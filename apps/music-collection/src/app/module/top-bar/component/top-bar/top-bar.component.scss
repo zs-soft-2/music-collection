@@ -1,0 +1,23 @@
+:host ::ng-deep .p-menuitem-link-active {
+  background-color: #dddddd;
+}
+
+:host ::ng-deep .p-menubar {
+  border: none;
+}
+
+:host ::ng-deep .p-toolbar {
+  padding: 0.2rem;
+}
+
+.title {
+  line-height: 64px;
+  font-size: 32px;
+  vertical-align: super;
+  margin-left: 10px;
+}
+
+.users-dropdown {
+  margin-left: 10px;
+  width: 150px;
+}
