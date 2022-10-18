@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 
 import { BaseService } from '../../common';
-import { User } from './user.model';
+import { User } from '../user';
 
 export abstract class AuthenticationStateService extends BaseService {
   public abstract dispatchAuthenticated(user: User | undefined): void;
