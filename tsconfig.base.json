@@ -15,7 +15,10 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@music-collection/api": ["libs/api/src/index.ts"]
+      "@music-collection/api": ["libs/api/src/index.ts"],
+      "@music-collection/core/authentication": [
+        "libs/core/authentication/src/index.ts"
+      ]
     }
   },
   "exclude": ["node_modules", "tmp"]
