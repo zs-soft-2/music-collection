@@ -13,7 +13,7 @@
           "error",
           {
             "type": "attribute",
-            "prefix": "musicCollection",
+            "prefix": "mc",
             "style": "camelCase"
           }
         ],
@@ -21,7 +21,7 @@
           "error",
           {
             "type": "element",
-            "prefix": "music-collection",
+            "prefix": "mc",
             "style": "kebab-case"
           }
         ]
