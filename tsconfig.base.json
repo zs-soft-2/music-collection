@@ -18,7 +18,8 @@
       "@music-collection/api": ["libs/api/src/index.ts"],
       "@music-collection/core/authentication": [
         "libs/core/authentication/src/index.ts"
-      ]
+      ],
+      "@music-collection/domain/user": ["libs/domain/user/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

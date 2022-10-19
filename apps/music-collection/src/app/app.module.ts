@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { CoreAuthenticationModule } from '@music-collection/core/authentication';
+import { DomainUserModule } from '@music-collection/domain/user';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
@@ -27,6 +28,7 @@ import { TopBarModule } from './module';
     EffectsModule.forRoot([]),
     TopBarModule,
     CoreAuthenticationModule,
+    DomainUserModule,
   ],
   providers: [],
   bootstrap: [AppComponent],
