@@ -41,7 +41,6 @@ export class UserEffects {
             if (user && user.uid) {
               this.authorizationService.addRoles(user.roles as Role[]);
               this.authenticationService.dispatchAuthenticated(user);
-              this.userHookService.loadEntity(user);
 
               return UserActions.loadExistedUserSuccess({ user });
             } else {
@@ -109,8 +108,6 @@ export class UserEffects {
     private actions$: Actions,
     private authenticationService: AuthenticationStateService,
     private authorizationService: AuthorizationService,
-    private roleDataService: RoleDataService,
     private userDataService: UserDataService,
-    private userHookService: UserHookService
   ) {}
 }
