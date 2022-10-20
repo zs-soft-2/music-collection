@@ -1,8 +1,7 @@
 import { Observable, of } from 'rxjs';
-import { map, takeUntil } from 'rxjs/operators';
 
 import { Injectable } from '@angular/core';
-import { User, UserDataService } from '@music-collection/api';
+import { RoleNames, User, UserDataService } from '@music-collection/api';
 
 @Injectable()
 export class UserDataServiceImpl extends UserDataService {
@@ -11,7 +10,29 @@ export class UserDataServiceImpl extends UserDataService {
   public constructor() {
     super();
 
-    this.userCollection = [];
+    this.userCollection = [
+      {
+        displayName: 'Zsagia',
+        email: 'zsagia@gmail.com',
+        firstName: '',
+        lastName: '',
+        phone: '',
+        photoURL: '',
+        roles: [
+          {
+            uid: 'role-1',
+            name: RoleNames.ADMIN,
+            permissions: ['*.*'],
+          },
+          {
+            uid: 'role-2',
+            name: RoleNames.USER,
+            permissions: ['viewCollectionPage'],
+          },
+        ],
+        uid: 'user-1',
+      },
+    ];
   }
 
   public add$(user: User): Observable<User> {

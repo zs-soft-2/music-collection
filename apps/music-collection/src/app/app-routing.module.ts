@@ -2,6 +2,7 @@ import { NgxPermissionsGuard } from 'ngx-permissions';
 
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import { RoleNames } from '@music-collection/api';
 
 export const routes: Routes = [
   {
@@ -16,6 +17,22 @@ export const routes: Routes = [
     data: {
       breadcrumb: 'home',
     },
+  },
+  {
+    path: 'collection',
+    loadChildren: () =>
+      import('./page/collection/collection.module').then(
+        (module) => module.CollectionModule
+      ),
+    data: {
+      breadcrumb: 'collection',
+      permissions: {
+        only: [RoleNames.USER],
+        redirectTo: '/home',
+      },
+    },
+    canActivate: [NgxPermissionsGuard],
+    canLoad: [NgxPermissionsGuard],
   },
   {
     path: 'error',

@@ -2,7 +2,12 @@ import { of } from 'rxjs';
 import { catchError, map, mergeMap, switchMap } from 'rxjs/operators';
 
 import { Injectable } from '@angular/core';
-import { BaseService, User, UserStateService } from '@music-collection/api';
+import {
+  BaseService,
+  RoleNames,
+  User,
+  UserStateService,
+} from '@music-collection/api';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 
 import * as authenticationActions from './authentication.actions';
@@ -24,8 +29,7 @@ export class AuthenticationEffects extends BaseService {
             lastName: '',
             phone: '',
             photoURL: '',
-            roles: [],
-            uid: 'a1b2c3',
+            uid: 'user-1',
           };
 
           this.userStateService.dispatchLoadExistedUserAction(user);
