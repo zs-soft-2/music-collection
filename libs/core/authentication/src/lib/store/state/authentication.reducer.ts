@@ -42,7 +42,7 @@ export const authenticationReducer = createReducer(
       loading: false,
     };
   }),
-  on(authenticationActions.googleLogin, (state) => ({
+  on(authenticationActions.login, (state) => ({
     ...state,
     loading: true,
   })),

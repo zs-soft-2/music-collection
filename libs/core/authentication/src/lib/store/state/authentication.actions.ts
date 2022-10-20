@@ -12,6 +12,8 @@ export const notAuthenticated = createAction('[Auth] Not Authenticated');
 
 export const googleLogin = createAction('[Auth] Google Login Attempt');
 
+export const login = createAction('[Auth] Login Attempt');
+
 export const logout = createAction('[Auth] Logout');
 
 export const logoutSuccess = createAction('[Auth] Logout Success');

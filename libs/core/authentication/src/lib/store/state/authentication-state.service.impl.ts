@@ -27,7 +27,7 @@ export class AuthenticationStateServiceImpl extends AuthenticationStateService {
   }
 
   public dispatchLogin(): void {
-    throw new Error('Method not implemented.');
+    this.store.dispatch(authenticationActions.login());
   }
 
   public dispatchLogout(): void {

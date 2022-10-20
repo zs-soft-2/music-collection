@@ -19,6 +19,9 @@
       "@music-collection/core/authentication": [
         "libs/core/authentication/src/index.ts"
       ],
+      "@music-collection/core/authentication/view": [
+        "libs/core/authentication/src/lib/view/core-authentication-view.module"
+      ],
       "@music-collection/core/authorization": [
         "libs/core/authorization/src/index.ts"
       ],

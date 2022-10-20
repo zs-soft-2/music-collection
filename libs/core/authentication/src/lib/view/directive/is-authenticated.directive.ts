@@ -27,7 +27,7 @@ export class IsAuthenticatedDirective extends BaseDirective implements OnInit {
   }
 
   @Input()
-  public set zsIsAuthenticated(condition: boolean) {
+  public set mcIsAuthenticated(condition: boolean) {
     this.condition = condition;
   }
 

@@ -29,6 +29,8 @@ export class AuthenticationEffects extends BaseService {
           };
 
           this.userStateService.dispatchLoadExistedUserAction(user);
+
+          actions.push(authenticationActions.authenticated({ user }));
         } else {
           actions.push(authenticationActions.notAuthenticated());
         }
@@ -42,7 +44,7 @@ export class AuthenticationEffects extends BaseService {
   );
   public login = createEffect(() =>
     this.actions$.pipe(
-      ofType(authenticationActions.googleLogin),
+      ofType(authenticationActions.login),
       switchMap(() => {
         return of({});
       }),
