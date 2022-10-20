@@ -108,6 +108,6 @@ export class UserEffects {
     private actions$: Actions,
     private authenticationService: AuthenticationStateService,
     private authorizationService: AuthorizationService,
-    private userDataService: UserDataService,
+    private userDataService: UserDataService
   ) {}
 }
