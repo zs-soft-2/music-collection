@@ -1,3 +1,5 @@
+import { NgxPermissionsModule } from 'ngx-permissions';
+
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { CoreAuthenticationModule } from '@music-collection/core/authentication';
@@ -6,9 +8,9 @@ import { DomainUserModule } from '@music-collection/domain/user';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
-import { NgxPermissionsModule } from 'ngx-permissions';
 
 import { environment } from '../environments/environment';
+import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { TopBarModule } from './module';
 
@@ -16,6 +18,7 @@ import { TopBarModule } from './module';
   declarations: [AppComponent],
   imports: [
     BrowserModule,
+    AppRoutingModule,
     StoreModule.forRoot(
       {},
       {
