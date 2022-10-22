@@ -35,6 +35,20 @@ export const routes: Routes = [
     canLoad: [NgxPermissionsGuard],
   },
   {
+    path: 'admin',
+    loadChildren: () =>
+      import('./page/admin/admin.module').then((module) => module.AdminModule),
+    data: {
+      breadcrumb: 'admin',
+      permissions: {
+        only: [RoleNames.ADMIN],
+        redirectTo: '/home',
+      },
+    },
+    canActivate: [NgxPermissionsGuard],
+    canLoad: [NgxPermissionsGuard],
+  },
+  {
     path: 'error',
     loadChildren: () =>
       import('./page/error/error.module').then((module) => module.ErrorModule),
