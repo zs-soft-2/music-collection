@@ -14,7 +14,7 @@ export interface AuthenticationPartialState {
 }
 
 const defaultUser: User = {
-  uid: null,
+  uid: 'guest-1',
   displayName: 'GUEST',
   email: null,
   photoURL: null,

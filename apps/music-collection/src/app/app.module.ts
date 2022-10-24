@@ -1,3 +1,4 @@
+import { CoreEntityQuantityModule } from 'libs/core/entity-quantity/src';
 import { NgxPermissionsModule } from 'ngx-permissions';
 
 import { NgModule } from '@angular/core';
@@ -5,6 +6,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CoreAuthenticationModule } from '@music-collection/core/authentication';
 import { CoreAuthorizationModule } from '@music-collection/core/authorization';
+import { DomainArtistModule } from '@music-collection/domain/artist';
 import { DomainUserModule } from '@music-collection/domain/user';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
@@ -37,7 +39,9 @@ import { TopBarModule } from './module';
     NgxPermissionsModule.forRoot(),
     CoreAuthenticationModule,
     CoreAuthorizationModule,
+    CoreEntityQuantityModule,
     DomainUserModule,
+    DomainArtistModule,
   ],
   providers: [],
   bootstrap: [AppComponent],
