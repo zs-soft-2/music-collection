@@ -1,0 +1,50 @@
+<section class="artist-table" *ngIf="params$ | async as params">
+  <p-table
+    [value]="params.artists"
+    styleClass="p-datatable-striped p-datatable-sm"
+    responsiveLayout="scroll"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Name</th>
+
+        <th>Formed in</th>
+
+        <th>Styles</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-artist>
+      <tr>
+        <td>{{ artist.name }}</td>
+
+        <td>{{ artist.formedIn | date }}</td>
+
+        <td>
+          <ng-container *ngFor="let style of artist.styles">
+            <p-chip styleClass="style">
+              {{ style }}
+            </p-chip>
+          </ng-container>
+        </td>
+
+        <td>
+          <button
+            pButton
+            pRipple
+            icon="pi pi-pencil"
+            class="p-button-rounded p-button-success mr-2"
+            (click)="editArtist(artist)"
+          ></button>
+          <button
+            pButton
+            pRipple
+            icon="pi pi-trash"
+            class="p-button-rounded p-button-warning"
+            (click)="deleteArtist(artist)"
+          ></button>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</section>

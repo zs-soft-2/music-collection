@@ -12,6 +12,11 @@ export class AdminComponent {
   public items!: MenuItem[];
 
   public constructor() {
-    this.items = [];
+    this.items = [
+      {
+        label: 'Artist',
+        routerLink: 'artist',
+      },
+    ];
   }
 }
