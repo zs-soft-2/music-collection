@@ -35,16 +35,6 @@ export class ArtistEffects {
       switchMap(({ action, entityQuantityEntity }) =>
         this.artistDataService.add$(action.artist).pipe(
           map((artist) => {
-            entityQuantityEntity =
-              entityQuantityEntity ||
-              this.entityQuantityUtilService.createEntityQuantity(
-                EntityTypeEnum.Artist
-              );
-
-            this.entityQuantityStateService.dispatchUpdateEntityAction(
-              this.artistUtilService.updateEntityQuantity(entityQuantityEntity)
-            );
-
             return artistActions.addArtistSuccess({
               artist,
             });

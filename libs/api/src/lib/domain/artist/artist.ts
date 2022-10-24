@@ -19,6 +19,7 @@ export type ArtistEntityUpdate = Partial<ArtistEntity> & Identifiable;
 
 export type ArtistFormParams = {
   formGroup: FormGroup;
+  styleList: StyleEnum[];
 };
 
 export type ArtistTableParams = {
