@@ -6,9 +6,9 @@ import { AlbumStateService } from '@music-collection/api';
 
 @Injectable()
 export class AlbumEditResolverService implements Resolve<void> {
-  public constructor(private albumStateService: AlbumStateService) {}
+	public constructor(private albumStateService: AlbumStateService) {}
 
-  public resolve(): void | Observable<void> | Promise<void> {
-    this.albumStateService.dispatchChangeNewEntityButtonEnabled(false);
-  }
+	public resolve(): void | Observable<void> | Promise<void> {
+		this.albumStateService.dispatchChangeNewEntityButtonEnabled(false);
+	}
 }

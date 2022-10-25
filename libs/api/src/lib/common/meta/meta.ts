@@ -1,3 +1,3 @@
 export interface Meta {
-  lastUpdated: string;
+	lastUpdated: string;
 }

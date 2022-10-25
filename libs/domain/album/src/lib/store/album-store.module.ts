@@ -9,16 +9,16 @@ import { AlbumEffects } from './state/album.effects';
 import * as fromAlbum from './state/album.reducer';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    StoreModule.forFeature(ALBUM_FEATURE_KEY, fromAlbum.reducer),
-    EffectsModule.forFeature([AlbumEffects]),
-  ],
-  providers: [
-    {
-      provide: AlbumStateService,
-      useClass: AlbumStateServiceImpl,
-    },
-  ],
+	imports: [
+		CommonModule,
+		StoreModule.forFeature(ALBUM_FEATURE_KEY, fromAlbum.reducer),
+		EffectsModule.forFeature([AlbumEffects]),
+	],
+	providers: [
+		{
+			provide: AlbumStateService,
+			useClass: AlbumStateServiceImpl,
+		},
+	],
 })
 export class AlbumStoreModule {}

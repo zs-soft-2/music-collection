@@ -6,11 +6,11 @@ import { ArtistStoreModule } from './store/artist-store.module';
 import { ArtistUtilModule } from './util/artist-util.module';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    ArtistDataModule,
-    ArtistUtilModule,
-    ArtistStoreModule,
-  ],
+	imports: [
+		CommonModule,
+		ArtistDataModule,
+		ArtistUtilModule,
+		ArtistStoreModule,
+	],
 })
 export class DomainArtistModule {}

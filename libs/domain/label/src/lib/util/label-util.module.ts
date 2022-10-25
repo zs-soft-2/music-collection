@@ -6,13 +6,13 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { LabelUtilServiceImpl } from './service';
 
 @NgModule({
-  declarations: [],
-  imports: [CommonModule, ReactiveFormsModule],
-  providers: [
-    {
-      provide: LabelUtilService,
-      useClass: LabelUtilServiceImpl,
-    },
-  ],
+	declarations: [],
+	imports: [CommonModule, ReactiveFormsModule],
+	providers: [
+		{
+			provide: LabelUtilService,
+			useClass: LabelUtilServiceImpl,
+		},
+	],
 })
 export class LabelUtilModule {}

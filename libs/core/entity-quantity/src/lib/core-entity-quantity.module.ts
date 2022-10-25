@@ -6,11 +6,11 @@ import { EntityQuantityStoreModule } from './store';
 import { EntityQuantityUtilModule } from './util';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    EntityQuantityDataModule,
-    EntityQuantityUtilModule,
-    EntityQuantityStoreModule,
-  ],
+	imports: [
+		CommonModule,
+		EntityQuantityDataModule,
+		EntityQuantityUtilModule,
+		EntityQuantityStoreModule,
+	],
 })
 export class CoreEntityQuantityModule {}

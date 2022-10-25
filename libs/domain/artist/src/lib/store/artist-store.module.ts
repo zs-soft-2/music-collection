@@ -9,16 +9,16 @@ import { ArtistEffects } from './state/artist.effects';
 import * as fromArtist from './state/artist.reducer';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    StoreModule.forFeature(ARTIST_FEATURE_KEY, fromArtist.reducer),
-    EffectsModule.forFeature([ArtistEffects]),
-  ],
-  providers: [
-    {
-      provide: ArtistStateService,
-      useClass: ArtistStateServiceImpl,
-    },
-  ],
+	imports: [
+		CommonModule,
+		StoreModule.forFeature(ARTIST_FEATURE_KEY, fromArtist.reducer),
+		EffectsModule.forFeature([ArtistEffects]),
+	],
+	providers: [
+		{
+			provide: ArtistStateService,
+			useClass: ArtistStateServiceImpl,
+		},
+	],
 })
 export class ArtistStoreModule {}

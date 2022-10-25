@@ -4,10 +4,10 @@ import { EntityDataService } from '../../common';
 import { ArtistEntity, ArtistEntityAdd, ArtistEntityUpdate } from './artist';
 
 export abstract class ArtistDataService extends EntityDataService<
-  ArtistEntity,
-  ArtistEntityAdd,
-  ArtistEntityUpdate
+	ArtistEntity,
+	ArtistEntityAdd,
+	ArtistEntityUpdate
 > {
-  public abstract listByIds$(ids: string[]): Observable<ArtistEntity[]>;
-  public abstract search$(query: string): Observable<ArtistEntity[]>;
+	public abstract listByIds$(ids: string[]): Observable<ArtistEntity[]>;
+	public abstract search$(query: string): Observable<ArtistEntity[]>;
 }

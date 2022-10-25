@@ -6,13 +6,13 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { AlbumUtilServiceImpl } from './service';
 
 @NgModule({
-  declarations: [],
-  imports: [CommonModule, ReactiveFormsModule],
-  providers: [
-    {
-      provide: AlbumUtilService,
-      useClass: AlbumUtilServiceImpl,
-    },
-  ],
+	declarations: [],
+	imports: [CommonModule, ReactiveFormsModule],
+	providers: [
+		{
+			provide: AlbumUtilService,
+			useClass: AlbumUtilServiceImpl,
+		},
+	],
 })
 export class AlbumUtilModule {}

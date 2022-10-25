@@ -4,11 +4,11 @@ import { LabelStateService } from '@music-collection/api';
 
 @Injectable()
 export class LabelListPageResolverService implements Resolve<void> {
-  constructor(private labelStateService: LabelStateService) {}
+	constructor(private labelStateService: LabelStateService) {}
 
-  public resolve(): void {
-    this.labelStateService.dispatchListEntitiesAction();
-    this.labelStateService.dispatchSetSelectedEntityIdAction('');
-    this.labelStateService.dispatchChangeNewEntityButtonEnabled(true);
-  }
+	public resolve(): void {
+		this.labelStateService.dispatchListEntitiesAction();
+		this.labelStateService.dispatchSetSelectedEntityIdAction('');
+		this.labelStateService.dispatchChangeNewEntityButtonEnabled(true);
+	}
 }

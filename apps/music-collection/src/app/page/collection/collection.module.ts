@@ -5,7 +5,7 @@ import { CollectionRoutingModule } from './collection-routing.module';
 import { CollectionComponent } from './collection.component';
 
 @NgModule({
-  declarations: [CollectionComponent],
-  imports: [CommonModule, CollectionRoutingModule],
+	declarations: [CollectionComponent],
+	imports: [CommonModule, CollectionRoutingModule],
 })
 export class CollectionModule {}

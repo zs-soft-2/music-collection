@@ -6,6 +6,6 @@ import { AlbumStoreModule } from './store/album-store.module';
 import { AlbumUtilModule } from './util/album-util.module';
 
 @NgModule({
-  imports: [CommonModule, AlbumDataModule, AlbumUtilModule, AlbumStoreModule],
+	imports: [CommonModule, AlbumDataModule, AlbumUtilModule, AlbumStoreModule],
 })
 export class DomainAlbumModule {}

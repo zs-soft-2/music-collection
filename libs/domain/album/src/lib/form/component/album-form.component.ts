@@ -6,32 +6,32 @@ import { AlbumFormParams, BaseComponent } from '@music-collection/api';
 import { AlbumFormService } from './album-form.service';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [AlbumFormService],
-  selector: 'mc-album-form',
-  templateUrl: './album-form.component.html',
-  styleUrls: ['./album-form.component.scss'],
+	changeDetection: ChangeDetectionStrategy.OnPush,
+	providers: [AlbumFormService],
+	selector: 'mc-album-form',
+	templateUrl: './album-form.component.html',
+	styleUrls: ['./album-form.component.scss'],
 })
 export class AlbumFormComponent extends BaseComponent implements OnInit {
-  public params$!: Observable<AlbumFormParams>;
+	public params$!: Observable<AlbumFormParams>;
 
-  public constructor(private componentService: AlbumFormService) {
-    super();
-  }
+	public constructor(private componentService: AlbumFormService) {
+		super();
+	}
 
-  public cancel(): void {
-    this.componentService.cancel();
-  }
+	public cancel(): void {
+		this.componentService.cancel();
+	}
 
-  public ngOnInit(): void {
-    this.params$ = this.componentService.init$();
-  }
+	public ngOnInit(): void {
+		this.params$ = this.componentService.init$();
+	}
 
-  public submit(): void {
-    this.componentService.submit();
-  }
+	public submit(): void {
+		this.componentService.submit();
+	}
 
-  public searchArtist(event: any): void {
-    this.componentService.searchArtist(event['query']);
-  }
+	public searchArtist(event: any): void {
+		this.componentService.searchArtist(event['query']);
+	}
 }

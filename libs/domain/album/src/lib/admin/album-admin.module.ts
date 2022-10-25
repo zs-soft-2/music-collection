@@ -11,25 +11,25 @@ import { AlbumAdminRoutingModule } from './album-admin-routing.module';
 import { AlbumAdminComponent } from './page/admin';
 import { AlbumEditComponent, AlbumEditResolverService } from './page/edit';
 import {
-  AlbumListPageComponent,
-  AlbumListPageResolverService,
+	AlbumListPageComponent,
+	AlbumListPageResolverService,
 } from './page/list';
 
 @NgModule({
-  declarations: [
-    AlbumAdminComponent,
-    AlbumEditComponent,
-    AlbumListPageComponent,
-  ],
-  imports: [
-    CommonModule,
-    AlbumAdminRoutingModule,
-    NgxPermissionsModule.forChild(),
-    AlbumFormModule,
-    AlbumCollectionModule,
-    ButtonModule,
-    ToolbarModule,
-  ],
-  providers: [AlbumEditResolverService, AlbumListPageResolverService],
+	declarations: [
+		AlbumAdminComponent,
+		AlbumEditComponent,
+		AlbumListPageComponent,
+	],
+	imports: [
+		CommonModule,
+		AlbumAdminRoutingModule,
+		NgxPermissionsModule.forChild(),
+		AlbumFormModule,
+		AlbumCollectionModule,
+		ButtonModule,
+		ToolbarModule,
+	],
+	providers: [AlbumEditResolverService, AlbumListPageResolverService],
 })
 export class AlbumAdminModule {}

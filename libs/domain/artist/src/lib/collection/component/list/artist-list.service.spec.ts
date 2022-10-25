@@ -3,15 +3,15 @@ import { TestBed } from '@angular/core/testing';
 import { ArtistListService } from './artist-list.service';
 
 describe('ArtistListService', () => {
-  let service: ArtistListService;
+	let service: ArtistListService;
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({});
+	beforeEach(() => {
+		TestBed.configureTestingModule({});
 
-    service = TestBed.inject(ArtistListService);
-  });
+		service = TestBed.inject(ArtistListService);
+	});
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
+	it('should be created', () => {
+		expect(service).toBeTruthy();
+	});
 });

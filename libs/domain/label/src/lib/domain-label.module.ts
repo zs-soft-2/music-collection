@@ -6,6 +6,6 @@ import { LabelStoreModule } from './store/label-store.module';
 import { LabelUtilModule } from './util/label-util.module';
 
 @NgModule({
-  imports: [CommonModule, LabelDataModule, LabelUtilModule, LabelStoreModule],
+	imports: [CommonModule, LabelDataModule, LabelUtilModule, LabelStoreModule],
 })
 export class DomainLabelModule {}

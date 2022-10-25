@@ -4,23 +4,23 @@ import { AlbumCollectionModule } from '../../../collection/album-collection.modu
 import { AlbumListPageComponent } from './album-list-page.component';
 
 describe('AlbumListComponent', () => {
-  let component: AlbumListPageComponent;
-  let fixture: ComponentFixture<AlbumListPageComponent>;
+	let component: AlbumListPageComponent;
+	let fixture: ComponentFixture<AlbumListPageComponent>;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      declarations: [AlbumListPageComponent],
-      imports: [AlbumCollectionModule],
-    }).compileComponents();
-  }));
+	beforeEach(waitForAsync(() => {
+		TestBed.configureTestingModule({
+			declarations: [AlbumListPageComponent],
+			imports: [AlbumCollectionModule],
+		}).compileComponents();
+	}));
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(AlbumListPageComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+	beforeEach(() => {
+		fixture = TestBed.createComponent(AlbumListPageComponent);
+		component = fixture.componentInstance;
+		fixture.detectChanges();
+	});
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+	it('should create', () => {
+		expect(component).toBeTruthy();
+	});
 });

@@ -11,17 +11,17 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ArtistFormComponent } from './component';
 
 @NgModule({
-  declarations: [ArtistFormComponent],
-  exports: [ArtistFormComponent],
-  imports: [
-    CommonModule,
-    ButtonModule,
-    FormsModule,
-    CalendarModule,
-    InputTextareaModule,
-    InputTextModule,
-    MultiSelectModule,
-    ReactiveFormsModule,
-  ],
+	declarations: [ArtistFormComponent],
+	exports: [ArtistFormComponent],
+	imports: [
+		CommonModule,
+		ButtonModule,
+		FormsModule,
+		CalendarModule,
+		InputTextareaModule,
+		InputTextModule,
+		MultiSelectModule,
+		ReactiveFormsModule,
+	],
 })
 export class ArtistFormModule {}

@@ -1,61 +1,74 @@
 <section class="artist-form" *ngIf="params$ | async as params">
-  <form [formGroup]="params.formGroup">
-    <input name="uid" formControlName="uid" hidden />
+	<form [formGroup]="params.formGroup">
+		<input name="uid" formControlName="uid" hidden />
 
-    <div class="field">
-      <span class="p-float-label">
-        <input id="name" type="text" pInputText formControlName="name" />
+		<div class="field">
+			<span class="p-float-label">
+				<input
+					id="name"
+					type="text"
+					pInputText
+					formControlName="name"
+				/>
 
-        <label for="name">Name</label>
-      </span>
-    </div>
+				<label for="name">Name</label>
+			</span>
+		</div>
 
-    <div class="field">
-      <span class="p-float-label">
-        <textarea
-          [rows]="5"
-          [cols]="30"
-          formControlName="description"
-          pInputTextarea
-          [autoResize]="true"
-        ></textarea>
+		<div class="field">
+			<span class="p-float-label">
+				<textarea
+					[rows]="5"
+					[cols]="30"
+					formControlName="description"
+					pInputTextarea
+					[autoResize]="true"
+				></textarea>
 
-        <label for="description">Description</label>
-      </span>
-    </div>
+				<label for="description">Description</label>
+			</span>
+		</div>
 
-    <div class="field">
-      <span class="p-float-label">
-        <p-calendar id="formedIn" formControlName="formedIn"></p-calendar>
+		<div class="field">
+			<span class="p-float-label">
+				<p-calendar
+					id="formedIn"
+					formControlName="formedIn"
+				></p-calendar>
 
-        <label for="formedIn">Formed in</label>
-      </span>
-    </div>
+				<label for="formedIn">Formed in</label>
+			</span>
+		</div>
 
-    <div class="field">
-      <span class="p-float-label">
-        <p-multiSelect
-          id="styles"
-          [options]="params.styleList"
-          [filter]="false"
-          formControlName="styles"
-          display="chip"
-        ></p-multiSelect>
+		<div class="field">
+			<span class="p-float-label">
+				<p-multiSelect
+					id="styles"
+					[options]="params.styleList"
+					[filter]="false"
+					formControlName="styles"
+					display="chip"
+				></p-multiSelect>
 
-        <label for="styles">Styles</label>
-      </span>
-    </div>
-  </form>
+				<label for="styles">Styles</label>
+			</span>
+		</div>
+	</form>
 
-  <div style="margin-top: 10px" fxLayout="row" fxLayoutAlign="space-around">
-    <button
-      pButton
-      type="button"
-      label="Submit"
-      (click)="submit()"
-      [disabled]="!params.formGroup.valid"
-    ></button>
+	<div style="margin-top: 10px" fxLayout="row" fxLayoutAlign="space-around">
+		<button
+			pButton
+			type="button"
+			label="Submit"
+			(click)="submit()"
+			[disabled]="!params.formGroup.valid"
+		></button>
 
-    <button pButton type="button" label="Cancel" (click)="cancel()"></button>
-  </div>
+		<button
+			pButton
+			type="button"
+			label="Cancel"
+			(click)="cancel()"
+		></button>
+	</div>
 </section>

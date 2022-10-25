@@ -11,17 +11,17 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { LabelFormComponent } from './component';
 
 @NgModule({
-  declarations: [LabelFormComponent],
-  exports: [LabelFormComponent],
-  imports: [
-    CommonModule,
-    ButtonModule,
-    FormsModule,
-    AutoCompleteModule,
-    CalendarModule,
-    InputTextModule,
-    MultiSelectModule,
-    ReactiveFormsModule,
-  ],
+	declarations: [LabelFormComponent],
+	exports: [LabelFormComponent],
+	imports: [
+		CommonModule,
+		ButtonModule,
+		FormsModule,
+		AutoCompleteModule,
+		CalendarModule,
+		InputTextModule,
+		MultiSelectModule,
+		ReactiveFormsModule,
+	],
 })
 export class LabelFormModule {}

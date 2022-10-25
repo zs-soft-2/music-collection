@@ -4,9 +4,9 @@ import { EntityDataService } from '../../common';
 import { Role } from './role';
 
 export abstract class RoleDataService extends EntityDataService<
-  Role,
-  Role,
-  Role
+	Role,
+	Role,
+	Role
 > {
-  public abstract listByIds$(ids: string[]): Observable<Role[]>;
+	public abstract listByIds$(ids: string[]): Observable<Role[]>;
 }

@@ -5,12 +5,12 @@ import { EntityQuantityDataService } from '@music-collection/api';
 import { EntityQuantityDataServiceImpl } from './service';
 
 @NgModule({
-  imports: [CommonModule],
-  providers: [
-    {
-      provide: EntityQuantityDataService,
-      useClass: EntityQuantityDataServiceImpl,
-    },
-  ],
+	imports: [CommonModule],
+	providers: [
+		{
+			provide: EntityQuantityDataService,
+			useClass: EntityQuantityDataServiceImpl,
+		},
+	],
 })
 export class EntityQuantityDataModule {}

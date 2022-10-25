@@ -5,11 +5,11 @@ import { CoreAuthenticationStoreModule } from './store/core-authentication-store
 import { CoreAuthenticationViewModule } from './view/core-authentication-view.module';
 
 @NgModule({
-  exports: [CoreAuthenticationStoreModule, CoreAuthenticationViewModule],
-  imports: [
-    CommonModule,
-    CoreAuthenticationStoreModule,
-    CoreAuthenticationViewModule,
-  ],
+	exports: [CoreAuthenticationStoreModule, CoreAuthenticationViewModule],
+	imports: [
+		CommonModule,
+		CoreAuthenticationStoreModule,
+		CoreAuthenticationViewModule,
+	],
 })
 export class CoreAuthenticationModule {}

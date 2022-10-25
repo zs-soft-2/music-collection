@@ -21,35 +21,35 @@ import { AppComponent } from './app.component';
 import { TopBarModule } from './module';
 
 @NgModule({
-  declarations: [AppComponent],
-  imports: [
-    BrowserModule,
-    BrowserAnimationsModule,
-    AppRoutingModule,
-    BreadcrumbModule,
-    StoreModule.forRoot(
-      {},
-      {
-        metaReducers: !environment.production ? [] : [],
-        runtimeChecks: {
-          strictActionImmutability: true,
-          strictStateImmutability: true,
-        },
-      }
-    ),
-    !environment.production ? StoreDevtoolsModule.instrument() : [],
-    EffectsModule.forRoot([]),
-    TopBarModule,
-    NgxPermissionsModule.forRoot(),
-    CoreAuthenticationModule,
-    CoreAuthorizationModule,
-    CoreEntityQuantityModule,
-    DomainUserModule,
-    DomainArtistModule,
-    DomainAlbumModule,
-    DomainLabelModule,
-  ],
-  providers: [],
-  bootstrap: [AppComponent],
+	declarations: [AppComponent],
+	imports: [
+		BrowserModule,
+		BrowserAnimationsModule,
+		AppRoutingModule,
+		BreadcrumbModule,
+		StoreModule.forRoot(
+			{},
+			{
+				metaReducers: !environment.production ? [] : [],
+				runtimeChecks: {
+					strictActionImmutability: true,
+					strictStateImmutability: true,
+				},
+			}
+		),
+		!environment.production ? StoreDevtoolsModule.instrument() : [],
+		EffectsModule.forRoot([]),
+		TopBarModule,
+		NgxPermissionsModule.forRoot(),
+		CoreAuthenticationModule,
+		CoreAuthorizationModule,
+		CoreEntityQuantityModule,
+		DomainUserModule,
+		DomainArtistModule,
+		DomainAlbumModule,
+		DomainLabelModule,
+	],
+	providers: [],
+	bootstrap: [AppComponent],
 })
 export class AppModule {}

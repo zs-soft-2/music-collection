@@ -11,17 +11,17 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AlbumFormComponent } from './component';
 
 @NgModule({
-  declarations: [AlbumFormComponent],
-  exports: [AlbumFormComponent],
-  imports: [
-    CommonModule,
-    ButtonModule,
-    FormsModule,
-    AutoCompleteModule,
-    CalendarModule,
-    InputTextModule,
-    MultiSelectModule,
-    ReactiveFormsModule,
-  ],
+	declarations: [AlbumFormComponent],
+	exports: [AlbumFormComponent],
+	imports: [
+		CommonModule,
+		ButtonModule,
+		FormsModule,
+		AutoCompleteModule,
+		CalendarModule,
+		InputTextModule,
+		MultiSelectModule,
+		ReactiveFormsModule,
+	],
 })
 export class AlbumFormModule {}

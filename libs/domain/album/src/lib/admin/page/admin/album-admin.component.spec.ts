@@ -6,27 +6,27 @@ import { AlbumCollectionModule } from '../../../collection/album-collection.modu
 import { AlbumAdminComponent } from './album-admin.component';
 
 describe('AlbumAdminComponent', () => {
-  let component: AlbumAdminComponent;
-  let fixture: ComponentFixture<AlbumAdminComponent>;
+	let component: AlbumAdminComponent;
+	let fixture: ComponentFixture<AlbumAdminComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [AlbumAdminComponent],
-      imports: [
-        HttpClientTestingModule,
-        RouterTestingModule,
-        AlbumCollectionModule,
-      ],
-    }).compileComponents();
-  }));
+	beforeEach(async(() => {
+		TestBed.configureTestingModule({
+			declarations: [AlbumAdminComponent],
+			imports: [
+				HttpClientTestingModule,
+				RouterTestingModule,
+				AlbumCollectionModule,
+			],
+		}).compileComponents();
+	}));
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(AlbumAdminComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+	beforeEach(() => {
+		fixture = TestBed.createComponent(AlbumAdminComponent);
+		component = fixture.componentInstance;
+		fixture.detectChanges();
+	});
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+	it('should create', () => {
+		expect(component).toBeTruthy();
+	});
 });

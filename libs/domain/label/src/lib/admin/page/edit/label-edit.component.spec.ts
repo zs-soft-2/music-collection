@@ -4,23 +4,23 @@ import { LabelFormModule } from '../../../form/label-form.module';
 import { LabelEditComponent } from './label-edit.component';
 
 describe('LabelEditComponent', () => {
-  let component: LabelEditComponent;
-  let fixture: ComponentFixture<LabelEditComponent>;
+	let component: LabelEditComponent;
+	let fixture: ComponentFixture<LabelEditComponent>;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      declarations: [LabelEditComponent],
-      imports: [LabelFormModule],
-    }).compileComponents();
-  }));
+	beforeEach(waitForAsync(() => {
+		TestBed.configureTestingModule({
+			declarations: [LabelEditComponent],
+			imports: [LabelFormModule],
+		}).compileComponents();
+	}));
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(LabelEditComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+	beforeEach(() => {
+		fixture = TestBed.createComponent(LabelEditComponent);
+		component = fixture.componentInstance;
+		fixture.detectChanges();
+	});
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+	it('should create', () => {
+		expect(component).toBeTruthy();
+	});
 });
