@@ -12,9 +12,37 @@
 
     <div class="field">
       <span class="p-float-label">
+        <textarea
+          [rows]="5"
+          [cols]="30"
+          formControlName="description"
+          pInputTextarea
+          [autoResize]="true"
+        ></textarea>
+
+        <label for="description">Description</label>
+      </span>
+    </div>
+
+    <div class="field">
+      <span class="p-float-label">
         <p-calendar id="formedIn" formControlName="formedIn"></p-calendar>
 
-        <label for="formedIn">formedIn</label>
+        <label for="formedIn">Formed in</label>
+      </span>
+    </div>
+
+    <div class="field">
+      <span class="p-float-label">
+        <p-multiSelect
+          id="styles"
+          [options]="params.styleList"
+          [filter]="false"
+          formControlName="styles"
+          display="chip"
+        ></p-multiSelect>
+
+        <label for="styles">Styles</label>
       </span>
     </div>
   </form>

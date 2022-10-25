@@ -1,4 +1,8 @@
 import { EntityUtilService } from '../../common';
-import { ArtistEntity } from './artist';
+import { ArtistEntity, ArtistEntityAdd, ArtistEntityUpdate } from './artist';
 
-export abstract class ArtistUtilService extends EntityUtilService<ArtistEntity> {}
+export abstract class ArtistUtilService extends EntityUtilService<
+  ArtistEntity,
+  ArtistEntityAdd,
+  ArtistEntityUpdate
+> {}

@@ -46,7 +46,7 @@ export class ArtistDataServiceImpl extends ArtistDataService {
       uid: nanoid(),
     };
 
-    this.artistCollection.push(newArtist);
+    this.artistCollection = this.artistCollection.concat([newArtist]);
 
     return of(newArtist);
   }
@@ -81,16 +81,16 @@ export class ArtistDataServiceImpl extends ArtistDataService {
   }
 
   public update$(artist: ArtistEntityUpdate): Observable<ArtistEntityUpdate> {
-    const index = this.artistCollection.findIndex(
-      (oldArtist) => oldArtist.uid === artist.uid
-    );
-
-    if (index) {
-      this.artistCollection[index] = {
-        ...this.artistCollection[index],
-        ...artist,
-      };
-    }
+    this.artistCollection = this.artistCollection.map((oldArtist) => {
+      return (
+        oldArtist.uid === artist.uid
+          ? {
+              ...oldArtist,
+              ...artist,
+            }
+          : artist
+      ) as ArtistEntity;
+    });
 
     return of(artist);
   }
