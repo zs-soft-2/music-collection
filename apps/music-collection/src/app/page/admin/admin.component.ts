@@ -17,6 +17,10 @@ export class AdminComponent {
         label: 'Artist',
         routerLink: 'artist',
       },
+      {
+        label: 'Album',
+        routerLink: 'album',
+      },
     ];
   }
 }

@@ -1,6 +1,6 @@
 export enum ArtistResourceEnum {
-  ROLE_ENTITY = 'ArtistEntity',
-  ROLE_ADMIN_PAGE = 'ArtistAdminPage',
-  ROLE_EDIT_PAGE = 'ArtistEditPage',
-  ROLE_LIST_PAGE = 'ArtistListPage',
+  ARTIST_ENTITY = 'ArtistEntity',
+  ARTIST_ADMIN_PAGE = 'ArtistAdminPage',
+  ARTIST_EDIT_PAGE = 'ArtistEditPage',
+  ARTIST_LIST_PAGE = 'ArtistListPage',
 }

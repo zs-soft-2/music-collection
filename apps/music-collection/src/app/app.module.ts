@@ -6,6 +6,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CoreAuthenticationModule } from '@music-collection/core/authentication';
 import { CoreAuthorizationModule } from '@music-collection/core/authorization';
+import { DomainAlbumModule } from '@music-collection/domain/album';
 import { DomainArtistModule } from '@music-collection/domain/artist';
 import { DomainUserModule } from '@music-collection/domain/user';
 import { EffectsModule } from '@ngrx/effects';
@@ -42,6 +43,7 @@ import { TopBarModule } from './module';
     CoreEntityQuantityModule,
     DomainUserModule,
     DomainArtistModule,
+    DomainAlbumModule,
   ],
   providers: [],
   bootstrap: [AppComponent],

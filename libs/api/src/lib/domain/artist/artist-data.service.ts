@@ -9,4 +9,5 @@ export abstract class ArtistDataService extends EntityDataService<
   ArtistEntityUpdate
 > {
   public abstract listByIds$(ids: string[]): Observable<ArtistEntity[]>;
+  public abstract search$(query: string): Observable<ArtistEntity[]>;
 }

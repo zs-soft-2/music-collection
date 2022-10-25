@@ -8,7 +8,7 @@ import { ArtistAdminComponent } from './page/admin';
 import { ArtistEditComponent, ArtistEditResolverService } from './page/edit';
 import {
   ArtistListPageComponent,
-  ArtistListResolverService,
+  ArtistListPageResolverService,
 } from './page/list';
 import { ArtistAdminPermissionsService } from './service';
 
@@ -54,7 +54,7 @@ const routes: Routes = [
         },
         path: 'list',
         pathMatch: 'full',
-        resolve: { data: ArtistListResolverService },
+        resolve: { data: ArtistListPageResolverService },
       },
     ],
   },

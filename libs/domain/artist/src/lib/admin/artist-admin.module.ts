@@ -12,7 +12,7 @@ import { ArtistAdminComponent } from './page/admin';
 import { ArtistEditComponent, ArtistEditResolverService } from './page/edit';
 import {
   ArtistListPageComponent,
-  ArtistListResolverService,
+  ArtistListPageResolverService,
 } from './page/list';
 
 @NgModule({
@@ -30,6 +30,6 @@ import {
     ButtonModule,
     ToolbarModule,
   ],
-  providers: [ArtistEditResolverService, ArtistListResolverService],
+  providers: [ArtistEditResolverService, ArtistListPageResolverService],
 })
 export class ArtistAdminModule {}

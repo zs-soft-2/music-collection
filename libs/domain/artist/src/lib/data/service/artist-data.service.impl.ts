@@ -80,6 +80,23 @@ export class ArtistDataServiceImpl extends ArtistDataService {
     return of(this.artistCollection.find((artist) => artist.uid === uid));
   }
 
+  public search$(query: string): Observable<ArtistEntity[]> {
+    const foundByQuery: ArtistEntity[] = [];
+
+    return of(
+      this.artistCollection.reduce(
+        (list: ArtistEntity[], artist: ArtistEntity) => {
+          if (artist.name.toLowerCase().search(query.toLowerCase()) > -1) {
+            list.push(artist);
+          }
+
+          return list;
+        },
+        foundByQuery
+      )
+    );
+  }
+
   public update$(artist: ArtistEntityUpdate): Observable<ArtistEntityUpdate> {
     this.artistCollection = this.artistCollection.map((oldArtist) => {
       return (
@@ -88,7 +105,7 @@ export class ArtistDataServiceImpl extends ArtistDataService {
               ...oldArtist,
               ...artist,
             }
-          : artist
+          : oldArtist
       ) as ArtistEntity;
     });
 

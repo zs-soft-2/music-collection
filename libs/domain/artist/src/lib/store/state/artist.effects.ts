@@ -77,9 +77,18 @@ export class ArtistEffects {
   public searchArtists = createEffect(() =>
     this.actions$.pipe(
       ofType(artistActions.search),
-      switchMap((action) => {
-        return of(artistActions.searchSuccess({ result: [] }));
-      })
+      switchMap((action) =>
+        this.artistDataService.search$(action.term).pipe(
+          map((result) => {
+            return artistActions.searchSuccess({
+              result,
+            });
+          }),
+          catchError((error) => {
+            return of(artistActions.searchFailed(error));
+          })
+        )
+      )
     )
   );
   public updateArtist = createEffect(() =>

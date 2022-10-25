@@ -28,6 +28,7 @@
       "@music-collection/core/entity-quantity": [
         "libs/core/entity-quantity/src/index.ts"
       ],
+      "@music-collection/domain/album": ["libs/domain/album/src/index.ts"],
       "@music-collection/domain/artist": ["libs/domain/artist/src/index.ts"],
       "@music-collection/domain/user": ["libs/domain/user/src/index.ts"]
     }
