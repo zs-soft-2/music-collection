@@ -9,6 +9,7 @@ import { CoreAuthorizationModule } from '@music-collection/core/authorization';
 import { DomainAlbumModule } from '@music-collection/domain/album';
 import { DomainArtistModule } from '@music-collection/domain/artist';
 import { DomainUserModule } from '@music-collection/domain/user';
+import { BreadcrumbModule } from '@music-collection/ui';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
@@ -24,6 +25,7 @@ import { TopBarModule } from './module';
     BrowserModule,
     BrowserAnimationsModule,
     AppRoutingModule,
+    BreadcrumbModule,
     StoreModule.forRoot(
       {},
       {

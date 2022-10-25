@@ -26,7 +26,7 @@ const routes: Routes = [
         canActivate: [NgxPermissionsGuard],
         component: AlbumEditComponent,
         data: {
-          breadcrumb: 'Edit',
+          breadcrumb: 'edit',
           permissions: {
             only: [
               RoleNames.ADMIN,
@@ -43,7 +43,7 @@ const routes: Routes = [
         canActivate: [NgxPermissionsGuard],
         component: AlbumListPageComponent,
         data: {
-          breadcrumb: 'List',
+          breadcrumb: 'list',
           permissions: {
             only: [
               RoleNames.ADMIN,
