@@ -1,7 +1,3 @@
-import {
-  EntityQuantityStateService,
-  EntityQuantityUtilService,
-} from 'libs/api/src/lib/core/entity-quantity';
 import { of } from 'rxjs';
 import { catchError, first, map, switchMap } from 'rxjs/operators';
 
@@ -10,6 +6,8 @@ import {
   ArtistDataService,
   ArtistEntity,
   ArtistUtilService,
+  EntityQuantityStateService,
+  EntityQuantityUtilService,
   EntityTypeEnum,
 } from '@music-collection/api';
 import { Actions, createEffect, ofType } from '@ngrx/effects';

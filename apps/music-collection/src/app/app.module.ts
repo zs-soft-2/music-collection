@@ -1,4 +1,3 @@
-import { CoreEntityQuantityModule } from 'libs/core/entity-quantity/src';
 import { NgxPermissionsModule } from 'ngx-permissions';
 
 import { NgModule } from '@angular/core';
@@ -6,8 +5,10 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CoreAuthenticationModule } from '@music-collection/core/authentication';
 import { CoreAuthorizationModule } from '@music-collection/core/authorization';
+import { CoreEntityQuantityModule } from '@music-collection/core/entity-quantity';
 import { DomainAlbumModule } from '@music-collection/domain/album';
 import { DomainArtistModule } from '@music-collection/domain/artist';
+import { DomainLabelModule } from '@music-collection/domain/label';
 import { DomainUserModule } from '@music-collection/domain/user';
 import { BreadcrumbModule } from '@music-collection/ui';
 import { EffectsModule } from '@ngrx/effects';
@@ -46,6 +47,7 @@ import { TopBarModule } from './module';
     DomainUserModule,
     DomainArtistModule,
     DomainAlbumModule,
+    DomainLabelModule,
   ],
   providers: [],
   bootstrap: [AppComponent],
