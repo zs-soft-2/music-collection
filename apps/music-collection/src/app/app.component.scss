@@ -1,0 +1,9 @@
+nav {
+    margin-left: 1rem;
+}
+
+:host ::ng-deep p-toolbar {
+    .p-toolbar {
+        padding: 0;
+    }
+}

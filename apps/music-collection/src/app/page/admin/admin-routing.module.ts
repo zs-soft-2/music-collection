@@ -9,40 +9,41 @@ import { AdminComponent } from './admin.component';
 const routes: Routes = [
   {
     path: '',
-    pathMatch: 'full',
     component: AdminComponent,
-  },
-  {
-    path: 'artist',
-    data: {
-      breadcrumb: 'artist',
-      permissions: {
-        only: [RoleNames.ADMIN],
-        redirectTo: '/error',
+    children: [
+      {
+        path: 'artist',
+        data: {
+          breadcrumb: 'artist',
+          permissions: {
+            only: [RoleNames.ADMIN],
+            redirectTo: '/error',
+          },
+        },
+        loadChildren: () =>
+          import('@music-collection/domain/artist').then(
+            (lib) => lib.ArtistAdminModule
+          ),
+        canActivate: [NgxPermissionsGuard],
+        canLoad: [NgxPermissionsGuard],
       },
-    },
-    loadChildren: () =>
-      import('@music-collection/domain/artist').then(
-        (lib) => lib.ArtistAdminModule
-      ),
-    canActivate: [NgxPermissionsGuard],
-    canLoad: [NgxPermissionsGuard],
-  },
-  {
-    path: 'album',
-    data: {
-      breadcrumb: 'album',
-      permissions: {
-        only: [RoleNames.ADMIN],
-        redirectTo: '/error',
+      {
+        path: 'album',
+        data: {
+          breadcrumb: 'album',
+          permissions: {
+            only: [RoleNames.ADMIN],
+            redirectTo: '/error',
+          },
+        },
+        loadChildren: () =>
+          import('@music-collection/domain/album').then(
+            (lib) => lib.AlbumAdminModule
+          ),
+        canActivate: [NgxPermissionsGuard],
+        canLoad: [NgxPermissionsGuard],
       },
-    },
-    loadChildren: () =>
-      import('@music-collection/domain/album').then(
-        (lib) => lib.AlbumAdminModule
-      ),
-    canActivate: [NgxPermissionsGuard],
-    canLoad: [NgxPermissionsGuard],
+    ],
   },
 ];
 

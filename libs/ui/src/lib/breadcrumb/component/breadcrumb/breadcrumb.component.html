@@ -1,0 +1,17 @@
+<ng-content></ng-content>
+
+<ng-container *ngIf="autoGenerate && breadcrumbs.length">
+  <ng-container *ngFor="let breadcrumb of breadcrumbs">
+    <span class="ant-breadcrumb-link">
+      <a
+        [attr.href]="breadcrumb.url"
+        (click)="navigate(breadcrumb.url, $event)"
+        >{{ breadcrumb.label }}</a
+      >
+    </span>
+
+    <span class="ant-breadcrumb-separator" *ngIf="separator">
+      {{ separator }}
+    </span>
+  </ng-container>
+</ng-container>
