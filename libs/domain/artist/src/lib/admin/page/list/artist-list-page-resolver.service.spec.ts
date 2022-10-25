@@ -1,22 +1,22 @@
 import { TestBed } from '@angular/core/testing';
 import { ArtistStateService } from '@music-collection/api';
 
-import { ArtistListResolverService } from './artist-list-resolver.service';
+import { ArtistListPageResolverService } from './artist-list-page-resolver.service';
 
-describe('ArtistListResolverService', () => {
-  let service: ArtistListResolverService;
+describe('ArtistListPageResolverService', () => {
+  let service: ArtistListPageResolverService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
-        ArtistListResolverService,
+        ArtistListPageResolverService,
         {
           provide: ArtistStateService,
           useValue: {},
         },
       ],
     });
-    service = TestBed.inject(ArtistListResolverService);
+    service = TestBed.inject(ArtistListPageResolverService);
   });
 
   it('should be created', () => {

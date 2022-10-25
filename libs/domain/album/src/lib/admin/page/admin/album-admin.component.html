@@ -1,0 +1,19 @@
+<section>
+  <p-toolbar>
+    <div class="p-toolbar-group-left"></div>
+
+    <div class="p-toolbar-group-right">
+      <ng-template [ngxPermissionsOnly]="buttonPermissions">
+        <p-button
+          label="Add Album"
+          icon="pi pi-plus"
+          (onClick)="clickHandler()"
+          [disabled]="(isNewEntityButtonEnabled$ | async) === false"
+        >
+        </p-button>
+      </ng-template>
+    </div>
+  </p-toolbar>
+
+  <router-outlet> </router-outlet>
+</section>

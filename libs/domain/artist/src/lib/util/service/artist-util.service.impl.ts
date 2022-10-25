@@ -46,7 +46,10 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
     return this.formBuilder.group({
       description: [artist?.description || null],
       uid: [artist?.uid],
-      name: [artist?.name || null, [Validators.required]],
+      name: [
+        artist?.name || null,
+        [Validators.required, Validators.min(3), Validators.max(30)],
+      ],
       formedIn: [artist?.formedIn || null, [Validators.required]],
       styles: [artist?.styles || null, [Validators.required]],
     });

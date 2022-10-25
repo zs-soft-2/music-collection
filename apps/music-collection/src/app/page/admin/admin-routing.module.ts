@@ -28,6 +28,22 @@ const routes: Routes = [
     canActivate: [NgxPermissionsGuard],
     canLoad: [NgxPermissionsGuard],
   },
+  {
+    path: 'album',
+    data: {
+      breadcrumb: 'album',
+      permissions: {
+        only: [RoleNames.ADMIN],
+        redirectTo: '/error',
+      },
+    },
+    loadChildren: () =>
+      import('@music-collection/domain/album').then(
+        (lib) => lib.AlbumAdminModule
+      ),
+    canActivate: [NgxPermissionsGuard],
+    canLoad: [NgxPermissionsGuard],
+  },
 ];
 
 @NgModule({
