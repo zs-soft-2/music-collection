@@ -43,6 +43,22 @@ const routes: Routes = [
         canActivate: [NgxPermissionsGuard],
         canLoad: [NgxPermissionsGuard],
       },
+      {
+        path: 'label',
+        data: {
+          breadcrumb: 'label',
+          permissions: {
+            only: [RoleNames.ADMIN],
+            redirectTo: '/error',
+          },
+        },
+        loadChildren: () =>
+          import('@music-collection/domain/label').then(
+            (lib) => lib.LabelAdminModule
+          ),
+        canActivate: [NgxPermissionsGuard],
+        canLoad: [NgxPermissionsGuard],
+      },
     ],
   },
 ];
