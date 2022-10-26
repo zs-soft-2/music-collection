@@ -75,9 +75,18 @@ export class ReleaseEffects {
 	public searchReleases = createEffect(() =>
 		this.actions$.pipe(
 			ofType(releaseActions.search),
-			switchMap((action) => {
-				return of(releaseActions.searchSuccess({ result: [] }));
-			})
+			switchMap((action) =>
+				this.releaseDataService.search$(action.term).pipe(
+					map((result) => {
+						return releaseActions.searchSuccess({
+							result,
+						});
+					}),
+					catchError((error) => {
+						return of(releaseActions.searchFailed(error));
+					})
+				)
+			)
 		)
 	);
 	public updateRelease = createEffect(() =>

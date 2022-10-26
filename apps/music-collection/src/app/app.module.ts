@@ -8,6 +8,7 @@ import { CoreAuthorizationModule } from '@music-collection/core/authorization';
 import { CoreEntityQuantityModule } from '@music-collection/core/entity-quantity';
 import { DomainAlbumModule } from '@music-collection/domain/album';
 import { DomainArtistModule } from '@music-collection/domain/artist';
+import { DomainCollectionItemModule } from '@music-collection/domain/collection-item';
 import { DomainLabelModule } from '@music-collection/domain/label';
 import { DomainReleaseModule } from '@music-collection/domain/release';
 import { DomainUserModule } from '@music-collection/domain/user';
@@ -50,6 +51,7 @@ import { TopBarModule } from './module';
 		DomainAlbumModule,
 		DomainLabelModule,
 		DomainReleaseModule,
+		DomainCollectionItemModule,
 	],
 	providers: [],
 	bootstrap: [AppComponent],

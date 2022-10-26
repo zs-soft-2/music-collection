@@ -13,4 +13,5 @@ export abstract class ReleaseDataService extends EntityDataService<
 	ReleaseEntityUpdate
 > {
 	public abstract listByIds$(ids: string[]): Observable<ReleaseEntity[]>;
+	public abstract search$(query: string): Observable<ReleaseEntity[]>;
 }
