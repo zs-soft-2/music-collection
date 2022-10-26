@@ -75,6 +75,22 @@ const routes: Routes = [
 				canActivate: [NgxPermissionsGuard],
 				canLoad: [NgxPermissionsGuard],
 			},
+			{
+				path: 'collection-item',
+				data: {
+					breadcrumb: 'collection-item',
+					permissions: {
+						only: [RoleNames.ADMIN],
+						redirectTo: '/error',
+					},
+				},
+				loadChildren: () =>
+					import('@music-collection/domain/collection-item').then(
+						(lib) => lib.CollectionItemAdminModule
+					),
+				canActivate: [NgxPermissionsGuard],
+				canLoad: [NgxPermissionsGuard],
+			},
 		],
 	},
 ];

@@ -61,6 +61,26 @@ export class ReleaseDataServiceImpl extends ReleaseDataService {
 		);
 	}
 
+	public search$(query: string): Observable<ReleaseEntity[]> {
+		const foundByQuery: ReleaseEntity[] = [];
+
+		return of(
+			this.releaseCollection.reduce(
+				(list: ReleaseEntity[], release: ReleaseEntity) => {
+					if (
+						release.name.toLowerCase().search(query.toLowerCase()) >
+						-1
+					) {
+						list.push(release);
+					}
+
+					return list;
+				},
+				foundByQuery
+			)
+		);
+	}
+
 	public update$(
 		release: ReleaseEntityUpdate
 	): Observable<ReleaseEntityUpdate> {

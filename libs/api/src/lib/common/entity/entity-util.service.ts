@@ -1,4 +1,5 @@
 import { FormGroup } from '@angular/forms';
+import { User } from '../../core';
 
 import {
 	EntityQuantityEntity,
