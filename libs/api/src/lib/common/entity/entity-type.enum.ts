@@ -3,4 +3,5 @@ export const enum EntityTypeEnum {
 	Artist = 'Artist',
 	Album = 'Album',
 	Label = 'Label',
+	Release = 'Release',
 }

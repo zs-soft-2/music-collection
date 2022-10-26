@@ -7,8 +7,6 @@ import {
 	AlbumEntity,
 	AlbumEntityAdd,
 	AlbumEntityUpdate,
-	GenreEnum,
-	StyleEnum,
 } from '@music-collection/api';
 
 @Injectable()
@@ -61,6 +59,26 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 		return of(this.albumCollection.find((album) => album.uid === uid));
 	}
 
+	public search$(query: string): Observable<AlbumEntity[]> {
+		const foundByQuery: AlbumEntity[] = [];
+
+		return of(
+			this.albumCollection.reduce(
+				(list: AlbumEntity[], album: AlbumEntity) => {
+					if (
+						album.name.toLowerCase().search(query.toLowerCase()) >
+						-1
+					) {
+						list.push(album);
+					}
+
+					return list;
+				},
+				foundByQuery
+			)
+		);
+	}
+
 	public update$(album: AlbumEntityUpdate): Observable<AlbumEntityUpdate> {
 		this.albumCollection = this.albumCollection.map((oldAlbum) => {
 			return (
@@ -69,7 +87,7 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 							...oldAlbum,
 							...album,
 					  }
-					: album
+					: oldAlbum
 			) as AlbumEntity;
 		});
 

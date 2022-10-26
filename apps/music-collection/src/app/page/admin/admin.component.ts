@@ -25,6 +25,10 @@ export class AdminComponent {
 				label: 'Label',
 				routerLink: 'label',
 			},
+			{
+				label: 'Release',
+				routerLink: 'release',
+			},
 		];
 	}
 }

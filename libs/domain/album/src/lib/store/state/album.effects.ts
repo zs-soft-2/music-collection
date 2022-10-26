@@ -1,7 +1,3 @@
-import {
-	EntityQuantityStateService,
-	EntityQuantityUtilService,
-} from 'libs/api/src/lib/core/entity-quantity';
 import { of } from 'rxjs';
 import { catchError, first, map, switchMap } from 'rxjs/operators';
 
@@ -10,6 +6,8 @@ import {
 	AlbumDataService,
 	AlbumEntity,
 	AlbumUtilService,
+	EntityQuantityStateService,
+	EntityQuantityUtilService,
 	EntityTypeEnum,
 } from '@music-collection/api';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
@@ -77,9 +75,18 @@ export class AlbumEffects {
 	public searchAlbums = createEffect(() =>
 		this.actions$.pipe(
 			ofType(albumActions.search),
-			switchMap((action) => {
-				return of(albumActions.searchSuccess({ result: [] }));
-			})
+			switchMap((action) =>
+				this.albumDataService.search$(action.term).pipe(
+					map((result) => {
+						return albumActions.searchSuccess({
+							result,
+						});
+					}),
+					catchError((error) => {
+						return of(albumActions.searchFailed(error));
+					})
+				)
+			)
 		)
 	);
 	public updateAlbum = createEffect(() =>

@@ -37,6 +37,9 @@
 			"@music-collection/domain/label": [
 				"libs/domain/label/src/index.ts"
 			],
+			"@music-collection/domain/release": [
+				"libs/domain/release/src/index.ts"
+			],
 			"@music-collection/domain/user": ["libs/domain/user/src/index.ts"],
 			"@music-collection/ui": ["libs/ui/src/index.ts"]
 		}

@@ -59,6 +59,22 @@ const routes: Routes = [
 				canActivate: [NgxPermissionsGuard],
 				canLoad: [NgxPermissionsGuard],
 			},
+			{
+				path: 'release',
+				data: {
+					breadcrumb: 'Release',
+					permissions: {
+						only: [RoleNames.ADMIN],
+						redirectTo: '/error',
+					},
+				},
+				loadChildren: () =>
+					import('@music-collection/domain/release').then(
+						(lib) => lib.ReleaseAdminModule
+					),
+				canActivate: [NgxPermissionsGuard],
+				canLoad: [NgxPermissionsGuard],
+			},
 		],
 	},
 ];

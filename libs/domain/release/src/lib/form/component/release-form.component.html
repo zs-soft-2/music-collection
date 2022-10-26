@@ -1,0 +1,127 @@
+<section class="release-form" *ngIf="params$ | async as params">
+	<form [formGroup]="params.formGroup">
+		<input name="uid" formControlName="uid" hidden />
+
+		<div class="field">
+			<span class="p-float-label">
+				<p-autoComplete
+					formControlName="artist"
+					[suggestions]="params.artists"
+					[minLength]="3"
+					[delay]="400"
+					field="name"
+					(completeMethod)="searchArtist($event)"
+				></p-autoComplete>
+
+				<label for="artist">Artist</label>
+			</span>
+		</div>
+
+		<div class="field">
+			<span class="p-float-label">
+				<p-autoComplete
+					formControlName="album"
+					[suggestions]="params.albums"
+					[minLength]="3"
+					[delay]="400"
+					field="name"
+					(completeMethod)="searchAlbum($event)"
+				></p-autoComplete>
+
+				<label for="album">Album</label>
+			</span>
+		</div>
+
+		<div class="field">
+			<span class="p-float-label">
+				<p-autoComplete
+					formControlName="label"
+					[suggestions]="params.labels"
+					[minLength]="3"
+					[delay]="400"
+					field="name"
+					(completeMethod)="searchLabel($event)"
+				></p-autoComplete>
+
+				<label for="label">Label</label>
+			</span>
+		</div>
+
+		<div class="field">
+			<span class="p-float-label">
+				<input
+					id="name"
+					type="text"
+					pInputText
+					formControlName="name"
+				/>
+
+				<label for="name">Name</label>
+			</span>
+		</div>
+
+		<div class="field">
+			<span class="p-float-label">
+				<p-calendar id="date" formControlName="date"></p-calendar>
+
+				<label for="date">Date</label>
+			</span>
+		</div>
+
+		<div class="field">
+			<span class="p-float-label">
+				<p-dropdown
+					id="media"
+					[options]="params.mediaList"
+					placeholder="Select a media"
+					formControlName="media"
+				></p-dropdown>
+
+				<label for="media">Media</label>
+			</span>
+		</div>
+
+		<div class="field">
+			<span class="p-float-label">
+				<p-dropdown
+					id="format"
+					[options]="params.formatList"
+					placeholder="Select a format"
+					formControlName="format"
+				></p-dropdown>
+
+				<label for="format">Format</label>
+			</span>
+		</div>
+
+		<div class="field">
+			<span class="p-float-label">
+				<p-dropdown
+					id="formatDescription"
+					[options]="params.formatDescriptionList"
+					placeholder="Select a format description"
+					formControlName="formatDescription"
+				></p-dropdown>
+
+				<label for="formatDescription">Format description</label>
+			</span>
+		</div>
+	</form>
+
+	<div style="margin-top: 10px" fxLayout="row" fxLayoutAlign="space-around">
+		<button
+			pButton
+			type="button"
+			label="Submit"
+			(click)="submit()"
+			[disabled]="!params.formGroup.valid"
+		></button>
+
+		<button
+			pButton
+			type="button"
+			label="Cancel"
+			(click)="cancel()"
+		></button>
+	</div>
+</section>

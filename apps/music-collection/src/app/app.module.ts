@@ -9,6 +9,7 @@ import { CoreEntityQuantityModule } from '@music-collection/core/entity-quantity
 import { DomainAlbumModule } from '@music-collection/domain/album';
 import { DomainArtistModule } from '@music-collection/domain/artist';
 import { DomainLabelModule } from '@music-collection/domain/label';
+import { DomainReleaseModule } from '@music-collection/domain/release';
 import { DomainUserModule } from '@music-collection/domain/user';
 import { BreadcrumbModule } from '@music-collection/ui';
 import { EffectsModule } from '@ngrx/effects';
@@ -48,6 +49,7 @@ import { TopBarModule } from './module';
 		DomainArtistModule,
 		DomainAlbumModule,
 		DomainLabelModule,
+		DomainReleaseModule,
 	],
 	providers: [],
 	bootstrap: [AppComponent],
