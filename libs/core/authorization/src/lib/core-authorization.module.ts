@@ -4,6 +4,6 @@ import { NgModule } from '@angular/core';
 import { CoreAuthorizationDataModule } from './data/core-authorization-data.module';
 
 @NgModule({
-  imports: [CommonModule, CoreAuthorizationDataModule],
+	imports: [CommonModule, CoreAuthorizationDataModule],
 })
 export class CoreAuthorizationModule {}

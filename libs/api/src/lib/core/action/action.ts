@@ -1,3 +1,3 @@
 export interface Action {
-  name: string;
+	name: string;
 }

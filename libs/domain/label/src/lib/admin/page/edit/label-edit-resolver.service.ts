@@ -6,9 +6,9 @@ import { LabelStateService } from '@music-collection/api';
 
 @Injectable()
 export class LabelEditResolverService implements Resolve<void> {
-  public constructor(private labelStateService: LabelStateService) {}
+	public constructor(private labelStateService: LabelStateService) {}
 
-  public resolve(): void | Observable<void> | Promise<void> {
-    this.labelStateService.dispatchChangeNewEntityButtonEnabled(false);
-  }
+	public resolve(): void | Observable<void> | Promise<void> {
+		this.labelStateService.dispatchChangeNewEntityButtonEnabled(false);
+	}
 }

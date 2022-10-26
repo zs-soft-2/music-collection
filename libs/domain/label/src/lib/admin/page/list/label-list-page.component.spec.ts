@@ -4,23 +4,23 @@ import { LabelCollectionModule } from '../../../collection/label-collection.modu
 import { LabelListPageComponent } from './label-list-page.component';
 
 describe('LabelListComponent', () => {
-  let component: LabelListPageComponent;
-  let fixture: ComponentFixture<LabelListPageComponent>;
+	let component: LabelListPageComponent;
+	let fixture: ComponentFixture<LabelListPageComponent>;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
-      declarations: [LabelListPageComponent],
-      imports: [LabelCollectionModule],
-    }).compileComponents();
-  }));
+	beforeEach(waitForAsync(() => {
+		TestBed.configureTestingModule({
+			declarations: [LabelListPageComponent],
+			imports: [LabelCollectionModule],
+		}).compileComponents();
+	}));
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(LabelListPageComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+	beforeEach(() => {
+		fixture = TestBed.createComponent(LabelListPageComponent);
+		component = fixture.componentInstance;
+		fixture.detectChanges();
+	});
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+	it('should create', () => {
+		expect(component).toBeTruthy();
+	});
 });

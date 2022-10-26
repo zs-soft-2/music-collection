@@ -6,13 +6,13 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { ArtistUtilServiceImpl } from './service';
 
 @NgModule({
-  declarations: [],
-  imports: [CommonModule, ReactiveFormsModule],
-  providers: [
-    {
-      provide: ArtistUtilService,
-      useClass: ArtistUtilServiceImpl,
-    },
-  ],
+	declarations: [],
+	imports: [CommonModule, ReactiveFormsModule],
+	providers: [
+		{
+			provide: ArtistUtilService,
+			useClass: ArtistUtilServiceImpl,
+		},
+	],
 })
 export class ArtistUtilModule {}

@@ -3,15 +3,15 @@ import { TestBed } from '@angular/core/testing';
 import { LabelListService } from './label-list.service';
 
 describe('LabelListService', () => {
-  let service: LabelListService;
+	let service: LabelListService;
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({});
+	beforeEach(() => {
+		TestBed.configureTestingModule({});
 
-    service = TestBed.inject(LabelListService);
-  });
+		service = TestBed.inject(LabelListService);
+	});
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
+	it('should be created', () => {
+		expect(service).toBeTruthy();
+	});
 });

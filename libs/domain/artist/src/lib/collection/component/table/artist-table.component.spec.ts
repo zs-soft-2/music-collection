@@ -3,22 +3,22 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { ArtistTableComponent } from './artist-table.component';
 
 describe('ArtistTableComponent', () => {
-  let component: ArtistTableComponent;
-  let fixture: ComponentFixture<ArtistTableComponent>;
+	let component: ArtistTableComponent;
+	let fixture: ComponentFixture<ArtistTableComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [ArtistTableComponent],
-    }).compileComponents();
-  }));
+	beforeEach(async(() => {
+		TestBed.configureTestingModule({
+			declarations: [ArtistTableComponent],
+		}).compileComponents();
+	}));
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(ArtistTableComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+	beforeEach(() => {
+		fixture = TestBed.createComponent(ArtistTableComponent);
+		component = fixture.componentInstance;
+		fixture.detectChanges();
+	});
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+	it('should create', () => {
+		expect(component).toBeTruthy();
+	});
 });

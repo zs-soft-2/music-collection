@@ -8,8 +8,8 @@ import { NgModule } from '@angular/core';
 import { LabelListComponent, LabelTableComponent } from './component';
 
 @NgModule({
-  declarations: [LabelListComponent, LabelTableComponent],
-  exports: [LabelListComponent, LabelTableComponent],
-  imports: [CommonModule, ButtonModule, ChipModule, TableModule],
+	declarations: [LabelListComponent, LabelTableComponent],
+	exports: [LabelListComponent, LabelTableComponent],
+	imports: [CommonModule, ButtonModule, ChipModule, TableModule],
 })
 export class LabelCollectionModule {}

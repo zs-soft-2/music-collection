@@ -10,39 +10,39 @@ import * as authenticationSelectors from './authentication.selectors';
 
 @Injectable()
 export class AuthenticationStateServiceImpl extends AuthenticationStateService {
-  public constructor(private store: Store<AuthenticationPartialState>) {
-    super();
-  }
+	public constructor(private store: Store<AuthenticationPartialState>) {
+		super();
+	}
 
-  public dispatchAuthenticated(user: User): void {
-    this.store.dispatch(authenticationActions.authenticated({ user }));
-  }
+	public dispatchAuthenticated(user: User): void {
+		this.store.dispatch(authenticationActions.authenticated({ user }));
+	}
 
-  public dispatchGetUser(): void {
-    this.store.dispatch(authenticationActions.getUser());
-  }
+	public dispatchGetUser(): void {
+		this.store.dispatch(authenticationActions.getUser());
+	}
 
-  public dispatchGoogleLogin(): void {
-    this.store.dispatch(authenticationActions.googleLogin());
-  }
+	public dispatchGoogleLogin(): void {
+		this.store.dispatch(authenticationActions.googleLogin());
+	}
 
-  public dispatchLogin(): void {
-    this.store.dispatch(authenticationActions.login());
-  }
+	public dispatchLogin(): void {
+		this.store.dispatch(authenticationActions.login());
+	}
 
-  public dispatchLogout(): void {
-    this.store.dispatch(authenticationActions.logout());
-  }
+	public dispatchLogout(): void {
+		this.store.dispatch(authenticationActions.logout());
+	}
 
-  public selectAuthenticatedUser$(): Observable<User | undefined> {
-    return this.store.pipe(
-      select(authenticationSelectors.selectAuthenticatedUser)
-    );
-  }
+	public selectAuthenticatedUser$(): Observable<User | undefined> {
+		return this.store.pipe(
+			select(authenticationSelectors.selectAuthenticatedUser)
+		);
+	}
 
-  public selectIsAuthenticated$(): Observable<boolean> {
-    return this.store.pipe(
-      select(authenticationSelectors.selectIsAuthenticated)
-    );
-  }
+	public selectIsAuthenticated$(): Observable<boolean> {
+		return this.store.pipe(
+			select(authenticationSelectors.selectIsAuthenticated)
+		);
+	}
 }

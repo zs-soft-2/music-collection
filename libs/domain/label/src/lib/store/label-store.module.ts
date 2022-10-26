@@ -9,16 +9,16 @@ import { LabelEffects } from './state/label.effects';
 import * as fromLabel from './state/label.reducer';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    StoreModule.forFeature(LABEL_FEATURE_KEY, fromLabel.reducer),
-    EffectsModule.forFeature([LabelEffects]),
-  ],
-  providers: [
-    {
-      provide: LabelStateService,
-      useClass: LabelStateServiceImpl,
-    },
-  ],
+	imports: [
+		CommonModule,
+		StoreModule.forFeature(LABEL_FEATURE_KEY, fromLabel.reducer),
+		EffectsModule.forFeature([LabelEffects]),
+	],
+	providers: [
+		{
+			provide: LabelStateService,
+			useClass: LabelStateServiceImpl,
+		},
+	],
 })
 export class LabelStoreModule {}

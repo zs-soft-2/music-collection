@@ -11,25 +11,25 @@ import { LabelAdminRoutingModule } from './label-admin-routing.module';
 import { LabelAdminComponent } from './page/admin';
 import { LabelEditComponent, LabelEditResolverService } from './page/edit';
 import {
-  LabelListPageComponent,
-  LabelListPageResolverService,
+	LabelListPageComponent,
+	LabelListPageResolverService,
 } from './page/list';
 
 @NgModule({
-  declarations: [
-    LabelAdminComponent,
-    LabelEditComponent,
-    LabelListPageComponent,
-  ],
-  imports: [
-    CommonModule,
-    LabelAdminRoutingModule,
-    NgxPermissionsModule.forChild(),
-    LabelFormModule,
-    LabelCollectionModule,
-    ButtonModule,
-    ToolbarModule,
-  ],
-  providers: [LabelEditResolverService, LabelListPageResolverService],
+	declarations: [
+		LabelAdminComponent,
+		LabelEditComponent,
+		LabelListPageComponent,
+	],
+	imports: [
+		CommonModule,
+		LabelAdminRoutingModule,
+		NgxPermissionsModule.forChild(),
+		LabelFormModule,
+		LabelCollectionModule,
+		ButtonModule,
+		ToolbarModule,
+	],
+	providers: [LabelEditResolverService, LabelListPageResolverService],
 })
 export class LabelAdminModule {}

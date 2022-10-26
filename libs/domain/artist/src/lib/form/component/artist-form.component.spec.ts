@@ -3,22 +3,22 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { ArtistFormComponent } from './artist-form.component';
 
 describe('ArtistFormComponent', () => {
-  let component: ArtistFormComponent;
-  let fixture: ComponentFixture<ArtistFormComponent>;
+	let component: ArtistFormComponent;
+	let fixture: ComponentFixture<ArtistFormComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [ArtistFormComponent],
-    }).compileComponents();
-  }));
+	beforeEach(async(() => {
+		TestBed.configureTestingModule({
+			declarations: [ArtistFormComponent],
+		}).compileComponents();
+	}));
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(ArtistFormComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+	beforeEach(() => {
+		fixture = TestBed.createComponent(ArtistFormComponent);
+		component = fixture.componentInstance;
+		fixture.detectChanges();
+	});
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+	it('should create', () => {
+		expect(component).toBeTruthy();
+	});
 });

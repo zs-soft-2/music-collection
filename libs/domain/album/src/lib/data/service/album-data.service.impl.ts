@@ -3,73 +3,94 @@ import { Observable, of } from 'rxjs';
 
 import { Injectable } from '@angular/core';
 import {
-  AlbumDataService,
-  AlbumEntity,
-  AlbumEntityAdd,
-  AlbumEntityUpdate,
-  GenreEnum,
-  StyleEnum,
+	AlbumDataService,
+	AlbumEntity,
+	AlbumEntityAdd,
+	AlbumEntityUpdate,
 } from '@music-collection/api';
 
 @Injectable()
 export class AlbumDataServiceImpl extends AlbumDataService {
-  protected albumCollection: AlbumEntity[];
+	protected albumCollection: AlbumEntity[];
 
-  public constructor() {
-    super();
+	public constructor() {
+		super();
 
-    this.albumCollection = [];
-  }
+		this.albumCollection = [];
+	}
 
-  public add$(album: AlbumEntityAdd): Observable<AlbumEntity> {
-    const newAlbum: AlbumEntity = {
-      ...album,
-      uid: nanoid(),
-    };
+	public add$(album: AlbumEntityAdd): Observable<AlbumEntity> {
+		const newAlbum: AlbumEntity = {
+			...album,
+			uid: nanoid(),
+		};
 
-    this.albumCollection = this.albumCollection.concat([newAlbum]);
+		this.albumCollection = this.albumCollection.concat([newAlbum]);
 
-    return of(newAlbum);
-  }
+		return of(newAlbum);
+	}
 
-  public delete$(album: AlbumEntity): Observable<AlbumEntity> {
-    return of(album);
-  }
+	public delete$(album: AlbumEntity): Observable<AlbumEntity> {
+		return of(album);
+	}
 
-  public list$(): Observable<AlbumEntity[]> {
-    return of(this.albumCollection);
-  }
+	public list$(): Observable<AlbumEntity[]> {
+		return of(this.albumCollection);
+	}
 
-  public listByIds$(ids: string[]): Observable<AlbumEntity[]> {
-    const listByIds: AlbumEntity[] = [];
+	public listByIds$(ids: string[]): Observable<AlbumEntity[]> {
+		const listByIds: AlbumEntity[] = [];
 
-    return of(
-      this.albumCollection.reduce((list: AlbumEntity[], album: AlbumEntity) => {
-        if (ids.includes(album.uid)) {
-          list.push(album);
-        }
+		return of(
+			this.albumCollection.reduce(
+				(list: AlbumEntity[], album: AlbumEntity) => {
+					if (ids.includes(album.uid)) {
+						list.push(album);
+					}
 
-        return list;
-      }, listByIds)
-    );
-  }
+					return list;
+				},
+				listByIds
+			)
+		);
+	}
 
-  public load$(uid: string): Observable<AlbumEntity | undefined> {
-    return of(this.albumCollection.find((album) => album.uid === uid));
-  }
+	public load$(uid: string): Observable<AlbumEntity | undefined> {
+		return of(this.albumCollection.find((album) => album.uid === uid));
+	}
 
-  public update$(album: AlbumEntityUpdate): Observable<AlbumEntityUpdate> {
-    this.albumCollection = this.albumCollection.map((oldAlbum) => {
-      return (
-        oldAlbum.uid === album.uid
-          ? {
-              ...oldAlbum,
-              ...album,
-            }
-          : album
-      ) as AlbumEntity;
-    });
+	public search$(query: string): Observable<AlbumEntity[]> {
+		const foundByQuery: AlbumEntity[] = [];
 
-    return of(album);
-  }
+		return of(
+			this.albumCollection.reduce(
+				(list: AlbumEntity[], album: AlbumEntity) => {
+					if (
+						album.name.toLowerCase().search(query.toLowerCase()) >
+						-1
+					) {
+						list.push(album);
+					}
+
+					return list;
+				},
+				foundByQuery
+			)
+		);
+	}
+
+	public update$(album: AlbumEntityUpdate): Observable<AlbumEntityUpdate> {
+		this.albumCollection = this.albumCollection.map((oldAlbum) => {
+			return (
+				oldAlbum.uid === album.uid
+					? {
+							...oldAlbum,
+							...album,
+					  }
+					: oldAlbum
+			) as AlbumEntity;
+		});
+
+		return of(album);
+	}
 }

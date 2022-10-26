@@ -3,17 +3,17 @@ import { TestBed } from '@angular/core/testing';
 import { ArtistEditResolverService } from './artist-edit-resolver.service';
 
 describe('ArtistEditResolverService', () => {
-  let service: ArtistEditResolverService;
+	let service: ArtistEditResolverService;
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({
-      providers: [ArtistEditResolverService],
-    });
+	beforeEach(() => {
+		TestBed.configureTestingModule({
+			providers: [ArtistEditResolverService],
+		});
 
-    service = TestBed.inject(ArtistEditResolverService);
-  });
+		service = TestBed.inject(ArtistEditResolverService);
+	});
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
+	it('should be created', () => {
+		expect(service).toBeTruthy();
+	});
 });

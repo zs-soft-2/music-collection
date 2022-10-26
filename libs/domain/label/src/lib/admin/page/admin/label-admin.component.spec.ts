@@ -6,27 +6,27 @@ import { LabelCollectionModule } from '../../../collection/label-collection.modu
 import { LabelAdminComponent } from './label-admin.component';
 
 describe('LabelAdminComponent', () => {
-  let component: LabelAdminComponent;
-  let fixture: ComponentFixture<LabelAdminComponent>;
+	let component: LabelAdminComponent;
+	let fixture: ComponentFixture<LabelAdminComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [LabelAdminComponent],
-      imports: [
-        HttpClientTestingModule,
-        RouterTestingModule,
-        LabelCollectionModule,
-      ],
-    }).compileComponents();
-  }));
+	beforeEach(async(() => {
+		TestBed.configureTestingModule({
+			declarations: [LabelAdminComponent],
+			imports: [
+				HttpClientTestingModule,
+				RouterTestingModule,
+				LabelCollectionModule,
+			],
+		}).compileComponents();
+	}));
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(LabelAdminComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+	beforeEach(() => {
+		fixture = TestBed.createComponent(LabelAdminComponent);
+		component = fixture.componentInstance;
+		fixture.detectChanges();
+	});
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+	it('should create', () => {
+		expect(component).toBeTruthy();
+	});
 });

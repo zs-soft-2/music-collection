@@ -1,6 +1,6 @@
 export const RoleNames = {
-  ADMIN: 'ADMIN',
-  EDITOR: 'EDITOR',
-  OWNER: 'OWNER',
-  USER: 'USER',
+	ADMIN: 'ADMIN',
+	EDITOR: 'EDITOR',
+	OWNER: 'OWNER',
+	USER: 'USER',
 };

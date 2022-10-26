@@ -7,53 +7,53 @@ import { labelAdapter, LabelPartialState, State } from './label.reducer';
 const { selectAll, selectEntities } = labelAdapter.getSelectors();
 
 export const getLabelState = createFeatureSelector<LabelPartialState, State>(
-  LABEL_FEATURE_KEY
+	LABEL_FEATURE_KEY
 );
 
 export const getLabelError = createSelector(
-  getLabelState,
-  (state: State) => state.error
+	getLabelState,
+	(state: State) => state.error
 );
 
 export const getLabelLoading = createSelector(
-  getLabelState,
-  (state: State) => state.loading
+	getLabelState,
+	(state: State) => state.loading
 );
 
 export const getSelectedId = createSelector(
-  getLabelState,
-  (state: State) => state.selectedId || ''
+	getLabelState,
+	(state: State) => state.selectedId || ''
 );
 
 export const isNewEntityButtonEnabled = createSelector(
-  getLabelState,
-  (state: State) => state.isNewEntityButtonEnabled
+	getLabelState,
+	(state: State) => state.isNewEntityButtonEnabled
 );
 
 export const selectLabelEntities = createSelector(
-  getLabelState,
-  selectEntities
+	getLabelState,
+	selectEntities
 );
 
 export const selectAllLabel = createSelector(getLabelState, selectAll);
 
 export const selectLabel = createSelector(
-  selectLabelEntities,
-  getSelectedId,
-  (labelEntities, labelID) => labelEntities[labelID]
+	selectLabelEntities,
+	getSelectedId,
+	(labelEntities, labelID) => labelEntities[labelID]
 );
 
 export const selectLabelById = () =>
-  createSelector(
-    selectLabelEntities,
-    (labelEntities: Dictionary<LabelEntity>, props: any) => {
-      const labelEntity = labelEntities[props.uid];
+	createSelector(
+		selectLabelEntities,
+		(labelEntities: Dictionary<LabelEntity>, props: any) => {
+			const labelEntity = labelEntities[props.uid];
 
-      return labelEntity;
-    }
-  );
+			return labelEntity;
+		}
+	);
 
 export const selectSearchResult = createSelector(
-  getLabelState,
-  (state: State) => state.searchResult
+	getLabelState,
+	(state: State) => state.searchResult
 );

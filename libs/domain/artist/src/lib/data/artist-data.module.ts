@@ -5,12 +5,12 @@ import { ArtistDataService } from '@music-collection/api';
 import { ArtistDataServiceImpl } from './service';
 
 @NgModule({
-  imports: [CommonModule],
-  providers: [
-    {
-      provide: ArtistDataService,
-      useClass: ArtistDataServiceImpl,
-    },
-  ],
+	imports: [CommonModule],
+	providers: [
+		{
+			provide: ArtistDataService,
+			useClass: ArtistDataServiceImpl,
+		},
+	],
 })
 export class ArtistDataModule {}

@@ -4,11 +4,11 @@ import { ArtistStateService } from '@music-collection/api';
 
 @Injectable()
 export class ArtistListPageResolverService implements Resolve<void> {
-  constructor(private artistStateService: ArtistStateService) {}
+	constructor(private artistStateService: ArtistStateService) {}
 
-  public resolve(): void {
-    this.artistStateService.dispatchListEntitiesAction();
-    this.artistStateService.dispatchSetSelectedEntityIdAction('');
-    this.artistStateService.dispatchChangeNewEntityButtonEnabled(true);
-  }
+	public resolve(): void {
+		this.artistStateService.dispatchListEntitiesAction();
+		this.artistStateService.dispatchSetSelectedEntityIdAction('');
+		this.artistStateService.dispatchChangeNewEntityButtonEnabled(true);
+	}
 }

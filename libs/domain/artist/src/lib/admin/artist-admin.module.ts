@@ -11,25 +11,25 @@ import { ArtistAdminRoutingModule } from './artist-admin-routing.module';
 import { ArtistAdminComponent } from './page/admin';
 import { ArtistEditComponent, ArtistEditResolverService } from './page/edit';
 import {
-  ArtistListPageComponent,
-  ArtistListPageResolverService,
+	ArtistListPageComponent,
+	ArtistListPageResolverService,
 } from './page/list';
 
 @NgModule({
-  declarations: [
-    ArtistAdminComponent,
-    ArtistEditComponent,
-    ArtistListPageComponent,
-  ],
-  imports: [
-    CommonModule,
-    ArtistAdminRoutingModule,
-    NgxPermissionsModule.forChild(),
-    ArtistFormModule,
-    ArtistCollectionModule,
-    ButtonModule,
-    ToolbarModule,
-  ],
-  providers: [ArtistEditResolverService, ArtistListPageResolverService],
+	declarations: [
+		ArtistAdminComponent,
+		ArtistEditComponent,
+		ArtistListPageComponent,
+	],
+	imports: [
+		CommonModule,
+		ArtistAdminRoutingModule,
+		NgxPermissionsModule.forChild(),
+		ArtistFormModule,
+		ArtistCollectionModule,
+		ButtonModule,
+		ToolbarModule,
+	],
+	providers: [ArtistEditResolverService, ArtistListPageResolverService],
 })
 export class ArtistAdminModule {}

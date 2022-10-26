@@ -1,0 +1,55 @@
+<section class="release-table" *ngIf="params$ | async as params">
+	<p-table
+		[value]="params.releases"
+		styleClass="p-datatable-striped p-datatable-sm"
+		responsiveLayout="scroll"
+	>
+		<ng-template pTemplate="header">
+			<tr>
+				<th>Name</th>
+
+				<th>Artist</th>
+
+				<th>Date</th>
+
+				<th>Media</th>
+
+				<th>Format</th>
+
+				<th></th>
+			</tr>
+		</ng-template>
+
+		<ng-template pTemplate="body" let-release>
+			<tr>
+				<td>{{ release.name }}</td>
+
+				<td>{{ release.artist.name }}</td>
+
+				<td>{{ release.date | date: 'yyyy' }}</td>
+
+				<td>{{ release.media }}</td>
+
+				<td>{{ release.format }}</td>
+
+				<td>
+					<button
+						pButton
+						pRipple
+						icon="pi pi-pencil"
+						class="p-button-rounded p-button-success mr-2"
+						(click)="editRelease(release)"
+					></button>
+
+					<button
+						pButton
+						pRipple
+						icon="pi pi-trash"
+						class="p-button-rounded p-button-warning"
+						(click)="deleteRelease(release)"
+					></button>
+				</td>
+			</tr>
+		</ng-template>
+	</p-table>
+</section>

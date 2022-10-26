@@ -3,15 +3,15 @@ import { TestBed } from '@angular/core/testing';
 import { AlbumTableService } from './album-table.service';
 
 describe('AlbumTableService', () => {
-  let service: AlbumTableService;
+	let service: AlbumTableService;
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({});
+	beforeEach(() => {
+		TestBed.configureTestingModule({});
 
-    service = TestBed.inject(AlbumTableService);
-  });
+		service = TestBed.inject(AlbumTableService);
+	});
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
+	it('should be created', () => {
+		expect(service).toBeTruthy();
+	});
 });

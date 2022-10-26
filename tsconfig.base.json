@@ -1,39 +1,48 @@
 {
-  "compileOnSave": false,
-  "compilerOptions": {
-    "rootDir": ".",
-    "sourceMap": true,
-    "declaration": false,
-    "moduleResolution": "node",
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "importHelpers": true,
-    "target": "es2015",
-    "module": "esnext",
-    "lib": ["es2017", "dom"],
-    "skipLibCheck": true,
-    "skipDefaultLibCheck": true,
-    "baseUrl": ".",
-    "paths": {
-      "@music-collection/api": ["libs/api/src/index.ts"],
-      "@music-collection/core/authentication": [
-        "libs/core/authentication/src/index.ts"
-      ],
-      "@music-collection/core/authentication/view": [
-        "libs/core/authentication/src/lib/view/index.ts"
-      ],
-      "@music-collection/core/authorization": [
-        "libs/core/authorization/src/index.ts"
-      ],
-      "@music-collection/core/entity-quantity": [
-        "libs/core/entity-quantity/src/index.ts"
-      ],
-      "@music-collection/domain/album": ["libs/domain/album/src/index.ts"],
-      "@music-collection/domain/artist": ["libs/domain/artist/src/index.ts"],
-      "@music-collection/domain/label": ["libs/domain/label/src/index.ts"],
-      "@music-collection/domain/user": ["libs/domain/user/src/index.ts"],
-      "@music-collection/ui": ["libs/ui/src/index.ts"]
-    }
-  },
-  "exclude": ["node_modules", "tmp"]
+	"compileOnSave": false,
+	"compilerOptions": {
+		"rootDir": ".",
+		"sourceMap": true,
+		"declaration": false,
+		"moduleResolution": "node",
+		"emitDecoratorMetadata": true,
+		"experimentalDecorators": true,
+		"importHelpers": true,
+		"target": "es2015",
+		"module": "esnext",
+		"lib": ["es2017", "dom"],
+		"skipLibCheck": true,
+		"skipDefaultLibCheck": true,
+		"baseUrl": ".",
+		"paths": {
+			"@music-collection/api": ["libs/api/src/index.ts"],
+			"@music-collection/core/authentication": [
+				"libs/core/authentication/src/index.ts"
+			],
+			"@music-collection/core/authentication/view": [
+				"libs/core/authentication/src/lib/view/index.ts"
+			],
+			"@music-collection/core/authorization": [
+				"libs/core/authorization/src/index.ts"
+			],
+			"@music-collection/core/entity-quantity": [
+				"libs/core/entity-quantity/src/index.ts"
+			],
+			"@music-collection/domain/album": [
+				"libs/domain/album/src/index.ts"
+			],
+			"@music-collection/domain/artist": [
+				"libs/domain/artist/src/index.ts"
+			],
+			"@music-collection/domain/label": [
+				"libs/domain/label/src/index.ts"
+			],
+			"@music-collection/domain/release": [
+				"libs/domain/release/src/index.ts"
+			],
+			"@music-collection/domain/user": ["libs/domain/user/src/index.ts"],
+			"@music-collection/ui": ["libs/ui/src/index.ts"]
+		}
+	},
+	"exclude": ["node_modules", "tmp"]
 }

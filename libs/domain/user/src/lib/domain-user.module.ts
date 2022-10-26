@@ -5,6 +5,6 @@ import { UserDataModule } from './data';
 import { UserStoreModule } from './store';
 
 @NgModule({
-  imports: [CommonModule, UserDataModule, UserStoreModule],
+	imports: [CommonModule, UserDataModule, UserStoreModule],
 })
 export class DomainUserModule {}

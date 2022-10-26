@@ -6,23 +6,27 @@ import { ArtistListModule } from '../../../list/artist-list.module';
 import { ArtistAdminComponent } from './artist-admin.component';
 
 describe('ArtistAdminComponent', () => {
-  let component: ArtistAdminComponent;
-  let fixture: ComponentFixture<ArtistAdminComponent>;
+	let component: ArtistAdminComponent;
+	let fixture: ComponentFixture<ArtistAdminComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [ArtistAdminComponent],
-      imports: [HttpClientTestingModule, RouterTestingModule, ArtistListModule],
-    }).compileComponents();
-  }));
+	beforeEach(async(() => {
+		TestBed.configureTestingModule({
+			declarations: [ArtistAdminComponent],
+			imports: [
+				HttpClientTestingModule,
+				RouterTestingModule,
+				ArtistListModule,
+			],
+		}).compileComponents();
+	}));
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(ArtistAdminComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+	beforeEach(() => {
+		fixture = TestBed.createComponent(ArtistAdminComponent);
+		component = fixture.componentInstance;
+		fixture.detectChanges();
+	});
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+	it('should create', () => {
+		expect(component).toBeTruthy();
+	});
 });

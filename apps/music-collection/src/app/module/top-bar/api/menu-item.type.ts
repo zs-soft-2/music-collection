@@ -1,4 +1,4 @@
 export type MenuItem = {
-  label: string;
-  routerLink: string[];
+	label: string;
+	routerLink: string[];
 };
