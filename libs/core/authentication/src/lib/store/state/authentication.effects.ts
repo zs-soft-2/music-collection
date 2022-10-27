@@ -1,5 +1,10 @@
-import { of } from 'rxjs';
+import { from, of } from 'rxjs';
 import { catchError, map, mergeMap, switchMap } from 'rxjs/operators';
+import {
+	Auth,
+	GoogleAuthProvider,
+	signInWithPopup
+  } from '@angular/fire/auth';
 
 import { Injectable } from '@angular/core';
 import {
@@ -18,18 +23,26 @@ export class AuthenticationEffects extends BaseService {
 		this.actions$.pipe(
 			ofType(authenticationActions.getUser),
 			mergeMap(() => {
+				const authData = this.auth.currentUser;
 				const actions: any[] = [];
 
 				// eslint-disable-next-line no-constant-condition
-				if (true) {
+				if (authData) {
 					const user: User = {
-						displayName: 'Zsagia',
-						email: 'zsagia@gmail.com',
-						firstName: '',
-						lastName: '',
-						phone: '',
-						photoURL: '',
-						uid: 'user-1',
+						displayName: authData.displayName,
+                        email: authData.email,
+                        firstName: '',
+                        lastName: '',
+                        phone: '',
+                        photoURL: authData.photoURL,
+                        roles: [
+							{
+								uid: 'role-2',
+								name: RoleNames.USER,
+								permissions: [],
+							},
+						],
+                        uid: authData.uid,
 					};
 
 					this.userStateService.dispatchLoadExistedUserAction(user);
@@ -50,7 +63,7 @@ export class AuthenticationEffects extends BaseService {
 		this.actions$.pipe(
 			ofType(authenticationActions.login),
 			switchMap(() => {
-				return of({});
+				return from(this.googleLogin());
 			}),
 			map(() => {
 				return authenticationActions.getUser();
@@ -76,8 +89,13 @@ export class AuthenticationEffects extends BaseService {
 
 	public constructor(
 		private actions$: Actions,
+		private auth: Auth,
 		private userStateService: UserStateService
 	) {
 		super();
 	}
+
+	private googleLogin(): Promise<unknown> {
+       return signInWithPopup(this.auth, new GoogleAuthProvider());
+    }
 }
