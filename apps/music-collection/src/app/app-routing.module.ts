@@ -46,7 +46,7 @@ export const routes: Routes = [
 			breadcrumb: 'admin',
 			permissions: {
 				only: [RoleNames.ADMIN],
-				redirectTo: '/home',
+				redirectTo: '/error',
 			},
 		},
 		canActivate: [NgxPermissionsGuard],
