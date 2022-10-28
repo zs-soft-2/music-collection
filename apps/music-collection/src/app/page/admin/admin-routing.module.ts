@@ -91,6 +91,22 @@ const routes: Routes = [
 				canActivate: [NgxPermissionsGuard],
 				canLoad: [NgxPermissionsGuard],
 			},
+			{
+				path: 'document',
+				data: {
+					breadcrumb: 'document',
+					permissions: {
+						only: [RoleNames.ADMIN],
+						redirectTo: '/error',
+					},
+				},
+				loadChildren: () =>
+					import('@music-collection/domain/document').then(
+						(lib) => lib.DocumentAdminModule
+					),
+				canActivate: [NgxPermissionsGuard],
+				canLoad: [NgxPermissionsGuard],
+			},
 		],
 	},
 ];

@@ -1,10 +1,9 @@
 {
-  "hosting": [
-    {
-      "site": "music-collection-4e074",
-      "public": "dist/apps/music-collection",
-      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
-    }
-  ]
-   
+	"hosting": [
+		{
+			"site": "music-collection-4e074",
+			"public": "dist/apps/music-collection",
+			"ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
+		}
+	]
 }
