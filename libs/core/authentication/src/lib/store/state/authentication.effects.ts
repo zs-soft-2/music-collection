@@ -1,10 +1,6 @@
 import { from, of } from 'rxjs';
 import { catchError, map, mergeMap, switchMap } from 'rxjs/operators';
-import {
-	Auth,
-	GoogleAuthProvider,
-	signInWithPopup
-  } from '@angular/fire/auth';
+import { Auth, GoogleAuthProvider, signInWithPopup } from '@angular/fire/auth';
 
 import { Injectable } from '@angular/core';
 import {
@@ -30,19 +26,19 @@ export class AuthenticationEffects extends BaseService {
 				if (authData) {
 					const user: User = {
 						displayName: authData.displayName,
-                        email: authData.email,
-                        firstName: '',
-                        lastName: '',
-                        phone: '',
-                        photoURL: authData.photoURL,
-                        roles: [
+						email: authData.email,
+						firstName: '',
+						lastName: '',
+						phone: '',
+						photoURL: authData.photoURL,
+						roles: [
 							{
 								uid: 'role-2',
 								name: RoleNames.USER,
 								permissions: [],
 							},
 						],
-                        uid: authData.uid,
+						uid: authData.uid,
 					};
 
 					this.userStateService.dispatchLoadExistedUserAction(user);
@@ -96,6 +92,6 @@ export class AuthenticationEffects extends BaseService {
 	}
 
 	private googleLogin(): Promise<unknown> {
-       return signInWithPopup(this.auth, new GoogleAuthProvider());
-    }
+		return signInWithPopup(this.auth, new GoogleAuthProvider());
+	}
 }

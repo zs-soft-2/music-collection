@@ -1,8 +1,7 @@
 import { NgxPermissionsModule } from 'ngx-permissions';
 
 import { NgModule } from '@angular/core';
-import { getApp, initializeApp, provideFirebaseApp } from '@angular/fire/app';
-import { getAuth, provideAuth } from '@angular/fire/auth';
+import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { getFirestore, provideFirestore } from '@angular/fire/firestore';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -12,6 +11,7 @@ import { CoreEntityQuantityModule } from '@music-collection/core/entity-quantity
 import { DomainAlbumModule } from '@music-collection/domain/album';
 import { DomainArtistModule } from '@music-collection/domain/artist';
 import { DomainCollectionItemModule } from '@music-collection/domain/collection-item';
+import { DomainDocumentModule } from '@music-collection/domain/document';
 import { DomainLabelModule } from '@music-collection/domain/label';
 import { DomainReleaseModule } from '@music-collection/domain/release';
 import { DomainUserModule } from '@music-collection/domain/user';
@@ -34,7 +34,6 @@ import { TopBarModule } from './module';
 		BreadcrumbModule,
 		provideFirebaseApp(() => initializeApp(environment.firebase)),
 		provideFirestore(() => getFirestore()),
-		provideAuth(() => getAuth()),
 		StoreModule.forRoot(
 			{},
 			{
@@ -52,6 +51,7 @@ import { TopBarModule } from './module';
 		CoreAuthenticationModule,
 		CoreAuthorizationModule,
 		CoreEntityQuantityModule,
+		DomainDocumentModule,
 		DomainUserModule,
 		DomainArtistModule,
 		DomainAlbumModule,

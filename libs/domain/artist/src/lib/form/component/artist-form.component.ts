@@ -27,6 +27,10 @@ export class ArtistFormComponent extends BaseComponent implements OnInit {
 		this.params$ = this.componentService.init$();
 	}
 
+	public mainImageUpload(event: any): void {
+		this.componentService.mainImageUpload(event['files'][0]);
+	}
+
 	public submit(): void {
 		this.componentService.submit();
 	}

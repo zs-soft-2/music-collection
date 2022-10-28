@@ -33,6 +33,10 @@ export class AdminComponent {
 				label: 'Collection Item',
 				routerLink: 'collection-item',
 			},
+			{
+				label: 'Document',
+				routerLink: 'document',
+			},
 		];
 	}
 }
