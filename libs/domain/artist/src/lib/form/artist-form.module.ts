@@ -1,3 +1,4 @@
+import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { CalendarModule } from 'primeng/calendar';
 import { FileUploadModule } from 'primeng/fileupload';
@@ -18,6 +19,7 @@ import { ArtistFormComponent } from './component';
 	exports: [ArtistFormComponent],
 	imports: [
 		CommonModule,
+		AutoCompleteModule,
 		ButtonModule,
 		FormsModule,
 		CalendarModule,
