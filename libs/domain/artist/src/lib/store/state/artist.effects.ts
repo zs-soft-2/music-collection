@@ -4,7 +4,6 @@ import { catchError, first, map, switchMap } from 'rxjs/operators';
 import { Injectable } from '@angular/core';
 import {
 	ArtistDataService,
-	ArtistEntity,
 	ArtistUtilService,
 	EntityQuantityStateService,
 	EntityQuantityUtilService,
@@ -31,13 +30,21 @@ export class ArtistEffects {
 					)
 			),
 			switchMap(({ action, entityQuantityEntity }) =>
-				this.artistDataService.add$(action.artist).pipe(
-					map((artist) => {
-						return artistActions.addArtistSuccess({
-							artist,
-						});
-					})
-				)
+				this.artistDataService
+					.add$(
+						this.artistUtilService.convertEntityAddToModelAdd(
+							action.artist
+						)
+					)
+					.pipe(
+						map((artist) => {
+							return artistActions.addArtistSuccess({
+								artist: this.artistUtilService.convertModelToEntity(
+									artist
+								),
+							});
+						})
+					)
 			)
 		)
 	);
@@ -46,6 +53,11 @@ export class ArtistEffects {
 			ofType(artistActions.listArtists),
 			switchMap(() =>
 				this.artistDataService.list$().pipe(
+					map((artists) =>
+						artists.map((artist) =>
+							this.artistUtilService.convertModelToEntity(artist)
+						)
+					),
 					map((artists) => {
 						return artistActions.listArtistsSuccess({
 							artists,
@@ -62,7 +74,11 @@ export class ArtistEffects {
 				this.artistDataService.load$(action.uid).pipe(
 					map((artist) => {
 						return artistActions.loadArtistSuccess({
-							artist: artist as ArtistEntity,
+							artist: artist
+								? this.artistUtilService.convertModelToEntity(
+										artist
+								  )
+								: undefined,
 						});
 					}),
 					catchError((error) => {
@@ -77,6 +93,11 @@ export class ArtistEffects {
 			ofType(artistActions.search),
 			switchMap((action) =>
 				this.artistDataService.search$(action.term).pipe(
+					map((result) =>
+						result.map((artist) =>
+							this.artistUtilService.convertModelToEntity(artist)
+						)
+					),
 					map((result) => {
 						return artistActions.searchSuccess({
 							result,
@@ -93,16 +114,25 @@ export class ArtistEffects {
 		this.actions$.pipe(
 			ofType(artistActions.updateArtist),
 			switchMap((action) =>
-				this.artistDataService.update$(action.artist).pipe(
-					map((artist) => {
-						return artistActions.updateArtistSuccess({
-							artist: {
-								id: artist.uid || '',
-								changes: artist,
-							},
-						});
-					})
-				)
+				this.artistDataService
+					.update$(
+						this.artistUtilService.convertEntityUpdateToModelUpdate(
+							action.artist
+						)
+					)
+					.pipe(
+						map((artist) => {
+							return artistActions.updateArtistSuccess({
+								artist: {
+									id: artist.uid || '',
+									changes:
+										this.artistUtilService.convertModelUpdateToEntityUpdate(
+											artist
+										),
+								},
+							});
+						})
+					)
 			)
 		)
 	);

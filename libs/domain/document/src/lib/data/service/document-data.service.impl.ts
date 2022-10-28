@@ -72,15 +72,25 @@ export class DocumentDataServiceImpl extends DocumentDataService {
 		}) as Observable<DocumentEntity>;
 	}
 
-	public search$(param: string): Observable<DocumentEntity[]> {
+	public search$(term: string): Observable<DocumentEntity[]> {
 		const documentQuery = query(
 			this.documentCollection,
-			where('name', '==', param)
+			where('name', '>=', term)
 		);
 
-		from(getDocs(documentQuery));
-
-		return of([]);
+		return new Observable((subscriber) => {
+			getDocs(documentQuery)
+				.then((snapshot) => {
+					subscriber.next(
+						snapshot.docs.map(
+							(doc) => doc.data() as unknown as DocumentEntity
+						)
+					);
+				})
+				.catch((error) => {
+					subscriber.error(error);
+				});
+		});
 	}
 
 	public update$(
@@ -91,9 +101,9 @@ export class DocumentDataServiceImpl extends DocumentDataService {
 			`${DOCUMENT_FEATURE_KEY}/${document.uid}`
 		);
 
-		return new Observable((next) => {
+		return new Observable((subscriber) => {
 			updateDoc(documentDocument, { ...document }).then((data) => {
-				next.next(document);
+				subscriber.next(document);
 			});
 		});
 	}

@@ -1,4 +1,4 @@
-import { Observable, ReplaySubject } from 'rxjs';
+import { combineLatest, Observable, ReplaySubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
 import { Injectable } from '@angular/core';
@@ -10,12 +10,16 @@ import {
 	ArtistFormParams,
 	ArtistStateService,
 	ArtistUtilService,
+	DocumentEntity,
+	DocumentStateService,
 	StyleList,
 } from '@music-collection/api';
+import { FormGroup } from '@angular/forms';
 
 @Injectable()
 export class ArtistFormService {
 	private artist!: ArtistEntity | undefined;
+	private formGroup!: FormGroup;
 	private params!: ArtistFormParams;
 	private params$$: ReplaySubject<ArtistFormParams>;
 
@@ -24,6 +28,7 @@ export class ArtistFormService {
 		private artistStateService: ArtistStateService,
 		private artistUtilService: ArtistUtilService,
 		private componentUtil: ArtistUtilService,
+		private documentStateService: DocumentStateService,
 		private router: Router
 	) {
 		this.params$$ = new ReplaySubject();
@@ -38,17 +43,29 @@ export class ArtistFormService {
 	public init$(): Observable<ArtistFormParams> {
 		return this.activatedRoute.params.pipe(
 			switchMap((data) =>
-				this.artistStateService.selectEntityById$(data['artistId'])
+				combineLatest([
+					this.artistStateService.selectEntityById$(data['artistId']),
+					this.documentStateService.selectSearchResult$(),
+				])
 			),
-			switchMap((artist) => {
+			switchMap(([artist, documents]) => {
 				this.artist = artist;
-				this.params = this.createArtistParams(artist);
+				this.formGroup = this.artistUtilService.createFormGroup(artist);
+				this.params = this.createArtistParams(
+					this.formGroup,
+					documents,
+					!!artist
+				);
 
 				this.params$$.next(this.params);
 
 				return this.params$$;
 			})
 		);
+	}
+
+	public searchDocument(term: string): void {
+		this.documentStateService.dispatchSearch(term);
 	}
 
 	public submit(): void {
@@ -72,13 +89,14 @@ export class ArtistFormService {
 	}
 
 	private createArtistParams(
-		artist: ArtistEntity | undefined
+		formGroup: FormGroup,
+		documents: DocumentEntity[],
+		isImagesTabActive: boolean
 	): ArtistFormParams {
-		const formGroup = this.artistUtilService.createFormGroup(artist);
-
 		const artistFormParams: ArtistFormParams = {
+			documents,
 			formGroup,
-			isImagesTabActive: !!artist,
+			isImagesTabActive,
 			styleList: StyleList,
 		};
 

@@ -34,4 +34,8 @@ export class ArtistFormComponent extends BaseComponent implements OnInit {
 	public submit(): void {
 		this.componentService.submit();
 	}
+
+	public searchDocument(event: any): void {
+		this.componentService.searchDocument(event['query']);
+	}
 }

@@ -1,13 +1,13 @@
 import { Observable } from 'rxjs';
 
 import { EntityDataService } from '../../common';
-import { ArtistEntity, ArtistEntityAdd, ArtistEntityUpdate } from './artist';
+import { ArtistModel, ArtistModelAdd, ArtistModelUpdate } from './artist';
 
 export abstract class ArtistDataService extends EntityDataService<
-	ArtistEntity,
-	ArtistEntityAdd,
-	ArtistEntityUpdate
+	ArtistModel,
+	ArtistModelAdd,
+	ArtistModelUpdate
 > {
-	public abstract listByIds$(ids: string[]): Observable<ArtistEntity[]>;
-	public abstract search$(query: string): Observable<ArtistEntity[]>;
+	public abstract listByIds$(ids: string[]): Observable<ArtistModel[]>;
+	public abstract search$(query: string): Observable<ArtistModel[]>;
 }
