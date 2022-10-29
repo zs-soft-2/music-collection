@@ -19,7 +19,7 @@ export class DocumentFormService {
 	private formGroup!: FormGroup;
 	private params!: DocumentFormParams;
 	private params$$: ReplaySubject<DocumentFormParams>;
-	private selectedFile!: File;
+	private selectedFile!: File | undefined;
 
 	public constructor(
 		private activatedRoute: ActivatedRoute,
@@ -32,6 +32,8 @@ export class DocumentFormService {
 	}
 
 	public cancel(): void {
+		this.selectedFile = undefined;
+
 		this.router.navigate(['../../list'], {
 			relativeTo: this.activatedRoute,
 		});

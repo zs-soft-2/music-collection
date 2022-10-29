@@ -1,6 +1,7 @@
 import { ButtonModule } from 'primeng/button';
 import { CalendarModule } from 'primeng/calendar';
 import { FileUploadModule } from 'primeng/fileupload';
+import { ImageModule } from 'primeng/image';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputTextareaModule } from 'primeng/inputtextarea';
 import { MultiSelectModule } from 'primeng/multiselect';
@@ -23,6 +24,7 @@ import { DocumentFormComponent } from './component';
 		CalendarModule,
 		FileUploadModule,
 		HttpClientModule,
+		ImageModule,
 		InputTextareaModule,
 		InputTextModule,
 		MultiSelectModule,
