@@ -2,6 +2,7 @@ import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { CalendarModule } from 'primeng/calendar';
 import { FileUploadModule } from 'primeng/fileupload';
+import { ImageModule } from 'primeng/image';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputTextareaModule } from 'primeng/inputtextarea';
 import { MultiSelectModule } from 'primeng/multiselect';
@@ -25,6 +26,7 @@ import { ArtistFormComponent } from './component';
 		CalendarModule,
 		FileUploadModule,
 		HttpClientModule,
+		ImageModule,
 		InputTextareaModule,
 		InputTextModule,
 		MultiSelectModule,

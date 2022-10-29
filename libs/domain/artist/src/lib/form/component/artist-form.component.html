@@ -90,9 +90,19 @@
 							[delay]="400"
 							field="name"
 							(completeMethod)="searchDocument($event)"
-						></p-autoComplete>
+						>
+						</p-autoComplete>
+
 						<label for="headerImage">Header image</label>
 					</span>
+
+					<p-image
+						[src]="params.formGroup.value.headerImage.filePath"
+						[preview]="true"
+						alt="Image"
+						width="200"
+					>
+					</p-image>
 				</div>
 			</p-tabPanel>
 		</p-tabView>

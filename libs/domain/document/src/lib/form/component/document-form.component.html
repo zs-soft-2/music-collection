@@ -17,14 +17,24 @@
 
 		<div class="field">
 			<span>
-				<label for="mainImage"></label>
+				<label for="file"></label>
 
 				<p-fileUpload
-					name="mainImage"
+					name="file"
 					[customUpload]="true"
 					(uploadHandler)="fileUpload($event)"
 				></p-fileUpload>
 			</span>
+
+			<ng-container *ngIf="params.formGroup.value.filePath">
+				<p-image
+					[src]="params.formGroup.value.filePath"
+					[preview]="true"
+					alt="Image"
+					width="250"
+				>
+				</p-image>
+			</ng-container>
 		</div>
 
 		<div class="field">
