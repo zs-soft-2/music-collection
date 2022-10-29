@@ -1,1 +1,21 @@
-<p>artist simple view works!</p>
+<div class="artist-simple">
+	<p-card>
+		<ng-template pTemplate="header">
+			{{ artist.name }}
+		</ng-template>
+
+		<p-image
+			[src]="artist.mainImage?.filePath || ''"
+			alt="Image"
+			width="250"
+		></p-image>
+
+		<ng-template pTemplate="footer">
+			<ng-container *ngFor="let style of artist.styles">
+				<p-chip styleClass="style">
+					{{ style }}
+				</p-chip>
+			</ng-container>
+		</ng-template>
+	</p-card>
+</div>

@@ -28,6 +28,7 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 			formedIn: formGroup.value['formedIn'],
 			genre: GenreEnum.Rock,
 			headerImage: formGroup.value['headerImage'],
+			mainImage: formGroup.value['mainImage'],
 			name: formGroup.value['name'],
 			sites: [],
 			styles: formGroup.value['styles'],
@@ -40,6 +41,7 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 			formedIn: formGroup.value['formedIn'],
 			genre: GenreEnum.Rock,
 			headerImage: formGroup.value['headerImage'],
+			mainImage: formGroup.value['mainImage'],
 			name: formGroup.value['name'],
 			styles: formGroup.value['styles'],
 			sites: [],
@@ -52,6 +54,7 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 			description: [artist?.description || null],
 			formedIn: [artist?.formedIn || null, [Validators.required]],
 			headerImage: [artist?.headerImage || null],
+			mainImage: [artist?.mainImage || null],
 			name: [
 				artist?.name || null,
 				[Validators.required, Validators.min(3), Validators.max(30)],

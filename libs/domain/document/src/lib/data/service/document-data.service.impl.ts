@@ -83,7 +83,10 @@ export class DocumentDataServiceImpl extends DocumentDataService {
 				.then((snapshot) => {
 					subscriber.next(
 						snapshot.docs.map(
-							(doc) => doc.data() as unknown as DocumentEntity
+							(doc) =>
+								({
+									...doc.data(),
+								} as unknown as DocumentEntity)
 						)
 					);
 				})

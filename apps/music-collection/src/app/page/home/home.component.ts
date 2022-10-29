@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ArtistStateService } from '@music-collection/api';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -6,4 +7,10 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 	templateUrl: './home.component.html',
 	styleUrls: ['./home.component.scss'],
 })
-export class HomeComponent {}
+export class HomeComponent implements OnInit {
+	public constructor(private artistStateService: ArtistStateService) {}
+
+	public ngOnInit(): void {
+		this.artistStateService.dispatchListEntitiesAction();
+	}
+}

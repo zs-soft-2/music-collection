@@ -3,8 +3,6 @@ import {
 	ArtistEntity,
 	ArtistTableParams,
 	BaseComponent,
-	GenreEnum,
-	StyleEnum,
 } from '@music-collection/api';
 import { Observable } from 'rxjs';
 
