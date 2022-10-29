@@ -5,6 +5,7 @@ import { DocumentEntity } from '../document';
 export interface Artist {
 	description: string;
 	headerImage?: DocumentEntity;
+	mainImage?: DocumentEntity;
 	members?: any[];
 	name: string;
 	sites: string[];
@@ -38,5 +39,9 @@ export type ArtistFormParams = {
 };
 
 export type ArtistTableParams = {
+	artists: ArtistEntity[];
+};
+
+export type ArtistListParams = {
 	artists: ArtistEntity[];
 };
