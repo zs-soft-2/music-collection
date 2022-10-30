@@ -1,4 +1,10 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	EventEmitter,
+	Input,
+	Output,
+} from '@angular/core';
 import { ArtistEntity, BaseComponent } from '@music-collection/api';
 
 @Component({
@@ -10,4 +16,16 @@ import { ArtistEntity, BaseComponent } from '@music-collection/api';
 export class ArtistSimpleViewComponent extends BaseComponent {
 	@Input()
 	public artist!: ArtistEntity;
+	@Output()
+	public selectArtist: EventEmitter<ArtistEntity>;
+
+	public constructor() {
+		super();
+
+		this.selectArtist = new EventEmitter();
+	}
+
+	public detailClickHandler(artist: ArtistEntity): void {
+		this.selectArtist.emit(artist);
+	}
 }

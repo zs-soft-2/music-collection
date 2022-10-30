@@ -1,5 +1,6 @@
 export * from './artist-data.service';
 export * from './artist-feature.key';
+export * from './artist-hook.service';
 export * from './artist-permissions.service';
 export * from './artist-resource.enum';
 export * from './artist-state.service';

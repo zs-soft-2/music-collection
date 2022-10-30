@@ -95,7 +95,12 @@ export const searchSuccess = createAction(
 
 export const selectArtist = createAction(
 	'[Artist] Select Artist',
-	props<{ artistId: string }>()
+	props<{ artist: ArtistEntity }>()
+);
+
+export const selectArtistSuccess = createAction(
+	'[Artist] Select Artist Success',
+	props<{ artist: ArtistEntity }>()
 );
 
 export const setSelectedArtistId = createAction(

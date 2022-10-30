@@ -12,6 +12,7 @@ export abstract class ArtistStateService extends EntityStateService<
 		enabled: boolean
 	): void;
 	public abstract dispatchSearch(term: string): void;
+	public abstract dispatchSelectArtistAction(artist: ArtistEntity): void;
 	public abstract selectNewEntityButtonEnabled$(): Observable<boolean>;
 	public abstract selectSearchResult$(): Observable<ArtistEntity[]>;
 }

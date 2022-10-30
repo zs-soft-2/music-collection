@@ -21,6 +21,22 @@ export const routes: Routes = [
 		},
 	},
 	{
+		path: 'artist/:artistId',
+		loadChildren: () =>
+			import('./page/artist/artist-page.module').then(
+				(module) => module.ArtistPageModule
+			),
+		data: {
+			breadcrumb: 'artist',
+			permissions: {
+				only: [RoleNames.USER],
+				redirectTo: '/artist',
+			},
+		},
+		canActivate: [NgxPermissionsGuard],
+		canLoad: [NgxPermissionsGuard],
+	},
+	{
 		path: 'collection',
 		loadChildren: () =>
 			import('./page/collection/collection.module').then(

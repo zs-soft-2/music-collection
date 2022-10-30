@@ -3,6 +3,7 @@ import { switchMap } from 'rxjs/operators';
 
 import { Injectable } from '@angular/core';
 import {
+	ArtistEntity,
 	ArtistListParams,
 	ArtistStateService,
 	BaseComponent,
@@ -31,5 +32,9 @@ export class ArtistListService extends BaseComponent {
 				return this.params$$;
 			})
 		);
+	}
+
+	public selectArtistHandler(artist: ArtistEntity): void {
+		this.artistStateService.dispatchSelectArtistAction(artist);
 	}
 }

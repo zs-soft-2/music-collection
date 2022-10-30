@@ -15,7 +15,6 @@ import { DomainDocumentModule } from '@music-collection/domain/document';
 import { DomainLabelModule } from '@music-collection/domain/label';
 import { DomainReleaseModule } from '@music-collection/domain/release';
 import { DomainUserModule } from '@music-collection/domain/user';
-import { BreadcrumbModule } from '@music-collection/ui';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
@@ -24,6 +23,7 @@ import { environment } from '../environments/environment';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { TopBarModule } from './module';
+import { HookModule } from './module/hook';
 
 @NgModule({
 	declarations: [AppComponent],
@@ -31,7 +31,6 @@ import { TopBarModule } from './module';
 		BrowserModule,
 		BrowserAnimationsModule,
 		AppRoutingModule,
-		BreadcrumbModule,
 		provideFirebaseApp(() => initializeApp(environment.firebase)),
 		provideFirestore(() => getFirestore()),
 		StoreModule.forRoot(
@@ -58,6 +57,7 @@ import { TopBarModule } from './module';
 		DomainLabelModule,
 		DomainReleaseModule,
 		DomainCollectionItemModule,
+		HookModule,
 	],
 	providers: [],
 	bootstrap: [AppComponent],

@@ -49,8 +49,8 @@ export class ArtistStateServiceImpl extends ArtistStateService {
 		this.store.dispatch(artistActions.search({ term }));
 	}
 
-	public dispatchSelectArtistAction(uid: string): void {
-		this.store.dispatch(artistActions.selectArtist({ artistId: uid }));
+	public dispatchSelectArtistAction(artist: ArtistEntity): void {
+		this.store.dispatch(artistActions.selectArtist({ artist }));
 	}
 
 	public dispatchSetSelectedEntityIdAction(entityId: string): void {

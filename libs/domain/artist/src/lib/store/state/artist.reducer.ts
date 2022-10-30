@@ -43,11 +43,11 @@ export const artistReducer = createReducer(
 		...state,
 		isNewEntityButtonEnabled: enabled,
 	})),
-	on(artistActions.selectArtist, (state, { artistId }) => ({
+	on(artistActions.selectArtistSuccess, (state, { artist }) => ({
 		...state,
 		loading: false,
 		error: null,
-		selectedArtistId: artistId,
+		selectedArtistId: artist.uid,
 	})),
 	on(artistActions.updateArtistSuccess, (state, { artist }) =>
 		artistAdapter.updateOne(artist, state)
