@@ -4,6 +4,7 @@ import { catchError, first, map, switchMap } from 'rxjs/operators';
 import { Injectable } from '@angular/core';
 import {
 	ArtistDataService,
+	ArtistHookService,
 	ArtistUtilService,
 	EntityQuantityStateService,
 	EntityQuantityUtilService,
@@ -110,6 +111,18 @@ export class ArtistEffects {
 			)
 		)
 	);
+	public selectArtist = createEffect(() =>
+		this.actions$.pipe(
+			ofType(artistActions.selectArtist),
+			map((action) => {
+				this.artistHookService.selectEntity(action.artist);
+
+				return artistActions.selectArtistSuccess({
+					artist: action.artist,
+				});
+			})
+		)
+	);
 	public updateArtist = createEffect(() =>
 		this.actions$.pipe(
 			ofType(artistActions.updateArtist),
@@ -140,6 +153,7 @@ export class ArtistEffects {
 	public constructor(
 		private actions$: Actions,
 		private artistDataService: ArtistDataService,
+		private artistHookService: ArtistHookService,
 		private artistUtilService: ArtistUtilService,
 		private entityQuantityStateService: EntityQuantityStateService,
 		private entityQuantityUtilService: EntityQuantityUtilService

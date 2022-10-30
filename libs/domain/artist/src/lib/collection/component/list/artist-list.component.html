@@ -6,7 +6,10 @@
 		[autoplayInterval]="5000"
 	>
 		<ng-template let-artist pTemplate="item">
-			<mc-artist-simple-view [artist]="artist"></mc-artist-simple-view>
+			<mc-artist-simple-view
+				[artist]="artist"
+				(selectArtist)="selectArtistHandler($event)"
+			></mc-artist-simple-view>
 		</ng-template>
 	</p-carousel>
 </section>

@@ -10,7 +10,9 @@
 				{{ artist.name }}
 			</h2>
 
-			<a href="">Details</a>
+			<a href="javascript:void(0)" (click)="detailClickHandler(artist)"
+				>Detail</a
+			>
 
 			<div>
 				<ng-container *ngFor="let style of artist.styles">
