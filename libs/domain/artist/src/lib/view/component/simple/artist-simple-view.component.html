@@ -1,23 +1,30 @@
 <div class="artist-simple">
 	<div class="content" fxLayout="row">
-		<div class="left" fxFlex="40" fxLayout="column" fxLayoutAlign="space-between center">
+		<div
+			class="left"
+			fxFlex="40"
+			fxLayout="column"
+			fxLayoutAlign="space-between center"
+		>
 			<h2>
 				{{ artist.name }}
 			</h2>
-			
+
 			<a href="">Details</a>
 
 			<div>
 				<ng-container *ngFor="let style of artist.styles">
-					<p-chip styleClass="style" [label]="style">
-					</p-chip>
+					<p-chip styleClass="style" [label]="style"> </p-chip>
 				</ng-container>
 			</div>
 		</div>
 
 		<div class="right" fxFlex="60">
-			<p-image [src]="artist.mainImage?.filePath || ''" alt="Image" width="450"></p-image>
+			<p-image
+				[src]="artist.mainImage?.filePath || ''"
+				alt="Image"
+				width="450"
+			></p-image>
 		</div>
 	</div>
-
 </div>

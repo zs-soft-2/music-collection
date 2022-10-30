@@ -4,7 +4,7 @@ import { createReducer, on } from '@ngrx/store';
 import * as authenticationActions from './authentication.actions';
 
 export interface AuthenticationState {
-	authenticatedUser: User | undefined;
+	authenticatedUser: User;
 	loading: boolean;
 	error: string | null;
 }

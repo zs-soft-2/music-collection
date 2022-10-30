@@ -1,7 +1,12 @@
 <section class="artist-list" *ngIf="params$ | async as params">
-    <p-carousel [value]="params.artists" [numVisible]="1" [numScroll]="1" [autoplayInterval]="5000" >
-        <ng-template let-artist pTemplate="item">
-            <mc-artist-simple-view [artist]="artist"></mc-artist-simple-view>
-        </ng-template>
-    </p-carousel>
+	<p-carousel
+		[value]="params.artists"
+		[numVisible]="1"
+		[numScroll]="1"
+		[autoplayInterval]="5000"
+	>
+		<ng-template let-artist pTemplate="item">
+			<mc-artist-simple-view [artist]="artist"></mc-artist-simple-view>
+		</ng-template>
+	</p-carousel>
 </section>

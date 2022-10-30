@@ -6,10 +6,19 @@
 			<ng-container *ngFor="let breadcrumb of breadcrumbs">
 				<li>
 					<span class="p-menuitem">
-						<a class="p-menuitem-link" [attr.href]="breadcrumb.url" (click)="navigate(breadcrumb.url, $event)"><span
-								class="p-menuitem-text">{{ breadcrumb.label }}</span></a>
-		
-						<span class="ant-breadcrumb-separator" *ngIf="separator">
+						<a
+							class="p-menuitem-link"
+							[attr.href]="breadcrumb.url"
+							(click)="navigate(breadcrumb.url, $event)"
+							><span class="p-menuitem-text">{{
+								breadcrumb.label
+							}}</span></a
+						>
+
+						<span
+							class="ant-breadcrumb-separator"
+							*ngIf="separator"
+						>
 							{{ separator }}
 						</span>
 					</span>

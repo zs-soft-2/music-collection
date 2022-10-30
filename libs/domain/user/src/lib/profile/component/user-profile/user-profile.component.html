@@ -1,5 +1,9 @@
 <div>
 	<ng-container>
-		<p-avatar icon="pi pi-user" size="large"></p-avatar>
+		<p-avatar
+			shape="circle"
+			size="large"
+			[image]="user?.photoURL || ''"
+		></p-avatar>
 	</ng-container>
 </div>

@@ -1,9 +1,10 @@
-import { Observable, ReplaySubject, Subject } from 'rxjs';
+import { Observable, ReplaySubject, Subject, switchMap } from 'rxjs';
 
 import { Injectable } from '@angular/core';
-import { Router, RouterStateSnapshot } from '@angular/router';
+import { Router } from '@angular/router';
 
 import { MenuItem, TopBarParams } from '../../api';
+import { AuthenticationStateService, User } from '@music-collection/api';
 
 @Injectable()
 export class TopBarService {
@@ -11,7 +12,10 @@ export class TopBarService {
 	private params!: TopBarParams;
 	private params$$: Subject<TopBarParams>;
 
-	constructor(private router: Router) {
+	constructor(
+		private authenticationStateService: AuthenticationStateService,
+		private router: Router
+	) {
 		this.params$$ = new ReplaySubject();
 	}
 
@@ -20,14 +24,19 @@ export class TopBarService {
 	}
 
 	public init$(): Observable<TopBarParams> {
-		this.params = {
-			addPagePermissions: [],
-			editPagePermissions: [],
-			menuItems: this.createMenuItems(),
-		};
+		return this.authenticationStateService.selectAuthenticatedUser$().pipe(
+			switchMap((user) => {
+				this.params = {
+					addPagePermissions: [],
+					editPagePermissions: [],
+					menuItems: this.createMenuItems(),
+					user,
+				};
 
-		this.params$$.next(this.params);
+				this.params$$.next(this.params);
 
-		return this.params$$;
+				return this.params$$;
+			})
+		);
 	}
 }

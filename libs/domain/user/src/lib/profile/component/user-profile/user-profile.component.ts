@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { BaseComponent } from '@music-collection/api';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { BaseComponent, User } from '@music-collection/api';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -7,4 +7,7 @@ import { BaseComponent } from '@music-collection/api';
 	templateUrl: './user-profile.component.html',
 	styleUrls: ['./user-profile.component.scss'],
 })
-export class UserProfileComponent extends BaseComponent {}
+export class UserProfileComponent extends BaseComponent {
+	@Input()
+	public user!: User;
+}

@@ -8,7 +8,7 @@
 
 		<ng-template pTemplate="end">
 			<ng-container *mcIsAuthenticated="true">
-				<mc-user-profile></mc-user-profile>
+				<mc-user-profile [user]="params.user"></mc-user-profile>
 			</ng-container>
 		</ng-template>
 	</p-menubar>

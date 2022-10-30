@@ -8,6 +8,6 @@ export abstract class AuthenticationStateService extends BaseService {
 	public abstract dispatchGetUser(): void;
 	public abstract dispatchLogin(): void;
 	public abstract dispatchLogout(): void;
-	public abstract selectAuthenticatedUser$(): Observable<User | undefined>;
+	public abstract selectAuthenticatedUser$(): Observable<User>;
 	public abstract selectIsAuthenticated$(): Observable<boolean>;
 }

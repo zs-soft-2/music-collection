@@ -34,7 +34,7 @@ export class AuthenticationStateServiceImpl extends AuthenticationStateService {
 		this.store.dispatch(authenticationActions.logout());
 	}
 
-	public selectAuthenticatedUser$(): Observable<User | undefined> {
+	public selectAuthenticatedUser$(): Observable<User> {
 		return this.store.pipe(
 			select(authenticationSelectors.selectAuthenticatedUser)
 		);
