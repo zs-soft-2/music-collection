@@ -1,21 +1,23 @@
 <div class="artist-simple">
-	<p-card>
-		<ng-template pTemplate="header">
-			{{ artist.name }}
-		</ng-template>
+	<div class="content" fxLayout="row">
+		<div class="left" fxFlex="40" fxLayout="column" fxLayoutAlign="space-between center">
+			<h2>
+				{{ artist.name }}
+			</h2>
+			
+			<a href="">Details</a>
 
-		<p-image
-			[src]="artist.mainImage?.filePath || ''"
-			alt="Image"
-			width="250"
-		></p-image>
+			<div>
+				<ng-container *ngFor="let style of artist.styles">
+					<p-chip styleClass="style" [label]="style">
+					</p-chip>
+				</ng-container>
+			</div>
+		</div>
 
-		<ng-template pTemplate="footer">
-			<ng-container *ngFor="let style of artist.styles">
-				<p-chip styleClass="style">
-					{{ style }}
-				</p-chip>
-			</ng-container>
-		</ng-template>
-	</p-card>
+		<div class="right" fxFlex="60">
+			<p-image [src]="artist.mainImage?.filePath || ''" alt="Image" width="450"></p-image>
+		</div>
+	</div>
+
 </div>

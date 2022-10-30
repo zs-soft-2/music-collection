@@ -1,1 +1,56 @@
 /* You can add global styles to this file, and also import other style files */
+body {
+    background-color: #e6e6e6;
+    color: #181818;
+
+    .p-breadcrumb ul li .p-menuitem-link .p-menuitem-text {
+        color: #656565;
+    }
+
+    .p-breadcrumb ul {
+        margin: 0;
+        padding: 0;
+        list-style-type: none;
+        display: flex;
+        align-items: center;
+        flex-wrap: nowrap;
+    }
+
+    .p-chip {
+        background-color: #656565;
+        color: #e6e6e6;
+        border-radius: 16px;
+        padding: 0 0.75rem;
+
+        .p-chip-text {
+            line-height: 1.5;
+            margin-top: 0.4rem;
+            margin-bottom: 0.4rem;
+        }
+    }
+
+    .p-toolbar {
+        background: none;
+        border: none;
+    }
+}
+
+.p-breadcrumb {
+    background: none;
+    border: none;
+    padding-top: 0;
+}
+
+.p-breadcrumb .p-menuitem-link {
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.p-card {
+    background: none;
+    box-shadow: none;
+}
+
+.p-menubar {
+    background: none;
+}
