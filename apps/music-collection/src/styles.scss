@@ -1,6 +1,7 @@
 /* You can add global styles to this file, and also import other style files */
 body {
 	background-color: #e6e6e6;
+	background: url(./assets/background.jpg) center repeat-y #e6e6e6;
 	color: #181818;
 
 	.p-breadcrumb ul li .p-menuitem-link .p-menuitem-text {
@@ -26,6 +27,12 @@ body {
 			line-height: 1.5;
 			margin-top: 0.4rem;
 			margin-bottom: 0.4rem;
+		}
+	}
+
+	.p-image {
+		img {
+			border-radius: 20px;
 		}
 	}
 

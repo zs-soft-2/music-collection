@@ -40,11 +40,11 @@ export class DocumentFormService {
 	}
 
 	public fileUpload(file: File): void {
-		this.selectedFile = file;
+		this.selectedFile = { ...file };
 		this.documentStateService.dispatchUploadFileAction({
-			content: file,
+			content: this.selectedFile,
 			path: this.documentUtilService.createFilePath(
-				file.name,
+				this.selectedFile.name,
 				'/document/'
 			),
 			meta: { type: 'image' },
@@ -89,6 +89,8 @@ export class DocumentFormService {
 		} else {
 			this.addDocument();
 		}
+
+		this.selectedFile = undefined;
 
 		this.router.navigate(['../../list'], {
 			relativeTo: this.activatedRoute,

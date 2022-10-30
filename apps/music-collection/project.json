@@ -6,10 +6,10 @@
 	"prefix": "music-collection",
 	"targets": {
 		"build": {
-			"allowedCommonJsDependencies": ["object-hash"],
 			"executor": "@angular-devkit/build-angular:browser",
 			"outputs": ["{options.outputPath}"],
 			"options": {
+				"allowedCommonJsDependencies": ["object-hash"],
 				"outputPath": "dist/apps/music-collection",
 				"index": "apps/music-collection/src/index.html",
 				"main": "apps/music-collection/src/main.ts",

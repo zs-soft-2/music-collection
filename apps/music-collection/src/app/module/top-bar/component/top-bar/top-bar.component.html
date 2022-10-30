@@ -1,15 +1,17 @@
 <ng-container *ngIf="params$$ | async as params">
-	<p-menubar [model]="params.menuItems">
-		<ng-template pTemplate="start">
-			<img src="assets/music.png" height="40" class="mr-2" />
+	<section class="top-bar">
+		<p-menubar [model]="params.menuItems">
+			<ng-template pTemplate="start">
+				<img src="assets/music.png" height="40" class="mr-2" />
 
-			<span class="title">Music Collection</span>
-		</ng-template>
+				<span class="title">musiCollection</span>
+			</ng-template>
 
-		<ng-template pTemplate="end">
-			<ng-container *mcIsAuthenticated="true">
-				<mc-user-profile [user]="params.user"></mc-user-profile>
-			</ng-container>
-		</ng-template>
-	</p-menubar>
+			<ng-template pTemplate="end">
+				<ng-container *mcIsAuthenticated="true">
+					<mc-user-profile [user]="params.user"></mc-user-profile>
+				</ng-container>
+			</ng-template>
+		</p-menubar>
+	</section>
 </ng-container>

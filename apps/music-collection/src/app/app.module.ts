@@ -24,6 +24,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { TopBarModule } from './module';
 import { HookModule } from './module/hook';
+import { ArtistPageResolverService } from './resolver';
 
 @NgModule({
 	declarations: [AppComponent],
@@ -59,7 +60,7 @@ import { HookModule } from './module/hook';
 		DomainCollectionItemModule,
 		HookModule,
 	],
-	providers: [],
+	providers: [ArtistPageResolverService],
 	bootstrap: [AppComponent],
 })
 export class AppModule {}

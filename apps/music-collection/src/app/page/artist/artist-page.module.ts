@@ -8,5 +8,6 @@ import { ArtistPageComponent } from './artist-page.component';
 @NgModule({
 	declarations: [ArtistPageComponent],
 	imports: [CommonModule, ArtistPageRoutingModule, ArtistViewModule],
+	providers: [],
 })
 export class ArtistPageModule {}
