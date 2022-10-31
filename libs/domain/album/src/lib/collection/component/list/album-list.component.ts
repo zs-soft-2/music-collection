@@ -1,5 +1,7 @@
+import { Observable } from 'rxjs';
+
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { BaseComponent } from '@music-collection/api';
+import { AlbumListParams, BaseComponent } from '@music-collection/api';
 
 import { AlbumListService } from './album-list.service';
 
@@ -11,11 +13,13 @@ import { AlbumListService } from './album-list.service';
 	styleUrls: ['./album-list.component.scss'],
 })
 export class AlbumListComponent extends BaseComponent implements OnInit {
+	public params$!: Observable<AlbumListParams>;
+
 	public constructor(private componentService: AlbumListService) {
 		super();
 	}
 
 	public ngOnInit(): void {
-		this.componentService.init$().pipe().subscribe();
+		this.params$ = this.componentService.init$();
 	}
 }

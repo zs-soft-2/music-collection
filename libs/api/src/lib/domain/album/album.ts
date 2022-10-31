@@ -43,6 +43,10 @@ export type AlbumTableParams = {
 	albums: AlbumEntity[];
 };
 
+export type AlbumListParams = {
+	albums: AlbumEntity[];
+};
+
 export type AlbumArtist = Omit<
 	ArtistEntity,
 	'sites' | 'members' | 'description' | 'formedIn' | 'genre' | 'styles'
