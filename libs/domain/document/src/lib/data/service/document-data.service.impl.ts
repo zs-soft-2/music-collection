@@ -48,7 +48,9 @@ export class DocumentDataServiceImpl extends DocumentDataService {
 
 		return new Observable((subscriber) => {
 			setDoc(doc(this.documentCollection, uid), newDocument).then(() => {
-				subscriber.next({ ...newDocument } as unknown as DocumentEntity);
+				subscriber.next({
+					...newDocument,
+				} as unknown as DocumentEntity);
 			});
 		});
 	}

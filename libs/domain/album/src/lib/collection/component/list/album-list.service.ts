@@ -1,15 +1,35 @@
-import { Observable, of } from 'rxjs';
+import { Observable, ReplaySubject } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 
 import { Injectable } from '@angular/core';
-import { BaseComponent } from '@music-collection/api';
+import {
+	AlbumListParams,
+	AlbumStateService,
+	BaseComponent,
+} from '@music-collection/api';
 
 @Injectable()
 export class AlbumListService extends BaseComponent {
-	public constructor() {
+	private params!: AlbumListParams;
+	private params$$: ReplaySubject<AlbumListParams>;
+
+	public constructor(private albumStateService: AlbumStateService) {
 		super();
+
+		this.params$$ = new ReplaySubject();
 	}
 
-	public init$(): Observable<boolean> {
-		return of(true);
+	public init$(): Observable<AlbumListParams> {
+		return this.albumStateService.selectEntities$().pipe(
+			switchMap((albums) => {
+				this.params = {
+					albums,
+				};
+
+				this.params$$.next(this.params);
+
+				return this.params$$;
+			})
+		);
 	}
 }

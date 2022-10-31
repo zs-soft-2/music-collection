@@ -1,1 +1,7 @@
-<p>album simple view works!</p>
+<div class="album-simple" [style.background]="album.coverImage?.filePath">
+	<p-image
+		[src]="album.coverImage?.filePath || ''"
+		[width]="width"
+		alt="Image"
+	></p-image>
+</div>

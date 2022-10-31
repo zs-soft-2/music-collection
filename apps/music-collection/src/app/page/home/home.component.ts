@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { ArtistStateService } from '@music-collection/api';
+import { AlbumStateService, ArtistStateService } from '@music-collection/api';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -8,9 +8,13 @@ import { ArtistStateService } from '@music-collection/api';
 	styleUrls: ['./home.component.scss'],
 })
 export class HomeComponent implements OnInit {
-	public constructor(private artistStateService: ArtistStateService) {}
+	public constructor(
+		private artistStateService: ArtistStateService,
+		private albumStateService: AlbumStateService
+	) {}
 
 	public ngOnInit(): void {
 		this.artistStateService.dispatchListEntitiesAction();
+		this.albumStateService.dispatchListEntitiesAction();
 	}
 }
