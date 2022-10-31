@@ -40,7 +40,7 @@ export class DocumentFormService {
 	}
 
 	public fileUpload(file: File): void {
-		this.selectedFile = { ...file };
+		this.selectedFile = file;
 		this.documentStateService.dispatchUploadFileAction({
 			content: this.selectedFile,
 			path: this.documentUtilService.createFilePath(

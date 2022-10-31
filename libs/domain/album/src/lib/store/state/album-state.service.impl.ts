@@ -49,8 +49,8 @@ export class AlbumStateServiceImpl extends AlbumStateService {
 		this.store.dispatch(albumActions.search({ term }));
 	}
 
-	public dispatchSelectAlbumAction(uid: string): void {
-		this.store.dispatch(albumActions.selectAlbum({ albumId: uid }));
+	public dispatchSelectAlbumAction(album: AlbumEntity): void {
+		this.store.dispatch(albumActions.selectAlbum({ album }));
 	}
 
 	public dispatchSetSelectedEntityIdAction(entityId: string): void {
@@ -64,7 +64,7 @@ export class AlbumStateServiceImpl extends AlbumStateService {
 	}
 
 	public isLoading$(): Observable<boolean> {
-		throw new Error('Method not implemented.');
+		return this.store.pipe(select(albumSelectors.isLoading));
 	}
 
 	public selectEntities$(): Observable<AlbumEntity[]> {

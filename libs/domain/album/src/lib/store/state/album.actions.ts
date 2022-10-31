@@ -95,7 +95,12 @@ export const searchSuccess = createAction(
 
 export const selectAlbum = createAction(
 	'[Album] Select Album',
-	props<{ albumId: string }>()
+	props<{ album: AlbumEntity }>()
+);
+
+export const selectAlbumSuccess = createAction(
+	'[Album] Select Album Success',
+	props<{ album: AlbumEntity }>()
 );
 
 export const setSelectedAlbumId = createAction(

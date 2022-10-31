@@ -34,4 +34,8 @@ export class AlbumFormComponent extends BaseComponent implements OnInit {
 	public searchArtist(event: any): void {
 		this.componentService.searchArtist(event['query']);
 	}
+
+	public searchDocument(event: any): void {
+		this.componentService.searchDocument(event['query']);
+	}
 }

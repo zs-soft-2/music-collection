@@ -1,96 +1,118 @@
-import { nanoid } from 'nanoid';
-import { Observable, of } from 'rxjs';
+import { Observable } from 'rxjs';
 
 import { Injectable } from '@angular/core';
 import {
+	addDoc,
+	collection,
+	collectionData,
+	CollectionReference,
+	doc,
+	docData,
+	DocumentData,
+	Firestore,
+	getDocs,
+	query,
+	updateDoc,
+	where,
+} from '@angular/fire/firestore';
+import {
+	ALBUM_FEATURE_KEY,
 	AlbumDataService,
-	AlbumEntity,
-	AlbumEntityAdd,
-	AlbumEntityUpdate,
+	AlbumModel,
+	AlbumModelAdd,
+	AlbumModelUpdate,
 } from '@music-collection/api';
 
 @Injectable()
 export class AlbumDataServiceImpl extends AlbumDataService {
-	protected albumCollection: AlbumEntity[];
+	protected albumCollection: CollectionReference<DocumentData>;
 
-	public constructor() {
+	public constructor(private firestore: Firestore) {
 		super();
 
-		this.albumCollection = [];
+		this.albumCollection = collection(this.firestore, ALBUM_FEATURE_KEY);
 	}
 
-	public add$(album: AlbumEntityAdd): Observable<AlbumEntity> {
-		const newAlbum: AlbumEntity = {
-			...album,
-			uid: nanoid(),
-		};
-
-		this.albumCollection = this.albumCollection.concat([newAlbum]);
-
-		return of(newAlbum);
-	}
-
-	public delete$(album: AlbumEntity): Observable<AlbumEntity> {
-		return of(album);
-	}
-
-	public list$(): Observable<AlbumEntity[]> {
-		return of(this.albumCollection);
-	}
-
-	public listByIds$(ids: string[]): Observable<AlbumEntity[]> {
-		const listByIds: AlbumEntity[] = [];
-
-		return of(
-			this.albumCollection.reduce(
-				(list: AlbumEntity[], album: AlbumEntity) => {
-					if (ids.includes(album.uid)) {
-						list.push(album);
-					}
-
-					return list;
-				},
-				listByIds
-			)
-		);
-	}
-
-	public load$(uid: string): Observable<AlbumEntity | undefined> {
-		return of(this.albumCollection.find((album) => album.uid === uid));
-	}
-
-	public search$(query: string): Observable<AlbumEntity[]> {
-		const foundByQuery: AlbumEntity[] = [];
-
-		return of(
-			this.albumCollection.reduce(
-				(list: AlbumEntity[], album: AlbumEntity) => {
-					if (
-						album.name.toLowerCase().search(query.toLowerCase()) >
-						-1
-					) {
-						list.push(album);
-					}
-
-					return list;
-				},
-				foundByQuery
-			)
-		);
-	}
-
-	public update$(album: AlbumEntityUpdate): Observable<AlbumEntityUpdate> {
-		this.albumCollection = this.albumCollection.map((oldAlbum) => {
-			return (
-				oldAlbum.uid === album.uid
-					? {
-							...oldAlbum,
-							...album,
-					  }
-					: oldAlbum
-			) as AlbumEntity;
+	public add$(album: AlbumModelAdd): Observable<AlbumModel> {
+		return new Observable((subscriber) => {
+			addDoc(this.albumCollection, { ...album }).then((data) => {
+				subscriber.next({ ...data } as unknown as AlbumModel);
+			});
 		});
+	}
 
-		return of(album);
+	public delete$(album: AlbumModel): Observable<AlbumModel> {
+		return this.update$(
+			album as AlbumModelUpdate
+		) as Observable<AlbumModel>;
+	}
+
+	public list$(): Observable<AlbumModel[]> {
+		return collectionData(this.albumCollection, {
+			idField: 'uid',
+		}) as Observable<AlbumModel[]>;
+	}
+
+	public listByIds$(ids: string[]): Observable<AlbumModel[]> {
+		const albumsQuery = query(
+			this.albumCollection,
+			where('uid', 'in', ids)
+		);
+
+		return new Observable((subscriber) => {
+			getDocs(albumsQuery).then((snapshot) => {
+				subscriber.next(
+					snapshot.docChanges() as unknown as AlbumModel[]
+				);
+			});
+		});
+	}
+
+	public load$(uid: string): Observable<AlbumModel | undefined> {
+		const albumDocument = doc(
+			this.firestore,
+			`${ALBUM_FEATURE_KEY}/${uid}`
+		);
+
+		return docData(albumDocument, {
+			idField: 'uid',
+		}) as Observable<AlbumModel>;
+	}
+
+	public search$(term: string): Observable<AlbumModel[]> {
+		const albumQuery = query(
+			this.albumCollection,
+			where('name', '>=', term)
+		);
+
+		return new Observable((subscriber) => {
+			getDocs(albumQuery)
+				.then((snapshot) => {
+					subscriber.next(
+						snapshot.docs.map(
+							(doc) =>
+								({
+									...doc.data(),
+								} as unknown as AlbumModel)
+						)
+					);
+				})
+				.catch((error) => {
+					subscriber.error(error);
+				});
+		});
+	}
+
+	public update$(album: AlbumModelUpdate): Observable<AlbumModelUpdate> {
+		const albumDocument = doc(
+			this.firestore,
+			`${ALBUM_FEATURE_KEY}/${album.uid}`
+		);
+
+		return new Observable((subscriber) => {
+			updateDoc(albumDocument, { ...album }).then(() => {
+				subscriber.next(album);
+			});
+		});
 	}
 }

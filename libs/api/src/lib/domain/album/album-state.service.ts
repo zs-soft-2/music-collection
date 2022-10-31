@@ -12,6 +12,7 @@ export abstract class AlbumStateService extends EntityStateService<
 		enabled: boolean
 	): void;
 	public abstract dispatchSearch(term: string): void;
+	public abstract dispatchSelectAlbumAction(album: AlbumEntity): void;
 	public abstract selectNewEntityButtonEnabled$(): Observable<boolean>;
 	public abstract selectSearchResult$(): Observable<AlbumEntity[]>;
 }
