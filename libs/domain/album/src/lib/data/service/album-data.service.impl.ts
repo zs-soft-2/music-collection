@@ -1,8 +1,7 @@
-import { Observable } from 'rxjs';
+import { from, Observable } from 'rxjs';
 
 import { Injectable } from '@angular/core';
 import {
-	addDoc,
 	collection,
 	collectionData,
 	CollectionReference,
@@ -12,6 +11,7 @@ import {
 	Firestore,
 	getDocs,
 	query,
+	setDoc,
 	updateDoc,
 	where,
 } from '@angular/fire/firestore';
@@ -34,9 +34,15 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 	}
 
 	public add$(album: AlbumModelAdd): Observable<AlbumModel> {
+		const uid = doc(collection(this.firestore, 'id')).id;
+		const newAlbum: AlbumModel = {
+			...album,
+			uid,
+		};
+
 		return new Observable((subscriber) => {
-			addDoc(this.albumCollection, { ...album }).then((data) => {
-				subscriber.next({ ...data } as unknown as AlbumModel);
+			setDoc(doc(this.albumCollection, uid), newAlbum).then(() => {
+				subscriber.next({ ...newAlbum } as unknown as AlbumModel);
 			});
 		});
 	}

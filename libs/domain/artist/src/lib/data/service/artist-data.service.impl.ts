@@ -2,7 +2,6 @@ import { Observable } from 'rxjs';
 
 import { Injectable } from '@angular/core';
 import {
-	addDoc,
 	collection,
 	collectionData,
 	CollectionReference,
@@ -12,6 +11,7 @@ import {
 	Firestore,
 	getDocs,
 	query,
+	setDoc,
 	updateDoc,
 	where,
 } from '@angular/fire/firestore';
@@ -34,9 +34,15 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 	}
 
 	public add$(artist: ArtistModelAdd): Observable<ArtistModel> {
+		const uid = doc(collection(this.firestore, 'id')).id;
+		const newArtist: ArtistModel = {
+			...artist,
+			uid,
+		};
+
 		return new Observable((subscriber) => {
-			addDoc(this.artistCollection, artist).then((data) => {
-				subscriber.next(data as unknown as ArtistModel);
+			setDoc(doc(this.artistCollection, uid), newArtist).then(() => {
+				subscriber.next({ ...newArtist } as unknown as ArtistModel);
 			});
 		});
 	}

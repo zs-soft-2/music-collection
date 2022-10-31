@@ -1,8 +1,7 @@
-import { from, Observable, of, switchMap } from 'rxjs';
+import { from, Observable, switchMap } from 'rxjs';
 
 import { Injectable } from '@angular/core';
 import {
-	addDoc,
 	collection,
 	collectionData,
 	CollectionReference,
@@ -12,6 +11,7 @@ import {
 	Firestore,
 	getDocs,
 	query,
+	setDoc,
 	updateDoc,
 	where,
 } from '@angular/fire/firestore';
@@ -21,9 +21,9 @@ import {
 	DOCUMENT_FEATURE_KEY,
 	DocumentDataService,
 	DocumentEntity,
-	DocumentFile,
 	DocumentEntityAdd,
 	DocumentEntityUpdate,
+	DocumentFile,
 } from '@music-collection/api';
 
 @Injectable()
@@ -40,9 +40,17 @@ export class DocumentDataServiceImpl extends DocumentDataService {
 	}
 
 	public add$(document: DocumentEntityAdd): Observable<DocumentEntity> {
-		return from(
-			addDoc(this.documentCollection, document)
-		) as unknown as Observable<DocumentEntity>;
+		const uid = doc(collection(this.firestore, 'id')).id;
+		const newDocument: DocumentEntity = {
+			...document,
+			uid,
+		};
+
+		return new Observable((subscriber) => {
+			setDoc(doc(this.documentCollection, uid), newDocument).then(() => {
+				subscriber.next({ ...newDocument } as unknown as DocumentEntity);
+			});
+		});
 	}
 
 	public delete$(document: DocumentEntity): Observable<DocumentEntity> {
