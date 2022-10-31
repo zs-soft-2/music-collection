@@ -14,6 +14,8 @@
 
 				<th>Styles</th>
 
+				<th>Cover</th>
+
 				<th></th>
 			</tr>
 		</ng-template>
@@ -28,9 +30,17 @@
 
 				<td>
 					<ng-container *ngFor="let style of album.styles">
-						<p-chip styleClass="style">
-							{{ style }}
-						</p-chip>
+						<div>
+							<p-chip styleClass="style">
+								{{ style }}
+							</p-chip>
+						</div>
+					</ng-container>
+				</td>
+
+				<td>
+					<ng-container *ngIf="album.coverImage">
+						<i class="pi pi-image"></i>
 					</ng-container>
 				</td>
 

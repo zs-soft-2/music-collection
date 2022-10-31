@@ -4,7 +4,7 @@ import { catchError, first, map, switchMap } from 'rxjs/operators';
 import { Injectable } from '@angular/core';
 import {
 	AlbumDataService,
-	AlbumEntity,
+	AlbumHookService,
 	AlbumUtilService,
 	EntityQuantityStateService,
 	EntityQuantityUtilService,
@@ -31,13 +31,21 @@ export class AlbumEffects {
 					)
 			),
 			switchMap(({ action, entityQuantityEntity }) =>
-				this.albumDataService.add$(action.album).pipe(
-					map((album) => {
-						return albumActions.addAlbumSuccess({
-							album,
-						});
-					})
-				)
+				this.albumDataService
+					.add$(
+						this.albumUtilService.convertEntityAddToModelAdd(
+							action.album
+						)
+					)
+					.pipe(
+						map((album) => {
+							return albumActions.addAlbumSuccess({
+								album: this.albumUtilService.convertModelToEntity(
+									album
+								),
+							});
+						})
+					)
 			)
 		)
 	);
@@ -46,6 +54,11 @@ export class AlbumEffects {
 			ofType(albumActions.listAlbums),
 			switchMap(() =>
 				this.albumDataService.list$().pipe(
+					map((albums) =>
+						albums.map((album) =>
+							this.albumUtilService.convertModelToEntity(album)
+						)
+					),
 					map((albums) => {
 						return albumActions.listAlbumsSuccess({
 							albums,
@@ -62,7 +75,11 @@ export class AlbumEffects {
 				this.albumDataService.load$(action.uid).pipe(
 					map((album) => {
 						return albumActions.loadAlbumSuccess({
-							album: album as AlbumEntity,
+							album: album
+								? this.albumUtilService.convertModelToEntity(
+										album
+								  )
+								: undefined,
 						});
 					}),
 					catchError((error) => {
@@ -77,6 +94,11 @@ export class AlbumEffects {
 			ofType(albumActions.search),
 			switchMap((action) =>
 				this.albumDataService.search$(action.term).pipe(
+					map((result) =>
+						result.map((album) =>
+							this.albumUtilService.convertModelToEntity(album)
+						)
+					),
 					map((result) => {
 						return albumActions.searchSuccess({
 							result,
@@ -89,20 +111,41 @@ export class AlbumEffects {
 			)
 		)
 	);
+	public selectAlbum = createEffect(() =>
+		this.actions$.pipe(
+			ofType(albumActions.selectAlbum),
+			map((action) => {
+				this.albumHookService.selectEntity(action.album);
+
+				return albumActions.selectAlbumSuccess({
+					album: action.album,
+				});
+			})
+		)
+	);
 	public updateAlbum = createEffect(() =>
 		this.actions$.pipe(
 			ofType(albumActions.updateAlbum),
 			switchMap((action) =>
-				this.albumDataService.update$(action.album).pipe(
-					map((album) => {
-						return albumActions.updateAlbumSuccess({
-							album: {
-								id: album.uid || '',
-								changes: album,
-							},
-						});
-					})
-				)
+				this.albumDataService
+					.update$(
+						this.albumUtilService.convertEntityUpdateToModelUpdate(
+							action.album
+						)
+					)
+					.pipe(
+						map((album) => {
+							return albumActions.updateAlbumSuccess({
+								album: {
+									id: album.uid || '',
+									changes:
+										this.albumUtilService.convertModelUpdateToEntityUpdate(
+											album
+										),
+								},
+							});
+						})
+					)
 			)
 		)
 	);
@@ -110,6 +153,7 @@ export class AlbumEffects {
 	public constructor(
 		private actions$: Actions,
 		private albumDataService: AlbumDataService,
+		private albumHookService: AlbumHookService,
 		private albumUtilService: AlbumUtilService,
 		private entityQuantityStateService: EntityQuantityStateService,
 		private entityQuantityUtilService: EntityQuantityUtilService

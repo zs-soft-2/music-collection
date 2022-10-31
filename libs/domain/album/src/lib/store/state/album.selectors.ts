@@ -25,6 +25,11 @@ export const getSelectedId = createSelector(
 	(state: State) => state.selectedId || ''
 );
 
+export const isLoading = createSelector(
+	getAlbumState,
+	(state: State) => state.loading
+);
+
 export const isNewEntityButtonEnabled = createSelector(
 	getAlbumState,
 	(state: State) => state.isNewEntityButtonEnabled

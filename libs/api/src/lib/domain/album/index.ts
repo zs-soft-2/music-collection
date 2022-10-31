@@ -1,5 +1,6 @@
 export * from './album-data.service';
 export * from './album-feature.key';
+export * from './album-hook.service';
 export * from './album-permissions.service';
 export * from './album-resource.enum';
 export * from './album-state.service';

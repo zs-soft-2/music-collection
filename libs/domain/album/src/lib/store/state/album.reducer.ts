@@ -43,11 +43,11 @@ export const albumReducer = createReducer(
 		...state,
 		isNewEntityButtonEnabled: enabled,
 	})),
-	on(albumActions.selectAlbum, (state, { albumId }) => ({
+	on(albumActions.selectAlbum, (state, { album }) => ({
 		...state,
 		loading: false,
 		error: null,
-		selectedAlbumId: albumId,
+		selectedAlbumId: album.uid,
 	})),
 	on(albumActions.updateAlbumSuccess, (state, { album }) =>
 		albumAdapter.updateOne(album, state)

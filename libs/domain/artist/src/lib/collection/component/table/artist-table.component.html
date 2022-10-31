@@ -12,6 +12,8 @@
 
 				<th>Styles</th>
 
+				<th>Images</th>
+
 				<th></th>
 			</tr>
 		</ng-template>
@@ -27,6 +29,22 @@
 						<p-chip styleClass="style">
 							{{ style }}
 						</p-chip>
+					</ng-container>
+				</td>
+
+				<td>
+					<ng-container *ngIf="artist.headerImage">
+						<i
+							class="pi pi-image"
+							style="color: red; margin: 1px"
+						></i>
+					</ng-container>
+
+					<ng-container
+						*ngIf="artist.mainImage"
+						style="color: blue; margin: 1px"
+					>
+						<i class="pi pi-image"></i>
 					</ng-container>
 				</td>
 

@@ -12,6 +12,8 @@ import {
 	AlbumUtilService,
 	ArtistEntity,
 	ArtistStateService,
+	DocumentEntity,
+	DocumentStateService,
 	StyleList,
 } from '@music-collection/api';
 
@@ -27,6 +29,7 @@ export class AlbumFormService {
 		private albumUtilService: AlbumUtilService,
 		private artistStateService: ArtistStateService,
 		private componentUtil: AlbumUtilService,
+		private documentStateService: DocumentStateService,
 		private router: Router
 	) {
 		this.params$$ = new ReplaySubject();
@@ -44,11 +47,12 @@ export class AlbumFormService {
 				combineLatest([
 					this.albumStateService.selectEntityById$(data['albumId']),
 					this.artistStateService.selectSearchResult$(),
+					this.documentStateService.selectSearchResult$(),
 				])
 			),
-			switchMap(([album, artists]) => {
+			switchMap(([album, artists, documents]) => {
 				this.album = album;
-				this.params = this.createAlbumParams(album, artists);
+				this.params = this.createAlbumParams(album, artists, documents);
 
 				this.params$$.next(this.params);
 
@@ -59,6 +63,10 @@ export class AlbumFormService {
 
 	public searchArtist(query: string): void {
 		this.artistStateService.dispatchSearch(query);
+	}
+
+	public searchDocument(term: string): void {
+		this.documentStateService.dispatchSearch(term);
 	}
 
 	public submit(): void {
@@ -83,14 +91,17 @@ export class AlbumFormService {
 
 	private createAlbumParams(
 		album: AlbumEntity | undefined,
-		artists: ArtistEntity[]
+		artists: ArtistEntity[],
+		documents: DocumentEntity[]
 	): AlbumFormParams {
 		const formGroup = this.albumUtilService.createFormGroup(album);
 
 		const albumFormParams: AlbumFormParams = {
 			artists,
+			documents,
 			formGroup,
 			styleList: StyleList,
+			isImagesTabActive: !!album,
 		};
 
 		return albumFormParams;
