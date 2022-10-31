@@ -29,6 +29,10 @@ export const changeNewEntityButtonEnabled = createAction(
 
 export const clearDocuments = createAction('[Document] Clear Documents');
 
+export const clearFilePath = createAction(
+	'[Document] Clear File Path'
+);
+
 export const deleteDocument = createAction(
 	'[Document] Delete Document',
 	props<{ document: DocumentEntity }>()

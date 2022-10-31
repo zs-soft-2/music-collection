@@ -33,6 +33,7 @@ export class DocumentFormService {
 
 	public cancel(): void {
 		this.selectedFile = undefined;
+		this.documentStateService.dispatchClearFilePathAction();
 
 		this.router.navigate(['../../list'], {
 			relativeTo: this.activatedRoute,
@@ -91,6 +92,7 @@ export class DocumentFormService {
 		}
 
 		this.selectedFile = undefined;
+		this.documentStateService.dispatchClearFilePathAction();
 
 		this.router.navigate(['../../list'], {
 			relativeTo: this.activatedRoute,

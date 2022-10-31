@@ -66,6 +66,10 @@ export const documentReducer = createReducer(
 	on(documentActions.clearDocuments, (state) =>
 		documentAdapter.removeAll(state)
 	),
+	on(documentActions.clearFilePath, (state) => ({
+		...state,
+		filePath: undefined,
+	})),
 	on(documentActions.setSelectedDocumentId, (state, { documentId }) => ({
 		...state,
 		selectedId: documentId,

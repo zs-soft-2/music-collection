@@ -32,6 +32,10 @@ export class DocumentStateServiceImpl extends DocumentStateService {
 		);
 	}
 
+	public dispatchClearFilePathAction(): void {
+		this.store.dispatch(documentActions.clearFilePath());
+	}
+
 	public dispatchDeleteEntityAction(document: DocumentEntity): void {
 		this.store.dispatch(documentActions.deleteDocument({ document }));
 	}
