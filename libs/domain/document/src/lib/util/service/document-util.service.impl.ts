@@ -6,6 +6,9 @@ import {
 	DocumentEntity,
 	DocumentEntityAdd,
 	DocumentEntityUpdate,
+	DocumentModel,
+	DocumentModelAdd,
+	DocumentModelUpdate,
 	DocumentUtilService,
 	EntityQuantityEntity,
 	EntityQuantityEntityUpdate,
@@ -23,7 +26,7 @@ export class DocumentUtilServiceImpl extends DocumentUtilService {
 
 	public createEntity(formGroup: FormGroup): DocumentEntityAdd {
 		return {
-			name: formGroup.value['name'],
+			name: (formGroup.value['name'] as string).trim(),
 			filePath: formGroup.value['filePath'],
 			originalName: formGroup.value['originalName'],
 			fileType: formGroup.value['fileType'],
@@ -65,7 +68,7 @@ export class DocumentUtilServiceImpl extends DocumentUtilService {
 
 	public updateEntity(formGroup: FormGroup): DocumentEntityUpdate {
 		return {
-			name: formGroup.value['name'],
+			name: (formGroup.value['name'] as string).trim(),
 			filePath: formGroup.value['filePath'],
 			originalName: formGroup.value['originalName'],
 			fileType: formGroup.value['fileType'],
@@ -80,5 +83,70 @@ export class DocumentUtilServiceImpl extends DocumentUtilService {
 			...entityQuantity,
 			quantity: entityQuantity.quantity + 1,
 		};
+	}
+
+	public convertEntityAddToModelAdd(
+		entity: DocumentEntityAdd
+	): DocumentModelAdd {
+		return {
+			...entity,
+			searchParameters: this.createSearchParameters(entity.name),
+		};
+	}
+
+	public convertEntityToModel(entity: DocumentEntity): DocumentModel {
+		return {
+			...entity,
+			searchParameters: this.createSearchParameters(entity.name),
+		};
+	}
+
+	public convertEntityUpdateToModelUpdate(
+		entity: DocumentEntityUpdate
+	): DocumentModelUpdate {
+		return {
+			...entity,
+			searchParameters: this.createSearchParameters(entity.name || ''),
+		};
+	}
+
+	public convertModelAddToEntityAdd(
+		model: DocumentModelAdd
+	): DocumentEntityAdd {
+		return {
+			...model,
+		};
+	}
+
+	public convertModelToEntity(model: DocumentModel): DocumentEntity {
+		return {
+			...model,
+		};
+	}
+
+	public convertModelUpdateToEntityUpdate(
+		model: DocumentModelUpdate
+	): DocumentEntityUpdate {
+		const entity: DocumentEntityUpdate = {
+			uid: model.uid,
+		};
+
+		if (model.filePath) {
+			entity.filePath = model.filePath;
+		}
+
+		if (model.fileType) {
+			entity.fileType = model.fileType;
+		}
+
+		if (model.name) {
+			entity.name = model.name;
+		}
+
+		if (model.originalName) {
+			entity.originalName = model.originalName;
+		}
+
+		return entity;
 	}
 }

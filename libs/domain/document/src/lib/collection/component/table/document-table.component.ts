@@ -1,10 +1,11 @@
+import { Observable } from 'rxjs';
+
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import {
+	BaseComponent,
 	DocumentEntity,
 	DocumentTableParams,
-	BaseComponent,
 } from '@music-collection/api';
-import { Observable } from 'rxjs';
 
 import { DocumentTableService } from './document-table.service';
 
@@ -32,5 +33,9 @@ export class DocumentTableComponent extends BaseComponent implements OnInit {
 
 	public ngOnInit(): void {
 		this.params$ = this.componentService.init$();
+	}
+
+	public searchHandler(event: any): void {
+		this.componentService.searchHandler(event['query']);
 	}
 }

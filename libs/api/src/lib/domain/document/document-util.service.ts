@@ -5,6 +5,9 @@ import {
 	DocumentEntity,
 	DocumentEntityAdd,
 	DocumentEntityUpdate,
+	DocumentModel,
+	DocumentModelAdd,
+	DocumentModelUpdate,
 } from './document';
 
 export abstract class DocumentUtilService extends EntityUtilService<
@@ -20,4 +23,18 @@ export abstract class DocumentUtilService extends EntityUtilService<
 		originalName: string | undefined,
 		uid: string | undefined
 	): FormGroup;
+	public abstract convertEntityAddToModelAdd(
+		entity: DocumentEntityAdd
+	): DocumentModelAdd;
+	public abstract convertEntityToModel(entity: DocumentEntity): DocumentModel;
+	public abstract convertEntityUpdateToModelUpdate(
+		entity: DocumentEntityUpdate
+	): DocumentModelUpdate;
+	public abstract convertModelAddToEntityAdd(
+		model: DocumentModelAdd
+	): DocumentEntityAdd;
+	public abstract convertModelToEntity(model: DocumentModel): DocumentEntity;
+	public abstract convertModelUpdateToEntityUpdate(
+		model: DocumentModelUpdate
+	): DocumentEntityUpdate;
 }

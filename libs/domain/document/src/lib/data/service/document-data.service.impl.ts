@@ -20,15 +20,15 @@ import { getDownloadURL } from '@firebase/storage';
 import {
 	DOCUMENT_FEATURE_KEY,
 	DocumentDataService,
-	DocumentEntity,
-	DocumentEntityAdd,
-	DocumentEntityUpdate,
+	DocumentModel,
+	DocumentModelAdd,
+	DocumentModelUpdate,
 	DocumentFile,
 } from '@music-collection/api';
 
 @Injectable()
 export class DocumentDataServiceImpl extends DocumentDataService {
-	private documentCollection: CollectionReference<DocumentData>;
+	protected documentCollection: CollectionReference<DocumentData>;
 
 	public constructor(private firestore: Firestore, private storage: Storage) {
 		super();
@@ -39,9 +39,9 @@ export class DocumentDataServiceImpl extends DocumentDataService {
 		);
 	}
 
-	public add$(document: DocumentEntityAdd): Observable<DocumentEntity> {
+	public add$(document: DocumentModelAdd): Observable<DocumentModel> {
 		const uid = doc(collection(this.firestore, 'id')).id;
-		const newDocument: DocumentEntity = {
+		const newDocument: DocumentModel = {
 			...document,
 			uid,
 		};
@@ -50,28 +50,28 @@ export class DocumentDataServiceImpl extends DocumentDataService {
 			setDoc(doc(this.documentCollection, uid), newDocument).then(() => {
 				subscriber.next({
 					...newDocument,
-				} as unknown as DocumentEntity);
+				} as unknown as DocumentModel);
 			});
 		});
 	}
 
-	public delete$(document: DocumentEntity): Observable<DocumentEntity> {
+	public delete$(document: DocumentModel): Observable<DocumentModel> {
 		return this.update$(
-			document as DocumentEntityUpdate
-		) as Observable<DocumentEntity>;
+			document as DocumentModelUpdate
+		) as Observable<DocumentModel>;
 	}
 
 	public getDownloadURL(path: string): Observable<string> {
 		return from(getDownloadURL(ref(this.storage, path)));
 	}
 
-	public list$(): Observable<DocumentEntity[]> {
+	public list$(): Observable<DocumentModel[]> {
 		return collectionData(this.documentCollection, {
 			idField: 'uid',
-		}) as Observable<DocumentEntity[]>;
+		}) as Observable<DocumentModel[]>;
 	}
 
-	public load$(uid: string): Observable<DocumentEntity | undefined> {
+	public load$(uid: string): Observable<DocumentModel | undefined> {
 		const documentDocument = doc(
 			this.firestore,
 			`${DOCUMENT_FEATURE_KEY}/${uid}`
@@ -79,13 +79,13 @@ export class DocumentDataServiceImpl extends DocumentDataService {
 
 		return docData(documentDocument, {
 			idField: 'uid',
-		}) as Observable<DocumentEntity>;
+		}) as Observable<DocumentModel>;
 	}
 
-	public search$(term: string): Observable<DocumentEntity[]> {
+	public search$(term: string): Observable<DocumentModel[]> {
 		const documentQuery = query(
 			this.documentCollection,
-			where('name', '>=', term)
+			where('searchParameters', 'array-contains', term.toLowerCase())
 		);
 
 		return new Observable((subscriber) => {
@@ -96,7 +96,7 @@ export class DocumentDataServiceImpl extends DocumentDataService {
 							(doc) =>
 								({
 									...doc.data(),
-								} as unknown as DocumentEntity)
+								} as unknown as DocumentModel)
 						)
 					);
 				})
@@ -107,15 +107,15 @@ export class DocumentDataServiceImpl extends DocumentDataService {
 	}
 
 	public update$(
-		document: DocumentEntityUpdate
-	): Observable<DocumentEntityUpdate> {
+		document: DocumentModelUpdate
+	): Observable<DocumentModelUpdate> {
 		const documentDocument = doc(
 			this.firestore,
 			`${DOCUMENT_FEATURE_KEY}/${document.uid}`
 		);
 
 		return new Observable((subscriber) => {
-			updateDoc(documentDocument, { ...document }).then((data) => {
+			updateDoc(documentDocument, { ...document }).then(() => {
 				subscriber.next(document);
 			});
 		});

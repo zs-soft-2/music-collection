@@ -4,6 +4,8 @@ export enum GenreEnum {
 
 export enum StyleEnum {
 	Death = 'Death',
+	Glam_Rock = 'Glam Rock',
+	Glam_Metal = 'Glam Metal',
 	Gothenburg = 'Gothenburg',
 	Groove = 'Groove',
 	Hard_Rock = 'Hard rock',
@@ -15,6 +17,8 @@ export enum StyleEnum {
 
 export const StyleList: StyleEnum[] = [
 	StyleEnum.Death,
+	StyleEnum.Glam_Metal,
+	StyleEnum.Glam_Rock,
 	StyleEnum.Gothenburg,
 	StyleEnum.Groove,
 	StyleEnum.Hard_Rock,

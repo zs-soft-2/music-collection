@@ -31,13 +31,19 @@ export class DocumentEffects {
 					)
 			),
 			switchMap(({ action, entityQuantityEntity }) =>
-				this.documentDataService.add$(action.document).pipe(
-					map((document) => {
-						return documentActions.addDocumentSuccess({
-							document,
-						});
-					})
-				)
+				this.documentDataService
+					.add$(
+						this.documentUtilService.convertEntityAddToModelAdd(
+							action.document
+						)
+					)
+					.pipe(
+						map((document) => {
+							return documentActions.addDocumentSuccess({
+								document,
+							});
+						})
+					)
 			)
 		)
 	);
@@ -46,6 +52,13 @@ export class DocumentEffects {
 			ofType(documentActions.listDocuments),
 			switchMap(() =>
 				this.documentDataService.list$().pipe(
+					map((documents) =>
+						documents.map((document) =>
+							this.documentUtilService.convertModelToEntity(
+								document
+							)
+						)
+					),
 					map((documents) => {
 						return documentActions.listDocumentsSuccess({
 							documents,
@@ -62,7 +75,11 @@ export class DocumentEffects {
 				this.documentDataService.load$(action.uid).pipe(
 					map((document) => {
 						return documentActions.loadDocumentSuccess({
-							document: document as DocumentEntity,
+							document: document
+								? this.documentUtilService.convertModelToEntity(
+										document
+								  )
+								: undefined,
 						});
 					}),
 					catchError((error) => {
@@ -77,6 +94,13 @@ export class DocumentEffects {
 			ofType(documentActions.search),
 			switchMap((action) =>
 				this.documentDataService.search$(action.term).pipe(
+					map((result) =>
+						result.map((document) =>
+							this.documentUtilService.convertModelToEntity(
+								document
+							)
+						)
+					),
 					map((result) => {
 						return documentActions.searchSuccess({
 							result,
@@ -93,16 +117,25 @@ export class DocumentEffects {
 		this.actions$.pipe(
 			ofType(documentActions.updateDocument),
 			switchMap((action) =>
-				this.documentDataService.update$(action.document).pipe(
-					map((document) => {
-						return documentActions.updateDocumentSuccess({
-							document: {
-								id: document.uid || '',
-								changes: document,
-							},
-						});
-					})
-				)
+				this.documentDataService
+					.update$(
+						this.documentUtilService.convertEntityUpdateToModelUpdate(
+							action.document
+						)
+					)
+					.pipe(
+						map((document) => {
+							return documentActions.updateDocumentSuccess({
+								document: {
+									id: document.uid || '',
+									changes:
+										this.documentUtilService.convertModelUpdateToEntityUpdate(
+											document
+										),
+								},
+							});
+						})
+					)
 			)
 		)
 	);
