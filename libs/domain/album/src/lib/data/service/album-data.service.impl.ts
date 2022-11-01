@@ -88,7 +88,7 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 	public search$(term: string): Observable<AlbumModel[]> {
 		const albumQuery = query(
 			this.albumCollection,
-			where('name', '>=', term)
+			where('searchParameters', 'array-contains', term.toLowerCase())
 		);
 
 		return new Observable((subscriber) => {

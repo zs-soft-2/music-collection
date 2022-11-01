@@ -1,6 +1,6 @@
 import { FormGroup } from '@angular/forms';
 
-import { GenreEnum, Identifiable, StyleEnum } from '../../common';
+import { GenreEnum, Identifiable, Searchable, StyleEnum } from '../../common';
 import { ArtistEntity } from '../artist';
 import { DocumentEntity } from '../document';
 
@@ -23,7 +23,8 @@ export type AlbumEntityAdd = Omit<AlbumEntity, 'uid'>;
 export type AlbumEntityUpdate = Partial<AlbumEntity> & Identifiable;
 
 export type AlbumModel = Album &
-	Identifiable & {
+	Identifiable &
+	Searchable & {
 		year: number;
 	};
 
@@ -41,6 +42,7 @@ export type AlbumFormParams = {
 
 export type AlbumTableParams = {
 	albums: AlbumEntity[];
+	empty: string[];
 };
 
 export type AlbumListParams = {

@@ -31,10 +31,11 @@ export class AlbumTableService extends BaseComponent {
 	}
 
 	public init$(): Observable<AlbumTableParams> {
-		return this.albumStateService.selectEntities$().pipe(
+		return this.albumStateService.selectSearchResult$().pipe(
 			switchMap((albums) => {
 				this.params = {
 					albums,
+					empty: [],
 				};
 
 				this.params$$.next(this.params);
@@ -42,5 +43,9 @@ export class AlbumTableService extends BaseComponent {
 				return this.params$$;
 			})
 		);
+	}
+
+	public searchHandler(query: string): void {
+		this.albumStateService.dispatchSearch(query);
 	}
 }
