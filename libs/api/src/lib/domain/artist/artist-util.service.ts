@@ -13,23 +13,19 @@ export abstract class ArtistUtilService extends EntityUtilService<
 	ArtistEntityAdd,
 	ArtistEntityUpdate
 > {
-	public abstract convertEntityToModel(entity: ArtistEntity): ArtistModel;
-
 	public abstract convertEntityAddToModelAdd(
 		entity: ArtistEntityAdd
 	): ArtistModelAdd;
-
+	public abstract convertEntityToModel(entity: ArtistEntity): ArtistModel;
 	public abstract convertEntityUpdateToModelUpdate(
 		entity: ArtistEntityUpdate
 	): ArtistModelUpdate;
-
-	public abstract convertModelToEntity(model: ArtistModel): ArtistEntity;
-
 	public abstract convertModelAddToEntityAdd(
 		model: ArtistModelAdd
 	): ArtistEntityAdd;
-
+	public abstract convertModelToEntity(model: ArtistModel): ArtistEntity;
 	public abstract convertModelUpdateToEntityUpdate(
 		model: ArtistModelUpdate
 	): ArtistEntityUpdate;
+	public abstract createSearchParameters(name: string): string[];
 }

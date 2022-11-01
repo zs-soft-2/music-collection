@@ -31,10 +31,11 @@ export class ArtistTableService extends BaseComponent {
 	}
 
 	public init$(): Observable<ArtistTableParams> {
-		return this.artistStateService.selectEntities$().pipe(
+		return this.artistStateService.selectSearchResult$().pipe(
 			switchMap((artists) => {
 				this.params = {
 					artists,
+					empty: [],
 				};
 
 				this.params$$.next(this.params);
@@ -42,5 +43,9 @@ export class ArtistTableService extends BaseComponent {
 				return this.params$$;
 			})
 		);
+	}
+
+	public searchHandler(query: string): void {
+		this.artistStateService.dispatchSearch(query);
 	}
 }

@@ -88,7 +88,7 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 	public search$(term: string): Observable<ArtistModel[]> {
 		const artistQuery = query(
 			this.artistCollection,
-			where('name', '>=', term)
+			where('searchParameters', 'array-contains', term.toLowerCase())
 		);
 
 		return new Observable((subscriber) => {

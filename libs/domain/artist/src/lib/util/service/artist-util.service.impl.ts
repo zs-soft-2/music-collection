@@ -22,54 +22,11 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 		super();
 	}
 
-	public createEntity(formGroup: FormGroup): ArtistEntityAdd {
+	public convertEntityAddToModelAdd(entity: ArtistEntityAdd): ArtistModelAdd {
 		return {
-			description: formGroup.value['description'],
-			formedIn: formGroup.value['formedIn'],
-			genre: GenreEnum.Rock,
-			headerImage: formGroup.value['headerImage'],
-			mainImage: formGroup.value['mainImage'],
-			name: formGroup.value['name'],
-			sites: [],
-			styles: formGroup.value['styles'],
-		};
-	}
-
-	public updateEntity(formGroup: FormGroup): ArtistEntityUpdate {
-		return {
-			description: formGroup.value['description'],
-			formedIn: formGroup.value['formedIn'],
-			genre: GenreEnum.Rock,
-			headerImage: formGroup.value['headerImage'],
-			mainImage: formGroup.value['mainImage'],
-			name: formGroup.value['name'],
-			styles: formGroup.value['styles'],
-			sites: [],
-			uid: formGroup.value['uid'],
-		};
-	}
-
-	public createFormGroup(artist: ArtistEntity | undefined): FormGroup {
-		return this.formBuilder.group({
-			description: [artist?.description || null],
-			formedIn: [artist?.formedIn || null, [Validators.required]],
-			headerImage: [artist?.headerImage || null],
-			mainImage: [artist?.mainImage || null],
-			name: [
-				artist?.name || null,
-				[Validators.required, Validators.min(3), Validators.max(30)],
-			],
-			styles: [artist?.styles || null, [Validators.required]],
-			uid: [artist?.uid],
-		});
-	}
-
-	public updateEntityQuantity(
-		entityQuantity: EntityQuantityEntity
-	): EntityQuantityEntityUpdate {
-		return {
-			...entityQuantity,
-			quantity: entityQuantity.quantity + 1,
+			...entity,
+			formedIn: entity.formedIn?.getTime(),
+			searchParameters: this.createSearchParameters(entity.name),
 		};
 	}
 
@@ -77,13 +34,7 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 		return {
 			...entity,
 			formedIn: entity.formedIn?.getTime(),
-		};
-	}
-
-	public convertEntityAddToModelAdd(entity: ArtistEntityAdd): ArtistModelAdd {
-		return {
-			...entity,
-			formedIn: entity.formedIn?.getTime(),
+			searchParameters: this.createSearchParameters(entity.name),
 		};
 	}
 
@@ -93,17 +44,18 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 		return {
 			...entity,
 			formedIn: entity.formedIn?.getTime(),
+			searchParameters: this.createSearchParameters(entity.name || ''),
 		};
 	}
 
-	public convertModelToEntity(model: ArtistModel): ArtistEntity {
+	public convertModelAddToEntityAdd(model: ArtistModelAdd): ArtistEntityAdd {
 		return {
 			...model,
 			formedIn: new Date(model.formedIn),
 		};
 	}
 
-	public convertModelAddToEntityAdd(model: ArtistModelAdd): ArtistEntityAdd {
+	public convertModelToEntity(model: ArtistModel): ArtistEntity {
 		return {
 			...model,
 			formedIn: new Date(model.formedIn),
@@ -146,5 +98,69 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 		}
 
 		return entity;
+	}
+
+	public createEntity(formGroup: FormGroup): ArtistEntityAdd {
+		return {
+			description: formGroup.value['description'],
+			formedIn: formGroup.value['formedIn'],
+			genre: GenreEnum.Rock,
+			headerImage: formGroup.value['headerImage'],
+			mainImage: formGroup.value['mainImage'],
+			name: (formGroup.value['name'] as string).trim(),
+			sites: [],
+			styles: formGroup.value['styles'],
+		};
+	}
+
+	public createFormGroup(artist: ArtistEntity | undefined): FormGroup {
+		return this.formBuilder.group({
+			description: [artist?.description || null],
+			formedIn: [artist?.formedIn || null, [Validators.required]],
+			headerImage: [artist?.headerImage || null],
+			mainImage: [artist?.mainImage || null],
+			name: [
+				artist?.name || null,
+				[Validators.required, Validators.min(3), Validators.max(30)],
+			],
+			styles: [artist?.styles || null, [Validators.required]],
+			uid: [artist?.uid],
+		});
+	}
+
+	public createSearchParameters(name: string): string[] {
+		const searchOptions: string[] = [];
+		let temp = '';
+
+		for (let i = 0; i < name.length; i++) {
+			temp = temp + name[i].toLowerCase();
+
+			searchOptions.push(temp);
+		}
+
+		return searchOptions;
+	}
+
+	public updateEntity(formGroup: FormGroup): ArtistEntityUpdate {
+		return {
+			description: formGroup.value['description'],
+			formedIn: formGroup.value['formedIn'],
+			genre: GenreEnum.Rock,
+			headerImage: formGroup.value['headerImage'],
+			mainImage: formGroup.value['mainImage'],
+			name: (formGroup.value['name'] as string).trim(),
+			styles: formGroup.value['styles'],
+			sites: [],
+			uid: formGroup.value['uid'],
+		};
+	}
+
+	public updateEntityQuantity(
+		entityQuantity: EntityQuantityEntity
+	): EntityQuantityEntityUpdate {
+		return {
+			...entityQuantity,
+			quantity: entityQuantity.quantity + 1,
+		};
 	}
 }
