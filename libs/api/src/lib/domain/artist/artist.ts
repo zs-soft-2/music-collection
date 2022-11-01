@@ -1,5 +1,5 @@
 import { FormGroup } from '@angular/forms';
-import { GenreEnum, Identifiable, StyleEnum } from '../../common';
+import { GenreEnum, Identifiable, Searchable, StyleEnum } from '../../common';
 import { DocumentEntity } from '../document';
 
 export interface Artist {
@@ -23,13 +23,16 @@ export type ArtistEntityAdd = Omit<ArtistEntity, 'uid'>;
 export type ArtistEntityUpdate = Partial<ArtistEntity> & Identifiable;
 
 export type ArtistModel = Artist &
-	Identifiable & {
+	Identifiable &
+	Searchable & {
 		formedIn: number;
 	};
 
 export type ArtistModelAdd = Omit<ArtistModel, 'uid'>;
 
-export type ArtistModelUpdate = Partial<ArtistModel> & Identifiable;
+export type ArtistModelUpdate = Partial<ArtistModel> &
+	Identifiable &
+	Searchable;
 
 export type ArtistFormParams = {
 	documents: DocumentEntity[];
@@ -40,6 +43,7 @@ export type ArtistFormParams = {
 
 export type ArtistTableParams = {
 	artists: ArtistEntity[];
+	empty: string[];
 };
 
 export type ArtistListParams = {

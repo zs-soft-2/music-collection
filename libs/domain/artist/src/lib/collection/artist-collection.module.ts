@@ -1,3 +1,4 @@
+import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { CarouselModule } from 'primeng/carousel';
 import { ChipModule } from 'primeng/chip';
@@ -14,6 +15,7 @@ import { ArtistListComponent, ArtistTableComponent } from './component';
 	exports: [ArtistListComponent, ArtistTableComponent],
 	imports: [
 		CommonModule,
+		AutoCompleteModule,
 		ButtonModule,
 		CarouselModule,
 		ChipModule,
