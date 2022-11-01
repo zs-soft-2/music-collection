@@ -27,5 +27,4 @@ export abstract class ArtistUtilService extends EntityUtilService<
 	public abstract convertModelUpdateToEntityUpdate(
 		model: ArtistModelUpdate
 	): ArtistEntityUpdate;
-	public abstract createSearchParameters(name: string): string[];
 }

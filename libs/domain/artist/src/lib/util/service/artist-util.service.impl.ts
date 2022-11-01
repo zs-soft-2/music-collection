@@ -128,19 +128,6 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 		});
 	}
 
-	public createSearchParameters(name: string): string[] {
-		const searchOptions: string[] = [];
-		let temp = '';
-
-		for (let i = 0; i < name.length; i++) {
-			temp = temp + name[i].toLowerCase();
-
-			searchOptions.push(temp);
-		}
-
-		return searchOptions;
-	}
-
 	public updateEntity(formGroup: FormGroup): ArtistEntityUpdate {
 		return {
 			description: formGroup.value['description'],

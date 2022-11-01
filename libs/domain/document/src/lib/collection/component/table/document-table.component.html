@@ -14,6 +14,23 @@
 
 				<th></th>
 			</tr>
+
+			<tr>
+				<th>
+					<p-autoComplete
+						[suggestions]="params.empty"
+						[showClear]="true"
+						(completeMethod)="searchHandler($event)"
+						[minLength]="3"
+						[delay]="400"
+					>
+					</p-autoComplete>
+				</th>
+
+				<th></th>
+
+				<th></th>
+			</tr>
 		</ng-template>
 
 		<ng-template pTemplate="body" let-document>

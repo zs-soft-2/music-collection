@@ -31,10 +31,11 @@ export class DocumentTableService extends BaseComponent {
 	}
 
 	public init$(): Observable<DocumentTableParams> {
-		return this.documentStateService.selectEntities$().pipe(
+		return this.documentStateService.selectSearchResult$().pipe(
 			switchMap((documents) => {
 				this.params = {
 					documents,
+					empty: [],
 				};
 
 				this.params$$.next(this.params);
@@ -42,5 +43,9 @@ export class DocumentTableService extends BaseComponent {
 				return this.params$$;
 			})
 		);
+	}
+
+	public searchHandler(query: string): void {
+		this.documentStateService.dispatchSearch(query);
 	}
 }
