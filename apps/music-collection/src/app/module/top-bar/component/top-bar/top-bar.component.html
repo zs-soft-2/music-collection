@@ -2,7 +2,12 @@
 	<section class="top-bar">
 		<p-menubar [model]="params.menuItems">
 			<ng-template pTemplate="start">
-				<img src="assets/music.png" height="40" class="mr-2" />
+				<img
+					src="assets/music.png"
+					height="40"
+					class="mr-2"
+					(click)="imgClickHandler()"
+				/>
 
 				<span class="title">musiCollection</span>
 			</ng-template>

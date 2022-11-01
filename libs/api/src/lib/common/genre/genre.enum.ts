@@ -12,6 +12,7 @@ export enum StyleEnum {
 	Heavy = 'Heavy metal',
 	Progressive_Death = 'Progressive Death',
 	Teachnical_Death = 'Technical Death',
+	Teutonic_Thrash = 'Teutonic Thrash',
 	Thrash = 'Thrash',
 }
 
@@ -25,5 +26,6 @@ export const StyleList: StyleEnum[] = [
 	StyleEnum.Heavy,
 	StyleEnum.Progressive_Death,
 	StyleEnum.Teachnical_Death,
+	StyleEnum.Teutonic_Thrash,
 	StyleEnum.Thrash,
 ];

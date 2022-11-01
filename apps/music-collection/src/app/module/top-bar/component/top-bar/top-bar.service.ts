@@ -4,7 +4,7 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { MenuItem, TopBarParams } from '../../api';
-import { AuthenticationStateService, User } from '@music-collection/api';
+import { AuthenticationStateService } from '@music-collection/api';
 
 @Injectable()
 export class TopBarService {
@@ -38,5 +38,9 @@ export class TopBarService {
 				return this.params$$;
 			})
 		);
+	}
+
+	public imgClickHandler(): void {
+		this.router.navigate(['/']);
 	}
 }

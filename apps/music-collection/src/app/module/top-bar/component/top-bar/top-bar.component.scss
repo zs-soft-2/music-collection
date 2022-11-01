@@ -13,6 +13,10 @@
 .top-bar {
 	margin-bottom: 1rem;
 	border-bottom: #656565 1px solid;
+
+	img:hover {
+		cursor: pointer;
+	}
 }
 
 .title {

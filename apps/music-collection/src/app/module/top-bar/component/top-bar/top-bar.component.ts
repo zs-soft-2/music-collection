@@ -28,4 +28,8 @@ export class TopBarComponent extends BaseComponent implements OnInit {
 			.pipe(takeUntil(this.destroy))
 			.subscribe((topBarParams) => this.params$$.next(topBarParams));
 	}
+
+	public imgClickHandler(): void {
+		this.componentService.imgClickHandler();
+	}
 }
