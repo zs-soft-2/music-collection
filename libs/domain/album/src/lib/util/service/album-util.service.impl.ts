@@ -27,6 +27,7 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 	public convertEntityAddToModelAdd(entity: AlbumEntityAdd): AlbumModelAdd {
 		return {
 			...entity,
+			searchParameters: this.createSearchParameters(entity.name || ''),
 			year: entity.year?.getTime(),
 		};
 	}
@@ -34,6 +35,7 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 	public convertEntityToModel(entity: AlbumEntity): AlbumModel {
 		return {
 			...entity,
+			searchParameters: this.createSearchParameters(entity.name || ''),
 			year: entity.year?.getTime(),
 		};
 	}
@@ -43,6 +45,7 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 	): AlbumModelUpdate {
 		return {
 			...entity,
+			searchParameters: this.createSearchParameters(entity.name || ''),
 			year: entity.year?.getTime(),
 		};
 	}
@@ -100,7 +103,7 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 			artist: this.createSimpleArtist(formGroup.value['artist']),
 			coverImage: formGroup.value['coverImage'],
 			genre: GenreEnum.Rock,
-			name: formGroup.value['name'],
+			name: (formGroup.value['name'] as string).trim(),
 			styles: formGroup.value['styles'],
 			songs: formGroup.value['songs'],
 			year: formGroup.value['year'],
@@ -124,7 +127,7 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 			artist: this.createSimpleArtist(formGroup.value['artist']),
 			coverImage: formGroup.value['coverImage'],
 			genre: GenreEnum.Rock,
-			name: formGroup.value['name'],
+			name: (formGroup.value['name'] as string).trim(),
 			songs: formGroup.value['songs'],
 			styles: formGroup.value['styles'],
 			uid: formGroup.value['uid'],
