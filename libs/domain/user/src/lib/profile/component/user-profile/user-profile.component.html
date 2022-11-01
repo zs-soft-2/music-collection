@@ -1,9 +1,19 @@
-<div>
+<div class="user-profile">
 	<ng-container>
 		<p-avatar
 			shape="circle"
 			size="large"
 			[image]="user.photoURL || ''"
+			(click)="menu.toggle($event)"
 		></p-avatar>
+
+		<p-menu
+			[showTransitionOptions]="'0ms'"
+			[hideTransitionOptions]="'0ms'"
+			#menu
+			[popup]="true"
+			[model]="userMenuItems"
+		>
+		</p-menu>
 	</ng-container>
 </div>
