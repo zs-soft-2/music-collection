@@ -7,7 +7,6 @@ export class ArtistListPageResolverService implements Resolve<void> {
 	constructor(private artistStateService: ArtistStateService) {}
 
 	public resolve(): void {
-		this.artistStateService.dispatchListEntitiesAction();
 		this.artistStateService.dispatchSetSelectedEntityIdAction('');
 		this.artistStateService.dispatchChangeNewEntityButtonEnabled(true);
 	}

@@ -1,16 +1,26 @@
 <section class="album-table" *ngIf="params$ | async as params">
 	<p-table
 		[value]="params.albums"
+		[paginator]="true"
+		[rows]="10"
+		sortField="name"
+		sortMode="multiple"
 		styleClass="p-datatable-striped p-datatable-sm"
 		responsiveLayout="scroll"
 	>
 		<ng-template pTemplate="header">
 			<tr>
-				<th>Name</th>
+				<th pSortableColumn="name">
+					Name <p-sortIcon field="name"></p-sortIcon>
+				</th>
 
-				<th>Artist</th>
+				<th pSortableColumn="artist.name">
+					Artist <p-sortIcon field="artist.name"></p-sortIcon>
+				</th>
 
-				<th>Year</th>
+				<th pSortableColumn="year">
+					Year <p-sortIcon field="year"></p-sortIcon>
+				</th>
 
 				<th>Styles</th>
 
@@ -27,6 +37,7 @@
 						(completeMethod)="searchHandler($event)"
 						[minLength]="3"
 						[delay]="400"
+						class="p-inputtext-sm"
 					>
 					</p-autoComplete>
 				</th>

@@ -1,14 +1,22 @@
 <section class="artist-table" *ngIf="params$ | async as params">
 	<p-table
 		[value]="params.artists"
+		sortField="name"
+		sortMode="multiple"
 		styleClass="p-datatable-striped p-datatable-sm"
 		responsiveLayout="scroll"
+		[paginator]="true"
+		[rows]="10"
 	>
 		<ng-template pTemplate="header">
 			<tr>
-				<th>Name</th>
+				<th pSortableColumn="name">
+					Name <p-sortIcon field="name"></p-sortIcon>
+				</th>
 
-				<th>Formed in</th>
+				<th pSortableColumn="formedIn">
+					Formed in <p-sortIcon field="formedIn"></p-sortIcon>
+				</th>
 
 				<th>Styles</th>
 
@@ -21,6 +29,7 @@
 					<p-autoComplete
 						[suggestions]="params.empty"
 						[showClear]="true"
+						class="p-inputtext-sm"
 						(completeMethod)="searchHandler($event)"
 						[minLength]="3"
 						[delay]="400"
@@ -42,7 +51,7 @@
 			<tr>
 				<td>{{ artist.name }}</td>
 
-				<td>{{ artist.formedIn | date }}</td>
+				<td>{{ artist.formedIn | date: 'yyyy' }}</td>
 
 				<td>
 					<ng-container *ngFor="let style of artist.styles">

@@ -1,4 +1,11 @@
-import { Observable, of, ReplaySubject, switchMap } from 'rxjs';
+import {
+	filter,
+	first,
+	merge,
+	Observable,
+	ReplaySubject,
+	switchMap,
+} from 'rxjs';
 
 import { Injectable } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -31,7 +38,10 @@ export class ArtistTableService extends BaseComponent {
 	}
 
 	public init$(): Observable<ArtistTableParams> {
-		return this.artistStateService.selectSearchResult$().pipe(
+		return merge(
+			this.artistStateService.selectSearchResult$(),
+			this.artistStateService.selectEntities$().pipe(first())
+		).pipe(
 			switchMap((artists) => {
 				this.params = {
 					artists,

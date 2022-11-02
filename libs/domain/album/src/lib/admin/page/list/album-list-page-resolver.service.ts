@@ -7,7 +7,6 @@ export class AlbumListPageResolverService implements Resolve<void> {
 	constructor(private albumStateService: AlbumStateService) {}
 
 	public resolve(): void {
-		this.albumStateService.dispatchListEntitiesAction();
 		this.albumStateService.dispatchSetSelectedEntityIdAction('');
 		this.albumStateService.dispatchChangeNewEntityButtonEnabled(true);
 	}
