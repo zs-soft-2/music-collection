@@ -7,7 +7,6 @@ export class DocumentListPageResolverService implements Resolve<void> {
 	constructor(private documentStateService: DocumentStateService) {}
 
 	public resolve(): void {
-		this.documentStateService.dispatchListEntitiesAction();
 		this.documentStateService.dispatchSetSelectedEntityIdAction('');
 		this.documentStateService.dispatchChangeNewEntityButtonEnabled(true);
 	}

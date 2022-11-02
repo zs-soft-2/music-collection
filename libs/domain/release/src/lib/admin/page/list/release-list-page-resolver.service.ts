@@ -7,7 +7,6 @@ export class ReleaseListPageResolverService implements Resolve<void> {
 	constructor(private releaseStateService: ReleaseStateService) {}
 
 	public resolve(): void {
-		this.releaseStateService.dispatchListEntitiesAction();
 		this.releaseStateService.dispatchSetSelectedEntityIdAction('');
 		this.releaseStateService.dispatchChangeNewEntityButtonEnabled(true);
 	}

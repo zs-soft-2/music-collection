@@ -66,10 +66,12 @@ export const artistReducer = createReducer(
 		...state,
 		selectedId: artistId,
 	})),
-	on(artistActions.searchSuccess, (state, { result }) => ({
-		...state,
-		searchResult: result,
-	})),
+	on(artistActions.searchSuccess, (state, { result }) => {
+		return artistAdapter.upsertMany(result, {
+			...state,
+			searchResult: result,
+		});
+	}),
 	on(artistActions.searchFailed, (state, { error }) => ({
 		...state,
 		searchResult: [],

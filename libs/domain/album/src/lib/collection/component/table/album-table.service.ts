@@ -1,4 +1,4 @@
-import { Observable, of, ReplaySubject, switchMap } from 'rxjs';
+import { merge, Observable, ReplaySubject, switchMap } from 'rxjs';
 
 import { Injectable } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -31,7 +31,10 @@ export class AlbumTableService extends BaseComponent {
 	}
 
 	public init$(): Observable<AlbumTableParams> {
-		return this.albumStateService.selectSearchResult$().pipe(
+		return merge(
+			this.albumStateService.selectSearchResult$(),
+			this.albumStateService.selectEntities$()
+		).pipe(
 			switchMap((albums) => {
 				this.params = {
 					albums,

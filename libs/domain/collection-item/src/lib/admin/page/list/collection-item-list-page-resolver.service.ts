@@ -9,7 +9,6 @@ export class CollectionItemListPageResolverService implements Resolve<void> {
 	) {}
 
 	public resolve(): void {
-		this.collectionItemStateService.dispatchListEntitiesAction();
 		this.collectionItemStateService.dispatchSetSelectedEntityIdAction('');
 		this.collectionItemStateService.dispatchChangeNewEntityButtonEnabled(
 			true

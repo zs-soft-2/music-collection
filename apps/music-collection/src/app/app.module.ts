@@ -22,6 +22,7 @@ import { AppComponent } from './app.component';
 import { TopBarModule } from './module';
 import { HookModule } from './module/hook';
 import { ArtistPageResolverService } from './resolver';
+import { metaReducers } from './reducer';
 
 @NgModule({
 	declarations: [AppComponent],
@@ -34,7 +35,7 @@ import { ArtistPageResolverService } from './resolver';
 		StoreModule.forRoot(
 			{},
 			{
-				metaReducers: !environment.production ? [] : [],
+				metaReducers: metaReducers,
 				runtimeChecks: {
 					strictActionImmutability: true,
 					strictStateImmutability: true,
