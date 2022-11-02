@@ -1,4 +1,5 @@
 import { EntityUtilService } from '../../common';
+import { EntityQuantityEntity, EntityQuantityEntityUpdate } from '../../core';
 import {
 	AlbumEntity,
 	AlbumEntityAdd,
@@ -27,4 +28,8 @@ export abstract class AlbumUtilService extends EntityUtilService<
 	public abstract convertModelUpdateToEntityUpdate(
 		model: AlbumModelUpdate
 	): AlbumEntityUpdate;
+	public abstract updateEntityQuantity(
+		entityQuantityEntity: EntityQuantityEntity,
+		album: AlbumEntity
+	): EntityQuantityEntityUpdate;
 }

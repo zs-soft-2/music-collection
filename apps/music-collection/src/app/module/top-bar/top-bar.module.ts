@@ -3,7 +3,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { MenubarModule } from 'primeng/menubar';
 import { ToolbarModule } from 'primeng/toolbar';
 
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
@@ -21,6 +21,7 @@ import { CoreAuthenticationViewModule } from '@music-collection/core/authenticat
 		DropdownModule,
 		FormsModule,
 		MenubarModule,
+		NgOptimizedImage,
 		ToolbarModule,
 		UserProfileModule,
 	],

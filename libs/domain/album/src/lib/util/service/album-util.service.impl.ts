@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import {
 	AlbumArtist,
+	AlbumDocument,
 	AlbumEntity,
 	AlbumEntityAdd,
 	AlbumEntityUpdate,
@@ -10,8 +11,11 @@ import {
 	AlbumModelUpdate,
 	AlbumUtilService,
 	ArtistEntity,
+	DocumentEntity,
 	EntityQuantityEntity,
 	EntityQuantityEntityUpdate,
+	EntityQuantityGroup,
+	EntityTypeEnum,
 	GenreEnum,
 } from '@music-collection/api';
 
@@ -101,7 +105,9 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 	public createEntity(formGroup: FormGroup): AlbumEntityAdd {
 		return {
 			artist: this.createSimpleArtist(formGroup.value['artist']),
-			coverImage: formGroup.value['coverImage'],
+			coverImage: formGroup.value['coverImage']
+				? this.createSimpleDocument(formGroup.value['coverImage'])
+				: null,
 			genre: GenreEnum.Rock,
 			name: (formGroup.value['name'] as string).trim(),
 			styles: formGroup.value['styles'],
@@ -125,7 +131,9 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 	public updateEntity(formGroup: FormGroup): AlbumEntityUpdate {
 		return {
 			artist: this.createSimpleArtist(formGroup.value['artist']),
-			coverImage: formGroup.value['coverImage'],
+			coverImage: formGroup.value['coverImage']
+				? this.createSimpleDocument(formGroup.value['coverImage'])
+				: null,
 			genre: GenreEnum.Rock,
 			name: (formGroup.value['name'] as string).trim(),
 			songs: formGroup.value['songs'],
@@ -136,11 +144,23 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 	}
 
 	public updateEntityQuantity(
-		entityQuantity: EntityQuantityEntity
+		entityQuantity: EntityQuantityEntity,
+		album: AlbumEntity
 	): EntityQuantityEntityUpdate {
+		const group: object = { ...entityQuantity.group };
+		const artistGroup = (group as any)[EntityTypeEnum.Artist]
+			? { ...(group as any)[EntityTypeEnum.Artist] }
+			: {};
+		const artistProperty = artistGroup[album.artist.uid || ''] || 0;
+
+		artistGroup[album.artist.uid || ''] = artistProperty + 1;
+
+		(group as any)[EntityTypeEnum.Artist] = artistGroup;
+
 		return {
 			...entityQuantity,
 			quantity: entityQuantity.quantity + 1,
+			group: group as EntityQuantityGroup,
 		};
 	}
 
@@ -150,6 +170,16 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 		return {
 			uid,
 			name,
+		};
+	}
+
+	private createSimpleDocument(document: DocumentEntity): AlbumDocument {
+		const { uid, filePath, name } = document;
+
+		return {
+			filePath,
+			name,
+			uid,
 		};
 	}
 }

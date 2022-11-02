@@ -6,7 +6,7 @@ import { DocumentEntity } from '../document';
 
 export interface Album {
 	artist: AlbumArtist;
-	coverImage?: DocumentEntity;
+	coverImage: AlbumDocument | null;
 	genre: GenreEnum;
 	name: string;
 	songs: string[];
@@ -53,3 +53,5 @@ export type AlbumArtist = Omit<
 	ArtistEntity,
 	'sites' | 'members' | 'description' | 'formedIn' | 'genre' | 'styles'
 >;
+
+export type AlbumDocument = Omit<DocumentEntity, 'originalName' | 'fileType'>;

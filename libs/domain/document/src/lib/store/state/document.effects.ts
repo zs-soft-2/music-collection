@@ -39,6 +39,18 @@ export class DocumentEffects {
 					)
 					.pipe(
 						map((document) => {
+							entityQuantityEntity =
+								entityQuantityEntity ||
+								this.entityQuantityUtilService.createEntityQuantity(
+									EntityTypeEnum.Document
+								);
+
+							this.entityQuantityStateService.dispatchUpdateEntityAction(
+								this.documentUtilService.updateEntityQuantity(
+									entityQuantityEntity
+								)
+							);
+
 							return documentActions.addDocumentSuccess({
 								document,
 							});

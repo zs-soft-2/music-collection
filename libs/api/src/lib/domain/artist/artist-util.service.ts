@@ -1,4 +1,5 @@
 import { EntityUtilService } from '../../common';
+import { EntityQuantityEntity, EntityQuantityEntityUpdate } from '../../core';
 import {
 	ArtistEntity,
 	ArtistEntityAdd,
@@ -27,4 +28,7 @@ export abstract class ArtistUtilService extends EntityUtilService<
 	public abstract convertModelUpdateToEntityUpdate(
 		model: ArtistModelUpdate
 	): ArtistEntityUpdate;
+	public abstract updateEntityQuantity(
+		entityQuantity: EntityQuantityEntity
+	): EntityQuantityEntityUpdate;
 }

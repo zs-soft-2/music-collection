@@ -75,12 +75,13 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 	}
 
 	private createReleaseAlbum(album: AlbumEntity): ReleaseAlbum {
-		const { uid, name, artist, genre, songs, styles } = album;
+		const { uid, name, artist, coverImage, genre, songs, styles } = album;
 
 		return {
 			uid,
 			name,
 			artist,
+			coverImage,
 			genre,
 			songs,
 			styles,
