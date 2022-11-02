@@ -4,6 +4,7 @@ import { catchError, first, map, switchMap } from 'rxjs/operators';
 import { Injectable } from '@angular/core';
 import {
 	AlbumDataService,
+	AlbumEntity,
 	AlbumHookService,
 	AlbumUtilService,
 	EntityQuantityStateService,
@@ -39,10 +40,26 @@ export class AlbumEffects {
 					)
 					.pipe(
 						map((album) => {
-							return albumActions.addAlbumSuccess({
-								album: this.albumUtilService.convertModelToEntity(
+							entityQuantityEntity =
+								entityQuantityEntity ||
+								this.entityQuantityUtilService.createEntityQuantity(
+									EntityTypeEnum.Album
+								);
+
+							const albumEntity: AlbumEntity =
+								this.albumUtilService.convertModelToEntity(
 									album
-								),
+								);
+
+							this.entityQuantityStateService.dispatchUpdateEntityAction(
+								this.albumUtilService.updateEntityQuantity(
+									entityQuantityEntity,
+									albumEntity
+								)
+							);
+
+							return albumActions.addAlbumSuccess({
+								album: albumEntity,
 							});
 						})
 					)

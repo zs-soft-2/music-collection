@@ -1,6 +1,7 @@
 import { FormGroup } from '@angular/forms';
 
 import { EntityUtilService } from '../../common';
+import { EntityQuantityEntity, EntityQuantityEntityUpdate } from '../../core';
 import {
 	DocumentEntity,
 	DocumentEntityAdd,
@@ -15,14 +16,6 @@ export abstract class DocumentUtilService extends EntityUtilService<
 	DocumentEntityAdd,
 	DocumentEntityUpdate
 > {
-	public abstract createFilePath(data: string, folder?: string): string;
-	public abstract createFormGroupByProperties(
-		name: string | undefined,
-		filePath: string | undefined,
-		fileType: string | undefined,
-		originalName: string | undefined,
-		uid: string | undefined
-	): FormGroup;
 	public abstract convertEntityAddToModelAdd(
 		entity: DocumentEntityAdd
 	): DocumentModelAdd;
@@ -37,4 +30,15 @@ export abstract class DocumentUtilService extends EntityUtilService<
 	public abstract convertModelUpdateToEntityUpdate(
 		model: DocumentModelUpdate
 	): DocumentEntityUpdate;
+	public abstract createFilePath(data: string, folder?: string): string;
+	public abstract createFormGroupByProperties(
+		name: string | undefined,
+		filePath: string | undefined,
+		fileType: string | undefined,
+		originalName: string | undefined,
+		uid: string | undefined
+	): FormGroup;
+	public abstract updateEntityQuantity(
+		entityQuantity: EntityQuantityEntity
+	): EntityQuantityEntityUpdate;
 }

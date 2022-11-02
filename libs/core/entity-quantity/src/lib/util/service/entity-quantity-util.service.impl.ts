@@ -11,6 +11,7 @@ import {
 export class EntityQuantityUtilServiceImpl extends EntityQuantityUtilService {
 	public createEntityQuantity(type: EntityTypeEnum): EntityQuantityEntity {
 		return {
+			group: {},
 			items: [],
 			modifyDate: new Date(),
 			uid: type.toString(),

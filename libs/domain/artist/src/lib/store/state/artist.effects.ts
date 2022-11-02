@@ -39,6 +39,18 @@ export class ArtistEffects {
 					)
 					.pipe(
 						map((artist) => {
+							entityQuantityEntity =
+								entityQuantityEntity ||
+								this.entityQuantityUtilService.createEntityQuantity(
+									EntityTypeEnum.Artist
+								);
+
+							this.entityQuantityStateService.dispatchUpdateEntityAction(
+								this.artistUtilService.updateEntityQuantity(
+									entityQuantityEntity
+								)
+							);
+
 							return artistActions.addArtistSuccess({
 								artist: this.artistUtilService.convertModelToEntity(
 									artist

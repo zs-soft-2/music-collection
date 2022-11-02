@@ -1,6 +1,7 @@
 import { EntityTypeEnum, Identifiable } from '../../common';
 
 export interface EntityQuantity {
+	group: EntityQuantityGroup;
 	items: EntityQuantityItem[];
 	modifyDate: Date;
 	quantity: number;
@@ -16,5 +17,9 @@ export type EntityQuantityEntity = EntityQuantity & Identifiable;
 export type EntityQuantityEntityAdd = Omit<EntityQuantityEntity, 'uid'>;
 export type EntityQuantityEntityUpdate = Partial<EntityQuantityEntity> &
 	Identifiable;
+
+export interface EntityQuantityGroup {
+	[x: string]: number;
+}
 
 export const ENTITY_QUANTITY_FEATURE_KEY = 'entity-quantity';
