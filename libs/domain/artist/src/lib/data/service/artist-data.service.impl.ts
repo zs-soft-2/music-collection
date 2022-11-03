@@ -21,6 +21,10 @@ import {
 	ArtistModel,
 	ArtistModelAdd,
 	ArtistModelUpdate,
+	AlbumModelAdd,
+	AlbumModel,
+	ALBUM_FEATURE_KEY,
+	AlbumModelUpdate,
 } from '@music-collection/api';
 
 @Injectable()
@@ -43,6 +47,27 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 		return new Observable((subscriber) => {
 			setDoc(doc(this.artistCollection, uid), newArtist).then(() => {
 				subscriber.next({ ...newArtist } as unknown as ArtistModel);
+			});
+		});
+	}
+
+	public addAlbum$(album: AlbumModelAdd): Observable<AlbumModel> {
+		const uid = doc(collection(this.firestore, 'id')).id;
+		const newAlbum: AlbumModel = {
+			...album,
+			uid,
+		};
+
+		return new Observable((subscriber) => {
+			const docRef = doc(
+				this.firestore,
+				ARTIST_FEATURE_KEY,
+				newAlbum.artist.uid
+			);
+			const collectionReference = collection(docRef, ALBUM_FEATURE_KEY);
+
+			setDoc(doc(collectionReference, uid), newAlbum).then(() => {
+				subscriber.next({ ...newAlbum } as unknown as AlbumModel);
 			});
 		});
 	}
@@ -118,6 +143,19 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 		return new Observable((subscriber) => {
 			updateDoc(artistDocument, { ...artist }).then(() => {
 				subscriber.next(artist);
+			});
+		});
+	}
+
+	public updateAlbum$(album: AlbumModelUpdate): Observable<AlbumModelUpdate> {
+		const albumDocument = doc(
+			this.firestore,
+			`${ARTIST_FEATURE_KEY}/${album.artist?.uid}/${ALBUM_FEATURE_KEY}/${album.uid}`
+		);
+
+		return new Observable((subscriber) => {
+			updateDoc(albumDocument, { ...album }).then(() => {
+				subscriber.next(album);
 			});
 		});
 	}

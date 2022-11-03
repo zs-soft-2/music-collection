@@ -7,6 +7,7 @@ import {
 	AlbumEntity,
 	AlbumHookService,
 	AlbumUtilService,
+	ArtistDataService,
 	EntityQuantityStateService,
 	EntityQuantityUtilService,
 	EntityTypeEnum,
@@ -32,8 +33,8 @@ export class AlbumEffects {
 					)
 			),
 			switchMap(({ action, entityQuantityEntity }) =>
-				this.albumDataService
-					.add$(
+				this.artistDataService
+					.addAlbum$(
 						this.albumUtilService.convertEntityAddToModelAdd(
 							action.album
 						)
@@ -144,8 +145,8 @@ export class AlbumEffects {
 		this.actions$.pipe(
 			ofType(albumActions.updateAlbum),
 			switchMap((action) =>
-				this.albumDataService
-					.update$(
+				this.artistDataService
+					.updateAlbum$(
 						this.albumUtilService.convertEntityUpdateToModelUpdate(
 							action.album
 						)
@@ -172,6 +173,7 @@ export class AlbumEffects {
 		private albumDataService: AlbumDataService,
 		private albumHookService: AlbumHookService,
 		private albumUtilService: AlbumUtilService,
+		private artistDataService: ArtistDataService,
 		private entityQuantityStateService: EntityQuantityStateService,
 		private entityQuantityUtilService: EntityQuantityUtilService
 	) {}

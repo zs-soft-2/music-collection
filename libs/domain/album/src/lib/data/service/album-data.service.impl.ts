@@ -4,6 +4,7 @@ import { Injectable } from '@angular/core';
 import {
 	collection,
 	collectionData,
+	collectionGroup,
 	CollectionReference,
 	doc,
 	docData,
@@ -87,7 +88,7 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 
 	public search$(term: string): Observable<AlbumModel[]> {
 		const albumQuery = query(
-			this.albumCollection,
+			collectionGroup(this.firestore, ALBUM_FEATURE_KEY),
 			where('searchParameters', 'array-contains', term.toLowerCase())
 		);
 

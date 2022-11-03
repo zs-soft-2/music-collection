@@ -79,6 +79,10 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 			entity.year = new Date(model.year);
 		}
 
+		if (model.coverImage) {
+			entity.coverImage = model.coverImage;
+		}
+
 		if (model.artist) {
 			entity.artist = model.artist;
 		}
