@@ -39,3 +39,19 @@ testem.log
 Thumbs.db
 
 .angular
+
+/emulators.backup/auth_export/accounts.json
+/emulators.backup/auth_export/config.json
+/emulators.backup/firebase-export-metadata.json
+/emulators.backup/firestore_export/all_namespaces/all_kinds/all_namespaces_all_kinds.export_metadata
+/emulators.backup/firestore_export/all_namespaces/all_kinds/output-0
+/emulators.backup/firestore_export/firestore_export.overall_export_metadata
+/emulators.backup/storage_export/blobs/89fb18c4-ba44-4d2b-9bc8-9a45844dc081
+/emulators.backup/storage_export/blobs/8c8496b9-518f-4d0c-8c81-84cf5e3af910
+/emulators.backup/storage_export/buckets.json
+/emulators.backup/storage_export/metadata/89fb18c4-ba44-4d2b-9bc8-9a45844dc081.json
+/emulators.backup/storage_export/metadata/8c8496b9-518f-4d0c-8c81-84cf5e3af910.json
+/firebase-debug.log
+/storage.rules
+/ui-debug.log
+/firestore-debug.log

@@ -11,3 +11,11 @@ Run `npx nx g @nrwl/angular:lib my-lib {--directory=my-folder}` to generate a li
 ## Understand your workspace
 
 Run `npx nx dep-graph` to see a diagram of the dependencies of your projects.
+
+## Emulator
+
+firebase emulators:start
+
+firebase emulators:export ./emulators.backup
+
+firebase emulators:start --import=./emulators.backup

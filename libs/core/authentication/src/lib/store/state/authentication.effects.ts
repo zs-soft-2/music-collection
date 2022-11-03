@@ -38,7 +38,7 @@ export class AuthenticationEffects extends BaseService {
 								permissions: [],
 							},
 						],
-						uid: authData.uid,
+						uid: authData.uid || '12345',
 					};
 
 					this.userStateService.dispatchLoadExistedUserAction(user);

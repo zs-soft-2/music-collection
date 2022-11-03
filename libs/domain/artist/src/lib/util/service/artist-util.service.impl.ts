@@ -77,6 +77,14 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 			entity.description = model.description;
 		}
 
+		if (model.headerImage) {
+			entity.headerImage = model.headerImage;
+		}
+
+		if (model.mainImage) {
+			entity.mainImage = model.mainImage;
+		}
+
 		if (model.genre) {
 			entity.genre = model.genre;
 		}

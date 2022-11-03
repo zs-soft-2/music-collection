@@ -5,5 +5,26 @@
 			"public": "dist/apps/music-collection",
 			"ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
 		}
-	]
+	],
+	"emulators": {
+		"auth": {
+			"port": 9199
+		},
+		"firestore": {
+			"port": 9198
+		},
+		"hosting": {
+			"port": 9197
+		},
+		"storage": {
+			"port": 9195
+		},
+		"ui": {
+			"enabled": true
+		},
+		"singleProjectMode": true
+	},
+	"storage": {
+		"rules": "storage.rules"
+	}
 }
