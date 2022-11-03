@@ -49,8 +49,8 @@ export class LabelStateServiceImpl extends LabelStateService {
 		this.store.dispatch(labelActions.search({ term }));
 	}
 
-	public dispatchSelectLabelAction(uid: string): void {
-		this.store.dispatch(labelActions.selectLabel({ labelId: uid }));
+	public dispatchSelectLabelAction(label: LabelEntity): void {
+		this.store.dispatch(labelActions.selectLabel({ label }));
 	}
 
 	public dispatchSetSelectedEntityIdAction(entityId: string): void {

@@ -5,9 +5,11 @@ import {
 	LabelEntityAdd,
 	LabelEntityUpdate,
 	LabelUtilService,
-	ArtistEntity,
 	EntityQuantityEntity,
 	EntityQuantityEntityUpdate,
+	LabelModelAdd,
+	LabelModel,
+	LabelModelUpdate,
 } from '@music-collection/api';
 
 @Injectable()
@@ -49,5 +51,58 @@ export class LabelUtilServiceImpl extends LabelUtilService {
 			...entityQuantity,
 			quantity: entityQuantity.quantity + 1,
 		};
+	}
+
+	public convertEntityAddToModelAdd(entity: LabelEntityAdd): LabelModelAdd {
+		return {
+			...entity,
+			searchParameters: this.createSearchParameters(entity.name),
+		};
+	}
+
+	public convertEntityToModel(entity: LabelEntity): LabelModel {
+		return {
+			...entity,
+			searchParameters: this.createSearchParameters(entity.name),
+		};
+	}
+
+	public convertEntityUpdateToModelUpdate(
+		entity: LabelEntityUpdate
+	): LabelModelUpdate {
+		return {
+			...entity,
+			searchParameters: this.createSearchParameters(entity.name || ''),
+		};
+	}
+
+	public convertModelAddToEntityAdd(model: LabelModelAdd): LabelEntityAdd {
+		return {
+			...model,
+		};
+	}
+
+	public convertModelToEntity(model: LabelModel): LabelEntity {
+		return {
+			...model,
+		};
+	}
+
+	public convertModelUpdateToEntityUpdate(
+		model: LabelModelUpdate
+	): LabelEntityUpdate {
+		const entity: LabelEntityUpdate = {
+			uid: model.uid,
+		};
+
+		if (model.name) {
+			entity.name = model.name;
+		}
+
+		if (model.parent) {
+			entity.parent = model.parent;
+		}
+
+		return entity;
 	}
 }

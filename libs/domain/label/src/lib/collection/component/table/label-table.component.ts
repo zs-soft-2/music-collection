@@ -3,8 +3,6 @@ import {
 	LabelEntity,
 	LabelTableParams,
 	BaseComponent,
-	GenreEnum,
-	StyleEnum,
 } from '@music-collection/api';
 import { Observable } from 'rxjs';
 
@@ -34,5 +32,9 @@ export class LabelTableComponent extends BaseComponent implements OnInit {
 
 	public ngOnInit(): void {
 		this.params$ = this.componentService.init$();
+	}
+
+	public searchHandler(event: any): void {
+		this.componentService.searchHandler(event['query']);
 	}
 }

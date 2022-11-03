@@ -95,7 +95,12 @@ export const searchSuccess = createAction(
 
 export const selectLabel = createAction(
 	'[Label] Select Label',
-	props<{ labelId: string }>()
+	props<{ label: LabelEntity }>()
+);
+
+export const selectLabelSuccess = createAction(
+	'[Label] Select Label Success',
+	props<{ label: LabelEntity }>()
 );
 
 export const setSelectedLabelId = createAction(
