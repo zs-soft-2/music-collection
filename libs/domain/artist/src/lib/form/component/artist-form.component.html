@@ -56,27 +56,6 @@
 						<label for="styles">Styles</label>
 					</span>
 				</div>
-
-				<div
-					style="margin-top: 10px"
-					fxLayout="row"
-					fxLayoutAlign="space-around"
-				>
-					<button
-						pButton
-						type="button"
-						label="Submit"
-						(click)="submit()"
-						[disabled]="!params.formGroup.valid"
-					></button>
-
-					<button
-						pButton
-						type="button"
-						label="Cancel"
-						(click)="cancel()"
-					></button>
-				</div>
 			</p-tabPanel>
 
 			<p-tabPanel header="Images" [disabled]="!params.isImagesTabActive">
@@ -97,6 +76,7 @@
 					</span>
 
 					<p-image
+						*ngIf="params.formGroup.value.headerImage"
 						[src]="params.formGroup.value.headerImage?.filePath"
 						[preview]="true"
 						alt="Image"
@@ -122,6 +102,7 @@
 					</span>
 
 					<p-image
+						*ngIf="params.formGroup.value.mainImage"
 						[src]="params.formGroup.value.mainImage?.filePath"
 						[preview]="true"
 						alt="Image"
@@ -130,6 +111,27 @@
 					</p-image>
 				</div>
 			</p-tabPanel>
+
+			<div
+				style="margin-top: 10px"
+				fxLayout="row"
+				fxLayoutAlign="space-around"
+			>
+				<button
+					pButton
+					type="button"
+					label="Submit"
+					(click)="submit()"
+					[disabled]="!params.formGroup.valid"
+				></button>
+
+				<button
+					pButton
+					type="button"
+					label="Cancel"
+					(click)="cancel()"
+				></button>
+			</div>
 		</p-tabView>
 	</form>
 </section>

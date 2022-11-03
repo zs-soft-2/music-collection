@@ -1,5 +1,6 @@
 <section class="album-list" *ngIf="params$ | async as params">
 	<p-carousel
+		*ngIf="params.albums.length"
 		[value]="params.albums"
 		[numVisible]="3"
 		[numScroll]="1"
