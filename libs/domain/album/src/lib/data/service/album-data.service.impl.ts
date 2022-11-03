@@ -55,14 +55,17 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 	}
 
 	public list$(): Observable<AlbumModel[]> {
-		return collectionData(this.albumCollection, {
-			idField: 'uid',
-		}) as Observable<AlbumModel[]>;
+		return collectionData(
+			collectionGroup(this.firestore, ALBUM_FEATURE_KEY),
+			{
+				idField: 'uid',
+			}
+		) as Observable<AlbumModel[]>;
 	}
 
 	public listByIds$(ids: string[]): Observable<AlbumModel[]> {
 		const albumsQuery = query(
-			this.albumCollection,
+			collectionGroup(this.firestore, ALBUM_FEATURE_KEY),
 			where('uid', 'in', ids)
 		);
 
