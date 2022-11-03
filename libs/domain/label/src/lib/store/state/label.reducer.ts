@@ -43,11 +43,11 @@ export const labelReducer = createReducer(
 		...state,
 		isNewEntityButtonEnabled: enabled,
 	})),
-	on(labelActions.selectLabel, (state, { labelId }) => ({
+	on(labelActions.selectLabel, (state, { label }) => ({
 		...state,
 		loading: false,
 		error: null,
-		selectedLabelId: labelId,
+		selectedLabelId: label.uid,
 	})),
 	on(labelActions.updateLabelSuccess, (state, { label }) =>
 		labelAdapter.updateOne(label, state)
@@ -66,10 +66,12 @@ export const labelReducer = createReducer(
 		...state,
 		selectedId: labelId,
 	})),
-	on(labelActions.searchSuccess, (state, { result }) => ({
-		...state,
-		searchResult: result,
-	})),
+	on(labelActions.searchSuccess, (state, { result }) => {
+		return labelAdapter.upsertMany(result, {
+			...state,
+			searchResult: result,
+		});
+	}),
 	on(labelActions.searchFailed, (state, { error }) => ({
 		...state,
 		searchResult: [],

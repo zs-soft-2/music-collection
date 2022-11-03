@@ -7,7 +7,6 @@ import {
 	EntityQuantityUtilService,
 	EntityTypeEnum,
 	LabelDataService,
-	LabelEntity,
 	LabelUtilService,
 } from '@music-collection/api';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
@@ -31,13 +30,33 @@ export class LabelEffects {
 					)
 			),
 			switchMap(({ action, entityQuantityEntity }) =>
-				this.labelDataService.add$(action.label).pipe(
-					map((label) => {
-						return labelActions.addLabelSuccess({
-							label,
-						});
-					})
-				)
+				this.labelDataService
+					.add$(
+						this.labelUtilService.convertEntityAddToModelAdd(
+							action.label
+						)
+					)
+					.pipe(
+						map((label) => {
+							entityQuantityEntity =
+								entityQuantityEntity ||
+								this.entityQuantityUtilService.createEntityQuantity(
+									EntityTypeEnum.Label
+								);
+
+							this.entityQuantityStateService.dispatchUpdateEntityAction(
+								this.labelUtilService.updateEntityQuantity(
+									entityQuantityEntity
+								)
+							);
+
+							return labelActions.addLabelSuccess({
+								label: this.labelUtilService.convertModelToEntity(
+									label
+								),
+							});
+						})
+					)
 			)
 		)
 	);
@@ -46,6 +65,11 @@ export class LabelEffects {
 			ofType(labelActions.listLabels),
 			switchMap(() =>
 				this.labelDataService.list$().pipe(
+					map((labels) =>
+						labels.map((label) =>
+							this.labelUtilService.convertModelToEntity(label)
+						)
+					),
 					map((labels) => {
 						return labelActions.listLabelsSuccess({
 							labels,
@@ -62,7 +86,11 @@ export class LabelEffects {
 				this.labelDataService.load$(action.uid).pipe(
 					map((label) => {
 						return labelActions.loadLabelSuccess({
-							label: label as LabelEntity,
+							label: label
+								? this.labelUtilService.convertModelToEntity(
+										label
+								  )
+								: undefined,
 						});
 					}),
 					catchError((error) => {
@@ -77,32 +105,58 @@ export class LabelEffects {
 			ofType(labelActions.search),
 			switchMap((action) =>
 				this.labelDataService.search$(action.term).pipe(
+					map((result) =>
+						result.map((label) =>
+							this.labelUtilService.convertModelToEntity(label)
+						)
+					),
 					map((result) => {
 						return labelActions.searchSuccess({
 							result,
 						});
 					}),
 					catchError((error) => {
+						console.error(error);
+
 						return of(labelActions.searchFailed(error));
 					})
 				)
 			)
 		)
 	);
+	public selectLabel = createEffect(() =>
+		this.actions$.pipe(
+			ofType(labelActions.selectLabel),
+			map((action) => {
+				return labelActions.selectLabelSuccess({
+					label: action.label,
+				});
+			})
+		)
+	);
 	public updateLabel = createEffect(() =>
 		this.actions$.pipe(
 			ofType(labelActions.updateLabel),
 			switchMap((action) =>
-				this.labelDataService.update$(action.label).pipe(
-					map((label) => {
-						return labelActions.updateLabelSuccess({
-							label: {
-								id: label.uid || '',
-								changes: label,
-							},
-						});
-					})
-				)
+				this.labelDataService
+					.update$(
+						this.labelUtilService.convertEntityUpdateToModelUpdate(
+							action.label
+						)
+					)
+					.pipe(
+						map((label) => {
+							return labelActions.updateLabelSuccess({
+								label: {
+									id: label.uid || '',
+									changes:
+										this.labelUtilService.convertModelUpdateToEntityUpdate(
+											label
+										),
+								},
+							});
+						})
+					)
 			)
 		)
 	);

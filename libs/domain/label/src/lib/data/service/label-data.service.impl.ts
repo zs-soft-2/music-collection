@@ -1,96 +1,141 @@
-import { nanoid } from 'nanoid';
-import { Observable, of } from 'rxjs';
+import { Observable } from 'rxjs';
 
 import { Injectable } from '@angular/core';
 import {
+	collection,
+	collectionData,
+	collectionGroup,
+	CollectionReference,
+	doc,
+	docData,
+	DocumentData,
+	Firestore,
+	getDocs,
+	query,
+	setDoc,
+	updateDoc,
+	where,
+} from '@angular/fire/firestore';
+import {
+	LABEL_FEATURE_KEY,
 	LabelDataService,
-	LabelEntity,
-	LabelEntityAdd,
-	LabelEntityUpdate,
+	LabelModel,
+	LabelModelAdd,
+	LabelModelUpdate,
 } from '@music-collection/api';
 
 @Injectable()
 export class LabelDataServiceImpl extends LabelDataService {
-	protected labelCollection: LabelEntity[];
+	protected labelCollection: CollectionReference<DocumentData>;
 
-	public constructor() {
+	public constructor(private firestore: Firestore) {
 		super();
 
-		this.labelCollection = [];
+		this.labelCollection = collection(this.firestore, LABEL_FEATURE_KEY);
 	}
 
-	public add$(label: LabelEntityAdd): Observable<LabelEntity> {
-		const newLabel: LabelEntity = {
+	public add$(label: LabelModelAdd): Observable<LabelModel> {
+		const uid = doc(collection(this.firestore, 'id')).id;
+		const newLabel: LabelModel = {
 			...label,
-			uid: nanoid(),
+			uid,
 		};
 
-		this.labelCollection = this.labelCollection.concat([newLabel]);
+		return new Observable((subscriber) => {
+			if (!newLabel.parent) {
+				setDoc(doc(this.labelCollection, uid), newLabel).then(() => {
+					subscriber.next({ ...newLabel } as unknown as LabelModel);
+				});
+			} else {
+				const docRef = doc(
+					this.firestore,
+					LABEL_FEATURE_KEY,
+					newLabel.parent.uid
+				);
+				const collectionReference = collection(
+					docRef,
+					LABEL_FEATURE_KEY
+				);
 
-		return of(newLabel);
-	}
-
-	public delete$(label: LabelEntity): Observable<LabelEntity> {
-		return of(label);
-	}
-
-	public list$(): Observable<LabelEntity[]> {
-		return of(this.labelCollection);
-	}
-
-	public listByIds$(ids: string[]): Observable<LabelEntity[]> {
-		const listByIds: LabelEntity[] = [];
-
-		return of(
-			this.labelCollection.reduce(
-				(list: LabelEntity[], label: LabelEntity) => {
-					if (ids.includes(label.uid)) {
-						list.push(label);
-					}
-
-					return list;
-				},
-				listByIds
-			)
-		);
-	}
-
-	public load$(uid: string): Observable<LabelEntity | undefined> {
-		return of(this.labelCollection.find((label) => label.uid === uid));
-	}
-
-	public search$(query: string): Observable<LabelEntity[]> {
-		const foundByQuery: LabelEntity[] = [];
-
-		return of(
-			this.labelCollection.reduce(
-				(list: LabelEntity[], label: LabelEntity) => {
-					if (
-						label.name.toLowerCase().search(query.toLowerCase()) >
-						-1
-					) {
-						list.push(label);
-					}
-
-					return list;
-				},
-				foundByQuery
-			)
-		);
-	}
-
-	public update$(label: LabelEntityUpdate): Observable<LabelEntityUpdate> {
-		this.labelCollection = this.labelCollection.map((oldLabel) => {
-			return (
-				oldLabel.uid === label.uid
-					? {
-							...oldLabel,
-							...label,
-					  }
-					: oldLabel
-			) as LabelEntity;
+				setDoc(doc(collectionReference, uid), newLabel).then(() => {
+					subscriber.next({ ...newLabel } as unknown as LabelModel);
+				});
+			}
 		});
+	}
 
-		return of(label);
+	public delete$(label: LabelModel): Observable<LabelModel> {
+		return this.update$(
+			label as LabelModelUpdate
+		) as Observable<LabelModel>;
+	}
+
+	public list$(): Observable<LabelModel[]> {
+		return collectionData(this.labelCollection, {
+			idField: 'uid',
+		}) as Observable<LabelModel[]>;
+	}
+
+	public listByIds$(ids: string[]): Observable<LabelModel[]> {
+		const labelsQuery = query(
+			this.labelCollection,
+			where('uid', 'in', ids)
+		);
+
+		return new Observable((subscriber) => {
+			getDocs(labelsQuery).then((snapshot) => {
+				subscriber.next(
+					snapshot.docChanges() as unknown as LabelModel[]
+				);
+			});
+		});
+	}
+
+	public load$(uid: string): Observable<LabelModel | undefined> {
+		const labelDocument = doc(
+			this.firestore,
+			`${LABEL_FEATURE_KEY}/${uid}`
+		);
+
+		return docData(labelDocument, {
+			idField: 'uid',
+		}) as Observable<LabelModel>;
+	}
+
+	public search$(term: string): Observable<LabelModel[]> {
+		const labelQuery = query(
+			collectionGroup(this.firestore, LABEL_FEATURE_KEY),
+			where('searchParameters', 'array-contains', term.toLowerCase())
+		);
+
+		return new Observable((subscriber) => {
+			getDocs(labelQuery)
+				.then((snapshot) => {
+					subscriber.next(
+						snapshot.docs.map(
+							(doc) =>
+								({
+									...doc.data(),
+								} as unknown as LabelModel)
+						)
+					);
+				})
+				.catch((error) => {
+					subscriber.error(error);
+				});
+		});
+	}
+
+	public update$(label: LabelModelUpdate): Observable<LabelModelUpdate> {
+		const labelDocument = doc(
+			this.firestore,
+			`${LABEL_FEATURE_KEY}/${label.uid}`
+		);
+
+		return new Observable((subscriber) => {
+			updateDoc(labelDocument, { ...label }).then(() => {
+				subscriber.next(label);
+			});
+		});
 	}
 }
