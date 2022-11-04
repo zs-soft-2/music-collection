@@ -75,6 +75,7 @@ export class AuthenticationEffects extends BaseService {
 		this.actions$.pipe(
 			ofType(authenticationActions.logout),
 			map(() => {
+				this.auth;
 				return authenticationActions.logoutSuccess();
 			}),
 			catchError((err) =>

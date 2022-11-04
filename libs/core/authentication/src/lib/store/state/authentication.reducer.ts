@@ -14,7 +14,7 @@ export interface AuthenticationPartialState {
 }
 
 const defaultUser: User = {
-	uid: 'guest-1',
+	uid: '',
 	displayName: 'GUEST',
 	email: null,
 	photoURL: null,
@@ -31,7 +31,6 @@ export const authenticationReducer = createReducer(
 	on(authenticationActions.notAuthenticated, (state) => {
 		return {
 			...state,
-			authenticatedUser: defaultUser,
 			loading: false,
 		};
 	}),

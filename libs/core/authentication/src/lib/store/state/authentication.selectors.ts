@@ -18,7 +18,7 @@ export const selectAuthenticatedUser = createSelector(
 
 export const selectIsAuthenticated = createSelector(
 	selectAuthenticationState,
-	(state: AuthenticationState) => !!state.authenticatedUser?.uid
+	(state: AuthenticationState) => state.authenticatedUser?.uid !== ''
 );
 
 export const selectLoading = (state: AuthenticationPartialState) =>

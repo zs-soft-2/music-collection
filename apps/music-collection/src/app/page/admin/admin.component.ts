@@ -34,6 +34,7 @@ export class AdminComponent {
 				routerLink: 'collection-item',
 			},
 			{
+				icon: 'pi pi-file-edit',
 				label: 'Document',
 				routerLink: 'document',
 			},

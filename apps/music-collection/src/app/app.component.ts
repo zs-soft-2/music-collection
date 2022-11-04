@@ -20,6 +20,5 @@ export class AppComponent implements OnInit {
 
 	public ngOnInit(): void {
 		this.entityQuantityStateService.dispatchListEntitiesAction();
-		this.authenticationStateService.dispatchLogin();
 	}
 }

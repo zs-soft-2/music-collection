@@ -22,14 +22,22 @@ export class TopBarComponent extends BaseComponent implements OnInit {
 		this.params$$ = new ReplaySubject();
 	}
 
+	public imgClickHandler(): void {
+		this.componentService.imgClickHandler();
+	}
+
+	public loginClickHandler(): void {
+		this.componentService.login();
+	}
+
+	public logoutHandler(): void {
+		this.componentService.logout();
+	}
+
 	public ngOnInit(): void {
 		this.componentService
 			.init$()
 			.pipe(takeUntil(this.destroy))
 			.subscribe((topBarParams) => this.params$$.next(topBarParams));
-	}
-
-	public imgClickHandler(): void {
-		this.componentService.imgClickHandler();
 	}
 }

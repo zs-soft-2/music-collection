@@ -13,6 +13,9 @@ function localStorageSyncReducer(
 			{
 				artist: ['ids', 'entities'],
 			},
+			{
+				authentication: ['authenticatedUser'],
+			},
 		],
 		rehydrate: true,
 	})(reducer);
