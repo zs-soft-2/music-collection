@@ -1,17 +1,13 @@
 import { Observable } from 'rxjs';
 
 import { EntityDataService } from '../../common';
-import {
-	ReleaseEntity,
-	ReleaseEntityAdd,
-	ReleaseEntityUpdate,
-} from './release';
+import { ReleaseModel, ReleaseModelAdd, ReleaseModelUpdate } from './release';
 
 export abstract class ReleaseDataService extends EntityDataService<
-	ReleaseEntity,
-	ReleaseEntityAdd,
-	ReleaseEntityUpdate
+	ReleaseModel,
+	ReleaseModelAdd,
+	ReleaseModelUpdate
 > {
-	public abstract listByIds$(ids: string[]): Observable<ReleaseEntity[]>;
-	public abstract search$(query: string): Observable<ReleaseEntity[]>;
+	public abstract listByIds$(ids: string[]): Observable<ReleaseModel[]>;
+	public abstract search$(query: string): Observable<ReleaseModel[]>;
 }

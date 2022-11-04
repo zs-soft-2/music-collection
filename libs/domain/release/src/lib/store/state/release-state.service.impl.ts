@@ -49,8 +49,8 @@ export class ReleaseStateServiceImpl extends ReleaseStateService {
 		this.store.dispatch(releaseActions.search({ term }));
 	}
 
-	public dispatchSelectReleaseAction(uid: string): void {
-		this.store.dispatch(releaseActions.selectRelease({ releaseId: uid }));
+	public dispatchSelectReleaseAction(release: ReleaseEntity): void {
+		this.store.dispatch(releaseActions.selectRelease({ release }));
 	}
 
 	public dispatchSetSelectedEntityIdAction(entityId: string): void {

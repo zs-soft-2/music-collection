@@ -6,6 +6,7 @@ import {
 	ReleaseDataService,
 	ReleaseEntity,
 	ReleaseUtilService,
+	ArtistDataService,
 	EntityQuantityStateService,
 	EntityQuantityUtilService,
 	EntityTypeEnum,
@@ -31,13 +32,37 @@ export class ReleaseEffects {
 					)
 			),
 			switchMap(({ action, entityQuantityEntity }) =>
-				this.releaseDataService.add$(action.release).pipe(
-					map((release) => {
-						return releaseActions.addReleaseSuccess({
-							release,
-						});
-					})
-				)
+				this.artistDataService
+					.addRelease$(
+						this.releaseUtilService.convertEntityAddToModelAdd(
+							action.release
+						)
+					)
+					.pipe(
+						map((release) => {
+							entityQuantityEntity =
+								entityQuantityEntity ||
+								this.entityQuantityUtilService.createEntityQuantity(
+									EntityTypeEnum.Release
+								);
+
+							const releaseEntity: ReleaseEntity =
+								this.releaseUtilService.convertModelToEntity(
+									release
+								);
+
+							this.entityQuantityStateService.dispatchUpdateEntityAction(
+								this.releaseUtilService.updateEntityQuantity(
+									entityQuantityEntity,
+									releaseEntity
+								)
+							);
+
+							return releaseActions.addReleaseSuccess({
+								release: releaseEntity,
+							});
+						})
+					)
 			)
 		)
 	);
@@ -46,6 +71,13 @@ export class ReleaseEffects {
 			ofType(releaseActions.listReleases),
 			switchMap(() =>
 				this.releaseDataService.list$().pipe(
+					map((releases) =>
+						releases.map((release) =>
+							this.releaseUtilService.convertModelToEntity(
+								release
+							)
+						)
+					),
 					map((releases) => {
 						return releaseActions.listReleasesSuccess({
 							releases,
@@ -62,7 +94,11 @@ export class ReleaseEffects {
 				this.releaseDataService.load$(action.uid).pipe(
 					map((release) => {
 						return releaseActions.loadReleaseSuccess({
-							release: release as ReleaseEntity,
+							release: release
+								? this.releaseUtilService.convertModelToEntity(
+										release
+								  )
+								: undefined,
 						});
 					}),
 					catchError((error) => {
@@ -77,6 +113,13 @@ export class ReleaseEffects {
 			ofType(releaseActions.search),
 			switchMap((action) =>
 				this.releaseDataService.search$(action.term).pipe(
+					map((result) =>
+						result.map((release) =>
+							this.releaseUtilService.convertModelToEntity(
+								release
+							)
+						)
+					),
 					map((result) => {
 						return releaseActions.searchSuccess({
 							result,
@@ -89,20 +132,39 @@ export class ReleaseEffects {
 			)
 		)
 	);
+	public selectRelease = createEffect(() =>
+		this.actions$.pipe(
+			ofType(releaseActions.selectRelease),
+			map((action) => {
+				return releaseActions.selectReleaseSuccess({
+					release: action.release,
+				});
+			})
+		)
+	);
 	public updateRelease = createEffect(() =>
 		this.actions$.pipe(
 			ofType(releaseActions.updateRelease),
 			switchMap((action) =>
-				this.releaseDataService.update$(action.release).pipe(
-					map((release) => {
-						return releaseActions.updateReleaseSuccess({
-							release: {
-								id: release.uid || '',
-								changes: release,
-							},
-						});
-					})
-				)
+				this.artistDataService
+					.updateRelease$(
+						this.releaseUtilService.convertEntityUpdateToModelUpdate(
+							action.release
+						)
+					)
+					.pipe(
+						map((release) => {
+							return releaseActions.updateReleaseSuccess({
+								release: {
+									id: release.uid || '',
+									changes:
+										this.releaseUtilService.convertModelUpdateToEntityUpdate(
+											release
+										),
+								},
+							});
+						})
+					)
 			)
 		)
 	);
@@ -111,6 +173,7 @@ export class ReleaseEffects {
 		private actions$: Actions,
 		private releaseDataService: ReleaseDataService,
 		private releaseUtilService: ReleaseUtilService,
+		private artistDataService: ArtistDataService,
 		private entityQuantityStateService: EntityQuantityStateService,
 		private entityQuantityUtilService: EntityQuantityUtilService
 	) {}

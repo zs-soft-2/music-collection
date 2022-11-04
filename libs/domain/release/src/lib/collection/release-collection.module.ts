@@ -1,3 +1,4 @@
+import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { ChipModule } from 'primeng/chip';
 import { TableModule } from 'primeng/table';
@@ -10,6 +11,12 @@ import { ReleaseListComponent, ReleaseTableComponent } from './component';
 @NgModule({
 	declarations: [ReleaseListComponent, ReleaseTableComponent],
 	exports: [ReleaseListComponent, ReleaseTableComponent],
-	imports: [CommonModule, ButtonModule, ChipModule, TableModule],
+	imports: [
+		CommonModule,
+		AutoCompleteModule,
+		ButtonModule,
+		ChipModule,
+		TableModule,
+	],
 })
 export class ReleaseCollectionModule {}

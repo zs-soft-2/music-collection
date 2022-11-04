@@ -95,7 +95,12 @@ export const searchSuccess = createAction(
 
 export const selectRelease = createAction(
 	'[Release] Select Release',
-	props<{ releaseId: string }>()
+	props<{ release: ReleaseEntity }>()
+);
+
+export const selectReleaseSuccess = createAction(
+	'[Release] Select Release Success',
+	props<{ release: ReleaseEntity }>()
 );
 
 export const setSelectedReleaseId = createAction(

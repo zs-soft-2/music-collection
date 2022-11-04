@@ -1,12 +1,12 @@
-import { Observable, ReplaySubject, switchMap } from 'rxjs';
+import { merge, Observable, ReplaySubject, switchMap } from 'rxjs';
 
 import { Injectable } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
+	BaseComponent,
 	ReleaseEntity,
 	ReleaseStateService,
 	ReleaseTableParams,
-	BaseComponent,
 } from '@music-collection/api';
 
 @Injectable()
@@ -31,10 +31,14 @@ export class ReleaseTableService extends BaseComponent {
 	}
 
 	public init$(): Observable<ReleaseTableParams> {
-		return this.releaseStateService.selectEntities$().pipe(
+		return merge(
+			this.releaseStateService.selectSearchResult$(),
+			this.releaseStateService.selectEntities$()
+		).pipe(
 			switchMap((releases) => {
 				this.params = {
 					releases,
+					empty: [],
 				};
 
 				this.params$$.next(this.params);
@@ -42,5 +46,9 @@ export class ReleaseTableService extends BaseComponent {
 				return this.params$$;
 			})
 		);
+	}
+
+	public searchHandler(query: string): void {
+		this.releaseStateService.dispatchSearch(query);
 	}
 }
