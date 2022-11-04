@@ -15,7 +15,18 @@
 
 			<ng-template pTemplate="end">
 				<ng-container *mcIsAuthenticated="true">
-					<mc-user-profile [user]="params.user"></mc-user-profile>
+					<mc-user-profile
+						[user]="params.user"
+						(logout)="logoutHandler()"
+					></mc-user-profile>
+				</ng-container>
+
+				<ng-container *mcIsAuthenticated="false">
+					<i class="pi pi-sign-in"></i>
+
+					<span>
+						<a (click)="loginClickHandler()">login</a>
+					</span>
 				</ng-container>
 			</ng-template>
 		</p-menubar>

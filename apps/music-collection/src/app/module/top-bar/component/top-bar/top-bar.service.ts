@@ -2,9 +2,12 @@ import { Observable, ReplaySubject, Subject, switchMap } from 'rxjs';
 
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
+import {
+	AuthenticationStateService,
+	AuthorizationService,
+} from '@music-collection/api';
 
 import { MenuItem, TopBarParams } from '../../api';
-import { AuthenticationStateService } from '@music-collection/api';
 
 @Injectable()
 export class TopBarService {
@@ -14,6 +17,7 @@ export class TopBarService {
 
 	constructor(
 		private authenticationStateService: AuthenticationStateService,
+		private authorizationService: AuthorizationService,
 		private router: Router
 	) {
 		this.params$$ = new ReplaySubject();
@@ -21,6 +25,10 @@ export class TopBarService {
 
 	public createMenuItems(): MenuItem[] {
 		return [];
+	}
+
+	public imgClickHandler(): void {
+		this.router.navigate(['/']);
 	}
 
 	public init$(): Observable<TopBarParams> {
@@ -40,7 +48,13 @@ export class TopBarService {
 		);
 	}
 
-	public imgClickHandler(): void {
-		this.router.navigate(['/']);
+	public login(): void {
+		this.authenticationStateService.dispatchLogin();
+	}
+
+	public logout(): void {
+		this.authorizationService.removeAll();
+		this.router.navigate(['/home']);
+		this.authenticationStateService.dispatchLogout();
 	}
 }

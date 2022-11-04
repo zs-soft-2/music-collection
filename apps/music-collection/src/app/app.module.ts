@@ -1,6 +1,6 @@
 import { NgxPermissionsModule } from 'ngx-permissions';
 
-import { NgModule } from '@angular/core';
+import { APP_INITIALIZER, NgModule } from '@angular/core';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import {
 	Auth,
@@ -22,6 +22,7 @@ import {
 } from '@angular/fire/storage';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { AuthenticationStateService } from '@music-collection/api';
 import { CoreAuthenticationModule } from '@music-collection/core/authentication';
 import { CoreAuthorizationModule } from '@music-collection/core/authorization';
 import { CoreEntityQuantityModule } from '@music-collection/core/entity-quantity';
@@ -35,6 +36,7 @@ import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { environment } from '../environments/environment';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
+import { AuthenticationInitializer } from './initializer';
 import { TopBarModule } from './module';
 import { HookModule } from './module/hook';
 import { metaReducers } from './reducer';
@@ -72,7 +74,15 @@ import { ArtistPageResolverService } from './resolver';
 		DomainAlbumModule,
 		HookModule,
 	],
-	providers: [ArtistPageResolverService],
+	providers: [
+		ArtistPageResolverService,
+		{
+			provide: APP_INITIALIZER,
+			useFactory: AuthenticationInitializer,
+			deps: [AuthenticationStateService],
+			multi: true,
+		},
+	],
 	bootstrap: [AppComponent],
 })
 export class AppModule {
