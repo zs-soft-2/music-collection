@@ -1,100 +1,133 @@
-import { nanoid } from 'nanoid';
-import { Observable, of } from 'rxjs';
+import { Observable } from 'rxjs';
 
 import { Injectable } from '@angular/core';
 import {
+	collection,
+	collectionData,
+	collectionGroup,
+	CollectionReference,
+	doc,
+	docData,
+	DocumentData,
+	Firestore,
+	getDocs,
+	query,
+	setDoc,
+	updateDoc,
+	where,
+} from '@angular/fire/firestore';
+import {
+	RELEASE_FEATURE_KEY,
 	ReleaseDataService,
-	ReleaseEntity,
-	ReleaseEntityAdd,
-	ReleaseEntityUpdate,
+	ReleaseModel,
+	ReleaseModelAdd,
+	ReleaseModelUpdate,
 } from '@music-collection/api';
 
 @Injectable()
 export class ReleaseDataServiceImpl extends ReleaseDataService {
-	protected releaseCollection: ReleaseEntity[];
+	protected releaseCollection: CollectionReference<DocumentData>;
 
-	public constructor() {
+	public constructor(private firestore: Firestore) {
 		super();
 
-		this.releaseCollection = [];
+		this.releaseCollection = collection(
+			this.firestore,
+			RELEASE_FEATURE_KEY
+		);
 	}
 
-	public add$(release: ReleaseEntityAdd): Observable<ReleaseEntity> {
-		const newRelease: ReleaseEntity = {
+	public add$(release: ReleaseModelAdd): Observable<ReleaseModel> {
+		const uid = doc(collection(this.firestore, 'id')).id;
+		const newRelease: ReleaseModel = {
 			...release,
-			uid: nanoid(),
+			uid,
 		};
 
-		this.releaseCollection = this.releaseCollection.concat([newRelease]);
-
-		return of(newRelease);
+		return new Observable((subscriber) => {
+			setDoc(doc(this.releaseCollection, uid), newRelease).then(() => {
+				subscriber.next({ ...newRelease } as unknown as ReleaseModel);
+			});
+		});
 	}
 
-	public delete$(release: ReleaseEntity): Observable<ReleaseEntity> {
-		return of(release);
+	public delete$(release: ReleaseModel): Observable<ReleaseModel> {
+		return this.update$(
+			release as ReleaseModelUpdate
+		) as Observable<ReleaseModel>;
 	}
 
-	public list$(): Observable<ReleaseEntity[]> {
-		return of(this.releaseCollection);
+	public list$(): Observable<ReleaseModel[]> {
+		return collectionData(
+			collectionGroup(this.firestore, RELEASE_FEATURE_KEY),
+			{
+				idField: 'uid',
+			}
+		) as Observable<ReleaseModel[]>;
 	}
 
-	public listByIds$(ids: string[]): Observable<ReleaseEntity[]> {
-		const listByIds: ReleaseEntity[] = [];
-
-		return of(
-			this.releaseCollection.reduce(
-				(list: ReleaseEntity[], release: ReleaseEntity) => {
-					if (ids.includes(release.uid)) {
-						list.push(release);
-					}
-
-					return list;
-				},
-				listByIds
-			)
+	public listByIds$(ids: string[]): Observable<ReleaseModel[]> {
+		const releasesQuery = query(
+			collectionGroup(this.firestore, RELEASE_FEATURE_KEY),
+			where('uid', 'in', ids)
 		);
+
+		return new Observable((subscriber) => {
+			getDocs(releasesQuery).then((snapshot) => {
+				subscriber.next(
+					snapshot.docChanges() as unknown as ReleaseModel[]
+				);
+			});
+		});
 	}
 
-	public load$(uid: string): Observable<ReleaseEntity | undefined> {
-		return of(
-			this.releaseCollection.find((release) => release.uid === uid)
+	public load$(uid: string): Observable<ReleaseModel | undefined> {
+		const releaseDocument = doc(
+			this.firestore,
+			`${RELEASE_FEATURE_KEY}/${uid}`
 		);
+
+		return docData(releaseDocument, {
+			idField: 'uid',
+		}) as Observable<ReleaseModel>;
 	}
 
-	public search$(query: string): Observable<ReleaseEntity[]> {
-		const foundByQuery: ReleaseEntity[] = [];
-
-		return of(
-			this.releaseCollection.reduce(
-				(list: ReleaseEntity[], release: ReleaseEntity) => {
-					if (
-						release.name.toLowerCase().search(query.toLowerCase()) >
-						-1
-					) {
-						list.push(release);
-					}
-
-					return list;
-				},
-				foundByQuery
-			)
+	public search$(term: string): Observable<ReleaseModel[]> {
+		const releaseQuery = query(
+			collectionGroup(this.firestore, RELEASE_FEATURE_KEY),
+			where('searchParameters', 'array-contains', term.toLowerCase())
 		);
+
+		return new Observable((subscriber) => {
+			getDocs(releaseQuery)
+				.then((snapshot) => {
+					subscriber.next(
+						snapshot.docs.map(
+							(doc) =>
+								({
+									...doc.data(),
+								} as unknown as ReleaseModel)
+						)
+					);
+				})
+				.catch((error) => {
+					subscriber.error(error);
+				});
+		});
 	}
 
 	public update$(
-		release: ReleaseEntityUpdate
-	): Observable<ReleaseEntityUpdate> {
-		this.releaseCollection = this.releaseCollection.map((oldRelease) => {
-			return (
-				oldRelease.uid === release.uid
-					? {
-							...oldRelease,
-							...release,
-					  }
-					: oldRelease
-			) as ReleaseEntity;
-		});
+		release: ReleaseModelUpdate
+	): Observable<ReleaseModelUpdate> {
+		const releaseDocument = doc(
+			this.firestore,
+			`${RELEASE_FEATURE_KEY}/${release.uid}`
+		);
 
-		return of(release);
+		return new Observable((subscriber) => {
+			updateDoc(releaseDocument, { ...release }).then(() => {
+				subscriber.next(release);
+			});
+		});
 	}
 }

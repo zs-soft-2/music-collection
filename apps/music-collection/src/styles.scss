@@ -1,20 +1,45 @@
 /* You can add global styles to this file, and also import other style files */
+html {
+	background: url(./assets/background.jpg) no-repeat center center fixed;
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-o-background-size: cover;
+	background-size: cover;
+	opacity: 0.9;
+}
+
 body {
-	background-color: #e6e6e6;
-	background: url(./assets/background.jpg) center repeat-y #e6e6e6;
 	color: #181818;
 
-	.p-breadcrumb ul li .p-menuitem-link .p-menuitem-text {
-		color: #656565;
+	.p-breadcrumb {
+		background: none;
+		border: none;
+		padding-top: 0;
+
+		ul {
+			margin: 0;
+			padding: 0;
+			list-style-type: none;
+			display: flex;
+			align-items: center;
+			flex-wrap: nowrap;
+
+			li {
+				.p-menuitem-link .p-menuitem-text {
+					color: #656565;
+				}
+			}
+		}
+
+		.p-menuitem-link {
+			text-decoration: none;
+			cursor: pointer;
+		}
 	}
 
-	.p-breadcrumb ul {
-		margin: 0;
-		padding: 0;
-		list-style-type: none;
-		display: flex;
-		align-items: center;
-		flex-wrap: nowrap;
+	.p-card {
+		background: none;
+		box-shadow: none;
 	}
 
 	.p-chip {
@@ -36,33 +61,21 @@ body {
 		}
 	}
 
-	.p-toolbar {
+	.p-menubar {
 		background: none;
-		border: none;
+		padding: 0;
 	}
 
 	.p-menuitem-link-active {
 		background-color: #e9ecef;
 	}
-}
 
-.p-breadcrumb {
-	background: none;
-	border: none;
-	padding-top: 0;
-}
+	.p-carousel-item {
+		text-align: center;
+	}
 
-.p-breadcrumb .p-menuitem-link {
-	text-decoration: none;
-	cursor: pointer;
-}
-
-.p-card {
-	background: none;
-	box-shadow: none;
-}
-
-.p-menubar {
-	background: none;
-	padding: 0;
+	.p-toolbar {
+		background: none;
+		border: none;
+	}
 }

@@ -19,6 +19,7 @@ import {
 	AlbumStateService,
 	LabelStateService,
 	LabelEntity,
+	CountryList,
 } from '@music-collection/api';
 import { FormGroup } from '@angular/forms';
 
@@ -73,7 +74,9 @@ export class ReleaseFormService {
 					artists,
 					albums,
 					labels,
-					this.formGroup
+					this.formGroup,
+					!!artists?.length,
+					!release
 				);
 
 				this.params$$.next(this.params);
@@ -119,13 +122,17 @@ export class ReleaseFormService {
 		artists: ArtistEntity[],
 		albums: AlbumEntity[],
 		labels: LabelEntity[],
-		formGroup: FormGroup
+		formGroup: FormGroup,
+		isAlbumsActive: boolean,
+		isArtistsActive: boolean
 	): ReleaseFormParams {
 		const releaseFormParams: ReleaseFormParams = {
 			artists,
 			albums,
+			countryList: CountryList,
 			formGroup,
-			isAlbumsActive: formGroup.value['artist'],
+			isAlbumsActive,
+			isArtistsActive,
 			formatList: FormatList,
 			formatDescriptionList: FormatDescriptionList,
 			labels,

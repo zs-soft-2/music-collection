@@ -43,11 +43,11 @@ export const releaseReducer = createReducer(
 		...state,
 		isNewEntityButtonEnabled: enabled,
 	})),
-	on(releaseActions.selectRelease, (state, { releaseId }) => ({
+	on(releaseActions.selectRelease, (state, { release }) => ({
 		...state,
 		loading: false,
 		error: null,
-		selectedReleaseId: releaseId,
+		releaseId: release.uid,
 	})),
 	on(releaseActions.updateReleaseSuccess, (state, { release }) =>
 		releaseAdapter.updateOne(release, state)
@@ -66,12 +66,14 @@ export const releaseReducer = createReducer(
 	),
 	on(releaseActions.setSelectedReleaseId, (state, { releaseId }) => ({
 		...state,
-		selectedId: releaseId,
+		selectedReleaseId: releaseId,
 	})),
-	on(releaseActions.searchSuccess, (state, { result }) => ({
-		...state,
-		searchResult: result,
-	})),
+	on(releaseActions.searchSuccess, (state, { result }) => {
+		return releaseAdapter.upsertMany(result, {
+			...state,
+			searchResult: result,
+		});
+	}),
 	on(releaseActions.searchFailed, (state, { error }) => ({
 		...state,
 		searchResult: [],

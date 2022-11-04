@@ -62,7 +62,7 @@ const routes: Routes = [
 			{
 				path: 'release',
 				data: {
-					breadcrumb: 'Release',
+					breadcrumb: 'release',
 					permissions: {
 						only: [RoleNames.ADMIN],
 						redirectTo: '/error',

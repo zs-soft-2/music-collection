@@ -9,6 +9,7 @@
 					[suggestions]="params.artists"
 					[minLength]="3"
 					[delay]="400"
+					[disabled]="!params.isArtistsActive"
 					field="name"
 					(completeMethod)="searchArtist($event)"
 				></p-autoComplete>
@@ -24,6 +25,7 @@
 					[suggestions]="params.albums"
 					[minLength]="3"
 					[delay]="400"
+					[disabled]="!params.isAlbumsActive"
 					field="name"
 					(completeMethod)="searchAlbum($event)"
 				></p-autoComplete>
@@ -65,6 +67,19 @@
 				<p-calendar id="date" formControlName="date"></p-calendar>
 
 				<label for="date">Date</label>
+			</span>
+		</div>
+
+		<div class="field">
+			<span class="p-float-label">
+				<p-dropdown
+					id="country"
+					[options]="params.countryList"
+					placeholder="Select a country"
+					formControlName="country"
+				></p-dropdown>
+
+				<label for="country">Country</label>
 			</span>
 		</div>
 
