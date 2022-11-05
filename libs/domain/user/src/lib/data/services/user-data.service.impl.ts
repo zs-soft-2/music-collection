@@ -12,7 +12,14 @@ import {
 	setDoc,
 	updateDoc,
 } from '@angular/fire/firestore';
-import { User, UserDataService } from '@music-collection/api';
+import {
+	COLLECTION_ITEM_FEATURE_KEY,
+	CollectionItemModel,
+	CollectionItemModelAdd,
+	CollectionItemModelUpdate,
+	User,
+	UserDataService,
+} from '@music-collection/api';
 
 import { USER_FEATURE_KEY } from '../../store/state/user.reducer';
 
@@ -30,6 +37,36 @@ export class UserDataServiceImpl extends UserDataService {
 		return from(
 			setDoc(doc(this.userCollection, user.uid), user)
 		) as unknown as Observable<User>;
+	}
+
+	public addCollectionItem$(
+		collectionItem: CollectionItemModelAdd
+	): Observable<CollectionItemModel> {
+		const uid = doc(collection(this.firestore, 'id')).id;
+		const newCollectionItem: CollectionItemModel = {
+			...collectionItem,
+			uid,
+		};
+
+		return new Observable((subscriber) => {
+			const docRef = doc(
+				this.firestore,
+				COLLECTION_ITEM_FEATURE_KEY,
+				newCollectionItem.userId
+			);
+			const collectionReference = collection(
+				docRef,
+				COLLECTION_ITEM_FEATURE_KEY
+			);
+
+			setDoc(doc(collectionReference, uid), newCollectionItem).then(
+				() => {
+					subscriber.next({
+						...newCollectionItem,
+					} as unknown as CollectionItemModel);
+				}
+			);
+		});
 	}
 
 	public delete$(user: User): Observable<User> {
@@ -57,5 +94,22 @@ export class UserDataServiceImpl extends UserDataService {
 		return from(
 			updateDoc(userDocument, { ...user })
 		) as unknown as Observable<User>;
+	}
+
+	public updateCollectionItem$(
+		collectionItem: CollectionItemModelUpdate
+	): Observable<CollectionItemModelUpdate> {
+		const collectionItemDocument = doc(
+			this.firestore,
+			`${USER_FEATURE_KEY}/${collectionItem.userId}/${COLLECTION_ITEM_FEATURE_KEY}/${collectionItem.uid}`
+		);
+
+		return new Observable((subscriber) => {
+			updateDoc(collectionItemDocument, { ...collectionItem }).then(
+				() => {
+					subscriber.next(collectionItem);
+				}
+			);
+		});
 	}
 }

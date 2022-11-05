@@ -1,117 +1,141 @@
-import { nanoid } from 'nanoid';
-import { Observable, of } from 'rxjs';
+import { Observable } from 'rxjs';
 
 import { Injectable } from '@angular/core';
 import {
+	collection,
+	collectionData,
+	collectionGroup,
+	CollectionReference,
+	doc,
+	docData,
+	DocumentData,
+	Firestore,
+	getDocs,
+	query,
+	setDoc,
+	updateDoc,
+	where,
+} from '@angular/fire/firestore';
+import {
+	COLLECTION_ITEM_FEATURE_KEY,
 	CollectionItemDataService,
-	CollectionItemEntity,
-	CollectionItemEntityAdd,
-	CollectionItemEntityUpdate,
+	CollectionItemModel,
+	CollectionItemModelAdd,
+	CollectionItemModelUpdate,
 } from '@music-collection/api';
 
 @Injectable()
 export class CollectionItemDataServiceImpl extends CollectionItemDataService {
-	protected collectionItemCollection: CollectionItemEntity[];
+	protected albumCollection: CollectionReference<DocumentData>;
 
-	public constructor() {
+	public constructor(private firestore: Firestore) {
 		super();
 
-		this.collectionItemCollection = [];
+		this.albumCollection = collection(
+			this.firestore,
+			COLLECTION_ITEM_FEATURE_KEY
+		);
 	}
 
 	public add$(
-		collectionItem: CollectionItemEntityAdd
-	): Observable<CollectionItemEntity> {
-		const newCollectionItem: CollectionItemEntity = {
-			...collectionItem,
-			uid: nanoid(),
+		album: CollectionItemModelAdd
+	): Observable<CollectionItemModel> {
+		const uid = doc(collection(this.firestore, 'id')).id;
+		const newCollectionItem: CollectionItemModel = {
+			...album,
+			uid,
 		};
 
-		this.collectionItemCollection = this.collectionItemCollection.concat([
-			newCollectionItem,
-		]);
-
-		return of(newCollectionItem);
+		return new Observable((subscriber) => {
+			setDoc(doc(this.albumCollection, uid), newCollectionItem).then(
+				() => {
+					subscriber.next({
+						...newCollectionItem,
+					} as unknown as CollectionItemModel);
+				}
+			);
+		});
 	}
 
 	public delete$(
-		collectionItem: CollectionItemEntity
-	): Observable<CollectionItemEntity> {
-		return of(collectionItem);
+		album: CollectionItemModel
+	): Observable<CollectionItemModel> {
+		return this.update$(
+			album as CollectionItemModelUpdate
+		) as Observable<CollectionItemModel>;
 	}
 
-	public list$(): Observable<CollectionItemEntity[]> {
-		return of(this.collectionItemCollection);
+	public list$(): Observable<CollectionItemModel[]> {
+		return collectionData(
+			collectionGroup(this.firestore, COLLECTION_ITEM_FEATURE_KEY),
+			{
+				idField: 'uid',
+			}
+		) as Observable<CollectionItemModel[]>;
 	}
 
-	public listByIds$(ids: string[]): Observable<CollectionItemEntity[]> {
-		const listByIds: CollectionItemEntity[] = [];
-
-		return of(
-			this.collectionItemCollection.reduce(
-				(
-					list: CollectionItemEntity[],
-					collectionItem: CollectionItemEntity
-				) => {
-					if (ids.includes(collectionItem.uid)) {
-						list.push(collectionItem);
-					}
-
-					return list;
-				},
-				listByIds
-			)
+	public listByIds$(ids: string[]): Observable<CollectionItemModel[]> {
+		const albumsQuery = query(
+			collectionGroup(this.firestore, COLLECTION_ITEM_FEATURE_KEY),
+			where('uid', 'in', ids)
 		);
+
+		return new Observable((subscriber) => {
+			getDocs(albumsQuery).then((snapshot) => {
+				subscriber.next(
+					snapshot.docChanges() as unknown as CollectionItemModel[]
+				);
+			});
+		});
 	}
 
-	public load$(uid: string): Observable<CollectionItemEntity | undefined> {
-		return of(
-			this.collectionItemCollection.find(
-				(collectionItem) => collectionItem.uid === uid
-			)
+	public load$(uid: string): Observable<CollectionItemModel | undefined> {
+		const albumDocument = doc(
+			this.firestore,
+			`${COLLECTION_ITEM_FEATURE_KEY}/${uid}`
 		);
+
+		return docData(albumDocument, {
+			idField: 'uid',
+		}) as Observable<CollectionItemModel>;
 	}
 
-	public search$(query: string): Observable<CollectionItemEntity[]> {
-		const foundByQuery: CollectionItemEntity[] = [];
-
-		return of(
-			this.collectionItemCollection.reduce(
-				(
-					list: CollectionItemEntity[],
-					collectionItem: CollectionItemEntity
-				) => {
-					if (
-						collectionItem.release.name
-							.toLowerCase()
-							.search(query.toLowerCase()) > -1
-					) {
-						list.push(collectionItem);
-					}
-
-					return list;
-				},
-				foundByQuery
-			)
+	public search$(term: string): Observable<CollectionItemModel[]> {
+		const albumQuery = query(
+			collectionGroup(this.firestore, COLLECTION_ITEM_FEATURE_KEY),
+			where('searchParameters', 'array-contains', term.toLowerCase())
 		);
+
+		return new Observable((subscriber) => {
+			getDocs(albumQuery)
+				.then((snapshot) => {
+					subscriber.next(
+						snapshot.docs.map(
+							(doc) =>
+								({
+									...doc.data(),
+								} as unknown as CollectionItemModel)
+						)
+					);
+				})
+				.catch((error) => {
+					subscriber.error(error);
+				});
+		});
 	}
 
 	public update$(
-		collectionItem: CollectionItemEntityUpdate
-	): Observable<CollectionItemEntityUpdate> {
-		this.collectionItemCollection = this.collectionItemCollection.map(
-			(oldCollectionItem) => {
-				return (
-					oldCollectionItem.uid === collectionItem.uid
-						? {
-								...oldCollectionItem,
-								...collectionItem,
-						  }
-						: oldCollectionItem
-				) as CollectionItemEntity;
-			}
+		album: CollectionItemModelUpdate
+	): Observable<CollectionItemModelUpdate> {
+		const albumDocument = doc(
+			this.firestore,
+			`${COLLECTION_ITEM_FEATURE_KEY}/${album.uid}`
 		);
 
-		return of(collectionItem);
+		return new Observable((subscriber) => {
+			updateDoc(albumDocument, { ...album }).then(() => {
+				subscriber.next(album);
+			});
+		});
 	}
 }

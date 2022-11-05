@@ -6,4 +6,5 @@ export const enum EntityTypeEnum {
 	Label = 'Label',
 	Release = 'Release',
 	CollectionItem = 'Collection Item',
+	User = 'User',
 }

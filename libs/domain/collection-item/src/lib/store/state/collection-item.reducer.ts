@@ -56,11 +56,11 @@ export const collectionItemReducer = createReducer(
 	),
 	on(
 		collectionItemActions.selectCollectionItem,
-		(state, { collectionItemId }) => ({
+		(state, { collectionItem }) => ({
 			...state,
 			loading: false,
 			error: null,
-			selectedCollectionItemId: collectionItemId,
+			selectedCollectionItemId: collectionItem.uid,
 		})
 	),
 	on(
@@ -99,10 +99,12 @@ export const collectionItemReducer = createReducer(
 			selectedId: collectionItemId,
 		})
 	),
-	on(collectionItemActions.searchSuccess, (state, { result }) => ({
-		...state,
-		searchResult: result,
-	})),
+	on(collectionItemActions.searchSuccess, (state, { result }) => {
+		return collectionItemAdapter.upsertMany(result, {
+			...state,
+			searchResult: result,
+		});
+	}),
 	on(collectionItemActions.searchFailed, (state, { error }) => ({
 		...state,
 		searchResult: [],

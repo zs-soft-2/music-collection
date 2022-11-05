@@ -59,10 +59,12 @@ export class CollectionItemStateServiceImpl extends CollectionItemStateService {
 		this.store.dispatch(collectionItemActions.search({ term }));
 	}
 
-	public dispatchSelectCollectionItemAction(uid: string): void {
+	public dispatchSelectCollectionItemAction(
+		collectionItem: CollectionItemEntity
+	): void {
 		this.store.dispatch(
 			collectionItemActions.selectCollectionItem({
-				collectionItemId: uid,
+				collectionItem,
 			})
 		);
 	}
