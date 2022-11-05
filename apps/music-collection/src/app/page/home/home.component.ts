@@ -14,17 +14,17 @@ import {
 	styleUrls: ['./home.component.scss'],
 })
 export class HomeComponent extends BaseComponent implements OnInit {
-	public constructor(private releaseStateService: ReleaseStateService) {
+	public constructor(private albumStateService: ReleaseStateService) {
 		super();
 	}
 
 	public ngOnInit(): void {
-		this.releaseStateService
+		this.albumStateService
 			.selectEntities$()
 			.pipe(
 				tap((entities) => {
 					if (!entities?.length) {
-						this.releaseStateService.dispatchListEntitiesAction();
+						this.albumStateService.dispatchListEntitiesAction();
 					}
 				}),
 				takeUntil(this.destroy)

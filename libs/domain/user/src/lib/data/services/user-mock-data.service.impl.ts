@@ -1,7 +1,14 @@
 import { Observable, of } from 'rxjs';
 
 import { Injectable } from '@angular/core';
-import { RoleNames, User, UserDataService } from '@music-collection/api';
+import {
+	CollectionItemModel,
+	CollectionItemModelAdd,
+	CollectionItemModelUpdate,
+	RoleNames,
+	User,
+	UserDataService,
+} from '@music-collection/api';
 
 @Injectable()
 export class UserMockDataServiceImpl extends UserDataService {
@@ -39,6 +46,12 @@ export class UserMockDataServiceImpl extends UserDataService {
 		return of(user);
 	}
 
+	public addCollectionItem$(
+		collectionItem: CollectionItemModelAdd
+	): Observable<CollectionItemModel> {
+		throw new Error('Method not implemented.');
+	}
+
 	public delete$(user: User): Observable<User> {
 		return of(user);
 	}
@@ -57,5 +70,11 @@ export class UserMockDataServiceImpl extends UserDataService {
 
 	public update$(user: User): Observable<User> {
 		return of(user);
+	}
+
+	public updateCollectionItem$(
+		collectionItem: CollectionItemModelUpdate
+	): Observable<CollectionItemModelUpdate> {
+		throw new Error('Method not implemented.');
 	}
 }

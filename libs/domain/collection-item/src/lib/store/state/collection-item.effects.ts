@@ -9,6 +9,7 @@ import {
 	EntityQuantityStateService,
 	EntityQuantityUtilService,
 	EntityTypeEnum,
+	UserDataService,
 } from '@music-collection/api';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 
@@ -31,13 +32,39 @@ export class CollectionItemEffects {
 					)
 			),
 			switchMap(({ action, entityQuantityEntity }) =>
-				this.collectionItemDataService.add$(action.collectionItem).pipe(
-					map((collectionItem) => {
-						return collectionItemActions.addCollectionItemSuccess({
-							collectionItem,
-						});
-					})
-				)
+				this.userDataService
+					.addCollectionItem$(
+						this.collectionItemUtilService.convertEntityAddToModelAdd(
+							action.collectionItem
+						)
+					)
+					.pipe(
+						map((collectionItem) => {
+							entityQuantityEntity =
+								entityQuantityEntity ||
+								this.entityQuantityUtilService.createEntityQuantity(
+									EntityTypeEnum.CollectionItem
+								);
+
+							const collectionItemEntity: CollectionItemEntity =
+								this.collectionItemUtilService.convertModelToEntity(
+									collectionItem
+								);
+
+							this.entityQuantityStateService.dispatchUpdateEntityAction(
+								this.collectionItemUtilService.updateEntityQuantity(
+									entityQuantityEntity,
+									collectionItemEntity
+								)
+							);
+
+							return collectionItemActions.addCollectionItemSuccess(
+								{
+									collectionItem: collectionItemEntity,
+								}
+							);
+						})
+					)
 			)
 		)
 	);
@@ -46,6 +73,13 @@ export class CollectionItemEffects {
 			ofType(collectionItemActions.listCollectionItems),
 			switchMap(() =>
 				this.collectionItemDataService.list$().pipe(
+					map((collectionItems) =>
+						collectionItems.map((collectionItem) =>
+							this.collectionItemUtilService.convertModelToEntity(
+								collectionItem
+							)
+						)
+					),
 					map((collectionItems) => {
 						return collectionItemActions.listCollectionItemsSuccess(
 							{
@@ -64,8 +98,11 @@ export class CollectionItemEffects {
 				this.collectionItemDataService.load$(action.uid).pipe(
 					map((collectionItem) => {
 						return collectionItemActions.loadCollectionItemSuccess({
-							collectionItem:
-								collectionItem as CollectionItemEntity,
+							collectionItem: collectionItem
+								? this.collectionItemUtilService.convertModelToEntity(
+										collectionItem
+								  )
+								: undefined,
 						});
 					}),
 					catchError((error) => {
@@ -82,6 +119,13 @@ export class CollectionItemEffects {
 			ofType(collectionItemActions.search),
 			switchMap((action) =>
 				this.collectionItemDataService.search$(action.term).pipe(
+					map((result) =>
+						result.map((collectionItem) =>
+							this.collectionItemUtilService.convertModelToEntity(
+								collectionItem
+							)
+						)
+					),
 					map((result) => {
 						return collectionItemActions.searchSuccess({
 							result,
@@ -94,19 +138,36 @@ export class CollectionItemEffects {
 			)
 		)
 	);
+	public selectCollectionItem = createEffect(() =>
+		this.actions$.pipe(
+			ofType(collectionItemActions.selectCollectionItem),
+			map((action) => {
+				return collectionItemActions.selectCollectionItemSuccess({
+					collectionItem: action.collectionItem,
+				});
+			})
+		)
+	);
 	public updateCollectionItem = createEffect(() =>
 		this.actions$.pipe(
 			ofType(collectionItemActions.updateCollectionItem),
 			switchMap((action) =>
-				this.collectionItemDataService
-					.update$(action.collectionItem)
+				this.userDataService
+					.updateCollectionItem$(
+						this.collectionItemUtilService.convertEntityUpdateToModelUpdate(
+							action.collectionItem
+						)
+					)
 					.pipe(
 						map((collectionItem) => {
 							return collectionItemActions.updateCollectionItemSuccess(
 								{
 									collectionItem: {
 										id: collectionItem.uid || '',
-										changes: collectionItem,
+										changes:
+											this.collectionItemUtilService.convertModelUpdateToEntityUpdate(
+												collectionItem
+											),
 									},
 								}
 							);
@@ -120,6 +181,7 @@ export class CollectionItemEffects {
 		private actions$: Actions,
 		private collectionItemDataService: CollectionItemDataService,
 		private collectionItemUtilService: CollectionItemUtilService,
+		private userDataService: UserDataService,
 		private entityQuantityStateService: EntityQuantityStateService,
 		private entityQuantityUtilService: EntityQuantityUtilService
 	) {}

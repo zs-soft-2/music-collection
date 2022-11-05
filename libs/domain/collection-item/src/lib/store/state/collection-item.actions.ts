@@ -99,7 +99,12 @@ export const searchSuccess = createAction(
 
 export const selectCollectionItem = createAction(
 	'[CollectionItem] Select CollectionItem',
-	props<{ collectionItemId: string }>()
+	props<{ collectionItem: CollectionItemEntity }>()
+);
+
+export const selectCollectionItemSuccess = createAction(
+	'[Album] Select Collection Item Success',
+	props<{ collectionItem: CollectionItemEntity }>()
 );
 
 export const setSelectedCollectionItemId = createAction(

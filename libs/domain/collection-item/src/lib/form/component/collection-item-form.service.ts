@@ -2,7 +2,6 @@ import { combineLatest, Observable, ReplaySubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
 import { Injectable } from '@angular/core';
-import { FormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
 	CollectionItemEntity,
@@ -11,9 +10,6 @@ import {
 	CollectionItemFormParams,
 	CollectionItemStateService,
 	CollectionItemUtilService,
-	ArtistEntity,
-	ArtistStateService,
-	StyleList,
 	ReleaseEntity,
 	ReleaseStateService,
 	AuthenticationStateService,
@@ -28,12 +24,12 @@ export class CollectionItemFormService {
 
 	public constructor(
 		private activatedRoute: ActivatedRoute,
+		private authenticationStateService: AuthenticationStateService,
 		private collectionItemStateService: CollectionItemStateService,
 		private collectionItemUtilService: CollectionItemUtilService,
 		private releaseStateService: ReleaseStateService,
 		private componentUtil: CollectionItemUtilService,
-		private router: Router,
-		private authenticationStateService: AuthenticationStateService
+		private router: Router
 	) {
 		this.params$$ = new ReplaySubject();
 	}
@@ -96,7 +92,7 @@ export class CollectionItemFormService {
 	private createCollectionItemParams(
 		collectionItem: CollectionItemEntity | undefined,
 		releases: ReleaseEntity[],
-		authenticatedUser: User | undefined
+		authenticatedUser: User
 	): CollectionItemFormParams {
 		const formGroup = this.collectionItemUtilService.createFormGroupByUser(
 			collectionItem,
