@@ -1,0 +1,17 @@
+<section class="release-list" *ngIf="params$ | async as params">
+	<p-carousel
+		*ngIf="params.releases.length"
+		[value]="params.releases"
+		[numVisible]="3"
+		[numScroll]="1"
+		[autoplayInterval]="5000"
+	>
+		<ng-template let-release pTemplate="item">
+			<div class="release-view">
+				<mc-release-simple-view
+					[release]="release"
+				></mc-release-simple-view>
+			</div>
+		</ng-template>
+	</p-carousel>
+</section>

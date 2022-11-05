@@ -55,3 +55,5 @@ export type AlbumArtist = Omit<
 >;
 
 export type AlbumDocument = Omit<DocumentEntity, 'originalName' | 'fileType'>;
+
+export type SimpleAlbum = Omit<AlbumEntity, 'year'>;

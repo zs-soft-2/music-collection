@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
-import { AlbumEntity, BaseComponent } from '@music-collection/api';
+import { BaseComponent, SimpleAlbum } from '@music-collection/api';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -9,7 +9,7 @@ import { AlbumEntity, BaseComponent } from '@music-collection/api';
 })
 export class AlbumSimpleViewComponent extends BaseComponent {
 	@Input()
-	public album!: AlbumEntity;
+	public album!: SimpleAlbum;
 	@Input()
 	public width = '300';
 }

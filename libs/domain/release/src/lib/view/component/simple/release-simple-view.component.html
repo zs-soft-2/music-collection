@@ -1,1 +1,29 @@
-<p>release simple view works!</p>
+<section class="release-simple-view">
+	<div class="content">
+		<a href="https://unsplash.com/photos/HkTMcmlMOUQ" target="_blank">
+			<div class="content-overlay"></div>
+
+			<div class="content-image">
+				<mc-album-simple-view
+					[album]="release.album"
+				></mc-album-simple-view>
+			</div>
+
+			<div class="content-details fadeIn-bottom fadeIn-right">
+				<svg-icon
+					*ngIf="release.media === media['vinyl']"
+					src="assets/icon/vinyl/format-vinyl-48.svg"
+					[svgStyle]="{ 'padding.px': 1, 'margin.px': 3 }"
+				>
+				</svg-icon>
+
+				<svg-icon
+					*ngIf="release.media === media['cd']"
+					src="assets/icon/cd/format-cd-48.svg"
+					[svgStyle]="{ 'padding.px': 1, 'margin.px': 3 }"
+				>
+				</svg-icon>
+			</div>
+		</a>
+	</div>
+</section>

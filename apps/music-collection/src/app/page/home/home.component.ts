@@ -1,7 +1,11 @@
 import { takeUntil, tap } from 'rxjs';
 
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { AlbumStateService, BaseComponent } from '@music-collection/api';
+import {
+	AlbumStateService,
+	BaseComponent,
+	ReleaseStateService,
+} from '@music-collection/api';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -10,17 +14,17 @@ import { AlbumStateService, BaseComponent } from '@music-collection/api';
 	styleUrls: ['./home.component.scss'],
 })
 export class HomeComponent extends BaseComponent implements OnInit {
-	public constructor(private albumStateService: AlbumStateService) {
+	public constructor(private releaseStateService: ReleaseStateService) {
 		super();
 	}
 
 	public ngOnInit(): void {
-		this.albumStateService
+		this.releaseStateService
 			.selectEntities$()
 			.pipe(
 				tap((entities) => {
 					if (!entities?.length) {
-						this.albumStateService.dispatchListEntitiesAction();
+						this.releaseStateService.dispatchListEntitiesAction();
 					}
 				}),
 				takeUntil(this.destroy)

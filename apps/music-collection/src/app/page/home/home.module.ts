@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { AlbumCollectionModule } from '@music-collection/domain/album';
 import { ArtistCollectionModule } from '@music-collection/domain/artist';
+import { ReleaseCollectionModule } from '@music-collection/domain/release';
 
 import { HomeRoutingModule } from './home-routing.module';
 import { HomeComponent } from './home.component';
@@ -12,7 +13,7 @@ import { HomeComponent } from './home.component';
 		CommonModule,
 		HomeRoutingModule,
 		ArtistCollectionModule,
-		AlbumCollectionModule,
+		ReleaseCollectionModule,
 	],
 })
 export class HomeModule {}

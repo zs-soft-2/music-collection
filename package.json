@@ -28,6 +28,7 @@
 		"@ngrx/store": "^14.3.2",
 		"@ngrx/store-devtools": "^14.3.2",
 		"@nrwl/angular": "^15.0.0",
+		"angular-svg-icon": "^14.0.0",
 		"nanoid": "^4.0.0",
 		"ngrx-store-localstorage": "^14.0.0",
 		"ngx-permissions": "^14.0.0",

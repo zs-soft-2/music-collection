@@ -1,3 +1,4 @@
+import { AngularSvgIconModule } from 'angular-svg-icon';
 import { NgxPermissionsModule } from 'ngx-permissions';
 
 import { APP_INITIALIZER, NgModule } from '@angular/core';
@@ -28,6 +29,7 @@ import { CoreAuthorizationModule } from '@music-collection/core/authorization';
 import { CoreEntityQuantityModule } from '@music-collection/core/entity-quantity';
 import { DomainAlbumModule } from '@music-collection/domain/album';
 import { DomainArtistModule } from '@music-collection/domain/artist';
+import { DomainReleaseModule } from '@music-collection/domain/release';
 import { DomainUserModule } from '@music-collection/domain/user';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
@@ -41,6 +43,7 @@ import { TopBarModule } from './module';
 import { HookModule } from './module/hook';
 import { metaReducers } from './reducer';
 import { ArtistPageResolverService } from './resolver';
+import { HttpClientModule } from '@angular/common/http';
 
 @NgModule({
 	declarations: [AppComponent],
@@ -52,6 +55,8 @@ import { ArtistPageResolverService } from './resolver';
 		provideFirestore(() => getFirestore()),
 		provideAuth(() => getAuth()),
 		provideStorage(() => getStorage()),
+		HttpClientModule,
+		AngularSvgIconModule.forRoot(),
 		StoreModule.forRoot(
 			{},
 			{
@@ -72,6 +77,7 @@ import { ArtistPageResolverService } from './resolver';
 		DomainUserModule,
 		DomainArtistModule,
 		DomainAlbumModule,
+		DomainReleaseModule,
 		HookModule,
 	],
 	providers: [

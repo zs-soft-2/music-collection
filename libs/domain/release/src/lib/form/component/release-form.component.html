@@ -12,7 +12,8 @@
 					[disabled]="!params.isArtistsActive"
 					field="name"
 					(completeMethod)="searchArtist($event)"
-				></p-autoComplete>
+				>
+				</p-autoComplete>
 
 				<label for="artist">Artist</label>
 			</span>
@@ -28,7 +29,8 @@
 					[disabled]="!params.isAlbumsActive"
 					field="name"
 					(completeMethod)="searchAlbum($event)"
-				></p-autoComplete>
+				>
+				</p-autoComplete>
 
 				<label for="album">Album</label>
 			</span>
@@ -111,13 +113,14 @@
 
 		<div class="field">
 			<span class="p-float-label">
-				<p-dropdown
+				<p-multiSelect
 					id="formatDescription"
 					[options]="params.formatDescriptionList"
 					placeholder="Select a format description"
+					[filter]="false"
 					formControlName="formatDescription"
-				></p-dropdown>
-
+					display="chip"
+				></p-multiSelect>
 				<label for="formatDescription">Format description</label>
 			</span>
 		</div>
