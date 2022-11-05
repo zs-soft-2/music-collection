@@ -2,13 +2,16 @@
 	<section class="top-bar">
 		<p-menubar [model]="params.menuItems">
 			<ng-template pTemplate="start">
-				<img
-					ngSrc="assets/music.png"
-					height="40"
-					width="40"
-					class="mr-2"
+				<svg-icon
+					src="assets/music.svg"
+					[svgStyle]="{
+						fill: '#656565',
+						'padding.px': 1,
+						'margin.px': 3
+					}"
 					(click)="imgClickHandler()"
-				/>
+				>
+				</svg-icon>
 
 				<span class="title">musiCollection</span>
 			</ng-template>
@@ -24,7 +27,7 @@
 				<ng-container *mcIsAuthenticated="false">
 					<i class="pi pi-sign-in"></i>
 
-					<span>
+					<span class="login">
 						<a (click)="loginClickHandler()">login</a>
 					</span>
 				</ng-container>

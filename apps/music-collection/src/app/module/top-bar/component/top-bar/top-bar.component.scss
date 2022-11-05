@@ -14,7 +14,7 @@
 	margin-bottom: 1rem;
 	border-bottom: #656565 1px solid;
 
-	img:hover {
+	svg-icon:hover {
 		cursor: pointer;
 	}
 }
@@ -29,4 +29,9 @@
 .users-dropdown {
 	margin-left: 10px;
 	width: 150px;
+}
+
+.login {
+	cursor: pointer;
+	margin-left: 5px;
 }

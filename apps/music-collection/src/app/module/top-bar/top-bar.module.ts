@@ -1,3 +1,4 @@
+import { AngularSvgIconModule } from 'angular-svg-icon';
 import { ButtonModule } from 'primeng/button';
 import { DropdownModule } from 'primeng/dropdown';
 import { MenubarModule } from 'primeng/menubar';
@@ -6,16 +7,17 @@ import { ToolbarModule } from 'primeng/toolbar';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { CoreAuthenticationViewModule } from '@music-collection/core/authentication/view';
+import { UserProfileModule } from '@music-collection/domain/user';
 
 import { TopBarComponent } from './component';
-import { UserProfileModule } from '@music-collection/domain/user';
-import { CoreAuthenticationViewModule } from '@music-collection/core/authentication/view';
 
 @NgModule({
 	exports: [TopBarComponent],
 	declarations: [TopBarComponent],
 	imports: [
 		CommonModule,
+		AngularSvgIconModule,
 		CoreAuthenticationViewModule,
 		ButtonModule,
 		DropdownModule,

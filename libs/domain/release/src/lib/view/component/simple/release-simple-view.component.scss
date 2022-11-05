@@ -7,12 +7,14 @@
 	}
 
 	.content .content-overlay {
+		border-bottom-right-radius: 20px;
+		border-bottom-left-radius: 20px;
 		background: rgba(255, 255, 255, 0.7);
 		position: absolute;
 		height: 30%;
 		width: 100%;
 		left: 0;
-		top: 70%;
+		top: 69%;
 		bottom: 0;
 		right: 0;
 		opacity: 0;
