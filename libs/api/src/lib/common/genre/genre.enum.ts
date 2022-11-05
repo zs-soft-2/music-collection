@@ -3,10 +3,15 @@ export enum GenreEnum {
 }
 
 export enum StyleEnum {
+	Alternative_Rock = 'Alternative Rock',
+	Backened_Doom = 'Blackened Doom',
+	Bay_Area_Thrash = 'Bay Area Thrash',
 	Death = 'Death',
+	Death_Doom = 'Death Doom',
 	Glam_Rock = 'Glam Rock',
 	Glam_Metal = 'Glam Metal',
 	Gothenburg = 'Gothenburg',
+	Gothic_Doom = 'Gothic Doom',
 	Groove = 'Groove',
 	Hard_Rock = 'Hard rock',
 	Heavy = 'Heavy metal',
@@ -19,10 +24,15 @@ export enum StyleEnum {
 }
 
 export const StyleList: StyleEnum[] = [
+	StyleEnum.Alternative_Rock,
+	StyleEnum.Backened_Doom,
+	StyleEnum.Bay_Area_Thrash,
 	StyleEnum.Death,
+	StyleEnum.Death_Doom,
 	StyleEnum.Glam_Metal,
 	StyleEnum.Glam_Rock,
 	StyleEnum.Gothenburg,
+	StyleEnum.Gothic_Doom,
 	StyleEnum.Groove,
 	StyleEnum.Hard_Rock,
 	StyleEnum.Heavy,
