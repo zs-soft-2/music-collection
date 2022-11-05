@@ -1,5 +1,9 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { BaseComponent } from '@music-collection/api';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { BaseComponent, MediaEnum, ReleaseEntity } from '@music-collection/api';
+
+export interface Media {
+	[x: string]: MediaEnum;
+}
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -7,4 +11,18 @@ import { BaseComponent } from '@music-collection/api';
 	templateUrl: './release-simple-view.component.html',
 	styleUrls: ['./release-simple-view.component.scss'],
 })
-export class ReleaseSimpleViewComponent extends BaseComponent {}
+export class ReleaseSimpleViewComponent extends BaseComponent {
+	@Input()
+	public release!: ReleaseEntity;
+
+	public media: Media;
+
+	public constructor() {
+		super();
+
+		this.media = {
+			cd: MediaEnum.cd,
+			vinyl: MediaEnum.vinyl,
+		};
+	}
+}

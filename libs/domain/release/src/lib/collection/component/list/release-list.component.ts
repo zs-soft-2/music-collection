@@ -1,5 +1,7 @@
+import { Observable } from 'rxjs';
+
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { BaseComponent } from '@music-collection/api';
+import { BaseComponent, ReleaseListParams } from '@music-collection/api';
 
 import { ReleaseListService } from './release-list.service';
 
@@ -11,11 +13,13 @@ import { ReleaseListService } from './release-list.service';
 	styleUrls: ['./release-list.component.scss'],
 })
 export class ReleaseListComponent extends BaseComponent implements OnInit {
+	public params$!: Observable<ReleaseListParams>;
+
 	public constructor(private componentService: ReleaseListService) {
 		super();
 	}
 
 	public ngOnInit(): void {
-		this.componentService.init$().pipe().subscribe();
+		this.params$ = this.componentService.init$();
 	}
 }

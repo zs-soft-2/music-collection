@@ -8,7 +8,7 @@ import {
 	EntityQuantityGroup,
 	EntityTypeEnum,
 	LabelEntity,
-	ReleaseAlbum,
+	SimpleAlbum,
 	ReleaseArtist,
 	ReleaseEntity,
 	ReleaseEntityAdd,
@@ -196,7 +196,7 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 		};
 	}
 
-	private createReleaseAlbum(album: AlbumEntity): ReleaseAlbum {
+	private createReleaseAlbum(album: AlbumEntity): SimpleAlbum {
 		const { uid, name, artist, coverImage, genre, songs, styles } = album;
 
 		return {

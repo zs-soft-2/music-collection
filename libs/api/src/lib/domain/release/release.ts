@@ -8,12 +8,12 @@ import {
 	MediaEnum,
 	Searchable,
 } from '../../common';
-import { AlbumEntity } from '../album';
+import { AlbumEntity, SimpleAlbum } from '../album';
 import { ArtistEntity } from '../artist';
 import { LabelEntity } from '../label';
 
 export interface Release {
-	album: ReleaseAlbum;
+	album: SimpleAlbum;
 	artist: ReleaseArtist;
 	country: CountryEnum;
 	format: FormatEnum;
@@ -62,11 +62,13 @@ export type ReleaseTableParams = {
 	empty: string[];
 };
 
+export type ReleaseListParams = {
+	releases: ReleaseEntity[];
+};
+
 export type ReleaseArtist = Omit<
 	ArtistEntity,
 	'sites' | 'members' | 'description' | 'formedIn' | 'genre' | 'styles'
 >;
-
-export type ReleaseAlbum = Omit<AlbumEntity, 'year'>;
 
 export type ReleaseLabel = Omit<LabelEntity, 'parent'>;

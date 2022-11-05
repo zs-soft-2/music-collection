@@ -1,0 +1,82 @@
+.release-simple-view {
+	.content {
+		position: relative;
+		max-width: 300px;
+		margin: auto;
+		overflow: hidden;
+	}
+
+	.content .content-overlay {
+		background: rgba(255, 255, 255, 0.7);
+		position: absolute;
+		height: 30%;
+		width: 100%;
+		left: 0;
+		top: 70%;
+		bottom: 0;
+		right: 0;
+		opacity: 0;
+		-webkit-transition: all 0.4s ease-in-out 0s;
+		-moz-transition: all 0.4s ease-in-out 0s;
+		transition: all 0.4s ease-in-out 0s;
+	}
+
+	.content:hover .content-overlay {
+		opacity: 60%;
+	}
+
+	.content-image {
+		width: 100%;
+	}
+
+	.content-details {
+		position: absolute;
+		padding-left: 1em;
+		padding-right: 1em;
+		width: 100%;
+		top: 50%;
+		left: 50%;
+		opacity: 0;
+		-webkit-transform: translate(-50%, 0%);
+		-moz-transform: translate(-50%, 0%);
+		transform: translate(-50%, 0%);
+		-webkit-transition: all 0.3s ease-in-out 0s;
+		-moz-transition: all 0.3s ease-in-out 0s;
+		transition: all 0.3s ease-in-out 0s;
+	}
+
+	.content:hover .content-details {
+		bottom: 0%;
+		left: 50%;
+		opacity: 1;
+	}
+
+	.content-details h3 {
+		color: #fff;
+		font-weight: 500;
+		letter-spacing: 0.15em;
+		margin-bottom: 0.5em;
+		text-transform: uppercase;
+	}
+
+	.content-details p {
+		color: #fff;
+		font-size: 0.8em;
+	}
+
+	.fadeIn-bottom {
+		top: 80%;
+	}
+
+	.fadeIn-top {
+		top: 20%;
+	}
+
+	.fadeIn-left {
+		left: 20%;
+	}
+
+	.fadeIn-right {
+		left: 80%;
+	}
+}
