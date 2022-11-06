@@ -36,4 +36,8 @@ export class CollectionItemTableComponent
 	public ngOnInit(): void {
 		this.params$ = this.componentService.init$();
 	}
+
+	public searchHandler(event: any): void {
+		this.componentService.searchHandler(event['query']);
+	}
 }

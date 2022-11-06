@@ -44,6 +44,7 @@ import { HookModule } from './module/hook';
 import { metaReducers } from './reducer';
 import { ArtistPageResolverService } from './resolver';
 import { HttpClientModule } from '@angular/common/http';
+import { DomainCollectionItemModule } from '@music-collection/domain/collection-item';
 
 @NgModule({
 	declarations: [AppComponent],
@@ -77,6 +78,7 @@ import { HttpClientModule } from '@angular/common/http';
 		DomainUserModule,
 		DomainArtistModule,
 		DomainAlbumModule,
+		DomainCollectionItemModule,
 		DomainReleaseModule,
 		HookModule,
 	],

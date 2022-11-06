@@ -45,7 +45,7 @@ export class CollectionItemFormService {
 			switchMap((data) =>
 				combineLatest([
 					this.collectionItemStateService.selectEntityById$(
-						data['collection-itemId']
+						data['collectionItemId']
 					),
 					this.releaseStateService.selectSearchResult$(),
 					this.authenticationStateService.selectAuthenticatedUser$(),

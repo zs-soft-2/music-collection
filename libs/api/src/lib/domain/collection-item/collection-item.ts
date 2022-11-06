@@ -35,6 +35,11 @@ export type CollectionItemFormParams = {
 	formGroup: FormGroup;
 };
 
+export type CollectionItemListParams = {
+	collectionItems: CollectionItemEntity[];
+};
+
 export type CollectionItemTableParams = {
 	collectionItems: CollectionItemEntity[];
+	empty: string[];
 };

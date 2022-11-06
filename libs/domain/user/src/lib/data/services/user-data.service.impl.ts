@@ -51,7 +51,7 @@ export class UserDataServiceImpl extends UserDataService {
 		return new Observable((subscriber) => {
 			const docRef = doc(
 				this.firestore,
-				COLLECTION_ITEM_FEATURE_KEY,
+				USER_FEATURE_KEY,
 				newCollectionItem.userId
 			);
 			const collectionReference = collection(

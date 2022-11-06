@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
+import { ReleaseViewModule } from '@music-collection/domain/release';
 
 import {
 	CollectionItemDetailViewComponent,
@@ -11,6 +12,10 @@ import {
 		CollectionItemDetailViewComponent,
 		CollectionItemSimpleViewComponent,
 	],
-	imports: [CommonModule],
+	exports: [
+		CollectionItemDetailViewComponent,
+		CollectionItemSimpleViewComponent,
+	],
+	imports: [CommonModule, ReleaseViewModule],
 })
 export class CollectionItemViewModule {}
