@@ -15,19 +15,17 @@ import {
 	styleUrls: ['./home.component.scss'],
 })
 export class HomeComponent extends BaseComponent implements OnInit {
-	public constructor(
-		private collectionItemStateService: CollectionItemStateService
-	) {
+	public constructor(private albumStateService: AlbumStateService) {
 		super();
 	}
 
 	public ngOnInit(): void {
-		this.collectionItemStateService
+		this.albumStateService
 			.selectEntities$()
 			.pipe(
 				tap((entities) => {
 					if (!entities?.length) {
-						this.collectionItemStateService.dispatchListEntitiesAction();
+						this.albumStateService.dispatchListEntitiesAction();
 					}
 				}),
 				takeUntil(this.destroy)

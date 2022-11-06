@@ -1,4 +1,10 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { takeUntil, tap } from 'rxjs';
+
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import {
+	BaseComponent,
+	CollectionItemStateService,
+} from '@music-collection/api';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -6,4 +12,24 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 	templateUrl: './collection.component.html',
 	styleUrls: ['./collection.component.scss'],
 })
-export class CollectionComponent {}
+export class CollectionComponent extends BaseComponent implements OnInit {
+	public constructor(
+		private collectionItemStateService: CollectionItemStateService
+	) {
+		super();
+	}
+
+	public ngOnInit(): void {
+		this.collectionItemStateService
+			.selectEntities$()
+			.pipe(
+				tap((entities) => {
+					if (!entities?.length) {
+						this.collectionItemStateService.dispatchListEntitiesAction();
+					}
+				}),
+				takeUntil(this.destroy)
+			)
+			.subscribe();
+	}
+}
