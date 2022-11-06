@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { BaseComponent } from '@music-collection/api';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { BaseComponent, CollectionItemEntity } from '@music-collection/api';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -7,4 +7,7 @@ import { BaseComponent } from '@music-collection/api';
 	templateUrl: './collection-item-simple-view.component.html',
 	styleUrls: ['./collection-item-simple-view.component.scss'],
 })
-export class CollectionItemSimpleViewComponent extends BaseComponent {}
+export class CollectionItemSimpleViewComponent extends BaseComponent {
+	@Input()
+	public collectionItem!: CollectionItemEntity;
+}

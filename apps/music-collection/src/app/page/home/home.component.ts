@@ -4,6 +4,7 @@ import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import {
 	AlbumStateService,
 	BaseComponent,
+	CollectionItemStateService,
 	ReleaseStateService,
 } from '@music-collection/api';
 
@@ -14,17 +15,19 @@ import {
 	styleUrls: ['./home.component.scss'],
 })
 export class HomeComponent extends BaseComponent implements OnInit {
-	public constructor(private albumStateService: ReleaseStateService) {
+	public constructor(
+		private collectionItemStateService: CollectionItemStateService
+	) {
 		super();
 	}
 
 	public ngOnInit(): void {
-		this.albumStateService
+		this.collectionItemStateService
 			.selectEntities$()
 			.pipe(
 				tap((entities) => {
 					if (!entities?.length) {
-						this.albumStateService.dispatchListEntitiesAction();
+						this.collectionItemStateService.dispatchListEntitiesAction();
 					}
 				}),
 				takeUntil(this.destroy)

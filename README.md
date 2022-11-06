@@ -19,3 +19,5 @@ firebase emulators:start
 firebase emulators:export ./emulators.backup
 
 firebase emulators:start --import=./emulators.backup
+
+firebase emulators:start --import=./emulators.backup --export-on-exit

@@ -1,4 +1,4 @@
-import { Observable, of, ReplaySubject, switchMap } from 'rxjs';
+import { merge, Observable, ReplaySubject, switchMap } from 'rxjs';
 
 import { Injectable } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -31,10 +31,14 @@ export class CollectionItemTableService extends BaseComponent {
 	}
 
 	public init$(): Observable<CollectionItemTableParams> {
-		return this.collectionItemStateService.selectEntities$().pipe(
+		return merge(
+			this.collectionItemStateService.selectSearchResult$(),
+			this.collectionItemStateService.selectEntities$()
+		).pipe(
 			switchMap((collectionItems) => {
 				this.params = {
 					collectionItems,
+					empty: [],
 				};
 
 				this.params$$.next(this.params);
@@ -42,5 +46,9 @@ export class CollectionItemTableService extends BaseComponent {
 				return this.params$$;
 			})
 		);
+	}
+
+	public searchHandler(query: string): void {
+		this.collectionItemStateService.dispatchSearch(query);
 	}
 }

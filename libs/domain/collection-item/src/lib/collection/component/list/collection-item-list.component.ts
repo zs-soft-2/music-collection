@@ -1,5 +1,7 @@
+import { Observable } from 'rxjs';
+
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { BaseComponent } from '@music-collection/api';
+import { BaseComponent, CollectionItemListParams } from '@music-collection/api';
 
 import { CollectionItemListService } from './collection-item-list.service';
 
@@ -14,11 +16,13 @@ export class CollectionItemListComponent
 	extends BaseComponent
 	implements OnInit
 {
+	public params$!: Observable<CollectionItemListParams>;
+
 	public constructor(private componentService: CollectionItemListService) {
 		super();
 	}
 
 	public ngOnInit(): void {
-		this.componentService.init$().pipe().subscribe();
+		this.params$ = this.componentService.init$();
 	}
 }
