@@ -1,10 +1,15 @@
-import { ArtistEntity, ARTIST_FEATURE_KEY } from '@music-collection/api';
+import {
+	AlbumEntity,
+	ArtistEntity,
+	ARTIST_FEATURE_KEY,
+} from '@music-collection/api';
 import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity';
 import { Action, createReducer, on } from '@ngrx/store';
 
 import * as artistActions from './artist.actions';
 
 export interface State extends EntityState<ArtistEntity> {
+	albumsById: AlbumEntity[] | undefined;
 	isNewEntityButtonEnabled: boolean;
 	selectedId?: string;
 	loading: boolean;
@@ -27,6 +32,7 @@ export const artistAdapter: EntityAdapter<ArtistEntity> =
 	});
 
 export const initialState: State = artistAdapter.getInitialState({
+	albumsById: undefined,
 	isNewEntityButtonEnabled: true,
 	loading: false,
 	error: null,
@@ -55,12 +61,28 @@ export const artistReducer = createReducer(
 	on(artistActions.deleteArtistSuccess, (state, { artistId }) =>
 		artistAdapter.removeOne(artistId, state)
 	),
+	on(artistActions.listAlbumsByIdSuccess, (state, { albums }) => ({
+		...state,
+		loading: false,
+		error: null,
+		albumsById: albums,
+	})),
 	on(artistActions.listArtistsSuccess, (state, { artists }) =>
 		artistAdapter.upsertMany(artists as ArtistEntity[], state)
 	),
-	on(artistActions.loadArtistSuccess, (state, { artist }) =>
-		artistAdapter.upsertOne(artist as ArtistEntity, state)
-	),
+	on(artistActions.loadArtistSuccess, (state, { artist }) => {
+		if (artist) {
+			return artistAdapter.upsertOne(artist as ArtistEntity, {
+				...state,
+				albumsById: undefined,
+			});
+		} else {
+			return {
+				...state,
+				albumsById: undefined,
+			};
+		}
+	}),
 	on(artistActions.clearArtists, (state) => artistAdapter.removeAll(state)),
 	on(artistActions.setSelectedArtistId, (state, { artistId }) => ({
 		...state,

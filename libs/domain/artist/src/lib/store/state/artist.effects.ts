@@ -3,6 +3,7 @@ import { catchError, first, map, switchMap } from 'rxjs/operators';
 
 import { Injectable } from '@angular/core';
 import {
+	AlbumUtilService,
 	ArtistDataService,
 	ArtistHookService,
 	ArtistUtilService,
@@ -58,6 +59,25 @@ export class ArtistEffects {
 							});
 						})
 					)
+			)
+		)
+	);
+	public listAlbumsById = createEffect(() =>
+		this.actions$.pipe(
+			ofType(artistActions.listAlbumsById),
+			switchMap((action) =>
+				this.artistDataService.listAlbumsById$(action.uid).pipe(
+					map((albums) =>
+						albums.map((album) =>
+							this.albumUtilService.convertModelToEntity(album)
+						)
+					),
+					map((albums) => {
+						return artistActions.listAlbumsByIdSuccess({
+							albums,
+						});
+					})
+				)
 			)
 		)
 	);
@@ -167,6 +187,7 @@ export class ArtistEffects {
 		private artistDataService: ArtistDataService,
 		private artistHookService: ArtistHookService,
 		private artistUtilService: ArtistUtilService,
+		private albumUtilService: AlbumUtilService,
 		private entityQuantityStateService: EntityQuantityStateService,
 		private entityQuantityUtilService: EntityQuantityUtilService
 	) {}

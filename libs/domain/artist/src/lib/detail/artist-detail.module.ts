@@ -5,11 +5,11 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
 
-import { ArtistSimpleViewComponent } from './component';
+import { ArtistDetailViewComponent } from './component';
 
 @NgModule({
-	exports: [ArtistSimpleViewComponent],
-	declarations: [ArtistSimpleViewComponent],
+	exports: [ArtistDetailViewComponent],
+	declarations: [ArtistDetailViewComponent],
 	imports: [CommonModule, ChipModule, FlexLayoutModule, ImageModule],
 })
-export class ArtistViewModule {}
+export class ArtistDetailModule {}

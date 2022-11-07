@@ -29,16 +29,10 @@ export const routes: Routes = [
 			),
 		data: {
 			breadcrumb: 'artist',
-			permissions: {
-				only: [RoleNames.USER],
-				redirectTo: '/artist',
-			},
 		},
 		resolve: {
 			artist$: ArtistPageResolverService,
 		},
-		canActivate: [NgxPermissionsGuard],
-		canLoad: [NgxPermissionsGuard],
 	},
 	{
 		path: 'collection',

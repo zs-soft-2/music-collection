@@ -1,4 +1,5 @@
 import {
+	AlbumEntity,
 	ArtistEntity,
 	ArtistEntityAdd,
 	ArtistEntityUpdate,
@@ -41,6 +42,21 @@ export const deleteArtistFail = createAction(
 export const deleteArtistSuccess = createAction(
 	'[Artist] Delete Artist Success',
 	props<{ artistId: string }>()
+);
+
+export const listAlbumsById = createAction(
+	'[Artist] List Albums By Id',
+	props<{ uid: string }>()
+);
+
+export const listAlbumsByIdFail = createAction(
+	'[Artist] List Albums By Id FAIL',
+	props<{ error: Error }>()
+);
+
+export const listAlbumsByIdSuccess = createAction(
+	'[Artist] List Albums By Id Success',
+	props<{ albums: AlbumEntity[] }>()
 );
 
 export const listArtists = createAction('[Artist] List Artists');

@@ -111,6 +111,17 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 		}) as Observable<ArtistModel[]>;
 	}
 
+	public listAlbumsById$(uid: string): Observable<AlbumModel[]> {
+		const albumCollection = collection(
+			this.firestore,
+			`${ARTIST_FEATURE_KEY}/${uid}/${ALBUM_FEATURE_KEY}`
+		);
+
+		return collectionData(albumCollection, {
+			idField: 'uid',
+		}) as Observable<AlbumModel[]>;
+	}
+
 	public listByIds$(ids: string[]): Observable<ArtistModel[]> {
 		const artistsQuery = query(
 			this.artistCollection,

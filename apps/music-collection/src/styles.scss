@@ -11,6 +11,16 @@ html {
 body {
 	color: #181818;
 
+	.entity-detail {
+		img {
+			border-radius: 0;
+			display: block;
+			height: 260px;
+			margin: 0 auto;
+			width: 800px;
+		}
+	}
+
 	.p-breadcrumb {
 		background: none;
 		border: none;
@@ -55,7 +65,7 @@ body {
 		}
 	}
 
-	.p-image {
+	.view-image {
 		img {
 			border-radius: 20px;
 		}
