@@ -9,7 +9,13 @@ html {
 }
 
 body {
-	color: #181818;
+	color: #e6e6e6;
+
+	main {
+		display: flex;
+		flex-direction: column;
+		min-height: calc(100vh - 30px);
+	}
 
 	.entity-detail {
 		img {
@@ -18,6 +24,7 @@ body {
 			height: 260px;
 			margin: 0 auto;
 			width: 800px;
+			filter: grayscale(70%);
 		}
 	}
 

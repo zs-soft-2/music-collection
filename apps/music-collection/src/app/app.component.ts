@@ -3,6 +3,7 @@ import {
 	AuthenticationStateService,
 	EntityQuantityStateService,
 } from '@music-collection/api';
+import { environment } from '../environments/environment';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -12,6 +13,7 @@ import {
 })
 export class AppComponent implements OnInit {
 	public title = 'music-collection';
+	public version = environment.version;
 
 	public constructor(
 		private authenticationStateService: AuthenticationStateService,

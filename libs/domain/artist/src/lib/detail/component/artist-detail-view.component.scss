@@ -1,6 +1,22 @@
 .artist-detail {
 	border-radius: 20px;
-	background-color: black;
+	background-color: #181818;
 	margin: 0 auto;
 	width: 90%;
+
+	.header-content {
+		margin: 0 auto;
+		position: relative;
+		width: 800px;
+
+		.text-block {
+			position: absolute;
+			bottom: 20px;
+			right: 20px;
+			background-color: black;
+			color: white;
+			padding-left: 20px;
+			padding-right: 20px;
+		}
+	}
 }

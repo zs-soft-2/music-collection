@@ -1,8 +1,14 @@
 <section class="artist-detail entity-detail" *ngIf="params$ | async as params">
 	<header>
-		<p-image
-			[src]="params.artist?.headerImage?.filePath || ''"
-			alt="Image"
-		></p-image>
+		<div class="header-content">
+			<p-image
+				[src]="params.artist?.headerImage?.filePath || ''"
+				alt="Image"
+			></p-image>
+
+			<div class="text-block">
+				<h3>{{ params.artist?.name }}</h3>
+			</div>
+		</div>
 	</header>
 </section>

@@ -3,3 +3,15 @@
 		padding: 0;
 	}
 }
+
+.content {
+	flex: 1;
+}
+
+footer {
+	flex: auto;
+	margin-bottom: 20px;
+	text-align: center;
+	color: aliceblue;
+	width: 100%;
+}
