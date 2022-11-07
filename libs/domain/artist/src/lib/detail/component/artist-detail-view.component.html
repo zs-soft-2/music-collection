@@ -1,4 +1,6 @@
 <section class="artist-detail entity-detail" *ngIf="params$ | async as params">
+	<nav></nav>
+
 	<header>
 		<div class="header-content">
 			<p-image
@@ -6,9 +8,45 @@
 				alt="Image"
 			></p-image>
 
-			<div class="text-block">
-				<h3>{{ params.artist?.name }}</h3>
+			<div class="tab-menu">
+				<p-tabMenu
+					[model]="params.menuItems"
+					[activeItem]="params.activeMenuItem"
+				></p-tabMenu>
+			</div>
+
+			<div class="artist-name">
+				<span>{{ params.artist?.name }}</span>
 			</div>
 		</div>
 	</header>
+
+	<div class="content">
+		<ng-container [ngSwitch]="params.selectedContent">
+			<div *ngSwitchCase="'info'">
+				<div class="item">
+					<span>Formed in:</span>
+
+					<span>{{ params.artist?.formedIn | date: 'yyyy' }}</span>
+				</div>
+
+				<div class="item">
+					<span>Styles:</span>
+
+					<span>
+						<ng-container
+							*ngFor="let style of params.artist?.styles"
+						>
+							<p-chip styleClass="style" [label]="style">
+							</p-chip>
+						</ng-container>
+					</span>
+				</div>
+			</div>
+
+			<div *ngSwitchCase="'discography'">Discography</div>
+
+			<div *ngSwitchCase="'members'">Members</div>
+		</ng-container>
+	</div>
 </section>
