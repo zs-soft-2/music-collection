@@ -1,6 +1,8 @@
 import { FormGroup } from '@angular/forms';
 import { GenreEnum, Identifiable, Searchable, StyleEnum } from '../../common';
+import { AlbumEntity } from '../album';
 import { DocumentEntity } from '../document';
+import { ReleaseEntity } from '../release';
 
 export interface Artist {
 	description: string;
@@ -39,6 +41,10 @@ export type ArtistFormParams = {
 	formGroup: FormGroup;
 	isImagesTabActive: boolean;
 	styleList: StyleEnum[];
+};
+
+export type ArtistDetailParams = {
+	artist: ArtistEntity | undefined;
 };
 
 export type ArtistTableParams = {

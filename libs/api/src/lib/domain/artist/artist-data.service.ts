@@ -14,6 +14,7 @@ export abstract class ArtistDataService extends EntityDataService<
 	public abstract addRelease$(
 		release: ReleaseModelAdd
 	): Observable<ReleaseModel>;
+	public abstract listAlbumsById$(uid: string): Observable<AlbumModel[]>;
 	public abstract listByIds$(ids: string[]): Observable<ArtistModel[]>;
 	public abstract search$(query: string): Observable<ArtistModel[]>;
 	public abstract updateAlbum$(

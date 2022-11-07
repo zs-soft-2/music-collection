@@ -2,6 +2,7 @@ import { Observable } from 'rxjs';
 
 import { Injectable } from '@angular/core';
 import {
+	AlbumEntity,
 	ArtistEntity,
 	ArtistEntityAdd,
 	ArtistEntityUpdate,
@@ -31,6 +32,10 @@ export class ArtistStateServiceImpl extends ArtistStateService {
 
 	public dispatchDeleteEntityAction(artist: ArtistEntity): void {
 		this.store.dispatch(artistActions.deleteArtist({ artist }));
+	}
+
+	public dispatchListAlbumsByIdAction(uid: string): void {
+		this.store.dispatch(artistActions.listAlbumsById({ uid }));
 	}
 
 	public dispatchListEntitiesAction(): void {
@@ -67,6 +72,10 @@ export class ArtistStateServiceImpl extends ArtistStateService {
 		throw new Error('Method not implemented.');
 	}
 
+	public selectAlbumsById$(): Observable<AlbumEntity[] | undefined> {
+		return this.store.pipe(select(artistSelectors.selectAlbumsById()));
+	}
+
 	public selectEntities$(): Observable<ArtistEntity[]> {
 		return this.store.pipe(select(artistSelectors.selectAllArtist));
 	}
@@ -74,9 +83,7 @@ export class ArtistStateServiceImpl extends ArtistStateService {
 	public selectEntityById$(
 		uid: string
 	): Observable<ArtistEntity | undefined> {
-		return this.store.pipe(
-			select(artistSelectors.selectArtistById(), { uid })
-		);
+		return this.store.pipe(select(artistSelectors.selectArtistById(uid)));
 	}
 
 	public selectNewEntityButtonEnabled$(): Observable<boolean> {

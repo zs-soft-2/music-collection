@@ -1,0 +1,8 @@
+<section class="artist-detail entity-detail" *ngIf="params$ | async as params">
+	<header>
+		<p-image
+			[src]="params.artist?.headerImage?.filePath || ''"
+			alt="Image"
+		></p-image>
+	</header>
+</section>
