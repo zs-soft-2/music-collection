@@ -1,0 +1,29 @@
+.album-item {
+	display: flex;
+	align-items: center;
+	padding: 1rem;
+	width: 100%;
+
+	img {
+		box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+		margin-right: 2rem;
+	}
+
+	.album-item-content {
+		flex: 1 1 0;
+		display: flex;
+
+		.album-data {
+			margin-left: 1rem;
+		}
+	}
+
+	.album-item-action {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.p-button {
+		margin-bottom: 0.5rem;
+	}
+}

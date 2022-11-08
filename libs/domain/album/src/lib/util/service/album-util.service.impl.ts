@@ -23,6 +23,8 @@ import {
 export class AlbumUtilServiceImpl extends AlbumUtilService {
 	public _sort = (a: AlbumEntity, b: AlbumEntity): number =>
 		a.name < b.name ? 1 : -1;
+	public _sortByYear = (a: AlbumEntity, b: AlbumEntity): number =>
+		a.year < b.year ? 1 : -1;
 
 	public constructor(private formBuilder: FormBuilder) {
 		super();

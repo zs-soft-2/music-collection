@@ -1,6 +1,7 @@
 import { FormGroup } from '@angular/forms';
 import { MenuItem } from 'primeng/api';
 import { GenreEnum, Identifiable, Searchable, StyleEnum } from '../../common';
+import { AlbumEntity } from '../album';
 import { DocumentEntity } from '../document';
 
 export interface Artist {
@@ -43,6 +44,7 @@ export type ArtistFormParams = {
 };
 
 export type ArtistDetailParams = {
+	albums: AlbumEntity[] | undefined;
 	artist: ArtistEntity | undefined;
 	menuItems: MenuItem[];
 	activeMenuItem: MenuItem;

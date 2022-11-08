@@ -14,6 +14,7 @@ export abstract class AlbumUtilService extends EntityUtilService<
 	AlbumEntityAdd,
 	AlbumEntityUpdate
 > {
+	public abstract _sortByYear(a: AlbumEntity, b: AlbumEntity): number;
 	public abstract convertEntityAddToModelAdd(
 		entity: AlbumEntityAdd
 	): AlbumModelAdd;

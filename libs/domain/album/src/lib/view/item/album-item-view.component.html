@@ -1,0 +1,27 @@
+<div class="album-item">
+	<div class="album-item-content">
+		<div class="cover">
+			<p-image
+				[src]="album.coverImage?.filePath || ''"
+				[height]="'100'"
+				[width]="width"
+				alt="Image"
+				styleClass="item-image"
+			></p-image>
+		</div>
+
+		<div class="album-data">
+			<h3>
+				{{ album.name }}
+			</h3>
+
+			<div>
+				{{ album.year | date: 'yyyy' }}
+			</div>
+		</div>
+	</div>
+
+	<div class="album-item-action">
+		<p-button label="detail"> </p-button>
+	</div>
+</div>

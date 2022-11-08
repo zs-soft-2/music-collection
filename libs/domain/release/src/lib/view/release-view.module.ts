@@ -2,7 +2,7 @@ import { AngularSvgIconModule } from 'angular-svg-icon';
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { AlbumViewModule } from '@music-collection/domain/album';
+import { AlbumSimpleViewModule } from '@music-collection/domain/album';
 
 import {
 	ReleaseDetailViewComponent,
@@ -12,6 +12,6 @@ import {
 @NgModule({
 	exports: [ReleaseDetailViewComponent, ReleaseSimpleViewComponent],
 	declarations: [ReleaseDetailViewComponent, ReleaseSimpleViewComponent],
-	imports: [CommonModule, AlbumViewModule, AngularSvgIconModule],
+	imports: [CommonModule, AlbumSimpleViewModule, AngularSvgIconModule],
 })
 export class ReleaseViewModule {}

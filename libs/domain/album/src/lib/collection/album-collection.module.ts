@@ -7,7 +7,7 @@ import { TableModule } from 'primeng/table';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 
-import { AlbumViewModule } from '../view/album-view.module';
+import { AlbumSimpleViewModule } from '../view/simple';
 import { AlbumListComponent, AlbumTableComponent } from './component';
 
 @NgModule({
@@ -15,7 +15,7 @@ import { AlbumListComponent, AlbumTableComponent } from './component';
 	exports: [AlbumListComponent, AlbumTableComponent],
 	imports: [
 		CommonModule,
-		AlbumViewModule,
+		AlbumSimpleViewModule,
 		AutoCompleteModule,
 		ButtonModule,
 		CarouselModule,

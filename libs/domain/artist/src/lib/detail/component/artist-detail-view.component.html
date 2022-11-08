@@ -44,7 +44,17 @@
 				</div>
 			</div>
 
-			<div *ngSwitchCase="'discography'">Discography</div>
+			<div *ngSwitchCase="'discography'">
+				<ng-container *ngIf="params.albums">
+					<p-dataView [value]="params.albums">
+						<ng-template let-album pTemplate="listItem">
+							<mc-album-item-view
+								[album]="album"
+							></mc-album-item-view>
+						</ng-template>
+					</p-dataView>
+				</ng-container>
+			</div>
 
 			<div *ngSwitchCase="'members'">Members</div>
 		</ng-container>
