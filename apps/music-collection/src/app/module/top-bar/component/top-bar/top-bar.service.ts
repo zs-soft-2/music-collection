@@ -35,7 +35,7 @@ export class TopBarService {
 	public init$(): Observable<TopBarParams> {
 		return this.authenticationStateService.selectAuthenticatedUser$().pipe(
 			switchMap((user) => {
-				this.params = this.updateParams(this.params, user)
+				this.params = this.updateParams(this.params, user);
 
 				this.params$$.next(this.params);
 
@@ -56,7 +56,7 @@ export class TopBarService {
 
 	private updateParams(params: TopBarParams, user: User): TopBarParams {
 		let newParams: TopBarParams;
-		
+
 		if (!params) {
 			newParams = {
 				addPagePermissions: [],

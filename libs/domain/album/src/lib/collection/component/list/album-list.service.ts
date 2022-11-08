@@ -28,9 +28,12 @@ export class AlbumListService extends ComponentBaseService<AlbumListParams> {
 		);
 	}
 
-	private updateParams(params: AlbumListParams, albums: AlbumEntity[]): AlbumListParams {
+	private updateParams(
+		params: AlbumListParams,
+		albums: AlbumEntity[]
+	): AlbumListParams {
 		let newParams: AlbumListParams;
-		
+
 		if (!params) {
 			newParams = {
 				albums,

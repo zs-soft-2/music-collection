@@ -9,7 +9,6 @@
 					[suggestions]="params.artists"
 					[minLength]="3"
 					[delay]="400"
-					[disabled]="!params.isArtistsActive"
 					field="name"
 					(completeMethod)="searchArtist($event)"
 				>
@@ -26,7 +25,6 @@
 					[suggestions]="params.albums"
 					[minLength]="3"
 					[delay]="400"
-					[disabled]="!params.isAlbumsActive"
 					field="name"
 					(completeMethod)="searchAlbum($event)"
 				>

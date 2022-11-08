@@ -8,7 +8,6 @@ import {
 	EntityQuantityGroup,
 	EntityTypeEnum,
 	LabelEntity,
-	SimpleAlbum,
 	ReleaseArtist,
 	ReleaseEntity,
 	ReleaseEntityAdd,
@@ -18,6 +17,7 @@ import {
 	ReleaseModelAdd,
 	ReleaseModelUpdate,
 	ReleaseUtilService,
+	SimpleAlbum,
 } from '@music-collection/api';
 
 @Injectable()
@@ -133,19 +133,52 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 		};
 	}
 
-	public createFormGroup(release: ReleaseEntity | undefined): FormGroup {
-		return this.formBuilder.group({
-			album: [release?.album || null, [Validators.required]],
-			artist: [release?.artist || null, [Validators.required]],
-			country: [release?.country || null, [Validators.required]],
-			date: [release?.date || null, [Validators.required]],
-			format: [release?.format || null, [Validators.required]],
-			formatDescription: [release?.formatDescription || null],
-			label: [release?.label || null, [Validators.required]],
-			media: [release?.media || null, [Validators.required]],
-			name: [release?.name || null, [Validators.required]],
-			uid: [release?.uid],
-		});
+	public createFormGroup(entity: ReleaseEntity | undefined): FormGroup<any> {
+		throw new Error('Method not implemented.');
+	}
+
+	public createOrUpdateFormGroupForDisabling(
+		formGroup: FormGroup,
+		release: ReleaseEntity | undefined,
+		isAlbumsActive: boolean,
+		isArtistsActive: boolean
+	): FormGroup {
+		let newFormGroup: FormGroup;
+
+		if (!formGroup) {
+			newFormGroup = this.formBuilder.group({
+				album: [
+					{ value: release?.album, disabled: !isAlbumsActive } ||
+						null,
+					[Validators.required],
+				],
+				artist: [
+					{ value: release?.artist, disabled: !isArtistsActive } ||
+						null,
+					[Validators.required],
+				],
+				country: [release?.country || null, [Validators.required]],
+				date: [release?.date || null, [Validators.required]],
+				format: [release?.format || null, [Validators.required]],
+				formatDescription: [release?.formatDescription || null],
+				label: [release?.label || null, [Validators.required]],
+				media: [release?.media || null, [Validators.required]],
+				name: [release?.name || null, [Validators.required]],
+				uid: [release?.uid],
+			});
+		} else {
+			if (isAlbumsActive) {
+				formGroup.get('album')?.enable();
+			}
+
+			if (isArtistsActive) {
+				formGroup.get('artist')?.enable();
+			}
+
+			newFormGroup = formGroup;
+		}
+
+		return newFormGroup;
 	}
 
 	public updateEntity(formGroup: FormGroup): ReleaseEntityUpdate {
