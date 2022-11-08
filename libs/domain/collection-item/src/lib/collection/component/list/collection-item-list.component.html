@@ -1,6 +1,6 @@
-<section class="collection-item-list" *rxLet="params$ | async as params">
+<section class="collection-item-list" *rxLet="params$; let params">
 	<p-carousel
-		*rxLet="params.collectionItems.length"
+		*ngIf="params.collectionItems.length"
 		[value]="params.collectionItems"
 		[numVisible]="3"
 		[numScroll]="1"

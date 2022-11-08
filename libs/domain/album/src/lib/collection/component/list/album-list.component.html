@@ -1,6 +1,6 @@
-<section class="album-list" *rxLet="params$ | async as params">
+<section class="album-list" *rxLet="params$; let params">
 	<p-carousel
-		*rxLet="params.albums.length"
+		*ngIf="params.albums.length"
 		[value]="params.albums"
 		[numVisible]="3"
 		[numScroll]="1"

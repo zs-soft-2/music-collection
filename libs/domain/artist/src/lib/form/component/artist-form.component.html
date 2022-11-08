@@ -1,4 +1,4 @@
-<section class="artist-form" *rxLet="params$ | async as params">
+<section class="artist-form" *rxLet="params$; let params">
 	<form [formGroup]="params.formGroup">
 		<p-tabView>
 			<p-tabPanel header="Data">
@@ -76,7 +76,7 @@
 					</span>
 
 					<p-image
-						*rxLet="params.formGroup.value.headerImage"
+						*ngIf="params.formGroup.value.headerImage"
 						[src]="params.formGroup.value.headerImage?.filePath"
 						[preview]="true"
 						alt="Image"
@@ -102,7 +102,7 @@
 					</span>
 
 					<p-image
-						*rxLet="params.formGroup.value.mainImage"
+						*ngIf="params.formGroup.value.mainImage"
 						[src]="params.formGroup.value.mainImage?.filePath"
 						[preview]="true"
 						alt="Image"

@@ -1,4 +1,4 @@
-<section class="release-table" *rxLet="params$ | async as params">
+<section class="release-table" *rxLet="params$; let params">
 	<p-table
 		[value]="params.releases"
 		styleClass="p-datatable-striped p-datatable-sm"

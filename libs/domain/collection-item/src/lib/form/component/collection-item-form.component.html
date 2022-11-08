@@ -1,4 +1,4 @@
-<section class="collection-item-form" *rxLet="params$ | async as params">
+<section class="collection-item-form" *rxLet="params$; let params">
 	<form [formGroup]="params.formGroup">
 		<input name="uid" formControlName="uid" hidden />
 		<input name="userId" formControlName="userId" hidden />

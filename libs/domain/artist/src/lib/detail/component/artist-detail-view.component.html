@@ -1,4 +1,4 @@
-<section class="artist-detail entity-detail" *rxLet="params$ | async as params">
+<section class="artist-detail entity-detail" *rxLet="params$; let params">
 	<nav></nav>
 
 	<header>
@@ -45,7 +45,7 @@
 			</div>
 
 			<div *ngSwitchCase="'discography'">
-				<ng-container *rxLet="params.albums">
+				<ng-container *ngIf="params.albums">
 					<p-dataView [value]="params.albums">
 						<ng-template let-album pTemplate="listItem">
 							<mc-album-item-view

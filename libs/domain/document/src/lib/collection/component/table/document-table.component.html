@@ -1,4 +1,4 @@
-<section class="document-table" *rxLet="params$ | async as params">
+<section class="document-table" *rxLet="params$; let params">
 	<p-table
 		[value]="params.documents"
 		styleClass="p-datatable-striped p-datatable-sm"

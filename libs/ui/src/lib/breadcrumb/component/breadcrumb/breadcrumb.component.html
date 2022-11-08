@@ -1,7 +1,7 @@
 <section class="p-breadcrumb">
 	<ng-content></ng-content>
 
-	<ng-container *rxLet="autoGenerate && breadcrumbs.length">
+	<ng-container *ngIf="autoGenerate && breadcrumbs.length">
 		<ul>
 			<ng-container *ngFor="let breadcrumb of breadcrumbs">
 				<li>
@@ -17,7 +17,7 @@
 
 						<span
 							class="ant-breadcrumb-separator"
-							*rxLet="!!separator"
+							*ngIf="!!separator"
 						>
 							{{ separator }}
 						</span>

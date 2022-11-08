@@ -1,4 +1,4 @@
-<section class="artist-list" *rxLet="params$ | async as params">
+<section class="artist-list" *rxLet="params$; let params">
 	<p-carousel
 		[value]="params.artists"
 		[numVisible]="1"

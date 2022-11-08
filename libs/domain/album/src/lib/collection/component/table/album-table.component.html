@@ -1,4 +1,4 @@
-<section class="album-table" *rxLet="params$ | async as params">
+<section class="album-table" *rxLet="params$; let params">
 	<p-table
 		[value]="params.albums"
 		[paginator]="true"
@@ -69,7 +69,7 @@
 				</td>
 
 				<td>
-					<ng-container *rxLet="album.coverImage">
+					<ng-container *ngIf="album.coverImage">
 						<i class="pi pi-image"></i>
 					</ng-container>
 				</td>

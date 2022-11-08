@@ -1,4 +1,4 @@
-<ng-container *rxLet="params$$ | async as params">
+<ng-container *rxLet="params$$; let params">
 	<section class="top-bar">
 		<p-menubar [model]="params.menuItems">
 			<ng-template pTemplate="start">

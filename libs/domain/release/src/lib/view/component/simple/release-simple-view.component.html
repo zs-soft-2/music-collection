@@ -11,14 +11,14 @@
 
 			<div class="content-details fadeIn-bottom fadeIn-right">
 				<svg-icon
-					*rxLet="release.media === media['vinyl']"
+					*ngIf="release.media === media['vinyl']"
 					src="assets/icon/vinyl/format-vinyl-48.svg"
 					[svgStyle]="{ 'padding.px': 1, 'margin.px': 3 }"
 				>
 				</svg-icon>
 
 				<svg-icon
-					*rxLet="release.media === media['cd']"
+					*ngIf="release.media === media['cd']"
 					src="assets/icon/cd/format-cd-48.svg"
 					[svgStyle]="{ 'padding.px': 1, 'margin.px': 3 }"
 				>
