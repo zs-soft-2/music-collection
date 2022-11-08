@@ -1,6 +1,6 @@
-<section class="release-list" *ngIf="params$ | async as params">
+<section class="release-list" *rxLet="params$ | async as params">
 	<p-carousel
-		*ngIf="params.releases.length"
+		*rxLet="params.releases.length"
 		[value]="params.releases"
 		[numVisible]="3"
 		[numScroll]="1"

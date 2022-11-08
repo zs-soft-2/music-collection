@@ -1,4 +1,4 @@
-<section class="album-form" *ngIf="params$ | async as params">
+<section class="album-form" *rxLet="params$ | async as params">
 	<form [formGroup]="params.formGroup">
 		<p-tabView>
 			<p-tabPanel header="Data">
@@ -76,7 +76,7 @@
 					</span>
 
 					<p-image
-						*ngIf="params.formGroup.value.coverImage"
+						*rxLet="params.formGroup.value.coverImage"
 						[src]="params.formGroup.value.coverImage?.filePath"
 						[preview]="true"
 						alt="Image"

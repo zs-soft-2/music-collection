@@ -6,9 +6,10 @@ import { TableModule } from 'primeng/table';
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
+import { LetModule } from '@rx-angular/template';
 
-import { ReleaseListComponent, ReleaseTableComponent } from './component';
 import { ReleaseViewModule } from '../view/release-view.module';
+import { ReleaseListComponent, ReleaseTableComponent } from './component';
 
 @NgModule({
 	declarations: [ReleaseListComponent, ReleaseTableComponent],
@@ -19,6 +20,7 @@ import { ReleaseViewModule } from '../view/release-view.module';
 		CarouselModule,
 		ButtonModule,
 		ChipModule,
+		LetModule,
 		ReleaseViewModule,
 		TableModule,
 	],

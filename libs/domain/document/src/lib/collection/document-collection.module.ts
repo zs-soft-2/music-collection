@@ -5,6 +5,7 @@ import { TableModule } from 'primeng/table';
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
+import { LetModule } from '@rx-angular/template';
 
 import { DocumentListComponent, DocumentTableComponent } from './component';
 
@@ -16,6 +17,7 @@ import { DocumentListComponent, DocumentTableComponent } from './component';
 		AutoCompleteModule,
 		ButtonModule,
 		ChipModule,
+		LetModule,
 		TableModule,
 	],
 })

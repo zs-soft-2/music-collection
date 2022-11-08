@@ -1,4 +1,4 @@
-<section class="label-table" *ngIf="params$ | async as params">
+<section class="label-table" *rxLet="params$ | async as params">
 	<p-table
 		[value]="params.labels"
 		styleClass="p-datatable-striped p-datatable-sm"

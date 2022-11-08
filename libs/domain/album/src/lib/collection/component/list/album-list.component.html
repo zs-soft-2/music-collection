@@ -1,6 +1,6 @@
-<section class="album-list" *ngIf="params$ | async as params">
+<section class="album-list" *rxLet="params$ | async as params">
 	<p-carousel
-		*ngIf="params.albums.length"
+		*rxLet="params.albums.length"
 		[value]="params.albums"
 		[numVisible]="3"
 		[numScroll]="1"
@@ -8,7 +8,7 @@
 	>
 		<ng-template let-album pTemplate="item">
 			<div class="album-view">
-				<mc-album-simple-view [album]="album"></mc-album-simple-view>
+				<mc-album-simple-view [album]="album" ></mc-album-simple-view>
 			</div>
 		</ng-template>
 	</p-carousel>

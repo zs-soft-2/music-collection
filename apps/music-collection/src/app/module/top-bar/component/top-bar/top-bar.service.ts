@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import {
 	AuthenticationStateService,
 	AuthorizationService,
+	User,
 } from '@music-collection/api';
 
 import { MenuItem, TopBarParams } from '../../api';
@@ -34,12 +35,7 @@ export class TopBarService {
 	public init$(): Observable<TopBarParams> {
 		return this.authenticationStateService.selectAuthenticatedUser$().pipe(
 			switchMap((user) => {
-				this.params = {
-					addPagePermissions: [],
-					editPagePermissions: [],
-					menuItems: this.createMenuItems(),
-					user,
-				};
+				this.params = this.updateParams(this.params, user)
 
 				this.params$$.next(this.params);
 
@@ -56,5 +52,24 @@ export class TopBarService {
 		this.authorizationService.removeAll();
 		this.router.navigate(['/home']);
 		this.authenticationStateService.dispatchLogout();
+	}
+
+	private updateParams(params: TopBarParams, user: User): TopBarParams {
+		let newParams: TopBarParams;
+		
+		if (!params) {
+			newParams = {
+				addPagePermissions: [],
+				editPagePermissions: [],
+				menuItems: this.createMenuItems(),
+				user,
+			};
+		} else {
+			params.user = user;
+
+			newParams = params;
+		}
+
+		return newParams;
 	}
 }

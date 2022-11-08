@@ -1,4 +1,4 @@
-<section class="collection-item-table" *ngIf="params$ | async as params">
+<section class="collection-item-table" *rxLet="params$ | async as params">
 	<p-table
 		[value]="params.collectionItems"
 		styleClass="p-datatable-striped p-datatable-sm"

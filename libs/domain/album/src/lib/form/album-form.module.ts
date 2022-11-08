@@ -5,7 +5,7 @@ import { ImageModule } from 'primeng/image';
 import { InputTextModule } from 'primeng/inputtext';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { TabViewModule } from 'primeng/tabview';
-
+import { LetModule } from '@rx-angular/template';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -23,6 +23,7 @@ import { AlbumFormComponent } from './component';
 		CalendarModule,
 		ImageModule,
 		InputTextModule,
+		LetModule,
 		MultiSelectModule,
 		ReactiveFormsModule,
 		TabViewModule,
