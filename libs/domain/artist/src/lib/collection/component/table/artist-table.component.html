@@ -1,4 +1,4 @@
-<section class="artist-table" *ngIf="params$ | async as params">
+<section class="artist-table" *rxLet="params$ | async as params">
 	<p-table
 		[value]="params.artists"
 		sortField="name"
@@ -62,7 +62,7 @@
 				</td>
 
 				<td>
-					<ng-container *ngIf="artist.headerImage">
+					<ng-container *rxLet="artist.headerImage">
 						<i
 							class="pi pi-image"
 							style="color: red; margin: 1px"
@@ -70,7 +70,7 @@
 					</ng-container>
 
 					<ng-container
-						*ngIf="artist.mainImage"
+						*rxLet="artist.mainImage"
 						style="color: blue; margin: 1px"
 					>
 						<i class="pi pi-image"></i>

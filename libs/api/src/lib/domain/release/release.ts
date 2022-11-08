@@ -46,10 +46,8 @@ export type ReleaseModelUpdate = Partial<ReleaseModel> &
 
 export type ReleaseFormParams = {
 	artists: ArtistEntity[];
-	isArtistsActive: boolean;
 	albums: AlbumEntity[];
 	countryList: CountryEnum[];
-	isAlbumsActive: boolean;
 	formGroup: FormGroup;
 	formatList: FormatEnum[];
 	formatDescriptionList: FormatDescriptionEnum[];

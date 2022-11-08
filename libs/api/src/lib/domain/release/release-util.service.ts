@@ -1,3 +1,4 @@
+import { FormGroup } from '@angular/forms';
 import { EntityUtilService } from '../../common';
 import { EntityQuantityEntity, EntityQuantityEntityUpdate } from '../../core';
 import {
@@ -28,6 +29,12 @@ export abstract class ReleaseUtilService extends EntityUtilService<
 	public abstract convertModelUpdateToEntityUpdate(
 		model: ReleaseModelUpdate
 	): ReleaseEntityUpdate;
+	public abstract createOrUpdateFormGroupForDisabling(
+		formGroup: FormGroup,
+		release: ReleaseEntity | undefined,
+		isAlbumsActive: boolean,
+		isArtistsActive: boolean
+	): FormGroup;
 	public abstract updateEntityQuantity(
 		entityQuantityEntity: EntityQuantityEntity,
 		release: ReleaseEntity

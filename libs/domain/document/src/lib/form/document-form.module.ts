@@ -11,6 +11,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { LetModule } from '@rx-angular/template';
 
 import { DocumentFormComponent } from './component';
 
@@ -27,6 +28,7 @@ import { DocumentFormComponent } from './component';
 		ImageModule,
 		InputTextareaModule,
 		InputTextModule,
+		LetModule,
 		MultiSelectModule,
 		ReactiveFormsModule,
 		TabViewModule,

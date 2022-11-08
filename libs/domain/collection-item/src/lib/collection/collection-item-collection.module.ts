@@ -6,6 +6,7 @@ import { TableModule } from 'primeng/table';
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
+import { LetModule } from '@rx-angular/template';
 
 import { CollectionItemViewModule } from '../view/collection-item-view.module';
 import {
@@ -23,6 +24,7 @@ import {
 		CollectionItemViewModule,
 		ButtonModule,
 		ChipModule,
+		LetModule,
 		TableModule,
 	],
 })

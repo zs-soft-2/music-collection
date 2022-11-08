@@ -1,4 +1,4 @@
-<section class="document-form" *ngIf="params$ | async as params">
+<section class="document-form" *rxLet="params$ | async as params">
 	<form [formGroup]="params.formGroup">
 		<input name="uid" formControlName="uid" hidden />
 
@@ -26,7 +26,7 @@
 				></p-fileUpload>
 			</span>
 
-			<ng-container *ngIf="params.formGroup.value.filePath">
+			<ng-container *rxLet="params.formGroup.value.filePath">
 				<p-image
 					[src]="params.formGroup.value.filePath"
 					[preview]="true"

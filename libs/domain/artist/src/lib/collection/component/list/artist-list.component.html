@@ -1,4 +1,4 @@
-<section class="artist-list" *ngIf="params$ | async as params">
+<section class="artist-list" *rxLet="params$ | async as params">
 	<p-carousel
 		[value]="params.artists"
 		[numVisible]="1"

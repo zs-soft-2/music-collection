@@ -2,33 +2,33 @@ import { combineLatest, Observable, ReplaySubject } from 'rxjs';
 import { switchMap, tap } from 'rxjs/operators';
 
 import { Injectable } from '@angular/core';
+import { FormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
+	AlbumEntity,
+	AlbumStateService,
+	ArtistEntity,
+	ArtistStateService,
+	CountryList,
+	FormatDescriptionList,
+	FormatList,
+	LabelEntity,
+	LabelStateService,
+	MediaList,
 	ReleaseEntity,
 	ReleaseEntityAdd,
 	ReleaseEntityUpdate,
 	ReleaseFormParams,
 	ReleaseStateService,
 	ReleaseUtilService,
-	ArtistEntity,
-	ArtistStateService,
-	AlbumEntity,
-	MediaList,
-	FormatList,
-	FormatDescriptionList,
-	AlbumStateService,
-	LabelStateService,
-	LabelEntity,
-	CountryList,
 } from '@music-collection/api';
-import { FormGroup } from '@angular/forms';
 
 @Injectable()
 export class ReleaseFormService {
 	private formGroup!: FormGroup;
-	private release!: ReleaseEntity | undefined;
 	private params!: ReleaseFormParams;
 	private params$$: ReplaySubject<ReleaseFormParams>;
+	private release!: ReleaseEntity | undefined;
 
 	public constructor(
 		private activatedRoute: ActivatedRoute,
@@ -53,16 +53,9 @@ export class ReleaseFormService {
 		return this.activatedRoute.params.pipe(
 			switchMap((data) =>
 				combineLatest([
-					this.releaseStateService
-						.selectEntityById$(data['releaseId'])
-						.pipe(
-							tap((release) => {
-								this.formGroup =
-									this.releaseUtilService.createFormGroup(
-										release
-									);
-							})
-						),
+					this.releaseStateService.selectEntityById$(
+						data['releaseId']
+					),
 					this.artistStateService.selectSearchResult$(),
 					this.albumStateService.selectSearchResult$(),
 					this.labelStateService.selectSearchResult$(),
@@ -70,13 +63,19 @@ export class ReleaseFormService {
 			),
 			switchMap(([release, artists, albums, labels]) => {
 				this.release = release;
-				this.params = this.createReleaseParams(
+				this.formGroup =
+					this.releaseUtilService.createOrUpdateFormGroupForDisabling(
+						this.formGroup,
+						release,
+						!!artists?.length,
+						!release
+					);
+				this.params = this.updateReleaseParams(
+					this.params,
 					artists,
 					albums,
 					labels,
-					this.formGroup,
-					!!artists?.length,
-					!release
+					this.formGroup
 				);
 
 				this.params$$.next(this.params);
@@ -118,35 +117,43 @@ export class ReleaseFormService {
 		this.releaseStateService.dispatchAddEntityAction(release);
 	}
 
-	private createReleaseParams(
-		artists: ArtistEntity[],
-		albums: AlbumEntity[],
-		labels: LabelEntity[],
-		formGroup: FormGroup,
-		isAlbumsActive: boolean,
-		isArtistsActive: boolean
-	): ReleaseFormParams {
-		const releaseFormParams: ReleaseFormParams = {
-			artists,
-			albums,
-			countryList: CountryList,
-			formGroup,
-			isAlbumsActive,
-			isArtistsActive,
-			formatList: FormatList,
-			formatDescriptionList: FormatDescriptionList,
-			labels,
-			mediaList: MediaList,
-		};
-
-		return releaseFormParams;
-	}
-
 	private updateRelease(): void {
 		const release: ReleaseEntityUpdate = this.componentUtil.updateEntity(
 			this.params.formGroup
 		);
 
 		this.releaseStateService.dispatchUpdateEntityAction(release);
+	}
+
+	private updateReleaseParams(
+		params: ReleaseFormParams,
+		artists: ArtistEntity[],
+		albums: AlbumEntity[],
+		labels: LabelEntity[],
+		formGroup: FormGroup
+	): ReleaseFormParams {
+		let releaseFormParams: ReleaseFormParams;
+
+		if (!params) {
+			releaseFormParams = {
+				artists,
+				albums,
+				countryList: CountryList,
+				formGroup,
+				formatList: FormatList,
+				formatDescriptionList: FormatDescriptionList,
+				labels,
+				mediaList: MediaList,
+			};
+		} else {
+			params.artists = artists;
+			params.albums = albums;
+			params.formGroup = formGroup;
+			params.labels = labels;
+
+			releaseFormParams = params;
+		}
+
+		return releaseFormParams;
 	}
 }

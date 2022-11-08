@@ -6,6 +6,7 @@ import { TableModule } from 'primeng/table';
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
+import { LetModule } from '@rx-angular/template';
 
 import { AlbumSimpleViewModule } from '../view/simple';
 import { AlbumListComponent, AlbumTableComponent } from './component';
@@ -20,6 +21,7 @@ import { AlbumListComponent, AlbumTableComponent } from './component';
 		ButtonModule,
 		CarouselModule,
 		ChipModule,
+		LetModule,
 		TableModule,
 	],
 })
