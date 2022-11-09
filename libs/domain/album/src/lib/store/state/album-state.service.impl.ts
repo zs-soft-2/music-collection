@@ -6,6 +6,7 @@ import {
 	AlbumEntityAdd,
 	AlbumEntityUpdate,
 	AlbumStateService,
+	SearchParams,
 } from '@music-collection/api';
 import { select, Store } from '@ngrx/store';
 
@@ -45,8 +46,8 @@ export class AlbumStateServiceImpl extends AlbumStateService {
 		this.store.dispatch(albumActions.loadAlbum({ uid }));
 	}
 
-	public dispatchSearch(term: string): void {
-		this.store.dispatch(albumActions.search({ term }));
+	public dispatchSearch(params: SearchParams): void {
+		this.store.dispatch(albumActions.search({ params }));
 	}
 
 	public dispatchSelectAlbumAction(album: AlbumEntity): void {

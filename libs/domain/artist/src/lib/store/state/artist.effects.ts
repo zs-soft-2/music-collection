@@ -125,7 +125,7 @@ export class ArtistEffects {
 		this.actions$.pipe(
 			ofType(artistActions.search),
 			switchMap((action) =>
-				this.artistDataService.search$(action.term).pipe(
+				this.artistDataService.search$(action.params).pipe(
 					map((result) =>
 						result.map((artist) =>
 							this.artistUtilService.convertModelToEntity(artist)

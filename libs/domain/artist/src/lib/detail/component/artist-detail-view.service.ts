@@ -98,10 +98,6 @@ export class ArtistDetailViewService extends BaseComponent {
 		);
 	}
 
-	public searchHandler(query: string): void {
-		this.artistStateService.dispatchSearch(query);
-	}
-
 	private selectContent(content: string): void {
 		this.selectedContent = content;
 		this.params.selectedContent = content;

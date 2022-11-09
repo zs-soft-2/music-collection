@@ -2,6 +2,7 @@ import {
 	AlbumEntity,
 	AlbumEntityAdd,
 	AlbumEntityUpdate,
+	SearchParams,
 } from '@music-collection/api';
 import { Update } from '@ngrx/entity';
 import { createAction, props } from '@ngrx/store';
@@ -82,7 +83,7 @@ export const loadAlbumSuccess = createAction(
 
 export const search = createAction(
 	'[Album] Search Albums',
-	props<{ term: string }>()
+	props<{ params: SearchParams }>()
 );
 export const searchFailed = createAction(
 	'[Album] Search Albums Failed',

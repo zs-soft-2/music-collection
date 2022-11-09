@@ -14,6 +14,8 @@ import {
 	ArtistStateService,
 	DocumentEntity,
 	DocumentStateService,
+	EntityTypeEnum,
+	SearchParams,
 	StyleList,
 } from '@music-collection/api';
 
@@ -61,8 +63,13 @@ export class AlbumFormService {
 		);
 	}
 
-	public searchArtist(query: string): void {
-		this.artistStateService.dispatchSearch(query);
+	public searchArtist(term: string): void {
+		const searchParams: SearchParams =
+			this.albumUtilService.createSearchParams(
+				EntityTypeEnum.Artist,
+				term
+			);
+		this.artistStateService.dispatchSearch(searchParams);
 	}
 
 	public searchDocument(term: string): void {

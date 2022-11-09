@@ -31,15 +31,15 @@ export class ReleaseFormComponent extends BaseComponent implements OnInit {
 		this.componentService.submit();
 	}
 
-	public searchAlbum(event: any): void {
+	public searchAlbumHandler(event: any): void {
 		this.componentService.searchAlbum(event['query']);
 	}
 
-	public searchArtist(event: any): void {
+	public searchArtistHandler(event: any): void {
 		this.componentService.searchArtist(event['query']);
 	}
 
-	public searchLabel(event: any): void {
+	public searchLabelHandler(event: any): void {
 		this.componentService.searchLabel(event['query']);
 	}
 }

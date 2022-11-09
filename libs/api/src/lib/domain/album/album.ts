@@ -52,7 +52,8 @@ export type AlbumListParams = {
 export type AlbumArtist = Omit<
 	ArtistEntity,
 	'sites' | 'members' | 'description' | 'formedIn' | 'genre' | 'styles'
->;
+> &
+	Searchable;
 
 export type AlbumDocument = Omit<DocumentEntity, 'originalName' | 'fileType'>;
 

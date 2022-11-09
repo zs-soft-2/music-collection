@@ -3,6 +3,7 @@ import {
 	ArtistEntity,
 	ArtistEntityAdd,
 	ArtistEntityUpdate,
+	SearchParams,
 } from '@music-collection/api';
 import { Update } from '@ngrx/entity';
 import { createAction, props } from '@ngrx/store';
@@ -98,7 +99,7 @@ export const loadArtistSuccess = createAction(
 
 export const search = createAction(
 	'[Artist] Search Artists',
-	props<{ term: string }>()
+	props<{ params: SearchParams }>()
 );
 export const searchFailed = createAction(
 	'[Artist] Search Artists Failed',

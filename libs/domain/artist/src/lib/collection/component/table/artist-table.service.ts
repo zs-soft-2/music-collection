@@ -1,11 +1,4 @@
-import {
-	filter,
-	first,
-	merge,
-	Observable,
-	ReplaySubject,
-	switchMap,
-} from 'rxjs';
+import { first, merge, Observable, ReplaySubject, switchMap } from 'rxjs';
 
 import { Injectable } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -13,7 +6,10 @@ import {
 	ArtistEntity,
 	ArtistStateService,
 	ArtistTableParams,
+	ArtistUtilService,
 	BaseComponent,
+	EntityTypeEnum,
+	SearchParams,
 } from '@music-collection/api';
 
 @Injectable()
@@ -24,6 +20,7 @@ export class ArtistTableService extends BaseComponent {
 	public constructor(
 		private activatedRoute: ActivatedRoute,
 		private artistStateService: ArtistStateService,
+		private artistUtilService: ArtistUtilService,
 		private router: Router
 	) {
 		super();
@@ -55,7 +52,13 @@ export class ArtistTableService extends BaseComponent {
 		);
 	}
 
-	public searchHandler(query: string): void {
-		this.artistStateService.dispatchSearch(query);
+	public searchByName(term: string): void {
+		const searchParams: SearchParams =
+			this.artistUtilService.createSearchParams(
+				EntityTypeEnum.Album,
+				term
+			);
+
+		this.artistStateService.dispatchSearch(searchParams);
 	}
 }

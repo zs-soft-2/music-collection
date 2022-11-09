@@ -1,4 +1,4 @@
-import { EntityUtilService } from '../../common';
+import { EntityTypeEnum, EntityUtilService, SearchParams } from '../../common';
 import { EntityQuantityEntity, EntityQuantityEntityUpdate } from '../../core';
 import {
 	ArtistEntity,
@@ -28,6 +28,10 @@ export abstract class ArtistUtilService extends EntityUtilService<
 	public abstract convertModelUpdateToEntityUpdate(
 		model: ArtistModelUpdate
 	): ArtistEntityUpdate;
+	public abstract createSearchParams(
+		entityType: EntityTypeEnum,
+		term: string
+	): SearchParams;
 	public abstract updateEntityQuantity(
 		entityQuantity: EntityQuantityEntity
 	): EntityQuantityEntityUpdate;

@@ -34,7 +34,7 @@
 					<p-autoComplete
 						[suggestions]="params.empty"
 						[showClear]="true"
-						(completeMethod)="searchHandler($event)"
+						(completeMethod)="searchByNameHandler($event)"
 						[minLength]="3"
 						[delay]="400"
 						class="p-inputtext-sm"
@@ -42,7 +42,18 @@
 					</p-autoComplete>
 				</th>
 
-				<th></th>
+				<th>
+					<p-autoComplete
+						[suggestions]="params.empty"
+						[showClear]="true"
+						(completeMethod)="searchByArtistNameHandler($event)"
+						[minLength]="3"
+						[delay]="400"
+						class="p-inputtext-sm"
+					>
+					</p-autoComplete>
+				</th>
+
 				<th></th>
 				<th></th>
 				<th></th>

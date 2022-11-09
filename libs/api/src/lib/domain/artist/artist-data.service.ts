@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { EntityDataService } from '../../common';
+import { EntityDataService, SearchParams } from '../../common';
 import { AlbumModel, AlbumModelAdd, AlbumModelUpdate } from '../album';
 import { ReleaseModel, ReleaseModelAdd, ReleaseModelUpdate } from '../release';
 import { ArtistModel, ArtistModelAdd, ArtistModelUpdate } from './artist';
@@ -16,7 +16,7 @@ export abstract class ArtistDataService extends EntityDataService<
 	): Observable<ReleaseModel>;
 	public abstract listAlbumsById$(uid: string): Observable<AlbumModel[]>;
 	public abstract listByIds$(ids: string[]): Observable<ArtistModel[]>;
-	public abstract search$(query: string): Observable<ArtistModel[]>;
+	public abstract search$(params: SearchParams): Observable<ArtistModel[]>;
 	public abstract updateAlbum$(
 		album: AlbumModelUpdate
 	): Observable<AlbumModelUpdate>;

@@ -36,7 +36,11 @@ export class AlbumTableComponent extends BaseComponent implements OnInit {
 		this.params$ = this.componentService.init$();
 	}
 
-	public searchHandler(event: any): void {
-		this.componentService.searchHandler(event['query']);
+	public searchByNameHandler(event: any): void {
+		this.componentService.searchByName(event['query']);
+	}
+
+	public searchByArtistNameHandler(event: any): void {
+		this.componentService.searchByArtistName(event['query']);
 	}
 }

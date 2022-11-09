@@ -30,8 +30,8 @@ export class ArtistTableComponent extends BaseComponent implements OnInit {
 		this.componentService.editArtist(artist);
 	}
 
-	public searchHandler(event: any): void {
-		this.componentService.searchHandler(event['query']);
+	public searchByNameHandler(event: any): void {
+		this.componentService.searchByName(event['query']);
 	}
 
 	public ngOnInit(): void {

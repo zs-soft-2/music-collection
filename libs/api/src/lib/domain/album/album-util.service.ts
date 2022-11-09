@@ -1,4 +1,4 @@
-import { EntityUtilService } from '../../common';
+import { EntityTypeEnum, EntityUtilService, SearchParams } from '../../common';
 import { EntityQuantityEntity, EntityQuantityEntityUpdate } from '../../core';
 import {
 	AlbumEntity,
@@ -29,6 +29,10 @@ export abstract class AlbumUtilService extends EntityUtilService<
 	public abstract convertModelUpdateToEntityUpdate(
 		model: AlbumModelUpdate
 	): AlbumEntityUpdate;
+	public abstract createSearchParams(
+		entityType: EntityTypeEnum,
+		term: string
+	): SearchParams;
 	public abstract updateEntityQuantity(
 		entityQuantityEntity: EntityQuantityEntity,
 		album: AlbumEntity
