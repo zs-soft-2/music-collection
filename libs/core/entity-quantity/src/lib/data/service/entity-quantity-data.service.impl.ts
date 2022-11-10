@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 
 import { Injectable } from '@angular/core';
-import { collection, Firestore } from '@angular/fire/firestore';
+import { collection, doc, Firestore, setDoc } from '@angular/fire/firestore';
 import {
 	ENTITY_QUANTITY_FEATURE_KEY,
 	EntityQuantityDataService,
@@ -53,6 +53,19 @@ export class EntityQuantityDataServiceImpl extends EntityQuantityDataService {
 	public update$(
 		entityQuantity: EntityQuantityEntityUpdate
 	): Observable<EntityQuantityEntityUpdate> {
-		return super.updateModel$(entityQuantity);
+		const newEntityQuantity: EntityQuantityEntity = {
+			...entityQuantity,
+		} as EntityQuantityEntity;
+
+		return new Observable((subscriber) => {
+			setDoc(
+				doc(this.collection, entityQuantity.uid),
+				newEntityQuantity
+			).then(() => {
+				subscriber.next({
+					...newEntityQuantity,
+				} as unknown as EntityQuantityEntity);
+			});
+		});
 	}
 }
