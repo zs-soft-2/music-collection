@@ -11,6 +11,7 @@ import {
 	Firestore,
 	getDocs,
 	query,
+	QueryConstraint,
 	setDoc,
 	updateDoc,
 	where,
@@ -29,6 +30,7 @@ import {
 	ReleaseModel,
 	ReleaseModelAdd,
 	ReleaseModelUpdate,
+	SearchParams,
 } from '@music-collection/api';
 
 @Injectable()
@@ -148,11 +150,12 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 		}) as Observable<ArtistModel>;
 	}
 
-	public search$(term: string): Observable<ArtistModel[]> {
-		const artistQuery = query(
-			this.artistCollection,
-			where('searchParameters', 'array-contains', term.toLowerCase())
+	public search$(params: SearchParams): Observable<ArtistModel[]> {
+		const queries: QueryConstraint[] = params.map((param) =>
+			where(param.query.field, param.query.operation, param.query.value)
 		);
+
+		const artistQuery = query(this.artistCollection, ...queries);
 
 		return new Observable((subscriber) => {
 			getDocs(artistQuery)

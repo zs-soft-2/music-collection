@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { EntityStateService } from '../../common';
+import { EntityStateService, SearchParams } from '../../common';
 import { AlbumEntity } from '../album';
 import { ArtistEntity, ArtistEntityAdd, ArtistEntityUpdate } from './artist';
 
@@ -13,7 +13,7 @@ export abstract class ArtistStateService extends EntityStateService<
 	public abstract dispatchChangeNewEntityButtonEnabled(
 		enabled: boolean
 	): void;
-	public abstract dispatchSearch(term: string): void;
+	public abstract dispatchSearch(params: SearchParams): void;
 	public abstract dispatchSelectArtistAction(artist: ArtistEntity): void;
 	public abstract selectAlbumsById$(): Observable<AlbumEntity[] | undefined>;
 	public abstract selectNewEntityButtonEnabled$(): Observable<boolean>;

@@ -7,6 +7,11 @@ import {
 	AlbumStateService,
 	AlbumTableParams,
 	BaseComponent,
+	EntityTypeEnum,
+	ParamItem,
+	QueryConstraintTypeEnum,
+	QueryOperatorEnum,
+	SearchParams,
 } from '@music-collection/api';
 
 @Injectable()
@@ -48,7 +53,33 @@ export class AlbumTableService extends BaseComponent {
 		);
 	}
 
-	public searchHandler(query: string): void {
-		this.albumStateService.dispatchSearch(query);
+	public searchByName(term: string): void {
+		const query: ParamItem<string> = {
+			queryConstraint: QueryConstraintTypeEnum.where,
+			operation: QueryOperatorEnum.arrayContains,
+			field: 'searchParameters',
+			value: term.toLowerCase(),
+		};
+
+		const searchParams: SearchParams = [
+			{ entityType: EntityTypeEnum.Album, query },
+		];
+
+		this.albumStateService.dispatchSearch(searchParams);
+	}
+
+	public searchByArtistName(term: string): void {
+		const query: ParamItem<string> = {
+			queryConstraint: QueryConstraintTypeEnum.where,
+			operation: QueryOperatorEnum.arrayContains,
+			field: 'artist.searchParameters',
+			value: term.toLowerCase(),
+		};
+
+		const searchParams: SearchParams = [
+			{ entityType: EntityTypeEnum.Album, query },
+		];
+
+		this.albumStateService.dispatchSearch(searchParams);
 	}
 }

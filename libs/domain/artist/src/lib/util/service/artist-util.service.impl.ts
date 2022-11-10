@@ -10,7 +10,12 @@ import {
 	ArtistUtilService,
 	EntityQuantityEntity,
 	EntityQuantityEntityUpdate,
+	EntityTypeEnum,
 	GenreEnum,
+	ParamItem,
+	QueryConstraintTypeEnum,
+	QueryOperatorEnum,
+	SearchParams,
 } from '@music-collection/api';
 
 @Injectable()
@@ -134,6 +139,22 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 			styles: [artist?.styles || null, [Validators.required]],
 			uid: [artist?.uid],
 		});
+	}
+
+	public createSearchParams(
+		entityType: EntityTypeEnum,
+		term: string
+	): SearchParams {
+		const query: ParamItem<string> = {
+			queryConstraint: QueryConstraintTypeEnum.where,
+			operation: QueryOperatorEnum.arrayContains,
+			field: 'searchParameters',
+			value: term.toLowerCase(),
+		};
+
+		const searchParams: SearchParams = [{ entityType, query }];
+
+		return searchParams;
 	}
 
 	public updateEntity(formGroup: FormGroup): ArtistEntityUpdate {

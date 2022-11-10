@@ -1,5 +1,5 @@
 import { combineLatest, Observable, ReplaySubject } from 'rxjs';
-import { switchMap, tap } from 'rxjs/operators';
+import { switchMap } from 'rxjs/operators';
 
 import { Injectable } from '@angular/core';
 import { FormGroup } from '@angular/forms';
@@ -10,17 +10,22 @@ import {
 	ArtistEntity,
 	ArtistStateService,
 	CountryList,
+	EntityTypeEnum,
 	FormatDescriptionList,
 	FormatList,
 	LabelEntity,
 	LabelStateService,
 	MediaList,
+	ParamItem,
+	QueryConstraintTypeEnum,
+	QueryOperatorEnum,
 	ReleaseEntity,
 	ReleaseEntityAdd,
 	ReleaseEntityUpdate,
 	ReleaseFormParams,
 	ReleaseStateService,
 	ReleaseUtilService,
+	SearchParams,
 } from '@music-collection/api';
 
 @Injectable()
@@ -85,16 +90,31 @@ export class ReleaseFormService {
 		);
 	}
 
-	public searchAlbum(query: string): void {
-		this.albumStateService.dispatchSearch(query);
+	public searchAlbum(term: string): void {
+		const searchParams: SearchParams = this.createSearchParams(
+			EntityTypeEnum.Album,
+			term
+		);
+
+		this.albumStateService.dispatchSearch(searchParams);
 	}
 
-	public searchArtist(query: string): void {
-		this.artistStateService.dispatchSearch(query);
+	public searchArtist(term: string): void {
+		const searchParams: SearchParams = this.createSearchParams(
+			EntityTypeEnum.Artist,
+			term
+		);
+
+		this.artistStateService.dispatchSearch(searchParams);
 	}
 
-	public searchLabel(query: string): void {
-		this.labelStateService.dispatchSearch(query);
+	public searchLabel(term: string): void {
+		const searchParams: SearchParams = this.createSearchParams(
+			EntityTypeEnum.Label,
+			term
+		);
+
+		this.labelStateService.dispatchSearch(term);
 	}
 
 	public submit(): void {
@@ -115,6 +135,22 @@ export class ReleaseFormService {
 		);
 
 		this.releaseStateService.dispatchAddEntityAction(release);
+	}
+
+	private createSearchParams(
+		entityType: EntityTypeEnum,
+		term: string
+	): SearchParams {
+		const query: ParamItem<string> = {
+			queryConstraint: QueryConstraintTypeEnum.where,
+			operation: QueryOperatorEnum.arrayContains,
+			field: 'searchParameters',
+			value: term.toLowerCase(),
+		};
+
+		const searchParams: SearchParams = [{ entityType, query }];
+
+		return searchParams;
 	}
 
 	private updateRelease(): void {

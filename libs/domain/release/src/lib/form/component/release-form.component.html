@@ -10,7 +10,7 @@
 					[minLength]="3"
 					[delay]="400"
 					field="name"
-					(completeMethod)="searchArtist($event)"
+					(completeMethod)="searchArtistHandler($event)"
 				>
 				</p-autoComplete>
 
@@ -26,7 +26,7 @@
 					[minLength]="3"
 					[delay]="400"
 					field="name"
-					(completeMethod)="searchAlbum($event)"
+					(completeMethod)="searchAlbumHandler($event)"
 				>
 				</p-autoComplete>
 
@@ -42,7 +42,7 @@
 					[minLength]="3"
 					[delay]="400"
 					field="name"
-					(completeMethod)="searchLabel($event)"
+					(completeMethod)="searchLabelHandler($event)"
 				></p-autoComplete>
 
 				<label for="label">Label</label>

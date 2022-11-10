@@ -7,6 +7,7 @@ import {
 	ArtistEntityAdd,
 	ArtistEntityUpdate,
 	ArtistStateService,
+	SearchParams,
 } from '@music-collection/api';
 import { select, Store } from '@ngrx/store';
 
@@ -50,8 +51,8 @@ export class ArtistStateServiceImpl extends ArtistStateService {
 		this.store.dispatch(artistActions.loadArtist({ uid }));
 	}
 
-	public dispatchSearch(term: string): void {
-		this.store.dispatch(artistActions.search({ term }));
+	public dispatchSearch(params: SearchParams): void {
+		this.store.dispatch(artistActions.search({ params }));
 	}
 
 	public dispatchSelectArtistAction(artist: ArtistEntity): void {

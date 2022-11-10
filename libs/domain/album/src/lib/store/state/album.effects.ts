@@ -111,7 +111,7 @@ export class AlbumEffects {
 		this.actions$.pipe(
 			ofType(albumActions.search),
 			switchMap((action) =>
-				this.albumDataService.search$(action.term).pipe(
+				this.albumDataService.search$(action.params).pipe(
 					map((result) =>
 						result.map((album) =>
 							this.albumUtilService.convertModelToEntity(album)

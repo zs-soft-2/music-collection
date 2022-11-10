@@ -12,6 +12,7 @@ import {
 	Firestore,
 	getDocs,
 	query,
+	QueryConstraint,
 	setDoc,
 	updateDoc,
 	where,
@@ -22,6 +23,7 @@ import {
 	AlbumModel,
 	AlbumModelAdd,
 	AlbumModelUpdate,
+	SearchParams,
 } from '@music-collection/api';
 
 @Injectable()
@@ -89,10 +91,14 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 		}) as Observable<AlbumModel>;
 	}
 
-	public search$(term: string): Observable<AlbumModel[]> {
+	public search$(params: SearchParams): Observable<AlbumModel[]> {
+		const queries: QueryConstraint[] = params.map((param) =>
+			where(param.query.field, param.query.operation, param.query.value)
+		);
+
 		const albumQuery = query(
 			collectionGroup(this.firestore, ALBUM_FEATURE_KEY),
-			where('searchParameters', 'array-contains', term.toLowerCase())
+			...queries
 		);
 
 		return new Observable((subscriber) => {
