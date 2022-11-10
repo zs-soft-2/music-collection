@@ -5,6 +5,7 @@ import { Auth, GoogleAuthProvider, signInWithPopup } from '@angular/fire/auth';
 import { Injectable } from '@angular/core';
 import {
 	BaseService,
+	EntityTypeEnum,
 	RoleNames,
 	User,
 	UserStateService,
@@ -27,6 +28,7 @@ export class AuthenticationEffects extends BaseService {
 					const user: User = {
 						displayName: authData.displayName,
 						email: authData.email,
+						entityType: EntityTypeEnum.User,
 						firstName: '',
 						lastName: '',
 						phone: '',

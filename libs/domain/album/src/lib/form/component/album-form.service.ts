@@ -69,11 +69,18 @@ export class AlbumFormService {
 				EntityTypeEnum.Artist,
 				term
 			);
+
 		this.artistStateService.dispatchSearch(searchParams);
 	}
 
 	public searchDocument(term: string): void {
-		this.documentStateService.dispatchSearch(term);
+		const searchParams: SearchParams =
+			this.albumUtilService.createSearchParams(
+				EntityTypeEnum.Document,
+				term
+			);
+
+		this.documentStateService.dispatchSearch(searchParams);
 	}
 
 	public submit(): void {

@@ -6,6 +6,7 @@ import {
 	ReleaseEntityAdd,
 	ReleaseEntityUpdate,
 	ReleaseStateService,
+	SearchParams,
 } from '@music-collection/api';
 import { select, Store } from '@ngrx/store';
 
@@ -45,8 +46,8 @@ export class ReleaseStateServiceImpl extends ReleaseStateService {
 		this.store.dispatch(releaseActions.loadRelease({ uid }));
 	}
 
-	public dispatchSearch(term: string): void {
-		this.store.dispatch(releaseActions.search({ term }));
+	public dispatchSearch(params: SearchParams): void {
+		this.store.dispatch(releaseActions.search({ params }));
 	}
 
 	public dispatchSelectReleaseAction(release: ReleaseEntity): void {

@@ -112,7 +112,7 @@ export class ReleaseEffects {
 		this.actions$.pipe(
 			ofType(releaseActions.search),
 			switchMap((action) =>
-				this.releaseDataService.search$(action.term).pipe(
+				this.releaseDataService.search$(action.params).pipe(
 					map((result) =>
 						result.map((release) =>
 							this.releaseUtilService.convertModelToEntity(

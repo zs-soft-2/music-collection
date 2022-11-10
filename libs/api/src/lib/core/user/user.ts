@@ -1,7 +1,7 @@
-import { Identifiable } from '../../common';
+import { Entity } from '../../common';
 import { Role } from '../role';
 
-export interface User extends Identifiable {
+export interface User extends Entity {
 	currentLanguage?: string;
 	displayName?: string | null;
 	email?: string | null;

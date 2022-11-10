@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 
 import { Injectable } from '@angular/core';
-import { User, UserStateService } from '@music-collection/api';
+import { SearchParams, User, UserStateService } from '@music-collection/api';
 import { select, Store } from '@ngrx/store';
 
 import * as userActions from './user.actions';
@@ -36,6 +36,10 @@ export class UserStateServiceImpl extends UserStateService {
 
 	public dispatchLoadExistedUserAction(user: User): void {
 		this.store.dispatch(userActions.loadExistedUser({ user }));
+	}
+
+	public dispatchSearch(params: SearchParams): void {
+		throw new Error('Method not implemented.');
 	}
 
 	public dispatchSetSelectedEntityIdAction(entityId: string): void {

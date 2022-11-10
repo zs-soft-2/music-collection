@@ -1,6 +1,6 @@
 import { FormGroup } from '@angular/forms';
 
-import { GenreEnum, Identifiable, Searchable, StyleEnum } from '../../common';
+import { Entity, GenreEnum, Searchable, StyleEnum } from '../../common';
 import { ArtistEntity } from '../artist';
 import { DocumentEntity } from '../document';
 
@@ -14,23 +14,23 @@ export interface Album {
 }
 
 export type AlbumEntity = Album &
-	Identifiable & {
+	Entity & {
 		year: Date;
 	};
 
 export type AlbumEntityAdd = Omit<AlbumEntity, 'uid'>;
 
-export type AlbumEntityUpdate = Partial<AlbumEntity> & Identifiable;
+export type AlbumEntityUpdate = Partial<AlbumEntity> & Entity;
 
 export type AlbumModel = Album &
-	Identifiable &
+	Entity &
 	Searchable & {
 		year: number;
 	};
 
 export type AlbumModelAdd = Omit<AlbumModel, 'uid'>;
 
-export type AlbumModelUpdate = Partial<AlbumModel> & Identifiable;
+export type AlbumModelUpdate = Partial<AlbumModel> & Entity;
 
 export type AlbumFormParams = {
 	artists: ArtistEntity[];

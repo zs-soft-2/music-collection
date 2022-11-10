@@ -19,7 +19,7 @@ export class EntityQuantityEffects {
 				this.entityQuantityDataService.add$(action.entityQuantity).pipe(
 					map((entityQuantity) => {
 						return entityQuantityActions.addEntityQuantitySuccess({
-							entityQuantity: entityQuantity,
+							entityQuantity,
 						});
 					})
 				)
@@ -65,28 +65,22 @@ export class EntityQuantityEffects {
 		this.actions$.pipe(
 			ofType(entityQuantityActions.search),
 			switchMap((action) => {
-				if (action.term) {
-					return this.entityQuantityDataService
-						.search$(action.term)
-						.pipe(
-							map((entityQuantities) => {
-								return entityQuantityActions.searchSuccess({
-									result: entityQuantities,
-								});
-							}),
-							catchError((error) => {
-								return of(
-									entityQuantityActions.searchFailed({
-										error: error as string,
-									})
-								);
-							})
-						);
-				} else {
-					return of(
-						entityQuantityActions.searchSuccess({ result: [] })
+				return this.entityQuantityDataService
+					.search$(action.params)
+					.pipe(
+						map((entityQuantities) => {
+							return entityQuantityActions.searchSuccess({
+								result: entityQuantities,
+							});
+						}),
+						catchError((error) => {
+							return of(
+								entityQuantityActions.searchFailed({
+									error: error as string,
+								})
+							);
+						})
 					);
-				}
 			})
 		)
 	);

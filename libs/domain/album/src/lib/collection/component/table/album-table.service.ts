@@ -6,6 +6,8 @@ import {
 	AlbumEntity,
 	AlbumStateService,
 	AlbumTableParams,
+	AlbumUtilService,
+	ArtistStateService,
 	BaseComponent,
 	EntityTypeEnum,
 	ParamItem,
@@ -22,6 +24,8 @@ export class AlbumTableService extends BaseComponent {
 	public constructor(
 		private activatedRoute: ActivatedRoute,
 		private albumStateService: AlbumStateService,
+		private artistStateService: ArtistStateService,
+		private albumUtilService: AlbumUtilService,
 		private router: Router
 	) {
 		super();
@@ -53,32 +57,22 @@ export class AlbumTableService extends BaseComponent {
 		);
 	}
 
-	public searchByName(term: string): void {
-		const query: ParamItem<string> = {
-			queryConstraint: QueryConstraintTypeEnum.where,
-			operation: QueryOperatorEnum.arrayContains,
-			field: 'searchParameters',
-			value: term.toLowerCase(),
-		};
-
-		const searchParams: SearchParams = [
-			{ entityType: EntityTypeEnum.Album, query },
-		];
+	public searchByArtistName(term: string): void {
+		const searchParams: SearchParams =
+			this.albumUtilService.createSearchParamsByArtist(
+				EntityTypeEnum.Album,
+				term.toLowerCase()
+			);
 
 		this.albumStateService.dispatchSearch(searchParams);
 	}
 
-	public searchByArtistName(term: string): void {
-		const query: ParamItem<string> = {
-			queryConstraint: QueryConstraintTypeEnum.where,
-			operation: QueryOperatorEnum.arrayContains,
-			field: 'artist.searchParameters',
-			value: term.toLowerCase(),
-		};
-
-		const searchParams: SearchParams = [
-			{ entityType: EntityTypeEnum.Album, query },
-		];
+	public searchByName(term: string): void {
+		const searchParams: SearchParams =
+			this.albumUtilService.createSearchParams(
+				EntityTypeEnum.Album,
+				term.toLowerCase()
+			);
 
 		this.albumStateService.dispatchSearch(searchParams);
 	}

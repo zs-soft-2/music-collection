@@ -2,6 +2,7 @@ import {
 	LabelEntity,
 	LabelEntityAdd,
 	LabelEntityUpdate,
+	SearchParams,
 } from '@music-collection/api';
 import { Update } from '@ngrx/entity';
 import { createAction, props } from '@ngrx/store';
@@ -82,7 +83,7 @@ export const loadLabelSuccess = createAction(
 
 export const search = createAction(
 	'[Label] Search Labels',
-	props<{ term: string }>()
+	props<{ params: SearchParams }>()
 );
 export const searchFailed = createAction(
 	'[Label] Search Labels Failed',

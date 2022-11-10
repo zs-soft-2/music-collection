@@ -1,5 +1,6 @@
 import { Observable } from 'rxjs';
 
+import { SearchParams } from '../search';
 import { StateService } from '../state';
 
 export abstract class EntityStateService<R, S, T> extends StateService {
@@ -8,6 +9,7 @@ export abstract class EntityStateService<R, S, T> extends StateService {
 	public abstract dispatchListEntitiesAction(): void;
 	public abstract dispatchLoadEntitiesByIdsAction(ids: string[]): void;
 	public abstract dispatchLoadEntityAction(id: string): void;
+	public abstract dispatchSearch(params: SearchParams): void;
 	public abstract dispatchSetSelectedEntityIdAction(entityId: string): void;
 	public abstract dispatchUpdateEntityAction(entity: T): void;
 	public abstract selectEntities$(): Observable<R[]>;

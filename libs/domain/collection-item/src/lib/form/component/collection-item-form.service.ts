@@ -4,15 +4,17 @@ import { switchMap } from 'rxjs/operators';
 import { Injectable } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
+	AuthenticationStateService,
 	CollectionItemEntity,
 	CollectionItemEntityAdd,
 	CollectionItemEntityUpdate,
 	CollectionItemFormParams,
 	CollectionItemStateService,
 	CollectionItemUtilService,
+	EntityTypeEnum,
 	ReleaseEntity,
 	ReleaseStateService,
-	AuthenticationStateService,
+	SearchParams,
 	User,
 } from '@music-collection/api';
 
@@ -66,8 +68,13 @@ export class CollectionItemFormService {
 		);
 	}
 
-	public searchRelease(query: string): void {
-		this.releaseStateService.dispatchSearch(query);
+	public searchRelease(term: string): void {
+		const searchParams: SearchParams =
+			this.collectionItemUtilService.createSearchParams(
+				EntityTypeEnum.CollectionItem,
+				term
+			);
+		this.releaseStateService.dispatchSearch(searchParams);
 	}
 
 	public submit(): void {

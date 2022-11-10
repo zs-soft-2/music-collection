@@ -3,10 +3,13 @@ import { Observable, ReplaySubject, switchMap } from 'rxjs';
 import { Injectable } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
+	BaseComponent,
 	DocumentEntity,
 	DocumentStateService,
 	DocumentTableParams,
-	BaseComponent,
+	DocumentUtilService,
+	EntityTypeEnum,
+	SearchParams,
 } from '@music-collection/api';
 
 @Injectable()
@@ -17,6 +20,7 @@ export class DocumentTableService extends BaseComponent {
 	public constructor(
 		private activatedRoute: ActivatedRoute,
 		private documentStateService: DocumentStateService,
+		private documentUtilService: DocumentUtilService,
 		private router: Router
 	) {
 		super();
@@ -45,7 +49,12 @@ export class DocumentTableService extends BaseComponent {
 		);
 	}
 
-	public searchHandler(query: string): void {
-		this.documentStateService.dispatchSearch(query);
+	public searchHandler(term: string): void {
+		const searchParams: SearchParams =
+			this.documentUtilService.createSearchParams(
+				EntityTypeEnum.Document,
+				term
+			);
+		this.documentStateService.dispatchSearch(searchParams);
 	}
 }

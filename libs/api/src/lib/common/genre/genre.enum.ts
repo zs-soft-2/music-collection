@@ -19,11 +19,13 @@ export enum StyleEnum {
 	Heavy = 'Heavy metal',
 	Melodic_Death = 'Melodic Death',
 	New_Wave_Of_British_Heavy_Metal = 'New Wave Of British Heavy Metal',
+	Power_Metal = 'Power metal',
 	Progressive_Death = 'Progressive Death',
 	Progressive_Thrash = 'Progressive Thrash',
 	Teachnical_Death = 'Technical Death',
 	Teutonic_Thrash = 'Teutonic Thrash',
 	Thrash = 'Thrash',
+	US_Power_Metal = 'US Power metal',
 }
 
 export const StyleList: StyleEnum[] = [
@@ -43,9 +45,11 @@ export const StyleList: StyleEnum[] = [
 	StyleEnum.Heavy,
 	StyleEnum.Melodic_Death,
 	StyleEnum.New_Wave_Of_British_Heavy_Metal,
+	StyleEnum.Power_Metal,
 	StyleEnum.Progressive_Death,
 	StyleEnum.Progressive_Thrash,
 	StyleEnum.Teachnical_Death,
 	StyleEnum.Teutonic_Thrash,
 	StyleEnum.Thrash,
+	StyleEnum.US_Power_Metal,
 ];

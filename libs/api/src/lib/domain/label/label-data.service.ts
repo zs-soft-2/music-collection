@@ -1,18 +1,8 @@
-import { Observable } from 'rxjs';
+import { FirebaseDataService } from '../../core';
+import { LabelModel, LabelModelAdd, LabelModelUpdate } from './label';
 
-import { EntityDataService } from '../../common';
-import {
-	LabelEntity,
-	LabelModel,
-	LabelModelAdd,
-	LabelModelUpdate,
-} from './label';
-
-export abstract class LabelDataService extends EntityDataService<
+export abstract class LabelDataService extends FirebaseDataService<
 	LabelModel,
 	LabelModelAdd,
 	LabelModelUpdate
-> {
-	public abstract listByIds$(ids: string[]): Observable<LabelEntity[]>;
-	public abstract search$(query: string): Observable<LabelModel[]>;
-}
+> {}

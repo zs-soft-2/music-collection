@@ -1,23 +1,23 @@
 import { FormGroup } from '@angular/forms';
 
-import { Identifiable, Searchable } from '../../common';
+import { Entity, Searchable } from '../../common';
 
 export interface Label {
 	name: string;
 	parent: LabelEntity | null;
 }
 
-export type LabelEntity = Label & Identifiable;
+export type LabelEntity = Label & Entity;
 
 export type LabelEntityAdd = Omit<LabelEntity, 'uid'>;
 
-export type LabelEntityUpdate = Partial<LabelEntity> & Identifiable;
+export type LabelEntityUpdate = Partial<LabelEntity> & Entity;
 
-export type LabelModel = Label & Identifiable & Searchable;
+export type LabelModel = Label & Entity & Searchable;
 
 export type LabelModelAdd = Omit<LabelModel, 'uid'>;
 
-export type LabelModelUpdate = Partial<LabelModel> & Identifiable & Searchable;
+export type LabelModelUpdate = Partial<LabelModel> & Entity & Searchable;
 
 export type LabelFormParams = {
 	labels: LabelEntity[];

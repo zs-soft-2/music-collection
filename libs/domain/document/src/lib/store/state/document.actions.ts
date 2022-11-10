@@ -3,6 +3,7 @@ import {
 	DocumentEntityAdd,
 	DocumentEntityUpdate,
 	DocumentFile,
+	SearchParams,
 } from '@music-collection/api';
 import { Update } from '@ngrx/entity';
 import { createAction, props } from '@ngrx/store';
@@ -85,7 +86,7 @@ export const loadDocumentSuccess = createAction(
 
 export const search = createAction(
 	'[Document] Search Documents',
-	props<{ term: string }>()
+	props<{ params: SearchParams }>()
 );
 export const searchFailed = createAction(
 	'[Document] Search Documents Failed',

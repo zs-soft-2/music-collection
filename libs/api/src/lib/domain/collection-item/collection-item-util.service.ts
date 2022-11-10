@@ -1,6 +1,6 @@
 import { FormGroup } from '@angular/forms';
 
-import { EntityUtilService } from '../../common';
+import { EntityTypeEnum, EntityUtilService, SearchParams } from '../../common';
 import {
 	EntityQuantityEntity,
 	EntityQuantityEntityUpdate,

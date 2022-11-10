@@ -12,10 +12,6 @@ import {
 	EntityQuantityEntityUpdate,
 	EntityTypeEnum,
 	GenreEnum,
-	ParamItem,
-	QueryConstraintTypeEnum,
-	QueryOperatorEnum,
-	SearchParams,
 } from '@music-collection/api';
 
 @Injectable()
@@ -72,6 +68,7 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 	): ArtistEntityUpdate {
 		const entity: ArtistEntityUpdate = {
 			uid: model.uid,
+			entityType: model.entityType,
 		};
 
 		if (model.formedIn) {
@@ -116,6 +113,7 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 	public createEntity(formGroup: FormGroup): ArtistEntityAdd {
 		return {
 			description: formGroup.value['description'],
+			entityType: EntityTypeEnum.Artist,
 			formedIn: formGroup.value['formedIn'],
 			genre: GenreEnum.Rock,
 			headerImage: formGroup.value['headerImage'],
@@ -141,25 +139,10 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 		});
 	}
 
-	public createSearchParams(
-		entityType: EntityTypeEnum,
-		term: string
-	): SearchParams {
-		const query: ParamItem<string> = {
-			queryConstraint: QueryConstraintTypeEnum.where,
-			operation: QueryOperatorEnum.arrayContains,
-			field: 'searchParameters',
-			value: term.toLowerCase(),
-		};
-
-		const searchParams: SearchParams = [{ entityType, query }];
-
-		return searchParams;
-	}
-
 	public updateEntity(formGroup: FormGroup): ArtistEntityUpdate {
 		return {
 			description: formGroup.value['description'],
+			entityType: EntityTypeEnum.Artist,
 			formedIn: formGroup.value['formedIn'],
 			genre: GenreEnum.Rock,
 			headerImage: formGroup.value['headerImage'],

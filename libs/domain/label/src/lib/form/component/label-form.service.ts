@@ -4,12 +4,14 @@ import { switchMap } from 'rxjs/operators';
 import { Injectable } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
+	EntityTypeEnum,
 	LabelEntity,
 	LabelEntityAdd,
 	LabelEntityUpdate,
 	LabelFormParams,
 	LabelStateService,
 	LabelUtilService,
+	SearchParams,
 } from '@music-collection/api';
 
 @Injectable()
@@ -53,8 +55,14 @@ export class LabelFormService {
 		);
 	}
 
-	public searchLabel(query: string): void {
-		this.labelStateService.dispatchSearch(query);
+	public searchLabel(term: string): void {
+		const searchParams: SearchParams =
+			this.labelUtilService.createSearchParams(
+				EntityTypeEnum.Label,
+				term
+			);
+
+		this.labelStateService.dispatchSearch(searchParams);
 	}
 
 	public submit(): void {

@@ -1,13 +1,8 @@
-import { Observable } from 'rxjs';
-
-import { EntityDataService, SearchParams } from '../../common';
+import { FirebaseDataService } from '../../core';
 import { AlbumModel, AlbumModelAdd, AlbumModelUpdate } from './album';
 
-export abstract class AlbumDataService extends EntityDataService<
+export abstract class AlbumDataService extends FirebaseDataService<
 	AlbumModel,
 	AlbumModelAdd,
 	AlbumModelUpdate
-> {
-	public abstract listByIds$(ids: string[]): Observable<AlbumModel[]>;
-	public abstract search$(params: SearchParams): Observable<AlbumModel[]>;
-}
+> {}

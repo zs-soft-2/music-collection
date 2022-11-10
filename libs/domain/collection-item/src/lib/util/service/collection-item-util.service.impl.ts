@@ -12,6 +12,10 @@ import {
 	EntityQuantityEntityUpdate,
 	EntityQuantityGroup,
 	EntityTypeEnum,
+	ParamItem,
+	QueryConstraintTypeEnum,
+	QueryOperatorEnum,
+	SearchParams,
 	User,
 } from '@music-collection/api';
 
@@ -83,6 +87,7 @@ export class CollectionItemUtilServiceImpl extends CollectionItemUtilService {
 	): CollectionItemEntityUpdate {
 		const entity: CollectionItemEntityUpdate = {
 			uid: model.uid,
+			entityType: model.entityType,
 		};
 
 		if (model.date) {
@@ -110,6 +115,7 @@ export class CollectionItemUtilServiceImpl extends CollectionItemUtilService {
 			userId: formGroup.value['userId'],
 			description: formGroup.value['userId'],
 			date: formGroup.value['date'],
+			entityType: EntityTypeEnum.CollectionItem,
 		};
 	}
 
@@ -137,6 +143,7 @@ export class CollectionItemUtilServiceImpl extends CollectionItemUtilService {
 			userId: formGroup.value['userId'],
 			description: formGroup.value['userId'],
 			date: formGroup.value['date'],
+			entityType: EntityTypeEnum.CollectionItem,
 		};
 	}
 

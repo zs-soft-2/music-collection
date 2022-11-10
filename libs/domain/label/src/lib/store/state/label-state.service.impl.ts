@@ -6,6 +6,7 @@ import {
 	LabelEntityAdd,
 	LabelEntityUpdate,
 	LabelStateService,
+	SearchParams,
 } from '@music-collection/api';
 import { select, Store } from '@ngrx/store';
 
@@ -45,8 +46,8 @@ export class LabelStateServiceImpl extends LabelStateService {
 		this.store.dispatch(labelActions.loadLabel({ uid }));
 	}
 
-	public dispatchSearch(term: string): void {
-		this.store.dispatch(labelActions.search({ term }));
+	public dispatchSearch(params: SearchParams): void {
+		this.store.dispatch(labelActions.search({ params }));
 	}
 
 	public dispatchSelectLabelAction(label: LabelEntity): void {

@@ -17,7 +17,6 @@ export abstract class DocumentStateService extends EntityStateService<
 		enabled: boolean
 	): void;
 	public abstract dispatchClearFilePathAction(): void;
-	public abstract dispatchSearch(term: string): void;
 	public abstract dispatchUploadFileAction(file: DocumentFile): void;
 	public abstract selectFilePath$(): Observable<string | undefined>;
 	public abstract selectNewEntityButtonEnabled$(): Observable<boolean>;

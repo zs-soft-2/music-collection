@@ -1,6 +1,6 @@
 import { FormGroup } from '@angular/forms';
 
-import { Identifiable, Searchable } from '../../common';
+import { Entity, Searchable } from '../../common';
 import { ReleaseEntity } from '../release';
 
 export interface CollectionItem {
@@ -10,25 +10,23 @@ export interface CollectionItem {
 }
 
 export type CollectionItemEntity = CollectionItem &
-	Identifiable & {
+	Entity & {
 		date: Date;
 	};
 
 export type CollectionItemEntityAdd = Omit<CollectionItemEntity, 'uid'>;
 
-export type CollectionItemEntityUpdate = Partial<CollectionItemEntity> &
-	Identifiable;
+export type CollectionItemEntityUpdate = Partial<CollectionItemEntity> & Entity;
 
 export type CollectionItemModel = CollectionItem &
-	Identifiable &
+	Entity &
 	Searchable & {
 		date: number;
 	};
 
 export type CollectionItemModelAdd = Omit<CollectionItemModel, 'uid'>;
 
-export type CollectionItemModelUpdate = Partial<CollectionItemModel> &
-	Identifiable;
+export type CollectionItemModelUpdate = Partial<CollectionItemModel> & Entity;
 
 export type CollectionItemFormParams = {
 	releases: ReleaseEntity[];

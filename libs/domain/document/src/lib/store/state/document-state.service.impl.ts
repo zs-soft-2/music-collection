@@ -7,6 +7,7 @@ import {
 	DocumentEntityUpdate,
 	DocumentFile,
 	DocumentStateService,
+	SearchParams,
 } from '@music-collection/api';
 import { select, Store } from '@ngrx/store';
 
@@ -52,8 +53,8 @@ export class DocumentStateServiceImpl extends DocumentStateService {
 		this.store.dispatch(documentActions.loadDocument({ uid }));
 	}
 
-	public dispatchSearch(term: string): void {
-		this.store.dispatch(documentActions.search({ term }));
+	public dispatchSearch(params: SearchParams): void {
+		this.store.dispatch(documentActions.search({ params }));
 	}
 
 	public dispatchSelectDocumentAction(uid: string): void {

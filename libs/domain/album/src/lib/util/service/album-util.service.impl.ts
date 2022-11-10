@@ -78,6 +78,7 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 		model: AlbumModelUpdate
 	): AlbumEntityUpdate {
 		const entity: AlbumEntityUpdate = {
+			entityType: model.entityType,
 			uid: model.uid,
 		};
 
@@ -118,6 +119,7 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 			coverImage: formGroup.value['coverImage']
 				? this.createSimpleDocument(formGroup.value['coverImage'])
 				: null,
+			entityType: EntityTypeEnum.Album,
 			genre: GenreEnum.Rock,
 			name: (formGroup.value['name'] as string).trim(),
 			styles: formGroup.value['styles'],
@@ -138,14 +140,14 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 		});
 	}
 
-	public createSearchParams(
+	public createSearchParamsByArtist(
 		entityType: EntityTypeEnum,
 		term: string
 	): SearchParams {
 		const query: ParamItem<string> = {
 			queryConstraint: QueryConstraintTypeEnum.where,
 			operation: QueryOperatorEnum.arrayContains,
-			field: 'searchParameters',
+			field: 'artist.searchParameters',
 			value: term.toLowerCase(),
 		};
 
@@ -160,6 +162,7 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 			coverImage: formGroup.value['coverImage']
 				? this.createSimpleDocument(formGroup.value['coverImage'])
 				: null,
+			entityType: EntityTypeEnum.Album,
 			genre: GenreEnum.Rock,
 			name: (formGroup.value['name'] as string).trim(),
 			songs: formGroup.value['songs'],
@@ -191,20 +194,22 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 	}
 
 	private createSimpleArtist(artist: ArtistEntity): AlbumArtist {
-		const { uid, name } = artist;
+		const { uid, name, entityType } = artist;
 
 		return {
 			uid,
+			entityType,
 			name,
 			searchParameters: this.createSearchParameters(name),
 		};
 	}
 
 	private createSimpleDocument(document: DocumentEntity): AlbumDocument {
-		const { uid, filePath, name } = document;
+		const { uid, filePath, entityType, name } = document;
 
 		return {
 			filePath,
+			entityType,
 			name,
 			uid,
 		};

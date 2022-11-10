@@ -2,9 +2,9 @@ import { FormGroup } from '@angular/forms';
 
 import {
 	CountryEnum,
+	Entity,
 	FormatDescriptionEnum,
 	FormatEnum,
-	Identifiable,
 	MediaEnum,
 	Searchable,
 } from '../../common';
@@ -24,25 +24,23 @@ export interface Release {
 }
 
 export type ReleaseEntity = Release &
-	Identifiable & {
+	Entity & {
 		date: Date;
 	};
 
 export type ReleaseEntityAdd = Omit<ReleaseEntity, 'uid'>;
 
-export type ReleaseEntityUpdate = Partial<ReleaseEntity> & Identifiable;
+export type ReleaseEntityUpdate = Partial<ReleaseEntity> & Entity;
 
 export type ReleaseModel = Release &
-	Identifiable &
+	Entity &
 	Searchable & {
 		date: number;
 	};
 
 export type ReleaseModelAdd = Omit<ReleaseModel, 'uid'>;
 
-export type ReleaseModelUpdate = Partial<ReleaseModel> &
-	Identifiable &
-	Searchable;
+export type ReleaseModelUpdate = Partial<ReleaseModel> & Entity & Searchable;
 
 export type ReleaseFormParams = {
 	artists: ArtistEntity[];

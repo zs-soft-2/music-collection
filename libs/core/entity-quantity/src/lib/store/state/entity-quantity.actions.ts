@@ -2,6 +2,7 @@ import {
 	EntityQuantityEntity,
 	EntityQuantityEntityAdd,
 	EntityQuantityEntityUpdate,
+	SearchParams,
 } from '@music-collection/api';
 import { Update } from '@ngrx/entity';
 import { createAction, props } from '@ngrx/store';
@@ -86,7 +87,7 @@ export const loadEntityQuantitySuccess = createAction(
 
 export const search = createAction(
 	'[EntityQuantity] Search EntityQuantities',
-	props<{ term: string }>()
+	props<{ params: SearchParams }>()
 );
 export const searchFailed = createAction(
 	'[EntityQuantity] Search EntityQuantities Failed',

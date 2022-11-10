@@ -1,19 +1,12 @@
-import { Observable } from 'rxjs';
-
-import { EntityDataService } from '../../common';
+import { FirebaseDataService } from '../firebase';
 import {
 	EntityQuantityEntity,
 	EntityQuantityEntityAdd,
 	EntityQuantityEntityUpdate,
 } from './entity-quantity';
 
-export abstract class EntityQuantityDataService extends EntityDataService<
+export abstract class EntityQuantityDataService extends FirebaseDataService<
 	EntityQuantityEntity,
 	EntityQuantityEntityAdd,
 	EntityQuantityEntityUpdate
-> {
-	public abstract listByIds$(
-		ids: string[]
-	): Observable<EntityQuantityEntity[]>;
-	public abstract search$(param: string): Observable<EntityQuantityEntity[]>;
-}
+> {}

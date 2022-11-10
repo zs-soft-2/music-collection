@@ -1,13 +1,8 @@
-import { Observable } from 'rxjs';
-
-import { EntityDataService } from '../../common';
+import { FirebaseDataService } from '../../core';
 import { ReleaseModel, ReleaseModelAdd, ReleaseModelUpdate } from './release';
 
-export abstract class ReleaseDataService extends EntityDataService<
+export abstract class ReleaseDataService extends FirebaseDataService<
 	ReleaseModel,
 	ReleaseModelAdd,
 	ReleaseModelUpdate
-> {
-	public abstract listByIds$(ids: string[]): Observable<ReleaseModel[]>;
-	public abstract search$(query: string): Observable<ReleaseModel[]>;
-}
+> {}

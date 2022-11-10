@@ -1,4 +1,8 @@
-import { AUTHENTICATION_FEATURE_KEY, User } from '@music-collection/api';
+import {
+	AUTHENTICATION_FEATURE_KEY,
+	EntityTypeEnum,
+	User,
+} from '@music-collection/api';
 import { createReducer, on } from '@ngrx/store';
 
 import * as authenticationActions from './authentication.actions';
@@ -14,6 +18,7 @@ export interface AuthenticationPartialState {
 }
 
 const defaultUser: User = {
+	entityType: EntityTypeEnum.User,
 	uid: '',
 	displayName: 'GUEST',
 	email: null,

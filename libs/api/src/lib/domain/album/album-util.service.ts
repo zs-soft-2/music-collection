@@ -29,12 +29,12 @@ export abstract class AlbumUtilService extends EntityUtilService<
 	public abstract convertModelUpdateToEntityUpdate(
 		model: AlbumModelUpdate
 	): AlbumEntityUpdate;
-	public abstract createSearchParams(
-		entityType: EntityTypeEnum,
-		term: string
-	): SearchParams;
 	public abstract updateEntityQuantity(
 		entityQuantityEntity: EntityQuantityEntity,
 		album: AlbumEntity
 	): EntityQuantityEntityUpdate;
+	public abstract createSearchParamsByArtist(
+		entityType: EntityTypeEnum,
+		term: string
+	): SearchParams;
 }

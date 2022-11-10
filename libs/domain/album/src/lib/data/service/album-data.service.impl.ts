@@ -3,51 +3,32 @@ import { Observable } from 'rxjs';
 import { Injectable } from '@angular/core';
 import {
 	collection,
-	collectionData,
 	collectionGroup,
-	CollectionReference,
-	doc,
-	docData,
-	DocumentData,
 	Firestore,
 	getDocs,
 	query,
-	QueryConstraint,
-	setDoc,
-	updateDoc,
 	where,
 } from '@angular/fire/firestore';
 import {
 	ALBUM_FEATURE_KEY,
-	AlbumDataService,
 	AlbumModel,
 	AlbumModelAdd,
 	AlbumModelUpdate,
 	SearchParams,
+	AlbumDataService,
 } from '@music-collection/api';
 
 @Injectable()
 export class AlbumDataServiceImpl extends AlbumDataService {
-	protected albumCollection: CollectionReference<DocumentData>;
+	public constructor(firestore: Firestore) {
+		super(firestore);
 
-	public constructor(private firestore: Firestore) {
-		super();
-
-		this.albumCollection = collection(this.firestore, ALBUM_FEATURE_KEY);
+		this.featureKey = ALBUM_FEATURE_KEY;
+		this.collection = collection(this.firestore, this.featureKey);
 	}
 
 	public add$(album: AlbumModelAdd): Observable<AlbumModel> {
-		const uid = doc(collection(this.firestore, 'id')).id;
-		const newAlbum: AlbumModel = {
-			...album,
-			uid,
-		};
-
-		return new Observable((subscriber) => {
-			setDoc(doc(this.albumCollection, uid), newAlbum).then(() => {
-				subscriber.next({ ...newAlbum } as unknown as AlbumModel);
-			});
-		});
+		return super.addModel$(album);
 	}
 
 	public delete$(album: AlbumModel): Observable<AlbumModel> {
@@ -57,12 +38,7 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 	}
 
 	public list$(): Observable<AlbumModel[]> {
-		return collectionData(
-			collectionGroup(this.firestore, ALBUM_FEATURE_KEY),
-			{
-				idField: 'uid',
-			}
-		) as Observable<AlbumModel[]>;
+		return super.listModels$();
 	}
 
 	public listByIds$(ids: string[]): Observable<AlbumModel[]> {
@@ -81,54 +57,14 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 	}
 
 	public load$(uid: string): Observable<AlbumModel | undefined> {
-		const albumDocument = doc(
-			this.firestore,
-			`${ALBUM_FEATURE_KEY}/${uid}`
-		);
-
-		return docData(albumDocument, {
-			idField: 'uid',
-		}) as Observable<AlbumModel>;
+		return super.loadModel$(uid);
 	}
 
 	public search$(params: SearchParams): Observable<AlbumModel[]> {
-		const queries: QueryConstraint[] = params.map((param) =>
-			where(param.query.field, param.query.operation, param.query.value)
-		);
-
-		const albumQuery = query(
-			collectionGroup(this.firestore, ALBUM_FEATURE_KEY),
-			...queries
-		);
-
-		return new Observable((subscriber) => {
-			getDocs(albumQuery)
-				.then((snapshot) => {
-					subscriber.next(
-						snapshot.docs.map(
-							(doc) =>
-								({
-									...doc.data(),
-								} as unknown as AlbumModel)
-						)
-					);
-				})
-				.catch((error) => {
-					subscriber.error(error);
-				});
-		});
+		return super.searchModel$(params);
 	}
 
 	public update$(album: AlbumModelUpdate): Observable<AlbumModelUpdate> {
-		const albumDocument = doc(
-			this.firestore,
-			`${ALBUM_FEATURE_KEY}/${album.uid}`
-		);
-
-		return new Observable((subscriber) => {
-			updateDoc(albumDocument, { ...album }).then(() => {
-				subscriber.next(album);
-			});
-		});
+		return super.updateModel$(album);
 	}
 }

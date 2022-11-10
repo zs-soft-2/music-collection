@@ -6,6 +6,7 @@ import {
 	EntityQuantityEntityAdd,
 	EntityQuantityEntityUpdate,
 	EntityQuantityStateService,
+	SearchParams,
 } from '@music-collection/api';
 import { select, Store } from '@ngrx/store';
 
@@ -55,8 +56,8 @@ export class EntityQuantityStateServiceImpl extends EntityQuantityStateService {
 		this.store.dispatch(entityQuantityActions.loadEntityQuantity({ uid }));
 	}
 
-	public dispatchSearch(term: string): void {
-		this.store.dispatch(entityQuantityActions.search({ term }));
+	public dispatchSearch(params: SearchParams): void {
+		this.store.dispatch(entityQuantityActions.search({ params }));
 	}
 
 	public dispatchSelectEntityQuantityAction(uid: string): void {

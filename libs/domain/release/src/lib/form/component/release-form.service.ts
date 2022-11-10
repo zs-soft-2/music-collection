@@ -114,7 +114,7 @@ export class ReleaseFormService {
 			term
 		);
 
-		this.labelStateService.dispatchSearch(term);
+		this.labelStateService.dispatchSearch(searchParams);
 	}
 
 	public submit(): void {

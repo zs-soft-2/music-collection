@@ -10,6 +10,7 @@ import {
 	LabelModelAdd,
 	LabelModel,
 	LabelModelUpdate,
+	EntityTypeEnum,
 } from '@music-collection/api';
 
 @Injectable()
@@ -23,6 +24,7 @@ export class LabelUtilServiceImpl extends LabelUtilService {
 
 	public createEntity(formGroup: FormGroup): LabelEntityAdd {
 		return {
+			entityType: EntityTypeEnum.Label,
 			name: formGroup.value['name'],
 			parent: formGroup.value['parent'],
 		};
@@ -30,6 +32,7 @@ export class LabelUtilServiceImpl extends LabelUtilService {
 
 	public updateEntity(formGroup: FormGroup): LabelEntityUpdate {
 		return {
+			entityType: EntityTypeEnum.Label,
 			uid: formGroup.value['uid'],
 			name: formGroup.value['name'],
 			parent: formGroup.value['parent'],
@@ -93,6 +96,7 @@ export class LabelUtilServiceImpl extends LabelUtilService {
 	): LabelEntityUpdate {
 		const entity: LabelEntityUpdate = {
 			uid: model.uid,
+			entityType: model.entityType,
 		};
 
 		if (model.name) {

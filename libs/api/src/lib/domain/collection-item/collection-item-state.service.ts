@@ -15,7 +15,6 @@ export abstract class CollectionItemStateService extends EntityStateService<
 	public abstract dispatchChangeNewEntityButtonEnabled(
 		enabled: boolean
 	): void;
-	public abstract dispatchSearch(term: string): void;
 	public abstract selectNewEntityButtonEnabled$(): Observable<boolean>;
 	public abstract selectSearchResult$(): Observable<CollectionItemEntity[]>;
 }

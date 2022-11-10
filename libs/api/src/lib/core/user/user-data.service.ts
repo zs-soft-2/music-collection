@@ -1,14 +1,14 @@
 import { Observable } from 'rxjs';
 
-import { EntityDataService } from '../../common';
 import {
 	CollectionItemModel,
 	CollectionItemModelAdd,
 	CollectionItemModelUpdate,
 } from '../../domain';
+import { FirebaseDataService } from '../firebase';
 import { User } from './user';
 
-export abstract class UserDataService extends EntityDataService<
+export abstract class UserDataService extends FirebaseDataService<
 	User,
 	User,
 	User

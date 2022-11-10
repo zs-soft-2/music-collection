@@ -77,6 +77,7 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 		model: ReleaseModelUpdate
 	): ReleaseEntityUpdate {
 		const entity: ReleaseEntityUpdate = {
+			entityType: model.entityType,
 			uid: model.uid,
 		};
 
@@ -125,6 +126,7 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 			artist: this.createReleaseArtist(formGroup.value['artist']),
 			country: formGroup.value['country'],
 			date: formGroup.value['date'],
+			entityType: EntityTypeEnum.Release,
 			format: formGroup.value['format'],
 			formatDescription: formGroup.value['formatDescription'],
 			label: this.createReleaseLabel(formGroup.value['label']),
@@ -187,6 +189,7 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 			artist: this.createReleaseArtist(formGroup.value['artist']),
 			country: formGroup.value['country'],
 			date: formGroup.value['date'],
+			entityType: EntityTypeEnum.Release,
 			name: formGroup.value['name'],
 			label: this.createReleaseLabel(formGroup.value['label']),
 			format: formGroup.value['format'],
@@ -230,13 +233,23 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 	}
 
 	private createReleaseAlbum(album: AlbumEntity): SimpleAlbum {
-		const { uid, name, artist, coverImage, genre, songs, styles } = album;
+		const {
+			uid,
+			name,
+			artist,
+			coverImage,
+			entityType,
+			genre,
+			songs,
+			styles,
+		} = album;
 
 		return {
 			uid,
 			name,
 			artist,
 			coverImage,
+			entityType,
 			genre,
 			songs,
 			styles,
@@ -244,18 +257,20 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 	}
 
 	private createReleaseArtist(artist: ArtistEntity): ReleaseArtist {
-		const { uid, name } = artist;
+		const { entityType, uid, name } = artist;
 
 		return {
+			entityType,
 			uid,
 			name,
 		};
 	}
 
 	private createReleaseLabel(label: LabelEntity): ReleaseLabel {
-		const { uid, name } = label;
+		const { entityType, uid, name } = label;
 
 		return {
+			entityType,
 			uid,
 			name,
 		};

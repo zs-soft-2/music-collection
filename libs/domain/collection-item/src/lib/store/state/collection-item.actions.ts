@@ -2,6 +2,7 @@ import {
 	CollectionItemEntity,
 	CollectionItemEntityAdd,
 	CollectionItemEntityUpdate,
+	SearchParams,
 } from '@music-collection/api';
 import { Update } from '@ngrx/entity';
 import { createAction, props } from '@ngrx/store';
@@ -86,7 +87,7 @@ export const loadCollectionItemSuccess = createAction(
 
 export const search = createAction(
 	'[CollectionItem] Search CollectionItems',
-	props<{ term: string }>()
+	props<{ params: SearchParams }>()
 );
 export const searchFailed = createAction(
 	'[CollectionItem] Search CollectionItems Failed',

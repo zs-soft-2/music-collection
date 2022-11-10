@@ -1,13 +1,15 @@
 import { FormGroup } from '@angular/forms';
 
 import { BaseService } from '../base';
+import {
+	ParamItem,
+	QueryConstraintTypeEnum,
+	QueryOperatorEnum,
+	SearchParams,
+} from '../search';
+import { EntityTypeEnum } from './entity-type.enum';
 
 export abstract class EntityUtilService<R, S, T> extends BaseService {
-	public abstract _sort(a: R, b: R): number;
-	public abstract createEntity(formGroup: FormGroup): S;
-	public abstract createFormGroup(entity: R | undefined): FormGroup;
-	public abstract updateEntity(formGroup: FormGroup): T;
-
 	public createSearchParameters(name: string): string[] {
 		const searchOptions: string[] = [];
 		let temp = '';
@@ -20,4 +22,25 @@ export abstract class EntityUtilService<R, S, T> extends BaseService {
 
 		return searchOptions;
 	}
+
+	public createSearchParams(
+		entityType: EntityTypeEnum,
+		term: string
+	): SearchParams {
+		const query: ParamItem<string> = {
+			queryConstraint: QueryConstraintTypeEnum.where,
+			operation: QueryOperatorEnum.arrayContains,
+			field: 'searchParameters',
+			value: term.toLowerCase(),
+		};
+
+		const searchParams: SearchParams = [{ entityType, query }];
+
+		return searchParams;
+	}
+
+	public abstract _sort(a: R, b: R): number;
+	public abstract createEntity(formGroup: FormGroup): S;
+	public abstract createFormGroup(entity: R | undefined): FormGroup;
+	public abstract updateEntity(formGroup: FormGroup): T;
 }

@@ -1,4 +1,4 @@
-import { EntityTypeEnum, Identifiable } from '../../common';
+import { Entity, EntityTypeEnum } from '../../common';
 
 export interface EntityQuantity {
 	group: EntityQuantityGroup;
@@ -13,10 +13,9 @@ export interface EntityQuantityItem {
 	uid: string;
 }
 
-export type EntityQuantityEntity = EntityQuantity & Identifiable;
+export type EntityQuantityEntity = EntityQuantity & Entity;
 export type EntityQuantityEntityAdd = Omit<EntityQuantityEntity, 'uid'>;
-export type EntityQuantityEntityUpdate = Partial<EntityQuantityEntity> &
-	Identifiable;
+export type EntityQuantityEntityUpdate = Partial<EntityQuantityEntity> & Entity;
 
 export interface EntityQuantityGroup {
 	[x: string]: number;

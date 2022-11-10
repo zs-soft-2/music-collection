@@ -4,9 +4,12 @@ import { Injectable } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
 	BaseComponent,
+	EntityTypeEnum,
 	ReleaseEntity,
 	ReleaseStateService,
 	ReleaseTableParams,
+	ReleaseUtilService,
+	SearchParams,
 } from '@music-collection/api';
 
 @Injectable()
@@ -17,6 +20,7 @@ export class ReleaseTableService extends BaseComponent {
 	public constructor(
 		private activatedRoute: ActivatedRoute,
 		private releaseStateService: ReleaseStateService,
+		private releaseUtilService: ReleaseUtilService,
 		private router: Router
 	) {
 		super();
@@ -48,7 +52,12 @@ export class ReleaseTableService extends BaseComponent {
 		);
 	}
 
-	public searchHandler(query: string): void {
-		this.releaseStateService.dispatchSearch(query);
+	public searchHandler(term: string): void {
+		const searchParams: SearchParams =
+			this.releaseUtilService.createSearchParams(
+				EntityTypeEnum.Release,
+				term
+			);
+		this.releaseStateService.dispatchSearch(searchParams);
 	}
 }

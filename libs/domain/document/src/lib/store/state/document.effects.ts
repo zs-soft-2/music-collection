@@ -4,7 +4,6 @@ import { catchError, first, map, switchMap } from 'rxjs/operators';
 import { Injectable } from '@angular/core';
 import {
 	DocumentDataService,
-	DocumentEntity,
 	DocumentUtilService,
 	EntityQuantityStateService,
 	EntityQuantityUtilService,
@@ -105,7 +104,7 @@ export class DocumentEffects {
 		this.actions$.pipe(
 			ofType(documentActions.search),
 			switchMap((action) =>
-				this.documentDataService.search$(action.term).pipe(
+				this.documentDataService.search$(action.params).pipe(
 					map((result) =>
 						result.map((document) =>
 							this.documentUtilService.convertModelToEntity(

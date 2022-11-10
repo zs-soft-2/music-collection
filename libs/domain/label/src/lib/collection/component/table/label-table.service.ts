@@ -4,9 +4,12 @@ import { Injectable } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
 	BaseComponent,
+	EntityTypeEnum,
 	LabelEntity,
 	LabelStateService,
 	LabelTableParams,
+	LabelUtilService,
+	SearchParams,
 } from '@music-collection/api';
 
 @Injectable()
@@ -17,6 +20,7 @@ export class LabelTableService extends BaseComponent {
 	public constructor(
 		private activatedRoute: ActivatedRoute,
 		private labelStateService: LabelStateService,
+		private labelUtilService: LabelUtilService,
 		private router: Router
 	) {
 		super();
@@ -48,7 +52,13 @@ export class LabelTableService extends BaseComponent {
 		);
 	}
 
-	public searchHandler(query: string): void {
-		this.labelStateService.dispatchSearch(query);
+	public searchHandler(term: string): void {
+		const searchParams: SearchParams =
+			this.labelUtilService.createSearchParams(
+				EntityTypeEnum.Label,
+				term
+			);
+
+		this.labelStateService.dispatchSearch(searchParams);
 	}
 }

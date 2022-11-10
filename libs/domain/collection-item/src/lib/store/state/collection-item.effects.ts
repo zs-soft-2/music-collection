@@ -118,7 +118,7 @@ export class CollectionItemEffects {
 		this.actions$.pipe(
 			ofType(collectionItemActions.search),
 			switchMap((action) =>
-				this.collectionItemDataService.search$(action.term).pipe(
+				this.collectionItemDataService.search$(action.params).pipe(
 					map((result) =>
 						result.map((collectionItem) =>
 							this.collectionItemUtilService.convertModelToEntity(

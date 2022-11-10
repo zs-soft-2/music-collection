@@ -2,6 +2,7 @@ import {
 	ReleaseEntity,
 	ReleaseEntityAdd,
 	ReleaseEntityUpdate,
+	SearchParams,
 } from '@music-collection/api';
 import { Update } from '@ngrx/entity';
 import { createAction, props } from '@ngrx/store';
@@ -82,7 +83,7 @@ export const loadReleaseSuccess = createAction(
 
 export const search = createAction(
 	'[Release] Search Releases',
-	props<{ term: string }>()
+	props<{ params: SearchParams }>()
 );
 export const searchFailed = createAction(
 	'[Release] Search Releases Failed',

@@ -1,58 +1,30 @@
 import { from, Observable, switchMap } from 'rxjs';
 
 import { Injectable } from '@angular/core';
-import {
-	collection,
-	collectionData,
-	CollectionReference,
-	doc,
-	docData,
-	DocumentData,
-	Firestore,
-	getDocs,
-	query,
-	setDoc,
-	updateDoc,
-	where,
-} from '@angular/fire/firestore';
+import { collection, Firestore } from '@angular/fire/firestore';
 import { ref, Storage, uploadBytes } from '@angular/fire/storage';
 import { getDownloadURL } from '@firebase/storage';
 import {
 	DOCUMENT_FEATURE_KEY,
 	DocumentDataService,
+	DocumentFile,
 	DocumentModel,
 	DocumentModelAdd,
 	DocumentModelUpdate,
-	DocumentFile,
+	SearchParams,
 } from '@music-collection/api';
 
 @Injectable()
 export class DocumentDataServiceImpl extends DocumentDataService {
-	protected documentCollection: CollectionReference<DocumentData>;
+	public constructor(firestore: Firestore, private storage: Storage) {
+		super(firestore);
 
-	public constructor(private firestore: Firestore, private storage: Storage) {
-		super();
-
-		this.documentCollection = collection(
-			this.firestore,
-			DOCUMENT_FEATURE_KEY
-		);
+		this.featureKey = DOCUMENT_FEATURE_KEY;
+		this.collection = collection(this.firestore, this.featureKey);
 	}
 
 	public add$(document: DocumentModelAdd): Observable<DocumentModel> {
-		const uid = doc(collection(this.firestore, 'id')).id;
-		const newDocument: DocumentModel = {
-			...document,
-			uid,
-		};
-
-		return new Observable((subscriber) => {
-			setDoc(doc(this.documentCollection, uid), newDocument).then(() => {
-				subscriber.next({
-					...newDocument,
-				} as unknown as DocumentModel);
-			});
-		});
+		return super.addModel$(document);
 	}
 
 	public delete$(document: DocumentModel): Observable<DocumentModel> {
@@ -66,59 +38,21 @@ export class DocumentDataServiceImpl extends DocumentDataService {
 	}
 
 	public list$(): Observable<DocumentModel[]> {
-		return collectionData(this.documentCollection, {
-			idField: 'uid',
-		}) as Observable<DocumentModel[]>;
+		return super.listModels$();
 	}
 
 	public load$(uid: string): Observable<DocumentModel | undefined> {
-		const documentDocument = doc(
-			this.firestore,
-			`${DOCUMENT_FEATURE_KEY}/${uid}`
-		);
-
-		return docData(documentDocument, {
-			idField: 'uid',
-		}) as Observable<DocumentModel>;
+		return super.loadModel$(uid);
 	}
 
-	public search$(term: string): Observable<DocumentModel[]> {
-		const documentQuery = query(
-			this.documentCollection,
-			where('searchParameters', 'array-contains', term.toLowerCase())
-		);
-
-		return new Observable((subscriber) => {
-			getDocs(documentQuery)
-				.then((snapshot) => {
-					subscriber.next(
-						snapshot.docs.map(
-							(doc) =>
-								({
-									...doc.data(),
-								} as unknown as DocumentModel)
-						)
-					);
-				})
-				.catch((error) => {
-					subscriber.error(error);
-				});
-		});
+	public search$(params: SearchParams): Observable<DocumentModel[]> {
+		return super.searchModel$(params);
 	}
 
 	public update$(
 		document: DocumentModelUpdate
 	): Observable<DocumentModelUpdate> {
-		const documentDocument = doc(
-			this.firestore,
-			`${DOCUMENT_FEATURE_KEY}/${document.uid}`
-		);
-
-		return new Observable((subscriber) => {
-			updateDoc(documentDocument, { ...document }).then(() => {
-				subscriber.next(document);
-			});
-		});
+		return super.updateModel$(document);
 	}
 
 	public upload$(file: DocumentFile): Observable<string> {

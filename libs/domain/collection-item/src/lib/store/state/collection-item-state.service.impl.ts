@@ -6,6 +6,7 @@ import {
 	CollectionItemEntityAdd,
 	CollectionItemEntityUpdate,
 	CollectionItemStateService,
+	SearchParams,
 } from '@music-collection/api';
 import { select, Store } from '@ngrx/store';
 
@@ -55,8 +56,8 @@ export class CollectionItemStateServiceImpl extends CollectionItemStateService {
 		this.store.dispatch(collectionItemActions.loadCollectionItem({ uid }));
 	}
 
-	public dispatchSearch(term: string): void {
-		this.store.dispatch(collectionItemActions.search({ term }));
+	public dispatchSearch(params: SearchParams): void {
+		this.store.dispatch(collectionItemActions.search({ params }));
 	}
 
 	public dispatchSelectCollectionItemAction(

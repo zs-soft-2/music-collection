@@ -1,40 +1,40 @@
-import { FormGroup } from '@angular/forms';
 import { MenuItem } from 'primeng/api';
-import { GenreEnum, Identifiable, Searchable, StyleEnum } from '../../common';
+
+import { FormGroup } from '@angular/forms';
+
+import { Entity, GenreEnum, Searchable, StyleEnum } from '../../common';
 import { AlbumEntity } from '../album';
 import { DocumentEntity } from '../document';
 
 export interface Artist {
 	description: string;
+	genre: GenreEnum;
 	headerImage?: DocumentEntity;
 	mainImage?: DocumentEntity;
-	members?: any[];
+	members?: unknown[];
 	name: string;
 	sites: string[];
-	genre: GenreEnum;
 	styles: StyleEnum[];
 }
 
 export type ArtistEntity = Artist &
-	Identifiable & {
+	Entity & {
 		formedIn: Date;
 	};
 
 export type ArtistEntityAdd = Omit<ArtistEntity, 'uid'>;
 
-export type ArtistEntityUpdate = Partial<ArtistEntity> & Identifiable;
+export type ArtistEntityUpdate = Partial<ArtistEntity> & Entity;
 
 export type ArtistModel = Artist &
-	Identifiable &
+	Entity &
 	Searchable & {
 		formedIn: number;
 	};
 
 export type ArtistModelAdd = Omit<ArtistModel, 'uid'>;
 
-export type ArtistModelUpdate = Partial<ArtistModel> &
-	Identifiable &
-	Searchable;
+export type ArtistModelUpdate = Partial<ArtistModel> & Entity & Searchable;
 
 export type ArtistFormParams = {
 	documents: DocumentEntity[];

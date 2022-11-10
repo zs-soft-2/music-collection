@@ -1,11 +1,11 @@
 import { Observable } from 'rxjs';
 
-import { EntityDataService, SearchParams } from '../../common';
+import { FirebaseDataService } from '../../core';
 import { AlbumModel, AlbumModelAdd, AlbumModelUpdate } from '../album';
 import { ReleaseModel, ReleaseModelAdd, ReleaseModelUpdate } from '../release';
 import { ArtistModel, ArtistModelAdd, ArtistModelUpdate } from './artist';
 
-export abstract class ArtistDataService extends EntityDataService<
+export abstract class ArtistDataService extends FirebaseDataService<
 	ArtistModel,
 	ArtistModelAdd,
 	ArtistModelUpdate
@@ -15,8 +15,6 @@ export abstract class ArtistDataService extends EntityDataService<
 		release: ReleaseModelAdd
 	): Observable<ReleaseModel>;
 	public abstract listAlbumsById$(uid: string): Observable<AlbumModel[]>;
-	public abstract listByIds$(ids: string[]): Observable<ArtistModel[]>;
-	public abstract search$(params: SearchParams): Observable<ArtistModel[]>;
 	public abstract updateAlbum$(
 		album: AlbumModelUpdate
 	): Observable<AlbumModelUpdate>;

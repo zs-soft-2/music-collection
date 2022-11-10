@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { EntityDataService } from '../../common';
+import { FirebaseDataService } from '../../core';
 import {
 	DocumentFile,
 	DocumentModel,
@@ -8,12 +8,11 @@ import {
 	DocumentModelUpdate,
 } from './document';
 
-export abstract class DocumentDataService extends EntityDataService<
+export abstract class DocumentDataService extends FirebaseDataService<
 	DocumentModel,
 	DocumentModelAdd,
 	DocumentModelUpdate
 > {
 	public abstract getDownloadURL(path: string): Observable<string>;
-	public abstract search$(query: string): Observable<DocumentModel[]>;
 	public abstract upload$(file: DocumentFile): Observable<string>;
 }

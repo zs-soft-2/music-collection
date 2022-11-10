@@ -2,6 +2,7 @@ import { combineLatest, Observable, ReplaySubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
 import { Injectable } from '@angular/core';
+import { FormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
 	ArtistEntity,
@@ -12,9 +13,10 @@ import {
 	ArtistUtilService,
 	DocumentEntity,
 	DocumentStateService,
+	EntityTypeEnum,
+	SearchParams,
 	StyleList,
 } from '@music-collection/api';
-import { FormGroup } from '@angular/forms';
 
 @Injectable()
 export class ArtistFormService {
@@ -64,8 +66,17 @@ export class ArtistFormService {
 		);
 	}
 
+	public mainImageUpload(file: File): void {
+		console.log(file);
+	}
+
 	public searchDocument(term: string): void {
-		this.documentStateService.dispatchSearch(term);
+		const searchParams: SearchParams =
+			this.artistUtilService.createSearchParams(
+				EntityTypeEnum.Document,
+				term
+			);
+		this.documentStateService.dispatchSearch(searchParams);
 	}
 
 	public submit(): void {
@@ -109,9 +120,5 @@ export class ArtistFormService {
 		);
 
 		this.artistStateService.dispatchUpdateEntityAction(artist);
-	}
-
-	public mainImageUpload(file: File): void {
-		console.log(file);
 	}
 }

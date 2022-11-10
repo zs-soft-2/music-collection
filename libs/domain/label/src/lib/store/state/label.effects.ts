@@ -104,7 +104,7 @@ export class LabelEffects {
 		this.actions$.pipe(
 			ofType(labelActions.search),
 			switchMap((action) =>
-				this.labelDataService.search$(action.term).pipe(
+				this.labelDataService.search$(action.params).pipe(
 					map((result) =>
 						result.map((label) =>
 							this.labelUtilService.convertModelToEntity(label)
