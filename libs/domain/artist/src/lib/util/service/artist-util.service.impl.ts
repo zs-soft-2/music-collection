@@ -26,7 +26,7 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 	public convertEntityAddToModelAdd(entity: ArtistEntityAdd): ArtistModelAdd {
 		return {
 			...entity,
-			formedIn: entity.formedIn?.getTime(),
+			formedIn: entity.formedIn.toISOString(),
 			searchParameters: this.createSearchParameters(entity.name),
 		};
 	}
@@ -34,7 +34,7 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 	public convertEntityToModel(entity: ArtistEntity): ArtistModel {
 		return {
 			...entity,
-			formedIn: entity.formedIn?.getTime(),
+			formedIn: entity.formedIn.toISOString(),
 			searchParameters: this.createSearchParameters(entity.name),
 		};
 	}
@@ -44,7 +44,7 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 	): ArtistModelUpdate {
 		return {
 			...entity,
-			formedIn: entity.formedIn?.getTime(),
+			formedIn: entity.formedIn?.toISOString(),
 			searchParameters: this.createSearchParameters(entity.name || ''),
 		};
 	}

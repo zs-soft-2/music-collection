@@ -12,6 +12,15 @@
 				>
 				</p-button>
 			</ng-template>
+
+			<ng-template [ngxPermissionsOnly]="buttonPermissions">
+				<p-button
+					label="Import artist"
+					icon="pi pi-plus"
+					(onClick)="importClickHandler()"
+				>
+				</p-button>
+			</ng-template>
 		</div>
 	</p-toolbar>
 

@@ -2,6 +2,7 @@ export * from './action';
 export * from './authentication';
 export * from './authorization';
 export * from './entity-quantity';
+export * from './export-import';
 export * from './firebase';
 export * from './resource';
 export * from './role';

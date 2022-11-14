@@ -9,7 +9,11 @@
 			"executor": "@angular-devkit/build-angular:browser",
 			"outputs": ["{options.outputPath}"],
 			"options": {
-				"allowedCommonJsDependencies": ["deepmerge", "object-hash"],
+				"allowedCommonJsDependencies": [
+					"deepmerge",
+					"file-saver",
+					"object-hash"
+				],
 				"outputPath": "dist/apps/music-collection",
 				"index": "apps/music-collection/src/index.html",
 				"main": "apps/music-collection/src/main.ts",

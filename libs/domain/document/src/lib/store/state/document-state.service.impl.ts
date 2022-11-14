@@ -77,6 +77,10 @@ export class DocumentStateServiceImpl extends DocumentStateService {
 		this.store.dispatch(documentActions.uploadFile({ file }));
 	}
 
+	public dispatchUploadImportFileAction(file: DocumentFile): void {
+		this.store.dispatch(documentActions.uploadImportFile({ file }));
+	}
+
 	public isLoading$(): Observable<boolean> {
 		throw new Error('Method not implemented.');
 	}
@@ -105,6 +109,12 @@ export class DocumentStateServiceImpl extends DocumentStateService {
 
 	public selectFilePath$(): Observable<string | undefined> {
 		return this.store.pipe(select(documentSelectors.selectFilePath));
+	}
+
+	public selectImportFilePath$(name: string): Observable<string | undefined> {
+		return this.store.pipe(
+			select(documentSelectors.selectImportFilePath(name))
+		);
 	}
 
 	public selectSelectedEntity$(): Observable<DocumentEntity | undefined> {

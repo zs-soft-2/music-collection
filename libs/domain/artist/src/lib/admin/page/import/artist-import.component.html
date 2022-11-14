@@ -1,0 +1,13 @@
+<div class="artist-import">
+	<div class="field">
+		<span>
+			<label for="file"></label>
+
+			<p-fileUpload
+				name="file"
+				[customUpload]="true"
+				(uploadHandler)="artistImport($event)"
+			></p-fileUpload>
+		</span>
+	</div>
+</div>

@@ -11,6 +11,7 @@ import {
 	ArtistListPageResolverService,
 } from './page/list';
 import { ArtistAdminPermissionsService } from './service';
+import { ArtistImportComponent } from './page/import';
 
 const routes: Routes = [
 	{
@@ -38,6 +39,22 @@ const routes: Routes = [
 				path: 'edit/:artistId',
 				pathMatch: 'full',
 				resolve: { data: ArtistEditResolverService },
+			},
+			{
+				canActivate: [NgxPermissionsGuard],
+				component: ArtistImportComponent,
+				data: {
+					breadcrumb: 'import',
+					permissions: {
+						only: [
+							RoleNames.ADMIN,
+							ArtistAdminPermissionsService.viewArtistListPage,
+						],
+						redirectTo: '/error',
+					},
+				},
+				path: 'import',
+				pathMatch: 'full',
 			},
 			{
 				canActivate: [NgxPermissionsGuard],
