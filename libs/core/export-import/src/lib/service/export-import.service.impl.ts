@@ -178,14 +178,14 @@ export class ExportImportServiceImpl extends ExportImportService {
 	}
 
 	public createDocumentImport(
-		documentExportModel: DocumentExportModel | null
+		documentExportModel: DocumentExportModel | null, filePath: string | undefined
 	): Observable<DocumentImportModel | null> {
 		let documentImportModel: DocumentImportModel | null = null;
 
-		if (documentExportModel) {
+		if (documentExportModel && filePath) {
 			documentImportModel = {
 				entityType: documentExportModel.entityType,
-				filePath: documentExportModel.filePath,
+				filePath,
 				fileType: documentExportModel.fileType,
 				name: documentExportModel.name,
 				originalName: documentExportModel.originalName,
@@ -302,13 +302,13 @@ export class ExportImportServiceImpl extends ExportImportService {
 	): Observable<(DocumentImportModel | null)[]> {
 		const calls = [
 			this.createDocumentFileImport(documentExportModels[0]).pipe(
-				switchMap(() =>
-					this.createDocumentImport(documentExportModels[0])
+				switchMap((filePath) =>
+					this.createDocumentImport(documentExportModels[0], filePath)
 				)
 			),
 			this.createDocumentFileImport(documentExportModels[1]).pipe(
-				switchMap(() =>
-					this.createDocumentImport(documentExportModels[1])
+				switchMap((filePath) =>
+					this.createDocumentImport(documentExportModels[1], filePath)
 				)
 			),
 		];
