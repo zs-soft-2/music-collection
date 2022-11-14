@@ -29,7 +29,7 @@ export type ArtistEntityUpdate = Partial<ArtistEntity> & Entity;
 export type ArtistModel = Artist &
 	Entity &
 	Searchable & {
-		formedIn: number;
+		formedIn: string;
 	};
 
 export type ArtistModelAdd = Omit<ArtistModel, 'uid'>;

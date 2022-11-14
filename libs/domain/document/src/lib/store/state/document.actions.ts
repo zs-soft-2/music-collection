@@ -136,3 +136,18 @@ export const uploadFileSuccess = createAction(
 	'[Document] Upload File Success',
 	props<{ filePath: string }>()
 );
+
+export const uploadImportFile = createAction(
+	'[Document] Upload Import File',
+	props<{ file: DocumentFile }>()
+);
+
+export const uploadImportFileFail = createAction(
+	'[Document] Upload Import File Fail',
+	props<{ error: Error }>()
+);
+
+export const uploadImportFileSuccess = createAction(
+	'[Document] Upload Import File Success',
+	props<{ name: string; filePath: string }>()
+);

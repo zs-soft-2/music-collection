@@ -32,6 +32,10 @@ export class ArtistAdminComponent extends BaseComponent implements OnInit {
 		this.router.navigate(['edit', 0], { relativeTo: this.activatedRoute });
 	}
 
+	public importClickHandler(): void {
+		this.router.navigate(['import'], { relativeTo: this.activatedRoute });
+	}
+
 	public ngOnInit(): void {
 		this.isNewEntityButtonEnabled$ =
 			this.artistStateService.selectNewEntityButtonEnabled$();

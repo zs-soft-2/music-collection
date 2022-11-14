@@ -45,6 +45,8 @@ import { metaReducers } from './reducer';
 import { ArtistPageResolverService } from './resolver';
 import { HttpClientModule } from '@angular/common/http';
 import { DomainCollectionItemModule } from '@music-collection/domain/collection-item';
+import { CoreExportImportModule } from '@music-collection/core/export-import';
+import { DomainDocumentModule } from '@music-collection/domain/document';
 
 @NgModule({
 	declarations: [AppComponent],
@@ -75,10 +77,12 @@ import { DomainCollectionItemModule } from '@music-collection/domain/collection-
 		CoreAuthenticationModule,
 		CoreAuthorizationModule,
 		CoreEntityQuantityModule,
+		CoreExportImportModule,
 		DomainUserModule,
 		DomainArtistModule,
 		DomainAlbumModule,
 		DomainCollectionItemModule,
+		DomainDocumentModule,
 		DomainReleaseModule,
 		HookModule,
 	],

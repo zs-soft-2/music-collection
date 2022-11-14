@@ -9,6 +9,7 @@ import {
 	ArtistUtilService,
 	BaseComponent,
 	EntityTypeEnum,
+	ExportImportService,
 	SearchParams,
 } from '@music-collection/api';
 
@@ -21,6 +22,7 @@ export class ArtistTableService extends BaseComponent {
 		private activatedRoute: ActivatedRoute,
 		private artistStateService: ArtistStateService,
 		private artistUtilService: ArtistUtilService,
+		private exportImportService: ExportImportService,
 		private router: Router
 	) {
 		super();
@@ -32,6 +34,13 @@ export class ArtistTableService extends BaseComponent {
 		this.router.navigate(['../edit', artist?.uid], {
 			relativeTo: this.activatedRoute,
 		});
+	}
+
+	public exportArtist(artist: ArtistEntity): void {
+		this.exportImportService
+			.createArtistExport(artist)
+			.pipe(first())
+			.subscribe();
 	}
 
 	public init$(): Observable<ArtistTableParams> {

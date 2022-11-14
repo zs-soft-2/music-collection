@@ -1,5 +1,5 @@
 import { of } from 'rxjs';
-import { catchError, first, map, switchMap } from 'rxjs/operators';
+import { catchError, concatMap, first, map, switchMap } from 'rxjs/operators';
 
 import { Injectable } from '@angular/core';
 import {
@@ -157,6 +157,21 @@ export class DocumentEffects {
 				this.documentDataService.upload$(action.file).pipe(
 					map((filePath) => {
 						return documentActions.uploadFileSuccess({
+							filePath,
+						});
+					})
+				)
+			)
+		)
+	);
+	public uploadImportFile = createEffect(() =>
+		this.actions$.pipe(
+			ofType(documentActions.uploadImportFile),
+			concatMap((action) =>
+				this.documentDataService.upload$(action.file).pipe(
+					map((filePath) => {
+						return documentActions.uploadImportFileSuccess({
+							name: action.file.path,
 							filePath,
 						});
 					})

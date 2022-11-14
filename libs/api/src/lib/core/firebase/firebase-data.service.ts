@@ -112,17 +112,16 @@ export abstract class FirebaseDataService<
 	}
 
 	protected updateModel$(entity: T): Observable<T> {
-		const document = doc(
-			this.firestore,
-			`${this.featureKey}/${entity.uid}`
-		);
+		const newEntity: T = {
+			...entity,
+		} as T;
 
 		return new Observable((subscriber) => {
-			updateDoc(document, { ...(entity as { [x: string]: any }) }).then(
-				() => {
-					subscriber.next(entity);
-				}
-			);
+			setDoc(doc(this.collection, entity.uid), newEntity).then(() => {
+				subscriber.next({
+					...newEntity,
+				} as unknown as T);
+			});
 		});
 	}
 }

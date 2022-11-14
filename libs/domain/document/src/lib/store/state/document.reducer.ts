@@ -4,6 +4,10 @@ import { Action, createReducer, on } from '@ngrx/store';
 
 import * as documentActions from './document.actions';
 
+export interface ImportFilePath {
+	[x: string]: string;
+}
+
 export interface State extends EntityState<DocumentEntity> {
 	isNewEntityButtonEnabled: boolean;
 	selectedId?: string;
@@ -11,6 +15,7 @@ export interface State extends EntityState<DocumentEntity> {
 	searchResult: DocumentEntity[];
 	filePath: string | undefined;
 	error?: string | null;
+	importFilePath: ImportFilePath;
 }
 
 export interface DocumentPartialState {
@@ -34,6 +39,7 @@ export const initialState: State = documentAdapter.getInitialState({
 	searchResult: [],
 	selectedDocumentId: null,
 	filePath: undefined,
+	importFilePath: {},
 });
 
 export const documentReducer = createReducer(
@@ -74,10 +80,12 @@ export const documentReducer = createReducer(
 		...state,
 		selectedId: documentId,
 	})),
-	on(documentActions.searchSuccess, (state, { result }) => ({
-		...state,
-		searchResult: result,
-	})),
+	on(documentActions.searchSuccess, (state, { result }) => {
+		return documentAdapter.upsertMany(result, {
+			...state,
+			searchResult: result,
+		});
+	}),
 	on(documentActions.searchFailed, (state, { error }) => ({
 		...state,
 		searchResult: [],
@@ -86,7 +94,17 @@ export const documentReducer = createReducer(
 	on(documentActions.uploadFileSuccess, (state, { filePath }) => ({
 		...state,
 		filePath,
-	}))
+	})),
+	on(documentActions.uploadImportFileSuccess, (state, { name, filePath }) => {
+		const importFilePath = { ...state.importFilePath };
+
+		importFilePath[name] = filePath;
+
+		return {
+			...state,
+			importFilePath,
+		};
+	})
 );
 
 export function reducer(state: State | undefined, action: Action) {

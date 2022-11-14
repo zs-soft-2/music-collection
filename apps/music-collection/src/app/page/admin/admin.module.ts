@@ -4,7 +4,6 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { DomainCollectionItemModule } from '@music-collection/domain/collection-item';
-import { DomainDocumentModule } from '@music-collection/domain/document';
 import { DomainLabelModule } from '@music-collection/domain/label';
 import { DomainReleaseModule } from '@music-collection/domain/release';
 import { BreadcrumbModule } from '@music-collection/ui';
@@ -23,7 +22,6 @@ import { AdminComponent } from './admin.component';
 		DomainLabelModule,
 		DomainReleaseModule,
 		DomainCollectionItemModule,
-		DomainDocumentModule,
 	],
 	exports: [],
 })

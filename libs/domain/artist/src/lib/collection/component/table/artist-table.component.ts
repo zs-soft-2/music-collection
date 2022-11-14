@@ -30,6 +30,10 @@ export class ArtistTableComponent extends BaseComponent implements OnInit {
 		this.componentService.editArtist(artist);
 	}
 
+	public exportArtist(artist: ArtistEntity): void {
+		this.componentService.exportArtist(artist);
+	}
+
 	public searchByNameHandler(event: any): void {
 		this.componentService.searchByName(event['query']);
 	}

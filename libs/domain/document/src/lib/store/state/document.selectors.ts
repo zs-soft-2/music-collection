@@ -65,7 +65,11 @@ export const selectSearchResult = createSelector(
 
 export const selectFilePath = createSelector(
 	getDocumentState,
-	(state: State) => {
-		return state.filePath;
-	}
+	(state: State) => state.filePath
 );
+
+export const selectImportFilePath = (name: string) =>
+	createSelector(
+		getDocumentState,
+		(state: State) => state.importFilePath[name]
+	);
