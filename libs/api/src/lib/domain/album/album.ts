@@ -1,12 +1,19 @@
 import { FormGroup } from '@angular/forms';
 
-import { Entity, GenreEnum, Searchable, StyleEnum } from '../../common';
+import {
+	Entity,
+	FormatEnum,
+	GenreEnum,
+	Searchable,
+	StyleEnum,
+} from '../../common';
 import { ArtistEntity } from '../artist';
 import { DocumentEntity } from '../document';
 
 export interface Album {
 	artist: AlbumArtist;
 	coverImage: AlbumDocument | null;
+	format: FormatEnum;
 	genre: GenreEnum;
 	name: string;
 	songs: string[];
@@ -35,6 +42,7 @@ export type AlbumModelUpdate = Partial<AlbumModel> & Entity;
 export type AlbumFormParams = {
 	artists: ArtistEntity[];
 	documents: DocumentEntity[];
+	formatList: FormatEnum[];
 	formGroup: FormGroup;
 	isImagesTabActive: boolean;
 	styleList: StyleEnum[];

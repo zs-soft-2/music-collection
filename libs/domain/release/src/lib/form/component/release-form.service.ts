@@ -176,7 +176,6 @@ export class ReleaseFormService {
 				albums,
 				countryList: CountryList,
 				formGroup,
-				formatList: FormatList,
 				formatDescriptionList: FormatDescriptionList,
 				labels,
 				mediaList: MediaList,

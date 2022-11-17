@@ -94,6 +94,10 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 			entity.artist = model.artist;
 		}
 
+		if (model.format) {
+			entity.format = model.format;
+		}
+
 		if (model.genre) {
 			entity.genre = model.genre;
 		}
@@ -120,6 +124,7 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 				? this.createSimpleDocument(formGroup.value['coverImage'])
 				: null,
 			entityType: EntityTypeEnum.Album,
+			format: formGroup.value['format'],
 			genre: GenreEnum.Rock,
 			name: (formGroup.value['name'] as string).trim(),
 			styles: formGroup.value['styles'],
@@ -132,6 +137,7 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 		return this.formBuilder.group({
 			artist: [album?.artist || null, [Validators.required]],
 			coverImage: [album?.coverImage || null],
+			format: [album?.format || null, [Validators.required]],
 			name: [album?.name || null, [Validators.required]],
 			songs: [album?.songs || null],
 			styles: [album?.styles || null, [Validators.required]],
@@ -163,6 +169,7 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 				? this.createSimpleDocument(formGroup.value['coverImage'])
 				: null,
 			entityType: EntityTypeEnum.Album,
+			format: formGroup.value['format'],
 			genre: GenreEnum.Rock,
 			name: (formGroup.value['name'] as string).trim(),
 			songs: formGroup.value['songs'],

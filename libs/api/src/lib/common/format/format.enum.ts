@@ -15,17 +15,21 @@ export const FormatList: FormatEnum[] = [
 ];
 
 export enum FormatDescriptionEnum {
-	pictureDisc = 'picture disc',
+	boxSet = 'box set',
+	deluxeEdition = 'deluxe edition',
+	g180 = '180g',
 	limitedEdition = 'limited edition',
+	pictureDisc = 'picture disc',
 	reissue = 'reissue',
 	remastered = 'remastered',
-	g180 = '180g',
 }
 
 export const FormatDescriptionList: FormatDescriptionEnum[] = [
+	FormatDescriptionEnum.boxSet,
+	FormatDescriptionEnum.deluxeEdition,
+	FormatDescriptionEnum.g180,
 	FormatDescriptionEnum.limitedEdition,
 	FormatDescriptionEnum.pictureDisc,
 	FormatDescriptionEnum.reissue,
 	FormatDescriptionEnum.remastered,
-	FormatDescriptionEnum.g180,
 ];

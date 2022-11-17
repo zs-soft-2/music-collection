@@ -16,7 +16,6 @@ export interface Release {
 	album: SimpleAlbum;
 	artist: ReleaseArtist;
 	country: CountryEnum;
-	format: FormatEnum;
 	formatDescription: FormatDescriptionEnum;
 	label: ReleaseLabel;
 	media: MediaEnum;
@@ -47,7 +46,6 @@ export type ReleaseFormParams = {
 	albums: AlbumEntity[];
 	countryList: CountryEnum[];
 	formGroup: FormGroup;
-	formatList: FormatEnum[];
 	formatDescriptionList: FormatDescriptionEnum[];
 	labels: LabelEntity[];
 	mediaList: MediaEnum[];
