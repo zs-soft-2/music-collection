@@ -15,6 +15,7 @@ import {
 	DocumentEntity,
 	DocumentStateService,
 	EntityTypeEnum,
+	FormatList,
 	SearchParams,
 	StyleList,
 } from '@music-collection/api';
@@ -113,6 +114,7 @@ export class AlbumFormService {
 		const albumFormParams: AlbumFormParams = {
 			artists,
 			documents,
+			formatList: FormatList,
 			formGroup,
 			styleList: StyleList,
 			isImagesTabActive: !!album,

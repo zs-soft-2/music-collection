@@ -97,10 +97,6 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 			entity.country = model.country;
 		}
 
-		if (model.format) {
-			entity.format = model.format;
-		}
-
 		if (model.formatDescription) {
 			entity.formatDescription = model.formatDescription;
 		}
@@ -127,7 +123,6 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 			country: formGroup.value['country'],
 			date: formGroup.value['date'],
 			entityType: EntityTypeEnum.Release,
-			format: formGroup.value['format'],
 			formatDescription: formGroup.value['formatDescription'],
 			label: this.createReleaseLabel(formGroup.value['label']),
 			media: formGroup.value['media'],
@@ -161,7 +156,6 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 				],
 				country: [release?.country || null, [Validators.required]],
 				date: [release?.date || null, [Validators.required]],
-				format: [release?.format || null, [Validators.required]],
 				formatDescription: [release?.formatDescription || null],
 				label: [release?.label || null, [Validators.required]],
 				media: [release?.media || null, [Validators.required]],
@@ -192,7 +186,6 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 			entityType: EntityTypeEnum.Release,
 			name: formGroup.value['name'],
 			label: this.createReleaseLabel(formGroup.value['label']),
-			format: formGroup.value['format'],
 			formatDescription: formGroup.value['formatDescription'],
 			media: formGroup.value['media'],
 			uid: formGroup.value['uid'],
@@ -239,6 +232,7 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 			artist,
 			coverImage,
 			entityType,
+			format,
 			genre,
 			songs,
 			styles,
@@ -250,6 +244,7 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 			artist,
 			coverImage,
 			entityType,
+			format,
 			genre,
 			songs,
 			styles,
