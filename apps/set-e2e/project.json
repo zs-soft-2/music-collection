@@ -1,0 +1,30 @@
+{
+	"name": "set-e2e",
+	"$schema": "../../node_modules/nx/schemas/project-schema.json",
+	"sourceRoot": "apps/set-e2e/src",
+	"projectType": "application",
+	"targets": {
+		"e2e": {
+			"executor": "@nrwl/cypress:cypress",
+			"options": {
+				"cypressConfig": "apps/set-e2e/cypress.config.ts",
+				"devServerTarget": "set:serve:development",
+				"testingType": "e2e"
+			},
+			"configurations": {
+				"production": {
+					"devServerTarget": "set:serve:production"
+				}
+			}
+		},
+		"lint": {
+			"executor": "@nrwl/linter:eslint",
+			"outputs": ["{options.outputFile}"],
+			"options": {
+				"lintFilePatterns": ["apps/set-e2e/**/*.{js,ts}"]
+			}
+		}
+	},
+	"tags": [],
+	"implicitDependencies": ["set"]
+}
