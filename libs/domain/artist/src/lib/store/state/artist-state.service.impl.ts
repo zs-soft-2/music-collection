@@ -73,8 +73,10 @@ export class ArtistStateServiceImpl extends ArtistStateService {
 		throw new Error('Method not implemented.');
 	}
 
-	public selectAlbumsById$(): Observable<AlbumEntity[] | undefined> {
-		return this.store.pipe(select(artistSelectors.selectAlbumsById()));
+	public selectAlbumsById$(artistId: string): Observable<AlbumEntity[]> {
+		return this.store.pipe(
+			select(artistSelectors.selectAlbumsById(artistId))
+		);
 	}
 
 	public selectEntities$(): Observable<ArtistEntity[]> {

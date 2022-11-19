@@ -1,9 +1,7 @@
-import { decode, encode } from 'base64-arraybuffer';
 import { saveAs } from 'file-saver';
 import {
 	combineLatest,
 	filter,
-	first,
 	forkJoin,
 	from,
 	map,
@@ -11,11 +9,13 @@ import {
 	of,
 	ReplaySubject,
 	switchMap,
-	tap,
 } from 'rxjs';
+import { first, mergeMap, reduce, tap } from 'rxjs/operators';
 
 import { Injectable } from '@angular/core';
 import {
+	AlbumEntity,
+	AlbumExportModel,
 	ArtistEntity,
 	ArtistExportModel,
 	ArtistImportModel,
@@ -28,62 +28,66 @@ import {
 	DocumentUtilService,
 	Entity,
 	ExportImportService,
+	ExportImportStateService,
+	ExportImportUtilService,
 } from '@music-collection/api';
 
 @Injectable()
 export class ExportImportServiceImpl extends ExportImportService {
 	public constructor(
-		private artistStateService: ArtistStateService,
-		private documentStateService: DocumentStateService,
-		private documentUtilService: DocumentUtilService
+		private exportImportStateService: ExportImportStateService,
+		private exportImportUtilService: ExportImportUtilService
 	) {
 		super();
 	}
 
-	public createArtistExport(
-		artist: ArtistEntity
-	): Observable<ArtistExportModel> {
+	public createArtistExport(artist: ArtistEntity): Observable<boolean> {
+		const artistId = artist.uid;
+
+		this.exportImportStateService.dispatchListAlbumsByIdAction(artistId);
+
 		return combineLatest([
 			this.createDocumentExport(artist.headerImage),
 			this.createDocumentExport(artist.mainImage),
+			this.exportImportStateService.selectAlbums$().pipe(
+				filter((albums) => !!albums),
+				first(),
+				switchMap((albums) => {
+					if (albums) {
+						return this.createAlbumExports(albums);
+					} else {
+						return of([]);
+					}
+				})
+			),
 		]).pipe(
-			switchMap(([headerImageDocument, mainImageDocument]) => {
-				const {
-					description,
-					entityType,
-					genre,
-					formedIn,
-					name,
-					sites,
-					styles,
-					uid,
-					members,
-					meta,
-				} = artist;
-
-				const artistExportModel: ArtistExportModel = {
-					description,
-					entityType,
-					genre,
-					formedIn: formedIn.toISOString(),
-					name,
-					sites,
-					styles,
-					uid,
-					members,
-					meta,
+			map(
+				([
 					headerImageDocument,
 					mainImageDocument,
-				};
+					albumExportDocuments,
+				]) => {
+					const artistExportModel =
+						this.exportImportUtilService.createArtistExportModel(
+							artist,
+							headerImageDocument,
+							mainImageDocument
+						);
 
-				return of(artistExportModel);
-			}),
-			tap((artistExport) => {
-				const blob = new Blob([JSON.stringify(artistExport)], {
-					type: 'text/json; charset=utf-8',
-				});
+					return { artistExportModel, albumExportDocuments };
+				}
+			),
+			switchMap(({ artistExportModel, albumExportDocuments }) => {
+				const blob = new Blob(
+					[JSON.stringify([artistExportModel, albumExportDocuments])],
+					{
+						type: 'text/json; charset=utf-8',
+					}
+				);
 
 				saveAs(blob, `${artist.name}.bundle.json`);
+
+				return of(true);
 			})
 		);
 	}
@@ -111,40 +115,27 @@ export class ExportImportServiceImpl extends ExportImportService {
 	): Observable<DocumentExportModel | null> {
 		return this.getImageFromUrl(document?.filePath || '').pipe(
 			switchMap((blob) => {
-				const result = new ReplaySubject<string>(1);
+				const result = new ReplaySubject<ArrayBuffer>(1);
 				const reader = new FileReader();
 
 				reader.readAsArrayBuffer(blob);
-				reader.onload = (event) =>
-					result.next(encode(event.target?.result as ArrayBuffer));
+				reader.onload = (event) => {
+					result.next(event.target?.result as ArrayBuffer);
+					result.complete();
+				};
 
 				return result;
 			}),
+			switchMap((arrayBuffer) => {
+				return of(this.exportImportUtilService.encode(arrayBuffer));
+			}),
 			switchMap((fileAsText) => {
-				let documentExportModel: DocumentExportModel | null = null;
-
-				if (document) {
-					const {
-						entityType,
-						filePath,
-						fileType,
-						name,
-						originalName,
-						uid,
-					} = document;
-
-					documentExportModel = {
-						entityType,
-						filePath,
-						fileType,
-						name,
-						originalName,
-						uid,
-						base64EncodedFile: fileAsText,
-					};
-				}
-
-				return of(documentExportModel);
+				return of(
+					this.exportImportUtilService.createDocumentExportModel(
+						document,
+						fileAsText
+					)
+				);
 			})
 		);
 	}
@@ -157,19 +148,28 @@ export class ExportImportServiceImpl extends ExportImportService {
 		}
 
 		const documentFile: DocumentFile = {
-			content: new Blob([decode(document?.base64EncodedFile || '')], {
-				type: 'image/jpeg',
-			}),
+			content: new Blob(
+				[
+					this.exportImportUtilService.decode(
+						document?.base64EncodedFile || ''
+					),
+				],
+				{
+					type: 'image/jpeg',
+				}
+			),
 			meta: { type: 'image' },
-			path: this.documentUtilService.createFilePath(
+			path: this.exportImportUtilService.createFilePath(
 				document?.originalName || '',
 				'/document/'
 			),
 		};
 
-		this.documentStateService.dispatchUploadImportFileAction(documentFile);
+		this.exportImportStateService.dispatchUploadImportFileAction(
+			documentFile
+		);
 
-		return this.documentStateService
+		return this.exportImportStateService
 			.selectImportFilePath$(documentFile.path)
 			.pipe(
 				filter((data) => data !== undefined),
@@ -202,99 +202,87 @@ export class ExportImportServiceImpl extends ExportImportService {
 	}
 
 	public exportArtistBundle(artist: ArtistEntity): void {
-		const bundle = {
-			artist: this.createArtistExport(artist),
-		};
-
-		const blob = new Blob([JSON.stringify(bundle)], {
-			type: 'text/json; charset=utf-8',
-		});
-
-		saveAs(blob, `${artist.name}.bundle.json`);
-	}
-
-	public exportDocument(document: DocumentEntity, name: string): void {
-		const blob = new Blob([JSON.stringify(document)], {
-			type: 'text/json; charset=utf-8',
-		});
-
-		saveAs(blob, name);
+		throw new Error('Method not implemented.');
 	}
 
 	public exportEntity(entity: Entity, name: string): void {
-		const blob = new Blob([JSON.stringify(entity)], {
-			type: 'text/json; charset=utf-8',
-		});
-
-		saveAs(blob, name);
-	}
-
-	public exportImage(url: string, fileName: string, fileType: string): void {
-		saveAs(url, `${fileName}.${fileType}`);
+		throw new Error('Method not implemented.');
 	}
 
 	public importArtistBundle(artistFile: File): Observable<boolean> {
 		return this.createArtistExportFromFile(artistFile).pipe(
 			switchMap((artistExportModel) =>
-				this.getDocumentExportModels(artistExportModel).pipe(
-					switchMap((documentExportModels) =>
-						this.createDocumentFiles(documentExportModels)
+				combineLatest([
+					this.getDocumentExportModels(artistExportModel).pipe(
+						switchMap((documentExportModels) =>
+							this.createDocumentFiles(documentExportModels)
+						),
+						map((documentImportModels) => {
+							return {
+								artistExportModel,
+								documentImportModels,
+							};
+						})
 					),
-					map((documentImportModels) => {
-						return {
-							artistExportModel,
-							documentImportModels,
-						};
-					})
-				)
+				])
 			),
-			map(({ artistExportModel, documentImportModels }) => {
-				const artistImportModel: ArtistImportModel = {
-					description: artistExportModel.description,
-					entityType: artistExportModel.entityType,
-					formedIn: new Date(artistExportModel.formedIn),
-					genre: artistExportModel.genre,
-					name: artistExportModel.name,
-					sites: artistExportModel.sites,
-					styles: artistExportModel.styles,
-					uid: artistExportModel.uid,
-				};
-
-				if (artistExportModel.members) {
-					artistImportModel.members = artistExportModel.members;
-				}
-
-				if (artistExportModel.meta) {
-					artistImportModel.meta = artistExportModel.meta;
-				}
-
-				const headerImageDocument: DocumentEntity | null =
-					documentImportModels[0];
-				const mainImageDocument: DocumentEntity | null =
-					documentImportModels[1];
-
-				if (headerImageDocument) {
-					artistImportModel.headerImage = headerImageDocument;
-
-					this.documentStateService.dispatchUpdateEntityAction(
-						headerImageDocument
+			map(([{ artistExportModel, documentImportModels }]) => {
+				const artistImportModel: ArtistImportModel =
+					this.createArtistEntity(
+						artistExportModel,
+						documentImportModels
 					);
-				}
 
-				if (mainImageDocument) {
-					artistImportModel.mainImage = mainImageDocument;
-
-					this.documentStateService.dispatchUpdateEntityAction(
-						mainImageDocument
-					);
-				}
-
-				this.artistStateService.dispatchUpdateEntityAction(
+				this.exportImportStateService.dispatchUpdateArtistAction(
 					artistImportModel
 				);
 
 				return true;
 			})
+		);
+	}
+
+	private createAlbumExport(
+		album: AlbumEntity
+	): Observable<AlbumExportModel> {
+		const coverImageId = album.coverImage?.uid || '';
+
+		this.exportImportStateService.dispatchLoadDocumentAction(coverImageId);
+
+		return this.exportImportStateService
+			.selectDocumentById$(coverImageId)
+			.pipe(
+				filter(
+					(coverImageDocument) => coverImageDocument !== undefined
+				),
+				switchMap((coverImageDocument) => {
+					return this.createDocumentExport(
+						coverImageDocument as DocumentEntity
+					);
+				}),
+				first(),
+				switchMap((coverImageDocument) => {
+					const albumExportModel: AlbumExportModel =
+						this.exportImportUtilService.createAlbumExportModel(
+							album,
+							coverImageDocument
+						);
+
+					return of(albumExportModel);
+				})
+			);
+	}
+
+	private createAlbumExports(
+		albums: AlbumEntity[]
+	): Observable<AlbumExportModel[]> {
+		return from(albums).pipe(
+			mergeMap((album) => {
+				return this.createAlbumExport(album);
+			}),
+			reduce((acc: AlbumExportModel[], value) => {
+				return [...acc, value];
+			}, [])
 		);
 	}
 
@@ -330,5 +318,52 @@ export class ExportImportServiceImpl extends ExportImportService {
 		return from(fetch(imageUrl)).pipe(
 			switchMap((response) => from(response.blob()))
 		);
+	}
+
+	private createArtistEntity(
+		artistExportModel: ArtistExportModel,
+		documentImportModels: (DocumentImportModel | null)[]
+	) {
+		const artistImportModel: ArtistImportModel = {
+			description: artistExportModel.description,
+			entityType: artistExportModel.entityType,
+			formedIn: new Date(artistExportModel.formedIn),
+			genre: artistExportModel.genre,
+			name: artistExportModel.name,
+			sites: artistExportModel.sites,
+			styles: artistExportModel.styles,
+			uid: artistExportModel.uid,
+		};
+
+		if (artistExportModel.members) {
+			artistImportModel.members = artistExportModel.members;
+		}
+
+		if (artistExportModel.meta) {
+			artistImportModel.meta = artistExportModel.meta;
+		}
+
+		const headerImageDocument: DocumentEntity | null =
+			documentImportModels[0];
+		const mainImageDocument: DocumentEntity | null =
+			documentImportModels[1];
+
+		if (headerImageDocument) {
+			artistImportModel.headerImage = headerImageDocument;
+
+			this.exportImportStateService.dispatchUpdateDocumentAction(
+				headerImageDocument
+			);
+		}
+
+		if (mainImageDocument) {
+			artistImportModel.mainImage = mainImageDocument;
+
+			this.exportImportStateService.dispatchUpdateDocumentAction(
+				mainImageDocument
+			);
+		}
+
+		return artistImportModel;
 	}
 }

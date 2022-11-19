@@ -64,7 +64,7 @@ export class ArtistDetailViewService extends BaseComponent {
 						this.artistId || ''
 					),
 					this.artistStateService
-						.selectAlbumsById$()
+						.selectAlbumsById$(this.artistId || '')
 						.pipe(
 							map((albums) =>
 								albums

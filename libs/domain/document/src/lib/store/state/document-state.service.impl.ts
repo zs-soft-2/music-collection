@@ -93,7 +93,7 @@ export class DocumentStateServiceImpl extends DocumentStateService {
 		uid: string
 	): Observable<DocumentEntity | undefined> {
 		return this.store.pipe(
-			select(documentSelectors.selectDocumentById(), { uid })
+			select(documentSelectors.selectDocumentById(uid))
 		);
 	}
 
