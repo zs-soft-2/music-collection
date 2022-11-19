@@ -1,5 +1,12 @@
 import { of } from 'rxjs';
-import { catchError, concatMap, first, map, switchMap } from 'rxjs/operators';
+import {
+	catchError,
+	concatMap,
+	first,
+	map,
+	mergeMap,
+	switchMap,
+} from 'rxjs/operators';
 
 import { Injectable } from '@angular/core';
 import {
@@ -82,7 +89,7 @@ export class DocumentEffects {
 	public loadDocument = createEffect(() =>
 		this.actions$.pipe(
 			ofType(documentActions.loadDocument),
-			switchMap((action) =>
+			mergeMap((action) =>
 				this.documentDataService.load$(action.uid).pipe(
 					map((document) => {
 						return documentActions.loadDocumentSuccess({
@@ -94,6 +101,7 @@ export class DocumentEffects {
 						});
 					}),
 					catchError((error) => {
+						console.log(error);
 						return of(documentActions.loadDocumentFail(error));
 					})
 				)

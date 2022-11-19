@@ -1,6 +1,7 @@
+import { first } from 'rxjs';
+
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { BaseComponent, ExportImportService } from '@music-collection/api';
-import { first } from 'rxjs';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,

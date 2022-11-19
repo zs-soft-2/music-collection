@@ -48,11 +48,11 @@ export const selectDocument = createSelector(
 	(documentEntities, documentID) => documentEntities[documentID]
 );
 
-export const selectDocumentById = () =>
+export const selectDocumentById = (uid: string) =>
 	createSelector(
 		selectDocumentEntities,
-		(documentEntities: Dictionary<DocumentEntity>, props: any) => {
-			const documentEntity = documentEntities[props.uid];
+		(documentEntities: Dictionary<DocumentEntity>) => {
+			const documentEntity = documentEntities[uid];
 
 			return documentEntity;
 		}

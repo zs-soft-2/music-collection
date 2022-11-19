@@ -1,12 +1,12 @@
-import { DOCUMENT_FEATURE_KEY, DocumentEntity } from '@music-collection/api';
+import {
+	DOCUMENT_FEATURE_KEY,
+	DocumentEntity,
+	ImportFilePath,
+} from '@music-collection/api';
 import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity';
 import { Action, createReducer, on } from '@ngrx/store';
 
 import * as documentActions from './document.actions';
-
-export interface ImportFilePath {
-	[x: string]: string;
-}
 
 export interface State extends EntityState<DocumentEntity> {
 	isNewEntityButtonEnabled: boolean;

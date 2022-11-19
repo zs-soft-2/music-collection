@@ -7,7 +7,7 @@ import { ArtistExportModel } from './export-import';
 export abstract class ExportImportService extends BaseService {
 	public abstract createArtistExport(
 		artist: ArtistEntity
-	): Observable<ArtistExportModel>;
+	): Observable<boolean>;
 	public abstract createArtistExportFromFile(
 		artistFile: File
 	): Observable<ArtistExportModel>;

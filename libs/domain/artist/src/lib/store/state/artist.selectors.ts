@@ -43,8 +43,8 @@ export const selectArtist = createSelector(
 	(artistEntities, artistID) => artistEntities[artistID]
 );
 
-export const selectAlbumsById = () =>
-	createSelector(getArtistState, (state: State) => state.albumsById);
+export const selectAlbumsById = (artistId: string) =>
+	createSelector(getArtistState, (state: State) => state.albumsById || []);
 
 export const selectArtistById = (uid: string) =>
 	createSelector(
