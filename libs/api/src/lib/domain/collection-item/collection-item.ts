@@ -28,10 +28,9 @@ export type CollectionItemModelAdd = Omit<CollectionItemModel, 'uid'>;
 
 export type CollectionItemModelUpdate = Partial<CollectionItemModel> & Entity;
 
-
 export type ReleaseForConnectionItem = ReleaseEntity & {
 	nameAndMedia: string;
-}
+};
 export type CollectionItemFormParams = {
 	releases: ReleaseForConnectionItem[];
 	formGroup: FormGroup;

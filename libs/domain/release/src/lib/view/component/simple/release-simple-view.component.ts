@@ -15,6 +15,9 @@ export class ReleaseSimpleViewComponent extends BaseComponent {
 	@Input()
 	public release!: ReleaseEntity;
 
+	@Input()
+	public width = '220';
+
 	public media: Media;
 
 	public constructor() {

@@ -1,17 +1,17 @@
 <section class="collection-item-list" *rxLet="params$; let params">
-	<p-carousel
-		*ngIf="params.collectionItems.length"
-		[value]="params.collectionItems"
-		[numVisible]="3"
-		[numScroll]="1"
-		[autoplayInterval]="5000"
+	<div
+		class="flex-container"
+		fxLayout="row wrap"
+		fxLayout.xs="column"
+		fxLayoutAlign="center"
+		fxLayoutGap="10px 5px grid"
 	>
-		<ng-template let-collectionItem pTemplate="item">
-			<div class="collection-item-view">
+		<ng-container *ngFor="let collectionItem of params.collectionItems">
+			<div class="collection-item-view" fxLayoutAlign="center center">
 				<mc-collection-item-simple-view
 					[collectionItem]="collectionItem"
 				></mc-collection-item-simple-view>
 			</div>
-		</ng-template>
-	</p-carousel>
+		</ng-container>
+	</div>
 </section>

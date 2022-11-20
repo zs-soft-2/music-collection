@@ -1,5 +1,5 @@
 import { Observable, ReplaySubject } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { filter, map, switchMap } from 'rxjs/operators';
 
 import { Injectable } from '@angular/core';
 import {
@@ -19,15 +19,16 @@ export class CollectionItemListService extends BaseComponent {
 	) {
 		super();
 
-		this.params$$ = new ReplaySubject();
+		this.params$$ = new ReplaySubject(1);
 	}
 
 	public init$(): Observable<CollectionItemListParams> {
 		return this.collectionItemStateService.selectEntities$().pipe(
+			filter((collectionItems) => collectionItems.length > 0),
 			map((collectionItems) => this.shuffleArray(collectionItems)),
 			switchMap((collectionItems) => {
 				this.params = {
-					collectionItems,
+					collectionItems: [...collectionItems],
 				};
 
 				this.params$$.next(this.params);
