@@ -25,6 +25,7 @@ export class ReleaseSimpleViewComponent extends BaseComponent {
 
 		this.media = {
 			cd: MediaEnum.cd,
+			dvd: MediaEnum.dvd,
 			vinyl: MediaEnum.vinyl,
 		};
 	}
