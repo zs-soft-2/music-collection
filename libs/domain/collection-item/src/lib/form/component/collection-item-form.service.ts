@@ -107,7 +107,10 @@ export class CollectionItemFormService {
 		);
 
 		const collectionItemFormParams: CollectionItemFormParams = {
-			releases,
+			releases: releases.map(release => ({
+				...release,
+				nameAndMedia: `${release.name} (${ release.media})`
+			})),
 			formGroup,
 		};
 
