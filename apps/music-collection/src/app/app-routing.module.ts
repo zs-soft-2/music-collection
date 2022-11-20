@@ -43,12 +43,9 @@ export const routes: Routes = [
 		data: {
 			breadcrumb: 'collection',
 			permissions: {
-				only: [RoleNames.USER],
 				redirectTo: '/home',
 			},
 		},
-		canActivate: [NgxPermissionsGuard],
-		canLoad: [NgxPermissionsGuard],
 	},
 	{
 		path: 'admin',
