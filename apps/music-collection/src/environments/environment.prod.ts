@@ -10,5 +10,5 @@ export const environment = {
 		measurementId: 'G-7H6CC1PTSY',
 	},
 	type: 'production',
-	version: '0.12.5',
+	version: '0.12.6',
 };
