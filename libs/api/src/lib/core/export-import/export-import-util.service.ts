@@ -4,9 +4,14 @@ import {
 	AlbumExportModel,
 	ArtistExportModel,
 	DocumentExportModel,
+	DocumentImportModel,
 } from './export-import';
 
 export abstract class ExportImportUtilService extends BaseService {
+	public abstract createAlbumEntity(
+		albumExportModel: AlbumExportModel,
+		documentImportModel: DocumentImportModel | null
+	): AlbumEntity;
 	public abstract createAlbumExportModel(
 		albumEntity: AlbumEntity,
 		coverImageDocument: DocumentExportModel | null

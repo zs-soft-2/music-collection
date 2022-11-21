@@ -67,6 +67,33 @@ export class ExportImportEffects extends BaseService {
 		)
 	);
 
+	public updateAlbum = createEffect(() =>
+		this.actions$.pipe(
+			ofType(exportImportActions.updateAlbum),
+			switchMap((action) =>
+				this.artistDataService
+					.updateAlbum$(
+						this.albumUtilService.convertEntityUpdateToModelUpdate(
+							action.album
+						)
+					)
+					.pipe(
+						map((album) => {
+							return exportImportActions.updateAlbumSuccess({
+								album: {
+									id: album.uid || '',
+									changes:
+										this.albumUtilService.convertModelUpdateToEntityUpdate(
+											album
+										),
+								},
+							});
+						})
+					)
+			)
+		)
+	);
+
 	public updateArtist = createEffect(() =>
 		this.actions$.pipe(
 			ofType(exportImportActions.updateArtist),

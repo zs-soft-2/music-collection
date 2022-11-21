@@ -18,6 +18,7 @@ import {
 	AlbumExportModel,
 	ArtistEntity,
 	ArtistExportModel,
+	ArtistExportModelWithAlbums,
 	ArtistImportModel,
 	ArtistStateService,
 	DocumentEntity,
@@ -65,7 +66,7 @@ export class ExportImportServiceImpl extends ExportImportService {
 				([
 					headerImageDocument,
 					mainImageDocument,
-					albumExportDocuments,
+					albumExportModels,
 				]) => {
 					const artistExportModel =
 						this.exportImportUtilService.createArtistExportModel(
@@ -74,12 +75,17 @@ export class ExportImportServiceImpl extends ExportImportService {
 							mainImageDocument
 						);
 
-					return { artistExportModel, albumExportDocuments };
+					return { artistExportModel, albumExportModels };
 				}
 			),
-			switchMap(({ artistExportModel, albumExportDocuments }) => {
+			switchMap(({ artistExportModel, albumExportModels }) => {
 				const blob = new Blob(
-					[JSON.stringify([artistExportModel, albumExportDocuments])],
+					[
+						JSON.stringify({
+							artist: artistExportModel,
+							albums: albumExportModels,
+						}),
+					],
 					{
 						type: 'text/json; charset=utf-8',
 					}
@@ -94,17 +100,16 @@ export class ExportImportServiceImpl extends ExportImportService {
 
 	public createArtistExportFromFile(
 		artistFile: File
-	): Observable<ArtistExportModel> {
-		const result = new ReplaySubject<ArtistExportModel>(1);
+	): Observable<ArtistExportModelWithAlbums> {
+		const result = new ReplaySubject<ArtistExportModelWithAlbums>(1);
 		const reader = new FileReader();
 
 		reader.readAsText(artistFile);
 		reader.onload = (event) => {
-			const artistExport: ArtistExportModel = JSON.parse(
-				event.target?.result?.toString() || ''
-			);
+			const artistExportWithAlbums: ArtistExportModelWithAlbums =
+				JSON.parse(event.target?.result?.toString() || '');
 
-			result.next(artistExport);
+			result.next(artistExportWithAlbums);
 		};
 
 		return result;
@@ -211,34 +216,45 @@ export class ExportImportServiceImpl extends ExportImportService {
 
 	public importArtistBundle(artistFile: File): Observable<boolean> {
 		return this.createArtistExportFromFile(artistFile).pipe(
-			switchMap((artistExportModel) =>
+			switchMap((artistExportModelWithAlbums) =>
 				combineLatest([
-					this.getDocumentExportModels(artistExportModel).pipe(
+					this.getDocumentExportModels(
+						artistExportModelWithAlbums.artist
+					).pipe(
 						switchMap((documentExportModels) =>
 							this.createDocumentFiles(documentExportModels)
 						),
 						map((documentImportModels) => {
 							return {
-								artistExportModel,
+								artistExportModel:
+									artistExportModelWithAlbums.artist,
 								documentImportModels,
 							};
 						})
 					),
+					this.importAlbumEntities(
+						artistExportModelWithAlbums.albums
+					),
 				])
 			),
-			map(([{ artistExportModel, documentImportModels }]) => {
-				const artistImportModel: ArtistImportModel =
-					this.createArtistEntity(
-						artistExportModel,
-						documentImportModels
+			map(
+				([
+					{ artistExportModel, documentImportModels },
+					albumExportModels,
+				]) => {
+					const artistImportModel: ArtistImportModel =
+						this.createArtistEntity(
+							artistExportModel,
+							documentImportModels
+						);
+
+					this.exportImportStateService.dispatchUpdateArtistAction(
+						artistImportModel
 					);
 
-				this.exportImportStateService.dispatchUpdateArtistAction(
-					artistImportModel
-				);
-
-				return true;
-			})
+					return true;
+				}
+			)
 		);
 	}
 
@@ -283,40 +299,6 @@ export class ExportImportServiceImpl extends ExportImportService {
 			reduce((acc: AlbumExportModel[], value) => {
 				return [...acc, value];
 			}, [])
-		);
-	}
-
-	private createDocumentFiles(
-		documentExportModels: (DocumentExportModel | null)[]
-	): Observable<(DocumentImportModel | null)[]> {
-		const calls = [
-			this.createDocumentFileImport(documentExportModels[0]).pipe(
-				switchMap((filePath) =>
-					this.createDocumentImport(documentExportModels[0], filePath)
-				)
-			),
-			this.createDocumentFileImport(documentExportModels[1]).pipe(
-				switchMap((filePath) =>
-					this.createDocumentImport(documentExportModels[1], filePath)
-				)
-			),
-		];
-
-		return forkJoin(calls);
-	}
-
-	private getDocumentExportModels(
-		artistExportModel: ArtistExportModel
-	): Observable<(DocumentExportModel | null)[]> {
-		return of([
-			artistExportModel.headerImageDocument,
-			artistExportModel.mainImageDocument,
-		]);
-	}
-
-	private getImageFromUrl(imageUrl: string): Observable<Blob> {
-		return from(fetch(imageUrl)).pipe(
-			switchMap((response) => from(response.blob()))
 		);
 	}
 
@@ -365,5 +347,79 @@ export class ExportImportServiceImpl extends ExportImportService {
 		}
 
 		return artistImportModel;
+	}
+
+	private createDocumentFiles(
+		documentExportModels: (DocumentExportModel | null)[]
+	): Observable<(DocumentImportModel | null)[]> {
+		const calls = documentExportModels.map((documentExportModel) =>
+			this.createDocumentFileImport(documentExportModel).pipe(
+				switchMap((filePath) =>
+					this.createDocumentImport(documentExportModels[0], filePath)
+				)
+			)
+		);
+
+		return forkJoin(calls);
+	}
+
+	private getDocumentExportModels(
+		artistExportModel: ArtistExportModel
+	): Observable<(DocumentExportModel | null)[]> {
+		return of([
+			artistExportModel.headerImageDocument,
+			artistExportModel.mainImageDocument,
+		]);
+	}
+
+	private getImageFromUrl(imageUrl: string): Observable<Blob> {
+		return from(fetch(imageUrl)).pipe(
+			switchMap((response) => from(response.blob()))
+		);
+	}
+
+	private importAlbumEntities(
+		albumExportModels: AlbumExportModel[]
+	): Observable<AlbumEntity[]> {
+		const calls = albumExportModels.map((albumExportModel) =>
+			this.createDocumentFileImport(albumExportModel.coverImageDocument)
+				.pipe(
+					switchMap((filePath) =>
+						this.createDocumentImport(
+							albumExportModel.coverImageDocument,
+							filePath
+						)
+					)
+				)
+				.pipe(
+					switchMap((documentImportModel) =>
+						this.importAlbumEntity(
+							albumExportModel,
+							documentImportModel
+						)
+					)
+				)
+		);
+
+		return forkJoin(calls);
+	}
+
+	private importAlbumEntity(
+		albumExportModel: AlbumExportModel,
+		documentImportModel: DocumentImportModel | null
+	): Observable<AlbumEntity> {
+		const albumEntity: AlbumEntity =
+			this.exportImportUtilService.createAlbumEntity(
+				albumExportModel,
+				documentImportModel
+			);
+
+		return of(albumEntity).pipe(
+			tap((albumEntity) =>
+				this.exportImportStateService.dispatchUpdateAlbumAction(
+					albumEntity
+				)
+			)
+		);
 	}
 }

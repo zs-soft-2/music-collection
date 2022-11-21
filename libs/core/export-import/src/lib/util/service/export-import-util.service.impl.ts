@@ -8,6 +8,7 @@ import {
 	ArtistExportModel,
 	DocumentEntity,
 	DocumentExportModel,
+	DocumentImportModel,
 	DocumentUtilService,
 	EntityTypeEnum,
 	ExportImportUtilService,
@@ -18,6 +19,27 @@ export class ExportImportUtilServiceImpl extends ExportImportUtilService {
 	public constructor(private documentUtilService: DocumentUtilService) {
 		super();
 	}
+
+	public createAlbumEntity(
+		albumExportModel: AlbumExportModel,
+		documentImportModel: DocumentImportModel | null
+	): AlbumEntity {
+		const albumEntity: AlbumEntity = {
+			artist: albumExportModel.artist,
+			coverImage: documentImportModel,
+			format: albumExportModel.format,
+			genre: albumExportModel.genre,
+			entityType: albumExportModel.entityType,
+			name: albumExportModel.name,
+			songs: albumExportModel.songs,
+			styles: albumExportModel.styles,
+			uid: albumExportModel.uid,
+			year: new Date(albumExportModel.year),
+		};
+
+		return albumEntity;
+	}
+
 	public createAlbumExportModel(
 		albumEntity: AlbumEntity,
 		coverImageDocument: DocumentExportModel
@@ -36,7 +58,10 @@ export class ExportImportUtilServiceImpl extends ExportImportUtilService {
 		} = albumEntity;
 
 		const albumExportModel: AlbumExportModel = {
-			artist: { ...artist, entityType: artist.entityType || EntityTypeEnum.Artist },
+			artist: {
+				...artist,
+				entityType: artist.entityType || EntityTypeEnum.Artist,
+			},
 			entityType,
 			format,
 			genre,
@@ -112,15 +137,15 @@ export class ExportImportUtilServiceImpl extends ExportImportUtilService {
 		return documentExportModel;
 	}
 
+	public createFilePath(data: string, folder: string = '/'): string {
+		return this.documentUtilService.createFilePath(data, folder);
+	}
+
 	public decode(fileAsText: string): ArrayBuffer {
 		return decode(fileAsText);
 	}
 
 	public encode(arrayBuffer: ArrayBuffer): string {
 		return encode(arrayBuffer);
-	}
-
-	public createFilePath(data: string, folder: string = '/'): string {
-		return this.documentUtilService.createFilePath(data, folder);
 	}
 }

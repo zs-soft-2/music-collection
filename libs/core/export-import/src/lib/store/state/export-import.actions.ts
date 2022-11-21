@@ -1,5 +1,6 @@
 import {
 	AlbumEntity,
+	AlbumEntityUpdate,
 	ArtistEntity,
 	ArtistEntityUpdate,
 	DocumentEntity,
@@ -71,6 +72,21 @@ export const uploadImportFileFail = createAction(
 export const uploadImportFileSuccess = createAction(
 	'[Export Import] Upload Import File Success',
 	props<{ name: string; filePath: string }>()
+);
+
+export const updateAlbum = createAction(
+	'[Export Import] Update Album',
+	props<{ album: AlbumEntityUpdate }>()
+);
+
+export const updateAlbumFail = createAction(
+	'[Export Import] Update Album Fail',
+	props<{ error: Error }>()
+);
+
+export const updateAlbumSuccess = createAction(
+	'[Export Import] Update Album Success',
+	props<{ album: Update<AlbumEntityUpdate> }>()
 );
 
 export const updateArtist = createAction(

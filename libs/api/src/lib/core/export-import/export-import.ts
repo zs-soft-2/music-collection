@@ -31,3 +31,8 @@ export type ArtistExportModel = ArtistExport & Entity;
 export type ArtistImportModel = ArtistImport & Entity;
 
 export type AlbumExportModel = AlbumExport & Entity;
+
+export type ArtistExportModelWithAlbums = {
+	artist: ArtistExportModel;
+	albums: AlbumExportModel[];
+};

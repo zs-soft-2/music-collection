@@ -2,7 +2,7 @@ import { Observable } from 'rxjs';
 
 import { BaseService, Entity } from '../../common';
 import { ArtistEntity } from '../../domain';
-import { ArtistExportModel } from './export-import';
+import { ArtistExportModelWithAlbums } from './export-import';
 
 export abstract class ExportImportService extends BaseService {
 	public abstract createArtistExport(
@@ -10,7 +10,7 @@ export abstract class ExportImportService extends BaseService {
 	): Observable<boolean>;
 	public abstract createArtistExportFromFile(
 		artistFile: File
-	): Observable<ArtistExportModel>;
+	): Observable<ArtistExportModelWithAlbums>;
 	public abstract exportArtistBundle(artist: ArtistEntity): void;
 	public abstract exportEntity(entity: Entity, name: string): void;
 	public abstract importArtistBundle(artistFile: File): Observable<boolean>;

@@ -3,12 +3,11 @@ import { Observable } from 'rxjs';
 import { Injectable } from '@angular/core';
 import {
 	AlbumEntity,
+	AlbumEntityUpdate,
 	ArtistEntity,
-	ArtistEntityUpdate,
 	DocumentEntity,
 	DocumentFile,
 	ExportImportStateService,
-	User,
 } from '@music-collection/api';
 import { select, Store } from '@ngrx/store';
 
@@ -32,6 +31,10 @@ export class ExportImportStateServiceImpl extends ExportImportStateService {
 
 	public dispatchUpdateArtistAction(artist: ArtistEntity): void {
 		this.store.dispatch(exportImportActions.updateArtist({ artist }));
+	}
+
+	public dispatchUpdateAlbumAction(album: AlbumEntityUpdate): void {
+		this.store.dispatch(exportImportActions.updateAlbum({ album }));
 	}
 
 	public dispatchUpdateDocumentAction(document: DocumentEntity): void {
