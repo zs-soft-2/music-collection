@@ -1,4 +1,5 @@
 import { ButtonModule } from 'primeng/button';
+import { ScrollTopModule } from 'primeng/scrolltop';
 import { SidebarModule } from 'primeng/sidebar';
 
 import { CommonModule } from '@angular/common';
@@ -15,6 +16,7 @@ import { CollectionComponent } from './collection.component';
 		ButtonModule,
 		CollectionRoutingModule,
 		CollectionItemCollectionModule,
+		ScrollTopModule,
 		SidebarModule,
 	],
 })
