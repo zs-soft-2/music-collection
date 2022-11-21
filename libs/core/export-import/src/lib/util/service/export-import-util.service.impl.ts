@@ -9,6 +9,7 @@ import {
 	DocumentEntity,
 	DocumentExportModel,
 	DocumentUtilService,
+	EntityTypeEnum,
 	ExportImportUtilService,
 } from '@music-collection/api';
 
@@ -35,7 +36,7 @@ export class ExportImportUtilServiceImpl extends ExportImportUtilService {
 		} = albumEntity;
 
 		const albumExportModel: AlbumExportModel = {
-			artist,
+			artist: { ...artist, entityType: artist.entityType || EntityTypeEnum.Artist },
 			entityType,
 			format,
 			genre,
@@ -98,7 +99,7 @@ export class ExportImportUtilServiceImpl extends ExportImportUtilService {
 				documentEntity;
 
 			documentExportModel = {
-				entityType,
+				entityType: entityType || EntityTypeEnum.Document,
 				filePath,
 				fileType,
 				name,

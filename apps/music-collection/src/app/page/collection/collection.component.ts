@@ -13,6 +13,8 @@ import {
 	styleUrls: ['./collection.component.scss'],
 })
 export class CollectionComponent extends BaseComponent implements OnInit {
+	public display = false;
+
 	public constructor(
 		private collectionItemStateService: CollectionItemStateService
 	) {

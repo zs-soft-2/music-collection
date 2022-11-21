@@ -205,7 +205,7 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 
 		return {
 			uid,
-			entityType,
+			entityType: entityType || EntityTypeEnum.Artist,
 			name,
 			searchParameters: this.createSearchParameters(name),
 		};
@@ -216,7 +216,7 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 
 		return {
 			filePath,
-			entityType,
+			entityType: entityType || EntityTypeEnum.Document,
 			name,
 			uid,
 		};
