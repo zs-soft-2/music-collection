@@ -33,7 +33,7 @@ export class ExportImportStateServiceImpl extends ExportImportStateService {
 		this.store.dispatch(exportImportActions.updateArtist({ artist }));
 	}
 
-	public dispatchUpdateAlbumAction(album: AlbumEntityUpdate): void {
+	public dispatchUpdateAlbumAction(album: AlbumEntity): void {
 		this.store.dispatch(exportImportActions.updateAlbum({ album }));
 	}
 

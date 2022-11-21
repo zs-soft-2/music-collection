@@ -60,6 +60,21 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 		});
 	}
 
+	public importAlbum$(album: AlbumModel): Observable<AlbumModel> {
+		return new Observable((subscriber) => {
+			const docRef = doc(
+				this.firestore,
+				ARTIST_FEATURE_KEY,
+				album.artist.uid
+			);
+			const collectionReference = collection(docRef, ALBUM_FEATURE_KEY);
+
+			setDoc(doc(collectionReference, album.uid), album).then(() => {
+				subscriber.next({ ...album } as unknown as AlbumModel);
+			});
+		});
+	}
+
 	public addRelease$(release: ReleaseModelAdd): Observable<ReleaseModel> {
 		const uid = doc(collection(this.firestore, 'id')).id;
 		const newRelease: ReleaseModel = {

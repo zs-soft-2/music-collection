@@ -3,7 +3,6 @@ import { Observable } from 'rxjs';
 import { BaseService } from '../../common';
 import {
 	AlbumEntity,
-	AlbumEntityUpdate,
 	ArtistEntity,
 	DocumentEntity,
 	DocumentFile,
@@ -12,7 +11,7 @@ import {
 export abstract class ExportImportStateService extends BaseService {
 	public abstract dispatchListAlbumsByIdAction(uid: string): void;
 	public abstract dispatchLoadDocumentAction(uid: string): void;
-	public abstract dispatchUpdateAlbumAction(album: AlbumEntityUpdate): void;
+	public abstract dispatchUpdateAlbumAction(album: AlbumEntity): void;
 	public abstract dispatchUpdateArtistAction(artist: ArtistEntity): void;
 	public abstract dispatchUpdateDocumentAction(
 		document: DocumentEntity

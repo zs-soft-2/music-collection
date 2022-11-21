@@ -76,7 +76,7 @@ export const uploadImportFileSuccess = createAction(
 
 export const updateAlbum = createAction(
 	'[Export Import] Update Album',
-	props<{ album: AlbumEntityUpdate }>()
+	props<{ album: AlbumEntity }>()
 );
 
 export const updateAlbumFail = createAction(
@@ -86,7 +86,7 @@ export const updateAlbumFail = createAction(
 
 export const updateAlbumSuccess = createAction(
 	'[Export Import] Update Album Success',
-	props<{ album: Update<AlbumEntityUpdate> }>()
+	props<{ album: AlbumEntity }>()
 );
 
 export const updateArtist = createAction(

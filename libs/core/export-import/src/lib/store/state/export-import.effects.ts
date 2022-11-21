@@ -72,22 +72,21 @@ export class ExportImportEffects extends BaseService {
 			ofType(exportImportActions.updateAlbum),
 			switchMap((action) =>
 				this.artistDataService
-					.updateAlbum$(
-						this.albumUtilService.convertEntityUpdateToModelUpdate(
-							action.album
-						)
+					.importAlbum$(
+						this.albumUtilService.convertEntityToModel(action.album)
 					)
 					.pipe(
 						map((album) => {
 							return exportImportActions.updateAlbumSuccess({
-								album: {
-									id: album.uid || '',
-									changes:
-										this.albumUtilService.convertModelUpdateToEntityUpdate(
-											album
-										),
-								},
+								album: this.albumUtilService.convertModelToEntity(
+									album
+								),
 							});
+						}),
+						catchError((error) => {
+							console.log(error);
+	
+							return of(exportImportActions.updateAlbumFail(error));
 						})
 					)
 			)
