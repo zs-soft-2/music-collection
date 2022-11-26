@@ -1,6 +1,7 @@
 export * from './action';
 export * from './authentication';
 export * from './authorization';
+export * from './dynamic-config';
 export * from './entity-quantity';
 export * from './export-import';
 export * from './firebase';

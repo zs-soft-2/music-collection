@@ -1,5 +1,6 @@
 import {
 	CollectionItemEntity,
+	CollectionItemListConfig,
 	COLLECTION_ITEM_FEATURE_KEY,
 } from '@music-collection/api';
 import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity';
@@ -13,6 +14,7 @@ export interface State extends EntityState<CollectionItemEntity> {
 	loading: boolean;
 	searchResult: CollectionItemEntity[];
 	error?: string | null;
+	collectionItemListConfig: CollectionItemListConfig | null;
 }
 
 export interface CollectionItemPartialState {
@@ -30,6 +32,7 @@ export const collectionItemAdapter: EntityAdapter<CollectionItemEntity> =
 	});
 
 export const initialState: State = collectionItemAdapter.getInitialState({
+	collectionItemListConfig: null,
 	isNewEntityButtonEnabled: true,
 	loading: false,
 	error: null,
@@ -105,11 +108,13 @@ export const collectionItemReducer = createReducer(
 			searchResult: result,
 		});
 	}),
-	on(collectionItemActions.searchFailed, (state, { error }) => ({
-		...state,
-		searchResult: [],
-		error,
-	}))
+	on(
+		collectionItemActions.setCollectionItemListConfig,
+		(state, { collectionItemListConfig }) => ({
+			...state,
+			collectionItemListConfig,
+		})
+	)
 );
 
 export function reducer(state: State | undefined, action: Action) {

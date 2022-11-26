@@ -1,4 +1,5 @@
 export enum FormatEnum {
+	ep = 'ep',
 	lp = 'lp',
 	live = 'live',
 	compilation = 'compilation',
@@ -7,6 +8,7 @@ export enum FormatEnum {
 }
 
 export const FormatList: FormatEnum[] = [
+	FormatEnum.ep,
 	FormatEnum.compilation,
 	FormatEnum.live,
 	FormatEnum.lp,

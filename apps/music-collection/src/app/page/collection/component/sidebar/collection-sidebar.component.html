@@ -1,0 +1,41 @@
+<div class="collection-sidebar" *ngIf="params$$ | async as params">
+	<div class="config">
+		<div class="config-content-wrapper">
+			<a tabindex="0" class="config-button" (click)="openSidebarHandler()"
+				><i class="pi pi-cog"></i
+			></a>
+
+			<a tabindex="0" class="config-close"><i class="pi pi-times"></i></a>
+		</div>
+	</div>
+
+	<p-sidebar [(visible)]="params.isSidebarVisible" position="right">
+		<div
+			class="sidebar"
+			fxLayout="column"
+			fxLayoutAlign="space-between none"
+		>
+			<p-accordion fxFlex="80">
+				<p-accordionTab header="Group By" [selected]="true">
+					<p-multiSelect
+						[options]="params.groupList"
+						display="chip"
+						[(ngModel)]="params.config.groupBy"
+					>
+					</p-multiSelect>
+				</p-accordionTab>
+
+				<p-accordionTab header="Header 2"> Content 2 </p-accordionTab>
+
+				<p-accordionTab header="Header 3"> Content 3 </p-accordionTab>
+			</p-accordion>
+
+			<button
+				pButton
+				type="button"
+				label="Save"
+				(click)="saveHandler()"
+			></button>
+		</div>
+	</p-sidebar>
+</div>

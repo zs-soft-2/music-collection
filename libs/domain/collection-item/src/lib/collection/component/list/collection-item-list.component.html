@@ -1,17 +1,57 @@
 <section class="collection-item-list" *rxLet="params$; let params">
 	<div
 		class="flex-container"
-		fxLayout="row wrap"
+		[fxLayout]="params.fxLayoutValue"
 		fxLayout.xs="column"
 		fxLayoutAlign="center"
 		fxLayoutGap="10px 5px grid"
 	>
-		<ng-container *ngFor="let collectionItem of params.collectionItems">
-			<div class="collection-item-view" fxLayoutAlign="center center">
-				<mc-collection-item-simple-view
-					[collectionItem]="collectionItem"
-				></mc-collection-item-simple-view>
-			</div>
+		<ng-container *ngFor="let item of params.collectionItemMap">
+			<ng-container [ngSwitch]="item.groupBy">
+				<ng-container *ngSwitchCase="'default'">
+					<ng-container
+						*ngFor="let collectionItem of item.collectionItemList"
+					>
+						<div
+							class="collection-item-view"
+							fxLayoutAlign="center center"
+						>
+							<mc-collection-item-simple-view
+								[collectionItem]="collectionItem"
+							>
+							</mc-collection-item-simple-view>
+						</div>
+					</ng-container>
+				</ng-container>
+
+				<ng-container *ngSwitchCase="'artist'">
+					<div>
+						<h3>
+							{{ item.name }}
+						</h3>
+
+						<div
+							fxLayout="row wrap"
+							fxLayout.xs="column"
+							fxLayoutAlign="center"
+							fxLayoutGap="10px 5px grid"
+						>
+							<ng-container
+								*ngFor="
+									let collectionItem of item.collectionItemList
+								"
+							>
+								<div class="collection-item-view">
+									<mc-collection-item-simple-view
+										[collectionItem]="collectionItem"
+									>
+									</mc-collection-item-simple-view>
+								</div>
+							</ng-container>
+						</div>
+					</div>
+				</ng-container>
+			</ng-container>
 		</ng-container>
 	</div>
 </section>

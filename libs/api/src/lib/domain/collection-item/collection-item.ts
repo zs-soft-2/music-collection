@@ -37,10 +37,42 @@ export type CollectionItemFormParams = {
 };
 
 export type CollectionItemListParams = {
-	collectionItems: CollectionItemEntity[];
+	collectionItemMap: CollectionItemMap[];
+	fxLayoutValue: string;
 };
 
 export type CollectionItemTableParams = {
 	collectionItems: CollectionItemEntity[];
 	empty: string[];
+};
+
+export type CollectionSidebarParams = {
+	config: CollectionItemListConfig;
+	isSidebarVisible: boolean;
+	groupList: CollectionGroupByEnum[];
+};
+
+export enum CollectionGroupByEnum {
+	default = 'default',
+	artist = 'artist',
+	style = 'style',
+	year = 'year',
+}
+
+export const CollectionGroupByList: CollectionGroupByEnum[] = [
+	CollectionGroupByEnum.artist,
+	CollectionGroupByEnum.style,
+	CollectionGroupByEnum.year,
+];
+
+export type CollectionItemListConfig = {
+	sortBy: 'albumName' | 'albumYear' | null;
+	groupBy: CollectionGroupByEnum[] | null;
+};
+
+export type CollectionItemMap = {
+	name: string;
+	collectionItemList: CollectionItemEntity[] | null;
+	collectionItemMap: CollectionItemMap | null;
+	groupBy: CollectionGroupByEnum;
 };

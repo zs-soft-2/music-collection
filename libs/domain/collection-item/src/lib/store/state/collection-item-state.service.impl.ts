@@ -5,6 +5,7 @@ import {
 	CollectionItemEntity,
 	CollectionItemEntityAdd,
 	CollectionItemEntityUpdate,
+	CollectionItemListConfig,
 	CollectionItemStateService,
 	SearchParams,
 } from '@music-collection/api';
@@ -27,6 +28,16 @@ export class CollectionItemStateServiceImpl extends CollectionItemStateService {
 	): void {
 		this.store.dispatch(
 			collectionItemActions.addCollectionItem({ collectionItem })
+		);
+	}
+
+	public dispatchSetCollectionItemConfigAction(
+		collectionItemListConfig: CollectionItemListConfig
+	): void {
+		this.store.dispatch(
+			collectionItemActions.setCollectionItemListConfig({
+				collectionItemListConfig,
+			})
 		);
 	}
 
@@ -107,6 +118,12 @@ export class CollectionItemStateServiceImpl extends CollectionItemStateService {
 	public selectNewEntityButtonEnabled$(): Observable<boolean> {
 		return this.store.pipe(
 			select(collectionItemSelectors.isNewEntityButtonEnabled)
+		);
+	}
+
+	public selectCollectionItemListConfig$(): Observable<CollectionItemListConfig | null> {
+		return this.store.pipe(
+			select(collectionItemSelectors.selectCollectionItemListConfig)
 		);
 	}
 

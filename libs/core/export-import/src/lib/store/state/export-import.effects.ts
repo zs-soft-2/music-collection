@@ -85,8 +85,10 @@ export class ExportImportEffects extends BaseService {
 						}),
 						catchError((error) => {
 							console.log(error);
-	
-							return of(exportImportActions.updateAlbumFail(error));
+
+							return of(
+								exportImportActions.updateAlbumFail(error)
+							);
 						})
 					)
 			)

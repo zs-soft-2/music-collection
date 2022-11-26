@@ -72,3 +72,8 @@ export const selectSearchResult = createSelector(
 	getCollectionItemState,
 	(state: State) => state.searchResult
 );
+
+export const selectCollectionItemListConfig = createSelector(
+	getCollectionItemState,
+	(state: State) => state.collectionItemListConfig
+);

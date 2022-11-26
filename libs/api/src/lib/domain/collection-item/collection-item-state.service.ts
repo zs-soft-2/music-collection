@@ -5,6 +5,7 @@ import {
 	CollectionItemEntity,
 	CollectionItemEntityAdd,
 	CollectionItemEntityUpdate,
+	CollectionItemListConfig,
 } from './collection-item';
 
 export abstract class CollectionItemStateService extends EntityStateService<
@@ -15,6 +16,10 @@ export abstract class CollectionItemStateService extends EntityStateService<
 	public abstract dispatchChangeNewEntityButtonEnabled(
 		enabled: boolean
 	): void;
+	public abstract dispatchSetCollectionItemConfigAction(
+		collectionItemListConfig: CollectionItemListConfig
+	): void;
+	public abstract selectCollectionItemListConfig$(): Observable<CollectionItemListConfig | null>;
 	public abstract selectNewEntityButtonEnabled$(): Observable<boolean>;
 	public abstract selectSearchResult$(): Observable<CollectionItemEntity[]>;
 }

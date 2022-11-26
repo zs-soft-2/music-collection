@@ -2,6 +2,7 @@ import {
 	CollectionItemEntity,
 	CollectionItemEntityAdd,
 	CollectionItemEntityUpdate,
+	CollectionItemListConfig,
 	SearchParams,
 } from '@music-collection/api';
 import { Update } from '@ngrx/entity';
@@ -126,4 +127,9 @@ export const updateCollectionItemFail = createAction(
 export const updateCollectionItemSuccess = createAction(
 	'[CollectionItem] Update CollectionItem Success',
 	props<{ collectionItem: Update<CollectionItemEntityUpdate> }>()
+);
+
+export const setCollectionItemListConfig = createAction(
+	'[CollectionItem] Set CollectionItem List Config',
+	props<{ collectionItemListConfig: CollectionItemListConfig }>()
 );

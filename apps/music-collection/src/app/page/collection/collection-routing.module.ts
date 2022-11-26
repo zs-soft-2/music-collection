@@ -1,13 +1,13 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
-import { CollectionComponent } from './collection.component';
+import { CollectionPageComponent } from './component';
 
 const routes: Routes = [
 	{
 		path: '',
 		pathMatch: 'full',
-		component: CollectionComponent,
+		component: CollectionPageComponent,
 	},
 ];
 
