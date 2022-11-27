@@ -118,7 +118,7 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 
 	public createEntity(formGroup: FormGroup): ReleaseEntityAdd {
 		return {
-			album: this.createReleaseAlbum(formGroup.value['album']),
+			album: formGroup.value['album'],
 			artist: this.createReleaseArtist(formGroup.value['artist']),
 			country: formGroup.value['country'],
 			date: formGroup.value['date'],
@@ -144,16 +144,8 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 
 		if (!formGroup) {
 			newFormGroup = this.formBuilder.group({
-				album: [
-					{ value: release?.album, disabled: !isAlbumsActive } ||
-						null,
-					[Validators.required],
-				],
-				artist: [
-					{ value: release?.artist, disabled: !isArtistsActive } ||
-						null,
-					[Validators.required],
-				],
+				album: [release?.album || null, [Validators.required]],
+				artist: [release?.artist || null, [Validators.required]],
 				country: [release?.country || null, [Validators.required]],
 				date: [release?.date || null, [Validators.required]],
 				formatDescription: [release?.formatDescription || null],
@@ -179,7 +171,7 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 
 	public updateEntity(formGroup: FormGroup): ReleaseEntityUpdate {
 		return {
-			album: this.createReleaseAlbum(formGroup.value['album']),
+			album: formGroup.value['album'],
 			artist: this.createReleaseArtist(formGroup.value['artist']),
 			country: formGroup.value['country'],
 			date: formGroup.value['date'],

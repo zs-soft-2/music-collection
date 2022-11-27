@@ -55,12 +55,14 @@ export type CollectionSidebarParams = {
 export enum CollectionGroupByEnum {
 	default = 'default',
 	artist = 'artist',
+	media = 'media',
 	style = 'style',
 	year = 'year',
 }
 
 export const CollectionGroupByList: CollectionGroupByEnum[] = [
 	CollectionGroupByEnum.artist,
+	CollectionGroupByEnum.media,
 	CollectionGroupByEnum.style,
 	CollectionGroupByEnum.year,
 ];
@@ -73,6 +75,6 @@ export type CollectionItemListConfig = {
 export type CollectionItemMap = {
 	name: string;
 	collectionItemList: CollectionItemEntity[] | null;
-	collectionItemMap: CollectionItemMap | null;
+	collectionItemMaps: CollectionItemMap[] | null;
 	groupBy: CollectionGroupByEnum;
 };

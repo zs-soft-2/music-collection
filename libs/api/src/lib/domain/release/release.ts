@@ -4,16 +4,15 @@ import {
 	CountryEnum,
 	Entity,
 	FormatDescriptionEnum,
-	FormatEnum,
 	MediaEnum,
 	Searchable,
 } from '../../common';
-import { AlbumEntity, SimpleAlbum } from '../album';
+import { AlbumEntity } from '../album';
 import { ArtistEntity } from '../artist';
 import { LabelEntity } from '../label';
 
 export interface Release {
-	album: SimpleAlbum;
+	album: AlbumEntity;
 	artist: ReleaseArtist;
 	country: CountryEnum;
 	formatDescription: FormatDescriptionEnum;

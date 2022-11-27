@@ -12,7 +12,6 @@ import {
 	CountryList,
 	EntityTypeEnum,
 	FormatDescriptionList,
-	FormatList,
 	LabelEntity,
 	LabelStateService,
 	MediaList,

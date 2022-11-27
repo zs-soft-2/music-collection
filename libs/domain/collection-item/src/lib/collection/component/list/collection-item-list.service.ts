@@ -10,6 +10,7 @@ import {
 	CollectionItemListParams,
 	CollectionItemMap,
 	CollectionItemStateService,
+	MediaEnum,
 } from '@music-collection/api';
 
 @Injectable()
@@ -70,10 +71,26 @@ export class CollectionItemListService extends BaseComponent {
 			items.push({
 				name: '',
 				collectionItemList: entities,
-				collectionItemMap: null,
+				collectionItemMaps: null,
 				groupBy: CollectionGroupByEnum.default,
 			});
-		} else if (config.groupBy?.includes(CollectionGroupByEnum.artist)) {
+		} else {
+			items.push(...this.createGroup(entities, config.groupBy, 0));
+		}
+
+		return items;
+	}
+
+	private createGroup(
+		entities: CollectionItemEntity[],
+		groupByItems: CollectionGroupByEnum[],
+		index: number
+	): CollectionItemMap[] {
+		const groupBy: CollectionGroupByEnum = groupByItems[index];
+		const collectionItemMaps: CollectionItemMap[] = [];
+		const isMoreGroupBy = !!groupByItems[index + 1];
+
+		if (groupBy === CollectionGroupByEnum.artist) {
 			const map: Map<string, CollectionItemEntity[]> = new Map();
 
 			entities.forEach((entity) => {
@@ -92,16 +109,72 @@ export class CollectionItemListService extends BaseComponent {
 			});
 
 			Array.from(map.entries()).forEach((entry) => {
-				items.push({
+				let collectionItemList: CollectionItemEntity[] | null = null;
+				let childCollectionItemMaps: CollectionItemMap[] | null = null;
+
+				if (isMoreGroupBy) {
+					childCollectionItemMaps = this.createGroup(
+						entry[1],
+						groupByItems,
+						index + 1
+					);
+				} else {
+					collectionItemList = entry[1];
+				}
+
+				const item: CollectionItemMap = {
 					name: entry[0],
-					collectionItemList: entry[1],
-					collectionItemMap: null,
-					groupBy: CollectionGroupByEnum.artist,
-				});
+					collectionItemList,
+					collectionItemMaps: childCollectionItemMaps,
+					groupBy,
+				};
+
+				collectionItemMaps.push(item);
+			});
+		} else if (groupBy === CollectionGroupByEnum.media) {
+			const map: Map<MediaEnum, CollectionItemEntity[]> = new Map();
+
+			entities.forEach((entity) => {
+				const media: MediaEnum = entity.release.media;
+
+				let entities: CollectionItemEntity[] | undefined =
+					map.get(media);
+
+				if (!entities) {
+					entities = [entity];
+
+					map.set(media, entities);
+				} else {
+					entities.push(entity);
+				}
+			});
+
+			Array.from(map.entries()).forEach((entry) => {
+				let collectionItemList: CollectionItemEntity[] | null = null;
+				let childCollectionItemMaps: CollectionItemMap[] | null = null;
+
+				if (isMoreGroupBy) {
+					childCollectionItemMaps = this.createGroup(
+						entry[1],
+						groupByItems,
+						index + 1
+					);
+				} else {
+					collectionItemList = entry[1];
+				}
+
+				const item: CollectionItemMap = {
+					name: entry[0],
+					collectionItemList,
+					collectionItemMaps: childCollectionItemMaps,
+					groupBy,
+				};
+
+				collectionItemMaps.push(item);
 			});
 		}
 
-		return items;
+		return collectionItemMaps;
 	}
 
 	private shuffleArray(

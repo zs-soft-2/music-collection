@@ -51,6 +51,34 @@
 						</div>
 					</div>
 				</ng-container>
+
+				<ng-container *ngSwitchCase="'media'">
+					<div>
+						<h3>
+							{{ item.name }}
+						</h3>
+
+						<div
+							fxLayout="row wrap"
+							fxLayout.xs="column"
+							fxLayoutAlign="center"
+							fxLayoutGap="10px 5px grid"
+						>
+							<ng-container
+								*ngFor="
+									let collectionItem of item.collectionItemList
+								"
+							>
+								<div class="collection-item-view">
+									<mc-collection-item-simple-view
+										[collectionItem]="collectionItem"
+									>
+									</mc-collection-item-simple-view>
+								</div>
+							</ng-container>
+						</div>
+					</div>
+				</ng-container>
 			</ng-container>
 		</ng-container>
 	</div>
