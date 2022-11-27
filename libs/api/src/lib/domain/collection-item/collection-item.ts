@@ -37,7 +37,7 @@ export type CollectionItemFormParams = {
 };
 
 export type CollectionItemListParams = {
-	collectionItemMap: CollectionItemMap[];
+	collectionItemMaps: CollectionItemMap[];
 	fxLayoutValue: string;
 };
 

@@ -41,7 +41,7 @@ export class CollectionItemListService extends BaseComponent {
 		]).pipe(
 			switchMap(([entities, config]) => {
 				this.params = {
-					collectionItemMap: this.createCollectionItemMap(
+					collectionItemMaps: this.createCollectionItemMap(
 						entities,
 						config
 					),
@@ -144,6 +144,47 @@ export class CollectionItemListService extends BaseComponent {
 					entities = [entity];
 
 					map.set(media, entities);
+				} else {
+					entities.push(entity);
+				}
+			});
+
+			Array.from(map.entries()).forEach((entry) => {
+				let collectionItemList: CollectionItemEntity[] | null = null;
+				let childCollectionItemMaps: CollectionItemMap[] | null = null;
+
+				if (isMoreGroupBy) {
+					childCollectionItemMaps = this.createGroup(
+						entry[1],
+						groupByItems,
+						index + 1
+					);
+				} else {
+					collectionItemList = entry[1];
+				}
+
+				const item: CollectionItemMap = {
+					name: entry[0],
+					collectionItemList,
+					collectionItemMaps: childCollectionItemMaps,
+					groupBy,
+				};
+
+				collectionItemMaps.push(item);
+			});
+		} else if (groupBy === CollectionGroupByEnum.style) {
+			const map: Map<string, CollectionItemEntity[]> = new Map();
+
+			entities.forEach((entity) => {
+				const style: string = entity.release.album.styles.join('/');
+
+				let entities: CollectionItemEntity[] | undefined =
+					map.get(style);
+
+				if (!entities) {
+					entities = [entity];
+
+					map.set(style, entities);
 				} else {
 					entities.push(entity);
 				}
