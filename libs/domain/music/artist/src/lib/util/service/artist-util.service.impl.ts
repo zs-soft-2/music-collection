@@ -71,6 +71,10 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 			entityType: model.entityType,
 		};
 
+		if (model.country) {
+			entity.country = model.country;
+		}
+
 		if (model.formedIn) {
 			entity.formedIn = new Date(model.formedIn);
 		}
@@ -112,6 +116,7 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 
 	public createEntity(formGroup: FormGroup): ArtistEntityAdd {
 		return {
+			country: formGroup.value['country'],
 			description: formGroup.value['description'],
 			entityType: EntityTypeEnum.Artist,
 			formedIn: formGroup.value['formedIn'],
@@ -126,6 +131,7 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 
 	public createFormGroup(artist: ArtistEntity | undefined): FormGroup {
 		return this.formBuilder.group({
+			country: [artist?.country || null],
 			description: [artist?.description || null],
 			formedIn: [artist?.formedIn || null, [Validators.required]],
 			headerImage: [artist?.headerImage || null],
@@ -141,6 +147,7 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 
 	public updateEntity(formGroup: FormGroup): ArtistEntityUpdate {
 		return {
+			country: formGroup.value['country'],
 			description: formGroup.value['description'],
 			entityType: EntityTypeEnum.Artist,
 			formedIn: formGroup.value['formedIn'],

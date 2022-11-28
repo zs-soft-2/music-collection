@@ -9,7 +9,7 @@ import {
 	AlbumStateService,
 	ArtistEntity,
 	ArtistStateService,
-	CountryList,
+	ReleaseCountryList,
 	EntityTypeEnum,
 	FormatDescriptionList,
 	LabelEntity,
@@ -173,7 +173,7 @@ export class ReleaseFormService {
 			releaseFormParams = {
 				artists,
 				albums,
-				countryList: CountryList,
+				countryList: ReleaseCountryList,
 				formGroup,
 				formatDescriptionList: FormatDescriptionList,
 				labels,

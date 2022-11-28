@@ -1,7 +1,7 @@
 import { FormGroup } from '@angular/forms';
 
 import {
-	CountryEnum,
+	ReleaseCountryEnum,
 	Entity,
 	FormatDescriptionEnum,
 	MediaEnum,
@@ -14,7 +14,7 @@ import { LabelEntity } from '../label';
 export interface Release {
 	album: AlbumEntity;
 	artist: ReleaseArtist;
-	country: CountryEnum;
+	country: ReleaseCountryEnum;
 	formatDescription: FormatDescriptionEnum;
 	label: ReleaseLabel;
 	media: MediaEnum;
@@ -43,7 +43,7 @@ export type ReleaseModelUpdate = Partial<ReleaseModel> & Entity & Searchable;
 export type ReleaseFormParams = {
 	artists: ArtistEntity[];
 	albums: AlbumEntity[];
-	countryList: CountryEnum[];
+	countryList: ReleaseCountryEnum[];
 	formGroup: FormGroup;
 	formatDescriptionList: FormatDescriptionEnum[];
 	labels: LabelEntity[];

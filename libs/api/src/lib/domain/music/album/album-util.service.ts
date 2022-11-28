@@ -1,5 +1,12 @@
-import { EntityTypeEnum, EntityUtilService, SearchParams } from '../../../common';
-import { EntityQuantityEntity, EntityQuantityEntityUpdate } from '../../../core';
+import {
+	EntityTypeEnum,
+	EntityUtilService,
+	SearchParams,
+} from '../../../common';
+import {
+	EntityQuantityEntity,
+	EntityQuantityEntityUpdate,
+} from '../../../core';
 import {
 	AlbumEntity,
 	AlbumEntityAdd,

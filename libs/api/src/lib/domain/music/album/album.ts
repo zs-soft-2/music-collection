@@ -1,6 +1,12 @@
 import { FormGroup } from '@angular/forms';
 
-import { Entity, FormatEnum, GenreEnum, Searchable, StyleEnum } from '../../../common';
+import {
+	Entity,
+	FormatEnum,
+	GenreEnum,
+	Searchable,
+	StyleEnum,
+} from '../../../common';
 import { DocumentEntity } from '../../document';
 import { ArtistEntity } from '../artist';
 

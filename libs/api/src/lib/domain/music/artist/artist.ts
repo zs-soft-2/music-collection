@@ -2,11 +2,18 @@ import { MenuItem } from 'primeng/api';
 
 import { FormGroup } from '@angular/forms';
 
-import { Entity, GenreEnum, Searchable, StyleEnum } from '../../../common';
+import {
+	CountryEnum,
+	Entity,
+	GenreEnum,
+	Searchable,
+	StyleEnum,
+} from '../../../common';
 import { DocumentEntity } from '../../document';
 import { AlbumEntity } from '../album';
 
 export interface Artist {
+	country?: CountryEnum;
 	description: string;
 	genre: GenreEnum;
 	headerImage?: DocumentEntity;
@@ -37,6 +44,7 @@ export type ArtistModelAdd = Omit<ArtistModel, 'uid'>;
 export type ArtistModelUpdate = Partial<ArtistModel> & Entity & Searchable;
 
 export type ArtistFormParams = {
+	countries: CountryEnum[];
 	documents: DocumentEntity[];
 	formGroup: FormGroup;
 	isImagesTabActive: boolean;
@@ -46,6 +54,7 @@ export type ArtistFormParams = {
 export type ArtistDetailParams = {
 	albums: AlbumEntity[] | undefined;
 	artist: ArtistEntity | undefined;
+	country?: CountryEnum;
 	menuItems: MenuItem[];
 	activeMenuItem: MenuItem;
 	selectedContent: string;

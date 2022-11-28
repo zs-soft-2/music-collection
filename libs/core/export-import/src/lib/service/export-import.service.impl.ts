@@ -20,13 +20,10 @@ import {
 	ArtistExportModel,
 	ArtistExportModelWithAlbums,
 	ArtistImportModel,
-	ArtistStateService,
 	DocumentEntity,
 	DocumentExportModel,
 	DocumentFile,
 	DocumentImportModel,
-	DocumentStateService,
-	DocumentUtilService,
 	Entity,
 	ExportImportService,
 	ExportImportStateService,
@@ -307,6 +304,7 @@ export class ExportImportServiceImpl extends ExportImportService {
 		documentImportModels: (DocumentImportModel | null)[]
 	) {
 		const artistImportModel: ArtistImportModel = {
+			country: artistExportModel.country,
 			description: artistExportModel.description,
 			entityType: artistExportModel.entityType,
 			formedIn: new Date(artistExportModel.formedIn),

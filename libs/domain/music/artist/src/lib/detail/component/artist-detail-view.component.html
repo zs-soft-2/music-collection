@@ -24,13 +24,19 @@
 	<div class="content">
 		<ng-container [ngSwitch]="params.selectedContent">
 			<div *ngSwitchCase="'info'">
-				<div class="item">
+				<div class="property">
+					<span>Country:</span>
+
+					<span>{{ params.artist?.country }}</span>
+				</div>
+
+				<div class="property">
 					<span>Formed in:</span>
 
 					<span>{{ params.artist?.formedIn | date: 'yyyy' }}</span>
 				</div>
 
-				<div class="item">
+				<div class="property">
 					<span>Styles:</span>
 
 					<span>

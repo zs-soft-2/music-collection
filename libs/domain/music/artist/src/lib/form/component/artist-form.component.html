@@ -34,6 +34,19 @@
 
 				<div class="field">
 					<span class="p-float-label">
+						<p-dropdown
+							id="country"
+							[options]="params.countries"
+							placeholder="Select a country"
+							formControlName="country"
+						></p-dropdown>
+
+						<label for="country">Country</label>
+					</span>
+				</div>
+
+				<div class="field">
+					<span class="p-float-label">
 						<p-calendar
 							id="formedIn"
 							formControlName="formedIn"

@@ -1,5 +1,8 @@
 import { EntityUtilService } from '../../../common';
-import { EntityQuantityEntity, EntityQuantityEntityUpdate } from '../../../core';
+import {
+	EntityQuantityEntity,
+	EntityQuantityEntityUpdate,
+} from '../../../core';
 import {
 	LabelEntity,
 	LabelEntityAdd,

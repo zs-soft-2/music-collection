@@ -83,6 +83,7 @@ export class ExportImportUtilServiceImpl extends ExportImportUtilService {
 		mainImageDocument: DocumentExportModel | null
 	): ArtistExportModel {
 		const {
+			country,
 			description,
 			entityType,
 			genre,
@@ -96,6 +97,7 @@ export class ExportImportUtilServiceImpl extends ExportImportUtilService {
 		} = artistEntity;
 
 		const artistExportModel: ArtistExportModel = {
+			country,
 			description,
 			entityType,
 			genre,

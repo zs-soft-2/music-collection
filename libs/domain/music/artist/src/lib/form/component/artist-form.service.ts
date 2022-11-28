@@ -11,6 +11,7 @@ import {
 	ArtistFormParams,
 	ArtistStateService,
 	ArtistUtilService,
+	CountryList,
 	DocumentEntity,
 	DocumentStateService,
 	EntityTypeEnum,
@@ -105,6 +106,7 @@ export class ArtistFormService {
 		isImagesTabActive: boolean
 	): ArtistFormParams {
 		const artistFormParams: ArtistFormParams = {
+			countries: CountryList,
 			documents,
 			formGroup,
 			isImagesTabActive,
