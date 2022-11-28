@@ -32,22 +32,22 @@
 				"libs/core/export-import/src/index.ts"
 			],
 			"@music-collection/domain/album": [
-				"libs/domain/album/src/index.ts"
+				"libs/domain/music/album/src/index.ts"
 			],
 			"@music-collection/domain/artist": [
-				"libs/domain/artist/src/index.ts"
+				"libs/domain/music/artist/src/index.ts"
 			],
 			"@music-collection/domain/collection-item": [
-				"libs/domain/collection-item/src/index.ts"
+				"libs/domain/music/collection-item/src/index.ts"
 			],
 			"@music-collection/domain/document": [
 				"libs/domain/document/src/index.ts"
 			],
 			"@music-collection/domain/label": [
-				"libs/domain/label/src/index.ts"
+				"libs/domain/music/label/src/index.ts"
 			],
 			"@music-collection/domain/release": [
-				"libs/domain/release/src/index.ts"
+				"libs/domain/music/release/src/index.ts"
 			],
 			"@music-collection/domain/user": ["libs/domain/user/src/index.ts"],
 			"@music-collection/ui": ["libs/ui/src/index.ts"]
