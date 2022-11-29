@@ -41,6 +41,7 @@ export class CollectionItemListService extends BaseComponent {
 		]).pipe(
 			switchMap(([entities, config]) => {
 				this.params = {
+					allItems: entities.length,
 					collectionItemMaps: this.createCollectionItemMap(
 						entities,
 						config
