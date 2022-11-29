@@ -13,7 +13,7 @@ import { DocumentEntity } from '../../document';
 import { AlbumEntity } from '../album';
 
 export interface Artist {
-	country?: CountryEnum;
+	country: CountryEnum;
 	description: string;
 	genre: GenreEnum;
 	headerImage?: DocumentEntity;

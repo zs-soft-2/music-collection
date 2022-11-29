@@ -27,7 +27,7 @@ export enum StyleEnum {
 	Metalcore = 'Metalcore',
 	New_Wave_Of_British_Heavy_Metal = 'New Wave Of British Heavy Metal',
 	Power_Metal = 'Power metal',
-	Progressive_Metal = 'Progressive meta',
+	Progressive_Metal = 'Progressive metal',
 	Progressive_Death = 'Progressive Death',
 	Progressive_Thrash = 'Progressive Thrash',
 	Speed = 'Speed',

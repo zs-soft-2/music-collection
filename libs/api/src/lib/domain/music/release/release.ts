@@ -61,7 +61,13 @@ export type ReleaseListParams = {
 
 export type ReleaseArtist = Omit<
 	ArtistEntity,
-	'sites' | 'members' | 'description' | 'formedIn' | 'genre' | 'styles'
+	| 'sites'
+	| 'members'
+	| 'description'
+	| 'formedIn'
+	| 'genre'
+	| 'styles'
+	| 'country'
 >;
 
 export type ReleaseLabel = Omit<LabelEntity, 'parent'>;
