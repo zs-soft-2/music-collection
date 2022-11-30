@@ -10,6 +10,8 @@ import {
 	CollectionItemListParams,
 	CollectionItemMap,
 	CollectionItemStateService,
+	CollectionItemUtilService,
+	CollectionSortByEnum,
 	MediaEnum,
 } from '@music-collection/api';
 
@@ -19,7 +21,8 @@ export class CollectionItemListService extends BaseComponent {
 	private params$$: ReplaySubject<CollectionItemListParams>;
 
 	public constructor(
-		private collectionItemStateService: CollectionItemStateService
+		private collectionItemStateService: CollectionItemStateService,
+		private collectionItemUtilService: CollectionItemUtilService
 	) {
 		super();
 
@@ -34,8 +37,7 @@ export class CollectionItemListService extends BaseComponent {
 						this.collectionItemStateService.dispatchListEntitiesAction();
 					}
 				}),
-				filter((entities) => entities.length > 0),
-				map((entities) => this.shuffleArray(entities))
+				filter((entities) => entities.length > 0)
 			),
 			this.collectionItemStateService.selectCollectionItemListConfig$(),
 		]).pipe(
@@ -43,7 +45,10 @@ export class CollectionItemListService extends BaseComponent {
 				this.params = {
 					allItems: entities.length,
 					collectionItemMaps: this.createCollectionItemMap(
-						entities,
+						this.collectionItemUtilService.sortCollectionItems(
+							config?.sortBy || null,
+							entities
+						),
 						config
 					),
 					fxLayoutValue: this.createFxLayoutValue(config),
@@ -217,22 +222,5 @@ export class CollectionItemListService extends BaseComponent {
 		}
 
 		return collectionItemMaps;
-	}
-
-	private shuffleArray(
-		array: CollectionItemEntity[]
-	): CollectionItemEntity[] {
-		let size = array.length,
-			t,
-			i;
-
-		while (size) {
-			i = Math.floor(Math.random() * size--);
-			t = array[size];
-			array[size] = array[i];
-			array[i] = t;
-		}
-
-		return array;
 	}
 }

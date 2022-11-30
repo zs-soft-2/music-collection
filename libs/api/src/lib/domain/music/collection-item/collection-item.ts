@@ -50,8 +50,25 @@ export type CollectionItemTableParams = {
 export type CollectionSidebarParams = {
 	config: CollectionItemListConfig;
 	isSidebarVisible: boolean;
-	groupList: CollectionGroupByEnum[];
+	groupByList: CollectionGroupByEnum[];
+	sortByList: CollectionSortByEnum[];
 };
+
+export enum CollectionSortByEnum {
+	ascAlbumName = 'asc album name',
+	descAlbumName = 'desc album name',
+	ascArtistName = 'asc artist name',
+	descArtistName = 'desc artist name',
+	random = 'random',
+}
+
+export const collectionSortByList: CollectionSortByEnum[] = [
+	CollectionSortByEnum.ascAlbumName,
+	CollectionSortByEnum.descAlbumName,
+	CollectionSortByEnum.ascArtistName,
+	CollectionSortByEnum.descArtistName,
+	CollectionSortByEnum.random,
+];
 
 export enum CollectionGroupByEnum {
 	default = 'default',
@@ -61,7 +78,7 @@ export enum CollectionGroupByEnum {
 	year = 'year',
 }
 
-export const CollectionGroupByList: CollectionGroupByEnum[] = [
+export const collectionGroupByList: CollectionGroupByEnum[] = [
 	CollectionGroupByEnum.artist,
 	CollectionGroupByEnum.media,
 	CollectionGroupByEnum.style,
@@ -69,7 +86,7 @@ export const CollectionGroupByList: CollectionGroupByEnum[] = [
 ];
 
 export type CollectionItemListConfig = {
-	sortBy: 'albumName' | 'albumYear' | null;
+	sortBy: CollectionSortByEnum | null;
 	groupBy: CollectionGroupByEnum[] | null;
 };
 

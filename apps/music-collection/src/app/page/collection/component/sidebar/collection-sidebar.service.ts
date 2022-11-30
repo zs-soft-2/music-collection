@@ -1,12 +1,12 @@
-import { Observable, ReplaySubject, Subject, switchMap } from 'rxjs';
+import { Observable, ReplaySubject, Subject } from 'rxjs';
 
 import { Injectable } from '@angular/core';
 import {
 	BaseService,
-	CollectionGroupByEnum,
-	CollectionGroupByList,
+	collectionGroupByList,
 	CollectionItemListConfig,
 	CollectionSidebarParams,
+	collectionSortByList,
 } from '@music-collection/api';
 
 @Injectable()
@@ -29,7 +29,8 @@ export class CollectionSidebarService extends BaseService {
 				groupBy: null,
 			},
 			isSidebarVisible: false,
-			groupList: CollectionGroupByList,
+			groupByList: collectionGroupByList,
+			sortByList: collectionSortByList,
 		};
 
 		this.params$$.next(this.params);

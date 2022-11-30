@@ -8,21 +8,23 @@ import {
 	CollectionItemModelAdd,
 	CollectionItemModelUpdate,
 	CollectionItemUtilService,
+	CollectionSortByEnum,
 	EntityQuantityEntity,
 	EntityQuantityEntityUpdate,
 	EntityQuantityGroup,
 	EntityTypeEnum,
-	ParamItem,
-	QueryConstraintTypeEnum,
-	QueryOperatorEnum,
-	SearchParams,
 	User,
 } from '@music-collection/api';
 
 @Injectable()
 export class CollectionItemUtilServiceImpl extends CollectionItemUtilService {
 	public _sort = (a: CollectionItemEntity, b: CollectionItemEntity): number =>
-		a.release.name < b.release.name ? 1 : -1;
+		a.release.name <= b.release.name ? -1 : 1;
+
+	public _sortByArtistName = (
+		a: CollectionItemEntity,
+		b: CollectionItemEntity
+	): number => (a.release.artist.name <= b.release.artist.name ? -1 : 1);
 
 	public constructor(private formBuilder: FormBuilder) {
 		super();
@@ -136,6 +138,48 @@ export class CollectionItemUtilServiceImpl extends CollectionItemUtilService {
 		});
 	}
 
+	public sortCollectionItems(
+		sortBy: CollectionSortByEnum | null,
+		collectionItems: CollectionItemEntity[]
+	): CollectionItemEntity[] {
+		let sortedCollectionItems: CollectionItemEntity[];
+
+		switch (sortBy) {
+			case CollectionSortByEnum.random:
+				sortedCollectionItems = this.shuffleArray(collectionItems);
+
+				break;
+			case CollectionSortByEnum.ascAlbumName:
+				sortedCollectionItems = collectionItems.sort(this._sort);
+
+				break;
+			case CollectionSortByEnum.descAlbumName:
+				sortedCollectionItems = collectionItems
+					.sort(this._sort)
+					.reverse();
+
+				break;
+			case CollectionSortByEnum.ascArtistName:
+				sortedCollectionItems = collectionItems.sort(
+					this._sortByArtistName
+				);
+
+				break;
+			case CollectionSortByEnum.descArtistName:
+				sortedCollectionItems = collectionItems
+					.sort(this._sortByArtistName)
+					.reverse();
+
+				break;
+			default:
+				sortedCollectionItems = collectionItems;
+
+				break;
+		}
+
+		return sortedCollectionItems;
+	}
+
 	public updateEntity(formGroup: FormGroup): CollectionItemEntityUpdate {
 		return {
 			uid: formGroup.value['uid'],
@@ -166,5 +210,23 @@ export class CollectionItemUtilServiceImpl extends CollectionItemUtilService {
 			quantity: entityQuantity.quantity + 1,
 			group: group as EntityQuantityGroup,
 		};
+	}
+
+	private shuffleArray(
+		array: CollectionItemEntity[]
+	): CollectionItemEntity[] {
+		let size = array.length,
+			t,
+			i;
+
+		while (size) {
+			i = Math.floor(Math.random() * size--);
+			t = array[size];
+
+			array[size] = array[i];
+			array[i] = t;
+		}
+
+		return array;
 	}
 }

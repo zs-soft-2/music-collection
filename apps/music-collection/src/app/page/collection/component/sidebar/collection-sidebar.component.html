@@ -16,16 +16,29 @@
 			fxLayoutAlign="space-between none"
 		>
 			<p-accordion fxFlex="80">
-				<p-accordionTab header="Group By" [selected]="true">
+				<p-accordionTab header="Sort by">
+					<ng-container *ngFor="let item of params.sortByList">
+						<div class="field-radiobutton">
+							<p-radioButton
+								[name]="item"
+								[value]="item"
+								[(ngModel)]="params.config.sortBy"
+								[inputId]="item"
+							></p-radioButton>
+
+							<label [for]="item">{{ item | titlecase }}</label>
+						</div>
+					</ng-container>
+				</p-accordionTab>
+
+				<p-accordionTab header="Group by" [selected]="true">
 					<p-multiSelect
-						[options]="params.groupList"
+						[options]="params.groupByList"
 						display="chip"
 						[(ngModel)]="params.config.groupBy"
 					>
 					</p-multiSelect>
 				</p-accordionTab>
-
-				<p-accordionTab header="Header 2"> Content 2 </p-accordionTab>
 
 				<p-accordionTab header="Header 3"> Content 3 </p-accordionTab>
 			</p-accordion>

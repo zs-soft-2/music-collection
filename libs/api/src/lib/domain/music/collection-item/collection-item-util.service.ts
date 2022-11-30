@@ -13,6 +13,7 @@ import {
 	CollectionItemModel,
 	CollectionItemModelAdd,
 	CollectionItemModelUpdate,
+	CollectionSortByEnum,
 } from './collection-item';
 
 export abstract class CollectionItemUtilService extends EntityUtilService<
@@ -20,6 +21,11 @@ export abstract class CollectionItemUtilService extends EntityUtilService<
 	CollectionItemEntityAdd,
 	CollectionItemEntityUpdate
 > {
+	public abstract sortCollectionItems(
+		sortBy: CollectionSortByEnum | null,
+		collectionItems: CollectionItemEntity[]
+	): CollectionItemEntity[];
+
 	public abstract convertEntityAddToModelAdd(
 		entity: CollectionItemEntityAdd
 	): CollectionItemModelAdd;
