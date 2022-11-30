@@ -42,6 +42,11 @@ export class CollectionItemListService extends BaseComponent {
 			this.collectionItemStateService.selectCollectionItemListConfig$(),
 		]).pipe(
 			switchMap(([entities, config]) => {
+				entities = this.collectionItemUtilService.filterByArtist(
+					entities,
+					config?.filterByArtistNames || null
+				);
+
 				this.params = {
 					allItems: entities.length,
 					collectionItemMaps: this.createCollectionItemMap(

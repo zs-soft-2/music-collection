@@ -21,11 +21,6 @@ export abstract class CollectionItemUtilService extends EntityUtilService<
 	CollectionItemEntityAdd,
 	CollectionItemEntityUpdate
 > {
-	public abstract sortCollectionItems(
-		sortBy: CollectionSortByEnum | null,
-		collectionItems: CollectionItemEntity[]
-	): CollectionItemEntity[];
-
 	public abstract convertEntityAddToModelAdd(
 		entity: CollectionItemEntityAdd
 	): CollectionItemModelAdd;
@@ -48,6 +43,14 @@ export abstract class CollectionItemUtilService extends EntityUtilService<
 		entity: CollectionItemEntity | undefined,
 		user: User
 	): FormGroup;
+	public abstract filterByArtist(
+		collectionItems: CollectionItemEntity[],
+		filterByArtistNames: string[] | null
+	): CollectionItemEntity[];
+	public abstract sortCollectionItems(
+		sortBy: CollectionSortByEnum | null,
+		collectionItems: CollectionItemEntity[]
+	): CollectionItemEntity[];
 	public abstract updateEntityQuantity(
 		entityQuantityEntity: EntityQuantityEntity,
 		collectionItem: CollectionItemEntity

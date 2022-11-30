@@ -50,6 +50,7 @@ export type CollectionItemTableParams = {
 export type CollectionSidebarParams = {
 	config: CollectionItemListConfig;
 	isSidebarVisible: boolean;
+	filterByArtistNameList: string[];
 	groupByList: CollectionGroupByEnum[];
 	sortByList: CollectionSortByEnum[];
 };
@@ -86,6 +87,7 @@ export const collectionGroupByList: CollectionGroupByEnum[] = [
 ];
 
 export type CollectionItemListConfig = {
+	filterByArtistNames: string[] | null;
 	sortBy: CollectionSortByEnum | null;
 	groupBy: CollectionGroupByEnum[] | null;
 };

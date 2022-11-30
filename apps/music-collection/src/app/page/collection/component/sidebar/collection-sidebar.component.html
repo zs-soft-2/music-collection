@@ -40,7 +40,14 @@
 					</p-multiSelect>
 				</p-accordionTab>
 
-				<p-accordionTab header="Header 3"> Content 3 </p-accordionTab>
+				<p-accordionTab header="Filter by">
+					<p-multiSelect
+						[options]="params.filterByArtistNameList"
+						display="chip"
+						[(ngModel)]="params.config.filterByArtistNames"
+					>
+					</p-multiSelect>
+				</p-accordionTab>
 			</p-accordion>
 
 			<button

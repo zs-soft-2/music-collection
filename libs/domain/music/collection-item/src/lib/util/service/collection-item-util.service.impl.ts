@@ -30,6 +30,17 @@ export class CollectionItemUtilServiceImpl extends CollectionItemUtilService {
 		super();
 	}
 
+	public filterByArtist(
+		collectionItems: CollectionItemEntity[],
+		filterByArtistNames: string[] | null
+	): CollectionItemEntity[] {
+		return filterByArtistNames
+			? collectionItems.filter((item) =>
+					filterByArtistNames.includes(item.release.artist.name)
+			  )
+			: collectionItems;
+	}
+
 	public convertEntityAddToModelAdd(
 		entity: CollectionItemEntityAdd
 	): CollectionItemModelAdd {
