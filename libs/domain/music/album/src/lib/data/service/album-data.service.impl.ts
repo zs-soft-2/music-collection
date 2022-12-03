@@ -1,4 +1,4 @@
-import { Observable } from 'rxjs';
+import { Observable, of, switchMap } from 'rxjs';
 
 import { Injectable } from '@angular/core';
 import {
@@ -57,7 +57,9 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 	}
 
 	public load$(uid: string): Observable<AlbumModel | undefined> {
-		return super.loadModel$(uid);
+		return super
+			.listModelsByIds$([uid])
+			.pipe(switchMap((entities) => of(entities[0])));
 	}
 
 	public search$(params: SearchParams): Observable<AlbumModel[]> {

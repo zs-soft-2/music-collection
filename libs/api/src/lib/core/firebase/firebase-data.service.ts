@@ -1,4 +1,4 @@
-import { Observable } from 'rxjs';
+import { Observable, of, switchMap } from 'rxjs';
 
 import { Injectable } from '@angular/core';
 import {
@@ -69,8 +69,14 @@ export abstract class FirebaseDataService<
 		);
 
 		return new Observable((subscriber) => {
-			getDocs(albumsQuery).then((snapshot) => {
-				subscriber.next(snapshot.docChanges() as unknown as R[]);
+			getDocs(albumsQuery).then((snapshots) => {
+				const entities: R[] = [];
+
+				snapshots.forEach((doc) => {
+					entities.push(doc.data() as unknown as R);
+				});
+
+				subscriber.next(entities);
 			});
 		});
 	}
