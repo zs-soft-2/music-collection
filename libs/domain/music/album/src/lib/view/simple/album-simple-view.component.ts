@@ -12,4 +12,6 @@ export class AlbumSimpleViewComponent extends BaseComponent {
 	public album!: SimpleAlbum;
 	@Input()
 	public width = '300';
+	@Input()
+	public height = '300';
 }

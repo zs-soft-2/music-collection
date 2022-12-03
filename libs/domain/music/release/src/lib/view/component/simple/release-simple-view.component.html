@@ -7,30 +7,51 @@
 				<mc-album-simple-view
 					[album]="release.album"
 					[width]="width"
+					[height]="width"
 				></mc-album-simple-view>
 			</div>
 
-			<div class="content-details fadeIn-bottom fadeIn-right">
-				<svg-icon
-					*ngIf="release.media === media['vinyl']"
-					src="assets/icon/vinyl/format-vinyl-48.svg"
-					[svgStyle]="{ 'padding.px': 1, 'margin.px': 3 }"
-				>
-				</svg-icon>
+			<div
+				class="content-details fadeIn-bottom fadeIn-right"
+				fxLayout="row"
+			>
+				<div class="name">
+					<div class="album">
+						<a
+							href="javascript:void(0)"
+							(click)="releaseClickHandler()"
+						>
+							{{ release.album.name }}
+						</a>
+					</div>
 
-				<svg-icon
-					*ngIf="release.media === media['cd']"
-					src="assets/icon/cd/format-cd-48.svg"
-					[svgStyle]="{ 'padding.px': 1, 'margin.px': 3 }"
-				>
-				</svg-icon>
+					<div class="artist">
+						{{ release.artist.name }}
+					</div>
+				</div>
 
-				<svg-icon
-					*ngIf="release.media === media['dvd']"
-					src="assets/icon/dvd/format-dvd-48.svg"
-					[svgStyle]="{ 'padding.px': 1, 'margin.px': 3 }"
-				>
-				</svg-icon>
+				<div class="icon">
+					<svg-icon
+						*ngIf="release.media === media['vinyl']"
+						src="assets/icon/vinyl/format-vinyl-48.svg"
+						[svgStyle]="{ 'padding.px': 1, 'margin.px': 3 }"
+					>
+					</svg-icon>
+
+					<svg-icon
+						*ngIf="release.media === media['cd']"
+						src="assets/icon/cd/format-cd-48.svg"
+						[svgStyle]="{ 'padding.px': 1, 'margin.px': 3 }"
+					>
+					</svg-icon>
+
+					<svg-icon
+						*ngIf="release.media === media['dvd']"
+						src="assets/icon/dvd/format-dvd-48.svg"
+						[svgStyle]="{ 'padding.px': 1, 'margin.px': 3 }"
+					>
+					</svg-icon>
+				</div>
 			</div>
 		</a>
 	</div>

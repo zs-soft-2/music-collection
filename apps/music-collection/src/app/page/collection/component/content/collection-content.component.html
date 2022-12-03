@@ -1,5 +1,7 @@
 <div class="collection-content">
-	<mc-collection-item-list></mc-collection-item-list>
+	<mc-collection-item-list
+		(selectCollectionItem)="selectCollectionItemHandler($event)"
+	></mc-collection-item-list>
 
 	<mc-collection-sidebar
 		(configChange)="configChangeHandler($event)"

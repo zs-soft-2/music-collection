@@ -1,4 +1,10 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	EventEmitter,
+	Input,
+	Output,
+} from '@angular/core';
 import { BaseComponent, CollectionItemEntity } from '@music-collection/api';
 
 @Component({
@@ -10,4 +16,16 @@ import { BaseComponent, CollectionItemEntity } from '@music-collection/api';
 export class CollectionItemSimpleViewComponent extends BaseComponent {
 	@Input()
 	public collectionItem!: CollectionItemEntity;
+	@Output()
+	public selectCollectionItem: EventEmitter<void>;
+
+	public constructor() {
+		super();
+
+		this.selectCollectionItem = new EventEmitter();
+	}
+
+	public releaseClickHandler(): void {
+		this.selectCollectionItem.emit();
+	}
 }

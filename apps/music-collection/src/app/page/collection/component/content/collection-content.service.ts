@@ -1,8 +1,10 @@
 import { Observable, ReplaySubject, Subject } from 'rxjs';
 
 import { Injectable } from '@angular/core';
+import { Router } from '@angular/router';
 import {
 	BaseService,
+	CollectionItemEntity,
 	CollectionItemListConfig,
 	CollectionItemStateService,
 } from '@music-collection/api';
@@ -17,7 +19,8 @@ export class CollectionContentService extends BaseService {
 	private params$$: Subject<CollectionContentParams>;
 
 	public constructor(
-		private collectionItemStateService: CollectionItemStateService
+		private collectionItemStateService: CollectionItemStateService,
+		private router: Router
 	) {
 		super();
 
@@ -35,5 +38,9 @@ export class CollectionContentService extends BaseService {
 
 	public init$(): Observable<CollectionContentParams> {
 		return this.params$$;
+	}
+
+	public selectCollectionItem(collectionItem: CollectionItemEntity): void {
+		this.router.navigate(['album', collectionItem.release.album.uid]);
 	}
 }

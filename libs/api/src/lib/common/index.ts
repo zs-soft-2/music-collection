@@ -1,4 +1,5 @@
 export * from './base';
+export * from './config';
 export * from './country';
 export * from './data';
 export * from './entity';

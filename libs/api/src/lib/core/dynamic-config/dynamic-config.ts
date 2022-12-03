@@ -1,12 +1,13 @@
-import { Identifiable } from '../../common';
+import { Configurable, Identifiable } from '../../common';
 
 export interface DynamicProperties {
 	[key: string]: boolean;
 }
 
 export type DynamicConfigEntity = {
-	properties: DynamicProperties;
-} & Identifiable;
+	componentId: string;
+} & Identifiable &
+	Configurable;
 
 export type DynamicConfigEntityAdd = Omit<DynamicConfigEntity, 'id'>;
 

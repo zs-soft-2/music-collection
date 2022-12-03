@@ -6,25 +6,27 @@
 		overflow: hidden;
 	}
 
-	.content .content-overlay {
-		border-bottom-right-radius: 20px;
-		border-bottom-left-radius: 20px;
-		background: rgba(255, 255, 255, 0.7);
-		position: absolute;
-		height: 30%;
-		width: 100%;
-		left: 0;
-		top: 68%;
-		bottom: 0;
-		right: 0;
-		opacity: 0;
-		-webkit-transition: all 0.4s ease-in-out 0s;
-		-moz-transition: all 0.4s ease-in-out 0s;
-		transition: all 0.4s ease-in-out 0s;
+	.content {
+		.content-overlay {
+			border-bottom-right-radius: 20px;
+			border-bottom-left-radius: 20px;
+			background: rgba(255, 255, 255, 0.7);
+			position: absolute;
+			height: 30%;
+			width: 100%;
+			left: 0;
+			top: 68%;
+			bottom: 0;
+			right: 0;
+			opacity: 0;
+			-webkit-transition: all 0.4s ease-in-out 0s;
+			-moz-transition: all 0.4s ease-in-out 0s;
+			transition: all 0.4s ease-in-out 0s;
+		}
 	}
 
 	.content:hover .content-overlay {
-		opacity: 60%;
+		opacity: 100%;
 	}
 
 	.content-image {
@@ -37,7 +39,7 @@
 		padding-right: 1em;
 		width: 100%;
 		top: 50%;
-		left: 50%;
+		left: 40%;
 		opacity: 0;
 		-webkit-transform: translate(-50%, 0%);
 		-moz-transform: translate(-50%, 0%);
@@ -45,6 +47,28 @@
 		-webkit-transition: all 0.3s ease-in-out 0s;
 		-moz-transition: all 0.3s ease-in-out 0s;
 		transition: all 0.3s ease-in-out 0s;
+
+		.name {
+			color: black;
+			height: 100%;
+			width: 70%;
+
+			.album {
+				font-size: 15px;
+				font-weight: 600;
+				top: 0%;
+			}
+
+			.artist {
+				font-size: 13px;
+				font-weight: 500;
+				bottom: 0%;
+			}
+		}
+
+		.icon {
+			width: 30%;
+		}
 	}
 
 	.content:hover .content-details {
@@ -67,7 +91,7 @@
 	}
 
 	.fadeIn-bottom {
-		top: 75%;
+		top: 72%;
 	}
 
 	.fadeIn-top {

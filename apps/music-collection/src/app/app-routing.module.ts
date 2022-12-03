@@ -3,7 +3,10 @@ import { NgxPermissionsGuard } from 'ngx-permissions';
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { RoleNames } from '@music-collection/api';
-import { ArtistPageResolverService } from './resolver';
+import {
+	AlbumPageResolverService,
+	ArtistPageResolverService,
+} from './resolver';
 
 export const routes: Routes = [
 	{
@@ -19,6 +22,19 @@ export const routes: Routes = [
 			),
 		data: {
 			breadcrumb: 'home',
+		},
+	},
+	{
+		path: 'album/:albumId',
+		loadChildren: () =>
+			import('./page/album/album-page.module').then(
+				(module) => module.AlbumPageModule
+			),
+		data: {
+			breadcrumb: 'album',
+		},
+		resolve: {
+			album$: AlbumPageResolverService,
 		},
 	},
 	{

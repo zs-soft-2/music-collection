@@ -1,10 +1,14 @@
-import { takeUntil, tap, Observable } from 'rxjs';
+import { Observable, takeUntil, tap } from 'rxjs';
 
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { BaseComponent, CollectionItemListConfig } from '@music-collection/api';
+import {
+	BaseComponent,
+	CollectionItemEntity,
+	CollectionItemListConfig,
+} from '@music-collection/api';
 
-import { CollectionContentService } from './collection-content.service';
 import { CollectionContentParams } from '../../api';
+import { CollectionContentService } from './collection-content.service';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -23,11 +27,17 @@ export class CollectionContentComponent
 		super();
 	}
 
+	public configChangeHandler(config: CollectionItemListConfig): void {
+		this.componentService.configChange(config);
+	}
+
 	public ngOnInit(): void {
 		this.params$$ = this.componentService.init$();
 	}
 
-	public configChangeHandler(config: CollectionItemListConfig): void {
-		this.componentService.configChange(config);
+	public selectCollectionItemHandler(
+		collectionItem: CollectionItemEntity
+	): void {
+		this.componentService.selectCollectionItem(collectionItem);
 	}
 }

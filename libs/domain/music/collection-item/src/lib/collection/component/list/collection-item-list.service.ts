@@ -1,7 +1,7 @@
 import { combineLatest, Observable, ReplaySubject, tap } from 'rxjs';
-import { filter, map, switchMap } from 'rxjs/operators';
+import { filter, switchMap } from 'rxjs/operators';
 
-import { Injectable } from '@angular/core';
+import { EventEmitter, Injectable } from '@angular/core';
 import {
 	BaseComponent,
 	CollectionGroupByEnum,
@@ -11,7 +11,6 @@ import {
 	CollectionItemMap,
 	CollectionItemStateService,
 	CollectionItemUtilService,
-	CollectionSortByEnum,
 	MediaEnum,
 } from '@music-collection/api';
 
@@ -19,6 +18,7 @@ import {
 export class CollectionItemListService extends BaseComponent {
 	private params!: CollectionItemListParams;
 	private params$$: ReplaySubject<CollectionItemListParams>;
+	private selectCollectionItem!: EventEmitter<CollectionItemEntity>;
 
 	public constructor(
 		private collectionItemStateService: CollectionItemStateService,
@@ -29,7 +29,15 @@ export class CollectionItemListService extends BaseComponent {
 		this.params$$ = new ReplaySubject(1);
 	}
 
-	public init$(): Observable<CollectionItemListParams> {
+	public collectionItemClick(collectionItem: CollectionItemEntity): void {
+		this.selectCollectionItem.emit(collectionItem);
+	}
+
+	public init$(
+		selectCollectionItem: EventEmitter<CollectionItemEntity>
+	): Observable<CollectionItemListParams> {
+		this.selectCollectionItem = selectCollectionItem;
+
 		return combineLatest([
 			this.collectionItemStateService.selectEntities$().pipe(
 				tap((entities) => {
@@ -66,12 +74,6 @@ export class CollectionItemListService extends BaseComponent {
 		);
 	}
 
-	private createFxLayoutValue(
-		config: CollectionItemListConfig | null
-	): string {
-		return !config || !config.groupBy?.length ? 'row wrap' : 'column';
-	}
-
 	private createCollectionItemMap(
 		entities: CollectionItemEntity[],
 		config: CollectionItemListConfig | null
@@ -90,6 +92,12 @@ export class CollectionItemListService extends BaseComponent {
 		}
 
 		return items;
+	}
+
+	private createFxLayoutValue(
+		config: CollectionItemListConfig | null
+	): string {
+		return !config || !config.groupBy?.length ? 'row wrap' : 'column';
 	}
 
 	private createGroup(

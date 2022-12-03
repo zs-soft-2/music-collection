@@ -18,7 +18,7 @@ import {
 export class HomeComponent extends BaseComponent implements OnInit {
 	public constructor(
 		private albumStateService: AlbumStateService,
-		public artistStateService: ArtistStateService
+		private artistStateService: ArtistStateService
 	) {
 		super();
 	}

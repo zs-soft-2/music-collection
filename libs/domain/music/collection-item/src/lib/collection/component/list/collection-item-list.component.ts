@@ -1,7 +1,18 @@
 import { Observable } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { BaseComponent, CollectionItemListParams } from '@music-collection/api';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	EventEmitter,
+	OnInit,
+	Output,
+} from '@angular/core';
+import {
+	BaseComponent,
+	CollectionItem,
+	CollectionItemEntity,
+	CollectionItemListParams,
+} from '@music-collection/api';
 
 import { CollectionItemListService } from './collection-item-list.service';
 
@@ -17,12 +28,22 @@ export class CollectionItemListComponent
 	implements OnInit
 {
 	public params$!: Observable<CollectionItemListParams>;
+	@Output()
+	public selectCollectionItem: EventEmitter<CollectionItemEntity>;
 
 	public constructor(private componentService: CollectionItemListService) {
 		super();
+
+		this.selectCollectionItem = new EventEmitter();
+	}
+
+	public collectionItemClickHandler(
+		collectionItem: CollectionItemEntity
+	): void {
+		this.componentService.collectionItemClick(collectionItem);
 	}
 
 	public ngOnInit(): void {
-		this.params$ = this.componentService.init$();
+		this.params$ = this.componentService.init$(this.selectCollectionItem);
 	}
 }

@@ -1,1 +1,28 @@
-<p>album detail view works!</p>
+<ng-container *rxLet="params$; let params">
+	<ng-container *ngIf="params.album">
+		<section class="album-detail flex-container">
+			<div
+				class="album-detail-content"
+				fxLayout="row"
+				fxLayout.xs="column"
+				fxLayoutAlign="start stretch"
+				fxLayoutGap="10px 5px grid"
+			>
+				<div class="cover">
+					<p-image
+						[src]="params.album.coverImage?.filePath || ''"
+						[height]="params.imageHeight"
+						[width]="params.imageWidth"
+						alt="Image"
+						styleClass="item-image"
+					></p-image>
+				</div>
+
+				<div class="content">
+					<h1>{{ params.album.name }}</h1>
+					<h4>{{ params.album.artist.name }}</h4>
+				</div>
+			</div>
+		</section>
+	</ng-container>
+</ng-container>

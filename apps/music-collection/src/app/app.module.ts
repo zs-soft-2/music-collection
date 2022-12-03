@@ -1,6 +1,7 @@
 import { AngularSvgIconModule } from 'angular-svg-icon';
 import { NgxPermissionsModule } from 'ngx-permissions';
 
+import { HttpClientModule } from '@angular/common/http';
 import { APP_INITIALIZER, NgModule } from '@angular/core';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import {
@@ -27,8 +28,11 @@ import { AuthenticationStateService } from '@music-collection/api';
 import { CoreAuthenticationModule } from '@music-collection/core/authentication';
 import { CoreAuthorizationModule } from '@music-collection/core/authorization';
 import { CoreEntityQuantityModule } from '@music-collection/core/entity-quantity';
+import { CoreExportImportModule } from '@music-collection/core/export-import';
 import { DomainAlbumModule } from '@music-collection/domain/album';
 import { DomainArtistModule } from '@music-collection/domain/artist';
+import { DomainCollectionItemModule } from '@music-collection/domain/collection-item';
+import { DomainDocumentModule } from '@music-collection/domain/document';
 import { DomainReleaseModule } from '@music-collection/domain/release';
 import { DomainUserModule } from '@music-collection/domain/user';
 import { EffectsModule } from '@ngrx/effects';
@@ -42,11 +46,10 @@ import { AuthenticationInitializer } from './initializer';
 import { TopBarModule } from './module';
 import { HookModule } from './module/hook';
 import { metaReducers } from './reducer';
-import { ArtistPageResolverService } from './resolver';
-import { HttpClientModule } from '@angular/common/http';
-import { DomainCollectionItemModule } from '@music-collection/domain/collection-item';
-import { CoreExportImportModule } from '@music-collection/core/export-import';
-import { DomainDocumentModule } from '@music-collection/domain/document';
+import {
+	AlbumPageResolverService,
+	ArtistPageResolverService,
+} from './resolver';
 
 @NgModule({
 	declarations: [AppComponent],
@@ -87,6 +90,7 @@ import { DomainDocumentModule } from '@music-collection/domain/document';
 		HookModule,
 	],
 	providers: [
+		AlbumPageResolverService,
 		ArtistPageResolverService,
 		{
 			provide: APP_INITIALIZER,

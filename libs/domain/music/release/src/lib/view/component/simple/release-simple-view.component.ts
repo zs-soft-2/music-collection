@@ -1,5 +1,16 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
-import { BaseComponent, MediaEnum, ReleaseEntity } from '@music-collection/api';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	EventEmitter,
+	Input,
+	Output,
+} from '@angular/core';
+import {
+	AlbumEntity,
+	BaseComponent,
+	MediaEnum,
+	ReleaseEntity,
+} from '@music-collection/api';
 
 export interface Media {
 	[x: string]: MediaEnum;
@@ -12,21 +23,27 @@ export interface Media {
 	styleUrls: ['./release-simple-view.component.scss'],
 })
 export class ReleaseSimpleViewComponent extends BaseComponent {
+	public media: Media;
 	@Input()
 	public release!: ReleaseEntity;
-
+	@Output()
+	public selectRelease: EventEmitter<void>;
 	@Input()
 	public width = '220';
 
-	public media: Media;
-
 	public constructor() {
 		super();
+
+		this.selectRelease = new EventEmitter();
 
 		this.media = {
 			cd: MediaEnum.cd,
 			dvd: MediaEnum.dvd,
 			vinyl: MediaEnum.vinyl,
 		};
+	}
+
+	public releaseClickHandler(): void {
+		this.selectRelease.emit();
 	}
 }

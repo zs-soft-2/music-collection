@@ -12,15 +12,20 @@
 				context: { mapItems: params.collectionItemMaps }
 			"
 		></ng-container>
-
-		<div>All items: {{ params.allItems }}</div>
 	</div>
+
+	<div>All items: {{ params.allItems }}</div>
 </section>
 
 <ng-template #collectionItemList let-item="item">
 	<ng-container *ngFor="let collectionItem of item.collectionItemList">
 		<div class="collection-item-view" fxLayoutAlign="center center">
-			<mc-collection-item-simple-view [collectionItem]="collectionItem">
+			<mc-collection-item-simple-view
+				[collectionItem]="collectionItem"
+				(selectCollectionItem)="
+					collectionItemClickHandler(collectionItem)
+				"
+			>
 			</mc-collection-item-simple-view>
 		</div>
 	</ng-container>
