@@ -1,6 +1,7 @@
 import { FormGroup } from '@angular/forms';
 
-import { Activable, Entity, FormatEnum, Searchable } from '../../../common';
+import { Activable, Entity, FormatEnum } from '../../../common';
+import { UserReference } from '../../../core';
 import { AlbumEntity, AlbumReference } from '../album';
 import { ArtistReference } from '../artist';
 
@@ -9,13 +10,10 @@ export interface WhislistItem {
 	artistReference: ArtistReference;
 	formats: FormatEnum[];
 	sourceLink: string;
+	userReference: UserReference;
 }
 
-export type WhislistItemEntity = WhislistItem &
-	Activable &
-	Entity & {
-		formedIn: Date;
-	};
+export type WhislistItemEntity = WhislistItem & Activable & Entity;
 
 export type WhislistItemEntityAdd = Omit<WhislistItemEntity, 'uid'>;
 
@@ -23,19 +21,13 @@ export type WhislistItemEntityUpdate = Partial<WhislistItemEntity> &
 	Entity &
 	Activable;
 
-export type WhislistItemModel = WhislistItem &
-	Entity &
-	Activable &
-	Searchable & {
-		formedIn: string;
-	};
+export type WhislistItemModel = WhislistItem & Entity & Activable;
 
 export type WhislistItemModelAdd = Omit<WhislistItemModel, 'uid'>;
 
 export type WhislistItemModelUpdate = Partial<WhislistItemModel> &
 	Entity &
-	Activable &
-	Searchable;
+	Activable;
 
 export type WhislistItemFormParams = {
 	albums: AlbumEntity[];

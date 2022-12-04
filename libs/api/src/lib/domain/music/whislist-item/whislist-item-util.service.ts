@@ -2,6 +2,7 @@ import { EntityUtilService } from '../../../common';
 import {
 	EntityQuantityEntity,
 	EntityQuantityEntityUpdate,
+	UpdateEntityQuantityType,
 } from '../../../core';
 import {
 	WhislistItemEntity,
@@ -36,6 +37,8 @@ export abstract class WhislistItemUtilService extends EntityUtilService<
 		model: WhislistItemModelUpdate
 	): WhislistItemEntityUpdate;
 	public abstract updateEntityQuantity(
-		entityQuantity: EntityQuantityEntity
+		entityQuantity: EntityQuantityEntity,
+		whislistItem: WhislistItemEntity,
+		type: UpdateEntityQuantityType
 	): EntityQuantityEntityUpdate;
 }

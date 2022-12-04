@@ -212,7 +212,7 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 
 		artistGroupItem[release.artist.uid] = artistProperty + value;
 
-		group[EntityTypeEnum.Album] = albumGroupItem;
+		group[EntityTypeEnum.Artist] = artistGroupItem;
 
 		return {
 			...entityQuantity,
