@@ -16,6 +16,12 @@ function localStorageSyncReducer(
 			{
 				authentication: ['authenticatedUser'],
 			},
+			{
+				'collection-item': ['ids', 'entities'],
+			},
+			{
+				document: ['ids', 'entities'],
+			},
 		],
 		rehydrate: true,
 	})(reducer);
