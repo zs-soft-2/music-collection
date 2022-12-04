@@ -1,3 +1,4 @@
+export * from './activable';
 export * from './base';
 export * from './config';
 export * from './country';
