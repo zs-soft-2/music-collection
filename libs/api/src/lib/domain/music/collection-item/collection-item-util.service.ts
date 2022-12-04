@@ -4,6 +4,7 @@ import { EntityUtilService } from '../../../common';
 import {
 	EntityQuantityEntity,
 	EntityQuantityEntityUpdate,
+	UpdateEntityQuantityType,
 	User,
 } from '../../../core';
 import {
@@ -53,6 +54,7 @@ export abstract class CollectionItemUtilService extends EntityUtilService<
 	): CollectionItemEntity[];
 	public abstract updateEntityQuantity(
 		entityQuantityEntity: EntityQuantityEntity,
-		collectionItem: CollectionItemEntity
+		collectionItem: CollectionItemEntity,
+		type: UpdateEntityQuantityType
 	): EntityQuantityEntityUpdate;
 }

@@ -21,4 +21,13 @@ export interface EntityQuantityGroup {
 	[x: string]: number;
 }
 
+export enum UpdateEntityQuantityTypeEnum {
+	decrease = 'decrease',
+	increase = 'increase',
+}
+
+export type UpdateEntityQuantityType =
+	| UpdateEntityQuantityTypeEnum.increase
+	| UpdateEntityQuantityTypeEnum.decrease;
+
 export const ENTITY_QUANTITY_FEATURE_KEY = 'entity-quantity';

@@ -4,12 +4,14 @@ import { catchError, first, map, switchMap } from 'rxjs/operators';
 import { Injectable } from '@angular/core';
 import {
 	ArtistDataService,
+	EntityQuantityEntity,
 	EntityQuantityStateService,
 	EntityQuantityUtilService,
 	EntityTypeEnum,
 	ReleaseDataService,
 	ReleaseEntity,
 	ReleaseUtilService,
+	UpdateEntityQuantityTypeEnum,
 } from '@music-collection/api';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 
@@ -54,7 +56,8 @@ export class ReleaseEffects {
 							this.entityQuantityStateService.dispatchUpdateEntityAction(
 								this.releaseUtilService.updateEntityQuantity(
 									entityQuantityEntity,
-									releaseEntity
+									releaseEntity,
+									UpdateEntityQuantityTypeEnum.increase
 								)
 							);
 
@@ -70,6 +73,17 @@ export class ReleaseEffects {
 		this.actions$.pipe(
 			ofType(releaseActions.deleteRelease),
 			switchMap((action) =>
+				this.entityQuantityStateService
+					.selectEntityById$(EntityTypeEnum.Release)
+					.pipe(
+						map((entityQuantityEntity) => ({
+							action,
+							entityQuantityEntity,
+						})),
+						first()
+					)
+			),
+			switchMap(({ action, entityQuantityEntity }) =>
 				this.artistDataService
 					.deleteRelease$(
 						this.releaseUtilService.convertEntityToModel(
@@ -78,6 +92,16 @@ export class ReleaseEffects {
 					)
 					.pipe(
 						map((release) => {
+							this.entityQuantityStateService.dispatchUpdateEntityAction(
+								this.releaseUtilService.updateEntityQuantity(
+									entityQuantityEntity as EntityQuantityEntity,
+									this.releaseUtilService.convertModelToEntity(
+										release
+									),
+									UpdateEntityQuantityTypeEnum.decrease
+								)
+							);
+
 							return releaseActions.deleteReleaseSuccess({
 								releaseId: release.uid,
 							});

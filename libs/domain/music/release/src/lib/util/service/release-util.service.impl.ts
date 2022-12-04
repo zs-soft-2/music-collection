@@ -18,6 +18,8 @@ import {
 	ReleaseModelUpdate,
 	ReleaseUtilService,
 	SimpleAlbum,
+	UpdateEntityQuantityType,
+	UpdateEntityQuantityTypeEnum,
 } from '@music-collection/api';
 
 @Injectable()
@@ -186,7 +188,8 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 
 	public updateEntityQuantity(
 		entityQuantity: EntityQuantityEntity,
-		release: ReleaseEntity
+		release: ReleaseEntity,
+		type: UpdateEntityQuantityType
 	): EntityQuantityEntityUpdate {
 		let group: EntityQuantityGroup = { ...entityQuantity.group };
 
@@ -194,8 +197,9 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 			? { ...(group as any)[EntityTypeEnum.Album] }
 			: {};
 		const albumProperty = albumGroupItem[release.album.uid] || 0;
+		const value = type === UpdateEntityQuantityTypeEnum.increase ? 1 : -1;
 
-		albumGroupItem[release.album.uid] = albumProperty + 1;
+		albumGroupItem[release.album.uid] = albumProperty + value;
 
 		group[EntityTypeEnum.Album] = albumGroupItem;
 
@@ -206,13 +210,13 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 			: {};
 		const artistProperty = artistGroupItem[release.artist.uid] || 0;
 
-		artistGroupItem[release.artist.uid] = artistProperty + 1;
+		artistGroupItem[release.artist.uid] = artistProperty + value;
 
 		group[EntityTypeEnum.Album] = albumGroupItem;
 
 		return {
 			...entityQuantity,
-			quantity: entityQuantity.quantity + 1,
+			quantity: entityQuantity.quantity + value,
 			group: group as EntityQuantityGroup,
 		};
 	}

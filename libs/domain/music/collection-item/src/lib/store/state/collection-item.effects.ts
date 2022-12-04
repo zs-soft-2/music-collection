@@ -6,9 +6,11 @@ import {
 	CollectionItemDataService,
 	CollectionItemEntity,
 	CollectionItemUtilService,
+	EntityQuantityEntity,
 	EntityQuantityStateService,
 	EntityQuantityUtilService,
 	EntityTypeEnum,
+	UpdateEntityQuantityTypeEnum,
 	UserDataService,
 } from '@music-collection/api';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
@@ -54,7 +56,8 @@ export class CollectionItemEffects {
 							this.entityQuantityStateService.dispatchUpdateEntityAction(
 								this.collectionItemUtilService.updateEntityQuantity(
 									entityQuantityEntity,
-									collectionItemEntity
+									collectionItemEntity,
+									UpdateEntityQuantityTypeEnum.increase
 								)
 							);
 
@@ -72,6 +75,17 @@ export class CollectionItemEffects {
 		this.actions$.pipe(
 			ofType(collectionItemActions.deleteCollectionItem),
 			switchMap((action) =>
+				this.entityQuantityStateService
+					.selectEntityById$(EntityTypeEnum.CollectionItem)
+					.pipe(
+						map((entityQuantityEntity) => ({
+							action,
+							entityQuantityEntity,
+						})),
+						first()
+					)
+			),
+			switchMap(({ action, entityQuantityEntity }) =>
 				this.userDataService
 					.deleteCollectionItem$(
 						this.collectionItemUtilService.convertEntityToModel(
@@ -80,6 +94,16 @@ export class CollectionItemEffects {
 					)
 					.pipe(
 						map((collectionItem) => {
+							this.entityQuantityStateService.dispatchUpdateEntityAction(
+								this.collectionItemUtilService.updateEntityQuantity(
+									entityQuantityEntity as EntityQuantityEntity,
+									this.collectionItemUtilService.convertModelToEntity(
+										collectionItem
+									),
+									UpdateEntityQuantityTypeEnum.decrease
+								)
+							);
+
 							return collectionItemActions.deleteCollectionItemSuccess(
 								{
 									collectionItemId: collectionItem.uid,

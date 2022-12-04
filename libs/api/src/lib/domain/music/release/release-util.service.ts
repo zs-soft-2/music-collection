@@ -4,6 +4,7 @@ import { EntityUtilService } from '../../../common';
 import {
 	EntityQuantityEntity,
 	EntityQuantityEntityUpdate,
+	UpdateEntityQuantityType,
 } from '../../../core';
 import {
 	ReleaseEntity,
@@ -41,6 +42,7 @@ export abstract class ReleaseUtilService extends EntityUtilService<
 	): FormGroup;
 	public abstract updateEntityQuantity(
 		entityQuantityEntity: EntityQuantityEntity,
-		release: ReleaseEntity
+		release: ReleaseEntity,
+		type: UpdateEntityQuantityType
 	): EntityQuantityEntityUpdate;
 }

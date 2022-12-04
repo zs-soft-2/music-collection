@@ -13,6 +13,8 @@ import {
 	EntityQuantityEntityUpdate,
 	EntityQuantityGroup,
 	EntityTypeEnum,
+	UpdateEntityQuantityType,
+	UpdateEntityQuantityTypeEnum,
 	User,
 } from '@music-collection/api';
 
@@ -20,7 +22,6 @@ import {
 export class CollectionItemUtilServiceImpl extends CollectionItemUtilService {
 	public _sort = (a: CollectionItemEntity, b: CollectionItemEntity): number =>
 		a.release.name <= b.release.name ? -1 : 1;
-
 	public _sortByArtistName = (
 		a: CollectionItemEntity,
 		b: CollectionItemEntity
@@ -28,17 +29,6 @@ export class CollectionItemUtilServiceImpl extends CollectionItemUtilService {
 
 	public constructor(private formBuilder: FormBuilder) {
 		super();
-	}
-
-	public filterByArtist(
-		collectionItems: CollectionItemEntity[],
-		filterByArtistNames: string[] | null
-	): CollectionItemEntity[] {
-		return filterByArtistNames
-			? collectionItems.filter((item) =>
-					filterByArtistNames.includes(item.release.artist.name)
-			  )
-			: collectionItems;
 	}
 
 	public convertEntityAddToModelAdd(
@@ -149,6 +139,17 @@ export class CollectionItemUtilServiceImpl extends CollectionItemUtilService {
 		});
 	}
 
+	public filterByArtist(
+		collectionItems: CollectionItemEntity[],
+		filterByArtistNames: string[] | null
+	): CollectionItemEntity[] {
+		return filterByArtistNames
+			? collectionItems.filter((item) =>
+					filterByArtistNames.includes(item.release.artist.name)
+			  )
+			: collectionItems;
+	}
+
 	public sortCollectionItems(
 		sortBy: CollectionSortByEnum | null,
 		collectionItems: CollectionItemEntity[]
@@ -204,21 +205,23 @@ export class CollectionItemUtilServiceImpl extends CollectionItemUtilService {
 
 	public updateEntityQuantity(
 		entityQuantity: EntityQuantityEntity,
-		collectionItem: CollectionItemEntity
+		collectionItem: CollectionItemEntity,
+		type: UpdateEntityQuantityType
 	): EntityQuantityEntityUpdate {
 		const group: object = { ...entityQuantity.group };
 		const userGroup = (group as any)[EntityTypeEnum.User]
 			? { ...(group as any)[EntityTypeEnum.User] }
 			: {};
 		const userProperty = userGroup[collectionItem.userId || ''] || 0;
+		const value = type === UpdateEntityQuantityTypeEnum.increase ? 1 : -1;
 
-		userGroup[collectionItem.userId || ''] = userProperty + 1;
+		userGroup[collectionItem.userId || ''] = userProperty + value;
 
 		(group as any)[EntityTypeEnum.User] = userGroup;
 
 		return {
 			...entityQuantity,
-			quantity: entityQuantity.quantity + 1,
+			quantity: entityQuantity.quantity + value,
 			group: group as EntityQuantityGroup,
 		};
 	}

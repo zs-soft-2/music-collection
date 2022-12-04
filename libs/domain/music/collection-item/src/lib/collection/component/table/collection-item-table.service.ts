@@ -36,7 +36,8 @@ export class CollectionItemTableService extends BaseComponent {
 
 	public init$(): Observable<CollectionItemTableParams> {
 		return merge(
-			this.collectionItemStateService.selectSearchResult$()
+			this.collectionItemStateService.selectSearchResult$(),
+			this.collectionItemStateService.selectEntities$()
 		).pipe(
 			switchMap((collectionItems) => {
 				this.params = {
