@@ -16,6 +16,9 @@ export abstract class UserDataService extends FirebaseDataService<
 	public abstract addCollectionItem$(
 		collectionItem: CollectionItemModelAdd
 	): Observable<CollectionItemModel>;
+	public abstract deleteCollectionItem$(
+		collectionItem: CollectionItemModel
+	): Observable<CollectionItemModel>;
 	public abstract updateCollectionItem$(
 		collectionItem: CollectionItemModelUpdate
 	): Observable<CollectionItemModelUpdate>;

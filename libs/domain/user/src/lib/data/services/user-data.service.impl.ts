@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { Injectable } from '@angular/core';
 import {
 	collection,
+	deleteDoc,
 	doc,
 	Firestore,
 	setDoc,
@@ -65,6 +66,23 @@ export class UserDataServiceImpl extends UserDataService {
 
 	public delete$(user: User): Observable<User> {
 		return this.update$(user);
+	}
+
+	public deleteCollectionItem$(
+		collectionItem: CollectionItemModel
+	): Observable<CollectionItemModel> {
+		return new Observable((subscriber) => {
+			const collectionItemDocument = doc(
+				this.firestore,
+				`${USER_FEATURE_KEY}/${collectionItem.userId}/${COLLECTION_ITEM_FEATURE_KEY}/${collectionItem.uid}`
+			);
+
+			deleteDoc(collectionItemDocument).then(() => {
+				subscriber.next({
+					...collectionItem,
+				} as unknown as CollectionItemModel);
+			});
+		});
 	}
 
 	public list$(): Observable<User[]> {

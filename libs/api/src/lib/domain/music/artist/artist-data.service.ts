@@ -14,6 +14,9 @@ export abstract class ArtistDataService extends FirebaseDataService<
 	public abstract addRelease$(
 		release: ReleaseModelAdd
 	): Observable<ReleaseModel>;
+	public abstract deleteRelease$(
+		release: ReleaseModel
+	): Observable<ReleaseModel>;
 	public abstract importAlbum$(album: AlbumModel): Observable<AlbumModel>;
 	public abstract listAlbumsById$(uid: string): Observable<AlbumModel[]>;
 	public abstract updateAlbum$(

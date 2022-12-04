@@ -1,10 +1,11 @@
+import { Observable } from 'rxjs';
+
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import {
+	BaseComponent,
 	ReleaseEntity,
 	ReleaseTableParams,
-	BaseComponent,
 } from '@music-collection/api';
-import { Observable } from 'rxjs';
 
 import { ReleaseTableService } from './release-table.service';
 
@@ -23,7 +24,7 @@ export class ReleaseTableComponent extends BaseComponent implements OnInit {
 	}
 
 	public deleteRelease(release: ReleaseEntity): void {
-		console.log(release);
+		this.componentService.deleteRelease(release);
 	}
 
 	public editRelease(release: ReleaseEntity): void {

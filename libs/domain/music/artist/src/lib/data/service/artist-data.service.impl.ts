@@ -4,6 +4,7 @@ import { Injectable } from '@angular/core';
 import {
 	collection,
 	collectionData,
+	deleteDoc,
 	doc,
 	Firestore,
 	setDoc,
@@ -60,21 +61,6 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 		});
 	}
 
-	public importAlbum$(album: AlbumModel): Observable<AlbumModel> {
-		return new Observable((subscriber) => {
-			const docRef = doc(
-				this.firestore,
-				ARTIST_FEATURE_KEY,
-				album.artist.uid
-			);
-			const collectionReference = collection(docRef, ALBUM_FEATURE_KEY);
-
-			setDoc(doc(collectionReference, album.uid), album).then(() => {
-				subscriber.next({ ...album } as unknown as AlbumModel);
-			});
-		});
-	}
-
 	public addRelease$(release: ReleaseModelAdd): Observable<ReleaseModel> {
 		const uid = doc(collection(this.firestore, 'id')).id;
 		const newRelease: ReleaseModel = {
@@ -102,6 +88,36 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 		return this.update$(
 			artist as ArtistModelUpdate
 		) as Observable<ArtistModel>;
+	}
+
+	public deleteRelease$(release: ReleaseModel): Observable<ReleaseModel> {
+		return new Observable((subscriber) => {
+			const releaseDocument = doc(
+				this.firestore,
+				`${ARTIST_FEATURE_KEY}/${release.artist.uid}/${ALBUM_FEATURE_KEY}/${release.album.uid}/${RELEASE_FEATURE_KEY}/${release.uid}`
+			);
+
+			deleteDoc(releaseDocument).then(() => {
+				subscriber.next({
+					...release,
+				} as unknown as ReleaseModel);
+			});
+		});
+	}
+
+	public importAlbum$(album: AlbumModel): Observable<AlbumModel> {
+		return new Observable((subscriber) => {
+			const docRef = doc(
+				this.firestore,
+				ARTIST_FEATURE_KEY,
+				album.artist.uid
+			);
+			const collectionReference = collection(docRef, ALBUM_FEATURE_KEY);
+
+			setDoc(doc(collectionReference, album.uid), album).then(() => {
+				subscriber.next({ ...album } as unknown as AlbumModel);
+			});
+		});
 	}
 
 	public list$(): Observable<ArtistModel[]> {

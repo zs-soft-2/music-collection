@@ -26,7 +26,7 @@ export class CollectionItemTableComponent
 	}
 
 	public deleteCollectionItem(collectionItem: CollectionItemEntity): void {
-		console.log(collectionItem);
+		this.componentService.deleteCollectionItem(collectionItem);
 	}
 
 	public editCollectionItem(collectionItem: CollectionItemEntity): void {

@@ -36,8 +36,7 @@ export class CollectionItemTableService extends BaseComponent {
 
 	public init$(): Observable<CollectionItemTableParams> {
 		return merge(
-			this.collectionItemStateService.selectSearchResult$(),
-			this.collectionItemStateService.selectEntities$()
+			this.collectionItemStateService.selectSearchResult$()
 		).pipe(
 			switchMap((collectionItems) => {
 				this.params = {
@@ -59,5 +58,11 @@ export class CollectionItemTableService extends BaseComponent {
 				term
 			);
 		this.collectionItemStateService.dispatchSearch(searchParams);
+	}
+
+	public deleteCollectionItem(collectionItem: CollectionItemEntity): void {
+		this.collectionItemStateService.dispatchDeleteEntityAction(
+			collectionItem
+		);
 	}
 }

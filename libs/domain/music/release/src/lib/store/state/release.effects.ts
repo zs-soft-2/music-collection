@@ -3,13 +3,13 @@ import { catchError, first, map, switchMap } from 'rxjs/operators';
 
 import { Injectable } from '@angular/core';
 import {
-	ReleaseDataService,
-	ReleaseEntity,
-	ReleaseUtilService,
 	ArtistDataService,
 	EntityQuantityStateService,
 	EntityQuantityUtilService,
 	EntityTypeEnum,
+	ReleaseDataService,
+	ReleaseEntity,
+	ReleaseUtilService,
 } from '@music-collection/api';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 
@@ -60,6 +60,26 @@ export class ReleaseEffects {
 
 							return releaseActions.addReleaseSuccess({
 								release: releaseEntity,
+							});
+						})
+					)
+			)
+		)
+	);
+	public deleteRelease = createEffect(() =>
+		this.actions$.pipe(
+			ofType(releaseActions.deleteRelease),
+			switchMap((action) =>
+				this.artistDataService
+					.deleteRelease$(
+						this.releaseUtilService.convertEntityToModel(
+							action.release
+						)
+					)
+					.pipe(
+						map((release) => {
+							return releaseActions.deleteReleaseSuccess({
+								releaseId: release.uid,
 							});
 						})
 					)

@@ -68,6 +68,28 @@ export class CollectionItemEffects {
 			)
 		)
 	);
+	public deleteCollectionItem = createEffect(() =>
+		this.actions$.pipe(
+			ofType(collectionItemActions.deleteCollectionItem),
+			switchMap((action) =>
+				this.userDataService
+					.deleteCollectionItem$(
+						this.collectionItemUtilService.convertEntityToModel(
+							action.collectionItem
+						)
+					)
+					.pipe(
+						map((collectionItem) => {
+							return collectionItemActions.deleteCollectionItemSuccess(
+								{
+									collectionItemId: collectionItem.uid,
+								}
+							);
+						})
+					)
+			)
+		)
+	);
 	public listCollectionItems = createEffect(() =>
 		this.actions$.pipe(
 			ofType(collectionItemActions.listCollectionItems),

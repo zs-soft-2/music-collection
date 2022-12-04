@@ -28,6 +28,10 @@ export class ReleaseTableService extends BaseComponent {
 		this.params$$ = new ReplaySubject();
 	}
 
+	public deleteRelease(release: ReleaseEntity): void {
+		this.releaseStateService.dispatchDeleteEntityAction(release);
+	}
+
 	public editRelease(release: ReleaseEntity): void {
 		this.router.navigate(['../edit', release?.uid], {
 			relativeTo: this.activatedRoute,

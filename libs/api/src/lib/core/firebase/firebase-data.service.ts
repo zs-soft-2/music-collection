@@ -15,6 +15,7 @@ import {
 	QueryConstraint,
 	setDoc,
 	updateDoc,
+	deleteDoc,
 	where,
 } from '@angular/fire/firestore';
 
