@@ -46,6 +46,9 @@
 			"@music-collection/domain/label": [
 				"libs/domain/music/label/src/index.ts"
 			],
+			"@music-collection/domain/music/whislist-item": [
+				"libs/domain/music/whislist-item/src/index.ts"
+			],
 			"@music-collection/domain/release": [
 				"libs/domain/music/release/src/index.ts"
 			],
