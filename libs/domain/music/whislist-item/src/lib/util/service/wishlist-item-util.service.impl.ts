@@ -13,18 +13,18 @@ import {
 	UpdateEntityQuantityTypeEnum,
 	User,
 	UserReference,
-	WhislistItemEntity,
-	WhislistItemEntityAdd,
-	WhislistItemEntityUpdate,
-	WhislistItemModel,
-	WhislistItemModelAdd,
-	WhislistItemModelUpdate,
-	WhislistItemUtilService,
+	WishlistItemEntity,
+	WishlistItemEntityAdd,
+	WishlistItemEntityUpdate,
+	WishlistItemModel,
+	WishlistItemModelAdd,
+	WishlistItemModelUpdate,
+	WishlistItemUtilService,
 } from '@music-collection/api';
 
 @Injectable()
-export class WhislistItemUtilServiceImpl extends WhislistItemUtilService {
-	public _sort = (a: WhislistItemEntity, b: WhislistItemEntity): number =>
+export class WishlistItemUtilServiceImpl extends WishlistItemUtilService {
+	public _sort = (a: WishlistItemEntity, b: WishlistItemEntity): number =>
 		a.albumReference.name < b.albumReference.name ? 1 : -1;
 
 	public constructor(private formBuilder: FormBuilder) {
@@ -32,45 +32,45 @@ export class WhislistItemUtilServiceImpl extends WhislistItemUtilService {
 	}
 
 	public convertEntityAddToModelAdd(
-		entity: WhislistItemEntityAdd
-	): WhislistItemModelAdd {
+		entity: WishlistItemEntityAdd
+	): WishlistItemModelAdd {
 		return {
 			...entity,
 		};
 	}
 
-	public convertEntityToModel(entity: WhislistItemEntity): WhislistItemModel {
+	public convertEntityToModel(entity: WishlistItemEntity): WishlistItemModel {
 		return {
 			...entity,
 		};
 	}
 
 	public convertEntityUpdateToModelUpdate(
-		entity: WhislistItemEntityUpdate
-	): WhislistItemModelUpdate {
+		entity: WishlistItemEntityUpdate
+	): WishlistItemModelUpdate {
 		return {
-			...entity
+			...entity,
 		};
 	}
 
 	public convertModelAddToEntityAdd(
-		model: WhislistItemModelAdd
-	): WhislistItemEntityAdd {
+		model: WishlistItemModelAdd
+	): WishlistItemEntityAdd {
 		return {
 			...model,
 		};
 	}
 
-	public convertModelToEntity(model: WhislistItemModel): WhislistItemEntity {
+	public convertModelToEntity(model: WishlistItemModel): WishlistItemEntity {
 		return {
 			...model,
 		};
 	}
 
 	public convertModelUpdateToEntityUpdate(
-		model: WhislistItemModelUpdate
-	): WhislistItemEntityUpdate {
-		const entity: WhislistItemEntityUpdate = {
+		model: WishlistItemModelUpdate
+	): WishlistItemEntityUpdate {
+		const entity: WishlistItemEntityUpdate = {
 			isActive: model.isActive,
 			uid: model.uid,
 			entityType: model.entityType,
@@ -91,12 +91,18 @@ export class WhislistItemUtilServiceImpl extends WhislistItemUtilService {
 		return entity;
 	}
 
-	public createEntity(formGroup: FormGroup): WhislistItemEntityAdd {
+	public createEntity(formGroup: FormGroup): WishlistItemEntityAdd {
 		return {
-			entityType: EntityTypeEnum.WhislistItem,
-			albumReference: this.createAlbumReference(formGroup.value['albumReference']),
-			artistReference: this.createArtistReference(formGroup.value['artistReference']),
-			userReference: this.createUserReference(formGroup.value['userReference']),
+			entityType: EntityTypeEnum.WishlistItem,
+			albumReference: this.createAlbumReference(
+				formGroup.value['albumReference']
+			),
+			artistReference: this.createArtistReference(
+				formGroup.value['artistReference']
+			),
+			userReference: this.createUserReference(
+				formGroup.value['userReference']
+			),
 			formats: formGroup.value['formats'],
 			isActive: formGroup.value['isActive'],
 			sourceLink: formGroup.value['sourceLink'],
@@ -104,21 +110,30 @@ export class WhislistItemUtilServiceImpl extends WhislistItemUtilService {
 	}
 
 	public createFormGroup(
-		whislistItem: WhislistItemEntity | undefined
+		wishlistItem: WishlistItemEntity | undefined
 	): FormGroup {
 		return this.formBuilder.group({
-			uid: [whislistItem?.uid],
-			albumReference: [whislistItem?.albumReference || null, [Validators.required]],
-			artistReference: [whislistItem?.artistReference || null, [Validators.required]],
-			userReference: [whislistItem?.userReference || null, [Validators.required]],
-			formats: [whislistItem?.formats || null, [Validators.required]],
-			sourceLink: [whislistItem?.sourceLink || null],
+			uid: [wishlistItem?.uid],
+			albumReference: [
+				wishlistItem?.albumReference || null,
+				[Validators.required],
+			],
+			artistReference: [
+				wishlistItem?.artistReference || null,
+				[Validators.required],
+			],
+			userReference: [
+				wishlistItem?.userReference || null,
+				[Validators.required],
+			],
+			formats: [wishlistItem?.formats || null, [Validators.required]],
+			sourceLink: [wishlistItem?.sourceLink || null],
 		});
 	}
 
-	public updateEntity(formGroup: FormGroup): WhislistItemEntityUpdate {
+	public updateEntity(formGroup: FormGroup): WishlistItemEntityUpdate {
 		return {
-			entityType: EntityTypeEnum.WhislistItem,
+			entityType: EntityTypeEnum.WishlistItem,
 			uid: formGroup.value['uid'],
 			albumReference: formGroup.value['albumReference'],
 			artistReference: formGroup.value['artistReference'],
@@ -131,7 +146,7 @@ export class WhislistItemUtilServiceImpl extends WhislistItemUtilService {
 
 	public updateEntityQuantity(
 		entityQuantity: EntityQuantityEntity,
-		whislistItem: WhislistItemEntity,
+		wishlistItem: WishlistItemEntity,
 		type: UpdateEntityQuantityType
 	): EntityQuantityEntityUpdate {
 		let group: EntityQuantityGroup = { ...entityQuantity.group };
@@ -139,10 +154,11 @@ export class WhislistItemUtilServiceImpl extends WhislistItemUtilService {
 		const albumGroupItem = group[EntityTypeEnum.Album]
 			? { ...(group as any)[EntityTypeEnum.Album] }
 			: {};
-		const albumProperty = albumGroupItem[whislistItem.albumReference.uid] || 0;
+		const albumProperty =
+			albumGroupItem[wishlistItem.albumReference.uid] || 0;
 		const value = type === UpdateEntityQuantityTypeEnum.increase ? 1 : -1;
 
-		albumGroupItem[whislistItem.albumReference.uid] = albumProperty + value;
+		albumGroupItem[wishlistItem.albumReference.uid] = albumProperty + value;
 
 		group[EntityTypeEnum.Album] = albumGroupItem;
 
@@ -151,9 +167,9 @@ export class WhislistItemUtilServiceImpl extends WhislistItemUtilService {
 		const userGroupItem = group[EntityTypeEnum.User]
 			? { ...(group as any)[EntityTypeEnum.User] }
 			: {};
-		const userProperty = userGroupItem[whislistItem.userReference.uid] || 0;
+		const userProperty = userGroupItem[wishlistItem.userReference.uid] || 0;
 
-		userGroupItem[whislistItem.userReference.uid] = userProperty + value;
+		userGroupItem[wishlistItem.userReference.uid] = userProperty + value;
 
 		group[EntityTypeEnum.User] = userGroupItem;
 

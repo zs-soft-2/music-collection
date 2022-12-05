@@ -1,6 +1,6 @@
 /* eslint-disable */
 export default {
-	displayName: 'domain-music-whislist-item',
+	displayName: 'domain-music-wishlist-item',
 	preset: '../../../../jest.preset.js',
 	setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
 	globals: {
@@ -9,7 +9,7 @@ export default {
 			stringifyContentPathRegex: '\\.(html|svg)$',
 		},
 	},
-	coverageDirectory: '../../../../coverage/libs/domain/music/whislist-item',
+	coverageDirectory: '../../../../coverage/libs/domain/music/wishlist-item',
 	transform: {
 		'^.+\\.(ts|mjs|js|html)$': 'jest-preset-angular',
 	},

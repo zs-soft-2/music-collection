@@ -1,1 +1,1 @@
-export * from './whislist-item-util.service.impl';
+export * from './wishlist-item-util.service.impl';

@@ -8,5 +8,5 @@ export const enum EntityTypeEnum {
 	Release = 'Release',
 	CollectionItem = 'Collection Item',
 	User = 'User',
-	WhislistItem = 'Whislist Item',
+	WishlistItem = 'Wishlist Item',
 }

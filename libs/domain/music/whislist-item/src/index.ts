@@ -1,1 +1,1 @@
-export * from './lib/domain-whislist-item.module';
+export * from './lib/domain-wishlist-item.module';
