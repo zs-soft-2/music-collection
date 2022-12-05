@@ -1,5 +1,5 @@
 {
-	"name": "domain-music-wishlist-item",
+	"name": "domain-wishlist-item",
 	"$schema": "../../../../node_modules/nx/schemas/project-schema.json",
 	"projectType": "library",
 	"sourceRoot": "libs/domain/music/wishlist-item/src",

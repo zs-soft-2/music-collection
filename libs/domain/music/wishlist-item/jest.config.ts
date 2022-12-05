@@ -1,6 +1,6 @@
 /* eslint-disable */
 export default {
-	displayName: 'domain-music-wishlist-item',
+	displayName: 'domain-wishlist-item',
 	preset: '../../../../jest.preset.js',
 	setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
 	globals: {

@@ -35,6 +35,7 @@ import { DomainCollectionItemModule } from '@music-collection/domain/collection-
 import { DomainDocumentModule } from '@music-collection/domain/document';
 import { DomainReleaseModule } from '@music-collection/domain/release';
 import { DomainUserModule } from '@music-collection/domain/user';
+import { DomainWishlistItemModule } from '@music-collection/domain/wishlist-item';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
@@ -87,6 +88,7 @@ import {
 		DomainCollectionItemModule,
 		DomainDocumentModule,
 		DomainReleaseModule,
+		DomainWishlistItemModule,
 		HookModule,
 	],
 	providers: [
