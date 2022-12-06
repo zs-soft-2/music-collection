@@ -1,0 +1,100 @@
+<section class="wishlistItem-table" *rxLet="params$; let params">
+	<p-table
+		[value]="params.wishlistItems"
+		sortField="name"
+		sortMode="multiple"
+		styleClass="p-datatable-striped p-datatable-sm"
+		responsiveLayout="scroll"
+		[paginator]="true"
+		[rows]="10"
+	>
+		<ng-template pTemplate="header">
+			<tr>
+				<th pSortableColumn="name">
+					Name <p-sortIcon field="name"></p-sortIcon>
+				</th>
+
+				<th pSortableColumn="formedIn">
+					Formed in <p-sortIcon field="formedIn"></p-sortIcon>
+				</th>
+
+				<th>Styles</th>
+
+				<th>Images</th>
+
+				<th></th>
+			</tr>
+			<tr>
+				<th>
+					<p-autoComplete
+						[suggestions]="params.empty"
+						[showClear]="true"
+						class="p-inputtext-sm"
+						(completeMethod)="searchByNameHandler($event)"
+						[minLength]="3"
+						[delay]="400"
+					>
+					</p-autoComplete>
+				</th>
+
+				<th></th>
+
+				<th></th>
+
+				<th></th>
+
+				<th></th>
+			</tr>
+		</ng-template>
+
+		<ng-template pTemplate="body" let-wishlistItem>
+			<tr>
+				<td>{{ wishlistItem.name }}</td>
+
+				<td>{{ wishlistItem.formedIn | date: 'yyyy' }}</td>
+
+				<td>
+					<ng-container *ngFor="let style of wishlistItem.styles">
+						<p-chip styleClass="style">
+							{{ style }}
+						</p-chip>
+					</ng-container>
+				</td>
+
+				<td>
+					<ng-container *ngIf="wishlistItem.headerImage">
+						<i
+							class="pi pi-image"
+							style="color: red; margin: 1px"
+						></i>
+					</ng-container>
+
+					<ng-container
+						*ngIf="wishlistItem.mainImage"
+						style="color: blue; margin: 1px"
+					>
+						<i class="pi pi-image"></i>
+					</ng-container>
+				</td>
+
+				<td>
+					<button
+						pButton
+						pRipple
+						icon="pi pi-pencil"
+						class="p-button-rounded p-button-success mr-2"
+						(click)="editWishlistItem(wishlistItem)"
+					></button>
+
+					<button
+						pButton
+						pRipple
+						icon="pi pi-trash"
+						class="p-button-rounded p-button-warning"
+						(click)="deleteWishlistItem(wishlistItem)"
+					></button>
+				</td>
+			</tr>
+		</ng-template>
+	</p-table>
+</section>

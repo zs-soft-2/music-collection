@@ -1,0 +1,10 @@
+<section class="wishlist-item-list" *rxLet="params$; let params">
+	<p-carousel
+		[value]="params.wishlistItems"
+		[numVisible]="1"
+		[numScroll]="1"
+		[autoplayInterval]="5000"
+	>
+		<ng-template let-wishlistItem pTemplate="item"> </ng-template>
+	</p-carousel>
+</section>
