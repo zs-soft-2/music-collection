@@ -39,12 +39,18 @@ export class WishlistItemUtilServiceImpl extends WishlistItemUtilService {
 	): WishlistItemModelAdd {
 		return {
 			...entity,
+			searchParameters: this.createSearchParameters(
+				entity.albumReference.name
+			),
 		};
 	}
 
 	public convertEntityToModel(entity: WishlistItemEntity): WishlistItemModel {
 		return {
 			...entity,
+			searchParameters: this.createSearchParameters(
+				entity.albumReference.name
+			),
 		};
 	}
 
@@ -53,6 +59,9 @@ export class WishlistItemUtilServiceImpl extends WishlistItemUtilService {
 	): WishlistItemModelUpdate {
 		return {
 			...entity,
+			searchParameters: this.createSearchParameters(
+				entity.albumReference?.name || ''
+			),
 		};
 	}
 
@@ -91,8 +100,8 @@ export class WishlistItemUtilServiceImpl extends WishlistItemUtilService {
 			entity.userReference = model.userReference;
 		}
 
-		if (model.formats) {
-			entity.formats = model.formats;
+		if (model.medias) {
+			entity.medias = model.medias;
 		}
 
 		if (model.sourceLink) {
@@ -114,14 +123,21 @@ export class WishlistItemUtilServiceImpl extends WishlistItemUtilService {
 			userReference: this.createUserReference(
 				formGroup.value['userReference']
 			),
-			formats: formGroup.value['formats'],
+			medias: formGroup.value['medias'],
 			isActive: formGroup.value['isActive'],
 			sourceLink: formGroup.value['sourceLink'],
 		};
 	}
 
 	public createFormGroup(
-		wishlistItem: WishlistItemEntity | undefined
+		entity: WishlistItemEntity | undefined
+	): FormGroup<any> {
+		throw new Error('Method not implemented.');
+	}
+
+	public createFormGroupByUser(
+		wishlistItem: WishlistItemEntity | undefined,
+		user: User
 	): FormGroup {
 		return this.formBuilder.group({
 			uid: [wishlistItem?.uid],
@@ -134,13 +150,29 @@ export class WishlistItemUtilServiceImpl extends WishlistItemUtilService {
 				[Validators.required],
 			],
 			userReference: [
-				wishlistItem?.userReference || null,
+				wishlistItem?.userReference || user,
 				[Validators.required],
 			],
-			formats: [wishlistItem?.formats || null, [Validators.required]],
+			medias: [wishlistItem?.medias || null, [Validators.required]],
 			isActive: [wishlistItem?.isActive || true],
 			sourceLink: [wishlistItem?.sourceLink || null],
 		});
+	}
+
+	public createOrUpdateFormGroup(
+		formGroup: FormGroup,
+		wishlistItem: WishlistItemEntity | undefined,
+		user: User
+	): FormGroup {
+		let newFormGroup: FormGroup;
+
+		if (!formGroup) {
+			newFormGroup = this.createFormGroupByUser(wishlistItem, user);
+		} else {
+			newFormGroup = formGroup;
+		}
+
+		return newFormGroup;
 	}
 
 	public createSearchParamsForAlbum(
@@ -150,7 +182,7 @@ export class WishlistItemUtilServiceImpl extends WishlistItemUtilService {
 		const searchParams: SearchParams = [
 			this.createSearchParam(
 				EntityTypeEnum.Album,
-				term,
+				term.toLowerCase(),
 				QueryConstraintTypeEnum.where,
 				QueryOperatorEnum.arrayContains,
 				'searchParameters'
@@ -174,7 +206,7 @@ export class WishlistItemUtilServiceImpl extends WishlistItemUtilService {
 			albumReference: formGroup.value['albumReference'],
 			artistReference: formGroup.value['artistReference'],
 			userReference: formGroup.value['userReference'],
-			formats: formGroup.value['formats'],
+			medias: formGroup.value['medias'],
 			sourceLink: formGroup.value['sourceLink'],
 			isActive: formGroup.value['isActive'],
 		};

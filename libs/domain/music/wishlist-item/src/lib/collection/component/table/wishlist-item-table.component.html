@@ -10,17 +10,15 @@
 	>
 		<ng-template pTemplate="header">
 			<tr>
-				<th pSortableColumn="name">
-					Name <p-sortIcon field="name"></p-sortIcon>
+				<th pSortableColumn="albumReference.name">
+					Artist name <p-sortIcon field="albumReference"></p-sortIcon>
 				</th>
 
-				<th pSortableColumn="formedIn">
-					Formed in <p-sortIcon field="formedIn"></p-sortIcon>
+				<th pSortableColumn="artistReference.name">
+					Album name <p-sortIcon field="artistReference"></p-sortIcon>
 				</th>
 
-				<th>Styles</th>
-
-				<th>Images</th>
+				<th>Medias</th>
 
 				<th></th>
 			</tr>
@@ -42,38 +40,20 @@
 				<th></th>
 
 				<th></th>
-
-				<th></th>
 			</tr>
 		</ng-template>
 
 		<ng-template pTemplate="body" let-wishlistItem>
 			<tr>
-				<td>{{ wishlistItem.name }}</td>
+				<td>{{ wishlistItem.artistReference.name }}</td>
 
-				<td>{{ wishlistItem.formedIn | date: 'yyyy' }}</td>
+				<td>{{ wishlistItem.albumReference.name }}</td>
 
 				<td>
-					<ng-container *ngFor="let style of wishlistItem.styles">
+					<ng-container *ngFor="let media of wishlistItem.medias">
 						<p-chip styleClass="style">
-							{{ style }}
+							{{ media }}
 						</p-chip>
-					</ng-container>
-				</td>
-
-				<td>
-					<ng-container *ngIf="wishlistItem.headerImage">
-						<i
-							class="pi pi-image"
-							style="color: red; margin: 1px"
-						></i>
-					</ng-container>
-
-					<ng-container
-						*ngIf="wishlistItem.mainImage"
-						style="color: blue; margin: 1px"
-					>
-						<i class="pi pi-image"></i>
 					</ng-container>
 				</td>
 

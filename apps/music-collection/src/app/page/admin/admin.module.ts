@@ -6,6 +6,7 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { DomainCollectionItemModule } from '@music-collection/domain/collection-item';
 import { DomainLabelModule } from '@music-collection/domain/label';
 import { DomainReleaseModule } from '@music-collection/domain/release';
+import { DomainWishlistItemModule } from '@music-collection/domain/wishlist-item';
 import { BreadcrumbModule } from '@music-collection/ui';
 
 import { AdminRoutingModule } from './admin-routing.module';
@@ -22,6 +23,7 @@ import { AdminComponent } from './admin.component';
 		DomainLabelModule,
 		DomainReleaseModule,
 		DomainCollectionItemModule,
+		DomainWishlistItemModule,
 	],
 	exports: [],
 })

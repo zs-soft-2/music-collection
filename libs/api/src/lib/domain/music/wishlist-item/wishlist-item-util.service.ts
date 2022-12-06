@@ -1,8 +1,11 @@
-import { EntityUtilService } from '../../../common';
+import { FormGroup } from '@angular/forms';
+
+import { EntityUtilService, SearchParams } from '../../../common';
 import {
 	EntityQuantityEntity,
 	EntityQuantityEntityUpdate,
 	UpdateEntityQuantityType,
+	User,
 } from '../../../core';
 import {
 	WishlistItemEntity,
@@ -36,6 +39,19 @@ export abstract class WishlistItemUtilService extends EntityUtilService<
 	public abstract convertModelUpdateToEntityUpdate(
 		model: WishlistItemModelUpdate
 	): WishlistItemEntityUpdate;
+	public abstract createFormGroupByUser(
+		wishlistItem: WishlistItemEntity | undefined,
+		user: User
+	): FormGroup;
+	public abstract createOrUpdateFormGroup(
+		formGroup: FormGroup,
+		wishlistItem: WishlistItemEntity | undefined,
+		user: User
+	): FormGroup;
+	public abstract createSearchParamsForAlbum(
+		term: string,
+		artistId: string
+	): SearchParams;
 	public abstract updateEntityQuantity(
 		entityQuantity: EntityQuantityEntity,
 		wishlistItem: WishlistItemEntity,

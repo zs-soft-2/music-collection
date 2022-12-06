@@ -9,8 +9,10 @@ import {
 	AlbumStateService,
 	ArtistEntity,
 	ArtistStateService,
+	AuthenticationStateService,
 	EntityTypeEnum,
 	FormatList,
+	MediaList,
 	SearchParams,
 	WishlistItemEntity,
 	WishlistItemEntityAdd,
@@ -22,19 +24,20 @@ import {
 
 @Injectable()
 export class WishlistItemFormService {
-	private wishlistItem!: WishlistItemEntity | undefined;
 	private formGroup!: FormGroup;
 	private params!: WishlistItemFormParams;
 	private params$$: ReplaySubject<WishlistItemFormParams>;
+	private wishlistItem!: WishlistItemEntity | undefined;
 
 	public constructor(
 		private activatedRoute: ActivatedRoute,
-		private wishlistItemStateService: WishlistItemStateService,
-		private wishlistItemUtilService: WishlistItemUtilService,
-		private componentUtil: WishlistItemUtilService,
 		private albumStateService: AlbumStateService,
 		private artistStateService: ArtistStateService,
-		private router: Router
+		private authorizationStateService: AuthenticationStateService,
+		private componentUtil: WishlistItemUtilService,
+		private router: Router,
+		private wishlistItemStateService: WishlistItemStateService,
+		private wishlistItemUtilService: WishlistItemUtilService
 	) {
 		this.params$$ = new ReplaySubject();
 	}
@@ -54,12 +57,17 @@ export class WishlistItemFormService {
 					),
 					this.artistStateService.selectSearchResult$(),
 					this.albumStateService.selectSearchResult$(),
+					this.authorizationStateService.selectAuthenticatedUser$(),
 				])
 			),
-			switchMap(([wishlistItem, artists, albums]) => {
+			switchMap(([wishlistItem, artists, albums, user]) => {
 				this.wishlistItem = wishlistItem;
 				this.formGroup =
-					this.wishlistItemUtilService.createFormGroup(wishlistItem);
+					this.wishlistItemUtilService.createOrUpdateFormGroup(
+						this.formGroup,
+						wishlistItem,
+						user
+					);
 				this.params = this.createWishlistItemParams(
 					this.formGroup,
 					artists,
@@ -79,9 +87,9 @@ export class WishlistItemFormService {
 
 	public searchAlbum(term: string): void {
 		const searchParams: SearchParams =
-			this.wishlistItemUtilService.createSearchParams(
-				EntityTypeEnum.Album,
-				term
+			this.wishlistItemUtilService.createSearchParamsForAlbum(
+				term,
+				this.formGroup.value['artistReference']?.uid
 			);
 		this.albumStateService.dispatchSearch(searchParams);
 	}
@@ -124,7 +132,7 @@ export class WishlistItemFormService {
 			albums,
 			artists,
 			formGroup,
-			formatList: FormatList,
+			mediaList: MediaList,
 		};
 
 		return wishlistItemFormParams;

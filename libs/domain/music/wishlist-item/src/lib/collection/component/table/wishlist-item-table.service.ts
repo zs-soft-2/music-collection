@@ -39,7 +39,7 @@ export class WishlistItemTableService extends BaseComponent {
 	public init$(): Observable<WishlistItemTableParams> {
 		return merge(
 			this.wishlistItemStateService.selectSearchResult$(),
-			this.wishlistItemStateService.selectEntities$().pipe(first())
+			this.wishlistItemStateService.selectEntities$()
 		).pipe(
 			switchMap((wishlistItems) => {
 				this.params = {
@@ -57,7 +57,7 @@ export class WishlistItemTableService extends BaseComponent {
 	public searchByName(term: string): void {
 		const searchParams: SearchParams =
 			this.wishlistItemUtilService.createSearchParams(
-				EntityTypeEnum.Album,
+				EntityTypeEnum.WishlistItem,
 				term
 			);
 

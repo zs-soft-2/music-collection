@@ -34,6 +34,10 @@ export class AdminComponent {
 				routerLink: 'collection-item',
 			},
 			{
+				label: 'Wishlist Item',
+				routerLink: 'wishlist-item',
+			},
+			{
 				icon: 'pi pi-file-edit',
 				label: 'Document',
 				routerLink: 'document',

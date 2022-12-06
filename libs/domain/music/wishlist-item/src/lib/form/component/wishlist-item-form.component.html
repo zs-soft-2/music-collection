@@ -3,12 +3,16 @@
 		<p-tabView>
 			<p-tabPanel header="Data">
 				<input name="uid" formControlName="uid" hidden />
-				<input name="user" formControlName="user" hidden />
+				<input
+					name="userReference"
+					formControlName="userReference"
+					hidden
+				/>
 
 				<div class="field">
 					<span class="p-float-label">
 						<p-autoComplete
-							formControlName="artist"
+							formControlName="artistReference"
 							[suggestions]="params.artists"
 							[minLength]="3"
 							[delay]="400"
@@ -17,14 +21,14 @@
 						>
 						</p-autoComplete>
 
-						<label for="artist">Artist</label>
+						<label for="artistReference">Artist</label>
 					</span>
 				</div>
 
 				<div class="field">
 					<span class="p-float-label">
 						<p-autoComplete
-							formControlName="album"
+							formControlName="albumReference"
 							[suggestions]="params.albums"
 							[minLength]="3"
 							[delay]="400"
@@ -33,7 +37,7 @@
 						>
 						</p-autoComplete>
 
-						<label for="album">Album</label>
+						<label for="albumReference">Album</label>
 					</span>
 				</div>
 
@@ -53,19 +57,19 @@
 				<div class="field">
 					<span class="p-float-label">
 						<p-multiSelect
-							id="formats"
-							[options]="params.formatList"
-							placeholder="Select formats"
+							id="medias"
+							[options]="params.mediaList"
+							placeholder="Select medias"
 							[filter]="false"
-							formControlName="formats"
+							formControlName="medias"
 							display="chip"
 						></p-multiSelect>
-						<label for="formats">Formats</label>
+						<label for="medias">Medias</label>
 					</span>
 				</div>
 
 				<div class="field">
-					<span class="p-float-label">
+					<span class="no-float">
 						<p-checkbox
 							[binary]="true"
 							formControlName="isActive"
