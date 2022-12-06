@@ -1,4 +1,6 @@
 <mc-release-simple-view
+	[height]="collectionItem.release.media === 'dvd' ? '160' : '210'"
+	[width]="'210'"
 	[release]="collectionItem.release"
 	(selectRelease)="releaseClickHandler()"
 ></mc-release-simple-view>

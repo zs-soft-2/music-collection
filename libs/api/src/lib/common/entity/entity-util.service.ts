@@ -5,6 +5,7 @@ import {
 	ParamItem,
 	QueryConstraintTypeEnum,
 	QueryOperatorEnum,
+	SearchParam,
 	SearchParams,
 } from '../search';
 import { EntityTypeEnum } from './entity-type.enum';
@@ -37,6 +38,25 @@ export abstract class EntityUtilService<R, S, T> extends BaseService {
 		const searchParams: SearchParams = [{ entityType, query }];
 
 		return searchParams;
+	}
+
+	public createSearchParam(
+		entityType: EntityTypeEnum,
+		term: string,
+		queryConstraint: QueryConstraintTypeEnum,
+		operation: QueryOperatorEnum,
+		field: string
+	): SearchParam {
+		const query: ParamItem<string> = {
+			queryConstraint,
+			operation,
+			field,
+			value: term,
+		};
+
+		const searchParam: SearchParam = { entityType, query };
+
+		return searchParam;
 	}
 
 	public abstract _sort(a: R, b: R): number;

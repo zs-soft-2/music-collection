@@ -1,4 +1,7 @@
-import { WishlistItemEntity, WISHLIST_ITEM_FEATURE_KEY } from '@music-collection/api';
+import {
+	WishlistItemEntity,
+	WISHLIST_ITEM_FEATURE_KEY,
+} from '@music-collection/api';
 import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity';
 import { Action, createReducer, on } from '@ngrx/store';
 
@@ -39,33 +42,50 @@ export const wishlistItemReducer = createReducer(
 	on(wishlistItemActions.addWishlistItemSuccess, (state, { wishlistItem }) =>
 		wishlistItemAdapter.addOne(wishlistItem as WishlistItemEntity, state)
 	),
-	on(wishlistItemActions.changeNewEntityButtonEnabled, (state, { enabled }) => ({
-		...state,
-		isNewEntityButtonEnabled: enabled,
-	})),
+	on(
+		wishlistItemActions.changeNewEntityButtonEnabled,
+		(state, { enabled }) => ({
+			...state,
+			isNewEntityButtonEnabled: enabled,
+		})
+	),
 	on(wishlistItemActions.selectWishlistItem, (state, { wishlistItem }) => ({
 		...state,
 		loading: false,
 		error: null,
 		selectedWishlistItemId: wishlistItem.uid,
 	})),
-	on(wishlistItemActions.updateWishlistItemSuccess, (state, { wishlistItem }) =>
-		wishlistItemAdapter.updateOne(wishlistItem, state)
+	on(
+		wishlistItemActions.updateWishlistItemSuccess,
+		(state, { wishlistItem }) =>
+			wishlistItemAdapter.updateOne(wishlistItem, state)
 	),
-	on(wishlistItemActions.deleteWishlistItemSuccess, (state, { wishlistItemId }) =>
-		wishlistItemAdapter.removeOne(wishlistItemId, state)
+	on(
+		wishlistItemActions.deleteWishlistItemSuccess,
+		(state, { wishlistItemId }) =>
+			wishlistItemAdapter.removeOne(wishlistItemId, state)
 	),
-	on(wishlistItemActions.listWishlistItemsSuccess, (state, { wishlistItems }) =>
-		wishlistItemAdapter.upsertMany(wishlistItems as WishlistItemEntity[], state)
+	on(
+		wishlistItemActions.listWishlistItemsSuccess,
+		(state, { wishlistItems }) =>
+			wishlistItemAdapter.upsertMany(
+				wishlistItems as WishlistItemEntity[],
+				state
+			)
 	),
 	on(wishlistItemActions.loadWishlistItemSuccess, (state, { wishlistItem }) =>
 		wishlistItemAdapter.upsertOne(wishlistItem as WishlistItemEntity, state)
 	),
-	on(wishlistItemActions.clearWishlistItems, (state) => wishlistItemAdapter.removeAll(state)),
-	on(wishlistItemActions.setSelectedWishlistItemId, (state, { wishlistItemId }) => ({
-		...state,
-		selectedId: wishlistItemId,
-	})),
+	on(wishlistItemActions.clearWishlistItems, (state) =>
+		wishlistItemAdapter.removeAll(state)
+	),
+	on(
+		wishlistItemActions.setSelectedWishlistItemId,
+		(state, { wishlistItemId }) => ({
+			...state,
+			selectedId: wishlistItemId,
+		})
+	),
 	on(wishlistItemActions.searchSuccess, (state, { result }) => {
 		return wishlistItemAdapter.upsertMany(result, {
 			...state,

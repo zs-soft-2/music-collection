@@ -1,9 +1,9 @@
 export enum MediaEnum {
-	vinyl = 'vinyl',
+	all = 'all',
+	cassette = 'cassette',
 	cd = 'cd',
 	dvd = 'dvd',
-	cassette = 'cassette',
-	all = 'all',
+	vinyl = 'vinyl',
 }
 
 export const MediaList: MediaEnum[] = [

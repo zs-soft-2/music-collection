@@ -9,6 +9,9 @@ import {
 	EntityQuantityEntityUpdate,
 	EntityQuantityGroup,
 	EntityTypeEnum,
+	QueryConstraintTypeEnum,
+	QueryOperatorEnum,
+	SearchParams,
 	UpdateEntityQuantityType,
 	UpdateEntityQuantityTypeEnum,
 	User,
@@ -80,6 +83,14 @@ export class WishlistItemUtilServiceImpl extends WishlistItemUtilService {
 			entity.albumReference = model.albumReference;
 		}
 
+		if (model.artistReference) {
+			entity.artistReference = model.artistReference;
+		}
+
+		if (model.userReference) {
+			entity.userReference = model.userReference;
+		}
+
 		if (model.formats) {
 			entity.formats = model.formats;
 		}
@@ -127,8 +138,33 @@ export class WishlistItemUtilServiceImpl extends WishlistItemUtilService {
 				[Validators.required],
 			],
 			formats: [wishlistItem?.formats || null, [Validators.required]],
+			isActive: [wishlistItem?.isActive || true],
 			sourceLink: [wishlistItem?.sourceLink || null],
 		});
+	}
+
+	public createSearchParamsForAlbum(
+		term: string,
+		artistId: string
+	): SearchParams {
+		const searchParams: SearchParams = [
+			this.createSearchParam(
+				EntityTypeEnum.Album,
+				term,
+				QueryConstraintTypeEnum.where,
+				QueryOperatorEnum.arrayContains,
+				'searchParameters'
+			),
+			this.createSearchParam(
+				EntityTypeEnum.Album,
+				artistId,
+				QueryConstraintTypeEnum.where,
+				QueryOperatorEnum.equal,
+				'artist.uid'
+			),
+		];
+
+		return searchParams;
 	}
 
 	public updateEntity(formGroup: FormGroup): WishlistItemEntityUpdate {

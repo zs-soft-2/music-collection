@@ -9,7 +9,6 @@ import {
 	AlbumStateService,
 	ArtistEntity,
 	ArtistStateService,
-	ReleaseCountryList,
 	EntityTypeEnum,
 	FormatDescriptionList,
 	LabelEntity,
@@ -18,6 +17,7 @@ import {
 	ParamItem,
 	QueryConstraintTypeEnum,
 	QueryOperatorEnum,
+	ReleaseCountryList,
 	ReleaseEntity,
 	ReleaseEntityAdd,
 	ReleaseEntityUpdate,
@@ -90,10 +90,11 @@ export class ReleaseFormService {
 	}
 
 	public searchAlbum(term: string): void {
-		const searchParams: SearchParams = this.createSearchParams(
-			EntityTypeEnum.Album,
-			term
-		);
+		const searchParams: SearchParams =
+			this.releaseUtilService.createSearchParamsForAlbum(
+				term,
+				this.formGroup.value['artist']?.uid
+			);
 
 		this.albumStateService.dispatchSearch(searchParams);
 	}

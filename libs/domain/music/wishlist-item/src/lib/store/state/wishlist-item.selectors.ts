@@ -1,14 +1,22 @@
-import { WISHLIST_ITEM_FEATURE_KEY, WishlistItemEntity } from '@music-collection/api';
+import {
+	WISHLIST_ITEM_FEATURE_KEY,
+	WishlistItemEntity,
+} from '@music-collection/api';
 import { Dictionary } from '@ngrx/entity';
 import { createFeatureSelector, createSelector } from '@ngrx/store';
 
-import { wishlistItemAdapter, WishlistItemPartialState, State } from './wishlist-item.reducer';
+import {
+	wishlistItemAdapter,
+	WishlistItemPartialState,
+	State,
+} from './wishlist-item.reducer';
 
 const { selectAll, selectEntities } = wishlistItemAdapter.getSelectors();
 
-export const getWishlistItemState = createFeatureSelector<WishlistItemPartialState, State>(
-	WISHLIST_ITEM_FEATURE_KEY
-);
+export const getWishlistItemState = createFeatureSelector<
+	WishlistItemPartialState,
+	State
+>(WISHLIST_ITEM_FEATURE_KEY);
 
 export const getWishlistItemError = createSelector(
 	getWishlistItemState,
@@ -35,12 +43,16 @@ export const selectWishlistItemEntities = createSelector(
 	selectEntities
 );
 
-export const selectAllWishlistItem = createSelector(getWishlistItemState, selectAll);
+export const selectAllWishlistItem = createSelector(
+	getWishlistItemState,
+	selectAll
+);
 
 export const selectWishlistItem = createSelector(
 	selectWishlistItemEntities,
 	getSelectedId,
-	(wishlistItemEntities, wishlistItemID) => wishlistItemEntities[wishlistItemID]
+	(wishlistItemEntities, wishlistItemID) =>
+		wishlistItemEntities[wishlistItemID]
 );
 
 export const selectWishlistItemById = () =>

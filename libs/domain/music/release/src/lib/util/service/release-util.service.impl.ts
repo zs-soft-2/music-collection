@@ -8,6 +8,8 @@ import {
 	EntityQuantityGroup,
 	EntityTypeEnum,
 	LabelEntity,
+	QueryConstraintTypeEnum,
+	QueryOperatorEnum,
 	ReleaseArtist,
 	ReleaseEntity,
 	ReleaseEntityAdd,
@@ -17,6 +19,7 @@ import {
 	ReleaseModelAdd,
 	ReleaseModelUpdate,
 	ReleaseUtilService,
+	SearchParams,
 	SimpleAlbum,
 	UpdateEntityQuantityType,
 	UpdateEntityQuantityTypeEnum,
@@ -169,6 +172,30 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 		}
 
 		return newFormGroup;
+	}
+
+	public createSearchParamsForAlbum(
+		term: string,
+		artistId: string
+	): SearchParams {
+		const searchParams: SearchParams = [
+			this.createSearchParam(
+				EntityTypeEnum.Album,
+				term.toLowerCase(),
+				QueryConstraintTypeEnum.where,
+				QueryOperatorEnum.arrayContains,
+				'searchParameters'
+			),
+			this.createSearchParam(
+				EntityTypeEnum.Album,
+				artistId,
+				QueryConstraintTypeEnum.where,
+				QueryOperatorEnum.equal,
+				'artist.uid'
+			),
+		];
+
+		return searchParams;
 	}
 
 	public updateEntity(formGroup: FormGroup): ReleaseEntityUpdate {

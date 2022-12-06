@@ -27,7 +27,9 @@ export const changeNewEntityButtonEnabled = createAction(
 	props<{ enabled: boolean }>()
 );
 
-export const clearWishlistItems = createAction('[WishlistItem] Clear WishlistItems');
+export const clearWishlistItems = createAction(
+	'[WishlistItem] Clear WishlistItems'
+);
 
 export const deleteWishlistItem = createAction(
 	'[WishlistItem] Delete WishlistItem',
@@ -44,7 +46,9 @@ export const deleteWishlistItemSuccess = createAction(
 	props<{ wishlistItemId: string }>()
 );
 
-export const listWishlistItems = createAction('[WishlistItem] List WishlistItems');
+export const listWishlistItems = createAction(
+	'[WishlistItem] List WishlistItems'
+);
 
 export const listWishlistItemsFail = createAction(
 	'[WishlistItem] List WishlistItems FAIL',

@@ -56,9 +56,10 @@ export class WishlistItemEffects {
 							);
 
 							return wishlistItemActions.addWishlistItemSuccess({
-								wishlistItem: this.wishlistItemUtilService.convertModelToEntity(
-									wishlistItem
-								),
+								wishlistItem:
+									this.wishlistItemUtilService.convertModelToEntity(
+										wishlistItem
+									),
 							});
 						})
 					)
@@ -98,9 +99,11 @@ export class WishlistItemEffects {
 								)
 							);
 
-							return wishlistItemActions.deleteWishlistItemSuccess({
-								wishlistItemId: wishlistItem.uid,
-							});
+							return wishlistItemActions.deleteWishlistItemSuccess(
+								{
+									wishlistItemId: wishlistItem.uid,
+								}
+							);
 						})
 					)
 			)
@@ -113,7 +116,9 @@ export class WishlistItemEffects {
 				this.wishlistItemDataService.list$().pipe(
 					map((wishlistItems) =>
 						wishlistItems.map((wishlistItem) =>
-							this.wishlistItemUtilService.convertModelToEntity(wishlistItem)
+							this.wishlistItemUtilService.convertModelToEntity(
+								wishlistItem
+							)
 						)
 					),
 					map((wishlistItems) => {
@@ -140,7 +145,9 @@ export class WishlistItemEffects {
 						});
 					}),
 					catchError((error) => {
-						return of(wishlistItemActions.loadWishlistItemFail(error));
+						return of(
+							wishlistItemActions.loadWishlistItemFail(error)
+						);
 					})
 				)
 			)
@@ -153,7 +160,9 @@ export class WishlistItemEffects {
 				this.wishlistItemDataService.search$(action.params).pipe(
 					map((result) =>
 						result.map((wishlistItem) =>
-							this.wishlistItemUtilService.convertModelToEntity(wishlistItem)
+							this.wishlistItemUtilService.convertModelToEntity(
+								wishlistItem
+							)
 						)
 					),
 					map((result) => {
@@ -192,15 +201,17 @@ export class WishlistItemEffects {
 					)
 					.pipe(
 						map((wishlistItem) => {
-							return wishlistItemActions.updateWishlistItemSuccess({
-								wishlistItem: {
-									id: wishlistItem.uid || '',
-									changes:
-										this.wishlistItemUtilService.convertModelUpdateToEntityUpdate(
-											wishlistItem
-										),
-								},
-							});
+							return wishlistItemActions.updateWishlistItemSuccess(
+								{
+									wishlistItem: {
+										id: wishlistItem.uid || '',
+										changes:
+											this.wishlistItemUtilService.convertModelUpdateToEntityUpdate(
+												wishlistItem
+											),
+									},
+								}
+							);
 						})
 					)
 			)

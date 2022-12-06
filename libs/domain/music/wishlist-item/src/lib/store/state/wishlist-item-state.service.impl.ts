@@ -16,12 +16,16 @@ import * as wishlistItemSelectors from './wishlist-item.selectors';
 
 @Injectable()
 export class WishlistItemStateServiceImpl extends WishlistItemStateService {
-	public constructor(private store: Store<fromWishlistItem.WishlistItemPartialState>) {
+	public constructor(
+		private store: Store<fromWishlistItem.WishlistItemPartialState>
+	) {
 		super();
 	}
 
 	public dispatchAddEntityAction(wishlistItem: WishlistItemEntityAdd): void {
-		this.store.dispatch(wishlistItemActions.addWishlistItem({ wishlistItem }));
+		this.store.dispatch(
+			wishlistItemActions.addWishlistItem({ wishlistItem })
+		);
 	}
 
 	public dispatchChangeNewEntityButtonEnabled(enabled: boolean): void {
@@ -31,7 +35,9 @@ export class WishlistItemStateServiceImpl extends WishlistItemStateService {
 	}
 
 	public dispatchDeleteEntityAction(wishlistItem: WishlistItemEntity): void {
-		this.store.dispatch(wishlistItemActions.deleteWishlistItem({ wishlistItem }));
+		this.store.dispatch(
+			wishlistItemActions.deleteWishlistItem({ wishlistItem })
+		);
 	}
 
 	public dispatchListEntitiesAction(): void {
@@ -50,18 +56,28 @@ export class WishlistItemStateServiceImpl extends WishlistItemStateService {
 		this.store.dispatch(wishlistItemActions.search({ params }));
 	}
 
-	public dispatchSelectWishlistItemAction(wishlistItem: WishlistItemEntity): void {
-		this.store.dispatch(wishlistItemActions.selectWishlistItem({ wishlistItem }));
+	public dispatchSelectWishlistItemAction(
+		wishlistItem: WishlistItemEntity
+	): void {
+		this.store.dispatch(
+			wishlistItemActions.selectWishlistItem({ wishlistItem })
+		);
 	}
 
 	public dispatchSetSelectedEntityIdAction(entityId: string): void {
 		this.store.dispatch(
-			wishlistItemActions.setSelectedWishlistItemId({ wishlistItemId: entityId })
+			wishlistItemActions.setSelectedWishlistItemId({
+				wishlistItemId: entityId,
+			})
 		);
 	}
 
-	public dispatchUpdateEntityAction(wishlistItem: WishlistItemEntityUpdate): void {
-		this.store.dispatch(wishlistItemActions.updateWishlistItem({ wishlistItem }));
+	public dispatchUpdateEntityAction(
+		wishlistItem: WishlistItemEntityUpdate
+	): void {
+		this.store.dispatch(
+			wishlistItemActions.updateWishlistItem({ wishlistItem })
+		);
 	}
 
 	public isLoading$(): Observable<boolean> {
@@ -69,25 +85,35 @@ export class WishlistItemStateServiceImpl extends WishlistItemStateService {
 	}
 
 	public selectEntities$(): Observable<WishlistItemEntity[]> {
-		return this.store.pipe(select(wishlistItemSelectors.selectAllWishlistItem));
+		return this.store.pipe(
+			select(wishlistItemSelectors.selectAllWishlistItem)
+		);
 	}
 
-	public selectEntityById$(uid: string): Observable<WishlistItemEntity | undefined> {
+	public selectEntityById$(
+		uid: string
+	): Observable<WishlistItemEntity | undefined> {
 		return this.store.pipe(
 			select(wishlistItemSelectors.selectWishlistItemById(), { uid })
 		);
 	}
 
 	public selectNewEntityButtonEnabled$(): Observable<boolean> {
-		return this.store.pipe(select(wishlistItemSelectors.isNewEntityButtonEnabled));
+		return this.store.pipe(
+			select(wishlistItemSelectors.isNewEntityButtonEnabled)
+		);
 	}
 
 	public selectSearchResult$(): Observable<WishlistItemEntity[]> {
-		return this.store.pipe(select(wishlistItemSelectors.selectSearchResult));
+		return this.store.pipe(
+			select(wishlistItemSelectors.selectSearchResult)
+		);
 	}
 
 	public selectSelectedEntity$(): Observable<WishlistItemEntity | undefined> {
-		return this.store.pipe(select(wishlistItemSelectors.selectWishlistItem));
+		return this.store.pipe(
+			select(wishlistItemSelectors.selectWishlistItem)
+		);
 	}
 
 	public selectSelectedEntityID$(): Observable<string> {

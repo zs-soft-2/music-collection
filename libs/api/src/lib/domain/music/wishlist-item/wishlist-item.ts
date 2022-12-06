@@ -3,7 +3,7 @@ import { FormGroup } from '@angular/forms';
 import { Activable, Entity, FormatEnum } from '../../../common';
 import { UserReference } from '../../../core';
 import { AlbumEntity, AlbumReference } from '../album';
-import { ArtistReference } from '../artist';
+import { ArtistEntity, ArtistReference } from '../artist';
 
 export interface WishlistItem {
 	albumReference: AlbumReference;
@@ -31,6 +31,7 @@ export type WishlistItemModelUpdate = Partial<WishlistItemModel> &
 
 export type WishlistItemFormParams = {
 	albums: AlbumEntity[];
+	artists: ArtistEntity[];
 	formGroup: FormGroup;
 	formatList: FormatEnum[];
 };

@@ -6,8 +6,8 @@
 			<div class="content-image">
 				<mc-album-simple-view
 					[album]="release.album"
-					[width]="width"
-					[height]="width"
+					[width]="release.media === media['dvd'] ? '350' : width"
+					[height]="height"
 				></mc-album-simple-view>
 			</div>
 
