@@ -92,6 +92,22 @@ const routes: Routes = [
 				canLoad: [NgxPermissionsGuard],
 			},
 			{
+				path: 'wishlist-item',
+				data: {
+					breadcrumb: 'wishlist-item',
+					permissions: {
+						only: [RoleNames.ADMIN],
+						redirectTo: '/error',
+					},
+				},
+				loadChildren: () =>
+					import('@music-collection/domain/wishlist-item').then(
+						(lib) => lib.WishlistItemAdminModule
+					),
+				canActivate: [NgxPermissionsGuard],
+				canLoad: [NgxPermissionsGuard],
+			},
+			{
 				path: 'document',
 				data: {
 					breadcrumb: 'document',

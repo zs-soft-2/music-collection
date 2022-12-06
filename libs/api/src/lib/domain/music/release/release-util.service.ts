@@ -1,6 +1,6 @@
 import { FormGroup } from '@angular/forms';
 
-import { EntityUtilService } from '../../../common';
+import { EntityUtilService, SearchParams } from '../../../common';
 import {
 	EntityQuantityEntity,
 	EntityQuantityEntityUpdate,
@@ -40,6 +40,10 @@ export abstract class ReleaseUtilService extends EntityUtilService<
 		isAlbumsActive: boolean,
 		isArtistsActive: boolean
 	): FormGroup;
+	public abstract createSearchParamsForAlbum(
+		term: string,
+		artistId: string
+	): SearchParams;
 	public abstract updateEntityQuantity(
 		entityQuantityEntity: EntityQuantityEntity,
 		release: ReleaseEntity,

@@ -5,12 +5,7 @@ import {
 	Input,
 	Output,
 } from '@angular/core';
-import {
-	AlbumEntity,
-	BaseComponent,
-	MediaEnum,
-	ReleaseEntity,
-} from '@music-collection/api';
+import { BaseComponent, MediaEnum, ReleaseEntity } from '@music-collection/api';
 
 export interface Media {
 	[x: string]: MediaEnum;
@@ -24,6 +19,8 @@ export interface Media {
 })
 export class ReleaseSimpleViewComponent extends BaseComponent {
 	public media: Media;
+	@Input()
+	public height = '220';
 	@Input()
 	public release!: ReleaseEntity;
 	@Output()

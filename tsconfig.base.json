@@ -50,6 +50,9 @@
 				"libs/domain/music/release/src/index.ts"
 			],
 			"@music-collection/domain/user": ["libs/domain/user/src/index.ts"],
+			"@music-collection/domain/wishlist-item": [
+				"libs/domain/music/wishlist-item/src/index.ts"
+			],
 			"@music-collection/ui": ["libs/ui/src/index.ts"]
 		}
 	},

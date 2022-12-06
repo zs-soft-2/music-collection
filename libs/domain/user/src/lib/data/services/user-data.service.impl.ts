@@ -17,6 +17,10 @@ import {
 	SearchParams,
 	User,
 	UserDataService,
+	WishlistItemModel,
+	WISHLIST_ITEM_FEATURE_KEY,
+	WishlistItemModelAdd,
+	WishlistItemModelUpdate,
 } from '@music-collection/api';
 
 import { USER_FEATURE_KEY } from '../../store/state/user.reducer';
@@ -64,6 +68,34 @@ export class UserDataServiceImpl extends UserDataService {
 		});
 	}
 
+	public addWishlistItem$(
+		wishlistItem: WishlistItemModelAdd
+	): Observable<WishlistItemModel> {
+		const uid = doc(collection(this.firestore, 'id')).id;
+		const newWishlistItem: WishlistItemModel = {
+			...wishlistItem,
+			uid,
+		};
+
+		return new Observable((subscriber) => {
+			const docRef = doc(
+				this.firestore,
+				USER_FEATURE_KEY,
+				newWishlistItem.userReference.uid
+			);
+			const wishlistReference = collection(
+				docRef,
+				WISHLIST_ITEM_FEATURE_KEY
+			);
+
+			setDoc(doc(wishlistReference, uid), newWishlistItem).then(() => {
+				subscriber.next({
+					...newWishlistItem,
+				} as unknown as WishlistItemModel);
+			});
+		});
+	}
+
 	public delete$(user: User): Observable<User> {
 		return this.update$(user);
 	}
@@ -81,6 +113,23 @@ export class UserDataServiceImpl extends UserDataService {
 				subscriber.next({
 					...collectionItem,
 				} as unknown as CollectionItemModel);
+			});
+		});
+	}
+
+	public deleteWishlistItem$(
+		wishlistItem: WishlistItemModel
+	): Observable<WishlistItemModel> {
+		return new Observable((subscriber) => {
+			const wishlistItemDocument = doc(
+				this.firestore,
+				`${USER_FEATURE_KEY}/${wishlistItem.userReference.uid}/${WISHLIST_ITEM_FEATURE_KEY}/${wishlistItem.uid}`
+			);
+
+			deleteDoc(wishlistItemDocument).then(() => {
+				subscriber.next({
+					...wishlistItem,
+				} as unknown as WishlistItemModel);
 			});
 		});
 	}
@@ -115,6 +164,21 @@ export class UserDataServiceImpl extends UserDataService {
 					subscriber.next(collectionItem);
 				}
 			);
+		});
+	}
+
+	public updateWishlistItem$(
+		wishlistItem: WishlistItemModelUpdate
+	): Observable<WishlistItemModelUpdate> {
+		const wishlistItemDocument = doc(
+			this.firestore,
+			`${USER_FEATURE_KEY}/${wishlistItem.userReference?.uid}/${WISHLIST_ITEM_FEATURE_KEY}/${wishlistItem.uid}`
+		);
+
+		return new Observable((subscriber) => {
+			updateDoc(wishlistItemDocument, { ...wishlistItem }).then(() => {
+				subscriber.next(wishlistItem);
+			});
 		});
 	}
 }

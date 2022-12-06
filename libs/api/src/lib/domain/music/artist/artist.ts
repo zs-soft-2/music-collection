@@ -6,6 +6,7 @@ import {
 	CountryEnum,
 	Entity,
 	GenreEnum,
+	Identifiable,
 	Searchable,
 	StyleEnum,
 } from '../../../common';
@@ -42,6 +43,10 @@ export type ArtistModel = Artist &
 export type ArtistModelAdd = Omit<ArtistModel, 'uid'>;
 
 export type ArtistModelUpdate = Partial<ArtistModel> & Entity & Searchable;
+
+export type ArtistReference = {
+	name: string;
+} & Identifiable;
 
 export type ArtistFormParams = {
 	countries: CountryEnum[];

@@ -1,0 +1,107 @@
+<section class="wishlist-item-form" *rxLet="params$; let params">
+	<form [formGroup]="params.formGroup">
+		<p-tabView>
+			<p-tabPanel header="Data">
+				<input name="uid" formControlName="uid" hidden />
+				<input
+					name="userReference"
+					formControlName="userReference"
+					hidden
+				/>
+
+				<div class="field">
+					<span class="p-float-label">
+						<p-autoComplete
+							formControlName="artistReference"
+							[suggestions]="params.artists"
+							[minLength]="3"
+							[delay]="400"
+							field="name"
+							(completeMethod)="searchArtistHandler($event)"
+						>
+						</p-autoComplete>
+
+						<label for="artistReference">Artist</label>
+					</span>
+				</div>
+
+				<div class="field">
+					<span class="p-float-label">
+						<p-autoComplete
+							formControlName="albumReference"
+							[suggestions]="params.albums"
+							[minLength]="3"
+							[delay]="400"
+							field="name"
+							(completeMethod)="searchAlbumHandler($event)"
+						>
+						</p-autoComplete>
+
+						<label for="albumReference">Album</label>
+					</span>
+				</div>
+
+				<div class="field">
+					<span class="p-float-label">
+						<input
+							id="sourceLink"
+							type="text"
+							pInputText
+							formControlName="sourceLink"
+						/>
+
+						<label for="sourceLink">Source link</label>
+					</span>
+				</div>
+
+				<div class="field">
+					<span class="p-float-label">
+						<p-multiSelect
+							id="medias"
+							[options]="params.mediaList"
+							placeholder="Select medias"
+							[filter]="false"
+							formControlName="medias"
+							display="chip"
+						></p-multiSelect>
+						<label for="medias">Medias</label>
+					</span>
+				</div>
+
+				<div class="field">
+					<span class="no-float">
+						<p-checkbox
+							[binary]="true"
+							formControlName="isActive"
+							name="isActive"
+							id="isActive"
+						></p-checkbox>
+
+						<label for="iaActive">Active</label>
+					</span>
+				</div>
+			</p-tabPanel>
+
+			<div
+				style="margin-top: 10px"
+				fxLayout="row"
+				fxLayoutAlign="space-around"
+			>
+				<button
+					pButton
+					type="button"
+					label="Submit"
+					(click)="submit()"
+					[disabled]="!params.formGroup.valid"
+				></button>
+
+				<button
+					pButton
+					type="button"
+					label="Cancel"
+					(click)="cancel()"
+				></button>
+			</div>
+		</p-tabView>
+	</form>
+</section>

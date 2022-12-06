@@ -4,6 +4,7 @@ import {
 	Entity,
 	FormatEnum,
 	GenreEnum,
+	Identifiable,
 	Searchable,
 	StyleEnum,
 } from '../../../common';
@@ -38,6 +39,11 @@ export type AlbumModel = Album &
 export type AlbumModelAdd = Omit<AlbumModel, 'uid'>;
 
 export type AlbumModelUpdate = Partial<AlbumModel> & Entity;
+
+export type AlbumReference = {
+	coverImage: AlbumDocument | null;
+	name: string;
+} & Identifiable;
 
 export type AlbumFormParams = {
 	artists: ArtistEntity[];

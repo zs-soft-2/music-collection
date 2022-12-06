@@ -1,4 +1,4 @@
-import { Entity } from '../../common';
+import { Entity, Identifiable } from '../../common';
 import { Role } from '../role';
 
 export interface User extends Entity {
@@ -12,3 +12,7 @@ export interface User extends Entity {
 	photoURL?: string | null;
 	roles?: Role[];
 }
+
+export type UserReference = {
+	displayName?: string | null;
+} & Identifiable;

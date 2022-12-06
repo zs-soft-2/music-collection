@@ -1,0 +1,80 @@
+<section class="wishlistItem-table" *rxLet="params$; let params">
+	<p-table
+		[value]="params.wishlistItems"
+		sortField="name"
+		sortMode="multiple"
+		styleClass="p-datatable-striped p-datatable-sm"
+		responsiveLayout="scroll"
+		[paginator]="true"
+		[rows]="10"
+	>
+		<ng-template pTemplate="header">
+			<tr>
+				<th pSortableColumn="albumReference.name">
+					Artist name <p-sortIcon field="albumReference"></p-sortIcon>
+				</th>
+
+				<th pSortableColumn="artistReference.name">
+					Album name <p-sortIcon field="artistReference"></p-sortIcon>
+				</th>
+
+				<th>Medias</th>
+
+				<th></th>
+			</tr>
+			<tr>
+				<th>
+					<p-autoComplete
+						[suggestions]="params.empty"
+						[showClear]="true"
+						class="p-inputtext-sm"
+						(completeMethod)="searchByNameHandler($event)"
+						[minLength]="3"
+						[delay]="400"
+					>
+					</p-autoComplete>
+				</th>
+
+				<th></th>
+
+				<th></th>
+
+				<th></th>
+			</tr>
+		</ng-template>
+
+		<ng-template pTemplate="body" let-wishlistItem>
+			<tr>
+				<td>{{ wishlistItem.artistReference.name }}</td>
+
+				<td>{{ wishlistItem.albumReference.name }}</td>
+
+				<td>
+					<ng-container *ngFor="let media of wishlistItem.medias">
+						<p-chip styleClass="style">
+							{{ media }}
+						</p-chip>
+					</ng-container>
+				</td>
+
+				<td>
+					<button
+						pButton
+						pRipple
+						icon="pi pi-pencil"
+						class="p-button-rounded p-button-success mr-2"
+						(click)="editWishlistItem(wishlistItem)"
+					></button>
+
+					<button
+						pButton
+						pRipple
+						icon="pi pi-trash"
+						class="p-button-rounded p-button-warning"
+						(click)="deleteWishlistItem(wishlistItem)"
+					></button>
+				</td>
+			</tr>
+		</ng-template>
+	</p-table>
+</section>
