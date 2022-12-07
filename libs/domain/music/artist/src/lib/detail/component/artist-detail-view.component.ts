@@ -1,7 +1,17 @@
 import { Observable } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { ArtistDetailParams, BaseComponent } from '@music-collection/api';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	EventEmitter,
+	OnInit,
+	Output,
+} from '@angular/core';
+import {
+	AlbumEntity,
+	ArtistDetailParams,
+	BaseComponent,
+} from '@music-collection/api';
 
 import { ArtistDetailViewService } from './artist-detail-view.service';
 
@@ -14,12 +24,20 @@ import { ArtistDetailViewService } from './artist-detail-view.service';
 })
 export class ArtistDetailViewComponent extends BaseComponent implements OnInit {
 	public params$!: Observable<ArtistDetailParams>;
+	@Output()
+	public selectAlbumDetail: EventEmitter<AlbumEntity>;
 
 	public constructor(private componentService: ArtistDetailViewService) {
 		super();
+
+		this.selectAlbumDetail = new EventEmitter();
 	}
 
 	public ngOnInit(): void {
 		this.params$ = this.componentService.init$();
+	}
+
+	public selectAlbumDetailHandler(album: AlbumEntity): void {
+		this.selectAlbumDetail.emit(album);
 	}
 }
