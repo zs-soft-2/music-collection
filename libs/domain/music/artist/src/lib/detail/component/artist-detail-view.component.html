@@ -55,7 +55,10 @@
 					<p-dataView [value]="params.albums">
 						<ng-template let-album pTemplate="listItem">
 							<mc-album-item-view
-								[album]="album" (selectAlbumDetail)="selectAlbumDetailHandler($event)"
+								[album]="album"
+								(selectAlbumDetail)="
+									selectAlbumDetailHandler($event)
+								"
 							></mc-album-item-view>
 						</ng-template>
 					</p-dataView>
