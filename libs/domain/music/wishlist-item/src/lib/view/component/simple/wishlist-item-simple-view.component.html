@@ -1,0 +1,15 @@
+<div fxLayout="row" fxLayout.xs="column" fxLayoutAlign="center">
+	<p-image
+		[src]="wishlistItem.albumReference.coverImage?.filePath || ''"
+		[preview]="true"
+		alt="Image"
+		width="250"
+	>
+	</p-image>
+
+	<p>
+		{{ wishlistItem.artistReference.name }}
+		-
+		{{ wishlistItem.albumReference.name }}
+	</p>
+</div>
