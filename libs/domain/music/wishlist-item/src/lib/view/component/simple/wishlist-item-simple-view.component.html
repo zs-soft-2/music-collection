@@ -1,15 +1,88 @@
-<div fxLayout="row" fxLayout.xs="column" fxLayoutAlign="center">
-	<p-image
-		[src]="wishlistItem.albumReference.coverImage?.filePath || ''"
-		[preview]="true"
-		alt="Image"
-		width="250"
-	>
-	</p-image>
+<ng-container [ngSwitch]="layout">
+	<ng-container *ngSwitchCase="'horizontal'">
+		<div
+			fxLayout="row"
+			fxLayout.xs="column"
+			fxLayoutAlign="center"
+			fxLayoutGap="10px 5px grid"
+			*ngIf="wishlistItem"
+		>
+			<p-image
+				[src]="wishlistItem.albumReference.coverImage?.filePath || ''"
+				[preview]="true"
+				alt="Image"
+				[width]="width"
+			>
+			</p-image>
 
-	<p>
-		{{ wishlistItem.artistReference.name }}
-		-
-		{{ wishlistItem.albumReference.name }}
-	</p>
-</div>
+			<div>
+				<p>
+					{{ wishlistItem.artistReference.name }}
+				</p>
+
+				<p>
+					{{ wishlistItem.albumReference.name }}
+				</p>
+			</div>
+
+			<div>
+				<p>
+					<a [href]="wishlistItem.sourceLink" target="_blank">Shop</a>
+				</p>
+
+				<p>
+					<ng-container *ngFor="let media of wishlistItem.medias">
+						<div>
+							<p-chip styleClass="style">
+								{{ media }}
+							</p-chip>
+						</div>
+					</ng-container>
+				</p>
+			</div>
+		</div>
+	</ng-container>
+
+	<ng-container *ngSwitchCase="'vertical'">
+		<div
+			fxLayout="column"
+			fxLayoutAlign="center"
+			fxLayoutGap="10px 5px grid"
+			*ngIf="wishlistItem"
+		>
+			<div>
+				<p-image
+					[src]="
+						wishlistItem.albumReference.coverImage?.filePath || ''
+					"
+					[preview]="true"
+					alt="Image"
+					[width]="width"
+				>
+				</p-image>
+			</div>
+
+			<p>
+				{{ wishlistItem.artistReference.name }}
+			</p>
+
+			<p>
+				{{ wishlistItem.albumReference.name }}
+			</p>
+
+			<p>
+				<ng-container *ngFor="let media of wishlistItem.medias">
+					<div>
+						<p-chip styleClass="style">
+							{{ media }}
+						</p-chip>
+					</div>
+				</ng-container>
+			</p>
+
+			<p>
+				<a [href]="wishlistItem.sourceLink" target="_blank">Shop</a>
+			</p>
+		</div>
+	</ng-container>
+</ng-container>

@@ -1,7 +1,7 @@
-import { Observable, ReplaySubject } from 'rxjs';
+import { Observable, ReplaySubject, tap } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import { Injectable } from '@angular/core';
+import { Injectable, EventEmitter } from '@angular/core';
 import {
 	WishlistItemEntity,
 	WishlistItemListParams,
@@ -13,6 +13,7 @@ import {
 export class WishlistItemListService extends BaseComponent {
 	private params!: WishlistItemListParams;
 	private params$$: ReplaySubject<WishlistItemListParams>;
+	private selectWishlistItem!: EventEmitter<WishlistItemEntity>;
 
 	public constructor(
 		private wishlistItemStateService: WishlistItemStateService
@@ -22,8 +23,17 @@ export class WishlistItemListService extends BaseComponent {
 		this.params$$ = new ReplaySubject();
 	}
 
-	public init$(): Observable<WishlistItemListParams> {
+	public init$(
+		selectWishlistItem: EventEmitter<WishlistItemEntity>
+	): Observable<WishlistItemListParams> {
+		this.selectWishlistItem = selectWishlistItem;
+
 		return this.wishlistItemStateService.selectEntities$().pipe(
+			tap((entities) => {
+				if (!entities) {
+					this.wishlistItemStateService.dispatchListEntitiesAction();
+				}
+			}),
 			switchMap((wishlistItems) => {
 				this.params = {
 					wishlistItems,
@@ -37,8 +47,6 @@ export class WishlistItemListService extends BaseComponent {
 	}
 
 	public selectWishlistItemHandler(wishlistItem: WishlistItemEntity): void {
-		this.wishlistItemStateService.dispatchSelectWishlistItemAction(
-			wishlistItem
-		);
+		this.selectWishlistItem.emit(wishlistItem);
 	}
 }

@@ -58,9 +58,16 @@ export const routes: Routes = [
 			),
 		data: {
 			breadcrumb: 'collection',
-			permissions: {
-				redirectTo: '/home',
-			},
+		},
+	},
+	{
+		path: 'wishlist',
+		loadChildren: () =>
+			import('./page/wishlist/wishlist.module').then(
+				(module) => module.WishlistModule
+			),
+		data: {
+			breadcrumb: 'wishlist',
 		},
 	},
 	{
