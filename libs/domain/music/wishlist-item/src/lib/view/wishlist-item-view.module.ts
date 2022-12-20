@@ -1,7 +1,8 @@
-import { CommonModule } from '@angular/common';
-import { NgModule } from '@angular/core';
+import { ChipModule } from 'primeng/chip';
 import { ImageModule } from 'primeng/image';
 
+import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
 
 import { WishlistItemSimpleViewComponent } from './component';
@@ -9,6 +10,6 @@ import { WishlistItemSimpleViewComponent } from './component';
 @NgModule({
 	declarations: [WishlistItemSimpleViewComponent],
 	exports: [WishlistItemSimpleViewComponent],
-	imports: [CommonModule, FlexLayoutModule, ImageModule],
+	imports: [CommonModule, ChipModule, FlexLayoutModule, ImageModule],
 })
 export class WishlistItemViewModule {}

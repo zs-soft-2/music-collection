@@ -1,10 +1,29 @@
 <section class="wishlist-item-list" *rxLet="params$; let params">
-	<p-carousel
-		[value]="params.wishlistItems"
-		[numVisible]="1"
-		[numScroll]="1"
-		[autoplayInterval]="5000"
-	>
-		<ng-template let-wishlistItem pTemplate="item"> </ng-template>
-	</p-carousel>
+	<p-dataView [value]="params.wishlistItems" [layout]="'grid'">
+		<ng-template pTemplate="header">
+			<p-dataViewLayoutOptions></p-dataViewLayoutOptions>
+		</ng-template>
+
+		<ng-template let-wishlistItem pTemplate="listItem">
+			<div class="p-col-12 wishlist-item">
+				<mc-wishlist-item-simple-view
+					[wishlistItem]="wishlistItem"
+					[width]="'100'"
+					[layout]="'horizontal'"
+				>
+				</mc-wishlist-item-simple-view>
+			</div>
+		</ng-template>
+
+		<ng-template let-wishlistItem pTemplate="gridItem">
+			<div class="col-12 md:col-4 wishlist-item">
+				<mc-wishlist-item-simple-view
+					[wishlistItem]="wishlistItem"
+					[width]="'100'"
+					[layout]="'vertical'"
+				>
+				</mc-wishlist-item-simple-view>
+			</div>
+		</ng-template>
+	</p-dataView>
 </section>

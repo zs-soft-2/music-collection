@@ -18,6 +18,10 @@ export class WishlistItemSimpleViewComponent extends BaseComponent {
 	public wishlistItem!: WishlistItemEntity;
 	@Output()
 	public selectWishlistItem: EventEmitter<void>;
+	@Input()
+	public width = '200';
+	@Input()
+	public layout: 'horizontal' | 'vertical' = 'horizontal';
 
 	public constructor() {
 		super();
