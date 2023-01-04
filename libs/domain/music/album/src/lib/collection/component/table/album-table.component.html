@@ -67,7 +67,7 @@
 
 				<td>{{ album.artist.name }}</td>
 
-				<td>{{ album.year | date: 'yyyy' }}</td>
+				<td>{{ album.year | date : 'yyyy' }}</td>
 
 				<td>
 					<ng-container *ngFor="let style of album.styles">

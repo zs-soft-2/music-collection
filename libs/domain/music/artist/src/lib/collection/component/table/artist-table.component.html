@@ -51,7 +51,7 @@
 			<tr>
 				<td>{{ artist.name }}</td>
 
-				<td>{{ artist.formedIn | date: 'yyyy' }}</td>
+				<td>{{ artist.formedIn | date : 'yyyy' }}</td>
 
 				<td>
 					<ng-container *ngFor="let style of artist.styles">

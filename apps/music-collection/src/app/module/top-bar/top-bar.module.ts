@@ -9,7 +9,7 @@ import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CoreAuthenticationViewModule } from '@music-collection/core/authentication/view';
 import { UserProfileModule } from '@music-collection/domain/user';
-import { LetModule } from '@rx-angular/template';
+import { LetModule } from '@rx-angular/template/let';
 
 import { TopBarComponent } from './component';
 

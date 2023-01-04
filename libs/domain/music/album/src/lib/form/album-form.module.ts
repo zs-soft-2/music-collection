@@ -10,7 +10,7 @@ import { TabViewModule } from 'primeng/tabview';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { LetModule } from '@rx-angular/template';
+import { LetModule } from '@rx-angular/template/let';
 
 import { AlbumFormComponent } from './component';
 
