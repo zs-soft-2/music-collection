@@ -1,4 +1,4 @@
-import { ReplaySubject, Subject, takeUntil } from 'rxjs';
+import { Observable, ReplaySubject, Subject, takeUntil } from 'rxjs';
 
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { BaseComponent } from '@music-collection/api';
@@ -14,12 +14,10 @@ import { TopBarService } from './top-bar.service';
 	templateUrl: './top-bar.component.html',
 })
 export class TopBarComponent extends BaseComponent implements OnInit {
-	public params$$: Subject<TopBarParams>;
+	public params$!: Observable<TopBarParams>;
 
 	public constructor(private componentService: TopBarService) {
 		super();
-
-		this.params$$ = new ReplaySubject();
 	}
 
 	public imgClickHandler(): void {
@@ -35,9 +33,7 @@ export class TopBarComponent extends BaseComponent implements OnInit {
 	}
 
 	public ngOnInit(): void {
-		this.componentService
-			.init$()
-			.pipe(takeUntil(this.destroy))
-			.subscribe((topBarParams) => this.params$$.next(topBarParams));
+		this.params$ = this.componentService
+			.init$();
 	}
 }

@@ -50,8 +50,8 @@ export class TopBarService {
 
 	public logout(): void {
 		this.authorizationService.removeAll();
-		this.router.navigate(['/home']);
 		this.authenticationStateService.dispatchLogout();
+		this.router.navigate(['/home']);
 	}
 
 	private updateParams(params: TopBarParams, user: User): TopBarParams {
@@ -61,6 +61,7 @@ export class TopBarService {
 			newParams = {
 				addPagePermissions: [],
 				editPagePermissions: [],
+				isAuthenticated: user && user.displayName !== 'GUEST',
 				menuItems: this.createMenuItems(),
 				user,
 			};
