@@ -2,8 +2,10 @@
 	<p-carousel
 		*ngIf="params.albums.length"
 		[value]="params.albums"
+		[circular]="true"
 		[numVisible]="3"
 		[numScroll]="1"
+		[showIndicators]="false"
 		[autoplayInterval]="5000"
 	>
 		<ng-template let-album pTemplate="item">
