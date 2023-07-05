@@ -2,22 +2,18 @@ import { Observable, ReplaySubject, Subject, switchMap } from 'rxjs';
 
 import { Injectable } from '@angular/core';
 import {
-	BaseService,
-	collectionGroupByList,
-	CollectionItemListConfig,
-	CollectionItemStateService,
-	CollectionSidebarParams,
-	collectionSortByList,
+    BaseService, CollectionGroupByEnum, collectionGroupByList, CollectionItemListConfig,
+    CollectionItemStateService, CollectionSidebarParams, CollectionSortByEnum, collectionSortByList
 } from '@music-collection/api';
 
 @Injectable()
 export class CollectionSidebarService extends BaseService {
-	private params!: CollectionSidebarParams;
-	private params$$: Subject<CollectionSidebarParams>;
+    private params!: CollectionSidebarParams;
+    private params$$: Subject<CollectionSidebarParams>;
 
-	public selectedValue = 'default';
+    public selectedValue = 'default';
 
-	public constructor(
+    public constructor(
 		private collectionItemStateService: CollectionItemStateService
 	) {
 		super();
@@ -25,7 +21,11 @@ export class CollectionSidebarService extends BaseService {
 		this.params$$ = new ReplaySubject(1);
 	}
 
-	public init$(): Observable<CollectionSidebarParams> {
+    public getConfig(): CollectionItemListConfig {
+		return { ...this.params.config };
+	}
+
+    public init$(): Observable<CollectionSidebarParams> {
 		return this.collectionItemStateService.selectEntities$().pipe(
 			switchMap((entities) => {
 				const artistNameSet: Set<string> = new Set();
@@ -37,8 +37,8 @@ export class CollectionSidebarService extends BaseService {
 				this.params = {
 					config: {
 						filterByArtistNames: null,
-						sortBy: null,
-						groupBy: null,
+						sortBy: CollectionSortByEnum.ascArtistName,
+						groupBy: [CollectionGroupByEnum.artist],
 					},
 					filterByArtistNameList: Array.from(artistNameSet.keys()),
 					isSidebarVisible: false,
@@ -53,13 +53,9 @@ export class CollectionSidebarService extends BaseService {
 		);
 	}
 
-	public openSidebar(): void {
+    public openSidebar(): void {
 		this.params.isSidebarVisible = true;
 
 		this.params$$.next(this.params);
-	}
-
-	public getConfig(): CollectionItemListConfig {
-		return { ...this.params.config };
 	}
 }
