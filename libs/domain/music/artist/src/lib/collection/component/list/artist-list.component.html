@@ -1,8 +1,10 @@
 <section class="artist-list" *rxLet="params$; let params">
 	<p-carousel
 		[value]="params.artists"
+		[circular]="true"
 		[numVisible]="1"
 		[numScroll]="1"
+		[showIndicators]="false"
 		[autoplayInterval]="5000"
 	>
 		<ng-template let-artist pTemplate="item">

@@ -17,7 +17,7 @@ function localStorageSyncReducer(
 				authentication: ['authenticatedUser'],
 			},
 			{
-				'collection-item': ['ids', 'entities'],
+				'collection-item': ['ids', 'entities', 'isNewEntityButtonEnabled', 'collectionItemListConfig'],
 			},
 			{
 				document: ['ids', 'entities'],

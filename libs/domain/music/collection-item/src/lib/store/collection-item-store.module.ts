@@ -18,7 +18,7 @@ import * as fromCollectionItem from './state/collection-item.reducer';
 			COLLECTION_ITEM_FEATURE_KEY,
 			fromCollectionItem.reducer
 		),
-		EffectsModule.forFeature([CollectionItemEffects]),
+		EffectsModule.forFeature([CollectionItemEffects])
 	],
 	providers: [
 		{

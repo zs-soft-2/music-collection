@@ -3,10 +3,12 @@ import { Observable, ReplaySubject, Subject, switchMap } from 'rxjs';
 import { Injectable } from '@angular/core';
 import {
 	BaseService,
+	CollectionGroupByEnum,
 	collectionGroupByList,
 	CollectionItemListConfig,
 	CollectionItemStateService,
 	CollectionSidebarParams,
+	CollectionSortByEnum,
 	collectionSortByList,
 } from '@music-collection/api';
 
@@ -25,6 +27,19 @@ export class CollectionSidebarService extends BaseService {
 		this.params$$ = new ReplaySubject(1);
 	}
 
+	public getConfig(): CollectionItemListConfig {
+		const config = this.params.config;
+
+		return {
+			...config,
+			filterByArtistNames:
+				config.filterByArtistNames &&
+				config.filterByArtistNames.length === 0
+					? null
+					: config.filterByArtistNames,
+		};
+	}
+
 	public init$(): Observable<CollectionSidebarParams> {
 		return this.collectionItemStateService.selectEntities$().pipe(
 			switchMap((entities) => {
@@ -37,8 +52,8 @@ export class CollectionSidebarService extends BaseService {
 				this.params = {
 					config: {
 						filterByArtistNames: null,
-						sortBy: null,
-						groupBy: null,
+						sortBy: CollectionSortByEnum.ascArtistName,
+						groupBy: [CollectionGroupByEnum.artist],
 					},
 					filterByArtistNameList: Array.from(artistNameSet.keys()),
 					isSidebarVisible: false,
@@ -57,9 +72,5 @@ export class CollectionSidebarService extends BaseService {
 		this.params.isSidebarVisible = true;
 
 		this.params$$.next(this.params);
-	}
-
-	public getConfig(): CollectionItemListConfig {
-		return { ...this.params.config };
 	}
 }
