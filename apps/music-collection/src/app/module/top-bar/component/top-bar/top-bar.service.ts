@@ -25,7 +25,16 @@ export class TopBarService {
 	}
 
 	public createMenuItems(): MenuItem[] {
-		return [];
+		return [
+			{
+				label: 'Home',
+				routerLink: ['/home'],
+			},
+			{
+				label: 'Collection',
+				routerLink: ['/collection'],
+			},
+		];
 	}
 
 	public imgClickHandler(): void {

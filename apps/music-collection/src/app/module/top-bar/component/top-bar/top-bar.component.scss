@@ -14,6 +14,10 @@
 	margin-bottom: 1rem;
 	border-bottom: #656565 1px solid;
 
+	.start {
+		display: flex
+	}
+
 	svg-icon:hover {
 		cursor: pointer;
 	}
@@ -24,6 +28,7 @@
 	font-size: 32px;
 	vertical-align: super;
 	margin-left: 10px;
+	margin-right: 10px;
 }
 
 .users-dropdown {

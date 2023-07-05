@@ -11,7 +11,7 @@ import {
 export const routes: Routes = [
 	{
 		path: '',
-		redirectTo: 'collection',
+		redirectTo: 'home',
 		pathMatch: 'full',
 	},
 	{
