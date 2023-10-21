@@ -36,6 +36,8 @@
 						[options]="params.groupByList"
 						display="chip"
 						[(ngModel)]="params.config.groupBy"
+						[filter]="true"
+						optionLabel="label"
 					>
 					</p-multiSelect>
 				</p-accordionTab>
@@ -45,6 +47,8 @@
 						[options]="params.filterByArtistNameList"
 						display="chip"
 						[(ngModel)]="params.config.filterByArtistNames"
+						[filter]="true"
+						optionLabel="label"
 					>
 					</p-multiSelect>
 				</p-accordionTab>

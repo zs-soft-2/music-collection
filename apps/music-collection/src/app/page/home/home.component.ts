@@ -5,8 +5,6 @@ import {
 	AlbumStateService,
 	ArtistStateService,
 	BaseComponent,
-	CollectionItemStateService,
-	ReleaseStateService,
 } from '@music-collection/api';
 
 @Component({

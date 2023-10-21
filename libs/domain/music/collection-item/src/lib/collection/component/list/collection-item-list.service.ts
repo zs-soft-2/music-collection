@@ -52,7 +52,8 @@ export class CollectionItemListService extends BaseComponent {
 			switchMap(([entities, config]) => {
 				entities = this.collectionItemUtilService.filterByArtist(
 					entities,
-					config?.filterByArtistNames || null
+					config?.filterByArtistNames?.map((item) => item.value) ||
+						null
 				);
 
 				this.params = {
@@ -88,7 +89,13 @@ export class CollectionItemListService extends BaseComponent {
 				groupBy: CollectionGroupByEnum.default,
 			});
 		} else {
-			items.push(...this.createGroup(entities, config.groupBy, 0));
+			items.push(
+				...this.createGroup(
+					entities,
+					config.groupBy.map((item) => item.value),
+					0
+				)
+			);
 		}
 
 		return items;

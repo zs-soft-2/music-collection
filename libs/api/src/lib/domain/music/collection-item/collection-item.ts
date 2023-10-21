@@ -1,3 +1,5 @@
+import { SelectItem } from 'primeng/api';
+
 import { FormGroup } from '@angular/forms';
 
 import { Entity, Searchable } from '../../../common';
@@ -50,8 +52,8 @@ export type CollectionItemTableParams = {
 export type CollectionSidebarParams = {
 	config: CollectionItemListConfig;
 	isSidebarVisible: boolean;
-	filterByArtistNameList: string[];
-	groupByList: CollectionGroupByEnum[];
+	filterByArtistNameList: SelectItem<string>[];
+	groupByList: SelectItem<CollectionGroupByEnum>[];
 	sortByList: CollectionSortByEnum[];
 };
 
@@ -79,17 +81,29 @@ export enum CollectionGroupByEnum {
 	year = 'year',
 }
 
-export const collectionGroupByList: CollectionGroupByEnum[] = [
-	CollectionGroupByEnum.artist,
-	CollectionGroupByEnum.media,
-	CollectionGroupByEnum.style,
-	CollectionGroupByEnum.year,
+export const collectionGroupByList: SelectItem<CollectionGroupByEnum>[] = [
+	{
+		value: CollectionGroupByEnum.artist,
+		label: CollectionGroupByEnum.artist.toString(),
+	},
+	{
+		value: CollectionGroupByEnum.media,
+		label: CollectionGroupByEnum.media.toString(),
+	},
+	{
+		value: CollectionGroupByEnum.style,
+		label: CollectionGroupByEnum.style.toString(),
+	},
+	{
+		value: CollectionGroupByEnum.year,
+		label: CollectionGroupByEnum.year.toString(),
+	},
 ];
 
 export type CollectionItemListConfig = {
-	filterByArtistNames: string[] | null;
+	filterByArtistNames: SelectItem<string>[] | null;
 	sortBy: CollectionSortByEnum | null;
-	groupBy: CollectionGroupByEnum[] | null;
+	groupBy: SelectItem<CollectionGroupByEnum>[] | null;
 };
 
 export type CollectionItemMap = {

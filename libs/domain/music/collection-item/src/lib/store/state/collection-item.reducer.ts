@@ -1,9 +1,9 @@
 import {
+	COLLECTION_ITEM_FEATURE_KEY,
+	CollectionGroupByEnum,
 	CollectionItemEntity,
 	CollectionItemListConfig,
-	COLLECTION_ITEM_FEATURE_KEY,
 	CollectionSortByEnum,
-	CollectionGroupByEnum,
 } from '@music-collection/api';
 import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity';
 import { Action, createReducer, on } from '@ngrx/store';
@@ -37,7 +37,12 @@ export const initialState: State = collectionItemAdapter.getInitialState({
 	collectionItemListConfig: {
 		filterByArtistNames: null,
 		sortBy: CollectionSortByEnum.ascArtistName,
-		groupBy: [CollectionGroupByEnum.artist],
+		groupBy: [
+			{
+				value: CollectionGroupByEnum.artist,
+				label: CollectionGroupByEnum.artist.toString(),
+			},
+		],
 	},
 	isNewEntityButtonEnabled: true,
 	loading: false,

@@ -11,6 +11,7 @@ import {
 	CollectionSortByEnum,
 	collectionSortByList,
 } from '@music-collection/api';
+import { SelectItem } from 'primeng/api';
 
 @Injectable()
 export class CollectionSidebarService extends BaseService {
@@ -45,17 +46,24 @@ export class CollectionSidebarService extends BaseService {
 			switchMap((entities) => {
 				const artistNameSet: Set<string> = new Set();
 
-				entities.forEach((entity) =>
-					artistNameSet.add(entity.release.artist.name)
-				);
+				entities.forEach((entity) => {
+					artistNameSet.add(entity.release.artist.name);
+				});
 
 				this.params = {
 					config: {
 						filterByArtistNames: null,
 						sortBy: CollectionSortByEnum.ascArtistName,
-						groupBy: [CollectionGroupByEnum.artist],
+						groupBy: [
+							{
+								value: CollectionGroupByEnum.artist,
+								label: CollectionGroupByEnum.artist.toString(),
+							},
+						],
 					},
-					filterByArtistNameList: Array.from(artistNameSet.keys()),
+					filterByArtistNameList: Array.from(
+						artistNameSet.keys()
+					).map((name) => ({ value: name, label: name })),
 					isSidebarVisible: false,
 					groupByList: collectionGroupByList,
 					sortByList: collectionSortByList,
