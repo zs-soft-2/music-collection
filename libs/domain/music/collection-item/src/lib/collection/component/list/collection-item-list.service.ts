@@ -239,6 +239,55 @@ export class CollectionItemListService extends BaseComponent {
 
 				collectionItemMaps.push(item);
 			});
+		} else if (groupBy === CollectionGroupByEnum.year) {
+			const map: Map<string, CollectionItemEntity[]> = new Map();
+
+			entities.forEach((entity) => {
+				const year = entity.release.album.year as never;
+				let number = 0;
+
+				if (year) {
+					number = year['seconds'];
+				}
+
+				const date = new Date(number * 1000);
+				const yearString: string = date.getFullYear().toString();
+
+				let entities: CollectionItemEntity[] | undefined =
+					map.get(yearString);
+
+				if (!entities) {
+					entities = [entity];
+
+					map.set(yearString, entities);
+				} else {
+					entities.push(entity);
+				}
+			});
+
+			Array.from(map.entries()).forEach((entry) => {
+				let collectionItemList: CollectionItemEntity[] | null = null;
+				let childCollectionItemMaps: CollectionItemMap[] | null = null;
+
+				if (isMoreGroupBy) {
+					childCollectionItemMaps = this.createGroup(
+						entry[1],
+						groupByItems,
+						index + 1
+					);
+				} else {
+					collectionItemList = entry[1];
+				}
+
+				const item: CollectionItemMap = {
+					name: entry[0],
+					collectionItemList,
+					collectionItemMaps: childCollectionItemMaps,
+					groupBy,
+				};
+
+				collectionItemMaps.push(item);
+			});
 		}
 
 		return collectionItemMaps;
