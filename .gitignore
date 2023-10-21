@@ -46,3 +46,5 @@ Thumbs.db
 /storage.rules
 /ui-debug.log
 /firestore-debug.log
+
+/.nx
