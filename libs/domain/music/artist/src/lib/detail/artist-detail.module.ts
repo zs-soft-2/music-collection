@@ -7,7 +7,7 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { AlbumItemViewModule } from '@music-collection/domain/album';
-import { LetModule } from '@rx-angular/template/let';
+import { RxLet } from '@rx-angular/template/let';
 
 import { ArtistDetailViewComponent } from './component';
 
@@ -21,7 +21,7 @@ import { ArtistDetailViewComponent } from './component';
 		DataViewModule,
 		FlexLayoutModule,
 		ImageModule,
-		LetModule,
+		RxLet,
 		TabMenuModule,
 	],
 })

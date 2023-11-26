@@ -6,7 +6,7 @@ import { TableModule } from 'primeng/table';
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { LetModule } from '@rx-angular/template/let';
+import { RxLet } from '@rx-angular/template/let';
 
 import { ReleaseViewModule } from '../view/release-view.module';
 import { ReleaseListComponent, ReleaseTableComponent } from './component';
@@ -20,7 +20,7 @@ import { ReleaseListComponent, ReleaseTableComponent } from './component';
 		CarouselModule,
 		ButtonModule,
 		ChipModule,
-		LetModule,
+		RxLet,
 		ReleaseViewModule,
 		TableModule,
 	],

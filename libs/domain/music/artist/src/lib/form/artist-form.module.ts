@@ -13,7 +13,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { LetModule } from '@rx-angular/template/let';
+import { RxLet } from '@rx-angular/template/let';
 
 import { ArtistFormComponent } from './component';
 
@@ -32,7 +32,7 @@ import { ArtistFormComponent } from './component';
 		ImageModule,
 		InputTextareaModule,
 		InputTextModule,
-		LetModule,
+		RxLet,
 		MultiSelectModule,
 		ReactiveFormsModule,
 		TabViewModule,

@@ -7,7 +7,7 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { LetModule } from '@rx-angular/template/let';
+import { RxLet } from '@rx-angular/template/let';
 
 import { CollectionItemFormComponent } from './component';
 
@@ -21,7 +21,7 @@ import { CollectionItemFormComponent } from './component';
 		AutoCompleteModule,
 		CalendarModule,
 		InputTextModule,
-		LetModule,
+		RxLet,
 		MultiSelectModule,
 		ReactiveFormsModule,
 	],

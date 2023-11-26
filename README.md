@@ -12,6 +12,10 @@ Run `npx nx g @nrwl/angular:lib my-lib {--directory=my-folder}` to generate a li
 
 Run `npx nx dep-graph` to see a diagram of the dependencies of your projects.
 
+## Upgrade
+
+npx nx migrate latest
+
 ## Emulator
 
 firebase emulators:start
