@@ -6,19 +6,19 @@ import {
 	EventEmitter,
 	OnInit,
 	Output,
+	inject,
 } from '@angular/core';
 import {
 	BaseComponent,
-	CollectionItem,
 	CollectionItemEntity,
-	CollectionItemListParams,
 } from '@music-collection/api';
 
 import { CollectionItemListService } from './collection-item-list.service';
+import { CollectionItemListState } from './collection-item-list.store';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	providers: [CollectionItemListService],
+	providers: [CollectionItemListService, CollectionItemListState],
 	selector: 'mc-collection-item-list',
 	templateUrl: './collection-item-list.component.html',
 	styleUrls: ['./collection-item-list.component.scss'],
@@ -27,7 +27,8 @@ export class CollectionItemListComponent
 	extends BaseComponent
 	implements OnInit
 {
-	public params$!: Observable<CollectionItemListParams>;
+	public store = inject(CollectionItemListState);
+
 	@Output()
 	public selectCollectionItem: EventEmitter<CollectionItemEntity>;
 
@@ -37,13 +38,7 @@ export class CollectionItemListComponent
 		this.selectCollectionItem = new EventEmitter();
 	}
 
-	public collectionItemClickHandler(
-		collectionItem: CollectionItemEntity
-	): void {
-		this.componentService.collectionItemClick(collectionItem);
-	}
-
 	public ngOnInit(): void {
-		this.params$ = this.componentService.init$(this.selectCollectionItem);
+		this.componentService.init$(this.selectCollectionItem);
 	}
 }

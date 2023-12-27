@@ -1,7 +1,7 @@
-<section class="collection-item-list" *rxLet="params$; let params">
+<section class="collection-item-list">
 	<div
 		class="flex-container"
-		[fxLayout]="params.fxLayoutValue"
+		[fxLayout]="store.fxLayoutValue()"
 		fxLayout.xs="column"
 		fxLayoutAlign="center"
 		fxLayoutGap="10px 5px grid"
@@ -9,12 +9,12 @@
 		<ng-container
 			*ngTemplateOutlet="
 				collectionItemMap;
-				context: { mapItems: params.collectionItemMaps }
+				context: { mapItems: store.collectionItemMaps() }
 			"
 		></ng-container>
 	</div>
 
-	<div>All items: {{ params.allItems }}</div>
+	<div>All items: {{ store.allItemsSize() }}</div>
 </section>
 
 <ng-template #collectionItemList let-item="item">
@@ -23,7 +23,7 @@
 			<mc-collection-item-simple-view
 				[collectionItem]="collectionItem"
 				(selectCollectionItem)="
-					collectionItemClickHandler(collectionItem)
+					store.collectionItemClick(collectionItem)
 				"
 			>
 			</mc-collection-item-simple-view>

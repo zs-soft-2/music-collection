@@ -1,22 +1,19 @@
-import { Observable, takeUntil, tap } from 'rxjs';
-
 import {
 	ChangeDetectionStrategy,
 	Component,
 	EventEmitter,
 	OnInit,
 	Output,
+	inject,
 } from '@angular/core';
-import {
-	BaseComponent,
-	CollectionItemListConfig,
-	CollectionSidebarParams,
-} from '@music-collection/api';
+import { BaseComponent, CollectionItemListConfig } from '@music-collection/api';
+
 import { CollectionSidebarService } from './collection-sidebar.service';
+import { CollectionSidebarStore } from './collection-sidebar.store';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	providers: [CollectionSidebarService],
+	providers: [CollectionSidebarService, CollectionSidebarStore],
 	selector: 'mc-collection-sidebar',
 	templateUrl: './collection-sidebar.component.html',
 	styleUrls: ['./collection-sidebar.component.scss'],
@@ -25,7 +22,7 @@ export class CollectionSidebarComponent
 	extends BaseComponent
 	implements OnInit
 {
-	public params$$!: Observable<CollectionSidebarParams>;
+	public store = inject(CollectionSidebarStore);
 
 	@Output()
 	public configChange: EventEmitter<CollectionItemListConfig>;
@@ -37,14 +34,6 @@ export class CollectionSidebarComponent
 	}
 
 	public ngOnInit(): void {
-		this.params$$ = this.componentService.init$();
-	}
-
-	public openSidebarHandler(): void {
-		this.componentService.openSidebar();
-	}
-
-	public saveHandler(): void {
-		this.configChange.emit(this.componentService.getConfig());
+		this.componentService.init$(this.configChange);
 	}
 }

@@ -1,13 +1,9 @@
-import { combineLatest, Observable, ReplaySubject, tap } from 'rxjs';
-import { filter, switchMap } from 'rxjs/operators';
-
 import { EventEmitter, Injectable } from '@angular/core';
 import {
 	BaseComponent,
 	CollectionGroupByEnum,
 	CollectionItemEntity,
 	CollectionItemListConfig,
-	CollectionItemListParams,
 	CollectionItemMap,
 	CollectionItemStateService,
 	CollectionItemUtilService,
@@ -16,66 +12,19 @@ import {
 
 @Injectable()
 export class CollectionItemListService extends BaseComponent {
-	private params!: CollectionItemListParams;
-	private params$$: ReplaySubject<CollectionItemListParams>;
 	private selectCollectionItem!: EventEmitter<CollectionItemEntity>;
 
-	public constructor(
-		private collectionItemStateService: CollectionItemStateService,
-		private collectionItemUtilService: CollectionItemUtilService
-	) {
-		super();
-
-		this.params$$ = new ReplaySubject(1);
+	public init$(
+		selectCollectionItem: EventEmitter<CollectionItemEntity>
+	): void {
+		this.selectCollectionItem = selectCollectionItem;
 	}
 
 	public collectionItemClick(collectionItem: CollectionItemEntity): void {
 		this.selectCollectionItem.emit(collectionItem);
 	}
 
-	public init$(
-		selectCollectionItem: EventEmitter<CollectionItemEntity>
-	): Observable<CollectionItemListParams> {
-		this.selectCollectionItem = selectCollectionItem;
-
-		return combineLatest([
-			this.collectionItemStateService.selectEntities$().pipe(
-				tap((entities) => {
-					if (!entities?.length) {
-						this.collectionItemStateService.dispatchListEntitiesAction();
-					}
-				}),
-				filter((entities) => entities.length > 0)
-			),
-			this.collectionItemStateService.selectCollectionItemListConfig$(),
-		]).pipe(
-			switchMap(([entities, config]) => {
-				entities = this.collectionItemUtilService.filterByArtist(
-					entities,
-					config?.filterByArtistNames?.map((item) => item.value) ||
-						null
-				);
-
-				this.params = {
-					allItems: entities.length,
-					collectionItemMaps: this.createCollectionItemMap(
-						this.collectionItemUtilService.sortCollectionItems(
-							config?.sortBy || null,
-							entities
-						),
-						config
-					),
-					fxLayoutValue: this.createFxLayoutValue(config),
-				};
-
-				this.params$$.next(this.params);
-
-				return this.params$$.asObservable();
-			})
-		);
-	}
-
-	private createCollectionItemMap(
+	public createCollectionItemMap(
 		entities: CollectionItemEntity[],
 		config: CollectionItemListConfig | null
 	): CollectionItemMap[] {
@@ -101,7 +50,7 @@ export class CollectionItemListService extends BaseComponent {
 		return items;
 	}
 
-	private createFxLayoutValue(
+	public createFxLayoutValue(
 		config: CollectionItemListConfig | null
 	): string {
 		return !config || !config.groupBy?.length ? 'row wrap' : 'column';

@@ -1,36 +1,21 @@
-import { Observable, ReplaySubject, Subject, switchMap } from 'rxjs';
-
-import { Injectable } from '@angular/core';
-import {
-	BaseService,
-	CollectionGroupByEnum,
-	collectionGroupByList,
-	CollectionItemListConfig,
-	CollectionItemStateService,
-	CollectionSidebarParams,
-	CollectionSortByEnum,
-	collectionSortByList,
-} from '@music-collection/api';
-import { SelectItem } from 'primeng/api';
+import { EventEmitter, Injectable } from '@angular/core';
+import { BaseService, CollectionItemListConfig } from '@music-collection/api';
 
 @Injectable()
 export class CollectionSidebarService extends BaseService {
-	private params!: CollectionSidebarParams;
-	private params$$: Subject<CollectionSidebarParams>;
+	public configChange!: EventEmitter<CollectionItemListConfig>;
 
-	public selectedValue = 'default';
-
-	public constructor(
-		private collectionItemStateService: CollectionItemStateService
-	) {
-		super();
-
-		this.params$$ = new ReplaySubject(1);
+	public init$(configChange: EventEmitter<CollectionItemListConfig>): void {
+		this.configChange = configChange;
 	}
 
-	public getConfig(): CollectionItemListConfig {
-		const config = this.params.config;
+	public save(config: CollectionItemListConfig): void {
+		this.configChange.emit(this.getConfig(config));
+	}
 
+	private getConfig(
+		config: CollectionItemListConfig,
+	): CollectionItemListConfig {
 		return {
 			...config,
 			filterByArtistNames:
@@ -39,46 +24,5 @@ export class CollectionSidebarService extends BaseService {
 					? null
 					: config.filterByArtistNames,
 		};
-	}
-
-	public init$(): Observable<CollectionSidebarParams> {
-		return this.collectionItemStateService.selectEntities$().pipe(
-			switchMap((entities) => {
-				const artistNameSet: Set<string> = new Set();
-
-				entities.forEach((entity) => {
-					artistNameSet.add(entity.release.artist.name);
-				});
-
-				this.params = {
-					config: {
-						filterByArtistNames: null,
-						sortBy: CollectionSortByEnum.ascArtistName,
-						groupBy: [
-							{
-								value: CollectionGroupByEnum.artist,
-								label: CollectionGroupByEnum.artist.toString(),
-							},
-						],
-					},
-					filterByArtistNameList: Array.from(
-						artistNameSet.keys()
-					).map((name) => ({ value: name, label: name })),
-					isSidebarVisible: false,
-					groupByList: collectionGroupByList,
-					sortByList: collectionSortByList,
-				};
-
-				this.params$$.next(this.params);
-
-				return this.params$$.asObservable();
-			})
-		);
-	}
-
-	public openSidebar(): void {
-		this.params.isSidebarVisible = true;
-
-		this.params$$.next(this.params);
 	}
 }

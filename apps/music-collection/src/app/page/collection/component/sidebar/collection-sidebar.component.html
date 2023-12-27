@@ -1,7 +1,7 @@
-<div class="collection-sidebar" *ngIf="params$$ | async as params">
+<div class="collection-sidebar">
 	<div class="config">
 		<div class="config-content-wrapper">
-			<a tabindex="0" class="config-button" (click)="openSidebarHandler()"
+			<a tabindex="0" class="config-button" (click)="store.visibleSidebar(true)"
 				><i class="pi pi-cog"></i
 			></a>
 
@@ -9,7 +9,12 @@
 		</div>
 	</div>
 
-	<p-sidebar [(visible)]="params.isSidebarVisible" position="right">
+	<p-sidebar
+		[showCloseIcon]="false"
+		[visible]="store.isSidebarVisible()"
+		(visibleChange)="store.visibleSidebar($event)"
+		position="right"
+	>
 		<div
 			class="sidebar"
 			fxLayout="column"
@@ -17,12 +22,13 @@
 		>
 			<p-accordion fxFlex="80">
 				<p-accordionTab header="Sort by">
-					<ng-container *ngFor="let item of params.sortByList">
+					<ng-container *ngFor="let item of store.sortByList()">
 						<div class="field-radiobutton">
 							<p-radioButton
 								[name]="item"
 								[value]="item"
-								[(ngModel)]="params.config.sortBy"
+								[ngModel]="store.sortBy()"
+								(onClick)="store.changeSortBy($event)"
 								[inputId]="item"
 							></p-radioButton>
 
@@ -33,9 +39,10 @@
 
 				<p-accordionTab header="Group by" [selected]="true">
 					<p-multiSelect
-						[options]="params.groupByList"
+						[options]="store.groupByList()"
 						display="chip"
-						[(ngModel)]="params.config.groupBy"
+						[ngModel]="store.groupBy()"
+						(onChange)="store.changeGroupBy($event)"
 						[filter]="true"
 						optionLabel="label"
 					>
@@ -44,9 +51,10 @@
 
 				<p-accordionTab header="Filter by">
 					<p-multiSelect
-						[options]="params.filterByArtistNameList"
+						[options]="store.filterByArtistNameList()"
 						display="chip"
-						[(ngModel)]="params.config.filterByArtistNames"
+						[ngModel]="store.filterByArtistNames()"
+						(onChange)="store.changeFilterBy($event)"
 						[filter]="true"
 						optionLabel="label"
 					>
@@ -58,7 +66,7 @@
 				pButton
 				type="button"
 				label="Save"
-				(click)="saveHandler()"
+				(click)="store.save()"
 			></button>
 		</div>
 	</p-sidebar>

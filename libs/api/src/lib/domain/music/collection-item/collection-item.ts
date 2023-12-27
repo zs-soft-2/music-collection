@@ -38,10 +38,11 @@ export type CollectionItemFormParams = {
 	formGroup: FormGroup;
 };
 
-export type CollectionItemListParams = {
-	allItems: number;
+export type CollectionItemListStateModel = {
+	allItemsSize: number;
 	collectionItemMaps: CollectionItemMap[];
 	fxLayoutValue: string;
+	isLoading: boolean;
 };
 
 export type CollectionItemTableParams = {
@@ -49,12 +50,15 @@ export type CollectionItemTableParams = {
 	empty: string[];
 };
 
-export type CollectionSidebarParams = {
-	config: CollectionItemListConfig;
+export type CollectionSidebarStateModel = {
+	filterByArtistNames: SelectItem<string>[] | null;
+	sortBy: CollectionSortByEnum | null;
+	groupBy: SelectItem<CollectionGroupByEnum>[] | null;
 	isSidebarVisible: boolean;
 	filterByArtistNameList: SelectItem<string>[];
 	groupByList: SelectItem<CollectionGroupByEnum>[];
 	sortByList: CollectionSortByEnum[];
+	isLoading: boolean;
 };
 
 export enum CollectionSortByEnum {
