@@ -1,6 +1,4 @@
-import { Observable, ReplaySubject, Subject } from 'rxjs';
-
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import {
 	BaseService,
@@ -8,39 +6,55 @@ import {
 	CollectionItemListConfig,
 	CollectionItemStateService,
 } from '@music-collection/api';
+import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
 
-import { CollectionContentParams } from '../../api';
+import { CollectionContentModel } from '../../api';
+
+const initCollectionContentModel: CollectionContentModel = {
+	collectionItemListConfig: {
+		filterByArtistNames: null,
+		groupBy: null,
+		sortBy: null,
+	},
+	isLoading: true,
+};
+
+export const CollectionContentStore = signalStore(
+	withState(initCollectionContentModel),
+	withMethods(
+		(
+			store,
+			collectionItemStateService = inject(
+				CollectionItemStateService,
+			),
+			router = inject(Router),
+		) => ({
+			selectCollectionItem: (
+				collectionItem: CollectionItemEntity,
+			) => {
+				router.navigate([
+					'album',
+					collectionItem.release.album.uid,
+				]);
+			},
+			configChange: (
+				collectionItemListConfig: CollectionItemListConfig,
+			) => {
+				patchState(store, { collectionItemListConfig });
+
+				collectionItemStateService.dispatchSetCollectionItemConfigAction(
+					collectionItemListConfig,
+				);
+			},
+		}),
+	),
+);
 
 @Injectable()
 export class CollectionContentService extends BaseService {
-	private config: CollectionItemListConfig | null = null;
-	private config$$: Subject<CollectionItemListConfig | null>;
-	private params!: CollectionContentParams;
-	private params$$: Subject<CollectionContentParams>;
+	private store!: any;
 
-	public constructor(
-		private collectionItemStateService: CollectionItemStateService,
-		private router: Router
-	) {
-		super();
-
-		this.params$$ = new ReplaySubject();
-		this.config$$ = new ReplaySubject();
-	}
-
-	public configChange(config: CollectionItemListConfig): void {
-		this.config = config;
-
-		this.collectionItemStateService.dispatchSetCollectionItemConfigAction(
-			this.config
-		);
-	}
-
-	public init$(): Observable<CollectionContentParams> {
-		return this.params$$;
-	}
-
-	public selectCollectionItem(collectionItem: CollectionItemEntity): void {
-		this.router.navigate(['album', collectionItem.release.album.uid]);
+	public init$(): any {
+		return this.store;
 	}
 }

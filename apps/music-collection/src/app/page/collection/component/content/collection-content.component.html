@@ -1,10 +1,10 @@
 <div class="collection-content">
 	<mc-collection-item-list
-		(selectCollectionItem)="selectCollectionItemHandler($event)"
+		(selectCollectionItem)="store.selectCollectionItem($event)"
 	></mc-collection-item-list>
 
 	<mc-collection-sidebar
-		(configChange)="configChangeHandler($event)"
+		(configChange)="store.configChange($event)"
 	></mc-collection-sidebar>
 
 	<p-scrollTop></p-scrollTop>

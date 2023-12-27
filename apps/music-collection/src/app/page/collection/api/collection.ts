@@ -3,8 +3,9 @@ import {
 	DynamicConfigEntity,
 } from '@music-collection/api';
 
-export interface CollectionContentParams {
+export interface CollectionContentModel {
 	collectionItemListConfig: CollectionItemListConfig;
+	isLoading: boolean;
 }
 
 export interface CollectionSidebarParams {
