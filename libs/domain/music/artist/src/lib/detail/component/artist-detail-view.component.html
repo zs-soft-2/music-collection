@@ -33,7 +33,7 @@
 				<div class="property">
 					<span>Formed in:</span>
 
-					<span>{{ params.artist?.formedIn | date : 'yyyy' }}</span>
+					<span>{{ params.artist?.formedIn | date: 'yyyy' }}</span>
 				</div>
 
 				<div class="property">
@@ -53,13 +53,15 @@
 			<div *ngSwitchCase="'discography'">
 				<ng-container *ngIf="params.albums">
 					<p-dataView [value]="params.albums">
-						<ng-template let-album pTemplate="listItem">
-							<mc-album-item-view
-								[album]="album"
-								(selectAlbumDetail)="
-									selectAlbumDetailHandler($event)
-								"
-							></mc-album-item-view>
+						<ng-template let-albums pTemplate="list">
+							<ng-container *ngFor="let album of albums">
+								<mc-album-item-view
+									[album]="album"
+									(selectAlbumDetail)="
+										selectAlbumDetailHandler($event)
+									"
+								></mc-album-item-view>
+							</ng-container>
 						</ng-template>
 					</p-dataView>
 				</ng-container>
