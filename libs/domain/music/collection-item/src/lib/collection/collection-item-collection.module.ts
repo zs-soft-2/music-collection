@@ -2,12 +2,12 @@ import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { CarouselModule } from 'primeng/carousel';
 import { ChipModule } from 'primeng/chip';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TableModule } from 'primeng/table';
-import { FlexLayoutModule } from '@angular/flex-layout';
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { RxLet } from '@rx-angular/template/let';
+import { FlexLayoutModule } from '@angular/flex-layout';
 
 import { CollectionItemViewModule } from '../view/collection-item-view.module';
 import {
@@ -26,8 +26,8 @@ import {
 		ButtonModule,
 		ChipModule,
 		FlexLayoutModule,
-		RxLet,
 		TableModule,
+		ProgressSpinnerModule,
 	],
 })
 export class CollectionItemCollectionModule {}

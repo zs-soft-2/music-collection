@@ -1,21 +1,31 @@
+import {
+	combineLatest,
+	debounceTime,
+	filter,
+	of,
+	pipe,
+	switchMap,
+	tap,
+} from 'rxjs';
+
 import { inject } from '@angular/core';
 import {
+	CollectionItemEntity,
 	CollectionItemListStateModel,
 	CollectionItemStateService,
 	CollectionItemUtilService,
-	CollectionItemEntity,
 } from '@music-collection/api';
+import { tapResponse } from '@ngrx/operators';
 import {
-	signalStore,
 	patchState,
+	signalStore,
 	withHooks,
 	withMethods,
 	withState,
 } from '@ngrx/signals';
-import { CollectionItemListService } from './collection-item-list.service';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
-import { combineLatest, filter, of, pipe, switchMap, tap } from 'rxjs';
-import { tapResponse } from '@ngrx/component-store';
+
+import { CollectionItemListService } from './collection-item-list.service';
 
 const initialCollectionItemListStateModel: CollectionItemListStateModel = {
 	allItemsSize: 0,
@@ -35,7 +45,7 @@ export const CollectionItemListState = signalStore(
 		) => ({
 			init: rxMethod(
 				pipe(
-					tap(() => patchState(store, { isLoading: true })),
+					debounceTime(500),
 					switchMap(() =>
 						combineLatest([
 							collectionItemStateService.selectEntities$().pipe(
@@ -73,9 +83,13 @@ export const CollectionItemListState = signalStore(
 										config,
 									),
 							});
+
+							patchState(store, { isLoading: false });
 						},
 						error: console.error,
-						finalize: () => patchState(store, { isLoading: false }),
+						finalize: () => {
+							patchState(store, { isLoading: false });
+						},
 					}),
 				),
 			),

@@ -1,74 +1,84 @@
 <section class="collection-item-list">
-	<div
-		class="flex-container"
-		[fxLayout]="store.fxLayoutValue()"
-		fxLayout.xs="column"
-		fxLayoutAlign="center"
-		fxLayoutGap="10px 5px grid"
-	>
-		<ng-container
-			*ngTemplateOutlet="
-				collectionItemMap;
-				context: { mapItems: store.collectionItemMaps() }
-			"
-		></ng-container>
-	</div>
+	<p-progressSpinner
+		*ngIf="store.isLoading(); else content"
+	></p-progressSpinner>
 
-	<div>All items: {{ store.allItemsSize() }}</div>
-</section>
-
-<ng-template #collectionItemList let-item="item">
-	<ng-container *ngFor="let collectionItem of item.collectionItemList">
-		<div class="collection-item-view" fxLayoutAlign="center center">
-			<mc-collection-item-simple-view
-				[collectionItem]="collectionItem"
-				(selectCollectionItem)="
-					store.collectionItemClick(collectionItem)
-				"
+	<ng-template #content>
+		<div class="content">
+			<div
+				class="flex-container"
+				[fxLayout]="store.fxLayoutValue()"
+				fxLayout.xs="column"
+				fxLayoutAlign="center"
+				fxLayoutGap="10px 5px grid"
 			>
-			</mc-collection-item-simple-view>
-		</div>
-	</ng-container>
-</ng-template>
-
-<ng-template #collectionItemListWithLayout let-item="item">
-	<div
-		fxLayout="row wrap"
-		fxLayout.xs="column"
-		fxLayoutAlign="center"
-		fxLayoutGap="10px 5px grid"
-	>
-		<ng-container *ngTemplateOutlet="collectionItemList; context: { item }">
-		</ng-container>
-	</div>
-</ng-template>
-
-<ng-template #collectionItemMap let-mapItems="mapItems">
-	<ng-container *ngFor="let item of mapItems">
-		<div class="group">
-			<h3>
-				{{ item.name }}
-			</h3>
-
-			<ng-container
-				*ngTemplateOutlet="
-					item.collectionItemList
-						? collectionItemListWithLayout
-						: map;
-					context: { item }
-				"
-			>
-			</ng-container>
-
-			<ng-template #map let-item="item">
 				<ng-container
 					*ngTemplateOutlet="
 						collectionItemMap;
-						context: { mapItems: item.collectionItemMaps }
+						context: { mapItems: store.collectionItemMaps() }
+					"
+				></ng-container>
+			</div>
+
+			<div>All items: {{ store.allItemsSize() }}</div>
+		</div>
+	</ng-template>
+
+	<ng-template #collectionItemList let-item="item">
+		<ng-container *ngFor="let collectionItem of item.collectionItemList">
+			<div class="collection-item-view" fxLayoutAlign="center center">
+				<mc-collection-item-simple-view
+					[collectionItem]="collectionItem"
+					(selectCollectionItem)="
+						store.collectionItemClick(collectionItem)
+					"
+				>
+				</mc-collection-item-simple-view>
+			</div>
+		</ng-container>
+	</ng-template>
+
+	<ng-template #collectionItemListWithLayout let-item="item">
+		<div
+			fxLayout="row wrap"
+			fxLayout.xs="column"
+			fxLayoutAlign="center"
+			fxLayoutGap="10px 5px grid"
+		>
+			<ng-container
+				*ngTemplateOutlet="collectionItemList; context: { item }"
+			>
+			</ng-container>
+		</div>
+	</ng-template>
+
+	<ng-template #collectionItemMap let-mapItems="mapItems">
+		<ng-container *ngFor="let item of mapItems">
+			<div class="group">
+				<h3>
+					{{ item.name }}
+				</h3>
+
+				<ng-container
+					*ngTemplateOutlet="
+						item.collectionItemList
+							? collectionItemListWithLayout
+							: map;
+						context: { item }
 					"
 				>
 				</ng-container>
-			</ng-template>
-		</div>
-	</ng-container>
-</ng-template>
+
+				<ng-template #map let-item="item">
+					<ng-container
+						*ngTemplateOutlet="
+							collectionItemMap;
+							context: { mapItems: item.collectionItemMaps }
+						"
+					>
+					</ng-container>
+				</ng-template>
+			</div>
+		</ng-container>
+	</ng-template>
+</section>
