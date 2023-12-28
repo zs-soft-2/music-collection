@@ -1,73 +1,80 @@
-<section class="artist-detail entity-detail" *rxLet="params$; let params">
-	<nav></nav>
-
-	<header>
-		<div class="header-content">
-			<p-image
-				[src]="params.artist?.headerImage?.filePath || ''"
-				alt="Image"
-			></p-image>
-
-			<div class="tab-menu">
-				<p-tabMenu
-					[model]="params.menuItems"
-					[activeItem]="params.activeMenuItem"
-				></p-tabMenu>
+@if (params$ | async; as params) {
+	<section class="artist-detail entity-detail">
+		<nav></nav>
+	
+		<header>
+			<div class="header-content">
+				<p-image
+					[src]="params.artist?.headerImage?.filePath || ''"
+					alt="Image"
+				></p-image>
+	
+				<div class="tab-menu">
+					<p-tabMenu
+						[model]="params.menuItems"
+						[activeItem]="params.activeMenuItem"
+					></p-tabMenu>
+				</div>
+	
+				<div class="artist-name">
+					<span>{{ params.artist?.name }}</span>
+				</div>
 			</div>
-
-			<div class="artist-name">
-				<span>{{ params.artist?.name }}</span>
-			</div>
+		</header>
+	
+		<div class="content">
+			@switch (params.selectedContent) {
+				@case ('info') {
+					<div>
+						<div class="property">
+							<span>Country:</span>
+		
+							<span>{{ params.artist?.country }}</span>
+						</div>
+		
+						<div class="property">
+							<span>Formed in:</span>
+		
+							<span>{{ params.artist?.formedIn | date: 'yyyy' }}</span>
+						</div>
+		
+						<div class="property">
+							<span>Styles:</span>
+		
+							<span>
+								<ng-container
+									*ngFor="let style of params.artist?.styles"
+								>
+									<p-chip styleClass="style" [label]="style">
+									</p-chip>
+								</ng-container>
+							</span>
+						</div>
+					</div>
+				}
+				@case ('discography') {
+					<div>
+						@if (params.albums) {
+							<p-dataView [value]="params.albums">
+								<ng-template let-albums pTemplate="list">
+									@for (album of albums; track album.uid) {
+										<mc-album-item-view
+											[album]="album"
+											(selectAlbumDetail)="
+												selectAlbumDetailHandler($event)
+											"
+										></mc-album-item-view>
+									}
+								</ng-template>
+							</p-dataView>
+						}
+					</div>
+				}
+				@case ('members') {
+					<div>Members</div>
+				}
+				@default {}
+			  }
 		</div>
-	</header>
-
-	<div class="content">
-		<ng-container [ngSwitch]="params.selectedContent">
-			<div *ngSwitchCase="'info'">
-				<div class="property">
-					<span>Country:</span>
-
-					<span>{{ params.artist?.country }}</span>
-				</div>
-
-				<div class="property">
-					<span>Formed in:</span>
-
-					<span>{{ params.artist?.formedIn | date: 'yyyy' }}</span>
-				</div>
-
-				<div class="property">
-					<span>Styles:</span>
-
-					<span>
-						<ng-container
-							*ngFor="let style of params.artist?.styles"
-						>
-							<p-chip styleClass="style" [label]="style">
-							</p-chip>
-						</ng-container>
-					</span>
-				</div>
-			</div>
-
-			<div *ngSwitchCase="'discography'">
-				<ng-container *ngIf="params.albums">
-					<p-dataView [value]="params.albums">
-						<ng-template let-albums pTemplate="list">
-							<ng-container *ngFor="let album of albums">
-								<mc-album-item-view
-									[album]="album"
-									(selectAlbumDetail)="
-										selectAlbumDetailHandler($event)
-									"
-								></mc-album-item-view>
-							</ng-container>
-						</ng-template>
-					</p-dataView>
-				</ng-container>
-			</div>
-
-			<div *ngSwitchCase="'members'">Members</div>
-		</ng-container>
-	</div>
-</section>
+	</section>
+}
