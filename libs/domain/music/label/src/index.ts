@@ -1,2 +1,3 @@
 export * from './lib/domain-label.module';
-export * from './lib/admin/label-admin.module';
+export * from './lib/form/label-form.module';
+export * from './lib/collection/label-collection.module';

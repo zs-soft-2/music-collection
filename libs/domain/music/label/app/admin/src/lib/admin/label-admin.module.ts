@@ -4,9 +4,11 @@ import { ToolbarModule } from 'primeng/toolbar';
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
+import {
+	LabelCollectionModule,
+	LabelFormModule,
+} from '@music-collection/domain/label';
 
-import { LabelFormModule } from '../form/label-form.module';
-import { LabelCollectionModule } from '../collection/label-collection.module';
 import { LabelAdminRoutingModule } from './label-admin-routing.module';
 import { LabelAdminComponent } from './page/admin';
 import { LabelEditComponent, LabelEditResolverService } from './page/edit';
