@@ -5,17 +5,19 @@ import { ToolbarModule } from 'primeng/toolbar';
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
+import {
+	ArtistCollectionModule,
+	ArtistFormModule,
+} from '@music-collection/domain/artist';
 
-import { ArtistCollectionModule } from '../collection/artist-collection.module';
-import { ArtistFormModule } from '../form/artist-form.module';
 import { ArtistAdminRoutingModule } from './artist-admin-routing.module';
 import { ArtistAdminComponent } from './page/admin';
 import { ArtistEditComponent, ArtistEditResolverService } from './page/edit';
+import { ArtistImportComponent } from './page/import';
 import {
 	ArtistListPageComponent,
 	ArtistListPageResolverService,
 } from './page/list';
-import { ArtistImportComponent } from './page/import';
 
 @NgModule({
 	declarations: [

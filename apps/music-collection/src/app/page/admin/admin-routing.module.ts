@@ -21,7 +21,7 @@ const routes: Routes = [
 					},
 				},
 				loadChildren: () =>
-					import('@music-collection/domain/artist').then(
+					import('@music-collection/domain/artist/admin').then(
 						(lib) => lib.ArtistAdminModule
 					),
 				canActivate: [NgxPermissionsGuard],
