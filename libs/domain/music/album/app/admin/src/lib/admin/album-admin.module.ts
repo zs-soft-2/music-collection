@@ -4,9 +4,11 @@ import { ToolbarModule } from 'primeng/toolbar';
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
+import {
+	AlbumCollectionModule,
+	AlbumFormModule,
+} from '@music-collection/domain/album';
 
-import { AlbumFormModule } from '../form/album-form.module';
-import { AlbumCollectionModule } from '../collection/album-collection.module';
 import { AlbumAdminRoutingModule } from './album-admin-routing.module';
 import { AlbumAdminComponent } from './page/admin';
 import { AlbumEditComponent, AlbumEditResolverService } from './page/edit';
