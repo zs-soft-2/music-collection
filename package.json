@@ -1,6 +1,6 @@
 {
 	"name": "music-collection",
-	"version": "17.0.1",
+	"version": "17.0.2",
 	"license": "MIT",
 	"scripts": {
 		"export": "firebase emulators:export ./emulators.backup",
