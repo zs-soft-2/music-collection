@@ -770,10 +770,9 @@ import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 							Add UI library
 						</summary>
 						<pre><span># Generate UI lib</span>
-nx g @nrwl/angular:lib ui
 
 <span># Add a component</span>
-nx g @nrwl/angular:component button --project ui</pre>
+</pre>
 					</details>
 					<details>
 						<summary>
