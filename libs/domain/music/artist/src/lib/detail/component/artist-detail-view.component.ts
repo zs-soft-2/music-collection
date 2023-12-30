@@ -1,29 +1,29 @@
-import { Observable } from 'rxjs';
-
 import {
 	ChangeDetectionStrategy,
 	Component,
 	EventEmitter,
 	OnInit,
 	Output,
+	inject,
 } from '@angular/core';
 import {
 	AlbumEntity,
-	ArtistDetailParams,
 	BaseComponent,
 } from '@music-collection/api';
 
 import { ArtistDetailViewService } from './artist-detail-view.service';
+import { ArtistDetailViewStore } from './artist-detail-view.store';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	providers: [ArtistDetailViewService],
+	providers: [ArtistDetailViewService, ArtistDetailViewStore],
 	selector: 'mc-artist-detail-view',
 	templateUrl: './artist-detail-view.component.html',
 	styleUrls: ['./artist-detail-view.component.scss'],
 })
 export class ArtistDetailViewComponent extends BaseComponent implements OnInit {
-	public params$!: Observable<ArtistDetailParams>;
+	public store = inject(ArtistDetailViewStore);
+
 	@Output()
 	public selectAlbumDetail: EventEmitter<AlbumEntity>;
 
@@ -34,10 +34,6 @@ export class ArtistDetailViewComponent extends BaseComponent implements OnInit {
 	}
 
 	public ngOnInit(): void {
-		this.params$ = this.componentService.init$();
-	}
-
-	public selectAlbumDetailHandler(album: AlbumEntity): void {
-		this.selectAlbumDetail.emit(album);
+		this.componentService.init(this.selectAlbumDetail);
 	}
 }

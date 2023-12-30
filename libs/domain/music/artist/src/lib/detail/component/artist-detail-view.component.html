@@ -1,41 +1,42 @@
-@if (params$ | async; as params) {
-	<section class="artist-detail entity-detail">
+@if (store.artist()) {
+	<section class="artist-detail entity-detail" >
 		<nav></nav>
 	
 		<header>
 			<div class="header-content">
 				<p-image
-					[src]="params.artist?.headerImage?.filePath || ''"
+					[src]="store.artist()?.headerImage?.filePath || ''"
 					alt="Image"
 				></p-image>
 	
 				<div class="tab-menu">
 					<p-tabMenu
-						[model]="params.menuItems"
-						[activeItem]="params.activeMenuItem"
+						[model]="store.menuItems()"
+						[activeItem]="store.activeMenuItem()"
+						(activeItemChange)="store.activeItemChange($event)"
 					></p-tabMenu>
 				</div>
 	
 				<div class="artist-name">
-					<span>{{ params.artist?.name }}</span>
+					<span>{{ store.artist()?.name }}</span>
 				</div>
 			</div>
 		</header>
 	
 		<div class="content">
-			@switch (params.selectedContent) {
+			@switch (store.selectedContent()) {
 				@case ('info') {
 					<div>
 						<div class="property">
 							<span>Country:</span>
 		
-							<span>{{ params.artist?.country }}</span>
+							<span>{{ store.artist()?.country }}</span>
 						</div>
 		
 						<div class="property">
 							<span>Formed in:</span>
 		
-							<span>{{ params.artist?.formedIn | date: 'yyyy' }}</span>
+							<span>{{ store.artist()?.formedIn | date: 'yyyy' }}</span>
 						</div>
 		
 						<div class="property">
@@ -43,7 +44,7 @@
 		
 							<span>
 								<ng-container
-									*ngFor="let style of params.artist?.styles"
+									*ngFor="let style of store.artist()?.styles"
 								>
 									<p-chip styleClass="style" [label]="style">
 									</p-chip>
@@ -54,14 +55,14 @@
 				}
 				@case ('discography') {
 					<div>
-						@if (params.albums) {
-							<p-dataView [value]="params.albums">
+						@if (store.albums()) {
+							<p-dataView [value]="store.albums()">
 								<ng-template let-albums pTemplate="list">
 									@for (album of albums; track album.uid) {
 										<mc-album-item-view
 											[album]="album"
 											(selectAlbumDetail)="
-												selectAlbumDetailHandler($event)
+												store.selectAlbumDetail($event)
 											"
 										></mc-album-item-view>
 									}

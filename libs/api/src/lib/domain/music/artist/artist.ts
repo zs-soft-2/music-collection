@@ -56,13 +56,14 @@ export type ArtistFormParams = {
 	styleList: StyleEnum[];
 };
 
-export type ArtistDetailParams = {
-	albums: AlbumEntity[] | undefined;
-	artist: ArtistEntity | undefined;
-	country?: CountryEnum;
-	menuItems: MenuItem[];
+export type ArtistDetailViewStateModel = {
 	activeMenuItem: MenuItem;
-	selectedContent: string;
+	albums: AlbumEntity[];
+	artist: ArtistEntity | null;
+	country: CountryEnum | null;
+	isLoading: boolean;
+	menuItems: MenuItem[];
+	selectedContent: string | null;
 };
 
 export type ArtistTableParams = {
