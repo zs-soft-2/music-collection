@@ -4,9 +4,11 @@ import { ToolbarModule } from 'primeng/toolbar';
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
+import {
+	DocumentCollectionModule,
+	DocumentFormModule,
+} from '@music-collection/domain/document';
 
-import { DocumentFormModule } from '../form/document-form.module';
-import { DocumentCollectionModule } from '../collection/document-collection.module';
 import { DocumentAdminRoutingModule } from './document-admin-routing.module';
 import { DocumentAdminComponent } from './page/admin';
 import {
