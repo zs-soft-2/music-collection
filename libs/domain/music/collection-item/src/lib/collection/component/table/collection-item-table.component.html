@@ -1,61 +1,64 @@
-<section class="collection-item-table" *rxLet="params$; let params">
-	<p-table
-		[value]="params.collectionItems"
-		styleClass="p-datatable-striped p-datatable-sm"
-		responsiveLayout="scroll"
-	>
-		<ng-template pTemplate="header">
-			<tr>
-				<th>Name</th>
+@if(params$ | async; as params) {
+	<section class="collection-item-table">
+		<p-table
+			[value]="params.collectionItems"
+			styleClass="p-datatable-striped p-datatable-sm"
+			responsiveLayout="scroll"
+		>
+			<ng-template pTemplate="header">
+				<tr>
+					<th>Name</th>
+	
+					<th>Year</th>
+	
+					<th></th>
+				</tr>
+	
+				<tr>
+					<th>
+						<p-autoComplete
+							[suggestions]="params.empty"
+							[showClear]="true"
+							(completeMethod)="searchHandler($event)"
+							[minLength]="3"
+							[delay]="400"
+							class="p-inputtext-sm"
+						>
+						</p-autoComplete>
+					</th>
+	
+					<th></th>
+	
+					<th></th>
+				</tr>
+			</ng-template>
+	
+			<ng-template pTemplate="body" let-collectionItem>
+				<tr>
+					<td>{{ collectionItem.release.name }}</td>
+	
+					<td>{{ collectionItem.date | date : 'yyyy' }}</td>
+	
+					<td>
+						<button
+							pButton
+							pRipple
+							icon="pi pi-pencil"
+							class="p-button-rounded p-button-success mr-2"
+							(click)="editCollectionItem(collectionItem)"
+						></button>
+	
+						<button
+							pButton
+							pRipple
+							icon="pi pi-trash"
+							class="p-button-rounded p-button-warning"
+							(click)="deleteCollectionItem(collectionItem)"
+						></button>
+					</td>
+				</tr>
+			</ng-template>
+		</p-table>
+	</section>
+}
 
-				<th>Year</th>
-
-				<th></th>
-			</tr>
-
-			<tr>
-				<th>
-					<p-autoComplete
-						[suggestions]="params.empty"
-						[showClear]="true"
-						(completeMethod)="searchHandler($event)"
-						[minLength]="3"
-						[delay]="400"
-						class="p-inputtext-sm"
-					>
-					</p-autoComplete>
-				</th>
-
-				<th></th>
-
-				<th></th>
-			</tr>
-		</ng-template>
-
-		<ng-template pTemplate="body" let-collectionItem>
-			<tr>
-				<td>{{ collectionItem.release.name }}</td>
-
-				<td>{{ collectionItem.date | date : 'yyyy' }}</td>
-
-				<td>
-					<button
-						pButton
-						pRipple
-						icon="pi pi-pencil"
-						class="p-button-rounded p-button-success mr-2"
-						(click)="editCollectionItem(collectionItem)"
-					></button>
-
-					<button
-						pButton
-						pRipple
-						icon="pi pi-trash"
-						class="p-button-rounded p-button-warning"
-						(click)="deleteCollectionItem(collectionItem)"
-					></button>
-				</td>
-			</tr>
-		</ng-template>
-	</p-table>
-</section>

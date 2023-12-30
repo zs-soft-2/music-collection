@@ -40,6 +40,9 @@
 			"@music-collection/domain/artist": [
 				"libs/domain/music/artist/src/index.ts"
 			],
+			"@music-collection/domain/artist/admin": [
+				"libs/domain/music/artist/app/admin/src/index.ts"
+			],
 			"@music-collection/domain/collection-item": [
 				"libs/domain/music/collection-item/src/index.ts"
 			],
@@ -60,7 +63,9 @@
 				"libs/domain/music/wishlist-item/app/admin/src/index.ts"
 			],
 			"@music-collection/ui": ["libs/ui/src/index.ts"],
-			"@music-collection/domain/artist/admin": ["libs/domain/music/artist/app/admin/src/index.ts"]
+			"@music-collection/domain/collection-item/admin": [
+				"libs/domain/music/collection-item/app/admin/src/index.ts"
+			]
 		}
 	},
 	"exclude": ["node_modules", "tmp"]
