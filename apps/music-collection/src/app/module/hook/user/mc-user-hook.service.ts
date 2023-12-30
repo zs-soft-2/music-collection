@@ -9,6 +9,6 @@ export class MCUserHookService extends UserHookService {
 	}
 
 	public loadEntity(user: User): void {
-		throw new Error('loadEntity of User is not implemented!');
+		throw new Error('loadEntity of User is not implemented!' + user.uid);
 	}
 }

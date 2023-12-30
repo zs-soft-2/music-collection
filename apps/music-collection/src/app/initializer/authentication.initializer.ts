@@ -5,7 +5,7 @@ export function AuthenticationInitializer(
 	authenticationStateService: AuthenticationStateService
 ) {
 	return () => {
-		return new Promise<any>((resolve, reject) => {
+		return new Promise<unknown>((resolve) => {
 			authenticationStateService
 				.selectAuthenticatedUser$()
 				.pipe(

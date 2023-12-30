@@ -27,6 +27,6 @@ function localStorageSyncReducer(
 	})(reducer);
 }
 
-export const metaReducers: Array<MetaReducer<any, Action>> = [
+export const metaReducers: Array<MetaReducer<unknown, Action>> = [
 	localStorageSyncReducer,
 ];
