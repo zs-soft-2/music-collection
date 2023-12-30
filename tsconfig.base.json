@@ -54,7 +54,8 @@
 				"libs/domain/music/wishlist-item/src/index.ts"
 			],
 			"@music-collection/ui": ["libs/ui/src/index.ts"],
-			"song": ["libs/domain/music/song/src/index.ts"]
+			"@music-collection/domain/wishlist-item/admin": ["libs/domain/music/wishlist-item/app/admin/src/index.ts"],
+			
 		}
 	},
 	"exclude": ["node_modules", "tmp"]

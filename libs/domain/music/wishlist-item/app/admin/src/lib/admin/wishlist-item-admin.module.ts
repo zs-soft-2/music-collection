@@ -5,10 +5,11 @@ import { ToolbarModule } from 'primeng/toolbar';
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
+import {
+	WishlistItemCollectionModule,
+	WishlistItemFormModule,
+} from '@music-collection/domain/wishlist-item';
 
-import { WishlistItemCollectionModule } from '../collection/wishlist-item-collection.module';
-import { WishlistItemFormModule } from '../form/wishlist-item-form.module';
-import { WishlistItemAdminRoutingModule } from './wishlist-item-admin-routing.module';
 import { WishlistItemAdminComponent } from './page/admin';
 import {
 	WishlistItemEditComponent,
@@ -18,6 +19,7 @@ import {
 	WishlistItemListPageComponent,
 	WishlistItemListPageResolverService,
 } from './page/list';
+import { WishlistItemAdminRoutingModule } from './wishlist-item-admin-routing.module';
 
 @NgModule({
 	declarations: [

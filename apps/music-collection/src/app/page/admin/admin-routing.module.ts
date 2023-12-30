@@ -101,7 +101,7 @@ const routes: Routes = [
 					},
 				},
 				loadChildren: () =>
-					import('@music-collection/domain/wishlist-item').then(
+					import('@music-collection/domain/wishlist-item/admin').then(
 						(lib) => lib.WishlistItemAdminModule
 					),
 				canActivate: [NgxPermissionsGuard],
