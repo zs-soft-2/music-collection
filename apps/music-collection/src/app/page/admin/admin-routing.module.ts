@@ -69,7 +69,7 @@ const routes: Routes = [
 					},
 				},
 				loadChildren: () =>
-					import('@music-collection/domain/release').then(
+					import('@music-collection/domain/release/admin').then(
 						(lib) => lib.ReleaseAdminModule
 					),
 				canActivate: [NgxPermissionsGuard],

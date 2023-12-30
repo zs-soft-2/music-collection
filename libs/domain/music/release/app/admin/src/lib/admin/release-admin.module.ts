@@ -4,16 +4,18 @@ import { ToolbarModule } from 'primeng/toolbar';
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
+import {
+	ReleaseCollectionModule,
+	ReleaseFormModule,
+} from '@music-collection/domain/release';
 
-import { ReleaseFormModule } from '../form/release-form.module';
-import { ReleaseCollectionModule } from '../collection/release-collection.module';
-import { ReleaseAdminRoutingModule } from './release-admin-routing.module';
 import { ReleaseAdminComponent } from './page/admin';
 import { ReleaseEditComponent, ReleaseEditResolverService } from './page/edit';
 import {
 	ReleaseListPageComponent,
 	ReleaseListPageResolverService,
 } from './page/list';
+import { ReleaseAdminRoutingModule } from './release-admin-routing.module';
 
 @NgModule({
 	declarations: [
