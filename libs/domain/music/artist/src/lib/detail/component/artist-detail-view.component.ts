@@ -20,6 +20,7 @@ import { ArtistDetailViewStore } from './artist-detail-view.store';
 	selector: 'mc-artist-detail-view',
 	templateUrl: './artist-detail-view.component.html',
 	styleUrls: ['./artist-detail-view.component.scss'],
+  standalone: false,
 })
 export class ArtistDetailViewComponent extends BaseComponent implements OnInit {
 	public store = inject(ArtistDetailViewStore);

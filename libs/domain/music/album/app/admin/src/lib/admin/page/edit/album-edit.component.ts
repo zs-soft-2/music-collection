@@ -7,6 +7,7 @@ import { BaseComponent } from '@music-collection/api';
 	selector: 'mc-album-edit',
 	templateUrl: './album-edit.component.html',
 	styleUrls: ['./album-edit.component.scss'],
+	standalone: false,
 })
 export class AlbumEditComponent extends BaseComponent implements OnInit {
 	public albumId!: string;

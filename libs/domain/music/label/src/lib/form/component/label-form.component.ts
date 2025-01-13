@@ -11,6 +11,7 @@ import { LabelFormService } from './label-form.service';
 	selector: 'mc-label-form',
 	templateUrl: './label-form.component.html',
 	styleUrls: ['./label-form.component.scss'],
+  standalone: false,
 })
 export class LabelFormComponent extends BaseComponent implements OnInit {
 	public params$!: Observable<LabelFormParams>;

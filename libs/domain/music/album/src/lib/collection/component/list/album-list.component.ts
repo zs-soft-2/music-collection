@@ -11,6 +11,7 @@ import { AlbumListService } from './album-list.service';
 	selector: 'mc-album-list',
 	templateUrl: './album-list.component.html',
 	styleUrls: ['./album-list.component.scss'],
+	standalone: false,
 })
 export class AlbumListComponent extends BaseComponent implements OnInit {
 	public params$!: Observable<AlbumListParams>;

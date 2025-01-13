@@ -9,6 +9,7 @@ import { CollectionContentStore } from './collection-content.service';
 	selector: 'mc-collection-content',
 	templateUrl: './collection-content.component.html',
 	styleUrls: ['./collection-content.component.scss'],
+  standalone: false,
 })
 export class CollectionContentComponent
 	extends BaseComponent

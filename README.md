@@ -2,11 +2,11 @@
 
 ## Generate an application
 
-Run `npx nx g @nrwl/angular:app my-app` to generate an application.
+Run `npx nx g @nx/angular:app my-app` to generate an application.
 
 ## Generate a library
 
-Run `npx nx g @nrwl/angular:lib my-lib {--directory=my-folder}` to generate a library.
+Run `npx nx g @nx/angular:lib my-lib {--directory=my-folder}` to generate a library.
 
 ## Understand your workspace
 
@@ -25,3 +25,7 @@ firebase emulators:export ./emulators.backup
 firebase emulators:start --import=./emulators.backup
 
 firebase emulators:start --import=./emulators.backup --export-on-exit
+
+## start
+
+npx nx serve music-collection

@@ -6,6 +6,7 @@ import { BaseComponent, SimpleAlbum } from '@music-collection/api';
 	selector: 'mc-album-simple-view',
 	templateUrl: './album-simple-view.component.html',
 	styleUrls: ['./album-simple-view.component.scss'],
+  standalone: false,
 })
 export class AlbumSimpleViewComponent extends BaseComponent {
 	@Input()

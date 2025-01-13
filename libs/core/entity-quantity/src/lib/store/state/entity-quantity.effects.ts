@@ -1,7 +1,7 @@
 import { of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import {
 	EntityQuantityDataService,
 	EntityQuantityUtilService,
@@ -12,6 +12,9 @@ import * as entityQuantityActions from './entity-quantity.actions';
 
 @Injectable()
 export class EntityQuantityEffects {
+  actions$: Actions = inject(Actions);
+	entityQuantityDataService = inject(EntityQuantityDataService);
+	entityQuantityUtilService = inject(EntityQuantityUtilService);
 	public addEntityQuantity = createEffect(() =>
 		this.actions$.pipe(
 			ofType(entityQuantityActions.addEntityQuantity),
@@ -105,10 +108,4 @@ export class EntityQuantityEffects {
 			)
 		)
 	);
-
-	public constructor(
-		private actions$: Actions,
-		private entityQuantityDataService: EntityQuantityDataService,
-		private entityQuantityUtilService: EntityQuantityUtilService
-	) {}
 }

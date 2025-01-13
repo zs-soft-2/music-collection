@@ -7,6 +7,7 @@ import { BaseComponent } from '@music-collection/api';
 	selector: 'mc-collection-item-edit',
 	templateUrl: './collection-item-edit.component.html',
 	styleUrls: ['./collection-item-edit.component.scss'],
+  standalone: false,
 })
 export class CollectionItemEditComponent
 	extends BaseComponent

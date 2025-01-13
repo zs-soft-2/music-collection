@@ -12,6 +12,7 @@ import { ArtistEntity, BaseComponent } from '@music-collection/api';
 	selector: 'mc-artist-simple-view',
 	templateUrl: './artist-simple-view.component.html',
 	styleUrls: ['./artist-simple-view.component.scss'],
+	standalone: false,
 })
 export class ArtistSimpleViewComponent extends BaseComponent {
 	@Input()

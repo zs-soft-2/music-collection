@@ -3,7 +3,7 @@ import { CalendarModule } from 'primeng/calendar';
 import { FileUploadModule } from 'primeng/fileupload';
 import { ImageModule } from 'primeng/image';
 import { InputTextModule } from 'primeng/inputtext';
-import { InputTextareaModule } from 'primeng/inputtextarea';
+import { TextareaModule } from 'primeng/textarea';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { TabViewModule } from 'primeng/tabview';
 
@@ -26,7 +26,7 @@ import { DocumentFormComponent } from './component';
 		FileUploadModule,
 		HttpClientModule,
 		ImageModule,
-		InputTextareaModule,
+		TextareaModule,
 		InputTextModule,
 		RxLet,
 		MultiSelectModule,

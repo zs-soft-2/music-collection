@@ -11,6 +11,7 @@ import { DocumentFormService } from './document-form.service';
 	selector: 'mc-document-form',
 	templateUrl: './document-form.component.html',
 	styleUrls: ['./document-form.component.scss'],
+	standalone: false,
 })
 export class DocumentFormComponent extends BaseComponent implements OnInit {
 	public params$!: Observable<DocumentFormParams>;

@@ -10,6 +10,7 @@ import { TopBarService } from './top-bar.service';
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	providers: [TopBarService],
 	selector: 'mc-top-bar',
+  standalone: false,
 	styleUrls: ['./top-bar.component.scss'],
 	templateUrl: './top-bar.component.html',
 })

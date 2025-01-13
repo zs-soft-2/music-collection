@@ -15,6 +15,7 @@ import { ReleaseAdminPermissionsService } from '../../service';
 	selector: 'mc-release-admin',
 	templateUrl: './release-admin.component.html',
 	styleUrls: ['./release-admin.component.scss'],
+  standalone: false,
 })
 export class ReleaseAdminComponent extends BaseComponent implements OnInit {
 	public buttonPermissions: string[] = [];

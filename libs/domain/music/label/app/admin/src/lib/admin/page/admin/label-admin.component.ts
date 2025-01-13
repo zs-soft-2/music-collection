@@ -15,6 +15,7 @@ import { LabelAdminPermissionsService } from '../../service';
 	selector: 'mc-label-admin',
 	templateUrl: './label-admin.component.html',
 	styleUrls: ['./label-admin.component.scss'],
+	standalone: false,
 })
 export class LabelAdminComponent extends BaseComponent implements OnInit {
 	public buttonPermissions: string[] = [];

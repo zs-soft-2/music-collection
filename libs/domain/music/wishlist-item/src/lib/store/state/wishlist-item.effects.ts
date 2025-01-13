@@ -1,7 +1,7 @@
 import { of } from 'rxjs';
 import { catchError, first, map, switchMap } from 'rxjs/operators';
 
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import {
 	EntityQuantityEntity,
 	EntityQuantityStateService,
@@ -18,6 +18,13 @@ import * as wishlistItemActions from './wishlist-item.actions';
 
 @Injectable()
 export class WishlistItemEffects {
+	private actions$: Actions = inject(Actions);
+	private entityQuantityStateService = inject(EntityQuantityStateService);
+	private entityQuantityUtilService = inject(EntityQuantityUtilService);
+	private userDataService = inject(UserDataService);
+	private wishlistItemDataService = inject(WishlistItemDataService);
+	private wishlistItemUtilService = inject(WishlistItemUtilService);
+
 	public addWishlistItem = createEffect(() =>
 		this.actions$.pipe(
 			ofType(wishlistItemActions.addWishlistItem),
@@ -217,13 +224,4 @@ export class WishlistItemEffects {
 			)
 		)
 	);
-
-	public constructor(
-		private actions$: Actions,
-		private userDataService: UserDataService,
-		private wishlistItemDataService: WishlistItemDataService,
-		private wishlistItemUtilService: WishlistItemUtilService,
-		private entityQuantityStateService: EntityQuantityStateService,
-		private entityQuantityUtilService: EntityQuantityUtilService
-	) {}
 }

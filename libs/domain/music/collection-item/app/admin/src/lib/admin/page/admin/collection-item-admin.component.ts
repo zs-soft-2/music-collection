@@ -15,6 +15,7 @@ import { CollectionItemAdminPermissionsService } from '../../service';
 	selector: 'mc-collection-item-admin',
 	templateUrl: './collection-item-admin.component.html',
 	styleUrls: ['./collection-item-admin.component.scss'],
+	standalone: false,
 })
 export class CollectionItemAdminComponent
 	extends BaseComponent

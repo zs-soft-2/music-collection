@@ -9,6 +9,7 @@ import { LabelListService } from './label-list.service';
 	selector: 'mc-label-list',
 	templateUrl: './label-list.component.html',
 	styleUrls: ['./label-list.component.scss'],
+	standalone: false,
 })
 export class LabelListComponent extends BaseComponent implements OnInit {
 	public constructor(private componentService: LabelListService) {

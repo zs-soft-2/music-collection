@@ -15,6 +15,7 @@ import { BaseComponent, User } from '@music-collection/api';
 	selector: 'mc-user-profile',
 	templateUrl: './user-profile.component.html',
 	styleUrls: ['./user-profile.component.scss'],
+  standalone: false,
 })
 export class UserProfileComponent extends BaseComponent implements OnInit {
 	@Input()

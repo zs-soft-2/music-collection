@@ -14,6 +14,7 @@ import { CollectionItemTableService } from './collection-item-table.service';
 	selector: 'mc-collection-item-table',
 	templateUrl: './collection-item-table.component.html',
 	styleUrls: ['./collection-item-table.component.scss'],
+  standalone: false,
 })
 export class CollectionItemTableComponent
 	extends BaseComponent

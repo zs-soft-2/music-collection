@@ -1,22 +1,10 @@
 import { from, of } from 'rxjs';
-import {
-	catchError,
-	concatMap,
-	map,
-	mergeMap,
-	switchMap,
-} from 'rxjs/operators';
+import { catchError, concatMap, map, mergeMap, switchMap } from 'rxjs/operators';
 
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import {
-	AlbumUtilService,
-	ArtistDataService,
-	ArtistEntity,
-	ArtistUtilService,
-	BaseService,
-	DocumentDataService,
-	DocumentUtilService,
-	UserStateService,
+    AlbumUtilService, ArtistDataService, ArtistEntity, ArtistUtilService, BaseService,
+    DocumentDataService, DocumentUtilService, UserStateService
 } from '@music-collection/api';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 
@@ -24,7 +12,13 @@ import * as exportImportActions from './export-import.actions';
 
 @Injectable()
 export class ExportImportEffects extends BaseService {
-	public listAlbumsById = createEffect(() =>
+    actions$: Actions = inject(Actions);
+    public albumUtilService = inject(AlbumUtilService);
+    public artistDataService = inject(ArtistDataService);
+    public artistUtilService = inject(ArtistUtilService);
+    public documentDataService = inject(DocumentDataService);
+    public documentUtilService = inject(DocumentUtilService);
+    public listAlbumsById = createEffect(() =>
 		this.actions$.pipe(
 			ofType(exportImportActions.listAlbumsById),
 			switchMap((action) =>
@@ -43,7 +37,7 @@ export class ExportImportEffects extends BaseService {
 			)
 		)
 	);
-	public loadDocument = createEffect(() =>
+    public loadDocument = createEffect(() =>
 		this.actions$.pipe(
 			ofType(exportImportActions.loadDocument),
 			mergeMap((action) =>
@@ -66,8 +60,7 @@ export class ExportImportEffects extends BaseService {
 			)
 		)
 	);
-
-	public updateAlbum = createEffect(() =>
+    public updateAlbum = createEffect(() =>
 		this.actions$.pipe(
 			ofType(exportImportActions.updateAlbum),
 			switchMap((action) =>
@@ -94,8 +87,7 @@ export class ExportImportEffects extends BaseService {
 			)
 		)
 	);
-
-	public updateArtist = createEffect(() =>
+    public updateArtist = createEffect(() =>
 		this.actions$.pipe(
 			ofType(exportImportActions.updateArtist),
 			switchMap((action) =>
@@ -117,8 +109,7 @@ export class ExportImportEffects extends BaseService {
 			)
 		)
 	);
-
-	public updateDocument = createEffect(() =>
+    public updateDocument = createEffect(() =>
 		this.actions$.pipe(
 			ofType(exportImportActions.updateDocument),
 			switchMap((action) =>
@@ -141,7 +132,7 @@ export class ExportImportEffects extends BaseService {
 			)
 		)
 	);
-	public uploadImportFile = createEffect(() =>
+    public uploadImportFile = createEffect(() =>
 		this.actions$.pipe(
 			ofType(exportImportActions.uploadImportFile),
 			concatMap((action) =>
@@ -156,16 +147,5 @@ export class ExportImportEffects extends BaseService {
 			)
 		)
 	);
-
-	public constructor(
-		private actions$: Actions,
-		private albumUtilService: AlbumUtilService,
-		private artistDataService: ArtistDataService,
-		private artistUtilService: ArtistUtilService,
-		private documentDataService: DocumentDataService,
-		private documentUtilService: DocumentUtilService,
-		private userStateService: UserStateService
-	) {
-		super();
-	}
+    public userStateService = inject(UserStateService);
 }

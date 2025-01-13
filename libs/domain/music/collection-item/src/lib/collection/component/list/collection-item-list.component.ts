@@ -22,6 +22,7 @@ import { CollectionItemListState } from './collection-item-list.store';
 	selector: 'mc-collection-item-list',
 	templateUrl: './collection-item-list.component.html',
 	styleUrls: ['./collection-item-list.component.scss'],
+  standalone: false,
 })
 export class CollectionItemListComponent
 	extends BaseComponent

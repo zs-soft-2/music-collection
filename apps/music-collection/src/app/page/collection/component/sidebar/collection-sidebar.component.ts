@@ -17,6 +17,7 @@ import { CollectionSidebarStore } from './collection-sidebar.store';
 	selector: 'mc-collection-sidebar',
 	templateUrl: './collection-sidebar.component.html',
 	styleUrls: ['./collection-sidebar.component.scss'],
+  standalone: false,
 })
 export class CollectionSidebarComponent
 	extends BaseComponent

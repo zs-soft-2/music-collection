@@ -11,6 +11,7 @@ import { ReleaseFormService } from './release-form.service';
 	selector: 'mc-release-form',
 	templateUrl: './release-form.component.html',
 	styleUrls: ['./release-form.component.scss'],
+  standalone: false,
 })
 export class ReleaseFormComponent extends BaseComponent implements OnInit {
 	public params$!: Observable<ReleaseFormParams>;

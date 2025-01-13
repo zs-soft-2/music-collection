@@ -7,6 +7,7 @@ import { BaseComponent } from '@music-collection/api';
 	selector: 'mc-artist-edit',
 	templateUrl: './artist-edit.component.html',
 	styleUrls: ['./artist-edit.component.scss'],
+  standalone: false,
 })
 export class ArtistEditComponent extends BaseComponent implements OnInit {
 	public artistId!: string;

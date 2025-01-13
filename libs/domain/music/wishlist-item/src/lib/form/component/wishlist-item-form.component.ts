@@ -11,6 +11,7 @@ import { WishlistItemFormService } from './wishlist-item-form.service';
 	selector: 'mc-wishlist-item-form',
 	templateUrl: './wishlist-item-form.component.html',
 	styleUrls: ['./wishlist-item-form.component.scss'],
+  standalone: false,
 })
 export class WishlistItemFormComponent extends BaseComponent implements OnInit {
 	public params$!: Observable<WishlistItemFormParams>;

@@ -7,6 +7,7 @@ import { AlbumEntity } from '@music-collection/api';
 	selector: 'mc-artist-page',
 	templateUrl: './artist-page.component.html',
 	styleUrls: ['./artist-page.component.scss'],
+  standalone: false,
 })
 export class ArtistPageComponent {
 	public constructor(private router: Router) {}

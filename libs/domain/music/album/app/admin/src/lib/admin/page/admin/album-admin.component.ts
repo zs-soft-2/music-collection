@@ -15,6 +15,7 @@ import { AlbumAdminPermissionsService } from '../../service';
 	selector: 'mc-album-admin',
 	templateUrl: './album-admin.component.html',
 	styleUrls: ['./album-admin.component.scss'],
+	standalone: false,
 })
 export class AlbumAdminComponent extends BaseComponent implements OnInit {
 	public buttonPermissions: string[] = [];

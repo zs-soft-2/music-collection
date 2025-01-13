@@ -15,6 +15,7 @@ import { ReleaseTableService } from './release-table.service';
 	selector: 'mc-release-table',
 	templateUrl: './release-table.component.html',
 	styleUrls: ['./release-table.component.scss'],
+  standalone: false,
 })
 export class ReleaseTableComponent extends BaseComponent implements OnInit {
 	public params$!: Observable<ReleaseTableParams>;

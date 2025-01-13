@@ -21,6 +21,7 @@ import { WishlistItemListService } from './wishlist-item-list.service';
 	selector: 'mc-wishlist-item-list',
 	templateUrl: './wishlist-item-list.component.html',
 	styleUrls: ['./wishlist-item-list.component.scss'],
+  standalone: false,
 })
 export class WishlistItemListComponent extends BaseComponent implements OnInit {
 	public params$!: Observable<WishlistItemListParams>;

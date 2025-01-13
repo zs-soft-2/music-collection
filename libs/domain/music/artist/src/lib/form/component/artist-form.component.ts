@@ -11,6 +11,7 @@ import { ArtistFormService } from './artist-form.service';
 	selector: 'mc-artist-form',
 	templateUrl: './artist-form.component.html',
 	styleUrls: ['./artist-form.component.scss'],
+  standalone: false,
 })
 export class ArtistFormComponent extends BaseComponent implements OnInit {
 	public params$!: Observable<ArtistFormParams>;

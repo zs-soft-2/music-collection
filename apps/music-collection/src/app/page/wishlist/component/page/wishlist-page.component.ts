@@ -6,5 +6,6 @@ import { BaseComponent } from '@music-collection/api';
 	selector: 'mc-wishlist-page',
 	templateUrl: './wishlist-page.component.html',
 	styleUrls: ['./wishlist-page.component.scss'],
+  standalone: false,
 })
 export class WishlistPageComponent extends BaseComponent {}

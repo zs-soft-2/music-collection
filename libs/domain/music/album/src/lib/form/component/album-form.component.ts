@@ -11,6 +11,7 @@ import { AlbumFormService } from './album-form.service';
 	selector: 'mc-album-form',
 	templateUrl: './album-form.component.html',
 	styleUrls: ['./album-form.component.scss'],
+	standalone: false,
 })
 export class AlbumFormComponent extends BaseComponent implements OnInit {
 	public params$!: Observable<AlbumFormParams>;

@@ -15,6 +15,7 @@ import { WishlistItemAdminPermissionsService } from '../../service';
 	selector: 'mc-wishlist-item-admin',
 	templateUrl: './wishlist-item-admin.component.html',
 	styleUrls: ['./wishlist-item-admin.component.scss'],
+  standalone: false,
 })
 export class WishlistItemAdminComponent
 	extends BaseComponent

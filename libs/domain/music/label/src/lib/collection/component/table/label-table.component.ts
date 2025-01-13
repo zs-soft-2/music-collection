@@ -14,6 +14,7 @@ import { LabelTableService } from './label-table.service';
 	selector: 'mc-label-table',
 	templateUrl: './label-table.component.html',
 	styleUrls: ['./label-table.component.scss'],
+	standalone: false,
 })
 export class LabelTableComponent extends BaseComponent implements OnInit {
 	public params$!: Observable<LabelTableParams>;

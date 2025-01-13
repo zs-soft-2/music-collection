@@ -9,7 +9,7 @@ import {
 	CollectionSortByEnum,
 	collectionSortByList,
 } from '@music-collection/api';
-import { tapResponse } from '@ngrx/component-store';
+import { tapResponse } from '@ngrx/operators';
 import {
 	patchState,
 	signalStore,
@@ -71,7 +71,7 @@ export const CollectionSidebarStore = signalStore(
 						collectionItemStateService.selectEntities$(),
 					),
 					tapResponse({
-						next: (entities) => {
+						next: (entities: any[]) => {
 							const artistNameSet: Set<string> = new Set();
 
 							entities.forEach((entity) => {

@@ -16,6 +16,7 @@ export interface Media {
 	selector: 'mc-release-simple-view',
 	templateUrl: './release-simple-view.component.html',
 	styleUrls: ['./release-simple-view.component.scss'],
+  standalone: false,
 })
 export class ReleaseSimpleViewComponent extends BaseComponent {
 	public media: Media;

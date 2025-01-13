@@ -11,6 +11,7 @@ import { CollectionItemFormService } from './collection-item-form.service';
 	selector: 'mc-collection-item-form',
 	templateUrl: './collection-item-form.component.html',
 	styleUrls: ['./collection-item-form.component.scss'],
+  standalone: false,
 })
 export class CollectionItemFormComponent
 	extends BaseComponent

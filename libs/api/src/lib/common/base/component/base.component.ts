@@ -6,6 +6,7 @@ import { Entity } from '../../entity';
 
 @Component({
 	template: '',
+  standalone: false,
 })
 export abstract class BaseComponent implements OnDestroy {
 	protected destroy: Subject<boolean>;

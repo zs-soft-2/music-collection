@@ -6,6 +6,7 @@ import { BaseComponent } from '@music-collection/api';
 	selector: 'mc-label-list-page',
 	templateUrl: './label-list-page.component.html',
 	styleUrls: ['./label-list-page.component.scss'],
+	standalone: false,
 })
 export class LabelListPageComponent extends BaseComponent {
 	public constructor() {

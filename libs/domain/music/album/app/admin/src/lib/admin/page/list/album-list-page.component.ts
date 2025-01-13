@@ -6,9 +6,7 @@ import { BaseComponent } from '@music-collection/api';
 	selector: 'mc-album-list-page',
 	templateUrl: './album-list-page.component.html',
 	styleUrls: ['./album-list-page.component.scss'],
+	standalone: false,
 })
 export class AlbumListPageComponent extends BaseComponent {
-	public constructor() {
-		super();
-	}
 }

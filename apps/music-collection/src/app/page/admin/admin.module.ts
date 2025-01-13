@@ -2,7 +2,7 @@ import { MenuModule } from 'primeng/menu';
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { FlexLayoutModule } from '@angular/flex-layout';
+import { FlexLayoutModule } from 'ng-flex-layout';
 import { DomainCollectionItemModule } from '@music-collection/domain/collection-item';
 import { DomainLabelModule } from '@music-collection/domain/label';
 import { DomainReleaseModule } from '@music-collection/domain/release';

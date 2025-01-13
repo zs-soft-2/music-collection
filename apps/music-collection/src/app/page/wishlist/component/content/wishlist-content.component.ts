@@ -9,6 +9,7 @@ import { WishlistContentService } from './wishlist-content.service';
 	selector: 'mc-wishlist-content',
 	templateUrl: './wishlist-content.component.html',
 	styleUrls: ['./wishlist-content.component.scss'],
+  standalone: false,
 })
 export class WishlistContentComponent extends BaseComponent {
 	public constructor(private componentService: WishlistContentService) {

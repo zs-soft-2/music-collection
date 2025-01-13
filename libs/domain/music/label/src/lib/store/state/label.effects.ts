@@ -1,7 +1,7 @@
 import { of } from 'rxjs';
 import { catchError, first, map, switchMap } from 'rxjs/operators';
 
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import {
 	EntityQuantityStateService,
 	EntityQuantityUtilService,
@@ -15,6 +15,12 @@ import * as labelActions from './label.actions';
 
 @Injectable()
 export class LabelEffects {
+	private actions$: Actions = inject(Actions);
+	private entityQuantityStateService = inject(EntityQuantityStateService);
+	private entityQuantityUtilService = inject(EntityQuantityUtilService);
+	private labelDataService = inject(LabelDataService);
+	private labelUtilService = inject(LabelUtilService);
+
 	public addLabel = createEffect(() =>
 		this.actions$.pipe(
 			ofType(labelActions.addLabel),
@@ -160,12 +166,4 @@ export class LabelEffects {
 			)
 		)
 	);
-
-	public constructor(
-		private actions$: Actions,
-		private labelDataService: LabelDataService,
-		private labelUtilService: LabelUtilService,
-		private entityQuantityStateService: EntityQuantityStateService,
-		private entityQuantityUtilService: EntityQuantityUtilService
-	) {}
 }

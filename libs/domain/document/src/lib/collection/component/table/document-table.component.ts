@@ -15,6 +15,7 @@ import { DocumentTableService } from './document-table.service';
 	selector: 'mc-document-table',
 	templateUrl: './document-table.component.html',
 	styleUrls: ['./document-table.component.scss'],
+	standalone: false,
 })
 export class DocumentTableComponent extends BaseComponent implements OnInit {
 	public params$!: Observable<DocumentTableParams>;
