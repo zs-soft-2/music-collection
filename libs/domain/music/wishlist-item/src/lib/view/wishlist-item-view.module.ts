@@ -3,7 +3,7 @@ import { ImageModule } from 'primeng/image';
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { FlexLayoutModule } from '@angular/flex-layout';
+import { FlexLayoutModule } from 'ng-flex-layout';
 
 import { WishlistItemSimpleViewComponent } from './component';
 

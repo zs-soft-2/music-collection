@@ -12,6 +12,7 @@ import { BaseComponent, CollectionItemEntity } from '@music-collection/api';
 	selector: 'mc-collection-item-simple-view',
 	templateUrl: './collection-item-simple-view.component.html',
 	styleUrls: ['./collection-item-simple-view.component.scss'],
+	standalone: false,
 })
 export class CollectionItemSimpleViewComponent extends BaseComponent {
 	@Input()

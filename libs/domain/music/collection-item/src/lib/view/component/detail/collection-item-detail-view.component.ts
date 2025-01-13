@@ -6,5 +6,6 @@ import { BaseComponent } from '@music-collection/api';
 	selector: 'mc-collection-item-detail-view',
 	templateUrl: './collection-item-detail-view.component.html',
 	styleUrls: ['./collection-item-detail-view.component.scss'],
+	standalone: false,
 })
 export class CollectionItemDetailViewComponent extends BaseComponent {}

@@ -14,6 +14,7 @@ import { ArtistTableService } from './artist-table.service';
 	selector: 'mc-artist-table',
 	templateUrl: './artist-table.component.html',
 	styleUrls: ['./artist-table.component.scss'],
+  standalone: false,
 })
 export class ArtistTableComponent extends BaseComponent implements OnInit {
 	public params$!: Observable<ArtistTableParams>;

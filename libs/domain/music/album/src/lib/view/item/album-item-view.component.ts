@@ -12,6 +12,7 @@ import { AlbumEntity, BaseComponent } from '@music-collection/api';
 	selector: 'mc-album-item-view',
 	templateUrl: './album-item-view.component.html',
 	styleUrls: ['./album-item-view.component.scss'],
+	standalone: false,
 })
 export class AlbumItemViewComponent extends BaseComponent {
 	@Input()

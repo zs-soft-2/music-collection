@@ -12,6 +12,7 @@ import {
 	selector: 'mc-home',
 	templateUrl: './home.component.html',
 	styleUrls: ['./home.component.scss'],
+  standalone: false,
 })
 export class HomeComponent extends BaseComponent implements OnInit {
 	public constructor(

@@ -8,7 +8,7 @@ import {
 	switchMap,
 } from 'rxjs/operators';
 
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import {
 	DocumentDataService,
 	DocumentUtilService,
@@ -22,6 +22,12 @@ import * as documentActions from './document.actions';
 
 @Injectable()
 export class DocumentEffects {
+	private actions$: Actions = inject(Actions);
+	private documentDataService = inject(DocumentDataService);
+	private documentUtilService = inject(DocumentUtilService);
+	private entityQuantityStateService = inject(EntityQuantityStateService);
+	private entityQuantityUtilService = inject(EntityQuantityUtilService);
+
 	public addDocument = createEffect(() =>
 		this.actions$.pipe(
 			ofType(documentActions.addDocument),
@@ -187,12 +193,4 @@ export class DocumentEffects {
 			)
 		)
 	);
-
-	public constructor(
-		private actions$: Actions,
-		private documentDataService: DocumentDataService,
-		private documentUtilService: DocumentUtilService,
-		private entityQuantityStateService: EntityQuantityStateService,
-		private entityQuantityUtilService: EntityQuantityUtilService
-	) {}
 }

@@ -6,6 +6,7 @@ import { BaseComponent } from '@music-collection/api';
 	selector: 'mc-release-list-page',
 	templateUrl: './release-list-page.component.html',
 	styleUrls: ['./release-list-page.component.scss'],
+  standalone: false,
 })
 export class ReleaseListPageComponent extends BaseComponent {
 	public constructor() {

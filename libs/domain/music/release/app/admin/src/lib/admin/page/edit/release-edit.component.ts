@@ -7,6 +7,7 @@ import { BaseComponent } from '@music-collection/api';
 	selector: 'mc-release-edit',
 	templateUrl: './release-edit.component.html',
 	styleUrls: ['./release-edit.component.scss'],
+  standalone: false,
 })
 export class ReleaseEditComponent extends BaseComponent implements OnInit {
 	public releaseId!: string;

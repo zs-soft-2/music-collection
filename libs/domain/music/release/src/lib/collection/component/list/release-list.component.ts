@@ -11,6 +11,7 @@ import { ReleaseListService } from './release-list.service';
 	selector: 'mc-release-list',
 	templateUrl: './release-list.component.html',
 	styleUrls: ['./release-list.component.scss'],
+  standalone: false,
 })
 export class ReleaseListComponent extends BaseComponent implements OnInit {
 	public params$!: Observable<ReleaseListParams>;

@@ -15,6 +15,7 @@ import { ArtistListService } from './artist-list.service';
 	selector: 'mc-artist-list',
 	templateUrl: './artist-list.component.html',
 	styleUrls: ['./artist-list.component.scss'],
+  standalone: false,
 })
 export class ArtistListComponent extends BaseComponent implements OnInit {
 	public params$!: Observable<ArtistListParams>;

@@ -1,5 +1,5 @@
 import { AngularSvgIconModule } from 'angular-svg-icon';
-import { FlexLayoutModule } from '@angular/flex-layout';
+import { FlexLayoutModule } from 'ng-flex-layout';
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';

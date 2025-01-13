@@ -7,7 +7,7 @@ import { SidebarModule } from 'primeng/sidebar';
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { FlexLayoutModule } from '@angular/flex-layout';
+import { FlexLayoutModule } from 'ng-flex-layout';
 import { FormsModule } from '@angular/forms';
 import { CollectionItemCollectionModule } from '@music-collection/domain/collection-item';
 

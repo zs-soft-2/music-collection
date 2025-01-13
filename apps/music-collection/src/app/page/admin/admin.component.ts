@@ -7,6 +7,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 	selector: 'mc-admin',
 	templateUrl: './admin.component.html',
 	styleUrls: ['./admin.component.scss'],
+  standalone: false,
 })
 export class AdminComponent {
 	public items!: MenuItem[];

@@ -3,7 +3,7 @@ import { of, pipe, switchMap, tap } from 'rxjs';
 
 import { inject } from '@angular/core';
 import { AlbumEntity, ArtistDetailViewStateModel } from '@music-collection/api';
-import { tapResponse } from '@ngrx/component-store';
+import { tapResponse } from '@ngrx/operators';
 import {
 	patchState,
 	signalStore,
@@ -51,7 +51,7 @@ export const ArtistDetailViewStore = signalStore(
 					tap(() => patchState(store, { isLoading: true })),
 					switchMap(() => artistDetailViewService.getData()),
 					tapResponse({
-						next: (data) => {
+						next: (data: any[]) => {
 							patchState(store, {
 								albums: data[1],
 								artist: data[0] || null,

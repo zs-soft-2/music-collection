@@ -8,6 +8,7 @@ import { BaseComponent, ExportImportService } from '@music-collection/api';
 	selector: 'mc-artist-import',
 	templateUrl: './artist-import.component.html',
 	styleUrls: ['./artist-import.component.scss'],
+  standalone: false,
 })
 export class ArtistImportComponent extends BaseComponent {
 	public constructor(private exportImportService: ExportImportService) {

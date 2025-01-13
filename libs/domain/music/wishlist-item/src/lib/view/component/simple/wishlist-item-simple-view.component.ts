@@ -12,6 +12,7 @@ import { BaseComponent, WishlistItemEntity } from '@music-collection/api';
 	selector: 'mc-wishlist-item-simple-view',
 	templateUrl: './wishlist-item-simple-view.component.html',
 	styleUrls: ['./wishlist-item-simple-view.component.scss'],
+  standalone: false,
 })
 export class WishlistItemSimpleViewComponent extends BaseComponent {
 	@Input()

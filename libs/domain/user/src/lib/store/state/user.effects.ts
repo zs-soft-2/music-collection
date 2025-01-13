@@ -1,13 +1,9 @@
 import { of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import {
-	AuthenticationStateService,
-	AuthorizationService,
-	Role,
-	User,
-	UserDataService,
+    AuthenticationStateService, AuthorizationService, Role, User, UserDataService
 } from '@music-collection/api';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 
@@ -15,7 +11,12 @@ import * as UserActions from './user.actions';
 
 @Injectable()
 export class UserEffects {
-	addUser$ = createEffect(() =>
+    private authenticationService = inject(AuthenticationStateService);
+    private authorizationService = inject(AuthorizationService);
+    private userDataService = inject(UserDataService);
+
+    actions$: Actions = inject(Actions);
+    addUser$ = createEffect(() =>
 		this.actions$.pipe(
 			ofType(UserActions.addUser),
 			switchMap((action) =>
@@ -30,7 +31,7 @@ export class UserEffects {
 			)
 		)
 	);
-	loadExistedUser$ = createEffect(() =>
+    loadExistedUser$ = createEffect(() =>
 		this.actions$.pipe(
 			ofType(UserActions.loadExistedUser),
 			switchMap((action) =>
@@ -58,7 +59,7 @@ export class UserEffects {
 			)
 		)
 	);
-	loadUser$ = createEffect(() =>
+    loadUser$ = createEffect(() =>
 		this.actions$.pipe(
 			ofType(UserActions.loadUser),
 			switchMap((action) =>
@@ -73,7 +74,7 @@ export class UserEffects {
 			)
 		)
 	);
-	loadUsers$ = createEffect(() =>
+    loadUsers$ = createEffect(() =>
 		this.actions$.pipe(
 			ofType(UserActions.loadUsers),
 			switchMap((action) =>
@@ -90,7 +91,7 @@ export class UserEffects {
 			)
 		)
 	);
-	updateUser$ = createEffect(() =>
+    updateUser$ = createEffect(() =>
 		this.actions$.pipe(
 			ofType(UserActions.updateUser),
 			switchMap((action) =>
@@ -110,11 +111,4 @@ export class UserEffects {
 			)
 		)
 	);
-
-	public constructor(
-		private actions$: Actions,
-		private authenticationService: AuthenticationStateService,
-		private authorizationService: AuthorizationService,
-		private userDataService: UserDataService
-	) {}
 }

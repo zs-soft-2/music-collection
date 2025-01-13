@@ -15,6 +15,7 @@ import { ArtistAdminPermissionsService } from '../../service';
 	selector: 'mc-artist-admin',
 	templateUrl: './artist-admin.component.html',
 	styleUrls: ['./artist-admin.component.scss'],
+  standalone: false,
 })
 export class ArtistAdminComponent extends BaseComponent implements OnInit {
 	public buttonPermissions: string[] = [];

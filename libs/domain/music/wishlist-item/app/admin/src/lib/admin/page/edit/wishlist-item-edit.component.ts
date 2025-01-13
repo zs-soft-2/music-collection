@@ -7,6 +7,7 @@ import { BaseComponent } from '@music-collection/api';
 	selector: 'mc-wishlist-item-edit',
 	templateUrl: './wishlist-item-edit.component.html',
 	styleUrls: ['./wishlist-item-edit.component.scss'],
+  standalone: false,
 })
 export class WishlistItemEditComponent extends BaseComponent implements OnInit {
 	public wishlistItemId!: string;

@@ -15,6 +15,7 @@ import { DocumentAdminPermissionsService } from '../../service';
 	selector: 'mc-document-admin',
 	templateUrl: './document-admin.component.html',
 	styleUrls: ['./document-admin.component.scss'],
+  standalone: false,
 })
 export class DocumentAdminComponent extends BaseComponent implements OnInit {
 	public buttonPermissions: string[] = [];

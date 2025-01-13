@@ -14,6 +14,7 @@ import {
 
 @Directive({
 	selector: '[mcIsAuthenticated]',
+  standalone: false
 })
 export class IsAuthenticatedDirective extends BaseDirective implements OnInit {
 	public condition = false;

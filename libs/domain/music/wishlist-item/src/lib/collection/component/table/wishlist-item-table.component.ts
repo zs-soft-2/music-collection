@@ -14,6 +14,7 @@ import { WishlistItemTableService } from './wishlist-item-table.service';
 	selector: 'mc-wishlist-item-table',
 	templateUrl: './wishlist-item-table.component.html',
 	styleUrls: ['./wishlist-item-table.component.scss'],
+	standalone: false,
 })
 export class WishlistItemTableComponent
 	extends BaseComponent

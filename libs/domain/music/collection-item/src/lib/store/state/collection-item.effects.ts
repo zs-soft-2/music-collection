@@ -1,7 +1,7 @@
 import { of } from 'rxjs';
 import { catchError, first, map, switchMap } from 'rxjs/operators';
 
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import {
 	CollectionItemDataService,
 	CollectionItemEntity,
@@ -19,6 +19,13 @@ import * as collectionItemActions from './collection-item.actions';
 
 @Injectable()
 export class CollectionItemEffects {
+	private actions$: Actions = inject(Actions);
+	private collectionItemDataService = inject(CollectionItemDataService);
+	private collectionItemUtilService = inject(CollectionItemUtilService);
+	private entityQuantityStateService = inject(EntityQuantityStateService);
+	private entityQuantityUtilService = inject(EntityQuantityUtilService);
+	private userDataService = inject(UserDataService);
+
 	public addCollectionItem = createEffect(() =>
 		this.actions$.pipe(
 			ofType(collectionItemActions.addCollectionItem),
@@ -222,13 +229,4 @@ export class CollectionItemEffects {
 			)
 		)
 	);
-
-	public constructor(
-		private actions$: Actions,
-		private collectionItemDataService: CollectionItemDataService,
-		private collectionItemUtilService: CollectionItemUtilService,
-		private userDataService: UserDataService,
-		private entityQuantityStateService: EntityQuantityStateService,
-		private entityQuantityUtilService: EntityQuantityUtilService
-	) {}
 }

@@ -27,6 +27,7 @@ export interface BreadcrumbOption {
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-breadcrumb',
 	templateUrl: './breadcrumb.component.html',
+  standalone: false,
 })
 export class BreadcrumbComponent extends BaseComponent implements OnInit {
 	@Input()

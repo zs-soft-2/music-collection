@@ -6,5 +6,6 @@ import { BaseComponent } from '@music-collection/api';
 	selector: 'mc-label-simple-view',
 	templateUrl: './label-simple-view.component.html',
 	styleUrls: ['./label-simple-view.component.scss'],
+  standalone: false,
 })
 export class LabelSimpleViewComponent extends BaseComponent {}

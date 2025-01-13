@@ -1,7 +1,7 @@
 import { of } from 'rxjs';
 import { catchError, first, map, switchMap } from 'rxjs/operators';
 
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import {
 	ArtistDataService,
 	EntityQuantityEntity,
@@ -19,6 +19,13 @@ import * as releaseActions from './release.actions';
 
 @Injectable()
 export class ReleaseEffects {
+	private actions$: Actions = inject(Actions);
+	private artistDataService = inject(ArtistDataService);
+	private entityQuantityStateService = inject(EntityQuantityStateService);
+	private entityQuantityUtilService = inject(EntityQuantityUtilService);
+	private releaseDataService = inject(ReleaseDataService);
+	private releaseUtilService = inject(ReleaseUtilService);
+
 	public addRelease = createEffect(() =>
 		this.actions$.pipe(
 			ofType(releaseActions.addRelease),
@@ -212,13 +219,4 @@ export class ReleaseEffects {
 			)
 		)
 	);
-
-	public constructor(
-		private actions$: Actions,
-		private releaseDataService: ReleaseDataService,
-		private releaseUtilService: ReleaseUtilService,
-		private artistDataService: ArtistDataService,
-		private entityQuantityStateService: EntityQuantityStateService,
-		private entityQuantityUtilService: EntityQuantityUtilService
-	) {}
 }

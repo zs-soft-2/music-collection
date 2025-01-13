@@ -7,6 +7,7 @@ import { BaseComponent } from '@music-collection/api';
 	selector: 'mc-label-edit',
 	templateUrl: './label-edit.component.html',
 	styleUrls: ['./label-edit.component.scss'],
+	standalone: false,
 })
 export class LabelEditComponent extends BaseComponent implements OnInit {
 	public labelId!: string;

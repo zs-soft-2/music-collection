@@ -2,7 +2,7 @@ import { from, of } from 'rxjs';
 import { catchError, map, mergeMap, switchMap } from 'rxjs/operators';
 import { Auth, GoogleAuthProvider, signInWithPopup } from '@angular/fire/auth';
 
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import {
 	BaseService,
 	EntityTypeEnum,
@@ -16,6 +16,9 @@ import * as authenticationActions from './authentication.actions';
 
 @Injectable()
 export class AuthenticationEffects extends BaseService {
+  actions$: Actions = inject(Actions);
+  auth: Auth = inject(Auth);
+  userStateService: UserStateService = inject(UserStateService);
 	getAuthenticatedUser$ = createEffect(() =>
 		this.actions$.pipe(
 			ofType(authenticationActions.getUser),
@@ -85,14 +88,6 @@ export class AuthenticationEffects extends BaseService {
 			)
 		)
 	);
-
-	public constructor(
-		private actions$: Actions,
-		private auth: Auth,
-		private userStateService: UserStateService
-	) {
-		super();
-	}
 
 	private googleLogin(): Promise<unknown> {
 		return signInWithPopup(this.auth, new GoogleAuthProvider());

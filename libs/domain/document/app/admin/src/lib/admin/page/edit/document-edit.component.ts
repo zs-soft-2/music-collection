@@ -7,6 +7,7 @@ import { BaseComponent } from '@music-collection/api';
 	selector: 'mc-document-edit',
 	templateUrl: './document-edit.component.html',
 	styleUrls: ['./document-edit.component.scss'],
+	standalone: false,
 })
 export class DocumentEditComponent extends BaseComponent implements OnInit {
 	public documentId!: string;

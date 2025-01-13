@@ -1,7 +1,6 @@
 <section class="wishlist-item-list" *rxLet="params$; let params">
 	<p-dataView [value]="params.wishlistItems" [layout]="'grid'">
 		<ng-template pTemplate="header">
-			<p-dataViewLayoutOptions></p-dataViewLayoutOptions>
 		</ng-template>
 
 		<ng-template let-wishlistItem pTemplate="listItem">

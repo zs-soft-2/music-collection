@@ -14,6 +14,7 @@ import { AlbumTableService } from './album-table.service';
 	selector: 'mc-album-table',
 	templateUrl: './album-table.component.html',
 	styleUrls: ['./album-table.component.scss'],
+	standalone: false,
 })
 export class AlbumTableComponent extends BaseComponent implements OnInit {
 	public params$!: Observable<AlbumTableParams>;
