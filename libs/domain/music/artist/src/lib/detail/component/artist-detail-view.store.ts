@@ -80,10 +80,10 @@ export const ArtistDetailViewStore = signalStore(
 			activeItemChange: (activeMenuItem: MenuItem): void => {
 				patchState(store, { activeMenuItem });
 				patchState(store, {
-					selectedContent: activeMenuItem.label?.toLowerCase(),
+					selectedContent: activeMenuItem?.label?.toLowerCase(),
 				});
 
-				if (activeMenuItem.label === 'Discography') {
+				if (activeMenuItem?.label === 'Discography') {
 					artistDetailViewService.dispatchListAlbumsByIdAction(
 						store.artist()?.uid || '',
 					);
