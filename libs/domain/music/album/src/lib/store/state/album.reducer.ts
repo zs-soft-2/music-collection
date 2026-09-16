@@ -46,7 +46,7 @@ export const albumReducer = createReducer(
 		...state,
 		loading: false,
 		error: null,
-		selectedAlbumId: album.uid,
+		selectedId: album.uid,
 	})),
 	on(albumActions.updateAlbumSuccess, (state, { album }) =>
 		albumAdapter.updateOne(album, state)

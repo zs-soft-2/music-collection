@@ -52,7 +52,7 @@ export const wishlistItemReducer = createReducer(
 		...state,
 		loading: false,
 		error: null,
-		selectedWishlistItemId: wishlistItem.uid,
+		selectedId: wishlistItem.uid,
 	})),
 	on(
 		wishlistItemActions.updateWishlistItemSuccess,

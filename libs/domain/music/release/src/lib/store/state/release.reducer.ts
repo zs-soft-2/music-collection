@@ -65,7 +65,7 @@ export const releaseReducer = createReducer(
 	),
 	on(releaseActions.setSelectedReleaseId, (state, { releaseId }) => ({
 		...state,
-		selectedReleaseId: releaseId,
+		selectedId: releaseId,
 	})),
 	on(releaseActions.searchSuccess, (state, { result }) => {
 		return releaseAdapter.upsertMany(result, {

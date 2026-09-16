@@ -43,7 +43,7 @@ export const entityQuantityReducer = createReducer(
 			...state,
 			loading: false,
 			error: null,
-			selectedEntityQuantityId: entityQuantityId,
+			selectedId: entityQuantityId,
 		})
 	),
 	on(

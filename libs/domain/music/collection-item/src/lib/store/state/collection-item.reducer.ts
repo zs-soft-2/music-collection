@@ -73,7 +73,7 @@ export const collectionItemReducer = createReducer(
 			...state,
 			loading: false,
 			error: null,
-			selectedCollectionItemId: collectionItem.uid,
+			selectedId: collectionItem.uid,
 		})
 	),
 	on(
