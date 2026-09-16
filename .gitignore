@@ -54,3 +54,9 @@ Thumbs.db
 .claude/worktrees
 # Discogs import cache
 /tools/discogs/.cache
+
+# OpenTofu
+.terraform/
+*.tfstate
+*.tfstate.*
+.zs-cloud-progress.json

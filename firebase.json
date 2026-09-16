@@ -4,7 +4,7 @@
 	},
 	"hosting": [
 		{
-			"site": "music-collection-4e074",
+			"target": "app",
 			"public": "dist/apps/music-collection",
 			"ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
 		}

@@ -1,0 +1,34 @@
+{
+  "cloud": {
+    "githubOwner": "zs-soft-2",
+    "githubRepo": "music-collection",
+    "iacEngine": "tofu",
+    "region": "europe-west1",
+    "gcpProjectPattern": "music-collection-{env}",
+    "stateBucketPattern": "music-collection-{env}-tfstate",
+    "capabilities": {
+      "firebase": true,
+      "gcp": true,
+      "ci": true
+    },
+    "environments": [
+      {
+        "name": "dev",
+        "gcpProjectId": "music-collection-dev",
+        "isProduction": false
+      },
+      {
+        "name": "prod",
+        "gcpProjectId": "music-collection-4e074",
+        "isProduction": true,
+        "reviewers": {
+          "users": ["zsagia"],
+          "teams": []
+        },
+        "waitTimerMinutes": 0
+      }
+    ],
+    "firebaseTargets": [],
+    "secrets": []
+  }
+}

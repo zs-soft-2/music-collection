@@ -1,5 +1,19 @@
 {
   "projects": {
-    "default": "music-collection-4e074"
+    "default": "music-collection-dev",
+    "dev": "music-collection-dev",
+    "prod": "music-collection-4e074"
+  },
+  "targets": {
+    "music-collection-dev": {
+      "hosting": {
+        "app": ["music-collection-dev"]
+      }
+    },
+    "music-collection-4e074": {
+      "hosting": {
+        "app": ["music-collection-4e074"]
+      }
+    }
   }
 }

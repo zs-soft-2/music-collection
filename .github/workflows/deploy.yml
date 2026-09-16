@@ -1,0 +1,40 @@
+name: Deploy
+
+# main → dev automatikusan; prod csak kézi indítással, a `prod` GitHub Environment
+# jóváhagyójának engedélyével. A környezeti változókat (GCP_PROJECT, WIF_PROVIDER,
+# DEPLOYER_SA, BUILD_CONFIG, FIREBASE_HOSTING) az `infra/` tofu-gyökerei írják.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        type: choice
+        options: [dev, prod]
+        default: dev
+
+concurrency:
+  group: deploy-${{ github.event.inputs.environment || 'dev' }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'dev' }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx nx build music-collection --configuration=${{ vars.BUILD_CONFIG }}
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ vars.DEPLOYER_SA }}
+      - run: npx firebase-tools deploy --only hosting:${{ vars.FIREBASE_HOSTING }} --project ${{ vars.GCP_PROJECT }} --non-interactive
