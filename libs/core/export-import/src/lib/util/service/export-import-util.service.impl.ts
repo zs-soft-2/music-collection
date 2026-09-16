@@ -139,7 +139,7 @@ export class ExportImportUtilServiceImpl extends ExportImportUtilService {
 		return documentExportModel;
 	}
 
-	public createFilePath(data: string, folder: string = '/'): string {
+	public createFilePath(data: string, folder = '/'): string {
 		return this.documentUtilService.createFilePath(data, folder);
 	}
 

@@ -61,7 +61,7 @@ export class BreadcrumbComponent extends BaseComponent implements OnInit {
 
 	private getBreadcrumbs(
 		route: ActivatedRoute,
-		url: string = '',
+		url = '',
 		breadcrumbs: BreadcrumbOption[] = []
 	): BreadcrumbOption[] {
 		const children: ActivatedRoute[] = route.children;

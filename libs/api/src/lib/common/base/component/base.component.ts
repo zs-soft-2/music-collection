@@ -6,7 +6,11 @@ import { Entity } from '../../entity';
 
 @Component({
 	template: '',
-  changeDetection: ChangeDetectionStrategy.Eager,
+	// Az Angular 22 migrációja tette ide, a 22 előtti változásdetektálás
+	// megőrzésére. OnPush-ra váltása az egész appra kiható viselkedésváltozás,
+	// ezért itt szándékosan nem követjük a szabályt.
+	// eslint-disable-next-line @angular-eslint/prefer-on-push-component-change-detection
+	changeDetection: ChangeDetectionStrategy.Eager,
   standalone: false,
 })
 export abstract class BaseComponent implements OnDestroy {

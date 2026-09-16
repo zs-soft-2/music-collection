@@ -37,4 +37,27 @@ module.exports = [
     // Override or add rules here
     rules: {},
   },
+  {
+    files: ['**/*.html'],
+    rules: {
+      // A PrimeNG pButton a label attribútumból rendereli a gomb szövegét
+      // (<span class="p-button-label">), tehát az akadálymentes név megvan —
+      // a szabály alapértelmezett listája viszont nem ismeri a label-t.
+      '@angular-eslint/template/elements-content': [
+        'error',
+        {
+          allowList: [
+            'aria-label',
+            'innerHtml',
+            'innerHTML',
+            'innerText',
+            'outerHTML',
+            'textContent',
+            'title',
+            'label',
+          ],
+        },
+      ],
+    },
+  },
 ];
