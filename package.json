@@ -78,6 +78,7 @@
 		"eslint": "^9.28.0",
 		"eslint-config-prettier": "10.1.8",
 		"eslint-plugin-cypress": "3.5.0",
+		"firebase-admin": "14.4.0",
 		"jest": "30.5.1",
 		"jest-environment-jsdom": "30.5.1",
 		"jest-preset-angular": "17.0.0",

@@ -52,3 +52,5 @@ Thumbs.db
 .github/instructions/nx.instructions.md
 
 .claude/worktrees
+# Discogs import cache
+/tools/discogs/.cache
