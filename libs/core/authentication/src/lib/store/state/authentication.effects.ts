@@ -1,6 +1,11 @@
 import { from, of } from 'rxjs';
 import { catchError, map, mergeMap, switchMap } from 'rxjs/operators';
-import { Auth, GoogleAuthProvider, signInWithPopup } from '@angular/fire/auth';
+import {
+	Auth,
+	GoogleAuthProvider,
+	signInWithPopup,
+	signOut,
+} from '@angular/fire/auth';
 
 import { inject, Injectable } from '@angular/core';
 import {
@@ -16,9 +21,9 @@ import * as authenticationActions from './authentication.actions';
 
 @Injectable()
 export class AuthenticationEffects extends BaseService {
-  actions$: Actions = inject(Actions);
-  auth: Auth = inject(Auth);
-  userStateService: UserStateService = inject(UserStateService);
+	actions$: Actions = inject(Actions);
+	auth: Auth = inject(Auth);
+	userStateService: UserStateService = inject(UserStateService);
 	getAuthenticatedUser$ = createEffect(() =>
 		this.actions$.pipe(
 			ofType(authenticationActions.getUser),
@@ -79,11 +84,19 @@ export class AuthenticationEffects extends BaseService {
 	public logout = createEffect(() =>
 		this.actions$.pipe(
 			ofType(authenticationActions.logout),
-			map(() => {
-				return authenticationActions.logoutSuccess();
-			}),
-			catchError((err) =>
-				of(authenticationActions.authError({ error: err.message }))
+			switchMap(() =>
+				// A catchError a belső folyamon van: így egy sikertelen
+				// kijelentkezés nem állítja le véglegesen az effektet.
+				from(signOut(this.auth)).pipe(
+					map(() => authenticationActions.logoutSuccess()),
+					catchError((err) =>
+						of(
+							authenticationActions.authError({
+								error: err.message,
+							})
+						)
+					)
+				)
 			)
 		)
 	);
