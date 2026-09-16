@@ -1,6 +1,6 @@
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { InputTextModule } from 'primeng/inputtext';
 import { MultiSelectModule } from 'primeng/multiselect';
 
@@ -19,7 +19,7 @@ import { CollectionItemFormComponent } from './component';
 		ButtonModule,
 		FormsModule,
 		AutoCompleteModule,
-		CalendarModule,
+		DatePickerModule,
 		InputTextModule,
 		RxLet,
 		MultiSelectModule,

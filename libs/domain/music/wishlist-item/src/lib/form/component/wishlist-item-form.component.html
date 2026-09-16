@@ -1,7 +1,12 @@
 <section class="wishlist-item-form" *rxLet="params$; let params">
 	<form [formGroup]="params.formGroup">
-		<p-tabView>
-			<p-tabPanel header="Data">
+		<p-tabs value="0">
+			<p-tablist>
+				<p-tab value="0">Data</p-tab>
+			</p-tablist>
+
+			<p-tabpanels>
+			<p-tabpanel value="0">
 				<input name="uid" formControlName="uid" hidden />
 				<input
 					name="userReference"
@@ -80,7 +85,9 @@
 						<label for="iaActive">Active</label>
 					</span>
 				</div>
-			</p-tabPanel>
+			</p-tabpanel>
+			</p-tabpanels>
+		</p-tabs>
 
 			<div
 				style="margin-top: 10px"
@@ -102,6 +109,5 @@
 					(click)="cancel()"
 				></button>
 			</div>
-		</p-tabView>
 	</form>
 </section>

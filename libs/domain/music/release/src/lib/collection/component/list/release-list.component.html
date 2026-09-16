@@ -1,17 +1,18 @@
 <section class="release-list" *rxLet="params$; let params">
-	<p-carousel
-		*ngIf="params.releases.length"
-		[value]="params.releases"
-		[numVisible]="3"
-		[numScroll]="1"
-		[autoplayInterval]="5000"
-	>
-		<ng-template let-release pTemplate="item">
-			<div class="release-view">
-				<mc-release-simple-view
-					[release]="release"
-				></mc-release-simple-view>
-			</div>
-		</ng-template>
-	</p-carousel>
+  @if (params.releases.length) {
+    <p-carousel
+      [value]="params.releases"
+      [numVisible]="3"
+      [numScroll]="1"
+      [autoplayInterval]="5000"
+      >
+      <ng-template let-release pTemplate="item">
+        <div class="release-view">
+          <mc-release-simple-view
+            [release]="release"
+          ></mc-release-simple-view>
+        </div>
+      </ng-template>
+    </p-carousel>
+  }
 </section>

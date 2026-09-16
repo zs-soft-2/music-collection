@@ -1,7 +1,7 @@
 import { ChipModule } from 'primeng/chip';
 import { DataViewModule } from 'primeng/dataview';
 import { ImageModule } from 'primeng/image';
-import { TabMenuModule } from 'primeng/tabmenu';
+import { TabsModule } from 'primeng/tabs';
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
@@ -22,7 +22,7 @@ import { ArtistDetailViewComponent } from './component';
 		FlexLayoutModule,
 		ImageModule,
 		RxLet,
-		TabMenuModule,
+		TabsModule,
 	],
 })
 export class ArtistDetailModule {}

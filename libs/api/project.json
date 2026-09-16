@@ -4,13 +4,15 @@
 	"projectType": "library",
 	"sourceRoot": "libs/api/src",
 	"prefix": "mc",
+	"tags": [],
 	"targets": {
 		"test": {
 			"executor": "@nx/jest:jest",
 			"outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
 			"options": {
 				"jestConfig": "libs/api/jest.config.ts",
-				"passWithNoTests": true
+				"passWithNoTests": true,
+				"tsConfig": "libs/api/tsconfig.spec.json"
 			}
 		},
 		"lint": {
@@ -19,6 +21,5 @@
 				"lintFilePatterns": ["libs/api/**/*.ts", "libs/api/**/*.html"]
 			}
 		}
-	},
-	"tags": []
+	}
 }

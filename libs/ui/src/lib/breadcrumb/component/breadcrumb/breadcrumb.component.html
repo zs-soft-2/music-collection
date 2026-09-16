@@ -1,29 +1,29 @@
 <section class="p-breadcrumb">
-	<ng-content></ng-content>
+  <ng-content></ng-content>
 
-	<ng-container *ngIf="autoGenerate && breadcrumbs.length">
-		<ul>
-			<ng-container *ngFor="let breadcrumb of breadcrumbs">
-				<li>
-					<span class="p-menuitem">
-						<a
-							class="p-menuitem-link"
-							[attr.href]="breadcrumb.url"
-							(click)="navigate(breadcrumb.url, $event)"
-							><span class="p-menuitem-text">{{
-								breadcrumb.label
-							}}</span></a
-						>
-
-						<span
-							class="ant-breadcrumb-separator"
-							*ngIf="!!separator"
-						>
-							{{ separator }}
-						</span>
-					</span>
-				</li>
-			</ng-container>
-		</ul>
-	</ng-container>
+  @if (autoGenerate && breadcrumbs.length) {
+    <ul>
+      @for (breadcrumb of breadcrumbs; track breadcrumb) {
+        <li>
+          <span class="p-menuitem">
+            <a
+              class="p-menuitem-link"
+              [attr.href]="breadcrumb.url"
+              (click)="navigate(breadcrumb.url, $event)"
+              ><span class="p-menuitem-text">{{
+              breadcrumb.label
+            }}</span></a
+            >
+            @if (!!separator) {
+              <span
+                class="ant-breadcrumb-separator"
+                >
+                {{ separator }}
+              </span>
+            }
+          </span>
+        </li>
+      }
+    </ul>
+  }
 </section>

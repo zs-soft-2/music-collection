@@ -3,7 +3,7 @@ import { ButtonModule } from 'primeng/button';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { ScrollTopModule } from 'primeng/scrolltop';
-import { SidebarModule } from 'primeng/sidebar';
+import { DrawerModule } from 'primeng/drawer';
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
@@ -35,7 +35,7 @@ import { CollectionSidebarComponent } from './component/sidebar';
 		MultiSelectModule,
 		RadioButtonModule,
 		ScrollTopModule,
-		SidebarModule,
+		DrawerModule,
 	],
 })
 export class CollectionModule {}

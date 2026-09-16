@@ -1,58 +1,61 @@
 <section class="release-simple-view">
-	<div class="content">
-		<a href="javascript:void(0)">
-			<div class="content-overlay"></div>
+  <div class="content">
+    <a href="javascript:void(0)">
+      <div class="content-overlay"></div>
 
-			<div class="content-image">
-				<mc-album-simple-view
-					[album]="release.album"
-					[width]="release.media === media['dvd'] ? '350' : width"
-					[height]="height"
-				></mc-album-simple-view>
-			</div>
+      <div class="content-image">
+        <mc-album-simple-view
+          [album]="release.album"
+          [width]="release.media === media['dvd'] ? '350' : width"
+          [height]="height"
+        ></mc-album-simple-view>
+      </div>
 
-			<div
-				class="content-details fadeIn-bottom fadeIn-right"
-				fxLayout="row"
-			>
-				<div class="name">
-					<div class="album">
-						<a
-							href="javascript:void(0)"
-							(click)="releaseClickHandler()"
-						>
-							{{ release.album.name }}
-						</a>
-					</div>
+      <div
+        class="content-details fadeIn-bottom fadeIn-right"
+        fxLayout="row"
+        >
+        <div class="name">
+          <div class="album">
+            <a
+              href="javascript:void(0)"
+              (click)="releaseClickHandler()"
+              >
+              {{ release.album.name }}
+            </a>
+          </div>
 
-					<div class="artist">
-						{{ release.artist.name }}
-					</div>
-				</div>
+          <div class="artist">
+            {{ release.artist.name }}
+          </div>
+        </div>
 
-				<div class="icon">
-					<svg-icon
-						*ngIf="release.media === media['vinyl']"
-						src="assets/icon/vinyl/format-vinyl-48.svg"
-						[svgStyle]="{ 'padding.px': 1, 'margin.px': 3 }"
-					>
-					</svg-icon>
+        <div class="icon">
+          @if (release.media === media['vinyl']) {
+            <svg-icon
+              src="assets/icon/vinyl/format-vinyl-48.svg"
+              [svgStyle]="{ 'padding.px': 1, 'margin.px': 3 }"
+              >
+            </svg-icon>
+          }
 
-					<svg-icon
-						*ngIf="release.media === media['cd']"
-						src="assets/icon/cd/format-cd-48.svg"
-						[svgStyle]="{ 'padding.px': 1, 'margin.px': 3 }"
-					>
-					</svg-icon>
+          @if (release.media === media['cd']) {
+            <svg-icon
+              src="assets/icon/cd/format-cd-48.svg"
+              [svgStyle]="{ 'padding.px': 1, 'margin.px': 3 }"
+              >
+            </svg-icon>
+          }
 
-					<svg-icon
-						*ngIf="release.media === media['dvd']"
-						src="assets/icon/dvd/format-dvd-48.svg"
-						[svgStyle]="{ 'padding.px': 1, 'margin.px': 3 }"
-					>
-					</svg-icon>
-				</div>
-			</div>
-		</a>
-	</div>
+          @if (release.media === media['dvd']) {
+            <svg-icon
+              src="assets/icon/dvd/format-dvd-48.svg"
+              [svgStyle]="{ 'padding.px': 1, 'margin.px': 3 }"
+              >
+            </svg-icon>
+          }
+        </div>
+      </div>
+    </a>
+  </div>
 </section>

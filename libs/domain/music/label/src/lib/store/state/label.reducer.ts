@@ -31,7 +31,6 @@ export const initialState: State = labelAdapter.getInitialState({
 	loading: false,
 	error: null,
 	searchResult: [],
-	selectedLabelId: null,
 });
 
 export const labelReducer = createReducer(

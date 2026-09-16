@@ -1,13 +1,13 @@
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
-import { CalendarModule } from 'primeng/calendar';
-import { DropdownModule } from 'primeng/dropdown';
+import { DatePickerModule } from 'primeng/datepicker';
+import { SelectModule } from 'primeng/select';
 import { FileUploadModule } from 'primeng/fileupload';
 import { ImageModule } from 'primeng/image';
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { MultiSelectModule } from 'primeng/multiselect';
-import { TabViewModule } from 'primeng/tabview';
+import { TabsModule } from 'primeng/tabs';
 
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
@@ -24,9 +24,9 @@ import { ArtistFormComponent } from './component';
 		CommonModule,
 		AutoCompleteModule,
 		ButtonModule,
-		DropdownModule,
+		SelectModule,
 		FormsModule,
-		CalendarModule,
+		DatePickerModule,
 		FileUploadModule,
 		HttpClientModule,
 		ImageModule,
@@ -35,7 +35,7 @@ import { ArtistFormComponent } from './component';
 		RxLet,
 		MultiSelectModule,
 		ReactiveFormsModule,
-		TabViewModule,
+		TabsModule,
 	],
 })
 export class ArtistFormModule {}

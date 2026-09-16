@@ -1,11 +1,11 @@
 import { ButtonModule } from 'primeng/button';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { FileUploadModule } from 'primeng/fileupload';
 import { ImageModule } from 'primeng/image';
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { MultiSelectModule } from 'primeng/multiselect';
-import { TabViewModule } from 'primeng/tabview';
+import { TabsModule } from 'primeng/tabs';
 
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
@@ -22,7 +22,7 @@ import { DocumentFormComponent } from './component';
 		CommonModule,
 		ButtonModule,
 		FormsModule,
-		CalendarModule,
+		DatePickerModule,
 		FileUploadModule,
 		HttpClientModule,
 		ImageModule,
@@ -31,7 +31,7 @@ import { DocumentFormComponent } from './component';
 		RxLet,
 		MultiSelectModule,
 		ReactiveFormsModule,
-		TabViewModule,
+		TabsModule,
 	],
 })
 export class DocumentFormModule {}

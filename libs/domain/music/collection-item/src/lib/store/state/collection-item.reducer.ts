@@ -48,7 +48,6 @@ export const initialState: State = collectionItemAdapter.getInitialState({
 	loading: false,
 	error: null,
 	searchResult: [],
-	selectedCollectionItemId: null,
 });
 
 export const collectionItemReducer = createReducer(

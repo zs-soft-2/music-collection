@@ -31,7 +31,6 @@ export const initialState: State = albumAdapter.getInitialState({
 	loading: false,
 	error: null,
 	searchResult: [],
-	selectedAlbumId: null,
 });
 
 export const albumReducer = createReducer(

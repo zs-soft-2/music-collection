@@ -64,7 +64,7 @@
 
 		<div class="field">
 			<span class="p-float-label">
-				<p-calendar id="date" formControlName="date"></p-calendar>
+				<p-datepicker id="date" formControlName="date"></p-datepicker>
 
 				<label for="date">Date</label>
 			</span>
@@ -72,12 +72,12 @@
 
 		<div class="field">
 			<span class="p-float-label">
-				<p-dropdown
+				<p-select
 					id="country"
 					[options]="params.countryList"
 					placeholder="Select a country"
 					formControlName="country"
-				></p-dropdown>
+				></p-select>
 
 				<label for="country">Country</label>
 			</span>
@@ -85,12 +85,12 @@
 
 		<div class="field">
 			<span class="p-float-label">
-				<p-dropdown
+				<p-select
 					id="media"
 					[options]="params.mediaList"
 					placeholder="Select a media"
 					formControlName="media"
-				></p-dropdown>
+				></p-select>
 
 				<label for="media">Media</label>
 			</span>

@@ -37,4 +37,16 @@ export class ArtistDetailViewComponent extends BaseComponent implements OnInit {
 	public ngOnInit(): void {
 		this.componentService.init(this.selectAlbumDetail);
 	}
+
+	// A PrimeNG Tabs a fül értékét (itt a label-t) adja vissza, a store viszont a
+	// teljes MenuItem-et várja — ahogy a korábbi p-tabMenu activeItemChange-e is.
+	public selectMenuItem(value: unknown): void {
+		const menuItem = this.store
+			.menuItems()
+			.find((item) => item.label === value);
+
+		if (menuItem) {
+			this.store.activeItemChange(menuItem);
+		}
+	}
 }

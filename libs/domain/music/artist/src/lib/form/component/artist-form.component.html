@@ -1,150 +1,160 @@
 <section class="artist-form" *rxLet="params$; let params">
-	<form [formGroup]="params.formGroup">
-		<p-tabView>
-			<p-tabPanel header="Data">
-				<input name="uid" formControlName="uid" hidden />
+  <form [formGroup]="params.formGroup">
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0">Data</p-tab>
 
-				<div class="field">
-					<span class="p-float-label">
-						<input
-							id="name"
-							type="text"
-							pInputText
-							formControlName="name"
-						/>
+        <p-tab value="1" [disabled]="!params.isImagesTabActive">Images</p-tab>
+      </p-tablist>
 
-						<label for="name">Name</label>
-					</span>
-				</div>
+      <p-tabpanels>
+      <p-tabpanel value="0">
+        <input name="uid" formControlName="uid" hidden />
 
-				<div class="field">
-					<span class="p-float-label">
-						<textarea
-							id="description"
-							[rows]="5"
-							[cols]="30"
-							formControlName="description"
-							pTextarea
-							[autoResize]="true"
-						></textarea>
+        <div class="field">
+          <span class="p-float-label">
+            <input
+              id="name"
+              type="text"
+              pInputText
+              formControlName="name"
+              />
 
-						<label for="description">Description</label>
-					</span>
-				</div>
+            <label for="name">Name</label>
+          </span>
+        </div>
 
-				<div class="field">
-					<span class="p-float-label">
-						<p-dropdown
-							id="country"
-							[options]="params.countries"
-							placeholder="Select a country"
-							formControlName="country"
-						></p-dropdown>
+        <div class="field">
+          <span class="p-float-label">
+            <textarea
+              id="description"
+              [rows]="5"
+              [cols]="30"
+              formControlName="description"
+              pTextarea
+              [autoResize]="true"
+            ></textarea>
 
-						<label for="country">Country</label>
-					</span>
-				</div>
+            <label for="description">Description</label>
+          </span>
+        </div>
 
-				<div class="field">
-					<span class="p-float-label">
-						<p-calendar
-							id="formedIn"
-							formControlName="formedIn"
-						></p-calendar>
+        <div class="field">
+          <span class="p-float-label">
+            <p-select
+              id="country"
+              [options]="params.countries"
+              placeholder="Select a country"
+              formControlName="country"
+            ></p-select>
 
-						<label for="formedIn">Formed in</label>
-					</span>
-				</div>
+            <label for="country">Country</label>
+          </span>
+        </div>
 
-				<div class="field">
-					<span class="p-float-label">
-						<p-multiSelect
-							id="styles"
-							[options]="params.styleList"
-							[filter]="false"
-							formControlName="styles"
-							display="chip"
-						></p-multiSelect>
+        <div class="field">
+          <span class="p-float-label">
+            <p-datepicker
+              id="formedIn"
+              formControlName="formedIn"
+            ></p-datepicker>
 
-						<label for="styles">Styles</label>
-					</span>
-				</div>
-			</p-tabPanel>
+            <label for="formedIn">Formed in</label>
+          </span>
+        </div>
 
-			<p-tabPanel header="Images" [disabled]="!params.isImagesTabActive">
-				<div class="field">
-					<span class="p-float-label">
-						<p-autoComplete
-							id="headerImage"
-							formControlName="headerImage"
-							[suggestions]="params.documents"
-							[minLength]="3"
-							[delay]="400"
-							field="name"
-							(completeMethod)="searchDocument($event)"
-						>
-						</p-autoComplete>
+        <div class="field">
+          <span class="p-float-label">
+            <p-multiSelect
+              id="styles"
+              [options]="params.styleList"
+              [filter]="false"
+              formControlName="styles"
+              display="chip"
+            ></p-multiSelect>
 
-						<label for="headerImage">Header image</label>
-					</span>
+            <label for="styles">Styles</label>
+          </span>
+        </div>
+      </p-tabpanel>
 
-					<p-image
-						*ngIf="params.formGroup.value.headerImage"
-						[src]="params.formGroup.value.headerImage?.filePath"
-						[preview]="true"
-						alt="Image"
-						width="200"
-					>
-					</p-image>
-				</div>
+      <p-tabpanel value="1">
+        <div class="field">
+          <span class="p-float-label">
+            <p-autoComplete
+              id="headerImage"
+              formControlName="headerImage"
+              [suggestions]="params.documents"
+              [minLength]="3"
+              [delay]="400"
+              field="name"
+              (completeMethod)="searchDocument($event)"
+              >
+            </p-autoComplete>
 
-				<div class="field">
-					<span class="p-float-label">
-						<p-autoComplete
-							id="mainImage"
-							formControlName="mainImage"
-							[suggestions]="params.documents"
-							[minLength]="3"
-							[delay]="400"
-							field="name"
-							(completeMethod)="searchDocument($event)"
-						>
-						</p-autoComplete>
+            <label for="headerImage">Header image</label>
+          </span>
 
-						<label for="mainImage">Main image</label>
-					</span>
+          @if (params.formGroup.value.headerImage) {
+            <p-image
+              [src]="params.formGroup.value.headerImage?.filePath"
+              [preview]="true"
+              alt="Image"
+              width="200"
+              >
+            </p-image>
+          }
+        </div>
 
-					<p-image
-						*ngIf="params.formGroup.value.mainImage"
-						[src]="params.formGroup.value.mainImage?.filePath"
-						[preview]="true"
-						alt="Image"
-						width="200"
-					>
-					</p-image>
-				</div>
-			</p-tabPanel>
+        <div class="field">
+          <span class="p-float-label">
+            <p-autoComplete
+              id="mainImage"
+              formControlName="mainImage"
+              [suggestions]="params.documents"
+              [minLength]="3"
+              [delay]="400"
+              field="name"
+              (completeMethod)="searchDocument($event)"
+              >
+            </p-autoComplete>
 
-			<div
-				style="margin-top: 10px"
-				fxLayout="row"
-				fxLayoutAlign="space-around"
-			>
-				<button
-					pButton
-					type="button"
-					label="Submit"
-					(click)="submit()"
-					[disabled]="!params.formGroup.valid"
-				></button>
+            <label for="mainImage">Main image</label>
+          </span>
 
-				<button
-					pButton
-					type="button"
-					label="Cancel"
-					(click)="cancel()"
-				></button>
-			</div>
-		</p-tabView>
-	</form>
+          @if (params.formGroup.value.mainImage) {
+            <p-image
+              [src]="params.formGroup.value.mainImage?.filePath"
+              [preview]="true"
+              alt="Image"
+              width="200"
+              >
+            </p-image>
+          }
+        </div>
+      </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+
+      <div
+        style="margin-top: 10px"
+        fxLayout="row"
+        fxLayoutAlign="space-around"
+        >
+        <button
+          pButton
+          type="button"
+          label="Submit"
+          (click)="submit()"
+          [disabled]="!params.formGroup.valid"
+        ></button>
+
+        <button
+          pButton
+          type="button"
+          label="Cancel"
+          (click)="cancel()"
+        ></button>
+      </div>
+  </form>
 </section>

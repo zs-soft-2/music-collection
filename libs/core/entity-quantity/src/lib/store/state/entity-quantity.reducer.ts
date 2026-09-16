@@ -25,7 +25,6 @@ export const entityQuantityAdapter: EntityAdapter<EntityQuantityEntity> =
 export const initialState: State = entityQuantityAdapter.getInitialState({
 	loading: false,
 	error: null,
-	selectedEntityQuantityId: null,
 });
 
 export const entityQuantityReducer = createReducer(

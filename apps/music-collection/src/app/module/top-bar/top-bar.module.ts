@@ -1,6 +1,6 @@
 import { AngularSvgIconModule } from 'angular-svg-icon';
 import { ButtonModule } from 'primeng/button';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { MenubarModule } from 'primeng/menubar';
 import { ToolbarModule } from 'primeng/toolbar';
 
@@ -21,7 +21,7 @@ import { TopBarComponent } from './component';
 		AngularSvgIconModule,
 		CoreAuthenticationViewModule,
 		ButtonModule,
-		DropdownModule,
+		SelectModule,
 		FormsModule,
 		RxLet,
 		MenubarModule,

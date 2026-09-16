@@ -31,7 +31,6 @@ export const initialState: State = releaseAdapter.getInitialState({
 	loading: false,
 	error: null,
 	searchResult: [],
-	selectedReleaseId: null,
 });
 
 export const releaseReducer = createReducer(

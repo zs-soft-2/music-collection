@@ -48,3 +48,5 @@ Thumbs.db
 /firestore-debug.log
 
 /.nx
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md

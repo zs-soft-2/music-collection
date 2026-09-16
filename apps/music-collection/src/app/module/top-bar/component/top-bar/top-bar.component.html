@@ -1,39 +1,35 @@
-<ng-container *ngIf="params$ | async as params">
-	<section class="top-bar">
-		<p-menubar [model]="params.menuItems">
-			<ng-template pTemplate="start">
-				<div class="start">
-					<svg-icon
-					src="assets/music.svg"
+@if (params$ | async; as params) {
+  <section class="top-bar">
+    <p-menubar [model]="params.menuItems">
+      <ng-template pTemplate="start">
+        <div class="start">
+          <svg-icon
+            src="assets/music.svg"
 					[svgStyle]="{
 						fill: '#656565',
 						'padding.px': 1,
 						'margin.px': 3
 					}"
-					(click)="imgClickHandler()"
-				>
-				</svg-icon>
-
-				<span class="title">musiCollection</span>
-				</div>
-			</ng-template>
-
-			<ng-template pTemplate="end">
-				<ng-container *mcIsAuthenticated="true">
-					<mc-user-profile
-						[user]="params.user"
-						(logout)="logoutHandler()"
-					></mc-user-profile>
-				</ng-container>
-
-				<ng-container *mcIsAuthenticated="false">
-					<i class="pi pi-sign-in"></i>
-
-					<span class="login">
-						<a (click)="loginClickHandler()">login</a>
-					</span>
-				</ng-container>
-			</ng-template>
-		</p-menubar>
-	</section>
-</ng-container>
+            (click)="imgClickHandler()"
+            >
+          </svg-icon>
+          <span class="title">musiCollection</span>
+        </div>
+      </ng-template>
+      <ng-template pTemplate="end">
+        <ng-container *mcIsAuthenticated="true">
+          <mc-user-profile
+            [user]="params.user"
+            (logout)="logoutHandler()"
+          ></mc-user-profile>
+        </ng-container>
+        <ng-container *mcIsAuthenticated="false">
+          <i class="pi pi-sign-in"></i>
+          <span class="login">
+            <a (click)="loginClickHandler()">login</a>
+          </span>
+        </ng-container>
+      </ng-template>
+    </p-menubar>
+  </section>
+}

@@ -37,7 +37,6 @@ export const initialState: State = documentAdapter.getInitialState({
 	loading: false,
 	error: null,
 	searchResult: [],
-	selectedDocumentId: null,
 	filePath: undefined,
 	importFilePath: {},
 });

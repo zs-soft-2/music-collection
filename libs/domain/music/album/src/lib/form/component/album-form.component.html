@@ -1,124 +1,133 @@
 <section class="album-form" *rxLet="params$; let params">
-	<form [formGroup]="params.formGroup">
-		<p-tabView>
-			<p-tabPanel header="Data">
-				<input name="uid" formControlName="uid" hidden />
+  <form [formGroup]="params.formGroup">
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0">Data</p-tab>
 
-				<div class="field">
-					<span class="p-float-label">
-						<p-autoComplete
-							formControlName="artist"
-							[suggestions]="params.artists"
-							[minLength]="3"
-							[delay]="400"
-							field="name"
-							(completeMethod)="searchArtist($event)"
-						></p-autoComplete>
+        <p-tab value="1" [disabled]="!params.isImagesTabActive">Images</p-tab>
+      </p-tablist>
 
-						<label for="artist">Artist</label>
-					</span>
-				</div>
+      <p-tabpanels>
+      <p-tabpanel value="0">
+        <input name="uid" formControlName="uid" hidden />
 
-				<div class="field">
-					<span class="p-float-label">
-						<input
-							id="name"
-							type="text"
-							pInputText
-							formControlName="name"
-						/>
+        <div class="field">
+          <span class="p-float-label">
+            <p-autoComplete
+              formControlName="artist"
+              [suggestions]="params.artists"
+              [minLength]="3"
+              [delay]="400"
+              field="name"
+              (completeMethod)="searchArtist($event)"
+            ></p-autoComplete>
 
-						<label for="name">Name</label>
-					</span>
-				</div>
+            <label for="artist">Artist</label>
+          </span>
+        </div>
 
-				<div class="field">
-					<span class="p-float-label">
-						<p-dropdown
-							id="format"
-							[options]="params.formatList"
-							placeholder="Select a format"
-							formControlName="format"
-						></p-dropdown>
+        <div class="field">
+          <span class="p-float-label">
+            <input
+              id="name"
+              type="text"
+              pInputText
+              formControlName="name"
+              />
 
-						<label for="format">Format</label>
-					</span>
-				</div>
+            <label for="name">Name</label>
+          </span>
+        </div>
 
-				<div class="field">
-					<span class="p-float-label">
-						<p-calendar
-							id="year"
-							formControlName="year"
-						></p-calendar>
+        <div class="field">
+          <span class="p-float-label">
+            <p-select
+              id="format"
+              [options]="params.formatList"
+              placeholder="Select a format"
+              formControlName="format"
+            ></p-select>
 
-						<label for="year">Year</label>
-					</span>
-				</div>
+            <label for="format">Format</label>
+          </span>
+        </div>
 
-				<div class="field">
-					<span class="p-float-label">
-						<p-multiSelect
-							id="styles"
-							[options]="params.styleList"
-							[filter]="false"
-							formControlName="styles"
-							display="chip"
-						></p-multiSelect>
+        <div class="field">
+          <span class="p-float-label">
+            <p-datepicker
+              id="year"
+              formControlName="year"
+            ></p-datepicker>
 
-						<label for="styles">Styles</label>
-					</span>
-				</div>
-			</p-tabPanel>
+            <label for="year">Year</label>
+          </span>
+        </div>
 
-			<p-tabPanel header="Images" [disabled]="!params.isImagesTabActive">
-				<div class="field">
-					<span class="p-float-label">
-						<p-autoComplete
-							id="coverImage"
-							formControlName="coverImage"
-							[suggestions]="params.documents"
-							[minLength]="3"
-							[delay]="400"
-							field="name"
-							(completeMethod)="searchDocument($event)"
-						>
-						</p-autoComplete>
+        <div class="field">
+          <span class="p-float-label">
+            <p-multiSelect
+              id="styles"
+              [options]="params.styleList"
+              [filter]="false"
+              formControlName="styles"
+              display="chip"
+            ></p-multiSelect>
 
-						<label for="coverImage">Cover image</label>
-					</span>
+            <label for="styles">Styles</label>
+          </span>
+        </div>
+      </p-tabpanel>
 
-					<p-image
-						*ngIf="params.formGroup.value.coverImage"
-						[src]="params.formGroup.value.coverImage?.filePath"
-						[preview]="true"
-						alt="Image"
-						width="200"
-					>
-					</p-image>
-				</div>
-			</p-tabPanel>
+      <p-tabpanel value="1">
+        <div class="field">
+          <span class="p-float-label">
+            <p-autoComplete
+              id="coverImage"
+              formControlName="coverImage"
+              [suggestions]="params.documents"
+              [minLength]="3"
+              [delay]="400"
+              field="name"
+              (completeMethod)="searchDocument($event)"
+              >
+            </p-autoComplete>
 
-			<div
-				style="margin-top: 10px"
-				fxLayout="row"
-				fxLayoutAlign="space-around"
-			>
-				<button
-					pButton
-					type="button"
-					label="Submit"
-					(click)="submit()"
-					[disabled]="!params.formGroup.valid"
-				></button>
+            <label for="coverImage">Cover image</label>
+          </span>
 
-				<button
-					pButton
-					type="button"
-					label="Cancel"
-					(click)="cancel()"
-				></button>
-			</div>
-		</p-tabView>
-	</form>
+          @if (params.formGroup.value.coverImage) {
+            <p-image
+              [src]="params.formGroup.value.coverImage?.filePath"
+              [preview]="true"
+              alt="Image"
+              width="200"
+              >
+            </p-image>
+          }
+        </div>
+      </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+
+      <div
+        style="margin-top: 10px"
+        fxLayout="row"
+        fxLayoutAlign="space-around"
+        >
+        <button
+          pButton
+          type="button"
+          label="Submit"
+          (click)="submit()"
+          [disabled]="!params.formGroup.valid"
+        ></button>
+
+        <button
+          pButton
+          type="button"
+          label="Cancel"
+          (click)="cancel()"
+        ></button>
+      </div>
+  </form>
 </section>

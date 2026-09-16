@@ -37,7 +37,6 @@ export const initialState: State = artistAdapter.getInitialState({
 	loading: false,
 	error: null,
 	searchResult: [],
-	selectedArtistId: null,
 });
 
 export const artistReducer = createReducer(

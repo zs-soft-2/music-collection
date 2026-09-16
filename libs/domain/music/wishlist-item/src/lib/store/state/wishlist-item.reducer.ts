@@ -34,7 +34,6 @@ export const initialState: State = wishlistItemAdapter.getInitialState({
 	loading: false,
 	error: null,
 	searchResult: [],
-	selectedWishlistItemId: null,
 });
 
 export const wishlistItemReducer = createReducer(

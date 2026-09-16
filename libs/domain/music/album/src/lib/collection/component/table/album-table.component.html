@@ -1,108 +1,108 @@
 <section class="album-table" *rxLet="params$; let params">
-	<p-table
-		[value]="params.albums"
-		[paginator]="true"
-		[rows]="10"
-		sortField="name"
-		sortMode="multiple"
-		styleClass="p-datatable-striped p-datatable-sm"
-		responsiveLayout="scroll"
-	>
-		<ng-template pTemplate="header">
-			<tr>
-				<th pSortableColumn="name">
-					Name <p-sortIcon field="name"></p-sortIcon>
-				</th>
+  <p-table
+    [value]="params.albums"
+    [paginator]="true"
+    [rows]="10"
+    sortField="name"
+    sortMode="multiple"
+    styleClass="p-datatable-striped p-datatable-sm"
+    responsiveLayout="scroll"
+    >
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="name">
+          Name <p-sortIcon field="name"></p-sortIcon>
+        </th>
 
-				<th pSortableColumn="artist.name">
-					Artist <p-sortIcon field="artist.name"></p-sortIcon>
-				</th>
+        <th pSortableColumn="artist.name">
+          Artist <p-sortIcon field="artist.name"></p-sortIcon>
+        </th>
 
-				<th pSortableColumn="year">
-					Year <p-sortIcon field="year"></p-sortIcon>
-				</th>
+        <th pSortableColumn="year">
+          Year <p-sortIcon field="year"></p-sortIcon>
+        </th>
 
-				<th>Styles</th>
+        <th>Styles</th>
 
-				<th>Cover</th>
+        <th>Cover</th>
 
-				<th></th>
-			</tr>
+        <th></th>
+      </tr>
 
-			<tr>
-				<th>
-					<p-autoComplete
-						[suggestions]="params.empty"
-						[showClear]="true"
-						(completeMethod)="searchByNameHandler($event)"
-						[minLength]="3"
-						[delay]="400"
-						class="p-inputtext-sm"
-					>
-					</p-autoComplete>
-				</th>
+      <tr>
+        <th>
+          <p-autoComplete
+            [suggestions]="params.empty"
+            [showClear]="true"
+            (completeMethod)="searchByNameHandler($event)"
+            [minLength]="3"
+            [delay]="400"
+            class="p-inputtext-sm"
+            >
+          </p-autoComplete>
+        </th>
 
-				<th>
-					<p-autoComplete
-						[suggestions]="params.empty"
-						[showClear]="true"
-						(completeMethod)="searchByArtistNameHandler($event)"
-						[minLength]="3"
-						[delay]="400"
-						class="p-inputtext-sm"
-					>
-					</p-autoComplete>
-				</th>
+        <th>
+          <p-autoComplete
+            [suggestions]="params.empty"
+            [showClear]="true"
+            (completeMethod)="searchByArtistNameHandler($event)"
+            [minLength]="3"
+            [delay]="400"
+            class="p-inputtext-sm"
+            >
+          </p-autoComplete>
+        </th>
 
-				<th></th>
-				<th></th>
-				<th></th>
-				<th></th>
-			</tr>
-		</ng-template>
+        <th></th>
+        <th></th>
+        <th></th>
+        <th></th>
+      </tr>
+    </ng-template>
 
-		<ng-template pTemplate="body" let-album>
-			<tr>
-				<td>{{ album.name }}</td>
+    <ng-template pTemplate="body" let-album>
+      <tr>
+        <td>{{ album.name }}</td>
 
-				<td>{{ album.artist.name }}</td>
+        <td>{{ album.artist.name }}</td>
 
-				<td>{{ album.year | date : 'yyyy' }}</td>
+        <td>{{ album.year | date : 'yyyy' }}</td>
 
-				<td>
-					<ng-container *ngFor="let style of album.styles">
-						<div>
-							<p-chip styleClass="style">
-								{{ style }}
-							</p-chip>
-						</div>
-					</ng-container>
-				</td>
+        <td>
+          @for (style of album.styles; track style) {
+            <div>
+              <p-chip styleClass="style">
+                {{ style }}
+              </p-chip>
+            </div>
+          }
+        </td>
 
-				<td>
-					<ng-container *ngIf="album.coverImage">
-						<i class="pi pi-image"></i>
-					</ng-container>
-				</td>
+        <td>
+          @if (album.coverImage) {
+            <i class="pi pi-image"></i>
+          }
+        </td>
 
-				<td>
-					<button
-						pButton
-						pRipple
-						icon="pi pi-pencil"
-						class="p-button-rounded p-button-success mr-2"
-						(click)="editAlbum(album)"
-					></button>
+        <td>
+          <button
+            pButton
+            pRipple
+            icon="pi pi-pencil"
+            class="p-button-rounded p-button-success mr-2"
+            (click)="editAlbum(album)"
+          ></button>
 
-					<button
-						pButton
-						pRipple
-						icon="pi pi-trash"
-						class="p-button-rounded p-button-warning"
-						(click)="deleteAlbum(album)"
-					></button>
-				</td>
-			</tr>
-		</ng-template>
-	</p-table>
+          <button
+            pButton
+            pRipple
+            icon="pi pi-trash"
+            class="p-button-rounded p-button-warning"
+            (click)="deleteAlbum(album)"
+          ></button>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
 </section>

@@ -4,13 +4,15 @@
 	"projectType": "library",
 	"sourceRoot": "libs/domain/music/album/src",
 	"prefix": "music-collection",
+	"tags": [],
 	"targets": {
 		"test": {
 			"executor": "@nx/jest:jest",
 			"outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
 			"options": {
 				"jestConfig": "libs/domain/music/album/jest.config.ts",
-				"passWithNoTests": true
+				"passWithNoTests": true,
+				"tsConfig": "libs/domain/music/album/tsconfig.spec.json"
 			}
 		},
 		"lint": {
@@ -22,6 +24,5 @@
 				]
 			}
 		}
-	},
-	"tags": []
+	}
 }

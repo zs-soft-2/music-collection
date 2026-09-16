@@ -1,96 +1,96 @@
 <section class="document-form" *rxLet="params$; let params">
-	<form [formGroup]="params.formGroup">
-		<input name="uid" formControlName="uid" hidden />
+  <form [formGroup]="params.formGroup">
+    <input name="uid" formControlName="uid" hidden />
 
-		<div class="field">
-			<span class="p-float-label">
-				<input
-					id="name"
-					type="text"
-					pInputText
-					formControlName="name"
-				/>
+    <div class="field">
+      <span class="p-float-label">
+        <input
+          id="name"
+          type="text"
+          pInputText
+          formControlName="name"
+          />
 
-				<label for="name">Name</label>
-			</span>
-		</div>
+        <label for="name">Name</label>
+      </span>
+    </div>
 
-		<div class="field">
-			<span>
-				<label for="file"></label>
+    <div class="field">
+      <span>
+        <label for="file"></label>
 
-				<p-fileUpload
-					name="file"
-					[customUpload]="true"
-					(uploadHandler)="fileUpload($event)"
-				></p-fileUpload>
-			</span>
+        <p-fileUpload
+          name="file"
+          [customUpload]="true"
+          (uploadHandler)="fileUpload($event)"
+        ></p-fileUpload>
+      </span>
 
-			<ng-container *ngIf="params.formGroup.value.filePath">
-				<p-image
-					[src]="params.formGroup.value.filePath"
-					[preview]="true"
-					alt="Image"
-					width="250"
-				>
-				</p-image>
-			</ng-container>
-		</div>
+      @if (params.formGroup.value.filePath) {
+        <p-image
+          [src]="params.formGroup.value.filePath"
+          [preview]="true"
+          alt="Image"
+          width="250"
+          >
+        </p-image>
+      }
+    </div>
 
-		<div class="field">
-			<span class="p-float-label">
-				<input
-					id="filePath"
-					type="text"
-					pInputText
-					formControlName="filePath"
-				/>
+    <div class="field">
+      <span class="p-float-label">
+        <input
+          id="filePath"
+          type="text"
+          pInputText
+          formControlName="filePath"
+          />
 
-				<label for="filePath">File path</label>
-			</span>
-		</div>
+        <label for="filePath">File path</label>
+      </span>
+    </div>
 
-		<div class="field">
-			<span class="p-float-label">
-				<input
-					id="originalName"
-					type="text"
-					pInputText
-					formControlName="originalName"
-				/>
+    <div class="field">
+      <span class="p-float-label">
+        <input
+          id="originalName"
+          type="text"
+          pInputText
+          formControlName="originalName"
+          />
 
-				<label for="originalName">Original name</label>
-			</span>
-		</div>
+        <label for="originalName">Original name</label>
+      </span>
+    </div>
 
-		<div class="field">
-			<span class="p-float-label">
-				<input
-					id="fileType"
-					type="text"
-					pInputText
-					formControlName="fileType"
-				/>
+    <div class="field">
+      <span class="p-float-label">
+        <input
+          id="fileType"
+          type="text"
+          pInputText
+          formControlName="fileType"
+          />
 
-				<label for="fileType">File type</label>
-			</span>
-		</div>
-	</form>
+        <label for="fileType">File type</label>
+      </span>
+    </div>
+  </form>
 
-	<div style="margin-top: 10px" fxLayout="row" fxLayoutAlign="space-around">
-		<button
-			pButton
-			type="button"
-			label="Submit"
-			(click)="submit()"
-			[disabled]="!params.formGroup.valid"
-		></button>
+  <div style="margin-top: 10px" fxLayout="row" fxLayoutAlign="space-around">
+    <button
+      pButton
+      type="button"
+      label="Submit"
+      (click)="submit()"
+      [disabled]="!params.formGroup.valid"
+    ></button>
 
-		<button
-			pButton
-			type="button"
-			label="Cancel"
-			(click)="cancel()"
-		></button>
-	</div>
+    <button
+      pButton
+      type="button"
+      label="Cancel"
+      (click)="cancel()"
+    ></button>
+  </div>
 </section>
