@@ -8,7 +8,7 @@ describe('ReleaseFormComponent', () => {
 
 	beforeEach(async(() => {
 		TestBed.configureTestingModule({
-			declarations: [ReleaseFormComponent],
+			imports: [ReleaseFormComponent],
 		}).compileComponents();
 	}));
 

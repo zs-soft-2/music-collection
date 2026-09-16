@@ -15,7 +15,6 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DocumentFormComponent } from './component';
 
 @NgModule({
-	declarations: [DocumentFormComponent],
 	exports: [DocumentFormComponent],
 	imports: [
 		CommonModule,
@@ -30,6 +29,7 @@ import { DocumentFormComponent } from './component';
 		MultiSelectModule,
 		ReactiveFormsModule,
 		TabsModule,
+		DocumentFormComponent,
 	],
 })
 export class DocumentFormModule {}

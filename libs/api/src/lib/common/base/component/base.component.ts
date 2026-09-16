@@ -11,7 +11,6 @@ import { Entity } from '../../entity';
 	// ezért itt szándékosan nem követjük a szabályt.
 	// eslint-disable-next-line @angular-eslint/prefer-on-push-component-change-detection
 	changeDetection: ChangeDetectionStrategy.Eager,
-  standalone: false,
 })
 export abstract class BaseComponent implements OnDestroy {
 	protected destroy: Subject<boolean>;

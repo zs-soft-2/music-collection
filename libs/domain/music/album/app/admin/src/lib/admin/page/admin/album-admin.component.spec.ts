@@ -11,11 +11,11 @@ describe('AlbumAdminComponent', () => {
 
 	beforeEach(async(() => {
 		TestBed.configureTestingModule({
-			declarations: [AlbumAdminComponent],
 			imports: [
 				HttpClientTestingModule,
 				RouterTestingModule,
 				AlbumCollectionModule,
+				AlbumAdminComponent,
 			],
 		}).compileComponents();
 	}));

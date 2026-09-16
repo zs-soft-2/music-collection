@@ -59,11 +59,7 @@ export class DocumentFormService {
 					this.documentStateService.selectEntityById$(
 						data['documentId']
 					),
-					this.documentStateService.selectFilePath$().pipe(
-						tap(() => {
-							console.log;
-						})
-					),
+					this.documentStateService.selectFilePath$(),
 				])
 			),
 			switchMap(([document, filePath]) => {

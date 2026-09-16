@@ -9,7 +9,6 @@ import { NgModule } from '@angular/core';
 import { LabelListComponent, LabelTableComponent } from './component';
 
 @NgModule({
-	declarations: [LabelListComponent, LabelTableComponent],
 	exports: [LabelListComponent, LabelTableComponent],
 	imports: [
 		CommonModule,
@@ -17,6 +16,8 @@ import { LabelListComponent, LabelTableComponent } from './component';
 		ButtonModule,
 		ChipModule,
 		TableModule,
+		LabelListComponent,
+		LabelTableComponent,
 	],
 })
 export class LabelCollectionModule {}

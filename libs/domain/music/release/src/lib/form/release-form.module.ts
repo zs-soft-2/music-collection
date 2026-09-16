@@ -12,7 +12,6 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ReleaseFormComponent } from './component';
 
 @NgModule({
-	declarations: [ReleaseFormComponent],
 	exports: [ReleaseFormComponent],
 	imports: [
 		CommonModule,
@@ -24,6 +23,7 @@ import { ReleaseFormComponent } from './component';
 		InputTextModule,
 		MultiSelectModule,
 		ReactiveFormsModule,
+		ReleaseFormComponent,
 	],
 })
 export class ReleaseFormModule {}

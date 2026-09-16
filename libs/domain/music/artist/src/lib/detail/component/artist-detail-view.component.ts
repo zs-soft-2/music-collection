@@ -6,13 +6,19 @@ import {
 	Output,
 	inject,
 } from '@angular/core';
-import {
-	AlbumEntity,
-	BaseComponent,
-} from '@music-collection/api';
+import { AlbumEntity, BaseComponent } from '@music-collection/api';
 
 import { ArtistDetailViewService } from './artist-detail-view.service';
 import { ArtistDetailViewStore } from './artist-detail-view.store';
+import { Bind } from 'primeng/bind';
+import { Image } from 'primeng/image';
+import { Tabs, TabList, Tab } from 'primeng/tabs';
+import { Ripple } from 'primeng/ripple';
+import { Chip } from 'primeng/chip';
+import { DataView } from 'primeng/dataview';
+import { PrimeTemplate } from 'primeng/api';
+import { AlbumItemViewModule } from '@music-collection/domain/album';
+import { DatePipe } from '@angular/common';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -20,7 +26,19 @@ import { ArtistDetailViewStore } from './artist-detail-view.store';
 	selector: 'mc-artist-detail-view',
 	templateUrl: './artist-detail-view.component.html',
 	styleUrls: ['./artist-detail-view.component.scss'],
-  standalone: false,
+	imports: [
+		Bind,
+		Image,
+		Tabs,
+		TabList,
+		Ripple,
+		Tab,
+		Chip,
+		DataView,
+		PrimeTemplate,
+		AlbumItemViewModule,
+		DatePipe,
+	],
 })
 export class ArtistDetailViewComponent extends BaseComponent implements OnInit {
 	private componentService = inject(ArtistDetailViewService);

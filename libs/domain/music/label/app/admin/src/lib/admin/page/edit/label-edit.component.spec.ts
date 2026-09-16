@@ -9,8 +9,7 @@ describe('LabelEditComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [LabelEditComponent],
-			imports: [LabelFormModule],
+			imports: [LabelFormModule, LabelEditComponent],
 		}).compileComponents();
 	}));
 

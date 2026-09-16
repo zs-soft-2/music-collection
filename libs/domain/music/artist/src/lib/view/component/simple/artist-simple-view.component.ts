@@ -6,13 +6,28 @@ import {
 	Output,
 } from '@angular/core';
 import { ArtistEntity, BaseComponent } from '@music-collection/api';
+import {
+	DefaultLayoutDirective,
+	DefaultFlexDirective,
+	DefaultLayoutAlignDirective,
+} from 'ng-flex-layout/flex';
+import { Bind } from 'primeng/bind';
+import { Chip } from 'primeng/chip';
+import { Image } from 'primeng/image';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-artist-simple-view',
 	templateUrl: './artist-simple-view.component.html',
 	styleUrls: ['./artist-simple-view.component.scss'],
-	standalone: false,
+	imports: [
+		DefaultLayoutDirective,
+		DefaultFlexDirective,
+		DefaultLayoutAlignDirective,
+		Bind,
+		Chip,
+		Image,
+	],
 })
 export class ArtistSimpleViewComponent extends BaseComponent {
 	@Input()

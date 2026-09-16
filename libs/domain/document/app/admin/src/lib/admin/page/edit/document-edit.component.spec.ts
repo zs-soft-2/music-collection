@@ -9,8 +9,7 @@ describe('DocumentEditComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [DocumentEditComponent],
-			imports: [DocumentFormModule],
+			imports: [DocumentFormModule, DocumentEditComponent],
 		}).compileComponents();
 	}));
 

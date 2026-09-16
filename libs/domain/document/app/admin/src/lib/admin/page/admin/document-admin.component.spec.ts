@@ -11,11 +11,11 @@ describe('DocumentAdminComponent', () => {
 
 	beforeEach(async(() => {
 		TestBed.configureTestingModule({
-			declarations: [DocumentAdminComponent],
 			imports: [
 				HttpClientTestingModule,
 				RouterTestingModule,
 				DocumentCollectionModule,
+				DocumentAdminComponent,
 			],
 		}).compileComponents();
 	}));

@@ -9,8 +9,7 @@ describe('ErrorComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ErrorComponent],
-			imports: [HttpClientTestingModule],
+			imports: [HttpClientTestingModule, ErrorComponent],
 		}).compileComponents();
 	}));
 

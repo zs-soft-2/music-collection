@@ -14,7 +14,6 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AlbumFormComponent } from './component';
 
 @NgModule({
-	declarations: [AlbumFormComponent],
 	exports: [AlbumFormComponent],
 	imports: [
 		CommonModule,
@@ -28,6 +27,7 @@ import { AlbumFormComponent } from './component';
 		MultiSelectModule,
 		ReactiveFormsModule,
 		TabsModule,
+		AlbumFormComponent,
 	],
 })
 export class AlbumFormModule {}

@@ -8,7 +8,7 @@ describe('AlbumItemViewComponent', () => {
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			declarations: [AlbumItemViewComponent],
+			imports: [AlbumItemViewComponent],
 		}).compileComponents();
 
 		fixture = TestBed.createComponent(AlbumItemViewComponent);

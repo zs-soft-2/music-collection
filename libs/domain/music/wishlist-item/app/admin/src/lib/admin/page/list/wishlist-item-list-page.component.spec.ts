@@ -9,8 +9,10 @@ describe('WishlistItemListComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [WishlistItemListPageComponent],
-			imports: [WishlistItemCollectionModule],
+			imports: [
+				WishlistItemCollectionModule,
+				WishlistItemListPageComponent,
+			],
 		}).compileComponents();
 	}));
 

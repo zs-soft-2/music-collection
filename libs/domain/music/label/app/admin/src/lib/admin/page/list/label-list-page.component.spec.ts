@@ -9,8 +9,7 @@ describe('LabelListComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [LabelListPageComponent],
-			imports: [LabelCollectionModule],
+			imports: [LabelCollectionModule, LabelListPageComponent],
 		}).compileComponents();
 	}));
 

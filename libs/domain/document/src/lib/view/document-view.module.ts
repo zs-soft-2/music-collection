@@ -7,7 +7,10 @@ import {
 } from './component';
 
 @NgModule({
-	declarations: [DocumentDetailViewComponent, DocumentSimpleViewComponent],
-	imports: [CommonModule],
+	imports: [
+		CommonModule,
+		DocumentDetailViewComponent,
+		DocumentSimpleViewComponent,
+	],
 })
 export class DocumentViewModule {}

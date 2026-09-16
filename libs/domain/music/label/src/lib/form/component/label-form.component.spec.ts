@@ -8,7 +8,7 @@ describe('LabelFormComponent', () => {
 
 	beforeEach(async(() => {
 		TestBed.configureTestingModule({
-			declarations: [LabelFormComponent],
+			imports: [LabelFormComponent],
 		}).compileComponents();
 	}));
 

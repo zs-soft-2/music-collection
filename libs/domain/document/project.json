@@ -19,8 +19,8 @@
 			"executor": "@nx/eslint:lint",
 			"options": {
 				"lintFilePatterns": [
-					"libs/core/storage/**/*.ts",
-					"libs/core/storage/**/*.html"
+					"libs/domain/document/**/*.ts",
+					"libs/domain/document/**/*.html"
 				]
 			}
 		}

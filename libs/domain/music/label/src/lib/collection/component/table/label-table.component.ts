@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	OnInit,
+	inject,
+} from '@angular/core';
 import {
 	LabelEntity,
 	LabelTableParams,
@@ -7,6 +12,13 @@ import {
 import { Observable } from 'rxjs';
 
 import { LabelTableService } from './label-table.service';
+import { Bind } from 'primeng/bind';
+import { Table } from 'primeng/table';
+import { PrimeTemplate } from 'primeng/api';
+import { AutoComplete } from 'primeng/autocomplete';
+import { Ripple } from 'primeng/ripple';
+import { ButtonDirective } from 'primeng/button';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -14,7 +26,15 @@ import { LabelTableService } from './label-table.service';
 	selector: 'mc-label-table',
 	templateUrl: './label-table.component.html',
 	styleUrls: ['./label-table.component.scss'],
-	standalone: false,
+	imports: [
+		Bind,
+		Table,
+		PrimeTemplate,
+		AutoComplete,
+		Ripple,
+		ButtonDirective,
+		AsyncPipe,
+	],
 })
 export class LabelTableComponent extends BaseComponent implements OnInit {
 	private componentService = inject(LabelTableService);

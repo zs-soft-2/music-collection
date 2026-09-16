@@ -9,8 +9,7 @@ describe('CollectionItemEditComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [CollectionItemEditComponent],
-			imports: [CollectionItemFormModule],
+			imports: [CollectionItemFormModule, CollectionItemEditComponent],
 		}).compileComponents();
 	}));
 

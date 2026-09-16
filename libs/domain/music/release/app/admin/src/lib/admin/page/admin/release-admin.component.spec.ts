@@ -11,11 +11,11 @@ describe('ReleaseAdminComponent', () => {
 
 	beforeEach(async(() => {
 		TestBed.configureTestingModule({
-			declarations: [ReleaseAdminComponent],
 			imports: [
 				HttpClientTestingModule,
 				RouterTestingModule,
 				ReleaseCollectionModule,
+				ReleaseAdminComponent,
 			],
 		}).compileComponents();
 	}));

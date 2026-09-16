@@ -18,11 +18,6 @@ import {
 } from './page/list';
 
 @NgModule({
-	declarations: [
-		LabelAdminComponent,
-		LabelEditComponent,
-		LabelListPageComponent,
-	],
 	imports: [
 		CommonModule,
 		LabelAdminRoutingModule,
@@ -31,6 +26,9 @@ import {
 		LabelCollectionModule,
 		ButtonModule,
 		ToolbarModule,
+		LabelAdminComponent,
+		LabelEditComponent,
+		LabelListPageComponent,
 	],
 	providers: [LabelEditResolverService, LabelListPageResolverService],
 })

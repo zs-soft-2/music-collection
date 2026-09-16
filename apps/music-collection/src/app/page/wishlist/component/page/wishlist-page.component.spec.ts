@@ -8,7 +8,7 @@ describe('WishlistPageComponent', () => {
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			declarations: [WishlistPageComponent],
+			imports: [WishlistPageComponent],
 		}).compileComponents();
 
 		fixture = TestBed.createComponent(WishlistPageComponent);

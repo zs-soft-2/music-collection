@@ -100,7 +100,7 @@ export class DocumentUtilServiceImpl extends DocumentUtilService {
 		};
 	}
 
-	public createFilePath(data: string, folder: string = '/'): string {
+	public createFilePath(data: string, folder = '/'): string {
 		return folder + objectHash(data);
 	}
 

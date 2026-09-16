@@ -8,7 +8,7 @@ describe('ArtistDetailViewComponent', () => {
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			declarations: [ArtistDetailViewComponent],
+			imports: [ArtistDetailViewComponent],
 		}).compileComponents();
 
 		fixture = TestBed.createComponent(ArtistDetailViewComponent);

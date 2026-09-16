@@ -1,7 +1,12 @@
 import { Observable } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	OnInit,
+	inject,
+} from '@angular/core';
+import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
 import {
 	AlbumStateService,
 	BaseComponent,
@@ -9,13 +14,25 @@ import {
 } from '@music-collection/api';
 
 import { AlbumAdminPermissionsService } from '../../service';
+import { Bind } from 'primeng/bind';
+import { Toolbar } from 'primeng/toolbar';
+import { NgxPermissionsModule } from 'ngx-permissions';
+import { Button } from 'primeng/button';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-album-admin',
 	templateUrl: './album-admin.component.html',
 	styleUrls: ['./album-admin.component.scss'],
-	standalone: false,
+	imports: [
+		Bind,
+		Toolbar,
+		NgxPermissionsModule,
+		Button,
+		RouterOutlet,
+		AsyncPipe,
+	],
 })
 export class AlbumAdminComponent extends BaseComponent implements OnInit {
 	private activatedRoute = inject(ActivatedRoute);

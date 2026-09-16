@@ -11,7 +11,6 @@ import { ReleaseViewModule } from '../view/release-view.module';
 import { ReleaseListComponent, ReleaseTableComponent } from './component';
 
 @NgModule({
-	declarations: [ReleaseListComponent, ReleaseTableComponent],
 	exports: [ReleaseListComponent, ReleaseTableComponent],
 	imports: [
 		CommonModule,
@@ -21,6 +20,8 @@ import { ReleaseListComponent, ReleaseTableComponent } from './component';
 		ChipModule,
 		ReleaseViewModule,
 		TableModule,
+		ReleaseListComponent,
+		ReleaseTableComponent,
 	],
 })
 export class ReleaseCollectionModule {}

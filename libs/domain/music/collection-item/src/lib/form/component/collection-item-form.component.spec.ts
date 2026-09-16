@@ -8,7 +8,7 @@ describe('CollectionItemFormComponent', () => {
 
 	beforeEach(async(() => {
 		TestBed.configureTestingModule({
-			declarations: [CollectionItemFormComponent],
+			imports: [CollectionItemFormComponent],
 		}).compileComponents();
 	}));
 

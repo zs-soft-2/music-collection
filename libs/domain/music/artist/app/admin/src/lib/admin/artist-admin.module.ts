@@ -20,12 +20,6 @@ import {
 } from './page/list';
 
 @NgModule({
-	declarations: [
-		ArtistAdminComponent,
-		ArtistEditComponent,
-		ArtistImportComponent,
-		ArtistListPageComponent,
-	],
 	imports: [
 		CommonModule,
 		ArtistAdminRoutingModule,
@@ -35,6 +29,10 @@ import {
 		ButtonModule,
 		FileUploadModule,
 		ToolbarModule,
+		ArtistAdminComponent,
+		ArtistEditComponent,
+		ArtistImportComponent,
+		ArtistListPageComponent,
 	],
 	providers: [ArtistEditResolverService, ArtistListPageResolverService],
 })

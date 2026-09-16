@@ -9,8 +9,7 @@ describe('ReleaseListComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ReleaseListPageComponent],
-			imports: [ReleaseCollectionModule],
+			imports: [ReleaseCollectionModule, ReleaseListPageComponent],
 		}).compileComponents();
 	}));
 

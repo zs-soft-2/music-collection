@@ -19,11 +19,6 @@ import {
 import { CollectionSidebarComponent } from './component/sidebar';
 
 @NgModule({
-	declarations: [
-		CollectionPageComponent,
-		CollectionContentComponent,
-		CollectionSidebarComponent,
-	],
 	imports: [
 		CommonModule,
 		AccordionModule,
@@ -36,6 +31,9 @@ import { CollectionSidebarComponent } from './component/sidebar';
 		RadioButtonModule,
 		ScrollTopModule,
 		DrawerModule,
+		CollectionPageComponent,
+		CollectionContentComponent,
+		CollectionSidebarComponent,
 	],
 })
 export class CollectionModule {}

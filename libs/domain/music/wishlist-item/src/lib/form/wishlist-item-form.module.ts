@@ -17,7 +17,6 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { WishlistItemFormComponent } from './component';
 
 @NgModule({
-	declarations: [WishlistItemFormComponent],
 	exports: [WishlistItemFormComponent],
 	imports: [
 		CommonModule,
@@ -34,6 +33,7 @@ import { WishlistItemFormComponent } from './component';
 		MultiSelectModule,
 		ReactiveFormsModule,
 		TabsModule,
+		WishlistItemFormComponent,
 	],
 })
 export class WishlistItemFormModule {}

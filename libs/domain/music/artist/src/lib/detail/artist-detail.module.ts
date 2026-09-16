@@ -12,7 +12,6 @@ import { ArtistDetailViewComponent } from './component';
 
 @NgModule({
 	exports: [ArtistDetailViewComponent],
-	declarations: [ArtistDetailViewComponent],
 	imports: [
 		CommonModule,
 		AlbumItemViewModule,
@@ -21,6 +20,7 @@ import { ArtistDetailViewComponent } from './component';
 		FlexLayoutModule,
 		ImageModule,
 		TabsModule,
+		ArtistDetailViewComponent,
 	],
 })
 export class ArtistDetailModule {}

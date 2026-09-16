@@ -26,7 +26,14 @@
         <ng-container *mcIsAuthenticated="false">
           <i class="pi pi-sign-in"></i>
           <span class="login">
-            <a (click)="loginClickHandler()">login</a>
+            <a
+              role="button"
+              tabindex="0"
+              (click)="loginClickHandler()"
+              (keydown.enter)="loginClickHandler()"
+              (keydown.space)="loginClickHandler(); $event.preventDefault()"
+              >login</a
+            >
           </span>
         </ng-container>
       </ng-template>

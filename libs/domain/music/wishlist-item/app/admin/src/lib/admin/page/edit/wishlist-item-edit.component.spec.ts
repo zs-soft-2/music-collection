@@ -9,8 +9,7 @@ describe('WishlistItemEditComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [WishlistItemEditComponent],
-			imports: [WishlistItemFormModule],
+			imports: [WishlistItemFormModule, WishlistItemEditComponent],
 		}).compileComponents();
 	}));
 

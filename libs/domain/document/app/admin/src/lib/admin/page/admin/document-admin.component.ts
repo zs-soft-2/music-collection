@@ -1,7 +1,12 @@
 import { Observable } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	OnInit,
+	inject,
+} from '@angular/core';
+import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
 import {
 	DocumentStateService,
 	BaseComponent,
@@ -9,13 +14,25 @@ import {
 } from '@music-collection/api';
 
 import { DocumentAdminPermissionsService } from '../../service';
+import { Bind } from 'primeng/bind';
+import { Toolbar } from 'primeng/toolbar';
+import { NgxPermissionsModule } from 'ngx-permissions';
+import { Button } from 'primeng/button';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-document-admin',
 	templateUrl: './document-admin.component.html',
 	styleUrls: ['./document-admin.component.scss'],
-  standalone: false,
+	imports: [
+		Bind,
+		Toolbar,
+		NgxPermissionsModule,
+		Button,
+		RouterOutlet,
+		AsyncPipe,
+	],
 })
 export class DocumentAdminComponent extends BaseComponent implements OnInit {
 	private activatedRoute = inject(ActivatedRoute);

@@ -8,7 +8,7 @@ describe('CollectionItemDetailViewComponent', () => {
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			declarations: [CollectionItemDetailViewComponent],
+			imports: [CollectionItemDetailViewComponent],
 		}).compileComponents();
 
 		fixture = TestBed.createComponent(CollectionItemDetailViewComponent);

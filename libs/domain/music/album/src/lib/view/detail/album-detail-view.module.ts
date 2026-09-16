@@ -8,7 +8,11 @@ import { AlbumDetailViewComponent } from './album-detail-view.component';
 
 @NgModule({
 	exports: [AlbumDetailViewComponent],
-	declarations: [AlbumDetailViewComponent],
-	imports: [CommonModule, FlexLayoutModule, ImageModule],
+	imports: [
+		CommonModule,
+		FlexLayoutModule,
+		ImageModule,
+		AlbumDetailViewComponent,
+	],
 })
 export class AlbumDetailViewModule {}

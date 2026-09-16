@@ -15,7 +15,6 @@ import { WishlistRoutingModule } from './wishlist-routing.module';
 import { WishlistContentComponent, WishlistPageComponent } from './component';
 
 @NgModule({
-	declarations: [WishlistPageComponent, WishlistContentComponent],
 	imports: [
 		CommonModule,
 		AccordionModule,
@@ -28,6 +27,8 @@ import { WishlistContentComponent, WishlistPageComponent } from './component';
 		RadioButtonModule,
 		ScrollTopModule,
 		DrawerModule,
+		WishlistPageComponent,
+		WishlistContentComponent,
 	],
 })
 export class WishlistModule {}

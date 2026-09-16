@@ -14,7 +14,6 @@ import { TopBarComponent } from './component';
 
 @NgModule({
 	exports: [TopBarComponent],
-	declarations: [TopBarComponent],
 	imports: [
 		CommonModule,
 		AngularSvgIconModule,
@@ -26,6 +25,7 @@ import { TopBarComponent } from './component';
 		NgOptimizedImage,
 		ToolbarModule,
 		UserProfileModule,
+		TopBarComponent,
 	],
 })
 export class TopBarModule {}

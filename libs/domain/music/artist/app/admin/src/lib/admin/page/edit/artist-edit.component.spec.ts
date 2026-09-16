@@ -9,8 +9,7 @@ describe('ArtistEditComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ArtistEditComponent],
-			imports: [ArtistFormModule],
+			imports: [ArtistFormModule, ArtistEditComponent],
 		}).compileComponents();
 	}));
 

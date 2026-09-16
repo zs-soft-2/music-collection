@@ -8,7 +8,7 @@ describe('AlbumTableComponent', () => {
 
 	beforeEach(async(() => {
 		TestBed.configureTestingModule({
-			declarations: [AlbumTableComponent],
+			imports: [AlbumTableComponent],
 		}).compileComponents();
 	}));
 

@@ -7,7 +7,10 @@ import {
 } from './component';
 
 @NgModule({
-	declarations: [LabelDetailViewComponent, LabelSimpleViewComponent],
-	imports: [CommonModule],
+	imports: [
+		CommonModule,
+		LabelDetailViewComponent,
+		LabelSimpleViewComponent,
+	],
 })
 export class LabelViewModule {}

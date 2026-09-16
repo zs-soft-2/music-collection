@@ -1,13 +1,19 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	OnInit,
+	inject,
+} from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { BaseComponent } from '@music-collection/api';
+import { DocumentFormModule } from '@music-collection/domain/document';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-document-edit',
 	templateUrl: './document-edit.component.html',
 	styleUrls: ['./document-edit.component.scss'],
-	standalone: false,
+	imports: [DocumentFormModule],
 })
 export class DocumentEditComponent extends BaseComponent implements OnInit {
 	private activatedRoute = inject(ActivatedRoute);

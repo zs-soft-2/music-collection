@@ -11,7 +11,6 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { LabelFormComponent } from './component';
 
 @NgModule({
-	declarations: [LabelFormComponent],
 	exports: [LabelFormComponent],
 	imports: [
 		CommonModule,
@@ -22,6 +21,7 @@ import { LabelFormComponent } from './component';
 		InputTextModule,
 		MultiSelectModule,
 		ReactiveFormsModule,
+		LabelFormComponent,
 	],
 })
 export class LabelFormModule {}

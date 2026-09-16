@@ -16,7 +16,6 @@ import {
 } from './component';
 
 @NgModule({
-	declarations: [WishlistItemListComponent, WishlistItemTableComponent],
 	exports: [WishlistItemListComponent, WishlistItemTableComponent],
 	imports: [
 		CommonModule,
@@ -28,6 +27,8 @@ import {
 		FlexLayoutModule,
 		TableModule,
 		WishlistItemViewModule,
+		WishlistItemListComponent,
+		WishlistItemTableComponent,
 	],
 })
 export class WishlistItemCollectionModule {}

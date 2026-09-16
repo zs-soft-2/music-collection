@@ -9,8 +9,10 @@ describe('CollectionItemListComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [CollectionItemListPageComponent],
-			imports: [CollectionItemCollectionModule],
+			imports: [
+				CollectionItemCollectionModule,
+				CollectionItemListPageComponent,
+			],
 		}).compileComponents();
 	}));
 

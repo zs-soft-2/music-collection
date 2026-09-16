@@ -11,7 +11,6 @@ import { AlbumSimpleViewModule } from '../view/simple';
 import { AlbumListComponent, AlbumTableComponent } from './component';
 
 @NgModule({
-	declarations: [AlbumListComponent, AlbumTableComponent],
 	exports: [AlbumListComponent, AlbumTableComponent],
 	imports: [
 		CommonModule,
@@ -21,6 +20,8 @@ import { AlbumListComponent, AlbumTableComponent } from './component';
 		CarouselModule,
 		ChipModule,
 		TableModule,
+		AlbumListComponent,
+		AlbumTableComponent,
 	],
 })
 export class AlbumCollectionModule {}

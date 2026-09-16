@@ -5,7 +5,6 @@ import { BreadcrumbComponent } from './component/breadcrumb';
 
 @NgModule({
 	exports: [BreadcrumbComponent],
-	declarations: [BreadcrumbComponent],
-	imports: [CommonModule],
+	imports: [CommonModule, BreadcrumbComponent],
 })
 export class BreadcrumbModule {}

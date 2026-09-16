@@ -18,11 +18,6 @@ import {
 } from './page/list';
 
 @NgModule({
-	declarations: [
-		AlbumAdminComponent,
-		AlbumEditComponent,
-		AlbumListPageComponent,
-	],
 	imports: [
 		CommonModule,
 		AlbumAdminRoutingModule,
@@ -31,6 +26,9 @@ import {
 		AlbumCollectionModule,
 		ButtonModule,
 		ToolbarModule,
+		AlbumAdminComponent,
+		AlbumEditComponent,
+		AlbumListPageComponent,
 	],
 	providers: [AlbumEditResolverService, AlbumListPageResolverService],
 })

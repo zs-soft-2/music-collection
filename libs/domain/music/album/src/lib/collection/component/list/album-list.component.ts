@@ -1,9 +1,19 @@
 import { Observable } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	OnInit,
+	inject,
+} from '@angular/core';
 import { AlbumListParams, BaseComponent } from '@music-collection/api';
 
 import { AlbumListService } from './album-list.service';
+import { Bind } from 'primeng/bind';
+import { Carousel } from 'primeng/carousel';
+import { PrimeTemplate } from 'primeng/api';
+import { AlbumSimpleViewComponent } from '../../../view/simple/album-simple-view.component';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -11,7 +21,13 @@ import { AlbumListService } from './album-list.service';
 	selector: 'mc-album-list',
 	templateUrl: './album-list.component.html',
 	styleUrls: ['./album-list.component.scss'],
-	standalone: false,
+	imports: [
+		Bind,
+		Carousel,
+		PrimeTemplate,
+		AlbumSimpleViewComponent,
+		AsyncPipe,
+	],
 })
 export class AlbumListComponent extends BaseComponent implements OnInit {
 	private componentService = inject(AlbumListService);

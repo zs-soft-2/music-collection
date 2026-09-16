@@ -9,8 +9,7 @@ describe('DocumentListComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [DocumentListPageComponent],
-			imports: [DocumentCollectionModule],
+			imports: [DocumentCollectionModule, DocumentListPageComponent],
 		}).compileComponents();
 	}));
 

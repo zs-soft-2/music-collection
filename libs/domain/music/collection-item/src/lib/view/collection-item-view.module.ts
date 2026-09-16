@@ -8,14 +8,15 @@ import {
 } from './component';
 
 @NgModule({
-	declarations: [
-		CollectionItemDetailViewComponent,
-		CollectionItemSimpleViewComponent,
-	],
 	exports: [
 		CollectionItemDetailViewComponent,
 		CollectionItemSimpleViewComponent,
 	],
-	imports: [CommonModule, ReleaseViewModule],
+	imports: [
+		CommonModule,
+		ReleaseViewModule,
+		CollectionItemDetailViewComponent,
+		CollectionItemSimpleViewComponent,
+	],
 })
 export class CollectionItemViewModule {}

@@ -1,13 +1,28 @@
 import { MenuItem } from 'primeng/api';
 
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { BreadcrumbModule } from '@music-collection/ui';
+import {
+	DefaultLayoutDirective,
+	DefaultFlexDirective,
+} from 'ng-flex-layout/flex';
+import { Bind } from 'primeng/bind';
+import { Menu } from 'primeng/menu';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-admin',
 	templateUrl: './admin.component.html',
 	styleUrls: ['./admin.component.scss'],
-  standalone: false,
+	imports: [
+		BreadcrumbModule,
+		DefaultLayoutDirective,
+		DefaultFlexDirective,
+		Bind,
+		Menu,
+		RouterOutlet,
+	],
 })
 export class AdminComponent {
 	public items!: MenuItem[];

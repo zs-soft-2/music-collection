@@ -1,9 +1,27 @@
 import { Observable } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	OnInit,
+	inject,
+} from '@angular/core';
 import { ArtistFormParams, BaseComponent } from '@music-collection/api';
 
 import { ArtistFormService } from './artist-form.service';
+import { ReactiveFormsModule } from '@angular/forms';
+import { Bind } from 'primeng/bind';
+import { Tabs, TabList, Tab, TabPanels, TabPanel } from 'primeng/tabs';
+import { Ripple } from 'primeng/ripple';
+import { InputText } from 'primeng/inputtext';
+import { Textarea } from 'primeng/textarea';
+import { Select } from 'primeng/select';
+import { DatePicker } from 'primeng/datepicker';
+import { MultiSelect } from 'primeng/multiselect';
+import { AutoComplete } from 'primeng/autocomplete';
+import { Image } from 'primeng/image';
+import { ButtonDirective } from 'primeng/button';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -11,7 +29,25 @@ import { ArtistFormService } from './artist-form.service';
 	selector: 'mc-artist-form',
 	templateUrl: './artist-form.component.html',
 	styleUrls: ['./artist-form.component.scss'],
-  standalone: false,
+	imports: [
+		ReactiveFormsModule,
+		Bind,
+		Tabs,
+		TabList,
+		Ripple,
+		Tab,
+		TabPanels,
+		TabPanel,
+		InputText,
+		Textarea,
+		Select,
+		DatePicker,
+		MultiSelect,
+		AutoComplete,
+		Image,
+		ButtonDirective,
+		AsyncPipe,
+	],
 })
 export class ArtistFormComponent extends BaseComponent implements OnInit {
 	private componentService = inject(ArtistFormService);

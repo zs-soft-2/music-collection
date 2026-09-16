@@ -9,12 +9,12 @@ import { ArtistSimpleViewComponent } from './component';
 
 @NgModule({
 	exports: [ArtistSimpleViewComponent],
-	declarations: [ArtistSimpleViewComponent],
 	imports: [
 		CommonModule,
 		ChipModule,
 		FlexLayoutModule,
 		ImageModule,
+		ArtistSimpleViewComponent,
 	],
 })
 export class ArtistViewModule {}

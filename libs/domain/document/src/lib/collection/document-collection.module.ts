@@ -9,7 +9,6 @@ import { NgModule } from '@angular/core';
 import { DocumentListComponent, DocumentTableComponent } from './component';
 
 @NgModule({
-	declarations: [DocumentListComponent, DocumentTableComponent],
 	exports: [DocumentListComponent, DocumentTableComponent],
 	imports: [
 		CommonModule,
@@ -17,6 +16,8 @@ import { DocumentListComponent, DocumentTableComponent } from './component';
 		ButtonModule,
 		ChipModule,
 		TableModule,
+		DocumentListComponent,
+		DocumentTableComponent,
 	],
 })
 export class DocumentCollectionModule {}

@@ -8,7 +8,7 @@ describe('WishlistItemFormComponent', () => {
 
 	beforeEach(async(() => {
 		TestBed.configureTestingModule({
-			declarations: [WishlistItemFormComponent],
+			imports: [WishlistItemFormComponent],
 		}).compileComponents();
 	}));
 

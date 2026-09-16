@@ -8,7 +8,7 @@ describe('ReleaseTableComponent', () => {
 
 	beforeEach(async(() => {
 		TestBed.configureTestingModule({
-			declarations: [ReleaseTableComponent],
+			imports: [ReleaseTableComponent],
 		}).compileComponents();
 	}));
 

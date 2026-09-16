@@ -11,7 +11,6 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CollectionItemFormComponent } from './component';
 
 @NgModule({
-	declarations: [CollectionItemFormComponent],
 	exports: [CollectionItemFormComponent],
 	imports: [
 		CommonModule,
@@ -22,6 +21,7 @@ import { CollectionItemFormComponent } from './component';
 		InputTextModule,
 		MultiSelectModule,
 		ReactiveFormsModule,
+		CollectionItemFormComponent,
 	],
 })
 export class CollectionItemFormModule {}

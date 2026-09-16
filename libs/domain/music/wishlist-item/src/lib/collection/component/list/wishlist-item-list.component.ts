@@ -1,6 +1,13 @@
 import { Observable } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output, inject } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	EventEmitter,
+	OnInit,
+	Output,
+	inject,
+} from '@angular/core';
 import {
 	WishlistItemEntity,
 	WishlistItemListParams,
@@ -8,6 +15,11 @@ import {
 } from '@music-collection/api';
 
 import { WishlistItemListService } from './wishlist-item-list.service';
+import { Bind } from 'primeng/bind';
+import { DataView } from 'primeng/dataview';
+import { PrimeTemplate } from 'primeng/api';
+import { WishlistItemSimpleViewComponent } from '../../../view/component/simple/wishlist-item-simple-view.component';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -15,7 +27,13 @@ import { WishlistItemListService } from './wishlist-item-list.service';
 	selector: 'mc-wishlist-item-list',
 	templateUrl: './wishlist-item-list.component.html',
 	styleUrls: ['./wishlist-item-list.component.scss'],
-  standalone: false,
+	imports: [
+		Bind,
+		DataView,
+		PrimeTemplate,
+		WishlistItemSimpleViewComponent,
+		AsyncPipe,
+	],
 })
 export class WishlistItemListComponent extends BaseComponent implements OnInit {
 	private componentService = inject(WishlistItemListService);

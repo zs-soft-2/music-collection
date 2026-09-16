@@ -9,8 +9,7 @@ describe('ArtistImportComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ArtistImportComponent],
-			imports: [ArtistFormModule],
+			imports: [ArtistFormModule, ArtistImportComponent],
 		}).compileComponents();
 	}));
 

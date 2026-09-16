@@ -9,12 +9,12 @@ import { ArtistPageRoutingModule } from './artist-page-routing.module';
 import { ArtistPageComponent } from './artist-page.component';
 
 @NgModule({
-	declarations: [ArtistPageComponent],
 	imports: [
 		CommonModule,
 		ArtistDetailModule,
 		ArtistPageRoutingModule,
 		ArtistViewModule,
+		ArtistPageComponent,
 	],
 	providers: [],
 })

@@ -10,13 +10,16 @@ import {
 	Output,
 } from '@angular/core';
 import { BaseComponent, User } from '@music-collection/api';
+import { Bind } from 'primeng/bind';
+import { Avatar } from 'primeng/avatar';
+import { Menu } from 'primeng/menu';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-user-profile',
 	templateUrl: './user-profile.component.html',
 	styleUrls: ['./user-profile.component.scss'],
-  standalone: false,
+	imports: [Bind, Avatar, Menu],
 })
 export class UserProfileComponent extends BaseComponent implements OnInit {
 	@Input()

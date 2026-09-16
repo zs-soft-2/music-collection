@@ -1,18 +1,38 @@
 import { Observable } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	OnInit,
+	inject,
+} from '@angular/core';
 import { BaseComponent } from '@music-collection/api';
 
 import { TopBarParams } from '../../api';
 import { TopBarService } from './top-bar.service';
+import { Bind } from 'primeng/bind';
+import { Menubar } from 'primeng/menubar';
+import { PrimeTemplate } from 'primeng/api';
+import { SvgIconComponent } from 'angular-svg-icon';
+import { CoreAuthenticationViewModule } from '@music-collection/core/authentication/view';
+import { UserProfileModule } from '@music-collection/domain/user';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	providers: [TopBarService],
 	selector: 'mc-top-bar',
-  standalone: false,
 	styleUrls: ['./top-bar.component.scss'],
 	templateUrl: './top-bar.component.html',
+	imports: [
+		Bind,
+		Menubar,
+		PrimeTemplate,
+		SvgIconComponent,
+		CoreAuthenticationViewModule,
+		UserProfileModule,
+		AsyncPipe,
+	],
 })
 export class TopBarComponent extends BaseComponent implements OnInit {
 	private componentService = inject(TopBarService);
@@ -32,7 +52,6 @@ export class TopBarComponent extends BaseComponent implements OnInit {
 	}
 
 	public ngOnInit(): void {
-		this.params$ = this.componentService
-			.init$();
+		this.params$ = this.componentService.init$();
 	}
 }

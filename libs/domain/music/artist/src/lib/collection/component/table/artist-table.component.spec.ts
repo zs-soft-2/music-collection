@@ -8,7 +8,7 @@ describe('ArtistTableComponent', () => {
 
 	beforeEach(async(() => {
 		TestBed.configureTestingModule({
-			declarations: [ArtistTableComponent],
+			imports: [ArtistTableComponent],
 		}).compileComponents();
 	}));
 

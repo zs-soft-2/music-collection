@@ -1,15 +1,19 @@
 import { takeUntil } from 'rxjs/operators';
 
-import { Directive, Input, OnInit, TemplateRef, ViewContainerRef, inject } from '@angular/core';
+import {
+	Directive,
+	Input,
+	OnInit,
+	TemplateRef,
+	ViewContainerRef,
+	inject,
+} from '@angular/core';
 import {
 	AuthenticationStateService,
 	BaseDirective,
 } from '@music-collection/api';
 
-@Directive({
-	selector: '[mcIsAuthenticated]',
-  standalone: false
-})
+@Directive({ selector: '[mcIsAuthenticated]' })
 export class IsAuthenticatedDirective extends BaseDirective implements OnInit {
 	private authenticationStateService = inject(AuthenticationStateService);
 	private templateRef = inject<TemplateRef<unknown>>(TemplateRef);

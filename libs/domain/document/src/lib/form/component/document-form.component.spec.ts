@@ -8,7 +8,7 @@ describe('DocumentFormComponent', () => {
 
 	beforeEach(async(() => {
 		TestBed.configureTestingModule({
-			declarations: [DocumentFormComponent],
+			imports: [DocumentFormComponent],
 		}).compileComponents();
 	}));
 

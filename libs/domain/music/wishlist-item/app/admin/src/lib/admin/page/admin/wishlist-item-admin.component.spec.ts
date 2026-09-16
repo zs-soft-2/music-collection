@@ -11,11 +11,11 @@ describe('WishlistItemAdminComponent', () => {
 
 	beforeEach(async(() => {
 		TestBed.configureTestingModule({
-			declarations: [WishlistItemAdminComponent],
 			imports: [
 				HttpClientTestingModule,
 				RouterTestingModule,
 				WishlistItemCollectionModule,
+				WishlistItemAdminComponent,
 			],
 		}).compileComponents();
 	}));

@@ -11,11 +11,11 @@ describe('CollectionItemAdminComponent', () => {
 
 	beforeEach(async(() => {
 		TestBed.configureTestingModule({
-			declarations: [CollectionItemAdminComponent],
 			imports: [
 				HttpClientTestingModule,
 				RouterTestingModule,
 				CollectionItemCollectionModule,
+				CollectionItemAdminComponent,
 			],
 		}).compileComponents();
 	}));

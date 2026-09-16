@@ -11,11 +11,11 @@ describe('ArtistAdminComponent', () => {
 
 	beforeEach(async(() => {
 		TestBed.configureTestingModule({
-			declarations: [ArtistAdminComponent],
 			imports: [
 				HttpClientTestingModule,
 				RouterTestingModule,
 				ArtistListModule,
+				ArtistAdminComponent,
 			],
 		}).compileComponents();
 	}));

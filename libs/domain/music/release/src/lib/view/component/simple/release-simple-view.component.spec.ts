@@ -8,7 +8,7 @@ describe('ReleaseSimpleViewComponent', () => {
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			declarations: [ReleaseSimpleViewComponent],
+			imports: [ReleaseSimpleViewComponent],
 		}).compileComponents();
 
 		fixture = TestBed.createComponent(ReleaseSimpleViewComponent);

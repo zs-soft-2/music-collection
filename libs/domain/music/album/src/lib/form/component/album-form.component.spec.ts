@@ -8,7 +8,7 @@ describe('AlbumFormComponent', () => {
 
 	beforeEach(async(() => {
 		TestBed.configureTestingModule({
-			declarations: [AlbumFormComponent],
+			imports: [AlbumFormComponent],
 		}).compileComponents();
 	}));
 

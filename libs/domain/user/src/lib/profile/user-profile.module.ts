@@ -7,8 +7,7 @@ import { NgModule } from '@angular/core';
 import { UserProfileComponent } from './component/user-profile';
 
 @NgModule({
-	imports: [CommonModule, AvatarModule, MenuModule],
-	declarations: [UserProfileComponent],
+	imports: [CommonModule, AvatarModule, MenuModule, UserProfileComponent],
 	exports: [UserProfileComponent],
 })
 export class UserProfileModule {}

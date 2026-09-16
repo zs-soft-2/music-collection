@@ -1,7 +1,14 @@
 <div class="collection-sidebar">
   <div class="config">
     <div class="config-content-wrapper">
-      <a tabindex="0" class="config-button" (click)="store.visibleSidebar(true)"
+      <a
+        role="button"
+        tabindex="0"
+        class="config-button"
+        aria-label="Open collection settings"
+        (click)="store.visibleSidebar(true)"
+        (keydown.enter)="store.visibleSidebar(true)"
+        (keydown.space)="store.visibleSidebar(true); $event.preventDefault()"
         ><i class="pi pi-cog"></i
       ></a>
 

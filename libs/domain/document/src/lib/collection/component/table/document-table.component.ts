@@ -1,6 +1,11 @@
 import { Observable } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	OnInit,
+	inject,
+} from '@angular/core';
 import {
 	BaseComponent,
 	DocumentEntity,
@@ -8,6 +13,13 @@ import {
 } from '@music-collection/api';
 
 import { DocumentTableService } from './document-table.service';
+import { Bind } from 'primeng/bind';
+import { Table } from 'primeng/table';
+import { PrimeTemplate } from 'primeng/api';
+import { AutoComplete } from 'primeng/autocomplete';
+import { Ripple } from 'primeng/ripple';
+import { ButtonDirective } from 'primeng/button';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -15,7 +27,15 @@ import { DocumentTableService } from './document-table.service';
 	selector: 'mc-document-table',
 	templateUrl: './document-table.component.html',
 	styleUrls: ['./document-table.component.scss'],
-	standalone: false,
+	imports: [
+		Bind,
+		Table,
+		PrimeTemplate,
+		AutoComplete,
+		Ripple,
+		ButtonDirective,
+		AsyncPipe,
+	],
 })
 export class DocumentTableComponent extends BaseComponent implements OnInit {
 	private componentService = inject(DocumentTableService);

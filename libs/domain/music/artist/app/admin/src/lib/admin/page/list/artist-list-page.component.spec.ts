@@ -9,8 +9,7 @@ describe('ArtistListComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ArtistListPageComponent],
-			imports: [ArtistListModule],
+			imports: [ArtistListModule, ArtistListPageComponent],
 		}).compileComponents();
 	}));
 

@@ -11,7 +11,6 @@ import { ArtistViewModule } from '../view/artist-view.module';
 import { ArtistListComponent, ArtistTableComponent } from './component';
 
 @NgModule({
-	declarations: [ArtistListComponent, ArtistTableComponent],
 	exports: [ArtistListComponent, ArtistTableComponent],
 	imports: [
 		CommonModule,
@@ -21,6 +20,8 @@ import { ArtistListComponent, ArtistTableComponent } from './component';
 		ChipModule,
 		TableModule,
 		ArtistViewModule,
+		ArtistListComponent,
+		ArtistTableComponent,
 	],
 })
 export class ArtistCollectionModule {}

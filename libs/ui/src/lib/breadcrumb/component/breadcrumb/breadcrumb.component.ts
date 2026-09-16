@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Injector, Input, OnInit, TemplateRef, inject } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	ChangeDetectorRef,
+	Component,
+	Injector,
+	Input,
+	OnInit,
+	TemplateRef,
+	inject,
+} from '@angular/core';
 import { BaseComponent } from '@music-collection/api';
 import {
 	ActivatedRoute,
@@ -19,7 +28,6 @@ export interface BreadcrumbOption {
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-breadcrumb',
 	templateUrl: './breadcrumb.component.html',
-  standalone: false,
 })
 export class BreadcrumbComponent extends BaseComponent implements OnInit {
 	private injector = inject(Injector);

@@ -11,11 +11,11 @@ describe('LabelAdminComponent', () => {
 
 	beforeEach(async(() => {
 		TestBed.configureTestingModule({
-			declarations: [LabelAdminComponent],
 			imports: [
 				HttpClientTestingModule,
 				RouterTestingModule,
 				LabelCollectionModule,
+				LabelAdminComponent,
 			],
 		}).compileComponents();
 	}));

@@ -12,12 +12,13 @@ import {
 
 @NgModule({
 	exports: [ReleaseDetailViewComponent, ReleaseSimpleViewComponent],
-	declarations: [ReleaseDetailViewComponent, ReleaseSimpleViewComponent],
 	imports: [
 		CommonModule,
 		AlbumSimpleViewModule,
 		AngularSvgIconModule,
 		FlexLayoutModule,
+		ReleaseDetailViewComponent,
+		ReleaseSimpleViewComponent,
 	],
 })
 export class ReleaseViewModule {}

@@ -9,8 +9,7 @@ describe('ReleaseEditComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ReleaseEditComponent],
-			imports: [ReleaseFormModule],
+			imports: [ReleaseFormModule, ReleaseEditComponent],
 		}).compileComponents();
 	}));
 

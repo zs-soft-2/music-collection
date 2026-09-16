@@ -17,7 +17,6 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ArtistFormComponent } from './component';
 
 @NgModule({
-	declarations: [ArtistFormComponent],
 	exports: [ArtistFormComponent],
 	imports: [
 		CommonModule,
@@ -34,6 +33,7 @@ import { ArtistFormComponent } from './component';
 		MultiSelectModule,
 		ReactiveFormsModule,
 		TabsModule,
+		ArtistFormComponent,
 	],
 })
 export class ArtistFormModule {}
