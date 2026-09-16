@@ -1,0 +1,140 @@
+<div class="page">
+	<!-- Spotlight -->
+	@if (store.spotlight(); as artist) {
+		<mc-artist-spotlight
+			[artist]="artist"
+			[releases]="store.spotlightReleases()"
+			[releaseCount]="store.spotlightReleaseCount()"
+			(shuffle)="store.shuffleSpotlight()"
+		/>
+	} @else if (store.artistsLoading() || store.releasesLoading()) {
+		<div
+			class="skeleton spotlight-skeleton"
+			aria-busy="true"
+			aria-label="Loading"
+		></div>
+	}
+
+	<!-- Collection at a glance -->
+	<section class="section" aria-labelledby="glance-title">
+		<header class="section-head">
+			<h2 id="glance-title">Your collection at a glance</h2>
+			<a class="more" routerLink="/collection">
+				Open collection
+				<i class="pi pi-arrow-right" aria-hidden="true"></i>
+			</a>
+		</header>
+
+		@if (store.releasesLoading()) {
+			<div class="skeleton glance-skeleton"></div>
+		} @else {
+			<div class="glance">
+				<dl class="stats">
+					<div class="stat is-hero">
+						<dt>Releases</dt>
+						<dd>{{ store.stats().releases }}</dd>
+					</div>
+					<div class="stat">
+						<dt>Artists</dt>
+						<dd>{{ store.stats().artists }}</dd>
+					</div>
+					<div class="stat">
+						<dt>Vinyl</dt>
+						<dd>{{ store.stats().vinyl }}</dd>
+					</div>
+					<div class="stat">
+						<dt>CD</dt>
+						<dd>{{ store.stats().cd }}</dd>
+					</div>
+				</dl>
+
+				<div class="panel">
+					<mc-decade-chart
+						title="Releases by decade"
+						[data]="store.decades()"
+					/>
+				</div>
+
+				<div class="panel">
+					<mc-style-bars title="Top styles" [data]="store.styles()" />
+				</div>
+			</div>
+		}
+	</section>
+
+	<!-- Recently added -->
+	<section class="section" aria-labelledby="recent-title">
+		<header class="section-head">
+			<h2 id="recent-title">Recently added</h2>
+			<a class="more" routerLink="/collection">
+				All releases
+				<i class="pi pi-arrow-right" aria-hidden="true"></i>
+			</a>
+		</header>
+
+		<ul class="card-grid">
+			@if (store.releasesLoading()) {
+				@for (i of placeholders(6); track i) {
+					<li class="skeleton card-skeleton"></li>
+				}
+			} @else {
+				@for (release of store.recentReleases(); track release.id) {
+					<li><mc-release-card [release]="release" /></li>
+				}
+			}
+		</ul>
+	</section>
+
+	<!-- Most collected artists -->
+	<section class="section" aria-labelledby="artists-title">
+		<header class="section-head">
+			<h2 id="artists-title">Most collected artists</h2>
+		</header>
+
+		<ul class="artist-grid">
+			@if (store.artistsLoading() || store.releasesLoading()) {
+				@for (i of placeholders(6); track i) {
+					<li class="skeleton tile-skeleton"></li>
+				}
+			} @else {
+				@for (artist of store.topArtists(); track artist.id) {
+					<li><mc-artist-tile [artist]="artist" /></li>
+				}
+			}
+		</ul>
+	</section>
+
+	<!-- Newest albums in the catalog -->
+	<section class="section" aria-labelledby="albums-title">
+		<header class="section-head">
+			<h2 id="albums-title">Newest albums in the catalog</h2>
+		</header>
+
+		<ul class="album-wall">
+			@if (store.albumsLoading()) {
+				@for (i of placeholders(12); track i) {
+					<li class="skeleton cover-skeleton"></li>
+				}
+			} @else {
+				@for (album of store.newestAlbums(); track album.id) {
+					<li>
+						<a class="album" [routerLink]="['/album', album.id]">
+							<img [src]="album.coverUrl" alt="" loading="lazy" />
+							<span class="album-info">
+								<span class="album-title">{{
+									album.title
+								}}</span>
+								<span class="album-meta">
+									{{ album.artistName }}
+									@if (album.year) {
+										· {{ album.year }}
+									}
+								</span>
+							</span>
+						</a>
+					</li>
+				}
+			}
+		</ul>
+	</section>
+</div>

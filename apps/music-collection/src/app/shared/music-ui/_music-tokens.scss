@@ -1,0 +1,28 @@
+// Design tokens of the music pages (home, collection). Include the mixin on a
+// page host: the tokens stay scoped to that page and child components inherit
+// them, so the rest of the app is unaffected.
+@mixin tokens {
+	--mc-bg: #0a0a0a;
+	--mc-bg-muted: #111;
+	--mc-card-bg: #161616;
+	--mc-card-bg-hover: #1f1f1f;
+	--mc-text: #fff;
+	--mc-text-muted: #a8a8a8;
+	--mc-text-subtle: #8a8a8a;
+	--mc-primary: #ff4444;
+	--mc-accent: #ffaa00;
+	// Data marks (single-series charts); validated against --mc-card-bg.
+	--mc-chart: #ff4444;
+	--mc-border: rgba(255, 255, 255, 0.08);
+	--mc-border-strong: rgba(255, 255, 255, 0.18);
+	--mc-radius-sm: 4px;
+	--mc-radius-md: 8px;
+	--mc-radius-lg: 12px;
+	--mc-duration-fast: 150ms;
+	--mc-duration: 300ms;
+	--mc-duration-slow: 500ms;
+	--mc-font-display:
+		'Bebas Neue', 'Oswald', Impact, 'Arial Narrow', sans-serif;
+	--mc-font-body:
+		Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}

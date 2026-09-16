@@ -15,9 +15,9 @@ export const routes: Routes = [
 	},
 	{
 		path: 'home',
-		loadChildren: () =>
-			import('./page/home/home.module').then(
-				(module) => module.HomeModule
+		loadComponent: () =>
+			import('./page/home/home-page.component').then(
+				(module) => module.HomePageComponent
 			),
 		data: {
 			breadcrumb: 'home',
@@ -51,9 +51,9 @@ export const routes: Routes = [
 	},
 	{
 		path: 'collection',
-		loadChildren: () =>
-			import('./page/collection/collection.module').then(
-				(module) => module.CollectionModule
+		loadComponent: () =>
+			import('./page/collection/collection-page.component').then(
+				(module) => module.CollectionPageComponent
 			),
 		data: {
 			breadcrumb: 'collection',

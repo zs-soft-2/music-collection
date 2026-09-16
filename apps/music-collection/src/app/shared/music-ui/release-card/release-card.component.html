@@ -1,0 +1,98 @@
+@let item = release();
+
+<a
+	class="card"
+	[class]="'is-' + item.format"
+	[routerLink]="['/album', item.albumId]"
+	[attr.aria-label]="ariaLabel()"
+>
+	<div class="stage">
+		<!-- Medium behind the sleeve -->
+		@switch (item.format) {
+			@case ('vinyl') {
+				<div class="medium vinyl" aria-hidden="true">
+					<div class="record" [class.picture]="item.pictureDisc" [style.background]="recordBackground()">
+						@if (!item.pictureDisc) {
+							<span class="groove g1"></span>
+							<span class="groove g2"></span>
+							<span class="groove g3"></span>
+							<span class="groove g4"></span>
+							<span class="record-label">
+								@if (item.coverUrl) {
+									<img [src]="item.coverUrl" alt="" loading="lazy" />
+								}
+							</span>
+						}
+						<span class="hole"></span>
+						<span class="shine"></span>
+					</div>
+				</div>
+			}
+			@case ('cassette') {
+				<div class="medium cassette" aria-hidden="true">
+					<div class="shell">
+						<div class="tape-label">
+							<span class="tape-artist">{{ item.artistName }}</span>
+							<span class="tape-title">{{ item.title }}</span>
+						</div>
+						<div class="tape-window">
+							<span class="reel"></span>
+							<span class="reel"></span>
+						</div>
+					</div>
+				</div>
+			}
+			@case ('other') {}
+			@default {
+				<!-- CD and DVD: a disc slides out -->
+				<div class="medium disc" aria-hidden="true">
+					<div class="disc-surface">
+						<span class="disc-rainbow"></span>
+						<span class="disc-center">
+							@if (item.coverUrl) {
+								<img [src]="item.coverUrl" alt="" loading="lazy" />
+							}
+						</span>
+						<span class="hole"></span>
+					</div>
+				</div>
+			}
+		}
+
+		<!-- Sleeve / case front -->
+		<div class="sleeve">
+			@if (item.coverUrl) {
+				<img class="cover" [src]="item.coverUrl" [alt]="item.title" [attr.loading]="priority() ? 'eager' : 'lazy'" />
+			} @else {
+				<div class="cover placeholder" aria-hidden="true">♪</div>
+			}
+			@if (item.format === 'cd') {
+				<span class="jewel-reflection" aria-hidden="true"></span>
+			}
+			@if (item.format === 'dvd') {
+				<span class="case-band" aria-hidden="true">DVD</span>
+			}
+		</div>
+
+		@if (item.editions.length) {
+			<div class="badges">
+				@for (edition of item.editions; track edition) {
+					<span class="badge" [class.is-box]="edition === 'box set'">{{ edition }}</span>
+				}
+			</div>
+		}
+	</div>
+
+	<div class="info">
+		<div class="meta">
+			<mc-format-badge [format]="item.format" [weight]="item.weight" />
+			@if (item.albumType || item.year) {
+				<span class="meta-extra">
+					{{ item.albumType }}@if (item.albumType && item.year) { · }{{ item.year }}
+				</span>
+			}
+		</div>
+		<h3 class="title">{{ item.title }}</h3>
+		<p class="artist">{{ item.artistName }}</p>
+	</div>
+</a>

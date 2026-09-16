@@ -1,0 +1,326 @@
+@use '../../shared/music-ui/music-tokens' as mc;
+
+:host {
+	@include mc.tokens;
+
+	display: block;
+	color: var(--mc-text);
+	font-family: var(--mc-font-body);
+}
+
+.page {
+	max-width: 1440px;
+	margin: 1rem auto 2rem;
+	padding: clamp(1rem, 2vw, 1.5rem) clamp(1rem, 3vw, 2.5rem) 3rem;
+	background: rgba(10, 10, 10, 0.9);
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-lg);
+	backdrop-filter: blur(6px);
+}
+
+ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+/* ── Sections ─────────────────────────────────────────────────────────── */
+
+.section {
+	margin-top: 3rem;
+}
+
+.section-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.5rem 1rem;
+	margin-bottom: 1.25rem;
+	padding-bottom: 0.75rem;
+	border-bottom: 1px solid var(--mc-border);
+
+	h2 {
+		margin: 0;
+		font-family: var(--mc-font-display);
+		font-size: clamp(1.8rem, 3vw, 2.4rem);
+		font-weight: 400;
+		line-height: 1;
+		letter-spacing: 0.02em;
+	}
+}
+
+.more {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: var(--mc-accent);
+	text-decoration: none;
+
+	i {
+		font-size: 0.75rem;
+		transition: transform var(--mc-duration-fast) ease;
+	}
+
+	&:hover i {
+		transform: translateX(3px);
+	}
+
+	&:hover {
+		text-decoration: underline;
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--mc-primary);
+		outline-offset: 3px;
+	}
+}
+
+/* ── At a glance ──────────────────────────────────────────────────────── */
+
+.glance {
+	display: grid;
+	grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.2fr) minmax(0, 1fr);
+	gap: 1rem;
+}
+
+.stats {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	align-content: start;
+	gap: 0.75rem;
+	margin: 0;
+}
+
+.stat {
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	padding: 0.8rem 1rem;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-md);
+
+	dt {
+		font-size: 0.8rem;
+		color: var(--mc-text-muted);
+	}
+
+	dd {
+		margin: 0.15rem 0 0;
+		font-size: 1.6rem;
+		font-weight: 600;
+		line-height: 1.1;
+	}
+
+	&.is-hero {
+		grid-column: 1 / -1;
+
+		dd {
+			font-size: 3.5rem;
+			font-weight: 700;
+			line-height: 1;
+		}
+	}
+}
+
+.panel {
+	padding: 1.1rem 1.25rem;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-md);
+}
+
+/* ── Grids ────────────────────────────────────────────────────────────── */
+
+.card-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: 1.25rem;
+}
+
+.artist-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+	gap: 1rem;
+}
+
+.album-wall {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: 1.25rem;
+}
+
+.album {
+	position: relative;
+	display: block;
+	aspect-ratio: 1;
+	overflow: hidden;
+	color: #fff;
+	text-decoration: none;
+	background: var(--mc-card-bg);
+	border-radius: var(--mc-radius-md);
+
+	img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transition: transform var(--mc-duration-slow) ease;
+	}
+
+	&:hover img,
+	&:focus-visible img {
+		transform: scale(1.05);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--mc-primary);
+		outline-offset: 3px;
+	}
+}
+
+/* Title bar slides up on hover / focus; always visible on touch screens. */
+.album-info {
+	position: absolute;
+	inset: auto 0 0;
+	display: flex;
+	flex-direction: column;
+	padding: 1.75rem 0.6rem 0.55rem;
+	background: linear-gradient(
+		0deg,
+		rgba(0, 0, 0, 0.92) 0%,
+		rgba(0, 0, 0, 0.55) 60%,
+		transparent 100%
+	);
+	opacity: 0;
+	transform: translateY(8px);
+	transition:
+		opacity var(--mc-duration-fast) ease,
+		transform var(--mc-duration-fast) ease;
+}
+
+.album:hover .album-info,
+.album:focus-visible .album-info {
+	opacity: 1;
+	transform: none;
+}
+
+@media (hover: none) {
+	.album-info {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+.album-title,
+.album-meta {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.album-title {
+	font-size: 0.85rem;
+	font-weight: 600;
+}
+
+.album-meta {
+	font-size: 0.72rem;
+	color: #cfcfcf;
+}
+
+/* ── Loading ──────────────────────────────────────────────────────────── */
+
+.skeleton {
+	background: linear-gradient(
+		100deg,
+		var(--mc-card-bg) 40%,
+		#222 50%,
+		var(--mc-card-bg) 60%
+	);
+	background-size: 200% 100%;
+	border-radius: var(--mc-radius-lg);
+	animation: mc-shimmer 1.4s linear infinite;
+}
+
+.spotlight-skeleton {
+	height: 440px;
+}
+
+.glance-skeleton {
+	height: 260px;
+}
+
+.card-skeleton {
+	aspect-ratio: 0.78;
+}
+
+.tile-skeleton,
+.cover-skeleton {
+	aspect-ratio: 1;
+}
+
+@keyframes mc-shimmer {
+	to {
+		background-position: -200% 0;
+	}
+}
+
+@media (max-width: 1100px) {
+	.glance {
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	}
+
+	.stats {
+		grid-column: 1 / -1;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+	}
+
+	.stat.is-hero {
+		grid-column: auto;
+
+		dd {
+			font-size: 1.9rem;
+			font-weight: 600;
+		}
+	}
+}
+
+@media (max-width: 720px) {
+	.glance {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.stats {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.card-grid {
+		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+		gap: 0.75rem;
+	}
+
+	.artist-grid {
+		grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+	}
+
+	.album-wall {
+		grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+		gap: 0.75rem;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.skeleton {
+		animation: none;
+	}
+
+	.album img,
+	.album-info,
+	.more i {
+		transition: none;
+	}
+}

@@ -1,0 +1,210 @@
+<div class="page">
+	<!-- Header -->
+	<header class="hero">
+		<div class="hero-text">
+			<p class="eyebrow">musiCollection</p>
+			<h1>My Collection</h1>
+		</div>
+
+		@if (!store.isLoading()) {
+			<dl class="stats">
+				<div class="stat">
+					<dt>Releases</dt>
+					<dd>{{ store.stats().total }}</dd>
+				</div>
+				<div class="stat">
+					<dt>Artists</dt>
+					<dd>{{ store.stats().artists }}</dd>
+				</div>
+				@for (format of formatOrder; track format) {
+					@if (store.stats().byFormat[format]) {
+						<div class="stat is-format">
+							<dt>{{ formatLabels[format] }}</dt>
+							<dd>{{ store.stats().byFormat[format] }}</dd>
+						</div>
+					}
+				}
+			</dl>
+		}
+	</header>
+
+	<!-- Toolbar -->
+	<div class="toolbar">
+		<div class="search">
+			<i class="pi pi-search" aria-hidden="true"></i>
+			<label class="visually-hidden" for="collection-search"
+				>Search artist or album</label
+			>
+			<input
+				id="collection-search"
+				type="search"
+				placeholder="Search artist or album…"
+				autocomplete="off"
+				[value]="store.query()"
+				(input)="onQuery($event)"
+			/>
+		</div>
+
+		<div class="chips" role="group" aria-label="Filter by format">
+			<button
+				type="button"
+				class="chip"
+				[attr.aria-pressed]="store.format() === 'all'"
+				(click)="store.setFormat('all')"
+			>
+				All
+			</button>
+			@for (format of formatOrder; track format) {
+				@if (store.stats().byFormat[format]) {
+					<button
+						type="button"
+						class="chip"
+						[attr.aria-pressed]="store.format() === format"
+						(click)="store.setFormat(format)"
+					>
+						{{ formatLabels[format] }}
+						<span class="chip-count">{{
+							store.stats().byFormat[format]
+						}}</span>
+					</button>
+				}
+			}
+		</div>
+
+		<div class="controls">
+			<label class="select">
+				<span>Sort</span>
+				<select [value]="store.sort()" (change)="onSort($event)">
+					@for (option of sortOptions; track option.value) {
+						<option
+							[value]="option.value"
+							[selected]="option.value === store.sort()"
+						>
+							{{ option.label }}
+						</option>
+					}
+				</select>
+			</label>
+
+			<label class="select">
+				<span>Group</span>
+				<select [value]="store.group()" (change)="onGroup($event)">
+					@for (option of groupOptions; track option.value) {
+						<option
+							[value]="option.value"
+							[selected]="option.value === store.group()"
+						>
+							{{ option.label }}
+						</option>
+					}
+				</select>
+			</label>
+
+			<div class="view-toggle" role="group" aria-label="View">
+				@for (option of viewOptions; track option.value) {
+					<button
+						type="button"
+						[attr.aria-pressed]="store.view() === option.value"
+						[attr.aria-label]="option.label"
+						[title]="option.label"
+						(click)="store.setView(option.value)"
+					>
+						<i [class]="option.icon" aria-hidden="true"></i>
+					</button>
+				}
+			</div>
+		</div>
+	</div>
+
+	<p class="summary" aria-live="polite">
+		@if (!store.isLoading()) {
+			@if (store.hasFilter()) {
+				Showing {{ store.visible().length }} of
+				{{ store.stats().total }} releases
+				<button
+					type="button"
+					class="link-button"
+					(click)="store.clearFilters()"
+				>
+					Clear filters
+				</button>
+			} @else {
+				{{ store.stats().total }} releases
+			}
+		}
+	</p>
+
+	<!-- Content -->
+	@if (store.isLoading()) {
+		<div class="grid" aria-busy="true" aria-label="Loading collection">
+			@for (skeleton of skeletons; track skeleton) {
+				<div class="skeleton"></div>
+			}
+		</div>
+	} @else if (!store.visible().length) {
+		<div class="empty">
+			<p class="empty-icon" aria-hidden="true">♪</p>
+			<h2>No releases found</h2>
+			<p>Try another search or format.</p>
+			<button type="button" class="button" (click)="store.clearFilters()">
+				Clear filters
+			</button>
+		</div>
+	} @else {
+		@switch (store.view()) {
+			@case ('shelf') {
+				<mc-record-shelf [compartments]="store.shelfCompartments()" />
+			}
+			@default {
+				@for (
+					group of store.groups();
+					track group.key;
+					let firstGroup = $first
+				) {
+					<section
+						class="group"
+						[attr.aria-label]="group.label || 'Collection'"
+					>
+						@if (group.label) {
+							<h2 class="group-title">
+								{{ group.label }}
+								<span class="group-count">{{
+									group.items.length
+								}}</span>
+							</h2>
+						}
+
+						@if (store.view() === 'list') {
+							<ul class="list">
+								@for (
+									release of group.items;
+									track release.id
+								) {
+									<li>
+										<mc-release-row [release]="release" />
+									</li>
+								}
+							</ul>
+						} @else {
+							<ul class="grid">
+								@for (
+									release of group.items;
+									track release.id
+								) {
+									<li>
+										<mc-release-card
+											[release]="release"
+											[priority]="
+												firstGroup && $index < 6
+											"
+										/>
+									</li>
+								}
+							</ul>
+						}
+					</section>
+				}
+			}
+		}
+	}
+</div>

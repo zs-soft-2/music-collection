@@ -1,0 +1,251 @@
+:host {
+	display: block;
+}
+
+.spotlight {
+	position: relative;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	align-items: end;
+	gap: 2rem;
+	min-height: 440px;
+	padding: clamp(1.5rem, 4vw, 3rem);
+	overflow: hidden;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-lg);
+}
+
+.backdrop {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: center 30%;
+	filter: grayscale(35%);
+}
+
+/* Keeps the text readable on any photo. */
+.shade {
+	position: absolute;
+	inset: 0;
+	background:
+		linear-gradient(
+			90deg,
+			rgba(10, 10, 10, 0.94) 0%,
+			rgba(10, 10, 10, 0.7) 45%,
+			rgba(10, 10, 10, 0.15) 100%
+		),
+		linear-gradient(0deg, rgba(10, 10, 10, 0.9) 0%, transparent 55%);
+}
+
+.content,
+.owned {
+	position: relative;
+	z-index: 1;
+}
+
+.content {
+	max-width: 640px;
+}
+
+.eyebrow {
+	margin: 0;
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: var(--mc-primary);
+}
+
+h1 {
+	margin: 0.35rem 0 0.75rem;
+	font-family: var(--mc-font-display);
+	font-size: clamp(3rem, 8vw, 6rem);
+	font-weight: 400;
+	line-height: 0.92;
+	letter-spacing: 0.01em;
+	overflow-wrap: anywhere;
+}
+
+.meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem 0.9rem;
+	margin: 0 0 1rem;
+	font-size: 0.95rem;
+	color: var(--mc-text-muted);
+
+	span + span::before {
+		margin-right: 0.9rem;
+		content: '·';
+		color: var(--mc-text-subtle);
+	}
+
+	.count {
+		color: var(--mc-text);
+	}
+}
+
+.styles {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	margin: 0 0 1.5rem;
+	padding: 0;
+	list-style: none;
+
+	li {
+		padding: 0.25rem 0.65rem;
+		font-size: 0.72rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		background: rgba(255, 255, 255, 0.08);
+		border: 1px solid var(--mc-border-strong);
+		border-radius: 999px;
+	}
+}
+
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+}
+
+.button {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.7rem 1.2rem;
+	font: inherit;
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: #fff;
+	text-decoration: none;
+	cursor: pointer;
+	border-radius: var(--mc-radius-md);
+	transition:
+		background var(--mc-duration-fast) ease,
+		border-color var(--mc-duration-fast) ease;
+
+	&:focus-visible {
+		outline: 2px solid #fff;
+		outline-offset: 2px;
+	}
+
+	&.primary {
+		background: var(--mc-primary);
+		border: 1px solid var(--mc-primary);
+
+		&:hover {
+			background: #e53b3b;
+		}
+	}
+
+	&.ghost {
+		background: rgba(10, 10, 10, 0.4);
+		border: 1px solid var(--mc-border-strong);
+
+		&:hover {
+			border-color: var(--mc-text-muted);
+		}
+	}
+}
+
+.owned-title {
+	margin: 0 0 0.5rem;
+	font-size: 0.7rem;
+	font-weight: 700;
+	letter-spacing: 0.12em;
+	text-align: right;
+	text-transform: uppercase;
+	color: var(--mc-text-muted);
+}
+
+/* Three covers per row, right-aligned under the title, oldest first. */
+.owned-list {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 0.5rem;
+	width: calc(3 * 72px + 2 * 0.5rem);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.owned-item {
+	display: block;
+	width: 72px;
+	height: 72px;
+	overflow: hidden;
+	background: var(--mc-bg-muted);
+	border-radius: var(--mc-radius-sm);
+	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+	transition: transform var(--mc-duration-fast) ease;
+
+	&:hover,
+	&:focus-visible {
+		transform: translateY(-3px);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--mc-primary);
+		outline-offset: 2px;
+	}
+
+	img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+}
+
+.owned-placeholder {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 100%;
+	color: var(--mc-text-subtle);
+}
+
+@media (max-width: 860px) {
+	.spotlight {
+		grid-template-columns: minmax(0, 1fr);
+		min-height: 380px;
+	}
+
+	.owned-title {
+		text-align: left;
+	}
+
+	.owned-list {
+		justify-content: flex-start;
+		width: auto;
+	}
+
+	.owned-item {
+		width: 56px;
+		height: 56px;
+	}
+}
+
+@media (max-width: 480px) {
+	.meta .count {
+		flex-basis: 100%;
+	}
+
+	.meta span + span.count::before {
+		content: none;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.owned-item,
+	.button {
+		transition: none;
+	}
+}
