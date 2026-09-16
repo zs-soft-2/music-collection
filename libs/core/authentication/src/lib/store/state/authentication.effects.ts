@@ -1,7 +1,8 @@
 import { from, of } from 'rxjs';
-import { catchError, map, mergeMap, switchMap } from 'rxjs/operators';
+import { catchError, map, mergeMap, switchMap, take } from 'rxjs/operators';
 import {
 	Auth,
+	authState,
 	GoogleAuthProvider,
 	signInWithPopup,
 	signOut,
@@ -24,6 +25,22 @@ export class AuthenticationEffects extends BaseService {
 	actions$: Actions = inject(Actions);
 	auth: Auth = inject(Auth);
 	userStateService: UserStateService = inject(UserStateService);
+	// Az injektálási kontextusban kell létrehozni (AngularFire).
+	private readonly authState$ = authState(this.auth);
+
+	// Oldal-újratöltéskor a Firebase aszinkron állítja vissza a munkamenetet.
+	// A munkamenet igazságforrása a Firebase (nem a localStorage-ba mentett
+	// állapot): ha van visszaállított user, betöltjük, különben vendég lesz.
+	restoreSession$ = createEffect(() =>
+		this.authState$.pipe(
+			take(1),
+			map((firebaseUser) =>
+				firebaseUser
+					? authenticationActions.getUser()
+					: authenticationActions.logoutSuccess()
+			)
+		)
+	);
 	getAuthenticatedUser$ = createEffect(() =>
 		this.actions$.pipe(
 			ofType(authenticationActions.getUser),

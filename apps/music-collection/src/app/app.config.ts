@@ -3,7 +3,6 @@ import { providePrimeNG } from 'primeng/config';
 
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import {
-	APP_INITIALIZER,
 	ApplicationConfig,
 	importProvidersFrom,
 	provideZoneChangeDetection,
@@ -15,7 +14,6 @@ import { provideStorage } from '@angular/fire/storage';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideRouter } from '@angular/router';
 import { getStorage } from 'firebase/storage';
-import { AuthenticationStateService } from '@music-collection/api';
 import { CoreAuthenticationModule } from '@music-collection/core/authentication';
 import { CoreAuthorizationModule } from '@music-collection/core/authorization';
 import { CoreEntityQuantityModule } from '@music-collection/core/entity-quantity';
@@ -33,7 +31,6 @@ import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 
 import { environment } from '../environments/environment';
 import { routes } from './app-routing';
-import { AuthenticationInitializer } from './initializer';
 import { HookModule } from './module/hook';
 import { metaReducers } from './reducer';
 import { MusicPreset } from './theme';
@@ -85,11 +82,5 @@ export const appConfig: ApplicationConfig = {
 			DomainWishlistItemModule,
 			HookModule
 		),
-		{
-			provide: APP_INITIALIZER,
-			useFactory: AuthenticationInitializer,
-			deps: [AuthenticationStateService],
-			multi: true,
-		},
 	],
 };
