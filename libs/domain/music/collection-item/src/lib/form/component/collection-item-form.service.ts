@@ -2,7 +2,7 @@ import { combineLatest, Observable, ReplaySubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
 import { Injectable, inject } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import {
 	AuthenticationStateService,
 	CollectionItemEntity,
@@ -14,6 +14,7 @@ import {
 	EntityTypeEnum,
 	ReleaseEntity,
 	ReleaseStateService,
+	ReturnNavigationService,
 	SearchParams,
 	User,
 } from '@music-collection/api';
@@ -26,7 +27,7 @@ export class CollectionItemFormService {
 	private collectionItemUtilService = inject(CollectionItemUtilService);
 	private releaseStateService = inject(ReleaseStateService);
 	private componentUtil = inject(CollectionItemUtilService);
-	private router = inject(Router);
+	private returnNavigation = inject(ReturnNavigationService);
 
 	private collectionItem!: CollectionItemEntity | undefined;
 	private params!: CollectionItemFormParams;
@@ -37,9 +38,7 @@ export class CollectionItemFormService {
 	}
 
 	public cancel(): void {
-		this.router.navigate(['../../list'], {
-			relativeTo: this.activatedRoute,
-		});
+		this.returnNavigation.leave(['../../list'], this.activatedRoute);
 	}
 
 	public init$(): Observable<CollectionItemFormParams> {
@@ -84,9 +83,7 @@ export class CollectionItemFormService {
 			this.addCollectionItem();
 		}
 
-		this.router.navigate(['../../list'], {
-			relativeTo: this.activatedRoute,
-		});
+		this.returnNavigation.leave(['../../list'], this.activatedRoute);
 	}
 
 	private addCollectionItem(): void {

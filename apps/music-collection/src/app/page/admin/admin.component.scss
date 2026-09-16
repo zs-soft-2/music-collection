@@ -129,6 +129,31 @@
 	padding: 1rem 2rem 2.5rem;
 }
 
+.back {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	min-height: 44px;
+	box-sizing: border-box;
+	margin-bottom: 0.5rem;
+	padding: 0 0.875rem;
+	border: 1px solid var(--mc-border-strong);
+	border-radius: var(--mc-radius-md);
+	color: var(--mc-text);
+	font-size: 0.875rem;
+	font-weight: 600;
+	text-decoration: none;
+
+	&:hover {
+		background: var(--mc-surface-2);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--mc-accent);
+		outline-offset: 2px;
+	}
+}
+
 .crumbs {
 	margin-bottom: 1rem;
 

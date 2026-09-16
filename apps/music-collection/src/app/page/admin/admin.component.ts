@@ -4,22 +4,25 @@ import {
 	inject,
 	signal,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import {
 	NavigationEnd,
 	Router,
 	RouterLink,
 	RouterLinkActive,
 	RouterOutlet,
+	UrlTree,
 } from '@angular/router';
+import { ReturnNavigationService } from '@music-collection/api';
 import { BreadcrumbModule } from '@music-collection/ui';
-import { filter } from 'rxjs';
+import { filter, map } from 'rxjs';
 
 import { ADMIN_NAV } from './admin-nav';
 
 /**
  * Az admin felület héja: csoportosított oldalsáv (tableten és mobilon
- * ikonsáv, a menügombbal kinyitható), morzsamenü és a tartalom.
+ * ikonsáv, a menügombbal kinyitható), morzsamenü és a tartalom. Ha egy
+ * nyilvános oldalról érkeztünk (`returnUrl`), vissza link oda.
  */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -33,8 +36,17 @@ import { ADMIN_NAV } from './admin-nav';
 })
 export class AdminComponent {
 	private readonly router = inject(Router);
+	private readonly returnNavigation = inject(ReturnNavigationService);
 
 	protected readonly groups = ADMIN_NAV;
+	/** The public page the editor was opened from, as a link target. */
+	protected readonly returnLink = toSignal(
+		this.router.events.pipe(
+			filter((event) => event instanceof NavigationEnd),
+			map(() => this.createReturnLink())
+		),
+		{ initialValue: this.createReturnLink() }
+	);
 	protected readonly expanded = signal(false);
 
 	public constructor() {
@@ -45,6 +57,12 @@ export class AdminComponent {
 				takeUntilDestroyed()
 			)
 			.subscribe(() => this.expanded.set(false));
+	}
+
+	private createReturnLink(): UrlTree | null {
+		const returnUrl = this.returnNavigation.returnUrl();
+
+		return returnUrl ? this.router.parseUrl(returnUrl) : null;
 	}
 
 	protected toggle(): void {

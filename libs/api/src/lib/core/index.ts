@@ -5,6 +5,7 @@ export * from './dynamic-config';
 export * from './entity-quantity';
 export * from './export-import';
 export * from './firebase';
+export * from './navigation';
 export * from './resource';
 export * from './role';
 export * from './user';

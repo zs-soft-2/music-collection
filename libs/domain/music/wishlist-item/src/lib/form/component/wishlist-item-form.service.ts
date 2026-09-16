@@ -3,7 +3,7 @@ import { switchMap } from 'rxjs/operators';
 
 import { Injectable, inject } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import {
 	AlbumEntity,
 	AlbumStateService,
@@ -13,6 +13,7 @@ import {
 	EntityTypeEnum,
 	FormatList,
 	MediaList,
+	ReturnNavigationService,
 	SearchParams,
 	WishlistItemEntity,
 	WishlistItemEntityAdd,
@@ -29,7 +30,7 @@ export class WishlistItemFormService {
 	private artistStateService = inject(ArtistStateService);
 	private authorizationStateService = inject(AuthenticationStateService);
 	private componentUtil = inject(WishlistItemUtilService);
-	private router = inject(Router);
+	private returnNavigation = inject(ReturnNavigationService);
 	private wishlistItemStateService = inject(WishlistItemStateService);
 	private wishlistItemUtilService = inject(WishlistItemUtilService);
 
@@ -43,9 +44,7 @@ export class WishlistItemFormService {
 	}
 
 	public cancel(): void {
-		this.router.navigate(['../../list'], {
-			relativeTo: this.activatedRoute,
-		});
+		this.returnNavigation.leave(['../../list'], this.activatedRoute);
 	}
 
 	public init$(): Observable<WishlistItemFormParams> {
@@ -111,9 +110,7 @@ export class WishlistItemFormService {
 			this.addWishlistItem();
 		}
 
-		this.router.navigate(['../../list'], {
-			relativeTo: this.activatedRoute,
-		});
+		this.returnNavigation.leave(['../../list'], this.activatedRoute);
 	}
 
 	private addWishlistItem(): void {

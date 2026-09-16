@@ -1,3 +1,5 @@
+import { filter, map } from 'rxjs';
+
 import {
 	ChangeDetectionStrategy,
 	Component,
@@ -5,7 +7,9 @@ import {
 	inject,
 	input,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
+import { RETURN_URL_PARAM } from '@music-collection/api';
 
 import { AdminAccessService } from './admin-access.service';
 
@@ -29,7 +33,8 @@ const ENTITY_NAMES: Record<AdminEditEntity, string> = {
 
 /**
  * „Edit in admin” link a nézeti oldalakról közvetlenül az entitás admin
- * szerkesztőjére — csak adminnak jelenik meg. A `button` változat a
+ * szerkesztőjére — csak adminnak jelenik meg. Magával viszi az oldal címét,
+ * a szerkesztő bezárásakor ide tér vissza. A `button` változat a
  * fejlécekbe, az `icon` a kártyákra és sorokra való.
  */
 @Component({
@@ -45,6 +50,7 @@ const ENTITY_NAMES: Record<AdminEditEntity, string> = {
 			<a
 				class="edit"
 				[routerLink]="['/admin', entity(), 'edit', id()]"
+				[queryParams]="queryParams()"
 				[attr.aria-label]="ariaLabel()"
 				[attr.title]="variant() === 'icon' ? ariaLabel() : null"
 			>
@@ -97,6 +103,15 @@ const ENTITY_NAMES: Record<AdminEditEntity, string> = {
 })
 export class AdminEditLinkComponent {
 	private readonly adminAccess = inject(AdminAccessService);
+	private readonly router = inject(Router);
+
+	private readonly currentUrl = toSignal(
+		this.router.events.pipe(
+			filter((event) => event instanceof NavigationEnd),
+			map(() => this.router.url)
+		),
+		{ initialValue: this.router.url }
+	);
 
 	public readonly entity = input.required<AdminEditEntity>();
 	public readonly id = input.required<string | null | undefined>();
@@ -107,6 +122,10 @@ export class AdminEditLinkComponent {
 	protected readonly visible = computed(
 		() => this.adminAccess.isAdmin() && !!this.id()
 	);
+
+	protected readonly queryParams = computed(() => ({
+		[RETURN_URL_PARAM]: this.currentUrl(),
+	}));
 
 	protected readonly ariaLabel = computed(() => {
 		const name = this.name();

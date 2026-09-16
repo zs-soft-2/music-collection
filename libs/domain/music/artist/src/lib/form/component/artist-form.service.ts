@@ -3,7 +3,7 @@ import { switchMap } from 'rxjs/operators';
 
 import { Injectable, inject } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import {
 	ArtistEntity,
 	ArtistEntityAdd,
@@ -15,6 +15,7 @@ import {
 	DocumentEntity,
 	DocumentStateService,
 	EntityTypeEnum,
+	ReturnNavigationService,
 	SearchParams,
 	StyleList,
 } from '@music-collection/api';
@@ -26,7 +27,7 @@ export class ArtistFormService {
 	private artistUtilService = inject(ArtistUtilService);
 	private componentUtil = inject(ArtistUtilService);
 	private documentStateService = inject(DocumentStateService);
-	private router = inject(Router);
+	private returnNavigation = inject(ReturnNavigationService);
 
 	private artist!: ArtistEntity | undefined;
 	private formGroup!: FormGroup;
@@ -38,9 +39,7 @@ export class ArtistFormService {
 	}
 
 	public cancel(): void {
-		this.router.navigate(['../../list'], {
-			relativeTo: this.activatedRoute,
-		});
+		this.returnNavigation.leave(['../../list'], this.activatedRoute);
 	}
 
 	public init$(): Observable<ArtistFormParams> {
@@ -87,9 +86,7 @@ export class ArtistFormService {
 			this.addArtist();
 		}
 
-		this.router.navigate(['../../list'], {
-			relativeTo: this.activatedRoute,
-		});
+		this.returnNavigation.leave(['../../list'], this.activatedRoute);
 	}
 
 	private addArtist(): void {
