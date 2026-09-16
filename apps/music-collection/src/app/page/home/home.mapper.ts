@@ -1,13 +1,8 @@
-import { ArtistView, ReleaseView } from '../../shared/music-ui';
+import { ArtistTileView, ArtistView, ReleaseView } from '../../shared/music-ui';
 
 export interface CountDatum {
 	label: string;
 	count: number;
-}
-
-export interface ArtistTileView extends ArtistView {
-	/** Releases of this artist in the collection. */
-	releaseCount: number;
 }
 
 /** Releases per decade of the album's release year, in chronological order. */

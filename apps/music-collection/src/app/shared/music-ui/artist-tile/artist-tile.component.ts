@@ -1,9 +1,12 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { ArtistTileView } from '../../home.mapper';
+import { ArtistTileView } from '../music-ui.model';
 
-/** Artist photo tile — the whole tile links to the artist page. */
+/**
+ * Artist photo tile — the whole tile links to the artist page. Shows the number
+ * of collected releases, or the country when there are none.
+ */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-artist-tile',
@@ -20,8 +23,12 @@ import { ArtistTileView } from '../../home.mapper';
 			<span class="body">
 				<span class="name">{{ item.name }}</span>
 				<span class="details">
-					{{ item.releaseCount }}
-					{{ item.releaseCount === 1 ? 'release' : 'releases' }}
+					@if (item.releaseCount) {
+						{{ item.releaseCount }}
+						{{ item.releaseCount === 1 ? 'release' : 'releases' }}
+					} @else {
+						{{ item.country }}
+					}
 					@if (item.styles.length) {
 						· {{ item.styles[0] }}
 					}

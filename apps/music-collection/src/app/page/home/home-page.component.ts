@@ -1,9 +1,11 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { ReleaseCardComponent } from '../../shared/music-ui';
+import {
+	ArtistTileComponent,
+	ReleaseCardComponent,
+} from '../../shared/music-ui';
 import { ArtistSpotlightComponent } from './component/artist-spotlight/artist-spotlight.component';
-import { ArtistTileComponent } from './component/artist-tile/artist-tile.component';
 import { DecadeChartComponent } from './component/decade-chart/decade-chart.component';
 import { StyleBarsComponent } from './component/style-bars/style-bars.component';
 import { HomePageStore } from './home-page.store';

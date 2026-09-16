@@ -136,7 +136,8 @@
 
 	<!-- Content -->
 	@if (store.isLoading()) {
-		<div class="grid" aria-busy="true" aria-label="Loading collection">
+		<div class="grid" role="status" aria-busy="true">
+			<span class="visually-hidden">Loading collection…</span>
 			@for (skeleton of skeletons; track skeleton) {
 				<div class="skeleton"></div>
 			}

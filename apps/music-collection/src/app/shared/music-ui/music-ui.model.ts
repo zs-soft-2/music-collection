@@ -52,12 +52,20 @@ export interface ArtistView {
 	formedYear: number | null;
 }
 
+export interface ArtistTileView extends ArtistView {
+	/** Releases of this artist in the collection. */
+	releaseCount: number;
+}
+
 export interface AlbumView {
 	id: string;
 	title: string;
 	artistName: string;
 	coverUrl: string | null;
 	year: number | null;
+	/** Album type label, e.g. "LP", "EP", "Live". */
+	albumType: string | null;
+	styles: string[];
 }
 
 export const FORMAT_LABELS: Record<MediaFormat, string> = {

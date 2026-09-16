@@ -1,3 +1,300 @@
-<mc-artist-detail-view
-	(selectAlbumDetail)="selectDetailHandler($event)"
-></mc-artist-detail-view>
+<div class="page">
+	@if (store.artist(); as artist) {
+		<!-- Profile -->
+		<header class="hero">
+			@if (artist.headerUrl) {
+				<img
+					class="backdrop"
+					[src]="artist.headerUrl"
+					alt=""
+					fetchpriority="high"
+				/>
+			}
+			<div class="shade" aria-hidden="true"></div>
+
+			<div class="profile">
+				@if (artist.imageUrl) {
+					<img
+						class="portrait"
+						[src]="artist.imageUrl"
+						[alt]="artist.name"
+					/>
+				}
+
+				<div class="identity">
+					<p class="eyebrow">Artist</p>
+					<h1>{{ artist.name }}</h1>
+
+					<dl class="facts">
+						@if (artist.country) {
+							<div>
+								<dt>Country</dt>
+								<dd>{{ artist.country }}</dd>
+							</div>
+						}
+						@if (artist.formedYear) {
+							<div>
+								<dt>Formed</dt>
+								<dd>{{ artist.formedYear }}</dd>
+							</div>
+						}
+						@if (artist.genre) {
+							<div>
+								<dt>Genre</dt>
+								<dd>{{ artist.genre }}</dd>
+							</div>
+						}
+					</dl>
+
+					@if (artist.styles.length) {
+						<ul class="styles" aria-label="Styles">
+							@for (style of artist.styles; track style) {
+								<li>{{ style }}</li>
+							}
+						</ul>
+					}
+
+					@if (artist.sites.length) {
+						<ul class="sites" aria-label="Links">
+							@for (site of artist.sites; track site.url) {
+								<li>
+									<a
+										[href]="site.url"
+										target="_blank"
+										rel="noopener noreferrer"
+									>
+										{{ site.label }}
+										<i
+											class="pi pi-external-link"
+											aria-hidden="true"
+										></i>
+										<span class="visually-hidden"
+											>(opens in a new tab)</span
+										>
+									</a>
+								</li>
+							}
+						</ul>
+					}
+				</div>
+			</div>
+		</header>
+
+		<!-- Key figures -->
+		<dl class="stats">
+			<div class="stat">
+				<dt>Albums in the catalog</dt>
+				<dd>
+					{{ store.albumsLoading() ? '–' : store.stats().albums }}
+				</dd>
+			</div>
+			<div class="stat">
+				<dt>Releases in your collection</dt>
+				<dd>
+					{{ store.releasesLoading() ? '–' : store.stats().releases }}
+				</dd>
+			</div>
+			@for (entry of store.stats().formats; track entry.format) {
+				<div class="stat">
+					<dt>{{ formatLabels[entry.format] }}</dt>
+					<dd>{{ entry.count }}</dd>
+				</div>
+			}
+			@if (store.stats().firstYear) {
+				<div class="stat">
+					<dt>On record</dt>
+					<dd>
+						{{ store.stats().firstYear }}
+						@if (
+							store.stats().lastYear !== store.stats().firstYear
+						) {
+							– {{ store.stats().lastYear }}
+						}
+					</dd>
+				</div>
+			}
+		</dl>
+
+		<!-- In-page navigation -->
+		<nav class="section-nav" aria-label="Sections">
+			@if (artist.paragraphs.length) {
+				<a
+					href="#about"
+					(click)="$event.preventDefault(); scrollTo('about')"
+					>About</a
+				>
+			}
+			<a
+				href="#discography"
+				(click)="$event.preventDefault(); scrollTo('discography')"
+				>Discography</a
+			>
+			@if (store.ownReleases().length) {
+				<a
+					href="#in-collection"
+					(click)="$event.preventDefault(); scrollTo('in-collection')"
+					>In your collection</a
+				>
+			}
+			@if (store.similar().length) {
+				<a
+					href="#similar"
+					(click)="$event.preventDefault(); scrollTo('similar')"
+					>Similar artists</a
+				>
+			}
+		</nav>
+
+		<!-- About -->
+		@if (artist.paragraphs.length) {
+			<section id="about" class="section" aria-labelledby="about-title">
+				<h2 id="about-title" class="section-title">About</h2>
+				<div class="bio" id="artist-bio">
+					@for (paragraph of visibleParagraphs(); track $index) {
+						<p>{{ paragraph }}</p>
+					}
+				</div>
+				@if (canExpandBio()) {
+					<button
+						type="button"
+						class="text-button"
+						aria-controls="artist-bio"
+						[attr.aria-expanded]="bioExpanded()"
+						(click)="bioExpanded.set(!bioExpanded())"
+					>
+						{{ bioExpanded() ? 'Show less' : 'Read more' }}
+					</button>
+				}
+			</section>
+		}
+
+		<!-- Discography -->
+		<section
+			id="discography"
+			class="section"
+			aria-labelledby="discography-title"
+		>
+			<header class="section-head">
+				<h2 id="discography-title" class="section-title">
+					Discography
+				</h2>
+
+				@if (store.albumTypes().length > 1) {
+					<div
+						class="chips"
+						role="group"
+						aria-label="Filter by album type"
+					>
+						<button
+							type="button"
+							class="chip"
+							[attr.aria-pressed]="store.albumType() === null"
+							(click)="store.setAlbumType(null)"
+						>
+							All
+							<span class="chip-count">{{
+								store.discography().length
+							}}</span>
+						</button>
+						@for (entry of store.albumTypes(); track entry.type) {
+							<button
+								type="button"
+								class="chip"
+								[attr.aria-pressed]="
+									store.albumType() === entry.type
+								"
+								(click)="store.setAlbumType(entry.type)"
+							>
+								{{ entry.type }}
+								<span class="chip-count">{{
+									entry.count
+								}}</span>
+							</button>
+						}
+					</div>
+				}
+			</header>
+
+			@if (store.albumsLoading()) {
+				<ul class="album-grid">
+					@for (i of placeholders(6); track i) {
+						<li class="skeleton card-skeleton"></li>
+					}
+				</ul>
+			} @else if (store.discography().length) {
+				@if (hasTimeline()) {
+					<mc-discography-timeline [albums]="store.discography()" />
+				}
+
+				<ul class="album-grid">
+					@for (
+						album of store.filteredDiscography();
+						track album.id
+					) {
+						<li><mc-discography-card [album]="album" /></li>
+					}
+				</ul>
+			} @else {
+				<p class="empty">
+					No albums of {{ artist.name }} in the catalog yet.
+				</p>
+			}
+		</section>
+
+		<!-- Collected releases -->
+		@if (store.ownReleases().length) {
+			<section
+				id="in-collection"
+				class="section"
+				aria-labelledby="collection-title"
+			>
+				<header class="section-head">
+					<h2 id="collection-title" class="section-title">
+						In your collection
+					</h2>
+					<a class="more" routerLink="/collection">
+						Open collection
+						<i class="pi pi-arrow-right" aria-hidden="true"></i>
+					</a>
+				</header>
+
+				<ul class="card-grid">
+					@for (release of store.ownReleases(); track release.id) {
+						<li><mc-release-card [release]="release" /></li>
+					}
+				</ul>
+			</section>
+		}
+
+		<!-- Similar artists -->
+		@if (store.similar().length) {
+			<section
+				id="similar"
+				class="section"
+				aria-labelledby="similar-title"
+			>
+				<h2 id="similar-title" class="section-title">
+					Similar artists
+				</h2>
+				<ul class="artist-grid">
+					@for (similar of store.similar(); track similar.id) {
+						<li><mc-artist-tile [artist]="similar" /></li>
+					}
+				</ul>
+			</section>
+		}
+	} @else if (store.notFound()) {
+		<div class="not-found">
+			<p class="not-found-icon" aria-hidden="true">♪</p>
+			<h1>Artist not found</h1>
+			<p>This artist is not in the catalog.</p>
+			<a class="button" routerLink="/home">Back to home</a>
+		</div>
+	} @else {
+		<div role="status" aria-busy="true">
+			<span class="visually-hidden">Loading artist…</span>
+			<div class="skeleton hero-skeleton"></div>
+			<div class="skeleton stats-skeleton"></div>
+		</div>
+	}
+</div>

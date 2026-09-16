@@ -135,5 +135,7 @@ export function toAlbumView(album: AlbumEntity): AlbumView {
 		artistName: album.artist?.name ?? '',
 		coverUrl: album.coverImage?.filePath || null,
 		year: toYear(album.year),
+		albumType: toAlbumType(album.format),
+		styles: album.styles ?? [],
 	};
 }
