@@ -1,4 +1,10 @@
-import { ArtistTileView, ArtistView, ReleaseView } from '../../shared/music-ui';
+import {
+	AlbumView,
+	ArtistTileView,
+	ArtistView,
+	FORMAT_LABELS,
+	ReleaseView,
+} from '../../shared/music-ui';
 
 export interface CountDatum {
 	label: string;
@@ -81,4 +87,113 @@ export function pickRandom<T>(items: T[], exclude?: T): T | null {
 		items.length > 1 ? items.filter((item) => item !== exclude) : items;
 
 	return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+}
+
+export type HomeSearchKind = 'artist' | 'release' | 'album';
+
+export interface HomeSearchItem {
+	/** Unique across all groups — used as the option element id. */
+	id: string;
+	kind: HomeSearchKind;
+	title: string;
+	subtitle: string;
+	imageUrl: string | null;
+	link: string[];
+}
+
+export interface HomeSearchGroup {
+	kind: HomeSearchKind;
+	label: string;
+	items: HomeSearchItem[];
+}
+
+const matches = (needle: string, ...texts: (string | null)[]) =>
+	texts.some((text) => text?.toLocaleLowerCase().includes(needle));
+
+/**
+ * Quick search of the home page: matching artists, collected releases and
+ * catalog albums not in the collection yet, `limit` of each.
+ */
+export function searchHome(
+	query: string,
+	artists: ArtistView[],
+	releases: ReleaseView[],
+	albums: AlbumView[],
+	limit: number
+): HomeSearchGroup[] {
+	const needle = query.trim().toLocaleLowerCase();
+
+	if (!needle) {
+		return [];
+	}
+
+	const collectedAlbumIds = new Set(
+		releases.map((release) => release.albumId)
+	);
+
+	const groups: HomeSearchGroup[] = [
+		{
+			kind: 'artist',
+			label: 'Artists',
+			items: artists
+				.filter((artist) => matches(needle, artist.name))
+				.slice(0, limit)
+				.map((artist) => ({
+					id: `artist-${artist.id}`,
+					kind: 'artist',
+					title: artist.name,
+					subtitle: [artist.country, artist.formedYear]
+						.filter(Boolean)
+						.join(' · '),
+					imageUrl: artist.imageUrl,
+					link: ['/artist', artist.id],
+				})),
+		},
+		{
+			kind: 'release',
+			label: 'In your collection',
+			items: releases
+				.filter((release) =>
+					matches(needle, release.title, release.artistName)
+				)
+				.slice(0, limit)
+				.map((release) => ({
+					id: `release-${release.id}`,
+					kind: 'release',
+					title: release.title,
+					subtitle: [
+						release.artistName,
+						release.year,
+						FORMAT_LABELS[release.format],
+					]
+						.filter(Boolean)
+						.join(' · '),
+					imageUrl: release.coverUrl,
+					link: ['/album', release.albumId],
+				})),
+		},
+		{
+			kind: 'album',
+			label: 'In the catalog',
+			items: albums
+				.filter(
+					(album) =>
+						!collectedAlbumIds.has(album.id) &&
+						matches(needle, album.title, album.artistName)
+				)
+				.slice(0, limit)
+				.map((album) => ({
+					id: `album-${album.id}`,
+					kind: 'album',
+					title: album.title,
+					subtitle: [album.artistName, album.year]
+						.filter(Boolean)
+						.join(' · '),
+					imageUrl: album.coverUrl,
+					link: ['/album', album.id],
+				})),
+		},
+	];
+
+	return groups.filter((group) => group.items.length > 0);
 }

@@ -6,12 +6,13 @@ import {
 	ReleaseCardComponent,
 } from '../../shared/music-ui';
 import { ArtistSpotlightComponent } from './component/artist-spotlight/artist-spotlight.component';
+import { HomeSearchComponent } from './component/home-search/home-search.component';
 import { DecadeChartComponent } from './component/decade-chart/decade-chart.component';
 import { StyleBarsComponent } from './component/style-bars/style-bars.component';
 import { HomePageStore } from './home-page.store';
 
 /**
- * Home page: an artist spotlight, the collection at a glance, recently added
+ * Home page: a quick search, an artist spotlight, the collection at a glance, recently added
  * releases, the most collected artists and the newest albums of the catalog.
  */
 @Component({
@@ -27,6 +28,7 @@ import { HomePageStore } from './home-page.store';
 		ArtistTileComponent,
 		DecadeChartComponent,
 		StyleBarsComponent,
+		HomeSearchComponent,
 	],
 })
 export class HomePageComponent {

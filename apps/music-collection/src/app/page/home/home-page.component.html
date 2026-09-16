@@ -1,4 +1,12 @@
 <div class="page">
+	<search>
+		<mc-home-search
+			[query]="store.query()"
+			[results]="store.searchResults()"
+			(queryChange)="store.setQuery($event)"
+		/>
+	</search>
+
 	<!-- Spotlight -->
 	@if (store.spotlight(); as artist) {
 		<mc-artist-spotlight

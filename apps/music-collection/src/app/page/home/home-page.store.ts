@@ -30,6 +30,7 @@ import {
 	mostCollectedArtists,
 	pickRandom,
 	releaseCountsByArtist,
+	searchHome,
 	topStyles,
 } from './home.mapper';
 
@@ -41,6 +42,7 @@ interface HomePageState {
 	albumsLoading: boolean;
 	releasesLoading: boolean;
 	spotlightId: string | null;
+	query: string;
 }
 
 const initialState: HomePageState = {
@@ -51,6 +53,7 @@ const initialState: HomePageState = {
 	albumsLoading: true,
 	releasesLoading: true,
 	spotlightId: null,
+	query: '',
 };
 
 const RECENT_COUNT = 6;
@@ -58,6 +61,7 @@ const ARTIST_COUNT = 12;
 const ALBUM_COUNT = 12;
 const STYLE_COUNT = 6;
 const SPOTLIGHT_RELEASE_COUNT = 6;
+const SEARCH_RESULT_COUNT = 5;
 
 /**
  * Loads a feature's entities once: selects them from the NgRx store and
@@ -136,6 +140,15 @@ export const HomePageStore = signalStore(
 			styles: computed(() => topStyles(store.releases(), STYLE_COUNT)),
 			topArtists: computed(() =>
 				mostCollectedArtists(store.artists(), counts(), ARTIST_COUNT)
+			),
+			searchResults: computed(() =>
+				searchHome(
+					store.query(),
+					store.artists(),
+					store.releases(),
+					store.albums(),
+					SEARCH_RESULT_COUNT
+				)
 			),
 			newestAlbums: computed(() =>
 				store
@@ -234,6 +247,7 @@ export const HomePageStore = signalStore(
 						})
 					)
 				),
+				setQuery: (query: string) => patchState(store, { query }),
 				/** Shows another artist in the spotlight. */
 				shuffleSpotlight: () =>
 					patchState(store, {
