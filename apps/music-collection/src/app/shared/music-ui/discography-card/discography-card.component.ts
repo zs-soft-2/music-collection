@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { FormatBadgeComponent } from '../../../../shared/music-ui';
-import { DiscographyAlbum } from '../../artist.mapper';
+import { FormatBadgeComponent } from '../format-badge/format-badge.component';
+import { DiscographyAlbum } from '../music-ui.model';
 
 /**
  * One album of the discography. Collected albums show the formats owned;

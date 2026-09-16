@@ -7,7 +7,9 @@ import {
 import {
 	AlbumView,
 	ArtistView,
+	DiscographyAlbum,
 	EditionTag,
+	FORMAT_ORDER,
 	MediaFormat,
 	ReleaseView,
 } from './music-ui.model';
@@ -91,6 +93,8 @@ export function toReleaseView(item: CollectionItemEntity): ReleaseView {
 		boxSet: descriptions.includes('box set'),
 		pictureDisc: descriptions.includes('picture disc'),
 		addedAt: toEpochMs(item.date) ?? 0,
+		labelName: release.label?.name || null,
+		country: formatCountry(release.country),
 	};
 }
 
@@ -108,6 +112,18 @@ export function formatCountry(country: unknown): string | null {
 		return country.toUpperCase();
 	}
 	return country
+		.toLowerCase()
+		.split(/[_\s]+/)
+		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+		.join(' ');
+}
+
+/** Genres are stored as "Rock" or as enum keys like "THRASH_METAL". */
+export function formatGenre(genre: unknown): string | null {
+	if (typeof genre !== 'string' || !genre.trim()) {
+		return null;
+	}
+	return genre
 		.toLowerCase()
 		.split(/[_\s]+/)
 		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -138,4 +154,32 @@ export function toAlbumView(album: AlbumEntity): AlbumView {
 		albumType: toAlbumType(album.format),
 		styles: album.styles ?? [],
 	};
+}
+
+/** The artist's albums, oldest first, with the formats owned of each. */
+export function toDiscography(
+	albums: AlbumView[],
+	releases: ReleaseView[]
+): DiscographyAlbum[] {
+	const owned = new Map<string, Set<MediaFormat>>();
+
+	for (const release of releases) {
+		const formats = owned.get(release.albumId) ?? new Set<MediaFormat>();
+		formats.add(release.format);
+		owned.set(release.albumId, formats);
+	}
+
+	return albums
+		.map((album) => ({
+			...album,
+			ownedFormats: FORMAT_ORDER.filter((format) =>
+				owned.get(album.id)?.has(format)
+			),
+		}))
+		.sort(
+			(a, b) =>
+				(a.year ?? Number.MAX_SAFE_INTEGER) -
+					(b.year ?? Number.MAX_SAFE_INTEGER) ||
+				a.title.localeCompare(b.title)
+		);
 }

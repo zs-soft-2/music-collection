@@ -6,7 +6,7 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { DiscographyAlbum } from '../../artist.mapper';
+import { DiscographyAlbum } from '../../../../shared/music-ui';
 
 interface Marker {
 	album: DiscographyAlbum;

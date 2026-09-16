@@ -26,6 +26,7 @@ import {
 	ReleaseView,
 	toAlbumView,
 	toArtistView,
+	toDiscography,
 	toReleaseView,
 } from '../../shared/music-ui';
 import {
@@ -33,7 +34,6 @@ import {
 	albumTypeCounts,
 	similarArtists,
 	toArtistProfile,
-	toDiscography,
 } from './artist.mapper';
 
 interface ArtistPageState {

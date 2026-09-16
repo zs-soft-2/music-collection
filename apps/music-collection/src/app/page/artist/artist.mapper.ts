@@ -1,12 +1,10 @@
 import { ArtistEntity } from '@music-collection/api';
 
 import {
-	AlbumView,
 	ArtistTileView,
 	ArtistView,
-	FORMAT_ORDER,
-	MediaFormat,
-	ReleaseView,
+	DiscographyAlbum,
+	formatGenre,
 	toArtistView,
 } from '../../shared/music-ui';
 
@@ -21,11 +19,6 @@ export interface ArtistProfileView extends ArtistView {
 	/** Description split into readable paragraphs, markup removed. */
 	paragraphs: string[];
 	sites: SiteLink[];
-}
-
-export interface DiscographyAlbum extends AlbumView {
-	/** Formats of this album in the collection; empty when not collected. */
-	ownedFormats: MediaFormat[];
 }
 
 export interface TypeCount {
@@ -77,18 +70,6 @@ export function toParagraphs(text: string): string[] {
 	return paragraphs;
 }
 
-/** Genres are stored as "Rock" or as enum keys like "THRASH_METAL". */
-export function formatGenre(genre: unknown): string | null {
-	if (typeof genre !== 'string' || !genre.trim()) {
-		return null;
-	}
-	return genre
-		.toLowerCase()
-		.split(/[_\s]+/)
-		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-		.join(' ');
-}
-
 export function toSiteLinks(sites: unknown): SiteLink[] {
 	if (!Array.isArray(sites)) {
 		return [];
@@ -115,34 +96,6 @@ export function toArtistProfile(artist: ArtistEntity): ArtistProfileView {
 		paragraphs: toParagraphs(cleanDescription(artist.description)),
 		sites: toSiteLinks(artist.sites),
 	};
-}
-
-/** The artist's albums, oldest first, with the formats owned of each. */
-export function toDiscography(
-	albums: AlbumView[],
-	releases: ReleaseView[]
-): DiscographyAlbum[] {
-	const owned = new Map<string, Set<MediaFormat>>();
-
-	for (const release of releases) {
-		const formats = owned.get(release.albumId) ?? new Set<MediaFormat>();
-		formats.add(release.format);
-		owned.set(release.albumId, formats);
-	}
-
-	return albums
-		.map((album) => ({
-			...album,
-			ownedFormats: FORMAT_ORDER.filter((format) =>
-				owned.get(album.id)?.has(format)
-			),
-		}))
-		.sort(
-			(a, b) =>
-				(a.year ?? Number.MAX_SAFE_INTEGER) -
-					(b.year ?? Number.MAX_SAFE_INTEGER) ||
-				a.title.localeCompare(b.title)
-		);
 }
 
 /** Album types present in the discography, most frequent first. */

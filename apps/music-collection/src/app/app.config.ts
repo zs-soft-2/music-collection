@@ -37,7 +37,6 @@ import { routes } from './app-routing';
 import { AuthenticationInitializer } from './initializer';
 import { HookModule } from './module/hook';
 import { metaReducers } from './reducer';
-import { AlbumPageResolverService } from './resolver';
 import { NgxPermissionsModule } from 'ngx-permissions';
 
 export const appConfig: ApplicationConfig = {
@@ -83,7 +82,6 @@ export const appConfig: ApplicationConfig = {
 			DomainWishlistItemModule,
 			HookModule
 		),
-		AlbumPageResolverService,
 		{
 			provide: APP_INITIALIZER,
 			useFactory: AuthenticationInitializer,

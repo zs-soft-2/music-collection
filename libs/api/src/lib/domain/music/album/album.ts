@@ -11,9 +11,22 @@ import {
 import { DocumentEntity } from '../../document';
 import { ArtistEntity } from '../artist';
 
+/** Original release of the album on Discogs (set by the Discogs import). */
+export interface AlbumDiscogs {
+	masterId: number | null;
+	releaseId: number;
+	/** Release date as given by Discogs, e.g. "1987" or "1987-04-20". */
+	released: string | null;
+	country: string | null;
+	labels: { name: string; catno: string | null }[];
+	/** e.g. "Vinyl, LP, Album". */
+	formats: string[];
+}
+
 export interface Album {
 	artist: AlbumArtist;
 	coverImage: AlbumDocument | null;
+	discogs?: AlbumDiscogs;
 	format: FormatEnum;
 	genre: GenreEnum;
 	name: string;

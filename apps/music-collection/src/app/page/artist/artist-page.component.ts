@@ -12,11 +12,11 @@ import { RouterLink } from '@angular/router';
 
 import {
 	ArtistTileComponent,
+	DiscographyCardComponent,
 	FORMAT_LABELS,
 	ReleaseCardComponent,
 } from '../../shared/music-ui';
 import { ArtistPageStore } from './artist-page.store';
-import { DiscographyCardComponent } from './component/discography-card/discography-card.component';
 import { DiscographyTimelineComponent } from './component/discography-timeline/discography-timeline.component';
 
 /** Paragraphs shown before "Read more". */

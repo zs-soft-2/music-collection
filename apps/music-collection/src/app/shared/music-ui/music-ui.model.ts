@@ -38,6 +38,9 @@ export interface ReleaseView {
 	pictureDisc: boolean;
 	/** When the item was added to the collection (epoch ms). */
 	addedAt: number;
+	/** Label and country of the collected pressing. */
+	labelName: string | null;
+	country: string | null;
 }
 
 export interface ArtistView {
@@ -66,6 +69,12 @@ export interface AlbumView {
 	/** Album type label, e.g. "LP", "EP", "Live". */
 	albumType: string | null;
 	styles: string[];
+}
+
+/** An album of a discography with the formats collected of it. */
+export interface DiscographyAlbum extends AlbumView {
+	/** Formats of this album in the collection; empty when not collected. */
+	ownedFormats: MediaFormat[];
 }
 
 export const FORMAT_LABELS: Record<MediaFormat, string> = {
