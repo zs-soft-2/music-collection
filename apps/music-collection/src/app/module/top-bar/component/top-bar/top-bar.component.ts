@@ -11,7 +11,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { BaseComponent, RoleNames } from '@music-collection/api';
 
-import { ThemeService } from '../../../../theme';
+import { SpotifyMiniPlayerComponent } from '../../../../shared/spotify';
+import { LayoutWidthService, ThemeService } from '../../../../theme';
 import { TopBarService } from './top-bar.service';
 
 const NAV_ICONS: Record<string, string> = {
@@ -27,7 +28,12 @@ const NAV_ICONS: Record<string, string> = {
 	selector: 'mc-top-bar',
 	styleUrls: ['./top-bar.component.scss'],
 	templateUrl: './top-bar.component.html',
-	imports: [RouterLink, RouterLinkActive, NgxPermissionsModule],
+	imports: [
+		RouterLink,
+		RouterLinkActive,
+		NgxPermissionsModule,
+		SpotifyMiniPlayerComponent,
+	],
 	host: {
 		'(document:keydown.escape)': 'closeMenus()',
 	},
@@ -35,6 +41,7 @@ const NAV_ICONS: Record<string, string> = {
 export class TopBarComponent extends BaseComponent {
 	private readonly componentService = inject(TopBarService);
 	protected readonly theme = inject(ThemeService);
+	protected readonly layoutWidth = inject(LayoutWidthService);
 
 	protected readonly adminRoles = [RoleNames.ADMIN];
 
@@ -55,6 +62,16 @@ export class TopBarComponent extends BaseComponent {
 	protected readonly menuOpen = signal(false);
 
 	protected readonly user = computed(() => this.params()?.user);
+	/**
+	 * Google's photo server sometimes refuses the image (429); the initials
+	 * stand in for a photo that failed to load, until the URL changes.
+	 */
+	protected readonly failedAvatarUrl = signal<string | null>(null);
+	protected readonly avatarUrl = computed(() => {
+		const photo = this.user()?.photoURL;
+
+		return photo && photo !== this.failedAvatarUrl() ? photo : null;
+	});
 	protected readonly initials = computed(() => {
 		const name = this.user()?.displayName || this.user()?.email || '?';
 

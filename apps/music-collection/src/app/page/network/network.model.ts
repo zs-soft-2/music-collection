@@ -1,25 +1,33 @@
+import { ArtistType } from '@music-collection/api';
+
 /**
- * View models of the relationship network: musicians, bands, solo projects
- * and albums as nodes; memberships and releases as edges.
+ * View models of the relationship network. The graph is bipartite: a musician
+ * only connects to groups (bands, projects, formations) and a group only to
+ * musicians — two musicians are linked through the groups they played in.
  */
 
-export type NetworkNodeKind = 'musician' | 'band' | 'project' | 'album';
+export type NetworkNodeKind = 'musician' | ArtistType;
 
-/** member = current member, former = left the band, released = band → album. */
-export type NetworkEdgeKind = 'member' | 'former' | 'guest' | 'released';
+/** member = current member, former = left the group, guest = played on records. */
+export type NetworkEdgeKind = 'member' | 'former' | 'guest';
+
+export const NETWORK_KIND_LABELS: Record<NetworkNodeKind, string> = {
+	musician: 'Musician',
+	band: 'Band',
+	project: 'Project',
+	formation: 'Formation',
+};
 
 export interface NetworkNode {
-	/** `musician:<uid>`, `artist:<uid>` or `album:<uid>` — stable `track` key. */
+	/** `musician:<uid>` or `artist:<uid>` — stable `track` key. */
 	id: string;
 	uid: string;
 	kind: NetworkNodeKind;
 	label: string;
-	/** Second line under the label, e.g. the band of an album. */
-	caption: string | null;
 	imageUrl: string | null;
-	/** Album: in the collection; band / project: has collected releases. */
+	/** A group with releases in the collection. */
 	owned: boolean;
-	/** Hops from the focus (albums: their band's distance + 1). */
+	/** Hops from the focus. */
 	distance: number;
 	/** Page of the node in the app; musicians have none. */
 	link: string[] | null;
@@ -44,14 +52,11 @@ export interface NetworkGraph {
 
 export interface NetworkFilter {
 	focusId: string;
-	/** Membership hops from the focus (1–3). */
+	/** Membership hops from the focus. */
 	depth: number;
-	showMusicians: boolean;
-	showBands: boolean;
-	showAlbums: boolean;
 	/** Guest appearances as edges (and the guests reached through them). */
 	includeGuests: boolean;
-	/** Only albums in the collection and bands with collected releases. */
+	/** Only groups with releases in the collection. */
 	onlyOwned: boolean;
 }
 
@@ -69,14 +74,14 @@ export interface NetworkMembershipView {
 export interface NetworkTogetherView {
 	nodeId: string;
 	name: string;
-	/** The band they played in together. */
+	/** The group they played in together. */
 	via: string;
 	years: string;
-	/** Both of them are still in that band. */
+	/** Both of them are still in that group. */
 	active: boolean;
 }
 
-/** Two bands a musician was in at the same time. */
+/** Two groups a musician was in at the same time. */
 export interface NetworkParallelView {
 	first: string;
 	second: string;
@@ -85,7 +90,6 @@ export interface NetworkParallelView {
 }
 
 export interface NetworkAlbumView {
-	nodeId: string;
 	id: string;
 	title: string;
 	artistName: string;
@@ -96,7 +100,7 @@ export interface NetworkAlbumView {
 
 export interface NetworkDetailsView {
 	node: NetworkNode;
-	/** Musician: their bands; band / project: its line-up. */
+	/** Musician: their groups; group: its line-up. */
 	memberships: NetworkMembershipView[];
 	together: NetworkTogetherView[];
 	parallel: NetworkParallelView[];

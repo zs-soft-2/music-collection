@@ -2,7 +2,7 @@
 	--net-musician: var(--mc-primary);
 	--net-band: #4d8dff;
 	--net-project: #b36bff;
-	--net-album: var(--mc-status-ok);
+	--net-formation: #e3a008;
 
 	display: flex;
 	flex-direction: column;
@@ -13,6 +13,7 @@
 :host-context(html.mc-light) {
 	--net-band: #2459c7;
 	--net-project: #7a2fc2;
+	--net-formation: #8a5a00;
 }
 
 ul {
@@ -83,8 +84,8 @@ h3 {
 		border-radius: var(--mc-radius-lg);
 	}
 
-	&[data-kind='album'] {
-		--kind-color: var(--net-album);
+	&[data-kind='formation'] {
+		--kind-color: var(--net-formation);
 		border-radius: var(--mc-radius-sm);
 	}
 

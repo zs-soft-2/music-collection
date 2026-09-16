@@ -9,7 +9,6 @@ import {
 	NetworkGraph,
 	NetworkMembershipView,
 	NetworkNode,
-	NetworkNodeKind,
 	NetworkParallelView,
 	NetworkSearchResult,
 	NetworkTogetherView,
@@ -18,14 +17,10 @@ import {
 /** The network stops growing here; beyond it a graph is no longer readable. */
 export const MAX_NETWORK_NODES = 120;
 
-/** Albums drawn around a band; the details panel lists all of them. */
-export const ALBUMS_PER_ARTIST = 8;
-
 const SEARCH_LIMIT = 8;
 
 export const musicianNodeId = (uid: string) => `musician:${uid}`;
 export const artistNodeId = (uid: string) => `artist:${uid}`;
-export const albumNodeId = (uid: string) => `album:${uid}`;
 
 export interface NetworkSource {
 	memberships: MembershipEntity[];
@@ -45,11 +40,9 @@ export interface NetworkIndex {
 	/** Sorted by year. */
 	albumsByArtist: Map<string, NetworkAlbumView[]>;
 	albumsById: Map<string, NetworkAlbumView & { artistId: string }>;
-	/** Album uid → memberships that list the album. */
-	membershipsByAlbum: Map<string, MembershipEntity[]>;
 }
 
-interface Span {
+export interface Span {
 	from: number;
 	to: number;
 	active: boolean;
@@ -73,7 +66,7 @@ function push<K, V>(map: Map<K, V[]>, key: K, value: V): void {
 	}
 }
 
-function spanOf(
+export function spanOf(
 	membership: MembershipEntity,
 	currentYear: number
 ): Span | null {
@@ -89,7 +82,7 @@ function spanOf(
 	};
 }
 
-function overlapOf(a: Span, b: Span): Span | null {
+export function overlapOf(a: Span, b: Span): Span | null {
 	const from = Math.max(a.from, b.from);
 	const to = Math.min(a.to, b.to);
 
@@ -131,7 +124,6 @@ export function buildNetworkIndex(source: NetworkSource): NetworkIndex {
 	const nodes = new Map<string, NetworkNode>();
 	const membershipsByMusician = new Map<string, MembershipEntity[]>();
 	const membershipsByArtist = new Map<string, MembershipEntity[]>();
-	const membershipsByAlbum = new Map<string, MembershipEntity[]>();
 	const artistsById = new Map(source.artists.map((a) => [a.id, a]));
 	const artistsByName = new Map(
 		source.artists.map((a) => [normalizeName(a.name), a])
@@ -140,9 +132,6 @@ export function buildNetworkIndex(source: NetworkSource): NetworkIndex {
 	for (const membership of source.memberships) {
 		push(membershipsByMusician, membership.musicianUid, membership);
 		push(membershipsByArtist, membership.artistUid, membership);
-		for (const albumUid of membership.albumUids ?? []) {
-			push(membershipsByAlbum, albumUid, membership);
-		}
 	}
 	membershipsByMusician.forEach((list) => list.sort(byImportance));
 	membershipsByArtist.forEach((list) => list.sort(byImportance));
@@ -154,20 +143,14 @@ export function buildNetworkIndex(source: NetworkSource): NetworkIndex {
 			return;
 		}
 		const view = artistsById.get(uid);
-		const name = view?.name ?? fallbackName;
-		// A solo project: the band carries the name of one of its members.
-		const isProject = (membershipsByArtist.get(uid) ?? []).some(
-			(m) =>
-				m.kind === 'member' &&
-				normalizeName(m.musicianName) === normalizeName(name)
-		);
 
 		nodes.set(id, {
 			id,
 			uid,
-			kind: isProject ? 'project' : 'band',
-			label: name,
-			caption: view?.country ?? null,
+			// Groups missing from the catalog are bands, like unset types
+			// (ArtistView.type is already defaulted).
+			kind: view?.type ?? 'band',
+			label: view?.name ?? fallbackName,
 			imageUrl: view?.imageUrl ?? null,
 			owned: source.collectedArtistIds.has(uid),
 			distance: 0,
@@ -189,14 +172,13 @@ export function buildNetworkIndex(source: NetworkSource): NetworkIndex {
 				uid: membership.musicianUid,
 				kind: 'musician',
 				label: membership.musicianName,
-				caption: null,
-				// A musician with a solo project shares its portrait.
+				// A musician with a same-named solo act shares its portrait.
 				imageUrl:
 					artistsByName.get(normalizeName(membership.musicianName))
 						?.imageUrl ?? null,
 				owned: false,
 				distance: 0,
-				link: null,
+				link: ['/musician', membership.musicianUid],
 			});
 		}
 	}
@@ -209,7 +191,6 @@ export function buildNetworkIndex(source: NetworkSource): NetworkIndex {
 
 	for (const album of source.albums) {
 		const view = {
-			nodeId: albumNodeId(album.id),
 			id: album.id,
 			title: album.title,
 			artistName: album.artistName,
@@ -221,17 +202,6 @@ export function buildNetworkIndex(source: NetworkSource): NetworkIndex {
 
 		albumsById.set(album.id, view);
 		push(albumsByArtist, album.artistId, view);
-		nodes.set(view.nodeId, {
-			id: view.nodeId,
-			uid: album.id,
-			kind: 'album',
-			label: album.title,
-			caption: album.artistName || null,
-			imageUrl: album.coverUrl,
-			owned: view.owned,
-			distance: 0,
-			link: ['/album', album.id],
-		});
 	}
 	albumsByArtist.forEach((list) =>
 		list.sort((a, b) => (a.year ?? 9999) - (b.year ?? 9999))
@@ -243,7 +213,6 @@ export function buildNetworkIndex(source: NetworkSource): NetworkIndex {
 		membershipsByArtist,
 		albumsByArtist,
 		albumsById,
-		membershipsByAlbum,
 	};
 }
 
@@ -270,7 +239,8 @@ function membershipEdge(
 
 /**
  * Cuts the network around the focus: breadth-first along memberships up to
- * `depth` hops, then the albums of the bands next to the focus.
+ * `depth` hops. Every hop crosses from a musician to a group or back, so the
+ * graph stays bipartite.
  */
 export function buildNetwork(
 	index: NetworkIndex,
@@ -283,19 +253,18 @@ export function buildNetwork(
 		return { nodes: [], edges: [], truncated: false };
 	}
 
-	const kindShown = (kind: NetworkNodeKind) =>
-		kind === 'musician'
-			? filter.showMusicians
-			: kind === 'album'
-				? filter.showAlbums
-				: filter.showBands;
-	// Filtered out nodes are not walked through either — except hidden
-	// musicians / bands, which still connect what is shown.
+	// Filtered out groups are not walked through either.
 	const passable = (node: NetworkNode) =>
 		node.id === focus.id ||
 		!filter.onlyOwned ||
 		node.kind === 'musician' ||
 		node.owned;
+	const neighbours = (node: NetworkNode): MembershipEntity[] =>
+		(
+			(node.kind === 'musician'
+				? index.membershipsByMusician.get(node.uid)
+				: index.membershipsByArtist.get(node.uid)) ?? []
+		).filter((m) => filter.includeGuests || m.kind === 'member');
 
 	const reached = new Map<string, NetworkNode>([
 		[focus.id, { ...focus, distance: 0 }],
@@ -304,34 +273,8 @@ export function buildNetwork(
 	let truncated = false;
 	let frontier = [focus];
 
-	const neighbours = (node: NetworkNode): MembershipEntity[] => {
-		const list =
-			node.kind === 'musician'
-				? index.membershipsByMusician.get(node.uid)
-				: node.kind === 'album'
-					? []
-					: index.membershipsByArtist.get(node.uid);
-
-		return (list ?? []).filter(
-			(m) => filter.includeGuests || m.kind === 'member'
-		);
-	};
-
-	if (focus.kind === 'album') {
-		const album = index.albumsById.get(focus.uid);
-		const artist = album && index.nodes.get(artistNodeId(album.artistId));
-
-		if (artist) {
-			reached.set(artist.id, { ...artist, distance: 1 });
-			frontier = [artist];
-		}
-	}
-
-	// An album's band is already one hop away.
-	const firstHop = focus.kind === 'album' ? 2 : 1;
-
 	for (
-		let distance = firstHop;
+		let distance = 1;
 		distance <= filter.depth && frontier.length;
 		distance++
 	) {
@@ -367,103 +310,11 @@ export function buildNetwork(
 		frontier = next;
 	}
 
-	const nodes = [...reached.values()].filter(
-		(node) => node.id === focus.id || kindShown(node.kind)
-	);
-	const shown = new Set(nodes.map((node) => node.id));
-	const edges: NetworkEdge[] = [];
+	const edges = [...memberships.values()]
+		.map((membership) => membershipEdge(membership, currentYear))
+		.filter((edge) => reached.has(edge.source) && reached.has(edge.target));
 
-	for (const membership of memberships.values()) {
-		const edge = membershipEdge(membership, currentYear);
-
-		if (shown.has(edge.source) && shown.has(edge.target)) {
-			edges.push(edge);
-		}
-	}
-
-	if (!filter.showMusicians) {
-		edges.push(...sharedMemberEdges(memberships, shown));
-	}
-
-	if (filter.showAlbums) {
-		const bands = nodes.filter(
-			(node) =>
-				(node.kind === 'band' || node.kind === 'project') &&
-				node.distance <= 1
-		);
-
-		for (const band of bands) {
-			const albums = (index.albumsByArtist.get(band.uid) ?? [])
-				.filter((album) => !filter.onlyOwned || album.owned)
-				.slice()
-				.sort((a, b) => Number(b.owned) - Number(a.owned))
-				.slice(0, ALBUMS_PER_ARTIST);
-
-			for (const album of albums) {
-				const node = index.nodes.get(album.nodeId);
-
-				if (!node) {
-					continue;
-				}
-				if (!shown.has(node.id)) {
-					shown.add(node.id);
-					nodes.push({ ...node, distance: band.distance + 1 });
-				}
-				edges.push({
-					id: `${band.id}>${node.id}`,
-					source: band.id,
-					target: node.id,
-					kind: 'released',
-					label: 'released',
-					years: album.year ? String(album.year) : null,
-				});
-			}
-		}
-	}
-
-	return { nodes, edges, truncated };
-}
-
-/** Band ↔ band edges through the (hidden) musicians they share. */
-function sharedMemberEdges(
-	memberships: Map<string, MembershipEntity>,
-	shown: Set<string>
-): NetworkEdge[] {
-	const bandsByMusician = new Map<string, string[]>();
-
-	for (const membership of memberships.values()) {
-		const bandId = artistNodeId(membership.artistUid);
-
-		if (shown.has(bandId)) {
-			push(bandsByMusician, membership.musicianUid, bandId);
-		}
-	}
-
-	const shared = new Map<string, number>();
-
-	for (const bands of bandsByMusician.values()) {
-		for (let i = 0; i < bands.length; i++) {
-			for (let j = i + 1; j < bands.length; j++) {
-				const key = [bands[i], bands[j]].sort().join('|');
-
-				shared.set(key, (shared.get(key) ?? 0) + 1);
-			}
-		}
-	}
-
-	return [...shared].map(([key, count]) => {
-		const [source, target] = key.split('|');
-
-		return {
-			id: key,
-			source,
-			target,
-			kind: 'member',
-			label:
-				count === 1 ? '1 shared musician' : `${count} shared musicians`,
-			years: null,
-		};
-	});
+	return { nodes: [...reached.values()], edges, truncated };
 }
 
 function toMembershipView(
@@ -606,16 +457,6 @@ export function buildNetworkDetails(
 		};
 	}
 
-	if (node.kind === 'album') {
-		return {
-			...base,
-			memberships: (index.membershipsByAlbum.get(node.uid) ?? []).map(
-				(m) => toMembershipView(m, 'musician', currentYear)
-			),
-			albums: [],
-		};
-	}
-
 	return {
 		...base,
 		memberships: (index.membershipsByArtist.get(node.uid) ?? []).map((m) =>
@@ -625,7 +466,7 @@ export function buildNetworkDetails(
 	};
 }
 
-/** Musicians, bands and albums by name; prefix matches first. */
+/** Musicians and groups by name; prefix matches first. */
 export function searchNetwork(
 	index: NetworkIndex,
 	query: string
@@ -645,8 +486,7 @@ export function searchNetwork(
 				nodeId: node.id,
 				name: node.label,
 				kind: node.kind,
-				rank:
-					(position === 0 ? 0 : 2) + (node.kind === 'album' ? 1 : 0),
+				rank: position === 0 ? 0 : 1,
 			});
 		}
 	}

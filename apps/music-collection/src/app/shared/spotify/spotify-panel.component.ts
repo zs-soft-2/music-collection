@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 
 import { SpotifyPlayerComponent } from '../music-ui';
+import { SpotifyIconComponent } from './spotify-icon.component';
 import { SpotifyPlaybackStore } from './spotify-playback.store';
 
 /**
@@ -17,7 +18,7 @@ import { SpotifyPlaybackStore } from './spotify-playback.store';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-spotify-panel',
-	imports: [SpotifyPlayerComponent],
+	imports: [SpotifyIconComponent, SpotifyPlayerComponent],
 	template: `
 		@if (spotify.connected()) {
 			<div class="now-playing">
@@ -51,7 +52,7 @@ import { SpotifyPlaybackStore } from './spotify-playback.store';
 						</button>
 						<button
 							type="button"
-							class="icon-button primary"
+							class="icon-button spotify"
 							[attr.aria-label]="
 								spotify.nowPlaying()?.paused ? 'Play' : 'Pause'
 							"
@@ -78,10 +79,10 @@ import { SpotifyPlaybackStore } from './spotify-playback.store';
 					} @else {
 						<button
 							type="button"
-							class="button"
+							class="button spotify"
 							(click)="spotify.play(albumId(), null)"
 						>
-							<i class="pi pi-play" aria-hidden="true"></i>
+							<mc-spotify-icon />
 							Play album
 						</button>
 					}
@@ -141,10 +142,11 @@ import { SpotifyPlaybackStore } from './spotify-playback.store';
 					</p>
 					<button
 						type="button"
-						class="button"
+						class="button spotify"
 						[disabled]="spotify.status() === 'connecting'"
 						(click)="spotify.connect()"
 					>
+						<mc-spotify-icon />
 						@if (spotify.status() === 'connecting') {
 							Connecting…
 						} @else {
@@ -259,6 +261,15 @@ import { SpotifyPlaybackStore } from './spotify-playback.store';
 			border-radius: var(--mc-radius-md);
 			cursor: pointer;
 
+			&.spotify {
+				color: var(--mc-on-spotify);
+				background: var(--mc-spotify);
+
+				mc-spotify-icon {
+					color: inherit;
+				}
+			}
+
 			&:disabled {
 				opacity: 0.6;
 				cursor: default;
@@ -276,10 +287,10 @@ import { SpotifyPlaybackStore } from './spotify-playback.store';
 			border-radius: 50%;
 			cursor: pointer;
 
-			&.primary {
-				color: #fff;
-				background: var(--mc-primary);
-				border-color: var(--mc-primary);
+			&.spotify {
+				color: var(--mc-on-spotify);
+				background: var(--mc-spotify);
+				border-color: var(--mc-spotify);
 			}
 		}
 
@@ -307,7 +318,7 @@ import { SpotifyPlaybackStore } from './spotify-playback.store';
 
 		button:focus-visible,
 		select:focus-visible {
-			outline: 2px solid var(--mc-primary);
+			outline: 2px solid var(--mc-spotify-text);
 			outline-offset: 2px;
 		}
 	`,

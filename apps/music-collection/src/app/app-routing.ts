@@ -40,6 +40,16 @@ export const routes: Routes = [
 		},
 	},
 	{
+		path: 'musician/:musicianId',
+		loadComponent: () =>
+			import('./page/musician/musician-page.component').then(
+				(module) => module.MusicianPageComponent
+			),
+		data: {
+			breadcrumb: 'musician',
+		},
+	},
+	{
 		path: 'network',
 		loadComponent: () =>
 			import('./page/network/network-page.component').then(

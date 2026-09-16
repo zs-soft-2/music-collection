@@ -8,17 +8,10 @@ import {
 	signal,
 } from '@angular/core';
 
-import { NetworkNodeKind, NetworkSearchResult } from '../../network.model';
-
-const KIND_LABELS: Record<NetworkNodeKind, string> = {
-	musician: 'Musician',
-	band: 'Band',
-	project: 'Project',
-	album: 'Album',
-};
+import { NETWORK_KIND_LABELS, NetworkSearchResult } from '../../network.model';
 
 /**
- * Finds a musician, band or album to put in the focus (ARIA combobox). Arrow
+ * Finds a musician or group to put in the focus (ARIA combobox). Arrow
  * keys move between the results, Enter picks the active one, Escape closes.
  */
 @Component({
@@ -182,7 +175,7 @@ export class NetworkSearchComponent {
 		return count === 1 ? '1 result' : `${count} results`;
 	});
 
-	protected readonly kindLabels = KIND_LABELS;
+	protected readonly kindLabels = NETWORK_KIND_LABELS;
 
 	protected onInput(event: Event): void {
 		this.open.set(true);

@@ -461,3 +461,109 @@ export function toMembershipDocs(band, entries, profile) {
 		};
 	});
 }
+
+/** Prefixes of the lower-case name, as the app's search expects. */
+export function searchParameters(name) {
+	const lower = String(name ?? '').toLowerCase();
+	return Array.from(lower, (_, index) => lower.slice(0, index + 1));
+}
+
+const validUrls = (urls) =>
+	(urls ?? []).filter((url) => /^https?:\/\//i.test(String(url).trim()));
+
+/** The parts of a Discogs `/artists/{id}` response the import uses. */
+export function trimArtistProfile(artist) {
+	const images = artist.images ?? [];
+	const primary =
+		images.find((image) => image.type === 'primary') ?? images[0];
+
+	return {
+		id: artist.id,
+		name: artist.name,
+		realname: artist.realname || null,
+		profile: artist.profile?.trim() || null,
+		urls: validUrls(artist.urls),
+		namevariations: artist.namevariations ?? [],
+		aliases: (artist.aliases ?? []).map((a) => ({
+			id: a.id,
+			name: a.name,
+		})),
+		imageUrl: primary?.uri || null,
+		groups: (artist.groups ?? []).map((g) => ({
+			id: g.id,
+			name: g.name,
+			active: g.active ?? null,
+		})),
+		members: (artist.members ?? []).map((m) => ({
+			id: m.id,
+			name: m.name,
+			active: m.active ?? null,
+		})),
+	};
+}
+
+/** Fields of a `musician` document from its Discogs profile. */
+export function toMusicianProfileDoc(profile) {
+	return {
+		uid: `discogs-${profile.id}`,
+		name: stripDiscogsSuffix(profile.name),
+		discogsId: profile.id,
+		entityType: 'Musician',
+		source: 'discogs',
+		realName: profile.realname,
+		description: profile.profile,
+		sites: profile.urls,
+		aliases: [
+			...new Set(profile.aliases.map((a) => stripDiscogsSuffix(a.name))),
+		],
+		nameVariations: profile.namevariations,
+		imageUrl: profile.imageUrl,
+	};
+}
+
+/**
+ * A new `artist` document for a Discogs group that is not in the catalog.
+ * Country, genre and the year formed are unknown: left out for the admin.
+ */
+export function toGroupArtistDoc(profile) {
+	const name = stripDiscogsSuffix(profile.name);
+
+	return {
+		uid: `discogs-${profile.id}`,
+		name,
+		entityType: 'Artist',
+		artistType: 'band',
+		description: profile.profile ?? '',
+		sites: profile.urls,
+		styles: [],
+		searchParameters: searchParameters(name),
+		discogs: { artistId: profile.id, imageUrl: profile.imageUrl },
+		source: 'discogs',
+	};
+}
+
+/** Line-up of a new group: members only, years unknown. */
+export function toGroupMembershipDocs(artistUid, profile) {
+	const artistName = stripDiscogsSuffix(profile.name);
+
+	return profile.members.map((member) => {
+		const musicianUid = `discogs-${member.id}`;
+
+		return {
+			uid: `${artistUid}_${musicianUid}`,
+			artistUid,
+			artistName,
+			musicianUid,
+			musicianName: stripDiscogsSuffix(member.name),
+			kind: 'member',
+			instruments: [],
+			from: null,
+			to: null,
+			active: member.active,
+			albumCount: 0,
+			albumUids: [],
+			entityType: 'Membership',
+			source: 'discogs',
+		};
+	});
+}

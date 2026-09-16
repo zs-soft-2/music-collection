@@ -79,15 +79,6 @@ ul {
 	align-items: flex-end;
 }
 
-.portrait {
-	width: clamp(140px, 18vw, 220px);
-	aspect-ratio: 1;
-	object-fit: cover;
-	border: 3px solid rgba(255, 255, 255, 0.9);
-	border-radius: var(--mc-radius-lg);
-	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
-}
-
 .identity {
 	flex: 1 1 320px;
 	min-width: 0;
@@ -133,26 +124,10 @@ h1 {
 	}
 }
 
-.styles,
 .sites {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 0.4rem;
-}
-
-.styles {
-	margin-bottom: 0.9rem;
-
-	li {
-		padding: 0.25rem 0.65rem;
-		font-size: 0.72rem;
-		font-weight: 700;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
-		background: rgba(255, 255, 255, 0.08);
-		border: 1px solid var(--mc-border-strong);
-		border-radius: 999px;
-	}
 }
 
 .sites a {
@@ -345,7 +320,7 @@ h1 {
 		margin: 0 0 1rem;
 		font-size: 1rem;
 		line-height: 1.7;
-		color: #d8d8d8;
+		color: var(--mc-text);
 	}
 }
 
@@ -408,25 +383,266 @@ h1 {
 	opacity: 0.8;
 }
 
-mc-discography-timeline {
-	margin-bottom: 1.25rem;
-}
-
-.album-grid,
-.card-grid {
+.album-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 	gap: 1.25rem;
 }
 
-.artist-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-	gap: 1rem;
-}
-
 .empty {
 	color: var(--mc-text-muted);
+}
+
+/* ── Portrait ─────────────────────────────────────────────────────────── */
+
+.portrait {
+	width: clamp(120px, 15vw, 180px);
+	aspect-ratio: 1;
+	object-fit: cover;
+	border: 3px solid rgba(255, 255, 255, 0.9);
+	border-radius: 50%;
+	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+}
+
+.monogram {
+	display: grid;
+	place-items: center;
+	width: clamp(120px, 15vw, 180px);
+	aspect-ratio: 1;
+	font-family: var(--mc-font-display);
+	font-size: clamp(3rem, 6vw, 4.5rem);
+	color: var(--mc-text);
+	background: rgba(10, 10, 10, 0.6);
+	border: 3px solid rgba(255, 255, 255, 0.9);
+	border-radius: 50%;
+	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* ── Bands ────────────────────────────────────────────────────────────── */
+
+.band {
+	display: grid;
+	grid-template-columns: 3rem minmax(0, 1.2fr) minmax(10rem, 0.7fr) minmax(
+			0,
+			1.1fr
+		);
+	gap: 0.4rem 1.25rem;
+	align-items: center;
+	padding: 0.7rem 0;
+	border-bottom: 1px solid var(--mc-border);
+}
+
+.thumb {
+	display: grid;
+	place-items: center;
+	width: 3rem;
+	height: 3rem;
+	overflow: hidden;
+	font-weight: 700;
+	color: var(--mc-text-muted);
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-md);
+
+	img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+}
+
+.who,
+.when {
+	display: flex;
+	flex-direction: column;
+	gap: 0.1rem;
+	min-width: 0;
+}
+
+.band-name {
+	font-weight: 600;
+	color: var(--mc-text);
+	text-decoration: none;
+}
+
+a.band-name:hover {
+	text-decoration: underline;
+}
+
+a.band-name:focus-visible,
+.bandmate:focus-visible {
+	outline: 2px solid var(--mc-primary);
+	outline-offset: 2px;
+}
+
+.instruments {
+	font-size: 0.82rem;
+	color: var(--mc-text-muted);
+}
+
+.years {
+	font-size: 0.9rem;
+	font-variant-numeric: tabular-nums;
+}
+
+.band.active .years {
+	font-weight: 600;
+}
+
+.meta {
+	font-size: 0.75rem;
+	color: var(--mc-text-subtle);
+}
+
+.owned {
+	font-size: 0.7rem;
+	color: var(--mc-status-ok);
+}
+
+/* Time bar across the musician's years on record. */
+.track {
+	position: relative;
+	height: 10px;
+	background: rgba(255, 255, 255, 0.05);
+	border-radius: 999px;
+}
+
+.bar {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	min-width: 10px;
+	background: var(--mc-text-subtle);
+	border-radius: 999px;
+}
+
+.band.active .bar {
+	background: var(--mc-chart);
+}
+
+.axis {
+	display: grid;
+	grid-template-columns: 3rem minmax(0, 1.2fr) minmax(10rem, 0.7fr) minmax(
+			0,
+			1.1fr
+		);
+	gap: 0 1.25rem;
+	margin-top: 0.35rem;
+	font-size: 0.72rem;
+	color: var(--mc-text-subtle);
+	font-variant-numeric: tabular-nums;
+
+	span {
+		grid-row: 1;
+		grid-column: 4;
+	}
+
+	span:last-child {
+		justify-self: end;
+	}
+}
+
+/* ── Guest appearances ────────────────────────────────────────────────── */
+
+.guests {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+	gap: 0.5rem 1.5rem;
+}
+
+.guest {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	padding: 0.5rem 0;
+	border-bottom: 1px solid var(--mc-border);
+}
+
+/* ── Albums ───────────────────────────────────────────────────────────── */
+
+.album {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.album-artist {
+	margin: 0.5rem 0 0.3rem;
+	font-size: 0.8rem;
+	color: var(--mc-text-muted);
+}
+
+.roles {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.3rem;
+
+	li {
+		padding: 0.1rem 0.5rem;
+		font-size: 0.74rem;
+		background: rgba(255, 255, 255, 0.06);
+		border: 1px solid var(--mc-border-strong);
+		border-radius: 999px;
+	}
+}
+
+/* ── Bandmates ────────────────────────────────────────────────────────── */
+
+.bandmates {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: 0.75rem;
+	margin-bottom: 0.75rem;
+}
+
+.bandmate {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+	height: 100%;
+	padding: 0.75rem 1rem;
+	color: var(--mc-text);
+	text-decoration: none;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-md);
+	transition: border-color var(--mc-duration-fast) ease;
+
+	&:hover {
+		border-color: var(--mc-text-muted);
+	}
+
+	&.active {
+		border-left: 3px solid var(--mc-chart);
+	}
+}
+
+.bandmate-name {
+	font-weight: 600;
+}
+
+.together {
+	font-size: 0.78rem;
+	color: var(--mc-text-muted);
+	font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 720px) {
+	.band {
+		grid-template-columns: 3rem minmax(0, 1fr);
+	}
+
+	.when {
+		grid-column: 2;
+	}
+
+	.track {
+		grid-column: 1 / -1;
+	}
+
+	.axis {
+		display: none;
+	}
 }
 
 /* ── States ───────────────────────────────────────────────────────────── */
@@ -500,14 +716,9 @@ mc-discography-timeline {
 		min-height: 400px;
 	}
 
-	.album-grid,
-	.card-grid {
+	.album-grid {
 		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
 		gap: 0.75rem;
-	}
-
-	.artist-grid {
-		grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
 	}
 }
 

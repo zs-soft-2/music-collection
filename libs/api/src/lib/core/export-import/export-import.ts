@@ -2,7 +2,7 @@ import { Entity } from '../../common';
 import { Album, Artist, Document } from '../../domain';
 
 export interface ArtistExport extends Artist {
-	formedIn: string;
+	formedIn: string | null;
 	headerImageDocument: DocumentExportModel | null;
 	mainImageDocument: DocumentExportModel | null;
 }
@@ -17,7 +17,7 @@ export interface AlbumImport extends Album {
 }
 
 export interface ArtistImport extends Artist {
-	formedIn: Date;
+	formedIn: Date | null;
 }
 
 export interface DocumentExport extends Document {

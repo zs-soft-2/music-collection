@@ -3,8 +3,13 @@ import { catchError, first, map, switchMap } from 'rxjs/operators';
 
 import { inject, Injectable } from '@angular/core';
 import {
-    AlbumUtilService, ArtistDataService, ArtistHookService, ArtistUtilService,
-    EntityQuantityStateService, EntityQuantityUtilService, EntityTypeEnum
+	AlbumUtilService,
+	ArtistDataService,
+	ArtistHookService,
+	ArtistUtilService,
+	EntityQuantityStateService,
+	EntityQuantityUtilService,
+	EntityTypeEnum,
 } from '@music-collection/api';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 
@@ -12,15 +17,15 @@ import * as artistActions from './artist.actions';
 
 @Injectable()
 export class ArtistEffects {
-    private actions$: Actions = inject(Actions);
-    private albumUtilService = inject(AlbumUtilService);
-    private artistDataService = inject(ArtistDataService);
-    private artistHookService = inject(ArtistHookService);
-    private artistUtilService = inject(ArtistUtilService);
-    private entityQuantityStateService = inject(EntityQuantityStateService);
-    private entityQuantityUtilService = inject(EntityQuantityUtilService);
+	private actions$: Actions = inject(Actions);
+	private albumUtilService = inject(AlbumUtilService);
+	private artistDataService = inject(ArtistDataService);
+	private artistHookService = inject(ArtistHookService);
+	private artistUtilService = inject(ArtistUtilService);
+	private entityQuantityStateService = inject(EntityQuantityStateService);
+	private entityQuantityUtilService = inject(EntityQuantityUtilService);
 
-    public addArtist = createEffect(() =>
+	public addArtist = createEffect(() =>
 		this.actions$.pipe(
 			ofType(artistActions.addArtist),
 			switchMap((action) =>
@@ -65,7 +70,7 @@ export class ArtistEffects {
 			)
 		)
 	);
-    public listAlbumsById = createEffect(() =>
+	public listAlbumsById = createEffect(() =>
 		this.actions$.pipe(
 			ofType(artistActions.listAlbumsById),
 			switchMap((action) =>
@@ -84,7 +89,7 @@ export class ArtistEffects {
 			)
 		)
 	);
-    public listArtists = createEffect(() =>
+	public listArtists = createEffect(() =>
 		this.actions$.pipe(
 			ofType(artistActions.listArtists),
 			switchMap(() =>
@@ -103,7 +108,7 @@ export class ArtistEffects {
 			)
 		)
 	);
-    public loadArtist = createEffect(() =>
+	public loadArtist = createEffect(() =>
 		this.actions$.pipe(
 			ofType(artistActions.loadArtist),
 			switchMap((action) =>
@@ -113,7 +118,7 @@ export class ArtistEffects {
 							artist: artist
 								? this.artistUtilService.convertModelToEntity(
 										artist
-								  )
+									)
 								: undefined,
 						});
 					}),
@@ -124,7 +129,7 @@ export class ArtistEffects {
 			)
 		)
 	);
-    public searchArtists = createEffect(() =>
+	public searchArtists = createEffect(() =>
 		this.actions$.pipe(
 			ofType(artistActions.search),
 			switchMap((action) =>
@@ -146,7 +151,7 @@ export class ArtistEffects {
 			)
 		)
 	);
-    public selectArtist = createEffect(() =>
+	public selectArtist = createEffect(() =>
 		this.actions$.pipe(
 			ofType(artistActions.selectArtist),
 			map((action) => {
@@ -158,7 +163,7 @@ export class ArtistEffects {
 			})
 		)
 	);
-    public updateArtist = createEffect(() =>
+	public updateArtist = createEffect(() =>
 		this.actions$.pipe(
 			ofType(artistActions.updateArtist),
 			switchMap((action) =>

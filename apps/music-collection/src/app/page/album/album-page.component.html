@@ -130,7 +130,10 @@
 		<!-- Listen -->
 		@if (album.spotifyAlbumId) {
 			<section class="listen" aria-labelledby="listen-title">
-				<h2 id="listen-title" class="panel-title">Listen on Spotify</h2>
+				<h2 id="listen-title" class="panel-title spotify-title">
+					<mc-spotify-icon />
+					Listen on Spotify
+				</h2>
 				<mc-spotify-panel
 					[albumId]="album.spotifyAlbumId"
 					[albumTitle]="album.artistName + ' – ' + album.title"

@@ -1,3 +1,5 @@
+import { ArtistType } from '@music-collection/api';
+
 /**
  * Presentation models shared by the music pages (home, collection).
  *
@@ -46,6 +48,8 @@ export interface ReleaseView {
 export interface ArtistView {
 	id: string;
 	name: string;
+	/** Band, project or formation; `band` when not set. */
+	type: ArtistType;
 	/** Square portrait / band photo. */
 	imageUrl: string | null;
 	/** Wide header photo, falls back to the portrait. */

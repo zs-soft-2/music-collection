@@ -304,7 +304,9 @@ export class ExportImportServiceImpl extends ExportImportService {
 			country: artistExportModel.country,
 			description: artistExportModel.description,
 			entityType: artistExportModel.entityType,
-			formedIn: new Date(artistExportModel.formedIn),
+			formedIn: artistExportModel.formedIn
+				? new Date(artistExportModel.formedIn)
+				: null,
 			genre: artistExportModel.genre,
 			name: artistExportModel.name,
 			sites: artistExportModel.sites,

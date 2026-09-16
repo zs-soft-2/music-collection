@@ -14,6 +14,7 @@ import {
 	FormatBadgeComponent,
 } from '../../shared/music-ui';
 import {
+	SpotifyIconComponent,
 	SpotifyPanelComponent,
 	SpotifyPlaybackStore,
 } from '../../shared/spotify';
@@ -38,6 +39,7 @@ import { AlbumTracklistComponent } from './component/album-tracklist/album-track
 		FormatBadgeComponent,
 		AlbumCreditsComponent,
 		AlbumTracklistComponent,
+		SpotifyIconComponent,
 		SpotifyPanelComponent,
 		AdminEditLinkComponent,
 	],

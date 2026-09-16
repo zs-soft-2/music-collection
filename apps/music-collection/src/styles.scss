@@ -28,6 +28,10 @@ html.mc-dark {
 	--mc-border: rgba(255, 255, 255, 0.08);
 	--mc-border-strong: rgba(255, 255, 255, 0.18);
 	--mc-status-ok: #4fd18b;
+	// Spotify brand green: logo and button background; -text for green text.
+	--mc-spotify: #1ed760;
+	--mc-on-spotify: #000000;
+	--mc-spotify-text: #1ed760;
 	--mc-status-warn: #ffb733;
 	--mc-status-bad: #ff6b6b;
 	--mc-shadow-menu:
@@ -54,6 +58,9 @@ html.mc-light {
 	--mc-border: rgba(0, 0, 0, 0.1);
 	--mc-border-strong: rgba(0, 0, 0, 0.18);
 	--mc-status-ok: #17703f;
+	--mc-spotify: #1ed760;
+	--mc-on-spotify: #000000;
+	--mc-spotify-text: #0f7a3a;
 	--mc-status-warn: #8a5700;
 	--mc-status-bad: #b91c1c;
 	--mc-shadow-menu:
@@ -423,6 +430,16 @@ body .p-chip {
 	.mc-card-admin {
 		opacity: 1;
 	}
+}
+
+// A lapok tartalmának legnagyobb szélessége; széles nézetben (a felső sáv
+// kapcsolója, LayoutWidthService) nincs korlát, csak az oldalsó térköz.
+:root {
+	--mc-page-max-width: 1440px;
+}
+
+:root.mc-wide {
+	--mc-page-max-width: none;
 }
 
 // Admin szerkesztő-gomb a fotós fejlécek jobb felső sarkában.

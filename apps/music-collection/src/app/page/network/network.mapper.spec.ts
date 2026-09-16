@@ -111,6 +111,7 @@ const source: NetworkSource = {
 		{
 			id: 'maiden',
 			name: 'Iron Maiden',
+			type: 'band',
 			imageUrl: null,
 			headerUrl: null,
 			styles: [],
@@ -120,6 +121,7 @@ const source: NetworkSource = {
 		{
 			id: 'solo',
 			name: 'Bruce Dickinson',
+			type: 'project',
 			imageUrl: 'bruce.jpg',
 			headerUrl: null,
 			styles: [],
@@ -146,9 +148,6 @@ const source: NetworkSource = {
 const filter = (overrides: Partial<NetworkFilter> = {}): NetworkFilter => ({
 	focusId: musicianNodeId('bruce'),
 	depth: 2,
-	showMusicians: true,
-	showBands: true,
-	showAlbums: true,
 	includeGuests: false,
 	onlyOwned: false,
 	...overrides,
@@ -157,15 +156,17 @@ const filter = (overrides: Partial<NetworkFilter> = {}): NetworkFilter => ({
 describe('network.mapper', () => {
 	const index = buildNetworkIndex(source);
 
-	it('recognises a solo project and shares its portrait with the musician', () => {
+	it('takes the group kind from the artist type, band by default', () => {
 		expect(index.nodes.get(artistNodeId('solo'))?.kind).toBe('project');
 		expect(index.nodes.get(artistNodeId('maiden'))?.kind).toBe('band');
+		// Samson is not in the catalog, only in memberships.
+		expect(index.nodes.get(artistNodeId('samson'))?.kind).toBe('band');
 		expect(index.nodes.get(musicianNodeId('bruce'))?.imageUrl).toBe(
 			'bruce.jpg'
 		);
 	});
 
-	it('walks memberships up to the depth and adds the albums of near bands', () => {
+	it('walks memberships up to the depth, musicians and groups only', () => {
 		const graph = buildNetwork(index, filter(), YEAR);
 		const ids = graph.nodes.map((node) => node.id);
 
@@ -177,21 +178,30 @@ describe('network.mapper', () => {
 				'artist:solo',
 				'musician:adrian',
 				'musician:paul',
-				'album:powerslave',
 			])
 		);
+		expect(ids.some((id) => id.startsWith('album:'))).toBe(false);
 		expect(ids).not.toContain('musician:guest');
 		expect(graph.edges.find((e) => e.id === 'adrian>maiden')?.kind).toBe(
 			'former'
 		);
 	});
 
-	it('stops at depth 1', () => {
+	it('only ever connects a musician to a group', () => {
 		const graph = buildNetwork(
 			index,
-			filter({ depth: 1, showAlbums: false }),
+			filter({ depth: 4, includeGuests: true }),
 			YEAR
 		);
+
+		for (const edge of graph.edges) {
+			expect(edge.source.startsWith('musician:')).toBe(true);
+			expect(edge.target.startsWith('artist:')).toBe(true);
+		}
+	});
+
+	it('stops at depth 1', () => {
+		const graph = buildNetwork(index, filter({ depth: 1 }), YEAR);
 
 		expect(graph.nodes.map((node) => node.id).sort()).toEqual([
 			'artist:maiden',
@@ -220,22 +230,6 @@ describe('network.mapper', () => {
 		expect(ids).toContain('artist:maiden');
 		expect(ids).not.toContain('artist:samson');
 		expect(ids).not.toContain('musician:paul');
-	});
-
-	it('connects bands directly when musicians are hidden', () => {
-		const graph = buildNetwork(
-			index,
-			filter({
-				focusId: artistNodeId('maiden'),
-				showMusicians: false,
-				showAlbums: false,
-			}),
-			YEAR
-		);
-
-		expect(graph.edges.map((edge) => edge.label)).toContain(
-			'1 shared musician'
-		);
 	});
 
 	it('lists bandmates with overlapping years and parallel bands', () => {

@@ -143,12 +143,12 @@ import { TrackGroup } from '../../album.mapper';
 
 			i {
 				font-size: 0.8rem;
-				color: var(--mc-primary);
+				color: var(--mc-spotify-text);
 				opacity: 0;
 			}
 
 			&:focus-visible {
-				outline: 2px solid var(--mc-primary);
+				outline: 2px solid var(--mc-spotify-text);
 				outline-offset: 3px;
 			}
 		}
@@ -166,7 +166,7 @@ import { TrackGroup } from '../../album.mapper';
 		}
 
 		.playing .name {
-			color: var(--mc-primary);
+			color: var(--mc-spotify-text);
 		}
 
 		.position {

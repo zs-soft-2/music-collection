@@ -8,21 +8,14 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { NetworkDetailsView, NetworkNodeKind } from '../../network.model';
+import { NETWORK_KIND_LABELS, NetworkDetailsView } from '../../network.model';
 
 /** Rows of a list shown before "Show all". */
 const PREVIEW = 8;
 
-const KIND_LABELS: Record<NetworkNodeKind, string> = {
-	musician: 'Musician',
-	band: 'Band',
-	project: 'Project',
-	album: 'Album',
-};
-
 /**
- * The selected node of the network in words: its bands or line-up, who the
- * musician played with at the same time, parallel bands and albums. Also the
+ * The selected node of the network in words: its groups or line-up, who the
+ * musician played with at the same time, parallel groups and albums. Also the
  * text alternative of the graph.
  */
 @Component({
@@ -48,14 +41,12 @@ export class NetworkDetailsComponent {
 	});
 
 	protected readonly kindLabel = computed(
-		() => KIND_LABELS[this.details().node.kind]
+		() => NETWORK_KIND_LABELS[this.details().node.kind]
 	);
 	protected readonly membershipsTitle = computed(() => {
 		switch (this.details().node.kind) {
 			case 'musician':
-				return 'Bands & projects';
-			case 'album':
-				return 'Musicians on this album';
+				return 'Bands, projects & formations';
 			default:
 				return 'Line-up';
 		}

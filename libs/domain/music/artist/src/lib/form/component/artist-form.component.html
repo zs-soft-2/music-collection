@@ -17,6 +17,17 @@
 					</div>
 
 					<div class="mc-field">
+						<label for="artistType">Type</label>
+						<p-select
+							inputId="artistType"
+							[options]="params.artistTypes"
+							optionLabel="label"
+							optionValue="value"
+							formControlName="artistType"
+						></p-select>
+					</div>
+
+					<div class="mc-field">
 						<label for="country">Country</label>
 						<p-select
 							inputId="country"

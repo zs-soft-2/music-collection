@@ -33,7 +33,7 @@ export class ArtistDetailViewService extends BaseComponent {
 			switchMap(() =>
 				combineLatest([
 					this.artistStateService.selectEntityById$(
-						this.artistId || '',
+						this.artistId || ''
 					),
 					this.artistStateService
 						.selectAlbumsById$(this.artistId || '')
@@ -41,13 +41,13 @@ export class ArtistDetailViewService extends BaseComponent {
 							map((albums) =>
 								albums
 									? [...albums].sort(
-											this.albumUtilService._sortByYear,
+											this.albumUtilService._sortByYear
 										)
-									: albums,
-							),
+									: albums
+							)
 						),
-				]),
-			),
+				])
+			)
 		);
 	}
 

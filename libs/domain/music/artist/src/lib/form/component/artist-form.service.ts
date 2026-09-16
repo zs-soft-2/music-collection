@@ -5,6 +5,7 @@ import { Injectable, inject } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import {
+	ARTIST_TYPE_OPTIONS,
 	ArtistEntity,
 	ArtistEntityAdd,
 	ArtistEntityUpdate,
@@ -103,6 +104,7 @@ export class ArtistFormService {
 		isImagesTabActive: boolean
 	): ArtistFormParams {
 		const artistFormParams: ArtistFormParams = {
+			artistTypes: ARTIST_TYPE_OPTIONS,
 			countries: CountryList,
 			documents,
 			formGroup,

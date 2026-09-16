@@ -100,7 +100,7 @@ export class ExportImportUtilServiceImpl extends ExportImportUtilService {
 			description,
 			entityType,
 			genre,
-			formedIn: formedIn.toISOString(),
+			formedIn: formedIn?.toISOString() ?? null,
 			name,
 			sites,
 			styles,

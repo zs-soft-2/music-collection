@@ -2,11 +2,39 @@
 	<header class="intro">
 		<h1>Relationship network</h1>
 		<p>
-			Who played with whom — musicians, bands, projects and albums on one
-			map.
+			Who played with whom — musicians and the bands, projects and
+			formations they played in.
 		</p>
 	</header>
 
+	@if (!expanded()) {
+		<ng-container [ngTemplateOutlet]="network" />
+	}
+</div>
+
+@if (expanded()) {
+	<dialog
+		#dialog
+		class="fullscreen"
+		aria-labelledby="network-dialog-title"
+		(close)="onDialogClose()"
+	>
+		<header class="dialog-header">
+			<h2 id="network-dialog-title">Relationship network</h2>
+			<button
+				type="button"
+				class="close"
+				aria-label="Exit full screen"
+				(click)="collapse()"
+			>
+				<i class="pi pi-times" aria-hidden="true"></i>
+			</button>
+		</header>
+		<ng-container [ngTemplateOutlet]="network" />
+	</dialog>
+}
+
+<ng-template #network>
 	<div class="toolbar" role="group" aria-label="Network settings">
 		<div class="focus">
 			<span class="focus-label">Focus</span>
@@ -28,31 +56,7 @@
 		</label>
 
 		<fieldset class="types">
-			<legend class="visually-hidden">Show</legend>
-			<label class="check">
-				<input
-					type="checkbox"
-					[checked]="store.showMusicians()"
-					(change)="onFlagChange('showMusicians', $event)"
-				/>
-				Musicians
-			</label>
-			<label class="check">
-				<input
-					type="checkbox"
-					[checked]="store.showBands()"
-					(change)="onFlagChange('showBands', $event)"
-				/>
-				Bands &amp; projects
-			</label>
-			<label class="check">
-				<input
-					type="checkbox"
-					[checked]="store.showAlbums()"
-					(change)="onFlagChange('showAlbums', $event)"
-				/>
-				Albums
-			</label>
+			<legend class="visually-hidden">Filters</legend>
 			<label class="check">
 				<input
 					type="checkbox"
@@ -101,7 +105,9 @@
 					[focusId]="store.effectiveFocusId()"
 					[selectedId]="store.selectedId()"
 					(nodeSelect)="store.select($event)"
+					[expanded]="expanded()"
 					(nodeFocus)="store.setFocus($event)"
+					(expandToggle)="toggleExpanded()"
 				/>
 			}
 
@@ -114,15 +120,43 @@
 			}
 
 			<ul class="legend" aria-label="Legend">
+				@for (kind of kinds; track kind) {
+					<li>
+						<svg
+							class="swatch"
+							viewBox="-10 -10 20 20"
+							aria-hidden="true"
+							[attr.data-kind]="kind"
+						>
+							@switch (kind) {
+								@case ('musician') {
+									<circle r="8" />
+								}
+								@case ('project') {
+									<polygon
+										points="0,-8.5 7.4,-4.25 7.4,4.25 0,8.5 -7.4,4.25 -7.4,-4.25"
+									/>
+								}
+								@case ('formation') {
+									<polygon points="0,-8 9,0 0,8 -9,0" />
+								}
+								@default {
+									<rect
+										x="-9"
+										y="-6"
+										width="18"
+										height="12"
+										rx="2"
+									/>
+								}
+							}
+						</svg>
+						{{ kindLabels[kind] }}
+					</li>
+				}
 				<li>
-					<span class="swatch" data-kind="musician"></span>Musician
-				</li>
-				<li><span class="swatch" data-kind="band"></span>Band</li>
-				<li><span class="swatch" data-kind="project"></span>Project</li>
-				<li><span class="swatch" data-kind="album"></span>Album</li>
-				<li>
-					<i class="pi pi-check-circle owned" aria-hidden="true"></i
-					>In your collection
+					<i class="pi pi-check-circle owned" aria-hidden="true"></i>
+					In your collection
 				</li>
 				<li><span class="line" data-kind="member"></span>Member</li>
 				<li>
@@ -143,4 +177,4 @@
 			}
 		</aside>
 	</div>
-</div>
+</ng-template>

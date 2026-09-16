@@ -1,0 +1,430 @@
+<div class="page">
+	@if (store.header(); as musician) {
+		<!-- Profile -->
+		<header class="hero">
+			@if (backdropUrl()) {
+				<img class="backdrop" [src]="backdropUrl()" alt="" />
+			}
+			<div class="shade" aria-hidden="true"></div>
+
+			<div class="profile">
+				@if (musician.imageUrl) {
+					<img
+						class="portrait"
+						[src]="musician.imageUrl"
+						[alt]="musician.name"
+					/>
+				} @else {
+					<div class="monogram" aria-hidden="true">
+						{{ initials() }}
+					</div>
+				}
+
+				<div class="identity">
+					<p class="eyebrow">Musician</p>
+					<h1>{{ musician.name }}</h1>
+
+					<dl class="facts">
+						@if (musician.realName) {
+							<div>
+								<dt>Real name</dt>
+								<dd>{{ musician.realName }}</dd>
+							</div>
+						}
+						@if (musician.aliases.length) {
+							<div>
+								<dt>Also known as</dt>
+								<dd>{{ musician.aliases.join(', ') }}</dd>
+							</div>
+						}
+						@if (store.summary().instruments.length) {
+							<div>
+								<dt>Plays</dt>
+								<dd>
+									{{ store.summary().instruments.join(', ') }}
+								</dd>
+							</div>
+						}
+						@if (store.summary().span) {
+							<div>
+								<dt>Active</dt>
+								<dd>{{ store.summary().span }}</dd>
+							</div>
+						}
+					</dl>
+
+					<ul class="sites" aria-label="Links">
+						<li>
+							<a
+								routerLink="/network"
+								[queryParams]="{
+									focus: 'musician:' + musician.uid,
+								}"
+							>
+								<i class="pi pi-sitemap" aria-hidden="true"></i>
+								Relationship network
+							</a>
+						</li>
+						@for (site of musician.sites; track site.url) {
+							<li>
+								<a
+									[href]="site.url"
+									target="_blank"
+									rel="noopener noreferrer"
+								>
+									{{ site.label }}
+									<i
+										class="pi pi-external-link"
+										aria-hidden="true"
+									></i>
+									<span class="visually-hidden"
+										>(opens in a new tab)</span
+									>
+								</a>
+							</li>
+						}
+						@if (musician.discogsUrl) {
+							<li>
+								<a
+									[href]="musician.discogsUrl"
+									target="_blank"
+									rel="noopener noreferrer"
+								>
+									discogs.com
+									<i
+										class="pi pi-external-link"
+										aria-hidden="true"
+									></i>
+									<span class="visually-hidden"
+										>(opens in a new tab)</span
+									>
+								</a>
+							</li>
+						}
+					</ul>
+				</div>
+			</div>
+		</header>
+
+		<!-- Key figures -->
+		<dl class="stats">
+			<div class="stat">
+				<dt>Bands</dt>
+				<dd>{{ store.summary().bands }}</dd>
+			</div>
+			<div class="stat">
+				<dt>Guest appearances</dt>
+				<dd>{{ store.summary().guestAppearances }}</dd>
+			</div>
+			<div class="stat">
+				<dt>Albums credited</dt>
+				<dd>
+					{{ store.albumsLoading() ? '–' : store.albums().length }}
+				</dd>
+			</div>
+			<div class="stat">
+				<dt>In your collection</dt>
+				<dd>
+					{{ store.albumsLoading() ? '–' : store.collectedAlbums() }}
+				</dd>
+			</div>
+		</dl>
+
+		<!-- In-page navigation -->
+		@if (sections().length > 1) {
+			<nav class="section-nav" aria-label="Sections">
+				@for (section of sections(); track section.id) {
+					<a
+						[href]="'#' + section.id"
+						(click)="$event.preventDefault(); scrollTo(section.id)"
+						>{{ section.label }}</a
+					>
+				}
+			</nav>
+		}
+
+		<!-- About -->
+		@if (musician.paragraphs.length) {
+			<section id="about" class="section" aria-labelledby="about-title">
+				<h2 id="about-title" class="section-title">About</h2>
+				<div class="bio" id="musician-bio">
+					@for (paragraph of visibleParagraphs(); track $index) {
+						<p>{{ paragraph }}</p>
+					}
+				</div>
+				@if (canExpandBio()) {
+					<button
+						type="button"
+						class="text-button"
+						aria-controls="musician-bio"
+						[attr.aria-expanded]="bioExpanded()"
+						(click)="bioExpanded.set(!bioExpanded())"
+					>
+						{{ bioExpanded() ? 'Show less' : 'Read more' }}
+					</button>
+				}
+			</section>
+		}
+
+		<!-- Bands -->
+		@if (store.members().length) {
+			<section id="bands" class="section" aria-labelledby="bands-title">
+				<h2 id="bands-title" class="section-title">Bands</h2>
+				<ul class="bands">
+					@for (band of store.members(); track band.artistUid) {
+						<li class="band" [class.active]="band.active">
+							<span class="thumb" aria-hidden="true">
+								@if (band.artist?.imageUrl) {
+									<img
+										[src]="band.artist.imageUrl"
+										alt=""
+										loading="lazy"
+									/>
+								} @else {
+									{{ band.name.charAt(0) }}
+								}
+							</span>
+
+							<div class="who">
+								@if (band.artist) {
+									<a
+										class="band-name"
+										[routerLink]="[
+											'/artist',
+											band.artistUid,
+										]"
+										>{{ band.name }}</a
+									>
+								} @else {
+									<span class="band-name">{{
+										band.name
+									}}</span>
+								}
+								@if (band.instruments.length) {
+									<span class="instruments">{{
+										band.instruments.join(', ')
+									}}</span>
+								}
+							</div>
+
+							<div class="when">
+								<span class="years">{{
+									band.years ?? 'Years unknown'
+								}}</span>
+								<span class="meta">
+									@if (band.type) {
+										{{ typeLabels[band.type] }}
+									}
+									@if (band.albumCount) {
+										· {{ band.albumCount }}
+										{{
+											band.albumCount === 1
+												? 'album'
+												: 'albums'
+										}}
+									}
+									@if (band.collectedReleases) {
+										·
+										<i
+											class="pi pi-check-circle owned"
+											aria-hidden="true"
+										></i>
+										{{ band.collectedReleases }} in your
+										collection
+									}
+								</span>
+							</div>
+
+							<div class="track" aria-hidden="true">
+								@if (bar(band); as position) {
+									<span
+										class="bar"
+										[style.left.%]="position.left"
+										[style.width.%]="position.width"
+									></span>
+								}
+							</div>
+						</li>
+					}
+				</ul>
+				@if (span(); as all) {
+					<div class="axis" aria-hidden="true">
+						<span>{{ all.from }}</span>
+						<span>{{ all.active ? 'Now' : all.to }}</span>
+					</div>
+				}
+			</section>
+		}
+
+		<!-- Guest appearances -->
+		@if (store.guestBands().length) {
+			<section id="guest" class="section" aria-labelledby="guest-title">
+				<h2 id="guest-title" class="section-title">
+					Guest appearances
+				</h2>
+				<ul class="guests">
+					@for (band of store.guestBands(); track band.artistUid) {
+						<li class="guest">
+							@if (band.artist) {
+								<a
+									class="band-name"
+									[routerLink]="['/artist', band.artistUid]"
+									>{{ band.name }}</a
+								>
+							} @else {
+								<span class="band-name">{{ band.name }}</span>
+							}
+							@if (band.instruments.length) {
+								<span class="instruments">{{
+									band.instruments.join(', ')
+								}}</span>
+							}
+							<span class="meta">
+								@if (band.years) {
+									{{ band.years }}
+								}
+								@if (band.albumCount) {
+									· {{ band.albumCount }}
+									{{
+										band.albumCount === 1
+											? 'album'
+											: 'albums'
+									}}
+								}
+							</span>
+						</li>
+					}
+				</ul>
+			</section>
+		}
+
+		<!-- Albums -->
+		@if (store.albumsLoading() && store.contributions().length) {
+			<ul class="album-grid" aria-hidden="true">
+				@for (i of placeholders(6); track i) {
+					<li class="skeleton card-skeleton"></li>
+				}
+			</ul>
+		} @else if (store.albums().length) {
+			<section id="albums" class="section" aria-labelledby="albums-title">
+				<header class="section-head">
+					<h2 id="albums-title" class="section-title">Albums</h2>
+
+					@if (store.albumRoles().length > 1) {
+						<div
+							class="chips"
+							role="group"
+							aria-label="Filter by credit"
+						>
+							<button
+								type="button"
+								class="chip"
+								[attr.aria-pressed]="
+									store.albumRole() === 'all'
+								"
+								(click)="store.setAlbumRole('all')"
+							>
+								All
+								<span class="chip-count">{{
+									store.albums().length
+								}}</span>
+							</button>
+							@for (
+								entry of store.albumRoles();
+								track entry.category
+							) {
+								<button
+									type="button"
+									class="chip"
+									[attr.aria-pressed]="
+										store.albumRole() === entry.category
+									"
+									(click)="store.setAlbumRole(entry.category)"
+								>
+									{{ roleLabels[entry.category] }}
+									<span class="chip-count">{{
+										entry.count
+									}}</span>
+								</button>
+							}
+						</div>
+					}
+				</header>
+
+				<ul class="album-grid">
+					@for (album of store.filteredAlbums(); track album.id) {
+						<li class="album">
+							<mc-discography-card [album]="album" />
+							<p class="album-artist">{{ album.artistName }}</p>
+							<ul class="roles" aria-label="Credits">
+								@for (role of album.roles; track role) {
+									<li>{{ role }}</li>
+								}
+							</ul>
+						</li>
+					}
+				</ul>
+			</section>
+		}
+
+		<!-- Bandmates -->
+		@if (store.bandmates().length) {
+			<section
+				id="bandmates"
+				class="section"
+				aria-labelledby="bandmates-title"
+			>
+				<h2 id="bandmates-title" class="section-title">Bandmates</h2>
+				<ul class="bandmates">
+					@for (mate of visibleBandmates(); track mate.musicianUid) {
+						<li>
+							<a
+								class="bandmate"
+								[class.active]="mate.active"
+								[routerLink]="['/musician', mate.musicianUid]"
+							>
+								<span class="bandmate-name">{{
+									mate.name
+								}}</span>
+								@for (item of mate.together; track $index) {
+									<span class="together">
+										{{ item.band }} · {{ item.years }}
+									</span>
+								}
+							</a>
+						</li>
+					}
+				</ul>
+				@if (store.bandmates().length > bandmatePreview) {
+					<button
+						type="button"
+						class="text-button"
+						[attr.aria-expanded]="showAllBandmates()"
+						(click)="showAllBandmates.set(!showAllBandmates())"
+					>
+						{{
+							showAllBandmates()
+								? 'Show fewer bandmates'
+								: 'Show all ' +
+									store.bandmates().length +
+									' bandmates'
+						}}
+					</button>
+				}
+			</section>
+		}
+	} @else if (store.notFound()) {
+		<div class="not-found">
+			<p class="not-found-icon" aria-hidden="true">♪</p>
+			<h1>Musician not found</h1>
+			<p>This musician is not in the catalog.</p>
+			<a class="button" routerLink="/home">Back to home</a>
+		</div>
+	} @else {
+		<div role="status" aria-busy="true">
+			<span class="visually-hidden">Loading musician…</span>
+			<div class="skeleton hero-skeleton"></div>
+			<div class="skeleton stats-skeleton"></div>
+		</div>
+	}
+</div>

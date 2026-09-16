@@ -42,7 +42,8 @@ interface Peek {
 	styles: `
 		:host {
 			position: absolute;
-			z-index: 20;
+			/* Above the sticky collection toolbar (z-index: 30). */
+			z-index: 40;
 			display: none;
 			width: 150px;
 			overflow: hidden;

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 import { CreditGroup } from '../../album.mapper';
 
@@ -6,6 +7,7 @@ import { CreditGroup } from '../../album.mapper';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-album-credits',
+	imports: [RouterLink],
 	template: `
 		@for (group of groups(); track group.key) {
 			<section
@@ -19,7 +21,13 @@ import { CreditGroup } from '../../album.mapper';
 					@for (person of group.people; track person.musicianUid) {
 						<li class="person">
 							<span class="name">
-								{{ person.name }}
+								<a
+									[routerLink]="[
+										'/musician',
+										person.musicianUid,
+									]"
+									>{{ person.name }}</a
+								>
 								@if (person.creditedAs) {
 									<span class="credited-as"
 										>as {{ person.creditedAs }}</span
@@ -81,6 +89,20 @@ import { CreditGroup } from '../../album.mapper';
 
 		.name {
 			font-weight: 600;
+		}
+
+		.name a {
+			color: var(--mc-text);
+			text-decoration: none;
+		}
+
+		.name a:hover {
+			text-decoration: underline;
+		}
+
+		.name a:focus-visible {
+			outline: 2px solid var(--mc-primary);
+			outline-offset: 2px;
 		}
 
 		.credited-as {

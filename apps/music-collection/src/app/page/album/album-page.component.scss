@@ -9,7 +9,7 @@
 }
 
 .page {
-	max-width: 1440px;
+	max-width: var(--mc-page-max-width);
 	margin: 0 auto;
 	padding: clamp(1rem, 2vw, 1.5rem) clamp(1rem, 3vw, 2.5rem) 3rem;
 }
@@ -209,6 +209,17 @@ h1 {
 	letter-spacing: 0.14em;
 	text-transform: uppercase;
 	color: var(--mc-primary);
+}
+
+.spotify-title {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	color: var(--mc-spotify-text);
+
+	mc-spotify-icon {
+		font-size: 1.1rem;
+	}
 }
 
 .original-facts {

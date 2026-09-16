@@ -14,9 +14,6 @@
 			<h2 id="mc-net-details-name">{{ node.label }}</h2>
 			<p class="kind" [attr.data-kind]="node.kind">
 				{{ kindLabel() }}
-				@if (node.kind === 'album' && node.caption) {
-					· {{ node.caption }}
-				}
 			</p>
 		</div>
 	</div>
@@ -43,11 +40,7 @@
 				<dt>Collection</dt>
 				<dd class="owned">
 					<i class="pi pi-check-circle" aria-hidden="true"></i>
-					{{
-						node.kind === 'album'
-							? 'In your collection'
-							: 'Collected'
-					}}
+					In your collection
 				</dd>
 			</div>
 		}
@@ -71,7 +64,7 @@
 
 @if (view.parallel.length) {
 	<section class="card" aria-labelledby="mc-net-parallel">
-		<h3 id="mc-net-parallel">Parallel bands</h3>
+		<h3 id="mc-net-parallel">Parallel groups</h3>
 		<ul class="rows">
 			@for (item of view.parallel; track $index) {
 				<li class="row">

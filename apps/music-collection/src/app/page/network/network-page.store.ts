@@ -38,7 +38,7 @@ import {
 import { NetworkFilter } from './network.model';
 
 export const MIN_DEPTH = 1;
-export const MAX_DEPTH = 3;
+export const MAX_DEPTH = 4;
 const DEFAULT_DEPTH = 2;
 
 export type NetworkFilterFlag = Exclude<
@@ -51,9 +51,6 @@ interface NetworkPageState {
 	focusId: string | null;
 	depth: number;
 	selectedId: string | null;
-	showMusicians: boolean;
-	showBands: boolean;
-	showAlbums: boolean;
 	includeGuests: boolean;
 	onlyOwned: boolean;
 	query: string;
@@ -69,9 +66,6 @@ const initialState: NetworkPageState = {
 	focusId: null,
 	depth: DEFAULT_DEPTH,
 	selectedId: null,
-	showMusicians: true,
-	showBands: true,
-	showAlbums: true,
 	includeGuests: false,
 	onlyOwned: false,
 	query: '',
@@ -108,7 +102,7 @@ function toDepth(value: string | null): number {
 
 /**
  * Relationship network page: who played with whom, in which bands and
- * projects, and which albums came of it. Focus and depth live in the URL.
+ * projects. Focus and depth live in the URL.
  */
 export const NetworkPageStore = signalStore(
 	withState(initialState),
@@ -140,9 +134,6 @@ export const NetworkPageStore = signalStore(
 						{
 							focusId,
 							depth: store.depth(),
-							showMusicians: store.showMusicians(),
-							showBands: store.showBands(),
-							showAlbums: store.showAlbums(),
 							includeGuests: store.includeGuests(),
 							onlyOwned: store.onlyOwned(),
 						},

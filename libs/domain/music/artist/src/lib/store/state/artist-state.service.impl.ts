@@ -19,7 +19,6 @@ import * as artistSelectors from './artist.selectors';
 export class ArtistStateServiceImpl extends ArtistStateService {
 	private store = inject<Store<fromArtist.ArtistPartialState>>(Store);
 
-
 	public dispatchAddEntityAction(artist: ArtistEntityAdd): void {
 		this.store.dispatch(artistActions.addArtist({ artist }));
 	}

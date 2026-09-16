@@ -7,13 +7,14 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
+import { SpotifyIconComponent } from './spotify-icon.component';
 import { SpotifyPlaybackStore } from './spotify-playback.store';
 
 /** Return address of the Spotify sign-in (`/spotify/callback`). */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-spotify-callback',
-	imports: [RouterLink],
+	imports: [RouterLink, SpotifyIconComponent],
 	template: `
 		<div class="callback">
 			@if (error(); as error) {
@@ -21,7 +22,10 @@ import { SpotifyPlaybackStore } from './spotify-playback.store';
 				<p role="alert">{{ error }}</p>
 				<a routerLink="/home">Back to home</a>
 			} @else {
-				<p role="status">Connecting to Spotify…</p>
+				<p class="connecting" role="status">
+					<mc-spotify-icon />
+					Connecting to Spotify…
+				</p>
 			}
 		</div>
 	`,
@@ -31,6 +35,12 @@ import { SpotifyPlaybackStore } from './spotify-playback.store';
 			margin: 4rem auto;
 			padding: 0 1rem;
 			text-align: center;
+		}
+
+		.connecting {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.5rem;
 		}
 
 		a {

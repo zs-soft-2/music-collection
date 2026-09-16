@@ -1,4 +1,4 @@
-<div class="zoom" role="toolbar" aria-label="Zoom">
+<div class="zoom" role="toolbar" aria-label="View">
 	<button type="button" aria-label="Zoom in" (click)="zoomIn()">
 		<i class="pi pi-plus" aria-hidden="true"></i>
 	</button>
@@ -7,6 +7,19 @@
 	</button>
 	<button type="button" aria-label="Fit to screen" (click)="fit()">
 		<i class="pi pi-expand" aria-hidden="true"></i>
+	</button>
+	<button
+		type="button"
+		data-expand-toggle
+		[attr.aria-label]="expanded() ? 'Exit full screen' : 'Open full screen'"
+		(click)="expandToggle.emit()"
+	>
+		<i
+			class="pi"
+			[class.pi-window-maximize]="!expanded()"
+			[class.pi-window-minimize]="expanded()"
+			aria-hidden="true"
+		></i>
 	</button>
 </div>
 
@@ -38,6 +51,9 @@
 			<polygon
 				points="0.5,0 0.933,0.25 0.933,0.75 0.5,1 0.067,0.75 0.067,0.25"
 			/>
+		</clipPath>
+		<clipPath id="mc-net-clip-diamond" clipPathUnits="objectBoundingBox">
+			<polygon points="0.5,0 1,0.5 0.5,1 0,0.5" />
 		</clipPath>
 		<clipPath id="mc-net-clip-rect" clipPathUnits="objectBoundingBox">
 			<rect width="1" height="1" rx="0.07" ry="0.1" />
@@ -156,23 +172,20 @@
 								</text>
 							}
 						}
-						@case ('album') {
-							<rect
+						@case ('formation') {
+							<polygon
 								class="shape"
-								[attr.x]="-radius.album"
-								[attr.y]="-radius.album"
-								[attr.width]="radius.album * 2"
-								[attr.height]="radius.album * 2"
-								rx="4"
+								[attr.points]="diamond(radius.formation)"
 							/>
 							@if (node.imageUrl) {
 								<image
 									[attr.href]="node.imageUrl"
-									[attr.x]="-radius.album + 3"
-									[attr.y]="-radius.album + 3"
-									[attr.width]="(radius.album - 3) * 2"
-									[attr.height]="(radius.album - 3) * 2"
+									[attr.x]="-radius.formation / 2"
+									[attr.y]="-radius.formation / 2"
+									[attr.width]="radius.formation"
+									[attr.height]="radius.formation"
 									preserveAspectRatio="xMidYMid slice"
+									clip-path="url(#mc-net-clip-diamond)"
 								/>
 							} @else {
 								<text
@@ -182,21 +195,6 @@
 								>
 									{{ node.initials }}
 								</text>
-							}
-							@if (node.owned) {
-								<g
-									class="owned-badge"
-									[attr.transform]="
-										'translate(' +
-										radius.album +
-										',' +
-										-radius.album +
-										')'
-									"
-								>
-									<circle r="10" />
-									<path d="M-4.5,0 L-1.5,3 L4.5,-3.5" />
-								</g>
 							}
 						}
 						@default {
@@ -228,6 +226,22 @@
 								</text>
 							}
 						}
+					}
+
+					@if (node.owned) {
+						<g
+							class="owned-badge"
+							[attr.transform]="
+								'translate(' +
+								radius[node.kind] +
+								',' +
+								-radius[node.kind] * 0.75 +
+								')'
+							"
+						>
+							<circle r="10" />
+							<path d="M-4.5,0 L-1.5,3 L4.5,-3.5" />
+						</g>
 					}
 
 					<text

@@ -77,6 +77,8 @@ export class RecordShelfComponent {
 
 	private readonly router = inject(Router);
 	private readonly peek = viewChild.required(RecordShelfPeekComponent);
+	private readonly unit =
+		viewChild.required<ElementRef<HTMLElement>>('unit');
 
 	protected readonly shelf = computed<Compartment[]>(() =>
 		this.compartments().map((group) => ({
@@ -128,12 +130,9 @@ export class RecordShelfComponent {
 			element && this.releasesById().get(element.dataset['id'] ?? '');
 
 		if (element && release) {
-			/* offset* ignores the hover lift transform and is relative to .unit. */
-			this.peek().show(
-				release,
-				element.offsetLeft + element.offsetWidth / 2,
-				element.offsetTop
-			);
+			const { x, y } = this.offsetInUnit(element);
+
+			this.peek().show(release, x + element.offsetWidth / 2, y);
 		}
 	};
 
@@ -161,6 +160,28 @@ export class RecordShelfComponent {
 		event.preventDefault();
 		void this.router.navigateByUrl(element.getAttribute('href') ?? '/');
 	};
+
+	/**
+	 * Resting spine position relative to .unit. offset* ignores the hover lift
+	 * transform, but is relative to the offsetParent — and the compartments'
+	 * `content-visibility` makes each one an offsetParent, so the chain is
+	 * summed up to .unit.
+	 */
+	private offsetInUnit(element: HTMLElement): { x: number; y: number } {
+		const unit = this.unit().nativeElement;
+		let x = 0;
+		let y = 0;
+
+		for (
+			let node: HTMLElement | null = element;
+			node && node !== unit;
+			node = node.offsetParent as HTMLElement | null
+		) {
+			x += node.offsetLeft;
+			y += node.offsetTop;
+		}
+		return { x, y };
+	}
 
 	private spineOf(target: EventTarget | null): HTMLElement | null {
 		return target instanceof Element

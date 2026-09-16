@@ -24,6 +24,7 @@ export const CATALOG_FEATURE_KEYS = [
 	'entity-quantity',
 	'label',
 	'membership',
+	'musician',
 	'release',
 	'track',
 	'user',

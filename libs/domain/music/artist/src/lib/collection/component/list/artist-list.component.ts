@@ -24,12 +24,7 @@ import { AsyncPipe } from '@angular/common';
 	selector: 'mc-artist-list',
 	templateUrl: './artist-list.component.html',
 	styleUrls: ['./artist-list.component.scss'],
-	imports: [
-		Bind,
-		Carousel,
-		ArtistSimpleViewComponent,
-		AsyncPipe,
-	],
+	imports: [Bind, Carousel, ArtistSimpleViewComponent, AsyncPipe],
 })
 export class ArtistListComponent extends BaseComponent implements OnInit {
 	private componentService = inject(ArtistListService);

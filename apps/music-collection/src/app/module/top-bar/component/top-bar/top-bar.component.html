@@ -47,6 +47,27 @@
 	</nav>
 
 	<div class="actions">
+		<mc-spotify-mini-player />
+
+		<!-- Csak nagy képernyőn: ott van mit kitölteni. -->
+		<button
+			type="button"
+			class="icon-btn width-btn"
+			aria-label="Wide layout"
+			[attr.aria-pressed]="layoutWidth.isWide()"
+			[attr.title]="
+				layoutWidth.isWide() ? 'Standard width' : 'Use the full width'
+			"
+			(click)="layoutWidth.toggle()"
+		>
+			<i
+				class="pi"
+				[class.pi-window-maximize]="!layoutWidth.isWide()"
+				[class.pi-window-minimize]="layoutWidth.isWide()"
+				aria-hidden="true"
+			></i>
+		</button>
+
 		<button
 			type="button"
 			class="icon-btn"
@@ -75,8 +96,14 @@
 					[attr.aria-expanded]="accountOpen()"
 					(click)="toggleAccount()"
 				>
-					@if (user()?.photoURL; as photo) {
-						<img class="avatar" [src]="photo" alt="" />
+					@if (avatarUrl(); as photo) {
+						<img
+							class="avatar"
+							[src]="photo"
+							alt=""
+							referrerpolicy="no-referrer"
+							(error)="failedAvatarUrl.set(photo)"
+						/>
 					} @else {
 						<span class="avatar">{{ initials() }}</span>
 					}

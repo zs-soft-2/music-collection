@@ -20,6 +20,24 @@
  *     created, completed or left unchanged. Needs Firebase Admin credentials
  *     (GOOGLE_APPLICATION_CREDENTIALS or `gcloud auth application-default login`).
  *
+ *   node tools/discogs/import-discogs.mjs fetch-musicians [--limit N] [--refresh]
+ *     Downloads the Discogs profile of every musician with a Discogs id —
+ *     band members (fetch-artists) and everyone credited on the cached
+ *     releases: real name, biography, links, aliases, portrait URL, groups.
+ *   node tools/discogs/import-discogs.mjs fetch-groups [--min-members N] [--dry-run] [--limit N] [--refresh]
+ *     Downloads the groups of the fetched musicians that are not in the
+ *     catalog yet (profile and member list) — only groups at least N (default
+ *     2) of the fetched musicians played in, so a new artist connects people.
+ *     --dry-run only prints how many groups each threshold would bring.
+ *   node tools/discogs/import-discogs.mjs write-musicians [--confirm]
+ *     Completes the `musician` documents with the fetched profiles.
+ *   node tools/discogs/import-discogs.mjs write-groups [--confirm]
+ *     Creates `artist` documents for the fetched groups (uid `discogs-{id}`),
+ *     their `membership` documents and the members' `musician` documents.
+ *   Both write commands only create missing documents and fill in missing
+ *   fields: an existing value is never overwritten. A group that is already
+ *   in the catalog (by Discogs id or name) is skipped.
+ *
  *   node tools/discogs/import-discogs.mjs fetch-artists [--refresh]
  *     Refreshes the cached album years and downloads each band's Discogs member
  *     list. `write` then also creates `membership` documents (musician ↔ band,
@@ -39,11 +57,17 @@ import { parseArgs } from 'node:util';
 import { DiscogsClient } from './discogs-client.mjs';
 import {
 	bandDiscogsId,
+	normalize,
 	rankCandidates,
+	stripDiscogsSuffix,
 	toCreditDocs,
+	toGroupArtistDoc,
+	toGroupMembershipDocs,
 	toMembershipDocs,
+	toMusicianProfileDoc,
 	toOriginalRelease,
 	toTrackDocs,
+	trimArtistProfile,
 	trimRelease,
 	yearOf,
 } from './discogs-mapping.mjs';
@@ -53,6 +77,11 @@ const ROOT = join(HERE, '..', '..');
 const CACHE = join(HERE, '.cache');
 const ALBUM_CACHE = join(CACHE, 'albums');
 const ARTIST_CACHE = join(CACHE, 'artists');
+const MUSICIAN_CACHE = join(CACHE, 'musicians');
+const GROUP_CACHE = join(CACHE, 'groups');
+
+/** Discogs' "Various" pseudo-artist. */
+const VARIOUS_ARTIST_ID = 194;
 
 const { positionals, values: options } = parseArgs({
 	allowPositionals: true,
@@ -64,6 +93,8 @@ const { positionals, values: options } = parseArgs({
 		replace: { type: 'boolean', default: false },
 		'memberships-only': { type: 'boolean', default: false },
 		'include-ambiguous': { type: 'boolean', default: false },
+		'min-members': { type: 'string', default: '2' },
+		'dry-run': { type: 'boolean', default: false },
 	},
 });
 
@@ -562,9 +593,8 @@ async function planAlbum(db, item, replace) {
  * client cache picks the changes up.
  */
 async function writeOps(db, ops) {
-	const { featureKeyOf, stamp, tombstone, touchCatalog } = await import(
-		'../sync/catalog-sync.mjs'
-	);
+	const { featureKeyOf, stamp, tombstone, touchCatalog } =
+		await import('../sync/catalog-sync.mjs');
 	const writer = db.bulkWriter();
 	const failures = [];
 	writer.onWriteError((error) => {
@@ -824,14 +854,335 @@ async function writeCommand() {
 	);
 }
 
+async function readJsonDir(dir) {
+	if (!existsSync(dir)) {
+		return [];
+	}
+	const files = (await readdir(dir)).filter((f) => f.endsWith('.json'));
+	return Promise.all(
+		files.map(async (f) => JSON.parse(await readFile(join(dir, f), 'utf8')))
+	);
+}
+
+/** Discogs ids of every musician: band members and credited people. */
+async function musicianDiscogsIds() {
+	const ids = new Set();
+	const addCredits = (credits) =>
+		(credits ?? []).forEach((credit) => credit.id && ids.add(credit.id));
+	const addTracks = (tracks) =>
+		(tracks ?? []).forEach((track) => {
+			addCredits(track.extraartists);
+			addTracks(track.subTracks);
+		});
+
+	for (const entry of await readCache()) {
+		addCredits(entry.release?.extraartists);
+		addTracks(entry.release?.tracklist);
+	}
+	for (const band of await readJsonDir(ARTIST_CACHE)) {
+		(band.members ?? []).forEach((member) => ids.add(member.id));
+	}
+	ids.delete(VARIOUS_ARTIST_ID);
+	return [...ids].sort((a, b) => a - b);
+}
+
+/**
+ * Downloads Discogs artist profiles into `dir` (one file per id); resumable.
+ * A missing artist is cached as `{ id, missing: true }`.
+ */
+async function fetchProfiles(dir, ids, what) {
+	const client = new DiscogsClient();
+	await mkdir(dir, { recursive: true });
+
+	if (!client.authenticated) {
+		console.warn(
+			'DISCOGS_TOKEN is not set: 25 instead of 60 requests per minute.'
+		);
+	}
+	const todo = ids.filter(
+		(id) => options.refresh || !existsSync(join(dir, `${id}.json`))
+	);
+	const limited = options.limit ? todo.slice(0, Number(options.limit)) : todo;
+	console.log(
+		`${ids.length} ${what}, ${ids.length - todo.length} cached, fetching ${limited.length}`
+	);
+
+	let done = 0;
+	for (const id of limited) {
+		done++;
+		try {
+			const artist = await client.get(`/artists/${id}`);
+			const profile = artist
+				? trimArtistProfile(artist)
+				: { id, missing: true };
+			await writeFile(
+				join(dir, `${id}.json`),
+				JSON.stringify(
+					{ ...profile, fetchedAt: new Date().toISOString() },
+					null,
+					2
+				)
+			);
+			if (done % 25 === 0 || done === limited.length) {
+				console.log(
+					`[${done}/${limited.length}] ${profile.name ?? id}`
+				);
+			}
+		} catch (error) {
+			console.error(
+				`[${done}/${limited.length}] ${id}: ERROR ${error.message}`
+			);
+		}
+	}
+}
+
+async function fetchMusiciansCommand() {
+	await fetchProfiles(
+		MUSICIAN_CACHE,
+		await musicianDiscogsIds(),
+		'musicians'
+	);
+}
+
+/**
+ * Artists of the catalog: their Discogs ids (the `discogs.artistId` field and
+ * the band cache) and normalized names, to tell new groups from known ones.
+ */
+async function catalogArtistKeys() {
+	const documents = await queryCollectionGroup('artist');
+	const ids = new Set();
+	const names = new Set();
+
+	for (const document of documents) {
+		const fields = document.fields ?? {};
+		const discogsId =
+			fields.discogs?.mapValue?.fields?.artistId?.integerValue;
+		// Groups created by this import are "known" too, but still completed.
+		if (discogsId && fields.source?.stringValue !== 'discogs') {
+			ids.add(Number(discogsId));
+		}
+		if (
+			fields.name?.stringValue &&
+			fields.source?.stringValue !== 'discogs'
+		) {
+			names.add(normalize(fields.name.stringValue));
+		}
+	}
+	for (const band of await readJsonDir(ARTIST_CACHE)) {
+		if (band.id) ids.add(band.id);
+	}
+	return { ids, names };
+}
+
+const isCatalogGroup = (keys, group) =>
+	keys.ids.has(group.id) || keys.names.has(normalize(group.name));
+
+async function fetchGroupsCommand() {
+	const keys = await catalogArtistKeys();
+	/** Group id → how many fetched musicians played in it. */
+	const counts = new Map();
+
+	for (const musician of await readJsonDir(MUSICIAN_CACHE)) {
+		for (const group of musician.groups ?? []) {
+			if (
+				group.id !== VARIOUS_ARTIST_ID &&
+				!isCatalogGroup(keys, group)
+			) {
+				counts.set(group.id, (counts.get(group.id) ?? 0) + 1);
+			}
+		}
+	}
+	const minMembers = Number(options['min-members']) || 1;
+
+	if (options['dry-run']) {
+		for (const threshold of [1, 2, 3, 5]) {
+			const size = [...counts.values()].filter(
+				(c) => c >= threshold
+			).length;
+			console.log(`--min-members ${threshold}: ${size} groups`);
+		}
+		return;
+	}
+	await fetchProfiles(
+		GROUP_CACHE,
+		[...counts.entries()]
+			.filter(([, count]) => count >= minMembers)
+			.map(([id]) => id)
+			.sort((a, b) => a - b),
+		`groups not in the catalog with at least ${minMembers} known musicians`
+	);
+}
+
+async function openFirestore() {
+	const { initializeApp, applicationDefault } =
+		await import('firebase-admin/app');
+	const { getFirestore } = await import('firebase-admin/firestore');
+	const { projectId } = await firebaseConfig();
+	initializeApp({ credential: applicationDefault(), projectId });
+	return getFirestore();
+}
+
+/** Documents per read and write round in the profile commands. */
+const PROFILE_CHUNK = 250;
+
+/**
+ * Fill mode for a list of documents: creates the missing ones and adds the
+ * missing fields to existing ones; never overwrites or deletes.
+ */
+async function planFill(db, items) {
+	const ops = [];
+	const stats = { created: 0, completed: 0, unchanged: 0 };
+	const snaps = items.length
+		? await db.getAll(...items.map((item) => item.ref))
+		: [];
+
+	items.forEach((item, index) => {
+		const snap = snaps[index];
+		if (!snap.exists) {
+			ops.push({ type: 'create', ref: item.ref, data: item.data });
+			stats.created++;
+			return;
+		}
+		const patch = missingFields(snap.data(), item.data);
+		if (Object.keys(patch).length) {
+			ops.push({ type: 'update', ref: item.ref, data: patch });
+			stats.completed++;
+		} else {
+			stats.unchanged++;
+		}
+	});
+	return { ops, stats };
+}
+
+/** Plans and (with --confirm) writes the items in chunks; prints totals. */
+async function fillInChunks(db, items, label) {
+	const totals = { created: 0, completed: 0, unchanged: 0, failed: 0 };
+
+	for (let start = 0; start < items.length; start += PROFILE_CHUNK) {
+		const chunk = items.slice(start, start + PROFILE_CHUNK);
+		const { ops, stats } = await planFill(db, chunk);
+		totals.created += stats.created;
+		totals.completed += stats.completed;
+		totals.unchanged += stats.unchanged;
+
+		if (options.confirm && ops.length) {
+			const failures = await writeOps(db, ops);
+			totals.failed += failures.length;
+			if (failures.length) {
+				console.error(
+					`  ${failures.length} writes failed, first: ${failures[0]}`
+				);
+				if (failures.some((f) => /RESOURCE_EXHAUSTED|quota/i.test(f))) {
+					console.error(
+						'\nFirestore quota exhausted — stopping; re-run later.'
+					);
+					process.exitCode = 1;
+					break;
+				}
+			}
+		}
+		console.log(
+			`${label} ${Math.min(start + PROFILE_CHUNK, items.length)}/${items.length}`
+		);
+	}
+	console.log(
+		`${label}: ${totals.created} new, ${totals.completed} completed, ${totals.unchanged} unchanged` +
+			(options.confirm
+				? totals.failed
+					? `, ${totals.failed} FAILED`
+					: ' — written'
+				: ' — DRY RUN, re-run with --confirm')
+	);
+}
+
+async function writeMusiciansCommand() {
+	const profiles = (await readJsonDir(MUSICIAN_CACHE)).filter(
+		(p) => !p.missing
+	);
+	const db = await openFirestore();
+
+	await fillInChunks(
+		db,
+		profiles.map((profile) => {
+			const data = toMusicianProfileDoc(profile);
+			return { ref: db.collection('musician').doc(data.uid), data };
+		}),
+		'musicians'
+	);
+}
+
+async function writeGroupsCommand() {
+	const keys = await catalogArtistKeys();
+	const groups = (await readJsonDir(GROUP_CACHE)).filter(
+		(group) => !group.missing && !isCatalogGroup(keys, group)
+	);
+	const musicians = new Map(
+		(await readJsonDir(MUSICIAN_CACHE))
+			.filter((profile) => !profile.missing)
+			.map((profile) => [profile.id, profile])
+	);
+	const db = await openFirestore();
+	const artists = [];
+	const memberships = [];
+	const members = new Map();
+
+	for (const group of groups) {
+		const artist = toGroupArtistDoc(group);
+		artists.push({
+			ref: db.collection('artist').doc(artist.uid),
+			data: artist,
+		});
+
+		for (const membership of toGroupMembershipDocs(artist.uid, group)) {
+			memberships.push({
+				ref: db.collection('membership').doc(membership.uid),
+				data: membership,
+			});
+		}
+		for (const member of group.members) {
+			const profile = musicians.get(member.id);
+			const data = profile
+				? toMusicianProfileDoc(profile)
+				: {
+						uid: `discogs-${member.id}`,
+						name: stripDiscogsSuffix(member.name),
+						discogsId: member.id,
+						entityType: 'Musician',
+						source: 'discogs',
+					};
+			members.set(data.uid, {
+				ref: db.collection('musician').doc(data.uid),
+				data,
+			});
+		}
+	}
+	console.log(`${groups.length} groups not in the catalog`);
+
+	await fillInChunks(db, artists, 'artists');
+	if (process.exitCode) return;
+	await fillInChunks(db, [...members.values()], 'member musicians');
+	if (process.exitCode) return;
+	await fillInChunks(db, memberships, 'memberships');
+}
+
+const WRITE_COMMANDS = {
+	write: () => writeCommand(),
+	'write-musicians': () => writeMusiciansCommand(),
+	'write-groups': () => writeGroupsCommand(),
+};
+
 const command = positionals[0];
 if (command === 'fetch') {
 	await fetchCommand();
 } else if (command === 'fetch-artists') {
 	await fetchArtistsCommand();
-} else if (command === 'write') {
+} else if (command === 'fetch-musicians') {
+	await fetchMusiciansCommand();
+} else if (command === 'fetch-groups') {
+	await fetchGroupsCommand();
+} else if (WRITE_COMMANDS[command]) {
 	try {
-		await writeCommand();
+		await WRITE_COMMANDS[command]();
 	} catch (error) {
 		if (
 			/invalid_grant|invalid_rapt|Could not load the default credentials|PERMISSION_DENIED/i.test(
@@ -853,7 +1204,7 @@ if (command === 'fetch') {
 	await writeReport();
 } else {
 	console.log(
-		'Usage: import-discogs.mjs <fetch|fetch-artists|write|report> [--limit N] [--album UID] [--refresh] [--confirm] [--replace] [--memberships-only]'
+		'Usage: import-discogs.mjs <fetch|fetch-artists|fetch-musicians|fetch-groups|write|write-musicians|write-groups|report> [--limit N] [--album UID] [--refresh] [--confirm] [--replace] [--memberships-only]'
 	);
 	process.exitCode = 1;
 }

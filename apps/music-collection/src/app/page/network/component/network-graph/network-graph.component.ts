@@ -29,7 +29,8 @@ import {
 	NetworkLayout,
 	PlacedNode,
 	Point,
-	layoutNetwork,
+	placeNetwork,
+	simulateNetwork,
 } from './network-graph.layout';
 
 const MIN_SCALE = 0.15;
@@ -60,18 +61,34 @@ export class NetworkGraphComponent {
 	public readonly edges = input.required<NetworkEdge[]>();
 	public readonly focusId = input<string | null>(null);
 	public readonly selectedId = input<string | null>(null);
+	/** Shown in the full-screen dialog (switches the toggle's icon and label). */
+	public readonly expanded = input(false);
 
 	/** A node was clicked or activated from the keyboard. */
 	public readonly nodeSelect = output<string>();
 	/** A node was double-clicked (or `F` pressed on it): make it the focus. */
 	public readonly nodeFocus = output<string>();
+	/** The full-screen toggle was pressed. */
+	public readonly expandToggle = output<void>();
 
 	private readonly svg = viewChild.required<ElementRef<SVGSVGElement>>('svg');
 	private readonly destroyRef = inject(DestroyRef);
 
-	protected readonly layout = signal<NetworkLayout>({ nodes: [], edges: [] });
+	/** Simulated positions, before they are stretched to the canvas. */
+	private readonly simulated = signal<ReadonlyMap<string, Point>>(new Map());
 	protected readonly transform = signal<ZoomTransform>(zoomIdentity);
 	private readonly size = signal({ width: 0, height: 0 });
+
+	protected readonly layout = computed<NetworkLayout>(() => {
+		const { width, height } = this.size();
+
+		return placeNetwork(
+			this.nodes(),
+			this.edges(),
+			this.simulated(),
+			width && height ? width / height : 1
+		);
+	});
 
 	protected readonly transformAttr = computed(() => {
 		const { x, y, k } = this.transform();
@@ -81,18 +98,18 @@ export class NetworkGraphComponent {
 	protected readonly showEdgeLabels = computed(
 		() => this.transform().k >= EDGE_LABEL_MIN_SCALE
 	);
-	/** Labelled edges: all of a small graph, else those of the selection / focus. */
+	/** Labelled edges: all of a small graph, else those of the selection. */
 	protected readonly labelledEdges = computed(() => {
 		const edges = this.layout().edges;
-		const ids = [this.selectedId(), this.focusId()];
+		const selectedId = this.selectedId();
 
 		return new Set(
 			edges
 				.filter(
 					(edge) =>
 						edges.length <= ALL_EDGE_LABELS_MAX ||
-						ids.includes(edge.source) ||
-						ids.includes(edge.target)
+						edge.source === selectedId ||
+						edge.target === selectedId
 				)
 				.map((edge) => edge.id)
 		);
@@ -121,9 +138,11 @@ export class NetworkGraphComponent {
 	protected readonly radius = NODE_RADIUS;
 
 	private zoomBehavior: ZoomBehavior<SVGSVGElement, unknown> | null = null;
-	private positions = new Map<string, Point>();
 	private laidOutFocus: string | null = null;
 	private fittedFocus: string | null = null;
+	/** The user zoomed or panned since the last fit: keep their view. */
+	private userAdjusted = false;
+	private fitting = false;
 
 	constructor() {
 		// Re-layout when the network changes; positions carry over.
@@ -135,26 +154,22 @@ export class NetworkGraphComponent {
 			untracked(() => {
 				// A new focus is laid out afresh around it; otherwise positions
 				// carry over, so filtering does not reshuffle the graph.
-				const layout = layoutNetwork(
-					nodes,
-					edges,
-					focusId,
-					focusId === this.laidOutFocus ? this.positions : new Map()
+				this.simulated.set(
+					simulateNetwork(
+						nodes,
+						edges,
+						focusId,
+						focusId === this.laidOutFocus
+							? this.simulated()
+							: new Map()
+					)
 				);
-
 				this.laidOutFocus = focusId;
-
-				this.positions = new Map(
-					layout.nodes.map((node) => [
-						node.id,
-						{ x: node.x, y: node.y },
-					])
-				);
-				this.layout.set(layout);
 			});
 		});
 
-		// A new focus (and the first drawing) brings the whole network into view.
+		// Keep the network filling the canvas: on a new focus always, on a
+		// resize or filter change unless the user has zoomed or panned.
 		effect(() => {
 			const { nodes } = this.layout();
 			const { width } = this.size();
@@ -163,7 +178,7 @@ export class NetworkGraphComponent {
 			if (!nodes.length || !width || !this.zoomBehavior) {
 				return;
 			}
-			if (focusId !== this.fittedFocus) {
+			if (focusId !== this.fittedFocus || !this.userAdjusted) {
 				this.fittedFocus = focusId;
 				untracked(() => this.fit());
 			}
@@ -174,9 +189,14 @@ export class NetworkGraphComponent {
 
 			this.zoomBehavior = zoom<SVGSVGElement, unknown>()
 				.scaleExtent([MIN_SCALE, MAX_SCALE])
-				.on('zoom', (event: D3ZoomEvent<SVGSVGElement, unknown>) =>
-					this.transform.set(event.transform)
-				);
+				.on('zoom', (event: D3ZoomEvent<SVGSVGElement, unknown>) => {
+					// Wheel, drag, keys and the zoom buttons adjust the view;
+					// only fit() resets it.
+					if (!this.fitting) {
+						this.userAdjusted = true;
+					}
+					this.transform.set(event.transform);
+				});
 			select(svg)
 				.call(this.zoomBehavior)
 				// Double click belongs to the nodes (focus), not to zooming.
@@ -228,6 +248,7 @@ export class NetworkGraphComponent {
 			)
 		);
 
+		this.fitting = true;
 		select(this.svg().nativeElement).call(
 			this.zoomBehavior.transform,
 			zoomIdentity
@@ -235,6 +256,8 @@ export class NetworkGraphComponent {
 				.scale(scale)
 				.translate(-(minX + maxX) / 2, -(minY + maxY) / 2)
 		);
+		this.fitting = false;
+		this.userAdjusted = false;
 	}
 
 	protected onNodeKeydown(event: KeyboardEvent, node: PlacedNode): void {
@@ -314,6 +337,13 @@ export class NetworkGraphComponent {
 
 			return `${Math.cos(angle) * radius},${Math.sin(angle) * radius}`;
 		}).join(' ');
+	}
+
+	/** Rhombus of a formation; wider than tall, so labels stay clear. */
+	protected diamond(radius: number): string {
+		const width = radius * 1.35;
+
+		return `0,${-radius} ${width},0 0,${radius} ${-width},0`;
 	}
 
 	private scaleBy(factor: number): void {

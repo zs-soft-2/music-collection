@@ -2,6 +2,7 @@ import {
 	AlbumEntity,
 	ArtistEntity,
 	CollectionItemEntity,
+	DEFAULT_ARTIST_TYPE,
 } from '@music-collection/api';
 
 import {
@@ -131,11 +132,13 @@ export function formatGenre(genre: unknown): string | null {
 }
 
 export function toArtistView(artist: ArtistEntity): ArtistView {
-	const imageUrl = artist.mainImage?.filePath || null;
+	const imageUrl =
+		artist.mainImage?.filePath || artist.discogs?.imageUrl || null;
 
 	return {
 		id: artist.uid,
 		name: artist.name,
+		type: artist.artistType ?? DEFAULT_ARTIST_TYPE,
 		imageUrl,
 		headerUrl: artist.headerImage?.filePath || imageUrl,
 		styles: artist.styles ?? [],

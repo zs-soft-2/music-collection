@@ -3,7 +3,8 @@
 	--net-musician: var(--mc-primary);
 	--net-band: #4d8dff;
 	--net-project: #b36bff;
-	--net-album: var(--mc-status-ok);
+	--net-formation: #e3a008;
+	--net-owned: var(--mc-status-ok);
 	--net-edge: rgba(255, 255, 255, 0.32);
 	--net-canvas: var(--mc-bg-muted);
 
@@ -22,6 +23,7 @@
 :host-context(html.mc-light) {
 	--net-band: #2459c7;
 	--net-project: #7a2fc2;
+	--net-formation: #8a5a00;
 	--net-edge: rgba(0, 0, 0, 0.35);
 }
 
@@ -140,8 +142,8 @@
 		--node-color: var(--net-project);
 	}
 
-	&[data-kind='album'] {
-		--node-color: var(--net-album);
+	&[data-kind='formation'] {
+		--node-color: var(--net-formation);
 	}
 
 	.shape {
@@ -205,7 +207,7 @@
 
 .owned-badge {
 	circle {
-		fill: var(--net-album);
+		fill: var(--net-owned);
 		stroke: var(--net-canvas);
 		stroke-width: 2;
 	}

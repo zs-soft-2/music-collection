@@ -5,6 +5,7 @@ import {
 	input,
 	signal,
 } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 import { LineupMember, LineupView } from '../../artist.mapper';
 
@@ -13,11 +14,13 @@ const GUEST_PREVIEW = 12;
 
 /**
  * A band's line-up: members with their instruments and years, each with a
- * time bar across the band's years on record, and the guest musicians.
+ * time bar across the band's years on record (a current member whose start
+ * year is unknown gets a dot at the present end), and the guest musicians.
  */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-artist-lineup',
+	imports: [RouterLink],
 	template: `
 		@let view = lineup();
 
@@ -26,7 +29,11 @@ const GUEST_PREVIEW = 12;
 				@for (member of view.members; track member.musicianUid) {
 					<li class="member" [class.active]="member.active">
 						<div class="who">
-							<span class="name">{{ member.name }}</span>
+							<a
+								class="name"
+								[routerLink]="['/musician', member.musicianUid]"
+								>{{ member.name }}</a
+							>
 							@if (member.instruments.length) {
 								<span class="instruments">{{
 									member.instruments.join(', ')
@@ -62,6 +69,11 @@ const GUEST_PREVIEW = 12;
 									[style.width.%]="position.width"
 								></span>
 							</div>
+						} @else if (member.active) {
+							<!-- Start year unknown: only "now" is certain. -->
+							<div class="track" aria-hidden="true">
+								<span class="dot"></span>
+							</div>
 						}
 					</li>
 				}
@@ -80,7 +92,11 @@ const GUEST_PREVIEW = 12;
 			<ul class="guests">
 				@for (guest of visibleGuests(); track guest.musicianUid) {
 					<li class="guest">
-						<span class="name">{{ guest.name }}</span>
+						<a
+							class="name"
+							[routerLink]="['/musician', guest.musicianUid]"
+							>{{ guest.name }}</a
+						>
 						@if (guest.instruments.length) {
 							<span class="instruments">{{
 								guest.instruments.join(', ')
@@ -142,6 +158,17 @@ const GUEST_PREVIEW = 12;
 
 		.name {
 			font-weight: 600;
+			color: var(--mc-text);
+			text-decoration: none;
+		}
+
+		.name:hover {
+			text-decoration: underline;
+		}
+
+		.name:focus-visible {
+			outline: 2px solid var(--mc-primary);
+			outline-offset: 2px;
 		}
 
 		.instruments {
@@ -182,6 +209,17 @@ const GUEST_PREVIEW = 12;
 
 		.member.active .bar {
 			background: var(--mc-chart);
+		}
+
+		/* A current member without a known start year: a dot at "now". */
+		.dot {
+			position: absolute;
+			top: 0;
+			right: 0;
+			width: 10px;
+			height: 10px;
+			background: var(--mc-chart);
+			border-radius: 50%;
 		}
 
 		.axis {
