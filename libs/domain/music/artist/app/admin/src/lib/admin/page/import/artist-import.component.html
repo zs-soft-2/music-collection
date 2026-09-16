@@ -1,13 +1,17 @@
-<div class="artist-import">
-	<div class="field">
-		<span>
-			<label for="file"></label>
-
+<section class="mc-form">
+	<section class="mc-form-section" aria-labelledby="artist-import-title">
+		<h2 id="artist-import-title">Import artists</h2>
+		<p class="mc-form-note">
+			Upload an artist bundle exported from the artist list.
+		</p>
+		<div class="mc-field">
+			<span class="mc-field-label">File</span>
 			<p-fileupload
 				name="file"
+				chooseLabel="Choose file"
 				[customUpload]="true"
 				(uploadHandler)="artistImport($event)"
 			></p-fileupload>
-		</span>
-	</div>
-</div>
+		</div>
+	</section>
+</section>

@@ -13,8 +13,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { Bind } from 'primeng/bind';
 import { AutoComplete } from 'primeng/autocomplete';
 import { InputText } from 'primeng/inputtext';
-import { Ripple } from 'primeng/ripple';
-import { ButtonDirective } from 'primeng/button';
+import { Button } from 'primeng/button';
 import { AsyncPipe } from '@angular/common';
 
 @Component({
@@ -28,8 +27,7 @@ import { AsyncPipe } from '@angular/common';
 		Bind,
 		AutoComplete,
 		InputText,
-		Ripple,
-		ButtonDirective,
+		Button,
 		AsyncPipe,
 	],
 })

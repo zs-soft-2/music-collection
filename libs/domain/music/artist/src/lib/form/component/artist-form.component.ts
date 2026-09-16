@@ -11,8 +11,6 @@ import { ArtistFormParams, BaseComponent } from '@music-collection/api';
 import { ArtistFormService } from './artist-form.service';
 import { ReactiveFormsModule } from '@angular/forms';
 import { Bind } from 'primeng/bind';
-import { Tabs, TabList, Tab, TabPanels, TabPanel } from 'primeng/tabs';
-import { Ripple } from 'primeng/ripple';
 import { InputText } from 'primeng/inputtext';
 import { Textarea } from 'primeng/textarea';
 import { Select } from 'primeng/select';
@@ -20,7 +18,7 @@ import { DatePicker } from 'primeng/datepicker';
 import { MultiSelect } from 'primeng/multiselect';
 import { AutoComplete } from 'primeng/autocomplete';
 import { Image } from 'primeng/image';
-import { ButtonDirective } from 'primeng/button';
+import { Button } from 'primeng/button';
 import { AsyncPipe } from '@angular/common';
 
 @Component({
@@ -32,12 +30,6 @@ import { AsyncPipe } from '@angular/common';
 	imports: [
 		ReactiveFormsModule,
 		Bind,
-		Tabs,
-		TabList,
-		Ripple,
-		Tab,
-		TabPanels,
-		TabPanel,
 		InputText,
 		Textarea,
 		Select,
@@ -45,7 +37,7 @@ import { AsyncPipe } from '@angular/common';
 		MultiSelect,
 		AutoComplete,
 		Image,
-		ButtonDirective,
+		Button,
 		AsyncPipe,
 	],
 })

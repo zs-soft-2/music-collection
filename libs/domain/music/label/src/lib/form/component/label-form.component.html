@@ -1,54 +1,51 @@
 @if (params$ | async; as params) {
-<section class="label-form">
-	<form [formGroup]="params.formGroup">
-		<input name="uid" formControlName="uid" hidden />
+	<section class="label-form">
+		<form class="mc-form" [formGroup]="params.formGroup">
+			<input name="uid" formControlName="uid" hidden />
 
-		<div class="field">
-			<span class="p-float-label">
-				<p-autocomplete
-					formControlName="parent"
-					[suggestions]="params.labels"
-					[minQueryLength]="3"
-					[delay]="400"
-					optionLabel="name"
-					(completeMethod)="searchLabel($event)"
-				></p-autocomplete>
+			<section class="mc-form-section" aria-labelledby="label-details">
+				<h2 id="label-details">Details</h2>
+				<div class="mc-form-grid">
+					<div class="mc-field">
+						<label for="name">Name</label>
+						<input
+							id="name"
+							type="text"
+							pInputText
+							formControlName="name"
+						/>
+					</div>
 
-				<label for="parent">Parent</label>
-			</span>
-		</div>
+					<div class="mc-field">
+						<label for="parent">Parent label</label>
+						<p-autocomplete
+							inputId="parent"
+							formControlName="parent"
+							[suggestions]="params.labels"
+							[minQueryLength]="3"
+							[delay]="400"
+							optionLabel="name"
+							placeholder="Start typing a label…"
+							(completeMethod)="searchLabel($event)"
+						></p-autocomplete>
+					</div>
+				</div>
+			</section>
 
-		<div class="field">
-			<span class="p-float-label">
-				<input
-					id="name"
-					type="text"
-					pInputText
-					formControlName="name"
-				/>
-
-				<label for="name">Name</label>
-			</span>
-		</div>
-	</form>
-
-	<div style="margin-top: 10px" fxLayout="row" fxLayoutAlign="space-around">
-		<button
-			pButton
-			type="button"
-			(click)="submit()"
-			[disabled]="!params.formGroup.valid"
-		>
-			Submit
-		</button>
-
-		<button
-			pButton
-			type="button"
-			(click)="cancel()"
-		>
-			Cancel
-		</button>
-	</div>
-</section>
+			<div class="mc-form-actions">
+				<p-button
+					label="Cancel"
+					severity="secondary"
+					[outlined]="true"
+					(onClick)="cancel()"
+				></p-button>
+				<p-button
+					label="Save"
+					icon="pi pi-check"
+					[disabled]="!params.formGroup.valid"
+					(onClick)="submit()"
+				></p-button>
+			</div>
+		</form>
+	</section>
 }

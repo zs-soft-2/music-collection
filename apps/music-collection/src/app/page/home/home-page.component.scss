@@ -10,12 +10,8 @@
 
 .page {
 	max-width: 1440px;
-	margin: 1rem auto 2rem;
+	margin: 0 auto;
 	padding: clamp(1rem, 2vw, 1.5rem) clamp(1rem, 3vw, 2.5rem) 3rem;
-	background: rgba(10, 10, 10, 0.9);
-	border: 1px solid var(--mc-border);
-	border-radius: var(--mc-radius-lg);
-	backdrop-filter: blur(6px);
 }
 
 ul {
@@ -249,7 +245,7 @@ ul {
 	background: linear-gradient(
 		100deg,
 		var(--mc-card-bg) 40%,
-		#222 50%,
+		var(--mc-surface-2) 50%,
 		var(--mc-card-bg) 60%
 	);
 	background-size: 200% 100%;

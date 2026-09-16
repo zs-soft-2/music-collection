@@ -10,12 +10,8 @@
 
 .page {
 	max-width: 1440px;
-	margin: 1rem auto 2rem;
+	margin: 0 auto;
 	padding: clamp(1rem, 2vw, 1.5rem) clamp(1rem, 3vw, 2.5rem) 3rem;
-	background: rgba(10, 10, 10, 0.9);
-	border: 1px solid var(--mc-border);
-	border-radius: var(--mc-radius-lg);
-	backdrop-filter: blur(6px);
 }
 
 ul {
@@ -38,6 +34,8 @@ ul {
 /* ── Profile ──────────────────────────────────────────────────────────── */
 
 .hero {
+	@include mc.on-image;
+
 	position: relative;
 	display: flex;
 	align-items: flex-end;
@@ -217,14 +215,14 @@ h1 {
 
 .section-nav {
 	position: sticky;
-	top: 0;
+	top: var(--mc-app-bar-height);
 	z-index: 20;
 	display: flex;
 	flex-wrap: wrap;
 	gap: 0.25rem 1.5rem;
 	margin: 1.5rem calc(-1 * clamp(1rem, 3vw, 2.5rem)) 0;
 	padding: 0.85rem clamp(1rem, 3vw, 2.5rem);
-	background: rgba(10, 10, 10, 0.96);
+	background: var(--mc-bg);
 	border-top: 1px solid var(--mc-border);
 	border-bottom: 1px solid var(--mc-border);
 
@@ -250,7 +248,7 @@ h1 {
 .section {
 	margin-top: 2.5rem;
 	/* Clear the sticky section navigation when jumping to a section. */
-	scroll-margin-top: 4rem;
+	scroll-margin-top: calc(var(--mc-app-bar-height) + 4rem);
 }
 
 .section-head {
@@ -354,7 +352,7 @@ h1 {
 	}
 
 	&[aria-pressed='true'] {
-		color: #fff;
+		color: var(--mc-on-primary);
 		background: var(--mc-primary);
 		border-color: var(--mc-primary);
 	}
@@ -415,13 +413,13 @@ mc-discography-timeline {
 	margin-top: 1rem;
 	padding: 0.7rem 1.2rem;
 	font-weight: 600;
-	color: #fff;
+	color: var(--mc-on-primary);
 	text-decoration: none;
 	background: var(--mc-primary);
 	border-radius: var(--mc-radius-md);
 
 	&:focus-visible {
-		outline: 2px solid #fff;
+		outline: 2px solid var(--mc-info);
 		outline-offset: 2px;
 	}
 }
@@ -430,7 +428,7 @@ mc-discography-timeline {
 	background: linear-gradient(
 		100deg,
 		var(--mc-card-bg) 40%,
-		#222 50%,
+		var(--mc-surface-2) 50%,
 		var(--mc-card-bg) 60%
 	);
 	background-size: 200% 100%;

@@ -77,9 +77,9 @@ export const routes: Routes = [
 	},
 	{
 		path: 'error',
-		loadChildren: () =>
-			import('./page/error/error.module').then(
-				(module) => module.ErrorModule
+		loadComponent: () =>
+			import('./page/error/error.component').then(
+				(module) => module.ErrorComponent
 			),
 	},
 ];

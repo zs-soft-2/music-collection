@@ -1,21 +1,24 @@
-import { Observable } from 'rxjs';
+import { NgxPermissionsModule } from 'ngx-permissions';
 
 import {
 	ChangeDetectionStrategy,
 	Component,
-	OnInit,
+	computed,
 	inject,
+	signal,
 } from '@angular/core';
-import { BaseComponent } from '@music-collection/api';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { RouterLink, RouterLinkActive } from '@angular/router';
+import { BaseComponent, RoleNames } from '@music-collection/api';
 
-import { TopBarParams } from '../../api';
+import { ThemeService } from '../../../../theme';
 import { TopBarService } from './top-bar.service';
-import { Bind } from 'primeng/bind';
-import { Menubar } from 'primeng/menubar';
-import { SvgIconComponent } from 'angular-svg-icon';
-import { CoreAuthenticationViewModule } from '@music-collection/core/authentication/view';
-import { UserProfileModule } from '@music-collection/domain/user';
-import { AsyncPipe } from '@angular/common';
+
+const NAV_ICONS: Record<string, string> = {
+	Home: 'pi-home',
+	Collection: 'pi-th-large',
+	Wishlist: 'pi-heart',
+};
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -23,33 +26,73 @@ import { AsyncPipe } from '@angular/common';
 	selector: 'mc-top-bar',
 	styleUrls: ['./top-bar.component.scss'],
 	templateUrl: './top-bar.component.html',
-	imports: [
-		Bind,
-		Menubar,
-		SvgIconComponent,
-		CoreAuthenticationViewModule,
-		UserProfileModule,
-		AsyncPipe,
-	],
+	imports: [RouterLink, RouterLinkActive, NgxPermissionsModule],
+	host: {
+		'(document:keydown.escape)': 'closeMenus()',
+	},
 })
-export class TopBarComponent extends BaseComponent implements OnInit {
-	private componentService = inject(TopBarService);
+export class TopBarComponent extends BaseComponent {
+	private readonly componentService = inject(TopBarService);
+	protected readonly theme = inject(ThemeService);
 
-	public params$!: Observable<TopBarParams>;
+	protected readonly adminRoles = [RoleNames.ADMIN];
 
-	public imgClickHandler(): void {
-		this.componentService.imgClickHandler();
+	protected readonly navItems = this.componentService
+		.createMenuItems()
+		.map((item) => ({
+			...item,
+			icon: NAV_ICONS[item.label] ?? 'pi-circle',
+		}));
+
+	protected readonly params = toSignal(this.componentService.init$());
+	protected readonly isAuthenticated = toSignal(
+		this.componentService.selectIsAuthenticated$(),
+		{ initialValue: false }
+	);
+
+	protected readonly accountOpen = signal(false);
+	protected readonly menuOpen = signal(false);
+
+	protected readonly user = computed(() => this.params()?.user);
+	protected readonly initials = computed(() => {
+		const name = this.user()?.displayName || this.user()?.email || '?';
+
+		return name
+			.split(/[\s@.]+/)
+			.filter(Boolean)
+			.slice(0, 2)
+			.map((part) => part[0])
+			.join('')
+			.toUpperCase();
+	});
+
+	protected closeMenus(): void {
+		this.accountOpen.set(false);
+		this.menuOpen.set(false);
 	}
 
-	public loginClickHandler(): void {
+	protected toggleAccount(): void {
+		this.menuOpen.set(false);
+		this.accountOpen.update((open) => !open);
+	}
+
+	protected toggleMenu(): void {
+		this.accountOpen.set(false);
+		this.menuOpen.update((open) => !open);
+	}
+
+	protected login(): void {
+		this.closeMenus();
 		this.componentService.login();
 	}
 
-	public logoutHandler(): void {
+	protected logout(): void {
+		this.closeMenus();
 		this.componentService.logout();
 	}
 
-	public ngOnInit(): void {
-		this.params$ = this.componentService.init$();
+	protected goHome(): void {
+		this.closeMenus();
+		this.componentService.imgClickHandler();
 	}
 }

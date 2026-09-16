@@ -1,15 +1,69 @@
-<section class="admin-page">
-	<nav>
-		<mc-breadcrumb [autoGenerate]="true"></mc-breadcrumb>
-	</nav>
+<div class="admin" [class.is-expanded]="expanded()">
+	@if (expanded()) {
+		<button
+			type="button"
+			class="scrim"
+			aria-label="Close admin menu"
+			tabindex="-1"
+			(click)="expanded.set(false)"
+		></button>
+	}
 
-	<div class="content" fxLayout="row">
-		<div class="menu" fxFlex="20">
-			<p-menu [model]="items"></p-menu>
+	<aside class="side" aria-label="Admin">
+		<div class="side-head">
+			<button
+				type="button"
+				class="side-toggle"
+				aria-controls="mc-admin-nav"
+				[attr.aria-expanded]="expanded()"
+				[attr.aria-label]="
+					expanded() ? 'Collapse admin menu' : 'Expand admin menu'
+				"
+				(click)="toggle()"
+			>
+				<i
+					class="pi"
+					[class.pi-bars]="!expanded()"
+					[class.pi-times]="expanded()"
+					aria-hidden="true"
+				></i>
+			</button>
+			<span class="side-title">Admin</span>
 		</div>
 
-		<div class="content" fxFlex="80">
+		<nav id="mc-admin-nav" class="side-nav">
+			@for (group of groups; track group.label) {
+				<div class="group">
+					@if (group.label) {
+						<h2 class="group-label">{{ group.label }}</h2>
+					}
+					@for (item of group.items; track item.route) {
+						<a
+							class="nav-item"
+							[routerLink]="item.route"
+							routerLinkActive="is-active"
+							ariaCurrentWhenActive="page"
+							[attr.title]="item.label"
+						>
+							<i
+								class="pi {{ item.icon }}"
+								aria-hidden="true"
+							></i>
+							<span class="nav-label">{{ item.label }}</span>
+						</a>
+					}
+				</div>
+			}
+		</nav>
+	</aside>
+
+	<div class="main">
+		<nav class="crumbs" aria-label="Breadcrumb">
+			<mc-breadcrumb [autoGenerate]="true" separator="/"></mc-breadcrumb>
+		</nav>
+
+		<div class="content">
 			<router-outlet></router-outlet>
 		</div>
 	</div>
-</section>
+</div>

@@ -1,8 +1,12 @@
+@use '../../../../shared/music-ui/music-tokens' as mc;
+
 :host {
 	display: block;
 }
 
 .spotlight {
+	@include mc.on-image;
+
 	position: relative;
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) auto;
@@ -138,6 +142,7 @@ h1 {
 	&.primary {
 		background: var(--mc-primary);
 		border: 1px solid var(--mc-primary);
+		color: var(--mc-on-primary);
 
 		&:hover {
 			background: #e53b3b;

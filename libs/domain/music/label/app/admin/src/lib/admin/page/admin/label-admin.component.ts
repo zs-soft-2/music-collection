@@ -15,7 +15,6 @@ import {
 
 import { LabelAdminPermissionsService } from '../../service';
 import { Bind } from 'primeng/bind';
-import { Toolbar } from 'primeng/toolbar';
 import { NgxPermissionsModule } from 'ngx-permissions';
 import { Button } from 'primeng/button';
 import { AsyncPipe } from '@angular/common';
@@ -25,14 +24,7 @@ import { AsyncPipe } from '@angular/common';
 	selector: 'mc-label-admin',
 	templateUrl: './label-admin.component.html',
 	styleUrls: ['./label-admin.component.scss'],
-	imports: [
-		Bind,
-		Toolbar,
-		NgxPermissionsModule,
-		Button,
-		RouterOutlet,
-		AsyncPipe,
-	],
+	imports: [Bind, NgxPermissionsModule, Button, RouterOutlet, AsyncPipe],
 })
 export class LabelAdminComponent extends BaseComponent implements OnInit {
 	private activatedRoute = inject(ActivatedRoute);

@@ -30,13 +30,13 @@ import { DomainWishlistItemModule } from '@music-collection/domain/wishlist-item
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
-import Aura from '@primeuix/themes/aura';
 
 import { environment } from '../environments/environment';
 import { routes } from './app-routing';
 import { AuthenticationInitializer } from './initializer';
 import { HookModule } from './module/hook';
 import { metaReducers } from './reducer';
+import { MusicPreset } from './theme';
 import { NgxPermissionsModule } from 'ngx-permissions';
 
 export const appConfig: ApplicationConfig = {
@@ -52,7 +52,10 @@ export const appConfig: ApplicationConfig = {
 		provideAnimationsAsync(),
 		providePrimeNG({
 			theme: {
-				preset: Aura,
+				preset: MusicPreset,
+				options: {
+					darkModeSelector: '.mc-dark',
+				},
 			},
 		}),
 		importProvidersFrom(

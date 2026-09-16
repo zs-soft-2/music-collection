@@ -1,164 +1,145 @@
 @if (params$ | async; as params) {
-<section class="artist-form">
-  <form [formGroup]="params.formGroup">
-    <p-tabs value="0">
-      <p-tablist>
-        <p-tab value="0">Data</p-tab>
+	<section class="artist-form">
+		<form class="mc-form" [formGroup]="params.formGroup">
+			<input name="uid" formControlName="uid" hidden />
 
-        <p-tab value="1" [disabled]="!params.isImagesTabActive">Images</p-tab>
-      </p-tablist>
+			<section class="mc-form-section" aria-labelledby="artist-details">
+				<h2 id="artist-details">Details</h2>
+				<div class="mc-form-grid">
+					<div class="mc-field">
+						<label for="name">Name</label>
+						<input
+							id="name"
+							type="text"
+							pInputText
+							formControlName="name"
+						/>
+					</div>
 
-      <p-tabpanels>
-      <p-tabpanel value="0">
-        <input name="uid" formControlName="uid" hidden />
+					<div class="mc-field">
+						<label for="country">Country</label>
+						<p-select
+							inputId="country"
+							[options]="params.countries"
+							placeholder="Select a country"
+							formControlName="country"
+							[filter]="true"
+						></p-select>
+					</div>
 
-        <div class="field">
-          <span class="p-float-label">
-            <input
-              id="name"
-              type="text"
-              pInputText
-              formControlName="name"
-              />
+					<div class="mc-field">
+						<label for="formedIn">Formed in</label>
+						<p-datepicker
+							inputId="formedIn"
+							formControlName="formedIn"
+						></p-datepicker>
+					</div>
 
-            <label for="name">Name</label>
-          </span>
-        </div>
+					<div class="mc-field">
+						<label for="styles">Styles</label>
+						<p-multiselect
+							inputId="styles"
+							[options]="params.styleList"
+							[filter]="false"
+							formControlName="styles"
+							display="chip"
+							placeholder="Select styles"
+						></p-multiselect>
+					</div>
 
-        <div class="field">
-          <span class="p-float-label">
-            <textarea
-              id="description"
-              [rows]="5"
-              [cols]="30"
-              formControlName="description"
-              pTextarea
-              [autoResize]="true"
-            ></textarea>
+					<div class="mc-field is-wide">
+						<label for="description">Description</label>
+						<textarea
+							id="description"
+							[rows]="5"
+							formControlName="description"
+							pTextarea
+							[autoResize]="true"
+						></textarea>
+					</div>
+				</div>
+			</section>
 
-            <label for="description">Description</label>
-          </span>
-        </div>
+			<section class="mc-form-section" aria-labelledby="artist-images">
+				<h2 id="artist-images">Images</h2>
+				@if (params.isImagesTabActive) {
+					<div class="mc-form-grid">
+						<div class="mc-field">
+							<label for="headerImage">Header image</label>
+							<p-autocomplete
+								inputId="headerImage"
+								formControlName="headerImage"
+								[suggestions]="params.documents"
+								[minQueryLength]="3"
+								[delay]="400"
+								optionLabel="name"
+								placeholder="Search documents…"
+								(completeMethod)="searchDocument($event)"
+							></p-autocomplete>
+							@if (params.formGroup.value.headerImage) {
+								<p-image
+									class="mc-form-image"
+									[src]="
+										$safeNavigationMigration(
+											params.formGroup.value.headerImage
+												?.filePath
+										)
+									"
+									[preview]="true"
+									alt="Header image"
+									width="200"
+								></p-image>
+							}
+						</div>
+						<div class="mc-field">
+							<label for="mainImage">Main image</label>
+							<p-autocomplete
+								inputId="mainImage"
+								formControlName="mainImage"
+								[suggestions]="params.documents"
+								[minQueryLength]="3"
+								[delay]="400"
+								optionLabel="name"
+								placeholder="Search documents…"
+								(completeMethod)="searchDocument($event)"
+							></p-autocomplete>
+							@if (params.formGroup.value.mainImage) {
+								<p-image
+									class="mc-form-image"
+									[src]="
+										$safeNavigationMigration(
+											params.formGroup.value.mainImage
+												?.filePath
+										)
+									"
+									[preview]="true"
+									alt="Main image"
+									width="200"
+								></p-image>
+							}
+						</div>
+					</div>
+				} @else {
+					<p class="mc-form-note">
+						Save the artist first to attach images.
+					</p>
+				}
+			</section>
 
-        <div class="field">
-          <span class="p-float-label">
-            <p-select
-              id="country"
-              [options]="params.countries"
-              placeholder="Select a country"
-              formControlName="country"
-            ></p-select>
-
-            <label for="country">Country</label>
-          </span>
-        </div>
-
-        <div class="field">
-          <span class="p-float-label">
-            <p-datepicker
-              id="formedIn"
-              formControlName="formedIn"
-            ></p-datepicker>
-
-            <label for="formedIn">Formed in</label>
-          </span>
-        </div>
-
-        <div class="field">
-          <span class="p-float-label">
-            <p-multiselect
-              id="styles"
-              [options]="params.styleList"
-              [filter]="false"
-              formControlName="styles"
-              display="chip"
-            ></p-multiselect>
-
-            <label for="styles">Styles</label>
-          </span>
-        </div>
-      </p-tabpanel>
-
-      <p-tabpanel value="1">
-        <div class="field">
-          <span class="p-float-label">
-            <p-autocomplete
-              id="headerImage"
-              formControlName="headerImage"
-              [suggestions]="params.documents"
-              [minQueryLength]="3"
-              [delay]="400"
-              optionLabel="name"
-              (completeMethod)="searchDocument($event)"
-              >
-            </p-autocomplete>
-
-            <label for="headerImage">Header image</label>
-          </span>
-
-          @if (params.formGroup.value.headerImage) {
-            <p-image
-              [src]="$safeNavigationMigration(params.formGroup.value.headerImage?.filePath)"
-              [preview]="true"
-              alt="Image"
-              width="200"
-              >
-            </p-image>
-          }
-        </div>
-
-        <div class="field">
-          <span class="p-float-label">
-            <p-autocomplete
-              id="mainImage"
-              formControlName="mainImage"
-              [suggestions]="params.documents"
-              [minQueryLength]="3"
-              [delay]="400"
-              optionLabel="name"
-              (completeMethod)="searchDocument($event)"
-              >
-            </p-autocomplete>
-
-            <label for="mainImage">Main image</label>
-          </span>
-
-          @if (params.formGroup.value.mainImage) {
-            <p-image
-              [src]="$safeNavigationMigration(params.formGroup.value.mainImage?.filePath)"
-              [preview]="true"
-              alt="Image"
-              width="200"
-              >
-            </p-image>
-          }
-        </div>
-      </p-tabpanel>
-      </p-tabpanels>
-    </p-tabs>
-
-      <div
-        style="margin-top: 10px"
-        fxLayout="row"
-        fxLayoutAlign="space-around"
-        >
-        <button
-          pButton
-          type="button"
-          (click)="submit()"
-          [disabled]="!params.formGroup.valid"
-        >
-          Submit
-        </button>
-
-        <button
-          pButton
-          type="button"
-          (click)="cancel()"
-        >
-          Cancel
-        </button>
-      </div>
-  </form>
-</section>
+			<div class="mc-form-actions">
+				<p-button
+					label="Cancel"
+					severity="secondary"
+					[outlined]="true"
+					(onClick)="cancel()"
+				></p-button>
+				<p-button
+					label="Save"
+					icon="pi pi-check"
+					[disabled]="!params.formGroup.valid"
+					(onClick)="submit()"
+				></p-button>
+			</div>
+		</form>
+	</section>
 }

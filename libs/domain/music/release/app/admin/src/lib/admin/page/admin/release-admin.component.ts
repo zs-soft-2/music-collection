@@ -15,7 +15,6 @@ import {
 
 import { ReleaseAdminPermissionsService } from '../../service';
 import { Bind } from 'primeng/bind';
-import { Toolbar } from 'primeng/toolbar';
 import { NgxPermissionsModule } from 'ngx-permissions';
 import { Button } from 'primeng/button';
 import { AsyncPipe } from '@angular/common';
@@ -25,14 +24,7 @@ import { AsyncPipe } from '@angular/common';
 	selector: 'mc-release-admin',
 	templateUrl: './release-admin.component.html',
 	styleUrls: ['./release-admin.component.scss'],
-	imports: [
-		Bind,
-		Toolbar,
-		NgxPermissionsModule,
-		Button,
-		RouterOutlet,
-		AsyncPipe,
-	],
+	imports: [Bind, NgxPermissionsModule, Button, RouterOutlet, AsyncPipe],
 })
 export class ReleaseAdminComponent extends BaseComponent implements OnInit {
 	private activatedRoute = inject(ActivatedRoute);

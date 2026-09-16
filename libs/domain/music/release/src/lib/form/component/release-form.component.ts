@@ -16,8 +16,7 @@ import { InputText } from 'primeng/inputtext';
 import { DatePicker } from 'primeng/datepicker';
 import { Select } from 'primeng/select';
 import { MultiSelect } from 'primeng/multiselect';
-import { Ripple } from 'primeng/ripple';
-import { ButtonDirective } from 'primeng/button';
+import { Button } from 'primeng/button';
 import { AsyncPipe } from '@angular/common';
 
 @Component({
@@ -34,8 +33,7 @@ import { AsyncPipe } from '@angular/common';
 		DatePicker,
 		Select,
 		MultiSelect,
-		Ripple,
-		ButtonDirective,
+		Button,
 		AsyncPipe,
 	],
 })

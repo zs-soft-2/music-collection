@@ -12,6 +12,21 @@ const routes: Routes = [
 		component: AdminComponent,
 		children: [
 			{
+				path: '',
+				pathMatch: 'full',
+				redirectTo: 'dashboard',
+			},
+			{
+				path: 'dashboard',
+				data: {
+					breadcrumb: 'dashboard',
+				},
+				loadComponent: () =>
+					import('./dashboard/admin-dashboard.component').then(
+						(module) => module.AdminDashboardComponent
+					),
+			},
+			{
 				path: 'artist',
 				data: {
 					breadcrumb: 'artist',

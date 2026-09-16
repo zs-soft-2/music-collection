@@ -14,8 +14,7 @@ import { Bind } from 'primeng/bind';
 import { InputText } from 'primeng/inputtext';
 import { FileUpload } from 'primeng/fileupload';
 import { Image } from 'primeng/image';
-import { Ripple } from 'primeng/ripple';
-import { ButtonDirective } from 'primeng/button';
+import { Button } from 'primeng/button';
 import { AsyncPipe } from '@angular/common';
 
 @Component({
@@ -30,8 +29,7 @@ import { AsyncPipe } from '@angular/common';
 		InputText,
 		FileUpload,
 		Image,
-		Ripple,
-		ButtonDirective,
+		Button,
 		AsyncPipe,
 	],
 })

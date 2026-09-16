@@ -1,61 +1,62 @@
-@if(params$ | async; as params) {
-	<section class="collection-item-table">
+@if (params$ | async; as params) {
+	<section class="collection-item-table mc-card">
 		<p-table
 			[value]="params.collectionItems"
-			styleClass="p-datatable-striped p-datatable-sm"
+			styleClass="mc-table"
 			responsiveLayout="scroll"
 		>
 			<ng-template #header>
 				<tr>
 					<th>Name</th>
-	
+
 					<th>Year</th>
-	
+
 					<th></th>
 				</tr>
-	
+
 				<tr>
 					<th>
 						<p-autocomplete
+							placeholder="Filter by name…"
+							ariaLabel="Filter by name"
 							[suggestions]="params.empty"
 							[showClear]="true"
 							(completeMethod)="searchHandler($event)"
 							[minQueryLength]="3"
 							[delay]="400"
-							class="p-inputtext-sm"
 						>
 						</p-autocomplete>
 					</th>
-	
+
 					<th></th>
-	
+
 					<th></th>
 				</tr>
 			</ng-template>
-	
+
 			<ng-template #body let-collectionItem>
 				<tr>
 					<td>{{ collectionItem.release.name }}</td>
-	
-					<td>{{ collectionItem.date | date : 'yyyy' }}</td>
-	
+
+					<td>{{ collectionItem.date | date: 'yyyy' }}</td>
+
 					<td>
 						<button
 							pButton
 							pRipple
 							aria-label="Edit collection item"
-							class="p-button-rounded p-button-success mr-2"
+							class="p-button-text p-button-rounded p-button-secondary"
 							(click)="editCollectionItem(collectionItem)"
 							iconOnly
 						>
 							<i class="pi pi-pencil" aria-hidden="true"></i>
 						</button>
-	
+
 						<button
 							pButton
 							pRipple
 							aria-label="Delete collection item"
-							class="p-button-rounded p-button-warning"
+							class="p-button-text p-button-rounded p-button-danger"
 							(click)="deleteCollectionItem(collectionItem)"
 							iconOnly
 						>
@@ -67,4 +68,3 @@
 		</p-table>
 	</section>
 }
-

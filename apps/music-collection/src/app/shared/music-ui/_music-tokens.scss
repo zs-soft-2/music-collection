@@ -1,28 +1,30 @@
-// Design tokens of the music pages (home, collection). Include the mixin on a
-// page host: the tokens stay scoped to that page and child components inherit
-// them, so the rest of the app is unaffected.
+// A zenei oldalak tokenjei. A színek és a betűk globálisak (styles.scss, a
+// téma szerint sötét vagy világos), ezért a `tokens` mixin már csak a régi
+// @include-okat szolgálja ki: új kódnak nem kell meghívnia.
 @mixin tokens {
+}
+
+// Fényképre vagy borítóra rajzolt rész (hero, spotlight): a képfedés mindig
+// sötét, ezért itt a sötét téma tokenjei érvényesek a választott témától
+// függetlenül — különben világos témában sötét szöveg kerülne a sötét képre.
+@mixin on-image {
+	color-scheme: dark;
+
 	--mc-bg: #0a0a0a;
-	--mc-bg-muted: #111;
+	--mc-bg-muted: #111111;
 	--mc-card-bg: #161616;
 	--mc-card-bg-hover: #1f1f1f;
-	--mc-text: #fff;
+	--mc-surface-2: #1e1e1e;
+	--mc-text: #ffffff;
 	--mc-text-muted: #a8a8a8;
 	--mc-text-subtle: #8a8a8a;
 	--mc-primary: #ff4444;
+	--mc-on-primary: #0a0a0a;
 	--mc-accent: #ffaa00;
-	// Data marks (single-series charts); validated against --mc-card-bg.
-	--mc-chart: #ff4444;
+	--mc-on-accent: #000000;
+	--mc-info: #00d4ff;
 	--mc-border: rgba(255, 255, 255, 0.08);
 	--mc-border-strong: rgba(255, 255, 255, 0.18);
-	--mc-radius-sm: 4px;
-	--mc-radius-md: 8px;
-	--mc-radius-lg: 12px;
-	--mc-duration-fast: 150ms;
-	--mc-duration: 300ms;
-	--mc-duration-slow: 500ms;
-	--mc-font-display:
-		'Bebas Neue', 'Oswald', Impact, 'Arial Narrow', sans-serif;
-	--mc-font-body:
-		Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+	color: var(--mc-text);
 }

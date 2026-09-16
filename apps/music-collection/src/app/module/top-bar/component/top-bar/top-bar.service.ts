@@ -34,6 +34,10 @@ export class TopBarService {
 				label: 'Collection',
 				routerLink: ['/collection'],
 			},
+			{
+				label: 'Wishlist',
+				routerLink: ['/wishlist'],
+			},
 		];
 	}
 
@@ -51,6 +55,10 @@ export class TopBarService {
 				return this.params$$;
 			})
 		);
+	}
+
+	public selectIsAuthenticated$(): Observable<boolean> {
+		return this.authenticationStateService.selectIsAuthenticated$();
 	}
 
 	public login(): void {
