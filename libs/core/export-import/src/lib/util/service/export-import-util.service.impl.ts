@@ -1,6 +1,6 @@
 import { decode, encode } from 'base64-arraybuffer';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
 	AlbumEntity,
 	AlbumExportModel,
@@ -16,9 +16,8 @@ import {
 
 @Injectable()
 export class ExportImportUtilServiceImpl extends ExportImportUtilService {
-	public constructor(private documentUtilService: DocumentUtilService) {
-		super();
-	}
+	private documentUtilService = inject(DocumentUtilService);
+
 
 	public createAlbumEntity(
 		albumExportModel: AlbumExportModel,

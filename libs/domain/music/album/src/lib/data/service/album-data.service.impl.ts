@@ -20,8 +20,8 @@ import {
 
 @Injectable()
 export class AlbumDataServiceImpl extends AlbumDataService {
-	public constructor(firestore: Firestore) {
-		super(firestore);
+	public constructor() {
+		super();
 
 		this.featureKey = ALBUM_FEATURE_KEY;
 		this.collection = collection(this.firestore, this.featureKey);

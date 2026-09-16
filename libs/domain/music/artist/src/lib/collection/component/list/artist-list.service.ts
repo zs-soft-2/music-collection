@@ -1,7 +1,7 @@
 import { Observable, ReplaySubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
 	ArtistEntity,
 	ArtistListParams,
@@ -11,10 +11,12 @@ import {
 
 @Injectable()
 export class ArtistListService extends BaseComponent {
+	private artistStateService = inject(ArtistStateService);
+
 	private params!: ArtistListParams;
 	private params$$: ReplaySubject<ArtistListParams>;
 
-	public constructor(private artistStateService: ArtistStateService) {
+	public constructor() {
 		super();
 
 		this.params$$ = new ReplaySubject();

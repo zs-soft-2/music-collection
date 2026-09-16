@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import {
 	LabelEntity,
 	LabelTableParams,
@@ -17,11 +17,9 @@ import { LabelTableService } from './label-table.service';
 	standalone: false,
 })
 export class LabelTableComponent extends BaseComponent implements OnInit {
-	public params$!: Observable<LabelTableParams>;
+	private componentService = inject(LabelTableService);
 
-	public constructor(private componentService: LabelTableService) {
-		super();
-	}
+	public params$!: Observable<LabelTableParams>;
 
 	public deleteLabel(label: LabelEntity): void {
 		console.log(label);

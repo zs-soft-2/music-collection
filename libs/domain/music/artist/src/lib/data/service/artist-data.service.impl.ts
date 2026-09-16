@@ -29,8 +29,8 @@ import {
 
 @Injectable()
 export class ArtistDataServiceImpl extends ArtistDataService {
-	public constructor(firestore: Firestore) {
-		super(firestore);
+	public constructor() {
+		super();
 
 		this.featureKey = ARTIST_FEATURE_KEY;
 		this.collection = collection(this.firestore, this.featureKey);

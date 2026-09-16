@@ -1,7 +1,7 @@
 import { combineLatest, Observable, ReplaySubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
 	EntityTypeEnum,
@@ -16,17 +16,17 @@ import {
 
 @Injectable()
 export class LabelFormService {
+	private activatedRoute = inject(ActivatedRoute);
+	private labelStateService = inject(LabelStateService);
+	private labelUtilService = inject(LabelUtilService);
+	private componentUtil = inject(LabelUtilService);
+	private router = inject(Router);
+
 	private label!: LabelEntity | undefined;
 	private params!: LabelFormParams;
 	private params$$: ReplaySubject<LabelFormParams>;
 
-	public constructor(
-		private activatedRoute: ActivatedRoute,
-		private labelStateService: LabelStateService,
-		private labelUtilService: LabelUtilService,
-		private componentUtil: LabelUtilService,
-		private router: Router
-	) {
+	public constructor() {
 		this.params$$ = new ReplaySubject();
 	}
 

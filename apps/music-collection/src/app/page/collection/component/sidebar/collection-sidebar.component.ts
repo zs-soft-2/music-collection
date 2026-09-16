@@ -23,12 +23,14 @@ export class CollectionSidebarComponent
 	extends BaseComponent
 	implements OnInit
 {
+	private componentService = inject(CollectionSidebarService);
+
 	public store = inject(CollectionSidebarStore);
 
 	@Output()
 	public configChange: EventEmitter<CollectionItemListConfig>;
 
-	public constructor(private componentService: CollectionSidebarService) {
+	public constructor() {
 		super();
 
 		this.configChange = new EventEmitter();

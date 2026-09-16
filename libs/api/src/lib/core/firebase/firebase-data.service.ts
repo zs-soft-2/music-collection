@@ -1,6 +1,6 @@
 import { Observable, of, switchMap } from 'rxjs';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
 	collection,
 	collectionData,
@@ -27,12 +27,10 @@ export abstract class FirebaseDataService<
 	S,
 	T extends Entity
 > extends EntityDataService<R, S, T> {
+	protected firestore = inject(Firestore);
+
 	protected collection!: CollectionReference<DocumentData>;
 	protected featureKey!: string;
-
-	public constructor(protected firestore: Firestore) {
-		super();
-	}
 
 	protected addModel$(entityAdd: S): Observable<R> {
 		const uid = doc(collection(this.firestore, 'id')).id;

@@ -1,6 +1,6 @@
 import { merge, Observable, ReplaySubject, switchMap } from 'rxjs';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
 	BaseComponent,
@@ -14,15 +14,15 @@ import {
 
 @Injectable()
 export class ReleaseTableService extends BaseComponent {
+	private activatedRoute = inject(ActivatedRoute);
+	private releaseStateService = inject(ReleaseStateService);
+	private releaseUtilService = inject(ReleaseUtilService);
+	private router = inject(Router);
+
 	private params!: ReleaseTableParams;
 	private params$$: ReplaySubject<ReleaseTableParams>;
 
-	public constructor(
-		private activatedRoute: ActivatedRoute,
-		private releaseStateService: ReleaseStateService,
-		private releaseUtilService: ReleaseUtilService,
-		private router: Router
-	) {
+	public constructor() {
 		super();
 
 		this.params$$ = new ReplaySubject();

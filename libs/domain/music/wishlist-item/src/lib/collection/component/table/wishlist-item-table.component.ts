@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import {
 	WishlistItemEntity,
 	WishlistItemTableParams,
@@ -20,11 +20,9 @@ export class WishlistItemTableComponent
 	extends BaseComponent
 	implements OnInit
 {
-	public params$!: Observable<WishlistItemTableParams>;
+	private componentService = inject(WishlistItemTableService);
 
-	public constructor(private componentService: WishlistItemTableService) {
-		super();
-	}
+	public params$!: Observable<WishlistItemTableParams>;
 
 	public deleteWishlistItem(wishlistItem: WishlistItemEntity): void {
 		console.log(wishlistItem);

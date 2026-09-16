@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { LabelFormParams, BaseComponent } from '@music-collection/api';
 
 import { LabelFormService } from './label-form.service';
@@ -14,11 +14,9 @@ import { LabelFormService } from './label-form.service';
   standalone: false,
 })
 export class LabelFormComponent extends BaseComponent implements OnInit {
-	public params$!: Observable<LabelFormParams>;
+	private componentService = inject(LabelFormService);
 
-	public constructor(private componentService: LabelFormService) {
-		super();
-	}
+	public params$!: Observable<LabelFormParams>;
 
 	public cancel(): void {
 		this.componentService.cancel();

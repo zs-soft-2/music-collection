@@ -28,12 +28,14 @@ export class CollectionItemListComponent
 	extends BaseComponent
 	implements OnInit
 {
+	private componentService = inject(CollectionItemListService);
+
 	public store = inject(CollectionItemListState);
 
 	@Output()
 	public selectCollectionItem: EventEmitter<CollectionItemEntity>;
 
-	public constructor(private componentService: CollectionItemListService) {
+	public constructor() {
 		super();
 
 		this.selectCollectionItem = new EventEmitter();

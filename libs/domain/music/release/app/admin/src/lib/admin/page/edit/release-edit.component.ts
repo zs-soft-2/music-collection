@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { BaseComponent } from '@music-collection/api';
 
@@ -10,11 +10,9 @@ import { BaseComponent } from '@music-collection/api';
   standalone: false,
 })
 export class ReleaseEditComponent extends BaseComponent implements OnInit {
-	public releaseId!: string;
+	private activatedRoute = inject(ActivatedRoute);
 
-	public constructor(private activatedRoute: ActivatedRoute) {
-		super();
-	}
+	public releaseId!: string;
 
 	public ngOnInit(): void {
 		this.releaseId = this.activatedRoute.snapshot.params['releaseId'];

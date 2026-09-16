@@ -1,10 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Resolve } from '@angular/router';
 import { LabelStateService } from '@music-collection/api';
 
 @Injectable()
 export class LabelListPageResolverService implements Resolve<void> {
-	constructor(private labelStateService: LabelStateService) {}
+	private labelStateService = inject(LabelStateService);
+
 
 	public resolve(): void {
 		this.labelStateService.dispatchSetSelectedEntityIdAction('');

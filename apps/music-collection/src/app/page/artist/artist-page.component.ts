@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AlbumEntity } from '@music-collection/api';
 
@@ -10,7 +10,8 @@ import { AlbumEntity } from '@music-collection/api';
   standalone: false,
 })
 export class ArtistPageComponent {
-	public constructor(private router: Router) {}
+	private router = inject(Router);
+
 
 	public selectDetailHandler(album: AlbumEntity): void {
 		this.router.navigate(['album', album.uid]);

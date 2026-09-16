@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import {
 	CollectionItemEntity,
 	CollectionItemTableParams,
@@ -20,11 +20,9 @@ export class CollectionItemTableComponent
 	extends BaseComponent
 	implements OnInit
 {
-	public params$!: Observable<CollectionItemTableParams>;
+	private componentService = inject(CollectionItemTableService);
 
-	public constructor(private componentService: CollectionItemTableService) {
-		super();
-	}
+	public params$!: Observable<CollectionItemTableParams>;
 
 	public deleteCollectionItem(collectionItem: CollectionItemEntity): void {
 		this.componentService.deleteCollectionItem(collectionItem);

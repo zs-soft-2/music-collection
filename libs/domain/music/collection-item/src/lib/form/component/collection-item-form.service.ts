@@ -1,7 +1,7 @@
 import { combineLatest, Observable, ReplaySubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
 	AuthenticationStateService,
@@ -20,19 +20,19 @@ import {
 
 @Injectable()
 export class CollectionItemFormService {
+	private activatedRoute = inject(ActivatedRoute);
+	private authenticationStateService = inject(AuthenticationStateService);
+	private collectionItemStateService = inject(CollectionItemStateService);
+	private collectionItemUtilService = inject(CollectionItemUtilService);
+	private releaseStateService = inject(ReleaseStateService);
+	private componentUtil = inject(CollectionItemUtilService);
+	private router = inject(Router);
+
 	private collectionItem!: CollectionItemEntity | undefined;
 	private params!: CollectionItemFormParams;
 	private params$$: ReplaySubject<CollectionItemFormParams>;
 
-	public constructor(
-		private activatedRoute: ActivatedRoute,
-		private authenticationStateService: AuthenticationStateService,
-		private collectionItemStateService: CollectionItemStateService,
-		private collectionItemUtilService: CollectionItemUtilService,
-		private releaseStateService: ReleaseStateService,
-		private componentUtil: CollectionItemUtilService,
-		private router: Router
-	) {
+	public constructor() {
 		this.params$$ = new ReplaySubject();
 	}
 

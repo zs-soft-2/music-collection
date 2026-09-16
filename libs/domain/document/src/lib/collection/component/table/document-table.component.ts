@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import {
 	BaseComponent,
 	DocumentEntity,
@@ -18,11 +18,9 @@ import { DocumentTableService } from './document-table.service';
 	standalone: false,
 })
 export class DocumentTableComponent extends BaseComponent implements OnInit {
-	public params$!: Observable<DocumentTableParams>;
+	private componentService = inject(DocumentTableService);
 
-	public constructor(private componentService: DocumentTableService) {
-		super();
-	}
+	public params$!: Observable<DocumentTableParams>;
 
 	public deleteDocument(document: DocumentEntity): void {
 		console.log(document);

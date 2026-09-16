@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { ArtistFormParams, BaseComponent } from '@music-collection/api';
 
 import { ArtistFormService } from './artist-form.service';
@@ -14,11 +14,9 @@ import { ArtistFormService } from './artist-form.service';
   standalone: false,
 })
 export class ArtistFormComponent extends BaseComponent implements OnInit {
-	public params$!: Observable<ArtistFormParams>;
+	private componentService = inject(ArtistFormService);
 
-	public constructor(private componentService: ArtistFormService) {
-		super();
-	}
+	public params$!: Observable<ArtistFormParams>;
 
 	public cancel(): void {
 		this.componentService.cancel();

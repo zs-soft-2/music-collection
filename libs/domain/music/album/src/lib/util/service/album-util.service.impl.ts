@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import {
 	AlbumArtist,
@@ -25,14 +25,12 @@ import {
 
 @Injectable()
 export class AlbumUtilServiceImpl extends AlbumUtilService {
+	private formBuilder = inject(FormBuilder);
+
 	public _sort = (a: AlbumEntity, b: AlbumEntity): number =>
 		a.name < b.name ? 1 : -1;
 	public _sortByYear = (a: AlbumEntity, b: AlbumEntity): number =>
 		a.year < b.year ? 1 : -1;
-
-	public constructor(private formBuilder: FormBuilder) {
-		super();
-	}
 
 	public convertEntityAddToModelAdd(entity: AlbumEntityAdd): AlbumModelAdd {
 		return {

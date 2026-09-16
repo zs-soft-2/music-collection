@@ -1,7 +1,7 @@
 import { combineLatest, Observable, ReplaySubject } from 'rxjs';
 import { switchMap, tap } from 'rxjs/operators';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
@@ -15,19 +15,19 @@ import {
 
 @Injectable()
 export class DocumentFormService {
+	private activatedRoute = inject(ActivatedRoute);
+	private documentStateService = inject(DocumentStateService);
+	private documentUtilService = inject(DocumentUtilService);
+	private componentUtil = inject(DocumentUtilService);
+	private router = inject(Router);
+
 	private document!: DocumentEntity | undefined;
 	private formGroup!: FormGroup;
 	private params!: DocumentFormParams;
 	private params$$: ReplaySubject<DocumentFormParams>;
 	private selectedFile!: File | undefined;
 
-	public constructor(
-		private activatedRoute: ActivatedRoute,
-		private documentStateService: DocumentStateService,
-		private documentUtilService: DocumentUtilService,
-		private componentUtil: DocumentUtilService,
-		private router: Router
-	) {
+	public constructor() {
 		this.params$$ = new ReplaySubject();
 	}
 

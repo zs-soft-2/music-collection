@@ -12,7 +12,7 @@ import {
 } from 'rxjs';
 import { first, mergeMap, reduce, tap } from 'rxjs/operators';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
 	AlbumEntity,
 	AlbumExportModel,
@@ -32,12 +32,9 @@ import {
 
 @Injectable()
 export class ExportImportServiceImpl extends ExportImportService {
-	public constructor(
-		private exportImportStateService: ExportImportStateService,
-		private exportImportUtilService: ExportImportUtilService
-	) {
-		super();
-	}
+	private exportImportStateService = inject(ExportImportStateService);
+	private exportImportUtilService = inject(ExportImportUtilService);
+
 
 	public createArtistExport(artist: ArtistEntity): Observable<boolean> {
 		const artistId = artist.uid;

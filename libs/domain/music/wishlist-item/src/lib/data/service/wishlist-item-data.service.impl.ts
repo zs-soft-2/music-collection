@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 
 import { Injectable } from '@angular/core';
-import { collection, doc, Firestore, setDoc } from '@angular/fire/firestore';
+import { collection, doc, setDoc } from '@angular/fire/firestore';
 import {
 	WishlistItemDataService,
 	WishlistItemModel,
@@ -13,8 +13,8 @@ import {
 
 @Injectable()
 export class WishlistItemDataServiceImpl extends WishlistItemDataService {
-	public constructor(firestore: Firestore) {
-		super(firestore);
+	public constructor() {
+		super();
 
 		this.featureKey = WISHLIST_ITEM_FEATURE_KEY;
 		this.collection = collection(this.firestore, this.featureKey);

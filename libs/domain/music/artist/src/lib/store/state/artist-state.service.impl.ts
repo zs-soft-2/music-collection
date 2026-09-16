@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
 	AlbumEntity,
 	ArtistEntity,
@@ -17,9 +17,8 @@ import * as artistSelectors from './artist.selectors';
 
 @Injectable()
 export class ArtistStateServiceImpl extends ArtistStateService {
-	public constructor(private store: Store<fromArtist.ArtistPartialState>) {
-		super();
-	}
+	private store = inject<Store<fromArtist.ArtistPartialState>>(Store);
+
 
 	public dispatchAddEntityAction(artist: ArtistEntityAdd): void {
 		this.store.dispatch(artistActions.addArtist({ artist }));

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import {
 	AuthenticationStateService,
@@ -16,13 +16,11 @@ import { TopBarModule } from './module';
 	imports: [TopBarModule, RouterModule],
 })
 export class AppComponent implements OnInit {
+	private authenticationStateService = inject(AuthenticationStateService);
+	private entityQuantityStateService = inject(EntityQuantityStateService);
+
 	public title = 'music-collection';
 	public version = environment.version;
-
-	public constructor(
-		private authenticationStateService: AuthenticationStateService,
-		private entityQuantityStateService: EntityQuantityStateService,
-	) {}
 
 	public ngOnInit(): void {
 		this.entityQuantityStateService.dispatchListEntitiesAction();

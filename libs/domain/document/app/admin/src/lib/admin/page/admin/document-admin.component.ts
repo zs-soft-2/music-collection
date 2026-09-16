@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
 	DocumentStateService,
@@ -18,16 +18,12 @@ import { DocumentAdminPermissionsService } from '../../service';
   standalone: false,
 })
 export class DocumentAdminComponent extends BaseComponent implements OnInit {
+	private activatedRoute = inject(ActivatedRoute);
+	private router = inject(Router);
+	private documentStateService = inject(DocumentStateService);
+
 	public buttonPermissions: string[] = [];
 	public isNewEntityButtonEnabled$!: Observable<boolean>;
-
-	public constructor(
-		private activatedRoute: ActivatedRoute,
-		private router: Router,
-		private documentStateService: DocumentStateService
-	) {
-		super();
-	}
 
 	public clickHandler(): void {
 		this.router.navigate(['edit', 0], { relativeTo: this.activatedRoute });

@@ -1,6 +1,6 @@
 import { combineLatest, takeUntil, tap } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import {
 	AlbumStateService,
 	ArtistStateService,
@@ -15,12 +15,9 @@ import {
   standalone: false,
 })
 export class HomeComponent extends BaseComponent implements OnInit {
-	public constructor(
-		private albumStateService: AlbumStateService,
-		private artistStateService: ArtistStateService
-	) {
-		super();
-	}
+	private albumStateService = inject(AlbumStateService);
+	private artistStateService = inject(ArtistStateService);
+
 
 	public ngOnInit(): void {
 		combineLatest([

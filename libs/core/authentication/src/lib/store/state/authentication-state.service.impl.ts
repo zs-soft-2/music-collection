@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { AuthenticationStateService, User } from '@music-collection/api';
 import { select, Store } from '@ngrx/store';
 
@@ -10,9 +10,8 @@ import * as authenticationSelectors from './authentication.selectors';
 
 @Injectable()
 export class AuthenticationStateServiceImpl extends AuthenticationStateService {
-	public constructor(private store: Store<AuthenticationPartialState>) {
-		super();
-	}
+	private store = inject<Store<AuthenticationPartialState>>(Store);
+
 
 	public dispatchAuthenticated(user: User): void {
 		this.store.dispatch(authenticationActions.authenticated({ user }));

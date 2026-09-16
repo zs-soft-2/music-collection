@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
 	CollectionItemEntity,
 	CollectionItemEntityAdd,
@@ -17,11 +17,8 @@ import * as collectionItemSelectors from './collection-item.selectors';
 
 @Injectable()
 export class CollectionItemStateServiceImpl extends CollectionItemStateService {
-	public constructor(
-		private store: Store<fromCollectionItem.CollectionItemPartialState>
-	) {
-		super();
-	}
+	private store = inject<Store<fromCollectionItem.CollectionItemPartialState>>(Store);
+
 
 	public dispatchAddEntityAction(
 		collectionItem: CollectionItemEntityAdd

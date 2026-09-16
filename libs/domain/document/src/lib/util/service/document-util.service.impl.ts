@@ -1,6 +1,6 @@
 import objectHash from 'object-hash';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import {
 	DocumentEntity,
@@ -17,9 +17,8 @@ import {
 
 @Injectable()
 export class DocumentUtilServiceImpl extends DocumentUtilService {
-	public constructor(private formBuilder: FormBuilder) {
-		super();
-	}
+	private formBuilder = inject(FormBuilder);
+
 
 	public _sort(a: DocumentEntity, b: DocumentEntity): number {
 		return a.name < b.name ? 1 : -1;

@@ -23,12 +23,14 @@ import { ArtistDetailViewStore } from './artist-detail-view.store';
   standalone: false,
 })
 export class ArtistDetailViewComponent extends BaseComponent implements OnInit {
+	private componentService = inject(ArtistDetailViewService);
+
 	public store = inject(ArtistDetailViewStore);
 
 	@Output()
 	public selectAlbumDetail: EventEmitter<AlbumEntity>;
 
-	public constructor(private componentService: ArtistDetailViewService) {
+	public constructor() {
 		super();
 
 		this.selectAlbumDetail = new EventEmitter();

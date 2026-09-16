@@ -1,7 +1,7 @@
 import { combineLatest, Observable, ReplaySubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
 	AlbumEntity,
@@ -22,19 +22,19 @@ import {
 
 @Injectable()
 export class AlbumFormService {
+	private activatedRoute = inject(ActivatedRoute);
+	private albumStateService = inject(AlbumStateService);
+	private albumUtilService = inject(AlbumUtilService);
+	private artistStateService = inject(ArtistStateService);
+	private componentUtil = inject(AlbumUtilService);
+	private documentStateService = inject(DocumentStateService);
+	private router = inject(Router);
+
 	private album!: AlbumEntity | undefined;
 	private params!: AlbumFormParams;
 	private params$$: ReplaySubject<AlbumFormParams>;
 
-	public constructor(
-		private activatedRoute: ActivatedRoute,
-		private albumStateService: AlbumStateService,
-		private albumUtilService: AlbumUtilService,
-		private artistStateService: ArtistStateService,
-		private componentUtil: AlbumUtilService,
-		private documentStateService: DocumentStateService,
-		private router: Router
-	) {
+	public constructor() {
 		this.params$$ = new ReplaySubject();
 	}
 

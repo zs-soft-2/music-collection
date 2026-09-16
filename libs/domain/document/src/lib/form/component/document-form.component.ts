@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { DocumentFormParams, BaseComponent } from '@music-collection/api';
 
 import { DocumentFormService } from './document-form.service';
@@ -14,11 +14,9 @@ import { DocumentFormService } from './document-form.service';
 	standalone: false,
 })
 export class DocumentFormComponent extends BaseComponent implements OnInit {
-	public params$!: Observable<DocumentFormParams>;
+	private componentService = inject(DocumentFormService);
 
-	public constructor(private componentService: DocumentFormService) {
-		super();
-	}
+	public params$!: Observable<DocumentFormParams>;
 
 	public cancel(): void {
 		this.componentService.cancel();

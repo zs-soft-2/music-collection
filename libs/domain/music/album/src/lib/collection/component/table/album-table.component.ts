@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import {
 	AlbumEntity,
 	AlbumTableParams,
@@ -17,11 +17,9 @@ import { AlbumTableService } from './album-table.service';
 	standalone: false,
 })
 export class AlbumTableComponent extends BaseComponent implements OnInit {
-	public params$!: Observable<AlbumTableParams>;
+	private componentService = inject(AlbumTableService);
 
-	public constructor(private componentService: AlbumTableService) {
-		super();
-	}
+	public params$!: Observable<AlbumTableParams>;
 
 	public deleteAlbum(album: AlbumEntity): void {
 		console.log(album);

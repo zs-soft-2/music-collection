@@ -1,12 +1,6 @@
 import { takeUntil } from 'rxjs/operators';
 
-import {
-	Directive,
-	Input,
-	OnInit,
-	TemplateRef,
-	ViewContainerRef,
-} from '@angular/core';
+import { Directive, Input, OnInit, TemplateRef, ViewContainerRef, inject } from '@angular/core';
 import {
 	AuthenticationStateService,
 	BaseDirective,
@@ -17,15 +11,11 @@ import {
   standalone: false
 })
 export class IsAuthenticatedDirective extends BaseDirective implements OnInit {
-	public condition = false;
+	private authenticationStateService = inject(AuthenticationStateService);
+	private templateRef = inject<TemplateRef<unknown>>(TemplateRef);
+	private viewContainer = inject(ViewContainerRef);
 
-	constructor(
-		private authenticationStateService: AuthenticationStateService,
-		private templateRef: TemplateRef<unknown>,
-		private viewContainer: ViewContainerRef
-	) {
-		super();
-	}
+	public condition = false;
 
 	@Input()
 	public set mcIsAuthenticated(condition: boolean) {

@@ -1,6 +1,6 @@
 import { first } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { BaseComponent, ExportImportService } from '@music-collection/api';
 
 @Component({
@@ -11,9 +11,8 @@ import { BaseComponent, ExportImportService } from '@music-collection/api';
   standalone: false,
 })
 export class ArtistImportComponent extends BaseComponent {
-	public constructor(private exportImportService: ExportImportService) {
-		super();
-	}
+	private exportImportService = inject(ExportImportService);
+
 
 	public artistImport(event: any): void {
 		this.exportImportService

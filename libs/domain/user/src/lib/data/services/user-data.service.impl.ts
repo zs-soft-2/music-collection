@@ -27,8 +27,8 @@ import { USER_FEATURE_KEY } from '../../store/state/user.reducer';
 
 @Injectable()
 export class UserDataServiceImpl extends UserDataService {
-	public constructor(firestore: Firestore) {
-		super(firestore);
+	public constructor() {
+		super();
 
 		this.featureKey = USER_FEATURE_KEY;
 		this.collection = collection(this.firestore, this.featureKey);

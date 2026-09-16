@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import {
 	BaseComponent,
 	ReleaseEntity,
@@ -18,11 +18,9 @@ import { ReleaseTableService } from './release-table.service';
   standalone: false,
 })
 export class ReleaseTableComponent extends BaseComponent implements OnInit {
-	public params$!: Observable<ReleaseTableParams>;
+	private componentService = inject(ReleaseTableService);
 
-	public constructor(private componentService: ReleaseTableService) {
-		super();
-	}
+	public params$!: Observable<ReleaseTableParams>;
 
 	public deleteRelease(release: ReleaseEntity): void {
 		this.componentService.deleteRelease(release);

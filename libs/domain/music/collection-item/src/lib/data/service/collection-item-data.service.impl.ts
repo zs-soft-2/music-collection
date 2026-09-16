@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 
 import { Injectable } from '@angular/core';
-import { collection, doc, Firestore, updateDoc } from '@angular/fire/firestore';
+import { collection, doc, updateDoc } from '@angular/fire/firestore';
 import {
 	COLLECTION_ITEM_FEATURE_KEY,
 	CollectionItemDataService,
@@ -13,8 +13,8 @@ import {
 
 @Injectable()
 export class CollectionItemDataServiceImpl extends CollectionItemDataService {
-	public constructor(firestore: Firestore) {
-		super(firestore);
+	public constructor() {
+		super();
 
 		this.featureKey = COLLECTION_ITEM_FEATURE_KEY;
 		this.collection = collection(this.firestore, this.featureKey);

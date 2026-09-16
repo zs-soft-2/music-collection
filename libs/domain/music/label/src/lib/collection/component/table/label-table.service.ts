@@ -1,6 +1,6 @@
 import { first, merge, Observable, ReplaySubject, switchMap } from 'rxjs';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
 	BaseComponent,
@@ -14,15 +14,15 @@ import {
 
 @Injectable()
 export class LabelTableService extends BaseComponent {
+	private activatedRoute = inject(ActivatedRoute);
+	private labelStateService = inject(LabelStateService);
+	private labelUtilService = inject(LabelUtilService);
+	private router = inject(Router);
+
 	private params!: LabelTableParams;
 	private params$$: ReplaySubject<LabelTableParams>;
 
-	public constructor(
-		private activatedRoute: ActivatedRoute,
-		private labelStateService: LabelStateService,
-		private labelUtilService: LabelUtilService,
-		private router: Router
-	) {
+	public constructor() {
 		super();
 
 		this.params$$ = new ReplaySubject();

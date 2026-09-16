@@ -1,7 +1,7 @@
 import { Observable, ReplaySubject, tap } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import { Injectable, EventEmitter } from '@angular/core';
+import { Injectable, EventEmitter, inject } from '@angular/core';
 import {
 	WishlistItemEntity,
 	WishlistItemListParams,
@@ -11,13 +11,13 @@ import {
 
 @Injectable()
 export class WishlistItemListService extends BaseComponent {
+	private wishlistItemStateService = inject(WishlistItemStateService);
+
 	private params!: WishlistItemListParams;
 	private params$$: ReplaySubject<WishlistItemListParams>;
 	private selectWishlistItem!: EventEmitter<WishlistItemEntity>;
 
-	public constructor(
-		private wishlistItemStateService: WishlistItemStateService
-	) {
+	public constructor() {
 		super();
 
 		this.params$$ = new ReplaySubject();

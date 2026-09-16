@@ -1,12 +1,6 @@
 import { Observable } from 'rxjs';
 
-import {
-	ChangeDetectionStrategy,
-	Component,
-	EventEmitter,
-	OnInit,
-	Output,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, OnInit, Output, inject } from '@angular/core';
 import {
 	WishlistItemEntity,
 	WishlistItemListParams,
@@ -24,11 +18,13 @@ import { WishlistItemListService } from './wishlist-item-list.service';
   standalone: false,
 })
 export class WishlistItemListComponent extends BaseComponent implements OnInit {
+	private componentService = inject(WishlistItemListService);
+
 	public params$!: Observable<WishlistItemListParams>;
 	@Output()
 	public selectWishlistItem: EventEmitter<WishlistItemEntity>;
 
-	public constructor(private componentService: WishlistItemListService) {
+	public constructor() {
 		super();
 
 		this.selectWishlistItem = new EventEmitter();

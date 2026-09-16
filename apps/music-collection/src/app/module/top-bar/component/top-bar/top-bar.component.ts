@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { BaseComponent } from '@music-collection/api';
 
 import { TopBarParams } from '../../api';
@@ -15,11 +15,9 @@ import { TopBarService } from './top-bar.service';
 	templateUrl: './top-bar.component.html',
 })
 export class TopBarComponent extends BaseComponent implements OnInit {
-	public params$!: Observable<TopBarParams>;
+	private componentService = inject(TopBarService);
 
-	public constructor(private componentService: TopBarService) {
-		super();
-	}
+	public params$!: Observable<TopBarParams>;
 
 	public imgClickHandler(): void {
 		this.componentService.imgClickHandler();

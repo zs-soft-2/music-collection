@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
 	ArtistStateService,
@@ -18,16 +18,12 @@ import { ArtistAdminPermissionsService } from '../../service';
   standalone: false,
 })
 export class ArtistAdminComponent extends BaseComponent implements OnInit {
+	private activatedRoute = inject(ActivatedRoute);
+	private router = inject(Router);
+	private artistStateService = inject(ArtistStateService);
+
 	public buttonPermissions: string[] = [];
 	public isNewEntityButtonEnabled$!: Observable<boolean>;
-
-	public constructor(
-		private activatedRoute: ActivatedRoute,
-		private router: Router,
-		private artistStateService: ArtistStateService
-	) {
-		super();
-	}
 
 	public clickHandler(): void {
 		this.router.navigate(['edit', 0], { relativeTo: this.activatedRoute });

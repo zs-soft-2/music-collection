@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 
 import { Injectable } from '@angular/core';
-import { collection, doc, Firestore, setDoc } from '@angular/fire/firestore';
+import { collection, doc, setDoc } from '@angular/fire/firestore';
 import {
 	ENTITY_QUANTITY_FEATURE_KEY,
 	EntityQuantityDataService,
@@ -13,8 +13,8 @@ import {
 
 @Injectable()
 export class EntityQuantityDataServiceImpl extends EntityQuantityDataService {
-	public constructor(firestore: Firestore) {
-		super(firestore);
+	public constructor() {
+		super();
 
 		this.featureKey = ENTITY_QUANTITY_FEATURE_KEY;
 		this.collection = collection(this.firestore, this.featureKey);

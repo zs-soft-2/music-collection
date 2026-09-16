@@ -1,6 +1,6 @@
 import { first, merge, Observable, ReplaySubject, switchMap } from 'rxjs';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
 	ArtistEntity,
@@ -15,16 +15,16 @@ import {
 
 @Injectable()
 export class ArtistTableService extends BaseComponent {
+	private activatedRoute = inject(ActivatedRoute);
+	private artistStateService = inject(ArtistStateService);
+	private artistUtilService = inject(ArtistUtilService);
+	private exportImportService = inject(ExportImportService);
+	private router = inject(Router);
+
 	private params!: ArtistTableParams;
 	private params$$: ReplaySubject<ArtistTableParams>;
 
-	public constructor(
-		private activatedRoute: ActivatedRoute,
-		private artistStateService: ArtistStateService,
-		private artistUtilService: ArtistUtilService,
-		private exportImportService: ExportImportService,
-		private router: Router
-	) {
+	public constructor() {
 		super();
 
 		this.params$$ = new ReplaySubject();

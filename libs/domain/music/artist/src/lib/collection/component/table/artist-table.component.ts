@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import {
 	ArtistEntity,
 	ArtistTableParams,
@@ -17,11 +17,9 @@ import { ArtistTableService } from './artist-table.service';
   standalone: false,
 })
 export class ArtistTableComponent extends BaseComponent implements OnInit {
-	public params$!: Observable<ArtistTableParams>;
+	private componentService = inject(ArtistTableService);
 
-	public constructor(private componentService: ArtistTableService) {
-		super();
-	}
+	public params$!: Observable<ArtistTableParams>;
 
 	public deleteArtist(artist: ArtistEntity): void {
 		console.log(artist);

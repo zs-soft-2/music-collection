@@ -1,7 +1,7 @@
 import { combineLatest, Observable, ReplaySubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
@@ -21,19 +21,19 @@ import {
 
 @Injectable()
 export class ArtistFormService {
+	private activatedRoute = inject(ActivatedRoute);
+	private artistStateService = inject(ArtistStateService);
+	private artistUtilService = inject(ArtistUtilService);
+	private componentUtil = inject(ArtistUtilService);
+	private documentStateService = inject(DocumentStateService);
+	private router = inject(Router);
+
 	private artist!: ArtistEntity | undefined;
 	private formGroup!: FormGroup;
 	private params!: ArtistFormParams;
 	private params$$: ReplaySubject<ArtistFormParams>;
 
-	public constructor(
-		private activatedRoute: ActivatedRoute,
-		private artistStateService: ArtistStateService,
-		private artistUtilService: ArtistUtilService,
-		private componentUtil: ArtistUtilService,
-		private documentStateService: DocumentStateService,
-		private router: Router
-	) {
+	public constructor() {
 		this.params$$ = new ReplaySubject();
 	}
 

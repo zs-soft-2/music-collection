@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
 	AlbumEntity,
 	AlbumListParams,
@@ -11,9 +11,8 @@ import {
 
 @Injectable()
 export class AlbumListService extends ComponentBaseService<AlbumListParams> {
-	public constructor(private albumStateService: AlbumStateService) {
-		super();
-	}
+	private albumStateService = inject(AlbumStateService);
+
 
 	public init$(): Observable<AlbumListParams> {
 		return this.albumStateService.selectEntities$().pipe(

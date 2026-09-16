@@ -1,10 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Resolve } from '@angular/router';
 import { WishlistItemStateService } from '@music-collection/api';
 
 @Injectable()
 export class WishlistItemListPageResolverService implements Resolve<void> {
-	constructor(private wishlistItemStateService: WishlistItemStateService) {}
+	private wishlistItemStateService = inject(WishlistItemStateService);
+
 
 	public resolve(): void {
 		this.wishlistItemStateService.dispatchListEntitiesAction();

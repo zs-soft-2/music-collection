@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import {
 	ArtistEntity,
 	ArtistListParams,
@@ -18,11 +18,9 @@ import { ArtistListService } from './artist-list.service';
   standalone: false,
 })
 export class ArtistListComponent extends BaseComponent implements OnInit {
-	public params$!: Observable<ArtistListParams>;
+	private componentService = inject(ArtistListService);
 
-	public constructor(private componentService: ArtistListService) {
-		super();
-	}
+	public params$!: Observable<ArtistListParams>;
 
 	public ngOnInit(): void {
 		this.params$ = this.componentService.init$();

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { BaseComponent, WishlistItemEntity } from '@music-collection/api';
 
 import { WishlistContentService } from './wishlist-content.service';
@@ -12,9 +12,8 @@ import { WishlistContentService } from './wishlist-content.service';
   standalone: false,
 })
 export class WishlistContentComponent extends BaseComponent {
-	public constructor(private componentService: WishlistContentService) {
-		super();
-	}
+	private componentService = inject(WishlistContentService);
+
 
 	public selectWishlistItemHandler(wishlistItem: WishlistItemEntity): void {
 		this.componentService.selectWishlistItem(wishlistItem);

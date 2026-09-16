@@ -1,12 +1,13 @@
 import { Observable } from 'rxjs';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { ActivatedRouteSnapshot, Resolve } from '@angular/router';
 import { AlbumStateService } from '@music-collection/api';
 
 @Injectable()
 export class AlbumPageResolverService implements Resolve<void> {
-	public constructor(private albumStateService: AlbumStateService) {}
+	private albumStateService = inject(AlbumStateService);
+
 
 	public resolve(
 		activatedRoute: ActivatedRouteSnapshot

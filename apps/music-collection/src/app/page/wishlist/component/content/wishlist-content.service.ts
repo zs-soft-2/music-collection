@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import {
 	BaseService,
@@ -8,10 +8,10 @@ import {
 
 @Injectable()
 export class WishlistContentService extends BaseService {
-	public constructor(
-		private wishlistItemStateService: WishlistItemStateService,
-		private router: Router
-	) {
+	private wishlistItemStateService = inject(WishlistItemStateService);
+	private router = inject(Router);
+
+	public constructor() {
 		super();
 
 		this.wishlistItemStateService.dispatchListEntitiesAction();

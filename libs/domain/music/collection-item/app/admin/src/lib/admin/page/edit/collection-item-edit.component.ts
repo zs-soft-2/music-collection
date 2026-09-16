@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { BaseComponent } from '@music-collection/api';
 
@@ -13,11 +13,9 @@ export class CollectionItemEditComponent
 	extends BaseComponent
 	implements OnInit
 {
-	public collectionItemId!: string;
+	private activatedRoute = inject(ActivatedRoute);
 
-	public constructor(private activatedRoute: ActivatedRoute) {
-		super();
-	}
+	public collectionItemId!: string;
 
 	public ngOnInit(): void {
 		this.collectionItemId =

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { BaseComponent } from '@music-collection/api';
 
 import { DocumentListService } from './document-list.service';
@@ -12,9 +12,8 @@ import { DocumentListService } from './document-list.service';
 	standalone: false,
 })
 export class DocumentListComponent extends BaseComponent implements OnInit {
-	public constructor(private componentService: DocumentListService) {
-		super();
-	}
+	private componentService = inject(DocumentListService);
+
 
 	public ngOnInit(): void {
 		this.componentService.init$().pipe().subscribe();

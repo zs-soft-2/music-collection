@@ -6,7 +6,7 @@ import {
 	switchMap,
 } from 'rxjs';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import {
 	AlbumDetailViewParams,
@@ -18,12 +18,12 @@ import { AlbumDetailViewStoreService } from './album-detail-view-store.service';
 
 @Injectable()
 export class AlbumDetailViewService extends BaseService {
+	private activatedRoute = inject(ActivatedRoute);
+	private storeService = inject(AlbumDetailViewStoreService);
+
 	private params$$: Subject<AlbumDetailViewParams>;
 
-	public constructor(
-		private activatedRoute: ActivatedRoute,
-		private storeService: AlbumDetailViewStoreService
-	) {
+	public constructor() {
 		super();
 
 		this.params$$ = new ReplaySubject(1);

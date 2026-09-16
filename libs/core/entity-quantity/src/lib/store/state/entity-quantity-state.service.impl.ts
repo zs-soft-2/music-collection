@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
 	EntityQuantityEntity,
 	EntityQuantityEntityAdd,
@@ -16,11 +16,8 @@ import * as entityQuantitySelectors from './entity-quantity.selectors';
 
 @Injectable()
 export class EntityQuantityStateServiceImpl extends EntityQuantityStateService {
-	public constructor(
-		private store: Store<fromEntityQuantity.EntityQuantityPartialState>
-	) {
-		super();
-	}
+	private store = inject<Store<fromEntityQuantity.EntityQuantityPartialState>>(Store);
+
 
 	public dispatchAddEntityAction(
 		entityQuantity: EntityQuantityEntityAdd

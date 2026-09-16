@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { CollectionItemFormParams, BaseComponent } from '@music-collection/api';
 
 import { CollectionItemFormService } from './collection-item-form.service';
@@ -17,11 +17,9 @@ export class CollectionItemFormComponent
 	extends BaseComponent
 	implements OnInit
 {
-	public params$!: Observable<CollectionItemFormParams>;
+	private componentService = inject(CollectionItemFormService);
 
-	public constructor(private componentService: CollectionItemFormService) {
-		super();
-	}
+	public params$!: Observable<CollectionItemFormParams>;
 
 	public cancel(): void {
 		this.componentService.cancel();

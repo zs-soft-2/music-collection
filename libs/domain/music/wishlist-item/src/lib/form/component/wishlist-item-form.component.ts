@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { WishlistItemFormParams, BaseComponent } from '@music-collection/api';
 
 import { WishlistItemFormService } from './wishlist-item-form.service';
@@ -14,11 +14,9 @@ import { WishlistItemFormService } from './wishlist-item-form.service';
   standalone: false,
 })
 export class WishlistItemFormComponent extends BaseComponent implements OnInit {
-	public params$!: Observable<WishlistItemFormParams>;
+	private componentService = inject(WishlistItemFormService);
 
-	public constructor(private componentService: WishlistItemFormService) {
-		super();
-	}
+	public params$!: Observable<WishlistItemFormParams>;
 
 	public cancel(): void {
 		this.componentService.cancel();
