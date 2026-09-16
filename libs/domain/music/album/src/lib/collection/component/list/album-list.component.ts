@@ -11,7 +11,6 @@ import { AlbumListParams, BaseComponent } from '@music-collection/api';
 import { AlbumListService } from './album-list.service';
 import { Bind } from 'primeng/bind';
 import { Carousel } from 'primeng/carousel';
-import { PrimeTemplate } from 'primeng/api';
 import { AlbumSimpleViewComponent } from '../../../view/simple/album-simple-view.component';
 import { AsyncPipe } from '@angular/common';
 
@@ -24,7 +23,6 @@ import { AsyncPipe } from '@angular/common';
 	imports: [
 		Bind,
 		Carousel,
-		PrimeTemplate,
 		AlbumSimpleViewComponent,
 		AsyncPipe,
 	],

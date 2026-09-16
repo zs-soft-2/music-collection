@@ -5,7 +5,7 @@
 		styleClass="p-datatable-striped p-datatable-sm"
 		responsiveLayout="scroll"
 	>
-		<ng-template pTemplate="header">
+		<ng-template #header>
 			<tr>
 				<th>Name</th>
 
@@ -41,7 +41,7 @@
 			</tr>
 		</ng-template>
 
-		<ng-template pTemplate="body" let-release>
+		<ng-template #body let-release>
 			<tr>
 				<td>{{ release.name }}</td>
 

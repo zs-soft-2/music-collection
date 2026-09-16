@@ -1,28 +1,34 @@
 @if (params$ | async; as params) {
 <section class="wishlist-item-list">
 	<p-dataview [value]="params.wishlistItems" [layout]="'grid'">
-		<ng-template pTemplate="header">
+		<ng-template #header>
 		</ng-template>
 
-		<ng-template let-wishlistItem pTemplate="listItem">
-			<div class="p-col-12 wishlist-item">
-				<mc-wishlist-item-simple-view
-					[wishlistItem]="wishlistItem"
-					[width]="'100'"
-					[layout]="'horizontal'"
-				>
-				</mc-wishlist-item-simple-view>
-			</div>
+		<ng-template #list let-wishlistItems>
+			@for (wishlistItem of wishlistItems; track wishlistItem.uid) {
+				<div class="p-col-12 wishlist-item">
+					<mc-wishlist-item-simple-view
+						[wishlistItem]="wishlistItem"
+						[width]="'100'"
+						[layout]="'horizontal'"
+					>
+					</mc-wishlist-item-simple-view>
+				</div>
+			}
 		</ng-template>
 
-		<ng-template let-wishlistItem pTemplate="gridItem">
-			<div class="col-12 md:col-4 wishlist-item">
-				<mc-wishlist-item-simple-view
-					[wishlistItem]="wishlistItem"
-					[width]="'100'"
-					[layout]="'vertical'"
-				>
-				</mc-wishlist-item-simple-view>
+		<ng-template #grid let-wishlistItems>
+			<div class="grid">
+				@for (wishlistItem of wishlistItems; track wishlistItem.uid) {
+					<div class="col-12 md:col-4 wishlist-item">
+						<mc-wishlist-item-simple-view
+							[wishlistItem]="wishlistItem"
+							[width]="'100'"
+							[layout]="'vertical'"
+						>
+						</mc-wishlist-item-simple-view>
+					</div>
+				}
 			</div>
 		</ng-template>
 	</p-dataview>

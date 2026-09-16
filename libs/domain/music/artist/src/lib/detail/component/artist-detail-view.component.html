@@ -60,7 +60,7 @@
           <div>
             @if (store.albums()) {
               <p-dataview [value]="store.albums()">
-                <ng-template let-albums pTemplate="list">
+                <ng-template let-albums #list>
                   @for (album of albums; track album.uid) {
                     <mc-album-item-view
                       [album]="album"

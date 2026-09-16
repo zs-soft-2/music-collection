@@ -15,7 +15,6 @@ import {
 import { ReleaseTableService } from './release-table.service';
 import { Bind } from 'primeng/bind';
 import { Table } from 'primeng/table';
-import { PrimeTemplate } from 'primeng/api';
 import { AutoComplete } from 'primeng/autocomplete';
 import { Ripple } from 'primeng/ripple';
 import { ButtonDirective } from 'primeng/button';
@@ -30,7 +29,6 @@ import { AsyncPipe, DatePipe } from '@angular/common';
 	imports: [
 		Bind,
 		Table,
-		PrimeTemplate,
 		AutoComplete,
 		Ripple,
 		ButtonDirective,

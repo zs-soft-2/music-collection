@@ -7,7 +7,7 @@
 		[paginator]="true"
 		[rows]="10"
 	>
-		<ng-template pTemplate="header">
+		<ng-template #header>
 			<tr>
 				<th>Name</th>
 
@@ -35,7 +35,7 @@
 			</tr>
 		</ng-template>
 
-		<ng-template pTemplate="body" let-document>
+		<ng-template #body let-document>
 			<tr>
 				<td>{{ document.name }}</td>
 

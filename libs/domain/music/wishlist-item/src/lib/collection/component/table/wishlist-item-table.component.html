@@ -9,7 +9,7 @@
     [paginator]="true"
     [rows]="10"
     >
-    <ng-template pTemplate="header">
+    <ng-template #header>
       <tr>
         <th pSortableColumn="albumReference.name">
           Artist name <p-sorticon field="albumReference"></p-sorticon>
@@ -44,7 +44,7 @@
       </tr>
     </ng-template>
 
-    <ng-template pTemplate="body" let-wishlistItem>
+    <ng-template #body let-wishlistItem>
       <tr>
         <td>{{ wishlistItem.artistReference.name }}</td>
 

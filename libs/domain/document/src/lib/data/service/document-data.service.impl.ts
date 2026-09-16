@@ -3,7 +3,7 @@ import { from, Observable, switchMap } from 'rxjs';
 import { Injectable, inject } from '@angular/core';
 import { collection } from '@angular/fire/firestore';
 import { ref, Storage, uploadBytes } from '@angular/fire/storage';
-import { getDownloadURL } from '@firebase/storage';
+import { getDownloadURL } from 'firebase/storage';
 import {
 	DOCUMENT_FEATURE_KEY,
 	DocumentDataService,

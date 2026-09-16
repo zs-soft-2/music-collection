@@ -11,7 +11,6 @@ import { BaseComponent, ReleaseListParams } from '@music-collection/api';
 import { ReleaseListService } from './release-list.service';
 import { Bind } from 'primeng/bind';
 import { Carousel } from 'primeng/carousel';
-import { PrimeTemplate } from 'primeng/api';
 import { ReleaseSimpleViewComponent } from '../../../view/component/simple/release-simple-view.component';
 import { AsyncPipe } from '@angular/common';
 
@@ -24,7 +23,6 @@ import { AsyncPipe } from '@angular/common';
 	imports: [
 		Bind,
 		Carousel,
-		PrimeTemplate,
 		ReleaseSimpleViewComponent,
 		AsyncPipe,
 	],

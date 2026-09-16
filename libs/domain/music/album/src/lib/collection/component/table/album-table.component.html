@@ -9,7 +9,7 @@
     styleClass="p-datatable-striped p-datatable-sm"
     responsiveLayout="scroll"
     >
-    <ng-template pTemplate="header">
+    <ng-template #header>
       <tr>
         <th pSortableColumn="name">
           Name <p-sorticon field="name"></p-sorticon>
@@ -62,7 +62,7 @@
       </tr>
     </ng-template>
 
-    <ng-template pTemplate="body" let-album>
+    <ng-template #body let-album>
       <tr>
         <td>{{ album.name }}</td>
 

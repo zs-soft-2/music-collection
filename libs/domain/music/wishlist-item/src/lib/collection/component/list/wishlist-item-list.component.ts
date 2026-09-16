@@ -17,7 +17,6 @@ import {
 import { WishlistItemListService } from './wishlist-item-list.service';
 import { Bind } from 'primeng/bind';
 import { DataView } from 'primeng/dataview';
-import { PrimeTemplate } from 'primeng/api';
 import { WishlistItemSimpleViewComponent } from '../../../view/component/simple/wishlist-item-simple-view.component';
 import { AsyncPipe } from '@angular/common';
 
@@ -30,7 +29,6 @@ import { AsyncPipe } from '@angular/common';
 	imports: [
 		Bind,
 		DataView,
-		PrimeTemplate,
 		WishlistItemSimpleViewComponent,
 		AsyncPipe,
 	],

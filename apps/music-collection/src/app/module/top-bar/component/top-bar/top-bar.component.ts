@@ -12,7 +12,6 @@ import { TopBarParams } from '../../api';
 import { TopBarService } from './top-bar.service';
 import { Bind } from 'primeng/bind';
 import { Menubar } from 'primeng/menubar';
-import { PrimeTemplate } from 'primeng/api';
 import { SvgIconComponent } from 'angular-svg-icon';
 import { CoreAuthenticationViewModule } from '@music-collection/core/authentication/view';
 import { UserProfileModule } from '@music-collection/domain/user';
@@ -27,7 +26,6 @@ import { AsyncPipe } from '@angular/common';
 	imports: [
 		Bind,
 		Menubar,
-		PrimeTemplate,
 		SvgIconComponent,
 		CoreAuthenticationViewModule,
 		UserProfileModule,

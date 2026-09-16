@@ -14,7 +14,6 @@ import { Observable } from 'rxjs';
 import { AlbumTableService } from './album-table.service';
 import { Bind } from 'primeng/bind';
 import { Table, SortableColumn, SortIcon } from 'primeng/table';
-import { PrimeTemplate } from 'primeng/api';
 import { AutoComplete } from 'primeng/autocomplete';
 import { Chip } from 'primeng/chip';
 import { Ripple } from 'primeng/ripple';
@@ -30,7 +29,6 @@ import { AsyncPipe, DatePipe } from '@angular/common';
 	imports: [
 		Bind,
 		Table,
-		PrimeTemplate,
 		SortableColumn,
 		SortIcon,
 		AutoComplete,

@@ -7,7 +7,7 @@
       [numScroll]="1"
       [autoplayInterval]="5000"
       >
-      <ng-template let-release pTemplate="item">
+      <ng-template let-release #item>
         <div class="release-view">
           <mc-release-simple-view
             [release]="release"

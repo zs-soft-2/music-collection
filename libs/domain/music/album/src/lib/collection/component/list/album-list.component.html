@@ -9,7 +9,7 @@
       [showIndicators]="false"
       [autoplayInterval]="5000"
       >
-      <ng-template let-album pTemplate="item">
+      <ng-template let-album #item>
         <div class="album-view">
           <mc-album-simple-view [album]="album"></mc-album-simple-view>
         </div>

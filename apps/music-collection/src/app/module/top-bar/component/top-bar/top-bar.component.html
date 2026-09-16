@@ -1,7 +1,7 @@
 @if (params$ | async; as params) {
   <section class="top-bar">
     <p-menubar [model]="params.menuItems">
-      <ng-template pTemplate="start">
+      <ng-template #start>
         <div class="start">
           <svg-icon
             src="assets/music.svg"
@@ -16,7 +16,7 @@
           <span class="title">musiCollection</span>
         </div>
       </ng-template>
-      <ng-template pTemplate="end">
+      <ng-template #end>
         <ng-container *mcIsAuthenticated="true">
           <mc-user-profile
             [user]="params.user"

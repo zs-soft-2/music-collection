@@ -16,7 +16,6 @@ import { Tabs, TabList, Tab } from 'primeng/tabs';
 import { Ripple } from 'primeng/ripple';
 import { Chip } from 'primeng/chip';
 import { DataView } from 'primeng/dataview';
-import { PrimeTemplate } from 'primeng/api';
 import { AlbumItemViewModule } from '@music-collection/domain/album';
 import { DatePipe } from '@angular/common';
 
@@ -35,7 +34,6 @@ import { DatePipe } from '@angular/common';
 		Tab,
 		Chip,
 		DataView,
-		PrimeTemplate,
 		AlbumItemViewModule,
 		DatePipe,
 	],

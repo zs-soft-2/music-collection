@@ -8,7 +8,7 @@
 		[showIndicators]="false"
 		[autoplayInterval]="5000"
 	>
-		<ng-template let-artist pTemplate="item">
+		<ng-template let-artist #item>
 			<mc-artist-simple-view
 				[artist]="artist"
 				(selectArtist)="selectArtistHandler($event)"

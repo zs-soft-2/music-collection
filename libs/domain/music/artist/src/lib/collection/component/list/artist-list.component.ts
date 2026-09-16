@@ -15,7 +15,6 @@ import {
 import { ArtistListService } from './artist-list.service';
 import { Bind } from 'primeng/bind';
 import { Carousel } from 'primeng/carousel';
-import { PrimeTemplate } from 'primeng/api';
 import { ArtistSimpleViewComponent } from '../../../view/component/simple/artist-simple-view.component';
 import { AsyncPipe } from '@angular/common';
 
@@ -28,7 +27,6 @@ import { AsyncPipe } from '@angular/common';
 	imports: [
 		Bind,
 		Carousel,
-		PrimeTemplate,
 		ArtistSimpleViewComponent,
 		AsyncPipe,
 	],
