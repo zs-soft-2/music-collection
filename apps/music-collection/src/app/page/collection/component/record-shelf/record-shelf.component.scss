@@ -4,6 +4,7 @@
 
 /* One connected shelving unit: the frame color shows through the grid gaps. */
 .unit {
+	position: relative;
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
 	gap: 14px;
@@ -16,10 +17,17 @@
 		inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
+/*
+ * Off-screen compartments skip style, layout and paint. The hover lift stays
+ * inside the cubby padding and the cover preview lives outside, so the paint
+ * containment this implies clips nothing.
+ */
 .compartment {
 	display: flex;
 	flex-direction: column;
 	min-width: 0;
+	content-visibility: auto;
+	contain-intrinsic-block-size: auto 262px;
 }
 
 .label {
@@ -73,18 +81,30 @@
 		hsl(var(--hue) 22% 10%)
 	);
 	border-radius: 2px 2px 1px 1px;
-	box-shadow:
-		inset -2px 0 4px rgba(0, 0, 0, 0.5),
-		inset 1px 0 0 rgba(255, 255, 255, 0.06),
-		0 3px 5px rgba(0, 0, 0, 0.4);
-	transition:
-		transform var(--mc-duration-fast) ease,
-		box-shadow var(--mc-duration-fast) ease;
+	transition: transform var(--mc-duration-fast) ease;
+
+	/*
+	 * Edge shading as a gradient, not box-shadow: blurred shadows on hundreds
+	 * of spines (and a shadow swap on hover) made every hover re-raster the
+	 * shelf — measured A/B: hover GPU time ~5 s → ~0.5 s.
+	 */
+	&::before {
+		position: absolute;
+		inset: 0;
+		content: '';
+		background: linear-gradient(
+			90deg,
+			rgba(255, 255, 255, 0.06) 0 1px,
+			transparent 1px calc(100% - 3px),
+			rgba(0, 0, 0, 0.45)
+		);
+		border-radius: inherit;
+		pointer-events: none;
+	}
 
 	&:hover,
 	&:focus-visible {
 		z-index: 5;
-		box-shadow: 0 16px 24px rgba(0, 0, 0, 0.55);
 		transform: translateY(-16px);
 	}
 
@@ -164,60 +184,8 @@
 	font-size: 0.54rem;
 }
 
-/* Cover pulled out above the spine */
-.peek {
-	position: absolute;
-	bottom: calc(100% + 8px);
-	left: 50%;
-	z-index: 20;
-	width: 150px;
-	overflow: hidden;
-	background: var(--mc-card-bg);
-	border-radius: var(--mc-radius-md);
-	box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-	opacity: 0;
-	transform: translateX(-50%) translateY(6px);
-	transition:
-		opacity var(--mc-duration-fast) ease,
-		transform var(--mc-duration-fast) ease;
-	pointer-events: none;
-
-	img {
-		display: block;
-		width: 150px;
-		height: 150px;
-		object-fit: cover;
-	}
-}
-
-.spine:hover .peek,
-.spine:focus-visible .peek {
-	opacity: 1;
-	transform: translateX(-50%) translateY(0);
-}
-
-.peek-meta {
-	display: flex;
-	flex-direction: column;
-	gap: 1px;
-	padding: 6px 8px 8px;
-}
-
-.peek-artist {
-	font-size: 0.7rem;
-	color: var(--mc-text-muted);
-}
-
-.peek-title {
-	font-size: 0.8rem;
-	font-weight: 600;
-	line-height: 1.2;
-	color: var(--mc-text);
-}
-
 @media (prefers-reduced-motion: reduce) {
-	.spine,
-	.peek {
+	.spine {
 		transition: none;
 	}
 }

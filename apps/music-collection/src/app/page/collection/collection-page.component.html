@@ -170,38 +170,38 @@
 							<h2 class="group-title">
 								{{ group.label }}
 								<span class="group-count">{{
-									group.items.length
+									group.count
 								}}</span>
 							</h2>
 						}
 
-						@if (store.view() === 'list') {
-							<ul class="list">
-								@for (
-									release of group.items;
-									track release.id
-								) {
-									<li>
-										<mc-release-row [release]="release" />
-									</li>
+						@for (chunk of group.chunks; track $index) {
+							@if (firstGroup && $first) {
+								<ng-container
+									[ngTemplateOutlet]="chunkTemplate"
+									[ngTemplateOutletContext]="{
+										$implicit: chunk,
+										priority: true,
+									}"
+								/>
+							} @else {
+								<!-- Later chunks build just before they scroll into view -->
+								@defer (on viewport({ rootMargin: '800px' })) {
+									<ng-container
+										[ngTemplateOutlet]="chunkTemplate"
+										[ngTemplateOutletContext]="{
+											$implicit: chunk,
+											priority: false,
+										}"
+									/>
+								} @placeholder {
+									<div
+										class="chunk-placeholder"
+										[class.is-list]="store.view() === 'list'"
+										[style.--count]="chunk.length"
+									></div>
 								}
-							</ul>
-						} @else {
-							<ul class="grid">
-								@for (
-									release of group.items;
-									track release.id
-								) {
-									<li>
-										<mc-release-card
-											[release]="release"
-											[priority]="
-												firstGroup && $index < 6
-											"
-										/>
-									</li>
-								}
-							</ul>
+							}
 						}
 					</section>
 				}
@@ -209,3 +209,26 @@
 		}
 	}
 </div>
+
+<ng-template #chunkTemplate let-items let-priority="priority">
+	@if (store.view() === 'list') {
+		<ul class="list">
+			@for (release of items; track release.id) {
+				<li>
+					<mc-release-row [release]="release" />
+				</li>
+			}
+		</ul>
+	} @else {
+		<ul class="grid">
+			@for (release of items; track release.id) {
+				<li>
+					<mc-release-card
+						[release]="release"
+						[priority]="priority && $index < 6"
+					/>
+				</li>
+			}
+		</ul>
+	}
+</ng-template>

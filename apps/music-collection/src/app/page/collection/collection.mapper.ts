@@ -7,6 +7,7 @@ import {
 import {
 	CollectionGroup,
 	CollectionSort,
+	ChunkedReleaseGroup,
 	CollectionStats,
 	FormatFilter,
 	ReleaseGroup,
@@ -28,8 +29,10 @@ export function filterReleases(
 	);
 }
 
-const byText = (a: string, b: string) =>
-	a.localeCompare(b, undefined, { sensitivity: 'base' });
+/* One shared collator: `localeCompare` with options builds a new one per call. */
+const collator = new Intl.Collator(undefined, { sensitivity: 'base' });
+
+const byText = (a: string, b: string) => collator.compare(a, b);
 
 const byYear = (a: ReleaseView, b: ReleaseView) =>
 	(a.year ?? Number.MAX_SAFE_INTEGER) - (b.year ?? Number.MAX_SAFE_INTEGER);
@@ -161,6 +164,7 @@ export function packShelf(
 	const compartments: ReleaseGroup[] = [];
 	let items: ReleaseView[] = [];
 	let labels: string[] = [];
+	let key = '';
 
 	const flush = () => {
 		if (!items.length) {
@@ -169,8 +173,9 @@ export function packShelf(
 		const first = labels[0];
 		const last = labels[labels.length - 1];
 
+		/* Keyed by content, so a filter change does not rebuild every cubby. */
 		compartments.push({
-			key: `${compartments.length}`,
+			key,
 			label: first === last ? first : `${first} – ${last}`,
 			items,
 		});
@@ -189,12 +194,16 @@ export function packShelf(
 					(part + 1) * capacity
 				);
 				labels = [`${group.label} · ${part + 1}/${parts}`];
+				key = `${group.key}#${part}`;
 				flush();
 			}
 			continue;
 		}
 		if (items.length + group.items.length > capacity) {
 			flush();
+		}
+		if (!items.length) {
+			key = group.key;
 		}
 		items = [...items, ...group.items];
 		if (labels[labels.length - 1] !== group.label) {
@@ -204,4 +213,24 @@ export function packShelf(
 	flush();
 
 	return compartments;
+}
+
+/** Splits every group into consecutive chunks of at most `size` releases. */
+export function chunkGroups(
+	groups: ReleaseGroup[],
+	size: number
+): ChunkedReleaseGroup[] {
+	return groups.map((group) => {
+		const chunks: ReleaseView[][] = [];
+
+		for (let i = 0; i < group.items.length; i += size) {
+			chunks.push(group.items.slice(i, i + size));
+		}
+		return {
+			key: group.key,
+			label: group.label,
+			count: group.items.length,
+			chunks,
+		};
+	});
 }

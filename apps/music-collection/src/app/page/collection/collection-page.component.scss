@@ -315,6 +315,28 @@ button {
 	gap: 0.4rem;
 }
 
+/* Consecutive render chunks read as one continuous grid / list. */
+.grid + .grid,
+.chunk-placeholder + .grid,
+.grid + .chunk-placeholder {
+	margin-top: 1.25rem;
+}
+
+.list + .list,
+.chunk-placeholder + .list,
+.list + .chunk-placeholder {
+	margin-top: 0.4rem;
+}
+
+/* Rough height of a not-yet-rendered chunk (≈6 cards per row). */
+.chunk-placeholder {
+	height: calc(round(up, var(--count) / 6, 1) * 330px);
+
+	&.is-list {
+		height: calc(var(--count) * 66px);
+	}
+}
+
 .skeleton {
 	aspect-ratio: 0.78;
 	background: linear-gradient(

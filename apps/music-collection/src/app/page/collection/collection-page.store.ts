@@ -19,6 +19,7 @@ import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { ReleaseView, toReleaseView } from '../../shared/music-ui';
 
 import {
+	chunkGroups,
 	collectionStats,
 	filterReleases,
 	groupReleases,
@@ -38,6 +39,12 @@ import {
 
 /** Spines per shelf compartment before it continues in the next one. */
 const SHELF_CUBBY_SIZE = 36;
+
+/**
+ * Cards / rows per render chunk of the grid and list views. The first chunk
+ * renders at once, the rest when they approach the viewport (`@defer`).
+ */
+const RENDER_CHUNK_SIZE = 30;
 
 interface CollectionPageState {
 	releases: ReleaseView[];
@@ -108,7 +115,18 @@ export const CollectionPageStore = signalStore(
 		return {
 			stats,
 			visible,
-			groups,
+			/*
+			 * Keyed by view as well: @for only reconciles when the array
+			 * changes, so a grid ↔ list switch must yield new groups to
+			 * rebuild them with fresh (not yet triggered) deferred chunks.
+			 */
+			groups: computed(() => {
+				const view = store.view();
+
+				return chunkGroups(groups(), RENDER_CHUNK_SIZE).map(
+					(group) => ({ ...group, key: `${view}:${group.key}` })
+				);
+			}),
 			/**
 			 * Shelf compartments: without grouping the shelf is organised by
 			 * format. Groups are packed into cubbies the way a collector

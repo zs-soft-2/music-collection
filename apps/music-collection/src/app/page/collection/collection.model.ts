@@ -17,6 +17,14 @@ export interface ReleaseGroup {
 	items: ReleaseView[];
 }
 
+/** A group split into render chunks, so hundreds of cards never build in one tick. */
+export interface ChunkedReleaseGroup {
+	key: string;
+	label: string;
+	count: number;
+	chunks: ReleaseView[][];
+}
+
 export interface CollectionStats {
 	total: number;
 	artists: number;

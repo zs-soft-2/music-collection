@@ -6,52 +6,41 @@
 				<span class="label-count">{{ compartment.spines.length }}</span>
 			</h3>
 
-			<div class="cubby">
-				@for (spine of compartment.spines; track spine.release.id) {
-					<a
-						class="spine"
-						[class]="'is-' + spine.release.format"
-						[class.is-box]="spine.release.boxSet"
-						[style.width.px]="spine.width"
-						[style.height.px]="spine.height"
-						[style.--hue]="spine.hue"
-						[routerLink]="['/album', spine.release.albumId]"
-						[attr.aria-label]="
-							spine.release.artistName +
-							' — ' +
-							spine.release.title
-						"
-					>
-						<span class="spine-cap" aria-hidden="true"></span>
-						<span class="spine-text" aria-hidden="true">
-							<span class="spine-title">{{
+			@defer (on viewport) {
+				<div class="cubby">
+					@for (spine of compartment.spines; track spine.release.id) {
+						<a
+							class="spine"
+							[class]="'is-' + spine.release.format"
+							[class.is-box]="spine.release.boxSet"
+							[style.width.px]="spine.width"
+							[style.height.px]="spine.height"
+							[style.--hue]="spine.hue"
+							[attr.href]="spine.href"
+							[attr.data-id]="spine.release.id"
+							[attr.aria-label]="
+								spine.release.artistName +
+								' — ' +
 								spine.release.title
-							}}</span>
-							<span class="spine-artist">{{
-								spine.release.artistName
-							}}</span>
-						</span>
-
-						<span class="peek" aria-hidden="true">
-							@if (spine.release.coverUrl) {
-								<img
-									[src]="spine.release.coverUrl"
-									alt=""
-									loading="lazy"
-								/>
-							}
-							<span class="peek-meta">
-								<span class="peek-artist">{{
-									spine.release.artistName
-								}}</span>
-								<span class="peek-title">{{
+							"
+						>
+							<span class="spine-cap" aria-hidden="true"></span>
+							<span class="spine-text" aria-hidden="true">
+								<span class="spine-title">{{
 									spine.release.title
 								}}</span>
+								<span class="spine-artist">{{
+									spine.release.artistName
+								}}</span>
 							</span>
-						</span>
-					</a>
-				}
-			</div>
+						</a>
+					}
+				</div>
+			} @placeholder {
+				<div class="cubby"></div>
+			}
 		</section>
 	}
+
+	<mc-record-shelf-peek />
 </div>

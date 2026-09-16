@@ -1,4 +1,6 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 
 import { RecordShelfComponent } from './component/record-shelf/record-shelf.component';
 import { ReleaseRowComponent } from './component/release-row/release-row.component';
@@ -26,7 +28,12 @@ import { CollectionPageStore } from './collection-page.store';
 	selector: 'mc-collection-page',
 	templateUrl: './collection-page.component.html',
 	styleUrls: ['./collection-page.component.scss'],
-	imports: [ReleaseCardComponent, ReleaseRowComponent, RecordShelfComponent],
+	imports: [
+		NgTemplateOutlet,
+		ReleaseCardComponent,
+		ReleaseRowComponent,
+		RecordShelfComponent,
+	],
 })
 export class CollectionPageComponent {
 	protected readonly store = inject(CollectionPageStore);
@@ -38,6 +45,14 @@ export class CollectionPageComponent {
 	protected readonly viewOptions = VIEW_OPTIONS;
 
 	protected readonly skeletons = Array.from({ length: 12 }, (_, i) => i);
+
+	public constructor() {
+		/* The home page quick search links here with `?q=`. */
+		const query = inject(ActivatedRoute).snapshot.queryParamMap.get('q');
+		if (query) {
+			this.store.setQuery(query);
+		}
+	}
 
 	protected onQuery(event: Event): void {
 		this.store.setQuery((event.target as HTMLInputElement).value);
