@@ -3,6 +3,7 @@ export * from './artist';
 export * from './collection-item';
 export * from './contribution';
 export * from './label';
+export * from './membership';
 export * from './musician';
 export * from './release';
 export * from './track';

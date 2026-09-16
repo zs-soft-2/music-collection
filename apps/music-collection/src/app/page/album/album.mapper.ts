@@ -7,7 +7,11 @@ import {
 
 import {
 	AlbumView,
+	CREDIT_CATEGORY_LABELS,
+	CreditCategory,
+	creditCategory,
 	formatCountry,
+	performerOrder,
 	formatGenre,
 	toAlbumView,
 } from '../../shared/music-ui';
@@ -62,45 +66,6 @@ export interface CreditGroup {
 	label: string;
 	people: CreditPerson[];
 }
-
-type CreditCategory =
-	'performers' | 'songwriting' | 'production' | 'artwork' | 'other';
-
-const CATEGORY_LABELS: Record<CreditCategory, string> = {
-	performers: 'Performers',
-	songwriting: 'Songwriting',
-	production: 'Production',
-	artwork: 'Artwork & design',
-	other: 'Other credits',
-};
-
-const CATEGORY_PATTERNS: [CreditCategory, RegExp][] = [
-	[
-		'songwriting',
-		/written|words by|lyrics|music by|composed|songwriter|arranged|orchestrated/i,
-	],
-	[
-		'production',
-		/produc|engineer|mix|master|record|lacquer|edited|technician|programm|a&r/i,
-	],
-	[
-		'artwork',
-		/artwork|design|cover|photo|layout|illustrat|paint|logo|art direction|typography|sleeve|graphics/i,
-	],
-	[
-		'performers',
-		/vocal|voice|guitar|bass|drum|percussion|keyboard|synth|piano|organ|sitar|timpani|violin|viola|cello|strings|sax|trumpet|trombone|horn|flute|harmonica|banjo|mandolin|choir|chorus|performer|instrument|finger snaps|clap|turntable|scratch|sampler|effects|lead|rhythm/i,
-	],
-];
-
-/** Order of performers: singers first, then guitars, bass, drums, keys. */
-const PERFORMER_ORDER = [
-	/vocal|voice/i,
-	/guitar/i,
-	/bass/i,
-	/drum|percussion/i,
-	/keyboard|synth|piano|organ/i,
-];
 
 export function toAlbumProfile(album: AlbumEntity): AlbumProfileView {
 	const discogs = album.discogs;
@@ -262,22 +227,9 @@ export function groupTracks(
 	}));
 }
 
-function categoryOf(role: string): CreditCategory {
-	return (
-		CATEGORY_PATTERNS.find(([, pattern]) => pattern.test(role))?.[0] ??
-		'other'
-	);
-}
-
 function performerRank(person: CreditPerson): number {
 	const ranks = person.roles.map((role) => {
-		const index = PERFORMER_ORDER.findIndex((pattern) =>
-			pattern.test(role.label)
-		);
-		return (
-			(index < 0 ? PERFORMER_ORDER.length : index) +
-			(role.tracks ? 10 : 0)
-		);
+		return performerOrder(role.label) + (role.tracks ? 10 : 0);
 	});
 	return Math.min(...ranks);
 }
@@ -289,7 +241,7 @@ export function groupCredits(
 	const groups = new Map<CreditCategory, Map<string, CreditPerson>>();
 
 	for (const contribution of contributions) {
-		const category = categoryOf(contribution.role);
+		const category = creditCategory(contribution.role);
 		const people = groups.get(category) ?? new Map<string, CreditPerson>();
 		const person = people.get(contribution.musicianUid) ?? {
 			musicianUid: contribution.musicianUid,
@@ -315,7 +267,7 @@ export function groupCredits(
 		groups.set(category, people);
 	}
 
-	return (Object.keys(CATEGORY_LABELS) as CreditCategory[])
+	return (Object.keys(CREDIT_CATEGORY_LABELS) as CreditCategory[])
 		.filter((key) => groups.has(key))
 		.map((key) => {
 			const people = Array.from(
@@ -330,7 +282,7 @@ export function groupCredits(
 
 			return {
 				key,
-				label: CATEGORY_LABELS[key],
+				label: CREDIT_CATEGORY_LABELS[key],
 				people:
 					key === 'performers'
 						? people.sort(

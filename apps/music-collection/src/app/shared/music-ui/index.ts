@@ -1,4 +1,5 @@
 export * from './artist-tile/artist-tile.component';
+export * from './credit-roles';
 export * from './discography-card/discography-card.component';
 export * from './format-badge/format-badge.component';
 export * from './music-ui.mapper';

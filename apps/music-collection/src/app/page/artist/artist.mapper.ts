@@ -1,10 +1,11 @@
-import { ArtistEntity } from '@music-collection/api';
+import { ArtistEntity, MembershipEntity } from '@music-collection/api';
 
 import {
 	ArtistTileView,
 	ArtistView,
 	DiscographyAlbum,
 	formatGenre,
+	performerOrder,
 	toArtistView,
 } from '../../shared/music-ui';
 
@@ -145,4 +146,100 @@ export function similarArtists(
 		)
 		.slice(0, limit)
 		.map(({ artist: other, releaseCount }) => ({ ...other, releaseCount }));
+}
+
+export interface LineupMember {
+	musicianUid: string;
+	name: string;
+	/** Performing roles, most defining first. */
+	instruments: string[];
+	from: number | null;
+	to: number | null;
+	active: boolean | null;
+	/** "1987–2008", "1983–present" or null when the years are unknown. */
+	years: string | null;
+	albumCount: number;
+}
+
+export interface LineupView {
+	members: LineupMember[];
+	guests: LineupMember[];
+	/** Years covered by the line-up, for drawing the time bars. */
+	span: { from: number; to: number } | null;
+}
+
+/** Supporting parts (backing vocals etc.) never define a member's role. */
+const SECONDARY_ROLE = /backing|harmony|gang|additional|choir|chorus|^voice$/i;
+
+const instrumentOrder = (role: string) =>
+	performerOrder(role) + (SECONDARY_ROLE.test(role) ? 10 : 0);
+
+function toLineupMember(membership: MembershipEntity): LineupMember {
+	const { from, to, active } = membership;
+	const end = active ? 'present' : to !== from ? to : null;
+
+	return {
+		musicianUid: membership.musicianUid,
+		name: membership.musicianName,
+		instruments: [...new Set(membership.instruments ?? [])].sort(
+			(a, b) =>
+				instrumentOrder(a) - instrumentOrder(b) || a.localeCompare(b)
+		),
+		from,
+		to,
+		active,
+		years: from
+			? end
+				? `${from}–${end}`
+				: String(from)
+			: active
+				? 'Current member'
+				: null,
+		albumCount: membership.albumCount ?? 0,
+	};
+}
+
+const instrumentRank = (member: LineupMember) =>
+	member.instruments.length ? instrumentOrder(member.instruments[0]) : 99;
+
+/**
+ * Line-up of a band: current members first (by instrument), then former
+ * members in the order they joined; guests by how many albums they are on.
+ */
+export function toLineup(
+	memberships: MembershipEntity[],
+	currentYear: number
+): LineupView {
+	const all = memberships.map(toLineupMember);
+	const members = all
+		.filter((_, index) => memberships[index].kind === 'member')
+		.sort(
+			(a, b) =>
+				Number(!!b.active) - Number(!!a.active) ||
+				(a.active ? instrumentRank(a) - instrumentRank(b) : 0) ||
+				(a.from ?? 9999) - (b.from ?? 9999) ||
+				instrumentRank(a) - instrumentRank(b) ||
+				a.name.localeCompare(b.name)
+		);
+	const guests = all
+		.filter((_, index) => memberships[index].kind !== 'member')
+		.sort(
+			(a, b) =>
+				b.albumCount - a.albumCount || a.name.localeCompare(b.name)
+		);
+
+	const years = members
+		.flatMap((member) => [
+			member.from,
+			member.active ? currentYear : member.to,
+		])
+		.filter((year): year is number => typeof year === 'number');
+
+	return {
+		members,
+		guests,
+		span: years.length
+			? { from: Math.min(...years), to: Math.max(...years) }
+			: null,
+	};
 }

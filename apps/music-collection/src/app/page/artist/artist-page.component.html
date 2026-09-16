@@ -117,30 +117,15 @@
 
 		<!-- In-page navigation -->
 		<nav class="section-nav" aria-label="Sections">
-			@if (artist.paragraphs.length) {
+			@for (section of sections(); track section.id) {
 				<a
-					href="#about"
-					(click)="$event.preventDefault(); scrollTo('about')"
-					>About</a
-				>
-			}
-			<a
-				href="#discography"
-				(click)="$event.preventDefault(); scrollTo('discography')"
-				>Discography</a
-			>
-			@if (store.ownReleases().length) {
-				<a
-					href="#in-collection"
-					(click)="$event.preventDefault(); scrollTo('in-collection')"
-					>In your collection</a
-				>
-			}
-			@if (store.similar().length) {
-				<a
-					href="#similar"
-					(click)="$event.preventDefault(); scrollTo('similar')"
-					>Similar artists</a
+					[href]="'#' + section.id"
+					[class.active]="activeSection() === section.id"
+					[attr.aria-current]="
+						activeSection() === section.id ? 'location' : null
+					"
+					(click)="$event.preventDefault(); scrollTo(section.id)"
+					>{{ section.label }}</a
 				>
 			}
 		</nav>
@@ -165,6 +150,14 @@
 						{{ bioExpanded() ? 'Show less' : 'Read more' }}
 					</button>
 				}
+			</section>
+		}
+
+		<!-- Line-up -->
+		@if (hasLineup()) {
+			<section id="lineup" class="section" aria-labelledby="lineup-title">
+				<h2 id="lineup-title" class="section-title">Line-up</h2>
+				<mc-artist-lineup [lineup]="store.lineup()" />
 			</section>
 		}
 

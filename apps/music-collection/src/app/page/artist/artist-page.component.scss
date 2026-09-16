@@ -227,13 +227,39 @@ h1 {
 	border-bottom: 1px solid var(--mc-border);
 
 	a {
+		position: relative;
+		padding-bottom: 0.2rem;
 		font-size: 0.85rem;
 		font-weight: 600;
 		color: var(--mc-text-muted);
 		text-decoration: none;
+		transition: color var(--mc-duration-fast) ease;
+
+		/* Indicator of the section in view. */
+		&::after {
+			position: absolute;
+			right: 0;
+			bottom: -0.1rem;
+			left: 0;
+			height: 2px;
+			content: '';
+			background: var(--mc-primary);
+			border-radius: 2px;
+			transform: scaleX(0);
+			transform-origin: left;
+			transition: transform var(--mc-duration) ease;
+		}
 
 		&:hover {
 			color: var(--mc-text);
+		}
+
+		&.active {
+			color: var(--mc-text);
+
+			&::after {
+				transform: scaleX(1);
+			}
 		}
 
 		&:focus-visible {
@@ -474,5 +500,10 @@ mc-discography-timeline {
 @media (prefers-reduced-motion: reduce) {
 	.skeleton {
 		animation: none;
+	}
+
+	.section-nav a,
+	.section-nav a::after {
+		transition: none;
 	}
 }

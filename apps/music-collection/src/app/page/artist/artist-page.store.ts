@@ -7,6 +7,7 @@ import {
 	ArtistEntity,
 	ArtistStateService,
 	CollectionItemStateService,
+	MembershipEntity,
 } from '@music-collection/api';
 import { tapResponse } from '@ngrx/operators';
 import {
@@ -19,6 +20,7 @@ import {
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
+import { ArtistLineupEffect } from '../../data/artist-lineup';
 import {
 	AlbumView,
 	ArtistView,
@@ -34,6 +36,7 @@ import {
 	albumTypeCounts,
 	similarArtists,
 	toArtistProfile,
+	toLineup,
 } from './artist.mapper';
 
 interface ArtistPageState {
@@ -48,6 +51,8 @@ interface ArtistPageState {
 	releasesLoading: boolean;
 	/** Selected album type filter of the discography; null = all. */
 	albumType: string | null;
+	memberships: MembershipEntity[];
+	lineupLoading: boolean;
 }
 
 const initialState: ArtistPageState = {
@@ -60,6 +65,8 @@ const initialState: ArtistPageState = {
 	albumsLoading: true,
 	releasesLoading: true,
 	albumType: null,
+	memberships: [],
+	lineupLoading: true,
 };
 
 const SIMILAR_COUNT = 6;
@@ -162,6 +169,9 @@ export const ArtistPageStore = signalStore(
 					: [];
 			}),
 			/** The artist is not in the catalog (only known once all are loaded). */
+			lineup: computed(() =>
+				toLineup(store.memberships(), new Date().getFullYear())
+			),
 			notFound: computed(
 				() =>
 					!store.artist() &&
@@ -176,6 +186,7 @@ export const ArtistPageStore = signalStore(
 		(
 			store,
 			route = inject(ActivatedRoute),
+			artistLineupEffect = inject(ArtistLineupEffect),
 			artistStateService = inject(ArtistStateService),
 			albumStateService = inject(AlbumStateService),
 			collectionItemStateService = inject(CollectionItemStateService)
@@ -277,6 +288,34 @@ export const ArtistPageStore = signalStore(
 					})
 				)
 			),
+			/** Follows `:artistId` and loads the band's line-up. */
+			loadLineup: rxMethod<void>(
+				pipe(
+					switchMap(() => route.paramMap),
+					map((params) => params.get('artistId') ?? ''),
+					tap(() =>
+						patchState(store, {
+							memberships: [],
+							lineupLoading: true,
+						})
+					),
+					switchMap((artistId) =>
+						artistLineupEffect.load$(artistId).pipe(
+							tapResponse({
+								next: (memberships) =>
+									patchState(store, {
+										memberships,
+										lineupLoading: false,
+									}),
+								error: (error) => {
+									console.error(error);
+									patchState(store, { lineupLoading: false });
+								},
+							})
+						)
+					)
+				)
+			),
 			setAlbumType: (albumType: string | null) =>
 				patchState(store, { albumType }),
 		})
@@ -284,6 +323,7 @@ export const ArtistPageStore = signalStore(
 	withHooks({
 		onInit(store) {
 			store.loadArtist(of(undefined));
+			store.loadLineup(of(undefined));
 			store.loadAlbums(of(undefined));
 			store.loadReleases(of(undefined));
 			store.loadArtists(of(undefined));

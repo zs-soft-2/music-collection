@@ -20,6 +20,12 @@
  *     created, completed or left unchanged. Needs Firebase Admin credentials
  *     (GOOGLE_APPLICATION_CREDENTIALS or `gcloud auth application-default login`).
  *
+ *   node tools/discogs/import-discogs.mjs fetch-artists [--refresh]
+ *     Refreshes the cached album years and downloads each band's Discogs member
+ *     list. `write` then also creates `membership` documents (musician ↔ band,
+ *     member or guest, instruments, from–to album years, active flag).
+ *     --memberships-only skips the album data.
+ *
  * Optional: DISCOGS_TOKEN (personal access token) raises the rate limit from
  * 25 to 60 requests per minute.
  */
@@ -32,8 +38,10 @@ import { parseArgs } from 'node:util';
 
 import { DiscogsClient } from './discogs-client.mjs';
 import {
+	bandDiscogsId,
 	rankCandidates,
 	toCreditDocs,
+	toMembershipDocs,
 	toOriginalRelease,
 	toTrackDocs,
 	trimRelease,
@@ -44,6 +52,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '..', '..');
 const CACHE = join(HERE, '.cache');
 const ALBUM_CACHE = join(CACHE, 'albums');
+const ARTIST_CACHE = join(CACHE, 'artists');
 
 const { positionals, values: options } = parseArgs({
 	allowPositionals: true,
@@ -53,6 +62,7 @@ const { positionals, values: options } = parseArgs({
 		refresh: { type: 'boolean', default: false },
 		confirm: { type: 'boolean', default: false },
 		replace: { type: 'boolean', default: false },
+		'memberships-only': { type: 'boolean', default: false },
 		'include-ambiguous': { type: 'boolean', default: false },
 	},
 });
@@ -225,6 +235,89 @@ async function fetchCommand() {
 	}
 
 	await writeReport();
+}
+
+/**
+ * Refreshes the cached albums' years from Firestore and downloads each band's
+ * Discogs artist profile (member list with the active flag).
+ */
+async function fetchArtistsCommand() {
+	const client = new DiscogsClient();
+	await mkdir(ARTIST_CACHE, { recursive: true });
+
+	const fresh = new Map(
+		(await loadAlbums()).map((album) => [album.uid, album])
+	);
+	const cached = await readCache();
+	for (const entry of cached) {
+		const album = fresh.get(entry.album.uid);
+		if (
+			album &&
+			(album.year !== entry.album.year || album.path !== entry.album.path)
+		) {
+			entry.album = { ...entry.album, ...album };
+			await writeFile(
+				cacheFile(album.uid),
+				JSON.stringify(entry, null, 2)
+			);
+		}
+	}
+
+	const bands = new Map();
+	for (const entry of cached.filter((e) => e.release)) {
+		const artistUid = entry.album.path?.split('/')[1];
+		if (!artistUid) continue;
+		const band = bands.get(artistUid) ?? {
+			name: entry.album.artistName,
+			entries: [],
+		};
+		band.entries.push(entry);
+		bands.set(artistUid, band);
+	}
+
+	let done = 0;
+	for (const [artistUid, band] of bands) {
+		done++;
+		const file = join(ARTIST_CACHE, `${artistUid}.json`);
+		if (!options.refresh && existsSync(file)) continue;
+
+		const discogsId = bandDiscogsId(band.entries);
+		const label = `[${done}/${bands.size}] ${band.name}`;
+		try {
+			const artist = discogsId
+				? await client.get(`/artists/${discogsId}`)
+				: null;
+			const profile = artist
+				? {
+						id: artist.id,
+						name: artist.name,
+						members: (artist.members ?? []).map((m) => ({
+							id: m.id,
+							name: m.name,
+							active: !!m.active,
+						})),
+					}
+				: null;
+			await writeFile(
+				file,
+				JSON.stringify(
+					{
+						artistUid,
+						discogsId,
+						...profile,
+						fetchedAt: new Date().toISOString(),
+					},
+					null,
+					2
+				)
+			);
+			console.log(
+				`${label}: ${profile ? `${profile.members.length} members` : 'no Discogs artist'}`
+			);
+		} catch (error) {
+			console.error(`${label}: ERROR ${error.message}`);
+		}
+	}
 }
 
 async function readCache() {
@@ -463,6 +556,115 @@ async function planAlbum(db, item, replace) {
 	return { ops, stats };
 }
 
+/** Writes operations in bulk; returns the writes that failed for good. */
+async function writeOps(db, ops) {
+	const writer = db.bulkWriter();
+	const failures = [];
+	writer.onWriteError((error) => {
+		// Quota and permission errors will not heal by retrying.
+		const fatal = [7, 8].includes(error.code); // PERMISSION_DENIED, RESOURCE_EXHAUSTED
+		if (fatal || error.failedAttempts >= 3) {
+			failures.push(`${error.documentRef.path}: ${error.message}`);
+			return false;
+		}
+		return true;
+	});
+	for (const op of ops) {
+		if (op.type === 'create') writer.create(op.ref, op.data);
+		if (op.type === 'set') writer.set(op.ref, op.data);
+		if (op.type === 'update') writer.update(op.ref, op.data);
+		if (op.type === 'delete') writer.delete(op.ref);
+	}
+	await writer.close();
+	return failures;
+}
+
+/**
+ * Operations for one band's line-up: `membership` documents, `musician`
+ * documents for members not known yet, and the band's Discogs id on the
+ * artist document. Fill mode keeps hand-edited values (e.g. corrected years).
+ */
+async function planArtist(db, band, memberships, discogsArtistId, replace) {
+	const ops = [];
+	const stats = { created: 0, completed: 0, unchanged: 0 };
+
+	const membershipRefs = memberships.map((m) =>
+		db.collection('membership').doc(m.uid)
+	);
+	const musicianRefs = memberships.map((m) =>
+		db.collection('musician').doc(m.musicianUid)
+	);
+	const artistRef = db.doc(`artist/${band.artistUid}`);
+	const [membershipSnaps, musicianSnaps, artistSnap] = await Promise.all([
+		membershipRefs.length ? db.getAll(...membershipRefs) : [],
+		musicianRefs.length ? db.getAll(...musicianRefs) : [],
+		artistRef.get(),
+	]);
+
+	const upsert = (ref, snap, data) => {
+		if (replace) {
+			ops.push({ type: 'set', ref, data });
+			return;
+		}
+		if (!snap?.exists) {
+			ops.push({ type: 'create', ref, data });
+			stats.created++;
+			return;
+		}
+		const patch = missingFields(snap.data(), data);
+		if (Object.keys(patch).length) {
+			ops.push({ type: 'update', ref, data: patch });
+			stats.completed++;
+		} else {
+			stats.unchanged++;
+		}
+	};
+
+	memberships.forEach((membership, index) => {
+		upsert(membershipRefs[index], membershipSnaps[index], membership);
+	});
+
+	const seen = new Set();
+	memberships.forEach((membership, index) => {
+		if (seen.has(membership.musicianUid)) return;
+		seen.add(membership.musicianUid);
+		// Replace mode never replaces musicians: they are shared by albums.
+		const snap = musicianSnaps[index];
+		const data = {
+			uid: membership.musicianUid,
+			name: membership.musicianName,
+			discogsId:
+				Number(membership.musicianUid.replace('discogs-', '')) || null,
+			entityType: 'Musician',
+			source: 'discogs',
+		};
+		if (!snap.exists) {
+			ops.push({ type: 'create', ref: snap.ref, data });
+			stats.created++;
+		} else {
+			const patch = missingFields(snap.data(), data);
+			if (Object.keys(patch).length) {
+				ops.push({ type: 'update', ref: snap.ref, data: patch });
+				stats.completed++;
+			} else {
+				stats.unchanged++;
+			}
+		}
+	});
+
+	if (artistSnap.exists && discogsArtistId) {
+		const patch = missingFields(artistSnap.data(), {
+			discogs: { artistId: discogsArtistId },
+		});
+		if (Object.keys(patch).length) {
+			ops.push({ type: 'update', ref: artistRef, data: patch });
+			stats.completed++;
+		}
+	}
+
+	return { ops, stats };
+}
+
 async function writeCommand() {
 	const cached = await readCache();
 	let entries = cached.filter(
@@ -505,7 +707,7 @@ async function writeCommand() {
 
 	const totals = { created: 0, completed: 0, unchanged: 0, operations: 0 };
 
-	for (const item of plan) {
+	for (const item of options['memberships-only'] ? [] : plan) {
 		const label = `${item.album.artistName} — ${item.album.name}`;
 		const { ops, stats } = await planAlbum(db, item, options.replace);
 		totals.operations += ops.length;
@@ -528,25 +730,92 @@ async function writeCommand() {
 		if (!options.confirm || !ops.length) {
 			continue;
 		}
-		const writer = db.bulkWriter();
-		for (const op of ops) {
-			if (op.type === 'create') writer.create(op.ref, op.data);
-			if (op.type === 'set') writer.set(op.ref, op.data);
-			if (op.type === 'update') writer.update(op.ref, op.data);
-			if (op.type === 'delete') writer.delete(op.ref);
+		const failures = await writeOps(db, ops);
+
+		if (failures.length) {
+			totals.failed = (totals.failed ?? 0) + failures.length;
+			console.error(
+				`  ${failures.length} writes failed, first: ${failures[0]}`
+			);
+			if (failures.some((f) => /RESOURCE_EXHAUSTED|quota/i.test(f))) {
+				console.error(
+					'\nFirestore quota exhausted — stopping. Re-run the same command later: ' +
+						'fill mode continues where it stopped.'
+				);
+				process.exitCode = 1;
+				break;
+			}
 		}
-		await writer.close();
+	}
+
+	// Line-ups, from the same unambiguous album matches.
+	const bands = new Map();
+	for (const entry of entries) {
+		const artistUid = entry.album.path?.split('/')[1];
+		if (!artistUid) continue;
+		const band = bands.get(artistUid) ?? {
+			artistUid,
+			artistName: entry.album.artistName,
+			entries: [],
+		};
+		band.entries.push(entry);
+		bands.set(artistUid, band);
+	}
+
+	for (const band of process.exitCode ? [] : bands.values()) {
+		const profileFile = join(ARTIST_CACHE, `${band.artistUid}.json`);
+		const profile = existsSync(profileFile)
+			? JSON.parse(await readFile(profileFile, 'utf8'))
+			: null;
+		const memberships = toMembershipDocs(band, band.entries, profile);
+		const { ops, stats } = await planArtist(
+			db,
+			band,
+			memberships,
+			profile?.id ?? null,
+			options.replace
+		);
+		totals.operations += ops.length;
+		totals.created += stats.created;
+		totals.completed += stats.completed;
+		totals.unchanged += stats.unchanged;
+		const members = memberships.filter((m) => m.kind === 'member').length;
+		console.log(
+			`${band.artistName} line-up: ${members} members, ${memberships.length - members} guests` +
+				(profile
+					? ''
+					: ' (no Discogs member list — run fetch-artists)') +
+				` → ${stats.created} new, ${stats.completed} completed, ${stats.unchanged} unchanged`
+		);
+
+		if (!options.confirm || !ops.length) continue;
+		const failures = await writeOps(db, ops);
+		if (failures.length) {
+			totals.failed = (totals.failed ?? 0) + failures.length;
+			console.error(
+				`  ${failures.length} writes failed, first: ${failures[0]}`
+			);
+			if (failures.some((f) => /RESOURCE_EXHAUSTED|quota/i.test(f))) {
+				console.error(
+					'\nFirestore quota exhausted — stopping; re-run later.'
+				);
+				process.exitCode = 1;
+				break;
+			}
+		}
 	}
 
 	console.log(
 		`\n${options.replace ? '' : `${totals.created} new, ${totals.completed} completed, ${totals.unchanged} unchanged; `}` +
-			`${totals.operations} operations ${options.confirm ? 'written' : 'planned — nothing written, re-run with --confirm'}`
+			`${totals.operations} operations ${options.confirm ? 'written' : 'planned — nothing written, re-run with --confirm'}${totals.failed ? `, ${totals.failed} FAILED` : ''}`
 	);
 }
 
 const command = positionals[0];
 if (command === 'fetch') {
 	await fetchCommand();
+} else if (command === 'fetch-artists') {
+	await fetchArtistsCommand();
 } else if (command === 'write') {
 	try {
 		await writeCommand();
@@ -571,7 +840,7 @@ if (command === 'fetch') {
 	await writeReport();
 } else {
 	console.log(
-		'Usage: import-discogs.mjs <fetch|write|report> [--limit N] [--album UID] [--refresh] [--confirm] [--replace]'
+		'Usage: import-discogs.mjs <fetch|fetch-artists|write|report> [--limit N] [--album UID] [--refresh] [--confirm] [--replace] [--memberships-only]'
 	);
 	process.exitCode = 1;
 }

@@ -23,14 +23,28 @@ export function normalize(text) {
 		.trim();
 }
 
-/** Year of a Firestore REST value (timestamp or ISO string). */
+/**
+ * Year of a Firestore REST value: epoch milliseconds (integer), a timestamp or
+ * an ISO string. Dates are stored as local midnight (e.g. 1987-01-01T00:00+01),
+ * which is still the previous year in UTC, so half a day is added.
+ */
 export function yearOf(value) {
-	const raw = value?.timestampValue ?? value?.stringValue ?? null;
-	if (!raw) {
+	const raw =
+		value?.integerValue ??
+		value?.doubleValue ??
+		value?.timestampValue ??
+		value?.stringValue ??
+		null;
+	if (raw === null || raw === '') {
 		return null;
 	}
-	const year = new Date(raw).getUTCFullYear();
-	return Number.isNaN(year) ? null : year;
+	const ms = /^-?\d+(\.\d+)?$/.test(String(raw))
+		? Number(raw)
+		: Date.parse(raw);
+	if (Number.isNaN(ms)) {
+		return null;
+	}
+	return new Date(ms + 12 * 60 * 60 * 1000).getUTCFullYear();
 }
 
 const VIDEO_FORMATS = [
@@ -326,4 +340,124 @@ export function toOriginalRelease(match, release) {
 			[format.name, ...format.descriptions].filter(Boolean).join(', ')
 		),
 	};
+}
+
+/*
+ * Line-up — mirrors apps/.../shared/music-ui/credit-roles.ts: a credit is a
+ * performance unless it is songwriting, production or artwork.
+ */
+const NON_PERFORMER_ROLE =
+	/written|words by|lyrics|music by|composed|songwriter|arranged|orchestrated|produc|engineer|mix|master|record|lacquer|edited|technician|programm|a&r|artwork|design|cover|photo|layout|illustrat|paint|logo|art direction|typography|sleeve|graphics/i;
+const PERFORMER_ROLE =
+	/vocal|voice|guitar|bass|drum|percussion|keyboard|synth|piano|organ|sitar|timpani|violin|viola|cello|strings|sax|trumpet|trombone|horn|flute|harmonica|banjo|mandolin|choir|chorus|performer|instrument|finger snaps|clap|turntable|scratch|sampler|effects|lead|rhythm/i;
+
+export const isPerformerRole = (role) =>
+	!NON_PERFORMER_ROLE.test(role) && PERFORMER_ROLE.test(role);
+
+/** The band's Discogs artist id: the main artist most of its releases name. */
+export function bandDiscogsId(entries) {
+	const counts = new Map();
+	for (const entry of entries) {
+		const main = entry.release?.artists?.[0];
+		// 194 is Discogs' "Various" pseudo-artist.
+		if (main?.id && main.id !== 194) {
+			counts.set(main.id, (counts.get(main.id) ?? 0) + 1);
+		}
+	}
+	return [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+}
+
+/**
+ * Membership documents of one band: who played in it, on what, and from which
+ * to which album year. Discogs' member list decides member vs. guest (and
+ * whether the membership is still active); without that list, a release-wide
+ * performer credit counts as membership and a track-limited one as guest.
+ *
+ * @param band    { artistUid, artistName }
+ * @param entries cached album entries of the band ({ album, release })
+ * @param profile cached Discogs artist ({ members: [{ id, name, active }] }) or null
+ */
+export function toMembershipDocs(band, entries, profile) {
+	const members = new Map(
+		(profile?.members ?? []).map((member) => [member.id, member])
+	);
+	const people = new Map();
+
+	const personFor = (artist) => {
+		const uid = musicianUid(artist);
+		if (!people.has(uid)) {
+			people.set(uid, {
+				musicianUid: uid,
+				musicianName: stripDiscogsSuffix(artist.name),
+				discogsId: artist.id || null,
+				instruments: new Set(),
+				years: [],
+				albumUids: new Set(),
+				releaseWide: false,
+			});
+		}
+		return people.get(uid);
+	};
+
+	for (const { album, release } of entries) {
+		if (!release) continue;
+
+		const credit = (artist, trackLimited) => {
+			// The band credited as a whole is not a member of itself.
+			if (artist.id && artist.id === profile?.id) return;
+
+			const performed = splitRoles(artist.role)
+				.map(({ role }) => role)
+				.filter(isPerformerRole);
+			if (!performed.length) return;
+
+			const person = personFor(artist);
+			performed.forEach((role) => person.instruments.add(role));
+			person.albumUids.add(album.uid);
+			if (album.year) person.years.push(album.year);
+			if (!trackLimited) person.releaseWide = true;
+		};
+
+		release.extraartists.forEach((artist) =>
+			credit(artist, !!artist.tracks)
+		);
+		const visit = (track) => {
+			track.extraartists.forEach((artist) => credit(artist, true));
+			track.subTracks.forEach(visit);
+		};
+		release.tracklist.forEach(visit);
+	}
+
+	// Members listed by Discogs but without credits on the catalog's albums.
+	for (const member of members.values()) {
+		personFor(member);
+	}
+
+	return [...people.values()].map((person) => {
+		const member = person.discogsId ? members.get(person.discogsId) : null;
+		const kind = members.size
+			? member
+				? 'member'
+				: 'guest'
+			: person.releaseWide
+				? 'member'
+				: 'guest';
+
+		return {
+			uid: `${band.artistUid}_${person.musicianUid}`,
+			artistUid: band.artistUid,
+			artistName: band.artistName,
+			musicianUid: person.musicianUid,
+			musicianName: person.musicianName,
+			kind,
+			instruments: [...person.instruments],
+			from: person.years.length ? Math.min(...person.years) : null,
+			to: person.years.length ? Math.max(...person.years) : null,
+			active: member ? !!member.active : null,
+			albumCount: person.albumUids.size,
+			albumUids: [...person.albumUids],
+			entityType: 'Membership',
+			source: 'discogs',
+		};
+	});
 }
