@@ -1,4 +1,5 @@
-<section class="wishlist-item-form" *rxLet="params$; let params">
+@if (params$ | async; as params) {
+<section class="wishlist-item-form">
 	<form [formGroup]="params.formGroup">
 		<p-tabs value="0">
 			<p-tablist>
@@ -16,15 +17,15 @@
 
 				<div class="field">
 					<span class="p-float-label">
-						<p-autoComplete
+						<p-autocomplete
 							formControlName="artistReference"
 							[suggestions]="params.artists"
-							[minLength]="3"
+							[minQueryLength]="3"
 							[delay]="400"
 							field="name"
 							(completeMethod)="searchArtistHandler($event)"
 						>
-						</p-autoComplete>
+						</p-autocomplete>
 
 						<label for="artistReference">Artist</label>
 					</span>
@@ -32,15 +33,15 @@
 
 				<div class="field">
 					<span class="p-float-label">
-						<p-autoComplete
+						<p-autocomplete
 							formControlName="albumReference"
 							[suggestions]="params.albums"
-							[minLength]="3"
+							[minQueryLength]="3"
 							[delay]="400"
 							field="name"
 							(completeMethod)="searchAlbumHandler($event)"
 						>
-						</p-autoComplete>
+						</p-autocomplete>
 
 						<label for="albumReference">Album</label>
 					</span>
@@ -61,14 +62,14 @@
 
 				<div class="field">
 					<span class="p-float-label">
-						<p-multiSelect
+						<p-multiselect
 							id="medias"
 							[options]="params.mediaList"
 							placeholder="Select medias"
 							[filter]="false"
 							formControlName="medias"
 							display="chip"
-						></p-multiSelect>
+						></p-multiselect>
 						<label for="medias">Medias</label>
 					</span>
 				</div>
@@ -111,3 +112,4 @@
 			</div>
 	</form>
 </section>
+}

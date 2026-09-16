@@ -9,7 +9,6 @@ import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CoreAuthenticationViewModule } from '@music-collection/core/authentication/view';
 import { UserProfileModule } from '@music-collection/domain/user';
-import { RxLet } from '@rx-angular/template/let';
 
 import { TopBarComponent } from './component';
 
@@ -23,7 +22,6 @@ import { TopBarComponent } from './component';
 		ButtonModule,
 		SelectModule,
 		FormsModule,
-		RxLet,
 		MenubarModule,
 		NgOptimizedImage,
 		ToolbarModule,

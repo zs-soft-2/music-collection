@@ -6,7 +6,6 @@ import { TableModule } from 'primeng/table';
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { RxLet } from '@rx-angular/template/let';
 
 import { ArtistViewModule } from '../view/artist-view.module';
 import { ArtistListComponent, ArtistTableComponent } from './component';
@@ -20,7 +19,6 @@ import { ArtistListComponent, ArtistTableComponent } from './component';
 		ButtonModule,
 		CarouselModule,
 		ChipModule,
-		RxLet,
 		TableModule,
 		ArtistViewModule,
 	],

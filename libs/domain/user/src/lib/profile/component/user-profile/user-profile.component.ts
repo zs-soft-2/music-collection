@@ -1,3 +1,4 @@
+import { MotionOptions } from '@primeuix/motion';
 import { MenuItem } from 'primeng/api';
 
 import {
@@ -21,6 +22,10 @@ export class UserProfileComponent extends BaseComponent implements OnInit {
 	@Input()
 	public user!: User;
 	public userMenuItems!: MenuItem[];
+
+	// A PrimeNG 22-ben a showTransitionOptions/hideTransitionOptions helyét a
+	// motionOptions vette át; a korábbi '0ms' átmenetek megfelelője a kikapcsolt animáció.
+	public readonly menuMotionOptions: MotionOptions = { disabled: true };
 
 	@Output()
 	public logout: EventEmitter<boolean>;

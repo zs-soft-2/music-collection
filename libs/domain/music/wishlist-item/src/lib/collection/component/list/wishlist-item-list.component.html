@@ -1,5 +1,6 @@
-<section class="wishlist-item-list" *rxLet="params$; let params">
-	<p-dataView [value]="params.wishlistItems" [layout]="'grid'">
+@if (params$ | async; as params) {
+<section class="wishlist-item-list">
+	<p-dataview [value]="params.wishlistItems" [layout]="'grid'">
 		<ng-template pTemplate="header">
 		</ng-template>
 
@@ -24,5 +25,6 @@
 				</mc-wishlist-item-simple-view>
 			</div>
 		</ng-template>
-	</p-dataView>
+	</p-dataview>
 </section>
+}

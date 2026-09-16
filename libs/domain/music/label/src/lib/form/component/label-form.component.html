@@ -1,17 +1,18 @@
-<section class="label-form" *rxLet="params$; let params">
+@if (params$ | async; as params) {
+<section class="label-form">
 	<form [formGroup]="params.formGroup">
 		<input name="uid" formControlName="uid" hidden />
 
 		<div class="field">
 			<span class="p-float-label">
-				<p-autoComplete
+				<p-autocomplete
 					formControlName="parent"
 					[suggestions]="params.labels"
-					[minLength]="3"
+					[minQueryLength]="3"
 					[delay]="400"
 					field="name"
 					(completeMethod)="searchLabel($event)"
-				></p-autoComplete>
+				></p-autocomplete>
 
 				<label for="parent">Parent</label>
 			</span>
@@ -48,3 +49,4 @@
 		></button>
 	</div>
 </section>
+}

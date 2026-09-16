@@ -1,4 +1,5 @@
-<section class="wishlistItem-table" *rxLet="params$; let params">
+@if (params$ | async; as params) {
+<section class="wishlistItem-table">
   <p-table
     [value]="params.wishlistItems"
     sortField="name"
@@ -11,11 +12,11 @@
     <ng-template pTemplate="header">
       <tr>
         <th pSortableColumn="albumReference.name">
-          Artist name <p-sortIcon field="albumReference"></p-sortIcon>
+          Artist name <p-sorticon field="albumReference"></p-sorticon>
         </th>
 
         <th pSortableColumn="artistReference.name">
-          Album name <p-sortIcon field="artistReference"></p-sortIcon>
+          Album name <p-sorticon field="artistReference"></p-sorticon>
         </th>
 
         <th>Medias</th>
@@ -24,15 +25,15 @@
       </tr>
       <tr>
         <th>
-          <p-autoComplete
+          <p-autocomplete
             [suggestions]="params.empty"
             [showClear]="true"
             class="p-inputtext-sm"
             (completeMethod)="searchByNameHandler($event)"
-            [minLength]="3"
+            [minQueryLength]="3"
             [delay]="400"
             >
-          </p-autoComplete>
+          </p-autocomplete>
         </th>
 
         <th></th>
@@ -78,3 +79,4 @@
     </ng-template>
   </p-table>
 </section>
+}

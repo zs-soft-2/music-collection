@@ -10,7 +10,6 @@ import { TabsModule } from 'primeng/tabs';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { RxLet } from '@rx-angular/template/let';
 
 import { AlbumFormComponent } from './component';
 
@@ -26,7 +25,6 @@ import { AlbumFormComponent } from './component';
 		SelectModule,
 		ImageModule,
 		InputTextModule,
-		RxLet,
 		MultiSelectModule,
 		ReactiveFormsModule,
 		TabsModule,

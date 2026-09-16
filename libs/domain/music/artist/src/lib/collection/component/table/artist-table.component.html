@@ -1,4 +1,5 @@
-<section class="artist-table" *rxLet="params$; let params">
+@if (params$ | async; as params) {
+<section class="artist-table">
   <p-table
     [value]="params.artists"
     sortField="name"
@@ -11,11 +12,11 @@
     <ng-template pTemplate="header">
       <tr>
         <th pSortableColumn="name">
-          Name <p-sortIcon field="name"></p-sortIcon>
+          Name <p-sorticon field="name"></p-sorticon>
         </th>
 
         <th pSortableColumn="formedIn">
-          Formed in <p-sortIcon field="formedIn"></p-sortIcon>
+          Formed in <p-sorticon field="formedIn"></p-sorticon>
         </th>
 
         <th>Styles</th>
@@ -26,15 +27,15 @@
       </tr>
       <tr>
         <th>
-          <p-autoComplete
+          <p-autocomplete
             [suggestions]="params.empty"
             [showClear]="true"
             class="p-inputtext-sm"
             (completeMethod)="searchByNameHandler($event)"
-            [minLength]="3"
+            [minQueryLength]="3"
             [delay]="400"
             >
-          </p-autoComplete>
+          </p-autocomplete>
         </th>
 
         <th></th>
@@ -106,3 +107,4 @@
     </ng-template>
   </p-table>
 </section>
+}

@@ -5,7 +5,6 @@ import { TableModule } from 'primeng/table';
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { RxLet } from '@rx-angular/template/let';
 
 import { LabelListComponent, LabelTableComponent } from './component';
 
@@ -17,7 +16,6 @@ import { LabelListComponent, LabelTableComponent } from './component';
 		AutoCompleteModule,
 		ButtonModule,
 		ChipModule,
-		RxLet,
 		TableModule,
 	],
 })

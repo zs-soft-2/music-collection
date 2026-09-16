@@ -11,7 +11,6 @@ import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { RxLet } from '@rx-angular/template/let';
 
 import { DocumentFormComponent } from './component';
 
@@ -28,7 +27,6 @@ import { DocumentFormComponent } from './component';
 		ImageModule,
 		TextareaModule,
 		InputTextModule,
-		RxLet,
 		MultiSelectModule,
 		ReactiveFormsModule,
 		TabsModule,

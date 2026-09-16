@@ -1,4 +1,5 @@
-<section class="album-table" *rxLet="params$; let params">
+@if (params$ | async; as params) {
+<section class="album-table">
   <p-table
     [value]="params.albums"
     [paginator]="true"
@@ -11,15 +12,15 @@
     <ng-template pTemplate="header">
       <tr>
         <th pSortableColumn="name">
-          Name <p-sortIcon field="name"></p-sortIcon>
+          Name <p-sorticon field="name"></p-sorticon>
         </th>
 
         <th pSortableColumn="artist.name">
-          Artist <p-sortIcon field="artist.name"></p-sortIcon>
+          Artist <p-sorticon field="artist.name"></p-sorticon>
         </th>
 
         <th pSortableColumn="year">
-          Year <p-sortIcon field="year"></p-sortIcon>
+          Year <p-sorticon field="year"></p-sorticon>
         </th>
 
         <th>Styles</th>
@@ -31,27 +32,27 @@
 
       <tr>
         <th>
-          <p-autoComplete
+          <p-autocomplete
             [suggestions]="params.empty"
             [showClear]="true"
             (completeMethod)="searchByNameHandler($event)"
-            [minLength]="3"
+            [minQueryLength]="3"
             [delay]="400"
             class="p-inputtext-sm"
             >
-          </p-autoComplete>
+          </p-autocomplete>
         </th>
 
         <th>
-          <p-autoComplete
+          <p-autocomplete
             [suggestions]="params.empty"
             [showClear]="true"
             (completeMethod)="searchByArtistNameHandler($event)"
-            [minLength]="3"
+            [minQueryLength]="3"
             [delay]="400"
             class="p-inputtext-sm"
             >
-          </p-autoComplete>
+          </p-autocomplete>
         </th>
 
         <th></th>
@@ -106,3 +107,4 @@
     </ng-template>
   </p-table>
 </section>
+}

@@ -1,4 +1,5 @@
-<section class="album-form" *rxLet="params$; let params">
+@if (params$ | async; as params) {
+<section class="album-form">
   <form [formGroup]="params.formGroup">
     <p-tabs value="0">
       <p-tablist>
@@ -13,14 +14,14 @@
 
         <div class="field">
           <span class="p-float-label">
-            <p-autoComplete
+            <p-autocomplete
               formControlName="artist"
               [suggestions]="params.artists"
-              [minLength]="3"
+              [minQueryLength]="3"
               [delay]="400"
               field="name"
               (completeMethod)="searchArtist($event)"
-            ></p-autoComplete>
+            ></p-autocomplete>
 
             <label for="artist">Artist</label>
           </span>
@@ -65,13 +66,13 @@
 
         <div class="field">
           <span class="p-float-label">
-            <p-multiSelect
+            <p-multiselect
               id="styles"
               [options]="params.styleList"
               [filter]="false"
               formControlName="styles"
               display="chip"
-            ></p-multiSelect>
+            ></p-multiselect>
 
             <label for="styles">Styles</label>
           </span>
@@ -81,23 +82,23 @@
       <p-tabpanel value="1">
         <div class="field">
           <span class="p-float-label">
-            <p-autoComplete
+            <p-autocomplete
               id="coverImage"
               formControlName="coverImage"
               [suggestions]="params.documents"
-              [minLength]="3"
+              [minQueryLength]="3"
               [delay]="400"
               field="name"
               (completeMethod)="searchDocument($event)"
               >
-            </p-autoComplete>
+            </p-autocomplete>
 
             <label for="coverImage">Cover image</label>
           </span>
 
           @if (params.formGroup.value.coverImage) {
             <p-image
-              [src]="params.formGroup.value.coverImage?.filePath"
+              [src]="$safeNavigationMigration(params.formGroup.value.coverImage?.filePath)"
               [preview]="true"
               alt="Image"
               width="200"
@@ -131,3 +132,4 @@
       </div>
   </form>
 </section>
+}

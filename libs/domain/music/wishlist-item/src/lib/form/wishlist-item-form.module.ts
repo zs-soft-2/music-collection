@@ -13,7 +13,6 @@ import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { RxLet } from '@rx-angular/template/let';
 
 import { WishlistItemFormComponent } from './component';
 
@@ -32,7 +31,6 @@ import { WishlistItemFormComponent } from './component';
 		ImageModule,
 		TextareaModule,
 		InputTextModule,
-		RxLet,
 		MultiSelectModule,
 		ReactiveFormsModule,
 		TabsModule,

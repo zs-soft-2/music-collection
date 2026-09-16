@@ -27,13 +27,13 @@
           <p-accordion-content>
             @for (item of store.sortByList(); track item) {
               <div class="field-radiobutton">
-                <p-radioButton
+                <p-radiobutton
                   [name]="item"
                   [value]="item"
                   [ngModel]="store.sortBy()"
                   (onClick)="store.changeSortBy($event)"
                   [inputId]="item"
-                ></p-radioButton>
+                ></p-radiobutton>
                 <label [for]="item">{{ item | titlecase }}</label>
               </div>
             }
@@ -44,7 +44,7 @@
           <p-accordion-header>Group by</p-accordion-header>
 
           <p-accordion-content>
-            <p-multiSelect
+            <p-multiselect
               [options]="store.groupByList()"
               display="chip"
               [ngModel]="store.groupBy()"
@@ -52,7 +52,7 @@
               [filter]="true"
               optionLabel="label"
               >
-            </p-multiSelect>
+            </p-multiselect>
           </p-accordion-content>
         </p-accordion-panel>
 
@@ -60,7 +60,7 @@
           <p-accordion-header>Filter by</p-accordion-header>
 
           <p-accordion-content>
-            <p-multiSelect
+            <p-multiselect
               [options]="store.filterByArtistNameList()"
               display="chip"
               [ngModel]="store.filterByArtistNames()"
@@ -68,7 +68,7 @@
               [filter]="true"
               optionLabel="label"
               >
-            </p-multiSelect>
+            </p-multiselect>
           </p-accordion-content>
         </p-accordion-panel>
       </p-accordion>

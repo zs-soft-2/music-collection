@@ -1,4 +1,4 @@
-<ng-container *rxLet="params$; let params">
+@if (params$ | async; as params) {
   @if (params.album) {
     <section class="album-detail flex-container">
       <div
@@ -24,4 +24,4 @@
       </div>
     </section>
   }
-</ng-container>
+}

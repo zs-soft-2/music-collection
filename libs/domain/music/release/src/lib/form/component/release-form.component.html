@@ -1,18 +1,19 @@
-<section class="release-form" *rxLet="params$; let params">
+@if (params$ | async; as params) {
+<section class="release-form">
 	<form [formGroup]="params.formGroup">
 		<input name="uid" formControlName="uid" hidden />
 
 		<div class="field">
 			<span class="p-float-label">
-				<p-autoComplete
+				<p-autocomplete
 					formControlName="artist"
 					[suggestions]="params.artists"
-					[minLength]="3"
+					[minQueryLength]="3"
 					[delay]="400"
 					field="name"
 					(completeMethod)="searchArtistHandler($event)"
 				>
-				</p-autoComplete>
+				</p-autocomplete>
 
 				<label for="artist">Artist</label>
 			</span>
@@ -20,15 +21,15 @@
 
 		<div class="field">
 			<span class="p-float-label">
-				<p-autoComplete
+				<p-autocomplete
 					formControlName="album"
 					[suggestions]="params.albums"
-					[minLength]="3"
+					[minQueryLength]="3"
 					[delay]="400"
 					field="name"
 					(completeMethod)="searchAlbumHandler($event)"
 				>
-				</p-autoComplete>
+				</p-autocomplete>
 
 				<label for="album">Album</label>
 			</span>
@@ -36,14 +37,14 @@
 
 		<div class="field">
 			<span class="p-float-label">
-				<p-autoComplete
+				<p-autocomplete
 					formControlName="label"
 					[suggestions]="params.labels"
-					[minLength]="3"
+					[minQueryLength]="3"
 					[delay]="400"
 					field="name"
 					(completeMethod)="searchLabelHandler($event)"
-				></p-autoComplete>
+				></p-autocomplete>
 
 				<label for="label">Label</label>
 			</span>
@@ -98,14 +99,14 @@
 
 		<div class="field">
 			<span class="p-float-label">
-				<p-multiSelect
+				<p-multiselect
 					id="formatDescription"
 					[options]="params.formatDescriptionList"
 					placeholder="Select a format description"
 					[filter]="false"
 					formControlName="formatDescription"
 					display="chip"
-				></p-multiSelect>
+				></p-multiselect>
 				<label for="formatDescription">Format description</label>
 			</span>
 		</div>
@@ -128,3 +129,4 @@
 		></button>
 	</div>
 </section>
+}

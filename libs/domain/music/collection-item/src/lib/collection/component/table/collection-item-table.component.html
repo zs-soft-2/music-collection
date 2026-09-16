@@ -16,15 +16,15 @@
 	
 				<tr>
 					<th>
-						<p-autoComplete
+						<p-autocomplete
 							[suggestions]="params.empty"
 							[showClear]="true"
 							(completeMethod)="searchHandler($event)"
-							[minLength]="3"
+							[minQueryLength]="3"
 							[delay]="400"
 							class="p-inputtext-sm"
 						>
-						</p-autoComplete>
+						</p-autocomplete>
 					</th>
 	
 					<th></th>

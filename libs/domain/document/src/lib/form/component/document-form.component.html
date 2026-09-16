@@ -1,4 +1,5 @@
-<section class="document-form" *rxLet="params$; let params">
+@if (params$ | async; as params) {
+<section class="document-form">
   <form [formGroup]="params.formGroup">
     <input name="uid" formControlName="uid" hidden />
 
@@ -19,11 +20,11 @@
       <span>
         <label for="file"></label>
 
-        <p-fileUpload
+        <p-fileupload
           name="file"
           [customUpload]="true"
           (uploadHandler)="fileUpload($event)"
-        ></p-fileUpload>
+        ></p-fileupload>
       </span>
 
       @if (params.formGroup.value.filePath) {
@@ -94,3 +95,4 @@
     ></button>
   </div>
 </section>
+}

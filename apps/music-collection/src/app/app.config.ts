@@ -1,7 +1,7 @@
 import { provideAngularSvgIcon } from 'angular-svg-icon';
 import { providePrimeNG } from 'primeng/config';
 
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import {
 	APP_INITIALIZER,
 	ApplicationConfig,
@@ -51,7 +51,7 @@ export const appConfig: ApplicationConfig = {
 		provideFirestore(() => getFirestore()),
 		provideAuth(() => getAuth()),
 		provideStorage(() => getStorage()),
-		provideHttpClient(),
+		provideHttpClient(withXhr()),
 		provideAngularSvgIcon(),
 		provideAnimationsAsync(),
 		providePrimeNG({

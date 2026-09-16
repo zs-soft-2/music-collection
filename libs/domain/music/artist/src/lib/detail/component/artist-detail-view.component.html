@@ -41,7 +41,7 @@
             <div class="property">
               <span>Formed in:</span>
 
-              <span>{{ store.artist()?.formedIn | date: 'yyyy' }}</span>
+              <span>{{ $safeNavigationMigration(store.artist()?.formedIn) | date: 'yyyy' }}</span>
             </div>
 
             <div class="property">
@@ -59,7 +59,7 @@
         @case ('discography') {
           <div>
             @if (store.albums()) {
-              <p-dataView [value]="store.albums()">
+              <p-dataview [value]="store.albums()">
                 <ng-template let-albums pTemplate="list">
                   @for (album of albums; track album.uid) {
                     <mc-album-item-view
@@ -70,7 +70,7 @@
                     ></mc-album-item-view>
                   }
                 </ng-template>
-              </p-dataView>
+              </p-dataview>
             }
           </div>
         }
