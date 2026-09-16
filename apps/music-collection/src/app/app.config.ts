@@ -30,7 +30,7 @@ import { DomainWishlistItemModule } from '@music-collection/domain/wishlist-item
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
-import Aura from '@primeng/themes/aura';
+import Aura from '@primeuix/themes/aura';
 
 import { environment } from '../environments/environment';
 import { routes } from './app-routing';

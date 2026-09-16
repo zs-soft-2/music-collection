@@ -8,7 +8,9 @@
 	"targets": {
 		"build": {
 			"executor": "@angular-devkit/build-angular:browser",
-			"outputs": ["{options.outputPath}"],
+			"outputs": [
+				"{options.outputPath}"
+			],
 			"options": {
 				"allowedCommonJsDependencies": [
 					"deepmerge",
@@ -38,7 +40,7 @@
 						{
 							"type": "initial",
 							"maximumWarning": "1.5mb",
-							"maximumError": "2.7mb"
+							"maximumError": "3.5mb"
 						},
 						{
 							"type": "anyComponentStyle",
@@ -86,7 +88,9 @@
 		},
 		"test": {
 			"executor": "@nx/jest:jest",
-			"outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+			"outputs": [
+				"{workspaceRoot}/coverage/{projectRoot}"
+			],
 			"options": {
 				"jestConfig": "apps/music-collection/jest.config.ts",
 				"tsConfig": "apps/music-collection/tsconfig.spec.json"

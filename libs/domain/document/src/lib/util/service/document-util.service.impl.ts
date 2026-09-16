@@ -1,4 +1,4 @@
-import * as objectHash from 'object-hash';
+import objectHash from 'object-hash';
 
 import { Injectable } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
