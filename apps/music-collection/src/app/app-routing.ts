@@ -40,6 +40,13 @@ export const routes: Routes = [
 		},
 	},
 	{
+		path: 'spotify/callback',
+		loadComponent: () =>
+			import('./shared/spotify/spotify-callback.component').then(
+				(module) => module.SpotifyCallbackComponent
+			),
+	},
+	{
 		path: 'collection',
 		loadComponent: () =>
 			import('./page/collection/collection-page.component').then(

@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	input,
+	output,
+} from '@angular/core';
 
 import { TrackGroup } from '../../album.mapper';
 
@@ -21,8 +26,39 @@ import { TrackGroup } from '../../album.mapper';
 				}
 				<ol class="tracks">
 					@for (track of group.tracks; track track.id) {
-						<li class="track">
-							<span class="position">{{ track.position }}</span>
+						<li
+							class="track"
+							[class.playing]="track.id === playingId()"
+							[attr.aria-current]="
+								track.id === playingId() ? 'true' : null
+							"
+						>
+							@if (playable()) {
+								<button
+									type="button"
+									class="position play"
+									[attr.aria-label]="'Play ' + track.name"
+									(click)="playTrack.emit(track.id)"
+								>
+									<span class="position-text">{{
+										track.position
+									}}</span>
+									<i
+										class="pi"
+										[class.pi-play]="
+											track.id !== playingId()
+										"
+										[class.pi-volume-up]="
+											track.id === playingId()
+										"
+										aria-hidden="true"
+									></i>
+								</button>
+							} @else {
+								<span class="position">{{
+									track.position
+								}}</span>
+							}
 							<span class="body">
 								<span class="name">{{ track.name }}</span>
 								@if (track.credits.length) {
@@ -91,6 +127,48 @@ import { TrackGroup } from '../../album.mapper';
 			background: rgba(255, 255, 255, 0.03);
 		}
 
+		.play {
+			display: grid;
+			align-items: center;
+			justify-items: start;
+			padding: 0;
+			font: inherit;
+			background: none;
+			border: 0;
+			cursor: pointer;
+
+			> * {
+				grid-area: 1 / 1;
+			}
+
+			i {
+				font-size: 0.8rem;
+				color: var(--mc-primary);
+				opacity: 0;
+			}
+
+			&:focus-visible {
+				outline: 2px solid var(--mc-primary);
+				outline-offset: 3px;
+			}
+		}
+
+		.track:hover .play,
+		.play:focus-visible,
+		.playing .play {
+			.position-text {
+				opacity: 0;
+			}
+
+			i {
+				opacity: 1;
+			}
+		}
+
+		.playing .name {
+			color: var(--mc-primary);
+		}
+
 		.position {
 			font-size: 0.8rem;
 			font-weight: 600;
@@ -136,4 +214,9 @@ import { TrackGroup } from '../../album.mapper';
 export class AlbumTracklistComponent {
 	public readonly groups = input.required<TrackGroup[]>();
 	public readonly total = input<string | null>(null);
+	/** Shows a play button on each track. */
+	public readonly playable = input(false);
+	/** Id of the track playing now. */
+	public readonly playingId = input<string | null>(null);
+	public readonly playTrack = output<string>();
 }

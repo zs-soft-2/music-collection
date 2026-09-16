@@ -125,7 +125,7 @@
 		@if (album.spotifyAlbumId) {
 			<section class="listen" aria-labelledby="listen-title">
 				<h2 id="listen-title" class="panel-title">Listen on Spotify</h2>
-				<mc-spotify-player
+				<mc-spotify-panel
 					[albumId]="album.spotifyAlbumId"
 					[albumTitle]="album.artistName + ' – ' + album.title"
 				/>
@@ -147,6 +147,13 @@
 					<mc-album-tracklist
 						[groups]="store.trackGroups()"
 						[total]="store.totalDuration()"
+						[playable]="
+							spotify.connected() && !!album.spotifyAlbumId
+						"
+						[playingId]="spotify.playingTrackId()"
+						(playTrack)="
+							playTrack(album.spotifyAlbumId ?? '', $event)
+						"
 					/>
 				} @else {
 					<p class="empty">
