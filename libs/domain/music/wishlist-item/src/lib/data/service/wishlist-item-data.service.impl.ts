@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 
 import { Injectable } from '@angular/core';
-import { collection, doc, setDoc } from '@angular/fire/firestore';
+import { collection, doc } from '@angular/fire/firestore';
 import {
 	WishlistItemDataService,
 	WishlistItemModel,
@@ -40,11 +40,17 @@ export class WishlistItemDataServiceImpl extends WishlistItemDataService {
 				WISHLIST_ITEM_FEATURE_KEY
 			);
 
-			setDoc(doc(collectionReference, uid), newWishlistItem).then(() => {
-				subscriber.next({
-					...newWishlistItem,
-				} as unknown as WishlistItemModel);
-			});
+			this.firestoreSync
+				.set(
+					doc(collectionReference, uid),
+					WISHLIST_ITEM_FEATURE_KEY,
+					newWishlistItem
+				)
+				.then(() => {
+					subscriber.next({
+						...newWishlistItem,
+					} as unknown as WishlistItemModel);
+				});
 		});
 	}
 

@@ -1,0 +1,531 @@
+{
+	"indexes": [],
+	"fieldOverrides": [
+		{
+			"collectionGroup": "album",
+			"fieldPath": "artist",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "album",
+			"fieldPath": "artist.searchParameters",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "album",
+			"fieldPath": "artist.uid",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "album",
+			"fieldPath": "name",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "album",
+			"fieldPath": "searchParameters",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "album",
+			"fieldPath": "uid",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "album",
+			"fieldPath": "updatedAt",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "artist",
+			"fieldPath": "searchParameters",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "artist",
+			"fieldPath": "updatedAt",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "collection-item",
+			"fieldPath": "searchParameters",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "collection-item",
+			"fieldPath": "updatedAt",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "document",
+			"fieldPath": "searchParameters",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "document",
+			"fieldPath": "updatedAt",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "entity-quantity",
+			"fieldPath": "updatedAt",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "label",
+			"fieldPath": "searchParameters",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "label",
+			"fieldPath": "updatedAt",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "release",
+			"fieldPath": "searchParameters",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "release",
+			"fieldPath": "updatedAt",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "user",
+			"fieldPath": "updatedAt",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "wishlist-item",
+			"fieldPath": "searchParameters",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "wishlist-item",
+			"fieldPath": "updatedAt",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		}
+	]
+}

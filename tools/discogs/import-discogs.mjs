@@ -556,8 +556,15 @@ async function planAlbum(db, item, replace) {
 	return { ops, stats };
 }
 
-/** Writes operations in bulk; returns the writes that failed for good. */
+/**
+ * Writes operations in bulk; returns the writes that failed for good. Stamps
+ * `updatedAt`, leaves tombstones and bumps the catalog version, so the app's
+ * client cache picks the changes up.
+ */
 async function writeOps(db, ops) {
+	const { featureKeyOf, stamp, tombstone, touchCatalog } = await import(
+		'../sync/catalog-sync.mjs'
+	);
 	const writer = db.bulkWriter();
 	const failures = [];
 	writer.onWriteError((error) => {
@@ -570,12 +577,18 @@ async function writeOps(db, ops) {
 		return true;
 	});
 	for (const op of ops) {
-		if (op.type === 'create') writer.create(op.ref, op.data);
-		if (op.type === 'set') writer.set(op.ref, op.data);
-		if (op.type === 'update') writer.update(op.ref, op.data);
-		if (op.type === 'delete') writer.delete(op.ref);
+		if (op.type === 'create') writer.create(op.ref, stamp(op.data));
+		if (op.type === 'set') writer.set(op.ref, stamp(op.data));
+		if (op.type === 'update') writer.update(op.ref, stamp(op.data));
+		if (op.type === 'delete') {
+			const deletion = tombstone(db, op.ref);
+			writer.delete(op.ref);
+			writer.set(deletion.ref, deletion.data);
+		}
 	}
 	await writer.close();
+	// After the writes: the version must not be older than what it covers.
+	await touchCatalog(db, [...new Set(ops.map((op) => featureKeyOf(op.ref)))]);
 	return failures;
 }
 

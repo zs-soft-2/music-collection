@@ -1,4 +1,4 @@
-import { Observable, forkJoin, map } from 'rxjs';
+import { Observable, combineLatest, map } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
 import { ContributionEntity, TrackEntity } from '@music-collection/api';
@@ -11,13 +11,16 @@ export interface AlbumDetails {
 	contributions: ContributionEntity[];
 }
 
-/** Loads the tracklist and the credits of an album together. */
+/**
+ * Loads the tracklist and the credits of an album together; emits again when
+ * either changes.
+ */
 @Injectable({ providedIn: 'root' })
 export class AlbumDetailsEffect {
 	private readonly repository = inject(AlbumDetailsRepository);
 
 	public load$(albumUid: string): Observable<AlbumDetails> {
-		return forkJoin({
+		return combineLatest({
 			tracks: this.repository.listTracks$(albumUid),
 			contributions: this.repository.listContributions$(albumUid),
 		}).pipe(

@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 
 import { Injectable } from '@angular/core';
-import { collection, doc, setDoc } from '@angular/fire/firestore';
+import { collection, doc } from '@angular/fire/firestore';
 import {
 	LABEL_FEATURE_KEY,
 	LabelDataService,
@@ -29,9 +29,13 @@ export class LabelDataServiceImpl extends LabelDataService {
 
 		return new Observable((subscriber) => {
 			if (!newLabel.parent) {
-				setDoc(doc(this.collection, uid), newLabel).then(() => {
-					subscriber.next({ ...newLabel } as unknown as LabelModel);
-				});
+				this.firestoreSync
+					.set(doc(this.collection, uid), LABEL_FEATURE_KEY, newLabel)
+					.then(() => {
+						subscriber.next({
+							...newLabel,
+						} as unknown as LabelModel);
+					});
 			} else {
 				const docRef = doc(
 					this.firestore,
@@ -43,9 +47,17 @@ export class LabelDataServiceImpl extends LabelDataService {
 					LABEL_FEATURE_KEY
 				);
 
-				setDoc(doc(collectionReference, uid), newLabel).then(() => {
-					subscriber.next({ ...newLabel } as unknown as LabelModel);
-				});
+				this.firestoreSync
+					.set(
+						doc(collectionReference, uid),
+						LABEL_FEATURE_KEY,
+						newLabel
+					)
+					.then(() => {
+						subscriber.next({
+							...newLabel,
+						} as unknown as LabelModel);
+					});
 			}
 		});
 	}

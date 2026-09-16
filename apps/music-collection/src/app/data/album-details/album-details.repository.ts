@@ -1,21 +1,11 @@
-import { Observable, from, map } from 'rxjs';
+import { Observable } from 'rxjs';
 
-import {
-	EnvironmentInjector,
-	Injectable,
-	inject,
-	runInInjectionContext,
-} from '@angular/core';
-import {
-	Firestore,
-	collection,
-	getDocs,
-	query,
-	where,
-} from '@angular/fire/firestore';
+import { Injectable, inject } from '@angular/core';
+import { Firestore, collection, query, where } from '@angular/fire/firestore';
 import {
 	CONTRIBUTION_FEATURE_KEY,
 	ContributionEntity,
+	FirestoreSyncService,
 	TRACK_FEATURE_KEY,
 	TrackEntity,
 } from '@music-collection/api';
@@ -27,7 +17,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class AlbumDetailsRepository {
 	private readonly firestore = inject(Firestore);
-	private readonly injector = inject(EnvironmentInjector);
+	private readonly firestoreSync = inject(FirestoreSyncService);
 
 	public listTracks$(albumUid: string): Observable<TrackEntity[]> {
 		return this.listByAlbum$<TrackEntity>(TRACK_FEATURE_KEY, albumUid);
@@ -42,24 +32,18 @@ export class AlbumDetailsRepository {
 		);
 	}
 
+	/** Served from the local cache while the collection is unchanged. */
 	private listByAlbum$<T>(
 		collectionName: string,
 		albumUid: string
 	): Observable<T[]> {
-		// AngularFire expects its APIs to be called in an injection context.
-		const snapshot = runInInjectionContext(this.injector, () =>
-			getDocs(
-				query(
-					collection(this.firestore, collectionName),
-					where('albumUid', '==', albumUid)
-				)
-			)
-		);
-
-		return from(snapshot).pipe(
-			map((result) =>
-				result.docs.map((doc) => ({ ...doc.data(), uid: doc.id }) as T)
-			)
-		);
+		return this.firestoreSync.list$<T>({
+			featureKey: collectionName,
+			cacheKey: `${collectionName}?albumUid=${albumUid}`,
+			query: query(
+				collection(this.firestore, collectionName),
+				where('albumUid', '==', albumUid)
+			),
+		});
 	}
 }

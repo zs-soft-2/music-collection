@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 
 import { Injectable } from '@angular/core';
-import { collection, doc, updateDoc } from '@angular/fire/firestore';
+import { collection, doc } from '@angular/fire/firestore';
 import {
 	COLLECTION_ITEM_FEATURE_KEY,
 	CollectionItemDataService,
@@ -59,9 +59,13 @@ export class CollectionItemDataServiceImpl extends CollectionItemDataService {
 		);
 
 		return new Observable((subscriber) => {
-			updateDoc(albumDocument, { ...album }).then(() => {
-				subscriber.next(album);
-			});
+			this.firestoreSync
+				.update(albumDocument, COLLECTION_ITEM_FEATURE_KEY, {
+					...album,
+				})
+				.then(() => {
+					subscriber.next(album);
+				});
 		});
 	}
 }

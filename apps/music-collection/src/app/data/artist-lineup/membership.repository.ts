@@ -1,19 +1,9 @@
-import { Observable, from, map } from 'rxjs';
+import { Observable } from 'rxjs';
 
+import { Injectable, inject } from '@angular/core';
+import { Firestore, collection, query, where } from '@angular/fire/firestore';
 import {
-	EnvironmentInjector,
-	Injectable,
-	inject,
-	runInInjectionContext,
-} from '@angular/core';
-import {
-	Firestore,
-	collection,
-	getDocs,
-	query,
-	where,
-} from '@angular/fire/firestore';
-import {
+	FirestoreSyncService,
 	MEMBERSHIP_FEATURE_KEY,
 	MembershipEntity,
 } from '@music-collection/api';
@@ -22,7 +12,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class MembershipRepository {
 	private readonly firestore = inject(Firestore);
-	private readonly injector = inject(EnvironmentInjector);
+	private readonly firestoreSync = inject(FirestoreSyncService);
 
 	/** The line-up of a band. */
 	public listByArtist$(artistUid: string): Observable<MembershipEntity[]> {
@@ -36,27 +26,18 @@ export class MembershipRepository {
 		return this.listBy$('musicianUid', musicianUid);
 	}
 
+	/** Served from the local cache while the collection is unchanged. */
 	private listBy$(
 		field: 'artistUid' | 'musicianUid',
 		value: string
 	): Observable<MembershipEntity[]> {
-		// AngularFire expects its APIs to be called in an injection context.
-		const snapshot = runInInjectionContext(this.injector, () =>
-			getDocs(
-				query(
-					collection(this.firestore, MEMBERSHIP_FEATURE_KEY),
-					where(field, '==', value)
-				)
-			)
-		);
-
-		return from(snapshot).pipe(
-			map((result) =>
-				result.docs.map(
-					(doc) =>
-						({ ...doc.data(), uid: doc.id }) as MembershipEntity
-				)
-			)
-		);
+		return this.firestoreSync.list$<MembershipEntity>({
+			featureKey: MEMBERSHIP_FEATURE_KEY,
+			cacheKey: `${MEMBERSHIP_FEATURE_KEY}?${field}=${value}`,
+			query: query(
+				collection(this.firestore, MEMBERSHIP_FEATURE_KEY),
+				where(field, '==', value)
+			),
+		});
 	}
 }

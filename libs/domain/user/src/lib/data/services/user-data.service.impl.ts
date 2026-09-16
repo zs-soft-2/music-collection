@@ -1,14 +1,7 @@
 import { Observable } from 'rxjs';
 
 import { Injectable } from '@angular/core';
-import {
-	collection,
-	deleteDoc,
-	doc,
-	Firestore,
-	setDoc,
-	updateDoc,
-} from '@angular/fire/firestore';
+import { collection, doc } from '@angular/fire/firestore';
 import {
 	COLLECTION_ITEM_FEATURE_KEY,
 	CollectionItemModel,
@@ -58,13 +51,17 @@ export class UserDataServiceImpl extends UserDataService {
 				COLLECTION_ITEM_FEATURE_KEY
 			);
 
-			setDoc(doc(collectionReference, uid), newCollectionItem).then(
-				() => {
+			this.firestoreSync
+				.set(
+					doc(collectionReference, uid),
+					COLLECTION_ITEM_FEATURE_KEY,
+					newCollectionItem
+				)
+				.then(() => {
 					subscriber.next({
 						...newCollectionItem,
 					} as unknown as CollectionItemModel);
-				}
-			);
+				});
 		});
 	}
 
@@ -88,11 +85,17 @@ export class UserDataServiceImpl extends UserDataService {
 				WISHLIST_ITEM_FEATURE_KEY
 			);
 
-			setDoc(doc(wishlistReference, uid), newWishlistItem).then(() => {
-				subscriber.next({
-					...newWishlistItem,
-				} as unknown as WishlistItemModel);
-			});
+			this.firestoreSync
+				.set(
+					doc(wishlistReference, uid),
+					WISHLIST_ITEM_FEATURE_KEY,
+					newWishlistItem
+				)
+				.then(() => {
+					subscriber.next({
+						...newWishlistItem,
+					} as unknown as WishlistItemModel);
+				});
 		});
 	}
 
@@ -109,11 +112,13 @@ export class UserDataServiceImpl extends UserDataService {
 				`${USER_FEATURE_KEY}/${collectionItem.userId}/${COLLECTION_ITEM_FEATURE_KEY}/${collectionItem.uid}`
 			);
 
-			deleteDoc(collectionItemDocument).then(() => {
-				subscriber.next({
-					...collectionItem,
-				} as unknown as CollectionItemModel);
-			});
+			this.firestoreSync
+				.delete(collectionItemDocument, COLLECTION_ITEM_FEATURE_KEY)
+				.then(() => {
+					subscriber.next({
+						...collectionItem,
+					} as unknown as CollectionItemModel);
+				});
 		});
 	}
 
@@ -126,11 +131,13 @@ export class UserDataServiceImpl extends UserDataService {
 				`${USER_FEATURE_KEY}/${wishlistItem.userReference.uid}/${WISHLIST_ITEM_FEATURE_KEY}/${wishlistItem.uid}`
 			);
 
-			deleteDoc(wishlistItemDocument).then(() => {
-				subscriber.next({
-					...wishlistItem,
-				} as unknown as WishlistItemModel);
-			});
+			this.firestoreSync
+				.delete(wishlistItemDocument, WISHLIST_ITEM_FEATURE_KEY)
+				.then(() => {
+					subscriber.next({
+						...wishlistItem,
+					} as unknown as WishlistItemModel);
+				});
 		});
 	}
 
@@ -159,11 +166,13 @@ export class UserDataServiceImpl extends UserDataService {
 		);
 
 		return new Observable((subscriber) => {
-			updateDoc(collectionItemDocument, { ...collectionItem }).then(
-				() => {
+			this.firestoreSync
+				.update(collectionItemDocument, COLLECTION_ITEM_FEATURE_KEY, {
+					...collectionItem,
+				})
+				.then(() => {
 					subscriber.next(collectionItem);
-				}
-			);
+				});
 		});
 	}
 
@@ -176,9 +185,13 @@ export class UserDataServiceImpl extends UserDataService {
 		);
 
 		return new Observable((subscriber) => {
-			updateDoc(wishlistItemDocument, { ...wishlistItem }).then(() => {
-				subscriber.next(wishlistItem);
-			});
+			this.firestoreSync
+				.update(wishlistItemDocument, WISHLIST_ITEM_FEATURE_KEY, {
+					...wishlistItem,
+				})
+				.then(() => {
+					subscriber.next(wishlistItem);
+				});
 		});
 	}
 }

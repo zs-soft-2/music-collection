@@ -1,9 +1,8 @@
-import { Observable, of, switchMap } from 'rxjs';
+import { Observable } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
 import {
 	collection,
-	collectionData,
 	collectionGroup,
 	CollectionReference,
 	doc,
@@ -13,21 +12,20 @@ import {
 	getDocs,
 	query,
 	QueryConstraint,
-	setDoc,
-	updateDoc,
-	deleteDoc,
 	where,
 } from '@angular/fire/firestore';
 
 import { Entity, EntityDataService, SearchParams } from '../../common';
+import { FirestoreSyncService } from './firestore-sync.service';
 
 @Injectable()
 export abstract class FirebaseDataService<
 	R extends Entity,
 	S,
-	T extends Entity
+	T extends Entity,
 > extends EntityDataService<R, S, T> {
 	protected firestore = inject(Firestore);
+	protected firestoreSync = inject(FirestoreSyncService);
 
 	protected collection!: CollectionReference<DocumentData>;
 	protected featureKey!: string;
@@ -40,9 +38,11 @@ export abstract class FirebaseDataService<
 		};
 
 		return new Observable((subscriber) => {
-			setDoc(doc(this.collection, uid), newEntity).then(() => {
-				subscriber.next({ ...newEntity } as unknown as R);
-			});
+			this.firestoreSync
+				.set(doc(this.collection, uid), this.featureKey, newEntity)
+				.then(() => {
+					subscriber.next({ ...newEntity } as unknown as R);
+				});
 		});
 	}
 
@@ -53,12 +53,11 @@ export abstract class FirebaseDataService<
 	}
 
 	protected listModels$(): Observable<R[]> {
-		return collectionData(
-			collectionGroup(this.firestore, this.featureKey),
-			{
-				idField: 'uid',
-			}
-		) as Observable<R[]>;
+		return this.firestoreSync.list$<R>({
+			featureKey: this.featureKey,
+			query: collectionGroup(this.firestore, this.featureKey),
+			incremental: true,
+		});
 	}
 
 	protected listModelsByIds$(ids: string[]): Observable<R[]> {
@@ -106,7 +105,7 @@ export abstract class FirebaseDataService<
 							(doc) =>
 								({
 									...doc.data(),
-								} as unknown as R)
+								}) as unknown as R
 						)
 					);
 				})
@@ -122,11 +121,17 @@ export abstract class FirebaseDataService<
 		} as T;
 
 		return new Observable((subscriber) => {
-			setDoc(doc(this.collection, entity.uid), newEntity).then(() => {
-				subscriber.next({
-					...newEntity,
-				} as unknown as T);
-			});
+			this.firestoreSync
+				.set(
+					doc(this.collection, entity.uid),
+					this.featureKey,
+					newEntity
+				)
+				.then(() => {
+					subscriber.next({
+						...newEntity,
+					} as unknown as T);
+				});
 		});
 	}
 }

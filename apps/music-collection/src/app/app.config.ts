@@ -7,9 +7,15 @@ import {
 	importProvidersFrom,
 	provideZonelessChangeDetection,
 } from '@angular/core';
-import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
+import { getApp, initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { getAuth, provideAuth } from '@angular/fire/auth';
-import { getFirestore, provideFirestore } from '@angular/fire/firestore';
+import {
+	CACHE_SIZE_UNLIMITED,
+	initializeFirestore,
+	persistentLocalCache,
+	persistentMultipleTabManager,
+	provideFirestore,
+} from '@angular/fire/firestore';
 import { provideStorage } from '@angular/fire/storage';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideRouter } from '@angular/router';
@@ -41,7 +47,17 @@ export const appConfig: ApplicationConfig = {
 		provideZonelessChangeDetection(),
 		provideRouter(routes),
 		provideFirebaseApp(() => initializeApp(environment.firebase)),
-		provideFirestore(() => getFirestore()),
+		provideFirestore(() =>
+			// Persistent (IndexedDB) cache, shared by the tabs. Unlimited size:
+			// the sync cache (FirestoreSyncService) relies on nothing being
+			// garbage collected.
+			initializeFirestore(getApp(), {
+				localCache: persistentLocalCache({
+					cacheSizeBytes: CACHE_SIZE_UNLIMITED,
+					tabManager: persistentMultipleTabManager(),
+				}),
+			})
+		),
 		provideAuth(() => getAuth()),
 		provideStorage(() => getStorage()),
 		provideHttpClient(withXhr()),
