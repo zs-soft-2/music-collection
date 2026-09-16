@@ -121,6 +121,17 @@
 			</section>
 		}
 
+		<!-- Listen -->
+		@if (album.spotifyAlbumId) {
+			<section class="listen" aria-labelledby="listen-title">
+				<h2 id="listen-title" class="panel-title">Listen on Spotify</h2>
+				<mc-spotify-player
+					[albumId]="album.spotifyAlbumId"
+					[albumTitle]="album.artistName + ' – ' + album.title"
+				/>
+			</section>
+		}
+
 		<!-- Tracklist and credits -->
 		<div class="details">
 			<section class="panel" aria-labelledby="tracklist-title">

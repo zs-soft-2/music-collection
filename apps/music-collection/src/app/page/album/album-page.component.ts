@@ -11,6 +11,7 @@ import { RouterLink } from '@angular/router';
 import {
 	DiscographyCardComponent,
 	FormatBadgeComponent,
+	SpotifyPlayerComponent,
 } from '../../shared/music-ui';
 import { AlbumPageStore } from './album-page.store';
 import { AlbumCreditsComponent } from './component/album-credits/album-credits.component';
@@ -33,6 +34,7 @@ import { AlbumTracklistComponent } from './component/album-tracklist/album-track
 		FormatBadgeComponent,
 		AlbumCreditsComponent,
 		AlbumTracklistComponent,
+		SpotifyPlayerComponent,
 	],
 })
 export class AlbumPageComponent {

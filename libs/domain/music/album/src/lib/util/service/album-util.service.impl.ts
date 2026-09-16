@@ -1,5 +1,11 @@
 import { Injectable, inject } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {
+	AbstractControl,
+	FormBuilder,
+	FormGroup,
+	ValidationErrors,
+	Validators,
+} from '@angular/forms';
 import {
 	AlbumArtist,
 	AlbumDocument,
@@ -21,7 +27,17 @@ import {
 	QueryConstraintTypeEnum,
 	QueryOperatorEnum,
 	SearchParams,
+	parseSpotifyAlbumId,
 } from '@music-collection/api';
+
+/** The Spotify field accepts an album share link, URI or id, or nothing. */
+function spotifyAlbumValidator(
+	control: AbstractControl
+): ValidationErrors | null {
+	return control.value && !parseSpotifyAlbumId(control.value)
+		? { spotifyAlbum: true }
+		: null;
+}
 
 @Injectable()
 export class AlbumUtilServiceImpl extends AlbumUtilService {
@@ -112,6 +128,10 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 			entity.styles = model.styles;
 		}
 
+		if (model.spotifyAlbumId !== undefined) {
+			entity.spotifyAlbumId = model.spotifyAlbumId;
+		}
+
 		return entity;
 	}
 
@@ -127,6 +147,7 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 			name: (formGroup.value['name'] as string).trim(),
 			styles: formGroup.value['styles'],
 			songs: formGroup.value['songs'],
+			spotifyAlbumId: parseSpotifyAlbumId(formGroup.value['spotify']),
 			year: formGroup.value['year'],
 		};
 	}
@@ -138,6 +159,12 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 			format: [album?.format || null, [Validators.required]],
 			name: [album?.name || null, [Validators.required]],
 			songs: [album?.songs || null],
+			spotify: [
+				album?.spotifyAlbumId
+					? `https://open.spotify.com/album/${album.spotifyAlbumId}`
+					: null,
+				[spotifyAlbumValidator],
+			],
 			styles: [album?.styles || null, [Validators.required]],
 			uid: [album?.uid],
 			year: [album?.year || null, [Validators.required]],
@@ -171,6 +198,7 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 			genre: GenreEnum.Rock,
 			name: (formGroup.value['name'] as string).trim(),
 			songs: formGroup.value['songs'],
+			spotifyAlbumId: parseSpotifyAlbumId(formGroup.value['spotify']),
 			styles: formGroup.value['styles'],
 			uid: formGroup.value['uid'],
 			year: formGroup.value['year'],

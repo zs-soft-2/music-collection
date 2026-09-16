@@ -77,6 +77,29 @@
             <label for="styles">Styles</label>
           </span>
         </div>
+
+        <div class="field">
+          <span class="p-float-label">
+            <input
+              id="spotify"
+              type="url"
+              pInputText
+              formControlName="spotify"
+              aria-describedby="spotify-help"
+              [attr.aria-invalid]="params.formGroup.controls['spotify'].invalid"
+              />
+
+            <label for="spotify">Spotify link</label>
+          </span>
+          <small id="spotify-help">
+            @if (params.formGroup.controls['spotify'].invalid) {
+              Not a Spotify album link. In Spotify: Share → Copy album link.
+            } @else {
+              Optional. Paste the album link from Spotify (Share → Copy album
+              link) to show the player on the album page.
+            }
+          </small>
+        </div>
       </p-tabpanel>
 
       <p-tabpanel value="1">

@@ -2,6 +2,7 @@ import {
 	AlbumEntity,
 	ContributionEntity,
 	TrackEntity,
+	isSpotifyAlbumId,
 } from '@music-collection/api';
 
 import {
@@ -24,6 +25,7 @@ export interface AlbumProfileView extends AlbumView {
 	artistId: string;
 	genre: string | null;
 	original: OriginalReleaseView | null;
+	spotifyAlbumId: string | null;
 }
 
 export interface TrackRow {
@@ -107,6 +109,9 @@ export function toAlbumProfile(album: AlbumEntity): AlbumProfileView {
 		...toAlbumView(album),
 		artistId: album.artist?.uid ?? '',
 		genre: formatGenre(album.genre),
+		spotifyAlbumId: isSpotifyAlbumId(album.spotifyAlbumId)
+			? album.spotifyAlbumId
+			: null,
 		original: discogs
 			? {
 					released: discogs.released,

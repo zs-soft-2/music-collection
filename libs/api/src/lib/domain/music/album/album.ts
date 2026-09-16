@@ -31,6 +31,8 @@ export interface Album {
 	genre: GenreEnum;
 	name: string;
 	songs: string[];
+	/** Spotify album id, used for the embedded player on the album page. */
+	spotifyAlbumId?: string | null;
 	styles: StyleEnum[];
 }
 
