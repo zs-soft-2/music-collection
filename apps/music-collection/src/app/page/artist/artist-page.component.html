@@ -11,6 +11,12 @@
 				/>
 			}
 			<div class="shade" aria-hidden="true"></div>
+			<mc-admin-edit-link
+				class="mc-hero-admin"
+				entity="artist"
+				[id]="artist.id"
+				[name]="artist.name"
+			/>
 
 			<div class="profile">
 				@if (artist.imageUrl) {

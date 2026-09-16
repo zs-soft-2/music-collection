@@ -11,6 +11,12 @@
 				/>
 			}
 			<div class="shade" aria-hidden="true"></div>
+			<mc-admin-edit-link
+				class="mc-hero-admin"
+				entity="album"
+				[id]="album.id"
+				[name]="album.title"
+			/>
 
 			<div class="profile">
 				@if (album.coverUrl) {
@@ -225,6 +231,13 @@
 									}
 								</span>
 							}
+							<mc-admin-edit-link
+								class="copy-admin"
+								variant="icon"
+								entity="collection-item"
+								[id]="copy.id"
+								[name]="album.title"
+							/>
 						</li>
 					}
 				</ul>

@@ -1,13 +1,26 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	inject,
+	input,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { FormatBadgeComponent, ReleaseView } from '../../../../shared/music-ui';
+import {
+	AdminAccessService,
+	AdminEditLinkComponent,
+	FormatBadgeComponent,
+	ReleaseView,
+} from '../../../../shared/music-ui';
 
 /** Dense list row for large collections — the whole row links to the album. */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-release-row',
-	imports: [RouterLink, FormatBadgeComponent],
+	imports: [RouterLink, FormatBadgeComponent, AdminEditLinkComponent],
+	host: {
+		'[class.has-admin]': 'adminAccess.isAdmin()',
+	},
 	template: `
 		@let item = release();
 
@@ -39,10 +52,30 @@ import { FormatBadgeComponent, ReleaseView } from '../../../../shared/music-ui';
 				[weight]="item.weight"
 			/>
 		</a>
+
+		<mc-admin-edit-link
+			class="mc-row-admin"
+			variant="icon"
+			entity="collection-item"
+			[id]="item.id"
+			[name]="item.artistName + ' — ' + item.title"
+		/>
 	`,
 	styles: `
 		:host {
+			position: relative;
 			display: block;
+		}
+
+		:host(.has-admin) .row {
+			padding-right: 3.25rem;
+		}
+
+		.mc-row-admin {
+			position: absolute;
+			top: 50%;
+			right: 0.6rem;
+			transform: translateY(-50%);
 		}
 
 		.row {
@@ -162,5 +195,7 @@ import { FormatBadgeComponent, ReleaseView } from '../../../../shared/music-ui';
 	`,
 })
 export class ReleaseRowComponent {
+	protected readonly adminAccess = inject(AdminAccessService);
+
 	public readonly release = input.required<ReleaseView>();
 }

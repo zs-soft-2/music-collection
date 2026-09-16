@@ -1,3 +1,5 @@
+export * from './admin-edit-link/admin-access.service';
+export * from './admin-edit-link/admin-edit-link.component';
 export * from './artist-tile/artist-tile.component';
 export * from './credit-roles';
 export * from './discography-card/discography-card.component';

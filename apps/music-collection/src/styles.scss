@@ -401,3 +401,34 @@ body .p-chip {
 		font-weight: 600;
 	}
 }
+
+// Admin szerkesztő-ikon a kártyák sarkában (mc-admin-edit-link). A kártya egésze
+// link, ezért az ikon testvérelem: hoverre és billentyűzetes fókuszra látszik,
+// érintőképernyőn mindig.
+.mc-card-admin {
+	position: absolute;
+	top: 0.5rem;
+	right: 0.5rem;
+	z-index: 5;
+	opacity: 0;
+	transition: opacity var(--mc-duration-fast) ease;
+}
+
+:hover > .mc-card-admin,
+:focus-within > .mc-card-admin {
+	opacity: 1;
+}
+
+@media (hover: none) {
+	.mc-card-admin {
+		opacity: 1;
+	}
+}
+
+// Admin szerkesztő-gomb a fotós fejlécek jobb felső sarkában.
+.mc-hero-admin {
+	position: absolute;
+	top: 1rem;
+	right: 1rem;
+	z-index: 3;
+}

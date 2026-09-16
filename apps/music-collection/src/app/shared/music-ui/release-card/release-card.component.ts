@@ -7,6 +7,10 @@ import {
 import { RouterLink } from '@angular/router';
 
 import { ReleaseView } from '../music-ui.model';
+import {
+	AdminEditEntity,
+	AdminEditLinkComponent,
+} from '../admin-edit-link/admin-edit-link.component';
 import { FormatBadgeComponent } from '../format-badge/format-badge.component';
 
 /**
@@ -19,12 +23,17 @@ import { FormatBadgeComponent } from '../format-badge/format-badge.component';
 	selector: 'mc-release-card',
 	templateUrl: './release-card.component.html',
 	styleUrls: ['./release-card.component.scss'],
-	imports: [RouterLink, FormatBadgeComponent],
+	imports: [RouterLink, FormatBadgeComponent, AdminEditLinkComponent],
 })
 export class ReleaseCardComponent {
 	public readonly release = input.required<ReleaseView>();
 	/** Above-the-fold cards load their cover eagerly (LCP). */
 	public readonly priority = input(false);
+	/**
+	 * Which record the admin edit icon opens: the collected copy by default,
+	 * the wishlist item on the wishlist.
+	 */
+	public readonly adminEntity = input<AdminEditEntity>('collection-item');
 
 	protected readonly ariaLabel = computed(() => {
 		const release = this.release();

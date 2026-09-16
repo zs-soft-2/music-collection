@@ -15,6 +15,7 @@ import {
 import { RouterLink } from '@angular/router';
 
 import {
+	AdminEditLinkComponent,
 	ArtistTileComponent,
 	DiscographyCardComponent,
 	FORMAT_LABELS,
@@ -48,6 +49,7 @@ const SECTION_REACHED_OFFSET = 24;
 		DiscographyCardComponent,
 		DiscographyTimelineComponent,
 		ArtistLineupComponent,
+		AdminEditLinkComponent,
 	],
 })
 export class ArtistPageComponent {

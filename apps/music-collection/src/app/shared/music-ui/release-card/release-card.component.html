@@ -123,3 +123,11 @@
 		<p class="artist">{{ item.artistName }}</p>
 	</div>
 </a>
+
+<mc-admin-edit-link
+	class="mc-card-admin"
+	variant="icon"
+	[entity]="adminEntity()"
+	[id]="item.id"
+	[name]="item.artistName + ' — ' + item.title"
+/>

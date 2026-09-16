@@ -7,7 +7,11 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { ArtistView, ReleaseView } from '../../../../shared/music-ui';
+import {
+	AdminEditLinkComponent,
+	ArtistView,
+	ReleaseView,
+} from '../../../../shared/music-ui';
 
 /**
  * Hero of the home page: one artist from the collection, large, with the
@@ -19,7 +23,7 @@ import { ArtistView, ReleaseView } from '../../../../shared/music-ui';
 	selector: 'mc-artist-spotlight',
 	templateUrl: './artist-spotlight.component.html',
 	styleUrls: ['./artist-spotlight.component.scss'],
-	imports: [RouterLink],
+	imports: [RouterLink, AdminEditLinkComponent],
 })
 export class ArtistSpotlightComponent {
 	public readonly artist = input.required<ArtistView>();

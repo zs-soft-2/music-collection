@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { AdminEditLinkComponent } from '../admin-edit-link/admin-edit-link.component';
 import { FormatBadgeComponent } from '../format-badge/format-badge.component';
 import { DiscographyAlbum } from '../music-ui.model';
 
@@ -11,7 +12,7 @@ import { DiscographyAlbum } from '../music-ui.model';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-discography-card',
-	imports: [RouterLink, FormatBadgeComponent],
+	imports: [RouterLink, FormatBadgeComponent, AdminEditLinkComponent],
 	template: `
 		@let item = album();
 
@@ -54,9 +55,18 @@ import { DiscographyAlbum } from '../music-ui.model';
 				}
 			</span>
 		</a>
+
+		<mc-admin-edit-link
+			class="mc-card-admin"
+			variant="icon"
+			entity="album"
+			[id]="item.id"
+			[name]="item.title"
+		/>
 	`,
 	styles: `
 		:host {
+			position: relative;
 			display: block;
 			height: 100%;
 		}

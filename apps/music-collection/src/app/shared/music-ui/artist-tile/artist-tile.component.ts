@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { AdminEditLinkComponent } from '../admin-edit-link/admin-edit-link.component';
 import { ArtistTileView } from '../music-ui.model';
 
 /**
@@ -10,7 +11,7 @@ import { ArtistTileView } from '../music-ui.model';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-artist-tile',
-	imports: [RouterLink],
+	imports: [RouterLink, AdminEditLinkComponent],
 	template: `
 		@let item = artist();
 
@@ -35,9 +36,18 @@ import { ArtistTileView } from '../music-ui.model';
 				</span>
 			</span>
 		</a>
+
+		<mc-admin-edit-link
+			class="mc-card-admin"
+			variant="icon"
+			entity="artist"
+			[id]="item.id"
+			[name]="item.name"
+		/>
 	`,
 	styles: `
 		:host {
+			position: relative;
 			display: block;
 		}
 

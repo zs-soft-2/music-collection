@@ -123,6 +123,7 @@
 			@for (entry of store.visible(); track entry.id) {
 				<li class="entry" [class.is-found]="!entry.isActive">
 					<mc-release-card
+						adminEntity="wishlist-item"
 						[release]="entry.release"
 						[priority]="$index < 6"
 					/>

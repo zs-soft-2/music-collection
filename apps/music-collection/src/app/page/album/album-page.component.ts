@@ -9,6 +9,7 @@ import {
 import { RouterLink } from '@angular/router';
 
 import {
+	AdminEditLinkComponent,
 	DiscographyCardComponent,
 	FormatBadgeComponent,
 } from '../../shared/music-ui';
@@ -38,6 +39,7 @@ import { AlbumTracklistComponent } from './component/album-tracklist/album-track
 		AlbumCreditsComponent,
 		AlbumTracklistComponent,
 		SpotifyPanelComponent,
+		AdminEditLinkComponent,
 	],
 })
 export class AlbumPageComponent {
