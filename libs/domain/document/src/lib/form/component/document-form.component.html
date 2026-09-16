@@ -82,17 +82,19 @@
     <button
       pButton
       type="button"
-      label="Submit"
       (click)="submit()"
       [disabled]="!params.formGroup.valid"
-    ></button>
+    >
+      Submit
+    </button>
 
     <button
       pButton
       type="button"
-      label="Cancel"
       (click)="cancel()"
-    ></button>
+    >
+      Cancel
+    </button>
   </div>
 </section>
 }

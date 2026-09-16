@@ -83,28 +83,34 @@
           <button
             pButton
             pRipple
-            icon="pi pi-pencil"
             aria-label="Edit artist"
             class="p-button-rounded p-button-success mr-2"
             (click)="editArtist(artist)"
-          ></button>
+            iconOnly
+          >
+            <i class="pi pi-pencil" aria-hidden="true"></i>
+          </button>
           <button
             pButton
             pRipple
-            icon="pi pi-trash"
             aria-label="Delete artist"
             class="p-button-rounded p-button-warning"
             (click)="deleteArtist(artist)"
-          ></button>
+            iconOnly
+          >
+            <i class="pi pi-trash" aria-hidden="true"></i>
+          </button>
 
           <button
             pButton
             pRipple
-            icon="pi pi-file-export"
             aria-label="Export artist"
             class="p-button-rounded p-button-warning"
             (click)="exportArtist(artist)"
-          ></button>
+            iconOnly
+          >
+            <i class="pi pi-file-export" aria-hidden="true"></i>
+          </button>
         </td>
       </tr>
     </ng-template>

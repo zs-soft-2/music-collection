@@ -43,20 +43,24 @@
 					<button
 						pButton
 						pRipple
-						icon="pi pi-pencil"
 						aria-label="Edit label"
 						class="p-button-rounded p-button-success mr-2"
 						(click)="editLabel(label)"
-					></button>
+						iconOnly
+					>
+						<i class="pi pi-pencil" aria-hidden="true"></i>
+					</button>
 
 					<button
 						pButton
 						pRipple
-						icon="pi pi-trash"
 						aria-label="Delete label"
 						class="p-button-rounded p-button-warning"
 						(click)="deleteLabel(label)"
-					></button>
+						iconOnly
+					>
+						<i class="pi pi-trash" aria-hidden="true"></i>
+					</button>
 				</td>
 			</tr>
 		</ng-template>

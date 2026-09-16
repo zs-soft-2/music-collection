@@ -22,7 +22,7 @@
 							[suggestions]="params.artists"
 							[minQueryLength]="3"
 							[delay]="400"
-							field="name"
+							optionLabel="name"
 							(completeMethod)="searchArtistHandler($event)"
 						>
 						</p-autocomplete>
@@ -38,7 +38,7 @@
 							[suggestions]="params.albums"
 							[minQueryLength]="3"
 							[delay]="400"
-							field="name"
+							optionLabel="name"
 							(completeMethod)="searchAlbumHandler($event)"
 						>
 						</p-autocomplete>
@@ -98,17 +98,19 @@
 				<button
 					pButton
 					type="button"
-					label="Submit"
 					(click)="submit()"
 					[disabled]="!params.formGroup.valid"
-				></button>
+				>
+					Submit
+				</button>
 
 				<button
 					pButton
 					type="button"
-					label="Cancel"
 					(click)="cancel()"
-				></button>
+				>
+					Cancel
+				</button>
 			</div>
 	</form>
 </section>

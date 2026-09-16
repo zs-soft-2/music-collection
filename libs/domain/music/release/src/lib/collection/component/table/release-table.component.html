@@ -57,20 +57,24 @@
 					<button
 						pButton
 						pRipple
-						icon="pi pi-pencil"
 						aria-label="Edit release"
 						class="p-button-rounded p-button-success mr-2"
 						(click)="editRelease(release)"
-					></button>
+						iconOnly
+					>
+						<i class="pi pi-pencil" aria-hidden="true"></i>
+					</button>
 
 					<button
 						pButton
 						pRipple
-						icon="pi pi-trash"
 						aria-label="Delete release"
 						class="p-button-rounded p-button-warning"
 						(click)="deleteRelease(release)"
-					></button>
+						iconOnly
+					>
+						<i class="pi pi-trash" aria-hidden="true"></i>
+					</button>
 				</td>
 			</tr>
 		</ng-template>
