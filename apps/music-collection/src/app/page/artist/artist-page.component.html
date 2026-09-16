@@ -164,6 +164,14 @@
 			<section id="lineup" class="section" aria-labelledby="lineup-title">
 				<h2 id="lineup-title" class="section-title">Line-up</h2>
 				<mc-artist-lineup [lineup]="store.lineup()" />
+				<a
+					class="network-link"
+					routerLink="/network"
+					[queryParams]="{ focus: 'artist:' + artist.id }"
+				>
+					<i class="pi pi-sitemap" aria-hidden="true"></i>
+					View in the relationship network
+				</a>
 			</section>
 		}
 

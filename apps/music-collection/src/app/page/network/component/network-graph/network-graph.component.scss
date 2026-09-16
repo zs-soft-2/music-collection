@@ -1,0 +1,227 @@
+:host {
+	// Node colours by kind; strokes only, so 3:1 against the canvas is enough.
+	--net-musician: var(--mc-primary);
+	--net-band: #4d8dff;
+	--net-project: #b36bff;
+	--net-album: var(--mc-status-ok);
+	--net-edge: rgba(255, 255, 255, 0.32);
+	--net-canvas: var(--mc-bg-muted);
+
+	position: relative;
+	display: block;
+	min-height: 360px;
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-lg);
+	background:
+		radial-gradient(circle at center, var(--mc-border) 1px, transparent 1px)
+			0 0 / 24px 24px,
+		var(--net-canvas);
+	overflow: hidden;
+}
+
+:host-context(html.mc-light) {
+	--net-band: #2459c7;
+	--net-project: #7a2fc2;
+	--net-edge: rgba(0, 0, 0, 0.35);
+}
+
+.zoom {
+	position: absolute;
+	top: 0.75rem;
+	left: 0.75rem;
+	z-index: 1;
+	display: flex;
+	flex-direction: column;
+	border: 1px solid var(--mc-border-strong);
+	border-radius: var(--mc-radius-md);
+	background: var(--mc-card-bg);
+	overflow: hidden;
+
+	button {
+		display: grid;
+		place-items: center;
+		width: 2.5rem;
+		height: 2.5rem;
+		border: 0;
+		background: transparent;
+		color: var(--mc-text);
+		cursor: pointer;
+
+		& + button {
+			border-top: 1px solid var(--mc-border);
+		}
+
+		&:hover {
+			background: var(--mc-card-bg-hover);
+		}
+
+		&:focus-visible {
+			outline-offset: -2px;
+		}
+	}
+}
+
+.canvas {
+	display: block;
+	width: 100%;
+	height: 100%;
+	min-height: inherit;
+	cursor: grab;
+	touch-action: none;
+	user-select: none;
+
+	&:active {
+		cursor: grabbing;
+	}
+
+	&:focus-visible {
+		outline-offset: -3px;
+	}
+}
+
+.arrow {
+	fill: var(--net-edge);
+}
+
+/* ── Edges ────────────────────────────────────────────────────────────── */
+
+.edge {
+	transition: opacity var(--mc-duration-fast);
+
+	line {
+		stroke: var(--net-edge);
+		stroke-width: 1.5;
+	}
+
+	&[data-kind='former'] line {
+		stroke-dasharray: 2 5;
+	}
+
+	&[data-kind='guest'] line {
+		stroke-dasharray: 7 5;
+	}
+
+	&.is-active line {
+		stroke: var(--mc-text-muted);
+		stroke-width: 2.5;
+	}
+
+	&.is-dimmed {
+		opacity: 0.2;
+	}
+}
+
+.edge-label {
+	rect {
+		fill: var(--mc-card-bg);
+		stroke: var(--mc-border-strong);
+	}
+
+	text {
+		fill: var(--mc-text-muted);
+		font-size: 12px;
+	}
+}
+
+/* ── Nodes ────────────────────────────────────────────────────────────── */
+
+.node {
+	--node-color: var(--net-musician);
+
+	cursor: pointer;
+	outline: none;
+	transition: opacity var(--mc-duration-fast);
+
+	&[data-kind='band'] {
+		--node-color: var(--net-band);
+	}
+
+	&[data-kind='project'] {
+		--node-color: var(--net-project);
+	}
+
+	&[data-kind='album'] {
+		--node-color: var(--net-album);
+	}
+
+	.shape {
+		fill: var(--mc-card-bg);
+		stroke: var(--node-color);
+		stroke-width: 2.5;
+	}
+
+	.initials {
+		fill: var(--mc-text);
+		font-family: var(--mc-font-display);
+		font-size: 22px;
+		pointer-events: none;
+	}
+
+	.label {
+		fill: var(--mc-text);
+		font-size: 14px;
+		font-weight: 600;
+	}
+
+	.caption {
+		fill: var(--mc-text-subtle);
+		font-size: 11px;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+
+	.label,
+	.caption {
+		// Legible over edges crossing behind the text.
+		paint-order: stroke;
+		stroke: var(--net-canvas);
+		stroke-width: 4px;
+		stroke-linejoin: round;
+	}
+
+	&:hover .shape {
+		fill: var(--mc-card-bg-hover);
+		filter: drop-shadow(0 0 6px var(--node-color));
+	}
+
+	&.is-focus .shape {
+		stroke-width: 4;
+		filter: drop-shadow(0 0 10px var(--node-color));
+	}
+
+	&.is-selected .shape {
+		stroke: var(--mc-text);
+	}
+
+	&:focus-visible .shape {
+		stroke: var(--mc-info);
+		stroke-width: 4;
+	}
+
+	&.is-dimmed {
+		opacity: 0.35;
+	}
+}
+
+.owned-badge {
+	circle {
+		fill: var(--net-album);
+		stroke: var(--net-canvas);
+		stroke-width: 2;
+	}
+
+	path {
+		fill: none;
+		stroke: var(--mc-bg);
+		stroke-width: 2.2;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.edge,
+	.node {
+		transition: none;
+	}
+}

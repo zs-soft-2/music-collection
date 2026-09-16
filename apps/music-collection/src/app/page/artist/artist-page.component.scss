@@ -305,6 +305,20 @@ h1 {
 	border-bottom: 1px solid var(--mc-border);
 }
 
+.network-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin-top: 1rem;
+	color: var(--mc-info);
+	font-weight: 600;
+	text-decoration: none;
+
+	&:hover {
+		text-decoration: underline;
+	}
+}
+
 .more {
 	display: inline-flex;
 	align-items: center;

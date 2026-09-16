@@ -38,6 +38,10 @@ export class TopBarService {
 				label: 'Wishlist',
 				routerLink: ['/wishlist'],
 			},
+			{
+				label: 'Network',
+				routerLink: ['/network'],
+			},
 		];
 	}
 

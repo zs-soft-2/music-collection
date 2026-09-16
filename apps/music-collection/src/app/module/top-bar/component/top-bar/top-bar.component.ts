@@ -18,6 +18,7 @@ const NAV_ICONS: Record<string, string> = {
 	Home: 'pi-home',
 	Collection: 'pi-th-large',
 	Wishlist: 'pi-heart',
+	Network: 'pi-sitemap',
 };
 
 @Component({

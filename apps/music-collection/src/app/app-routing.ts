@@ -40,6 +40,16 @@ export const routes: Routes = [
 		},
 	},
 	{
+		path: 'network',
+		loadComponent: () =>
+			import('./page/network/network-page.component').then(
+				(module) => module.NetworkPageComponent
+			),
+		data: {
+			breadcrumb: 'network',
+		},
+	},
+	{
 		path: 'spotify/callback',
 		loadComponent: () =>
 			import('./shared/spotify/spotify-callback.component').then(

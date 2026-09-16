@@ -26,6 +26,15 @@ export class MembershipRepository {
 		return this.listBy$('musicianUid', musicianUid);
 	}
 
+	/** Every membership — the relationship network is built from these. */
+	public list$(): Observable<MembershipEntity[]> {
+		return this.firestoreSync.list$<MembershipEntity>({
+			featureKey: MEMBERSHIP_FEATURE_KEY,
+			cacheKey: MEMBERSHIP_FEATURE_KEY,
+			query: query(collection(this.firestore, MEMBERSHIP_FEATURE_KEY)),
+		});
+	}
+
 	/** Served from the local cache while the collection is unchanged. */
 	private listBy$(
 		field: 'artistUid' | 'musicianUid',

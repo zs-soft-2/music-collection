@@ -1,0 +1,146 @@
+<div class="page">
+	<header class="intro">
+		<h1>Relationship network</h1>
+		<p>
+			Who played with whom — musicians, bands, projects and albums on one
+			map.
+		</p>
+	</header>
+
+	<div class="toolbar" role="group" aria-label="Network settings">
+		<div class="focus">
+			<span class="focus-label">Focus</span>
+			<strong>{{ store.focusNode()?.label ?? '—' }}</strong>
+		</div>
+
+		<label class="field">
+			<span>Depth</span>
+			<select [value]="store.depth()" (change)="onDepthChange($event)">
+				@for (depth of depths; track depth) {
+					<option
+						[value]="depth"
+						[selected]="depth === store.depth()"
+					>
+						{{ depth }}
+					</option>
+				}
+			</select>
+		</label>
+
+		<fieldset class="types">
+			<legend class="visually-hidden">Show</legend>
+			<label class="check">
+				<input
+					type="checkbox"
+					[checked]="store.showMusicians()"
+					(change)="onFlagChange('showMusicians', $event)"
+				/>
+				Musicians
+			</label>
+			<label class="check">
+				<input
+					type="checkbox"
+					[checked]="store.showBands()"
+					(change)="onFlagChange('showBands', $event)"
+				/>
+				Bands &amp; projects
+			</label>
+			<label class="check">
+				<input
+					type="checkbox"
+					[checked]="store.showAlbums()"
+					(change)="onFlagChange('showAlbums', $event)"
+				/>
+				Albums
+			</label>
+			<label class="check">
+				<input
+					type="checkbox"
+					[checked]="store.includeGuests()"
+					(change)="onFlagChange('includeGuests', $event)"
+				/>
+				Guests
+			</label>
+			<label class="check">
+				<input
+					type="checkbox"
+					[checked]="store.onlyOwned()"
+					(change)="onFlagChange('onlyOwned', $event)"
+				/>
+				Only my collection
+			</label>
+		</fieldset>
+
+		<mc-network-search
+			class="search"
+			[query]="store.query()"
+			[results]="store.searchResults()"
+			(queryChange)="store.setQuery($event)"
+			(picked)="store.setFocus($event)"
+		/>
+	</div>
+
+	<div class="layout">
+		<div class="graph-area">
+			@if (store.loading()) {
+				<div class="state" role="status">
+					<i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+					Loading the network…
+				</div>
+			} @else if (store.empty()) {
+				<div class="state" role="status">
+					<i class="pi pi-share-alt" aria-hidden="true"></i>
+					No connections to show. Pick another focus or change the
+					filters.
+				</div>
+			} @else {
+				<mc-network-graph
+					class="graph"
+					[nodes]="store.graph().nodes"
+					[edges]="store.graph().edges"
+					[focusId]="store.effectiveFocusId()"
+					[selectedId]="store.selectedId()"
+					(nodeSelect)="store.select($event)"
+					(nodeFocus)="store.setFocus($event)"
+				/>
+			}
+
+			@if (store.graph().truncated) {
+				<p class="notice" role="status">
+					<i class="pi pi-info-circle" aria-hidden="true"></i>
+					The network is too large to show in full — lower the depth
+					or hide guests.
+				</p>
+			}
+
+			<ul class="legend" aria-label="Legend">
+				<li>
+					<span class="swatch" data-kind="musician"></span>Musician
+				</li>
+				<li><span class="swatch" data-kind="band"></span>Band</li>
+				<li><span class="swatch" data-kind="project"></span>Project</li>
+				<li><span class="swatch" data-kind="album"></span>Album</li>
+				<li>
+					<i class="pi pi-check-circle owned" aria-hidden="true"></i
+					>In your collection
+				</li>
+				<li><span class="line" data-kind="member"></span>Member</li>
+				<li>
+					<span class="line" data-kind="former"></span>Former member
+				</li>
+				<li><span class="line" data-kind="guest"></span>Guest</li>
+			</ul>
+		</div>
+
+		<aside class="details" aria-label="Details">
+			@if (store.details(); as details) {
+				<mc-network-details
+					[details]="details"
+					[focusId]="store.effectiveFocusId()"
+					(nodeSelect)="store.select($event)"
+					(nodeFocus)="store.setFocus($event)"
+				/>
+			}
+		</aside>
+	</div>
+</div>

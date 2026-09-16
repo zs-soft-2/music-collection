@@ -1,0 +1,217 @@
+@let view = details();
+@let node = view.node;
+
+<section class="card profile" aria-labelledby="mc-net-details-name">
+	<div class="identity">
+		<div class="avatar" [attr.data-kind]="node.kind">
+			@if (node.imageUrl) {
+				<img [src]="node.imageUrl" alt="" />
+			} @else {
+				<span aria-hidden="true">{{ initials(node.label) }}</span>
+			}
+		</div>
+		<div>
+			<h2 id="mc-net-details-name">{{ node.label }}</h2>
+			<p class="kind" [attr.data-kind]="node.kind">
+				{{ kindLabel() }}
+				@if (node.kind === 'album' && node.caption) {
+					· {{ node.caption }}
+				}
+			</p>
+		</div>
+	</div>
+
+	<dl class="facts">
+		@if (current().length) {
+			<div>
+				<dt>{{ currentLabel() }}</dt>
+				<dd>{{ current().join(', ') }}</dd>
+			</div>
+		}
+		<div>
+			<dt>Connections in view</dt>
+			<dd>{{ view.connectionCount }}</dd>
+		</div>
+		@if (view.albums.length) {
+			<div>
+				<dt>Albums</dt>
+				<dd>{{ view.albums.length }}</dd>
+			</div>
+		}
+		@if (node.owned) {
+			<div>
+				<dt>Collection</dt>
+				<dd class="owned">
+					<i class="pi pi-check-circle" aria-hidden="true"></i>
+					{{
+						node.kind === 'album'
+							? 'In your collection'
+							: 'Collected'
+					}}
+				</dd>
+			</div>
+		}
+	</dl>
+
+	<div class="actions">
+		@if (node.link) {
+			<a class="btn btn-primary" [routerLink]="node.link">
+				<i class="pi pi-external-link" aria-hidden="true"></i>
+				Open page
+			</a>
+		}
+		@if (node.id !== focusId()) {
+			<button type="button" class="btn" (click)="nodeFocus.emit(node.id)">
+				<i class="pi pi-bullseye" aria-hidden="true"></i>
+				Focus here
+			</button>
+		}
+	</div>
+</section>
+
+@if (view.parallel.length) {
+	<section class="card" aria-labelledby="mc-net-parallel">
+		<h3 id="mc-net-parallel">Parallel bands</h3>
+		<ul class="rows">
+			@for (item of view.parallel; track $index) {
+				<li class="row">
+					<span class="main"
+						>{{ item.first }} &amp; {{ item.second }}</span
+					>
+					<span class="meta" [class.active]="item.active">
+						{{ item.years }}
+					</span>
+				</li>
+			}
+		</ul>
+	</section>
+}
+
+@if (view.together.length) {
+	<section class="card" aria-labelledby="mc-net-together">
+		<h3 id="mc-net-together">
+			Played together with
+			<span class="count">({{ view.together.length }})</span>
+		</h3>
+		<ul class="rows">
+			@for (item of visible(view.together, 'together'); track $index) {
+				<li class="row">
+					<button
+						type="button"
+						class="link"
+						(click)="nodeSelect.emit(item.nodeId)"
+					>
+						{{ item.name }}
+					</button>
+					<span class="meta" [class.active]="item.active">
+						{{ item.via }} · {{ item.years }}
+					</span>
+				</li>
+			}
+		</ul>
+		@if (view.together.length > preview) {
+			<button
+				type="button"
+				class="more"
+				[attr.aria-expanded]="expanded().has('together')"
+				(click)="toggle('together')"
+			>
+				{{ expanded().has('together') ? 'Show less' : 'Show all' }}
+			</button>
+		}
+	</section>
+}
+
+@if (view.memberships.length) {
+	<section class="card" aria-labelledby="mc-net-memberships">
+		<h3 id="mc-net-memberships">
+			{{ membershipsTitle() }}
+			<span class="count">({{ view.memberships.length }})</span>
+		</h3>
+		<ul class="rows">
+			@for (
+				item of visible(view.memberships, 'memberships');
+				track $index
+			) {
+				<li class="row">
+					<button
+						type="button"
+						class="link"
+						(click)="nodeSelect.emit(item.nodeId)"
+					>
+						{{ item.name }}
+					</button>
+					<span class="meta" [class.active]="item.active">
+						@if (item.kind === 'guest') {
+							Guest ·
+						}
+						@if (item.instruments.length) {
+							{{ item.instruments.slice(0, 3).join(', ') }} ·
+						}
+						{{ item.years ?? 'Years unknown' }}
+					</span>
+				</li>
+			}
+		</ul>
+		@if (view.memberships.length > preview) {
+			<button
+				type="button"
+				class="more"
+				[attr.aria-expanded]="expanded().has('memberships')"
+				(click)="toggle('memberships')"
+			>
+				{{ expanded().has('memberships') ? 'Show less' : 'Show all' }}
+			</button>
+		}
+	</section>
+}
+
+@if (view.albums.length) {
+	<section class="card" aria-labelledby="mc-net-albums">
+		<h3 id="mc-net-albums">
+			Related albums
+			<span class="count">({{ view.albums.length }})</span>
+		</h3>
+		<ul class="albums">
+			@for (album of visible(view.albums, 'albums'); track album.id) {
+				<li class="album">
+					@if (album.coverUrl) {
+						<img [src]="album.coverUrl" alt="" loading="lazy" />
+					} @else {
+						<span class="cover-placeholder" aria-hidden="true">
+							<i class="pi pi-circle"></i>
+						</span>
+					}
+					<a class="album-title" [routerLink]="['/album', album.id]">
+						{{ album.title }}
+					</a>
+					<span class="album-meta">
+						{{ album.artistName }}
+						@if (album.year) {
+							· {{ album.year }}
+						}
+					</span>
+					@if (album.owned) {
+						<span class="pill">
+							<i
+								class="pi pi-check-circle"
+								aria-hidden="true"
+							></i>
+							Owned
+						</span>
+					}
+				</li>
+			}
+		</ul>
+		@if (view.albums.length > preview) {
+			<button
+				type="button"
+				class="more"
+				[attr.aria-expanded]="expanded().has('albums')"
+				(click)="toggle('albums')"
+			>
+				{{ expanded().has('albums') ? 'Show less' : 'Show all' }}
+			</button>
+		}
+	</section>
+}
