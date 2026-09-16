@@ -5,7 +5,7 @@ import { provideHttpClient, withXhr } from '@angular/common/http';
 import {
 	ApplicationConfig,
 	importProvidersFrom,
-	provideZoneChangeDetection,
+	provideZonelessChangeDetection,
 } from '@angular/core';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { getAuth, provideAuth } from '@angular/fire/auth';
@@ -38,7 +38,7 @@ import { NgxPermissionsModule } from 'ngx-permissions';
 
 export const appConfig: ApplicationConfig = {
 	providers: [
-		provideZoneChangeDetection({ eventCoalescing: true }),
+		provideZonelessChangeDetection(),
 		provideRouter(routes),
 		provideFirebaseApp(() => initializeApp(environment.firebase)),
 		provideFirestore(() => getFirestore()),

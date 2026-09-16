@@ -20,7 +20,6 @@
 				"outputPath": "dist/apps/music-collection",
 				"index": "apps/music-collection/src/index.html",
 				"main": "apps/music-collection/src/main.ts",
-				"polyfills": "zone.js",
 				"tsConfig": "apps/music-collection/tsconfig.app.json",
 				"inlineStyleLanguage": "scss",
 				"assets": [
