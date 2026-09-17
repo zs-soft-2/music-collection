@@ -195,9 +195,16 @@ export class SpotifyApiRepository {
 				.catch(() => undefined);
 			throw new SpotifyApiError(response.status, detail);
 		}
-		const text = await response.text();
+		// The playback controls answer with no content or a non-JSON body.
+		const contentType = response.headers.get('Content-Type') ?? '';
+		if (
+			response.status === 204 ||
+			!contentType.includes('application/json')
+		) {
+			return null as T;
+		}
 
-		return (text ? JSON.parse(text) : null) as T;
+		return (await response.json()) as T;
 	}
 }
 
