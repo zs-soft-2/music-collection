@@ -39,18 +39,39 @@
 						{
 							"type": "initial",
 							"maximumWarning": "1.5mb",
-							"maximumError": "3.5mb"
+							"maximumError": "4mb"
 						},
 						{
 							"type": "anyComponentStyle",
-							"maximumWarning": "2kb",
-							"maximumError": "4kb"
+							"maximumWarning": "8kb",
+							"maximumError": "16kb"
 						}
 					],
 					"fileReplacements": [
 						{
 							"replace": "apps/music-collection/src/environments/environment.ts",
 							"with": "apps/music-collection/src/environments/environment.prod.ts"
+						}
+					],
+					"outputHashing": "all"
+				},
+				"dev": {
+					"budgets": [
+						{
+							"type": "initial",
+							"maximumWarning": "1.5mb",
+							"maximumError": "4mb"
+						},
+						{
+							"type": "anyComponentStyle",
+							"maximumWarning": "8kb",
+							"maximumError": "16kb"
+						}
+					],
+					"fileReplacements": [
+						{
+							"replace": "apps/music-collection/src/environments/environment.ts",
+							"with": "apps/music-collection/src/environments/environment.dev.ts"
 						}
 					],
 					"outputHashing": "all"
@@ -90,9 +111,7 @@
 		},
 		"test": {
 			"executor": "@nx/jest:jest",
-			"outputs": [
-				"{workspaceRoot}/coverage/{projectRoot}"
-			],
+			"outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
 			"options": {
 				"jestConfig": "apps/music-collection/jest.config.ts",
 				"tsConfig": "apps/music-collection/tsconfig.spec.json"

@@ -1,13 +1,13 @@
 {
   "projects": {
-    "default": "music-collection-dev",
-    "dev": "music-collection-dev",
+    "default": "music-collection-16676",
+    "dev": "music-collection-16676",
     "prod": "music-collection-4e074"
   },
   "targets": {
-    "music-collection-dev": {
+    "music-collection-16676": {
       "hosting": {
-        "app": ["music-collection-dev"]
+        "app": ["music-collection-16676"]
       }
     },
     "music-collection-4e074": {

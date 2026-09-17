@@ -14,7 +14,7 @@
     "environments": [
       {
         "name": "dev",
-        "gcpProjectId": "music-collection-dev",
+        "gcpProjectId": "music-collection-16676",
         "isProduction": false
       },
       {

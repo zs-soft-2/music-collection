@@ -1,27 +1,21 @@
 name: Deploy
 
-# main → dev automatikusan; prod csak kézi indítással, a `prod` GitHub Environment
-# jóváhagyójának engedélyével. A környezeti változókat (GCP_PROJECT, WIF_PROVIDER,
-# DEPLOYER_SA, BUILD_CONFIG, FIREBASE_HOSTING) az `infra/` tofu-gyökerei írják.
+# dev branch → dev környezet automatikusan. A környezeti változókat (GCP_PROJECT,
+# WIF_PROVIDER, DEPLOYER_SA, BUILD_CONFIG, FIREBASE_HOSTING) az `infra/`
+# tofu-gyökerei írják.
 on:
   push:
-    branches: [main]
+    branches: [dev]
   workflow_dispatch:
-    inputs:
-      environment:
-        description: Target environment
-        type: choice
-        options: [dev, prod]
-        default: dev
 
 concurrency:
-  group: deploy-${{ github.event.inputs.environment || 'dev' }}
+  group: deploy-dev
   cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment || 'dev' }}
+    environment: dev
     permissions:
       contents: read
       id-token: write

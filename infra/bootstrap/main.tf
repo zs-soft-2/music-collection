@@ -3,10 +3,10 @@
 # A „mindent megelőző" réteg, lokál state-tel: ez teremti azokat a bucketeket, amikbe a
 # környezeti gyökerek a state-jüket írják.
 #
-#   dev  → `music-collection-dev`  ÚJ projekt, ITT jön létre (a bucketnek kell a projekt).
-#   prod → `music-collection-4e074` MEGLÉVŐ projekt. A projekt-azonosító nem nevezhető át,
-#          ezért a prod csak adatforrásként jelenik meg: a bootstrap nem gazdája, és egy
-#          elgépelt destroy sem érheti el.
+#   dev  → `music-collection-16676` MEGLÉVŐ projekt.
+#   prod → `music-collection-4e074` MEGLÉVŐ projekt.
+# A projekt-azonosító nem nevezhető át, ezért mindkettő csak adatforrásként jelenik meg: a
+# bootstrap nem gazdájuk, és egy elgépelt destroy sem érheti el őket.
 terraform {
   required_providers {
     google = {
@@ -25,37 +25,8 @@ variable "region" {
   default = "europe-west1"
 }
 
-variable "org_id" {
-  type        = string
-  default     = ""
-  description = "A szervezet numerikus azonosítója, amely alá a dev projekt kerül (`gcloud organizations list`). Üresen szervezet nélkül jön létre."
-}
-
-variable "billing_account" {
-  type        = string
-  description = "A dev projekt számlázási fiókja (`gcloud billing accounts list`). A state-bucket és a Firebase Storage számlázást igényel."
-
-  validation {
-    condition     = can(regex("^[A-F0-9]{6}-[A-F0-9]{6}-[A-F0-9]{6}$", var.billing_account))
-    error_message = "A billing_account alakja XXXXXX-XXXXXX-XXXXXX. Lekérdezés: `gcloud billing accounts list`."
-  }
-}
-
-locals {
-  bootstrap_services = [
-    "storage.googleapis.com",
-    "serviceusage.googleapis.com",
-  ]
-}
-
-module "dev_project" {
-  source          = "../modules/gcp-project"
-  project_id      = "music-collection-dev"
-  project_name    = "music-collection-dev"
-  billing_account = var.billing_account
-  org_id          = var.org_id
-  services        = local.bootstrap_services
-  deletion_policy = "DELETE"
+data "google_project" "dev" {
+  project_id = "music-collection-16676"
 }
 
 data "google_project" "prod" {
@@ -65,7 +36,7 @@ data "google_project" "prod" {
 locals {
   state_buckets = {
     "dev" = {
-      project = module.dev_project.project_id
+      project = data.google_project.dev.project_id
       bucket  = "music-collection-dev-tfstate"
     }
     "prod" = {

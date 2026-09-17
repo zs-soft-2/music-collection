@@ -64,6 +64,8 @@ module "github_environment" {
   reviewer_users = var.reviewer_users
   wait_timer     = 0
 
+  deployment_branches = var.deployment_branches
+
   # A deploy workflow ezekből dolgozik — a címek így nem a workflow-ba égetve élnek.
   environment_variables = {
     GCP_PROJECT      = local.project_id

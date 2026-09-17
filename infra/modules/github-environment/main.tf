@@ -40,8 +40,8 @@ resource "github_repository_environment" "this" {
     }
   }
 
-  # A `main` nem védett ág, így a `protected_branches = true` minden telepítést blokkolna.
-  # Helyette név szerinti szabály: csak a `main`-ről lehet ebbe a környezetbe telepíteni.
+  # Az ágak nem védettek, így a `protected_branches = true` minden telepítést blokkolna.
+  # Helyette név szerinti szabály: csak a `deployment_branches` ágairól lehet telepíteni.
   deployment_branch_policy {
     protected_branches     = false
     custom_branch_policies = true

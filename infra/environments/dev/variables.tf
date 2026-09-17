@@ -73,3 +73,9 @@ variable "services" {
     "identitytoolkit.googleapis.com",
   ]
 }
+
+variable "deployment_branches" {
+  type        = list(string)
+  default     = ["main"]
+  description = "Az ágak, amelyekről a GitHub environmentbe telepíteni lehet."
+}
