@@ -1,4 +1,3 @@
-import { nanoid } from 'nanoid';
 import { Observable } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
@@ -19,7 +18,7 @@ export class ErrorStateServiceImpl extends ErrorStateService {
 		this.store.dispatch(
 			errorActions.report({
 				error: {
-					uid: nanoid(),
+					uid: crypto.randomUUID(),
 					reportedAt: Date.now(),
 					...error,
 				},

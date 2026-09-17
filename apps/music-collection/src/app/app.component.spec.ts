@@ -10,6 +10,8 @@ import {
 	AuthorizationService,
 	EntityQuantityStateService,
 } from '@music-collection/api';
+import { EffectsModule } from '@ngrx/effects';
+import { StoreModule } from '@ngrx/store';
 
 import { AppComponent } from './app.component';
 import { SpotifyPlaybackStore } from './shared/spotify';
@@ -17,7 +19,13 @@ import { SpotifyPlaybackStore } from './shared/spotify';
 describe('AppComponent', () => {
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			imports: [AppComponent, NgxPermissionsModule.forRoot()],
+			imports: [
+				AppComponent,
+				NgxPermissionsModule.forRoot(),
+				// A CoreErrorModule feature-store-ot és -effecteket regisztrál, ezekhez kell a gyökér.
+				StoreModule.forRoot({}),
+				EffectsModule.forRoot([]),
+			],
 			providers: [
 				provideRouter([]),
 				{
