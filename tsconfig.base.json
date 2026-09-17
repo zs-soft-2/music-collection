@@ -61,6 +61,12 @@
 			"@music-collection/domain/label/admin": [
 				"libs/domain/music/label/app/admin/src/index.ts"
 			],
+			"@music-collection/domain/musician": [
+				"libs/domain/music/musician/src/index.ts"
+			],
+			"@music-collection/domain/musician/admin": [
+				"libs/domain/music/musician/app/admin/src/index.ts"
+			],
 			"@music-collection/domain/release": [
 				"libs/domain/music/release/src/index.ts"
 			],

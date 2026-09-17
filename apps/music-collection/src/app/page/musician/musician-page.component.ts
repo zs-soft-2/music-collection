@@ -11,6 +11,7 @@ import {
 import { RouterLink } from '@angular/router';
 
 import {
+	AdminEditLinkComponent,
 	CREDIT_CATEGORY_LABELS,
 	DiscographyCardComponent,
 } from '../../shared/music-ui';
@@ -40,7 +41,7 @@ const TYPE_LABELS: Record<string, string> = {
 	selector: 'mc-musician-page',
 	templateUrl: './musician-page.component.html',
 	styleUrls: ['./musician-page.component.scss'],
-	imports: [RouterLink, DiscographyCardComponent],
+	imports: [RouterLink, DiscographyCardComponent, AdminEditLinkComponent],
 })
 export class MusicianPageComponent {
 	protected readonly store = inject(MusicianPageStore);

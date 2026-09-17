@@ -30,6 +30,12 @@ export const ADMIN_NAV: AdminNavGroup[] = [
 				createLabel: 'Add artist',
 			},
 			{
+				label: 'Musicians',
+				route: 'musician',
+				icon: 'pi-user',
+				createLabel: 'Add musician',
+			},
+			{
 				label: 'Albums',
 				route: 'album',
 				icon: 'pi-circle',

@@ -6,6 +6,12 @@
 				<img class="backdrop" [src]="backdropUrl()" alt="" />
 			}
 			<div class="shade" aria-hidden="true"></div>
+			<mc-admin-edit-link
+				class="mc-hero-admin"
+				entity="musician"
+				[id]="musician.uid"
+				[name]="musician.name"
+			/>
 
 			<div class="profile">
 				@if (musician.imageUrl) {

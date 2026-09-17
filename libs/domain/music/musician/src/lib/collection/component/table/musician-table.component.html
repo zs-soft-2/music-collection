@@ -1,0 +1,98 @@
+@if (params$ | async; as params) {
+	<section class="musician-table mc-card">
+		<p-table
+			#table
+			[value]="params.musicians"
+			[loading]="params.loading && !params.musicians.length"
+			[globalFilterFields]="filterFields"
+			[paginator]="true"
+			[rows]="50"
+			[rowsPerPageOptions]="[25, 50, 100]"
+			dataKey="uid"
+			styleClass="mc-table"
+			responsiveLayout="scroll"
+		>
+			<ng-template #caption>
+				<p-iconfield>
+					<p-inputicon styleClass="pi pi-search" />
+					<input
+						pInputText
+						type="search"
+						placeholder="Filter by name…"
+						aria-label="Filter musicians by name, real name or alias"
+						(input)="filter(table, $event)"
+					/>
+				</p-iconfield>
+			</ng-template>
+
+			<ng-template #header>
+				<tr>
+					<th scope="col">
+						<span class="visually-hidden">Portrait</span>
+					</th>
+					<th scope="col" pSortableColumn="name">
+						Name <p-sorticon field="name" />
+					</th>
+					<th scope="col" pSortableColumn="realName">
+						Real name <p-sorticon field="realName" />
+					</th>
+					<th scope="col">Profile</th>
+					<th scope="col">
+						<span class="visually-hidden">Actions</span>
+					</th>
+				</tr>
+			</ng-template>
+
+			<ng-template #body let-musician>
+				<tr>
+					<td>
+						@if (musician.imageUrl) {
+							<img
+								class="thumb"
+								[src]="musician.imageUrl"
+								alt=""
+								loading="lazy"
+							/>
+						} @else {
+							<span class="thumb placeholder" aria-hidden="true">
+								{{ musician.name.charAt(0) }}
+							</span>
+						}
+					</td>
+					<td>{{ musician.name }}</td>
+					<td>{{ musician.realName }}</td>
+					<td class="profile">
+						@if (musician.description) {
+							<span class="tag">Biography</span>
+						}
+						@if (musician.sites?.length) {
+							<span class="tag"
+								>{{ musician.sites.length }} links</span
+							>
+						}
+						@if (musician.discogsId) {
+							<span class="tag">Discogs</span>
+						}
+					</td>
+					<td>
+						<button
+							pButton
+							type="button"
+							class="p-button-text p-button-rounded p-button-secondary"
+							[attr.aria-label]="'Edit ' + musician.name"
+							(click)="editMusician(musician)"
+						>
+							<i class="pi pi-pencil" aria-hidden="true"></i>
+						</button>
+					</td>
+				</tr>
+			</ng-template>
+
+			<ng-template #emptymessage>
+				<tr>
+					<td colspan="5">No musicians found.</td>
+				</tr>
+			</ng-template>
+		</p-table>
+	</section>
+}

@@ -1,0 +1,19 @@
+<section class="entity-admin">
+	<header class="mc-page-head">
+		<div>
+			<h1>Musicians</h1>
+			<p>Musicians of the global catalog, with their Discogs profile.</p>
+		</div>
+
+		<div class="mc-page-actions" *ngxPermissionsOnly="buttonPermissions">
+			<p-button
+				label="Add musician"
+				icon="pi pi-plus"
+				(onClick)="clickHandler()"
+				[disabled]="(isNewEntityButtonEnabled$ | async) === false"
+			></p-button>
+		</div>
+	</header>
+
+	<router-outlet></router-outlet>
+</section>

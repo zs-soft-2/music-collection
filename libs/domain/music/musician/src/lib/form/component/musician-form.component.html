@@ -1,0 +1,136 @@
+@if (params$ | async; as params) {
+	<section class="musician-form">
+		<form class="mc-form" [formGroup]="params.formGroup">
+			<input name="uid" formControlName="uid" hidden />
+
+			<section class="mc-form-section" aria-labelledby="musician-details">
+				<h2 id="musician-details">Details</h2>
+				<div class="mc-form-grid">
+					<div class="mc-field">
+						<label for="name">Name</label>
+						<input
+							id="name"
+							type="text"
+							pInputText
+							formControlName="name"
+						/>
+					</div>
+
+					<div class="mc-field">
+						<label for="realName">Real name</label>
+						<input
+							id="realName"
+							type="text"
+							pInputText
+							formControlName="realName"
+						/>
+					</div>
+
+					<div class="mc-field is-wide">
+						<label for="description">Biography</label>
+						<textarea
+							id="description"
+							pTextarea
+							rows="8"
+							formControlName="description"
+						></textarea>
+						<small>
+							Discogs markup such as [a=Name] is cleaned up on the
+							public page.
+						</small>
+					</div>
+				</div>
+			</section>
+
+			<section class="mc-form-section" aria-labelledby="musician-links">
+				<h2 id="musician-links">Image and links</h2>
+				<div class="mc-form-grid">
+					<div class="mc-field is-wide">
+						<label for="imageUrl">Portrait URL</label>
+						<input
+							id="imageUrl"
+							type="url"
+							pInputText
+							formControlName="imageUrl"
+							aria-describedby="imageUrl-hint"
+						/>
+						@if (params.formGroup.get('imageUrl')?.invalid) {
+							<small id="imageUrl-hint" class="is-error">
+								Enter a full http(s) address.
+							</small>
+						}
+						@if (params.formGroup.get('imageUrl')?.value; as url) {
+							<img
+								class="portrait-preview"
+								[src]="url"
+								alt="Portrait preview"
+							/>
+						}
+					</div>
+
+					<div class="mc-field">
+						<label for="sites">Links</label>
+						<textarea
+							id="sites"
+							pTextarea
+							rows="5"
+							formControlName="sites"
+							aria-describedby="sites-hint"
+						></textarea>
+						<small id="sites-hint">One address per line.</small>
+					</div>
+
+					<div class="mc-field">
+						<label for="aliases">Also known as</label>
+						<textarea
+							id="aliases"
+							pTextarea
+							rows="5"
+							formControlName="aliases"
+							aria-describedby="aliases-hint"
+						></textarea>
+						<small id="aliases-hint">One name per line.</small>
+					</div>
+				</div>
+			</section>
+
+			<section class="mc-form-section" aria-labelledby="musician-source">
+				<h2 id="musician-source">Source</h2>
+				<div class="mc-form-grid">
+					<div class="mc-field">
+						<label for="discogsId">Discogs ID</label>
+						<input
+							id="discogsId"
+							type="number"
+							min="1"
+							pInputText
+							formControlName="discogsId"
+						/>
+					</div>
+
+					@if (params.formGroup.get('source')?.value; as source) {
+						<div class="mc-field">
+							<span class="source-label">Imported from</span>
+							<span>{{ source }}</span>
+						</div>
+					}
+				</div>
+			</section>
+
+			<div class="mc-form-actions">
+				<p-button
+					label="Cancel"
+					severity="secondary"
+					[outlined]="true"
+					(onClick)="cancel()"
+				></p-button>
+				<p-button
+					label="Save"
+					icon="pi pi-check"
+					[disabled]="!params.formGroup.valid"
+					(onClick)="submit()"
+				></p-button>
+			</div>
+		</form>
+	</section>
+}

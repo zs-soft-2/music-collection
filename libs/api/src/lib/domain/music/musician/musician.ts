@@ -1,4 +1,6 @@
-import { Entity } from '../../../common';
+import { FormGroup } from '@angular/forms';
+
+import { Entity, Searchable } from '../../../common';
 
 /** A person (or group) credited on releases. */
 export interface Musician {
@@ -19,3 +21,22 @@ export interface Musician {
 }
 
 export type MusicianEntity = Musician & Entity;
+
+export type MusicianEntityAdd = Omit<MusicianEntity, 'uid'>;
+
+export type MusicianEntityUpdate = Partial<MusicianEntity> & Entity;
+
+export type MusicianModel = Musician & Entity & Searchable;
+
+export type MusicianModelAdd = Omit<MusicianModel, 'uid'>;
+
+export type MusicianModelUpdate = Partial<MusicianModel> & Entity & Searchable;
+
+export type MusicianFormParams = {
+	formGroup: FormGroup;
+};
+
+export type MusicianTableParams = {
+	musicians: MusicianEntity[];
+	loading: boolean;
+};

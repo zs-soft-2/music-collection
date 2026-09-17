@@ -1,0 +1,38 @@
+:host {
+	display: block;
+}
+
+.thumb {
+	display: grid;
+	place-items: center;
+	width: 2.25rem;
+	height: 2.25rem;
+	object-fit: cover;
+	font-weight: 600;
+	color: var(--mc-text-muted);
+	background: var(--mc-surface-2);
+	border-radius: 50%;
+}
+
+.profile {
+	white-space: nowrap;
+}
+
+.tag {
+	display: inline-block;
+	margin-right: 0.3rem;
+	padding: 0.05rem 0.45rem;
+	font-size: 0.75rem;
+	color: var(--mc-text-muted);
+	border: 1px solid var(--mc-border-strong);
+	border-radius: 999px;
+}
+
+.visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+}
