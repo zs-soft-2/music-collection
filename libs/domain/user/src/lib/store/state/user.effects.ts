@@ -4,8 +4,6 @@ import { catchError, map, switchMap, take } from 'rxjs/operators';
 import { inject, Injectable } from '@angular/core';
 import {
 	AuthenticationStateService,
-	AuthorizationService,
-	Role,
 	User,
 	UserDataService,
 } from '@music-collection/api';
@@ -16,7 +14,6 @@ import * as UserActions from './user.actions';
 @Injectable()
 export class UserEffects {
 	private authenticationService = inject(AuthenticationStateService);
-	private authorizationService = inject(AuthorizationService);
 	private userDataService = inject(UserDataService);
 
 	actions$: Actions = inject(Actions);
@@ -45,9 +42,10 @@ export class UserEffects {
 					take(1),
 					map((user) => {
 						if (user && user.uid) {
-							this.authorizationService.addRoles(
-								user.roles as Role[]
-							);
+							// A jogosultságokat nem innen töltjük: a beágyazott
+							// `roles` a rules számára láthatatlan másolat volt.
+							// A permissionök forrása az effective_permissions
+							// dokumentum (CoreAuthorizationStoreModule).
 							this.authenticationService.dispatchAuthenticated(
 								user
 							);

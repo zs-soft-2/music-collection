@@ -3,22 +3,31 @@ rules_version = '2';
 // ---------------------------------------------------------------------------
 // Music Collection — Cloud Storage security rules.
 //
-// Permission-alapú, a firestore.rules-szal azonos permission-nevekkel.
-// Csak a token-claimet (`request.auth.token.permissions`) nézzük: a
-// ttzs-ben a cross-service `firestore.get()` az effective_permissions
-// dokumentumra prodon nem oldódott fel. Ezért a permission-szinkron
-// functionnek a custom claimet is ki kell írnia, és a kliensnek a
-// szinkron után frissítenie kell az ID tokent (getIdToken(true)).
+// Permission-alapú, a firestore.rules-szal azonos permission-nevekkel és
+// ugyanabból az egy igazságforrásból: a `security/users/{uid}/
+// effective_permissions` dokumentumot cross-service `firestore.get()`-tel
+// olvassuk. Custom claimet nem használunk — a claimek együtt 1000 bájtba
+// férnek, amit a teljes permission-lista túllépné.
+//
+// A dokumentumot a jogosultság-szinkron function tartja karban
+// (`apps/functions`). Feltételei: a Firestore az alapértelmezett
+// (`(default)`) adatbázis, és minden ellenőrzés egy Firestore-olvasást jelent.
 // ---------------------------------------------------------------------------
 
 service firebase.storage {
   match /b/{bucket}/o {
 
+    function effectivePermissionsPath() {
+      return /databases/(default)/documents/security/users/$(request.auth.uid)/effective_permissions;
+    }
+    function permissions() {
+      return firestore.get(effectivePermissionsPath()).data.permissions;
+    }
     function hasPerm(perm) {
       return request.auth != null
-          && request.auth.token.permissions is list
-          && (perm in request.auth.token.permissions
-              || 'ADMIN' in request.auth.token.permissions);
+          && firestore.exists(effectivePermissionsPath())
+          && permissions() is list
+          && (perm in permissions() || 'ADMIN' in permissions());
     }
     function isAdmin() {
       return hasPerm('ADMIN');

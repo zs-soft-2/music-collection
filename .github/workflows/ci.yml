@@ -50,5 +50,7 @@ jobs:
         with:
           workload_identity_provider: ${{ vars.WIF_PROVIDER }}
           service_account: ${{ vars.DEPLOYER_SA }}
-      # A hosting mellett a firebase.json többi része is: Firestore rules és indexek, Storage rules.
-      - run: npx firebase-tools deploy --only hosting:${{ vars.FIREBASE_HOSTING }},firestore,storage --project ${{ vars.GCP_PROJECT }} --non-interactive
+      # A hosting mellett a firebase.json többi része is: Firestore rules és indexek,
+      # Storage rules, és a jogosultság-szinkron function (apps/functions — a
+      # predeploy hook telepíti és fordítja).
+      - run: npx firebase-tools deploy --only hosting:${{ vars.FIREBASE_HOSTING }},firestore,storage,functions --project ${{ vars.GCP_PROJECT }} --non-interactive

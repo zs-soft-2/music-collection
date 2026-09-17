@@ -12,7 +12,6 @@ import { inject, Injectable } from '@angular/core';
 import {
 	BaseService,
 	EntityTypeEnum,
-	RoleNames,
 	User,
 	UserStateService,
 } from '@music-collection/api';
@@ -50,6 +49,11 @@ export class AuthenticationEffects extends BaseService {
 
 				// eslint-disable-next-line no-constant-condition
 				if (authData) {
+					// Szerepkört NEM teszünk a user dokumentumba: a rules
+					// tiltja, hogy valaki magának adjon (`roles`/`roleIds`), és
+					// a jogosultság forrása amúgy is az effective_permissions
+					// dokumentum. Emiatt hasalt el eddig az első bejelentkezés
+					// user-dokumentum létrehozása.
 					const user: User = {
 						displayName: authData.displayName,
 						email: authData.email,
@@ -58,13 +62,6 @@ export class AuthenticationEffects extends BaseService {
 						lastName: '',
 						phone: '',
 						photoURL: authData.photoURL,
-						roles: [
-							{
-								uid: 'role-2',
-								name: RoleNames.USER,
-								permissions: [],
-							},
-						],
 						uid: authData.uid || '12345',
 					};
 

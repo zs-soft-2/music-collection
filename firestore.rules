@@ -6,13 +6,14 @@ rules_version = '2';
 // Jogosultság: permission-alapú (a ttzs / zssz-soft minta szerint).
 //  - Az admin `role/{roleId}` dokumentumot állít össze permissionökből
 //    (`permissions: string[]`), és a usernek `user/{uid}.roleIds`-t ad.
-//  - A szerveroldali function (`@zssz-soft/firebase-functions-security`,
-//    calculateEffectivePermissions) a user összes szerepkörének permissionjeit
-//    a `security/users/{uid}/effective_permissions` dokumentumba gyűjti
-//    (`permissions: string[]`, `roles: string[]`), és — a storage.rules
-//    miatt — ugyanezt a `permissions` custom claimbe is kiírja.
-//  - A rules a token-claimet VAGY a cache-elt dokumentumot ellenőrzi; az
-//    `ADMIN` permission a teljes wildcard.
+//  - A szerveroldali function (`apps/functions`, syncUserPermissions /
+//    syncRolePermissions) a user összes szerepkörének permissionjeit a
+//    `security/users/{uid}/effective_permissions` dokumentumba gyűjti
+//    (`permissions: string[]`, `roles: string[]`).
+//  - Egyetlen igazságforrás ez a dokumentum: a storage.rules is ezt olvassa
+//    (cross-service `firestore.get()`). Custom claimet nem használunk, mert a
+//    claimek együtt 1000 bájtba férnek, amit a teljes permission-lista
+//    túllépné. Az `ADMIN` permission a teljes wildcard.
 //  - Permission-nevek: ActionEnum + *ResourceEnum (pl. `createArtistEntity`).
 //
 // Adatvilágok:
@@ -43,22 +44,14 @@ service cloud.firestore {
     function effectivePermissionsPath() {
       return /databases/$(database)/documents/security/users/$(request.auth.uid)/effective_permissions;
     }
-    function hasTokenPerm(perm) {
-      return isAuthed()
-          && request.auth.token.permissions is list
-          && (perm in request.auth.token.permissions
-              || 'ADMIN' in request.auth.token.permissions);
-    }
-    function hasCachedPerm(perm) {
+    // Az azonos dokumentumra mutató get()-ek egy kéréson belül egyetlen
+    // olvasásnak számítanak.
+    function hasPerm(perm) {
       return isAuthed()
           && exists(effectivePermissionsPath())
           && get(effectivePermissionsPath()).data.permissions is list
           && (perm in get(effectivePermissionsPath()).data.permissions
               || 'ADMIN' in get(effectivePermissionsPath()).data.permissions);
-    }
-    // Az ADMIN wildcardot mindkét ág kezeli.
-    function hasPerm(perm) {
-      return hasTokenPerm(perm) || hasCachedPerm(perm);
     }
     function isAdmin() {
       return hasPerm('ADMIN');
@@ -152,7 +145,8 @@ service cloud.firestore {
       allow read: if true;
     }
 
-    // A calculateEffectivePermissions function írja (Admin SDK).
+    // A jogosultság-szinkron function írja (Admin SDK); a kliens csak olvassa
+    // — ebből tölti a saját permission-listáját.
     match /security/users/{uid}/effective_permissions {
       allow get: if isSelf(uid) || hasPerm('viewSecurityEntity');
       allow list, create, update, delete: if false;
