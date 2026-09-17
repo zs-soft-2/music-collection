@@ -23,6 +23,7 @@ import { getStorage } from 'firebase/storage';
 import { CoreAuthenticationModule } from '@music-collection/core/authentication';
 import { CoreAuthorizationModule } from '@music-collection/core/authorization';
 import { CoreEntityQuantityModule } from '@music-collection/core/entity-quantity';
+import { CoreErrorModule } from '@music-collection/core/error';
 import { CoreExportImportModule } from '@music-collection/core/export-import';
 import { DomainAlbumModule } from '@music-collection/domain/album';
 import { DomainArtistModule } from '@music-collection/domain/artist';
@@ -85,6 +86,8 @@ export const appConfig: ApplicationConfig = {
 			!environment.production ? StoreDevtoolsModule.instrument() : [],
 			EffectsModule.forRoot([]),
 			NgxPermissionsModule.forRoot(),
+			// Elsőként: a globális ErrorHandler a többi modul indulását is fedi.
+			CoreErrorModule,
 			CoreAuthenticationModule,
 			CoreAuthorizationModule,
 			CoreEntityQuantityModule,

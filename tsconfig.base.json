@@ -28,6 +28,9 @@
 			"@music-collection/core/entity-quantity": [
 				"libs/core/entity-quantity/src/index.ts"
 			],
+			"@music-collection/core/error": [
+				"libs/core/error/src/index.ts"
+			],
 			"@music-collection/core/export-import": [
 				"libs/core/export-import/src/index.ts"
 			],
