@@ -32,6 +32,7 @@ export class MembershipRepository {
 			featureKey: MEMBERSHIP_FEATURE_KEY,
 			cacheKey: MEMBERSHIP_FEATURE_KEY,
 			query: query(collection(this.firestore, MEMBERSHIP_FEATURE_KEY)),
+			incremental: true,
 		});
 	}
 

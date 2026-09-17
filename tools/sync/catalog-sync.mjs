@@ -65,7 +65,53 @@ export async function touchCatalog(db, featureKeys, { reset = false } = {}) {
 		.collection(SYNC_COLLECTION)
 		.doc(CATALOG_SYNC_DOCUMENT)
 		.set(
-			reset ? { modifiedAt: times, resetAt: times } : { modifiedAt: times },
+			reset
+				? { modifiedAt: times, resetAt: times }
+				: { modifiedAt: times },
+			{ merge: true }
+		);
+}
+
+/** Collections served to the clients as Firestore bundles by default. */
+export const BUNDLE_FEATURE_KEYS = ['membership', 'track', 'contribution'];
+/** Storage folder of the bundles: `bundles/{featureKey}/{seconds}.bundle`. */
+export const BUNDLE_FOLDER = 'bundles';
+
+/** The feature's version (`sync/catalog.modifiedAt`), or null. */
+export async function featureVersion(db, featureKey) {
+	const catalog = await db
+		.collection(SYNC_COLLECTION)
+		.doc(CATALOG_SYNC_DOCUMENT)
+		.get();
+
+	return catalog.get(`modifiedAt.${featureKey}`) ?? null;
+}
+
+/**
+ * Announces a published bundle in `sync/catalog.bundles.{featureKey}`. The
+ * bundle holds every document of the feature as of `modifiedAt`; clients load
+ * it instead of downloading the documents and fetch only the later changes.
+ * The feature's version is left as it is: no document changed.
+ */
+export async function announceBundle(
+	db,
+	featureKey,
+	{ path, modifiedAt, count }
+) {
+	await db
+		.collection(SYNC_COLLECTION)
+		.doc(CATALOG_SYNC_DOCUMENT)
+		.set(
+			{
+				bundles: {
+					[featureKey]: {
+						path,
+						modifiedAt,
+						count,
+						builtAt: FieldValue.serverTimestamp(),
+					},
+				},
+			},
 			{ merge: true }
 		);
 }

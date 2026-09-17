@@ -32,12 +32,15 @@ import {
 	getDocFromServer,
 	getDocsFromCache,
 	getDocsFromServer,
+	limit,
+	loadBundle,
 	onSnapshot,
 	query,
 	serverTimestamp,
 	where,
 	writeBatch,
 } from '@angular/fire/firestore';
+import { Storage, getBlob, ref } from '@angular/fire/storage';
 
 /** Collection of the sync bookkeeping documents. */
 export const SYNC_COLLECTION = 'sync';
@@ -53,14 +56,26 @@ export const UPDATED_AT_FIELD = 'updatedAt';
 
 type TimestampMap = Record<string, Timestamp | undefined>;
 
+/**
+ * A feature published as a Firestore bundle in Cloud Storage
+ * (`tools/sync/build-bundles.mjs`): every document as of `modifiedAt`.
+ */
+interface CatalogBundle {
+	path: string;
+	modifiedAt: Timestamp;
+	count: number;
+}
+
 interface CatalogSync {
 	modifiedAt?: TimestampMap;
 	resetAt?: TimestampMap;
+	bundles?: Record<string, CatalogBundle | undefined>;
 }
 
 interface FeatureVersion {
 	modifiedAt: Timestamp | null;
 	resetAt: Timestamp | null;
+	bundle: CatalogBundle | null;
 }
 
 /** What the local cache of a query holds, kept in localStorage. */
@@ -68,6 +83,13 @@ interface SyncMarker {
 	seconds: number;
 	nanoseconds: number;
 	count: number;
+}
+
+/** The bundle of a feature last loaded into the local cache. */
+interface LoadedBundle {
+	path: string;
+	seconds: number;
+	nanoseconds: number;
 }
 
 export interface SyncedQuery {
@@ -103,6 +125,10 @@ const timestampKey = (timestamp: Timestamp | null) =>
  * since then are downloaded and deleted ones are evicted by their tombstones.
  * An unchanged catalog costs one document read per app start.
  *
+ * Bundles: when a feature is published as a bundle, a query without a
+ * current cache loads the bundle from Cloud Storage (no document reads) and
+ * downloads only what changed after it.
+ *
  * Writes: every write stamps `updatedAt` and bumps the feature's `modifiedAt`
  * in the same batch; deletes leave a tombstone.
  */
@@ -110,6 +136,9 @@ const timestampKey = (timestamp: Timestamp | null) =>
 export class FirestoreSyncService {
 	private readonly firestore = inject(Firestore);
 	private readonly injector = inject(EnvironmentInjector);
+	private readonly storage = inject(Storage);
+	/** Bundle loads in progress or done in this session, by path. */
+	private readonly bundleLoads = new Map<string, Promise<boolean>>();
 
 	private readonly catalog$: Observable<CatalogSync | null> =
 		new Observable<CatalogSync | null>((subscriber) =>
@@ -243,6 +272,7 @@ export class FirestoreSyncService {
 							modifiedAt:
 								catalog.modifiedAt?.[featureKey] ?? null,
 							resetAt: catalog.resetAt?.[featureKey] ?? null,
+							bundle: catalog.bundles?.[featureKey] ?? null,
 						}
 					: null
 			),
@@ -253,7 +283,8 @@ export class FirestoreSyncService {
 					timestampKey(previous.modifiedAt) ===
 						timestampKey(current.modifiedAt) &&
 					timestampKey(previous.resetAt) ===
-						timestampKey(current.resetAt)
+						timestampKey(current.resetAt) &&
+					previous.bundle?.path === current.bundle?.path
 			)
 		);
 	}
@@ -268,12 +299,17 @@ export class FirestoreSyncService {
 	): Observable<QueryDocumentSnapshot[] | null> {
 		return defer(async () => {
 			const modifiedAt = version?.modifiedAt ?? null;
-			const marker = this.readMarker(synced);
 
 			// Unversioned feature: the cache cannot be trusted.
 			if (!modifiedAt) {
 				return this.downloadAll(synced, null);
 			}
+
+			const marker = await this.catchUpWithBundle(
+				synced,
+				version?.bundle ?? null,
+				version?.resetAt ?? null
+			);
 			if (
 				!marker ||
 				(version?.resetAt &&
@@ -348,30 +384,14 @@ export class FirestoreSyncService {
 	): Promise<QueryDocumentSnapshot[]> {
 		const since = new Timestamp(marker.seconds, marker.nanoseconds);
 
-		const [deletions, changes] = await this.run(() =>
-			Promise.all([
-				getDocsFromServer(
-					query(
-						collection(
-							this.firestore,
-							SYNC_COLLECTION,
-							synced.featureKey,
-							DELETION_COLLECTION
-						),
-						where('deletedAt', '>', since)
-					)
-				),
+		const [changes] = await Promise.all([
+			this.run(() =>
 				getDocsFromServer(
 					query(synced.query, where(UPDATED_AT_FIELD, '>', since))
-				),
-			])
-		);
-
-		await this.evict(
-			deletions.docs.map((snapshot) =>
-				doc(this.firestore, snapshot.get('path') as string)
-			)
-		);
+				)
+			),
+			this.evictDeleted(synced.featureKey, since),
+		]);
 
 		const all = await this.run(() => getDocsFromCache(synced.query));
 
@@ -381,6 +401,137 @@ export class FirestoreSyncService {
 			all.size
 		);
 		return all.docs;
+	}
+
+	/**
+	 * The query's marker, advanced to the feature's bundle when the cache is
+	 * older than the bundle and the bundle could be loaded.
+	 */
+	private async catchUpWithBundle(
+		synced: SyncedQuery,
+		bundle: CatalogBundle | null,
+		resetAt: Timestamp | null
+	): Promise<SyncMarker | null> {
+		const marker = this.readMarker(synced);
+		const behind =
+			!marker ||
+			(!!bundle && compareTimestamps(bundle.modifiedAt, marker) > 0) ||
+			(!!resetAt && compareTimestamps(resetAt, marker) > 0);
+
+		// A bundle built before a reset misses edits made without `updatedAt`.
+		if (
+			!bundle ||
+			!behind ||
+			(resetAt && compareTimestamps(resetAt, bundle.modifiedAt) > 0) ||
+			!(await this.loadFeatureBundle(synced.featureKey, bundle))
+		) {
+			return marker;
+		}
+
+		const cached = await this.run(() => getDocsFromCache(synced.query));
+
+		this.writeMarker(synced, bundle.modifiedAt, cached.size);
+		return {
+			seconds: bundle.modifiedAt.seconds,
+			nanoseconds: bundle.modifiedAt.nanoseconds,
+			count: cached.size,
+		};
+	}
+
+	/** Loads the bundle once per session; false when it cannot be used. */
+	private loadFeatureBundle(
+		featureKey: string,
+		bundle: CatalogBundle
+	): Promise<boolean> {
+		let loading = this.bundleLoads.get(bundle.path);
+
+		if (!loading) {
+			loading = this.loadBundleIntoCache(featureKey, bundle).catch(
+				(error) => {
+					console.warn(
+						`Bundle "${bundle.path}" unavailable, downloading documents`,
+						error
+					);
+					this.bundleLoads.delete(bundle.path);
+					return false;
+				}
+			);
+			this.bundleLoads.set(bundle.path, loading);
+		}
+		return loading;
+	}
+
+	private async loadBundleIntoCache(
+		featureKey: string,
+		bundle: CatalogBundle
+	): Promise<boolean> {
+		const loaded = this.readJson<LoadedBundle>(
+			this.bundleStorageKey(featureKey)
+		);
+
+		if (
+			loaded?.path === bundle.path &&
+			(await this.hasCached(featureKey))
+		) {
+			return true;
+		}
+
+		const blob = await this.run(() =>
+			getBlob(ref(this.storage, bundle.path))
+		);
+		const data = await blob.arrayBuffer();
+
+		await this.run(() => loadBundle(this.firestore, data));
+		// Loading never removes documents: evict the ones deleted since the
+		// previous bundle, or since ever when there was none.
+		await this.evictDeleted(
+			featureKey,
+			loaded ? new Timestamp(loaded.seconds, loaded.nanoseconds) : null
+		);
+
+		this.writeJson(this.bundleStorageKey(featureKey), {
+			path: bundle.path,
+			seconds: bundle.modifiedAt.seconds,
+			nanoseconds: bundle.modifiedAt.nanoseconds,
+		} satisfies LoadedBundle);
+		return true;
+	}
+
+	/** Whether the cache holds any document of the feature. */
+	private async hasCached(featureKey: string): Promise<boolean> {
+		const cached = await this.run(() =>
+			getDocsFromCache(
+				query(collection(this.firestore, featureKey), limit(1))
+			)
+		).catch(() => null);
+
+		return !!cached && !cached.empty;
+	}
+
+	/** Evicts the documents deleted after `since` (all when null). */
+	private async evictDeleted(
+		featureKey: string,
+		since: Timestamp | null
+	): Promise<void> {
+		const tombstones = collection(
+			this.firestore,
+			SYNC_COLLECTION,
+			featureKey,
+			DELETION_COLLECTION
+		);
+		const deletions = await this.run(() =>
+			getDocsFromServer(
+				since
+					? query(tombstones, where('deletedAt', '>', since))
+					: tombstones
+			)
+		);
+
+		await this.evict(
+			deletions.docs.map((snapshot) =>
+				doc(this.firestore, snapshot.get('path') as string)
+			)
+		);
 	}
 
 	/** The cached documents, or null when the cache is missing or partial. */
@@ -456,14 +607,12 @@ export class FirestoreSyncService {
 		return `mc.sync.${this.firestore.app.options.projectId}.${this.cacheKey(synced)}`;
 	}
 
-	private readMarker(synced: SyncedQuery): SyncMarker | null {
-		try {
-			const raw = localStorage.getItem(this.storageKey(synced));
+	private bundleStorageKey(featureKey: string): string {
+		return `mc.sync.${this.firestore.app.options.projectId}.bundle:${featureKey}`;
+	}
 
-			return raw ? (JSON.parse(raw) as SyncMarker) : null;
-		} catch {
-			return null;
-		}
+	private readMarker(synced: SyncedQuery): SyncMarker | null {
+		return this.readJson<SyncMarker>(this.storageKey(synced));
 	}
 
 	private writeMarker(
@@ -471,15 +620,26 @@ export class FirestoreSyncService {
 		syncedAt: Timestamp,
 		count: number
 	): void {
+		this.writeJson(this.storageKey(synced), {
+			seconds: syncedAt.seconds,
+			nanoseconds: syncedAt.nanoseconds,
+			count,
+		} satisfies SyncMarker);
+	}
+
+	private readJson<T>(key: string): T | null {
 		try {
-			localStorage.setItem(
-				this.storageKey(synced),
-				JSON.stringify({
-					seconds: syncedAt.seconds,
-					nanoseconds: syncedAt.nanoseconds,
-					count,
-				} satisfies SyncMarker)
-			);
+			const raw = localStorage.getItem(key);
+
+			return raw ? (JSON.parse(raw) as T) : null;
+		} catch {
+			return null;
+		}
+	}
+
+	private writeJson(key: string, value: object): void {
+		try {
+			localStorage.setItem(key, JSON.stringify(value));
 		} catch {
 			// Storage unavailable — the next start downloads again.
 		}
