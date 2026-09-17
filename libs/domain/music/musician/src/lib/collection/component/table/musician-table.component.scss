@@ -36,3 +36,124 @@
 	clip: rect(0 0 0 0);
 	white-space: nowrap;
 }
+
+.toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0.75rem;
+}
+
+.view-toggle {
+	display: inline-flex;
+	overflow: hidden;
+	border: 1px solid var(--mc-border-strong);
+	border-radius: var(--mc-radius-md);
+
+	button {
+		padding: 0.5rem 0.75rem;
+		color: var(--mc-text-muted);
+		cursor: pointer;
+		background: transparent;
+		border: 0;
+
+		& + button {
+			border-left: 1px solid var(--mc-border-strong);
+		}
+
+		&:hover {
+			color: var(--mc-text);
+		}
+
+		&[aria-pressed='true'] {
+			color: var(--mc-on-primary);
+			background: var(--mc-primary);
+		}
+	}
+}
+
+.cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+	gap: 0.75rem;
+	margin: 0;
+	padding: 0.75rem;
+	list-style: none;
+}
+
+.card-body {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+	align-items: center;
+	width: 100%;
+	height: 100%;
+	padding: 1rem 0.75rem;
+	font: inherit;
+	color: var(--mc-text);
+	text-align: center;
+	cursor: pointer;
+	background: var(--mc-surface-2);
+	border: 1px solid var(--mc-border-strong);
+	border-radius: var(--mc-radius-md);
+	transition: border-color 0.15s;
+
+	&:hover,
+	&:focus-visible {
+		border-color: var(--mc-primary);
+
+		.edit-icon {
+			opacity: 1;
+		}
+	}
+}
+
+.portrait {
+	display: grid;
+	place-items: center;
+	width: 6rem;
+	height: 6rem;
+	margin-bottom: 0.35rem;
+	object-fit: cover;
+	font-size: 2rem;
+	font-weight: 600;
+	color: var(--mc-text-muted);
+	background: var(--mc-border-strong);
+	border-radius: 50%;
+}
+
+.name {
+	font-weight: 600;
+	overflow-wrap: anywhere;
+}
+
+.real-name {
+	font-size: 0.85rem;
+	color: var(--mc-text-muted);
+}
+
+.card-body .profile {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.3rem;
+	justify-content: center;
+	margin-top: auto;
+	padding-top: 0.35rem;
+	white-space: normal;
+
+	.tag {
+		margin-right: 0;
+	}
+}
+
+.edit-icon {
+	position: absolute;
+	top: 0.6rem;
+	right: 0.6rem;
+	color: var(--mc-text-muted);
+	opacity: 0;
+	transition: opacity 0.15s;
+}
