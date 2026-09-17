@@ -72,6 +72,23 @@ export class MusicianPageComponent {
 			(this.store.header()?.paragraphs.length ?? 0) > COLLAPSED_PARAGRAPHS
 	);
 
+	/**
+	 * Relationship network around this musician; guests are switched on when
+	 * the musician has no band membership, otherwise the graph would be empty.
+	 */
+	protected readonly networkQueryParams = computed(() => {
+		const uid = this.store.header()?.uid ?? '';
+		return this.store.members().length
+			? { focus: `musician:${uid}` }
+			: { focus: `musician:${uid}`, guests: 1 };
+	});
+
+	protected readonly hasNetwork = computed(
+		() =>
+			this.store.members().length > 0 ||
+			this.store.guestBands().length > 0
+	);
+
 	protected readonly span = computed(() => bandsSpan(this.store.members()));
 
 	/** The current (or else the first) band's photo behind the name. */

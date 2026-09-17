@@ -60,17 +60,20 @@
 					</dl>
 
 					<ul class="sites" aria-label="Links">
-						<li>
-							<a
-								routerLink="/network"
-								[queryParams]="{
-									focus: 'musician:' + musician.uid,
-								}"
-							>
-								<i class="pi pi-sitemap" aria-hidden="true"></i>
-								Relationship network
-							</a>
-						</li>
+						@if (hasNetwork()) {
+							<li>
+								<a
+									routerLink="/network"
+									[queryParams]="networkQueryParams()"
+								>
+									<i
+										class="pi pi-sitemap"
+										aria-hidden="true"
+									></i>
+									Relationship network
+								</a>
+							</li>
+						}
 						@for (site of musician.sites; track site.url) {
 							<li>
 								<a
@@ -269,6 +272,14 @@
 						[style.--count]="store.members().length"
 					></div>
 				}
+				<a
+					class="network-link"
+					routerLink="/network"
+					[queryParams]="networkQueryParams()"
+				>
+					<i class="pi pi-sitemap" aria-hidden="true"></i>
+					View in the relationship network
+				</a>
 			</section>
 		}
 
@@ -328,6 +339,16 @@
 						class="defer-placeholder is-guests"
 						[style.--count]="store.guestBands().length"
 					></div>
+				}
+				@if (!store.members().length) {
+					<a
+						class="network-link"
+						routerLink="/network"
+						[queryParams]="networkQueryParams()"
+					>
+						<i class="pi pi-sitemap" aria-hidden="true"></i>
+						View in the relationship network
+					</a>
 				}
 			</section>
 		}

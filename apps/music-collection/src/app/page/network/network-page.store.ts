@@ -196,7 +196,7 @@ export const NetworkPageStore = signalStore(
 				});
 
 			return {
-				/** Follows the `focus` and `depth` query parameters. */
+				/** Follows the `focus`, `depth` and `guests` query parameters. */
 				followRoute: rxMethod<void>(
 					pipe(
 						switchMap(() => route.queryParamMap),
@@ -206,6 +206,13 @@ export const NetworkPageStore = signalStore(
 							patchState(store, {
 								focusId,
 								depth: toDepth(params.get('depth')),
+								// Links may ask for guests, e.g. for a session musician.
+								...(params.has('guests')
+									? {
+											includeGuests:
+												params.get('guests') === '1',
+										}
+									: {}),
 								// A new focus starts with its own details.
 								...(focusId !== store.focusId()
 									? { selectedId: null }
@@ -305,8 +312,16 @@ export const NetworkPageStore = signalStore(
 					navigate({ depth: toDepth(String(depth)) }),
 				select: (nodeId: string | null) =>
 					patchState(store, { selectedId: nodeId }),
-				setFlag: (flag: NetworkFilterFlag, value: boolean) =>
-					patchState(store, { [flag]: value }),
+				setFlag: (flag: NetworkFilterFlag, value: boolean) => {
+					patchState(store, { [flag]: value });
+					// Keep a `guests` parameter from a link in step with the toggle.
+					if (
+						flag === 'includeGuests' &&
+						route.snapshot.queryParamMap.has('guests')
+					) {
+						navigate({ guests: value ? 1 : 0 });
+					}
+				},
 				setQuery: (query: string) => patchState(store, { query }),
 			};
 		}
