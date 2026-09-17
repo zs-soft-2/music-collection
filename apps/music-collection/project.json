@@ -68,12 +68,6 @@
 							"maximumError": "16kb"
 						}
 					],
-					"fileReplacements": [
-						{
-							"replace": "apps/music-collection/src/environments/environment.ts",
-							"with": "apps/music-collection/src/environments/environment.dev.ts"
-						}
-					],
 					"outputHashing": "all"
 				},
 				"development": {
@@ -85,7 +79,7 @@
 					"namedChunks": true
 				}
 			},
-			"defaultConfiguration": "production"
+			"defaultConfiguration": "dev"
 		},
 		"serve": {
 			"executor": "@angular-devkit/build-angular:dev-server",

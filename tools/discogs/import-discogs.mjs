@@ -55,6 +55,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 
+import { ENV_OPTION, readEnvironment } from '../sync/environment.mjs';
 import { DiscogsClient } from './discogs-client.mjs';
 import {
 	bandDiscogsId,
@@ -86,6 +87,7 @@ const VARIOUS_ARTIST_ID = 194;
 const { positionals, values: options } = parseArgs({
 	allowPositionals: true,
 	options: {
+		env: ENV_OPTION,
 		limit: { type: 'string' },
 		album: { type: 'string' },
 		refresh: { type: 'boolean', default: false },
@@ -100,13 +102,7 @@ const { positionals, values: options } = parseArgs({
 
 /** Project id and web API key of the app (used for public REST reads). */
 async function firebaseConfig() {
-	const source = await readFile(
-		join(ROOT, 'apps/music-collection/src/environments/environment.ts'),
-		'utf8'
-	);
-	const pick = (key) => source.match(new RegExp(`${key}:\\s*'([^']+)'`))?.[1];
-
-	return { projectId: pick('projectId'), apiKey: pick('apiKey') };
+	return readEnvironment(options.env);
 }
 
 /**

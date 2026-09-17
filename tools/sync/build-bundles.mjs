@@ -3,7 +3,8 @@
  * Publishes catalog collections as Firestore bundles, so the clients load
  * them from Cloud Storage instead of reading every document.
  *
- *   node tools/sync/build-bundles.mjs [--collections membership,track] [--confirm]
+ *   node tools/sync/build-bundles.mjs [--env dev|prod]
+ *     [--collections membership,track] [--confirm]
  *
  * Run it after an import. Per collection it reads every document (one read
  * each), uploads `bundles/{featureKey}/{seconds}.bundle` (gzip) and announces
@@ -17,9 +18,6 @@
  * `gcloud auth application-default login`).
  */
 
-import { readFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { gzipSync } from 'node:zlib';
 
@@ -33,12 +31,13 @@ import {
 	announceBundle,
 	featureVersion,
 } from './catalog-sync.mjs';
+import { ENV_OPTION, readEnvironment } from './environment.mjs';
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const KEPT_BUNDLES = 2;
 
 const { values: options } = parseArgs({
 	options: {
+		env: ENV_OPTION,
 		collections: { type: 'string' },
 		confirm: { type: 'boolean', default: false },
 	},
@@ -51,14 +50,7 @@ const featureKeys = options.collections
 			.filter(Boolean)
 	: BUNDLE_FEATURE_KEYS;
 
-const environment = await readFile(
-	join(ROOT, 'apps/music-collection/src/environments/environment.ts'),
-	'utf8'
-);
-const pick = (key) =>
-	environment.match(new RegExp(`${key}:\\s*'([^']+)'`))?.[1];
-const projectId = pick('projectId');
-const storageBucket = pick('storageBucket');
+const { projectId, storageBucket } = await readEnvironment(options.env);
 
 console.log(
 	`${projectId}: bundles of ${featureKeys.join(', ')} → gs://${storageBucket}/${BUNDLE_FOLDER}` +
