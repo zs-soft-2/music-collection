@@ -33,6 +33,7 @@ module "service_accounts" {
     "roles/firebasehosting.admin",
     "roles/firebaserules.admin",
     "roles/datastore.indexAdmin",
+    "roles/firebasestorage.viewer",
     "roles/serviceusage.serviceUsageConsumer",
   ]
 

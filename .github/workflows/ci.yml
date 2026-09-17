@@ -15,6 +15,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm run lint
-      - run: npm test
+      # Minden projekt (app és library-k), nem csak a music-collection.
+      - run: npx nx run-many -t lint
+      - run: npx nx run-many -t test --passWithNoTests
       - run: npm run build:prod

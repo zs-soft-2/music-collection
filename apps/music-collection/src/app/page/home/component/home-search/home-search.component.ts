@@ -63,6 +63,8 @@ import { HomeSearchGroup, HomeSearchItem } from '../../home.mapper';
 						{{ group.label }}
 					</div>
 					@for (item of group.items; track item.id) {
+						<!-- Combobox-minta: a billentyűzetet az input kezeli (aria-activedescendant), az opció nem fókuszálható. -->
+						<!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
 						<div
 							class="option"
 							role="option"
@@ -101,6 +103,7 @@ import { HomeSearchGroup, HomeSearchItem } from '../../home.mapper';
 				<p class="empty">No artists or albums found.</p>
 			}
 
+			<!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
 			<div
 				class="option all"
 				role="option"
