@@ -5,122 +5,189 @@ import {
 	input,
 	signal,
 } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 
 import { LineupMember, LineupView } from '../../artist.mapper';
-
-/** Guests shown before "Show all guests". */
-const GUEST_PREVIEW = 12;
 
 /**
  * A band's line-up: members with their instruments and years, each with a
  * time bar across the band's years on record (a current member whose start
  * year is unknown gets a dot at the present end), and the guest musicians.
+ * Former members and guests are collapsed and only rendered once opened.
  */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-artist-lineup',
-	imports: [RouterLink],
+	imports: [NgTemplateOutlet, RouterLink],
 	template: `
 		@let view = lineup();
 
-		@if (view.members.length) {
+		@if (currentMembers().length) {
 			<ul class="members">
-				@for (member of view.members; track member.musicianUid) {
-					<li class="member" [class.active]="member.active">
-						<div class="who">
-							<a
-								class="name"
-								[routerLink]="['/musician', member.musicianUid]"
-								>{{ member.name }}</a
-							>
-							@if (member.instruments.length) {
-								<span class="instruments">{{
-									member.instruments.join(', ')
-								}}</span>
-							}
-						</div>
-
-						<div class="when">
-							<span class="years">
-								@if (member.years) {
-									{{ member.years }}
-								} @else {
-									Years unknown
-								}
-							</span>
-							@if (member.albumCount) {
-								<span class="albums">
-									{{ member.albumCount }}
-									{{
-										member.albumCount === 1
-											? 'album'
-											: 'albums'
-									}}
-								</span>
-							}
-						</div>
-
-						@if (bar(member); as position) {
-							<div class="track" aria-hidden="true">
-								<span
-									class="bar"
-									[style.left.%]="position.left"
-									[style.width.%]="position.width"
-								></span>
-							</div>
-						} @else if (member.active) {
-							<!-- Start year unknown: only "now" is certain. -->
-							<div class="track" aria-hidden="true">
-								<span class="dot"></span>
-							</div>
-						}
-					</li>
+				@for (member of currentMembers(); track member.musicianUid) {
+					<ng-container
+						*ngTemplateOutlet="
+							memberRow;
+							context: { $implicit: member }
+						"
+					/>
 				}
 			</ul>
+			<ng-container *ngTemplateOutlet="axis" />
+		}
 
+		@if (formerMembers().length) {
+			<div class="collapsible-head">
+				<h3 class="subsection-title" id="former-members-title">
+					Former members
+					<span class="count">{{ formerMembers().length }}</span>
+				</h3>
+				<button
+					type="button"
+					class="text-button"
+					aria-controls="former-members"
+					[attr.aria-expanded]="showFormer()"
+					(click)="showFormer.set(!showFormer())"
+				>
+					{{
+						showFormer()
+							? 'Hide former members'
+							: 'Show former members'
+					}}
+				</button>
+			</div>
+
+			<!-- Rendered only on request; stays rendered once opened. -->
+			@defer (when showFormer()) {
+				<div
+					id="former-members"
+					class="collapsible"
+					[hidden]="!showFormer()"
+					aria-labelledby="former-members-title"
+				>
+					<ul class="members">
+						@for (
+							member of formerMembers();
+							track member.musicianUid
+						) {
+							<ng-container
+								*ngTemplateOutlet="
+									memberRow;
+									context: { $implicit: member }
+								"
+							/>
+						}
+					</ul>
+					<ng-container *ngTemplateOutlet="axis" />
+				</div>
+			}
+		}
+
+		<ng-template #memberRow let-member>
+			<li class="member" [class.active]="member.active">
+				<div class="who">
+					<a
+						class="name"
+						[routerLink]="['/musician', member.musicianUid]"
+						>{{ member.name }}</a
+					>
+					@if (member.instruments.length) {
+						<span class="instruments">{{
+							member.instruments.join(', ')
+						}}</span>
+					}
+				</div>
+
+				<div class="when">
+					<span class="years">
+						@if (member.years) {
+							{{ member.years }}
+						} @else {
+							Years unknown
+						}
+					</span>
+					@if (member.albumCount) {
+						<span class="albums">
+							{{ member.albumCount }}
+							{{ member.albumCount === 1 ? 'album' : 'albums' }}
+						</span>
+					}
+				</div>
+
+				@if (bar(member); as position) {
+					<div class="track" aria-hidden="true">
+						<span
+							class="bar"
+							[style.left.%]="position.left"
+							[style.width.%]="position.width"
+						></span>
+					</div>
+				} @else if (member.active) {
+					<!-- Start year unknown: only "now" is certain. -->
+					<div class="track" aria-hidden="true">
+						<span class="dot"></span>
+					</div>
+				}
+			</li>
+		</ng-template>
+
+		<ng-template #axis>
 			@if (view.span) {
 				<div class="axis" aria-hidden="true">
 					<span>{{ view.span.from }}</span>
 					<span>{{ view.span.to }}</span>
 				</div>
 			}
-		}
+		</ng-template>
 
 		@if (view.guests.length) {
-			<h3 class="guests-title">Guest musicians</h3>
-			<ul class="guests">
-				@for (guest of visibleGuests(); track guest.musicianUid) {
-					<li class="guest">
-						<a
-							class="name"
-							[routerLink]="['/musician', guest.musicianUid]"
-							>{{ guest.name }}</a
-						>
-						@if (guest.instruments.length) {
-							<span class="instruments">{{
-								guest.instruments.join(', ')
-							}}</span>
-						}
-						@if (guest.years) {
-							<span class="years">{{ guest.years }}</span>
-						}
-					</li>
-				}
-			</ul>
-			@if (view.guests.length > guestPreview) {
+			<div class="collapsible-head">
+				<h3 class="subsection-title" id="guest-musicians-title">
+					Guest musicians
+					<span class="count">{{ view.guests.length }}</span>
+				</h3>
 				<button
 					type="button"
 					class="text-button"
-					[attr.aria-expanded]="showAllGuests()"
-					(click)="showAllGuests.set(!showAllGuests())"
+					aria-controls="guest-musicians"
+					[attr.aria-expanded]="showGuests()"
+					(click)="showGuests.set(!showGuests())"
 				>
 					{{
-						showAllGuests()
-							? 'Show fewer guests'
-							: 'Show all ' + view.guests.length + ' guests'
+						showGuests()
+							? 'Hide guest musicians'
+							: 'Show guest musicians'
 					}}
 				</button>
+			</div>
+
+			<!-- Rendered only on request; stays rendered once opened. -->
+			@defer (when showGuests()) {
+				<ul
+					id="guest-musicians"
+					class="guests collapsible"
+					[hidden]="!showGuests()"
+					aria-labelledby="guest-musicians-title"
+				>
+					@for (guest of view.guests; track guest.musicianUid) {
+						<li class="guest">
+							<a
+								class="name"
+								[routerLink]="['/musician', guest.musicianUid]"
+								>{{ guest.name }}</a
+							>
+							@if (guest.instruments.length) {
+								<span class="instruments">{{
+									guest.instruments.join(', ')
+								}}</span>
+							}
+							@if (guest.years) {
+								<span class="years">{{ guest.years }}</span>
+							}
+						</li>
+					}
+				</ul>
 			}
 		}
 	`,
@@ -246,8 +313,36 @@ const GUEST_PREVIEW = 12;
 			justify-self: end;
 		}
 
-		.guests-title {
-			margin: 1.75rem 0 0.6rem;
+		.collapsible-head {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 0.5rem 1.25rem;
+			align-items: baseline;
+			margin-top: 1.75rem;
+		}
+
+		.collapsible-head .subsection-title {
+			margin: 0;
+		}
+
+		.collapsible-head .text-button {
+			margin-top: 0;
+		}
+
+		.count {
+			margin-left: 0.35rem;
+			color: var(--mc-text-subtle);
+		}
+
+		.collapsible[hidden] {
+			display: none;
+		}
+
+		.collapsible {
+			margin-top: 0.4rem;
+		}
+
+		.subsection-title {
 			font-size: 0.72rem;
 			font-weight: 700;
 			letter-spacing: 0.14em;
@@ -315,13 +410,16 @@ const GUEST_PREVIEW = 12;
 export class ArtistLineupComponent {
 	public readonly lineup = input.required<LineupView>();
 
-	protected readonly guestPreview = GUEST_PREVIEW;
-	protected readonly showAllGuests = signal(false);
+	protected readonly showGuests = signal(false);
+	protected readonly showFormer = signal(false);
 
-	protected readonly visibleGuests = computed(() => {
-		const guests = this.lineup().guests;
-		return this.showAllGuests() ? guests : guests.slice(0, GUEST_PREVIEW);
-	});
+	protected readonly currentMembers = computed(() =>
+		this.lineup().members.filter((member) => member.active)
+	);
+
+	protected readonly formerMembers = computed(() =>
+		this.lineup().members.filter((member) => !member.active)
+	);
 
 	/** Position of a member's years on the band's time bar, in percent. */
 	protected bar(

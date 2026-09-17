@@ -84,6 +84,17 @@ export class ArtistPageComponent {
 		return lineup.members.length > 0 || lineup.guests.length > 0;
 	});
 
+	/**
+	 * Rows the line-up shows before any interaction, for its placeholder:
+	 * current members and the collapsed former-members and guests bars.
+	 */
+	protected readonly lineupPlaceholderRows = computed(() => {
+		const { members, guests } = this.store.lineup();
+		const current = members.filter((member) => member.active).length;
+		const hasFormer = current < members.length;
+		return current + Number(hasFormer) + Number(guests.length > 0);
+	});
+
 	protected readonly hasTimeline = computed(() =>
 		this.store.discography().some((album) => album.year !== null)
 	);

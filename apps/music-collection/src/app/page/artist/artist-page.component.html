@@ -171,10 +171,7 @@
 				} @placeholder {
 					<div
 						class="defer-placeholder is-rows"
-						[style.--count]="
-							store.lineup().members.length +
-							store.lineup().guests.length / 3
-						"
+						[style.--count]="lineupPlaceholderRows()"
 					></div>
 				}
 				<a
