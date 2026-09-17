@@ -18,5 +18,5 @@ export const environment = {
 		clientId: '0ab3fba0933440238c563c337700db27',
 	},
 	type: 'production',
-	version: '20.0.0',
+	version: '1.0.0',
 };
