@@ -34,11 +34,17 @@ interface SpotifyPlaybackState {
 	tracksAlbumId: string | null;
 	/** Our track id → Spotify track URI. */
 	trackUris: Record<string, string>;
+	/** Volume of the output device, 0–100. */
+	volume: number;
 	error: string | null;
 }
 
 /** Remote devices report no events, so their playback is polled. */
 const REMOTE_POLL_MS = 4000;
+/** Remote volume changes are sent once the slider rests this long. */
+const VOLUME_DEBOUNCE_MS = 200;
+/** Polled volume is ignored this long after a change, so the slider does not jump back. */
+const VOLUME_SETTLE_MS = 2000;
 
 const errorMessage = (error: unknown): string => {
 	if (error instanceof SpotifyNotConnectedError) {
@@ -70,6 +76,7 @@ export const SpotifyPlaybackStore = signalStore(
 		nowPlaying: null,
 		tracksAlbumId: null,
 		trackUris: {},
+		volume: 80,
 		error: null,
 	}),
 	withComputed((store) => ({
@@ -84,6 +91,16 @@ export const SpotifyPlaybackStore = signalStore(
 				Object.entries(store.trackUris()).find(
 					([, trackUri]) => trackUri === uri
 				)?.[0] ?? null
+			);
+		}),
+		/** Whether the output device lets its volume be changed. */
+		volumeSupported: computed(() => {
+			const selected = store.selectedDeviceId();
+			return (
+				!selected ||
+				(store.devices().find((device) => device.id === selected)
+					?.supportsVolume ??
+					true)
 			);
 		}),
 		/** Other devices than this browser. */
@@ -102,6 +119,8 @@ export const SpotifyPlaybackStore = signalStore(
 		) => {
 			let player: SdkPlayer | null = null;
 			let pollTimer: ReturnType<typeof setInterval> | null = null;
+			let volumeTimer: ReturnType<typeof setTimeout> | null = null;
+			let volumeChangedAt = 0;
 
 			const fail = (error: unknown) => {
 				console.error(error);
@@ -129,9 +148,14 @@ export const SpotifyPlaybackStore = signalStore(
 					return;
 				}
 				try {
-					patchState(store, {
-						nowPlaying: await effect.nowPlaying(),
-					});
+					const nowPlaying = await effect.nowPlaying();
+					patchState(store, { nowPlaying });
+					if (
+						nowPlaying?.volumePercent != null &&
+						Date.now() - volumeChangedAt > VOLUME_SETTLE_MS
+					) {
+						patchState(store, { volume: nowPlaying.volumePercent });
+					}
 				} catch (error) {
 					fail(error);
 				}
@@ -196,6 +220,24 @@ export const SpotifyPlaybackStore = signalStore(
 				} catch (error) {
 					reset();
 					fail(error);
+				}
+			};
+
+			/** Shows the volume of the device just selected. */
+			const syncVolume = async (deviceId: string | null) => {
+				if (deviceId) {
+					const volume = store
+						.devices()
+						.find(
+							(device) => device.id === deviceId
+						)?.volumePercent;
+					if (volume != null) {
+						patchState(store, { volume });
+					}
+				} else if (player) {
+					patchState(store, {
+						volume: Math.round((await player.getVolume()) * 100),
+					});
 				}
 			};
 
@@ -324,11 +366,41 @@ export const SpotifyPlaybackStore = signalStore(
 					}
 				},
 
+				/** Sets the volume (0–100) of the output device. */
+				setVolume(volumePercent: number): void {
+					const volume = Math.round(
+						Math.min(100, Math.max(0, volumePercent))
+					);
+					patchState(store, { volume });
+					volumeChangedAt = Date.now();
+
+					if (volumeTimer) {
+						clearTimeout(volumeTimer);
+						volumeTimer = null;
+					}
+					const deviceId = store.selectedDeviceId();
+					if (!deviceId) {
+						effect.saveBrowserVolume(volume);
+						player?.setVolume(volume / 100).catch(fail);
+						return;
+					}
+					volumeTimer = setTimeout(async () => {
+						volumeTimer = null;
+						try {
+							await effect.setVolume(deviceId, volume);
+						} catch (error) {
+							fail(error);
+						}
+					}, VOLUME_DEBOUNCE_MS);
+				},
+
 				/** Plays on the device from now on; moves what is playing there. */
 				async selectDevice(deviceId: string | null): Promise<void> {
 					void player?.activateElement();
 					const target = deviceId ?? store.browserDeviceId();
 					patchState(store, { selectedDeviceId: deviceId });
+					volumeChangedAt = 0;
+					void syncVolume(deviceId);
 					pollWhenRemote();
 
 					const nowPlaying = store.nowPlaying();
@@ -347,7 +419,10 @@ export const SpotifyPlaybackStore = signalStore(
 	),
 	withHooks({
 		onInit(store, effect = inject(SpotifyPlaybackEffect)) {
-			patchState(store, { configured: effect.configured });
+			patchState(store, {
+				configured: effect.configured,
+				volume: effect.browserVolume,
+			});
 			void store.start();
 		},
 	})

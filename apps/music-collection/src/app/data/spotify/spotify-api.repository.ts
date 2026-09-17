@@ -28,7 +28,7 @@ interface ApiPage<T> {
 
 interface ApiPlayer {
 	is_playing: boolean;
-	device: { id: string | null } | null;
+	device: { id: string | null; volume_percent: number | null } | null;
 	item: ApiTrack | null;
 }
 
@@ -37,6 +37,8 @@ interface ApiDevice {
 	name: string;
 	type: string;
 	is_active: boolean;
+	volume_percent: number | null;
+	supports_volume?: boolean;
 }
 
 /** Spotify Web API calls (playback control, devices, album tracks). */
@@ -102,6 +104,19 @@ export class SpotifyApiRepository {
 		return this.request(accessToken, 'POST', `${API}/me/player/previous`);
 	}
 
+	/** Sets the volume (0–100) of the device. */
+	public setVolume(
+		accessToken: string,
+		deviceId: string,
+		volumePercent: number
+	): Promise<void> {
+		return this.request(
+			accessToken,
+			'PUT',
+			`${API}/me/player/volume?volume_percent=${volumePercent}&device_id=${encodeURIComponent(deviceId)}`
+		);
+	}
+
 	public async devices(accessToken: string): Promise<SpotifyDevice[]> {
 		const result: { devices: ApiDevice[] } = await this.request(
 			accessToken,
@@ -116,6 +131,8 @@ export class SpotifyApiRepository {
 				name: device.name,
 				type: device.type,
 				isActive: device.is_active,
+				volumePercent: device.volume_percent,
+				supportsVolume: device.supports_volume ?? true,
 			}));
 	}
 
@@ -152,6 +169,7 @@ export class SpotifyApiRepository {
 			imageUrl: item.album?.images.at(-1)?.url ?? null,
 			paused: !player.is_playing,
 			deviceId: player.device?.id ?? null,
+			volumePercent: player.device?.volume_percent ?? null,
 		};
 	}
 

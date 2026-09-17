@@ -22,6 +22,10 @@ export interface SdkPlayer {
 	connect(): Promise<boolean>;
 	disconnect(): void;
 	activateElement(): Promise<void>;
+	/** 0–1. */
+	getVolume(): Promise<number>;
+	/** 0–1. */
+	setVolume(volume: number): Promise<void>;
 	addListener(
 		event: 'ready' | 'not_ready',
 		callback: (payload: { device_id: string }) => void

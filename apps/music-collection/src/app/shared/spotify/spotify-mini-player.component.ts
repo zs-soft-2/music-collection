@@ -1,8 +1,11 @@
 import {
 	ChangeDetectionStrategy,
 	Component,
+	ElementRef,
+	HostListener,
 	computed,
 	inject,
+	signal,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NgTemplateOutlet } from '@angular/common';
@@ -81,6 +84,47 @@ import { SpotifyPlaybackStore } from './spotify-playback.store';
 				>
 					<i class="pi pi-step-forward" aria-hidden="true"></i>
 				</button>
+				<div class="volume secondary">
+					<button
+						type="button"
+						class="control"
+						aria-label="Volume"
+						aria-controls="mini-player-volume"
+						[attr.aria-expanded]="volumeOpen()"
+						(click)="volumeOpen.set(!volumeOpen())"
+					>
+						<i
+							class="pi"
+							[class.pi-volume-off]="spotify.volume() === 0"
+							[class.pi-volume-down]="
+								spotify.volume() > 0 && spotify.volume() < 50
+							"
+							[class.pi-volume-up]="spotify.volume() >= 50"
+							aria-hidden="true"
+						></i>
+					</button>
+					@if (volumeOpen()) {
+						<div id="mini-player-volume" class="volume-popup">
+							<input
+								type="range"
+								min="0"
+								max="100"
+								step="1"
+								aria-label="Volume"
+								[value]="spotify.volume()"
+								[disabled]="!spotify.volumeSupported()"
+								(input)="setVolume($event)"
+							/>
+							<span class="volume-value">
+								@if (spotify.volumeSupported()) {
+									{{ spotify.volume() }}%
+								} @else {
+									Not adjustable
+								}
+							</span>
+						</div>
+					}
+				</div>
 			</div>
 		}
 	`,
@@ -179,8 +223,47 @@ import { SpotifyPlaybackStore } from './spotify-playback.store';
 			}
 		}
 
+		.volume {
+			position: relative;
+		}
+
+		.volume-popup {
+			position: absolute;
+			top: calc(100% + 0.5rem);
+			right: 0;
+			z-index: 10;
+			display: flex;
+			align-items: center;
+			gap: 0.6rem;
+			padding: 0.6rem 0.8rem;
+			white-space: nowrap;
+			background: var(--mc-card-bg);
+			border: 1px solid var(--mc-border);
+			border-radius: var(--mc-radius-md);
+			box-shadow: 0 6px 20px rgb(0 0 0 / 0.18);
+
+			input {
+				width: 9rem;
+				accent-color: var(--mc-spotify);
+				cursor: pointer;
+
+				&:disabled {
+					opacity: 0.5;
+					cursor: default;
+				}
+			}
+		}
+
+		.volume-value {
+			min-width: 2.5rem;
+			font-size: 0.75rem;
+			color: var(--mc-text-muted);
+			text-align: right;
+		}
+
 		.now:focus-visible,
-		.control:focus-visible {
+		.control:focus-visible,
+		.volume-popup input:focus-visible {
 			outline: 2px solid var(--mc-spotify-text);
 			outline-offset: 2px;
 		}
@@ -205,7 +288,10 @@ import { SpotifyPlaybackStore } from './spotify-playback.store';
 })
 export class SpotifyMiniPlayerComponent {
 	private readonly albumStateService = inject(AlbumStateService);
+	private readonly host = inject(ElementRef<HTMLElement>);
 	protected readonly spotify = inject(SpotifyPlaybackStore);
+
+	protected readonly volumeOpen = signal(false);
 
 	private readonly albums = toSignal(
 		this.albumStateService.selectEntities$(),
@@ -226,4 +312,25 @@ export class SpotifyMiniPlayerComponent {
 
 		return album ? ['/album', album.uid] : null;
 	});
+
+	protected setVolume(event: Event): void {
+		this.spotify.setVolume(
+			Number((event.target as HTMLInputElement).value)
+		);
+	}
+
+	@HostListener('document:click', ['$event'])
+	protected closeVolumeOutside(event: MouseEvent): void {
+		if (
+			this.volumeOpen() &&
+			!this.host.nativeElement.contains(event.target as Node)
+		) {
+			this.volumeOpen.set(false);
+		}
+	}
+
+	@HostListener('document:keydown.escape')
+	protected closeVolume(): void {
+		this.volumeOpen.set(false);
+	}
 }

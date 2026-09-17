@@ -86,6 +86,32 @@ import { SpotifyPlaybackStore } from './spotify-playback.store';
 							Play album
 						</button>
 					}
+					<label class="volume">
+						<i
+							class="pi"
+							[class.pi-volume-off]="spotify.volume() === 0"
+							[class.pi-volume-down]="
+								spotify.volume() > 0 && spotify.volume() < 50
+							"
+							[class.pi-volume-up]="spotify.volume() >= 50"
+							aria-hidden="true"
+						></i>
+						<input
+							type="range"
+							min="0"
+							max="100"
+							step="1"
+							aria-label="Volume"
+							[value]="spotify.volume()"
+							[disabled]="!spotify.volumeSupported()"
+							[title]="
+								spotify.volumeSupported()
+									? spotify.volume() + '%'
+									: 'This device does not allow volume control'
+							"
+							(input)="setVolume($event)"
+						/>
+					</label>
 				</div>
 			</div>
 
@@ -223,6 +249,25 @@ import { SpotifyPlaybackStore } from './spotify-playback.store';
 			gap: 0.5rem;
 		}
 
+		.volume {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.5rem;
+			margin-left: 0.25rem;
+			color: var(--mc-text-muted);
+
+			input {
+				width: 7rem;
+				accent-color: var(--mc-spotify);
+				cursor: pointer;
+
+				&:disabled {
+					opacity: 0.5;
+					cursor: default;
+				}
+			}
+		}
+
 		.connect p {
 			flex: 1 1 16rem;
 			margin: 0;
@@ -317,7 +362,8 @@ import { SpotifyPlaybackStore } from './spotify-playback.store';
 		}
 
 		button:focus-visible,
-		select:focus-visible {
+		select:focus-visible,
+		input:focus-visible {
 			outline: 2px solid var(--mc-spotify-text);
 			outline-offset: 2px;
 		}
@@ -335,6 +381,12 @@ export class SpotifyPanelComponent {
 			this.spotify.nowPlaying()?.albumUri ===
 			`spotify:album:${this.albumId()}`
 	);
+
+	protected setVolume(event: Event): void {
+		this.spotify.setVolume(
+			Number((event.target as HTMLInputElement).value)
+		);
+	}
 
 	protected selectDevice(event: Event): void {
 		const value = (event.target as HTMLSelectElement).value;

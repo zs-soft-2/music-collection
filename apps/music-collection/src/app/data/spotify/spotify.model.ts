@@ -12,6 +12,9 @@ export interface SpotifyDevice {
 	/** e.g. "Computer", "Speaker", "AVR", "Smartphone". */
 	type: string;
 	isActive: boolean;
+	/** 0–100, when the device reports it. */
+	volumePercent: number | null;
+	supportsVolume: boolean;
 }
 
 export interface SpotifyAlbumTrack {
@@ -30,6 +33,8 @@ export interface SpotifyNowPlaying {
 	paused: boolean;
 	/** Device the track plays on, when known. */
 	deviceId: string | null;
+	/** 0–100, when the device reports it. */
+	volumePercent: number | null;
 }
 
 /** A track of our album, to be matched to its Spotify track. */

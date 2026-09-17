@@ -2,6 +2,7 @@ import { DOCUMENT, Injectable, inject } from '@angular/core';
 
 import { SpotifyApiRepository } from './spotify-api.repository';
 import { SpotifyAuthRepository } from './spotify-auth.repository';
+import { SpotifyPreferencesRepository } from './spotify-preferences.repository';
 import { SdkPlayer } from './spotify-sdk.types';
 import { SpotifySdkRepository } from './spotify-sdk.repository';
 import {
@@ -44,6 +45,7 @@ export class SpotifyPlaybackEffect {
 	private readonly api = inject(SpotifyApiRepository);
 	private readonly auth = inject(SpotifyAuthRepository);
 	private readonly document = inject(DOCUMENT);
+	private readonly preferences = inject(SpotifyPreferencesRepository);
 	private readonly sdk = inject(SpotifySdkRepository);
 
 	public get configured(): boolean {
@@ -52,6 +54,15 @@ export class SpotifyPlaybackEffect {
 
 	public get hasToken(): boolean {
 		return !!this.auth.loadToken();
+	}
+
+	/** Remembered volume of the browser player, 0–100. */
+	public get browserVolume(): number {
+		return this.preferences.loadBrowserVolume();
+	}
+
+	public saveBrowserVolume(volumePercent: number): void {
+		this.preferences.saveBrowserVolume(volumePercent);
 	}
 
 	public async beginLogin(returnUrl: string): Promise<void> {
@@ -94,7 +105,7 @@ export class SpotifyPlaybackEffect {
 	): Promise<SdkPlayer> {
 		const player = await this.sdk.createPlayer({
 			name: PLAYER_NAME,
-			volume: 0.8,
+			volume: this.browserVolume / 100,
 			getOAuthToken: (callback) => {
 				this.accessToken()
 					.then(callback)
@@ -118,6 +129,7 @@ export class SpotifyPlaybackEffect {
 							imageUrl: track.album.images.at(-1)?.url ?? null,
 							paused: state.paused,
 							deviceId: null,
+							volumePercent: null,
 						}
 					: null
 			);
@@ -198,6 +210,18 @@ export class SpotifyPlaybackEffect {
 		await (direction === 'next'
 			? this.api.next(token)
 			: this.api.previous(token));
+	}
+
+	/** Sets the volume (0–100) of a Spotify Connect device. */
+	public async setVolume(
+		deviceId: string,
+		volumePercent: number
+	): Promise<void> {
+		await this.api.setVolume(
+			await this.accessToken(),
+			deviceId,
+			volumePercent
+		);
 	}
 
 	public async devices(): Promise<SpotifyDevice[]> {
