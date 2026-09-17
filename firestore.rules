@@ -208,7 +208,14 @@ service cloud.firestore {
       }
     }
 
-    // A katalógus collection-group olvasásai (album, release, label).
+    // A katalógus collection-group olvasásai. A generikus FirebaseDataService
+    // minden feature listáját collection-group lekérdezéssel kéri le
+    // (`collectionGroup(firestore, featureKey)`), ezért MINDEN publikus
+    // katalógus-collectionhöz kell group-szabály is — enélkül a lekérdezés
+    // „Missing or insufficient permissions” hibával áll el.
+    match /{path=**}/artist/{artistId} {
+      allow read: if true;
+    }
     match /{path=**}/album/{albumId} {
       allow read: if true;
     }
@@ -217,6 +224,29 @@ service cloud.firestore {
     }
     match /{path=**}/label/{labelId} {
       allow read: if true;
+    }
+    match /{path=**}/musician/{musicianId} {
+      allow read: if true;
+    }
+    match /{path=**}/document/{documentId} {
+      allow read: if true;
+    }
+    match /{path=**}/track/{trackId} {
+      allow read: if true;
+    }
+    match /{path=**}/contribution/{contributionId} {
+      allow read: if true;
+    }
+    match /{path=**}/membership/{membershipId} {
+      allow read: if true;
+    }
+    match /{path=**}/entity-quantity/{entityType} {
+      allow read: if true;
+    }
+
+    // A user-lista is collection-groupon megy; permissionhöz kötve.
+    match /{path=**}/user/{uid} {
+      allow list: if hasPerm('viewUserEntity');
     }
 
     match /musician/{musicianId} {
