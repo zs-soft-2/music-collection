@@ -27,13 +27,14 @@
  *   node tools/discogs/import-discogs.mjs fetch-groups [--min-members N] [--dry-run] [--limit N] [--refresh]
  *     Downloads the groups of the fetched musicians that are not in the
  *     catalog yet (profile and member list) — only groups at least N (default
- *     2) of the fetched musicians played in, so a new artist connects people.
+ *     3) of the fetched musicians played in, so a new artist connects people.
  *     --dry-run only prints how many groups each threshold would bring.
  *   node tools/discogs/import-discogs.mjs write-musicians [--confirm]
  *     Completes the `musician` documents with the fetched profiles.
- *   node tools/discogs/import-discogs.mjs write-groups [--confirm]
- *     Creates `artist` documents for the fetched groups (uid `discogs-{id}`),
- *     their `membership` documents and the members' `musician` documents.
+ *   node tools/discogs/import-discogs.mjs write-groups [--min-members N] [--confirm]
+ *     Creates `artist` documents for the fetched groups with at least N known
+ *     musicians (uid `discogs-{id}`) and their `membership` documents — only
+ *     for members already known; no new musician is created.
  *   Both write commands only create missing documents and fill in missing
  *   fields: an existing value is never overwritten. A group that is already
  *   in the catalog (by Discogs id or name) is skipped.
@@ -59,7 +60,6 @@ import {
 	bandDiscogsId,
 	normalize,
 	rankCandidates,
-	stripDiscogsSuffix,
 	toCreditDocs,
 	toGroupArtistDoc,
 	toGroupMembershipDocs,
@@ -93,7 +93,7 @@ const { positionals, values: options } = parseArgs({
 		replace: { type: 'boolean', default: false },
 		'memberships-only': { type: 'boolean', default: false },
 		'include-ambiguous': { type: 'boolean', default: false },
-		'min-members': { type: 'string', default: '2' },
+		'min-members': { type: 'string', default: '3' },
 		'dry-run': { type: 'boolean', default: false },
 	},
 });
@@ -977,9 +977,11 @@ async function catalogArtistKeys() {
 const isCatalogGroup = (keys, group) =>
 	keys.ids.has(group.id) || keys.names.has(normalize(group.name));
 
-async function fetchGroupsCommand() {
-	const keys = await catalogArtistKeys();
-	/** Group id → how many fetched musicians played in it. */
+/**
+ * Groups of the fetched musicians that are not in the catalog, with how many
+ * of the fetched musicians played in each.
+ */
+async function newGroupCounts(keys) {
 	const counts = new Map();
 
 	for (const musician of await readJsonDir(MUSICIAN_CACHE)) {
@@ -992,7 +994,13 @@ async function fetchGroupsCommand() {
 			}
 		}
 	}
-	const minMembers = Number(options['min-members']) || 1;
+	return counts;
+}
+
+const minMembers = () => Number(options['min-members']) || 1;
+
+async function fetchGroupsCommand() {
+	const counts = await newGroupCounts(await catalogArtistKeys());
 
 	if (options['dry-run']) {
 		for (const threshold of [1, 2, 3, 5]) {
@@ -1006,10 +1014,10 @@ async function fetchGroupsCommand() {
 	await fetchProfiles(
 		GROUP_CACHE,
 		[...counts.entries()]
-			.filter(([, count]) => count >= minMembers)
+			.filter(([, count]) => count >= minMembers())
 			.map(([id]) => id)
 			.sort((a, b) => a - b),
-		`groups not in the catalog with at least ${minMembers} known musicians`
+		`groups not in the catalog with at least ${minMembers()} known musicians`
 	);
 }
 
@@ -1111,20 +1119,27 @@ async function writeMusiciansCommand() {
 	);
 }
 
+/**
+ * New artists only connect musicians already known: memberships are written
+ * for the members with a fetched profile, no new musician is created.
+ */
 async function writeGroupsCommand() {
 	const keys = await catalogArtistKeys();
+	const counts = await newGroupCounts(keys);
 	const groups = (await readJsonDir(GROUP_CACHE)).filter(
-		(group) => !group.missing && !isCatalogGroup(keys, group)
+		(group) =>
+			!group.missing &&
+			!isCatalogGroup(keys, group) &&
+			(counts.get(group.id) ?? 0) >= minMembers()
 	);
-	const musicians = new Map(
+	const known = new Set(
 		(await readJsonDir(MUSICIAN_CACHE))
 			.filter((profile) => !profile.missing)
-			.map((profile) => [profile.id, profile])
+			.map((profile) => `discogs-${profile.id}`)
 	);
 	const db = await openFirestore();
 	const artists = [];
 	const memberships = [];
-	const members = new Map();
 
 	for (const group of groups) {
 		const artist = toGroupArtistDoc(group);
@@ -1134,33 +1149,19 @@ async function writeGroupsCommand() {
 		});
 
 		for (const membership of toGroupMembershipDocs(artist.uid, group)) {
-			memberships.push({
-				ref: db.collection('membership').doc(membership.uid),
-				data: membership,
-			});
-		}
-		for (const member of group.members) {
-			const profile = musicians.get(member.id);
-			const data = profile
-				? toMusicianProfileDoc(profile)
-				: {
-						uid: `discogs-${member.id}`,
-						name: stripDiscogsSuffix(member.name),
-						discogsId: member.id,
-						entityType: 'Musician',
-						source: 'discogs',
-					};
-			members.set(data.uid, {
-				ref: db.collection('musician').doc(data.uid),
-				data,
-			});
+			if (known.has(membership.musicianUid)) {
+				memberships.push({
+					ref: db.collection('membership').doc(membership.uid),
+					data: membership,
+				});
+			}
 		}
 	}
-	console.log(`${groups.length} groups not in the catalog`);
+	console.log(
+		`${groups.length} groups not in the catalog with at least ${minMembers()} known musicians`
+	);
 
 	await fillInChunks(db, artists, 'artists');
-	if (process.exitCode) return;
-	await fillInChunks(db, [...members.values()], 'member musicians');
 	if (process.exitCode) return;
 	await fillInChunks(db, memberships, 'memberships');
 }
