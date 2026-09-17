@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { AlbumStateService } from '@music-collection/api';
 
 import { AlbumEditResolverService } from './album-edit-resolver.service';
 
@@ -7,7 +8,10 @@ describe('AlbumEditResolverService', () => {
 
 	beforeEach(() => {
 		TestBed.configureTestingModule({
-			providers: [AlbumEditResolverService],
+			providers: [
+				AlbumEditResolverService,
+				{ provide: AlbumStateService, useValue: {} },
+			],
 		});
 
 		service = TestBed.inject(AlbumEditResolverService);

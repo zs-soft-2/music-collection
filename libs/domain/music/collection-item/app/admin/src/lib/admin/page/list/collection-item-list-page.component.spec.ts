@@ -1,22 +1,36 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { of } from 'rxjs';
 
-import { CollectionItemCollectionModule } from '../../../collection/collection-item-collection.module';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
+import { provideRouter } from '@angular/router';
+import {
+	CollectionItemStateService,
+	CollectionItemUtilService,
+} from '@music-collection/api';
+
 import { CollectionItemListPageComponent } from './collection-item-list-page.component';
 
 describe('CollectionItemListComponent', () => {
 	let component: CollectionItemListPageComponent;
 	let fixture: ComponentFixture<CollectionItemListPageComponent>;
 
-	beforeEach(waitForAsync(() => {
-		TestBed.configureTestingModule({
-			imports: [
-				CollectionItemCollectionModule,
-				CollectionItemListPageComponent,
+	beforeEach(async () => {
+		await TestBed.configureTestingModule({
+			imports: [CollectionItemListPageComponent],
+			providers: [
+				provideRouter([]),
+				provideNoopAnimations(),
+				{
+					provide: CollectionItemStateService,
+					useValue: {
+						selectEntities$: jest.fn(() => of([])),
+						selectSearchResult$: jest.fn(() => of([])),
+					},
+				},
+				{ provide: CollectionItemUtilService, useValue: {} },
 			],
 		}).compileComponents();
-	}));
 
-	beforeEach(() => {
 		fixture = TestBed.createComponent(CollectionItemListPageComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();

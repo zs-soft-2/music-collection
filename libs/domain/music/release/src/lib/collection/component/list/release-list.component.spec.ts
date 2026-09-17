@@ -1,4 +1,7 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
+
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ReleaseStateService } from '@music-collection/api';
 
 import { ReleaseListComponent } from './release-list.component';
 
@@ -6,13 +9,17 @@ describe('ReleaseListComponent', () => {
 	let component: ReleaseListComponent;
 	let fixture: ComponentFixture<ReleaseListComponent>;
 
-	beforeEach(async(() => {
-		TestBed.configureTestingModule({
+	beforeEach(async () => {
+		await TestBed.configureTestingModule({
 			imports: [ReleaseListComponent],
+			providers: [
+				{
+					provide: ReleaseStateService,
+					useValue: { selectEntities$: jest.fn(() => of([])) },
+				},
+			],
 		}).compileComponents();
-	}));
 
-	beforeEach(() => {
 		fixture = TestBed.createComponent(ReleaseListComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();

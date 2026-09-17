@@ -1,26 +1,30 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import { of } from 'rxjs';
 
-import { CollectionItemCollectionModule } from '../../../collection/collection-item-collection.module';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { CollectionItemStateService } from '@music-collection/api';
+import { NgxPermissionsModule } from 'ngx-permissions';
+
 import { CollectionItemAdminComponent } from './collection-item-admin.component';
 
 describe('CollectionItemAdminComponent', () => {
 	let component: CollectionItemAdminComponent;
 	let fixture: ComponentFixture<CollectionItemAdminComponent>;
 
-	beforeEach(async(() => {
-		TestBed.configureTestingModule({
-			imports: [
-				HttpClientTestingModule,
-				RouterTestingModule,
-				CollectionItemCollectionModule,
-				CollectionItemAdminComponent,
+	beforeEach(async () => {
+		await TestBed.configureTestingModule({
+			imports: [NgxPermissionsModule.forRoot(), CollectionItemAdminComponent],
+			providers: [
+				provideRouter([]),
+				{
+					provide: CollectionItemStateService,
+					useValue: {
+						selectNewEntityButtonEnabled$: jest.fn(() => of(true)),
+					},
+				},
 			],
 		}).compileComponents();
-	}));
 
-	beforeEach(() => {
 		fixture = TestBed.createComponent(CollectionItemAdminComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();

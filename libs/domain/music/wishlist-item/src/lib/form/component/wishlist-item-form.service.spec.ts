@@ -1,4 +1,12 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import {
+	AlbumStateService,
+	ArtistStateService,
+	AuthenticationStateService,
+	WishlistItemStateService,
+	WishlistItemUtilService,
+} from '@music-collection/api';
 
 import { WishlistItemFormService } from './wishlist-item-form.service';
 
@@ -7,7 +15,15 @@ describe('WishlistItemFormService', () => {
 
 	beforeEach(() => {
 		TestBed.configureTestingModule({
-			providers: [WishlistItemFormService],
+			providers: [
+				WishlistItemFormService,
+				provideRouter([]),
+				{ provide: AlbumStateService, useValue: {} },
+				{ provide: ArtistStateService, useValue: {} },
+				{ provide: AuthenticationStateService, useValue: {} },
+				{ provide: WishlistItemStateService, useValue: {} },
+				{ provide: WishlistItemUtilService, useValue: {} },
+			],
 		});
 
 		service = TestBed.inject(WishlistItemFormService);

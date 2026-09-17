@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { ArtistStateService } from '@music-collection/api';
 
 import { ArtistListService } from './artist-list.service';
 
@@ -6,7 +7,12 @@ describe('ArtistListService', () => {
 	let service: ArtistListService;
 
 	beforeEach(() => {
-		TestBed.configureTestingModule({});
+		TestBed.configureTestingModule({
+			providers: [
+				ArtistListService,
+				{ provide: ArtistStateService, useValue: {} },
+			],
+		});
 
 		service = TestBed.inject(ArtistListService);
 	});

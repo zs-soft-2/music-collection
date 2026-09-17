@@ -1,26 +1,30 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import { of } from 'rxjs';
 
-import { AlbumCollectionModule } from '../../../collection/album-collection.module';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { AlbumStateService } from '@music-collection/api';
+import { NgxPermissionsModule } from 'ngx-permissions';
+
 import { AlbumAdminComponent } from './album-admin.component';
 
 describe('AlbumAdminComponent', () => {
 	let component: AlbumAdminComponent;
 	let fixture: ComponentFixture<AlbumAdminComponent>;
 
-	beforeEach(async(() => {
-		TestBed.configureTestingModule({
-			imports: [
-				HttpClientTestingModule,
-				RouterTestingModule,
-				AlbumCollectionModule,
-				AlbumAdminComponent,
+	beforeEach(async () => {
+		await TestBed.configureTestingModule({
+			imports: [NgxPermissionsModule.forRoot(), AlbumAdminComponent],
+			providers: [
+				provideRouter([]),
+				{
+					provide: AlbumStateService,
+					useValue: {
+						selectNewEntityButtonEnabled$: jest.fn(() => of(true)),
+					},
+				},
 			],
 		}).compileComponents();
-	}));
 
-	beforeEach(() => {
 		fixture = TestBed.createComponent(AlbumAdminComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();

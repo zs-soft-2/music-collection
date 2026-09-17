@@ -6,7 +6,9 @@ describe('EntityQuantityUtilServiceImpl', () => {
 	let service: EntityQuantityUtilServiceImpl;
 
 	beforeEach(() => {
-		TestBed.configureTestingModule({});
+		TestBed.configureTestingModule({
+			providers: [EntityQuantityUtilServiceImpl],
+		});
 		service = TestBed.inject(EntityQuantityUtilServiceImpl);
 	});
 

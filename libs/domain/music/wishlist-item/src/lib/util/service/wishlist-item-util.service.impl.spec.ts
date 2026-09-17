@@ -6,7 +6,9 @@ describe('WishlistItemUtilServiceImpl', () => {
 	let service: WishlistItemUtilServiceImpl;
 
 	beforeEach(() => {
-		TestBed.configureTestingModule({});
+		TestBed.configureTestingModule({
+			providers: [WishlistItemUtilServiceImpl],
+		});
 		service = TestBed.inject(WishlistItemUtilServiceImpl);
 	});
 

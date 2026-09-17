@@ -1,4 +1,11 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import {
+	AuthenticationStateService,
+	CollectionItemStateService,
+	CollectionItemUtilService,
+	ReleaseStateService,
+} from '@music-collection/api';
 
 import { CollectionItemFormService } from './collection-item-form.service';
 
@@ -7,7 +14,14 @@ describe('CollectionItemFormService', () => {
 
 	beforeEach(() => {
 		TestBed.configureTestingModule({
-			providers: [CollectionItemFormService],
+			providers: [
+				provideRouter([]),
+				CollectionItemFormService,
+				{ provide: AuthenticationStateService, useValue: {} },
+				{ provide: CollectionItemStateService, useValue: {} },
+				{ provide: CollectionItemUtilService, useValue: {} },
+				{ provide: ReleaseStateService, useValue: {} },
+			],
 		});
 
 		service = TestBed.inject(CollectionItemFormService);

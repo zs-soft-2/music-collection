@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import { MCArtistHookService } from './mc-artist-hook.service';
 
@@ -6,7 +7,9 @@ describe('MCArtistHookService', () => {
 	let service: MCArtistHookService;
 
 	beforeEach(() => {
-		TestBed.configureTestingModule({});
+		TestBed.configureTestingModule({
+			providers: [provideRouter([]), MCArtistHookService],
+		});
 
 		service = TestBed.inject(MCArtistHookService);
 	});

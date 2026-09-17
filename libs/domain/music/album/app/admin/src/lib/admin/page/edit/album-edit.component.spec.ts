@@ -1,19 +1,58 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { of } from 'rxjs';
 
-import { AlbumFormModule } from '../../../form/album-form.module';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { FormBuilder } from '@angular/forms';
+import { provideRouter } from '@angular/router';
+import {
+	AlbumStateService,
+	AlbumUtilService,
+	ArtistStateService,
+	DocumentStateService,
+} from '@music-collection/api';
+
 import { AlbumEditComponent } from './album-edit.component';
 
 describe('AlbumEditComponent', () => {
 	let component: AlbumEditComponent;
 	let fixture: ComponentFixture<AlbumEditComponent>;
 
-	beforeEach(waitForAsync(() => {
-		TestBed.configureTestingModule({
-			imports: [AlbumFormModule, AlbumEditComponent],
+	beforeEach(async () => {
+		await TestBed.configureTestingModule({
+			imports: [AlbumEditComponent],
+			providers: [
+				provideRouter([]),
+				{
+					provide: AlbumStateService,
+					useValue: { selectEntityById$: jest.fn(() => of(undefined)) },
+				},
+				{
+					provide: AlbumUtilService,
+					useValue: {
+						createFormGroup: jest.fn(() =>
+							new FormBuilder().group({
+								artist: [null],
+								coverImage: [null],
+								format: [null],
+								name: [null],
+								spotify: [null],
+								styles: [null],
+								uid: [null],
+								year: [null],
+							})
+						),
+					},
+				},
+				{
+					provide: ArtistStateService,
+					useValue: { selectSearchResult$: jest.fn(() => of([])) },
+				},
+				{
+					provide: DocumentStateService,
+					useValue: { selectSearchResult$: jest.fn(() => of([])) },
+				},
+			],
 		}).compileComponents();
-	}));
 
-	beforeEach(() => {
 		fixture = TestBed.createComponent(AlbumEditComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();

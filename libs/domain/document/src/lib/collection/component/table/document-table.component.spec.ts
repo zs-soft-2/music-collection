@@ -1,4 +1,12 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
+
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
+import { provideRouter } from '@angular/router';
+import {
+	DocumentStateService,
+	DocumentUtilService,
+} from '@music-collection/api';
 
 import { DocumentTableComponent } from './document-table.component';
 
@@ -6,13 +14,20 @@ describe('DocumentTableComponent', () => {
 	let component: DocumentTableComponent;
 	let fixture: ComponentFixture<DocumentTableComponent>;
 
-	beforeEach(async(() => {
-		TestBed.configureTestingModule({
+	beforeEach(async () => {
+		await TestBed.configureTestingModule({
 			imports: [DocumentTableComponent],
+			providers: [
+				provideRouter([]),
+				provideNoopAnimations(),
+				{
+					provide: DocumentStateService,
+					useValue: { selectSearchResult$: jest.fn(() => of([])) },
+				},
+				{ provide: DocumentUtilService, useValue: {} },
+			],
 		}).compileComponents();
-	}));
 
-	beforeEach(() => {
 		fixture = TestBed.createComponent(DocumentTableComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
