@@ -28,7 +28,10 @@
 		},
 		"singleProjectMode": true
 	},
-	"storage": {
-		"rules": "storage.rules"
-	}
+	"storage": [
+		{
+			"target": "main",
+			"rules": "storage.rules"
+		}
+	]
 }

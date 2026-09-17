@@ -7,12 +7,26 @@
   "targets": {
     "music-collection-16676": {
       "hosting": {
-        "app": ["music-collection-16676"]
+        "app": [
+          "music-collection-16676"
+        ]
+      },
+      "storage": {
+        "main": [
+          "music-collection-16676.firebasestorage.app"
+        ]
       }
     },
     "music-collection-4e074": {
       "hosting": {
-        "app": ["music-collection-4e074"]
+        "app": [
+          "music-collection-4e074"
+        ]
+      },
+      "storage": {
+        "main": [
+          "music-collection-4e074.appspot.com"
+        ]
       }
     }
   }
