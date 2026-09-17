@@ -119,58 +119,88 @@
 			</button>
 		</div>
 	} @else {
-		<ul class="grid">
-			@for (entry of store.visible(); track entry.id) {
-				<li class="entry" [class.is-found]="!entry.isActive">
-					<mc-release-card
-						adminEntity="wishlist-item"
-						[release]="entry.release"
-						[priority]="$index < 6"
+		@for (chunk of store.chunks(); track $index) {
+			@if ($first) {
+				<ng-container
+					[ngTemplateOutlet]="chunkTemplate"
+					[ngTemplateOutletContext]="{
+						$implicit: chunk,
+						priority: true,
+					}"
+				/>
+			} @else {
+				<!-- Later chunks build just before they scroll into view -->
+				@defer (on viewport({ rootMargin: '800px' })) {
+					<ng-container
+						[ngTemplateOutlet]="chunkTemplate"
+						[ngTemplateOutletContext]="{
+							$implicit: chunk,
+							priority: false,
+						}"
 					/>
-					<div class="entry-meta">
-						@if (entry.formats.length > 1) {
-							<ul class="formats" aria-label="Also wanted on">
-								@for (
-									format of entry.formats.slice(1);
-									track format
-								) {
-									<li>
-										<mc-format-badge [format]="format" />
-									</li>
-								}
-							</ul>
-						} @else {
-							<span></span>
-						}
-						@if (!entry.isActive) {
-							<span class="found">
-								<i class="pi pi-check" aria-hidden="true"></i>
-								Found
-							</span>
-						} @else if (entry.shopUrl) {
-							<a
-								class="shop"
-								[href]="entry.shopUrl"
-								target="_blank"
-								rel="noopener noreferrer"
-								[attr.aria-label]="
-									'Shop: ' +
-									entry.release.artistName +
-									' — ' +
-									entry.release.title +
-									' (opens in a new tab)'
-								"
-							>
-								Shop
-								<i
-									class="pi pi-external-link"
-									aria-hidden="true"
-								></i>
-							</a>
-						}
-					</div>
-				</li>
+				} @placeholder {
+					<div
+						class="chunk-placeholder"
+						[style.--count]="chunk.length"
+					></div>
+				}
 			}
-		</ul>
+		}
 	}
 </div>
+
+<ng-template #chunkTemplate let-entries let-priority="priority">
+	<ul class="grid">
+		@for (entry of entries; track entry.id) {
+			<li class="entry" [class.is-found]="!entry.isActive">
+				<mc-release-card
+					adminEntity="wishlist-item"
+					[release]="entry.release"
+					[priority]="priority && $index < 6"
+				/>
+				<div class="entry-meta">
+					@if (entry.formats.length > 1) {
+						<ul class="formats" aria-label="Also wanted on">
+							@for (
+								format of entry.formats.slice(1);
+								track format
+							) {
+								<li>
+									<mc-format-badge [format]="format" />
+								</li>
+							}
+						</ul>
+					} @else {
+						<span></span>
+					}
+					@if (!entry.isActive) {
+						<span class="found">
+							<i class="pi pi-check" aria-hidden="true"></i>
+							Found
+						</span>
+					} @else if (entry.shopUrl) {
+						<a
+							class="shop"
+							[href]="entry.shopUrl"
+							target="_blank"
+							rel="noopener noreferrer"
+							[attr.aria-label]="
+								'Shop: ' +
+								entry.release.artistName +
+								' — ' +
+								entry.release.title +
+								' (opens in a new tab)'
+							"
+						>
+							Shop
+							<i
+								class="pi pi-external-link"
+								aria-hidden="true"
+							></i>
+						</a>
+					}
+				</div>
+			</li>
+		}
+	</ul>
+</ng-template>

@@ -20,6 +20,9 @@ import { FORMAT_LABELS, MediaFormat, ReleaseView } from '../../shared/music-ui';
 
 export type WishlistFormatFilter = MediaFormat | 'all';
 
+/** Cards per render chunk of the grid (see `chunks`). */
+const RENDER_CHUNK_SIZE = 30;
+
 /** One wanted album: the card view plus what the wishlist adds to it. */
 export interface WishlistEntryView {
 	id: string;
@@ -109,23 +112,36 @@ export const WishlistPageStore = signalStore(
 				);
 		});
 
+		const visible = computed(() =>
+			searched()
+				.filter(
+					(entry) =>
+						store.format() === 'all' ||
+						entry.formats.includes(store.format() as MediaFormat)
+				)
+				.sort(
+					(a, b) =>
+						a.release.artistName.localeCompare(
+							b.release.artistName
+						) || a.release.title.localeCompare(b.release.title)
+				)
+		);
+
 		return {
-			visible: computed(() =>
-				searched()
-					.filter(
-						(entry) =>
-							store.format() === 'all' ||
-							entry.formats.includes(
-								store.format() as MediaFormat
-							)
-					)
-					.sort(
-						(a, b) =>
-							a.release.artistName.localeCompare(
-								b.release.artistName
-							) || a.release.title.localeCompare(b.release.title)
-					)
-			),
+			visible,
+			/**
+			 * Cards per render chunk: the first chunk renders at once, the
+			 * rest when they approach the viewport (`@defer`).
+			 */
+			chunks: computed(() => {
+				const entries = visible();
+				const chunks: WishlistEntryView[][] = [];
+
+				for (let i = 0; i < entries.length; i += RENDER_CHUNK_SIZE) {
+					chunks.push(entries.slice(i, i + RENDER_CHUNK_SIZE));
+				}
+				return chunks;
+			}),
 			formatCounts: computed(() =>
 				FORMAT_ORDER.map((format) => ({
 					format,

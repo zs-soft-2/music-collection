@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
@@ -14,7 +15,12 @@ import { WishlistPageStore } from '../../wishlist-page.store';
 	selector: 'mc-wishlist-page',
 	templateUrl: './wishlist-page.component.html',
 	styleUrls: ['./wishlist-page.component.scss'],
-	imports: [RouterLink, ReleaseCardComponent, FormatBadgeComponent],
+	imports: [
+		NgTemplateOutlet,
+		RouterLink,
+		ReleaseCardComponent,
+		FormatBadgeComponent,
+	],
 })
 export class WishlistPageComponent {
 	protected readonly store = inject(WishlistPageStore);

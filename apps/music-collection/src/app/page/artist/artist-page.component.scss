@@ -425,6 +425,17 @@ mc-discography-timeline {
 	gap: 1rem;
 }
 
+/* Rough height of a section that has not rendered yet (@defer). */
+.defer-placeholder {
+	&.is-cards {
+		height: calc(round(up, var(--count) / 6, 1) * 330px);
+	}
+
+	&.is-rows {
+		height: calc(var(--count) * 58px);
+	}
+}
+
 .empty {
 	color: var(--mc-text-muted);
 }
@@ -498,6 +509,10 @@ mc-discography-timeline {
 @media (max-width: 720px) {
 	.hero {
 		min-height: 400px;
+	}
+
+	.defer-placeholder.is-cards {
+		height: calc(round(up, var(--count) / 2, 1) * 290px);
 	}
 
 	.album-grid,

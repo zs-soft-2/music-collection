@@ -195,6 +195,17 @@ h1 {
 	gap: 1.25rem;
 }
 
+.grid + .grid,
+.chunk-placeholder + .grid,
+.grid + .chunk-placeholder {
+	margin-top: 1.25rem;
+}
+
+/* Rough height of a not-yet-rendered chunk (≈6 cards per row). */
+.chunk-placeholder {
+	height: calc(round(up, var(--count) / 6, 1) * 370px);
+}
+
 .entry {
 	display: flex;
 	flex-direction: column;

@@ -176,22 +176,118 @@
 		@if (store.members().length) {
 			<section id="bands" class="section" aria-labelledby="bands-title">
 				<h2 id="bands-title" class="section-title">Bands</h2>
-				<ul class="bands">
-					@for (band of store.members(); track band.artistUid) {
-						<li class="band" [class.active]="band.active">
-							<span class="thumb" aria-hidden="true">
-								@if (band.artist?.imageUrl) {
-									<img
-										[src]="band.artist.imageUrl"
-										alt=""
-										loading="lazy"
-									/>
-								} @else {
-									{{ band.name.charAt(0) }}
-								}
-							</span>
+				@defer (
+					on viewport({ rootMargin: '800px' });
+					when revealAll()
+				) {
+					<ul class="bands">
+						@for (band of store.members(); track band.artistUid) {
+							<li class="band" [class.active]="band.active">
+								<span class="thumb" aria-hidden="true">
+									@if (band.artist?.imageUrl) {
+										<img
+											[src]="band.artist.imageUrl"
+											alt=""
+											loading="lazy"
+										/>
+									} @else {
+										{{ band.name.charAt(0) }}
+									}
+								</span>
 
-							<div class="who">
+								<div class="who">
+									@if (band.artist) {
+										<a
+											class="band-name"
+											[routerLink]="[
+												'/artist',
+												band.artistUid,
+											]"
+											>{{ band.name }}</a
+										>
+									} @else {
+										<span class="band-name">{{
+											band.name
+										}}</span>
+									}
+									@if (band.instruments.length) {
+										<span class="instruments">{{
+											band.instruments.join(', ')
+										}}</span>
+									}
+								</div>
+
+								<div class="when">
+									<span class="years">{{
+										band.years ?? 'Years unknown'
+									}}</span>
+									<span class="meta">
+										@if (band.type) {
+											{{ typeLabels[band.type] }}
+										}
+										@if (band.albumCount) {
+											· {{ band.albumCount }}
+											{{
+												band.albumCount === 1
+													? 'album'
+													: 'albums'
+											}}
+										}
+										@if (band.collectedReleases) {
+											·
+											<i
+												class="pi pi-check-circle owned"
+												aria-hidden="true"
+											></i>
+											{{ band.collectedReleases }} in your
+											collection
+										}
+									</span>
+								</div>
+
+								<div class="track" aria-hidden="true">
+									@if (bar(band); as position) {
+										<span
+											class="bar"
+											[style.left.%]="position.left"
+											[style.width.%]="position.width"
+										></span>
+									}
+								</div>
+							</li>
+						}
+					</ul>
+					@if (span(); as all) {
+						<div class="axis" aria-hidden="true">
+							<span>{{ all.from }}</span>
+							<span>{{ all.active ? 'Now' : all.to }}</span>
+						</div>
+					}
+				} @placeholder {
+					<div
+						class="defer-placeholder is-rows"
+						[style.--count]="store.members().length"
+					></div>
+				}
+			</section>
+		}
+
+		<!-- Guest appearances -->
+		@if (store.guestBands().length) {
+			<section id="guest" class="section" aria-labelledby="guest-title">
+				<h2 id="guest-title" class="section-title">
+					Guest appearances
+				</h2>
+				@defer (
+					on viewport({ rootMargin: '800px' });
+					when revealAll()
+				) {
+					<ul class="guests">
+						@for (
+							band of store.guestBands();
+							track band.artistUid
+						) {
+							<li class="guest">
 								@if (band.artist) {
 									<a
 										class="band-name"
@@ -211,15 +307,9 @@
 										band.instruments.join(', ')
 									}}</span>
 								}
-							</div>
-
-							<div class="when">
-								<span class="years">{{
-									band.years ?? 'Years unknown'
-								}}</span>
 								<span class="meta">
-									@if (band.type) {
-										{{ typeLabels[band.type] }}
+									@if (band.years) {
+										{{ band.years }}
 									}
 									@if (band.albumCount) {
 										· {{ band.albumCount }}
@@ -229,78 +319,16 @@
 												: 'albums'
 										}}
 									}
-									@if (band.collectedReleases) {
-										·
-										<i
-											class="pi pi-check-circle owned"
-											aria-hidden="true"
-										></i>
-										{{ band.collectedReleases }} in your
-										collection
-									}
 								</span>
-							</div>
-
-							<div class="track" aria-hidden="true">
-								@if (bar(band); as position) {
-									<span
-										class="bar"
-										[style.left.%]="position.left"
-										[style.width.%]="position.width"
-									></span>
-								}
-							</div>
-						</li>
-					}
-				</ul>
-				@if (span(); as all) {
-					<div class="axis" aria-hidden="true">
-						<span>{{ all.from }}</span>
-						<span>{{ all.active ? 'Now' : all.to }}</span>
-					</div>
+							</li>
+						}
+					</ul>
+				} @placeholder {
+					<div
+						class="defer-placeholder is-guests"
+						[style.--count]="store.guestBands().length"
+					></div>
 				}
-			</section>
-		}
-
-		<!-- Guest appearances -->
-		@if (store.guestBands().length) {
-			<section id="guest" class="section" aria-labelledby="guest-title">
-				<h2 id="guest-title" class="section-title">
-					Guest appearances
-				</h2>
-				<ul class="guests">
-					@for (band of store.guestBands(); track band.artistUid) {
-						<li class="guest">
-							@if (band.artist) {
-								<a
-									class="band-name"
-									[routerLink]="['/artist', band.artistUid]"
-									>{{ band.name }}</a
-								>
-							} @else {
-								<span class="band-name">{{ band.name }}</span>
-							}
-							@if (band.instruments.length) {
-								<span class="instruments">{{
-									band.instruments.join(', ')
-								}}</span>
-							}
-							<span class="meta">
-								@if (band.years) {
-									{{ band.years }}
-								}
-								@if (band.albumCount) {
-									· {{ band.albumCount }}
-									{{
-										band.albumCount === 1
-											? 'album'
-											: 'albums'
-									}}
-								}
-							</span>
-						</li>
-					}
-				</ul>
 			</section>
 		}
 
@@ -357,19 +385,31 @@
 					}
 				</header>
 
-				<ul class="album-grid">
-					@for (album of store.filteredAlbums(); track album.id) {
-						<li class="album">
-							<mc-discography-card [album]="album" />
-							<p class="album-artist">{{ album.artistName }}</p>
-							<ul class="roles" aria-label="Credits">
-								@for (role of album.roles; track role) {
-									<li>{{ role }}</li>
-								}
-							</ul>
-						</li>
-					}
-				</ul>
+				@defer (
+					on viewport({ rootMargin: '800px' });
+					when revealAll()
+				) {
+					<ul class="album-grid">
+						@for (album of store.filteredAlbums(); track album.id) {
+							<li class="album">
+								<mc-discography-card [album]="album" />
+								<p class="album-artist">
+									{{ album.artistName }}
+								</p>
+								<ul class="roles" aria-label="Credits">
+									@for (role of album.roles; track role) {
+										<li>{{ role }}</li>
+									}
+								</ul>
+							</li>
+						}
+					</ul>
+				} @placeholder {
+					<div
+						class="defer-placeholder is-cards"
+						[style.--count]="store.filteredAlbums().length"
+					></div>
+				}
 			</section>
 		}
 
@@ -381,26 +421,42 @@
 				aria-labelledby="bandmates-title"
 			>
 				<h2 id="bandmates-title" class="section-title">Bandmates</h2>
-				<ul class="bandmates">
-					@for (mate of visibleBandmates(); track mate.musicianUid) {
-						<li>
-							<a
-								class="bandmate"
-								[class.active]="mate.active"
-								[routerLink]="['/musician', mate.musicianUid]"
-							>
-								<span class="bandmate-name">{{
-									mate.name
-								}}</span>
-								@for (item of mate.together; track $index) {
-									<span class="together">
-										{{ item.band }} · {{ item.years }}
-									</span>
-								}
-							</a>
-						</li>
-					}
-				</ul>
+				@defer (
+					on viewport({ rootMargin: '800px' });
+					when revealAll()
+				) {
+					<ul class="bandmates">
+						@for (
+							mate of visibleBandmates();
+							track mate.musicianUid
+						) {
+							<li>
+								<a
+									class="bandmate"
+									[class.active]="mate.active"
+									[routerLink]="[
+										'/musician',
+										mate.musicianUid,
+									]"
+								>
+									<span class="bandmate-name">{{
+										mate.name
+									}}</span>
+									@for (item of mate.together; track $index) {
+										<span class="together">
+											{{ item.band }} · {{ item.years }}
+										</span>
+									}
+								</a>
+							</li>
+						}
+					</ul>
+				} @placeholder {
+					<div
+						class="defer-placeholder is-mates"
+						[style.--count]="visibleBandmates().length"
+					></div>
+				}
 				@if (store.bandmates().length > bandmatePreview) {
 					<button
 						type="button"

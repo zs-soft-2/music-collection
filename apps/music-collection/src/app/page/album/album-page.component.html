@@ -186,7 +186,14 @@
 						}
 					</div>
 				} @else if (store.contributions().length) {
-					<mc-album-credits [groups]="store.creditGroups()" />
+					@defer (on viewport({ rootMargin: '800px' })) {
+						<mc-album-credits [groups]="store.creditGroups()" />
+					} @placeholder {
+						<div
+							class="defer-placeholder is-rows"
+							[style.--count]="store.contributions().length"
+						></div>
+					}
 				} @else if (!store.detailsFailed()) {
 					<p class="empty">
 						No credits have been imported for this album yet.
@@ -261,11 +268,18 @@
 						<i class="pi pi-arrow-right" aria-hidden="true"></i>
 					</a>
 				</header>
-				<ul class="album-grid">
-					@for (other of store.moreAlbums(); track other.id) {
-						<li><mc-discography-card [album]="other" /></li>
-					}
-				</ul>
+				@defer (on viewport({ rootMargin: '800px' })) {
+					<ul class="album-grid">
+						@for (other of store.moreAlbums(); track other.id) {
+							<li><mc-discography-card [album]="other" /></li>
+						}
+					</ul>
+				} @placeholder {
+					<div
+						class="defer-placeholder is-cards"
+						[style.--count]="store.moreAlbums().length"
+					></div>
+				}
 			</section>
 		}
 	} @else if (store.notFound()) {

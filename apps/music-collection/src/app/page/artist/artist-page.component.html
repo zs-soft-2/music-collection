@@ -163,7 +163,20 @@
 		@if (hasLineup()) {
 			<section id="lineup" class="section" aria-labelledby="lineup-title">
 				<h2 id="lineup-title" class="section-title">Line-up</h2>
-				<mc-artist-lineup [lineup]="store.lineup()" />
+				@defer (
+					on viewport({ rootMargin: '800px' });
+					when revealAll()
+				) {
+					<mc-artist-lineup [lineup]="store.lineup()" />
+				} @placeholder {
+					<div
+						class="defer-placeholder is-rows"
+						[style.--count]="
+							store.lineup().members.length +
+							store.lineup().guests.length / 3
+						"
+					></div>
+				}
 				<a
 					class="network-link"
 					routerLink="/network"
@@ -229,18 +242,30 @@
 					}
 				</ul>
 			} @else if (store.discography().length) {
-				@if (hasTimeline()) {
-					<mc-discography-timeline [albums]="store.discography()" />
-				}
-
-				<ul class="album-grid">
-					@for (
-						album of store.filteredDiscography();
-						track album.id
-					) {
-						<li><mc-discography-card [album]="album" /></li>
+				@defer (
+					on viewport({ rootMargin: '800px' });
+					when revealAll()
+				) {
+					@if (hasTimeline()) {
+						<mc-discography-timeline
+							[albums]="store.discography()"
+						/>
 					}
-				</ul>
+
+					<ul class="album-grid">
+						@for (
+							album of store.filteredDiscography();
+							track album.id
+						) {
+							<li><mc-discography-card [album]="album" /></li>
+						}
+					</ul>
+				} @placeholder {
+					<div
+						class="defer-placeholder is-cards"
+						[style.--count]="store.filteredDiscography().length"
+					></div>
+				}
 			} @else {
 				<p class="empty">
 					No albums of {{ artist.name }} in the catalog yet.
@@ -265,11 +290,24 @@
 					</a>
 				</header>
 
-				<ul class="card-grid">
-					@for (release of store.ownReleases(); track release.id) {
-						<li><mc-release-card [release]="release" /></li>
-					}
-				</ul>
+				@defer (
+					on viewport({ rootMargin: '800px' });
+					when revealAll()
+				) {
+					<ul class="card-grid">
+						@for (
+							release of store.ownReleases();
+							track release.id
+						) {
+							<li><mc-release-card [release]="release" /></li>
+						}
+					</ul>
+				} @placeholder {
+					<div
+						class="defer-placeholder is-cards"
+						[style.--count]="store.ownReleases().length"
+					></div>
+				}
 			</section>
 		}
 
@@ -283,11 +321,21 @@
 				<h2 id="similar-title" class="section-title">
 					Similar artists
 				</h2>
-				<ul class="artist-grid">
-					@for (similar of store.similar(); track similar.id) {
-						<li><mc-artist-tile [artist]="similar" /></li>
-					}
-				</ul>
+				@defer (
+					on viewport({ rootMargin: '800px' });
+					when revealAll()
+				) {
+					<ul class="artist-grid">
+						@for (similar of store.similar(); track similar.id) {
+							<li><mc-artist-tile [artist]="similar" /></li>
+						}
+					</ul>
+				} @placeholder {
+					<div
+						class="defer-placeholder is-cards"
+						[style.--count]="store.similar().length"
+					></div>
+				}
 			</section>
 		}
 	} @else if (store.notFound()) {

@@ -2,6 +2,7 @@ import { DOCUMENT, ViewportScroller } from '@angular/common';
 import {
 	ChangeDetectionStrategy,
 	Component,
+	ElementRef,
 	computed,
 	effect,
 	inject,
@@ -14,6 +15,7 @@ import {
 	AdminEditLinkComponent,
 	CREDIT_CATEGORY_LABELS,
 	DiscographyCardComponent,
+	whenDeferredRendered,
 } from '../../shared/music-ui';
 import { MusicianBandView, bandsSpan } from './musician.mapper';
 import { MusicianPageStore } from './musician-page.store';
@@ -47,12 +49,16 @@ export class MusicianPageComponent {
 	protected readonly store = inject(MusicianPageStore);
 	private readonly viewportScroller = inject(ViewportScroller);
 	private readonly document = inject(DOCUMENT);
+	private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
 	protected readonly roleLabels = CREDIT_CATEGORY_LABELS;
 	protected readonly typeLabels = TYPE_LABELS;
 	protected readonly bandmatePreview = BANDMATE_PREVIEW;
 	protected readonly showAllBandmates = signal(false);
 	protected readonly bioExpanded = signal(false);
+
+	/** Renders every deferred section at once (before an in-page jump). */
+	protected readonly revealAll = signal(false);
 
 	protected readonly visibleParagraphs = computed(() => {
 		const paragraphs = this.store.header()?.paragraphs ?? [];
@@ -153,7 +159,11 @@ export class MusicianPageComponent {
 		};
 	}
 
-	protected scrollTo(sectionId: string): void {
+	protected async scrollTo(sectionId: string): Promise<void> {
+		// Sections above the target must have their final height first.
+		this.revealAll.set(true);
+		await whenDeferredRendered(this.host.nativeElement);
+
 		const section = this.document.getElementById(sectionId);
 		const smooth = !this.document.defaultView?.matchMedia(
 			'(prefers-reduced-motion: reduce)'

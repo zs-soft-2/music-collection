@@ -335,6 +335,18 @@ h1 {
 	}
 }
 
+/* Rough height of a block that has not rendered yet (@defer). */
+.defer-placeholder {
+	&.is-rows {
+		/* Credits are grouped by person: fewer rows than contributions. */
+		height: calc(var(--count) * 34px);
+	}
+
+	&.is-cards {
+		height: calc(round(up, var(--count) / 6, 1) * 330px);
+	}
+}
+
 .empty {
 	margin: 0;
 	color: var(--mc-text-muted);
@@ -468,6 +480,10 @@ h1 {
 }
 
 @media (max-width: 720px) {
+	.defer-placeholder.is-cards {
+		height: calc(round(up, var(--count) / 2, 1) * 290px);
+	}
+
 	.album-grid {
 		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
 		gap: 0.75rem;

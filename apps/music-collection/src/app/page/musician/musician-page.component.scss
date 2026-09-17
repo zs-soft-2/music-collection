@@ -560,9 +560,17 @@ a.band-name:focus-visible,
 
 /* ── Albums ───────────────────────────────────────────────────────────── */
 
+/*
+ * Card, artist and roles share the rows of the grid (subgrid): the cards of a
+ * row are equally tall, the roles start on one line, and a shorter role list
+ * leaves its space below.
+ */
 .album {
-	display: flex;
-	flex-direction: column;
+	display: grid;
+	grid-row: span 3;
+	grid-template-rows: subgrid;
+	row-gap: 0;
+	align-content: start;
 	min-width: 0;
 }
 
@@ -575,6 +583,7 @@ a.band-name:focus-visible,
 .roles {
 	display: flex;
 	flex-wrap: wrap;
+	align-content: flex-start;
 	gap: 0.3rem;
 
 	li {
@@ -628,6 +637,10 @@ a.band-name:focus-visible,
 }
 
 @media (max-width: 720px) {
+	.defer-placeholder.is-cards {
+		height: calc(round(up, var(--count) / 2, 1) * 360px);
+	}
+
 	.band {
 		grid-template-columns: 3rem minmax(0, 1fr);
 	}
@@ -642,6 +655,27 @@ a.band-name:focus-visible,
 
 	.axis {
 		display: none;
+	}
+}
+
+/* ── Deferred sections ────────────────────────────────────────────────── */
+
+/* Rough height of a section that has not rendered yet (@defer). */
+.defer-placeholder {
+	&.is-rows {
+		height: calc(var(--count) * 72px);
+	}
+
+	&.is-guests {
+		height: calc(round(up, var(--count) / 4, 1) * 72px);
+	}
+
+	&.is-cards {
+		height: calc(round(up, var(--count) / 6, 1) * 400px);
+	}
+
+	&.is-mates {
+		height: calc(round(up, var(--count) / 4, 1) * 96px);
 	}
 }
 

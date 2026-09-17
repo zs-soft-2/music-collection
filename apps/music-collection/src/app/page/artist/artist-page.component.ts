@@ -20,6 +20,7 @@ import {
 	DiscographyCardComponent,
 	FORMAT_LABELS,
 	ReleaseCardComponent,
+	whenDeferredRendered,
 } from '../../shared/music-ui';
 import { ArtistPageStore } from './artist-page.store';
 import { ArtistLineupComponent } from './component/artist-lineup/artist-lineup.component';
@@ -62,6 +63,9 @@ export class ArtistPageComponent {
 
 	protected readonly formatLabels = FORMAT_LABELS;
 	protected readonly bioExpanded = signal(false);
+
+	/** Renders every deferred section at once (before an in-page jump). */
+	protected readonly revealAll = signal(false);
 
 	protected readonly visibleParagraphs = computed(() => {
 		const paragraphs = this.store.artist()?.paragraphs ?? [];
@@ -128,12 +132,20 @@ export class ArtistPageComponent {
 		afterNextRender(() => this.trackActiveSection());
 	}
 
-	protected scrollTo(sectionId: string): void {
+	protected async scrollTo(sectionId: string): Promise<void> {
+		this.activeSection.set(sectionId);
+		// Sections above the target must have their final height first; the
+		// scroll-spy waits meanwhile.
+		this.scrollLockUntil = Number.MAX_SAFE_INTEGER;
+		this.revealAll.set(true);
+		await whenDeferredRendered(this.host.nativeElement);
+
 		const view = this.document.defaultView;
 		const section = this.document.getElementById(sectionId);
 		const nav =
 			this.host.nativeElement.querySelector<HTMLElement>('.section-nav');
 		if (!view || !section || !nav) {
+			this.scrollLockUntil = 0;
 			return;
 		}
 		// Land below the sticky app bar and section navigation.
@@ -145,7 +157,6 @@ export class ArtistPageComponent {
 		const smooth = !view.matchMedia('(prefers-reduced-motion: reduce)')
 			.matches;
 
-		this.activeSection.set(sectionId);
 		// Keep the clicked link active while the page scrolls past other sections.
 		this.scrollLockUntil = Date.now() + (smooth ? 1000 : 0);
 		view.scrollTo({
