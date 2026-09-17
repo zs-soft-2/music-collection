@@ -26,10 +26,13 @@ module "service_accounts" {
   source     = "../../modules/service-accounts"
   project_id = local.project_id
 
-  # A CI csak Firebase Hostingot telepít — a scaffold alapértéke (firebase.admin, run.admin,
-  # cloudfunctions, projekt-szintű secretAccessor) ehhez indokolatlanul tág.
+  # A CI a Hostingot, a Firestore és Storage rules-t és a Firestore indexeket telepíti — a
+  # scaffold alapértéke (firebase.admin, run.admin, cloudfunctions, projekt-szintű
+  # secretAccessor) ehhez indokolatlanul tág.
   deployer_roles = [
     "roles/firebasehosting.admin",
+    "roles/firebaserules.admin",
+    "roles/datastore.indexAdmin",
     "roles/serviceusage.serviceUsageConsumer",
   ]
 

@@ -43,7 +43,6 @@ Thumbs.db
 /.firebase/*.*
 /emulators.backup
 /firebase-debug.log
-/storage.rules
 /ui-debug.log
 /firestore-debug.log
 

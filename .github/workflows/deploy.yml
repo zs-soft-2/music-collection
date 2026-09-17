@@ -31,4 +31,5 @@ jobs:
         with:
           workload_identity_provider: ${{ vars.WIF_PROVIDER }}
           service_account: ${{ vars.DEPLOYER_SA }}
-      - run: npx firebase-tools deploy --only hosting:${{ vars.FIREBASE_HOSTING }} --project ${{ vars.GCP_PROJECT }} --non-interactive
+      # A hosting mellett a firebase.json többi része is: Firestore rules és indexek, Storage rules.
+      - run: npx firebase-tools deploy --only hosting:${{ vars.FIREBASE_HOSTING }},firestore,storage --project ${{ vars.GCP_PROJECT }} --non-interactive
