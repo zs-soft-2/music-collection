@@ -71,6 +71,16 @@ variable "services" {
     "firebaserules.googleapis.com",
     "firebasestorage.googleapis.com",
     "identitytoolkit.googleapis.com",
+    # Cloud Functions (2. generáció) a jogosultság-szinkronhoz: a function Cloud
+    # Runon fut, a triggerét az Eventarc kézbesíti, a képét a Cloud Build építi
+    # és az Artifact Registry tárolja, a forrás egy Storage-bucketbe kerül.
+    "cloudfunctions.googleapis.com",
+    "run.googleapis.com",
+    "eventarc.googleapis.com",
+    "cloudbuild.googleapis.com",
+    "artifactregistry.googleapis.com",
+    "pubsub.googleapis.com",
+    "storage.googleapis.com",
   ]
 }
 

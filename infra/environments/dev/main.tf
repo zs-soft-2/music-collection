@@ -26,15 +26,32 @@ module "service_accounts" {
   source     = "../../modules/service-accounts"
   project_id = local.project_id
 
-  # A CI a Hostingot, a Firestore és Storage rules-t és a Firestore indexeket telepíti — a
-  # scaffold alapértéke (firebase.admin, run.admin, cloudfunctions, projekt-szintű
-  # secretAccessor) ehhez indokolatlanul tág.
+  # A CI a Hostingot, a Firestore és Storage rules-t, a Firestore indexeket és a
+  # jogosultság-szinkron functiont telepíti — a scaffold alapértéke (firebase.admin,
+  # projekt-szintű secretAccessor) ehhez indokolatlanul tág.
+  #
+  # A 2. generációs function deployjához: kép építése (cloudbuild) és tárolása
+  # (artifactregistry), futtatás (run), Firestore-trigger (eventarc), és a futtató
+  # service account használata (serviceAccountUser). Az API-kat a fenti
+  # `google_project_service.enabled` kapcsolja be, a deployernek csak látnia kell
+  # őket (serviceUsageViewer) — bekapcsolnia nem kell.
+  #
+  # Storage-jogot SZÁNDÉKOSAN nem adunk: a 2. generációs deploy a forrást a
+  # Cloud Functions API-tól kapott aláírt URL-re tölti fel, nem IAM-mel. Így a
+  # deployer nem fér hozzá a feltöltött borítókhoz sem.
   deployer_roles = [
     "roles/firebasehosting.admin",
     "roles/firebaserules.admin",
     "roles/datastore.indexAdmin",
     "roles/firebasestorage.viewer",
     "roles/serviceusage.serviceUsageConsumer",
+    "roles/serviceusage.serviceUsageViewer",
+    "roles/cloudfunctions.developer",
+    "roles/run.admin",
+    "roles/eventarc.developer",
+    "roles/cloudbuild.builds.editor",
+    "roles/artifactregistry.writer",
+    "roles/iam.serviceAccountUser",
   ]
 
   depends_on = [google_project_service.enabled]
