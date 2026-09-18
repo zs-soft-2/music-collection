@@ -1,6 +1,6 @@
 import { Observable, filter, map, of, pipe, switchMap, tap } from 'rxjs';
 
-import { computed, inject } from '@angular/core';
+import { DestroyRef, computed, effect, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import {
 	AlbumEntity,
@@ -35,6 +35,11 @@ import {
 	toAlbumProfile,
 	totalDuration,
 } from './album.mapper';
+import {
+	PlayRequest,
+	PlayerStore,
+	albumPlayRequest,
+} from '../../shared/player';
 
 interface AlbumPageState {
 	albumId: string | null;
@@ -248,8 +253,41 @@ export const AlbumPageStore = signalStore(
 			),
 		})
 	),
+	withComputed((store, player = inject(PlayerStore)) => ({
+		/** Our id of the album's track playing now. */
+		playingTrackId: computed(() => {
+			const now = player.now();
+			return now?.albumId === store.albumId() ? now.trackId : null;
+		}),
+		/** The album plays now. */
+		playing: computed(() => player.pagePlaying()),
+		playable: computed(() => player.pagePlayable()),
+	})),
+	withMethods((store, player = inject(PlayerStore)) => ({
+		/** Plays the album, or pauses / resumes it. */
+		togglePlay(): Promise<void> {
+			return player.togglePage();
+		},
+		playTrack(trackId: string): Promise<void> {
+			return player.playPageTrack(trackId);
+		},
+		openPlayer(): void {
+			player.openStage();
+		},
+	})),
 	withHooks({
-		onInit(store) {
+		onInit(store, player = inject(PlayerStore)) {
+			// The player gets ready for the album shown.
+			let page: PlayRequest | null = null;
+			effect(() => {
+				const album = store
+					.albums()
+					.find((item) => item.uid === store.albumId());
+				page = album ? albumPlayRequest(album, store.tracks()) : null;
+				player.setPage(page);
+			});
+			inject(DestroyRef).onDestroy(() => player.clearPage(page));
+
 			store.loadDetails(of(undefined));
 			store.loadAlbums(of(undefined));
 			store.loadArtists(of(undefined));

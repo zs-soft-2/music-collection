@@ -7,6 +7,15 @@ export interface YtPlayer {
 	previousVideo(): void;
 	getPlaylistIndex(): number;
 	getPlayerState(): number;
+	/** Seconds. */
+	getCurrentTime(): number;
+	/** Seconds; 0 until known. */
+	getDuration(): number;
+	seekTo(seconds: number, allowSeekAhead: boolean): void;
+	/** 0–100. */
+	getVolume(): number;
+	/** 0–100. */
+	setVolume(volume: number): void;
 	destroy(): void;
 }
 

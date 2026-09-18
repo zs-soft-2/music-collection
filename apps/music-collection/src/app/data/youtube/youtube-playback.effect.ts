@@ -3,10 +3,19 @@ import { Injectable, inject } from '@angular/core';
 import { YoutubeIframeRepository } from './youtube-iframe.repository';
 import { YT_PLAYING, YtPlayer } from './youtube-iframe.types';
 
+/** What the player reports on every state change. */
+export interface YoutubePlayerState {
+	/** Playlist position (0-based), -1 for a single video. */
+	playlistIndex: number;
+	playing: boolean;
+	positionMs: number;
+	durationMs: number;
+}
+
 export interface YoutubePlayerEvents {
-	ready: () => void;
-	/** Playlist position (0-based, -1 for a single video) and whether it plays. */
-	stateChanged: (playlistIndex: number, playing: boolean) => void;
+	/** With the player's volume, 0–100. */
+	ready: (volumePercent: number) => void;
+	stateChanged: (state: YoutubePlayerState) => void;
 }
 
 /** Controls an embedded YouTube player: playlist position and track changes. */
@@ -20,12 +29,14 @@ export class YoutubePlaybackEffect {
 	): Promise<YtPlayer> {
 		return this.repository.attach(iframe, {
 			events: {
-				onReady: () => events.ready(),
+				onReady: ({ target }) => events.ready(target.getVolume()),
 				onStateChange: ({ target, data }) =>
-					events.stateChanged(
-						target.getPlaylistIndex(),
-						data === YT_PLAYING
-					),
+					events.stateChanged({
+						playlistIndex: target.getPlaylistIndex(),
+						playing: data === YT_PLAYING,
+						positionMs: target.getCurrentTime() * 1000,
+						durationMs: target.getDuration() * 1000,
+					}),
 			},
 		});
 	}
@@ -40,6 +51,14 @@ export class YoutubePlaybackEffect {
 		} else {
 			player.pauseVideo();
 		}
+	}
+
+	public setVolume(player: YtPlayer, volumePercent: number): void {
+		player.setVolume(volumePercent);
+	}
+
+	public seek(player: YtPlayer, positionMs: number): void {
+		player.seekTo(positionMs / 1000, true);
 	}
 
 	public skip(player: YtPlayer, direction: 'previous' | 'next'): void {

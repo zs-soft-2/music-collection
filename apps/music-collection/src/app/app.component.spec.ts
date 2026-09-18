@@ -14,7 +14,7 @@ import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
 
 import { AppComponent } from './app.component';
-import { SpotifyPlaybackStore } from './shared/spotify';
+import { PlayerStore } from './shared/player';
 
 describe('AppComponent', () => {
 	beforeEach(async () => {
@@ -50,15 +50,10 @@ describe('AppComponent', () => {
 					useValue: { selectEntities$: () => of([]) },
 				},
 				{
-					provide: SpotifyPlaybackStore,
+					provide: PlayerStore,
 					useValue: {
-						connected: signal(false),
-						nowPlaying: signal(null),
-						volume: signal(0),
-						volumeSupported: signal(false),
-						setVolume: jest.fn(),
-						skip: jest.fn(),
-						togglePlay: jest.fn(),
+						stageOpen: signal(false),
+						now: signal(null),
 					},
 				},
 			],

@@ -10,6 +10,7 @@ import { CoreErrorModule } from '@music-collection/core/error';
 
 import { TopBarModule } from './module';
 import { AmbientBackdropComponent } from './shared/backdrop';
+import { PlayerStageComponent, PlayerStore } from './shared/player';
 import { YoutubeDockComponent } from './shared/youtube';
 
 @Component({
@@ -23,11 +24,13 @@ import { YoutubeDockComponent } from './shared/youtube';
 		CoreErrorModule,
 		YoutubeDockComponent,
 		AmbientBackdropComponent,
+		PlayerStageComponent,
 	],
 })
 export class AppComponent implements OnInit {
 	private authenticationStateService = inject(AuthenticationStateService);
 	private entityQuantityStateService = inject(EntityQuantityStateService);
+	protected readonly player = inject(PlayerStore);
 
 	public title = 'music-collection';
 	public version = environment.version;

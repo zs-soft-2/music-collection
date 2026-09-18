@@ -432,6 +432,38 @@ body .p-chip {
 	}
 }
 
+// Kártyák play gombja (mc-play-album-button): hoverre / fókuszra jelenik meg,
+// amíg a kártya albuma szól, mindig látszik.
+.mc-card-play {
+	position: absolute;
+	top: 0.5rem;
+	left: 0.5rem;
+	z-index: 5;
+	opacity: 0;
+	transform: translateY(4px);
+	transition:
+		opacity var(--mc-duration-fast) ease,
+		transform var(--mc-duration-fast) ease;
+
+	&:has(.on) {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+:hover > .mc-card-play,
+:focus-within > .mc-card-play {
+	opacity: 1;
+	transform: none;
+}
+
+@media (hover: none) {
+	.mc-card-play {
+		opacity: 1;
+		transform: none;
+	}
+}
+
 // A lapok tartalmának legnagyobb szélessége; széles nézetben (a felső sáv
 // kapcsolója, LayoutWidthService) nincs korlát, csak az oldalsó térköz.
 :root {

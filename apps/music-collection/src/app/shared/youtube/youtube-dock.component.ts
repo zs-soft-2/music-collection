@@ -14,6 +14,7 @@ import {
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 
+import { PlayerStore } from '../player/player.store';
 import { YoutubePlaybackStore } from './youtube-playback.store';
 
 interface Box {
@@ -37,13 +38,13 @@ interface Box {
 		@if (visible()) {
 			<div
 				class="dock"
-				[class.floating]="!youtube.inSlot()"
-				[style.top.px]="youtube.inSlot() ? box()?.top : null"
-				[style.left.px]="youtube.inSlot() ? box()?.left : null"
-				[style.width.px]="youtube.inSlot() ? box()?.width : null"
-				[style.height.px]="youtube.inSlot() ? box()?.height : null"
+				[class.floating]="!docked()"
+				[style.top.px]="docked() ? box()?.top : null"
+				[style.left.px]="docked() ? box()?.left : null"
+				[style.width.px]="docked() ? box()?.width : null"
+				[style.height.px]="docked() ? box()?.height : null"
 			>
-				@if (!youtube.inSlot()) {
+				@if (!docked()) {
 					<div class="bar">
 						@if (youtube.album(); as album) {
 							<a
@@ -162,6 +163,15 @@ export class YoutubeDockComponent {
 	private readonly sanitizer = inject(DomSanitizer);
 	private readonly document = inject(DOCUMENT);
 	protected readonly youtube = inject(YoutubePlaybackStore);
+	private readonly player = inject(PlayerStore);
+
+	/**
+	 * Over the page's slot; floating (above it) while the full-screen player
+	 * is open, so the video stays in sight.
+	 */
+	protected readonly docked = computed(
+		() => this.youtube.inSlot() && !this.player.stageOpen()
+	);
 
 	private readonly frame = viewChild<ElementRef<HTMLIFrameElement>>('frame');
 	/** Page position of the slot the player covers. */
@@ -171,7 +181,7 @@ export class YoutubeDockComponent {
 	protected readonly visible = computed(
 		() =>
 			!!this.youtube.selection() &&
-			(this.youtube.inSlot() ? !!this.box() : this.youtube.started())
+			(this.docked() ? !!this.box() : this.youtube.started())
 	);
 
 	/** The player URL of the selected item, as a one-element list. */

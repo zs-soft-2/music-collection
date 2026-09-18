@@ -30,6 +30,16 @@ export const routes: Routes = [
 		},
 	},
 	{
+		path: 'album/:albumId/track/:trackId',
+		loadComponent: () =>
+			import('./page/track/track-page.component').then(
+				(module) => module.TrackPageComponent
+			),
+		data: {
+			breadcrumb: 'track',
+		},
+	},
+	{
 		path: 'artist/:artistId',
 		loadComponent: () =>
 			import('./page/artist/artist-page.component').then(

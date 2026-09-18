@@ -145,8 +145,7 @@ h1 {
 	}
 }
 
-.facts,
-.youtube-title {
+.facts {
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;
@@ -215,17 +214,6 @@ h1 {
 	letter-spacing: 0.14em;
 	text-transform: uppercase;
 	color: var(--mc-primary);
-}
-
-.spotify-title {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	color: var(--mc-spotify-text);
-
-	mc-spotify-icon {
-		font-size: 1.1rem;
-	}
 }
 
 .original-facts {
@@ -499,5 +487,198 @@ h1 {
 @media (prefers-reduced-motion: reduce) {
 	.skeleton {
 		animation: none;
+	}
+}
+
+/* ── Compact view ─────────────────────────────────────────────────────── */
+
+.view-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 0.5rem 1rem;
+	margin-top: 1rem;
+}
+
+.view-toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.45rem 0.9rem;
+	font: inherit;
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: var(--mc-text);
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: 999px;
+	cursor: pointer;
+
+	&[aria-pressed='true'] {
+		color: var(--mc-primary);
+		border-color: var(--mc-primary);
+	}
+}
+
+.text-button {
+	padding: 0.4rem 0.2rem;
+	font: inherit;
+	font-size: 0.85rem;
+	color: var(--mc-text-muted);
+	background: none;
+	border: 0;
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+/*
+ * Every section becomes one row of the same accordion: same card, same
+ * title, one column. Opened, a section shows its content below its title.
+ */
+.is-compact {
+	.original,
+	.listen,
+	.panel,
+	.section {
+		display: block;
+		margin: 0.5rem 0 0;
+		padding: 0;
+		background: var(--mc-card-bg);
+		border: 1px solid var(--mc-border);
+		border-radius: var(--mc-radius-md);
+	}
+
+	.details {
+		display: block;
+		margin: 0;
+	}
+
+	.panel-title,
+	.section-title,
+	.section-head {
+		margin: 0;
+		padding: 0;
+		border: 0;
+		font-family: inherit;
+		font-size: 1rem;
+		font-weight: 600;
+		line-height: 1.3;
+		letter-spacing: normal;
+		text-transform: none;
+		color: var(--mc-text);
+	}
+
+	/* Opened content lines up with the title text. */
+	.original-facts,
+	.source,
+	mc-player-panel,
+	mc-album-tracklist,
+	mc-album-credits,
+	.copies,
+	.album-grid,
+	.empty,
+	.more,
+	[role='status'] {
+		margin: 0 1rem 1rem;
+	}
+
+	.original-facts {
+		display: flex;
+	}
+
+	.source {
+		display: inline-flex;
+	}
+
+	.section-head {
+		display: flex;
+		align-items: center;
+
+		.section-title {
+			flex: 1;
+		}
+
+		.more {
+			margin: 0 1rem 0 0;
+			white-space: nowrap;
+		}
+	}
+}
+
+/* The title of a section in the compact view opens and closes it. */
+.section-toggle {
+	display: flex;
+	flex: 1;
+	align-items: center;
+	gap: 0.75rem;
+	width: 100%;
+	padding: 0.85rem 1rem;
+	font: inherit;
+	color: inherit;
+	text-align: left;
+	background: none;
+	border: 0;
+	border-radius: var(--mc-radius-md);
+	cursor: pointer;
+
+	.pi {
+		width: 1rem;
+		font-size: 0.8rem;
+		color: var(--mc-text-muted);
+	}
+
+	&:hover {
+		background: var(--mc-surface-2);
+	}
+}
+
+.view-toggle:focus-visible,
+.text-button:focus-visible,
+.section-toggle:focus-visible {
+	outline: 2px solid var(--mc-primary);
+	outline-offset: 2px;
+}
+
+.play-actions {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin-top: 1.25rem;
+}
+
+.play-button {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	height: 44px;
+	padding: 0 1.4rem;
+	border: 0;
+	border-radius: 22px;
+	font: inherit;
+	font-weight: 700;
+	color: #fff;
+	background: var(--mc-primary);
+	cursor: pointer;
+	transition: transform var(--mc-duration-fast) ease;
+
+	&:hover {
+		transform: scale(1.04);
+	}
+}
+
+.player-button {
+	display: grid;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	border: 1px solid rgb(255 255 255 / 0.3);
+	border-radius: 50%;
+	color: #fff;
+	background: rgb(0 0 0 / 0.3);
+	cursor: pointer;
+
+	&:hover {
+		background: rgb(255 255 255 / 0.15);
 	}
 }

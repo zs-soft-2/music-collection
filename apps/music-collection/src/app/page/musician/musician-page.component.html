@@ -1,5 +1,6 @@
 <div class="page">
 	@if (store.header(); as musician) {
+		<mc-back-link fallback="/network" />
 		<!-- Profile -->
 		<header class="hero">
 			@if (backdropUrl()) {

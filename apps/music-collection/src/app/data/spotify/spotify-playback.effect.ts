@@ -130,6 +130,9 @@ export class SpotifyPlaybackEffect {
 							paused: state.paused,
 							deviceId: null,
 							volumePercent: null,
+							positionMs: state.position,
+							durationMs: state.duration || track.duration_ms,
+							positionAt: state.timestamp || Date.now(),
 						}
 					: null
 			);
@@ -190,13 +193,15 @@ export class SpotifyPlaybackEffect {
 	public async play(
 		deviceId: string,
 		albumId: string,
-		trackUri: string | null
+		trackUri: string | null,
+		single = false
 	): Promise<void> {
 		await this.api.play(
 			await this.accessToken(),
 			deviceId,
 			albumId,
-			trackUri
+			trackUri,
+			single
 		);
 	}
 
@@ -210,6 +215,10 @@ export class SpotifyPlaybackEffect {
 		await (direction === 'next'
 			? this.api.next(token)
 			: this.api.previous(token));
+	}
+
+	public async seek(positionMs: number): Promise<void> {
+		await this.api.seek(await this.accessToken(), positionMs);
 	}
 
 	/** Sets the volume (0–100) of a Spotify Connect device. */

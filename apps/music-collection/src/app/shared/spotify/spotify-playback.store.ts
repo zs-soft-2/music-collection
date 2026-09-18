@@ -17,6 +17,7 @@ import {
 	SpotifyNowPlaying,
 	SpotifyPlaybackEffect,
 	TrackToMatch,
+	currentPositionMs,
 } from '../../data/spotify';
 
 type SpotifyStatus = 'disconnected' | 'connecting' | 'ready';
@@ -300,10 +301,14 @@ export const SpotifyPlaybackStore = signalStore(
 					}
 				},
 
-				/** Plays the album, from one of its tracks when given. */
+				/**
+				 * Plays the album, from one of its tracks when given; with
+				 * `single`, only that track.
+				 */
 				async play(
 					albumId: string,
-					trackId: string | null
+					trackId: string | null,
+					single = false
 				): Promise<void> {
 					// Browsers only allow audio started from the click itself.
 					void player?.activateElement();
@@ -326,7 +331,7 @@ export const SpotifyPlaybackStore = signalStore(
 						return;
 					}
 					try {
-						await effect.play(deviceId, albumId, trackUri);
+						await effect.play(deviceId, albumId, trackUri, single);
 						patchState(store, { error: null });
 						if (store.selectedDeviceId()) {
 							setTimeout(refreshNowPlaying, 800);
@@ -344,12 +349,35 @@ export const SpotifyPlaybackStore = signalStore(
 					}
 					try {
 						await effect.setPaused(!nowPlaying.paused);
+						const now = Date.now();
 						patchState(store, {
 							nowPlaying: {
 								...nowPlaying,
 								paused: !nowPlaying.paused,
+								positionMs: currentPositionMs(nowPlaying, now),
+								positionAt: now,
 							},
 						});
+					} catch (error) {
+						fail(error);
+					}
+				},
+
+				/** Jumps to the position (milliseconds) in the track playing. */
+				async seek(positionMs: number): Promise<void> {
+					const nowPlaying = store.nowPlaying();
+					if (!nowPlaying) {
+						return;
+					}
+					patchState(store, {
+						nowPlaying: {
+							...nowPlaying,
+							positionMs,
+							positionAt: Date.now(),
+						},
+					});
+					try {
+						await effect.seek(positionMs);
 					} catch (error) {
 						fail(error);
 					}

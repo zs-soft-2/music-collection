@@ -35,6 +35,11 @@ export interface SpotifyNowPlaying {
 	deviceId: string | null;
 	/** 0–100, when the device reports it. */
 	volumePercent: number | null;
+	/** Position in the track at `positionAt`. */
+	positionMs: number;
+	durationMs: number;
+	/** Epoch milliseconds `positionMs` was measured at. */
+	positionAt: number;
 }
 
 /** A track of our album, to be matched to its Spotify track. */
@@ -43,6 +48,18 @@ export interface TrackToMatch {
 	name: string;
 	/** Play order, 1-based. */
 	index: number;
+}
+
+/** Where the track is now: measured position plus the time since, unless paused. */
+export function currentPositionMs(
+	nowPlaying: SpotifyNowPlaying,
+	now = Date.now()
+): number {
+	const position = nowPlaying.paused
+		? nowPlaying.positionMs
+		: nowPlaying.positionMs + (now - nowPlaying.positionAt);
+
+	return Math.min(Math.max(0, position), nowPlaying.durationMs || position);
 }
 
 export class SpotifyNotConnectedError extends Error {

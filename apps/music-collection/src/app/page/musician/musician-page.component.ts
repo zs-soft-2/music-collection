@@ -19,6 +19,7 @@ import {
 } from '../../shared/music-ui';
 import { MusicianBandView, bandsSpan } from './musician.mapper';
 import { MusicianPageStore } from './musician-page.store';
+import { BackLinkComponent } from '../../shared/back-link';
 
 /** Paragraphs shown before "Read more". */
 const COLLAPSED_PARAGRAPHS = 2;
@@ -43,7 +44,12 @@ const TYPE_LABELS: Record<string, string> = {
 	selector: 'mc-musician-page',
 	templateUrl: './musician-page.component.html',
 	styleUrls: ['./musician-page.component.scss'],
-	imports: [RouterLink, DiscographyCardComponent, AdminEditLinkComponent],
+	imports: [
+		BackLinkComponent,
+		RouterLink,
+		DiscographyCardComponent,
+		AdminEditLinkComponent,
+	],
 })
 export class MusicianPageComponent {
 	protected readonly store = inject(MusicianPageStore);

@@ -17,6 +17,7 @@ interface ApiTrack {
 	name: string;
 	disc_number: number;
 	track_number: number;
+	duration_ms?: number;
 	artists?: { name: string }[];
 	album?: { uri: string; images: ApiImage[] };
 }
@@ -28,6 +29,8 @@ interface ApiPage<T> {
 
 interface ApiPlayer {
 	is_playing: boolean;
+	progress_ms: number | null;
+	timestamp?: number;
 	device: { id: string | null; volume_percent: number | null } | null;
 	item: ApiTrack | null;
 }
@@ -70,21 +73,35 @@ export class SpotifyApiRepository {
 		return tracks;
 	}
 
-	/** Plays the album on the device, from the given track when set. */
+	/**
+	 * Plays the album on the device, from the given track when set; with
+	 * `single`, only that track (playback stops after it).
+	 */
 	public play(
 		accessToken: string,
 		deviceId: string,
 		albumId: string,
-		trackUri: string | null
+		trackUri: string | null,
+		single = false
 	): Promise<void> {
 		return this.request(
 			accessToken,
 			'PUT',
 			`${API}/me/player/play?device_id=${encodeURIComponent(deviceId)}`,
-			{
-				context_uri: `spotify:album:${albumId}`,
-				...(trackUri ? { offset: { uri: trackUri } } : {}),
-			}
+			single && trackUri
+				? { uris: [trackUri] }
+				: {
+						context_uri: `spotify:album:${albumId}`,
+						...(trackUri ? { offset: { uri: trackUri } } : {}),
+					}
+		);
+	}
+
+	public seek(accessToken: string, positionMs: number): Promise<void> {
+		return this.request(
+			accessToken,
+			'PUT',
+			`${API}/me/player/seek?position_ms=${Math.round(positionMs)}`
 		);
 	}
 
@@ -170,6 +187,10 @@ export class SpotifyApiRepository {
 			paused: !player.is_playing,
 			deviceId: player.device?.id ?? null,
 			volumePercent: player.device?.volume_percent ?? null,
+			positionMs: player.progress_ms ?? 0,
+			durationMs: item.duration_ms ?? 0,
+			// The response's own timestamp is when the state last changed, not now.
+			positionAt: Date.now(),
 		};
 	}
 

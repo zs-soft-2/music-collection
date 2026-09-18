@@ -81,6 +81,7 @@ service cloud.firestore {
         'musician': 'MusicianEntity',
         'document': 'DocumentEntity',
         'track': 'TrackEntity',
+        'track-lyrics': 'TrackEntity',
         'contribution': 'ContributionEntity',
         'membership': 'MembershipEntity',
         'user': 'UserEntity',
@@ -132,6 +133,10 @@ service cloud.firestore {
                       && hasPerm('updateWishlistItemEntity')
                       && request.resource.data.userReference.uid == uid;
         allow delete: if isSelf(uid) && hasPerm('deleteWishlistItemEntity');
+      }
+      // Saját beállítások (pl. lejátszó: user/{uid}/setting/player).
+      match /setting/{settingId} {
+        allow read, write: if isSelf(uid);
       }
     }
 
@@ -263,6 +268,14 @@ service cloud.firestore {
       allow create: if hasPerm('createTrackEntity');
       allow update: if hasPerm('updateTrackEntity');
       allow delete: if hasPerm('deleteTrackEntity');
+    }
+
+    // Dalszöveg: szerzői jogvédett, ezért nem publikus — csak bejelentkezve
+    // olvasható. Külön collection, hogy a publikus track-dokumentumba ne
+    // kerüljön.
+    match /track-lyrics/{trackId} {
+      allow read: if isAuthed();
+      allow create, update, delete: if hasPerm('updateTrackEntity');
     }
 
     match /contribution/{contributionId} {

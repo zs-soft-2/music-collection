@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { AdminEditLinkComponent } from '../admin-edit-link/admin-edit-link.component';
 import { FormatBadgeComponent } from '../format-badge/format-badge.component';
 import { DiscographyAlbum } from '../music-ui.model';
+import { PlayAlbumButtonComponent } from '../../player/play-album-button.component';
 
 /**
  * One album of the discography. Collected albums show the formats owned;
@@ -12,7 +13,12 @@ import { DiscographyAlbum } from '../music-ui.model';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-discography-card',
-	imports: [RouterLink, FormatBadgeComponent, AdminEditLinkComponent],
+	imports: [
+		RouterLink,
+		FormatBadgeComponent,
+		AdminEditLinkComponent,
+		PlayAlbumButtonComponent,
+	],
 	template: `
 		@let item = album();
 
@@ -55,6 +61,12 @@ import { DiscographyAlbum } from '../music-ui.model';
 				}
 			</span>
 		</a>
+
+		<mc-play-album-button
+			class="mc-card-play"
+			[albumId]="item.id"
+			[title]="item.title"
+		/>
 
 		<mc-admin-edit-link
 			class="mc-card-admin"

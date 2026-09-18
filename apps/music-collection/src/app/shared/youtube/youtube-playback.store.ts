@@ -40,6 +40,13 @@ interface YoutubePlaybackState {
 	playing: boolean;
 	/** Something has played since the album was loaded. */
 	started: boolean;
+	/** Position in the item at `positionAt`. */
+	positionMs: number;
+	durationMs: number;
+	/** Epoch milliseconds `positionMs` was measured at. */
+	positionAt: number;
+	/** 0–100; kept when the player is reloaded. */
+	volume: number;
 }
 
 const initialState: YoutubePlaybackState = {
@@ -50,6 +57,10 @@ const initialState: YoutubePlaybackState = {
 	playlistIndex: null,
 	playing: false,
 	started: false,
+	positionMs: 0,
+	durationMs: 0,
+	positionAt: 0,
+	volume: 100,
 };
 
 const sameItem = (a: YoutubeItem | null, b: YoutubeItem | null) =>
@@ -137,6 +148,7 @@ export const YoutubePlaybackStore = signalStore(
 				detach();
 				patchState(store, {
 					...initialState,
+					volume: store.volume(),
 					album,
 					selection: album.items[0] ?? null,
 				});
@@ -147,6 +159,7 @@ export const YoutubePlaybackStore = signalStore(
 				detach();
 				patchState(store, {
 					...initialState,
+					volume: store.volume(),
 					album,
 					selection: album.items[0] ?? null,
 					autoplay: true,
@@ -156,7 +169,7 @@ export const YoutubePlaybackStore = signalStore(
 			/** Stops playback and closes the player. */
 			close(): void {
 				detach();
-				patchState(store, initialState);
+				patchState(store, { ...initialState, volume: store.volume() });
 			},
 
 			/** Takes control of the player frame showing the current item. */
@@ -170,9 +183,20 @@ export const YoutubePlaybackStore = signalStore(
 						ready: () => {
 							if (current === generation) {
 								ready = true;
+								// A new frame starts at full volume: keep the chosen one.
+								queueMicrotask(() =>
+									control((p) =>
+										effect.setVolume(p, store.volume())
+									)
+								);
 							}
 						},
-						stateChanged: (playlistIndex, playing) => {
+						stateChanged: ({
+							playlistIndex,
+							playing,
+							positionMs,
+							durationMs,
+						}) => {
 							if (current === generation) {
 								patchState(store, {
 									playlistIndex:
@@ -181,6 +205,9 @@ export const YoutubePlaybackStore = signalStore(
 											: null,
 									playing,
 									started: store.started() || playing,
+									positionMs,
+									durationMs,
+									positionAt: Date.now(),
 								});
 							}
 						},
@@ -225,6 +252,43 @@ export const YoutubePlaybackStore = signalStore(
 
 			togglePlay(): void {
 				control((p) => effect.setPlaying(p, !store.playing()));
+			},
+
+			/** 0–100. */
+			setVolume(volumePercent: number): void {
+				const volume = Math.round(
+					Math.min(100, Math.max(0, volumePercent))
+				);
+				patchState(store, { volume });
+				control((p) => effect.setVolume(p, volume));
+			},
+
+			/** Jumps to the position (milliseconds) in the item playing. */
+			seek(positionMs: number): void {
+				control((p) => {
+					effect.seek(p, positionMs);
+					patchState(store, { positionMs, positionAt: Date.now() });
+				});
+			},
+
+			/**
+			 * Plays the album's item from the start, at a playlist position
+			 * when given. Replaces what is playing.
+			 */
+			playAlbum(
+				album: YoutubeAlbum,
+				item: YoutubeItem,
+				startIndex = 0
+			): void {
+				detach();
+				patchState(store, {
+					...initialState,
+					volume: store.volume(),
+					album,
+					selection: item,
+					autoplay: true,
+					startIndex,
+				});
 			},
 
 			skip(direction: 'previous' | 'next'): void {

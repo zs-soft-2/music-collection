@@ -11,6 +11,7 @@ import {
 	AdminEditEntity,
 	AdminEditLinkComponent,
 } from '../admin-edit-link/admin-edit-link.component';
+import { PlayAlbumButtonComponent } from '../../player/play-album-button.component';
 import { FormatBadgeComponent } from '../format-badge/format-badge.component';
 
 /**
@@ -23,7 +24,12 @@ import { FormatBadgeComponent } from '../format-badge/format-badge.component';
 	selector: 'mc-release-card',
 	templateUrl: './release-card.component.html',
 	styleUrls: ['./release-card.component.scss'],
-	imports: [RouterLink, FormatBadgeComponent, AdminEditLinkComponent],
+	imports: [
+		RouterLink,
+		FormatBadgeComponent,
+		AdminEditLinkComponent,
+		PlayAlbumButtonComponent,
+	],
 })
 export class ReleaseCardComponent {
 	public readonly release = input.required<ReleaseView>();

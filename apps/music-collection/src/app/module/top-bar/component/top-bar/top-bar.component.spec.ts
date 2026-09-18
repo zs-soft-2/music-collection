@@ -10,7 +10,7 @@ import {
 	AuthorizationService,
 } from '@music-collection/api';
 
-import { SpotifyPlaybackStore } from '../../../../shared/spotify';
+import { PlayerStore } from '../../../../shared/player';
 import { TopBarComponent } from './top-bar.component';
 
 describe('TopBarComponent', () => {
@@ -40,15 +40,10 @@ describe('TopBarComponent', () => {
 					useValue: { selectEntities$: () => of([]) },
 				},
 				{
-					provide: SpotifyPlaybackStore,
+					provide: PlayerStore,
 					useValue: {
-						connected: signal(false),
-						nowPlaying: signal(null),
-						volume: signal(0),
-						volumeSupported: signal(false),
-						setVolume: jest.fn(),
-						skip: jest.fn(),
-						togglePlay: jest.fn(),
+						stageOpen: signal(false),
+						now: signal(null),
 					},
 				},
 			],

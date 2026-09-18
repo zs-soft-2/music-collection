@@ -5,12 +5,15 @@ import {
 	output,
 } from '@angular/core';
 
+import { RouterLink } from '@angular/router';
+
 import { TrackGroup } from '../../album.mapper';
 
 /** Tracklist grouped by side / disc, with per-track credits. */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-album-tracklist',
+	imports: [RouterLink],
 	template: `
 		@for (group of groups(); track $index) {
 			<div class="group">
@@ -60,7 +63,11 @@ import { TrackGroup } from '../../album.mapper';
 								}}</span>
 							}
 							<span class="body">
-								<span class="name">{{ track.name }}</span>
+								<a
+									class="name"
+									[routerLink]="['track', track.id]"
+									>{{ track.name }}</a
+								>
 								@if (track.credits.length) {
 									<span class="credits">{{
 										track.credits.join(' · ')
@@ -186,6 +193,13 @@ import { TrackGroup } from '../../album.mapper';
 		.name {
 			font-size: 1rem;
 			font-weight: 500;
+			color: inherit;
+			text-decoration: none;
+		}
+
+		a.name:hover,
+		a.name:focus-visible {
+			text-decoration: underline;
 		}
 
 		.credits {

@@ -1,5 +1,10 @@
-<div class="page">
+<div class="page" [class.is-compact]="compact()">
 	@if (store.album(); as album) {
+		<mc-back-link
+			[fallback]="
+				album.artistId ? ['/artist', album.artistId] : '/collection'
+			"
+		/>
 		<!-- Album -->
 		<header class="hero">
 			@if (album.coverUrl) {
@@ -78,84 +83,188 @@
 							}
 						</ul>
 					}
+
+					@if (store.playable()) {
+						<div class="play-actions">
+							<button
+								type="button"
+								class="play-button"
+								(click)="store.togglePlay()"
+							>
+								<i
+									class="pi"
+									[class.pi-pause]="store.playing()"
+									[class.pi-play]="!store.playing()"
+									aria-hidden="true"
+								></i>
+								<span>{{
+									store.playing() ? 'Pause' : 'Play'
+								}}</span>
+							</button>
+							<button
+								type="button"
+								class="player-button"
+								title="Full-screen player"
+								aria-label="Open the full-screen player"
+								(click)="store.openPlayer()"
+							>
+								<i
+									class="pi pi-window-maximize"
+									aria-hidden="true"
+								></i>
+							</button>
+						</div>
+					}
 				</div>
 			</div>
 		</header>
+
+		<div class="view-bar">
+			<button
+				type="button"
+				class="view-toggle"
+				[attr.aria-pressed]="compact()"
+				(click)="toggleCompact()"
+			>
+				<i
+					class="pi"
+					[class.pi-list]="!compact()"
+					[class.pi-bars]="compact()"
+					aria-hidden="true"
+				></i>
+				Compact view
+			</button>
+			@if (compact() && openSections().size) {
+				<button
+					type="button"
+					class="text-button"
+					(click)="collapseAll()"
+				>
+					Collapse all
+				</button>
+			}
+		</div>
 
 		<!-- Original release -->
 		@if (album.original; as original) {
 			<section class="original" aria-labelledby="original-title">
 				<h2 id="original-title" class="panel-title">
-					Original release
+					@if (compact()) {
+						<button
+							type="button"
+							class="section-toggle"
+							[attr.aria-expanded]="isOpen('original')"
+							(click)="toggleSection('original')"
+						>
+							<i
+								class="pi"
+								[class.pi-chevron-right]="!isOpen('original')"
+								[class.pi-chevron-down]="isOpen('original')"
+								aria-hidden="true"
+							></i>
+							Original release
+						</button>
+					} @else {
+						Original release
+					}
 				</h2>
-				<dl class="original-facts">
-					@if (original.released) {
-						<div>
-							<dt>Released</dt>
-							<dd>{{ original.released }}</dd>
-						</div>
-					}
-					@if (original.country) {
-						<div>
-							<dt>Country</dt>
-							<dd>{{ original.country }}</dd>
-						</div>
-					}
-					@if (original.labels) {
-						<div>
-							<dt>Label</dt>
-							<dd>{{ original.labels }}</dd>
-						</div>
-					}
-					@if (original.formats) {
-						<div>
-							<dt>Format</dt>
-							<dd>{{ original.formats }}</dd>
-						</div>
-					}
-				</dl>
-				<a
-					class="source"
-					[href]="original.discogsUrl"
-					target="_blank"
-					rel="noopener noreferrer"
-				>
-					Data from Discogs
-					<i class="pi pi-external-link" aria-hidden="true"></i>
-					<span class="visually-hidden">(opens in a new tab)</span>
-				</a>
+				@if (isOpen('original')) {
+					<dl class="original-facts">
+						@if (original.released) {
+							<div>
+								<dt>Released</dt>
+								<dd>{{ original.released }}</dd>
+							</div>
+						}
+						@if (original.country) {
+							<div>
+								<dt>Country</dt>
+								<dd>{{ original.country }}</dd>
+							</div>
+						}
+						@if (original.labels) {
+							<div>
+								<dt>Label</dt>
+								<dd>{{ original.labels }}</dd>
+							</div>
+						}
+						@if (original.formats) {
+							<div>
+								<dt>Format</dt>
+								<dd>{{ original.formats }}</dd>
+							</div>
+						}
+					</dl>
+					<a
+						class="source"
+						[href]="original.discogsUrl"
+						target="_blank"
+						rel="noopener noreferrer"
+					>
+						Data from Discogs
+						<i class="pi pi-external-link" aria-hidden="true"></i>
+						<span class="visually-hidden"
+							>(opens in a new tab)</span
+						>
+					</a>
+				}
 			</section>
 		}
 
 		<!-- Listen -->
-		@if (album.spotifyAlbumId) {
+		@if (store.playable()) {
 			<section class="listen" aria-labelledby="listen-title">
-				<h2 id="listen-title" class="panel-title spotify-title">
-					<mc-spotify-icon />
-					Listen on Spotify
+				<h2 id="listen-title" class="panel-title">
+					@if (compact()) {
+						<button
+							type="button"
+							class="section-toggle"
+							[attr.aria-expanded]="isOpen('listen')"
+							(click)="toggleSection('listen')"
+						>
+							<i
+								class="pi"
+								[class.pi-chevron-right]="!isOpen('listen')"
+								[class.pi-chevron-down]="isOpen('listen')"
+								aria-hidden="true"
+							></i>
+							Listen
+						</button>
+					} @else {
+						Listen
+					}
 				</h2>
-				<mc-spotify-panel
-					[albumId]="album.spotifyAlbumId"
-					[albumTitle]="album.artistName + ' – ' + album.title"
-				/>
-			</section>
-		}
-
-		@if (youtubeAlbum(); as youtubeAlbum) {
-			<section class="listen" aria-labelledby="youtube-title">
-				<h2 id="youtube-title" class="panel-title youtube-title">
-					<mc-youtube-icon />
-					Watch on YouTube
-				</h2>
-				<mc-youtube-panel [album]="youtubeAlbum" />
+				@if (isOpen('listen')) {
+					<mc-player-panel />
+				}
 			</section>
 		}
 
 		<!-- Tracklist and credits -->
 		<div class="details">
 			<section class="panel" aria-labelledby="tracklist-title">
-				<h2 id="tracklist-title" class="section-title">Tracklist</h2>
-				@if (store.detailsLoading()) {
+				<h2 id="tracklist-title" class="section-title">
+					@if (compact()) {
+						<button
+							type="button"
+							class="section-toggle"
+							[attr.aria-expanded]="isOpen('tracklist')"
+							(click)="toggleSection('tracklist')"
+						>
+							<i
+								class="pi"
+								[class.pi-chevron-right]="!isOpen('tracklist')"
+								[class.pi-chevron-down]="isOpen('tracklist')"
+								aria-hidden="true"
+							></i>
+							Tracklist
+						</button>
+					} @else {
+						Tracklist
+					}
+				</h2>
+				@if (!isOpen('tracklist')) {
+				} @else if (store.detailsLoading()) {
 					<div role="status" aria-busy="true">
 						<span class="visually-hidden">Loading tracklist…</span>
 						@for (i of placeholders(8); track i) {
@@ -166,9 +275,9 @@
 					<mc-album-tracklist
 						[groups]="store.trackGroups()"
 						[total]="store.totalDuration()"
-						[playable]="playable()"
-						[playingId]="playingTrackId()"
-						(playTrack)="playTrack($event)"
+						[playable]="store.playable()"
+						[playingId]="store.playingTrackId()"
+						(playTrack)="store.playTrack($event)"
 					/>
 				} @else {
 					<p class="empty">
@@ -183,8 +292,28 @@
 			</section>
 
 			<section class="panel" aria-labelledby="credits-title">
-				<h2 id="credits-title" class="section-title">Credits</h2>
-				@if (store.detailsLoading()) {
+				<h2 id="credits-title" class="section-title">
+					@if (compact()) {
+						<button
+							type="button"
+							class="section-toggle"
+							[attr.aria-expanded]="isOpen('credits')"
+							(click)="toggleSection('credits')"
+						>
+							<i
+								class="pi"
+								[class.pi-chevron-right]="!isOpen('credits')"
+								[class.pi-chevron-down]="isOpen('credits')"
+								aria-hidden="true"
+							></i>
+							Credits
+						</button>
+					} @else {
+						Credits
+					}
+				</h2>
+				@if (!isOpen('credits')) {
+				} @else if (store.detailsLoading()) {
 					<div role="status" aria-busy="true">
 						<span class="visually-hidden">Loading credits…</span>
 						@for (i of placeholders(6); track i) {
@@ -210,8 +339,28 @@
 
 		<!-- The collector's copies -->
 		<section class="section" aria-labelledby="copies-title">
-			<h2 id="copies-title" class="section-title">In your collection</h2>
-			@if (store.releasesLoading()) {
+			<h2 id="copies-title" class="section-title">
+				@if (compact()) {
+					<button
+						type="button"
+						class="section-toggle"
+						[attr.aria-expanded]="isOpen('copies')"
+						(click)="toggleSection('copies')"
+					>
+						<i
+							class="pi"
+							[class.pi-chevron-right]="!isOpen('copies')"
+							[class.pi-chevron-down]="isOpen('copies')"
+							aria-hidden="true"
+						></i>
+						In your collection
+					</button>
+				} @else {
+					In your collection
+				}
+			</h2>
+			@if (!isOpen('copies')) {
+			} @else if (store.releasesLoading()) {
 				<div
 					class="skeleton row-skeleton"
 					role="status"
@@ -267,24 +416,43 @@
 			<section class="section" aria-labelledby="more-title">
 				<header class="section-head">
 					<h2 id="more-title" class="section-title">
-						More from {{ album.artistName }}
+						@if (compact()) {
+							<button
+								type="button"
+								class="section-toggle"
+								[attr.aria-expanded]="isOpen('more')"
+								(click)="toggleSection('more')"
+							>
+								<i
+									class="pi"
+									[class.pi-chevron-right]="!isOpen('more')"
+									[class.pi-chevron-down]="isOpen('more')"
+									aria-hidden="true"
+								></i>
+								More from {{ album.artistName }}
+							</button>
+						} @else {
+							More from {{ album.artistName }}
+						}
 					</h2>
 					<a class="more" [routerLink]="['/artist', album.artistId]">
 						Full discography
 						<i class="pi pi-arrow-right" aria-hidden="true"></i>
 					</a>
 				</header>
-				@defer (on viewport({ rootMargin: '800px' })) {
-					<ul class="album-grid">
-						@for (other of store.moreAlbums(); track other.id) {
-							<li><mc-discography-card [album]="other" /></li>
-						}
-					</ul>
-				} @placeholder {
-					<div
-						class="defer-placeholder is-cards"
-						[style.--count]="store.moreAlbums().length"
-					></div>
+				@if (isOpen('more')) {
+					@defer (on viewport({ rootMargin: '800px' })) {
+						<ul class="album-grid">
+							@for (other of store.moreAlbums(); track other.id) {
+								<li><mc-discography-card [album]="other" /></li>
+							}
+						</ul>
+					} @placeholder {
+						<div
+							class="defer-placeholder is-cards"
+							[style.--count]="store.moreAlbums().length"
+						></div>
+					}
 				}
 			</section>
 		}

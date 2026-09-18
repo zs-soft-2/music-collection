@@ -1,0 +1,240 @@
+@let track = store.track();
+@let album = store.album();
+
+<mc-cover-backdrop [src]="album?.coverUrl" />
+
+<div class="page">
+	<mc-back-link
+		[fallback]="['/album', store.albumId()]"
+		label="Back to album"
+	/>
+	@if (store.loading()) {
+		<p class="muted">Loading…</p>
+	} @else if (store.failed()) {
+		<p class="muted">The track could not be loaded.</p>
+	} @else if (store.notFound() || !track) {
+		<p class="muted">Track not found.</p>
+	} @else {
+		<header class="hero">
+			@if (album?.coverUrl) {
+				<img class="cover" [src]="album!.coverUrl" alt="" />
+			}
+			<div class="heading">
+				<p class="eyebrow">
+					@if (track.position) {
+						<span>{{ track.position }}</span> ·
+					}
+					<a [routerLink]="['/album', store.albumId()]">{{
+						album?.title ?? 'Album'
+					}}</a>
+					@if (album?.artistName) {
+						<span> · {{ album!.artistName }}</span>
+					}
+				</p>
+				<h1 class="title">{{ track.name }}</h1>
+				@if (track.duration) {
+					<p class="muted">{{ track.duration }}</p>
+				}
+			</div>
+			<div class="hero-actions">
+				@if (store.playerAvailable()) {
+					<button
+						type="button"
+						class="button primary"
+						(click)="store.togglePlay()"
+					>
+						<i
+							class="pi"
+							[class.pi-pause]="store.playing()"
+							[class.pi-play]="!store.playing()"
+							aria-hidden="true"
+						></i>
+						<span>{{ store.playing() ? 'Pause' : 'Play' }}</span>
+					</button>
+					<button
+						type="button"
+						class="button"
+						(click)="store.openPlayer()"
+					>
+						<i class="pi pi-microphone" aria-hidden="true"></i>
+						<span>{{
+							store.lyrics() ? 'Lyrics player' : 'Full screen'
+						}}</span>
+					</button>
+				}
+				@if (store.canEdit() && !editing()) {
+					<button type="button" class="button" (click)="startEdit()">
+						<i class="pi pi-pencil" aria-hidden="true"></i>
+						<span>Edit</span>
+					</button>
+				}
+			</div>
+		</header>
+
+		@if (editing()) {
+			<form class="panel form" (submit)="$event.preventDefault(); save()">
+				<label>
+					<span>Spotify link</span>
+					<input
+						type="text"
+						placeholder="https://open.spotify.com/track/…"
+						[value]="form().spotify"
+						(input)="setField('spotify', $event)"
+					/>
+					@if (spotifyInvalid()) {
+						<small class="error">Not a Spotify track link.</small>
+					}
+				</label>
+				<label>
+					<span>YouTube video</span>
+					<input
+						type="text"
+						placeholder="https://www.youtube.com/watch?v=…"
+						[value]="form().youtube"
+						(input)="setField('youtube', $event)"
+					/>
+					@if (youtubeInvalid()) {
+						<small class="error">Not a YouTube video link.</small>
+					}
+				</label>
+				<label>
+					<span>Writers (comma separated)</span>
+					<input
+						type="text"
+						[value]="form().writers"
+						(input)="setField('writers', $event)"
+					/>
+				</label>
+				<label>
+					<span class="label-row">
+						<span>Lyrics (visible to signed-in users only)</span>
+						<button
+							type="button"
+							class="button"
+							[disabled]="store.fetchingLyrics()"
+							(click)="loadLyrics()"
+						>
+							{{
+								store.fetchingLyrics()
+									? 'Loading…'
+									: 'Load lyrics'
+							}}
+						</button>
+					</span>
+					@if (store.fetchLyricsError()) {
+						<small class="error">{{
+							store.fetchLyricsError()
+						}}</small>
+					}
+					<textarea
+						rows="14"
+						[value]="form().lyrics"
+						(input)="setField('lyrics', $event)"
+					></textarea>
+				</label>
+				<label>
+					<span>Synced lyrics (LRC, for the lyrics player)</span>
+					<textarea
+						rows="6"
+						placeholder="[00:12.34] First line"
+						[value]="form().synced"
+						(input)="setField('synced', $event)"
+					></textarea>
+				</label>
+				@if (store.saveError()) {
+					<p class="error">{{ store.saveError() }}</p>
+				}
+				<div class="actions">
+					<button
+						type="button"
+						class="button"
+						(click)="editing.set(false)"
+					>
+						Cancel
+					</button>
+					<button
+						type="submit"
+						class="button primary"
+						[disabled]="
+							store.saving() ||
+							spotifyInvalid() ||
+							youtubeInvalid()
+						"
+					>
+						{{ store.saving() ? 'Saving…' : 'Save' }}
+					</button>
+				</div>
+			</form>
+		}
+
+		@if (store.playerAvailable()) {
+			<section class="panel" aria-label="Player">
+				<mc-player-panel />
+			</section>
+		}
+
+		<div class="columns">
+			<section class="panel" aria-labelledby="lyrics-title">
+				<h2 id="lyrics-title" class="section-title">Lyrics</h2>
+				@if (store.lyrics(); as lyrics) {
+					<p class="lyrics">{{ lyrics.text }}</p>
+				} @else {
+					<p class="muted">
+						No lyrics here. Lyrics are shown only when you are
+						signed in.
+					</p>
+				}
+			</section>
+
+			<section class="panel" aria-labelledby="credits-title">
+				<h2 id="credits-title" class="section-title">Credits</h2>
+				@if (store.credits().length) {
+					<ul class="credits">
+						@for (credit of store.credits(); track credit.name) {
+							<li>
+								@if (credit.musicianUid) {
+									<a
+										class="name"
+										[routerLink]="[
+											'/musician',
+											credit.musicianUid,
+										]"
+										>{{ credit.name }}</a
+									>
+								} @else {
+									<span class="name">{{ credit.name }}</span>
+								}
+								<span class="muted">{{
+									credit.roles.join(', ')
+								}}</span>
+							</li>
+						}
+					</ul>
+				} @else {
+					<p class="muted">No credits for this track.</p>
+				}
+			</section>
+		</div>
+
+		<nav class="neighbours" aria-label="Other tracks">
+			@if (store.neighbours().previous; as previous) {
+				<a
+					[routerLink]="[
+						'/album',
+						store.albumId(),
+						'track',
+						previous.uid,
+					]"
+					>← {{ previous.name }}</a
+				>
+			} @else {
+				<span></span>
+			}
+			@if (store.neighbours().next; as next) {
+				<a [routerLink]="['/album', store.albumId(), 'track', next.uid]"
+					>{{ next.name }} →</a
+				>
+			}
+		</nav>
+	}
+</div>
