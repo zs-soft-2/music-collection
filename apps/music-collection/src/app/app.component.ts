@@ -9,6 +9,7 @@ import { environment } from '../environments/environment';
 import { CoreErrorModule } from '@music-collection/core/error';
 
 import { TopBarModule } from './module';
+import { AmbientBackdropComponent } from './shared/backdrop';
 import { YoutubeDockComponent } from './shared/youtube';
 
 @Component({
@@ -21,6 +22,7 @@ import { YoutubeDockComponent } from './shared/youtube';
 		RouterModule,
 		CoreErrorModule,
 		YoutubeDockComponent,
+		AmbientBackdropComponent,
 	],
 })
 export class AppComponent implements OnInit {
