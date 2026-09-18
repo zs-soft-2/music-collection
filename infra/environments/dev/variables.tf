@@ -81,6 +81,9 @@ variable "services" {
     "artifactregistry.googleapis.com",
     "pubsub.googleapis.com",
     "storage.googleapis.com",
+    # A Compute default SA-t (a Cloud Build alapértelmezett build SA-ja) ennek
+    # bekapcsolása hozza létre; futó VM-et nem indítunk.
+    "compute.googleapis.com",
   ]
 }
 

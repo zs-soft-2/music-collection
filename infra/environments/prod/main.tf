@@ -22,6 +22,43 @@ locals {
   project_number = data.google_project.this.number
 }
 
+# A jogosultság-szinkron function saját futtató service accountja. A Compute
+# default SA-t nem használjuk futtatásra: az org policy miatt nincs szerepköre,
+# és bármilyen compute-erőforrás felvehetné. Ez csak a Firestore-t éri el, és
+# az Eventarc-tól kaphat eseményt. A deployer a projekt-szintű
+# serviceAccountUser révén telepíthet a nevében.
+resource "google_service_account" "functions_runtime" {
+  project      = local.project_id
+  account_id   = "functions-runtime"
+  display_name = "Cloud Functions runtime (permission sync)"
+
+  depends_on = [google_project_service.enabled]
+}
+
+resource "google_project_iam_member" "functions_runtime" {
+  for_each = toset([
+    "roles/datastore.user",
+    "roles/eventarc.eventReceiver",
+    "roles/logging.logWriter",
+  ])
+  project = local.project_id
+  role    = each.value
+  member  = "serviceAccount:${google_service_account.functions_runtime.email}"
+}
+
+# A 2. generációs function képét a Cloud Build a Compute default SA nevében
+# építi (új projektekben ez az alapértelmezett build SA). Az org policy miatt
+# az Editor-jogot nem kapja meg automatikusan, így a forrást sem tudja letölteni
+# ("missing permission on the build service account"). A builder szerepkör
+# pontosan a buildhez kellő jogokat adja (forrás olvasása, kép írása, naplózás).
+resource "google_project_iam_member" "functions_build" {
+  project = local.project_id
+  role    = "roles/cloudbuild.builds.builder"
+  member  = "serviceAccount:${local.project_number}-compute@developer.gserviceaccount.com"
+
+  depends_on = [google_project_service.enabled]
+}
+
 module "service_accounts" {
   source     = "../../modules/service-accounts"
   project_id = local.project_id

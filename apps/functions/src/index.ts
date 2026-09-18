@@ -41,7 +41,13 @@ const ROLE_COLLECTION = 'role';
 const USER_COLLECTION = 'user';
 
 initializeApp();
-setGlobalOptions({ region: REGION, maxInstances: 10 });
+// A `functions-runtime@` rövidítést a Firebase a projekt azonosítójával egészíti
+// ki; a service accountot és a szerepköreit az infra/environments hozza létre.
+setGlobalOptions({
+	region: REGION,
+	maxInstances: 10,
+	serviceAccount: 'functions-runtime@',
+});
 
 const database = () => getFirestore();
 
