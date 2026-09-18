@@ -133,7 +133,10 @@ export function formatGenre(genre: unknown): string | null {
 
 export function toArtistView(artist: ArtistEntity): ArtistView {
 	const imageUrl =
-		artist.mainImage?.filePath || artist.discogs?.imageUrl || null;
+		artist.mainImage?.filePath ||
+		artist.imageUrl ||
+		artist.discogs?.imageUrl ||
+		null;
 
 	return {
 		id: artist.uid,

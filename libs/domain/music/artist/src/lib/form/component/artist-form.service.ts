@@ -1,7 +1,7 @@
-import { combineLatest, Observable, ReplaySubject } from 'rxjs';
+import { combineLatest, firstValueFrom, Observable, ReplaySubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import {
@@ -9,6 +9,8 @@ import {
 	ArtistEntity,
 	ArtistEntityAdd,
 	ArtistEntityUpdate,
+	ArtistExternalField,
+	ArtistExternalProfile,
 	ArtistFormParams,
 	ArtistStateService,
 	ArtistUtilService,
@@ -20,6 +22,59 @@ import {
 	SearchParams,
 	StyleList,
 } from '@music-collection/api';
+
+/** One field of the loaded profile next to the form's current value. */
+export interface ArtistExternalRow {
+	current: string;
+	field: ArtistExternalField;
+	label: string;
+	loaded: string;
+	/** Whether the loaded value goes into the form on apply. */
+	selected: boolean;
+	value: unknown;
+}
+
+export interface ArtistExternalComparison {
+	rows: ArtistExternalRow[];
+	sourceUrl: string;
+}
+
+const EXTERNAL_FIELDS: { field: ArtistExternalField; label: string }[] = [
+	{ field: 'name', label: 'Name' },
+	{ field: 'artistType', label: 'Type' },
+	{ field: 'country', label: 'Country' },
+	{ field: 'formedIn', label: 'Formed in' },
+	{ field: 'styles', label: 'Styles' },
+	{ field: 'description', label: 'Description' },
+	{ field: 'imageUrl', label: 'Photo URL' },
+];
+
+function isEmpty(value: unknown): boolean {
+	return (
+		value === null ||
+		value === undefined ||
+		value === '' ||
+		(Array.isArray(value) && value.length === 0)
+	);
+}
+
+function formatValue(value: unknown): string {
+	if (isEmpty(value)) {
+		return '';
+	}
+	if (value instanceof Date) {
+		const pad = (part: number): string => String(part).padStart(2, '0');
+
+		return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(
+			value.getDate()
+		)}`;
+	}
+	if (Array.isArray(value)) {
+		return value.join(', ');
+	}
+
+	return String(value);
+}
 
 @Injectable()
 export class ArtistFormService {
@@ -35,12 +90,77 @@ export class ArtistFormService {
 	private params!: ArtistFormParams;
 	private params$$: ReplaySubject<ArtistFormParams>;
 
+	public readonly externalComparison =
+		signal<ArtistExternalComparison | null>(null);
+	public readonly externalError = signal<string | null>(null);
+	public readonly externalLoading = signal(false);
+
 	public constructor() {
 		this.params$$ = new ReplaySubject();
 	}
 
 	public cancel(): void {
 		this.returnNavigation.leave(['../../list'], this.activatedRoute);
+	}
+
+	/** Puts the selected loaded values into the form; saving stays manual. */
+	public applyExternal(): void {
+		const comparison = this.externalComparison();
+		if (!comparison) {
+			return;
+		}
+		const patch = Object.fromEntries(
+			comparison.rows
+				.filter((row) => row.selected)
+				.map((row) => [row.field, row.value])
+		);
+		this.formGroup.patchValue(patch);
+		this.formGroup.markAsDirty();
+		this.externalComparison.set(null);
+		this.params$$.next(this.params);
+	}
+
+	public closeExternal(): void {
+		this.externalComparison.set(null);
+	}
+
+	/** Looks the artist up online by the name in the form. */
+	public async loadExternal(): Promise<void> {
+		const name = (this.formGroup.value['name'] as string | null)?.trim();
+		if (!name || this.externalLoading()) {
+			return;
+		}
+		this.externalLoading.set(true);
+		this.externalError.set(null);
+		try {
+			const profile = await firstValueFrom(
+				this.artistStateService.fetchExternalProfile$(name)
+			);
+			if (profile) {
+				this.externalComparison.set(this.compare(profile));
+			} else {
+				this.externalError.set(`No artist found for "${name}".`);
+			}
+		} catch (error) {
+			console.error(error);
+			this.externalError.set('Loading artist data failed.');
+		} finally {
+			this.externalLoading.set(false);
+		}
+	}
+
+	public toggleExternalRow(field: ArtistExternalField): void {
+		this.externalComparison.update(
+			(comparison) =>
+				comparison && {
+					...comparison,
+					rows: comparison.rows.map((row) =>
+						row.field === field
+							? { ...row, selected: !row.selected }
+							: row
+					),
+				}
+		);
 	}
 
 	public init$(): Observable<ArtistFormParams> {
@@ -96,6 +216,28 @@ export class ArtistFormService {
 		);
 
 		this.artistStateService.dispatchAddEntityAction(artist);
+	}
+
+	/**
+	 * The fields the source knows, preselecting those the form lacks.
+	 * Fields with the same value are left out.
+	 */
+	private compare(profile: ArtistExternalProfile): ArtistExternalComparison {
+		const rows = EXTERNAL_FIELDS.map(({ field, label }) => {
+			const current = formatValue(this.formGroup.value[field]);
+			const loaded = formatValue(profile[field]);
+
+			return {
+				current,
+				field,
+				label,
+				loaded,
+				selected: !current && !!loaded,
+				value: profile[field],
+			};
+		}).filter((row) => row.loaded && row.loaded !== row.current);
+
+		return { rows, sourceUrl: profile.sourceUrl };
 	}
 
 	private createArtistParams(

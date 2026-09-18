@@ -1,6 +1,7 @@
-import { Observable } from 'rxjs';
+import { Observable, catchError, map, of, switchMap } from 'rxjs';
 
-import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
 import { collection, doc } from '@angular/fire/firestore';
 import {
 	ALBUM_FEATURE_KEY,
@@ -9,6 +10,7 @@ import {
 	AlbumModelUpdate,
 	ARTIST_FEATURE_KEY,
 	ArtistDataService,
+	ArtistExternalProfile,
 	ArtistModel,
 	ArtistModelAdd,
 	ArtistModelUpdate,
@@ -19,8 +21,27 @@ import {
 	SearchParams,
 } from '@music-collection/api';
 
+import {
+	MUSICBRAINZ_URL,
+	MusicBrainzArtist,
+	MusicBrainzSearch,
+	WIKIDATA_API_URL,
+	WIKIPEDIA_SUMMARY_URL,
+	WikidataEntities,
+	WikipediaSummary,
+	pickArtist,
+	toCommonsImageUrl,
+	toArtistType,
+	toCountry,
+	toFormedIn,
+	toStyles,
+	toWikidataId,
+} from './artist-external.mapper';
+
 @Injectable()
 export class ArtistDataServiceImpl extends ArtistDataService {
+	private http = inject(HttpClient);
+
 	public constructor() {
 		super();
 
@@ -30,6 +51,62 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 
 	public add$(artist: ArtistModelAdd): Observable<ArtistModel> {
 		return super.addModel$(artist);
+	}
+
+	/**
+	 * Looks the artist up on MusicBrainz by name, and its description on
+	 * the English Wikipedia and its photo on Commons through Wikidata. Null when not found.
+	 */
+	public fetchExternalProfile$(
+		name: string
+	): Observable<ArtistExternalProfile | null> {
+		const params = new HttpParams()
+			.set('query', `artist:"${name.replace(/"/g, '')}"`)
+			.set('limit', 10)
+			.set('fmt', 'json');
+
+		return this.http
+			.get<MusicBrainzSearch>(`${MUSICBRAINZ_URL}/artist`, { params })
+			.pipe(
+				map((result) => pickArtist(name, result.artists ?? [])),
+				switchMap((hit) =>
+					hit
+						? this.http.get<MusicBrainzArtist>(
+								`${MUSICBRAINZ_URL}/artist/${hit.id}`,
+								{
+									params: new HttpParams()
+										.set('inc', 'genres+url-rels')
+										.set('fmt', 'json'),
+								}
+							)
+						: of(null)
+				),
+				switchMap((artist) =>
+					artist
+						? this.fetchWikidata$(
+								toWikidataId(artist.relations)
+							).pipe(
+								map(
+									({
+										description,
+										imageUrl,
+									}): ArtistExternalProfile => ({
+										artistType: toArtistType(artist.type),
+										country: toCountry(artist.country),
+										description,
+										formedIn: toFormedIn(
+											artist['life-span']?.begin
+										),
+										imageUrl,
+										name: artist.name,
+										sourceUrl: `https://musicbrainz.org/artist/${artist.id}`,
+										styles: toStyles(artist.genres),
+									})
+								)
+							)
+						: of(null)
+				)
+			);
 	}
 
 	public addAlbum$(album: AlbumModelAdd): Observable<AlbumModel> {
@@ -193,5 +270,55 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 					subscriber.next(release);
 				});
 		});
+	}
+
+	/**
+	 * The English Wikipedia summary and the Commons photo of a Wikidata
+	 * item; null where missing. Both are optional: errors give nulls.
+	 */
+	private fetchWikidata$(
+		wikidataId: string | null
+	): Observable<{ description: string | null; imageUrl: string | null }> {
+		const empty = { description: null, imageUrl: null };
+		if (!wikidataId) {
+			return of(empty);
+		}
+		const params = new HttpParams()
+			.set('action', 'wbgetentities')
+			.set('ids', wikidataId)
+			.set('props', 'sitelinks|claims')
+			.set('sitefilter', 'enwiki')
+			.set('format', 'json')
+			.set('origin', '*');
+
+		return this.http
+			.get<WikidataEntities>(WIKIDATA_API_URL, { params })
+			.pipe(
+				switchMap((result) => {
+					const entity = result.entities?.[wikidataId];
+					const imageUrl = toCommonsImageUrl(entity?.claims);
+					const title = entity?.sitelinks?.['enwiki']?.title;
+
+					const summary$: Observable<WikipediaSummary | null> = title
+						? this.http.get<WikipediaSummary>(
+								`${WIKIPEDIA_SUMMARY_URL}/${encodeURIComponent(
+									title.replace(/ /g, '_')
+								)}`
+							)
+						: of(null);
+
+					return summary$.pipe(
+						map((summary) => ({
+							description:
+								summary?.type === 'standard'
+									? summary.extract?.trim() || null
+									: null,
+							imageUrl,
+						})),
+						catchError(() => of({ description: null, imageUrl }))
+					);
+				}),
+				catchError(() => of(empty))
+			);
 	}
 }

@@ -39,6 +39,8 @@ export interface Artist {
 	discogs?: ArtistDiscogs;
 	genre: GenreEnum;
 	headerImage?: DocumentEntity;
+	/** Photo on the web (Wikimedia Commons), for artists without an uploaded image. */
+	imageUrl?: string | null;
 	mainImage?: DocumentEntity;
 	members?: unknown[];
 	name: string;

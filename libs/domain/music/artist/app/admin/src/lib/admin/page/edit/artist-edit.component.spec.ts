@@ -34,6 +34,7 @@ describe('ArtistEditComponent', () => {
 								description: [null],
 								formedIn: [null],
 								headerImage: [null],
+								imageUrl: [null],
 								mainImage: [null],
 								name: [null],
 								styles: [null],

@@ -4,12 +4,17 @@ import {
 	ChangeDetectionStrategy,
 	Component,
 	OnInit,
+	computed,
 	inject,
 } from '@angular/core';
-import { ArtistFormParams, BaseComponent } from '@music-collection/api';
+import {
+	ArtistExternalField,
+	ArtistFormParams,
+	BaseComponent,
+} from '@music-collection/api';
 
 import { ArtistFormService } from './artist-form.service';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Bind } from 'primeng/bind';
 import { InputText } from 'primeng/inputtext';
 import { Textarea } from 'primeng/textarea';
@@ -19,6 +24,8 @@ import { MultiSelect } from 'primeng/multiselect';
 import { AutoComplete } from 'primeng/autocomplete';
 import { Image } from 'primeng/image';
 import { Button } from 'primeng/button';
+import { Checkbox } from 'primeng/checkbox';
+import { Dialog } from 'primeng/dialog';
 import { AsyncPipe } from '@angular/common';
 
 @Component({
@@ -28,6 +35,7 @@ import { AsyncPipe } from '@angular/common';
 	templateUrl: './artist-form.component.html',
 	styleUrls: ['./artist-form.component.scss'],
 	imports: [
+		FormsModule,
 		ReactiveFormsModule,
 		Bind,
 		InputText,
@@ -38,6 +46,8 @@ import { AsyncPipe } from '@angular/common';
 		AutoComplete,
 		Image,
 		Button,
+		Checkbox,
+		Dialog,
 		AsyncPipe,
 	],
 })
@@ -46,8 +56,32 @@ export class ArtistFormComponent extends BaseComponent implements OnInit {
 
 	public params$!: Observable<ArtistFormParams>;
 
+	public readonly externalComparison =
+		this.componentService.externalComparison;
+	public readonly externalError = this.componentService.externalError;
+	public readonly externalLoading = this.componentService.externalLoading;
+	public readonly hasSelectedExternalRow = computed(
+		() => !!this.externalComparison()?.rows.some((row) => row.selected)
+	);
+
+	public applyExternal(): void {
+		this.componentService.applyExternal();
+	}
+
 	public cancel(): void {
 		this.componentService.cancel();
+	}
+
+	public closeExternal(): void {
+		this.componentService.closeExternal();
+	}
+
+	public loadExternal(): void {
+		void this.componentService.loadExternal();
+	}
+
+	public toggleExternalRow(field: ArtistExternalField): void {
+		this.componentService.toggleExternalRow(field);
 	}
 
 	public ngOnInit(): void {

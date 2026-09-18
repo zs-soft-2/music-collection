@@ -4,6 +4,7 @@ import { FirebaseDataService } from '../../../core';
 import { AlbumModel, AlbumModelAdd, AlbumModelUpdate } from '../album';
 import { ReleaseModel, ReleaseModelAdd, ReleaseModelUpdate } from '../release';
 import { ArtistModel, ArtistModelAdd, ArtistModelUpdate } from './artist';
+import { ArtistExternalProfile } from './artist-external';
 
 export abstract class ArtistDataService extends FirebaseDataService<
 	ArtistModel,
@@ -17,6 +18,10 @@ export abstract class ArtistDataService extends FirebaseDataService<
 	public abstract deleteRelease$(
 		release: ReleaseModel
 	): Observable<ReleaseModel>;
+	/** Looks the artist up online by name; null when not found. */
+	public abstract fetchExternalProfile$(
+		name: string
+	): Observable<ArtistExternalProfile | null>;
 	public abstract importAlbum$(album: AlbumModel): Observable<AlbumModel>;
 	public abstract listAlbumsById$(uid: string): Observable<AlbumModel[]>;
 	public abstract updateAlbum$(

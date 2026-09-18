@@ -6,6 +6,8 @@ import {
 	ArtistEntity,
 	ArtistEntityAdd,
 	ArtistEntityUpdate,
+	ArtistDataService,
+	ArtistExternalProfile,
 	ArtistStateService,
 	SearchParams,
 } from '@music-collection/api';
@@ -17,6 +19,7 @@ import * as artistSelectors from './artist.selectors';
 
 @Injectable()
 export class ArtistStateServiceImpl extends ArtistStateService {
+	private artistDataService = inject(ArtistDataService);
 	private store = inject<Store<fromArtist.ArtistPartialState>>(Store);
 
 	public dispatchAddEntityAction(artist: ArtistEntityAdd): void {
@@ -65,6 +68,12 @@ export class ArtistStateServiceImpl extends ArtistStateService {
 
 	public dispatchUpdateEntityAction(artist: ArtistEntityUpdate): void {
 		this.store.dispatch(artistActions.updateArtist({ artist }));
+	}
+
+	public fetchExternalProfile$(
+		name: string
+	): Observable<ArtistExternalProfile | null> {
+		return this.artistDataService.fetchExternalProfile$(name);
 	}
 
 	public isLoading$(): Observable<boolean> {
