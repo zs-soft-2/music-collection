@@ -1,0 +1,94 @@
+@if (params$ | async; as params) {
+	<section class="mc-form-section" aria-labelledby="album-tracks">
+		<div class="album-tracks-heading">
+			<h2 id="album-tracks">
+				Tracks ({{ params.tracks.length }})
+			</h2>
+			<p-button
+				label="Load"
+				icon="pi pi-cloud-download"
+				size="small"
+				severity="secondary"
+				[outlined]="true"
+				[loading]="externalLoading()"
+				[disabled]="!params.album"
+				ariaLabel="Load the tracklist from MusicBrainz"
+				(onClick)="loadExternal()"
+			></p-button>
+		</div>
+		@if (externalError()) {
+			<small class="album-tracks-error">{{ externalError() }}</small>
+		}
+		@if (params.tracks.length) {
+			<ol class="album-tracks-list">
+				@for (track of params.tracks; track track.uid) {
+					<li>
+						<span>{{ track.name }}</span>
+						@if (track.duration) {
+							<span class="album-tracks-duration">{{
+								track.duration
+							}}</span>
+						}
+					</li>
+				}
+			</ol>
+		} @else {
+			<p class="mc-form-note">
+				No tracks yet. Load them from MusicBrainz.
+			</p>
+		}
+	</section>
+
+	<p-dialog
+		header="Tracks found"
+		[modal]="true"
+		[visible]="!!externalTracks()"
+		(visibleChange)="$event || closeExternal()"
+		[style]="{ width: 'min(48rem, 95vw)' }"
+		[dismissableMask]="true"
+	>
+		@if (externalTracks(); as tracks) {
+			<p class="album-tracks-source">
+				Source:
+				<a [href]="tracks.sourceUrl" target="_blank" rel="noopener">{{
+					tracks.sourceUrl
+				}}</a>
+			</p>
+			@if (params.tracks.length) {
+				<p class="album-tracks-note">
+					Saving replaces the current
+					{{ params.tracks.length }}
+					tracks; their links and lyrics are kept by position.
+				</p>
+			}
+			<ol class="album-tracks-list">
+				@for (item of tracks.tracks; track $index) {
+					<li>
+						<span>{{ item.name }}</span>
+						@if (item.duration) {
+							<span class="album-tracks-duration">{{
+								item.duration
+							}}</span>
+						}
+					</li>
+				}
+			</ol>
+		}
+		<ng-template #footer>
+			<p-button
+				label="Cancel"
+				severity="secondary"
+				[outlined]="true"
+				(onClick)="closeExternal()"
+			></p-button>
+			<p-button
+				[label]="
+					'Save ' + (externalTracks()?.tracks?.length ?? 0) + ' tracks'
+				"
+				icon="pi pi-check"
+				[loading]="saving()"
+				(onClick)="applyExternal()"
+			></p-button>
+		</ng-template>
+	</p-dialog>
+}

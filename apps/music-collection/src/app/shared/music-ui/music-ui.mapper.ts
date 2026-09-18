@@ -84,7 +84,10 @@ export function toReleaseView(item: CollectionItemEntity): ReleaseView {
 		title: release.album?.name || release.name || 'Untitled',
 		artistId: release.artist?.uid ?? '',
 		artistName: release.artist?.name || 'Unknown artist',
-		coverUrl: release.album?.coverImage?.filePath || null,
+		coverUrl:
+			release.album?.coverImage?.filePath ||
+			release.album?.coverImageUrl ||
+			null,
 		format: toMediaFormat(release.media),
 		albumType: toAlbumType(release.album?.format),
 		year: toYear(release.album?.year),
@@ -155,7 +158,7 @@ export function toAlbumView(album: AlbumEntity): AlbumView {
 		id: album.uid,
 		title: album.name,
 		artistName: album.artist?.name ?? '',
-		coverUrl: album.coverImage?.filePath || null,
+		coverUrl: album.coverImage?.filePath || album.coverImageUrl || null,
 		year: toYear(album.year),
 		albumType: toAlbumType(album.format),
 		styles: album.styles ?? [],

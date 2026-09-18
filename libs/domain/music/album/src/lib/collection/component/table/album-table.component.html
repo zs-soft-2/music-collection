@@ -83,7 +83,7 @@
 					</td>
 
 					<td>
-						@if (album.coverImage) {
+						@if (album.coverImage || album.coverImageUrl) {
 							<span class="p-chip">Cover</span>
 						} @else {
 							<span class="mc-missing">No cover</span>

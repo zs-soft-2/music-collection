@@ -2,7 +2,7 @@
 	<div class="album-item-content">
 		<div class="cover">
 			<p-image
-				[src]="album.coverImage?.filePath || ''"
+				[src]="album.coverImage?.filePath || album.coverImageUrl || ''"
 				[height]="'100'"
 				[width]="width"
 				alt="Image"
@@ -16,7 +16,7 @@
 			</h3>
 
 			<div>
-				{{ album.year | date : 'yyyy' }}
+				{{ album.year | date: 'yyyy' }}
 			</div>
 		</div>
 	</div>

@@ -6,6 +6,7 @@ export * from './entity-quantity';
 export * from './error';
 export * from './export-import';
 export * from './firebase';
+export * from './musicbrainz';
 export * from './navigation';
 export * from './resource';
 export * from './role';

@@ -31,6 +31,22 @@ export interface CollectionStats {
 	byFormat: Record<MediaFormat, number>;
 }
 
+/** One catalog-wide entity count shown in the "at a glance" panel. */
+export interface CatalogStat {
+	label: string;
+	count: number;
+}
+
+/** Entity types counted in the catalog panel, in display order. */
+export const CATALOG_TYPES: { type: string; label: string }[] = [
+	{ type: 'Artist', label: 'Artists' },
+	{ type: 'Album', label: 'Albums' },
+	{ type: 'Release', label: 'Releases' },
+	{ type: 'Musician', label: 'Musicians' },
+	{ type: 'Track', label: 'Tracks' },
+	{ type: 'Label', label: 'Labels' },
+];
+
 export const SORT_OPTIONS: { value: CollectionSort; label: string }[] = [
 	{ value: 'artist', label: 'Artist A–Z' },
 	{ value: 'title', label: 'Album A–Z' },

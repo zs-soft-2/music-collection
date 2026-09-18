@@ -6,5 +6,6 @@ export * from './album-resource.enum';
 export * from './album-state.service';
 export * from './album-util.service';
 export * from './album';
+export * from './album-external';
 export * from './spotify-album-id';
 export * from './youtube-link';

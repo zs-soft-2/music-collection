@@ -26,6 +26,8 @@ export interface AlbumDiscogs {
 export interface Album {
 	artist: AlbumArtist;
 	coverImage: AlbumDocument | null;
+	/** Cover found online, used when no cover image is attached. */
+	coverImageUrl?: string | null;
 	discogs?: AlbumDiscogs;
 	format: FormatEnum;
 	genre: GenreEnum;

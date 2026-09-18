@@ -21,17 +21,17 @@ import {
 	AlbumView,
 	ArtistView,
 	ReleaseView,
+	decadeDistribution,
 	toAlbumView,
 	toArtistView,
 	toReleaseView,
+	topStyles,
 } from '../../shared/music-ui';
 import {
-	decadeDistribution,
 	mostCollectedArtists,
 	pickRandom,
 	releaseCountsByArtist,
 	searchHome,
-	topStyles,
 } from './home.mapper';
 
 interface HomePageState {

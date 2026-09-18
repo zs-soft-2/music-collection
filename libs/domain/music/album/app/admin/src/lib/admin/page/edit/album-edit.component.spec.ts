@@ -23,7 +23,9 @@ describe('AlbumEditComponent', () => {
 				provideRouter([]),
 				{
 					provide: AlbumStateService,
-					useValue: { selectEntityById$: jest.fn(() => of(undefined)) },
+					useValue: {
+						selectEntityById$: jest.fn(() => of(undefined)),
+					},
 				},
 				{
 					provide: AlbumUtilService,
@@ -32,6 +34,7 @@ describe('AlbumEditComponent', () => {
 							new FormBuilder().group({
 								artist: [null],
 								coverImage: [null],
+								coverImageUrl: [null],
 								format: [null],
 								name: [null],
 								spotify: [null],

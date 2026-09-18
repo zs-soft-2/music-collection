@@ -5,9 +5,11 @@ import { ActivatedRoute } from '@angular/router';
 import { RecordShelfComponent } from './component/record-shelf/record-shelf.component';
 import { ReleaseRowComponent } from './component/release-row/release-row.component';
 import {
+	DecadeChartComponent,
 	FORMAT_LABELS,
 	FORMAT_ORDER,
 	ReleaseCardComponent,
+	StyleBarsComponent,
 } from '../../shared/music-ui';
 import {
 	CollectionGroup,
@@ -33,6 +35,8 @@ import { CollectionPageStore } from './collection-page.store';
 		ReleaseCardComponent,
 		ReleaseRowComponent,
 		RecordShelfComponent,
+		DecadeChartComponent,
+		StyleBarsComponent,
 	],
 })
 export class CollectionPageComponent {

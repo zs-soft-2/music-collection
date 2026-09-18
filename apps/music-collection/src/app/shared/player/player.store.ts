@@ -120,7 +120,7 @@ export function albumPlayRequest(
 		albumId: album.uid,
 		albumTitle: album.name,
 		artistName: album.artist?.name ?? null,
-		coverUrl: album.coverImage?.filePath || null,
+		coverUrl: album.coverImage?.filePath || album.coverImageUrl || null,
 		spotifyAlbumId: isSpotifyAlbumId(album.spotifyAlbumId)
 			? album.spotifyAlbumId
 			: null,

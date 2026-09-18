@@ -217,23 +217,31 @@ export class FirestoreSyncService {
 		});
 	}
 
+	/**
+	 * Sets (merges) and deletes documents of one feature in a single batch;
+	 * deletions leave tombstones like `delete`.
+	 */
+	public setAll(
+		featureKey: string,
+		writes: { reference: DocumentReference; data: DocumentData }[],
+		deletions: DocumentReference[] = []
+	): Promise<void> {
+		return this.commit((batch) => {
+			writes.forEach(({ reference, data }) =>
+				batch.set(reference, this.stamp(data), { merge: true })
+			);
+			deletions.forEach((reference) => this.remove(batch, reference, featureKey));
+			this.touch(batch, featureKey);
+		});
+	}
+
 	/** Deletes a document and leaves a tombstone for the other clients. */
 	public delete(
 		reference: DocumentReference,
 		featureKey: string
 	): Promise<void> {
 		return this.commit((batch) => {
-			batch.delete(reference);
-			batch.set(
-				doc(
-					this.firestore,
-					SYNC_COLLECTION,
-					featureKey,
-					DELETION_COLLECTION,
-					reference.path.split('/').join('~')
-				),
-				{ path: reference.path, deletedAt: serverTimestamp() }
-			);
+			this.remove(batch, reference, featureKey);
 			this.touch(batch, featureKey);
 		});
 	}
@@ -245,6 +253,24 @@ export class FirestoreSyncService {
 			write(batch);
 			return batch.commit();
 		});
+	}
+
+	private remove(
+		batch: WriteBatch,
+		reference: DocumentReference,
+		featureKey: string
+	): void {
+		batch.delete(reference);
+		batch.set(
+			doc(
+				this.firestore,
+				SYNC_COLLECTION,
+				featureKey,
+				DELETION_COLLECTION,
+				reference.path.split('/').join('~')
+			),
+			{ path: reference.path, deletedAt: serverTimestamp() }
+		);
 	}
 
 	private stamp<T extends object>(data: T): T {

@@ -7,7 +7,6 @@ import {
 	StyleList,
 } from '@music-collection/api';
 
-export const MUSICBRAINZ_URL = 'https://musicbrainz.org/ws/2';
 export const WIKIDATA_API_URL = 'https://www.wikidata.org/w/api.php';
 export const WIKIPEDIA_SUMMARY_URL =
 	'https://en.wikipedia.org/api/rest_v1/page/summary';

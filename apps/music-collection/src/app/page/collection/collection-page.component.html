@@ -28,6 +28,40 @@
 		}
 	</header>
 
+	<!-- At a glance -->
+	<section class="glance-section" aria-labelledby="glance-title">
+		<h2 id="glance-title" class="glance-title">At a glance</h2>
+
+		@if (store.isLoading()) {
+			<div class="skeleton glance-skeleton"></div>
+		} @else {
+			<div class="glance">
+				<div class="panel">
+					<h3 class="panel-title">In the catalog</h3>
+					<dl class="catalog">
+						@for (item of store.catalog(); track item.label) {
+							<div class="catalog-stat">
+								<dt>{{ item.label }}</dt>
+								<dd>{{ item.count }}</dd>
+							</div>
+						}
+					</dl>
+				</div>
+
+				<div class="panel">
+					<mc-decade-chart
+						title="Releases by decade"
+						[data]="store.decades()"
+					/>
+				</div>
+
+				<div class="panel">
+					<mc-style-bars title="Top styles" [data]="store.styles()" />
+				</div>
+			</div>
+		}
+	</section>
+
 	<!-- Toolbar -->
 	<div class="toolbar">
 		<div class="search">

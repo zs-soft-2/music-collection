@@ -1,6 +1,6 @@
 <div class="album-simple" [style.background]="album.coverImage?.filePath">
 	<p-image
-		[src]="album.coverImage?.filePath || ''"
+		[src]="album.coverImage?.filePath || album.coverImageUrl || ''"
 		[width]="width"
 		[height]="height"
 		alt="Image"

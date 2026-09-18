@@ -4,6 +4,8 @@ import { computed, inject } from '@angular/core';
 import {
 	CollectionItemEntity,
 	CollectionItemStateService,
+	EntityQuantityEntity,
+	EntityQuantityStateService,
 } from '@music-collection/api';
 import { tapResponse } from '@ngrx/operators';
 import {
@@ -16,9 +18,15 @@ import {
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
-import { ReleaseView, toReleaseView } from '../../shared/music-ui';
+import {
+	ReleaseView,
+	decadeDistribution,
+	toReleaseView,
+	topStyles,
+} from '../../shared/music-ui';
 
 import {
+	catalogStats,
 	chunkGroups,
 	collectionStats,
 	filterReleases,
@@ -46,9 +54,13 @@ const SHELF_CUBBY_SIZE = 36;
  */
 const RENDER_CHUNK_SIZE = 30;
 
+/** Styles listed in the "at a glance" panel. */
+const STYLE_COUNT = 6;
+
 interface CollectionPageState {
 	releases: ReleaseView[];
 	isLoading: boolean;
+	quantities: EntityQuantityEntity[];
 	query: string;
 	format: FormatFilter;
 	sort: CollectionSort;
@@ -63,6 +75,7 @@ const PREFERENCES_KEY = 'mc.collection.preferences';
 const initialState: CollectionPageState = {
 	releases: [],
 	isLoading: true,
+	quantities: [],
 	query: '',
 	format: 'all',
 	sort: 'artist',
@@ -114,6 +127,9 @@ export const CollectionPageStore = signalStore(
 
 		return {
 			stats,
+			catalog: computed(() => catalogStats(store.quantities())),
+			decades: computed(() => decadeDistribution(store.releases())),
+			styles: computed(() => topStyles(store.releases(), STYLE_COUNT)),
 			visible,
 			/*
 			 * Keyed by view as well: @for only reconciles when the array
@@ -149,7 +165,8 @@ export const CollectionPageStore = signalStore(
 	withMethods(
 		(
 			store,
-			collectionItemStateService = inject(CollectionItemStateService)
+			collectionItemStateService = inject(CollectionItemStateService),
+			quantityStateService = inject(EntityQuantityStateService)
 		) => {
 			const savePreferences = () =>
 				writePreferences({
@@ -185,6 +202,20 @@ export const CollectionPageStore = signalStore(
 						})
 					)
 				),
+				/** Catalog-wide entity counts (artists, albums, tracks, …). */
+				loadQuantities: rxMethod<void>(
+					pipe(
+						tap(() =>
+							quantityStateService.dispatchListEntitiesAction()
+						),
+						switchMap(() => quantityStateService.selectEntities$()),
+						tapResponse({
+							next: (quantities) =>
+								patchState(store, { quantities }),
+							error: (error) => console.error(error),
+						})
+					)
+				),
 				setQuery: (query: string) => patchState(store, { query }),
 				setFormat: (format: FormatFilter) =>
 					patchState(store, { format }),
@@ -209,6 +240,7 @@ export const CollectionPageStore = signalStore(
 		onInit(store) {
 			patchState(store, readPreferences());
 			store.load(of(undefined));
+			store.loadQuantities(of(undefined));
 		},
 	})
 );

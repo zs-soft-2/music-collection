@@ -11,10 +11,10 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
-import { AlbumFormComponent } from './component';
+import { AlbumFormComponent, AlbumTracksComponent } from './component';
 
 @NgModule({
-	exports: [AlbumFormComponent],
+	exports: [AlbumFormComponent, AlbumTracksComponent],
 	imports: [
 		CommonModule,
 		ButtonModule,
@@ -28,6 +28,7 @@ import { AlbumFormComponent } from './component';
 		ReactiveFormsModule,
 		TabsModule,
 		AlbumFormComponent,
+		AlbumTracksComponent,
 	],
 })
 export class AlbumFormModule {}

@@ -5,7 +5,7 @@ import {
 	input,
 } from '@angular/core';
 
-import { CountDatum } from '../../home.mapper';
+import { CountDatum } from '../count-stats';
 
 /**
  * Single-series horizontal bar chart. Every bar carries its value at the tip,

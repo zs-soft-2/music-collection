@@ -5,7 +5,7 @@ import {
 	input,
 } from '@angular/core';
 
-import { CountDatum } from '../../home.mapper';
+import { CountDatum } from '../count-stats';
 
 /**
  * Single-series column chart of releases per decade. The title names the

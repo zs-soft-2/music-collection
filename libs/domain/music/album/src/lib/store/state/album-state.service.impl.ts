@@ -4,8 +4,13 @@ import { Injectable, inject } from '@angular/core';
 import {
 	AlbumEntity,
 	AlbumEntityAdd,
+	AlbumDataService,
 	AlbumEntityUpdate,
+	AlbumExternalProfile,
+	AlbumExternalTrack,
+	AlbumExternalTracks,
 	AlbumStateService,
+	TrackEntity,
 	SearchParams,
 } from '@music-collection/api';
 import { select, Store } from '@ngrx/store';
@@ -16,8 +21,8 @@ import * as albumSelectors from './album.selectors';
 
 @Injectable()
 export class AlbumStateServiceImpl extends AlbumStateService {
+	private albumDataService = inject(AlbumDataService);
 	private store = inject<Store<fromAlbum.AlbumPartialState>>(Store);
-
 
 	public dispatchAddEntityAction(album: AlbumEntityAdd): void {
 		this.store.dispatch(albumActions.addAlbum({ album }));
@@ -61,6 +66,32 @@ export class AlbumStateServiceImpl extends AlbumStateService {
 
 	public dispatchUpdateEntityAction(album: AlbumEntityUpdate): void {
 		this.store.dispatch(albumActions.updateAlbum({ album }));
+	}
+
+	public fetchExternalProfile$(
+		artistName: string,
+		name: string
+	): Observable<AlbumExternalProfile | null> {
+		return this.albumDataService.fetchExternalProfile$(artistName, name);
+	}
+
+	public fetchExternalTracks$(
+		artistName: string,
+		name: string
+	): Observable<AlbumExternalTracks | null> {
+		return this.albumDataService.fetchExternalTracks$(artistName, name);
+	}
+
+	public listTracks$(albumUid: string): Observable<TrackEntity[]> {
+		return this.albumDataService.listTracks$(albumUid);
+	}
+
+	public saveTracks(
+		albumUid: string,
+		tracks: AlbumExternalTrack[],
+		existing: TrackEntity[]
+	): Promise<void> {
+		return this.albumDataService.saveTracks(albumUid, tracks, existing);
 	}
 
 	public isLoading$(): Observable<boolean> {

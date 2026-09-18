@@ -15,6 +15,7 @@ import {
 	ArtistModel,
 	ArtistModelAdd,
 	ArtistModelUpdate,
+	MusicBrainzClient,
 	RELEASE_FEATURE_KEY,
 	ReleaseModel,
 	ReleaseModelAdd,
@@ -23,7 +24,6 @@ import {
 } from '@music-collection/api';
 
 import {
-	MUSICBRAINZ_URL,
 	MusicBrainzArtist,
 	MusicBrainzReleaseGroupSearch,
 	MusicBrainzSearch,
@@ -44,6 +44,7 @@ import {
 @Injectable()
 export class ArtistDataServiceImpl extends ArtistDataService {
 	private http = inject(HttpClient);
+	private musicBrainz = inject(MusicBrainzClient);
 
 	public constructor() {
 		super();
@@ -66,13 +67,11 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 		return this.searchMusicBrainzArtist$(name).pipe(
 			switchMap((hit) =>
 				hit
-					? this.http.get<MusicBrainzArtist>(
-							`${MUSICBRAINZ_URL}/artist/${hit.id}`,
-							{
-								params: new HttpParams()
-									.set('inc', 'genres+url-rels')
-									.set('fmt', 'json'),
-							}
+					? this.musicBrainz.get$<MusicBrainzArtist>(
+							`/artist/${hit.id}`,
+							new HttpParams()
+								.set('inc', 'genres+url-rels')
+								.set('fmt', 'json')
 						)
 					: of(null)
 			),
@@ -114,17 +113,15 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 		return this.searchMusicBrainzArtist$(name).pipe(
 			switchMap((hit) =>
 				hit
-					? this.http.get<MusicBrainzReleaseGroupSearch>(
-							`${MUSICBRAINZ_URL}/release-group`,
-							{
-								params: new HttpParams()
-									.set(
-										'query',
-										`arid:${hit.id} AND primarytype:(album OR ep) AND status:official AND NOT secondarytype:*`
-									)
-									.set('limit', 100)
-									.set('fmt', 'json'),
-							}
+					? this.musicBrainz.get$<MusicBrainzReleaseGroupSearch>(
+							'/release-group',
+							new HttpParams()
+								.set(
+									'query',
+									`arid:${hit.id} AND primarytype:(album OR ep) AND status:official AND NOT secondarytype:*`
+								)
+								.set('limit', 100)
+								.set('fmt', 'json')
 						)
 					: of(null)
 			),
@@ -312,8 +309,8 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 			.set('limit', 10)
 			.set('fmt', 'json');
 
-		return this.http
-			.get<MusicBrainzSearch>(`${MUSICBRAINZ_URL}/artist`, { params })
+		return this.musicBrainz
+			.get$<MusicBrainzSearch>('/artist', params)
 			.pipe(map((result) => pickArtist(name, result.artists ?? [])));
 	}
 

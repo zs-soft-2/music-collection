@@ -143,6 +143,10 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 			entity.coverImage = model.coverImage;
 		}
 
+		if (model.coverImageUrl !== undefined) {
+			entity.coverImageUrl = model.coverImageUrl;
+		}
+
 		if (model.artist) {
 			entity.artist = model.artist;
 		}
@@ -188,6 +192,7 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 			coverImage: formGroup.value['coverImage']
 				? this.createSimpleDocument(formGroup.value['coverImage'])
 				: null,
+			coverImageUrl: formGroup.value['coverImageUrl'] || null,
 			entityType: EntityTypeEnum.Album,
 			format: formGroup.value['format'],
 			genre: GenreEnum.Rock,
@@ -209,6 +214,7 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 		return this.formBuilder.group({
 			artist: [album?.artist || null, [Validators.required]],
 			coverImage: [album?.coverImage || null],
+			coverImageUrl: [album?.coverImageUrl || null],
 			format: [album?.format || null, [Validators.required]],
 			name: [album?.name || null, [Validators.required]],
 			songs: [album?.songs || null],
@@ -262,6 +268,7 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 			coverImage: formGroup.value['coverImage']
 				? this.createSimpleDocument(formGroup.value['coverImage'])
 				: null,
+			coverImageUrl: formGroup.value['coverImageUrl'] || null,
 			entityType: EntityTypeEnum.Album,
 			format: formGroup.value['format'],
 			genre: GenreEnum.Rock,

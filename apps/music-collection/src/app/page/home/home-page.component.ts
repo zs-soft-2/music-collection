@@ -3,12 +3,12 @@ import { RouterLink } from '@angular/router';
 
 import {
 	ArtistTileComponent,
+	DecadeChartComponent,
 	ReleaseCardComponent,
+	StyleBarsComponent,
 } from '../../shared/music-ui';
 import { ArtistSpotlightComponent } from './component/artist-spotlight/artist-spotlight.component';
 import { HomeSearchComponent } from './component/home-search/home-search.component';
-import { DecadeChartComponent } from './component/decade-chart/decade-chart.component';
-import { StyleBarsComponent } from './component/style-bars/style-bars.component';
 import { HomePageStore } from './home-page.store';
 
 /**

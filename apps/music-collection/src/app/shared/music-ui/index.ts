@@ -1,7 +1,9 @@
 export * from './admin-edit-link/admin-access.service';
 export * from './admin-edit-link/admin-edit-link.component';
 export * from './artist-tile/artist-tile.component';
+export * from './count-stats';
 export * from './credit-roles';
+export * from './decade-chart/decade-chart.component';
 export * from './defer-reveal';
 export * from './discography-card/discography-card.component';
 export * from './format-badge/format-badge.component';
@@ -9,3 +11,4 @@ export * from './music-ui.mapper';
 export * from './music-ui.model';
 export * from './release-card/release-card.component';
 export * from './spotify-player/spotify-player.component';
+export * from './style-bars/style-bars.component';

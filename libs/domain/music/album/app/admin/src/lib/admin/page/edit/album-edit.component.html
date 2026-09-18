@@ -1,3 +1,20 @@
 <section class="album-edit">
-	<mc-album-form></mc-album-form>
+	@if (isExisting) {
+		<p-tabs value="details">
+			<p-tablist>
+				<p-tab value="details">Details</p-tab>
+				<p-tab value="tracks">Tracks</p-tab>
+			</p-tablist>
+			<p-tabpanels>
+				<p-tabpanel value="details">
+					<mc-album-form></mc-album-form>
+				</p-tabpanel>
+				<p-tabpanel value="tracks">
+					<mc-album-tracks [albumId]="albumId"></mc-album-tracks>
+				</p-tabpanel>
+			</p-tabpanels>
+		</p-tabs>
+	} @else {
+		<mc-album-form></mc-album-form>
+	}
 </section>
