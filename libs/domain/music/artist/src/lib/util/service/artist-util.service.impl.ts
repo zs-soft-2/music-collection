@@ -1,9 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import {
+	AlbumEntityAdd,
 	ArtistEntity,
 	ArtistEntityAdd,
 	ArtistEntityUpdate,
+	ArtistExternalAlbum,
 	ArtistModel,
 	ArtistModelAdd,
 	ArtistModelUpdate,
@@ -119,6 +121,28 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 		}
 
 		return entity;
+	}
+
+	public createAlbumFromExternal(
+		artist: ArtistEntity,
+		album: ArtistExternalAlbum
+	): AlbumEntityAdd {
+		return {
+			artist: {
+				entityType: EntityTypeEnum.Artist,
+				name: artist.name,
+				searchParameters: this.createSearchParameters(artist.name),
+				uid: artist.uid,
+			},
+			coverImage: null,
+			entityType: EntityTypeEnum.Album,
+			format: album.format,
+			genre: GenreEnum.Rock,
+			name: album.name.trim(),
+			songs: [],
+			styles: artist.styles ?? [],
+			year: album.year ?? new Date(0),
+		};
 	}
 
 	public createEntity(formGroup: FormGroup): ArtistEntityAdd {

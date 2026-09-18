@@ -1,5 +1,6 @@
 import {
 	AlbumEntity,
+	AlbumEntityAdd,
 	ArtistEntity,
 	ArtistEntityAdd,
 	ArtistEntityUpdate,
@@ -7,6 +8,16 @@ import {
 } from '@music-collection/api';
 import { Update } from '@ngrx/entity';
 import { createAction, props } from '@ngrx/store';
+
+export const addAlbums = createAction(
+	'[Artist] Add Albums',
+	props<{ albums: AlbumEntityAdd[] }>()
+);
+
+export const addAlbumsSuccess = createAction(
+	'[Artist] Add Albums Success',
+	props<{ albums: AlbumEntity[] }>()
+);
 
 export const addArtist = createAction(
 	'[Artist] Add Artist',

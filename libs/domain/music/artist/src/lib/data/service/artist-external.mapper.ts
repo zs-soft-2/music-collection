@@ -1,6 +1,8 @@
 import {
+	ArtistExternalAlbum,
 	ArtistType,
 	CountryEnum,
+	FormatEnum,
 	StyleEnum,
 	StyleList,
 } from '@music-collection/api';
@@ -148,5 +150,44 @@ export function toCommonsImageUrl(
 		? `${COMMONS_FILE_PATH_URL}/${encodeURIComponent(
 				file.replace(/ /g, '_')
 			)}?width=1200`
+		: null;
+}
+
+export interface MusicBrainzReleaseGroup {
+	id: string;
+	title: string;
+	'primary-type'?: string | null;
+	'secondary-types'?: string[];
+	'first-release-date'?: string | null;
+}
+
+export interface MusicBrainzReleaseGroupSearch {
+	'release-groups': MusicBrainzReleaseGroup[];
+	count: number;
+}
+
+/**
+ * The release group as an album: a studio album or an EP. Null for other
+ * kinds (live, compilation, demo…) and for those without a release date.
+ */
+export function toExternalAlbum(
+	group: MusicBrainzReleaseGroup
+): ArtistExternalAlbum | null {
+	const year = toFormedIn(group['first-release-date']);
+	const format = group['secondary-types']?.length
+		? null
+		: group['primary-type'] === 'Album'
+			? FormatEnum.lp
+			: group['primary-type'] === 'EP'
+				? FormatEnum.ep
+				: null;
+
+	return format && year
+		? {
+				format,
+				name: group.title,
+				sourceUrl: `https://musicbrainz.org/release-group/${group.id}`,
+				year,
+			}
 		: null;
 }

@@ -1,3 +1,20 @@
 <div class="artist-edit">
-	<mc-artist-form></mc-artist-form>
+	@if (isExisting) {
+		<p-tabs value="details">
+			<p-tablist>
+				<p-tab value="details">Details</p-tab>
+				<p-tab value="albums">Albums</p-tab>
+			</p-tablist>
+			<p-tabpanels>
+				<p-tabpanel value="details">
+					<mc-artist-form></mc-artist-form>
+				</p-tabpanel>
+				<p-tabpanel value="albums">
+					<mc-artist-albums [artistId]="artistId"></mc-artist-albums>
+				</p-tabpanel>
+			</p-tabpanels>
+		</p-tabs>
+	} @else {
+		<mc-artist-form></mc-artist-form>
+	}
 </div>

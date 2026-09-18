@@ -8,7 +8,6 @@ import { ArtistStateService } from '@music-collection/api';
 export class ArtistEditResolverService implements Resolve<void> {
 	private artistStateService = inject(ArtistStateService);
 
-
 	public resolve(): void | Observable<void> | Promise<void> {
 		this.artistStateService.dispatchChangeNewEntityButtonEnabled(false);
 	}

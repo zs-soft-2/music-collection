@@ -1,0 +1,52 @@
+:host {
+	display: block;
+}
+
+.artist-albums-heading {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+}
+
+.artist-albums-error {
+	display: block;
+	margin-block-end: 0.75rem;
+	color: var(--p-red-500);
+}
+
+.artist-albums-note {
+	margin-block-start: 0;
+	color: var(--p-text-muted-color);
+}
+
+.artist-albums-source {
+	margin-inline-start: 0.5rem;
+	color: var(--p-text-muted-color);
+	font-size: 0.8rem;
+}
+
+.artist-albums-table {
+	overflow-x: auto;
+
+	table {
+		width: 100%;
+		border-collapse: collapse;
+	}
+
+	th,
+	td {
+		padding: 0.5rem;
+		text-align: start;
+		vertical-align: middle;
+		border-block-end: 1px solid var(--p-content-border-color);
+	}
+
+	tbody th {
+		font-weight: 400;
+	}
+
+	tr.is-selected th {
+		font-weight: 600;
+	}
+}

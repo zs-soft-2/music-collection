@@ -6,7 +6,6 @@ import { ArtistStateService } from '@music-collection/api';
 export class ArtistListPageResolverService implements Resolve<void> {
 	private artistStateService = inject(ArtistStateService);
 
-
 	public resolve(): void {
 		this.artistStateService.dispatchSetSelectedEntityIdAction('');
 		this.artistStateService.dispatchChangeNewEntityButtonEnabled(true);

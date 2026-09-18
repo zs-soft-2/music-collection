@@ -22,7 +22,9 @@ describe('ArtistEditComponent', () => {
 				provideRouter([]),
 				{
 					provide: ArtistStateService,
-					useValue: { selectEntityById$: jest.fn(() => of(undefined)) },
+					useValue: {
+						selectEntityById$: jest.fn(() => of(undefined)),
+					},
 				},
 				{
 					provide: ArtistUtilService,

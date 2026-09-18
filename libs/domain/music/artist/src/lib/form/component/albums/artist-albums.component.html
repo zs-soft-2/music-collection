@@ -1,0 +1,148 @@
+@if (params$ | async; as params) {
+	<section class="mc-form-section" aria-labelledby="artist-albums">
+		<div class="artist-albums-heading">
+			<h2 id="artist-albums">Albums ({{ params.albums.length }})</h2>
+			<p-button
+				label="Load"
+				icon="pi pi-cloud-download"
+				size="small"
+				severity="secondary"
+				[outlined]="true"
+				[loading]="externalLoading()"
+				[disabled]="!params.artist"
+				ariaLabel="Load the missing studio albums and EPs from MusicBrainz"
+				(onClick)="loadExternal()"
+			></p-button>
+		</div>
+		@if (externalError()) {
+			<small class="artist-albums-error">{{ externalError() }}</small>
+		}
+		@if (params.albums.length) {
+			<div class="artist-albums-table">
+				<table>
+					<thead>
+						<tr>
+							<th scope="col">Year</th>
+							<th scope="col">Name</th>
+							<th scope="col">Format</th>
+						</tr>
+					</thead>
+					<tbody>
+						@for (album of params.albums; track album.uid) {
+							<tr>
+								<td>{{ album.year | date: 'yyyy' }}</td>
+								<th scope="row">
+									<a
+										[routerLink]="[
+											'../../../album/edit',
+											album.uid,
+										]"
+										>{{ album.name }}</a
+									>
+								</th>
+								<td>{{ album.format }}</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		} @else {
+			<p class="mc-form-note">
+				No albums yet. Load them from MusicBrainz.
+			</p>
+		}
+	</section>
+
+	<p-dialog
+		header="Albums found"
+		[modal]="true"
+		[visible]="!!externalAlbums()"
+		(visibleChange)="$event || closeExternal()"
+		[style]="{ width: 'min(48rem, 95vw)' }"
+		[dismissableMask]="true"
+	>
+		@if (externalAlbums(); as rows) {
+			@if (rows.length) {
+				<p class="artist-albums-note">
+					Studio albums and EPs of MusicBrainz not in the catalog yet.
+					The selected ones are created.
+				</p>
+				<div class="artist-albums-table">
+					<table>
+						<thead>
+							<tr>
+								<th scope="col">
+									<p-checkbox
+										inputId="external-album-all"
+										ariaLabel="Select all"
+										[binary]="true"
+										[ngModel]="
+											selectedCount() === rows.length
+										"
+										(onChange)="
+											toggleAllExternalRows(
+												$event.checked
+											)
+										"
+									></p-checkbox>
+								</th>
+								<th scope="col">Year</th>
+								<th scope="col">Name</th>
+								<th scope="col">Format</th>
+							</tr>
+						</thead>
+						<tbody>
+							@for (
+								row of rows;
+								track row.album.sourceUrl;
+								let i = $index
+							) {
+								<tr [class.is-selected]="row.selected">
+									<td>
+										<p-checkbox
+											[inputId]="'external-album-' + i"
+											[binary]="true"
+											[ngModel]="row.selected"
+											(onChange)="toggleExternalRow(row)"
+										></p-checkbox>
+									</td>
+									<td>{{ row.album.year | date: 'yyyy' }}</td>
+									<th scope="row">
+										<label [for]="'external-album-' + i">{{
+											row.album.name
+										}}</label>
+										<a
+											class="artist-albums-source"
+											[href]="row.album.sourceUrl"
+											target="_blank"
+											rel="noopener"
+											aria-label="Open on MusicBrainz"
+											><i class="pi pi-external-link"></i
+										></a>
+									</th>
+									<td>{{ row.album.format }}</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			} @else {
+				<p>Every album found is already in the catalog.</p>
+			}
+		}
+		<ng-template #footer>
+			<p-button
+				label="Cancel"
+				severity="secondary"
+				[outlined]="true"
+				(onClick)="closeExternal()"
+			></p-button>
+			<p-button
+				[label]="'Create ' + selectedCount() + ' albums'"
+				icon="pi pi-check"
+				[disabled]="!selectedCount()"
+				(onClick)="applyExternal()"
+			></p-button>
+		</ng-template>
+	</p-dialog>
+}

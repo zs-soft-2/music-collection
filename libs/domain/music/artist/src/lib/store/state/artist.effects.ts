@@ -1,12 +1,23 @@
-import { of } from 'rxjs';
-import { catchError, first, map, switchMap } from 'rxjs/operators';
+import { from, of } from 'rxjs';
+import {
+	catchError,
+	concatMap,
+	first,
+	map,
+	mergeMap,
+	switchMap,
+	take,
+	toArray,
+} from 'rxjs/operators';
 
 import { inject, Injectable } from '@angular/core';
 import {
+	AlbumEntity,
 	AlbumUtilService,
 	ArtistDataService,
 	ArtistHookService,
 	ArtistUtilService,
+	EntityQuantityEntity,
 	EntityQuantityStateService,
 	EntityQuantityUtilService,
 	EntityTypeEnum,
@@ -25,6 +36,49 @@ export class ArtistEffects {
 	private entityQuantityStateService = inject(EntityQuantityStateService);
 	private entityQuantityUtilService = inject(EntityQuantityUtilService);
 
+	/**
+	 * Writes the albums one after the other, then counts them in the album
+	 * quantity (in total and per artist) in one update.
+	 */
+	public addAlbums = createEffect(() =>
+		this.actions$.pipe(
+			ofType(artistActions.addAlbums),
+			mergeMap((action) =>
+				from(action.albums).pipe(
+					concatMap((album) =>
+						this.artistDataService
+							.addAlbum$(
+								this.albumUtilService.convertEntityAddToModelAdd(
+									album
+								)
+							)
+							.pipe(take(1))
+					),
+					map((album) =>
+						this.albumUtilService.convertModelToEntity(album)
+					),
+					toArray(),
+					switchMap((albums) =>
+						this.entityQuantityStateService
+							.selectEntityById$(EntityTypeEnum.Album)
+							.pipe(
+								first(),
+								map((entityQuantityEntity) => {
+									this.updateAlbumQuantity(
+										entityQuantityEntity,
+										albums
+									);
+
+									return artistActions.addAlbumsSuccess({
+										albums,
+									});
+								})
+							)
+					)
+				)
+			)
+		)
+	);
 	public addArtist = createEffect(() =>
 		this.actions$.pipe(
 			ofType(artistActions.addArtist),
@@ -189,4 +243,28 @@ export class ArtistEffects {
 			)
 		)
 	);
+
+	private updateAlbumQuantity(
+		entityQuantityEntity: EntityQuantityEntity | undefined,
+		albums: AlbumEntity[]
+	): void {
+		if (!albums.length) {
+			return;
+		}
+		const entityQuantity = albums.reduce(
+			(quantity, album) =>
+				this.albumUtilService.updateEntityQuantity(
+					quantity,
+					album
+				) as EntityQuantityEntity,
+			entityQuantityEntity ||
+				this.entityQuantityUtilService.createEntityQuantity(
+					EntityTypeEnum.Album
+				)
+		);
+
+		this.entityQuantityStateService.dispatchUpdateEntityAction(
+			entityQuantity
+		);
+	}
 }

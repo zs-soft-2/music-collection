@@ -1,4 +1,4 @@
-import { CountryEnum, StyleEnum } from '../../../common';
+import { CountryEnum, FormatEnum, StyleEnum } from '../../../common';
 import { ArtistType } from './artist';
 
 /**
@@ -23,3 +23,13 @@ export type ArtistExternalField = Exclude<
 	keyof ArtistExternalProfile,
 	'sourceUrl'
 >;
+
+/** An album of the artist found online (a MusicBrainz release group). */
+export interface ArtistExternalAlbum {
+	format: FormatEnum;
+	name: string;
+	/** Source page of the release group. */
+	sourceUrl: string;
+	/** First release date; null when the source does not know it. */
+	year: Date | null;
+}

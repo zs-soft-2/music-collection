@@ -3,10 +3,12 @@ import { Observable } from 'rxjs';
 import { Injectable, inject } from '@angular/core';
 import {
 	AlbumEntity,
+	AlbumEntityAdd,
 	ArtistEntity,
 	ArtistEntityAdd,
 	ArtistEntityUpdate,
 	ArtistDataService,
+	ArtistExternalAlbum,
 	ArtistExternalProfile,
 	ArtistStateService,
 	SearchParams,
@@ -21,6 +23,10 @@ import * as artistSelectors from './artist.selectors';
 export class ArtistStateServiceImpl extends ArtistStateService {
 	private artistDataService = inject(ArtistDataService);
 	private store = inject<Store<fromArtist.ArtistPartialState>>(Store);
+
+	public dispatchAddAlbumsAction(albums: AlbumEntityAdd[]): void {
+		this.store.dispatch(artistActions.addAlbums({ albums }));
+	}
 
 	public dispatchAddEntityAction(artist: ArtistEntityAdd): void {
 		this.store.dispatch(artistActions.addArtist({ artist }));
@@ -68,6 +74,12 @@ export class ArtistStateServiceImpl extends ArtistStateService {
 
 	public dispatchUpdateEntityAction(artist: ArtistEntityUpdate): void {
 		this.store.dispatch(artistActions.updateArtist({ artist }));
+	}
+
+	public fetchExternalAlbums$(
+		name: string
+	): Observable<ArtistExternalAlbum[]> {
+		return this.artistDataService.fetchExternalAlbums$(name);
 	}
 
 	public fetchExternalProfile$(

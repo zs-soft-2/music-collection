@@ -10,6 +10,7 @@ import {
 	AlbumModelUpdate,
 	ARTIST_FEATURE_KEY,
 	ArtistDataService,
+	ArtistExternalAlbum,
 	ArtistExternalProfile,
 	ArtistModel,
 	ArtistModelAdd,
@@ -24,6 +25,7 @@ import {
 import {
 	MUSICBRAINZ_URL,
 	MusicBrainzArtist,
+	MusicBrainzReleaseGroupSearch,
 	MusicBrainzSearch,
 	WIKIDATA_API_URL,
 	WIKIPEDIA_SUMMARY_URL,
@@ -33,6 +35,7 @@ import {
 	toCommonsImageUrl,
 	toArtistType,
 	toCountry,
+	toExternalAlbum,
 	toFormedIn,
 	toStyles,
 	toWikidataId,
@@ -60,53 +63,81 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 	public fetchExternalProfile$(
 		name: string
 	): Observable<ArtistExternalProfile | null> {
-		const params = new HttpParams()
-			.set('query', `artist:"${name.replace(/"/g, '')}"`)
-			.set('limit', 10)
-			.set('fmt', 'json');
+		return this.searchMusicBrainzArtist$(name).pipe(
+			switchMap((hit) =>
+				hit
+					? this.http.get<MusicBrainzArtist>(
+							`${MUSICBRAINZ_URL}/artist/${hit.id}`,
+							{
+								params: new HttpParams()
+									.set('inc', 'genres+url-rels')
+									.set('fmt', 'json'),
+							}
+						)
+					: of(null)
+			),
+			switchMap((artist) =>
+				artist
+					? this.fetchWikidata$(toWikidataId(artist.relations)).pipe(
+							map(
+								({
+									description,
+									imageUrl,
+								}): ArtistExternalProfile => ({
+									artistType: toArtistType(artist.type),
+									country: toCountry(artist.country),
+									description,
+									formedIn: toFormedIn(
+										artist['life-span']?.begin
+									),
+									imageUrl,
+									name: artist.name,
+									sourceUrl: `https://musicbrainz.org/artist/${artist.id}`,
+									styles: toStyles(artist.genres),
+								})
+							)
+						)
+					: of(null)
+			)
+		);
+	}
 
-		return this.http
-			.get<MusicBrainzSearch>(`${MUSICBRAINZ_URL}/artist`, { params })
-			.pipe(
-				map((result) => pickArtist(name, result.artists ?? [])),
-				switchMap((hit) =>
-					hit
-						? this.http.get<MusicBrainzArtist>(
-								`${MUSICBRAINZ_URL}/artist/${hit.id}`,
-								{
-									params: new HttpParams()
-										.set('inc', 'genres+url-rels')
-										.set('fmt', 'json'),
-								}
-							)
-						: of(null)
-				),
-				switchMap((artist) =>
-					artist
-						? this.fetchWikidata$(
-								toWikidataId(artist.relations)
-							).pipe(
-								map(
-									({
-										description,
-										imageUrl,
-									}): ArtistExternalProfile => ({
-										artistType: toArtistType(artist.type),
-										country: toCountry(artist.country),
-										description,
-										formedIn: toFormedIn(
-											artist['life-span']?.begin
-										),
-										imageUrl,
-										name: artist.name,
-										sourceUrl: `https://musicbrainz.org/artist/${artist.id}`,
-										styles: toStyles(artist.genres),
-									})
-								)
-							)
-						: of(null)
-				)
-			);
+	/**
+	 * The official studio albums and EPs of the artist found on MusicBrainz
+	 * by name, the oldest first. Empty when the artist is not found. Live
+	 * albums and compilations are left out: official bootlegs outnumber the
+	 * albums of some bands by far.
+	 */
+	public fetchExternalAlbums$(
+		name: string
+	): Observable<ArtistExternalAlbum[]> {
+		return this.searchMusicBrainzArtist$(name).pipe(
+			switchMap((hit) =>
+				hit
+					? this.http.get<MusicBrainzReleaseGroupSearch>(
+							`${MUSICBRAINZ_URL}/release-group`,
+							{
+								params: new HttpParams()
+									.set(
+										'query',
+										`arid:${hit.id} AND primarytype:(album OR ep) AND status:official AND NOT secondarytype:*`
+									)
+									.set('limit', 100)
+									.set('fmt', 'json'),
+							}
+						)
+					: of(null)
+			),
+			map((result) =>
+				(result?.['release-groups'] ?? [])
+					.map(toExternalAlbum)
+					.filter((album): album is ArtistExternalAlbum => !!album)
+					.sort(
+						(a, b) =>
+							(a.year?.getTime() ?? 0) - (b.year?.getTime() ?? 0)
+					)
+			)
+		);
 	}
 
 	public addAlbum$(album: AlbumModelAdd): Observable<AlbumModel> {
@@ -270,6 +301,20 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 					subscriber.next(release);
 				});
 		});
+	}
+
+	/** The MusicBrainz artist of the name; null when not found. */
+	private searchMusicBrainzArtist$(
+		name: string
+	): Observable<MusicBrainzArtist | null> {
+		const params = new HttpParams()
+			.set('query', `artist:"${name.replace(/"/g, '')}"`)
+			.set('limit', 10)
+			.set('fmt', 'json');
+
+		return this.http
+			.get<MusicBrainzSearch>(`${MUSICBRAINZ_URL}/artist`, { params })
+			.pipe(map((result) => pickArtist(name, result.artists ?? [])));
 	}
 
 	/**
