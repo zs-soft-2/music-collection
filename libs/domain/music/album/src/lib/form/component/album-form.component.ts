@@ -13,6 +13,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { Bind } from 'primeng/bind';
 import { AutoComplete } from 'primeng/autocomplete';
 import { InputText } from 'primeng/inputtext';
+import { Textarea } from 'primeng/textarea';
 import { Select } from 'primeng/select';
 import { DatePicker } from 'primeng/datepicker';
 import { MultiSelect } from 'primeng/multiselect';
@@ -31,6 +32,7 @@ import { AsyncPipe } from '@angular/common';
 		Bind,
 		AutoComplete,
 		InputText,
+		Textarea,
 		Select,
 		DatePicker,
 		MultiSelect,

@@ -9,13 +9,19 @@ import { environment } from '../environments/environment';
 import { CoreErrorModule } from '@music-collection/core/error';
 
 import { TopBarModule } from './module';
+import { YoutubeDockComponent } from './shared/youtube';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-root',
 	templateUrl: './app.component.html',
 	styleUrls: ['./app.component.scss'],
-	imports: [TopBarModule, RouterModule, CoreErrorModule],
+	imports: [
+		TopBarModule,
+		RouterModule,
+		CoreErrorModule,
+		YoutubeDockComponent,
+	],
 })
 export class AppComponent implements OnInit {
 	private authenticationStateService = inject(AuthenticationStateService);

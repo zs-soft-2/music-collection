@@ -34,6 +34,10 @@ export interface Album {
 	/** Spotify album id, used for the embedded player on the album page. */
 	spotifyAlbumId?: string | null;
 	styles: StyleEnum[];
+	/** YouTube (Music) playlist of the album, for the embedded player. */
+	youtubePlaylistId?: string | null;
+	/** YouTube videos of the album (clips, live performances). */
+	youtubeVideoIds?: string[] | null;
 }
 
 export type AlbumEntity = Album &

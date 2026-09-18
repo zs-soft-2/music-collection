@@ -141,6 +141,16 @@
 			</section>
 		}
 
+		@if (youtubeAlbum(); as youtubeAlbum) {
+			<section class="listen" aria-labelledby="youtube-title">
+				<h2 id="youtube-title" class="panel-title youtube-title">
+					<mc-youtube-icon />
+					Watch on YouTube
+				</h2>
+				<mc-youtube-panel [album]="youtubeAlbum" />
+			</section>
+		}
+
 		<!-- Tracklist and credits -->
 		<div class="details">
 			<section class="panel" aria-labelledby="tracklist-title">
@@ -156,13 +166,9 @@
 					<mc-album-tracklist
 						[groups]="store.trackGroups()"
 						[total]="store.totalDuration()"
-						[playable]="
-							spotify.connected() && !!album.spotifyAlbumId
-						"
-						[playingId]="spotify.playingTrackId()"
-						(playTrack)="
-							playTrack(album.spotifyAlbumId ?? '', $event)
-						"
+						[playable]="playable()"
+						[playingId]="playingTrackId()"
+						(playTrack)="playTrack($event)"
 					/>
 				} @else {
 					<p class="empty">

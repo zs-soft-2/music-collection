@@ -88,6 +88,72 @@
 							}
 						</small>
 					</div>
+
+					<div class="mc-field is-wide">
+						<label for="youtube-music">YouTube Music link</label>
+						<input
+							id="youtube-music"
+							type="url"
+							pInputText
+							formControlName="youtubeMusic"
+							aria-describedby="youtube-music-help"
+							[attr.aria-invalid]="
+								params.formGroup.controls['youtubeMusic']
+									.invalid
+							"
+						/>
+						<small
+							id="youtube-music-help"
+							[class.is-error]="
+								params.formGroup.controls['youtubeMusic']
+									.invalid
+							"
+						>
+							@if (
+								params.formGroup.controls['youtubeMusic']
+									.invalid
+							) {
+								Not a YouTube playlist link. In YouTube Music:
+								open the album, Share → Copy link.
+							} @else {
+								Optional. Paste the album link from YouTube
+								Music (Share → Copy link) to play the album on
+								the album page.
+							}
+						</small>
+					</div>
+
+					<div class="mc-field is-wide">
+						<label for="youtube-videos">YouTube videos</label>
+						<textarea
+							id="youtube-videos"
+							pTextarea
+							rows="3"
+							formControlName="youtubeVideos"
+							aria-describedby="youtube-videos-help"
+							[attr.aria-invalid]="
+								params.formGroup.controls['youtubeVideos']
+									.invalid
+							"
+						></textarea>
+						<small
+							id="youtube-videos-help"
+							[class.is-error]="
+								params.formGroup.controls['youtubeVideos']
+									.invalid
+							"
+						>
+							@if (
+								params.formGroup.controls['youtubeVideos']
+									.invalid
+							) {
+								Every line must be a YouTube video link.
+							} @else {
+								Optional. One YouTube video link per line (music
+								videos, live performances).
+							}
+						</small>
+					</div>
 				</div>
 			</section>
 

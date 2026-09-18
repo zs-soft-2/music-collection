@@ -3,6 +3,8 @@ import {
 	ContributionEntity,
 	TrackEntity,
 	isSpotifyAlbumId,
+	isYoutubePlaylistId,
+	isYoutubeVideoId,
 } from '@music-collection/api';
 
 import {
@@ -30,6 +32,8 @@ export interface AlbumProfileView extends AlbumView {
 	genre: string | null;
 	original: OriginalReleaseView | null;
 	spotifyAlbumId: string | null;
+	youtubePlaylistId: string | null;
+	youtubeVideoIds: string[];
 }
 
 export interface TrackRow {
@@ -77,6 +81,10 @@ export function toAlbumProfile(album: AlbumEntity): AlbumProfileView {
 		spotifyAlbumId: isSpotifyAlbumId(album.spotifyAlbumId)
 			? album.spotifyAlbumId
 			: null,
+		youtubePlaylistId: isYoutubePlaylistId(album.youtubePlaylistId)
+			? album.youtubePlaylistId
+			: null,
+		youtubeVideoIds: (album.youtubeVideoIds ?? []).filter(isYoutubeVideoId),
 		original: discogs
 			? {
 					released: discogs.released,

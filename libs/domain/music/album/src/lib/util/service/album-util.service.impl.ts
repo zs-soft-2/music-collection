@@ -28,6 +28,8 @@ import {
 	QueryOperatorEnum,
 	SearchParams,
 	parseSpotifyAlbumId,
+	parseYoutubePlaylistId,
+	parseYoutubeVideoId,
 } from '@music-collection/api';
 
 /** The Spotify field accepts an album share link, URI or id, or nothing. */
@@ -37,6 +39,43 @@ function spotifyAlbumValidator(
 	return control.value && !parseSpotifyAlbumId(control.value)
 		? { spotifyAlbum: true }
 		: null;
+}
+
+/** The YouTube Music field accepts a playlist link or id, or nothing. */
+function youtubePlaylistValidator(
+	control: AbstractControl
+): ValidationErrors | null {
+	return control.value && !parseYoutubePlaylistId(control.value)
+		? { youtubePlaylist: true }
+		: null;
+}
+
+/** Non-empty lines of the video field. */
+function videoLines(value: string | null | undefined): string[] {
+	return (value ?? '')
+		.split(/\r?\n/)
+		.map((line) => line.trim())
+		.filter(Boolean);
+}
+
+/** The video field takes one YouTube video link or id per line. */
+function youtubeVideosValidator(
+	control: AbstractControl
+): ValidationErrors | null {
+	return videoLines(control.value).some((line) => !parseYoutubeVideoId(line))
+		? { youtubeVideos: true }
+		: null;
+}
+
+/** Video ids of the video field, without duplicates. */
+function parseYoutubeVideoIds(value: string | null | undefined): string[] {
+	return [
+		...new Set(
+			videoLines(value)
+				.map(parseYoutubeVideoId)
+				.filter((id): id is string => !!id)
+		),
+	];
 }
 
 @Injectable()
@@ -132,6 +171,14 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 			entity.spotifyAlbumId = model.spotifyAlbumId;
 		}
 
+		if (model.youtubePlaylistId !== undefined) {
+			entity.youtubePlaylistId = model.youtubePlaylistId;
+		}
+
+		if (model.youtubeVideoIds !== undefined) {
+			entity.youtubeVideoIds = model.youtubeVideoIds;
+		}
+
 		return entity;
 	}
 
@@ -148,6 +195,12 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 			styles: formGroup.value['styles'],
 			songs: formGroup.value['songs'],
 			spotifyAlbumId: parseSpotifyAlbumId(formGroup.value['spotify']),
+			youtubePlaylistId: parseYoutubePlaylistId(
+				formGroup.value['youtubeMusic']
+			),
+			youtubeVideoIds: parseYoutubeVideoIds(
+				formGroup.value['youtubeVideos']
+			),
 			year: formGroup.value['year'],
 		};
 	}
@@ -166,6 +219,22 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 				[spotifyAlbumValidator],
 			],
 			styles: [album?.styles || null, [Validators.required]],
+			youtubeMusic: [
+				album?.youtubePlaylistId
+					? `https://music.youtube.com/playlist?list=${album.youtubePlaylistId}`
+					: null,
+				[youtubePlaylistValidator],
+			],
+			youtubeVideos: [
+				album?.youtubeVideoIds?.length
+					? album.youtubeVideoIds
+							.map(
+								(id) => `https://www.youtube.com/watch?v=${id}`
+							)
+							.join('\n')
+					: null,
+				[youtubeVideosValidator],
+			],
 			uid: [album?.uid],
 			year: [album?.year || null, [Validators.required]],
 		});
@@ -199,6 +268,12 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 			name: (formGroup.value['name'] as string).trim(),
 			songs: formGroup.value['songs'],
 			spotifyAlbumId: parseSpotifyAlbumId(formGroup.value['spotify']),
+			youtubePlaylistId: parseYoutubePlaylistId(
+				formGroup.value['youtubeMusic']
+			),
+			youtubeVideoIds: parseYoutubeVideoIds(
+				formGroup.value['youtubeVideos']
+			),
 			styles: formGroup.value['styles'],
 			uid: formGroup.value['uid'],
 			year: formGroup.value['year'],

@@ -38,6 +38,8 @@ describe('AlbumEditComponent', () => {
 								styles: [null],
 								uid: [null],
 								year: [null],
+								youtubeMusic: [null],
+								youtubeVideos: [null],
 							})
 						),
 					},

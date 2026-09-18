@@ -12,6 +12,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { BaseComponent, RoleNames } from '@music-collection/api';
 
 import { SpotifyMiniPlayerComponent } from '../../../../shared/spotify';
+import { YoutubeMiniPlayerComponent } from '../../../../shared/youtube';
 import { LayoutWidthService, ThemeService } from '../../../../theme';
 import { TopBarService } from './top-bar.service';
 
@@ -33,6 +34,7 @@ const NAV_ICONS: Record<string, string> = {
 		RouterLinkActive,
 		NgxPermissionsModule,
 		SpotifyMiniPlayerComponent,
+		YoutubeMiniPlayerComponent,
 	],
 	host: {
 		'(document:keydown.escape)': 'closeMenus()',

@@ -7,3 +7,4 @@ export * from './album-state.service';
 export * from './album-util.service';
 export * from './album';
 export * from './spotify-album-id';
+export * from './youtube-link';

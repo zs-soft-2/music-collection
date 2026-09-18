@@ -146,6 +146,12 @@ h1 {
 }
 
 .facts,
+.youtube-title {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
 .original-facts {
 	display: flex;
 	flex-wrap: wrap;
