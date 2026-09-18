@@ -1,12 +1,16 @@
 import { Subject } from 'rxjs';
 
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 
 import { Entity } from '../../entity';
 
 @Component({
 	template: '',
-  standalone: false,
+	// Az Angular 22 migrációja tette ide, a 22 előtti változásdetektálás
+	// megőrzésére. OnPush-ra váltása az egész appra kiható viselkedésváltozás,
+	// ezért itt szándékosan nem követjük a szabályt.
+	// eslint-disable-next-line @angular-eslint/prefer-on-push-component-change-detection
+	changeDetection: ChangeDetectionStrategy.Eager,
 })
 export abstract class BaseComponent implements OnDestroy {
 	protected destroy: Subject<boolean>;

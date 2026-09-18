@@ -8,8 +8,13 @@ import { FlexLayoutModule } from 'ng-flex-layout';
 import { WishlistItemSimpleViewComponent } from './component';
 
 @NgModule({
-	declarations: [WishlistItemSimpleViewComponent],
 	exports: [WishlistItemSimpleViewComponent],
-	imports: [CommonModule, ChipModule, FlexLayoutModule, ImageModule],
+	imports: [
+		CommonModule,
+		ChipModule,
+		FlexLayoutModule,
+		ImageModule,
+		WishlistItemSimpleViewComponent,
+	],
 })
 export class WishlistItemViewModule {}

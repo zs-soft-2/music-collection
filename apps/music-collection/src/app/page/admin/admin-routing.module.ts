@@ -12,6 +12,21 @@ const routes: Routes = [
 		component: AdminComponent,
 		children: [
 			{
+				path: '',
+				pathMatch: 'full',
+				redirectTo: 'dashboard',
+			},
+			{
+				path: 'dashboard',
+				data: {
+					breadcrumb: 'dashboard',
+				},
+				loadComponent: () =>
+					import('./dashboard/admin-dashboard.component').then(
+						(module) => module.AdminDashboardComponent
+					),
+			},
+			{
 				path: 'artist',
 				data: {
 					breadcrumb: 'artist',
@@ -55,6 +70,22 @@ const routes: Routes = [
 				loadChildren: () =>
 					import('@music-collection/domain/label/admin').then(
 						(lib) => lib.LabelAdminModule
+					),
+				canActivate: [NgxPermissionsGuard],
+				canLoad: [NgxPermissionsGuard],
+			},
+			{
+				path: 'musician',
+				data: {
+					breadcrumb: 'musician',
+					permissions: {
+						only: [RoleNames.ADMIN],
+						redirectTo: '/error',
+					},
+				},
+				loadChildren: () =>
+					import('@music-collection/domain/musician/admin').then(
+						(lib) => lib.MusicianAdminModule
 					),
 				canActivate: [NgxPermissionsGuard],
 				canLoad: [NgxPermissionsGuard],

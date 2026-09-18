@@ -6,7 +6,9 @@ describe('ReleaseUtilServiceImpl', () => {
 	let service: ReleaseUtilServiceImpl;
 
 	beforeEach(() => {
-		TestBed.configureTestingModule({});
+		TestBed.configureTestingModule({
+			providers: [ReleaseUtilServiceImpl],
+		});
 		service = TestBed.inject(ReleaseUtilServiceImpl);
 	});
 

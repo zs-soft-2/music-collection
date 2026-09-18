@@ -1,1 +1,298 @@
-<mc-album-detail-view></mc-album-detail-view>
+<div class="page">
+	@if (store.album(); as album) {
+		<!-- Album -->
+		<header class="hero">
+			@if (album.coverUrl) {
+				<img
+					class="backdrop"
+					[src]="album.coverUrl"
+					alt=""
+					aria-hidden="true"
+				/>
+			}
+			<div class="shade" aria-hidden="true"></div>
+			<mc-admin-edit-link
+				class="mc-hero-admin"
+				entity="album"
+				[id]="album.id"
+				[name]="album.title"
+			/>
+
+			<div class="profile">
+				@if (album.coverUrl) {
+					<img
+						class="cover"
+						[src]="album.coverUrl"
+						[alt]="album.title + ' cover'"
+						fetchpriority="high"
+					/>
+				} @else {
+					<div class="cover placeholder" aria-hidden="true">♪</div>
+				}
+
+				<div class="identity">
+					<p class="eyebrow">{{ album.albumType ?? 'Album' }}</p>
+					<h1>{{ album.title }}</h1>
+
+					<a
+						class="artist-link"
+						[routerLink]="['/artist', album.artistId]"
+					>
+						@if (store.artist()?.imageUrl) {
+							<img [src]="store.artist()?.imageUrl" alt="" />
+						}
+						<span>{{ album.artistName }}</span>
+					</a>
+
+					<dl class="facts">
+						@if (album.year) {
+							<div>
+								<dt>Year</dt>
+								<dd>{{ album.year }}</dd>
+							</div>
+						}
+						@if (album.genre) {
+							<div>
+								<dt>Genre</dt>
+								<dd>{{ album.genre }}</dd>
+							</div>
+						}
+						@if (store.tracks().length) {
+							<div>
+								<dt>Tracks</dt>
+								<dd>{{ store.tracks().length }}</dd>
+							</div>
+						}
+						@if (store.totalDuration()) {
+							<div>
+								<dt>Length</dt>
+								<dd>{{ store.totalDuration() }}</dd>
+							</div>
+						}
+					</dl>
+
+					@if (album.styles.length) {
+						<ul class="styles" aria-label="Styles">
+							@for (style of album.styles; track style) {
+								<li>{{ style }}</li>
+							}
+						</ul>
+					}
+				</div>
+			</div>
+		</header>
+
+		<!-- Original release -->
+		@if (album.original; as original) {
+			<section class="original" aria-labelledby="original-title">
+				<h2 id="original-title" class="panel-title">
+					Original release
+				</h2>
+				<dl class="original-facts">
+					@if (original.released) {
+						<div>
+							<dt>Released</dt>
+							<dd>{{ original.released }}</dd>
+						</div>
+					}
+					@if (original.country) {
+						<div>
+							<dt>Country</dt>
+							<dd>{{ original.country }}</dd>
+						</div>
+					}
+					@if (original.labels) {
+						<div>
+							<dt>Label</dt>
+							<dd>{{ original.labels }}</dd>
+						</div>
+					}
+					@if (original.formats) {
+						<div>
+							<dt>Format</dt>
+							<dd>{{ original.formats }}</dd>
+						</div>
+					}
+				</dl>
+				<a
+					class="source"
+					[href]="original.discogsUrl"
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					Data from Discogs
+					<i class="pi pi-external-link" aria-hidden="true"></i>
+					<span class="visually-hidden">(opens in a new tab)</span>
+				</a>
+			</section>
+		}
+
+		<!-- Listen -->
+		@if (album.spotifyAlbumId) {
+			<section class="listen" aria-labelledby="listen-title">
+				<h2 id="listen-title" class="panel-title spotify-title">
+					<mc-spotify-icon />
+					Listen on Spotify
+				</h2>
+				<mc-spotify-panel
+					[albumId]="album.spotifyAlbumId"
+					[albumTitle]="album.artistName + ' – ' + album.title"
+				/>
+			</section>
+		}
+
+		<!-- Tracklist and credits -->
+		<div class="details">
+			<section class="panel" aria-labelledby="tracklist-title">
+				<h2 id="tracklist-title" class="section-title">Tracklist</h2>
+				@if (store.detailsLoading()) {
+					<div role="status" aria-busy="true">
+						<span class="visually-hidden">Loading tracklist…</span>
+						@for (i of placeholders(8); track i) {
+							<div class="skeleton row-skeleton"></div>
+						}
+					</div>
+				} @else if (store.tracks().length) {
+					<mc-album-tracklist
+						[groups]="store.trackGroups()"
+						[total]="store.totalDuration()"
+						[playable]="
+							spotify.connected() && !!album.spotifyAlbumId
+						"
+						[playingId]="spotify.playingTrackId()"
+						(playTrack)="
+							playTrack(album.spotifyAlbumId ?? '', $event)
+						"
+					/>
+				} @else {
+					<p class="empty">
+						@if (store.detailsFailed()) {
+							The tracklist could not be loaded.
+						} @else {
+							The tracklist of this album has not been imported
+							yet.
+						}
+					</p>
+				}
+			</section>
+
+			<section class="panel" aria-labelledby="credits-title">
+				<h2 id="credits-title" class="section-title">Credits</h2>
+				@if (store.detailsLoading()) {
+					<div role="status" aria-busy="true">
+						<span class="visually-hidden">Loading credits…</span>
+						@for (i of placeholders(6); track i) {
+							<div class="skeleton row-skeleton"></div>
+						}
+					</div>
+				} @else if (store.contributions().length) {
+					@defer (on viewport({ rootMargin: '800px' })) {
+						<mc-album-credits [groups]="store.creditGroups()" />
+					} @placeholder {
+						<div
+							class="defer-placeholder is-rows"
+							[style.--count]="store.contributions().length"
+						></div>
+					}
+				} @else if (!store.detailsFailed()) {
+					<p class="empty">
+						No credits have been imported for this album yet.
+					</p>
+				}
+			</section>
+		</div>
+
+		<!-- The collector's copies -->
+		<section class="section" aria-labelledby="copies-title">
+			<h2 id="copies-title" class="section-title">In your collection</h2>
+			@if (store.releasesLoading()) {
+				<div
+					class="skeleton row-skeleton"
+					role="status"
+					aria-busy="true"
+				>
+					<span class="visually-hidden">Loading…</span>
+				</div>
+			} @else if (store.copies().length) {
+				<ul class="copies">
+					@for (copy of store.copies(); track copy.id) {
+						<li class="copy">
+							<mc-format-badge
+								[format]="copy.format"
+								[weight]="copy.weight"
+							/>
+							<span class="copy-details">
+								@if (copy.labelName) {
+									<span>{{ copy.labelName }}</span>
+								}
+								@if (copy.country) {
+									<span>{{ copy.country }}</span>
+								}
+							</span>
+							@if (copy.editions.length) {
+								<span class="editions">
+									@for (
+										edition of copy.editions;
+										track edition
+									) {
+										<span class="edition">{{
+											edition
+										}}</span>
+									}
+								</span>
+							}
+							<mc-admin-edit-link
+								class="copy-admin"
+								variant="icon"
+								entity="collection-item"
+								[id]="copy.id"
+								[name]="album.title"
+							/>
+						</li>
+					}
+				</ul>
+			} @else {
+				<p class="empty">This album is not in your collection.</p>
+			}
+		</section>
+
+		<!-- More from the artist -->
+		@if (store.moreAlbums().length) {
+			<section class="section" aria-labelledby="more-title">
+				<header class="section-head">
+					<h2 id="more-title" class="section-title">
+						More from {{ album.artistName }}
+					</h2>
+					<a class="more" [routerLink]="['/artist', album.artistId]">
+						Full discography
+						<i class="pi pi-arrow-right" aria-hidden="true"></i>
+					</a>
+				</header>
+				@defer (on viewport({ rootMargin: '800px' })) {
+					<ul class="album-grid">
+						@for (other of store.moreAlbums(); track other.id) {
+							<li><mc-discography-card [album]="other" /></li>
+						}
+					</ul>
+				} @placeholder {
+					<div
+						class="defer-placeholder is-cards"
+						[style.--count]="store.moreAlbums().length"
+					></div>
+				}
+			</section>
+		}
+	} @else if (store.notFound()) {
+		<div class="not-found">
+			<p class="not-found-icon" aria-hidden="true">♪</p>
+			<h1>Album not found</h1>
+			<p>This album is not in the catalog.</p>
+			<a class="button" routerLink="/home">Back to home</a>
+		</div>
+	} @else {
+		<div role="status" aria-busy="true">
+			<span class="visually-hidden">Loading album…</span>
+			<div class="skeleton hero-skeleton"></div>
+		</div>
+	}
+</div>

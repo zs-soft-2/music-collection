@@ -1,14 +1,38 @@
 {
+	"firestore": {
+		"rules": "firestore.rules",
+		"indexes": "firestore.indexes.json"
+	},
+	"functions": [
+		{
+			"source": "apps/functions",
+			"codebase": "security",
+			"ignore": ["node_modules", ".git", "*.log", "**/*.spec.ts"],
+			"predeploy": [
+				"npm --prefix \"$RESOURCE_DIR\" install",
+				"npm --prefix \"$RESOURCE_DIR\" run build"
+			]
+		}
+	],
 	"hosting": [
 		{
-			"site": "music-collection-4e074",
+			"target": "app",
 			"public": "dist/apps/music-collection",
-			"ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
+			"ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+			"rewrites": [
+				{
+					"source": "**",
+					"destination": "/index.html"
+				}
+			]
 		}
 	],
 	"emulators": {
 		"auth": {
 			"port": 9199
+		},
+		"functions": {
+			"port": 9196
 		},
 		"firestore": {
 			"port": 9198
@@ -24,7 +48,10 @@
 		},
 		"singleProjectMode": true
 	},
-	"storage": {
-		"rules": "storage.rules"
-	}
+	"storage": [
+		{
+			"target": "main",
+			"rules": "storage.rules"
+		}
+	]
 }

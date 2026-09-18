@@ -1,9 +1,24 @@
 import { Observable } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	OnInit,
+	inject,
+} from '@angular/core';
 import { AlbumFormParams, BaseComponent } from '@music-collection/api';
 
 import { AlbumFormService } from './album-form.service';
+import { ReactiveFormsModule } from '@angular/forms';
+import { Bind } from 'primeng/bind';
+import { AutoComplete } from 'primeng/autocomplete';
+import { InputText } from 'primeng/inputtext';
+import { Select } from 'primeng/select';
+import { DatePicker } from 'primeng/datepicker';
+import { MultiSelect } from 'primeng/multiselect';
+import { Image } from 'primeng/image';
+import { Button } from 'primeng/button';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -11,14 +26,23 @@ import { AlbumFormService } from './album-form.service';
 	selector: 'mc-album-form',
 	templateUrl: './album-form.component.html',
 	styleUrls: ['./album-form.component.scss'],
-	standalone: false,
+	imports: [
+		ReactiveFormsModule,
+		Bind,
+		AutoComplete,
+		InputText,
+		Select,
+		DatePicker,
+		MultiSelect,
+		Image,
+		Button,
+		AsyncPipe,
+	],
 })
 export class AlbumFormComponent extends BaseComponent implements OnInit {
-	public params$!: Observable<AlbumFormParams>;
+	private componentService = inject(AlbumFormService);
 
-	public constructor(private componentService: AlbumFormService) {
-		super();
-	}
+	public params$!: Observable<AlbumFormParams>;
 
 	public cancel(): void {
 		this.componentService.cancel();

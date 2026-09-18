@@ -1,0 +1,197 @@
+:host {
+	display: block;
+}
+
+.timeline {
+	margin: 0;
+	padding: 1.1rem 1.25rem 2rem;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-md);
+}
+
+.head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.5rem 1rem;
+	margin-bottom: 1rem;
+}
+
+.title {
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--mc-text-muted);
+}
+
+.legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem 1rem;
+	font-size: 0.8rem;
+	color: var(--mc-text-muted);
+}
+
+.key {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+}
+
+.swatch {
+	width: 10px;
+	height: 10px;
+	border: 2px solid var(--mc-text-subtle);
+	border-radius: 50%;
+
+	&.owned {
+		background: var(--mc-chart);
+		border-color: var(--mc-chart);
+	}
+}
+
+.plot {
+	position: relative;
+	/* Keep the edge markers' hit areas and tooltips inside the card. */
+	margin: 0 12px;
+}
+
+.markers {
+	position: absolute;
+	inset: 0;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.marker-slot {
+	position: absolute;
+	transform: translateX(-50%);
+}
+
+/* The 24px hit target is larger than the 12px mark. */
+.marker {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 22px;
+	border-radius: 50%;
+
+	&:focus-visible {
+		outline: 2px solid var(--mc-text);
+		outline-offset: 0;
+	}
+}
+
+.dot {
+	width: 12px;
+	height: 12px;
+	background: var(--mc-card-bg);
+	border: 2px solid var(--mc-text-subtle);
+	border-radius: 50%;
+	/* Surface ring keeps overlapping marks legible. */
+	box-shadow: 0 0 0 2px var(--mc-card-bg);
+	transition: transform var(--mc-duration-fast) ease;
+}
+
+.marker.owned .dot {
+	background: var(--mc-chart);
+	border-color: var(--mc-chart);
+}
+
+.marker:hover .dot,
+.marker:focus-visible .dot {
+	transform: scale(1.35);
+}
+
+.axis {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	height: 12px;
+	border-top: 1px solid var(--mc-border-strong);
+}
+
+.tick {
+	position: absolute;
+	top: 6px;
+	font-size: 0.7rem;
+	color: var(--mc-text-subtle);
+	font-variant-numeric: tabular-nums;
+	transform: translateX(-50%);
+}
+
+.tooltip {
+	position: absolute;
+	bottom: calc(100% + 8px);
+	left: 50%;
+	z-index: 10;
+	display: flex;
+	gap: 0.6rem;
+	align-items: center;
+	width: max-content;
+	max-width: min(260px, 60vw);
+	padding: 0.45rem;
+	color: var(--mc-text);
+	background: #000;
+	border: 1px solid var(--mc-border-strong);
+	border-radius: var(--mc-radius-sm);
+	box-shadow: 0 10px 24px rgba(0, 0, 0, 0.6);
+	opacity: 0;
+	transform: translateX(-50%);
+	transition: opacity var(--mc-duration-fast) ease;
+	pointer-events: none;
+
+	img {
+		width: 48px;
+		height: 48px;
+		object-fit: cover;
+		border-radius: 2px;
+	}
+}
+
+.marker.align-start .tooltip {
+	left: 0;
+	transform: none;
+}
+
+.marker.align-end .tooltip {
+	right: 0;
+	left: auto;
+	transform: none;
+}
+
+.marker:hover .tooltip,
+.marker:focus-visible .tooltip {
+	opacity: 1;
+}
+
+.tooltip-text {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	font-size: 0.75rem;
+	color: var(--mc-text-muted);
+
+	strong {
+		font-size: 0.85rem;
+		color: var(--mc-text);
+	}
+}
+
+.tooltip-owned {
+	color: var(--mc-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.dot,
+	.tooltip {
+		transition: none;
+	}
+}

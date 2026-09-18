@@ -6,6 +6,9 @@ import {
 	Output,
 } from '@angular/core';
 import { BaseComponent, MediaEnum, ReleaseEntity } from '@music-collection/api';
+import { AlbumSimpleViewModule } from '@music-collection/domain/album';
+import { DefaultLayoutDirective } from 'ng-flex-layout/flex';
+import { SvgIconComponent } from 'angular-svg-icon';
 
 export interface Media {
 	[x: string]: MediaEnum;
@@ -16,7 +19,11 @@ export interface Media {
 	selector: 'mc-release-simple-view',
 	templateUrl: './release-simple-view.component.html',
 	styleUrls: ['./release-simple-view.component.scss'],
-  standalone: false,
+	imports: [
+		AlbumSimpleViewModule,
+		DefaultLayoutDirective,
+		SvgIconComponent,
+	],
 })
 export class ReleaseSimpleViewComponent extends BaseComponent {
 	public media: Media;

@@ -1,96 +1,90 @@
-<section class="document-form" *rxLet="params$; let params">
-	<form [formGroup]="params.formGroup">
-		<input name="uid" formControlName="uid" hidden />
+@if (params$ | async; as params) {
+	<section class="document-form">
+		<form class="mc-form" [formGroup]="params.formGroup">
+			<input name="uid" formControlName="uid" hidden />
 
-		<div class="field">
-			<span class="p-float-label">
-				<input
-					id="name"
-					type="text"
-					pInputText
-					formControlName="name"
-				/>
+			<section class="mc-form-section" aria-labelledby="document-file">
+				<h2 id="document-file">File</h2>
+				<div class="mc-field">
+					<label for="name">Name</label>
+					<input
+						id="name"
+						type="text"
+						pInputText
+						formControlName="name"
+					/>
+				</div>
 
-				<label for="name">Name</label>
-			</span>
-		</div>
+				<div class="mc-field">
+					<span class="mc-field-label">Upload</span>
+					<p-fileupload
+						name="file"
+						chooseLabel="Choose file"
+						[customUpload]="true"
+						(uploadHandler)="fileUpload($event)"
+					></p-fileupload>
+				</div>
 
-		<div class="field">
-			<span>
-				<label for="file"></label>
+				@if (params.formGroup.value.filePath) {
+					<p-image
+						class="mc-form-image"
+						[src]="params.formGroup.value.filePath"
+						[preview]="true"
+						alt="Uploaded file preview"
+						width="250"
+					></p-image>
+				}
+			</section>
 
-				<p-fileUpload
-					name="file"
-					[customUpload]="true"
-					(uploadHandler)="fileUpload($event)"
-				></p-fileUpload>
-			</span>
+			<section class="mc-form-section" aria-labelledby="document-meta">
+				<h2 id="document-meta">Stored file</h2>
+				<div class="mc-form-grid">
+					<div class="mc-field is-wide">
+						<label for="filePath">File path</label>
+						<input
+							id="filePath"
+							type="text"
+							pInputText
+							formControlName="filePath"
+						/>
+					</div>
 
-			<ng-container *ngIf="params.formGroup.value.filePath">
-				<p-image
-					[src]="params.formGroup.value.filePath"
-					[preview]="true"
-					alt="Image"
-					width="250"
-				>
-				</p-image>
-			</ng-container>
-		</div>
+					<div class="mc-field">
+						<label for="originalName">Original name</label>
+						<input
+							id="originalName"
+							type="text"
+							pInputText
+							formControlName="originalName"
+						/>
+					</div>
 
-		<div class="field">
-			<span class="p-float-label">
-				<input
-					id="filePath"
-					type="text"
-					pInputText
-					formControlName="filePath"
-				/>
+					<div class="mc-field">
+						<label for="fileType">File type</label>
+						<input
+							id="fileType"
+							type="text"
+							pInputText
+							formControlName="fileType"
+						/>
+					</div>
+				</div>
+			</section>
 
-				<label for="filePath">File path</label>
-			</span>
-		</div>
-
-		<div class="field">
-			<span class="p-float-label">
-				<input
-					id="originalName"
-					type="text"
-					pInputText
-					formControlName="originalName"
-				/>
-
-				<label for="originalName">Original name</label>
-			</span>
-		</div>
-
-		<div class="field">
-			<span class="p-float-label">
-				<input
-					id="fileType"
-					type="text"
-					pInputText
-					formControlName="fileType"
-				/>
-
-				<label for="fileType">File type</label>
-			</span>
-		</div>
-	</form>
-
-	<div style="margin-top: 10px" fxLayout="row" fxLayoutAlign="space-around">
-		<button
-			pButton
-			type="button"
-			label="Submit"
-			(click)="submit()"
-			[disabled]="!params.formGroup.valid"
-		></button>
-
-		<button
-			pButton
-			type="button"
-			label="Cancel"
-			(click)="cancel()"
-		></button>
-	</div>
-</section>
+			<div class="mc-form-actions">
+				<p-button
+					label="Cancel"
+					severity="secondary"
+					[outlined]="true"
+					(onClick)="cancel()"
+				></p-button>
+				<p-button
+					label="Save"
+					icon="pi pi-check"
+					[disabled]="!params.formGroup.valid"
+					(onClick)="submit()"
+				></p-button>
+			</div>
+		</form>
+	</section>
+}

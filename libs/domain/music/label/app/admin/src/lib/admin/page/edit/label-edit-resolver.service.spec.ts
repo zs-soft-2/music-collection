@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { LabelStateService } from '@music-collection/api';
 
 import { LabelEditResolverService } from './label-edit-resolver.service';
 
@@ -7,7 +8,10 @@ describe('LabelEditResolverService', () => {
 
 	beforeEach(() => {
 		TestBed.configureTestingModule({
-			providers: [LabelEditResolverService],
+			providers: [
+				LabelEditResolverService,
+				{ provide: LabelStateService, useValue: {} },
+			],
 		});
 
 		service = TestBed.inject(LabelEditResolverService);

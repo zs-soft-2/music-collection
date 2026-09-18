@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
 	ReleaseEntity,
 	ReleaseEntityAdd,
@@ -16,9 +16,8 @@ import * as releaseSelectors from './release.selectors';
 
 @Injectable()
 export class ReleaseStateServiceImpl extends ReleaseStateService {
-	public constructor(private store: Store<fromRelease.ReleasePartialState>) {
-		super();
-	}
+	private store = inject<Store<fromRelease.ReleasePartialState>>(Store);
+
 
 	public dispatchAddEntityAction(release: ReleaseEntityAdd): void {
 		this.store.dispatch(releaseActions.addRelease({ release }));

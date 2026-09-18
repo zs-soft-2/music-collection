@@ -1,5 +1,5 @@
 /* eslint-disable */
-export default {
+module.exports = {
 	displayName: 'domain-label',
 	preset: '../../../../jest.preset.js',
 	setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import {
 	CollectionItemEntity,
@@ -20,16 +20,14 @@ import {
 
 @Injectable()
 export class CollectionItemUtilServiceImpl extends CollectionItemUtilService {
+	private formBuilder = inject(FormBuilder);
+
 	public _sort = (a: CollectionItemEntity, b: CollectionItemEntity): number =>
 		a.release.name <= b.release.name ? -1 : 1;
 	public _sortByArtistName = (
 		a: CollectionItemEntity,
 		b: CollectionItemEntity
 	): number => (a.release.artist.name <= b.release.artist.name ? -1 : 1);
-
-	public constructor(private formBuilder: FormBuilder) {
-		super();
-	}
 
 	public convertEntityAddToModelAdd(
 		entity: CollectionItemEntityAdd

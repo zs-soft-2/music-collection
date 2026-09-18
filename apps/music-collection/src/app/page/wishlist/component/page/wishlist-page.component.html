@@ -1,1 +1,206 @@
-<mc-wishlist-content></mc-wishlist-content>
+<div class="page">
+	<header class="hero">
+		<div>
+			<p class="eyebrow">musiCollection</p>
+			<h1>Wishlist</h1>
+		</div>
+
+		@if (!store.isLoading()) {
+			<dl class="stats">
+				<div class="stat">
+					<dt>Wanted</dt>
+					<dd>{{ store.stats().wanted }}</dd>
+				</div>
+				<div class="stat">
+					<dt>Artists</dt>
+					<dd>{{ store.stats().artists }}</dd>
+				</div>
+				@if (store.stats().found) {
+					<div class="stat">
+						<dt>Found</dt>
+						<dd>{{ store.stats().found }}</dd>
+					</div>
+				}
+			</dl>
+		}
+	</header>
+
+	<div class="toolbar">
+		<div class="search">
+			<i class="pi pi-search" aria-hidden="true"></i>
+			<label class="visually-hidden" for="wishlist-search"
+				>Search artist or album</label
+			>
+			<input
+				id="wishlist-search"
+				type="search"
+				placeholder="Search artist or album…"
+				autocomplete="off"
+				[value]="store.query()"
+				(input)="onQuery($event)"
+			/>
+		</div>
+
+		<div class="chips" role="group" aria-label="Filter by format">
+			<button
+				type="button"
+				class="chip"
+				[attr.aria-pressed]="store.format() === 'all'"
+				(click)="store.setFormat('all')"
+			>
+				All
+			</button>
+			@for (option of store.formatCounts(); track option.format) {
+				<button
+					type="button"
+					class="chip"
+					[attr.aria-pressed]="store.format() === option.format"
+					(click)="store.setFormat(option.format)"
+				>
+					{{ option.label }}
+					<span class="chip-count">{{ option.count }}</span>
+				</button>
+			}
+		</div>
+
+		@if (store.stats().found) {
+			<button
+				type="button"
+				class="chip toggle"
+				[attr.aria-pressed]="store.showFound()"
+				(click)="store.toggleFound()"
+			>
+				<i class="pi pi-check" aria-hidden="true"></i>
+				Show found
+			</button>
+		}
+	</div>
+
+	<p class="summary" aria-live="polite">
+		@if (!store.isLoading()) {
+			@if (store.hasFilter()) {
+				Showing {{ store.visible().length }} albums
+				<button
+					type="button"
+					class="link-button"
+					(click)="store.clearFilters()"
+				>
+					Clear filters
+				</button>
+			} @else {
+				{{ store.visible().length }} albums
+			}
+		}
+	</p>
+
+	@if (store.isLoading()) {
+		<div class="grid" role="status" aria-busy="true">
+			<span class="visually-hidden">Loading wishlist…</span>
+			@for (skeleton of skeletons; track skeleton) {
+				<div class="skeleton"></div>
+			}
+		</div>
+	} @else if (!store.entries().length) {
+		<div class="empty">
+			<i class="pi pi-heart empty-icon" aria-hidden="true"></i>
+			<h2>Your wishlist is empty</h2>
+			<p>
+				Browse the collection and note the albums you are looking for.
+			</p>
+			<a class="button" routerLink="/collection">Open collection</a>
+		</div>
+	} @else if (!store.visible().length) {
+		<div class="empty">
+			<i class="pi pi-search empty-icon" aria-hidden="true"></i>
+			<h2>No albums found</h2>
+			<p>Try another search or format.</p>
+			<button type="button" class="button" (click)="store.clearFilters()">
+				Clear filters
+			</button>
+		</div>
+	} @else {
+		@for (chunk of store.chunks(); track $index) {
+			@if ($first) {
+				<ng-container
+					[ngTemplateOutlet]="chunkTemplate"
+					[ngTemplateOutletContext]="{
+						$implicit: chunk,
+						priority: true,
+					}"
+				/>
+			} @else {
+				<!-- Later chunks build just before they scroll into view -->
+				@defer (on viewport({ rootMargin: '800px' })) {
+					<ng-container
+						[ngTemplateOutlet]="chunkTemplate"
+						[ngTemplateOutletContext]="{
+							$implicit: chunk,
+							priority: false,
+						}"
+					/>
+				} @placeholder {
+					<div
+						class="chunk-placeholder"
+						[style.--count]="chunk.length"
+					></div>
+				}
+			}
+		}
+	}
+</div>
+
+<ng-template #chunkTemplate let-entries let-priority="priority">
+	<ul class="grid">
+		@for (entry of entries; track entry.id) {
+			<li class="entry" [class.is-found]="!entry.isActive">
+				<mc-release-card
+					adminEntity="wishlist-item"
+					[release]="entry.release"
+					[priority]="priority && $index < 6"
+				/>
+				<div class="entry-meta">
+					@if (entry.formats.length > 1) {
+						<ul class="formats" aria-label="Also wanted on">
+							@for (
+								format of entry.formats.slice(1);
+								track format
+							) {
+								<li>
+									<mc-format-badge [format]="format" />
+								</li>
+							}
+						</ul>
+					} @else {
+						<span></span>
+					}
+					@if (!entry.isActive) {
+						<span class="found">
+							<i class="pi pi-check" aria-hidden="true"></i>
+							Found
+						</span>
+					} @else if (entry.shopUrl) {
+						<a
+							class="shop"
+							[href]="entry.shopUrl"
+							target="_blank"
+							rel="noopener noreferrer"
+							[attr.aria-label]="
+								'Shop: ' +
+								entry.release.artistName +
+								' — ' +
+								entry.release.title +
+								' (opens in a new tab)'
+							"
+						>
+							Shop
+							<i
+								class="pi pi-external-link"
+								aria-hidden="true"
+							></i>
+						</a>
+					}
+				</div>
+			</li>
+		}
+	</ul>
+</ng-template>

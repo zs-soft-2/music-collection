@@ -1,4 +1,9 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import {
+	DocumentStateService,
+	DocumentUtilService,
+} from '@music-collection/api';
 
 import { DocumentFormService } from './document-form.service';
 
@@ -7,7 +12,12 @@ describe('DocumentFormService', () => {
 
 	beforeEach(() => {
 		TestBed.configureTestingModule({
-			providers: [DocumentFormService],
+			providers: [
+				DocumentFormService,
+				provideRouter([]),
+				{ provide: DocumentStateService, useValue: {} },
+				{ provide: DocumentUtilService, useValue: {} },
+			],
 		});
 
 		service = TestBed.inject(DocumentFormService);

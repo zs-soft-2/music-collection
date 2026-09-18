@@ -1,9 +1,20 @@
 import { Observable } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	OnInit,
+	inject,
+} from '@angular/core';
 import { LabelFormParams, BaseComponent } from '@music-collection/api';
 
 import { LabelFormService } from './label-form.service';
+import { ReactiveFormsModule } from '@angular/forms';
+import { Bind } from 'primeng/bind';
+import { AutoComplete } from 'primeng/autocomplete';
+import { InputText } from 'primeng/inputtext';
+import { Button } from 'primeng/button';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -11,14 +22,19 @@ import { LabelFormService } from './label-form.service';
 	selector: 'mc-label-form',
 	templateUrl: './label-form.component.html',
 	styleUrls: ['./label-form.component.scss'],
-  standalone: false,
+	imports: [
+		ReactiveFormsModule,
+		Bind,
+		AutoComplete,
+		InputText,
+		Button,
+		AsyncPipe,
+	],
 })
 export class LabelFormComponent extends BaseComponent implements OnInit {
-	public params$!: Observable<LabelFormParams>;
+	private componentService = inject(LabelFormService);
 
-	public constructor(private componentService: LabelFormService) {
-		super();
-	}
+	public params$!: Observable<LabelFormParams>;
 
 	public cancel(): void {
 		this.componentService.cancel();

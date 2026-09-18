@@ -1,54 +1,66 @@
 @if (store.artist()) {
-	<section class="artist-detail entity-detail" >
+	<section class="artist-detail entity-detail">
 		<nav></nav>
-	
+
 		<header>
 			<div class="header-content">
 				<p-image
 					[src]="store.artist()?.headerImage?.filePath || ''"
 					alt="Image"
 				></p-image>
-	
+
 				<div class="tab-menu">
-					<p-tabMenu
-						[model]="store.menuItems()"
-						[activeItem]="store.activeMenuItem()"
-						(activeItemChange)="store.activeItemChange($event)"
-					></p-tabMenu>
+					<p-tabs
+						[value]="store.activeMenuItem().label"
+						(valueChange)="selectMenuItem($event)"
+					>
+						<p-tablist>
+							@for (item of store.menuItems(); track item.label) {
+								<p-tab [value]="item.label">{{
+									item.label
+								}}</p-tab>
+							}
+						</p-tablist>
+					</p-tabs>
 				</div>
-	
+
 				<div class="artist-name">
 					<span>{{ store.artist()?.name }}</span>
 				</div>
 			</div>
 		</header>
-	
+
 		<div class="content">
 			@switch (store.selectedContent()) {
 				@case ('info') {
 					<div>
 						<div class="property">
 							<span>Country:</span>
-		
+
 							<span>{{ store.artist()?.country }}</span>
 						</div>
-		
+
 						<div class="property">
 							<span>Formed in:</span>
-		
-							<span>{{ store.artist()?.formedIn | date: 'yyyy' }}</span>
+
+							<span>{{
+								$safeNavigationMigration(
+									store.artist()?.formedIn
+								) | date: 'yyyy'
+							}}</span>
 						</div>
-		
+
 						<div class="property">
 							<span>Styles:</span>
-		
+
 							<span>
-								<ng-container
-									*ngFor="let style of store.artist()?.styles"
-								>
+								@for (
+									style of store.artist()?.styles;
+									track style
+								) {
 									<p-chip styleClass="style" [label]="style">
 									</p-chip>
-								</ng-container>
+								}
 							</span>
 						</div>
 					</div>
@@ -56,8 +68,8 @@
 				@case ('discography') {
 					<div>
 						@if (store.albums()) {
-							<p-dataView [value]="store.albums()">
-								<ng-template let-albums pTemplate="list">
+							<p-dataview [value]="store.albums()">
+								<ng-template let-albums #list>
 									@for (album of albums; track album.uid) {
 										<mc-album-item-view
 											[album]="album"
@@ -67,7 +79,7 @@
 										></mc-album-item-view>
 									}
 								</ng-template>
-							</p-dataView>
+							</p-dataview>
 						}
 					</div>
 				}
@@ -75,7 +87,7 @@
 					<div>Members</div>
 				}
 				@default {}
-			  }
+			}
 		</div>
 	</section>
 }

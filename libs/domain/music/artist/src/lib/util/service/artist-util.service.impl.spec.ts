@@ -6,7 +6,9 @@ describe('ArtistUtilServiceImpl', () => {
 	let service: ArtistUtilServiceImpl;
 
 	beforeEach(() => {
-		TestBed.configureTestingModule({});
+		TestBed.configureTestingModule({
+			providers: [ArtistUtilServiceImpl],
+		});
 		service = TestBed.inject(ArtistUtilServiceImpl);
 	});
 

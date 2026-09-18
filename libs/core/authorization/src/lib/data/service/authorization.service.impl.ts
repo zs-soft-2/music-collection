@@ -5,7 +5,7 @@ import {
 	NgxRolesService,
 } from 'ngx-permissions';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
 	Action,
 	AuthorizationService,
@@ -15,12 +15,9 @@ import {
 
 @Injectable()
 export class AuthorizationServiceImpl extends AuthorizationService {
-	public constructor(
-		private permissionsService: NgxPermissionsService,
-		private rolesService: NgxRolesService
-	) {
-		super();
-	}
+	private permissionsService = inject(NgxPermissionsService);
+	private rolesService = inject(NgxRolesService);
+
 
 	public addPermission(permission: string): void {
 		this.permissionsService.addPermission(permission);

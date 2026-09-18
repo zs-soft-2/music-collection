@@ -1,0 +1,177 @@
+@if (params$ | async; as params) {
+	<section class="musician-table mc-card">
+		<div class="toolbar">
+			<p-iconfield>
+				<p-inputicon styleClass="pi pi-search" />
+				<input
+					pInputText
+					type="search"
+					placeholder="Filter by name…"
+					aria-label="Filter musicians by name, real name or alias"
+					(input)="filter($event)"
+				/>
+			</p-iconfield>
+
+			<div class="view-toggle" role="group" aria-label="View">
+				@for (option of viewOptions; track option.value) {
+					<button
+						type="button"
+						[attr.aria-pressed]="view() === option.value"
+						[attr.aria-label]="option.label"
+						[title]="option.label"
+						(click)="setView(option.value)"
+					>
+						<i [class]="option.icon" aria-hidden="true"></i>
+					</button>
+				}
+			</div>
+		</div>
+
+		@if (view() === 'cards') {
+			<p-dataview
+				[value]="params.musicians"
+				layout="grid"
+				[paginator]="true"
+				[rows]="48"
+				[rowsPerPageOptions]="[24, 48, 96]"
+				emptyMessage="No musicians found."
+			>
+				<ng-template #grid let-musicians>
+					<ul class="cards">
+						@for (musician of musicians; track musician.uid) {
+							<li class="card">
+								<button
+									type="button"
+									class="card-body"
+									[attr.aria-label]="'Edit ' + musician.name"
+									(click)="editMusician(musician)"
+								>
+									@if (musician.imageUrl) {
+										<img
+											class="portrait"
+											[src]="musician.imageUrl"
+											alt=""
+											loading="lazy"
+										/>
+									} @else {
+										<span
+											class="portrait placeholder"
+											aria-hidden="true"
+										>
+											{{ musician.name.charAt(0) }}
+										</span>
+									}
+									<span class="name">{{ musician.name }}</span>
+									@if (musician.realName) {
+										<span class="real-name">{{
+											musician.realName
+										}}</span>
+									}
+									<span class="profile">
+										<ng-container
+											*ngTemplateOutlet="
+												profileTags;
+												context: { $implicit: musician }
+											"
+										/>
+									</span>
+									<i
+										class="pi pi-pencil edit-icon"
+										aria-hidden="true"
+									></i>
+								</button>
+							</li>
+						}
+					</ul>
+				</ng-template>
+			</p-dataview>
+		} @else {
+			<p-table
+				[value]="params.musicians"
+				[loading]="params.loading && !params.musicians.length"
+				[paginator]="true"
+				[rows]="50"
+				[rowsPerPageOptions]="[25, 50, 100]"
+				dataKey="uid"
+				styleClass="mc-table"
+				responsiveLayout="scroll"
+			>
+				<ng-template #header>
+					<tr>
+						<th scope="col">
+							<span class="visually-hidden">Portrait</span>
+						</th>
+						<th scope="col" pSortableColumn="name">
+							Name <p-sorticon field="name" />
+						</th>
+						<th scope="col" pSortableColumn="realName">
+							Real name <p-sorticon field="realName" />
+						</th>
+						<th scope="col">Profile</th>
+						<th scope="col">
+							<span class="visually-hidden">Actions</span>
+						</th>
+					</tr>
+				</ng-template>
+
+				<ng-template #body let-musician>
+					<tr>
+						<td>
+							@if (musician.imageUrl) {
+								<img
+									class="thumb"
+									[src]="musician.imageUrl"
+									alt=""
+									loading="lazy"
+								/>
+							} @else {
+								<span class="thumb placeholder" aria-hidden="true">
+									{{ musician.name.charAt(0) }}
+								</span>
+							}
+						</td>
+						<td>{{ musician.name }}</td>
+						<td>{{ musician.realName }}</td>
+						<td class="profile">
+							<ng-container
+								*ngTemplateOutlet="
+									profileTags;
+									context: { $implicit: musician }
+								"
+							/>
+						</td>
+						<td>
+							<button
+								pButton
+								type="button"
+								class="p-button-text p-button-rounded p-button-secondary"
+								[attr.aria-label]="'Edit ' + musician.name"
+								(click)="editMusician(musician)"
+							>
+								<i class="pi pi-pencil" aria-hidden="true"></i>
+							</button>
+						</td>
+					</tr>
+				</ng-template>
+
+				<ng-template #emptymessage>
+					<tr>
+						<td colspan="5">No musicians found.</td>
+					</tr>
+				</ng-template>
+			</p-table>
+		}
+	</section>
+}
+
+<ng-template #profileTags let-musician>
+	@if (musician.description) {
+		<span class="tag">Biography</span>
+	}
+	@if (musician.sites?.length) {
+		<span class="tag">{{ musician.sites.length }} links</span>
+	}
+	@if (musician.discogsId) {
+		<span class="tag">Discogs</span>
+	}
+</ng-template>

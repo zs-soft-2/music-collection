@@ -1,8 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { AuthorizationService } from '@music-collection/api';
+import {
+	AuthorizationService,
+	EffectivePermissionsDataService,
+} from '@music-collection/api';
 
-import { AuthorizationServiceImpl } from './service';
+import {
+	AuthorizationServiceImpl,
+	EffectivePermissionsDataServiceImpl,
+} from './service';
 
 @NgModule({
 	imports: [CommonModule],
@@ -10,6 +16,10 @@ import { AuthorizationServiceImpl } from './service';
 		{
 			provide: AuthorizationService,
 			useClass: AuthorizationServiceImpl,
+		},
+		{
+			provide: EffectivePermissionsDataService,
+			useClass: EffectivePermissionsDataServiceImpl,
 		},
 	],
 })

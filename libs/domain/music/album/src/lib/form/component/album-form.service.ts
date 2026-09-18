@@ -1,8 +1,8 @@
 import { combineLatest, Observable, ReplaySubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import { Injectable } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import {
 	AlbumEntity,
 	AlbumEntityAdd,
@@ -16,32 +16,31 @@ import {
 	DocumentStateService,
 	EntityTypeEnum,
 	FormatList,
+	ReturnNavigationService,
 	SearchParams,
 	StyleList,
 } from '@music-collection/api';
 
 @Injectable()
 export class AlbumFormService {
+	private activatedRoute = inject(ActivatedRoute);
+	private albumStateService = inject(AlbumStateService);
+	private albumUtilService = inject(AlbumUtilService);
+	private artistStateService = inject(ArtistStateService);
+	private componentUtil = inject(AlbumUtilService);
+	private documentStateService = inject(DocumentStateService);
+	private returnNavigation = inject(ReturnNavigationService);
+
 	private album!: AlbumEntity | undefined;
 	private params!: AlbumFormParams;
 	private params$$: ReplaySubject<AlbumFormParams>;
 
-	public constructor(
-		private activatedRoute: ActivatedRoute,
-		private albumStateService: AlbumStateService,
-		private albumUtilService: AlbumUtilService,
-		private artistStateService: ArtistStateService,
-		private componentUtil: AlbumUtilService,
-		private documentStateService: DocumentStateService,
-		private router: Router
-	) {
+	public constructor() {
 		this.params$$ = new ReplaySubject();
 	}
 
 	public cancel(): void {
-		this.router.navigate(['../../list'], {
-			relativeTo: this.activatedRoute,
-		});
+		this.returnNavigation.leave(['../../list'], this.activatedRoute);
 	}
 
 	public init$(): Observable<AlbumFormParams> {
@@ -91,9 +90,7 @@ export class AlbumFormService {
 			this.addAlbum();
 		}
 
-		this.router.navigate(['../../list'], {
-			relativeTo: this.activatedRoute,
-		});
+		this.returnNavigation.leave(['../../list'], this.activatedRoute);
 	}
 
 	private addAlbum(): void {

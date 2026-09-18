@@ -1,6 +1,6 @@
 import { Observable, ReplaySubject, Subject, switchMap } from 'rxjs';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import {
 	AuthenticationStateService,
@@ -12,15 +12,15 @@ import { MenuItem, TopBarParams } from '../../api';
 
 @Injectable()
 export class TopBarService {
+	private authenticationStateService = inject(AuthenticationStateService);
+	private authorizationService = inject(AuthorizationService);
+	private router = inject(Router);
+
 	private currentPath!: string;
 	private params!: TopBarParams;
 	private params$$: Subject<TopBarParams>;
 
-	constructor(
-		private authenticationStateService: AuthenticationStateService,
-		private authorizationService: AuthorizationService,
-		private router: Router
-	) {
+	constructor() {
 		this.params$$ = new ReplaySubject();
 	}
 
@@ -33,6 +33,14 @@ export class TopBarService {
 			{
 				label: 'Collection',
 				routerLink: ['/collection'],
+			},
+			{
+				label: 'Wishlist',
+				routerLink: ['/wishlist'],
+			},
+			{
+				label: 'Network',
+				routerLink: ['/network'],
 			},
 		];
 	}
@@ -51,6 +59,10 @@ export class TopBarService {
 				return this.params$$;
 			})
 		);
+	}
+
+	public selectIsAuthenticated$(): Observable<boolean> {
+		return this.authenticationStateService.selectIsAuthenticated$();
 	}
 
 	public login(): void {

@@ -1,0 +1,56 @@
+name: CI
+
+# Egyetlen workflow, hogy a deploy a build-test job sikerére várhasson (`needs:`).
+# Külön workflow-k között nincs függés, így korábban a piros teszt mellett is
+# kiment a deploy.
+on:
+  pull_request:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      # Minden projekt (app és library-k), nem csak a music-collection.
+      - run: npx nx run-many -t lint
+      - run: npx nx run-many -t test --passWithNoTests
+      - run: npm run build:prod
+
+  # dev branch → dev környezet automatikusan, de csak zöld build-test után.
+  # A környezeti változókat (GCP_PROJECT, WIF_PROVIDER, DEPLOYER_SA, BUILD_CONFIG,
+  # FIREBASE_HOSTING) az `infra/` tofu-gyökerei írják.
+  deploy:
+    needs: build-test
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment: dev
+    concurrency:
+      group: deploy-dev
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx nx build music-collection --configuration=${{ vars.BUILD_CONFIG }}
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.WIF_PROVIDER }}
+          service_account: ${{ vars.DEPLOYER_SA }}
+      # A hosting mellett a firebase.json többi része is: Firestore rules és indexek,
+      # Storage rules, és a jogosultság-szinkron function (apps/functions — a
+      # predeploy hook telepíti és fordítja).
+      - run: npx firebase-tools deploy --only hosting:${{ vars.FIREBASE_HOSTING }},firestore,storage,functions --project ${{ vars.GCP_PROJECT }} --non-interactive

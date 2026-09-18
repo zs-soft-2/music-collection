@@ -4,7 +4,6 @@ import { FlexLayoutModule } from 'ng-flex-layout';
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { AlbumSimpleViewModule } from '@music-collection/domain/album';
-import { RxLet } from '@rx-angular/template/let';
 
 import {
 	ReleaseDetailViewComponent,
@@ -13,13 +12,13 @@ import {
 
 @NgModule({
 	exports: [ReleaseDetailViewComponent, ReleaseSimpleViewComponent],
-	declarations: [ReleaseDetailViewComponent, ReleaseSimpleViewComponent],
 	imports: [
 		CommonModule,
 		AlbumSimpleViewModule,
 		AngularSvgIconModule,
 		FlexLayoutModule,
-		RxLet,
+		ReleaseDetailViewComponent,
+		ReleaseSimpleViewComponent,
 	],
 })
 export class ReleaseViewModule {}

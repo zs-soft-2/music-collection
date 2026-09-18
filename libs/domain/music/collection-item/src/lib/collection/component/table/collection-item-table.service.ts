@@ -1,6 +1,6 @@
 import { merge, Observable, ReplaySubject, switchMap } from 'rxjs';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
 	BaseComponent,
@@ -14,15 +14,15 @@ import {
 
 @Injectable()
 export class CollectionItemTableService extends BaseComponent {
+	private activatedRoute = inject(ActivatedRoute);
+	private collectionItemStateService = inject(CollectionItemStateService);
+	private collectionItemUtilService = inject(CollectionItemUtilService);
+	private router = inject(Router);
+
 	private params!: CollectionItemTableParams;
 	private params$$: ReplaySubject<CollectionItemTableParams>;
 
-	public constructor(
-		private activatedRoute: ActivatedRoute,
-		private collectionItemStateService: CollectionItemStateService,
-		private collectionItemUtilService: CollectionItemUtilService,
-		private router: Router
-	) {
+	public constructor() {
 		super();
 
 		this.params$$ = new ReplaySubject();

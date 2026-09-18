@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
 	AlbumEntity,
 	AlbumEntityAdd,
@@ -16,9 +16,8 @@ import * as albumSelectors from './album.selectors';
 
 @Injectable()
 export class AlbumStateServiceImpl extends AlbumStateService {
-	public constructor(private store: Store<fromAlbum.AlbumPartialState>) {
-		super();
-	}
+	private store = inject<Store<fromAlbum.AlbumPartialState>>(Store);
+
 
 	public dispatchAddEntityAction(album: AlbumEntityAdd): void {
 		this.store.dispatch(albumActions.addAlbum({ album }));

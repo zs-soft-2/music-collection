@@ -1,6 +1,6 @@
 import { Observable, of, switchMap } from 'rxjs';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
 	AlbumEntity,
 	AlbumStateService,
@@ -16,6 +16,8 @@ export interface AlbumDetailViewState {
 
 @Injectable()
 export class AlbumDetailViewStoreService extends ComponentStore<AlbumDetailViewState> {
+	private albumStateService = inject(AlbumStateService);
+
 	public readonly album$: Observable<AlbumEntity | null> = this.select(
 		(state) => state.album
 	);
@@ -25,10 +27,6 @@ export class AlbumDetailViewStoreService extends ComponentStore<AlbumDetailViewS
 	public readonly imageWidth$: Observable<string> = this.select(
 		(state) => state.imageWidth
 	);
-
-	public constructor(private albumStateService: AlbumStateService) {
-		super();
-	}
 
 	public init$(
 		albumId: string,

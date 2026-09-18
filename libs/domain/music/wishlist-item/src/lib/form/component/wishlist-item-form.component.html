@@ -1,107 +1,97 @@
-<section class="wishlist-item-form" *rxLet="params$; let params">
-	<form [formGroup]="params.formGroup">
-		<p-tabView>
-			<p-tabPanel header="Data">
-				<input name="uid" formControlName="uid" hidden />
-				<input
-					name="userReference"
-					formControlName="userReference"
-					hidden
-				/>
+@if (params$ | async; as params) {
+	<section class="wishlist-item-form">
+		<form class="mc-form" [formGroup]="params.formGroup">
+			<input name="uid" formControlName="uid" hidden />
+			<input
+				name="userReference"
+				formControlName="userReference"
+				hidden
+			/>
 
-				<div class="field">
-					<span class="p-float-label">
-						<p-autoComplete
+			<section
+				class="mc-form-section"
+				aria-labelledby="wishlist-item-details"
+			>
+				<h2 id="wishlist-item-details">Details</h2>
+				<div class="mc-form-grid">
+					<div class="mc-field">
+						<label for="artistReference">Artist</label>
+						<p-autocomplete
+							inputId="artistReference"
 							formControlName="artistReference"
 							[suggestions]="params.artists"
-							[minLength]="3"
+							[minQueryLength]="3"
 							[delay]="400"
-							field="name"
+							optionLabel="name"
+							placeholder="Start typing an artist…"
 							(completeMethod)="searchArtistHandler($event)"
-						>
-						</p-autoComplete>
+						></p-autocomplete>
+					</div>
 
-						<label for="artistReference">Artist</label>
-					</span>
-				</div>
-
-				<div class="field">
-					<span class="p-float-label">
-						<p-autoComplete
+					<div class="mc-field">
+						<label for="albumReference">Album</label>
+						<p-autocomplete
+							inputId="albumReference"
 							formControlName="albumReference"
 							[suggestions]="params.albums"
-							[minLength]="3"
+							[minQueryLength]="3"
 							[delay]="400"
-							field="name"
+							optionLabel="name"
+							placeholder="Start typing an album…"
 							(completeMethod)="searchAlbumHandler($event)"
-						>
-						</p-autoComplete>
+						></p-autocomplete>
+					</div>
 
-						<label for="albumReference">Album</label>
-					</span>
-				</div>
-
-				<div class="field">
-					<span class="p-float-label">
-						<input
-							id="sourceLink"
-							type="text"
-							pInputText
-							formControlName="sourceLink"
-						/>
-
-						<label for="sourceLink">Source link</label>
-					</span>
-				</div>
-
-				<div class="field">
-					<span class="p-float-label">
-						<p-multiSelect
-							id="medias"
+					<div class="mc-field">
+						<label for="medias">Medias</label>
+						<p-multiselect
+							inputId="medias"
 							[options]="params.mediaList"
 							placeholder="Select medias"
 							[filter]="false"
 							formControlName="medias"
 							display="chip"
-						></p-multiSelect>
-						<label for="medias">Medias</label>
-					</span>
-				</div>
+						></p-multiselect>
+					</div>
 
-				<div class="field">
-					<span class="no-float">
+					<div class="mc-field">
+						<label for="sourceLink">Source link</label>
+						<input
+							id="sourceLink"
+							type="url"
+							pInputText
+							formControlName="sourceLink"
+						/>
+					</div>
+
+					<div class="mc-check is-wide">
 						<p-checkbox
 							[binary]="true"
 							formControlName="isActive"
 							name="isActive"
-							id="isActive"
+							inputId="isActive"
 						></p-checkbox>
-
-						<label for="iaActive">Active</label>
-					</span>
+						<label for="isActive"
+							>Active — still looking for it</label
+						>
+					</div>
 				</div>
-			</p-tabPanel>
+			</section>
 
-			<div
-				style="margin-top: 10px"
-				fxLayout="row"
-				fxLayoutAlign="space-around"
-			>
-				<button
-					pButton
-					type="button"
-					label="Submit"
-					(click)="submit()"
-					[disabled]="!params.formGroup.valid"
-				></button>
-
-				<button
-					pButton
-					type="button"
+			<div class="mc-form-actions">
+				<p-button
 					label="Cancel"
-					(click)="cancel()"
-				></button>
+					severity="secondary"
+					[outlined]="true"
+					(onClick)="cancel()"
+				></p-button>
+				<p-button
+					label="Save"
+					icon="pi pi-check"
+					[disabled]="!params.formGroup.valid"
+					(onClick)="submit()"
+				></p-button>
 			</div>
-		</p-tabView>
-	</form>
-</section>
+		</form>
+	</section>
+}

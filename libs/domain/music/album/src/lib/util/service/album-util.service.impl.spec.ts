@@ -6,7 +6,9 @@ describe('AlbumUtilServiceImpl', () => {
 	let service: AlbumUtilServiceImpl;
 
 	beforeEach(() => {
-		TestBed.configureTestingModule({});
+		TestBed.configureTestingModule({
+			providers: [AlbumUtilServiceImpl],
+		});
 		service = TestBed.inject(AlbumUtilServiceImpl);
 	});
 

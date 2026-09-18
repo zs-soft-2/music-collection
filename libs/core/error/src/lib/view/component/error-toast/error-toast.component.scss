@@ -1,0 +1,55 @@
+.error-toasts {
+	position: fixed;
+	right: 1rem;
+	bottom: 1rem;
+	z-index: 1000;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	max-width: min(28rem, calc(100vw - 2rem));
+}
+
+.error-toast {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.75rem;
+	padding: 0.75rem 1rem;
+	border-radius: 0.5rem;
+	border: 1px solid var(--p-red-500, #ef4444);
+	background: var(--p-content-background, #1f1f1f);
+	color: var(--p-text-color, #f5f5f5);
+	box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
+
+	.pi-exclamation-triangle {
+		color: var(--p-red-500, #ef4444);
+	}
+}
+
+.error-body {
+	display: flex;
+	flex-direction: column;
+	gap: 0.125rem;
+	min-width: 0;
+}
+
+.error-message {
+	overflow-wrap: anywhere;
+}
+
+.error-source {
+	font-size: 0.75rem;
+	opacity: 0.7;
+}
+
+.error-close {
+	margin-left: auto;
+	border: 0;
+	background: none;
+	color: inherit;
+	cursor: pointer;
+	opacity: 0.7;
+
+	&:hover {
+		opacity: 1;
+	}
+}

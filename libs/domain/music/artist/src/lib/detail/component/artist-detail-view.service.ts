@@ -2,7 +2,7 @@ import { MenuItem } from 'primeng/api';
 import { combineLatest, Observable, of } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
 
-import { EventEmitter, Injectable } from '@angular/core';
+import { EventEmitter, Injectable, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import {
 	AlbumEntity,
@@ -15,17 +15,13 @@ import {
 
 @Injectable()
 export class ArtistDetailViewService extends BaseComponent {
+	private activatedRoute = inject(ActivatedRoute);
+	private artistStateService = inject(ArtistStateService);
+	private albumUtilService = inject(AlbumUtilService);
+
 	private artistId: string | undefined;
 	private selectAlbumDetailEvent!: EventEmitter<AlbumEntity>;
 	private selectedContent = 'info';
-
-	public constructor(
-		private activatedRoute: ActivatedRoute,
-		private artistStateService: ArtistStateService,
-		private albumUtilService: AlbumUtilService,
-	) {
-		super();
-	}
 
 	public dispatchListAlbumsByIdAction(artistId: string): void {
 		this.artistStateService.dispatchListAlbumsByIdAction(artistId);
@@ -37,7 +33,7 @@ export class ArtistDetailViewService extends BaseComponent {
 			switchMap(() =>
 				combineLatest([
 					this.artistStateService.selectEntityById$(
-						this.artistId || '',
+						this.artistId || ''
 					),
 					this.artistStateService
 						.selectAlbumsById$(this.artistId || '')
@@ -45,13 +41,13 @@ export class ArtistDetailViewService extends BaseComponent {
 							map((albums) =>
 								albums
 									? [...albums].sort(
-											this.albumUtilService._sortByYear,
+											this.albumUtilService._sortByYear
 										)
-									: albums,
-							),
+									: albums
+							)
 						),
-				]),
-			),
+				])
+			)
 		);
 	}
 

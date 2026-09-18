@@ -1,5 +1,6 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import { ErrorComponent } from './error.component';
 
@@ -9,8 +10,8 @@ describe('ErrorComponent', () => {
 
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
-			declarations: [ErrorComponent],
-			imports: [HttpClientTestingModule],
+			imports: [HttpClientTestingModule, ErrorComponent],
+			providers: [provideRouter([])],
 		}).compileComponents();
 	}));
 
@@ -22,5 +23,13 @@ describe('ErrorComponent', () => {
 
 	it('should create', () => {
 		expect(component).toBeTruthy();
+	});
+
+	it('should lead back to the home and the collection page', () => {
+		const links = Array.from(
+			(fixture.nativeElement as HTMLElement).querySelectorAll('a')
+		).map((link) => link.getAttribute('href'));
+
+		expect(links).toEqual(['/home', '/collection']);
 	});
 });

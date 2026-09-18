@@ -1,6 +1,6 @@
 import { map, Observable, of, ReplaySubject, switchMap } from 'rxjs';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
 	BaseComponent,
 	ReleaseEntity,
@@ -10,10 +10,12 @@ import {
 
 @Injectable()
 export class ReleaseListService extends BaseComponent {
+	private releaseStateService = inject(ReleaseStateService);
+
 	private params!: ReleaseListParams;
 	private params$$: ReplaySubject<ReleaseListParams>;
 
-	public constructor(private releaseStateService: ReleaseStateService) {
+	public constructor() {
 		super();
 
 		this.params$$ = new ReplaySubject();

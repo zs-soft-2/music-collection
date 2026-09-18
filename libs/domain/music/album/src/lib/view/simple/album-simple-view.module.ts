@@ -7,7 +7,6 @@ import { AlbumSimpleViewComponent } from './album-simple-view.component';
 
 @NgModule({
 	exports: [AlbumSimpleViewComponent],
-	declarations: [AlbumSimpleViewComponent],
-	imports: [CommonModule, ImageModule],
+	imports: [CommonModule, ImageModule, AlbumSimpleViewComponent],
 })
 export class AlbumSimpleViewModule {}

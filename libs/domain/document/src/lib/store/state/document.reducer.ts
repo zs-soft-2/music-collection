@@ -37,7 +37,6 @@ export const initialState: State = documentAdapter.getInitialState({
 	loading: false,
 	error: null,
 	searchResult: [],
-	selectedDocumentId: null,
 	filePath: undefined,
 	importFilePath: {},
 });
@@ -55,7 +54,7 @@ export const documentReducer = createReducer(
 		...state,
 		loading: false,
 		error: null,
-		selectedDocumentId: documentId,
+		selectedId: documentId,
 	})),
 	on(documentActions.updateDocumentSuccess, (state, { document }) =>
 		documentAdapter.updateOne(document, state)

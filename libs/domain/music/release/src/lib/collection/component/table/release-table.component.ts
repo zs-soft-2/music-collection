@@ -1,6 +1,11 @@
 import { Observable } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	OnInit,
+	inject,
+} from '@angular/core';
 import {
 	BaseComponent,
 	ReleaseEntity,
@@ -8,6 +13,12 @@ import {
 } from '@music-collection/api';
 
 import { ReleaseTableService } from './release-table.service';
+import { Bind } from 'primeng/bind';
+import { Table } from 'primeng/table';
+import { AutoComplete } from 'primeng/autocomplete';
+import { Ripple } from 'primeng/ripple';
+import { ButtonDirective } from 'primeng/button';
+import { AsyncPipe, DatePipe } from '@angular/common';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -15,14 +26,20 @@ import { ReleaseTableService } from './release-table.service';
 	selector: 'mc-release-table',
 	templateUrl: './release-table.component.html',
 	styleUrls: ['./release-table.component.scss'],
-  standalone: false,
+	imports: [
+		Bind,
+		Table,
+		AutoComplete,
+		Ripple,
+		ButtonDirective,
+		AsyncPipe,
+		DatePipe,
+	],
 })
 export class ReleaseTableComponent extends BaseComponent implements OnInit {
-	public params$!: Observable<ReleaseTableParams>;
+	private componentService = inject(ReleaseTableService);
 
-	public constructor(private componentService: ReleaseTableService) {
-		super();
-	}
+	public params$!: Observable<ReleaseTableParams>;
 
 	public deleteRelease(release: ReleaseEntity): void {
 		this.componentService.deleteRelease(release);

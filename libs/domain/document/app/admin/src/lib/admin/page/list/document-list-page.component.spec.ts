@@ -1,20 +1,33 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { of } from 'rxjs';
 
-import { DocumentCollectionModule } from '../../../collection/document-collection.module';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
+import { provideRouter } from '@angular/router';
+import {
+	DocumentStateService,
+	DocumentUtilService,
+} from '@music-collection/api';
+
 import { DocumentListPageComponent } from './document-list-page.component';
 
 describe('DocumentListComponent', () => {
 	let component: DocumentListPageComponent;
 	let fixture: ComponentFixture<DocumentListPageComponent>;
 
-	beforeEach(waitForAsync(() => {
-		TestBed.configureTestingModule({
-			declarations: [DocumentListPageComponent],
-			imports: [DocumentCollectionModule],
+	beforeEach(async () => {
+		await TestBed.configureTestingModule({
+			imports: [DocumentListPageComponent],
+			providers: [
+				provideRouter([]),
+				provideNoopAnimations(),
+				{
+					provide: DocumentStateService,
+					useValue: { selectSearchResult$: jest.fn(() => of([])) },
+				},
+				{ provide: DocumentUtilService, useValue: {} },
+			],
 		}).compileComponents();
-	}));
 
-	beforeEach(() => {
 		fixture = TestBed.createComponent(DocumentListPageComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();

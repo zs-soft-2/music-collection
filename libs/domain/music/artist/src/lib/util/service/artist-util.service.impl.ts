@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import {
 	ArtistEntity,
@@ -8,6 +8,7 @@ import {
 	ArtistModelAdd,
 	ArtistModelUpdate,
 	ArtistUtilService,
+	DEFAULT_ARTIST_TYPE,
 	EntityQuantityEntity,
 	EntityQuantityEntityUpdate,
 	EntityTypeEnum,
@@ -16,17 +17,15 @@ import {
 
 @Injectable()
 export class ArtistUtilServiceImpl extends ArtistUtilService {
+	private formBuilder = inject(FormBuilder);
+
 	public _sort = (a: ArtistEntity, b: ArtistEntity): number =>
 		a.name < b.name ? 1 : -1;
-
-	public constructor(private formBuilder: FormBuilder) {
-		super();
-	}
 
 	public convertEntityAddToModelAdd(entity: ArtistEntityAdd): ArtistModelAdd {
 		return {
 			...entity,
-			formedIn: entity.formedIn.toISOString(),
+			formedIn: entity.formedIn?.toISOString() ?? null,
 			searchParameters: this.createSearchParameters(entity.name),
 		};
 	}
@@ -34,7 +33,7 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 	public convertEntityToModel(entity: ArtistEntity): ArtistModel {
 		return {
 			...entity,
-			formedIn: entity.formedIn.toISOString(),
+			formedIn: entity.formedIn?.toISOString() ?? null,
 			searchParameters: this.createSearchParameters(entity.name),
 		};
 	}
@@ -52,14 +51,14 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 	public convertModelAddToEntityAdd(model: ArtistModelAdd): ArtistEntityAdd {
 		return {
 			...model,
-			formedIn: new Date(model.formedIn),
+			formedIn: model.formedIn ? new Date(model.formedIn) : null,
 		};
 	}
 
 	public convertModelToEntity(model: ArtistModel): ArtistEntity {
 		return {
 			...model,
-			formedIn: new Date(model.formedIn),
+			formedIn: model.formedIn ? new Date(model.formedIn) : null,
 		};
 	}
 
@@ -70,6 +69,10 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 			uid: model.uid,
 			entityType: model.entityType,
 		};
+
+		if (model.artistType) {
+			entity.artistType = model.artistType;
+		}
 
 		if (model.country) {
 			entity.country = model.country;
@@ -116,6 +119,7 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 
 	public createEntity(formGroup: FormGroup): ArtistEntityAdd {
 		return {
+			artistType: formGroup.value['artistType'] ?? DEFAULT_ARTIST_TYPE,
 			country: formGroup.value['country'],
 			description: formGroup.value['description'],
 			entityType: EntityTypeEnum.Artist,
@@ -131,6 +135,10 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 
 	public createFormGroup(artist: ArtistEntity | undefined): FormGroup {
 		return this.formBuilder.group({
+			artistType: [
+				artist?.artistType ?? DEFAULT_ARTIST_TYPE,
+				[Validators.required],
+			],
 			country: [artist?.country || null],
 			description: [artist?.description || null],
 			formedIn: [artist?.formedIn || null, [Validators.required]],
@@ -147,6 +155,7 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 
 	public updateEntity(formGroup: FormGroup): ArtistEntityUpdate {
 		return {
+			artistType: formGroup.value['artistType'] ?? DEFAULT_ARTIST_TYPE,
 			country: formGroup.value['country'],
 			description: formGroup.value['description'],
 			entityType: EntityTypeEnum.Artist,

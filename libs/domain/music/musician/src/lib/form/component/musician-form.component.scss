@@ -1,0 +1,17 @@
+:host {
+	display: block;
+}
+
+.portrait-preview {
+	width: 120px;
+	height: 120px;
+	margin-top: 0.5rem;
+	object-fit: cover;
+	border: 1px solid var(--mc-border);
+	border-radius: 50%;
+}
+
+.source-label {
+	font-size: 0.8125rem;
+	font-weight: 600;
+}

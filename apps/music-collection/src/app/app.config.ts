@@ -1,24 +1,29 @@
 import { provideAngularSvgIcon } from 'angular-svg-icon';
 import { providePrimeNG } from 'primeng/config';
 
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import {
-	APP_INITIALIZER,
 	ApplicationConfig,
 	importProvidersFrom,
-	provideZoneChangeDetection,
+	provideZonelessChangeDetection,
 } from '@angular/core';
-import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
+import { getApp, initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { getAuth, provideAuth } from '@angular/fire/auth';
-import { getFirestore, provideFirestore } from '@angular/fire/firestore';
+import {
+	CACHE_SIZE_UNLIMITED,
+	initializeFirestore,
+	persistentLocalCache,
+	persistentMultipleTabManager,
+	provideFirestore,
+} from '@angular/fire/firestore';
 import { provideStorage } from '@angular/fire/storage';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideRouter } from '@angular/router';
-import { getStorage } from '@firebase/storage';
-import { AuthenticationStateService } from '@music-collection/api';
+import { getStorage } from 'firebase/storage';
 import { CoreAuthenticationModule } from '@music-collection/core/authentication';
 import { CoreAuthorizationModule } from '@music-collection/core/authorization';
 import { CoreEntityQuantityModule } from '@music-collection/core/entity-quantity';
+import { CoreErrorModule } from '@music-collection/core/error';
 import { CoreExportImportModule } from '@music-collection/core/export-import';
 import { DomainAlbumModule } from '@music-collection/domain/album';
 import { DomainArtistModule } from '@music-collection/domain/artist';
@@ -30,33 +35,41 @@ import { DomainWishlistItemModule } from '@music-collection/domain/wishlist-item
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
-import Aura from '@primeng/themes/aura';
 
 import { environment } from '../environments/environment';
 import { routes } from './app-routing';
-import { AuthenticationInitializer } from './initializer';
 import { HookModule } from './module/hook';
 import { metaReducers } from './reducer';
-import {
-	AlbumPageResolverService,
-	ArtistPageResolverService,
-} from './resolver';
+import { MusicPreset } from './theme';
 import { NgxPermissionsModule } from 'ngx-permissions';
 
 export const appConfig: ApplicationConfig = {
 	providers: [
-		provideZoneChangeDetection({ eventCoalescing: true }),
+		provideZonelessChangeDetection(),
 		provideRouter(routes),
 		provideFirebaseApp(() => initializeApp(environment.firebase)),
-		provideFirestore(() => getFirestore()),
+		provideFirestore(() =>
+			// Persistent (IndexedDB) cache, shared by the tabs. Unlimited size:
+			// the sync cache (FirestoreSyncService) relies on nothing being
+			// garbage collected.
+			initializeFirestore(getApp(), {
+				localCache: persistentLocalCache({
+					cacheSizeBytes: CACHE_SIZE_UNLIMITED,
+					tabManager: persistentMultipleTabManager(),
+				}),
+			})
+		),
 		provideAuth(() => getAuth()),
 		provideStorage(() => getStorage()),
-		provideHttpClient(),
+		provideHttpClient(withXhr()),
 		provideAngularSvgIcon(),
 		provideAnimationsAsync(),
 		providePrimeNG({
 			theme: {
-				preset: Aura,
+				preset: MusicPreset,
+				options: {
+					darkModeSelector: '.mc-dark',
+				},
 			},
 		}),
 		importProvidersFrom(
@@ -68,11 +81,13 @@ export const appConfig: ApplicationConfig = {
 						strictActionImmutability: true,
 						strictStateImmutability: true,
 					},
-				},
+				}
 			),
 			!environment.production ? StoreDevtoolsModule.instrument() : [],
 			EffectsModule.forRoot([]),
-      NgxPermissionsModule.forRoot(),
+			NgxPermissionsModule.forRoot(),
+			// Elsőként: a globális ErrorHandler a többi modul indulását is fedi.
+			CoreErrorModule,
 			CoreAuthenticationModule,
 			CoreAuthorizationModule,
 			CoreEntityQuantityModule,
@@ -84,15 +99,7 @@ export const appConfig: ApplicationConfig = {
 			DomainDocumentModule,
 			DomainReleaseModule,
 			DomainWishlistItemModule,
-			HookModule,
+			HookModule
 		),
-		AlbumPageResolverService,
-		ArtistPageResolverService,
-		{
-			provide: APP_INITIALIZER,
-			useFactory: AuthenticationInitializer,
-			deps: [AuthenticationStateService],
-			multi: true,
-		},
 	],
 };

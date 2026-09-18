@@ -21,11 +21,6 @@ import {
 } from './page/list';
 
 @NgModule({
-	declarations: [
-		CollectionItemAdminComponent,
-		CollectionItemEditComponent,
-		CollectionItemListPageComponent,
-	],
 	imports: [
 		CommonModule,
 		CollectionItemAdminRoutingModule,
@@ -34,6 +29,9 @@ import {
 		CollectionItemCollectionModule,
 		ButtonModule,
 		ToolbarModule,
+		CollectionItemAdminComponent,
+		CollectionItemEditComponent,
+		CollectionItemListPageComponent,
 	],
 	providers: [
 		CollectionItemEditResolverService,

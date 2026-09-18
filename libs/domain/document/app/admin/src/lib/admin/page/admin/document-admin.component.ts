@@ -1,7 +1,12 @@
 import { Observable } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	OnInit,
+	inject,
+} from '@angular/core';
+import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
 import {
 	DocumentStateService,
 	BaseComponent,
@@ -9,25 +14,25 @@ import {
 } from '@music-collection/api';
 
 import { DocumentAdminPermissionsService } from '../../service';
+import { Bind } from 'primeng/bind';
+import { NgxPermissionsModule } from 'ngx-permissions';
+import { Button } from 'primeng/button';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-document-admin',
 	templateUrl: './document-admin.component.html',
 	styleUrls: ['./document-admin.component.scss'],
-  standalone: false,
+	imports: [Bind, NgxPermissionsModule, Button, RouterOutlet, AsyncPipe],
 })
 export class DocumentAdminComponent extends BaseComponent implements OnInit {
+	private activatedRoute = inject(ActivatedRoute);
+	private router = inject(Router);
+	private documentStateService = inject(DocumentStateService);
+
 	public buttonPermissions: string[] = [];
 	public isNewEntityButtonEnabled$!: Observable<boolean>;
-
-	public constructor(
-		private activatedRoute: ActivatedRoute,
-		private router: Router,
-		private documentStateService: DocumentStateService
-	) {
-		super();
-	}
 
 	public clickHandler(): void {
 		this.router.navigate(['edit', 0], { relativeTo: this.activatedRoute });

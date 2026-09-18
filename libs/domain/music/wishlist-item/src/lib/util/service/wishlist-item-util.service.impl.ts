@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import {
 	AlbumEntity,
@@ -27,12 +27,10 @@ import {
 
 @Injectable()
 export class WishlistItemUtilServiceImpl extends WishlistItemUtilService {
+	private formBuilder = inject(FormBuilder);
+
 	public _sort = (a: WishlistItemEntity, b: WishlistItemEntity): number =>
 		a.albumReference.name < b.albumReference.name ? 1 : -1;
-
-	public constructor(private formBuilder: FormBuilder) {
-		super();
-	}
 
 	public convertEntityAddToModelAdd(
 		entity: WishlistItemEntityAdd

@@ -1,0 +1,191 @@
+:host {
+	display: block;
+}
+
+/* One connected shelving unit: the frame color shows through the grid gaps. */
+.unit {
+	position: relative;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+	gap: 14px;
+	padding: 14px;
+	background: linear-gradient(180deg, #4a3826 0%, #2b1f14 100%);
+	border-radius: 6px;
+	box-shadow:
+		0 24px 48px -16px rgba(0, 0, 0, 0.6),
+		inset 0 0 0 1px rgba(0, 0, 0, 0.45),
+		inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/*
+ * Off-screen compartments skip style, layout and paint. The hover lift stays
+ * inside the cubby padding and the cover preview lives outside, so the paint
+ * containment this implies clips nothing.
+ */
+.compartment {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	content-visibility: auto;
+	contain-intrinsic-block-size: auto 262px;
+}
+
+.label {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.5rem;
+	margin: 0 0 6px;
+	padding: 0 2px;
+	font-size: 0.68rem;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: #e9dcc6;
+}
+
+.label-text {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.label-count {
+	font-weight: 500;
+	color: #b8a58a;
+}
+
+/* Recessed back panel. Overflow stays visible so the cover can pull out. */
+.cubby {
+	display: flex;
+	align-items: flex-end;
+	gap: 2px;
+	min-height: 230px;
+	padding: 24px 10px 10px;
+	background: linear-gradient(180deg, #080808 0%, #151515 30%);
+	box-shadow:
+		inset 0 0 26px rgba(0, 0, 0, 0.75),
+		inset 0 0 0 1px rgba(0, 0, 0, 0.55);
+}
+
+/* A full cubby squeezes every spine thinner, like a packed Kallax. */
+.spine {
+	position: relative;
+	flex: 0 1 auto;
+	min-width: 0;
+	color: #eee;
+	text-decoration: none;
+	background: linear-gradient(
+		180deg,
+		hsl(var(--hue) 18% 22%),
+		hsl(var(--hue) 22% 10%)
+	);
+	border-radius: 2px 2px 1px 1px;
+	transition: transform var(--mc-duration-fast) ease;
+
+	/*
+	 * Edge shading as a gradient, not box-shadow: blurred shadows on hundreds
+	 * of spines (and a shadow swap on hover) made every hover re-raster the
+	 * shelf — measured A/B: hover GPU time ~5 s → ~0.5 s.
+	 */
+	&::before {
+		position: absolute;
+		inset: 0;
+		content: '';
+		background: linear-gradient(
+			90deg,
+			rgba(255, 255, 255, 0.06) 0 1px,
+			transparent 1px calc(100% - 3px),
+			rgba(0, 0, 0, 0.45)
+		);
+		border-radius: inherit;
+		pointer-events: none;
+	}
+
+	&:hover,
+	&:focus-visible {
+		z-index: 5;
+		transform: translateY(-16px);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--mc-primary);
+		outline-offset: 1px;
+	}
+
+	&.is-cd {
+		color: #1c1c22;
+		background: linear-gradient(
+			180deg,
+			hsl(var(--hue) 12% 92%),
+			hsl(var(--hue) 10% 76%)
+		);
+	}
+
+	&.is-dvd {
+		background: linear-gradient(180deg, #24242c, #16161c);
+	}
+
+	&.is-cassette {
+		color: #ece2d0;
+		background: linear-gradient(180deg, #3a3028, #2d2319);
+	}
+
+	&.is-box {
+		color: #fff;
+		background: linear-gradient(180deg, var(--mc-primary), #6e1717);
+	}
+}
+
+.spine-cap {
+	position: absolute;
+	top: 0;
+	right: 0;
+	left: 0;
+	height: 4px;
+	background: rgba(255, 255, 255, 0.14);
+	border-radius: 2px 2px 0 0;
+}
+
+.spine-text {
+	position: absolute;
+	inset: 8px 0 6px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 5px;
+	overflow: hidden;
+	writing-mode: vertical-rl;
+	transform: rotate(180deg);
+}
+
+.spine-title,
+.spine-artist {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.spine-title {
+	max-height: 70%;
+	font-size: 0.46rem;
+	font-weight: 700;
+}
+
+.spine-artist {
+	max-height: 40%;
+	font-size: 0.4rem;
+	opacity: 0.7;
+}
+
+.is-dvd .spine-title,
+.is-cassette .spine-title,
+.is-box .spine-title {
+	font-size: 0.54rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.spine {
+		transition: none;
+	}
+}

@@ -6,6 +6,7 @@ import {
 	Input,
 	OnInit,
 	TemplateRef,
+	inject,
 } from '@angular/core';
 import { BaseComponent } from '@music-collection/api';
 import {
@@ -27,9 +28,11 @@ export interface BreadcrumbOption {
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-breadcrumb',
 	templateUrl: './breadcrumb.component.html',
-  standalone: false,
 })
 export class BreadcrumbComponent extends BaseComponent implements OnInit {
+	private injector = inject(Injector);
+	private cdr = inject(ChangeDetectorRef);
+
 	@Input()
 	public autoGenerate = false;
 	public breadcrumbs: BreadcrumbOption[] = [];
@@ -39,13 +42,6 @@ export class BreadcrumbComponent extends BaseComponent implements OnInit {
 	public separator: string | TemplateRef<void> | null = '/';
 	@Input()
 	public routeLabelFn: (label: string) => string = (label) => label;
-
-	public constructor(
-		private injector: Injector,
-		private cdr: ChangeDetectorRef
-	) {
-		super();
-	}
 
 	public navigate(url: string, e: MouseEvent): void {
 		e.preventDefault();
@@ -61,7 +57,7 @@ export class BreadcrumbComponent extends BaseComponent implements OnInit {
 
 	private getBreadcrumbs(
 		route: ActivatedRoute,
-		url: string = '',
+		url = '',
 		breadcrumbs: BreadcrumbOption[] = []
 	): BreadcrumbOption[] {
 		const children: ActivatedRoute[] = route.children;

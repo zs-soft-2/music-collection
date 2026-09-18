@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import {
 	LabelEntity,
@@ -15,12 +15,10 @@ import {
 
 @Injectable()
 export class LabelUtilServiceImpl extends LabelUtilService {
+	private formBuilder = inject(FormBuilder);
+
 	public _sort = (a: LabelEntity, b: LabelEntity): number =>
 		a.name < b.name ? 1 : -1;
-
-	public constructor(private formBuilder: FormBuilder) {
-		super();
-	}
 
 	public createEntity(formGroup: FormGroup): LabelEntityAdd {
 		return {

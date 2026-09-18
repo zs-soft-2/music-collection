@@ -1,15 +1,7 @@
 import { Observable } from 'rxjs';
 
 import { Injectable } from '@angular/core';
-import {
-	collection,
-	collectionData,
-	deleteDoc,
-	doc,
-	Firestore,
-	setDoc,
-	updateDoc,
-} from '@angular/fire/firestore';
+import { collection, doc } from '@angular/fire/firestore';
 import {
 	ALBUM_FEATURE_KEY,
 	AlbumModel,
@@ -29,8 +21,8 @@ import {
 
 @Injectable()
 export class ArtistDataServiceImpl extends ArtistDataService {
-	public constructor(firestore: Firestore) {
-		super(firestore);
+	public constructor() {
+		super();
 
 		this.featureKey = ARTIST_FEATURE_KEY;
 		this.collection = collection(this.firestore, this.featureKey);
@@ -55,9 +47,11 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 			);
 			const collectionReference = collection(docRef, ALBUM_FEATURE_KEY);
 
-			setDoc(doc(collectionReference, uid), newAlbum).then(() => {
-				subscriber.next({ ...newAlbum } as unknown as AlbumModel);
-			});
+			this.firestoreSync
+				.set(doc(collectionReference, uid), ALBUM_FEATURE_KEY, newAlbum)
+				.then(() => {
+					subscriber.next({ ...newAlbum } as unknown as AlbumModel);
+				});
 		});
 	}
 
@@ -78,9 +72,17 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 			);
 			const collectionReference = collection(docRef, RELEASE_FEATURE_KEY);
 
-			setDoc(doc(collectionReference, uid), newRelease).then(() => {
-				subscriber.next({ ...newRelease } as unknown as ReleaseModel);
-			});
+			this.firestoreSync
+				.set(
+					doc(collectionReference, uid),
+					RELEASE_FEATURE_KEY,
+					newRelease
+				)
+				.then(() => {
+					subscriber.next({
+						...newRelease,
+					} as unknown as ReleaseModel);
+				});
 		});
 	}
 
@@ -97,11 +99,13 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 				`${ARTIST_FEATURE_KEY}/${release.artist.uid}/${ALBUM_FEATURE_KEY}/${release.album.uid}/${RELEASE_FEATURE_KEY}/${release.uid}`
 			);
 
-			deleteDoc(releaseDocument).then(() => {
-				subscriber.next({
-					...release,
-				} as unknown as ReleaseModel);
-			});
+			this.firestoreSync
+				.delete(releaseDocument, RELEASE_FEATURE_KEY)
+				.then(() => {
+					subscriber.next({
+						...release,
+					} as unknown as ReleaseModel);
+				});
 		});
 	}
 
@@ -114,9 +118,15 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 			);
 			const collectionReference = collection(docRef, ALBUM_FEATURE_KEY);
 
-			setDoc(doc(collectionReference, album.uid), album).then(() => {
-				subscriber.next({ ...album } as unknown as AlbumModel);
-			});
+			this.firestoreSync
+				.set(
+					doc(collectionReference, album.uid),
+					ALBUM_FEATURE_KEY,
+					album
+				)
+				.then(() => {
+					subscriber.next({ ...album } as unknown as AlbumModel);
+				});
 		});
 	}
 
@@ -130,9 +140,11 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 			`${ARTIST_FEATURE_KEY}/${uid}/${ALBUM_FEATURE_KEY}`
 		);
 
-		return collectionData(albumCollection, {
-			idField: 'uid',
-		}) as Observable<AlbumModel[]>;
+		return this.firestoreSync.list$<AlbumModel>({
+			featureKey: ALBUM_FEATURE_KEY,
+			cacheKey: `${ALBUM_FEATURE_KEY}@${albumCollection.path}`,
+			query: albumCollection,
+		});
 	}
 
 	public listByIds$(ids: string[]): Observable<ArtistModel[]> {
@@ -158,9 +170,11 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 		);
 
 		return new Observable((subscriber) => {
-			updateDoc(albumDocument, { ...album }).then(() => {
-				subscriber.next(album);
-			});
+			this.firestoreSync
+				.update(albumDocument, ALBUM_FEATURE_KEY, { ...album })
+				.then(() => {
+					subscriber.next(album);
+				});
 		});
 	}
 
@@ -173,9 +187,11 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 		);
 
 		return new Observable((subscriber) => {
-			updateDoc(releaseDocument, { ...release }).then(() => {
-				subscriber.next(release);
-			});
+			this.firestoreSync
+				.update(releaseDocument, RELEASE_FEATURE_KEY, { ...release })
+				.then(() => {
+					subscriber.next(release);
+				});
 		});
 	}
 }

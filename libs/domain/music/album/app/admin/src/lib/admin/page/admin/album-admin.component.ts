@@ -1,7 +1,12 @@
 import { Observable } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	OnInit,
+	inject,
+} from '@angular/core';
+import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
 import {
 	AlbumStateService,
 	BaseComponent,
@@ -9,25 +14,25 @@ import {
 } from '@music-collection/api';
 
 import { AlbumAdminPermissionsService } from '../../service';
+import { Bind } from 'primeng/bind';
+import { NgxPermissionsModule } from 'ngx-permissions';
+import { Button } from 'primeng/button';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-album-admin',
 	templateUrl: './album-admin.component.html',
 	styleUrls: ['./album-admin.component.scss'],
-	standalone: false,
+	imports: [Bind, NgxPermissionsModule, Button, RouterOutlet, AsyncPipe],
 })
 export class AlbumAdminComponent extends BaseComponent implements OnInit {
+	private activatedRoute = inject(ActivatedRoute);
+	private router = inject(Router);
+	private albumStateService = inject(AlbumStateService);
+
 	public buttonPermissions: string[] = [];
 	public isNewEntityButtonEnabled$!: Observable<boolean>;
-
-	public constructor(
-		private activatedRoute: ActivatedRoute,
-		private router: Router,
-		private albumStateService: AlbumStateService
-	) {
-		super();
-	}
 
 	public clickHandler(): void {
 		this.router.navigate(['edit', 0], { relativeTo: this.activatedRoute });

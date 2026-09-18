@@ -1,19 +1,17 @@
 import { ChipModule } from 'primeng/chip';
 import { DataViewModule } from 'primeng/dataview';
 import { ImageModule } from 'primeng/image';
-import { TabMenuModule } from 'primeng/tabmenu';
+import { TabsModule } from 'primeng/tabs';
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FlexLayoutModule } from 'ng-flex-layout';
 import { AlbumItemViewModule } from '@music-collection/domain/album';
-import { RxLet } from '@rx-angular/template/let';
 
 import { ArtistDetailViewComponent } from './component';
 
 @NgModule({
 	exports: [ArtistDetailViewComponent],
-	declarations: [ArtistDetailViewComponent],
 	imports: [
 		CommonModule,
 		AlbumItemViewModule,
@@ -21,8 +19,8 @@ import { ArtistDetailViewComponent } from './component';
 		DataViewModule,
 		FlexLayoutModule,
 		ImageModule,
-		RxLet,
-		TabMenuModule,
+		TabsModule,
+		ArtistDetailViewComponent,
 	],
 })
 export class ArtistDetailModule {}

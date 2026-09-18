@@ -1,26 +1,30 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import { NgxPermissionsModule } from 'ngx-permissions';
+import { of } from 'rxjs';
 
-import { DocumentCollectionModule } from '../../../collection/document-collection.module';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { DocumentStateService } from '@music-collection/api';
+
 import { DocumentAdminComponent } from './document-admin.component';
 
 describe('DocumentAdminComponent', () => {
 	let component: DocumentAdminComponent;
 	let fixture: ComponentFixture<DocumentAdminComponent>;
 
-	beforeEach(async(() => {
-		TestBed.configureTestingModule({
-			declarations: [DocumentAdminComponent],
-			imports: [
-				HttpClientTestingModule,
-				RouterTestingModule,
-				DocumentCollectionModule,
+	beforeEach(async () => {
+		await TestBed.configureTestingModule({
+			imports: [DocumentAdminComponent, NgxPermissionsModule.forRoot()],
+			providers: [
+				provideRouter([]),
+				{
+					provide: DocumentStateService,
+					useValue: {
+						selectNewEntityButtonEnabled$: jest.fn(() => of(true)),
+					},
+				},
 			],
 		}).compileComponents();
-	}));
 
-	beforeEach(() => {
 		fixture = TestBed.createComponent(DocumentAdminComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();

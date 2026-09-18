@@ -1,9 +1,9 @@
 import { from, Observable, switchMap } from 'rxjs';
 
-import { Injectable } from '@angular/core';
-import { collection, Firestore } from '@angular/fire/firestore';
+import { Injectable, inject } from '@angular/core';
+import { collection } from '@angular/fire/firestore';
 import { ref, Storage, uploadBytes } from '@angular/fire/storage';
-import { getDownloadURL } from '@firebase/storage';
+import { getDownloadURL } from 'firebase/storage';
 import {
 	DOCUMENT_FEATURE_KEY,
 	DocumentDataService,
@@ -16,8 +16,10 @@ import {
 
 @Injectable()
 export class DocumentDataServiceImpl extends DocumentDataService {
-	public constructor(firestore: Firestore, private storage: Storage) {
-		super(firestore);
+	private storage = inject(Storage);
+
+	public constructor() {
+		super();
 
 		this.featureKey = DOCUMENT_FEATURE_KEY;
 		this.collection = collection(this.firestore, this.featureKey);

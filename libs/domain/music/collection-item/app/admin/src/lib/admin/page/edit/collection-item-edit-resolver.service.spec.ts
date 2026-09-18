@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { CollectionItemStateService } from '@music-collection/api';
 
 import { CollectionItemEditResolverService } from './collection-item-edit-resolver.service';
 
@@ -7,7 +8,10 @@ describe('CollectionItemEditResolverService', () => {
 
 	beforeEach(() => {
 		TestBed.configureTestingModule({
-			providers: [CollectionItemEditResolverService],
+			providers: [
+				CollectionItemEditResolverService,
+				{ provide: CollectionItemStateService, useValue: {} },
+			],
 		});
 
 		service = TestBed.inject(CollectionItemEditResolverService);

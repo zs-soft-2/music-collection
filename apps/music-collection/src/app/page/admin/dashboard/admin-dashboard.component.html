@@ -1,0 +1,55 @@
+<header class="mc-page-head">
+	<div>
+		<h1>Dashboard</h1>
+		<p>The catalog and the collection data at a glance.</p>
+	</div>
+</header>
+
+<section aria-labelledby="counts-title">
+	<h2 id="counts-title" class="visually-hidden">Record counts</h2>
+	<ul class="tiles">
+		@for (tile of store.tiles(); track tile.route) {
+			<li>
+				<a class="tile" [routerLink]="['..', tile.route]">
+					<span class="tile-label">
+						<i class="pi {{ tile.icon }}" aria-hidden="true"></i>
+						{{ tile.label }}
+					</span>
+					@if (tile.count === null) {
+						<span class="tile-value is-loading" aria-label="Loading"
+							>—</span
+						>
+					} @else {
+						<span class="tile-value">{{ tile.count }}</span>
+					}
+					<span class="tile-sub">
+						Open list
+						<i class="pi pi-arrow-right" aria-hidden="true"></i>
+					</span>
+				</a>
+			</li>
+		}
+	</ul>
+</section>
+
+<section class="mc-card panel" aria-labelledby="actions-title">
+	<header class="panel-head">
+		<h2 id="actions-title">Quick actions</h2>
+	</header>
+	<ul class="actions">
+		@for (action of store.quickActions(); track action.route) {
+			<li>
+				<a
+					class="action"
+					[routerLink]="['..', action.route, 'edit', 0]"
+				>
+					<span class="action-icon">
+						<i class="pi {{ action.icon }}" aria-hidden="true"></i>
+					</span>
+					<span class="action-text">{{ action.createLabel }}</span>
+					<i class="pi pi-plus" aria-hidden="true"></i>
+				</a>
+			</li>
+		}
+	</ul>
+</section>

@@ -1,10 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Resolve } from '@angular/router';
 import { DocumentStateService } from '@music-collection/api';
 
 @Injectable()
 export class DocumentListPageResolverService implements Resolve<void> {
-	constructor(private documentStateService: DocumentStateService) {}
+	private documentStateService = inject(DocumentStateService);
+
 
 	public resolve(): void {
 		this.documentStateService.dispatchSetSelectedEntityIdAction('');

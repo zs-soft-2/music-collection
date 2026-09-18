@@ -1,17 +1,19 @@
-<section class="artist-list" *rxLet="params$; let params">
-	<p-carousel
-		[value]="params.artists"
-		[circular]="true"
-		[numVisible]="1"
-		[numScroll]="1"
-		[showIndicators]="false"
-		[autoplayInterval]="5000"
-	>
-		<ng-template let-artist pTemplate="item">
-			<mc-artist-simple-view
-				[artist]="artist"
-				(selectArtist)="selectArtistHandler($event)"
-			></mc-artist-simple-view>
-		</ng-template>
-	</p-carousel>
-</section>
+@if (params$ | async; as params) {
+	<section class="artist-list">
+		<p-carousel
+			[value]="params.artists"
+			[circular]="true"
+			[numVisible]="1"
+			[numScroll]="1"
+			[showIndicators]="false"
+			[autoplayInterval]="5000"
+		>
+			<ng-template let-artist #item>
+				<mc-artist-simple-view
+					[artist]="artist"
+					(selectArtist)="selectArtistHandler($event)"
+				></mc-artist-simple-view>
+			</ng-template>
+		</p-carousel>
+	</section>
+}

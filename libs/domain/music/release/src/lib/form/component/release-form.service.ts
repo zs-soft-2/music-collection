@@ -1,9 +1,9 @@
 import { combineLatest, Observable, ReplaySubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import {
 	AlbumEntity,
 	AlbumStateService,
@@ -24,33 +24,32 @@ import {
 	ReleaseFormParams,
 	ReleaseStateService,
 	ReleaseUtilService,
+	ReturnNavigationService,
 	SearchParams,
 } from '@music-collection/api';
 
 @Injectable()
 export class ReleaseFormService {
+	private activatedRoute = inject(ActivatedRoute);
+	private releaseStateService = inject(ReleaseStateService);
+	private releaseUtilService = inject(ReleaseUtilService);
+	private albumStateService = inject(AlbumStateService);
+	private artistStateService = inject(ArtistStateService);
+	private componentUtil = inject(ReleaseUtilService);
+	private labelStateService = inject(LabelStateService);
+	private returnNavigation = inject(ReturnNavigationService);
+
 	private formGroup!: FormGroup;
 	private params!: ReleaseFormParams;
 	private params$$: ReplaySubject<ReleaseFormParams>;
 	private release!: ReleaseEntity | undefined;
 
-	public constructor(
-		private activatedRoute: ActivatedRoute,
-		private releaseStateService: ReleaseStateService,
-		private releaseUtilService: ReleaseUtilService,
-		private albumStateService: AlbumStateService,
-		private artistStateService: ArtistStateService,
-		private componentUtil: ReleaseUtilService,
-		private labelStateService: LabelStateService,
-		private router: Router
-	) {
+	public constructor() {
 		this.params$$ = new ReplaySubject();
 	}
 
 	public cancel(): void {
-		this.router.navigate(['../../list'], {
-			relativeTo: this.activatedRoute,
-		});
+		this.returnNavigation.leave(['../../list'], this.activatedRoute);
 	}
 
 	public init$(): Observable<ReleaseFormParams> {
@@ -124,9 +123,7 @@ export class ReleaseFormService {
 			this.addRelease();
 		}
 
-		this.router.navigate(['../../list'], {
-			relativeTo: this.activatedRoute,
-		});
+		this.returnNavigation.leave(['../../list'], this.activatedRoute);
 	}
 
 	private addRelease(): void {

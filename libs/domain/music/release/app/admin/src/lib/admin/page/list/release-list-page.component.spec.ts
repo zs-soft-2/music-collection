@@ -1,20 +1,36 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { of } from 'rxjs';
 
-import { ReleaseCollectionModule } from '../../../collection/release-collection.module';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
+import { provideRouter } from '@angular/router';
+import {
+	ReleaseStateService,
+	ReleaseUtilService,
+} from '@music-collection/api';
+
 import { ReleaseListPageComponent } from './release-list-page.component';
 
 describe('ReleaseListComponent', () => {
 	let component: ReleaseListPageComponent;
 	let fixture: ComponentFixture<ReleaseListPageComponent>;
 
-	beforeEach(waitForAsync(() => {
-		TestBed.configureTestingModule({
-			declarations: [ReleaseListPageComponent],
-			imports: [ReleaseCollectionModule],
+	beforeEach(async () => {
+		await TestBed.configureTestingModule({
+			imports: [ReleaseListPageComponent],
+			providers: [
+				provideRouter([]),
+				provideNoopAnimations(),
+				{
+					provide: ReleaseStateService,
+					useValue: {
+						selectEntities$: jest.fn(() => of([])),
+						selectSearchResult$: jest.fn(() => of([])),
+					},
+				},
+				{ provide: ReleaseUtilService, useValue: {} },
+			],
 		}).compileComponents();
-	}));
 
-	beforeEach(() => {
 		fixture = TestBed.createComponent(ReleaseListPageComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();

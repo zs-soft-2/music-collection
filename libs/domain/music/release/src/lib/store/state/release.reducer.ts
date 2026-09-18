@@ -31,7 +31,6 @@ export const initialState: State = releaseAdapter.getInitialState({
 	loading: false,
 	error: null,
 	searchResult: [],
-	selectedReleaseId: null,
 });
 
 export const releaseReducer = createReducer(
@@ -66,7 +65,7 @@ export const releaseReducer = createReducer(
 	),
 	on(releaseActions.setSelectedReleaseId, (state, { releaseId }) => ({
 		...state,
-		selectedReleaseId: releaseId,
+		selectedId: releaseId,
 	})),
 	on(releaseActions.searchSuccess, (state, { result }) => {
 		return releaseAdapter.upsertMany(result, {

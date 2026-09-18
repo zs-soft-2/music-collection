@@ -1,20 +1,24 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	OnInit,
+	inject,
+} from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { BaseComponent } from '@music-collection/api';
+import { WishlistItemFormModule } from '@music-collection/domain/wishlist-item';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-wishlist-item-edit',
 	templateUrl: './wishlist-item-edit.component.html',
 	styleUrls: ['./wishlist-item-edit.component.scss'],
-  standalone: false,
+	imports: [WishlistItemFormModule],
 })
 export class WishlistItemEditComponent extends BaseComponent implements OnInit {
-	public wishlistItemId!: string;
+	private activatedRoute = inject(ActivatedRoute);
 
-	public constructor(private activatedRoute: ActivatedRoute) {
-		super();
-	}
+	public wishlistItemId!: string;
 
 	public ngOnInit(): void {
 		this.wishlistItemId =

@@ -1,150 +1,156 @@
-<section class="artist-form" *rxLet="params$; let params">
-	<form [formGroup]="params.formGroup">
-		<p-tabView>
-			<p-tabPanel header="Data">
-				<input name="uid" formControlName="uid" hidden />
+@if (params$ | async; as params) {
+	<section class="artist-form">
+		<form class="mc-form" [formGroup]="params.formGroup">
+			<input name="uid" formControlName="uid" hidden />
 
-				<div class="field">
-					<span class="p-float-label">
+			<section class="mc-form-section" aria-labelledby="artist-details">
+				<h2 id="artist-details">Details</h2>
+				<div class="mc-form-grid">
+					<div class="mc-field">
+						<label for="name">Name</label>
 						<input
 							id="name"
 							type="text"
 							pInputText
 							formControlName="name"
 						/>
+					</div>
 
-						<label for="name">Name</label>
-					</span>
-				</div>
+					<div class="mc-field">
+						<label for="artistType">Type</label>
+						<p-select
+							inputId="artistType"
+							[options]="params.artistTypes"
+							optionLabel="label"
+							optionValue="value"
+							formControlName="artistType"
+						></p-select>
+					</div>
 
-				<div class="field">
-					<span class="p-float-label">
-						<textarea
-							id="description"
-							[rows]="5"
-							[cols]="30"
-							formControlName="description"
-							pTextarea
-							[autoResize]="true"
-						></textarea>
-
-						<label for="description">Description</label>
-					</span>
-				</div>
-
-				<div class="field">
-					<span class="p-float-label">
-						<p-dropdown
-							id="country"
+					<div class="mc-field">
+						<label for="country">Country</label>
+						<p-select
+							inputId="country"
 							[options]="params.countries"
 							placeholder="Select a country"
 							formControlName="country"
-						></p-dropdown>
+							[filter]="true"
+						></p-select>
+					</div>
 
-						<label for="country">Country</label>
-					</span>
-				</div>
-
-				<div class="field">
-					<span class="p-float-label">
-						<p-calendar
-							id="formedIn"
-							formControlName="formedIn"
-						></p-calendar>
-
+					<div class="mc-field">
 						<label for="formedIn">Formed in</label>
-					</span>
-				</div>
+						<p-datepicker
+							inputId="formedIn"
+							formControlName="formedIn"
+						></p-datepicker>
+					</div>
 
-				<div class="field">
-					<span class="p-float-label">
-						<p-multiSelect
-							id="styles"
+					<div class="mc-field">
+						<label for="styles">Styles</label>
+						<p-multiselect
+							inputId="styles"
 							[options]="params.styleList"
 							[filter]="false"
 							formControlName="styles"
 							display="chip"
-						></p-multiSelect>
+							placeholder="Select styles"
+						></p-multiselect>
+					</div>
 
-						<label for="styles">Styles</label>
-					</span>
+					<div class="mc-field is-wide">
+						<label for="description">Description</label>
+						<textarea
+							id="description"
+							[rows]="5"
+							formControlName="description"
+							pTextarea
+							[autoResize]="true"
+						></textarea>
+					</div>
 				</div>
-			</p-tabPanel>
+			</section>
 
-			<p-tabPanel header="Images" [disabled]="!params.isImagesTabActive">
-				<div class="field">
-					<span class="p-float-label">
-						<p-autoComplete
-							id="headerImage"
-							formControlName="headerImage"
-							[suggestions]="params.documents"
-							[minLength]="3"
-							[delay]="400"
-							field="name"
-							(completeMethod)="searchDocument($event)"
-						>
-						</p-autoComplete>
+			<section class="mc-form-section" aria-labelledby="artist-images">
+				<h2 id="artist-images">Images</h2>
+				@if (params.isImagesTabActive) {
+					<div class="mc-form-grid">
+						<div class="mc-field">
+							<label for="headerImage">Header image</label>
+							<p-autocomplete
+								inputId="headerImage"
+								formControlName="headerImage"
+								[suggestions]="params.documents"
+								[minQueryLength]="3"
+								[delay]="400"
+								optionLabel="name"
+								placeholder="Search documents…"
+								(completeMethod)="searchDocument($event)"
+							></p-autocomplete>
+							@if (params.formGroup.value.headerImage) {
+								<p-image
+									class="mc-form-image"
+									[src]="
+										$safeNavigationMigration(
+											params.formGroup.value.headerImage
+												?.filePath
+										)
+									"
+									[preview]="true"
+									alt="Header image"
+									width="200"
+								></p-image>
+							}
+						</div>
+						<div class="mc-field">
+							<label for="mainImage">Main image</label>
+							<p-autocomplete
+								inputId="mainImage"
+								formControlName="mainImage"
+								[suggestions]="params.documents"
+								[minQueryLength]="3"
+								[delay]="400"
+								optionLabel="name"
+								placeholder="Search documents…"
+								(completeMethod)="searchDocument($event)"
+							></p-autocomplete>
+							@if (params.formGroup.value.mainImage) {
+								<p-image
+									class="mc-form-image"
+									[src]="
+										$safeNavigationMigration(
+											params.formGroup.value.mainImage
+												?.filePath
+										)
+									"
+									[preview]="true"
+									alt="Main image"
+									width="200"
+								></p-image>
+							}
+						</div>
+					</div>
+				} @else {
+					<p class="mc-form-note">
+						Save the artist first to attach images.
+					</p>
+				}
+			</section>
 
-						<label for="headerImage">Header image</label>
-					</span>
-
-					<p-image
-						*ngIf="params.formGroup.value.headerImage"
-						[src]="params.formGroup.value.headerImage?.filePath"
-						[preview]="true"
-						alt="Image"
-						width="200"
-					>
-					</p-image>
-				</div>
-
-				<div class="field">
-					<span class="p-float-label">
-						<p-autoComplete
-							id="mainImage"
-							formControlName="mainImage"
-							[suggestions]="params.documents"
-							[minLength]="3"
-							[delay]="400"
-							field="name"
-							(completeMethod)="searchDocument($event)"
-						>
-						</p-autoComplete>
-
-						<label for="mainImage">Main image</label>
-					</span>
-
-					<p-image
-						*ngIf="params.formGroup.value.mainImage"
-						[src]="params.formGroup.value.mainImage?.filePath"
-						[preview]="true"
-						alt="Image"
-						width="200"
-					>
-					</p-image>
-				</div>
-			</p-tabPanel>
-
-			<div
-				style="margin-top: 10px"
-				fxLayout="row"
-				fxLayoutAlign="space-around"
-			>
-				<button
-					pButton
-					type="button"
-					label="Submit"
-					(click)="submit()"
-					[disabled]="!params.formGroup.valid"
-				></button>
-
-				<button
-					pButton
-					type="button"
+			<div class="mc-form-actions">
+				<p-button
 					label="Cancel"
-					(click)="cancel()"
-				></button>
+					severity="secondary"
+					[outlined]="true"
+					(onClick)="cancel()"
+				></p-button>
+				<p-button
+					label="Save"
+					icon="pi pi-check"
+					[disabled]="!params.formGroup.valid"
+					(onClick)="submit()"
+				></p-button>
 			</div>
-		</p-tabView>
-	</form>
-</section>
+		</form>
+	</section>
+}

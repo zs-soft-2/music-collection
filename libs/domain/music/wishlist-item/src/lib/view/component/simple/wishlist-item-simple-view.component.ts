@@ -6,13 +6,28 @@ import {
 	Output,
 } from '@angular/core';
 import { BaseComponent, WishlistItemEntity } from '@music-collection/api';
+import {
+	DefaultLayoutDirective,
+	DefaultLayoutAlignDirective,
+	DefaultLayoutGapDirective,
+} from 'ng-flex-layout/flex';
+import { Bind } from 'primeng/bind';
+import { Image } from 'primeng/image';
+import { Chip } from 'primeng/chip';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-wishlist-item-simple-view',
 	templateUrl: './wishlist-item-simple-view.component.html',
 	styleUrls: ['./wishlist-item-simple-view.component.scss'],
-  standalone: false,
+	imports: [
+		DefaultLayoutDirective,
+		DefaultLayoutAlignDirective,
+		DefaultLayoutGapDirective,
+		Bind,
+		Image,
+		Chip,
+	],
 })
 export class WishlistItemSimpleViewComponent extends BaseComponent {
 	@Input()

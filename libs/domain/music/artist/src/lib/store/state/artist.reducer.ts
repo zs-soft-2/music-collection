@@ -37,7 +37,6 @@ export const initialState: State = artistAdapter.getInitialState({
 	loading: false,
 	error: null,
 	searchResult: [],
-	selectedArtistId: null,
 });
 
 export const artistReducer = createReducer(
@@ -53,7 +52,7 @@ export const artistReducer = createReducer(
 		...state,
 		loading: false,
 		error: null,
-		selectedArtistId: artist.uid,
+		selectedId: artist.uid,
 	})),
 	on(artistActions.updateArtistSuccess, (state, { artist }) =>
 		artistAdapter.updateOne(artist, state)

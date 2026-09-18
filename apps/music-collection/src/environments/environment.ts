@@ -1,14 +1,28 @@
+/**
+ * Az alapértelmezett környezet a DEV projekt: a `nx serve`, a `nx build` és a
+ * `tools/` scriptek is ezt használják. A prod konfigurációt a `production`
+ * build-konfiguráció cseréli be (`environment.prod.ts`), a tool scriptek pedig
+ * a `--env prod` kapcsolóval kérik.
+ */
 export const environment = {
 	production: false,
 	firebase: {
-		apiKey: 'AIzaSyDHWO8_DhKXayoJc_eThKVwm2LzLBw9J5w',
-		authDomain: 'music-collection-4e074.firebaseapp.com',
-		projectId: 'music-collection-4e074',
-		storageBucket: 'music-collection-4e074.appspot.com',
-		messagingSenderId: '110722700843',
-		appId: '1:110722700843:web:2b53358337e0976ba87c6e',
-		measurementId: 'G-7H6CC1PTSY',
+		apiKey: 'AIzaSyC-XU47nmMtvnj5z7x-BI2HgR3UCERsxOQ',
+		authDomain: 'music-collection-16676.firebaseapp.com',
+		projectId: 'music-collection-16676',
+		storageBucket: 'music-collection-16676.firebasestorage.app',
+		messagingSenderId: '967955572806',
+		appId: '1:967955572806:web:7b17294aa9888914508247',
+		measurementId: 'G-H3YMKNE5KV',
 	},
-	type: '', //'develop' or '',
-	version: '0.19.1',
+	spotify: {
+		/**
+		 * Client ID of the Spotify app (developer.spotify.com/dashboard) for
+		 * full playback on the album page. Not a secret (PKCE flow). Empty
+		 * leaves only the embedded preview player.
+		 */
+		clientId: '0ab3fba0933440238c563c337700db27',
+	},
+	type: 'develop',
+	version: '1.0.0',
 };

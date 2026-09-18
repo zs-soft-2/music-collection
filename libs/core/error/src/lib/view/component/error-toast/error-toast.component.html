@@ -1,0 +1,23 @@
+@if (errors().length) {
+	<div class="error-toasts" role="alert" aria-live="assertive">
+		@for (error of errors(); track error.uid) {
+			<div class="error-toast">
+				<i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+
+				<div class="error-body">
+					<span class="error-message">{{ error.message }}</span>
+					<span class="error-source">{{ error.source }}</span>
+				</div>
+
+				<button
+					type="button"
+					class="error-close"
+					aria-label="Close"
+					(click)="dismiss(error.uid)"
+				>
+					<i class="pi pi-times" aria-hidden="true"></i>
+				</button>
+			</div>
+		}
+	</div>
+}

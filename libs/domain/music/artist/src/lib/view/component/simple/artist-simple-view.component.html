@@ -15,9 +15,9 @@
 			>
 
 			<div>
-				<ng-container *ngFor="let style of artist.styles">
+				@for (style of artist.styles; track style) {
 					<p-chip styleClass="style" [label]="style"> </p-chip>
-				</ng-container>
+				}
 			</div>
 		</div>
 

@@ -1,6 +1,6 @@
 import { Observable, ReplaySubject, switchMap } from 'rxjs';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
 	BaseComponent,
@@ -14,15 +14,15 @@ import {
 
 @Injectable()
 export class DocumentTableService extends BaseComponent {
+	private activatedRoute = inject(ActivatedRoute);
+	private documentStateService = inject(DocumentStateService);
+	private documentUtilService = inject(DocumentUtilService);
+	private router = inject(Router);
+
 	private params!: DocumentTableParams;
 	private params$$: ReplaySubject<DocumentTableParams>;
 
-	public constructor(
-		private activatedRoute: ActivatedRoute,
-		private documentStateService: DocumentStateService,
-		private documentUtilService: DocumentUtilService,
-		private router: Router
-	) {
+	public constructor() {
 		super();
 
 		this.params$$ = new ReplaySubject();

@@ -1,9 +1,9 @@
 import { combineLatest, Observable, ReplaySubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import {
 	AlbumEntity,
 	AlbumStateService,
@@ -13,6 +13,7 @@ import {
 	EntityTypeEnum,
 	FormatList,
 	MediaList,
+	ReturnNavigationService,
 	SearchParams,
 	WishlistItemEntity,
 	WishlistItemEntityAdd,
@@ -24,28 +25,26 @@ import {
 
 @Injectable()
 export class WishlistItemFormService {
+	private activatedRoute = inject(ActivatedRoute);
+	private albumStateService = inject(AlbumStateService);
+	private artistStateService = inject(ArtistStateService);
+	private authorizationStateService = inject(AuthenticationStateService);
+	private componentUtil = inject(WishlistItemUtilService);
+	private returnNavigation = inject(ReturnNavigationService);
+	private wishlistItemStateService = inject(WishlistItemStateService);
+	private wishlistItemUtilService = inject(WishlistItemUtilService);
+
 	private formGroup!: FormGroup;
 	private params!: WishlistItemFormParams;
 	private params$$: ReplaySubject<WishlistItemFormParams>;
 	private wishlistItem!: WishlistItemEntity | undefined;
 
-	public constructor(
-		private activatedRoute: ActivatedRoute,
-		private albumStateService: AlbumStateService,
-		private artistStateService: ArtistStateService,
-		private authorizationStateService: AuthenticationStateService,
-		private componentUtil: WishlistItemUtilService,
-		private router: Router,
-		private wishlistItemStateService: WishlistItemStateService,
-		private wishlistItemUtilService: WishlistItemUtilService
-	) {
+	public constructor() {
 		this.params$$ = new ReplaySubject();
 	}
 
 	public cancel(): void {
-		this.router.navigate(['../../list'], {
-			relativeTo: this.activatedRoute,
-		});
+		this.returnNavigation.leave(['../../list'], this.activatedRoute);
 	}
 
 	public init$(): Observable<WishlistItemFormParams> {
@@ -111,9 +110,7 @@ export class WishlistItemFormService {
 			this.addWishlistItem();
 		}
 
-		this.router.navigate(['../../list'], {
-			relativeTo: this.activatedRoute,
-		});
+		this.returnNavigation.leave(['../../list'], this.activatedRoute);
 	}
 
 	private addWishlistItem(): void {

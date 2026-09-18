@@ -1,1 +1,1 @@
-export * from './artist-page.module';
+export * from './artist-page.component';

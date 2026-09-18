@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
 	DocumentEntity,
 	DocumentEntityAdd,
@@ -17,11 +17,8 @@ import * as documentSelectors from './document.selectors';
 
 @Injectable()
 export class DocumentStateServiceImpl extends DocumentStateService {
-	public constructor(
-		private store: Store<fromDocument.DocumentPartialState>
-	) {
-		super();
-	}
+	private store = inject<Store<fromDocument.DocumentPartialState>>(Store);
+
 
 	public dispatchAddEntityAction(document: DocumentEntityAdd): void {
 		this.store.dispatch(documentActions.addDocument({ document }));

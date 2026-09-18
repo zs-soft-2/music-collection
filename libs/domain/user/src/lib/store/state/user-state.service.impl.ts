@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { SearchParams, User, UserStateService } from '@music-collection/api';
 import { select, Store } from '@ngrx/store';
 
@@ -10,9 +10,8 @@ import * as UserSelectors from './user.selectors';
 
 @Injectable()
 export class UserStateServiceImpl extends UserStateService {
-	public constructor(private store: Store<fromUser.UserPartialState>) {
-		super();
-	}
+	private store = inject<Store<fromUser.UserPartialState>>(Store);
+
 
 	public dispatchAddEntityAction(user: User): void {
 		this.store.dispatch(userActions.addUser({ user }));

@@ -1,8 +1,8 @@
 import { combineLatest, Observable, ReplaySubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import { Injectable } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import {
 	EntityTypeEnum,
 	LabelEntity,
@@ -11,29 +11,28 @@ import {
 	LabelFormParams,
 	LabelStateService,
 	LabelUtilService,
+	ReturnNavigationService,
 	SearchParams,
 } from '@music-collection/api';
 
 @Injectable()
 export class LabelFormService {
+	private activatedRoute = inject(ActivatedRoute);
+	private labelStateService = inject(LabelStateService);
+	private labelUtilService = inject(LabelUtilService);
+	private componentUtil = inject(LabelUtilService);
+	private returnNavigation = inject(ReturnNavigationService);
+
 	private label!: LabelEntity | undefined;
 	private params!: LabelFormParams;
 	private params$$: ReplaySubject<LabelFormParams>;
 
-	public constructor(
-		private activatedRoute: ActivatedRoute,
-		private labelStateService: LabelStateService,
-		private labelUtilService: LabelUtilService,
-		private componentUtil: LabelUtilService,
-		private router: Router
-	) {
+	public constructor() {
 		this.params$$ = new ReplaySubject();
 	}
 
 	public cancel(): void {
-		this.router.navigate(['../../list'], {
-			relativeTo: this.activatedRoute,
-		});
+		this.returnNavigation.leave(['../../list'], this.activatedRoute);
 	}
 
 	public init$(): Observable<LabelFormParams> {
@@ -72,9 +71,7 @@ export class LabelFormService {
 			this.addLabel();
 		}
 
-		this.router.navigate(['../../list'], {
-			relativeTo: this.activatedRoute,
-		});
+		this.returnNavigation.leave(['../../list'], this.activatedRoute);
 	}
 
 	private addLabel(): void {

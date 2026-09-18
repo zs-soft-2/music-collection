@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
 	WishlistItemEntity,
 	WishlistItemEntityAdd,
@@ -16,11 +16,8 @@ import * as wishlistItemSelectors from './wishlist-item.selectors';
 
 @Injectable()
 export class WishlistItemStateServiceImpl extends WishlistItemStateService {
-	public constructor(
-		private store: Store<fromWishlistItem.WishlistItemPartialState>
-	) {
-		super();
-	}
+	private store = inject<Store<fromWishlistItem.WishlistItemPartialState>>(Store);
+
 
 	public dispatchAddEntityAction(wishlistItem: WishlistItemEntityAdd): void {
 		this.store.dispatch(

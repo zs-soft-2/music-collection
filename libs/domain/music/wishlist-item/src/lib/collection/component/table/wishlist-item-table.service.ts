@@ -1,6 +1,6 @@
 import { first, merge, Observable, ReplaySubject, switchMap } from 'rxjs';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
 	WishlistItemEntity,
@@ -15,16 +15,16 @@ import {
 
 @Injectable()
 export class WishlistItemTableService extends BaseComponent {
+	private activatedRoute = inject(ActivatedRoute);
+	private wishlistItemStateService = inject(WishlistItemStateService);
+	private wishlistItemUtilService = inject(WishlistItemUtilService);
+	private exportImportService = inject(ExportImportService);
+	private router = inject(Router);
+
 	private params!: WishlistItemTableParams;
 	private params$$: ReplaySubject<WishlistItemTableParams>;
 
-	public constructor(
-		private activatedRoute: ActivatedRoute,
-		private wishlistItemStateService: WishlistItemStateService,
-		private wishlistItemUtilService: WishlistItemUtilService,
-		private exportImportService: ExportImportService,
-		private router: Router
-	) {
+	public constructor() {
 		super();
 
 		this.params$$ = new ReplaySubject();

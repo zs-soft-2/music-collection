@@ -1,4 +1,7 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
+
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ArtistStateService } from '@music-collection/api';
 
 import { ArtistListComponent } from './artist-list.component';
 
@@ -6,13 +9,17 @@ describe('ArtistListComponent', () => {
 	let component: ArtistListComponent;
 	let fixture: ComponentFixture<ArtistListComponent>;
 
-	beforeEach(async(() => {
-		TestBed.configureTestingModule({
-			declarations: [ArtistListComponent],
+	beforeEach(async () => {
+		await TestBed.configureTestingModule({
+			imports: [ArtistListComponent],
+			providers: [
+				{
+					provide: ArtistStateService,
+					useValue: { selectEntities$: jest.fn(() => of([])) },
+				},
+			],
 		}).compileComponents();
-	}));
 
-	beforeEach(() => {
 		fixture = TestBed.createComponent(ArtistListComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();

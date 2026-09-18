@@ -1,0 +1,265 @@
+<div class="zoom" role="toolbar" aria-label="View">
+	<button type="button" aria-label="Zoom in" (click)="zoomIn()">
+		<i class="pi pi-plus" aria-hidden="true"></i>
+	</button>
+	<button type="button" aria-label="Zoom out" (click)="zoomOut()">
+		<i class="pi pi-minus" aria-hidden="true"></i>
+	</button>
+	<button type="button" aria-label="Fit to screen" (click)="fit()">
+		<i class="pi pi-expand" aria-hidden="true"></i>
+	</button>
+	<button
+		type="button"
+		data-expand-toggle
+		[attr.aria-label]="expanded() ? 'Exit full screen' : 'Open full screen'"
+		(click)="expandToggle.emit()"
+	>
+		<i
+			class="pi"
+			[class.pi-window-maximize]="!expanded()"
+			[class.pi-window-minimize]="expanded()"
+			aria-hidden="true"
+		></i>
+	</button>
+</div>
+
+<svg
+	#svg
+	class="canvas"
+	role="group"
+	tabindex="0"
+	aria-roledescription="network graph"
+	[attr.aria-label]="summary()"
+	(keydown)="onCanvasKeydown($event)"
+>
+	<defs>
+		<marker
+			id="mc-net-arrow"
+			viewBox="0 0 10 10"
+			refX="8"
+			refY="5"
+			markerWidth="7"
+			markerHeight="7"
+			orient="auto-start-reverse"
+		>
+			<path class="arrow" d="M0,0 L10,5 L0,10 z" />
+		</marker>
+		<clipPath id="mc-net-clip-circle" clipPathUnits="objectBoundingBox">
+			<circle cx="0.5" cy="0.5" r="0.5" />
+		</clipPath>
+		<clipPath id="mc-net-clip-hexagon" clipPathUnits="objectBoundingBox">
+			<polygon
+				points="0.5,0 0.933,0.25 0.933,0.75 0.5,1 0.067,0.75 0.067,0.25"
+			/>
+		</clipPath>
+		<clipPath id="mc-net-clip-diamond" clipPathUnits="objectBoundingBox">
+			<polygon points="0.5,0 1,0.5 0.5,1 0,0.5" />
+		</clipPath>
+		<clipPath id="mc-net-clip-rect" clipPathUnits="objectBoundingBox">
+			<rect width="1" height="1" rx="0.07" ry="0.1" />
+		</clipPath>
+	</defs>
+
+	<g [attr.transform]="transformAttr()">
+		<g class="edges" aria-hidden="true">
+			@for (edge of layout().edges; track edge.id) {
+				<g
+					class="edge"
+					[attr.data-kind]="edge.kind"
+					[class.is-dimmed]="
+						isDimmed(edge.source) || isDimmed(edge.target)
+					"
+					[class.is-active]="
+						edge.source === selectedId() ||
+						edge.target === selectedId()
+					"
+				>
+					<line
+						[attr.x1]="edge.x1"
+						[attr.y1]="edge.y1"
+						[attr.x2]="edge.x2"
+						[attr.y2]="edge.y2"
+						marker-end="url(#mc-net-arrow)"
+					/>
+					@if (showEdgeLabels() && labelledEdges().has(edge.id)) {
+						<g
+							class="edge-label"
+							[attr.transform]="
+								'translate(' + edge.mx + ',' + edge.my + ')'
+							"
+						>
+							<rect
+								[attr.x]="-(edge.label.length * 3.4 + 12)"
+								y="-11"
+								[attr.width]="edge.label.length * 6.8 + 24"
+								height="22"
+								rx="11"
+							/>
+							<text text-anchor="middle" dy="4">
+								{{ edge.label }}
+							</text>
+						</g>
+					}
+				</g>
+			}
+		</g>
+
+		<g class="nodes">
+			@for (node of layout().nodes; track node.id) {
+				<g
+					class="node"
+					role="button"
+					tabindex="0"
+					[attr.data-kind]="node.kind"
+					[attr.transform]="
+						'translate(' + node.x + ',' + node.y + ')'
+					"
+					[attr.aria-label]="node.ariaLabel"
+					[attr.aria-pressed]="node.id === selectedId()"
+					[class.is-focus]="node.id === focusId()"
+					[class.is-selected]="node.id === selectedId()"
+					[class.is-dimmed]="isDimmed(node.id)"
+					(click)="nodeSelect.emit(node.id)"
+					(dblclick)="nodeFocus.emit(node.id)"
+					(keydown)="onNodeKeydown($event, node)"
+					(focus)="reveal(node)"
+				>
+					@switch (node.kind) {
+						@case ('musician') {
+							<circle class="shape" [attr.r]="radius.musician" />
+							@if (node.imageUrl) {
+								<image
+									[attr.href]="node.imageUrl"
+									[attr.x]="-radius.musician + 3"
+									[attr.y]="-radius.musician + 3"
+									[attr.width]="(radius.musician - 3) * 2"
+									[attr.height]="(radius.musician - 3) * 2"
+									preserveAspectRatio="xMidYMid slice"
+									clip-path="url(#mc-net-clip-circle)"
+								/>
+							} @else {
+								<text
+									class="initials"
+									text-anchor="middle"
+									dy="7"
+								>
+									{{ node.initials }}
+								</text>
+							}
+						}
+						@case ('project') {
+							<polygon
+								class="shape"
+								[attr.points]="hexagon(radius.project)"
+							/>
+							@if (node.imageUrl) {
+								<image
+									[attr.href]="node.imageUrl"
+									[attr.x]="-radius.project + 5"
+									[attr.y]="-radius.project + 5"
+									[attr.width]="(radius.project - 5) * 2"
+									[attr.height]="(radius.project - 5) * 2"
+									preserveAspectRatio="xMidYMid slice"
+									clip-path="url(#mc-net-clip-hexagon)"
+								/>
+							} @else {
+								<text
+									class="initials"
+									text-anchor="middle"
+									dy="7"
+								>
+									{{ node.initials }}
+								</text>
+							}
+						}
+						@case ('formation') {
+							<polygon
+								class="shape"
+								[attr.points]="diamond(radius.formation)"
+							/>
+							@if (node.imageUrl) {
+								<image
+									[attr.href]="node.imageUrl"
+									[attr.x]="-radius.formation / 2"
+									[attr.y]="-radius.formation / 2"
+									[attr.width]="radius.formation"
+									[attr.height]="radius.formation"
+									preserveAspectRatio="xMidYMid slice"
+									clip-path="url(#mc-net-clip-diamond)"
+								/>
+							} @else {
+								<text
+									class="initials"
+									text-anchor="middle"
+									dy="7"
+								>
+									{{ node.initials }}
+								</text>
+							}
+						}
+						@default {
+							<rect
+								class="shape"
+								[attr.x]="-radius.band * 1.35"
+								[attr.y]="-radius.band * 0.8"
+								[attr.width]="radius.band * 2.7"
+								[attr.height]="radius.band * 1.6"
+								rx="8"
+							/>
+							@if (node.imageUrl) {
+								<image
+									[attr.href]="node.imageUrl"
+									[attr.x]="-radius.band * 1.35 + 4"
+									[attr.y]="-radius.band * 0.8 + 4"
+									[attr.width]="radius.band * 2.7 - 8"
+									[attr.height]="radius.band * 1.6 - 8"
+									preserveAspectRatio="xMidYMid slice"
+									clip-path="url(#mc-net-clip-rect)"
+								/>
+							} @else {
+								<text
+									class="initials"
+									text-anchor="middle"
+									dy="7"
+								>
+									{{ node.initials }}
+								</text>
+							}
+						}
+					}
+
+					@if (node.owned) {
+						<g
+							class="owned-badge"
+							[attr.transform]="
+								'translate(' +
+								radius[node.kind] +
+								',' +
+								-radius[node.kind] * 0.75 +
+								')'
+							"
+						>
+							<circle r="10" />
+							<path d="M-4.5,0 L-1.5,3 L4.5,-3.5" />
+						</g>
+					}
+
+					<text
+						class="label"
+						text-anchor="middle"
+						[attr.y]="node.labelY"
+					>
+						{{ node.shortLabel }}
+					</text>
+					<text
+						class="caption"
+						text-anchor="middle"
+						[attr.y]="node.labelY + 16"
+					>
+						{{ node.captionText }}
+					</text>
+				</g>
+			}
+		</g>
+	</g>
+</svg>

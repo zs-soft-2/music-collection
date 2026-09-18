@@ -6,6 +6,7 @@ import {
 	EventEmitter,
 	OnInit,
 	Output,
+	inject,
 } from '@angular/core';
 import {
 	WishlistItemEntity,
@@ -14,6 +15,10 @@ import {
 } from '@music-collection/api';
 
 import { WishlistItemListService } from './wishlist-item-list.service';
+import { Bind } from 'primeng/bind';
+import { DataView } from 'primeng/dataview';
+import { WishlistItemSimpleViewComponent } from '../../../view/component/simple/wishlist-item-simple-view.component';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -21,14 +26,21 @@ import { WishlistItemListService } from './wishlist-item-list.service';
 	selector: 'mc-wishlist-item-list',
 	templateUrl: './wishlist-item-list.component.html',
 	styleUrls: ['./wishlist-item-list.component.scss'],
-  standalone: false,
+	imports: [
+		Bind,
+		DataView,
+		WishlistItemSimpleViewComponent,
+		AsyncPipe,
+	],
 })
 export class WishlistItemListComponent extends BaseComponent implements OnInit {
+	private componentService = inject(WishlistItemListService);
+
 	public params$!: Observable<WishlistItemListParams>;
 	@Output()
 	public selectWishlistItem: EventEmitter<WishlistItemEntity>;
 
-	public constructor(private componentService: WishlistItemListService) {
+	public constructor() {
 		super();
 
 		this.selectWishlistItem = new EventEmitter();

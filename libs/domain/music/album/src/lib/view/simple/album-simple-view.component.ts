@@ -1,12 +1,14 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { BaseComponent, SimpleAlbum } from '@music-collection/api';
+import { Bind } from 'primeng/bind';
+import { Image } from 'primeng/image';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-album-simple-view',
 	templateUrl: './album-simple-view.component.html',
 	styleUrls: ['./album-simple-view.component.scss'],
-  standalone: false,
+	imports: [Bind, Image],
 })
 export class AlbumSimpleViewComponent extends BaseComponent {
 	@Input()

@@ -1,0 +1,88 @@
+@let item = artist();
+
+<section class="spotlight" aria-labelledby="spotlight-name">
+	@if (item.headerUrl) {
+		<img
+			class="backdrop"
+			[src]="item.headerUrl"
+			alt=""
+			fetchpriority="high"
+		/>
+	}
+	<div class="shade" aria-hidden="true"></div>
+
+	<div class="content">
+		<p class="eyebrow">Artist spotlight</p>
+		<h1 id="spotlight-name">{{ item.name }}</h1>
+
+		<p class="meta">
+			@for (part of meta(); track part) {
+				<span>{{ part }}</span>
+			}
+			<span class="count"
+				>{{ releaseCount() }}
+				{{ releaseCount() === 1 ? 'release' : 'releases' }} in your
+				collection</span
+			>
+		</p>
+
+		@if (item.styles.length) {
+			<ul class="styles" aria-label="Styles">
+				@for (style of item.styles; track style) {
+					<li>{{ style }}</li>
+				}
+			</ul>
+		}
+
+		<div class="actions">
+			<a class="button primary" [routerLink]="['/artist', item.id]">
+				View artist
+				<i class="pi pi-arrow-right" aria-hidden="true"></i>
+			</a>
+			<button type="button" class="button ghost" (click)="shuffle.emit()">
+				<i class="pi pi-sync" aria-hidden="true"></i>
+				Show another artist
+			</button>
+			<mc-admin-edit-link
+				entity="artist"
+				[id]="item.id"
+				[name]="item.name"
+			/>
+		</div>
+	</div>
+
+	@if (releases().length) {
+		<div class="owned">
+			<h2 class="owned-title">In your collection</h2>
+			<ul class="owned-list">
+				@for (release of releases(); track release.id) {
+					<li>
+						<a
+							class="owned-item"
+							[routerLink]="['/album', release.albumId]"
+							[attr.aria-label]="
+								release.title +
+								(release.year ? ', ' + release.year : '')
+							"
+							[title]="release.title"
+						>
+							@if (release.coverUrl) {
+								<img
+									[src]="release.coverUrl"
+									alt=""
+									loading="lazy"
+								/>
+							} @else {
+								<span
+									class="owned-placeholder"
+									aria-hidden="true"
+									>♪</span
+								>
+							}
+						</a>
+					</li>
+				}
+			</ul>
+		</div>
+	}
+</section>

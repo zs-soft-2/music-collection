@@ -1,5 +1,14 @@
 {
 	"singleQuote": true,
 	"useTabs": true,
-	"tabWidth": 4
+	"tabWidth": 4,
+	"trailingComma": "es5",
+	"overrides": [
+		{
+			"files": "*.html",
+			"options": {
+				"parser": "angular"
+			}
+		}
+	]
 }

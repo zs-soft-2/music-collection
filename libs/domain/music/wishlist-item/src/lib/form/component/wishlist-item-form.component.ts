@@ -1,9 +1,22 @@
 import { Observable } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	OnInit,
+	inject,
+} from '@angular/core';
 import { WishlistItemFormParams, BaseComponent } from '@music-collection/api';
 
 import { WishlistItemFormService } from './wishlist-item-form.service';
+import { ReactiveFormsModule } from '@angular/forms';
+import { Bind } from 'primeng/bind';
+import { AutoComplete } from 'primeng/autocomplete';
+import { InputText } from 'primeng/inputtext';
+import { MultiSelect } from 'primeng/multiselect';
+import { Checkbox } from 'primeng/checkbox';
+import { Button } from 'primeng/button';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -11,14 +24,21 @@ import { WishlistItemFormService } from './wishlist-item-form.service';
 	selector: 'mc-wishlist-item-form',
 	templateUrl: './wishlist-item-form.component.html',
 	styleUrls: ['./wishlist-item-form.component.scss'],
-  standalone: false,
+	imports: [
+		ReactiveFormsModule,
+		Bind,
+		AutoComplete,
+		InputText,
+		MultiSelect,
+		Checkbox,
+		Button,
+		AsyncPipe,
+	],
 })
 export class WishlistItemFormComponent extends BaseComponent implements OnInit {
-	public params$!: Observable<WishlistItemFormParams>;
+	private componentService = inject(WishlistItemFormService);
 
-	public constructor(private componentService: WishlistItemFormService) {
-		super();
-	}
+	public params$!: Observable<WishlistItemFormParams>;
 
 	public cancel(): void {
 		this.componentService.cancel();

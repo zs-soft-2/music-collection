@@ -28,6 +28,9 @@
 			"@music-collection/core/entity-quantity": [
 				"libs/core/entity-quantity/src/index.ts"
 			],
+			"@music-collection/core/error": [
+				"libs/core/error/src/index.ts"
+			],
 			"@music-collection/core/export-import": [
 				"libs/core/export-import/src/index.ts"
 			],
@@ -58,6 +61,15 @@
 			"@music-collection/domain/label": [
 				"libs/domain/music/label/src/index.ts"
 			],
+			"@music-collection/domain/label/admin": [
+				"libs/domain/music/label/app/admin/src/index.ts"
+			],
+			"@music-collection/domain/musician": [
+				"libs/domain/music/musician/src/index.ts"
+			],
+			"@music-collection/domain/musician/admin": [
+				"libs/domain/music/musician/app/admin/src/index.ts"
+			],
 			"@music-collection/domain/release": [
 				"libs/domain/music/release/src/index.ts"
 			],
@@ -71,9 +83,13 @@
 			"@music-collection/domain/wishlist-item/admin": [
 				"libs/domain/music/wishlist-item/app/admin/src/index.ts"
 			],
-			"@music-collection/ui": ["libs/ui/src/index.ts"],
-			"@music-collection/domain/label/admin": ["libs/domain/music/label/app/admin/src/index.ts"]
-		}
+			"@music-collection/ui": ["libs/ui/src/index.ts"]
+		},
+		"strict": false,
+		"noUncheckedSideEffectImports": false,
+		"types": ["*"],
+		"esModuleInterop": false,
+		"ignoreDeprecations": "6.0"
 	},
 	"exclude": ["node_modules", "tmp"]
 }

@@ -1,0 +1,768 @@
+@use '../../shared/music-ui/music-tokens' as mc;
+
+:host {
+	@include mc.tokens;
+
+	display: block;
+	color: var(--mc-text);
+	font-family: var(--mc-font-body);
+}
+
+.page {
+	max-width: var(--mc-page-max-width);
+	margin: 0 auto;
+	padding: clamp(1rem, 2vw, 1.5rem) clamp(1rem, 3vw, 2.5rem) 3rem;
+}
+
+ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+/* ── Profile ──────────────────────────────────────────────────────────── */
+
+.hero {
+	@include mc.on-image;
+
+	position: relative;
+	display: flex;
+	align-items: flex-end;
+	min-height: 460px;
+	padding: clamp(1.5rem, 4vw, 3rem);
+	overflow: hidden;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-lg);
+}
+
+.backdrop {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: center 30%;
+	filter: grayscale(35%);
+}
+
+.shade {
+	position: absolute;
+	inset: 0;
+	background:
+		linear-gradient(
+			0deg,
+			rgba(10, 10, 10, 0.95) 0%,
+			rgba(10, 10, 10, 0.55) 55%,
+			rgba(10, 10, 10, 0.2) 100%
+		),
+		linear-gradient(90deg, rgba(10, 10, 10, 0.7) 0%, transparent 70%);
+}
+
+.profile {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1.5rem 2rem;
+	align-items: flex-end;
+}
+
+.identity {
+	flex: 1 1 320px;
+	min-width: 0;
+}
+
+.eyebrow {
+	margin: 0;
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: var(--mc-primary);
+}
+
+h1 {
+	margin: 0.3rem 0 0.9rem;
+	font-family: var(--mc-font-display);
+	font-size: clamp(3rem, 8vw, 6.5rem);
+	font-weight: 400;
+	line-height: 0.9;
+	letter-spacing: 0.01em;
+	overflow-wrap: anywhere;
+}
+
+.facts {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem 2rem;
+	margin: 0 0 1rem;
+
+	dt {
+		font-size: 0.68rem;
+		font-weight: 700;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--mc-text-muted);
+	}
+
+	dd {
+		margin: 0.1rem 0 0;
+		font-size: 1rem;
+		font-weight: 600;
+	}
+}
+
+.sites {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+}
+
+.sites a {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	padding: 0.35rem 0.75rem;
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: var(--mc-text);
+	text-decoration: none;
+	background: rgba(10, 10, 10, 0.5);
+	border: 1px solid var(--mc-border-strong);
+	border-radius: var(--mc-radius-md);
+
+	i {
+		font-size: 0.7rem;
+	}
+
+	&:hover {
+		border-color: var(--mc-text-muted);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--mc-primary);
+		outline-offset: 2px;
+	}
+}
+
+/* ── Key figures ──────────────────────────────────────────────────────── */
+
+.stats {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+	gap: 0.75rem;
+	margin: 1rem 0 0;
+}
+
+.stat {
+	padding: 0.8rem 1rem;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-md);
+
+	dt {
+		font-size: 0.8rem;
+		color: var(--mc-text-muted);
+	}
+
+	dd {
+		margin: 0.15rem 0 0;
+		font-size: clamp(1.3rem, 4vw, 1.6rem);
+		font-weight: 600;
+		line-height: 1.1;
+		white-space: nowrap;
+	}
+}
+
+/* ── Section navigation ───────────────────────────────────────────────── */
+
+.section-nav {
+	position: sticky;
+	top: var(--mc-app-bar-height);
+	z-index: 20;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem 1.5rem;
+	margin: 1.5rem calc(-1 * clamp(1rem, 3vw, 2.5rem)) 0;
+	padding: 0.85rem clamp(1rem, 3vw, 2.5rem);
+	background: var(--mc-bg);
+	border-top: 1px solid var(--mc-border);
+	border-bottom: 1px solid var(--mc-border);
+
+	a {
+		position: relative;
+		padding-bottom: 0.2rem;
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--mc-text-muted);
+		text-decoration: none;
+		transition: color var(--mc-duration-fast) ease;
+
+		/* Indicator of the section in view. */
+		&::after {
+			position: absolute;
+			right: 0;
+			bottom: -0.1rem;
+			left: 0;
+			height: 2px;
+			content: '';
+			background: var(--mc-primary);
+			border-radius: 2px;
+			transform: scaleX(0);
+			transform-origin: left;
+			transition: transform var(--mc-duration) ease;
+		}
+
+		&:hover {
+			color: var(--mc-text);
+		}
+
+		&.active {
+			color: var(--mc-text);
+
+			&::after {
+				transform: scaleX(1);
+			}
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--mc-primary);
+			outline-offset: 3px;
+		}
+	}
+}
+
+/* ── Sections ─────────────────────────────────────────────────────────── */
+
+.section {
+	margin-top: 2.5rem;
+	/* Clear the sticky section navigation when jumping to a section. */
+	scroll-margin-top: calc(var(--mc-app-bar-height) + 4rem);
+}
+
+.section-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem 1rem;
+	margin-bottom: 1.25rem;
+	padding-bottom: 0.75rem;
+	border-bottom: 1px solid var(--mc-border);
+
+	.section-title {
+		margin: 0;
+		padding: 0;
+		border: 0;
+	}
+}
+
+.section-title {
+	margin: 0 0 1.25rem;
+	padding-bottom: 0.75rem;
+	font-family: var(--mc-font-display);
+	font-size: clamp(1.8rem, 3vw, 2.4rem);
+	font-weight: 400;
+	line-height: 1;
+	letter-spacing: 0.02em;
+	border-bottom: 1px solid var(--mc-border);
+}
+
+.network-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin-top: 1rem;
+	color: var(--mc-info);
+	font-weight: 600;
+	text-decoration: none;
+
+	&:hover {
+		text-decoration: underline;
+	}
+}
+
+.more {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: var(--mc-accent);
+	text-decoration: none;
+
+	&:hover {
+		text-decoration: underline;
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--mc-primary);
+		outline-offset: 3px;
+	}
+}
+
+.bio {
+	max-width: 75ch;
+
+	p {
+		margin: 0 0 1rem;
+		font-size: 1rem;
+		line-height: 1.7;
+		color: var(--mc-text);
+	}
+}
+
+.text-button {
+	padding: 0;
+	font: inherit;
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: var(--mc-accent);
+	text-decoration: underline;
+	cursor: pointer;
+	background: none;
+	border: 0;
+
+	&:focus-visible {
+		outline: 2px solid var(--mc-primary);
+		outline-offset: 3px;
+	}
+}
+
+.chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+}
+
+.chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	padding: 0.35rem 0.75rem;
+	font: inherit;
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: var(--mc-text-muted);
+	cursor: pointer;
+	background: transparent;
+	border: 1px solid var(--mc-border-strong);
+	border-radius: 999px;
+
+	&:hover {
+		color: var(--mc-text);
+		border-color: var(--mc-text-muted);
+	}
+
+	&[aria-pressed='true'] {
+		color: var(--mc-on-primary);
+		background: var(--mc-primary);
+		border-color: var(--mc-primary);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--mc-primary);
+		outline-offset: 2px;
+	}
+}
+
+.chip-count {
+	font-size: 0.7rem;
+	opacity: 0.8;
+}
+
+.album-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: 1.25rem;
+}
+
+.empty {
+	color: var(--mc-text-muted);
+}
+
+/* ── Portrait ─────────────────────────────────────────────────────────── */
+
+.portrait {
+	width: clamp(120px, 15vw, 180px);
+	aspect-ratio: 1;
+	object-fit: cover;
+	border: 3px solid rgba(255, 255, 255, 0.9);
+	border-radius: 50%;
+	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+}
+
+.monogram {
+	display: grid;
+	place-items: center;
+	width: clamp(120px, 15vw, 180px);
+	aspect-ratio: 1;
+	font-family: var(--mc-font-display);
+	font-size: clamp(3rem, 6vw, 4.5rem);
+	color: var(--mc-text);
+	background: rgba(10, 10, 10, 0.6);
+	border: 3px solid rgba(255, 255, 255, 0.9);
+	border-radius: 50%;
+	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* ── Bands ────────────────────────────────────────────────────────────── */
+
+.band {
+	display: grid;
+	grid-template-columns: 3rem minmax(0, 1.2fr) minmax(10rem, 0.7fr) minmax(
+			0,
+			1.1fr
+		);
+	gap: 0.4rem 1.25rem;
+	align-items: center;
+	padding: 0.7rem 0;
+	border-bottom: 1px solid var(--mc-border);
+}
+
+.thumb {
+	display: grid;
+	place-items: center;
+	width: 3rem;
+	height: 3rem;
+	overflow: hidden;
+	font-weight: 700;
+	color: var(--mc-text-muted);
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-md);
+
+	img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+}
+
+.who,
+.when {
+	display: flex;
+	flex-direction: column;
+	gap: 0.1rem;
+	min-width: 0;
+}
+
+.band-name {
+	font-weight: 600;
+	color: var(--mc-text);
+	text-decoration: none;
+}
+
+a.band-name:hover {
+	text-decoration: underline;
+}
+
+a.band-name:focus-visible,
+.bandmate:focus-visible {
+	outline: 2px solid var(--mc-primary);
+	outline-offset: 2px;
+}
+
+.instruments {
+	font-size: 0.82rem;
+	color: var(--mc-text-muted);
+}
+
+.years {
+	font-size: 0.9rem;
+	font-variant-numeric: tabular-nums;
+}
+
+.band.active .years {
+	font-weight: 600;
+}
+
+.meta {
+	font-size: 0.75rem;
+	color: var(--mc-text-subtle);
+}
+
+.owned {
+	font-size: 0.7rem;
+	color: var(--mc-status-ok);
+}
+
+/* Time bar across the musician's years on record. */
+.track {
+	position: relative;
+	height: 10px;
+	background: rgba(255, 255, 255, 0.05);
+	border-radius: 999px;
+}
+
+.bar {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	min-width: 10px;
+	background: var(--mc-text-subtle);
+	border-radius: 999px;
+}
+
+.band.active .bar {
+	background: var(--mc-chart);
+}
+
+.axis {
+	display: grid;
+	grid-template-columns: 3rem minmax(0, 1.2fr) minmax(10rem, 0.7fr) minmax(
+			0,
+			1.1fr
+		);
+	gap: 0 1.25rem;
+	margin-top: 0.35rem;
+	font-size: 0.72rem;
+	color: var(--mc-text-subtle);
+	font-variant-numeric: tabular-nums;
+
+	span {
+		grid-row: 1;
+		grid-column: 4;
+	}
+
+	span:last-child {
+		justify-self: end;
+	}
+}
+
+/* ── Guest appearances ────────────────────────────────────────────────── */
+
+.guests {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+	gap: 0.5rem 1.5rem;
+}
+
+.guest {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	padding: 0.5rem 0;
+	border-bottom: 1px solid var(--mc-border);
+}
+
+/* ── Albums ───────────────────────────────────────────────────────────── */
+
+/*
+ * Card, artist and roles share the rows of the grid (subgrid): the cards of a
+ * row are equally tall, the roles start on one line, and a shorter role list
+ * leaves its space below.
+ */
+.album {
+	display: grid;
+	grid-row: span 3;
+	grid-template-rows: subgrid;
+	row-gap: 0;
+	align-content: start;
+	min-width: 0;
+}
+
+.album-artist {
+	margin: 0.5rem 0 0.3rem;
+	font-size: 0.8rem;
+	color: var(--mc-text-muted);
+}
+
+.roles {
+	display: flex;
+	flex-wrap: wrap;
+	align-content: flex-start;
+	gap: 0.3rem;
+
+	li {
+		padding: 0.1rem 0.5rem;
+		font-size: 0.74rem;
+		background: rgba(255, 255, 255, 0.06);
+		border: 1px solid var(--mc-border-strong);
+		border-radius: 999px;
+	}
+}
+
+/* ── Bandmates ────────────────────────────────────────────────────────── */
+
+.bandmates {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: 0.75rem;
+	margin-bottom: 0.75rem;
+}
+
+.bandmate {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+	height: 100%;
+	padding: 0.75rem 1rem;
+	color: var(--mc-text);
+	text-decoration: none;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-md);
+	transition: border-color var(--mc-duration-fast) ease;
+
+	&:hover {
+		border-color: var(--mc-text-muted);
+	}
+
+	&.active {
+		border-left: 3px solid var(--mc-chart);
+	}
+}
+
+.bandmate-name {
+	font-weight: 600;
+}
+
+.together {
+	font-size: 0.78rem;
+	color: var(--mc-text-muted);
+	font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 720px) {
+	.defer-placeholder.is-cards {
+		height: calc(round(up, var(--count) / 2, 1) * 360px);
+	}
+
+	.band {
+		grid-template-columns: 3rem minmax(0, 1fr);
+	}
+
+	.when {
+		grid-column: 2;
+	}
+
+	.track {
+		grid-column: 1 / -1;
+	}
+
+	.axis {
+		display: none;
+	}
+}
+
+/* ── Deferred sections ────────────────────────────────────────────────── */
+
+/* Rough height of a section that has not rendered yet (@defer). */
+.defer-placeholder {
+	&.is-rows {
+		height: calc(var(--count) * 72px);
+	}
+
+	&.is-guests {
+		height: calc(round(up, var(--count) / 4, 1) * 72px);
+	}
+
+	&.is-cards {
+		height: calc(round(up, var(--count) / 6, 1) * 400px);
+	}
+
+	&.is-mates {
+		height: calc(round(up, var(--count) / 4, 1) * 96px);
+	}
+}
+
+/* ── States ───────────────────────────────────────────────────────────── */
+
+.not-found {
+	padding: 5rem 1rem;
+	text-align: center;
+	color: var(--mc-text-muted);
+
+	h1 {
+		font-size: clamp(2.5rem, 6vw, 4rem);
+		color: var(--mc-text);
+	}
+}
+
+.not-found-icon {
+	margin: 0;
+	font-size: 3rem;
+	color: var(--mc-text-subtle);
+}
+
+.button {
+	display: inline-block;
+	margin-top: 1rem;
+	padding: 0.7rem 1.2rem;
+	font-weight: 600;
+	color: var(--mc-on-primary);
+	text-decoration: none;
+	background: var(--mc-primary);
+	border-radius: var(--mc-radius-md);
+
+	&:focus-visible {
+		outline: 2px solid var(--mc-info);
+		outline-offset: 2px;
+	}
+}
+
+.skeleton {
+	background: linear-gradient(
+		100deg,
+		var(--mc-card-bg) 40%,
+		var(--mc-surface-2) 50%,
+		var(--mc-card-bg) 60%
+	);
+	background-size: 200% 100%;
+	border-radius: var(--mc-radius-lg);
+	animation: mc-shimmer 1.4s linear infinite;
+}
+
+.hero-skeleton {
+	height: 460px;
+}
+
+.stats-skeleton {
+	height: 80px;
+	margin-top: 1rem;
+}
+
+.card-skeleton {
+	aspect-ratio: 0.72;
+}
+
+@keyframes mc-shimmer {
+	to {
+		background-position: -200% 0;
+	}
+}
+
+@media (max-width: 720px) {
+	.hero {
+		min-height: 400px;
+	}
+
+	.album-grid {
+		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+		gap: 0.75rem;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.skeleton {
+		animation: none;
+	}
+
+	.section-nav a,
+	.section-nav a::after {
+		transition: none;
+	}
+}

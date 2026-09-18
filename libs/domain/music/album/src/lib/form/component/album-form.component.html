@@ -1,124 +1,147 @@
-<section class="album-form" *rxLet="params$; let params">
-	<form [formGroup]="params.formGroup">
-		<p-tabView>
-			<p-tabPanel header="Data">
-				<input name="uid" formControlName="uid" hidden />
+@if (params$ | async; as params) {
+	<section class="album-form">
+		<form class="mc-form" [formGroup]="params.formGroup">
+			<input name="uid" formControlName="uid" hidden />
 
-				<div class="field">
-					<span class="p-float-label">
-						<p-autoComplete
-							formControlName="artist"
-							[suggestions]="params.artists"
-							[minLength]="3"
-							[delay]="400"
-							field="name"
-							(completeMethod)="searchArtist($event)"
-						></p-autoComplete>
-
-						<label for="artist">Artist</label>
-					</span>
-				</div>
-
-				<div class="field">
-					<span class="p-float-label">
+			<section class="mc-form-section" aria-labelledby="album-details">
+				<h2 id="album-details">Details</h2>
+				<div class="mc-form-grid">
+					<div class="mc-field">
+						<label for="name">Title</label>
 						<input
 							id="name"
 							type="text"
 							pInputText
 							formControlName="name"
 						/>
+					</div>
 
-						<label for="name">Name</label>
-					</span>
-				</div>
+					<div class="mc-field">
+						<label for="artist">Artist</label>
+						<p-autocomplete
+							inputId="artist"
+							formControlName="artist"
+							[suggestions]="params.artists"
+							[minQueryLength]="3"
+							[delay]="400"
+							optionLabel="name"
+							placeholder="Start typing an artist…"
+							(completeMethod)="searchArtist($event)"
+						></p-autocomplete>
+					</div>
 
-				<div class="field">
-					<span class="p-float-label">
-						<p-dropdown
-							id="format"
+					<div class="mc-field">
+						<label for="format">Format</label>
+						<p-select
+							inputId="format"
 							[options]="params.formatList"
 							placeholder="Select a format"
 							formControlName="format"
-						></p-dropdown>
+						></p-select>
+					</div>
 
-						<label for="format">Format</label>
-					</span>
-				</div>
-
-				<div class="field">
-					<span class="p-float-label">
-						<p-calendar
-							id="year"
-							formControlName="year"
-						></p-calendar>
-
+					<div class="mc-field">
 						<label for="year">Year</label>
-					</span>
-				</div>
+						<p-datepicker
+							inputId="year"
+							formControlName="year"
+						></p-datepicker>
+					</div>
 
-				<div class="field">
-					<span class="p-float-label">
-						<p-multiSelect
-							id="styles"
+					<div class="mc-field is-wide">
+						<label for="styles">Styles</label>
+						<p-multiselect
+							inputId="styles"
 							[options]="params.styleList"
 							[filter]="false"
 							formControlName="styles"
 							display="chip"
-						></p-multiSelect>
+							placeholder="Select styles"
+						></p-multiselect>
+					</div>
 
-						<label for="styles">Styles</label>
-					</span>
+					<div class="mc-field is-wide">
+						<label for="spotify">Spotify link</label>
+						<input
+							id="spotify"
+							type="url"
+							pInputText
+							formControlName="spotify"
+							aria-describedby="spotify-help"
+							[attr.aria-invalid]="
+								params.formGroup.controls['spotify'].invalid
+							"
+						/>
+						<small
+							id="spotify-help"
+							[class.is-error]="
+								params.formGroup.controls['spotify'].invalid
+							"
+						>
+							@if (params.formGroup.controls['spotify'].invalid) {
+								Not a Spotify album link. In Spotify: Share →
+								Copy album link.
+							} @else {
+								Optional. Paste the album link from Spotify
+								(Share → Copy album link) to show the player on
+								the album page.
+							}
+						</small>
+					</div>
 				</div>
-			</p-tabPanel>
+			</section>
 
-			<p-tabPanel header="Images" [disabled]="!params.isImagesTabActive">
-				<div class="field">
-					<span class="p-float-label">
-						<p-autoComplete
-							id="coverImage"
+			<section class="mc-form-section" aria-labelledby="album-images">
+				<h2 id="album-images">Cover</h2>
+				@if (params.isImagesTabActive) {
+					<div class="mc-field">
+						<label for="coverImage">Cover image</label>
+						<p-autocomplete
+							inputId="coverImage"
 							formControlName="coverImage"
 							[suggestions]="params.documents"
-							[minLength]="3"
+							[minQueryLength]="3"
 							[delay]="400"
-							field="name"
+							optionLabel="name"
+							placeholder="Search documents…"
 							(completeMethod)="searchDocument($event)"
-						>
-						</p-autoComplete>
+						></p-autocomplete>
+						@if (params.formGroup.value.coverImage) {
+							<p-image
+								class="mc-form-image"
+								[src]="
+									$safeNavigationMigration(
+										params.formGroup.value.coverImage
+											?.filePath
+									)
+								"
+								[preview]="true"
+								alt="Cover image"
+								width="200"
+							></p-image>
+						}
+					</div>
+				} @else {
+					<p class="mc-form-note">
+						Save the album first to attach a cover image.
+					</p>
+				}
+			</section>
 
-						<label for="coverImage">Cover image</label>
-					</span>
-
-					<p-image
-						*ngIf="params.formGroup.value.coverImage"
-						[src]="params.formGroup.value.coverImage?.filePath"
-						[preview]="true"
-						alt="Image"
-						width="200"
-					>
-					</p-image>
-				</div>
-			</p-tabPanel>
-
-			<div
-				style="margin-top: 10px"
-				fxLayout="row"
-				fxLayoutAlign="space-around"
-			>
-				<button
-					pButton
-					type="button"
-					label="Submit"
-					(click)="submit()"
-					[disabled]="!params.formGroup.valid"
-				></button>
-
-				<button
-					pButton
-					type="button"
+			<div class="mc-form-actions">
+				<p-button
 					label="Cancel"
-					(click)="cancel()"
-				></button>
+					severity="secondary"
+					[outlined]="true"
+					(onClick)="cancel()"
+				></p-button>
+				<p-button
+					label="Save"
+					icon="pi pi-check"
+					[disabled]="!params.formGroup.valid"
+					(onClick)="submit()"
+				></p-button>
 			</div>
-		</p-tabView>
-	</form>
-</section>
+		</form>
+	</section>
+}

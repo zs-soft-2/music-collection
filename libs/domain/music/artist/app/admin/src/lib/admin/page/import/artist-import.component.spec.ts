@@ -1,20 +1,18 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ExportImportService } from '@music-collection/api';
 
-import { ArtistFormModule } from '../../../form/artist-form.module';
 import { ArtistImportComponent } from './artist-import.component';
 
 describe('ArtistImportComponent', () => {
 	let component: ArtistImportComponent;
 	let fixture: ComponentFixture<ArtistImportComponent>;
 
-	beforeEach(waitForAsync(() => {
-		TestBed.configureTestingModule({
-			declarations: [ArtistImportComponent],
-			imports: [ArtistFormModule],
+	beforeEach(async () => {
+		await TestBed.configureTestingModule({
+			imports: [ArtistImportComponent],
+			providers: [{ provide: ExportImportService, useValue: {} }],
 		}).compileComponents();
-	}));
 
-	beforeEach(() => {
 		fixture = TestBed.createComponent(ArtistImportComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();

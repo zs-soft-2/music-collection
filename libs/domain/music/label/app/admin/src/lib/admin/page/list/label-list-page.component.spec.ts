@@ -1,20 +1,33 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { of } from 'rxjs';
 
-import { LabelCollectionModule } from '../../../collection/label-collection.module';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
+import { provideRouter } from '@angular/router';
+import { LabelStateService, LabelUtilService } from '@music-collection/api';
+
 import { LabelListPageComponent } from './label-list-page.component';
 
 describe('LabelListComponent', () => {
 	let component: LabelListPageComponent;
 	let fixture: ComponentFixture<LabelListPageComponent>;
 
-	beforeEach(waitForAsync(() => {
-		TestBed.configureTestingModule({
-			declarations: [LabelListPageComponent],
-			imports: [LabelCollectionModule],
+	beforeEach(async () => {
+		await TestBed.configureTestingModule({
+			imports: [LabelListPageComponent],
+			providers: [
+				provideRouter([]),
+				provideNoopAnimations(),
+				{
+					provide: LabelStateService,
+					useValue: {
+						selectEntities$: jest.fn(() => of([])),
+						selectSearchResult$: jest.fn(() => of([])),
+					},
+				},
+				{ provide: LabelUtilService, useValue: {} },
+			],
 		}).compileComponents();
-	}));
 
-	beforeEach(() => {
 		fixture = TestBed.createComponent(LabelListPageComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();

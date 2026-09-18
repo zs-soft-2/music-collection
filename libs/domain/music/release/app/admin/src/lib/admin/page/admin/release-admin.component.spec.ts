@@ -1,26 +1,30 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import { of } from 'rxjs';
 
-import { ReleaseCollectionModule } from '../../../collection/release-collection.module';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { ReleaseStateService } from '@music-collection/api';
+import { NgxPermissionsModule } from 'ngx-permissions';
+
 import { ReleaseAdminComponent } from './release-admin.component';
 
 describe('ReleaseAdminComponent', () => {
 	let component: ReleaseAdminComponent;
 	let fixture: ComponentFixture<ReleaseAdminComponent>;
 
-	beforeEach(async(() => {
-		TestBed.configureTestingModule({
-			declarations: [ReleaseAdminComponent],
-			imports: [
-				HttpClientTestingModule,
-				RouterTestingModule,
-				ReleaseCollectionModule,
+	beforeEach(async () => {
+		await TestBed.configureTestingModule({
+			imports: [NgxPermissionsModule.forRoot(), ReleaseAdminComponent],
+			providers: [
+				provideRouter([]),
+				{
+					provide: ReleaseStateService,
+					useValue: {
+						selectNewEntityButtonEnabled$: jest.fn(() => of(true)),
+					},
+				},
 			],
 		}).compileComponents();
-	}));
 
-	beforeEach(() => {
 		fixture = TestBed.createComponent(ReleaseAdminComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();

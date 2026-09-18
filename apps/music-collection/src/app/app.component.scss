@@ -1,17 +1,18 @@
-:host ::ng-deep p-toolbar {
-	.p-toolbar {
-		padding: 0;
-	}
+main {
+	display: flex;
+	flex-direction: column;
+	min-height: calc(100vh - var(--mc-app-bar-height));
 }
 
 .content {
 	flex: 1;
+	min-width: 0;
 }
 
 footer {
-	flex: auto;
-	margin: 20px 0;
+	padding: 1.25rem 1rem;
+	border-top: 1px solid var(--mc-border);
+	color: var(--mc-text-muted);
+	font-size: 0.75rem;
 	text-align: center;
-	color: aliceblue;
-	width: 100%;
 }

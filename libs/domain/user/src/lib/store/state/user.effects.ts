@@ -1,9 +1,11 @@
 import { of } from 'rxjs';
-import { catchError, map, switchMap } from 'rxjs/operators';
+import { catchError, map, switchMap, take } from 'rxjs/operators';
 
 import { inject, Injectable } from '@angular/core';
 import {
-    AuthenticationStateService, AuthorizationService, Role, User, UserDataService
+	AuthenticationStateService,
+	User,
+	UserDataService,
 } from '@music-collection/api';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 
@@ -11,12 +13,11 @@ import * as UserActions from './user.actions';
 
 @Injectable()
 export class UserEffects {
-    private authenticationService = inject(AuthenticationStateService);
-    private authorizationService = inject(AuthorizationService);
-    private userDataService = inject(UserDataService);
+	private authenticationService = inject(AuthenticationStateService);
+	private userDataService = inject(UserDataService);
 
-    actions$: Actions = inject(Actions);
-    addUser$ = createEffect(() =>
+	actions$: Actions = inject(Actions);
+	addUser$ = createEffect(() =>
 		this.actions$.pipe(
 			ofType(UserActions.addUser),
 			switchMap((action) =>
@@ -31,16 +32,20 @@ export class UserEffects {
 			)
 		)
 	);
-    loadExistedUser$ = createEffect(() =>
+	loadExistedUser$ = createEffect(() =>
 		this.actions$.pipe(
 			ofType(UserActions.loadExistedUser),
 			switchMap((action) =>
 				this.userDataService.load$(action.user.uid || '').pipe(
+					// A load$ élő Firestore-listener: kijelentkezéskor újra
+					// emittálna, és visszaállítaná a bejelentkezett állapotot.
+					take(1),
 					map((user) => {
 						if (user && user.uid) {
-							this.authorizationService.addRoles(
-								user.roles as Role[]
-							);
+							// A jogosultságokat nem innen töltjük: a beágyazott
+							// `roles` a rules számára láthatatlan másolat volt.
+							// A permissionök forrása az effective_permissions
+							// dokumentum (CoreAuthorizationStoreModule).
 							this.authenticationService.dispatchAuthenticated(
 								user
 							);
@@ -59,7 +64,7 @@ export class UserEffects {
 			)
 		)
 	);
-    loadUser$ = createEffect(() =>
+	loadUser$ = createEffect(() =>
 		this.actions$.pipe(
 			ofType(UserActions.loadUser),
 			switchMap((action) =>
@@ -74,7 +79,7 @@ export class UserEffects {
 			)
 		)
 	);
-    loadUsers$ = createEffect(() =>
+	loadUsers$ = createEffect(() =>
 		this.actions$.pipe(
 			ofType(UserActions.loadUsers),
 			switchMap((action) =>
@@ -91,7 +96,7 @@ export class UserEffects {
 			)
 		)
 	);
-    updateUser$ = createEffect(() =>
+	updateUser$ = createEffect(() =>
 		this.actions$.pipe(
 			ofType(UserActions.updateUser),
 			switchMap((action) =>

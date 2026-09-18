@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	OnInit,
+	inject,
+} from '@angular/core';
 import {
 	WishlistItemEntity,
 	WishlistItemTableParams,
@@ -7,6 +12,13 @@ import {
 import { Observable } from 'rxjs';
 
 import { WishlistItemTableService } from './wishlist-item-table.service';
+import { Bind } from 'primeng/bind';
+import { Table, SortableColumn, SortIcon } from 'primeng/table';
+import { AutoComplete } from 'primeng/autocomplete';
+import { Chip } from 'primeng/chip';
+import { Ripple } from 'primeng/ripple';
+import { ButtonDirective } from 'primeng/button';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -14,17 +26,25 @@ import { WishlistItemTableService } from './wishlist-item-table.service';
 	selector: 'mc-wishlist-item-table',
 	templateUrl: './wishlist-item-table.component.html',
 	styleUrls: ['./wishlist-item-table.component.scss'],
-	standalone: false,
+	imports: [
+		Bind,
+		Table,
+		SortableColumn,
+		SortIcon,
+		AutoComplete,
+		Chip,
+		Ripple,
+		ButtonDirective,
+		AsyncPipe,
+	],
 })
 export class WishlistItemTableComponent
 	extends BaseComponent
 	implements OnInit
 {
-	public params$!: Observable<WishlistItemTableParams>;
+	private componentService = inject(WishlistItemTableService);
 
-	public constructor(private componentService: WishlistItemTableService) {
-		super();
-	}
+	public params$!: Observable<WishlistItemTableParams>;
 
 	public deleteWishlistItem(wishlistItem: WishlistItemEntity): void {
 		console.log(wishlistItem);

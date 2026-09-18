@@ -4,13 +4,15 @@
 	"projectType": "library",
 	"sourceRoot": "libs/core/authentication/src",
 	"prefix": "music-collection",
+	"tags": [],
 	"targets": {
 		"test": {
 			"executor": "@nx/jest:jest",
 			"outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
 			"options": {
 				"jestConfig": "libs/core/authentication/jest.config.ts",
-				"passWithNoTests": true
+				"passWithNoTests": true,
+				"tsConfig": "libs/core/authentication/tsconfig.spec.json"
 			}
 		},
 		"lint": {
@@ -22,6 +24,5 @@
 				]
 			}
 		}
-	},
-	"tags": []
+	}
 }

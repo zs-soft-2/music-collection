@@ -2,10 +2,6 @@ import { NgxPermissionsGuard } from 'ngx-permissions';
 
 import { Routes } from '@angular/router';
 import { RoleNames } from '@music-collection/api';
-import {
-	AlbumPageResolverService,
-	ArtistPageResolverService,
-} from './resolver';
 
 export const routes: Routes = [
 	{
@@ -15,9 +11,9 @@ export const routes: Routes = [
 	},
 	{
 		path: 'home',
-		loadChildren: () =>
-			import('./page/home/home.module').then(
-				(module) => module.HomeModule
+		loadComponent: () =>
+			import('./page/home/home-page.component').then(
+				(module) => module.HomePageComponent
 			),
 		data: {
 			breadcrumb: 'home',
@@ -25,35 +21,56 @@ export const routes: Routes = [
 	},
 	{
 		path: 'album/:albumId',
-		loadChildren: () =>
-			import('./page/album/album-page.module').then(
-				(module) => module.AlbumPageModule
+		loadComponent: () =>
+			import('./page/album/album-page.component').then(
+				(module) => module.AlbumPageComponent
 			),
 		data: {
 			breadcrumb: 'album',
 		},
-		resolve: {
-			album$: AlbumPageResolverService,
-		},
 	},
 	{
 		path: 'artist/:artistId',
-		loadChildren: () =>
-			import('./page/artist/artist-page.module').then(
-				(module) => module.ArtistPageModule
+		loadComponent: () =>
+			import('./page/artist/artist-page.component').then(
+				(module) => module.ArtistPageComponent
 			),
 		data: {
 			breadcrumb: 'artist',
 		},
-		resolve: {
-			artist$: ArtistPageResolverService,
+	},
+	{
+		path: 'musician/:musicianId',
+		loadComponent: () =>
+			import('./page/musician/musician-page.component').then(
+				(module) => module.MusicianPageComponent
+			),
+		data: {
+			breadcrumb: 'musician',
 		},
 	},
 	{
+		path: 'network',
+		loadComponent: () =>
+			import('./page/network/network-page.component').then(
+				(module) => module.NetworkPageComponent
+			),
+		data: {
+			breadcrumb: 'network',
+		},
+	},
+	{
+		path: 'spotify/callback',
+		loadComponent: () =>
+			import('./shared/spotify/spotify-callback.component').then(
+				(module) => module.SpotifyCallbackComponent
+			),
+	},
+	{
 		path: 'collection',
-		loadChildren: () =>
-			import('./page/collection/collection.module').then(
-				(module) => module.CollectionModule
+		loadComponent: () =>
+			import('./page/collection/collection-page.component').then(
+				(module) => module.CollectionPageComponent
 			),
 		data: {
 			breadcrumb: 'collection',
@@ -87,9 +104,9 @@ export const routes: Routes = [
 	},
 	{
 		path: 'error',
-		loadChildren: () =>
-			import('./page/error/error.module').then(
-				(module) => module.ErrorModule
+		loadComponent: () =>
+			import('./page/error/error.component').then(
+				(module) => module.ErrorComponent
 			),
 	},
 ];

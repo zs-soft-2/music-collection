@@ -1,4 +1,5 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { EntityTypeEnum, User } from '@music-collection/api';
 
 import { UserProfileComponent } from './user-profile.component';
 
@@ -6,15 +7,22 @@ describe('UserProfileComponent', () => {
 	let component: UserProfileComponent;
 	let fixture: ComponentFixture<UserProfileComponent>;
 
-	beforeEach(waitForAsync(() => {
-		TestBed.configureTestingModule({
-			declarations: [UserProfileComponent],
+	beforeEach(async () => {
+		await TestBed.configureTestingModule({
+			imports: [UserProfileComponent],
 		}).compileComponents();
-	}));
 
-	beforeEach(() => {
 		fixture = TestBed.createComponent(UserProfileComponent);
 		component = fixture.componentInstance;
+
+		const user: User = {
+			entityType: EntityTypeEnum.User,
+			uid: 'user-1',
+			displayName: 'Test User',
+			photoURL: null,
+		};
+
+		fixture.componentRef.setInput('user', user);
 		fixture.detectChanges();
 	});
 

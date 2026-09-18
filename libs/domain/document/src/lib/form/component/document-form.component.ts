@@ -1,9 +1,21 @@
 import { Observable } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	OnInit,
+	inject,
+} from '@angular/core';
 import { DocumentFormParams, BaseComponent } from '@music-collection/api';
 
 import { DocumentFormService } from './document-form.service';
+import { ReactiveFormsModule } from '@angular/forms';
+import { Bind } from 'primeng/bind';
+import { InputText } from 'primeng/inputtext';
+import { FileUpload } from 'primeng/fileupload';
+import { Image } from 'primeng/image';
+import { Button } from 'primeng/button';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -11,14 +23,20 @@ import { DocumentFormService } from './document-form.service';
 	selector: 'mc-document-form',
 	templateUrl: './document-form.component.html',
 	styleUrls: ['./document-form.component.scss'],
-	standalone: false,
+	imports: [
+		ReactiveFormsModule,
+		Bind,
+		InputText,
+		FileUpload,
+		Image,
+		Button,
+		AsyncPipe,
+	],
 })
 export class DocumentFormComponent extends BaseComponent implements OnInit {
-	public params$!: Observable<DocumentFormParams>;
+	private componentService = inject(DocumentFormService);
 
-	public constructor(private componentService: DocumentFormService) {
-		super();
-	}
+	public params$!: Observable<DocumentFormParams>;
 
 	public cancel(): void {
 		this.componentService.cancel();

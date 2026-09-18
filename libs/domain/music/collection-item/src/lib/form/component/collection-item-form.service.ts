@@ -1,8 +1,8 @@
 import { combineLatest, Observable, ReplaySubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import { Injectable } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Injectable, inject } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import {
 	AuthenticationStateService,
 	CollectionItemEntity,
@@ -14,32 +14,31 @@ import {
 	EntityTypeEnum,
 	ReleaseEntity,
 	ReleaseStateService,
+	ReturnNavigationService,
 	SearchParams,
 	User,
 } from '@music-collection/api';
 
 @Injectable()
 export class CollectionItemFormService {
+	private activatedRoute = inject(ActivatedRoute);
+	private authenticationStateService = inject(AuthenticationStateService);
+	private collectionItemStateService = inject(CollectionItemStateService);
+	private collectionItemUtilService = inject(CollectionItemUtilService);
+	private releaseStateService = inject(ReleaseStateService);
+	private componentUtil = inject(CollectionItemUtilService);
+	private returnNavigation = inject(ReturnNavigationService);
+
 	private collectionItem!: CollectionItemEntity | undefined;
 	private params!: CollectionItemFormParams;
 	private params$$: ReplaySubject<CollectionItemFormParams>;
 
-	public constructor(
-		private activatedRoute: ActivatedRoute,
-		private authenticationStateService: AuthenticationStateService,
-		private collectionItemStateService: CollectionItemStateService,
-		private collectionItemUtilService: CollectionItemUtilService,
-		private releaseStateService: ReleaseStateService,
-		private componentUtil: CollectionItemUtilService,
-		private router: Router
-	) {
+	public constructor() {
 		this.params$$ = new ReplaySubject();
 	}
 
 	public cancel(): void {
-		this.router.navigate(['../../list'], {
-			relativeTo: this.activatedRoute,
-		});
+		this.returnNavigation.leave(['../../list'], this.activatedRoute);
 	}
 
 	public init$(): Observable<CollectionItemFormParams> {
@@ -84,9 +83,7 @@ export class CollectionItemFormService {
 			this.addCollectionItem();
 		}
 
-		this.router.navigate(['../../list'], {
-			relativeTo: this.activatedRoute,
-		});
+		this.returnNavigation.leave(['../../list'], this.activatedRoute);
 	}
 
 	private addCollectionItem(): void {

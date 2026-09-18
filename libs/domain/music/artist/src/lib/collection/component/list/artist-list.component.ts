@@ -1,6 +1,11 @@
 import { Observable } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	OnInit,
+	inject,
+} from '@angular/core';
 import {
 	ArtistEntity,
 	ArtistListParams,
@@ -8,6 +13,10 @@ import {
 } from '@music-collection/api';
 
 import { ArtistListService } from './artist-list.service';
+import { Bind } from 'primeng/bind';
+import { Carousel } from 'primeng/carousel';
+import { ArtistSimpleViewComponent } from '../../../view/component/simple/artist-simple-view.component';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -15,14 +24,12 @@ import { ArtistListService } from './artist-list.service';
 	selector: 'mc-artist-list',
 	templateUrl: './artist-list.component.html',
 	styleUrls: ['./artist-list.component.scss'],
-  standalone: false,
+	imports: [Bind, Carousel, ArtistSimpleViewComponent, AsyncPipe],
 })
 export class ArtistListComponent extends BaseComponent implements OnInit {
-	public params$!: Observable<ArtistListParams>;
+	private componentService = inject(ArtistListService);
 
-	public constructor(private componentService: ArtistListService) {
-		super();
-	}
+	public params$!: Observable<ArtistListParams>;
 
 	public ngOnInit(): void {
 		this.params$ = this.componentService.init$();

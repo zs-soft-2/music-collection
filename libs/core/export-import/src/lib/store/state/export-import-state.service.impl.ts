@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
 	AlbumEntity,
 	AlbumEntityUpdate,
@@ -17,9 +17,8 @@ import * as exportImportSelectors from './export-import.selectors';
 
 @Injectable()
 export class ExportImportStateServiceImpl extends ExportImportStateService {
-	public constructor(private store: Store<ExportImportPartialState>) {
-		super();
-	}
+	private store = inject<Store<ExportImportPartialState>>(Store);
+
 
 	public dispatchListAlbumsByIdAction(uid: string): void {
 		this.store.dispatch(exportImportActions.listAlbumsById({ uid }));

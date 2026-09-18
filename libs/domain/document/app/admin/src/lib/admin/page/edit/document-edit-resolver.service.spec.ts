@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { DocumentStateService } from '@music-collection/api';
 
 import { DocumentEditResolverService } from './document-edit-resolver.service';
 
@@ -7,7 +8,10 @@ describe('DocumentEditResolverService', () => {
 
 	beforeEach(() => {
 		TestBed.configureTestingModule({
-			providers: [DocumentEditResolverService],
+			providers: [
+				DocumentEditResolverService,
+				{ provide: DocumentStateService, useValue: {} },
+			],
 		});
 
 		service = TestBed.inject(DocumentEditResolverService);

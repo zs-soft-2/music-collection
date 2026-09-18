@@ -22,11 +22,6 @@ import {
 import { WishlistItemAdminRoutingModule } from './wishlist-item-admin-routing.module';
 
 @NgModule({
-	declarations: [
-		WishlistItemAdminComponent,
-		WishlistItemEditComponent,
-		WishlistItemListPageComponent,
-	],
 	imports: [
 		CommonModule,
 		WishlistItemAdminRoutingModule,
@@ -36,6 +31,9 @@ import { WishlistItemAdminRoutingModule } from './wishlist-item-admin-routing.mo
 		ButtonModule,
 		FileUploadModule,
 		ToolbarModule,
+		WishlistItemAdminComponent,
+		WishlistItemEditComponent,
+		WishlistItemListPageComponent,
 	],
 	providers: [
 		WishlistItemEditResolverService,

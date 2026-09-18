@@ -1,10 +1,11 @@
 import { combineLatest, Observable, ReplaySubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import {
+	ARTIST_TYPE_OPTIONS,
 	ArtistEntity,
 	ArtistEntityAdd,
 	ArtistEntityUpdate,
@@ -15,32 +16,31 @@ import {
 	DocumentEntity,
 	DocumentStateService,
 	EntityTypeEnum,
+	ReturnNavigationService,
 	SearchParams,
 	StyleList,
 } from '@music-collection/api';
 
 @Injectable()
 export class ArtistFormService {
+	private activatedRoute = inject(ActivatedRoute);
+	private artistStateService = inject(ArtistStateService);
+	private artistUtilService = inject(ArtistUtilService);
+	private componentUtil = inject(ArtistUtilService);
+	private documentStateService = inject(DocumentStateService);
+	private returnNavigation = inject(ReturnNavigationService);
+
 	private artist!: ArtistEntity | undefined;
 	private formGroup!: FormGroup;
 	private params!: ArtistFormParams;
 	private params$$: ReplaySubject<ArtistFormParams>;
 
-	public constructor(
-		private activatedRoute: ActivatedRoute,
-		private artistStateService: ArtistStateService,
-		private artistUtilService: ArtistUtilService,
-		private componentUtil: ArtistUtilService,
-		private documentStateService: DocumentStateService,
-		private router: Router
-	) {
+	public constructor() {
 		this.params$$ = new ReplaySubject();
 	}
 
 	public cancel(): void {
-		this.router.navigate(['../../list'], {
-			relativeTo: this.activatedRoute,
-		});
+		this.returnNavigation.leave(['../../list'], this.activatedRoute);
 	}
 
 	public init$(): Observable<ArtistFormParams> {
@@ -87,9 +87,7 @@ export class ArtistFormService {
 			this.addArtist();
 		}
 
-		this.router.navigate(['../../list'], {
-			relativeTo: this.activatedRoute,
-		});
+		this.returnNavigation.leave(['../../list'], this.activatedRoute);
 	}
 
 	private addArtist(): void {
@@ -106,6 +104,7 @@ export class ArtistFormService {
 		isImagesTabActive: boolean
 	): ArtistFormParams {
 		const artistFormParams: ArtistFormParams = {
+			artistTypes: ARTIST_TYPE_OPTIONS,
 			countries: CountryList,
 			documents,
 			formGroup,

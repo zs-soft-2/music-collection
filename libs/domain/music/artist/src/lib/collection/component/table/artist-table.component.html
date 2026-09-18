@@ -1,107 +1,114 @@
-<section class="artist-table" *rxLet="params$; let params">
-	<p-table
-		[value]="params.artists"
-		sortField="name"
-		sortMode="multiple"
-		styleClass="p-datatable-striped p-datatable-sm"
-		responsiveLayout="scroll"
-		[paginator]="true"
-		[rows]="10"
-	>
-		<ng-template pTemplate="header">
-			<tr>
-				<th pSortableColumn="name">
-					Name <p-sortIcon field="name"></p-sortIcon>
-				</th>
+@if (params$ | async; as params) {
+	<section class="artist-table mc-card">
+		<p-table
+			[value]="params.artists"
+			sortField="name"
+			sortMode="multiple"
+			styleClass="mc-table"
+			responsiveLayout="scroll"
+			[paginator]="true"
+			[rows]="10"
+		>
+			<ng-template #header>
+				<tr>
+					<th pSortableColumn="name">
+						Name <p-sorticon field="name"></p-sorticon>
+					</th>
 
-				<th pSortableColumn="formedIn">
-					Formed in <p-sortIcon field="formedIn"></p-sortIcon>
-				</th>
+					<th pSortableColumn="formedIn">
+						Formed in <p-sorticon field="formedIn"></p-sorticon>
+					</th>
 
-				<th>Styles</th>
+					<th>Styles</th>
 
-				<th>Images</th>
+					<th>Images</th>
 
-				<th></th>
-			</tr>
-			<tr>
-				<th>
-					<p-autoComplete
-						[suggestions]="params.empty"
-						[showClear]="true"
-						class="p-inputtext-sm"
-						(completeMethod)="searchByNameHandler($event)"
-						[minLength]="3"
-						[delay]="400"
-					>
-					</p-autoComplete>
-				</th>
+					<th></th>
+				</tr>
+				<tr>
+					<th>
+						<p-autocomplete
+							placeholder="Filter by name…"
+							ariaLabel="Filter by name"
+							[suggestions]="params.empty"
+							[showClear]="true"
+							(completeMethod)="searchByNameHandler($event)"
+							[minQueryLength]="3"
+							[delay]="400"
+						>
+						</p-autocomplete>
+					</th>
 
-				<th></th>
+					<th></th>
 
-				<th></th>
+					<th></th>
 
-				<th></th>
+					<th></th>
 
-				<th></th>
-			</tr>
-		</ng-template>
+					<th></th>
+				</tr>
+			</ng-template>
 
-		<ng-template pTemplate="body" let-artist>
-			<tr>
-				<td>{{ artist.name }}</td>
+			<ng-template #body let-artist>
+				<tr>
+					<td>{{ artist.name }}</td>
 
-				<td>{{ artist.formedIn | date : 'yyyy' }}</td>
+					<td>{{ artist.formedIn | date: 'yyyy' }}</td>
 
-				<td>
-					<ng-container *ngFor="let style of artist.styles">
-						<p-chip styleClass="style">
-							{{ style }}
-						</p-chip>
-					</ng-container>
-				</td>
+					<td>
+						@for (style of artist.styles; track style) {
+							<p-chip styleClass="style">
+								{{ style }}
+							</p-chip>
+						}
+					</td>
 
-				<td>
-					<ng-container *ngIf="artist.headerImage">
-						<i
-							class="pi pi-image"
-							style="color: red; margin: 1px"
-						></i>
-					</ng-container>
+					<td>
+						<div class="mc-image-flags">
+							@if (artist.headerImage) {
+								<span class="p-chip">Header</span>
+							}
+							@if (artist.mainImage) {
+								<span class="p-chip">Main</span>
+							}
+						</div>
+					</td>
 
-					<ng-container
-						*ngIf="artist.mainImage"
-						style="color: blue; margin: 1px"
-					>
-						<i class="pi pi-image"></i>
-					</ng-container>
-				</td>
+					<td>
+						<button
+							pButton
+							pRipple
+							aria-label="Edit artist"
+							class="p-button-text p-button-rounded p-button-secondary"
+							(click)="editArtist(artist)"
+							iconOnly
+						>
+							<i class="pi pi-pencil" aria-hidden="true"></i>
+						</button>
+						<button
+							pButton
+							pRipple
+							aria-label="Delete artist"
+							class="p-button-text p-button-rounded p-button-danger"
+							(click)="deleteArtist(artist)"
+							iconOnly
+						>
+							<i class="pi pi-trash" aria-hidden="true"></i>
+						</button>
 
-				<td>
-					<button
-						pButton
-						pRipple
-						icon="pi pi-pencil"
-						class="p-button-rounded p-button-success mr-2"
-						(click)="editArtist(artist)"
-					></button>
-					<button
-						pButton
-						pRipple
-						icon="pi pi-trash"
-						class="p-button-rounded p-button-warning"
-						(click)="deleteArtist(artist)"
-					></button>
-
-					<button
-						pButton
-						pRipple
-						icon="pi pi-file-export"
-						class="p-button-rounded p-button-warning"
-						(click)="exportArtist(artist)"
-					></button>
-				</td>
-			</tr>
-		</ng-template>
-	</p-table>
-</section>
+						<button
+							pButton
+							pRipple
+							aria-label="Export artist"
+							class="p-button-text p-button-rounded p-button-secondary"
+							(click)="exportArtist(artist)"
+							iconOnly
+						>
+							<i class="pi pi-file-export" aria-hidden="true"></i>
+						</button>
+					</td>
+				</tr>
+			</ng-template>
+		</p-table>
+	</section>
+}

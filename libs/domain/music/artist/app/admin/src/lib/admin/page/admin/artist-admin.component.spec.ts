@@ -1,26 +1,30 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import { of } from 'rxjs';
 
-import { ArtistListModule } from '../../../list/artist-list.module';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { ArtistStateService } from '@music-collection/api';
+import { NgxPermissionsModule } from 'ngx-permissions';
+
 import { ArtistAdminComponent } from './artist-admin.component';
 
 describe('ArtistAdminComponent', () => {
 	let component: ArtistAdminComponent;
 	let fixture: ComponentFixture<ArtistAdminComponent>;
 
-	beforeEach(async(() => {
-		TestBed.configureTestingModule({
-			declarations: [ArtistAdminComponent],
-			imports: [
-				HttpClientTestingModule,
-				RouterTestingModule,
-				ArtistListModule,
+	beforeEach(async () => {
+		await TestBed.configureTestingModule({
+			imports: [NgxPermissionsModule.forRoot(), ArtistAdminComponent],
+			providers: [
+				provideRouter([]),
+				{
+					provide: ArtistStateService,
+					useValue: {
+						selectNewEntityButtonEnabled$: jest.fn(() => of(true)),
+					},
+				},
 			],
 		}).compileComponents();
-	}));
 
-	beforeEach(() => {
 		fixture = TestBed.createComponent(ArtistAdminComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();

@@ -31,7 +31,6 @@ export const initialState: State = labelAdapter.getInitialState({
 	loading: false,
 	error: null,
 	searchResult: [],
-	selectedLabelId: null,
 });
 
 export const labelReducer = createReducer(
@@ -47,7 +46,7 @@ export const labelReducer = createReducer(
 		...state,
 		loading: false,
 		error: null,
-		selectedLabelId: label.uid,
+		selectedId: label.uid,
 	})),
 	on(labelActions.updateLabelSuccess, (state, { label }) =>
 		labelAdapter.updateOne(label, state)

@@ -6,7 +6,9 @@ describe('LabelUtilServiceImpl', () => {
 	let service: LabelUtilServiceImpl;
 
 	beforeEach(() => {
-		TestBed.configureTestingModule({});
+		TestBed.configureTestingModule({
+			providers: [LabelUtilServiceImpl],
+		});
 		service = TestBed.inject(LabelUtilServiceImpl);
 	});
 

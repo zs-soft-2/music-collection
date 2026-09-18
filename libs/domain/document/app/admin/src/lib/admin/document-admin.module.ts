@@ -21,11 +21,6 @@ import {
 } from './page/list';
 
 @NgModule({
-	declarations: [
-		DocumentAdminComponent,
-		DocumentEditComponent,
-		DocumentListPageComponent,
-	],
 	imports: [
 		CommonModule,
 		DocumentAdminRoutingModule,
@@ -34,6 +29,9 @@ import {
 		DocumentCollectionModule,
 		ButtonModule,
 		ToolbarModule,
+		DocumentAdminComponent,
+		DocumentEditComponent,
+		DocumentListPageComponent,
 	],
 	providers: [DocumentEditResolverService, DocumentListPageResolverService],
 })

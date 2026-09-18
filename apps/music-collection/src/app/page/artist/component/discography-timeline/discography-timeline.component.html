@@ -1,0 +1,68 @@
+<figure class="timeline">
+	<figcaption class="head">
+		<span class="title">Releases over time</span>
+		<span class="legend">
+			<span class="key"
+				><span class="swatch owned" aria-hidden="true"></span>In your
+				collection</span
+			>
+			<span class="key"
+				><span class="swatch" aria-hidden="true"></span>Not
+				collected</span
+			>
+		</span>
+	</figcaption>
+
+	<div class="plot" [style.height.px]="height()">
+		<ul class="markers">
+			@for (marker of markers(); track marker.album.id) {
+				<li
+					class="marker-slot"
+					[style.left.%]="marker.left"
+					[style.bottom.px]="16 + marker.level * levelStep"
+				>
+					<a
+						class="marker"
+						[class.owned]="marker.owned"
+						[class]="'align-' + marker.align"
+						[routerLink]="['/album', marker.album.id]"
+						[attr.aria-label]="marker.label"
+					>
+						<span class="dot" aria-hidden="true"></span>
+						<span class="tooltip" aria-hidden="true">
+							@if (marker.album.coverUrl) {
+								<img
+									[src]="marker.album.coverUrl"
+									alt=""
+									loading="lazy"
+								/>
+							}
+							<span class="tooltip-text">
+								<strong>{{ marker.album.title }}</strong>
+								<span>
+									{{ marker.album.year }}
+									@if (marker.album.albumType) {
+										· {{ marker.album.albumType }}
+									}
+								</span>
+								@if (marker.owned) {
+									<span class="tooltip-owned"
+										>In your collection</span
+									>
+								}
+							</span>
+						</span>
+					</a>
+				</li>
+			}
+		</ul>
+
+		<div class="axis" aria-hidden="true">
+			@for (tick of ticks(); track tick.year) {
+				<span class="tick" [style.left.%]="tick.left">{{
+					tick.year
+				}}</span>
+			}
+		</div>
+	</div>
+</figure>

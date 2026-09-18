@@ -1,75 +1,84 @@
-<section class="release-table" *rxLet="params$; let params">
-	<p-table
-		[value]="params.releases"
-		styleClass="p-datatable-striped p-datatable-sm"
-		responsiveLayout="scroll"
-	>
-		<ng-template pTemplate="header">
-			<tr>
-				<th>Name</th>
+@if (params$ | async; as params) {
+	<section class="release-table mc-card">
+		<p-table
+			[value]="params.releases"
+			styleClass="mc-table"
+			responsiveLayout="scroll"
+		>
+			<ng-template #header>
+				<tr>
+					<th>Name</th>
 
-				<th>Artist</th>
+					<th>Artist</th>
 
-				<th>Date</th>
+					<th>Date</th>
 
-				<th>Media</th>
+					<th>Media</th>
 
-				<th>Format</th>
+					<th>Format</th>
 
-				<th></th>
-			</tr>
+					<th></th>
+				</tr>
 
-			<tr>
-				<th>
-					<p-autoComplete
-						[suggestions]="params.empty"
-						[showClear]="true"
-						(completeMethod)="searchHandler($event)"
-						[minLength]="3"
-						[delay]="400"
-						class="p-inputtext-sm"
-					>
-					</p-autoComplete>
-				</th>
+				<tr>
+					<th>
+						<p-autocomplete
+							placeholder="Filter by name…"
+							ariaLabel="Filter by name"
+							[suggestions]="params.empty"
+							[showClear]="true"
+							(completeMethod)="searchHandler($event)"
+							[minQueryLength]="3"
+							[delay]="400"
+						>
+						</p-autocomplete>
+					</th>
 
-				<th></th>
-				<th></th>
-				<th></th>
-				<th></th>
-				<th></th>
-			</tr>
-		</ng-template>
+					<th></th>
+					<th></th>
+					<th></th>
+					<th></th>
+					<th></th>
+				</tr>
+			</ng-template>
 
-		<ng-template pTemplate="body" let-release>
-			<tr>
-				<td>{{ release.name }}</td>
+			<ng-template #body let-release>
+				<tr>
+					<td>{{ release.name }}</td>
 
-				<td>{{ release.artist.name }}</td>
+					<td>{{ release.artist.name }}</td>
 
-				<td>{{ release.date | date : 'yyyy' }}</td>
+					<td>{{ release.date | date: 'yyyy' }}</td>
 
-				<td>{{ release.media }}</td>
+					<td>{{ release.media }}</td>
 
-				<td>{{ release.format }}</td>
+					<td>{{ release.format }}</td>
 
-				<td>
-					<button
-						pButton
-						pRipple
-						icon="pi pi-pencil"
-						class="p-button-rounded p-button-success mr-2"
-						(click)="editRelease(release)"
-					></button>
+					<td>
+						<button
+							pButton
+							pRipple
+							aria-label="Edit release"
+							class="p-button-text p-button-rounded p-button-secondary"
+							(click)="editRelease(release)"
+							iconOnly
+						>
+							<i class="pi pi-pencil" aria-hidden="true"></i>
+						</button>
 
-					<button
-						pButton
-						pRipple
-						icon="pi pi-trash"
-						class="p-button-rounded p-button-warning"
-						(click)="deleteRelease(release)"
-					></button>
-				</td>
-			</tr>
-		</ng-template>
-	</p-table>
-</section>
+						<button
+							pButton
+							pRipple
+							aria-label="Delete release"
+							class="p-button-text p-button-rounded p-button-danger"
+							(click)="deleteRelease(release)"
+							iconOnly
+						>
+							<i class="pi pi-trash" aria-hidden="true"></i>
+						</button>
+					</td>
+				</tr>
+			</ng-template>
+		</p-table>
+	</section>
+}

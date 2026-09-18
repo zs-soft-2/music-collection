@@ -8,7 +8,7 @@ describe('LabelSimpleViewComponent', () => {
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			declarations: [LabelSimpleViewComponent],
+			imports: [LabelSimpleViewComponent],
 		}).compileComponents();
 
 		fixture = TestBed.createComponent(LabelSimpleViewComponent);

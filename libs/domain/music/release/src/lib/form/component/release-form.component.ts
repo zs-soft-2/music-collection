@@ -1,9 +1,23 @@
 import { Observable } from 'rxjs';
 
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	OnInit,
+	inject,
+} from '@angular/core';
 import { ReleaseFormParams, BaseComponent } from '@music-collection/api';
 
 import { ReleaseFormService } from './release-form.service';
+import { ReactiveFormsModule } from '@angular/forms';
+import { Bind } from 'primeng/bind';
+import { AutoComplete } from 'primeng/autocomplete';
+import { InputText } from 'primeng/inputtext';
+import { DatePicker } from 'primeng/datepicker';
+import { Select } from 'primeng/select';
+import { MultiSelect } from 'primeng/multiselect';
+import { Button } from 'primeng/button';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -11,14 +25,22 @@ import { ReleaseFormService } from './release-form.service';
 	selector: 'mc-release-form',
 	templateUrl: './release-form.component.html',
 	styleUrls: ['./release-form.component.scss'],
-  standalone: false,
+	imports: [
+		ReactiveFormsModule,
+		Bind,
+		AutoComplete,
+		InputText,
+		DatePicker,
+		Select,
+		MultiSelect,
+		Button,
+		AsyncPipe,
+	],
 })
 export class ReleaseFormComponent extends BaseComponent implements OnInit {
-	public params$!: Observable<ReleaseFormParams>;
+	private componentService = inject(ReleaseFormService);
 
-	public constructor(private componentService: ReleaseFormService) {
-		super();
-	}
+	public params$!: Observable<ReleaseFormParams>;
 
 	public cancel(): void {
 		this.componentService.cancel();

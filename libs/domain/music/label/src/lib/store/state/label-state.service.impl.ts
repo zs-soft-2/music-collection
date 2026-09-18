@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
 	LabelEntity,
 	LabelEntityAdd,
@@ -16,9 +16,8 @@ import * as labelSelectors from './label.selectors';
 
 @Injectable()
 export class LabelStateServiceImpl extends LabelStateService {
-	public constructor(private store: Store<fromLabel.LabelPartialState>) {
-		super();
-	}
+	private store = inject<Store<fromLabel.LabelPartialState>>(Store);
+
 
 	public dispatchAddEntityAction(label: LabelEntityAdd): void {
 		this.store.dispatch(labelActions.addLabel({ label }));

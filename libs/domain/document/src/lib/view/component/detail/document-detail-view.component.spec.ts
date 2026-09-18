@@ -8,7 +8,7 @@ describe('DocumentDetailViewComponent', () => {
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			declarations: [DocumentDetailViewComponent],
+			imports: [DocumentDetailViewComponent],
 		}).compileComponents();
 
 		fixture = TestBed.createComponent(DocumentDetailViewComponent);

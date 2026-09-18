@@ -1,130 +1,127 @@
-<section class="release-form" *rxLet="params$; let params">
-	<form [formGroup]="params.formGroup">
-		<input name="uid" formControlName="uid" hidden />
+@if (params$ | async; as params) {
+	<section class="release-form">
+		<form class="mc-form" [formGroup]="params.formGroup">
+			<input name="uid" formControlName="uid" hidden />
 
-		<div class="field">
-			<span class="p-float-label">
-				<p-autoComplete
-					formControlName="artist"
-					[suggestions]="params.artists"
-					[minLength]="3"
-					[delay]="400"
-					field="name"
-					(completeMethod)="searchArtistHandler($event)"
-				>
-				</p-autoComplete>
+			<section class="mc-form-section" aria-labelledby="release-details">
+				<h2 id="release-details">Details</h2>
+				<div class="mc-form-grid">
+					<div class="mc-field is-wide">
+						<label for="name">Name</label>
+						<input
+							id="name"
+							type="text"
+							pInputText
+							formControlName="name"
+						/>
+					</div>
 
-				<label for="artist">Artist</label>
-			</span>
-		</div>
+					<div class="mc-field">
+						<label for="artist">Artist</label>
+						<p-autocomplete
+							inputId="artist"
+							formControlName="artist"
+							[suggestions]="params.artists"
+							[minQueryLength]="3"
+							[delay]="400"
+							optionLabel="name"
+							placeholder="Start typing an artist…"
+							(completeMethod)="searchArtistHandler($event)"
+						></p-autocomplete>
+					</div>
 
-		<div class="field">
-			<span class="p-float-label">
-				<p-autoComplete
-					formControlName="album"
-					[suggestions]="params.albums"
-					[minLength]="3"
-					[delay]="400"
-					field="name"
-					(completeMethod)="searchAlbumHandler($event)"
-				>
-				</p-autoComplete>
+					<div class="mc-field">
+						<label for="album">Album</label>
+						<p-autocomplete
+							inputId="album"
+							formControlName="album"
+							[suggestions]="params.albums"
+							[minQueryLength]="3"
+							[delay]="400"
+							optionLabel="name"
+							placeholder="Start typing an album…"
+							(completeMethod)="searchAlbumHandler($event)"
+						></p-autocomplete>
+					</div>
 
-				<label for="album">Album</label>
-			</span>
-		</div>
+					<div class="mc-field">
+						<label for="label">Label</label>
+						<p-autocomplete
+							inputId="label"
+							formControlName="label"
+							[suggestions]="params.labels"
+							[minQueryLength]="3"
+							[delay]="400"
+							optionLabel="name"
+							placeholder="Start typing a label…"
+							(completeMethod)="searchLabelHandler($event)"
+						></p-autocomplete>
+					</div>
 
-		<div class="field">
-			<span class="p-float-label">
-				<p-autoComplete
-					formControlName="label"
-					[suggestions]="params.labels"
-					[minLength]="3"
-					[delay]="400"
-					field="name"
-					(completeMethod)="searchLabelHandler($event)"
-				></p-autoComplete>
+					<div class="mc-field">
+						<label for="date">Date</label>
+						<p-datepicker
+							inputId="date"
+							formControlName="date"
+						></p-datepicker>
+					</div>
+				</div>
+			</section>
 
-				<label for="label">Label</label>
-			</span>
-		</div>
+			<section class="mc-form-section" aria-labelledby="release-pressing">
+				<h2 id="release-pressing">Pressing</h2>
+				<div class="mc-form-grid">
+					<div class="mc-field">
+						<label for="media">Media</label>
+						<p-select
+							inputId="media"
+							[options]="params.mediaList"
+							placeholder="Select a media"
+							formControlName="media"
+						></p-select>
+					</div>
 
-		<div class="field">
-			<span class="p-float-label">
-				<input
-					id="name"
-					type="text"
-					pInputText
-					formControlName="name"
-				/>
+					<div class="mc-field">
+						<label for="country">Country</label>
+						<p-select
+							inputId="country"
+							[options]="params.countryList"
+							placeholder="Select a country"
+							formControlName="country"
+							[filter]="true"
+						></p-select>
+					</div>
 
-				<label for="name">Name</label>
-			</span>
-		</div>
+					<div class="mc-field is-wide">
+						<label for="formatDescription"
+							>Format description</label
+						>
+						<p-multiselect
+							inputId="formatDescription"
+							[options]="params.formatDescriptionList"
+							placeholder="Select a format description"
+							[filter]="false"
+							formControlName="formatDescription"
+							display="chip"
+						></p-multiselect>
+					</div>
+				</div>
+			</section>
 
-		<div class="field">
-			<span class="p-float-label">
-				<p-calendar id="date" formControlName="date"></p-calendar>
-
-				<label for="date">Date</label>
-			</span>
-		</div>
-
-		<div class="field">
-			<span class="p-float-label">
-				<p-dropdown
-					id="country"
-					[options]="params.countryList"
-					placeholder="Select a country"
-					formControlName="country"
-				></p-dropdown>
-
-				<label for="country">Country</label>
-			</span>
-		</div>
-
-		<div class="field">
-			<span class="p-float-label">
-				<p-dropdown
-					id="media"
-					[options]="params.mediaList"
-					placeholder="Select a media"
-					formControlName="media"
-				></p-dropdown>
-
-				<label for="media">Media</label>
-			</span>
-		</div>
-
-		<div class="field">
-			<span class="p-float-label">
-				<p-multiSelect
-					id="formatDescription"
-					[options]="params.formatDescriptionList"
-					placeholder="Select a format description"
-					[filter]="false"
-					formControlName="formatDescription"
-					display="chip"
-				></p-multiSelect>
-				<label for="formatDescription">Format description</label>
-			</span>
-		</div>
-	</form>
-
-	<div style="margin-top: 10px" fxLayout="row" fxLayoutAlign="space-around">
-		<button
-			pButton
-			type="button"
-			label="Submit"
-			(click)="submit()"
-			[disabled]="!params.formGroup.valid"
-		></button>
-
-		<button
-			pButton
-			type="button"
-			label="Cancel"
-			(click)="cancel()"
-		></button>
-	</div>
-</section>
+			<div class="mc-form-actions">
+				<p-button
+					label="Cancel"
+					severity="secondary"
+					[outlined]="true"
+					(onClick)="cancel()"
+				></p-button>
+				<p-button
+					label="Save"
+					icon="pi pi-check"
+					[disabled]="!params.formGroup.valid"
+					(onClick)="submit()"
+				></p-button>
+			</div>
+		</form>
+	</section>
+}

@@ -1,0 +1,60 @@
+rules_version = '2';
+
+// ---------------------------------------------------------------------------
+// Music Collection — Cloud Storage security rules.
+//
+// Permission-alapú, a firestore.rules-szal azonos permission-nevekkel és
+// ugyanabból az egy igazságforrásból: a `security/users/{uid}/
+// effective_permissions` dokumentumot cross-service `firestore.get()`-tel
+// olvassuk. Custom claimet nem használunk — a claimek együtt 1000 bájtba
+// férnek, amit a teljes permission-lista túllépné.
+//
+// A dokumentumot a jogosultság-szinkron function tartja karban
+// (`apps/functions`). Feltételei: a Firestore az alapértelmezett
+// (`(default)`) adatbázis, és minden ellenőrzés egy Firestore-olvasást jelent.
+// ---------------------------------------------------------------------------
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function effectivePermissionsPath() {
+      return /databases/(default)/documents/security/users/$(request.auth.uid)/effective_permissions;
+    }
+    function permissions() {
+      return firestore.get(effectivePermissionsPath()).data.permissions;
+    }
+    function hasPerm(perm) {
+      return request.auth != null
+          && firestore.exists(effectivePermissionsPath())
+          && permissions() is list
+          && (perm in permissions() || 'ADMIN' in permissions());
+    }
+    function isAdmin() {
+      return hasPerm('ADMIN');
+    }
+
+    // Document entitás fájljai (document-form, export-import: `/document/{hash}`).
+    // Publikus olvasás: a katalógusoldalak borítóit bárki letöltheti.
+    match /document/{path=**} {
+      allow read: if true;
+      allow create: if hasPerm('createDocumentEntity');
+      allow update: if hasPerm('createDocumentEntity') || hasPerm('updateDocumentEntity');
+      allow delete: if hasPerm('deleteDocumentEntity');
+    }
+
+    // Katalógus bundle-ök (`tools/sync/build-bundles.mjs`, Admin SDK írja).
+    // Publikus olvasás: a katalógus is az.
+    match /bundles/{path=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Tenant-szintű fájlok (pl. példányfotók) később ide kerülnek:
+    // `tenant/{tenantId}/…` — tulajdonlás-ellenőrzéssel. Addig tiltva.
+
+    // Minden más: csak ADMIN.
+    match /{allPaths=**} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

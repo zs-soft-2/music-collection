@@ -8,7 +8,6 @@ import { AlbumItemViewComponent } from './album-item-view.component';
 
 @NgModule({
 	exports: [AlbumItemViewComponent],
-	declarations: [AlbumItemViewComponent],
-	imports: [CommonModule, ButtonModule, ImageModule],
+	imports: [CommonModule, ButtonModule, ImageModule, AlbumItemViewComponent],
 })
 export class AlbumItemViewModule {}

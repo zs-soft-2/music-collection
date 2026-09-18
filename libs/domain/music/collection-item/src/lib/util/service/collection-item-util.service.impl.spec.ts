@@ -6,7 +6,9 @@ describe('CollectionItemUtilServiceImpl', () => {
 	let service: CollectionItemUtilServiceImpl;
 
 	beforeEach(() => {
-		TestBed.configureTestingModule({});
+		TestBed.configureTestingModule({
+			providers: [CollectionItemUtilServiceImpl],
+		});
 		service = TestBed.inject(CollectionItemUtilServiceImpl);
 	});
 

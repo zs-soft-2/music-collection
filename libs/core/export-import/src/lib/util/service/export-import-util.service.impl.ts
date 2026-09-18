@@ -1,6 +1,6 @@
 import { decode, encode } from 'base64-arraybuffer';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {
 	AlbumEntity,
 	AlbumExportModel,
@@ -16,9 +16,8 @@ import {
 
 @Injectable()
 export class ExportImportUtilServiceImpl extends ExportImportUtilService {
-	public constructor(private documentUtilService: DocumentUtilService) {
-		super();
-	}
+	private documentUtilService = inject(DocumentUtilService);
+
 
 	public createAlbumEntity(
 		albumExportModel: AlbumExportModel,
@@ -101,7 +100,7 @@ export class ExportImportUtilServiceImpl extends ExportImportUtilService {
 			description,
 			entityType,
 			genre,
-			formedIn: formedIn.toISOString(),
+			formedIn: formedIn?.toISOString() ?? null,
 			name,
 			sites,
 			styles,
@@ -139,7 +138,7 @@ export class ExportImportUtilServiceImpl extends ExportImportUtilService {
 		return documentExportModel;
 	}
 
-	public createFilePath(data: string, folder: string = '/'): string {
+	public createFilePath(data: string, folder = '/'): string {
 		return this.documentUtilService.createFilePath(data, folder);
 	}
 

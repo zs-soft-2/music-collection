@@ -5,8 +5,12 @@ export const enum EntityTypeEnum {
 	Document = 'Document',
 	EntityQuantity = 'EntityQuantity',
 	Label = 'Label',
+	Membership = 'Membership',
+	Musician = 'Musician',
 	Release = 'Release',
+	Track = 'Track',
 	CollectionItem = 'Collection Item',
+	Contribution = 'Contribution',
 	User = 'User',
 	WishlistItem = 'Wishlist Item',
 }

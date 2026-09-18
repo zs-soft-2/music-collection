@@ -16,7 +16,6 @@ import {
 } from './component';
 
 @NgModule({
-	declarations: [CollectionItemListComponent, CollectionItemTableComponent],
 	exports: [CollectionItemListComponent, CollectionItemTableComponent],
 	imports: [
 		CommonModule,
@@ -28,6 +27,8 @@ import {
 		FlexLayoutModule,
 		TableModule,
 		ProgressSpinnerModule,
+		CollectionItemListComponent,
+		CollectionItemTableComponent,
 	],
 })
 export class CollectionItemCollectionModule {}

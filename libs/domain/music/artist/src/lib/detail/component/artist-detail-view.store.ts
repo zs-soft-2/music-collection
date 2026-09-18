@@ -60,19 +60,20 @@ export const ArtistDetailViewStore = signalStore(
 										menuItemNames.findIndex(
 											(menuItemName) =>
 												menuItemName ===
-												store.selectedContent(),
+												store.selectedContent()
 										) || 0
 									],
 								country: null,
 								isLoading: false,
 								menuItems,
-								selectedContent: store.selectedContent() || 'info',
+								selectedContent:
+									store.selectedContent() || 'info',
 							});
 						},
 						error: console.error,
 						finalize: () => patchState(store, { isLoading: false }),
-					}),
-				),
+					})
+				)
 			),
 			selectAlbumDetail: (album: AlbumEntity): void => {
 				artistDetailViewService.selectAlbumDetail(album);
@@ -85,15 +86,15 @@ export const ArtistDetailViewStore = signalStore(
 
 				if (activeMenuItem?.label === 'Discography') {
 					artistDetailViewService.dispatchListAlbumsByIdAction(
-						store.artist()?.uid || '',
+						store.artist()?.uid || ''
 					);
 				}
 			},
-		}),
+		})
 	),
 	withHooks({
 		onInit({ init }) {
 			init(of(''));
 		},
-	}),
+	})
 );

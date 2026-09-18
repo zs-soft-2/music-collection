@@ -1,39 +1,206 @@
-<ng-container *ngIf="params$ | async as params">
-	<section class="top-bar">
-		<p-menubar [model]="params.menuItems">
-			<ng-template pTemplate="start">
-				<div class="start">
-					<svg-icon
-					src="assets/music.svg"
-					[svgStyle]="{
-						fill: '#656565',
-						'padding.px': 1,
-						'margin.px': 3
-					}"
-					(click)="imgClickHandler()"
+<header class="bar">
+	<button
+		type="button"
+		class="brand"
+		aria-label="Music Collection — home"
+		(click)="goHome()"
+	>
+		<svg
+			viewBox="0 0 24 24"
+			width="28"
+			height="28"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="1.8"
+			stroke-linecap="round"
+			aria-hidden="true"
+		>
+			<path
+				d="M3.5 12a8.5 8.5 0 1 0 17 0a8.5 8.5 0 1 0-17 0M10 12a2 2 0 1 0 4 0a2 2 0 1 0-4 0M12 6.5a5.5 5.5 0 0 0-5.5 5.5"
+			/>
+		</svg>
+		<span class="word">Music Collection</span>
+	</button>
+
+	<nav class="nav" aria-label="Main">
+		@for (item of navItems; track item.label) {
+			<a
+				class="nav-link"
+				[routerLink]="item.routerLink"
+				routerLinkActive="is-active"
+				ariaCurrentWhenActive="page"
+			>
+				<i class="pi {{ item.icon }}" aria-hidden="true"></i>
+				{{ item.label }}
+			</a>
+		}
+		<a
+			*ngxPermissionsOnly="adminRoles"
+			class="nav-link"
+			routerLink="/admin"
+			routerLinkActive="is-active"
+			ariaCurrentWhenActive="page"
+		>
+			<i class="pi pi-cog" aria-hidden="true"></i>
+			Admin
+		</a>
+	</nav>
+
+	<div class="actions">
+		<mc-spotify-mini-player />
+
+		<!-- Csak nagy képernyőn: ott van mit kitölteni. -->
+		<button
+			type="button"
+			class="icon-btn width-btn"
+			aria-label="Wide layout"
+			[attr.aria-pressed]="layoutWidth.isWide()"
+			[attr.title]="
+				layoutWidth.isWide() ? 'Standard width' : 'Use the full width'
+			"
+			(click)="layoutWidth.toggle()"
+		>
+			<i
+				class="pi"
+				[class.pi-window-maximize]="!layoutWidth.isWide()"
+				[class.pi-window-minimize]="layoutWidth.isWide()"
+				aria-hidden="true"
+			></i>
+		</button>
+
+		<button
+			type="button"
+			class="icon-btn"
+			[attr.aria-label]="
+				theme.isDark()
+					? 'Switch to light theme'
+					: 'Switch to dark theme'
+			"
+			(click)="theme.toggle()"
+		>
+			<i
+				class="pi"
+				[class.pi-sun]="theme.isDark()"
+				[class.pi-moon]="!theme.isDark()"
+				aria-hidden="true"
+			></i>
+		</button>
+
+		@if (isAuthenticated()) {
+			<div class="account">
+				<button
+					type="button"
+					class="avatar-btn"
+					aria-label="Account menu"
+					aria-haspopup="menu"
+					[attr.aria-expanded]="accountOpen()"
+					(click)="toggleAccount()"
 				>
-				</svg-icon>
+					@if (avatarUrl(); as photo) {
+						<img
+							class="avatar"
+							[src]="photo"
+							alt=""
+							referrerpolicy="no-referrer"
+							(error)="failedAvatarUrl.set(photo)"
+						/>
+					} @else {
+						<span class="avatar">{{ initials() }}</span>
+					}
+					<i class="pi pi-chevron-down" aria-hidden="true"></i>
+				</button>
 
-				<span class="title">musiCollection</span>
-				</div>
-			</ng-template>
+				@if (accountOpen()) {
+					<button
+						type="button"
+						class="scrim"
+						aria-label="Close account menu"
+						tabindex="-1"
+						(click)="closeMenus()"
+					></button>
+					<div class="menu" role="menu">
+						<div class="menu-user">
+							<b>{{ user()?.displayName || 'Signed in' }}</b>
+							@if (user()?.email; as email) {
+								<span>{{ email }}</span>
+							}
+						</div>
+						<a
+							*ngxPermissionsOnly="adminRoles"
+							class="menu-item"
+							role="menuitem"
+							routerLink="/admin"
+							(click)="closeMenus()"
+						>
+							<i class="pi pi-cog" aria-hidden="true"></i>
+							Admin
+						</a>
+						<button
+							type="button"
+							class="menu-item"
+							role="menuitem"
+							(click)="logout()"
+						>
+							<i class="pi pi-sign-out" aria-hidden="true"></i>
+							Log out
+						</button>
+					</div>
+				}
+			</div>
+		} @else {
+			<button
+				type="button"
+				class="login-btn"
+				aria-label="Log in"
+				(click)="login()"
+			>
+				<i class="pi pi-sign-in" aria-hidden="true"></i>
+				<span class="login-text">Log in</span>
+			</button>
+		}
 
-			<ng-template pTemplate="end">
-				<ng-container *mcIsAuthenticated="true">
-					<mc-user-profile
-						[user]="params.user"
-						(logout)="logoutHandler()"
-					></mc-user-profile>
-				</ng-container>
+		<button
+			type="button"
+			class="icon-btn menu-toggle"
+			[attr.aria-label]="menuOpen() ? 'Close menu' : 'Open menu'"
+			aria-controls="mc-mobile-nav"
+			[attr.aria-expanded]="menuOpen()"
+			(click)="toggleMenu()"
+		>
+			<i
+				class="pi"
+				[class.pi-bars]="!menuOpen()"
+				[class.pi-times]="menuOpen()"
+				aria-hidden="true"
+			></i>
+		</button>
+	</div>
+</header>
 
-				<ng-container *mcIsAuthenticated="false">
-					<i class="pi pi-sign-in"></i>
-
-					<span class="login">
-						<a (click)="loginClickHandler()">login</a>
-					</span>
-				</ng-container>
-			</ng-template>
-		</p-menubar>
-	</section>
-</ng-container>
+@if (menuOpen()) {
+	<nav id="mc-mobile-nav" class="sheet" aria-label="Main">
+		@for (item of navItems; track item.label) {
+			<a
+				class="sheet-link"
+				[routerLink]="item.routerLink"
+				routerLinkActive="is-active"
+				ariaCurrentWhenActive="page"
+				(click)="closeMenus()"
+			>
+				<i class="pi {{ item.icon }}" aria-hidden="true"></i>
+				{{ item.label }}
+			</a>
+		}
+		<a
+			*ngxPermissionsOnly="adminRoles"
+			class="sheet-link"
+			routerLink="/admin"
+			routerLinkActive="is-active"
+			ariaCurrentWhenActive="page"
+			(click)="closeMenus()"
+		>
+			<i class="pi pi-cog" aria-hidden="true"></i>
+			Admin
+		</a>
+	</nav>
+}

@@ -1,20 +1,38 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { of } from 'rxjs';
 
-import { ArtistListModule } from '../../../list/artist-list.module';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
+import { provideRouter } from '@angular/router';
+import {
+	ArtistStateService,
+	ArtistUtilService,
+	ExportImportService,
+} from '@music-collection/api';
+
 import { ArtistListPageComponent } from './artist-list-page.component';
 
 describe('ArtistListComponent', () => {
 	let component: ArtistListPageComponent;
 	let fixture: ComponentFixture<ArtistListPageComponent>;
 
-	beforeEach(waitForAsync(() => {
-		TestBed.configureTestingModule({
-			declarations: [ArtistListPageComponent],
-			imports: [ArtistListModule],
+	beforeEach(async () => {
+		await TestBed.configureTestingModule({
+			imports: [ArtistListPageComponent],
+			providers: [
+				provideRouter([]),
+				provideNoopAnimations(),
+				{
+					provide: ArtistStateService,
+					useValue: {
+						selectEntities$: jest.fn(() => of([])),
+						selectSearchResult$: jest.fn(() => of([])),
+					},
+				},
+				{ provide: ArtistUtilService, useValue: {} },
+				{ provide: ExportImportService, useValue: {} },
+			],
 		}).compileComponents();
-	}));
 
-	beforeEach(() => {
 		fixture = TestBed.createComponent(ArtistListPageComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();

@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	OnInit,
+	inject,
+} from '@angular/core';
 import { BaseComponent } from '@music-collection/api';
 
 import { LabelListService } from './label-list.service';
@@ -9,12 +14,9 @@ import { LabelListService } from './label-list.service';
 	selector: 'mc-label-list',
 	templateUrl: './label-list.component.html',
 	styleUrls: ['./label-list.component.scss'],
-	standalone: false,
 })
 export class LabelListComponent extends BaseComponent implements OnInit {
-	public constructor(private componentService: LabelListService) {
-		super();
-	}
+	private componentService = inject(LabelListService);
 
 	public ngOnInit(): void {
 		this.componentService.init$().pipe().subscribe();

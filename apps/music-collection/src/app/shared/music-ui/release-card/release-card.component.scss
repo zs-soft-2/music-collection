@@ -1,0 +1,464 @@
+:host {
+	position: relative;
+	display: block;
+}
+
+.card {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow: hidden;
+	color: var(--mc-text);
+	text-decoration: none;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-lg);
+	transition:
+		transform var(--mc-duration) ease,
+		background var(--mc-duration) ease,
+		box-shadow var(--mc-duration) ease;
+
+	&:hover,
+	&:focus-visible {
+		background: var(--mc-card-bg-hover);
+		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+		transform: translateY(-4px);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--mc-primary);
+		outline-offset: 3px;
+	}
+}
+
+/* ── Stage: sleeve in front, medium behind ───────────────────────────── */
+
+.stage {
+	position: relative;
+	aspect-ratio: 1;
+	overflow: hidden;
+	perspective: 1000px;
+}
+
+.sleeve {
+	position: relative;
+	z-index: 2;
+	width: 100%;
+	height: 100%;
+	transition: transform var(--mc-duration-slow) ease;
+}
+
+.cover {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.placeholder {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 3rem;
+	color: var(--mc-text-subtle);
+	background: linear-gradient(135deg, var(--mc-bg-muted), var(--mc-card-bg));
+}
+
+.card:hover .sleeve,
+.card:focus-visible .sleeve {
+	transform: translateX(-55%);
+}
+
+.card.is-cd:hover .sleeve,
+.card.is-cd:focus-visible .sleeve {
+	transform: rotateY(-12deg) translateX(-45%);
+}
+
+.card.is-other:hover .sleeve,
+.card.is-other:focus-visible .sleeve {
+	transform: none;
+}
+
+.medium {
+	position: absolute;
+	z-index: 1;
+	transition:
+		transform var(--mc-duration-slow) ease,
+		right var(--mc-duration-slow) ease,
+		opacity var(--mc-duration-slow) ease;
+}
+
+.hole {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 8%;
+	height: 8%;
+	background: var(--mc-bg);
+	border-radius: 50%;
+	transform: translate(-50%, -50%);
+	box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Vinyl */
+
+.vinyl {
+	top: 10%;
+	right: -20%;
+	width: 80%;
+	height: 80%;
+}
+
+.card:hover .vinyl,
+.card:focus-visible .vinyl {
+	transform: translateX(-35%);
+}
+
+.record {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	background: radial-gradient(circle, #262626 0%, #111 70%, #1c1c1c 100%);
+	border-radius: 50%;
+	box-shadow:
+		0 4px 20px rgba(0, 0, 0, 0.6),
+		inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.card:hover .record,
+.card:focus-visible .record {
+	animation: mc-spin 2s linear infinite;
+}
+
+.groove {
+	position: absolute;
+	border: 1px solid rgba(255, 255, 255, 0.04);
+	border-radius: 50%;
+	pointer-events: none;
+
+	&.g1 {
+		inset: 8%;
+	}
+	&.g2 {
+		inset: 16%;
+	}
+	&.g3 {
+		inset: 24%;
+	}
+	&.g4 {
+		inset: 31%;
+	}
+}
+
+.record-label {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 35%;
+	height: 35%;
+	overflow: hidden;
+	background: var(--mc-card-bg);
+	border-radius: 50%;
+	transform: translate(-50%, -50%);
+	box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+
+	img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+}
+
+.shine {
+	position: absolute;
+	inset: 0;
+	border-radius: 50%;
+	background: linear-gradient(
+		135deg,
+		rgba(255, 255, 255, 0.12) 0%,
+		transparent 40%,
+		transparent 60%,
+		rgba(255, 255, 255, 0.05) 100%
+	);
+	pointer-events: none;
+}
+
+/* CD / DVD disc */
+
+.disc {
+	top: 25%;
+	right: -15%;
+	width: 45%;
+	height: 45%;
+	opacity: 0;
+}
+
+.card:hover .disc,
+.card:focus-visible .disc {
+	right: 6%;
+	opacity: 1;
+}
+
+.disc-surface {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	background: linear-gradient(135deg, #e8e8e8 0%, #c0c0c0 50%, #e8e8e8 100%);
+	border-radius: 50%;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+}
+
+.is-dvd .disc-surface {
+	background: linear-gradient(135deg, #d7d2e6 0%, #b6aecb 50%, #d7d2e6 100%);
+}
+
+.card:hover .disc-surface,
+.card:focus-visible .disc-surface {
+	animation: mc-spin 3.5s linear infinite;
+}
+
+.disc-rainbow {
+	position: absolute;
+	inset: 0;
+	border-radius: 50%;
+	background: conic-gradient(
+		from 0deg,
+		rgba(255, 0, 0, 0.12),
+		rgba(255, 165, 0, 0.12),
+		rgba(255, 255, 0, 0.12),
+		rgba(0, 255, 0, 0.12),
+		rgba(0, 0, 255, 0.12),
+		rgba(128, 0, 128, 0.12),
+		rgba(255, 0, 0, 0.12)
+	);
+}
+
+.disc-center {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 35%;
+	height: 35%;
+	overflow: hidden;
+	background: #fff;
+	border-radius: 50%;
+	transform: translate(-50%, -50%);
+
+	img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+}
+
+.jewel-reflection {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(
+		135deg,
+		rgba(255, 255, 255, 0.16) 0%,
+		transparent 50%,
+		rgba(255, 255, 255, 0.05) 100%
+	);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	pointer-events: none;
+}
+
+.case-band {
+	position: absolute;
+	top: 0;
+	left: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 100%;
+	font-size: 0.55rem;
+	font-weight: 700;
+	letter-spacing: 0.18em;
+	color: #e6e6e6;
+	background: #16161c;
+	box-shadow: 1px 0 3px rgba(0, 0, 0, 0.4);
+	writing-mode: vertical-rl;
+	transform: rotate(180deg);
+}
+
+/* Cassette */
+
+.cassette {
+	top: 50%;
+	right: -22%;
+	width: 78%;
+	transform: translateY(-50%);
+}
+
+.card:hover .cassette,
+.card:focus-visible .cassette {
+	right: 6%;
+}
+
+.shell {
+	width: 100%;
+	aspect-ratio: 200 / 130;
+	padding: 8px;
+	background: linear-gradient(180deg, #3a3028 0%, #2d2319 50%, #1f1912 100%);
+	border-radius: 8px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.tape-label {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	height: 42%;
+	padding: 4px;
+	color: #333;
+	background: #f5f0e6;
+	border-radius: 4px 4px 0 0;
+}
+
+.tape-artist,
+.tape-title {
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.tape-artist {
+	font-size: 0.6rem;
+	font-weight: 700;
+	text-transform: uppercase;
+}
+
+.tape-title {
+	font-size: 0.5rem;
+}
+
+.tape-window {
+	display: flex;
+	align-items: center;
+	justify-content: space-around;
+	height: 34%;
+	margin-top: 4%;
+	padding: 0 18%;
+	background: #0f0d0a;
+	border-radius: 0 0 4px 4px;
+}
+
+.reel {
+	width: 24%;
+	aspect-ratio: 1;
+	background: repeating-conic-gradient(#2a2520 0 40deg, #444 40deg 60deg);
+	border-radius: 50%;
+}
+
+.card:hover .reel,
+.card:focus-visible .reel {
+	animation: mc-spin 1s linear infinite;
+}
+
+/* ── Edition badges ───────────────────────────────────────────────────── */
+
+.badges {
+	position: absolute;
+	top: 0.6rem;
+	left: 0.6rem;
+	z-index: 3;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.25rem;
+}
+
+.is-dvd .badges {
+	left: calc(16px + 0.6rem);
+}
+
+.badge {
+	padding: 0.15rem 0.45rem;
+	font-size: 0.62rem;
+	font-weight: 700;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	color: var(--mc-on-accent);
+	background: var(--mc-accent);
+	border-radius: var(--mc-radius-sm);
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+
+	&.is-box {
+		color: var(--mc-on-primary);
+		background: var(--mc-primary);
+	}
+}
+
+/* ── Info ─────────────────────────────────────────────────────────────── */
+
+.info {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	padding: 0.75rem 0.9rem 0.9rem;
+}
+
+.meta {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+}
+
+.meta-extra {
+	font-size: 0.7rem;
+	color: var(--mc-text-subtle);
+	white-space: nowrap;
+}
+
+.title {
+	display: -webkit-box;
+	margin: 0.4rem 0 0.2rem;
+	overflow: hidden;
+	font-family: var(--mc-font-display);
+	font-size: 1.2rem;
+	font-weight: 400;
+	line-height: 1.15;
+	letter-spacing: 0.02em;
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
+	-webkit-box-orient: vertical;
+}
+
+.artist {
+	margin: 0;
+	overflow: hidden;
+	font-size: 0.85rem;
+	color: var(--mc-text-muted);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+@keyframes mc-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.card,
+	.sleeve,
+	.medium {
+		transition: none;
+	}
+
+	.card:hover .record,
+	.card:hover .disc-surface,
+	.card:hover .reel,
+	.card:focus-visible .record,
+	.card:focus-visible .disc-surface,
+	.card:focus-visible .reel {
+		animation: none;
+	}
+}

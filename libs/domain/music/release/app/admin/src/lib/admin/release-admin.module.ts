@@ -18,11 +18,6 @@ import {
 import { ReleaseAdminRoutingModule } from './release-admin-routing.module';
 
 @NgModule({
-	declarations: [
-		ReleaseAdminComponent,
-		ReleaseEditComponent,
-		ReleaseListPageComponent,
-	],
 	imports: [
 		CommonModule,
 		ReleaseAdminRoutingModule,
@@ -31,6 +26,9 @@ import { ReleaseAdminRoutingModule } from './release-admin-routing.module';
 		ReleaseCollectionModule,
 		ButtonModule,
 		ToolbarModule,
+		ReleaseAdminComponent,
+		ReleaseEditComponent,
+		ReleaseListPageComponent,
 	],
 	providers: [ReleaseEditResolverService, ReleaseListPageResolverService],
 })

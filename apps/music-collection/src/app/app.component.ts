@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import {
 	AuthenticationStateService,
@@ -6,6 +6,8 @@ import {
 } from '@music-collection/api';
 
 import { environment } from '../environments/environment';
+import { CoreErrorModule } from '@music-collection/core/error';
+
 import { TopBarModule } from './module';
 
 @Component({
@@ -13,16 +15,14 @@ import { TopBarModule } from './module';
 	selector: 'mc-root',
 	templateUrl: './app.component.html',
 	styleUrls: ['./app.component.scss'],
-	imports: [TopBarModule, RouterModule],
+	imports: [TopBarModule, RouterModule, CoreErrorModule],
 })
 export class AppComponent implements OnInit {
+	private authenticationStateService = inject(AuthenticationStateService);
+	private entityQuantityStateService = inject(EntityQuantityStateService);
+
 	public title = 'music-collection';
 	public version = environment.version;
-
-	public constructor(
-		private authenticationStateService: AuthenticationStateService,
-		private entityQuantityStateService: EntityQuantityStateService,
-	) {}
 
 	public ngOnInit(): void {
 		this.entityQuantityStateService.dispatchListEntitiesAction();
