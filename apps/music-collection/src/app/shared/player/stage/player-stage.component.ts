@@ -283,6 +283,14 @@ export class PlayerStageComponent {
 		this.player.seek(ratio * this.player.durationMs());
 	}
 
+	protected seekBy(deltaMs: number): void {
+		if (!this.player.canSeek()) {
+			return;
+		}
+		const target = this.positionMs() + deltaMs;
+		this.player.seek(Math.min(Math.max(target, 0), this.player.durationMs()));
+	}
+
 	/** A bass hit of the real sound: embers and a soft flash. */
 	private onBeat(strength: number): void {
 		const effects = this.effects();

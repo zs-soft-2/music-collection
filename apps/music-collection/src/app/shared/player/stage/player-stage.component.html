@@ -57,7 +57,11 @@
 				[class.active]="$index === activeIndex()"
 				[class.past]="$index < activeIndex()"
 				[class.gap]="!line.text"
+				role="button"
+				tabindex="0"
 				(click)="seekTo(line.timeMs)"
+				(keydown.enter)="seekTo(line.timeMs)"
+				(keydown.space)="$event.preventDefault(); seekTo(line.timeMs)"
 			>
 				{{ line.text || '♪' }}
 			</p>
@@ -94,12 +98,18 @@
 					[class.disabled]="!player.canSeek()"
 					role="slider"
 					aria-label="Position"
+					[attr.tabindex]="player.canSeek() ? 0 : -1"
+					aria-valuemin="0"
+					[attr.aria-valuemax]="player.durationMs()"
+					[attr.aria-valuenow]="positionMs()"
 					[attr.aria-valuetext]="
 						formatTime(positionMs()) +
 						' of ' +
 						formatTime(player.durationMs())
 					"
 					(click)="seekFromBar($event)"
+					(keydown.arrowleft)="seekBy(-5000)"
+					(keydown.arrowright)="seekBy(5000)"
 				>
 					<div
 						class="fill"
