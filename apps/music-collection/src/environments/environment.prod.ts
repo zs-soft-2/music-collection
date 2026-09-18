@@ -1,3 +1,5 @@
+import { VERSION } from './version';
+
 export const environment = {
 	production: true,
 	firebase: {
@@ -18,5 +20,7 @@ export const environment = {
 		clientId: '0ab3fba0933440238c563c337700db27',
 	},
 	type: 'production',
-	version: '1.0.0',
+	/** Base version + per-build suffix (tools/version/generate-version.mjs). */
+	version: `1.0.0-${VERSION.build}`,
+	buildTime: VERSION.buildTime,
 };

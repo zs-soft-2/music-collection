@@ -6,6 +6,13 @@
 	"prefix": "music-collection",
 	"tags": [],
 	"targets": {
+		"version": {
+			"executor": "nx:run-commands",
+			"cache": false,
+			"options": {
+				"command": "node tools/version/generate-version.mjs"
+			}
+		},
 		"build": {
 			"executor": "@angular-devkit/build-angular:browser",
 			"outputs": [
@@ -79,7 +86,21 @@
 					"namedChunks": true
 				}
 			},
-			"defaultConfiguration": "dev"
+			"defaultConfiguration": "dev",
+			"dependsOn": [
+				"^build",
+				"version"
+			],
+			"inputs": [
+				"production",
+				"^production",
+				{
+					"env": "GITHUB_RUN_NUMBER"
+				},
+				{
+					"env": "GITHUB_SHA"
+				}
+			]
 		},
 		"serve": {
 			"executor": "@angular-devkit/build-angular:dev-server",
@@ -95,7 +116,10 @@
 				}
 			},
 			"defaultConfiguration": "development",
-			"continuous": true
+			"continuous": true,
+			"dependsOn": [
+				"version"
+			]
 		},
 		"extract-i18n": {
 			"executor": "@angular-devkit/build-angular:extract-i18n",
@@ -109,7 +133,10 @@
 			"options": {
 				"jestConfig": "apps/music-collection/jest.config.ts",
 				"tsConfig": "apps/music-collection/tsconfig.spec.json"
-			}
+			},
+			"dependsOn": [
+				"version"
+			]
 		},
 		"lint": {
 			"executor": "@nx/eslint:lint"

@@ -23,6 +23,7 @@ export class AppComponent implements OnInit {
 
 	public title = 'music-collection';
 	public version = environment.version;
+	public buildTime = environment.buildTime;
 
 	public ngOnInit(): void {
 		this.entityQuantityStateService.dispatchListEntitiesAction();

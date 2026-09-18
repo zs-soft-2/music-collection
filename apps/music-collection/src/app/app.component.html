@@ -5,7 +5,7 @@
 		<router-outlet></router-outlet>
 	</div>
 
-	<footer>Version: {{ version }} by Zsagia</footer>
+	<footer [title]="'Build: ' + buildTime">Version: {{ version }} by Zsagia</footer>
 </main>
 
 <mc-error-toast></mc-error-toast>

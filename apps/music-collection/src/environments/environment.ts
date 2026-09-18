@@ -4,6 +4,8 @@
  * build-konfiguráció cseréli be (`environment.prod.ts`), a tool scriptek pedig
  * a `--env prod` kapcsolóval kérik.
  */
+import { VERSION } from './version';
+
 export const environment = {
 	production: false,
 	firebase: {
@@ -24,5 +26,7 @@ export const environment = {
 		clientId: '0ab3fba0933440238c563c337700db27',
 	},
 	type: 'develop',
-	version: '1.0.0',
+	/** Base version + per-build suffix (tools/version/generate-version.mjs). */
+	version: `1.0.0-${VERSION.build}`,
+	buildTime: VERSION.buildTime,
 };
