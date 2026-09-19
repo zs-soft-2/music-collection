@@ -1,3 +1,5 @@
+import { EntityCounts } from '@music-collection/api';
+
 import {
 	AlbumView,
 	ArtistTileView,
@@ -5,6 +7,29 @@ import {
 	FORMAT_LABELS,
 	ReleaseView,
 } from '../../shared/music-ui';
+
+/** One catalog-wide entity count shown in the catalog panel. */
+export interface CatalogStat {
+	label: string;
+	count: number;
+}
+
+/** Entity types counted on the home page, in display order. */
+export const CATALOG_TYPES: { type: string; label: string }[] = [
+	{ type: 'Artist', label: 'Artists' },
+	{ type: 'Album', label: 'Albums' },
+	{ type: 'Label', label: 'Labels' },
+	{ type: 'Release', label: 'Releases' },
+	{ type: 'Musician', label: 'Musicians' },
+	{ type: 'Track', label: 'Tracks' },
+];
+
+/** Catalog-wide live counts; types not counted (yet) are left out. */
+export function catalogStats(counts: EntityCounts): CatalogStat[] {
+	return CATALOG_TYPES.flatMap(({ type, label }) =>
+		counts[type] === undefined ? [] : [{ label, count: counts[type] }]
+	);
+}
 
 export function releaseCountsByArtist(
 	releases: ReleaseView[]

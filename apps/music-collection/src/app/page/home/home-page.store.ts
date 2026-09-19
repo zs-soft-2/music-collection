@@ -1,10 +1,20 @@
-import { Observable, filter, of, pipe, switchMap, tap } from 'rxjs';
+import {
+	Observable,
+	combineLatest,
+	filter,
+	of,
+	pipe,
+	switchMap,
+	tap,
+} from 'rxjs';
 
 import { computed, inject } from '@angular/core';
 import {
 	AlbumStateService,
 	ArtistStateService,
 	CollectionItemStateService,
+	EntityCounts,
+	EntityQuantityStateService,
 } from '@music-collection/api';
 import { tapResponse } from '@ngrx/operators';
 import {
@@ -21,13 +31,13 @@ import {
 	AlbumView,
 	ArtistView,
 	ReleaseView,
-	decadeDistribution,
 	toAlbumView,
 	toArtistView,
 	toReleaseView,
-	topStyles,
 } from '../../shared/music-ui';
 import {
+	CATALOG_TYPES,
+	catalogStats,
 	mostCollectedArtists,
 	pickRandom,
 	releaseCountsByArtist,
@@ -38,9 +48,11 @@ interface HomePageState {
 	artists: ArtistView[];
 	albums: AlbumView[];
 	releases: ReleaseView[];
+	counts: EntityCounts;
 	artistsLoading: boolean;
 	albumsLoading: boolean;
 	releasesLoading: boolean;
+	countsLoading: boolean;
 	spotlightId: string | null;
 	query: string;
 }
@@ -49,9 +61,11 @@ const initialState: HomePageState = {
 	artists: [],
 	albums: [],
 	releases: [],
+	counts: {},
 	artistsLoading: true,
 	albumsLoading: true,
 	releasesLoading: true,
+	countsLoading: true,
 	spotlightId: null,
 	query: '',
 };
@@ -59,7 +73,6 @@ const initialState: HomePageState = {
 const RECENT_COUNT = 6;
 const ARTIST_COUNT = 12;
 const ALBUM_COUNT = 12;
-const STYLE_COUNT = 6;
 const SPOTLIGHT_RELEASE_COUNT = 6;
 const SEARCH_RESULT_COUNT = 5;
 
@@ -118,26 +131,12 @@ export const HomePageStore = signalStore(
 							.slice(0, SPOTLIGHT_RELEASE_COUNT)
 					: [];
 			}),
-			stats: computed(() => {
-				const releases = store.releases();
-
-				return {
-					releases: releases.length,
-					artists: counts().size,
-					vinyl: releases.filter(
-						(release) => release.format === 'vinyl'
-					).length,
-					cd: releases.filter((release) => release.format === 'cd')
-						.length,
-				};
-			}),
+			catalog: computed(() => catalogStats(store.counts())),
 			recentReleases: computed(() =>
 				[...store.releases()]
 					.sort((a, b) => b.addedAt - a.addedAt)
 					.slice(0, RECENT_COUNT)
 			),
-			decades: computed(() => decadeDistribution(store.releases())),
-			styles: computed(() => topStyles(store.releases(), STYLE_COUNT)),
 			topArtists: computed(() =>
 				mostCollectedArtists(store.artists(), counts(), ARTIST_COUNT)
 			),
@@ -164,7 +163,8 @@ export const HomePageStore = signalStore(
 			store,
 			artistStateService = inject(ArtistStateService),
 			albumStateService = inject(AlbumStateService),
-			collectionItemStateService = inject(CollectionItemStateService)
+			collectionItemStateService = inject(CollectionItemStateService),
+			quantityStateService = inject(EntityQuantityStateService)
 		) => {
 			const ensureSpotlight = () => {
 				if (!store.spotlightId()) {
@@ -247,6 +247,30 @@ export const HomePageStore = signalStore(
 						})
 					)
 				),
+				/** Live catalog-wide counts (artists, albums, tracks, …). */
+				loadCounts: rxMethod<void>(
+					pipe(
+						tap(() =>
+							quantityStateService.dispatchCountEntitiesAction(
+								CATALOG_TYPES.map(({ type }) => type)
+							)
+						),
+						switchMap(() =>
+							combineLatest([
+								quantityStateService.selectEntityCounts$(),
+								quantityStateService.selectEntityCountsLoading$(),
+							])
+						),
+						tapResponse({
+							next: ([counts, countsLoading]) =>
+								patchState(store, { counts, countsLoading }),
+							error: (error) => {
+								console.error(error);
+								patchState(store, { countsLoading: false });
+							},
+						})
+					)
+				),
 				setQuery: (query: string) => patchState(store, { query }),
 				/** Shows another artist in the spotlight. */
 				shuffleSpotlight: () =>
@@ -265,6 +289,7 @@ export const HomePageStore = signalStore(
 			store.loadArtists(of(undefined));
 			store.loadAlbums(of(undefined));
 			store.loadReleases(of(undefined));
+			store.loadCounts(of(undefined));
 		},
 	})
 );

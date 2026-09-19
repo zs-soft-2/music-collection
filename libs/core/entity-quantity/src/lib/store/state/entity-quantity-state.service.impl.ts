@@ -2,6 +2,7 @@ import { Observable } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
 import {
+	EntityCounts,
 	EntityQuantityEntity,
 	EntityQuantityEntityAdd,
 	EntityQuantityEntityUpdate,
@@ -16,8 +17,8 @@ import * as entityQuantitySelectors from './entity-quantity.selectors';
 
 @Injectable()
 export class EntityQuantityStateServiceImpl extends EntityQuantityStateService {
-	private store = inject<Store<fromEntityQuantity.EntityQuantityPartialState>>(Store);
-
+	private store =
+		inject<Store<fromEntityQuantity.EntityQuantityPartialState>>(Store);
 
 	public dispatchAddEntityAction(
 		entityQuantity: EntityQuantityEntityAdd
@@ -31,6 +32,10 @@ export class EntityQuantityStateServiceImpl extends EntityQuantityStateService {
 		this.store.dispatch(
 			entityQuantityActions.changeNewEntityButtonEnabled({ enabled })
 		);
+	}
+
+	public dispatchCountEntitiesAction(types: string[]): void {
+		this.store.dispatch(entityQuantityActions.countEntities({ types }));
 	}
 
 	public dispatchDeleteEntityAction(
@@ -83,6 +88,18 @@ export class EntityQuantityStateServiceImpl extends EntityQuantityStateService {
 
 	public isLoading$(): Observable<boolean> {
 		throw new Error('Method not implemented.');
+	}
+
+	public selectEntityCounts$(): Observable<EntityCounts> {
+		return this.store.pipe(
+			select(entityQuantitySelectors.selectEntityCounts)
+		);
+	}
+
+	public selectEntityCountsLoading$(): Observable<boolean> {
+		return this.store.pipe(
+			select(entityQuantitySelectors.selectEntityCountsLoading)
+		);
 	}
 
 	public selectEntities$(): Observable<EntityQuantityEntity[]> {

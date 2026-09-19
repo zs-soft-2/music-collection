@@ -5,58 +5,49 @@
 			<p class="eyebrow">musiCollection</p>
 			<h1>My Collection</h1>
 		</div>
-
-		@if (!store.isLoading()) {
-			<dl class="stats">
-				<div class="stat">
-					<dt>Releases</dt>
-					<dd>{{ store.stats().total }}</dd>
-				</div>
-				<div class="stat">
-					<dt>Artists</dt>
-					<dd>{{ store.stats().artists }}</dd>
-				</div>
-				@for (format of formatOrder; track format) {
-					@if (store.stats().byFormat[format]) {
-						<div class="stat is-format">
-							<dt>{{ formatLabels[format] }}</dt>
-							<dd>{{ store.stats().byFormat[format] }}</dd>
-						</div>
-					}
-				}
-			</dl>
-		}
 	</header>
 
 	<!-- At a glance -->
 	<section class="glance-section" aria-labelledby="glance-title">
-		<h2 id="glance-title" class="glance-title">At a glance</h2>
+		<h2 id="glance-title" class="glance-title">
+			Your collection at a glance
+		</h2>
 
 		@if (store.isLoading()) {
 			<div class="skeleton glance-skeleton"></div>
 		} @else {
 			<div class="glance">
-				<div class="panel">
-					<h3 class="panel-title">In the catalog</h3>
-					<dl class="catalog">
-						@for (item of store.catalog(); track item.label) {
-							<div class="catalog-stat">
-								<dt>{{ item.label }}</dt>
-								<dd>{{ item.count }}</dd>
+				<dl class="stats">
+					<div class="stat is-hero">
+						<dt>Releases</dt>
+						<dd>{{ store.stats().total }}</dd>
+					</div>
+					<div class="stat">
+						<dt>Artists</dt>
+						<dd>{{ store.stats().artists }}</dd>
+					</div>
+					@for (format of formatOrder; track format) {
+						@if (store.stats().byFormat[format]) {
+							<div class="stat">
+								<dt>{{ formatLabels[format] }}</dt>
+								<dd>{{ store.stats().byFormat[format] }}</dd>
 							</div>
 						}
-					</dl>
-				</div>
+					}
+				</dl>
 
 				<div class="panel">
 					<mc-decade-chart
-						title="Releases by decade"
+						heading="Releases by decade"
 						[data]="store.decades()"
 					/>
 				</div>
 
 				<div class="panel">
-					<mc-style-bars title="Top styles" [data]="store.styles()" />
+					<mc-style-bars
+						heading="Top styles"
+						[data]="store.styles()"
+					/>
 				</div>
 			</div>
 		}
@@ -231,7 +222,9 @@
 								} @placeholder {
 									<div
 										class="chunk-placeholder"
-										[class.is-list]="store.view() === 'list'"
+										[class.is-list]="
+											store.view() === 'list'
+										"
 										[style.--count]="chunk.length"
 									></div>
 								}

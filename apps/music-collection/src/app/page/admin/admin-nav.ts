@@ -3,8 +3,8 @@ export interface AdminNavItem {
 	/** Útvonal az /admin alatt. */
 	route: string;
 	icon: string;
-	/** Az entitás-számláló típusa, ha van. */
-	quantityType?: string;
+	/** A megszámolt entitás típusa (`EntityCounts` kulcs), ha van. */
+	countType?: string;
 	/** Új elem felvétele (a lista „Add” gombjával azonos cél). */
 	createLabel?: string;
 }
@@ -26,34 +26,35 @@ export const ADMIN_NAV: AdminNavGroup[] = [
 				label: 'Artists',
 				route: 'artist',
 				icon: 'pi-microphone',
-				quantityType: 'Artist',
+				countType: 'Artist',
 				createLabel: 'Add artist',
 			},
 			{
 				label: 'Musicians',
 				route: 'musician',
 				icon: 'pi-user',
+				countType: 'Musician',
 				createLabel: 'Add musician',
 			},
 			{
 				label: 'Albums',
 				route: 'album',
 				icon: 'pi-circle',
-				quantityType: 'Album',
+				countType: 'Album',
 				createLabel: 'Add album',
 			},
 			{
 				label: 'Releases',
 				route: 'release',
 				icon: 'pi-clone',
-				quantityType: 'Release',
+				countType: 'Release',
 				createLabel: 'Add release',
 			},
 			{
 				label: 'Labels',
 				route: 'label',
 				icon: 'pi-building',
-				quantityType: 'Label',
+				countType: 'Label',
 				createLabel: 'Add label',
 			},
 		],
@@ -65,12 +66,13 @@ export const ADMIN_NAV: AdminNavGroup[] = [
 				label: 'Collection items',
 				route: 'collection-item',
 				icon: 'pi-th-large',
-				quantityType: 'Collection Item',
+				countType: 'Collection Item',
 			},
 			{
 				label: 'Wishlist items',
 				route: 'wishlist-item',
 				icon: 'pi-heart',
+				countType: 'Wishlist Item',
 			},
 		],
 	},
@@ -81,7 +83,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
 				label: 'Documents',
 				route: 'document',
 				icon: 'pi-file',
-				quantityType: 'Document',
+				countType: 'Document',
 			},
 		],
 	},

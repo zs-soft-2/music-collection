@@ -1,5 +1,8 @@
+import { Observable } from 'rxjs';
+
 import { EntityStateService } from '../../common';
 import {
+	EntityCounts,
 	EntityQuantityEntity,
 	EntityQuantityEntityAdd,
 	EntityQuantityEntityUpdate,
@@ -9,4 +12,11 @@ export abstract class EntityQuantityStateService extends EntityStateService<
 	EntityQuantityEntity,
 	EntityQuantityEntityAdd,
 	EntityQuantityEntityUpdate
-> {}
+> {
+	/** Requests live counts of the given entity types. */
+	public abstract dispatchCountEntitiesAction(types: string[]): void;
+	/** The live counts received so far. */
+	public abstract selectEntityCounts$(): Observable<EntityCounts>;
+	/** Whether a count request is in flight. */
+	public abstract selectEntityCountsLoading$(): Observable<boolean>;
+}

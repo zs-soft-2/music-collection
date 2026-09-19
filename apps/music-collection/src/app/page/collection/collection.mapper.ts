@@ -4,11 +4,7 @@ import {
 	MediaFormat,
 	ReleaseView,
 } from '../../shared/music-ui';
-import { EntityQuantityEntity } from '@music-collection/api';
-
 import {
-	CATALOG_TYPES,
-	CatalogStat,
 	CollectionGroup,
 	CollectionSort,
 	ChunkedReleaseGroup,
@@ -161,18 +157,6 @@ export function collectionStats(releases: ReleaseView[]): CollectionStats {
  * Consecutive small groups share a compartment (labelled with the first and
  * last group), a group larger than a compartment is split across several.
  */
-/**
- * Catalog-wide counts from the entity-quantity documents. Types without a
- * counter document are left out.
- */
-export function catalogStats(quantities: EntityQuantityEntity[]): CatalogStat[] {
-	return CATALOG_TYPES.flatMap(({ type, label }) => {
-		const quantity = quantities.find((item) => item.type === type);
-
-		return quantity ? [{ label, count: quantity.quantity }] : [];
-	});
-}
-
 export function packShelf(
 	groups: ReleaseGroup[],
 	capacity: number

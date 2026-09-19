@@ -17,7 +17,7 @@ import { CountDatum } from '../count-stats';
 	selector: 'mc-decade-chart',
 	template: `
 		<figure class="chart">
-			<figcaption class="title">{{ title() }}</figcaption>
+			<figcaption class="title">{{ heading() }}</figcaption>
 
 			<ul class="plot">
 				@for (column of columns(); track column.label) {
@@ -173,7 +173,7 @@ import { CountDatum } from '../count-stats';
 	`,
 })
 export class DecadeChartComponent {
-	public readonly title = input.required<string>();
+	public readonly heading = input.required<string>();
 	public readonly data = input.required<CountDatum[]>();
 
 	protected readonly columns = computed(() => {

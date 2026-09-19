@@ -87,17 +87,10 @@ ul {
 
 /* ── At a glance ──────────────────────────────────────────────────────── */
 
-.glance {
+.catalog {
 	display: grid;
-	grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.2fr) minmax(0, 1fr);
+	grid-template-columns: repeat(6, minmax(0, 1fr));
 	gap: 1rem;
-}
-
-.stats {
-	display: grid;
-	grid-template-columns: repeat(3, minmax(0, 1fr));
-	align-content: start;
-	gap: 0.75rem;
 	margin: 0;
 }
 
@@ -105,7 +98,7 @@ ul {
 	display: flex;
 	flex-direction: column;
 	justify-content: flex-end;
-	padding: 0.8rem 1rem;
+	padding: 1rem 1.1rem;
 	background: var(--mc-card-bg);
 	border: 1px solid var(--mc-border);
 	border-radius: var(--mc-radius-md);
@@ -116,28 +109,12 @@ ul {
 	}
 
 	dd {
-		margin: 0.15rem 0 0;
-		font-size: 1.6rem;
-		font-weight: 600;
-		line-height: 1.1;
+		margin: 0.2rem 0 0;
+		font-size: 2.4rem;
+		font-weight: 700;
+		line-height: 1;
+		font-variant-numeric: tabular-nums;
 	}
-
-	&.is-hero {
-		grid-column: 1 / -1;
-
-		dd {
-			font-size: 3.5rem;
-			font-weight: 700;
-			line-height: 1;
-		}
-	}
-}
-
-.panel {
-	padding: 1.1rem 1.25rem;
-	background: var(--mc-card-bg);
-	border: 1px solid var(--mc-border);
-	border-radius: var(--mc-radius-md);
 }
 
 /* ── Grids ────────────────────────────────────────────────────────────── */
@@ -257,8 +234,13 @@ ul {
 	height: 440px;
 }
 
+.muted {
+	margin: 0;
+	color: var(--mc-text-muted);
+}
+
 .glance-skeleton {
-	height: 260px;
+	height: 92px;
 }
 
 .card-skeleton {
@@ -277,32 +259,18 @@ ul {
 }
 
 @media (max-width: 1100px) {
-	.glance {
-		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-	}
-
-	.stats {
-		grid-column: 1 / -1;
-		grid-template-columns: repeat(4, minmax(0, 1fr));
-	}
-
-	.stat.is-hero {
-		grid-column: auto;
-
-		dd {
-			font-size: 1.9rem;
-			font-weight: 600;
-		}
+	.catalog {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
 	}
 }
 
 @media (max-width: 720px) {
-	.glance {
-		grid-template-columns: minmax(0, 1fr);
+	.catalog {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 
-	.stats {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
+	.stat dd {
+		font-size: 1.8rem;
 	}
 
 	.card-grid {

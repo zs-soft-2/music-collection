@@ -1,4 +1,5 @@
 import {
+	EntityCounts,
 	EntityQuantityEntity,
 	EntityQuantityEntityAdd,
 	EntityQuantityEntityUpdate,
@@ -29,6 +30,21 @@ export const changeNewEntityButtonEnabled = createAction(
 
 export const clearEntityQuantities = createAction(
 	'[EntityQuantity] Clear EntityQuantities'
+);
+
+export const countEntities = createAction(
+	'[EntityQuantity] Count Entities',
+	props<{ types: string[] }>()
+);
+
+export const countEntitiesFail = createAction(
+	'[EntityQuantity] Count Entities Fail',
+	props<{ error: string }>()
+);
+
+export const countEntitiesSuccess = createAction(
+	'[EntityQuantity] Count Entities Success',
+	props<{ counts: EntityCounts }>()
 );
 
 export const deleteEntityQuantity = createAction(

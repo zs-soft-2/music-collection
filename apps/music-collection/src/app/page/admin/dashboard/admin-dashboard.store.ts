@@ -1,8 +1,8 @@
-import { pipe, switchMap, tap } from 'rxjs';
+import { combineLatest, pipe, switchMap, tap } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
 import {
-	EntityQuantityEntity,
+	EntityCounts,
 	EntityQuantityStateService,
 } from '@music-collection/api';
 import { tapResponse } from '@ngrx/operators';
@@ -19,7 +19,7 @@ import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { ADMIN_NAV, AdminNavItem } from '../admin-nav';
 
 interface AdminDashboardState {
-	quantities: EntityQuantityEntity[];
+	counts: EntityCounts;
 	loading: boolean;
 }
 
@@ -28,28 +28,23 @@ export interface AdminDashboardTile extends AdminNavItem {
 }
 
 const initialState: AdminDashboardState = {
-	quantities: [],
+	counts: {},
 	loading: true,
 };
 
-/** A vezérlőpult állapota: az entitás-számlálók az admin menü szerint. */
+const COUNTED_ITEMS = ADMIN_NAV.flatMap((group) => group.items).filter(
+	(item) => !!item.countType
+);
+
+/** A vezérlőpult állapota: élő entitás-számok az admin menü szerint. */
 export const AdminDashboardStore = signalStore(
 	withState(initialState),
 	withComputed((store) => ({
 		tiles: computed<AdminDashboardTile[]>(() =>
-			ADMIN_NAV.flatMap((group) => group.items)
-				.filter((item) => !!item.quantityType)
-				.map((item) => ({
-					...item,
-					count: store.loading()
-						? null
-						: (store
-								.quantities()
-								.find(
-									(quantity) =>
-										quantity.type === item.quantityType
-								)?.quantity ?? 0),
-				}))
+			COUNTED_ITEMS.map((item) => ({
+				...item,
+				count: store.counts()[item.countType ?? ''] ?? null,
+			}))
 		),
 		quickActions: computed(() =>
 			ADMIN_NAV.flatMap((group) => group.items).filter(
@@ -61,20 +56,22 @@ export const AdminDashboardStore = signalStore(
 		(store, quantityState = inject(EntityQuantityStateService)) => ({
 			load: rxMethod<void>(
 				pipe(
-					tap(() => quantityState.dispatchListEntitiesAction()),
-					switchMap(() =>
-						quantityState.selectEntities$().pipe(
-							tapResponse({
-								next: (quantities) =>
-									patchState(store, {
-										quantities,
-										loading: false,
-									}),
-								error: () =>
-									patchState(store, { loading: false }),
-							})
+					tap(() =>
+						quantityState.dispatchCountEntitiesAction(
+							COUNTED_ITEMS.map((item) => item.countType ?? '')
 						)
-					)
+					),
+					switchMap(() =>
+						combineLatest([
+							quantityState.selectEntityCounts$(),
+							quantityState.selectEntityCountsLoading$(),
+						])
+					),
+					tapResponse({
+						next: ([counts, loading]) =>
+							patchState(store, { counts, loading }),
+						error: () => patchState(store, { loading: false }),
+					})
 				)
 			),
 		})

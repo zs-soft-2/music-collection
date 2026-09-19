@@ -12,7 +12,7 @@ import * as entityQuantityActions from './entity-quantity.actions';
 
 @Injectable()
 export class EntityQuantityEffects {
-  actions$: Actions = inject(Actions);
+	actions$: Actions = inject(Actions);
 	entityQuantityDataService = inject(EntityQuantityDataService);
 	entityQuantityUtilService = inject(EntityQuantityUtilService);
 	public addEntityQuantity = createEffect(() =>
@@ -25,6 +25,25 @@ export class EntityQuantityEffects {
 							entityQuantity,
 						});
 					})
+				)
+			)
+		)
+	);
+	public countEntities = createEffect(() =>
+		this.actions$.pipe(
+			ofType(entityQuantityActions.countEntities),
+			switchMap((action) =>
+				this.entityQuantityDataService.count$(action.types).pipe(
+					map((counts) =>
+						entityQuantityActions.countEntitiesSuccess({ counts })
+					),
+					catchError((error) =>
+						of(
+							entityQuantityActions.countEntitiesFail({
+								error: String(error),
+							})
+						)
+					)
 				)
 			)
 		)

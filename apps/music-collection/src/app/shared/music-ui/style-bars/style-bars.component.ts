@@ -16,7 +16,7 @@ import { CountDatum } from '../count-stats';
 	selector: 'mc-style-bars',
 	template: `
 		<figure class="chart">
-			<figcaption class="title">{{ title() }}</figcaption>
+			<figcaption class="title">{{ heading() }}</figcaption>
 
 			<ul class="bars">
 				@for (row of rows(); track row.label) {
@@ -106,7 +106,7 @@ import { CountDatum } from '../count-stats';
 	`,
 })
 export class StyleBarsComponent {
-	public readonly title = input.required<string>();
+	public readonly heading = input.required<string>();
 	public readonly data = input.required<CountDatum[]>();
 
 	protected readonly rows = computed(() => {

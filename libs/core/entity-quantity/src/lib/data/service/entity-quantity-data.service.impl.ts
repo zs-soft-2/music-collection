@@ -1,9 +1,21 @@
-import { Observable } from 'rxjs';
+import { defer, Observable } from 'rxjs';
 
-import { Injectable } from '@angular/core';
-import { collection, doc } from '@angular/fire/firestore';
 import {
+	inject,
+	Injectable,
+	Injector,
+	runInInjectionContext,
+} from '@angular/core';
+import {
+	collection,
+	collectionGroup,
+	doc,
+	getCountFromServer,
+} from '@angular/fire/firestore';
+import {
+	ENTITY_COUNT_COLLECTIONS,
 	ENTITY_QUANTITY_FEATURE_KEY,
+	EntityCounts,
 	EntityQuantityDataService,
 	EntityQuantityEntity,
 	EntityQuantityEntityAdd,
@@ -13,6 +25,8 @@ import {
 
 @Injectable()
 export class EntityQuantityDataServiceImpl extends EntityQuantityDataService {
+	private readonly injector = inject(Injector);
+
 	public constructor() {
 		super();
 
@@ -24,6 +38,39 @@ export class EntityQuantityDataServiceImpl extends EntityQuantityDataService {
 		entityQuantity: EntityQuantityEntityAdd
 	): Observable<EntityQuantityEntity> {
 		return super.addModel$(entityQuantity);
+	}
+
+	/**
+	 * One aggregation query per type (billed as one read per 1000 documents),
+	 * always from the server: the local cache may hold only part of a group.
+	 */
+	public count$(types: string[]): Observable<EntityCounts> {
+		return defer(async () => {
+			const entries = await Promise.all(
+				types.map(async (type) => {
+					const collectionId = ENTITY_COUNT_COLLECTIONS[type];
+
+					if (!collectionId) {
+						throw new Error(
+							`No collection for entity type: ${type}`
+						);
+					}
+
+					// AngularFire expects its APIs in an injection context.
+					const snapshot = await runInInjectionContext(
+						this.injector,
+						() =>
+							getCountFromServer(
+								collectionGroup(this.firestore, collectionId)
+							)
+					);
+
+					return [type, snapshot.data().count] as const;
+				})
+			);
+
+			return Object.fromEntries(entries);
+		});
 	}
 
 	public delete$(

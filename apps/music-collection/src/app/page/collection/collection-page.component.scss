@@ -56,40 +56,6 @@ h1 {
 	letter-spacing: 0.02em;
 }
 
-.stats {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.75rem;
-	margin: 0;
-}
-
-.stat {
-	min-width: 5.5rem;
-	padding: 0.6rem 0.9rem;
-	background: var(--mc-card-bg);
-	border: 1px solid var(--mc-border);
-	border-radius: var(--mc-radius-md);
-
-	dt {
-		font-size: 0.68rem;
-		font-weight: 600;
-		letter-spacing: 0.1em;
-		text-transform: uppercase;
-		color: var(--mc-text-subtle);
-	}
-
-	dd {
-		margin: 0.1rem 0 0;
-		font-family: var(--mc-font-display);
-		font-size: 1.9rem;
-		line-height: 1;
-	}
-
-	&.is-format dd {
-		color: var(--mc-accent);
-	}
-}
-
 /* ── Toolbar ──────────────────────────────────────────────────────────── */
 
 .toolbar {
@@ -414,20 +380,22 @@ button {
 	border-radius: var(--mc-radius-md);
 }
 
-.panel-title {
-	margin: 0 0 1rem;
-	font-size: 0.75rem;
-	font-weight: 600;
-	letter-spacing: 0.12em;
-	text-transform: uppercase;
-	color: var(--mc-text-muted);
+.stats {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	align-content: start;
+	gap: 0.75rem;
+	margin: 0;
 }
 
-.catalog {
-	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: 1rem 1.25rem;
-	margin: 0;
+.stat {
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	padding: 0.8rem 1rem;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-md);
 
 	dt {
 		font-size: 0.8rem;
@@ -441,6 +409,16 @@ button {
 		line-height: 1.1;
 		font-variant-numeric: tabular-nums;
 	}
+
+	&.is-hero {
+		grid-column: 1 / -1;
+
+		dd {
+			font-size: 3.5rem;
+			font-weight: 700;
+			line-height: 1;
+		}
+	}
 }
 
 .glance-skeleton {
@@ -452,18 +430,28 @@ button {
 		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 	}
 
-	.glance > :first-child {
+	.stats {
 		grid-column: 1 / -1;
+		grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
 	}
 
-	.catalog {
-		grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+	.stat.is-hero {
+		grid-column: auto;
+
+		dd {
+			font-size: 1.9rem;
+			font-weight: 600;
+		}
 	}
 }
 
 @media (max-width: 720px) {
 	.glance {
 		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.stats {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 }
 
