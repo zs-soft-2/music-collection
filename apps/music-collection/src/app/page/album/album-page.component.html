@@ -84,35 +84,56 @@
 						</ul>
 					}
 
-					@if (store.playable()) {
+					@if (store.playable() || store.canCollect()) {
 						<div class="play-actions">
-							<button
-								type="button"
-								class="play-button"
-								(click)="store.togglePlay()"
-							>
-								<i
-									class="pi"
-									[class.pi-pause]="store.playing()"
-									[class.pi-play]="!store.playing()"
-									aria-hidden="true"
-								></i>
-								<span>{{
-									store.playing() ? 'Pause' : 'Play'
-								}}</span>
-							</button>
-							<button
-								type="button"
-								class="player-button"
-								title="Full-screen player"
-								aria-label="Open the full-screen player"
-								(click)="store.openPlayer()"
-							>
-								<i
-									class="pi pi-window-maximize"
-									aria-hidden="true"
-								></i>
-							</button>
+							@if (store.playable()) {
+								<button
+									type="button"
+									class="play-button"
+									(click)="store.togglePlay()"
+								>
+									<i
+										class="pi"
+										[class.pi-pause]="store.playing()"
+										[class.pi-play]="!store.playing()"
+										aria-hidden="true"
+									></i>
+									<span>{{
+										store.playing() ? 'Pause' : 'Play'
+									}}</span>
+								</button>
+								<button
+									type="button"
+									class="player-button"
+									title="Full-screen player"
+									aria-label="Open the full-screen player"
+									(click)="store.openPlayer()"
+								>
+									<i
+										class="pi pi-window-maximize"
+										aria-hidden="true"
+									></i>
+								</button>
+							}
+							@if (store.canCollect()) {
+								<button
+									type="button"
+									class="collect-button"
+									data-collect-toggle
+									aria-haspopup="dialog"
+									(click)="store.openPicker()"
+								>
+									<i
+										class="pi pi-plus"
+										aria-hidden="true"
+									></i>
+									<span>{{
+										store.copies().length
+											? 'Add another copy'
+											: 'Add to collection'
+									}}</span>
+								</button>
+							}
 						</div>
 					}
 				</div>
@@ -470,3 +491,15 @@
 		</div>
 	}
 </div>
+
+@if (store.pickerOpen() && store.album(); as album) {
+	<mc-release-picker
+		[albumTitle]="album.title"
+		[releases]="store.releaseOptions()"
+		[loading]="store.catalogReleasesLoading()"
+		[adding]="store.adding()"
+		[error]="store.addError()"
+		(picked)="store.addToCollection($event)"
+		(closed)="onPickerClosed()"
+	/>
+}

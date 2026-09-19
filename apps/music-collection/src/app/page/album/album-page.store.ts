@@ -1,4 +1,14 @@
-import { Observable, filter, map, of, pipe, switchMap, tap } from 'rxjs';
+import {
+	Observable,
+	combineLatest,
+	filter,
+	map,
+	of,
+	pairwise,
+	pipe,
+	switchMap,
+	tap,
+} from 'rxjs';
 
 import { DestroyRef, computed, effect, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
@@ -6,8 +16,15 @@ import {
 	AlbumEntity,
 	AlbumStateService,
 	ArtistStateService,
+	AuthenticationStateService,
+	CollectionItemEntityAdd,
+	CollectionItemPermissionsService,
 	CollectionItemStateService,
 	ContributionEntity,
+	EntityTypeEnum,
+	ReleaseEntity,
+	ReleaseStateService,
+	RoleNames,
 	TrackEntity,
 } from '@music-collection/api';
 import { tapResponse } from '@ngrx/operators';
@@ -20,6 +37,7 @@ import {
 	withState,
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
+import { NgxPermissionsService } from 'ngx-permissions';
 
 import { AlbumDetailsEffect } from '../../data/album-details';
 import {
@@ -33,6 +51,7 @@ import {
 	groupCredits,
 	groupTracks,
 	toAlbumProfile,
+	toReleaseOptions,
 	totalDuration,
 } from './album.mapper';
 import {
@@ -48,6 +67,15 @@ interface AlbumPageState {
 	releases: ReleaseView[];
 	tracks: TrackEntity[];
 	contributions: ContributionEntity[];
+	/** Every release of the catalog; loaded when the picker first opens. */
+	catalogReleases: ReleaseEntity[];
+	catalogReleasesLoading: boolean;
+	/** The signed-in user, who may add to their collection. */
+	userId: string | null;
+	canCollect: boolean;
+	pickerOpen: boolean;
+	adding: boolean;
+	addError: string | null;
 	albumsLoading: boolean;
 	releasesLoading: boolean;
 	detailsLoading: boolean;
@@ -61,6 +89,13 @@ const initialState: AlbumPageState = {
 	releases: [],
 	tracks: [],
 	contributions: [],
+	catalogReleases: [],
+	catalogReleasesLoading: true,
+	userId: null,
+	canCollect: false,
+	pickerOpen: false,
+	adding: false,
+	addError: null,
 	albumsLoading: true,
 	releasesLoading: true,
 	detailsLoading: true,
@@ -112,6 +147,25 @@ export const AlbumPageStore = signalStore(
 					.releases()
 					.filter((release) => release.albumId === store.albumId())
 			),
+			/** The album's catalog releases to pick the collected one from. */
+			releaseOptions: computed(() => {
+				const albumId = store.albumId();
+				const owned = new Set(
+					store
+						.releases()
+						.filter((release) => release.albumId === albumId)
+						.flatMap((release) =>
+							release.releaseId ? [release.releaseId] : []
+						)
+				);
+
+				return toReleaseOptions(
+					store
+						.catalogReleases()
+						.filter((release) => release.album?.uid === albumId),
+					owned
+				);
+			}),
 			trackGroups: computed(() =>
 				groupTracks(store.tracks(), store.contributions())
 			),
@@ -156,6 +210,9 @@ export const AlbumPageStore = signalStore(
 			albumStateService = inject(AlbumStateService),
 			artistStateService = inject(ArtistStateService),
 			collectionItemStateService = inject(CollectionItemStateService),
+			releaseStateService = inject(ReleaseStateService),
+			authenticationStateService = inject(AuthenticationStateService),
+			permissionsService = inject(NgxPermissionsService),
 			albumDetailsEffect = inject(AlbumDetailsEffect)
 		) => ({
 			/** Follows `:albumId` and loads the tracklist and credits. */
@@ -229,6 +286,95 @@ export const AlbumPageStore = signalStore(
 					})
 				)
 			),
+			/** Who is signed in and whether they may add to their collection. */
+			loadCollector: rxMethod<void>(
+				pipe(
+					switchMap(() =>
+						combineLatest([
+							authenticationStateService.selectAuthenticatedUser$(),
+							permissionsService.permissions$,
+						])
+					),
+					tap(([user, permissions]) =>
+						patchState(store, {
+							userId: user?.uid ?? null,
+							canCollect:
+								!!user?.uid &&
+								(CollectionItemPermissionsService.createCollectionItemEntity in
+									permissions ||
+									RoleNames.ADMIN in permissions),
+						})
+					)
+				)
+			),
+			loadCatalogReleases: rxMethod<void>(
+				pipe(
+					switchMap(() =>
+						entities$(
+							() => releaseStateService.selectEntities$(),
+							() =>
+								releaseStateService.dispatchListEntitiesAction()
+						)
+					),
+					tapResponse({
+						next: (catalogReleases) =>
+							patchState(store, {
+								catalogReleases,
+								catalogReleasesLoading: false,
+							}),
+						error: (error) => {
+							console.error(error);
+							patchState(store, {
+								catalogReleasesLoading: false,
+							});
+						},
+					})
+				)
+			),
+			/** Follows the add; the picker closes once the copy is saved. */
+			watchAdding: rxMethod<void>(
+				pipe(
+					switchMap(() =>
+						combineLatest([
+							collectionItemStateService.selectAdding$(),
+							collectionItemStateService.selectError$(),
+						])
+					),
+					pairwise(),
+					tap(([[wasAdding], [adding, error]]) => {
+						patchState(store, { adding });
+						if (wasAdding && !adding) {
+							patchState(store, {
+								addError: error,
+								pickerOpen: !!error,
+							});
+						}
+					})
+				)
+			),
+			/** Adds a copy of the release to the signed-in user's collection. */
+			addToCollection(releaseId: string): void {
+				const release = store
+					.catalogReleases()
+					.find((item) => item.uid === releaseId);
+				const userId = store.userId();
+
+				if (!release || !userId || store.adding()) {
+					return;
+				}
+
+				const collectionItem: CollectionItemEntityAdd = {
+					entityType: EntityTypeEnum.CollectionItem,
+					date: new Date(),
+					release,
+					userId,
+				};
+
+				patchState(store, { addError: null });
+				collectionItemStateService.dispatchAddEntityAction(
+					collectionItem
+				);
+			},
 			loadReleases: rxMethod<void>(
 				pipe(
 					switchMap(() =>
@@ -253,6 +399,22 @@ export const AlbumPageStore = signalStore(
 			),
 		})
 	),
+	withMethods((store) => {
+		let catalogRequested = false;
+
+		return {
+			openPicker(): void {
+				if (!catalogRequested) {
+					catalogRequested = true;
+					store.loadCatalogReleases(of(undefined));
+				}
+				patchState(store, { pickerOpen: true, addError: null });
+			},
+			closePicker(): void {
+				patchState(store, { pickerOpen: false });
+			},
+		};
+	}),
 	withComputed((store, player = inject(PlayerStore)) => ({
 		/** Our id of the album's track playing now. */
 		playingTrackId: computed(() => {
@@ -292,6 +454,8 @@ export const AlbumPageStore = signalStore(
 			store.loadAlbums(of(undefined));
 			store.loadArtists(of(undefined));
 			store.loadReleases(of(undefined));
+			store.loadCollector(of(undefined));
+			store.watchAdding(of(undefined));
 		},
 	})
 );

@@ -19,7 +19,11 @@ export abstract class CollectionItemStateService extends EntityStateService<
 	public abstract dispatchSetCollectionItemConfigAction(
 		collectionItemListConfig: CollectionItemListConfig
 	): void;
+	/** An item is being added. */
+	public abstract selectAdding$(): Observable<boolean>;
 	public abstract selectCollectionItemListConfig$(): Observable<CollectionItemListConfig | null>;
+	/** The error of the last failed write, `null` after a new one starts. */
+	public abstract selectError$(): Observable<string | null>;
 	public abstract selectNewEntityButtonEnabled$(): Observable<boolean>;
 	public abstract selectSearchResult$(): Observable<CollectionItemEntity[]>;
 }

@@ -75,6 +75,7 @@ export function toWishlistEntryView(
 		release: {
 			id: item.uid,
 			albumId: item.albumReference?.uid ?? '',
+			releaseId: null,
 			title: item.albumReference?.name ?? 'Unknown album',
 			artistId: item.artistReference?.uid ?? '',
 			artistName: item.artistReference?.name ?? 'Unknown artist',

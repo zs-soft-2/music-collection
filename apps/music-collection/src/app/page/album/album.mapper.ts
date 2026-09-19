@@ -1,6 +1,7 @@
 import {
 	AlbumEntity,
 	ContributionEntity,
+	ReleaseEntity,
 	TrackEntity,
 	isSpotifyAlbumId,
 	isYoutubePlaylistId,
@@ -11,11 +12,17 @@ import {
 	AlbumView,
 	CREDIT_CATEGORY_LABELS,
 	CreditCategory,
+	EDITION_TAGS,
+	EditionTag,
+	MediaFormat,
 	creditCategory,
 	formatCountry,
 	performerOrder,
 	formatGenre,
 	toAlbumView,
+	toDescriptions,
+	toMediaFormat,
+	toYear,
 } from '../../shared/music-ui';
 
 export interface OriginalReleaseView {
@@ -34,6 +41,20 @@ export interface AlbumProfileView extends AlbumView {
 	spotifyAlbumId: string | null;
 	youtubePlaylistId: string | null;
 	youtubeVideoIds: string[];
+}
+
+/** A catalog release (pressing) of the album, offered to be collected. */
+export interface ReleaseOptionView {
+	id: string;
+	format: MediaFormat;
+	/** Pressing weight in grams (180g vinyl). */
+	weight: number | null;
+	labelName: string | null;
+	country: string | null;
+	year: number | null;
+	editions: EditionTag[];
+	/** The collector already has a copy of this release. */
+	owned: boolean;
 }
 
 export interface TrackRow {
@@ -301,4 +322,34 @@ export function groupCredits(
 						: people.sort((a, b) => a.name.localeCompare(b.name)),
 			};
 		});
+}
+
+/** The album's releases, owned ones last, then by year and format. */
+export function toReleaseOptions(
+	releases: ReleaseEntity[],
+	ownedReleaseIds: Set<string>
+): ReleaseOptionView[] {
+	return releases
+		.map((release): ReleaseOptionView => {
+			const descriptions = toDescriptions(release.formatDescription);
+
+			return {
+				id: release.uid,
+				format: toMediaFormat(release.media),
+				weight: descriptions.includes('180g') ? 180 : null,
+				labelName: release.label?.name || null,
+				country: formatCountry(release.country),
+				year: toYear(release.date),
+				editions: EDITION_TAGS.filter((tag) =>
+					descriptions.includes(tag)
+				),
+				owned: ownedReleaseIds.has(release.uid),
+			};
+		})
+		.sort(
+			(a, b) =>
+				Number(a.owned) - Number(b.owned) ||
+				(a.year ?? Infinity) - (b.year ?? Infinity) ||
+				a.format.localeCompare(b.format)
+		);
 }

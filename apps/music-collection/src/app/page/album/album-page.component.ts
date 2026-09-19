@@ -2,7 +2,9 @@ import { ViewportScroller } from '@angular/common';
 import {
 	ChangeDetectionStrategy,
 	Component,
-	computed,
+	ElementRef,
+	Injector,
+	afterNextRender,
 	effect,
 	inject,
 	signal,
@@ -19,6 +21,7 @@ import { PlayerPanelComponent } from '../../shared/player';
 import { AlbumPageStore } from './album-page.store';
 import { AlbumCreditsComponent } from './component/album-credits/album-credits.component';
 import { AlbumTracklistComponent } from './component/album-tracklist/album-tracklist.component';
+import { ReleasePickerComponent } from './component/release-picker/release-picker.component';
 import { BackLinkComponent } from '../../shared/back-link';
 
 type AlbumSection =
@@ -54,11 +57,14 @@ function readCompact(): boolean {
 		AlbumTracklistComponent,
 		AdminEditLinkComponent,
 		PlayerPanelComponent,
+		ReleasePickerComponent,
 	],
 })
 export class AlbumPageComponent {
 	protected readonly store = inject(AlbumPageStore);
 	private readonly viewportScroller = inject(ViewportScroller);
+	private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+	private readonly injector = inject(Injector);
 
 	/** Compact view: sections show only their titles until opened. Remembered. */
 	protected readonly compact = signal(readCompact());
@@ -76,6 +82,23 @@ export class AlbumPageComponent {
 				this.viewportScroller.scrollToPosition([0, 0]);
 				this.openSections.set(new Set());
 			});
+		});
+
+		// Back on the page (closed or added): focus the button that opened the
+		// picker.
+		let pickerWasOpen = false;
+		effect(() => {
+			const open = this.store.pickerOpen();
+			if (pickerWasOpen && !open) {
+				afterNextRender(
+					() =>
+						this.host.nativeElement
+							.querySelector<HTMLElement>('[data-collect-toggle]')
+							?.focus(),
+					{ injector: this.injector }
+				);
+			}
+			pickerWasOpen = open;
 		});
 
 		effect(() => {
@@ -105,6 +128,10 @@ export class AlbumPageComponent {
 	protected toggleCompact(): void {
 		this.compact.update((compact) => !compact);
 		this.openSections.set(new Set());
+	}
+
+	protected onPickerClosed(): void {
+		this.store.closePicker();
 	}
 
 	protected collapseAll(): void {

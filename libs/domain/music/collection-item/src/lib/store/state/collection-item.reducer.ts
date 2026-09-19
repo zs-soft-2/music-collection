@@ -14,6 +14,8 @@ export interface State extends EntityState<CollectionItemEntity> {
 	isNewEntityButtonEnabled: boolean;
 	selectedId?: string;
 	loading: boolean;
+	/** An item is being added. */
+	adding: boolean;
 	searchResult: CollectionItemEntity[];
 	error?: string | null;
 	collectionItemListConfig: CollectionItemListConfig | null;
@@ -46,20 +48,31 @@ export const initialState: State = collectionItemAdapter.getInitialState({
 	},
 	isNewEntityButtonEnabled: true,
 	loading: false,
+	adding: false,
 	error: null,
 	searchResult: [],
 });
 
 export const collectionItemReducer = createReducer(
 	initialState,
+	on(collectionItemActions.addCollectionItem, (state) => ({
+		...state,
+		adding: true,
+		error: null,
+	})),
 	on(
 		collectionItemActions.addCollectionItemSuccess,
 		(state, { collectionItem }) =>
 			collectionItemAdapter.addOne(
 				collectionItem as CollectionItemEntity,
-				state
+				{ ...state, adding: false }
 			)
 	),
+	on(collectionItemActions.addCollectionItemFail, (state, { error }) => ({
+		...state,
+		adding: false,
+		error: error?.message ?? String(error),
+	})),
 	on(
 		collectionItemActions.changeNewEntityButtonEnabled,
 		(state, { enabled }) => ({

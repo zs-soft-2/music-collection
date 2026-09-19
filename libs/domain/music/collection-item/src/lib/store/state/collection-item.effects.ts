@@ -73,6 +73,14 @@ export class CollectionItemEffects {
 									collectionItem: collectionItemEntity,
 								}
 							);
+						}),
+						catchError((error) => {
+							console.error(error);
+							return of(
+								collectionItemActions.addCollectionItemFail({
+									error,
+								})
+							);
 						})
 					)
 			)
@@ -154,7 +162,7 @@ export class CollectionItemEffects {
 							collectionItem: collectionItem
 								? this.collectionItemUtilService.convertModelToEntity(
 										collectionItem
-								  )
+									)
 								: undefined,
 						});
 					}),

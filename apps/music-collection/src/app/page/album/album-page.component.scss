@@ -667,6 +667,30 @@ h1 {
 	}
 }
 
+.collect-button {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	height: 44px;
+	padding: 0 1.2rem;
+	border: 1px solid rgb(255 255 255 / 0.3);
+	border-radius: 22px;
+	font: inherit;
+	font-weight: 700;
+	color: #fff;
+	background: rgb(0 0 0 / 0.3);
+	cursor: pointer;
+
+	&:hover {
+		background: rgb(255 255 255 / 0.15);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--mc-primary);
+		outline-offset: 2px;
+	}
+}
+
 .player-button {
 	display: grid;
 	place-items: center;

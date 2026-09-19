@@ -23,6 +23,8 @@ export interface ReleaseView {
 	id: string;
 	/** Album id — the card links to `/album/:albumId`. */
 	albumId: string;
+	/** Catalog release (pressing) the item is a copy of; none on a wish. */
+	releaseId: string | null;
 	title: string;
 	/** Artist id — links to `/artist/:artistId`. */
 	artistId: string;

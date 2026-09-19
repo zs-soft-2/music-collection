@@ -15,7 +15,7 @@ import {
 	ReleaseView,
 } from './music-ui.model';
 
-const EDITION_TAGS: EditionTag[] = [
+export const EDITION_TAGS: EditionTag[] = [
 	'limited edition',
 	'deluxe edition',
 	'reissue',
@@ -52,7 +52,7 @@ export function toEpochMs(value: unknown): number | null {
 }
 
 /** `formatDescription` is typed as one value but is stored as a list. */
-function toDescriptions(value: unknown): string[] {
+export function toDescriptions(value: unknown): string[] {
 	if (Array.isArray(value)) {
 		return value.filter((item): item is string => typeof item === 'string');
 	}
@@ -81,6 +81,7 @@ export function toReleaseView(item: CollectionItemEntity): ReleaseView {
 	return {
 		id: item.uid,
 		albumId: release.album?.uid ?? '',
+		releaseId: release.uid ?? null,
 		title: release.album?.name || release.name || 'Untitled',
 		artistId: release.artist?.uid ?? '',
 		artistName: release.artist?.name || 'Unknown artist',
@@ -102,7 +103,7 @@ export function toReleaseView(item: CollectionItemEntity): ReleaseView {
 	};
 }
 
-function toYear(value: unknown): number | null {
+export function toYear(value: unknown): number | null {
 	const ms = toEpochMs(value);
 	return ms === null ? null : new Date(ms).getFullYear();
 }

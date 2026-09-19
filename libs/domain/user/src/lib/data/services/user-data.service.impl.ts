@@ -61,7 +61,8 @@ export class UserDataServiceImpl extends UserDataService {
 					subscriber.next({
 						...newCollectionItem,
 					} as unknown as CollectionItemModel);
-				});
+				})
+				.catch((error) => subscriber.error(error));
 		});
 	}
 

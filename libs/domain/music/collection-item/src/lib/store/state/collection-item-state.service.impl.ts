@@ -1,4 +1,4 @@
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
 import {
@@ -17,8 +17,8 @@ import * as collectionItemSelectors from './collection-item.selectors';
 
 @Injectable()
 export class CollectionItemStateServiceImpl extends CollectionItemStateService {
-	private store = inject<Store<fromCollectionItem.CollectionItemPartialState>>(Store);
-
+	private store =
+		inject<Store<fromCollectionItem.CollectionItemPartialState>>(Store);
 
 	public dispatchAddEntityAction(
 		collectionItem: CollectionItemEntityAdd
@@ -96,6 +96,19 @@ export class CollectionItemStateServiceImpl extends CollectionItemStateService {
 
 	public isLoading$(): Observable<boolean> {
 		throw new Error('Method not implemented.');
+	}
+
+	public selectAdding$(): Observable<boolean> {
+		return this.store.pipe(
+			select(collectionItemSelectors.getCollectionItemAdding)
+		);
+	}
+
+	public selectError$(): Observable<string | null> {
+		return this.store.pipe(
+			select(collectionItemSelectors.getCollectionItemError),
+			map((error) => error ?? null)
+		);
 	}
 
 	public selectEntities$(): Observable<CollectionItemEntity[]> {
