@@ -146,6 +146,8 @@ module "firebase" {
   hosting_sites      = var.hosting_sites
   firestore_location = var.firestore_location
 
+  firestore_point_in_time_recovery = var.firestore_point_in_time_recovery
+
   depends_on = [google_project_service.enabled]
 }
 

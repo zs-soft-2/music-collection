@@ -53,6 +53,11 @@ variable "firestore_location" {
   type = string
 }
 
+variable "firestore_point_in_time_recovery" {
+  type    = bool
+  default = false
+}
+
 variable "build_configuration" {
   type = string
 }

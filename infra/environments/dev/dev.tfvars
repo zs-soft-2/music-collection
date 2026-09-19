@@ -13,3 +13,6 @@ deployment_branches = ["dev"]
 # state alá kell venni: tofu import -var-file=dev.tfvars module.firebase.google_firestore_database.default \
 #   "projects/music-collection-16676/databases/(default)"
 firestore_location = "europe-west4"
+# A dev adatbázison be van kapcsolva (a konzolban kapcsolták be, 2026-09-19-én
+# vettük át); nélküle egy apply kikapcsolná.
+firestore_point_in_time_recovery = true

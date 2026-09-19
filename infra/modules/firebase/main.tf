@@ -22,6 +22,11 @@ variable "firestore_location" {
   type        = string
   description = "A Firestore adatbázis helye. Létrehozás után NEM módosítható; a dev a prod helyét követi."
 }
+variable "firestore_point_in_time_recovery" {
+  type        = bool
+  default     = false
+  description = "Point-in-time recovery (7 napra visszamenő olvasás/visszaállítás) a Firestore adatbázison."
+}
 
 resource "google_firebase_project" "this" {
   provider = google-beta
@@ -55,6 +60,12 @@ resource "google_firestore_database" "default" {
   name        = "(default)"
   location_id = var.firestore_location
   type        = "FIRESTORE_NATIVE"
+
+  point_in_time_recovery_enablement = (
+    var.firestore_point_in_time_recovery
+    ? "POINT_IN_TIME_RECOVERY_ENABLED"
+    : "POINT_IN_TIME_RECOVERY_DISABLED"
+  )
 
   # ABANDON: egy destroy a state-ből veszi ki, az adatot nem érinti.
   deletion_policy = "ABANDON"
