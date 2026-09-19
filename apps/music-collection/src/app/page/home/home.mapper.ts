@@ -182,3 +182,46 @@ export function searchHome(
 
 	return groups.filter((group) => group.items.length > 0);
 }
+
+/** Catalog albums of one decade and how many of them are in the collection. */
+export interface DecadeCoverage {
+	label: string;
+	catalog: number;
+	collected: number;
+}
+
+/**
+ * Catalog albums per decade of their release year, in chronological order,
+ * with the number of them that have at least one release in the collection.
+ */
+export function decadeCoverage(
+	albums: AlbumView[],
+	releases: ReleaseView[]
+): DecadeCoverage[] {
+	const collectedAlbumIds = new Set(
+		releases.map((release) => release.albumId)
+	);
+	const decades = new Map<number, DecadeCoverage>();
+
+	for (const album of albums) {
+		if (album.year === null) {
+			continue;
+		}
+		const decade = Math.floor(album.year / 10) * 10;
+		const entry = decades.get(decade) ?? {
+			label: `${decade}s`,
+			catalog: 0,
+			collected: 0,
+		};
+
+		entry.catalog++;
+		if (collectedAlbumIds.has(album.id)) {
+			entry.collected++;
+		}
+		decades.set(decade, entry);
+	}
+
+	return Array.from(decades.entries())
+		.sort(([a], [b]) => a - b)
+		.map(([, entry]) => entry);
+}

@@ -23,7 +23,7 @@ import { CountDatum } from '../count-stats';
 					<li
 						class="row"
 						[attr.aria-label]="
-							row.label + ': ' + row.count + ' releases'
+							row.label + ': ' + row.count + ' ' + unit()
 						"
 					>
 						<span class="label" aria-hidden="true">{{
@@ -108,6 +108,8 @@ import { CountDatum } from '../count-stats';
 export class StyleBarsComponent {
 	public readonly heading = input.required<string>();
 	public readonly data = input.required<CountDatum[]>();
+	/** What is counted, read out by screen readers after each value. */
+	public readonly unit = input('releases');
 
 	protected readonly rows = computed(() => {
 		const data = this.data();

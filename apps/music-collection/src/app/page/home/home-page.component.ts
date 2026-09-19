@@ -7,11 +7,13 @@ import {
 	ReleaseCardComponent,
 } from '../../shared/music-ui';
 import { ArtistSpotlightComponent } from './component/artist-spotlight/artist-spotlight.component';
+import { CatalogCoverageChartComponent } from './component/catalog-coverage-chart/catalog-coverage-chart.component';
 import { HomeSearchComponent } from './component/home-search/home-search.component';
 import { HomePageStore } from './home-page.store';
 
 /**
- * Home page: a quick search, an artist spotlight, the catalog at a glance, recently added
+ * Home page: a quick search, an artist spotlight, the catalog at a glance
+ * (counts and collection coverage by decade), recently added
  * releases, the most collected artists and the newest albums of the catalog.
  */
 @Component({
@@ -26,6 +28,7 @@ import { HomePageStore } from './home-page.store';
 		ReleaseCardComponent,
 		ArtistSpotlightComponent,
 		ArtistTileComponent,
+		CatalogCoverageChartComponent,
 		HomeSearchComponent,
 	],
 })

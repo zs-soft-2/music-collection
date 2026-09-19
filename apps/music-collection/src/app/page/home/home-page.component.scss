@@ -117,6 +117,23 @@ ul {
 	}
 }
 
+/* Catalog vs. collection by decade, below the count tiles. */
+.panel {
+	padding: 1.1rem 1.25rem;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-md);
+}
+
+.coverage {
+	margin-top: 1rem;
+}
+
+.coverage-skeleton {
+	height: 320px;
+	margin-top: 1rem;
+}
+
 /* ── Grids ────────────────────────────────────────────────────────────── */
 
 .card-grid {

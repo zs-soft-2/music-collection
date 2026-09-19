@@ -1,7 +1,12 @@
-import { combineLatest, pipe, switchMap, tap } from 'rxjs';
+import { Observable, combineLatest, filter, pipe, switchMap, tap } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
 import {
+	AlbumEntity,
+	AlbumStateService,
+	ArtistEntity,
+	ArtistStateService,
+	CollectionItemStateService,
 	EntityCounts,
 	EntityQuantityStateService,
 } from '@music-collection/api';
@@ -16,11 +21,27 @@ import {
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
+import {
+	ReleaseView,
+	toReleaseView,
+	topStyles,
+} from '../../../shared/music-ui';
 import { ADMIN_NAV, AdminNavItem } from '../admin-nav';
+import {
+	albumTypeDistribution,
+	catalogCompleteness,
+	collectionGrowth,
+} from './admin-dashboard.mapper';
 
 interface AdminDashboardState {
 	counts: EntityCounts;
 	loading: boolean;
+	albums: AlbumEntity[];
+	artists: ArtistEntity[];
+	releases: ReleaseView[];
+	albumsLoading: boolean;
+	artistsLoading: boolean;
+	releasesLoading: boolean;
 }
 
 export interface AdminDashboardTile extends AdminNavItem {
@@ -30,13 +51,43 @@ export interface AdminDashboardTile extends AdminNavItem {
 const initialState: AdminDashboardState = {
 	counts: {},
 	loading: true,
+	albums: [],
+	artists: [],
+	releases: [],
+	albumsLoading: true,
+	artistsLoading: true,
+	releasesLoading: true,
 };
 
 const COUNTED_ITEMS = ADMIN_NAV.flatMap((group) => group.items).filter(
 	(item) => !!item.countType
 );
 
-/** A vezérlőpult állapota: élő entitás-számok az admin menü szerint. */
+/** Stílusok száma a katalógus-összetétel diagramján. */
+const STYLE_COUNT = 8;
+
+/**
+ * Egy entitás-típus listáját egyszer tölti be: az NgRx store-ból olvas, és
+ * elindítja a listázást, ha a store még üres.
+ */
+function entities$<T>(
+	select: () => Observable<T[]>,
+	dispatchList: () => void
+): Observable<T[]> {
+	return select().pipe(
+		tap((items) => {
+			if (!items?.length) {
+				dispatchList();
+			}
+		}),
+		filter((items) => items?.length > 0)
+	);
+}
+
+/**
+ * A vezérlőpult állapota: élő entitás-számok az admin menü szerint, valamint
+ * a katalógus adatminősége, összetétele és a gyűjtemény gyarapodása.
+ */
 export const AdminDashboardStore = signalStore(
 	withState(initialState),
 	withComputed((store) => ({
@@ -51,9 +102,29 @@ export const AdminDashboardStore = signalStore(
 				(item) => !!item.createLabel
 			)
 		),
+		catalogLoading: computed(
+			() => store.albumsLoading() || store.artistsLoading()
+		),
+		completeness: computed(() =>
+			catalogCompleteness(store.albums(), store.artists())
+		),
+		growth: computed(() => collectionGrowth(store.releases())),
+		albumTypes: computed(() => albumTypeDistribution(store.albums())),
+		styles: computed(() =>
+			topStyles(
+				store.albums().map((album) => ({ styles: album.styles ?? [] })),
+				STYLE_COUNT
+			)
+		),
 	})),
 	withMethods(
-		(store, quantityState = inject(EntityQuantityStateService)) => ({
+		(
+			store,
+			quantityState = inject(EntityQuantityStateService),
+			albumState = inject(AlbumStateService),
+			artistState = inject(ArtistStateService),
+			collectionItemState = inject(CollectionItemStateService)
+		) => ({
 			load: rxMethod<void>(
 				pipe(
 					tap(() =>
@@ -74,11 +145,75 @@ export const AdminDashboardStore = signalStore(
 					})
 				)
 			),
+			loadAlbums: rxMethod<void>(
+				pipe(
+					switchMap(() =>
+						entities$(
+							() => albumState.selectEntities$(),
+							() => albumState.dispatchListEntitiesAction()
+						)
+					),
+					tapResponse({
+						next: (albums) =>
+							patchState(store, { albums, albumsLoading: false }),
+						error: (error) => {
+							console.error(error);
+							patchState(store, { albumsLoading: false });
+						},
+					})
+				)
+			),
+			loadArtists: rxMethod<void>(
+				pipe(
+					switchMap(() =>
+						entities$(
+							() => artistState.selectEntities$(),
+							() => artistState.dispatchListEntitiesAction()
+						)
+					),
+					tapResponse({
+						next: (artists) =>
+							patchState(store, {
+								artists,
+								artistsLoading: false,
+							}),
+						error: (error) => {
+							console.error(error);
+							patchState(store, { artistsLoading: false });
+						},
+					})
+				)
+			),
+			loadReleases: rxMethod<void>(
+				pipe(
+					switchMap(() =>
+						entities$(
+							() => collectionItemState.selectEntities$(),
+							() =>
+								collectionItemState.dispatchListEntitiesAction()
+						)
+					),
+					tapResponse({
+						next: (items) =>
+							patchState(store, {
+								releases: items.map(toReleaseView),
+								releasesLoading: false,
+							}),
+						error: (error) => {
+							console.error(error);
+							patchState(store, { releasesLoading: false });
+						},
+					})
+				)
+			),
 		})
 	),
 	withHooks({
 		onInit(store) {
 			store.load();
+			store.loadAlbums();
+			store.loadArtists();
+			store.loadReleases();
 		},
 	})
 );

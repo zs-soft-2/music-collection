@@ -32,6 +32,55 @@
 	</ul>
 </section>
 
+<div class="charts">
+	<section class="mc-card chart-card is-wide" aria-labelledby="growth-title">
+		<h2 id="growth-title" class="visually-hidden">Collection growth</h2>
+		@if (store.releasesLoading()) {
+			<div class="skeleton" role="status" aria-busy="true"></div>
+		} @else if (!store.growth().length) {
+			<p class="chart-empty">No dated collection items yet.</p>
+		} @else {
+			<mc-collection-growth-chart
+				heading="Collection growth"
+				[data]="store.growth()"
+			/>
+		}
+	</section>
+
+	<section class="mc-card chart-card is-tall" aria-labelledby="quality-title">
+		<h2 id="quality-title" class="chart-title">Data completeness</h2>
+		@if (store.catalogLoading()) {
+			<div class="skeleton" role="status" aria-busy="true"></div>
+		} @else {
+			<mc-completeness-meters [data]="store.completeness()" />
+		}
+	</section>
+
+	<section class="mc-card chart-card" aria-label="Album types">
+		@if (store.albumsLoading()) {
+			<div class="skeleton" role="status" aria-busy="true"></div>
+		} @else {
+			<mc-style-bars
+				heading="Album types in the catalog"
+				unit="albums"
+				[data]="store.albumTypes()"
+			/>
+		}
+	</section>
+
+	<section class="mc-card chart-card" aria-label="Top styles">
+		@if (store.albumsLoading()) {
+			<div class="skeleton" role="status" aria-busy="true"></div>
+		} @else {
+			<mc-style-bars
+				heading="Top styles in the catalog"
+				unit="albums"
+				[data]="store.styles()"
+			/>
+		}
+	</section>
+</div>
+
 <section class="mc-card panel" aria-labelledby="actions-title">
 	<header class="panel-head">
 		<h2 id="actions-title">Quick actions</h2>

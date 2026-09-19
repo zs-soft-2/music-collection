@@ -21,15 +21,15 @@ export function decadeDistribution(releases: ReleaseView[]): CountDatum[] {
 		.map(([decade, count]) => ({ label: `${decade}s`, count }));
 }
 
-/** The most frequent styles across the collection. */
+/** The most frequent styles across the given releases or albums. */
 export function topStyles(
-	releases: ReleaseView[],
+	items: { styles: string[] }[],
 	limit: number
 ): CountDatum[] {
 	const counts = new Map<string, number>();
 
-	for (const release of releases) {
-		for (const style of release.styles) {
+	for (const item of items) {
+		for (const style of item.styles) {
 			counts.set(style, (counts.get(style) ?? 0) + 1);
 		}
 	}

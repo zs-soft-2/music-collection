@@ -38,6 +38,7 @@ import {
 import {
 	CATALOG_TYPES,
 	catalogStats,
+	decadeCoverage,
 	mostCollectedArtists,
 	pickRandom,
 	releaseCountsByArtist,
@@ -132,6 +133,9 @@ export const HomePageStore = signalStore(
 					: [];
 			}),
 			catalog: computed(() => catalogStats(store.counts())),
+			coverage: computed(() =>
+				decadeCoverage(store.albums(), store.releases())
+			),
 			recentReleases: computed(() =>
 				[...store.releases()]
 					.sort((a, b) => b.addedAt - a.addedAt)

@@ -45,6 +45,17 @@
 		} @else {
 			<p class="muted">The catalog counts are not available right now.</p>
 		}
+
+		@if (store.albumsLoading() || store.releasesLoading()) {
+			<div class="skeleton coverage-skeleton"></div>
+		} @else if (store.coverage().length) {
+			<div class="panel coverage">
+				<mc-catalog-coverage-chart
+					heading="Catalog albums by decade"
+					[data]="store.coverage()"
+				/>
+			</div>
+		}
 	</section>
 
 	<!-- Recently added -->
