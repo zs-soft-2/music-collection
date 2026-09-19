@@ -1,3 +1,4 @@
+import { FetchResponse } from './discogs-api';
 import {
 	DiscogsError,
 	fetchMasterVersions,
@@ -11,7 +12,7 @@ const response = (status: number, body: unknown) =>
 		ok: status >= 200 && status < 300,
 		status,
 		json: async () => body,
-	}) as Response;
+	}) as FetchResponse;
 
 describe('releasedYear', () => {
 	it('az évet veszi a dátum elejéről', () => {

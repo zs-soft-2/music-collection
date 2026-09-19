@@ -15,8 +15,28 @@ export class DiscogsError extends Error {
 	}
 }
 
+/** Amit a Discogs-hívás a `fetch` válaszából használ. */
+export interface FetchResponse {
+	ok: boolean;
+	status: number;
+	json(): Promise<unknown>;
+}
+
+/**
+ * A Node 22 globális `fetch`-e, ennyi a típusából. A típust nem a
+ * `@types/node`-ból vesszük: a CI a gyökér (régebbi) `@types/node`-jával
+ * fordít, abban a `fetch` még nincs benne.
+ */
+export type Fetch = (
+	url: string,
+	init: { headers: Record<string, string> }
+) => Promise<FetchResponse>;
+
+const globalFetch: Fetch = (url, init) =>
+	(globalThis as unknown as { fetch: Fetch }).fetch(url, init);
+
 export interface DiscogsRequestOptions {
-	fetchImpl?: typeof fetch;
+	fetchImpl?: Fetch;
 	/** Personal access token; nélküle is működik, csak kisebb kerettel. */
 	token?: string | null;
 }
@@ -24,7 +44,7 @@ export interface DiscogsRequestOptions {
 /** GET egy API-útvonalra (pl. `/releases/123`), JSON válasszal. */
 export async function discogsGet<T>(
 	path: string,
-	{ fetchImpl = fetch, token = null }: DiscogsRequestOptions = {}
+	{ fetchImpl = globalFetch, token = null }: DiscogsRequestOptions = {}
 ): Promise<T> {
 	const url = `${API}${path}`;
 	const response = await fetchImpl(url, {
