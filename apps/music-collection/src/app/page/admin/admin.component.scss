@@ -90,7 +90,21 @@
 	text-transform: uppercase;
 }
 
+.nav-badge {
+	min-width: 1.25rem;
+	margin-left: auto;
+	padding: 0 0.35rem;
+	border-radius: 999px;
+	font-size: 0.7rem;
+	font-weight: 700;
+	line-height: 1.25rem;
+	text-align: center;
+	color: var(--mc-on-primary);
+	background: var(--mc-primary);
+}
+
 .nav-item {
+	position: relative;
 	display: flex;
 	align-items: center;
 	gap: 0.625rem;
@@ -262,6 +276,17 @@
 		font-size: 1rem;
 	}
 
+	/* Icon rail: the count sits on the icon's corner. */
+	.nav-badge {
+		position: absolute;
+		top: 2px;
+		right: 2px;
+		min-width: 1rem;
+		padding: 0 0.25rem;
+		font-size: 0.6rem;
+		line-height: 1rem;
+	}
+
 	.main {
 		padding: 1rem 1.25rem 2rem;
 	}
@@ -315,6 +340,14 @@
 			height: 44px;
 			padding: 0 0.625rem;
 			font-size: 0.875rem;
+		}
+
+		.nav-badge {
+			position: static;
+			min-width: 1.25rem;
+			padding: 0 0.35rem;
+			font-size: 0.7rem;
+			line-height: 1.25rem;
 		}
 
 		// Az overlay alatt a tartalom ne ugorjon el a 64px-es sáv helyéről.

@@ -123,6 +123,21 @@ const routes: Routes = [
 				canLoad: [NgxPermissionsGuard],
 			},
 			{
+				path: 'release-request',
+				data: {
+					breadcrumb: 'release-request',
+					permissions: {
+						only: [RoleNames.ADMIN],
+						redirectTo: '/error',
+					},
+				},
+				loadComponent: () =>
+					import('./release-request/release-request-admin.component').then(
+						(module) => module.ReleaseRequestAdminComponent
+					),
+				canActivate: [NgxPermissionsGuard],
+			},
+			{
 				path: 'wishlist-item',
 				data: {
 					breadcrumb: 'wishlist-item',

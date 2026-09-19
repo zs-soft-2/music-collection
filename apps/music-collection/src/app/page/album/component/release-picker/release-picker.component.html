@@ -49,6 +49,27 @@
 		</section>
 	}
 
+	@if (rejectedRequests().length) {
+		<section class="pending is-rejected" aria-labelledby="rejected-title">
+			<h3 id="rejected-title" class="subtitle">
+				<i class="pi pi-times-circle" aria-hidden="true"></i>
+				Not added by the admin
+			</h3>
+			<ul>
+				@for (request of rejectedRequests(); track request.id) {
+					<li>
+						<span>{{ request.summary }}</span>
+						@if (request.adminNote) {
+							<span class="pending-note">{{
+								request.adminNote
+							}}</span>
+						}
+					</li>
+				}
+			</ul>
+		</section>
+	}
+
 	@switch (view()) {
 		@case ('catalog') {
 			<p class="lead">Which pressing do you have?</p>

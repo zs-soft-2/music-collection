@@ -7,6 +7,8 @@ export interface AdminNavItem {
 	countType?: string;
 	/** Új elem felvétele (a lista „Add” gombjával azonos cél). */
 	createLabel?: string;
+	/** Teendők száma a menüpont mellett (pl. függő kérések). */
+	badge?: 'pendingReleaseRequests';
 }
 
 export interface AdminNavGroup {
@@ -67,6 +69,12 @@ export const ADMIN_NAV: AdminNavGroup[] = [
 				route: 'collection-item',
 				icon: 'pi-th-large',
 				countType: 'Collection Item',
+			},
+			{
+				label: 'Release requests',
+				route: 'release-request',
+				icon: 'pi-inbox',
+				badge: 'pendingReleaseRequests',
 			},
 			{
 				label: 'Wishlist items',

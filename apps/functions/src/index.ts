@@ -30,6 +30,7 @@ import {
 	DiscogsVersion,
 	fetchMasterVersions,
 } from './discogs-versions';
+import { approveReleaseRequest as approve } from './release-request-approval';
 import {
 	CatalogRole,
 	EffectivePermissions,
@@ -250,5 +251,53 @@ export const discogsMasterVersions = onCall(async (request) => {
 			);
 		}
 		throw new HttpsError('unavailable', 'A Discogs nem érhető el.');
+	}
+});
+
+/**
+ * Release-kérés jóváhagyása (ADMIN): a kiadás a katalógusba, egy példány a kérő
+ * kollekciójába kerül. `{ requestId, releaseUid? }` — `releaseUid` nélkül a
+ * kérés Discogs-kiadását importálja.
+ */
+export const approveReleaseRequest = onCall(async (request) => {
+	const uid = request.auth?.uid;
+
+	if (!uid) {
+		throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
+	}
+	if (!(await callerPermissions(uid)).includes('ADMIN')) {
+		throw new HttpsError('permission-denied', 'ADMIN permission szükséges.');
+	}
+
+	const requestId = request.data?.requestId;
+	const releaseUid = request.data?.releaseUid ?? null;
+
+	if (typeof requestId !== 'string' || !requestId) {
+		throw new HttpsError('invalid-argument', 'Hiányzó requestId.');
+	}
+	if (releaseUid !== null && typeof releaseUid !== 'string') {
+		throw new HttpsError('invalid-argument', 'Érvénytelen releaseUid.');
+	}
+
+	try {
+		return await approve(
+			database(),
+			{ requestId, releaseUid },
+			{ adminUid: uid, token: null }
+		);
+	} catch (error) {
+		if (error instanceof HttpsError) throw error;
+
+		logger.warn(`approveReleaseRequest ${requestId}`, error);
+
+		if (error instanceof DiscogsError) {
+			throw new HttpsError(
+				error.status === 404 ? 'not-found' : 'unavailable',
+				error.status === 404
+					? 'Nincs ilyen Discogs-kiadás.'
+					: 'A Discogs nem érhető el.'
+			);
+		}
+		throw new HttpsError('internal', 'A jóváhagyás nem sikerült.');
 	}
 });

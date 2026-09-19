@@ -18,6 +18,7 @@ import { BreadcrumbModule } from '@music-collection/ui';
 import { filter, map } from 'rxjs';
 
 import { ADMIN_NAV } from './admin-nav';
+import { AdminStore } from './admin.store';
 
 /**
  * Az admin felület héja: csoportosított oldalsáv (tableten és mobilon
@@ -30,6 +31,7 @@ import { ADMIN_NAV } from './admin-nav';
 	templateUrl: './admin.component.html',
 	styleUrls: ['./admin.component.scss'],
 	imports: [BreadcrumbModule, RouterLink, RouterLinkActive, RouterOutlet],
+	providers: [AdminStore],
 	host: {
 		'(document:keydown.escape)': 'expanded.set(false)',
 	},
@@ -38,6 +40,7 @@ export class AdminComponent {
 	private readonly router = inject(Router);
 	private readonly returnNavigation = inject(ReturnNavigationService);
 
+	protected readonly store = inject(AdminStore);
 	protected readonly groups = ADMIN_NAV;
 	/** The public page the editor was opened from, as a link target. */
 	protected readonly returnLink = toSignal(

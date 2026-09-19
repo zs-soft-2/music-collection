@@ -2,14 +2,19 @@
  * Egy Discogs master összes kiadása (préselése) — a gyűjtő ebből választja ki
  * a nála lévőt, ha a katalógusban nincs meg.
  *
- * Token nélkül hívjuk a Discogs API-t (25 kérés/perc/IP); a function az
- * eredményt Firestore-ban cache-eli, így egy albumhoz ritkán kell a Discogshoz
- * fordulni. A formátum a kliens `DiscogsVersion` típusa
+ * A function az eredményt Firestore-ban cache-eli, így egy albumhoz ritkán
+ * kell a Discogshoz fordulni. A formátum a kliens `DiscogsVersion` típusa
  * (libs/api … release-request/discogs-version.ts).
  */
 
-const API = 'https://api.discogs.com';
-const USER_AGENT = 'MusicCollection/1.0 +https://github.com/zsagia';
+import {
+	DiscogsRequestOptions,
+	discogsGet,
+	releasedYear,
+	text,
+} from './discogs-api';
+
+export { DiscogsError, releasedYear } from './discogs-api';
 
 /** Egy lapon ennyi kiadás jön; ennyi lapnál többet nem kérünk le. */
 const PER_PAGE = 100;
@@ -43,26 +48,6 @@ export interface DiscogsApiVersion {
 interface DiscogsVersionsPage {
 	pagination?: { pages?: number };
 	versions?: DiscogsApiVersion[];
-}
-
-export class DiscogsError extends Error {
-	public constructor(
-		message: string,
-		public readonly status: number
-	) {
-		super(message);
-	}
-}
-
-const text = (value: unknown): string | null =>
-	typeof value === 'string' && value.trim() ? value.trim() : null;
-
-/** "1987", "1987-04-20" → 1987; "0" vagy hiány → null. */
-export function releasedYear(value: unknown): number | null {
-	const match = String(value ?? '').match(/^(\d{4})/);
-	const year = match ? Number(match[1]) : 0;
-
-	return year > 0 ? year : null;
 }
 
 /**
@@ -119,24 +104,15 @@ export function sortVersions(versions: DiscogsVersion[]): DiscogsVersion[] {
 /** A master kiadásai, legfeljebb `MAX_PAGES` lapnyi. */
 export async function fetchMasterVersions(
 	masterId: number,
-	fetchImpl: typeof fetch = fetch
+	options: DiscogsRequestOptions = {}
 ): Promise<DiscogsVersion[]> {
 	const versions: DiscogsVersion[] = [];
 
 	for (let page = 1; page <= MAX_PAGES; page++) {
-		const url = `${API}/masters/${masterId}/versions?per_page=${PER_PAGE}&page=${page}`;
-		const response = await fetchImpl(url, {
-			headers: { 'User-Agent': USER_AGENT },
-		});
-
-		if (!response.ok) {
-			throw new DiscogsError(
-				`Discogs ${response.status}: ${url}`,
-				response.status
-			);
-		}
-
-		const body = (await response.json()) as DiscogsVersionsPage;
+		const body = await discogsGet<DiscogsVersionsPage>(
+			`/masters/${masterId}/versions?per_page=${PER_PAGE}&page=${page}`,
+			options
+		);
 
 		for (const version of body.versions ?? []) {
 			const mapped = toDiscogsVersion(version);

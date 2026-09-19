@@ -165,6 +165,10 @@ button {
 	}
 }
 
+.pending.is-rejected .subtitle {
+	color: var(--mc-status-bad);
+}
+
 .pending-note {
 	display: block;
 	font-size: 0.8rem;

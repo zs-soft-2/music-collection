@@ -54,6 +54,7 @@ export class ReleasePickerComponent {
 	public readonly adding = input(false);
 	public readonly error = input<string | null>(null);
 	public readonly pendingRequests = input<PendingRequestView[]>([]);
+	public readonly rejectedRequests = input<PendingRequestView[]>([]);
 	/** The album has a Discogs master to list pressings of. */
 	public readonly discogsAvailable = input(false);
 	public readonly discogsVersions = input<DiscogsVersionView[]>([]);

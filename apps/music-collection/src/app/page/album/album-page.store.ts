@@ -252,6 +252,17 @@ export const AlbumPageStore = signalStore(
 					)
 					.map(toPendingRequestView)
 			),
+			/** The collector's rejected requests for this album, with the reason. */
+			rejectedRequests: computed(() =>
+				store
+					.requests()
+					.filter(
+						(request) =>
+							request.status === 'rejected' &&
+							request.album?.uid === store.albumId()
+					)
+					.map(toPendingRequestView)
+			),
 			discogsOptions: computed(() => {
 				const masterId = albumEntity()?.discogs?.masterId ?? null;
 				if (!masterId || store.discogsVersionsFor() !== masterId) {

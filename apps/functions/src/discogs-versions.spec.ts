@@ -82,7 +82,7 @@ describe('fetchMasterVersions', () => {
 				})
 			);
 
-		const versions = await fetchMasterVersions(42, fetchImpl);
+		const versions = await fetchMasterVersions(42, { fetchImpl });
 
 		expect(fetchImpl).toHaveBeenCalledTimes(2);
 		expect(fetchImpl.mock.calls[1][0]).toContain('/masters/42/versions');
@@ -92,11 +92,11 @@ describe('fetchMasterVersions', () => {
 	it('hibás válasznál a státusszal együtt dob', async () => {
 		const fetchImpl = jest.fn().mockResolvedValue(response(404, {}));
 
-		await expect(fetchMasterVersions(42, fetchImpl)).rejects.toEqual(
+		await expect(fetchMasterVersions(42, { fetchImpl })).rejects.toEqual(
 			expect.objectContaining({ status: 404 })
 		);
-		await expect(fetchMasterVersions(42, fetchImpl)).rejects.toBeInstanceOf(
-			DiscogsError
-		);
+		await expect(
+			fetchMasterVersions(42, { fetchImpl })
+		).rejects.toBeInstanceOf(DiscogsError);
 	});
 });

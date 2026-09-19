@@ -26,6 +26,7 @@ export const CATALOG_FEATURE_KEYS = [
 	'membership',
 	'musician',
 	'release',
+	'release-request',
 	'track',
 	'user',
 	'wishlist-item',

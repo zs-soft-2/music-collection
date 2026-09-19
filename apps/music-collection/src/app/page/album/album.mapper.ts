@@ -76,13 +76,15 @@ export interface DiscogsVersionView {
 	requested: boolean;
 }
 
-/** A pending release request of the collector for the album. */
+/** A release request of the collector for the album. */
 export interface PendingRequestView {
 	id: string;
 	/** e.g. "Vinyl, LP · Megaforce (81741-1) · US · 1987". */
 	summary: string;
 	note: string | null;
 	discogsUrl: string | null;
+	/** The admin's reason, when rejected. */
+	adminNote: string | null;
 }
 
 /** What the collector asks the admin to add to the catalog. */
@@ -467,5 +469,6 @@ export function toPendingRequestView(
 		discogsUrl: request.discogsReleaseId
 			? discogsReleaseUrl(request.discogsReleaseId)
 			: null,
+		adminNote: request.adminNote ?? null,
 	};
 }

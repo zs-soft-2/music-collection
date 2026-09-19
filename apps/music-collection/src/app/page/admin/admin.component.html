@@ -50,6 +50,16 @@
 								aria-hidden="true"
 							></i>
 							<span class="nav-label">{{ item.label }}</span>
+							@if (
+								item.badge && store.badges()[item.badge];
+								as count
+							) {
+								<span
+									class="nav-badge"
+									[attr.aria-label]="count + ' to do'"
+									>{{ count }}</span
+								>
+							}
 						</a>
 					}
 				</div>

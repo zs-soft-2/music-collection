@@ -2,16 +2,21 @@ import { Observable, map } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
 import {
+	ApproveReleaseRequestResult,
 	DiscogsVersion,
 	ReleaseRequest,
 	ReleaseRequestAdd,
+	User,
 } from '@music-collection/api';
 
 import { ReleaseRequestRepository } from './release-request.repository';
 
+const newestFirst = (requests: ReleaseRequest[]) =>
+	[...requests].sort((a, b) => b.createdAt - a.createdAt);
+
 /**
- * Release requests of the signed-in collector and the Discogs pressings they
- * pick from.
+ * Release requests: the collector's own and the Discogs pressings they pick
+ * from; for the admin all of them with the approval and rejection.
  */
 @Injectable({ providedIn: 'root' })
 export class ReleaseRequestEffect {
@@ -19,13 +24,49 @@ export class ReleaseRequestEffect {
 
 	/** The user's requests, newest first; emits again when they change. */
 	public listByUser$(userId: string): Observable<ReleaseRequest[]> {
+		return this.repository.listByUser$(userId).pipe(map(newestFirst));
+	}
+
+	/** Every request, newest first (admin). */
+	public listAll$(): Observable<ReleaseRequest[]> {
+		return this.repository.listAll$().pipe(map(newestFirst));
+	}
+
+	/** How many requests wait for a decision (admin). */
+	public countPending$(): Observable<number> {
 		return this.repository
-			.listByUser$(userId)
+			.listAll$()
 			.pipe(
-				map((requests) =>
-					[...requests].sort((a, b) => b.createdAt - a.createdAt)
+				map(
+					(requests) =>
+						requests.filter(
+							(request) => request.status === 'pending'
+						).length
 				)
 			);
+	}
+
+	public listUsers$(): Observable<User[]> {
+		return this.repository.listUsers$();
+	}
+
+	/**
+	 * Approves the request: with `releaseUid` that catalog release of the
+	 * album, without it the requested Discogs release, imported.
+	 */
+	public approve$(
+		requestId: string,
+		releaseUid: string | null
+	): Observable<ApproveReleaseRequestResult> {
+		return this.repository.approve$({ requestId, releaseUid });
+	}
+
+	public reject$(
+		requestId: string,
+		adminNote: string | null,
+		adminUid: string
+	): Observable<void> {
+		return this.repository.reject$(requestId, adminNote, adminUid);
 	}
 
 	public request$(request: ReleaseRequestAdd): Observable<ReleaseRequest> {

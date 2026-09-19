@@ -1,0 +1,90 @@
+import {
+	discogsFormatDescriptions,
+	discogsMedia,
+	discogsReleaseDate,
+	toCatalogRelease,
+} from './discogs-release';
+
+const RELEASE = {
+	id: 3121170,
+	country: 'Europe',
+	released: '2011-09-13',
+	labels: [{ name: 'Nuclear Blast', catno: 'NB 2166-1' }],
+	formats: [
+		{
+			name: 'Vinyl',
+			descriptions: ['LP', 'Album', 'Limited Edition'],
+			text: '180 Gram, Red',
+		},
+	],
+};
+
+describe('discogsMedia', () => {
+	it('az első ismert hordozót adja', () => {
+		expect(discogsMedia(RELEASE)).toBe('vinyl');
+		expect(
+			discogsMedia({
+				id: 1,
+				formats: [{ name: 'Box Set' }, { name: 'CD' }],
+			})
+		).toBe('cd');
+	});
+});
+
+describe('discogsFormatDescriptions', () => {
+	it('csak az app ismert leírásait tartja meg', () => {
+		expect(discogsFormatDescriptions(RELEASE)).toEqual([
+			'limited edition',
+			'180g',
+		]);
+	});
+});
+
+describe('discogsReleaseDate', () => {
+	it('pontos dátumnál azt, csak évnél január 1-jét adja', () => {
+		expect(discogsReleaseDate(RELEASE)).toBe(Date.UTC(2011, 8, 13));
+		expect(discogsReleaseDate({ id: 1, released: '1987-00-00' })).toBe(
+			Date.UTC(1987, 0, 1)
+		);
+		expect(discogsReleaseDate({ id: 1 })).toBeNull();
+	});
+});
+
+describe('toCatalogRelease', () => {
+	it('az app release-dokumentumát építi', () => {
+		const album = {
+			uid: 'album-1',
+			name: 'Worship Music',
+			artist: { uid: 'artist-1', name: 'Anthrax' },
+		};
+
+		expect(
+			toCatalogRelease(RELEASE, {
+				uid: 'release-1',
+				album,
+				label: { uid: 'label-1', name: 'Nuclear Blast' },
+			})
+		).toEqual(
+			expect.objectContaining({
+				uid: 'release-1',
+				entityType: 'Release',
+				name: 'Worship Music',
+				album,
+				artist: {
+					uid: 'artist-1',
+					entityType: 'Artist',
+					name: 'Anthrax',
+				},
+				country: 'Europe',
+				formatDescription: ['limited edition', '180g'],
+				label: {
+					uid: 'label-1',
+					entityType: 'Label',
+					name: 'Nuclear Blast',
+				},
+				media: 'vinyl',
+				discogsReleaseId: 3121170,
+			})
+		);
+	});
+});
