@@ -123,4 +123,16 @@ describe('AuthorizationEffects', () => {
 		expect(authorizationService.removeAll).toHaveBeenCalled();
 		expect(authorizationService.addPermission).not.toHaveBeenCalled();
 	});
+	it('appliedFor$ csak a user jogosultságainak betöltése után emittál', () => {
+		const effects = create();
+		const ready = jest.fn();
+		effects.appliedFor$('u1').subscribe(ready);
+
+		authenticatedUser$.next(user('u1'));
+		expect(ready).not.toHaveBeenCalled();
+
+		effective$.next({ permissions: ['ADMIN'], roles: ['ADMIN'] });
+		expect(ready).toHaveBeenCalledTimes(1);
+		expect(authorizationService.addRole).toHaveBeenCalled();
+	});
 });

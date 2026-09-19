@@ -1,5 +1,12 @@
-import { Observable, Subscription, catchError, of, switchMap } from 'rxjs';
-import { distinctUntilChanged, map } from 'rxjs/operators';
+import {
+	Observable,
+	ReplaySubject,
+	Subscription,
+	catchError,
+	of,
+	switchMap,
+} from 'rxjs';
+import { distinctUntilChanged, filter, map, take } from 'rxjs/operators';
 
 import { Injectable, OnDestroy, inject } from '@angular/core';
 import {
@@ -31,16 +38,38 @@ export class AuthorizationEffects implements OnDestroy {
 
 	private subscription = new Subscription();
 
+	/** Annak a usernek az uid-ja, akinek a jogosultságai épp érvényben vannak. */
+	private appliedUid$ = new ReplaySubject<string | undefined>(1);
+
 	public constructor() {
 		this.subscription = this.authenticatedUid$()
 			.pipe(
 				switchMap((uid) =>
 					uid
-						? this.effectivePermissions$(uid)
-						: of(EMPTY_PERMISSIONS)
+						? this.effectivePermissions$(uid).pipe(
+								map((effective) => ({ uid, effective }))
+							)
+						: of({ uid, effective: EMPTY_PERMISSIONS })
 				)
 			)
-			.subscribe((effective) => this.apply(effective));
+			.subscribe(({ uid, effective }) => {
+				this.apply(effective);
+				this.appliedUid$.next(uid);
+			});
+	}
+
+	/**
+	 * Akkor emittál, amikor az adott user jogosultságai először érvénybe
+	 * léptek. Az app initializer ezzel várja meg, hogy oldal-újratöltéskor a
+	 * route guardok (NgxPermissionsGuard) már a betöltött szerepkörökkel
+	 * fussanak, ne az üres listával.
+	 */
+	public appliedFor$(uid: string): Observable<void> {
+		return this.appliedUid$.pipe(
+			filter((appliedUid) => appliedUid === uid),
+			take(1),
+			map(() => undefined)
+		);
 	}
 
 	public ngOnDestroy(): void {
