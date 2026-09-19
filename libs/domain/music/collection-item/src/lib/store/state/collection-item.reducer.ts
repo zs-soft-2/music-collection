@@ -16,6 +16,8 @@ export interface State extends EntityState<CollectionItemEntity> {
 	loading: boolean;
 	/** An item is being added. */
 	adding: boolean;
+	/** The signed-in user's collection has arrived (empty included). */
+	loaded: boolean;
 	searchResult: CollectionItemEntity[];
 	error?: string | null;
 	collectionItemListConfig: CollectionItemListConfig | null;
@@ -49,6 +51,7 @@ export const initialState: State = collectionItemAdapter.getInitialState({
 	isNewEntityButtonEnabled: true,
 	loading: false,
 	adding: false,
+	loaded: false,
 	error: null,
 	searchResult: [],
 });
@@ -99,14 +102,20 @@ export const collectionItemReducer = createReducer(
 		(state, { collectionItemId }) =>
 			collectionItemAdapter.removeOne(collectionItemId, state)
 	),
+	// The whole collection of the signed-in user: replaces the previous one.
 	on(
 		collectionItemActions.listCollectionItemsSuccess,
 		(state, { collectionItems }) =>
-			collectionItemAdapter.upsertMany(
+			collectionItemAdapter.setAll(
 				collectionItems as CollectionItemEntity[],
-				state
+				{ ...state, loaded: true }
 			)
 	),
+	on(collectionItemActions.listCollectionItemsFail, (state, { error }) => ({
+		...state,
+		loaded: true,
+		error: error?.message ?? String(error),
+	})),
 	on(
 		collectionItemActions.loadCollectionItemSuccess,
 		(state, { collectionItem }) =>

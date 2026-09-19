@@ -1,4 +1,4 @@
-import { filter, of, pipe, switchMap, tap } from 'rxjs';
+import { of, pipe, switchMap, tap } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
 import {
@@ -173,14 +173,7 @@ export const CollectionPageStore = signalStore(
 					pipe(
 						tap(() => patchState(store, { isLoading: true })),
 						switchMap(() =>
-							collectionItemStateService.selectEntities$().pipe(
-								tap((entities) => {
-									if (!entities?.length) {
-										collectionItemStateService.dispatchListEntitiesAction();
-									}
-								}),
-								filter((entities) => entities?.length > 0)
-							)
+							collectionItemStateService.selectLoadedEntities$()
 						),
 						tapResponse({
 							next: (entities: CollectionItemEntity[]) =>

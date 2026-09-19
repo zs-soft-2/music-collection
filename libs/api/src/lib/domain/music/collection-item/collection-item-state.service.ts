@@ -24,6 +24,11 @@ export abstract class CollectionItemStateService extends EntityStateService<
 	public abstract selectCollectionItemListConfig$(): Observable<CollectionItemListConfig | null>;
 	/** The error of the last failed write, `null` after a new one starts. */
 	public abstract selectError$(): Observable<string | null>;
+	/**
+	 * The signed-in user's collection, requested when not yet loaded; emits
+	 * only once it has arrived, an empty collection included.
+	 */
+	public abstract selectLoadedEntities$(): Observable<CollectionItemEntity[]>;
 	public abstract selectNewEntityButtonEnabled$(): Observable<boolean>;
 	public abstract selectSearchResult$(): Observable<CollectionItemEntity[]>;
 }

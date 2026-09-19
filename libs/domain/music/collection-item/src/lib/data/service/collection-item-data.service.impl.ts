@@ -12,6 +12,9 @@ import {
 	withLocalUpdatedAt,
 } from '@music-collection/api';
 
+/** Parent of the users' own data (`user/{uid}/collection-item`). */
+const USER_COLLECTION = 'user';
+
 @Injectable()
 export class CollectionItemDataServiceImpl extends CollectionItemDataService {
 	public constructor() {
@@ -37,6 +40,19 @@ export class CollectionItemDataServiceImpl extends CollectionItemDataService {
 
 	public list$(): Observable<CollectionItemModel[]> {
 		return super.listModels$();
+	}
+
+	public listByUser$(userId: string): Observable<CollectionItemModel[]> {
+		return this.firestoreSync.list$<CollectionItemModel>({
+			featureKey: this.featureKey,
+			cacheKey: `${this.featureKey}?userId=${userId}`,
+			query: collection(
+				this.firestore,
+				USER_COLLECTION,
+				userId,
+				this.featureKey
+			),
+		});
 	}
 
 	public listByIds$(ids: string[]): Observable<CollectionItemModel[]> {

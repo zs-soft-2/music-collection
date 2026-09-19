@@ -187,11 +187,7 @@ export const AdminDashboardStore = signalStore(
 			loadReleases: rxMethod<void>(
 				pipe(
 					switchMap(() =>
-						entities$(
-							() => collectionItemState.selectEntities$(),
-							() =>
-								collectionItemState.dispatchListEntitiesAction()
-						)
+						collectionItemState.selectLoadedEntities$()
 					),
 					tapResponse({
 						next: (items) =>

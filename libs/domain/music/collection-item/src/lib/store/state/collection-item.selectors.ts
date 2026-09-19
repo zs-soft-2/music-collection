@@ -28,6 +28,11 @@ export const getCollectionItemLoading = createSelector(
 	(state: State) => state.loading
 );
 
+export const getCollectionItemLoaded = createSelector(
+	getCollectionItemState,
+	(state: State) => state.loaded
+);
+
 export const getCollectionItemAdding = createSelector(
 	getCollectionItemState,
 	(state: State) => state.adding

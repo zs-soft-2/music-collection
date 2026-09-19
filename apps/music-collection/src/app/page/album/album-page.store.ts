@@ -378,11 +378,7 @@ export const AlbumPageStore = signalStore(
 			loadReleases: rxMethod<void>(
 				pipe(
 					switchMap(() =>
-						entities$(
-							() => collectionItemStateService.selectEntities$(),
-							() =>
-								collectionItemStateService.dispatchListEntitiesAction()
-						)
+						collectionItemStateService.selectLoadedEntities$()
 					),
 					tapResponse({
 						next: (items) =>

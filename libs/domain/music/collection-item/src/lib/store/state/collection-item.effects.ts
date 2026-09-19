@@ -1,8 +1,15 @@
 import { of } from 'rxjs';
-import { catchError, first, map, switchMap } from 'rxjs/operators';
+import {
+	catchError,
+	distinctUntilChanged,
+	first,
+	map,
+	switchMap,
+} from 'rxjs/operators';
 
 import { inject, Injectable } from '@angular/core';
 import {
+	AuthenticationStateService,
 	CollectionItemDataService,
 	CollectionItemEntity,
 	CollectionItemUtilService,
@@ -25,6 +32,7 @@ export class CollectionItemEffects {
 	private entityQuantityStateService = inject(EntityQuantityStateService);
 	private entityQuantityUtilService = inject(EntityQuantityUtilService);
 	private userDataService = inject(UserDataService);
+	private authenticationStateService = inject(AuthenticationStateService);
 
 	public addCollectionItem = createEffect(() =>
 		this.actions$.pipe(
@@ -132,8 +140,18 @@ export class CollectionItemEffects {
 	public listCollectionItems = createEffect(() =>
 		this.actions$.pipe(
 			ofType(collectionItemActions.listCollectionItems),
+			// The signed-in user's collection; a guest has none. Follows
+			// sign-in and sign-out.
 			switchMap(() =>
-				this.collectionItemDataService.list$().pipe(
+				this.authenticationStateService.selectAuthenticatedUser$()
+			),
+			map((user) => user?.uid ?? ''),
+			distinctUntilChanged(),
+			switchMap((userId) =>
+				(userId
+					? this.collectionItemDataService.listByUser$(userId)
+					: of([])
+				).pipe(
 					map((collectionItems) =>
 						collectionItems.map((collectionItem) =>
 							this.collectionItemUtilService.convertModelToEntity(
@@ -141,11 +159,17 @@ export class CollectionItemEffects {
 							)
 						)
 					),
-					map((collectionItems) => {
-						return collectionItemActions.listCollectionItemsSuccess(
-							{
-								collectionItems,
-							}
+					map((collectionItems) =>
+						collectionItemActions.listCollectionItemsSuccess({
+							collectionItems,
+						})
+					),
+					catchError((error) => {
+						console.error(error);
+						return of(
+							collectionItemActions.listCollectionItemsFail({
+								error,
+							})
 						);
 					})
 				)

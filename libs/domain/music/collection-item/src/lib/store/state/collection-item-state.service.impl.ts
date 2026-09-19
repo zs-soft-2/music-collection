@@ -1,4 +1,4 @@
-import { Observable, map } from 'rxjs';
+import { Observable, filter, first, map, switchMap, tap } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
 import {
@@ -108,6 +108,25 @@ export class CollectionItemStateServiceImpl extends CollectionItemStateService {
 		return this.store.pipe(
 			select(collectionItemSelectors.getCollectionItemError),
 			map((error) => error ?? null)
+		);
+	}
+
+	public selectLoadedEntities$(): Observable<CollectionItemEntity[]> {
+		const loaded$ = this.store.pipe(
+			select(collectionItemSelectors.getCollectionItemLoaded)
+		);
+
+		return loaded$.pipe(
+			first(),
+			tap((loaded) => {
+				if (!loaded) {
+					this.dispatchListEntitiesAction();
+				}
+			}),
+			switchMap(() => loaded$),
+			filter(Boolean),
+			first(),
+			switchMap(() => this.selectEntities$())
 		);
 	}
 
