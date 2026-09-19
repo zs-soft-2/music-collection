@@ -1,8 +1,12 @@
 import {
 	AlbumEntity,
 	ContributionEntity,
+	DiscogsVersion,
 	ReleaseEntity,
+	ReleaseRequest,
+	ReleaseRequestPressing,
 	TrackEntity,
+	discogsReleaseUrl,
 	isSpotifyAlbumId,
 	isYoutubePlaylistId,
 	isYoutubeVideoId,
@@ -55,6 +59,37 @@ export interface ReleaseOptionView {
 	editions: EditionTag[];
 	/** The collector already has a copy of this release. */
 	owned: boolean;
+}
+
+/** A Discogs pressing of the album, to request when not in the catalog. */
+export interface DiscogsVersionView {
+	id: number;
+	format: MediaFormat;
+	/** Discogs format text, e.g. "Vinyl, LP, Album, Reissue". */
+	formatText: string | null;
+	label: string | null;
+	catno: string | null;
+	country: string | null;
+	year: number | null;
+	discogsUrl: string;
+	/** The collector has a pending request for it. */
+	requested: boolean;
+}
+
+/** A pending release request of the collector for the album. */
+export interface PendingRequestView {
+	id: string;
+	/** e.g. "Vinyl, LP · Megaforce (81741-1) · US · 1987". */
+	summary: string;
+	note: string | null;
+	discogsUrl: string | null;
+}
+
+/** What the collector asks the admin to add to the catalog. */
+export interface ReleaseRequestDraft {
+	discogsReleaseId: number | null;
+	pressing: ReleaseRequestPressing | null;
+	note: string | null;
 }
 
 export interface TrackRow {
@@ -352,4 +387,85 @@ export function toReleaseOptions(
 				(a.year ?? Infinity) - (b.year ?? Infinity) ||
 				a.format.localeCompare(b.format)
 		);
+}
+
+const DISCOGS_MEDIA: Record<string, MediaFormat> = {
+	vinyl: 'vinyl',
+	cd: 'cd',
+	cassette: 'cassette',
+	dvd: 'dvd',
+};
+
+function discogsMediaFormat(majorFormats: string[]): MediaFormat {
+	for (const format of majorFormats) {
+		const media = DISCOGS_MEDIA[format.toLowerCase()];
+		if (media) {
+			return media;
+		}
+	}
+	return 'other';
+}
+
+export function toDiscogsVersionViews(
+	versions: DiscogsVersion[],
+	requestedIds: Set<number>
+): DiscogsVersionView[] {
+	return versions.map((version) => ({
+		id: version.id,
+		format: discogsMediaFormat(version.majorFormats),
+		formatText: version.format,
+		label: version.label,
+		catno: version.catno,
+		country: version.country,
+		year: version.year,
+		discogsUrl: discogsReleaseUrl(version.id),
+		requested: requestedIds.has(version.id),
+	}));
+}
+
+/** The pressing a request is about, as the collector saw it. */
+export function toRequestPressing(
+	version: DiscogsVersionView
+): ReleaseRequestPressing {
+	return {
+		format: version.formatText,
+		label: version.label,
+		catno: version.catno,
+		country: version.country,
+		year: version.year,
+	};
+}
+
+function pressingSummary(pressing: ReleaseRequestPressing | null): string {
+	if (!pressing) {
+		return '';
+	}
+	const label = pressing.label
+		? pressing.catno
+			? `${pressing.label} (${pressing.catno})`
+			: pressing.label
+		: null;
+
+	return [pressing.format, label, pressing.country, pressing.year]
+		.filter((part) => part !== null && part !== '')
+		.join(' · ');
+}
+
+export function toPendingRequestView(
+	request: ReleaseRequest
+): PendingRequestView {
+	const summary = pressingSummary(request.pressing);
+
+	return {
+		id: request.uid,
+		summary:
+			summary ||
+			(request.discogsReleaseId
+				? `Discogs release ${request.discogsReleaseId}`
+				: 'Described pressing'),
+		note: request.note,
+		discogsUrl: request.discogsReleaseId
+			? discogsReleaseUrl(request.discogsReleaseId)
+			: null,
+	};
 }

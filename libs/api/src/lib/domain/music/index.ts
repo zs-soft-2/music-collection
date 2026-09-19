@@ -6,5 +6,6 @@ export * from './label';
 export * from './membership';
 export * from './musician';
 export * from './release';
+export * from './release-request';
 export * from './track';
 export * from './wishlist-item';

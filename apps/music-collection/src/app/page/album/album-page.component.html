@@ -133,6 +133,19 @@
 											: 'Add to collection'
 									}}</span>
 								</button>
+								@if (store.pendingRequests().length) {
+									<button
+										type="button"
+										class="requested-chip"
+										(click)="store.openPicker()"
+									>
+										<i
+											class="pi pi-clock"
+											aria-hidden="true"
+										></i>
+										Release requested · pending
+									</button>
+								}
 							}
 						</div>
 					}
@@ -499,7 +512,16 @@
 		[loading]="store.catalogReleasesLoading()"
 		[adding]="store.adding()"
 		[error]="store.addError()"
+		[pendingRequests]="store.pendingRequests()"
+		[discogsAvailable]="!!store.discogsMasterId()"
+		[discogsVersions]="store.discogsOptions()"
+		[discogsLoading]="store.discogsLoading()"
+		[discogsError]="store.discogsError()"
+		[requesting]="store.requesting()"
+		[requestError]="store.requestError()"
 		(picked)="store.addToCollection($event)"
+		(discogsRequested)="store.showDiscogsVersions()"
+		(requestSent)="store.requestRelease($event)"
 		(closed)="onPickerClosed()"
 	/>
 }

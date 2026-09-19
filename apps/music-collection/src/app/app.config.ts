@@ -16,6 +16,7 @@ import {
 	persistentMultipleTabManager,
 	provideFirestore,
 } from '@angular/fire/firestore';
+import { getFunctions, provideFunctions } from '@angular/fire/functions';
 import { provideStorage } from '@angular/fire/storage';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideRouter } from '@angular/router';
@@ -60,6 +61,8 @@ export const appConfig: ApplicationConfig = {
 			})
 		),
 		provideAuth(() => getAuth()),
+		// The callables run where the Firestore database is (apps/functions).
+		provideFunctions(() => getFunctions(getApp(), 'europe-west4')),
 		provideStorage(() => getStorage()),
 		provideHttpClient(withXhr()),
 		provideAngularSvgIcon(),

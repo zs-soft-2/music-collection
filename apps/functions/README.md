@@ -18,6 +18,11 @@ user/{uid}.roleIds ────────┘        ▲                    ▲
 - **`syncRolePermissions`** — `role/{roleId}` írásakor minden érintett user.
 - **`resyncEffectivePermissions`** — callable, teljes újraszámolás (backfill).
   ADMIN permission kell hozzá.
+- **`discogsMasterVersions`** — callable, egy Discogs master összes kiadása
+  (`{ masterId }` → `{ masterId, versions }`) a release-kéréshez. Gyűjtő
+  (`createCollectionItemEntity`) vagy ADMIN hívhatja. Token nélkül kérdezi a
+  Discogst (25 kérés/perc), az eredményt egy hétig a `discogs-cache/master-{id}`
+  dokumentumban őrzi (a kliens nem éri el).
 
 A `role` dokumentum `permissions` tömbje dönt; a user dokumentumon lévő
 hivatkozások (`roleIds`, illetve a régi, beágyazott `roles`) csak megnevezik a

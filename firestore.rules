@@ -87,7 +87,8 @@ service cloud.firestore {
         'user': 'UserEntity',
         'entity-quantity': 'EntityQuantityEntity',
         'collection-item': 'CollectionItemEntity',
-        'wishlist-item': 'WishlistItemEntity'
+        'wishlist-item': 'WishlistItemEntity',
+        'release-request': 'ReleaseRequestEntity'
       };
     }
 
@@ -155,6 +156,25 @@ service cloud.firestore {
     match /security/users/{uid}/effective_permissions {
       allow get: if isSelf(uid) || hasPerm('viewSecurityEntity');
       allow list, create, update, delete: if false;
+    }
+
+    // ── Release-kérés: a gyűjtő kéri egy kiadás felvételét a katalógusba ────
+    // A gyűjtő csak a sajátját olvashatja, és csak függőben lévőt hozhat létre
+    // (a lekérdezésnek ezért `userId == uid`-ra kell szűrnie). Elbírálni
+    // (status, törlés) csak ADMIN tud.
+    match /release-request/{requestId} {
+      allow read: if isAdmin()
+                  || (isAuthed() && resource.data.userId == request.auth.uid);
+      allow create: if hasPerm('createCollectionItemEntity')
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.status == 'pending'
+                    && request.resource.data.uid == requestId
+                    && request.resource.data.keys().hasOnly([
+                         'uid', 'userId', 'album', 'status',
+                         'discogsMasterId', 'discogsReleaseId', 'pressing',
+                         'note', 'createdAt', 'updatedAt'
+                       ]);
+      allow update, delete: if isAdmin();
     }
 
     // ── Globális katalógus: publikus olvasás, permission-alapú írás ─────────

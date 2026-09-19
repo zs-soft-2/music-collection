@@ -1,0 +1,376 @@
+<dialog
+	#dialog
+	class="picker"
+	aria-labelledby="release-picker-title"
+	[attr.aria-busy]="busy()"
+	(close)="closed.emit()"
+>
+	<header class="picker-header">
+		<div>
+			<p class="eyebrow">Add to collection</p>
+			<h2 id="release-picker-title">{{ albumTitle() }}</h2>
+		</div>
+		<button
+			type="button"
+			class="icon-button"
+			aria-label="Close"
+			[disabled]="busy()"
+			(click)="close()"
+		>
+			<i class="pi pi-times" aria-hidden="true"></i>
+		</button>
+	</header>
+
+	@if (pendingRequests().length) {
+		<section class="pending" aria-labelledby="pending-title">
+			<h3 id="pending-title" class="subtitle">
+				<i class="pi pi-clock" aria-hidden="true"></i>
+				Requested, waiting for an admin
+			</h3>
+			<ul>
+				@for (request of pendingRequests(); track request.id) {
+					<li>
+						@if (request.discogsUrl) {
+							<a
+								[href]="request.discogsUrl"
+								target="_blank"
+								rel="noopener"
+								>{{ request.summary }}</a
+							>
+						} @else {
+							<span>{{ request.summary }}</span>
+						}
+						@if (request.note) {
+							<span class="pending-note">{{ request.note }}</span>
+						}
+					</li>
+				}
+			</ul>
+		</section>
+	}
+
+	@switch (view()) {
+		@case ('catalog') {
+			<p class="lead">Which pressing do you have?</p>
+
+			@if (error()) {
+				<p class="error" role="alert">
+					Could not add it to your collection: {{ error() }}
+				</p>
+			}
+
+			@if (loading()) {
+				<div class="skeleton" role="status" aria-busy="true">
+					<span class="visually-hidden">Loading releases…</span>
+				</div>
+			} @else if (releases().length) {
+				<ul class="options">
+					@for (release of releases(); track release.id) {
+						<li>
+							<button
+								type="button"
+								class="option"
+								[disabled]="busy()"
+								(click)="picked.emit(release.id)"
+							>
+								<mc-format-badge
+									[format]="release.format"
+									[weight]="release.weight"
+								/>
+								<span class="details">
+									@if (release.labelName) {
+										<span>{{ release.labelName }}</span>
+									}
+									@if (release.country) {
+										<span>{{ release.country }}</span>
+									}
+									@if (release.year) {
+										<span>{{ release.year }}</span>
+									}
+								</span>
+								@if (release.editions.length) {
+									<span class="editions">
+										@for (
+											edition of release.editions;
+											track edition
+										) {
+											<span class="edition">{{
+												edition
+											}}</span>
+										}
+									</span>
+								}
+								<span class="action">
+									@if (release.owned) {
+										<span class="state">
+											<i
+												class="pi pi-check"
+												aria-hidden="true"
+											></i>
+											In your collection
+										</span>
+									}
+									<i
+										class="pi pi-plus"
+										aria-hidden="true"
+									></i>
+									<span class="visually-hidden">
+										{{
+											release.owned
+												? 'Add another copy'
+												: 'Add'
+										}}
+									</span>
+								</span>
+							</button>
+						</li>
+					}
+				</ul>
+			} @else {
+				<p class="empty">
+					No release of this album is in the catalog yet.
+				</p>
+			}
+
+			<footer class="missing">
+				<p>Don't see your pressing? Ask an admin to add it.</p>
+				<div class="missing-actions">
+					@if (discogsAvailable()) {
+						<button
+							type="button"
+							class="secondary-button"
+							(click)="show('discogs')"
+						>
+							<i class="pi pi-search" aria-hidden="true"></i>
+							Find it on Discogs
+						</button>
+					}
+					<button
+						type="button"
+						class="text-button"
+						(click)="show('describe')"
+					>
+						Describe it
+					</button>
+				</div>
+			</footer>
+		}
+
+		@case ('discogs') {
+			<button type="button" class="back" (click)="show('catalog')">
+				<i class="pi pi-arrow-left" aria-hidden="true"></i>
+				Catalog releases
+			</button>
+
+			@if (selectedVersion(); as version) {
+				<p class="lead">Request this pressing:</p>
+				<div class="option is-selected">
+					<mc-format-badge [format]="version.format" />
+					<span class="details">
+						<ng-container
+							*ngTemplateOutlet="
+								versionDetails;
+								context: { $implicit: version }
+							"
+						/>
+					</span>
+				</div>
+				<label class="field">
+					<span>Note for the admin (optional)</span>
+					<textarea
+						rows="3"
+						[attr.maxlength]="noteMaxLength"
+						[value]="note()"
+						(input)="onInput('note', $event)"
+						placeholder="e.g. signed copy, coloured vinyl"
+					></textarea>
+				</label>
+				@if (requestError()) {
+					<p class="error" role="alert">{{ requestError() }}</p>
+				}
+				<div class="form-actions">
+					<button
+						type="button"
+						class="text-button"
+						[disabled]="requesting()"
+						(click)="selectedVersion.set(null)"
+					>
+						Choose another
+					</button>
+					<button
+						type="button"
+						class="primary-button"
+						[disabled]="requesting()"
+						(click)="requestSelected()"
+					>
+						{{ requesting() ? 'Sending…' : 'Send request' }}
+					</button>
+				</div>
+			} @else {
+				<p class="lead">Pick your pressing from Discogs:</p>
+
+				@if (discogsLoading()) {
+					<div class="skeleton" role="status" aria-busy="true">
+						<span class="visually-hidden"
+							>Loading Discogs pressings…</span
+						>
+					</div>
+				} @else if (discogsError()) {
+					<p class="error" role="alert">{{ discogsError() }}</p>
+					<div class="form-actions">
+						<button
+							type="button"
+							class="secondary-button"
+							(click)="discogsRequested.emit()"
+						>
+							Try again
+						</button>
+					</div>
+				} @else if (discogsVersions().length) {
+					@if (discogsFormats().length > 1) {
+						<div
+							class="filters"
+							role="group"
+							aria-label="Filter by format"
+						>
+							<button
+								type="button"
+								class="chip"
+								[attr.aria-pressed]="formatFilter() === 'all'"
+								(click)="formatFilter.set('all')"
+							>
+								All
+							</button>
+							@for (format of discogsFormats(); track format) {
+								<button
+									type="button"
+									class="chip"
+									[attr.aria-pressed]="
+										formatFilter() === format
+									"
+									(click)="formatFilter.set(format)"
+								>
+									{{ formatLabels[format] }}
+								</button>
+							}
+						</div>
+					}
+					<ul class="options">
+						@for (version of filteredVersions(); track version.id) {
+							<li>
+								<button
+									type="button"
+									class="option"
+									[disabled]="version.requested"
+									(click)="select(version)"
+								>
+									<mc-format-badge
+										[format]="version.format"
+									/>
+									<span class="details">
+										<ng-container
+											*ngTemplateOutlet="
+												versionDetails;
+												context: { $implicit: version }
+											"
+										/>
+									</span>
+									<span class="action">
+										@if (version.requested) {
+											<span class="state">Requested</span>
+										} @else {
+											<i
+												class="pi pi-chevron-right"
+												aria-hidden="true"
+											></i>
+										}
+									</span>
+								</button>
+							</li>
+						}
+					</ul>
+				} @else {
+					<p class="empty">Discogs lists no pressings of it.</p>
+				}
+
+				<p class="hint">
+					Not there?
+					<button
+						type="button"
+						class="text-button"
+						(click)="show('describe')"
+					>
+						Describe it
+					</button>
+				</p>
+			}
+		}
+
+		@case ('describe') {
+			<button type="button" class="back" (click)="show('catalog')">
+				<i class="pi pi-arrow-left" aria-hidden="true"></i>
+				Catalog releases
+			</button>
+
+			<p class="lead">
+				Paste its Discogs link, or describe it: format, label, country,
+				year.
+			</p>
+			<label class="field">
+				<span>Discogs release link</span>
+				<input
+					type="url"
+					inputmode="url"
+					placeholder="https://www.discogs.com/release/…"
+					[value]="discogsLink()"
+					[attr.aria-invalid]="linkInvalid()"
+					(input)="onInput('link', $event)"
+				/>
+				@if (linkInvalid()) {
+					<span class="field-error">Not a Discogs release link.</span>
+				}
+			</label>
+			<label class="field">
+				<span>Description</span>
+				<textarea
+					rows="4"
+					[attr.maxlength]="noteMaxLength"
+					[value]="note()"
+					(input)="onInput('note', $event)"
+					placeholder="e.g. Vinyl LP, Nuclear Blast, Germany, 2016, red vinyl"
+				></textarea>
+			</label>
+			@if (requestError()) {
+				<p class="error" role="alert">{{ requestError() }}</p>
+			}
+			<div class="form-actions">
+				<button
+					type="button"
+					class="primary-button"
+					[disabled]="!canDescribe() || requesting()"
+					(click)="requestDescribed()"
+				>
+					{{ requesting() ? 'Sending…' : 'Send request' }}
+				</button>
+			</div>
+		}
+	}
+</dialog>
+
+<ng-template #versionDetails let-version>
+	@if (version.formatText) {
+		<span>{{ version.formatText }}</span>
+	}
+	@if (version.label) {
+		<span
+			>{{ version.label
+			}}{{ version.catno ? ' (' + version.catno + ')' : '' }}</span
+		>
+	}
+	@if (version.country) {
+		<span>{{ version.country }}</span>
+	}
+	@if (version.year) {
+		<span>{{ version.year }}</span>
+	}
+</ng-template>

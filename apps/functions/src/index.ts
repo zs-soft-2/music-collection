@@ -1,5 +1,5 @@
 /**
- * Music Collection — szerveroldali jogosultság-szinkron.
+ * Music Collection — szerveroldali jogosultság-szinkron és Discogs-lekérdezés.
  *
  * A `role/{roleId}.permissions` és a user szerepkör-hivatkozásai
  * (`user/{uid}.roleIds`, illetve a régi, beágyazott `roles`) alapján
@@ -26,6 +26,11 @@ import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions/v2';
 
 import {
+	DiscogsError,
+	DiscogsVersion,
+	fetchMasterVersions,
+} from './discogs-versions';
+import {
 	CatalogRole,
 	EffectivePermissions,
 	UserDocument,
@@ -38,6 +43,10 @@ import {
 const REGION = 'europe-west4';
 
 const ROLE_COLLECTION = 'role';
+/** A Discogs-válaszok cache-e; csak a function (Admin SDK) éri el. */
+const DISCOGS_CACHE_COLLECTION = 'discogs-cache';
+/** Ennyi ideig használjuk a cache-elt kiadáslistát. */
+const DISCOGS_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const USER_COLLECTION = 'user';
 
 initializeApp();
@@ -174,4 +183,72 @@ export const resyncEffectivePermissions = onCall(async (request) => {
 	);
 
 	return { users: users.size, changed: changed.filter(Boolean).length };
+});
+
+/** A hívó effektív jogosultságai (üres, ha nincs dokumentuma). */
+async function callerPermissions(uid: string): Promise<string[]> {
+	const snapshot = await effectivePermissionsReference(uid).get();
+
+	return (snapshot.data()?.permissions ?? []) as string[];
+}
+
+/**
+ * Egy Discogs master kiadásai. Gyűjtő (createCollectionItemEntity) vagy ADMIN
+ * hívhatja; az eredményt `discogs-cache/master-{id}` alatt egy hétig őrizzük.
+ */
+export const discogsMasterVersions = onCall(async (request) => {
+	const uid = request.auth?.uid;
+
+	if (!uid) {
+		throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
+	}
+
+	const permissions = await callerPermissions(uid);
+
+	if (
+		!permissions.includes('ADMIN') &&
+		!permissions.includes('createCollectionItemEntity')
+	) {
+		throw new HttpsError('permission-denied', 'Nincs jogosultság.');
+	}
+
+	const masterId = Number(request.data?.masterId);
+
+	if (!Number.isSafeInteger(masterId) || masterId <= 0) {
+		throw new HttpsError('invalid-argument', 'Érvénytelen masterId.');
+	}
+
+	const cacheReference = database()
+		.collection(DISCOGS_CACHE_COLLECTION)
+		.doc(`master-${masterId}`);
+	const cached = await cacheReference.get();
+	const fetchedAt = cached.data()?.fetchedAt as number | undefined;
+
+	if (fetchedAt && Date.now() - fetchedAt < DISCOGS_CACHE_TTL_MS) {
+		return {
+			masterId,
+			versions: cached.data()?.versions as DiscogsVersion[],
+		};
+	}
+
+	try {
+		const versions = await fetchMasterVersions(masterId);
+
+		await cacheReference.set({ fetchedAt: Date.now(), versions });
+
+		return { masterId, versions };
+	} catch (error) {
+		logger.warn(`discogsMasterVersions ${masterId}`, error);
+
+		if (error instanceof DiscogsError && error.status === 404) {
+			throw new HttpsError('not-found', 'Nincs ilyen Discogs master.');
+		}
+		if (error instanceof DiscogsError && error.status === 429) {
+			throw new HttpsError(
+				'resource-exhausted',
+				'A Discogs most túlterhelt, próbáld újra egy perc múlva.'
+			);
+		}
+		throw new HttpsError('unavailable', 'A Discogs nem érhető el.');
+	}
 });

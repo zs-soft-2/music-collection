@@ -1,6 +1,7 @@
 import {
 	Observable,
 	combineLatest,
+	exhaustMap,
 	filter,
 	map,
 	of,
@@ -21,8 +22,10 @@ import {
 	CollectionItemPermissionsService,
 	CollectionItemStateService,
 	ContributionEntity,
+	DiscogsVersion,
 	EntityTypeEnum,
 	ReleaseEntity,
+	ReleaseRequest,
 	ReleaseStateService,
 	RoleNames,
 	TrackEntity,
@@ -40,6 +43,7 @@ import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { NgxPermissionsService } from 'ngx-permissions';
 
 import { AlbumDetailsEffect } from '../../data/album-details';
+import { ReleaseRequestEffect } from '../../data/release-request';
 import {
 	ArtistView,
 	ReleaseView,
@@ -49,8 +53,11 @@ import {
 } from '../../shared/music-ui';
 import {
 	groupCredits,
+	ReleaseRequestDraft,
 	groupTracks,
 	toAlbumProfile,
+	toDiscogsVersionViews,
+	toPendingRequestView,
 	toReleaseOptions,
 	totalDuration,
 } from './album.mapper';
@@ -76,6 +83,15 @@ interface AlbumPageState {
 	pickerOpen: boolean;
 	adding: boolean;
 	addError: string | null;
+	/** The signed-in user's release requests (all albums). */
+	requests: ReleaseRequest[];
+	/** Discogs pressings of the master `discogsVersionsFor`. */
+	discogsVersions: DiscogsVersion[];
+	discogsVersionsFor: number | null;
+	discogsLoading: boolean;
+	discogsError: string | null;
+	requesting: boolean;
+	requestError: string | null;
 	albumsLoading: boolean;
 	releasesLoading: boolean;
 	detailsLoading: boolean;
@@ -96,6 +112,13 @@ const initialState: AlbumPageState = {
 	pickerOpen: false,
 	adding: false,
 	addError: null,
+	requests: [],
+	discogsVersions: [],
+	discogsVersionsFor: null,
+	discogsLoading: false,
+	discogsError: null,
+	requesting: false,
+	requestError: null,
 	albumsLoading: true,
 	releasesLoading: true,
 	detailsLoading: true,
@@ -103,6 +126,25 @@ const initialState: AlbumPageState = {
 };
 
 const MORE_ALBUMS_COUNT = 6;
+
+/** What the collector reads when a request or a Discogs lookup fails. */
+function describeError(error: unknown): string {
+	const code = (error as { code?: string })?.code ?? '';
+
+	if (code.endsWith('resource-exhausted')) {
+		return 'Discogs is busy right now. Try again in a minute.';
+	}
+	if (code.endsWith('not-found')) {
+		return 'This album was not found on Discogs.';
+	}
+	if (code.endsWith('permission-denied')) {
+		return 'You are not allowed to do this.';
+	}
+	if (code.endsWith('unavailable')) {
+		return 'Discogs cannot be reached right now.';
+	}
+	return 'Something went wrong. Try again later.';
+}
 
 /** Selects a feature's entities and requests the list while it is empty. */
 function entities$<T>(
@@ -195,6 +237,41 @@ export const AlbumPageStore = signalStore(
 					.slice(0, MORE_ALBUMS_COUNT)
 					.sort((a, b) => (a.year ?? 0) - (b.year ?? 0));
 			}),
+			/** The album's Discogs master: its pressings can be requested. */
+			discogsMasterId: computed(
+				() => albumEntity()?.discogs?.masterId ?? null
+			),
+			/** The collector's pending requests for this album. */
+			pendingRequests: computed(() =>
+				store
+					.requests()
+					.filter(
+						(request) =>
+							request.status === 'pending' &&
+							request.album?.uid === store.albumId()
+					)
+					.map(toPendingRequestView)
+			),
+			discogsOptions: computed(() => {
+				const masterId = albumEntity()?.discogs?.masterId ?? null;
+				if (!masterId || store.discogsVersionsFor() !== masterId) {
+					return [];
+				}
+				const requested = new Set(
+					store
+						.requests()
+						.filter((request) => request.status === 'pending')
+						.flatMap((request) =>
+							request.discogsReleaseId
+								? [request.discogsReleaseId]
+								: []
+						)
+				);
+				return toDiscogsVersionViews(
+					store.discogsVersions(),
+					requested
+				);
+			}),
 			notFound: computed(
 				() =>
 					!store.albumsLoading() &&
@@ -213,8 +290,120 @@ export const AlbumPageStore = signalStore(
 			releaseStateService = inject(ReleaseStateService),
 			authenticationStateService = inject(AuthenticationStateService),
 			permissionsService = inject(NgxPermissionsService),
-			albumDetailsEffect = inject(AlbumDetailsEffect)
+			albumDetailsEffect = inject(AlbumDetailsEffect),
+			releaseRequestEffect = inject(ReleaseRequestEffect)
 		) => ({
+			/** The signed-in user's release requests; follows sign-in. */
+			loadRequests: rxMethod<void>(
+				pipe(
+					switchMap(() =>
+						authenticationStateService.selectAuthenticatedUser$()
+					),
+					map((user) => user?.uid ?? ''),
+					switchMap((userId) =>
+						userId
+							? releaseRequestEffect.listByUser$(userId)
+							: of([])
+					),
+					tapResponse({
+						next: (requests) => patchState(store, { requests }),
+						error: (error) => console.error(error),
+					})
+				)
+			),
+			/** The Discogs pressings of the album's master, once per master. */
+			loadDiscogsVersions: rxMethod<number>(
+				pipe(
+					filter(
+						(masterId) =>
+							masterId !== store.discogsVersionsFor() ||
+							!!store.discogsError()
+					),
+					tap(() =>
+						patchState(store, {
+							discogsLoading: true,
+							discogsError: null,
+						})
+					),
+					switchMap((masterId) =>
+						releaseRequestEffect
+							.listDiscogsVersions$(masterId)
+							.pipe(
+								tapResponse({
+									next: (discogsVersions) =>
+										patchState(store, {
+											discogsVersions,
+											discogsVersionsFor: masterId,
+											discogsLoading: false,
+										}),
+									error: (error) => {
+										console.error(error);
+										patchState(store, {
+											discogsLoading: false,
+											discogsError: describeError(error),
+										});
+									},
+								})
+							)
+					)
+				)
+			),
+			/** Sends the request to the admin; the picker closes when sent. */
+			requestRelease: rxMethod<ReleaseRequestDraft>(
+				pipe(
+					filter(() => !store.requesting()),
+					map((draft) => {
+						const album = store
+							.albums()
+							.find((item) => item.uid === store.albumId());
+						const userId = store.userId();
+
+						return album && userId
+							? releaseRequestEffect.request$({
+									userId,
+									album: {
+										uid: album.uid,
+										name: album.name,
+										artistUid: album.artist?.uid ?? null,
+										artistName: album.artist?.name ?? null,
+									},
+									status: 'pending',
+									discogsMasterId:
+										album.discogs?.masterId ?? null,
+									discogsReleaseId: draft.discogsReleaseId,
+									pressing: draft.pressing,
+									note: draft.note,
+									createdAt: Date.now(),
+								})
+							: null;
+					}),
+					filter((request$) => request$ !== null),
+					tap(() =>
+						patchState(store, {
+							requesting: true,
+							requestError: null,
+						})
+					),
+					exhaustMap((request$) =>
+						request$.pipe(
+							tapResponse({
+								next: () =>
+									patchState(store, {
+										requesting: false,
+										pickerOpen: false,
+									}),
+								error: (error) => {
+									console.error(error);
+									patchState(store, {
+										requesting: false,
+										requestError: describeError(error),
+									});
+								},
+							})
+						)
+					)
+				)
+			),
 			/** Follows `:albumId` and loads the tracklist and credits. */
 			loadDetails: rxMethod<void>(
 				pipe(
@@ -404,7 +593,18 @@ export const AlbumPageStore = signalStore(
 					catalogRequested = true;
 					store.loadCatalogReleases(of(undefined));
 				}
-				patchState(store, { pickerOpen: true, addError: null });
+				patchState(store, {
+					pickerOpen: true,
+					addError: null,
+					requestError: null,
+				});
+			},
+			/** Looks up the album's pressings on Discogs. */
+			showDiscogsVersions(): void {
+				const masterId = store.discogsMasterId();
+				if (masterId) {
+					store.loadDiscogsVersions(masterId);
+				}
 			},
 			closePicker(): void {
 				patchState(store, { pickerOpen: false });
@@ -452,6 +652,7 @@ export const AlbumPageStore = signalStore(
 			store.loadReleases(of(undefined));
 			store.loadCollector(of(undefined));
 			store.watchAdding(of(undefined));
+			store.loadRequests(of(undefined));
 		},
 	})
 );
