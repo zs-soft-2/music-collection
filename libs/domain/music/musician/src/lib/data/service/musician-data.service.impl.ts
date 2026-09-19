@@ -1,10 +1,14 @@
-import { Observable } from 'rxjs';
+import { Observable, from, map } from 'rxjs';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { collection } from '@angular/fire/firestore';
+import { Functions, httpsCallable } from '@angular/fire/functions';
 import {
+	DISCOGS_ARTIST_PROFILE_FUNCTION,
+	DiscogsArtistProfileRequest,
 	MUSICIAN_FEATURE_KEY,
 	MusicianDataService,
+	MusicianExternalProfile,
 	MusicianModel,
 	MusicianModelAdd,
 	MusicianModelUpdate,
@@ -13,6 +17,8 @@ import {
 
 @Injectable()
 export class MusicianDataServiceImpl extends MusicianDataService {
+	private functions = inject(Functions);
+
 	public constructor() {
 		super();
 
@@ -28,6 +34,20 @@ export class MusicianDataServiceImpl extends MusicianDataService {
 		return this.update$(
 			musician as MusicianModelUpdate
 		) as Observable<MusicianModel>;
+	}
+
+	/** Through the `discogsArtistProfile` callable, which caches it. */
+	public fetchExternalProfile$(
+		discogsId: number
+	): Observable<MusicianExternalProfile> {
+		const callable = httpsCallable<
+			DiscogsArtistProfileRequest,
+			MusicianExternalProfile
+		>(this.functions, DISCOGS_ARTIST_PROFILE_FUNCTION);
+
+		return from(callable({ artistId: discogsId })).pipe(
+			map((result) => result.data)
+		);
 	}
 
 	public list$(): Observable<MusicianModel[]> {

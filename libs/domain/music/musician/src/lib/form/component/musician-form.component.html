@@ -4,7 +4,25 @@
 			<input name="uid" formControlName="uid" hidden />
 
 			<section class="mc-form-section" aria-labelledby="musician-details">
-				<h2 id="musician-details">Details</h2>
+				<div class="musician-form-heading">
+					<h2 id="musician-details">Details</h2>
+					<p-button
+						label="Load"
+						icon="pi pi-cloud-download"
+						size="small"
+						severity="secondary"
+						[outlined]="true"
+						[loading]="externalLoading()"
+						[disabled]="!params.formGroup.value.discogsId"
+						ariaLabel="Load data from Discogs by the Discogs ID"
+						(onClick)="loadExternal()"
+					></p-button>
+				</div>
+				@if (externalError()) {
+					<small class="musician-form-error">{{
+						externalError()
+					}}</small>
+				}
 				<div class="mc-form-grid">
 					<div class="mc-field">
 						<label for="name">Name</label>
@@ -133,4 +151,86 @@
 			</div>
 		</form>
 	</section>
+
+	<p-dialog
+		header="Loaded musician data"
+		[modal]="true"
+		[visible]="!!externalComparison()"
+		(visibleChange)="$event || closeExternal()"
+		[style]="{ width: 'min(56rem, 95vw)' }"
+		[dismissableMask]="true"
+	>
+		@if (externalComparison(); as comparison) {
+			<p class="musician-external-source">
+				Source:
+				<a
+					[href]="comparison.sourceUrl"
+					target="_blank"
+					rel="noopener"
+					>{{ comparison.sourceUrl }}</a
+				>
+			</p>
+			@if (comparison.rows.length) {
+				<div class="musician-external-table">
+					<table>
+						<thead>
+							<tr>
+								<th scope="col">
+									<span class="visually-hidden">Apply</span>
+								</th>
+								<th scope="col">Field</th>
+								<th scope="col">Current</th>
+								<th scope="col">Loaded</th>
+							</tr>
+						</thead>
+						<tbody>
+							@for (row of comparison.rows; track row.field) {
+								<tr [class.is-selected]="row.selected">
+									<td>
+										<p-checkbox
+											[inputId]="'external-' + row.field"
+											[binary]="true"
+											[ngModel]="row.selected"
+											[ngModelOptions]="{
+												standalone: true,
+											}"
+											(onChange)="
+												toggleExternalRow(row.field)
+											"
+										></p-checkbox>
+									</td>
+									<th scope="row">
+										<label
+											[for]="'external-' + row.field"
+											>{{ row.label }}</label
+										>
+									</th>
+									<td class="is-current">
+										{{ row.current || '—' }}
+									</td>
+									<td class="is-loaded">{{ row.loaded }}</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			} @else {
+				<p>The loaded data matches the form.</p>
+			}
+		}
+		<ng-template #footer>
+			<p-button
+				label="Cancel"
+				severity="secondary"
+				[outlined]="true"
+				(onClick)="closeExternal()"
+			></p-button>
+			<p-button
+				label="Apply to form"
+				icon="pi pi-check"
+				[disabled]="!hasSelectedExternalRow()"
+				(onClick)="applyExternal()"
+			></p-button>
+		</ng-template>
+	</p-dialog>
 }

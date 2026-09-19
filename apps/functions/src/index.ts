@@ -26,6 +26,7 @@ import { onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions/v2';
 
+import { DiscogsArtistProfile, fetchArtistProfile } from './discogs-artist';
 import {
 	DiscogsError,
 	DiscogsVersion,
@@ -57,12 +58,14 @@ const DISCOGS_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const USER_COLLECTION = 'user';
 
 initializeApp();
-// A `functions-runtime@` rövidítést a Firebase a projekt azonosítójával egészíti
-// ki; a service accountot és a szerepköreit az infra/environments hozza létre.
+// A service accountot és a szerepköreit az infra/environments hozza létre. Teljes
+// címmel adjuk meg: a `functions-runtime@` rövidítést a CLI secret-hozzáférés
+// ellenőrzése nem egészíti ki, és érvénytelen taggal hívná a setIamPolicy-t.
+// A GCLOUD_PROJECT-et a CLI a deploy közbeni betöltéskor is beállítja.
 setGlobalOptions({
 	region: REGION,
 	maxInstances: 10,
-	serviceAccount: 'functions-runtime@',
+	serviceAccount: `functions-runtime@${process.env['GCLOUD_PROJECT']}.iam.gserviceaccount.com`,
 });
 
 const database = () => getFirestore();
@@ -180,7 +183,10 @@ export const resyncEffectivePermissions = onCall(async (request) => {
 	const permissions = (caller.data()?.permissions ?? []) as string[];
 
 	if (!permissions.includes('ADMIN')) {
-		throw new HttpsError('permission-denied', 'ADMIN permission szükséges.');
+		throw new HttpsError(
+			'permission-denied',
+			'ADMIN permission szükséges.'
+		);
 	}
 
 	const roles = await loadRoles();
@@ -255,6 +261,74 @@ export const discogsMasterVersions = onCall(
 				throw new HttpsError(
 					'not-found',
 					'Nincs ilyen Discogs master.'
+				);
+			}
+			if (error instanceof DiscogsError && error.status === 429) {
+				throw new HttpsError(
+					'resource-exhausted',
+					'A Discogs most túlterhelt, próbáld újra egy perc múlva.'
+				);
+			}
+			throw new HttpsError('unavailable', 'A Discogs nem érhető el.');
+		}
+	}
+);
+
+/**
+ * Egy Discogs előadó profilja a zenész szerkesztőűrlapjának Load gombjához.
+ * Csak ADMIN hívhatja; az eredményt `discogs-cache/artist-{id}` alatt egy
+ * hétig őrizzük.
+ */
+export const discogsArtistProfile = onCall(
+	{ secrets: [discogsToken] },
+	async (request) => {
+		const uid = request.auth?.uid;
+
+		if (!uid) {
+			throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
+		}
+		if (!(await callerPermissions(uid)).includes('ADMIN')) {
+			throw new HttpsError(
+				'permission-denied',
+				'ADMIN permission szükséges.'
+			);
+		}
+
+		const artistId = Number(request.data?.artistId);
+
+		if (!Number.isSafeInteger(artistId) || artistId <= 0) {
+			throw new HttpsError('invalid-argument', 'Érvénytelen artistId.');
+		}
+
+		const cacheReference = database()
+			.collection(DISCOGS_CACHE_COLLECTION)
+			.doc(`artist-${artistId}`);
+		const cached = await cacheReference.get();
+		const fetchedAt = cached.data()?.fetchedAt as number | undefined;
+
+		if (fetchedAt && Date.now() - fetchedAt < DISCOGS_CACHE_TTL_MS) {
+			return cached.data()?.profile as DiscogsArtistProfile;
+		}
+
+		try {
+			const profile = await fetchArtistProfile(artistId, {
+				token: discogsToken.value() || null,
+			});
+
+			if (!profile) {
+				throw new DiscogsError('Üres Discogs-előadó.', 404);
+			}
+
+			await cacheReference.set({ fetchedAt: Date.now(), profile });
+
+			return profile;
+		} catch (error) {
+			logger.warn(`discogsArtistProfile ${artistId}`, error);
+
+			if (error instanceof DiscogsError && error.status === 404) {
+				throw new HttpsError(
+					'not-found',
+					'Nincs ilyen Discogs-előadó.'
 				);
 			}
 			if (error instanceof DiscogsError && error.status === 429) {
