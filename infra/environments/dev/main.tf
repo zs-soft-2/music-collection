@@ -59,6 +59,40 @@ resource "google_project_iam_member" "functions_build" {
   depends_on = [google_project_service.enabled]
 }
 
+# A Discogs personal access token (60 kérés/perc a token nélküli 25 helyett) a
+# Discogs-lekérdező functionöknek. A secretet a tofu teremti, az ÉRTÉKÉT nem:
+# az nem kerülhet a state-be, kézzel tesszük fel —
+#   printf %s "$TOKEN" | gcloud secrets versions add DISCOGS_TOKEN \
+#     --data-file=- --project <project_id>
+# Érték nélkül a function deployja elszáll (a `defineSecret` verziót vár).
+resource "google_secret_manager_secret" "discogs_token" {
+  project   = local.project_id
+  secret_id = "DISCOGS_TOKEN"
+
+  replication {
+    auto {}
+  }
+
+  depends_on = [google_project_service.enabled]
+}
+
+# Csak a function futtatója olvashatja, és csak ezt az egy secretet.
+resource "google_secret_manager_secret_iam_member" "discogs_token_runtime" {
+  project   = local.project_id
+  secret_id = google_secret_manager_secret.discogs_token.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.functions_runtime.email}"
+}
+
+# A `firebase deploy` ellenőrzi a secret verzióját és a futtató hozzáférését;
+# ehhez a deployernek elég a viewer (az értéket nem olvashatja).
+resource "google_secret_manager_secret_iam_member" "discogs_token_deployer" {
+  project   = local.project_id
+  secret_id = google_secret_manager_secret.discogs_token.secret_id
+  role      = "roles/secretmanager.viewer"
+  member    = "serviceAccount:${module.service_accounts.deployer_email}"
+}
+
 module "service_accounts" {
   source     = "../../modules/service-accounts"
   project_id = local.project_id

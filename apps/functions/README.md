@@ -20,9 +20,17 @@ user/{uid}.roleIds ────────┘        ▲                    ▲
   ADMIN permission kell hozzá.
 - **`discogsMasterVersions`** — callable, egy Discogs master összes kiadása
   (`{ masterId }` → `{ masterId, versions }`) a release-kéréshez. Gyűjtő
-  (`createCollectionItemEntity`) vagy ADMIN hívhatja. Token nélkül kérdezi a
-  Discogst (25 kérés/perc), az eredményt egy hétig a `discogs-cache/master-{id}`
-  dokumentumban őrzi (a kliens nem éri el).
+  (`createCollectionItemEntity`) vagy ADMIN hívhatja. Az eredményt egy hétig a
+  `discogs-cache/master-{id}` dokumentumban őrzi (a kliens nem éri el).
+- **`approveReleaseRequest`** — callable, release-kérés jóváhagyása (ADMIN): a
+  kiadás a katalógusba (a Discogsról importálva, vagy egy meglévő
+  katalógus-kiadás), egy példány a kérő kollekciójába kerül, egy
+  tranzakcióban, a kliens-szinkronnal (`updatedAt`, `sync/catalog`) együtt.
+
+A Discogs-hívások a `DISCOGS_TOKEN` secretet használják (60 kérés/perc). A
+secretet és a hozzáférését az `infra/environments` teremti, az értékét kézzel
+tesszük fel (`gcloud secrets versions add DISCOGS_TOKEN --data-file=-`); érték
+nélkül a function deployja elszáll.
 
 A `role` dokumentum `permissions` tömbje dönt; a user dokumentumon lévő
 hivatkozások (`roleIds`, illetve a régi, beágyazott `roles`) csak megnevezik a

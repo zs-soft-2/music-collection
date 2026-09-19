@@ -84,6 +84,8 @@ variable "services" {
     # A Compute default SA-t (a Cloud Build alapértelmezett build SA-ja) ennek
     # bekapcsolása hozza létre; futó VM-et nem indítunk.
     "compute.googleapis.com",
+    # A Discogs token tárolása (DISCOGS_TOKEN secret).
+    "secretmanager.googleapis.com",
   ]
 }
 

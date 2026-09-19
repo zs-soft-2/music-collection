@@ -20,6 +20,7 @@ import {
 	FieldValue,
 	getFirestore,
 } from 'firebase-admin/firestore';
+import { defineSecret } from 'firebase-functions/params';
 import { setGlobalOptions } from 'firebase-functions/v2';
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
@@ -46,6 +47,11 @@ const REGION = 'europe-west4';
 const ROLE_COLLECTION = 'role';
 /** A Discogs-válaszok cache-e; csak a function (Admin SDK) éri el. */
 const DISCOGS_CACHE_COLLECTION = 'discogs-cache';
+/**
+ * Discogs personal access token (Secret Manager, infra/environments): 60
+ * kérés/perc a token nélküli 25 helyett.
+ */
+const discogsToken = defineSecret('DISCOGS_TOKEN');
 /** Ennyi ideig használjuk a cache-elt kiadáslistát. */
 const DISCOGS_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const USER_COLLECTION = 'user';
@@ -197,107 +203,121 @@ async function callerPermissions(uid: string): Promise<string[]> {
  * Egy Discogs master kiadásai. Gyűjtő (createCollectionItemEntity) vagy ADMIN
  * hívhatja; az eredményt `discogs-cache/master-{id}` alatt egy hétig őrizzük.
  */
-export const discogsMasterVersions = onCall(async (request) => {
-	const uid = request.auth?.uid;
+export const discogsMasterVersions = onCall(
+	{ secrets: [discogsToken] },
+	async (request) => {
+		const uid = request.auth?.uid;
 
-	if (!uid) {
-		throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
-	}
-
-	const permissions = await callerPermissions(uid);
-
-	if (
-		!permissions.includes('ADMIN') &&
-		!permissions.includes('createCollectionItemEntity')
-	) {
-		throw new HttpsError('permission-denied', 'Nincs jogosultság.');
-	}
-
-	const masterId = Number(request.data?.masterId);
-
-	if (!Number.isSafeInteger(masterId) || masterId <= 0) {
-		throw new HttpsError('invalid-argument', 'Érvénytelen masterId.');
-	}
-
-	const cacheReference = database()
-		.collection(DISCOGS_CACHE_COLLECTION)
-		.doc(`master-${masterId}`);
-	const cached = await cacheReference.get();
-	const fetchedAt = cached.data()?.fetchedAt as number | undefined;
-
-	if (fetchedAt && Date.now() - fetchedAt < DISCOGS_CACHE_TTL_MS) {
-		return {
-			masterId,
-			versions: cached.data()?.versions as DiscogsVersion[],
-		};
-	}
-
-	try {
-		const versions = await fetchMasterVersions(masterId);
-
-		await cacheReference.set({ fetchedAt: Date.now(), versions });
-
-		return { masterId, versions };
-	} catch (error) {
-		logger.warn(`discogsMasterVersions ${masterId}`, error);
-
-		if (error instanceof DiscogsError && error.status === 404) {
-			throw new HttpsError('not-found', 'Nincs ilyen Discogs master.');
+		if (!uid) {
+			throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
 		}
-		if (error instanceof DiscogsError && error.status === 429) {
-			throw new HttpsError(
-				'resource-exhausted',
-				'A Discogs most túlterhelt, próbáld újra egy perc múlva.'
-			);
+
+		const permissions = await callerPermissions(uid);
+
+		if (
+			!permissions.includes('ADMIN') &&
+			!permissions.includes('createCollectionItemEntity')
+		) {
+			throw new HttpsError('permission-denied', 'Nincs jogosultság.');
 		}
-		throw new HttpsError('unavailable', 'A Discogs nem érhető el.');
+
+		const masterId = Number(request.data?.masterId);
+
+		if (!Number.isSafeInteger(masterId) || masterId <= 0) {
+			throw new HttpsError('invalid-argument', 'Érvénytelen masterId.');
+		}
+
+		const cacheReference = database()
+			.collection(DISCOGS_CACHE_COLLECTION)
+			.doc(`master-${masterId}`);
+		const cached = await cacheReference.get();
+		const fetchedAt = cached.data()?.fetchedAt as number | undefined;
+
+		if (fetchedAt && Date.now() - fetchedAt < DISCOGS_CACHE_TTL_MS) {
+			return {
+				masterId,
+				versions: cached.data()?.versions as DiscogsVersion[],
+			};
+		}
+
+		try {
+			const versions = await fetchMasterVersions(masterId, {
+				token: discogsToken.value() || null,
+			});
+
+			await cacheReference.set({ fetchedAt: Date.now(), versions });
+
+			return { masterId, versions };
+		} catch (error) {
+			logger.warn(`discogsMasterVersions ${masterId}`, error);
+
+			if (error instanceof DiscogsError && error.status === 404) {
+				throw new HttpsError(
+					'not-found',
+					'Nincs ilyen Discogs master.'
+				);
+			}
+			if (error instanceof DiscogsError && error.status === 429) {
+				throw new HttpsError(
+					'resource-exhausted',
+					'A Discogs most túlterhelt, próbáld újra egy perc múlva.'
+				);
+			}
+			throw new HttpsError('unavailable', 'A Discogs nem érhető el.');
+		}
 	}
-});
+);
 
 /**
  * Release-kérés jóváhagyása (ADMIN): a kiadás a katalógusba, egy példány a kérő
  * kollekciójába kerül. `{ requestId, releaseUid? }` — `releaseUid` nélkül a
  * kérés Discogs-kiadását importálja.
  */
-export const approveReleaseRequest = onCall(async (request) => {
-	const uid = request.auth?.uid;
+export const approveReleaseRequest = onCall(
+	{ secrets: [discogsToken] },
+	async (request) => {
+		const uid = request.auth?.uid;
 
-	if (!uid) {
-		throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
-	}
-	if (!(await callerPermissions(uid)).includes('ADMIN')) {
-		throw new HttpsError('permission-denied', 'ADMIN permission szükséges.');
-	}
-
-	const requestId = request.data?.requestId;
-	const releaseUid = request.data?.releaseUid ?? null;
-
-	if (typeof requestId !== 'string' || !requestId) {
-		throw new HttpsError('invalid-argument', 'Hiányzó requestId.');
-	}
-	if (releaseUid !== null && typeof releaseUid !== 'string') {
-		throw new HttpsError('invalid-argument', 'Érvénytelen releaseUid.');
-	}
-
-	try {
-		return await approve(
-			database(),
-			{ requestId, releaseUid },
-			{ adminUid: uid, token: null }
-		);
-	} catch (error) {
-		if (error instanceof HttpsError) throw error;
-
-		logger.warn(`approveReleaseRequest ${requestId}`, error);
-
-		if (error instanceof DiscogsError) {
+		if (!uid) {
+			throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
+		}
+		if (!(await callerPermissions(uid)).includes('ADMIN')) {
 			throw new HttpsError(
-				error.status === 404 ? 'not-found' : 'unavailable',
-				error.status === 404
-					? 'Nincs ilyen Discogs-kiadás.'
-					: 'A Discogs nem érhető el.'
+				'permission-denied',
+				'ADMIN permission szükséges.'
 			);
 		}
-		throw new HttpsError('internal', 'A jóváhagyás nem sikerült.');
+
+		const requestId = request.data?.requestId;
+		const releaseUid = request.data?.releaseUid ?? null;
+
+		if (typeof requestId !== 'string' || !requestId) {
+			throw new HttpsError('invalid-argument', 'Hiányzó requestId.');
+		}
+		if (releaseUid !== null && typeof releaseUid !== 'string') {
+			throw new HttpsError('invalid-argument', 'Érvénytelen releaseUid.');
+		}
+
+		try {
+			return await approve(
+				database(),
+				{ requestId, releaseUid },
+				{ adminUid: uid, token: discogsToken.value() || null }
+			);
+		} catch (error) {
+			if (error instanceof HttpsError) throw error;
+
+			logger.warn(`approveReleaseRequest ${requestId}`, error);
+
+			if (error instanceof DiscogsError) {
+				throw new HttpsError(
+					error.status === 404 ? 'not-found' : 'unavailable',
+					error.status === 404
+						? 'Nincs ilyen Discogs-kiadás.'
+						: 'A Discogs nem érhető el.'
+				);
+			}
+			throw new HttpsError('internal', 'A jóváhagyás nem sikerült.');
+		}
 	}
-});
+);
