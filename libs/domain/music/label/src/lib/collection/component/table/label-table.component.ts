@@ -13,11 +13,16 @@ import { Observable } from 'rxjs';
 
 import { LabelTableService } from './label-table.service';
 import { Bind } from 'primeng/bind';
-import { Table } from 'primeng/table';
+import { Table, SortableColumn, SortIcon } from 'primeng/table';
 import { AutoComplete } from 'primeng/autocomplete';
 import { Ripple } from 'primeng/ripple';
 import { ButtonDirective } from 'primeng/button';
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, DatePipe } from '@angular/common';
+import { DataView } from 'primeng/dataview';
+import {
+	CollectionViewToggleComponent,
+	EntityCardComponent,
+} from '@music-collection/ui';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -28,16 +33,24 @@ import { AsyncPipe } from '@angular/common';
 	imports: [
 		Bind,
 		Table,
+		SortableColumn,
+		SortIcon,
 		AutoComplete,
 		Ripple,
 		ButtonDirective,
 		AsyncPipe,
+		DatePipe,
+		DataView,
+		CollectionViewToggleComponent,
+		EntityCardComponent,
 	],
 })
 export class LabelTableComponent extends BaseComponent implements OnInit {
 	private componentService = inject(LabelTableService);
 
 	public params$!: Observable<LabelTableParams>;
+
+	public readonly collectionView = this.componentService.collectionView;
 
 	public deleteLabel(label: LabelEntity): void {
 		console.log(label);

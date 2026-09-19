@@ -18,7 +18,12 @@ import { AutoComplete } from 'primeng/autocomplete';
 import { Chip } from 'primeng/chip';
 import { Ripple } from 'primeng/ripple';
 import { ButtonDirective } from 'primeng/button';
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, DatePipe } from '@angular/common';
+import { DataView } from 'primeng/dataview';
+import {
+	CollectionViewToggleComponent,
+	EntityCardComponent,
+} from '@music-collection/ui';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,6 +41,10 @@ import { AsyncPipe } from '@angular/common';
 		Ripple,
 		ButtonDirective,
 		AsyncPipe,
+		DatePipe,
+		DataView,
+		CollectionViewToggleComponent,
+		EntityCardComponent,
 	],
 })
 export class WishlistItemTableComponent
@@ -45,6 +54,13 @@ export class WishlistItemTableComponent
 	private componentService = inject(WishlistItemTableService);
 
 	public params$!: Observable<WishlistItemTableParams>;
+
+	public readonly collectionView = this.componentService.collectionView;
+
+	/** The cover of the wished album, if it has one. */
+	public imageOf(wishlistItem: WishlistItemEntity): string | null {
+		return wishlistItem.albumReference?.coverImage?.filePath || null;
+	}
 
 	public deleteWishlistItem(wishlistItem: WishlistItemEntity): void {
 		console.log(wishlistItem);

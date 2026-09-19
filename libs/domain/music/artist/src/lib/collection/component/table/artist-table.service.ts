@@ -1,4 +1,4 @@
-import { first, merge, Observable, ReplaySubject, switchMap } from 'rxjs';
+import { first, map, merge, Observable, ReplaySubject, switchMap } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -11,7 +11,9 @@ import {
 	EntityTypeEnum,
 	ExportImportService,
 	SearchParams,
+	sortByRecent,
 } from '@music-collection/api';
+import { createCollectionView } from '@music-collection/ui';
 
 @Injectable()
 export class ArtistTableService extends BaseComponent {
@@ -23,6 +25,10 @@ export class ArtistTableService extends BaseComponent {
 
 	private params!: ArtistTableParams;
 	private params$$: ReplaySubject<ArtistTableParams>;
+
+	public readonly collectionView = createCollectionView(
+		'mc.admin.artists.view'
+	);
 
 	public constructor() {
 		super();
@@ -43,11 +49,13 @@ export class ArtistTableService extends BaseComponent {
 			.subscribe();
 	}
 
+	/** The artists (or the search result), the last changed first. */
 	public init$(): Observable<ArtistTableParams> {
 		return merge(
 			this.artistStateService.selectSearchResult$(),
-			this.artistStateService.selectEntities$().pipe(first())
+			this.artistStateService.selectEntities$()
 		).pipe(
+			map(sortByRecent),
 			switchMap((artists) => {
 				this.params = {
 					artists,

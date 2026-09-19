@@ -19,6 +19,11 @@ import { Chip } from 'primeng/chip';
 import { Ripple } from 'primeng/ripple';
 import { ButtonDirective } from 'primeng/button';
 import { AsyncPipe, DatePipe } from '@angular/common';
+import { DataView } from 'primeng/dataview';
+import {
+	CollectionViewToggleComponent,
+	EntityCardComponent,
+} from '@music-collection/ui';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,12 +42,27 @@ import { AsyncPipe, DatePipe } from '@angular/common';
 		ButtonDirective,
 		AsyncPipe,
 		DatePipe,
+		DataView,
+		CollectionViewToggleComponent,
+		EntityCardComponent,
 	],
 })
 export class ArtistTableComponent extends BaseComponent implements OnInit {
 	private componentService = inject(ArtistTableService);
 
 	public params$!: Observable<ArtistTableParams>;
+
+	public readonly collectionView = this.componentService.collectionView;
+
+	/** The uploaded main image, else the photo found on the web. */
+	public imageOf(artist: ArtistEntity): string | null {
+		return (
+			artist.mainImage?.filePath ||
+			artist.imageUrl ||
+			artist.discogs?.imageUrl ||
+			null
+		);
+	}
 
 	public deleteArtist(artist: ArtistEntity): void {
 		console.log(artist);

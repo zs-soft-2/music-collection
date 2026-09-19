@@ -106,6 +106,10 @@ export class WishlistItemUtilServiceImpl extends WishlistItemUtilService {
 			entity.sourceLink = model.sourceLink;
 		}
 
+		if (model.updatedAt) {
+			entity.updatedAt = model.updatedAt;
+		}
+
 		return entity;
 	}
 

@@ -14,11 +14,16 @@ import {
 
 import { DocumentTableService } from './document-table.service';
 import { Bind } from 'primeng/bind';
-import { Table } from 'primeng/table';
+import { Table, SortableColumn, SortIcon } from 'primeng/table';
 import { AutoComplete } from 'primeng/autocomplete';
 import { Ripple } from 'primeng/ripple';
 import { ButtonDirective } from 'primeng/button';
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, DatePipe } from '@angular/common';
+import { DataView } from 'primeng/dataview';
+import {
+	CollectionViewToggleComponent,
+	EntityCardComponent,
+} from '@music-collection/ui';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -29,16 +34,31 @@ import { AsyncPipe } from '@angular/common';
 	imports: [
 		Bind,
 		Table,
+		SortableColumn,
+		SortIcon,
 		AutoComplete,
 		Ripple,
 		ButtonDirective,
 		AsyncPipe,
+		DatePipe,
+		DataView,
+		CollectionViewToggleComponent,
+		EntityCardComponent,
 	],
 })
 export class DocumentTableComponent extends BaseComponent implements OnInit {
 	private componentService = inject(DocumentTableService);
 
 	public params$!: Observable<DocumentTableParams>;
+
+	public readonly collectionView = this.componentService.collectionView;
+
+	/** The file itself, when the document is an image. */
+	public imageOf(document: DocumentEntity): string | null {
+		return document.fileType?.startsWith('image/')
+			? document.filePath || null
+			: null;
+	}
 
 	public deleteDocument(document: DocumentEntity): void {
 		console.log(document);

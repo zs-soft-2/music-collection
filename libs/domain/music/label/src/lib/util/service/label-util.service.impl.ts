@@ -105,6 +105,10 @@ export class LabelUtilServiceImpl extends LabelUtilService {
 			entity.parent = model.parent;
 		}
 
+		if (model.updatedAt) {
+			entity.updatedAt = model.updatedAt;
+		}
+
 		return entity;
 	}
 }

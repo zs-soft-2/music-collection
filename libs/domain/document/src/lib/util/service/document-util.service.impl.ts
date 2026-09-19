@@ -87,6 +87,10 @@ export class DocumentUtilServiceImpl extends DocumentUtilService {
 			entity.originalName = model.originalName;
 		}
 
+		if (model.updatedAt) {
+			entity.updatedAt = model.updatedAt;
+		}
+
 		return entity;
 	}
 

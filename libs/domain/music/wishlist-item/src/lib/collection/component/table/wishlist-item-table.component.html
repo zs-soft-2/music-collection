@@ -1,91 +1,158 @@
 @if (params$ | async; as params) {
 	<section class="wishlistItem-table mc-card">
-		<p-table
-			[value]="params.wishlistItems"
-			sortField="name"
-			sortMode="multiple"
-			styleClass="mc-table"
-			responsiveLayout="scroll"
-			[paginator]="true"
-			[rows]="10"
-		>
-			<ng-template #header>
-				<tr>
-					<th pSortableColumn="albumReference.name">
-						Artist name
-						<p-sorticon field="albumReference"></p-sorticon>
-					</th>
+		<div class="mc-table-tools">
+			<p-autocomplete
+				class="mc-table-search"
+				placeholder="Filter by name…"
+				ariaLabel="Filter by name"
+				[suggestions]="params.empty"
+				[showClear]="true"
+				(completeMethod)="searchByNameHandler($event)"
+				[minQueryLength]="3"
+				[delay]="400"
+			>
+			</p-autocomplete>
 
-					<th pSortableColumn="artistReference.name">
-						Album name
-						<p-sorticon field="artistReference"></p-sorticon>
-					</th>
+			<mc-collection-view-toggle
+				[view]="collectionView.view()"
+				(viewChange)="collectionView.setView($event)"
+			/>
+		</div>
 
-					<th>Medias</th>
+		@if (collectionView.view() === 'cards') {
+			<p-dataview
+				[value]="params.wishlistItems"
+				layout="grid"
+				[paginator]="true"
+				[rows]="24"
+				[rowsPerPageOptions]="[24, 48, 96]"
+				emptyMessage="No wishlist items found."
+			>
+				<ng-template #grid let-wishlistItems>
+					<ul class="mc-card-grid">
+						@for (
+							wishlistItem of wishlistItems;
+							track wishlistItem.uid
+						) {
+							<li>
+								<mc-entity-card
+									[title]="wishlistItem.albumReference.name"
+									[subtitle]="
+										wishlistItem.artistReference.name
+									"
+									[imageUrl]="imageOf(wishlistItem)"
+									imageShape="square"
+									(open)="editWishlistItem(wishlistItem)"
+								>
+									@for (
+										media of wishlistItem.medias;
+										track media
+									) {
+										<p-chip styleClass="style">
+											{{ media }}
+										</p-chip>
+									}
 
-					<th></th>
-				</tr>
-				<tr>
-					<th>
-						<p-autocomplete
-							placeholder="Filter by name…"
-							ariaLabel="Filter by name"
-							[suggestions]="params.empty"
-							[showClear]="true"
-							(completeMethod)="searchByNameHandler($event)"
-							[minQueryLength]="3"
-							[delay]="400"
-						>
-						</p-autocomplete>
-					</th>
-
-					<th></th>
-
-					<th></th>
-
-					<th></th>
-				</tr>
-			</ng-template>
-
-			<ng-template #body let-wishlistItem>
-				<tr>
-					<td>{{ wishlistItem.artistReference.name }}</td>
-
-					<td>{{ wishlistItem.albumReference.name }}</td>
-
-					<td>
-						@for (media of wishlistItem.medias; track media) {
-							<p-chip styleClass="style">
-								{{ media }}
-							</p-chip>
+									<button
+										cardActions
+										pButton
+										pRipple
+										aria-label="Delete wishlist item"
+										class="p-button-text p-button-rounded p-button-danger"
+										(click)="
+											deleteWishlistItem(wishlistItem)
+										"
+										iconOnly
+									>
+										<i
+											class="pi pi-trash"
+											aria-hidden="true"
+										></i>
+									</button>
+								</mc-entity-card>
+							</li>
 						}
-					</td>
+					</ul>
+				</ng-template>
+			</p-dataview>
+		} @else {
+			<p-table
+				[value]="params.wishlistItems"
+				sortMode="multiple"
+				styleClass="mc-table"
+				responsiveLayout="scroll"
+				[paginator]="true"
+				[rows]="10"
+			>
+				<ng-template #header>
+					<tr>
+						<th pSortableColumn="albumReference.name">
+							Artist name
+							<p-sorticon field="albumReference"></p-sorticon>
+						</th>
 
-					<td>
-						<button
-							pButton
-							pRipple
-							aria-label="Edit wishlist item"
-							class="p-button-text p-button-rounded p-button-secondary"
-							(click)="editWishlistItem(wishlistItem)"
-							iconOnly
-						>
-							<i class="pi pi-pencil" aria-hidden="true"></i>
-						</button>
+						<th pSortableColumn="artistReference.name">
+							Album name
+							<p-sorticon field="artistReference"></p-sorticon>
+						</th>
 
-						<button
-							pButton
-							pRipple
-							aria-label="Delete wishlist item"
-							class="p-button-text p-button-rounded p-button-danger"
-							(click)="deleteWishlistItem(wishlistItem)"
-							iconOnly
-						>
-							<i class="pi pi-trash" aria-hidden="true"></i>
-						</button>
-					</td>
-				</tr>
-			</ng-template>
-		</p-table>
+						<th>Medias</th>
+
+						<th pSortableColumn="updatedAt">
+							Updated <p-sorticon field="updatedAt"></p-sorticon>
+						</th>
+
+						<th></th>
+					</tr>
+				</ng-template>
+
+				<ng-template #body let-wishlistItem>
+					<tr>
+						<td>{{ wishlistItem.artistReference.name }}</td>
+
+						<td>{{ wishlistItem.albumReference.name }}</td>
+
+						<td>
+							@for (media of wishlistItem.medias; track media) {
+								<p-chip styleClass="style">
+									{{ media }}
+								</p-chip>
+							}
+						</td>
+
+						<td>
+							{{
+								wishlistItem.updatedAt
+									| date: 'yyyy-MM-dd HH:mm'
+							}}
+						</td>
+
+						<td>
+							<button
+								pButton
+								pRipple
+								aria-label="Edit wishlist item"
+								class="p-button-text p-button-rounded p-button-secondary"
+								(click)="editWishlistItem(wishlistItem)"
+								iconOnly
+							>
+								<i class="pi pi-pencil" aria-hidden="true"></i>
+							</button>
+
+							<button
+								pButton
+								pRipple
+								aria-label="Delete wishlist item"
+								class="p-button-text p-button-rounded p-button-danger"
+								(click)="deleteWishlistItem(wishlistItem)"
+								iconOnly
+							>
+								<i class="pi pi-trash" aria-hidden="true"></i>
+							</button>
+						</td>
+					</tr>
+				</ng-template>
+			</p-table>
+		}
 	</section>
 }

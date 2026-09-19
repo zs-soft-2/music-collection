@@ -1,7 +1,7 @@
 @if (params$ | async; as params) {
 	<section class="musician-table mc-card">
-		<div class="toolbar">
-			<p-iconfield>
+		<div class="mc-table-tools">
+			<p-iconfield class="mc-table-search">
 				<p-inputicon styleClass="pi pi-search" />
 				<input
 					pInputText
@@ -12,22 +12,13 @@
 				/>
 			</p-iconfield>
 
-			<div class="view-toggle" role="group" aria-label="View">
-				@for (option of viewOptions; track option.value) {
-					<button
-						type="button"
-						[attr.aria-pressed]="view() === option.value"
-						[attr.aria-label]="option.label"
-						[title]="option.label"
-						(click)="setView(option.value)"
-					>
-						<i [class]="option.icon" aria-hidden="true"></i>
-					</button>
-				}
-			</div>
+			<mc-collection-view-toggle
+				[view]="collectionView.view()"
+				(viewChange)="collectionView.setView($event)"
+			/>
 		</div>
 
-		@if (view() === 'cards') {
+		@if (collectionView.view() === 'cards') {
 			<p-dataview
 				[value]="params.musicians"
 				layout="grid"
@@ -37,49 +28,23 @@
 				emptyMessage="No musicians found."
 			>
 				<ng-template #grid let-musicians>
-					<ul class="cards">
+					<ul class="mc-card-grid">
 						@for (musician of musicians; track musician.uid) {
-							<li class="card">
-								<button
-									type="button"
-									class="card-body"
-									[attr.aria-label]="'Edit ' + musician.name"
-									(click)="editMusician(musician)"
+							<li>
+								<mc-entity-card
+									[title]="musician.name"
+									[subtitle]="musician.realName"
+									[imageUrl]="musician.imageUrl"
+									imageShape="round"
+									(open)="editMusician(musician)"
 								>
-									@if (musician.imageUrl) {
-										<img
-											class="portrait"
-											[src]="musician.imageUrl"
-											alt=""
-											loading="lazy"
-										/>
-									} @else {
-										<span
-											class="portrait placeholder"
-											aria-hidden="true"
-										>
-											{{ musician.name.charAt(0) }}
-										</span>
-									}
-									<span class="name">{{ musician.name }}</span>
-									@if (musician.realName) {
-										<span class="real-name">{{
-											musician.realName
-										}}</span>
-									}
-									<span class="profile">
-										<ng-container
-											*ngTemplateOutlet="
-												profileTags;
-												context: { $implicit: musician }
-											"
-										/>
-									</span>
-									<i
-										class="pi pi-pencil edit-icon"
-										aria-hidden="true"
-									></i>
-								</button>
+									<ng-container
+										*ngTemplateOutlet="
+											profileTags;
+											context: { $implicit: musician }
+										"
+									/>
+								</mc-entity-card>
 							</li>
 						}
 					</ul>
@@ -108,6 +73,9 @@
 							Real name <p-sorticon field="realName" />
 						</th>
 						<th scope="col">Profile</th>
+						<th scope="col" pSortableColumn="updatedAt">
+							Updated <p-sorticon field="updatedAt" />
+						</th>
 						<th scope="col">
 							<span class="visually-hidden">Actions</span>
 						</th>
@@ -125,7 +93,10 @@
 									loading="lazy"
 								/>
 							} @else {
-								<span class="thumb placeholder" aria-hidden="true">
+								<span
+									class="thumb placeholder"
+									aria-hidden="true"
+								>
 									{{ musician.name.charAt(0) }}
 								</span>
 							}
@@ -139,6 +110,9 @@
 									context: { $implicit: musician }
 								"
 							/>
+						</td>
+						<td>
+							{{ musician.updatedAt | date: 'yyyy-MM-dd HH:mm' }}
 						</td>
 						<td>
 							<button
@@ -156,7 +130,7 @@
 
 				<ng-template #emptymessage>
 					<tr>
-						<td colspan="5">No musicians found.</td>
+						<td colspan="6">No musicians found.</td>
 					</tr>
 				</ng-template>
 			</p-table>

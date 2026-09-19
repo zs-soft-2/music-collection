@@ -1,114 +1,183 @@
 @if (params$ | async; as params) {
 	<section class="artist-table mc-card">
-		<p-table
-			[value]="params.artists"
-			sortField="name"
-			sortMode="multiple"
-			styleClass="mc-table"
-			responsiveLayout="scroll"
-			[paginator]="true"
-			[rows]="10"
-		>
-			<ng-template #header>
-				<tr>
-					<th pSortableColumn="name">
-						Name <p-sorticon field="name"></p-sorticon>
-					</th>
+		<div class="mc-table-tools">
+			<p-autocomplete
+				class="mc-table-search"
+				placeholder="Filter by name…"
+				ariaLabel="Filter by name"
+				[suggestions]="params.empty"
+				[showClear]="true"
+				(completeMethod)="searchByNameHandler($event)"
+				[minQueryLength]="3"
+				[delay]="400"
+			>
+			</p-autocomplete>
 
-					<th pSortableColumn="formedIn">
-						Formed in <p-sorticon field="formedIn"></p-sorticon>
-					</th>
+			<mc-collection-view-toggle
+				[view]="collectionView.view()"
+				(viewChange)="collectionView.setView($event)"
+			/>
+		</div>
 
-					<th>Styles</th>
+		@if (collectionView.view() === 'cards') {
+			<p-dataview
+				[value]="params.artists"
+				layout="grid"
+				[paginator]="true"
+				[rows]="24"
+				[rowsPerPageOptions]="[24, 48, 96]"
+				emptyMessage="No artists found."
+			>
+				<ng-template #grid let-artists>
+					<ul class="mc-card-grid">
+						@for (artist of artists; track artist.uid) {
+							<li>
+								<mc-entity-card
+									[title]="artist.name"
+									[subtitle]="artist.formedIn | date: 'yyyy'"
+									[imageUrl]="imageOf(artist)"
+									imageShape="round"
+									(open)="editArtist(artist)"
+								>
+									@for (style of artist.styles; track style) {
+										<p-chip styleClass="style">
+											{{ style }}
+										</p-chip>
+									}
 
-					<th>Images</th>
-
-					<th></th>
-				</tr>
-				<tr>
-					<th>
-						<p-autocomplete
-							placeholder="Filter by name…"
-							ariaLabel="Filter by name"
-							[suggestions]="params.empty"
-							[showClear]="true"
-							(completeMethod)="searchByNameHandler($event)"
-							[minQueryLength]="3"
-							[delay]="400"
-						>
-						</p-autocomplete>
-					</th>
-
-					<th></th>
-
-					<th></th>
-
-					<th></th>
-
-					<th></th>
-				</tr>
-			</ng-template>
-
-			<ng-template #body let-artist>
-				<tr>
-					<td>{{ artist.name }}</td>
-
-					<td>{{ artist.formedIn | date: 'yyyy' }}</td>
-
-					<td>
-						@for (style of artist.styles; track style) {
-							<p-chip styleClass="style">
-								{{ style }}
-							</p-chip>
+									<button
+										cardActions
+										pButton
+										pRipple
+										aria-label="Export artist"
+										class="p-button-text p-button-rounded p-button-secondary"
+										(click)="exportArtist(artist)"
+										iconOnly
+									>
+										<i
+											class="pi pi-file-export"
+											aria-hidden="true"
+										></i>
+									</button>
+									<button
+										cardActions
+										pButton
+										pRipple
+										aria-label="Delete artist"
+										class="p-button-text p-button-rounded p-button-danger"
+										(click)="deleteArtist(artist)"
+										iconOnly
+									>
+										<i
+											class="pi pi-trash"
+											aria-hidden="true"
+										></i>
+									</button>
+								</mc-entity-card>
+							</li>
 						}
-					</td>
+					</ul>
+				</ng-template>
+			</p-dataview>
+		} @else {
+			<p-table
+				[value]="params.artists"
+				sortMode="multiple"
+				styleClass="mc-table"
+				responsiveLayout="scroll"
+				[paginator]="true"
+				[rows]="10"
+			>
+				<ng-template #header>
+					<tr>
+						<th pSortableColumn="name">
+							Name <p-sorticon field="name"></p-sorticon>
+						</th>
 
-					<td>
-						<div class="mc-image-flags">
-							@if (artist.headerImage) {
-								<span class="p-chip">Header</span>
+						<th pSortableColumn="formedIn">
+							Formed in <p-sorticon field="formedIn"></p-sorticon>
+						</th>
+
+						<th>Styles</th>
+
+						<th>Images</th>
+
+						<th pSortableColumn="updatedAt">
+							Updated <p-sorticon field="updatedAt"></p-sorticon>
+						</th>
+
+						<th></th>
+					</tr>
+				</ng-template>
+
+				<ng-template #body let-artist>
+					<tr>
+						<td>{{ artist.name }}</td>
+
+						<td>{{ artist.formedIn | date: 'yyyy' }}</td>
+
+						<td>
+							@for (style of artist.styles; track style) {
+								<p-chip styleClass="style">
+									{{ style }}
+								</p-chip>
 							}
-							@if (artist.mainImage) {
-								<span class="p-chip">Main</span>
-							}
-						</div>
-					</td>
+						</td>
 
-					<td>
-						<button
-							pButton
-							pRipple
-							aria-label="Edit artist"
-							class="p-button-text p-button-rounded p-button-secondary"
-							(click)="editArtist(artist)"
-							iconOnly
-						>
-							<i class="pi pi-pencil" aria-hidden="true"></i>
-						</button>
-						<button
-							pButton
-							pRipple
-							aria-label="Delete artist"
-							class="p-button-text p-button-rounded p-button-danger"
-							(click)="deleteArtist(artist)"
-							iconOnly
-						>
-							<i class="pi pi-trash" aria-hidden="true"></i>
-						</button>
+						<td>
+							<div class="mc-image-flags">
+								@if (artist.headerImage) {
+									<span class="p-chip">Header</span>
+								}
+								@if (artist.mainImage) {
+									<span class="p-chip">Main</span>
+								}
+							</div>
+						</td>
 
-						<button
-							pButton
-							pRipple
-							aria-label="Export artist"
-							class="p-button-text p-button-rounded p-button-secondary"
-							(click)="exportArtist(artist)"
-							iconOnly
-						>
-							<i class="pi pi-file-export" aria-hidden="true"></i>
-						</button>
-					</td>
-				</tr>
-			</ng-template>
-		</p-table>
+						<td>
+							{{ artist.updatedAt | date: 'yyyy-MM-dd HH:mm' }}
+						</td>
+
+						<td>
+							<button
+								pButton
+								pRipple
+								aria-label="Edit artist"
+								class="p-button-text p-button-rounded p-button-secondary"
+								(click)="editArtist(artist)"
+								iconOnly
+							>
+								<i class="pi pi-pencil" aria-hidden="true"></i>
+							</button>
+							<button
+								pButton
+								pRipple
+								aria-label="Delete artist"
+								class="p-button-text p-button-rounded p-button-danger"
+								(click)="deleteArtist(artist)"
+								iconOnly
+							>
+								<i class="pi pi-trash" aria-hidden="true"></i>
+							</button>
+
+							<button
+								pButton
+								pRipple
+								aria-label="Export artist"
+								class="p-button-text p-button-rounded p-button-secondary"
+								(click)="exportArtist(artist)"
+								iconOnly
+							>
+								<i
+									class="pi pi-file-export"
+									aria-hidden="true"
+								></i>
+							</button>
+						</td>
+					</tr>
+				</ng-template>
+			</p-table>
+		}
 	</section>
 }

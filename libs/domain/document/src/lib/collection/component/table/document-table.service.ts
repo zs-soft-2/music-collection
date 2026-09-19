@@ -1,4 +1,4 @@
-import { Observable, ReplaySubject, switchMap } from 'rxjs';
+import { map, Observable, ReplaySubject, switchMap } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -10,7 +10,9 @@ import {
 	DocumentUtilService,
 	EntityTypeEnum,
 	SearchParams,
+	sortByRecent,
 } from '@music-collection/api';
+import { createCollectionView } from '@music-collection/ui';
 
 @Injectable()
 export class DocumentTableService extends BaseComponent {
@@ -21,6 +23,10 @@ export class DocumentTableService extends BaseComponent {
 
 	private params!: DocumentTableParams;
 	private params$$: ReplaySubject<DocumentTableParams>;
+
+	public readonly collectionView = createCollectionView(
+		'mc.admin.documents.view'
+	);
 
 	public constructor() {
 		super();
@@ -34,8 +40,10 @@ export class DocumentTableService extends BaseComponent {
 		});
 	}
 
+	/** The documents (the search result), the last changed first. */
 	public init$(): Observable<DocumentTableParams> {
 		return this.documentStateService.selectSearchResult$().pipe(
+			map(sortByRecent),
 			switchMap((documents) => {
 				this.params = {
 					documents,

@@ -1,4 +1,4 @@
-import { merge, Observable, ReplaySubject, switchMap } from 'rxjs';
+import { map, merge, Observable, ReplaySubject, switchMap } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -10,7 +10,9 @@ import {
 	ReleaseTableParams,
 	ReleaseUtilService,
 	SearchParams,
+	sortByRecent,
 } from '@music-collection/api';
+import { createCollectionView } from '@music-collection/ui';
 
 @Injectable()
 export class ReleaseTableService extends BaseComponent {
@@ -21,6 +23,10 @@ export class ReleaseTableService extends BaseComponent {
 
 	private params!: ReleaseTableParams;
 	private params$$: ReplaySubject<ReleaseTableParams>;
+
+	public readonly collectionView = createCollectionView(
+		'mc.admin.releases.view'
+	);
 
 	public constructor() {
 		super();
@@ -38,11 +44,13 @@ export class ReleaseTableService extends BaseComponent {
 		});
 	}
 
+	/** The releases (or the search result), the last changed first. */
 	public init$(): Observable<ReleaseTableParams> {
 		return merge(
 			this.releaseStateService.selectSearchResult$(),
 			this.releaseStateService.selectEntities$()
 		).pipe(
+			map(sortByRecent),
 			switchMap((releases) => {
 				this.params = {
 					releases,

@@ -9,6 +9,7 @@ import {
 	CollectionItemModelAdd,
 	CollectionItemModelUpdate,
 	SearchParams,
+	withLocalUpdatedAt,
 } from '@music-collection/api';
 
 @Injectable()
@@ -64,7 +65,7 @@ export class CollectionItemDataServiceImpl extends CollectionItemDataService {
 					...album,
 				})
 				.then(() => {
-					subscriber.next(album);
+					subscriber.next(withLocalUpdatedAt(album));
 				});
 		});
 	}

@@ -1,71 +1,121 @@
 @if (params$ | async; as params) {
 	<section class="document-table mc-card">
-		<p-table
-			[value]="params.documents"
-			styleClass="mc-table"
-			responsiveLayout="scroll"
-			[paginator]="true"
-			[rows]="10"
-		>
-			<ng-template #header>
-				<tr>
-					<th>Name</th>
+		<div class="mc-table-tools">
+			<p-autocomplete
+				class="mc-table-search"
+				placeholder="Filter by name…"
+				ariaLabel="Filter by name"
+				[suggestions]="params.empty"
+				[showClear]="true"
+				(completeMethod)="searchHandler($event)"
+				[minQueryLength]="3"
+				[delay]="400"
+			>
+			</p-autocomplete>
 
-					<th>Original name</th>
+			<mc-collection-view-toggle
+				[view]="collectionView.view()"
+				(viewChange)="collectionView.setView($event)"
+			/>
+		</div>
 
-					<th></th>
-				</tr>
+		@if (collectionView.view() === 'cards') {
+			<p-dataview
+				[value]="params.documents"
+				layout="grid"
+				[paginator]="true"
+				[rows]="24"
+				[rowsPerPageOptions]="[24, 48, 96]"
+				emptyMessage="No documents found."
+			>
+				<ng-template #grid let-documents>
+					<ul class="mc-card-grid">
+						@for (document of documents; track document.uid) {
+							<li>
+								<mc-entity-card
+									[title]="document.name"
+									[subtitle]="document.originalName"
+									[imageUrl]="imageOf(document)"
+									imageShape="square"
+									(open)="editDocument(document)"
+								>
+									<button
+										cardActions
+										pButton
+										pRipple
+										aria-label="Delete document"
+										class="p-button-text p-button-rounded p-button-danger"
+										(click)="deleteDocument(document)"
+										iconOnly
+									>
+										<i
+											class="pi pi-trash"
+											aria-hidden="true"
+										></i>
+									</button>
+								</mc-entity-card>
+							</li>
+						}
+					</ul>
+				</ng-template>
+			</p-dataview>
+		} @else {
+			<p-table
+				[value]="params.documents"
+				styleClass="mc-table"
+				responsiveLayout="scroll"
+				[paginator]="true"
+				[rows]="10"
+			>
+				<ng-template #header>
+					<tr>
+						<th>Name</th>
 
-				<tr>
-					<th>
-						<p-autocomplete
-							placeholder="Filter by name…"
-							ariaLabel="Filter by name"
-							[suggestions]="params.empty"
-							[showClear]="true"
-							(completeMethod)="searchHandler($event)"
-							[minQueryLength]="3"
-							[delay]="400"
-						>
-						</p-autocomplete>
-					</th>
+						<th>Original name</th>
 
-					<th></th>
+						<th pSortableColumn="updatedAt">
+							Updated <p-sorticon field="updatedAt"></p-sorticon>
+						</th>
 
-					<th></th>
-				</tr>
-			</ng-template>
+						<th></th>
+					</tr>
+				</ng-template>
 
-			<ng-template #body let-document>
-				<tr>
-					<td>{{ document.name }}</td>
+				<ng-template #body let-document>
+					<tr>
+						<td>{{ document.name }}</td>
 
-					<td>{{ document.originalName }}</td>
+						<td>{{ document.originalName }}</td>
 
-					<td>
-						<button
-							pButton
-							pRipple
-							aria-label="Edit document"
-							class="p-button-text p-button-rounded p-button-secondary"
-							(click)="editDocument(document)"
-							iconOnly
-						>
-							<i class="pi pi-pencil" aria-hidden="true"></i>
-						</button>
-						<button
-							pButton
-							pRipple
-							aria-label="Delete document"
-							class="p-button-text p-button-rounded p-button-danger"
-							(click)="deleteDocument(document)"
-							iconOnly
-						>
-							<i class="pi pi-trash" aria-hidden="true"></i>
-						</button>
-					</td>
-				</tr>
-			</ng-template>
-		</p-table>
+						<td>
+							{{ document.updatedAt | date: 'yyyy-MM-dd HH:mm' }}
+						</td>
+
+						<td>
+							<button
+								pButton
+								pRipple
+								aria-label="Edit document"
+								class="p-button-text p-button-rounded p-button-secondary"
+								(click)="editDocument(document)"
+								iconOnly
+							>
+								<i class="pi pi-pencil" aria-hidden="true"></i>
+							</button>
+							<button
+								pButton
+								pRipple
+								aria-label="Delete document"
+								class="p-button-text p-button-rounded p-button-danger"
+								(click)="deleteDocument(document)"
+								iconOnly
+							>
+								<i class="pi pi-trash" aria-hidden="true"></i>
+							</button>
+						</td>
+					</tr>
+				</ng-template>
+			</p-table>
+		}
 	</section>
 }

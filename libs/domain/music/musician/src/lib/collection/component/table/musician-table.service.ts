@@ -1,24 +1,14 @@
 import { BehaviorSubject, Observable, combineLatest, map } from 'rxjs';
 
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
 	MusicianEntity,
 	MusicianStateService,
 	MusicianTableParams,
+	sortByRecent,
 } from '@music-collection/api';
-
-export type MusicianTableView = 'table' | 'cards';
-
-const VIEW_KEY = 'mc.admin.musicians.view';
-
-function readView(): MusicianTableView {
-	try {
-		return localStorage.getItem(VIEW_KEY) === 'cards' ? 'cards' : 'table';
-	} catch {
-		return 'table';
-	}
-}
+import { createCollectionView } from '@music-collection/ui';
 
 @Injectable()
 export class MusicianTableService {
@@ -27,7 +17,9 @@ export class MusicianTableService {
 	private router = inject(Router);
 	private query$ = new BehaviorSubject('');
 
-	public readonly view = signal<MusicianTableView>(readView());
+	public readonly collectionView = createCollectionView(
+		'mc.admin.musicians.view'
+	);
 
 	public editMusician(musician: MusicianEntity): void {
 		this.router.navigate(['../edit', musician.uid], {
@@ -39,10 +31,10 @@ export class MusicianTableService {
 		this.query$.next(query.trim().toLowerCase());
 	}
 
-	/** Every musician (the list page resolver loads them), name order, filtered by name, real name or alias. */
+	/** Every musician (the list page resolver loads them), the last changed first, filtered by name, real name or alias. */
 	public init$(): Observable<MusicianTableParams> {
 		return combineLatest([
-			this.musicianStateService.selectEntities$(),
+			this.musicianStateService.selectEntities$().pipe(map(sortByRecent)),
 			this.musicianStateService.isLoading$(),
 			this.query$,
 		]).pipe(
@@ -53,15 +45,6 @@ export class MusicianTableService {
 				loading,
 			}))
 		);
-	}
-
-	public setView(view: MusicianTableView): void {
-		this.view.set(view);
-		try {
-			localStorage.setItem(VIEW_KEY, view);
-		} catch {
-			// Preference is a convenience only.
-		}
 	}
 }
 

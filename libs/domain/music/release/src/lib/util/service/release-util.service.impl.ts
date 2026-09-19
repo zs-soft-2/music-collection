@@ -116,6 +116,10 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 			entity.media = model.media;
 		}
 
+		if (model.updatedAt) {
+			entity.updatedAt = model.updatedAt;
+		}
+
 		return entity;
 	}
 

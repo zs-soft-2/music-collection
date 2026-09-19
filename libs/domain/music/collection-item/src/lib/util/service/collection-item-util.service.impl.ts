@@ -107,6 +107,10 @@ export class CollectionItemUtilServiceImpl extends CollectionItemUtilService {
 			entity.userId = model.userId;
 		}
 
+		if (model.updatedAt) {
+			entity.updatedAt = model.updatedAt;
+		}
+
 		return entity;
 	}
 

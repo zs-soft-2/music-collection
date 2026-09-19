@@ -19,6 +19,7 @@ import {
 } from '@angular/core';
 import {
 	DocumentData,
+	DocumentSnapshot,
 	DocumentReference,
 	Firestore,
 	Query,
@@ -114,6 +115,33 @@ const compareTimestamps = (
 
 const timestampKey = (timestamp: Timestamp | null) =>
 	timestamp ? `${timestamp.seconds}.${timestamp.nanoseconds}` : '';
+
+/**
+ * The data of a document with `updatedAt` as epoch milliseconds (undefined
+ * missing when never stamped), so models stay serializable and can be ordered by
+ * their last change. A pending server timestamp reads as its local estimate.
+ */
+export const toSyncedData = (snapshot: DocumentSnapshot): DocumentData => {
+	const { [UPDATED_AT_FIELD]: updatedAt, ...data } =
+		snapshot.data({ serverTimestamps: 'estimate' }) ?? {};
+
+	// Never undefined: embedded copies are written back, Firestore rejects it.
+	return updatedAt instanceof Timestamp
+		? { ...data, [UPDATED_AT_FIELD]: updatedAt.toMillis() }
+		: data;
+};
+
+/**
+ * The written data as the store should hold it: stamped with the local time
+ * in place of the server timestamp the write gets, so a just created or
+ * modified entity is ordered as the last changed without reloading it.
+ */
+export const withLocalUpdatedAt = <T extends object>(
+	data: T
+): T & { [UPDATED_AT_FIELD]: number } => ({
+	...data,
+	[UPDATED_AT_FIELD]: Date.now(),
+});
 
 /**
  * Client-side cache of the catalog on top of Firestore's persistent
@@ -230,7 +258,9 @@ export class FirestoreSyncService {
 			writes.forEach(({ reference, data }) =>
 				batch.set(reference, this.stamp(data), { merge: true })
 			);
-			deletions.forEach((reference) => this.remove(batch, reference, featureKey));
+			deletions.forEach((reference) =>
+				this.remove(batch, reference, featureKey)
+			);
 			this.touch(batch, featureKey);
 		});
 	}
@@ -608,10 +638,7 @@ export class FirestoreSyncService {
 	}
 
 	private toModel<T>(snapshot: QueryDocumentSnapshot): T {
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const { [UPDATED_AT_FIELD]: updatedAt, ...data } = snapshot.data();
-
-		return { ...data, uid: snapshot.id } as T;
+		return { ...toSyncedData(snapshot), uid: snapshot.id } as T;
 	}
 
 	private signature(docs: QueryDocumentSnapshot[]): string {

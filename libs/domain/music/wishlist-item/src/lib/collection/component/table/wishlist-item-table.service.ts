@@ -1,4 +1,4 @@
-import { first, merge, Observable, ReplaySubject, switchMap } from 'rxjs';
+import { first, map, merge, Observable, ReplaySubject, switchMap } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -11,7 +11,9 @@ import {
 	EntityTypeEnum,
 	ExportImportService,
 	SearchParams,
+	sortByRecent,
 } from '@music-collection/api';
+import { createCollectionView } from '@music-collection/ui';
 
 @Injectable()
 export class WishlistItemTableService extends BaseComponent {
@@ -23,6 +25,10 @@ export class WishlistItemTableService extends BaseComponent {
 
 	private params!: WishlistItemTableParams;
 	private params$$: ReplaySubject<WishlistItemTableParams>;
+
+	public readonly collectionView = createCollectionView(
+		'mc.admin.wishlist-items.view'
+	);
 
 	public constructor() {
 		super();
@@ -36,11 +42,13 @@ export class WishlistItemTableService extends BaseComponent {
 		});
 	}
 
+	/** The wishlist items (or the search result), the last changed first. */
 	public init$(): Observable<WishlistItemTableParams> {
 		return merge(
 			this.wishlistItemStateService.selectSearchResult$(),
 			this.wishlistItemStateService.selectEntities$()
 		).pipe(
+			map(sortByRecent),
 			switchMap((wishlistItems) => {
 				this.params = {
 					wishlistItems,

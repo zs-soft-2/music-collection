@@ -1,4 +1,4 @@
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
 import {
@@ -6,7 +6,7 @@ import {
 	collectionGroup,
 	CollectionReference,
 	doc,
-	docData,
+	docSnapshots,
 	DocumentData,
 	Firestore,
 	getDocs,
@@ -16,7 +16,11 @@ import {
 } from '@angular/fire/firestore';
 
 import { Entity, EntityDataService, SearchParams } from '../../common';
-import { FirestoreSyncService } from './firestore-sync.service';
+import {
+	FirestoreSyncService,
+	toSyncedData,
+	withLocalUpdatedAt,
+} from './firestore-sync.service';
 
 @Injectable()
 export abstract class FirebaseDataService<
@@ -41,7 +45,9 @@ export abstract class FirebaseDataService<
 			this.firestoreSync
 				.set(doc(this.collection, uid), this.featureKey, newEntity)
 				.then(() => {
-					subscriber.next({ ...newEntity } as unknown as R);
+					subscriber.next(
+						withLocalUpdatedAt(newEntity) as unknown as R
+					);
 				});
 		});
 	}
@@ -71,7 +77,7 @@ export abstract class FirebaseDataService<
 				const entities: R[] = [];
 
 				snapshots.forEach((doc) => {
-					entities.push(doc.data() as unknown as R);
+					entities.push(toSyncedData(doc) as unknown as R);
 				});
 
 				subscriber.next(entities);
@@ -82,9 +88,13 @@ export abstract class FirebaseDataService<
 	protected loadModel$(uid: string): Observable<R | undefined> {
 		const albumDocument = doc(this.firestore, `${this.featureKey}/${uid}`);
 
-		return docData(albumDocument, {
-			idField: 'uid',
-		}) as Observable<R>;
+		return docSnapshots(albumDocument).pipe(
+			map((snapshot) =>
+				snapshot.exists()
+					? ({ ...toSyncedData(snapshot), uid: snapshot.id } as R)
+					: undefined
+			)
+		);
 	}
 
 	protected searchModel$(params: SearchParams): Observable<R[]> {
@@ -104,7 +114,7 @@ export abstract class FirebaseDataService<
 						snapshot.docs.map(
 							(doc) =>
 								({
-									...doc.data(),
+									...toSyncedData(doc),
 								}) as unknown as R
 						)
 					);
@@ -128,9 +138,9 @@ export abstract class FirebaseDataService<
 					newEntity
 				)
 				.then(() => {
-					subscriber.next({
-						...newEntity,
-					} as unknown as T);
+					subscriber.next(
+						withLocalUpdatedAt(newEntity) as unknown as T
+					);
 				});
 		});
 	}

@@ -19,6 +19,11 @@ import { Chip } from 'primeng/chip';
 import { Ripple } from 'primeng/ripple';
 import { ButtonDirective } from 'primeng/button';
 import { AsyncPipe, DatePipe } from '@angular/common';
+import { DataView } from 'primeng/dataview';
+import {
+	CollectionViewToggleComponent,
+	EntityCardComponent,
+} from '@music-collection/ui';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,12 +42,22 @@ import { AsyncPipe, DatePipe } from '@angular/common';
 		ButtonDirective,
 		AsyncPipe,
 		DatePipe,
+		DataView,
+		CollectionViewToggleComponent,
+		EntityCardComponent,
 	],
 })
 export class AlbumTableComponent extends BaseComponent implements OnInit {
 	private componentService = inject(AlbumTableService);
 
 	public params$!: Observable<AlbumTableParams>;
+
+	public readonly collectionView = this.componentService.collectionView;
+
+	/** The uploaded cover, else the cover found on the web. */
+	public imageOf(album: AlbumEntity): string | null {
+		return album.coverImage?.filePath || album.coverImageUrl || null;
+	}
 
 	public deleteAlbum(album: AlbumEntity): void {
 		console.log(album);

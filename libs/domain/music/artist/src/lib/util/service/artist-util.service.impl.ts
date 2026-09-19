@@ -120,6 +120,10 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 			entity.styles = model.styles;
 		}
 
+		if (model.updatedAt) {
+			entity.updatedAt = model.updatedAt;
+		}
+
 		return entity;
 	}
 

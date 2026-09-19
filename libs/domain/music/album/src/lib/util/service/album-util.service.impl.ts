@@ -183,6 +183,10 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 			entity.youtubeVideoIds = model.youtubeVideoIds;
 		}
 
+		if (model.updatedAt) {
+			entity.updatedAt = model.updatedAt;
+		}
+
 		return entity;
 	}
 

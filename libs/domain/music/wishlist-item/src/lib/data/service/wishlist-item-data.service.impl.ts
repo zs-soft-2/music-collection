@@ -9,6 +9,7 @@ import {
 	WishlistItemModelUpdate,
 	SearchParams,
 	WISHLIST_ITEM_FEATURE_KEY,
+	withLocalUpdatedAt,
 } from '@music-collection/api';
 
 @Injectable()
@@ -47,9 +48,11 @@ export class WishlistItemDataServiceImpl extends WishlistItemDataService {
 					newWishlistItem
 				)
 				.then(() => {
-					subscriber.next({
-						...newWishlistItem,
-					} as unknown as WishlistItemModel);
+					subscriber.next(
+						withLocalUpdatedAt(
+							newWishlistItem
+						) as unknown as WishlistItemModel
+					);
 				});
 		});
 	}

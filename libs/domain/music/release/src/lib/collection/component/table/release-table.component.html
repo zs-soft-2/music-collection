@@ -1,84 +1,148 @@
 @if (params$ | async; as params) {
 	<section class="release-table mc-card">
-		<p-table
-			[value]="params.releases"
-			styleClass="mc-table"
-			responsiveLayout="scroll"
-		>
-			<ng-template #header>
-				<tr>
-					<th>Name</th>
+		<div class="mc-table-tools">
+			<p-autocomplete
+				class="mc-table-search"
+				placeholder="Filter by name…"
+				ariaLabel="Filter by name"
+				[suggestions]="params.empty"
+				[showClear]="true"
+				(completeMethod)="searchHandler($event)"
+				[minQueryLength]="3"
+				[delay]="400"
+			>
+			</p-autocomplete>
 
-					<th>Artist</th>
+			<mc-collection-view-toggle
+				[view]="collectionView.view()"
+				(viewChange)="collectionView.setView($event)"
+			/>
+		</div>
 
-					<th>Date</th>
+		@if (collectionView.view() === 'cards') {
+			<p-dataview
+				[value]="params.releases"
+				layout="grid"
+				[paginator]="true"
+				[rows]="24"
+				[rowsPerPageOptions]="[24, 48, 96]"
+				emptyMessage="No releases found."
+			>
+				<ng-template #grid let-releases>
+					<ul class="mc-card-grid">
+						@for (release of releases; track release.uid) {
+							<li>
+								<mc-entity-card
+									[title]="release.name"
+									[subtitle]="release.artist?.name"
+									[imageUrl]="imageOf(release)"
+									imageShape="square"
+									(open)="editRelease(release)"
+								>
+									@if (release.media) {
+										<p-chip styleClass="style">
+											{{ release.media }}
+										</p-chip>
+									}
+									@if (release.format) {
+										<p-chip styleClass="style">
+											{{ release.format }}
+										</p-chip>
+									}
+									@if (release.date) {
+										<p-chip styleClass="style">
+											{{ release.date | date: 'yyyy' }}
+										</p-chip>
+									}
 
-					<th>Media</th>
+									<button
+										cardActions
+										pButton
+										pRipple
+										aria-label="Delete release"
+										class="p-button-text p-button-rounded p-button-danger"
+										(click)="deleteRelease(release)"
+										iconOnly
+									>
+										<i
+											class="pi pi-trash"
+											aria-hidden="true"
+										></i>
+									</button>
+								</mc-entity-card>
+							</li>
+						}
+					</ul>
+				</ng-template>
+			</p-dataview>
+		} @else {
+			<p-table
+				[value]="params.releases"
+				styleClass="mc-table"
+				responsiveLayout="scroll"
+			>
+				<ng-template #header>
+					<tr>
+						<th>Name</th>
 
-					<th>Format</th>
+						<th>Artist</th>
 
-					<th></th>
-				</tr>
+						<th>Date</th>
 
-				<tr>
-					<th>
-						<p-autocomplete
-							placeholder="Filter by name…"
-							ariaLabel="Filter by name"
-							[suggestions]="params.empty"
-							[showClear]="true"
-							(completeMethod)="searchHandler($event)"
-							[minQueryLength]="3"
-							[delay]="400"
-						>
-						</p-autocomplete>
-					</th>
+						<th>Media</th>
 
-					<th></th>
-					<th></th>
-					<th></th>
-					<th></th>
-					<th></th>
-				</tr>
-			</ng-template>
+						<th>Format</th>
 
-			<ng-template #body let-release>
-				<tr>
-					<td>{{ release.name }}</td>
+						<th pSortableColumn="updatedAt">
+							Updated <p-sorticon field="updatedAt"></p-sorticon>
+						</th>
 
-					<td>{{ release.artist.name }}</td>
+						<th></th>
+					</tr>
+				</ng-template>
 
-					<td>{{ release.date | date: 'yyyy' }}</td>
+				<ng-template #body let-release>
+					<tr>
+						<td>{{ release.name }}</td>
 
-					<td>{{ release.media }}</td>
+						<td>{{ release.artist.name }}</td>
 
-					<td>{{ release.format }}</td>
+						<td>{{ release.date | date: 'yyyy' }}</td>
 
-					<td>
-						<button
-							pButton
-							pRipple
-							aria-label="Edit release"
-							class="p-button-text p-button-rounded p-button-secondary"
-							(click)="editRelease(release)"
-							iconOnly
-						>
-							<i class="pi pi-pencil" aria-hidden="true"></i>
-						</button>
+						<td>{{ release.media }}</td>
 
-						<button
-							pButton
-							pRipple
-							aria-label="Delete release"
-							class="p-button-text p-button-rounded p-button-danger"
-							(click)="deleteRelease(release)"
-							iconOnly
-						>
-							<i class="pi pi-trash" aria-hidden="true"></i>
-						</button>
-					</td>
-				</tr>
-			</ng-template>
-		</p-table>
+						<td>{{ release.format }}</td>
+
+						<td>
+							{{ release.updatedAt | date: 'yyyy-MM-dd HH:mm' }}
+						</td>
+
+						<td>
+							<button
+								pButton
+								pRipple
+								aria-label="Edit release"
+								class="p-button-text p-button-rounded p-button-secondary"
+								(click)="editRelease(release)"
+								iconOnly
+							>
+								<i class="pi pi-pencil" aria-hidden="true"></i>
+							</button>
+
+							<button
+								pButton
+								pRipple
+								aria-label="Delete release"
+								class="p-button-text p-button-rounded p-button-danger"
+								(click)="deleteRelease(release)"
+								iconOnly
+							>
+								<i class="pi pi-trash" aria-hidden="true"></i>
+							</button>
+						</td>
+					</tr>
+				</ng-template>
+			</p-table>
+		}
 	</section>
 }

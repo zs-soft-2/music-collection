@@ -1,0 +1,34 @@
+<button
+	type="button"
+	class="card-body"
+	[attr.aria-label]="'Edit ' + title()"
+	(click)="open.emit()"
+>
+	@if (imageUrl()) {
+		<img
+			class="image"
+			[class.round]="imageShape() === 'round'"
+			[src]="imageUrl()"
+			alt=""
+			loading="lazy"
+		/>
+	} @else {
+		<span
+			class="image placeholder"
+			[class.round]="imageShape() === 'round'"
+			aria-hidden="true"
+		>
+			{{ initial() }}
+		</span>
+	}
+
+	<span class="title">{{ title() }}</span>
+
+	@if (subtitle()) {
+		<span class="subtitle">{{ subtitle() }}</span>
+	}
+
+	<span class="tags"><ng-content /></span>
+</button>
+
+<div class="actions"><ng-content select="[cardActions]" /></div>

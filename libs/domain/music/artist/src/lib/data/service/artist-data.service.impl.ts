@@ -21,6 +21,7 @@ import {
 	ReleaseModelAdd,
 	ReleaseModelUpdate,
 	SearchParams,
+	withLocalUpdatedAt,
 } from '@music-collection/api';
 
 import {
@@ -155,7 +156,9 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 			this.firestoreSync
 				.set(doc(collectionReference, uid), ALBUM_FEATURE_KEY, newAlbum)
 				.then(() => {
-					subscriber.next({ ...newAlbum } as unknown as AlbumModel);
+					subscriber.next(
+						withLocalUpdatedAt(newAlbum) as unknown as AlbumModel
+					);
 				});
 		});
 	}
@@ -184,9 +187,11 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 					newRelease
 				)
 				.then(() => {
-					subscriber.next({
-						...newRelease,
-					} as unknown as ReleaseModel);
+					subscriber.next(
+						withLocalUpdatedAt(
+							newRelease
+						) as unknown as ReleaseModel
+					);
 				});
 		});
 	}
@@ -230,7 +235,9 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 					album
 				)
 				.then(() => {
-					subscriber.next({ ...album } as unknown as AlbumModel);
+					subscriber.next(
+						withLocalUpdatedAt(album) as unknown as AlbumModel
+					);
 				});
 		});
 	}
@@ -278,7 +285,7 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 			this.firestoreSync
 				.update(albumDocument, ALBUM_FEATURE_KEY, { ...album })
 				.then(() => {
-					subscriber.next(album);
+					subscriber.next(withLocalUpdatedAt(album));
 				});
 		});
 	}
@@ -295,7 +302,7 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 			this.firestoreSync
 				.update(releaseDocument, RELEASE_FEATURE_KEY, { ...release })
 				.then(() => {
-					subscriber.next(release);
+					subscriber.next(withLocalUpdatedAt(release));
 				});
 		});
 	}

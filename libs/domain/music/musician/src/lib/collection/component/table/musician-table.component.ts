@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { AsyncPipe, NgTemplateOutlet } from '@angular/common';
+import { AsyncPipe, DatePipe, NgTemplateOutlet } from '@angular/common';
 import {
 	ChangeDetectionStrategy,
 	Component,
@@ -18,11 +18,12 @@ import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
 import { InputText } from 'primeng/inputtext';
 import { SortIcon, SortableColumn, Table } from 'primeng/table';
-
 import {
-	MusicianTableService,
-	MusicianTableView,
-} from './musician-table.service';
+	CollectionViewToggleComponent,
+	EntityCardComponent,
+} from '@music-collection/ui';
+
+import { MusicianTableService } from './musician-table.service';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -40,7 +41,10 @@ import {
 		InputIcon,
 		InputText,
 		AsyncPipe,
+		DatePipe,
 		NgTemplateOutlet,
+		CollectionViewToggleComponent,
+		EntityCardComponent,
 	],
 })
 export class MusicianTableComponent extends BaseComponent implements OnInit {
@@ -48,16 +52,7 @@ export class MusicianTableComponent extends BaseComponent implements OnInit {
 
 	public params$!: Observable<MusicianTableParams>;
 
-	public readonly view = this.componentService.view;
-
-	public readonly viewOptions: {
-		value: MusicianTableView;
-		label: string;
-		icon: string;
-	}[] = [
-		{ value: 'table', label: 'Table', icon: 'pi pi-list' },
-		{ value: 'cards', label: 'Cards', icon: 'pi pi-th-large' },
-	];
+	public readonly collectionView = this.componentService.collectionView;
 
 	public editMusician(musician: MusicianEntity): void {
 		this.componentService.editMusician(musician);
@@ -69,9 +64,5 @@ export class MusicianTableComponent extends BaseComponent implements OnInit {
 
 	public ngOnInit(): void {
 		this.params$ = this.componentService.init$();
-	}
-
-	public setView(view: MusicianTableView): void {
-		this.componentService.setView(view);
 	}
 }

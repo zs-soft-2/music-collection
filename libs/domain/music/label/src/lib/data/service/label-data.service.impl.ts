@@ -9,6 +9,7 @@ import {
 	LabelModelAdd,
 	LabelModelUpdate,
 	SearchParams,
+	withLocalUpdatedAt,
 } from '@music-collection/api';
 
 @Injectable()
@@ -32,9 +33,11 @@ export class LabelDataServiceImpl extends LabelDataService {
 				this.firestoreSync
 					.set(doc(this.collection, uid), LABEL_FEATURE_KEY, newLabel)
 					.then(() => {
-						subscriber.next({
-							...newLabel,
-						} as unknown as LabelModel);
+						subscriber.next(
+							withLocalUpdatedAt(
+								newLabel
+							) as unknown as LabelModel
+						);
 					});
 			} else {
 				const docRef = doc(
@@ -54,9 +57,11 @@ export class LabelDataServiceImpl extends LabelDataService {
 						newLabel
 					)
 					.then(() => {
-						subscriber.next({
-							...newLabel,
-						} as unknown as LabelModel);
+						subscriber.next(
+							withLocalUpdatedAt(
+								newLabel
+							) as unknown as LabelModel
+						);
 					});
 			}
 		});

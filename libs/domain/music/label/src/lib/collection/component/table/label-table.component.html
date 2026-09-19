@@ -1,70 +1,119 @@
 @if (params$ | async; as params) {
 	<section class="label-table mc-card">
-		<p-table
-			[value]="params.labels"
-			styleClass="mc-table"
-			responsiveLayout="scroll"
-		>
-			<ng-template #header>
-				<tr>
-					<th>Name</th>
+		<div class="mc-table-tools">
+			<p-autocomplete
+				class="mc-table-search"
+				placeholder="Filter by name…"
+				ariaLabel="Filter by name"
+				[suggestions]="params.empty"
+				[showClear]="true"
+				(completeMethod)="searchHandler($event)"
+				[minQueryLength]="3"
+				[delay]="400"
+			>
+			</p-autocomplete>
 
-					<th>Parent</th>
+			<mc-collection-view-toggle
+				[view]="collectionView.view()"
+				(viewChange)="collectionView.setView($event)"
+			/>
+		</div>
 
-					<th></th>
-				</tr>
+		@if (collectionView.view() === 'cards') {
+			<p-dataview
+				[value]="params.labels"
+				layout="grid"
+				[paginator]="true"
+				[rows]="24"
+				[rowsPerPageOptions]="[24, 48, 96]"
+				emptyMessage="No labels found."
+			>
+				<ng-template #grid let-labels>
+					<ul class="mc-card-grid">
+						@for (label of labels; track label.uid) {
+							<li>
+								<mc-entity-card
+									[title]="label.name"
+									[subtitle]="label.parent?.name"
+									imageShape="square"
+									(open)="editLabel(label)"
+								>
+									<button
+										cardActions
+										pButton
+										pRipple
+										aria-label="Delete label"
+										class="p-button-text p-button-rounded p-button-danger"
+										(click)="deleteLabel(label)"
+										iconOnly
+									>
+										<i
+											class="pi pi-trash"
+											aria-hidden="true"
+										></i>
+									</button>
+								</mc-entity-card>
+							</li>
+						}
+					</ul>
+				</ng-template>
+			</p-dataview>
+		} @else {
+			<p-table
+				[value]="params.labels"
+				styleClass="mc-table"
+				responsiveLayout="scroll"
+			>
+				<ng-template #header>
+					<tr>
+						<th>Name</th>
 
-				<tr>
-					<th>
-						<p-autocomplete
-							placeholder="Filter by name…"
-							ariaLabel="Filter by name"
-							[suggestions]="params.empty"
-							[showClear]="true"
-							(completeMethod)="searchHandler($event)"
-							[minQueryLength]="3"
-							[delay]="400"
-						>
-						</p-autocomplete>
-					</th>
+						<th>Parent</th>
 
-					<th></th>
+						<th pSortableColumn="updatedAt">
+							Updated <p-sorticon field="updatedAt"></p-sorticon>
+						</th>
 
-					<th></th>
-				</tr>
-			</ng-template>
+						<th></th>
+					</tr>
+				</ng-template>
 
-			<ng-template #body let-label>
-				<tr>
-					<td>{{ label.name }}</td>
+				<ng-template #body let-label>
+					<tr>
+						<td>{{ label.name }}</td>
 
-					<td>{{ label.parent?.name }}</td>
+						<td>{{ label.parent?.name }}</td>
 
-					<td>
-						<button
-							pButton
-							pRipple
-							aria-label="Edit label"
-							class="p-button-text p-button-rounded p-button-secondary"
-							(click)="editLabel(label)"
-							iconOnly
-						>
-							<i class="pi pi-pencil" aria-hidden="true"></i>
-						</button>
+						<td>
+							{{ label.updatedAt | date: 'yyyy-MM-dd HH:mm' }}
+						</td>
 
-						<button
-							pButton
-							pRipple
-							aria-label="Delete label"
-							class="p-button-text p-button-rounded p-button-danger"
-							(click)="deleteLabel(label)"
-							iconOnly
-						>
-							<i class="pi pi-trash" aria-hidden="true"></i>
-						</button>
-					</td>
-				</tr>
-			</ng-template>
-		</p-table>
+						<td>
+							<button
+								pButton
+								pRipple
+								aria-label="Edit label"
+								class="p-button-text p-button-rounded p-button-secondary"
+								(click)="editLabel(label)"
+								iconOnly
+							>
+								<i class="pi pi-pencil" aria-hidden="true"></i>
+							</button>
+
+							<button
+								pButton
+								pRipple
+								aria-label="Delete label"
+								class="p-button-text p-button-rounded p-button-danger"
+								(click)="deleteLabel(label)"
+								iconOnly
+							>
+								<i class="pi pi-trash" aria-hidden="true"></i>
+							</button>
+						</td>
+					</tr>
+				</ng-template>
+			</p-table>
+		}
 	</section>
 }
