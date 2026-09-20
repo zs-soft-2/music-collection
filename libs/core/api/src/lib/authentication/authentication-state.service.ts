@@ -1,0 +1,13 @@
+import { Observable } from 'rxjs';
+
+import { BaseService } from '@music-collection/common-api';
+import { User } from '../user';
+
+export abstract class AuthenticationStateService extends BaseService {
+	public abstract dispatchAuthenticated(user: User | undefined): void;
+	public abstract dispatchGetUser(): void;
+	public abstract dispatchLogin(): void;
+	public abstract dispatchLogout(): void;
+	public abstract selectAuthenticatedUser$(): Observable<User>;
+	public abstract selectIsAuthenticated$(): Observable<boolean>;
+}

@@ -1,12 +1,13 @@
 import { Observable } from 'rxjs';
 
-import { FirebaseDataService } from '../firebase';
 import {
 	EntityCounts,
 	EntityQuantityEntity,
 	EntityQuantityEntityAdd,
 	EntityQuantityEntityUpdate,
-} from './entity-quantity';
+} from '@music-collection/core-api';
+
+import { FirebaseDataService } from '../firebase';
 
 export abstract class EntityQuantityDataService extends FirebaseDataService<
 	EntityQuantityEntity,

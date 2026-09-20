@@ -6,6 +6,7 @@ export * from './lib/data';
 export * from './lib/entity';
 export * from './lib/file';
 export * from './lib/identifiable';
+export * from './lib/key-value';
 export * from './lib/meta';
 export * from './lib/music';
 export * from './lib/search';
