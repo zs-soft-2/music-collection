@@ -1,0 +1,41 @@
+import { map } from 'rxjs';
+
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+
+import { BackLinkComponent } from '../../shared/back-link';
+
+import { CollectionDetailPageStore } from './collection-detail-page.store';
+import { ALBUM_FILTER_OPTIONS, AlbumFilter } from './collections.model';
+
+/**
+ * One collection: what it asks for, and which of those records are already on
+ * the shelf. Both are resolved live, so the page answers "where do I stand
+ * right now" rather than replaying a stored membership.
+ */
+@Component({
+	changeDetection: ChangeDetectionStrategy.OnPush,
+	providers: [CollectionDetailPageStore],
+	selector: 'mc-collection-detail-page',
+	templateUrl: './collection-detail-page.component.html',
+	styleUrls: ['./collection-detail-page.component.scss'],
+	imports: [RouterLink, BackLinkComponent],
+})
+export class CollectionDetailPageComponent {
+	protected readonly store = inject(CollectionDetailPageStore);
+
+	protected readonly filterOptions = ALBUM_FILTER_OPTIONS;
+	protected readonly skeletons = Array.from({ length: 8 }, (_, i) => i);
+
+	public constructor() {
+		this.store.load(
+			inject(ActivatedRoute).paramMap.pipe(
+				map((params) => params.get('slug') ?? '')
+			)
+		);
+	}
+
+	protected onFilter(filter: AlbumFilter): void {
+		this.store.setFilter(filter);
+	}
+}

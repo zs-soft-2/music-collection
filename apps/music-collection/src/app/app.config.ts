@@ -30,6 +30,7 @@ import { DomainAlbumModule } from '@music-collection/domain/album';
 import { DomainArtistModule } from '@music-collection/domain/artist';
 import { DomainCollectionItemModule } from '@music-collection/domain/collection-item';
 import { DomainDocumentModule } from '@music-collection/domain/document';
+import { provideMusicCollection } from '@music-collection/domain/music-collection/core';
 import { DomainReleaseModule } from '@music-collection/domain/release';
 import { DomainUserModule } from '@music-collection/domain/user';
 import { DomainWishlistItemModule } from '@music-collection/domain/wishlist-item';
@@ -66,6 +67,7 @@ export const appConfig: ApplicationConfig = {
 		provideStorage(() => getStorage()),
 		provideHttpClient(withXhr()),
 		provideAngularSvgIcon(),
+		provideMusicCollection(),
 		provideAnimationsAsync(),
 		providePrimeNG({
 			theme: {

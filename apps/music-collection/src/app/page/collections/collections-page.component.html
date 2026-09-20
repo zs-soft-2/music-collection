@@ -1,0 +1,129 @@
+<div class="page">
+	<header class="hero">
+		<div class="hero-text">
+			<p class="eyebrow">musiCollection</p>
+			<h1>Collections</h1>
+			<p class="lead">
+				Sets of records defined by a rule, not by a list — they grow
+				with the catalog.
+			</p>
+		</div>
+
+		@if (!store.isLoading() && store.collections().length) {
+			<dl class="stats">
+				<div class="stat">
+					<dt>Collections</dt>
+					<dd>{{ store.collections().length }}</dd>
+				</div>
+				<div class="stat">
+					<dt>Completed</dt>
+					<dd>{{ store.completedCount() }}</dd>
+				</div>
+				<div class="stat">
+					<dt>Records missing</dt>
+					<dd>{{ store.missingCount() }}</dd>
+				</div>
+			</dl>
+		}
+	</header>
+
+	@if (store.isLoading()) {
+		<div class="grid">
+			@for (skeleton of skeletons; track skeleton) {
+				<div class="skeleton card-skeleton"></div>
+			}
+		</div>
+	} @else if (!store.collections().length) {
+		<p class="empty">
+			No collection has been published yet. Once one is, this is where you
+			see how far your shelf gets you.
+		</p>
+	} @else {
+		<ul class="grid">
+			@for (collection of store.collections(); track collection.uid) {
+				<li>
+					<a
+						class="card"
+						[class.is-completed]="collection.completed"
+						[routerLink]="['/collections', collection.slug]"
+					>
+						<div class="artwork">
+							@if (collection.coverImageUrl) {
+								<img
+									class="cover"
+									[src]="collection.coverImageUrl"
+									alt=""
+									loading="lazy"
+								/>
+							} @else if (collection.covers.length) {
+								<div class="mosaic">
+									@for (
+										cover of collection.covers;
+										track cover
+									) {
+										<img
+											[src]="cover"
+											alt=""
+											loading="lazy"
+										/>
+									}
+								</div>
+							} @else {
+								<i
+									class="placeholder"
+									[class]="collection.icon || 'pi pi-box'"
+									aria-hidden="true"
+								></i>
+							}
+
+							@if (collection.completed) {
+								<span class="earned">
+									<i
+										class="pi pi-check"
+										aria-hidden="true"
+									></i>
+									{{ collection.badgeName || 'Complete' }}
+								</span>
+							}
+						</div>
+
+						<div class="body">
+							<h2>{{ collection.name }}</h2>
+
+							@if (collection.description) {
+								<p class="description">
+									{{ collection.description }}
+								</p>
+							}
+
+							<div class="progress">
+								<div
+									class="bar"
+									role="progressbar"
+									[attr.aria-valuenow]="collection.percentage"
+									aria-valuemin="0"
+									aria-valuemax="100"
+									[attr.aria-label]="
+										'Progress on ' + collection.name
+									"
+								>
+									<span
+										class="fill"
+										[style.width.%]="collection.percentage"
+									></span>
+								</div>
+								<p class="counts">
+									<strong>{{ collection.owned }}</strong> of
+									{{ collection.total }}
+									<span class="percentage"
+										>· {{ collection.percentage }}%</span
+									>
+								</p>
+							</div>
+						</div>
+					</a>
+				</li>
+			}
+		</ul>
+	}
+</div>

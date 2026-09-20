@@ -31,8 +31,12 @@ export class TopBarService {
 				routerLink: ['/home'],
 			},
 			{
-				label: 'Collection',
+				label: 'My Collection',
 				routerLink: ['/collection'],
+			},
+			{
+				label: 'Collections',
+				routerLink: ['/collections'],
 			},
 			{
 				label: 'Wishlist',

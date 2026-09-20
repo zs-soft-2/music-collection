@@ -1,0 +1,171 @@
+<div class="page">
+	<mc-back-link fallback="/collections" label="Collections" />
+
+	@if (store.isLoading()) {
+		<div class="skeleton hero-skeleton"></div>
+		<div class="grid">
+			@for (skeleton of skeletons; track skeleton) {
+				<div class="skeleton album-skeleton"></div>
+			}
+		</div>
+	} @else if (store.notFound() || !store.collection()) {
+		<p class="empty">
+			This collection is not published, or it no longer exists.
+			<a routerLink="/collections">Back to the collections</a>.
+		</p>
+	} @else {
+		@let collection = store.collection()!;
+
+		<header class="hero" [class.is-completed]="collection.completed">
+			<div class="hero-text">
+				<p class="eyebrow">Collection</p>
+				<h1>{{ collection.name }}</h1>
+
+				@if (collection.description) {
+					<p class="lead">{{ collection.description }}</p>
+				}
+
+				<div class="progress">
+					<div
+						class="bar"
+						role="progressbar"
+						[attr.aria-valuenow]="collection.percentage"
+						aria-valuemin="0"
+						aria-valuemax="100"
+						[attr.aria-label]="'Progress on ' + collection.name"
+					>
+						<span
+							class="fill"
+							[style.width.%]="collection.percentage"
+						></span>
+					</div>
+					<p class="counts">
+						<strong>{{ collection.owned }}</strong> of
+						{{ collection.total }} records ·
+						{{ collection.percentage }}%
+						@if (collection.missing) {
+							<span class="missing"
+								>· {{ collection.missing }} missing</span
+							>
+						}
+					</p>
+				</div>
+			</div>
+
+			@if (collection.badge; as badge) {
+				<aside class="badge" [class.is-earned]="badge.earned">
+					@if (badge.artworkUrl) {
+						<img
+							class="badge-art"
+							[src]="badge.artworkUrl"
+							alt=""
+						/>
+					} @else {
+						<i
+							class="badge-icon"
+							[class]="badge.icon || 'pi pi-star'"
+							aria-hidden="true"
+						></i>
+					}
+					<div>
+						<p class="badge-name">{{ badge.name }}</p>
+						@if (badge.description) {
+							<p class="badge-description">
+								{{ badge.description }}
+							</p>
+						}
+						<p class="badge-state">
+							{{
+								badge.earned
+									? 'Earned'
+									: collection.missing + ' record(s) to go'
+							}}
+						</p>
+					</div>
+				</aside>
+			}
+		</header>
+
+		@if (!collection.total) {
+			<p class="empty">
+				Nothing in the catalog answers this collection yet.
+			</p>
+		} @else {
+			<div class="toolbar" role="tablist" aria-label="Which records">
+				@for (option of filterOptions; track option.value) {
+					<button
+						type="button"
+						role="tab"
+						class="filter"
+						[class.is-active]="store.filter() === option.value"
+						[attr.aria-selected]="store.filter() === option.value"
+						(click)="onFilter(option.value)"
+					>
+						{{ option.label }}
+						<span class="count">
+							{{
+								option.value === 'owned'
+									? collection.owned
+									: option.value === 'missing'
+										? collection.missing
+										: collection.total
+							}}
+						</span>
+					</button>
+				}
+			</div>
+
+			@if (!store.albums().length) {
+				<p class="empty">No record here yet.</p>
+			} @else {
+				<ul class="grid">
+					@for (album of store.albums(); track album.albumUid) {
+						<li>
+							<a
+								class="album"
+								[class.is-owned]="album.owned"
+								[routerLink]="['/album', album.albumUid]"
+							>
+								<div class="sleeve">
+									@if (album.coverUrl) {
+										<img
+											[src]="album.coverUrl"
+											alt=""
+											loading="lazy"
+										/>
+									} @else {
+										<i
+											class="pi pi-image"
+											aria-hidden="true"
+										></i>
+									}
+
+									<span class="mark" aria-hidden="true">
+										<i
+											[class]="
+												album.owned
+													? 'pi pi-check'
+													: 'pi pi-plus'
+											"
+										></i>
+									</span>
+								</div>
+
+								<p class="album-name">{{ album.albumName }}</p>
+								<p class="album-meta">
+									{{ album.artistName }}
+									@if (album.year) {
+										· {{ album.year }}
+									}
+								</p>
+								<span class="visually-hidden">
+									{{ album.owned ? 'Owned' : 'Missing' }}
+								</span>
+							</a>
+						</li>
+					}
+				</ul>
+			}
+		}
+	}
+</div>
