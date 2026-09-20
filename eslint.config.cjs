@@ -16,8 +16,69 @@ module.exports = [
           enforceBuildableLibDependency: true,
           allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?js$'],
           depConstraints: [
+            // Két független irány. A `platform:` azt mondja meg, mire
+            // támaszkodhat egy library (a `platform:agnostic` libek a Cloud
+            // Functionsben is futnak, ezért nem láthatnak keretrendszert), a
+            // `type:` pedig a rétegek irányát: app → admin → domain → ui →
+            // api, mellette core → api, és később engine → api.
             {
-              sourceTag: '*',
+              sourceTag: 'platform:agnostic',
+              onlyDependOnLibsWithTags: ['platform:agnostic'],
+              bannedExternalImports: [
+                '@angular/*',
+                '@ngrx/*',
+                'primeng',
+                'primeng/*',
+                '@primeuix/*',
+                '@primeicons/*',
+                'ng-flex-layout',
+                'ngx-permissions',
+                'firebase',
+              ],
+            },
+            {
+              sourceTag: 'type:api',
+              onlyDependOnLibsWithTags: ['type:api'],
+            },
+            {
+              sourceTag: 'type:engine',
+              onlyDependOnLibsWithTags: ['type:api', 'type:engine'],
+            },
+            {
+              sourceTag: 'type:ui',
+              onlyDependOnLibsWithTags: ['type:api', 'type:engine', 'type:ui'],
+            },
+            {
+              sourceTag: 'type:core',
+              onlyDependOnLibsWithTags: [
+                'type:api',
+                'type:engine',
+                'type:core',
+              ],
+            },
+            // A domain librarykben PrimeNG-tábla-komponensek is vannak, ezért
+            // láthatják a ui libraryt; visszafelé tilos.
+            {
+              sourceTag: 'type:domain',
+              onlyDependOnLibsWithTags: [
+                'type:api',
+                'type:engine',
+                'type:ui',
+                'type:domain',
+              ],
+            },
+            {
+              sourceTag: 'type:admin',
+              onlyDependOnLibsWithTags: [
+                'type:api',
+                'type:engine',
+                'type:ui',
+                'type:domain',
+                'type:admin',
+              ],
+            },
+            {
+              sourceTag: 'type:app',
               onlyDependOnLibsWithTags: ['*'],
             },
           ],

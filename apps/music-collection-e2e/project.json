@@ -25,6 +25,6 @@
 			}
 		}
 	},
-	"tags": [],
+	"tags": ["type:app", "platform:angular"],
 	"implicitDependencies": ["music-collection"]
 }

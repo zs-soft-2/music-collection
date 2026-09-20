@@ -4,7 +4,7 @@
 	"projectType": "application",
 	"sourceRoot": "apps/music-collection/src",
 	"prefix": "music-collection",
-	"tags": [],
+	"tags": ["type:app", "platform:angular"],
 	"targets": {
 		"version": {
 			"executor": "nx:run-commands",
