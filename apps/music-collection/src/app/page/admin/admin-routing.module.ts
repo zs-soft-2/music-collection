@@ -138,6 +138,36 @@ const routes: Routes = [
 				canActivate: [NgxPermissionsGuard],
 			},
 			{
+				path: 'music-collection',
+				data: {
+					breadcrumb: 'music-collection',
+					permissions: {
+						only: [RoleNames.ADMIN],
+						redirectTo: '/error',
+					},
+				},
+				loadComponent: () =>
+					import('./music-collection/music-collection-admin.component').then(
+						(module) => module.MusicCollectionAdminComponent
+					),
+				canActivate: [NgxPermissionsGuard],
+			},
+			{
+				path: 'music-collection/edit/:uid',
+				data: {
+					breadcrumb: 'music-collection',
+					permissions: {
+						only: [RoleNames.ADMIN],
+						redirectTo: '/error',
+					},
+				},
+				loadComponent: () =>
+					import('./music-collection/edit/music-collection-edit.component').then(
+						(module) => module.MusicCollectionEditComponent
+					),
+				canActivate: [NgxPermissionsGuard],
+			},
+			{
 				path: 'wishlist-item',
 				data: {
 					breadcrumb: 'wishlist-item',

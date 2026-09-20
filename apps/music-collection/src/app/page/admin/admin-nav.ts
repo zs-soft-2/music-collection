@@ -59,6 +59,12 @@ export const ADMIN_NAV: AdminNavGroup[] = [
 				countType: 'Label',
 				createLabel: 'Add label',
 			},
+			{
+				label: 'Collections',
+				route: 'music-collection',
+				icon: 'pi-bookmark',
+				createLabel: 'Add collection',
+			},
 		],
 	},
 	{

@@ -7,11 +7,15 @@ import {
 	CollectionItemStateService,
 } from '@music-collection/api';
 import {
+	CreateMusicCollectionResult,
 	MusicCollectionCatalog,
+	MusicCollectionCriteria,
+	MusicCollectionDraft,
 	MusicCollectionEntity,
 	MusicCollectionProgress,
 	MusicCollectionRepository,
 	ResolvedMusicCollection,
+	UpdateMusicCollectionResult,
 } from '@music-collection/domain/music-collection/api';
 import {
 	compareWithCollection,
@@ -30,6 +34,18 @@ export interface MusicCollectionStanding {
 	resolved: ResolvedMusicCollection;
 	progress: MusicCollectionProgress;
 }
+
+/**
+ * A definition with what it resolves to, without anyone's progress: what the
+ * admin needs to see, where the question is what the rule catches.
+ */
+export interface MusicCollectionResolution {
+	collection: MusicCollectionEntity;
+	resolved: ResolvedMusicCollection;
+}
+
+/** The uid a criteria object is resolved under while it is still being written. */
+const PREVIEW_UID = 'preview';
 
 /** Selects a feature's entities and asks for the list while it is empty. */
 function entities$<T>(
@@ -96,6 +112,78 @@ export class MusicCollectionEffect {
 					: null
 			)
 		);
+	}
+
+	/** Every definition with what it resolves to, drafts included (admin). */
+	public listAllResolutions$(): Observable<MusicCollectionResolution[]> {
+		return combineLatest([
+			this.repository.listAll$(),
+			this.catalog$(),
+		]).pipe(
+			map(([collections, catalog]) =>
+				collections.map((collection) => ({
+					collection,
+					resolved: resolveMusicCollection(collection, catalog),
+				}))
+			)
+		);
+	}
+
+	/** One definition by its uid, with what it resolves to (admin). */
+	public loadResolution$(
+		uid: string
+	): Observable<MusicCollectionResolution | null> {
+		return combineLatest([
+			this.repository.loadByUid$(uid),
+			this.catalog$(),
+		]).pipe(
+			map(([collection, catalog]) =>
+				collection
+					? {
+							collection,
+							resolved: resolveMusicCollection(
+								collection,
+								catalog
+							),
+						}
+					: null
+			)
+		);
+	}
+
+	/**
+	 * What a rule would catch right now, for the editor: the criteria are
+	 * resolved without being saved, so the admin sees the records before
+	 * anyone earns a badge for them.
+	 */
+	public preview$(
+		criteria: MusicCollectionCriteria
+	): Observable<ResolvedMusicCollection> {
+		return this.catalog$().pipe(
+			map((catalog) =>
+				resolveMusicCollection(
+					{ uid: PREVIEW_UID, criteria, criteriaVersion: 0 },
+					catalog
+				)
+			)
+		);
+	}
+
+	public create$(
+		collection: MusicCollectionDraft
+	): Observable<CreateMusicCollectionResult> {
+		return this.repository.create$(collection);
+	}
+
+	public update$(
+		uid: string,
+		collection: MusicCollectionDraft
+	): Observable<UpdateMusicCollectionResult> {
+		return this.repository.update$(uid, collection);
+	}
+
+	public delete$(uid: string): Observable<void> {
+		return this.repository.delete$(uid);
 	}
 
 	private toStanding(

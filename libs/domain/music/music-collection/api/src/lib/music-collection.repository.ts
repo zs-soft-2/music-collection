@@ -1,5 +1,10 @@
 import { Observable } from 'rxjs';
 
+import {
+	CreateMusicCollectionResult,
+	MusicCollectionDraft,
+	UpdateMusicCollectionResult,
+} from './music-collection-function';
 import { MusicCollectionEntity } from './music-collection';
 
 /**
@@ -15,4 +20,21 @@ export abstract class MusicCollectionRepository {
 	public abstract loadBySlug$(
 		slug: string
 	): Observable<MusicCollectionEntity | undefined>;
+	public abstract loadByUid$(
+		uid: string
+	): Observable<MusicCollectionEntity | undefined>;
+
+	/**
+	 * Writing goes through the callables: the rules refuse every client write
+	 * to the definitions, so the permission and the criteria are checked
+	 * where the client cannot reach them.
+	 */
+	public abstract create$(
+		collection: MusicCollectionDraft
+	): Observable<CreateMusicCollectionResult>;
+	public abstract update$(
+		uid: string,
+		collection: MusicCollectionDraft
+	): Observable<UpdateMusicCollectionResult>;
+	public abstract delete$(uid: string): Observable<void>;
 }

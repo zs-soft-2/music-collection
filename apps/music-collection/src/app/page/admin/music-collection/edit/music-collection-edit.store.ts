@@ -1,0 +1,298 @@
+import {
+	Observable,
+	debounceTime,
+	exhaustMap,
+	filter,
+	map,
+	of,
+	pipe,
+	switchMap,
+	tap,
+} from 'rxjs';
+
+import { computed, inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { ArtistEntity, ArtistStateService } from '@music-collection/api';
+import {
+	MusicCollectionEntity,
+	MusicCollectionMembership,
+} from '@music-collection/domain/music-collection/api';
+import { MusicCollectionEffect } from '@music-collection/domain/music-collection/core';
+import { tapResponse } from '@ngrx/operators';
+import {
+	patchState,
+	signalStore,
+	withComputed,
+	withHooks,
+	withMethods,
+	withState,
+} from '@ngrx/signals';
+import { rxMethod } from '@ngrx/signals/rxjs-interop';
+
+import { describeWriteError } from '../music-collection-admin.errors';
+import {
+	slugify,
+	toCriteria,
+	toDraft,
+	toForm,
+} from '../music-collection-admin.mapper';
+import {
+	CollectionForm,
+	CriteriaForm,
+	emptyCollectionForm,
+} from '../music-collection-admin.model';
+
+/** The uid the other admin lists use for "not saved yet". */
+const NEW_UID = '0';
+/** The preview lists this many records; the rest is a count. */
+const PREVIEW_SIZE = 24;
+/** Keystrokes settle before the catalog is walked again. */
+const PREVIEW_DEBOUNCE_MS = 250;
+
+interface MusicCollectionEditState {
+	/** Null while adding a new collection. */
+	uid: string | null;
+	isLoading: boolean;
+	isSaving: boolean;
+	error: string | null;
+	form: CollectionForm;
+	/** The slug follows the name until the admin writes one. */
+	slugTouched: boolean;
+	previewAlbums: MusicCollectionMembership[];
+	previewTotal: number;
+	isPreviewing: boolean;
+	/** The other definitions, to pick a parent from. */
+	parents: { uid: string; name: string }[];
+	artists: ArtistEntity[];
+}
+
+const initialState: MusicCollectionEditState = {
+	uid: null,
+	isLoading: true,
+	isSaving: false,
+	error: null,
+	form: emptyCollectionForm(),
+	slugTouched: false,
+	previewAlbums: [],
+	previewTotal: 0,
+	isPreviewing: false,
+	parents: [],
+	artists: [],
+};
+
+/**
+ * Admin: one collection definition. The rule is resolved against the catalog
+ * while it is being written, so the admin sees what a collection would ask
+ * for before anybody is measured against it.
+ */
+export const MusicCollectionEditStore = signalStore(
+	withState(initialState),
+	withComputed((store) => ({
+		isNew: computed(() => store.uid() === null),
+		criteria: computed(() => toCriteria(store.form().criteria)),
+		/** A rule that catches everything is almost never what was meant. */
+		matchesEverything: computed(
+			() => !Object.keys(toCriteria(store.form().criteria)).length
+		),
+		canSave: computed(
+			() => !!store.form().name.trim() && !store.isSaving()
+		),
+		artistNames: computed(() => {
+			const names = new Map(
+				store.artists().map((artist) => [artist.uid, artist.name])
+			);
+
+			return store
+				.form()
+				.criteria.artists.map(
+					(uid) => names.get(uid) ?? 'Unknown artist'
+				);
+		}),
+	})),
+	withMethods(
+		(
+			store,
+			effect = inject(MusicCollectionEffect),
+			artistStateService = inject(ArtistStateService),
+			router = inject(Router)
+		) => {
+			const preview = rxMethod<CriteriaForm>(
+				pipe(
+					tap(() => patchState(store, { isPreviewing: true })),
+					debounceTime(PREVIEW_DEBOUNCE_MS),
+					switchMap((criteria) =>
+						effect.preview$(toCriteria(criteria))
+					),
+					tapResponse({
+						next: (resolved) =>
+							patchState(store, {
+								previewAlbums: resolved.albums.slice(
+									0,
+									PREVIEW_SIZE
+								),
+								previewTotal: resolved.total,
+								isPreviewing: false,
+							}),
+						error: (error) => {
+							console.error(error);
+							patchState(store, { isPreviewing: false });
+						},
+					})
+				)
+			);
+
+			const patchForm = (patch: Partial<CollectionForm>) => {
+				const form = { ...store.form(), ...patch };
+
+				patchState(store, { form });
+
+				if (patch.criteria) {
+					preview(of(form.criteria));
+				}
+			};
+
+			const finish = () => {
+				patchState(store, { isSaving: false });
+				router.navigate(['/admin/music-collection']);
+			};
+
+			const fail = (error: unknown) => {
+				console.error(error);
+				patchState(store, {
+					isSaving: false,
+					error: describeWriteError(error),
+				});
+			};
+
+			return {
+				/** `0` opens an empty editor, as the other admin lists do. */
+				load: rxMethod<string>(
+					pipe(
+						tap(() =>
+							patchState(store, {
+								isLoading: true,
+								error: null,
+							})
+						),
+						switchMap((uid) =>
+							uid === NEW_UID
+								? of(null)
+								: effect
+										.loadResolution$(uid)
+										.pipe(
+											map(
+												(resolution) =>
+													resolution?.collection ??
+													null
+											)
+										)
+						),
+						tapResponse({
+							next: (
+								collection: MusicCollectionEntity | null
+							) => {
+								const form = collection
+									? toForm(collection)
+									: emptyCollectionForm();
+
+								patchState(store, {
+									uid: collection?.uid ?? null,
+									form,
+									slugTouched: !!collection,
+									isLoading: false,
+								});
+								preview(of(form.criteria));
+							},
+							error: (error) => {
+								console.error(error);
+								patchState(store, {
+									isLoading: false,
+									error: describeWriteError(error),
+								});
+							},
+						})
+					)
+				),
+				loadOptions: rxMethod<void>(
+					pipe(
+						switchMap(() => effect.listAllResolutions$()),
+						tapResponse({
+							next: (resolutions) =>
+								patchState(store, {
+									parents: resolutions
+										.map(({ collection }) => ({
+											uid: collection.uid,
+											name: collection.name,
+										}))
+										.sort((a, b) =>
+											a.name.localeCompare(b.name)
+										),
+								}),
+							error: (error) => console.error(error),
+						})
+					)
+				),
+				loadArtists: rxMethod<void>(
+					pipe(
+						switchMap(
+							() =>
+								artistStateService.selectEntities$() as Observable<
+									ArtistEntity[]
+								>
+						),
+						tap((artists) => {
+							if (!artists?.length) {
+								artistStateService.dispatchListEntitiesAction();
+							}
+						}),
+						filter((artists) => artists?.length > 0),
+						tapResponse({
+							next: (artists: ArtistEntity[]) =>
+								patchState(store, {
+									artists: [...artists].sort((a, b) =>
+										a.name.localeCompare(b.name)
+									),
+								}),
+							error: (error) => console.error(error),
+						})
+					)
+				),
+				setField: (patch: Partial<CollectionForm>) => patchForm(patch),
+				setName: (name: string) =>
+					patchForm(
+						store.slugTouched()
+							? { name }
+							: { name, slug: slugify(name) }
+					),
+				setSlug: (slug: string) => {
+					patchState(store, { slugTouched: true });
+					patchForm({ slug });
+				},
+				setCriteria: (criteria: CriteriaForm) =>
+					patchForm({ criteria }),
+				save: rxMethod<void>(
+					pipe(
+						tap(() =>
+							patchState(store, { isSaving: true, error: null })
+						),
+						exhaustMap(() => {
+							const uid = store.uid();
+							const draft = toDraft(store.form());
+
+							return uid
+								? effect.update$(uid, draft)
+								: effect.create$(draft);
+						}),
+						tapResponse({ next: finish, error: fail })
+					)
+				),
+			};
+		}
+	),
+	withHooks({
+		onInit(store) {
+			store.loadOptions(of(undefined));
+			store.loadArtists(of(undefined));
+		},
+	})
+);
