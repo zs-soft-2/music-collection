@@ -23,7 +23,11 @@ import {
 import { defineSecret } from 'firebase-functions/params';
 import { setGlobalOptions } from 'firebase-functions/v2';
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
-import { HttpsError, onCall } from 'firebase-functions/v2/https';
+import {
+	CallableRequest,
+	HttpsError,
+	onCall,
+} from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions/v2';
 
 import { DiscogsArtistProfile, fetchArtistProfile } from './discogs-artist';
@@ -32,6 +36,11 @@ import {
 	DiscogsVersion,
 	fetchMasterVersions,
 } from './discogs-versions';
+import {
+	createMusicCollection,
+	deleteMusicCollection,
+	updateMusicCollection,
+} from './music-collection-write';
 import { approveReleaseRequest as approve } from './release-request-approval';
 import {
 	CatalogRole,
@@ -395,3 +404,53 @@ export const approveReleaseRequest = onCall(
 		}
 	}
 );
+
+/**
+ * A hívó uid-je, ha megvan a permissionje. Az ADMIN mindent visz; a
+ * bejelentkezés hiánya és a hiányzó jog szándékosan külön hiba.
+ */
+async function requireCaller(
+	request: CallableRequest,
+	permission: string
+): Promise<string> {
+	const uid = request.auth?.uid;
+
+	if (!uid) {
+		throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
+	}
+
+	const permissions = await callerPermissions(uid);
+
+	if (!permissions.includes('ADMIN') && !permissions.includes(permission)) {
+		throw new HttpsError('permission-denied', 'Nincs jogosultság.');
+	}
+
+	return uid;
+}
+
+/**
+ * Egy collection-definíció létrehozása, módosítása és törlése. A
+ * `firestore.rules` a `music-collection` írását a kliensnek tiltja, ezért a
+ * szabály validálása és a kliens-cache szinkronja is itt történik.
+ */
+export const createMusicCollectionEntity = onCall(async (request) => {
+	await requireCaller(request, 'createMusicCollectionEntity');
+
+	return createMusicCollection(database(), request.data?.collection);
+});
+
+export const updateMusicCollectionEntity = onCall(async (request) => {
+	await requireCaller(request, 'updateMusicCollectionEntity');
+
+	return updateMusicCollection(
+		database(),
+		request.data?.uid,
+		request.data?.collection
+	);
+});
+
+export const deleteMusicCollectionEntity = onCall(async (request) => {
+	await requireCaller(request, 'deleteMusicCollectionEntity');
+
+	return deleteMusicCollection(database(), request.data?.uid);
+});
