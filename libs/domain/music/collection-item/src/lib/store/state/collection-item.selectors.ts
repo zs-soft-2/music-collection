@@ -53,9 +53,32 @@ export const selectCollectionItemEntities = createSelector(
 	selectEntities
 );
 
-export const selectAllCollectionItem = createSelector(
+export const getCollectionItemDisposing = createSelector(
+	getCollectionItemState,
+	(state: State) => state.disposing
+);
+
+/** Every item, the ones gone from the collection included. */
+const selectEveryCollectionItem = createSelector(
 	getCollectionItemState,
 	selectAll
+);
+
+/** The copies owned: the ones gone from the collection are history. */
+export const selectAllCollectionItem = createSelector(
+	selectEveryCollectionItem,
+	(collectionItems) => collectionItems.filter((item) => !item.disposal)
+);
+
+/** The copies gone from the collection, the latest first. */
+export const selectDisposedCollectionItems = createSelector(
+	selectEveryCollectionItem,
+	(collectionItems) =>
+		collectionItems
+			.filter((item) => !!item.disposal)
+			.sort(
+				(a, b) => (b.disposal?.date ?? 0) - (a.disposal?.date ?? 0)
+			)
 );
 
 export const selectCollectionItem = createSelector(

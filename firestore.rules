@@ -60,6 +60,20 @@ service cloud.firestore {
       return request.resource.data.diff(resource.data).affectedKeys();
     }
 
+    // Egy példány eladása / elcserélése: a dokumentum megmarad (history),
+    // a `disposal` null vagy { reason, date, note }.
+    function isValidDisposal(data) {
+      return !('disposal' in data)
+          || data.disposal == null
+          || (data.disposal is map
+              && data.disposal.keys().hasOnly(['reason', 'date', 'note'])
+              && data.disposal.reason in ['sold', 'traded', 'gifted', 'lost', 'other']
+              && data.disposal.date is number
+              && (data.disposal.note == null
+                  || (data.disposal.note is string
+                      && data.disposal.note.size() <= 500)));
+    }
+
     // Tenant-tulajdonlás: induláskor 1 user : 1 tenant (`ownerUserId`).
     // A `tenantId` path-változó, ezért list-lekérdezésnél is feloldható.
     function tenantPath(tenantId) {
@@ -122,7 +136,8 @@ service cloud.firestore {
                       && request.resource.data.userId == uid;
         allow update: if isSelf(uid)
                       && hasPerm('updateCollectionItemEntity')
-                      && request.resource.data.userId == uid;
+                      && request.resource.data.userId == uid
+                      && isValidDisposal(request.resource.data);
         allow delete: if isSelf(uid) && hasPerm('deleteCollectionItemEntity');
       }
       match /wishlist-item/{itemId} {
@@ -360,7 +375,8 @@ service cloud.firestore {
                       && request.resource.data.userId == request.auth.uid;
         allow update: if ownsTenant(tenantId)
                       && hasPerm('updateCollectionItemEntity')
-                      && request.resource.data.userId == resource.data.userId;
+                      && request.resource.data.userId == resource.data.userId
+                      && isValidDisposal(request.resource.data);
         allow delete: if ownsTenant(tenantId) && hasPerm('deleteCollectionItemEntity');
       }
 

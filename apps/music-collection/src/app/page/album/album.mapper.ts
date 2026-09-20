@@ -1,5 +1,7 @@
 import {
 	AlbumEntity,
+	CollectionItemDisposalReason,
+	CollectionItemEntity,
 	ContributionEntity,
 	DiscogsVersion,
 	ReleaseEntity,
@@ -19,6 +21,7 @@ import {
 	EDITION_TAGS,
 	EditionTag,
 	MediaFormat,
+	ReleaseView,
 	creditCategory,
 	formatCountry,
 	performerOrder,
@@ -26,6 +29,7 @@ import {
 	toAlbumView,
 	toDescriptions,
 	toMediaFormat,
+	toReleaseView,
 	toYear,
 } from '../../shared/music-ui';
 
@@ -91,6 +95,33 @@ export interface PendingRequestView {
 export interface ReleaseRequestDraft {
 	discogsReleaseId: number | null;
 	pressing: ReleaseRequestPressing | null;
+	note: string | null;
+}
+
+export const DISPOSAL_REASON_LABELS: Record<
+	CollectionItemDisposalReason,
+	string
+> = {
+	sold: 'Sold',
+	traded: 'Traded',
+	gifted: 'Given away',
+	lost: 'Lost',
+	other: 'Other',
+};
+
+/** What the collector tells about a copy leaving the collection. */
+export interface DisposalDraft {
+	reason: CollectionItemDisposalReason;
+	/** When it left (epoch ms). */
+	date: number;
+	note: string | null;
+}
+
+/** A copy gone from the collection. */
+export interface PastCopyView extends ReleaseView {
+	reason: string;
+	/** When it left (epoch ms). */
+	disposedAt: number;
 	note: string | null;
 }
 
@@ -470,5 +501,17 @@ export function toPendingRequestView(
 			? discogsReleaseUrl(request.discogsReleaseId)
 			: null,
 		adminNote: request.adminNote ?? null,
+	};
+}
+
+export function toPastCopyView(item: CollectionItemEntity): PastCopyView {
+	return {
+		...toReleaseView(item),
+		reason: item.disposal
+			? DISPOSAL_REASON_LABELS[item.disposal.reason] ??
+				DISPOSAL_REASON_LABELS.other
+			: DISPOSAL_REASON_LABELS.other,
+		disposedAt: item.disposal?.date ?? 0,
+		note: item.disposal?.note ?? null,
 	};
 }

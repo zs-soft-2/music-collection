@@ -5,8 +5,31 @@ import { FormGroup } from '@angular/forms';
 import { Entity, Searchable } from '../../../common';
 import { ReleaseEntity } from '../release';
 
+export type CollectionItemDisposalReason =
+	| 'sold'
+	| 'traded'
+	| 'gifted'
+	| 'lost'
+	| 'other';
+
+export const COLLECTION_ITEM_DISPOSAL_REASONS: CollectionItemDisposalReason[] =
+	['sold', 'traded', 'gifted', 'lost', 'other'];
+
+/**
+ * How a copy left the collection. The item is kept as history: it no longer
+ * counts as owned, but can be looked back on or restored.
+ */
+export interface CollectionItemDisposal {
+	reason: CollectionItemDisposalReason;
+	/** When it left the collection (epoch ms). */
+	date: number;
+	note: string | null;
+}
+
 export interface CollectionItem {
 	description?: string;
+	/** Set once the copy left the collection; `null` or missing while owned. */
+	disposal?: CollectionItemDisposal | null;
 	release: ReleaseEntity;
 	userId: string;
 }

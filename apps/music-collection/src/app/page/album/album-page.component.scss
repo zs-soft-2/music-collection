@@ -365,8 +365,84 @@ h1 {
 	border-radius: var(--mc-radius-md);
 }
 
-.copy-admin {
+.copy-actions {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.75rem;
 	margin-left: auto;
+}
+
+.copy-remove {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	padding: 0.3rem 0.75rem;
+	border: 1px solid var(--mc-border-strong);
+	border-radius: 999px;
+	font: inherit;
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: var(--mc-text-muted);
+	background: transparent;
+	cursor: pointer;
+
+	&:hover:not(:disabled) {
+		color: var(--mc-text);
+		border-color: var(--mc-primary);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--mc-primary);
+		outline-offset: 2px;
+	}
+
+	&:disabled {
+		cursor: not-allowed;
+		opacity: 0.6;
+	}
+}
+
+.past-title {
+	margin: 1.5rem 0 0.75rem;
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--mc-text-muted);
+}
+
+.copy.is-past {
+	background: transparent;
+	border-style: dashed;
+
+	mc-format-badge,
+	.copy-details {
+		opacity: 0.7;
+	}
+}
+
+.past-state {
+	display: inline-flex;
+	gap: 0.4rem;
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: var(--mc-text-muted);
+
+	time {
+		font-weight: 400;
+	}
+}
+
+.past-note {
+	flex-basis: 100%;
+	order: 1;
+	font-size: 0.8rem;
+	color: var(--mc-text-subtle);
+}
+
+.past-error {
+	margin: 0 0 0.75rem;
+	color: var(--mc-status-bad);
 }
 
 .copy-details {
@@ -576,6 +652,8 @@ h1 {
 	mc-album-tracklist,
 	mc-album-credits,
 	.copies,
+	.past-title,
+	.past-error,
 	.album-grid,
 	.empty,
 	.more,

@@ -1,4 +1,5 @@
 import {
+	CollectionItemDisposal,
 	CollectionItemEntity,
 	CollectionItemEntityAdd,
 	CollectionItemEntityUpdate,
@@ -45,6 +46,25 @@ export const deleteCollectionItemFail = createAction(
 export const deleteCollectionItemSuccess = createAction(
 	'[CollectionItem] Delete CollectionItem Success',
 	props<{ collectionItemId: string }>()
+);
+
+/** Disposes of the copy, or restores it with `disposal: null`. */
+export const changeCollectionItemDisposal = createAction(
+	'[CollectionItem] Change CollectionItem Disposal',
+	props<{
+		collectionItem: CollectionItemEntity;
+		disposal: CollectionItemDisposal | null;
+	}>()
+);
+
+export const changeCollectionItemDisposalFail = createAction(
+	'[CollectionItem] Change CollectionItem Disposal Fail',
+	props<{ error: Error }>()
+);
+
+export const changeCollectionItemDisposalSuccess = createAction(
+	'[CollectionItem] Change CollectionItem Disposal Success',
+	props<{ collectionItem: Update<CollectionItemEntity> }>()
 );
 
 export const listCollectionItems = createAction(

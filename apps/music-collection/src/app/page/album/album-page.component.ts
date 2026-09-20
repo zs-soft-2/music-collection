@@ -1,4 +1,4 @@
-import { ViewportScroller } from '@angular/common';
+import { DatePipe, ViewportScroller } from '@angular/common';
 import {
 	ChangeDetectionStrategy,
 	Component,
@@ -21,6 +21,7 @@ import { PlayerPanelComponent } from '../../shared/player';
 import { AlbumPageStore } from './album-page.store';
 import { AlbumCreditsComponent } from './component/album-credits/album-credits.component';
 import { AlbumTracklistComponent } from './component/album-tracklist/album-tracklist.component';
+import { CopyRemovalComponent } from './component/copy-removal/copy-removal.component';
 import { ReleasePickerComponent } from './component/release-picker/release-picker.component';
 import { BackLinkComponent } from '../../shared/back-link';
 
@@ -58,6 +59,8 @@ function readCompact(): boolean {
 		AdminEditLinkComponent,
 		PlayerPanelComponent,
 		ReleasePickerComponent,
+		CopyRemovalComponent,
+		DatePipe,
 	],
 })
 export class AlbumPageComponent {
@@ -99,6 +102,31 @@ export class AlbumPageComponent {
 				);
 			}
 			pickerWasOpen = open;
+		});
+
+		// Back from the removal dialog: focus its button, or the add button once
+		// the copy is gone.
+		let removingCopyId: string | null = null;
+		effect(() => {
+			const copyId = this.store.removingCopyId();
+			if (removingCopyId && !copyId) {
+				const closedFor = removingCopyId;
+				afterNextRender(
+					() => {
+						const root = this.host.nativeElement;
+						(
+							root.querySelector<HTMLElement>(
+								`[data-remove-copy="${closedFor}"]`
+							) ??
+							root.querySelector<HTMLElement>(
+								'[data-collect-toggle]'
+							)
+						)?.focus();
+					},
+					{ injector: this.injector }
+				);
+			}
+			removingCopyId = copyId;
 		});
 
 		effect(() => {

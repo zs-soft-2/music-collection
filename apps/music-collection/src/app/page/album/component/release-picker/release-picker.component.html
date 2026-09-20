@@ -91,7 +91,7 @@
 							<button
 								type="button"
 								class="option"
-								[disabled]="busy()"
+								[disabled]="busy() || release.owned"
 								(click)="picked.emit(release.id)"
 							>
 								<mc-format-badge
@@ -130,18 +130,13 @@
 											></i>
 											In your collection
 										</span>
+									} @else {
+										<i
+											class="pi pi-plus"
+											aria-hidden="true"
+										></i>
+										<span class="visually-hidden">Add</span>
 									}
-									<i
-										class="pi pi-plus"
-										aria-hidden="true"
-									></i>
-									<span class="visually-hidden">
-										{{
-											release.owned
-												? 'Add another copy'
-												: 'Add'
-										}}
-									</span>
 								</span>
 							</button>
 						</li>

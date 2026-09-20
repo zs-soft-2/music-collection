@@ -430,18 +430,94 @@
 									}
 								</span>
 							}
-							<mc-admin-edit-link
-								class="copy-admin"
-								variant="icon"
-								entity="collection-item"
-								[id]="copy.id"
-								[name]="album.title"
-							/>
+							<span class="copy-actions">
+								@if (store.canManageCopies()) {
+									<button
+										type="button"
+										class="copy-remove"
+										[attr.data-remove-copy]="copy.id"
+										[disabled]="store.disposing()"
+										(click)="store.openRemoval(copy.id)"
+									>
+										<i
+											class="pi pi-sign-out"
+											aria-hidden="true"
+										></i>
+										Remove
+										<span class="visually-hidden"
+											>from your collection</span
+										>
+									</button>
+								}
+								<mc-admin-edit-link
+									variant="icon"
+									entity="collection-item"
+									[id]="copy.id"
+									[name]="album.title"
+								/>
+							</span>
 						</li>
 					}
 				</ul>
 			} @else {
 				<p class="empty">This album is not in your collection.</p>
+			}
+			@if (isOpen('copies') && store.pastCopies().length) {
+				<h3 class="past-title">Previously owned</h3>
+				@if (store.disposeError() && !store.removingCopyId()) {
+					<p class="past-error" role="alert">
+						Could not take it back: {{ store.disposeError() }}
+					</p>
+				}
+				<ul class="copies">
+					@for (copy of store.pastCopies(); track copy.id) {
+						<li class="copy is-past">
+							<mc-format-badge
+								[format]="copy.format"
+								[weight]="copy.weight"
+							/>
+							<span class="copy-details">
+								@if (copy.labelName) {
+									<span>{{ copy.labelName }}</span>
+								}
+								@if (copy.country) {
+									<span>{{ copy.country }}</span>
+								}
+							</span>
+							<span class="past-state">
+								{{ copy.reason }}
+								<time
+									[attr.datetime]="
+										copy.disposedAt | date: 'yyyy-MM-dd'
+									"
+									>{{ copy.disposedAt | date: 'mediumDate' }}</time
+								>
+							</span>
+							@if (copy.note) {
+								<span class="past-note">{{ copy.note }}</span>
+							}
+							@if (store.canManageCopies()) {
+								<span class="copy-actions">
+									<button
+										type="button"
+										class="copy-remove"
+										[disabled]="store.disposing()"
+										(click)="store.restoreCopy(copy.id)"
+									>
+										<i
+											class="pi pi-undo"
+											aria-hidden="true"
+										></i>
+										Take back
+										<span class="visually-hidden"
+											>into your collection</span
+										>
+									</button>
+								</span>
+							}
+						</li>
+					}
+				</ul>
 			}
 		</section>
 
@@ -524,5 +600,16 @@
 		(discogsRequested)="store.showDiscogsVersions()"
 		(requestSent)="store.requestRelease($event)"
 		(closed)="onPickerClosed()"
+	/>
+}
+
+@if (store.removingCopy(); as copy) {
+	<mc-copy-removal
+		[albumTitle]="store.album()?.title ?? copy.title"
+		[copy]="copy"
+		[busy]="store.disposing()"
+		[error]="store.disposeError()"
+		(removed)="store.removeCopy($event)"
+		(closed)="store.closeRemoval()"
 	/>
 }

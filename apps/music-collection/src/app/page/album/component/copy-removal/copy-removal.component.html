@@ -1,0 +1,109 @@
+<dialog
+	#dialog
+	class="removal"
+	aria-labelledby="copy-removal-title"
+	[attr.aria-busy]="busy()"
+	(close)="closed.emit()"
+>
+	<header class="removal-header">
+		<div>
+			<p class="eyebrow">Remove from collection</p>
+			<h2 id="copy-removal-title">{{ albumTitle() }}</h2>
+		</div>
+		<button
+			type="button"
+			class="icon-button"
+			aria-label="Close"
+			[disabled]="busy()"
+			(click)="close()"
+		>
+			<i class="pi pi-times" aria-hidden="true"></i>
+		</button>
+	</header>
+
+	<div class="copy">
+		<mc-format-badge [format]="copy().format" [weight]="copy().weight" />
+		<span class="details">
+			@if (copy().labelName) {
+				<span>{{ copy().labelName }}</span>
+			}
+			@if (copy().country) {
+				<span>{{ copy().country }}</span>
+			}
+		</span>
+	</div>
+
+	<form (submit)="$event.preventDefault(); submit()">
+		<fieldset class="reasons">
+			<legend>What happened to it?</legend>
+			<div class="chips">
+				@for (option of reasons; track option) {
+					<label class="chip">
+						<input
+							type="radio"
+							name="reason"
+							[value]="option"
+							[checked]="reason() === option"
+							(change)="reason.set(option)"
+						/>
+						{{ reasonLabels[option] }}
+					</label>
+				}
+			</div>
+		</fieldset>
+
+		<label class="field">
+			<span>When</span>
+			<input
+				type="date"
+				required
+				[max]="today"
+				[value]="date()"
+				[attr.aria-invalid]="dateInvalid()"
+				(input)="onInput('date', $event)"
+			/>
+			@if (dateInvalid()) {
+				<span class="field-error">Pick a day, today at the latest.</span>
+			}
+		</label>
+
+		<label class="field">
+			<span>Note (optional)</span>
+			<textarea
+				rows="3"
+				[attr.maxlength]="noteMaxLength"
+				[value]="note()"
+				(input)="onInput('note', $event)"
+				placeholder="e.g. sold on Discogs, traded for a Death LP"
+			></textarea>
+		</label>
+
+		<p class="hint">
+			It stays in your history, and you can take it back any time.
+		</p>
+
+		@if (error()) {
+			<p class="error" role="alert">
+				Could not remove it: {{ error() }}
+			</p>
+		}
+
+		<div class="form-actions">
+			<button
+				type="button"
+				class="text-button"
+				[disabled]="busy()"
+				(click)="close()"
+			>
+				Cancel
+			</button>
+			<button
+				type="submit"
+				class="primary-button"
+				[disabled]="dateInvalid() || busy()"
+			>
+				{{ busy() ? 'Removing…' : 'Remove from collection' }}
+			</button>
+		</div>
+	</form>
+</dialog>

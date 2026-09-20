@@ -4,6 +4,7 @@ import {
 	distinctUntilChanged,
 	first,
 	map,
+	mergeMap,
 	switchMap,
 } from 'rxjs/operators';
 
@@ -131,6 +132,68 @@ export class CollectionItemEffects {
 								{
 									collectionItemId: collectionItem.uid,
 								}
+							);
+						})
+					)
+			)
+		)
+	);
+	/**
+	 * Disposes of a copy or restores it. The item is kept either way; only
+	 * the owned ones count.
+	 */
+	public changeCollectionItemDisposal = createEffect(() =>
+		this.actions$.pipe(
+			ofType(collectionItemActions.changeCollectionItemDisposal),
+			mergeMap(({ collectionItem, disposal }) =>
+				this.entityQuantityStateService
+					.selectEntityById$(EntityTypeEnum.CollectionItem)
+					.pipe(
+						first(),
+						switchMap((entityQuantityEntity) =>
+							this.userDataService
+								.updateCollectionItem$({
+									uid: collectionItem.uid,
+									entityType: collectionItem.entityType,
+									userId: collectionItem.userId,
+									disposal,
+								})
+								.pipe(
+									first(),
+									map(({ updatedAt }) => {
+										this.entityQuantityStateService.dispatchUpdateEntityAction(
+											this.collectionItemUtilService.updateEntityQuantity(
+												entityQuantityEntity ||
+													this.entityQuantityUtilService.createEntityQuantity(
+														EntityTypeEnum.CollectionItem
+													),
+												collectionItem,
+												disposal
+													? UpdateEntityQuantityTypeEnum.decrease
+													: UpdateEntityQuantityTypeEnum.increase
+											)
+										);
+
+										return collectionItemActions.changeCollectionItemDisposalSuccess(
+											{
+												collectionItem: {
+													id: collectionItem.uid,
+													changes: {
+														disposal,
+														updatedAt,
+													},
+												},
+											}
+										);
+									})
+								)
+						),
+						catchError((error) => {
+							console.error(error);
+							return of(
+								collectionItemActions.changeCollectionItemDisposalFail(
+									{ error }
+								)
 							);
 						})
 					)

@@ -2,6 +2,7 @@ import { Observable, filter, first, map, switchMap, tap } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
 import {
+	CollectionItemDisposal,
 	CollectionItemEntity,
 	CollectionItemEntityAdd,
 	CollectionItemEntityUpdate,
@@ -49,6 +50,29 @@ export class CollectionItemStateServiceImpl extends CollectionItemStateService {
 	): void {
 		this.store.dispatch(
 			collectionItemActions.deleteCollectionItem({ collectionItem })
+		);
+	}
+
+	public dispatchDisposeEntityAction(
+		collectionItem: CollectionItemEntity,
+		disposal: CollectionItemDisposal
+	): void {
+		this.store.dispatch(
+			collectionItemActions.changeCollectionItemDisposal({
+				collectionItem,
+				disposal,
+			})
+		);
+	}
+
+	public dispatchRestoreEntityAction(
+		collectionItem: CollectionItemEntity
+	): void {
+		this.store.dispatch(
+			collectionItemActions.changeCollectionItemDisposal({
+				collectionItem,
+				disposal: null,
+			})
 		);
 	}
 
@@ -111,22 +135,23 @@ export class CollectionItemStateServiceImpl extends CollectionItemStateService {
 		);
 	}
 
-	public selectLoadedEntities$(): Observable<CollectionItemEntity[]> {
-		const loaded$ = this.store.pipe(
-			select(collectionItemSelectors.getCollectionItemLoaded)
+	public selectDisposing$(): Observable<boolean> {
+		return this.store.pipe(
+			select(collectionItemSelectors.getCollectionItemDisposing)
 		);
+	}
 
-		return loaded$.pipe(
-			first(),
-			tap((loaded) => {
-				if (!loaded) {
-					this.dispatchListEntitiesAction();
-				}
-			}),
-			switchMap(() => loaded$),
-			filter(Boolean),
-			first(),
-			switchMap(() => this.selectEntities$())
+	public selectLoadedEntities$(): Observable<CollectionItemEntity[]> {
+		return this.selectOnceLoaded$(this.selectEntities$());
+	}
+
+	public selectLoadedDisposedEntities$(): Observable<
+		CollectionItemEntity[]
+	> {
+		return this.selectOnceLoaded$(
+			this.store.pipe(
+				select(collectionItemSelectors.selectDisposedCollectionItems)
+			)
 		);
 	}
 
@@ -176,5 +201,25 @@ export class CollectionItemStateServiceImpl extends CollectionItemStateService {
 
 	public selectSelectedEntityId$(): Observable<string> {
 		throw new Error('Method not implemented.');
+	}
+
+	/** Requests the collection when not yet loaded; emits once it arrived. */
+	private selectOnceLoaded$<T>(selected$: Observable<T>): Observable<T> {
+		const loaded$ = this.store.pipe(
+			select(collectionItemSelectors.getCollectionItemLoaded)
+		);
+
+		return loaded$.pipe(
+			first(),
+			tap((loaded) => {
+				if (!loaded) {
+					this.dispatchListEntitiesAction();
+				}
+			}),
+			switchMap(() => loaded$),
+			filter(Boolean),
+			first(),
+			switchMap(() => selected$)
+		);
 	}
 }

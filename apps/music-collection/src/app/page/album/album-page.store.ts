@@ -18,6 +18,8 @@ import {
 	AlbumStateService,
 	ArtistStateService,
 	AuthenticationStateService,
+	COLLECTION_ITEM_DISPOSAL_REASONS,
+	CollectionItemEntity,
 	CollectionItemEntityAdd,
 	CollectionItemPermissionsService,
 	CollectionItemStateService,
@@ -52,12 +54,14 @@ import {
 	toReleaseView,
 } from '../../shared/music-ui';
 import {
+	DisposalDraft,
 	groupCredits,
 	ReleaseRequestDraft,
 	groupTracks,
 	toAlbumProfile,
 	toDiscogsVersionViews,
 	toPendingRequestView,
+	toPastCopyView,
 	toReleaseOptions,
 	totalDuration,
 } from './album.mapper';
@@ -72,6 +76,10 @@ interface AlbumPageState {
 	albums: AlbumEntity[];
 	artists: ArtistView[];
 	releases: ReleaseView[];
+	/** The collection items behind `releases`. */
+	ownedItems: CollectionItemEntity[];
+	/** The collector's copies gone from the collection (all albums). */
+	pastItems: CollectionItemEntity[];
 	tracks: TrackEntity[];
 	contributions: ContributionEntity[];
 	/** Every release of the catalog; loaded when the picker first opens. */
@@ -80,6 +88,12 @@ interface AlbumPageState {
 	/** The signed-in user, who may add to their collection. */
 	userId: string | null;
 	canCollect: boolean;
+	/** May mark their copies sold, traded… and take them back. */
+	canManageCopies: boolean;
+	/** The copy the removal dialog is open for. */
+	removingCopyId: string | null;
+	disposing: boolean;
+	disposeError: string | null;
 	pickerOpen: boolean;
 	adding: boolean;
 	addError: string | null;
@@ -103,12 +117,18 @@ const initialState: AlbumPageState = {
 	albums: [],
 	artists: [],
 	releases: [],
+	ownedItems: [],
+	pastItems: [],
 	tracks: [],
 	contributions: [],
 	catalogReleases: [],
 	catalogReleasesLoading: true,
 	userId: null,
 	canCollect: false,
+	canManageCopies: false,
+	removingCopyId: null,
+	disposing: false,
+	disposeError: null,
 	pickerOpen: false,
 	adding: false,
 	addError: null,
@@ -126,6 +146,29 @@ const initialState: AlbumPageState = {
 };
 
 const MORE_ALBUMS_COUNT = 6;
+
+const DISPOSAL_NOTE_MAX_LENGTH = 500;
+
+/** A removal the rules accept: a known reason, a past date, a short note. */
+function isValidDisposal(draft: DisposalDraft): boolean {
+	return (
+		COLLECTION_ITEM_DISPOSAL_REASONS.includes(draft.reason) &&
+		Number.isFinite(draft.date) &&
+		draft.date <= Date.now() &&
+		(draft.note?.length ?? 0) <= DISPOSAL_NOTE_MAX_LENGTH
+	);
+}
+
+/** A release is collected once: a copy of it is already owned. */
+function ownsRelease(
+	ownedItems: CollectionItemEntity[],
+	releaseId: string | undefined
+): boolean {
+	return (
+		!!releaseId &&
+		ownedItems.some((item) => item.release?.uid === releaseId)
+	);
+}
 
 /** What the collector reads when a request or a Discogs lookup fails. */
 function describeError(error: unknown): string {
@@ -188,6 +231,22 @@ export const AlbumPageStore = signalStore(
 				store
 					.releases()
 					.filter((release) => release.albumId === store.albumId())
+			),
+			/** The copy the removal dialog is open for. */
+			removingCopy: computed(
+				() =>
+					store
+						.releases()
+						.find(
+							(release) => release.id === store.removingCopyId()
+						) ?? null
+			),
+			/** The collector's copies of this album gone from the collection. */
+			pastCopies: computed(() =>
+				store
+					.pastItems()
+					.map(toPastCopyView)
+					.filter((copy) => copy.albumId === store.albumId())
 			),
 			/** The album's catalog releases to pick the collected one from. */
 			releaseOptions: computed(() => {
@@ -503,6 +562,11 @@ export const AlbumPageStore = signalStore(
 								(CollectionItemPermissionsService.createCollectionItemEntity in
 									permissions ||
 									RoleNames.ADMIN in permissions),
+							canManageCopies:
+								!!user?.uid &&
+								(CollectionItemPermissionsService.updateCollectionItemEntity in
+									permissions ||
+									RoleNames.ADMIN in permissions),
 						})
 					)
 				)
@@ -552,7 +616,84 @@ export const AlbumPageStore = signalStore(
 					})
 				)
 			),
-			/** Adds a copy of the release to the signed-in user's collection. */
+			/** Follows a removal or restore; the dialog closes once saved. */
+			watchDisposing: rxMethod<void>(
+				pipe(
+					switchMap(() =>
+						combineLatest([
+							collectionItemStateService.selectDisposing$(),
+							collectionItemStateService.selectError$(),
+						])
+					),
+					pairwise(),
+					tap(([[wasDisposing], [disposing, error]]) => {
+						patchState(store, { disposing });
+						if (wasDisposing && !disposing) {
+							patchState(store, {
+								disposeError: error,
+								removingCopyId: error
+									? store.removingCopyId()
+									: null,
+							});
+						}
+					})
+				)
+			),
+			/** Marks the copy sold, traded… It stays in the history. */
+			removeCopy(draft: DisposalDraft): void {
+				const item = store
+					.ownedItems()
+					.find((owned) => owned.uid === store.removingCopyId());
+
+				if (
+					!item ||
+					!store.canManageCopies() ||
+					store.disposing() ||
+					!isValidDisposal(draft)
+				) {
+					return;
+				}
+
+				patchState(store, { disposeError: null });
+				collectionItemStateService.dispatchDisposeEntityAction(item, {
+					reason: draft.reason,
+					date: draft.date,
+					note: draft.note?.trim() || null,
+				});
+			},
+			/** Takes a copy gone from the collection back into it. */
+			restoreCopy(copyId: string): void {
+				const item = store
+					.pastItems()
+					.find((past) => past.uid === copyId);
+
+				if (
+					item &&
+					store.canManageCopies() &&
+					!store.disposing() &&
+					!ownsRelease(store.ownedItems(), item.release?.uid)
+				) {
+					collectionItemStateService.dispatchRestoreEntityAction(
+						item
+					);
+				}
+			},
+			loadPastItems: rxMethod<void>(
+				pipe(
+					switchMap(() =>
+						collectionItemStateService.selectLoadedDisposedEntities$()
+					),
+					tapResponse({
+						next: (pastItems) => patchState(store, { pastItems }),
+						error: (error) => console.error(error),
+					})
+				)
+			),
+			/**
+			 * Adds a copy of the release to the signed-in user's collection,
+			 * unless it is already in it (an approved release request adds it
+			 * on its own).
+			 */
 			addToCollection(releaseId: string): void {
 				const release = store
 					.catalogReleases()
@@ -560,6 +701,12 @@ export const AlbumPageStore = signalStore(
 				const userId = store.userId();
 
 				if (!release || !userId || store.adding()) {
+					return;
+				}
+				if (ownsRelease(store.ownedItems(), releaseId)) {
+					patchState(store, {
+						addError: 'This release is already in your collection.',
+					});
 					return;
 				}
 
@@ -583,6 +730,7 @@ export const AlbumPageStore = signalStore(
 					tapResponse({
 						next: (items) =>
 							patchState(store, {
+								ownedItems: items,
 								releases: items.map(toReleaseView),
 								releasesLoading: false,
 							}),
@@ -619,6 +767,15 @@ export const AlbumPageStore = signalStore(
 			},
 			closePicker(): void {
 				patchState(store, { pickerOpen: false });
+			},
+			openRemoval(copyId: string): void {
+				patchState(store, {
+					removingCopyId: copyId,
+					disposeError: null,
+				});
+			},
+			closeRemoval(): void {
+				patchState(store, { removingCopyId: null });
 			},
 		};
 	}),
@@ -663,6 +820,8 @@ export const AlbumPageStore = signalStore(
 			store.loadReleases(of(undefined));
 			store.loadCollector(of(undefined));
 			store.watchAdding(of(undefined));
+			store.watchDisposing(of(undefined));
+			store.loadPastItems(of(undefined));
 			store.loadRequests(of(undefined));
 		},
 	})

@@ -14,6 +14,7 @@ import {
 	WISHLIST_ITEM_FEATURE_KEY,
 	WishlistItemModelAdd,
 	WishlistItemModelUpdate,
+	withLocalUpdatedAt,
 } from '@music-collection/api';
 
 import { USER_FEATURE_KEY } from '../../store/state/user.reducer';
@@ -172,8 +173,10 @@ export class UserDataServiceImpl extends UserDataService {
 					...collectionItem,
 				})
 				.then(() => {
-					subscriber.next(collectionItem);
-				});
+					subscriber.next(withLocalUpdatedAt(collectionItem));
+					subscriber.complete();
+				})
+				.catch((error) => subscriber.error(error));
 		});
 	}
 
