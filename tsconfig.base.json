@@ -16,6 +16,9 @@
 		"baseUrl": ".",
 		"paths": {
 			"@music-collection/api": ["libs/api/src/index.ts"],
+			"@music-collection/common-api": [
+				"libs/common/api/src/index.ts"
+			],
 			"@music-collection/core/authentication": [
 				"libs/core/authentication/src/index.ts"
 			],
