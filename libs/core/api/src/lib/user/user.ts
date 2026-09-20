@@ -1,4 +1,4 @@
-import { Entity, Identifiable } from '@music-collection/common-api';
+import { Entity, Identifiable } from '@music-collection/common/api';
 import { Role } from '../role';
 
 export interface User extends Entity {

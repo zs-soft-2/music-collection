@@ -1,7 +1,7 @@
 import { Subject } from 'rxjs';
 
 import { Component, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
-import { Entity } from '@music-collection/common-api';
+import { Entity } from '@music-collection/common/api';
 
 @Component({
 	template: '',

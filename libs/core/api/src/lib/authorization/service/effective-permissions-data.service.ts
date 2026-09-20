@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { BaseService } from '@music-collection/common-api';
+import { BaseService } from '@music-collection/common/api';
 import { EffectivePermissions } from '../effective-permissions';
 
 /**

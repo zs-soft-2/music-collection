@@ -5,7 +5,7 @@ import {
 	EntityQuantityEntity,
 	EntityQuantityEntityAdd,
 	EntityQuantityEntityUpdate,
-} from '@music-collection/core-api';
+} from '@music-collection/core/api';
 
 import { FirebaseDataService } from '../firebase';
 

@@ -1,4 +1,4 @@
-import { BaseService, KeyValuePair } from '@music-collection/common-api';
+import { BaseService, KeyValuePair } from '@music-collection/common/api';
 
 import { Resource } from './resource';
 import { ResourceEnum } from './resource.enum';

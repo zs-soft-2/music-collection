@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { EntityStateService } from '@music-collection/common-api';
+import { EntityStateService } from '@music-collection/common/api';
 import {
 	EntityCounts,
 	EntityQuantityEntity,

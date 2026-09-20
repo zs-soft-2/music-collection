@@ -1,4 +1,4 @@
-import { EntityTypeEnum } from '@music-collection/common-api';
+import { EntityTypeEnum } from '@music-collection/common/api';
 import {
 	EntityQuantityEntity,
 	EntityQuantityEntityAdd,

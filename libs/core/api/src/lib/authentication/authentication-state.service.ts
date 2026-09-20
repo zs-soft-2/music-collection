@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { BaseService } from '@music-collection/common-api';
+import { BaseService } from '@music-collection/common/api';
 import { User } from '../user';
 
 export abstract class AuthenticationStateService extends BaseService {

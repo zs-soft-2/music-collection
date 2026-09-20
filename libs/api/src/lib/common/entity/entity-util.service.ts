@@ -8,7 +8,7 @@ import {
 	QueryOperatorEnum,
 	SearchParam,
 	SearchParams,
-} from '@music-collection/common-api';
+} from '@music-collection/common/api';
 
 export abstract class EntityUtilService<R, S, T> extends BaseService {
 	public createSearchParameters(name: string): string[] {

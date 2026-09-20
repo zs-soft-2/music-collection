@@ -1,4 +1,4 @@
-import { BaseService } from '@music-collection/common-api';
+import { BaseService } from '@music-collection/common/api';
 
 /**
  * A bejelentkezés platformfüggő része. A webes változat felugró ablakot nyit

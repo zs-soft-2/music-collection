@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { User } from '@music-collection/core-api';
+import { User } from '@music-collection/core/api';
 
 import {
 	CollectionItemModel,

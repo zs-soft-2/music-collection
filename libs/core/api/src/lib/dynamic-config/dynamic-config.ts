@@ -1,4 +1,4 @@
-import { Configurable, Identifiable } from '@music-collection/common-api';
+import { Configurable, Identifiable } from '@music-collection/common/api';
 
 export interface DynamicProperties {
 	[key: string]: boolean;

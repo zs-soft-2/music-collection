@@ -1,4 +1,4 @@
-import { BaseService } from '@music-collection/common-api';
+import { BaseService } from '@music-collection/common/api';
 import { Action } from '../../action';
 import { Resource } from '../../resource';
 import { Role } from '../../role';

@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { BaseService } from '@music-collection/common-api';
+import { BaseService } from '@music-collection/common/api';
 import { AppError } from './app-error.model';
 
 export abstract class ErrorStateService extends BaseService {

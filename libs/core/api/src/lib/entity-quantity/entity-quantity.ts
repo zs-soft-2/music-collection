@@ -1,4 +1,4 @@
-import { Entity, EntityTypeEnum } from '@music-collection/common-api';
+import { Entity, EntityTypeEnum } from '@music-collection/common/api';
 
 export interface EntityQuantity {
 	group: EntityQuantityGroup;

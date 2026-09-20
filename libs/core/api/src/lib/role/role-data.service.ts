@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { EntityDataService } from '@music-collection/common-api';
+import { EntityDataService } from '@music-collection/common/api';
 import { Role } from './role';
 
 export abstract class RoleDataService extends EntityDataService<

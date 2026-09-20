@@ -1,4 +1,4 @@
-import { EntityStateService } from '@music-collection/common-api';
+import { EntityStateService } from '@music-collection/common/api';
 import { User } from './user';
 
 export abstract class UserStateService extends EntityStateService<
