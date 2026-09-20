@@ -147,6 +147,34 @@
 									</button>
 								}
 							}
+							@if (store.canWish()) {
+								@if (store.wanted()) {
+									<a
+										class="wanted-chip"
+										routerLink="/wishlist"
+									>
+										<i
+											class="pi pi-heart-fill"
+											aria-hidden="true"
+										></i>
+										On your wishlist
+									</a>
+								} @else {
+									<button
+										type="button"
+										class="wish-button"
+										data-wish-toggle
+										aria-haspopup="dialog"
+										(click)="store.openWishlist()"
+									>
+										<i
+											class="pi pi-heart"
+											aria-hidden="true"
+										></i>
+										<span>Add to wishlist</span>
+									</button>
+								}
+							}
 						</div>
 					}
 				</div>
@@ -490,7 +518,9 @@
 									[attr.datetime]="
 										copy.disposedAt | date: 'yyyy-MM-dd'
 									"
-									>{{ copy.disposedAt | date: 'mediumDate' }}</time
+									>{{
+										copy.disposedAt | date: 'mediumDate'
+									}}</time
 								>
 							</span>
 							@if (copy.note) {
@@ -600,6 +630,17 @@
 		(discogsRequested)="store.showDiscogsVersions()"
 		(requestSent)="store.requestRelease($event)"
 		(closed)="onPickerClosed()"
+	/>
+}
+
+@if (store.wishlistOpen() && store.album(); as album) {
+	<mc-wishlist-dialog
+		[albumTitle]="album.title"
+		[artistName]="album.artistName"
+		[busy]="store.wishing()"
+		[error]="store.wishError()"
+		(wished)="store.addToWishlist($event)"
+		(closed)="onWishlistClosed()"
 	/>
 }
 

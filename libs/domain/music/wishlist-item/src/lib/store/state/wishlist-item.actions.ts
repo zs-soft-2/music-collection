@@ -50,6 +50,11 @@ export const listWishlistItems = createAction(
 	'[WishlistItem] List WishlistItems'
 );
 
+/** The signed-in user's own wanted albums. */
+export const listOwnWishlistItems = createAction(
+	'[WishlistItem] List own WishlistItems'
+);
+
 export const listWishlistItemsFail = createAction(
 	'[WishlistItem] List WishlistItems FAIL',
 	props<{ error: Error }>()

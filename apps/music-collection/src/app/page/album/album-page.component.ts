@@ -23,6 +23,7 @@ import { AlbumCreditsComponent } from './component/album-credits/album-credits.c
 import { AlbumTracklistComponent } from './component/album-tracklist/album-tracklist.component';
 import { CopyRemovalComponent } from './component/copy-removal/copy-removal.component';
 import { ReleasePickerComponent } from './component/release-picker/release-picker.component';
+import { WishlistDialogComponent } from './component/wishlist-dialog/wishlist-dialog.component';
 import { BackLinkComponent } from '../../shared/back-link';
 
 type AlbumSection =
@@ -60,6 +61,7 @@ function readCompact(): boolean {
 		PlayerPanelComponent,
 		ReleasePickerComponent,
 		CopyRemovalComponent,
+		WishlistDialogComponent,
 		DatePipe,
 	],
 })
@@ -102,6 +104,30 @@ export class AlbumPageComponent {
 				);
 			}
 			pickerWasOpen = open;
+		});
+
+		// Back on the page (closed or added): focus the wishlist button, which
+		// is gone once the album is wanted — then the collect button.
+		let wishlistWasOpen = false;
+		effect(() => {
+			const open = this.store.wishlistOpen();
+			if (wishlistWasOpen && !open) {
+				afterNextRender(
+					() => {
+						const root = this.host.nativeElement;
+						(
+							root.querySelector<HTMLElement>(
+								'[data-wish-toggle]'
+							) ??
+							root.querySelector<HTMLElement>(
+								'[data-collect-toggle]'
+							)
+						)?.focus();
+					},
+					{ injector: this.injector }
+				);
+			}
+			wishlistWasOpen = open;
 		});
 
 		// Back from the removal dialog: focus its button, or the add button once
@@ -160,6 +186,10 @@ export class AlbumPageComponent {
 
 	protected onPickerClosed(): void {
 		this.store.closePicker();
+	}
+
+	protected onWishlistClosed(): void {
+		this.store.closeWishlist();
 	}
 
 	protected collapseAll(): void {

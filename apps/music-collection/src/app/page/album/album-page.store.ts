@@ -31,6 +31,10 @@ import {
 	ReleaseStateService,
 	RoleNames,
 	TrackEntity,
+	WishlistItemEntity,
+	WishlistItemEntityAdd,
+	WishlistItemPermissionsService,
+	WishlistItemStateService,
 } from '@music-collection/api';
 import { tapResponse } from '@ngrx/operators';
 import {
@@ -57,6 +61,7 @@ import {
 	DisposalDraft,
 	groupCredits,
 	ReleaseRequestDraft,
+	WishlistDraft,
 	groupTracks,
 	toAlbumProfile,
 	toDiscogsVersionViews,
@@ -87,7 +92,15 @@ interface AlbumPageState {
 	catalogReleasesLoading: boolean;
 	/** The signed-in user, who may add to their collection. */
 	userId: string | null;
+	userName: string | null;
 	canCollect: boolean;
+	/** May put albums on their own wishlist. */
+	canWish: boolean;
+	/** The signed-in user's wanted albums (all albums). */
+	wishlistItems: WishlistItemEntity[];
+	wishlistOpen: boolean;
+	wishing: boolean;
+	wishError: string | null;
 	/** May mark their copies sold, traded… and take them back. */
 	canManageCopies: boolean;
 	/** The copy the removal dialog is open for. */
@@ -124,7 +137,13 @@ const initialState: AlbumPageState = {
 	catalogReleases: [],
 	catalogReleasesLoading: true,
 	userId: null,
+	userName: null,
 	canCollect: false,
+	canWish: false,
+	wishlistItems: [],
+	wishlistOpen: false,
+	wishing: false,
+	wishError: null,
 	canManageCopies: false,
 	removingCopyId: null,
 	disposing: false,
@@ -296,6 +315,22 @@ export const AlbumPageStore = signalStore(
 					.slice(0, MORE_ALBUMS_COUNT)
 					.sort((a, b) => (a.year ?? 0) - (b.year ?? 0));
 			}),
+			/** This album on the signed-in user's wishlist, still wanted. */
+			wanted: computed(() => {
+				const userId = store.userId();
+				const albumId = store.albumId();
+
+				return (
+					store
+						.wishlistItems()
+						.find(
+							(item) =>
+								item.userReference?.uid === userId &&
+								item.albumReference?.uid === albumId &&
+								item.isActive !== false
+						) ?? null
+				);
+			}),
 			/** The album's Discogs master: its pressings can be requested. */
 			discogsMasterId: computed(
 				() => albumEntity()?.discogs?.masterId ?? null
@@ -357,6 +392,7 @@ export const AlbumPageStore = signalStore(
 			albumStateService = inject(AlbumStateService),
 			artistStateService = inject(ArtistStateService),
 			collectionItemStateService = inject(CollectionItemStateService),
+			wishlistItemStateService = inject(WishlistItemStateService),
 			releaseStateService = inject(ReleaseStateService),
 			authenticationStateService = inject(AuthenticationStateService),
 			permissionsService = inject(NgxPermissionsService),
@@ -557,6 +593,12 @@ export const AlbumPageStore = signalStore(
 					tap(([user, permissions]) =>
 						patchState(store, {
 							userId: user?.uid ?? null,
+							userName: user?.displayName ?? null,
+							canWish:
+								!!user?.uid &&
+								(WishlistItemPermissionsService.createWishlistItemEntity in
+									permissions ||
+									RoleNames.ADMIN in permissions),
 							canCollect:
 								!!user?.uid &&
 								(CollectionItemPermissionsService.createCollectionItemEntity in
@@ -722,6 +764,93 @@ export const AlbumPageStore = signalStore(
 					collectionItem
 				);
 			},
+			/** The signed-in user's wanted albums; follows sign-in. */
+			loadWishlist: rxMethod<void>(
+				pipe(
+					tap(() =>
+						wishlistItemStateService.dispatchListOwnEntitiesAction()
+					),
+					switchMap(() => wishlistItemStateService.selectEntities$()),
+					tapResponse({
+						next: (wishlistItems) =>
+							patchState(store, { wishlistItems }),
+						error: (error) => console.error(error),
+					})
+				)
+			),
+			/** Follows the add; the dialog closes once the album is wanted. */
+			watchWishing: rxMethod<void>(
+				pipe(
+					switchMap(() =>
+						combineLatest([
+							wishlistItemStateService.selectAdding$(),
+							wishlistItemStateService.selectError$(),
+						])
+					),
+					pairwise(),
+					tap(([[wasWishing], [wishing, error]]) => {
+						patchState(store, { wishing });
+						if (wasWishing && !wishing) {
+							patchState(store, {
+								wishError: error,
+								wishlistOpen: !!error,
+							});
+						}
+					})
+				)
+			),
+			/**
+			 * Puts the album on the signed-in user's wishlist, unless it is
+			 * already wanted.
+			 */
+			addToWishlist(draft: WishlistDraft): void {
+				const album = store
+					.albums()
+					.find((item) => item.uid === store.albumId());
+				const userId = store.userId();
+
+				if (!album || !userId || !store.canWish() || store.wishing()) {
+					return;
+				}
+				if (
+					store
+						.wishlistItems()
+						.some(
+							(item) =>
+								item.userReference?.uid === userId &&
+								item.albumReference?.uid === album.uid &&
+								item.isActive !== false
+						)
+				) {
+					patchState(store, {
+						wishError: 'This album is already on your wishlist.',
+					});
+					return;
+				}
+
+				const wishlistItem: WishlistItemEntityAdd = {
+					entityType: EntityTypeEnum.WishlistItem,
+					albumReference: {
+						coverImage: album.coverImage ?? null,
+						name: album.name,
+						uid: album.uid,
+					},
+					artistReference: {
+						name: album.artist?.name ?? '',
+						uid: album.artist?.uid ?? '',
+					},
+					userReference: {
+						displayName: store.userName(),
+						uid: userId,
+					},
+					medias: draft.medias,
+					sourceLink: draft.sourceLink ?? '',
+					isActive: true,
+				};
+
+				patchState(store, { wishError: null });
+				wishlistItemStateService.dispatchAddEntityAction(wishlistItem);
+			},
 			loadReleases: rxMethod<void>(
 				pipe(
 					switchMap(() =>
@@ -767,6 +896,12 @@ export const AlbumPageStore = signalStore(
 			},
 			closePicker(): void {
 				patchState(store, { pickerOpen: false });
+			},
+			openWishlist(): void {
+				patchState(store, { wishlistOpen: true, wishError: null });
+			},
+			closeWishlist(): void {
+				patchState(store, { wishlistOpen: false });
 			},
 			openRemoval(copyId: string): void {
 				patchState(store, {
@@ -823,6 +958,8 @@ export const AlbumPageStore = signalStore(
 			store.watchDisposing(of(undefined));
 			store.loadPastItems(of(undefined));
 			store.loadRequests(of(undefined));
+			store.loadWishlist(of(undefined));
+			store.watchWishing(of(undefined));
 		},
 	})
 );

@@ -1,8 +1,15 @@
 import { of } from 'rxjs';
-import { catchError, first, map, switchMap } from 'rxjs/operators';
+import {
+	catchError,
+	distinctUntilChanged,
+	first,
+	map,
+	switchMap,
+} from 'rxjs/operators';
 
 import { inject, Injectable } from '@angular/core';
 import {
+	AuthenticationStateService,
 	EntityQuantityEntity,
 	EntityQuantityStateService,
 	EntityQuantityUtilService,
@@ -19,6 +26,7 @@ import * as wishlistItemActions from './wishlist-item.actions';
 @Injectable()
 export class WishlistItemEffects {
 	private actions$: Actions = inject(Actions);
+	private authenticationStateService = inject(AuthenticationStateService);
 	private entityQuantityStateService = inject(EntityQuantityStateService);
 	private entityQuantityUtilService = inject(EntityQuantityUtilService);
 	private userDataService = inject(UserDataService);
@@ -68,6 +76,15 @@ export class WishlistItemEffects {
 										wishlistItem
 									),
 							});
+						}),
+						catchError((error) => {
+							console.error(error);
+
+							return of(
+								wishlistItemActions.addWishlistItemFail({
+									error,
+								})
+							);
 						})
 					)
 			)
@@ -111,6 +128,15 @@ export class WishlistItemEffects {
 									wishlistItemId: wishlistItem.uid,
 								}
 							);
+						}),
+						catchError((error) => {
+							console.error(error);
+
+							return of(
+								wishlistItemActions.deleteWishlistItemFail({
+									error,
+								})
+							);
 						})
 					)
 			)
@@ -132,6 +158,50 @@ export class WishlistItemEffects {
 						return wishlistItemActions.listWishlistItemsSuccess({
 							wishlistItems,
 						});
+					}),
+					catchError((error) => {
+						console.error(error);
+
+						return of(
+							wishlistItemActions.listWishlistItemsFail({ error })
+						);
+					})
+				)
+			)
+		)
+	);
+	/** The signed-in user's own wishlist; a guest has none. */
+	public listOwnWishlistItems = createEffect(() =>
+		this.actions$.pipe(
+			ofType(wishlistItemActions.listOwnWishlistItems),
+			switchMap(() =>
+				this.authenticationStateService.selectAuthenticatedUser$()
+			),
+			map((user) => user?.uid ?? ''),
+			distinctUntilChanged(),
+			switchMap((userId) =>
+				(userId
+					? this.wishlistItemDataService.listByUser$(userId)
+					: of([])
+				).pipe(
+					map((wishlistItems) =>
+						wishlistItems.map((wishlistItem) =>
+							this.wishlistItemUtilService.convertModelToEntity(
+								wishlistItem
+							)
+						)
+					),
+					map((wishlistItems) =>
+						wishlistItemActions.listWishlistItemsSuccess({
+							wishlistItems,
+						})
+					),
+					catchError((error) => {
+						console.error(error);
+
+						return of(
+							wishlistItemActions.listWishlistItemsFail({ error })
+						);
 					})
 				)
 			)
@@ -147,7 +217,7 @@ export class WishlistItemEffects {
 							wishlistItem: wishlistItem
 								? this.wishlistItemUtilService.convertModelToEntity(
 										wishlistItem
-								  )
+									)
 								: undefined,
 						});
 					}),
@@ -218,6 +288,15 @@ export class WishlistItemEffects {
 											),
 									},
 								}
+							);
+						}),
+						catchError((error) => {
+							console.error(error);
+
+							return of(
+								wishlistItemActions.updateWishlistItemFail({
+									error,
+								})
 							);
 						})
 					)

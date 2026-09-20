@@ -1,4 +1,4 @@
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
 import {
@@ -16,8 +16,8 @@ import * as wishlistItemSelectors from './wishlist-item.selectors';
 
 @Injectable()
 export class WishlistItemStateServiceImpl extends WishlistItemStateService {
-	private store = inject<Store<fromWishlistItem.WishlistItemPartialState>>(Store);
-
+	private store =
+		inject<Store<fromWishlistItem.WishlistItemPartialState>>(Store);
 
 	public dispatchAddEntityAction(wishlistItem: WishlistItemEntityAdd): void {
 		this.store.dispatch(
@@ -39,6 +39,10 @@ export class WishlistItemStateServiceImpl extends WishlistItemStateService {
 
 	public dispatchListEntitiesAction(): void {
 		this.store.dispatch(wishlistItemActions.listWishlistItems());
+	}
+
+	public dispatchListOwnEntitiesAction(): void {
+		this.store.dispatch(wishlistItemActions.listOwnWishlistItems());
 	}
 
 	public dispatchLoadEntitiesByIdsAction(uids: string[]): void {
@@ -81,6 +85,12 @@ export class WishlistItemStateServiceImpl extends WishlistItemStateService {
 		throw new Error('Method not implemented.');
 	}
 
+	public selectAdding$(): Observable<boolean> {
+		return this.store.pipe(
+			select(wishlistItemSelectors.getWishlistItemAdding)
+		);
+	}
+
 	public selectEntities$(): Observable<WishlistItemEntity[]> {
 		return this.store.pipe(
 			select(wishlistItemSelectors.selectAllWishlistItem)
@@ -92,6 +102,13 @@ export class WishlistItemStateServiceImpl extends WishlistItemStateService {
 	): Observable<WishlistItemEntity | undefined> {
 		return this.store.pipe(
 			select(wishlistItemSelectors.selectWishlistItemById(), { uid })
+		);
+	}
+
+	public selectError$(): Observable<string | null> {
+		return this.store.pipe(
+			select(wishlistItemSelectors.getWishlistItemError),
+			map((error) => error ?? null)
 		);
 	}
 
@@ -119,5 +136,11 @@ export class WishlistItemStateServiceImpl extends WishlistItemStateService {
 
 	public selectSelectedEntityId$(): Observable<string> {
 		throw new Error('Method not implemented.');
+	}
+
+	public selectUpdating$(): Observable<boolean> {
+		return this.store.pipe(
+			select(wishlistItemSelectors.getWishlistItemUpdating)
+		);
 	}
 }

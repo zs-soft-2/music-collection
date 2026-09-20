@@ -1,6 +1,7 @@
 import {
 	AlbumEntity,
 	CollectionItemDisposalReason,
+	MediaEnum,
 	CollectionItemEntity,
 	ContributionEntity,
 	DiscogsVersion,
@@ -96,6 +97,22 @@ export interface ReleaseRequestDraft {
 	discogsReleaseId: number | null;
 	pressing: ReleaseRequestPressing | null;
 	note: string | null;
+}
+
+/** What the collector wants the wanted album on. */
+export const WISHLIST_MEDIA_LABELS: Record<MediaEnum, string> = {
+	[MediaEnum.all]: 'Any format',
+	[MediaEnum.vinyl]: 'Vinyl',
+	[MediaEnum.cd]: 'CD',
+	[MediaEnum.cassette]: 'Cassette',
+	[MediaEnum.dvd]: 'DVD',
+};
+
+/** What the collector adds to their wishlist. */
+export interface WishlistDraft {
+	medias: MediaEnum[];
+	/** Where it can be bought; `null` when not noted. */
+	sourceLink: string | null;
 }
 
 export const DISPOSAL_REASON_LABELS: Record<

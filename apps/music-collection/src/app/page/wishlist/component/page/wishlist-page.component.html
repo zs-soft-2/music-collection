@@ -76,6 +76,12 @@
 		}
 	</div>
 
+	@if (store.changeError()) {
+		<p class="change-error" role="alert">
+			Could not save it: {{ store.changeError() }}
+		</p>
+	}
+
 	<p class="summary" aria-live="polite">
 		@if (!store.isLoading()) {
 			@if (store.hasFilter()) {
@@ -174,30 +180,69 @@
 						<span></span>
 					}
 					@if (!entry.isActive) {
-						<span class="found">
-							<i class="pi pi-check" aria-hidden="true"></i>
-							Found
+						<span class="actions">
+							<span class="found">
+								<i class="pi pi-check" aria-hidden="true"></i>
+								Found
+							</span>
+							@if (store.canEdit()) {
+								<button
+									type="button"
+									class="link-button"
+									[disabled]="store.changingId() === entry.id"
+									(click)="store.setFound(entry.id, false)"
+								>
+									Want again
+								</button>
+							}
 						</span>
-					} @else if (entry.shopUrl) {
-						<a
-							class="shop"
-							[href]="entry.shopUrl"
-							target="_blank"
-							rel="noopener noreferrer"
-							[attr.aria-label]="
-								'Shop: ' +
-								entry.release.artistName +
-								' — ' +
-								entry.release.title +
-								' (opens in a new tab)'
-							"
-						>
-							Shop
-							<i
-								class="pi pi-external-link"
-								aria-hidden="true"
-							></i>
-						</a>
+					} @else {
+						<span class="actions">
+							@if (entry.shopUrl) {
+								<a
+									class="shop"
+									[href]="entry.shopUrl"
+									target="_blank"
+									rel="noopener noreferrer"
+									[attr.aria-label]="
+										'Shop: ' +
+										entry.release.artistName +
+										' — ' +
+										entry.release.title +
+										' (opens in a new tab)'
+									"
+								>
+									Shop
+									<i
+										class="pi pi-external-link"
+										aria-hidden="true"
+									></i>
+								</a>
+							}
+							@if (store.canEdit()) {
+								<button
+									type="button"
+									class="got-it"
+									[disabled]="store.changingId() === entry.id"
+									[attr.aria-label]="
+										'I have ' +
+										entry.release.title +
+										' — mark it found'
+									"
+									(click)="store.setFound(entry.id, true)"
+								>
+									<i
+										class="pi pi-check"
+										aria-hidden="true"
+									></i>
+									{{
+										store.changingId() === entry.id
+											? 'Saving…'
+											: 'I have it'
+									}}
+								</button>
+							}
+						</span>
 					}
 				</div>
 			</li>

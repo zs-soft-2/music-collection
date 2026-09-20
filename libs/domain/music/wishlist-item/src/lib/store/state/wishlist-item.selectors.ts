@@ -28,6 +28,21 @@ export const getWishlistItemLoading = createSelector(
 	(state: State) => state.loading
 );
 
+export const getWishlistItemLoaded = createSelector(
+	getWishlistItemState,
+	(state: State) => state.loaded
+);
+
+export const getWishlistItemAdding = createSelector(
+	getWishlistItemState,
+	(state: State) => state.adding
+);
+
+export const getWishlistItemUpdating = createSelector(
+	getWishlistItemState,
+	(state: State) => state.updating
+);
+
 export const getSelectedId = createSelector(
 	getWishlistItemState,
 	(state: State) => state.selectedId || ''
