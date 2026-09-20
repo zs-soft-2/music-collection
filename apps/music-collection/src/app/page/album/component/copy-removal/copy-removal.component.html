@@ -63,7 +63,9 @@
 				(input)="onInput('date', $event)"
 			/>
 			@if (dateInvalid()) {
-				<span class="field-error">Pick a day, today at the latest.</span>
+				<span class="field-error"
+					>Pick a day, today at the latest.</span
+				>
 			}
 		</label>
 
@@ -83,9 +85,7 @@
 		</p>
 
 		@if (error()) {
-			<p class="error" role="alert">
-				Could not remove it: {{ error() }}
-			</p>
+			<p class="error" role="alert">Could not remove it: {{ error() }}</p>
 		}
 
 		<div class="form-actions">

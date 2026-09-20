@@ -19,6 +19,7 @@ import {
 } from '../../shared/music-ui';
 import { PlayerPanelComponent } from '../../shared/player';
 import { AlbumPageStore } from './album-page.store';
+import { AlbumCollectionsComponent } from './component/album-collections/album-collections.component';
 import { AlbumCreditsComponent } from './component/album-credits/album-credits.component';
 import { AlbumTracklistComponent } from './component/album-tracklist/album-tracklist.component';
 import { CopyRemovalComponent } from './component/copy-removal/copy-removal.component';
@@ -55,6 +56,7 @@ function readCompact(): boolean {
 		RouterLink,
 		DiscographyCardComponent,
 		FormatBadgeComponent,
+		AlbumCollectionsComponent,
 		AlbumCreditsComponent,
 		AlbumTracklistComponent,
 		AdminEditLinkComponent,
