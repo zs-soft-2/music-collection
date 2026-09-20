@@ -74,6 +74,9 @@
 			"@music-collection/domain/music-collection/api": [
 				"libs/domain/music/music-collection/api/src/index.ts"
 			],
+			"@music-collection/domain/music-collection/core": [
+				"libs/domain/music/music-collection/core/src/index.ts"
+			],
 			"@music-collection/domain/music-collection/engine": [
 				"libs/domain/music/music-collection/engine/src/index.ts"
 			],

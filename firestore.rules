@@ -98,6 +98,7 @@ service cloud.firestore {
         'track-lyrics': 'TrackEntity',
         'contribution': 'ContributionEntity',
         'membership': 'MembershipEntity',
+        'music-collection': 'MusicCollectionEntity',
         'user': 'UserEntity',
         'entity-quantity': 'EntityQuantityEntity',
         'collection-item': 'CollectionItemEntity',
