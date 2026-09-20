@@ -19,6 +19,9 @@
 			"@music-collection/common/api": [
 				"libs/common/api/src/index.ts"
 			],
+			"@music-collection/common/engine": [
+				"libs/common/engine/src/index.ts"
+			],
 			"@music-collection/core/api": ["libs/core/api/src/index.ts"],
 			"@music-collection/core/authentication": [
 				"libs/core/authentication/src/index.ts"
