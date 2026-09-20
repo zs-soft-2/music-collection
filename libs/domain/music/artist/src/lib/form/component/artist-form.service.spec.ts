@@ -1,3 +1,5 @@
+import { of } from 'rxjs';
+
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import {
@@ -16,7 +18,13 @@ describe('ArtistFormService', () => {
 			providers: [
 				ArtistFormService,
 				provideRouter([]),
-				{ provide: ArtistStateService, useValue: {} },
+				{
+					provide: ArtistStateService,
+					useValue: {
+						selectEntities$: jest.fn(() => of([])),
+						dispatchListEntitiesAction: jest.fn(),
+					},
+				},
 				{ provide: ArtistUtilService, useValue: {} },
 				{ provide: DocumentStateService, useValue: {} },
 			],

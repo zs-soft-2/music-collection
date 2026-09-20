@@ -35,6 +35,17 @@
 							pInputText
 							formControlName="name"
 						/>
+						@if (
+							params.formGroup.controls['name'].errors?.[
+								'duplicateCatalogName'
+							];
+							as duplicate
+						) {
+							<small class="album-form-error"
+								>This artist already has
+								{{ duplicate.match }}.</small
+							>
+						}
 					</div>
 
 					<div class="mc-field">

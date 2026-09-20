@@ -1,7 +1,8 @@
 import { combineLatest, firstValueFrom, Observable, ReplaySubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import { Injectable, inject, signal } from '@angular/core';
+import { DestroyRef, Injectable, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import {
 	AlbumEntity,
@@ -22,6 +23,7 @@ import {
 	SearchParams,
 	StyleList,
 } from '@music-collection/api';
+import { uniqueCatalogName } from '@music-collection/ui';
 
 /** One field of the loaded album next to the form's current value. */
 export interface AlbumExternalRow {
@@ -81,10 +83,13 @@ export class AlbumFormService {
 	private albumUtilService = inject(AlbumUtilService);
 	private artistStateService = inject(ArtistStateService);
 	private componentUtil = inject(AlbumUtilService);
+	private destroyRef = inject(DestroyRef);
 	private documentStateService = inject(DocumentStateService);
 	private returnNavigation = inject(ReturnNavigationService);
 
 	private album!: AlbumEntity | undefined;
+	/** Every album of the catalog, for the duplicate check on the title. */
+	private catalogAlbums: AlbumEntity[] = [];
 	private params!: AlbumFormParams;
 	private params$$: ReplaySubject<AlbumFormParams>;
 
@@ -96,6 +101,43 @@ export class AlbumFormService {
 
 	public constructor() {
 		this.params$$ = new ReplaySubject();
+
+		// The catalog may arrive after the form is on screen, so the title is
+		// checked again once it does.
+		this.albumStateService
+			.selectEntities$()
+			.pipe(takeUntilDestroyed())
+			.subscribe((albums) => {
+				if (!albums.length) {
+					this.albumStateService.dispatchListEntitiesAction();
+				}
+				this.catalogAlbums = albums;
+				this.params?.formGroup.controls[
+					'name'
+				].updateValueAndValidity();
+			});
+	}
+
+	/**
+	 * The titles this album would collide with: the other albums of the
+	 * artist it is being filed under. Two artists may each have a record
+	 * called Destroyer, so the clash is only within one artist — and the
+	 * artist is a form field, which is why the list is read on every check.
+	 */
+	private takenAlbumNames(): string[] {
+		const artistUid = this.params?.formGroup.value['artist']?.uid;
+
+		if (!artistUid) {
+			return [];
+		}
+
+		return this.catalogAlbums
+			.filter(
+				(album) =>
+					album.artist?.uid === artistUid &&
+					album.uid !== this.album?.uid
+			)
+			.map((album) => album.name);
 	}
 
 	/** Puts the selected loaded values into the form; saving stays manual. */
@@ -254,6 +296,17 @@ export class AlbumFormService {
 		documents: DocumentEntity[]
 	): AlbumFormParams {
 		const formGroup = this.albumUtilService.createFormGroup(album);
+
+		formGroup.controls['name'].addValidators(
+			uniqueCatalogName(() => this.takenAlbumNames())
+		);
+		// The title clashes within one artist, so changing the artist has to
+		// ask the question again.
+		formGroup.controls['artist'].valueChanges
+			.pipe(takeUntilDestroyed(this.destroyRef))
+			.subscribe(() =>
+				formGroup.controls['name'].updateValueAndValidity()
+			);
 
 		const albumFormParams: AlbumFormParams = {
 			artists,

@@ -2,6 +2,7 @@ import { combineLatest, firstValueFrom, Observable, ReplaySubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
 import { Injectable, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import {
@@ -22,6 +23,7 @@ import {
 	SearchParams,
 	StyleList,
 } from '@music-collection/api';
+import { uniqueCatalogName } from '@music-collection/ui';
 
 /** One field of the loaded profile next to the form's current value. */
 export interface ArtistExternalRow {
@@ -86,6 +88,8 @@ export class ArtistFormService {
 	private returnNavigation = inject(ReturnNavigationService);
 
 	private artist!: ArtistEntity | undefined;
+	/** Every artist of the catalog, for the duplicate check on the name. */
+	private catalogArtists: ArtistEntity[] = [];
 	private formGroup!: FormGroup;
 	private params!: ArtistFormParams;
 	private params$$: ReplaySubject<ArtistFormParams>;
@@ -97,6 +101,29 @@ export class ArtistFormService {
 
 	public constructor() {
 		this.params$$ = new ReplaySubject();
+
+		// The catalog may arrive after the form is on screen, so the name is
+		// checked again once it does.
+		this.artistStateService
+			.selectEntities$()
+			.pipe(takeUntilDestroyed())
+			.subscribe((artists) => {
+				if (!artists.length) {
+					this.artistStateService.dispatchListEntitiesAction();
+				}
+				this.catalogArtists = artists;
+				this.formGroup?.controls['name'].updateValueAndValidity();
+			});
+	}
+
+	/**
+	 * The names this artist would collide with — its own excluded, so that
+	 * saving an artist unchanged is not a duplicate of itself.
+	 */
+	private takenArtistNames(): string[] {
+		return this.catalogArtists
+			.filter((artist) => artist.uid !== this.artist?.uid)
+			.map((artist) => artist.name);
 	}
 
 	public cancel(): void {
@@ -174,6 +201,10 @@ export class ArtistFormService {
 			switchMap(([artist, documents]) => {
 				this.artist = artist;
 				this.formGroup = this.artistUtilService.createFormGroup(artist);
+				this.formGroup.controls['name'].addValidators(
+					uniqueCatalogName(() => this.takenArtistNames())
+				);
+				this.formGroup.controls['name'].updateValueAndValidity();
 				this.params = this.createArtistParams(
 					this.formGroup,
 					documents,
