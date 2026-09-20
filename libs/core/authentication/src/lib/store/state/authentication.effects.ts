@@ -1,15 +1,10 @@
 import { from, of } from 'rxjs';
 import { catchError, map, mergeMap, switchMap, take } from 'rxjs/operators';
-import {
-	Auth,
-	authState,
-	GoogleAuthProvider,
-	signInWithPopup,
-	signOut,
-} from '@angular/fire/auth';
+import { Auth, authState } from '@angular/fire/auth';
 
 import { inject, Injectable } from '@angular/core';
 import {
+	AuthenticationProviderService,
 	BaseService,
 	EntityTypeEnum,
 	User,
@@ -24,6 +19,10 @@ export class AuthenticationEffects extends BaseService {
 	actions$: Actions = inject(Actions);
 	auth: Auth = inject(Auth);
 	userStateService: UserStateService = inject(UserStateService);
+	// Platformfüggő bejelentkezés: weben popup, mobilon natív Google SDK.
+	authenticationProviderService: AuthenticationProviderService = inject(
+		AuthenticationProviderService
+	);
 	// Az injektálási kontextusban kell létrehozni (AngularFire).
 	private readonly authState$ = authState(this.auth);
 
@@ -83,7 +82,9 @@ export class AuthenticationEffects extends BaseService {
 		this.actions$.pipe(
 			ofType(authenticationActions.login),
 			switchMap(() => {
-				return from(this.googleLogin());
+				return from(
+					this.authenticationProviderService.signInWithGoogle()
+				);
 			}),
 			map(() => {
 				return authenticationActions.getUser();
@@ -101,7 +102,7 @@ export class AuthenticationEffects extends BaseService {
 			switchMap(() =>
 				// A catchError a belső folyamon van: így egy sikertelen
 				// kijelentkezés nem állítja le véglegesen az effektet.
-				from(signOut(this.auth)).pipe(
+				from(this.authenticationProviderService.signOut()).pipe(
 					map(() => authenticationActions.logoutSuccess()),
 					catchError((err) =>
 						of(
@@ -114,8 +115,4 @@ export class AuthenticationEffects extends BaseService {
 			)
 		)
 	);
-
-	private googleLogin(): Promise<unknown> {
-		return signInWithPopup(this.auth, new GoogleAuthProvider());
-	}
 }
