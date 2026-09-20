@@ -1,4 +1,12 @@
-import { Observable, combineLatest, filter, map, tap } from 'rxjs';
+import {
+	Observable,
+	combineLatest,
+	filter,
+	map,
+	of,
+	switchMap,
+	tap,
+} from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
 import {
@@ -47,6 +55,17 @@ export interface MusicCollectionResolution {
 /** The uid a criteria object is resolved under while it is still being written. */
 const PREVIEW_UID = 'preview';
 
+/**
+ * Whether any of these rules asks about who played on a record. The credits
+ * outnumber the albums by far, so they are only fetched when a criterion
+ * actually reads them.
+ */
+function wantsCredits(
+	collections: readonly { criteria: MusicCollectionCriteria }[]
+): boolean {
+	return collections.some(({ criteria }) => !!criteria.credits);
+}
+
 /** Selects a feature's entities and asks for the list while it is empty. */
 function entities$<T>(
 	select: () => Observable<T[]>,
@@ -84,16 +103,19 @@ export class MusicCollectionEffect {
 	public listStandings$(): Observable<MusicCollectionStanding[]> {
 		return combineLatest([
 			this.repository.listPublished$(),
-			this.catalog$(),
 			this.collectionItemStateService.selectLoadedEntities$(),
 		]).pipe(
-			map(([collections, catalog, items]) => {
-				const copies = toOwnedCopies(items);
+			switchMap(([collections, items]) =>
+				this.catalog$(wantsCredits(collections)).pipe(
+					map((catalog) => {
+						const copies = toOwnedCopies(items);
 
-				return collections.map((collection) =>
-					this.toStanding(collection, catalog, copies)
-				);
-			})
+						return collections.map((collection) =>
+							this.toStanding(collection, catalog, copies)
+						);
+					})
+				)
+			)
 		);
 	}
 
@@ -103,28 +125,41 @@ export class MusicCollectionEffect {
 	): Observable<MusicCollectionStanding | null> {
 		return combineLatest([
 			this.repository.loadBySlug$(slug),
-			this.catalog$(),
 			this.collectionItemStateService.selectLoadedEntities$(),
 		]).pipe(
-			map(([collection, catalog, items]) =>
-				collection
-					? this.toStanding(collection, catalog, toOwnedCopies(items))
-					: null
+			switchMap(([collection, items]) =>
+				this.catalog$(
+					wantsCredits(collection ? [collection] : [])
+				).pipe(
+					map((catalog) =>
+						collection
+							? this.toStanding(
+									collection,
+									catalog,
+									toOwnedCopies(items)
+								)
+							: null
+					)
+				)
 			)
 		);
 	}
 
 	/** Every definition with what it resolves to, drafts included (admin). */
 	public listAllResolutions$(): Observable<MusicCollectionResolution[]> {
-		return combineLatest([
-			this.repository.listAll$(),
-			this.catalog$(),
-		]).pipe(
-			map(([collections, catalog]) =>
-				collections.map((collection) => ({
-					collection,
-					resolved: resolveMusicCollection(collection, catalog),
-				}))
+		return this.repository.listAll$().pipe(
+			switchMap((collections) =>
+				this.catalog$(wantsCredits(collections)).pipe(
+					map((catalog) =>
+						collections.map((collection) => ({
+							collection,
+							resolved: resolveMusicCollection(
+								collection,
+								catalog
+							),
+						}))
+					)
+				)
 			)
 		);
 	}
@@ -133,20 +168,23 @@ export class MusicCollectionEffect {
 	public loadResolution$(
 		uid: string
 	): Observable<MusicCollectionResolution | null> {
-		return combineLatest([
-			this.repository.loadByUid$(uid),
-			this.catalog$(),
-		]).pipe(
-			map(([collection, catalog]) =>
-				collection
-					? {
-							collection,
-							resolved: resolveMusicCollection(
-								collection,
-								catalog
-							),
-						}
-					: null
+		return this.repository.loadByUid$(uid).pipe(
+			switchMap((collection) =>
+				this.catalog$(
+					wantsCredits(collection ? [collection] : [])
+				).pipe(
+					map((catalog) =>
+						collection
+							? {
+									collection,
+									resolved: resolveMusicCollection(
+										collection,
+										catalog
+									),
+								}
+							: null
+					)
+				)
 			)
 		);
 	}
@@ -159,7 +197,7 @@ export class MusicCollectionEffect {
 	public preview$(
 		criteria: MusicCollectionCriteria
 	): Observable<ResolvedMusicCollection> {
-		return this.catalog$().pipe(
+		return this.catalog$(wantsCredits([{ criteria }])).pipe(
 			map((catalog) =>
 				resolveMusicCollection(
 					{ uid: PREVIEW_UID, criteria, criteriaVersion: 0 },
@@ -200,7 +238,7 @@ export class MusicCollectionEffect {
 		};
 	}
 
-	private catalog$(): Observable<MusicCollectionCatalog> {
+	private catalog$(withCredits: boolean): Observable<MusicCollectionCatalog> {
 		return combineLatest([
 			entities$(
 				() => this.albumStateService.selectEntities$(),
@@ -210,10 +248,12 @@ export class MusicCollectionEffect {
 				() => this.artistStateService.selectEntities$(),
 				() => this.artistStateService.dispatchListEntitiesAction()
 			),
+			withCredits ? this.repository.listCredits$() : of([]),
 		]).pipe(
-			map(([albums, artists]) => ({
+			map(([albums, artists, credits]) => ({
 				albums: albums.map(toCatalogAlbum),
 				artists: artists.map(toCatalogArtist),
+				credits,
 			}))
 		);
 	}

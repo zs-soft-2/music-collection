@@ -4,7 +4,6 @@ import {
 	StyleList,
 } from '@music-collection/common/api';
 import {
-	CreditCriterion,
 	MusicCollectionStatus,
 	MusicCollectionVisibility,
 } from '@music-collection/domain/music-collection/api';
@@ -41,12 +40,10 @@ export interface CriteriaForm {
 	artistCountries: EnumCriterionForm;
 	/** Artist uids. */
 	artists: string[];
-	/**
-	 * Carried through untouched: the credits criterion has no editor yet (it
-	 * needs a musician picker), and what the form cannot write it must not
-	 * drop either.
-	 */
-	credits: CreditCriterion | null;
+	/** Musician uids that must be credited on the record. */
+	creditMusicians: string[];
+	/** Discogs roles, e.g. "Producer"; matched case-insensitively. */
+	creditRoles: string[];
 }
 
 export interface CollectionForm {
@@ -125,7 +122,8 @@ export const emptyCriteriaForm = (): CriteriaForm => ({
 	albumFormats: emptyEnumCriterion(),
 	artistCountries: emptyEnumCriterion(),
 	artists: [],
-	credits: null,
+	creditMusicians: [],
+	creditRoles: [],
 });
 
 export const emptyCollectionForm = (): CollectionForm => ({

@@ -3,9 +3,14 @@ import { Observable, from, map } from 'rxjs';
 import { Injectable, inject } from '@angular/core';
 import { Firestore, collection, query } from '@angular/fire/firestore';
 import { Functions, httpsCallable } from '@angular/fire/functions';
-import { FirestoreSyncService } from '@music-collection/api';
+import {
+	CONTRIBUTION_FEATURE_KEY,
+	ContributionEntity,
+	FirestoreSyncService,
+} from '@music-collection/api';
 import {
 	CREATE_MUSIC_COLLECTION_FUNCTION,
+	CatalogCredit,
 	CreateMusicCollectionResult,
 	DELETE_MUSIC_COLLECTION_FUNCTION,
 	MUSIC_COLLECTION_FEATURE_KEY,
@@ -16,6 +21,8 @@ import {
 	UPDATE_MUSIC_COLLECTION_FUNCTION,
 	UpdateMusicCollectionResult,
 } from '@music-collection/domain/music-collection/api';
+
+import { toCatalogCredit } from './music-collection.mapper';
 
 /**
  * The definitions in `music-collection/{uid}`, served from the client cache
@@ -72,6 +79,16 @@ export class MusicCollectionFirestoreRepository extends MusicCollectionRepositor
 				collections.find((definition) => definition.uid === uid)
 			)
 		);
+	}
+
+	/** The whole `contribution` collection, served as a bundle like the rest. */
+	public listCredits$(): Observable<CatalogCredit[]> {
+		return this.firestoreSync
+			.list$<ContributionEntity>({
+				featureKey: CONTRIBUTION_FEATURE_KEY,
+				query: collection(this.firestore, CONTRIBUTION_FEATURE_KEY),
+			})
+			.pipe(map((contributions) => contributions.map(toCatalogCredit)));
 	}
 
 	public create$(

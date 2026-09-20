@@ -13,6 +13,8 @@ import {
 	VISIBILITY_OPTIONS,
 } from '../music-collection-admin.model';
 
+import { EntityPickerComponent } from '../component/entity-picker.component';
+
 import { MusicCollectionEditStore } from './music-collection-edit.store';
 
 type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
@@ -26,7 +28,7 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-music-collection-edit',
 	providers: [MusicCollectionEditStore],
-	imports: [RouterLink],
+	imports: [RouterLink, EntityPickerComponent],
 	template: `
 		<header class="mc-page-head">
 			<div>
@@ -300,42 +302,51 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 
 							<div class="mc-field is-wide">
 								<label for="artists">Artists</label>
-								<select
-									id="artists"
-									multiple
-									size="5"
-									(change)="onArtists($event)"
-								>
-									@for (
-										artist of store.artists();
-										track artist.uid
-									) {
-										<option
-											[value]="artist.uid"
-											[selected]="
-												form.criteria.artists.includes(
-													artist.uid
-												)
-											"
-										>
-											{{ artist.name }}
-										</option>
-									}
-								</select>
+								<mc-entity-picker
+									inputId="artists"
+									placeholder="Search artists…"
+									[options]="store.artists()"
+									[selected]="form.criteria.artists"
+									(selectedChange)="
+										onCriteria({ artists: $event })
+									"
+								/>
+								<small>Nothing picked means any artist.</small>
+							</div>
+
+							<div class="mc-field">
+								<label for="credit-musicians">
+									Credited musicians
+								</label>
+								<mc-entity-picker
+									inputId="credit-musicians"
+									placeholder="Search musicians…"
+									[options]="store.musicians()"
+									[selected]="form.criteria.creditMusicians"
+									(selectedChange)="
+										onCriteria({ creditMusicians: $event })
+									"
+								/>
+							</div>
+
+							<div class="mc-field">
+								<label for="credit-roles">Credited as</label>
+								<input
+									id="credit-roles"
+									type="text"
+									placeholder="Drums, Producer"
+									[value]="
+										form.criteria.creditRoles.join(', ')
+									"
+									(change)="onRoles($event)"
+								/>
 								<small>
-									@if (store.artistNames().length) {
-										{{ store.artistNames().join(', ') }}
-									} @else {
-										Any artist.
-									}
+									Discogs roles, comma separated. One credit
+									must satisfy both: the musician in that
+									role, not two credits together.
 								</small>
 							</div>
 						</div>
-
-						<p class="hint">
-							A credits filter (musician or role) is kept if the
-							definition has one, but it has no editor yet.
-						</p>
 					</section>
 
 					<section class="mc-form-section">
@@ -704,8 +715,18 @@ export class MusicCollectionEditComponent {
 		});
 	}
 
-	protected onArtists(event: Event): void {
-		this.patchCriteria({ artists: this.selected(event) });
+	protected onCriteria(patch: Partial<CriteriaForm>): void {
+		this.patchCriteria(patch);
+	}
+
+	/** Free text, because a Discogs role is free text. */
+	protected onRoles(event: Event): void {
+		this.patchCriteria({
+			creditRoles: this.value(event)
+				.split(',')
+				.map((role) => role.trim())
+				.filter(Boolean),
+		});
 	}
 
 	private selected(event: Event): string[] {

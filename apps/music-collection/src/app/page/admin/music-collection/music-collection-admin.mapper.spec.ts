@@ -100,13 +100,23 @@ describe('toCriteriaForm', () => {
 		expect(toCriteriaForm({})).toEqual(emptyCriteriaForm());
 	});
 
-	/* The editor cannot write a credits criterion — nor may it delete one. */
-	it('carries a credits criterion through untouched', () => {
+	it('round-trips a credits criterion through its two fields', () => {
 		const credits = { musicians: ['hoglan'], roles: ['Drums'] };
+		const form = toCriteriaForm({ credits });
 
-		expect(toCriteria(toCriteriaForm({ credits })).credits).toEqual(
-			credits
-		);
+		expect([form.creditMusicians, form.creditRoles]).toEqual([
+			['hoglan'],
+			['Drums'],
+		]);
+		expect(toCriteria(form).credits).toEqual(credits);
+	});
+
+	it('writes only the half of the credits criterion that is filled in', () => {
+		const form = emptyCriteriaForm();
+
+		form.creditRoles = ['Producer'];
+
+		expect(toCriteria(form).credits).toEqual({ roles: ['Producer'] });
 	});
 });
 
@@ -191,6 +201,14 @@ describe('describeCriteria', () => {
 				artists: { includesAny: ['a', 'b'] },
 			})
 		).toBe('1980–1989 · album styles Thrash · 2 artist(s)');
+	});
+
+	it('names who must be credited, and in what role', () => {
+		expect(
+			describeCriteria({
+				credits: { musicians: ['hoglan'], roles: ['Drums'] },
+			})
+		).toBe('credited: 1 musician(s) as Drums');
 	});
 
 	it('warns when the rule catches everything', () => {

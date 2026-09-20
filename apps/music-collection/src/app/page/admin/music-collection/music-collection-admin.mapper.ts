@@ -23,9 +23,10 @@ import {
  * rather than sent as an empty list, because the resolver reads a missing
  * field as "says nothing" and an empty list as "matches nothing".
  *
- * The credits criterion has no editor yet — it needs a musician picker — so
- * the form carries it through untouched rather than dropping it: what the
- * editor cannot express, it must not silently delete either.
+ * The credits criterion is split in two here — the musicians and the roles —
+ * because that is how the form asks for them; they go back together as one
+ * criterion, which is what makes "this musician in this role" a single
+ * condition rather than two.
  */
 
 /** A readable slug from the name: lowercase words joined by hyphens. */
@@ -72,8 +73,19 @@ export function toCriteria(form: CriteriaForm): MusicCollectionCriteria {
 	if (form.artists.length) {
 		criteria.artists = { includesAny: [...form.artists] };
 	}
-	if (form.credits) {
-		criteria.credits = form.credits;
+	/*
+	 * One credit must satisfy the whole criterion: "Gene Hoglan on drums" is
+	 * not met by Hoglan guesting on vocals while somebody else drums.
+	 */
+	if (form.creditMusicians.length || form.creditRoles.length) {
+		criteria.credits = {
+			...(form.creditMusicians.length
+				? { musicians: [...form.creditMusicians] }
+				: {}),
+			...(form.creditRoles.length
+				? { roles: [...form.creditRoles] }
+				: {}),
+		};
 	}
 
 	return criteria;
@@ -112,7 +124,8 @@ export function toCriteriaForm(
 	}
 
 	form.artists = [...(criteria.artists?.includesAny ?? [])];
-	form.credits = criteria.credits ?? null;
+	form.creditMusicians = [...(criteria.credits?.musicians ?? [])];
+	form.creditRoles = [...(criteria.credits?.roles ?? [])];
 
 	return form;
 }
@@ -195,7 +208,16 @@ export function describeCriteria(criteria: MusicCollectionCriteria): string {
 		parts.push(`${criteria.artists.includesAny.length} artist(s)`);
 	}
 	if (criteria.credits) {
-		parts.push('credits');
+		const credited = [];
+
+		if (criteria.credits.musicians?.length) {
+			credited.push(`${criteria.credits.musicians.length} musician(s)`);
+		}
+		if (criteria.credits.roles?.length) {
+			credited.push(criteria.credits.roles.join(', '));
+		}
+
+		parts.push(`credited: ${credited.join(' as ')}`);
 	}
 
 	return parts.join(' · ') || 'No rule — matches the whole catalog';

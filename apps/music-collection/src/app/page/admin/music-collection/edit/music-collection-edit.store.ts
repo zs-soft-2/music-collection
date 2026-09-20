@@ -12,7 +12,10 @@ import {
 
 import { computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { ArtistEntity, ArtistStateService } from '@music-collection/api';
+import {
+	ArtistStateService,
+	MusicianStateService,
+} from '@music-collection/api';
 import {
 	MusicCollectionEntity,
 	MusicCollectionMembership,
@@ -36,11 +39,41 @@ import {
 	toDraft,
 	toForm,
 } from '../music-collection-admin.mapper';
+import { PickerOption } from '../component/entity-picker.component';
 import {
 	CollectionForm,
 	CriteriaForm,
 	emptyCollectionForm,
 } from '../music-collection-admin.model';
+
+/**
+ * A named entity list for a picker: asked for while it is empty, sorted by
+ * name, and narrowed to what the picker shows.
+ */
+function options$(
+	select: () => Observable<{ uid: string; name: string }[]>,
+	dispatchList: () => void,
+	store: (options: PickerOption[]) => void
+) {
+	return pipe(
+		switchMap(() => select()),
+		tap((entities) => {
+			if (!entities?.length) {
+				dispatchList();
+			}
+		}),
+		filter((entities) => entities?.length > 0),
+		tapResponse({
+			next: (entities: { uid: string; name: string }[]) =>
+				store(
+					entities
+						.map(({ uid, name }) => ({ uid, name }))
+						.sort((a, b) => a.name.localeCompare(b.name))
+				),
+			error: (error: unknown) => console.error(error),
+		})
+	);
+}
 
 /** The uid the other admin lists use for "not saved yet". */
 const NEW_UID = '0';
@@ -62,8 +95,9 @@ interface MusicCollectionEditState {
 	previewTotal: number;
 	isPreviewing: boolean;
 	/** The other definitions, to pick a parent from. */
-	parents: { uid: string; name: string }[];
-	artists: ArtistEntity[];
+	parents: PickerOption[];
+	artists: PickerOption[];
+	musicians: PickerOption[];
 }
 
 const initialState: MusicCollectionEditState = {
@@ -78,6 +112,7 @@ const initialState: MusicCollectionEditState = {
 	isPreviewing: false,
 	parents: [],
 	artists: [],
+	musicians: [],
 };
 
 /**
@@ -97,23 +132,13 @@ export const MusicCollectionEditStore = signalStore(
 		canSave: computed(
 			() => !!store.form().name.trim() && !store.isSaving()
 		),
-		artistNames: computed(() => {
-			const names = new Map(
-				store.artists().map((artist) => [artist.uid, artist.name])
-			);
-
-			return store
-				.form()
-				.criteria.artists.map(
-					(uid) => names.get(uid) ?? 'Unknown artist'
-				);
-		}),
 	})),
 	withMethods(
 		(
 			store,
 			effect = inject(MusicCollectionEffect),
 			artistStateService = inject(ArtistStateService),
+			musicianStateService = inject(MusicianStateService),
 			router = inject(Router)
 		) => {
 			const preview = rxMethod<CriteriaForm>(
@@ -233,28 +258,21 @@ export const MusicCollectionEditStore = signalStore(
 					)
 				),
 				loadArtists: rxMethod<void>(
-					pipe(
-						switchMap(
-							() =>
-								artistStateService.selectEntities$() as Observable<
-									ArtistEntity[]
-								>
-						),
-						tap((artists) => {
-							if (!artists?.length) {
-								artistStateService.dispatchListEntitiesAction();
-							}
-						}),
-						filter((artists) => artists?.length > 0),
-						tapResponse({
-							next: (artists: ArtistEntity[]) =>
-								patchState(store, {
-									artists: [...artists].sort((a, b) =>
-										a.name.localeCompare(b.name)
-									),
-								}),
-							error: (error) => console.error(error),
-						})
+					options$(
+						() => artistStateService.selectEntities$(),
+						() => artistStateService.dispatchListEntitiesAction(),
+						(artists) => patchState(store, { artists })
+					)
+				),
+				/**
+				 * The musicians are loaded for the credits picker only — the
+				 * criteria name them, the resolver matches on the credits.
+				 */
+				loadMusicians: rxMethod<void>(
+					options$(
+						() => musicianStateService.selectEntities$(),
+						() => musicianStateService.dispatchListEntitiesAction(),
+						(musicians) => patchState(store, { musicians })
 					)
 				),
 				setField: (patch: Partial<CollectionForm>) => patchForm(patch),
@@ -293,6 +311,7 @@ export const MusicCollectionEditStore = signalStore(
 		onInit(store) {
 			store.loadOptions(of(undefined));
 			store.loadArtists(of(undefined));
+			store.loadMusicians(of(undefined));
 		},
 	})
 );

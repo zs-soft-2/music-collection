@@ -1,5 +1,6 @@
 import { Observable } from 'rxjs';
 
+import { CatalogCredit } from './music-collection-catalog';
 import {
 	CreateMusicCollectionResult,
 	MusicCollectionDraft,
@@ -23,6 +24,13 @@ export abstract class MusicCollectionRepository {
 	public abstract loadByUid$(
 		uid: string
 	): Observable<MusicCollectionEntity | undefined>;
+
+	/**
+	 * Every credit of the catalog. Only a collection that asks about who
+	 * played on a record needs them, and they outnumber the albums by far,
+	 * so they are fetched when a criterion actually wants them.
+	 */
+	public abstract listCredits$(): Observable<CatalogCredit[]>;
 
 	/**
 	 * Writing goes through the callables: the rules refuse every client write
