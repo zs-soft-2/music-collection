@@ -1,6 +1,6 @@
 import { ContributionEntity, MembershipEntity } from '@music-collection/api';
 
-import { AlbumView } from '../../shared/music-ui/music-ui.model';
+import { AlbumView } from '@music-collection/ui/music-view';
 import {
 	toBandmates,
 	toMusicianAlbums,

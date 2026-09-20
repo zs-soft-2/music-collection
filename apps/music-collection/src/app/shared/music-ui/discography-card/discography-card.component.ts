@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 
 import { AdminEditLinkComponent } from '../admin-edit-link/admin-edit-link.component';
 import { FormatBadgeComponent } from '../format-badge/format-badge.component';
-import { DiscographyAlbum } from '../music-ui.model';
+import { DiscographyAlbum } from '@music-collection/ui/music-view';
 import { PlayAlbumButtonComponent } from '../../player/play-album-button.component';
 
 /**

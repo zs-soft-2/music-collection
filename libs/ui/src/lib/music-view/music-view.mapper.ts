@@ -13,7 +13,7 @@ import {
 	FORMAT_ORDER,
 	MediaFormat,
 	ReleaseView,
-} from './music-ui.model';
+} from './music-view.model';
 
 export const EDITION_TAGS: EditionTag[] = [
 	'limited edition',

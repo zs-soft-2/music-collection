@@ -6,7 +6,7 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import { ReleaseView } from '../music-ui.model';
+import { ReleaseView } from '@music-collection/ui/music-view';
 import {
 	AdminEditEntity,
 	AdminEditLinkComponent,

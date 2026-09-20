@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { AdminEditLinkComponent } from '../admin-edit-link/admin-edit-link.component';
-import { ArtistTileView } from '../music-ui.model';
+import { ArtistTileView } from '@music-collection/ui/music-view';
 
 /**
  * Artist photo tile — the whole tile links to the artist page. Shows the number

@@ -1,4 +1,4 @@
-import { ReleaseView } from './music-ui.model';
+import { ReleaseView } from '@music-collection/ui/music-view';
 
 export interface CountDatum {
 	label: string;

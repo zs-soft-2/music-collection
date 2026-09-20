@@ -5,7 +5,7 @@ import {
 	input,
 } from '@angular/core';
 
-import { FORMAT_LABELS, MediaFormat } from '../music-ui.model';
+import { FORMAT_LABELS, MediaFormat } from '@music-collection/ui/music-view';
 
 /** Inline format label with a format-specific icon. */
 @Component({

@@ -4,7 +4,7 @@ import { ArtistType } from '@music-collection/api';
  * Presentation models shared by the music pages (home, collection).
  *
  * Components render these flat view-models, never the domain entities: the
- * mappers (`music-ui.mapper.ts`) are the single place where a domain entity is
+ * mappers (`music-view.mapper.ts`) are the single place where a domain entity is
  * translated into what the UI shows.
  */
 

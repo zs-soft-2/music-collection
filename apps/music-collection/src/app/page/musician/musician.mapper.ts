@@ -10,13 +10,13 @@ import {
 	creditCategory,
 	performerOrder,
 } from '../../shared/music-ui/credit-roles';
-import { toDiscography } from '../../shared/music-ui/music-ui.mapper';
+import { toDiscography } from '@music-collection/ui/music-view';
 import {
 	AlbumView,
 	ArtistView,
 	DiscographyAlbum,
 	ReleaseView,
-} from '../../shared/music-ui/music-ui.model';
+} from '@music-collection/ui/music-view';
 import {
 	SiteLink,
 	cleanDescription,
