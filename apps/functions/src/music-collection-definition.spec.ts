@@ -116,9 +116,10 @@ describe('prepareDefinition', () => {
 		).toThrow(/visibility/);
 	});
 
+	// A szerver dönti el; a hívó nem hozhatja magával.
 	it('az ismeretlen mezőt nem írja be a dokumentumba', () => {
 		expect(() =>
-			prepareDefinition(definition({ ownerTenantId: 'other-tenant' }))
+			prepareDefinition(definition({ criteriaVersion: 99 }))
 		).toThrow(/Ismeretlen mező/);
 	});
 

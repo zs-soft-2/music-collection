@@ -141,9 +141,6 @@ export async function createMusicCollection(
 				...definition,
 				uid: reference.id,
 				entityType: ENTITY_TYPE,
-				// A globális (kurált) collectionök gazdátlanok; a tenant
-				// sajátja a `tenant/{tenantId}/music-collection` alá kerül.
-				ownerTenantId: null,
 				createdAt: Date.now(),
 				criteriaVersion: 1,
 			})
@@ -203,8 +200,6 @@ export async function updateMusicCollection(
 				...definition,
 				uid: reference.id,
 				entityType: ENTITY_TYPE,
-				ownerTenantId:
-					(snapshot.get('ownerTenantId') as string | null) ?? null,
 				createdAt: Number(snapshot.get('createdAt')) || Date.now(),
 				criteriaVersion,
 			})

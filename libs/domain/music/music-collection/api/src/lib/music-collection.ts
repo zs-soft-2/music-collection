@@ -88,8 +88,6 @@ export interface MusicCollection {
 	parentUid: string | null;
 	status: MusicCollectionStatus;
 	visibility: MusicCollectionVisibility;
-	/** Null for the curated collections; set for a tenant's own. */
-	ownerTenantId: string | null;
 	/** Epoch milliseconds. */
 	createdAt: number;
 	/** Raised whenever the criteria change; resolved membership carries it. */

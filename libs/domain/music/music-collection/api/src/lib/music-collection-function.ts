@@ -12,12 +12,11 @@ export const DELETE_MUSIC_COLLECTION_FUNCTION = 'deleteMusicCollectionEntity';
 
 /**
  * A definition as the editor submits it: everything but what the server
- * decides — when it was created, which criteria version it is on, and whose
- * it is.
+ * decides — when it was created, and which criteria version it is on.
  */
 export type MusicCollectionDraft = Omit<
 	MusicCollection,
-	'createdAt' | 'criteriaVersion' | 'ownerTenantId'
+	'createdAt' | 'criteriaVersion'
 >;
 
 export interface MusicCollectionWriteInput {

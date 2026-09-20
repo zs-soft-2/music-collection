@@ -43,7 +43,6 @@ function collection(
 		parentUid: null,
 		status: 'published',
 		visibility: 'public',
-		ownerTenantId: null,
 		createdAt: 0,
 		criteriaVersion: 1,
 		...overrides,

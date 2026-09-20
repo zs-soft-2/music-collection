@@ -32,7 +32,6 @@ function collection(
 		parentUid: null,
 		status: 'draft',
 		visibility: 'public',
-		ownerTenantId: null,
 		createdAt: 0,
 		criteriaVersion: 1,
 		...overrides,
