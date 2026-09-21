@@ -11,6 +11,22 @@ export const environment = {
 		appId: '1:110722700843:web:2b53358337e0976ba87c6e',
 		measurementId: 'G-7H6CC1PTSY',
 	},
+	appCheck: {
+		/**
+		 * A reCAPTCHA Enterprise site key. A kulcsot és az App Check
+		 * regisztrációját a tofu teremti (infra/modules/firebase), az értéke
+		 * innen jön:
+		 *   tofu -chdir=infra/environments/prod output -raw app_check_site_key
+		 *
+		 * Nem titok: a kliensbe kerül, a védelmet a hozzá tartozó,
+		 * szerveroldalon ellenőrzött token adja.
+		 *
+		 * Üresen az App Check nem indul el, és a callable-ök — amik App Check
+		 * tokent követelnek (apps/functions/src/index.ts) — mindent
+		 * elutasítanak.
+		 */
+		recaptchaSiteKey: '',
+	},
 	spotify: {
 		/**
 		 * Client ID of the Spotify app (developer.spotify.com/dashboard) for

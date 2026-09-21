@@ -10,6 +10,7 @@ import {
 	provideZonelessChangeDetection,
 } from '@angular/core';
 import { getApp, initializeApp, provideFirebaseApp } from '@angular/fire/app';
+import { initializeAppCheck, provideAppCheck } from '@angular/fire/app-check';
 import { getAuth, provideAuth } from '@angular/fire/auth';
 import {
 	CACHE_SIZE_UNLIMITED,
@@ -22,6 +23,7 @@ import { getFunctions, provideFunctions } from '@angular/fire/functions';
 import { provideStorage } from '@angular/fire/storage';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideRouter } from '@angular/router';
+import { ReCaptchaEnterpriseProvider } from 'firebase/app-check';
 import { getStorage } from 'firebase/storage';
 import { CoreAuthenticationModule } from '@music-collection/core/authentication';
 import { CoreAuthorizationModule } from '@music-collection/core/authorization';
@@ -53,6 +55,29 @@ export const appConfig: ApplicationConfig = {
 		provideZonelessChangeDetection(),
 		provideRouter(routes),
 		provideFirebaseApp(() => initializeApp(environment.firebase)),
+		// App Check: a callable-ök (apps/functions) App Check tokent követelnek,
+		// mert a bejelentkezés önmagában nem mondja meg, hogy a hívás a mi
+		// appunkból jön — egy kimásolt ID tokennel a végpontok scriptből is
+		// hívhatók lennének, hívásonként egy modell-kérés árán.
+		//
+		// Site key nélkül nem indítjuk el: az app elfut, de a callable-ök
+		// mindent elutasítanak, amíg a kulcs be nem kerül a környezetbe.
+		//
+		// Localhoston is a valódi reCAPTCHA fut: a dev kulcs domainjei között
+		// ott a `localhost` (infra/environments/dev/dev.tfvars), így nem kell
+		// debug tokent regisztrálni a fejlesztéshez.
+		...(environment.appCheck.recaptchaSiteKey
+			? [
+					provideAppCheck(() =>
+						initializeAppCheck(getApp(), {
+							provider: new ReCaptchaEnterpriseProvider(
+								environment.appCheck.recaptchaSiteKey
+							),
+							isTokenAutoRefreshEnabled: true,
+						})
+					),
+				]
+			: []),
 		provideFirestore(() =>
 			// Persistent (IndexedDB) cache, shared by the tabs. Unlimited size:
 			// the sync cache (FirestoreSyncService) relies on nothing being

@@ -16,3 +16,10 @@ firestore_location = "europe-west4"
 # A dev adatbázison be van kapcsolva (a konzolban kapcsolták be, 2026-09-19-én
 # vettük át); nélküle egy apply kikapcsolná.
 firestore_point_in_time_recovery = true
+# App Check: a reCAPTCHA kulcs innen ad tokent. A localhost a `nx serve`-hez
+# kell; enélkül a callable-ök a fejlesztői gépen is elutasítanának mindent.
+app_check_domains = [
+  "music-collection-16676.web.app",
+  "music-collection-16676.firebaseapp.com",
+  "localhost",
+]

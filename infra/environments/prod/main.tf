@@ -179,8 +179,24 @@ module "firebase" {
   firestore_location = var.firestore_location
 
   firestore_point_in_time_recovery = var.firestore_point_in_time_recovery
+  app_check_domains                = var.app_check_domains
 
   depends_on = [google_project_service.enabled]
+}
+
+# Ez megy az apps/music-collection/src/environments/environment*.ts
+# `appCheck.recaptchaSiteKey` mezőjébe:
+#   tofu output -raw app_check_site_key
+output "app_check_site_key" {
+  value       = module.firebase.app_check_site_key
+  description = "A kliensbe kerülő reCAPTCHA Enterprise site key (nem titok)."
+}
+
+# Az `environment*.ts` `firebase.appId` mezőjének ezzel kell egyeznie —
+# különben az App Check nem arra az appra került, amelyik az appot kiszolgálja.
+output "web_app_id" {
+  value       = module.firebase.web_app_id
+  description = "A tofu által kezelt Firebase web app azonosítója."
 }
 
 module "github_environment" {

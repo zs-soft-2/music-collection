@@ -22,6 +22,11 @@ variable "firestore_location" {
   type        = string
   description = "A Firestore adatbázis helye. Létrehozás után NEM módosítható; a dev a prod helyét követi."
 }
+variable "app_check_domains" {
+  type        = list(string)
+  default     = []
+  description = "Azok a domainek, ahonnan az App Check reCAPTCHA kulcsa tokent ad (pl. a hosting domainek, devben a localhost). Üresen App Check nem jön létre."
+}
 variable "firestore_point_in_time_recovery" {
   type        = bool
   default     = false
@@ -71,6 +76,44 @@ resource "google_firestore_database" "default" {
   deletion_policy = "ABANDON"
 
   depends_on = [google_firebase_project.this]
+}
+
+# ── App Check ───────────────────────────────────────────────────────────────
+# A callable-ök (apps/functions/src/index.ts: `enforceAppCheck`) App Check
+# tokent követelnek, mert a bejelentkezés önmagában nem mondja meg, hogy a hívás
+# a mi appunkból jön: egy kimásolt ID tokennel a végpontok scriptből is
+# hívhatók lennének, az `identifyRecordFromPhoto` esetében hívásonként egy
+# modell-kérés árán.
+#
+# A kulcs pontozó (SCORE) típusú: a látogató nem kap kirakóst, a reCAPTCHA a
+# viselkedésből ad pontot, és a döntést az App Check hozza meg belőle.
+resource "google_recaptcha_enterprise_key" "app_check" {
+  provider     = google-beta
+  count        = length(var.app_check_domains) > 0 ? 1 : 0
+  project      = var.project_id
+  display_name = "${var.web_app_display_name}-app-check"
+
+  web_settings {
+    integration_type = "SCORE"
+    allowed_domains  = var.app_check_domains
+  }
+
+  depends_on = [google_firebase_project.this]
+}
+
+# A web app regisztrálása App Checkbe ezzel a kulccsal. A kliens a kulcs
+# nevét (= magát a site key-t) kapja az `environment*.ts`-ben.
+resource "google_firebase_app_check_recaptcha_enterprise_config" "app" {
+  provider = google-beta
+  count    = length(var.app_check_domains) > 0 ? 1 : 0
+  project  = var.project_id
+  app_id   = google_firebase_web_app.app.app_id
+  site_key = google_recaptcha_enterprise_key.app_check[0].name
+}
+
+output "app_check_site_key" {
+  value       = one(google_recaptcha_enterprise_key.app_check[*].name)
+  description = "A reCAPTCHA Enterprise site key — ez megy az environment*.ts `appCheck.recaptchaSiteKey` mezőjébe. Nem titok, a kliensbe kerül."
 }
 
 output "web_app_id" {

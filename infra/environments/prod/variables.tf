@@ -91,7 +91,17 @@ variable "services" {
     "compute.googleapis.com",
     # A Discogs token tárolása (DISCOGS_TOKEN secret).
     "secretmanager.googleapis.com",
+    # App Check: a callable-ök csak a saját appunkból hívhatók. A reCAPTCHA
+    # Enterprise adja a pontot, az App Check a belőle váltott tokent.
+    "firebaseappcheck.googleapis.com",
+    "recaptchaenterprise.googleapis.com",
   ]
+}
+
+variable "app_check_domains" {
+  type        = list(string)
+  default     = []
+  description = "Azok a domainek, ahonnan az App Check reCAPTCHA kulcsa tokent ad. Üresen App Check nem jön létre."
 }
 
 variable "deployment_branches" {

@@ -89,6 +89,15 @@ setGlobalOptions({
 	region: REGION,
 	maxInstances: 10,
 	serviceAccount: `functions-runtime@${process.env['GCLOUD_PROJECT']}.iam.gserviceaccount.com`,
+	// Minden callable csak a saját appunkból hívható. A jogosultság-ellenőrzés
+	// önmagában nem elég: egy ID token a böngészőből kimásolható, és onnantól a
+	// végpontok scriptből, tetszőleges ütemben hívhatók — az
+	// `identifyRecordFromPhoto` esetében hívásonként egy modell-kérés árán. Az
+	// App Check token azt igazolja, hogy a hívás a mi appunkból jön; a kliens
+	// oldali párja a `provideAppCheck` az app.config.ts-ben.
+	//
+	// Globálisan állítjuk, hogy egy új callable is védetten szülessen.
+	enforceAppCheck: true,
 });
 
 const database = () => getFirestore();

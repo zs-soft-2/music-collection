@@ -11,3 +11,8 @@ hosting_sites       = ["music-collection-4e074"]
 build_configuration = "production"
 reviewer_users      = ["zsagia"]
 firestore_location  = "eur3"
+# App Check: a reCAPTCHA kulcs csak az éles hosting domainekről ad tokent.
+app_check_domains = [
+  "music-collection-4e074.web.app",
+  "music-collection-4e074.firebaseapp.com",
+]
