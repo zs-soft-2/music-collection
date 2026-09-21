@@ -49,6 +49,14 @@ service firebase.storage {
       allow write: if false;
     }
 
+    // Collection badge-ek (`generateMusicCollectionBadge`, Admin SDK írja).
+    // Publikus olvasás: a badge-et a collection oldalán bárki látja. Írni
+    // csak a function tud — a képmodell a mi számlánkra fut.
+    match /badge/{path=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // Tenant-szintű fájlok (pl. példányfotók) később ide kerülnek:
     // `tenant/{tenantId}/…` — tulajdonlás-ellenőrzéssel. Addig tiltva.
 

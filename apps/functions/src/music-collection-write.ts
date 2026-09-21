@@ -194,10 +194,20 @@ export async function updateMusicCollection(
 
 		criteriaVersion = changed ? previousVersion + 1 : previousVersion;
 
+		// A generált badge-kép nem a szerkesztőn át jön: a
+		// `setMusicCollectionBadgeImage` írja, és a definíció mentése
+		// átviszi. Enélkül minden mentés eldobná — a validálás úgyis
+		// kiszórná a `badge.image` kulcsot.
+		const previousImage = snapshot.get('badge.image') ?? null;
+
 		transaction.set(
 			reference,
 			stamp({
 				...definition,
+				badge: definition.badge && {
+					...definition.badge,
+					image: previousImage,
+				},
 				uid: reference.id,
 				entityType: ENTITY_TYPE,
 				createdAt: Number(snapshot.get('createdAt')) || Date.now(),

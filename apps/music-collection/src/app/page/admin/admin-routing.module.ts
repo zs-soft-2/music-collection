@@ -168,6 +168,21 @@ const routes: Routes = [
 				canActivate: [NgxPermissionsGuard],
 			},
 			{
+				path: 'badge-settings',
+				data: {
+					breadcrumb: 'badge-settings',
+					permissions: {
+						only: [RoleNames.ADMIN],
+						redirectTo: '/error',
+					},
+				},
+				loadComponent: () =>
+					import('./badge-settings/badge-settings.component').then(
+						(module) => module.BadgeSettingsComponent
+					),
+				canActivate: [NgxPermissionsGuard],
+			},
+			{
 				path: 'wishlist-item',
 				data: {
 					breadcrumb: 'wishlist-item',

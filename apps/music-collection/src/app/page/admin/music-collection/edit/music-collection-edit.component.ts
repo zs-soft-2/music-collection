@@ -437,6 +437,87 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 										})
 									"
 								/>
+								<small>
+									A hand-made image, for the rare badge that
+									wants one. The generated pin below wins over
+									it.
+								</small>
+							</div>
+
+							<div class="mc-field is-wide badge-art">
+								<div class="badge-art-head">
+									<div>
+										<strong>The pin</strong>
+										<small>
+											Drawn once by an image model, from
+											this collection's own data, and then
+											fixed. The style is the same on
+											every badge — only the motif, the
+											enamel, the patina and the rim
+											follow the rule.
+										</small>
+									</div>
+									<button
+										type="button"
+										[disabled]="
+											store.isNew() ||
+											store.isGeneratingBadge()
+										"
+										(click)="store.generateBadge()"
+									>
+										{{
+											store.isGeneratingBadge()
+												? 'Drawing…'
+												: store.badgeImageUrl()
+													? 'Draw again'
+													: 'Generate'
+										}}
+									</button>
+								</div>
+
+								@if (store.isNew()) {
+									<p class="hint">
+										Save the collection first: the prompt is
+										built on the server from what is stored,
+										not from this form.
+									</p>
+								}
+
+								@if (store.badgeCandidates().length) {
+									<ul class="candidates">
+										@for (
+											candidate of store.badgeCandidates();
+											track candidate.path
+										) {
+											<li>
+												<img
+													[src]="candidate.url"
+													alt=""
+													loading="lazy"
+												/>
+												<button
+													type="button"
+													[disabled]="
+														store.isPickingBadge()
+													"
+													(click)="
+														store.pickBadge(
+															candidate
+														)
+													"
+												>
+													Pick this one
+												</button>
+											</li>
+										}
+									</ul>
+								} @else if (store.badgeImageUrl(); as badge) {
+									<img
+										class="chosen"
+										[src]="badge"
+										alt="The collection's badge"
+									/>
+								}
 							</div>
 						</div>
 					</section>
@@ -515,6 +596,54 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 		}
 	`,
 	styles: `
+		.badge-art-head {
+			display: flex;
+			align-items: flex-start;
+			justify-content: space-between;
+			gap: 1rem;
+		}
+
+		.badge-art-head small {
+			display: block;
+			max-width: 46ch;
+			margin-top: 0.25rem;
+		}
+
+		.badge-art .hint {
+			margin: 0.75rem 0 0;
+			font-size: 0.85rem;
+			color: var(--mc-text-muted);
+		}
+
+		.candidates {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+			gap: 0.75rem;
+			margin: 0.9rem 0 0;
+			padding: 0;
+			list-style: none;
+		}
+
+		.candidates li {
+			display: flex;
+			flex-direction: column;
+			gap: 0.4rem;
+		}
+
+		.candidates img,
+		.chosen {
+			width: 100%;
+			aspect-ratio: 1;
+			object-fit: contain;
+			border-radius: var(--mc-radius-md);
+			background: var(--mc-bg-muted);
+		}
+
+		.chosen {
+			max-width: 220px;
+			margin-top: 0.9rem;
+		}
+
 		:host {
 			display: block;
 		}

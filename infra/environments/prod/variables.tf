@@ -95,6 +95,9 @@ variable "services" {
     # Enterprise adja a pontot, az App Check a belőle váltott tokent.
     "firebaseappcheck.googleapis.com",
     "recaptchaenterprise.googleapis.com",
+    # Vertex AI: a collection badge-eket az Imagen rajzolja meg
+    # (generateMusicCollectionBadge).
+    "aiplatform.googleapis.com",
   ]
 }
 

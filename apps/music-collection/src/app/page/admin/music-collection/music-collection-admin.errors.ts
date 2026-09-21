@@ -10,6 +10,9 @@ const ERRORS: Record<string, string> = {
 	'invalid-argument': 'The definition is not valid.',
 	'not-found': 'This collection no longer exists.',
 	'permission-denied': 'You may not change the collections.',
+	// A badge generation runs on our bill, so the day has a ceiling.
+	'resource-exhausted': "Today's badge allowance is used up.",
+	internal: 'The image model refused the request. Try again later.',
 };
 
 export function describeWriteError(error: unknown): string {

@@ -1,5 +1,6 @@
 import {
 	Observable,
+	combineLatest,
 	debounceTime,
 	exhaustMap,
 	filter,
@@ -17,6 +18,8 @@ import {
 	MusicianStateService,
 } from '@music-collection/api';
 import {
+	BadgeCandidate,
+	GenerateBadgeResult,
 	MusicCollectionEntity,
 	MusicCollectionMembership,
 } from '@music-collection/domain/music-collection/api';
@@ -85,6 +88,11 @@ const PREVIEW_SIZE = 24;
 /** Keystrokes settle before the catalog is walked again. */
 const PREVIEW_DEBOUNCE_MS = 250;
 
+/** A candidate with the URL the admin actually looks at. */
+export interface BadgeCandidateView extends BadgeCandidate {
+	url: string;
+}
+
 interface MusicCollectionEditState {
 	/** Null while adding a new collection. */
 	uid: string | null;
@@ -103,6 +111,14 @@ interface MusicCollectionEditState {
 	parents: PickerOption[];
 	artists: PickerOption[];
 	musicians: PickerOption[];
+	/** The badge already frozen onto the definition, as an `<img>` can load it. */
+	badgeImageUrl: string | null;
+	/** Freshly drawn candidates, until one of them is picked. */
+	badgeCandidates: BadgeCandidateView[];
+	/** What the last run was drawn from; travels with the picked candidate. */
+	badgeDraw: GenerateBadgeResult | null;
+	isGeneratingBadge: boolean;
+	isPickingBadge: boolean;
 }
 
 const initialState: MusicCollectionEditState = {
@@ -119,6 +135,11 @@ const initialState: MusicCollectionEditState = {
 	parents: [],
 	artists: [],
 	musicians: [],
+	badgeImageUrl: null,
+	badgeCandidates: [],
+	badgeDraw: null,
+	isGeneratingBadge: false,
+	isPickingBadge: false,
 };
 
 /**
@@ -202,6 +223,20 @@ export const MusicCollectionEditStore = signalStore(
 				});
 			};
 
+			/** The frozen badge, turned into something an `<img>` can load. */
+			const showBadge = rxMethod<string | null>(
+				pipe(
+					switchMap((path) =>
+						path ? effect.badgeUrl$(path) : of(null)
+					),
+					tapResponse({
+						next: (badgeImageUrl: string | null) =>
+							patchState(store, { badgeImageUrl }),
+						error: (error: unknown) => console.error(error),
+					})
+				)
+			);
+
 			return {
 				/** `0` opens an empty editor, as the other admin lists do. */
 				load: rxMethod<string>(
@@ -238,8 +273,14 @@ export const MusicCollectionEditStore = signalStore(
 									form,
 									slugTouched: !!collection,
 									isLoading: false,
+									badgeCandidates: [],
+									badgeDraw: null,
+									badgeImageUrl: null,
 								});
 								preview(of(form.criteria));
+								showBadge(
+									of(collection?.badge?.image?.path ?? null)
+								);
 							},
 							error: (error) => {
 								console.error(error);
@@ -301,6 +342,125 @@ export const MusicCollectionEditStore = signalStore(
 				},
 				setCriteria: (criteria: CriteriaForm) =>
 					patchForm({ criteria }),
+				/**
+				 * Draws candidates. This is not a write: nothing reaches the
+				 * definition until one is picked, so a bad draw never becomes
+				 * a badge. The collection must be saved first — the server
+				 * builds the prompt from what is stored, not from the form.
+				 */
+				generateBadge: rxMethod<void>(
+					pipe(
+						filter(
+							() => !!store.uid() && !store.isGeneratingBadge()
+						),
+						tap(() =>
+							patchState(store, {
+								isGeneratingBadge: true,
+								error: null,
+								badgeCandidates: [],
+							})
+						),
+						exhaustMap(() =>
+							effect
+								.generateBadge$(
+									store.uid() as string,
+									store.curatedPoints() ??
+										store.derivedPoints()
+								)
+								.pipe(
+									switchMap((draw) =>
+										(draw.candidates.length
+											? combineLatest(
+													draw.candidates.map(
+														(candidate) =>
+															effect
+																.badgeUrl$(
+																	candidate.path
+																)
+																.pipe(
+																	map(
+																		(
+																			url
+																		) => ({
+																			...candidate,
+																			url,
+																		})
+																	)
+																)
+													)
+												)
+											: of([])
+										).pipe(
+											map((candidates) => ({
+												draw,
+												candidates,
+											}))
+										)
+									)
+								)
+						),
+						tapResponse({
+							next: ({ draw, candidates }) =>
+								patchState(store, {
+									badgeDraw: draw,
+									badgeCandidates:
+										candidates as BadgeCandidateView[],
+									isGeneratingBadge: false,
+								}),
+							error: (error: unknown) => {
+								console.error(error);
+								patchState(store, {
+									isGeneratingBadge: false,
+									error: describeWriteError(error),
+								});
+							},
+						})
+					)
+				),
+
+				/** Freezes the chosen candidate onto the definition. */
+				pickBadge: rxMethod<BadgeCandidateView>(
+					pipe(
+						filter(() => !!store.uid() && !store.isPickingBadge()),
+						tap(() =>
+							patchState(store, {
+								isPickingBadge: true,
+								error: null,
+							})
+						),
+						exhaustMap((candidate) => {
+							const draw = store.badgeDraw();
+
+							return effect
+								.setBadgeImage$(store.uid() as string, {
+									path: candidate.path,
+									prompt: draw?.prompt ?? '',
+									negativePrompt: draw?.negativePrompt ?? '',
+									seed: draw?.seed ?? 0,
+									styleVersion: draw?.styleVersion ?? 0,
+									model: draw?.model ?? '',
+									generatedAt: Date.now(),
+								})
+								.pipe(map(() => candidate));
+						}),
+						tapResponse({
+							next: (candidate: BadgeCandidateView) =>
+								patchState(store, {
+									badgeImageUrl: candidate.url,
+									badgeCandidates: [],
+									isPickingBadge: false,
+								}),
+							error: (error: unknown) => {
+								console.error(error);
+								patchState(store, {
+									isPickingBadge: false,
+									error: describeWriteError(error),
+								});
+							},
+						})
+					)
+				),
+
 				save: rxMethod<void>(
 					pipe(
 						tap(() =>

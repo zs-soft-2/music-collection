@@ -61,6 +61,24 @@ export interface MusicCollectionCriteria {
 	credits?: CreditCriterion;
 }
 
+/**
+ * The generated pin, once an admin has picked one of the candidates. It
+ * keeps everything needed to cast the same badge again — a badge nobody can
+ * reproduce could never be regenerated larger, or replaced when one came
+ * out wrong.
+ */
+export interface BadgeImage {
+	/** Storage path under `badge/{uid}/`; the client resolves the URL. */
+	path: string;
+	prompt: string;
+	negativePrompt: string;
+	seed: number;
+	styleVersion: number;
+	model: string;
+	/** Epoch milliseconds. */
+	generatedAt: number;
+}
+
 /** The reward for owning every album of the collection. */
 export interface BadgeDefinition {
 	name: string;
@@ -68,6 +86,13 @@ export interface BadgeDefinition {
 	/** PrimeIcons class, as the admin navigation uses them. */
 	icon: string | null;
 	artworkUrl: string | null;
+	/**
+	 * Drawn once by an image model, then fixed. Absent on a draft the editor
+	 * submits: the image is written by its own callable, and the server
+	 * carries it across a definition save rather than trusting the client to
+	 * send it back untouched.
+	 */
+	image?: BadgeImage | null;
 }
 
 /**

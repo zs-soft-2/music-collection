@@ -40,6 +40,10 @@ resource "google_project_iam_member" "functions_runtime" {
     "roles/datastore.user",
     "roles/eventarc.eventReceiver",
     "roles/logging.logWriter",
+    # A badge-generálás: az Imagen hívása, és a kész kép a Storage
+    # `badge/` útvonalára. A Firestore-t a datastore.user fedi.
+    "roles/aiplatform.user",
+    "roles/storage.objectUser",
   ])
   project = local.project_id
   role    = each.value

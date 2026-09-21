@@ -16,7 +16,10 @@ import {
 	CollectionItemStateService,
 } from '@music-collection/api';
 import {
+	BadgeGenerationSettings,
+	BadgeImage,
 	CreateMusicCollectionResult,
+	GenerateBadgeResult,
 	MusicCollectionCatalog,
 	MusicCollectionCriteria,
 	MusicCollectionDraft,
@@ -254,6 +257,36 @@ export class MusicCollectionEffect {
 
 	public delete$(uid: string): Observable<void> {
 		return this.repository.delete$(uid);
+	}
+
+	/**
+	 * The badge. Generating is not a write: it only draws candidates and
+	 * parks them in storage. Nothing reaches the definition until an admin
+	 * picks one, which is what keeps a bad draw from becoming a badge.
+	 */
+	public generateBadge$(
+		uid: string,
+		points: number
+	): Observable<GenerateBadgeResult> {
+		return this.repository.generateBadge$(uid, points);
+	}
+
+	public setBadgeImage$(uid: string, image: BadgeImage): Observable<void> {
+		return this.repository.setBadgeImage$(uid, image);
+	}
+
+	public badgeUrl$(path: string): Observable<string> {
+		return this.repository.badgeUrl$(path);
+	}
+
+	public readBadgeSettings$(): Observable<BadgeGenerationSettings> {
+		return this.repository.readBadgeSettings$();
+	}
+
+	public updateBadgeSettings$(
+		settings: BadgeGenerationSettings
+	): Observable<BadgeGenerationSettings> {
+		return this.repository.updateBadgeSettings$(settings);
 	}
 
 	private toStanding(

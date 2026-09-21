@@ -99,6 +99,11 @@ export const ADMIN_NAV: AdminNavGroup[] = [
 				icon: 'pi-file',
 				countType: 'Document',
 			},
+			{
+				label: 'Badge generation',
+				route: 'badge-settings',
+				icon: 'pi-sparkles',
+			},
 		],
 	},
 ];

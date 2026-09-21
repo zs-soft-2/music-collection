@@ -2,11 +2,13 @@ import { Observable } from 'rxjs';
 
 import { CatalogCredit } from './music-collection-catalog';
 import {
+	BadgeGenerationSettings,
 	CreateMusicCollectionResult,
+	GenerateBadgeResult,
 	MusicCollectionDraft,
 	UpdateMusicCollectionResult,
 } from './music-collection-function';
-import { MusicCollectionEntity } from './music-collection';
+import { BadgeImage, MusicCollectionEntity } from './music-collection';
 
 /**
  * Data access for the collection definitions. The application binds the
@@ -45,4 +47,26 @@ export abstract class MusicCollectionRepository {
 		collection: MusicCollectionDraft
 	): Observable<UpdateMusicCollectionResult>;
 	public abstract delete$(uid: string): Observable<void>;
+
+	/**
+	 * The badge. Generating draws several candidates and stores them; only
+	 * the one an admin picks is frozen onto the definition, so the last word
+	 * stays human while the work does not.
+	 */
+	public abstract generateBadge$(
+		uid: string,
+		points: number
+	): Observable<GenerateBadgeResult>;
+	public abstract setBadgeImage$(
+		uid: string,
+		image: BadgeImage
+	): Observable<void>;
+	/** A Storage path turned into something an `<img>` can load. */
+	public abstract badgeUrl$(path: string): Observable<string>;
+
+	/** What an admin may set about generation; the style lock is not in it. */
+	public abstract readBadgeSettings$(): Observable<BadgeGenerationSettings>;
+	public abstract updateBadgeSettings$(
+		settings: BadgeGenerationSettings
+	): Observable<BadgeGenerationSettings>;
 }

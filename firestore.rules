@@ -96,6 +96,14 @@ service cloud.firestore {
       };
     }
 
+    // Alkalmazás-szintű beállítások (pl. `badge-generation`). Írni csak a
+    // callable tud, mert a napi keret számlálója is itt él — a kliens nem
+    // nullázhatja le magának.
+    match /app-setting/{settingId} {
+      allow get, list: if hasPerm('updateBadgeGenerationSettings');
+      allow write: if false;
+    }
+
     // ── Jogosultság: szerepkör, user, effektív permissionök ─────────────────
     match /role/{roleId} {
       allow get, list: if isAuthed();

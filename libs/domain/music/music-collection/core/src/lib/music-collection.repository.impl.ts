@@ -3,21 +3,28 @@ import { Observable, from, map } from 'rxjs';
 import { Injectable, inject } from '@angular/core';
 import { Firestore, collection, query } from '@angular/fire/firestore';
 import { Functions, httpsCallable } from '@angular/fire/functions';
+import { Storage, getDownloadURL, ref } from '@angular/fire/storage';
 import {
 	CONTRIBUTION_FEATURE_KEY,
 	ContributionEntity,
 	FirestoreSyncService,
 } from '@music-collection/api';
 import {
+	BadgeGenerationSettings,
+	BadgeImage,
 	CREATE_MUSIC_COLLECTION_FUNCTION,
 	CatalogCredit,
 	CreateMusicCollectionResult,
 	DELETE_MUSIC_COLLECTION_FUNCTION,
+	GENERATE_MUSIC_COLLECTION_BADGE_FUNCTION,
+	GenerateBadgeResult,
 	MUSIC_COLLECTION_FEATURE_KEY,
 	MusicCollectionDraft,
 	MusicCollectionEntity,
 	MusicCollectionRepository,
-	MusicCollectionWriteInput,
+	READ_BADGE_GENERATION_SETTINGS_FUNCTION,
+	SET_MUSIC_COLLECTION_BADGE_IMAGE_FUNCTION,
+	UPDATE_BADGE_GENERATION_SETTINGS_FUNCTION,
 	UPDATE_MUSIC_COLLECTION_FUNCTION,
 	UpdateMusicCollectionResult,
 } from '@music-collection/domain/music-collection/api';
@@ -40,6 +47,7 @@ export class MusicCollectionFirestoreRepository extends MusicCollectionRepositor
 	private readonly firestore = inject(Firestore);
 	private readonly firestoreSync = inject(FirestoreSyncService);
 	private readonly functions = inject(Functions);
+	private readonly storage = inject(Storage);
 
 	public listAll$(): Observable<MusicCollectionEntity[]> {
 		return this.firestoreSync.list$<MusicCollectionEntity>({
@@ -117,14 +125,51 @@ export class MusicCollectionFirestoreRepository extends MusicCollectionRepositor
 		return this.call$<void>(DELETE_MUSIC_COLLECTION_FUNCTION, { uid });
 	}
 
-	private call$<T>(
-		name: string,
-		input: Partial<MusicCollectionWriteInput>
-	): Observable<T> {
-		const callable = httpsCallable<Partial<MusicCollectionWriteInput>, T>(
-			this.functions,
-			name
+	/**
+	 * The candidates. The server builds the prompt from the stored
+	 * definition; the points only reach it as a hint for how rich the rim
+	 * is, so a client cannot dictate what gets drawn on our bill.
+	 */
+	public generateBadge$(
+		uid: string,
+		points: number
+	): Observable<GenerateBadgeResult> {
+		return this.call$<GenerateBadgeResult>(
+			GENERATE_MUSIC_COLLECTION_BADGE_FUNCTION,
+			{ uid, points }
 		);
+	}
+
+	public setBadgeImage$(uid: string, image: BadgeImage): Observable<void> {
+		return this.call$<void>(SET_MUSIC_COLLECTION_BADGE_IMAGE_FUNCTION, {
+			uid,
+			image,
+		});
+	}
+
+	/** `badge/` is world readable, so a download URL is all it takes. */
+	public badgeUrl$(path: string): Observable<string> {
+		return from(getDownloadURL(ref(this.storage, path)));
+	}
+
+	public readBadgeSettings$(): Observable<BadgeGenerationSettings> {
+		return this.call$<BadgeGenerationSettings>(
+			READ_BADGE_GENERATION_SETTINGS_FUNCTION,
+			{}
+		);
+	}
+
+	public updateBadgeSettings$(
+		settings: BadgeGenerationSettings
+	): Observable<BadgeGenerationSettings> {
+		return this.call$<BadgeGenerationSettings>(
+			UPDATE_BADGE_GENERATION_SETTINGS_FUNCTION,
+			{ settings }
+		);
+	}
+
+	private call$<T>(name: string, input: object): Observable<T> {
+		const callable = httpsCallable<object, T>(this.functions, name);
 
 		return from(callable(input)).pipe(map((result) => result.data));
 	}

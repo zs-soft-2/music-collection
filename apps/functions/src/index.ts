@@ -37,6 +37,12 @@ import {
 	fetchMasterVersions,
 } from './discogs-versions';
 import {
+	generateBadgeCandidates,
+	readBadgeSettings,
+	setBadgeImage,
+	writeBadgeSettings,
+} from './badge-generation';
+import {
 	createMusicCollection,
 	deleteMusicCollection,
 	updateMusicCollection,
@@ -624,4 +630,53 @@ export const deleteMusicCollectionEntity = onCall(async (request) => {
 	await requireCaller(request, 'deleteMusicCollectionEntity');
 
 	return deleteMusicCollection(database(), request.data?.uid);
+});
+
+/**
+ * Badge-generálás. A prompt a szerveren épül a collection tárolt adataiból —
+ * a hívó a uid-et küldi, és a feloldott pontszámot, ami csak a perem
+ * gazdagságát mozdítja. A `timeoutSeconds` a képmodell miatt bőséges, a
+ * memória a base64 képek miatt.
+ */
+export const generateMusicCollectionBadge = onCall(
+	{ timeoutSeconds: 300, memory: '1GiB' },
+	async (request) => {
+		await requireCaller(request, 'updateMusicCollectionEntity');
+
+		return generateBadgeCandidates(
+			database(),
+			process.env['GCLOUD_PROJECT'] ?? '',
+			request.data?.uid,
+			request.data?.points,
+			Date.now()
+		);
+	}
+);
+
+/** A jelöltek közül a választott befagyasztása a definícióba. */
+export const setMusicCollectionBadgeImage = onCall(async (request) => {
+	await requireCaller(request, 'updateMusicCollectionEntity');
+
+	return setBadgeImage(
+		database(),
+		request.data?.uid,
+		request.data?.image,
+		Date.now()
+	);
+});
+
+/**
+ * A generálás beállításai. A stíluszár szándékosan nincs köztük: az tartja
+ * egy készletben a badge-eket, és kódban marad, verziózva.
+ */
+export const updateBadgeGenerationSettings = onCall(async (request) => {
+	await requireCaller(request, 'updateBadgeGenerationSettings');
+
+	return writeBadgeSettings(database(), request.data?.settings);
+});
+
+export const readBadgeGenerationSettings = onCall(async (request) => {
+	await requireCaller(request, 'updateBadgeGenerationSettings');
+
+	return readBadgeSettings(database());
 });
