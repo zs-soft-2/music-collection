@@ -3,6 +3,7 @@ import {
 	albumFormat,
 	albumSongs,
 	releaseArtist,
+	sameAlbumName,
 	sameArtistName,
 	toCatalogAlbum,
 	toCatalogArtist,
@@ -151,5 +152,21 @@ describe('sameArtistName', () => {
 		expect(sameArtistName('Slayer', 'Slayer (2)')).toBe(true);
 		expect(sameArtistName('Anthrax', 'Overkill')).toBe(false);
 		expect(sameArtistName('', '')).toBe(false);
+	});
+});
+
+describe('sameAlbumName', () => {
+	it('a tagolástól és a névelőtől függetlenül egyeztet', () => {
+		expect(
+			sameAlbumName('Indecent & Obscene', 'Indecent And Obscene')
+		).toBe(true);
+		expect(sameAlbumName('Power & the Glory', 'Power And The Glory')).toBe(
+			true
+		);
+		expect(sameAlbumName('The Antichrist', 'Antichrist')).toBe(true);
+		expect(sameAlbumName('Thrash Anthems', 'Thrash Anthems II')).toBe(
+			false
+		);
+		expect(sameAlbumName('', '')).toBe(false);
 	});
 });

@@ -27,7 +27,9 @@ import {
 } from './discogs-release';
 import { DiscogsRelease } from './discogs-release';
 import {
+	albumName,
 	releaseArtist,
+	sameAlbumName,
 	sameArtistName,
 	toCatalogAlbum,
 	toCatalogArtist,
@@ -236,20 +238,28 @@ async function prepareAlbum(
 
 	const artist = await resolveArtist(database, discogs);
 	const albums = artist.reference.collection(ALBUM_COLLECTION);
-	// Egy korábbi jóváhagyás már importálhatta ugyanezt az albumot.
-	const imported = await albums
-		.where('discogs.releaseId', '==', discogs.id)
-		.limit(1)
-		.get();
+	// A lemez már a katalógusban lehet: importálta egy korábbi jóváhagyás
+	// ugyanebből a kiadásból, vagy ott van kézzel felvéve, esetleg egy másik
+	// préselésből — ezért a címére is rákérdezünk, nem csak a Discogs-
+	// azonosítóra. Nélküle minden préselésből új album lenne, és az előadó
+	// alatt kétszer állna ugyanaz a lemez.
+	const existing = artist.newArtist
+		? null
+		: (await albums.get()).docs.find(
+				(document) =>
+					document.get('discogs.releaseId') === discogs.id ||
+					sameAlbumName(
+						String(document.get('name') ?? ''),
+						albumName(discogs)
+					)
+			);
 
-	if (!imported.empty && !artist.newArtist) {
-		const snapshot = imported.docs[0];
-
+	if (existing) {
 		return {
-			reference: snapshot.ref,
+			reference: existing.ref,
 			album: withoutUpdatedAt({
-				...snapshot.data(),
-				uid: snapshot.id,
+				...existing.data(),
+				uid: existing.id,
 			}) as CatalogAlbum,
 			newArtist: null,
 			newAlbum: null,

@@ -58,10 +58,11 @@ const artists = (await database.collection('artist').get()).docs.map((doc) => ({
 	uid: doc.id,
 	...doc.data(),
 }));
-const albums = (await database.collection('album').get()).docs.map((doc) => ({
-	uid: doc.id,
-	...doc.data(),
-}));
+// An album is a subcollection of its artist (`artist/{uid}/album`), so a
+// top-level read finds nothing at all — hence the collection group.
+const albums = (await database.collectionGroup('album').get()).docs.map(
+	(doc) => ({ uid: doc.id, ...doc.data() })
+);
 
 console.log(
 	`${projectId}: ${artists.length} artists, ${albums.length} albums\n`

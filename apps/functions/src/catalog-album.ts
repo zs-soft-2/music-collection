@@ -147,3 +147,11 @@ export function toCatalogAlbum(
 /** Névre egyező katalógus-előadó keresésekor használt összevetés. */
 export const sameArtistName = (a: string, b: string): boolean =>
 	normalize(a) === normalize(b) && !!normalize(a);
+
+/**
+ * Ugyanaz a lemez-e a két cím — egy előadón belül. Két előadónak lehet
+ * ugyanolyan című albuma, a katalógus ezért csak az előadón belül ütközteti
+ * a címeket, ahogy az admin űrlap is.
+ */
+export const sameAlbumName = (a: string, b: string): boolean =>
+	normalize(a) === normalize(b) && !!normalize(a);
