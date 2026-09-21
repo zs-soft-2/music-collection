@@ -6,53 +6,96 @@ import {
 } from '@music-collection/domain/music-collection/api';
 
 import { owned } from './music-collection.fixture';
-import { derivedBasePoints, scoreCollection } from './music-collection-score';
+import {
+	ageWeight,
+	derivedBasePoints,
+	scoreCollection,
+} from './music-collection-score';
 
+/** Scoring is done at a fixed moment, so the ages in here never drift. */
+const NOW = Date.UTC(2026, 5, 1);
+const THIS_YEAR = 2026;
+/** Thirty-eight years old at `NOW`: all but fully vintage. */
 const ALBUM_YEAR = 1988;
+/** What an album of `ALBUM_YEAR` weighs: 38 / 40. */
+const VINTAGE = 0.95;
 
-function membership(albumUid: string): MusicCollectionMembership {
+function membership(
+	albumUid: string,
+	year: number | null = ALBUM_YEAR
+): MusicCollectionMembership {
 	return {
 		albumUid,
 		albumName: `Album ${albumUid}`,
 		artistUid: 'artist',
 		artistName: 'Artist',
-		year: ALBUM_YEAR,
+		year,
 		coverUrl: null,
 	};
 }
 
-function resolved(albumUids: string[]): ResolvedMusicCollection {
+function resolved(
+	albums: MusicCollectionMembership[]
+): ResolvedMusicCollection {
 	return {
 		collectionUid: 'bay-area-1988',
 		criteriaVersion: 1,
-		albums: albumUids.map(membership),
-		total: albumUids.length,
-		calculatedAt: 0,
+		albums,
+		total: albums.length,
+		calculatedAt: NOW,
 	};
 }
 
-/** Four albums, base 400: one album is worth 100. */
-const FOUR = resolved(['a', 'b', 'c', 'd']);
+/** Four 1988 albums, base 400: one album is worth 100. */
+const FOUR = resolved(['a', 'b', 'c', 'd'].map((uid) => membership(uid)));
 const ALL_FOUR: OwnedCopy[] = [owned('a'), owned('b'), owned('c'), owned('d')];
 
 const score = (
 	copies: OwnedCopy[],
 	completed: boolean,
 	base: number | null = 400
-) => scoreCollection(FOUR, copies, base, completed);
+) => scoreCollection(FOUR, copies, base, completed, NOW);
+
+describe('ageWeight', () => {
+	it('grows from nothing to one over forty years', () => {
+		expect(ageWeight(THIS_YEAR, NOW)).toBe(0);
+		expect(ageWeight(THIS_YEAR - 20, NOW)).toBe(0.5);
+		expect(ageWeight(THIS_YEAR - 40, NOW)).toBe(1);
+		expect(ageWeight(THIS_YEAR - 60, NOW)).toBe(1);
+	});
+
+	it('grants nothing for a year the catalog does not know', () => {
+		expect(ageWeight(null, NOW)).toBe(0);
+	});
+});
 
 describe('derivedBasePoints', () => {
 	it('grows faster than the collection does', () => {
 		// A fortieth record is harder to find than a fourth.
-		expect(derivedBasePoints(4)).toBe(43);
-		expect(derivedBasePoints(40)).toBe(720);
-		expect(derivedBasePoints(40)).toBeGreaterThan(
-			10 * derivedBasePoints(4)
-		);
+		const four = resolved(
+			['a', 'b', 'c', 'd'].map((uid) => membership(uid, THIS_YEAR))
+		).albums;
+		const forty = resolved(
+			Array.from({ length: 40 }, (_unused, index) =>
+				membership(`album-${index}`, THIS_YEAR)
+			)
+		).albums;
+
+		expect(derivedBasePoints(four, NOW)).toBe(43);
+		expect(derivedBasePoints(forty, NOW)).toBe(720);
+	});
+
+	/* The point the collector made: an old record is not a new one. */
+	it('counts an old album for nearly double a new one', () => {
+		const fresh = [membership('a', THIS_YEAR)];
+		const vintage = [membership('a', THIS_YEAR - 40)];
+
+		expect(derivedBasePoints(fresh, NOW)).toBe(10);
+		expect(derivedBasePoints(vintage, NOW)).toBe(20);
 	});
 
 	it('is nothing for a collection that resolves to nothing', () => {
-		expect(derivedBasePoints(0)).toBe(0);
+		expect(derivedBasePoints([], NOW)).toBe(0);
 	});
 });
 
@@ -69,22 +112,39 @@ describe('scoreCollection', () => {
 		expect(score(ALL_FOUR, true).earnedPoints).toBe(400);
 	});
 
-	it('adds a quarter of an album share for an original pressing', () => {
+	it('pays for an original pressing in proportion to its age', () => {
 		const result = score(
 			[owned('a', ALBUM_YEAR), owned('b'), owned('c'), owned('d')],
 			true
 		);
 
-		expect(result.bonusPoints).toBe(25);
-		expect(result.totalPoints).toBe(425);
+		// 0.4 × 0.95 of a 100-point share.
+		expect(result.bonusPoints).toBe(Math.round(100 * 0.4 * VINTAGE));
 		expect(result.highlights).toEqual([
 			{
 				albumUid: 'a',
 				albumName: 'Album a',
 				reasons: ['original pressing'],
-				points: 25,
+				points: 38,
 			},
 		]);
+	});
+
+	/*
+	 * Every copy of this year's record is an original pressing — the
+	 * collector bought it in a shop, which is not a find.
+	 */
+	it('pays nothing for the original pressing of a new record', () => {
+		const fresh = resolved([membership('a', THIS_YEAR)]);
+		const result = scoreCollection(
+			fresh,
+			[owned('a', THIS_YEAR)],
+			100,
+			true,
+			NOW
+		);
+
+		expect(result.bonusPoints).toBe(0);
 	});
 
 	it('does not call a reissue of the same year an original', () => {
@@ -116,7 +176,7 @@ describe('scoreCollection', () => {
 			true
 		);
 
-		// 0.25 + 0.3 + 0.2 + 0.1 = 0.85, capped at 0.5 of a 100-point share.
+		// 0.38 + 0.3 + 0.2 + 0.1, capped at 0.5 of a 100-point share.
 		expect(result.bonusPoints).toBe(50);
 	});
 
@@ -132,7 +192,7 @@ describe('scoreCollection', () => {
 			true
 		);
 
-		expect(result.bonusPoints).toBe(25);
+		expect(result.bonusPoints).toBe(38);
 		expect(result.highlights).toHaveLength(1);
 	});
 
@@ -160,19 +220,19 @@ describe('scoreCollection', () => {
 		const cheap = score([owned('a', ALBUM_YEAR), ...ALL_FOUR], true, 400);
 		const prized = score([owned('a', ALBUM_YEAR), ...ALL_FOUR], true, 4000);
 
-		expect(cheap.bonusPoints).toBe(25);
-		expect(prized.bonusPoints).toBe(250);
+		expect(cheap.bonusPoints).toBe(38);
+		expect(prized.bonusPoints).toBe(380);
 	});
 
 	it('falls back to the rule when the curator named no base', () => {
 		const result = score(ALL_FOUR, true, null);
 
 		expect(result.derived).toBe(true);
-		expect(result.basePoints).toBe(derivedBasePoints(4));
+		expect(result.basePoints).toBe(derivedBasePoints(FOUR.albums, NOW));
 	});
 
 	it('scores an empty collection at nothing, earned or not', () => {
-		const empty = scoreCollection(resolved([]), [], null, false);
+		const empty = scoreCollection(resolved([]), [], null, false, NOW);
 
 		expect([empty.totalPoints, empty.earnedPoints]).toEqual([0, 0]);
 	});

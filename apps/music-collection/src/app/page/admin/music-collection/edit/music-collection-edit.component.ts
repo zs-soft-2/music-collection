@@ -195,7 +195,9 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 								/>
 								<small>
 									What finishing it is worth. Left empty the
-									rule decides, which right now would be
+									rule decides — how many records it asks for,
+									and how old they are — which right now would
+									be
 									{{ store.derivedPoints() }} points.
 								</small>
 							</div>
@@ -463,7 +465,8 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 							{{ store.curatedPoints() ?? store.derivedPoints() }}
 						</strong>
 						points, and only once a collector owns every one of
-						them. A rare pressing raises it further.
+						them. Owning the original pressing of an old record
+						raises it further.
 					</p>
 
 					<ul class="albums">

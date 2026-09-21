@@ -11,25 +11,31 @@ import {
  * Scoring a collection.
  *
  * The base says what finishing it is worth. Left to the rule, that is the
- * size of the collection with a hand on the scale for the long ones: a
- * fortieth record is harder to find than a fourth, because by then only the
- * awkward ones are left.
+ * size of the collection with two hands on the scale: a fortieth record is
+ * harder to find than a fourth, because by then only the awkward ones are
+ * left — and an old record is harder than a new one, which is still in
+ * print and in every shop.
  *
  * The bonus is what the shelf adds. Each album carries an equal share of the
  * base, and the best pressing the collector owns of it adds a fraction of
  * that share — so the same original pressing is worth more inside a prized
  * collection than inside a cheap one, which is what a collector would say
- * too.
+ * too. Age weighs here as well: every copy of this year's record is an
+ * original pressing, so being one is worth nothing until time has passed.
  *
  * Nothing is earned until the collection is complete. That is the whole
  * point of a collection, and the reason the pages show what it *would* be
  * worth next to what it is worth now.
  */
 
-/** A base point per album, before the size of the collection is weighed. */
+/** A base point per album, before age and size are weighed. */
 const POINTS_PER_ALBUM = 10;
 /** Every this many albums adds another 100% to the base. */
 const SIZE_SCALE = 50;
+/** The age at which a record counts as fully vintage. */
+const VINTAGE_YEARS = 40;
+/** What a fully vintage album adds to its own base point, as a fraction. */
+const VINTAGE_BONUS = 1;
 
 /** What a pressing adds, as a fraction of its album's share of the base. */
 const PRESSING_FACTORS: { edition: FormatDescriptionEnum; factor: number }[] = [
@@ -38,18 +44,44 @@ const PRESSING_FACTORS: { edition: FormatDescriptionEnum; factor: number }[] = [
 	{ edition: FormatDescriptionEnum.boxSet, factor: 0.2 },
 	{ edition: FormatDescriptionEnum.g180, factor: 0.1 },
 ];
-/** The pressing that came out with the record. */
-const ORIGINAL_PRESSING_FACTOR = 0.25;
+/** What an original pressing adds once the record is fully vintage. */
+const ORIGINAL_PRESSING_FACTOR = 0.4;
 /** However special a copy is, one album cannot carry the whole collection. */
 const MAX_PRESSING_FACTOR = 0.5;
 
 /**
+ * How old a record is, from nothing for this year's to one at forty years.
+ * A year the catalog does not know earns nothing: age must be shown, not
+ * assumed.
+ */
+export function ageWeight(year: number | null, now: number): number {
+	if (year === null) {
+		return 0;
+	}
+
+	const age = new Date(now).getFullYear() - year;
+
+	return age <= 0 ? 0 : Math.min(1, age / VINTAGE_YEARS);
+}
+
+/**
  * What the rule alone says the collection is worth. The curator may write a
  * base of their own; this is what stands in when they do not.
+ *
+ * A forty-year-old album counts double: it went out of print decades ago,
+ * and what is left of it is what somebody decided to keep.
  */
-export function derivedBasePoints(albumCount: number): number {
+export function derivedBasePoints(
+	albums: readonly { year: number | null }[],
+	now: number = Date.now()
+): number {
+	const weight = albums.reduce(
+		(sum, album) => sum + 1 + VINTAGE_BONUS * ageWeight(album.year, now),
+		0
+	);
+
 	return Math.round(
-		POINTS_PER_ALBUM * albumCount * (1 + albumCount / SIZE_SCALE)
+		POINTS_PER_ALBUM * weight * (1 + albums.length / SIZE_SCALE)
 	);
 }
 
@@ -72,13 +104,16 @@ function isOriginalPressing(
 /** What this copy adds, and what to call it. */
 function weighCopy(
 	copy: OwnedCopy,
-	albumYear: number | null
+	albumYear: number | null,
+	now: number
 ): { factor: number; reasons: string[] } {
 	const reasons: string[] = [];
 	let factor = 0;
 
 	if (isOriginalPressing(copy, albumYear)) {
-		factor += ORIGINAL_PRESSING_FACTOR;
+		// Every copy of this year's record is an original pressing; only
+		// time makes holding one worth anything.
+		factor += ORIGINAL_PRESSING_FACTOR * ageWeight(albumYear, now);
 		reasons.push('original pressing');
 	}
 
@@ -97,13 +132,14 @@ function weighCopy(
 /** The best copy the collector owns of this album; several may be owned. */
 function bestCopy(
 	copies: readonly OwnedCopy[],
-	album: MusicCollectionMembership
+	album: MusicCollectionMembership,
+	now: number
 ): { factor: number; reasons: string[] } {
 	let best = { factor: 0, reasons: [] as string[] };
 
 	for (const copy of copies) {
 		if (copy.disposedAt === null && copy.albumUid === album.albumUid) {
-			const weighed = weighCopy(copy, album.year);
+			const weighed = weighCopy(copy, album.year, now);
 
 			if (weighed.factor > best.factor) {
 				best = weighed;
@@ -123,17 +159,18 @@ export function scoreCollection(
 	resolved: ResolvedMusicCollection,
 	copies: readonly OwnedCopy[],
 	basePoints: number | null,
-	completed: boolean
+	completed: boolean,
+	now: number = Date.now()
 ): MusicCollectionScore {
 	const derived = basePoints === null;
-	const base = derived ? derivedBasePoints(resolved.total) : basePoints;
+	const base = derived ? derivedBasePoints(resolved.albums, now) : basePoints;
 	// An album's share of the base; a collection of nothing shares nothing.
 	const albumShare = resolved.total ? base / resolved.total : 0;
 	const highlights: ScoreHighlight[] = [];
 	let bonus = 0;
 
 	for (const album of resolved.albums) {
-		const { factor, reasons } = bestCopy(copies, album);
+		const { factor, reasons } = bestCopy(copies, album, now);
 
 		if (factor > 0) {
 			const points = albumShare * factor;

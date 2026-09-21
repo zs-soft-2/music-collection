@@ -96,6 +96,8 @@ interface MusicCollectionEditState {
 	slugTouched: boolean;
 	previewAlbums: MusicCollectionMembership[];
 	previewTotal: number;
+	/** What the rule alone would make this collection worth. */
+	previewPoints: number;
 	isPreviewing: boolean;
 	/** The other definitions, to pick a parent from. */
 	parents: PickerOption[];
@@ -112,6 +114,7 @@ const initialState: MusicCollectionEditState = {
 	slugTouched: false,
 	previewAlbums: [],
 	previewTotal: 0,
+	previewPoints: 0,
 	isPreviewing: false,
 	parents: [],
 	artists: [],
@@ -136,7 +139,7 @@ export const MusicCollectionEditStore = signalStore(
 			() => !!store.form().name.trim() && !store.isSaving()
 		),
 		/** What the rule alone would make the collection worth. */
-		derivedPoints: computed(() => derivedBasePoints(store.previewTotal())),
+		derivedPoints: computed(() => store.previewPoints()),
 		/** The curator's number, once it is a number. */
 		curatedPoints: computed(() => toBasePoints(store.form().basePoints)),
 	})),
@@ -163,6 +166,9 @@ export const MusicCollectionEditStore = signalStore(
 									PREVIEW_SIZE
 								),
 								previewTotal: resolved.total,
+								previewPoints: derivedBasePoints(
+									resolved.albums
+								),
 								isPreviewing: false,
 							}),
 						error: (error) => {

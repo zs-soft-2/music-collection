@@ -256,7 +256,7 @@ export function toRows(
 			status: collection.status,
 			visibility: collection.visibility,
 			total: resolved.total,
-			points: collection.basePoints ?? derivedBasePoints(resolved.total),
+			points: collection.basePoints ?? derivedBasePoints(resolved.albums),
 			derivedPoints: collection.basePoints === null,
 			badgeName: collection.badge?.name ?? null,
 			summary: describeCriteria(collection.criteria),
