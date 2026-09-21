@@ -177,6 +177,12 @@
 							}
 						</div>
 					}
+
+					@if (store.collections().length) {
+						<mc-album-collections
+							[collections]="store.collections()"
+						/>
+					}
 				</div>
 			</div>
 		</header>

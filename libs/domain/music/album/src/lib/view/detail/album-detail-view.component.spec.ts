@@ -17,7 +17,9 @@ describe('AlbumDetailViewComponent', () => {
 				provideRouter([]),
 				{
 					provide: AlbumStateService,
-					useValue: { selectEntityById$: jest.fn(() => of(undefined)) },
+					useValue: {
+						selectEntityById$: jest.fn(() => of(undefined)),
+					},
 				},
 			],
 		}).compileComponents();

@@ -1,0 +1,17 @@
+export const enum EntityTypeEnum {
+	ApplicationConfig = 'ApplicationConfig',
+	Artist = 'Artist',
+	Album = 'Album',
+	Document = 'Document',
+	EntityQuantity = 'EntityQuantity',
+	Label = 'Label',
+	Membership = 'Membership',
+	MusicCollection = 'Music Collection',
+	Musician = 'Musician',
+	Release = 'Release',
+	Track = 'Track',
+	CollectionItem = 'Collection Item',
+	Contribution = 'Contribution',
+	User = 'User',
+	WishlistItem = 'Wishlist Item',
+}

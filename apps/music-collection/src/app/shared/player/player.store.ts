@@ -570,7 +570,16 @@ export const PlayerStore = signalStore(
 				}
 			};
 
+			/**
+			 * Unlocks Spotify's audio element. Safari only lets sound start
+			 * from the tap itself, so every method that begins playback calls
+			 * this before its first `await` — by then the tap no longer counts.
+			 */
+			const activate = () => spotify.activate();
+
 			return {
+				activate,
+
 				/** The page shows an album or track (null: nothing to play). */
 				setPage(page: PlayRequest | null): void {
 					patchState(store, { page });
@@ -585,6 +594,7 @@ export const PlayerStore = signalStore(
 
 				/** Plays the page's album / track, or pauses / resumes it. */
 				async togglePage(): Promise<void> {
+					activate();
 					const page = store.page();
 					if (store.pageActive()) {
 						await toggle();
@@ -595,6 +605,7 @@ export const PlayerStore = signalStore(
 
 				/** Plays a track of the page's album. */
 				async playPageTrack(trackId: string): Promise<void> {
+					activate();
 					const page = store.page();
 					const track = page?.tracks.find(
 						(item) => item.id === trackId
@@ -611,6 +622,7 @@ export const PlayerStore = signalStore(
 
 				/** Plays an album of the catalog from its start. */
 				async playAlbum(albumId: string): Promise<void> {
+					activate();
 					patchState(store, { loadingAlbumId: albumId });
 					try {
 						const albums = await firstValueFrom(
@@ -642,6 +654,7 @@ export const PlayerStore = signalStore(
 
 				/** Pauses / resumes what plays, or starts what is shown. */
 				async togglePlay(): Promise<void> {
+					activate();
 					const request = store.shown().request;
 					if (store.now()) {
 						await toggle();

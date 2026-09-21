@@ -19,14 +19,14 @@ rules_version = '2';
 // Adatvilágok:
 //  - Globális katalógus (artist, album, release, label, musician, document,
 //    track, contribution, membership): publikus olvasás, permission-alapú írás.
-//  - Tenant (`tenant/{tenantId}/…`): a felhasználó saját adatvilága; a tenant
-//    dokumentumot csak a bootstrap function írja (Admin SDK).
-//  - Collection (`music-collection`): globális és tenant-szintű; a collection,
-//    a szabály és az elemlista írása KIZÁRÓLAG szerveroldali (callable-ök
-//    ellenőrzik a `createMusicCollectionEntity` stb. permissiont).
+//  - Saját adat (`user/{uid}/…`): a gyűjtő példányai, kívánságlistája és
+//    beállításai; csak ő írhatja, a megfelelő permissionnel.
+//  - Collection (`music-collection`): globális; a collection, a szabály és az
+//    elemlista írása KIZÁRÓLAG szerveroldali (a callable-ök ellenőrzik a
+//    `createMusicCollectionEntity` stb. permissiont).
 //  - Minden más tiltva.
 //
-// FONTOS: a tenant alatt NEM használhatunk katalógus collection-nevet
+// FONTOS: a saját adat alatt NEM használhatunk katalógus collection-nevet
 // (album, release, label …), mert a lenti collection-group olvasási szabályok
 // bármely mélységben publikussá tennék.
 // ---------------------------------------------------------------------------
@@ -74,17 +74,6 @@ service cloud.firestore {
                       && data.disposal.note.size() <= 500)));
     }
 
-    // Tenant-tulajdonlás: induláskor 1 user : 1 tenant (`ownerUserId`).
-    // A `tenantId` path-változó, ezért list-lekérdezésnél is feloldható.
-    function tenantPath(tenantId) {
-      return /databases/$(database)/documents/tenant/$(tenantId);
-    }
-    function ownsTenant(tenantId) {
-      return isAuthed()
-          && exists(tenantPath(tenantId))
-          && get(tenantPath(tenantId)).data.ownerUserId == request.auth.uid;
-    }
-
     // A sync-marker feature key → permission-erőforrás. Ismeretlen kulcs → tiltás.
     function syncResources() {
       return {
@@ -98,6 +87,7 @@ service cloud.firestore {
         'track-lyrics': 'TrackEntity',
         'contribution': 'ContributionEntity',
         'membership': 'MembershipEntity',
+        'music-collection': 'MusicCollectionEntity',
         'user': 'UserEntity',
         'entity-quantity': 'EntityQuantityEntity',
         'collection-item': 'CollectionItemEntity',
@@ -126,9 +116,8 @@ service cloud.firestore {
                     || (isSelf(uid) && !changedKeys().hasAny(['roleIds', 'roles']));
       allow delete: if hasPerm('deleteUserEntity');
 
-      // ÁTMENETI (tenant-migrációig): a saját adat még a user alatt él.
-      // A migráció (user/{uid}/… → tenant/{tenantId}/…) PR-jében törlendő,
-      // a lenti collection-group olvasással együtt.
+      // A gyűjtő saját adata a user alatt él; a lenti collection-group
+      // olvasás ezt teszi elérhetővé a kliens szűretlen lekérdezésének.
       match /collection-item/{itemId} {
         allow read: if true;
         allow create: if isSelf(uid)
@@ -156,9 +145,9 @@ service cloud.firestore {
       }
     }
 
-    // ÁTMENETI: a jelenlegi kliens szűretlen collection-group lekérdezése miatt.
-    // A tenant-migrációval együtt törlendő — különben a tenant alatti
-    // collection-item / wishlist-item is publikus lenne.
+    // A kliens szűretlen collection-group lekérdezése miatt: a saját adat
+    // bárki számára olvasható. Szűkítés csak a lekérdezés megszorításával
+    // együtt mehet, különben a meglévő kliens elhasal rajta.
     match /{path=**}/collection-item/{itemId} {
       allow read: if true;
     }
@@ -327,8 +316,7 @@ service cloud.firestore {
       allow delete: if hasPerm('deleteMembershipEntity');
     }
 
-    // ÁTMENETI: globális számláló a user-szintű map-pel együtt. A tenant-
-    // migráció után a gyűjteményi számláló tenant-szintű / function-számolt lesz.
+    // Globális számláló a user-szintű map-pel együtt.
     match /entity-quantity/{entityType} {
       allow read: if true;
       allow create, update: if hasPerm('updateEntityQuantityEntity');
@@ -361,81 +349,6 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // ── Tenant: saját adatvilág ─────────────────────────────────────────────
-    match /tenant/{tenantId} {
-      allow get: if ownsTenant(tenantId) || hasPerm('viewTenantEntity');
-      allow list: if hasPerm('viewTenantEntity');
-      allow write: if false; // tenant-bootstrap function (Admin SDK)
-
-      // Birtokolt példányok. FEAT-010 után az írás callable-re kerül → false.
-      match /collection-item/{itemId} {
-        allow read: if ownsTenant(tenantId) || hasPerm('viewCollectionItemEntity');
-        allow create: if ownsTenant(tenantId)
-                      && hasPerm('createCollectionItemEntity')
-                      && request.resource.data.userId == request.auth.uid;
-        allow update: if ownsTenant(tenantId)
-                      && hasPerm('updateCollectionItemEntity')
-                      && request.resource.data.userId == resource.data.userId
-                      && isValidDisposal(request.resource.data);
-        allow delete: if ownsTenant(tenantId) && hasPerm('deleteCollectionItemEntity');
-      }
-
-      match /wishlist-item/{itemId} {
-        allow read: if ownsTenant(tenantId) || hasPerm('viewWishlistItemEntity');
-        allow create: if ownsTenant(tenantId)
-                      && hasPerm('createWishlistItemEntity')
-                      && request.resource.data.userReference.uid == request.auth.uid;
-        allow update: if ownsTenant(tenantId)
-                      && hasPerm('updateWishlistItemEntity')
-                      && request.resource.data.userReference.uid == resource.data.userReference.uid;
-        allow delete: if ownsTenant(tenantId) && hasPerm('deleteWishlistItemEntity');
-      }
-
-      // Saját (konkrét) collection. Láthatóság: private | link | public.
-      // `link`: ID ismeretében olvasható, listázásban nem jelenik meg.
-      match /music-collection/{collectionId} {
-        function collectionVisibility() {
-          return get(/databases/$(database)/documents/tenant/$(tenantId)/music-collection/$(collectionId)).data.visibility;
-        }
-        function canReadCollection() {
-          return ownsTenant(tenantId)
-              || hasPerm('viewMusicCollectionEntity')
-              || collectionVisibility() in ['public', 'link'];
-        }
-
-        allow get: if ownsTenant(tenantId)
-                   || hasPerm('viewMusicCollectionEntity')
-                   || resource.data.visibility in ['public', 'link'];
-        allow list: if ownsTenant(tenantId)
-                    || hasPerm('viewMusicCollectionEntity')
-                    || resource.data.visibility == 'public';
-        allow write: if false; // music-collection-* callable-ök
-
-        match /rule/{ruleId} {
-          allow read: if canReadCollection();
-          allow write: if false;
-        }
-        match /items/{itemId} {
-          allow read: if canReadCollection();
-          allow write: if false; // music-collection-rebuild-items
-        }
-      }
-
-      // Teljesítés (FEAT-042): a doc ID = collectionUid. Publikus collectionnél
-      // a százalék látható, a példányadatok nem (azok a collection-item-ben vannak).
-      match /collection-progress/{collectionId} {
-        allow read: if ownsTenant(tenantId)
-                    || hasPerm('viewMusicCollectionEntity')
-                    || get(/databases/$(database)/documents/tenant/$(tenantId)/music-collection/$(collectionId)).data.visibility in ['public', 'link'];
-        allow write: if false; // RebuildCollectionProgress
-      }
-
-      // Tenant-szintű sync markerek a saját adathoz.
-      match /sync/{document=**} {
-        allow read, write: if ownsTenant(tenantId);
-      }
-    }
-
     // ── Globális (absztrakt) collection ─────────────────────────────────────
     match /music-collection/{collectionId} {
       allow read: if true;
@@ -449,12 +362,6 @@ service cloud.firestore {
         allow read: if true;
         allow write: if false;
       }
-    }
-
-    // Publikus collectionök böngészése (globális + tenant) collection-grouppal;
-    // a lekérdezésnek `visibility == 'public'` szűrőt kell tartalmaznia.
-    match /{path=**}/music-collection/{collectionId} {
-      allow list: if resource.data.visibility == 'public';
     }
 
     // ── Alapértelmezés: tiltás ──────────────────────────────────────────────

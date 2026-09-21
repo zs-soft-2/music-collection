@@ -23,12 +23,20 @@ describe('AlbumFormComponent', () => {
 				provideRouter([]),
 				{
 					provide: AlbumStateService,
-					useValue: { selectEntityById$: jest.fn(() => of(undefined)) },
+					useValue: {
+						selectEntities$: jest.fn(() => of([])),
+						dispatchListEntitiesAction: jest.fn(),
+						selectEntityById$: jest.fn(() => of(undefined)),
+					},
 				},
 				{ provide: AlbumUtilService, useClass: AlbumUtilServiceImpl },
 				{
 					provide: ArtistStateService,
-					useValue: { selectSearchResult$: jest.fn(() => of([])) },
+					useValue: {
+						selectEntities$: jest.fn(() => of([])),
+						dispatchListEntitiesAction: jest.fn(),
+						selectSearchResult$: jest.fn(() => of([])),
+					},
 				},
 				{
 					provide: DocumentStateService,

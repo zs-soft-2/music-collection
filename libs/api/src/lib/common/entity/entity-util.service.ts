@@ -1,14 +1,14 @@
 import { FormGroup } from '@angular/forms';
 
-import { BaseService } from '../base';
 import {
+	BaseService,
+	EntityTypeEnum,
 	ParamItem,
 	QueryConstraintTypeEnum,
 	QueryOperatorEnum,
 	SearchParam,
 	SearchParams,
-} from '../search';
-import { EntityTypeEnum } from './entity-type.enum';
+} from '@music-collection/common/api';
 
 export abstract class EntityUtilService<R, S, T> extends BaseService {
 	public createSearchParameters(name: string): string[] {

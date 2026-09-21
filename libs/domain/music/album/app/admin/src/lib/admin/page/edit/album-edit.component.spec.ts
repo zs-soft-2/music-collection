@@ -24,6 +24,8 @@ describe('AlbumEditComponent', () => {
 				{
 					provide: AlbumStateService,
 					useValue: {
+						selectEntities$: jest.fn(() => of([])),
+						dispatchListEntitiesAction: jest.fn(),
 						selectEntityById$: jest.fn(() => of(undefined)),
 					},
 				},
@@ -49,7 +51,11 @@ describe('AlbumEditComponent', () => {
 				},
 				{
 					provide: ArtistStateService,
-					useValue: { selectSearchResult$: jest.fn(() => of([])) },
+					useValue: {
+						selectEntities$: jest.fn(() => of([])),
+						dispatchListEntitiesAction: jest.fn(),
+						selectSearchResult$: jest.fn(() => of([])),
+					},
 				},
 				{
 					provide: DocumentStateService,

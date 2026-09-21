@@ -16,6 +16,10 @@ import {
 	EntityCounts,
 	EntityQuantityStateService,
 } from '@music-collection/api';
+import {
+	MusicCollectionEffect,
+	MusicCollectionStanding,
+} from '@music-collection/domain/music-collection/core';
 import { tapResponse } from '@ngrx/operators';
 import {
 	patchState,
@@ -36,6 +40,11 @@ import {
 	toReleaseView,
 } from '../../shared/music-ui';
 import {
+	sortCollectionCards,
+	toCollectionCard,
+} from '../collections/collections.mapper';
+import { CollectionCardView } from '../collections/collections.model';
+import {
 	CATALOG_TYPES,
 	catalogStats,
 	decadeCoverage,
@@ -44,6 +53,9 @@ import {
 	releaseCountsByArtist,
 	searchHome,
 } from './home.mapper';
+
+/** Collections on the home page; the rest is one click away. */
+const HOME_COLLECTION_COUNT = 3;
 
 interface HomePageState {
 	artists: ArtistView[];
@@ -54,6 +66,9 @@ interface HomePageState {
 	albumsLoading: boolean;
 	releasesLoading: boolean;
 	countsLoading: boolean;
+	/** The published collections with the collector's progress on them. */
+	collectionStandings: MusicCollectionStanding[];
+	collectionsLoading: boolean;
 	spotlightId: string | null;
 	query: string;
 }
@@ -67,6 +82,8 @@ const initialState: HomePageState = {
 	albumsLoading: true,
 	releasesLoading: true,
 	countsLoading: true,
+	collectionStandings: [],
+	collectionsLoading: true,
 	spotlightId: null,
 	query: '',
 };
@@ -114,7 +131,24 @@ export const HomePageStore = signalStore(
 					.find((artist) => artist.id === store.spotlightId()) ?? null
 		);
 
+		const collections = computed<CollectionCardView[]>(() =>
+			sortCollectionCards(
+				store.collectionStandings().map(toCollectionCard)
+			)
+		);
+
 		return {
+			/** The few worth showing: nearest to complete, empty ones never. */
+			collections: computed(() =>
+				collections()
+					.filter((collection) => collection.total > 0)
+					.slice(0, HOME_COLLECTION_COUNT)
+			),
+			completedCollections: computed(
+				() =>
+					collections().filter((collection) => collection.completed)
+						.length
+			),
 			spotlightCandidates,
 			spotlight,
 			spotlightReleaseCount: computed(() => {
@@ -168,7 +202,8 @@ export const HomePageStore = signalStore(
 			artistStateService = inject(ArtistStateService),
 			albumStateService = inject(AlbumStateService),
 			collectionItemStateService = inject(CollectionItemStateService),
-			quantityStateService = inject(EntityQuantityStateService)
+			quantityStateService = inject(EntityQuantityStateService),
+			musicCollectionEffect = inject(MusicCollectionEffect)
 		) => {
 			const ensureSpotlight = () => {
 				if (!store.spotlightId()) {
@@ -180,6 +215,26 @@ export const HomePageStore = signalStore(
 			};
 
 			return {
+				loadCollections: rxMethod<void>(
+					pipe(
+						switchMap(() => musicCollectionEffect.listStandings$()),
+						tapResponse({
+							next: (
+								collectionStandings: MusicCollectionStanding[]
+							) =>
+								patchState(store, {
+									collectionStandings,
+									collectionsLoading: false,
+								}),
+							error: (error) => {
+								console.error(error);
+								patchState(store, {
+									collectionsLoading: false,
+								});
+							},
+						})
+					)
+				),
 				loadArtists: rxMethod<void>(
 					pipe(
 						switchMap(() =>
@@ -289,6 +344,7 @@ export const HomePageStore = signalStore(
 			store.loadAlbums(of(undefined));
 			store.loadReleases(of(undefined));
 			store.loadCounts(of(undefined));
+			store.loadCollections(of(undefined));
 		},
 	})
 );

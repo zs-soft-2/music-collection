@@ -23,6 +23,8 @@ describe('ArtistFormComponent', () => {
 				{
 					provide: ArtistStateService,
 					useValue: {
+						selectEntities$: jest.fn(() => of([])),
+						dispatchListEntitiesAction: jest.fn(),
 						selectEntityById$: jest.fn(() => of(undefined)),
 					},
 				},

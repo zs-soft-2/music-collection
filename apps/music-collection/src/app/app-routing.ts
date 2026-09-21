@@ -87,6 +87,26 @@ export const routes: Routes = [
 		},
 	},
 	{
+		path: 'collections',
+		loadComponent: () =>
+			import('./page/collections/collections-page.component').then(
+				(module) => module.CollectionsPageComponent
+			),
+		data: {
+			breadcrumb: 'collections',
+		},
+	},
+	{
+		path: 'collections/:slug',
+		loadComponent: () =>
+			import('./page/collections/collection-detail-page.component').then(
+				(module) => module.CollectionDetailPageComponent
+			),
+		data: {
+			breadcrumb: 'collection',
+		},
+	},
+	{
 		path: 'wishlist',
 		loadChildren: () =>
 			import('./page/wishlist/wishlist.module').then(

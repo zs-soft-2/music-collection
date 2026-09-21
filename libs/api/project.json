@@ -4,7 +4,7 @@
 	"projectType": "library",
 	"sourceRoot": "libs/api/src",
 	"prefix": "mc",
-	"tags": [],
+	"tags": ["type:api", "platform:angular"],
 	"targets": {
 		"test": {
 			"executor": "@nx/jest:jest",

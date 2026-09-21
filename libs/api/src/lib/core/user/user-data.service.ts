@@ -1,5 +1,7 @@
 import { Observable } from 'rxjs';
 
+import { User } from '@music-collection/core/api';
+
 import {
 	CollectionItemModel,
 	CollectionItemModelAdd,
@@ -9,7 +11,6 @@ import {
 	WishlistItemModelUpdate,
 } from '../../domain';
 import { FirebaseDataService } from '../firebase';
-import { User } from './user';
 
 export abstract class UserDataService extends FirebaseDataService<
 	User,

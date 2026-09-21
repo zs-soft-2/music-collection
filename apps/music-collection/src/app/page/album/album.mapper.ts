@@ -14,6 +14,7 @@ import {
 	isYoutubePlaylistId,
 	isYoutubeVideoId,
 } from '@music-collection/api';
+import { MusicCollectionStanding } from '@music-collection/domain/music-collection/core';
 
 import {
 	AlbumView,
@@ -525,10 +526,55 @@ export function toPastCopyView(item: CollectionItemEntity): PastCopyView {
 	return {
 		...toReleaseView(item),
 		reason: item.disposal
-			? DISPOSAL_REASON_LABELS[item.disposal.reason] ??
-				DISPOSAL_REASON_LABELS.other
+			? (DISPOSAL_REASON_LABELS[item.disposal.reason] ??
+				DISPOSAL_REASON_LABELS.other)
 			: DISPOSAL_REASON_LABELS.other,
 		disposedAt: item.disposal?.date ?? 0,
 		note: item.disposal?.note ?? null,
 	};
+}
+
+/** A collection this album belongs to, as the album page shows it. */
+export interface AlbumCollectionView {
+	uid: string;
+	slug: string;
+	name: string;
+	badgeName: string | null;
+	owned: number;
+	total: number;
+	/** 0–100. */
+	percentage: number;
+	completed: boolean;
+	/** The collector already owns this very record. */
+	ownsThisAlbum: boolean;
+}
+
+/**
+ * The collections asking for this album, nearest to complete first. The
+ * album page answers "what is this record part of, and how far am I with
+ * it" — which is the question a collection is for.
+ */
+export function toAlbumCollections(
+	standings: MusicCollectionStanding[],
+	albumId: string
+): AlbumCollectionView[] {
+	return standings
+		.filter(({ resolved }) =>
+			resolved.albums.some((album) => album.albumUid === albumId)
+		)
+		.map(({ collection, progress }) => ({
+			uid: collection.uid,
+			slug: collection.slug,
+			name: collection.name,
+			badgeName: collection.badge?.name ?? null,
+			owned: progress.owned,
+			total: progress.total,
+			percentage: progress.percentage,
+			completed: progress.completed,
+			ownsThisAlbum: progress.ownedAlbumUids.includes(albumId),
+		}))
+		.sort(
+			(a, b) =>
+				b.percentage - a.percentage || a.name.localeCompare(b.name)
+		);
 }

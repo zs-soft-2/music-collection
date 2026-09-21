@@ -1,8 +1,9 @@
 import { combineLatest, firstValueFrom, Observable, ReplaySubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import { Injectable, inject, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { DestroyRef, Injectable, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
 	AlbumEntity,
 	AlbumEntityAdd,
@@ -22,6 +23,12 @@ import {
 	SearchParams,
 	StyleList,
 } from '@music-collection/api';
+import { isSameCatalogName } from '@music-collection/common/engine';
+import {
+	CatalogDuplicate,
+	DUPLICATE_CATALOG_NAME,
+	uniqueCatalogName,
+} from '@music-collection/ui';
 
 /** One field of the loaded album next to the form's current value. */
 export interface AlbumExternalRow {
@@ -81,13 +88,19 @@ export class AlbumFormService {
 	private albumUtilService = inject(AlbumUtilService);
 	private artistStateService = inject(ArtistStateService);
 	private componentUtil = inject(AlbumUtilService);
+	private destroyRef = inject(DestroyRef);
 	private documentStateService = inject(DocumentStateService);
 	private returnNavigation = inject(ReturnNavigationService);
+	private router = inject(Router);
 
 	private album!: AlbumEntity | undefined;
+	/** Every album of the catalog, for the duplicate check on the title. */
+	private catalogAlbums: AlbumEntity[] = [];
 	private params!: AlbumFormParams;
 	private params$$: ReplaySubject<AlbumFormParams>;
 
+	/** The album this title collides with, blocking or not, or null. */
+	public readonly duplicate = signal<CatalogDuplicate | null>(null);
 	public readonly externalComparison = signal<AlbumExternalComparison | null>(
 		null
 	);
@@ -96,6 +109,74 @@ export class AlbumFormService {
 
 	public constructor() {
 		this.params$$ = new ReplaySubject();
+
+		// The catalog may arrive after the form is on screen, so the title is
+		// checked again once it does.
+		this.albumStateService
+			.selectEntities$()
+			.pipe(takeUntilDestroyed())
+			.subscribe((albums) => {
+				if (!albums.length) {
+					this.albumStateService.dispatchListEntitiesAction();
+				}
+				this.catalogAlbums = albums;
+				this.recheckName();
+			});
+	}
+
+	/**
+	 * The titles this album would collide with: the other albums of the
+	 * artist it is being filed under. Two artists may each have a record
+	 * called Destroyer, so the clash is only within one artist — and the
+	 * artist is a form field, which is why the list is read on every check.
+	 */
+	private takenAlbums(): AlbumEntity[] {
+		const artistUid = this.params?.formGroup.value['artist']?.uid;
+
+		if (!artistUid) {
+			return [];
+		}
+
+		return this.catalogAlbums.filter(
+			(album) =>
+				album.artist?.uid === artistUid && album.uid !== this.album?.uid
+		);
+	}
+
+	private takenAlbumNames(): string[] {
+		return this.takenAlbums().map((album) => album.name);
+	}
+
+	/**
+	 * Asks the catalog about the title again and names what it collides with.
+	 * The validator lets through the collision the album arrived in, so the
+	 * report carries both kinds and says which this one is: a blocking clash
+	 * the admin can still type their way out of, or a settled one only a merge
+	 * in the catalog can end.
+	 */
+	private recheckName(): void {
+		const control = this.params?.formGroup.controls['name'];
+
+		if (!control) {
+			return;
+		}
+
+		control.updateValueAndValidity({ emitEvent: false });
+
+		const name = String(control.value ?? '');
+		const twin = this.takenAlbums().find((album) =>
+			isSameCatalogName(album.name, name)
+		);
+
+		this.duplicate.set(
+			twin
+				? {
+						blocking: !!control.errors?.[DUPLICATE_CATALOG_NAME],
+						name: twin.name,
+						uid: twin.uid,
+					}
+				: null
+		);
 	}
 
 	/** Puts the selected loaded values into the form; saving stays manual. */
@@ -117,6 +198,23 @@ export class AlbumFormService {
 
 	public closeExternal(): void {
 		this.externalComparison.set(null);
+	}
+
+	/**
+	 * Opens the album this title collides with, where the admin can see the
+	 * two side by side and decide which one the catalog keeps.
+	 */
+	public openDuplicate(): void {
+		const duplicate = this.duplicate();
+
+		if (!duplicate) {
+			return;
+		}
+
+		this.router.navigate(['..', duplicate.uid], {
+			queryParamsHandling: 'preserve',
+			relativeTo: this.activatedRoute,
+		});
 	}
 
 	/** Looks the album up online by the title and artist in the form. */
@@ -180,6 +278,7 @@ export class AlbumFormService {
 			switchMap(([album, artists, documents]) => {
 				this.album = album;
 				this.params = this.createAlbumParams(album, artists, documents);
+				this.recheckName();
 
 				this.params$$.next(this.params);
 
@@ -254,6 +353,21 @@ export class AlbumFormService {
 		documents: DocumentEntity[]
 	): AlbumFormParams {
 		const formGroup = this.albumUtilService.createFormGroup(album);
+
+		formGroup.controls['name'].addValidators(
+			uniqueCatalogName(
+				() => this.takenAlbumNames(),
+				() => this.album?.name ?? null
+			)
+		);
+		// The title clashes within one artist, so changing the artist has to
+		// ask the question again.
+		formGroup.controls['artist'].valueChanges
+			.pipe(takeUntilDestroyed(this.destroyRef))
+			.subscribe(() => this.recheckName());
+		formGroup.controls['name'].valueChanges
+			.pipe(takeUntilDestroyed(this.destroyRef))
+			.subscribe(() => this.recheckName());
 
 		const albumFormParams: AlbumFormParams = {
 			artists,

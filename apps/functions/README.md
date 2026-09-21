@@ -26,6 +26,18 @@ user/{uid}.roleIds ────────┘        ▲                    ▲
   kiadás a katalógusba (a Discogsról importálva, vagy egy meglévő
   katalógus-kiadás), egy példány a kérő kollekciójába kerül, egy
   tranzakcióban, a kliens-szinkronnal (`updatedAt`, `sync/catalog`) együtt.
+- **`createMusicCollectionEntity` / `updateMusicCollectionEntity` /
+  `deleteMusicCollectionEntity`** — callable-ök az absztrakt collectionökhöz.
+  A `firestore.rules` a `music-collection` írását a kliensnek tiltja, ezért a
+  definíció csak innen kerülhet be. Mindhárom a nevével egyező permissiont
+  kéri (az ADMIN mindent visz), és egy tranzakcióban dolgozik: a slug egyedi
+  marad, a szülőlánc nem lesz körkörös, a törlés markert hagy, és a
+  `sync/catalog` is frissül.
+
+  A szabályt a `music-collection-definition.ts` validálja — fehérlistás
+  kulcsokkal, mert az ismeretlen szűrőt a resolver nem nézi, az üres criteria
+  pedig az egész katalógusra illeszkedik. Publikálni ezért csak tényleges
+  szűrővel lehet. A `criteriaVersion` csak akkor nő, ha a szabály változott.
 
 A Discogs-hívások a `DISCOGS_TOKEN` secretet használják (60 kérés/perc). A
 secretet és a hozzáférését az `infra/environments` teremti, az értékét kézzel

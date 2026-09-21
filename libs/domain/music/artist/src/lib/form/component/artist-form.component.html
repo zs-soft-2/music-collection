@@ -32,6 +32,25 @@
 							pInputText
 							formControlName="name"
 						/>
+						@if (duplicate(); as twin) {
+							<small
+								class="artist-form-duplicate"
+								[class.is-warning]="!twin.blocking"
+							>
+								The catalog already has
+								<button
+									type="button"
+									class="artist-form-duplicate-link"
+									(click)="openDuplicate()"
+								>
+									{{ twin.name }}</button
+								>.
+								@if (!twin.blocking) {
+									Saving keeps both — merge one away in the
+									catalog.
+								}
+							</small>
+						}
 					</div>
 
 					<div class="mc-field">

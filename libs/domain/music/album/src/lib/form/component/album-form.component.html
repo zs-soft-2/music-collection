@@ -35,6 +35,25 @@
 							pInputText
 							formControlName="name"
 						/>
+						@if (duplicate(); as twin) {
+							<small
+								class="album-form-duplicate"
+								[class.is-warning]="!twin.blocking"
+							>
+								This artist already has
+								<button
+									type="button"
+									class="album-form-duplicate-link"
+									(click)="openDuplicate()"
+								>
+									{{ twin.name }}</button
+								>.
+								@if (!twin.blocking) {
+									Saving keeps both — merge one away in the
+									catalog.
+								}
+							</small>
+						}
 					</div>
 
 					<div class="mc-field">

@@ -24,6 +24,7 @@ export const CATALOG_FEATURE_KEYS = [
 	'entity-quantity',
 	'label',
 	'membership',
+	'music-collection',
 	'musician',
 	'release',
 	'release-request',
@@ -74,7 +75,20 @@ export async function touchCatalog(db, featureKeys, { reset = false } = {}) {
 }
 
 /** Collections served to the clients as Firestore bundles by default. */
-export const BUNDLE_FEATURE_KEYS = ['membership', 'track', 'contribution'];
+/**
+ * The general catalog, published as bundles: a client loads them from Cloud
+ * Storage instead of reading every document. What belongs to one collector
+ * (collection-item, wishlist-item) is synced per user instead, and cached
+ * the same way.
+ */
+export const BUNDLE_FEATURE_KEYS = [
+	'album',
+	'artist',
+	'contribution',
+	'membership',
+	'music-collection',
+	'track',
+];
 /** Storage folder of the bundles: `bundles/{featureKey}/{seconds}.bundle`. */
 export const BUNDLE_FOLDER = 'bundles';
 

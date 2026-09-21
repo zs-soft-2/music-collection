@@ -48,6 +48,11 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { NgxPermissionsService } from 'ngx-permissions';
 
+import {
+	MusicCollectionEffect,
+	MusicCollectionStanding,
+} from '@music-collection/domain/music-collection/core';
+
 import { AlbumDetailsEffect } from '../../data/album-details';
 import { ReleaseRequestEffect } from '../../data/release-request';
 import {
@@ -63,6 +68,7 @@ import {
 	ReleaseRequestDraft,
 	WishlistDraft,
 	groupTracks,
+	toAlbumCollections,
 	toAlbumProfile,
 	toDiscogsVersionViews,
 	toPendingRequestView,
@@ -119,6 +125,8 @@ interface AlbumPageState {
 	discogsError: string | null;
 	requesting: boolean;
 	requestError: string | null;
+	/** The published collections, to say what this album is part of. */
+	collectionStandings: MusicCollectionStanding[];
 	albumsLoading: boolean;
 	releasesLoading: boolean;
 	detailsLoading: boolean;
@@ -158,6 +166,7 @@ const initialState: AlbumPageState = {
 	discogsError: null,
 	requesting: false,
 	requestError: null,
+	collectionStandings: [],
 	albumsLoading: true,
 	releasesLoading: true,
 	detailsLoading: true,
@@ -238,6 +247,13 @@ export const AlbumPageStore = signalStore(
 
 		return {
 			album,
+			/** The collections this record is part of, nearest to complete. */
+			collections: computed(() =>
+				toAlbumCollections(
+					store.collectionStandings(),
+					store.albumId() ?? ''
+				)
+			),
 			artist: computed(
 				() =>
 					store
@@ -397,7 +413,8 @@ export const AlbumPageStore = signalStore(
 			authenticationStateService = inject(AuthenticationStateService),
 			permissionsService = inject(NgxPermissionsService),
 			albumDetailsEffect = inject(AlbumDetailsEffect),
-			releaseRequestEffect = inject(ReleaseRequestEffect)
+			releaseRequestEffect = inject(ReleaseRequestEffect),
+			musicCollectionEffect = inject(MusicCollectionEffect)
 		) => ({
 			/** The signed-in user's release requests; follows sign-in. */
 			loadRequests: rxMethod<void>(
@@ -543,6 +560,22 @@ export const AlbumPageStore = signalStore(
 							})
 						)
 					)
+				)
+			),
+			/**
+			 * Which collections ask for this album. Nothing is stored: the
+			 * standings are resolved from the catalog and the shelf, so the
+			 * answer follows both.
+			 */
+			loadCollections: rxMethod<void>(
+				pipe(
+					switchMap(() => musicCollectionEffect.listStandings$()),
+					tapResponse({
+						next: (
+							collectionStandings: MusicCollectionStanding[]
+						) => patchState(store, { collectionStandings }),
+						error: (error) => console.error(error),
+					})
 				)
 			),
 			loadAlbums: rxMethod<void>(
@@ -959,6 +992,7 @@ export const AlbumPageStore = signalStore(
 			store.loadPastItems(of(undefined));
 			store.loadRequests(of(undefined));
 			store.loadWishlist(of(undefined));
+			store.loadCollections(of(undefined));
 			store.watchWishing(of(undefined));
 		},
 	})
