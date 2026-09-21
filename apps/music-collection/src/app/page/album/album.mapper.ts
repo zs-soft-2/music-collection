@@ -113,6 +113,7 @@ export const WISHLIST_MEDIA_LABELS: Record<MediaEnum, string> = {
 	[MediaEnum.cd]: 'CD',
 	[MediaEnum.cassette]: 'Cassette',
 	[MediaEnum.dvd]: 'DVD',
+	[MediaEnum.boxset]: 'Box set',
 };
 
 /** What the collector adds to their wishlist. */
@@ -451,16 +452,20 @@ const DISCOGS_MEDIA: Record<string, MediaFormat> = {
 	cd: 'cd',
 	cassette: 'cassette',
 	dvd: 'dvd',
+	'box set': 'boxset',
 };
 
+/**
+ * What the pressing plays on. A box set is packaging rather than a medium, so
+ * it stands as the format only when nothing more specific is listed — Discogs
+ * names it first as readily as last.
+ */
 function discogsMediaFormat(majorFormats: string[]): MediaFormat {
-	for (const format of majorFormats) {
-		const media = DISCOGS_MEDIA[format.toLowerCase()];
-		if (media) {
-			return media;
-		}
-	}
-	return 'other';
+	const known = majorFormats
+		.map((format) => DISCOGS_MEDIA[format.toLowerCase()])
+		.filter((media): media is MediaFormat => !!media);
+
+	return known.find((media) => media !== 'boxset') ?? known[0] ?? 'other';
 }
 
 export function toDiscogsVersionViews(

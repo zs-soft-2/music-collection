@@ -29,19 +29,21 @@ interface Compartment {
 	spines: Spine[];
 }
 
+const BOX_SET_SIZE = { width: 30, height: 196 };
+
 /**
  * Spine size per format (px), scaled from real media: a vinyl sleeve is the
- * tallest but thinnest, a cassette is short but chunky.
+ * tallest but thinnest, a cassette is short but chunky. A box set is the widest
+ * of them all, whether the release is filed as one or only tagged as one.
  */
 const SPINE_SIZE: Record<MediaFormat, { width: number; height: number }> = {
 	vinyl: { width: 7, height: 190 },
 	dvd: { width: 15, height: 116 },
 	cd: { width: 11, height: 80 },
 	cassette: { width: 17, height: 70 },
+	boxset: BOX_SET_SIZE,
 	other: { width: 11, height: 100 },
 };
-
-const BOX_SET_SIZE = { width: 30, height: 196 };
 
 /** A stable pseudo-random hue per release, so spines are not all identical. */
 function hueOf(text: string): number {
@@ -77,8 +79,7 @@ export class RecordShelfComponent {
 
 	private readonly router = inject(Router);
 	private readonly peek = viewChild.required(RecordShelfPeekComponent);
-	private readonly unit =
-		viewChild.required<ElementRef<HTMLElement>>('unit');
+	private readonly unit = viewChild.required<ElementRef<HTMLElement>>('unit');
 
 	protected readonly shelf = computed<Compartment[]>(() =>
 		this.compartments().map((group) => ({

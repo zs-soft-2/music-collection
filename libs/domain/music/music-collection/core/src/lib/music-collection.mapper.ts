@@ -7,6 +7,7 @@ import {
 import {
 	FormatDescriptionEnum,
 	FormatDescriptionList,
+	MediaEnum,
 } from '@music-collection/common/api';
 import { toDescriptions, toYear } from '@music-collection/common/engine';
 import {
@@ -82,10 +83,26 @@ export function toOwnedCopies(items: CollectionItemEntity[]): OwnedCopy[] {
 				albumUid,
 				disposedAt: item.disposal?.date ?? null,
 				releaseYear: toYear(item.release?.date),
-				editions: toEditions(item.release?.formatDescription),
+				editions: toCopyEditions(item.release),
 			});
 		}
 	}
 
 	return copies;
+}
+
+/**
+ * What the scoring weighs about this copy. A pressing filed under the box set
+ * medium is a box set whether or not anyone also tagged it as one, so it earns
+ * that edition here — the engine only ever sees the tags.
+ */
+function toCopyEditions(
+	release: CollectionItemEntity['release']
+): FormatDescriptionEnum[] {
+	const editions = toEditions(release?.formatDescription);
+
+	return release?.media === MediaEnum.boxset &&
+		!editions.includes(FormatDescriptionEnum.boxSet)
+		? [...editions, FormatDescriptionEnum.boxSet]
+		: editions;
 }

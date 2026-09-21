@@ -138,6 +138,7 @@ export function collectionStats(releases: ReleaseView[]): CollectionStats {
 		cd: 0,
 		cassette: 0,
 		dvd: 0,
+		boxset: 0,
 		other: 0,
 	};
 

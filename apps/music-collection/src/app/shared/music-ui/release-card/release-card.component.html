@@ -52,6 +52,19 @@
 					</div>
 				</div>
 			}
+			@case ('boxset') {
+				<div class="medium boxset" aria-hidden="true">
+					<div class="box">
+						<span class="box-lid"></span>
+						<span class="box-spine">
+							<span class="box-artist">{{
+								item.artistName
+							}}</span>
+							<span class="box-title">{{ item.title }}</span>
+						</span>
+					</div>
+				</div>
+			}
 			@case ('other') {}
 			@default {
 				<!-- CD and DVD: a disc slides out -->

@@ -29,6 +29,12 @@ describe('discogsMedia', () => {
 			})
 		).toBe('cd');
 	});
+
+	it('a box setet csak akkor adja, ha nincs konkrétabb hordozó', () => {
+		expect(discogsMedia({ id: 1, formats: [{ name: 'Box Set' }] })).toBe(
+			'boxset'
+		);
+	});
 });
 
 describe('discogsFormatDescriptions', () => {

@@ -45,6 +45,7 @@ const MEDIA: Record<string, string> = {
 	cd: 'cd',
 	cassette: 'cassette',
 	dvd: 'dvd',
+	'box set': 'boxset',
 };
 
 /** Discogs formátum-leírás → az app `FormatDescriptionEnum` értékei. */
@@ -66,13 +67,25 @@ export function fetchDiscogsRelease(
 	return discogsGet<DiscogsRelease>(`/releases/${releaseId}`, options);
 }
 
-/** Az első ismert hordozó ("Vinyl" → vinyl); ismeretlennél kisbetűs név. */
+/**
+ * Az első ismert hordozó ("Vinyl" → vinyl); ismeretlennél kisbetűs név.
+ *
+ * A box set kivétel: az a csomagolás, nem a hordozó, és a Discogs gyakran
+ * előbb sorolja, mint a lemezt magát. Csak akkor lesz ez a média, ha
+ * konkrétabb hordozó egyáltalán nem szerepel.
+ */
 export function discogsMedia(release: DiscogsRelease): string | null {
 	const names = (release.formats ?? [])
 		.map((format) => text(format.name)?.toLowerCase())
 		.filter((name): name is string => !!name);
+	const known = names.map((name) => MEDIA[name]).filter(Boolean);
 
-	return names.map((name) => MEDIA[name]).find(Boolean) ?? names[0] ?? null;
+	return (
+		known.find((media) => media !== 'boxset') ??
+		known[0] ??
+		names[0] ??
+		null
+	);
 }
 
 export function discogsFormatDescriptions(release: DiscogsRelease): string[] {

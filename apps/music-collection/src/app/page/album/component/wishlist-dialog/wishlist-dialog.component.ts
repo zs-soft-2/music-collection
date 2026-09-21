@@ -21,6 +21,7 @@ const MEDIA_OPTIONS: MediaEnum[] = [
 	MediaEnum.cd,
 	MediaEnum.cassette,
 	MediaEnum.dvd,
+	MediaEnum.boxset,
 ];
 
 /** Modal to put an album on the wishlist: the media wanted and a shop link. */

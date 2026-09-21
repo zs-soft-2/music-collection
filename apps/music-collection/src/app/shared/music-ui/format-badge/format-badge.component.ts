@@ -42,6 +42,19 @@ import { FORMAT_LABELS, MediaFormat } from '@music-collection/ui/music-view';
 					<circle cx="16" cy="12" r="2" />
 				</svg>
 			}
+			@case ('boxset') {
+				<svg
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="1.5"
+					aria-hidden="true"
+				>
+					<rect x="3" y="7" width="18" height="13" rx="1.5" />
+					<path d="M3 11h18" />
+					<path d="M10 7V4h4v3" />
+				</svg>
+			}
 			@case ('dvd') {
 				<svg
 					viewBox="0 0 24 24"

@@ -8,7 +8,8 @@ import { ArtistType, ScanMatch } from '@music-collection/api';
  * translated into what the UI shows.
  */
 
-export type MediaFormat = 'vinyl' | 'cd' | 'cassette' | 'dvd' | 'other';
+export type MediaFormat =
+	'vinyl' | 'cd' | 'cassette' | 'dvd' | 'boxset' | 'other';
 
 export type EditionTag =
 	| 'limited edition'
@@ -95,6 +96,7 @@ export const FORMAT_LABELS: Record<MediaFormat, string> = {
 	cd: 'CD',
 	cassette: 'Cassette',
 	dvd: 'DVD',
+	boxset: 'Box set',
 	other: 'Other',
 };
 
@@ -104,5 +106,6 @@ export const FORMAT_ORDER: MediaFormat[] = [
 	'cd',
 	'cassette',
 	'dvd',
+	'boxset',
 	'other',
 ];

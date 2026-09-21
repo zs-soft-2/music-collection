@@ -67,7 +67,14 @@ const initialState: WishlistPageState = {
 	canEdit: false,
 };
 
-const FORMAT_ORDER: MediaFormat[] = ['vinyl', 'cd', 'cassette', 'dvd', 'other'];
+const FORMAT_ORDER: MediaFormat[] = [
+	'vinyl',
+	'cd',
+	'cassette',
+	'dvd',
+	'boxset',
+	'other',
+];
 
 function toFormat(media: string): MediaFormat {
 	return media in FORMAT_LABELS ? (media as MediaFormat) : 'other';

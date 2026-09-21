@@ -1,5 +1,5 @@
 import { CollectionItemEntity } from '@music-collection/api';
-import { FormatDescriptionEnum } from '@music-collection/common/api';
+import { FormatDescriptionEnum, MediaEnum } from '@music-collection/common/api';
 
 import { toOwnedCopies } from './music-collection.mapper';
 
@@ -87,6 +87,25 @@ describe('toOwnedCopies', () => {
 		const copies = toOwnedCopies([
 			copy('a', 'new-order', null, {
 				formatDescription: ['gatefold', FormatDescriptionEnum.boxSet],
+			}),
+		]);
+
+		expect(copies[0].editions).toEqual([FormatDescriptionEnum.boxSet]);
+	});
+
+	it('counts a copy filed under the box set medium as a box set', () => {
+		const copies = toOwnedCopies([
+			copy('a', 'new-order', null, { media: MediaEnum.boxset }),
+		]);
+
+		expect(copies[0].editions).toEqual([FormatDescriptionEnum.boxSet]);
+	});
+
+	it('does not tag a box set twice when it is also described as one', () => {
+		const copies = toOwnedCopies([
+			copy('a', 'new-order', null, {
+				media: MediaEnum.boxset,
+				formatDescription: [FormatDescriptionEnum.boxSet],
 			}),
 		]);
 

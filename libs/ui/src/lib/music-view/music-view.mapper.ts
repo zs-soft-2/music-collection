@@ -30,7 +30,13 @@ export const EDITION_TAGS: EditionTag[] = [
 	'picture disc',
 ];
 
-const MEDIA_FORMATS: MediaFormat[] = ['vinyl', 'cd', 'cassette', 'dvd'];
+const MEDIA_FORMATS: MediaFormat[] = [
+	'vinyl',
+	'cd',
+	'cassette',
+	'dvd',
+	'boxset',
+];
 
 function toAlbumType(format: unknown): string | null {
 	if (typeof format !== 'string' || !format) {
@@ -50,6 +56,9 @@ export function toMediaFormat(media: unknown): MediaFormat {
 export function toReleaseView(item: CollectionItemEntity): ReleaseView {
 	const { release } = item;
 	const descriptions = toDescriptions(release.formatDescription);
+	// Filed under the box set medium, or only tagged as one: either way the
+	// shelf draws the wide spine and the card says box set.
+	const format = toMediaFormat(release.media);
 
 	return {
 		id: item.uid,
@@ -62,13 +71,13 @@ export function toReleaseView(item: CollectionItemEntity): ReleaseView {
 			release.album?.coverImage?.filePath ||
 			release.album?.coverImageUrl ||
 			null,
-		format: toMediaFormat(release.media),
+		format,
 		albumType: toAlbumType(release.album?.format),
 		year: toYear(release.album?.year),
 		styles: release.album?.styles ?? [],
 		editions: EDITION_TAGS.filter((tag) => descriptions.includes(tag)),
 		weight: descriptions.includes('180g') ? 180 : null,
-		boxSet: descriptions.includes('box set'),
+		boxSet: format === 'boxset' || descriptions.includes('box set'),
 		pictureDisc: descriptions.includes('picture disc'),
 		addedAt: toEpochMs(item.date) ?? 0,
 		labelName: release.label?.name || null,
