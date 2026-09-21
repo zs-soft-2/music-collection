@@ -87,6 +87,9 @@ export class MusicCollectionFirestoreRepository extends MusicCollectionRepositor
 			.list$<ContributionEntity>({
 				featureKey: CONTRIBUTION_FEATURE_KEY,
 				query: collection(this.firestore, CONTRIBUTION_FEATURE_KEY),
+				// The credits outnumber every other collection: a single new
+				// one must not cost a download of all of them.
+				incremental: true,
 			})
 			.pipe(map((contributions) => contributions.map(toCatalogCredit)));
 	}

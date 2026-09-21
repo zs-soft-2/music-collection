@@ -29,6 +29,7 @@ import {
 	UpdateData,
 	WriteBatch,
 	collection,
+	collectionGroup,
 	doc,
 	getDocFromServer,
 	getDocsFromCache,
@@ -555,9 +556,11 @@ export class FirestoreSyncService {
 
 	/** Whether the cache holds any document of the feature. */
 	private async hasCached(featureKey: string): Promise<boolean> {
+		// A collection group: a nested feature (`artist/{uid}/album`) has no
+		// document directly under its own name, and would always read empty.
 		const cached = await this.run(() =>
 			getDocsFromCache(
-				query(collection(this.firestore, featureKey), limit(1))
+				query(collectionGroup(this.firestore, featureKey), limit(1))
 			)
 		).catch(() => null);
 
