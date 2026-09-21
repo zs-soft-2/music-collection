@@ -34,7 +34,7 @@ function toCovers(standing: MusicCollectionStanding): string[] {
 export function toCollectionCard(
 	standing: MusicCollectionStanding
 ): CollectionCardView {
-	const { collection, progress } = standing;
+	const { collection, progress, score } = standing;
 
 	return {
 		uid: collection.uid,
@@ -49,6 +49,9 @@ export function toCollectionCard(
 		missing: progress.missing,
 		percentage: progress.percentage,
 		completed: progress.completed,
+		points: score.totalPoints,
+		earnedPoints: score.earnedPoints,
+		bonusPoints: score.bonusPoints,
 		covers: toCovers(standing),
 	};
 }
@@ -93,5 +96,6 @@ export function toCollectionDetail(
 		...toCollectionCard(standing),
 		badge: toBadge(standing),
 		albums,
+		highlights: standing.score.highlights,
 	};
 }

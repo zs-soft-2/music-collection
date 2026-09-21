@@ -143,6 +143,14 @@
 								<span class="collection-counts">
 									{{ collection.owned }} /
 									{{ collection.total }}
+									<span class="collection-points">
+										{{
+											collection.completed
+												? collection.earnedPoints
+												: collection.points
+										}}
+										pts
+									</span>
 								</span>
 							</a>
 						</li>

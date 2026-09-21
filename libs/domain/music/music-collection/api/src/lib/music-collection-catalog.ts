@@ -1,5 +1,6 @@
 import {
 	CountryEnum,
+	FormatDescriptionEnum,
 	FormatEnum,
 	StyleEnum,
 } from '@music-collection/common/api';
@@ -58,4 +59,8 @@ export interface OwnedCopy {
 	albumUid: string;
 	/** Null while owned; the epoch ms it left the collection once gone. */
 	disposedAt: number | null;
+	/** Year of this pressing; null when the catalog does not know it. */
+	releaseYear: number | null;
+	/** `limited edition`, `picture disc`, `reissue`… as the catalog tags them. */
+	editions: FormatDescriptionEnum[];
 }

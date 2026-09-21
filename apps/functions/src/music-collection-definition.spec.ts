@@ -82,6 +82,7 @@ describe('prepareDefinition', () => {
 			icon: null,
 			criteria: { years: { equals: 1988 } },
 			badge: null,
+			basePoints: null,
 			parentUid: null,
 			status: 'draft',
 			visibility: 'public',
@@ -137,6 +138,19 @@ describe('prepareDefinition', () => {
 		expect(() =>
 			prepareDefinition(definition({ badge: { icon: 'pi pi-star' } }))
 		).toThrow(/badge neve/);
+	});
+
+	it('az alappontszámot számként kéri, vagy sehogy', () => {
+		expect(prepareDefinition(definition()).basePoints).toBeNull();
+		expect(
+			prepareDefinition(definition({ basePoints: 500 })).basePoints
+		).toBe(500);
+		expect(() =>
+			prepareDefinition(definition({ basePoints: '500' }))
+		).toThrow(/alappontszám/);
+		expect(() => prepareDefinition(definition({ basePoints: -1 }))).toThrow(
+			/alappontszám/
+		);
 	});
 
 	it('a nevet megköveteli', () => {

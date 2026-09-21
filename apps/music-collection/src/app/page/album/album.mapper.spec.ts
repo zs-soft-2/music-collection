@@ -1,5 +1,6 @@
 import { EntityTypeEnum } from '@music-collection/common/api';
 import { MusicCollectionStanding } from '@music-collection/domain/music-collection/core';
+import { scoreCollection } from '@music-collection/domain/music-collection/engine';
 
 import { toAlbumCollections } from './album.mapper';
 
@@ -28,6 +29,7 @@ function standing(
 				icon: null,
 				artworkUrl: null,
 			},
+			basePoints: null,
 			parentUid: null,
 			status: 'published',
 			visibility: 'public',
@@ -60,6 +62,18 @@ function standing(
 			ownedAlbumUids,
 			missingAlbumUids,
 		},
+		score: scoreCollection(
+			{
+				collectionUid: name,
+				criteriaVersion: 1,
+				albums: [],
+				total: albumUids.length,
+				calculatedAt: 0,
+			},
+			[],
+			null,
+			missingAlbumUids.length === 0
+		),
 	};
 }
 

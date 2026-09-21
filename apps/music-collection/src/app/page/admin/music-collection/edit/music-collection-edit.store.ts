@@ -33,8 +33,11 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
 import { describeWriteError } from '../music-collection-admin.errors';
+import { derivedBasePoints } from '@music-collection/domain/music-collection/engine';
+
 import {
 	slugify,
+	toBasePoints,
 	toCriteria,
 	toDraft,
 	toForm,
@@ -132,6 +135,10 @@ export const MusicCollectionEditStore = signalStore(
 		canSave: computed(
 			() => !!store.form().name.trim() && !store.isSaving()
 		),
+		/** What the rule alone would make the collection worth. */
+		derivedPoints: computed(() => derivedBasePoints(store.previewTotal())),
+		/** The curator's number, once it is a number. */
+		curatedPoints: computed(() => toBasePoints(store.form().basePoints)),
 	})),
 	withMethods(
 		(

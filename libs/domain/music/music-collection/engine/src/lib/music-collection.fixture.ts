@@ -1,5 +1,6 @@
 import {
 	CountryEnum,
+	FormatDescriptionEnum,
 	FormatEnum,
 	StyleEnum,
 } from '@music-collection/common/api';
@@ -41,12 +42,21 @@ export function artist(
 	return { uid, styles, country };
 }
 
-export function owned(albumUid: string): OwnedCopy {
-	return { albumUid, disposedAt: null };
+export function owned(
+	albumUid: string,
+	releaseYear: number | null = null,
+	editions: FormatDescriptionEnum[] = []
+): OwnedCopy {
+	return { albumUid, disposedAt: null, releaseYear, editions };
 }
 
 export function disposed(albumUid: string): OwnedCopy {
-	return { albumUid, disposedAt: 1_600_000_000_000 };
+	return {
+		albumUid,
+		disposedAt: 1_600_000_000_000,
+		releaseYear: null,
+		editions: [],
+	};
 }
 
 /** "1988 Bay Area Thrash": studio albums of the 1988 Bay Area scene. */

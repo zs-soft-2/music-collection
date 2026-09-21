@@ -54,6 +54,8 @@ export interface CollectionForm {
 	coverImageUrl: string;
 	status: MusicCollectionStatus;
 	visibility: MusicCollectionVisibility;
+	/** Empty leaves the score to the rule. */
+	basePoints: string;
 	parentUid: string;
 	badgeName: string;
 	badgeDescription: string;
@@ -134,6 +136,7 @@ export const emptyCollectionForm = (): CollectionForm => ({
 	coverImageUrl: '',
 	status: 'draft',
 	visibility: 'public',
+	basePoints: '',
 	parentUid: '',
 	badgeName: '',
 	badgeDescription: '',
@@ -151,6 +154,10 @@ export interface CollectionRow {
 	visibility: MusicCollectionVisibility;
 	/** What the rule catches in the catalog right now. */
 	total: number;
+	/** What finishing it is worth; the rule's number when there is no other. */
+	points: number;
+	/** The curator named no number, so the rule did. */
+	derivedPoints: boolean;
 	badgeName: string | null;
 	/** The criteria in one line, so the list says what the rule is. */
 	summary: string;

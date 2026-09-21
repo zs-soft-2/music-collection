@@ -4,7 +4,11 @@ import {
 	CollectionItemEntity,
 	ContributionEntity,
 } from '@music-collection/api';
-import { toYear } from '@music-collection/common/engine';
+import {
+	FormatDescriptionEnum,
+	FormatDescriptionList,
+} from '@music-collection/common/api';
+import { toDescriptions, toYear } from '@music-collection/common/engine';
 import {
 	CatalogAlbum,
 	CatalogArtist,
@@ -50,7 +54,23 @@ export function toCatalogCredit(
 	};
 }
 
-/** The collector's copies, as the completion engine needs to see them. */
+/**
+ * The edition tags the catalog knows, out of whatever the pressing carries:
+ * the field holds one description on old records and a list on new ones, and
+ * a tag the enum does not know is not a tag the scoring can weigh.
+ */
+function toEditions(value: unknown): FormatDescriptionEnum[] {
+	return toDescriptions(value).filter(
+		(description): description is FormatDescriptionEnum =>
+			FormatDescriptionList.includes(description as FormatDescriptionEnum)
+	);
+}
+
+/**
+ * The collector's copies, as the completion and the scoring need to see
+ * them. A copy without an album is dropped: it cannot say which record it is
+ * a pressing of.
+ */
 export function toOwnedCopies(items: CollectionItemEntity[]): OwnedCopy[] {
 	const copies: OwnedCopy[] = [];
 
@@ -61,6 +81,8 @@ export function toOwnedCopies(items: CollectionItemEntity[]): OwnedCopy[] {
 			copies.push({
 				albumUid,
 				disposedAt: item.disposal?.date ?? null,
+				releaseYear: toYear(item.release?.date),
+				editions: toEditions(item.release?.formatDescription),
 			});
 		}
 	}

@@ -43,6 +43,12 @@ export const CollectionsPageStore = signalStore(
 				.collections()
 				.reduce((sum, collection) => sum + collection.missing, 0)
 		),
+		/** Only complete collections pay, so this is what is actually held. */
+		earnedPoints: computed(() =>
+			store
+				.collections()
+				.reduce((sum, collection) => sum + collection.earnedPoints, 0)
+		),
 	})),
 	withMethods((store, effect = inject(MusicCollectionEffect)) => ({
 		load: rxMethod<void>(

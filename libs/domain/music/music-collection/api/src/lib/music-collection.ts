@@ -84,6 +84,11 @@ export interface MusicCollection {
 	icon: string | null;
 	criteria: MusicCollectionCriteria;
 	badge: BadgeDefinition | null;
+	/**
+	 * What completing it is worth. Null leaves it to the rule: a collection
+	 * is then worth what its size says, and follows the catalog as it grows.
+	 */
+	basePoints: number | null;
 	/** Parent in the collection tree; null at the top. */
 	parentUid: string | null;
 	status: MusicCollectionStatus;

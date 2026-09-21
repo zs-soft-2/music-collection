@@ -393,6 +393,17 @@ ul {
 	}
 }
 
+.collection-points {
+	display: block;
+	font-size: 0.75rem;
+	color: var(--mc-text-subtle);
+	text-align: right;
+}
+
+.is-completed .collection-points {
+	color: var(--mc-accent);
+}
+
 .collection-skeleton {
 	height: 5rem;
 }

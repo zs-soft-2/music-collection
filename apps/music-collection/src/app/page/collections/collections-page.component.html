@@ -23,6 +23,10 @@
 					<dt>Records missing</dt>
 					<dd>{{ store.missingCount() }}</dd>
 				</div>
+				<div class="stat">
+					<dt>Points earned</dt>
+					<dd>{{ store.earnedPoints() }}</dd>
+				</div>
 			</dl>
 		}
 	</header>
@@ -118,6 +122,23 @@
 									<span class="percentage"
 										>· {{ collection.percentage }}%</span
 									>
+								</p>
+								<p class="points">
+									@if (collection.completed) {
+										<strong
+											>{{
+												collection.earnedPoints
+											}}
+											pts</strong
+										>
+										earned
+									} @else {
+										worth
+										<strong
+											>{{ collection.points }} pts</strong
+										>
+										when complete
+									}
 								</p>
 							</div>
 						</div>

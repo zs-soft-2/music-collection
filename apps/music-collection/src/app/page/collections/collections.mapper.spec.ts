@@ -5,6 +5,7 @@ import {
 	MusicCollectionProgress,
 } from '@music-collection/domain/music-collection/api';
 import { MusicCollectionStanding } from '@music-collection/domain/music-collection/core';
+import { scoreCollection } from '@music-collection/domain/music-collection/engine';
 
 import {
 	sortCollectionCards,
@@ -40,6 +41,7 @@ function collection(
 		icon: null,
 		criteria: {},
 		badge: null,
+		basePoints: null,
 		parentUid: null,
 		status: 'published',
 		visibility: 'public',
@@ -71,16 +73,30 @@ function standing(
 		missingAlbumUids,
 	};
 
+	const definition = collection(overrides);
+	const resolved = {
+		collectionUid: 'bay-area-1988',
+		criteriaVersion: 1,
+		albums,
+		total: albums.length,
+		calculatedAt: 0,
+	};
+
 	return {
-		collection: collection(overrides),
-		resolved: {
-			collectionUid: 'bay-area-1988',
-			criteriaVersion: 1,
-			albums,
-			total: albums.length,
-			calculatedAt: 0,
-		},
+		collection: definition,
+		resolved,
 		progress,
+		score: scoreCollection(
+			resolved,
+			ownedAlbumUids.map((albumUid) => ({
+				albumUid,
+				disposedAt: null,
+				releaseYear: null,
+				editions: [],
+			})),
+			definition.basePoints,
+			progress.completed
+		),
 	};
 }
 
@@ -105,6 +121,22 @@ describe('toCollectionCard', () => {
 			completed: false,
 			badgeName: null,
 		});
+	});
+
+	it('shows what it is worth, but earns nothing while incomplete', () => {
+		const started = toCollectionCard(
+			standing([membership('a'), membership('b')], ['a'], {
+				basePoints: 500,
+			})
+		);
+		const finished = toCollectionCard(
+			standing([membership('a'), membership('b')], ['a', 'b'], {
+				basePoints: 500,
+			})
+		);
+
+		expect([started.points, started.earnedPoints]).toEqual([500, 0]);
+		expect([finished.points, finished.earnedPoints]).toEqual([500, 500]);
 	});
 
 	it('names the badge the collection rewards', () => {

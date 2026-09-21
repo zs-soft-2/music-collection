@@ -103,6 +103,89 @@ h1 {
 	color: var(--mc-text-subtle);
 }
 
+/* ── Score ────────────────────────────────────────────────────────────── */
+
+.score {
+	max-width: 32rem;
+	margin-top: 1.25rem;
+	padding: 0.9rem 1.1rem;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-lg);
+
+	&.is-earned {
+		border-color: var(--mc-accent);
+	}
+}
+
+.score-value {
+	margin: 0;
+	font-size: 0.85rem;
+	color: var(--mc-text-muted);
+	font-variant-numeric: tabular-nums;
+
+	strong {
+		font-size: 1.5rem;
+		color: var(--mc-text);
+	}
+
+	.is-earned & strong {
+		color: var(--mc-accent);
+	}
+}
+
+.score-state {
+	margin-left: 0.25rem;
+	font-size: 0.75rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--mc-text-subtle);
+}
+
+.score-parts {
+	margin: 0.3rem 0 0;
+	font-size: 0.8rem;
+	color: var(--mc-text-subtle);
+	font-variant-numeric: tabular-nums;
+}
+
+.bonus {
+	color: var(--mc-accent);
+}
+
+.highlights {
+	display: flex;
+	flex-direction: column;
+	gap: 0.2rem;
+	margin: 0.6rem 0 0;
+	padding: 0.6rem 0 0;
+	border-top: 1px solid var(--mc-border);
+	list-style: none;
+
+	li {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: 0 0.6rem;
+		font-size: 0.78rem;
+	}
+}
+
+.highlight-album {
+	font-weight: 600;
+}
+
+.highlight-points {
+	grid-row: 1;
+	grid-column: 2;
+	color: var(--mc-accent);
+	font-variant-numeric: tabular-nums;
+}
+
+.highlight-reasons {
+	grid-column: 1;
+	color: var(--mc-text-subtle);
+}
+
 /* ── Badge ────────────────────────────────────────────────────────────── */
 
 .badge {

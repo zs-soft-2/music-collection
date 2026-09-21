@@ -50,6 +50,56 @@
 						}
 					</p>
 				</div>
+
+				<div class="score" [class.is-earned]="collection.completed">
+					<p class="score-value">
+						<strong>{{
+							collection.completed
+								? collection.earnedPoints
+								: collection.points
+						}}</strong>
+						points
+						<span class="score-state">
+							{{
+								collection.completed
+									? 'earned'
+									: 'once complete'
+							}}
+						</span>
+					</p>
+
+					@if (collection.bonusPoints) {
+						<p class="score-parts">
+							{{ collection.points - collection.bonusPoints }}
+							base
+							<span class="bonus"
+								>+ {{ collection.bonusPoints }} for your
+								pressings</span
+							>
+						</p>
+					}
+
+					@if (collection.highlights.length) {
+						<ul class="highlights">
+							@for (
+								highlight of collection.highlights;
+								track highlight.albumUid
+							) {
+								<li>
+									<span class="highlight-album">{{
+										highlight.albumName
+									}}</span>
+									<span class="highlight-reasons">{{
+										highlight.reasons.join(' · ')
+									}}</span>
+									<span class="highlight-points"
+										>+{{ highlight.points }}</span
+									>
+								</li>
+							}
+						</ul>
+					}
+				</div>
 			</div>
 
 			@if (collection.badge; as badge) {

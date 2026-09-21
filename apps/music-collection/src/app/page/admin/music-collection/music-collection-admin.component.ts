@@ -81,6 +81,17 @@ import {
 							<span class="total">
 								<strong>{{ row.total }}</strong> records
 							</span>
+							<span
+								class="points"
+								[class.is-derived]="row.derivedPoints"
+								[title]="
+									row.derivedPoints
+										? 'From the rule — no curated score'
+										: 'Set by the curator'
+								"
+							>
+								<strong>{{ row.points }}</strong> pts
+							</span>
 						</div>
 
 						<div class="actions">
@@ -257,6 +268,16 @@ import {
 
 			strong {
 				color: var(--mc-text);
+			}
+		}
+
+		.points {
+			font-size: 0.85rem;
+			color: var(--mc-accent);
+			font-variant-numeric: tabular-nums;
+
+			&.is-derived {
+				color: var(--mc-text-muted);
 			}
 		}
 

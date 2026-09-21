@@ -22,12 +22,14 @@ import {
 	MusicCollectionEntity,
 	MusicCollectionProgress,
 	MusicCollectionRepository,
+	MusicCollectionScore,
 	ResolvedMusicCollection,
 	UpdateMusicCollectionResult,
 } from '@music-collection/domain/music-collection/api';
 import {
 	compareWithCollection,
 	resolveMusicCollection,
+	scoreCollection,
 } from '@music-collection/domain/music-collection/engine';
 
 import {
@@ -41,6 +43,8 @@ export interface MusicCollectionStanding {
 	collection: MusicCollectionEntity;
 	resolved: ResolvedMusicCollection;
 	progress: MusicCollectionProgress;
+	/** What it is worth, and what the collector has earned of that. */
+	score: MusicCollectionScore;
 }
 
 /**
@@ -230,11 +234,18 @@ export class MusicCollectionEffect {
 		copies: ReturnType<typeof toOwnedCopies>
 	): MusicCollectionStanding {
 		const resolved = resolveMusicCollection(collection, catalog);
+		const progress = compareWithCollection(resolved, copies);
 
 		return {
 			collection,
 			resolved,
-			progress: compareWithCollection(resolved, copies),
+			progress,
+			score: scoreCollection(
+				resolved,
+				copies,
+				collection.basePoints,
+				progress.completed
+			),
 		};
 	}
 

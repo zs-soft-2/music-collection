@@ -1,4 +1,7 @@
-import { MusicCollectionMembership } from '@music-collection/domain/music-collection/api';
+import {
+	MusicCollectionMembership,
+	ScoreHighlight,
+} from '@music-collection/domain/music-collection/api';
 
 /** Covers shown on a collection card that has no artwork of its own. */
 export const COVER_MOSAIC_SIZE = 4;
@@ -20,6 +23,12 @@ export interface CollectionCardView {
 	/** 0–100. */
 	percentage: number;
 	completed: boolean;
+	/** What finishing it is worth, the collector's pressings included. */
+	points: number;
+	/** What they hold right now: 0 until the collection is complete. */
+	earnedPoints: number;
+	/** How much of `points` the collector's own pressings added. */
+	bonusPoints: number;
 	/** Covers of the first albums, for a collection without artwork. */
 	covers: string[];
 }
@@ -42,6 +51,8 @@ export interface CollectionBadgeView {
 export interface CollectionDetailView extends CollectionCardView {
 	badge: CollectionBadgeView | null;
 	albums: CollectionAlbumView[];
+	/** Which records raised the score, and why. */
+	highlights: ScoreHighlight[];
 }
 
 /** Which albums the detail page lists. */

@@ -5,4 +5,5 @@ export * from './lib/music-collection-function';
 export * from './lib/music-collection-permissions.service';
 export * from './lib/music-collection-progress';
 export * from './lib/music-collection-resource.enum';
+export * from './lib/music-collection-score';
 export * from './lib/music-collection.repository';

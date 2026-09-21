@@ -180,6 +180,27 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 							</div>
 
 							<div class="mc-field">
+								<label for="base-points">Points</label>
+								<input
+									id="base-points"
+									type="number"
+									min="0"
+									[placeholder]="store.derivedPoints()"
+									[value]="form.basePoints"
+									(input)="
+										store.setField({
+											basePoints: value($event),
+										})
+									"
+								/>
+								<small>
+									What finishing it is worth. Left empty the
+									rule decides, which right now would be
+									{{ store.derivedPoints() }} points.
+								</small>
+							</div>
+
+							<div class="mc-field">
 								<label for="parent">Parent collection</label>
 								<select id="parent" (change)="onParent($event)">
 									<option value="">— none —</option>
@@ -436,6 +457,15 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 						}
 					</p>
 
+					<p class="points">
+						Worth
+						<strong>
+							{{ store.curatedPoints() ?? store.derivedPoints() }}
+						</strong>
+						points, and only once a collector owns every one of
+						them. A rare pressing raises it further.
+					</p>
+
 					<ul class="albums">
 						@for (
 							album of store.previewAlbums();
@@ -565,6 +595,18 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 		.busy {
 			font-size: 0.8rem;
 			color: var(--mc-text-subtle);
+		}
+
+		.points {
+			margin: 0 0 0.75rem;
+			font-size: 0.82rem;
+			color: var(--mc-text-muted);
+
+			strong {
+				color: var(--mc-accent);
+				font-size: 1rem;
+				font-variant-numeric: tabular-nums;
+			}
 		}
 
 		.albums {
