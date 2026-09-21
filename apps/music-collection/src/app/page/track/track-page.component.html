@@ -21,9 +21,11 @@
 					@if (track.position) {
 						<span>{{ track.position }}</span> ·
 					}
-					<a [routerLink]="['/album', store.albumId()]">{{
-						album?.title ?? 'Album'
-					}}</a>
+					<a
+						[routerLink]="['/album', store.albumId()]"
+						queryParamsHandling="preserve"
+						>{{ album?.title ?? 'Album' }}</a
+					>
 					@if (album?.artistName) {
 						<span> · {{ album!.artistName }}</span>
 					}
@@ -222,13 +224,21 @@
 						'track',
 						previous.uid,
 					]"
+					queryParamsHandling="preserve"
 					>← {{ previous.name }}</a
 				>
 			} @else {
 				<span></span>
 			}
 			@if (store.neighbours().next; as next) {
-				<a [routerLink]="['/album', store.albumId(), 'track', next.uid]"
+				<a
+					[routerLink]="[
+						'/album',
+						store.albumId(),
+						'track',
+						next.uid,
+					]"
+					queryParamsHandling="preserve"
 					>{{ next.name }} →</a
 				>
 			}

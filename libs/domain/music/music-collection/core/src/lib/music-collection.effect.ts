@@ -150,6 +150,19 @@ export class MusicCollectionEffect {
 		);
 	}
 
+	/**
+	 * One collection's definition by its slug, without resolving it: what a
+	 * page needs when all it asks is the name of the collection it was
+	 * opened from. The definitions are cached whole, so this costs nothing.
+	 */
+	public loadDefinition$(
+		slug: string
+	): Observable<MusicCollectionEntity | null> {
+		return this.repository
+			.loadBySlug$(slug)
+			.pipe(map((collection) => collection ?? null));
+	}
+
 	/** Every definition with what it resolves to, drafts included (admin). */
 	public listAllResolutions$(): Observable<MusicCollectionResolution[]> {
 		return this.repository.listAll$().pipe(

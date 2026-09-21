@@ -5,6 +5,8 @@ import { RouterLink } from '@angular/router';
 export interface Crumb {
 	label: string;
 	link?: string | unknown[];
+	/** Kept on the link, so a step up is read where this page was read. */
+	queryParams?: Record<string, string>;
 }
 
 /**
@@ -26,7 +28,11 @@ export interface Crumb {
 				@for (crumb of trail(); track crumb.label; let last = $last) {
 					<li>
 						@if (crumb.link && !last) {
-							<a [routerLink]="crumb.link">{{ crumb.label }}</a>
+							<a
+								[routerLink]="crumb.link"
+								[queryParams]="crumb.queryParams ?? null"
+								>{{ crumb.label }}</a
+							>
 						} @else {
 							<span [attr.aria-current]="last ? 'page' : null">{{
 								crumb.label

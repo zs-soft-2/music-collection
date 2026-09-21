@@ -66,6 +66,7 @@ import { TrackGroup } from '../../album.mapper';
 								<a
 									class="name"
 									[routerLink]="['track', track.id]"
+									queryParamsHandling="preserve"
 									>{{ track.name }}</a
 								>
 								@if (track.credits.length) {

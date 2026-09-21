@@ -31,6 +31,10 @@ import {
 	TrackDetailsUpdate,
 } from '../../data/track-details';
 import { Crumb } from '../../shared/page-breadcrumb';
+import {
+	collectionOriginParams,
+	withPageOrigin,
+} from '../../shared/page-origin';
 import { PlayRequest, PlayerStore } from '../../shared/player';
 import { toAlbumProfile } from '../album/album.mapper';
 import { toTrackCredits } from './track.mapper';
@@ -69,6 +73,7 @@ const initialState: TrackPageState = {
 
 export const TrackPageStore = signalStore(
 	withState(initialState),
+	withPageOrigin(),
 	withComputed((store, permissions = inject(NgxPermissionsService)) => {
 		const track = computed(
 			() =>
@@ -91,26 +96,45 @@ export const TrackPageStore = signalStore(
 		return {
 			track,
 			album,
-			/** My Collection › the artist › the album › this track. */
+			/**
+			 * Where the album was opened from › the album › this track: the
+			 * collection it was picked out of when it was, My Collection ›
+			 * the artist otherwise.
+			 */
 			trail: computed<Crumb[]>(() => {
 				const profile = album();
 				const name = track()?.name;
+				const origin = store.originTrail();
+				const originSlug = store.originSlug();
 
 				return [
-					{ label: 'My Collection', link: '/collection' },
-					...(profile?.artistId
-						? [
+					...(origin.length
+						? origin
+						: [
 								{
-									label: profile.artistName,
-									link: ['/artist', profile.artistId],
+									label: 'My Collection',
+									link: '/collection',
 								},
-							]
-						: []),
+								...(profile?.artistId
+									? [
+											{
+												label: profile.artistName,
+												link: [
+													'/artist',
+													profile.artistId,
+												],
+											},
+										]
+									: []),
+							]),
 					...(profile
 						? [
 								{
 									label: profile.title,
 									link: ['/album', profile.id],
+									// The album is read where the track was.
+									queryParams:
+										collectionOriginParams(originSlug),
 								},
 							]
 						: []),
@@ -338,6 +362,7 @@ export const TrackPageStore = signalStore(
 			});
 			inject(DestroyRef).onDestroy(() => player.clearPage(page));
 
+			store.loadOrigin(of(undefined));
 			store.loadTrack(of(undefined));
 			store.loadLyrics(of(undefined));
 			store.loadAlbums(of(undefined));

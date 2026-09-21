@@ -68,6 +68,7 @@ import {
 	toReleaseView,
 } from '../../shared/music-ui';
 import { Crumb } from '../../shared/page-breadcrumb';
+import { withPageOrigin } from '../../shared/page-origin';
 import { ALBUM_VIEW_SETTING } from './album-view.setting';
 import {
 	DisposalDraft,
@@ -317,6 +318,7 @@ function entities$<T>(
 
 export const AlbumPageStore = signalStore(
 	withState(initialState),
+	withPageOrigin(),
 	withComputed((store) => {
 		const albumEntity = computed(
 			() =>
@@ -330,20 +332,35 @@ export const AlbumPageStore = signalStore(
 
 		return {
 			album,
-			/** My Collection › the artist (when known) › this album. */
+			/**
+			 * Where this album was opened from › this album: the collection
+			 * it was picked out of when it was, My Collection › the artist
+			 * (when known) otherwise.
+			 */
 			trail: computed<Crumb[]>(() => {
 				const profile = album();
+				const origin = store.originTrail();
 
 				return [
-					{ label: 'My Collection', link: '/collection' },
-					...(profile?.artistId
-						? [
+					...(origin.length
+						? origin
+						: [
 								{
-									label: profile.artistName,
-									link: ['/artist', profile.artistId],
+									label: 'My Collection',
+									link: '/collection',
 								},
-							]
-						: []),
+								...(profile?.artistId
+									? [
+											{
+												label: profile.artistName,
+												link: [
+													'/artist',
+													profile.artistId,
+												],
+											},
+										]
+									: []),
+							]),
 					...(profile ? [{ label: profile.title }] : []),
 				];
 			}),
@@ -1247,6 +1264,7 @@ export const AlbumPageStore = signalStore(
 			inject(DestroyRef).onDestroy(() => player.clearPage(page));
 
 			store.followScanPick(of(undefined));
+			store.loadOrigin(of(undefined));
 			store.loadView(of(undefined));
 			store.loadDetails(of(undefined));
 			store.loadAlbums(of(undefined));

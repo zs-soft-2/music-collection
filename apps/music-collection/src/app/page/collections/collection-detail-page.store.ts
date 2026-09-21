@@ -17,6 +17,7 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
 import { Crumb } from '../../shared/page-breadcrumb';
+import { collectionOriginParams } from '../../shared/page-origin';
 
 import { withCollectionFollowing } from './collection-following.feature';
 import { toCollectionDetail } from './collections.mapper';
@@ -56,6 +57,13 @@ export const CollectionDetailPageStore = signalStore(
 				...(name ? [{ label: name }] : []),
 			];
 		}),
+		/**
+		 * Carried on to every album opened from here, so its own trail leads
+		 * back to this collection rather than to the shelf.
+		 */
+		albumOrigin: computed(() =>
+			collectionOriginParams(store.collection()?.slug ?? null)
+		),
 		albums: computed(() => {
 			const albums = store.collection()?.albums ?? [];
 			const filter = store.filter();

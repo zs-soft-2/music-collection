@@ -197,6 +197,7 @@
 								class="album"
 								[class.is-owned]="album.owned"
 								[routerLink]="['/album', album.albumUid]"
+								[queryParams]="store.albumOrigin() ?? null"
 							>
 								<div class="sleeve">
 									@if (album.coverUrl) {
