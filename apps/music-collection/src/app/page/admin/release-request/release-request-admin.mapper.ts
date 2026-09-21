@@ -39,6 +39,11 @@ export interface ReleaseRequestRow {
 	discogsUrl: string | null;
 	/** Can be approved by importing the Discogs release. */
 	importable: boolean;
+	/**
+	 * The album is not in the catalog either — a record identified from a
+	 * photo. Approving creates the album, and the artist when it is new too.
+	 */
+	newAlbum: boolean;
 	catalogReleases: CatalogReleaseOption[];
 }
 
@@ -127,6 +132,7 @@ export function toReleaseRequestRows(
 			? discogsReleaseUrl(request.discogsReleaseId)
 			: null,
 		importable: !!request.discogsReleaseId,
+		newAlbum: !request.album?.uid,
 		catalogReleases: releasesByAlbum.get(request.album?.uid ?? '') ?? [],
 	}));
 }

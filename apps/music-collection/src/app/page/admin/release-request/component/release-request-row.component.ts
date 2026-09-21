@@ -19,13 +19,24 @@ import { ReleaseRequestRow } from '../release-request-admin.mapper';
 			<header class="head">
 				<div>
 					<h3 [id]="'request-' + row().id">
-						<a [routerLink]="['/album', row().albumId]">{{
-							row().albumName
-						}}</a>
+						@if (row().newAlbum) {
+							<span>{{ row().albumName }}</span>
+						} @else {
+							<a [routerLink]="['/album', row().albumId]">{{
+								row().albumName
+							}}</a>
+						}
 						@if (row().artistName) {
 							<span class="artist">{{ row().artistName }}</span>
 						}
 					</h3>
+					@if (row().newAlbum) {
+						<p class="new-album">
+							<i class="pi pi-plus-circle" aria-hidden="true"></i>
+							Not in the catalog — approving creates the album
+							too
+						</p>
+					}
 					<p class="meta">
 						{{ row().requesterName }} · {{ row().requestedOn }}
 						@if (row().decidedOn) {
@@ -169,6 +180,15 @@ import { ReleaseRequestRow } from '../release-request-admin.mapper';
 		</article>
 	`,
 	styles: `
+		.new-album {
+			display: flex;
+			align-items: center;
+			gap: 0.375rem;
+			margin: 0.25rem 0 0;
+			font-size: 0.8125rem;
+			color: var(--mc-accent);
+		}
+
 		.request {
 			padding: 1rem 1.25rem;
 			background: var(--mc-card-bg);

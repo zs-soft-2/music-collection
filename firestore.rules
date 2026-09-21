@@ -216,7 +216,12 @@ service cloud.firestore {
                          'uid', 'userId', 'album', 'status',
                          'discogsMasterId', 'discogsReleaseId', 'pressing',
                          'note', 'createdAt', 'updatedAt'
-                       ]);
+                       ])
+                    // Katalógusban még nem szereplő album (fotóról azonosított
+                    // lemez) csak Discogs-kiadással kérhető: abból tud a
+                    // jóváhagyás albumot és előadót létrehozni.
+                    && (request.resource.data.album.uid != null
+                        || request.resource.data.discogsReleaseId != null);
       allow update, delete: if isAdmin();
     }
 

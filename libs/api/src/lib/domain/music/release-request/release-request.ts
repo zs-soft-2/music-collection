@@ -1,6 +1,7 @@
 /**
  * A collector's request to add a release (pressing) to the catalog: one that
- * is on Discogs (`discogsReleaseId`) or described in free text (`note`).
+ * is on Discogs (`discogsReleaseId`) or described in free text (`note`). The
+ * album may be missing from the catalog too — see `ReleaseRequestAlbum`.
  * Document: `release-request/{uid}`. The collector creates it pending; an
  * admin approves (imports the release and adds the copy to the collector's
  * collection) or rejects it.
@@ -14,7 +15,12 @@ export const RELEASE_REQUEST_STATUSES: ReleaseRequestStatus[] = [
 ];
 
 export interface ReleaseRequestAlbum {
-	uid: string;
+	/**
+	 * `null` when the album is not in the catalog yet — a record identified
+	 * from a photo. Approving such a request creates the album (and, if
+	 * needed, the artist) from the Discogs release.
+	 */
+	uid: string | null;
 	name: string;
 	artistUid: string | null;
 	artistName: string | null;
@@ -79,4 +85,8 @@ export interface ApproveReleaseRequestResult {
 	releaseUid: string;
 	collectionItemUid: string;
 	importedRelease: boolean;
+	/** The album the release sits under, created when the request had none. */
+	albumUid: string;
+	importedAlbum: boolean;
+	importedArtist: boolean;
 }
