@@ -145,6 +145,45 @@ service cloud.firestore {
       }
     }
 
+    // ── Megosztott hely (közösségi térkép) ──────────────────────────────────
+    // A user maga választja meg, mennyi látszódjon belőle (country / city /
+    // profile). A választás maga privát marad a beállításai közt; ide CSAK az
+    // a mezőkészlet kerülhet ki, amit a választott szint enged, és a
+    // dokumentum csak addig létezik, amíg megosztja. Ezért olvashatja bárki,
+    // aki be van jelentkezve: itt már nincs más, mint amit a tulajdonosa
+    // szánt ide.
+    match /user-location/{uid} {
+      function shared() {
+        return request.resource.data;
+      }
+      function isOptional(field, maxSize) {
+        return !(field in shared().keys())
+               || (shared()[field] is string && shared()[field].size() <= maxSize);
+      }
+      function isValidShared() {
+        return shared().uid == uid
+               && shared().level in ['country', 'city', 'profile']
+               && shared().countryCode is string
+               && shared().countryCode.size() == 2
+               && shared().keys().hasOnly(['uid', 'level', 'countryCode',
+                                           'city', 'displayName', 'photoURL',
+                                           'updatedAt'])
+               && isOptional('city', 60)
+               && isOptional('displayName', 200)
+               && isOptional('photoURL', 2000)
+               // A szintnél többet nem publikálhat: a városnév csak city-től,
+               // a név és a kép csak profile szinten kerülhet ki.
+               && (shared().level != 'country'
+                   || !shared().keys().hasAny(['city', 'displayName', 'photoURL']))
+               && (shared().level != 'city'
+                   || !shared().keys().hasAny(['displayName', 'photoURL']));
+      }
+
+      allow read: if isAuthed();
+      allow create, update: if isSelf(uid) && isValidShared();
+      allow delete: if isSelf(uid) || hasPerm('deleteUserEntity');
+    }
+
     // A kliens szűretlen collection-group lekérdezése miatt: a saját adat
     // bárki számára olvasható. Szűkítés csak a lekérdezés megszorításával
     // együtt mehet, különben a meglévő kliens elhasal rajta.
@@ -342,10 +381,15 @@ service cloud.firestore {
     // path-ra mutathat: `user~{uid}~<featureKey>~…`.
     match /sync/{featureKey}/deletion/{markerId} {
       allow read: if true;
-      allow create, update: if featureKey in syncResources()
-                            && hasPerm('delete' + syncResources()[featureKey])
-                            && (!(featureKey in ['collection-item', 'wishlist-item'])
-                                || markerId.matches('user~' + request.auth.uid + '~' + featureKey + '~.+'));
+      allow create, update: if (featureKey in syncResources()
+                                && hasPerm('delete' + syncResources()[featureKey])
+                                && (!(featureKey in ['collection-item', 'wishlist-item'])
+                                    || markerId.matches('user~' + request.auth.uid + '~' + featureKey + '~.+')))
+                            // A saját megosztott helyét bárki visszavonhatja,
+                            // permission nélkül is: ez a hozzájárulás vége.
+                            || (isAuthed()
+                                && featureKey == 'user-location'
+                                && markerId == 'user-location~' + request.auth.uid);
       allow delete: if isAdmin();
     }
 

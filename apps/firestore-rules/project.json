@@ -1,0 +1,22 @@
+{
+	"name": "firestore-rules",
+	"$schema": "../../node_modules/nx/schemas/project-schema.json",
+	"projectType": "application",
+	"sourceRoot": "apps/firestore-rules/src",
+	"tags": ["type:app", "platform:agnostic"],
+	"targets": {
+		"test": {
+			"executor": "nx:run-commands",
+			"options": {
+				"command": "firebase emulators:exec --only firestore \"npx jest --config apps/firestore-rules/jest.config.ts\"",
+				"cwd": "{workspaceRoot}"
+			}
+		},
+		"lint": {
+			"executor": "@nx/eslint:lint",
+			"options": {
+				"lintFilePatterns": ["apps/firestore-rules/**/*.ts"]
+			}
+		}
+	}
+}

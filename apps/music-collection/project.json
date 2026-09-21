@@ -33,7 +33,12 @@
 				"assets": [
 					"apps/music-collection/src/favicon.ico",
 					"apps/music-collection/src/favicon.svg",
-					"apps/music-collection/src/assets"
+					"apps/music-collection/src/assets",
+					{
+						"glob": "countries-110m.json",
+						"input": "node_modules/world-atlas",
+						"output": "assets/world"
+					}
 				],
 				"styles": [
 					"node_modules/primeicons/primeicons.css",

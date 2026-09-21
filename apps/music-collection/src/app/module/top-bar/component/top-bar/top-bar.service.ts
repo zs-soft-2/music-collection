@@ -46,6 +46,10 @@ export class TopBarService {
 				label: 'Network',
 				routerLink: ['/network'],
 			},
+			{
+				label: 'Map',
+				routerLink: ['/map'],
+			},
 		];
 	}
 

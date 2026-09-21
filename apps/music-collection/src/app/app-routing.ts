@@ -107,6 +107,16 @@ export const routes: Routes = [
 		},
 	},
 	{
+		path: 'map',
+		loadComponent: () =>
+			import('./page/map/map-page.component').then(
+				(module) => module.MapPageComponent
+			),
+		data: {
+			breadcrumb: 'map',
+		},
+	},
+	{
 		path: 'profile',
 		loadComponent: () =>
 			import('./page/profile/profile-page.component').then(

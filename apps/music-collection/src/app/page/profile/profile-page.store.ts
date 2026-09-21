@@ -1,5 +1,10 @@
 import { combineLatest, map, of, pipe, switchMap, tap } from 'rxjs';
 
+import {
+	NO_LOCATION,
+	UserLocationEffect,
+	UserLocationSettings,
+} from '../../data/user-location';
 import { UserSettingsEffect } from '../../data/user-settings';
 import { ALBUM_VIEW_SETTING } from '../album/album-view.setting';
 import {
@@ -32,6 +37,8 @@ interface ProfilePageState {
 	collectionView: CollectionViewChoice;
 	/** Album pages open with their sections collapsed. */
 	albumCompact: boolean;
+	/** Where the collector is, and how much of it the others may see. */
+	location: UserLocationSettings;
 	isAuthenticated: boolean;
 	/** The name waiting for the account to confirm it, if any. */
 	pendingName: string | null;
@@ -43,6 +50,7 @@ const initialState: ProfilePageState = {
 	user: null,
 	collectionView: COLLECTION_VIEW_DEFAULTS,
 	albumCompact: false,
+	location: NO_LOCATION,
 	isAuthenticated: false,
 	pendingName: null,
 	savedAt: null,
@@ -77,7 +85,8 @@ export const ProfilePageStore = signalStore(
 			store,
 			authentication = inject(AuthenticationStateService),
 			users = inject(UserStateService),
-			settings = inject(UserSettingsEffect)
+			settings = inject(UserSettingsEffect),
+			locations = inject(UserLocationEffect)
 		) => ({
 			/**
 			 * Follows the account: the signed-in user, and then the same user
@@ -116,6 +125,19 @@ export const ProfilePageStore = signalStore(
 						// from the sign-in state, which the write leaves be.
 						if (confirmed && user) {
 							authentication.dispatchAuthenticated(user);
+
+							// A pin that carries the name has the old one on
+							// it until it is published again.
+							if (store.location().level === 'profile') {
+								locations
+									.save(store.location(), user)
+									.catch((error) => {
+										console.error(
+											'Shared location not saved',
+											error
+										);
+									});
+							}
 						}
 					})
 				)
@@ -163,6 +185,33 @@ export const ProfilePageStore = signalStore(
 					});
 			},
 
+			/** What the user told us about where they are. */
+			loadLocation: rxMethod<void>(
+				pipe(
+					switchMap(() => locations.settings$()),
+					tap((location) => patchState(store, { location }))
+				)
+			),
+
+			/**
+			 * Changes the sharing, and republishes right away: the level is
+			 * a consent, so lowering it has to take effect at once.
+			 */
+			setLocation(changes: Partial<UserLocationSettings>): void {
+				const user = store.user();
+				const location = { ...store.location(), ...changes };
+
+				patchState(store, { location });
+
+				if (!user?.uid) {
+					return;
+				}
+
+				locations.save(location, user).catch((error) => {
+					console.error('Shared location not saved', error);
+				});
+			},
+
 			setAlbumCompact(compact: boolean): void {
 				patchState(store, { albumCompact: compact });
 				settings
@@ -196,6 +245,7 @@ export const ProfilePageStore = signalStore(
 		onInit(store) {
 			store.load(of(undefined));
 			store.loadViews(of(undefined));
+			store.loadLocation(of(undefined));
 		},
 	})
 );

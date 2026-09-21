@@ -20,6 +20,7 @@ const NAV_ICONS: Record<string, string> = {
 	Collection: 'pi-th-large',
 	Wishlist: 'pi-heart',
 	Network: 'pi-sitemap',
+	Map: 'pi-map-marker',
 };
 
 @Component({

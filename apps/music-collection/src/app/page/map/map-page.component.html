@@ -1,0 +1,132 @@
+<div class="page">
+	<header class="hero">
+		<div class="hero-text">
+			<p class="eyebrow">musiCollection</p>
+			<h1>Collectors</h1>
+			<p class="lead">
+				Where the records are kept. Everyone here chose to be on this
+				map, and chose how much of themselves it shows —
+				<a routerLink="/profile">your own is in the profile</a>.
+			</p>
+		</div>
+
+		@if (store.isAuthenticated() && store.collectorCount()) {
+			<dl class="stats">
+				<div class="stat">
+					<dt>Collectors</dt>
+					<dd>{{ store.collectorCount() }}</dd>
+				</div>
+				<div class="stat">
+					<dt>Countries</dt>
+					<dd>{{ store.countryCount() }}</dd>
+				</div>
+			</dl>
+		}
+	</header>
+
+	@if (!store.isAuthenticated()) {
+		<div class="notice">
+			<p>Sign in to see where the other collectors are.</p>
+
+			<button type="button" (click)="store.login()">
+				<i class="pi pi-sign-in" aria-hidden="true"></i>
+				Log in
+			</button>
+		</div>
+	} @else {
+		<div class="layout">
+			<div class="map-card">
+				<mc-world-map
+					[land]="store.land()"
+					[pins]="store.pins()"
+					[selectedId]="store.selectedCode()"
+					label="Collectors around the world"
+					(pick)="store.select($event)"
+				/>
+
+				@if (store.loading()) {
+					<p class="map-note">Looking for collectors…</p>
+				} @else if (!store.collectorCount()) {
+					<p class="map-note">
+						Nobody shares where they are yet. You could be the
+						first.
+					</p>
+				} @else {
+					<p class="map-note">
+						Drag to move, scroll to zoom, and pick a pin to see who
+						is there.
+					</p>
+				}
+			</div>
+
+			<aside class="panel">
+				@if (store.selected(); as country) {
+					<header class="panel-head">
+						<h2>{{ country.name }}</h2>
+						<button
+							type="button"
+							class="link"
+							(click)="store.clearSelection()"
+						>
+							Back to all
+						</button>
+					</header>
+
+					<ul class="collectors">
+						@for (
+							collector of country.collectors;
+							track collector.uid
+						) {
+							<li>
+								@if (collector.photoURL) {
+									<img
+										class="avatar"
+										[src]="collector.photoURL"
+										alt=""
+										referrerpolicy="no-referrer"
+									/>
+								} @else {
+									<span class="avatar" aria-hidden="true">
+										<i class="pi pi-user"></i>
+									</span>
+								}
+
+								<span class="who">
+									<b>{{
+										collector.displayName || 'A collector'
+									}}</b>
+									@if (collector.city) {
+										<span>{{ collector.city }}</span>
+									}
+								</span>
+							</li>
+						}
+					</ul>
+				} @else {
+					<header class="panel-head">
+						<h2>Where they are</h2>
+					</header>
+
+					<ul class="countries">
+						@for (
+							country of store.countries();
+							track country.code
+						) {
+							<li>
+								<button
+									type="button"
+									(click)="store.select(country.code)"
+								>
+									<span>{{ country.name }}</span>
+									<b>{{ country.count }}</b>
+								</button>
+							</li>
+						} @empty {
+							<li class="empty">No one on the map yet.</li>
+						}
+					</ul>
+				}
+			</aside>
+		</div>
+	}
+</div>
