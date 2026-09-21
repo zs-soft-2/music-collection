@@ -28,9 +28,21 @@ export interface WorldMapPin {
 const WIDTH = 960;
 const HEIGHT = 500;
 
-/** A pin of one collector, and of the largest crowd. */
-const MIN_RADIUS = 7;
-const MAX_RADIUS = 20;
+/**
+ * A pin of one collector, and of the largest crowd. Small on purpose: at
+ * world zoom two neighbouring countries are a few pixels apart, so a pin
+ * that reads well on its own would swallow the ones next to it. Zooming in
+ * is what pulls them apart — the pins keep their size while the countries
+ * grow under them.
+ */
+const MIN_RADIUS = 3.5;
+const MAX_RADIUS = 11;
+
+/** Below this a number would not fit inside the dot, so it is left off. */
+const COUNT_RADIUS = 7;
+
+/** What can be hit with a finger, however small the pin itself is. */
+const HIT_RADIUS = 9;
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -65,9 +77,10 @@ const MAX_RADIUS = 20;
 						(keydown.enter)="pick.emit(pin.id)"
 						(keydown.space)="pick.emit(pin.id)"
 					>
-						<circle class="halo" [attr.r]="pin.radius + 4" />
+						<circle class="hit" [attr.r]="hitRadius" />
+						<circle class="halo" [attr.r]="pin.radius * 2.2" />
 						<circle class="dot" [attr.r]="pin.radius" />
-						@if (pin.count > 1) {
+						@if (pin.count > 1 && pin.radius >= countRadius) {
 							<text dy="0.35em">{{ pin.count }}</text>
 						}
 					</g>
@@ -101,28 +114,42 @@ const MAX_RADIUS = 20;
 
 		.pin {
 			cursor: pointer;
+			outline: none;
+
+			.hit {
+				fill: transparent;
+			}
 
 			.halo {
 				fill: var(--mc-primary);
 				opacity: 0.18;
+				pointer-events: none;
 			}
 
 			.dot {
 				fill: var(--mc-primary);
+				pointer-events: none;
 			}
 
 			text {
 				font-family: var(--mc-font-body);
-				font-size: 0.7rem;
+				font-size: 8px;
 				font-weight: 700;
 				text-anchor: middle;
 				fill: var(--mc-on-primary);
 				pointer-events: none;
 			}
 
+			// The browser's own focus ring is a box around the group, which
+			// on a round pin sits well away from what it marks.
 			&:hover .halo,
 			&:focus-visible .halo {
-				opacity: 0.35;
+				opacity: 0.4;
+			}
+
+			&:focus-visible .dot {
+				stroke: var(--mc-text);
+				stroke-width: 1.5;
 			}
 
 			&.selected {
@@ -149,6 +176,8 @@ export class WorldMapComponent {
 
 	protected readonly width = WIDTH;
 	protected readonly height = HEIGHT;
+	protected readonly countRadius = COUNT_RADIUS;
+	protected readonly hitRadius = HIT_RADIUS;
 	protected readonly transform = signal<ZoomTransform>(zoomIdentity);
 
 	private readonly canvas =
@@ -205,7 +234,8 @@ export class WorldMapComponent {
 		afterNextRender(() => {
 			select(this.canvas().nativeElement).call(
 				zoom<SVGSVGElement, unknown>()
-					.scaleExtent([1, 8])
+					// Far enough in to tell neighbouring countries apart.
+					.scaleExtent([1, 16])
 					.on('zoom', (event) => this.transform.set(event.transform))
 			);
 		});
