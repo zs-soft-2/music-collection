@@ -79,15 +79,19 @@ export const MapPageStore = signalStore(
 			atlas = inject(WorldAtlasEffect),
 			authentication = inject(AuthenticationStateService)
 		) => ({
-			/** The shared locations, once it is known who is asking. */
+			/**
+			 * The shared locations, once it is known who is asking. Reading
+			 * them takes being signed in, so this waits for the uid of a
+			 * signed-in user — the sign-in flag stands for a guest too.
+			 */
 			load: rxMethod<void>(
 				pipe(
-					switchMap(() => authentication.selectIsAuthenticated$()),
-					tap((isAuthenticated) =>
-						patchState(store, { isAuthenticated })
+					switchMap(() => authentication.selectAuthenticatedUser$()),
+					tap((user) =>
+						patchState(store, { isAuthenticated: !!user?.uid })
 					),
-					switchMap((isAuthenticated) =>
-						isAuthenticated
+					switchMap((user) =>
+						user?.uid
 							? locations.shared$()
 							: of([] as PublicUserLocation[])
 					),
