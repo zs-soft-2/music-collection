@@ -29,6 +29,12 @@ jobs:
       # A firestore-rules tesztek emulátort indítanak; a runneren nincs
       # Firebase CLI, a fejlesztői gépeken viszont globálisan telepítve van.
       - run: npm i -g firebase-tools@15.24.0
+      # Az emulátor JVM-en fut, és a firebase-tools 21-nél régebbi JDK-t már
+      # nem fogad el — a runner alapértelmezett Java-ja ennél korábbi.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
       # Minden projekt (app és library-k), nem csak a music-collection.
       - run: npx nx run-many -t lint
       - run: npx nx run-many -t test --passWithNoTests
