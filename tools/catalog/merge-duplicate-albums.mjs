@@ -23,6 +23,11 @@
  * alone and reported: moving a collector's copy from one album to another is
  * a judgement call, not a rule. Without `--confirm` nothing is written and
  * the whole plan is printed. Needs Firebase Admin credentials.
+ *
+ * A dry run costs exactly what a merge costs, because the plan is what has
+ * to be read; the run prints its price in document reads. `--artist` asks
+ * that one artist for its albums instead of the collection group, so trying
+ * one band again is a few hundred reads rather than a few thousand.
  */
 
 import { parseArgs } from 'node:util';
@@ -60,10 +65,52 @@ function isEmpty(value) {
 	);
 }
 
-const documents = async (featureKey) =>
-	(await database.collectionGroup(featureKey).get()).docs;
+/** Firestore takes at most 30 values in an `in` or `array-contains-any`. */
+const QUERY_LIMIT = 30;
 
-const albums = (await documents('album')).map((document) => ({
+/** Documents read so far, so a run can print what it spent. */
+let reads = 0;
+
+/** The documents of a query or collection, counted as Firestore bills them. */
+const documentsOf = async (source) => {
+	const snapshot = await source.get();
+
+	// An empty result is still charged as one document read.
+	reads += Math.max(snapshot.size, 1);
+	return snapshot.docs;
+};
+
+/** How many documents a collection holds, without reading them. */
+const countOf = async (source) => {
+	const aggregate = await source.count().get();
+
+	reads += 1;
+	return aggregate.data().count;
+};
+
+/** The candidate uids, in chunks one query can ask about. */
+function chunked(uids) {
+	const chunks = [];
+
+	for (let index = 0; index < uids.length; index += QUERY_LIMIT) {
+		chunks.push(uids.slice(index, index + QUERY_LIMIT));
+	}
+
+	return chunks;
+}
+
+// An album lives under its artist: one artist is asked in place, and only a
+// run over the whole catalog reads the collection group.
+const albums = (
+	await documentsOf(
+		options.artist
+			? database
+					.collection('artist')
+					.doc(options.artist)
+					.collection('album')
+			: database.collectionGroup('album')
+	)
+).map((document) => ({
 	uid: document.id,
 	reference: document.ref,
 	data: document.data(),
@@ -109,16 +156,27 @@ function clashingGroups() {
 const groups = clashingGroups();
 
 console.log(
-	`${projectId}: ${albums.length} albums, ${groups.length} clashing groups`
+	`${projectId}: ${albums.length} albums` +
+		`${options.artist ? ` of artist ${options.artist}` : ''}` +
+		`, ${groups.length} clashing groups`
 );
 
 if (!groups.length) {
+	console.log(`read ${reads} documents`);
 	process.exit(0);
 }
 
 const candidates = new Set(groups.flat().map((album) => album.uid));
 
-/** What the rest of the catalog holds against each album of a group. */
+/**
+ * What the rest of the catalog holds against each album of a group. The
+ * candidates are a handful of documents, so every collection is asked about
+ * them by name instead of being read out in full: `track`, `contribution`
+ * and `membership` are top-level collections keyed by album, and a pressing
+ * is counted under the album it belongs to. What a collector holds is read
+ * whole — `collection-item` and `wishlist-item` live under the user, where a
+ * filter would need a collection-group index — and they are the small ones.
+ */
 async function collectReferences() {
 	const references = new Map(
 		[...candidates].map((uid) => [
@@ -135,28 +193,55 @@ async function collectReferences() {
 	);
 	const of = (uid) => (candidates.has(uid) ? references.get(uid) : null);
 
-	for (const document of await documents('track')) {
-		of(document.get('albumUid'))?.tracks.push(document.ref);
+	const chunks = chunked([...candidates]);
+
+	for (const chunk of chunks) {
+		for (const document of await documentsOf(
+			database.collection('track').where('albumUid', 'in', chunk)
+		)) {
+			of(document.get('albumUid'))?.tracks.push(document.ref);
+		}
+		for (const document of await documentsOf(
+			database.collection('contribution').where('albumUid', 'in', chunk)
+		)) {
+			of(document.get('albumUid'))?.contributions.push(document.ref);
+		}
 	}
-	for (const document of await documents('contribution')) {
-		of(document.get('albumUid'))?.contributions.push(document.ref);
+
+	// A line-up can name albums from two chunks and would then come back
+	// twice: each document is kept once, and read out after every query.
+	const lineups = new Map();
+
+	for (const chunk of chunks) {
+		for (const document of await documentsOf(
+			database
+				.collection('membership')
+				.where('albumUids', 'array-contains-any', chunk)
+		)) {
+			lineups.set(document.ref.path, document);
+		}
 	}
-	for (const document of await documents('membership')) {
+	for (const document of lineups.values()) {
 		for (const uid of document.get('albumUids') ?? []) {
 			of(uid)?.memberships.push(document);
 		}
 	}
-	for (const document of await documents('release')) {
-		const entry = of(document.ref.parent.parent?.id);
 
-		if (entry) entry.releases += 1;
+	for (const album of groups.flat()) {
+		references.get(album.uid).releases = await countOf(
+			album.reference.collection('release')
+		);
 	}
-	for (const document of await documents('collection-item')) {
+	for (const document of await documentsOf(
+		database.collectionGroup('collection-item')
+	)) {
 		const entry = of(document.get('release.album.uid'));
 
 		if (entry) entry.owned += 1;
 	}
-	for (const document of await documents('wishlist-item')) {
+	for (const document of await documentsOf(
+		database.collectionGroup('wishlist-item')
+	)) {
 		const entry = of(
 			document.get('album.uid') ?? document.get('release.album.uid')
 		);
@@ -317,7 +402,8 @@ for (const document of touchedMemberships.values()) {
 
 console.log(
 	`\n${groups.length - skipped} groups to merge, ${skipped} left alone` +
-		`, ${writes.length} writes over ${[...featureKeys].sort().join(', ') || '—'}`
+		`, ${writes.length} writes over ${[...featureKeys].sort().join(', ') || '—'}` +
+		`; read ${reads} documents`
 );
 
 if (!options.confirm) {
