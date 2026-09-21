@@ -20,9 +20,9 @@ describe('COLLECTION_FOLLOWING_SETTING', () => {
 	});
 
 	it('survives a document written with another shape', () => {
-		expect(
-			COLLECTION_FOLLOWING_SETTING.toValue({ followed: 'a' })
-		).toEqual({ followed: [] });
+		expect(COLLECTION_FOLLOWING_SETTING.toValue({ followed: 'a' })).toEqual(
+			{ followed: [] }
+		);
 	});
 
 	it('writes the list back as it stands', () => {

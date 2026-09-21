@@ -1,4 +1,4 @@
-import { pipe, switchMap, tap } from 'rxjs';
+import { of, pipe, switchMap, tap } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
 import {
@@ -10,6 +10,7 @@ import {
 	patchState,
 	signalStore,
 	withComputed,
+	withHooks,
 	withMethods,
 	withState,
 } from '@ngrx/signals';
@@ -17,6 +18,7 @@ import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
 import { Crumb } from '../../shared/page-breadcrumb';
 
+import { withCollectionFollowing } from './collection-following.feature';
 import { toCollectionDetail } from './collections.mapper';
 import { AlbumFilter, CollectionDetailView } from './collections.model';
 
@@ -37,7 +39,14 @@ const initialState: CollectionDetailPageState = {
 
 export const CollectionDetailPageStore = signalStore(
 	withState(initialState),
+	withCollectionFollowing(),
 	withComputed((store) => ({
+		/** Whether this collection is one the collector is after. */
+		followed: computed(() => {
+			const uid = store.collection()?.uid;
+
+			return !!uid && store.followedUids().has(uid);
+		}),
 		/** Collections › this collection. */
 		trail: computed<Crumb[]>(() => {
 			const name = store.collection()?.name;
@@ -82,5 +91,18 @@ export const CollectionDetailPageStore = signalStore(
 			)
 		),
 		setFilter: (filter: AlbumFilter) => patchState(store, { filter }),
-	}))
+		/** Follows or drops the collection on show. */
+		toggleFollowed: (): void => {
+			const uid = store.collection()?.uid;
+
+			if (uid) {
+				store.toggleFollow(uid);
+			}
+		},
+	})),
+	withHooks({
+		onInit(store) {
+			store.loadFollowing(of(undefined));
+		},
+	})
 );

@@ -32,6 +32,21 @@
 					<p class="lead">{{ collection.description }}</p>
 				}
 
+				<button
+					type="button"
+					class="follow"
+					[attr.aria-pressed]="store.followed()"
+					(click)="onToggleFollow()"
+				>
+					<i
+						class="pi"
+						[class.pi-star-fill]="store.followed()"
+						[class.pi-star]="!store.followed()"
+						aria-hidden="true"
+					></i>
+					{{ store.followed() ? 'Following' : 'Follow' }}
+				</button>
+
 				<div class="progress">
 					<div
 						class="bar"

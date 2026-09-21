@@ -69,7 +69,9 @@ export function withCollectionFollowing() {
 			 */
 			toggleFollow: (uid: string): void => {
 				const followed = store.followedUids().has(uid)
-					? store.followed().filter((followedUid) => followedUid !== uid)
+					? store
+							.followed()
+							.filter((followedUid) => followedUid !== uid)
 					: [...store.followed(), uid];
 
 				patchState(store, { followed });

@@ -39,4 +39,8 @@ export class CollectionDetailPageComponent {
 	protected onFilter(filter: AlbumFilter): void {
 		this.store.setFilter(filter);
 	}
+
+	protected onToggleFollow(): void {
+		this.store.toggleFollowed();
+	}
 }

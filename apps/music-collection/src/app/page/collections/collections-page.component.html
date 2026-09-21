@@ -150,8 +150,7 @@
 											aria-valuemin="0"
 											aria-valuemax="100"
 											[attr.aria-label]="
-												'Progress on ' +
-												collection.name
+												'Progress on ' + collection.name
 											"
 										>
 											<span
@@ -169,7 +168,9 @@
 											{{ collection.total }}
 											<span class="percentage"
 												>·
-												{{ collection.percentage }}%</span
+												{{
+													collection.percentage
+												}}%</span
 											>
 										</p>
 										<p class="points">
@@ -184,7 +185,9 @@
 											} @else {
 												worth
 												<strong
-													>{{ collection.points }}
+													>{{
+														collection.points
+													}}
 													pts</strong
 												>
 												when complete

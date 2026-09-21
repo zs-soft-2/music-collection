@@ -72,8 +72,10 @@ export const ALBUM_FILTER_OPTIONS: { value: AlbumFilter; label: string }[] = [
 /** Which collections the list shows. */
 export type CollectionsTab = 'following' | 'all';
 
-export const COLLECTIONS_TAB_OPTIONS: { value: CollectionsTab; label: string }[] =
-	[
-		{ value: 'following', label: 'Following' },
-		{ value: 'all', label: 'All' },
-	];
+export const COLLECTIONS_TAB_OPTIONS: {
+	value: CollectionsTab;
+	label: string;
+}[] = [
+	{ value: 'following', label: 'Following' },
+	{ value: 'all', label: 'All' },
+];

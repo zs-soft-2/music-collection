@@ -78,6 +78,100 @@ h1 {
 	}
 }
 
+/* ── Toolbar ───────────────────────────────────────────────────────────────── */
+
+.toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	margin-bottom: 1.25rem;
+}
+
+.tabs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.tab {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
+	padding: 0.45rem 0.9rem;
+	font: inherit;
+	font-size: 0.85rem;
+	color: var(--mc-text-muted);
+	cursor: pointer;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: 999px;
+	transition:
+		color 0.2s ease,
+		background 0.2s ease,
+		border-color 0.2s ease;
+
+	&:hover {
+		color: var(--mc-text);
+		border-color: var(--mc-border-strong);
+	}
+
+	&.is-active {
+		color: var(--mc-on-primary);
+		background: var(--mc-primary);
+		border-color: var(--mc-primary);
+	}
+}
+
+.count {
+	font-variant-numeric: tabular-nums;
+	opacity: 0.75;
+}
+
+.search {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.4rem 0.8rem;
+	color: var(--mc-text-subtle);
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: 999px;
+
+	&:focus-within {
+		border-color: var(--mc-border-strong);
+	}
+
+	input {
+		width: 12rem;
+		max-width: 100%;
+		font: inherit;
+		font-size: 0.85rem;
+		color: var(--mc-text);
+		background: none;
+		border: 0;
+		outline: none;
+	}
+}
+
+.hint {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.65rem 0.9rem;
+	margin: 0 0 1.25rem;
+	font-size: 0.85rem;
+	color: var(--mc-text-muted);
+	background: var(--mc-bg-muted);
+	border: 1px dashed var(--mc-border-strong);
+	border-radius: var(--mc-radius-md);
+
+	i {
+		color: var(--mc-primary);
+	}
+}
+
 /* ── Cards ────────────────────────────────────────────────────────────── */
 
 .grid {
@@ -90,12 +184,10 @@ h1 {
 }
 
 .card {
+	position: relative;
 	display: flex;
-	flex-direction: column;
 	height: 100%;
 	overflow: hidden;
-	color: inherit;
-	text-decoration: none;
 	background: var(--mc-card-bg);
 	border: 1px solid var(--mc-border);
 	border-radius: var(--mc-radius-lg);
@@ -105,14 +197,61 @@ h1 {
 		transform 0.2s ease;
 
 	&:hover,
-	&:focus-visible {
+	&:focus-within {
 		background: var(--mc-card-bg-hover);
 		border-color: var(--mc-border-strong);
 		transform: translateY(-2px);
 	}
 
+	/* Completed is the stronger state: it keeps the border where both hold. */
+	&.is-followed {
+		border-color: var(--mc-primary);
+	}
+
 	&.is-completed {
 		border-color: var(--mc-accent);
+	}
+}
+
+/* The whole card is the link; the star sits beside it, not inside it. */
+.card-link {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-width: 0;
+	color: inherit;
+	text-decoration: none;
+}
+
+.follow {
+	position: absolute;
+	top: 0.55rem;
+	right: 0.55rem;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2rem;
+	height: 2rem;
+	padding: 0;
+	font-size: 0.85rem;
+	color: #ffffff;
+	cursor: pointer;
+	background: rgba(0, 0, 0, 0.55);
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	border-radius: 999px;
+	transition:
+		color 0.2s ease,
+		background 0.2s ease,
+		border-color 0.2s ease;
+
+	&:hover {
+		background: rgba(0, 0, 0, 0.75);
+		border-color: rgba(255, 255, 255, 0.35);
+	}
+
+	&[aria-pressed='true'] {
+		color: var(--mc-primary);
+		border-color: var(--mc-primary);
 	}
 }
 
@@ -260,5 +399,9 @@ mc-collection-artwork {
 @media (max-width: 700px) {
 	.stats {
 		width: 100%;
+	}
+
+	.search {
+		flex: 1;
 	}
 }

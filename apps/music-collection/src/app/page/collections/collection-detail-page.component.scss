@@ -251,6 +251,37 @@ h1 {
 	}
 }
 
+/* ── Follow ────────────────────────────────────────────────────────────── */
+
+.follow {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
+	padding: 0.45rem 0.9rem;
+	margin-top: 1rem;
+	font: inherit;
+	font-size: 0.85rem;
+	color: var(--mc-text-muted);
+	cursor: pointer;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: 999px;
+	transition:
+		color 0.2s ease,
+		background 0.2s ease,
+		border-color 0.2s ease;
+
+	&:hover {
+		color: var(--mc-text);
+		border-color: var(--mc-border-strong);
+	}
+
+	&[aria-pressed='true'] {
+		color: var(--mc-primary);
+		border-color: var(--mc-primary);
+	}
+}
+
 /* ── Toolbar ──────────────────────────────────────────────────────────── */
 
 .toolbar {
