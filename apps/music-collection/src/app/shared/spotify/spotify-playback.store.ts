@@ -94,15 +94,20 @@ export const SpotifyPlaybackStore = signalStore(
 				)?.[0] ?? null
 			);
 		}),
-		/** Whether the output device lets its volume be changed. */
-		volumeSupported: computed(() => {
+		/**
+		 * The device the sound comes out of, when that is not this browser.
+		 * Playback can be moved from the Spotify app too, so what plays is
+		 * not always what was picked here.
+		 */
+		remoteDeviceId: computed(() => {
 			const selected = store.selectedDeviceId();
-			return (
-				!selected ||
-				(store.devices().find((device) => device.id === selected)
-					?.supportsVolume ??
-					true)
-			);
+			if (selected) {
+				return selected;
+			}
+			const playing = store.nowPlaying()?.deviceId ?? null;
+			return playing && playing !== store.browserDeviceId()
+				? playing
+				: null;
 		}),
 		/** Other devices than this browser. */
 		otherDevices: computed(() =>
@@ -110,6 +115,20 @@ export const SpotifyPlaybackStore = signalStore(
 				.devices()
 				.filter((device) => device.id !== store.browserDeviceId())
 		),
+	})),
+	withComputed((store) => ({
+		/** Whether the device playing lets its volume be changed. */
+		volumeSupported: computed(() => {
+			const remote = store.remoteDeviceId();
+			if (!remote) {
+				// This browser: only a player that exists has a volume.
+				return !!store.browserDeviceId();
+			}
+			return (
+				store.devices().find((device) => device.id === remote)
+					?.supportsVolume ?? true
+			);
+		}),
 	})),
 	withMethods(
 		(
@@ -169,9 +188,12 @@ export const SpotifyPlaybackStore = signalStore(
 				}
 			};
 
+			// The SDK reports its own player; everything else has to be asked
+			// for. A browser that never became a device (iOS) is never the
+			// output, so what plays there has to be polled as well.
 			const pollWhenRemote = () => {
 				stopPolling();
-				if (store.selectedDeviceId()) {
+				if (store.selectedDeviceId() || !store.browserDeviceId()) {
 					pollTimer = setInterval(refreshNowPlaying, REMOTE_POLL_MS);
 					void refreshNowPlaying();
 				}
@@ -206,10 +228,13 @@ export const SpotifyPlaybackStore = signalStore(
 								browserDeviceId,
 								status: 'ready',
 							});
+							pollWhenRemote();
 							void refreshDevices();
 						},
-						notReady: () =>
-							patchState(store, { browserDeviceId: null }),
+						notReady: () => {
+							patchState(store, { browserDeviceId: null });
+							pollWhenRemote();
+						},
 						stateChanged: (nowPlaying) => {
 							if (!store.selectedDeviceId()) {
 								patchState(store, { nowPlaying });
@@ -245,6 +270,15 @@ export const SpotifyPlaybackStore = signalStore(
 			return {
 				start,
 				refreshDevices,
+
+				/**
+				 * Unlocks the player's audio element. Safari only lets sound
+				 * start from the tap itself, so this has to run before the
+				 * click's first `await`, not where playback finally begins.
+				 */
+				activate(): void {
+					void player?.activateElement();
+				},
 
 				/** Leaves for the Spotify sign-in, then returns to this page. */
 				async connect(): Promise<void> {
@@ -406,7 +440,7 @@ export const SpotifyPlaybackStore = signalStore(
 						clearTimeout(volumeTimer);
 						volumeTimer = null;
 					}
-					const deviceId = store.selectedDeviceId();
+					const deviceId = store.remoteDeviceId();
 					if (!deviceId) {
 						effect.saveBrowserVolume(volume);
 						player?.setVolume(volume / 100).catch(fail);
