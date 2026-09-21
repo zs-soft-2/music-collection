@@ -3,7 +3,6 @@ import { Observable, from, map } from 'rxjs';
 import { Injectable, inject } from '@angular/core';
 import { Firestore, collection, query } from '@angular/fire/firestore';
 import { Functions, httpsCallable } from '@angular/fire/functions';
-import { Storage, getDownloadURL, ref } from '@angular/fire/storage';
 import {
 	CONTRIBUTION_FEATURE_KEY,
 	ContributionEntity,
@@ -11,7 +10,8 @@ import {
 } from '@music-collection/api';
 import {
 	BadgeGenerationSettings,
-	BadgeImage,
+	BadgeModelOption,
+	BadgeImageDraft,
 	CREATE_MUSIC_COLLECTION_FUNCTION,
 	CatalogCredit,
 	CreateMusicCollectionResult,
@@ -24,6 +24,7 @@ import {
 	MusicCollectionRepository,
 	READ_BADGE_GENERATION_SETTINGS_FUNCTION,
 	SET_MUSIC_COLLECTION_BADGE_IMAGE_FUNCTION,
+	LIST_BADGE_GENERATION_MODELS_FUNCTION,
 	UPDATE_BADGE_GENERATION_SETTINGS_FUNCTION,
 	UPDATE_MUSIC_COLLECTION_FUNCTION,
 	UpdateMusicCollectionResult,
@@ -47,7 +48,6 @@ export class MusicCollectionFirestoreRepository extends MusicCollectionRepositor
 	private readonly firestore = inject(Firestore);
 	private readonly firestoreSync = inject(FirestoreSyncService);
 	private readonly functions = inject(Functions);
-	private readonly storage = inject(Storage);
 
 	public listAll$(): Observable<MusicCollectionEntity[]> {
 		return this.firestoreSync.list$<MusicCollectionEntity>({
@@ -140,16 +140,14 @@ export class MusicCollectionFirestoreRepository extends MusicCollectionRepositor
 		);
 	}
 
-	public setBadgeImage$(uid: string, image: BadgeImage): Observable<void> {
+	public setBadgeImage$(
+		uid: string,
+		image: BadgeImageDraft
+	): Observable<void> {
 		return this.call$<void>(SET_MUSIC_COLLECTION_BADGE_IMAGE_FUNCTION, {
 			uid,
 			image,
 		});
-	}
-
-	/** `badge/` is world readable, so a download URL is all it takes. */
-	public badgeUrl$(path: string): Observable<string> {
-		return from(getDownloadURL(ref(this.storage, path)));
 	}
 
 	public readBadgeSettings$(): Observable<BadgeGenerationSettings> {
@@ -165,6 +163,13 @@ export class MusicCollectionFirestoreRepository extends MusicCollectionRepositor
 		return this.call$<BadgeGenerationSettings>(
 			UPDATE_BADGE_GENERATION_SETTINGS_FUNCTION,
 			{ settings }
+		);
+	}
+
+	public listBadgeModels$(): Observable<BadgeModelOption[]> {
+		return this.call$<BadgeModelOption[]>(
+			LIST_BADGE_GENERATION_MODELS_FUNCTION,
+			{}
 		);
 	}
 

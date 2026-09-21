@@ -38,6 +38,7 @@ import {
 } from './discogs-versions';
 import {
 	generateBadgeCandidates,
+	listBadgeModels,
 	readBadgeSettings,
 	setBadgeImage,
 	writeBadgeSettings,
@@ -680,3 +681,19 @@ export const readBadgeGenerationSettings = onCall(async (request) => {
 
 	return readBadgeSettings(database());
 });
+
+/**
+ * A választható képmodellek, a Vertex katalógusából, élőben — hogy a
+ * felület ne a mi emlékezetünkből kínáljon modellnevet.
+ */
+export const listBadgeGenerationModels = onCall(
+	{ timeoutSeconds: 60 },
+	async (request) => {
+		await requireCaller(request, 'updateBadgeGenerationSettings');
+
+		return listBadgeModels(
+			database(),
+			process.env['GCLOUD_PROJECT'] ?? ''
+		);
+	}
+);

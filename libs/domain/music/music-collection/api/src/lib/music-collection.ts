@@ -68,8 +68,11 @@ export interface MusicCollectionCriteria {
  * out wrong.
  */
 export interface BadgeImage {
-	/** Storage path under `badge/{uid}/`; the client resolves the URL. */
-	path: string;
+	/** The `document` entity wrapping the file, where metadata can hang. */
+	documentUid: string;
+	name: string;
+	/** The ready download URL, as covers have — straight into `<img src>`. */
+	filePath: string;
 	prompt: string;
 	negativePrompt: string;
 	seed: number;

@@ -487,11 +487,11 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 									<ul class="candidates">
 										@for (
 											candidate of store.badgeCandidates();
-											track candidate.path
+											track candidate.index
 										) {
 											<li>
 												<img
-													[src]="candidate.url"
+													[src]="candidate.dataUrl"
 													alt=""
 													loading="lazy"
 												/>

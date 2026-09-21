@@ -57,16 +57,43 @@ import { BadgeSettingsStore } from './badge-settings.store';
 
 						<div class="mc-field">
 							<label for="model">Model</label>
-							<input
+							<select
 								id="model"
-								type="text"
 								[value]="settings.model"
-								(input)="store.set({ model: value($event) })"
-							/>
+								[disabled]="store.isLoadingModels()"
+								(change)="store.set({ model: value($event) })"
+							>
+								@for (
+									model of store.modelOptions();
+									track model.name
+								) {
+									<option
+										[value]="model.name"
+										[selected]="
+											model.name === settings.model
+										"
+									>
+										{{ model.name }}
+										{{
+											model.isReachable
+												? ''
+												: '— not available here'
+										}}
+									</option>
+								}
+							</select>
 							<small>
-								An Imagen model id, as the Vertex publisher path
-								spells it. Media Studio lists the ones this
-								project can reach.
+								@if (store.isLoadingModels()) {
+									Reading the region's catalogue…
+								} @else if (store.modelsError(); as error) {
+									The catalogue could not be read
+									({{ error }}). The saved model is kept.
+								} @else {
+									What this project can actually call in the
+									region below, read from Vertex when the page
+									opened — not a list kept in our code. One
+									marked as unavailable will fail with a 404.
+								}
 							</small>
 						</div>
 

@@ -17,7 +17,8 @@ import {
 } from '@music-collection/api';
 import {
 	BadgeGenerationSettings,
-	BadgeImage,
+	BadgeModelOption,
+	BadgeImageDraft,
 	CreateMusicCollectionResult,
 	GenerateBadgeResult,
 	MusicCollectionCatalog,
@@ -271,12 +272,11 @@ export class MusicCollectionEffect {
 		return this.repository.generateBadge$(uid, points);
 	}
 
-	public setBadgeImage$(uid: string, image: BadgeImage): Observable<void> {
+	public setBadgeImage$(
+		uid: string,
+		image: BadgeImageDraft
+	): Observable<void> {
 		return this.repository.setBadgeImage$(uid, image);
-	}
-
-	public badgeUrl$(path: string): Observable<string> {
-		return this.repository.badgeUrl$(path);
 	}
 
 	public readBadgeSettings$(): Observable<BadgeGenerationSettings> {
@@ -287,6 +287,10 @@ export class MusicCollectionEffect {
 		settings: BadgeGenerationSettings
 	): Observable<BadgeGenerationSettings> {
 		return this.repository.updateBadgeSettings$(settings);
+	}
+
+	public listBadgeModels$(): Observable<BadgeModelOption[]> {
+		return this.repository.listBadgeModels$();
 	}
 
 	private toStanding(

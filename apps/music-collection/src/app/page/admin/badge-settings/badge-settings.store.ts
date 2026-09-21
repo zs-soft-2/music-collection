@@ -1,7 +1,10 @@
 import { pipe, switchMap, tap } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
-import { BadgeGenerationSettings } from '@music-collection/domain/music-collection/api';
+import {
+	BadgeGenerationSettings,
+	BadgeModelOption,
+} from '@music-collection/domain/music-collection/api';
 import { MusicCollectionEffect } from '@music-collection/domain/music-collection/core';
 import { tapResponse } from '@ngrx/operators';
 import {
@@ -19,7 +22,7 @@ import { describeWriteError } from '../music-collection/music-collection-admin.e
 /** What the server falls back to; shown until the real values arrive. */
 const FALLBACK: BadgeGenerationSettings = {
 	enabled: true,
-	model: 'imagen-4.0-generate-001',
+	model: 'gemini-2.5-flash-image',
 	location: 'us-central1',
 	candidateCount: 4,
 	dailyImageLimit: 200,
@@ -31,6 +34,11 @@ const MAX_DAILY_IMAGES = 2000;
 
 interface BadgeSettingsState {
 	settings: BadgeGenerationSettings;
+	/** What the region actually offers; loaded on init, next to the form. */
+	models: BadgeModelOption[];
+	isLoadingModels: boolean;
+	/** Why the list is empty, when it is. The form still works without it. */
+	modelsError: string | null;
 	isLoading: boolean;
 	isSaving: boolean;
 	error: string | null;
@@ -40,6 +48,9 @@ interface BadgeSettingsState {
 
 const initialState: BadgeSettingsState = {
 	settings: FALLBACK,
+	models: [],
+	isLoadingModels: true,
+	modelsError: null,
 	isLoading: true,
 	isSaving: false,
 	error: null,
@@ -61,6 +72,19 @@ export const BadgeSettingsStore = signalStore(
 		canSave: computed(
 			() => !store.isSaving() && !!store.settings().model.trim()
 		),
+		/**
+		 * The saved model is always among the choices, even when the
+		 * catalogue no longer lists it — opening the page must not quietly
+		 * switch a collection's badge to another model.
+		 */
+		modelOptions: computed(() => {
+			const models = store.models();
+			const current = store.settings().model;
+
+			return models.some((model) => model.name === current)
+				? models
+				: [...models, { name: current, isReachable: false }];
+		}),
 	})),
 	withMethods((store, effect = inject(MusicCollectionEffect)) => {
 		const load = rxMethod<void>(
@@ -81,8 +105,32 @@ export const BadgeSettingsStore = signalStore(
 			)
 		);
 
+		const loadModels = rxMethod<void>(
+			pipe(
+				tap(() =>
+					patchState(store, {
+						isLoadingModels: true,
+						modelsError: null,
+					})
+				),
+				switchMap(() => effect.listBadgeModels$()),
+				tapResponse({
+					next: (models) =>
+						patchState(store, { models, isLoadingModels: false }),
+					error: (error: unknown) => {
+						console.error(error);
+						patchState(store, {
+							isLoadingModels: false,
+							modelsError: describeWriteError(error),
+						});
+					},
+				})
+			)
+		);
+
 		return {
 			load,
+			loadModels,
 			set(change: Partial<BadgeGenerationSettings>): void {
 				patchState(store, {
 					settings: { ...store.settings(), ...change },
@@ -141,6 +189,7 @@ export const BadgeSettingsStore = signalStore(
 	withHooks({
 		onInit(store) {
 			store.load();
+			store.loadModels();
 		},
 	})
 );

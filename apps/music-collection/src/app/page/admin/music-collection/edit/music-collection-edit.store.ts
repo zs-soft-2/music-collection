@@ -88,11 +88,6 @@ const PREVIEW_SIZE = 24;
 /** Keystrokes settle before the catalog is walked again. */
 const PREVIEW_DEBOUNCE_MS = 250;
 
-/** A candidate with the URL the admin actually looks at. */
-export interface BadgeCandidateView extends BadgeCandidate {
-	url: string;
-}
-
 interface MusicCollectionEditState {
 	/** Null while adding a new collection. */
 	uid: string | null;
@@ -114,7 +109,7 @@ interface MusicCollectionEditState {
 	/** The badge already frozen onto the definition, as an `<img>` can load it. */
 	badgeImageUrl: string | null;
 	/** Freshly drawn candidates, until one of them is picked. */
-	badgeCandidates: BadgeCandidateView[];
+	badgeCandidates: BadgeCandidate[];
 	/** What the last run was drawn from; travels with the picked candidate. */
 	badgeDraw: GenerateBadgeResult | null;
 	isGeneratingBadge: boolean;
@@ -224,19 +219,6 @@ export const MusicCollectionEditStore = signalStore(
 			};
 
 			/** The frozen badge, turned into something an `<img>` can load. */
-			const showBadge = rxMethod<string | null>(
-				pipe(
-					switchMap((path) =>
-						path ? effect.badgeUrl$(path) : of(null)
-					),
-					tapResponse({
-						next: (badgeImageUrl: string | null) =>
-							patchState(store, { badgeImageUrl }),
-						error: (error: unknown) => console.error(error),
-					})
-				)
-			);
-
 			return {
 				/** `0` opens an empty editor, as the other admin lists do. */
 				load: rxMethod<string>(
@@ -275,12 +257,11 @@ export const MusicCollectionEditStore = signalStore(
 									isLoading: false,
 									badgeCandidates: [],
 									badgeDraw: null,
-									badgeImageUrl: null,
+									badgeImageUrl:
+										collection?.badge?.image?.filePath ??
+										null,
 								});
 								preview(of(form.criteria));
-								showBadge(
-									of(collection?.badge?.image?.path ?? null)
-								);
 							},
 							error: (error) => {
 								console.error(error);
@@ -361,50 +342,16 @@ export const MusicCollectionEditStore = signalStore(
 							})
 						),
 						exhaustMap(() =>
-							effect
-								.generateBadge$(
-									store.uid() as string,
-									store.curatedPoints() ??
-										store.derivedPoints()
-								)
-								.pipe(
-									switchMap((draw) =>
-										(draw.candidates.length
-											? combineLatest(
-													draw.candidates.map(
-														(candidate) =>
-															effect
-																.badgeUrl$(
-																	candidate.path
-																)
-																.pipe(
-																	map(
-																		(
-																			url
-																		) => ({
-																			...candidate,
-																			url,
-																		})
-																	)
-																)
-													)
-												)
-											: of([])
-										).pipe(
-											map((candidates) => ({
-												draw,
-												candidates,
-											}))
-										)
-									)
-								)
+							effect.generateBadge$(
+								store.uid() as string,
+								store.curatedPoints() ?? store.derivedPoints()
+							)
 						),
 						tapResponse({
-							next: ({ draw, candidates }) =>
+							next: (draw: GenerateBadgeResult) =>
 								patchState(store, {
 									badgeDraw: draw,
-									badgeCandidates:
-										candidates as BadgeCandidateView[],
+									badgeCandidates: draw.candidates,
 									isGeneratingBadge: false,
 								}),
 							error: (error: unknown) => {
@@ -419,7 +366,7 @@ export const MusicCollectionEditStore = signalStore(
 				),
 
 				/** Freezes the chosen candidate onto the definition. */
-				pickBadge: rxMethod<BadgeCandidateView>(
+				pickBadge: rxMethod<BadgeCandidate>(
 					pipe(
 						filter(() => !!store.uid() && !store.isPickingBadge()),
 						tap(() =>
@@ -433,20 +380,27 @@ export const MusicCollectionEditStore = signalStore(
 
 							return effect
 								.setBadgeImage$(store.uid() as string, {
-									path: candidate.path,
+									// A jelölt sehol nem volt eltárolva, ezért a
+									// kép maga megy vissza — csak ebből az
+									// egyből lesz fájl, dokumentummal a tetején.
+									image: candidate.dataUrl.replace(
+										/^data:[^,]*,/,
+										''
+									),
 									prompt: draw?.prompt ?? '',
 									negativePrompt: draw?.negativePrompt ?? '',
 									seed: draw?.seed ?? 0,
 									styleVersion: draw?.styleVersion ?? 0,
 									model: draw?.model ?? '',
-									generatedAt: Date.now(),
 								})
 								.pipe(map(() => candidate));
 						}),
 						tapResponse({
-							next: (candidate: BadgeCandidateView) =>
+							next: (candidate: BadgeCandidate) =>
 								patchState(store, {
-									badgeImageUrl: candidate.url,
+									// A feltöltött fájl URL-je a következő
+									// betöltéskor jön; addig a jelölt képe áll.
+									badgeImageUrl: candidate.dataUrl,
 									badgeCandidates: [],
 									isPickingBadge: false,
 								}),

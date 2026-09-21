@@ -3,12 +3,14 @@ import { Observable } from 'rxjs';
 import { CatalogCredit } from './music-collection-catalog';
 import {
 	BadgeGenerationSettings,
+	BadgeImageDraft,
+	BadgeModelOption,
 	CreateMusicCollectionResult,
 	GenerateBadgeResult,
 	MusicCollectionDraft,
 	UpdateMusicCollectionResult,
 } from './music-collection-function';
-import { BadgeImage, MusicCollectionEntity } from './music-collection';
+import { MusicCollectionEntity } from './music-collection';
 
 /**
  * Data access for the collection definitions. The application binds the
@@ -57,16 +59,21 @@ export abstract class MusicCollectionRepository {
 		uid: string,
 		points: number
 	): Observable<GenerateBadgeResult>;
+	/**
+	 * Freezes the picked candidate: the file is uploaded where covers go and
+	 * a `document` entity is written over it, so the badge is catalogued like
+	 * every other file rather than loose in a bucket.
+	 */
 	public abstract setBadgeImage$(
 		uid: string,
-		image: BadgeImage
+		image: BadgeImageDraft
 	): Observable<void>;
-	/** A Storage path turned into something an `<img>` can load. */
-	public abstract badgeUrl$(path: string): Observable<string>;
 
 	/** What an admin may set about generation; the style lock is not in it. */
 	public abstract readBadgeSettings$(): Observable<BadgeGenerationSettings>;
 	public abstract updateBadgeSettings$(
 		settings: BadgeGenerationSettings
 	): Observable<BadgeGenerationSettings>;
+	/** A választható képmodellek, élőben — nem egy kódba írt lista. */
+	public abstract listBadgeModels$(): Observable<BadgeModelOption[]>;
 }

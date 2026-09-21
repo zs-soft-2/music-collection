@@ -48,12 +48,34 @@ export const READ_BADGE_GENERATION_SETTINGS_FUNCTION =
 	'readBadgeGenerationSettings';
 export const UPDATE_BADGE_GENERATION_SETTINGS_FUNCTION =
 	'updateBadgeGenerationSettings';
+export const LIST_BADGE_GENERATION_MODELS_FUNCTION =
+	'listBadgeGenerationModels';
 
 /** One generated candidate, until somebody picks between them. */
 export interface BadgeCandidate {
-	/** Storage path; the client resolves the URL. */
-	path: string;
 	index: number;
+	/**
+	 * `data:image/png;base64,…`. A candidate is deliberately not a file:
+	 * three in four are born to be thrown away, and a Storage object with no
+	 * document over it is exactly the litter the catalog avoids. Only the
+	 * picked one is ever uploaded.
+	 */
+	dataUrl: string;
+}
+
+/**
+ * What the picked candidate sends back. The image travels with it because no
+ * candidate was ever stored — only this one becomes a file, wrapped in a
+ * `document` entity like every other file in the catalog.
+ */
+export interface BadgeImageDraft {
+	/** Base64 PNG, without the `data:` prefix. */
+	image: string;
+	prompt: string;
+	negativePrompt: string;
+	seed: number;
+	styleVersion: number;
+	model: string;
 }
 
 /** What generating returns; the frozen image is made of this. */
@@ -77,4 +99,14 @@ export interface BadgeGenerationSettings {
 	location: string;
 	candidateCount: number;
 	dailyImageLimit: number;
+}
+
+/**
+ * A választható képmodellek egyike, ahogy a Vertex katalógusa adja. A
+ * katalógus olyat is listáz, amit a projekt nem hívhat, ezért a felület
+ * nem csak a nevet kapja meg, hanem azt is, válaszol-e.
+ */
+export interface BadgeModelOption {
+	name: string;
+	isReachable: boolean;
 }
