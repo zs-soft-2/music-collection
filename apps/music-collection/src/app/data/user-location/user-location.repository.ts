@@ -1,6 +1,11 @@
 import { Observable } from 'rxjs';
 
-import { Injectable, inject } from '@angular/core';
+import {
+	Injectable,
+	Injector,
+	inject,
+	runInInjectionContext,
+} from '@angular/core';
 import { Firestore, collection, doc, query } from '@angular/fire/firestore';
 import { FirestoreSyncService } from '@music-collection/api';
 
@@ -18,6 +23,7 @@ export const USER_LOCATION_FEATURE_KEY = 'user-location';
 export class UserLocationRepository {
 	private readonly firestore = inject(Firestore);
 	private readonly firestoreSync = inject(FirestoreSyncService);
+	private readonly injector = inject(Injector);
 
 	/**
 	 * Every location shared right now. Readable only when signed in, so the
@@ -27,7 +33,9 @@ export class UserLocationRepository {
 		return this.firestoreSync.list$<PublicUserLocation>({
 			featureKey: USER_LOCATION_FEATURE_KEY,
 			cacheKey: USER_LOCATION_FEATURE_KEY,
-			query: query(collection(this.firestore, USER_LOCATION_FEATURE_KEY)),
+			query: runInInjectionContext(this.injector, () =>
+				query(collection(this.firestore, USER_LOCATION_FEATURE_KEY))
+			),
 		});
 	}
 
@@ -48,7 +56,13 @@ export class UserLocationRepository {
 		);
 	}
 
+	/**
+	 * AngularFire expects its APIs in an injection context; these run from a
+	 * stream or an event handler, long after the repository was built.
+	 */
 	private reference(uid: string) {
-		return doc(this.firestore, USER_LOCATION_FEATURE_KEY, uid);
+		return runInInjectionContext(this.injector, () =>
+			doc(this.firestore, USER_LOCATION_FEATURE_KEY, uid)
+		);
 	}
 }

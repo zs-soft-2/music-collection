@@ -1,6 +1,11 @@
 import { Observable, catchError, map, of, switchMap } from 'rxjs';
 
-import { Injectable, inject } from '@angular/core';
+import {
+	Injectable,
+	Injector,
+	inject,
+	runInInjectionContext,
+} from '@angular/core';
 import { Auth, authState } from '@angular/fire/auth';
 import { DocumentData, Firestore, doc, docData } from '@angular/fire/firestore';
 import { FirestoreSyncService } from '@music-collection/api';
@@ -21,6 +26,7 @@ export class UserSettingsRepository {
 	private readonly firestore = inject(Firestore);
 	private readonly auth = inject(Auth);
 	private readonly firestoreSync = inject(FirestoreSyncService);
+	private readonly injector = inject(Injector);
 
 	/**
 	 * Follows the setting, and switches with the sign-in state. A document
@@ -31,7 +37,7 @@ export class UserSettingsRepository {
 		return authState(this.auth).pipe(
 			switchMap((user) =>
 				user
-					? docData(this.reference(setting.id, user.uid)).pipe(
+					? this.document$(setting, user.uid).pipe(
 							map((data) => setting.toValue(data ?? {})),
 							catchError((error) => {
 								console.warn(
@@ -64,13 +70,22 @@ export class UserSettingsRepository {
 		);
 	}
 
+	/**
+	 * AngularFire expects its APIs in an injection context; these run from
+	 * a stream or an event handler, long after the repository was built.
+	 */
+	private document$<T>(
+		setting: UserSetting<T>,
+		uid: string
+	): Observable<DocumentData | undefined> {
+		return runInInjectionContext(this.injector, () =>
+			docData(this.reference(setting.id, uid))
+		);
+	}
+
 	private reference(id: string, uid: string) {
-		return doc(
-			this.firestore,
-			USER_COLLECTION,
-			uid,
-			SETTING_COLLECTION,
-			id
+		return runInInjectionContext(this.injector, () =>
+			doc(this.firestore, USER_COLLECTION, uid, SETTING_COLLECTION, id)
 		);
 	}
 
