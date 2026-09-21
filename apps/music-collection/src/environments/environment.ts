@@ -4,6 +4,7 @@
  * build-konfiguráció cseréli be (`environment.prod.ts`), a tool scriptek pedig
  * a `--env prod` kapcsolóval kérik.
  */
+import { APP_CHECK_DEBUG_TOKEN } from './app-check-debug-token';
 import { VERSION } from './version';
 
 export const environment = {
@@ -32,6 +33,17 @@ export const environment = {
 		 * elutasítanak.
 		 */
 		recaptchaSiteKey: '6LfnhcctAAAAAFX_jp0sInM0Fl5xmk7Z15YLYfC_',
+		/**
+		 * A localhost debug tokenje. A `nx serve` ezzel vált App Check tokent
+		 * a valódi reCAPTCHA pontozása helyett, így a fejlesztői gépen sem a
+		 * böngészőprofil viselkedésén múlik, hogy a callable-ök válaszolnak-e.
+		 *
+		 * Titok — ezért nem itt áll, hanem generált fájlból jön
+		 * (tools/app-check/generate-debug-token.mjs). Üresen a valódi
+		 * reCAPTCHA fut; a localhost a kulcs engedélyezett domainjei között
+		 * van (infra/environments/dev/dev.tfvars), tehát így is működik.
+		 */
+		debugToken: APP_CHECK_DEBUG_TOKEN,
 	},
 	spotify: {
 		/**

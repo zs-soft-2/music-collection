@@ -23,3 +23,8 @@ app_check_domains = [
   "music-collection-16676.firebaseapp.com",
   "localhost",
 ]
+# A localhost-fejlesztés debug tokenje: a `nx serve` ezzel vált App Check
+# tokent, a valódi reCAPTCHA pontozása helyett. A token a state-ben él, a
+# fejlesztő a `tofu output -raw app_check_debug_token`-nel kéri el
+# (tools/app-check/generate-debug-token.mjs). Prodban nincs ilyen.
+app_check_debug_token = true

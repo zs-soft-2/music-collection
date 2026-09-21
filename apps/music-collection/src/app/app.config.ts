@@ -50,6 +50,34 @@ import { metaReducers } from './reducer';
 import { AppearanceSyncService, MusicPreset } from './theme';
 import { NgxPermissionsModule } from 'ngx-permissions';
 
+/** A gépek, ahol a debug token szóba jöhet: a fejlesztői gép böngészője. */
+const LOCAL_HOSTS = ['localhost', '127.0.0.1', '[::1]'];
+
+/**
+ * Az App Check debug módja: a token puszta ismerete a bizonyíték, reCAPTCHA
+ * pontozás nélkül. Az SDK csak ebből a globálisból indítja el, és csak az
+ * `initializeAppCheck` előtt beállítva — ezért áll itt, a provider factory
+ * első lépéseként.
+ *
+ * Prod buildben a token üres (`environment.prod.ts`), a dev környezetet pedig
+ * a CI ugyanabból az `environment.ts`-ből telepíti, amiből a `nx serve` dolgozik:
+ * ha a token egyszer mégis bekerülne egy telepített build-be, a hostname-feltétel
+ * miatt akkor sem szólalna meg a hosting domainjein.
+ */
+function enableAppCheckDebugToken(): void {
+	if (
+		environment.production ||
+		!environment.appCheck.debugToken ||
+		!LOCAL_HOSTS.includes(location.hostname)
+	) {
+		return;
+	}
+
+	(self as unknown as Record<string, unknown>)[
+		'FIREBASE_APPCHECK_DEBUG_TOKEN'
+	] = environment.appCheck.debugToken;
+}
+
 export const appConfig: ApplicationConfig = {
 	providers: [
 		provideZonelessChangeDetection(),
@@ -63,19 +91,22 @@ export const appConfig: ApplicationConfig = {
 		// Site key nélkül nem indítjuk el: az app elfut, de a callable-ök
 		// mindent elutasítanak, amíg a kulcs be nem kerül a környezetbe.
 		//
-		// Localhoston is a valódi reCAPTCHA fut: a dev kulcs domainjei között
-		// ott a `localhost` (infra/environments/dev/dev.tfvars), így nem kell
-		// debug tokent regisztrálni a fejlesztéshez.
+		// Localhoston a dev környezet debug tokenje szólal meg, ha a fejlesztő
+		// elkérte a tofu-tól (tools/app-check/generate-debug-token.mjs) —
+		// enélkül a valódi reCAPTCHA fut, aminek a dev kulcs domainjei között
+		// ott a `localhost` (infra/environments/dev/dev.tfvars).
 		...(environment.appCheck.recaptchaSiteKey
 			? [
-					provideAppCheck(() =>
-						initializeAppCheck(getApp(), {
+					provideAppCheck(() => {
+						enableAppCheckDebugToken();
+
+						return initializeAppCheck(getApp(), {
 							provider: new ReCaptchaEnterpriseProvider(
 								environment.appCheck.recaptchaSiteKey
 							),
 							isTokenAutoRefreshEnabled: true,
-						})
-					),
+						});
+					}),
 				]
 			: []),
 		provideFirestore(() =>

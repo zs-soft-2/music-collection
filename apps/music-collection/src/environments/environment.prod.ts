@@ -26,6 +26,12 @@ export const environment = {
 		 * elutasítanak.
 		 */
 		recaptchaSiteKey: '',
+		/**
+		 * Debug token a prod buildben SOHA: aki ismeri, az App Checket
+		 * megkerülve hívhatná a callable-öket. Csak a dev környezet kap
+		 * ilyet, a localhost-fejlesztéshez (`environment.ts`).
+		 */
+		debugToken: '',
 	},
 	spotify: {
 		/**

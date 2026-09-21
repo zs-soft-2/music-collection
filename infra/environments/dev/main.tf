@@ -184,6 +184,7 @@ module "firebase" {
 
   firestore_point_in_time_recovery = var.firestore_point_in_time_recovery
   app_check_domains                = var.app_check_domains
+  app_check_debug_token            = var.app_check_debug_token
 
   depends_on = [google_project_service.enabled]
 }
@@ -191,6 +192,16 @@ module "firebase" {
 # Ez megy az apps/music-collection/src/environments/environment*.ts
 # `appCheck.recaptchaSiteKey` mezőjébe:
 #   tofu output -raw app_check_site_key
+# A localhost App Check debug tokenje (csak dev). Titok — a fejlesztő így kéri
+# el, a fájlt a git nem látja:
+#   tofu -chdir=infra/environments/dev output -raw app_check_debug_token \
+#     > .app-check-debug-token
+output "app_check_debug_token" {
+  value       = module.firebase.app_check_debug_token
+  sensitive   = true
+  description = "A `.app-check-debug-token` fájl tartalma a fejlesztői gépen."
+}
+
 output "app_check_site_key" {
   value       = module.firebase.app_check_site_key
   description = "A kliensbe kerülő reCAPTCHA Enterprise site key (nem titok)."

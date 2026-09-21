@@ -13,6 +13,13 @@
 				"command": "node tools/version/generate-version.mjs"
 			}
 		},
+		"app-check-token": {
+			"executor": "nx:run-commands",
+			"cache": false,
+			"options": {
+				"command": "node tools/app-check/generate-debug-token.mjs"
+			}
+		},
 		"build": {
 			"executor": "@angular-devkit/build-angular:browser",
 			"outputs": [
@@ -96,7 +103,8 @@
 			"defaultConfiguration": "dev",
 			"dependsOn": [
 				"^build",
-				"version"
+				"version",
+				"app-check-token"
 			],
 			"inputs": [
 				"production",
@@ -106,6 +114,9 @@
 				},
 				{
 					"env": "GITHUB_SHA"
+				},
+				{
+					"env": "MC_APP_CHECK_DEBUG_TOKEN"
 				}
 			]
 		},
@@ -125,7 +136,8 @@
 			"defaultConfiguration": "development",
 			"continuous": true,
 			"dependsOn": [
-				"version"
+				"version",
+				"app-check-token"
 			]
 		},
 		"extract-i18n": {
@@ -142,7 +154,8 @@
 				"tsConfig": "apps/music-collection/tsconfig.spec.json"
 			},
 			"dependsOn": [
-				"version"
+				"version",
+				"app-check-token"
 			]
 		},
 		"lint": {

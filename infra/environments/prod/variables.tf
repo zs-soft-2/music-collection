@@ -107,6 +107,12 @@ variable "app_check_domains" {
   description = "Azok a domainek, ahonnan az App Check reCAPTCHA kulcsa tokent ad. Üresen App Check nem jön létre."
 }
 
+variable "app_check_debug_token" {
+  type        = bool
+  default     = false
+  description = "Devben: egy tofu-teremtette App Check debug token a localhosthoz. Prodban sosem."
+}
+
 variable "deployment_branches" {
   type        = list(string)
   default     = ["main"]

@@ -6,6 +6,10 @@ terraform {
       source  = "hashicorp/google-beta"
       version = "~> 6.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.5"
+    }
   }
 }
 
@@ -27,6 +31,12 @@ variable "app_check_domains" {
   default     = []
   description = "Azok a domainek, ahonnan az App Check reCAPTCHA kulcsa tokent ad (pl. a hosting domainek, devben a localhost). Üresen App Check nem jön létre."
 }
+variable "app_check_debug_token" {
+  type        = bool
+  default     = false
+  description = "Devben: egy tofu-teremtette App Check debug token a localhosthoz. Prodban sosem — aki ismeri a tokent, az App Checket megkerülve hívhatja a callable-öket."
+}
+
 variable "firestore_point_in_time_recovery" {
   type        = bool
   default     = false
@@ -109,6 +119,51 @@ resource "google_firebase_app_check_recaptcha_enterprise_config" "app" {
   project  = var.project_id
   app_id   = google_firebase_web_app.app.app_id
   site_key = google_recaptcha_enterprise_key.app_check[0].name
+}
+
+# ── App Check debug token (csak dev) ────────────────────────────────────────
+# A localhost ott van a kulcs engedélyezett domainjei között, de a valódi
+# reCAPTCHA a fejlesztői gépen sérülékeny: egy frissen nyitott profil, egy
+# letiltott third-party süti vagy egy bezárt hálózat pontja alacsony lehet, és
+# a callable-ök elutasítanak. A debug token ezt kerüli meg: az App Check a
+# token puszta ismeretét fogadja el bizonyítéknak.
+#
+# Ezért a token TITOK: a tofu teremti, a state-ben él, és a fejlesztő kéri el
+# (`tofu output -raw app_check_debug_token`). A publikus repóba sosem kerül be.
+resource "random_bytes" "app_check_debug" {
+  count  = var.app_check_debug_token ? 1 : 0
+  length = 16
+}
+
+# Az App Check kifejezetten UUID4-et vár ("should be a UUID4"), a `random_uuid`
+# viszont a verzió- és variáns-számjegyeket is véletlenre hagyja. Ezért a 16
+# véletlen bájtot magunk öntjük UUID4 alakba: a harmadik csoport `4`-gyel, a
+# negyedik `8`-cal kezdődik, a többi jegy a véletlenből jön.
+locals {
+  app_check_debug_hex = one(random_bytes.app_check_debug[*].hex)
+
+  app_check_debug_token = local.app_check_debug_hex == null ? null : join("-", [
+    substr(local.app_check_debug_hex, 0, 8),
+    substr(local.app_check_debug_hex, 8, 4),
+    "4${substr(local.app_check_debug_hex, 12, 3)}",
+    "8${substr(local.app_check_debug_hex, 15, 3)}",
+    substr(local.app_check_debug_hex, 18, 12),
+  ])
+}
+
+resource "google_firebase_app_check_debug_token" "app" {
+  provider     = google-beta
+  count        = var.app_check_debug_token ? 1 : 0
+  project      = var.project_id
+  app_id       = google_firebase_web_app.app.app_id
+  display_name = "${var.web_app_display_name}-localhost"
+  token        = local.app_check_debug_token
+}
+
+output "app_check_debug_token" {
+  value       = local.app_check_debug_token
+  sensitive   = true
+  description = "A localhost App Check debug tokenje (csak dev). Titok: a `.app-check-debug-token` fájlba megy, amit a git nem lát."
 }
 
 output "app_check_site_key" {

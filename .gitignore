@@ -68,3 +68,8 @@ Thumbs.db
 
 # Generated build version (tools/version/generate-version.mjs)
 /apps/music-collection/src/environments/version.ts
+
+# Generated App Check debug token (tools/app-check/generate-debug-token.mjs),
+# and the file it reads — the token is a secret, this repo is public
+/apps/music-collection/src/environments/app-check-debug-token.ts
+/.app-check-debug-token
