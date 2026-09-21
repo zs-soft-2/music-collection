@@ -37,6 +37,8 @@ interface SpotifyPlaybackState {
 	trackUris: Record<string, string>;
 	/** Volume of the output device, 0–100. */
 	volume: number;
+	/** Volume the browser player starts at, kept for this browser, 0–100. */
+	browserVolume: number;
 	error: string | null;
 }
 
@@ -78,6 +80,7 @@ export const SpotifyPlaybackStore = signalStore(
 		tracksAlbumId: null,
 		trackUris: {},
 		volume: 80,
+		browserVolume: 80,
 		error: null,
 	}),
 	withComputed((store) => ({
@@ -442,6 +445,7 @@ export const SpotifyPlaybackStore = signalStore(
 					}
 					const deviceId = store.remoteDeviceId();
 					if (!deviceId) {
+						patchState(store, { browserVolume: volume });
 						effect.saveBrowserVolume(volume);
 						player?.setVolume(volume / 100).catch(fail);
 						return;
@@ -454,6 +458,25 @@ export const SpotifyPlaybackStore = signalStore(
 							fail(error);
 						}
 					}, VOLUME_DEBOUNCE_MS);
+				},
+
+				/**
+				 * The volume the browser player starts at. Unlike `setVolume`
+				 * it never reaches a remote device: this is the setting of
+				 * this browser, not the volume of what is playing elsewhere.
+				 */
+				setBrowserVolume(volumePercent: number): void {
+					const volume = Math.round(
+						Math.min(100, Math.max(0, volumePercent))
+					);
+
+					patchState(store, { browserVolume: volume });
+					effect.saveBrowserVolume(volume);
+
+					if (!store.remoteDeviceId()) {
+						patchState(store, { volume });
+						player?.setVolume(volume / 100).catch(fail);
+					}
 				},
 
 				/** Plays on the device from now on; moves what is playing there. */
@@ -484,6 +507,7 @@ export const SpotifyPlaybackStore = signalStore(
 			patchState(store, {
 				configured: effect.configured,
 				volume: effect.browserVolume,
+				browserVolume: effect.browserVolume,
 			});
 			void store.start();
 		},

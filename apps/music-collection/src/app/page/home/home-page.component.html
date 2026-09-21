@@ -105,54 +105,7 @@
 						track collection.uid
 					) {
 						<li>
-							<a
-								class="collection"
-								[class.is-completed]="collection.completed"
-								[routerLink]="['/collections', collection.slug]"
-							>
-								<span class="collection-name">
-									{{ collection.name }}
-									@if (
-										collection.completed &&
-										collection.badgeName
-									) {
-										<span class="collection-badge">
-											<i
-												class="pi pi-check"
-												aria-hidden="true"
-											></i>
-											{{ collection.badgeName }}
-										</span>
-									}
-								</span>
-								<span
-									class="collection-bar"
-									role="progressbar"
-									[attr.aria-valuenow]="collection.percentage"
-									aria-valuemin="0"
-									aria-valuemax="100"
-									[attr.aria-label]="
-										'Progress on ' + collection.name
-									"
-								>
-									<span
-										class="collection-fill"
-										[style.width.%]="collection.percentage"
-									></span>
-								</span>
-								<span class="collection-counts">
-									{{ collection.owned }} /
-									{{ collection.total }}
-									<span class="collection-points">
-										{{
-											collection.completed
-												? collection.earnedPoints
-												: collection.points
-										}}
-										pts
-									</span>
-								</span>
-							</a>
+							<mc-collection-progress [collection]="collection" />
 						</li>
 					}
 				</ul>

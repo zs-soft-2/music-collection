@@ -1,6 +1,6 @@
 <div class="page">
+	<mc-page-breadcrumb [trail]="store.trail()" />
 	@if (store.artist(); as artist) {
-		<mc-back-link fallback="/collection" />
 		<!-- Profile -->
 		<header class="hero">
 			@if (artist.headerUrl) {

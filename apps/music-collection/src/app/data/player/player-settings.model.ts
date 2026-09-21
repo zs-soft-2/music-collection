@@ -1,3 +1,5 @@
+import { UserSetting } from '../user-settings';
+
 /** Where the music comes from; `auto` picks the best one available. */
 export type PlayerSourceSetting = 'auto' | 'spotify' | 'youtube';
 /** How the player opens when playback starts. */
@@ -49,3 +51,21 @@ export function resolvePlayerSettings(
 ): PlayerSettings {
 	return { ...PLAYER_DEFAULTS[context], ...overrides[context] };
 }
+
+export const PLAYER_SETTING: UserSetting<PlayerSettingsOverrides> = {
+	id: 'player',
+	featureKey: 'player-setting',
+	storageKey: 'mc-player-settings',
+	toValue: (data) => {
+		// The browser used to keep the overrides without the wrapper; the
+		// known contexts are picked out, so the sync stamps stay behind.
+		const raw = (data['overrides'] ?? data) as PlayerSettingsOverrides;
+
+		return Object.fromEntries(
+			(Object.keys(PLAYER_DEFAULTS) as PlayerContext[])
+				.filter((context) => !!raw[context])
+				.map((context) => [context, raw[context]])
+		);
+	},
+	toDocument: (overrides) => ({ overrides }),
+};

@@ -1,10 +1,6 @@
 <div class="page" [class.is-compact]="compact()">
+	<mc-page-breadcrumb [trail]="store.trail()" />
 	@if (store.album(); as album) {
-		<mc-back-link
-			[fallback]="
-				album.artistId ? ['/artist', album.artistId] : '/collection'
-			"
-		/>
 		<!-- Album -->
 		<header class="hero">
 			@if (album.coverUrl) {

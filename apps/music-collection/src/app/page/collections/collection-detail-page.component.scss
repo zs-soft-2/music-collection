@@ -35,6 +35,15 @@
 	border-bottom: 1px solid var(--mc-border);
 }
 
+.hero-art {
+	flex: 0 0 auto;
+	width: 8rem;
+	height: 8rem;
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-lg);
+	--mc-collection-artwork-icon: 2rem;
+}
+
 .hero-text {
 	flex: 1 1 22rem;
 }

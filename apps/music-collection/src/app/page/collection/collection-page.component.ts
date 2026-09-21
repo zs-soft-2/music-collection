@@ -1,6 +1,6 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { RecordShelfComponent } from './component/record-shelf/record-shelf.component';
 import { ReleaseRowComponent } from './component/release-row/release-row.component';
@@ -11,6 +11,7 @@ import {
 	ReleaseCardComponent,
 	StyleBarsComponent,
 } from '../../shared/music-ui';
+import { CollectionProgressComponent } from '../collections/component/collection-progress/collection-progress.component';
 import {
 	CollectionGroup,
 	CollectionSort,
@@ -37,6 +38,8 @@ import { CollectionPageStore } from './collection-page.store';
 		RecordShelfComponent,
 		DecadeChartComponent,
 		StyleBarsComponent,
+		CollectionProgressComponent,
+		RouterLink,
 	],
 })
 export class CollectionPageComponent {
@@ -49,6 +52,10 @@ export class CollectionPageComponent {
 	protected readonly viewOptions = VIEW_OPTIONS;
 
 	protected readonly skeletons = Array.from({ length: 12 }, (_, i) => i);
+	protected readonly collectionSkeletons = Array.from(
+		{ length: 3 },
+		(_, i) => i
+	);
 
 	public constructor() {
 		/* The home page quick search links here with `?q=`. */

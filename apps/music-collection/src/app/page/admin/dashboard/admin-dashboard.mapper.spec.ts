@@ -1,5 +1,12 @@
+import { AlbumEntity, ArtistEntity } from '@music-collection/api';
+
+import { TrackStats } from '../../../data/track-stats';
 import { ReleaseView } from '../../../shared/music-ui';
-import { collectionGrowth } from './admin-dashboard.mapper';
+import {
+	catalogCompleteness,
+	collectionGrowth,
+	trackCompleteness,
+} from './admin-dashboard.mapper';
 
 const added = (iso: string) =>
 	({ addedAt: new Date(iso).getTime() }) as ReleaseView;
@@ -41,5 +48,86 @@ describe('collectionGrowth', () => {
 			added: 2,
 			total: 3,
 		});
+	});
+});
+
+const stats = (overrides: Partial<TrackStats> = {}): TrackStats => ({
+	total: 100,
+	albumUids: new Set<string>(),
+	withLyrics: 40,
+	withSpotify: 100,
+	withYoutube: 0,
+	...overrides,
+});
+
+describe('trackCompleteness', () => {
+	it('counts what is missing from the tracks', () => {
+		const group = trackCompleteness(stats());
+
+		expect(group.total).toBe(100);
+		expect(group.checks).toEqual([
+			{ label: 'Lyrics', missing: 60 },
+			{ label: 'Spotify link', missing: 0 },
+			{ label: 'YouTube video', missing: 100 },
+		]);
+	});
+
+	it('keeps rows at zero when lyrics outnumber the tracks', () => {
+		const group = trackCompleteness(stats({ total: 2, withLyrics: 3 }));
+
+		expect(group.checks[0].missing).toBe(0);
+	});
+
+	it('leaves the lyrics row out when they could not be counted', () => {
+		const group = trackCompleteness(stats({ withLyrics: null }));
+
+		expect(group.checks.map((check) => check.label)).toEqual([
+			'Spotify link',
+			'YouTube video',
+		]);
+	});
+});
+
+const album = (uid: string) => ({ uid }) as AlbumEntity;
+const artist = (uid: string) => ({ uid }) as ArtistEntity;
+
+describe('catalogCompleteness', () => {
+	const albums = [album('a'), album('b'), album('c')];
+	const artists = [artist('x'), artist('y')];
+
+	it('counts the albums without a tracklist', () => {
+		const [group] = catalogCompleteness(albums, [], new Set(['a']));
+
+		expect(group.checks).toContainEqual({
+			label: 'Tracklist',
+			missing: 2,
+		});
+	});
+
+	it('leaves the tracklist row out until the tracks are known', () => {
+		const [group] = catalogCompleteness(albums, [], null);
+
+		expect(group.checks.map((check) => check.label)).not.toContain(
+			'Tracklist'
+		);
+	});
+
+	it('counts the bands without a line-up', () => {
+		const [, group] = catalogCompleteness(
+			[],
+			artists,
+			null,
+			new Set(['x'])
+		);
+
+		expect(group.checks).toContainEqual({ label: 'Line-up', missing: 1 });
+	});
+
+	it('leaves the line-up row out until the memberships are known', () => {
+		const [, group] = catalogCompleteness([], artists, null);
+
+		expect(group.checks.map((check) => check.label)).not.toContain(
+			'Line-up'
+		);
 	});
 });

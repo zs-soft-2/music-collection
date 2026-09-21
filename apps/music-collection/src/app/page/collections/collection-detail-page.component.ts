@@ -3,7 +3,8 @@ import { map } from 'rxjs';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
-import { BackLinkComponent } from '../../shared/back-link';
+import { CollectionArtworkComponent } from '../../shared/collection-artwork';
+import { PageBreadcrumbComponent } from '../../shared/page-breadcrumb';
 
 import { CollectionDetailPageStore } from './collection-detail-page.store';
 import { ALBUM_FILTER_OPTIONS, AlbumFilter } from './collections.model';
@@ -19,7 +20,7 @@ import { ALBUM_FILTER_OPTIONS, AlbumFilter } from './collections.model';
 	selector: 'mc-collection-detail-page',
 	templateUrl: './collection-detail-page.component.html',
 	styleUrls: ['./collection-detail-page.component.scss'],
-	imports: [RouterLink, BackLinkComponent],
+	imports: [RouterLink, CollectionArtworkComponent, PageBreadcrumbComponent],
 })
 export class CollectionDetailPageComponent {
 	protected readonly store = inject(CollectionDetailPageStore);

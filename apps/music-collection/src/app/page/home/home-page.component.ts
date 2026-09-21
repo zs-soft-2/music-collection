@@ -6,6 +6,7 @@ import {
 	ArtistTileComponent,
 	ReleaseCardComponent,
 } from '../../shared/music-ui';
+import { CollectionProgressComponent } from '../collections/component/collection-progress/collection-progress.component';
 import { ArtistSpotlightComponent } from './component/artist-spotlight/artist-spotlight.component';
 import { CatalogCoverageChartComponent } from './component/catalog-coverage-chart/catalog-coverage-chart.component';
 import { HomeSearchComponent } from './component/home-search/home-search.component';
@@ -30,6 +31,7 @@ import { HomePageStore } from './home-page.store';
 		ArtistTileComponent,
 		CatalogCoverageChartComponent,
 		HomeSearchComponent,
+		CollectionProgressComponent,
 	],
 })
 export class HomePageComponent {

@@ -54,6 +54,7 @@ import {
 } from '@music-collection/domain/music-collection/core';
 
 import { AlbumDetailsEffect } from '../../data/album-details';
+import { UserSettingsEffect } from '../../data/user-settings';
 import { ReleaseRequestEffect } from '../../data/release-request';
 import {
 	ArtistView,
@@ -62,6 +63,8 @@ import {
 	toDiscography,
 	toReleaseView,
 } from '../../shared/music-ui';
+import { Crumb } from '../../shared/page-breadcrumb';
+import { ALBUM_VIEW_SETTING } from './album-view.setting';
 import {
 	DisposalDraft,
 	groupCredits,
@@ -84,6 +87,8 @@ import {
 
 interface AlbumPageState {
 	albumId: string | null;
+	/** Sections collapsed, so the whole album fits on one screen. */
+	compact: boolean;
 	albums: AlbumEntity[];
 	artists: ArtistView[];
 	releases: ReleaseView[];
@@ -135,6 +140,7 @@ interface AlbumPageState {
 
 const initialState: AlbumPageState = {
 	albumId: null,
+	compact: false,
 	albums: [],
 	artists: [],
 	releases: [],
@@ -247,6 +253,23 @@ export const AlbumPageStore = signalStore(
 
 		return {
 			album,
+			/** My Collection › the artist (when known) › this album. */
+			trail: computed<Crumb[]>(() => {
+				const profile = album();
+
+				return [
+					{ label: 'My Collection', link: '/collection' },
+					...(profile?.artistId
+						? [
+								{
+									label: profile.artistName,
+									link: ['/artist', profile.artistId],
+								},
+							]
+						: []),
+					...(profile ? [{ label: profile.title }] : []),
+				];
+			}),
 			/** The collections this record is part of, nearest to complete. */
 			collections: computed(() =>
 				toAlbumCollections(
@@ -905,7 +928,7 @@ export const AlbumPageStore = signalStore(
 			),
 		})
 	),
-	withMethods((store) => {
+	withMethods((store, settingsEffect = inject(UserSettingsEffect)) => {
 		let catalogRequested = false;
 
 		return {
@@ -945,6 +968,30 @@ export const AlbumPageStore = signalStore(
 			closeRemoval(): void {
 				patchState(store, { removingCopyId: null });
 			},
+
+			/** The layout kept for the user, and any later change to it. */
+			loadView: rxMethod<void>(
+				pipe(
+					switchMap(() => settingsEffect.value$(ALBUM_VIEW_SETTING)),
+					tap(({ compact }) => {
+						if (compact !== null) {
+							patchState(store, { compact });
+						}
+					})
+				)
+			),
+
+			/** Collapses the sections, or opens them again, for good. */
+			toggleCompact(): void {
+				const compact = !store.compact();
+
+				patchState(store, { compact });
+				settingsEffect
+					.save(ALBUM_VIEW_SETTING, { compact })
+					.catch((error) => {
+						console.error('Album view not saved', error);
+					});
+			},
 		};
 	}),
 	withComputed((store, player = inject(PlayerStore)) => ({
@@ -982,6 +1029,7 @@ export const AlbumPageStore = signalStore(
 			});
 			inject(DestroyRef).onDestroy(() => player.clearPage(page));
 
+			store.loadView(of(undefined));
 			store.loadDetails(of(undefined));
 			store.loadAlbums(of(undefined));
 			store.loadArtists(of(undefined));

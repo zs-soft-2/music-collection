@@ -5,6 +5,8 @@ import { provideHttpClient, withXhr } from '@angular/common/http';
 import {
 	ApplicationConfig,
 	importProvidersFrom,
+	inject,
+	provideEnvironmentInitializer,
 	provideZonelessChangeDetection,
 } from '@angular/core';
 import { getApp, initializeApp, provideFirebaseApp } from '@angular/fire/app';
@@ -42,7 +44,7 @@ import { environment } from '../environments/environment';
 import { routes } from './app-routing';
 import { HookModule } from './module/hook';
 import { metaReducers } from './reducer';
-import { MusicPreset } from './theme';
+import { AppearanceSyncService, MusicPreset } from './theme';
 import { NgxPermissionsModule } from 'ngx-permissions';
 
 export const appConfig: ApplicationConfig = {
@@ -69,6 +71,10 @@ export const appConfig: ApplicationConfig = {
 		provideAngularSvgIcon(),
 		provideMusicCollection(),
 		provideAnimationsAsync(),
+		// Carries the look of the app to and from the account. It has to be
+		// alive wherever the theme is switched, which is every page, so it
+		// starts with the app rather than with the page that shows it.
+		provideEnvironmentInitializer(() => inject(AppearanceSyncService)),
 		providePrimeNG({
 			theme: {
 				preset: MusicPreset,

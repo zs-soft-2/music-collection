@@ -1,5 +1,5 @@
 <div class="page">
-	<mc-back-link fallback="/collections" label="Collections" />
+	<mc-page-breadcrumb [trail]="store.trail()" />
 
 	@if (store.isLoading()) {
 		<div class="skeleton hero-skeleton"></div>
@@ -17,6 +17,13 @@
 		@let collection = store.collection()!;
 
 		<header class="hero" [class.is-completed]="collection.completed">
+			<mc-collection-artwork
+				class="hero-art"
+				[coverImageUrl]="collection.coverImageUrl"
+				[covers]="collection.covers"
+				[icon]="collection.icon"
+			/>
+
 			<div class="hero-text">
 				<p class="eyebrow">Collection</p>
 				<h1>{{ collection.name }}</h1>

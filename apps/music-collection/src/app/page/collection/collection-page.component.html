@@ -53,6 +53,55 @@
 		}
 	</section>
 
+	<!-- Collections: how far this shelf gets on the published sets -->
+	@if (store.standingsLoading() || store.collections().length) {
+		<section
+			class="collections-section"
+			aria-labelledby="collections-title"
+		>
+			<header class="collections-head">
+				<h2 id="collections-title" class="glance-title">
+					Collection goals
+				</h2>
+
+				@if (!store.standingsLoading()) {
+					<p class="collections-summary">
+						{{ store.collectionsSummary().completed }} of
+						{{ store.collectionsSummary().total }} complete
+						<span aria-hidden="true">·</span>
+						{{ store.collectionsSummary().missing }} records missing
+						<span aria-hidden="true">·</span>
+						{{ store.collectionsSummary().earnedPoints }} pts earned
+					</p>
+				}
+
+				<a class="collections-more" routerLink="/collections">
+					All collections
+					<i class="pi pi-arrow-right" aria-hidden="true"></i>
+				</a>
+			</header>
+
+			@if (store.standingsLoading()) {
+				<ul class="collection-list">
+					@for (skeleton of collectionSkeletons; track skeleton) {
+						<li class="skeleton collection-skeleton"></li>
+					}
+				</ul>
+			} @else {
+				<ul class="collection-list">
+					@for (
+						collection of store.collections();
+						track collection.uid
+					) {
+						<li>
+							<mc-collection-progress [collection]="collection" />
+						</li>
+					}
+				</ul>
+			}
+		</section>
+	}
+
 	<!-- Toolbar -->
 	<div class="toolbar">
 		<div class="search">

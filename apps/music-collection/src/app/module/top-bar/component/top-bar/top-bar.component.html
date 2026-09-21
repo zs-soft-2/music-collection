@@ -126,6 +126,15 @@
 							}
 						</div>
 						<a
+							class="menu-item"
+							role="menuitem"
+							routerLink="/profile"
+							(click)="closeMenus()"
+						>
+							<i class="pi pi-user" aria-hidden="true"></i>
+							Profile
+						</a>
+						<a
 							*ngxPermissionsOnly="adminRoles"
 							class="menu-item"
 							role="menuitem"

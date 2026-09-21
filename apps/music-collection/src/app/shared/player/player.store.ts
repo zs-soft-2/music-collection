@@ -461,6 +461,8 @@ export const PlayerStore = signalStore(
 				devices: computed(() => spotify.otherDevices()),
 				/** Chosen output device; null plays in this browser. */
 				selectedDeviceId: computed(() => spotify.selectedDeviceId()),
+				/** Volume the browser player starts at, 0–100. */
+				spotifyBrowserVolume: computed(() => spotify.browserVolume()),
 				/** Albums of the catalog with a Spotify or YouTube link. */
 				playableAlbumIds: computed(
 					() =>
@@ -507,6 +509,27 @@ export const PlayerStore = signalStore(
 				settingsEffect.save(overrides).catch((error) => {
 					console.error('Player settings not saved', error);
 				});
+			};
+
+			/** The kind of page the player is on, which the menu applies to. */
+			const shownContext = (): PlayerContext =>
+				store.shown().request?.context ?? 'default';
+
+			const updateFor = (
+				context: PlayerContext,
+				changes: Partial<PlayerSettings>
+			) => {
+				saveOverrides({
+					...store.overrides(),
+					[context]: { ...store.overrides()[context], ...changes },
+				});
+			};
+
+			const resetFor = (context: PlayerContext) => {
+				const overrides = { ...store.overrides() };
+
+				delete overrides[context];
+				saveOverrides(overrides);
 			};
 
 			/** Plays the request from its track (or the album's start). */
@@ -731,6 +754,11 @@ export const PlayerStore = signalStore(
 					return spotify.selectDevice(deviceId);
 				},
 
+				/** The volume the browser player starts at, 0–100. */
+				setSpotifyBrowserVolume(volumePercent: number): void {
+					spotify.setBrowserVolume(volumePercent);
+				},
+
 				/** Tab audio capture is possible in this browser. */
 				audioCaptureSupported(): boolean {
 					return audioCaptureEffect.supported;
@@ -787,22 +815,27 @@ export const PlayerStore = signalStore(
 
 				/** Changes the settings of the shown kind of page and keeps them. */
 				updateSettings(changes: Partial<PlayerSettings>): void {
-					const context = store.shown().request?.context ?? 'default';
-					saveOverrides({
-						...store.overrides(),
-						[context]: {
-							...store.overrides()[context],
-							...changes,
-						},
-					});
+					updateFor(shownContext(), changes);
 				},
 
 				/** Back to the defaults of the shown kind of page. */
 				resetSettings(): void {
-					const context = store.shown().request?.context ?? 'default';
-					const overrides = { ...store.overrides() };
-					delete overrides[context];
-					saveOverrides(overrides);
+					resetFor(shownContext());
+				},
+
+				/**
+				 * The same, for a kind of page that is not on show — the
+				 * profile sets all of them at once.
+				 */
+				updateSettingsFor(
+					context: PlayerContext,
+					changes: Partial<PlayerSettings>
+				): void {
+					updateFor(context, changes);
+				},
+
+				resetSettingsFor(context: PlayerContext): void {
+					resetFor(context);
 				},
 
 				loadSettings: rxMethod<void>(

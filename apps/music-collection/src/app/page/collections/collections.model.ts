@@ -33,6 +33,11 @@ export interface CollectionCardView {
 	covers: string[];
 }
 
+/** A card as the list renders it: the collector's pick decides the star. */
+export interface CollectionCardListView extends CollectionCardView {
+	followed: boolean;
+}
+
 /** One album of the collection, with whether it is on the shelf. */
 export interface CollectionAlbumView extends MusicCollectionMembership {
 	owned: boolean;
@@ -63,3 +68,12 @@ export const ALBUM_FILTER_OPTIONS: { value: AlbumFilter; label: string }[] = [
 	{ value: 'owned', label: 'Owned' },
 	{ value: 'missing', label: 'Missing' },
 ];
+
+/** Which collections the list shows. */
+export type CollectionsTab = 'following' | 'all';
+
+export const COLLECTIONS_TAB_OPTIONS: { value: CollectionsTab; label: string }[] =
+	[
+		{ value: 'following', label: 'Following' },
+		{ value: 'all', label: 'All' },
+	];

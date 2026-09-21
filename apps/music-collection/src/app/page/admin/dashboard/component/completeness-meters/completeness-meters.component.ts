@@ -11,24 +11,27 @@ import { CompletenessGroup } from '../../admin-dashboard.mapper';
 /**
  * Adatminőség: entitás-típusonként egy-egy mérősáv mezőnként, hogy a rekordok
  * hány százalékán van kitöltve. A sáv a kitöltött részt mutatja, mellette a
- * hiányzók száma áll, így a szám hover nélkül is olvasható.
+ * hiányzók száma áll, így a szám hover nélkül is olvasható. Az „Open list”
+ * csak ott jelenik meg, ahol a típusnak van admin listája.
  */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-completeness-meters',
 	imports: [RouterLink],
 	template: `
-		@for (group of groups(); track group.route) {
+		@for (group of groups(); track group.label) {
 			<section class="group" [attr.aria-label]="group.label">
 				<header class="group-head">
 					<h3>
 						{{ group.label }}
 						<span class="group-total">{{ group.total }}</span>
 					</h3>
-					<a class="more" [routerLink]="['..', group.route]">
-						Open list
-						<i class="pi pi-arrow-right" aria-hidden="true"></i>
-					</a>
+					@if (group.route) {
+						<a class="more" [routerLink]="['..', group.route]">
+							Open list
+							<i class="pi pi-arrow-right" aria-hidden="true"></i>
+						</a>
+					}
 				</header>
 
 				<ul class="meters">

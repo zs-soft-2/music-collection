@@ -25,20 +25,10 @@ import { AlbumTracklistComponent } from './component/album-tracklist/album-track
 import { CopyRemovalComponent } from './component/copy-removal/copy-removal.component';
 import { ReleasePickerComponent } from './component/release-picker/release-picker.component';
 import { WishlistDialogComponent } from './component/wishlist-dialog/wishlist-dialog.component';
-import { BackLinkComponent } from '../../shared/back-link';
+import { PageBreadcrumbComponent } from '../../shared/page-breadcrumb';
 
 type AlbumSection =
 	'original' | 'listen' | 'tracklist' | 'credits' | 'copies' | 'more';
-
-const COMPACT_STORAGE_KEY = 'mc-album-compact';
-
-function readCompact(): boolean {
-	try {
-		return localStorage.getItem(COMPACT_STORAGE_KEY) === 'true';
-	} catch {
-		return false;
-	}
-}
 
 /**
  * Album page: the album with its original release, tracklist, credits
@@ -52,7 +42,7 @@ function readCompact(): boolean {
 	templateUrl: './album-page.component.html',
 	styleUrls: ['./album-page.component.scss'],
 	imports: [
-		BackLinkComponent,
+		PageBreadcrumbComponent,
 		RouterLink,
 		DiscographyCardComponent,
 		FormatBadgeComponent,
@@ -73,8 +63,9 @@ export class AlbumPageComponent {
 	private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 	private readonly injector = inject(Injector);
 
-	/** Compact view: sections show only their titles until opened. Remembered. */
-	protected readonly compact = signal(readCompact());
+	/** Compact view: sections show only their titles until opened. Kept for
+	 * the user, so it follows them to the next browser. */
+	protected readonly compact = this.store.compact;
 	/** Sections opened in the compact view; a new album starts closed. */
 	protected readonly openSections = signal(new Set<AlbumSection>());
 
@@ -156,15 +147,6 @@ export class AlbumPageComponent {
 			}
 			removingCopyId = copyId;
 		});
-
-		effect(() => {
-			const compact = this.compact();
-			try {
-				localStorage.setItem(COMPACT_STORAGE_KEY, String(compact));
-			} catch {
-				// Storage unavailable (e.g. private window): lasts for the session.
-			}
-		});
 	}
 
 	protected isOpen(section: AlbumSection): boolean {
@@ -182,7 +164,7 @@ export class AlbumPageComponent {
 	}
 
 	protected toggleCompact(): void {
-		this.compact.update((compact) => !compact);
+		this.store.toggleCompact();
 		this.openSections.set(new Set());
 	}
 

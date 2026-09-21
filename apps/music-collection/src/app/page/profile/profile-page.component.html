@@ -1,0 +1,77 @@
+<div class="page">
+	<header class="hero">
+		<div class="hero-text">
+			<p class="eyebrow">musiCollection</p>
+			<h1>Profile</h1>
+			<p class="lead">
+				Your account, and how the app behaves for you. What you set here
+				is kept for the account, so it follows you to the next browser
+				you sign in on.
+			</p>
+		</div>
+	</header>
+
+	@if (store.isAuthenticated()) {
+		<div class="sections">
+			<section class="card">
+				<header class="card-head">
+					<h2>Account</h2>
+					<p>How you appear in the app.</p>
+				</header>
+
+				<mc-profile-account />
+			</section>
+
+			<section class="card">
+				<header class="card-head">
+					<h2>Appearance</h2>
+					<p>The theme and how much of the screen the pages use.</p>
+				</header>
+
+				<mc-profile-appearance />
+			</section>
+
+			<section class="card">
+				<header class="card-head">
+					<h2>Lists</h2>
+					<p>
+						What the collection opens with, and how much of an album
+						page shows at once.
+					</p>
+				</header>
+
+				<mc-profile-lists />
+			</section>
+
+			<section class="card">
+				<header class="card-head">
+					<h2>Playback</h2>
+					<p>
+						How the player starts, one setting per kind of page — a
+						track page may well want a fuller stage than the rest.
+					</p>
+				</header>
+
+				<mc-profile-playback />
+			</section>
+
+			<section class="card">
+				<header class="card-head">
+					<h2>Spotify</h2>
+					<p>Where Spotify plays, and how loud it starts here.</p>
+				</header>
+
+				<mc-profile-spotify />
+			</section>
+		</div>
+	} @else {
+		<div class="signed-out">
+			<p>Sign in to set up your profile.</p>
+
+			<button type="button" (click)="store.login()">
+				<i class="pi pi-sign-in" aria-hidden="true"></i>
+				Log in
+			</button>
+		</div>
+	}
+</div>

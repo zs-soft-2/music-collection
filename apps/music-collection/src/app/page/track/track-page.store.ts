@@ -30,6 +30,7 @@ import {
 	TrackDetailsEffect,
 	TrackDetailsUpdate,
 } from '../../data/track-details';
+import { Crumb } from '../../shared/page-breadcrumb';
 import { PlayRequest, PlayerStore } from '../../shared/player';
 import { toAlbumProfile } from '../album/album.mapper';
 import { toTrackCredits } from './track.mapper';
@@ -79,13 +80,42 @@ export const TrackPageStore = signalStore(
 			{ initialValue: [] as string[] }
 		);
 
+		const album = computed(() => {
+			const entity = store
+				.albums()
+				.find((item) => item.uid === store.albumId());
+
+			return entity ? toAlbumProfile(entity) : null;
+		});
+
 		return {
 			track,
-			album: computed(() => {
-				const album = store
-					.albums()
-					.find((item) => item.uid === store.albumId());
-				return album ? toAlbumProfile(album) : null;
+			album,
+			/** My Collection › the artist › the album › this track. */
+			trail: computed<Crumb[]>(() => {
+				const profile = album();
+				const name = track()?.name;
+
+				return [
+					{ label: 'My Collection', link: '/collection' },
+					...(profile?.artistId
+						? [
+								{
+									label: profile.artistName,
+									link: ['/artist', profile.artistId],
+								},
+							]
+						: []),
+					...(profile
+						? [
+								{
+									label: profile.title,
+									link: ['/album', profile.id],
+								},
+							]
+						: []),
+					...(name ? [{ label: name }] : []),
+				];
 			}),
 			spotifyTrackId: computed(() => {
 				const id = track()?.spotifyTrackId;

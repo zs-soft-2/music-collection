@@ -31,6 +31,7 @@ import {
 	toDiscography,
 	toReleaseView,
 } from '../../shared/music-ui';
+import { Crumb } from '../../shared/page-breadcrumb';
 import {
 	ArtistProfileView,
 	albumTypeCounts,
@@ -123,6 +124,15 @@ export const ArtistPageStore = signalStore(
 		});
 
 		return {
+			/** My Collection › this artist. */
+			trail: computed<Crumb[]>(() => {
+				const name = store.artist()?.name;
+
+				return [
+					{ label: 'My Collection', link: '/collection' },
+					...(name ? [{ label: name }] : []),
+				];
+			}),
 			ownReleases,
 			discography,
 			albumTypes: computed(() => albumTypeCounts(discography())),

@@ -25,7 +25,7 @@ import {
 import { ArtistPageStore } from './artist-page.store';
 import { ArtistLineupComponent } from './component/artist-lineup/artist-lineup.component';
 import { DiscographyTimelineComponent } from './component/discography-timeline/discography-timeline.component';
-import { BackLinkComponent } from '../../shared/back-link';
+import { PageBreadcrumbComponent } from '../../shared/page-breadcrumb';
 
 /** Paragraphs shown before "Read more". */
 const COLLAPSED_PARAGRAPHS = 2;
@@ -45,7 +45,7 @@ const SECTION_REACHED_OFFSET = 24;
 	templateUrl: './artist-page.component.html',
 	styleUrls: ['./artist-page.component.scss'],
 	imports: [
-		BackLinkComponent,
+		PageBreadcrumbComponent,
 		RouterLink,
 		ArtistTileComponent,
 		ReleaseCardComponent,

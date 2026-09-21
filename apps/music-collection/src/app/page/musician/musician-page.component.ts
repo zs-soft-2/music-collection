@@ -19,7 +19,7 @@ import {
 } from '../../shared/music-ui';
 import { MusicianBandView, bandsSpan } from './musician.mapper';
 import { MusicianPageStore } from './musician-page.store';
-import { BackLinkComponent } from '../../shared/back-link';
+import { PageBreadcrumbComponent } from '../../shared/page-breadcrumb';
 
 /** Paragraphs shown before "Read more". */
 const COLLAPSED_PARAGRAPHS = 2;
@@ -45,7 +45,7 @@ const TYPE_LABELS: Record<string, string> = {
 	templateUrl: './musician-page.component.html',
 	styleUrls: ['./musician-page.component.scss'],
 	imports: [
-		BackLinkComponent,
+		PageBreadcrumbComponent,
 		RouterLink,
 		DiscographyCardComponent,
 		AdminEditLinkComponent,

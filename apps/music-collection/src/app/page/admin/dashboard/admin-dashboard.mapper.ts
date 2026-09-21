@@ -1,5 +1,6 @@
 import { AlbumEntity, ArtistEntity } from '@music-collection/api';
 
+import { TrackStats } from '../../../data/track-stats';
 import {
 	CountDatum,
 	ReleaseView,
@@ -16,8 +17,8 @@ export interface CompletenessCheck {
 /** Completeness of one entity type: how many records lack each field. */
 export interface CompletenessGroup {
 	label: string;
-	/** Admin list route of the entity type. */
-	route: string;
+	/** Admin list route of the entity type, when it has a list. */
+	route?: string;
 	total: number;
 	checks: CompletenessCheck[];
 }
@@ -85,15 +86,64 @@ function completenessGroup<T>(
 	};
 }
 
-/** Missing fields of the catalog albums and artists. */
+/**
+ * Missing fields of the catalog albums and artists. Whether an album has a
+ * tracklist, or an artist a line-up, is only known once the tracks and the
+ * memberships are loaded, so those rows are left out until
+ * `albumUidsWithTracks` and `artistUidsWithLineup` arrive.
+ */
 export function catalogCompleteness(
 	albums: AlbumEntity[],
-	artists: ArtistEntity[]
+	artists: ArtistEntity[],
+	albumUidsWithTracks: ReadonlySet<string> | null,
+	artistUidsWithLineup: ReadonlySet<string> | null = null
 ): CompletenessGroup[] {
+	const albumChecks: Check<AlbumEntity>[] = albumUidsWithTracks
+		? [
+				...ALBUM_CHECKS,
+				{
+					label: 'Tracklist',
+					isFilled: (album) => albumUidsWithTracks.has(album.uid),
+				},
+			]
+		: ALBUM_CHECKS;
+
+	const artistChecks: Check<ArtistEntity>[] = artistUidsWithLineup
+		? [
+				...ARTIST_CHECKS,
+				{
+					label: 'Line-up',
+					isFilled: (artist) => artistUidsWithLineup.has(artist.uid),
+				},
+			]
+		: ARTIST_CHECKS;
+
 	return [
-		completenessGroup('Albums', 'album', albums, ALBUM_CHECKS),
-		completenessGroup('Artists', 'artist', artists, ARTIST_CHECKS),
+		completenessGroup('Albums', 'album', albums, albumChecks),
+		completenessGroup('Artists', 'artist', artists, artistChecks),
 	];
+}
+
+/**
+ * Lyrics and play links of the catalog tracks. The lyrics are counted rather
+ * than read, so lyrics left behind by a deleted track could outnumber the
+ * tracks; such a row stays at zero instead of going negative. Without a
+ * lyrics count the row is left out, so nothing claims they are all missing.
+ */
+export function trackCompleteness(stats: TrackStats): CompletenessGroup {
+	const missing = (filled: number) => Math.max(stats.total - filled, 0);
+
+	return {
+		label: 'Tracks',
+		total: stats.total,
+		checks: [
+			...(stats.withLyrics === null
+				? []
+				: [{ label: 'Lyrics', missing: missing(stats.withLyrics) }]),
+			{ label: 'Spotify link', missing: missing(stats.withSpotify) },
+			{ label: 'YouTube video', missing: missing(stats.withYoutube) },
+		],
+	};
 }
 
 /** Collections spanning more years than this are shown per year, not month. */

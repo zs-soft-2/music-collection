@@ -15,6 +15,8 @@ import {
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
+import { Crumb } from '../../shared/page-breadcrumb';
+
 import { toCollectionDetail } from './collections.mapper';
 import { AlbumFilter, CollectionDetailView } from './collections.model';
 
@@ -36,6 +38,15 @@ const initialState: CollectionDetailPageState = {
 export const CollectionDetailPageStore = signalStore(
 	withState(initialState),
 	withComputed((store) => ({
+		/** Collections › this collection. */
+		trail: computed<Crumb[]>(() => {
+			const name = store.collection()?.name;
+
+			return [
+				{ label: 'Collections', link: '/collections' },
+				...(name ? [{ label: name }] : []),
+			];
+		}),
 		albums: computed(() => {
 			const albums = store.collection()?.albums ?? [];
 			const filter = store.filter();

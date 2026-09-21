@@ -5,6 +5,10 @@ import {
 	CollectionItemEntity,
 	CollectionItemStateService,
 } from '@music-collection/api';
+import {
+	MusicCollectionEffect,
+	MusicCollectionStanding,
+} from '@music-collection/domain/music-collection/core';
 import { tapResponse } from '@ngrx/operators';
 import {
 	patchState,
@@ -16,12 +20,18 @@ import {
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
+import { UserSettingsEffect } from '../../data/user-settings';
 import {
 	ReleaseView,
 	decadeDistribution,
 	toReleaseView,
 	topStyles,
 } from '../../shared/music-ui';
+import {
+	sortCollectionCards,
+	toCollectionCard,
+} from '../collections/collections.mapper';
+import { CollectionCardView } from '../collections/collections.model';
 
 import {
 	chunkGroups,
@@ -32,14 +42,16 @@ import {
 	sortReleases,
 } from './collection.mapper';
 import {
+	COLLECTION_VIEW_DEFAULTS,
+	COLLECTION_VIEW_SETTING,
+	CollectionViewSettings,
+} from './collection-view.setting';
+import {
 	CollectionGroup,
 	CollectionSort,
 	CollectionView,
 	FormatFilter,
-	GROUP_OPTIONS,
 	ReleaseGroup,
-	SORT_OPTIONS,
-	VIEW_OPTIONS,
 } from './collection.model';
 
 /** Spines per shelf compartment before it continues in the next one. */
@@ -57,6 +69,9 @@ const STYLE_COUNT = 6;
 interface CollectionPageState {
 	releases: ReleaseView[];
 	isLoading: boolean;
+	/** The published collections with where this shelf gets the collector. */
+	standings: MusicCollectionStanding[];
+	standingsLoading: boolean;
 	query: string;
 	format: FormatFilter;
 	sort: CollectionSort;
@@ -64,47 +79,23 @@ interface CollectionPageState {
 	view: CollectionView;
 }
 
-type Preferences = Pick<CollectionPageState, 'sort' | 'group' | 'view'>;
-
-const PREFERENCES_KEY = 'mc.collection.preferences';
-
 const initialState: CollectionPageState = {
 	releases: [],
 	isLoading: true,
+	standings: [],
+	standingsLoading: true,
 	query: '',
 	format: 'all',
-	sort: 'artist',
-	group: 'none',
-	view: 'grid',
+	...COLLECTION_VIEW_DEFAULTS,
 };
 
-function readPreferences(): Partial<Preferences> {
-	try {
-		const raw = localStorage.getItem(PREFERENCES_KEY);
-		const stored = raw ? (JSON.parse(raw) as Partial<Preferences>) : {};
-		const preferences: Partial<Preferences> = {};
-
-		if (SORT_OPTIONS.some((option) => option.value === stored.sort)) {
-			preferences.sort = stored.sort;
-		}
-		if (GROUP_OPTIONS.some((option) => option.value === stored.group)) {
-			preferences.group = stored.group;
-		}
-		if (VIEW_OPTIONS.some((option) => option.value === stored.view)) {
-			preferences.view = stored.view;
-		}
-		return preferences;
-	} catch {
-		return {};
-	}
-}
-
-function writePreferences(preferences: Preferences): void {
-	try {
-		localStorage.setItem(PREFERENCES_KEY, JSON.stringify(preferences));
-	} catch {
-		// Storage unavailable (private mode, blocked site data) — not critical.
-	}
+/** Only what the user has actually chosen; the rest stays as it is. */
+function chosen(
+	settings: CollectionViewSettings
+): Partial<CollectionPageState> {
+	return Object.fromEntries(
+		Object.entries(settings).filter(([, value]) => value !== null)
+	);
 }
 
 export const CollectionPageStore = signalStore(
@@ -120,8 +111,36 @@ export const CollectionPageStore = signalStore(
 
 		const groups = computed(() => groupReleases(visible(), store.group()));
 
+		/*
+		 * The collections this shelf is measured against. An empty one — a
+		 * rule the catalog has nothing for — says nothing about the shelf,
+		 * so it stays out; nearly finished ones come first.
+		 */
+		const collections = computed<CollectionCardView[]>(() =>
+			sortCollectionCards(store.standings().map(toCollectionCard)).filter(
+				(collection) => collection.total > 0
+			)
+		);
+
 		return {
 			stats,
+			collections,
+			collectionsSummary: computed(() => ({
+				total: collections().length,
+				completed: collections().filter(
+					(collection) => collection.completed
+				).length,
+				/** Records the collections ask for that are not on the shelf. */
+				missing: collections().reduce(
+					(sum, collection) => sum + collection.missing,
+					0
+				),
+				/** Only a complete collection pays, so this is what is held. */
+				earnedPoints: collections().reduce(
+					(sum, collection) => sum + collection.earnedPoints,
+					0
+				),
+			})),
 			decades: computed(() => decadeDistribution(store.releases())),
 			styles: computed(() => topStyles(store.releases(), STYLE_COUNT)),
 			visible,
@@ -159,14 +178,21 @@ export const CollectionPageStore = signalStore(
 	withMethods(
 		(
 			store,
-			collectionItemStateService = inject(CollectionItemStateService)
+			collectionItemStateService = inject(CollectionItemStateService),
+			musicCollectionEffect = inject(MusicCollectionEffect),
+			settingsEffect = inject(UserSettingsEffect)
 		) => {
-			const savePreferences = () =>
-				writePreferences({
-					sort: store.sort(),
-					group: store.group(),
-					view: store.view(),
-				});
+			const savePreferences = () => {
+				settingsEffect
+					.save(COLLECTION_VIEW_SETTING, {
+						sort: store.sort(),
+						group: store.group(),
+						view: store.view(),
+					})
+					.catch((error) => {
+						console.error('Collection view not saved', error);
+					});
+			};
 
 			return {
 				load: rxMethod<void>(
@@ -186,6 +212,34 @@ export const CollectionPageStore = signalStore(
 								patchState(store, { isLoading: false });
 							},
 						})
+					)
+				),
+				loadCollections: rxMethod<void>(
+					pipe(
+						tap(() =>
+							patchState(store, { standingsLoading: true })
+						),
+						switchMap(() => musicCollectionEffect.listStandings$()),
+						tapResponse({
+							next: (standings: MusicCollectionStanding[]) =>
+								patchState(store, {
+									standings,
+									standingsLoading: false,
+								}),
+							error: (error) => {
+								console.error(error);
+								patchState(store, { standingsLoading: false });
+							},
+						})
+					)
+				),
+				/** The layout kept for the user, and any later change to it. */
+				loadPreferences: rxMethod<void>(
+					pipe(
+						switchMap(() =>
+							settingsEffect.value$(COLLECTION_VIEW_SETTING)
+						),
+						tap((settings) => patchState(store, chosen(settings)))
 					)
 				),
 				setQuery: (query: string) => patchState(store, { query }),
@@ -210,8 +264,9 @@ export const CollectionPageStore = signalStore(
 	),
 	withHooks({
 		onInit(store) {
-			patchState(store, readPreferences());
+			store.loadPreferences(of(undefined));
 			store.load(of(undefined));
+			store.loadCollections(of(undefined));
 		},
 	})
 );

@@ -14,7 +14,7 @@ import {
 import { CoverBackdropComponent } from '../../shared/backdrop';
 import { PlayerPanelComponent } from '../../shared/player';
 import { TrackPageStore } from './track-page.store';
-import { BackLinkComponent } from '../../shared/back-link';
+import { PageBreadcrumbComponent } from '../../shared/page-breadcrumb';
 
 interface TrackForm {
 	spotify: string;
@@ -36,7 +36,7 @@ interface TrackForm {
 	templateUrl: './track-page.component.html',
 	styleUrls: ['./track-page.component.scss'],
 	imports: [
-		BackLinkComponent,
+		PageBreadcrumbComponent,
 		RouterLink,
 		CoverBackdropComponent,
 		PlayerPanelComponent,

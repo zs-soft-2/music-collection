@@ -16,21 +16,39 @@ import {
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
+import { withCollectionFollowing } from './collection-following.feature';
 import { sortCollectionCards, toCollectionCard } from './collections.mapper';
-import { CollectionCardView } from './collections.model';
+import {
+	CollectionCardListView,
+	CollectionCardView,
+	CollectionsTab,
+} from './collections.model';
 
 interface CollectionsPageState {
 	collections: CollectionCardView[];
 	isLoading: boolean;
+	tab: CollectionsTab;
+	/** Free text over the name and the description. */
+	query: string;
 }
 
 const initialState: CollectionsPageState = {
 	collections: [],
 	isLoading: true,
+	tab: 'following',
+	query: '',
 };
+
+function matches(collection: CollectionCardView, query: string): boolean {
+	return (
+		collection.name.toLowerCase().includes(query) ||
+		(collection.description ?? '').toLowerCase().includes(query)
+	);
+}
 
 export const CollectionsPageStore = signalStore(
 	withState(initialState),
+	withCollectionFollowing(),
 	withComputed((store) => ({
 		completedCount: computed(
 			() =>
@@ -48,6 +66,43 @@ export const CollectionsPageStore = signalStore(
 			store
 				.collections()
 				.reduce((sum, collection) => sum + collection.earnedPoints, 0)
+		),
+		/** Followed collections that are still published. */
+		followingCount: computed(() => {
+			const followedUids = store.followedUids();
+
+			return store
+				.collections()
+				.filter((collection) => followedUids.has(collection.uid))
+				.length;
+		}),
+		/**
+		 * The cards on show: the pick on the Following tab, everything on the
+		 * other, narrowed by the search either way. A collector who has picked
+		 * nothing is shown the whole list rather than an empty page — there is
+		 * nothing to choose from until they have seen it.
+		 */
+		visible: computed<CollectionCardListView[]>(() => {
+			const followedUids = store.followedUids();
+			const followingOnly =
+				store.tab() === 'following' && !store.followsNothing();
+			const query = store.query().trim().toLowerCase();
+
+			return store
+				.collections()
+				.filter(
+					(collection) =>
+						(!followingOnly || followedUids.has(collection.uid)) &&
+						(!query || matches(collection, query))
+				)
+				.map((collection) => ({
+					...collection,
+					followed: followedUids.has(collection.uid),
+				}));
+		}),
+		/** The Following tab is standing in for a pick nobody has made. */
+		showsEverything: computed(
+			() => store.tab() === 'following' && store.followsNothing()
 		),
 	})),
 	withMethods((store, effect = inject(MusicCollectionEffect)) => ({
@@ -70,10 +125,13 @@ export const CollectionsPageStore = signalStore(
 				})
 			)
 		),
+		setTab: (tab: CollectionsTab) => patchState(store, { tab }),
+		setQuery: (query: string) => patchState(store, { query }),
 	})),
 	withHooks({
 		onInit(store) {
 			store.load(of(undefined));
+			store.loadFollowing(of(undefined));
 		},
 	})
 );

@@ -4,10 +4,7 @@
 <mc-cover-backdrop [src]="album?.coverUrl" />
 
 <div class="page">
-	<mc-back-link
-		[fallback]="['/album', store.albumId()]"
-		label="Back to album"
-	/>
+	<mc-page-breadcrumb [trail]="store.trail()" />
 	@if (store.loading()) {
 		<p class="muted">Loading…</p>
 	} @else if (store.failed()) {

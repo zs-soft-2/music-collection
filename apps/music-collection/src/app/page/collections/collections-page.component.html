@@ -43,108 +43,179 @@
 			see how far your shelf gets you.
 		</p>
 	} @else {
-		<ul class="grid">
-			@for (collection of store.collections(); track collection.uid) {
-				<li>
-					<a
-						class="card"
-						[class.is-completed]="collection.completed"
-						[routerLink]="['/collections', collection.slug]"
+		<div class="toolbar">
+			<div class="tabs" role="tablist" aria-label="Which collections">
+				@for (option of tabOptions; track option.value) {
+					<button
+						type="button"
+						role="tab"
+						class="tab"
+						[class.is-active]="store.tab() === option.value"
+						[attr.aria-selected]="store.tab() === option.value"
+						(click)="onTab(option.value)"
 					>
-						<div class="artwork">
-							@if (collection.coverImageUrl) {
-								<img
-									class="cover"
-									[src]="collection.coverImageUrl"
-									alt=""
-									loading="lazy"
-								/>
-							} @else if (collection.covers.length) {
-								<div class="mosaic">
-									@for (
-										cover of collection.covers;
-										track cover
-									) {
-										<img
-											[src]="cover"
-											alt=""
-											loading="lazy"
-										/>
+						{{ option.label }}
+						<span class="count">
+							{{
+								option.value === 'following'
+									? store.followingCount()
+									: store.collections().length
+							}}
+						</span>
+					</button>
+				}
+			</div>
+
+			<label class="search">
+				<i class="pi pi-search" aria-hidden="true"></i>
+				<input
+					type="search"
+					placeholder="Search collections"
+					aria-label="Search collections"
+					[value]="store.query()"
+					(input)="onQuery($event)"
+				/>
+			</label>
+		</div>
+
+		@if (store.showsEverything()) {
+			<p class="hint">
+				<i class="pi pi-star" aria-hidden="true"></i>
+				Star the collections you are after — Following then keeps just
+				those, however many are published.
+			</p>
+		}
+
+		@if (!store.visible().length) {
+			<p class="empty">
+				@if (store.query().trim()) {
+					No collection matches “{{ store.query().trim() }}”.
+				} @else {
+					Nothing you follow is published any more — the All tab has
+					what there is.
+				}
+			</p>
+		} @else {
+			<ul class="grid">
+				@for (collection of store.visible(); track collection.uid) {
+					<li>
+						<div
+							class="card"
+							[class.is-completed]="collection.completed"
+							[class.is-followed]="collection.followed"
+						>
+							<a
+								class="card-link"
+								[routerLink]="['/collections', collection.slug]"
+							>
+								<div class="artwork">
+									<mc-collection-artwork
+										[coverImageUrl]="
+											collection.coverImageUrl
+										"
+										[covers]="collection.covers"
+										[icon]="collection.icon"
+									/>
+
+									@if (collection.completed) {
+										<span class="earned">
+											<i
+												class="pi pi-check"
+												aria-hidden="true"
+											></i>
+											{{
+												collection.badgeName ||
+													'Complete'
+											}}
+										</span>
 									}
 								</div>
-							} @else {
+
+								<div class="body">
+									<h2>{{ collection.name }}</h2>
+
+									@if (collection.description) {
+										<p class="description">
+											{{ collection.description }}
+										</p>
+									}
+
+									<div class="progress">
+										<div
+											class="bar"
+											role="progressbar"
+											[attr.aria-valuenow]="
+												collection.percentage
+											"
+											aria-valuemin="0"
+											aria-valuemax="100"
+											[attr.aria-label]="
+												'Progress on ' +
+												collection.name
+											"
+										>
+											<span
+												class="fill"
+												[style.width.%]="
+													collection.percentage
+												"
+											></span>
+										</div>
+										<p class="counts">
+											<strong>{{
+												collection.owned
+											}}</strong>
+											of
+											{{ collection.total }}
+											<span class="percentage"
+												>·
+												{{ collection.percentage }}%</span
+											>
+										</p>
+										<p class="points">
+											@if (collection.completed) {
+												<strong
+													>{{
+														collection.earnedPoints
+													}}
+													pts</strong
+												>
+												earned
+											} @else {
+												worth
+												<strong
+													>{{ collection.points }}
+													pts</strong
+												>
+												when complete
+											}
+										</p>
+									</div>
+								</div>
+							</a>
+
+							<button
+								type="button"
+								class="follow"
+								[attr.aria-pressed]="collection.followed"
+								[attr.aria-label]="
+									(collection.followed
+										? 'Stop following '
+										: 'Follow ') + collection.name
+								"
+								(click)="onToggleFollow(collection.uid)"
+							>
 								<i
-									class="placeholder"
-									[class]="collection.icon || 'pi pi-box'"
+									class="pi"
+									[class.pi-star-fill]="collection.followed"
+									[class.pi-star]="!collection.followed"
 									aria-hidden="true"
 								></i>
-							}
-
-							@if (collection.completed) {
-								<span class="earned">
-									<i
-										class="pi pi-check"
-										aria-hidden="true"
-									></i>
-									{{ collection.badgeName || 'Complete' }}
-								</span>
-							}
+							</button>
 						</div>
-
-						<div class="body">
-							<h2>{{ collection.name }}</h2>
-
-							@if (collection.description) {
-								<p class="description">
-									{{ collection.description }}
-								</p>
-							}
-
-							<div class="progress">
-								<div
-									class="bar"
-									role="progressbar"
-									[attr.aria-valuenow]="collection.percentage"
-									aria-valuemin="0"
-									aria-valuemax="100"
-									[attr.aria-label]="
-										'Progress on ' + collection.name
-									"
-								>
-									<span
-										class="fill"
-										[style.width.%]="collection.percentage"
-									></span>
-								</div>
-								<p class="counts">
-									<strong>{{ collection.owned }}</strong> of
-									{{ collection.total }}
-									<span class="percentage"
-										>· {{ collection.percentage }}%</span
-									>
-								</p>
-								<p class="points">
-									@if (collection.completed) {
-										<strong
-											>{{
-												collection.earnedPoints
-											}}
-											pts</strong
-										>
-										earned
-									} @else {
-										worth
-										<strong
-											>{{ collection.points }} pts</strong
-										>
-										when complete
-									}
-								</p>
-							</div>
-						</div>
-					</a>
-				</li>
-			}
-		</ul>
+					</li>
+				}
+			</ul>
+		}
 	}
 </div>

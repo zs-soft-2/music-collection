@@ -21,6 +21,8 @@ import {
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
+import { ArtistLineupEffect } from '../../../data/artist-lineup';
+import { TrackStats, TrackStatsEffect } from '../../../data/track-stats';
 import {
 	ReleaseView,
 	toReleaseView,
@@ -31,6 +33,7 @@ import {
 	albumTypeDistribution,
 	catalogCompleteness,
 	collectionGrowth,
+	trackCompleteness,
 } from './admin-dashboard.mapper';
 
 interface AdminDashboardState {
@@ -39,6 +42,17 @@ interface AdminDashboardState {
 	albums: AlbumEntity[];
 	artists: ArtistEntity[];
 	releases: ReleaseView[];
+	/**
+	 * Null until the track data arrives, or when it cannot be read. The
+	 * completeness panel does not wait for it: the track rows join the
+	 * albums and artists once the tracks are there.
+	 */
+	trackStats: TrackStats | null;
+	/**
+	 * Uids of the bands with a line-up, null until the memberships arrive or
+	 * when they cannot be read. The line-up row waits for it the same way.
+	 */
+	artistUidsWithLineup: ReadonlySet<string> | null;
 	albumsLoading: boolean;
 	artistsLoading: boolean;
 	releasesLoading: boolean;
@@ -54,6 +68,8 @@ const initialState: AdminDashboardState = {
 	albums: [],
 	artists: [],
 	releases: [],
+	trackStats: null,
+	artistUidsWithLineup: null,
 	albumsLoading: true,
 	artistsLoading: true,
 	releasesLoading: true,
@@ -105,9 +121,19 @@ export const AdminDashboardStore = signalStore(
 		catalogLoading: computed(
 			() => store.albumsLoading() || store.artistsLoading()
 		),
-		completeness: computed(() =>
-			catalogCompleteness(store.albums(), store.artists())
-		),
+		completeness: computed(() => {
+			const trackStats = store.trackStats();
+
+			return [
+				...catalogCompleteness(
+					store.albums(),
+					store.artists(),
+					trackStats?.albumUids ?? null,
+					store.artistUidsWithLineup()
+				),
+				...(trackStats ? [trackCompleteness(trackStats)] : []),
+			];
+		}),
 		growth: computed(() => collectionGrowth(store.releases())),
 		albumTypes: computed(() => albumTypeDistribution(store.albums())),
 		styles: computed(() =>
@@ -123,7 +149,9 @@ export const AdminDashboardStore = signalStore(
 			quantityState = inject(EntityQuantityStateService),
 			albumState = inject(AlbumStateService),
 			artistState = inject(ArtistStateService),
-			collectionItemState = inject(CollectionItemStateService)
+			collectionItemState = inject(CollectionItemStateService),
+			trackStatsEffect = inject(TrackStatsEffect),
+			artistLineupEffect = inject(ArtistLineupEffect)
 		) => ({
 			load: rxMethod<void>(
 				pipe(
@@ -184,6 +212,27 @@ export const AdminDashboardStore = signalStore(
 					})
 				)
 			),
+			loadTrackStats: rxMethod<void>(
+				pipe(
+					switchMap(() => trackStatsEffect.load$()),
+					tapResponse({
+						next: (trackStats) => patchState(store, { trackStats }),
+						error: (error) => console.error(error),
+					})
+				)
+			),
+			loadLineups: rxMethod<void>(
+				pipe(
+					switchMap(() =>
+						artistLineupEffect.loadArtistUidsWithLineup$()
+					),
+					tapResponse({
+						next: (artistUidsWithLineup) =>
+							patchState(store, { artistUidsWithLineup }),
+						error: (error) => console.error(error),
+					})
+				)
+			),
 			loadReleases: rxMethod<void>(
 				pipe(
 					switchMap(() =>
@@ -209,6 +258,8 @@ export const AdminDashboardStore = signalStore(
 			store.load();
 			store.loadAlbums();
 			store.loadArtists();
+			store.loadTrackStats();
+			store.loadLineups();
 			store.loadReleases();
 		},
 	})

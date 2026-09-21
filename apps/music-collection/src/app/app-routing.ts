@@ -107,6 +107,16 @@ export const routes: Routes = [
 		},
 	},
 	{
+		path: 'profile',
+		loadComponent: () =>
+			import('./page/profile/profile-page.component').then(
+				(module) => module.ProfilePageComponent
+			),
+		data: {
+			breadcrumb: 'profile',
+		},
+	},
+	{
 		path: 'wishlist',
 		loadChildren: () =>
 			import('./page/wishlist/wishlist.module').then(
