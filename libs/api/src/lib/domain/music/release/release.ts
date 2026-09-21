@@ -15,6 +15,8 @@ export interface Release {
 	album: AlbumEntity;
 	artist: ReleaseArtist;
 	country: ReleaseCountryEnum;
+	/** The Discogs pressing this release was imported from, when it was. */
+	discogsReleaseId?: number | null;
 	formatDescription: FormatDescriptionEnum;
 	label: ReleaseLabel;
 	media: MediaEnum;

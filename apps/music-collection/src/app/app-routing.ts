@@ -87,6 +87,16 @@ export const routes: Routes = [
 		},
 	},
 	{
+		path: 'scan',
+		loadComponent: () =>
+			import('./page/scan/scan-page.component').then(
+				(module) => module.ScanPageComponent
+			),
+		data: {
+			breadcrumb: 'scan',
+		},
+	},
+	{
 		path: 'collections',
 		loadComponent: () =>
 			import('./page/collections/collections-page.component').then(

@@ -44,6 +44,7 @@
 		"d3-zoom": "^3.0.0",
 		"file-saver": "^2.0.5",
 		"firebase": "12.19.0",
+		"heic-to": "^1.5.2",
 		"ng-flex-layout": "22.0.1",
 		"ngrx-store-localstorage": "20.1.0",
 		"ngx-permissions": "19.0.0",

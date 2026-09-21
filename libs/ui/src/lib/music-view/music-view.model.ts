@@ -1,4 +1,4 @@
-import { ArtistType } from '@music-collection/api';
+import { ArtistType, ScanMatch } from '@music-collection/api';
 
 /**
  * Presentation models shared by the music pages (home, collection).
@@ -82,6 +82,13 @@ export interface DiscographyAlbum extends AlbumView {
 	/** Formats of this album in the collection; empty when not collected. */
 	ownedFormats: MediaFormat[];
 }
+
+/** How sure a photo scan is about a pressing, as the collector reads it. */
+export const MATCH_LABELS: Record<ScanMatch, string> = {
+	exact: 'Exact match',
+	likely: 'Likely',
+	possible: 'Possible',
+};
 
 export const FORMAT_LABELS: Record<MediaFormat, string> = {
 	vinyl: 'Vinyl',

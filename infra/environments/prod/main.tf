@@ -93,6 +93,38 @@ resource "google_secret_manager_secret_iam_member" "discogs_token_deployer" {
   member    = "serviceAccount:${module.service_accounts.deployer_email}"
 }
 
+# Az Anthropic API kulcs a fotós lemezazonosításhoz (`identifyRecordFromPhoto`).
+# Ugyanaz a szabály, mint a Discogs tokennél: a secretet a tofu teremti, az
+# ÉRTÉKÉT nem —
+#   printf %s "$KEY" | gcloud secrets versions add ANTHROPIC_API_KEY \
+#     --data-file=- --project <project_id>
+# Egy saját AI-gateway mögé állva ide a gateway tokenje kerül, a végpontot
+# pedig a function `AI_GATEWAY_URL` környezeti változója adja.
+resource "google_secret_manager_secret" "anthropic_api_key" {
+  project   = local.project_id
+  secret_id = "ANTHROPIC_API_KEY"
+
+  replication {
+    auto {}
+  }
+
+  depends_on = [google_project_service.enabled]
+}
+
+resource "google_secret_manager_secret_iam_member" "anthropic_api_key_runtime" {
+  project   = local.project_id
+  secret_id = google_secret_manager_secret.anthropic_api_key.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.functions_runtime.email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "anthropic_api_key_deployer" {
+  project   = local.project_id
+  secret_id = google_secret_manager_secret.anthropic_api_key.secret_id
+  role      = "roles/secretmanager.viewer"
+  member    = "serviceAccount:${module.service_accounts.deployer_email}"
+}
+
 module "service_accounts" {
   source     = "../../modules/service-accounts"
   project_id = local.project_id

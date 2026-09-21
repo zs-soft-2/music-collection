@@ -3,6 +3,7 @@ import {
 	combineLatest,
 	exhaustMap,
 	filter,
+	from,
 	map,
 	of,
 	pairwise,
@@ -11,7 +12,7 @@ import {
 	tap,
 } from 'rxjs';
 
-import { DestroyRef, computed, effect, inject } from '@angular/core';
+import { DestroyRef, Signal, computed, effect, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import {
 	AlbumEntity,
@@ -30,6 +31,7 @@ import {
 	ReleaseRequest,
 	ReleaseStateService,
 	RoleNames,
+	ScanCandidate,
 	TrackEntity,
 	WishlistItemEntity,
 	WishlistItemEntityAdd,
@@ -38,6 +40,7 @@ import {
 } from '@music-collection/api';
 import { tapResponse } from '@ngrx/operators';
 import {
+	WritableStateSource,
 	patchState,
 	signalStore,
 	withComputed,
@@ -55,6 +58,7 @@ import {
 
 import { AlbumDetailsEffect } from '../../data/album-details';
 import { UserSettingsEffect } from '../../data/user-settings';
+import { PhotoScanEffect, PreparedPhoto } from '../../data/photo-scan';
 import { ReleaseRequestEffect } from '../../data/release-request';
 import {
 	ArtistView,
@@ -75,6 +79,7 @@ import {
 	toAlbumProfile,
 	toDiscogsVersionViews,
 	toPendingRequestView,
+	toPhotoVersionViews,
 	toPastCopyView,
 	toReleaseOptions,
 	totalDuration,
@@ -119,6 +124,12 @@ interface AlbumPageState {
 	disposing: boolean;
 	disposeError: string | null;
 	pickerOpen: boolean;
+	/**
+	 * A photo scan sends the collector here with the pressing it recognised:
+	 * the picker opens on it, and they confirm.
+	 */
+	pickedReleaseUid: string | null;
+	pickedDiscogsReleaseId: number | null;
 	adding: boolean;
 	addError: string | null;
 	/** The signed-in user's release requests (all albums). */
@@ -130,6 +141,22 @@ interface AlbumPageState {
 	discogsError: string | null;
 	requesting: boolean;
 	requestError: string | null;
+	/**
+	 * Identifying the pressing from a photo of it. The album is known here,
+	 * so only the pressing is in question — which is exactly the part the
+	 * catalog and the Discogs list cannot always answer.
+	 */
+	photoScanning: boolean;
+	photoError: string | null;
+	photoCandidates: ScanCandidate[];
+	/**
+	 * The photo as it was sent. Kept so a failed scan can be retried with
+	 * the same picture — an overloaded reader is no reason to make the
+	 * collector photograph the record again.
+	 */
+	photo: PreparedPhoto | null;
+	/** A photo was scanned — tells "nothing found" from "not tried". */
+	photoScanned: boolean;
 	/** The published collections, to say what this album is part of. */
 	collectionStandings: MusicCollectionStanding[];
 	albumsLoading: boolean;
@@ -163,6 +190,8 @@ const initialState: AlbumPageState = {
 	disposing: false,
 	disposeError: null,
 	pickerOpen: false,
+	pickedReleaseUid: null,
+	pickedDiscogsReleaseId: null,
 	adding: false,
 	addError: null,
 	requests: [],
@@ -172,6 +201,11 @@ const initialState: AlbumPageState = {
 	discogsError: null,
 	requesting: false,
 	requestError: null,
+	photoScanning: false,
+	photoError: null,
+	photoCandidates: [],
+	photo: null,
+	photoScanned: false,
 	collectionStandings: [],
 	albumsLoading: true,
 	releasesLoading: true,
@@ -221,6 +255,49 @@ function describeError(error: unknown): string {
 		return 'Discogs cannot be reached right now.';
 	}
 	return 'Something went wrong. Try again later.';
+}
+
+/**
+ * What the collector reads when the photo scan fails. The source matters: a
+ * busy photo reader is not an unreachable Discogs, and only one of the two
+ * is worth retrying with the same picture.
+ */
+function describeScanError(error: unknown): string {
+	const { code = '', details } = (error ?? {}) as {
+		code?: string;
+		details?: { source?: string };
+	};
+
+	if (details?.source === 'vision') {
+		return code.endsWith('resource-exhausted')
+			? 'The photo reader is busy right now. Try again in a moment.'
+			: 'This photo could not be read. Try another one, or describe the pressing.';
+	}
+
+	return describeError(error);
+}
+
+type PhotoState = { photo: PreparedPhoto | null };
+type PhotoHolder = WritableStateSource<PhotoState> & {
+	photo: Signal<PreparedPhoto | null>;
+};
+
+/** A new picture, or `'again'`: the one already taken, sent once more. */
+type PhotoScanInput = Blob | 'again';
+
+/**
+ * Holds on to the photo being scanned, releasing the preview of the one
+ * before it — an object URL lives until it is revoked, and a collector who
+ * photographs a shelf-full of records would leak one per record.
+ */
+function keepPhoto(store: PhotoHolder, photo: PreparedPhoto | null): void {
+	const previous = store.photo();
+
+	if (previous && previous !== photo) {
+		URL.revokeObjectURL(previous.previewUrl);
+	}
+
+	patchState(store, { photo });
 }
 
 /** Selects a feature's entities and requests the list while it is empty. */
@@ -416,6 +493,23 @@ export const AlbumPageStore = signalStore(
 					requested
 				);
 			}),
+			/** The pressings a photo found, as picker options. */
+			photoOptions: computed(() => {
+				const requested = new Set(
+					store
+						.requests()
+						.filter((request) => request.status === 'pending')
+						.flatMap((request) =>
+							request.discogsReleaseId
+								? [request.discogsReleaseId]
+								: []
+						)
+				);
+
+				return toPhotoVersionViews(store.photoCandidates(), requested);
+			}),
+			/** The photo being scanned, to show it while it is read. */
+			photoPreviewUrl: computed(() => store.photo()?.previewUrl ?? null),
 			notFound: computed(
 				() =>
 					!store.albumsLoading() &&
@@ -437,6 +531,7 @@ export const AlbumPageStore = signalStore(
 			permissionsService = inject(NgxPermissionsService),
 			albumDetailsEffect = inject(AlbumDetailsEffect),
 			releaseRequestEffect = inject(ReleaseRequestEffect),
+			photoScanEffect = inject(PhotoScanEffect),
 			musicCollectionEffect = inject(MusicCollectionEffect)
 		) => ({
 			/** The signed-in user's release requests; follows sign-in. */
@@ -494,6 +589,79 @@ export const AlbumPageStore = signalStore(
 					)
 				)
 			),
+			/**
+			 * Identifies the pressing from a photo of the record. The album
+			 * is known here, so the search starts from it: the photo only has
+			 * to give up the catalogue number or the barcode, which is what
+			 * tells two pressings of the same album apart.
+			 */
+			scanPressingPhoto: rxMethod<PhotoScanInput>(
+				pipe(
+					filter(
+						(input) =>
+							!store.photoScanning() &&
+							(input !== 'again' || !!store.photo())
+					),
+					tap(() =>
+						patchState(store, {
+							photoScanning: true,
+							photoError: null,
+							photoCandidates: [],
+						})
+					),
+					switchMap((input) =>
+						from(
+							input === 'again'
+								? Promise.resolve(
+										store.photo() as PreparedPhoto
+									)
+								: photoScanEffect.prepare(input).catch(() => {
+										// A format the browser cannot decode
+										// (an untouched iPhone HEIC, say)
+										// fails here, not at the lookup — say
+										// so instead of blaming the server.
+										throw new Error('unreadable-photo');
+									})
+						).pipe(
+							tap((photo) => keepPhoto(store, photo)),
+							switchMap((photo) => {
+								const album = store.album();
+
+								return photoScanEffect.identify$(
+									photo,
+									album
+										? {
+												name: album.title,
+												artistName: album.artistName,
+											}
+										: null
+								);
+							}),
+							tapResponse({
+								next: (result) =>
+									patchState(store, {
+										photoCandidates: result.candidates,
+										photoScanning: false,
+										photoScanned: true,
+									}),
+								error: (error) => {
+									console.error(error);
+									patchState(store, {
+										photoScanning: false,
+										photoScanned: true,
+										photoError:
+											(error as Error)?.message ===
+											'unreadable-photo'
+												? 'This image could not be read. Try a JPEG or PNG — an iPhone photo may need to be shared as a picture first.'
+												: describeScanError(error),
+									});
+								},
+							})
+						)
+					)
+				)
+			),
+
 			/** Sends the request to the admin; the picker closes when sent. */
 			requestRelease: rxMethod<ReleaseRequestDraft>(
 				pipe(
@@ -928,6 +1096,12 @@ export const AlbumPageStore = signalStore(
 			),
 		})
 	),
+	withComputed((store) => ({
+		/** Where the picker opens: a scan may point at a Discogs pressing. */
+		pickerView: computed((): 'catalog' | 'discogs' =>
+			store.pickedDiscogsReleaseId() ? 'discogs' : 'catalog'
+		),
+	})),
 	withMethods((store, settingsEffect = inject(UserSettingsEffect)) => {
 		let catalogRequested = false;
 
@@ -951,7 +1125,16 @@ export const AlbumPageStore = signalStore(
 				}
 			},
 			closePicker(): void {
-				patchState(store, { pickerOpen: false });
+				keepPhoto(store, null);
+				patchState(store, {
+					pickerOpen: false,
+					pickedReleaseUid: null,
+					pickedDiscogsReleaseId: null,
+					// The next record gets its own photo, not this one's.
+					photoCandidates: [],
+					photoScanned: false,
+					photoError: null,
+				});
 			},
 			openWishlist(): void {
 				patchState(store, { wishlistOpen: true, wishError: null });
@@ -994,6 +1177,40 @@ export const AlbumPageStore = signalStore(
 			},
 		};
 	}),
+	withMethods((store, route = inject(ActivatedRoute)) => ({
+		/**
+		 * A photo scan links here with `?pick=`: the picker opens on what it
+		 * recognised — a catalog release to add, or a Discogs pressing to
+		 * request. The collector still confirms; the link only saves them
+		 * finding it in the list.
+		 */
+		followScanPick: rxMethod<void>(
+			pipe(
+				switchMap(() => route.queryParamMap),
+				map((params) => params.get('pick')),
+				filter((pick): pick is string => !!pick),
+				tap((pick) => {
+					const [kind, value] = pick.split(':');
+					const discogsReleaseId =
+						kind === 'discogs' ? Number(value) : NaN;
+
+					patchState(store, {
+						pickedReleaseUid: kind === 'release' ? value : null,
+						pickedDiscogsReleaseId: Number.isSafeInteger(
+							discogsReleaseId
+						)
+							? discogsReleaseId
+							: null,
+					});
+					store.openPicker();
+
+					if (kind === 'discogs') {
+						store.showDiscogsVersions();
+					}
+				})
+			)
+		),
+	})),
 	withComputed((store, player = inject(PlayerStore)) => ({
 		/** Our id of the album's track playing now. */
 		playingTrackId: computed(() => {
@@ -1029,6 +1246,7 @@ export const AlbumPageStore = signalStore(
 			});
 			inject(DestroyRef).onDestroy(() => player.clearPage(page));
 
+			store.followScanPick(of(undefined));
 			store.loadView(of(undefined));
 			store.loadDetails(of(undefined));
 			store.loadAlbums(of(undefined));

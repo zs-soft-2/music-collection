@@ -1,6 +1,7 @@
 <dialog
 	#dialog
 	class="picker"
+	[class.is-dragging]="dragging()"
 	aria-labelledby="release-picker-title"
 	[attr.aria-busy]="busy()"
 	(close)="closed.emit()"
@@ -87,7 +88,11 @@
 			} @else if (releases().length) {
 				<ul class="options">
 					@for (release of releases(); track release.id) {
-						<li>
+						<li
+							[class.is-highlighted]="
+								release.id === highlightReleaseId()
+							"
+						>
 							<button
 								type="button"
 								class="option"
@@ -163,6 +168,14 @@
 					}
 					<button
 						type="button"
+						class="secondary-button"
+						(click)="show('photo')"
+					>
+						<i class="pi pi-camera" aria-hidden="true"></i>
+						Identify from a photo
+					</button>
+					<button
+						type="button"
 						class="text-button"
 						(click)="show('describe')"
 					>
@@ -178,50 +191,8 @@
 				Catalog releases
 			</button>
 
-			@if (selectedVersion(); as version) {
-				<p class="lead">Request this pressing:</p>
-				<div class="option is-selected">
-					<mc-format-badge [format]="version.format" />
-					<span class="details">
-						<ng-container
-							*ngTemplateOutlet="
-								versionDetails;
-								context: { $implicit: version }
-							"
-						/>
-					</span>
-				</div>
-				<label class="field">
-					<span>Note for the admin (optional)</span>
-					<textarea
-						rows="3"
-						[attr.maxlength]="noteMaxLength"
-						[value]="note()"
-						(input)="onInput('note', $event)"
-						placeholder="e.g. signed copy, coloured vinyl"
-					></textarea>
-				</label>
-				@if (requestError()) {
-					<p class="error" role="alert">{{ requestError() }}</p>
-				}
-				<div class="form-actions">
-					<button
-						type="button"
-						class="text-button"
-						[disabled]="requesting()"
-						(click)="selectedVersion.set(null)"
-					>
-						Choose another
-					</button>
-					<button
-						type="button"
-						class="primary-button"
-						[disabled]="requesting()"
-						(click)="requestSelected()"
-					>
-						{{ requesting() ? 'Sending…' : 'Send request' }}
-					</button>
-				</div>
+			@if (selectedVersion()) {
+				<ng-container *ngTemplateOutlet="confirmPressing" />
 			} @else {
 				<p class="lead">Pick your pressing from Discogs:</p>
 
@@ -322,6 +293,167 @@
 			}
 		}
 
+		@case ('photo') {
+			<button type="button" class="back" (click)="show('catalog')">
+				<i class="pi pi-arrow-left" aria-hidden="true"></i>
+				Catalog releases
+			</button>
+
+			@if (selectedVersion()) {
+				<ng-container *ngTemplateOutlet="confirmPressing" />
+			} @else {
+				<!-- No `capture`: with it a phone goes straight to the camera
+				     and hides the photo library, so a picture already taken
+				     could not be picked. Without it iOS and Android offer the
+				     camera and the library both. -->
+				<input
+					#photo
+					type="file"
+					class="photo-input"
+					accept="image/*"
+					aria-hidden="true"
+					tabindex="-1"
+					(change)="onPhoto($event)"
+				/>
+
+				@if (photoPreviewUrl(); as preview) {
+					<figure class="shot" [class.is-reading]="photoScanning()">
+						<img [src]="preview" alt="The record photographed" />
+						@if (photoScanning()) {
+							<figcaption class="shot-status" role="status">
+								<i
+									class="pi pi-spin pi-spinner"
+									aria-hidden="true"
+								></i>
+								Reading the photo…
+							</figcaption>
+						}
+					</figure>
+				} @else {
+					<p class="lead">
+						Photograph the record — the back cover or the label, so
+						the catalogue number or the barcode is legible. That is
+						what tells your pressing from the others.
+					</p>
+
+					<button
+						type="button"
+						class="dropzone"
+						[class.is-over]="dragging()"
+						[disabled]="busy()"
+						(click)="takePhoto()"
+					>
+						<i class="pi pi-camera" aria-hidden="true"></i>
+						<span class="dropzone-title">Add a photo</span>
+						<span class="dropzone-hint">
+							or paste an image, or drop one here
+						</span>
+					</button>
+				}
+
+				@if (pasteHint(); as hint) {
+					<p class="notice" role="status">{{ hint }}</p>
+				}
+
+				@if (photoError()) {
+					<p class="error is-spaced" role="alert">
+						{{ photoError() }}
+					</p>
+				}
+
+				@if (photoPreviewUrl() && !photoScanning()) {
+					<div class="form-actions is-centred">
+						@if (canRetryPhoto()) {
+							<button
+								type="button"
+								class="primary-button"
+								(click)="photoRetried.emit()"
+							>
+								<i class="pi pi-refresh" aria-hidden="true"></i>
+								Try again
+							</button>
+						}
+						<button
+							type="button"
+							class="secondary-button"
+							(click)="takePhoto()"
+						>
+							<i class="pi pi-camera" aria-hidden="true"></i>
+							Another photo
+						</button>
+					</div>
+				}
+
+				@if (photoVersions().length) {
+					<p class="lead">Which one is yours?</p>
+					<ul class="options">
+						@for (version of photoVersions(); track version.id) {
+							<li>
+								<button
+									type="button"
+									class="option is-candidate"
+									[disabled]="version.requested"
+									(click)="select(version)"
+								>
+									<ng-container
+										*ngTemplateOutlet="
+											versionThumb;
+											context: { $implicit: version }
+										"
+									/>
+									<span class="details">
+										<ng-container
+											*ngTemplateOutlet="
+												versionDetails;
+												context: { $implicit: version }
+											"
+										/>
+									</span>
+									<span class="action">
+										@if (version.match) {
+											<span
+												class="badge"
+												[class.is-sure]="
+													version.match === 'exact'
+												"
+												>{{
+													matchLabels[version.match]
+												}}</span
+											>
+										}
+										@if (version.requested) {
+											<span class="state">Requested</span>
+										} @else {
+											<i
+												class="pi pi-chevron-right"
+												aria-hidden="true"
+											></i>
+										}
+									</span>
+								</button>
+							</li>
+						}
+					</ul>
+				} @else if (photoEmpty()) {
+					<p class="empty">
+						Nothing recognised on this photo. Try the side with the
+						catalogue number or the barcode.
+					</p>
+				}
+
+				<p class="hint">
+					Rather type it?
+					<button
+						type="button"
+						class="text-button"
+						(click)="show('describe')"
+					>
+						Describe it
+					</button>
+				</p>
+			}
+		}
+
 		@case ('describe') {
 			<button type="button" class="back" (click)="show('catalog')">
 				<i class="pi pi-arrow-left" aria-hidden="true"></i>
@@ -373,6 +505,62 @@
 	}
 </dialog>
 
+<!-- The pressing picked, wherever it came from: the Discogs list or a photo
+     of the record. From here the request is the same. -->
+<ng-template #confirmPressing>
+	@if (selectedVersion(); as version) {
+		<p class="lead">Request this pressing:</p>
+		<div class="option is-selected">
+			<ng-container
+				*ngTemplateOutlet="
+					versionThumb;
+					context: { $implicit: version }
+				"
+			/>
+			<mc-format-badge [format]="version.format" />
+			<span class="details">
+				<ng-container
+					*ngTemplateOutlet="
+						versionDetails;
+						context: { $implicit: version }
+					"
+				/>
+			</span>
+		</div>
+		<label class="field">
+			<span>Note for the admin (optional)</span>
+			<textarea
+				rows="3"
+				[attr.maxlength]="noteMaxLength"
+				[value]="note()"
+				(input)="onInput('note', $event)"
+				placeholder="e.g. signed copy, coloured vinyl"
+			></textarea>
+		</label>
+		@if (requestError()) {
+			<p class="error" role="alert">{{ requestError() }}</p>
+		}
+		<div class="form-actions">
+			<button
+				type="button"
+				class="text-button"
+				[disabled]="requesting()"
+				(click)="selectedVersion.set(null)"
+			>
+				Choose another
+			</button>
+			<button
+				type="button"
+				class="primary-button"
+				[disabled]="requesting()"
+				(click)="requestSelected()"
+			>
+				{{ requesting() ? 'Sending…' : 'Send request' }}
+			</button>
+		</div>
+	}
+</ng-template>
+
 <ng-template #versionDetails let-version>
 	@if (version.formatText) {
 		<span>{{ version.formatText }}</span>
@@ -388,5 +576,17 @@
 	}
 	@if (version.year) {
 		<span>{{ version.year }}</span>
+	}
+</ng-template>
+
+<!-- The cover, or a placeholder in its place: a row of pressings reads as a
+     list only when every line starts at the same edge. -->
+<ng-template #versionThumb let-version>
+	@if (version.thumbUrl) {
+		<img class="thumb" [src]="version.thumbUrl" alt="" loading="lazy" />
+	} @else {
+		<span class="thumb is-empty" aria-hidden="true">
+			<i class="pi pi-image"></i>
+		</span>
 	}
 </ng-template>

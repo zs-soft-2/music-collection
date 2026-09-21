@@ -8,6 +8,8 @@ import {
 	ReleaseEntity,
 	ReleaseRequest,
 	ReleaseRequestPressing,
+	ScanCandidate,
+	ScanMatch,
 	TrackEntity,
 	discogsReleaseUrl,
 	isSpotifyAlbumId,
@@ -78,6 +80,10 @@ export interface DiscogsVersionView {
 	country: string | null;
 	year: number | null;
 	discogsUrl: string;
+	/** Discogs cover thumbnail, when the pressing has one. */
+	thumbUrl: string | null;
+	/** How sure a photo scan is; `null` for a pressing picked from a list. */
+	match: ScanMatch | null;
 	/** The collector has a pending request for it. */
 	requested: boolean;
 }
@@ -470,8 +476,36 @@ export function toDiscogsVersionViews(
 		country: version.country,
 		year: version.year,
 		discogsUrl: discogsReleaseUrl(version.id),
+		thumbUrl: version.thumbUrl,
+		match: null,
 		requested: requestedIds.has(version.id),
 	}));
+}
+
+/**
+ * The pressings a photo found, as picker options. They stand in for Discogs
+ * versions on purpose: from here the collector confirms and requests exactly
+ * as they would from the version list, so nothing downstream changes.
+ */
+export function toPhotoVersionViews(
+	candidates: ScanCandidate[],
+	requestedIds: Set<number>
+): DiscogsVersionView[] {
+	return candidates
+		.filter((candidate) => !!candidate.discogsReleaseId)
+		.map((candidate) => ({
+			id: candidate.discogsReleaseId as number,
+			format: discogsMediaFormat(candidate.formats),
+			formatText: candidate.formats.join(', ') || null,
+			label: candidate.label,
+			catno: candidate.catno,
+			country: candidate.country,
+			year: candidate.year,
+			discogsUrl: discogsReleaseUrl(candidate.discogsReleaseId as number),
+			thumbUrl: candidate.thumbUrl,
+			match: candidate.match,
+			requested: requestedIds.has(candidate.discogsReleaseId as number),
+		}));
 }
 
 /** The pressing a request is about, as the collector saw it. */

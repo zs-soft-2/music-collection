@@ -35,6 +35,10 @@ export class TopBarService {
 				routerLink: ['/collection'],
 			},
 			{
+				label: 'Scan',
+				routerLink: ['/scan'],
+			},
+			{
 				label: 'Collections',
 				routerLink: ['/collections'],
 			},

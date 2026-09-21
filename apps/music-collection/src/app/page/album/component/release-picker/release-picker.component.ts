@@ -8,6 +8,7 @@ import {
 	computed,
 	effect,
 	input,
+	linkedSignal,
 	output,
 	inject,
 	signal,
@@ -18,6 +19,7 @@ import { parseDiscogsReleaseId } from '@music-collection/api';
 import {
 	FORMAT_LABELS,
 	FormatBadgeComponent,
+	MATCH_LABELS,
 	MediaFormat,
 } from '../../../../shared/music-ui';
 import {
@@ -28,8 +30,11 @@ import {
 	toRequestPressing,
 } from '../../album.mapper';
 
-/** The catalog releases, the album's Discogs pressings, or a description. */
-type PickerView = 'catalog' | 'discogs' | 'describe';
+/**
+ * The catalog releases, the album's Discogs pressings, a photo of the record
+ * itself, or a description.
+ */
+type PickerView = 'catalog' | 'discogs' | 'photo' | 'describe';
 
 type FormatFilter = MediaFormat | 'all';
 
@@ -58,6 +63,23 @@ export class ReleasePickerComponent {
 	/** The album has a Discogs master to list pressings of. */
 	public readonly discogsAvailable = input(false);
 	public readonly discogsVersions = input<DiscogsVersionView[]>([]);
+	/**
+	 * Where the picker opens. A scan sends the collector straight to the
+	 * pressing it recognised, so the dialog must not start on the catalog
+	 * list they have already been past.
+	 */
+	public readonly initialView = input<PickerView>('catalog');
+	/** The catalog release the scan recognised, to point at. */
+	public readonly highlightReleaseId = input<string | null>(null);
+	/** The Discogs pressing the scan recognised, preselected to request. */
+	public readonly highlightDiscogsReleaseId = input<number | null>(null);
+	/** The pressings a photo of the record turned up. */
+	public readonly photoVersions = input<DiscogsVersionView[]>([]);
+	public readonly photoScanning = input(false);
+	public readonly photoScanned = input(false);
+	public readonly photoError = input<string | null>(null);
+	/** The photo being read, shown while it is. */
+	public readonly photoPreviewUrl = input<string | null>(null);
 	public readonly discogsLoading = input(false);
 	public readonly discogsError = input<string | null>(null);
 	public readonly requesting = input(false);
@@ -67,11 +89,18 @@ export class ReleasePickerComponent {
 	public readonly picked = output<string>();
 	/** The Discogs pressings are needed. */
 	public readonly discogsRequested = output<void>();
+	/** A photo of the record, to identify the pressing from. */
+	public readonly photoPicked = output<Blob>();
+	/** The same photo once more — the reader was busy, the picture is fine. */
+	public readonly photoRetried = output<void>();
 	public readonly requestSent = output<ReleaseRequestDraft>();
 	/** Closed by the button, Escape or the page. */
 	public readonly closed = output<void>();
 
-	protected readonly view = signal<PickerView>('catalog');
+	protected readonly view = linkedSignal<PickerView, PickerView>({
+		source: this.initialView,
+		computation: (initial) => initial,
+	});
 	protected readonly formatFilter = signal<FormatFilter>('all');
 	protected readonly selectedVersion = signal<DiscogsVersionView | null>(
 		null
@@ -80,9 +109,39 @@ export class ReleasePickerComponent {
 	protected readonly discogsLink = signal('');
 	protected readonly noteMaxLength = NOTE_MAX_LENGTH;
 	protected readonly formatLabels = FORMAT_LABELS;
+	protected readonly matchLabels = MATCH_LABELS;
 
 	protected readonly busy = computed(
-		() => this.adding() || this.requesting()
+		() => this.adding() || this.requesting() || this.photoScanning()
+	);
+
+	/** An image is being dragged over the dialog, ready to be dropped. */
+	protected readonly dragging = signal(false);
+	/**
+	 * Why a paste did nothing. A copied *file* (from Finder or Explorer)
+	 * reaches the page as a path the browser may not read, not as an image —
+	 * without saying so, the paste just silently fails.
+	 */
+	protected readonly pasteHint = signal<string | null>(null);
+
+	/**
+	 * The photo is still there after a failed scan, so it can go again as it
+	 * is: a busy reader is no reason to photograph the record twice.
+	 */
+	protected readonly canRetryPhoto = computed(
+		() =>
+			!!this.photoError() &&
+			!!this.photoPreviewUrl() &&
+			!this.photoScanning()
+	);
+
+	/** A photo was read and matched nothing to request. */
+	protected readonly photoEmpty = computed(
+		() =>
+			this.photoScanned() &&
+			!this.photoScanning() &&
+			!this.photoError() &&
+			this.photoVersions().length === 0
 	);
 
 	/** The formats the Discogs pressings come in, for the filter. */
@@ -116,11 +175,98 @@ export class ReleasePickerComponent {
 
 	private readonly dialog =
 		viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
+	private readonly photoInput =
+		viewChild.required<ElementRef<HTMLInputElement>>('photo');
 	private readonly injector = inject(Injector);
 
 	public constructor() {
 		// Shown only while open; open it modally once rendered.
 		afterNextRender(() => this.dialog().nativeElement.showModal());
+
+		// A scan opens the picker on the pressing it recognised; select it as
+		// soon as the list it lives in has arrived.
+		effect(() => {
+			const wanted = this.highlightDiscogsReleaseId();
+			const versions = this.discogsVersions();
+
+			if (!wanted || this.selectedVersion()) {
+				return;
+			}
+
+			const version = versions.find((item) => item.id === wanted);
+
+			if (version && !version.requested) {
+				this.selectedVersion.set(version);
+			}
+		});
+
+		// A picture of the record can also be pasted (a screenshot, a copied
+		// image) or dropped on the dialog — on a desktop that beats finding
+		// the file. The paste listener sits on the document because the
+		// dialog may not hold the focus; this component only exists while
+		// the picker is open, so it cannot catch anything else.
+		effect((onCleanup) => {
+			const dialog = this.dialog().nativeElement;
+			const busy = this.busy();
+
+			const onPaste = (event: ClipboardEvent) => {
+				if (busy) {
+					return;
+				}
+
+				const image = this.imageIn(event.clipboardData);
+
+				if (image) {
+					event.preventDefault();
+					this.acceptImage(image);
+
+					return;
+				}
+
+				// Only in the photo view: elsewhere pasting text (a Discogs
+				// link into the description) is exactly what it should do.
+				if (this.view() === 'photo') {
+					this.pasteHint.set(
+						event.clipboardData?.types.length
+							? 'That was not an image. Copy the picture itself — in a browser, right-click it and choose “Copy image”. A file copied from Finder cannot be pasted, but you can drop it here.'
+							: 'The clipboard is empty.'
+					);
+				}
+			};
+			const onDragOver = (event: DragEvent) => {
+				if (!busy && event.dataTransfer?.types.includes('Files')) {
+					event.preventDefault();
+					this.dragging.set(true);
+				}
+			};
+			const onDragLeave = (event: DragEvent) => {
+				if (event.target === dialog) {
+					this.dragging.set(false);
+				}
+			};
+			const onDrop = (event: DragEvent) => {
+				event.preventDefault();
+				this.dragging.set(false);
+
+				const image = busy ? null : this.imageIn(event.dataTransfer);
+
+				if (image) {
+					this.acceptImage(image);
+				}
+			};
+
+			document.addEventListener('paste', onPaste);
+			dialog.addEventListener('dragover', onDragOver);
+			dialog.addEventListener('dragleave', onDragLeave);
+			dialog.addEventListener('drop', onDrop);
+
+			onCleanup(() => {
+				document.removeEventListener('paste', onPaste);
+				dialog.removeEventListener('dragover', onDragOver);
+				dialog.removeEventListener('dragleave', onDragLeave);
+				dialog.removeEventListener('drop', onDrop);
+			});
+		});
 
 		// Escape must not close the dialog halfway through a write.
 		effect((onCleanup) => {
@@ -140,6 +286,55 @@ export class ReleasePickerComponent {
 		if (!this.busy()) {
 			this.dialog().nativeElement.close();
 		}
+	}
+
+	protected takePhoto(): void {
+		this.pasteHint.set(null);
+		this.photoInput().nativeElement.click();
+	}
+
+	/**
+	 * The first image in a clipboard or drop payload. Text is ignored on
+	 * purpose: pasting a Discogs link into the description must keep working.
+	 */
+	private imageIn(data: DataTransfer | null): Blob | null {
+		const file = Array.from(data?.files ?? []).find((item) =>
+			item.type.startsWith('image/')
+		);
+
+		if (file) {
+			return file;
+		}
+
+		const item = Array.from(data?.items ?? []).find(
+			(entry) => entry.kind === 'file' && entry.type.startsWith('image/')
+		);
+
+		return item?.getAsFile() ?? null;
+	}
+
+	/**
+	 * An image arrived by paste or drop: from wherever in the dialog, it
+	 * means the same thing as taking a photo, so it opens that view.
+	 */
+	private acceptImage(image: Blob): void {
+		this.view.set('photo');
+		this.selectedVersion.set(null);
+		this.dragging.set(false);
+		this.pasteHint.set(null);
+		this.photoPicked.emit(image);
+	}
+
+	protected onPhoto(event: Event): void {
+		const input = event.target as HTMLInputElement;
+		const file = input.files?.[0];
+
+		if (file) {
+			this.selectedVersion.set(null);
+			this.photoPicked.emit(file);
+		}
+		// Photographing the same record again must fire the event again.
+		input.value = '';
 	}
 
 	protected show(view: PickerView): void {

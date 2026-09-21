@@ -5,6 +5,7 @@ export * from './contribution';
 export * from './label';
 export * from './membership';
 export * from './musician';
+export * from './photo-scan';
 export * from './release';
 export * from './release-request';
 export * from './track';

@@ -8,6 +8,12 @@ tmp
 # dependencies
 node_modules
 
+# secrets — the functions emulator reads apps/functions/.secret.local, and the
+# real values live in Secret Manager, never in the repo
+.secret.local
+.env
+.env.local
+
 # IDEs and editors
 /.idea
 .project

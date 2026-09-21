@@ -41,6 +41,14 @@ import {
 	deleteMusicCollection,
 	updateMusicCollection,
 } from './music-collection-write';
+import { DiscogsSearchHit } from './discogs-search';
+import { ScanAlbumContext, scanPhoto } from './photo-scan';
+import {
+	PHOTO_MEDIA_TYPES,
+	PhotoInput,
+	VisionError,
+	createVisionClient,
+} from './photo-signals';
 import { approveReleaseRequest as approve } from './release-request-approval';
 import {
 	CatalogRole,
@@ -62,6 +70,12 @@ const DISCOGS_CACHE_COLLECTION = 'discogs-cache';
  * kérés/perc a token nélküli 25 helyett.
  */
 const discogsToken = defineSecret('DISCOGS_TOKEN');
+/**
+ * Anthropic API kulcs (Secret Manager, infra/environments) a fotós
+ * azonosításhoz. Egy AI-gateway mögé állva a kulcs helyett a gateway tokenje
+ * kerül ide, a végpontot pedig az `AI_GATEWAY_URL` környezeti változó adja.
+ */
+const anthropicApiKey = defineSecret('ANTHROPIC_API_KEY');
 /** Ennyi ideig használjuk a cache-elt kiadáslistát. */
 const DISCOGS_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const USER_COLLECTION = 'user';
@@ -215,6 +229,71 @@ async function callerPermissions(uid: string): Promise<string[]> {
 }
 
 /**
+ * Ekkora base64-képet fogadunk el (kb. 4 MB kép). A kliens 1600 képpontra
+ * méretez, ennél nagyobb kép a felismerésen már nem javít.
+ */
+const MAX_PHOTO_BASE64_LENGTH = 6_000_000;
+
+/** A kliens képe, ha érvényes; `null`, ha nem küldött. */
+function readPhotoInput(value: unknown): PhotoInput | null {
+	if (!value || typeof value !== 'object') return null;
+
+	const { data, mediaType } = value as Record<string, unknown>;
+
+	if (typeof data !== 'string' || !data) return null;
+
+	if (data.length > MAX_PHOTO_BASE64_LENGTH) {
+		throw new HttpsError('invalid-argument', 'A kép túl nagy.');
+	}
+	if (!PHOTO_MEDIA_TYPES.includes(mediaType as PhotoInput['mediaType'])) {
+		throw new HttpsError('invalid-argument', 'Nem támogatott képformátum.');
+	}
+
+	return { data, mediaType: mediaType as PhotoInput['mediaType'] };
+}
+
+/** Az ismert album, ha a gyűjtő az album oldaláról fotóz. */
+function readAlbumContext(value: unknown): ScanAlbumContext | null {
+	if (!value || typeof value !== 'object') return null;
+
+	const { name, artistName } = value as Record<string, unknown>;
+
+	if (typeof name !== 'string' || !name.trim()) return null;
+
+	return {
+		name: name.trim(),
+		artistName:
+			typeof artistName === 'string' && artistName.trim()
+				? artistName.trim()
+				: null,
+	};
+}
+
+/** A vonalkódos Discogs-keresés cache-e, a master-kiadások mintájára. */
+function firestoreBarcodeCache() {
+	const reference = (barcode: string) =>
+		database()
+			.collection(DISCOGS_CACHE_COLLECTION)
+			.doc(`barcode-${barcode}`);
+
+	return {
+		async read(barcode: string): Promise<DiscogsSearchHit[] | null> {
+			const cached = await reference(barcode).get();
+			const fetchedAt = cached.data()?.fetchedAt as number | undefined;
+
+			if (!fetchedAt || Date.now() - fetchedAt >= DISCOGS_CACHE_TTL_MS) {
+				return null;
+			}
+
+			return cached.data()?.hits as DiscogsSearchHit[];
+		},
+		async write(barcode: string, hits: DiscogsSearchHit[]): Promise<void> {
+			await reference(barcode).set({ fetchedAt: Date.now(), hits });
+		},
+	};
+}
+
+/**
  * Egy Discogs master kiadásai. Gyűjtő (createCollectionItemEntity) vagy ADMIN
  * hívhatja; az eredményt `discogs-cache/master-{id}` alatt egy hétig őrizzük.
  */
@@ -347,6 +426,89 @@ export const discogsArtistProfile = onCall(
 				);
 			}
 			throw new HttpsError('unavailable', 'A Discogs nem érhető el.');
+		}
+	}
+);
+
+/**
+ * Egy lemez azonosítása fotóról: a kliens vonalkódja, majd — ha az nem dönt —
+ * a képről kiolvasott jelek alapján keres a Discogson. Gyűjtő
+ * (createCollectionItemEntity) vagy ADMIN hívhatja.
+ *
+ * A katalógussal a kliens veti össze a jelölteket; ez a function csak azt
+ * mondja meg, mi van a fotón. A vonalkódos kereséseket
+ * `discogs-cache/barcode-{ean}` alatt egy hétig őrizzük.
+ */
+export const identifyRecordFromPhoto = onCall(
+	{
+		secrets: [discogsToken, anthropicApiKey],
+		memory: '512MiB',
+		// A képolvasás újrapróbálkozásai is ebbe a keretbe férnek bele.
+		timeoutSeconds: 180,
+	},
+	async (request) => {
+		const uid = request.auth?.uid;
+
+		if (!uid) {
+			throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
+		}
+
+		const permissions = await callerPermissions(uid);
+
+		if (
+			!permissions.includes('ADMIN') &&
+			!permissions.includes('createCollectionItemEntity')
+		) {
+			throw new HttpsError('permission-denied', 'Nincs jogosultság.');
+		}
+
+		const photo = readPhotoInput(request.data?.photo);
+		const barcode = String(request.data?.barcode ?? '').replace(/\D+/g, '');
+
+		if (!photo && !barcode) {
+			throw new HttpsError('invalid-argument', 'Kép vagy vonalkód kell.');
+		}
+
+		try {
+			return await scanPhoto(
+				{
+					photo,
+					barcode: barcode || null,
+					album: readAlbumContext(request.data?.album),
+				},
+				{
+					client: createVisionClient(anthropicApiKey.value()),
+					discogs: { token: discogsToken.value() || null },
+					barcodeCache: firestoreBarcodeCache(),
+				}
+			);
+		} catch (error) {
+			logger.warn(`identifyRecordFromPhoto ${uid}`, error);
+
+			// A `details.source` mondja meg a kliensnek, mi akadt el: a
+			// modell túlterheltségét „a Discogs nem érhető el"-nek fordítani
+			// rossz okot mutat a gyűjtőnek, és rossz megoldást keres hozzá.
+			if (error instanceof DiscogsError) {
+				throw new HttpsError(
+					error.status === 429 ? 'resource-exhausted' : 'unavailable',
+					error.status === 429
+						? 'A Discogs most túlterhelt, próbáld újra egy perc múlva.'
+						: 'A Discogs nem érhető el.',
+					{ source: 'discogs' }
+				);
+			}
+			if (error instanceof VisionError) {
+				throw new HttpsError(
+					error.retryable ? 'resource-exhausted' : 'internal',
+					error.message,
+					{ source: 'vision' }
+				);
+			}
+			throw new HttpsError(
+				'internal',
+				'A fotó feldolgozása nem sikerült.',
+				{ source: 'unknown' }
+			);
 		}
 	}
 );

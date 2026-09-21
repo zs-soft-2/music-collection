@@ -363,3 +363,154 @@ button.option {
 	border-radius: var(--mc-radius-md);
 	background: var(--mc-card-bg);
 }
+
+/* The pressing a photo scan recognised: pointed at, not preselected — the
+   collector still confirms it. */
+.options li.is-highlighted .option {
+	border-color: var(--mc-accent);
+	box-shadow: 0 0 0 1px var(--mc-accent);
+}
+
+/* ── Identify from a photo ────────────────────────────────────────────── */
+
+.photo-input {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	opacity: 0;
+	pointer-events: none;
+}
+
+/* Where the photo comes from: one target for the button, the paste and the
+   drop, so the three ways in read as one. */
+.dropzone {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.4rem;
+	width: 100%;
+	margin-top: 1rem;
+	padding: 2.25rem 1.5rem;
+	color: var(--mc-text);
+	background: var(--mc-card-bg);
+	border: 2px dashed var(--mc-border-strong);
+	border-radius: var(--mc-radius-lg);
+	cursor: pointer;
+	transition:
+		border-color var(--mc-duration-fast) ease,
+		background var(--mc-duration-fast) ease;
+
+	i {
+		font-size: 2.25rem;
+		color: var(--mc-accent);
+	}
+
+	&:hover:not(:disabled),
+	&:focus-visible,
+	&.is-over {
+		background: var(--mc-card-bg-hover);
+		border-color: var(--mc-accent);
+	}
+}
+
+.dropzone-title {
+	font-size: 1.05rem;
+	font-weight: 700;
+}
+
+.dropzone-hint {
+	font-size: 0.8125rem;
+	color: var(--mc-text-subtle);
+}
+
+/* The photo taken, while it is read and after. Seeing it is how the
+   collector knows which picture the answer belongs to. */
+.shot {
+	position: relative;
+	margin: 1rem 0 0;
+
+	img {
+		display: block;
+		width: 100%;
+		max-height: 16rem;
+		object-fit: cover;
+		border-radius: var(--mc-radius-lg);
+	}
+
+	&.is-reading img {
+		opacity: 0.45;
+	}
+}
+
+.shot-status {
+	position: absolute;
+	inset: auto 0 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	padding: 0.75rem;
+	font-weight: 600;
+	color: var(--mc-text);
+	background: linear-gradient(transparent, rgb(0 0 0 / 0.65));
+	border-radius: 0 0 var(--mc-radius-lg) var(--mc-radius-lg);
+}
+
+.thumb {
+	flex: none;
+	width: 3.25rem;
+	height: 3.25rem;
+	object-fit: cover;
+	border-radius: var(--mc-radius-sm);
+	background: var(--mc-surface-2);
+}
+
+span.thumb {
+	display: grid;
+	place-items: center;
+	color: var(--mc-text-subtle);
+}
+
+/* How sure the scan is about this pressing. */
+.badge {
+	padding: 0.125rem 0.5rem;
+	font-size: 0.7rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--mc-text-muted);
+	border: 1px solid var(--mc-border-strong);
+	border-radius: 999px;
+
+	&.is-sure {
+		color: var(--mc-on-accent);
+		background: var(--mc-accent);
+		border-color: var(--mc-accent);
+	}
+}
+
+.error.is-spaced {
+	margin-top: 1rem;
+}
+
+.form-actions.is-centred {
+	justify-content: center;
+}
+
+/* An image is over the dialog and will be taken if dropped. */
+.picker.is-dragging {
+	outline: 2px dashed var(--mc-accent);
+	outline-offset: -0.5rem;
+}
+
+/* Why a paste did nothing — a copied file is not a copied image. */
+.notice {
+	margin: 0.75rem 0 0;
+	padding: 0.75rem 0.875rem;
+	font-size: 0.8125rem;
+	line-height: 1.5;
+	color: var(--mc-text-muted);
+	background: var(--mc-surface-2);
+	border: 1px solid var(--mc-border);
+	border-radius: 0.5rem;
+}

@@ -2,7 +2,9 @@ import { EntityTypeEnum } from '@music-collection/common/api';
 import { MusicCollectionStanding } from '@music-collection/domain/music-collection/core';
 import { scoreCollection } from '@music-collection/domain/music-collection/engine';
 
-import { toAlbumCollections } from './album.mapper';
+import { ScanCandidate } from '@music-collection/api';
+
+import { toAlbumCollections, toPhotoVersionViews } from './album.mapper';
 
 function standing(
 	name: string,
@@ -110,5 +112,58 @@ describe('toAlbumCollections', () => {
 			'almost',
 			'started',
 		]);
+	});
+});
+
+describe('toPhotoVersionViews', () => {
+	const candidate = (
+		overrides: Partial<ScanCandidate> = {}
+	): ScanCandidate => ({
+		discogsReleaseId: 1234,
+		discogsMasterId: 42,
+		title: 'Mercyful Fate - Melissa',
+		artistName: 'Mercyful Fate',
+		albumName: 'Melissa',
+		formats: ['Vinyl', 'LP', 'Album'],
+		label: 'Roadrunner Records',
+		catno: 'RR 9862',
+		country: 'Netherlands',
+		year: 1983,
+		thumbUrl: null,
+		match: 'exact',
+		...overrides,
+	});
+
+	it('a fotó jelöltjeit kiadásválasztó opciókká képezi', () => {
+		expect(toPhotoVersionViews([candidate()], new Set())).toEqual([
+			{
+				id: 1234,
+				format: 'vinyl',
+				formatText: 'Vinyl, LP, Album',
+				label: 'Roadrunner Records',
+				catno: 'RR 9862',
+				country: 'Netherlands',
+				year: 1983,
+				discogsUrl: 'https://www.discogs.com/release/1234',
+				thumbUrl: null,
+				match: 'exact',
+				requested: false,
+			},
+		]);
+	});
+
+	it('a már kért kiadást megjelöli', () => {
+		const [view] = toPhotoVersionViews([candidate()], new Set([1234]));
+
+		expect(view.requested).toBe(true);
+	});
+
+	it('a csak masterig jutó jelöltet elhagyja — abból nincs mit kérni', () => {
+		expect(
+			toPhotoVersionViews(
+				[candidate({ discogsReleaseId: null })],
+				new Set()
+			)
+		).toEqual([]);
 	});
 });
