@@ -18,7 +18,17 @@ jobs:
         with:
           node-version: 24
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            apps/functions/package-lock.json
       - run: npm ci
+      # A functions a saját package.json-jéből él (külön tsc, külön függőségek),
+      # így a gyökér `npm ci` nem hozza le neki a firebase-functions-t és a
+      # @anthropic-ai/sdk-t — a tesztjei enélkül fordítani sem tudnak.
+      - run: npm ci --prefix apps/functions
+      # A firestore-rules tesztek emulátort indítanak; a runneren nincs
+      # Firebase CLI, a fejlesztői gépeken viszont globálisan telepítve van.
+      - run: npm i -g firebase-tools@15.24.0
       # Minden projekt (app és library-k), nem csak a music-collection.
       - run: npx nx run-many -t lint
       - run: npx nx run-many -t test --passWithNoTests

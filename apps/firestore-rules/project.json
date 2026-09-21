@@ -8,8 +8,9 @@
 		"test": {
 			"executor": "nx:run-commands",
 			"options": {
-				"command": "firebase emulators:exec --only firestore \"npx jest --config apps/firestore-rules/jest.config.ts\"",
-				"cwd": "{workspaceRoot}"
+				"command": "firebase emulators:exec --project demo-music-collection --only firestore \"npx jest --config apps/firestore-rules/jest.config.ts\"",
+				"cwd": "{workspaceRoot}",
+				"forwardAllArgs": false
 			}
 		},
 		"lint": {
