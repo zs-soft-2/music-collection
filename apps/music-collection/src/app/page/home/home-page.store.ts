@@ -9,6 +9,7 @@ import {
 } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
+import { measure } from '@music-collection/common/engine';
 import {
 	AlbumStateService,
 	ArtistStateService,
@@ -115,7 +116,13 @@ function entities$<T>(
 export const HomePageStore = signalStore(
 	withState(initialState),
 	withComputed((store) => {
-		const counts = computed(() => releaseCountsByArtist(store.releases()));
+		const counts = computed(() =>
+			measure(
+				'home.releaseCounts',
+				{ releases: store.releases().length },
+				() => releaseCountsByArtist(store.releases())
+			)
+		);
 
 		/** Spotlight candidates: collected artists with a header photo. */
 		const spotlightCandidates = computed(() =>
@@ -168,7 +175,14 @@ export const HomePageStore = signalStore(
 			}),
 			catalog: computed(() => catalogStats(store.counts())),
 			coverage: computed(() =>
-				decadeCoverage(store.albums(), store.releases())
+				measure(
+					'home.coverage',
+					{
+						albums: store.albums().length,
+						releases: store.releases().length,
+					},
+					() => decadeCoverage(store.albums(), store.releases())
+				)
 			),
 			recentReleases: computed(() =>
 				[...store.releases()]
@@ -188,11 +202,16 @@ export const HomePageStore = signalStore(
 				)
 			),
 			newestAlbums: computed(() =>
-				store
-					.albums()
-					.filter((album) => album.coverUrl)
-					.sort((a, b) => (b.year ?? 0) - (a.year ?? 0))
-					.slice(0, ALBUM_COUNT)
+				measure(
+					'home.newestAlbums',
+					{ albums: store.albums().length },
+					() =>
+						store
+							.albums()
+							.filter((album) => album.coverUrl)
+							.sort((a, b) => (b.year ?? 0) - (a.year ?? 0))
+							.slice(0, ALBUM_COUNT)
+				)
 			),
 		};
 	}),
@@ -247,7 +266,11 @@ export const HomePageStore = signalStore(
 						tapResponse({
 							next: (artists) => {
 								patchState(store, {
-									artists: artists.map(toArtistView),
+									artists: measure(
+										'home.mapArtists',
+										{ artists: artists.length },
+										() => artists.map(toArtistView)
+									),
 									artistsLoading: false,
 								});
 								ensureSpotlight();
@@ -271,7 +294,11 @@ export const HomePageStore = signalStore(
 						tapResponse({
 							next: (albums) =>
 								patchState(store, {
-									albums: albums.map(toAlbumView),
+									albums: measure(
+										'home.mapAlbums',
+										{ albums: albums.length },
+										() => albums.map(toAlbumView)
+									),
 									albumsLoading: false,
 								}),
 							error: (error) => {
@@ -289,7 +316,11 @@ export const HomePageStore = signalStore(
 						tapResponse({
 							next: (items) => {
 								patchState(store, {
-									releases: items.map(toReleaseView),
+									releases: measure(
+										'home.mapReleases',
+										{ releases: items.length },
+										() => items.map(toReleaseView)
+									),
 									releasesLoading: false,
 								});
 								ensureSpotlight();

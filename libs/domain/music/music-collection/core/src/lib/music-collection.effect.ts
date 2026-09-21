@@ -9,6 +9,7 @@ import {
 } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
+import { performanceLog } from '@music-collection/common/engine';
 import {
 	AlbumStateService,
 	ArtistStateService,
@@ -154,15 +155,29 @@ export class MusicCollectionEffect {
 		return this.repository.listAll$().pipe(
 			switchMap((collections) =>
 				this.catalog$(wantsCredits(collections)).pipe(
-					map((catalog) =>
-						collections.map((collection) => ({
+					map((catalog) => {
+						// Every rule against the whole catalog, on the main
+						// thread. Timed so it is known whether this too
+						// belongs in a worker.
+						const run = performanceLog.start(
+							'collection.resolveAll',
+							{
+								collections: collections.length,
+								albums: catalog.albums.length,
+							}
+						);
+						const resolutions = collections.map((collection) => ({
 							collection,
 							resolved: resolveMusicCollection(
 								collection,
 								catalog
 							),
-						}))
-					)
+						}));
+
+						run.end();
+
+						return resolutions;
+					})
 				)
 			)
 		);
@@ -233,10 +248,13 @@ export class MusicCollectionEffect {
 		catalog: MusicCollectionCatalog,
 		copies: ReturnType<typeof toOwnedCopies>
 	): MusicCollectionStanding {
+		const run = performanceLog.start('collection.standing', {
+			albums: catalog.albums.length,
+			credits: catalog.credits?.length ?? 0,
+		});
 		const resolved = resolveMusicCollection(collection, catalog);
 		const progress = compareWithCollection(resolved, copies);
-
-		return {
+		const standing: MusicCollectionStanding = {
 			collection,
 			resolved,
 			progress,
@@ -247,6 +265,10 @@ export class MusicCollectionEffect {
 				progress.completed
 			),
 		};
+
+		run.end({ matched: resolved.total });
+
+		return standing;
 	}
 
 	private catalog$(withCredits: boolean): Observable<MusicCollectionCatalog> {
