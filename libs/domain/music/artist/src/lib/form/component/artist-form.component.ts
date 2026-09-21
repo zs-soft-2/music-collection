@@ -13,6 +13,8 @@ import {
 	BaseComponent,
 } from '@music-collection/api';
 
+import { ArtistExternalCandidateRow } from './artist-external-candidate';
+import { ArtistCandidatePickerComponent } from './candidate';
 import { ArtistFormService } from './artist-form.service';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Bind } from 'primeng/bind';
@@ -49,6 +51,7 @@ import { AsyncPipe } from '@angular/common';
 		Checkbox,
 		Dialog,
 		AsyncPipe,
+		ArtistCandidatePickerComponent,
 	],
 })
 export class ArtistFormComponent extends BaseComponent implements OnInit {
@@ -57,6 +60,8 @@ export class ArtistFormComponent extends BaseComponent implements OnInit {
 	public params$!: Observable<ArtistFormParams>;
 
 	public readonly duplicate = this.componentService.duplicate;
+	public readonly externalCandidates =
+		this.componentService.externalCandidates;
 	public readonly externalComparison =
 		this.componentService.externalComparison;
 	public readonly externalError = this.componentService.externalError;
@@ -73,8 +78,18 @@ export class ArtistFormComponent extends BaseComponent implements OnInit {
 		this.componentService.cancel();
 	}
 
+	public chooseExternalCandidate(
+		candidate: ArtistExternalCandidateRow
+	): void {
+		void this.componentService.chooseExternalCandidate(candidate);
+	}
+
 	public closeExternal(): void {
 		this.componentService.closeExternal();
+	}
+
+	public closeExternalCandidates(): void {
+		this.componentService.closeExternalCandidates();
 	}
 
 	public loadExternal(): void {

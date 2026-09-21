@@ -12,6 +12,7 @@ import {
 	ArtistEntityUpdate,
 	ArtistExternalField,
 	ArtistExternalProfile,
+	ArtistExternalQuery,
 	ArtistFormParams,
 	ArtistStateService,
 	ArtistUtilService,
@@ -22,6 +23,7 @@ import {
 	ReturnNavigationService,
 	SearchParams,
 	StyleList,
+	toMusicBrainzId,
 } from '@music-collection/api';
 import { isSameCatalogName } from '@music-collection/common/engine';
 import {
@@ -29,6 +31,11 @@ import {
 	DUPLICATE_CATALOG_NAME,
 	uniqueCatalogName,
 } from '@music-collection/ui';
+
+import {
+	ArtistExternalCandidateRow,
+	toCandidateRow,
+} from './artist-external-candidate';
 
 /** One field of the loaded profile next to the form's current value. */
 export interface ArtistExternalRow {
@@ -54,6 +61,7 @@ const EXTERNAL_FIELDS: { field: ArtistExternalField; label: string }[] = [
 	{ field: 'styles', label: 'Styles' },
 	{ field: 'description', label: 'Description' },
 	{ field: 'imageUrl', label: 'Photo URL' },
+	{ field: 'musicBrainzId', label: 'MusicBrainz ID' },
 ];
 
 function isEmpty(value: unknown): boolean {
@@ -103,6 +111,10 @@ export class ArtistFormService {
 
 	/** The artist this name collides with, blocking or not, or null. */
 	public readonly duplicate = signal<CatalogDuplicate | null>(null);
+	/** The namesakes to choose between; null while there is nothing to ask. */
+	public readonly externalCandidates = signal<
+		ArtistExternalCandidateRow[] | null
+	>(null);
 	public readonly externalComparison =
 		signal<ArtistExternalComparison | null>(null);
 	public readonly externalError = signal<string | null>(null);
@@ -213,23 +225,99 @@ export class ArtistFormService {
 		this.externalComparison.set(null);
 	}
 
-	/** Looks the artist up online by the name in the form. */
+	/**
+	 * Looks the artist up online. A MusicBrainz id in the form names the
+	 * artist outright; without one the name is searched on, and the country
+	 * and the styles already filled in rank the artists carrying that name.
+	 * Where several do, the admin is asked which one theirs is rather than
+	 * handed a guess: the id alone tells them nothing. The id of the match
+	 * comes back as a row of its own, so the next load is spared the asking.
+	 */
 	public async loadExternal(): Promise<void> {
 		const name = (this.formGroup.value['name'] as string | null)?.trim();
 		if (!name || this.externalLoading()) {
 			return;
 		}
+		const musicBrainzId = toMusicBrainzId(
+			this.formGroup.value['musicBrainzId']
+		);
+		if (musicBrainzId) {
+			await this.runExternal(() => this.loadProfile(name, musicBrainzId));
+
+			return;
+		}
+
+		await this.runExternal(async () => {
+			const candidates = await firstValueFrom(
+				this.artistStateService.searchExternalArtists$(
+					this.externalQuery(name)
+				)
+			);
+
+			if (candidates.length > 1) {
+				this.externalCandidates.set(candidates.map(toCandidateRow));
+			} else {
+				await this.loadProfile(
+					name,
+					candidates[0]?.musicBrainzId ?? null
+				);
+			}
+		});
+	}
+
+	/** Loads the artist the admin picked among the namesakes. */
+	public async chooseExternalCandidate(
+		candidate: ArtistExternalCandidateRow
+	): Promise<void> {
+		if (this.externalLoading()) {
+			return;
+		}
+		this.externalCandidates.set(null);
+
+		await this.runExternal(() =>
+			this.loadProfile(candidate.name, candidate.musicBrainzId)
+		);
+	}
+
+	public closeExternalCandidates(): void {
+		this.externalCandidates.set(null);
+	}
+
+	/** What the form knows to search and rank the artists by. */
+	private externalQuery(name: string): ArtistExternalQuery {
+		return {
+			country: this.formGroup.value['country'] ?? null,
+			musicBrainzId: this.formGroup.value['musicBrainzId'],
+			name,
+			styles: this.formGroup.value['styles'] ?? [],
+		};
+	}
+
+	/** The loaded profile against the form; the error says when there is none. */
+	private async loadProfile(
+		name: string,
+		musicBrainzId: string | null
+	): Promise<void> {
+		const profile = await firstValueFrom(
+			this.artistStateService.fetchExternalProfile$({
+				...this.externalQuery(name),
+				musicBrainzId,
+			})
+		);
+
+		if (profile) {
+			this.externalComparison.set(this.compare(profile));
+		} else {
+			this.externalError.set(`No artist found for "${name}".`);
+		}
+	}
+
+	/** One online step: the button waits on it and a failure is reported. */
+	private async runExternal(step: () => Promise<void>): Promise<void> {
 		this.externalLoading.set(true);
 		this.externalError.set(null);
 		try {
-			const profile = await firstValueFrom(
-				this.artistStateService.fetchExternalProfile$(name)
-			);
-			if (profile) {
-				this.externalComparison.set(this.compare(profile));
-			} else {
-				this.externalError.set(`No artist found for "${name}".`);
-			}
+			await step();
 		} catch (error) {
 			console.error(error);
 			this.externalError.set('Loading artist data failed.');

@@ -15,6 +15,7 @@ import {
 	EntityQuantityEntityUpdate,
 	EntityTypeEnum,
 	GenreEnum,
+	toMusicBrainzId,
 } from '@music-collection/api';
 
 @Injectable()
@@ -108,6 +109,10 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 			entity.members = model.members;
 		}
 
+		if (model.musicBrainzId !== undefined) {
+			entity.musicBrainzId = model.musicBrainzId;
+		}
+
 		if (model.name) {
 			entity.name = model.name;
 		}
@@ -160,6 +165,7 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 			headerImage: formGroup.value['headerImage'],
 			imageUrl: formGroup.value['imageUrl'] || null,
 			mainImage: formGroup.value['mainImage'],
+			musicBrainzId: toMusicBrainzId(formGroup.value['musicBrainzId']),
 			name: (formGroup.value['name'] as string).trim(),
 			sites: [],
 			styles: formGroup.value['styles'],
@@ -178,6 +184,7 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 			headerImage: [artist?.headerImage || null],
 			imageUrl: [artist?.imageUrl || null],
 			mainImage: [artist?.mainImage || null],
+			musicBrainzId: [artist?.musicBrainzId || null],
 			name: [
 				artist?.name || null,
 				[Validators.required, Validators.min(3), Validators.max(30)],
@@ -198,6 +205,7 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 			headerImage: formGroup.value['headerImage'],
 			imageUrl: formGroup.value['imageUrl'] || null,
 			mainImage: formGroup.value['mainImage'],
+			musicBrainzId: toMusicBrainzId(formGroup.value['musicBrainzId']),
 			name: (formGroup.value['name'] as string).trim(),
 			styles: formGroup.value['styles'],
 			sites: [],

@@ -193,6 +193,27 @@
 				}
 			</section>
 
+			<section class="mc-form-section" aria-labelledby="artist-source">
+				<h2 id="artist-source">Source</h2>
+				<div class="mc-form-grid">
+					<div class="mc-field">
+						<label for="musicBrainzId">MusicBrainz</label>
+						<input
+							id="musicBrainzId"
+							type="text"
+							pInputText
+							formControlName="musicBrainzId"
+							placeholder="Artist id or page URL"
+							aria-describedby="musicBrainzId-hint"
+						/>
+						<small id="musicBrainzId-hint"
+							>Load looks the artist up by this instead of
+							searching on the name.</small
+						>
+					</div>
+				</div>
+			</section>
+
 			<div class="mc-form-actions">
 				<p-button
 					label="Cancel"
@@ -209,6 +230,13 @@
 			</div>
 		</form>
 	</section>
+
+	<mc-artist-candidate-picker
+		[candidates]="externalCandidates()"
+		hint="Pick the one this is — its id comes back as a row to keep."
+		(picked)="chooseExternalCandidate($event)"
+		(closed)="closeExternalCandidates()"
+	></mc-artist-candidate-picker>
 
 	<p-dialog
 		header="Loaded artist data"

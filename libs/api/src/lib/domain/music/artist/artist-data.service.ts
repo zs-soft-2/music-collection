@@ -4,7 +4,12 @@ import { FirebaseDataService } from '../../../core';
 import { AlbumModel, AlbumModelAdd, AlbumModelUpdate } from '../album';
 import { ReleaseModel, ReleaseModelAdd, ReleaseModelUpdate } from '../release';
 import { ArtistModel, ArtistModelAdd, ArtistModelUpdate } from './artist';
-import { ArtistExternalAlbum, ArtistExternalProfile } from './artist-external';
+import {
+	ArtistExternalAlbum,
+	ArtistExternalCandidate,
+	ArtistExternalProfile,
+	ArtistExternalQuery,
+} from './artist-external';
 
 export abstract class ArtistDataService extends FirebaseDataService<
 	ArtistModel,
@@ -18,16 +23,20 @@ export abstract class ArtistDataService extends FirebaseDataService<
 	public abstract deleteRelease$(
 		release: ReleaseModel
 	): Observable<ReleaseModel>;
-	/** The artist's albums found online by the artist's name. */
+	/** The artist's albums found online by name, country and styles. */
 	public abstract fetchExternalAlbums$(
-		name: string
+		query: ArtistExternalQuery
 	): Observable<ArtistExternalAlbum[]>;
-	/** Looks the artist up online by name; null when not found. */
+	/** Looks the artist up online by name, country and styles; null when not found. */
 	public abstract fetchExternalProfile$(
-		name: string
+		query: ArtistExternalQuery
 	): Observable<ArtistExternalProfile | null>;
 	public abstract importAlbum$(album: AlbumModel): Observable<AlbumModel>;
 	public abstract listAlbumsById$(uid: string): Observable<AlbumModel[]>;
+	/** The artists of the searched name found online, the best fit first. */
+	public abstract searchExternalArtists$(
+		query: ArtistExternalQuery
+	): Observable<ArtistExternalCandidate[]>;
 	public abstract updateAlbum$(
 		album: AlbumModelUpdate
 	): Observable<AlbumModelUpdate>;

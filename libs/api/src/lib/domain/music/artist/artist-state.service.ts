@@ -3,7 +3,12 @@ import { Observable } from 'rxjs';
 import { EntityStateService } from '../../../common';
 import { AlbumEntity, AlbumEntityAdd } from '../album';
 import { ArtistEntity, ArtistEntityAdd, ArtistEntityUpdate } from './artist';
-import { ArtistExternalAlbum, ArtistExternalProfile } from './artist-external';
+import {
+	ArtistExternalAlbum,
+	ArtistExternalCandidate,
+	ArtistExternalProfile,
+	ArtistExternalQuery,
+} from './artist-external';
 
 export abstract class ArtistStateService extends EntityStateService<
 	ArtistEntity,
@@ -17,14 +22,18 @@ export abstract class ArtistStateService extends EntityStateService<
 		enabled: boolean
 	): void;
 	public abstract dispatchSelectArtistAction(artist: ArtistEntity): void;
-	/** The artist's albums found online by the artist's name. */
+	/** The artist's albums found online by name, country and styles. */
 	public abstract fetchExternalAlbums$(
-		name: string
+		query: ArtistExternalQuery
 	): Observable<ArtistExternalAlbum[]>;
-	/** Looks the artist up online by name; null when not found. */
+	/** Looks the artist up online by name, country and styles; null when not found. */
 	public abstract fetchExternalProfile$(
-		name: string
+		query: ArtistExternalQuery
 	): Observable<ArtistExternalProfile | null>;
+	/** The artists of the searched name found online, the best fit first. */
+	public abstract searchExternalArtists$(
+		query: ArtistExternalQuery
+	): Observable<ArtistExternalCandidate[]>;
 	public abstract selectAlbumsById$(
 		artistId: string
 	): Observable<AlbumEntity[]>;

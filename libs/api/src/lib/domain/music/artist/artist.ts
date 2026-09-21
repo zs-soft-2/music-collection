@@ -43,6 +43,11 @@ export interface Artist {
 	imageUrl?: string | null;
 	mainImage?: DocumentEntity;
 	members?: unknown[];
+	/**
+	 * The artist's MusicBrainz id, once loaded or typed in. Without it the
+	 * online lookup searches on the name, country and styles instead.
+	 */
+	musicBrainzId?: string | null;
 	name: string;
 	sites: string[];
 	/** `discogs` for artists created by the Discogs import. */

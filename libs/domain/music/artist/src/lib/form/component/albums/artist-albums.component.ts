@@ -16,6 +16,8 @@ import { Button } from 'primeng/button';
 import { Checkbox } from 'primeng/checkbox';
 import { Dialog } from 'primeng/dialog';
 
+import { ArtistExternalCandidateRow } from '../artist-external-candidate';
+import { ArtistCandidatePickerComponent } from '../candidate';
 import {
 	ArtistAlbumsParams,
 	ArtistAlbumsService,
@@ -36,6 +38,7 @@ import {
 		Button,
 		Checkbox,
 		Dialog,
+		ArtistCandidatePickerComponent,
 	],
 })
 export class ArtistAlbumsComponent extends BaseComponent implements OnInit {
@@ -46,8 +49,11 @@ export class ArtistAlbumsComponent extends BaseComponent implements OnInit {
 	public params$!: Observable<ArtistAlbumsParams>;
 
 	public readonly externalAlbums = this.componentService.externalAlbums;
+	public readonly externalCandidates =
+		this.componentService.externalCandidates;
 	public readonly externalError = this.componentService.externalError;
 	public readonly externalLoading = this.componentService.externalLoading;
+	public readonly externalSourceUrl = this.componentService.externalSourceUrl;
 	public readonly selectedCount = computed(
 		() => this.externalAlbums()?.filter((row) => row.selected).length ?? 0
 	);
@@ -60,8 +66,18 @@ export class ArtistAlbumsComponent extends BaseComponent implements OnInit {
 		this.componentService.applyExternal();
 	}
 
+	public chooseExternalCandidate(
+		candidate: ArtistExternalCandidateRow
+	): void {
+		void this.componentService.chooseExternalCandidate(candidate);
+	}
+
 	public closeExternal(): void {
 		this.componentService.closeExternal();
+	}
+
+	public closeExternalCandidates(): void {
+		this.componentService.closeExternalCandidates();
 	}
 
 	public loadExternal(): void {

@@ -1,0 +1,52 @@
+<p-dialog
+	header="Which artist is this?"
+	[modal]="true"
+	[visible]="!!candidates()"
+	(visibleChange)="$event || closed.emit()"
+	[style]="{ width: 'min(44rem, 95vw)' }"
+	[dismissableMask]="true"
+>
+	@if (candidates(); as rows) {
+		<p class="artist-candidate-hint">
+			MusicBrainz knows several artists by this name. {{ hint() }}
+		</p>
+		<ul class="artist-candidates">
+			@for (candidate of rows; track candidate.musicBrainzId) {
+				<li>
+					<button
+						type="button"
+						class="artist-candidate"
+						(click)="picked.emit(candidate)"
+					>
+						<span class="artist-candidate-name">
+							{{ candidate.name }}
+							@if (candidate.note) {
+								<em>({{ candidate.note }})</em>
+							}
+						</span>
+						@if (candidate.details) {
+							<span class="artist-candidate-details">
+								{{ candidate.details }}
+							</span>
+						}
+					</button>
+					<a
+						class="artist-candidate-link"
+						[href]="candidate.sourceUrl"
+						target="_blank"
+						rel="noopener"
+						>Open on MusicBrainz</a
+					>
+				</li>
+			}
+		</ul>
+	}
+	<ng-template #footer>
+		<p-button
+			label="Cancel"
+			severity="secondary"
+			[outlined]="true"
+			(onClick)="closed.emit()"
+		></p-button>
+	</ng-template>
+</p-dialog>

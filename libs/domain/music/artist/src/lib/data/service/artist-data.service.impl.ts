@@ -11,16 +11,20 @@ import {
 	ARTIST_FEATURE_KEY,
 	ArtistDataService,
 	ArtistExternalAlbum,
+	ArtistExternalCandidate,
 	ArtistExternalProfile,
+	ArtistExternalQuery,
 	ArtistModel,
 	ArtistModelAdd,
 	ArtistModelUpdate,
+	MUSICBRAINZ_ARTIST_URL,
 	MusicBrainzClient,
 	RELEASE_FEATURE_KEY,
 	ReleaseModel,
 	ReleaseModelAdd,
 	ReleaseModelUpdate,
 	SearchParams,
+	toMusicBrainzId,
 	withLocalUpdatedAt,
 } from '@music-collection/api';
 
@@ -32,15 +36,19 @@ import {
 	WIKIPEDIA_SUMMARY_URL,
 	WikidataEntities,
 	WikipediaSummary,
-	pickArtist,
+	rankArtists,
 	toCommonsImageUrl,
 	toArtistType,
 	toCountry,
 	toExternalAlbum,
+	toExternalCandidate,
 	toFormedIn,
 	toStyles,
 	toWikidataId,
 } from './artist-external.mapper';
+
+/** Hits of the name to rank by country and styles. */
+const SEARCH_LIMIT = 25;
 
 @Injectable()
 export class ArtistDataServiceImpl extends ArtistDataService {
@@ -59,13 +67,14 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 	}
 
 	/**
-	 * Looks the artist up on MusicBrainz by name, and its description on
-	 * the English Wikipedia and its photo on Commons through Wikidata. Null when not found.
+	 * Looks the artist up on MusicBrainz by name, country and styles, and
+	 * its description on the English Wikipedia and its photo on Commons
+	 * through Wikidata. Null when not found.
 	 */
 	public fetchExternalProfile$(
-		name: string
+		query: ArtistExternalQuery
 	): Observable<ArtistExternalProfile | null> {
-		return this.searchMusicBrainzArtist$(name).pipe(
+		return this.searchMusicBrainzArtist$(query).pipe(
 			switchMap((hit) =>
 				hit
 					? this.musicBrainz.get$<MusicBrainzArtist>(
@@ -91,8 +100,9 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 										artist['life-span']?.begin
 									),
 									imageUrl,
+									musicBrainzId: artist.id,
 									name: artist.name,
-									sourceUrl: `https://musicbrainz.org/artist/${artist.id}`,
+									sourceUrl: `${MUSICBRAINZ_ARTIST_URL}/${artist.id}`,
 									styles: toStyles(artist.genres),
 								})
 							)
@@ -104,14 +114,14 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 
 	/**
 	 * The official studio albums and EPs of the artist found on MusicBrainz
-	 * by name, the oldest first. Empty when the artist is not found. Live
-	 * albums and compilations are left out: official bootlegs outnumber the
-	 * albums of some bands by far.
+	 * by name, country and styles, the oldest first. Empty when the artist
+	 * is not found. Live albums and compilations are left out: official
+	 * bootlegs outnumber the albums of some bands by far.
 	 */
 	public fetchExternalAlbums$(
-		name: string
+		query: ArtistExternalQuery
 	): Observable<ArtistExternalAlbum[]> {
-		return this.searchMusicBrainzArtist$(name).pipe(
+		return this.searchMusicBrainzArtist$(query).pipe(
 			switchMap((hit) =>
 				hit
 					? this.musicBrainz.get$<MusicBrainzReleaseGroupSearch>(
@@ -271,6 +281,20 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 		return super.searchModel$(params);
 	}
 
+	/**
+	 * The artists of the searched name, the one best fitting the country and
+	 * styles of the form first, so the admin can say which namesake theirs
+	 * is. The id in the form is not used: it already names one artist, and
+	 * there would be nothing to choose.
+	 */
+	public searchExternalArtists$(
+		query: ArtistExternalQuery
+	): Observable<ArtistExternalCandidate[]> {
+		return this.searchMusicBrainzArtists$(query).pipe(
+			map((artists) => artists.map(toExternalCandidate))
+		);
+	}
+
 	public update$(artist: ArtistModelUpdate): Observable<ArtistModelUpdate> {
 		return super.updateModel$(artist);
 	}
@@ -307,18 +331,38 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 		});
 	}
 
-	/** The MusicBrainz artist of the name; null when not found. */
+	/**
+	 * The MusicBrainz artist the query fits best; null when not found.
+	 * A known id settles it, no search needed. Otherwise only the name is
+	 * searched on: the country and the styles are left to `pickArtist`, as
+	 * a hit MusicBrainz knows no country or tags for would drop out of a
+	 * filtered search altogether. Hence the wide page of hits.
+	 */
 	private searchMusicBrainzArtist$(
-		name: string
+		query: ArtistExternalQuery
 	): Observable<MusicBrainzArtist | null> {
+		const musicBrainzId = toMusicBrainzId(query.musicBrainzId);
+		if (musicBrainzId) {
+			return of({ id: musicBrainzId, name: query.name });
+		}
+
+		return this.searchMusicBrainzArtists$(query).pipe(
+			map((artists) => artists[0] ?? null)
+		);
+	}
+
+	/** The hits of the name, the one the query fits best first. */
+	private searchMusicBrainzArtists$(
+		query: ArtistExternalQuery
+	): Observable<MusicBrainzArtist[]> {
 		const params = new HttpParams()
-			.set('query', `artist:"${name.replace(/"/g, '')}"`)
-			.set('limit', 10)
+			.set('query', `artist:"${query.name.replace(/"/g, '')}"`)
+			.set('limit', SEARCH_LIMIT)
 			.set('fmt', 'json');
 
 		return this.musicBrainz
 			.get$<MusicBrainzSearch>('/artist', params)
-			.pipe(map((result) => pickArtist(name, result.artists ?? [])));
+			.pipe(map((result) => rankArtists(query, result.artists ?? [])));
 	}
 
 	/**

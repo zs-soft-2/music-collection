@@ -9,7 +9,9 @@ import {
 	ArtistEntityUpdate,
 	ArtistDataService,
 	ArtistExternalAlbum,
+	ArtistExternalCandidate,
 	ArtistExternalProfile,
+	ArtistExternalQuery,
 	ArtistStateService,
 	SearchParams,
 } from '@music-collection/api';
@@ -77,15 +79,21 @@ export class ArtistStateServiceImpl extends ArtistStateService {
 	}
 
 	public fetchExternalAlbums$(
-		name: string
+		query: ArtistExternalQuery
 	): Observable<ArtistExternalAlbum[]> {
-		return this.artistDataService.fetchExternalAlbums$(name);
+		return this.artistDataService.fetchExternalAlbums$(query);
 	}
 
 	public fetchExternalProfile$(
-		name: string
+		query: ArtistExternalQuery
 	): Observable<ArtistExternalProfile | null> {
-		return this.artistDataService.fetchExternalProfile$(name);
+		return this.artistDataService.fetchExternalProfile$(query);
+	}
+
+	public searchExternalArtists$(
+		query: ArtistExternalQuery
+	): Observable<ArtistExternalCandidate[]> {
+		return this.artistDataService.searchExternalArtists$(query);
 	}
 
 	public isLoading$(): Observable<boolean> {

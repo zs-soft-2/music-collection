@@ -53,6 +53,13 @@
 		}
 	</section>
 
+	<mc-artist-candidate-picker
+		[candidates]="externalCandidates()"
+		hint="Pick the one whose albums these are — save its id on the Details tab to keep the choice."
+		(picked)="chooseExternalCandidate($event)"
+		(closed)="closeExternalCandidates()"
+	></mc-artist-candidate-picker>
+
 	<p-dialog
 		header="Albums found"
 		[modal]="true"
@@ -66,6 +73,15 @@
 				<p class="artist-albums-note">
 					Studio albums and EPs of MusicBrainz not in the catalog yet.
 					The selected ones are created.
+					@if (externalSourceUrl(); as sourceUrl) {
+						<a
+							class="artist-albums-source-artist"
+							[href]="sourceUrl"
+							target="_blank"
+							rel="noopener"
+							>Check the artist they came from</a
+						>
+					}
 				</p>
 				<div class="artist-albums-table">
 					<table>
