@@ -5,6 +5,7 @@ import { ProfileAppearanceComponent } from './component/profile-appearance/profi
 import { ProfileListsComponent } from './component/profile-lists/profile-lists.component';
 import { ProfilePlaybackComponent } from './component/profile-playback/profile-playback.component';
 import { ProfilePrivacyComponent } from './component/profile-privacy/profile-privacy.component';
+import { ProfileShelvesComponent } from './component/profile-shelves/profile-shelves.component';
 import { ProfileSpotifyComponent } from './component/profile-spotify/profile-spotify.component';
 import { ProfilePageStore } from './profile-page.store';
 
@@ -25,6 +26,7 @@ import { ProfilePageStore } from './profile-page.store';
 		ProfileListsComponent,
 		ProfilePlaybackComponent,
 		ProfilePrivacyComponent,
+		ProfileShelvesComponent,
 		ProfileSpotifyComponent,
 	],
 })

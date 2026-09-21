@@ -11,10 +11,21 @@ import {
 	COLLECTION_VIEW_DEFAULTS,
 	COLLECTION_VIEW_SETTING,
 } from '../collection/collection-view.setting';
+import {
+	DEFAULT_SHELF,
+	NO_SHELF_LAYOUT,
+	SHELF_CUBBY_SIZE,
+	SHELF_LAYOUT_SETTING,
+	SHELF_LIMITS,
+	ShelfUnitLayout,
+	clampShelfSide,
+	shelfCapacity,
+} from '../collection/shelf-layout.setting';
 
 import { computed, inject } from '@angular/core';
 import {
 	AuthenticationStateService,
+	CollectionItemStateService,
 	User,
 	UserStateService,
 } from '@music-collection/api';
@@ -37,6 +48,10 @@ interface ProfilePageState {
 	collectionView: CollectionViewChoice;
 	/** Album pages open with their sections collapsed. */
 	albumCompact: boolean;
+	/** The shelving the collector drew, in the order it stands in the room. */
+	shelfLayout: ShelfUnitLayout[];
+	/** Records on the shelf, so the drawn furniture can be measured against it. */
+	collectionSize: number;
 	/** Where the collector is, and how much of it the others may see. */
 	location: UserLocationSettings;
 	isAuthenticated: boolean;
@@ -50,6 +65,8 @@ const initialState: ProfilePageState = {
 	user: null,
 	collectionView: COLLECTION_VIEW_DEFAULTS,
 	albumCompact: false,
+	shelfLayout: NO_SHELF_LAYOUT.units,
+	collectionSize: 0,
 	location: NO_LOCATION,
 	isAuthenticated: false,
 	pendingName: null,
@@ -68,6 +85,23 @@ export const ProfilePageStore = signalStore(
 		email: computed(() => store.user()?.email ?? ''),
 		photoUrl: computed(() => store.user()?.photoURL ?? null),
 		saving: computed(() => store.pendingName() !== null),
+		/** What the drawn furniture holds, against what it has to hold. */
+		shelfRoom: computed(() => {
+			const units = store.shelfLayout();
+			const { compartments, records } = shelfCapacity(
+				units,
+				SHELF_CUBBY_SIZE
+			);
+
+			return {
+				units: units.length,
+				compartments,
+				records,
+				/** Records that would have nowhere to stand. */
+				short: Math.max(0, store.collectionSize() - records),
+				full: units.length >= SHELF_LIMITS.maxUnits,
+			};
+		}),
 		initials: computed(() => {
 			const name = store.user()?.displayName || store.user()?.email || '';
 
@@ -241,10 +275,142 @@ export const ProfilePageStore = signalStore(
 			},
 		})
 	),
+	withMethods(
+		(
+			store,
+			authentication = inject(AuthenticationStateService),
+			settings = inject(UserSettingsEffect),
+			collectionItems = inject(CollectionItemStateService)
+		) => {
+			/** Keeps the drawn furniture, and writes it back to the account. */
+			const keep = (units: ShelfUnitLayout[]): void => {
+				patchState(store, { shelfLayout: units });
+				settings
+					.save(SHELF_LAYOUT_SETTING, { units })
+					.catch((error) => {
+						console.error('Shelf layout not saved', error);
+					});
+			};
+
+			const redraw = (
+				id: string,
+				change: (unit: ShelfUnitLayout) => ShelfUnitLayout
+			): void =>
+				keep(
+					store
+						.shelfLayout()
+						.map((unit) => (unit.id === id ? change(unit) : unit))
+				);
+
+			return {
+				/** The furniture kept for the user, and any later change. */
+				loadShelfLayout: rxMethod<void>(
+					pipe(
+						switchMap(() => settings.value$(SHELF_LAYOUT_SETTING)),
+						tap(({ units }) =>
+							patchState(store, { shelfLayout: units })
+						)
+					)
+				),
+
+				/**
+				 * How many records the drawn furniture has to hold. Only ever
+				 * asked for once there is an account to ask about — the shelf
+				 * belongs to the signed-in collector.
+				 */
+				loadCollectionSize: rxMethod<void>(
+					pipe(
+						switchMap(() =>
+							authentication.selectIsAuthenticated$()
+						),
+						switchMap((isAuthenticated) =>
+							isAuthenticated
+								? collectionItems.selectLoadedEntities$()
+								: of([])
+						),
+						tap((items) =>
+							patchState(store, { collectionSize: items.length })
+						)
+					)
+				),
+
+				/**
+				 * Puts another unit in the room, drawn like the one before it —
+				 * a collector who has two of the same shelf usually has three.
+				 */
+				addShelf(): void {
+					const units = store.shelfLayout();
+
+					if (units.length >= SHELF_LIMITS.maxUnits) {
+						return;
+					}
+
+					const last = units[units.length - 1];
+
+					keep([
+						...units,
+						{
+							id: crypto.randomUUID(),
+							name: `Shelf ${units.length + 1}`,
+							rows: last?.rows ?? DEFAULT_SHELF.rows,
+							columns: last?.columns ?? DEFAULT_SHELF.columns,
+						},
+					]);
+				},
+
+				removeShelf(id: string): void {
+					keep(store.shelfLayout().filter((unit) => unit.id !== id));
+				},
+
+				renameShelf(id: string, name: string): void {
+					redraw(id, (unit) => ({
+						...unit,
+						name: name.trim().slice(0, SHELF_LIMITS.maxNameLength),
+					}));
+				},
+
+				/** Redraws a unit. A side is kept to what a shelf can be. */
+				resizeShelf(
+					id: string,
+					size: { rows?: number; columns?: number }
+				): void {
+					redraw(id, (unit) => ({
+						...unit,
+						rows: clampShelfSide(size.rows ?? unit.rows),
+						columns: clampShelfSide(size.columns ?? unit.columns),
+					}));
+				},
+
+				/**
+				 * Moves a unit along the room. The order is the order records
+				 * are filed into the furniture, so it is worth getting right.
+				 */
+				moveShelf(id: string, step: -1 | 1): void {
+					const units = [...store.shelfLayout()];
+					const from = units.findIndex((unit) => unit.id === id);
+					const to = from + step;
+
+					if (from < 0 || to < 0 || to >= units.length) {
+						return;
+					}
+
+					units.splice(to, 0, ...units.splice(from, 1));
+					keep(units);
+				},
+
+				/** Empties the room; the shelf goes back to one open wall. */
+				clearShelves(): void {
+					keep([]);
+				},
+			};
+		}
+	),
 	withHooks({
 		onInit(store) {
 			store.load(of(undefined));
 			store.loadViews(of(undefined));
+			store.loadShelfLayout(of(undefined));
+			store.loadCollectionSize(of(undefined));
 			store.loadLocation(of(undefined));
 		},
 	})

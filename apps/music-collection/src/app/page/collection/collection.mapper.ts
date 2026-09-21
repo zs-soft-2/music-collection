@@ -11,7 +11,9 @@ import {
 	CollectionStats,
 	FormatFilter,
 	ReleaseGroup,
+	ShelfUnitView,
 } from './collection.model';
+import { ShelfUnitLayout } from './shelf-layout.setting';
 
 export function filterReleases(
 	releases: ReleaseView[],
@@ -234,4 +236,67 @@ export function chunkGroups(
 			chunks,
 		};
 	});
+}
+
+/**
+ * Files the packed compartments into the furniture the collector drew, in
+ * the order the units stand in the room: the first unit fills up before the
+ * next one is touched, and a unit keeps every compartment it was drawn with,
+ * empty ones included — the room is theirs, not ours to resize.
+ *
+ * Without drawn furniture the shelf stays one open wall that grows with the
+ * collection. Records that no drawn compartment is left for end up in a unit
+ * of their own, so nothing quietly disappears off the page.
+ */
+export function arrangeShelves(
+	compartments: ReleaseGroup[],
+	units: readonly ShelfUnitLayout[]
+): ShelfUnitView[] {
+	if (!units.length) {
+		return compartments.length
+			? [
+					{
+						key: 'wall',
+						name: '',
+						columns: 0,
+						compartments,
+						blanks: 0,
+						overflow: false,
+					},
+				]
+			: [];
+	}
+
+	const shelves: ShelfUnitView[] = [];
+	let filed = 0;
+
+	for (const unit of units) {
+		const size = unit.rows * unit.columns;
+		const held = compartments.slice(filed, filed + size);
+
+		shelves.push({
+			key: unit.id,
+			name: unit.name,
+			columns: unit.columns,
+			compartments: held,
+			blanks: size - held.length,
+			overflow: false,
+		});
+		filed += size;
+	}
+
+	const spilled = compartments.slice(filed);
+
+	if (spilled.length) {
+		shelves.push({
+			key: 'overflow',
+			name: '',
+			columns: units[units.length - 1].columns,
+			compartments: spilled,
+			blanks: 0,
+			overflow: true,
+		});
+	}
+
+	return shelves;
 }

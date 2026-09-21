@@ -11,7 +11,7 @@ import {
 import { Router } from '@angular/router';
 
 import { MediaFormat, ReleaseView } from '../../../../shared/music-ui';
-import { ReleaseGroup } from '../../collection.model';
+import { ShelfUnitView } from '../../collection.model';
 
 import { RecordShelfPeekComponent } from './record-shelf-peek.component';
 
@@ -27,6 +27,18 @@ interface Compartment {
 	key: string;
 	label: string;
 	spines: Spine[];
+}
+
+/** One drawn unit standing in the room, with its compartments filled. */
+interface Unit {
+	key: string;
+	name: string;
+	/** Compartments per row; 0 for the open wall, which fills the width. */
+	columns: number;
+	overflow: boolean;
+	compartments: Compartment[];
+	/** Drawn but unfilled compartments, rendered so the unit keeps its shape. */
+	blanks: number[];
 }
 
 const BOX_SET_SIZE = { width: 30, height: 196 };
@@ -57,7 +69,8 @@ function hueOf(text: string): number {
 
 /**
  * Collection shelf — releases stand spine-out in square, Kallax-like
- * compartments. Hovering or focusing a spine pulls it out and shows the cover.
+ * compartments, in the units the collector drew in their profile. Hovering or
+ * focusing a spine pulls it out and shows the cover.
  *
  * Built for hundreds of spines:
  * - compartments render when they approach the viewport (`@defer`), and
@@ -75,23 +88,32 @@ function hueOf(text: string): number {
 	imports: [RecordShelfPeekComponent],
 })
 export class RecordShelfComponent {
-	public readonly compartments = input.required<ReleaseGroup[]>();
+	public readonly shelves = input.required<ShelfUnitView[]>();
 
 	private readonly router = inject(Router);
 	private readonly peek = viewChild.required(RecordShelfPeekComponent);
-	private readonly unit = viewChild.required<ElementRef<HTMLElement>>('unit');
+	private readonly room = viewChild.required<ElementRef<HTMLElement>>('room');
 
-	protected readonly shelf = computed<Compartment[]>(() =>
-		this.compartments().map((group) => ({
-			key: group.key,
-			label: group.label,
-			spines: group.items.map((release) => ({
-				release,
-				href: this.router.serializeUrl(
-					this.router.createUrlTree(['/album', release.albumId])
-				),
-				...(release.boxSet ? BOX_SET_SIZE : SPINE_SIZE[release.format]),
-				hue: hueOf(release.title + release.artistName),
+	protected readonly units = computed<Unit[]>(() =>
+		this.shelves().map((shelf) => ({
+			key: shelf.key,
+			name: shelf.name,
+			columns: shelf.columns,
+			overflow: shelf.overflow,
+			blanks: Array.from({ length: shelf.blanks }, (_, index) => index),
+			compartments: shelf.compartments.map((group) => ({
+				key: group.key,
+				label: group.label,
+				spines: group.items.map((release) => ({
+					release,
+					href: this.router.serializeUrl(
+						this.router.createUrlTree(['/album', release.albumId])
+					),
+					...(release.boxSet
+						? BOX_SET_SIZE
+						: SPINE_SIZE[release.format]),
+					hue: hueOf(release.title + release.artistName),
+				})),
 			})),
 		}))
 	);
@@ -99,8 +121,12 @@ export class RecordShelfComponent {
 	private readonly releasesById = computed(
 		() =>
 			new Map(
-				this.compartments().flatMap((group) =>
-					group.items.map((release) => [release.id, release] as const)
+				this.shelves().flatMap((shelf) =>
+					shelf.compartments.flatMap((group) =>
+						group.items.map(
+							(release) => [release.id, release] as const
+						)
+					)
 				)
 			)
 	);
@@ -131,7 +157,7 @@ export class RecordShelfComponent {
 			element && this.releasesById().get(element.dataset['id'] ?? '');
 
 		if (element && release) {
-			const { x, y } = this.offsetInUnit(element);
+			const { x, y } = this.offsetInRoom(element);
 
 			this.peek().show(release, x + element.offsetWidth / 2, y);
 		}
@@ -163,19 +189,20 @@ export class RecordShelfComponent {
 	};
 
 	/**
-	 * Resting spine position relative to .unit. offset* ignores the hover lift
-	 * transform, but is relative to the offsetParent — and the compartments'
-	 * `content-visibility` makes each one an offsetParent, so the chain is
-	 * summed up to .unit.
+	 * Resting spine position relative to .room — the one positioned ancestor,
+	 * so a spine in any unit lands in the same coordinates as the preview.
+	 * offset* ignores the hover lift transform, but is relative to the
+	 * offsetParent — and the compartments' `content-visibility` makes each one
+	 * an offsetParent, so the chain is summed up to .room.
 	 */
-	private offsetInUnit(element: HTMLElement): { x: number; y: number } {
-		const unit = this.unit().nativeElement;
+	private offsetInRoom(element: HTMLElement): { x: number; y: number } {
+		const room = this.room().nativeElement;
 		let x = 0;
 		let y = 0;
 
 		for (
 			let node: HTMLElement | null = element;
-			node && node !== unit;
+			node && node !== room;
 			node = node.offsetParent as HTMLElement | null
 		) {
 			x += node.offsetLeft;

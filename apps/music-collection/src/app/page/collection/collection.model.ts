@@ -17,6 +17,21 @@ export interface ReleaseGroup {
 	items: ReleaseView[];
 }
 
+/**
+ * A drawn shelving unit with the compartments filed into it. A unit with no
+ * columns is the open wall the shelf falls back to when nothing is drawn.
+ */
+export interface ShelfUnitView {
+	key: string;
+	name: string;
+	columns: number;
+	compartments: ReleaseGroup[];
+	/** Compartments the unit has, drawn but with nothing filed into them. */
+	blanks: number;
+	/** Records with no drawn compartment left to hold them. */
+	overflow: boolean;
+}
+
 /** A group split into render chunks, so hundreds of cards never build in one tick. */
 export interface ChunkedReleaseGroup {
 	key: string;

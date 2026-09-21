@@ -1,20 +1,88 @@
 :host {
+	--cubby: 260px;
+	--shelf-gap: 14px;
+	--frame: 14px;
+
 	display: block;
 }
 
-/* One connected shelving unit: the frame color shows through the grid gaps. */
-.unit {
+/*
+ * The room the furniture stands in, and the one positioned ancestor: the
+ * cover preview is placed against it, so it may not scroll or clip — a unit
+ * too wide for the screen squeezes its columns instead.
+ */
+.room {
 	position: relative;
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-	gap: 14px;
-	padding: 14px;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: 28px;
+}
+
+/*
+ * One piece of shelving as the collector drew it: the frame color shows
+ * through the grid gaps, and the column count decides whether it stands up
+ * (4 × 2) or lies down (2 × 4).
+ */
+.unit {
+	display: flex;
+	flex-direction: column;
+	width: calc(
+		var(--cols) * var(--cubby) + (var(--cols) - 1) * var(--shelf-gap) + 2 *
+			var(--frame)
+	);
+	max-width: 100%;
+	padding: var(--frame);
 	background: linear-gradient(180deg, #4a3826 0%, #2b1f14 100%);
 	border-radius: 6px;
 	box-shadow:
 		0 24px 48px -16px rgba(0, 0, 0, 0.6),
 		inset 0 0 0 1px rgba(0, 0, 0, 0.45),
 		inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Nothing drawn: one open wall that grows with the collection. */
+.unit.is-wall {
+	width: 100%;
+}
+
+/* What no drawn compartment was left for; plainly not furniture. */
+.unit.is-overflow {
+	background: none;
+	border: 1px dashed rgba(233, 220, 198, 0.35);
+	box-shadow: none;
+}
+
+.grid {
+	display: grid;
+	grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+	gap: var(--shelf-gap);
+}
+
+.is-wall .grid,
+.is-overflow .grid {
+	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.unit-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.5rem;
+	padding: 0 2px 10px;
+}
+
+.unit-name {
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: #e9dcc6;
+}
+
+.unit-note {
+	font-size: 0.72rem;
+	color: #b8a58a;
 }
 
 /*
@@ -27,7 +95,17 @@
 	flex-direction: column;
 	min-width: 0;
 	content-visibility: auto;
-	contain-intrinsic-block-size: auto 262px;
+	contain-intrinsic-block-size: auto 290px;
+}
+
+/*
+ * In drawn furniture a compartment is as deep as it is wide — the column is
+ * a fixed width, so this is the square the collector drew. The open wall
+ * keeps its flexible columns instead, or a wide screen would stretch every
+ * cubby into a chimney.
+ */
+.unit:not(.is-wall, .is-overflow) .cubby {
+	aspect-ratio: 1;
 }
 
 .label {
@@ -35,6 +113,8 @@
 	align-items: baseline;
 	justify-content: space-between;
 	gap: 0.5rem;
+	/* Empty on a blank compartment, which still has to line up with the rest. */
+	min-height: 1em;
 	margin: 0 0 6px;
 	padding: 0 2px;
 	font-size: 0.68rem;

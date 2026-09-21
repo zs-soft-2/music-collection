@@ -228,7 +228,7 @@
 	} @else {
 		@switch (store.view()) {
 			@case ('shelf') {
-				<mc-record-shelf [compartments]="store.shelfCompartments()" />
+				<mc-record-shelf [shelves]="store.shelves()" />
 			}
 			@default {
 				@for (

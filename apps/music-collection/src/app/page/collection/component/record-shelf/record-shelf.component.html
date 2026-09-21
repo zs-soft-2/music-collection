@@ -1,44 +1,94 @@
-<div #unit class="unit">
-	@for (compartment of shelf(); track compartment.key) {
-		<section class="compartment" [attr.aria-label]="compartment.label">
-			<h3 class="label">
-				<span class="label-text">{{ compartment.label }}</span>
-				<span class="label-count">{{ compartment.spines.length }}</span>
-			</h3>
-
-			@defer (on viewport) {
-				<div class="cubby">
-					@for (spine of compartment.spines; track spine.release.id) {
-						<a
-							class="spine"
-							[class]="'is-' + spine.release.format"
-							[class.is-box]="spine.release.boxSet"
-							[style.width.px]="spine.width"
-							[style.height.px]="spine.height"
-							[style.--hue]="spine.hue"
-							[attr.href]="spine.href"
-							[attr.data-id]="spine.release.id"
-							[attr.aria-label]="
-								spine.release.artistName +
-								' — ' +
-								spine.release.title
-							"
-						>
-							<span class="spine-cap" aria-hidden="true"></span>
-							<span class="spine-text" aria-hidden="true">
-								<span class="spine-title">{{
-									spine.release.title
-								}}</span>
-								<span class="spine-artist">{{
-									spine.release.artistName
-								}}</span>
-							</span>
-						</a>
+<div #room class="room">
+	@for (unit of units(); track unit.key) {
+		<section
+			class="unit"
+			[class.is-wall]="!unit.columns"
+			[class.is-overflow]="unit.overflow"
+			[style.--cols]="unit.columns || null"
+			[attr.aria-label]="unit.name || null"
+		>
+			@if (unit.name || unit.overflow) {
+				<header class="unit-head">
+					@if (unit.overflow) {
+						<span class="unit-name">Off the shelf</span>
+						<span class="unit-note">
+							No drawn compartment left — add a shelf in your
+							profile.
+						</span>
+					} @else {
+						<span class="unit-name">{{ unit.name }}</span>
 					}
-				</div>
-			} @placeholder {
-				<div class="cubby"></div>
+				</header>
 			}
+
+			<div class="grid">
+				@for (compartment of unit.compartments; track compartment.key) {
+					<section
+						class="compartment"
+						[attr.aria-label]="compartment.label"
+					>
+						<h3 class="label">
+							<span class="label-text">{{
+								compartment.label
+							}}</span>
+							<span class="label-count">{{
+								compartment.spines.length
+							}}</span>
+						</h3>
+
+						@defer (on viewport) {
+							<div class="cubby">
+								@for (
+									spine of compartment.spines;
+									track spine.release.id
+								) {
+									<a
+										class="spine"
+										[class]="'is-' + spine.release.format"
+										[class.is-box]="spine.release.boxSet"
+										[style.width.px]="spine.width"
+										[style.height.px]="spine.height"
+										[style.--hue]="spine.hue"
+										[attr.href]="spine.href"
+										[attr.data-id]="spine.release.id"
+										[attr.aria-label]="
+											spine.release.artistName +
+											' — ' +
+											spine.release.title
+										"
+									>
+										<span
+											class="spine-cap"
+											aria-hidden="true"
+										></span>
+										<span
+											class="spine-text"
+											aria-hidden="true"
+										>
+											<span class="spine-title">{{
+												spine.release.title
+											}}</span>
+											<span class="spine-artist">{{
+												spine.release.artistName
+											}}</span>
+										</span>
+									</a>
+								}
+							</div>
+						} @placeholder {
+							<div class="cubby"></div>
+						}
+					</section>
+				}
+
+				<!-- Drawn compartments with nothing filed into them yet. -->
+				@for (blank of unit.blanks; track blank) {
+					<section class="compartment is-blank" aria-hidden="true">
+						<h3 class="label"></h3>
+						<div class="cubby"></div>
+					</section>
+				}
+			</div>
 		</section>
 	}
 

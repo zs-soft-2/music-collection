@@ -35,6 +35,7 @@ import {
 import { CollectionCardView } from '../collections/collections.model';
 
 import {
+	arrangeShelves,
 	chunkGroups,
 	collectionStats,
 	filterReleases,
@@ -53,10 +54,14 @@ import {
 	CollectionView,
 	FormatFilter,
 	ReleaseGroup,
+	ShelfUnitView,
 } from './collection.model';
-
-/** Spines per shelf compartment before it continues in the next one. */
-const SHELF_CUBBY_SIZE = 36;
+import {
+	NO_SHELF_LAYOUT,
+	SHELF_CUBBY_SIZE,
+	SHELF_LAYOUT_SETTING,
+	ShelfUnitLayout,
+} from './shelf-layout.setting';
 
 /**
  * Cards / rows per render chunk of the grid and list views. The first chunk
@@ -78,6 +83,8 @@ interface CollectionPageState {
 	sort: CollectionSort;
 	group: CollectionGroup;
 	view: CollectionView;
+	/** The furniture the collector drew in their profile; empty for none. */
+	shelfUnits: ShelfUnitLayout[];
 }
 
 const initialState: CollectionPageState = {
@@ -87,6 +94,7 @@ const initialState: CollectionPageState = {
 	standingsLoading: true,
 	query: '',
 	format: 'all',
+	shelfUnits: NO_SHELF_LAYOUT.units,
 	...COLLECTION_VIEW_DEFAULTS,
 };
 
@@ -177,19 +185,21 @@ export const CollectionPageStore = signalStore(
 				);
 			}),
 			/**
-			 * Shelf compartments: without grouping the shelf is organised by
-			 * format. Groups are packed into cubbies the way a collector
-			 * shelves records: small groups share a cubby, large ones continue
-			 * in the next.
+			 * The shelf as it stands in the room: compartments packed the way
+			 * a collector shelves records — without grouping by format, small
+			 * groups sharing a cubby, large ones continuing in the next — and
+			 * then filed into the units the collector drew.
 			 */
-			shelfCompartments: computed<ReleaseGroup[]>(() =>
-				packShelf(
+			shelves: computed<ShelfUnitView[]>(() => {
+				const compartments: ReleaseGroup[] = packShelf(
 					store.group() === 'none'
 						? groupReleases(visible(), 'format')
 						: groups(),
 					SHELF_CUBBY_SIZE
-				)
-			),
+				);
+
+				return arrangeShelves(compartments, store.shelfUnits());
+			}),
 			hasFilter: computed(
 				() => store.query().trim() !== '' || store.format() !== 'all'
 			),
@@ -253,6 +263,17 @@ export const CollectionPageStore = signalStore(
 						})
 					)
 				),
+				/** The furniture kept for the user, and any later change. */
+				loadShelfLayout: rxMethod<void>(
+					pipe(
+						switchMap(() =>
+							settingsEffect.value$(SHELF_LAYOUT_SETTING)
+						),
+						tap(({ units }) =>
+							patchState(store, { shelfUnits: units })
+						)
+					)
+				),
 				/** The layout kept for the user, and any later change to it. */
 				loadPreferences: rxMethod<void>(
 					pipe(
@@ -285,6 +306,7 @@ export const CollectionPageStore = signalStore(
 	withHooks({
 		onInit(store) {
 			store.loadPreferences(of(undefined));
+			store.loadShelfLayout(of(undefined));
 			store.load(of(undefined));
 			store.loadCollections(of(undefined));
 			store.loadFollowing(of(undefined));
