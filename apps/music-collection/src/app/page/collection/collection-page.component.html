@@ -54,7 +54,7 @@
 	</section>
 
 	<!-- Collections: how far this shelf gets on the published sets -->
-	@if (store.standingsLoading() || store.collections().length) {
+	@if (store.collectionsLoading() || store.collections().length) {
 		<section
 			class="collections-section"
 			aria-labelledby="collections-title"
@@ -64,7 +64,7 @@
 					Collection goals
 				</h2>
 
-				@if (!store.standingsLoading()) {
+				@if (!store.collectionsLoading()) {
 					<p class="collections-summary">
 						{{ store.collectionsSummary().completed }} of
 						{{ store.collectionsSummary().total }} complete
@@ -81,7 +81,7 @@
 				</a>
 			</header>
 
-			@if (store.standingsLoading()) {
+			@if (store.collectionsLoading()) {
 				<ul class="collection-list">
 					@for (skeleton of collectionSkeletons; track skeleton) {
 						<li class="skeleton collection-skeleton"></li>

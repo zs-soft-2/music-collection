@@ -27,6 +27,7 @@ import {
 	toReleaseView,
 	topStyles,
 } from '../../shared/music-ui';
+import { withCollectionFollowing } from '../collections/collection-following.feature';
 import {
 	sortCollectionCards,
 	toCollectionCard,
@@ -100,6 +101,7 @@ function chosen(
 
 export const CollectionPageStore = signalStore(
 	withState(initialState),
+	withCollectionFollowing(),
 	withComputed((store) => {
 		const stats = computed(() => collectionStats(store.releases()));
 		const visible = computed(() =>
@@ -112,19 +114,37 @@ export const CollectionPageStore = signalStore(
 		const groups = computed(() => groupReleases(visible(), store.group()));
 
 		/*
-		 * The collections this shelf is measured against. An empty one — a
-		 * rule the catalog has nothing for — says nothing about the shelf,
-		 * so it stays out; nearly finished ones come first.
+		 * The collections this shelf is measured against: the collector's
+		 * own pick, or — while they have picked none — every published one,
+		 * since there is nothing to choose from until they have seen it. An
+		 * empty collection — a rule the catalog has nothing for — says
+		 * nothing about the shelf, so it stays out; nearly finished ones
+		 * come first.
 		 */
-		const collections = computed<CollectionCardView[]>(() =>
-			sortCollectionCards(store.standings().map(toCollectionCard)).filter(
-				(collection) => collection.total > 0
-			)
-		);
+		const collections = computed<CollectionCardView[]>(() => {
+			const followedUids = store.followedUids();
+			const followingOnly = !store.followsNothing();
+
+			return sortCollectionCards(
+				store.standings().map(toCollectionCard)
+			).filter(
+				(collection) =>
+					collection.total > 0 &&
+					(!followingOnly || followedUids.has(collection.uid))
+			);
+		});
 
 		return {
 			stats,
 			collections,
+			/*
+			 * The pick decides which collections are shown, so the section
+			 * waits for it as well: better a moment of skeleton than a list
+			 * that first shows everything and then takes most of it back.
+			 */
+			collectionsLoading: computed(
+				() => store.standingsLoading() || !store.followingLoaded()
+			),
 			collectionsSummary: computed(() => ({
 				total: collections().length,
 				completed: collections().filter(
@@ -267,6 +287,7 @@ export const CollectionPageStore = signalStore(
 			store.loadPreferences(of(undefined));
 			store.load(of(undefined));
 			store.loadCollections(of(undefined));
+			store.loadFollowing(of(undefined));
 		},
 	})
 );
