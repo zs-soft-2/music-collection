@@ -1,10 +1,10 @@
 import { combineLatest, firstValueFrom, Observable, ReplaySubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import { Injectable, inject, signal } from '@angular/core';
+import { DestroyRef, Injectable, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
 	ARTIST_TYPE_OPTIONS,
 	ArtistEntity,
@@ -23,7 +23,12 @@ import {
 	SearchParams,
 	StyleList,
 } from '@music-collection/api';
-import { uniqueCatalogName } from '@music-collection/ui';
+import { isSameCatalogName } from '@music-collection/common/engine';
+import {
+	CatalogDuplicate,
+	DUPLICATE_CATALOG_NAME,
+	uniqueCatalogName,
+} from '@music-collection/ui';
 
 /** One field of the loaded profile next to the form's current value. */
 export interface ArtistExternalRow {
@@ -84,8 +89,10 @@ export class ArtistFormService {
 	private artistStateService = inject(ArtistStateService);
 	private artistUtilService = inject(ArtistUtilService);
 	private componentUtil = inject(ArtistUtilService);
+	private destroyRef = inject(DestroyRef);
 	private documentStateService = inject(DocumentStateService);
 	private returnNavigation = inject(ReturnNavigationService);
+	private router = inject(Router);
 
 	private artist!: ArtistEntity | undefined;
 	/** Every artist of the catalog, for the duplicate check on the name. */
@@ -94,6 +101,8 @@ export class ArtistFormService {
 	private params!: ArtistFormParams;
 	private params$$: ReplaySubject<ArtistFormParams>;
 
+	/** The artist this name collides with, blocking or not, or null. */
+	public readonly duplicate = signal<CatalogDuplicate | null>(null);
 	public readonly externalComparison =
 		signal<ArtistExternalComparison | null>(null);
 	public readonly externalError = signal<string | null>(null);
@@ -112,7 +121,7 @@ export class ArtistFormService {
 					this.artistStateService.dispatchListEntitiesAction();
 				}
 				this.catalogArtists = artists;
-				this.formGroup?.controls['name'].updateValueAndValidity();
+				this.recheckName();
 			});
 	}
 
@@ -120,10 +129,63 @@ export class ArtistFormService {
 	 * The names this artist would collide with — its own excluded, so that
 	 * saving an artist unchanged is not a duplicate of itself.
 	 */
+	private takenArtists(): ArtistEntity[] {
+		return this.catalogArtists.filter(
+			(artist) => artist.uid !== this.artist?.uid
+		);
+	}
+
 	private takenArtistNames(): string[] {
-		return this.catalogArtists
-			.filter((artist) => artist.uid !== this.artist?.uid)
-			.map((artist) => artist.name);
+		return this.takenArtists().map((artist) => artist.name);
+	}
+
+	/**
+	 * Asks the catalog about the name again and names what it collides with.
+	 * The validator lets through the collision the artist arrived in, so the
+	 * report carries both kinds and says which this one is: a blocking clash
+	 * the admin can still type their way out of, or a settled one only a merge
+	 * in the catalog can end.
+	 */
+	private recheckName(): void {
+		const control = this.formGroup?.controls['name'];
+
+		if (!control) {
+			return;
+		}
+
+		control.updateValueAndValidity({ emitEvent: false });
+
+		const name = String(control.value ?? '');
+		const twin = this.takenArtists().find((artist) =>
+			isSameCatalogName(artist.name, name)
+		);
+
+		this.duplicate.set(
+			twin
+				? {
+						blocking: !!control.errors?.[DUPLICATE_CATALOG_NAME],
+						name: twin.name,
+						uid: twin.uid,
+					}
+				: null
+		);
+	}
+
+	/**
+	 * Opens the artist this name collides with, where the admin can see the
+	 * two side by side and decide which one the catalog keeps.
+	 */
+	public openDuplicate(): void {
+		const duplicate = this.duplicate();
+
+		if (!duplicate) {
+			return;
+		}
+
+		this.router.navigate(['..', duplicate.uid], {
+			queryParamsHandling: 'preserve',
+			relativeTo: this.activatedRoute,
+		});
 	}
 
 	public cancel(): void {
@@ -202,9 +264,15 @@ export class ArtistFormService {
 				this.artist = artist;
 				this.formGroup = this.artistUtilService.createFormGroup(artist);
 				this.formGroup.controls['name'].addValidators(
-					uniqueCatalogName(() => this.takenArtistNames())
+					uniqueCatalogName(
+						() => this.takenArtistNames(),
+						() => this.artist?.name ?? null
+					)
 				);
-				this.formGroup.controls['name'].updateValueAndValidity();
+				this.formGroup.controls['name'].valueChanges
+					.pipe(takeUntilDestroyed(this.destroyRef))
+					.subscribe(() => this.recheckName());
+				this.recheckName();
 				this.params = this.createArtistParams(
 					this.formGroup,
 					documents,

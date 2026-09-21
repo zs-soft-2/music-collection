@@ -35,16 +35,24 @@
 							pInputText
 							formControlName="name"
 						/>
-						@if (
-							params.formGroup.controls['name'].errors?.[
-								'duplicateCatalogName'
-							];
-							as duplicate
-						) {
-							<small class="album-form-error"
-								>This artist already has
-								{{ duplicate.match }}.</small
+						@if (duplicate(); as twin) {
+							<small
+								class="album-form-duplicate"
+								[class.is-warning]="!twin.blocking"
 							>
+								This artist already has
+								<button
+									type="button"
+									class="album-form-duplicate-link"
+									(click)="openDuplicate()"
+								>
+									{{ twin.name }}</button
+								>.
+								@if (!twin.blocking) {
+									Saving keeps both — merge one away in the
+									catalog.
+								}
+							</small>
 						}
 					</div>
 

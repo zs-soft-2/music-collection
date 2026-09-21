@@ -26,6 +26,34 @@ describe('uniqueCatalogName', () => {
 		expect(control('', ['Testament']).errors).toBeNull();
 	});
 
+	it('lets through the clash the record arrived in', () => {
+		const name = new FormControl(
+			'Burning Bridges',
+			uniqueCatalogName(
+				() => ['Burning Bridges'],
+				() => 'Burning Bridges'
+			)
+		);
+
+		// The twin is the catalog's to merge away; refusing the name here
+		// would lock the record out of every other edit.
+		expect(name.errors).toBeNull();
+	});
+
+	it('still refuses a name typed into a clash', () => {
+		const name = new FormControl(
+			'Wages Of Sin',
+			uniqueCatalogName(
+				() => ['Wages of Sin'],
+				() => 'Burning Bridges'
+			)
+		);
+
+		expect(name.errors).toEqual({
+			[DUPLICATE_CATALOG_NAME]: { match: 'Wages of Sin' },
+		});
+	});
+
 	it('reads the rivals again on every check', () => {
 		const taken: string[] = [];
 		const name = new FormControl(

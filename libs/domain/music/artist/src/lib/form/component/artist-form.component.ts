@@ -56,6 +56,7 @@ export class ArtistFormComponent extends BaseComponent implements OnInit {
 
 	public params$!: Observable<ArtistFormParams>;
 
+	public readonly duplicate = this.componentService.duplicate;
 	public readonly externalComparison =
 		this.componentService.externalComparison;
 	public readonly externalError = this.componentService.externalError;
@@ -78,6 +79,10 @@ export class ArtistFormComponent extends BaseComponent implements OnInit {
 
 	public loadExternal(): void {
 		void this.componentService.loadExternal();
+	}
+
+	public openDuplicate(): void {
+		this.componentService.openDuplicate();
 	}
 
 	public toggleExternalRow(field: ArtistExternalField): void {
