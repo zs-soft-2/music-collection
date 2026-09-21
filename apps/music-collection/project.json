@@ -28,6 +28,7 @@
 				"index": "apps/music-collection/src/index.html",
 				"main": "apps/music-collection/src/main.ts",
 				"tsConfig": "apps/music-collection/tsconfig.app.json",
+				"webWorkerTsConfig": "apps/music-collection/tsconfig.worker.json",
 				"inlineStyleLanguage": "scss",
 				"assets": [
 					"apps/music-collection/src/favicon.ico",

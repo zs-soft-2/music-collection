@@ -30,8 +30,8 @@ import {
 	PlacedNode,
 	Point,
 	placeNetwork,
-	simulateNetwork,
 } from './network-graph.layout';
+import { NetworkLayoutService } from './network-layout.service';
 
 const MIN_SCALE = 0.15;
 const MAX_SCALE = 3;
@@ -52,6 +52,7 @@ const ALL_EDGE_LABELS_MAX = 16;
  */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
+	providers: [NetworkLayoutService],
 	selector: 'mc-network-graph',
 	templateUrl: './network-graph.component.html',
 	styleUrls: ['./network-graph.component.scss'],
@@ -73,6 +74,7 @@ export class NetworkGraphComponent {
 
 	private readonly svg = viewChild.required<ElementRef<SVGSVGElement>>('svg');
 	private readonly destroyRef = inject(DestroyRef);
+	private readonly layoutService = inject(NetworkLayoutService);
 
 	/** Simulated positions, before they are stretched to the canvas. */
 	private readonly simulated = signal<ReadonlyMap<string, Point>>(new Map());
@@ -135,10 +137,17 @@ export class NetworkGraphComponent {
 		return `Relationship network: ${nodes.length} nodes, ${edges.length} connections. Use Tab to move between nodes, Enter to show details, F to focus on a node.`;
 	});
 
+	/** The first layout of these nodes has not come back yet. */
+	protected readonly settling = computed(
+		() => this.nodes().length > 0 && this.simulated().size === 0
+	);
+
 	protected readonly radius = NODE_RADIUS;
 
 	private zoomBehavior: ZoomBehavior<SVGSVGElement, unknown> | null = null;
 	private laidOutFocus: string | null = null;
+	/** Only the newest layout may land: the worker answers out of order. */
+	private layoutRequest = 0;
 	private fittedFocus: string | null = null;
 	/** The user zoomed or panned since the last fit: keep their view. */
 	private userAdjusted = false;
@@ -151,21 +160,7 @@ export class NetworkGraphComponent {
 			const edges = this.edges();
 			const focusId = this.focusId();
 
-			untracked(() => {
-				// A new focus is laid out afresh around it; otherwise positions
-				// carry over, so filtering does not reshuffle the graph.
-				this.simulated.set(
-					simulateNetwork(
-						nodes,
-						edges,
-						focusId,
-						focusId === this.laidOutFocus
-							? this.simulated()
-							: new Map()
-					)
-				);
-				this.laidOutFocus = focusId;
-			});
+			untracked(() => void this.layOut(nodes, edges, focusId));
 		});
 
 		// Keep the network filling the canvas: on a new focus always, on a
@@ -344,6 +339,37 @@ export class NetworkGraphComponent {
 		const width = radius * 1.35;
 
 		return `0,${-radius} ${width},0 0,${radius} ${-width},0`;
+	}
+
+	/**
+	 * Places the nodes and shows the result, unless a newer layout has been
+	 * asked for in the meantime — the simulation runs in a worker, so the
+	 * answers can arrive in any order.
+	 */
+	private async layOut(
+		nodes: NetworkNode[],
+		edges: NetworkEdge[],
+		focusId: string | null
+	): Promise<void> {
+		const request = ++this.layoutRequest;
+		// A new focus is laid out afresh around it; otherwise positions
+		// carry over, so filtering does not reshuffle the graph.
+		const previous =
+			focusId === this.laidOutFocus
+				? this.simulated()
+				: new Map<string, Point>();
+		const positions = await this.layoutService.simulate(
+			nodes,
+			edges,
+			focusId,
+			previous
+		);
+
+		if (!positions || request !== this.layoutRequest) {
+			return;
+		}
+		this.laidOutFocus = focusId;
+		this.simulated.set(positions);
 	}
 
 	private scaleBy(factor: number): void {

@@ -81,6 +81,15 @@
 	}
 }
 
+/*
+ * The layout is simulated in a worker, so the first positions arrive a frame
+ * or two after the nodes do. Until then everything would sit on the origin:
+ * hold it back and fade it in once it is placed.
+ */
+.is-settling {
+	opacity: 0;
+}
+
 .arrow {
 	fill: var(--net-edge);
 }

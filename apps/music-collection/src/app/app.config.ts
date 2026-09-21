@@ -43,6 +43,7 @@ import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { environment } from '../environments/environment';
 import { routes } from './app-routing';
 import { HookModule } from './module/hook';
+import { installPerformanceConsole } from './performance';
 import { metaReducers } from './reducer';
 import { AppearanceSyncService, MusicPreset } from './theme';
 import { NgxPermissionsModule } from 'ngx-permissions';
@@ -75,6 +76,9 @@ export const appConfig: ApplicationConfig = {
 		// alive wherever the theme is switched, which is every page, so it
 		// starts with the app rather than with the page that shows it.
 		provideEnvironmentInitializer(() => inject(AppearanceSyncService)),
+		// `__mcPerf` in the console: the timings of the heavy work, in every
+		// build, so a slow machine's numbers can be read where it is slow.
+		provideEnvironmentInitializer(() => installPerformanceConsole()),
 		providePrimeNG({
 			theme: {
 				preset: MusicPreset,

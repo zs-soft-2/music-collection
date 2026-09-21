@@ -60,7 +60,7 @@
 		</clipPath>
 	</defs>
 
-	<g [attr.transform]="transformAttr()">
+	<g [attr.transform]="transformAttr()" [class.is-settling]="settling()">
 		<g class="edges" aria-hidden="true">
 			@for (edge of layout().edges; track edge.id) {
 				<g

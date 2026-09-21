@@ -14,6 +14,7 @@ import {
 import { NetworkDetailsComponent } from './component/network-details/network-details.component';
 import { NetworkGraphComponent } from './component/network-graph/network-graph.component';
 import { NetworkSearchComponent } from './component/network-search/network-search.component';
+import { provideNetworkLayoutWorker } from './network-layout.worker-provider';
 import {
 	MAX_DEPTH,
 	MIN_DEPTH,
@@ -30,7 +31,7 @@ import { NETWORK_KIND_LABELS, NetworkNodeKind } from './network.model';
  */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	providers: [NetworkPageStore],
+	providers: [NetworkPageStore, provideNetworkLayoutWorker()],
 	selector: 'mc-network-page',
 	templateUrl: './network-page.component.html',
 	styleUrls: ['./network-page.component.scss'],
