@@ -69,6 +69,17 @@ resource "google_firebase_web_app" "app" {
   depends_on = [google_firebase_project.this]
 }
 
+# A web app SDK-konfigurációja, ahogy a Firebase adja — csak olvasás. A
+# `measurement_id` akkor van benne, ha a projekthez GA4 property van kötve;
+# azt a Firebase konzol köti be (`projects.addGoogleAnalytics`), a providernek
+# nincs rá resource-a. Üres érték tehát azt jelenti, hogy a mérésnek nincs
+# hova mennie.
+data "google_firebase_web_app_config" "app" {
+  provider   = google-beta
+  project    = var.project_id
+  web_app_id = google_firebase_web_app.app.app_id
+}
+
 resource "google_firestore_database" "default" {
   provider    = google-beta
   project     = var.project_id
@@ -173,4 +184,9 @@ output "app_check_site_key" {
 
 output "web_app_id" {
   value = google_firebase_web_app.app.app_id
+}
+
+output "measurement_id" {
+  value       = data.google_firebase_web_app_config.app.measurement_id
+  description = "A GA4 measurement id, ahogy a Firebase adja — ez megy az environment*.ts `firebase.measurementId` mezőjébe. Nem titok, a kliensbe kerül. Üres, ha a projekthez nincs Google Analytics kötve."
 }

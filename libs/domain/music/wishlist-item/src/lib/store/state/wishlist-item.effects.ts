@@ -9,6 +9,7 @@ import {
 
 import { inject, Injectable } from '@angular/core';
 import {
+	AnalyticsService,
 	AuthenticationStateService,
 	EntityQuantityEntity,
 	EntityQuantityStateService,
@@ -27,6 +28,7 @@ import * as wishlistItemActions from './wishlist-item.actions';
 export class WishlistItemEffects {
 	private actions$: Actions = inject(Actions);
 	private authenticationStateService = inject(AuthenticationStateService);
+	private analytics = inject(AnalyticsService);
 	private entityQuantityStateService = inject(EntityQuantityStateService);
 	private entityQuantityUtilService = inject(EntityQuantityUtilService);
 	private userDataService = inject(UserDataService);
@@ -69,6 +71,13 @@ export class WishlistItemEffects {
 									UpdateEntityQuantityTypeEnum.increase
 								)
 							);
+
+							// How many pressings of it would do: a record wanted
+							// on vinyl only is a different want from one that
+							// any copy would settle.
+							this.analytics.track('add_to_wishlist', {
+								medias: wishlistItem.medias.length,
+							});
 
 							return wishlistItemActions.addWishlistItemSuccess({
 								wishlistItem:

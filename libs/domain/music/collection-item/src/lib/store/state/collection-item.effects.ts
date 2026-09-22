@@ -10,6 +10,7 @@ import {
 
 import { inject, Injectable } from '@angular/core';
 import {
+	AnalyticsService,
 	AuthenticationStateService,
 	CollectionItemDataService,
 	CollectionItemEntity,
@@ -34,6 +35,7 @@ export class CollectionItemEffects {
 	private entityQuantityUtilService = inject(EntityQuantityUtilService);
 	private userDataService = inject(UserDataService);
 	private authenticationStateService = inject(AuthenticationStateService);
+	private analytics = inject(AnalyticsService);
 
 	public addCollectionItem = createEffect(() =>
 		this.actions$.pipe(
@@ -76,6 +78,13 @@ export class CollectionItemEffects {
 									UpdateEntityQuantityTypeEnum.increase
 								)
 							);
+
+							// What was added, and on what it plays: the media
+							// is a closed list, so it says which shelves fill
+							// up without saying whose they are.
+							this.analytics.track('add_to_collection', {
+								media: collectionItemEntity.release.media,
+							});
 
 							return collectionItemActions.addCollectionItemSuccess(
 								{
@@ -218,16 +227,20 @@ export class CollectionItemEffects {
 					})
 					.pipe(
 						first(),
-						map(({ updatedAt }) =>
-							collectionItemActions.changeCollectionItemPlacementSuccess(
+						map(({ updatedAt }) => {
+							this.analytics.track('shelf_placement_changed', {
+								placed: !!placement,
+							});
+
+							return collectionItemActions.changeCollectionItemPlacementSuccess(
 								{
 									collectionItem: {
 										id: collectionItem.uid,
 										changes: { placement, updatedAt },
 									},
 								}
-							)
-						),
+							);
+						}),
 						catchError((error) => {
 							console.error(error);
 							return of(

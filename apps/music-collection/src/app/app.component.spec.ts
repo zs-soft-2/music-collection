@@ -14,6 +14,7 @@ import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
 
 import { AppComponent } from './app.component';
+import { MeasurementConsentService } from './data/analytics';
 import { PlayerStore } from './shared/player';
 
 describe('AppComponent', () => {
@@ -48,6 +49,12 @@ describe('AppComponent', () => {
 				{
 					provide: AlbumStateService,
 					useValue: { selectEntities$: () => of([]) },
+				},
+				{
+					// A hozzájárulás a beállításokból jönne (Firestore/Auth);
+					// itt elég annyi, hogy a sáv ne kérdezzen semmit.
+					provide: MeasurementConsentService,
+					useValue: { consented: signal(false), decide: jest.fn() },
 				},
 				{
 					provide: PlayerStore,

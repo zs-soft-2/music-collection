@@ -33,6 +33,14 @@ export const environment = {
 		 */
 		debugToken: '',
 	},
+	analytics: {
+		/**
+		 * Mérés a prod GA4 propertyjébe (`measurementId` feljebb). Csak
+		 * hozzájárulás után indul el: a gtag scriptet is akkor tölti be
+		 * először a böngésző (`FirebaseAnalyticsService`).
+		 */
+		enabled: true,
+	},
 	spotify: {
 		/**
 		 * Client ID of the Spotify app (developer.spotify.com/dashboard) for

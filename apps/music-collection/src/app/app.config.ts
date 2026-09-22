@@ -42,10 +42,11 @@ import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 
-import { ShelfLayoutService } from '@music-collection/api';
+import { AnalyticsService, ShelfLayoutService } from '@music-collection/api';
 
 import { environment } from '../environments/environment';
 import { routes } from './app-routing';
+import { FirebaseAnalyticsService } from './data/analytics';
 // Straight from the file: the page's barrel would pull the lazily loaded
 // collection page into the first bundle.
 import { CollectorShelfLayoutService } from './page/collection/shelf-layout.service';
@@ -141,6 +142,12 @@ export const appConfig: ApplicationConfig = {
 		// alive wherever the theme is switched, which is every page, so it
 		// starts with the app rather than with the page that shows it.
 		provideEnvironmentInitializer(() => inject(AppearanceSyncService)),
+		// Measurement. Nothing is sent — and the analytics SDK is not even
+		// fetched — until the collector has allowed it, but the service has to
+		// be alive from the start: it follows the navigations and the sign-in
+		// state, and neither of those waits for a first event.
+		{ provide: AnalyticsService, useExisting: FirebaseAnalyticsService },
+		provideEnvironmentInitializer(() => inject(FirebaseAnalyticsService)),
 		// `__mcPerf` in the console: the timings of the heavy work, in every
 		// build, so a slow machine's numbers can be read where it is slow.
 		provideEnvironmentInitializer(() => installPerformanceConsole()),

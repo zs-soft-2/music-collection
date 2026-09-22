@@ -10,6 +10,7 @@ import { CoreErrorModule } from '@music-collection/core/error';
 
 import { TopBarModule } from './module';
 import { AmbientBackdropComponent } from './shared/backdrop';
+import { MeasurementConsentComponent } from './shared/measurement';
 import { PlayerStageComponent, PlayerStore } from './shared/player';
 import { YoutubeDockComponent } from './shared/youtube';
 
@@ -25,6 +26,7 @@ import { YoutubeDockComponent } from './shared/youtube';
 		YoutubeDockComponent,
 		AmbientBackdropComponent,
 		PlayerStageComponent,
+		MeasurementConsentComponent,
 	],
 })
 export class AppComponent implements OnInit {

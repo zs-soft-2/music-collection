@@ -1,4 +1,5 @@
 export * from './lib/action';
+export * from './lib/analytics';
 export * from './lib/authentication';
 export * from './lib/authorization';
 export * from './lib/dynamic-config';

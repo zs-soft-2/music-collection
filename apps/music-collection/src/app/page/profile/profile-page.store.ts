@@ -5,6 +5,7 @@ import {
 	UserLocationEffect,
 	UserLocationSettings,
 } from '../../data/user-location';
+import { MeasurementConsentService } from '../../data/analytics';
 import { UserSettingsEffect } from '../../data/user-settings';
 import { ALBUM_VIEW_SETTING } from '../album/album-view.setting';
 import {
@@ -405,6 +406,28 @@ export const ProfilePageStore = signalStore(
 			};
 		}
 	),
+	/**
+	 * Being measured is a consent like the shared location: the collector may
+	 * take it back here, and it has to stop the moment they do. The answer
+	 * itself is not copied into this store — the measurement reads the same
+	 * signal, and two copies of a consent is one too many.
+	 */
+	withComputed(() => {
+		const consent = inject(MeasurementConsentService);
+
+		return {
+			measurement: computed(() => consent.consented() === true),
+		};
+	}),
+	withMethods(() => {
+		const consent = inject(MeasurementConsentService);
+
+		return {
+			setMeasurement(allowed: boolean): void {
+				consent.decide(allowed);
+			},
+		};
+	}),
 	withHooks({
 		onInit(store) {
 			store.load(of(undefined));

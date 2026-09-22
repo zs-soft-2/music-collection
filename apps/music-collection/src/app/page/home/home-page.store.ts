@@ -1,7 +1,10 @@
 import {
 	Observable,
 	combineLatest,
+	debounceTime,
+	distinctUntilChanged,
 	filter,
+	map,
 	of,
 	pipe,
 	switchMap,
@@ -9,9 +12,11 @@ import {
 } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { measure } from '@music-collection/common/engine';
 import {
 	AlbumStateService,
+	AnalyticsService,
 	ArtistStateService,
 	AuthenticationStateService,
 	CollectionItemStateService,
@@ -113,6 +118,10 @@ const ARTIST_COUNT = 12;
 const ALBUM_COUNT = 12;
 const SPOTLIGHT_RELEASE_COUNT = 6;
 const SEARCH_RESULT_COUNT = 5;
+/** How long a search box has to stand still before it counts as a search. */
+const SEARCH_SETTLED_MS = 800;
+/** Below this a term is still being typed, not searched with. */
+const SEARCH_MIN_LENGTH = 2;
 /** Rows of the catalog bands, and the covers or tiles shown in each. */
 const GROUP_COUNT = 6;
 const GROUP_ALBUM_COUNT = 12;
@@ -540,6 +549,37 @@ export const HomePageStore = signalStore(
 			};
 		}
 	),
+	withMethods((store) => {
+		const analytics = inject(AnalyticsService);
+		const query$ = toObservable(store.query);
+
+		return {
+			/**
+			 * Counts a search once the box has stood still. The term itself
+			 * never leaves the browser — only how much it turned up, which is
+			 * what says whether the search finds what people come for.
+			 */
+			watchSearches: rxMethod<void>(
+				pipe(
+					switchMap(() => query$),
+					map((query) => query.trim()),
+					debounceTime(SEARCH_SETTLED_MS),
+					distinctUntilChanged(),
+					filter((query) => query.length >= SEARCH_MIN_LENGTH),
+					tap(() =>
+						analytics.track('search', {
+							results: store
+								.searchResults()
+								.reduce(
+									(found, group) => found + group.items.length,
+									0
+								),
+						})
+					)
+				)
+			),
+		};
+	}),
 	withHooks({
 		onInit(store) {
 			store.loadArtists(of(undefined));
@@ -548,6 +588,7 @@ export const HomePageStore = signalStore(
 			store.loadCounts(of(undefined));
 			store.loadCollections(of(undefined));
 			store.loadAuthentication(of(undefined));
+			store.watchSearches(of(undefined));
 		},
 	})
 );

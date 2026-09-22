@@ -214,6 +214,16 @@ output "web_app_id" {
   description = "A tofu által kezelt Firebase web app azonosítója."
 }
 
+# Az `environment*.ts` `firebase.measurementId` mezője. A tofu nem kapcsolja be
+# a mérést — a GA4 propertyt és a Firebase-hez kötését a konzol adja, a
+# providerben nincs rá resource —, csak visszaolvassa, hogy a kliensben lévő
+# érték ne kézzel bemásolt maradjon:
+#   tofu -chdir=infra/environments/dev output -raw measurement_id
+output "measurement_id" {
+  value       = module.firebase.measurement_id
+  description = "A kliensbe kerülő GA4 measurement id (nem titok). Üres, ha a projekthez nincs Google Analytics kötve."
+}
+
 module "github_environment" {
   source         = "../../modules/github-environment"
   repository     = var.github_repo

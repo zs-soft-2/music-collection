@@ -1,7 +1,8 @@
-import { Observable, map } from 'rxjs';
+import { Observable, map, tap } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
 import {
+	AnalyticsService,
 	ApproveReleaseRequestResult,
 	DiscogsVersion,
 	ReleaseRequest,
@@ -21,6 +22,7 @@ const newestFirst = (requests: ReleaseRequest[]) =>
 @Injectable({ providedIn: 'root' })
 export class ReleaseRequestEffect {
 	private readonly repository = inject(ReleaseRequestRepository);
+	private readonly analytics = inject(AnalyticsService);
 
 	/** The user's requests, newest first; emits again when they change. */
 	public listByUser$(userId: string): Observable<ReleaseRequest[]> {
@@ -70,7 +72,17 @@ export class ReleaseRequestEffect {
 	}
 
 	public request$(request: ReleaseRequestAdd): Observable<ReleaseRequest> {
-		return this.repository.add$(request);
+		return this.repository.add$(request).pipe(
+			// Whether they picked a pressing off the Discogs versions or just
+			// asked for the album: the two are different amounts of work for
+			// whoever approves it, and we cannot tell which one collectors
+			// actually do without counting.
+			tap((created) =>
+				this.analytics.track('release_requested', {
+					pressing: !!created.discogsReleaseId,
+				})
+			)
+		);
 	}
 
 	public listDiscogsVersions$(

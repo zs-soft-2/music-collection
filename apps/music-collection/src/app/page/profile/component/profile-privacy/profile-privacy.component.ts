@@ -90,6 +90,27 @@ interface LevelChoice {
 		}
 
 		<p class="preview">{{ preview() }}</p>
+
+		<fieldset class="levels">
+			<legend>Usage measurement</legend>
+
+			<label class="level" [class.selected]="store.measurement()">
+				<input
+					type="checkbox"
+					[checked]="store.measurement()"
+					(change)="store.setMeasurement($any($event.target).checked)"
+				/>
+				<span class="level-text">
+					<b>Count how the app is used</b>
+					<span>
+						Which pages and features get opened, through Google
+						Analytics. No advertising, and nothing about your
+						records or your searches. Switching it off stops it at
+						once and clears what it left in this browser.
+					</span>
+				</span>
+			</label>
+		</fieldset>
 	`,
 	styles: `
 		:host {

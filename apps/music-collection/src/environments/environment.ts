@@ -45,6 +45,17 @@ export const environment = {
 		 */
 		debugToken: APP_CHECK_DEBUG_TOKEN,
 	},
+	analytics: {
+		/**
+		 * Mérés a dev projekt GA4 propertyjébe (`measurementId` feljebb), a
+		 * prodtól külön. Devben szándékosan be van kapcsolva: enélkül nincs
+		 * hol látni, hogy az esemény tényleg elmegy-e. A saját kattintgatásod
+		 * viszont beleszámít, szóval devből ne olvass számokat.
+		 *
+		 * Kikapcsolva a sáv sem jelenik meg, és az SDK-t se tölti be semmi.
+		 */
+		enabled: true,
+	},
 	spotify: {
 		/**
 		 * Client ID of the Spotify app (developer.spotify.com/dashboard) for
