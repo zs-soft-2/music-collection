@@ -48,6 +48,21 @@ export class ReleaseCardComponent {
 	public readonly canPlace = input(false);
 	/** The copy to file, by its collection item id. */
 	public readonly place = output<string>();
+	/**
+	 * Where the card leads. In the collector's own collection a card is a
+	 * copy they own, so it opens that copy; everywhere else — a search, an
+	 * artist's discography, someone's wishlist — it is a record in the
+	 * catalog, and the album page is what there is to open.
+	 */
+	public readonly opens = input<'album' | 'copy'>('album');
+
+	protected readonly link = computed((): unknown[] => {
+		const release = this.release();
+
+		return this.opens() === 'copy'
+			? ['/collection', 'copy', release.id]
+			: ['/album', release.albumId];
+	});
 
 	protected readonly ariaLabel = computed(() => {
 		const release = this.release();

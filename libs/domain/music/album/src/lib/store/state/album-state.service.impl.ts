@@ -10,6 +10,7 @@ import {
 	AlbumExternalTrack,
 	AlbumExternalTracks,
 	AlbumStateService,
+	ReleaseTrackDraft,
 	TrackEntity,
 	SearchParams,
 } from '@music-collection/api';
@@ -92,6 +93,18 @@ export class AlbumStateServiceImpl extends AlbumStateService {
 		existing: TrackEntity[]
 	): Promise<void> {
 		return this.albumDataService.saveTracks(albumUid, tracks, existing);
+	}
+
+	public listReleaseTracks$(releaseUid: string): Observable<TrackEntity[]> {
+		return this.albumDataService.listReleaseTracks$(releaseUid);
+	}
+
+	public saveReleaseTrack(track: ReleaseTrackDraft): Promise<void> {
+		return this.albumDataService.saveReleaseTrack(track);
+	}
+
+	public deleteReleaseTrack(uid: string): Promise<void> {
+		return this.albumDataService.deleteReleaseTrack(uid);
 	}
 
 	public isLoading$(): Observable<boolean> {

@@ -26,7 +26,12 @@ export type AnalyticsEventName =
 	 */
 	| 'search'
 	/** A collector asked for a release the catalog does not have yet. */
-	| 'release_requested';
+	| 'release_requested'
+	/**
+	 * Photos of a copy were added, replaced or removed. Carries how many the
+	 * copy is left with — never the pictures or what they show.
+	 */
+	| 'copy_photos_changed';
 
 /**
  * An event's parameters. Nothing here may name a record, a person or a place

@@ -63,6 +63,11 @@ export const getCollectionItemPlacing = createSelector(
 	(state: State) => state.placing
 );
 
+export const getCollectionItemSaving = createSelector(
+	getCollectionItemState,
+	(state: State) => state.saving
+);
+
 /** Every item, the ones gone from the collection included. */
 const selectEveryCollectionItem = createSelector(
 	getCollectionItemState,
@@ -81,9 +86,7 @@ export const selectDisposedCollectionItems = createSelector(
 	(collectionItems) =>
 		collectionItems
 			.filter((item) => !!item.disposal)
-			.sort(
-				(a, b) => (b.disposal?.date ?? 0) - (a.disposal?.date ?? 0)
-			)
+			.sort((a, b) => (b.disposal?.date ?? 0) - (a.disposal?.date ?? 0))
 );
 
 export const selectCollectionItem = createSelector(

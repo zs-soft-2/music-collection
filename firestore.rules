@@ -92,6 +92,80 @@ service cloud.firestore {
               && data.placement.position >= 1 && data.placement.position <= 36);
     }
 
+    // A beszerzés: mikor, hol, mennyiért. Minden mező önmagában állhat —
+    // egy ajándéknak van helye, de nincs ára.
+    function isValidPurchase(data) {
+      return !('purchase' in data)
+          || data.purchase == null
+          || (data.purchase is map
+              && data.purchase.keys().hasOnly(['date', 'place', 'price', 'currency'])
+              && (data.purchase.date == null || data.purchase.date is number)
+              && (data.purchase.place == null
+                  || (data.purchase.place is string
+                      && data.purchase.place.size() <= 200))
+              && (data.purchase.price == null
+                  || (data.purchase.price is number
+                      && data.purchase.price >= 0))
+              && (data.purchase.currency == null
+                  || (data.purchase.currency is string
+                      && data.purchase.currency.size() == 3)));
+    }
+
+    // Goldmine-osztályzat: a lemez és a borító külön.
+    function isValidGrade(grade) {
+      return grade == null
+          || grade in ['M', 'NM', 'VG+', 'VG', 'G', 'F', 'P'];
+    }
+    function isValidCondition(data) {
+      return !('condition' in data)
+          || data.condition == null
+          || (data.condition is map
+              && data.condition.keys().hasOnly(['media', 'sleeve'])
+              && isValidGrade(data.condition.media)
+              && isValidGrade(data.condition.sleeve));
+    }
+
+    // A példány sztorija. Hosszabb, mint a `description`, de nem határtalan:
+    // a dokumentum egy megabájtos kerete mindenki más adatát is viszi.
+    function isValidStory(data) {
+      return !('story' in data)
+          || data.story == null
+          || (data.story is string && data.story.size() <= 5000);
+    }
+
+    // Példányfotók: legfeljebb kettő (elöl-hátul), mindegyik a saját Storage
+    // útvonalára mutat. A `path` ellenőrzése az, ami megakadályozza, hogy a
+    // dokumentum más gyűjtő fájljára hivatkozzon.
+    function isValidPhoto(photo, uid, itemId) {
+      return photo is map
+          && photo.keys().hasOnly(['path', 'url', 'width', 'height'])
+          && photo.path is string
+          && photo.path.matches('^collection-item/' + uid + '/' + itemId + '/[A-Za-z0-9._-]{1,120}$')
+          && photo.url is string
+          && photo.url.size() <= 1000
+          && photo.width is int && photo.width > 0
+          && photo.height is int && photo.height > 0;
+    }
+    function isValidPhotos(data, uid, itemId) {
+      return !('photos' in data)
+          || data.photos == null
+          || (data.photos is list
+              && data.photos.size() <= 2
+              && isValidPhotoAt(data.photos, 0, uid, itemId)
+              && isValidPhotoAt(data.photos, 1, uid, itemId));
+    }
+    function isValidPhotoAt(photos, index, uid, itemId) {
+      return photos.size() <= index || isValidPhoto(photos[index], uid, itemId);
+    }
+
+    // Amit a példány-oldal ír a lemezről: beszerzés, állapot, sztori, fotók.
+    function isValidCopyStory(data, uid, itemId) {
+      return isValidPurchase(data)
+          && isValidCondition(data)
+          && isValidStory(data)
+          && isValidPhotos(data, uid, itemId);
+    }
+
     // A sync-marker feature key → permission-erőforrás. Ismeretlen kulcs → tiltás.
     function syncResources() {
       return {
@@ -149,12 +223,14 @@ service cloud.firestore {
         allow create: if isSelf(uid)
                       && hasPerm('createCollectionItemEntity')
                       && request.resource.data.userId == uid
-                      && isValidPlacement(request.resource.data);
+                      && isValidPlacement(request.resource.data)
+                      && isValidCopyStory(request.resource.data, uid, itemId);
         allow update: if isSelf(uid)
                       && hasPerm('updateCollectionItemEntity')
                       && request.resource.data.userId == uid
                       && isValidDisposal(request.resource.data)
-                      && isValidPlacement(request.resource.data);
+                      && isValidPlacement(request.resource.data)
+                      && isValidCopyStory(request.resource.data, uid, itemId);
         allow delete: if isSelf(uid) && hasPerm('deleteCollectionItemEntity');
       }
       match /wishlist-item/{itemId} {

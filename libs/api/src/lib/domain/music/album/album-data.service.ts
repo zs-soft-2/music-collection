@@ -2,7 +2,7 @@ import { Observable } from 'rxjs';
 
 import { FirebaseDataService } from '../../../core';
 import { AlbumModel, AlbumModelAdd, AlbumModelUpdate } from './album';
-import { TrackEntity } from '../track';
+import { ReleaseTrackDraft, TrackEntity } from '../track';
 import {
 	AlbumExternalProfile,
 	AlbumExternalTrack,
@@ -35,4 +35,12 @@ export abstract class AlbumDataService extends FirebaseDataService<
 		tracks: AlbumExternalTrack[],
 		existing: TrackEntity[]
 	): Promise<void>;
+	/** The tracks one pressing added, in play order. */
+	public abstract listReleaseTracks$(
+		releaseUid: string
+	): Observable<TrackEntity[]>;
+	/** Writes one track of a pressing — a new one, or an edited one. */
+	public abstract saveReleaseTrack(track: ReleaseTrackDraft): Promise<void>;
+	/** Takes a pressing's track back off the album. */
+	public abstract deleteReleaseTrack(uid: string): Promise<void>;
 }

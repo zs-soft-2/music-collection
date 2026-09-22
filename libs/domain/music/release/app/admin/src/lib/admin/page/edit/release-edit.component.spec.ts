@@ -24,7 +24,9 @@ describe('ReleaseEditComponent', () => {
 				provideRouter([]),
 				{
 					provide: ReleaseStateService,
-					useValue: { selectEntityById$: jest.fn(() => of(undefined)) },
+					useValue: {
+						selectEntityById$: jest.fn(() => of(undefined)),
+					},
 				},
 				{
 					provide: ReleaseUtilService,

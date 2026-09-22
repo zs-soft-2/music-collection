@@ -49,8 +49,24 @@ service firebase.storage {
       allow write: if false;
     }
 
-    // Tenant-szintű fájlok (pl. példányfotók) később ide kerülnek:
-    // `tenant/{tenantId}/…` — tulajdonlás-ellenőrzéssel. Addig tiltva.
+    // Példányfotók: a gyűjtő saját lemezéről készült kép, példányonként
+    // legfeljebb kettő (elöl-hátul). Az útvonal viszi a tulajdonost, így a
+    // jogosultság ránézésre eldönthető, és a Firestore-szabály ugyanerre az
+    // alakra illeszti a dokumentumban tárolt `path`-t.
+    //
+    // Az olvasás a tulajdonosé: a példány-oldal ma csak a saját lemezeidet
+    // nyitja meg. Ha később megosztható lesz, ez a sor nyílik publikusra —
+    // a feltöltés akkor sem.
+    match /collection-item/{userId}/{itemId}/{fileName} {
+      allow read: if request.auth != null
+                  && request.auth.uid == userId;
+      allow write: if request.auth != null
+                   && request.auth.uid == userId
+                   && hasPerm('updateCollectionItemEntity')
+                   && (request.resource == null
+                       || (request.resource.size < 2 * 1024 * 1024
+                           && request.resource.contentType.matches('image/.*')));
+    }
 
     // Minden más: csak ADMIN.
     match /{allPaths=**} {

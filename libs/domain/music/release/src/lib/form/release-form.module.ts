@@ -9,10 +9,10 @@ import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
-import { ReleaseFormComponent } from './component';
+import { ReleaseFormComponent, ReleaseTracksComponent } from './component';
 
 @NgModule({
-	exports: [ReleaseFormComponent],
+	exports: [ReleaseFormComponent, ReleaseTracksComponent],
 	imports: [
 		CommonModule,
 		ButtonModule,
@@ -24,6 +24,7 @@ import { ReleaseFormComponent } from './component';
 		MultiSelectModule,
 		ReactiveFormsModule,
 		ReleaseFormComponent,
+		ReleaseTracksComponent,
 	],
 })
 export class ReleaseFormModule {}

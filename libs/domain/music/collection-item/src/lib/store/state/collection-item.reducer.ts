@@ -20,6 +20,8 @@ export interface State extends EntityState<CollectionItemEntity> {
 	disposing: boolean;
 	/** A copy is being filed into a compartment, or taken out of one. */
 	placing: boolean;
+	/** What the collector tells about a copy is being written. */
+	saving: boolean;
 	/** The signed-in user's collection has arrived (empty included). */
 	loaded: boolean;
 	searchResult: CollectionItemEntity[];
@@ -57,6 +59,7 @@ export const initialState: State = collectionItemAdapter.getInitialState({
 	adding: false,
 	disposing: false,
 	placing: false,
+	saving: false,
 	loaded: false,
 	error: null,
 	searchResult: [],
@@ -121,6 +124,48 @@ export const collectionItemReducer = createReducer(
 		(state, { error }) => ({
 			...state,
 			disposing: false,
+			error: error?.message ?? String(error),
+		})
+	),
+	on(collectionItemActions.changeCollectionItemDetails, (state) => ({
+		...state,
+		saving: true,
+		error: null,
+	})),
+	on(
+		collectionItemActions.changeCollectionItemDetailsSuccess,
+		(state, { collectionItem }) =>
+			collectionItemAdapter.updateOne(collectionItem, {
+				...state,
+				saving: false,
+			})
+	),
+	on(
+		collectionItemActions.changeCollectionItemDetailsFail,
+		(state, { error }) => ({
+			...state,
+			saving: false,
+			error: error?.message ?? String(error),
+		})
+	),
+	on(collectionItemActions.changeCollectionItemPhotos, (state) => ({
+		...state,
+		saving: true,
+		error: null,
+	})),
+	on(
+		collectionItemActions.changeCollectionItemPhotosSuccess,
+		(state, { collectionItem }) =>
+			collectionItemAdapter.updateOne(collectionItem, {
+				...state,
+				saving: false,
+			})
+	),
+	on(
+		collectionItemActions.changeCollectionItemPhotosFail,
+		(state, { error }) => ({
+			...state,
+			saving: false,
 			error: error?.message ?? String(error),
 		})
 	),

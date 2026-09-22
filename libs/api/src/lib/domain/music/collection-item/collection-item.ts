@@ -6,11 +6,7 @@ import { Entity, Searchable } from '../../../common';
 import { ReleaseEntity } from '../release';
 
 export type CollectionItemDisposalReason =
-	| 'sold'
-	| 'traded'
-	| 'gifted'
-	| 'lost'
-	| 'other';
+	'sold' | 'traded' | 'gifted' | 'lost' | 'other';
 
 export const COLLECTION_ITEM_DISPOSAL_REASONS: CollectionItemDisposalReason[] =
 	['sold', 'traded', 'gifted', 'lost', 'other'];
@@ -46,6 +42,89 @@ export interface CollectionItemPlacement {
 	position: number;
 }
 
+/**
+ * Goldmine grades — the scale record fairs and Discogs both price by, from
+ * a sealed copy down to one kept for the music alone.
+ */
+export type CollectionItemGrade = 'M' | 'NM' | 'VG+' | 'VG' | 'G' | 'F' | 'P';
+
+export const COLLECTION_ITEM_GRADES: CollectionItemGrade[] = [
+	'M',
+	'NM',
+	'VG+',
+	'VG',
+	'G',
+	'F',
+	'P',
+];
+
+export const COLLECTION_ITEM_GRADE_LABELS: Record<CollectionItemGrade, string> =
+	{
+		M: 'Mint',
+		NM: 'Near Mint',
+		'VG+': 'Very Good Plus',
+		VG: 'Very Good',
+		G: 'Good',
+		F: 'Fair',
+		P: 'Poor',
+	};
+
+/**
+ * How the copy was come by. Every field stands on its own: a record found in
+ * a bin is remembered by the fair long after the price is forgotten, and a
+ * gift has a place but no price at all.
+ */
+export interface CollectionItemPurchase {
+	/** When it was bought (epoch ms). */
+	date: number | null;
+	/** Where it came from — a shop, a fair, a webshop, a person. */
+	place: string | null;
+	/** What was paid, in `currency`. */
+	price: number | null;
+	/** ISO 4217 code of `price`, e.g. "HUF". */
+	currency: string | null;
+}
+
+/**
+ * The state of the copy. The record and the sleeve are graded apart, the way
+ * a seller lists them: a clean pressing in a ringworn jacket is a common
+ * thing, and one number could not say it.
+ */
+export interface CollectionItemCondition {
+	media: CollectionItemGrade | null;
+	sleeve: CollectionItemGrade | null;
+}
+
+/**
+ * A photo of this very copy — the sleeve as it stands in the room, not the
+ * catalog cover. At most two: the first is the front, the second the back,
+ * and the page turns between them.
+ */
+export interface CollectionItemPhoto {
+	/** Storage path, under `collection-item/{userId}/{itemId}/`. */
+	path: string;
+	/** Download URL of `path`, so the page needs no Storage round-trip. */
+	url: string;
+	width: number;
+	height: number;
+}
+
+/**
+ * What the collector tells about a copy, as the copy page saves it in one
+ * go. Every field is written on every save, so clearing one is a change like
+ * any other rather than a silence the old value survives.
+ */
+export interface CollectionItemDetails {
+	/** The one-line note that stands next to the record. */
+	description: string;
+	purchase: CollectionItemPurchase | null;
+	condition: CollectionItemCondition | null;
+	story: string | null;
+}
+
+/** The most photos a copy carries: a front and a back. */
+export const COLLECTION_ITEM_PHOTO_LIMIT = 2;
+
 export interface CollectionItem {
 	description?: string;
 	/**
@@ -55,6 +134,17 @@ export interface CollectionItem {
 	placement?: CollectionItemPlacement | null;
 	/** Set once the copy left the collection; `null` or missing while owned. */
 	disposal?: CollectionItemDisposal | null;
+	/** How the copy was come by; missing while nothing is told about it. */
+	purchase?: CollectionItemPurchase | null;
+	/** Grades of the record and the sleeve; missing while ungraded. */
+	condition?: CollectionItemCondition | null;
+	/**
+	 * The copy's own story, as the collector tells it. `description` stays
+	 * the one-line note next to the record; this is the longer telling.
+	 */
+	story?: string | null;
+	/** Photos of this very copy, at most `COLLECTION_ITEM_PHOTO_LIMIT`. */
+	photos?: CollectionItemPhoto[] | null;
 	release: ReleaseEntity;
 	userId: string;
 }

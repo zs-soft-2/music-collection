@@ -142,8 +142,14 @@ export class RecordShelfComponent {
 				albumIds: group.items.map((release) => release.albumId),
 				spines: group.items.map((release) => ({
 					release,
+					// A spine on the shelf is a copy the collector owns, so
+					// pulling it out opens that copy rather than the album.
 					href: this.router.serializeUrl(
-						this.router.createUrlTree(['/album', release.albumId])
+						this.router.createUrlTree([
+							'/collection',
+							'copy',
+							release.id,
+						])
 					),
 					...(release.boxSet
 						? BOX_SET_SIZE

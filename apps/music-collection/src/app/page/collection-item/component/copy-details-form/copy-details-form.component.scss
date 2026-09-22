@@ -1,0 +1,140 @@
+:host {
+	display: block;
+}
+
+.form {
+	display: grid;
+	gap: 1.5rem;
+}
+
+.group {
+	padding: 0;
+	margin: 0;
+	border: 0;
+
+	&[disabled] {
+		opacity: 0.6;
+	}
+}
+
+legend {
+	padding: 0 0 0.75rem;
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--mc-primary);
+}
+
+.fields {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+	gap: 1rem;
+}
+
+.field {
+	display: grid;
+	gap: 0.35rem;
+	min-width: 0;
+
+	&.wide {
+		grid-column: span 2;
+	}
+
+	&.narrow {
+		max-width: 12rem;
+	}
+}
+
+.label {
+	font-size: 0.78rem;
+	letter-spacing: 0.06em;
+	color: var(--mc-text-muted);
+}
+
+input,
+select,
+textarea {
+	width: 100%;
+	padding: 0.55rem 0.7rem;
+	font: inherit;
+	color: var(--mc-text);
+	background: var(--mc-bg-muted);
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-sm, 0.4rem);
+
+	&:focus-visible {
+		outline: 2px solid var(--mc-primary);
+		outline-offset: 1px;
+	}
+
+	&[aria-invalid='true'] {
+		border-color: var(--mc-status-bad);
+	}
+}
+
+textarea {
+	resize: vertical;
+}
+
+.counter {
+	font-size: 0.75rem;
+	color: var(--mc-text-subtle);
+	text-align: right;
+}
+
+.field-error {
+	font-size: 0.78rem;
+	color: var(--mc-status-bad);
+}
+
+.error {
+	margin: 0;
+	color: var(--mc-status-bad);
+}
+
+.actions {
+	display: flex;
+	gap: 0.5rem;
+	justify-content: flex-end;
+}
+
+.button {
+	padding: 0.5rem 1.1rem;
+	font: inherit;
+	color: var(--mc-text);
+	cursor: pointer;
+	background: var(--mc-surface-2);
+	border: 1px solid var(--mc-border);
+	border-radius: 999px;
+
+	&:hover:not(:disabled) {
+		background: var(--mc-card-bg-hover);
+	}
+
+	&:disabled {
+		cursor: default;
+		opacity: 0.6;
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--mc-primary);
+		outline-offset: 2px;
+	}
+
+	&.primary {
+		color: var(--mc-on-primary);
+		background: var(--mc-primary);
+		border-color: transparent;
+
+		&:hover:not(:disabled) {
+			filter: brightness(1.1);
+		}
+	}
+}
+
+@media (width <= 40rem) {
+	.field.wide {
+		grid-column: auto;
+	}
+}

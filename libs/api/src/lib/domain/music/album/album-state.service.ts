@@ -2,7 +2,7 @@ import { Observable } from 'rxjs';
 
 import { EntityStateService } from '../../../common';
 import { AlbumEntity, AlbumEntityAdd, AlbumEntityUpdate } from './album';
-import { TrackEntity } from '../track';
+import { ReleaseTrackDraft, TrackEntity } from '../track';
 import {
 	AlbumExternalProfile,
 	AlbumExternalTrack,
@@ -38,6 +38,14 @@ export abstract class AlbumStateService extends EntityStateService<
 		tracks: AlbumExternalTrack[],
 		existing: TrackEntity[]
 	): Promise<void>;
+	/** The tracks one pressing added, in play order. */
+	public abstract listReleaseTracks$(
+		releaseUid: string
+	): Observable<TrackEntity[]>;
+	/** Writes one track of a pressing — a new one, or an edited one. */
+	public abstract saveReleaseTrack(track: ReleaseTrackDraft): Promise<void>;
+	/** Takes a pressing's track back off the album. */
+	public abstract deleteReleaseTrack(uid: string): Promise<void>;
 	public abstract dispatchSelectAlbumAction(album: AlbumEntity): void;
 	public abstract selectNewEntityButtonEnabled$(): Observable<boolean>;
 	public abstract selectSearchResult$(): Observable<AlbumEntity[]>;

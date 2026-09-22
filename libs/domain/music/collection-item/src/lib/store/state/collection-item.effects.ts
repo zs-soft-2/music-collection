@@ -210,6 +210,93 @@ export class CollectionItemEffects {
 		)
 	);
 	/**
+	 * Writes what the collector tells about the copy. Like a placement, this
+	 * changes nothing about what is owned, so no count is touched — and the
+	 * whole telling goes in one write, so the page and the record agree even
+	 * when a field was emptied.
+	 */
+	public changeCollectionItemDetails = createEffect(() =>
+		this.actions$.pipe(
+			ofType(collectionItemActions.changeCollectionItemDetails),
+			mergeMap(({ collectionItem, details }) =>
+				this.userDataService
+					.updateCollectionItem$({
+						uid: collectionItem.uid,
+						entityType: collectionItem.entityType,
+						userId: collectionItem.userId,
+						...details,
+					})
+					.pipe(
+						first(),
+						map(({ updatedAt }) =>
+							collectionItemActions.changeCollectionItemDetailsSuccess(
+								{
+									collectionItem: {
+										id: collectionItem.uid,
+										changes: { ...details, updatedAt },
+									},
+								}
+							)
+						),
+						catchError((error) => {
+							console.error(error);
+							return of(
+								collectionItemActions.changeCollectionItemDetailsFail(
+									{ error }
+								)
+							);
+						})
+					)
+			)
+		)
+	);
+
+	/**
+	 * Writes the list of photos. The pictures are already uploaded; a write
+	 * that fails here leaves them in Storage unreferenced, which costs a few
+	 * kilobytes and is the harmless half of the two ways this can go wrong.
+	 */
+	public changeCollectionItemPhotos = createEffect(() =>
+		this.actions$.pipe(
+			ofType(collectionItemActions.changeCollectionItemPhotos),
+			mergeMap(({ collectionItem, photos }) =>
+				this.userDataService
+					.updateCollectionItem$({
+						uid: collectionItem.uid,
+						entityType: collectionItem.entityType,
+						userId: collectionItem.userId,
+						photos,
+					})
+					.pipe(
+						first(),
+						map(({ updatedAt }) => {
+							this.analytics.track('copy_photos_changed', {
+								count: photos.length,
+							});
+
+							return collectionItemActions.changeCollectionItemPhotosSuccess(
+								{
+									collectionItem: {
+										id: collectionItem.uid,
+										changes: { photos, updatedAt },
+									},
+								}
+							);
+						}),
+						catchError((error) => {
+							console.error(error);
+							return of(
+								collectionItemActions.changeCollectionItemPhotosFail(
+									{ error }
+								)
+							);
+						})
+					)
+			)
+		)
+	);
+
+	/**
 	 * Files a copy into a compartment of the drawn shelf, or takes the place
 	 * back with `null`. Only the place moves: nothing here changes what the
 	 * collector owns, so no count is touched.

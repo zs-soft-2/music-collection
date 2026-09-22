@@ -130,6 +130,24 @@ export class CollectionItemUtilServiceImpl extends CollectionItemUtilService {
 			entity.placement = model.placement;
 		}
 
+		// What the collector tells about the copy itself. Cleared the same
+		// way as the place: `null` is the erasure, a missing key is silence.
+		if (model.purchase !== undefined) {
+			entity.purchase = model.purchase;
+		}
+
+		if (model.condition !== undefined) {
+			entity.condition = model.condition;
+		}
+
+		if (model.story !== undefined) {
+			entity.story = model.story;
+		}
+
+		if (model.photos !== undefined) {
+			entity.photos = model.photos;
+		}
+
 		return entity;
 	}
 

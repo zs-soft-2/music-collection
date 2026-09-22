@@ -23,6 +23,22 @@ export class AlbumDetailsRepository {
 		return this.listByAlbum$<TrackEntity>(TRACK_FEATURE_KEY, albumUid);
 	}
 
+	/**
+	 * The tracks only this pressing has — a bonus cut, a side a reissue
+	 * added. They carry the album too, so they are never the whole
+	 * tracklist: they are what a copy of this release plays beyond it.
+	 */
+	public listTracksByRelease$(releaseUid: string): Observable<TrackEntity[]> {
+		return this.firestoreSync.list$<TrackEntity>({
+			featureKey: TRACK_FEATURE_KEY,
+			cacheKey: `${TRACK_FEATURE_KEY}?releaseUid=${releaseUid}`,
+			query: query(
+				collection(this.firestore, TRACK_FEATURE_KEY),
+				where('releaseUid', '==', releaseUid)
+			),
+		});
+	}
+
 	public listContributions$(
 		albumUid: string
 	): Observable<ContributionEntity[]> {

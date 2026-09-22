@@ -3,6 +3,12 @@ import { Entity } from '../../../common';
 /** One track of an album, in play order (imported from Discogs). */
 export interface Track {
 	albumUid: string;
+	/**
+	 * Set when the track is only on one pressing — a bonus cut, a different
+	 * edit, a side the reissue added. Missing means the track is the album's
+	 * own, and every copy of it plays the track.
+	 */
+	releaseUid?: string | null;
 	/** Play order, 1-based. */
 	index: number;
 	/** Position as printed on the release, e.g. "A1", "2-03". */
@@ -23,6 +29,26 @@ export interface Track {
 }
 
 export type TrackEntity = Track & Entity;
+
+/**
+ * A track one pressing added, as the release form writes it: a Japanese
+ * edition with a tenth song the original nine never had.
+ *
+ * It is a track of the album like any other — same collection, same shape,
+ * creditable and playable — with the pressing named on it, so only a copy of
+ * that pressing lists it.
+ */
+export interface ReleaseTrackDraft {
+	/** Empty for a new track; the existing one's id when it is edited. */
+	uid: string | null;
+	albumUid: string;
+	releaseUid: string;
+	/** Play order, 1-based; after the album's own tracks. */
+	index: number;
+	position: string | null;
+	name: string;
+	duration: string | null;
+}
 
 /**
  * Lyrics of a track, kept apart from the public track document

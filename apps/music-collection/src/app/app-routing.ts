@@ -87,6 +87,19 @@ export const routes: Routes = [
 		},
 	},
 	{
+		// One copy on one shelf. Only the signed-in collector's own copies
+		// open here: what the page adds to the catalog — the price, the
+		// shelf place, the story, the photographs — is theirs.
+		path: 'collection/copy/:itemId',
+		loadComponent: () =>
+			import(
+				'./page/collection-item/collection-item-page.component'
+			).then((module) => module.CollectionItemPageComponent),
+		data: {
+			breadcrumb: 'copy',
+		},
+	},
+	{
 		path: 'scan',
 		loadComponent: () =>
 			import('./page/scan/scan-page.component').then(

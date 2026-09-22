@@ -1,6 +1,8 @@
 import {
+	CollectionItemDetails,
 	CollectionItemDisposal,
 	CollectionItemEntity,
+	CollectionItemPhoto,
 	CollectionItemPlacement,
 	CollectionItemEntityAdd,
 	CollectionItemEntityUpdate,
@@ -84,6 +86,51 @@ export const changeCollectionItemPlacementFail = createAction(
 
 export const changeCollectionItemPlacementSuccess = createAction(
 	'[CollectionItem] Change CollectionItem Placement Success',
+	props<{ collectionItem: Update<CollectionItemEntity> }>()
+);
+
+/**
+ * Writes what the collector tells about the copy — how it was come by, how
+ * it has held up, the story behind it. The whole telling is written at once,
+ * so a field emptied on the page is emptied on the record.
+ */
+export const changeCollectionItemDetails = createAction(
+	'[CollectionItem] Change CollectionItem Details',
+	props<{
+		collectionItem: CollectionItemEntity;
+		details: CollectionItemDetails;
+	}>()
+);
+
+export const changeCollectionItemDetailsFail = createAction(
+	'[CollectionItem] Change CollectionItem Details Fail',
+	props<{ error: Error }>()
+);
+
+export const changeCollectionItemDetailsSuccess = createAction(
+	'[CollectionItem] Change CollectionItem Details Success',
+	props<{ collectionItem: Update<CollectionItemEntity> }>()
+);
+
+/**
+ * Writes the photos of the copy. The pictures are already in Storage by the
+ * time this runs: what is written is the list pointing at them, front first.
+ */
+export const changeCollectionItemPhotos = createAction(
+	'[CollectionItem] Change CollectionItem Photos',
+	props<{
+		collectionItem: CollectionItemEntity;
+		photos: CollectionItemPhoto[];
+	}>()
+);
+
+export const changeCollectionItemPhotosFail = createAction(
+	'[CollectionItem] Change CollectionItem Photos Fail',
+	props<{ error: Error }>()
+);
+
+export const changeCollectionItemPhotosSuccess = createAction(
+	'[CollectionItem] Change CollectionItem Photos Success',
 	props<{ collectionItem: Update<CollectionItemEntity> }>()
 );
 

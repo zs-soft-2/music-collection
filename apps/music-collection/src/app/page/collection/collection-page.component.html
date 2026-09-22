@@ -329,6 +329,7 @@
 				<li>
 					<mc-release-card
 						[release]="release"
+						opens="copy"
 						[priority]="priority && $index < 6"
 						[canPlace]="store.canPlaceCopies()"
 						(place)="store.openPlacement($event)"

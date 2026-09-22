@@ -1,0 +1,143 @@
+<form class="form" (submit)="$event.preventDefault(); submit()">
+	<fieldset class="group" [disabled]="busy()">
+		<legend>How you came by it</legend>
+
+		<div class="fields">
+			<label class="field">
+				<span class="label">Bought on</span>
+				<input
+					type="date"
+					[max]="today"
+					[value]="purchaseDate()"
+					[attr.aria-invalid]="dateInvalid() ? 'true' : null"
+					(input)="purchaseDate.set(text($event))"
+				/>
+				@if (dateInvalid()) {
+					<span class="field-error">That day is still ahead.</span>
+				}
+			</label>
+
+			<label class="field wide">
+				<span class="label">Where from</span>
+				<input
+					type="text"
+					placeholder="A shop, a fair, a webshop, a person…"
+					[attr.maxlength]="placeMaxLength"
+					[value]="purchasePlace()"
+					(input)="purchasePlace.set(text($event))"
+				/>
+			</label>
+
+			<label class="field narrow">
+				<span class="label">Price</span>
+				<input
+					type="text"
+					inputmode="decimal"
+					[value]="purchasePrice()"
+					[attr.aria-invalid]="priceInvalid() ? 'true' : null"
+					(input)="purchasePrice.set(text($event))"
+				/>
+				@if (priceInvalid()) {
+					<span class="field-error">This is not an amount.</span>
+				}
+			</label>
+
+			<label class="field narrow">
+				<span class="label">Currency</span>
+				<input
+					type="text"
+					maxlength="3"
+					placeholder="HUF"
+					[value]="purchaseCurrency()"
+					(input)="purchaseCurrency.set(text($event))"
+				/>
+			</label>
+		</div>
+	</fieldset>
+
+	<fieldset class="group" [disabled]="busy()">
+		<legend>How it has held up</legend>
+
+		<div class="fields">
+			<label class="field">
+				<span class="label">Record</span>
+				<select
+					[value]="mediaGrade() ?? ''"
+					(change)="mediaGrade.set(grade($event))"
+				>
+					<option value="">Not graded</option>
+					@for (value of grades; track value) {
+						<option [value]="value">
+							{{ value }} — {{ gradeLabels[value] }}
+						</option>
+					}
+				</select>
+			</label>
+
+			<label class="field">
+				<span class="label">Sleeve</span>
+				<select
+					[value]="sleeveGrade() ?? ''"
+					(change)="sleeveGrade.set(grade($event))"
+				>
+					<option value="">Not graded</option>
+					@for (value of grades; track value) {
+						<option [value]="value">
+							{{ value }} — {{ gradeLabels[value] }}
+						</option>
+					}
+				</select>
+			</label>
+		</div>
+	</fieldset>
+
+	<fieldset class="group" [disabled]="busy()">
+		<legend>What there is to tell</legend>
+
+		<label class="field">
+			<span class="label">Note</span>
+			<input
+				type="text"
+				placeholder="The one line that stands next to the record"
+				[value]="description()"
+				(input)="description.set(text($event))"
+			/>
+		</label>
+
+		<label class="field">
+			<span class="label">Story</span>
+			<textarea
+				rows="6"
+				[attr.maxlength]="storyMaxLength"
+				placeholder="How it found you, and what it has been through since."
+				[value]="story()"
+				(input)="story.set(text($event))"
+			></textarea>
+			<span class="counter">
+				{{ story().length }} / {{ storyMaxLength }}
+			</span>
+		</label>
+	</fieldset>
+
+	@if (error()) {
+		<p class="error" role="alert">{{ error() }}</p>
+	}
+
+	<div class="actions">
+		<button
+			type="button"
+			class="button"
+			[disabled]="busy()"
+			(click)="cancelled.emit()"
+		>
+			Cancel
+		</button>
+		<button
+			type="submit"
+			class="button primary"
+			[disabled]="busy() || invalid()"
+		>
+			{{ busy() ? 'Saving…' : 'Save' }}
+		</button>
+	</div>
+</form>

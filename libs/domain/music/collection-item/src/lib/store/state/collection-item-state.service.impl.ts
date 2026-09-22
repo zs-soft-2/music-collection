@@ -2,11 +2,13 @@ import { Observable, filter, first, map, switchMap, tap } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
 import {
+	CollectionItemDetails,
 	CollectionItemDisposal,
 	CollectionItemEntity,
 	CollectionItemEntityAdd,
 	CollectionItemEntityUpdate,
 	CollectionItemListConfig,
+	CollectionItemPhoto,
 	CollectionItemPlacement,
 	CollectionItemStateService,
 	SearchParams,
@@ -36,6 +38,30 @@ export class CollectionItemStateServiceImpl extends CollectionItemStateService {
 		this.store.dispatch(
 			collectionItemActions.setCollectionItemListConfig({
 				collectionItemListConfig,
+			})
+		);
+	}
+
+	public dispatchChangeDetailsAction(
+		collectionItem: CollectionItemEntity,
+		details: CollectionItemDetails
+	): void {
+		this.store.dispatch(
+			collectionItemActions.changeCollectionItemDetails({
+				collectionItem,
+				details,
+			})
+		);
+	}
+
+	public dispatchChangePhotosAction(
+		collectionItem: CollectionItemEntity,
+		photos: CollectionItemPhoto[]
+	): void {
+		this.store.dispatch(
+			collectionItemActions.changeCollectionItemPhotos({
+				collectionItem,
+				photos,
 			})
 		);
 	}
@@ -169,6 +195,12 @@ export class CollectionItemStateServiceImpl extends CollectionItemStateService {
 		);
 	}
 
+	public selectSaving$(): Observable<boolean> {
+		return this.store.pipe(
+			select(collectionItemSelectors.getCollectionItemSaving)
+		);
+	}
+
 	public selectDisposing$(): Observable<boolean> {
 		return this.store.pipe(
 			select(collectionItemSelectors.getCollectionItemDisposing)
@@ -179,9 +211,7 @@ export class CollectionItemStateServiceImpl extends CollectionItemStateService {
 		return this.selectOnceLoaded$(this.selectEntities$());
 	}
 
-	public selectLoadedDisposedEntities$(): Observable<
-		CollectionItemEntity[]
-	> {
+	public selectLoadedDisposedEntities$(): Observable<CollectionItemEntity[]> {
 		return this.selectOnceLoaded$(
 			this.store.pipe(
 				select(collectionItemSelectors.selectDisposedCollectionItems)

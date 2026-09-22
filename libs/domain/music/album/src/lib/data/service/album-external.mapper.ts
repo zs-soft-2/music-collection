@@ -189,3 +189,24 @@ export function toTracks(
 			})
 	);
 }
+
+/**
+ * A duration as it is printed on a sleeve — "4:04", "1:02:30" — in seconds.
+ *
+ * The printed form is what the collector types and what the page shows; the
+ * seconds are what a total can be added up from, so both are kept and this
+ * is the one place they are derived from each other.
+ */
+export function toDurationSec(duration: string | null): number | null {
+	const parts = (duration ?? '').trim().split(':');
+
+	if (parts.length < 2 || parts.length > 3) {
+		return null;
+	}
+	const numbers = parts.map((part) => Number(part));
+
+	if (numbers.some((number) => !Number.isInteger(number) || number < 0)) {
+		return null;
+	}
+	return numbers.reduce((total, number) => total * 60 + number, 0);
+}

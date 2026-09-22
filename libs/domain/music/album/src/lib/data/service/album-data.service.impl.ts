@@ -22,6 +22,7 @@ import {
 	AlbumExternalTrack,
 	AlbumExternalTracks,
 	MusicBrainzClient,
+	ReleaseTrackDraft,
 	TRACK_FEATURE_KEY,
 	TrackEntity,
 } from '@music-collection/api';
@@ -36,6 +37,7 @@ import {
 	pickReleaseGroup,
 	toCoverUrl,
 	toDate,
+	toDurationSec,
 	toFormat,
 	toTracks,
 	toStyles,
@@ -135,16 +137,25 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 			);
 	}
 
-	/** Same ids as the Discogs import: `<albumUid>_<index:000>`. */
+	/**
+	 * Same ids as the Discogs import: `<albumUid>_<index:000>`.
+	 *
+	 * What one pressing added is left out of this entirely. Those tracks are
+	 * not part of the album's tracklist, so reloading that list from
+	 * MusicBrainz must neither overwrite them nor count them among the
+	 * surplus to delete — a Japanese edition's tenth song would otherwise
+	 * disappear the next time someone refreshed the original nine.
+	 */
 	public saveTracks(
 		albumUid: string,
 		tracks: AlbumExternalTrack[],
 		existing: TrackEntity[]
 	): Promise<void> {
+		const albumTracks = existing.filter((track) => !track.releaseUid);
 		const writes = tracks.map((track, i) => {
 			const index = i + 1;
 			const uid =
-				existing[i]?.uid ??
+				albumTracks[i]?.uid ??
 				`${albumUid}_${String(index).padStart(3, '0')}`;
 
 			return {
@@ -160,11 +171,64 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 				},
 			};
 		});
-		const deletions = existing
+		const deletions = albumTracks
 			.slice(tracks.length)
 			.map((track) => doc(this.firestore, TRACK_FEATURE_KEY, track.uid));
 
 		return this.firestoreSync.setAll(TRACK_FEATURE_KEY, writes, deletions);
+	}
+
+	public listReleaseTracks$(releaseUid: string): Observable<TrackEntity[]> {
+		return this.firestoreSync
+			.list$<TrackEntity>({
+				featureKey: TRACK_FEATURE_KEY,
+				cacheKey: `${TRACK_FEATURE_KEY}?releaseUid=${releaseUid}`,
+				query: query(
+					collection(this.firestore, TRACK_FEATURE_KEY),
+					where('releaseUid', '==', releaseUid)
+				),
+			})
+			.pipe(
+				map((tracks) => [...tracks].sort((a, b) => a.index - b.index))
+			);
+	}
+
+	/**
+	 * A pressing's track is filed under the pressing — `<releaseUid>_<index>`
+	 * — and never under the album. The album's own ids run to its own track
+	 * count, so a tenth song added by one edition can never take the id a
+	 * tenth song of the album would be given later.
+	 */
+	public saveReleaseTrack(track: ReleaseTrackDraft): Promise<void> {
+		const uid =
+			track.uid ||
+			`${track.releaseUid}_${String(track.index).padStart(3, '0')}`;
+
+		return this.firestoreSync.set(
+			doc(this.firestore, TRACK_FEATURE_KEY, uid),
+			TRACK_FEATURE_KEY,
+			{
+				uid,
+				albumUid: track.albumUid,
+				releaseUid: track.releaseUid,
+				entityType: 'Track',
+				index: track.index,
+				position: track.position,
+				name: track.name,
+				duration: track.duration,
+				durationSec: toDurationSec(track.duration),
+				heading: null,
+				source: 'release',
+			},
+			{ merge: true }
+		);
+	}
+
+	public deleteReleaseTrack(uid: string): Promise<void> {
+		return this.firestoreSync.delete(
+			doc(this.firestore, TRACK_FEATURE_KEY, uid),
+			TRACK_FEATURE_KEY
+		);
 	}
 
 	public list$(): Observable<AlbumModel[]> {

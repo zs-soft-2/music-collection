@@ -3,7 +3,7 @@
 <a
 	class="card"
 	[class]="'is-' + item.format"
-	[routerLink]="['/album', item.albumId]"
+	[routerLink]="link()"
 	[attr.aria-label]="ariaLabel()"
 >
 	<div class="stage">

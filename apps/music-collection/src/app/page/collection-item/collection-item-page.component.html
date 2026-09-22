@@ -1,0 +1,309 @@
+<div class="page">
+	<mc-page-breadcrumb [trail]="trail()" />
+
+	@if (store.itemLoading()) {
+		<p class="status">Looking for this copy…</p>
+	} @else if (store.notFound()) {
+		<section class="missing">
+			@if (store.userId()) {
+				<h1>This copy is not in your collection.</h1>
+				<p>
+					A copy page only opens for the records you own — the shelf
+					place, the price and the story on it are yours alone.
+				</p>
+			} @else {
+				<h1>Sign in to open your copies.</h1>
+				<p>
+					What a copy page shows beyond the catalog belongs to the
+					collector who owns it, so it needs to know who you are.
+				</p>
+			}
+			<a class="button" routerLink="/collection"
+				>Back to the collection</a
+			>
+		</section>
+	} @else if (store.album(); as album) {
+		<header class="hero">
+			@if (album.coverUrl) {
+				<img
+					class="backdrop"
+					[src]="album.coverUrl"
+					alt=""
+					aria-hidden="true"
+				/>
+			}
+			<div class="shade" aria-hidden="true"></div>
+
+			<div class="profile">
+				@if (album.coverUrl) {
+					<img
+						class="cover"
+						[src]="album.coverUrl"
+						[alt]="album.title + ' cover'"
+						fetchpriority="high"
+					/>
+				} @else {
+					<div class="cover placeholder" aria-hidden="true">♪</div>
+				}
+
+				<div class="identity">
+					<p class="eyebrow">Your copy</p>
+					<h1>{{ album.title }}</h1>
+
+					<a
+						class="artist-link"
+						[routerLink]="['/artist', album.artistId]"
+					>
+						{{ album.artistName }}
+					</a>
+
+					@if (store.pressing(); as pressing) {
+						<p class="pressing-line">
+							<mc-format-badge [format]="pressing.format" />
+							<span>
+								{{ pressing.labelName ?? 'Unknown label' }}
+								@if (pressing.country) {
+									· {{ pressing.country }}
+								}
+								@if (album.year) {
+									· {{ album.year }}
+								}
+							</span>
+						</p>
+					}
+
+					@if (store.disposal(); as disposal) {
+						<p class="gone">
+							Left the collection on
+							{{ disposal.date | date: 'longDate' }} ({{
+								disposal.reason
+							}}).
+						</p>
+					}
+				</div>
+			</div>
+		</header>
+
+		<!-- The copy itself -->
+		<section class="section copy">
+			<div class="copy-photos">
+				<mc-copy-photos
+					[photos]="store.photos()"
+					[albumTitle]="album.title"
+					[canEdit]="store.canEdit()"
+					[busy]="store.busy()"
+					[error]="store.photoError()"
+					(chosen)="store.addPhoto($event.slot, $event.file)"
+					(removed)="store.removePhoto($event)"
+				/>
+			</div>
+
+			<div class="copy-facts">
+				<div class="section-head">
+					<h2>This copy</h2>
+					@if (store.canEdit() && !store.editing()) {
+						<button
+							type="button"
+							class="button"
+							(click)="store.edit()"
+						>
+							Edit
+						</button>
+					}
+				</div>
+
+				@if (store.editing()) {
+					<mc-copy-details-form
+						[draft]="store.draft()"
+						[busy]="store.savingDetails()"
+						[error]="store.saveError()"
+						(saved)="save($event)"
+						(cancelled)="store.cancelEdit()"
+					/>
+				} @else {
+					<dl class="facts">
+						<div>
+							<dt>In the collection since</dt>
+							<dd>{{ store.item()?.date | date: 'longDate' }}</dd>
+						</div>
+
+						@if (store.provenance(); as provenance) {
+							@if (provenance.date) {
+								<div>
+									<dt>Bought on</dt>
+									<dd>{{ provenance.date }}</dd>
+								</div>
+							}
+							@if (provenance.place) {
+								<div>
+									<dt>Where from</dt>
+									<dd>{{ provenance.place }}</dd>
+								</div>
+							}
+							@if (provenance.price) {
+								<div>
+									<dt>Price</dt>
+									<dd>{{ provenance.price }}</dd>
+								</div>
+							}
+						}
+
+						@if (store.condition(); as condition) {
+							@if (condition.media) {
+								<div>
+									<dt>Record</dt>
+									<dd>{{ condition.media }}</dd>
+								</div>
+							}
+							@if (condition.sleeve) {
+								<div>
+									<dt>Sleeve</dt>
+									<dd>{{ condition.sleeve }}</dd>
+								</div>
+							}
+						}
+
+						@if (store.item()?.placement; as spot) {
+							<div>
+								<dt>On the shelf</dt>
+								<dd>
+									Row {{ spot.row }} · Slot
+									{{ spot.column }} · Position
+									{{ spot.position }}
+								</dd>
+							</div>
+						}
+					</dl>
+
+					@if (store.item()?.description; as note) {
+						<p class="note">{{ note }}</p>
+					}
+
+					@if (
+						store.provenance()?.empty &&
+						store.condition()?.empty &&
+						store.canEdit()
+					) {
+						<p class="prompt">
+							Nothing is written down about this copy yet — when
+							you got it, what you paid, how it has held up.
+						</p>
+					}
+				}
+			</div>
+		</section>
+
+		<!-- The story -->
+		@if (store.story(); as story) {
+			<section class="section">
+				<h2>Its story</h2>
+				<p class="story">{{ story }}</p>
+			</section>
+		}
+
+		<!-- The pressing -->
+		@if (store.pressing(); as pressing) {
+			<section class="section">
+				<h2>The pressing</h2>
+				<p class="section-lead">
+					What this release adds to the album — the label that pressed
+					it, where, and in what shape it came out.
+				</p>
+
+				<dl class="facts">
+					@if (pressing.name) {
+						<div>
+							<dt>Release</dt>
+							<dd>{{ pressing.name }}</dd>
+						</div>
+					}
+					@if (pressing.labelName) {
+						<div>
+							<dt>Label</dt>
+							<dd>{{ pressing.labelName }}</dd>
+						</div>
+					}
+					@if (pressing.country) {
+						<div>
+							<dt>Country</dt>
+							<dd>{{ pressing.country }}</dd>
+						</div>
+					}
+					@if (pressing.formatDescription) {
+						<div>
+							<dt>Format</dt>
+							<dd>{{ pressing.formatDescription }}</dd>
+						</div>
+					}
+					@if (store.exclusiveCount()) {
+						<div>
+							<dt>Only on this pressing</dt>
+							<dd>
+								{{ store.exclusiveCount() }}
+								{{
+									store.exclusiveCount() === 1
+										? 'track'
+										: 'tracks'
+								}}
+							</dd>
+						</div>
+					}
+				</dl>
+
+				@if (pressing.discogsUrl) {
+					<a
+						class="link-out"
+						[href]="pressing.discogsUrl"
+						target="_blank"
+						rel="noopener"
+					>
+						This pressing on Discogs
+					</a>
+				}
+			</section>
+		}
+
+		<!-- The album -->
+		<section class="section">
+			<div class="section-head">
+				<h2>What it plays</h2>
+				<a class="button" [routerLink]="['/album', album.id]">
+					The album
+				</a>
+			</div>
+
+			@if (store.detailsLoading()) {
+				<p class="status">Loading the tracklist…</p>
+			} @else if (store.tracklist().length) {
+				<ol class="tracks">
+					@for (track of store.tracklist(); track track.id) {
+						<li class="track" [class.exclusive]="track.exclusive">
+							<span class="position">{{ track.position }}</span>
+							<a
+								class="name"
+								[routerLink]="[
+									'/album',
+									album.id,
+									'track',
+									track.id,
+								]"
+								>{{ track.name }}</a
+							>
+							@if (track.exclusive) {
+								<span
+									class="badge"
+									title="Only on this pressing"
+								>
+									This pressing
+								</span>
+							}
+							<span class="duration">{{ track.duration }}</span>
+						</li>
+					}
+				</ol>
+			} @else {
+				<p class="status">No tracklist for this album yet.</p>
+			}
+		</section>
+	}
+</div>

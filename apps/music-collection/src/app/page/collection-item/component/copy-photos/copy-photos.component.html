@@ -1,0 +1,97 @@
+@if (photos().length) {
+	<div
+		class="card"
+		[class.turnable]="canTurn()"
+		[class.turned]="turned()"
+		[attr.role]="canTurn() ? 'button' : null"
+		[attr.tabindex]="canTurn() ? 0 : null"
+		[attr.aria-label]="canTurn() ? 'Turn ' + albumTitle() + ' over' : null"
+		(click)="toggle()"
+		(keydown.enter)="toggle()"
+		(keydown.space)="toggle(); $event.preventDefault()"
+	>
+		<div class="faces">
+			@if (front(); as photo) {
+				<img
+					class="face front"
+					[src]="photo.url"
+					[width]="photo.width"
+					[height]="photo.height"
+					[alt]="photo.side + ' of ' + albumTitle()"
+				/>
+			}
+			@if (back(); as photo) {
+				<img
+					class="face back"
+					[src]="photo.url"
+					[width]="photo.width"
+					[height]="photo.height"
+					[alt]="photo.side + ' of ' + albumTitle()"
+				/>
+			}
+		</div>
+
+		@if (canTurn()) {
+			<span class="hint" aria-hidden="true">
+				<i class="pi pi-replay"></i>
+				{{ turned() ? 'Back' : 'Front' }}
+			</span>
+		}
+	</div>
+} @else if (!canEdit()) {
+	<p class="empty">No photos of this copy.</p>
+}
+
+@if (canEdit()) {
+	<div class="controls">
+		@for (photo of photos(); track $index) {
+			<div class="control">
+				<span class="control-label">{{ photo.side }}</span>
+				<label class="button">
+					<input
+						type="file"
+						accept="image/*"
+						[disabled]="busy()"
+						(change)="
+							choose($index === 0 ? 'front' : 'back', $event)
+						"
+					/>
+					Replace
+				</label>
+				<button
+					type="button"
+					class="button remove"
+					[disabled]="busy()"
+					(click)="removed.emit($index)"
+				>
+					Remove
+				</button>
+			</div>
+		}
+
+		@if (photos().length < 2) {
+			<label class="button add">
+				<input
+					type="file"
+					accept="image/*"
+					[disabled]="busy()"
+					(change)="choose(nextSlot(), $event)"
+				/>
+				@if (busy()) {
+					Uploading…
+				} @else {
+					{{ photos().length ? 'Add the back' : 'Add a photo' }}
+				}
+			</label>
+		}
+	</div>
+
+	<p class="note">
+		At most two pictures — the front and the back. They are scaled down in
+		the browser before anything is uploaded.
+	</p>
+
+	@if (error()) {
+		<p class="error" role="alert">{{ error() }}</p>
+	}
+}

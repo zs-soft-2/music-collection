@@ -1,0 +1,52 @@
+.release-tracks-list {
+	display: grid;
+	gap: 0.25rem;
+	padding: 0;
+	margin: 0 0 1rem;
+	list-style: none;
+
+	li {
+		display: grid;
+		grid-template-columns: 4rem minmax(0, 1fr) 4rem auto;
+		gap: 0.75rem;
+		align-items: center;
+		padding: 0.35rem 0;
+		border-bottom: 1px solid var(--mc-border);
+	}
+
+	/* The album's own list is read-only here; it reads as background. */
+	&.is-album li {
+		color: var(--mc-text-muted);
+		grid-template-columns: 4rem minmax(0, 1fr) 4rem;
+	}
+}
+
+.release-tracks-position,
+.release-tracks-duration {
+	font-size: 0.85rem;
+	color: var(--mc-text-subtle);
+	font-variant-numeric: tabular-nums;
+}
+
+.release-tracks-name {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.release-tracks-actions {
+	display: inline-flex;
+	gap: 0.25rem;
+}
+
+.release-tracks-field-position,
+.release-tracks-field-duration {
+	max-width: 8rem;
+}
+
+.release-tracks-error {
+	display: block;
+	margin-bottom: 0.75rem;
+	color: var(--mc-status-bad);
+}

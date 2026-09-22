@@ -14,7 +14,7 @@ import {
 	ReleaseView,
 } from '../../../../shared/music-ui';
 
-/** Dense list row for large collections — the whole row links to the album. */
+/** Dense list row for large collections — the whole row opens the copy. */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-release-row',
@@ -26,7 +26,7 @@ import {
 	template: `
 		@let item = release();
 
-		<a class="row" [routerLink]="['/album', item.albumId]">
+		<a class="row" [routerLink]="['/collection', 'copy', item.id]">
 			<span class="thumb">
 				@if (item.coverUrl) {
 					<img [src]="item.coverUrl" alt="" loading="lazy" />

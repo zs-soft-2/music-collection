@@ -2,11 +2,13 @@ import { Observable } from 'rxjs';
 
 import { EntityStateService } from '../../../common';
 import {
+	CollectionItemDetails,
 	CollectionItemDisposal,
 	CollectionItemEntity,
 	CollectionItemEntityAdd,
 	CollectionItemEntityUpdate,
 	CollectionItemListConfig,
+	CollectionItemPhoto,
 	CollectionItemPlacement,
 } from './collection-item';
 
@@ -32,6 +34,20 @@ export abstract class CollectionItemStateService extends EntityStateService<
 		collectionItem: CollectionItemEntity,
 		placement: CollectionItemPlacement | null
 	): void;
+	/**
+	 * Writes what the collector tells about the copy — how it was come by,
+	 * how it has held up, the story behind it. The whole telling is written,
+	 * so a field left empty is cleared on the record.
+	 */
+	public abstract dispatchChangeDetailsAction(
+		collectionItem: CollectionItemEntity,
+		details: CollectionItemDetails
+	): void;
+	/** Writes the photos of the copy, front first. */
+	public abstract dispatchChangePhotosAction(
+		collectionItem: CollectionItemEntity,
+		photos: CollectionItemPhoto[]
+	): void;
 	/** Files several copies at once, as a rearranged compartment needs. */
 	public abstract dispatchPlaceEntitiesAction(
 		placements: {
@@ -51,6 +67,9 @@ export abstract class CollectionItemStateService extends EntityStateService<
 	public abstract selectDisposing$(): Observable<boolean>;
 	/** A copy is being filed into a compartment, or taken out of one. */
 	public abstract selectPlacing$(): Observable<boolean>;
+
+	/** What the collector tells about a copy is being written. */
+	public abstract selectSaving$(): Observable<boolean>;
 	/**
 	 * The copies gone from the signed-in user's collection, requested like
 	 * `selectLoadedEntities$`.

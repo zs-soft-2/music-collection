@@ -1,0 +1,150 @@
+@if (params$ | async; as params) {
+	@if (!params.release?.album?.uid) {
+		<section class="mc-form-section">
+			<p class="mc-form-note">
+				Give the pressing an album first — a track of a release is a
+				track of the album it pressed.
+			</p>
+		</section>
+	} @else {
+		<section class="mc-form-section" aria-labelledby="release-album-tracks">
+			<h2 id="release-album-tracks">
+				The album ({{ params.albumTracks.length }})
+			</h2>
+			<p class="mc-form-note">
+				Every pressing of this album plays these. They are edited on the
+				album, not here.
+			</p>
+			@if (params.albumTracks.length) {
+				<ol class="release-tracks-list is-album">
+					@for (track of params.albumTracks; track track.uid) {
+						<li>
+							<span class="release-tracks-position">{{
+								track.position
+							}}</span>
+							<span class="release-tracks-name">{{
+								track.name
+							}}</span>
+							<span class="release-tracks-duration">{{
+								track.duration
+							}}</span>
+						</li>
+					}
+				</ol>
+			}
+		</section>
+
+		<section class="mc-form-section" aria-labelledby="release-own-tracks">
+			<h2 id="release-own-tracks">
+				Only on this pressing ({{ params.releaseTracks.length }})
+			</h2>
+
+			@if (params.releaseTracks.length) {
+				<ol class="release-tracks-list">
+					@for (track of params.releaseTracks; track track.uid) {
+						<li>
+							<span class="release-tracks-position">{{
+								track.position
+							}}</span>
+							<span class="release-tracks-name">{{
+								track.name
+							}}</span>
+							<span class="release-tracks-duration">{{
+								track.duration
+							}}</span>
+							<span class="release-tracks-actions">
+								<p-button
+									icon="pi pi-pencil"
+									size="small"
+									severity="secondary"
+									[text]="true"
+									ariaLabel="Edit this track"
+									[disabled]="saving()"
+									(onClick)="edit(track)"
+								></p-button>
+								<p-button
+									icon="pi pi-trash"
+									size="small"
+									severity="danger"
+									[text]="true"
+									ariaLabel="Remove this track"
+									[disabled]="saving()"
+									(onClick)="remove(track)"
+								></p-button>
+							</span>
+						</li>
+					}
+				</ol>
+			} @else {
+				<p class="mc-form-note">
+					Nothing yet. This pressing plays the album as it is.
+				</p>
+			}
+
+			<div class="mc-form-grid release-tracks-form">
+				<div class="mc-field release-tracks-field-position">
+					<label for="track-position">Position</label>
+					<input
+						id="track-position"
+						type="text"
+						pInputText
+						[placeholder]="
+							editing()
+								? ''
+								: 'Printed on the sleeve, e.g. ' +
+									params.nextIndex
+						"
+						[value]="position()"
+						(input)="position.set(text($event))"
+					/>
+				</div>
+
+				<div class="mc-field is-wide">
+					<label for="track-name">Title</label>
+					<input
+						id="track-name"
+						type="text"
+						pInputText
+						[value]="name()"
+						(input)="name.set(text($event))"
+					/>
+				</div>
+
+				<div class="mc-field release-tracks-field-duration">
+					<label for="track-duration">Length</label>
+					<input
+						id="track-duration"
+						type="text"
+						pInputText
+						placeholder="4:04"
+						[value]="duration()"
+						(input)="duration.set(text($event))"
+					/>
+				</div>
+			</div>
+
+			@if (error()) {
+				<small class="release-tracks-error">{{ error() }}</small>
+			}
+
+			<div class="mc-form-actions">
+				@if (editing()) {
+					<p-button
+						label="Cancel"
+						severity="secondary"
+						[outlined]="true"
+						[disabled]="saving()"
+						(onClick)="cancel()"
+					></p-button>
+				}
+				<p-button
+					[label]="editing() ? 'Save the track' : 'Add the track'"
+					icon="pi pi-check"
+					[loading]="saving()"
+					[disabled]="!name().trim()"
+					(onClick)="save(params.nextIndex)"
+				></p-button>
+			</div>
+		</section>
+	}
+}

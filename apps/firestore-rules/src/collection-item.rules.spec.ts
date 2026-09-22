@@ -89,3 +89,153 @@ describe('collection-item: where the collector filed the copy', () => {
 			})
 		));
 });
+
+/** A picture of the copy, as the page writes it. */
+const photo = (fields: Record<string, unknown> = {}) => ({
+	path: `collection-item/${ME}/${ITEM}/front-1758499200000.jpg`,
+	url: 'https://firebasestorage.googleapis.com/v0/b/demo/o/front.jpg',
+	width: 2000,
+	height: 1994,
+	...fields,
+});
+
+describe('collection-item: what the collector tells about the copy', () => {
+	it('writes when, where and for how much', () =>
+		assertSucceeds(
+			updateDoc(doc(asMe(), PATH), {
+				purchase: {
+					date: 1550000000000,
+					place: 'Lemezkuckó',
+					price: 4500,
+					currency: 'HUF',
+				},
+			})
+		));
+
+	it('writes a purchase that is only a place', () =>
+		assertSucceeds(
+			updateDoc(doc(asMe(), PATH), {
+				purchase: {
+					date: null,
+					place: 'A gift',
+					price: null,
+					currency: null,
+				},
+			})
+		));
+
+	it('clears the purchase', () =>
+		assertSucceeds(updateDoc(doc(asMe(), PATH), { purchase: null })));
+
+	it('refuses a price that is owed rather than paid', () =>
+		assertFails(
+			updateDoc(doc(asMe(), PATH), {
+				purchase: {
+					date: null,
+					place: null,
+					price: -1,
+					currency: 'HUF',
+				},
+			})
+		));
+
+	it('refuses a currency that is not a code', () =>
+		assertFails(
+			updateDoc(doc(asMe(), PATH), {
+				purchase: {
+					date: null,
+					place: null,
+					price: 10,
+					currency: 'forint',
+				},
+			})
+		));
+
+	it('refuses anything smuggled into the purchase', () =>
+		assertFails(
+			updateDoc(doc(asMe(), PATH), {
+				purchase: {
+					date: null,
+					place: null,
+					price: null,
+					currency: null,
+					seller: 'someone',
+				},
+			})
+		));
+
+	it('grades the record and the sleeve apart', () =>
+		assertSucceeds(
+			updateDoc(doc(asMe(), PATH), {
+				condition: { media: 'NM', sleeve: 'VG+' },
+			})
+		));
+
+	it('refuses a grade off the scale', () =>
+		assertFails(
+			updateDoc(doc(asMe(), PATH), {
+				condition: { media: 'A+', sleeve: null },
+			})
+		));
+
+	it('writes the story', () =>
+		assertSucceeds(
+			updateDoc(doc(asMe(), PATH), {
+				story: 'Found it in a bin in Szeged, the sleeve still damp.',
+			})
+		));
+
+	it('refuses a story that would crowd out the record', () =>
+		assertFails(updateDoc(doc(asMe(), PATH), { story: 'x'.repeat(5001) })));
+
+	it('writes a front and a back', () =>
+		assertSucceeds(
+			updateDoc(doc(asMe(), PATH), {
+				photos: [
+					photo(),
+					photo({
+						path: `collection-item/${ME}/${ITEM}/back-1758499300000.jpg`,
+					}),
+				],
+			})
+		));
+
+	it('clears the photos', () =>
+		assertSucceeds(updateDoc(doc(asMe(), PATH), { photos: [] })));
+
+	it('refuses a third picture', () =>
+		assertFails(
+			updateDoc(doc(asMe(), PATH), {
+				photos: [photo(), photo(), photo()],
+			})
+		));
+
+	it('refuses a picture filed under another collector', () =>
+		assertFails(
+			updateDoc(doc(asMe(), PATH), {
+				photos: [
+					photo({
+						path: 'collection-item/collector-2/copy-9/front.jpg',
+					}),
+				],
+			})
+		));
+
+	it('refuses a picture filed under another copy of mine', () =>
+		assertFails(
+			updateDoc(doc(asMe(), PATH), {
+				photos: [
+					photo({
+						path: `collection-item/${ME}/copy-9/front.jpg`,
+					}),
+				],
+			})
+		));
+
+	it('refuses a picture that is not one', () =>
+		assertFails(
+			updateDoc(doc(asMe(), PATH), {
+				photos: [photo({ width: 0 })],
+			})
+		));
+});
