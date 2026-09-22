@@ -1,6 +1,10 @@
 import { FormGroup } from '@angular/forms';
 
-import { EntityUtilService } from '../../../common';
+import {
+	EntityTypeEnum,
+	EntityUtilService,
+	SearchParams,
+} from '../../../common';
 import {
 	EntityQuantityEntity,
 	EntityQuantityEntityUpdate,
@@ -40,6 +44,11 @@ export abstract class CollectionItemUtilService extends EntityUtilService<
 	public abstract convertModelUpdateToEntityUpdate(
 		model: CollectionItemModelUpdate
 	): CollectionItemEntityUpdate;
+	/** Looks the term up among the artists of the collected releases. */
+	public abstract createSearchParamsByArtist(
+		entityType: EntityTypeEnum,
+		term: string
+	): SearchParams;
 	public abstract createFormGroupByUser(
 		entity: CollectionItemEntity | undefined,
 		user: User

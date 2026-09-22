@@ -60,9 +60,18 @@ export class CollectionItemTableService extends BaseComponent {
 		);
 	}
 
-	public searchHandler(term: string): void {
+	public searchByName(term: string): void {
 		const searchParams: SearchParams =
 			this.collectionItemUtilService.createSearchParams(
+				EntityTypeEnum.CollectionItem,
+				term
+			);
+		this.collectionItemStateService.dispatchSearch(searchParams);
+	}
+
+	public searchByArtistName(term: string): void {
+		const searchParams: SearchParams =
+			this.collectionItemUtilService.createSearchParamsByArtist(
 				EntityTypeEnum.CollectionItem,
 				term
 			);

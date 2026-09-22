@@ -426,6 +426,17 @@ export async function approveReleaseRequest(
 				searchParameters: searchParameters(
 					String(embeddedRelease['name'] ?? '')
 				),
+				// Az admin listája az előadóra külön keres (a kiadvány neve
+				// és az előadóé más-más mezőben áll).
+				artistSearchParameters: searchParameters(
+					String(
+						(
+							embeddedRelease['artist'] as
+								| Record<string, unknown>
+								| undefined
+						)?.['name'] ?? ''
+					)
+				),
 			})
 		);
 		transaction.update(

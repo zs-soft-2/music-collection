@@ -13,6 +13,10 @@ import {
 	EntityQuantityEntityUpdate,
 	EntityQuantityGroup,
 	EntityTypeEnum,
+	ParamItem,
+	QueryConstraintTypeEnum,
+	QueryOperatorEnum,
+	SearchParams,
 	UpdateEntityQuantityType,
 	UpdateEntityQuantityTypeEnum,
 	User,
@@ -38,6 +42,9 @@ export class CollectionItemUtilServiceImpl extends CollectionItemUtilService {
 			searchParameters: this.createSearchParameters(
 				entity.release.name || ''
 			),
+			artistSearchParameters: this.createSearchParameters(
+				entity.release.artist?.name || ''
+			),
 		};
 	}
 
@@ -50,6 +57,9 @@ export class CollectionItemUtilServiceImpl extends CollectionItemUtilService {
 			searchParameters: this.createSearchParameters(
 				entity.release.name || ''
 			),
+			artistSearchParameters: this.createSearchParameters(
+				entity.release.artist?.name || ''
+			),
 		};
 	}
 
@@ -61,6 +71,9 @@ export class CollectionItemUtilServiceImpl extends CollectionItemUtilService {
 			date: entity.date?.getTime(),
 			searchParameters: this.createSearchParameters(
 				entity.release?.name || ''
+			),
+			artistSearchParameters: this.createSearchParameters(
+				entity.release?.artist?.name || ''
 			),
 		};
 	}
@@ -139,6 +152,24 @@ export class CollectionItemUtilServiceImpl extends CollectionItemUtilService {
 			release: [collectionItem?.release || null, [Validators.required]],
 			description: [collectionItem?.description || null],
 		});
+	}
+
+	/**
+	 * The search of the artist column: it looks in the prefixes of the
+	 * artist's name written next to the item, not in the release's own.
+	 */
+	public createSearchParamsByArtist(
+		entityType: EntityTypeEnum,
+		term: string
+	): SearchParams {
+		const query: ParamItem<string> = {
+			queryConstraint: QueryConstraintTypeEnum.where,
+			operation: QueryOperatorEnum.arrayContains,
+			field: 'artistSearchParameters',
+			value: term.toLowerCase(),
+		};
+
+		return [{ entityType, query }];
 	}
 
 	public filterByArtist(

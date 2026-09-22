@@ -7,7 +7,19 @@
 				ariaLabel="Filter by name"
 				[suggestions]="params.empty"
 				[showClear]="true"
-				(completeMethod)="searchHandler($event)"
+				(completeMethod)="searchByNameHandler($event)"
+				[minQueryLength]="3"
+				[delay]="400"
+			>
+			</p-autocomplete>
+
+			<p-autocomplete
+				class="mc-table-search"
+				placeholder="Filter by artist…"
+				ariaLabel="Filter by artist"
+				[suggestions]="params.empty"
+				[showClear]="true"
+				(completeMethod)="searchByArtistNameHandler($event)"
 				[minQueryLength]="3"
 				[delay]="400"
 			>
@@ -85,6 +97,8 @@
 					<tr>
 						<th>Name</th>
 
+						<th>Artist</th>
+
 						<th>Year</th>
 
 						<th pSortableColumn="updatedAt">
@@ -98,6 +112,8 @@
 				<ng-template #body let-collectionItem>
 					<tr>
 						<td>{{ collectionItem.release.name }}</td>
+
+						<td>{{ collectionItem.release.artist?.name }}</td>
 
 						<td>{{ collectionItem.date | date: 'yyyy' }}</td>
 

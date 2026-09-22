@@ -72,6 +72,14 @@ export type CollectionItemModel = CollectionItem &
 	Entity &
 	Searchable & {
 		date: number;
+		/**
+		 * The artist's name in growing prefixes, the way `searchParameters`
+		 * holds the release's: this is what a search by artist looks in.
+		 * Missing on a document written before the collection was searched
+		 * by artist — those are filled in by
+		 * `tools/sync/backfill-collection-item-artist.mjs`.
+		 */
+		artistSearchParameters?: string[];
 	};
 
 export type CollectionItemModelAdd = Omit<CollectionItemModel, 'uid'>;
