@@ -10,17 +10,18 @@ import {
 	output,
 	viewChild,
 } from '@angular/core';
-import { CollectionItemPlacement } from '@music-collection/api';
-
 import {
+	CollectionItemPlacement,
 	MAX_SHELF_POSITION,
+	ShelfUnitLayout,
 	nextPosition,
 	placementInLayout,
 	spotKey,
 	unitSpots,
-} from '../../../collection/shelf-placement';
-import { ShelfUnitLayout } from '../../../collection/shelf-layout.setting';
-import { FormatBadgeComponent, ReleaseView } from '../../../../shared/music-ui';
+} from '@music-collection/api';
+
+import { FormatBadgeComponent } from '../format-badge/format-badge.component';
+import { ReleaseView } from '@music-collection/ui/music-view';
 
 /** A compartment as the picker draws it: where it is, and what is already in it. */
 interface SpotCell {

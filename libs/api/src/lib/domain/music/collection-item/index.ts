@@ -5,3 +5,5 @@ export * from './collection-item-resource.enum';
 export * from './collection-item-state.service';
 export * from './collection-item-util.service';
 export * from './collection-item';
+export * from './shelf-layout';
+export * from './shelf-layout.service';

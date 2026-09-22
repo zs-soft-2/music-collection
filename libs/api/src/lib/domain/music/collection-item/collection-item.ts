@@ -92,6 +92,29 @@ export type ReleaseForConnectionItem = ReleaseEntity & {
 export type CollectionItemFormParams = {
 	releases: ReleaseForConnectionItem[];
 	formGroup: FormGroup;
+	placement: CollectionItemPlacementParams;
+};
+
+/**
+ * The shelf place section of the form: the furniture the signed-in collector
+ * drew, and which compartment of it the copy is filed into.
+ */
+export type CollectionItemPlacementParams = {
+	/** The drawn units; empty where the collector has drawn no furniture. */
+	units: SelectItem<string>[];
+	unitId: string;
+	/** The compartments of the chosen unit, as `row:column`. */
+	spots: SelectItem<string>[];
+	/** The chosen compartment, `null` while the copy is filed by the shelf. */
+	spot: string | null;
+	position: number;
+	maxPosition: number;
+	/**
+	 * A place is kept that no drawn compartment answers to any more — the
+	 * unit was thrown out, or redrawn smaller. The copy keeps it until the
+	 * form is given another one.
+	 */
+	lost: boolean;
 };
 
 export type CollectionItemListStateModel = {

@@ -5,6 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { RecordShelfComponent } from './component/record-shelf/record-shelf.component';
 import { ReleaseRowComponent } from './component/release-row/release-row.component';
 import {
+	CopyPlacementComponent,
 	DecadeChartComponent,
 	FORMAT_LABELS,
 	FORMAT_ORDER,
@@ -36,6 +37,7 @@ import { CollectionPageStore } from './collection-page.store';
 		ReleaseCardComponent,
 		ReleaseRowComponent,
 		RecordShelfComponent,
+		CopyPlacementComponent,
 		DecadeChartComponent,
 		StyleBarsComponent,
 		CollectionProgressComponent,

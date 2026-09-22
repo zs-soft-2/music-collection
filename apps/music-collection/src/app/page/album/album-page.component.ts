@@ -14,6 +14,7 @@ import { RouterLink } from '@angular/router';
 
 import {
 	AdminEditLinkComponent,
+	CopyPlacementComponent,
 	DiscographyCardComponent,
 	FormatBadgeComponent,
 } from '../../shared/music-ui';
@@ -22,7 +23,6 @@ import { AlbumPageStore } from './album-page.store';
 import { AlbumCollectionsComponent } from './component/album-collections/album-collections.component';
 import { AlbumCreditsComponent } from './component/album-credits/album-credits.component';
 import { AlbumTracklistComponent } from './component/album-tracklist/album-tracklist.component';
-import { CopyPlacementComponent } from './component/copy-placement/copy-placement.component';
 import { CopyRemovalComponent } from './component/copy-removal/copy-removal.component';
 import { ReleasePickerComponent } from './component/release-picker/release-picker.component';
 import { WishlistDialogComponent } from './component/wishlist-dialog/wishlist-dialog.component';

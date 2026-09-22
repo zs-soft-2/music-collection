@@ -313,7 +313,11 @@
 		<ul class="list">
 			@for (release of items; track release.id) {
 				<li>
-					<mc-release-row [release]="release" />
+					<mc-release-row
+						[release]="release"
+						[canPlace]="store.canPlaceCopies()"
+						(place)="store.openPlacement($event)"
+					/>
 				</li>
 			}
 		</ul>
@@ -324,9 +328,24 @@
 					<mc-release-card
 						[release]="release"
 						[priority]="priority && $index < 6"
+						[canPlace]="store.canPlaceCopies()"
+						(place)="store.openPlacement($event)"
 					/>
 				</li>
 			}
 		</ul>
 	}
 </ng-template>
+
+@if (store.placingCopy(); as copy) {
+	<mc-copy-placement
+		[albumTitle]="copy.title"
+		[copy]="copy"
+		[units]="store.shelfUnits()"
+		[filed]="store.filedElsewhere()"
+		[busy]="store.placing()"
+		[error]="store.placeError()"
+		(placed)="store.placeCopy($event)"
+		(closed)="store.closePlacement()"
+	/>
+}

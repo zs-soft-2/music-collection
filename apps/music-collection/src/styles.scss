@@ -474,6 +474,42 @@ body .p-chip {
 	}
 }
 
+// A kártyák polcra tevő gombja (mc-release-card): ugyanúgy hoverre / fókuszra
+// jelenik meg, mint az admin ikon, csak a kártya másik sarkában.
+.mc-card-place {
+	position: absolute;
+	right: 0.5rem;
+	bottom: 0.5rem;
+	z-index: 5;
+	display: grid;
+	place-items: center;
+	width: 2rem;
+	height: 2rem;
+	color: var(--mc-text);
+	cursor: pointer;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: 999px;
+	opacity: 0;
+	transition: opacity var(--mc-duration-fast) ease;
+
+	&:hover,
+	&:focus-visible {
+		border-color: var(--mc-border-strong);
+	}
+}
+
+:hover > .mc-card-place,
+:focus-within > .mc-card-place {
+	opacity: 1;
+}
+
+@media (hover: none) {
+	.mc-card-place {
+		opacity: 1;
+	}
+}
+
 // A lapok tartalmának legnagyobb szélessége; széles nézetben (a felső sáv
 // kapcsolója, LayoutWidthService) nincs korlát, csak az oldalsó térköz.
 :root {

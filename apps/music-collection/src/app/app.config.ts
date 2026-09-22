@@ -42,8 +42,13 @@ import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 
+import { ShelfLayoutService } from '@music-collection/api';
+
 import { environment } from '../environments/environment';
 import { routes } from './app-routing';
+// Straight from the file: the page's barrel would pull the lazily loaded
+// collection page into the first bundle.
+import { CollectorShelfLayoutService } from './page/collection/shelf-layout.service';
 import { HookModule } from './module/hook';
 import { installPerformanceConsole } from './performance';
 import { metaReducers } from './reducer';
@@ -127,6 +132,10 @@ export const appConfig: ApplicationConfig = {
 		provideHttpClient(withXhr()),
 		provideAngularSvgIcon(),
 		provideMusicCollection(),
+		// The admin form files a copy into the same furniture the shelf page
+		// draws: the drawing is a setting of the signed-in collector, which
+		// only the app can read.
+		{ provide: ShelfLayoutService, useExisting: CollectorShelfLayoutService },
 		provideAnimationsAsync(),
 		// Carries the look of the app to and from the account. It has to be
 		// alive wherever the theme is switched, which is every page, so it

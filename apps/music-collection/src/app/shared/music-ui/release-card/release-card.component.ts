@@ -3,6 +3,7 @@ import {
 	Component,
 	computed,
 	input,
+	output,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
@@ -40,6 +41,13 @@ export class ReleaseCardComponent {
 	 * the wishlist item on the wishlist.
 	 */
 	public readonly adminEntity = input<AdminEditEntity>('collection-item');
+	/**
+	 * The collector may file this copy on their drawn shelf. Only their own
+	 * collection offers it — a card on someone else's page does not.
+	 */
+	public readonly canPlace = input(false);
+	/** The copy to file, by its collection item id. */
+	public readonly place = output<string>();
 
 	protected readonly ariaLabel = computed(() => {
 		const release = this.release();

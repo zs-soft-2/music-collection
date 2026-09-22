@@ -1,19 +1,14 @@
+import { SHELF_CUBBY_SIZE, ShelfUnitLayout } from '@music-collection/api';
+
 import { UserSetting } from '../../data/user-settings';
 
 /**
- * One piece of shelving furniture, as the collector drew it: a grid of
- * square compartments. Rows and columns are what makes a unit stand up or
- * lie down — 4 × 2 is a tall one, 2 × 4 the same unit on its side.
+ * The drawn unit itself is shared with the rest of the app (the admin form
+ * files a copy into the same furniture), so it is kept with the collection
+ * item; what a unit may be, and how it is stored, stays here.
  */
-export interface ShelfUnitLayout {
-	id: string;
-	/** What the collector calls it, e.g. "Living room". May be empty. */
-	name: string;
-	/** Compartments from top to bottom. */
-	rows: number;
-	/** Compartments from left to right. */
-	columns: number;
-}
+export type { ShelfUnitLayout };
+export { SHELF_CUBBY_SIZE };
 
 /** The furniture in the room, in the order records are filed into it. */
 export interface ShelfLayoutSettings {
@@ -34,9 +29,6 @@ export const SHELF_LIMITS = {
 
 /** What a new unit looks like before it is redrawn: a square Kallax. */
 export const DEFAULT_SHELF = { rows: 4, columns: 4 } as const;
-
-/** Spines per compartment before the records continue in the next one. */
-export const SHELF_CUBBY_SIZE = 36;
 
 /** A room with no drawn furniture: the shelf falls back to one open wall. */
 export const NO_SHELF_LAYOUT: ShelfLayoutSettings = { units: [] };

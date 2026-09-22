@@ -66,6 +66,7 @@ import {
 	ShelfUnitLayout,
 } from './shelf-layout.setting';
 import {
+	placementInLayout,
 	placementsForDrop,
 	placementsLeftBehind,
 } from './shelf-placement';
@@ -97,6 +98,8 @@ interface CollectionPageState {
 	/** A rearrangement is on its way to the server. */
 	placing: boolean;
 	placeError: string | null;
+	/** The copy the placement dialog is open for. */
+	placingCopyId: string | null;
 }
 
 const initialState: CollectionPageState = {
@@ -110,6 +113,7 @@ const initialState: CollectionPageState = {
 	items: [],
 	placing: false,
 	placeError: null,
+	placingCopyId: null,
 	...COLLECTION_VIEW_DEFAULTS,
 };
 
@@ -239,6 +243,40 @@ export const CollectionPageStore = signalStore(
 					store.query().trim() === '' &&
 					store.format() === 'all'
 			),
+			/**
+			 * A single copy can be filed by hand wherever it is found —
+			 * unlike dragging the shelf around, which arranges a whole
+			 * compartment and therefore needs the whole collection on the
+			 * page. It only asks for furniture to file it into.
+			 */
+			canPlaceCopies: computed(() => store.shelfUnits().length > 0),
+			/** The copy the placement dialog is open for. */
+			placingCopy: computed(
+				() =>
+					store
+						.releases()
+						.find(
+							(release) => release.id === store.placingCopyId()
+						) ?? null
+			),
+			/**
+			 * Where the collector's other copies stand, so the picker can
+			 * say how full a compartment is — the copy being filed left out,
+			 * as it is about to leave the one it stands in.
+			 */
+			filedElsewhere: computed<CollectionItemPlacement[]>(() =>
+				store
+					.releases()
+					.filter(
+						(release) =>
+							release.id !== store.placingCopyId() &&
+							release.placement
+					)
+					.map(
+						(release) =>
+							release.placement as CollectionItemPlacement
+					)
+			),
 		};
 	}),
 	withMethods(
@@ -300,7 +338,11 @@ export const CollectionPageStore = signalStore(
 						})
 					)
 				),
-				/** Follows a rearrangement, so a failed one can be said out loud. */
+				/**
+				 * Follows a rearrangement, so a failed one can be said out
+				 * loud. The picker closes once the place is saved, and stays
+				 * open with the error when it is not.
+				 */
 				watchPlacing: rxMethod<void>(
 					pipe(
 						switchMap(() =>
@@ -313,7 +355,12 @@ export const CollectionPageStore = signalStore(
 						tap(([[wasPlacing], [placing, error]]) => {
 							patchState(store, { placing });
 							if (wasPlacing && !placing) {
-								patchState(store, { placeError: error });
+								patchState(store, {
+									placeError: error,
+									placingCopyId: error
+										? store.placingCopyId()
+										: null,
+								});
 							}
 						})
 					)
@@ -396,6 +443,37 @@ export const CollectionPageStore = signalStore(
 					patchState(store, { placeError: null });
 					collectionItemStateService.dispatchPlaceEntitiesAction(
 						placements
+					);
+				},
+				/** Opens the picker on one copy, wherever it is shown. */
+				openPlacement(copyId: string): void {
+					patchState(store, {
+						placingCopyId: copyId,
+						placeError: null,
+					});
+				},
+				closePlacement(): void {
+					patchState(store, { placingCopyId: null });
+				},
+				/**
+				 * Files the copy the picker is open for, or takes its place
+				 * back with `null`. Only that one copy moves: the rest of the
+				 * compartment keeps what it has.
+				 */
+				placeCopy(placement: CollectionItemPlacement | null): void {
+					const item = store
+						.items()
+						.find((owned) => owned.uid === store.placingCopyId());
+
+					if (!item || !store.canPlaceCopies() || store.placing()) {
+						return;
+					}
+
+					patchState(store, { placeError: null });
+					collectionItemStateService.dispatchPlaceEntityAction(
+						item,
+						placement &&
+							placementInLayout(placement, store.shelfUnits())
 					);
 				},
 				/** The furniture kept for the user, and any later change. */

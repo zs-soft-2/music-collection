@@ -3,6 +3,7 @@ import {
 	Component,
 	inject,
 	input,
+	output,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
@@ -20,6 +21,7 @@ import {
 	imports: [RouterLink, FormatBadgeComponent, AdminEditLinkComponent],
 	host: {
 		'[class.has-admin]': 'adminAccess.isAdmin()',
+		'[class.has-place]': 'canPlace()',
 	},
 	template: `
 		@let item = release();
@@ -53,6 +55,25 @@ import {
 			/>
 		</a>
 
+		@if (canPlace()) {
+			<button
+				type="button"
+				class="row-place"
+				[attr.data-place-copy]="item.id"
+				[attr.aria-label]="
+					(item.placement ? 'Move ' : 'Place ') +
+					item.title +
+					' on the shelf'
+				"
+				[title]="
+					item.placement ? 'Move on the shelf' : 'Place on the shelf'
+				"
+				(click)="place.emit(item.id)"
+			>
+				<i class="pi pi-bookmark" aria-hidden="true"></i>
+			</button>
+		}
+
 		<mc-admin-edit-link
 			class="mc-row-admin"
 			variant="icon"
@@ -69,6 +90,40 @@ import {
 
 		:host(.has-admin) .row {
 			padding-right: 3.25rem;
+		}
+
+		:host(.has-place) .row {
+			padding-right: 3.25rem;
+		}
+
+		:host(.has-place.has-admin) .row {
+			padding-right: 5.75rem;
+		}
+
+		.row-place {
+			position: absolute;
+			top: 50%;
+			right: 0.6rem;
+			display: grid;
+			place-items: center;
+			width: 2rem;
+			height: 2rem;
+			color: var(--mc-text-muted);
+			cursor: pointer;
+			background: transparent;
+			border: 0;
+			border-radius: 999px;
+			transform: translateY(-50%);
+		}
+
+		:host(.has-admin) .row-place {
+			right: 3.1rem;
+		}
+
+		.row-place:hover,
+		.row-place:focus-visible {
+			color: var(--mc-text);
+			background: var(--mc-bg-muted);
 		}
 
 		.mc-row-admin {
@@ -198,4 +253,8 @@ export class ReleaseRowComponent {
 	protected readonly adminAccess = inject(AdminAccessService);
 
 	public readonly release = input.required<ReleaseView>();
+	/** The collector may file this copy on their drawn shelf. */
+	public readonly canPlace = input(false);
+	/** The copy to file, by its collection item id. */
+	public readonly place = output<string>();
 }

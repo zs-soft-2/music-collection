@@ -34,6 +34,87 @@
 				</div>
 			</section>
 
+			<section
+				class="mc-form-section"
+				aria-labelledby="collection-item-place"
+			>
+				<h2 id="collection-item-place">Shelf place</h2>
+
+				@if (params.placement.units.length) {
+					<div class="mc-form-grid">
+						<div class="mc-field">
+							<label for="placement-unit">Unit</label>
+							<p-select
+								inputId="placement-unit"
+								[options]="params.placement.units"
+								[ngModel]="params.placement.unitId"
+								[ngModelOptions]="{ standalone: true }"
+								optionLabel="label"
+								optionValue="value"
+								placeholder="Select a unit"
+								(onChange)="chooseUnit($event)"
+							></p-select>
+						</div>
+
+						<div class="mc-field">
+							<label for="placement-spot">Compartment</label>
+							<p-select
+								inputId="placement-spot"
+								[options]="params.placement.spots"
+								[ngModel]="params.placement.spot"
+								[ngModelOptions]="{ standalone: true }"
+								optionLabel="label"
+								optionValue="value"
+								placeholder="Filed by the shelf"
+								(onChange)="chooseSpot($event)"
+							></p-select>
+						</div>
+
+						<div class="mc-field">
+							<label for="placement-position">Position</label>
+							<p-inputnumber
+								inputId="placement-position"
+								[ngModel]="params.placement.position"
+								[ngModelOptions]="{ standalone: true }"
+								[min]="1"
+								[max]="params.placement.maxPosition"
+								[disabled]="!params.placement.spot"
+								[showButtons]="true"
+								(onInput)="choosePosition($event)"
+							></p-inputnumber>
+						</div>
+					</div>
+
+					<p class="mc-form-note">
+						@if (params.placement.lost) {
+							This copy is filed into a compartment that is not
+							drawn any more. Pick another one, or take the place
+							back — until then it keeps the one it has.
+						} @else if (params.placement.spot) {
+							Counted from the left of the compartment; the shelf
+							files the rest around it.
+						} @else {
+							Not filed by hand: the shelf puts this copy where
+							the reading order takes it.
+						}
+					</p>
+
+					@if (params.placement.spot || params.placement.lost) {
+						<p-button
+							label="Take the place back"
+							severity="secondary"
+							[text]="true"
+							(onClick)="clearPlace()"
+						></p-button>
+					}
+				} @else {
+					<p class="mc-form-note">
+						No shelf drawn yet. Draw the units in your profile, and
+						the copies can be filed into them here.
+					</p>
+				}
+			</section>
+
 			<div class="mc-form-actions">
 				<p-button
 					label="Cancel"

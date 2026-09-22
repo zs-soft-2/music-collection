@@ -9,11 +9,13 @@ import {
 import { CollectionItemFormParams, BaseComponent } from '@music-collection/api';
 
 import { CollectionItemFormService } from './collection-item-form.service';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Bind } from 'primeng/bind';
 import { AutoComplete } from 'primeng/autocomplete';
 import { DatePicker } from 'primeng/datepicker';
 import { Button } from 'primeng/button';
+import { InputNumber } from 'primeng/inputnumber';
+import { Select } from 'primeng/select';
 import { AsyncPipe } from '@angular/common';
 
 @Component({
@@ -23,11 +25,14 @@ import { AsyncPipe } from '@angular/common';
 	templateUrl: './collection-item-form.component.html',
 	styleUrls: ['./collection-item-form.component.scss'],
 	imports: [
+		FormsModule,
 		ReactiveFormsModule,
 		Bind,
 		AutoComplete,
 		DatePicker,
 		Button,
+		InputNumber,
+		Select,
 		AsyncPipe,
 	],
 })
@@ -53,5 +58,22 @@ export class CollectionItemFormComponent
 
 	public searchRelease(event: any): void {
 		this.componentService.searchRelease(event['query']);
+	}
+
+	/** Another piece of furniture; the compartment goes with the old one. */
+	public chooseUnit(event: any): void {
+		this.componentService.chooseUnit(event['value']);
+	}
+
+	public chooseSpot(event: any): void {
+		this.componentService.chooseSpot(event['value']);
+	}
+
+	public choosePosition(event: any): void {
+		this.componentService.choosePosition(Number(event['value']));
+	}
+
+	public clearPlace(): void {
+		this.componentService.clearPlace();
 	}
 }
