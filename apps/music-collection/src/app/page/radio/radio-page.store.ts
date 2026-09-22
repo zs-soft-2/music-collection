@@ -26,7 +26,7 @@ import {
 	SHELF_LAYOUT_SETTING,
 } from '../collection/shelf-layout.setting';
 
-import { radioStations } from './radio.mapper';
+import { radioStations, toStationView } from './radio.mapper';
 import { RadioStationView } from './radio.model';
 
 interface RadioPageState {
@@ -84,6 +84,10 @@ export const RadioPageStore = signalStore(
 					: null;
 			}),
 			tuning: computed(() => player.tuning()),
+			/** Queues are drawn at random rather than played as they come. */
+			shuffled: computed(() => player.shuffled()),
+			/** The records waiting behind the one playing, named. */
+			upNext: computed(() => player.queueRecords()),
 			/** Records still waiting to go on. */
 			queued: computed(() => player.queue().length),
 		})
@@ -113,35 +117,44 @@ export const RadioPageStore = signalStore(
 								musicCollections.listStandings$(),
 								collectionItems.selectLoadedEntities$(),
 								playable$,
+								radio.names$(),
 							])
 						),
-						map(([layout, standings, copies, playable]) =>
+						map(([layout, standings, copies, playable, names]) =>
 							radioStations(
 								(layout ?? NO_SHELF_LAYOUT).units,
 								standings,
 								copies as CollectionItemEntity[],
 								playable
-							).map((station) => ({ station, playable }))
+							).map((station) => ({ station, playable, names }))
 						),
 						switchMap((stations) =>
 							stations.length
 								? combineLatest(
-										stations.map(({ station, playable }) =>
-											station.count !== null
-												? of(
-														station as RadioStationView
-													)
-												: radio
-														.albums$(
-															station.station,
-															playable
+										stations.map(
+											({ station, playable, names }) =>
+												station.albumIds
+													? of(
+															toStationView(
+																station,
+																station.albumIds,
+																names
+															)
 														)
-														.pipe(
-															map((albums) => ({
-																...station,
-																count: albums.length,
-															}))
-														)
+													: radio
+															.albums$(
+																station.station,
+																playable
+															)
+															.pipe(
+																map((albums) =>
+																	toStationView(
+																		station,
+																		albums,
+																		names
+																	)
+																)
+															)
 										)
 									)
 								: of([] as RadioStationView[])
@@ -164,6 +177,20 @@ export const RadioPageStore = signalStore(
 						.catch((error) =>
 							console.error('The station did not come on', error)
 						);
+				},
+
+				/** Puts a waiting record on now, passing over the ones before it. */
+				playQueued(albumId: string): void {
+					player
+						.playQueuedAlbum(albumId)
+						.catch((error) =>
+							console.error('That record did not go on', error)
+						);
+				},
+
+				/** Whether a station is played as it comes or drawn at random. */
+				setShuffled(shuffled: boolean): void {
+					player.setShuffled(shuffled);
 				},
 
 				/** Takes the queue off; what plays now plays to its end. */

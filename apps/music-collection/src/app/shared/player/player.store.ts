@@ -45,7 +45,12 @@ import { AlbumDetailsEffect } from '../../data/album-details';
 import { AudioCapture, AudioCaptureEffect } from '../../data/audio';
 import { ExternalPlayerConsentService } from '../../data/external-player';
 import { PlayLogEffect, PlayLogEntry } from '../../data/play-log';
-import { RadioEffect, RadioStation } from '../../data/radio';
+import {
+	RADIO_SHUFFLE_SETTING,
+	RadioEffect,
+	RadioStation,
+	shuffle,
+} from '../../data/radio';
 import {
 	PlayerContext,
 	PlayerSettings,
@@ -55,6 +60,7 @@ import {
 	resolvePlayerSettings,
 } from '../../data/player';
 import { TrackToMatch, currentPositionMs } from '../../data/spotify';
+import { UserSettingsEffect } from '../../data/user-settings';
 import { TrackDetailsEffect } from '../../data/track-details';
 import { SpotifyPlaybackStore } from '../spotify/spotify-playback.store';
 import {
@@ -191,6 +197,16 @@ interface PlayerState {
 	stationLabel: string | null;
 	/** A station is being tuned in: its records are being chosen. */
 	tuning: boolean;
+	/** Queues are put on in a random order. */
+	shuffled: boolean;
+}
+
+/** A record waiting in the queue, as a list of what is coming shows it. */
+export interface QueuedRecord {
+	albumId: string;
+	albumTitle: string;
+	artistName: string | null;
+	coverUrl: string | null;
 }
 
 /** Playback held at the start of a side, waiting to be let on. */
@@ -292,6 +308,7 @@ export const PlayerStore = signalStore(
 		station: null,
 		stationLabel: null,
 		tuning: false,
+		shuffled: false,
 	}),
 	withProps(() => ({
 		/**
@@ -531,6 +548,36 @@ export const PlayerStore = signalStore(
 				sides,
 				/** The record on show has sides, so it can be turned over. */
 				hasSides: computed(() => sides().size > 0),
+				/**
+				 * The records waiting to go on, in the order they will. The
+				 * queue holds ids and the catalog holds the titles, so a
+				 * record the catalog cannot name is left out of the list
+				 * rather than standing in it as a blank — the count beside
+				 * it comes from the queue itself and stays true.
+				 */
+				queueRecords: computed((): QueuedRecord[] => {
+					const named = new Map(
+						(albums() ?? []).map((album) => [album.uid, album])
+					);
+
+					return store.queue().flatMap((albumId) => {
+						const album = named.get(albumId);
+
+						return album
+							? [
+									{
+										albumId,
+										albumTitle: album.name,
+										artistName: album.artist?.name ?? null,
+										coverUrl:
+											album.coverImage?.filePath ||
+											album.coverImageUrl ||
+											null,
+									},
+								]
+							: [];
+					});
+				}),
 				pageActive,
 				/** The page's album / track plays now. */
 				pagePlaying: computed(() => pageActive() && !!now()?.playing),
@@ -639,7 +686,8 @@ export const PlayerStore = signalStore(
 			spotify = inject(SpotifyPlaybackStore),
 			youtube = inject(YoutubePlaybackStore),
 			audioCaptureEffect = inject(AudioCaptureEffect),
-			radioEffect = inject(RadioEffect)
+			radioEffect = inject(RadioEffect),
+			userSettingsEffect = inject(UserSettingsEffect)
 		) => {
 			let capture: AudioCapture | null = null;
 
@@ -765,6 +813,13 @@ export const PlayerStore = signalStore(
 					patchState(store, { loadingAlbumId: null });
 				}
 			};
+
+			/**
+			 * The records of a queue in the order they go on: as they came,
+			 * or drawn out of a hat where the collector asked for that.
+			 */
+			const inOrder = (albumIds: readonly string[]): string[] =>
+				store.shuffled() ? shuffle(albumIds) : [...albumIds];
 
 			/**
 			 * The next record of the queue, or the end of the station. A
@@ -928,7 +983,7 @@ export const PlayerStore = signalStore(
 									timeout(TUNING_TIMEOUT_MS)
 								)
 						);
-						const [first, ...rest] = albumIds;
+						const [first, ...rest] = inOrder(albumIds);
 
 						patchState(store, {
 							queue: rest,
@@ -962,8 +1017,8 @@ export const PlayerStore = signalStore(
 				): Promise<void> {
 					activate();
 					const playable = store.playableAlbumIds();
-					const [first, ...rest] = albumIds.filter((albumId) =>
-						playable.has(albumId)
+					const [first, ...rest] = inOrder(
+						albumIds.filter((albumId) => playable.has(albumId))
 					);
 
 					if (!first) {
@@ -983,6 +1038,53 @@ export const PlayerStore = signalStore(
 
 					return playNextAlbum();
 				},
+
+				/**
+				 * Puts a record of the queue on now, passing over the ones
+				 * standing before it — they have had their turn.
+				 */
+				playQueuedAlbum(albumId: string): Promise<void> {
+					activate();
+					const waiting = store.queue();
+					const at = waiting.indexOf(albumId);
+
+					if (at < 0) {
+						return Promise.resolve();
+					}
+					patchState(store, { queue: waiting.slice(at + 1) });
+
+					return playAlbumById(albumId);
+				},
+
+				/**
+				 * Whether queues are put on in a random order. Turning it on
+				 * draws the records still waiting again; turning it off
+				 * leaves them as they stand, since the order they came in is
+				 * not kept anywhere to be put back.
+				 */
+				setShuffled(shuffled: boolean): void {
+					const waiting = store.queue();
+
+					patchState(store, {
+						shuffled,
+						queue: shuffled ? shuffle(waiting) : waiting,
+					});
+					userSettingsEffect
+						.save(RADIO_SHUFFLE_SETTING, shuffled)
+						.catch((error) =>
+							console.error('Shuffle not kept', error)
+						);
+				},
+
+				/** The kept answer, which the collector gave last time. */
+				loadShuffled: rxMethod<void>(
+					pipe(
+						switchMap(() =>
+							userSettingsEffect.value$(RADIO_SHUFFLE_SETTING)
+						),
+						tap((shuffled) => patchState(store, { shuffled }))
+					)
+				),
 
 				/** Takes the queue off; what plays now plays to its end. */
 				stopStation(): void {
@@ -1201,6 +1303,7 @@ export const PlayerStore = signalStore(
 			destroyRef = inject(DestroyRef)
 		) {
 			store.loadSettings(of(undefined));
+			store.loadShuffled(of(undefined));
 			store.loadLyrics(() => store.shown().trackId);
 
 			// Playing on into a new side: hold there until the collector has

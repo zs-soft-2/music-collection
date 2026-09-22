@@ -9,6 +9,21 @@
 				collection you are after — or nothing in particular.
 			</p>
 		</div>
+
+		<label class="order">
+			<input
+				type="checkbox"
+				[checked]="store.shuffled()"
+				(change)="store.setShuffled(!store.shuffled())"
+			/>
+			<span>
+				<span class="order-label">Random order</span>
+				<span class="order-hint">
+					Draw the records out of a hat instead of playing the station
+					as it comes.
+				</span>
+			</span>
+		</label>
 	</header>
 
 	@if (player.station(); as playing) {
@@ -41,6 +56,44 @@
 					Stop the station
 				</button>
 			</div>
+
+			@if (store.upNext().length) {
+				<ol class="up-next" aria-label="Waiting to go on">
+					@for (record of store.upNext(); track record.albumId) {
+						<li>
+							<button
+								type="button"
+								[attr.title]="
+									'Play ' + record.albumTitle + ' now'
+								"
+								(click)="store.playQueued(record.albumId)"
+							>
+								@if (record.coverUrl) {
+									<img
+										[src]="record.coverUrl"
+										alt=""
+										loading="lazy"
+									/>
+								} @else {
+									<span class="no-cover" aria-hidden="true">
+										<i class="pi pi-image"></i>
+									</span>
+								}
+								<span class="names">
+									<span class="title">{{
+										record.albumTitle
+									}}</span>
+									@if (record.artistName) {
+										<span class="artist">{{
+											record.artistName
+										}}</span>
+									}
+								</span>
+							</button>
+						</li>
+					}
+				</ol>
+			}
 		</section>
 	}
 
@@ -83,6 +136,32 @@
 							{{ station.count }}
 							{{ station.count === 1 ? 'record' : 'records' }}
 						</p>
+						@if (station.preview.length) {
+							<p class="preview">
+								<!-- Two records may share a title, so the
+								     place in the line is what tracks them. -->
+								@for (record of station.preview; track $index) {
+									<span class="record">
+										{{ record.albumTitle }}
+										@if (record.artistName) {
+											<span class="by">
+												· {{ record.artistName }}
+											</span>
+										}
+									</span>
+								}
+								@if (station.count > station.preview.length) {
+									<span class="rest">
+										and
+										{{
+											station.count -
+												station.preview.length
+										}}
+										more
+									</span>
+								}
+							</p>
+						}
 					</div>
 					<button
 						type="button"

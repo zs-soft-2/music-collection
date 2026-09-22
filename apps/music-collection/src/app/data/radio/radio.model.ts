@@ -23,6 +23,12 @@ export interface RadioStation {
 	slug?: string | null;
 }
 
+/** A record of the catalog as a list of what a station holds names it. */
+export interface RadioRecordName {
+	albumTitle: string;
+	artistName: string | null;
+}
+
 /** How many records a station puts in the queue. */
 export const RADIO_LENGTH = 25;
 

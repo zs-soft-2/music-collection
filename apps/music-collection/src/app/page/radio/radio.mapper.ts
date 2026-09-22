@@ -4,9 +4,32 @@ import {
 } from '@music-collection/api';
 import { MusicCollectionStanding } from '@music-collection/domain/music-collection/core';
 
-import { RADIO_LENGTH, radioStationId } from '../../data/radio';
+import {
+	RADIO_LENGTH,
+	RadioRecordName,
+	radioStationId,
+} from '../../data/radio';
 
-import { CountedStation } from './radio.model';
+import { CountedStation, PREVIEW_COUNT, RadioStationView } from './radio.model';
+
+/**
+ * A counted station as the page shows it: its records named rather than only
+ * numbered. A record the catalog cannot name is passed over — the count says
+ * how many there are, and the names are there to say what kind.
+ */
+export function toStationView(
+	station: CountedStation,
+	albumIds: readonly string[],
+	names: ReadonlyMap<string, RadioRecordName>
+): RadioStationView {
+	return {
+		...station,
+		count: station.count ?? albumIds.length,
+		preview: albumIds
+			.slice(0, PREVIEW_COUNT)
+			.flatMap((albumId) => names.get(albumId) ?? []),
+	};
+}
 
 /** A copy, as the page asks whether a shelf station has anything to play. */
 interface FiledCopy {
@@ -14,9 +37,13 @@ interface FiledCopy {
 }
 
 const station = (
-	view: Omit<CountedStation, 'id' | 'count'> & { count?: number | null }
+	view: Omit<CountedStation, 'id' | 'count' | 'albumIds'> & {
+		count?: number | null;
+		albumIds?: string[] | null;
+	}
 ): CountedStation => ({
 	count: null,
+	albumIds: null,
 	...view,
 	id: radioStationId(view.station),
 });
@@ -100,6 +127,9 @@ export function radioStations(
 				// Resolving it again only to count it would cost a second
 				// pass over the catalog for an answer already in hand.
 				count: Math.min(albums.length, RADIO_LENGTH),
+				albumIds: albums
+					.slice(0, RADIO_LENGTH)
+					.map((album) => album.albumUid),
 				station: { kind: 'collection', slug: standing.collection.slug },
 				label: standing.collection.name,
 				description:

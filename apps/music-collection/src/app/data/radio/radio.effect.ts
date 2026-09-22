@@ -12,7 +12,12 @@ import {
 } from '@music-collection/api';
 import { MusicCollectionEffect } from '@music-collection/domain/music-collection/core';
 
-import { RADIO_LENGTH, RadioStation, TASTE_STYLES } from './radio.model';
+import {
+	RADIO_LENGTH,
+	RadioRecordName,
+	RadioStation,
+	TASTE_STYLES,
+} from './radio.model';
 import {
 	RadioAlbum,
 	ShelfCopy,
@@ -135,6 +140,27 @@ export class RadioEffect {
 							)
 					: of([]);
 		}
+	}
+
+	/**
+	 * The catalog's records by id, for a page that wants to say which ones a
+	 * station would put on rather than only how many.
+	 */
+	public names$(): Observable<Map<string, RadioRecordName>> {
+		return this.albumStateService.selectEntities$().pipe(
+			map(
+				(albums) =>
+					new Map(
+						(albums ?? []).map((album) => [
+							album.uid,
+							{
+								albumTitle: album.name,
+								artistName: album.artist?.name ?? null,
+							},
+						])
+					)
+			)
+		);
 	}
 
 	/**
