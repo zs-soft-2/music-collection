@@ -1,4 +1,8 @@
-import { ArtistType, ScanMatch } from '@music-collection/api';
+import {
+	ArtistType,
+	CollectionItemPlacement,
+	ScanMatch,
+} from '@music-collection/api';
 
 /**
  * Presentation models shared by the music pages (home, collection).
@@ -46,6 +50,8 @@ export interface ReleaseView {
 	/** Label and country of the collected pressing. */
 	labelName: string | null;
 	country: string | null;
+	/** Where the collector filed the copy; `null` leaves it to the shelf. */
+	placement: CollectionItemPlacement | null;
 }
 
 export interface ArtistView {

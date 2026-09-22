@@ -17,6 +17,32 @@ export interface ReleaseGroup {
 	items: ReleaseView[];
 }
 
+/** The drawn compartment a record stands in, without the position. */
+export interface ShelfSpotRef {
+	unitId: string;
+	row: number;
+	column: number;
+}
+
+/**
+ * A compartment as the shelf draws it: the records in it, and — in a drawn
+ * unit — which compartment of the furniture it is, so a record dropped on it
+ * knows where it landed.
+ */
+export interface ShelfCompartmentView extends ReleaseGroup {
+	spot: ShelfSpotRef | null;
+}
+
+/**
+ * A record dropped on the shelf: which compartment it landed in, and how far
+ * along that compartment it was let go.
+ */
+export interface ShelfDrop extends ShelfSpotRef {
+	releaseId: string;
+	/** Where among the records the compartment shows, 0-based. */
+	index: number;
+}
+
 /**
  * A drawn shelving unit with the compartments filed into it. A unit with no
  * columns is the open wall the shelf falls back to when nothing is drawn.
@@ -25,9 +51,12 @@ export interface ShelfUnitView {
 	key: string;
 	name: string;
 	columns: number;
-	compartments: ReleaseGroup[];
-	/** Compartments the unit has, drawn but with nothing filed into them. */
-	blanks: number;
+	/**
+	 * The compartments in grid order, top left to bottom right — every drawn
+	 * one, including those with nothing in them, so a record filed by hand
+	 * into the bottom row is drawn in the bottom row.
+	 */
+	compartments: ShelfCompartmentView[];
 	/** Records with no drawn compartment left to hold them. */
 	overflow: boolean;
 }

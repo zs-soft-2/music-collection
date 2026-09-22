@@ -1,3 +1,5 @@
+import { CollectionItemPlacement } from '@music-collection/api';
+
 import {
 	FORMAT_LABELS,
 	FORMAT_ORDER,
@@ -11,9 +13,11 @@ import {
 	CollectionStats,
 	FormatFilter,
 	ReleaseGroup,
+	ShelfCompartmentView,
 	ShelfUnitView,
 } from './collection.model';
 import { ShelfUnitLayout } from './shelf-layout.setting';
+import { placementInLayout, placementKey, spotKey } from './shelf-placement';
 
 export function filterReleases(
 	releases: ReleaseView[],
@@ -238,11 +242,66 @@ export function chunkGroups(
 	});
 }
 
+/** A record the collector filed by hand, with the place they filed it in. */
+export interface PlacedRelease {
+	release: ReleaseView;
+	placement: CollectionItemPlacement;
+}
+
+/**
+ * Splits the records into the ones filed by hand and the ones the shelf
+ * files itself. A placement naming a compartment the furniture no longer has
+ * — the unit thrown out, or redrawn smaller — counts as unfiled: better back
+ * among its neighbours than in a compartment nobody can see.
+ */
+export function splitByPlacement(
+	releases: ReleaseView[],
+	units: readonly ShelfUnitLayout[]
+): { placed: PlacedRelease[]; loose: ReleaseView[] } {
+	const placed: PlacedRelease[] = [];
+	const loose: ReleaseView[] = [];
+
+	for (const release of releases) {
+		const placement = placementInLayout(release.placement, units);
+
+		if (placement) {
+			placed.push({ release, placement });
+		} else {
+			loose.push(release);
+		}
+	}
+	return { placed, loose };
+}
+
+/** A compartment that is not one of the drawn ones: the wall, or the overflow. */
+function loose(group: ReleaseGroup): ShelfCompartmentView {
+	return { ...group, spot: null };
+}
+
+/** A compartment the collector filled themselves, in the order they left it. */
+function handFiled(key: string, filed: PlacedRelease[]): ReleaseGroup {
+	const items = [...filed]
+		.sort((a, b) => a.placement.position - b.placement.position)
+		.map((entry) => entry.release);
+	const first = items[0].artistName;
+	const last = items[items.length - 1].artistName;
+
+	return {
+		key,
+		label: first === last ? first : `${first} – ${last}`,
+		items,
+	};
+}
+
 /**
  * Files the packed compartments into the furniture the collector drew, in
  * the order the units stand in the room: the first unit fills up before the
  * next one is touched, and a unit keeps every compartment it was drawn with,
  * empty ones included — the room is theirs, not ours to resize.
+ *
+ * Compartments the collector filed records into by hand are theirs alone:
+ * the packed ones flow around them into what is left, so nothing the shelf
+ * decides can push a record out of the place its owner gave it.
  *
  * Without drawn furniture the shelf stays one open wall that grows with the
  * collection. Records that no drawn compartment is left for end up in a unit
@@ -250,7 +309,8 @@ export function chunkGroups(
  */
 export function arrangeShelves(
 	compartments: ReleaseGroup[],
-	units: readonly ShelfUnitLayout[]
+	units: readonly ShelfUnitLayout[],
+	placed: readonly PlacedRelease[] = []
 ): ShelfUnitView[] {
 	if (!units.length) {
 		return compartments.length
@@ -259,30 +319,56 @@ export function arrangeShelves(
 						key: 'wall',
 						name: '',
 						columns: 0,
-						compartments,
-						blanks: 0,
+						compartments: compartments.map(loose),
 						overflow: false,
 					},
 				]
 			: [];
 	}
 
+	const byHand = new Map<string, PlacedRelease[]>();
+
+	for (const entry of placed) {
+		const key = placementKey(entry.placement);
+
+		byHand.set(key, [...(byHand.get(key) ?? []), entry]);
+	}
+
 	const shelves: ShelfUnitView[] = [];
 	let filed = 0;
 
 	for (const unit of units) {
-		const size = unit.rows * unit.columns;
-		const held = compartments.slice(filed, filed + size);
+		const cells: ShelfCompartmentView[] = [];
+
+		for (let row = 1; row <= unit.rows; row++) {
+			for (let column = 1; column <= unit.columns; column++) {
+				const key = spotKey(unit.id, row, column);
+				const spot = { unitId: unit.id, row, column };
+				const hand = byHand.get(key);
+
+				if (hand?.length) {
+					cells.push({ ...handFiled(key, hand), spot });
+					continue;
+				}
+
+				const packed = compartments[filed];
+
+				if (packed) {
+					filed++;
+					cells.push({ ...packed, spot });
+				} else {
+					cells.push({ key, label: '', items: [], spot });
+				}
+			}
+		}
 
 		shelves.push({
 			key: unit.id,
 			name: unit.name,
 			columns: unit.columns,
-			compartments: held,
-			blanks: size - held.length,
+			compartments: cells,
 			overflow: false,
 		});
-		filed += size;
 	}
 
 	const spilled = compartments.slice(filed);
@@ -292,8 +378,7 @@ export function arrangeShelves(
 			key: 'overflow',
 			name: '',
 			columns: units[units.length - 1].columns,
-			compartments: spilled,
-			blanks: 0,
+			compartments: spilled.map(loose),
 			overflow: true,
 		});
 	}

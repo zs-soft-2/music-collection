@@ -1,8 +1,9 @@
-import { of, pipe, switchMap, tap } from 'rxjs';
+import { combineLatest, of, pairwise, pipe, switchMap, tap } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
 import {
 	CollectionItemEntity,
+	CollectionItemPlacement,
 	CollectionItemStateService,
 } from '@music-collection/api';
 import {
@@ -42,6 +43,7 @@ import {
 	groupReleases,
 	packShelf,
 	sortReleases,
+	splitByPlacement,
 } from './collection.mapper';
 import {
 	COLLECTION_VIEW_DEFAULTS,
@@ -54,6 +56,7 @@ import {
 	CollectionView,
 	FormatFilter,
 	ReleaseGroup,
+	ShelfDrop,
 	ShelfUnitView,
 } from './collection.model';
 import {
@@ -62,6 +65,7 @@ import {
 	SHELF_LAYOUT_SETTING,
 	ShelfUnitLayout,
 } from './shelf-layout.setting';
+import { placementsForDrop } from './shelf-placement';
 
 /**
  * Cards / rows per render chunk of the grid and list views. The first chunk
@@ -85,6 +89,11 @@ interface CollectionPageState {
 	view: CollectionView;
 	/** The furniture the collector drew in their profile; empty for none. */
 	shelfUnits: ShelfUnitLayout[];
+	/** The collection items behind `releases`, to write a place back onto. */
+	items: CollectionItemEntity[];
+	/** A rearrangement is on its way to the server. */
+	placing: boolean;
+	placeError: string | null;
 }
 
 const initialState: CollectionPageState = {
@@ -95,6 +104,9 @@ const initialState: CollectionPageState = {
 	query: '',
 	format: 'all',
 	shelfUnits: NO_SHELF_LAYOUT.units,
+	items: [],
+	placing: false,
+	placeError: null,
 	...COLLECTION_VIEW_DEFAULTS,
 };
 
@@ -191,17 +203,38 @@ export const CollectionPageStore = signalStore(
 			 * then filed into the units the collector drew.
 			 */
 			shelves: computed<ShelfUnitView[]>(() => {
+				const units = store.shelfUnits();
+				/*
+				 * What the collector filed by hand keeps its compartment;
+				 * only the rest is packed, so a hand-filed record is never
+				 * counted twice — once where it was put, once where the
+				 * shelf would have put it.
+				 */
+				const { placed, loose } = splitByPlacement(visible(), units);
 				const compartments: ReleaseGroup[] = packShelf(
-					store.group() === 'none'
-						? groupReleases(visible(), 'format')
-						: groups(),
+					groupReleases(
+						loose,
+						store.group() === 'none' ? 'format' : store.group()
+					),
 					SHELF_CUBBY_SIZE
 				);
 
-				return arrangeShelves(compartments, store.shelfUnits());
+				return arrangeShelves(compartments, units, placed);
 			}),
 			hasFilter: computed(
 				() => store.query().trim() !== '' || store.format() !== 'all'
+			),
+			/**
+			 * The shelf can be rearranged by hand: there is furniture to file
+			 * records into, and the shelf shows the whole collection. Under a
+			 * filter it shows a part of it, and a compartment arranged out of
+			 * a part would renumber records that are not even on the page.
+			 */
+			placeable: computed(
+				() =>
+					store.shelfUnits().length > 0 &&
+					store.query().trim() === '' &&
+					store.format() === 'all'
 			),
 		};
 	}),
@@ -234,6 +267,7 @@ export const CollectionPageStore = signalStore(
 						tapResponse({
 							next: (entities: CollectionItemEntity[]) =>
 								patchState(store, {
+									items: entities,
 									releases: entities.map(toReleaseView),
 									isLoading: false,
 								}),
@@ -263,6 +297,85 @@ export const CollectionPageStore = signalStore(
 						})
 					)
 				),
+				/** Follows a rearrangement, so a failed one can be said out loud. */
+				watchPlacing: rxMethod<void>(
+					pipe(
+						switchMap(() =>
+							combineLatest([
+								collectionItemStateService.selectPlacing$(),
+								collectionItemStateService.selectError$(),
+							])
+						),
+						pairwise(),
+						tap(([[wasPlacing], [placing, error]]) => {
+							patchState(store, { placing });
+							if (wasPlacing && !placing) {
+								patchState(store, { placeError: error });
+							}
+						})
+					)
+				),
+				/**
+				 * Files the dropped record where it was let go. Every record
+				 * the target compartment shows gets a place, not only the
+				 * dropped one: the collector arranged what they see, and a
+				 * place given to one record alone would leave the shelf free
+				 * to reshuffle its neighbours around it.
+				 */
+				fileRecord(drop: ShelfDrop): void {
+					const cell = store
+						.shelves()
+						.flatMap((shelf) => shelf.compartments)
+						.find(
+							(compartment) =>
+								compartment.spot?.unitId === drop.unitId &&
+								compartment.spot.row === drop.row &&
+								compartment.spot.column === drop.column
+						);
+					const moved = store
+						.releases()
+						.find((release) => release.id === drop.releaseId);
+
+					if (
+						!cell ||
+						!moved ||
+						!store.placeable() ||
+						store.placing()
+					) {
+						return;
+					}
+
+					const byId = new Map(
+						store.items().map((item) => [item.uid, item])
+					);
+					const placements = placementsForDrop(
+						cell.items,
+						moved,
+						{
+							unitId: drop.unitId,
+							row: drop.row,
+							column: drop.column,
+						},
+						drop.index
+					)
+						.map(({ releaseId, placement }) => ({
+							collectionItem: byId.get(releaseId),
+							placement,
+						}))
+						.filter(
+							(
+								move
+							): move is {
+								collectionItem: CollectionItemEntity;
+								placement: CollectionItemPlacement;
+							} => !!move.collectionItem
+						);
+
+					patchState(store, { placeError: null });
+					collectionItemStateService.dispatchPlaceEntitiesAction(
+						placements
+					);
+				},
 				/** The furniture kept for the user, and any later change. */
 				loadShelfLayout: rxMethod<void>(
 					pipe(
@@ -308,6 +421,7 @@ export const CollectionPageStore = signalStore(
 			store.loadPreferences(of(undefined));
 			store.loadShelfLayout(of(undefined));
 			store.load(of(undefined));
+			store.watchPlacing(of(undefined));
 			store.loadCollections(of(undefined));
 			store.loadFollowing(of(undefined));
 		},

@@ -200,6 +200,92 @@ export class CollectionItemEffects {
 			)
 		)
 	);
+	/**
+	 * Files a copy into a compartment of the drawn shelf, or takes the place
+	 * back with `null`. Only the place moves: nothing here changes what the
+	 * collector owns, so no count is touched.
+	 */
+	public changeCollectionItemPlacement = createEffect(() =>
+		this.actions$.pipe(
+			ofType(collectionItemActions.changeCollectionItemPlacement),
+			mergeMap(({ collectionItem, placement }) =>
+				this.userDataService
+					.updateCollectionItem$({
+						uid: collectionItem.uid,
+						entityType: collectionItem.entityType,
+						userId: collectionItem.userId,
+						placement,
+					})
+					.pipe(
+						first(),
+						map(({ updatedAt }) =>
+							collectionItemActions.changeCollectionItemPlacementSuccess(
+								{
+									collectionItem: {
+										id: collectionItem.uid,
+										changes: { placement, updatedAt },
+									},
+								}
+							)
+						),
+						catchError((error) => {
+							console.error(error);
+							return of(
+								collectionItemActions.changeCollectionItemPlacementFail(
+									{ error }
+								)
+							);
+						})
+					)
+			)
+		)
+	);
+
+	/**
+	 * Files several copies in one batch: rearranging a compartment moves
+	 * every record in it, and a half-written compartment would leave two
+	 * records standing in the same place.
+	 */
+	public changeCollectionItemPlacements = createEffect(() =>
+		this.actions$.pipe(
+			ofType(collectionItemActions.changeCollectionItemPlacements),
+			mergeMap(({ placements }) =>
+				this.userDataService
+					.updateCollectionItems$(
+						placements.map(({ collectionItem, placement }) => ({
+							uid: collectionItem.uid,
+							entityType: collectionItem.entityType,
+							userId: collectionItem.userId,
+							placement,
+						}))
+					)
+					.pipe(
+						first(),
+						map((updated) =>
+							collectionItemActions.changeCollectionItemPlacementsSuccess(
+								{
+									collectionItems: updated.map(
+										({ uid, placement, updatedAt }) => ({
+											id: uid,
+											changes: { placement, updatedAt },
+										})
+									),
+								}
+							)
+						),
+						catchError((error) => {
+							console.error(error);
+							return of(
+								collectionItemActions.changeCollectionItemPlacementsFail(
+									{ error }
+								)
+							);
+						})
+					)
+			)
+		)
+	);
+
 	public listCollectionItems = createEffect(() =>
 		this.actions$.pipe(
 			ofType(collectionItemActions.listCollectionItems),

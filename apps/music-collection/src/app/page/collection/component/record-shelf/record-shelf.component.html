@@ -25,15 +25,28 @@
 				@for (compartment of unit.compartments; track compartment.key) {
 					<section
 						class="compartment"
-						[attr.aria-label]="compartment.label"
+						[class.is-blank]="compartment.empty"
+						[attr.aria-hidden]="compartment.empty ? 'true' : null"
+						[attr.aria-label]="compartment.label || null"
+						[attr.data-unit]="
+							placeable() ? compartment.spot?.unitId : null
+						"
+						[attr.data-row]="
+							placeable() ? compartment.spot?.row : null
+						"
+						[attr.data-column]="
+							placeable() ? compartment.spot?.column : null
+						"
 					>
 						<h3 class="label">
-							<span class="label-text">{{
-								compartment.label
-							}}</span>
-							<span class="label-count">{{
-								compartment.spines.length
-							}}</span>
+							@if (!compartment.empty) {
+								<span class="label-text">{{
+									compartment.label
+								}}</span>
+								<span class="label-count">{{
+									compartment.spines.length
+								}}</span>
+							}
 						</h3>
 
 						@defer (on viewport) {
@@ -44,6 +57,7 @@
 								) {
 									<a
 										class="spine"
+										[attr.draggable]="placeable()"
 										[class]="'is-' + spine.release.format"
 										[class.is-box]="spine.release.boxSet"
 										[style.width.px]="spine.width"
@@ -78,14 +92,6 @@
 						} @placeholder {
 							<div class="cubby"></div>
 						}
-					</section>
-				}
-
-				<!-- Drawn compartments with nothing filed into them yet. -->
-				@for (blank of unit.blanks; track blank) {
-					<section class="compartment is-blank" aria-hidden="true">
-						<h3 class="label"></h3>
-						<div class="cubby"></div>
 					</section>
 				}
 			</div>

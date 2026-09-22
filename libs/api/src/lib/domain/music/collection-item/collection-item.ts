@@ -26,8 +26,33 @@ export interface CollectionItemDisposal {
 	note: string | null;
 }
 
+/**
+ * Where the copy stands in the room: which drawn unit, which compartment of
+ * it, and how far along that compartment it is. Rows and columns are counted
+ * from the top left starting at 1 — a place a collector could read out loud.
+ *
+ * The compartment is named by row and column rather than by a running number,
+ * so a unit redrawn on its side (4 x 2 into 2 x 4) does not send every record
+ * in it somewhere else.
+ */
+export interface CollectionItemPlacement {
+	/** `ShelfUnitLayout.id` of the drawn unit. */
+	unitId: string;
+	/** Compartment row, counted from the top, 1-based. */
+	row: number;
+	/** Compartment column, counted from the left, 1-based. */
+	column: number;
+	/** Order within the compartment, counted from the left, 1-based. */
+	position: number;
+}
+
 export interface CollectionItem {
 	description?: string;
+	/**
+	 * Where the collector filed this copy. `null` or missing leaves it to the
+	 * shelf, which files it in the reading order as it always has.
+	 */
+	placement?: CollectionItemPlacement | null;
 	/** Set once the copy left the collection; `null` or missing while owned. */
 	disposal?: CollectionItemDisposal | null;
 	release: ReleaseEntity;

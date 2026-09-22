@@ -228,7 +228,28 @@
 	} @else {
 		@switch (store.view()) {
 			@case ('shelf') {
-				<mc-record-shelf [shelves]="store.shelves()" />
+				@if (store.shelfUnits().length) {
+					<p class="shelf-note">
+						@if (store.placeable()) {
+							Drag a record to file it where it really stands.
+							Everything you have not placed keeps filling the
+							compartments you left free.
+						} @else {
+							Clear the search and the format filter to rearrange
+							the shelf by hand.
+						}
+					</p>
+				}
+				@if (store.placeError(); as error) {
+					<p class="shelf-error" role="alert">
+						Could not file it: {{ error }}
+					</p>
+				}
+				<mc-record-shelf
+					[shelves]="store.shelves()"
+					[placeable]="store.placeable()"
+					(filed)="store.fileRecord($event)"
+				/>
 			}
 			@default {
 				@for (

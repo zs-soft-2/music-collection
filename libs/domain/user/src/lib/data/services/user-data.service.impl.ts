@@ -180,6 +180,28 @@ export class UserDataServiceImpl extends UserDataService {
 		});
 	}
 
+	public updateCollectionItems$(
+		collectionItems: CollectionItemModelUpdate[]
+	): Observable<CollectionItemModelUpdate[]> {
+		const writes = collectionItems.map((collectionItem) => ({
+			reference: doc(
+				this.firestore,
+				`${USER_FEATURE_KEY}/${collectionItem.userId}/${COLLECTION_ITEM_FEATURE_KEY}/${collectionItem.uid}`
+			),
+			data: { ...collectionItem },
+		}));
+
+		return new Observable((subscriber) => {
+			this.firestoreSync
+				.setAll(COLLECTION_ITEM_FEATURE_KEY, writes)
+				.then(() => {
+					subscriber.next(collectionItems.map(withLocalUpdatedAt));
+					subscriber.complete();
+				})
+				.catch((error) => subscriber.error(error));
+		});
+	}
+
 	public updateWishlistItem$(
 		wishlistItem: WishlistItemModelUpdate
 	): Observable<WishlistItemModelUpdate> {

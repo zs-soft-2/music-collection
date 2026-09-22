@@ -269,3 +269,18 @@
 		transition: none;
 	}
 }
+
+/* Rearranging by hand: the record in the air, and where it would land. */
+.spine.is-lifted {
+	opacity: 0.35;
+}
+
+.compartment.is-drop .cubby {
+	background: color-mix(in srgb, var(--mc-primary) 14%, transparent);
+	outline: 2px dashed var(--mc-primary);
+	outline-offset: -2px;
+}
+
+.compartment[data-unit] .spine {
+	cursor: grab;
+}

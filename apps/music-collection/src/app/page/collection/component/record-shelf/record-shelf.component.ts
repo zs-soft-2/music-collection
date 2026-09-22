@@ -6,12 +6,13 @@ import {
 	ElementRef,
 	inject,
 	input,
+	output,
 	viewChild,
 } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { MediaFormat, ReleaseView } from '../../../../shared/music-ui';
-import { ShelfUnitView } from '../../collection.model';
+import { ShelfDrop, ShelfSpotRef, ShelfUnitView } from '../../collection.model';
 
 import { RecordShelfPeekComponent } from './record-shelf-peek.component';
 
@@ -27,6 +28,10 @@ interface Compartment {
 	key: string;
 	label: string;
 	spines: Spine[];
+	/** Drawn but with nothing in it; the unit keeps the shape either way. */
+	empty: boolean;
+	/** The drawn compartment this is, or null on the wall and the overflow. */
+	spot: ShelfSpotRef | null;
 }
 
 /** One drawn unit standing in the room, with its compartments filled. */
@@ -37,8 +42,6 @@ interface Unit {
 	columns: number;
 	overflow: boolean;
 	compartments: Compartment[];
-	/** Drawn but unfilled compartments, rendered so the unit keeps its shape. */
-	blanks: number[];
 }
 
 const BOX_SET_SIZE = { width: 30, height: 196 };
@@ -56,6 +59,9 @@ const SPINE_SIZE: Record<MediaFormat, { width: number; height: number }> = {
 	boxset: BOX_SET_SIZE,
 	other: { width: 11, height: 100 },
 };
+
+/** Takes the drop away from the browser, which would follow the link. */
+const swallow = (event: Event): void => event.preventDefault();
 
 /** A stable pseudo-random hue per release, so spines are not all identical. */
 function hueOf(text: string): number {
@@ -89,6 +95,14 @@ function hueOf(text: string): number {
 })
 export class RecordShelfComponent {
 	public readonly shelves = input.required<ShelfUnitView[]>();
+	/**
+	 * The collector may rearrange this shelf by hand. Off while a filter is
+	 * on: half a collection is no shelf to file records into.
+	 */
+	public readonly placeable = input(false);
+
+	/** A record was let go over a compartment of a drawn unit. */
+	public readonly filed = output<ShelfDrop>();
 
 	private readonly router = inject(Router);
 	private readonly peek = viewChild.required(RecordShelfPeekComponent);
@@ -100,10 +114,11 @@ export class RecordShelfComponent {
 			name: shelf.name,
 			columns: shelf.columns,
 			overflow: shelf.overflow,
-			blanks: Array.from({ length: shelf.blanks }, (_, index) => index),
 			compartments: shelf.compartments.map((group) => ({
 				key: group.key,
 				label: group.label,
+				empty: !group.items.length,
+				spot: group.spot,
 				spines: group.items.map((release) => ({
 					release,
 					href: this.router.serializeUrl(
@@ -131,24 +146,32 @@ export class RecordShelfComponent {
 			)
 	);
 
+	private readonly host: HTMLElement = inject(ElementRef).nativeElement;
+
 	public constructor() {
-		const host: HTMLElement = inject(ElementRef).nativeElement;
+		const host = this.host;
 		const listeners: [string, (event: never) => void][] = [
 			['pointerover', this.onEnter],
 			['focusin', this.onEnter],
 			['pointerout', this.onLeave],
 			['focusout', this.onLeave],
 			['click', this.onClick],
+			['dragstart', this.onDragStart],
+			['dragover', this.onDragOver],
+			['dragleave', this.onDragLeave],
+			['drop', this.onDrop],
+			['dragend', this.onDragEnd],
 		];
 
 		listeners.forEach(([type, listener]) =>
 			host.addEventListener(type, listener as EventListener)
 		);
-		inject(DestroyRef).onDestroy(() =>
+		inject(DestroyRef).onDestroy(() => {
 			listeners.forEach(([type, listener]) =>
 				host.removeEventListener(type, listener as EventListener)
-			)
-		);
+			);
+			this.clearDrag();
+		});
 	}
 
 	private readonly onEnter = (event: Event): void => {
@@ -187,6 +210,140 @@ export class RecordShelfComponent {
 		event.preventDefault();
 		void this.router.navigateByUrl(element.getAttribute('href') ?? '/');
 	};
+
+	/*
+	 * Rearranging by hand. Like the hover, this is delegated and touches the
+	 * DOM directly: a drag crossing forty compartments must not mark forty
+	 * views dirty, so the drop target is highlighted by a class rather than
+	 * by a binding.
+	 */
+
+	/** The record being dragged, while it is in the air. */
+	private dragging: string | null = null;
+	/** The compartment the pointer is over, highlighted. */
+	private over: HTMLElement | null = null;
+
+	private readonly onDragStart = (event: DragEvent): void => {
+		const element = this.spineOf(event.target);
+		const id = element?.dataset['id'];
+
+		if (!this.placeable() || !element || !id) {
+			return;
+		}
+		this.dragging = id;
+		this.peek().hide();
+		element.classList.add('is-lifted');
+		event.dataTransfer?.setData('text/plain', id);
+
+		if (event.dataTransfer) {
+			event.dataTransfer.effectAllowed = 'move';
+		}
+		/*
+		 * A spine is a link. Let go anywhere but a compartment, some
+		 * browsers take that as "open this address" and the collector
+		 * loses the page they were arranging — so while a record is in
+		 * the air, the whole document swallows the drop.
+		 */
+		document.addEventListener('dragover', swallow);
+		document.addEventListener('drop', swallow);
+	};
+
+	private readonly onDragOver = (event: DragEvent): void => {
+		const cell = this.compartmentOf(event.target);
+
+		if (!this.dragging || !cell) {
+			return;
+		}
+		/* Only a prevented dragover makes a drop possible at all. */
+		event.preventDefault();
+
+		if (event.dataTransfer) {
+			event.dataTransfer.dropEffect = 'move';
+		}
+		if (this.over !== cell) {
+			this.over?.classList.remove('is-drop');
+			cell.classList.add('is-drop');
+			this.over = cell;
+		}
+	};
+
+	private readonly onDragLeave = (event: DragEvent): void => {
+		const cell = this.compartmentOf(event.target);
+
+		if (
+			cell &&
+			cell === this.over &&
+			!cell.contains(event.relatedTarget as Node)
+		) {
+			cell.classList.remove('is-drop');
+			this.over = null;
+		}
+	};
+
+	private readonly onDrop = (event: DragEvent): void => {
+		const cell = this.compartmentOf(event.target);
+		const releaseId = this.dragging;
+
+		this.clearDrag();
+
+		if (!releaseId || !cell) {
+			return;
+		}
+		event.preventDefault();
+
+		const unitId = cell.dataset['unit'];
+		const row = Number(cell.dataset['row']);
+		const column = Number(cell.dataset['column']);
+
+		if (!unitId || !row || !column) {
+			return;
+		}
+		this.filed.emit({
+			releaseId,
+			unitId,
+			row,
+			column,
+			index: this.indexIn(cell, releaseId, event.clientX),
+		});
+	};
+
+	private readonly onDragEnd = (): void => this.clearDrag();
+
+	private clearDrag(): void {
+		document.removeEventListener('dragover', swallow);
+		document.removeEventListener('drop', swallow);
+		this.over?.classList.remove('is-drop');
+		this.over = null;
+		this.dragging = null;
+		this.host
+			.querySelector('.spine.is-lifted')
+			?.classList.remove('is-lifted');
+	}
+
+	/**
+	 * Where along the compartment the record was let go: before the first
+	 * spine whose middle is past the pointer, the record itself left out —
+	 * it is on its way somewhere else.
+	 */
+	private indexIn(cell: HTMLElement, releaseId: string, x: number): number {
+		const spines = Array.from(
+			cell.querySelectorAll<HTMLElement>('.spine')
+		).filter((spine) => spine.dataset['id'] !== releaseId);
+		const before = spines.findIndex((spine) => {
+			const box = spine.getBoundingClientRect();
+
+			return x < box.left + box.width / 2;
+		});
+
+		return before === -1 ? spines.length : before;
+	}
+
+	/** The drawn compartment under the pointer; the wall has none. */
+	private compartmentOf(target: EventTarget | null): HTMLElement | null {
+		return target instanceof Element
+			? target.closest<HTMLElement>('.compartment[data-unit]')
+			: null;
+	}
 
 	/**
 	 * Resting spine position relative to .room — the one positioned ancestor,

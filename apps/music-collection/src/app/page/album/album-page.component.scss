@@ -372,6 +372,7 @@ h1 {
 	margin-left: auto;
 }
 
+.copy-place,
 .copy-remove {
 	display: inline-flex;
 	align-items: center;
@@ -401,6 +402,20 @@ h1 {
 		opacity: 0.6;
 	}
 }
+
+/* Where the copy stands in the room, as the collector filed it. */
+.copy-spot {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	font-size: 0.8rem;
+	color: var(--mc-text-muted);
+
+	i {
+		color: var(--mc-primary);
+	}
+}
+
 
 .past-title {
 	margin: 1.5rem 0 0.75rem;

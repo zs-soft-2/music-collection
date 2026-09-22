@@ -23,6 +23,7 @@ import {
 	CollectionItemEntity,
 	CollectionItemEntityAdd,
 	CollectionItemPermissionsService,
+	CollectionItemPlacement,
 	CollectionItemStateService,
 	ContributionEntity,
 	DiscogsVersion,
@@ -69,6 +70,12 @@ import {
 } from '../../shared/music-ui';
 import { Crumb } from '../../shared/page-breadcrumb';
 import { withPageOrigin } from '../../shared/page-origin';
+import {
+	NO_SHELF_LAYOUT,
+	SHELF_LAYOUT_SETTING,
+	ShelfUnitLayout,
+} from '../collection/shelf-layout.setting';
+import { placementInLayout } from '../collection/shelf-placement';
 import { ALBUM_VIEW_SETTING } from './album-view.setting';
 import {
 	DisposalDraft,
@@ -124,6 +131,12 @@ interface AlbumPageState {
 	removingCopyId: string | null;
 	disposing: boolean;
 	disposeError: string | null;
+	/** The copy the placement dialog is open for. */
+	placingCopyId: string | null;
+	placing: boolean;
+	placeError: string | null;
+	/** The furniture the collector drew in their profile; empty for none. */
+	shelfUnits: ShelfUnitLayout[];
 	pickerOpen: boolean;
 	/**
 	 * A photo scan sends the collector here with the pressing it recognised:
@@ -190,6 +203,10 @@ const initialState: AlbumPageState = {
 	removingCopyId: null,
 	disposing: false,
 	disposeError: null,
+	placingCopyId: null,
+	placing: false,
+	placeError: null,
+	shelfUnits: NO_SHELF_LAYOUT.units,
 	pickerOpen: false,
 	pickedReleaseUid: null,
 	pickedDiscogsReleaseId: null,
@@ -383,6 +400,37 @@ export const AlbumPageStore = signalStore(
 				store
 					.releases()
 					.filter((release) => release.albumId === store.albumId())
+			),
+			/** The copy the placement dialog is open for. */
+			placingCopy: computed(
+				() =>
+					store
+						.releases()
+						.find(
+							(release) => release.id === store.placingCopyId()
+						) ?? null
+			),
+			/**
+			 * Where the collector's other copies stand in the room — the copy
+			 * being placed left out, so the picker counts the compartment it
+			 * is about to leave without it.
+			 */
+			filedElsewhere: computed<CollectionItemPlacement[]>(() =>
+				store
+					.releases()
+					.filter(
+						(release) =>
+							release.id !== store.placingCopyId() &&
+							release.placement
+					)
+					.map(
+						(release) =>
+							release.placement as CollectionItemPlacement
+					)
+			),
+			/** The collector can only file a copy into furniture they drew. */
+			canPlaceCopies: computed(
+				() => store.canManageCopies() && store.shelfUnits().length > 0
 			),
 			/** The copy the removal dialog is open for. */
 			removingCopy: computed(
@@ -1119,81 +1167,153 @@ export const AlbumPageStore = signalStore(
 			store.pickedDiscogsReleaseId() ? 'discogs' : 'catalog'
 		),
 	})),
-	withMethods((store, settingsEffect = inject(UserSettingsEffect)) => {
-		let catalogRequested = false;
+	withMethods(
+		(
+			store,
+			settingsEffect = inject(UserSettingsEffect),
+			collectionItemStateService = inject(CollectionItemStateService)
+		) => {
+			let catalogRequested = false;
 
-		return {
-			openPicker(): void {
-				if (!catalogRequested) {
-					catalogRequested = true;
-					store.loadCatalogReleases(of(undefined));
-				}
-				patchState(store, {
-					pickerOpen: true,
-					addError: null,
-					requestError: null,
-				});
-			},
-			/** Looks up the album's pressings on Discogs. */
-			showDiscogsVersions(): void {
-				const masterId = store.discogsMasterId();
-				if (masterId) {
-					store.loadDiscogsVersions(masterId);
-				}
-			},
-			closePicker(): void {
-				keepPhoto(store, null);
-				patchState(store, {
-					pickerOpen: false,
-					pickedReleaseUid: null,
-					pickedDiscogsReleaseId: null,
-					// The next record gets its own photo, not this one's.
-					photoCandidates: [],
-					photoScanned: false,
-					photoError: null,
-				});
-			},
-			openWishlist(): void {
-				patchState(store, { wishlistOpen: true, wishError: null });
-			},
-			closeWishlist(): void {
-				patchState(store, { wishlistOpen: false });
-			},
-			openRemoval(copyId: string): void {
-				patchState(store, {
-					removingCopyId: copyId,
-					disposeError: null,
-				});
-			},
-			closeRemoval(): void {
-				patchState(store, { removingCopyId: null });
-			},
-
-			/** The layout kept for the user, and any later change to it. */
-			loadView: rxMethod<void>(
-				pipe(
-					switchMap(() => settingsEffect.value$(ALBUM_VIEW_SETTING)),
-					tap(({ compact }) => {
-						if (compact !== null) {
-							patchState(store, { compact });
-						}
-					})
-				)
-			),
-
-			/** Collapses the sections, or opens them again, for good. */
-			toggleCompact(): void {
-				const compact = !store.compact();
-
-				patchState(store, { compact });
-				settingsEffect
-					.save(ALBUM_VIEW_SETTING, { compact })
-					.catch((error) => {
-						console.error('Album view not saved', error);
+			return {
+				openPicker(): void {
+					if (!catalogRequested) {
+						catalogRequested = true;
+						store.loadCatalogReleases(of(undefined));
+					}
+					patchState(store, {
+						pickerOpen: true,
+						addError: null,
+						requestError: null,
 					});
-			},
-		};
-	}),
+				},
+				/** Looks up the album's pressings on Discogs. */
+				showDiscogsVersions(): void {
+					const masterId = store.discogsMasterId();
+					if (masterId) {
+						store.loadDiscogsVersions(masterId);
+					}
+				},
+				closePicker(): void {
+					keepPhoto(store, null);
+					patchState(store, {
+						pickerOpen: false,
+						pickedReleaseUid: null,
+						pickedDiscogsReleaseId: null,
+						// The next record gets its own photo, not this one's.
+						photoCandidates: [],
+						photoScanned: false,
+						photoError: null,
+					});
+				},
+				openWishlist(): void {
+					patchState(store, { wishlistOpen: true, wishError: null });
+				},
+				closeWishlist(): void {
+					patchState(store, { wishlistOpen: false });
+				},
+				/** The drawn furniture, and any later change to it. */
+				loadShelfLayout: rxMethod<void>(
+					pipe(
+						switchMap(() =>
+							settingsEffect.value$(SHELF_LAYOUT_SETTING)
+						),
+						tap(({ units }) =>
+							patchState(store, { shelfUnits: units })
+						)
+					)
+				),
+				/** Follows a placement; the dialog closes once the place is saved. */
+				watchPlacing: rxMethod<void>(
+					pipe(
+						switchMap(() =>
+							combineLatest([
+								collectionItemStateService.selectPlacing$(),
+								collectionItemStateService.selectError$(),
+							])
+						),
+						pairwise(),
+						tap(([[wasPlacing], [placing, error]]) => {
+							patchState(store, { placing });
+							if (wasPlacing && !placing) {
+								patchState(store, {
+									placeError: error,
+									placingCopyId: error
+										? store.placingCopyId()
+										: null,
+								});
+							}
+						})
+					)
+				),
+				/**
+				 * Files the copy into the compartment the collector picked, or
+				 * takes the place back with `null` and leaves the filing to the
+				 * shelf again.
+				 */
+				placeCopy(placement: CollectionItemPlacement | null): void {
+					const item = store
+						.ownedItems()
+						.find((owned) => owned.uid === store.placingCopyId());
+
+					if (!item || !store.canManageCopies() || store.placing()) {
+						return;
+					}
+
+					patchState(store, { placeError: null });
+					collectionItemStateService.dispatchPlaceEntityAction(
+						item,
+						placement &&
+							placementInLayout(placement, store.shelfUnits())
+					);
+				},
+				openPlacement(copyId: string): void {
+					patchState(store, {
+						placingCopyId: copyId,
+						placeError: null,
+					});
+				},
+				closePlacement(): void {
+					patchState(store, { placingCopyId: null });
+				},
+				openRemoval(copyId: string): void {
+					patchState(store, {
+						removingCopyId: copyId,
+						disposeError: null,
+					});
+				},
+				closeRemoval(): void {
+					patchState(store, { removingCopyId: null });
+				},
+
+				/** The layout kept for the user, and any later change to it. */
+				loadView: rxMethod<void>(
+					pipe(
+						switchMap(() =>
+							settingsEffect.value$(ALBUM_VIEW_SETTING)
+						),
+						tap(({ compact }) => {
+							if (compact !== null) {
+								patchState(store, { compact });
+							}
+						})
+					)
+				),
+
+				/** Collapses the sections, or opens them again, for good. */
+				toggleCompact(): void {
+					const compact = !store.compact();
+
+					patchState(store, { compact });
+					settingsEffect
+						.save(ALBUM_VIEW_SETTING, { compact })
+						.catch((error) => {
+							console.error('Album view not saved', error);
+						});
+				},
+			};
+		}
+	),
 	withMethods((store, route = inject(ActivatedRoute)) => ({
 		/**
 		 * A photo scan links here with `?pick=`: the picker opens on what it
@@ -1273,6 +1393,8 @@ export const AlbumPageStore = signalStore(
 			store.loadCollector(of(undefined));
 			store.watchAdding(of(undefined));
 			store.watchDisposing(of(undefined));
+			store.watchPlacing(of(undefined));
+			store.loadShelfLayout(of(undefined));
 			store.loadPastItems(of(undefined));
 			store.loadRequests(of(undefined));
 			store.loadWishlist(of(undefined));

@@ -1,0 +1,141 @@
+<dialog
+	#dialog
+	class="placement"
+	aria-labelledby="copy-placement-title"
+	[attr.aria-busy]="busy()"
+	(close)="closed.emit()"
+>
+	<header class="placement-header">
+		<div>
+			<p class="eyebrow">Place on the shelf</p>
+			<h2 id="copy-placement-title">{{ albumTitle() }}</h2>
+		</div>
+		<button
+			type="button"
+			class="icon-button"
+			aria-label="Close"
+			[disabled]="busy()"
+			(click)="close()"
+		>
+			<i class="pi pi-times" aria-hidden="true"></i>
+		</button>
+	</header>
+
+	<div class="copy">
+		<mc-format-badge [format]="copy().format" [weight]="copy().weight" />
+		<span class="details">
+			@if (copy().labelName) {
+				<span>{{ copy().labelName }}</span>
+			}
+			@if (copy().country) {
+				<span>{{ copy().country }}</span>
+			}
+		</span>
+	</div>
+
+	<form (submit)="$event.preventDefault(); submit()">
+		@if (units().length > 1) {
+			<fieldset class="units">
+				<legend>Which shelf</legend>
+				<div class="chips">
+					@for (drawn of units(); track drawn.id) {
+						<label class="chip">
+							<input
+								type="radio"
+								name="unit"
+								[value]="drawn.id"
+								[checked]="unitId() === drawn.id"
+								(change)="unitId.set(drawn.id)"
+							/>
+							{{ drawn.name || 'Shelf' }}
+						</label>
+					}
+				</div>
+			</fieldset>
+		}
+
+		<fieldset class="compartments">
+			<legend>Which compartment</legend>
+			@if (unit(); as drawn) {
+				<div class="grid" [style.--cols]="drawn.columns">
+					@for (cell of cells(); track cell.key) {
+						<button
+							type="button"
+							class="cell"
+							[class.is-chosen]="cell.chosen"
+							[attr.aria-pressed]="cell.chosen"
+							[attr.aria-label]="
+								cell.label +
+								(cell.filed
+									? ', ' + cell.filed + ' filed here'
+									: ', empty')
+							"
+							[disabled]="busy()"
+							(click)="pick(cell.row, cell.column)"
+						>
+							@if (cell.filed) {
+								<span class="cell-count">{{ cell.filed }}</span>
+							}
+						</button>
+					}
+				</div>
+				<p class="chosen-name">
+					@if (spot(); as here) {
+						Row {{ here.row }} · Slot {{ here.column }}
+					} @else {
+						Pick a compartment.
+					}
+				</p>
+			}
+		</fieldset>
+
+		<label class="field">
+			<span>Position in the compartment</span>
+			<input
+				type="number"
+				min="1"
+				[max]="maxPosition"
+				[value]="position()"
+				[disabled]="!spot()"
+				(input)="onPosition($event)"
+			/>
+		</label>
+
+		<p class="hint">
+			Counted from the left. Records you have not placed yourself keep
+			filling the compartments you left free.
+		</p>
+
+		@if (error()) {
+			<p class="error" role="alert">Could not place it: {{ error() }}</p>
+		}
+
+		<div class="form-actions">
+			@if (standing()) {
+				<button
+					type="button"
+					class="text-button"
+					[disabled]="busy()"
+					(click)="takeOff()"
+				>
+					Take off the shelf
+				</button>
+			}
+			<button
+				type="button"
+				class="text-button"
+				[disabled]="busy()"
+				(click)="close()"
+			>
+				Cancel
+			</button>
+			<button
+				type="submit"
+				class="primary-button"
+				[disabled]="!canPlace()"
+			>
+				{{ busy() ? 'Placing…' : 'Place it here' }}
+			</button>
+		</div>
+	</form>
+</dialog>

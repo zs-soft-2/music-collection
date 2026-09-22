@@ -74,6 +74,24 @@ service cloud.firestore {
                       && data.disposal.note.size() <= 500)));
     }
 
+    // A példány helye a polcon: melyik szekrény, melyik rekesz, hányadik
+    // pozíció. A hiánya vagy a null azt jelenti, hogy a polc rakja el.
+    function isValidPlacement(data) {
+      return !('placement' in data)
+          || data.placement == null
+          || (data.placement is map
+              && data.placement.keys().hasOnly(['unitId', 'row', 'column', 'position'])
+              && data.placement.unitId is string
+              && data.placement.unitId.size() > 0
+              && data.placement.unitId.size() <= 100
+              && data.placement.row is int
+              && data.placement.row >= 1 && data.placement.row <= 12
+              && data.placement.column is int
+              && data.placement.column >= 1 && data.placement.column <= 12
+              && data.placement.position is int
+              && data.placement.position >= 1 && data.placement.position <= 36);
+    }
+
     // A sync-marker feature key → permission-erőforrás. Ismeretlen kulcs → tiltás.
     function syncResources() {
       return {
@@ -130,11 +148,13 @@ service cloud.firestore {
         allow read: if true;
         allow create: if isSelf(uid)
                       && hasPerm('createCollectionItemEntity')
-                      && request.resource.data.userId == uid;
+                      && request.resource.data.userId == uid
+                      && isValidPlacement(request.resource.data);
         allow update: if isSelf(uid)
                       && hasPerm('updateCollectionItemEntity')
                       && request.resource.data.userId == uid
-                      && isValidDisposal(request.resource.data);
+                      && isValidDisposal(request.resource.data)
+                      && isValidPlacement(request.resource.data);
         allow delete: if isSelf(uid) && hasPerm('deleteCollectionItemEntity');
       }
       match /wishlist-item/{itemId} {

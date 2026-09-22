@@ -1,6 +1,7 @@
 import {
 	CollectionItemDisposal,
 	CollectionItemEntity,
+	CollectionItemPlacement,
 	CollectionItemEntityAdd,
 	CollectionItemEntityUpdate,
 	CollectionItemListConfig,
@@ -65,6 +66,49 @@ export const changeCollectionItemDisposalFail = createAction(
 export const changeCollectionItemDisposalSuccess = createAction(
 	'[CollectionItem] Change CollectionItem Disposal Success',
 	props<{ collectionItem: Update<CollectionItemEntity> }>()
+);
+
+/** Files the copy into a compartment, or takes the place back with `null`. */
+export const changeCollectionItemPlacement = createAction(
+	'[CollectionItem] Change CollectionItem Placement',
+	props<{
+		collectionItem: CollectionItemEntity;
+		placement: CollectionItemPlacement | null;
+	}>()
+);
+
+export const changeCollectionItemPlacementFail = createAction(
+	'[CollectionItem] Change CollectionItem Placement Fail',
+	props<{ error: Error }>()
+);
+
+export const changeCollectionItemPlacementSuccess = createAction(
+	'[CollectionItem] Change CollectionItem Placement Success',
+	props<{ collectionItem: Update<CollectionItemEntity> }>()
+);
+
+/**
+ * Files several copies at once — a compartment rearranged by hand moves
+ * every record in it, and they move together or not at all.
+ */
+export const changeCollectionItemPlacements = createAction(
+	'[CollectionItem] Change CollectionItem Placements',
+	props<{
+		placements: {
+			collectionItem: CollectionItemEntity;
+			placement: CollectionItemPlacement | null;
+		}[];
+	}>()
+);
+
+export const changeCollectionItemPlacementsFail = createAction(
+	'[CollectionItem] Change CollectionItem Placements Fail',
+	props<{ error: Error }>()
+);
+
+export const changeCollectionItemPlacementsSuccess = createAction(
+	'[CollectionItem] Change CollectionItem Placements Success',
+	props<{ collectionItems: Update<CollectionItemEntity>[] }>()
 );
 
 export const listCollectionItems = createAction(

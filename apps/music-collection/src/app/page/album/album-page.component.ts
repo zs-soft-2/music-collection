@@ -22,6 +22,7 @@ import { AlbumPageStore } from './album-page.store';
 import { AlbumCollectionsComponent } from './component/album-collections/album-collections.component';
 import { AlbumCreditsComponent } from './component/album-credits/album-credits.component';
 import { AlbumTracklistComponent } from './component/album-tracklist/album-tracklist.component';
+import { CopyPlacementComponent } from './component/copy-placement/copy-placement.component';
 import { CopyRemovalComponent } from './component/copy-removal/copy-removal.component';
 import { ReleasePickerComponent } from './component/release-picker/release-picker.component';
 import { WishlistDialogComponent } from './component/wishlist-dialog/wishlist-dialog.component';
@@ -53,6 +54,7 @@ type AlbumSection =
 		PlayerPanelComponent,
 		ReleasePickerComponent,
 		CopyRemovalComponent,
+		CopyPlacementComponent,
 		WishlistDialogComponent,
 		DatePipe,
 	],
@@ -147,6 +149,34 @@ export class AlbumPageComponent {
 			}
 			removingCopyId = copyId;
 		});
+
+		// Back from the placement dialog: focus the button it opened from.
+		let placingCopyId: string | null = null;
+		effect(() => {
+			const copyId = this.store.placingCopyId();
+			if (placingCopyId && !copyId) {
+				const closedFor = placingCopyId;
+				afterNextRender(
+					() => {
+						this.host.nativeElement
+							.querySelector<HTMLElement>(
+								`[data-place-copy="${closedFor}"]`
+							)
+							?.focus();
+					},
+					{ injector: this.injector }
+				);
+			}
+			placingCopyId = copyId;
+		});
+	}
+
+	/** What the collector called the unit a copy stands in. */
+	protected shelfName(unitId: string): string {
+		return (
+			this.store.shelfUnits().find((unit) => unit.id === unitId)?.name ||
+			'Shelf'
+		);
 	}
 
 	protected isOpen(section: AlbumSection): boolean {

@@ -529,3 +529,19 @@ button {
 		animation: none;
 	}
 }
+
+/* What the shelf lets the collector do, and what went wrong if it did not. */
+.shelf-note {
+	margin: 0 0 0.75rem;
+	font-size: 0.85rem;
+	color: var(--mc-text-muted);
+}
+
+.shelf-error {
+	margin: 0 0 0.75rem;
+	padding: 0.6rem 0.8rem;
+	font-size: 0.9rem;
+	color: var(--mc-status-bad);
+	border: 1px solid var(--mc-status-bad);
+	border-radius: var(--mc-radius-md);
+}

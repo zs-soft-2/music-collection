@@ -58,6 +58,11 @@ export const getCollectionItemDisposing = createSelector(
 	(state: State) => state.disposing
 );
 
+export const getCollectionItemPlacing = createSelector(
+	getCollectionItemState,
+	(state: State) => state.placing
+);
+
 /** Every item, the ones gone from the collection included. */
 const selectEveryCollectionItem = createSelector(
 	getCollectionItemState,

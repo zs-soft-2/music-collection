@@ -7,6 +7,7 @@ import {
 	CollectionItemEntityAdd,
 	CollectionItemEntityUpdate,
 	CollectionItemListConfig,
+	CollectionItemPlacement,
 } from './collection-item';
 
 export abstract class CollectionItemStateService extends EntityStateService<
@@ -23,6 +24,21 @@ export abstract class CollectionItemStateService extends EntityStateService<
 	public abstract dispatchRestoreEntityAction(
 		collectionItem: CollectionItemEntity
 	): void;
+	/**
+	 * Files the copy into a compartment of the drawn shelf; `null` takes the
+	 * place back and leaves the filing to the shelf again.
+	 */
+	public abstract dispatchPlaceEntityAction(
+		collectionItem: CollectionItemEntity,
+		placement: CollectionItemPlacement | null
+	): void;
+	/** Files several copies at once, as a rearranged compartment needs. */
+	public abstract dispatchPlaceEntitiesAction(
+		placements: {
+			collectionItem: CollectionItemEntity;
+			placement: CollectionItemPlacement | null;
+		}[]
+	): void;
 	public abstract dispatchChangeNewEntityButtonEnabled(
 		enabled: boolean
 	): void;
@@ -33,6 +49,8 @@ export abstract class CollectionItemStateService extends EntityStateService<
 	public abstract selectAdding$(): Observable<boolean>;
 	/** A copy is being disposed of or restored. */
 	public abstract selectDisposing$(): Observable<boolean>;
+	/** A copy is being filed into a compartment, or taken out of one. */
+	public abstract selectPlacing$(): Observable<boolean>;
 	/**
 	 * The copies gone from the signed-in user's collection, requested like
 	 * `selectLoadedEntities$`.

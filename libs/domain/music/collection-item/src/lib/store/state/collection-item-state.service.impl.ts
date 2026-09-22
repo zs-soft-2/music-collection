@@ -7,6 +7,7 @@ import {
 	CollectionItemEntityAdd,
 	CollectionItemEntityUpdate,
 	CollectionItemListConfig,
+	CollectionItemPlacement,
 	CollectionItemStateService,
 	SearchParams,
 } from '@music-collection/api';
@@ -76,6 +77,33 @@ export class CollectionItemStateServiceImpl extends CollectionItemStateService {
 		);
 	}
 
+	public dispatchPlaceEntityAction(
+		collectionItem: CollectionItemEntity,
+		placement: CollectionItemPlacement | null
+	): void {
+		this.store.dispatch(
+			collectionItemActions.changeCollectionItemPlacement({
+				collectionItem,
+				placement,
+			})
+		);
+	}
+
+	public dispatchPlaceEntitiesAction(
+		placements: {
+			collectionItem: CollectionItemEntity;
+			placement: CollectionItemPlacement | null;
+		}[]
+	): void {
+		if (placements.length) {
+			this.store.dispatch(
+				collectionItemActions.changeCollectionItemPlacements({
+					placements,
+				})
+			);
+		}
+	}
+
 	public dispatchListEntitiesAction(): void {
 		this.store.dispatch(collectionItemActions.listCollectionItems());
 	}
@@ -132,6 +160,12 @@ export class CollectionItemStateServiceImpl extends CollectionItemStateService {
 		return this.store.pipe(
 			select(collectionItemSelectors.getCollectionItemError),
 			map((error) => error ?? null)
+		);
+	}
+
+	public selectPlacing$(): Observable<boolean> {
+		return this.store.pipe(
+			select(collectionItemSelectors.getCollectionItemPlacing)
 		);
 	}
 

@@ -32,6 +32,14 @@ export abstract class UserDataService extends FirebaseDataService<
 	public abstract updateCollectionItem$(
 		collectionItem: CollectionItemModelUpdate
 	): Observable<CollectionItemModelUpdate>;
+	/**
+	 * Updates several copies of one collector in a single batch — a shelf
+	 * rearranged by hand moves many records at once, and half a rearranged
+	 * compartment is no state to leave behind.
+	 */
+	public abstract updateCollectionItems$(
+		collectionItems: CollectionItemModelUpdate[]
+	): Observable<CollectionItemModelUpdate[]>;
 	public abstract updateWishlistItem$(
 		wishlistItem: WishlistItemModelUpdate
 	): Observable<WishlistItemModelUpdate>;
