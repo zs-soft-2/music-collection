@@ -4,13 +4,14 @@ import { join } from 'node:path';
 import {
 	BADGE_STYLE_VERSION,
 	BadgePromptInput,
-	MOTIF_BY_STYLE,
+	MOTIFS_BY_STYLE,
 	buildBadgePrompt,
 	enamelOf,
 	motifOf,
 	patinaOf,
 	rimOf,
 	seedOf,
+	styleNames,
 } from './music-collection-badge-prompt';
 
 /** 2026-09-21, hogy egy teszt se a naptártól függjön. */
@@ -49,22 +50,51 @@ function input(overrides: Partial<BadgePromptInput> = {}): BadgePromptInput {
 	};
 }
 
+/** Amennyi közül egy stílus választhat; ennyi alatt a polc ismételni kezd. */
+const MOTIFS_PER_STYLE = 3;
+
 describe('a motívumtábla', () => {
 	it('a katalógus minden stílusát ismeri', () => {
 		const styles = catalogStyles();
 
 		expect(styles.length).toBeGreaterThan(40);
-		expect(styles.filter((style) => !MOTIF_BY_STYLE[style])).toEqual([]);
+		expect(styles.filter((style) => !MOTIFS_BY_STYLE[style])).toEqual([]);
 	});
 
-	it('nem ad két stílusnak ugyanazt a motívumot', () => {
-		const motifs = Object.values(MOTIF_BY_STYLE);
+	it('egy stílusra sem hagy egyetlen motívumot, mert abból nincs választás', () => {
+		expect(
+			Object.entries(MOTIFS_BY_STYLE).filter(
+				([, motifs]) => motifs.length < MOTIFS_PER_STYLE
+			)
+		).toEqual([]);
+	});
+
+	it('egy motívumot sem ad ki kétszer, se stíluson belül, se azon kívül', () => {
+		const motifs = Object.values(MOTIFS_BY_STYLE).flat();
 
 		expect(new Set(motifs).size).toBe(motifs.length);
 	});
 
+	/**
+	 * A gitár nem tiltott — a rock-oldali stílusoknak pont az a tárgya —, de
+	 * a metalnak nem ez a nyelve. Ez a szám azért van itt, hogy a hangszer
+	 * ne szivárogjon vissza a tábla többi részébe.
+	 */
+	it('a hangszert a rock-oldali stílusokra hagyja', () => {
+		const instrument = /guitar|plectrum|bass|amplifier|drum/;
+		const withInstrument = Object.values(MOTIFS_BY_STYLE)
+			.flat()
+			.filter((motif) => instrument.test(motif));
+
+		expect(withInstrument.length).toBeLessThanOrEqual(6);
+	});
+
 	it('inkább visszaesik, mint hogy pin nélkül hagyjon egy collectiont', () => {
-		expect(motifOf([])).toContain('vinyl record');
+		expect(motifOf(['nincs ilyen stílus'], 0)).toBe(motifOf([], 0));
+	});
+
+	it('a visszaesés is a műfajról szól, nem akármelyik lemezről', () => {
+		expect(motifOf([], 0)).toContain('skull');
 	});
 });
 
@@ -101,9 +131,24 @@ describe('a stíluszár', () => {
 
 describe('amit a collection dönt el', () => {
 	it('az elsőként megnevezett stílusból veszi a motívumot', () => {
-		expect(buildBadgePrompt(input(), NOW).prompt).toContain(
-			'a screaming skull wreathed in flames'
+		const { prompt } = buildBadgePrompt(input(), NOW);
+
+		expect(
+			MOTIFS_BY_STYLE['Thrash'].filter((motif) => prompt.includes(motif))
+		).toHaveLength(1);
+	});
+
+	it('ugyanannak a collectionnek mindig ugyanazt a motívumot adja', () => {
+		expect(motifOf(['Thrash'], seedOf('thrash-big-four'))).toBe(
+			motifOf(['Thrash'], seedOf('thrash-big-four'))
 		);
+	});
+
+	it('nem ítéli egy stílus minden collectionjét ugyanarra a pinre', () => {
+		const slugs = ['thrash-big-four', 'teutonic-thrash', 'thrash-1983'];
+		const motifs = slugs.map((slug) => motifOf(['Thrash'], seedOf(slug)));
+
+		expect(new Set(motifs).size).toBeGreaterThan(1);
 	});
 
 	it('családonként csoportosítja a zománcot, hogy a műfaj sorozat legyen', () => {
@@ -133,6 +178,58 @@ describe('amit a collection dönt el', () => {
 		expect(buildBadgePrompt(input(), NOW).prompt).toContain(
 			'The pin is round'
 		);
+	});
+});
+
+/**
+ * A badge egyszer négy pint rajzolt egy lemezjátszó-karral, mert a
+ * collectiont az előadó tartotta össze, nem a stílus — a prompt viszont
+ * egyetlen criteria-mezőt nézett meg. Ezek a tesztek arról szólnak, hogy egy
+ * szabály melyik alakban is nevezi meg a műfaját.
+ */
+describe('a stílusok kiolvasása a szabályból', () => {
+	it('a megnevezés sorrendjében adja őket, mert az első adja a motívumot', () => {
+		expect(
+			styleNames({
+				styles: { includesAny: ['Thrash', 'Bay Area Thrash'] },
+			})
+		).toEqual(['Thrash', 'Bay Area Thrash']);
+	});
+
+	it('az includesAll ugyanúgy megnevezés, csak szigorúbb', () => {
+		expect(styleNames({ styles: { includesAll: ['Doom'] } })).toEqual([
+			'Doom',
+		]);
+	});
+
+	it('az előadó stílusa is összetarthat egy collectiont', () => {
+		expect(
+			styleNames({ artistStyles: { includesAny: ['Heavy metal'] } })
+		).toEqual(['Heavy metal']);
+	});
+
+	it('az album stílusa megelőzi az előadóét', () => {
+		expect(
+			styleNames({
+				artistStyles: { includesAny: ['Heavy metal'] },
+				styles: { includesAny: ['Speed'] },
+			})
+		).toEqual(['Speed', 'Heavy metal']);
+	});
+
+	it('üresen hagyja, amit semmilyen stílus nem nevez meg', () => {
+		expect(
+			styleNames({
+				years: { from: 1970, to: 1979 },
+				artists: { includesAny: ['VtIq9R7sFwP8mdNQy2s9'] },
+			})
+		).toEqual([]);
+	});
+
+	it('nem esik el attól, ha a szabály mást ír oda, mint egy lista', () => {
+		expect(styleNames({})).toEqual([]);
+		expect(styleNames({ styles: null })).toEqual([]);
+		expect(styleNames({ styles: { includesAny: 'Thrash' } })).toEqual([]);
 	});
 });
 

@@ -63,68 +63,270 @@ export const BADGE_NEGATIVE_PROMPT =
 	'background, drop shadow, cast shadow, reflection, border frame';
 
 /**
- * Minden pin tárgya: stílusonként egy megönthető dolog, sosem egy hangulat.
+ * Minden pin tárgya: stílusonként több megönthető dolog, sosem egy hangulat.
  * Az öntő ki tud emelni egy ivókürtöt; a „melankóliát" senki.
  *
+ * Miért több egy stílusra: egy motívum azt jelentette, hogy két thrash
+ * collection szükségszerűen ugyanazt a pint kapja. A stílus onnantól nem
+ * választ, csak kioszt — a polc pedig ismétel. A `seed` dönti el, melyik
+ * jut egy collectionnek, tehát a saját pinje továbbra is mindig ugyanaz.
+ *
+ * A szókincs szándékosan szűk és tárgyi: láng, koponya, csont, szarv,
+ * tüske, lánc, fejsze, sisak — ez az, amit a műfaj egy évtizede hímez
+ * hátára. Hangszer csak a rock-oldali stílusokban szerepel; egy death
+ * metal pinen a gitár a legkevésbé érdekes dolog, ami ráférhet.
+ *
  * A kulcsok a `StyleEnum` értékei (`libs/common/api`). Teszt tartja nyitva,
- * hogy mindegyikre jusson motívum — egy lemaradt stílus csendben ugyanazt a
- * általános pint adná egy egész műfajnak, és pont ez a tábla van ellene.
+ * hogy mindegyikre jusson motívum — egy lemaradt stílus csendben ugyanazt
+ * az általános pint adná egy egész műfajnak, és pont ez a tábla van ellene.
  */
-export const MOTIF_BY_STYLE: Record<string, string> = {
-	'Alternative metal': 'a cracked industrial gear split by a lightning bolt',
-	'Alternative Rock': 'a worn guitar plectrum over a broken vinyl record',
-	'Avantgarde metal':
+export const MOTIFS_BY_STYLE: Record<string, string[]> = {
+	'Alternative metal': [
+		'a cracked industrial gear split by a lightning bolt',
+		'a skull bolted into a riveted steel faceplate',
+		'a clenched fist bursting out of a cracked concrete slab',
+	],
+	'Alternative Rock': [
+		'a moth with a skull marking on its back',
+		'a shattered lightbulb with a bird skull inside',
+		'a worn guitar plectrum over a broken vinyl record',
+	],
+	'Avantgarde metal': [
 		'a fractured theatre mask breaking into geometric shards',
-	'Blackened Doom': 'a heavy iron bell hanging in a dead tree',
-	'Blackened Thrash': 'a horned skull wearing a studded bullet belt',
-	'Bay Area Thrash': 'a suspension bridge tower behind two crossed guitars',
-	Black: 'a bare winter forest under a thin crescent moon',
-	'Blues Rock': 'a slide guitar neck crossed with a harmonica',
-	'Brutal Death': 'a cracked anvil struck by a heavy chain',
-	'Celtic Folk metal': 'a celtic knotwork ring around a carved harp',
-	Death: 'a weathered skull over two crossed scythes',
-	'Death Doom': 'a mourning stone angel with folded wings',
-	Deathgrind: 'a circular saw blade over two crossed bones',
-	Doom: 'a cracked church bell hanging from a heavy chain',
-	'First wave of black metal':
+		'a skull unfolding into sharp paper planes',
+		'a candle burning at both ends under a glass bell jar',
+	],
+	'Blackened Doom': [
+		'a heavy iron bell hanging in a dead tree',
+		'a horned skull sinking into a tar pit',
+		'a black candle guttering on an upturned coffin lid',
+	],
+	'Blackened Thrash': [
+		'a horned skull wearing a studded bullet belt',
+		'a goat skull over two crossed daggers in flames',
+		'an inverted cross bound in barbed wire',
+	],
+	'Bay Area Thrash': [
+		'a skull in a dented hardhat over a snapped suspension cable',
+		'a suspension bridge tower engulfed in flames',
+		'a skeletal fist punching up through cracked asphalt',
+	],
+	Black: [
+		'a bare winter forest under a thin crescent moon',
+		'a horned goat head inside an inverted pentagram',
+		'a raven skull crowned with a ring of black candles',
+	],
+	'Blues Rock': [
+		'a crossroads signpost under a swinging lantern',
+		'a harmonica crossed with a bottleneck slide',
+		'a grinning skull in a felt fedora, cigar in its teeth',
+	],
+	'Brutal Death': [
+		'a cracked anvil struck by a heavy chain',
+		'a skull crushed in the jaws of a bear trap',
+		'a meat cleaver buried in a splintered butcher block',
+	],
+	'Celtic Folk metal': [
+		'a celtic knotwork ring around a carved harp',
+		'a horned helm resting on a mossy standing stone',
+		'a triple spiral carved into a weathered stone cross',
+	],
+	Death: [
+		'a weathered skull over two crossed scythes',
+		'a hooded reaper skull beneath a sickle moon',
+		'a ribcage cracked open around a burning heart',
+	],
+	'Death Doom': [
+		'a mourning stone angel with folded wings',
+		'a skull half sunk in a flooded crypt',
+		'a funeral urn split open by a creeping root',
+	],
+	Deathgrind: [
+		'a circular saw blade over two crossed bones',
+		'a skull fed into the teeth of a threshing machine',
+		'a gas mask skull with a severed hose',
+	],
+	Doom: [
+		'a cracked church bell hanging from a heavy chain',
+		'a cowled monk skull under a collapsing stone arch',
+		'a single black candle melting over a tombstone',
+	],
+	'First wave of black metal': [
 		'a three branched candelabra with guttering candles',
-	'Folk metal': 'a drinking horn crossed with a hand axe',
-	'Funk Rock': 'a bass guitar headstock over a starburst',
-	'Glam Rock': 'a platform boot struck through by a lightning bolt',
-	'Glam Metal': 'a studded leather bracelet around a five point star',
-	Gothenburg: 'a wolf head in profile wrapped in knotwork',
-	Gothic: 'a cathedral rose window holding a single rose',
-	'Gothic Doom': 'a weeping stone gargoyle on a broken column',
-	Grindcore: 'a crushed tin can behind a circular saw blade',
-	Groove: 'a clenched fist gripping a thick chain link',
-	'Groove Thrash': 'a sledgehammer crossed with a snapped chain',
-	Grunge: 'a smashed guitar body over a torn flannel patch',
-	'Hard rock': 'a double neck guitar over a winged wheel',
-	'Heavy metal': 'a horned hand sign wearing a spiked wristband',
-	'Melodic Death': 'a stag skull with antlers wound in thorns',
-	'Melodic Doom': 'a broken hourglass spilling sand over a wilted rose',
-	Metalcore: 'a torn chain link inside a ring of barbed wire',
-	'New Wave Of British Heavy Metal':
-		'a knight helmet visor over two crossed Flying V guitars',
-	'Pagan Thrash': 'a raven perched inside a ring of rune stones',
-	'Power metal': 'a winged sword rising out of a crown',
-	'Progressive metal': 'an armillary sphere of interlocking brass rings',
-	'Progressive Death': 'a skull dissolving into a geometric lattice',
-	'Progressive Thrash': 'a clockwork gear train driving a guitar tuning peg',
-	'Rap Rock': 'a microphone crossed with a spray can',
-	Rock: 'a plectrum over a vinyl record and crossed drumsticks',
-	Speed: 'a flaming motorcycle wheel trailing speed lines',
-	'Symphonic Heavy metal':
+		'a goat skull over two crossed pitchforks',
+		'a bat winged demon head on a pentagram medallion',
+	],
+	'Folk metal': [
+		'a drinking horn crossed with a hand axe',
+		'a boar skull between two upright mead horns',
+		'a wolf pelt draped over a rune carved shield',
+	],
+	'Funk Rock': [
+		'a skull in round sunglasses and a wide brimmed hat',
+		'a starburst behind a slap bass headstock',
+		'a clenched fist inside a starburst of lightning',
+	],
+	'Glam Rock': [
+		'a platform boot struck through by a lightning bolt',
+		'a skull with a lightning bolt painted across its face',
+		'a tipped top hat over a hand mirror cracked down the middle',
+	],
+	'Glam Metal': [
+		'a studded leather bracelet around a five point star',
+		'a skull with a teased mane and a hoop earring',
+		'a switchblade driven through a heart shaped padlock',
+	],
+	Gothenburg: [
+		'a wolf head in profile wrapped in knotwork',
+		'a bird of prey skull inside a broken snowflake',
+		'a skeletal hand crushing a frozen branch',
+	],
+	Gothic: [
+		'a cathedral rose window holding a single rose',
+		'a bat winged hourglass over a sealed coffin',
+		'a lace veiled skull with a rose between its teeth',
+	],
+	'Gothic Doom': [
+		'a weeping stone gargoyle on a broken column',
+		'a raven perched on a crumbling mausoleum door',
+		'a skull wound in a widow veil of iron thorns',
+	],
+	Grindcore: [
+		'a crushed tin can behind a circular saw blade',
+		'a skull flattened under an industrial press',
+		'a megaphone spilling a coil of barbed wire',
+	],
+	Groove: [
+		'a clenched fist gripping a thick chain link',
+		'a skull with a piston driven through the temple',
+		'a heavy boot sole treaded with rows of bones',
+	],
+	'Groove Thrash': [
+		'a sledgehammer crossed with a snapped chain',
+		'a skull in a welding mask throwing sparks',
+		'a brass knuckled fist wrapped in loose chain',
+	],
+	Grunge: [
+		'a moth eaten flannel patch stitched over a cracked skull',
+		'a smashed amplifier cabinet leaking smoke',
+		'a rain worn skull with a single flower in the eye socket',
+	],
+	'Hard rock': [
+		'a winged wheel wreathed in flames',
+		'a skull in aviator goggles over two crossed wrenches',
+		'a pair of flaming dice over a torn ace of spades',
+	],
+	'Heavy metal': [
+		'a horned hand sign wearing a spiked wristband',
+		'a winged skull crowned with a ring of rivets',
+		'a skull over two crossed lightning bolts in a spiked ring',
+	],
+	'Melodic Death': [
+		'a stag skull with antlers wound in thorns',
+		'a skull cradled in a pair of feathered wings',
+		'a sword driven through a frozen rose',
+	],
+	'Melodic Doom': [
+		'a broken hourglass spilling sand over a wilted rose',
+		'a skull resting on an open book of dead leaves',
+		'a cracked stone lantern gone dark',
+	],
+	Metalcore: [
+		'a torn chain link inside a ring of barbed wire',
+		'a skull stitched shut with heavy gauge wire',
+		'a taped fist over a shield split down the middle',
+	],
+	'New Wave Of British Heavy Metal': [
+		'a knight helmet visor over two crossed broadswords',
+		'a screaming skull sealed in a riveted iron mask',
+		'a lion rampant behind a spiked gauntlet',
+	],
+	'Pagan Thrash': [
+		'a raven perched inside a ring of rune stones',
+		'a horned skull bound with braided leather cord',
+		'a burning torch crossed with a bone handled spear',
+	],
+	'Power metal': [
+		'a winged sword rising out of a crown',
+		'a dragon coiled around a mountain peak',
+		'a gauntlet raising a flaming banner',
+	],
+	'Progressive metal': [
+		'an armillary sphere of interlocking brass rings',
+		'a skull split open onto a spiral staircase',
+		'an eye inside a tessellated triangle of gears',
+	],
+	'Progressive Death': [
+		'a skull dissolving into a geometric lattice',
+		'a spine rising into a helix of thorns',
+		'a nautilus shell cracked open around a fossil skull',
+	],
+	'Progressive Thrash': [
+		'a clockwork gear train driving a spinning saw blade',
+		'a skull with a metronome arm through its jaw',
+		'a pocket watch shattered by a lightning bolt',
+	],
+	'Rap Rock': [
+		'a microphone crossed with a spray can',
+		'a skull in a backwards cap over a boombox',
+		'a chain medallion stamped with a snarling skull',
+	],
+	Rock: [
+		'a plectrum over a vinyl record and crossed drumsticks',
+		'a skull in a studded leather collar, cigarette in its teeth',
+		'a lightning bolt striking a split bass drum head',
+	],
+	Speed: [
+		'a flaming motorcycle wheel trailing speed lines',
+		'a skull in a flight helmet against a shockwave',
+		'a winged boot spurred with a lightning bolt',
+	],
+	'Symphonic Heavy metal': [
 		'a violin scroll crossed with a sword beneath a crown',
-	'Technical Death': 'a mechanical skull with an exposed clockwork jaw',
-	'Technical Thrash': 'an exploded diagram of a gear driven metronome',
-	'Teutonic Thrash': 'a spiked steel helmet over two crossed hammers',
-	Thrash: 'a screaming skull wreathed in flames',
-	'US Power metal': 'an eagle clutching a sword over a shield',
+		'a laurel wreathed skull against a pipe organ facade',
+		'a conductor baton crossed with a flaming sword',
+	],
+	'Technical Death': [
+		'a mechanical skull with an exposed clockwork jaw',
+		'a spine built out of interlocking gear teeth',
+		'a skull dissected into numbered bone plates',
+	],
+	'Technical Thrash': [
+		'an exploded diagram of a gear driven metronome',
+		'a skull wired into an etched circuit board',
+		'a caliper measuring the jaw of a bare skull',
+	],
+	'Teutonic Thrash': [
+		'a spiked steel helmet over two crossed hammers',
+		'a horned skull in a spiked pickelhaube, wreathed in flames',
+		'a tank tread rolling over a shattered skull',
+	],
+	Thrash: [
+		'a screaming skull wreathed in flames',
+		'a skeletal fist throwing the horns out of a burning pit',
+		'a skull over two crossed hand axes inside a bullet belt',
+	],
+	'US Power metal': [
+		'an eagle clutching a sword over a shield',
+		'a winged skull in a plumed war helm',
+		'a flaming gauntlet holding a broken chain aloft',
+	],
 };
 
-/** Ha a katalógus semmit nem mond a stílusról, a pinnek akkor is lennie kell. */
-const FALLBACK_MOTIF = 'a vinyl record crossed by a tonearm';
+/**
+ * Ha a katalógus semmit nem mond a stílusról, a pinnek akkor is lennie kell.
+ *
+ * Ez a motívum viszont nem lehet semleges. Egy lemezjátszó-kar bármelyik
+ * műfajról szólhatna, és a visszaesés pont azokat a collectionöket éri,
+ * amiket nem stílus tart össze — egy előadót, egy évtizedet —, vagyis a
+ * polc legszebb darabjai kapnák a legüresebb pint. A katalógus egyetlen
+ * műfajról szól, tehát a visszaesés is arról szóljon.
+ */
+const FALLBACK_MOTIFS = [
+	'a horned skull over two crossed bones in a ring of flames',
+	'a skeletal hand throwing the horns against a wall of fire',
+	'a winged skull on a spiked medallion',
+];
 
 /**
  * A zománc stíluscsaládonként. A színt fogja meg leggyorsabban a szem,
@@ -178,13 +380,47 @@ export interface BadgePrompt {
 	aspectRatio: '1:1';
 }
 
-/** Az első stílus motívuma, amit a collection megnevez. */
-export function motifOf(styles: string[]): string {
-	const style = styles[0];
+/** Egy criteria-mező stringlistája, vagy üres, ha nincs ott semmi ilyen. */
+export function criterionList(value: unknown, key: string): string[] {
+	const criterion = (value ?? {}) as Record<string, unknown>;
 
-	return style === undefined
-		? FALLBACK_MOTIF
-		: (MOTIF_BY_STYLE[style] ?? FALLBACK_MOTIF);
+	return Array.isArray(criterion[key]) ? (criterion[key] as string[]) : [];
+}
+
+/**
+ * A stílusok, ahogy a szabály megnevezi őket. A sorrend számít: az első
+ * adja a pin tárgyát és a zománc színét.
+ *
+ * Négy helyen lehet stílus, és mindegyiket meg kell nézni. Az album stílusa
+ * az elsődleges, de egy collectiont éppúgy össze tarthat az előadó stílusa;
+ * és az `includesAll` ugyanolyan megnevezés, mint az `includesAny` — csak
+ * szigorúbb. Amelyik alakot ez a lista kihagyja, az a collection csendben
+ * a visszaesést kapja: egy egész szabály veszítené el a maga motívumát
+ * azon, hogy másik operátorral írták meg.
+ */
+export function styleNames(criteria: Record<string, unknown>): string[] {
+	return [
+		...criterionList(criteria['styles'], 'includesAny'),
+		...criterionList(criteria['styles'], 'includesAll'),
+		...criterionList(criteria['artistStyles'], 'includesAny'),
+		...criterionList(criteria['artistStyles'], 'includesAll'),
+	];
+}
+
+/**
+ * Az első megnevezett stílus egyik motívuma, a seed által kiválasztva.
+ *
+ * A seed a collection slugjából jön, vagyis a választás stabil: ugyanaz a
+ * collection mindig ugyanazt a motívumot kéri, akkor is, ha egy év múlva
+ * generálják újra. Két szomszédja viszont nem feltétlenül ugyanazt.
+ */
+export function motifOf(styles: string[], seed: number): string {
+	const style = styles[0];
+	const motifs =
+		(style === undefined ? undefined : MOTIFS_BY_STYLE[style]) ??
+		FALLBACK_MOTIFS;
+
+	return motifs[seed % motifs.length];
 }
 
 /** Az első stílus zománca, amit a collection megnevez. */
@@ -254,16 +490,18 @@ export function buildBadgePrompt(
 	input: BadgePromptInput,
 	now: number
 ): BadgePrompt {
+	const seed = seedOf(input.slug);
+	const motif = motifOf(input.styles, seed);
 	const subject = input.isSingleArtist
-		? `The pin is die cut to the silhouette of ${motifOf(input.styles)}, with ${rimOf(input.points)} following its outline.`
-		: `The pin is round, struck with ${motifOf(input.styles)} in raised relief, inside ${rimOf(input.points)}.`;
+		? `The pin is die cut to the silhouette of ${motif}, with ${rimOf(input.points)} following its outline.`
+		: `The pin is round, struck with ${motif} in raised relief, inside ${rimOf(input.points)}.`;
 
 	const finish = `The metal is ${patinaOf(input.earliestYear, now)}, and ${enamelOf(input.styles)} fills the recesses of the relief.`;
 
 	return {
 		prompt: `${STYLE_PREFIX}${subject} ${finish}${STYLE_SUFFIX}`,
 		negativePrompt: BADGE_NEGATIVE_PROMPT,
-		seed: seedOf(input.slug),
+		seed,
 		styleVersion: BADGE_STYLE_VERSION,
 		aspectRatio: '1:1',
 	};

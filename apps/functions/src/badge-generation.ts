@@ -39,6 +39,8 @@ import {
 	BADGE_STYLE_VERSION,
 	BadgePrompt,
 	buildBadgePrompt,
+	criterionList,
+	styleNames,
 } from './music-collection-badge-prompt';
 
 const MUSIC_COLLECTION_COLLECTION = 'music-collection';
@@ -174,6 +176,42 @@ async function reserveDailyQuota(
 	});
 }
 
+/** Ennyi előadóig nézzük meg a stílusukat; ennél többet nem ér egy pin. */
+const STYLE_LOOKUP_ARTIST_LIMIT = 5;
+/** `libs/api` Artist: az előadó a saját stílusait hordozza. */
+const ARTIST_COLLECTION = 'artist';
+
+/**
+ * A megnevezett előadók stílusai, ha a szabály maga egyet sem mond.
+ *
+ * Egy diszkográfia-collection („Iron Maiden on Vinyl") stílusról nem beszél,
+ * mert nem kell neki: az előadó uid-je pontosabban jelöli ki a lemezeket,
+ * mint bármelyik műfajnév. A pinnek viszont motívum kell, és az előadó
+ * stílusát a katalógus így is tudja — innen már csak el kell olvasni.
+ */
+async function artistStyleNames(
+	database: Firestore,
+	artistUids: string[]
+): Promise<string[]> {
+	const looked = artistUids.slice(0, STYLE_LOOKUP_ARTIST_LIMIT);
+
+	if (!looked.length) {
+		return [];
+	}
+
+	const snapshots = await database.getAll(
+		...looked.map((artistUid) =>
+			database.collection(ARTIST_COLLECTION).doc(artistUid)
+		)
+	);
+
+	return snapshots.flatMap((snapshot) => {
+		const styles = snapshot.get('styles');
+
+		return Array.isArray(styles) ? (styles as string[]) : [];
+	});
+}
+
 /** A collection adatai, ahogy a prompt kéri őket. */
 async function promptFor(
 	database: Firestore,
@@ -192,15 +230,12 @@ async function promptFor(
 	}
 
 	const criteria = (collection['criteria'] ?? {}) as Record<string, unknown>;
-	const styles = (criteria['styles'] ?? {}) as Record<string, unknown>;
 	const years = (criteria['years'] ?? {}) as Record<string, unknown>;
-	const artists = (criteria['artists'] ?? {}) as Record<string, unknown>;
-	const includesAny = Array.isArray(styles['includesAny'])
-		? (styles['includesAny'] as string[])
-		: [];
-	const artistUids = Array.isArray(artists['includesAny'])
-		? (artists['includesAny'] as string[])
-		: [];
+	const artistUids = criterionList(criteria['artists'], 'includesAny');
+	const named = styleNames(criteria);
+	const styles = named.length
+		? named
+		: await artistStyleNames(database, artistUids);
 	const from =
 		typeof years['from'] === 'number' ? (years['from'] as number) : null;
 	const equals =
@@ -210,7 +245,7 @@ async function promptFor(
 
 	return buildBadgePrompt(
 		{
-			styles: includesAny,
+			styles,
 			earliestYear: from ?? equals,
 			points,
 			isSingleArtist: artistUids.length === 1,
