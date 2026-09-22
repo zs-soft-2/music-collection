@@ -5,6 +5,7 @@ import { SpotifyAuthRepository } from './spotify-auth.repository';
 import { SpotifyPreferencesRepository } from './spotify-preferences.repository';
 import { SdkPlayer } from './spotify-sdk.types';
 import { SpotifySdkRepository } from './spotify-sdk.repository';
+import { SpotifyTokenService } from './spotify-token.service';
 import {
 	SpotifyDevice,
 	SpotifyNotConnectedError,
@@ -47,13 +48,24 @@ export class SpotifyPlaybackEffect {
 	private readonly document = inject(DOCUMENT);
 	private readonly preferences = inject(SpotifyPreferencesRepository);
 	private readonly sdk = inject(SpotifySdkRepository);
+	private readonly tokens = inject(SpotifyTokenService);
 
 	public get configured(): boolean {
 		return !!this.auth.clientId;
 	}
 
 	public get hasToken(): boolean {
-		return !!this.auth.loadToken();
+		return !!this.tokens.token();
+	}
+
+	/**
+	 * Resolves once the account's connection is known. The token used to come
+	 * out of browser storage the instant it was asked for; it now comes from a
+	 * document, so anything acting on "is there a connection" has to wait for
+	 * the answer rather than read a not-yet as a no.
+	 */
+	public tokenReady(): Promise<void> {
+		return this.tokens.ready();
 	}
 
 	/** Remembered volume of the browser player, 0–100. */
@@ -72,18 +84,25 @@ export class SpotifyPlaybackEffect {
 	/** Finishes the sign-in; returns the page to go back to. */
 	public async completeLogin(code: string, state: string): Promise<string> {
 		const { token, returnUrl } = await this.auth.exchangeCode(code, state);
-		this.auth.saveToken(token);
+		await this.tokens.save(token);
 
 		return returnUrl;
 	}
 
 	public signOut(): void {
-		this.auth.clearToken();
+		// The callers treat disconnecting as done the moment they ask for it:
+		// the connection is already gone from the signal, and the account
+		// catching up is not something to hold them on.
+		void this.tokens.clear().catch((error) => {
+			console.error('Spotify connection not cleared', error);
+		});
 	}
 
 	/** A valid access token, refreshed when about to expire. */
 	public async accessToken(): Promise<string> {
-		let token = this.auth.loadToken();
+		await this.tokens.ready();
+
+		let token = this.tokens.token();
 		if (!token) {
 			throw new SpotifyNotConnectedError();
 		}
@@ -91,10 +110,10 @@ export class SpotifyPlaybackEffect {
 			try {
 				token = await this.auth.refresh(token);
 			} catch {
-				this.auth.clearToken();
+				this.signOut();
 				throw new SpotifyNotConnectedError();
 			}
-			this.auth.saveToken(token);
+			await this.tokens.save(token);
 		}
 		return token.accessToken;
 	}
@@ -141,7 +160,7 @@ export class SpotifyPlaybackEffect {
 			events.error('Full playback needs a Spotify Premium account.')
 		);
 		player.addListener('authentication_error', () => {
-			this.auth.clearToken();
+			this.signOut();
 			events.error('Sign in to Spotify again.');
 		});
 		player.addListener('initialization_error', ({ message }) =>

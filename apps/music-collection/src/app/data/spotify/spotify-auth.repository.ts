@@ -11,7 +11,6 @@ const SCOPES = [
 	'user-read-playback-state',
 	'user-modify-playback-state',
 ];
-const TOKEN_KEY = 'mc-spotify-token';
 const PENDING_KEY = 'mc-spotify-pending-login';
 
 interface PendingLogin {
@@ -36,8 +35,9 @@ const randomString = (byteCount: number) =>
 	base64Url(crypto.getRandomValues(new Uint8Array(byteCount)));
 
 /**
- * Spotify sign-in with the Authorization Code + PKCE flow (no client secret)
- * and the token kept in this browser's storage.
+ * Spotify sign-in with the Authorization Code + PKCE flow (no client secret).
+ * Only the exchange lives here: where the resulting token is kept is the
+ * account's business, and `SpotifyTokenService` answers for it.
  */
 @Injectable({ providedIn: 'root' })
 export class SpotifyAuthRepository {
@@ -115,23 +115,6 @@ export class SpotifyAuthRepository {
 			}),
 			token.refreshToken
 		);
-	}
-
-	public loadToken(): SpotifyToken | null {
-		try {
-			const stored = localStorage.getItem(TOKEN_KEY);
-			return stored ? (JSON.parse(stored) as SpotifyToken) : null;
-		} catch {
-			return null;
-		}
-	}
-
-	public saveToken(token: SpotifyToken): void {
-		localStorage.setItem(TOKEN_KEY, JSON.stringify(token));
-	}
-
-	public clearToken(): void {
-		localStorage.removeItem(TOKEN_KEY);
 	}
 
 	private takePendingLogin(): PendingLogin | null {

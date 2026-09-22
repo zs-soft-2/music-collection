@@ -220,7 +220,14 @@ export const SpotifyPlaybackStore = signalStore(
 
 			/** Starts the browser player when signed in before. */
 			const start = async () => {
-				if (!store.configured() || !effect.hasToken || player) {
+				if (!store.configured() || player) {
+					return;
+				}
+				// The connection hangs on the account, so it arrives with a
+				// document rather than out of browser storage: asking before
+				// the answer is in would read "never connected".
+				await effect.tokenReady();
+				if (!effect.hasToken || player) {
 					return;
 				}
 				patchState(store, { status: 'connecting', error: null });
