@@ -43,6 +43,20 @@
 			see how far your shelf gets you.
 		</p>
 	} @else {
+		@if (store.showsHunt()) {
+			<section class="section" aria-labelledby="hunt-title">
+				<header class="section-head">
+					<h2 id="hunt-title">Next on the hunt</h2>
+					<p class="section-lead">
+						A collection pays only once it is complete — these are
+						the records that move that along fastest.
+					</p>
+				</header>
+
+				<mc-next-albums [albums]="store.nextAlbums()" />
+			</section>
+		}
+
 		<div class="toolbar">
 			<div class="tabs" role="tablist" aria-label="Which collections">
 				@for (option of tabOptions; track option.value) {

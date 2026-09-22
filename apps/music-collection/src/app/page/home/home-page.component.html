@@ -156,6 +156,20 @@
 		</section>
 	}
 
+	@if (store.showsHunt()) {
+		<section class="section" aria-labelledby="hunt-title">
+			<header class="section-head">
+				<h2 id="hunt-title">Next on the hunt</h2>
+				<a class="more" routerLink="/collections">
+					The whole hunt
+					<i class="pi pi-arrow-right" aria-hidden="true"></i>
+				</a>
+			</header>
+
+			<mc-next-albums [albums]="store.nextAlbums()" />
+		</section>
+	}
+
 	<!-- Artists: the collected ones, or the catalog for a guest -->
 	<section class="section" aria-labelledby="artists-title">
 		<header class="section-head">

@@ -42,6 +42,22 @@ export interface CatalogCredit {
 	role: string;
 }
 
+/**
+ * Which credits have to be fetched before a set of rules can be resolved.
+ *
+ * The credits outnumber the albums several times over, so this is worth
+ * asking before reaching for them: a rule that names its musicians can be
+ * answered from their credits alone, and the rest of the catalog's need
+ * never be downloaded.
+ */
+export type CreditsNeeded =
+	/** No rule asks who played on a record. */
+	| { kind: 'none' }
+	/** Only these musicians' credits can decide any of the rules. */
+	| { kind: 'musicians'; musicianUids: string[] }
+	/** A rule asks by role alone, so any credit in the catalog may match. */
+	| { kind: 'all' };
+
 export interface MusicCollectionCatalog {
 	albums: CatalogAlbum[];
 	artists: CatalogArtist[];

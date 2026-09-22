@@ -159,6 +159,34 @@ describe('compareWithCollection', () => {
 		expect(progress.completed).toBe(false);
 	});
 
+	/*
+	 * What the missing list promises whoever reads it: every uid in it names
+	 * an album of this collection, and there are exactly `missing` of them.
+	 * Suggesting what to buy next leans on both — a uid that named nothing
+	 * would be a record with no name, no cover and nowhere to go.
+	 */
+	it('names missing albums the collection actually asks for, and counts them', () => {
+		const { resolved, copies } = tenAlbums(4);
+		const members = new Set(
+			resolved.albums.map((membership) => membership.albumUid)
+		);
+
+		const progress = compareWithCollection(resolved, copies);
+
+		expect(progress.missing).toBe(progress.missingAlbumUids.length);
+		expect(progress.owned).toBe(progress.ownedAlbumUids.length);
+		expect(progress.owned + progress.missing).toBe(progress.total);
+		for (const albumUid of progress.missingAlbumUids) {
+			expect(members.has(albumUid)).toBe(true);
+		}
+		// Nothing is both missing and on the shelf.
+		expect(
+			progress.missingAlbumUids.filter((albumUid) =>
+				progress.ownedAlbumUids.includes(albumUid)
+			)
+		).toEqual([]);
+	});
+
 	it('never rounds up to a full bar beside a locked badge', () => {
 		const resolved = resolveMusicCollection(
 			{ uid: 'big', criteriaVersion: 1, criteria: {} },

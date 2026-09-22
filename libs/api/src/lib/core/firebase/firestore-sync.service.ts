@@ -107,6 +107,19 @@ export interface SyncedQuery {
 	 * when their feature changes.
 	 */
 	incremental?: boolean;
+	/**
+	 * Whether this query may fill its cache from the feature's bundle.
+	 * Defaults to true, which is what a query over the whole feature wants:
+	 * one download instead of a document read apiece.
+	 *
+	 * A bundle holds the feature *whole* — it is built per feature key, not
+	 * per query — so a narrow filter over a large feature pays for everything
+	 * it did not ask for. `false` leaves the bundle alone and reads the few
+	 * documents the filter names. Worth it only where the filter is narrow
+	 * and the feature is large; a query that will end up wanting most of the
+	 * feature anyway is better served by the bundle.
+	 */
+	bundle?: boolean;
 }
 
 const compareTimestamps = (
@@ -477,6 +490,7 @@ export class FirestoreSyncService {
 
 		// A bundle built before a reset misses edits made without `updatedAt`.
 		if (
+			synced.bundle === false ||
 			!bundle ||
 			!behind ||
 			(resetAt && compareTimestamps(resetAt, bundle.modifiedAt) > 0) ||

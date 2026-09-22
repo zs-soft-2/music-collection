@@ -4,6 +4,7 @@ import {
 	MusicCollectionEntity,
 	MusicCollectionMembership,
 	MusicCollectionProgress,
+	NextAlbumSuggestion,
 } from '@music-collection/domain/music-collection/api';
 import { MusicCollectionStanding } from '@music-collection/domain/music-collection/core';
 import { scoreCollection } from '@music-collection/domain/music-collection/engine';
@@ -12,6 +13,7 @@ import {
 	sortCollectionCards,
 	toCollectionCard,
 	toCollectionDetail,
+	toNextAlbums,
 } from './collections.mapper';
 import { CollectionCardView } from './collections.model';
 
@@ -286,5 +288,143 @@ describe('toCollectionDetail', () => {
 		);
 
 		expect(view.badge?.artworkUrl).toBe('https://example.test/pin.png');
+	});
+});
+
+function suggestion(
+	albumUid: string,
+	unlockedPoints: number,
+	potentialPoints: number,
+	wantedBy: NextAlbumSuggestion['wantedBy'],
+	completesCollectionUids: string[] = []
+): NextAlbumSuggestion {
+	return {
+		album: membership(albumUid),
+		unlockedPoints,
+		completesCollectionUids,
+		potentialPoints,
+		wantedBy,
+	};
+}
+
+const named = (uid: string, name: string, slug = uid) =>
+	({ uid, name, slug }) as CollectionCardView;
+
+describe('toNextAlbums', () => {
+	it('names the collections a record would complete, and where they are', () => {
+		const views = toNextAlbums(
+			[
+				suggestion(
+					'frolic',
+					400,
+					400,
+					[{ collectionUid: 'bay-area', missing: 1, totalPoints: 400 }],
+					['bay-area']
+				),
+			],
+			[named('bay-area', '1988 Bay Area Thrash', 'bay-area-1988')]
+		);
+
+		expect(views).toEqual([
+			{
+				albumUid: 'frolic',
+				albumName: 'Album frolic',
+				artistName: 'Artist frolic',
+				year: 1988,
+				coverUrl: null,
+				unlockedPoints: 400,
+				completes: ['1988 Bay Area Thrash'],
+				potentialPoints: 400,
+				wantedBy: [
+					{
+						name: '1988 Bay Area Thrash',
+						slug: 'bay-area-1988',
+						missing: 1,
+					},
+				],
+			},
+		]);
+	});
+
+	it('keeps the order it was given: the ranking was decided before this', () => {
+		const wanted = [
+			{ collectionUid: 'doom', missing: 4, totalPoints: 800 },
+		];
+
+		const views = toNextAlbums(
+			[
+				suggestion('second', 0, 200, wanted),
+				suggestion('first', 0, 100, wanted),
+			],
+			[named('doom', 'Doom')]
+		);
+
+		expect(views.map(({ albumUid }) => albumUid)).toEqual([
+			'second',
+			'first',
+		]);
+	});
+
+	it('shows at most what the page has room for', () => {
+		const wanted = [{ collectionUid: 'doom', missing: 9, totalPoints: 900 }];
+		const many = Array.from({ length: 20 }, (_unused, index) =>
+			suggestion(`album-${index}`, 0, 100, wanted)
+		);
+
+		expect(toNextAlbums(many, [named('doom', 'Doom')])).toHaveLength(6);
+		expect(toNextAlbums(many, [named('doom', 'Doom')], 3)).toHaveLength(3);
+	});
+
+	/*
+	 * A collection the page is not showing — withdrawn while the list stood
+	 * open — has no name and no page to go to. Pointing at it would be worse
+	 * than leaving it out.
+	 */
+	it('leaves out a collection the page cannot point at', () => {
+		const views = toNextAlbums(
+			[
+				suggestion('kept', 0, 100, [
+					{ collectionUid: 'doom', missing: 2, totalPoints: 200 },
+					{ collectionUid: 'gone', missing: 3, totalPoints: 300 },
+				]),
+				suggestion('dropped', 0, 90, [
+					{ collectionUid: 'gone', missing: 3, totalPoints: 300 },
+				]),
+			],
+			[named('doom', 'Doom')]
+		);
+
+		expect(views).toHaveLength(1);
+		expect(views[0].albumUid).toBe('kept');
+		expect(views[0].wantedBy).toEqual([
+			{ name: 'Doom', slug: 'doom', missing: 2 },
+		]);
+	});
+
+	it('claims no points for a collection it cannot name', () => {
+		const views = toNextAlbums(
+			[
+				suggestion(
+					'kept',
+					300,
+					150,
+					[
+						{ collectionUid: 'doom', missing: 4, totalPoints: 600 },
+						{ collectionUid: 'gone', missing: 1, totalPoints: 300 },
+					],
+					['gone']
+				),
+			],
+			[named('doom', 'Doom')]
+		);
+
+		expect(views[0].completes).toEqual([]);
+		// Nothing to point at, so nothing is promised — only what it moves.
+		expect(views[0].unlockedPoints).toBe(0);
+		expect(views[0].potentialPoints).toBe(150);
+	});
+
+	it('has nothing to show a collector who is missing nothing', () => {
+		expect(toNextAlbums([], [named('doom', 'Doom')])).toEqual([]);
 	});
 });

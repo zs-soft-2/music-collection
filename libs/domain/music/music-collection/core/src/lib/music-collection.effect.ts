@@ -21,6 +21,7 @@ import {
 	BadgeGenerationSettings,
 	BadgeImage,
 	BadgeModelOption,
+	CollectionShortfall,
 	CreateMusicCollectionResult,
 	GenerateBadgeResult,
 	MusicCollectionCatalog,
@@ -30,13 +31,16 @@ import {
 	MusicCollectionProgress,
 	MusicCollectionRepository,
 	MusicCollectionScore,
+	NextAlbumSuggestion,
 	ResolvedMusicCollection,
 	UpdateMusicCollectionResult,
 } from '@music-collection/domain/music-collection/api';
 import {
 	compareWithCollection,
+	creditsNeededFor,
 	resolveMusicCollection,
 	scoreCollection,
+	suggestNextAlbums,
 } from '@music-collection/domain/music-collection/engine';
 
 import {
@@ -67,14 +71,17 @@ export interface MusicCollectionResolution {
 const PREVIEW_UID = 'preview';
 
 /**
- * Whether any of these rules asks about who played on a record. The credits
- * outnumber the albums by far, so they are only fetched when a criterion
- * actually reads them.
+ * A standing as the next-album ranking reads it. Only what is still missing
+ * and what finishing would be worth: the definition, the badge and the
+ * collector's own pressings have no say in which record to buy next.
  */
-function wantsCredits(
-	collections: readonly { criteria: MusicCollectionCriteria }[]
-): boolean {
-	return collections.some(({ criteria }) => !!criteria.credits);
+function toShortfall(standing: MusicCollectionStanding): CollectionShortfall {
+	return {
+		collectionUid: standing.collection.uid,
+		albums: standing.resolved.albums,
+		missingAlbumUids: standing.progress.missingAlbumUids,
+		totalPoints: standing.score.totalPoints,
+	};
 }
 
 /** Selects a feature's entities and asks for the list while it is empty. */
@@ -118,7 +125,7 @@ export class MusicCollectionEffect {
 			this.collectionItemStateService.selectLoadedEntities$(),
 		]).pipe(
 			switchMap(([collections, items]) =>
-				this.catalog$(wantsCredits(collections)).pipe(
+				this.catalog$(collections).pipe(
 					map((catalog) => {
 						const copies = toOwnedCopies(items);
 
@@ -140,9 +147,7 @@ export class MusicCollectionEffect {
 			this.collectionItemStateService.selectLoadedEntities$(),
 		]).pipe(
 			switchMap(([collection, items]) =>
-				this.catalog$(
-					wantsCredits(collection ? [collection] : [])
-				).pipe(
+				this.catalog$(collection ? [collection] : []).pipe(
 					map((catalog) =>
 						collection
 							? this.toStanding(
@@ -155,6 +160,29 @@ export class MusicCollectionEffect {
 				)
 			)
 		);
+	}
+
+	/**
+	 * Which records to hunt for next, out of standings the caller already
+	 * holds.
+	 *
+	 * Synchronous on purpose: every collection on the page was resolved once
+	 * to draw it, and resolving them a second time to answer this would cost
+	 * a second pass over the whole catalog for an answer already in hand. The
+	 * engine call stays here rather than in a page, so the pages go on seeing
+	 * only views.
+	 */
+	public suggestNextAlbums(
+		standings: readonly MusicCollectionStanding[]
+	): NextAlbumSuggestion[] {
+		const run = performanceLog.start('collection.nextAlbums', {
+			collections: standings.length,
+		});
+		const suggestions = suggestNextAlbums(standings.map(toShortfall));
+
+		run.end({ suggested: suggestions.length });
+
+		return suggestions;
 	}
 
 	/**
@@ -174,7 +202,7 @@ export class MusicCollectionEffect {
 	public listAllResolutions$(): Observable<MusicCollectionResolution[]> {
 		return this.repository.listAll$().pipe(
 			switchMap((collections) =>
-				this.catalog$(wantsCredits(collections)).pipe(
+				this.catalog$(collections).pipe(
 					map((catalog) => {
 						// Every rule against the whole catalog, on the main
 						// thread. Timed so it is known whether this too
@@ -209,9 +237,7 @@ export class MusicCollectionEffect {
 	): Observable<MusicCollectionResolution | null> {
 		return this.repository.loadByUid$(uid).pipe(
 			switchMap((collection) =>
-				this.catalog$(
-					wantsCredits(collection ? [collection] : [])
-				).pipe(
+				this.catalog$(collection ? [collection] : []).pipe(
 					map((catalog) =>
 						collection
 							? {
@@ -236,7 +262,7 @@ export class MusicCollectionEffect {
 	public preview$(
 		criteria: MusicCollectionCriteria
 	): Observable<ResolvedMusicCollection> {
-		return this.catalog$(wantsCredits([{ criteria }])).pipe(
+		return this.catalog$([{ criteria }]).pipe(
 			map((catalog) =>
 				resolveMusicCollection(
 					{ uid: PREVIEW_UID, criteria, criteriaVersion: 0 },
@@ -353,7 +379,17 @@ export class MusicCollectionEffect {
 		return standing;
 	}
 
-	private catalog$(withCredits: boolean): Observable<MusicCollectionCatalog> {
+	/**
+	 * The catalog these rules are resolved against.
+	 *
+	 * The rules are handed in whole rather than a flag, because what has to
+	 * be fetched of the credits is a question about them: one naming its
+	 * musicians is answered from their credits alone, where a flag could only
+	 * ever say "all of them".
+	 */
+	private catalog$(
+		collections: readonly { criteria: MusicCollectionCriteria }[]
+	): Observable<MusicCollectionCatalog> {
 		return combineLatest([
 			entities$(
 				() => this.albumStateService.selectEntities$(),
@@ -363,7 +399,7 @@ export class MusicCollectionEffect {
 				() => this.artistStateService.selectEntities$(),
 				() => this.artistStateService.dispatchListEntitiesAction()
 			),
-			withCredits ? this.repository.listCredits$() : of([]),
+			this.repository.listCredits$(creditsNeededFor(collections)),
 		]).pipe(
 			map(([albums, artists, credits]) => ({
 				albums: albums.map(toCatalogAlbum),

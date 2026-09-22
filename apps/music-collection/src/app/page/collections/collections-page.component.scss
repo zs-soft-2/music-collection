@@ -78,6 +78,38 @@ h1 {
 	}
 }
 
+/* ── The hunt ──────────────────────────────────────────────────────────── */
+
+.section {
+	margin-bottom: 2.5rem;
+}
+
+.section-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.35rem 1rem;
+	padding-bottom: 0.75rem;
+	margin-bottom: 1.25rem;
+	border-bottom: 1px solid var(--mc-border);
+
+	h2 {
+		margin: 0;
+		font-family: var(--mc-font-display);
+		font-size: clamp(1.6rem, 2.6vw, 2.1rem);
+		font-weight: 400;
+		line-height: 1;
+		letter-spacing: 0.02em;
+	}
+}
+
+.section-lead {
+	max-width: 52ch;
+	margin: 0;
+	font-size: 0.85rem;
+	color: var(--mc-text-muted);
+}
+
 /* ── Toolbar ───────────────────────────────────────────────────────────────── */
 
 .toolbar {

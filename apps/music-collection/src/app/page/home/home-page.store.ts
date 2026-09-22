@@ -44,8 +44,12 @@ import {
 import {
 	sortCollectionCards,
 	toCollectionCard,
+	toNextAlbums,
 } from '../collections/collections.mapper';
-import { CollectionCardView } from '../collections/collections.model';
+import {
+	CollectionCardView,
+	NextAlbumView,
+} from '../collections/collections.model';
 import {
 	CATALOG_TYPES,
 	albumCountsByArtist,
@@ -64,6 +68,11 @@ import {
 
 /** Collections on the home page; the rest is one click away. */
 const HOME_COLLECTION_COUNT = 3;
+/**
+ * How many records the home page names to hunt for. Fewer than the hunt list
+ * on `/collections`: this is a nudge on the way past, not the list itself.
+ */
+const HOME_HUNT_COUNT = 3;
 
 interface HomePageState {
 	artists: ArtistView[];
@@ -129,7 +138,7 @@ function entities$<T>(
 
 export const HomePageStore = signalStore(
 	withState(initialState),
-	withComputed((store) => {
+	withComputed((store, musicCollectionEffect = inject(MusicCollectionEffect)) => {
 		const counts = computed(() =>
 			measure(
 				'home.releaseCounts',
@@ -181,6 +190,29 @@ export const HomePageStore = signalStore(
 			)
 		);
 
+		/**
+		 * Which records to buy next. The standings are already in state to
+		 * draw the collection rows, so ranking them costs a pass over what is
+		 * in hand — no query, and nothing kept.
+		 */
+		const nextAlbums = computed<NextAlbumView[]>(() => {
+			const cards = collections();
+
+			// The hunt is about a shelf, and a guest has none: nothing is
+			// ranked until there is something to continue.
+			if (!cards.some((collection) => collection.owned > 0)) {
+				return [];
+			}
+
+			return toNextAlbums(
+				musicCollectionEffect.suggestNextAlbums(
+					store.collectionStandings()
+				),
+				cards,
+				HOME_HUNT_COUNT
+			);
+		});
+
 		/** The catalog ranks a guest's artists, so it is waited for too. */
 		const artistsPending = computed(
 			() =>
@@ -213,6 +245,9 @@ export const HomePageStore = signalStore(
 					.filter((collection) => collection.total > 0)
 					.slice(0, HOME_COLLECTION_COUNT)
 			),
+			nextAlbums,
+			/** Empty where there is no shelf to continue, or no gap left. */
+			showsHunt: computed(() => nextAlbums().length > 0),
 			completedCollections: computed(
 				() =>
 					collections().filter((collection) => collection.completed)

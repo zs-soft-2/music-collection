@@ -6,6 +6,13 @@ import {
 /** Covers shown on a collection card that has no artwork of its own. */
 export const COVER_MOSAIC_SIZE = 4;
 
+/**
+ * How many records the hunt list shows. A collector with eight hundred gaps
+ * is not helped by a list of eight hundred; the point of ranking them is to
+ * name the few that are worth a trip to the shop.
+ */
+export const NEXT_ALBUM_COUNT = 6;
+
 /** One collection and where the collector stands on it, as a card shows it. */
 export interface CollectionCardView {
 	uid: string;
@@ -38,6 +45,34 @@ export interface CollectionCardView {
 /** A card as the list renders it: the collector's pick decides the star. */
 export interface CollectionCardListView extends CollectionCardView {
 	followed: boolean;
+}
+
+/** One collection asking for a record, as the hunt list names it. */
+export interface NextAlbumDemandView {
+	name: string;
+	slug: string;
+	/** How many records it still misses, this one counted. */
+	missing: number;
+}
+
+/**
+ * One record worth buying next. `unlockedPoints` is what the collector holds
+ * the moment it is on the shelf — a badge, and a score that stops being zero
+ * — and is 0 for a record that finishes nothing yet; `potentialPoints` is how
+ * much of the still-locked score it moves.
+ */
+export interface NextAlbumView {
+	albumUid: string;
+	albumName: string;
+	artistName: string;
+	year: number | null;
+	coverUrl: string | null;
+	unlockedPoints: number;
+	/** The collections this one record would complete, by name. */
+	completes: string[];
+	potentialPoints: number;
+	/** Every collection that wants it, the nearest to finishing first. */
+	wantedBy: NextAlbumDemandView[];
 }
 
 /** One album of the collection, with whether it is on the shelf. */

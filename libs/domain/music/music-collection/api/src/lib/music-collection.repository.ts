@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 
-import { CatalogCredit } from './music-collection-catalog';
+import { CatalogCredit, CreditsNeeded } from './music-collection-catalog';
 import {
 	BadgeGenerationSettings,
 	BadgeModelOption,
@@ -29,11 +29,14 @@ export abstract class MusicCollectionRepository {
 	): Observable<MusicCollectionEntity | undefined>;
 
 	/**
-	 * Every credit of the catalog. Only a collection that asks about who
-	 * played on a record needs them, and they outnumber the albums by far,
-	 * so they are fetched when a criterion actually wants them.
+	 * The credits resolving needs, and no more. They outnumber the albums by
+	 * far, so what is asked for matters: a rule naming its musicians is
+	 * answered from their credits alone, and only a rule asking by role
+	 * needs the catalog's whole set. See `creditsNeededFor`.
 	 */
-	public abstract listCredits$(): Observable<CatalogCredit[]>;
+	public abstract listCredits$(
+		needed: CreditsNeeded
+	): Observable<CatalogCredit[]>;
 
 	/**
 	 * Writing goes through the callables: the rules refuse every client write

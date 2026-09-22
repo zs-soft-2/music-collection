@@ -231,6 +231,36 @@ describe('scoreCollection', () => {
 		expect(result.basePoints).toBe(derivedBasePoints(FOUR.albums, NOW));
 	});
 
+	/*
+	 * The promise "buy this record and you hold N points" is made from a
+	 * score computed while the record is still missing, so `totalPoints` has
+	 * to be what `earnedPoints` becomes once it arrives — and a floor, never
+	 * a boast: the copy that completes the set may be a prized pressing and
+	 * raise the bonus further.
+	 */
+	it('shows, while a record is missing, the least completing it earns', () => {
+		const missingOne = [owned('a', ALBUM_YEAR), owned('b'), owned('c')];
+		const promised = score(missingOne, false);
+
+		expect(promised.earnedPoints).toBe(0);
+		// The plainest copy of the last record earns exactly what was shown.
+		expect(score([...missingOne, owned('d')], true).earnedPoints).toBe(
+			promised.totalPoints
+		);
+		// A prized one earns more — the number shown is never a boast.
+		expect(
+			score(
+				[
+					...missingOne,
+					owned('d', ALBUM_YEAR, [
+						FormatDescriptionEnum.limitedEdition,
+					]),
+				],
+				true
+			).earnedPoints
+		).toBeGreaterThan(promised.totalPoints);
+	});
+
 	it('scores an empty collection at nothing, earned or not', () => {
 		const empty = scoreCollection(resolved([]), [], null, false, NOW);
 

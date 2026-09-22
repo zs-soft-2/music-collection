@@ -7,6 +7,7 @@ import {
 	ReleaseCardComponent,
 } from '../../shared/music-ui';
 import { CollectionProgressComponent } from '../collections/component/collection-progress/collection-progress.component';
+import { NextAlbumsComponent } from '../collections/component/next-albums/next-albums.component';
 import { AlbumGroupComponent } from './component/album-group/album-group.component';
 import { ArtistGroupComponent } from './component/artist-group/artist-group.component';
 import { ArtistSpotlightComponent } from './component/artist-spotlight/artist-spotlight.component';
@@ -43,6 +44,7 @@ import { HomePageStore } from './home-page.store';
 		HomeSearchComponent,
 		JoinPromptComponent,
 		CollectionProgressComponent,
+		NextAlbumsComponent,
 	],
 })
 export class HomePageComponent {

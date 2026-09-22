@@ -17,15 +17,22 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
 import { withCollectionFollowing } from './collection-following.feature';
-import { sortCollectionCards, toCollectionCard } from './collections.mapper';
+import {
+	sortCollectionCards,
+	toCollectionCard,
+	toNextAlbums,
+} from './collections.mapper';
 import {
 	CollectionCardListView,
 	CollectionCardView,
 	CollectionsTab,
+	NextAlbumView,
 } from './collections.model';
 
 interface CollectionsPageState {
 	collections: CollectionCardView[];
+	/** The records worth buying next, the best buy first. */
+	nextAlbums: NextAlbumView[];
 	isLoading: boolean;
 	tab: CollectionsTab;
 	/** Free text over the name and the description. */
@@ -34,6 +41,7 @@ interface CollectionsPageState {
 
 const initialState: CollectionsPageState = {
 	collections: [],
+	nextAlbums: [],
 	isLoading: true,
 	tab: 'following',
 	query: '',
@@ -100,6 +108,8 @@ export const CollectionsPageStore = signalStore(
 					followed: followedUids.has(collection.uid),
 				}));
 		}),
+		/** Empty where there is no shelf to continue, or no gap left in one. */
+		showsHunt: computed(() => store.nextAlbums().length > 0),
 		/** The Following tab is standing in for a pick nobody has made. */
 		showsEverything: computed(
 			() => store.tab() === 'following' && store.followsNothing()
@@ -111,13 +121,39 @@ export const CollectionsPageStore = signalStore(
 				tap(() => patchState(store, { isLoading: true })),
 				switchMap(() => effect.listStandings$()),
 				tapResponse({
-					next: (standings: MusicCollectionStanding[]) =>
+					next: (standings: MusicCollectionStanding[]) => {
+						const collections = sortCollectionCards(
+							standings.map(toCollectionCard)
+						);
+						/*
+						 * The hunt is about a shelf. With nothing on it — a
+						 * guest, or a collector who has not filed a record yet
+						 * — there is nothing to continue, and the records are
+						 * not ranked at all: a guest is not made to pay, even
+						 * in a pass over memory, for advice given to nobody.
+						 */
+						const hasShelf = collections.some(
+							(collection) => collection.owned > 0
+						);
+
 						patchState(store, {
-							collections: sortCollectionCards(
-								standings.map(toCollectionCard)
-							),
+							collections,
+							/*
+							 * Over every published collection, not only the
+							 * ones followed: the pick is a view, and a
+							 * collection nobody starred still pays when it is
+							 * finished — the same reason the header counts
+							 * them all.
+							 */
+							nextAlbums: hasShelf
+								? toNextAlbums(
+										effect.suggestNextAlbums(standings),
+										collections
+									)
+								: [],
 							isLoading: false,
-						}),
+						});
+					},
 					error: (error) => {
 						console.error(error);
 						patchState(store, { isLoading: false });

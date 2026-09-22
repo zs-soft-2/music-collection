@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 
 import { CollectionArtworkComponent } from '../../shared/collection-artwork';
 
+import { NextAlbumsComponent } from './component/next-albums/next-albums.component';
 import { CollectionsPageStore } from './collections-page.store';
 import { COLLECTIONS_TAB_OPTIONS, CollectionsTab } from './collections.model';
 
@@ -14,6 +15,10 @@ import { COLLECTIONS_TAB_OPTIONS, CollectionsTab } from './collections.model';
  * There can be far more collections than anyone is after, so the list opens
  * on the ones the collector picked; the totals in the header stay over all of
  * them, as the points do.
+ *
+ * Above the list stands the answer to the question the cards cannot give:
+ * which single record to buy next. Nothing pays until a collection is
+ * complete, so that is rarely the record a collector would have guessed.
  */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -21,7 +26,7 @@ import { COLLECTIONS_TAB_OPTIONS, CollectionsTab } from './collections.model';
 	selector: 'mc-collections-page',
 	templateUrl: './collections-page.component.html',
 	styleUrls: ['./collections-page.component.scss'],
-	imports: [RouterLink, CollectionArtworkComponent],
+	imports: [RouterLink, CollectionArtworkComponent, NextAlbumsComponent],
 })
 export class CollectionsPageComponent {
 	protected readonly store = inject(CollectionsPageStore);

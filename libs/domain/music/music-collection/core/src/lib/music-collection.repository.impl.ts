@@ -1,7 +1,12 @@
-import { Observable, from, map } from 'rxjs';
+import { Observable, combineLatest, from, map, of } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
-import { Firestore, collection, query } from '@angular/fire/firestore';
+import {
+	Firestore,
+	collection,
+	query,
+	where,
+} from '@angular/fire/firestore';
 import { Functions, httpsCallable } from '@angular/fire/functions';
 import {
 	CONTRIBUTION_FEATURE_KEY,
@@ -14,6 +19,7 @@ import {
 	CREATE_MUSIC_COLLECTION_FUNCTION,
 	CatalogCredit,
 	CreateMusicCollectionResult,
+	CreditsNeeded,
 	DELETE_MUSIC_COLLECTION_FUNCTION,
 	GENERATE_MUSIC_COLLECTION_BADGE_FUNCTION,
 	GenerateBadgeResult,
@@ -30,6 +36,9 @@ import {
 } from '@music-collection/domain/music-collection/api';
 
 import { toCatalogCredit } from './music-collection.mapper';
+
+/** How many values an `in` filter takes; the credits are asked for in batches. */
+const MUSICIANS_PER_QUERY = 30;
 
 /**
  * The definitions in `music-collection/{uid}`, served from the client cache
@@ -89,16 +98,66 @@ export class MusicCollectionFirestoreRepository extends MusicCollectionRepositor
 	}
 
 	/** The whole `contribution` collection, served as a bundle like the rest. */
-	public listCredits$(): Observable<CatalogCredit[]> {
-		return this.firestoreSync
-			.list$<ContributionEntity>({
-				featureKey: CONTRIBUTION_FEATURE_KEY,
-				query: collection(this.firestore, CONTRIBUTION_FEATURE_KEY),
-				// The credits outnumber every other collection: a single new
-				// one must not cost a download of all of them.
-				incremental: true,
-			})
-			.pipe(map((contributions) => contributions.map(toCatalogCredit)));
+	public listCredits$(needed: CreditsNeeded): Observable<CatalogCredit[]> {
+		if (needed.kind === 'none') {
+			return of([]);
+		}
+
+		if (needed.kind === 'all') {
+			return this.firestoreSync
+				.list$<ContributionEntity>({
+					featureKey: CONTRIBUTION_FEATURE_KEY,
+					query: collection(
+						this.firestore,
+						CONTRIBUTION_FEATURE_KEY
+					),
+					// The credits outnumber every other collection: a single
+					// new one must not cost a download of all of them.
+					incremental: true,
+				})
+				.pipe(
+					map((contributions) => contributions.map(toCatalogCredit))
+				);
+		}
+
+		const { musicianUids } = needed;
+
+		if (!musicianUids.length) {
+			return of([]);
+		}
+
+		/*
+		 * The narrow case, and the reason it is worth the extra queries: the
+		 * credits of a handful of musicians instead of the catalog's whole
+		 * set, for the same answer. `bundle: false` because the bundle is
+		 * built per feature — taking it would download every credit there is,
+		 * which is the cost being avoided.
+		 */
+		const batches: string[][] = [];
+
+		for (let at = 0; at < musicianUids.length; at += MUSICIANS_PER_QUERY) {
+			batches.push(musicianUids.slice(at, at + MUSICIANS_PER_QUERY));
+		}
+
+		return combineLatest(
+			batches.map((uids) =>
+				this.firestoreSync.list$<ContributionEntity>({
+					featureKey: CONTRIBUTION_FEATURE_KEY,
+					cacheKey: `${CONTRIBUTION_FEATURE_KEY}?musicianUid=${uids.join(',')}`,
+					query: query(
+						collection(this.firestore, CONTRIBUTION_FEATURE_KEY),
+						where('musicianUid', 'in', uids)
+					),
+					bundle: false,
+				})
+			)
+		).pipe(
+			map((batched) =>
+				batched.flat().map((contribution) =>
+					toCatalogCredit(contribution)
+				)
+			)
+		);
 	}
 
 	public create$(

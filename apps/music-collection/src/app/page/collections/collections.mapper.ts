@@ -1,4 +1,7 @@
-import { BadgeDefinition } from '@music-collection/domain/music-collection/api';
+import {
+	BadgeDefinition,
+	NextAlbumSuggestion,
+} from '@music-collection/domain/music-collection/api';
 import { MusicCollectionStanding } from '@music-collection/domain/music-collection/core';
 
 import {
@@ -7,6 +10,9 @@ import {
 	CollectionBadgeView,
 	CollectionCardView,
 	CollectionDetailView,
+	NEXT_ALBUM_COUNT,
+	NextAlbumDemandView,
+	NextAlbumView,
 } from './collections.model';
 
 /**
@@ -109,4 +115,75 @@ export function toCollectionDetail(
 		albums,
 		highlights: standing.score.highlights,
 	};
+}
+
+/**
+ * The hunt list: the ranked records, named in the collector's terms.
+ *
+ * The ranking knows collections by uid alone; the names and the links come
+ * from the cards the page has already built. A collection the cards do not
+ * hold cannot be pointed at, so its demand is left out rather than shown as
+ * a dead link — and a record wanted by nothing else drops out with it.
+ */
+export function toNextAlbums(
+	suggestions: readonly NextAlbumSuggestion[],
+	collections: readonly CollectionCardView[],
+	limit: number = NEXT_ALBUM_COUNT
+): NextAlbumView[] {
+	const byUid = new Map(
+		collections.map((collection) => [collection.uid, collection])
+	);
+	const named = (uid: string) => byUid.get(uid)?.name;
+	const views: NextAlbumView[] = [];
+
+	for (const suggestion of suggestions) {
+		const wantedBy = suggestion.wantedBy.reduce<NextAlbumDemandView[]>(
+			(demands, demand) => {
+				const collection = byUid.get(demand.collectionUid);
+
+				return collection
+					? [
+							...demands,
+							{
+								name: collection.name,
+								slug: collection.slug,
+								missing: demand.missing,
+							},
+						]
+					: demands;
+			},
+			[]
+		);
+
+		if (!wantedBy.length) {
+			continue;
+		}
+
+		const completes = suggestion.completesCollectionUids
+			.map(named)
+			.filter((name): name is string => !!name);
+
+		views.push({
+			albumUid: suggestion.album.albumUid,
+			albumName: suggestion.album.albumName,
+			artistName: suggestion.album.artistName,
+			year: suggestion.album.year,
+			coverUrl: suggestion.album.coverUrl,
+			/*
+			 * Points are claimed only where the collection they come from can
+			 * be named: "completes" with nothing after it is worse than the
+			 * quieter promise of moving closer.
+			 */
+			unlockedPoints: completes.length ? suggestion.unlockedPoints : 0,
+			completes,
+			potentialPoints: suggestion.potentialPoints,
+			wantedBy,
+		});
+
+		if (views.length === limit) {
+			break;
+		}
+	}
+
+	return views;
 }
