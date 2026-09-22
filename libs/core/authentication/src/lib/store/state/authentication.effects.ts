@@ -1,9 +1,9 @@
 import { from, of } from 'rxjs';
 import { catchError, map, mergeMap, switchMap, take } from 'rxjs/operators';
-import { Auth, authState } from '@angular/fire/auth';
 
 import { inject, Injectable } from '@angular/core';
 import {
+	AuthenticatedUserService,
 	AuthenticationProviderService,
 	BaseService,
 	EntityTypeEnum,
@@ -17,14 +17,17 @@ import * as authenticationActions from './authentication.actions';
 @Injectable()
 export class AuthenticationEffects extends BaseService {
 	actions$: Actions = inject(Actions);
-	auth: Auth = inject(Auth);
+	authenticatedUser: AuthenticatedUserService = inject(
+		AuthenticatedUserService
+	);
 	userStateService: UserStateService = inject(UserStateService);
 	// Platformfüggő bejelentkezés: weben popup, mobilon natív Google SDK.
 	authenticationProviderService: AuthenticationProviderService = inject(
 		AuthenticationProviderService
 	);
-	// Az injektálási kontextusban kell létrehozni (AngularFire).
-	private readonly authState$ = authState(this.auth);
+	// A munkamenet egyetlen forrása; az AngularFire-t az
+	// AuthenticatedUserService kérdezi, itt már csak olvassuk.
+	private readonly authState$ = this.authenticatedUser.user$;
 
 	// Oldal-újratöltéskor a Firebase aszinkron állítja vissza a munkamenetet.
 	// A munkamenet igazságforrása a Firebase (nem a localStorage-ba mentett
@@ -43,7 +46,7 @@ export class AuthenticationEffects extends BaseService {
 		this.actions$.pipe(
 			ofType(authenticationActions.getUser),
 			mergeMap(() => {
-				const authData = this.auth.currentUser;
+				const authData = this.authenticatedUser.current;
 				const actions: any[] = [];
 
 				// eslint-disable-next-line no-constant-condition

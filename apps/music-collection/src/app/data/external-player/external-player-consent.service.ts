@@ -1,6 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Auth, authState } from '@angular/fire/auth';
+
+import { AuthenticatedUserService } from '@music-collection/api';
 
 import { UserSettingsEffect } from '../user-settings';
 import { EXTERNAL_PLAYER_SETTING } from './external-player.setting';
@@ -14,7 +15,7 @@ import { EXTERNAL_PLAYER_SETTING } from './external-player.setting';
 @Injectable({ providedIn: 'root' })
 export class ExternalPlayerConsentService {
 	private readonly settings = inject(UserSettingsEffect);
-	private readonly auth = inject(Auth);
+	private readonly authenticatedUser = inject(AuthenticatedUserService);
 
 	/** Null while the question has not been answered (or not loaded yet). */
 	public readonly consented = signal<boolean | null>(null);
@@ -41,7 +42,7 @@ export class ExternalPlayerConsentService {
 			.pipe(takeUntilDestroyed())
 			.subscribe(({ consented }) => this.consented.set(consented));
 
-		authState(this.auth)
+		this.authenticatedUser.user$
 			.pipe(takeUntilDestroyed())
 			.subscribe((user) => this.signedIn.set(!!user));
 	}

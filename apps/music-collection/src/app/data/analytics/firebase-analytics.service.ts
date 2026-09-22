@@ -3,12 +3,12 @@ import { filter } from 'rxjs/operators';
 import { Injectable, effect, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { getApp } from '@angular/fire/app';
-import { Auth, authState } from '@angular/fire/auth';
 import { NavigationEnd, Router } from '@angular/router';
 import {
 	AnalyticsEventName,
 	AnalyticsEventParameters,
 	AnalyticsService,
+	AuthenticatedUserService,
 } from '@music-collection/api';
 
 import type { Analytics } from 'firebase/analytics';
@@ -31,7 +31,7 @@ type AnalyticsSdk = typeof import('firebase/analytics');
  */
 @Injectable({ providedIn: 'root' })
 export class FirebaseAnalyticsService extends AnalyticsService {
-	private readonly auth = inject(Auth);
+	private readonly authenticatedUser = inject(AuthenticatedUserService);
 	private readonly router = inject(Router);
 	private readonly consent = inject(MeasurementConsentService);
 
@@ -67,7 +67,7 @@ export class FirebaseAnalyticsService extends AnalyticsService {
 			)
 			.subscribe(() => this.trackPageView());
 
-		authState(this.auth)
+		this.authenticatedUser.user$
 			.pipe(takeUntilDestroyed())
 			.subscribe((user) => this.follow(user?.uid ?? null));
 	}

@@ -2,7 +2,7 @@ import { firstValueFrom, of, switchMap, take, timeout } from 'rxjs';
 
 import { CommonModule } from '@angular/common';
 import { NgModule, inject, provideAppInitializer } from '@angular/core';
-import { Auth, authState } from '@angular/fire/auth';
+import { AuthenticatedUserService } from '@music-collection/api';
 
 import { AuthorizationEffects } from './state';
 
@@ -23,7 +23,7 @@ const PERMISSIONS_READY_TIMEOUT_MS = 10_000;
 			const effects = inject(AuthorizationEffects);
 
 			return firstValueFrom(
-				authState(inject(Auth)).pipe(
+				inject(AuthenticatedUserService).user$.pipe(
 					take(1),
 					switchMap((user) =>
 						user ? effects.appliedFor$(user.uid) : of(undefined)

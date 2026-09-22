@@ -6,9 +6,11 @@ import {
 	inject,
 	runInInjectionContext,
 } from '@angular/core';
-import { Auth, authState } from '@angular/fire/auth';
 import { Firestore, collection, doc } from '@angular/fire/firestore';
-import { FirestoreSyncService } from '@music-collection/api';
+import {
+	AuthenticatedUserService,
+	FirestoreSyncService,
+} from '@music-collection/api';
 
 import { PLAY_LOG_FEATURE_KEY, PlayLogEntry } from './play-log.model';
 
@@ -24,13 +26,13 @@ const USER_COLLECTION = 'user';
 @Injectable({ providedIn: 'root' })
 export class PlayLogRepository {
 	private readonly firestore = inject(Firestore);
-	private readonly auth = inject(Auth);
+	private readonly authenticatedUser = inject(AuthenticatedUserService);
 	private readonly firestoreSync = inject(FirestoreSyncService);
 	private readonly injector = inject(Injector);
 
 	/** The whole log of the signed-in collector; empty while signed out. */
 	public list$(): Observable<PlayLogEntry[]> {
-		return authState(this.auth).pipe(
+		return this.authenticatedUser.user$.pipe(
 			switchMap((user) =>
 				user
 					? this.firestoreSync.list$<PlayLogEntry>({
@@ -59,7 +61,7 @@ export class PlayLogRepository {
 	 * ended — is the same document rather than two plays.
 	 */
 	public save(entry: PlayLogEntry): Promise<void> {
-		const user = this.auth.currentUser;
+		const user = this.authenticatedUser.current;
 
 		if (!user) {
 			return Promise.resolve();
@@ -82,6 +84,6 @@ export class PlayLogRepository {
 
 	/** Whether a sitting would be kept at all. */
 	public get signedIn(): boolean {
-		return !!this.auth.currentUser;
+		return !!this.authenticatedUser.current;
 	}
 }

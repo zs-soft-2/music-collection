@@ -1,4 +1,12 @@
-import { Observable, catchError, map, of, switchMap } from 'rxjs';
+import {
+	Observable,
+	catchError,
+	finalize,
+	map,
+	of,
+	shareReplay,
+	switchMap,
+} from 'rxjs';
 
 import {
 	Injectable,
@@ -6,9 +14,11 @@ import {
 	inject,
 	runInInjectionContext,
 } from '@angular/core';
-import { Auth, authState } from '@angular/fire/auth';
 import { DocumentData, Firestore, doc, docData } from '@angular/fire/firestore';
-import { FirestoreSyncService } from '@music-collection/api';
+import {
+	AuthenticatedUserService,
+	FirestoreSyncService,
+} from '@music-collection/api';
 
 import { UserSetting } from './user-settings.model';
 
@@ -24,9 +34,14 @@ const SETTING_COLLECTION = 'setting';
 @Injectable({ providedIn: 'root' })
 export class UserSettingsRepository {
 	private readonly firestore = inject(Firestore);
-	private readonly auth = inject(Auth);
+	private readonly authenticatedUser = inject(AuthenticatedUserService);
 	private readonly firestoreSync = inject(FirestoreSyncService);
 	private readonly injector = inject(Injector);
+	/** The shared listener of every setting document being followed. */
+	private readonly followedDocuments = new Map<
+		string,
+		Observable<DocumentData | undefined>
+	>();
 
 	/**
 	 * Follows the setting, and switches with the sign-in state. A document
@@ -34,10 +49,10 @@ export class UserSettingsRepository {
 	 * instead of failing the page that shows it.
 	 */
 	public value$<T>(setting: UserSetting<T>): Observable<T> {
-		return authState(this.auth).pipe(
+		return this.authenticatedUser.user$.pipe(
 			switchMap((user) =>
 				user
-					? this.document$(setting, user.uid).pipe(
+					? this.followed$(setting, user.uid).pipe(
 							map((data) => setting.toValue(data ?? {})),
 							catchError((error) => {
 								console.warn(
@@ -54,7 +69,7 @@ export class UserSettingsRepository {
 	}
 
 	public save<T>(setting: UserSetting<T>, value: T): Promise<void> {
-		const user = this.auth.currentUser;
+		const user = this.authenticatedUser.current;
 		const data = setting.toDocument(value);
 
 		if (!user) {
@@ -68,6 +83,37 @@ export class UserSettingsRepository {
 			setting.featureKey,
 			data
 		);
+	}
+
+	/**
+	 * The one listener on a setting document, however many ask for it. The
+	 * same setting is read from several places at once — a page store, a
+	 * root service, a form — and without this each of them would open its
+	 * own snapshot listener on the very same document.
+	 *
+	 * The key holds the uid: a listener opened for one account must never
+	 * serve the next one. It is dropped again once the last reader lets go
+	 * (and on an error), so the next reader starts from a fresh document.
+	 */
+	private followed$<T>(
+		setting: UserSetting<T>,
+		uid: string
+	): Observable<DocumentData | undefined> {
+		const key = `${uid}/${setting.id}`;
+		const followed = this.followedDocuments.get(key);
+
+		if (followed) {
+			return followed;
+		}
+
+		const document$ = this.document$(setting, uid).pipe(
+			finalize(() => this.followedDocuments.delete(key)),
+			shareReplay({ bufferSize: 1, refCount: true })
+		);
+
+		this.followedDocuments.set(key, document$);
+
+		return document$;
 	}
 
 	/**

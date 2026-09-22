@@ -1,6 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Auth, authState } from '@angular/fire/auth';
+
+import { AuthenticatedUserService } from '@music-collection/api';
 
 import { UserSettingsEffect } from '../user-settings';
 import { SpotifyToken } from './spotify.model';
@@ -21,7 +22,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class SpotifyTokenService {
 	private readonly settings = inject(UserSettingsEffect);
-	private readonly auth = inject(Auth);
+	private readonly authenticatedUser = inject(AuthenticatedUserService);
 
 	private readonly stored = signal<SpotifyConnection>(null);
 	private readonly signedIn = signal(false);
@@ -42,7 +43,7 @@ export class SpotifyTokenService {
 	});
 
 	public constructor() {
-		authState(this.auth)
+		this.authenticatedUser.user$
 			.pipe(takeUntilDestroyed())
 			.subscribe((user) => this.signedIn.set(!!user));
 
@@ -81,7 +82,7 @@ export class SpotifyTokenService {
 	 * they ever came back for it.
 	 */
 	private carryOverLegacy(connection: SpotifyConnection): void {
-		if (!this.auth.currentUser) {
+		if (!this.authenticatedUser.current) {
 			return;
 		}
 

@@ -1,10 +1,18 @@
-import { Observable, catchError, map, of, switchMap } from 'rxjs';
+import {
+	Observable,
+	catchError,
+	finalize,
+	map,
+	of,
+	shareReplay,
+	switchMap,
+} from 'rxjs';
 
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Auth, authState } from '@angular/fire/auth';
-import { Firestore, doc, docData } from '@angular/fire/firestore';
+import { DocumentData, Firestore, doc, docData } from '@angular/fire/firestore';
 import {
+	AuthenticatedUserService,
 	FirestoreSyncService,
 	TRACK_FEATURE_KEY,
 	TRACK_LYRICS_FEATURE_KEY,
@@ -46,22 +54,21 @@ const toLyrics = (record: LrclibRecord | undefined): TrackLyrics | null => {
 @Injectable({ providedIn: 'root' })
 export class TrackDetailsRepository {
 	private readonly firestore = inject(Firestore);
-	private readonly auth = inject(Auth);
+	private readonly authenticatedUser = inject(AuthenticatedUserService);
 	private readonly firestoreSync = inject(FirestoreSyncService);
 	private readonly http = inject(HttpClient);
+	/** The shared listener of every track's lyrics being followed. */
+	private readonly followedLyrics = new Map<
+		string,
+		Observable<DocumentData | undefined>
+	>();
 
 	/** Null when signed out, missing or not readable. */
 	public lyrics$(trackUid: string): Observable<TrackLyrics | null> {
-		return authState(this.auth).pipe(
+		return this.authenticatedUser.user$.pipe(
 			switchMap((user) =>
 				user
-					? docData(
-							doc(
-								this.firestore,
-								TRACK_LYRICS_FEATURE_KEY,
-								trackUid
-							)
-						).pipe(
+					? this.followed$(trackUid, user.uid).pipe(
 							map((data) => {
 								const lyrics = data as TrackLyrics | undefined;
 								return lyrics?.text
@@ -79,6 +86,38 @@ export class TrackDetailsRepository {
 					: of(null)
 			)
 		);
+	}
+
+	/**
+	 * The one listener on a track's lyrics, however many ask for it. The
+	 * player follows the lyrics of what is playing and the track page those
+	 * of what is open — the same track, most of the time — and without this
+	 * the two would open a listener each on the very same document.
+	 *
+	 * The key holds the uid, because what a reader may see is the reader's
+	 * own; the entry goes once the last of them lets go (and on an error).
+	 */
+	private followed$(
+		trackUid: string,
+		uid: string
+	): Observable<DocumentData | undefined> {
+		const key = `${uid}/${trackUid}`;
+		const followed = this.followedLyrics.get(key);
+
+		if (followed) {
+			return followed;
+		}
+
+		const lyrics$ = docData(
+			doc(this.firestore, TRACK_LYRICS_FEATURE_KEY, trackUid)
+		).pipe(
+			finalize(() => this.followedLyrics.delete(key)),
+			shareReplay({ bufferSize: 1, refCount: true })
+		);
+
+		this.followedLyrics.set(key, lyrics$);
+
+		return lyrics$;
 	}
 
 	public updateTrack(
