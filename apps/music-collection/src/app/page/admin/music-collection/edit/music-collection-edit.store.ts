@@ -111,9 +111,10 @@ interface MusicCollectionEditState {
 	/** Which gallery image that is — the one marked as the current pin. */
 	badgeImageUid: string | null;
 	/**
-	 * Every image ever drawn for this collection, oldest first. Drawing adds
-	 * to it rather than replacing it, so an admin can still pick a pin out of
-	 * last month's run without paying the model again.
+	 * Every image drawn for this collection that is still on offer, oldest
+	 * first. Drawing adds to it rather than replacing it, so an admin can
+	 * still pick a pin out of last month's run without paying the model
+	 * again; the ones withdrawn in the document admin are left out.
 	 */
 	badgeGallery: BadgeImage[];
 	isGeneratingBadge: boolean;
@@ -199,6 +200,24 @@ export const MusicCollectionEditStore = signalStore(
 				)
 			);
 
+			/**
+			 * The gallery narrowed to what may still be picked: an image
+			 * withdrawn in the document admin stays where it is, and the
+			 * definition goes on pointing at it, but it is not offered.
+			 */
+			const offerGallery = rxMethod<BadgeImage[]>(
+				pipe(
+					switchMap((gallery) =>
+						effect.offeredBadgeGallery$(gallery)
+					),
+					tapResponse({
+						next: (badgeGallery: BadgeImage[]) =>
+							patchState(store, { badgeGallery }),
+						error: (error: unknown) => console.error(error),
+					})
+				)
+			);
+
 			const patchForm = (patch: Partial<CollectionForm>) => {
 				const form = { ...store.form(), ...patch };
 
@@ -254,6 +273,9 @@ export const MusicCollectionEditStore = signalStore(
 									? toForm(collection)
 									: emptyCollectionForm();
 
+								const gallery =
+									collection?.badge?.gallery ?? [];
+
 								patchState(store, {
 									uid: collection?.uid ?? null,
 									form,
@@ -265,9 +287,9 @@ export const MusicCollectionEditStore = signalStore(
 									badgeImageUid:
 										collection?.badge?.image?.documentUid ??
 										null,
-									badgeGallery:
-										collection?.badge?.gallery ?? [],
+									badgeGallery: gallery,
 								});
+								offerGallery(of(gallery));
 								preview(of(form.criteria));
 							},
 							error: (error) => {

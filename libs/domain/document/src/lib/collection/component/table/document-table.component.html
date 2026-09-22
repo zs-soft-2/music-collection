@@ -8,16 +8,63 @@
 				[suggestions]="params.empty"
 				[showClear]="true"
 				(completeMethod)="searchHandler($event)"
+				(onClear)="clearSearch()"
 				[minQueryLength]="3"
 				[delay]="400"
 			>
 			</p-autocomplete>
+
+			<div class="category-filter" role="group" aria-label="Category">
+				@for (option of filters; track option.value) {
+					<button
+						type="button"
+						[attr.aria-pressed]="params.filter === option.value"
+						(click)="setFilter(option.value)"
+					>
+						{{ option.label }}
+					</button>
+				}
+			</div>
 
 			<mc-collection-view-toggle
 				[view]="collectionView.view()"
 				(viewChange)="collectionView.setView($event)"
 			/>
 		</div>
+
+		@if (pendingWithdrawal(); as document) {
+			<div
+				class="withdrawal"
+				role="alertdialog"
+				aria-labelledby="withdrawal-title"
+			>
+				<p id="withdrawal-title">
+					Withdraw <strong>{{ document.name }}</strong
+					>? The file stays where it is — everything that already
+					points at it goes on working — but it will not be offered
+					again.
+				</p>
+
+				<div class="withdrawal-actions">
+					<button
+						pButton
+						pRipple
+						class="p-button-text p-button-secondary"
+						(click)="cancelWithdrawal()"
+					>
+						Cancel
+					</button>
+					<button
+						pButton
+						pRipple
+						class="p-button-danger"
+						(click)="confirmWithdrawal()"
+					>
+						Withdraw
+					</button>
+				</div>
+			</div>
+		}
 
 		@if (collectionView.view() === 'cards') {
 			<p-dataview
@@ -39,20 +86,37 @@
 									imageShape="square"
 									(open)="editDocument(document)"
 								>
-									<button
-										cardActions
-										pButton
-										pRipple
-										aria-label="Delete document"
-										class="p-button-text p-button-rounded p-button-danger"
-										(click)="deleteDocument(document)"
-										iconOnly
-									>
-										<i
-											class="pi pi-trash"
-											aria-hidden="true"
-										></i>
-									</button>
+									@if (isWithdrawn(document)) {
+										<button
+											cardActions
+											pButton
+											pRipple
+											aria-label="Restore document"
+											class="p-button-text p-button-rounded p-button-secondary"
+											(click)="restoreDocument(document)"
+											iconOnly
+										>
+											<i
+												class="pi pi-replay"
+												aria-hidden="true"
+											></i>
+										</button>
+									} @else {
+										<button
+											cardActions
+											pButton
+											pRipple
+											aria-label="Withdraw document"
+											class="p-button-text p-button-rounded p-button-danger"
+											(click)="askWithdrawal(document)"
+											iconOnly
+										>
+											<i
+												class="pi pi-trash"
+												aria-hidden="true"
+											></i>
+										</button>
+									}
 								</mc-entity-card>
 							</li>
 						}
@@ -69,9 +133,13 @@
 			>
 				<ng-template #header>
 					<tr>
+						<th class="thumbnail-column"></th>
+
 						<th>Name</th>
 
 						<th>Original name</th>
+
+						<th>Category</th>
 
 						<th pSortableColumn="updatedAt">
 							Updated <p-sorticon field="updatedAt"></p-sorticon>
@@ -82,36 +150,77 @@
 				</ng-template>
 
 				<ng-template #body let-document>
-					<tr>
+					<tr [class.is-withdrawn]="isWithdrawn(document)">
+						<td class="thumbnail-column">
+							@if (imageOf(document); as image) {
+								<img
+									class="thumbnail"
+									[src]="image"
+									[alt]="document.name"
+									loading="lazy"
+								/>
+							}
+						</td>
+
 						<td>{{ document.name }}</td>
 
 						<td>{{ document.originalName }}</td>
+
+						<td>
+							@if (document.category) {
+								<span class="category">{{
+									document.category
+								}}</span>
+							}
+						</td>
 
 						<td>
 							{{ document.updatedAt | date: 'yyyy-MM-dd HH:mm' }}
 						</td>
 
 						<td>
-							<button
-								pButton
-								pRipple
-								aria-label="Edit document"
-								class="p-button-text p-button-rounded p-button-secondary"
-								(click)="editDocument(document)"
-								iconOnly
-							>
-								<i class="pi pi-pencil" aria-hidden="true"></i>
-							</button>
-							<button
-								pButton
-								pRipple
-								aria-label="Delete document"
-								class="p-button-text p-button-rounded p-button-danger"
-								(click)="deleteDocument(document)"
-								iconOnly
-							>
-								<i class="pi pi-trash" aria-hidden="true"></i>
-							</button>
+							@if (isWithdrawn(document)) {
+								<button
+									pButton
+									pRipple
+									aria-label="Restore document"
+									class="p-button-text p-button-rounded p-button-secondary"
+									(click)="restoreDocument(document)"
+									iconOnly
+								>
+									<i
+										class="pi pi-replay"
+										aria-hidden="true"
+									></i>
+								</button>
+							} @else {
+								<button
+									pButton
+									pRipple
+									aria-label="Edit document"
+									class="p-button-text p-button-rounded p-button-secondary"
+									(click)="editDocument(document)"
+									iconOnly
+								>
+									<i
+										class="pi pi-pencil"
+										aria-hidden="true"
+									></i>
+								</button>
+								<button
+									pButton
+									pRipple
+									aria-label="Withdraw document"
+									class="p-button-text p-button-rounded p-button-danger"
+									(click)="askWithdrawal(document)"
+									iconOnly
+								>
+									<i
+										class="pi pi-trash"
+										aria-hidden="true"
+									></i>
+								</button>
+							}
 						</td>
 					</tr>
 				</ng-template>

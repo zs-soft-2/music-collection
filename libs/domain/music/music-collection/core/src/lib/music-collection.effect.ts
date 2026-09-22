@@ -14,9 +14,12 @@ import {
 	AlbumStateService,
 	ArtistStateService,
 	CollectionItemStateService,
+	DocumentStateService,
+	isWithdrawnDocument,
 } from '@music-collection/api';
 import {
 	BadgeGenerationSettings,
+	BadgeImage,
 	BadgeModelOption,
 	CreateMusicCollectionResult,
 	GenerateBadgeResult,
@@ -106,6 +109,7 @@ export class MusicCollectionEffect {
 	private readonly collectionItemStateService = inject(
 		CollectionItemStateService
 	);
+	private readonly documentStateService = inject(DocumentStateService);
 
 	/** Every published collection with the collector's progress on it. */
 	public listStandings$(): Observable<MusicCollectionStanding[]> {
@@ -276,6 +280,35 @@ export class MusicCollectionEffect {
 		documentUid: string
 	): Observable<void> {
 		return this.repository.setBadgeImage$(uid, documentUid);
+	}
+
+	/**
+	 * The drawn images that are still on offer. A candidate withdrawn in the
+	 * document admin keeps its file — whatever already points at it goes on
+	 * loading, the frozen badge included — but it is not among what a pin
+	 * can be picked from any more.
+	 */
+	public offeredBadgeGallery$(
+		gallery: BadgeImage[]
+	): Observable<BadgeImage[]> {
+		if (!gallery.length) {
+			return of(gallery);
+		}
+
+		return entities$(
+			() => this.documentStateService.selectEntities$(),
+			() => this.documentStateService.dispatchListEntitiesAction()
+		).pipe(
+			map((documents) => {
+				const withdrawn = new Set(
+					documents.filter(isWithdrawnDocument).map(({ uid }) => uid)
+				);
+
+				return gallery.filter(
+					(image) => !withdrawn.has(image.documentUid)
+				);
+			})
+		);
 	}
 
 	public readBadgeSettings$(): Observable<BadgeGenerationSettings> {

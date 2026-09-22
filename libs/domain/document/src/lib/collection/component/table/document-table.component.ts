@@ -9,7 +9,9 @@ import {
 import {
 	BaseComponent,
 	DocumentEntity,
+	DocumentFilterEnum,
 	DocumentTableParams,
+	isWithdrawnDocument,
 } from '@music-collection/api';
 
 import { DocumentTableService } from './document-table.service';
@@ -53,6 +55,37 @@ export class DocumentTableComponent extends BaseComponent implements OnInit {
 
 	public readonly collectionView = this.componentService.collectionView;
 
+	/** The document waiting for the withdrawal to be confirmed, if any. */
+	public readonly pendingWithdrawal = this.componentService.pendingWithdrawal;
+
+	/** The sets an admin can look at; the generated ones have their own. */
+	public readonly filters: { value: DocumentFilterEnum; label: string }[] = [
+		{ value: DocumentFilterEnum.All, label: 'All' },
+		{ value: DocumentFilterEnum.Badge, label: 'Badges' },
+		{ value: DocumentFilterEnum.Other, label: 'Uploads' },
+		{ value: DocumentFilterEnum.Withdrawn, label: 'Withdrawn' },
+	];
+
+	public askWithdrawal(document: DocumentEntity): void {
+		this.componentService.askWithdrawal(document);
+	}
+
+	public cancelWithdrawal(): void {
+		this.componentService.cancelWithdrawal();
+	}
+
+	public clearSearch(): void {
+		this.componentService.clearSearch();
+	}
+
+	public confirmWithdrawal(): void {
+		this.componentService.confirmWithdrawal();
+	}
+
+	public editDocument(document: DocumentEntity): void {
+		this.componentService.editDocument(document);
+	}
+
 	/** The file itself, when the document is an image. */
 	public imageOf(document: DocumentEntity): string | null {
 		return document.fileType?.startsWith('image/')
@@ -60,19 +93,23 @@ export class DocumentTableComponent extends BaseComponent implements OnInit {
 			: null;
 	}
 
-	public deleteDocument(document: DocumentEntity): void {
-		console.log(document);
-	}
-
-	public editDocument(document: DocumentEntity): void {
-		this.componentService.editDocument(document);
+	public isWithdrawn(document: DocumentEntity): boolean {
+		return isWithdrawnDocument(document);
 	}
 
 	public ngOnInit(): void {
 		this.params$ = this.componentService.init$();
 	}
 
+	public restoreDocument(document: DocumentEntity): void {
+		this.componentService.restoreDocument(document);
+	}
+
 	public searchHandler(event: any): void {
 		this.componentService.searchHandler(event['query']);
+	}
+
+	public setFilter(filter: DocumentFilterEnum): void {
+		this.componentService.setFilter(filter);
 	}
 }

@@ -22,7 +22,10 @@ describe('DocumentListComponent', () => {
 				provideNoopAnimations(),
 				{
 					provide: DocumentStateService,
-					useValue: { selectSearchResult$: jest.fn(() => of([])) },
+					useValue: {
+						selectEntities$: jest.fn(() => of([])),
+						selectSearchResult$: jest.fn(() => of([])),
+					},
 				},
 				{ provide: DocumentUtilService, useValue: {} },
 			],

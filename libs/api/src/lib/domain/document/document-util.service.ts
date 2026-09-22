@@ -31,12 +31,14 @@ export abstract class DocumentUtilService extends EntityUtilService<
 		model: DocumentModelUpdate
 	): DocumentEntityUpdate;
 	public abstract createFilePath(data: string, folder?: string): string;
+	/**
+	 * The form of a document, from whatever of it is known. It carries what
+	 * an admin never edits as well — the category it was filed under and its
+	 * withdrawal mark — because saving writes the whole document, so what
+	 * the form does not hold would be lost.
+	 */
 	public abstract createFormGroupByProperties(
-		name: string | undefined,
-		filePath: string | undefined,
-		fileType: string | undefined,
-		originalName: string | undefined,
-		uid: string | undefined
+		document: Partial<DocumentEntity>
 	): FormGroup;
 	public abstract updateEntityQuantity(
 		entityQuantity: EntityQuantityEntity

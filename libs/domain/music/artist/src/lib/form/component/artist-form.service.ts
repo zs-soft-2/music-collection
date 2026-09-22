@@ -20,6 +20,7 @@ import {
 	DocumentEntity,
 	DocumentStateService,
 	EntityTypeEnum,
+	liveDocuments,
 	ReturnNavigationService,
 	SearchParams,
 	StyleList,
@@ -363,7 +364,8 @@ export class ArtistFormService {
 				this.recheckName();
 				this.params = this.createArtistParams(
 					this.formGroup,
-					documents,
+					// A withdrawn document is not offered as a picture.
+					liveDocuments(documents),
 					!!artist
 				);
 

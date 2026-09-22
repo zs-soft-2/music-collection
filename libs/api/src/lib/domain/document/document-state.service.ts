@@ -17,6 +17,11 @@ export abstract class DocumentStateService extends EntityStateService<
 		enabled: boolean
 	): void;
 	public abstract dispatchClearFilePathAction(): void;
+	/**
+	 * Takes a withdrawn document back. Withdrawing is the delete action: it
+	 * marks the document, and this clears the mark.
+	 */
+	public abstract dispatchRestoreEntityAction(document: DocumentEntity): void;
 	public abstract dispatchUploadFileAction(file: DocumentFile): void;
 	public abstract dispatchUploadImportFileAction(file: DocumentFile): void;
 	public abstract selectFilePath$(): Observable<string | undefined>;

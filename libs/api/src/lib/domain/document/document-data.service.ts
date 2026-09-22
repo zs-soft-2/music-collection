@@ -14,5 +14,12 @@ export abstract class DocumentDataService extends FirebaseDataService<
 	DocumentModelUpdate
 > {
 	public abstract getDownloadURL(path: string): Observable<string>;
+	/**
+	 * Takes a withdrawn document back. Withdrawing is `delete$`, which marks
+	 * the document instead of removing it, so both ways write one field.
+	 */
+	public abstract restore$(
+		document: DocumentModel
+	): Observable<DocumentModel>;
 	public abstract upload$(file: DocumentFile): Observable<string>;
 }

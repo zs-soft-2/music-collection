@@ -53,6 +53,12 @@ const DOCUMENT_COLLECTION = 'document';
 const DOCUMENT_FOLDER = '/document/';
 /** `libs/common/api` EntityTypeEnum.Document. */
 const DOCUMENT_ENTITY_TYPE = 'Document';
+/**
+ * `libs/api` DocumentCategoryEnum.Badge. A kézzel feltöltött dokumentumnak
+ * nincs kategóriája; amit gép iktat, az megmondja, mire készült — az admin
+ * felületen ez alapján áll külön listába a sok jelölt.
+ */
+const DOCUMENT_BADGE_CATEGORY = 'badge';
 /** Az admin darabszámláló dokumentuma, amit a kliens is karbantart. */
 const ENTITY_QUANTITY_COLLECTION = 'entity-quantity';
 /** `catalog-sync`: a kliens-cache ezen a kulcson látja a változást. */
@@ -520,6 +526,7 @@ async function fileCandidates(
 				stamp({
 					uid: upload.documentReference.id,
 					entityType: DOCUMENT_ENTITY_TYPE,
+					category: DOCUMENT_BADGE_CATEGORY,
 					name: upload.name,
 					originalName: upload.originalName,
 					fileType: 'image/png',

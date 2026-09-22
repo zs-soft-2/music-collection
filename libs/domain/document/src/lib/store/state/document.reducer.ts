@@ -59,8 +59,19 @@ export const documentReducer = createReducer(
 	on(documentActions.updateDocumentSuccess, (state, { document }) =>
 		documentAdapter.updateOne(document, state)
 	),
-	on(documentActions.deleteDocumentSuccess, (state, { documentId }) =>
-		documentAdapter.removeOne(documentId, state)
+	on(
+		documentActions.deleteDocumentSuccess,
+		documentActions.restoreDocumentSuccess,
+		// Withdrawing keeps the document: it stays in the store with its
+		// mark, so the admin can still see it and take it back. The search
+		// result holds copies of its own, so the mark goes into those too.
+		(state, { document }) =>
+			documentAdapter.upsertOne(document, {
+				...state,
+				searchResult: state.searchResult.map((found) =>
+					found.uid === document.uid ? document : found
+				),
+			})
 	),
 	on(documentActions.listDocumentsSuccess, (state, { documents }) =>
 		documentAdapter.upsertMany(documents as DocumentEntity[], state)

@@ -19,6 +19,7 @@ import {
 	DocumentStateService,
 	EntityTypeEnum,
 	FormatList,
+	liveDocuments,
 	ReturnNavigationService,
 	SearchParams,
 	StyleList,
@@ -277,7 +278,12 @@ export class AlbumFormService {
 			),
 			switchMap(([album, artists, documents]) => {
 				this.album = album;
-				this.params = this.createAlbumParams(album, artists, documents);
+				// A withdrawn document is not offered as a cover any more.
+				this.params = this.createAlbumParams(
+					album,
+					artists,
+					liveDocuments(documents)
+				);
 				this.recheckName();
 
 				this.params$$.next(this.params);
