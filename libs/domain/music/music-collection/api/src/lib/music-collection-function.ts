@@ -1,4 +1,4 @@
-import { MusicCollection } from './music-collection';
+import { BadgeImage, MusicCollection } from './music-collection';
 
 /**
  * The callables that write the definitions. `firestore.rules` refuses every
@@ -51,41 +51,30 @@ export const UPDATE_BADGE_GENERATION_SETTINGS_FUNCTION =
 export const LIST_BADGE_GENERATION_MODELS_FUNCTION =
 	'listBadgeGenerationModels';
 
-/** One generated candidate, until somebody picks between them. */
-export interface BadgeCandidate {
-	index: number;
-	/**
-	 * `data:image/png;base64,…`. A candidate is deliberately not a file:
-	 * three in four are born to be thrown away, and a Storage object with no
-	 * document over it is exactly the litter the catalog avoids. Only the
-	 * picked one is ever uploaded.
-	 */
-	dataUrl: string;
+/**
+ * What generating returns. Every drawn image is kept: each one becomes a
+ * file with a `document` entity over it, and joins the definition's gallery
+ * — so a draw an admin walks away from is still there tomorrow, and any
+ * image ever drawn for this collection can still be made its badge.
+ */
+export interface GenerateBadgeResult {
+	/** The images this run added to the gallery, in the order drawn. */
+	candidates: BadgeImage[];
+	prompt: string;
+	negativePrompt: string;
+	seed: number;
+	styleVersion: number;
+	model: string;
 }
 
 /**
- * What the picked candidate sends back. The image travels with it because no
- * candidate was ever stored — only this one becomes a file, wrapped in a
- * `document` entity like every other file in the catalog.
+ * Picking a badge points at an image the gallery already holds — nothing
+ * travels back but its `document` id, because the file has existed since the
+ * moment it was drawn.
  */
-export interface BadgeImageDraft {
-	/** Base64 PNG, without the `data:` prefix. */
-	image: string;
-	prompt: string;
-	negativePrompt: string;
-	seed: number;
-	styleVersion: number;
-	model: string;
-}
-
-/** What generating returns; the frozen image is made of this. */
-export interface GenerateBadgeResult {
-	candidates: BadgeCandidate[];
-	prompt: string;
-	negativePrompt: string;
-	seed: number;
-	styleVersion: number;
-	model: string;
+export interface BadgeImagePick {
+	uid: string;
+	documentUid: string;
 }
 
 /**

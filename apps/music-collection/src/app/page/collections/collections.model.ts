@@ -17,6 +17,8 @@ export interface CollectionCardView {
 	coverImageUrl: string | null;
 	/** Name of the badge the collection rewards; null when it has none. */
 	badgeName: string | null;
+	/** Picture of that badge — the cast pin first; null while there is none. */
+	badgeArtworkUrl: string | null;
 	owned: number;
 	total: number;
 	missing: number;

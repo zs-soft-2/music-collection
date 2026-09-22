@@ -62,10 +62,11 @@ export interface MusicCollectionCriteria {
 }
 
 /**
- * The generated pin, once an admin has picked one of the candidates. It
- * keeps everything needed to cast the same badge again — a badge nobody can
- * reproduce could never be regenerated larger, or replaced when one came
- * out wrong.
+ * A generated pin. Every image a model draws is one of these: filed as a
+ * `document` entity the moment it exists, whether or not it ever becomes
+ * the badge. It keeps everything needed to cast the same badge again — a
+ * badge nobody can reproduce could never be regenerated larger, or replaced
+ * when one came out wrong.
  */
 export interface BadgeImage {
 	/** The `document` entity wrapping the file, where metadata can hang. */
@@ -90,12 +91,19 @@ export interface BadgeDefinition {
 	icon: string | null;
 	artworkUrl: string | null;
 	/**
-	 * Drawn once by an image model, then fixed. Absent on a draft the editor
+	 * Drawn by an image model, then fixed. Absent on a draft the editor
 	 * submits: the image is written by its own callable, and the server
 	 * carries it across a definition save rather than trusting the client to
 	 * send it back untouched.
 	 */
 	image?: BadgeImage | null;
+	/**
+	 * Every image ever drawn for this collection, oldest first — the one
+	 * above among them. Drawing keeps them all rather than three in four
+	 * dying with the page, so a later admin can still reach back and make
+	 * any of them the badge without paying the model again.
+	 */
+	gallery?: BadgeImage[];
 }
 
 /**

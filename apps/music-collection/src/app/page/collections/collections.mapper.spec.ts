@@ -1,5 +1,6 @@
 import { EntityTypeEnum } from '@music-collection/common/api';
 import {
+	BadgeImage,
 	MusicCollectionEntity,
 	MusicCollectionMembership,
 	MusicCollectionProgress,
@@ -25,6 +26,20 @@ function membership(
 		artistName: `Artist ${albumUid}`,
 		year: 1988,
 		coverUrl,
+	};
+}
+
+function pin(): BadgeImage {
+	return {
+		documentUid: 'document-1',
+		name: 'thrash-historian.png',
+		filePath: 'https://example.test/pin.png',
+		prompt: 'a pin',
+		negativePrompt: '',
+		seed: 7,
+		styleVersion: 1,
+		model: 'imagen',
+		generatedAt: 0,
 	};
 }
 
@@ -154,6 +169,28 @@ describe('toCollectionCard', () => {
 		expect(view.badgeName).toBe('Thrash Historian');
 	});
 
+	it('puts the cast pin on the card, over the artwork typed in', () => {
+		const view = toCollectionCard(
+			standing([membership('a')], [], {
+				badge: {
+					name: 'Thrash Historian',
+					description: null,
+					icon: 'pi pi-star',
+					artworkUrl: 'https://example.test/typed.png',
+					image: pin(),
+				},
+			})
+		);
+
+		expect(view.badgeArtworkUrl).toBe('https://example.test/pin.png');
+	});
+
+	it('leaves the card without a picture while no badge has one', () => {
+		const view = toCollectionCard(standing([membership('a')], []));
+
+		expect(view.badgeArtworkUrl).toBeNull();
+	});
+
 	it('takes at most four covers, skipping the albums without one', () => {
 		const view = toCollectionCard(
 			standing(
@@ -233,5 +270,21 @@ describe('toCollectionDetail', () => {
 
 		expect(missing.badge?.earned).toBe(false);
 		expect(complete.badge).toEqual({ ...badge, earned: true });
+	});
+
+	it('shows the pin an admin picked over the artwork typed in', () => {
+		const view = toCollectionDetail(
+			standing([membership('a')], ['a'], {
+				badge: {
+					name: 'Thrash Historian',
+					description: null,
+					icon: 'pi pi-star',
+					artworkUrl: 'https://example.test/typed.png',
+					image: pin(),
+				},
+			})
+		);
+
+		expect(view.badge?.artworkUrl).toBe('https://example.test/pin.png');
 	});
 });

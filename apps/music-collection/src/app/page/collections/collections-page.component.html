@@ -117,6 +117,22 @@
 										[icon]="collection.icon"
 									/>
 
+									@if (collection.badgeArtworkUrl) {
+										<img
+											class="badge-pin"
+											[class.is-earned]="
+												collection.completed
+											"
+											[src]="collection.badgeArtworkUrl"
+											[alt]="
+												collection.badgeName
+													? collection.badgeName +
+														' badge'
+													: 'Badge'
+											"
+										/>
+									}
+
 									@if (collection.completed) {
 										<span class="earned">
 											<i

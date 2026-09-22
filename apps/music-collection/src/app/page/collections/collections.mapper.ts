@@ -1,3 +1,4 @@
+import { BadgeDefinition } from '@music-collection/domain/music-collection/api';
 import { MusicCollectionStanding } from '@music-collection/domain/music-collection/core';
 
 import {
@@ -14,6 +15,15 @@ import {
  * membership and progress both come from the engine, and this only arranges
  * them.
  */
+
+/**
+ * The picture of the badge, wherever it comes from: the cast pin is the
+ * badge once an admin has picked one, and the typed-in artwork only stands
+ * in until then. Null leaves the icon to speak for it.
+ */
+function toBadgeArtwork(badge: BadgeDefinition | null): string | null {
+	return badge ? (badge.image?.filePath ?? badge.artworkUrl) : null;
+}
 
 function toCovers(standing: MusicCollectionStanding): string[] {
 	const covers: string[] = [];
@@ -44,6 +54,7 @@ export function toCollectionCard(
 		icon: collection.icon,
 		coverImageUrl: collection.coverImageUrl,
 		badgeName: collection.badge?.name ?? null,
+		badgeArtworkUrl: toBadgeArtwork(collection.badge),
 		owned: progress.owned,
 		total: progress.total,
 		missing: progress.missing,
@@ -78,7 +89,7 @@ function toBadge(
 				name: badge.name,
 				description: badge.description,
 				icon: badge.icon,
-				artworkUrl: badge.artworkUrl,
+				artworkUrl: toBadgeArtwork(badge),
 				earned: standing.progress.completed,
 			}
 		: null;

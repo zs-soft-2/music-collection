@@ -654,15 +654,17 @@ export const generateMusicCollectionBadge = onCall(
 	}
 );
 
-/** A jelöltek közül a választott befagyasztása a definícióba. */
+/**
+ * A galéria egyik darabjának megjelölése jelvénynek. Kép nem utazik: a
+ * rajzolás óta mindegyik fájl, így ide elég a dokumentum azonosítója.
+ */
 export const setMusicCollectionBadgeImage = onCall(async (request) => {
 	await requireCaller(request, 'updateMusicCollectionEntity');
 
 	return setBadgeImage(
 		database(),
 		request.data?.uid,
-		request.data?.image,
-		Date.now()
+		request.data?.documentUid
 	);
 });
 

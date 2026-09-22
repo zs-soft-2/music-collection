@@ -6,20 +6,28 @@
  * választott fagy bele a definícióba. Így az utolsó szó emberé marad, a
  * munka viszont nem az övé.
  *
+ * A többi jelölt attól még nem szemét: a modellt egyszer kifizettük értük.
+ * Ezért mindegyik megmarad — a definíció galériája gyűjti őket —, és a
+ * választás később bármelyikre eshet, újabb rajzolás nélkül.
+ *
  * Amit a szerver nem enged ki a kezéből: a prompt. Az a
  * `music-collection-badge-prompt.ts`-ben épül, a collection tárolt adataiból
  * — a kliens csak a uid-et küldi. Máskülönben egy hívó tetszőleges képet
  * rajzoltathatna a mi számlánkra.
  *
- * A képek a Storage `badge/` útvonalára kerülnek, ahol a `storage.rules`
- * publikus olvasást enged és minden kliensírást tilt. A definíció csak az
- * objektum útvonalát őrzi, az URL-t a kliens oldja fel — ugyanúgy, ahogy a
- * borítóknál.
+ * A képek oda kerülnek, ahová a borítók is: Storage-objektum, fölötte egy
+ * `document` entitás, ami a nevét és a letöltési URL-jét adja. A definíció
+ * csak hivatkozik rájuk — a galériában mindegyikre, a `badge.image`-ben
+ * arra az egyre, amelyik a jelvény lett.
  */
 
 import { randomUUID } from 'node:crypto';
 
-import { FieldValue, Firestore } from 'firebase-admin/firestore';
+import {
+	DocumentReference,
+	FieldValue,
+	Firestore,
+} from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import objectHash from 'object-hash';
 import { GoogleAuth } from 'google-auth-library';
@@ -77,21 +85,10 @@ export const DEFAULT_BADGE_SETTINGS: BadgeGenerationSettings = {
 	dailyImageLimit: 200,
 };
 
-/**
- * Egy legenerált jelölt. Szándékosan NEM fájl: a jelölt háromnegyede
- * eldobásra születik, és egy Storage-objektum, ami fölött nincs dokumentum,
- * pont az a szemét, amit a katalógus elkerül. Amíg nem választanak, a kép a
- * válaszban utazik, és sehol nem landol.
- */
-export interface BadgeCandidate {
-	index: number;
-	/** `data:image/png;base64,…` — közvetlenül `<img src>`-be tehető. */
-	dataUrl: string;
-}
-
 export interface GenerateBadgeResult {
-	candidates: BadgeCandidate[];
-	/** Amit a modell kapott — a badge mellé ez kerül, ha választanak. */
+	/** Amit ez a rajzolás tett a galériába, a rajzolás sorrendjében. */
+	candidates: BadgeImage[];
+	/** Amit a modell kapott — minden most rajzolt kép mellé ez kerül. */
 	prompt: string;
 	negativePrompt: string;
 	seed: number;
@@ -360,12 +357,17 @@ export async function generateBadgeCandidates(
 	await reserveDailyQuota(database, settings, settings.candidateCount, now);
 
 	const images = await predict(settings, projectId, built);
+	const drawn = await fileCandidates(
+		database,
+		database.collection(MUSIC_COLLECTION_COLLECTION).doc(uid),
+		images,
+		built,
+		settings.model,
+		now
+	);
 
 	return {
-		candidates: images.map((image, index) => ({
-			index,
-			dataUrl: `data:image/png;base64,${image}`,
-		})),
+		candidates: drawn,
 		prompt: built.prompt,
 		negativePrompt: built.negativePrompt,
 		seed: built.seed,
@@ -375,10 +377,11 @@ export async function generateBadgeCandidates(
 }
 
 /**
- * Amit a kiválasztott badge-ről megőrzünk. A fájl maga egy `document/{uid}`
- * entitás alatt él — onnan jön a neve és a letöltési URL-je —, az itteni
- * mezők pedig azok, amiknek a dokumentumban nincs helyük: ezek nélkül a
- * badge nem állítható elő újra.
+ * Amit egy megrajzolt képről megőrzünk — mindegyikről, nem csak arról, ami
+ * végül jelvény lesz. A fájl maga egy `document/{uid}` entitás alatt él —
+ * onnan jön a neve és a letöltési URL-je —, az itteni mezők pedig azok,
+ * amiknek a dokumentumban nincs helyük: ezek nélkül a badge nem állítható
+ * elő újra.
  */
 export interface BadgeImage {
 	/** A `document` entitás, ami a fájlt körbeveszi. */
@@ -433,69 +436,99 @@ async function uploadDocumentFile(
 }
 
 /**
- * A választott jelölt befagyasztása: fájl a Storage-be, fölé egy dokumentum,
- * és a definícióba a rá mutató hivatkozás.
+ * A megrajzolt képek fájlba tétele: mindegyikből Storage-objektum, fölé egy
+ * dokumentum, és a definíció galériájának a végére egy bejegyzés. A feltöltés
+ * párhuzamos, az írás viszont egyetlen tranzakció, hogy a katalógus soha ne
+ * lásson félig megérkezett sorozatot.
  *
- * A képet a kliens küldi vissza, mert a jelöltek sehol nem voltak eltárolva —
- * így viszont csak az az egy kép lesz fájl, amelyiket tényleg akarjuk.
+ * Ez az a pont, ahol a jelölt többé nem múlik el: a választás ezután már
+ * csak a galéria egyik darabjára mutat.
  */
-export async function setBadgeImage(
+async function fileCandidates(
 	database: Firestore,
-	uid: unknown,
-	image: unknown,
+	reference: DocumentReference,
+	images: string[],
+	built: BadgePrompt,
+	model: string,
 	now: number
-): Promise<{ uid: string; documentUid: string }> {
-	if (typeof uid !== 'string' || !uid.trim()) {
-		throw new HttpsError('invalid-argument', 'Hiányzó uid.');
-	}
-
-	const collectionUid = uid.trim();
-	const input = (image ?? {}) as Partial<BadgeImage> & { image?: unknown };
-
-	if (typeof input.image !== 'string' || !input.image) {
-		throw new HttpsError('invalid-argument', 'Hiányzik a kép.');
-	}
-
-	const bytes = Buffer.from(input.image, 'base64');
-
-	if (!bytes.length || bytes.length > MAX_IMAGE_BYTES) {
-		throw new HttpsError('invalid-argument', 'A kép mérete érvénytelen.');
-	}
-
-	const reference = database
-		.collection(MUSIC_COLLECTION_COLLECTION)
-		.doc(collectionUid);
+): Promise<BadgeImage[]> {
 	const snapshot = await reference.get();
 
 	if (!snapshot.exists) {
 		throw new HttpsError('not-found', 'Nincs ilyen collection.');
 	}
 
-	const collectionName = String(snapshot.get('name') ?? collectionUid);
-	const styleVersion = Number(input.styleVersion ?? BADGE_STYLE_VERSION);
-	const originalName = `${snapshot.get('slug') ?? collectionUid}-badge-v${styleVersion}-${now}.png`;
-	const { filePath, storagePath } = await uploadDocumentFile(
-		bytes,
-		originalName
+	const collectionName = String(snapshot.get('name') ?? reference.id);
+	const slug = String(snapshot.get('slug') ?? reference.id);
+	const uploads = await Promise.all(
+		images.map(async (image, index) => {
+			const bytes = Buffer.from(image, 'base64');
+
+			if (!bytes.length || bytes.length > MAX_IMAGE_BYTES) {
+				throw new HttpsError(
+					'internal',
+					'A képmodell érvénytelen méretű képet adott.'
+				);
+			}
+
+			// A név hordozza a sorszámot is: a tárolási útvonal a név hashe,
+			// így egy sorozat négy képe négy külön objektum lesz.
+			const originalName =
+				`${slug}-badge-v${built.styleVersion}-${now}-` +
+				`${index + 1}.png`;
+			const uploaded = await uploadDocumentFile(bytes, originalName);
+
+			return {
+				...uploaded,
+				originalName,
+				name: `Badge — ${collectionName} #${index + 1}`,
+				documentReference: database
+					.collection(DOCUMENT_COLLECTION)
+					.doc(),
+			};
+		})
 	);
-	const documentReference = database.collection(DOCUMENT_COLLECTION).doc();
-	const name = `Badge — ${collectionName}`;
+	const drawn: BadgeImage[] = uploads.map((upload) => ({
+		documentUid: upload.documentReference.id,
+		name: upload.name,
+		filePath: upload.filePath,
+		prompt: built.prompt,
+		negativePrompt: built.negativePrompt,
+		seed: built.seed,
+		styleVersion: built.styleVersion,
+		model,
+		generatedAt: now,
+	}));
 
 	await database.runTransaction(async (transaction) => {
-		// A fájl fölötti dokumentum: innentől a katalógus tud róla, és itt
-		// lehet metaadattal körbevenni.
-		transaction.set(
-			documentReference,
-			stamp({
-				uid: documentReference.id,
-				entityType: DOCUMENT_ENTITY_TYPE,
-				name,
-				originalName,
-				fileType: 'image/png',
-				filePath,
-				createdAt: now,
-			})
-		);
+		// A galériát a tranzakción belül olvassuk: két egyszerre futó
+		// rajzolás közül így egyik sem írja felül a másik jelöltjeit.
+		const fresh = await transaction.get(reference);
+		const badge = (fresh.data()?.['badge'] ?? {}) as Record<
+			string,
+			unknown
+		>;
+		const gallery = Array.isArray(badge['gallery'])
+			? (badge['gallery'] as BadgeImage[])
+			: [];
+
+		uploads.forEach((upload) => {
+			// A fájl fölötti dokumentum: innentől a katalógus tud róla, és
+			// itt lehet metaadattal körülvenni.
+			transaction.set(
+				upload.documentReference,
+				stamp({
+					uid: upload.documentReference.id,
+					entityType: DOCUMENT_ENTITY_TYPE,
+					name: upload.name,
+					originalName: upload.originalName,
+					fileType: 'image/png',
+					filePath: upload.filePath,
+					createdAt: now,
+				})
+			);
+		});
+
 		// Az admin darabszám, amit egyébként a kliens léptet.
 		transaction.set(
 			database
@@ -503,35 +536,14 @@ export async function setBadgeImage(
 				.doc(DOCUMENT_ENTITY_TYPE),
 			{
 				type: DOCUMENT_ENTITY_TYPE,
-				quantity: FieldValue.increment(1),
+				quantity: FieldValue.increment(drawn.length),
 				modifyDate: new Date(now),
 			},
 			{ merge: true }
 		);
-
-		const badge = (snapshot.data()?.['badge'] ?? {}) as Record<
-			string,
-			unknown
-		>;
-
 		transaction.set(
 			reference,
-			stamp({
-				badge: {
-					...badge,
-					image: {
-						documentUid: documentReference.id,
-						name,
-						filePath,
-						prompt: String(input.prompt ?? ''),
-						negativePrompt: String(input.negativePrompt ?? ''),
-						seed: Number(input.seed ?? 0),
-						styleVersion,
-						model: String(input.model ?? ''),
-						generatedAt: now,
-					},
-				},
-			}),
+			stamp({ badge: { ...badge, gallery: [...gallery, ...drawn] } }),
 			{ merge: true }
 		);
 		touchCatalog(database, transaction, [
@@ -541,10 +553,78 @@ export async function setBadgeImage(
 	});
 
 	logger.info(
-		`badge mentve: ${collectionUid} → document/${documentReference.id} (${storagePath})`
+		`badge-jelöltek mentve: ${reference.id} → ` +
+			uploads.map((upload) => upload.storagePath).join(', ')
 	);
 
-	return { uid: collectionUid, documentUid: documentReference.id };
+	return drawn;
+}
+
+/**
+ * A választott kép befagyasztása a definícióba. Fájl már nem készül: a kép a
+ * rajzolás óta megvan, ez a hívás csak azt mondja meg, a galéria melyik
+ * darabja a jelvény — így egy hónapja rajzolt jelöltre is eshet a választás.
+ */
+export async function setBadgeImage(
+	database: Firestore,
+	uid: unknown,
+	documentUid: unknown
+): Promise<{ uid: string; documentUid: string }> {
+	if (typeof uid !== 'string' || !uid.trim()) {
+		throw new HttpsError('invalid-argument', 'Hiányzó uid.');
+	}
+
+	if (typeof documentUid !== 'string' || !documentUid.trim()) {
+		throw new HttpsError(
+			'invalid-argument',
+			'Hiányzik a kép azonosítója.'
+		);
+	}
+
+	const collectionUid = uid.trim();
+	const pickedUid = documentUid.trim();
+	const reference = database
+		.collection(MUSIC_COLLECTION_COLLECTION)
+		.doc(collectionUid);
+
+	await database.runTransaction(async (transaction) => {
+		const snapshot = await transaction.get(reference);
+
+		if (!snapshot.exists) {
+			throw new HttpsError('not-found', 'Nincs ilyen collection.');
+		}
+
+		const badge = (snapshot.data()?.['badge'] ?? {}) as Record<
+			string,
+			unknown
+		>;
+		const gallery = Array.isArray(badge['gallery'])
+			? (badge['gallery'] as BadgeImage[])
+			: [];
+		// A kép csak a saját collectionje galériájából jöhet: a kliens nem
+		// mutathat rá egy másik collection badge-ére, sem bármi másra.
+		const picked = gallery.find(
+			(image) => image?.documentUid === pickedUid
+		);
+
+		if (!picked) {
+			throw new HttpsError(
+				'not-found',
+				'Ez a kép nincs a collection galériájában.'
+			);
+		}
+
+		transaction.set(
+			reference,
+			stamp({ badge: { ...badge, image: picked } }),
+			{ merge: true }
+		);
+		touchCatalog(database, transaction, [MUSIC_COLLECTION_COLLECTION]);
+	});
+
+	logger.info(`badge kiválasztva: ${collectionUid} → document/${pickedUid}`);
+
+	return { uid: collectionUid, documentUid: pickedUid };
 }
 
 /** Az admin felület mentése; a stíluszár szándékosan nincs köztük. */

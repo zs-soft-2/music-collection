@@ -11,7 +11,6 @@ import {
 import {
 	BadgeGenerationSettings,
 	BadgeModelOption,
-	BadgeImageDraft,
 	CREATE_MUSIC_COLLECTION_FUNCTION,
 	CatalogCredit,
 	CreateMusicCollectionResult,
@@ -142,11 +141,11 @@ export class MusicCollectionFirestoreRepository extends MusicCollectionRepositor
 
 	public setBadgeImage$(
 		uid: string,
-		image: BadgeImageDraft
+		documentUid: string
 	): Observable<void> {
 		return this.call$<void>(SET_MUSIC_COLLECTION_BADGE_IMAGE_FUNCTION, {
 			uid,
-			image,
+			documentUid,
 		});
 	}
 

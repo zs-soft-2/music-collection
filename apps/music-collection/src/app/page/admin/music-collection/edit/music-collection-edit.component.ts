@@ -449,12 +449,13 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 									<div>
 										<strong>The pin</strong>
 										<small>
-											Drawn once by an image model, from
-											this collection's own data, and then
-											fixed. The style is the same on
-											every badge — only the motif, the
-											enamel, the patina and the rim
-											follow the rule.
+											Drawn by an image model, from this
+											collection's own data. The style is
+											the same on every badge — only the
+											motif, the enamel, the patina and
+											the rim follow the rule. Every image
+											drawn is kept, so the pin can be any
+											of them, today or next year.
 										</small>
 									</div>
 									<button
@@ -483,40 +484,57 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 									</p>
 								}
 
-								@if (store.badgeCandidates().length) {
-									<ul class="candidates">
-										@for (
-											candidate of store.badgeCandidates();
-											track candidate.index
-										) {
-											<li>
-												<img
-													[src]="candidate.dataUrl"
-													alt=""
-													loading="lazy"
-												/>
-												<button
-													type="button"
-													[disabled]="
-														store.isPickingBadge()
-													"
-													(click)="
-														store.pickBadge(
-															candidate
-														)
-													"
-												>
-													Pick this one
-												</button>
-											</li>
-										}
-									</ul>
-								} @else if (store.badgeImageUrl(); as badge) {
+								@if (store.badgeImageUrl(); as badge) {
 									<img
 										class="chosen"
 										[src]="badge"
 										alt="The collection's badge"
 									/>
+								}
+
+								@if (store.badgeGallery().length) {
+									<ul class="gallery">
+										@for (
+											image of store.badgeGallery();
+											track image.documentUid
+										) {
+											<li
+												[class.is-chosen]="
+													image.documentUid ===
+													store.badgeImageUid()
+												"
+											>
+												<img
+													[src]="image.filePath"
+													[alt]="image.name"
+													loading="lazy"
+												/>
+
+												@if (
+													image.documentUid ===
+													store.badgeImageUid()
+												) {
+													<span class="current">
+														The badge
+													</span>
+												} @else {
+													<button
+														type="button"
+														[disabled]="
+															store.isPickingBadge()
+														"
+														(click)="
+															store.pickBadge(
+																image
+															)
+														"
+													>
+														Pick this one
+													</button>
+												}
+											</li>
+										}
+									</ul>
 								}
 							</div>
 						</div>
@@ -615,7 +633,7 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 			color: var(--mc-text-muted);
 		}
 
-		.candidates {
+		.gallery {
 			display: grid;
 			grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
 			gap: 0.75rem;
@@ -624,19 +642,30 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 			list-style: none;
 		}
 
-		.candidates li {
+		.gallery li {
 			display: flex;
 			flex-direction: column;
 			gap: 0.4rem;
 		}
 
-		.candidates img,
+		/* A pin átlátszó háttérrel érkezik: a lap színe látszik mögötte. */
+		.gallery img,
 		.chosen {
 			width: 100%;
 			aspect-ratio: 1;
 			object-fit: contain;
 			border-radius: var(--mc-radius-md);
-			background: var(--mc-bg-muted);
+		}
+
+		.gallery li.is-chosen img {
+			outline: 2px solid var(--mc-accent);
+			outline-offset: 2px;
+		}
+
+		.gallery .current {
+			text-align: center;
+			font-size: 0.8rem;
+			color: var(--mc-text-muted);
 		}
 
 		.chosen {

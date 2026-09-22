@@ -18,7 +18,7 @@ import {
 	MusicianStateService,
 } from '@music-collection/api';
 import {
-	BadgeCandidate,
+	BadgeImage,
 	GenerateBadgeResult,
 	MusicCollectionEntity,
 	MusicCollectionMembership,
@@ -108,10 +108,14 @@ interface MusicCollectionEditState {
 	musicians: PickerOption[];
 	/** The badge already frozen onto the definition, as an `<img>` can load it. */
 	badgeImageUrl: string | null;
-	/** Freshly drawn candidates, until one of them is picked. */
-	badgeCandidates: BadgeCandidate[];
-	/** What the last run was drawn from; travels with the picked candidate. */
-	badgeDraw: GenerateBadgeResult | null;
+	/** Which gallery image that is — the one marked as the current pin. */
+	badgeImageUid: string | null;
+	/**
+	 * Every image ever drawn for this collection, oldest first. Drawing adds
+	 * to it rather than replacing it, so an admin can still pick a pin out of
+	 * last month's run without paying the model again.
+	 */
+	badgeGallery: BadgeImage[];
 	isGeneratingBadge: boolean;
 	isPickingBadge: boolean;
 }
@@ -131,8 +135,8 @@ const initialState: MusicCollectionEditState = {
 	artists: [],
 	musicians: [],
 	badgeImageUrl: null,
-	badgeCandidates: [],
-	badgeDraw: null,
+	badgeImageUid: null,
+	badgeGallery: [],
 	isGeneratingBadge: false,
 	isPickingBadge: false,
 };
@@ -255,11 +259,14 @@ export const MusicCollectionEditStore = signalStore(
 									form,
 									slugTouched: !!collection,
 									isLoading: false,
-									badgeCandidates: [],
-									badgeDraw: null,
 									badgeImageUrl:
 										collection?.badge?.image?.filePath ??
 										null,
+									badgeImageUid:
+										collection?.badge?.image?.documentUid ??
+										null,
+									badgeGallery:
+										collection?.badge?.gallery ?? [],
 								});
 								preview(of(form.criteria));
 							},
@@ -324,10 +331,12 @@ export const MusicCollectionEditStore = signalStore(
 				setCriteria: (criteria: CriteriaForm) =>
 					patchForm({ criteria }),
 				/**
-				 * Draws candidates. This is not a write: nothing reaches the
-				 * definition until one is picked, so a bad draw never becomes
-				 * a badge. The collection must be saved first — the server
-				 * builds the prompt from what is stored, not from the form.
+				 * Draws candidates. Each one is filed the moment it exists and
+				 * joins the gallery, but none of them becomes the badge until
+				 * an admin picks it — so a bad draw is never a pin, and a good
+				 * one is never lost. The collection must be saved first: the
+				 * server builds the prompt from what is stored, not from the
+				 * form.
 				 */
 				generateBadge: rxMethod<void>(
 					pipe(
@@ -338,7 +347,6 @@ export const MusicCollectionEditStore = signalStore(
 							patchState(store, {
 								isGeneratingBadge: true,
 								error: null,
-								badgeCandidates: [],
 							})
 						),
 						exhaustMap(() =>
@@ -350,8 +358,13 @@ export const MusicCollectionEditStore = signalStore(
 						tapResponse({
 							next: (draw: GenerateBadgeResult) =>
 								patchState(store, {
-									badgeDraw: draw,
-									badgeCandidates: draw.candidates,
+									// A szerver már beírta őket a galériába;
+									// itt csak a végére fűzzük, hogy ne kelljen
+									// újratölteni a definíciót.
+									badgeGallery: [
+										...store.badgeGallery(),
+										...draw.candidates,
+									],
 									isGeneratingBadge: false,
 								}),
 							error: (error: unknown) => {
@@ -365,8 +378,8 @@ export const MusicCollectionEditStore = signalStore(
 					)
 				),
 
-				/** Freezes the chosen candidate onto the definition. */
-				pickBadge: rxMethod<BadgeCandidate>(
+				/** Marks one image of the gallery as the collection's pin. */
+				pickBadge: rxMethod<BadgeImage>(
 					pipe(
 						filter(() => !!store.uid() && !store.isPickingBadge()),
 						tap(() =>
@@ -375,33 +388,21 @@ export const MusicCollectionEditStore = signalStore(
 								error: null,
 							})
 						),
-						exhaustMap((candidate) => {
-							const draw = store.badgeDraw();
-
-							return effect
-								.setBadgeImage$(store.uid() as string, {
-									// A jelölt sehol nem volt eltárolva, ezért a
-									// kép maga megy vissza — csak ebből az
-									// egyből lesz fájl, dokumentummal a tetején.
-									image: candidate.dataUrl.replace(
-										/^data:[^,]*,/,
-										''
-									),
-									prompt: draw?.prompt ?? '',
-									negativePrompt: draw?.negativePrompt ?? '',
-									seed: draw?.seed ?? 0,
-									styleVersion: draw?.styleVersion ?? 0,
-									model: draw?.model ?? '',
-								})
-								.pipe(map(() => candidate));
-						}),
+						exhaustMap((image) =>
+							effect
+								// A kép a rajzolás óta fájl: elég megmondani,
+								// melyik legyen a jelvény.
+								.setBadgeImage$(
+									store.uid() as string,
+									image.documentUid
+								)
+								.pipe(map(() => image))
+						),
 						tapResponse({
-							next: (candidate: BadgeCandidate) =>
+							next: (image: BadgeImage) =>
 								patchState(store, {
-									// A feltöltött fájl URL-je a következő
-									// betöltéskor jön; addig a jelölt képe áll.
-									badgeImageUrl: candidate.dataUrl,
-									badgeCandidates: [],
+									badgeImageUrl: image.filePath,
+									badgeImageUid: image.documentUid,
 									isPickingBadge: false,
 								}),
 							error: (error: unknown) => {

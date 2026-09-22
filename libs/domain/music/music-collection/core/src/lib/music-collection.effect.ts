@@ -18,7 +18,6 @@ import {
 import {
 	BadgeGenerationSettings,
 	BadgeModelOption,
-	BadgeImageDraft,
 	CreateMusicCollectionResult,
 	GenerateBadgeResult,
 	MusicCollectionCatalog,
@@ -261,9 +260,9 @@ export class MusicCollectionEffect {
 	}
 
 	/**
-	 * The badge. Generating is not a write: it only draws candidates and
-	 * parks them in storage. Nothing reaches the definition until an admin
-	 * picks one, which is what keeps a bad draw from becoming a badge.
+	 * The badge. Generating files every image it draws into the definition's
+	 * gallery, but none of them is the badge yet: that stays an admin's
+	 * choice, which is what keeps a bad draw from becoming a pin.
 	 */
 	public generateBadge$(
 		uid: string,
@@ -274,9 +273,9 @@ export class MusicCollectionEffect {
 
 	public setBadgeImage$(
 		uid: string,
-		image: BadgeImageDraft
+		documentUid: string
 	): Observable<void> {
-		return this.repository.setBadgeImage$(uid, image);
+		return this.repository.setBadgeImage$(uid, documentUid);
 	}
 
 	public readBadgeSettings$(): Observable<BadgeGenerationSettings> {

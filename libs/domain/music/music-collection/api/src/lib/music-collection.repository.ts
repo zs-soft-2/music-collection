@@ -3,7 +3,6 @@ import { Observable } from 'rxjs';
 import { CatalogCredit } from './music-collection-catalog';
 import {
 	BadgeGenerationSettings,
-	BadgeImageDraft,
 	BadgeModelOption,
 	CreateMusicCollectionResult,
 	GenerateBadgeResult,
@@ -60,13 +59,13 @@ export abstract class MusicCollectionRepository {
 		points: number
 	): Observable<GenerateBadgeResult>;
 	/**
-	 * Freezes the picked candidate: the file is uploaded where covers go and
-	 * a `document` entity is written over it, so the badge is catalogued like
-	 * every other file rather than loose in a bucket.
+	 * Makes one image from the collection's gallery its badge. No file is
+	 * made here: every image has been one since it was drawn, so this only
+	 * says which of them the pin is.
 	 */
 	public abstract setBadgeImage$(
 		uid: string,
-		image: BadgeImageDraft
+		documentUid: string
 	): Observable<void>;
 
 	/** What an admin may set about generation; the style lock is not in it. */

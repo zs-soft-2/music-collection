@@ -213,9 +213,16 @@ h1 {
 }
 
 .badge-art {
+	flex: none;
 	width: 4rem;
 	height: 4rem;
 	object-fit: contain;
+
+	/* A pin not yet won is shown faded, as a record still to find is. */
+	.badge:not(.is-earned) & {
+		filter: grayscale(1);
+		opacity: 0.55;
+	}
 }
 
 .badge-icon {

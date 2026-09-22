@@ -18,16 +18,22 @@
  */
 
 /** Csak akkor emeld, ha a lenti zár változik. Minden badge mellé bekerül. */
-export const BADGE_STYLE_VERSION = 1;
+export const BADGE_STYLE_VERSION = 2;
 
 /**
  * Kötött szöveg, első fele. Azt mondja meg, miféle tárgyról készül a kép,
  * még mielőtt bármi szó esne erről a collectionről.
+ *
+ * A pin alatt nincs asztal: a badge a saját körvonalán ér véget, és onnantól
+ * a PNG alfa-csatornája üres. A badge ugyanis nem egy képen ül, hanem egy
+ * lapon, egy listában, egy sötét és egy világos felületen — bármi, ami
+ * mögé odaszárad, pont ott lesz rossz színű.
  */
 const STYLE_PREFIX =
 	'Antique cast pewter enamel pin badge, a single isolated pin centred in ' +
-	'frame, photographed flat from directly above on a matte charcoal ' +
-	'surface. ';
+	'frame, cut out on a fully transparent background: no surface, no ' +
+	'backdrop and no shadow, the PNG alpha channel empty everywhere the pin ' +
+	'itself is not. ';
 
 /**
  * Kötött szöveg, második fele. Azt mondja meg, hogyan öntött, világított és
@@ -39,8 +45,8 @@ const STYLE_SUFFIX =
 	'antiqued recesses, high-relief sculpted casting, deeply recessed ' +
 	'sandblasted matte black field behind the relief, fine casting pitting ' +
 	'in the metal, heavy metal band merchandise aesthetic, macro product ' +
-	'photograph, soft studio key light from the upper left with a short ' +
-	'shadow under the pin, the pin filling about ninety percent of the ' +
+	'photograph, soft studio key light from the upper left, nothing behind ' +
+	'or beneath the pin, the pin filling about ninety percent of the ' +
 	'square frame.';
 
 /**
@@ -51,8 +57,10 @@ const STYLE_SUFFIX =
 export const BADGE_NEGATIVE_PROMPT =
 	'text, letters, words, numbers, watermark, signature, multiple pins, ' +
 	'grid of pins, collage, hands, human figure, blurry, soft focus, low ' +
-	'contrast, flat vector illustration, cartoon, plastic, toy, coloured ' +
-	'background, white background, gradient background, border frame';
+	'contrast, flat vector illustration, cartoon, plastic, toy, background, ' +
+	'backdrop, surface, table, floor, charcoal background, grey background, ' +
+	'black background, coloured background, white background, gradient ' +
+	'background, drop shadow, cast shadow, reflection, border frame';
 
 /**
  * Minden pin tárgya: stílusonként egy megönthető dolog, sosem egy hangulat.
