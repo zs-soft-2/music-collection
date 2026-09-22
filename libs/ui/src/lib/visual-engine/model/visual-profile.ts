@@ -46,6 +46,13 @@ export interface VisualPalette {
  */
 export interface SongVisualProfile {
 	id: string;
+	/**
+	 * Which world the song plays in, rather than which song it is. Two tracks
+	 * of one record share it, so the city behind them is the same city, while
+	 * their differing `id` still keeps them from breathing in lockstep.
+	 * Falls back to `id` when a profile does not say.
+	 */
+	world?: string;
 
 	artist: string;
 	album: string;
@@ -85,6 +92,14 @@ export interface SongVisualProfile {
 		shake: number;
 		vignette: number;
 	};
+
+	/**
+	 * How hard this track runs through its world, 0..1. Ambient mode has
+	 * nothing else to tell two tracks of one record apart: they share a
+	 * skyline, a palette and the weather, so this is what makes one of them
+	 * sit low and dark and the next one burn. Defaults to the middle.
+	 */
+	energy?: number;
 
 	timeline?: VisualTimelineSection[];
 }

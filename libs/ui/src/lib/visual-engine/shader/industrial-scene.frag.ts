@@ -36,13 +36,34 @@ uniform vec3 uPrimary;
 uniform vec3 uSecondary;
 uniform vec3 uAccent;
 
-#define HORIZON -0.15
+// --- the shape of the world, as opposed to its colour and weather ---------
+// These are what make one record's world a different place rather than the
+// same place repainted. They come from the profile's environment and hold for
+// a whole record.
+uniform float uHorizon;
+/** 0 a city of blocks, 1 a ridge of hills; anything between is both. */
+uniform float uRidge;
+/** How closely the silhouette is packed, and how far it rises. */
+uniform float uDensity;
+uniform float uHeight;
+/** Whether this world has stacks, lit windows, stars, wet ground, a beam. */
+uniform float uStacks;
+uniform float uWindows;
+uniform float uStars;
+uniform float uWet;
+uniform float uBeam;
+/** How much of the light comes from furnaces on the horizon. */
+uniform float uFires;
+/** The pillars and the sagging cable in front of everything. */
+uniform float uFrame;
+
+#define HORIZON uHorizon
 
 ${NOISE_GLSL}
 
 /** Height of a rank of buildings above the horizon at world x. */
 float skylineHeight(float x, float seed, float scale, float base, float variance) {
-	float gx = x * scale + seed;
+	float gx = x * scale * uDensity + seed;
 	float cell = floor(gx);
 	float f = fract(gx);
 
@@ -52,7 +73,11 @@ float skylineHeight(float x, float seed, float scale, float base, float variance
 	h -= setback * variance * 0.32;
 	// Now and then a gap where the city thins out.
 	h = mix(h, base * 0.3, step(0.93, hash11(cell * 4.13 + seed)));
-	return h;
+
+	// The same rank read as a ridge rather than a roofline. A world that is
+	// not a city needs its horizon broken by something that was not built.
+	float ridge = base * 0.5 + variance * 1.7 * fbm(vec2(gx * 0.3, seed));
+	return mix(h, ridge, uRidge) * uHeight;
 }
 
 /** 1 below the roofline, antialiased across the edge. */
@@ -81,7 +106,7 @@ float windows(vec2 lp, float cell, float density) {
 	float pane =
 		(1.0 - smoothstep(0.15, 0.27, q.x)) *
 		(1.0 - smoothstep(0.20, 0.33, q.y));
-	return lit * pane * max(0.0, flick);
+	return lit * pane * max(0.0, flick) * uWindows;
 }
 
 /** A furnace mouth burning through the haze just above the horizon. */
@@ -136,25 +161,26 @@ float chimneyPlume(vec2 lp, Chimney c, float speed) {
 	float rise = smoothstep(0.0, 0.015, above) * exp(-above * 3.2);
 	float spread = 0.02 + above * 0.55;
 	float across = exp(-pow(c.dx / spread, 2.0));
-	float n = fbm(vec2(lp.x * 3.5, lp.y * 2.6 - uTime * speed * uFogSpeed * 0.2));
+	float n = fbm(vec2(lp.x * 3.5, lp.y * 2.6 - uTime * speed * uFogSpeed * 0.5));
 	return c.present * rise * across * n;
 }
 
 /** A deck of fog sitting at a given height, drifting sideways. */
 float fogBand(vec2 lp, float y0, float thickness, float speed, float seed) {
 	float n = fbm(vec2(
-		lp.x * 1.2 + uTime * speed * uFogSpeed * 0.05 + seed,
-		lp.y * 2.4 + seed - uTime * speed * uFogSpeed * 0.012
+		lp.x * 1.2 + uTime * speed * uFogSpeed * 0.19 + seed,
+		lp.y * 2.4 + seed - uTime * speed * uFogSpeed * 0.045
 	));
 	float band = exp(-pow((lp.y - y0) / thickness, 2.0));
 	return band * (0.25 + 0.75 * n);
 }
 
 float fireGlow(vec2 q) {
-	return
+	return (
 		furnace(q, -0.34, 0.15, 1.3) +
 		furnace(q, 0.06, 0.21, 0.9) +
-		furnace(q, 0.41, 0.13, 1.7);
+		furnace(q, 0.41, 0.13, 1.7)
+	) * uFires;
 }
 
 void main() {
@@ -182,9 +208,29 @@ void main() {
 	float above = smoothstep(HORIZON - 0.05, 0.45, skyP.y);
 	vec3 col = mix(mix(uBackground, uPrimary * 0.8, 0.55), uBackground * 0.45, above);
 
+	// A sky with something in it other than smog. A world with no city under
+	// it needs the height read somehow, and stars do it without a light.
+	if (uStars > 0.01) {
+		// A fine grid with a hard, small point in the few cells that have one:
+		// a coarse grid with a soft falloff gives bokeh blobs, not a sky.
+		vec2 sp = (p + cam * 0.03) * 90.0;
+		vec2 id = floor(sp);
+		float r = hash21(id + uSeed * 0.7);
+		vec2 jitter = vec2(hash21(id * 1.7), hash21(id * 3.1)) * 0.6 + 0.2;
+		float star = step(0.93, r) *
+			(1.0 - smoothstep(0.0, 0.09 + r * 0.06, length(fract(sp) - jitter)));
+		float twinkle = mix(
+			1.0,
+			0.5 + 0.5 * sin(uTime * (0.5 + r * 2.2) + r * 37.0),
+			uFlicker
+		);
+		col += mix(uSecondary, vec3(1.0), 0.65) * star * twinkle *
+			smoothstep(HORIZON, 0.4, skyP.y) * uStars * 1.4;
+	}
+
 	vec2 cloudP = p + cam * 0.08;
 	float cloud = fbm(vec2(
-		cloudP.x * 1.1 + uTime * 0.007 * uFogSpeed,
+		cloudP.x * 1.1 + uTime * 0.03 * uFogSpeed,
 		cloudP.y * 2.6
 	));
 	col = mix(
@@ -225,16 +271,31 @@ void main() {
 	float midMask = silhouette(midP, skylineHeight(midP.x, 11.3 + uSeed, 6.5, 0.05, 0.21));
 	vec3 midColour = mix(uBackground * 0.55, uSecondary * 0.1, 0.5);
 
-	Chimney chimney = chimneyAt(midP, 21.7 + uSeed, 3.4, 0.42);
-	float smoke = chimneyPlume(midP, chimney, 1.0) * (0.5 + uFog * 0.8);
-	col = mix(col, mix(uSecondary, uAccent, 0.2) * 0.3, clamp(smoke, 0.0, 0.8));
+	// A world without industry has no stacks and no smoke; the branch is on a
+	// uniform, so every fragment of the draw takes the same side of it.
+	if (uStacks > 0.01) {
+		Chimney chimney = chimneyAt(midP, 21.7 + uSeed, 3.4, 0.42 * uStacks);
+		float smoke =
+			chimneyPlume(midP, chimney, 1.0) * (0.5 + uFog * 0.8) * uStacks;
+		col = mix(
+			col,
+			mix(uSecondary, uAccent, 0.2) * 0.3,
+			clamp(smoke, 0.0, 0.8)
+		);
 
-	col = mix(col, midColour, midMask);
-	col += mix(uAccent, uPrimary, 0.35) *
-		windows(midP, 0.024, 0.1 + 0.12 * uIntensity) * midMask * uLight * 0.8;
+		col = mix(col, midColour, midMask);
+		col += mix(uAccent, uPrimary, 0.35) *
+			windows(midP, 0.024, 0.1 + 0.12 * uIntensity) * midMask * uLight *
+			0.8;
 
-	col = mix(col, midColour * 0.6, chimneyStack(midP, chimney, 0.012));
-	col += uPrimary * chimneyBeacon(midP, chimney) * (1.2 + uGlow);
+		col = mix(col, midColour * 0.6, chimneyStack(midP, chimney, 0.012));
+		col += uPrimary * chimneyBeacon(midP, chimney) * (1.2 + uGlow) * uStacks;
+	} else {
+		col = mix(col, midColour, midMask);
+		col += mix(uAccent, uPrimary, 0.35) *
+			windows(midP, 0.024, 0.1 + 0.12 * uIntensity) * midMask * uLight *
+			0.8;
+	}
 
 	// --- a thinner deck in front of the middle ground -----------------------
 	vec2 fogBP = p + cam * 0.26;
@@ -246,13 +307,15 @@ void main() {
 	);
 
 	// --- the searchlight, slow enough to be missed -------------------------
-	vec2 beamD = p - vec2(sin(uTime * 0.13) * 0.5, HORIZON + 0.01);
-	float angle = atan(beamD.x, max(beamD.y, 0.0001));
-	float beam =
-		exp(-pow((angle - sin(uTime * 0.17) * 0.5) / 0.16, 2.0)) *
-		smoothstep(0.0, 0.14, beamD.y) * exp(-beamD.y * 4.0);
-	col += mix(uAccent, vec3(1.0), 0.25) * beam * uLight * uGlow *
-		0.05 * (0.3 + uIntensity);
+	if (uBeam > 0.01) {
+		vec2 beamD = p - vec2(sin(uTime * 0.27) * 0.5, HORIZON + 0.01);
+		float angle = atan(beamD.x, max(beamD.y, 0.0001));
+		float beam =
+			exp(-pow((angle - sin(uTime * 0.23) * 0.7) / 0.16, 2.0)) *
+			smoothstep(0.0, 0.14, beamD.y) * exp(-beamD.y * 4.0);
+		col += mix(uAccent, vec3(1.0), 0.25) * beam * uLight * uGlow *
+			0.13 * (0.3 + uIntensity) * uBeam;
+	}
 
 	// --- the surreal column that stands in for a guitar solo ---------------
 	// Not equalizer bars: a curtain of light standing over the city, with
@@ -283,7 +346,8 @@ void main() {
 	float ground = smoothstep(HORIZON + 0.015, HORIZON - 0.1, fgP.y);
 	// The furnaces mirrored about the horizon, smeared by the distance the
 	// reflection travels.
-	float wet = fireGlow(vec2(glowP.x, 2.0 * HORIZON - glowP.y + 0.02));
+	float wet =
+		fireGlow(vec2(glowP.x, 2.0 * HORIZON - glowP.y + 0.02)) * uWet;
 	vec3 groundColour = uBackground * 0.25 + fireColour * wet * 0.5 * uLight;
 	col = mix(col, groundColour, ground * 0.94);
 
@@ -297,13 +361,26 @@ void main() {
 	);
 
 	// --- foreground frame --------------------------------------------------
-	float pillars =
-		(1.0 - smoothstep(0.04, 0.07, abs(fgP.x + edge * 0.84))) +
-		(1.0 - smoothstep(0.026, 0.05, abs(fgP.x - edge * 0.73)));
-	col = mix(col, vec3(0.0), clamp(pillars, 0.0, 1.0) * step(fgP.y, 0.34) * 0.94);
+	// Poles and a slack cable read as somewhere people wired up. A ridge under
+	// stars was never wired, so worlds that are not built skip this entirely,
+	// and the frame stops being the one thing every record has in common.
+	if (uFrame > 0.01) {
+		float pillars =
+			(1.0 - smoothstep(0.04, 0.07, abs(fgP.x + edge * 0.84))) +
+			(1.0 - smoothstep(0.026, 0.05, abs(fgP.x - edge * 0.73)));
+		col = mix(
+			col,
+			vec3(0.0),
+			clamp(pillars, 0.0, 1.0) * step(fgP.y, 0.34) * 0.94 * uFrame
+		);
 
-	float sag = 0.3 - 0.05 * cos(fgP.x * 2.2);
-	col = mix(col, vec3(0.0), (1.0 - smoothstep(0.0022, 0.0045, abs(fgP.y - sag))) * 0.85);
+		float sag = 0.3 - 0.05 * cos(fgP.x * 2.2);
+		col = mix(
+			col,
+			vec3(0.0),
+			(1.0 - smoothstep(0.0022, 0.0045, abs(fgP.y - sag))) * 0.85 * uFrame
+		);
+	}
 
 	// --- grade --------------------------------------------------------------
 	col = mix(col, col * 0.22, uDarkness);

@@ -60,7 +60,9 @@ export function targetVisualState(
 			0,
 			1.6
 		),
-		fogSpeed: lerp(0.2, 1, level) * preset.fogSpeed,
+		// Even a quiet section has weather: a floor here is the difference
+		// between a slow scene and a photograph.
+		fogSpeed: lerp(0.45, 1, level) * preset.fogSpeed,
 		darkness: clamp(
 			profile.environment.darkness * lerp(1.15, 0.7, level),
 			0,
@@ -76,7 +78,7 @@ export function targetVisualState(
 		),
 		particleSpeed: profile.particles.speed * lerp(0.7, 2, level),
 
-		camera: profile.camera.intensity * lerp(0.15, 1, level) * preset.camera,
+		camera: profile.camera.intensity * lerp(0.5, 1, level) * preset.camera,
 		light: lerp(0.2, 1.5, level) * preset.light,
 
 		glow: profile.effects.glow * lerp(0.5, 1.4, level) * preset.glow,

@@ -8,6 +8,7 @@ import {
 	applyOverrides,
 	clamp,
 	easeVisualState,
+	hash,
 	neutralVisualState,
 	noise,
 	targetVisualState,
@@ -25,6 +26,7 @@ import {
 } from './gl';
 import {
 	AudioFeatures,
+	EnvironmentType,
 	SongSection,
 	SongVisualProfile,
 	VisualInputMode,
@@ -38,6 +40,11 @@ import {
 	PARTICLE_FRAGMENT,
 	PARTICLE_VERTEX,
 } from './shader';
+
+/** Below this the analyser is reporting nothing, not quiet music. */
+const SILENCE_LEVEL = 0.015;
+/** How long that has to hold before the scene stops waiting for sound. */
+const SILENCE_FALLBACK_SECONDS = 2.5;
 
 /** How far past the nominal count a busy section may go. */
 const DENSITY_HEADROOM = 1.6;
@@ -83,13 +90,149 @@ export interface VisualEngineOptions {
 	onFrame?: (state: Readonly<VisualState>, fps: number) => void;
 }
 
-/** A stable number per profile, so one song's city is always the same city. */
+/** A stable number per key, so one song's city is always the same city. */
 function seedFrom(id: string): number {
 	let hash = 0;
 	for (let i = 0; i < id.length; i++) {
 		hash = (hash * 31 + id.charCodeAt(i)) % 100000;
 	}
 	return hash / 1000;
+}
+
+/**
+ * Which city gets built. It is the record's, not the track's: a new skyline at
+ * every track would say the listener had gone somewhere else, when they have
+ * only turned the record over.
+ */
+function worldSeed(profile: SongVisualProfile): number {
+	return seedFrom(profile.world ?? profile.id);
+}
+
+/**
+ * The shape of a world, as opposed to its colour and its weather. This is what
+ * the profile's `environment.type` finally means: until now every record was
+ * the same city repainted, which is exactly what it looked like.
+ */
+interface WorldShape {
+	/** Where the ground line sits in the frame. */
+	horizon: number;
+	/** 0 a city of blocks, 1 a ridge of hills. */
+	ridge: number;
+	density: number;
+	height: number;
+	stacks: number;
+	windows: number;
+	stars: number;
+	wet: number;
+	beam: number;
+	fires: number;
+	/** The poles and cable in front of everything. */
+	frame: number;
+}
+
+const WORLDS: Record<EnvironmentType, WorldShape> = {
+	// A city of furnaces: close-packed blocks, stacks, wet ground, no sky.
+	industrial: {
+		horizon: -0.15,
+		ridge: 0,
+		density: 1,
+		height: 1,
+		stacks: 1,
+		windows: 1,
+		stars: 0,
+		wet: 1,
+		beam: 1,
+		frame: 1,
+		fires: 1,
+	},
+	// Taller and thinner, lit from its own windows rather than from fire.
+	urban: {
+		horizon: -0.2,
+		ridge: 0,
+		density: 1.45,
+		height: 1.5,
+		stacks: 0.25,
+		windows: 1.4,
+		stars: 0.15,
+		wet: 0.8,
+		beam: 0.6,
+		frame: 0.85,
+		fires: 0.35,
+	},
+	// Nothing was built here: a low ridge under a sky that has stars in it.
+	space: {
+		horizon: -0.26,
+		ridge: 0.95,
+		density: 0.45,
+		height: 0.85,
+		stacks: 0,
+		windows: 0,
+		stars: 1,
+		wet: 0.35,
+		beam: 0,
+		frame: 0,
+		fires: 0.25,
+	},
+	nature: {
+		horizon: -0.18,
+		ridge: 1,
+		density: 0.35,
+		height: 1.3,
+		stacks: 0,
+		windows: 0,
+		stars: 0.7,
+		wet: 0.5,
+		beam: 0,
+		frame: 0.15,
+		fires: 0.3,
+	},
+	// Half a horizon: something rises, but it is not a city and not a hill.
+	abstract: {
+		horizon: -0.1,
+		ridge: 0.55,
+		density: 0.7,
+		height: 0.55,
+		stacks: 0,
+		windows: 0.35,
+		stars: 0.45,
+		wet: 0.25,
+		beam: 0.3,
+		frame: 0.25,
+		fires: 0.5,
+	},
+	custom: {
+		horizon: -0.15,
+		ridge: 0.3,
+		density: 1,
+		height: 1,
+		stacks: 0.6,
+		windows: 0.8,
+		stars: 0.2,
+		wet: 0.8,
+		beam: 0.6,
+		frame: 0.7,
+		fires: 0.8,
+	},
+};
+
+/**
+ * The world a record stands in, jittered off its family by the record's own
+ * seed so two industrial bands do not get the same skyline either.
+ */
+function worldShapeFor(
+	type: EnvironmentType,
+	seed: number
+): Readonly<WorldShape> {
+	const base = WORLDS[type];
+	const jitter = (offset: number) => hash(seed * 0.37 + offset) - 0.5;
+
+	return {
+		...base,
+		horizon: base.horizon + jitter(1.3) * 0.08,
+		ridge: clamp(base.ridge + jitter(2.7) * 0.25, 0, 1),
+		density: base.density * (1 + jitter(4.1) * 0.5),
+		height: base.height * (1 + jitter(5.9) * 0.45),
+	};
 }
 
 /**
@@ -125,6 +268,7 @@ export class VisualEngine {
 		accent: Rgb;
 	};
 	private seed: number;
+	private world: Readonly<WorldShape>;
 
 	private readonly state: VisualState = neutralVisualState();
 	private overrides: VisualOverrides | null = null;
@@ -133,6 +277,8 @@ export class VisualEngine {
 	private position = 0;
 	private simulateAudio = false;
 	private features: AudioFeatures | null = null;
+	/** How long the audio has been silent, in seconds. */
+	private silentFor = 0;
 
 	private elapsed = 0;
 	private last = 0;
@@ -166,7 +312,8 @@ export class VisualEngine {
 		this.settings = QUALITY[this.quality];
 		this.profile = options.profile;
 		this.palette = this.readPalette(options.profile);
-		this.seed = seedFrom(options.profile.id);
+		this.seed = worldSeed(options.profile);
+		this.world = worldShapeFor(options.profile.environment.type, this.seed);
 
 		const gl = this.canvas.getContext('webgl2', {
 			alpha: false,
@@ -196,9 +343,7 @@ export class VisualEngine {
 			this.settings.particles * DENSITY_HEADROOM
 		);
 
-		this.timeline.setSections(this.profile.timeline ?? []);
-		this.fakeAudio.setSections(this.profile.timeline ?? []);
-		this.ambient.setBase(0.3 + this.profile.environment.darkness * 0.15);
+		this.applyProfile();
 
 		this.resize();
 		document.addEventListener('visibilitychange', this.onVisibility);
@@ -209,10 +354,30 @@ export class VisualEngine {
 	public setProfile(profile: SongVisualProfile): void {
 		this.profile = profile;
 		this.palette = this.readPalette(profile);
-		this.seed = seedFrom(profile.id);
+		this.seed = worldSeed(profile);
+		this.world = worldShapeFor(profile.environment.type, this.seed);
+		this.applyProfile();
+	}
+
+	/**
+	 * Hands the current profile to everything that keeps a copy of it. The
+	 * ambient breath is set here too: a song with no timeline has nothing else
+	 * to tell it apart, so it gets its own base, swing, pace and starting
+	 * point rather than the one wave every scene would otherwise share.
+	 */
+	private applyProfile(): void {
+		const profile = this.profile;
 		this.timeline.setSections(profile.timeline ?? []);
 		this.fakeAudio.setSections(profile.timeline ?? []);
-		this.ambient.setBase(0.3 + profile.environment.darkness * 0.15);
+		const energy = profile.energy ?? 0.5;
+		this.ambient.setBase(
+			0.16 + energy * 0.46 + profile.environment.darkness * 0.1
+		);
+		this.ambient.setSwing(0.14 + profile.particles.speed * 0.22);
+		this.ambient.setPace(1.8 + profile.particles.speed * 1.6);
+		// The breath is the track's, so two songs of one record do not swell
+		// together even though they share a skyline.
+		this.ambient.setPhase(seedFrom(profile.id));
 	}
 
 	public setMode(mode: VisualInputMode): void {
@@ -361,7 +526,14 @@ export class VisualEngine {
 			case 'timeline':
 				return this.timeline;
 			case 'audio-reactive':
-				return this.audioReactive;
+				// Sharing a tab does not guarantee sound in it: Spotify may be
+				// playing on another device entirely, and then the analyser
+				// hands us silence. Following silence would freeze the scene
+				// at its darkest, so after a few seconds of nothing it goes
+				// back to breathing on its own.
+				return this.silentFor > SILENCE_FALLBACK_SECONDS
+					? this.ambient
+					: this.audioReactive;
 			default:
 				return this.ambient;
 		}
@@ -375,6 +547,12 @@ export class VisualEngine {
 			if (features) {
 				this.audioReactive.setFeatures(features);
 			}
+			this.silentFor =
+				features && features.volume > SILENCE_LEVEL
+					? 0
+					: this.silentFor + seconds;
+		} else {
+			this.silentFor = 0;
 		}
 
 		const signal = this.controller().update(seconds, this.elapsed);
@@ -397,7 +575,9 @@ export class VisualEngine {
 	/** Where the camera sits this frame, shared by the scene and the embers. */
 	private camera(): { x: number; y: number; zoom: number } {
 		const amount = this.state.camera;
-		const t = this.elapsed * 0.05;
+		// The drift used to take two minutes to cross the frame, which reads
+		// as a still image however carefully it is animated.
+		const t = this.elapsed * 0.13;
 		let x = 0;
 		let y = 0;
 		let zoom = 1;
@@ -406,21 +586,24 @@ export class VisualEngine {
 			case 'static':
 				break;
 			case 'slow-zoom':
-				zoom = 1 - 0.09 * amount * Math.sin(this.elapsed * 0.035);
-				x = Math.sin(t * 0.4) * 0.03 * amount;
+				zoom = 1 - 0.15 * amount * Math.sin(this.elapsed * 0.09);
+				x = Math.sin(t * 0.4) * 0.1 * amount;
 				break;
 			case 'orbit':
-				x = Math.cos(t * 0.6) * 0.12 * amount;
-				y = Math.sin(t * 0.6) * 0.05 * amount;
+				x = Math.cos(t * 0.6) * 0.3 * amount;
+				y = Math.sin(t * 0.6) * 0.12 * amount;
 				break;
 			case 'slow-drift':
 			default:
+				// The layers sit at different parallax, so the pan is what
+				// turns three flat ranks into a place with depth. It has to
+				// be wide enough to see.
 				x =
 					(Math.sin(t) + Math.sin(t * 0.37 + 1.7) * 0.5) *
-					0.11 *
+					0.3 *
 					amount;
-				y = Math.sin(t * 0.23 + 0.4) * 0.04 * amount;
-				zoom = 1 - 0.04 * amount * Math.sin(this.elapsed * 0.043);
+				y = Math.sin(t * 0.23 + 0.4) * 0.09 * amount;
+				zoom = 1 - 0.07 * amount * Math.sin(this.elapsed * 0.1);
 				break;
 		}
 
@@ -463,6 +646,17 @@ export class VisualEngine {
 		scene.float('uPulse', state.pulse);
 		scene.vec2('uCam', camera.x, camera.y);
 		scene.float('uZoom', camera.zoom);
+		scene.float('uHorizon', this.world.horizon);
+		scene.float('uRidge', this.world.ridge);
+		scene.float('uDensity', this.world.density);
+		scene.float('uHeight', this.world.height);
+		scene.float('uStacks', this.world.stacks);
+		scene.float('uWindows', this.world.windows);
+		scene.float('uStars', this.world.stars);
+		scene.float('uWet', this.world.wet);
+		scene.float('uBeam', this.world.beam);
+		scene.float('uFires', this.world.fires);
+		scene.float('uFrame', this.world.frame);
 		scene.vec3('uBackground', this.palette.background);
 		scene.vec3('uPrimary', this.palette.primary);
 		scene.vec3('uSecondary', this.palette.secondary);

@@ -5,7 +5,7 @@ import {
 	VisualInputMode,
 } from '../model';
 import { VisualTimelineSection } from '../model';
-import { clamp01, noise } from './math';
+import { clamp, clamp01, noise } from './math';
 
 /** What a controller hands the engine each frame. */
 export interface VisualSignal {
@@ -31,18 +31,40 @@ export class AmbientController implements VisualController {
 
 	public constructor(
 		private base = 0.38,
-		private swing = 0.16
+		private swing = 0.16,
+		private pace = 1,
+		private phase = 0
 	) {}
 
 	public setBase(base: number): void {
 		this.base = clamp01(base);
 	}
 
+	/** How far the swell travels either side of the base. */
+	public setSwing(swing: number): void {
+		this.swing = clamp(swing, 0, 0.5);
+	}
+
+	/** How fast it breathes; 1 is the pace the waves were written at. */
+	public setPace(pace: number): void {
+		this.pace = clamp(pace, 0.25, 3);
+	}
+
+	/**
+	 * Where in the waves this song starts. Without it every song would arrive
+	 * at the same point of the same swell, which is exactly what makes two
+	 * different scenes look like one animation.
+	 */
+	public setPhase(phase: number): void {
+		this.phase = phase;
+	}
+
 	public update(_seconds: number, elapsed: number): VisualSignal {
 		// Two slow waves of different periods, so the swell never repeats
 		// obviously within a listening session.
-		const slow = noise(elapsed * 0.035);
-		const slower = noise(elapsed * 0.011 + 31.7);
+		const time = elapsed * this.pace;
+		const slow = noise(time * 0.035 + this.phase);
+		const slower = noise(time * 0.011 + 31.7 + this.phase * 0.37);
 		const drift = (slow * 0.6 + slower * 0.4 - 0.5) * 2;
 
 		return {

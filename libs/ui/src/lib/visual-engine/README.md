@@ -47,15 +47,42 @@ An intro is heavy and close; a chorus opens up.
 
 A `SongVisualProfile` is data — palette, environment, particles, camera,
 effects, and an optional section timeline. `resolveVisualProfile()` picks a
-hand-authored profile when there is one, and otherwise derives something from
-the genre. That function is the seam an AI service would take over: it would
+hand-authored profile when there is one, and otherwise derives one from the
+song itself.
+
+Deriving is deterministic and works on three levels, because the three do
+different jobs:
+
+| Level | Keyed on | Decides |
+| --- | --- | --- |
+| Band | artist | the family (furnace, neon, haze, cobalt, rust, frost), the environment, the base hue, how the camera is held, the framing |
+| Record | artist + album | the weather: hue off the band's, fog, darkness, what falls through the air and how much of it, the glow — and the skyline, through `world` |
+| Track | artist + album + title | how it is played through: its `energy`, tempo, camera movement, flicker and shake |
+
+A band is meant to be recognised, so its world holds across its records. A
+record is another evening in that world, not another world. A track's `energy`
+is what the ambient breath sits on, so across one record the light and the pace
+change from song to song while the place does not. Two tracks of one
+record are the same place at a different pace — they share a skyline through
+`profile.world`, while their differing `id` keeps the ambient breath out of
+lockstep. A song with no metadata at all still looks like itself rather than
+like every other song.
+
+`resolveVisualProfile()` is the seam an AI service would take over: it would
 return the same JSON shape from artist, album, year, genre and a lyric
 analysis, and nothing downstream would change.
 
+The environment type is what the renderer builds, not a label: `industrial` is
+a close-packed city of stacks and wet ground under no sky, `urban` is taller
+and lit from its own windows, `space` and `nature` have no city at all — a
+ridge under stars, no poles, no cable, no furnaces. A record's seed then
+jitters the horizon, the ridge, the density and the height off its family, so
+two industrial bands do not stand in the same city either.
+
 ## Rendering
 
-One fragment shader draws the whole world back to front — sky, smog, furnace
-glow, three ranks of city at different parallax, two decks of fog woven between
+One fragment shader draws every world back to front — sky and stars, smog,
+furnace glow, three ranks of silhouette at different parallax, fog woven between
 them, chimneys with smoke, and a near-black foreground frame. Each layer offsets
 by the camera times its own depth, which is where the sense of distance comes
 from.
