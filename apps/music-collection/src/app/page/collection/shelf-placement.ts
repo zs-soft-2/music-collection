@@ -152,3 +152,43 @@ export function placementsForDrop(
 		.filter(({ placement, was }) => !samePlace(was, placement))
 		.map(({ releaseId, placement }) => ({ releaseId, placement }));
 }
+
+/**
+ * The places the compartment a record was taken out of keeps for itself, so
+ * the gap the record leaves stays a gap.
+ *
+ * A compartment the shelf packed itself is packed again the moment anything
+ * leaves it, and the next record along slides into the space that opened —
+ * the very space the collector made room with. Taking a record out of such a
+ * compartment therefore hands the rest of it to the collector too: from then
+ * on it holds what they left in it, be that thirty-five records or ten, and
+ * nothing the shelf decides puts another one back.
+ *
+ * A compartment already filed by hand needs none of this. Its records keep
+ * the places they were given, hole in the numbering and all, so nothing is
+ * written for them.
+ */
+export function placementsLeftBehind(
+	shown: readonly ReleaseView[],
+	moved: ReleaseView,
+	spot: ShelfSpotRef
+): { releaseId: string; placement: CollectionItemPlacement }[] {
+	const key = spotKey(spot.unitId, spot.row, spot.column);
+	const stays = shown.filter((release) => release.id !== moved.id);
+	const theirs = (release: ReleaseView) =>
+		!!release.placement && placementKey(release.placement) === key;
+
+	if (stays.every(theirs)) {
+		return [];
+	}
+
+	return stays
+		.slice(0, MAX_SHELF_POSITION)
+		.map((release, index) => ({
+			releaseId: release.id,
+			placement: { ...spot, position: index + 1 },
+			was: release.placement,
+		}))
+		.filter(({ placement, was }) => !samePlace(was, placement))
+		.map(({ releaseId, placement }) => ({ releaseId, placement }));
+}

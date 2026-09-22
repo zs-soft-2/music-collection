@@ -65,7 +65,10 @@ import {
 	SHELF_LAYOUT_SETTING,
 	ShelfUnitLayout,
 } from './shelf-layout.setting';
-import { placementsForDrop } from './shelf-placement';
+import {
+	placementsForDrop,
+	placementsLeftBehind,
+} from './shelf-placement';
 
 /**
  * Cards / rows per render chunk of the grid and list views. The first chunk
@@ -321,17 +324,31 @@ export const CollectionPageStore = signalStore(
 				 * dropped one: the collector arranged what they see, and a
 				 * place given to one record alone would leave the shelf free
 				 * to reshuffle its neighbours around it.
+				 *
+				 * The compartment the record came out of is arranged as well,
+				 * so the space it leaves behind stays free for whatever the
+				 * collector meant to stand there. A record is usually pulled
+				 * out to make room, not to have the shelf close the gap
+				 * behind it.
 				 */
 				fileRecord(drop: ShelfDrop): void {
-					const cell = store
+					const cells = store
 						.shelves()
-						.flatMap((shelf) => shelf.compartments)
-						.find(
-							(compartment) =>
-								compartment.spot?.unitId === drop.unitId &&
-								compartment.spot.row === drop.row &&
-								compartment.spot.column === drop.column
-						);
+						.flatMap((shelf) => shelf.compartments);
+					const cell = cells.find(
+						(compartment) =>
+							compartment.spot?.unitId === drop.unitId &&
+							compartment.spot.row === drop.row &&
+							compartment.spot.column === drop.column
+					);
+					const from = cells.find(
+						(compartment) =>
+							compartment.spot &&
+							compartment !== cell &&
+							compartment.items.some(
+								(release) => release.id === drop.releaseId
+							)
+					);
 					const moved = store
 						.releases()
 						.find((release) => release.id === drop.releaseId);
@@ -348,16 +365,21 @@ export const CollectionPageStore = signalStore(
 					const byId = new Map(
 						store.items().map((item) => [item.uid, item])
 					);
-					const placements = placementsForDrop(
-						cell.items,
-						moved,
-						{
-							unitId: drop.unitId,
-							row: drop.row,
-							column: drop.column,
-						},
-						drop.index
-					)
+					const placements = [
+						...(from?.spot
+							? placementsLeftBehind(from.items, moved, from.spot)
+							: []),
+						...placementsForDrop(
+							cell.items,
+							moved,
+							{
+								unitId: drop.unitId,
+								row: drop.row,
+								column: drop.column,
+							},
+							drop.index
+						),
+					]
 						.map(({ releaseId, placement }) => ({
 							collectionItem: byId.get(releaseId),
 							placement,

@@ -7,6 +7,7 @@ import {
 	nextPosition,
 	placementInLayout,
 	placementsForDrop,
+	placementsLeftBehind,
 	unitSpots,
 } from './shelf-placement';
 import { ShelfUnitLayout } from './shelf-layout.setting';
@@ -186,5 +187,44 @@ describe('placementsForDrop', () => {
 		expect(placementsForDrop(shown, moved, spot, 0)).toHaveLength(
 			MAX_SHELF_POSITION
 		);
+	});
+});
+
+describe('placementsLeftBehind', () => {
+	const spot = { unitId: 'one', row: 1, column: 1 };
+
+	it('gives the shelf-packed compartment to the collector, gap and all', () => {
+		const moved = record('b');
+		const shown = [record('a'), moved, record('c')];
+
+		/* Two left where three stood: nothing may slide into the third place. */
+		expect(placementsLeftBehind(shown, moved, spot)).toEqual([
+			{ releaseId: 'a', placement: { ...spot, position: 1 } },
+			{ releaseId: 'c', placement: { ...spot, position: 2 } },
+		]);
+	});
+
+	it('writes nothing for a compartment already filed by hand', () => {
+		const a = record('a', { ...spot, position: 1 });
+		const moved = record('b', { ...spot, position: 2 });
+		const c = record('c', { ...spot, position: 3 });
+
+		expect(placementsLeftBehind([a, moved, c], moved, spot)).toEqual([]);
+	});
+
+	it('leaves alone the records that already stand where they would be put', () => {
+		const a = record('a', { ...spot, position: 1 });
+		const moved = record('b');
+		const c = record('c');
+
+		expect(placementsLeftBehind([a, moved, c], moved, spot)).toEqual([
+			{ releaseId: 'c', placement: { ...spot, position: 2 } },
+		]);
+	});
+
+	it('empties out with the last record taken from it', () => {
+		const moved = record('a');
+
+		expect(placementsLeftBehind([moved], moved, spot)).toEqual([]);
 	});
 });
