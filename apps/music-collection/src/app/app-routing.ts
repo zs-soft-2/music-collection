@@ -97,6 +97,16 @@ export const routes: Routes = [
 		},
 	},
 	{
+		path: 'radio',
+		loadComponent: () =>
+			import('./page/radio/radio-page.component').then(
+				(module) => module.RadioPageComponent
+			),
+		data: {
+			breadcrumb: 'radio',
+		},
+	},
+	{
 		path: 'collections',
 		loadComponent: () =>
 			import('./page/collections/collections-page.component').then(

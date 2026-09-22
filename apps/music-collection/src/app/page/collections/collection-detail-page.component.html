@@ -32,20 +32,34 @@
 					<p class="lead">{{ collection.description }}</p>
 				}
 
-				<button
-					type="button"
-					class="follow"
-					[attr.aria-pressed]="store.followed()"
-					(click)="onToggleFollow()"
-				>
-					<i
-						class="pi"
-						[class.pi-star-fill]="store.followed()"
-						[class.pi-star]="!store.followed()"
-						aria-hidden="true"
-					></i>
-					{{ store.followed() ? 'Following' : 'Follow' }}
-				</button>
+				<div class="hero-actions">
+					<button
+						type="button"
+						class="follow"
+						[attr.aria-pressed]="store.followed()"
+						(click)="onToggleFollow()"
+					>
+						<i
+							class="pi"
+							[class.pi-star-fill]="store.followed()"
+							[class.pi-star]="!store.followed()"
+							aria-hidden="true"
+						></i>
+						{{ store.followed() ? 'Following' : 'Follow' }}
+					</button>
+
+					@if (player.playersAllowed()) {
+						<button
+							type="button"
+							class="follow"
+							[disabled]="player.tuning()"
+							(click)="onPlay(collection.slug, collection.name)"
+						>
+							<i class="pi pi-play" aria-hidden="true"></i>
+							Play this collection
+						</button>
+					}
+				</div>
 
 				<div class="progress">
 					<div

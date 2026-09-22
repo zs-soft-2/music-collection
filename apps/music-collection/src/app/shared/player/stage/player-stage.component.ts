@@ -18,6 +18,8 @@ import {
 import { SpotifyIconComponent } from '../../spotify/spotify-icon.component';
 import { YoutubeIconComponent } from '../../youtube/youtube-icon.component';
 import { PlayerSettingsMenuComponent } from '../player-settings-menu.component';
+import { PlayerSideBreakComponent } from '../player-side-break.component';
+import { PlayerStationComponent } from '../player-station.component';
 import { PlayerStore } from '../player.store';
 import { EmberField } from './embers';
 import { EqualizerBars } from './equalizer';
@@ -48,6 +50,8 @@ const BAR_COUNT = { off: 0, subtle: 32, full: 64 };
 		SpotifyIconComponent,
 		YoutubeIconComponent,
 		PlayerSettingsMenuComponent,
+		PlayerSideBreakComponent,
+		PlayerStationComponent,
 	],
 	host: {
 		role: 'dialog',
@@ -288,7 +292,9 @@ export class PlayerStageComponent {
 			return;
 		}
 		const target = this.positionMs() + deltaMs;
-		this.player.seek(Math.min(Math.max(target, 0), this.player.durationMs()));
+		this.player.seek(
+			Math.min(Math.max(target, 0), this.player.durationMs())
+		);
 	}
 
 	/** A bass hit of the real sound: embers and a soft flash. */

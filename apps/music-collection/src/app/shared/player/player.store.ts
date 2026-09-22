@@ -1,5 +1,6 @@
 import {
 	Observable,
+	TimeoutError,
 	distinctUntilChanged,
 	filter,
 	firstValueFrom,
@@ -7,9 +8,18 @@ import {
 	pipe,
 	switchMap,
 	tap,
+	timeout,
 } from 'rxjs';
 
-import { computed, effect, inject, signal, untracked } from '@angular/core';
+import {
+	DOCUMENT,
+	DestroyRef,
+	computed,
+	effect,
+	inject,
+	signal,
+	untracked,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
 	AlbumEntity,
@@ -33,11 +43,15 @@ import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
 import { AlbumDetailsEffect } from '../../data/album-details';
 import { AudioCapture, AudioCaptureEffect } from '../../data/audio';
+import { ExternalPlayerConsentService } from '../../data/external-player';
+import { PlayLogEffect, PlayLogEntry } from '../../data/play-log';
+import { RadioEffect, RadioStation } from '../../data/radio';
 import {
 	PlayerContext,
 	PlayerSettings,
 	PlayerSettingsEffect,
 	PlayerSettingsOverrides,
+	PlayerSource,
 	resolvePlayerSettings,
 } from '../../data/player';
 import { TrackToMatch, currentPositionMs } from '../../data/spotify';
@@ -49,7 +63,68 @@ import {
 	YoutubePlaybackStore,
 } from '../youtube/youtube-playback.store';
 
-export type PlayerSource = 'spotify' | 'youtube';
+import { TrackSide, sideBreaks } from './sides';
+
+export type { PlayerSource };
+
+/**
+ * Below this much actually played, a record was not listened to — it was
+ * passed over on the way to another one, and the log stays quiet about it.
+ */
+const MIN_SITTING_MS = 30_000;
+
+/** How long a station may take to choose its records before it gives up. */
+const TUNING_TIMEOUT_MS = 10_000;
+
+/**
+ * Records the queue may pass over in a row before it gives up. Without a
+ * limit, a station tuned in before the Spotify sign-in would run through
+ * everything it holds in one go.
+ */
+const MAX_PASSED_OVER = 5;
+
+/**
+ * One sitting with one album, while it lasts. Only what the player itself
+ * put on is followed: an album started on the phone is Spotify's own history
+ * to keep, and the app does not know which record of the catalog it is.
+ */
+interface Sitting {
+	albumId: string;
+	albumTitle: string;
+	artistName: string | null;
+	source: PlayerSource;
+	startedAt: number;
+	trackCount: number;
+	/** Tracks of the album heard, by id. */
+	heard: Set<string>;
+	/** Milliseconds played, of the spans that have ended. */
+	playedMs: number;
+	/** When the span playing now began; null while it is paused. */
+	playingSince: number | null;
+	/** When it last played. */
+	endedAt: number;
+}
+
+/** Milliseconds heard, the open span included. */
+const heardMs = (sitting: Sitting, at: number): number =>
+	sitting.playedMs +
+	(sitting.playingSince !== null ? at - sitting.playingSince : 0);
+
+/** The sitting as the log keeps it. */
+const toLogEntry = (sitting: Sitting, at: number): PlayLogEntry => ({
+	uid: `${sitting.albumId}-${sitting.startedAt}`,
+	albumId: sitting.albumId,
+	albumTitle: sitting.albumTitle,
+	artistName: sitting.artistName,
+	source: sitting.source,
+	startedAt: sitting.startedAt,
+	endedAt: sitting.playingSince !== null ? at : sitting.endedAt,
+	playedMs: heardMs(sitting, at),
+	playedTracks: sitting.heard.size,
+	trackCount: sitting.trackCount,
+	completed:
+		sitting.trackCount > 0 && sitting.heard.size >= sitting.trackCount,
+});
 
 /** An album, or one of its tracks, to play. */
 export interface PlayRequest {
@@ -101,12 +176,42 @@ interface PlayerState {
 	/** The tab's sound is analysed for the visuals. */
 	audioStatus: 'off' | 'starting' | 'on';
 	audioError: string | null;
+	/** The record is waiting to be turned over; null while it plays on. */
+	sideBreak: SideBreak | null;
+	/**
+	 * The side the collector has already been let through, so the hold does
+	 * not catch the same track again the moment it plays on.
+	 */
+	sideResumedTrackId: string | null;
+	/** Records waiting to go on after this one, by album id. */
+	queue: string[];
+	/** The station that filled the queue; null when nobody did. */
+	station: RadioStation | null;
+	/** What that station is called, for the player to say what is on. */
+	stationLabel: string | null;
+	/** A station is being tuned in: its records are being chosen. */
+	tuning: boolean;
 }
 
-const toTrackToMatch = ({ uid, name, index }: TrackEntity): TrackToMatch => ({
+/** Playback held at the start of a side, waiting to be let on. */
+export interface SideBreak {
+	/** The track the side starts with. */
+	trackId: string;
+	/** "Side B", as the prompt names it. */
+	label: string;
+}
+
+/** A track of the catalog as the player holds it. */
+export const toTrackToMatch = ({
+	uid,
+	name,
+	index,
+	position,
+}: TrackEntity): TrackToMatch => ({
 	id: uid,
 	name,
 	index,
+	position,
 });
 
 /** An album of the catalog as something to play. */
@@ -181,6 +286,12 @@ export const PlayerStore = signalStore(
 		loadingAlbumId: null,
 		audioStatus: 'off',
 		audioError: null,
+		sideBreak: null,
+		sideResumedTrackId: null,
+		queue: [],
+		station: null,
+		stationLabel: null,
+		tuning: false,
 	}),
 	withProps(() => ({
 		/**
@@ -194,7 +305,8 @@ export const PlayerStore = signalStore(
 			store,
 			spotify = inject(SpotifyPlaybackStore),
 			youtube = inject(YoutubePlaybackStore),
-			albumStateService = inject(AlbumStateService)
+			albumStateService = inject(AlbumStateService),
+			consent = inject(ExternalPlayerConsentService)
 		) => {
 			const albums = toSignal(albumStateService.selectEntities$(), {
 				initialValue: [] as AlbumEntity[],
@@ -211,10 +323,22 @@ export const PlayerStore = signalStore(
 					!!request?.youtubeVideoIds.length,
 			});
 
-			/** The source a request would be played on. */
+			/**
+			 * The source a request would be played on, and null where there
+			 * is none.
+			 *
+			 * This is where the outside players are let in or kept out. Both
+			 * sources are somebody else's player: embedding one writes their
+			 * storage and reports the visit, so without the collector's leave
+			 * there is no source at all — which is what every play button,
+			 * the stage and `start` itself already read.
+			 */
 			const sourceFor = (
 				request: PlayRequest | null
 			): PlayerSource | null => {
+				if (!consent.allowed()) {
+					return null;
+				}
 				const { spotify: onSpotify, youtube: onYoutube } =
 					availableFor(request);
 				switch (settingsFor(request?.context).source) {
@@ -380,6 +504,18 @@ export const PlayerStore = signalStore(
 				settingsFor(shown().request?.context)
 			);
 
+			/**
+			 * Where the record on show has to be turned over, by the track id
+			 * the side starts with. Empty for a release without sides.
+			 */
+			const sides = computed(() => {
+				const request = shown().request;
+
+				return request
+					? sideBreaks(request.tracks)
+					: new Map<string, TrackSide>();
+			});
+
 			const durationMs = computed(() => {
 				const current = now();
 				if (!current) {
@@ -392,6 +528,9 @@ export const PlayerStore = signalStore(
 
 			return {
 				now,
+				sides,
+				/** The record on show has sides, so it can be turned over. */
+				hasSides: computed(() => sides().size > 0),
 				pageActive,
 				/** The page's album / track plays now. */
 				pagePlaying: computed(() => pageActive() && !!now()?.playing),
@@ -463,11 +602,17 @@ export const PlayerStore = signalStore(
 				selectedDeviceId: computed(() => spotify.selectedDeviceId()),
 				/** Volume the browser player starts at, 0–100. */
 				spotifyBrowserVolume: computed(() => spotify.browserVolume()),
-				/** Albums of the catalog with a Spotify or YouTube link. */
+				/** The outside players may be put on the page at all. */
+				playersAllowed: computed(() => consent.allowed()),
+				/**
+				 * Albums of the catalog with a Spotify or YouTube link — none
+				 * at all while the outside players are not allowed, so a
+				 * button that could only disappoint is never offered.
+				 */
 				playableAlbumIds: computed(
 					() =>
 						new Set(
-							(albums() ?? [])
+							(consent.allowed() ? (albums() ?? []) : [])
 								.filter(
 									(album) =>
 										(isSpotifyAlbumId(
@@ -493,7 +638,8 @@ export const PlayerStore = signalStore(
 			albumStateService = inject(AlbumStateService),
 			spotify = inject(SpotifyPlaybackStore),
 			youtube = inject(YoutubePlaybackStore),
-			audioCaptureEffect = inject(AudioCaptureEffect)
+			audioCaptureEffect = inject(AudioCaptureEffect),
+			radioEffect = inject(RadioEffect)
 		) => {
 			let capture: AudioCapture | null = null;
 
@@ -546,7 +692,12 @@ export const PlayerStore = signalStore(
 					await spotify.connect();
 					return;
 				}
-				patchState(store, { session: request, sessionSource: source });
+				patchState(store, {
+					session: request,
+					sessionSource: source,
+					sideBreak: null,
+					sideResumedTrackId: null,
+				});
 				if (settings.view === 'stage') {
 					patchState(store, { stageOpen: true });
 				}
@@ -584,6 +735,60 @@ export const PlayerStore = signalStore(
 				}
 			};
 
+			/** Plays an album of the catalog from its start. */
+			const playAlbumById = async (albumId: string): Promise<void> => {
+				patchState(store, { loadingAlbumId: albumId });
+				try {
+					const albums = await firstValueFrom(
+						albumStateService.selectEntities$().pipe(
+							tap((all) => {
+								if (!all?.length) {
+									albumStateService.dispatchListEntitiesAction();
+								}
+							}),
+							filter((all) => all?.length > 0)
+						)
+					);
+					const album = albums.find((item) => item.uid === albumId);
+
+					if (!album) {
+						return;
+					}
+					const { tracks } = await firstValueFrom(
+						albumDetailsEffect.load$(albumId)
+					);
+
+					await start(albumPlayRequest(album, tracks));
+				} catch (error) {
+					console.error(error);
+				} finally {
+					patchState(store, { loadingAlbumId: null });
+				}
+			};
+
+			/**
+			 * The next record of the queue, or the end of the station. A
+			 * record that turns out to have nothing to play on is passed
+			 * over rather than leaving the queue stuck on it.
+			 */
+			const playNextAlbum = async (passedOver = 0): Promise<void> => {
+				const [next, ...rest] = store.queue();
+
+				patchState(store, { queue: rest });
+				if (!next) {
+					patchState(store, { station: null, stationLabel: null });
+
+					return;
+				}
+				await playAlbumById(next);
+				if (
+					store.session()?.albumId !== next &&
+					passedOver < MAX_PASSED_OVER
+				) {
+					await playNextAlbum(passedOver + 1);
+				}
+			};
+
 			const toggle = async (): Promise<void> => {
 				const current = store.now();
 				if (current?.source === 'spotify') {
@@ -591,6 +796,41 @@ export const PlayerStore = signalStore(
 				} else if (current?.source === 'youtube') {
 					youtube.togglePlay();
 				}
+			};
+
+			/**
+			 * Holds playback where the record has to be turned over: the side
+			 * has already begun by the time the source reports it, so it is
+			 * wound back to its first track's start and waits there.
+			 */
+			const holdAtSide = async (
+				trackId: string,
+				label: string
+			): Promise<void> => {
+				patchState(store, { sideBreak: { trackId, label } });
+				const current = store.now();
+
+				if (current?.source === 'spotify') {
+					await spotify.togglePlay();
+					await spotify.seek(0);
+				} else if (current?.source === 'youtube') {
+					youtube.togglePlay();
+					youtube.seek(0);
+				}
+			};
+
+			/** Lets the record play on from the side it was held at. */
+			const continueSide = async (): Promise<void> => {
+				const held = store.sideBreak();
+
+				if (!held) {
+					return;
+				}
+				patchState(store, {
+					sideBreak: null,
+					sideResumedTrackId: held.trackId,
+				});
+				await toggle();
 			};
 
 			/**
@@ -602,6 +842,15 @@ export const PlayerStore = signalStore(
 
 			return {
 				activate,
+
+				/** Lets the record play on from the side it was held at. */
+				continueSide,
+
+				/**
+				 * Holds the record at a side, for the watcher below to call
+				 * when playback runs into a turnover.
+				 */
+				holdAtSide,
 
 				/** The page shows an album or track (null: nothing to play). */
 				setPage(page: PlayRequest | null): void {
@@ -619,7 +868,9 @@ export const PlayerStore = signalStore(
 				async togglePage(): Promise<void> {
 					activate();
 					const page = store.page();
-					if (store.pageActive()) {
+					if (store.sideBreak() && store.pageActive()) {
+						await continueSide();
+					} else if (store.pageActive()) {
 						await toggle();
 					} else if (page) {
 						await start(page);
@@ -640,46 +891,115 @@ export const PlayerStore = signalStore(
 							trackName: track.name,
 							youtubeVideoId: null,
 						});
+						// Asked for by name: no record is turned over here.
+						patchState(store, { sideResumedTrackId: trackId });
 					}
 				},
 
 				/** Plays an album of the catalog from its start. */
-				async playAlbum(albumId: string): Promise<void> {
+				playAlbum(albumId: string): Promise<void> {
 					activate();
-					patchState(store, { loadingAlbumId: albumId });
-					try {
-						const albums = await firstValueFrom(
-							albumStateService.selectEntities$().pipe(
-								tap((all) => {
-									if (!all?.length) {
-										albumStateService.dispatchListEntitiesAction();
-									}
-								}),
-								filter((all) => all?.length > 0)
-							)
-						);
-						const album = albums.find(
-							(item) => item.uid === albumId
-						);
-						if (!album) {
-							return;
-						}
-						const { tracks } = await firstValueFrom(
-							albumDetailsEffect.load$(albumId)
-						);
-						await start(albumPlayRequest(album, tracks));
-					} catch (error) {
-						console.error(error);
-					} finally {
-						patchState(store, { loadingAlbumId: null });
+
+					return playAlbumById(albumId);
+				},
+
+				/**
+				 * Tunes in a station: chooses its records, puts the first on
+				 * and leaves the rest waiting.
+				 */
+				async startStation(
+					station: RadioStation,
+					label: string
+				): Promise<void> {
+					if (!store.playersAllowed()) {
+						return;
 					}
+					activate();
+					patchState(store, { tuning: true });
+					try {
+						const albumIds = await firstValueFrom(
+							radioEffect
+								.albums$(station, store.playableAlbumIds())
+								.pipe(
+									filter((ids) => ids.length > 0),
+									// The catalog and the shelf arrive on
+									// their own time; a station that never
+									// fills is one with nothing to play.
+									timeout(TUNING_TIMEOUT_MS)
+								)
+						);
+						const [first, ...rest] = albumIds;
+
+						patchState(store, {
+							queue: rest,
+							station,
+							stationLabel: label,
+						});
+						await playAlbumById(first);
+					} catch (error) {
+						patchState(store, {
+							queue: [],
+							station: null,
+							stationLabel: null,
+						});
+						if (!(error instanceof TimeoutError)) {
+							console.error(error);
+						}
+					} finally {
+						patchState(store, { tuning: false });
+					}
+				},
+
+				/**
+				 * Plays a run of records one after another — what stands in
+				 * one compartment, what a page has in front of it. A station
+				 * proper goes through `startStation`; this is the same queue
+				 * without a rule behind it.
+				 */
+				async playQueue(
+					albumIds: readonly string[],
+					label: string
+				): Promise<void> {
+					activate();
+					const playable = store.playableAlbumIds();
+					const [first, ...rest] = albumIds.filter((albumId) =>
+						playable.has(albumId)
+					);
+
+					if (!first) {
+						return;
+					}
+					patchState(store, {
+						queue: rest,
+						station: null,
+						stationLabel: label,
+					});
+					await playAlbumById(first);
+				},
+
+				/** Puts the next record of the queue on. */
+				playNextAlbum(): Promise<void> {
+					activate();
+
+					return playNextAlbum();
+				},
+
+				/** Takes the queue off; what plays now plays to its end. */
+				stopStation(): void {
+					patchState(store, {
+						queue: [],
+						station: null,
+						stationLabel: null,
+					});
 				},
 
 				/** Pauses / resumes what plays, or starts what is shown. */
 				async togglePlay(): Promise<void> {
 					activate();
 					const request = store.shown().request;
-					if (store.now()) {
+					if (store.sideBreak()) {
+						await continueSide();
+					} else if (store.now()) {
 						await toggle();
 					} else if (request) {
 						await start(request);
@@ -688,6 +1008,16 @@ export const PlayerStore = signalStore(
 
 				skip(direction: 'previous' | 'next'): void {
 					const current = store.now();
+					// Skipped into a side deliberately: it is not a turnover.
+					const tracks = store.shown().request?.tracks ?? [];
+					const at = tracks.findIndex(
+						(track) => track.id === current?.trackId
+					);
+					const target =
+						tracks[at + (direction === 'next' ? 1 : -1)]?.id ??
+						null;
+
+					patchState(store, { sideResumedTrackId: target });
 					if (current?.source === 'spotify') {
 						void spotify.skip(direction);
 					} else if (current?.source === 'youtube') {
@@ -862,9 +1192,200 @@ export const PlayerStore = signalStore(
 		}
 	),
 	withHooks({
-		onInit(store, spotify = inject(SpotifyPlaybackStore)) {
+		onInit(
+			store,
+			spotify = inject(SpotifyPlaybackStore),
+			youtube = inject(YoutubePlaybackStore),
+			playLog = inject(PlayLogEffect),
+			document = inject(DOCUMENT),
+			destroyRef = inject(DestroyRef)
+		) {
 			store.loadSettings(of(undefined));
 			store.loadLyrics(() => store.shown().trackId);
+
+			// Playing on into a new side: hold there until the collector has
+			// turned the record over.
+			effect(() => {
+				const current = store.now();
+				const trackId = current?.trackId ?? null;
+				const side = trackId ? store.sides().get(trackId) : null;
+
+				if (
+					!side ||
+					!trackId ||
+					!current?.playing ||
+					!store.settings().sideBreak ||
+					store.sideBreak() ||
+					store.sideResumedTrackId() === trackId
+				) {
+					return;
+				}
+				untracked(() => void store.holdAtSide(trackId, side.label));
+			});
+
+			// The album being listened to now; one document per sitting.
+			let sitting: Sitting | null = null;
+			const playNextOfQueue = () =>
+				store
+					.playNextAlbum()
+					.catch((error) =>
+						console.error('The next record did not go on', error)
+					);
+
+			/**
+			 * Writes the sitting out. `end` leaves it behind (the album is
+			 * over); without it the same document is written again as the
+			 * record plays on — the id holds the moment it started, so the
+			 * two are one play, not two.
+			 */
+			const flush = (end: boolean): void => {
+				const at = Date.now();
+				const done = sitting;
+
+				if (end) {
+					sitting = null;
+				}
+				if (!done || heardMs(done, at) < MIN_SITTING_MS) {
+					return;
+				}
+				if (playLog.recording) {
+					playLog
+						.record(toLogEntry(done, at))
+						.catch((error) =>
+							console.error('Listening not logged', error)
+						);
+				}
+			};
+
+			/**
+			 * The record ran out on its own, rather than being stopped. On
+			 * YouTube the player says so; Spotify parks on the last track of
+			 * the album with nothing left to play.
+			 */
+			const ranOut = (): boolean => {
+				const current = store.now();
+				const request = store.session();
+				const last = request?.tracks[request.tracks.length - 1];
+
+				// A record held to be turned over looks stopped, and on a
+				// last side of one track it even looks finished. It is not:
+				// it is waiting for a hand.
+				if (!current || current.playing || !last || store.sideBreak()) {
+					return false;
+				}
+
+				return current.source === 'youtube'
+					? youtube.ended()
+					: current.trackId === last.id &&
+							spotify.nowPlaying()?.positionMs === 0;
+			};
+
+			/** Whether this record has actually played, so it can run out. */
+			let played = false;
+
+			// What is playing, as the log follows it, and where the queue
+			// takes over once a record has run out.
+			effect(() => {
+				const current = store.now();
+				const session = store.session();
+				const at = Date.now();
+
+				untracked(() => {
+					const albumId = current?.albumId ?? null;
+					const ours =
+						!!current &&
+						!!session &&
+						!!albumId &&
+						session.albumId === albumId;
+
+					if (sitting && sitting.albumId !== albumId) {
+						// Another record went on, or the player fell silent.
+						played = false;
+						if (sitting.playingSince !== null) {
+							sitting.playedMs += at - sitting.playingSince;
+							sitting.playingSince = null;
+							sitting.endedAt = at;
+						}
+						flush(true);
+					}
+					if (!ours || !current || !session) {
+						return;
+					}
+					sitting ??= {
+						albumId: albumId as string,
+						albumTitle: session.albumTitle,
+						artistName: session.artistName,
+						source: current.source,
+						startedAt: at,
+						trackCount: session.tracks.length,
+						heard: new Set<string>(),
+						playedMs: 0,
+						playingSince: null,
+						endedAt: at,
+					};
+					if (current.playing) {
+						sitting.playingSince ??= at;
+						sitting.endedAt = at;
+						if (current.trackId) {
+							sitting.heard.add(current.trackId);
+						}
+					} else if (sitting.playingSince !== null) {
+						sitting.playedMs += at - sitting.playingSince;
+						sitting.playingSince = null;
+						sitting.endedAt = at;
+					}
+
+					if (current.playing) {
+						played = true;
+					} else if (played && store.queue().length && ranOut()) {
+						played = false;
+						void playNextOfQueue();
+					}
+				});
+			});
+
+			/**
+			 * The leave taken back while a record plays. The shell takes the
+			 * dock, the stage and the mini player off the page at once, so
+			 * what is playing would play on with nothing left to stop it.
+			 *
+			 * Only playback is ended here. Whether withdrawing also signs the
+			 * account out of Spotify is the consent's question, not the
+			 * player's, and this does not answer it.
+			 */
+			effect(() => {
+				if (store.playersAllowed()) {
+					return;
+				}
+				untracked(() => {
+					if (!store.now() && !store.queue().length) {
+						return;
+					}
+					const nowPlaying = spotify.nowPlaying();
+
+					if (nowPlaying && !nowPlaying.paused) {
+						void spotify.togglePlay();
+					}
+					youtube.close();
+					store.stopStation();
+					flush(true);
+				});
+			});
+
+			// A tab being hidden may never come back: keep what was heard.
+			const onVisibilityChange = () => {
+				if (document.visibilityState === 'hidden') {
+					flush(false);
+				}
+			};
+
+			document.addEventListener('visibilitychange', onVisibilityChange);
+			destroyRef.onDestroy(() =>
+				document.removeEventListener(
+					'visibilitychange',
+					onVisibilityChange
+				)
+			);
 
 			// Signed in to Spotify: map the playing (or shown) album's tracks.
 			effect(() => {

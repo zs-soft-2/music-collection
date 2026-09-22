@@ -300,6 +300,32 @@
 				</h2>
 				@if (isOpen('listen')) {
 					<mc-player-panel />
+
+					@if (store.listening(); as listening) {
+						@if (listening.plays) {
+							<p class="listening">
+								<i class="pi pi-history" aria-hidden="true"></i>
+								You have put this record on
+								{{ listening.plays }}
+								{{ listening.plays === 1 ? 'time' : 'times' }}
+								@if (listening.fullPlays) {
+									<span class="through">
+										· {{ listening.fullPlays }} right
+										through
+									</span>
+								}
+								@if (listening.lastPlayedAt) {
+									<span class="last">
+										· last on
+										{{
+											listening.lastPlayedAt
+												| date: 'mediumDate'
+										}}
+									</span>
+								}
+							</p>
+						}
+					}
 				}
 			</section>
 		}

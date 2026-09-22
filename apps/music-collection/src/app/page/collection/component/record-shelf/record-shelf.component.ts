@@ -12,7 +12,12 @@ import {
 import { Router } from '@angular/router';
 
 import { MediaFormat, ReleaseView } from '../../../../shared/music-ui';
-import { ShelfDrop, ShelfSpotRef, ShelfUnitView } from '../../collection.model';
+import {
+	ShelfDrop,
+	ShelfPlay,
+	ShelfSpotRef,
+	ShelfUnitView,
+} from '../../collection.model';
 
 import { RecordShelfPeekComponent } from './record-shelf-peek.component';
 
@@ -28,6 +33,8 @@ interface Compartment {
 	key: string;
 	label: string;
 	spines: Spine[];
+	/** The records in it, in the order they stand, by album id. */
+	albumIds: string[];
 	/** Drawn but with nothing in it; the unit keeps the shape either way. */
 	empty: boolean;
 	/** The drawn compartment this is, or null on the wall and the overflow. */
@@ -38,6 +45,8 @@ interface Compartment {
 interface Unit {
 	key: string;
 	name: string;
+	/** Everything standing in the unit, compartment by compartment. */
+	albumIds: string[];
 	/** Compartments per row; 0 for the open wall, which fills the width. */
 	columns: number;
 	overflow: boolean;
@@ -100,9 +109,17 @@ export class RecordShelfComponent {
 	 * on: half a collection is no shelf to file records into.
 	 */
 	public readonly placeable = input(false);
+	/**
+	 * A record can be put on at all. Without the outside players there is
+	 * nothing to play it on, and a shelf that offered to would only
+	 * disappoint.
+	 */
+	public readonly playable = input(false);
 
 	/** A record was let go over a compartment of a drawn unit. */
 	public readonly filed = output<ShelfDrop>();
+	/** A compartment, or a whole unit, asked to be put on. */
+	public readonly putOn = output<ShelfPlay>();
 
 	private readonly router = inject(Router);
 	private readonly peek = viewChild.required(RecordShelfPeekComponent);
@@ -114,11 +131,15 @@ export class RecordShelfComponent {
 			name: shelf.name,
 			columns: shelf.columns,
 			overflow: shelf.overflow,
+			albumIds: shelf.compartments.flatMap((group) =>
+				group.items.map((release) => release.albumId)
+			),
 			compartments: shelf.compartments.map((group) => ({
 				key: group.key,
 				label: group.label,
 				empty: !group.items.length,
 				spot: group.spot,
+				albumIds: group.items.map((release) => release.albumId),
 				spines: group.items.map((release) => ({
 					release,
 					href: this.router.serializeUrl(

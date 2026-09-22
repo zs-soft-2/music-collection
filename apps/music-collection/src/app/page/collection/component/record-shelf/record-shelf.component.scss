@@ -135,6 +135,61 @@
 	color: #b8a58a;
 }
 
+/*
+ * Putting a compartment on. It stays out of the way until the compartment is
+ * hovered or the button itself focused: a shelf is for looking at first.
+ */
+.label-play {
+	display: inline-grid;
+	place-items: center;
+	width: 18px;
+	height: 18px;
+	flex: none;
+	margin-right: auto;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	font-size: 0.55rem;
+	color: #f1e7d8;
+	background: rgb(255 255 255 / 12%);
+	opacity: 0;
+	cursor: pointer;
+	transition: opacity 0.15s ease;
+
+	&:hover {
+		background: rgb(255 255 255 / 24%);
+	}
+
+	&:focus-visible {
+		opacity: 1;
+	}
+}
+
+.compartment:hover .label-play {
+	opacity: 1;
+}
+
+.unit-play {
+	display: inline-grid;
+	place-items: center;
+	width: 24px;
+	height: 24px;
+	flex: none;
+	margin-left: auto;
+	padding: 0;
+	border: 1px solid var(--mc-border);
+	border-radius: 50%;
+	font-size: 0.65rem;
+	color: var(--mc-text-muted);
+	background: transparent;
+	cursor: pointer;
+
+	&:hover {
+		color: var(--mc-text);
+		background: var(--mc-surface-2);
+	}
+}
+
 /* Recessed back panel. Overflow stays visible so the cover can pull out. */
 .cubby {
 	display: flex;

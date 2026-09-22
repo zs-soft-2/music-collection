@@ -10,6 +10,8 @@ import { SpotifyIconComponent } from '../spotify/spotify-icon.component';
 import { YoutubeIconComponent } from '../youtube/youtube-icon.component';
 import { YoutubePanelComponent } from '../youtube/youtube-panel.component';
 import { PlayerSettingsMenuComponent } from './player-settings-menu.component';
+import { PlayerSideBreakComponent } from './player-side-break.component';
+import { PlayerStationComponent } from './player-station.component';
 import { PlayerStore } from './player.store';
 
 /**
@@ -27,6 +29,8 @@ import { PlayerStore } from './player.store';
 		YoutubeIconComponent,
 		YoutubePanelComponent,
 		PlayerSettingsMenuComponent,
+		PlayerSideBreakComponent,
+		PlayerStationComponent,
 	],
 	template: `
 		@if (player.page(); as page) {
@@ -121,6 +125,10 @@ import { PlayerStore } from './player.store';
 					<mc-player-settings-menu class="settings" />
 				</div>
 			</div>
+
+			<mc-player-station />
+
+			<mc-player-side-break />
 
 			@if (player.error(); as error) {
 				<p class="error">{{ error }}</p>

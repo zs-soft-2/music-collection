@@ -7,7 +7,8 @@
 			[style.--cols]="unit.columns || null"
 			[attr.aria-label]="unit.name || null"
 		>
-			@if (unit.name || unit.overflow) {
+			<!-- The open wall stays bare; a drawn unit can be put on. -->
+			@if (unit.name || unit.overflow || unit.columns) {
 				<header class="unit-head">
 					@if (unit.overflow) {
 						<span class="unit-name">Off the shelf</span>
@@ -17,6 +18,25 @@
 						</span>
 					} @else {
 						<span class="unit-name">{{ unit.name }}</span>
+					}
+					@if (playable() && unit.albumIds.length) {
+						<button
+							type="button"
+							class="unit-play"
+							[attr.aria-label]="
+								'Play what stands in ' +
+								(unit.name || 'this unit')
+							"
+							title="Play what stands here"
+							(click)="
+								putOn.emit({
+									label: unit.name || 'Your shelf',
+									albumIds: unit.albumIds,
+								})
+							"
+						>
+							<i class="pi pi-play" aria-hidden="true"></i>
+						</button>
 					}
 				</header>
 			}
@@ -43,6 +63,28 @@
 								<span class="label-text">{{
 									compartment.label
 								}}</span>
+								@if (playable()) {
+									<button
+										type="button"
+										class="label-play"
+										[attr.aria-label]="
+											'Play what stands in ' +
+											compartment.label
+										"
+										title="Play what stands here"
+										(click)="
+											putOn.emit({
+												label: compartment.label,
+												albumIds: compartment.albumIds,
+											})
+										"
+									>
+										<i
+											class="pi pi-play"
+											aria-hidden="true"
+										></i>
+									</button>
+								}
 								<span class="label-count">{{
 									compartment.spines.length
 								}}</span>

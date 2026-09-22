@@ -260,12 +260,18 @@ h1 {
 
 /* ── Follow ────────────────────────────────────────────────────────────── */
 
+.hero-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin-top: 1rem;
+}
+
 .follow {
 	display: inline-flex;
 	align-items: center;
 	gap: 0.45rem;
 	padding: 0.45rem 0.9rem;
-	margin-top: 1rem;
 	font: inherit;
 	font-size: 0.85rem;
 	color: var(--mc-text-muted);
@@ -286,6 +292,11 @@ h1 {
 	&[aria-pressed='true'] {
 		color: var(--mc-primary);
 		border-color: var(--mc-primary);
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: default;
 	}
 }
 

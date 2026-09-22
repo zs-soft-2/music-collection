@@ -249,7 +249,9 @@
 				<mc-record-shelf
 					[shelves]="store.shelves()"
 					[placeable]="store.placeable()"
+					[playable]="player.playersAllowed()"
 					(filed)="store.fileRecord($event)"
+					(putOn)="onPlayShelf($event)"
 				/>
 			}
 			@default {

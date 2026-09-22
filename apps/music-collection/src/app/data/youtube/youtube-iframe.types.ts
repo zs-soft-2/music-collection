@@ -43,3 +43,5 @@ export type YtWindow = Window & {
 
 /** YT.PlayerState.PLAYING */
 export const YT_PLAYING = 1;
+/** YT.PlayerState.ENDED — the video, or the whole playlist, ran out. */
+export const YT_ENDED = 0;

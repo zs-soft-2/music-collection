@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ProfileAccountComponent } from './component/profile-account/profile-account.component';
 import { ProfileAppearanceComponent } from './component/profile-appearance/profile-appearance.component';
 import { ProfileListsComponent } from './component/profile-lists/profile-lists.component';
+import { ProfileListeningComponent } from './component/profile-listening/profile-listening.component';
 import { ProfilePlaybackComponent } from './component/profile-playback/profile-playback.component';
 import { ProfilePrivacyComponent } from './component/profile-privacy/profile-privacy.component';
 import { ProfileShelvesComponent } from './component/profile-shelves/profile-shelves.component';
@@ -24,6 +25,7 @@ import { ProfilePageStore } from './profile-page.store';
 		ProfileAccountComponent,
 		ProfileAppearanceComponent,
 		ProfileListsComponent,
+		ProfileListeningComponent,
 		ProfilePlaybackComponent,
 		ProfilePrivacyComponent,
 		ProfileShelvesComponent,

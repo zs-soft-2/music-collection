@@ -43,6 +43,10 @@ export class TopBarService {
 				routerLink: ['/collections'],
 			},
 			{
+				label: 'Radio',
+				routerLink: ['/radio'],
+			},
+			{
 				label: 'Wishlist',
 				routerLink: ['/wishlist'],
 			},

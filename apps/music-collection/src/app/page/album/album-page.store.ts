@@ -58,6 +58,7 @@ import {
 } from '@music-collection/domain/music-collection/core';
 
 import { AlbumDetailsEffect } from '../../data/album-details';
+import { PlayLogEffect, PlayLogEntry, listeningFor } from '../../data/play-log';
 import { UserSettingsEffect } from '../../data/user-settings';
 import { PhotoScanEffect, PreparedPhoto } from '../../data/photo-scan';
 import { ReleaseRequestEffect } from '../../data/release-request';
@@ -173,6 +174,8 @@ interface AlbumPageState {
 	photoScanned: boolean;
 	/** The published collections, to say what this album is part of. */
 	collectionStandings: MusicCollectionStanding[];
+	/** The collector's own listening log; empty while signed out. */
+	playLog: PlayLogEntry[];
 	albumsLoading: boolean;
 	releasesLoading: boolean;
 	detailsLoading: boolean;
@@ -225,6 +228,7 @@ const initialState: AlbumPageState = {
 	photo: null,
 	photoScanned: false,
 	collectionStandings: [],
+	playLog: [],
 	albumsLoading: true,
 	releasesLoading: true,
 	detailsLoading: true,
@@ -597,8 +601,20 @@ export const AlbumPageStore = signalStore(
 			albumDetailsEffect = inject(AlbumDetailsEffect),
 			releaseRequestEffect = inject(ReleaseRequestEffect),
 			photoScanEffect = inject(PhotoScanEffect),
-			musicCollectionEffect = inject(MusicCollectionEffect)
+			musicCollectionEffect = inject(MusicCollectionEffect),
+			playLogEffect = inject(PlayLogEffect)
 		) => ({
+			/** The collector's listening, to say how often this record went on. */
+			loadPlayLog: rxMethod<void>(
+				pipe(
+					switchMap(() => playLogEffect.list$()),
+					tapResponse({
+						next: (playLog: PlayLogEntry[]) =>
+							patchState(store, { playLog }),
+						error: (error) => console.error(error),
+					})
+				)
+			),
 			/** The signed-in user's release requests; follows sign-in. */
 			loadRequests: rxMethod<void>(
 				pipe(
@@ -1166,6 +1182,10 @@ export const AlbumPageStore = signalStore(
 		pickerView: computed((): 'catalog' | 'discogs' =>
 			store.pickedDiscogsReleaseId() ? 'discogs' : 'catalog'
 		),
+		/** How often the collector has put this record on. */
+		listening: computed(() =>
+			listeningFor(store.playLog(), store.albumId())
+		),
 	})),
 	withMethods(
 		(
@@ -1399,6 +1419,7 @@ export const AlbumPageStore = signalStore(
 			store.loadRequests(of(undefined));
 			store.loadWishlist(of(undefined));
 			store.loadCollections(of(undefined));
+			store.loadPlayLog(of(undefined));
 			store.watchWishing(of(undefined));
 		},
 	})

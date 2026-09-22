@@ -2,6 +2,8 @@ import { UserSetting } from '../user-settings';
 
 /** Where the music comes from; `auto` picks the best one available. */
 export type PlayerSourceSetting = 'auto' | 'spotify' | 'youtube';
+/** Where the music actually comes from, once `auto` has picked. */
+export type PlayerSource = Exclude<PlayerSourceSetting, 'auto'>;
 /** How the player opens when playback starts. */
 export type PlayerView = 'panel' | 'stage';
 /** Strength of the stage's visual effects. */
@@ -17,6 +19,11 @@ export interface PlayerSettings {
 	effects: PlayerEffects;
 	/** Play on to the next track of the album. */
 	autoAdvance: boolean;
+	/**
+	 * Stop where the record has to be turned over, and wait to be let on.
+	 * Only a release whose positions name sides ("A1", "B2") has any.
+	 */
+	sideBreak: boolean;
 }
 
 /** What the user changed, per context; the rest comes from the defaults. */
@@ -30,6 +37,7 @@ const BASE: PlayerSettings = {
 	lyrics: true,
 	effects: 'subtle',
 	autoAdvance: true,
+	sideBreak: true,
 };
 
 export const PLAYER_DEFAULTS: Record<PlayerContext, PlayerSettings> = {

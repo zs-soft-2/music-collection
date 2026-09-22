@@ -1,0 +1,106 @@
+<div class="page">
+	<header class="hero">
+		<div class="hero-text">
+			<p class="eyebrow">musiCollection</p>
+			<h1>Radio</h1>
+			<p class="lead">
+				A record chosen for you: what the catalog has just taken in,
+				what your shelf says you like, one compartment of that shelf, a
+				collection you are after — or nothing in particular.
+			</p>
+		</div>
+	</header>
+
+	@if (player.station(); as playing) {
+		<section class="on-air" aria-label="On air">
+			<div class="on-air-text">
+				<p class="on-air-label">On air</p>
+				<p class="on-air-station">{{ player.stationLabel() }}</p>
+				<p class="on-air-queue">
+					@if (player.queue().length) {
+						{{ player.queue().length }} more
+						{{ player.queue().length === 1 ? 'record' : 'records' }}
+						waiting
+					} @else {
+						Last record of the station
+					}
+				</p>
+			</div>
+			<div class="on-air-actions">
+				<button
+					type="button"
+					class="ghost"
+					[disabled]="!player.queue().length"
+					(click)="store.skip()"
+				>
+					<i class="pi pi-step-forward" aria-hidden="true"></i>
+					Next record
+				</button>
+				<button type="button" class="ghost" (click)="store.stop()">
+					<i class="pi pi-times" aria-hidden="true"></i>
+					Stop the station
+				</button>
+			</div>
+		</section>
+	}
+
+	@if (store.blocked()) {
+		<p class="blocked">
+			@switch (store.blocked()) {
+				@case ('sign-in') {
+					The radio plays records through YouTube and Spotify. Sign in
+					to listen — both are somebody else's player, and neither is
+					put on the page for a visitor.
+				}
+				@case ('consent') {
+					The radio plays records through YouTube and Spotify.
+					Embedding either one writes its owner's storage and tells
+					them you were here, so it takes your leave first — the bar
+					at the bottom asks, and the
+					<a routerLink="/profile">privacy card on your profile</a>
+					takes the answer back at any time.
+				}
+			}
+		</p>
+	} @else if (store.isLoading()) {
+		<ul class="stations" aria-hidden="true">
+			@for (skeleton of skeletons; track skeleton) {
+				<li class="station skeleton"></li>
+			}
+		</ul>
+	} @else if (store.stations().length) {
+		<ul class="stations">
+			@for (station of store.stations(); track station.id) {
+				<li
+					class="station"
+					[class.playing]="store.playingStationId() === station.id"
+				>
+					<i class="icon {{ station.icon }}" aria-hidden="true"></i>
+					<div class="text">
+						<h2>{{ station.label }}</h2>
+						<p class="description">{{ station.description }}</p>
+						<p class="count">
+							{{ station.count }}
+							{{ station.count === 1 ? 'record' : 'records' }}
+						</p>
+					</div>
+					<button
+						type="button"
+						class="play"
+						[disabled]="store.tuning()"
+						[attr.aria-label]="'Play ' + station.label"
+						(click)="play(station)"
+					>
+						<i class="pi pi-play" aria-hidden="true"></i>
+					</button>
+				</li>
+			}
+		</ul>
+	} @else {
+		<p class="empty">
+			Nothing to play yet. The radio needs records with a Spotify or
+			YouTube link behind them — add a few to the catalog and the stations
+			appear here.
+		</p>
+	}
+</div>

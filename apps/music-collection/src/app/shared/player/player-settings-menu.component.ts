@@ -172,6 +172,16 @@ interface Choice<T> {
 					/>
 					<span>Play on to the next track</span>
 				</label>
+				@if (player.hasSides()) {
+					<label class="switch">
+						<input
+							type="checkbox"
+							[checked]="settings().sideBreak"
+							(change)="set({ sideBreak: !settings().sideBreak })"
+						/>
+						<span>Stop to turn the record over</span>
+					</label>
+				}
 
 				<button
 					type="button"

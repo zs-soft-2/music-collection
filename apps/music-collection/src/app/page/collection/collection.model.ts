@@ -44,6 +44,16 @@ export interface ShelfDrop extends ShelfSpotRef {
 }
 
 /**
+ * A part of the shelving put on the player: the records standing there, in
+ * the order they stand, and what to call the run of them.
+ */
+export interface ShelfPlay {
+	label: string;
+	/** Album ids, the way the compartment reads left to right. */
+	albumIds: string[];
+}
+
+/**
  * A drawn shelving unit with the compartments filed into it. A unit with no
  * columns is the open wall the shelf falls back to when nothing is drawn.
  */

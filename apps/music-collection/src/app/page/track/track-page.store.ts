@@ -35,7 +35,7 @@ import {
 	collectionOriginParams,
 	withPageOrigin,
 } from '../../shared/page-origin';
-import { PlayRequest, PlayerStore } from '../../shared/player';
+import { PlayRequest, PlayerStore, toTrackToMatch } from '../../shared/player';
 import { toAlbumProfile } from '../album/album.mapper';
 import { toTrackCredits } from './track.mapper';
 
@@ -344,13 +344,7 @@ export const TrackPageStore = signalStore(
 								coverUrl: album.coverUrl ?? null,
 								spotifyAlbumId: album.spotifyAlbumId,
 								youtubePlaylistId: album.youtubePlaylistId,
-								tracks: store
-									.tracks()
-									.map(({ uid, name, index }) => ({
-										id: uid,
-										name,
-										index,
-									})),
+								tracks: store.tracks().map(toTrackToMatch),
 								trackId: track.uid,
 								trackName: track.name,
 								youtubeVideoId: store.youtubeVideoId(),

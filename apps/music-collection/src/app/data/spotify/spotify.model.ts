@@ -48,6 +48,11 @@ export interface TrackToMatch {
 	name: string;
 	/** Play order, 1-based. */
 	index: number;
+	/**
+	 * Position as printed on the release, e.g. "A1". Nothing here matches on
+	 * it; the player reads the record's sides off it.
+	 */
+	position?: string | null;
 }
 
 /** Where the track is now: measured position plus the time since, unless paused. */

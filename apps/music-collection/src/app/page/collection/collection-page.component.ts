@@ -13,11 +13,13 @@ import {
 	StyleBarsComponent,
 } from '../../shared/music-ui';
 import { CollectionProgressComponent } from '../collections/component/collection-progress/collection-progress.component';
+import { PlayerStore } from '../../shared/player';
 import {
 	CollectionGroup,
 	CollectionSort,
 	GROUP_OPTIONS,
 	SORT_OPTIONS,
+	ShelfPlay,
 	VIEW_OPTIONS,
 } from './collection.model';
 import { CollectionPageStore } from './collection-page.store';
@@ -46,6 +48,7 @@ import { CollectionPageStore } from './collection-page.store';
 })
 export class CollectionPageComponent {
 	protected readonly store = inject(CollectionPageStore);
+	protected readonly player = inject(PlayerStore);
 
 	protected readonly formatLabels = FORMAT_LABELS;
 	protected readonly formatOrder = FORMAT_ORDER;
@@ -58,6 +61,15 @@ export class CollectionPageComponent {
 		{ length: 3 },
 		(_, i) => i
 	);
+
+	/** Puts a compartment — or a whole unit — on, record after record. */
+	protected onPlayShelf(shelf: ShelfPlay): void {
+		this.player
+			.playQueue(shelf.albumIds, shelf.label)
+			.catch((error) =>
+				console.error('The shelf did not come on', error)
+			);
+	}
 
 	public constructor() {
 		/* The home page quick search links here with `?q=`. */

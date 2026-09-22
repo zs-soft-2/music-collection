@@ -40,6 +40,11 @@ interface YoutubePlaybackState {
 	playing: boolean;
 	/** Something has played since the album was loaded. */
 	started: boolean;
+	/**
+	 * What was loaded ran out on its own. On a playlist that is the end of
+	 * the album; on a single video, the end of that video.
+	 */
+	ended: boolean;
 	/** Position in the item at `positionAt`. */
 	positionMs: number;
 	durationMs: number;
@@ -57,6 +62,7 @@ const initialState: YoutubePlaybackState = {
 	playlistIndex: null,
 	playing: false,
 	started: false,
+	ended: false,
 	positionMs: 0,
 	durationMs: 0,
 	positionAt: 0,
@@ -176,7 +182,11 @@ export const YoutubePlaybackStore = signalStore(
 			attach(iframe: HTMLIFrameElement): void {
 				detach();
 				const current = generation;
-				patchState(store, { playlistIndex: null, playing: false });
+				patchState(store, {
+					playlistIndex: null,
+					playing: false,
+					ended: false,
+				});
 
 				effect
 					.attach(iframe, {
@@ -194,6 +204,7 @@ export const YoutubePlaybackStore = signalStore(
 						stateChanged: ({
 							playlistIndex,
 							playing,
+							ended,
 							positionMs,
 							durationMs,
 						}) => {
@@ -205,6 +216,7 @@ export const YoutubePlaybackStore = signalStore(
 											: null,
 									playing,
 									started: store.started() || playing,
+									ended,
 									positionMs,
 									durationMs,
 									positionAt: Date.now(),

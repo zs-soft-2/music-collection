@@ -57,12 +57,22 @@ import { PlayerStore } from './player.store';
 					type="button"
 					class="control primary"
 					[class.youtube]="now.source === 'youtube'"
-					[attr.aria-label]="now.playing ? 'Pause' : 'Play'"
+					[attr.aria-label]="
+						player.sideBreak()
+							? 'Play ' + player.sideBreak()!.label
+							: now.playing
+								? 'Pause'
+								: 'Play'
+					"
+					[attr.title]="
+						player.sideBreak() ? 'Turn the record over' : null
+					"
 					(click)="player.togglePlay()"
 				>
 					<i
 						class="pi"
-						[class.pi-play]="!now.playing"
+						[class.pi-refresh]="player.sideBreak()"
+						[class.pi-play]="!now.playing && !player.sideBreak()"
 						[class.pi-pause]="now.playing"
 						aria-hidden="true"
 					></i>
@@ -75,6 +85,22 @@ import { PlayerStore } from './player.store';
 						(click)="player.skip('next')"
 					>
 						<i class="pi pi-step-forward" aria-hidden="true"></i>
+					</button>
+				}
+				@if (player.queue().length) {
+					<button
+						type="button"
+						class="control secondary"
+						aria-label="Next record of the station"
+						[attr.title]="
+							player.stationLabel() +
+							' · ' +
+							player.queue().length +
+							' waiting'
+						"
+						(click)="player.playNextAlbum()"
+					>
+						<i class="pi pi-fast-forward" aria-hidden="true"></i>
 					</button>
 				}
 				@if (player.volume() !== null) {

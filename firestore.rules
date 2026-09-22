@@ -171,6 +171,14 @@ service cloud.firestore {
       match /setting/{settingId} {
         allow read, write: if isSelf(uid);
       }
+
+      // Hallgatási napló: egy dokumentum egy leülés egy lemezzel. Teljesen
+      // privát — se collection-group olvasás, se más user nem látja. Nincs
+      // hozzá permission: aki be van jelentkezve, a saját hallgatását
+      // rögzítheti. Törlés is szabad: a saját naplóját bárki kitörölheti.
+      match /play-log/{entryId} {
+        allow read, write: if isSelf(uid);
+      }
     }
 
     // ── Megosztott hely (közösségi térkép) ──────────────────────────────────

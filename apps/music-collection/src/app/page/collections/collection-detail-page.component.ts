@@ -5,6 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { CollectionArtworkComponent } from '../../shared/collection-artwork';
 import { PageBreadcrumbComponent } from '../../shared/page-breadcrumb';
+import { PlayerStore } from '../../shared/player';
 
 import { CollectionDetailPageStore } from './collection-detail-page.store';
 import { ALBUM_FILTER_OPTIONS, AlbumFilter } from './collections.model';
@@ -24,6 +25,7 @@ import { ALBUM_FILTER_OPTIONS, AlbumFilter } from './collections.model';
 })
 export class CollectionDetailPageComponent {
 	protected readonly store = inject(CollectionDetailPageStore);
+	protected readonly player = inject(PlayerStore);
 
 	protected readonly filterOptions = ALBUM_FILTER_OPTIONS;
 	protected readonly skeletons = Array.from({ length: 8 }, (_, i) => i);
@@ -42,5 +44,14 @@ export class CollectionDetailPageComponent {
 
 	protected onToggleFollow(): void {
 		this.store.toggleFollowed();
+	}
+
+	/** Puts the collection on the radio, its records one after another. */
+	protected onPlay(slug: string, name: string): void {
+		this.player
+			.startStation({ kind: 'collection', slug }, name)
+			.catch((error) =>
+				console.error('The collection did not come on', error)
+			);
 	}
 }

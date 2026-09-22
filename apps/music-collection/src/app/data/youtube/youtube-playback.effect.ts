@@ -1,13 +1,15 @@
 import { Injectable, inject } from '@angular/core';
 
 import { YoutubeIframeRepository } from './youtube-iframe.repository';
-import { YT_PLAYING, YtPlayer } from './youtube-iframe.types';
+import { YT_ENDED, YT_PLAYING, YtPlayer } from './youtube-iframe.types';
 
 /** What the player reports on every state change. */
 export interface YoutubePlayerState {
 	/** Playlist position (0-based), -1 for a single video. */
 	playlistIndex: number;
 	playing: boolean;
+	/** The item — or, at the end of a playlist, the album — ran out. */
+	ended: boolean;
 	positionMs: number;
 	durationMs: number;
 }
@@ -34,6 +36,7 @@ export class YoutubePlaybackEffect {
 					events.stateChanged({
 						playlistIndex: target.getPlaylistIndex(),
 						playing: data === YT_PLAYING,
+						ended: data === YT_ENDED,
 						positionMs: target.getCurrentTime() * 1000,
 						durationMs: target.getDuration() * 1000,
 					}),

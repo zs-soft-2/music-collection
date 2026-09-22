@@ -7,6 +7,11 @@ import {
 } from '../../data/user-location';
 import { MeasurementConsentService } from '../../data/analytics';
 import { ExternalPlayerConsentService } from '../../data/external-player';
+import {
+	PlayLogEffect,
+	PlayLogEntry,
+	summariseListening,
+} from '../../data/play-log';
 import { UserSettingsEffect } from '../../data/user-settings';
 import { ALBUM_VIEW_SETTING } from '../album/album-view.setting';
 import {
@@ -39,6 +44,7 @@ import {
 	withMethods,
 	withState,
 } from '@ngrx/signals';
+import { tapResponse } from '@ngrx/operators';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
 /** The layout of the collection page, with nothing left unchosen. */
@@ -61,6 +67,8 @@ interface ProfilePageState {
 	pendingName: string | null;
 	/** When the account last confirmed a change, for the "Saved" note. */
 	savedAt: number | null;
+	/** The collector's listening log; empty while signed out. */
+	playLog: PlayLogEntry[];
 }
 
 const initialState: ProfilePageState = {
@@ -73,6 +81,7 @@ const initialState: ProfilePageState = {
 	isAuthenticated: false,
 	pendingName: null,
 	savedAt: null,
+	playLog: [],
 };
 
 /**
@@ -104,6 +113,8 @@ export const ProfilePageStore = signalStore(
 				full: units.length >= SHELF_LIMITS.maxUnits,
 			};
 		}),
+		/** What the collector's listening adds up to. */
+		listening: computed(() => summariseListening(store.playLog())),
 		initials: computed(() => {
 			const name = store.user()?.displayName || store.user()?.email || '';
 
@@ -122,8 +133,20 @@ export const ProfilePageStore = signalStore(
 			authentication = inject(AuthenticationStateService),
 			users = inject(UserStateService),
 			settings = inject(UserSettingsEffect),
-			locations = inject(UserLocationEffect)
+			locations = inject(UserLocationEffect),
+			playLogEffect = inject(PlayLogEffect)
 		) => ({
+			/** The listening log, which the player writes as records go on. */
+			loadPlayLog: rxMethod<void>(
+				pipe(
+					switchMap(() => playLogEffect.list$()),
+					tapResponse({
+						next: (playLog: PlayLogEntry[]) =>
+							patchState(store, { playLog }),
+						error: (error: unknown) => console.error(error),
+					})
+				)
+			),
 			/**
 			 * Follows the account: the signed-in user, and then the same user
 			 * in the user store, which is what a change lands in.
@@ -443,6 +466,7 @@ export const ProfilePageStore = signalStore(
 			store.loadShelfLayout(of(undefined));
 			store.loadCollectionSize(of(undefined));
 			store.loadLocation(of(undefined));
+			store.loadPlayLog(of(undefined));
 		},
 	})
 );
