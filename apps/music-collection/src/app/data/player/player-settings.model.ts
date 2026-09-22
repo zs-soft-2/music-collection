@@ -8,6 +8,11 @@ export type PlayerSource = Exclude<PlayerSourceSetting, 'auto'>;
 export type PlayerView = 'panel' | 'stage';
 /** Strength of the stage's visual effects. */
 export type PlayerEffects = 'off' | 'subtle' | 'full';
+/**
+ * What fills the stage behind the words: the record's own cover, blurred, or
+ * an animated world built from the song's visual profile.
+ */
+export type PlayerBackdrop = 'cover' | 'scene';
 /** The kind of page the player is used on; each has its own defaults. */
 export type PlayerContext = 'default' | 'album' | 'track';
 
@@ -17,6 +22,7 @@ export interface PlayerSettings {
 	/** Show the lyrics on the stage when there are any. */
 	lyrics: boolean;
 	effects: PlayerEffects;
+	backdrop: PlayerBackdrop;
 	/** Play on to the next track of the album. */
 	autoAdvance: boolean;
 	/**
@@ -36,6 +42,7 @@ const BASE: PlayerSettings = {
 	view: 'panel',
 	lyrics: true,
 	effects: 'subtle',
+	backdrop: 'cover',
 	autoAdvance: true,
 	sideBreak: true,
 };

@@ -15,7 +15,15 @@ import {
 	viewChildren,
 } from '@angular/core';
 
+import {
+	SongVisualProfile,
+	VisualInputMode,
+	VisualQuality,
+	resolveVisualProfile,
+} from '@music-collection/ui/visual-engine';
+
 import { SpotifyIconComponent } from '../../spotify/spotify-icon.component';
+import { VisualSceneComponent } from '../../visual-scene';
 import { YoutubeIconComponent } from '../../youtube/youtube-icon.component';
 import { PlayerSettingsMenuComponent } from '../player-settings-menu.component';
 import { PlayerSideBreakComponent } from '../player-side-break.component';
@@ -52,6 +60,7 @@ const BAR_COUNT = { off: 0, subtle: 32, full: 64 };
 		PlayerSettingsMenuComponent,
 		PlayerSideBreakComponent,
 		PlayerStationComponent,
+		VisualSceneComponent,
 	],
 	host: {
 		role: 'dialog',
@@ -88,6 +97,46 @@ export class PlayerStageComponent {
 
 	protected readonly effects = computed(() =>
 		this.reducedMotion ? 'off' : this.player.settings().effects
+	);
+
+	/**
+	 * The animated world, when the user asked for it. It replaces the blurred
+	 * cover rather than sitting behind it: two backgrounds competing for the
+	 * same pixels would only muddy both.
+	 */
+	protected readonly sceneOn = computed(
+		() =>
+			this.effects() !== 'off' &&
+			this.player.settings().backdrop === 'scene'
+	);
+
+	protected readonly visualProfile = computed<SongVisualProfile>(() => {
+		const request = this.request();
+		return resolveVisualProfile({
+			artist: request?.artistName ?? this.player.now()?.subtitle ?? null,
+			album: request?.albumTitle ?? null,
+			song: this.player.now()?.title ?? request?.trackName ?? null,
+		});
+	});
+
+	/**
+	 * Real sound wins, because nothing else follows the music as closely. A
+	 * song we have a timeline for comes next, and everything else simply
+	 * breathes on its own.
+	 */
+	protected readonly visualMode = computed<VisualInputMode>(() => {
+		if (this.player.analyser()) {
+			return 'audio-reactive';
+		}
+		return this.visualProfile().timeline ? 'timeline' : 'ambient';
+	});
+
+	protected readonly visualQuality = computed<VisualQuality>(() =>
+		this.effects() === 'full' ? 'high' : 'medium'
+	);
+
+	protected readonly positionSeconds = computed(
+		() => this.positionMs() / 1000
 	);
 
 	/** Nudges the lyrics earlier (+) or later (−). */

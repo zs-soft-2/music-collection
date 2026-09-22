@@ -120,6 +120,16 @@ export const routes: Routes = [
 		},
 	},
 	{
+		path: 'visual-lab',
+		loadComponent: () =>
+			import('./page/visual-lab/visual-lab.component').then(
+				(module) => module.VisualLabComponent
+			),
+		data: {
+			breadcrumb: 'visual-lab',
+		},
+	},
+	{
 		path: 'collections',
 		loadComponent: () =>
 			import('./page/collections/collections-page.component').then(

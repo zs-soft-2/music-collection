@@ -1,15 +1,26 @@
 <div class="backdrop" aria-hidden="true">
-	@if (coverUrl(); as cover) {
-		<img
-			class="blur"
-			[class.paused]="!player.playing()"
-			[src]="cover"
-			alt=""
+	@if (sceneOn()) {
+		<mc-visual-scene
+			class="scene"
+			[profile]="visualProfile()"
+			[mode]="visualMode()"
+			[quality]="visualQuality()"
+			[positionSeconds]="positionSeconds()"
+			[analyser]="player.analyser()"
 		/>
+	} @else {
+		@if (coverUrl(); as cover) {
+			<img
+				class="blur"
+				[class.paused]="!player.playing()"
+				[src]="cover"
+				alt=""
+			/>
+		}
+		<div class="vignette"></div>
+		<canvas #equalizer class="equalizer"></canvas>
+		<canvas #embers class="embers"></canvas>
 	}
-	<div class="vignette"></div>
-	<canvas #equalizer class="equalizer"></canvas>
-	<canvas #embers class="embers"></canvas>
 	<div #flash class="flash"></div>
 	<div class="grain"></div>
 </div>
