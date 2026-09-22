@@ -76,12 +76,19 @@ export interface ArtistTileView extends ArtistView {
 export interface AlbumView {
 	id: string;
 	title: string;
+	/** Artist id — links to `/artist/:artistId`. */
+	artistId: string;
 	artistName: string;
 	coverUrl: string | null;
 	year: number | null;
 	/** Album type label, e.g. "LP", "EP", "Live". */
 	albumType: string | null;
 	styles: string[];
+	/**
+	 * Last write of the catalog entry (epoch ms), 0 when never stamped —
+	 * what "new in the catalog" is ordered by.
+	 */
+	changedAt: number;
 }
 
 /** An album of a discography with the formats collected of it. */

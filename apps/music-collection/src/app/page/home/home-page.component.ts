@@ -7,15 +7,23 @@ import {
 	ReleaseCardComponent,
 } from '../../shared/music-ui';
 import { CollectionProgressComponent } from '../collections/component/collection-progress/collection-progress.component';
+import { AlbumGroupComponent } from './component/album-group/album-group.component';
+import { ArtistGroupComponent } from './component/artist-group/artist-group.component';
 import { ArtistSpotlightComponent } from './component/artist-spotlight/artist-spotlight.component';
 import { CatalogCoverageChartComponent } from './component/catalog-coverage-chart/catalog-coverage-chart.component';
 import { HomeSearchComponent } from './component/home-search/home-search.component';
+import { JoinPromptComponent } from './component/join-prompt/join-prompt.component';
 import { HomePageStore } from './home-page.store';
 
 /**
  * Home page: a quick search, an artist spotlight, the catalog at a glance
- * (counts and collection coverage by decade), recently added
- * releases, the most collected artists and the newest albums of the catalog.
+ * (counts and collection coverage by decade), recently added releases, the
+ * most collected artists, then ways through the catalog itself — by style,
+ * by decade and by kind of act — and the newest albums of the catalog.
+ *
+ * Everything the catalog holds is shown to a guest as well; what needs a
+ * collection behind it falls back to the catalog, and the sign-in prompt
+ * says what an account adds.
  */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -27,10 +35,13 @@ import { HomePageStore } from './home-page.store';
 		DecimalPipe,
 		RouterLink,
 		ReleaseCardComponent,
+		AlbumGroupComponent,
+		ArtistGroupComponent,
 		ArtistSpotlightComponent,
 		ArtistTileComponent,
 		CatalogCoverageChartComponent,
 		HomeSearchComponent,
+		JoinPromptComponent,
 		CollectionProgressComponent,
 	],
 })

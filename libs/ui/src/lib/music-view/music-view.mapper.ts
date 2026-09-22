@@ -109,11 +109,13 @@ export function toAlbumView(album: AlbumEntity): AlbumView {
 	return {
 		id: album.uid,
 		title: album.name,
+		artistId: album.artist?.uid ?? '',
 		artistName: album.artist?.name ?? '',
 		coverUrl: album.coverImage?.filePath || album.coverImageUrl || null,
 		year: toYear(album.year),
 		albumType: toAlbumType(album.format),
 		styles: album.styles ?? [],
+		changedAt: album.updatedAt ?? 0,
 	};
 }
 

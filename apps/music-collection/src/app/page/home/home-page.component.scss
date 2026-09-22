@@ -233,6 +233,14 @@ ul {
 	color: #cfcfcf;
 }
 
+/* ── Catalog rows ─────────────────────────────────────────────────────── */
+
+.groups {
+	display: flex;
+	flex-direction: column;
+	gap: 2rem;
+}
+
 /* ── Loading ──────────────────────────────────────────────────────────── */
 
 .skeleton {
@@ -249,6 +257,10 @@ ul {
 
 .spotlight-skeleton {
 	height: 440px;
+}
+
+.group-skeleton {
+	height: 13rem;
 }
 
 .muted {

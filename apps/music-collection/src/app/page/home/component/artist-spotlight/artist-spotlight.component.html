@@ -19,11 +19,19 @@
 			@for (part of meta(); track part) {
 				<span>{{ part }}</span>
 			}
-			<span class="count"
-				>{{ releaseCount() }}
-				{{ releaseCount() === 1 ? 'release' : 'releases' }} in your
-				collection</span
-			>
+			@if (releaseCount()) {
+				<span class="count"
+					>{{ releaseCount() }}
+					{{ releaseCount() === 1 ? 'release' : 'releases' }} in your
+					collection</span
+				>
+			} @else if (albumCount()) {
+				<span class="count"
+					>{{ albumCount() }}
+					{{ albumCount() === 1 ? 'album' : 'albums' }} in the
+					catalog</span
+				>
+			}
 		</p>
 
 		@if (item.styles.length) {

@@ -55,6 +55,7 @@ function contribution(albumUid: string, role: string): ContributionEntity {
 const album = (id: string, year: number): AlbumView => ({
 	id,
 	title: id,
+	artistId: 'maiden',
 	artistName: 'Iron Maiden',
 	coverUrl: null,
 	year,

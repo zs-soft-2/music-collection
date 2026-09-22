@@ -14,9 +14,10 @@ import {
 } from '../../../../shared/music-ui';
 
 /**
- * Hero of the home page: one artist from the collection, large, with the
- * releases of theirs the collector owns. "Show another" picks a new artist —
- * a deliberate action, not an auto-rotating carousel.
+ * Hero of the home page: one artist, large, with the releases of theirs the
+ * collector owns — or, with no collection behind it, the artist as the
+ * catalog holds them. "Show another" picks a new artist — a deliberate
+ * action, not an auto-rotating carousel.
  */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -29,6 +30,8 @@ export class ArtistSpotlightComponent {
 	public readonly artist = input.required<ArtistView>();
 	public readonly releases = input<ReleaseView[]>([]);
 	public readonly releaseCount = input(0);
+	/** Albums the catalog holds of the artist — what a guest is shown. */
+	public readonly albumCount = input(0);
 
 	public readonly shuffle = output<void>();
 

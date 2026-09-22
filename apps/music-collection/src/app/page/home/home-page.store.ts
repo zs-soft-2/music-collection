@@ -13,6 +13,7 @@ import { measure } from '@music-collection/common/engine';
 import {
 	AlbumStateService,
 	ArtistStateService,
+	AuthenticationStateService,
 	CollectionItemStateService,
 	EntityCounts,
 	EntityQuantityStateService,
@@ -47,9 +48,15 @@ import {
 import { CollectionCardView } from '../collections/collections.model';
 import {
 	CATALOG_TYPES,
+	albumCountsByArtist,
+	albumsByDecade,
+	albumsByStyle,
+	artistsByType,
 	catalogStats,
 	decadeCoverage,
+	mostCatalogedArtists,
 	mostCollectedArtists,
+	newInCatalog,
 	pickRandom,
 	releaseCountsByArtist,
 	searchHome,
@@ -72,6 +79,8 @@ interface HomePageState {
 	collectionsLoading: boolean;
 	spotlightId: string | null;
 	query: string;
+	/** Signed in, as opposed to reading the catalog as a guest. */
+	authenticated: boolean;
 }
 
 const initialState: HomePageState = {
@@ -87,6 +96,7 @@ const initialState: HomePageState = {
 	collectionsLoading: true,
 	spotlightId: null,
 	query: '',
+	authenticated: false,
 };
 
 const RECENT_COUNT = 6;
@@ -94,6 +104,10 @@ const ARTIST_COUNT = 12;
 const ALBUM_COUNT = 12;
 const SPOTLIGHT_RELEASE_COUNT = 6;
 const SEARCH_RESULT_COUNT = 5;
+/** Rows of the catalog bands, and the covers or tiles shown in each. */
+const GROUP_COUNT = 6;
+const GROUP_ALBUM_COUNT = 12;
+const GROUP_ARTIST_COUNT = 8;
 
 /**
  * Loads a feature's entities once: selects them from the NgRx store and
@@ -124,11 +138,34 @@ export const HomePageStore = signalStore(
 			)
 		);
 
-		/** Spotlight candidates: collected artists with a header photo. */
+		const albumCounts = computed(() =>
+			measure('home.albumCounts', { albums: store.albums().length }, () =>
+				albumCountsByArtist(store.albums())
+			)
+		);
+
+		/**
+		 * The collection has arrived and there is none — a guest, or a
+		 * collector who has not added a copy yet. The catalog is the content
+		 * then: its artists are ranked by the albums it holds of them, and
+		 * it stands in wherever the collection would have been shown.
+		 */
+		const catalogOnly = computed(
+			() => !store.releasesLoading() && store.releases().length === 0
+		);
+
+		/** What the artists are ranked by: the collection, or the catalog. */
+		const ranking = computed(() =>
+			catalogOnly() ? albumCounts() : counts()
+		);
+
+		/** Spotlight candidates: ranked artists with a header photo. */
 		const spotlightCandidates = computed(() =>
 			store
 				.artists()
-				.filter((artist) => artist.headerUrl && counts().has(artist.id))
+				.filter(
+					(artist) => artist.headerUrl && ranking().has(artist.id)
+				)
 		);
 
 		const spotlight = computed(
@@ -144,7 +181,32 @@ export const HomePageStore = signalStore(
 			)
 		);
 
+		/** The catalog ranks a guest's artists, so it is waited for too. */
+		const artistsPending = computed(
+			() =>
+				store.artistsLoading() ||
+				store.releasesLoading() ||
+				(catalogOnly() && store.albumsLoading())
+		);
+
 		return {
+			catalogOnly,
+			artistsPending,
+			/** Only a guest is asked to sign in. */
+			isGuest: computed(() => !store.authenticated()),
+			/** Waiting on whichever list the "recently added" row shows. */
+			recentPending: computed(
+				() =>
+					store.releasesLoading() ||
+					(catalogOnly() && store.albumsLoading())
+			),
+			/** Catalog-wide totals named in the sign-in prompt. */
+			albumTotal: computed(
+				() => store.counts()['Album'] ?? store.albums().length
+			),
+			artistTotal: computed(
+				() => store.counts()['Artist'] ?? store.artists().length
+			),
 			/** The few worth showing: nearest to complete, empty ones never. */
 			collections: computed(() =>
 				collections()
@@ -162,6 +224,10 @@ export const HomePageStore = signalStore(
 				const artist = spotlight();
 				return artist ? (counts().get(artist.id) ?? 0) : 0;
 			}),
+			spotlightAlbumCount: computed(() => {
+				const artist = spotlight();
+				return artist ? (albumCounts().get(artist.id) ?? 0) : 0;
+			}),
 			spotlightReleases: computed(() => {
 				const artist = spotlight();
 
@@ -174,6 +240,43 @@ export const HomePageStore = signalStore(
 					: [];
 			}),
 			catalog: computed(() => catalogStats(store.counts())),
+			/** Catalog rows: by style, by decade, by kind of act. */
+			styleGroups: computed(() =>
+				measure(
+					'home.styleGroups',
+					{ albums: store.albums().length },
+					() =>
+						albumsByStyle(
+							store.albums(),
+							GROUP_COUNT,
+							GROUP_ALBUM_COUNT
+						)
+				)
+			),
+			decadeGroups: computed(() =>
+				measure(
+					'home.decadeGroups',
+					{ albums: store.albums().length },
+					() =>
+						albumsByDecade(
+							store.albums(),
+							GROUP_COUNT,
+							GROUP_ALBUM_COUNT
+						)
+				)
+			),
+			artistGroups: computed(() =>
+				artistsByType(
+					store.artists(),
+					albumCounts(),
+					GROUP_ARTIST_COUNT
+				)
+			),
+			/** The catalog entries written last — what stands in for the
+			 * recently added copies when there is no collection. */
+			newInCatalog: computed(() =>
+				newInCatalog(store.albums(), RECENT_COUNT)
+			),
 			coverage: computed(() =>
 				measure(
 					'home.coverage',
@@ -190,7 +293,17 @@ export const HomePageStore = signalStore(
 					.slice(0, RECENT_COUNT)
 			),
 			topArtists: computed(() =>
-				mostCollectedArtists(store.artists(), counts(), ARTIST_COUNT)
+				catalogOnly()
+					? mostCatalogedArtists(
+							store.artists(),
+							albumCounts(),
+							ARTIST_COUNT
+						)
+					: mostCollectedArtists(
+							store.artists(),
+							counts(),
+							ARTIST_COUNT
+						)
 			),
 			searchResults: computed(() =>
 				searchHome(
@@ -220,12 +333,18 @@ export const HomePageStore = signalStore(
 			store,
 			artistStateService = inject(ArtistStateService),
 			albumStateService = inject(AlbumStateService),
+			authenticationStateService = inject(AuthenticationStateService),
 			collectionItemStateService = inject(CollectionItemStateService),
 			quantityStateService = inject(EntityQuantityStateService),
 			musicCollectionEffect = inject(MusicCollectionEffect)
 		) => {
+			/**
+			 * Picks the spotlight once everything it is ranked by has
+			 * arrived, so the artists of the catalog are not passed over
+			 * while the collection is still on its way.
+			 */
 			const ensureSpotlight = () => {
-				if (!store.spotlightId()) {
+				if (!store.spotlightId() && !store.artistsPending()) {
 					patchState(store, {
 						spotlightId:
 							pickRandom(store.spotlightCandidates())?.id ?? null,
@@ -292,7 +411,7 @@ export const HomePageStore = signalStore(
 							)
 						),
 						tapResponse({
-							next: (albums) =>
+							next: (albums) => {
 								patchState(store, {
 									albums: measure(
 										'home.mapAlbums',
@@ -300,7 +419,9 @@ export const HomePageStore = signalStore(
 										() => albums.map(toAlbumView)
 									),
 									albumsLoading: false,
-								}),
+								});
+								ensureSpotlight();
+							},
 							error: (error) => {
 								console.error(error);
 								patchState(store, { albumsLoading: false });
@@ -356,6 +477,21 @@ export const HomePageStore = signalStore(
 						})
 					)
 				),
+				/** Follows sign-in and sign-out while the page is open. */
+				loadAuthentication: rxMethod<void>(
+					pipe(
+						switchMap(() =>
+							authenticationStateService.selectIsAuthenticated$()
+						),
+						tapResponse({
+							next: (authenticated) =>
+								patchState(store, { authenticated }),
+							error: (error) => console.error(error),
+						})
+					)
+				),
+				/** Google sign-in, the same the top bar offers. */
+				signIn: () => authenticationStateService.dispatchLogin(),
 				setQuery: (query: string) => patchState(store, { query }),
 				/** Shows another artist in the spotlight. */
 				shuffleSpotlight: () =>
@@ -376,6 +512,7 @@ export const HomePageStore = signalStore(
 			store.loadReleases(of(undefined));
 			store.loadCounts(of(undefined));
 			store.loadCollections(of(undefined));
+			store.loadAuthentication(of(undefined));
 		},
 	})
 );

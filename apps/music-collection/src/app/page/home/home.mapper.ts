@@ -1,4 +1,4 @@
-import { EntityCounts } from '@music-collection/api';
+import { ARTIST_TYPE_OPTIONS, EntityCounts } from '@music-collection/api';
 
 import {
 	AlbumView,
@@ -47,6 +47,18 @@ export function releaseCountsByArtist(
 	return counts;
 }
 
+/** Albums the catalog holds of each artist. */
+export function albumCountsByArtist(albums: AlbumView[]): Map<string, number> {
+	const counts = new Map<string, number>();
+
+	for (const album of albums) {
+		if (album.artistId) {
+			counts.set(album.artistId, (counts.get(album.artistId) ?? 0) + 1);
+		}
+	}
+	return counts;
+}
+
 /** Artists ordered by how many of their releases are in the collection. */
 export function mostCollectedArtists(
 	artists: ArtistView[],
@@ -63,6 +75,154 @@ export function mostCollectedArtists(
 			(a, b) =>
 				b.releaseCount - a.releaseCount || a.name.localeCompare(b.name)
 		)
+		.slice(0, limit);
+}
+
+/**
+ * Artists ordered by how many albums of theirs the catalog holds — the
+ * ranking when there is no collection to rank by, so the tiles name the
+ * artist's country instead of a release count they do not stand for.
+ */
+export function mostCatalogedArtists(
+	artists: ArtistView[],
+	albumCounts: Map<string, number>,
+	limit: number
+): ArtistTileView[] {
+	return artists
+		.filter(
+			(artist) => (albumCounts.get(artist.id) ?? 0) > 0 && artist.imageUrl
+		)
+		.sort(
+			(a, b) =>
+				(albumCounts.get(b.id) ?? 0) - (albumCounts.get(a.id) ?? 0) ||
+				a.name.localeCompare(b.name)
+		)
+		.slice(0, limit)
+		.map((artist) => ({ ...artist, releaseCount: 0 }));
+}
+
+/**
+ * A row of the catalog on the home page: what the heading holds, a handful
+ * of it shown. The same shape for albums and for artists.
+ */
+interface CatalogGroup {
+	/** Stable `track` key — the style, the decade or the artist type. */
+	key: string;
+	label: string;
+	/** Everything the catalog holds under the heading, not only the shown. */
+	total: number;
+}
+
+export interface AlbumGroup extends CatalogGroup {
+	albums: AlbumView[];
+}
+
+export interface ArtistGroup extends CatalogGroup {
+	artists: ArtistTileView[];
+}
+
+/** Worth a cover first, then the newest — what a row leads with. */
+const compareAlbums = (a: AlbumView, b: AlbumView): number =>
+	Number(!!b.coverUrl) - Number(!!a.coverUrl) ||
+	(b.year ?? 0) - (a.year ?? 0);
+
+/**
+ * The fullest groups first, each cut to the albums a row shows. A group of
+ * one is left out: a row is a way through the catalog, not a stray cover.
+ */
+function toAlbumGroups(
+	grouped: Map<string, AlbumView[]>,
+	label: (key: string) => string,
+	groupLimit: number,
+	itemLimit: number
+): AlbumGroup[] {
+	return Array.from(grouped.entries())
+		.filter(([, albums]) => albums.length > 1)
+		.sort(([, a], [, b]) => b.length - a.length)
+		.slice(0, groupLimit)
+		.map(([key, albums]) => ({
+			key,
+			label: label(key),
+			total: albums.length,
+			albums: [...albums].sort(compareAlbums).slice(0, itemLimit),
+		}));
+}
+
+function groupBy(
+	albums: AlbumView[],
+	keys: (album: AlbumView) => string[]
+): Map<string, AlbumView[]> {
+	const grouped = new Map<string, AlbumView[]>();
+
+	for (const album of albums) {
+		for (const key of keys(album)) {
+			grouped.set(key, [...(grouped.get(key) ?? []), album]);
+		}
+	}
+	return grouped;
+}
+
+/** Catalog albums by style; an album on several styles is in each of them. */
+export function albumsByStyle(
+	albums: AlbumView[],
+	groupLimit: number,
+	itemLimit: number
+): AlbumGroup[] {
+	return toAlbumGroups(
+		groupBy(albums, (album) => album.styles),
+		(style) => style,
+		groupLimit,
+		itemLimit
+	);
+}
+
+/** Catalog albums by the decade of their release year. */
+export function albumsByDecade(
+	albums: AlbumView[],
+	groupLimit: number,
+	itemLimit: number
+): AlbumGroup[] {
+	return toAlbumGroups(
+		groupBy(albums, (album) =>
+			album.year === null ? [] : [`${Math.floor(album.year / 10) * 10}`]
+		),
+		(decade) => `${decade}s`,
+		groupLimit,
+		itemLimit
+	);
+}
+
+/**
+ * The artists of the catalog by what kind of act they are, bands first, each
+ * group led by the artists it holds the most albums of.
+ */
+export function artistsByType(
+	artists: ArtistView[],
+	albumCounts: Map<string, number>,
+	itemLimit: number
+): ArtistGroup[] {
+	return ARTIST_TYPE_OPTIONS.flatMap(({ label, value }) => {
+		const ofType = artists.filter((artist) => artist.type === value);
+		const shown = mostCatalogedArtists(ofType, albumCounts, itemLimit);
+
+		return shown.length
+			? [
+					{
+						key: value,
+						label: `${label}s`,
+						total: ofType.length,
+						artists: shown,
+					},
+				]
+			: [];
+	});
+}
+
+/** The catalog entries written last: what a guest is shown as new. */
+export function newInCatalog(albums: AlbumView[], limit: number): AlbumView[] {
+	return [...albums]
+		.filter((album) => album.changedAt > 0)
+		.sort((a, b) => b.changedAt - a.changedAt)
 		.slice(0, limit);
 }
 
