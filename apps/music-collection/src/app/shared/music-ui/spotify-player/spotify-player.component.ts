@@ -8,6 +8,8 @@ import {
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { isSpotifyAlbumId, isSpotifyTrackId } from '@music-collection/api';
 
+import { ExternalPlayerConsentService } from '../../../data/external-player';
+
 /**
  * Spotify's embedded album player, or one track's with `trackId`. Needs no token: a visitor signed in to
  * Spotify in the browser hears the full tracks, anyone else previews.
@@ -41,6 +43,7 @@ import { isSpotifyAlbumId, isSpotifyTrackId } from '@music-collection/api';
 })
 export class SpotifyPlayerComponent {
 	private readonly sanitizer = inject(DomSanitizer);
+	private readonly consent = inject(ExternalPlayerConsentService);
 
 	public readonly albumId = input.required<string>();
 	/** Spotify track id: shows only that track. */
@@ -49,6 +52,13 @@ export class SpotifyPlayerComponent {
 	public readonly albumTitle = input.required<string>();
 
 	protected readonly src = computed<SafeResourceUrl | null>(() => {
+		// Spotify has no privacy-enhanced host to fall back on, so without
+		// the collector's leave there is simply no frame. Whoever places this
+		// player is not asked to remember that.
+		if (!this.consent.allowed()) {
+			return null;
+		}
+
 		const trackId = this.trackId();
 		// Only a validated id reaches the trusted URL.
 		if (isSpotifyTrackId(trackId)) {

@@ -92,6 +92,29 @@ interface LevelChoice {
 		<p class="preview">{{ preview() }}</p>
 
 		<fieldset class="levels">
+			<legend>Outside players</legend>
+
+			<label class="level" [class.selected]="store.externalPlayers()">
+				<input
+					type="checkbox"
+					[checked]="store.externalPlayers()"
+					(change)="
+						store.setExternalPlayers($any($event.target).checked)
+					"
+				/>
+				<span class="level-text">
+					<b>Let me listen here</b>
+					<span>
+						Puts YouTube's and Spotify's players on the page. They
+						are not ours: each one writes its own storage and tells
+						its owner you were here. Switching it off takes them
+						off the page at once, and the records go silent.
+					</span>
+				</span>
+			</label>
+		</fieldset>
+
+		<fieldset class="levels">
 			<legend>Usage measurement</legend>
 
 			<label class="level" [class.selected]="store.measurement()">

@@ -6,6 +6,7 @@ import {
 	UserLocationSettings,
 } from '../../data/user-location';
 import { MeasurementConsentService } from '../../data/analytics';
+import { ExternalPlayerConsentService } from '../../data/external-player';
 import { UserSettingsEffect } from '../../data/user-settings';
 import { ALBUM_VIEW_SETTING } from '../album/album-view.setting';
 import {
@@ -407,24 +408,31 @@ export const ProfilePageStore = signalStore(
 		}
 	),
 	/**
-	 * Being measured is a consent like the shared location: the collector may
-	 * take it back here, and it has to stop the moment they do. The answer
-	 * itself is not copied into this store — the measurement reads the same
-	 * signal, and two copies of a consent is one too many.
+	 * The two consents the app asks for, next to the shared location, which
+	 * is the third: the collector may take either back here, and it has to
+	 * take effect the moment they do. Neither answer is copied into this store
+	 * — whatever acts on them reads the same signal, and two copies of a
+	 * consent is one too many.
 	 */
 	withComputed(() => {
-		const consent = inject(MeasurementConsentService);
+		const measurement = inject(MeasurementConsentService);
+		const players = inject(ExternalPlayerConsentService);
 
 		return {
-			measurement: computed(() => consent.consented() === true),
+			measurement: computed(() => measurement.consented() === true),
+			externalPlayers: computed(() => players.consented() === true),
 		};
 	}),
 	withMethods(() => {
-		const consent = inject(MeasurementConsentService);
+		const measurement = inject(MeasurementConsentService);
+		const players = inject(ExternalPlayerConsentService);
 
 		return {
 			setMeasurement(allowed: boolean): void {
-				consent.decide(allowed);
+				measurement.decide(allowed);
+			},
+			setExternalPlayers(allowed: boolean): void {
+				players.decide(allowed);
 			},
 		};
 	}),

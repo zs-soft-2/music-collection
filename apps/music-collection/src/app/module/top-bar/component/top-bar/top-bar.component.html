@@ -47,7 +47,11 @@
 	</nav>
 
 	<div class="actions">
-		<mc-player-mini />
+		<!-- Nincs mit mutatni, ha nincs mivel szólnia: a külső lejátszókat
+		     vendégnek, és hozzájárulás nélkül, nem tesszük ki. -->
+		@if (players.allowed()) {
+			<mc-player-mini />
+		}
 
 		<!-- Csak nagy képernyőn: ott van mit kitölteni. -->
 		<button

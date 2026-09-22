@@ -15,6 +15,7 @@ import { StoreModule } from '@ngrx/store';
 
 import { AppComponent } from './app.component';
 import { MeasurementConsentService } from './data/analytics';
+import { ExternalPlayerConsentService } from './data/external-player';
 import { PlayerStore } from './shared/player';
 
 describe('AppComponent', () => {
@@ -55,6 +56,15 @@ describe('AppComponent', () => {
 					// itt elég annyi, hogy a sáv ne kérdezzen semmit.
 					provide: MeasurementConsentService,
 					useValue: { consented: signal(false), decide: jest.fn() },
+				},
+				{
+					provide: ExternalPlayerConsentService,
+					useValue: {
+						consented: signal(false),
+						allowed: signal(false),
+						asking: signal(false),
+						decide: jest.fn(),
+					},
 				},
 				{
 					provide: PlayerStore,

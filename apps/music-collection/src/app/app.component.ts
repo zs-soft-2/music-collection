@@ -5,12 +5,13 @@ import {
 	EntityQuantityStateService,
 } from '@music-collection/api';
 
+import { ExternalPlayerConsentService } from './data/external-player';
 import { environment } from '../environments/environment';
 import { CoreErrorModule } from '@music-collection/core/error';
 
 import { TopBarModule } from './module';
 import { AmbientBackdropComponent } from './shared/backdrop';
-import { MeasurementConsentComponent } from './shared/measurement';
+import { ConsentBarComponent } from './shared/consent';
 import { PlayerStageComponent, PlayerStore } from './shared/player';
 import { YoutubeDockComponent } from './shared/youtube';
 
@@ -26,13 +27,15 @@ import { YoutubeDockComponent } from './shared/youtube';
 		YoutubeDockComponent,
 		AmbientBackdropComponent,
 		PlayerStageComponent,
-		MeasurementConsentComponent,
+		ConsentBarComponent,
 	],
 })
 export class AppComponent implements OnInit {
 	private authenticationStateService = inject(AuthenticationStateService);
 	private entityQuantityStateService = inject(EntityQuantityStateService);
 	protected readonly player = inject(PlayerStore);
+	/** Whether the outside players may be on the page at all. */
+	protected readonly players = inject(ExternalPlayerConsentService);
 
 	public title = 'music-collection';
 	public version = environment.version;

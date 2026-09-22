@@ -10,9 +10,18 @@
 </main>
 
 <mc-error-toast></mc-error-toast>
-<mc-measurement-consent />
-<mc-youtube-dock />
+<mc-consent-bar />
 
-@if (player.stageOpen()) {
-	<mc-player-stage />
+<!--
+	The outside players only exist for a signed-in collector who asked for
+	them: embedding one writes its owner's storage and reports the visit, so
+	the shell keeps them off the page rather than trusting each player to
+	check for itself.
+-->
+@if (players.allowed()) {
+	<mc-youtube-dock />
+
+	@if (player.stageOpen()) {
+		<mc-player-stage />
+	}
 }

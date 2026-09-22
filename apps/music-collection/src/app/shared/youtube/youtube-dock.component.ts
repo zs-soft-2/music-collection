@@ -14,6 +14,7 @@ import {
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 
+import { ExternalPlayerConsentService } from '../../data/external-player';
 import { PlayerStore } from '../player/player.store';
 import { YoutubePlaybackStore } from './youtube-playback.store';
 
@@ -177,9 +178,18 @@ export class YoutubeDockComponent {
 	/** Page position of the slot the player covers. */
 	protected readonly box = signal<Box | null>(null);
 
-	/** In the album page's slot, or floating once something has played. */
+	private readonly consent = inject(ExternalPlayerConsentService);
+
+	/**
+	 * In the album page's slot, or floating once something has played — and
+	 * never without the collector's leave. The shell already keeps this
+	 * component off the page then; the condition is here as well because it is
+	 * the frame below that fetches from YouTube, and that must not depend on
+	 * who remembered to check.
+	 */
 	protected readonly visible = computed(
 		() =>
+			this.consent.allowed() &&
 			!!this.youtube.selection() &&
 			(this.docked() ? !!this.box() : this.youtube.started())
 	);
@@ -207,7 +217,11 @@ export class YoutubeDockComponent {
 				item.kind === 'playlist'
 					? 'videoseries'
 					: encodeURIComponent(item.id);
-			const url = `https://www.youtube.com/embed/${path}?${params}`;
+			// The privacy-enhanced host: it holds off YouTube's tracking
+			// storage until something is actually played, instead of writing
+			// it the moment the frame loads. It does not remove it — the
+			// consent above is what answers for that.
+			const url = `https://www.youtube-nocookie.com/embed/${path}?${params}`;
 
 			// Only validated ids reach the trusted URL.
 			return [

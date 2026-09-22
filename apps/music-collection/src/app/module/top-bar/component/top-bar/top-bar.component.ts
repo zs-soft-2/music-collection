@@ -12,6 +12,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { BaseComponent, RoleNames } from '@music-collection/api';
 
 import { PlayerMiniComponent } from '../../../../shared/player';
+import { ExternalPlayerConsentService } from '../../../../data/external-player';
 import { LayoutWidthService, ThemeService } from '../../../../theme';
 import { TopBarService } from './top-bar.service';
 
@@ -43,6 +44,8 @@ export class TopBarComponent extends BaseComponent {
 	private readonly componentService = inject(TopBarService);
 	protected readonly theme = inject(ThemeService);
 	protected readonly layoutWidth = inject(LayoutWidthService);
+	/** Whether the outside players may be on the page at all. */
+	protected readonly players = inject(ExternalPlayerConsentService);
 
 	protected readonly adminRoles = [RoleNames.ADMIN];
 

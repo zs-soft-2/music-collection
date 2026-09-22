@@ -6,6 +6,7 @@ import {
 	input,
 } from '@angular/core';
 
+import { ExternalPlayerConsentService } from '../../data/external-player';
 import { PlayerStore } from './player.store';
 
 /**
@@ -77,9 +78,17 @@ export class PlayAlbumButtonComponent {
 	public readonly title = input<string | null>(null);
 
 	private readonly player = inject(PlayerStore);
+	private readonly consent = inject(ExternalPlayerConsentService);
 
-	protected readonly playable = computed(() =>
-		this.player.playableAlbumIds().has(this.albumId())
+	/**
+	 * Nothing to offer without a player to play it on: a guest, or a
+	 * collector who keeps the outside players off, is not shown a button that
+	 * could only disappoint them.
+	 */
+	protected readonly playable = computed(
+		() =>
+			this.consent.allowed() &&
+			this.player.playableAlbumIds().has(this.albumId())
 	);
 	protected readonly isCurrent = computed(
 		() => this.player.now()?.albumId === this.albumId()

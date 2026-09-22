@@ -10,6 +10,7 @@ import {
 	AuthorizationService,
 } from '@music-collection/api';
 
+import { ExternalPlayerConsentService } from '../../../../data/external-player';
 import { PlayerStore } from '../../../../shared/player';
 import { TopBarComponent } from './top-bar.component';
 
@@ -22,6 +23,17 @@ describe('TopBarComponent', () => {
 			imports: [TopBarComponent, NgxPermissionsModule.forRoot()],
 			providers: [
 				provideRouter([]),
+				{
+					// A külső lejátszók hozzájárulása a beállításokból jönne
+					// (Firestore/Auth); itt elég, hogy a mini player kimarad.
+					provide: ExternalPlayerConsentService,
+					useValue: {
+						consented: signal(false),
+						allowed: signal(false),
+						asking: signal(false),
+						decide: jest.fn(),
+					},
+				},
 				{
 					provide: AuthenticationStateService,
 					useValue: {
