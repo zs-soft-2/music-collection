@@ -4,6 +4,7 @@ import { Injectable } from '@angular/core';
 import { collection, doc } from '@angular/fire/firestore';
 import {
 	COLLECTION_ITEM_FEATURE_KEY,
+	COPY_SERIAL_FEATURE_KEY,
 	CollectionItemModel,
 	CollectionItemModelAdd,
 	CollectionItemModelUpdate,
@@ -14,6 +15,7 @@ import {
 	WISHLIST_ITEM_FEATURE_KEY,
 	WishlistItemModelAdd,
 	WishlistItemModelUpdate,
+	toCopySerialClaimId,
 	withLocalUpdatedAt,
 } from '@music-collection/api';
 
@@ -117,11 +119,47 @@ export class UserDataServiceImpl extends UserDataService {
 			this.firestoreSync
 				.delete(collectionItemDocument, COLLECTION_ITEM_FEATURE_KEY)
 				.then(() => {
+					void this.releaseCopySerial(collectionItem);
 					subscriber.next({
 						...collectionItem,
 					} as unknown as CollectionItemModel);
 				});
 		});
+	}
+
+	/**
+	 * Gives a numbered copy's number back to the registry once the copy is
+	 * gone, so whoever holds the record can write it down. Nearly every copy
+	 * carries no number and there is nothing here to do.
+	 *
+	 * The copy is already deleted by the time this runs, so a failure is
+	 * logged rather than raised: it costs one number nobody can claim, which
+	 * is less than an error over a deletion that went through.
+	 */
+	private async releaseCopySerial(
+		collectionItem: CollectionItemModel
+	): Promise<void> {
+		const releaseId = collectionItem.release?.uid ?? null;
+
+		if (!collectionItem.serial || !releaseId) {
+			return;
+		}
+
+		try {
+			await this.firestoreSync.delete(
+				doc(
+					this.firestore,
+					COPY_SERIAL_FEATURE_KEY,
+					toCopySerialClaimId(
+						releaseId,
+						collectionItem.serial.number
+					)
+				),
+				COPY_SERIAL_FEATURE_KEY
+			);
+		} catch (error) {
+			console.error(error);
+		}
 	}
 
 	public deleteWishlistItem$(

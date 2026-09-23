@@ -125,6 +125,40 @@ service cloud.firestore {
               && isValidGrade(data.condition.sleeve));
     }
 
+    // ── Számozott kiadás sorszáma ───────────────────────────────────────────
+    // Alakja: 1-től induló egész, és ha tudjuk a példányszámot, az nem lehet
+    // kisebb nála — a 600. darab nem létezhet 500-as kiadásban.
+    function isValidSerial(data) {
+      return !('serial' in data)
+          || data.serial == null
+          || (data.serial is map
+              && data.serial.keys().hasOnly(['number', 'total'])
+              && data.serial.number is int
+              && data.serial.number >= 1
+              && data.serial.number <= 1000000
+              && (data.serial.total == null
+                  || (data.serial.total is int
+                      && data.serial.total >= data.serial.number
+                      && data.serial.total <= 1000000)));
+    }
+
+    // A foglalás helye: `copy-serial/{kiadás}_{sorszám}`.
+    function serialClaimPath(data) {
+      return /databases/$(database)/documents/copy-serial/$(data.release.uid + '_' + string(data.serial.number));
+    }
+    // Sorszámot csak akkor írhatsz a példányra, ha a hozzá tartozó foglalás
+    // megvan és a tiéd. Ez köti össze a két írást: a foglalás dönti el, ki
+    // kapta meg a számot, ez pedig nem engedi, hogy más mégis beírja.
+    function ownsSerialClaim(data, uid) {
+      return !('serial' in data)
+          || data.serial == null
+          || (data.release is map
+              && data.release.uid is string
+              && data.release.uid.size() > 0
+              && exists(serialClaimPath(data))
+              && get(serialClaimPath(data)).data.userId == uid);
+    }
+
     // A példány sztorija. Hosszabb, mint a `description`, de nem határtalan:
     // a dokumentum egy megabájtos kerete mindenki más adatát is viszi.
     function isValidStory(data) {
@@ -162,6 +196,7 @@ service cloud.firestore {
     function isValidCopyStory(data, uid, itemId) {
       return isValidPurchase(data)
           && isValidCondition(data)
+          && isValidSerial(data)
           && isValidStory(data)
           && isValidPhotos(data, uid, itemId);
     }
@@ -224,13 +259,16 @@ service cloud.firestore {
                       && hasPerm('createCollectionItemEntity')
                       && request.resource.data.userId == uid
                       && isValidPlacement(request.resource.data)
-                      && isValidCopyStory(request.resource.data, uid, itemId);
+                      && isValidCopyStory(request.resource.data, uid, itemId)
+                      && ownsSerialClaim(request.resource.data, uid);
         allow update: if isSelf(uid)
                       && hasPerm('updateCollectionItemEntity')
                       && request.resource.data.userId == uid
                       && isValidDisposal(request.resource.data)
                       && isValidPlacement(request.resource.data)
-                      && isValidCopyStory(request.resource.data, uid, itemId);
+                      && isValidCopyStory(request.resource.data, uid, itemId)
+                      && (!changedKeys().hasAny(['serial'])
+                          || ownsSerialClaim(request.resource.data, uid));
         allow delete: if isSelf(uid) && hasPerm('deleteCollectionItemEntity');
       }
       match /wishlist-item/{itemId} {
@@ -311,6 +349,48 @@ service cloud.firestore {
     match /security/users/{uid}/effective_permissions {
       allow get: if isSelf(uid) || hasPerm('viewSecurityEntity');
       allow list, create, update, delete: if false;
+    }
+
+    // ── Számozott példány foglalása ─────────────────────────────────────────
+    // A dokumentum azonosítója maga a kulcs: `{kiadás}_{sorszám}`. Ezért a
+    // `create` az, ami egyedivé teszi — aki másodiknak írná ugyanazt a számot,
+    // az egy már álló dokumentumra írna, az pedig update, azt pedig senki nem
+    // kap meg. Nincs tranzakció és nincs számláló: az azonosító dönt.
+    //
+    // A foglalás állítás, nem bizonyíték. Azt nem tudja megmondani, hogy a
+    // lemez tényleg a gyűjtő kezében van-e; azt tudja, hogy ketten nem írták
+    // fel ugyanazt.
+    function isValidSerialClaim(claimId) {
+      return request.resource.data.keys().hasOnly(
+               ['releaseId', 'number', 'userId', 'itemId', 'updatedAt'])
+          && request.resource.data.userId == request.auth.uid
+          && request.resource.data.releaseId is string
+          && request.resource.data.releaseId.size() > 0
+          && request.resource.data.releaseId.size() <= 200
+          // Null, ha a szám olyan példányra kellett, ami még nem létezett:
+          // a felvétel és a beszámozás egy mozdulat, a foglalásnak pedig meg
+          // kell előznie az írást, különben a szabály utasítaná el.
+          && (request.resource.data.itemId == null
+              || (request.resource.data.itemId is string
+                  && request.resource.data.itemId.size() > 0
+                  && request.resource.data.itemId.size() <= 200))
+          && request.resource.data.number is int
+          && request.resource.data.number >= 1
+          && request.resource.data.number <= 1000000
+          && claimId == request.resource.data.releaseId + '_'
+                        + string(request.resource.data.number);
+    }
+    match /copy-serial/{claimId} {
+      // Olvasni bárki bejelentkezett tud: a form ebből mondja meg előre, hogy
+      // a szám foglalt, ahelyett hogy a mentés hasalna el rajta.
+      allow get: if isAuthed();
+      allow list: if false;
+      allow create: if hasPerm('updateCollectionItemEntity')
+                    && isValidSerialClaim(claimId);
+      // Ez a sor a lényeg: egy álló foglalást senki nem írhat át.
+      allow update: if false;
+      // Elengedni csak a gazdája tudja — eladáskor, vagy ha elírta a számot.
+      allow delete: if isAuthed() && resource.data.userId == request.auth.uid;
     }
 
     // ── Release-kérés: a gyűjtő kéri egy kiadás felvételét a katalógusba ────
@@ -506,7 +586,12 @@ service cloud.firestore {
                             // permission nélkül is: ez a hozzájárulás vége.
                             || (isAuthed()
                                 && featureKey == 'user-location'
-                                && markerId == 'user-location~' + request.auth.uid);
+                                && markerId == 'user-location~' + request.auth.uid)
+                            // Egy sorszám elengedése a példány szerkesztése,
+                            // nem katalógus-törlés: aki a példányt írhatja, a
+                            // foglalását vissza is tudja vonni.
+                            || (featureKey == 'copy-serial'
+                                && hasPerm('updateCollectionItemEntity'));
       allow delete: if isAdmin();
     }
 

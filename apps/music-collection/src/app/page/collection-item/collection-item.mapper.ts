@@ -123,6 +123,22 @@ export function toCopyCondition(item: CollectionItemEntity): CopyConditionView {
 }
 
 /**
+ * The copy's number, spelled the way it reads on the record — "No. 123 of
+ * 500", or "No. 123" alone where the edition size was never printed on it.
+ */
+export function toCopySerial(item: CollectionItemEntity): string | null {
+	const serial = item.serial ?? null;
+
+	if (!serial) {
+		return null;
+	}
+
+	return serial.total != null
+		? `No. ${serial.number} of ${serial.total}`
+		: `No. ${serial.number}`;
+}
+
+/**
  * The tracklist of this copy: the album's tracks, and the ones only this
  * pressing has, marked so the difference is visible rather than implied.
  */

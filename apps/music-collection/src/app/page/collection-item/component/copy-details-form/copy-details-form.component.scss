@@ -26,6 +26,13 @@ legend {
 	color: var(--mc-primary);
 }
 
+.group-lead {
+	margin: 0 0 0.9rem;
+	font-size: 0.82rem;
+	line-height: 1.5;
+	color: var(--mc-text-subtle);
+}
+
 .fields {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));

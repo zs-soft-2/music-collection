@@ -38,6 +38,7 @@ import {
 	WishlistItemEntityAdd,
 	WishlistItemPermissionsService,
 	WishlistItemStateService,
+	toCollectionItemSerial,
 } from '@music-collection/api';
 import { tapResponse } from '@ngrx/operators';
 import {
@@ -58,6 +59,7 @@ import {
 } from '@music-collection/domain/music-collection/core';
 
 import { AlbumDetailsEffect } from '../../data/album-details';
+import { CopySerialEffect, CopySerialTakenError } from '../../data/copy-serial';
 import { PlayLogEffect, PlayLogEntry, listeningFor } from '../../data/play-log';
 import { UserSettingsEffect } from '../../data/user-settings';
 import { PhotoScanEffect, PreparedPhoto } from '../../data/photo-scan';
@@ -78,6 +80,7 @@ import {
 } from '../collection/shelf-layout.setting';
 import { placementInLayout } from '../collection/shelf-placement';
 import { ALBUM_VIEW_SETTING } from './album-view.setting';
+import { CopyPick } from './component/release-picker/release-picker.component';
 import {
 	DisposalDraft,
 	groupCredits,
@@ -132,6 +135,20 @@ interface AlbumPageState {
 	removingCopyId: string | null;
 	disposing: boolean;
 	disposeError: string | null;
+	/**
+	 * The number of the copy changing hands, and which way it is going. Acted
+	 * on once the write is through: a record that has left the collection
+	 * gives its number back to the registry, so whoever holds the record can
+	 * register it, and one taken back asks for the number again.
+	 */
+	serialHandover: {
+		releaseId: string;
+		number: number;
+		itemId: string;
+		userId: string;
+		/** Taking the number back, rather than giving it up. */
+		retake: boolean;
+	} | null;
 	/** The copy the placement dialog is open for. */
 	placingCopyId: string | null;
 	placing: boolean;
@@ -147,6 +164,17 @@ interface AlbumPageState {
 	pickedDiscogsReleaseId: number | null;
 	adding: boolean;
 	addError: string | null;
+	/**
+	 * A number is being taken for a copy about to be added. Its own round
+	 * trip, before the write the picker waits on — the dialog has to be held
+	 * shut over it too, or a second press would start the add again.
+	 */
+	claiming: boolean;
+	/**
+	 * The number taken for a copy that is being written. Given back if the
+	 * write is refused, so a copy that never arrived locks nothing away.
+	 */
+	claimedSerial: { releaseId: string; number: number } | null;
 	/** The signed-in user's release requests (all albums). */
 	requests: ReleaseRequest[];
 	/** Discogs pressings of the master `discogsVersionsFor`. */
@@ -206,6 +234,7 @@ const initialState: AlbumPageState = {
 	removingCopyId: null,
 	disposing: false,
 	disposeError: null,
+	serialHandover: null,
 	placingCopyId: null,
 	placing: false,
 	placeError: null,
@@ -215,6 +244,8 @@ const initialState: AlbumPageState = {
 	pickedDiscogsReleaseId: null,
 	adding: false,
 	addError: null,
+	claiming: false,
+	claimedSerial: null,
 	requests: [],
 	discogsVersions: [],
 	discogsVersionsFor: null,
@@ -258,6 +289,40 @@ function ownsRelease(
 		!!releaseId &&
 		ownedItems.some((item) => item.release?.uid === releaseId)
 	);
+}
+
+/**
+ * What the registry has to be told once a copy changes hands, or null where
+ * the copy carries no number and the registry has nothing to do with it —
+ * which is nearly every record.
+ */
+function toSerialHandover(
+	item: CollectionItemEntity,
+	retake: boolean
+): AlbumPageState['serialHandover'] {
+	const releaseId = item.release?.uid ?? null;
+
+	return item.serial && releaseId
+		? {
+				releaseId,
+				number: item.serial.number,
+				itemId: item.uid,
+				userId: item.userId,
+				retake,
+			}
+		: null;
+}
+
+/** What the collector reads when the number is already spoken for. */
+function toSerialError(error: unknown): string {
+	if (error instanceof CopySerialTakenError) {
+		return error.conflict === 'mine'
+			? 'You have already registered this number on another copy.'
+			: 'Another collector has registered this copy. If it is the one in your hands, check the number on it.';
+	}
+	console.error(error);
+
+	return 'The number could not be checked just now. Try again.';
 }
 
 /** What the collector reads when a request or a Discogs lookup fails. */
@@ -602,7 +667,8 @@ export const AlbumPageStore = signalStore(
 			releaseRequestEffect = inject(ReleaseRequestEffect),
 			photoScanEffect = inject(PhotoScanEffect),
 			musicCollectionEffect = inject(MusicCollectionEffect),
-			playLogEffect = inject(PlayLogEffect)
+			playLogEffect = inject(PlayLogEffect),
+			serialEffect = inject(CopySerialEffect)
 		) => ({
 			/** The collector's listening, to say how often this record went on. */
 			loadPlayLog: rxMethod<void>(
@@ -954,11 +1020,23 @@ export const AlbumPageStore = signalStore(
 					pairwise(),
 					tap(([[wasAdding], [adding, error]]) => {
 						patchState(store, { adding });
-						if (wasAdding && !adding) {
-							patchState(store, {
-								addError: error,
-								pickerOpen: !!error,
-							});
+						if (!wasAdding || adding) {
+							return;
+						}
+						const claimed = store.claimedSerial();
+
+						patchState(store, {
+							addError: error,
+							pickerOpen: !!error,
+							claimedSerial: null,
+						});
+						// The copy never arrived; the number it was taking
+						// goes back, or nobody could ever register it.
+						if (error && claimed) {
+							void serialEffect.release(
+								claimed.releaseId,
+								claimed.number
+							);
 						}
 					})
 				)
@@ -975,14 +1053,47 @@ export const AlbumPageStore = signalStore(
 					pairwise(),
 					tap(([[wasDisposing], [disposing, error]]) => {
 						patchState(store, { disposing });
-						if (wasDisposing && !disposing) {
-							patchState(store, {
-								disposeError: error,
-								removingCopyId: error
-									? store.removingCopyId()
-									: null,
-							});
+						if (!wasDisposing || disposing) {
+							return;
 						}
+						const handover = store.serialHandover();
+
+						patchState(store, {
+							disposeError: error,
+							removingCopyId: error
+								? store.removingCopyId()
+								: null,
+							serialHandover: null,
+						});
+						if (error || !handover) {
+							return;
+						}
+						// The copy is written; now the registry follows it.
+						if (!handover.retake) {
+							void serialEffect.release(
+								handover.releaseId,
+								handover.number
+							);
+							return;
+						}
+						serialEffect
+							.hold(
+								handover.releaseId,
+								{ number: handover.number, total: null },
+								handover.userId,
+								handover.itemId
+							)
+							.catch(() =>
+								// Someone registered it while the record was
+								// out of the collection. The copy is back and
+								// still shows the number it wore, but it no
+								// longer holds it — worth saying, because the
+								// next edit to that number will be refused.
+								patchState(store, {
+									disposeError:
+										'The copy is back, but its number has been registered by another collector in the meantime.',
+								})
+							);
 					})
 				)
 			),
@@ -1001,7 +1112,10 @@ export const AlbumPageStore = signalStore(
 					return;
 				}
 
-				patchState(store, { disposeError: null });
+				patchState(store, {
+					disposeError: null,
+					serialHandover: toSerialHandover(item, false),
+				});
 				collectionItemStateService.dispatchDisposeEntityAction(item, {
 					reason: draft.reason,
 					date: draft.date,
@@ -1020,6 +1134,9 @@ export const AlbumPageStore = signalStore(
 					!store.disposing() &&
 					!ownsRelease(store.ownedItems(), item.release?.uid)
 				) {
+					patchState(store, {
+						serialHandover: toSerialHandover(item, true),
+					});
 					collectionItemStateService.dispatchRestoreEntityAction(
 						item
 					);
@@ -1041,30 +1158,66 @@ export const AlbumPageStore = signalStore(
 			 * unless it is already in it (an approved release request adds it
 			 * on its own).
 			 */
-			addToCollection(releaseId: string): void {
+			async addToCollection(pick: CopyPick): Promise<void> {
 				const release = store
 					.catalogReleases()
-					.find((item) => item.uid === releaseId);
+					.find((item) => item.uid === pick.releaseId);
 				const userId = store.userId();
 
-				if (!release || !userId || store.adding()) {
+				if (!release || !userId || store.adding() || store.claiming()) {
 					return;
 				}
-				if (ownsRelease(store.ownedItems(), releaseId)) {
+				if (ownsRelease(store.ownedItems(), pick.releaseId)) {
 					patchState(store, {
 						addError: 'This release is already in your collection.',
 					});
 					return;
+				}
+				const serial = toCollectionItemSerial(
+					pick.serialNumber,
+					pick.serialTotal
+				);
+
+				patchState(store, { addError: null });
+
+				// The number is taken before the copy is written, because the
+				// rules refuse a copy carrying a number it does not hold. The
+				// claim cannot name the copy yet — it does not exist — and it
+				// can never be edited, so it stays pointing at nothing.
+				if (serial) {
+					patchState(store, { claiming: true });
+					try {
+						await serialEffect.hold(
+							pick.releaseId,
+							serial,
+							userId,
+							null
+						);
+					} catch (error) {
+						patchState(store, {
+							claiming: false,
+							addError: toSerialError(error),
+						});
+						return;
+					}
+					patchState(store, { claiming: false });
 				}
 
 				const collectionItem: CollectionItemEntityAdd = {
 					entityType: EntityTypeEnum.CollectionItem,
 					date: new Date(),
 					release,
+					serial,
 					userId,
 				};
 
-				patchState(store, { addError: null });
+				patchState(store, {
+					// A refused add gives the number straight back, so a copy
+					// that never arrived locks nothing away.
+					claimedSerial: serial
+						? { releaseId: pick.releaseId, number: serial.number }
+						: null,
+				});
 				collectionItemStateService.dispatchAddEntityAction(
 					collectionItem
 				);

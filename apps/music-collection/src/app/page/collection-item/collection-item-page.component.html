@@ -163,6 +163,13 @@
 							}
 						}
 
+						@if (store.serial(); as serial) {
+							<div>
+								<dt>Numbered copy</dt>
+								<dd>{{ serial }}</dd>
+							</div>
+						}
+
 						@if (store.item()?.placement; as spot) {
 							<div>
 								<dt>On the shelf</dt>

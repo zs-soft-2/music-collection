@@ -20,10 +20,12 @@ import {
 	CollectionItemGrade,
 	CollectionItemPermissionsService,
 	CollectionItemPhoto,
+	CollectionItemSerial,
 	CollectionItemStateService,
 	ContributionEntity,
 	RoleNames,
 	TrackEntity,
+	toCollectionItemSerial,
 } from '@music-collection/api';
 import { tapResponse } from '@ngrx/operators';
 import {
@@ -39,12 +41,14 @@ import { NgxPermissionsService } from 'ngx-permissions';
 
 import { AlbumDetailsEffect } from '../../data/album-details';
 import { CopyPhotoEffect } from '../../data/copy-photo';
+import { CopySerialEffect, CopySerialTakenError } from '../../data/copy-serial';
 import { toAlbumProfile } from '../album/album.mapper';
 import {
 	toCopyCondition,
 	toCopyPhotos,
 	toCopyPressing,
 	toCopyProvenance,
+	toCopySerial,
 	toCopyTracks,
 } from './collection-item.mapper';
 
@@ -64,7 +68,17 @@ export interface CopyDraft {
 	purchaseCurrency: string;
 	mediaGrade: CollectionItemGrade | null;
 	sleeveGrade: CollectionItemGrade | null;
+	/** The copy's number on a numbered edition, as typed. */
+	serialNumber: string;
+	/** How many the edition ran to, as typed. */
+	serialTotal: string;
 	story: string;
+}
+
+/** A number the registry holds while a write decides whether it should. */
+interface PendingSerial {
+	releaseId: string;
+	number: number;
 }
 
 interface CollectionItemPageState {
@@ -95,6 +109,26 @@ interface CollectionItemPageState {
 	 * broken page, where the other order only leaves a few unread kilobytes.
 	 */
 	pendingDiscard: CollectionItemPhoto[];
+	/**
+	 * The number the copy wore before this save. Given back to the registry
+	 * once the write goes through — until then the stored copy still wears
+	 * it, and a number released early is one a stranger could take while our
+	 * own write is still in flight.
+	 */
+	previousSerial: PendingSerial | null;
+	/**
+	 * The number taken for this save. Given back if the write is refused, so
+	 * a save that failed leaves no number locked away behind a copy that
+	 * never got it.
+	 */
+	claimedSerial: PendingSerial | null;
+	/**
+	 * A number is being taken from the registry. That is a round trip of its
+	 * own, before the write the rest of the page waits on — so the form has
+	 * to be held shut over it too, or a second click would start the save
+	 * again while the first is still asking.
+	 */
+	claiming: boolean;
 }
 
 const EMPTY_DRAFT: CopyDraft = {
@@ -105,6 +139,8 @@ const EMPTY_DRAFT: CopyDraft = {
 	purchaseCurrency: '',
 	mediaGrade: null,
 	sleeveGrade: null,
+	serialNumber: '',
+	serialTotal: '',
 	story: '',
 };
 
@@ -126,6 +162,9 @@ const initialState: CollectionItemPageState = {
 	photoBusy: null,
 	photoError: null,
 	pendingDiscard: [],
+	previousSerial: null,
+	claimedSerial: null,
+	claiming: false,
 };
 
 /** The default currency of a price typed without one. */
@@ -145,8 +184,15 @@ function toDraft(item: CollectionItemEntity): CopyDraft {
 		purchaseCurrency: purchase?.currency ?? '',
 		mediaGrade: item.condition?.media ?? null,
 		sleeveGrade: item.condition?.sleeve ?? null,
+		serialNumber: item.serial ? String(item.serial.number) : '',
+		serialTotal: item.serial?.total != null ? String(item.serial.total) : '',
 		story: item.story ?? '',
 	};
+}
+
+/** The number as the record keeps it. */
+function toSerial(draft: CopyDraft): CollectionItemSerial | null {
+	return toCollectionItemSerial(draft.serialNumber, draft.serialTotal);
 }
 
 /** `yyyy-mm-dd`, what a date input reads and writes. */
@@ -194,8 +240,21 @@ function toDetails(draft: CopyDraft): CollectionItemDetails {
 		condition: conditionEmpty
 			? null
 			: { media: draft.mediaGrade, sleeve: draft.sleeveGrade },
+		serial: toSerial(draft),
 		story: story || null,
 	};
+}
+
+/** What to tell the collector when the number is already spoken for. */
+function toSerialError(error: unknown): string {
+	if (error instanceof CopySerialTakenError) {
+		return error.conflict === 'mine'
+			? 'You have already registered this number on another copy.'
+			: 'Another collector has registered this copy. If it is the one in your hands, check the number on it.';
+	}
+	console.error(error);
+
+	return 'The number could not be checked just now. Try again.';
 }
 
 /**
@@ -232,6 +291,12 @@ export const CollectionItemPageStore = signalStore(
 
 			return item ? toCopyCondition(item) : null;
 		}),
+		/** "No. 123 of 500", where this copy was one of a numbered edition. */
+		serial: computed(() => {
+			const item = store.item();
+
+			return item ? toCopySerial(item) : null;
+		}),
 		photos: computed(() => toCopyPhotos(store.item()?.photos)),
 		story: computed(() => store.item()?.story ?? null),
 		/** The copy left the collection; the page reads as history. */
@@ -256,7 +321,9 @@ export const CollectionItemPageStore = signalStore(
 		 * grey the form out, so the two are read apart.
 		 */
 		savingDetails: computed(
-			() => store.saving() && store.savingKind() === 'details'
+			() =>
+				store.claiming() ||
+				(store.saving() && store.savingKind() === 'details')
 		),
 		/** A second picture can still be added. */
 		canAddPhoto: computed(
@@ -273,7 +340,8 @@ export const CollectionItemPageStore = signalStore(
 			authenticationStateService = inject(AuthenticationStateService),
 			permissionsService = inject(NgxPermissionsService),
 			albumDetailsEffect = inject(AlbumDetailsEffect),
-			photoEffect = inject(CopyPhotoEffect)
+			photoEffect = inject(CopyPhotoEffect),
+			serialEffect = inject(CopySerialEffect)
 		) => ({
 			/** Who is signed in, and whether they may change their copies. */
 			loadCollector: rxMethod<void>(
@@ -404,11 +472,27 @@ export const CollectionItemPageStore = signalStore(
 						const kind = store.savingKind();
 
 						if (kind === 'details') {
+							const previous = store.previousSerial();
+							const claimed = store.claimedSerial();
+
 							patchState(store, {
 								saveError: error,
 								editing: !!error,
 								savingKind: null,
+								previousSerial: null,
+								claimedSerial: null,
 							});
+							// The write decides which of the two numbers the
+							// registry should still be holding: the one the
+							// copy now wears, or the one it wore before.
+							const stale = error ? claimed : previous;
+
+							if (stale) {
+								void serialEffect.release(
+									stale.releaseId,
+									stale.number
+								);
+							}
 							return;
 						}
 						if (kind === 'photos') {
@@ -452,16 +536,75 @@ export const CollectionItemPageStore = signalStore(
 					draft: item ? toDraft(item) : EMPTY_DRAFT,
 				});
 			},
-			save(draft: CopyDraft): void {
+			/**
+			 * Writes what the collector tells about the copy.
+			 *
+			 * A number is taken from the registry before the copy is written
+			 * and given back after it — that order is what keeps the two
+			 * honest. Taking first means a number someone else holds stops
+			 * the save while nothing has changed yet; giving back after means
+			 * the stored copy is never left wearing a number the registry has
+			 * already handed on.
+			 */
+			async save(draft: CopyDraft): Promise<void> {
 				const item = store.item();
+				const userId = store.userId();
 
-				if (!item || !store.canEdit() || store.saving()) {
+				if (
+					!item ||
+					!userId ||
+					!store.canEdit() ||
+					store.saving() ||
+					store.claiming()
+				) {
 					return;
 				}
+				const releaseId = item.release?.uid ?? null;
+				const next = toSerial(draft);
+				const current = item.serial ?? null;
+				const moved =
+					(next?.number ?? null) !== (current?.number ?? null);
+
+				// A number belongs to a pressing; without one there is nothing
+				// it could be the 123rd of.
+				if (next && !releaseId) {
+					patchState(store, {
+						draft,
+						saveError:
+							'This copy is not tied to a pressing, so its number cannot be registered.',
+					});
+					return;
+				}
+				patchState(store, { draft, saveError: null });
+
+				if (moved && next && releaseId) {
+					patchState(store, { claiming: true });
+					try {
+						await serialEffect.hold(
+							releaseId,
+							next,
+							userId,
+							item.uid
+						);
+					} catch (error) {
+						patchState(store, {
+							claiming: false,
+							saveError: toSerialError(error),
+						});
+						return;
+					}
+					patchState(store, { claiming: false });
+				}
 				patchState(store, {
-					draft,
-					saveError: null,
 					savingKind: 'details',
+					claimedSerial:
+						moved && next && releaseId
+							? { releaseId, number: next.number }
+							: null,
+					previousSerial:
+						moved && current && releaseId
+							? { releaseId, number: current.number }
+							: null,
 				});
 				collectionItemStateService.dispatchChangeDetailsAction(
 					item,

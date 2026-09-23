@@ -73,116 +73,227 @@
 
 	@switch (view()) {
 		@case ('catalog') {
-			<p class="lead">Which pressing do you have?</p>
+			@if (chosenRelease(); as chosen) {
+				<p class="lead">Is your copy a numbered one?</p>
 
-			@if (error()) {
-				<p class="error" role="alert">
-					Could not add it to your collection: {{ error() }}
+				@if (error()) {
+					<p class="error" role="alert">
+						Could not add it to your collection: {{ error() }}
+					</p>
+				}
+
+				<p class="chosen">
+					<mc-format-badge
+						[format]="chosen.format"
+						[weight]="chosen.weight"
+					/>
+					<span>
+						{{ chosen.labelName ?? 'Unknown label' }}
+						@if (chosen.country) {
+							· {{ chosen.country }}
+						}
+						@if (chosen.year) {
+							· {{ chosen.year }}
+						}
+					</span>
 				</p>
-			}
 
-			@if (loading()) {
-				<div class="skeleton" role="status" aria-busy="true">
-					<span class="visually-hidden">Loading releases…</span>
-				</div>
-			} @else if (releases().length) {
-				<ul class="options">
-					@for (release of releases(); track release.id) {
-						<li
-							[class.is-highlighted]="
-								release.id === highlightReleaseId()
+				<p class="hint serial-lead">
+					Only a numbered edition carries this — the number stamped or
+					written on the record. Leave it empty if yours has none; you
+					can add it later on the copy's own page.
+				</p>
+
+				<div class="serial-fields">
+					<label class="field">
+						<span>Copy number</span>
+						<input
+							type="text"
+							inputmode="numeric"
+							placeholder="123"
+							[disabled]="busy()"
+							[value]="serialNumber()"
+							[attr.aria-invalid]="
+								serialProblem() === 'number' ||
+								serialProblem() === 'totalAlone'
+									? 'true'
+									: null
 							"
-						>
-							<button
-								type="button"
-								class="option"
-								[disabled]="busy() || release.owned"
-								(click)="picked.emit(release.id)"
-							>
-								<mc-format-badge
-									[format]="release.format"
-									[weight]="release.weight"
-								/>
-								<span class="details">
-									@if (release.labelName) {
-										<span>{{ release.labelName }}</span>
-									}
-									@if (release.country) {
-										<span>{{ release.country }}</span>
-									}
-									@if (release.year) {
-										<span>{{ release.year }}</span>
-									}
-								</span>
-								@if (release.editions.length) {
-									<span class="editions">
-										@for (
-											edition of release.editions;
-											track edition
-										) {
-											<span class="edition">{{
-												edition
-											}}</span>
-										}
-									</span>
-								}
-								<span class="action">
-									@if (release.owned) {
-										<span class="state">
-											<i
-												class="pi pi-check"
-												aria-hidden="true"
-											></i>
-											In your collection
-										</span>
-									} @else {
-										<i
-											class="pi pi-plus"
-											aria-hidden="true"
-										></i>
-										<span class="visually-hidden">Add</span>
-									}
-								</span>
-							</button>
-						</li>
-					}
-				</ul>
-			} @else {
-				<p class="empty">
-					No release of this album is in the catalog yet.
-				</p>
-			}
+							(input)="onSerialInput('number', $event)"
+						/>
+					</label>
 
-			<footer class="missing">
-				<p>Don't see your pressing? Ask an admin to add it.</p>
-				<div class="missing-actions">
-					@if (discogsAvailable()) {
-						<button
-							type="button"
-							class="secondary-button"
-							(click)="show('discogs')"
-						>
-							<i class="pi pi-search" aria-hidden="true"></i>
-							Find it on Discogs
-						</button>
+					<label class="field">
+						<span>Out of</span>
+						<input
+							type="text"
+							inputmode="numeric"
+							placeholder="500"
+							[disabled]="busy()"
+							[value]="serialTotal()"
+							[attr.aria-invalid]="
+								serialProblem() === 'total' ||
+								serialProblem() === 'tooLarge'
+									? 'true'
+									: null
+							"
+							(input)="onSerialInput('total', $event)"
+						/>
+					</label>
+				</div>
+
+				@switch (serialProblem()) {
+					@case ('number') {
+						<p class="field-error">This is not a copy number.</p>
 					}
+					@case ('total') {
+						<p class="field-error">This is not an edition size.</p>
+					}
+					@case ('tooLarge') {
+						<p class="field-error">
+							The edition is smaller than this copy's number.
+						</p>
+					}
+					@case ('totalAlone') {
+						<p class="field-error">
+							Which one of them is yours? An edition size on its
+							own says nothing about this copy.
+						</p>
+					}
+				}
+
+				<div class="form-actions">
 					<button
 						type="button"
 						class="secondary-button"
-						(click)="show('photo')"
+						[disabled]="busy()"
+						(click)="unchoose()"
 					>
-						<i class="pi pi-camera" aria-hidden="true"></i>
-						Identify from a photo
+						Another pressing
 					</button>
 					<button
 						type="button"
-						class="text-button"
-						(click)="show('describe')"
+						class="primary-button confirm-add"
+						[disabled]="busy() || !!serialProblem()"
+						(click)="confirmChoice()"
 					>
-						Describe it
+						{{ adding() ? 'Adding…' : 'Add to my collection' }}
 					</button>
 				</div>
-			</footer>
+			} @else {
+				<p class="lead">Which pressing do you have?</p>
+
+				@if (error()) {
+					<p class="error" role="alert">
+						Could not add it to your collection: {{ error() }}
+					</p>
+				}
+
+				@if (loading()) {
+					<div class="skeleton" role="status" aria-busy="true">
+						<span class="visually-hidden">Loading releases…</span>
+					</div>
+				} @else if (releases().length) {
+					<ul class="options">
+						@for (release of releases(); track release.id) {
+							<li
+								[class.is-highlighted]="
+									release.id === highlightReleaseId()
+								"
+							>
+								<button
+									type="button"
+									class="option"
+									[disabled]="busy() || release.owned"
+									(click)="choose(release)"
+								>
+									<mc-format-badge
+										[format]="release.format"
+										[weight]="release.weight"
+									/>
+									<span class="details">
+										@if (release.labelName) {
+											<span>{{ release.labelName }}</span>
+										}
+										@if (release.country) {
+											<span>{{ release.country }}</span>
+										}
+										@if (release.year) {
+											<span>{{ release.year }}</span>
+										}
+									</span>
+									@if (release.editions.length) {
+										<span class="editions">
+											@for (
+												edition of release.editions;
+												track edition
+											) {
+												<span class="edition">{{
+													edition
+												}}</span>
+											}
+										</span>
+									}
+									<span class="action">
+										@if (release.owned) {
+											<span class="state">
+												<i
+													class="pi pi-check"
+													aria-hidden="true"
+												></i>
+												In your collection
+											</span>
+										} @else {
+											<i
+												class="pi pi-plus"
+												aria-hidden="true"
+											></i>
+											<span class="visually-hidden"
+												>Add</span
+											>
+										}
+									</span>
+								</button>
+							</li>
+						}
+					</ul>
+				} @else {
+					<p class="empty">
+						No release of this album is in the catalog yet.
+					</p>
+				}
+
+				<footer class="missing">
+					<p>Don't see your pressing? Ask an admin to add it.</p>
+					<div class="missing-actions">
+						@if (discogsAvailable()) {
+							<button
+								type="button"
+								class="secondary-button"
+								(click)="show('discogs')"
+							>
+								<i class="pi pi-search" aria-hidden="true"></i>
+								Find it on Discogs
+							</button>
+						}
+						<button
+							type="button"
+							class="secondary-button"
+							(click)="show('photo')"
+						>
+							<i class="pi pi-camera" aria-hidden="true"></i>
+							Identify from a photo
+						</button>
+						<button
+							type="button"
+							class="text-button"
+							(click)="show('describe')"
+						>
+							Describe it
+						</button>
+					</div>
+				</footer>
+			}
 		}
 
 		@case ('discogs') {
