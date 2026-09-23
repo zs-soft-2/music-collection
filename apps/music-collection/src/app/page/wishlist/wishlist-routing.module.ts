@@ -9,6 +9,18 @@ const routes: Routes = [
 		pathMatch: 'full',
 		component: WishlistPageComponent,
 	},
+	{
+		// One wish of one collector: which record is wanted, in what shape,
+		// and which pressings of it the catalog knows.
+		path: ':itemId',
+		loadComponent: () =>
+			import('../wishlist-item/wishlist-item-page.component').then(
+				(module) => module.WishlistItemPageComponent
+			),
+		data: {
+			breadcrumb: 'wish',
+		},
+	},
 ];
 
 @NgModule({

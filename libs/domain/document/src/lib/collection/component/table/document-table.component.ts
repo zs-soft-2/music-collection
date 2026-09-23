@@ -1,5 +1,6 @@
 import { Observable } from 'rxjs';
 
+import { FormsModule } from '@angular/forms';
 import {
 	ChangeDetectionStrategy,
 	Component,
@@ -15,16 +16,15 @@ import {
 } from '@music-collection/api';
 
 import { DocumentTableService } from './document-table.service';
-import { Bind } from 'primeng/bind';
-import { Table, SortableColumn, SortIcon } from 'primeng/table';
 import { AutoComplete } from 'primeng/autocomplete';
 import { Ripple } from 'primeng/ripple';
 import { ButtonDirective } from 'primeng/button';
 import { AsyncPipe, DatePipe } from '@angular/common';
-import { DataView } from 'primeng/dataview';
 import {
-	CollectionViewToggleComponent,
+	CollectionColumnDirective,
+	CollectionListComponent,
 	EntityCardComponent,
+	ViewActionComponent,
 } from '@music-collection/ui';
 
 @Component({
@@ -34,18 +34,16 @@ import {
 	templateUrl: './document-table.component.html',
 	styleUrls: ['./document-table.component.scss'],
 	imports: [
-		Bind,
-		Table,
-		SortableColumn,
-		SortIcon,
+		FormsModule,
 		AutoComplete,
 		Ripple,
 		ButtonDirective,
 		AsyncPipe,
 		DatePipe,
-		DataView,
-		CollectionViewToggleComponent,
+		CollectionColumnDirective,
+		CollectionListComponent,
 		EntityCardComponent,
+		ViewActionComponent,
 	],
 })
 export class DocumentTableComponent extends BaseComponent implements OnInit {
@@ -54,6 +52,8 @@ export class DocumentTableComponent extends BaseComponent implements OnInit {
 	public params$!: Observable<DocumentTableParams>;
 
 	public readonly collectionView = this.componentService.collectionView;
+
+	public readonly place = this.componentService.place;
 
 	/** The document waiting for the withdrawal to be confirmed, if any. */
 	public readonly pendingWithdrawal = this.componentService.pendingWithdrawal;
@@ -65,6 +65,10 @@ export class DocumentTableComponent extends BaseComponent implements OnInit {
 		{ value: DocumentFilterEnum.Other, label: 'Uploads' },
 		{ value: DocumentFilterEnum.Withdrawn, label: 'Withdrawn' },
 	];
+
+	/** Withdrawn documents are faded, so the list says which are on offer. */
+	public readonly withdrawnClass = (document: DocumentEntity): string =>
+		isWithdrawnDocument(document) ? 'is-withdrawn' : '';
 
 	public askWithdrawal(document: DocumentEntity): void {
 		this.componentService.askWithdrawal(document);
@@ -111,5 +115,10 @@ export class DocumentTableComponent extends BaseComponent implements OnInit {
 
 	public setFilter(filter: DocumentFilterEnum): void {
 		this.componentService.setFilter(filter);
+	}
+
+	/** Where the eye leads: the page that shows this document. */
+	public viewLink(document: DocumentEntity): unknown[] {
+		return this.componentService.viewLink(document);
 	}
 }

@@ -40,6 +40,47 @@ export const routes: Routes = [
 		},
 	},
 	{
+		// A pressing: one edition of an album. The album page holds what is
+		// true of every copy; this one only what this edition added.
+		path: 'release/:releaseId',
+		loadComponent: () =>
+			import('./page/release/release-page.component').then(
+				(module) => module.ReleasePageComponent
+			),
+		data: {
+			breadcrumb: 'release',
+		},
+	},
+	{
+		// The record company, and everything in the catalog that carries it.
+		path: 'label/:labelId',
+		loadComponent: () =>
+			import('./page/label/label-page.component').then(
+				(module) => module.LabelPageComponent
+			),
+		data: {
+			breadcrumb: 'label',
+		},
+	},
+	{
+		// An uploaded file as the catalog holds it. Documents are the
+		// machinery behind the covers and the badges rather than something
+		// to browse, so only an admin opens one.
+		path: 'document/:documentId',
+		loadComponent: () =>
+			import('./page/document/document-page.component').then(
+				(module) => module.DocumentPageComponent
+			),
+		data: {
+			breadcrumb: 'document',
+			permissions: {
+				only: [RoleNames.ADMIN],
+				redirectTo: '/error',
+			},
+		},
+		canActivate: [NgxPermissionsGuard],
+	},
+	{
 		path: 'artist/:artistId',
 		loadComponent: () =>
 			import('./page/artist/artist-page.component').then(
@@ -92,9 +133,9 @@ export const routes: Routes = [
 		// shelf place, the story, the photographs — is theirs.
 		path: 'collection/copy/:itemId',
 		loadComponent: () =>
-			import(
-				'./page/collection-item/collection-item-page.component'
-			).then((module) => module.CollectionItemPageComponent),
+			import('./page/collection-item/collection-item-page.component').then(
+				(module) => module.CollectionItemPageComponent
+			),
 		data: {
 			breadcrumb: 'copy',
 		},
@@ -127,6 +168,19 @@ export const routes: Routes = [
 			),
 		data: {
 			breadcrumb: 'visual-lab',
+		},
+	},
+	{
+		// The records of the catalog's artists that are still to come.
+		// `refreshUpcomingReleases` gathers them from MusicBrainz once a
+		// day; the page only reads what it wrote.
+		path: 'upcoming',
+		loadComponent: () =>
+			import('./page/upcoming/upcoming-page.component').then(
+				(module) => module.UpcomingPageComponent
+			),
+		data: {
+			breadcrumb: 'upcoming',
 		},
 	},
 	{

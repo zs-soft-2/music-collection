@@ -1,0 +1,78 @@
+<div class="page">
+	<mc-page-breadcrumb [trail]="store.trail()" />
+
+	@if (store.loading()) {
+		<p class="status">Looking for this document…</p>
+	} @else if (store.notFound()) {
+		<section class="missing">
+			<h1>No document under this id.</h1>
+			<p>
+				Documents are never deleted, only withdrawn — so this one was
+				either never here, or was removed by hand.
+			</p>
+			<a class="button" routerLink="/admin/document"
+				>Back to the documents</a
+			>
+		</section>
+	} @else if (store.document(); as document) {
+		@if (store.withdrawnAt()) {
+			<p class="banner">
+				This document is withdrawn: nothing is offered it again. The
+				file stays where it is, so everything that already points at it
+				goes on working.
+			</p>
+		}
+
+		<header class="hero">
+			<div class="art">
+				@if (store.isImage() && store.fileUrl(); as image) {
+					<img [src]="image" [alt]="document.name" />
+				} @else {
+					<i class="pi pi-file file-icon" aria-hidden="true"></i>
+				}
+			</div>
+
+			<div class="identity">
+				<p class="eyebrow">Document</p>
+				<h1>{{ document.name }}</h1>
+
+				<p class="lead">
+					<span>{{ document.originalName }}</span>
+				</p>
+
+				<div class="hero-actions">
+					@if (store.fileUrl(); as file) {
+						<a
+							class="button"
+							[href]="file"
+							target="_blank"
+							rel="noopener noreferrer"
+						>
+							Open the file
+						</a>
+					}
+
+					<mc-admin-edit-link
+						entity="document"
+						[id]="store.documentId()"
+						[name]="document.name"
+					/>
+				</div>
+			</div>
+		</header>
+
+		@if (store.fileUrl(); as file) {
+			@if (store.isImage()) {
+				<div class="preview">
+					<img [src]="file" [alt]="document.name" />
+				</div>
+			} @else if (store.isPdf() && framedUrl(); as framed) {
+				<div class="preview">
+					<iframe [src]="framed" [title]="document.name"></iframe>
+				</div>
+			}
+		}
+
+		<mc-entity-facts [facts]="facts()" />
+	}
+</div>

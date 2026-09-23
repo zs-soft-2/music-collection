@@ -1,179 +1,138 @@
 @if (params$ | async; as params) {
-	<section class="album-table mc-card">
-		<div class="mc-table-tools">
-			<p-autocomplete
-				class="mc-table-search"
-				placeholder="Filter by name…"
-				ariaLabel="Filter by name"
-				[suggestions]="params.empty"
-				[showClear]="true"
-				(completeMethod)="searchByNameHandler($event)"
-				[minQueryLength]="3"
-				[delay]="400"
-			>
-			</p-autocomplete>
+	<mc-collection-list
+		[items]="params.albums"
+		[place]="place"
+		[view]="collectionView"
+		emptyMessage="No albums found."
+	>
+		<p-autocomplete
+			tools
+			class="mc-table-search"
+			placeholder="Filter by name…"
+			ariaLabel="Filter by name"
+			[ngModel]="place.filterOf('name')"
+			[suggestions]="params.empty"
+			[showClear]="true"
+			(completeMethod)="searchByNameHandler($event)"
+			(onClear)="clearNameSearch()"
+			[minQueryLength]="3"
+			[delay]="400"
+		>
+		</p-autocomplete>
 
-			<p-autocomplete
-				class="mc-table-search"
-				placeholder="Filter by artist…"
-				ariaLabel="Filter by artist"
-				[suggestions]="params.empty"
-				[showClear]="true"
-				(completeMethod)="searchByArtistNameHandler($event)"
-				[minQueryLength]="3"
-				[delay]="400"
-			>
-			</p-autocomplete>
+		<p-autocomplete
+			tools
+			class="mc-table-search"
+			placeholder="Filter by artist…"
+			ariaLabel="Filter by artist"
+			[ngModel]="place.filterOf('artist')"
+			[suggestions]="params.empty"
+			[showClear]="true"
+			(completeMethod)="searchByArtistNameHandler($event)"
+			(onClear)="clearArtistSearch()"
+			[minQueryLength]="3"
+			[delay]="400"
+		>
+		</p-autocomplete>
 
-			<mc-collection-view-toggle
-				[view]="collectionView.view()"
-				(viewChange)="collectionView.setView($event)"
+		<ng-template #card let-album>
+			<mc-entity-card
+				[title]="album.name"
+				[subtitle]="
+					album.artist?.name +
+					(album.year ? ' · ' + (album.year | date: 'yyyy') : '')
+				"
+				[imageUrl]="imageOf(album)"
+				imageShape="square"
+				(open)="editAlbum(album)"
+			>
+				<mc-view-action
+					cardActions
+					[link]="viewLink(album)"
+					entity="album"
+					[name]="album.name"
+				/>
+				@for (style of album.styles; track style) {
+					<p-chip styleClass="style">
+						{{ style }}
+					</p-chip>
+				}
+
+				<button
+					cardActions
+					pButton
+					pRipple
+					aria-label="Delete album"
+					class="p-button-text p-button-rounded p-button-danger"
+					(click)="deleteAlbum(album)"
+					iconOnly
+				>
+					<i class="pi pi-trash" aria-hidden="true"></i>
+				</button>
+			</mc-entity-card>
+		</ng-template>
+
+		<ng-template mcColumn header="Name" field="name" let-album>
+			{{ album.name }}
+		</ng-template>
+
+		<ng-template mcColumn header="Artist" field="artist.name" let-album>
+			{{ album.artist.name }}
+		</ng-template>
+
+		<ng-template mcColumn header="Year" field="year" let-album>
+			{{ album.year | date: 'yyyy' }}
+		</ng-template>
+
+		<ng-template mcColumn header="Styles" let-album>
+			@for (style of album.styles; track style) {
+				<div>
+					<p-chip styleClass="style">
+						{{ style }}
+					</p-chip>
+				</div>
+			}
+		</ng-template>
+
+		<ng-template mcColumn header="Cover" let-album>
+			@if (album.coverImage || album.coverImageUrl) {
+				<span class="p-chip">Cover</span>
+			} @else {
+				<span class="mc-missing">No cover</span>
+			}
+		</ng-template>
+
+		<ng-template mcColumn header="Updated" field="updatedAt" let-album>
+			{{ album.updatedAt | date: 'yyyy-MM-dd HH:mm' }}
+		</ng-template>
+
+		<ng-template mcColumn header="Actions" headerHidden let-album>
+			<mc-view-action
+				[link]="viewLink(album)"
+				entity="album"
+				[name]="album.name"
 			/>
-		</div>
-
-		@if (collectionView.view() === 'cards') {
-			<p-dataview
-				[value]="params.albums"
-				layout="grid"
-				[paginator]="true"
-				[rows]="24"
-				[rowsPerPageOptions]="[24, 48, 96]"
-				emptyMessage="No albums found."
+			<button
+				pButton
+				pRipple
+				aria-label="Edit album"
+				class="p-button-text p-button-rounded p-button-secondary"
+				(click)="editAlbum(album)"
+				iconOnly
 			>
-				<ng-template #grid let-albums>
-					<ul class="mc-card-grid">
-						@for (album of albums; track album.uid) {
-							<li>
-								<mc-entity-card
-									[title]="album.name"
-									[subtitle]="
-										album.artist?.name +
-										(album.year
-											? ' · ' +
-												(album.year | date: 'yyyy')
-											: '')
-									"
-									[imageUrl]="imageOf(album)"
-									imageShape="square"
-									(open)="editAlbum(album)"
-								>
-									@for (style of album.styles; track style) {
-										<p-chip styleClass="style">
-											{{ style }}
-										</p-chip>
-									}
+				<i class="pi pi-pencil" aria-hidden="true"></i>
+			</button>
 
-									<button
-										cardActions
-										pButton
-										pRipple
-										aria-label="Delete album"
-										class="p-button-text p-button-rounded p-button-danger"
-										(click)="deleteAlbum(album)"
-										iconOnly
-									>
-										<i
-											class="pi pi-trash"
-											aria-hidden="true"
-										></i>
-									</button>
-								</mc-entity-card>
-							</li>
-						}
-					</ul>
-				</ng-template>
-			</p-dataview>
-		} @else {
-			<p-table
-				[value]="params.albums"
-				[paginator]="true"
-				[rows]="10"
-				sortMode="multiple"
-				styleClass="mc-table"
-				responsiveLayout="scroll"
+			<button
+				pButton
+				pRipple
+				aria-label="Delete album"
+				class="p-button-text p-button-rounded p-button-danger"
+				(click)="deleteAlbum(album)"
+				iconOnly
 			>
-				<ng-template #header>
-					<tr>
-						<th pSortableColumn="name">
-							Name <p-sorticon field="name"></p-sorticon>
-						</th>
-
-						<th pSortableColumn="artist.name">
-							Artist <p-sorticon field="artist.name"></p-sorticon>
-						</th>
-
-						<th pSortableColumn="year">
-							Year <p-sorticon field="year"></p-sorticon>
-						</th>
-
-						<th>Styles</th>
-
-						<th>Cover</th>
-
-						<th pSortableColumn="updatedAt">
-							Updated <p-sorticon field="updatedAt"></p-sorticon>
-						</th>
-
-						<th></th>
-					</tr>
-				</ng-template>
-
-				<ng-template #body let-album>
-					<tr>
-						<td>{{ album.name }}</td>
-
-						<td>{{ album.artist.name }}</td>
-
-						<td>{{ album.year | date: 'yyyy' }}</td>
-
-						<td>
-							@for (style of album.styles; track style) {
-								<div>
-									<p-chip styleClass="style">
-										{{ style }}
-									</p-chip>
-								</div>
-							}
-						</td>
-
-						<td>
-							@if (album.coverImage || album.coverImageUrl) {
-								<span class="p-chip">Cover</span>
-							} @else {
-								<span class="mc-missing">No cover</span>
-							}
-						</td>
-
-						<td>
-							{{ album.updatedAt | date: 'yyyy-MM-dd HH:mm' }}
-						</td>
-
-						<td>
-							<button
-								pButton
-								pRipple
-								aria-label="Edit album"
-								class="p-button-text p-button-rounded p-button-secondary"
-								(click)="editAlbum(album)"
-								iconOnly
-							>
-								<i class="pi pi-pencil" aria-hidden="true"></i>
-							</button>
-
-							<button
-								pButton
-								pRipple
-								aria-label="Delete album"
-								class="p-button-text p-button-rounded p-button-danger"
-								(click)="deleteAlbum(album)"
-								iconOnly
-							>
-								<i class="pi pi-trash" aria-hidden="true"></i>
-							</button>
-						</td>
-					</tr>
-				</ng-template>
-			</p-table>
-		}
-	</section>
+				<i class="pi pi-trash" aria-hidden="true"></i>
+			</button>
+		</ng-template>
+	</mc-collection-list>
 }

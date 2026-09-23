@@ -1,3 +1,4 @@
+import { FormsModule } from '@angular/forms';
 import {
 	ChangeDetectionStrategy,
 	Component,
@@ -12,16 +13,15 @@ import {
 import { Observable } from 'rxjs';
 
 import { LabelTableService } from './label-table.service';
-import { Bind } from 'primeng/bind';
-import { Table, SortableColumn, SortIcon } from 'primeng/table';
 import { AutoComplete } from 'primeng/autocomplete';
 import { Ripple } from 'primeng/ripple';
 import { ButtonDirective } from 'primeng/button';
 import { AsyncPipe, DatePipe } from '@angular/common';
-import { DataView } from 'primeng/dataview';
 import {
-	CollectionViewToggleComponent,
+	CollectionColumnDirective,
+	CollectionListComponent,
 	EntityCardComponent,
+	ViewActionComponent,
 } from '@music-collection/ui';
 
 @Component({
@@ -31,18 +31,16 @@ import {
 	templateUrl: './label-table.component.html',
 	styleUrls: ['./label-table.component.scss'],
 	imports: [
-		Bind,
-		Table,
-		SortableColumn,
-		SortIcon,
+		FormsModule,
 		AutoComplete,
 		Ripple,
 		ButtonDirective,
 		AsyncPipe,
 		DatePipe,
-		DataView,
-		CollectionViewToggleComponent,
+		CollectionColumnDirective,
+		CollectionListComponent,
 		EntityCardComponent,
+		ViewActionComponent,
 	],
 })
 export class LabelTableComponent extends BaseComponent implements OnInit {
@@ -51,6 +49,12 @@ export class LabelTableComponent extends BaseComponent implements OnInit {
 	public params$!: Observable<LabelTableParams>;
 
 	public readonly collectionView = this.componentService.collectionView;
+
+	public readonly place = this.componentService.place;
+
+	public clearSearch(): void {
+		this.componentService.clearSearch();
+	}
 
 	public deleteLabel(label: LabelEntity): void {
 		console.log(label);
@@ -66,5 +70,10 @@ export class LabelTableComponent extends BaseComponent implements OnInit {
 
 	public searchHandler(event: any): void {
 		this.componentService.searchHandler(event['query']);
+	}
+
+	/** Where the eye leads: the page that shows this label. */
+	public viewLink(label: LabelEntity): unknown[] {
+		return this.componentService.viewLink(label);
 	}
 }

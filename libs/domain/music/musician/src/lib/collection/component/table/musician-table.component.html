@@ -1,141 +1,105 @@
 @if (params$ | async; as params) {
-	<section class="musician-table mc-card">
-		<div class="mc-table-tools">
-			<p-iconfield class="mc-table-search">
-				<p-inputicon styleClass="pi pi-search" />
-				<input
-					pInputText
-					type="search"
-					placeholder="Filter by name…"
-					aria-label="Filter musicians by name, real name or alias"
-					(input)="filter($event)"
-				/>
-			</p-iconfield>
-
-			<mc-collection-view-toggle
-				[view]="collectionView.view()"
-				(viewChange)="collectionView.setView($event)"
+	<mc-collection-list
+		[items]="params.musicians"
+		[place]="place"
+		[view]="collectionView"
+		[loading]="params.loading && !params.musicians.length"
+		[tableRowsOptions]="[25, 50, 100]"
+		emptyMessage="No musicians found."
+	>
+		<p-iconfield tools class="mc-table-search">
+			<p-inputicon styleClass="pi pi-search" />
+			<input
+				pInputText
+				type="search"
+				placeholder="Filter by name…"
+				aria-label="Filter musicians by name, real name or alias"
+				[ngModel]="place.filterOf('name')"
+				(ngModelChange)="filter($event)"
 			/>
-		</div>
+		</p-iconfield>
 
-		@if (collectionView.view() === 'cards') {
-			<p-dataview
-				[value]="params.musicians"
-				layout="grid"
-				[paginator]="true"
-				[rows]="48"
-				[rowsPerPageOptions]="[24, 48, 96]"
-				emptyMessage="No musicians found."
+		<ng-template #card let-musician>
+			<mc-entity-card
+				[title]="musician.name"
+				[subtitle]="musician.realName"
+				[imageUrl]="musician.imageUrl"
+				imageShape="round"
+				(open)="editMusician(musician)"
 			>
-				<ng-template #grid let-musicians>
-					<ul class="mc-card-grid">
-						@for (musician of musicians; track musician.uid) {
-							<li>
-								<mc-entity-card
-									[title]="musician.name"
-									[subtitle]="musician.realName"
-									[imageUrl]="musician.imageUrl"
-									imageShape="round"
-									(open)="editMusician(musician)"
-								>
-									<ng-container
-										*ngTemplateOutlet="
-											profileTags;
-											context: { $implicit: musician }
-										"
-									/>
-								</mc-entity-card>
-							</li>
-						}
-					</ul>
-				</ng-template>
-			</p-dataview>
-		} @else {
-			<p-table
-				[value]="params.musicians"
-				[loading]="params.loading && !params.musicians.length"
-				[paginator]="true"
-				[rows]="50"
-				[rowsPerPageOptions]="[25, 50, 100]"
-				dataKey="uid"
-				styleClass="mc-table"
-				responsiveLayout="scroll"
+				<mc-view-action
+					cardActions
+					[link]="viewLink(musician)"
+					entity="musician"
+					[name]="musician.name"
+				/>
+				<ng-container
+					*ngTemplateOutlet="
+						profileTags;
+						context: { $implicit: musician }
+					"
+				/>
+			</mc-entity-card>
+		</ng-template>
+
+		<ng-template mcColumn header="Portrait" headerHidden let-musician>
+			@if (musician.imageUrl) {
+				<img
+					class="thumb"
+					[src]="musician.imageUrl"
+					alt=""
+					loading="lazy"
+				/>
+			} @else {
+				<span class="thumb placeholder" aria-hidden="true">
+					{{ musician.name.charAt(0) }}
+				</span>
+			}
+		</ng-template>
+
+		<ng-template mcColumn header="Name" field="name" let-musician>
+			{{ musician.name }}
+		</ng-template>
+
+		<ng-template mcColumn header="Real name" field="realName" let-musician>
+			{{ musician.realName }}
+		</ng-template>
+
+		<ng-template
+			mcColumn
+			header="Profile"
+			columnClass="profile"
+			let-musician
+		>
+			<ng-container
+				*ngTemplateOutlet="
+					profileTags;
+					context: { $implicit: musician }
+				"
+			/>
+		</ng-template>
+
+		<ng-template mcColumn header="Updated" field="updatedAt" let-musician>
+			{{ musician.updatedAt | date: 'yyyy-MM-dd HH:mm' }}
+		</ng-template>
+
+		<ng-template mcColumn header="Actions" headerHidden let-musician>
+			<mc-view-action
+				[link]="viewLink(musician)"
+				entity="musician"
+				[name]="musician.name"
+			/>
+			<button
+				pButton
+				type="button"
+				class="p-button-text p-button-rounded p-button-secondary"
+				[attr.aria-label]="'Edit ' + musician.name"
+				(click)="editMusician(musician)"
 			>
-				<ng-template #header>
-					<tr>
-						<th scope="col">
-							<span class="visually-hidden">Portrait</span>
-						</th>
-						<th scope="col" pSortableColumn="name">
-							Name <p-sorticon field="name" />
-						</th>
-						<th scope="col" pSortableColumn="realName">
-							Real name <p-sorticon field="realName" />
-						</th>
-						<th scope="col">Profile</th>
-						<th scope="col" pSortableColumn="updatedAt">
-							Updated <p-sorticon field="updatedAt" />
-						</th>
-						<th scope="col">
-							<span class="visually-hidden">Actions</span>
-						</th>
-					</tr>
-				</ng-template>
-
-				<ng-template #body let-musician>
-					<tr>
-						<td>
-							@if (musician.imageUrl) {
-								<img
-									class="thumb"
-									[src]="musician.imageUrl"
-									alt=""
-									loading="lazy"
-								/>
-							} @else {
-								<span
-									class="thumb placeholder"
-									aria-hidden="true"
-								>
-									{{ musician.name.charAt(0) }}
-								</span>
-							}
-						</td>
-						<td>{{ musician.name }}</td>
-						<td>{{ musician.realName }}</td>
-						<td class="profile">
-							<ng-container
-								*ngTemplateOutlet="
-									profileTags;
-									context: { $implicit: musician }
-								"
-							/>
-						</td>
-						<td>
-							{{ musician.updatedAt | date: 'yyyy-MM-dd HH:mm' }}
-						</td>
-						<td>
-							<button
-								pButton
-								type="button"
-								class="p-button-text p-button-rounded p-button-secondary"
-								[attr.aria-label]="'Edit ' + musician.name"
-								(click)="editMusician(musician)"
-							>
-								<i class="pi pi-pencil" aria-hidden="true"></i>
-							</button>
-						</td>
-					</tr>
-				</ng-template>
-
-				<ng-template #emptymessage>
-					<tr>
-						<td colspan="6">No musicians found.</td>
-					</tr>
-				</ng-template>
-			</p-table>
-		}
-	</section>
+				<i class="pi pi-pencil" aria-hidden="true"></i>
+			</button>
+		</ng-template>
+	</mc-collection-list>
 }
 
 <ng-template #profileTags let-musician>

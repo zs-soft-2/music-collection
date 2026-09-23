@@ -3,16 +3,24 @@ import { CollectionItemStateService } from '@music-collection/api';
 
 import { CollectionItemListPageResolverService } from './collection-item-list-page-resolver.service';
 
+let dispatchListEntitiesAction: jest.Mock;
+
 describe('CollectionItemListPageResolverService', () => {
 	let service: CollectionItemListPageResolverService;
 
 	beforeEach(() => {
+		dispatchListEntitiesAction = jest.fn();
+
 		TestBed.configureTestingModule({
 			providers: [
 				CollectionItemListPageResolverService,
 				{
 					provide: CollectionItemStateService,
-					useValue: {},
+					useValue: {
+						dispatchChangeNewEntityButtonEnabled: jest.fn(),
+						dispatchListEntitiesAction,
+						dispatchSetSelectedEntityIdAction: jest.fn(),
+					},
 				},
 			],
 		});
@@ -21,5 +29,11 @@ describe('CollectionItemListPageResolverService', () => {
 
 	it('should be created', () => {
 		expect(service).toBeTruthy();
+	});
+
+	it('loads the collection items the list opens on', () => {
+		service.resolve();
+
+		expect(dispatchListEntitiesAction).toHaveBeenCalled();
 	});
 });

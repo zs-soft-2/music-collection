@@ -69,6 +69,7 @@ const COUNTRY_BY_CODE: Record<string, CountryEnum> = {
 	GR: CountryEnum.Greece,
 	IE: CountryEnum.Ireland,
 	NL: CountryEnum.The_Netherlands,
+	NO: CountryEnum.Norway,
 	PL: CountryEnum.Poland,
 	SE: CountryEnum.Sweden,
 	US: CountryEnum.USA,

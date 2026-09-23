@@ -10,6 +10,7 @@ export const enum EntityTypeEnum {
 	Musician = 'Musician',
 	Release = 'Release',
 	Track = 'Track',
+	UpcomingRelease = 'Upcoming Release',
 	CollectionItem = 'Collection Item',
 	Contribution = 'Contribution',
 	User = 'User',

@@ -1,0 +1,142 @@
+<section class="mc-card">
+	<div class="mc-table-tools">
+		<ng-content select="[tools]" />
+
+		<mc-collection-view-toggle
+			[view]="view().view()"
+			(viewChange)="view().setView($event)"
+		/>
+	</div>
+
+	<ng-content select="[banner]" />
+
+	@if (view().view() === 'cards') {
+		@if (cardPage().length) {
+			<ul class="mc-card-grid">
+				@for (item of cardPage(); track item.uid) {
+					<li>
+						<ng-container
+							*ngTemplateOutlet="
+								card();
+								context: { $implicit: item }
+							"
+						/>
+					</li>
+				}
+			</ul>
+		} @else {
+			<p class="mc-collection-empty">{{ emptyMessage() }}</p>
+		}
+
+		<p-paginator
+			[first]="cardsFirst()"
+			[rows]="place().cards.rows()"
+			[totalRecords]="items().length"
+			[rowsPerPageOptions]="cardRowsOptions()"
+			(onPageChange)="pagedCards($event)"
+		/>
+	} @else {
+		<p-table
+			[value]="tablePage()"
+			[loading]="loading()"
+			dataKey="uid"
+			styleClass="mc-table"
+			responsiveLayout="scroll"
+		>
+			<ng-template #header>
+				<tr>
+					@for (column of columns(); track column) {
+						@if (column.field(); as field) {
+							<th
+								scope="col"
+								class="p-datatable-sortable-column"
+								[class]="column.columnClass()"
+								[class.p-datatable-column-sorted]="
+									orderOf(field) !== 0
+								"
+								[attr.aria-sort]="
+									orderOf(field) === 1
+										? 'ascending'
+										: orderOf(field) === -1
+											? 'descending'
+											: 'none'
+								"
+								tabindex="0"
+								(click)="sortBy(field, $event)"
+								(keydown.enter)="sortBy(field, $event)"
+								(keydown.space)="sortBy(field, $event)"
+							>
+								@if (column.headerHidden()) {
+									<span class="visually-hidden">{{
+										column.header()
+									}}</span>
+								} @else {
+									{{ column.header() }}
+								}
+
+								<i
+									class="pi p-datatable-sort-icon"
+									[class.pi-sort-alt]="orderOf(field) === 0"
+									[class.pi-sort-amount-up-alt]="
+										orderOf(field) === 1
+									"
+									[class.pi-sort-amount-down]="
+										orderOf(field) === -1
+									"
+									aria-hidden="true"
+								></i>
+
+								@if (levelOf(field); as level) {
+									<span class="mc-sort-level">{{
+										level
+									}}</span>
+								}
+							</th>
+						} @else {
+							<th scope="col" [class]="column.columnClass()">
+								@if (column.headerHidden()) {
+									<span class="visually-hidden">{{
+										column.header()
+									}}</span>
+								} @else {
+									{{ column.header() }}
+								}
+							</th>
+						}
+					}
+				</tr>
+			</ng-template>
+
+			<ng-template #body let-item>
+				<tr [class]="rowClass()(item)">
+					@for (column of columns(); track column) {
+						<td [class]="column.columnClass()">
+							<ng-container
+								*ngTemplateOutlet="
+									column.template;
+									context: { $implicit: item }
+								"
+							/>
+						</td>
+					}
+				</tr>
+			</ng-template>
+
+			<ng-template #emptymessage>
+				<tr>
+					<td [attr.colspan]="columns().length">
+						{{ emptyMessage() }}
+					</td>
+				</tr>
+			</ng-template>
+		</p-table>
+
+		<p-paginator
+			[first]="tableFirst()"
+			[rows]="place().table.rows()"
+			[totalRecords]="items().length"
+			[rowsPerPageOptions]="tableRowsOptions()"
+			(onPageChange)="pagedTable($event)"
+		/>
+	}
+</section>

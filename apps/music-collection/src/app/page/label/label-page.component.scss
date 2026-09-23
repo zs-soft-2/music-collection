@@ -1,0 +1,16 @@
+@use '../../shared/entity-view/entity-page' as view;
+
+@include view.entity-page;
+
+.monogram {
+	font-family: var(--mc-font-display);
+	font-size: 3rem;
+}
+
+.more {
+	margin-top: 1rem;
+	font: inherit;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	cursor: pointer;
+}

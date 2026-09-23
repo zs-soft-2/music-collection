@@ -1,0 +1,131 @@
+<div class="page">
+	<mc-page-breadcrumb [trail]="store.trail()" />
+
+	@if (store.loading()) {
+		<p class="status">Looking for this wish…</p>
+	} @else if (store.notFound()) {
+		<section class="missing">
+			<h1>No wish under this id.</h1>
+			<p>
+				Either the record has been found and the wish struck off, or it
+				was never on anyone's list.
+			</p>
+			<a class="button" routerLink="/wishlist">Back to the wishlist</a>
+		</section>
+	} @else if (store.album(); as album) {
+		@if (!store.isActive()) {
+			<p class="banner">
+				This wish is no longer active — the record was found, or the
+				hunt was called off.
+			</p>
+		}
+
+		<header class="hero" [class.on-cover]="!!store.coverUrl()">
+			@if (store.coverUrl(); as cover) {
+				<img class="backdrop" [src]="cover" alt="" aria-hidden="true" />
+				<div class="shade" aria-hidden="true"></div>
+			}
+
+			<div class="art">
+				@if (store.coverUrl(); as cover) {
+					<img [src]="cover" [alt]="album.name + ' cover'" />
+				} @else {
+					<span aria-hidden="true">♪</span>
+				}
+			</div>
+
+			<div class="identity">
+				<p class="eyebrow">On the wishlist</p>
+				<h1>{{ album.name }}</h1>
+
+				<p class="lead">
+					@if (store.artist(); as artist) {
+						<a [routerLink]="['/artist', artist.uid]">{{
+							artist.name
+						}}</a>
+					}
+				</p>
+
+				@if (store.medias().length) {
+					<p class="lead chips">
+						@for (media of store.medias(); track media) {
+							<span class="chip">{{ media }}</span>
+						}
+					</p>
+				}
+
+				<div class="hero-actions">
+					<a class="button" [routerLink]="['/album', album.uid]">
+						Open the album
+					</a>
+
+					<mc-admin-edit-link
+						entity="wishlist-item"
+						[id]="store.itemId()"
+						[name]="album.name"
+					/>
+				</div>
+			</div>
+		</header>
+
+		<mc-entity-facts [facts]="facts()" />
+
+		<section class="section">
+			<h2>Pressings that would do</h2>
+
+			@if (store.pressingRows().length) {
+				<ul class="entries">
+					@for (
+						pressing of store.pressingRows();
+						track pressing.uid
+					) {
+						<li>
+							<a
+								class="entry"
+								[routerLink]="['/release', pressing.uid]"
+							>
+								<span class="entry-art">
+									@if (pressing.coverUrl) {
+										<img
+											[src]="pressing.coverUrl"
+											[alt]="pressing.name + ' cover'"
+											loading="lazy"
+										/>
+									} @else {
+										<span aria-hidden="true">♪</span>
+									}
+								</span>
+
+								<span class="entry-text">
+									<strong>{{ pressing.name }}</strong>
+									<span>
+										{{
+											pressing.labelName ??
+												'Unknown label'
+										}}
+										@if (pressing.country) {
+											· {{ pressing.country }}
+										}
+									</span>
+								</span>
+
+								<span class="entry-meta">
+									<mc-format-badge
+										[format]="pressing.format"
+									/>
+									@if (pressing.year) {
+										<span> · {{ pressing.year }}</span>
+									}
+								</span>
+							</a>
+						</li>
+					}
+				</ul>
+			} @else {
+				<p class="empty">
+					The catalog knows no pressing of this album yet.
+				</p>
+			}
+		</section>
+	}
+</div>

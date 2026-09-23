@@ -1,0 +1,134 @@
+<div class="page">
+	<mc-page-breadcrumb [trail]="store.trail()" />
+
+	@if (store.loading()) {
+		<p class="status">Looking for this pressing…</p>
+	} @else if (store.notFound()) {
+		<section class="missing">
+			<h1>No pressing under this id.</h1>
+			<p>
+				The catalog holds the album it belonged to, but this edition of
+				it is not in it — or no longer is.
+			</p>
+			<a class="button" routerLink="/home">Back to the catalog</a>
+		</section>
+	} @else if (store.pressing(); as pressing) {
+		<header class="hero" [class.on-cover]="!!pressing.coverUrl">
+			@if (pressing.coverUrl) {
+				<img
+					class="backdrop"
+					[src]="pressing.coverUrl"
+					alt=""
+					aria-hidden="true"
+				/>
+				<div class="shade" aria-hidden="true"></div>
+			}
+
+			<div class="art">
+				@if (pressing.coverUrl) {
+					<img
+						[src]="pressing.coverUrl"
+						[alt]="pressing.name + ' cover'"
+						fetchpriority="high"
+					/>
+				} @else {
+					<span aria-hidden="true">♪</span>
+				}
+			</div>
+
+			<div class="identity">
+				<p class="eyebrow">Pressing</p>
+				<h1>{{ pressing.name }}</h1>
+
+				<p class="lead">
+					<mc-format-badge [format]="pressing.format" />
+
+					@if (pressing.artistUid) {
+						<a [routerLink]="['/artist', pressing.artistUid]">{{
+							pressing.artistName
+						}}</a>
+					} @else if (pressing.artistName) {
+						<span>{{ pressing.artistName }}</span>
+					}
+
+					@if (pressing.year) {
+						<span>· {{ pressing.year }}</span>
+					}
+				</p>
+
+				<div class="hero-actions">
+					@if (pressing.albumUid) {
+						<a
+							class="button"
+							[routerLink]="['/album', pressing.albumUid]"
+						>
+							Open the album
+						</a>
+					}
+
+					<mc-admin-edit-link
+						entity="release"
+						[id]="store.releaseId()"
+						[name]="pressing.name"
+					/>
+				</div>
+			</div>
+		</header>
+
+		<mc-entity-facts [facts]="facts()" />
+
+		<section class="section">
+			<h2>Other pressings of this album</h2>
+
+			@if (store.siblings().length) {
+				<ul class="entries">
+					@for (sibling of store.siblings(); track sibling.uid) {
+						<li>
+							<a
+								class="entry"
+								[routerLink]="['/release', sibling.uid]"
+							>
+								<span class="entry-art">
+									@if (sibling.coverUrl) {
+										<img
+											[src]="sibling.coverUrl"
+											[alt]="sibling.name + ' cover'"
+											loading="lazy"
+										/>
+									} @else {
+										<span aria-hidden="true">♪</span>
+									}
+								</span>
+
+								<span class="entry-text">
+									<strong>{{ sibling.name }}</strong>
+									<span>
+										{{
+											sibling.labelName ?? 'Unknown label'
+										}}
+										@if (sibling.country) {
+											· {{ sibling.country }}
+										}
+									</span>
+								</span>
+
+								<span class="entry-meta">
+									<mc-format-badge
+										[format]="sibling.format"
+									/>
+									@if (sibling.year) {
+										<span> · {{ sibling.year }}</span>
+									}
+								</span>
+							</a>
+						</li>
+					}
+				</ul>
+			} @else {
+				<p class="empty">
+					This is the only pressing of the album the catalog knows.
+				</p>
+			}
+		</section>
+	}
+</div>
