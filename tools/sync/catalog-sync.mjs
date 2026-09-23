@@ -29,6 +29,8 @@ export const CATALOG_FEATURE_KEYS = [
 	'release',
 	'release-request',
 	'track',
+	// Bundle nélkül: néhány tucat dokumentum, naponta egyszer újraírva.
+	'upcoming-release',
 	'user',
 	'wishlist-item',
 ];

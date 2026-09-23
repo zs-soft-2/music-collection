@@ -525,6 +525,14 @@ service cloud.firestore {
       }
     }
 
+    // ── Még meg nem jelent lemezek ──────────────────────────────────────────
+    // A MusicBrainzről a `refreshUpcomingReleases` (Admin SDK) tölti naponta;
+    // a kliens csak olvassa. Nyilvános, mint a katalógus többi része.
+    match /upcoming-release/{releaseGroupId} {
+      allow read: if true;
+      allow write: if false; // refreshUpcomingReleases / syncUpcomingReleasesNow
+    }
+
     // ── Alapértelmezés: tiltás ──────────────────────────────────────────────
     // (Az `id` collectiont a kliens csak ID-generálásra használja, nem írja.)
     match /{document=**} {

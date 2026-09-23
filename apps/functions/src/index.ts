@@ -28,6 +28,7 @@ import {
 	HttpsError,
 	onCall,
 } from 'firebase-functions/v2/https';
+import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions/v2';
 
 import { DiscogsArtistProfile, fetchArtistProfile } from './discogs-artist';
@@ -63,6 +64,7 @@ import {
 	createVisionClient,
 } from './photo-signals';
 import { approveReleaseRequest as approve } from './release-request-approval';
+import { syncUpcomingReleases } from './upcoming-release';
 import {
 	CatalogRole,
 	EffectivePermissions,
@@ -829,9 +831,49 @@ export const listBadgeGenerationModels = onCall(
 	async (request) => {
 		await requireCaller(request, 'updateBadgeGenerationSettings');
 
-		return listBadgeModels(
-			database(),
-			process.env['GCLOUD_PROJECT'] ?? ''
+		return listBadgeModels(database(), process.env['GCLOUD_PROJECT'] ?? '');
+	}
+);
+
+/**
+ * Ami még nem jelent meg: a katalógus előadóinak következő lemezei a
+ * MusicBrainzről, naponta egyszer. A hajnali időpont a MusicBrainz
+ * kedvéért is jó — a keret másodpercenként egy kérés, és a futás
+ * lapozás közben percekig tart.
+ *
+ * A `timeoutSeconds` ezért bőséges: egy hónap néhány ezer kiadás, százas
+ * lapokban, minden lap után egy másodperc várakozással.
+ *
+ * Az időzítéshez a Cloud Scheduler API kell (infra/environments
+ * `services`); enélkül a deploy elszáll.
+ */
+export const refreshUpcomingReleases = onSchedule(
+	{
+		schedule: '30 3 * * *',
+		timeZone: 'Europe/Budapest',
+		timeoutSeconds: 900,
+		memory: '512MiB',
+		// Ütemezett futás, nem a böngészőből: App Check tokenje nincs.
+		enforceAppCheck: false,
+	},
+	async () => {
+		const result = await syncUpcomingReleases(database());
+
+		logger.info(
+			`Upcoming releases: ${result.scanned} kiadásból ${result.matched} a katalógus előadóié (${result.written} írva, ${result.deleted} törölve)`
 		);
+	}
+);
+
+/**
+ * Ugyanaz kézzel, az adminnak: az ütemezett futás előtt, vagy ha valami
+ * félbemaradt. Drága hívás (percekig fut), ezért ADMIN kell hozzá.
+ */
+export const syncUpcomingReleasesNow = onCall(
+	{ timeoutSeconds: 900, memory: '512MiB' },
+	async (request) => {
+		await requireCaller(request, 'ADMIN');
+
+		return syncUpcomingReleases(database());
 	}
 );
