@@ -9,9 +9,14 @@
 }
 
 .page {
+	--mc-page-gutter: clamp(1rem, 3vw, 2.5rem);
+	/* On a phone the catalog rows run out to both screen edges, and give
+	   the gutter back as their own padding. */
+	--mc-carousel-bleed: var(--mc-page-gutter);
+
 	max-width: var(--mc-page-max-width);
 	margin: 0 auto;
-	padding: clamp(1rem, 2vw, 1.5rem) clamp(1rem, 3vw, 2.5rem) 3rem;
+	padding: clamp(1rem, 2vw, 1.5rem) var(--mc-page-gutter) 3rem;
 }
 
 ul {

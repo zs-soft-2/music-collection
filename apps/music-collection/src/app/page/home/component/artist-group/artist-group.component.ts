@@ -1,13 +1,16 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
-import { ArtistTileComponent } from '../../../../shared/music-ui';
+import {
+	ArtistTileComponent,
+	CarouselComponent,
+} from '../../../../shared/music-ui';
 import { ArtistGroup } from '../../home.mapper';
 
 /** The artists of one kind of act, in a row that scrolls sideways. */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-artist-group',
-	imports: [ArtistTileComponent],
+	imports: [ArtistTileComponent, CarouselComponent],
 	template: `
 		@let item = group();
 
@@ -16,15 +19,19 @@ import { ArtistGroup } from '../../home.mapper';
 			<span class="count">{{ item.total }} in the catalog</span>
 		</h3>
 
-		<ul class="row" [attr.aria-label]="item.label">
+		<mc-carousel [label]="item.label">
 			@for (artist of item.artists; track artist.id) {
 				<li><mc-artist-tile [artist]="artist" /></li>
 			}
-		</ul>
+		</mc-carousel>
 	`,
 	styles: `
 		:host {
 			display: block;
+
+			/* A tile is square, so the arrows sit on half a card's width. */
+			--mc-carousel-item: 11rem;
+			--mc-carousel-nav-top: 5.5rem;
 		}
 
 		.label {
@@ -46,19 +53,10 @@ import { ArtistGroup } from '../../home.mapper';
 			font-variant-numeric: tabular-nums;
 		}
 
-		.row {
-			display: flex;
-			gap: 1rem;
-			margin: 0;
-			padding: 0 0 0.5rem;
-			overflow-x: auto;
-			list-style: none;
-			scroll-snap-type: x proximity;
-			overscroll-behavior-x: contain;
-
-			li {
-				flex: 0 0 11rem;
-				scroll-snap-align: start;
+		@media (max-width: 720px) {
+			:host {
+				--mc-carousel-item: 9rem;
+				--mc-carousel-nav-top: 4.5rem;
 			}
 		}
 	`,

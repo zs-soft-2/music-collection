@@ -1,6 +1,7 @@
 export * from './admin-edit-link/admin-access.service';
 export * from './admin-edit-link/admin-edit-link.component';
 export * from './artist-tile/artist-tile.component';
+export * from './carousel/carousel.component';
 export * from './copy-placement/copy-placement.component';
 export * from './count-stats';
 export * from './credit-roles';
