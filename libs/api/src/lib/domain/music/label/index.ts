@@ -1,4 +1,5 @@
 export * from './label-data.service';
+export * from './label-external';
 export * from './label-feature.key';
 export * from './label-permissions.service';
 export * from './label-resource.enum';

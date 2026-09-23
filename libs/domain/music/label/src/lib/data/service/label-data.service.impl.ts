@@ -1,10 +1,18 @@
-import { Observable } from 'rxjs';
+import { Observable, from, map } from 'rxjs';
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { collection, doc } from '@angular/fire/firestore';
+import { Functions, httpsCallable } from '@angular/fire/functions';
 import {
+	DISCOGS_LABEL_PROFILE_FUNCTION,
+	DISCOGS_LABEL_SEARCH_FUNCTION,
+	DiscogsLabelProfileRequest,
+	DiscogsLabelSearchRequest,
+	DiscogsLabelSearchResponse,
 	LABEL_FEATURE_KEY,
 	LabelDataService,
+	LabelExternalCandidate,
+	LabelExternalProfile,
 	LabelModel,
 	LabelModelAdd,
 	LabelModelUpdate,
@@ -14,6 +22,8 @@ import {
 
 @Injectable()
 export class LabelDataServiceImpl extends LabelDataService {
+	private functions = inject(Functions);
+
 	public constructor() {
 		super();
 
@@ -73,6 +83,20 @@ export class LabelDataServiceImpl extends LabelDataService {
 		) as Observable<LabelModel>;
 	}
 
+	/** Through the `discogsLabelProfile` callable, which caches it. */
+	public fetchExternalProfile$(
+		discogsId: number
+	): Observable<LabelExternalProfile> {
+		const callable = httpsCallable<
+			DiscogsLabelProfileRequest,
+			LabelExternalProfile
+		>(this.functions, DISCOGS_LABEL_PROFILE_FUNCTION);
+
+		return from(callable({ labelId: discogsId })).pipe(
+			map((result) => result.data)
+		);
+	}
+
 	public list$(): Observable<LabelModel[]> {
 		return super.listModels$();
 	}
@@ -87,6 +111,20 @@ export class LabelDataServiceImpl extends LabelDataService {
 
 	public search$(params: SearchParams): Observable<LabelModel[]> {
 		return super.searchModel$(params);
+	}
+
+	/** Through the `discogsLabelSearch` callable, which caches the hits. */
+	public searchExternalLabels$(
+		name: string
+	): Observable<LabelExternalCandidate[]> {
+		const callable = httpsCallable<
+			DiscogsLabelSearchRequest,
+			DiscogsLabelSearchResponse
+		>(this.functions, DISCOGS_LABEL_SEARCH_FUNCTION);
+
+		return from(callable({ name })).pipe(
+			map((result) => result.data.candidates)
+		);
 	}
 
 	public update$(label: LabelModelUpdate): Observable<LabelModelUpdate> {

@@ -4,7 +4,28 @@
 			<input name="uid" formControlName="uid" hidden />
 
 			<section class="mc-form-section" aria-labelledby="label-details">
-				<h2 id="label-details">Details</h2>
+				<div class="label-form-heading">
+					<h2 id="label-details">Details</h2>
+					<p-button
+						label="Load"
+						icon="pi pi-cloud-download"
+						size="small"
+						severity="secondary"
+						[outlined]="true"
+						[loading]="externalLoading()"
+						[disabled]="
+							!params.formGroup.value.name &&
+							!params.formGroup.value.discogsId
+						"
+						ariaLabel="Load data from Discogs by the Discogs ID, or by the name"
+						(onClick)="loadExternal()"
+					></p-button>
+				</div>
+				@if (externalError()) {
+					<small class="label-form-error">{{
+						externalError()
+					}}</small>
+				}
 				<div class="mc-form-grid">
 					<div class="mc-field">
 						<label for="name">Name</label>
@@ -29,6 +50,80 @@
 							(completeMethod)="searchLabel($event)"
 						></p-autocomplete>
 					</div>
+
+					<div class="mc-field is-wide">
+						<label for="description">Profile</label>
+						<textarea
+							id="description"
+							pTextarea
+							rows="8"
+							formControlName="description"
+						></textarea>
+						<small>
+							Discogs markup such as [a=Name] is cleaned up on the
+							public page.
+						</small>
+					</div>
+				</div>
+			</section>
+
+			<section class="mc-form-section" aria-labelledby="label-links">
+				<h2 id="label-links">Image and links</h2>
+				<div class="mc-form-grid">
+					<div class="mc-field is-wide">
+						<label for="imageUrl">Logo URL</label>
+						<input
+							id="imageUrl"
+							type="url"
+							pInputText
+							formControlName="imageUrl"
+							aria-describedby="imageUrl-hint"
+						/>
+						@if (params.formGroup.get('imageUrl')?.invalid) {
+							<small id="imageUrl-hint" class="is-error">
+								Enter a full http(s) address.
+							</small>
+						}
+						@if (params.formGroup.get('imageUrl')?.value; as url) {
+							<img
+								class="logo-preview"
+								[src]="url"
+								alt="Logo preview"
+							/>
+						}
+					</div>
+
+					<div class="mc-field">
+						<label for="sites">Links</label>
+						<textarea
+							id="sites"
+							pTextarea
+							rows="5"
+							formControlName="sites"
+							aria-describedby="sites-hint"
+						></textarea>
+						<small id="sites-hint">One address per line.</small>
+					</div>
+				</div>
+			</section>
+
+			<section class="mc-form-section" aria-labelledby="label-source">
+				<h2 id="label-source">Source</h2>
+				<div class="mc-form-grid">
+					<div class="mc-field">
+						<label for="discogsId">Discogs ID</label>
+						<input
+							id="discogsId"
+							type="number"
+							min="1"
+							pInputText
+							formControlName="discogsId"
+							aria-describedby="discogsId-hint"
+						/>
+						<small id="discogsId-hint">
+							Empty: the load searches Discogs for the name.
+						</small>
+					</div>
 				</div>
 			</section>
 
@@ -48,4 +143,142 @@
 			</div>
 		</form>
 	</section>
+
+	<p-dialog
+		header="Which label is this?"
+		[modal]="true"
+		[visible]="!!externalCandidates()"
+		(visibleChange)="$event || closeExternalCandidates()"
+		[style]="{ width: 'min(44rem, 95vw)' }"
+		[dismissableMask]="true"
+	>
+		@if (externalCandidates(); as candidates) {
+			<p class="label-candidate-hint">
+				Discogs knows several labels by this name. Pick the one this is
+				— its id comes back as a row to keep.
+			</p>
+			<ul class="label-candidates">
+				@for (candidate of candidates; track candidate.discogsId) {
+					<li>
+						<button
+							type="button"
+							class="label-candidate"
+							(click)="chooseExternalCandidate(candidate)"
+						>
+							@if (candidate.thumbUrl) {
+								<img
+									class="label-candidate-thumb"
+									[src]="candidate.thumbUrl"
+									alt=""
+								/>
+							}
+							<span class="label-candidate-name">
+								{{ candidate.name }}
+							</span>
+						</button>
+						<a
+							class="label-candidate-link"
+							[href]="discogsLabelUrl(candidate.discogsId)"
+							target="_blank"
+							rel="noopener"
+							>Open on Discogs</a
+						>
+					</li>
+				}
+			</ul>
+		}
+		<ng-template #footer>
+			<p-button
+				label="Cancel"
+				severity="secondary"
+				[outlined]="true"
+				(onClick)="closeExternalCandidates()"
+			></p-button>
+		</ng-template>
+	</p-dialog>
+
+	<p-dialog
+		header="Loaded label data"
+		[modal]="true"
+		[visible]="!!externalComparison()"
+		(visibleChange)="$event || closeExternal()"
+		[style]="{ width: 'min(56rem, 95vw)' }"
+		[dismissableMask]="true"
+	>
+		@if (externalComparison(); as comparison) {
+			<p class="label-external-source">
+				Source:
+				<a [href]="comparison.sourceUrl" target="_blank" rel="noopener">
+					{{ comparison.sourceUrl }}
+				</a>
+			</p>
+			@if (comparison.parentName) {
+				<p class="label-external-parent">
+					Parent label on Discogs: {{ comparison.parentName }}. Pick
+					it by hand — the catalog may not have it yet.
+				</p>
+			}
+			@if (comparison.rows.length) {
+				<div class="label-external-table">
+					<table>
+						<thead>
+							<tr>
+								<th scope="col">
+									<span class="visually-hidden">Apply</span>
+								</th>
+								<th scope="col">Field</th>
+								<th scope="col">Current</th>
+								<th scope="col">Loaded</th>
+							</tr>
+						</thead>
+						<tbody>
+							@for (row of comparison.rows; track row.field) {
+								<tr [class.is-selected]="row.selected">
+									<td>
+										<p-checkbox
+											[inputId]="'external-' + row.field"
+											[binary]="true"
+											[ngModel]="row.selected"
+											[ngModelOptions]="{
+												standalone: true,
+											}"
+											(onChange)="
+												toggleExternalRow(row.field)
+											"
+										></p-checkbox>
+									</td>
+									<th scope="row">
+										<label
+											[for]="'external-' + row.field"
+											>{{ row.label }}</label
+										>
+									</th>
+									<td class="is-current">
+										{{ row.current || '—' }}
+									</td>
+									<td class="is-loaded">{{ row.loaded }}</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			} @else {
+				<p>The loaded data matches the form.</p>
+			}
+		}
+		<ng-template #footer>
+			<p-button
+				label="Cancel"
+				severity="secondary"
+				[outlined]="true"
+				(onClick)="closeExternal()"
+			></p-button>
+			<p-button
+				label="Apply to form"
+				icon="pi pi-check"
+				[disabled]="!hasSelectedExternalRow()"
+				(onClick)="applyExternal()"
+			></p-button>
+		</ng-template>
+	</p-dialog>
 }

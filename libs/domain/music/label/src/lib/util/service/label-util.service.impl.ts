@@ -13,6 +13,18 @@ import {
 	EntityTypeEnum,
 } from '@music-collection/api';
 
+/** One value per line in the form; blank lines are dropped. */
+const toLines = (value: unknown): string[] =>
+	typeof value === 'string'
+		? value
+				.split('\n')
+				.map((line) => line.trim())
+				.filter(Boolean)
+		: [];
+
+const orNull = (value: unknown): string | null =>
+	typeof value === 'string' && value.trim() ? value.trim() : null;
+
 @Injectable()
 export class LabelUtilServiceImpl extends LabelUtilService {
 	private formBuilder = inject(FormBuilder);
@@ -23,17 +35,16 @@ export class LabelUtilServiceImpl extends LabelUtilService {
 	public createEntity(formGroup: FormGroup): LabelEntityAdd {
 		return {
 			entityType: EntityTypeEnum.Label,
-			name: formGroup.value['name'],
-			parent: formGroup.value['parent'],
+			...this.formValues(formGroup),
 		};
 	}
 
+	/** The whole document: an update replaces it, fields and all. */
 	public updateEntity(formGroup: FormGroup): LabelEntityUpdate {
 		return {
 			entityType: EntityTypeEnum.Label,
 			uid: formGroup.value['uid'],
-			name: formGroup.value['name'],
-			parent: formGroup.value['parent'],
+			...this.formValues(formGroup),
 		};
 	}
 
@@ -42,6 +53,13 @@ export class LabelUtilServiceImpl extends LabelUtilService {
 			uid: [label?.uid],
 			name: [label?.name || null, [Validators.required]],
 			parent: [label?.parent || null],
+			description: [label?.description || null],
+			imageUrl: [
+				label?.imageUrl || null,
+				[Validators.pattern(/^https?:\/\/\S+$/i)],
+			],
+			sites: [(label?.sites ?? []).join('\n')],
+			discogsId: [label?.discogsId ?? null, [Validators.min(1)]],
 		});
 	}
 
@@ -92,23 +110,25 @@ export class LabelUtilServiceImpl extends LabelUtilService {
 	public convertModelUpdateToEntityUpdate(
 		model: LabelModelUpdate
 	): LabelEntityUpdate {
-		const entity: LabelEntityUpdate = {
-			uid: model.uid,
-			entityType: model.entityType,
+		const entity: LabelEntityUpdate & { searchParameters?: string[] } = {
+			...model,
 		};
-
-		if (model.name) {
-			entity.name = model.name;
-		}
-
-		if (model.parent) {
-			entity.parent = model.parent;
-		}
-
-		if (model.updatedAt) {
-			entity.updatedAt = model.updatedAt;
-		}
+		delete entity.searchParameters;
 
 		return entity;
+	}
+
+	private formValues(formGroup: FormGroup) {
+		const value = formGroup.value;
+		const discogsId = Number(value['discogsId']);
+
+		return {
+			name: String(value['name'] ?? '').trim(),
+			parent: value['parent'] ?? null,
+			description: orNull(value['description']),
+			imageUrl: orNull(value['imageUrl']),
+			sites: toLines(value['sites']),
+			discogsId: discogsId > 0 ? discogsId : null,
+		};
 	}
 }
