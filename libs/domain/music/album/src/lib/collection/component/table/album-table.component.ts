@@ -1,3 +1,4 @@
+import { FormsModule } from '@angular/forms';
 import {
 	ChangeDetectionStrategy,
 	Component,
@@ -12,17 +13,16 @@ import {
 import { Observable } from 'rxjs';
 
 import { AlbumTableService } from './album-table.service';
-import { Bind } from 'primeng/bind';
-import { Table, SortableColumn, SortIcon } from 'primeng/table';
 import { AutoComplete } from 'primeng/autocomplete';
 import { Chip } from 'primeng/chip';
 import { Ripple } from 'primeng/ripple';
 import { ButtonDirective } from 'primeng/button';
 import { AsyncPipe, DatePipe } from '@angular/common';
-import { DataView } from 'primeng/dataview';
 import {
-	CollectionViewToggleComponent,
+	CollectionColumnDirective,
+	CollectionListComponent,
 	EntityCardComponent,
+	ViewActionComponent,
 } from '@music-collection/ui';
 
 @Component({
@@ -32,19 +32,17 @@ import {
 	templateUrl: './album-table.component.html',
 	styleUrls: ['./album-table.component.scss'],
 	imports: [
-		Bind,
-		Table,
-		SortableColumn,
-		SortIcon,
+		FormsModule,
 		AutoComplete,
 		Chip,
 		Ripple,
 		ButtonDirective,
 		AsyncPipe,
 		DatePipe,
-		DataView,
-		CollectionViewToggleComponent,
+		CollectionColumnDirective,
+		CollectionListComponent,
 		EntityCardComponent,
+		ViewActionComponent,
 	],
 })
 export class AlbumTableComponent extends BaseComponent implements OnInit {
@@ -54,9 +52,19 @@ export class AlbumTableComponent extends BaseComponent implements OnInit {
 
 	public readonly collectionView = this.componentService.collectionView;
 
+	public readonly place = this.componentService.place;
+
 	/** The uploaded cover, else the cover found on the web. */
 	public imageOf(album: AlbumEntity): string | null {
 		return album.coverImage?.filePath || album.coverImageUrl || null;
+	}
+
+	public clearArtistSearch(): void {
+		this.componentService.clearSearch('artist');
+	}
+
+	public clearNameSearch(): void {
+		this.componentService.clearSearch('name');
 	}
 
 	public deleteAlbum(album: AlbumEntity): void {
@@ -77,5 +85,10 @@ export class AlbumTableComponent extends BaseComponent implements OnInit {
 
 	public searchByArtistNameHandler(event: any): void {
 		this.componentService.searchByArtistName(event['query']);
+	}
+
+	/** Where the eye leads: the page that shows this album. */
+	public viewLink(album: AlbumEntity): unknown[] {
+		return this.componentService.viewLink(album);
 	}
 }

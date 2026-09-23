@@ -379,6 +379,20 @@ body .p-chip {
 	.p-autocomplete {
 		min-width: 12rem;
 	}
+
+	// A sorok és oszlopok, amiket a mc-collection-list épít: a domain
+	// sablonja csak megnevezi őket (rowClass, columnClass).
+	tr.is-withdrawn {
+		opacity: 0.6;
+	}
+
+	.thumbnail-column {
+		width: 3.5rem;
+	}
+
+	.profile {
+		white-space: nowrap;
+	}
 }
 
 .mc-image-flags {

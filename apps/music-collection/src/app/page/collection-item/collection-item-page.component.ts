@@ -53,6 +53,8 @@ export class CollectionItemPageComponent {
 	});
 
 	protected save(draft: CopyDraft): void {
-		this.store.save(draft);
+		// The store takes the copy's number from the registry before it writes,
+		// which is a round trip; the page has nothing to do while it waits.
+		void this.store.save(draft);
 	}
 }

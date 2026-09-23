@@ -26,6 +26,14 @@
 	pointer-events: none;
 }
 
+// The animated world, in place of the blurred cover. It brings its own
+// vignette and grain, so it needs nothing over it but the lyrics.
+.scene {
+	position: absolute;
+	inset: 0;
+	display: block;
+}
+
 .blur {
 	position: absolute;
 	inset: -20%;

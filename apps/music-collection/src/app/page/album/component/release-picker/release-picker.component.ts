@@ -14,7 +14,7 @@ import {
 	signal,
 	viewChild,
 } from '@angular/core';
-import { parseDiscogsReleaseId } from '@music-collection/api';
+import { copySerialProblem, parseDiscogsReleaseId } from '@music-collection/api';
 
 import {
 	FORMAT_LABELS,
@@ -37,6 +37,17 @@ import {
 type PickerView = 'catalog' | 'discogs' | 'photo' | 'describe';
 
 type FormatFilter = MediaFormat | 'all';
+
+/**
+ * A pressing the collector says they own, and the number on their copy of it
+ * where the edition was numbered. The numbers travel as typed: parsing them
+ * is the store's job, the same way the copy page's form hands its draft over.
+ */
+export interface CopyPick {
+	releaseId: string;
+	serialNumber: string;
+	serialTotal: string;
+}
 
 const NOTE_MAX_LENGTH = 500;
 
@@ -85,8 +96,8 @@ export class ReleasePickerComponent {
 	public readonly requesting = input(false);
 	public readonly requestError = input<string | null>(null);
 
-	/** The id of the catalog release picked. */
-	public readonly picked = output<string>();
+	/** The catalog pressing picked, with the copy's number where it has one. */
+	public readonly picked = output<CopyPick>();
 	/** The Discogs pressings are needed. */
 	public readonly discogsRequested = output<void>();
 	/** A photo of the record, to identify the pressing from. */
@@ -107,6 +118,15 @@ export class ReleasePickerComponent {
 	);
 	protected readonly note = signal('');
 	protected readonly discogsLink = signal('');
+	/**
+	 * The pressing chosen from the catalog, waiting on the number step. The
+	 * copy is not added the moment a pressing is clicked, because a numbered
+	 * record has to bring its number with it: the number is registered across
+	 * the whole site, and it can only be taken before the copy is written.
+	 */
+	protected readonly chosenRelease = signal<ReleaseOptionView | null>(null);
+	protected readonly serialNumber = signal('');
+	protected readonly serialTotal = signal('');
 	protected readonly noteMaxLength = NOTE_MAX_LENGTH;
 	protected readonly formatLabels = FORMAT_LABELS;
 	protected readonly matchLabels = MATCH_LABELS;
@@ -157,6 +177,10 @@ export class ReleasePickerComponent {
 					(version) => version.format === filter
 				);
 	});
+
+	protected readonly serialProblem = computed(() =>
+		copySerialProblem(this.serialNumber(), this.serialTotal())
+	);
 
 	protected readonly linkedReleaseId = computed(() =>
 		parseDiscogsReleaseId(this.discogsLink())
@@ -337,9 +361,56 @@ export class ReleasePickerComponent {
 		input.value = '';
 	}
 
+	/**
+	 * The pressing is chosen; now the copy of it. Most records carry no
+	 * number and the step is one press of Add, so the Add button takes the
+	 * focus rather than the empty field: typing a number is the exception,
+	 * and the common way through should be a keystroke.
+	 */
+	protected choose(release: ReleaseOptionView): void {
+		if (release.owned || this.busy()) {
+			return;
+		}
+		this.chosenRelease.set(release);
+		this.serialNumber.set('');
+		this.serialTotal.set('');
+		afterNextRender(
+			() =>
+				this.dialog()
+					.nativeElement.querySelector<HTMLElement>('.confirm-add')
+					?.focus(),
+			{ injector: this.injector }
+		);
+	}
+
+	/** Back to the list; the pressing was not the one after all. */
+	protected unchoose(): void {
+		this.chosenRelease.set(null);
+	}
+
+	protected confirmChoice(): void {
+		const release = this.chosenRelease();
+
+		if (!release || this.busy() || this.serialProblem()) {
+			return;
+		}
+		this.picked.emit({
+			releaseId: release.id,
+			serialNumber: this.serialNumber(),
+			serialTotal: this.serialTotal(),
+		});
+	}
+
+	protected onSerialInput(part: 'number' | 'total', event: Event): void {
+		const value = (event.target as HTMLInputElement).value;
+
+		(part === 'number' ? this.serialNumber : this.serialTotal).set(value);
+	}
+
 	protected show(view: PickerView): void {
 		this.view.set(view);
 		this.selectedVersion.set(null);
+		this.chosenRelease.set(null);
 		this.note.set('');
 		if (view === 'discogs') {
 			this.discogsRequested.emit();

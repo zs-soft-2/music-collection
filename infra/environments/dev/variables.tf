@@ -98,6 +98,9 @@ variable "services" {
     # Vertex AI: a collection badge-eket az Imagen rajzolja meg
     # (generateMusicCollectionBadge).
     "aiplatform.googleapis.com",
+    # Cloud Scheduler: a `refreshUpcomingReleases` naponta fut. A v2 ütemezett
+    # function deployja maga hozza létre a schedulerjobot — enélkül elszáll.
+    "cloudscheduler.googleapis.com",
   ]
 }
 

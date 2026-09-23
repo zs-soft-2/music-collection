@@ -1,155 +1,122 @@
 @if (params$ | async; as params) {
-	<section class="collection-item-table mc-card">
-		<div class="mc-table-tools">
-			<p-autocomplete
-				class="mc-table-search"
-				placeholder="Filter by name…"
-				ariaLabel="Filter by name"
-				[suggestions]="params.empty"
-				[showClear]="true"
-				(completeMethod)="searchByNameHandler($event)"
-				[minQueryLength]="3"
-				[delay]="400"
-			>
-			</p-autocomplete>
+	<mc-collection-list
+		[items]="params.collectionItems"
+		[place]="place"
+		[view]="collectionView"
+		emptyMessage="No collection items found."
+	>
+		<p-autocomplete
+			tools
+			class="mc-table-search"
+			placeholder="Filter by name…"
+			ariaLabel="Filter by name"
+			[ngModel]="place.filterOf('name')"
+			[suggestions]="params.empty"
+			[showClear]="true"
+			(completeMethod)="searchByNameHandler($event)"
+			(onClear)="clearNameSearch()"
+			[minQueryLength]="3"
+			[delay]="400"
+		>
+		</p-autocomplete>
 
-			<p-autocomplete
-				class="mc-table-search"
-				placeholder="Filter by artist…"
-				ariaLabel="Filter by artist"
-				[suggestions]="params.empty"
-				[showClear]="true"
-				(completeMethod)="searchByArtistNameHandler($event)"
-				[minQueryLength]="3"
-				[delay]="400"
-			>
-			</p-autocomplete>
+		<p-autocomplete
+			tools
+			class="mc-table-search"
+			placeholder="Filter by artist…"
+			ariaLabel="Filter by artist"
+			[ngModel]="place.filterOf('artist')"
+			[suggestions]="params.empty"
+			[showClear]="true"
+			(completeMethod)="searchByArtistNameHandler($event)"
+			(onClear)="clearArtistSearch()"
+			[minQueryLength]="3"
+			[delay]="400"
+		>
+		</p-autocomplete>
 
-			<mc-collection-view-toggle
-				[view]="collectionView.view()"
-				(viewChange)="collectionView.setView($event)"
+		<ng-template #card let-collectionItem>
+			<mc-entity-card
+				[title]="collectionItem.release?.name"
+				[subtitle]="collectionItem.release?.artist?.name"
+				[imageUrl]="imageOf(collectionItem)"
+				imageShape="square"
+				(open)="editCollectionItem(collectionItem)"
+			>
+				<mc-view-action
+					cardActions
+					[link]="viewLink(collectionItem)"
+					entity="copy"
+					[name]="collectionItem.release?.name"
+				/>
+				@if (collectionItem.date) {
+					<p-chip styleClass="style">
+						{{ collectionItem.date | date: 'yyyy' }}
+					</p-chip>
+				}
+
+				<button
+					cardActions
+					pButton
+					pRipple
+					aria-label="Delete collection item"
+					class="p-button-text p-button-rounded p-button-danger"
+					(click)="deleteCollectionItem(collectionItem)"
+					iconOnly
+				>
+					<i class="pi pi-trash" aria-hidden="true"></i>
+				</button>
+			</mc-entity-card>
+		</ng-template>
+
+		<ng-template mcColumn header="Name" let-collectionItem>
+			{{ collectionItem.release.name }}
+		</ng-template>
+
+		<ng-template mcColumn header="Artist" let-collectionItem>
+			{{ collectionItem.release.artist?.name }}
+		</ng-template>
+
+		<ng-template mcColumn header="Year" let-collectionItem>
+			{{ collectionItem.date | date: 'yyyy' }}
+		</ng-template>
+
+		<ng-template
+			mcColumn
+			header="Updated"
+			field="updatedAt"
+			let-collectionItem
+		>
+			{{ collectionItem.updatedAt | date: 'yyyy-MM-dd HH:mm' }}
+		</ng-template>
+
+		<ng-template mcColumn header="Actions" headerHidden let-collectionItem>
+			<mc-view-action
+				[link]="viewLink(collectionItem)"
+				entity="copy"
+				[name]="collectionItem.release?.name"
 			/>
-		</div>
-
-		@if (collectionView.view() === 'cards') {
-			<p-dataview
-				[value]="params.collectionItems"
-				layout="grid"
-				[paginator]="true"
-				[rows]="24"
-				[rowsPerPageOptions]="[24, 48, 96]"
-				emptyMessage="No collection items found."
+			<button
+				pButton
+				pRipple
+				aria-label="Edit collection item"
+				class="p-button-text p-button-rounded p-button-secondary"
+				(click)="editCollectionItem(collectionItem)"
+				iconOnly
 			>
-				<ng-template #grid let-collectionItems>
-					<ul class="mc-card-grid">
-						@for (
-							collectionItem of collectionItems;
-							track collectionItem.uid
-						) {
-							<li>
-								<mc-entity-card
-									[title]="collectionItem.release?.name"
-									[subtitle]="
-										collectionItem.release?.artist?.name
-									"
-									[imageUrl]="imageOf(collectionItem)"
-									imageShape="square"
-									(open)="editCollectionItem(collectionItem)"
-								>
-									@if (collectionItem.date) {
-										<p-chip styleClass="style">
-											{{
-												collectionItem.date
-													| date: 'yyyy'
-											}}
-										</p-chip>
-									}
+				<i class="pi pi-pencil" aria-hidden="true"></i>
+			</button>
 
-									<button
-										cardActions
-										pButton
-										pRipple
-										aria-label="Delete collection item"
-										class="p-button-text p-button-rounded p-button-danger"
-										(click)="
-											deleteCollectionItem(collectionItem)
-										"
-										iconOnly
-									>
-										<i
-											class="pi pi-trash"
-											aria-hidden="true"
-										></i>
-									</button>
-								</mc-entity-card>
-							</li>
-						}
-					</ul>
-				</ng-template>
-			</p-dataview>
-		} @else {
-			<p-table
-				[value]="params.collectionItems"
-				styleClass="mc-table"
-				responsiveLayout="scroll"
+			<button
+				pButton
+				pRipple
+				aria-label="Delete collection item"
+				class="p-button-text p-button-rounded p-button-danger"
+				(click)="deleteCollectionItem(collectionItem)"
+				iconOnly
 			>
-				<ng-template #header>
-					<tr>
-						<th>Name</th>
-
-						<th>Artist</th>
-
-						<th>Year</th>
-
-						<th pSortableColumn="updatedAt">
-							Updated <p-sorticon field="updatedAt"></p-sorticon>
-						</th>
-
-						<th></th>
-					</tr>
-				</ng-template>
-
-				<ng-template #body let-collectionItem>
-					<tr>
-						<td>{{ collectionItem.release.name }}</td>
-
-						<td>{{ collectionItem.release.artist?.name }}</td>
-
-						<td>{{ collectionItem.date | date: 'yyyy' }}</td>
-
-						<td>
-							{{
-								collectionItem.updatedAt
-									| date: 'yyyy-MM-dd HH:mm'
-							}}
-						</td>
-
-						<td>
-							<button
-								pButton
-								pRipple
-								aria-label="Edit collection item"
-								class="p-button-text p-button-rounded p-button-secondary"
-								(click)="editCollectionItem(collectionItem)"
-								iconOnly
-							>
-								<i class="pi pi-pencil" aria-hidden="true"></i>
-							</button>
-
-							<button
-								pButton
-								pRipple
-								aria-label="Delete collection item"
-								class="p-button-text p-button-rounded p-button-danger"
-								(click)="deleteCollectionItem(collectionItem)"
-								iconOnly
-							>
-								<i class="pi pi-trash" aria-hidden="true"></i>
-							</button>
-						</td>
-					</tr>
-				</ng-template>
-			</p-table>
-		}
-	</section>
+				<i class="pi pi-trash" aria-hidden="true"></i>
+			</button>
+		</ng-template>
+	</mc-collection-list>
 }

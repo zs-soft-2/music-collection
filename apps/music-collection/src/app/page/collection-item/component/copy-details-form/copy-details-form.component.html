@@ -92,6 +92,71 @@
 	</fieldset>
 
 	<fieldset class="group" [disabled]="busy()">
+		<legend>Which one of them it is</legend>
+
+		<p class="group-lead">
+			Only a numbered edition carries this — the number stamped, embossed
+			or written by hand on the record. It is registered across the whole
+			site: two collectors cannot write down the same copy.
+		</p>
+
+		<div class="fields">
+			<label class="field narrow">
+				<span class="label">Copy number</span>
+				<input
+					type="text"
+					inputmode="numeric"
+					placeholder="123"
+					[value]="serialNumber()"
+					[attr.aria-invalid]="
+						serialProblem() === 'number' ||
+						serialProblem() === 'totalAlone'
+							? 'true'
+							: null
+					"
+					(input)="serialNumber.set(text($event))"
+				/>
+				@if (serialProblem() === 'number') {
+					<span class="field-error">This is not a copy number.</span>
+				}
+				@if (serialProblem() === 'totalAlone') {
+					<span class="field-error">
+						Which one of them is yours? An edition size on its own
+						says nothing about this copy.
+					</span>
+				}
+			</label>
+
+			<label class="field narrow">
+				<span class="label">Out of</span>
+				<input
+					type="text"
+					inputmode="numeric"
+					placeholder="500"
+					[value]="serialTotal()"
+					[attr.aria-invalid]="
+						serialProblem() === 'total' ||
+						serialProblem() === 'tooLarge'
+							? 'true'
+							: null
+					"
+					(input)="serialTotal.set(text($event))"
+				/>
+				@if (serialProblem() === 'total') {
+					<span class="field-error">
+						This is not an edition size.
+					</span>
+				}
+				@if (serialProblem() === 'tooLarge') {
+					<span class="field-error">
+						The edition is smaller than this copy's number.
+					</span>
+				}
+			</label>
+		</div>
+	</fieldset>
+
+	<fieldset class="group" [disabled]="busy()">
 		<legend>What there is to tell</legend>
 
 		<label class="field">

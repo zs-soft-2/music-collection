@@ -8,18 +8,28 @@ import {
 	MusicianTableParams,
 	sortByRecent,
 } from '@music-collection/api';
-import { createCollectionView } from '@music-collection/ui';
+import {
+	createCollectionPlace,
+	createCollectionView,
+} from '@music-collection/ui';
 
 @Injectable()
 export class MusicianTableService {
 	private activatedRoute = inject(ActivatedRoute);
 	private musicianStateService = inject(MusicianStateService);
 	private router = inject(Router);
-	private query$ = new BehaviorSubject('');
 
 	public readonly collectionView = createCollectionView(
 		'mc.admin.musicians.view'
 	);
+
+	public readonly place = createCollectionPlace('mc.admin.musicians', {
+		cards: 48,
+		table: 50,
+	});
+
+	/** The query the list is narrowed by, taken up again where it was left. */
+	private query$ = new BehaviorSubject(this.place.filterOf('name'));
 
 	public editMusician(musician: MusicianEntity): void {
 		this.router.navigate(['../edit', musician.uid], {
@@ -27,8 +37,17 @@ export class MusicianTableService {
 		});
 	}
 
+	/**
+	 * The page the musician is read on, as anyone else sees it —
+	 * the admin list's way of looking rather than editing.
+	 */
+	public viewLink(musician: MusicianEntity): unknown[] {
+		return ['/musician', musician.uid];
+	}
+
 	public filter(query: string): void {
-		this.query$.next(query.trim().toLowerCase());
+		this.place.setFilter('name', query);
+		this.query$.next(query);
 	}
 
 	/** Every musician (the list page resolver loads them), the last changed first, filtered by name, real name or alias. */
@@ -36,7 +55,7 @@ export class MusicianTableService {
 		return combineLatest([
 			this.musicianStateService.selectEntities$().pipe(map(sortByRecent)),
 			this.musicianStateService.isLoading$(),
-			this.query$,
+			this.query$.pipe(map((query) => query.trim().toLowerCase())),
 		]).pipe(
 			map(([musicians, loading, query]) => ({
 				musicians: query

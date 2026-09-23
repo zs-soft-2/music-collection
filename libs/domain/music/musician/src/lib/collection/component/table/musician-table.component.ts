@@ -1,6 +1,7 @@
 import { Observable } from 'rxjs';
 
 import { AsyncPipe, DatePipe, NgTemplateOutlet } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import {
 	ChangeDetectionStrategy,
 	Component,
@@ -13,14 +14,14 @@ import {
 	MusicianTableParams,
 } from '@music-collection/api';
 import { ButtonDirective } from 'primeng/button';
-import { DataView } from 'primeng/dataview';
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
 import { InputText } from 'primeng/inputtext';
-import { SortIcon, SortableColumn, Table } from 'primeng/table';
 import {
-	CollectionViewToggleComponent,
+	CollectionColumnDirective,
+	CollectionListComponent,
 	EntityCardComponent,
+	ViewActionComponent,
 } from '@music-collection/ui';
 
 import { MusicianTableService } from './musician-table.service';
@@ -32,19 +33,18 @@ import { MusicianTableService } from './musician-table.service';
 	templateUrl: './musician-table.component.html',
 	styleUrls: ['./musician-table.component.scss'],
 	imports: [
-		Table,
-		SortableColumn,
-		SortIcon,
+		FormsModule,
 		ButtonDirective,
-		DataView,
 		IconField,
 		InputIcon,
 		InputText,
 		AsyncPipe,
 		DatePipe,
 		NgTemplateOutlet,
-		CollectionViewToggleComponent,
+		CollectionColumnDirective,
+		CollectionListComponent,
 		EntityCardComponent,
+		ViewActionComponent,
 	],
 })
 export class MusicianTableComponent extends BaseComponent implements OnInit {
@@ -54,15 +54,22 @@ export class MusicianTableComponent extends BaseComponent implements OnInit {
 
 	public readonly collectionView = this.componentService.collectionView;
 
+	public readonly place = this.componentService.place;
+
 	public editMusician(musician: MusicianEntity): void {
 		this.componentService.editMusician(musician);
 	}
 
-	public filter(event: Event): void {
-		this.componentService.filter((event.target as HTMLInputElement).value);
+	public filter(query: string): void {
+		this.componentService.filter(query);
 	}
 
 	public ngOnInit(): void {
 		this.params$ = this.componentService.init$();
+	}
+
+	/** Where the eye leads: the page that shows this musician. */
+	public viewLink(musician: MusicianEntity): unknown[] {
+		return this.componentService.viewLink(musician);
 	}
 }

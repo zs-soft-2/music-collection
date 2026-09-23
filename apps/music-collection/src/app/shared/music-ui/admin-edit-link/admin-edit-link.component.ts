@@ -21,7 +21,8 @@ export type AdminEditEntity =
 	| 'label'
 	| 'musician'
 	| 'collection-item'
-	| 'wishlist-item';
+	| 'wishlist-item'
+	| 'document';
 
 const ENTITY_NAMES: Record<AdminEditEntity, string> = {
 	artist: 'artist',
@@ -31,6 +32,7 @@ const ENTITY_NAMES: Record<AdminEditEntity, string> = {
 	musician: 'musician',
 	'collection-item': 'collection item',
 	'wishlist-item': 'wishlist item',
+	document: 'document',
 };
 
 /**

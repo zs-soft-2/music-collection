@@ -48,7 +48,7 @@ describe('DocumentTableService', () => {
 		return emitted[emitted.length - 1].documents.map(({ uid }) => uid);
 	};
 
-	beforeEach(() => {
+	const create = () => {
 		dispatchDeleteEntityAction = jest.fn();
 
 		TestBed.configureTestingModule({
@@ -70,6 +70,12 @@ describe('DocumentTableService', () => {
 		});
 
 		service = TestBed.inject(DocumentTableService);
+	};
+
+	beforeEach(() => {
+		sessionStorage.clear();
+		TestBed.resetTestingModule();
+		create();
 	});
 
 	it('should be created', () => {
@@ -106,6 +112,16 @@ describe('DocumentTableService', () => {
 
 		expect(dispatchDeleteEntityAction).toHaveBeenCalledWith(badge);
 		expect(service.pendingWithdrawal()).toBeNull();
+	});
+
+	it('comes back to the tab it was left on', () => {
+		service.setFilter(DocumentFilterEnum.Withdrawn);
+
+		// What coming back from a document does: the service is built anew.
+		TestBed.resetTestingModule();
+		create();
+
+		expect(shown()).toEqual(['withdrawn']);
 	});
 
 	it('forgets the pending question when the tab changes', () => {

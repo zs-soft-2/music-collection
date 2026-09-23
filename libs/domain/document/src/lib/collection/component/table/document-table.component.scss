@@ -49,10 +49,6 @@
 	margin-left: auto;
 }
 
-.thumbnail-column {
-	width: 3.5rem;
-}
-
 .thumbnail {
 	display: block;
 	width: 2.5rem;
@@ -69,8 +65,4 @@
 	color: var(--mc-text-muted);
 	border: 1px solid var(--mc-border-strong);
 	border-radius: var(--mc-radius-sm);
-}
-
-tr.is-withdrawn {
-	opacity: 0.6;
 }

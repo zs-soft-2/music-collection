@@ -28,9 +28,16 @@ import {
 	HttpsError,
 	onCall,
 } from 'firebase-functions/v2/https';
+import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions/v2';
 
 import { DiscogsArtistProfile, fetchArtistProfile } from './discogs-artist';
+import {
+	DiscogsLabelCandidate,
+	DiscogsLabelProfile,
+	fetchLabelProfile,
+	searchLabels,
+} from './discogs-label';
 import {
 	DiscogsError,
 	DiscogsVersion,
@@ -57,6 +64,7 @@ import {
 	createVisionClient,
 } from './photo-signals';
 import { approveReleaseRequest as approve } from './release-request-approval';
+import { syncUpcomingReleases } from './upcoming-release';
 import {
 	CatalogRole,
 	EffectivePermissions,
@@ -310,6 +318,34 @@ function firestoreBarcodeCache() {
 }
 
 /**
+ * A Discogs hibájának megfelelő callable-hiba. A `missing` az, amit a 404
+ * jelent az adott végponton — másra a hívó nem tud mit lépni.
+ */
+function discogsFailure(error: unknown, missing: string): HttpsError {
+	if (error instanceof DiscogsError && error.status === 404) {
+		return new HttpsError('not-found', missing);
+	}
+	if (error instanceof DiscogsError && error.status === 429) {
+		return new HttpsError(
+			'resource-exhausted',
+			'A Discogs most túlterhelt, próbáld újra egy perc múlva.'
+		);
+	}
+
+	return new HttpsError('unavailable', 'A Discogs nem érhető el.');
+}
+
+/**
+ * Keresett szöveg → dokumentum-azonosító. Nem ékezettelenítünk és nem
+ * szűkítünk latin betűkre: a nem latin betűs kiadónevek abból csupa
+ * kötőjelre fogynának, és egymás találatait olvasnák. A `/` a Firestore-ban
+ * útelválasztó, ezért kódoljuk.
+ */
+function searchCacheKey(term: string): string {
+	return encodeURIComponent(term.toLowerCase()).slice(0, 200);
+}
+
+/**
  * Egy Discogs master kiadásai. Gyűjtő (createCollectionItemEntity) vagy ADMIN
  * hívhatja; az eredményt `discogs-cache/master-{id}` alatt egy hétig őrizzük.
  */
@@ -442,6 +478,103 @@ export const discogsArtistProfile = onCall(
 				);
 			}
 			throw new HttpsError('unavailable', 'A Discogs nem érhető el.');
+		}
+	}
+);
+
+/**
+ * Egy Discogs kiadó profilja a kiadó szerkesztőűrlapjának Load gombjához.
+ * A kiadó szerkesztője (vagy ADMIN) hívhatja; az eredményt
+ * `discogs-cache/label-{id}` alatt egy hétig őrizzük.
+ */
+export const discogsLabelProfile = onCall(
+	{ secrets: [discogsToken] },
+	async (request) => {
+		await requireCaller(request, [
+			'createLabelEntity',
+			'updateLabelEntity',
+		]);
+
+		const labelId = Number(request.data?.labelId);
+
+		if (!Number.isSafeInteger(labelId) || labelId <= 0) {
+			throw new HttpsError('invalid-argument', 'Érvénytelen labelId.');
+		}
+
+		const cacheReference = database()
+			.collection(DISCOGS_CACHE_COLLECTION)
+			.doc(`label-${labelId}`);
+		const cached = await cacheReference.get();
+		const fetchedAt = cached.data()?.fetchedAt as number | undefined;
+
+		if (fetchedAt && Date.now() - fetchedAt < DISCOGS_CACHE_TTL_MS) {
+			return cached.data()?.profile as DiscogsLabelProfile;
+		}
+
+		try {
+			const profile = await fetchLabelProfile(labelId, {
+				token: discogsToken.value() || null,
+			});
+
+			if (!profile) {
+				throw new DiscogsError('Üres Discogs-kiadó.', 404);
+			}
+
+			await cacheReference.set({ fetchedAt: Date.now(), profile });
+
+			return profile;
+		} catch (error) {
+			logger.warn(`discogsLabelProfile ${labelId}`, error);
+
+			throw discogsFailure(error, 'Nincs ilyen Discogs-kiadó.');
+		}
+	}
+);
+
+/**
+ * A névre illő Discogs-kiadók: a katalógus kiadói a kiadásokból, névre
+ * jönnek létre, így a Load első lépése a keresés. A találatokat
+ * `discogs-cache/label-search-{név}` alatt egy hétig őrizzük.
+ */
+export const discogsLabelSearch = onCall(
+	{ secrets: [discogsToken] },
+	async (request) => {
+		await requireCaller(request, [
+			'createLabelEntity',
+			'updateLabelEntity',
+		]);
+
+		const name = String(request.data?.name ?? '').trim();
+
+		if (!name) {
+			throw new HttpsError('invalid-argument', 'Hiányzó kiadónév.');
+		}
+
+		const cacheReference = database()
+			.collection(DISCOGS_CACHE_COLLECTION)
+			.doc(`label-search-${searchCacheKey(name)}`);
+		const cached = await cacheReference.get();
+		const fetchedAt = cached.data()?.fetchedAt as number | undefined;
+
+		if (fetchedAt && Date.now() - fetchedAt < DISCOGS_CACHE_TTL_MS) {
+			return {
+				candidates: cached.data()
+					?.candidates as DiscogsLabelCandidate[],
+			};
+		}
+
+		try {
+			const candidates = await searchLabels(name, {
+				token: discogsToken.value() || null,
+			});
+
+			await cacheReference.set({ fetchedAt: Date.now(), candidates });
+
+			return { candidates };
+		} catch (error) {
+			logger.warn(`discogsLabelSearch ${name}`, error);
+
+			throw discogsFailure(error, 'Nincs ilyen Discogs-kiadó.');
 		}
 	}
 );
@@ -584,12 +717,13 @@ export const approveReleaseRequest = onCall(
 );
 
 /**
- * A hívó uid-je, ha megvan a permissionje. Az ADMIN mindent visz; a
- * bejelentkezés hiánya és a hiányzó jog szándékosan külön hiba.
+ * A hívó uid-je, ha megvan a permissionje — többet felsorolva bármelyikkel.
+ * Az ADMIN mindent visz; a bejelentkezés hiánya és a hiányzó jog
+ * szándékosan külön hiba.
  */
 async function requireCaller(
 	request: CallableRequest,
-	permission: string
+	permission: string | string[]
 ): Promise<string> {
 	const uid = request.auth?.uid;
 
@@ -598,8 +732,12 @@ async function requireCaller(
 	}
 
 	const permissions = await callerPermissions(uid);
+	const accepted = Array.isArray(permission) ? permission : [permission];
 
-	if (!permissions.includes('ADMIN') && !permissions.includes(permission)) {
+	if (
+		!permissions.includes('ADMIN') &&
+		!accepted.some((name) => permissions.includes(name))
+	) {
 		throw new HttpsError('permission-denied', 'Nincs jogosultság.');
 	}
 
@@ -693,9 +831,49 @@ export const listBadgeGenerationModels = onCall(
 	async (request) => {
 		await requireCaller(request, 'updateBadgeGenerationSettings');
 
-		return listBadgeModels(
-			database(),
-			process.env['GCLOUD_PROJECT'] ?? ''
+		return listBadgeModels(database(), process.env['GCLOUD_PROJECT'] ?? '');
+	}
+);
+
+/**
+ * Ami még nem jelent meg: a katalógus előadóinak következő lemezei a
+ * MusicBrainzről, naponta egyszer. A hajnali időpont a MusicBrainz
+ * kedvéért is jó — a keret másodpercenként egy kérés, és a futás
+ * lapozás közben percekig tart.
+ *
+ * A `timeoutSeconds` ezért bőséges: egy hónap néhány ezer kiadás, százas
+ * lapokban, minden lap után egy másodperc várakozással.
+ *
+ * Az időzítéshez a Cloud Scheduler API kell (infra/environments
+ * `services`); enélkül a deploy elszáll.
+ */
+export const refreshUpcomingReleases = onSchedule(
+	{
+		schedule: '30 3 * * *',
+		timeZone: 'Europe/Budapest',
+		timeoutSeconds: 900,
+		memory: '512MiB',
+		// Ütemezett futás, nem a böngészőből: App Check tokenje nincs.
+		enforceAppCheck: false,
+	},
+	async () => {
+		const result = await syncUpcomingReleases(database());
+
+		logger.info(
+			`Upcoming releases: ${result.scanned} kiadásból ${result.matched} a katalógus előadóié (${result.written} írva, ${result.deleted} törölve)`
 		);
+	}
+);
+
+/**
+ * Ugyanaz kézzel, az adminnak: az ütemezett futás előtt, vagy ha valami
+ * félbemaradt. Drága hívás (percekig fut), ezért ADMIN kell hozzá.
+ */
+export const syncUpcomingReleasesNow = onCall(
+	{ timeoutSeconds: 900, memory: '512MiB' },
+	async (request) => {
+		await requireCaller(request, 'ADMIN');
+
+		return syncUpcomingReleases(database());
 	}
 );

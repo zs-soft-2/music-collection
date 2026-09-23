@@ -167,8 +167,8 @@ describe('toExternalCandidate', () => {
 	});
 
 	it('keeps the source code of a country the catalog has none for', () => {
-		expect(toExternalCandidate(hit('no', { country: 'NO' })).country).toBe(
-			'NO'
+		expect(toExternalCandidate(hit('jp', { country: 'JP' })).country).toBe(
+			'JP'
 		);
 	});
 });

@@ -11,6 +11,7 @@ import {
 	COLLECTION_ITEM_GRADES,
 	COLLECTION_ITEM_GRADE_LABELS,
 	CollectionItemGrade,
+	copySerialProblem,
 } from '@music-collection/api';
 
 import { CopyDraft } from '../../collection-item-page.store';
@@ -63,6 +64,8 @@ export class CopyDetailsFormComponent {
 	protected readonly purchaseCurrency = signal('');
 	protected readonly mediaGrade = signal<CollectionItemGrade | null>(null);
 	protected readonly sleeveGrade = signal<CollectionItemGrade | null>(null);
+	protected readonly serialNumber = signal('');
+	protected readonly serialTotal = signal('');
 	protected readonly story = signal('');
 
 	/** A record cannot have been bought after today. */
@@ -81,8 +84,18 @@ export class CopyDetailsFormComponent {
 		return !Number.isFinite(price) || price < 0;
 	});
 
+	/**
+	 * What is wrong with the pair of numbers, if anything. One value rather
+	 * than a flag apiece: the copy number and the edition size are only ever
+	 * wrong in relation to each other, and the picker reads it the same way.
+	 */
+	protected readonly serialProblem = computed(() =>
+		copySerialProblem(this.serialNumber(), this.serialTotal())
+	);
+
 	protected readonly invalid = computed(
-		() => this.dateInvalid() || this.priceInvalid()
+		() =>
+			this.dateInvalid() || this.priceInvalid() || !!this.serialProblem()
 	);
 
 	public constructor() {
@@ -99,6 +112,8 @@ export class CopyDetailsFormComponent {
 			this.purchaseCurrency.set(draft.purchaseCurrency);
 			this.mediaGrade.set(draft.mediaGrade);
 			this.sleeveGrade.set(draft.sleeveGrade);
+			this.serialNumber.set(draft.serialNumber);
+			this.serialTotal.set(draft.serialTotal);
 			this.story.set(draft.story);
 		});
 	}
@@ -115,6 +130,8 @@ export class CopyDetailsFormComponent {
 			purchaseCurrency: this.purchaseCurrency(),
 			mediaGrade: this.mediaGrade(),
 			sleeveGrade: this.sleeveGrade(),
+			serialNumber: this.serialNumber(),
+			serialTotal: this.serialTotal(),
 			story: this.story(),
 		});
 	}

@@ -7,11 +7,16 @@ import { LabelStateService, LabelUtilService } from '@music-collection/api';
 
 import { LabelTableComponent } from './label-table.component';
 
+const label = { uid: '1', name: 'Sub Pop' } as LabelEntity;
+
 describe('LabelTableComponent', () => {
 	let component: LabelTableComponent;
 	let fixture: ComponentFixture<LabelTableComponent>;
 
 	beforeEach(async () => {
+		localStorage.clear();
+		sessionStorage.clear();
+
 		await TestBed.configureTestingModule({
 			imports: [LabelTableComponent],
 			providers: [
@@ -20,7 +25,7 @@ describe('LabelTableComponent', () => {
 				{
 					provide: LabelStateService,
 					useValue: {
-						selectEntities$: jest.fn(() => of([])),
+						selectEntities$: jest.fn(() => of([label])),
 						selectSearchResult$: jest.fn(() => of([])),
 					},
 				},
@@ -35,5 +40,18 @@ describe('LabelTableComponent', () => {
 
 	it('should create', () => {
 		expect(component).toBeTruthy();
+	});
+
+	it('shows the label in both views', () => {
+		expect(
+			fixture.nativeElement.querySelector('tbody').textContent
+		).toContain('Sub Pop');
+
+		component.collectionView.setView('cards');
+		fixture.detectChanges();
+
+		expect(
+			fixture.nativeElement.querySelector('mc-entity-card').textContent
+		).toContain('Sub Pop');
 	});
 });

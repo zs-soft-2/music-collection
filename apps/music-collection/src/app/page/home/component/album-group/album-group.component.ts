@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
+import { CarouselComponent } from '../../../../shared/music-ui';
 import { AlbumGroup } from '../../home.mapper';
 
 /**
@@ -10,7 +11,7 @@ import { AlbumGroup } from '../../home.mapper';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-album-group',
-	imports: [RouterLink],
+	imports: [RouterLink, CarouselComponent],
 	template: `
 		@let item = group();
 
@@ -22,7 +23,7 @@ import { AlbumGroup } from '../../home.mapper';
 			>
 		</h3>
 
-		<ul class="row" [attr.aria-label]="item.label">
+		<mc-carousel [label]="item.label">
 			@for (album of item.albums; track album.id) {
 				<li>
 					<a
@@ -53,11 +54,16 @@ import { AlbumGroup } from '../../home.mapper';
 					</a>
 				</li>
 			}
-		</ul>
+		</mc-carousel>
 	`,
 	styles: `
 		:host {
 			display: block;
+
+			/* A cover is square, so half a card's width is the middle of the
+			   artwork: the arrows land there and not on the caption. */
+			--mc-carousel-item: 9.5rem;
+			--mc-carousel-nav-top: 4.75rem;
 		}
 
 		.label {
@@ -77,22 +83,6 @@ import { AlbumGroup } from '../../home.mapper';
 			font-size: 0.75rem;
 			color: var(--mc-text-muted);
 			font-variant-numeric: tabular-nums;
-		}
-
-		.row {
-			display: flex;
-			gap: 1rem;
-			margin: 0;
-			padding: 0 0 0.5rem;
-			overflow-x: auto;
-			list-style: none;
-			scroll-snap-type: x proximity;
-			overscroll-behavior-x: contain;
-
-			li {
-				flex: 0 0 9.5rem;
-				scroll-snap-align: start;
-			}
 		}
 
 		.cover {
@@ -152,6 +142,13 @@ import { AlbumGroup } from '../../home.mapper';
 		.meta {
 			font-size: 0.72rem;
 			color: var(--mc-text-muted);
+		}
+
+		@media (max-width: 720px) {
+			:host {
+				--mc-carousel-item: 8.5rem;
+				--mc-carousel-nav-top: 4.25rem;
+			}
 		}
 
 		@media (prefers-reduced-motion: reduce) {

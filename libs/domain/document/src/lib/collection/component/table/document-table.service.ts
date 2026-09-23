@@ -22,7 +22,19 @@ import {
 	SearchParams,
 	sortByRecent,
 } from '@music-collection/api';
-import { createCollectionView } from '@music-collection/ui';
+import {
+	createCollectionPlace,
+	createCollectionView,
+} from '@music-collection/ui';
+
+/** The tab the page was left on, the whole catalog when it is nothing known. */
+function storedFilter(value: string): DocumentFilterEnum {
+	return Object.values(DocumentFilterEnum).includes(
+		value as DocumentFilterEnum
+	)
+		? (value as DocumentFilterEnum)
+		: DocumentFilterEnum.All;
+}
 
 /** Which documents a tab shows. */
 function matchesFilter(
@@ -65,6 +77,8 @@ export class DocumentTableService extends BaseComponent {
 		'mc.admin.documents.view'
 	);
 
+	public readonly place = createCollectionPlace('mc.admin.documents');
+
 	/** The document the withdrawal is waiting on an answer for, if any. */
 	public readonly pendingWithdrawal = signal<DocumentEntity | null>(null);
 
@@ -72,10 +86,10 @@ export class DocumentTableService extends BaseComponent {
 		super();
 
 		this.filter$$ = new BehaviorSubject<DocumentFilterEnum>(
-			DocumentFilterEnum.All
+			storedFilter(this.place.filterOf('category'))
 		);
 		this.params$$ = new ReplaySubject();
-		this.term$$ = new BehaviorSubject<string>('');
+		this.term$$ = new BehaviorSubject<string>(this.place.filterOf('name'));
 	}
 
 	/** Asks before withdrawing: what a badge cost is not a click away. */
@@ -89,6 +103,7 @@ export class DocumentTableService extends BaseComponent {
 
 	/** Back to the whole catalog: the search is over. */
 	public clearSearch(): void {
+		this.place.setFilter('name', '');
 		this.term$$.next('');
 	}
 
@@ -108,6 +123,14 @@ export class DocumentTableService extends BaseComponent {
 	}
 
 	/**
+	 * The page the document is read on, as anyone else sees it —
+	 * the admin list's way of looking rather than editing.
+	 */
+	public viewLink(document: DocumentEntity): unknown[] {
+		return ['/document', document.uid];
+	}
+
+	/**
 	 * What the list shows: the search result while a term is on, the whole
 	 * catalog otherwise — the last changed first, so the page opens on the
 	 * documents filed most recently instead of on nothing. The tab narrows
@@ -115,6 +138,10 @@ export class DocumentTableService extends BaseComponent {
 	 * but their own.
 	 */
 	public init$(): Observable<DocumentTableParams> {
+		if (this.term$$.value) {
+			this.dispatchSearch(this.term$$.value);
+		}
+
 		return combineLatest([
 			this.documentStateService.selectEntities$(),
 			this.documentStateService.selectSearchResult$(),
@@ -146,18 +173,24 @@ export class DocumentTableService extends BaseComponent {
 	}
 
 	public searchHandler(term: string): void {
+		this.place.setFilter('name', term);
+		this.term$$.next(term);
+		this.dispatchSearch(term);
+	}
+
+	public setFilter(filter: DocumentFilterEnum): void {
+		this.pendingWithdrawal.set(null);
+		this.place.setFilter('category', filter);
+		this.filter$$.next(filter);
+	}
+
+	private dispatchSearch(term: string): void {
 		const searchParams: SearchParams =
 			this.documentUtilService.createSearchParams(
 				EntityTypeEnum.Document,
 				term
 			);
 
-		this.term$$.next(term);
 		this.documentStateService.dispatchSearch(searchParams);
-	}
-
-	public setFilter(filter: DocumentFilterEnum): void {
-		this.pendingWithdrawal.set(null);
-		this.filter$$.next(filter);
 	}
 }

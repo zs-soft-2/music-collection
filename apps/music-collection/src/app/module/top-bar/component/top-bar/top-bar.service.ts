@@ -47,6 +47,10 @@ export class TopBarService {
 				routerLink: ['/radio'],
 			},
 			{
+				label: 'Coming out',
+				routerLink: ['/upcoming'],
+			},
+			{
 				label: 'Wishlist',
 				routerLink: ['/wishlist'],
 			},

@@ -672,7 +672,7 @@
 		[albumTitle]="album.title"
 		[releases]="store.releaseOptions()"
 		[loading]="store.catalogReleasesLoading()"
-		[adding]="store.adding()"
+		[adding]="store.adding() || store.claiming()"
 		[error]="store.addError()"
 		[pendingRequests]="store.pendingRequests()"
 		[rejectedRequests]="store.rejectedRequests()"

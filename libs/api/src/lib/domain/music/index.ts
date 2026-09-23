@@ -9,4 +9,5 @@ export * from './photo-scan';
 export * from './release';
 export * from './release-request';
 export * from './track';
+export * from './upcoming-release';
 export * from './wishlist-item';

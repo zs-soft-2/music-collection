@@ -342,6 +342,7 @@ export const TrackPageStore = signalStore(
 								albumTitle: album.title,
 								artistName: album.artistName ?? null,
 								coverUrl: album.coverUrl ?? null,
+								styles: album.styles,
 								spotifyAlbumId: album.spotifyAlbumId,
 								youtubePlaylistId: album.youtubePlaylistId,
 								tracks: store.tracks().map(toTrackToMatch),

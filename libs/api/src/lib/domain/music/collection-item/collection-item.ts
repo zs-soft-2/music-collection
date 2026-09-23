@@ -96,6 +96,30 @@ export interface CollectionItemCondition {
 }
 
 /**
+ * The copy's own number on a numbered edition — "123 of 500", as it is
+ * stamped, embossed or written by hand on the record.
+ *
+ * Almost no record carries one: a normal pressing runs to thousands of
+ * identical copies, and nothing on them tells one collector's from another's.
+ * Where a number *is* there, it is the only thing that does — so it is not
+ * kept privately like the price or the story, but claimed against every other
+ * collector. See `CopySerialClaim` for how that claim is held.
+ */
+export interface CollectionItemSerial {
+	/** The copy's number, counted from 1. */
+	number: number;
+	/** How many were made, where the record says so. */
+	total: number | null;
+}
+
+/**
+ * The largest number a numbered edition is taken to run to. Editions this
+ * large do not exist; the bound is here so a mistyped number cannot claim a
+ * range of the registry that no real record will ever want back.
+ */
+export const COLLECTION_ITEM_SERIAL_MAX = 1000000;
+
+/**
  * A photo of this very copy — the sleeve as it stands in the room, not the
  * catalog cover. At most two: the first is the front, the second the back,
  * and the page turns between them.
@@ -119,6 +143,8 @@ export interface CollectionItemDetails {
 	description: string;
 	purchase: CollectionItemPurchase | null;
 	condition: CollectionItemCondition | null;
+	/** The number this copy carries, where the edition was numbered. */
+	serial: CollectionItemSerial | null;
 	story: string | null;
 }
 
@@ -138,6 +164,13 @@ export interface CollectionItem {
 	purchase?: CollectionItemPurchase | null;
 	/** Grades of the record and the sleeve; missing while ungraded. */
 	condition?: CollectionItemCondition | null;
+	/**
+	 * The number this copy carries on a numbered edition; missing on the
+	 * overwhelming majority of records, which carry none. A number here is
+	 * backed by a `CopySerialClaim` — the rules refuse to write one that
+	 * another collector holds.
+	 */
+	serial?: CollectionItemSerial | null;
 	/**
 	 * The copy's own story, as the collector tells it. `description` stays
 	 * the one-line note next to the record; this is the longer telling.

@@ -8,6 +8,7 @@ import {
 
 import {
 	PLAYER_CONTEXT_LABELS,
+	PlayerBackdrop,
 	PlayerEffects,
 	PlayerSettings,
 	PlayerSourceSetting,
@@ -135,6 +136,21 @@ interface Choice<T> {
 							type="button"
 							[class.selected]="settings().view === choice.value"
 							(click)="set({ view: choice.value })"
+						>
+							{{ choice.label }}
+						</button>
+					}
+				</fieldset>
+
+				<fieldset>
+					<legend>Backdrop</legend>
+					@for (choice of backdrops; track choice.value) {
+						<button
+							type="button"
+							[class.selected]="
+								settings().backdrop === choice.value
+							"
+							(click)="set({ backdrop: choice.value })"
 						>
 							{{ choice.label }}
 						</button>
@@ -403,6 +419,10 @@ export class PlayerSettingsMenuComponent {
 	protected readonly views: Choice<PlayerView>[] = [
 		{ value: 'panel', label: 'Page' },
 		{ value: 'stage', label: 'Full screen' },
+	];
+	protected readonly backdrops: Choice<PlayerBackdrop>[] = [
+		{ value: 'cover', label: 'Cover' },
+		{ value: 'scene', label: 'Animated world' },
 	];
 	protected readonly effects: Choice<PlayerEffects>[] = [
 		{ value: 'off', label: 'Off' },

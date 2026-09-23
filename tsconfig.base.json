@@ -100,6 +100,9 @@
 				"libs/domain/music/wishlist-item/app/admin/src/index.ts"
 			],
 			"@music-collection/ui": ["libs/ui/src/index.ts"],
+			"@music-collection/ui/visual-engine": [
+				"libs/ui/src/lib/visual-engine/index.ts"
+			],
 			"@music-collection/ui/music-view": [
 				"libs/ui/src/lib/music-view/index.ts"
 			]

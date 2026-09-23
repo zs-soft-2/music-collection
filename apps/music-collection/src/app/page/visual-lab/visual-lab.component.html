@@ -1,0 +1,311 @@
+<div class="lab" [class.lab--wide]="!panelOpen()">
+	<section class="stage">
+		@if (failure(); as message) {
+			<p class="stage__failure">
+				A vizuális motor nem indult el: {{ message }}
+			</p>
+		} @else {
+			<mc-visual-scene
+				class="stage__scene"
+				[profile]="profile()"
+				[mode]="mode()"
+				[quality]="quality()"
+				[positionSeconds]="positionSeconds()"
+				[section]="sectionOverride()"
+				[overrides]="overrides()"
+				[simulateAudio]="simulateAudio()"
+				(frame)="onFrame($event)"
+				(unsupported)="failure.set($event)"
+			/>
+		}
+
+		<p class="stage__badge">
+			{{ fps() }} FPS · {{ profile().environment.type }} ·
+			{{ currentSection() ?? 'ambient' }} · {{ mode() }}
+		</p>
+
+		<div class="overlay">
+			<div class="overlay__meta">
+				<p class="overlay__artist">{{ profile().artist }}</p>
+				<h1 class="overlay__song">{{ profile().song }}</h1>
+				<p class="overlay__album">
+					{{ profile().album }}
+					@if (profile().year) {
+						· {{ profile().year }}
+					}
+				</p>
+			</div>
+
+			<div class="timeline">
+				@for (segment of segments(); track segment.start) {
+					<span
+						class="timeline__part"
+						[class.timeline__part--on]="
+							positionSeconds() >= segment.start &&
+							positionSeconds() < segment.end
+						"
+						[style.width.%]="segment.width"
+						[title]="segment.section"
+					></span>
+				}
+			</div>
+
+			<input
+				class="scrubber"
+				type="range"
+				min="0"
+				[max]="duration()"
+				step="0.1"
+				[value]="positionSeconds()"
+				aria-label="Pozíció"
+				(input)="seek($any($event.target).value)"
+			/>
+
+			<div class="transport">
+				<span class="transport__time">
+					{{ time(positionSeconds()) }}
+				</span>
+
+				<div class="transport__buttons">
+					<button
+						type="button"
+						(click)="skip(-15)"
+						title="15 mp vissza"
+					>
+						◀◀
+					</button>
+					<button
+						type="button"
+						class="transport__play"
+						(click)="togglePlay()"
+					>
+						{{ playing() ? '❚❚' : '▶' }}
+					</button>
+					<button
+						type="button"
+						(click)="skip(15)"
+						title="15 mp előre"
+					>
+						▶▶
+					</button>
+				</div>
+
+				<span class="transport__time">{{ time(duration()) }}</span>
+			</div>
+		</div>
+	</section>
+
+	<aside class="panel" [class.panel--closed]="!panelOpen()">
+		<button
+			type="button"
+			class="panel__toggle"
+			(click)="panelOpen.set(!panelOpen())"
+		>
+			{{ panelOpen() ? '›' : '‹' }}
+		</button>
+
+		@if (panelOpen()) {
+			<div class="panel__body">
+				<h2>Lemez</h2>
+				<div class="record">
+					<button
+						type="button"
+						class="record__step"
+						title="Előző"
+						(click)="stepSubject(-1)"
+					>
+						‹
+					</button>
+					<select
+						class="record__list"
+						aria-label="Lemez"
+						(change)="pickSubject($any($event.target).value)"
+					>
+						@for (
+							option of subjects;
+							track option.artist + option.album;
+							let index = $index
+						) {
+							<option
+								[value]="index"
+								[selected]="
+									!typed() && subjectIndex() === index
+								"
+							>
+								{{ option.artist }} — {{ option.style }}
+							</option>
+						}
+					</select>
+					<button
+						type="button"
+						class="record__step"
+						title="Következő"
+						(click)="stepSubject(1)"
+					>
+						›
+					</button>
+				</div>
+				<p class="panel__hint">
+					Minden családhoz egy lemez, hogy végig lehessen lépni a
+					motor összes világán.
+				</p>
+
+				<h2>
+					Sajátot
+					@if (typed()) {
+						<button
+							type="button"
+							class="panel__manual chips__on"
+							(click)="clearTyped()"
+						>
+							vissza a listához
+						</button>
+					}
+				</h2>
+				<div class="fields">
+					<label>
+						<span>Előadó</span>
+						<input
+							type="text"
+							[value]="typedValue('artist')"
+							(input)="type('artist', $any($event.target).value)"
+						/>
+					</label>
+					<label>
+						<span>Lemez</span>
+						<input
+							type="text"
+							[value]="typedValue('album')"
+							(input)="type('album', $any($event.target).value)"
+						/>
+					</label>
+					<label>
+						<span>Szám</span>
+						<input
+							type="text"
+							[value]="typedValue('song')"
+							(input)="type('song', $any($event.target).value)"
+						/>
+					</label>
+					<label>
+						<span>Stílus</span>
+						<input
+							type="text"
+							[value]="typedValue('style')"
+							placeholder="Thrash, Doom, Black…"
+							(input)="type('style', $any($event.target).value)"
+						/>
+					</label>
+				</div>
+
+				<h2>Világ</h2>
+				<p class="world">
+					<strong>{{ profile().environment.type }}</strong>
+					· {{ profile().particles.type }} ·
+					{{ profile().camera.movement }}
+				</p>
+				<div class="swatches">
+					@for (colour of swatches(); track colour) {
+						<span
+							class="swatches__one"
+							[style.background]="colour"
+							[title]="colour"
+						></span>
+					}
+				</div>
+				<div class="chips chips--quiet">
+					@for (motif of motifs(); track motif.label) {
+						<span [title]="motif.weight.toFixed(2)">
+							{{ motif.label }}
+						</span>
+					}
+				</div>
+
+				<h2>Bemenet</h2>
+				<div class="chips">
+					@for (
+						option of ['ambient', 'timeline', 'audio-reactive'];
+						track option
+					) {
+						<button
+							type="button"
+							[class.chips__on]="mode() === option"
+							(click)="setMode($any(option))"
+						>
+							{{ option }}
+						</button>
+					}
+				</div>
+				<p class="panel__hint">
+					Az audio-reactive mód szimulált hangadatot kap, hogy a
+					szolgáltatói hozzáférés nélkül is tesztelhető legyen.
+				</p>
+
+				<h2>Szekció</h2>
+				<div class="chips">
+					<button
+						type="button"
+						[class.chips__on]="sectionOverride() === null"
+						(click)="clearSection()"
+					>
+						auto
+					</button>
+					@for (section of sections; track section) {
+						<button
+							type="button"
+							[class.chips__on]="sectionOverride() === section"
+							(click)="jumpTo(section)"
+						>
+							{{ section }}
+						</button>
+					}
+				</div>
+
+				<h2>Minőség</h2>
+				<div class="chips">
+					@for (level of ['low', 'medium', 'high']; track level) {
+						<button
+							type="button"
+							[class.chips__on]="quality() === level"
+							(click)="setQuality($any(level))"
+						>
+							{{ level }}
+						</button>
+					}
+				</div>
+
+				<h2>
+					Paraméterek
+					<button
+						type="button"
+						class="panel__manual"
+						[class.chips__on]="manual()"
+						(click)="toggleManual()"
+					>
+						{{ manual() ? 'kézi' : 'követ' }}
+					</button>
+				</h2>
+
+				@for (knob of knobs; track knob.key) {
+					<label class="knob">
+						<span class="knob__label">
+							{{ knob.label }}
+							<em>{{ knobValue(knob.key).toFixed(2) }}</em>
+						</span>
+						<input
+							type="range"
+							min="0"
+							[max]="knob.max"
+							step="0.01"
+							[value]="knobValue(knob.key)"
+							[disabled]="!manual()"
+							(input)="
+								setKnob(knob.key, $any($event.target).value)
+							"
+						/>
+					</label>
+				}
+			</div>
+		}
+	</aside>
+</div>

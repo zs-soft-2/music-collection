@@ -1,0 +1,212 @@
+<div class="page">
+	<header class="hero">
+		<div class="hero-text">
+			<p class="eyebrow">musiCollection</p>
+			<h1>Coming out</h1>
+			<p class="lead">
+				The next few weeks of records by the artists already in the
+				catalog — new ones and reissues alike, gathered from MusicBrainz
+				once a day.
+			</p>
+		</div>
+
+		@if (!store.isLoading() && store.releases().length) {
+			<dl class="stats">
+				<div class="stat">
+					<dt>Records</dt>
+					<dd>{{ store.releases().length }}</dd>
+				</div>
+				<div class="stat">
+					<dt>New</dt>
+					<dd>{{ store.newCount() }}</dd>
+				</div>
+				<div class="stat">
+					<dt>Reissues</dt>
+					<dd>{{ store.reissueCount() }}</dd>
+				</div>
+				<div class="stat">
+					<dt>Artists</dt>
+					<dd>{{ store.artistCount() }}</dd>
+				</div>
+			</dl>
+		}
+	</header>
+
+	@if (store.isLoading()) {
+		<div class="timeline">
+			@for (skeleton of skeletons; track skeleton) {
+				<div class="skeleton row-skeleton"></div>
+			}
+		</div>
+	} @else if (store.isEmpty()) {
+		<p class="empty">
+			Nothing is announced for the coming weeks. Once a record by one of
+			the catalog's artists gets a date on MusicBrainz, it shows up here —
+			usually a few weeks ahead.
+		</p>
+	} @else {
+		<div class="toolbar">
+			<div class="tabs" role="tablist" aria-label="Which records">
+				@for (option of filterOptions; track option.value) {
+					<button
+						type="button"
+						role="tab"
+						class="tab"
+						[class.is-active]="store.filter() === option.value"
+						[attr.aria-selected]="store.filter() === option.value"
+						(click)="onFilter(option.value)"
+					>
+						{{ option.label }}
+					</button>
+				}
+			</div>
+
+			<label class="vinyl-only">
+				<input
+					type="checkbox"
+					[checked]="store.vinylOnly()"
+					(change)="onVinylOnly()"
+				/>
+				On vinyl
+			</label>
+		</div>
+
+		@if (store.isFilteredOut()) {
+			<p class="empty">
+				Nothing in the next few weeks matches that. There are still
+				{{ store.releases().length }} records coming.
+			</p>
+		}
+
+		@for (month of store.months(); track month.key) {
+			<section class="month" [attr.aria-label]="month.label">
+				<h2 class="month-label">{{ month.label }}</h2>
+
+				@for (day of month.days; track day.key) {
+					<div class="day">
+						<div class="day-mark">
+							<span class="day-number">{{ day.day }}</span>
+							<span class="day-weekday">{{ day.weekday }}</span>
+							<span class="day-countdown">{{
+								day.countdown
+							}}</span>
+						</div>
+
+						<ul class="records">
+							@for (record of day.releases; track record.uid) {
+								<li class="record">
+									<div
+										class="art"
+										[style.background-image]="
+											record.artistImageUrl
+												? 'url(' +
+													record.artistImageUrl +
+													')'
+												: null
+										"
+									>
+										<img
+											class="cover"
+											[src]="record.coverUrl"
+											[alt]="
+												record.title +
+												' by ' +
+												record.artistName
+											"
+											loading="lazy"
+											(error)="onCoverError($event)"
+										/>
+									</div>
+
+									<div class="record-text">
+										<p class="artist">
+											@if (record.artistUid) {
+												<a
+													[routerLink]="[
+														'/artist',
+														record.artistUid,
+													]"
+													>{{ record.artistName }}</a
+												>
+											} @else {
+												{{ record.artistName }}
+											}
+
+											@if (record.namesake) {
+												<span
+													class="namesake"
+													title="Matched on the artist's name only — it could be a namesake."
+													>name match</span
+												>
+											}
+										</p>
+
+										<h3 class="title">
+											<a
+												[href]="record.sourceUrl"
+												target="_blank"
+												rel="noopener noreferrer"
+												>{{ record.title }}</a
+											>
+										</h3>
+
+										<p class="meta">
+											@if (record.kind === 'reissue') {
+												<span class="chip chip-reissue"
+													>Reissue{{
+														record.originalYear
+															? ' of ' +
+																record.originalYear
+															: ''
+													}}</span
+												>
+											} @else {
+												<span class="chip chip-new"
+													>New</span
+												>
+											}
+
+											@if (record.typeLabel) {
+												<span class="chip">{{
+													record.typeLabel
+												}}</span>
+											}
+
+											@for (
+												format of record.formats;
+												track format
+											) {
+												<span
+													class="chip"
+													[class.chip-vinyl]="
+														isVinyl(format)
+													"
+													>{{ format }}</span
+												>
+											}
+										</p>
+
+										@if (
+											record.labels || record.countries
+										) {
+											<p class="footnote">
+												{{ record.labels }}
+												@if (
+													record.labels &&
+													record.countries
+												) {
+													·
+												}
+												{{ record.countries }}
+											</p>
+										}
+									</div>
+								</li>
+							}
+						</ul>
+					</div>
+				}
+			</section>
+		}
+	}
+</div>

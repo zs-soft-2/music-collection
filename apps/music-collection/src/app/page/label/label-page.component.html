@@ -1,0 +1,166 @@
+<div class="page">
+	<mc-page-breadcrumb [trail]="store.trail()" />
+
+	@if (store.loading()) {
+		<p class="status">Looking for this label…</p>
+	} @else if (store.notFound()) {
+		<section class="missing">
+			<h1>No label under this name.</h1>
+			<p>
+				Either it was never in the catalog, or it has been removed. The
+				records that named it keep the name they were pressed with.
+			</p>
+			<a class="button" routerLink="/home">Back to the catalog</a>
+		</section>
+	} @else {
+		<header class="hero">
+			<div class="art" aria-hidden="true">
+				<span class="monogram">{{ monogram() }}</span>
+			</div>
+
+			<div class="identity">
+				<p class="eyebrow">Label</p>
+				<h1>{{ store.name() }}</h1>
+
+				@if (store.parent(); as parent) {
+					<p class="lead">
+						<span>A label of</span>
+						<a [routerLink]="['/label', parent.uid]">{{
+							parent.name
+						}}</a>
+					</p>
+				}
+
+				<div class="hero-actions">
+					<mc-admin-edit-link
+						entity="label"
+						[id]="store.labelId()"
+						[name]="store.name()"
+					/>
+				</div>
+			</div>
+		</header>
+
+		<mc-entity-facts [facts]="facts()" />
+
+		@if (store.children().length) {
+			<section class="section">
+				<h2>Sub-labels</h2>
+				<ul class="entries">
+					@for (child of store.children(); track child.uid) {
+						<li>
+							<a
+								class="entry"
+								[routerLink]="['/label', child.uid]"
+							>
+								<span class="entry-art" aria-hidden="true">{{
+									child.name.charAt(0).toUpperCase()
+								}}</span>
+								<span class="entry-text">
+									<strong>{{ child.name }}</strong>
+								</span>
+							</a>
+						</li>
+					}
+				</ul>
+			</section>
+		}
+
+		@if (store.artists().length) {
+			<section class="section">
+				<h2>Artists</h2>
+				<ul class="entries">
+					@for (artist of visibleArtists(); track artist.uid) {
+						<li>
+							<a
+								class="entry"
+								[routerLink]="['/artist', artist.uid]"
+							>
+								<span class="entry-text">
+									<strong>{{ artist.name }}</strong>
+								</span>
+								<span class="entry-meta">
+									{{ artist.releases }}
+									{{
+										artist.releases === 1
+											? 'pressing'
+											: 'pressings'
+									}}
+								</span>
+							</a>
+						</li>
+					}
+				</ul>
+
+				@if (store.artists().length > visibleArtists().length) {
+					<button
+						type="button"
+						class="button more"
+						(click)="showAllArtists.set(true)"
+					>
+						Show all {{ store.artists().length }} artists
+					</button>
+				}
+			</section>
+		}
+
+		<section class="section">
+			<h2>Pressings</h2>
+
+			@if (store.pressings().length) {
+				<ul class="entries">
+					@for (pressing of visiblePressings(); track pressing.uid) {
+						<li>
+							<a
+								class="entry"
+								[routerLink]="['/release', pressing.uid]"
+							>
+								<span class="entry-art">
+									@if (pressing.coverUrl) {
+										<img
+											[src]="pressing.coverUrl"
+											[alt]="pressing.name + ' cover'"
+											loading="lazy"
+										/>
+									} @else {
+										<span aria-hidden="true">♪</span>
+									}
+								</span>
+
+								<span class="entry-text">
+									<strong>{{ pressing.name }}</strong>
+									<span>{{
+										pressing.artistName ?? 'Unknown artist'
+									}}</span>
+								</span>
+
+								<span class="entry-meta">
+									<mc-format-badge
+										[format]="pressing.format"
+									/>
+									@if (pressing.year) {
+										<span> · {{ pressing.year }}</span>
+									}
+								</span>
+							</a>
+						</li>
+					}
+				</ul>
+
+				@if (store.pressings().length > visiblePressings().length) {
+					<button
+						type="button"
+						class="button more"
+						(click)="showAllPressings.set(true)"
+					>
+						Show all {{ store.pressings().length }} pressings
+					</button>
+				}
+			} @else {
+				<p class="empty">
+					No pressing in the catalog carries this label yet.
+				</p>
+			}
+		</section>
+	}
+</div>
