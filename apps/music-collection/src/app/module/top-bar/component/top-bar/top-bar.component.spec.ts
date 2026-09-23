@@ -1,5 +1,5 @@
 import { NgxPermissionsModule } from 'ngx-permissions';
-import { of } from 'rxjs';
+import { BehaviorSubject, of } from 'rxjs';
 
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -17,8 +17,17 @@ import { TopBarComponent } from './top-bar.component';
 describe('TopBarComponent', () => {
 	let component: TopBarComponent;
 	let fixture: ComponentFixture<TopBarComponent>;
+	let isAuthenticated$: BehaviorSubject<boolean>;
+
+	/** The labels of the links the top bar offers, in order. */
+	const navLabels = (): string[] =>
+		Array.from(
+			fixture.nativeElement.querySelectorAll('.nav .nav-link')
+		).map((link) => (link as HTMLElement).textContent?.trim() ?? '');
 
 	beforeEach(async () => {
+		isAuthenticated$ = new BehaviorSubject(false);
+
 		await TestBed.configureTestingModule({
 			imports: [TopBarComponent, NgxPermissionsModule.forRoot()],
 			providers: [
@@ -40,7 +49,7 @@ describe('TopBarComponent', () => {
 						dispatchLogin: jest.fn(),
 						dispatchLogout: jest.fn(),
 						selectAuthenticatedUser$: () => of(undefined),
-						selectIsAuthenticated$: () => of(false),
+						selectIsAuthenticated$: () => isAuthenticated$,
 					},
 				},
 				{
@@ -70,5 +79,35 @@ describe('TopBarComponent', () => {
 
 	it('should create', () => {
 		expect(component).toBeTruthy();
+	});
+
+	/**
+	 * A guest is offered what there is to browse. The rest would only ever be
+	 * empty for them, or asks for a collection they have not got.
+	 */
+	it('keeps the personal links from a guest', () => {
+		expect(navLabels()).toEqual([
+			'Home',
+			'Collections',
+			'Coming out',
+			'Network',
+		]);
+	});
+
+	it('offers every link once the session is restored', () => {
+		isAuthenticated$.next(true);
+		fixture.detectChanges();
+
+		expect(navLabels()).toEqual([
+			'Home',
+			'My Collection',
+			'Scan',
+			'Collections',
+			'Radio',
+			'Coming out',
+			'Wishlist',
+			'Network',
+			'Map',
+		]);
 	});
 });

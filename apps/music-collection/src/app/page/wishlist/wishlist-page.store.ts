@@ -308,6 +308,12 @@ export const WishlistPageStore = signalStore(
 			toggleFound: () =>
 				patchState(store, { showFound: !store.showFound() }),
 			clearFilters: () => patchState(store, { query: '', format: 'all' }),
+			/**
+			 * `authenticatedGuard` keeps a guest off this route; this is for
+			 * the case it is ever reached without a session, so the page asks
+			 * for a sign-in rather than calling the wishlist empty.
+			 */
+			login: () => authenticationStateService.dispatchLogin(),
 		})
 	),
 	withHooks({

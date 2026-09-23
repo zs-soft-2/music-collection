@@ -308,6 +308,14 @@ export const ScanPageStore = signalStore(
 					)
 				)
 			),
+			/**
+			 * `authenticatedGuard` keeps a guest off this route; this is for
+			 * the case it is ever reached without a session, so the notice
+			 * can offer the way in rather than only name it.
+			 */
+			login(): void {
+				authenticationStateService.dispatchLogin();
+			},
 		})
 	),
 	withMethods((store, scanEffect = inject(PhotoScanEffect)) => ({

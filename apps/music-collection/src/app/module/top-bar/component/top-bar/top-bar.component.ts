@@ -49,7 +49,7 @@ export class TopBarComponent extends BaseComponent {
 
 	protected readonly adminRoles = [RoleNames.ADMIN];
 
-	protected readonly navItems = this.componentService
+	private readonly menuItems = this.componentService
 		.createMenuItems()
 		.map((item) => ({
 			...item,
@@ -60,6 +60,18 @@ export class TopBarComponent extends BaseComponent {
 	protected readonly isAuthenticated = toSignal(
 		this.componentService.selectIsAuthenticated$(),
 		{ initialValue: false }
+	);
+
+	/**
+	 * A guest is offered what there is to browse, and nothing that would only
+	 * ever be empty for them. The personal links appear as the session is
+	 * restored, the same moment the avatar takes the place of the Log in
+	 * button.
+	 */
+	protected readonly navItems = computed(() =>
+		this.menuItems.filter(
+			(item) => !item.requiresAuth || this.isAuthenticated()
+		)
 	);
 
 	protected readonly accountOpen = signal(false);

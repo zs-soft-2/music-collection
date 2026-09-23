@@ -337,13 +337,18 @@ button {
 }
 
 .button {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
 	margin-top: 1rem;
 	padding: 0.6rem 1.2rem;
+	font: inherit;
 	font-weight: 600;
 	color: var(--mc-on-primary);
 	background: var(--mc-primary);
 	border: 0;
 	border-radius: var(--mc-radius-md);
+	cursor: pointer;
 }
 
 @keyframes mc-shimmer {

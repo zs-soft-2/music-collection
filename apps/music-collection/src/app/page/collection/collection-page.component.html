@@ -216,6 +216,16 @@
 				<div class="skeleton"></div>
 			}
 		</div>
+	} @else if (!store.isAuthenticated()) {
+		<div class="empty">
+			<p class="empty-icon" aria-hidden="true">♪</p>
+			<h2>Your collection lives behind the sign-in</h2>
+			<p>Log in to see the records you have, and to add new ones.</p>
+			<button type="button" class="button" (click)="store.login()">
+				<i class="pi pi-sign-in" aria-hidden="true"></i>
+				Log in
+			</button>
+		</div>
 	} @else if (!store.visible().length) {
 		<div class="empty">
 			<p class="empty-icon" aria-hidden="true">♪</p>

@@ -11,9 +11,21 @@
 	</header>
 
 	@if (!store.canCollect()) {
-		<p class="notice">
-			Sign in as a collector to add records to your collection.
-		</p>
+		<div class="notice">
+			@if (store.userId()) {
+				<p>
+					Your account may not add records to a collection yet. Ask
+					for the collector role and the scan opens up.
+				</p>
+			} @else {
+				<p>Sign in as a collector to add records to your collection.</p>
+
+				<button type="button" (click)="store.login()">
+					<i class="pi pi-sign-in" aria-hidden="true"></i>
+					Log in
+				</button>
+			}
+		</div>
 	} @else {
 		<!-- No `capture`: it would force the camera and hide the photo
 		     library, so a picture already taken could not be picked. -->

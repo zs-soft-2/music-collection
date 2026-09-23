@@ -285,6 +285,31 @@ h1 {
 	color: var(--mc-text-muted);
 }
 
+.notice {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.875rem;
+
+	p {
+		margin: 0;
+	}
+
+	button {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.6rem 1.1rem;
+		font: inherit;
+		font-weight: 600;
+		color: var(--mc-on-primary);
+		background: var(--mc-primary);
+		border: 0;
+		border-radius: var(--mc-radius-md);
+		cursor: pointer;
+	}
+}
+
 .error {
 	color: var(--mc-primary);
 	border-color: var(--mc-primary);

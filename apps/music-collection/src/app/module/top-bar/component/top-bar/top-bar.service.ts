@@ -33,10 +33,12 @@ export class TopBarService {
 			{
 				label: 'My Collection',
 				routerLink: ['/collection'],
+				requiresAuth: true,
 			},
 			{
 				label: 'Scan',
 				routerLink: ['/scan'],
+				requiresAuth: true,
 			},
 			{
 				label: 'Collections',
@@ -45,6 +47,7 @@ export class TopBarService {
 			{
 				label: 'Radio',
 				routerLink: ['/radio'],
+				requiresAuth: true,
 			},
 			{
 				label: 'Coming out',
@@ -53,6 +56,7 @@ export class TopBarService {
 			{
 				label: 'Wishlist',
 				routerLink: ['/wishlist'],
+				requiresAuth: true,
 			},
 			{
 				label: 'Network',
@@ -61,6 +65,7 @@ export class TopBarService {
 			{
 				label: 'Map',
 				routerLink: ['/map'],
+				requiresAuth: true,
 			},
 		];
 	}

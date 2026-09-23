@@ -23,7 +23,7 @@
 	</button>
 
 	<nav class="nav" aria-label="Main">
-		@for (item of navItems; track item.label) {
+		@for (item of navItems(); track item.label) {
 			<a
 				class="nav-link"
 				[routerLink]="item.routerLink"
@@ -192,7 +192,7 @@
 
 @if (menuOpen()) {
 	<nav id="mc-mobile-nav" class="sheet" aria-label="Main">
-		@for (item of navItems; track item.label) {
+		@for (item of navItems(); track item.label) {
 			<a
 				class="sheet-link"
 				[routerLink]="item.routerLink"

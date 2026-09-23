@@ -2,6 +2,7 @@ import { NgxPermissionsGuard } from 'ngx-permissions';
 
 import { Routes } from '@angular/router';
 import { RoleNames } from '@music-collection/api';
+import { authenticatedGuard } from '@music-collection/core/authentication';
 
 export const routes: Routes = [
 	{
@@ -126,6 +127,7 @@ export const routes: Routes = [
 		data: {
 			breadcrumb: 'collection',
 		},
+		canActivate: [authenticatedGuard],
 	},
 	{
 		// One copy on one shelf. Only the signed-in collector's own copies
@@ -139,6 +141,7 @@ export const routes: Routes = [
 		data: {
 			breadcrumb: 'copy',
 		},
+		canActivate: [authenticatedGuard],
 	},
 	{
 		path: 'scan',
@@ -149,6 +152,7 @@ export const routes: Routes = [
 		data: {
 			breadcrumb: 'scan',
 		},
+		canActivate: [authenticatedGuard],
 	},
 	{
 		path: 'radio',
@@ -159,6 +163,7 @@ export const routes: Routes = [
 		data: {
 			breadcrumb: 'radio',
 		},
+		canActivate: [authenticatedGuard],
 	},
 	{
 		path: 'visual-lab',
@@ -212,6 +217,7 @@ export const routes: Routes = [
 		data: {
 			breadcrumb: 'map',
 		},
+		canActivate: [authenticatedGuard],
 	},
 	{
 		path: 'profile',
@@ -222,6 +228,7 @@ export const routes: Routes = [
 		data: {
 			breadcrumb: 'profile',
 		},
+		canActivate: [authenticatedGuard],
 	},
 	{
 		path: 'wishlist',
@@ -232,6 +239,7 @@ export const routes: Routes = [
 		data: {
 			breadcrumb: 'wishlist',
 		},
+		canActivate: [authenticatedGuard],
 	},
 	{
 		path: 'admin',

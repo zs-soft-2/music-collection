@@ -2,6 +2,7 @@ import { combineLatest, of, pairwise, pipe, switchMap, tap } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
 import {
+	AuthenticationStateService,
 	CollectionItemEntity,
 	CollectionItemPlacement,
 	CollectionItemStateService,
@@ -83,6 +84,8 @@ const STYLE_COUNT = 6;
 interface CollectionPageState {
 	releases: ReleaseView[];
 	isLoading: boolean;
+	/** A guest has no collection to show; they are asked to sign in. */
+	isAuthenticated: boolean;
 	/** The published collections with where this shelf gets the collector. */
 	standings: MusicCollectionStanding[];
 	standingsLoading: boolean;
@@ -105,6 +108,7 @@ interface CollectionPageState {
 const initialState: CollectionPageState = {
 	releases: [],
 	isLoading: true,
+	isAuthenticated: false,
 	standings: [],
 	standingsLoading: true,
 	query: '',
@@ -284,7 +288,8 @@ export const CollectionPageStore = signalStore(
 			store,
 			collectionItemStateService = inject(CollectionItemStateService),
 			musicCollectionEffect = inject(MusicCollectionEffect),
-			settingsEffect = inject(UserSettingsEffect)
+			settingsEffect = inject(UserSettingsEffect),
+			authentication = inject(AuthenticationStateService)
 		) => {
 			const savePreferences = () => {
 				settingsEffect
@@ -299,6 +304,23 @@ export const CollectionPageStore = signalStore(
 			};
 
 			return {
+				/**
+				 * Who the shelf belongs to. `authenticatedGuard` keeps a guest
+				 * off this route, so this is what is left for the case it is
+				 * ever reached without a session: the page says so instead of
+				 * blaming the filters for the empty shelf.
+				 */
+				watchSession: rxMethod<void>(
+					pipe(
+						switchMap(() => authentication.selectIsAuthenticated$()),
+						tap((isAuthenticated) =>
+							patchState(store, { isAuthenticated })
+						)
+					)
+				),
+				login(): void {
+					authentication.dispatchLogin();
+				},
 				load: rxMethod<void>(
 					pipe(
 						tap(() => patchState(store, { isLoading: true })),
@@ -518,6 +540,7 @@ export const CollectionPageStore = signalStore(
 	),
 	withHooks({
 		onInit(store) {
+			store.watchSession(of(undefined));
 			store.loadPreferences(of(undefined));
 			store.loadShelfLayout(of(undefined));
 			store.load(of(undefined));
