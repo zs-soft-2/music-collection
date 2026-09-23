@@ -140,6 +140,13 @@ export interface PlayRequest {
 	albumTitle: string;
 	artistName: string | null;
 	coverUrl: string | null;
+	/**
+	 * The album's styles, as `StyleEnum` spells them. The animated backdrop
+	 * reads them to pick which world to build: without them it had to draw a
+	 * world out of the band's name, so the look was different per record but
+	 * never actually about the music.
+	 */
+	styles: string[];
 	spotifyAlbumId: string | null;
 	youtubePlaylistId: string | null;
 	/** The album's tracks in play order. */
@@ -242,6 +249,7 @@ export function albumPlayRequest(
 		albumTitle: album.name,
 		artistName: album.artist?.name ?? null,
 		coverUrl: album.coverImage?.filePath || album.coverImageUrl || null,
+		styles: album.styles ?? [],
 		spotifyAlbumId: isSpotifyAlbumId(album.spotifyAlbumId)
 			? album.spotifyAlbumId
 			: null,

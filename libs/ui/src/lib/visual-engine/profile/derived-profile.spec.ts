@@ -78,10 +78,10 @@ describe('deriveVisualProfile', () => {
 			counts.set(family, (counts.get(family) ?? 0) + 1);
 		}
 
-		// Every family gets used, and none takes more than a third of the
+		// Every family gets used, and none takes more than a fifth of the
 		// shelf. A weak number stream used to pile most bands into one.
-		expect(counts.size).toBe(6);
-		expect(Math.max(...counts.values())).toBeLessThan(bands / 3);
+		expect(counts.size).toBe(11);
+		expect(Math.max(...counts.values())).toBeLessThan(bands / 5);
 	});
 
 	it('makes two records of one band relatives, not strangers', () => {
@@ -139,6 +139,76 @@ describe('deriveVisualProfile', () => {
 		expect(thrash.environment.type).toBe('industrial');
 		expect(['embers', 'dust']).toContain(thrash.particles.type);
 		expect(jazz.environment.fog).toBeGreaterThan(thrash.environment.fog);
+	});
+
+	it(`reads this shelf's own styles, not music in general`, () => {
+		// The vocabulary is `StyleEnum`, which is metal and rock all the way
+		// down. A taxonomy written for music in general sent two thirds of it
+		// to the same world, which is what made every record look alike.
+		const worldOf = (style: string) =>
+			deriveVisualProfile({
+				artist: 'A',
+				album: 'B',
+				song: 'C',
+				genre: [style],
+			}).environment.type;
+
+		expect(worldOf('Thrash')).toBe('industrial');
+		expect(worldOf('Black')).toBe('forest');
+		expect(worldOf('Doom')).toBe('cathedral');
+		expect(worldOf('Melodic Death')).toBe('coast');
+		expect(worldOf('Death')).toBe('swamp');
+		expect(worldOf('Progressive metal')).toBe('space');
+		expect(worldOf('Power metal')).toBe('citadel');
+		expect(worldOf('Metalcore')).toBe('warehouse');
+		expect(worldOf('Glam Rock')).toBe('urban');
+		expect(worldOf('Hard rock')).toBe('desert');
+
+		// The more particular reading wins over the broader one.
+		expect(worldOf('Blackened Doom')).toBe('cathedral');
+		expect(worldOf('Death Doom')).toBe('cathedral');
+		expect(worldOf('Technical Thrash')).toBe('space');
+	});
+
+	it('sends a whole metal shelf to more than a couple of worlds', () => {
+		const STYLES = [
+			'Alternative metal',
+			'Bay Area Thrash',
+			'Black',
+			'Blues Rock',
+			'Brutal Death',
+			'Death',
+			'Death Doom',
+			'Doom',
+			'Folk metal',
+			'Glam Metal',
+			'Gothic',
+			'Grindcore',
+			'Groove',
+			'Grunge',
+			'Hard rock',
+			'Heavy metal',
+			'Melodic Death',
+			'Metalcore',
+			'Power metal',
+			'Progressive metal',
+			'Rock',
+			'Speed',
+			'Symphonic Heavy metal',
+			'Technical Death',
+			'Thrash',
+		];
+		const worlds = new Set(
+			STYLES.map(
+				(style) =>
+					deriveVisualProfile({ artist: 'A', genre: [style] })
+						.environment.type
+			)
+		);
+
+		// The old taxonomy reached three worlds with this list, and put more
+		// than half of it in one of them.
+		expect(worlds.size).toBeGreaterThanOrEqual(8);
 	});
 
 	it('writes colours back as hex', () => {

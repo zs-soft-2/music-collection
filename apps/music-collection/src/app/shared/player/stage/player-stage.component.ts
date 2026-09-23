@@ -116,6 +116,9 @@ export class PlayerStageComponent {
 			artist: request?.artistName ?? this.player.now()?.subtitle ?? null,
 			album: request?.albumTitle ?? null,
 			song: this.player.now()?.title ?? request?.trackName ?? null,
+			// What the record is, rather than what it is called: this is what
+			// decides whether the backdrop is a furnace city or a frozen wood.
+			genre: request?.styles ?? null,
 		});
 	});
 

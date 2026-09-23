@@ -15,9 +15,26 @@ export type VisualQuality = 'low' | 'medium' | 'high';
 export type SongSection =
 	'intro' | 'verse' | 'build' | 'chorus' | 'breakdown' | 'solo' | 'outro';
 
-/** The kind of world the scene builds. Only `industrial` renders so far. */
+/**
+ * The kind of world the scene builds. Every one of these is a different
+ * picture rather than a different grade of one picture: what stands on the
+ * horizon, what is in the sky and what the ground is made of all change with
+ * it. See `WORLDS` for what each one has.
+ */
 export type EnvironmentType =
-	'industrial' | 'space' | 'nature' | 'abstract' | 'urban' | 'custom';
+	| 'industrial'
+	| 'urban'
+	| 'forest'
+	| 'swamp'
+	| 'cathedral'
+	| 'citadel'
+	| 'space'
+	| 'desert'
+	| 'coast'
+	| 'warehouse'
+	| 'abstract'
+	| 'nature'
+	| 'custom';
 
 export type ParticleType = 'embers' | 'dust' | 'rain' | 'snow' | 'energy';
 

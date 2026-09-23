@@ -7,7 +7,7 @@
 		} @else {
 			<mc-visual-scene
 				class="stage__scene"
-				[profile]="profile"
+				[profile]="profile()"
 				[mode]="mode()"
 				[quality]="quality()"
 				[positionSeconds]="positionSeconds()"
@@ -20,16 +20,19 @@
 		}
 
 		<p class="stage__badge">
-			{{ fps() }} FPS · {{ currentSection() ?? 'ambient' }} ·
-			{{ mode() }}
+			{{ fps() }} FPS · {{ profile().environment.type }} ·
+			{{ currentSection() ?? 'ambient' }} · {{ mode() }}
 		</p>
 
 		<div class="overlay">
 			<div class="overlay__meta">
-				<p class="overlay__artist">{{ profile.artist }}</p>
-				<h1 class="overlay__song">{{ profile.song }}</h1>
+				<p class="overlay__artist">{{ profile().artist }}</p>
+				<h1 class="overlay__song">{{ profile().song }}</h1>
 				<p class="overlay__album">
-					{{ profile.album }} · {{ profile.year }}
+					{{ profile().album }}
+					@if (profile().year) {
+						· {{ profile().year }}
+					}
 				</p>
 			</div>
 
@@ -51,7 +54,7 @@
 				class="scrubber"
 				type="range"
 				min="0"
-				[max]="duration"
+				[max]="duration()"
 				step="0.1"
 				[value]="positionSeconds()"
 				aria-label="Pozíció"
@@ -87,7 +90,7 @@
 					</button>
 				</div>
 
-				<span class="transport__time">{{ time(duration) }}</span>
+				<span class="transport__time">{{ time(duration()) }}</span>
 			</div>
 		</div>
 	</section>
@@ -103,6 +106,121 @@
 
 		@if (panelOpen()) {
 			<div class="panel__body">
+				<h2>Lemez</h2>
+				<div class="record">
+					<button
+						type="button"
+						class="record__step"
+						title="Előző"
+						(click)="stepSubject(-1)"
+					>
+						‹
+					</button>
+					<select
+						class="record__list"
+						aria-label="Lemez"
+						(change)="pickSubject($any($event.target).value)"
+					>
+						@for (
+							option of subjects;
+							track option.artist + option.album;
+							let index = $index
+						) {
+							<option
+								[value]="index"
+								[selected]="
+									!typed() && subjectIndex() === index
+								"
+							>
+								{{ option.artist }} — {{ option.style }}
+							</option>
+						}
+					</select>
+					<button
+						type="button"
+						class="record__step"
+						title="Következő"
+						(click)="stepSubject(1)"
+					>
+						›
+					</button>
+				</div>
+				<p class="panel__hint">
+					Minden családhoz egy lemez, hogy végig lehessen lépni a
+					motor összes világán.
+				</p>
+
+				<h2>
+					Sajátot
+					@if (typed()) {
+						<button
+							type="button"
+							class="panel__manual chips__on"
+							(click)="clearTyped()"
+						>
+							vissza a listához
+						</button>
+					}
+				</h2>
+				<div class="fields">
+					<label>
+						<span>Előadó</span>
+						<input
+							type="text"
+							[value]="typedValue('artist')"
+							(input)="type('artist', $any($event.target).value)"
+						/>
+					</label>
+					<label>
+						<span>Lemez</span>
+						<input
+							type="text"
+							[value]="typedValue('album')"
+							(input)="type('album', $any($event.target).value)"
+						/>
+					</label>
+					<label>
+						<span>Szám</span>
+						<input
+							type="text"
+							[value]="typedValue('song')"
+							(input)="type('song', $any($event.target).value)"
+						/>
+					</label>
+					<label>
+						<span>Stílus</span>
+						<input
+							type="text"
+							[value]="typedValue('style')"
+							placeholder="Thrash, Doom, Black…"
+							(input)="type('style', $any($event.target).value)"
+						/>
+					</label>
+				</div>
+
+				<h2>Világ</h2>
+				<p class="world">
+					<strong>{{ profile().environment.type }}</strong>
+					· {{ profile().particles.type }} ·
+					{{ profile().camera.movement }}
+				</p>
+				<div class="swatches">
+					@for (colour of swatches(); track colour) {
+						<span
+							class="swatches__one"
+							[style.background]="colour"
+							[title]="colour"
+						></span>
+					}
+				</div>
+				<div class="chips chips--quiet">
+					@for (motif of motifs(); track motif.label) {
+						<span [title]="motif.weight.toFixed(2)">
+							{{ motif.label }}
+						</span>
+					}
+				</div>
+
 				<h2>Bemenet</h2>
 				<div class="chips">
 					@for (

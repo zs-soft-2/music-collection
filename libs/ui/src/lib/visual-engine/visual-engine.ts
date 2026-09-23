@@ -8,7 +8,6 @@ import {
 	applyOverrides,
 	clamp,
 	easeVisualState,
-	hash,
 	neutralVisualState,
 	noise,
 	targetVisualState,
@@ -26,7 +25,7 @@ import {
 } from './gl';
 import {
 	AudioFeatures,
-	EnvironmentType,
+	ParticleType,
 	SongSection,
 	SongVisualProfile,
 	VisualInputMode,
@@ -35,10 +34,16 @@ import {
 	VisualState,
 } from './model';
 import {
+	WorldShape,
+	seedFrom,
+	worldSeed,
+	worldShapeFor,
+} from './profile/world-shape';
+import {
 	FULLSCREEN_VERTEX,
-	INDUSTRIAL_SCENE_FRAGMENT,
 	PARTICLE_FRAGMENT,
 	PARTICLE_VERTEX,
+	SCENE_FRAGMENT,
 } from './shader';
 
 /** Below this the analyser is reporting nothing, not quiet music. */
@@ -81,6 +86,73 @@ const QUALITY: Record<VisualQuality, QualitySettings> = {
 	},
 };
 
+/**
+ * The fields of `WorldShape` the shader takes as uniforms. A missing name here
+ * is a motif the shader never sees, so the list is spelled out rather than
+ * taken from the object at runtime.
+ */
+const WORLD_MOTIFS: readonly (keyof WorldShape)[] = [
+	'horizon',
+	'land',
+	'blocks',
+	'ridge',
+	'spike',
+	'dunes',
+	'density',
+	'height',
+	'stacks',
+	'windows',
+	'arcade',
+	'monolith',
+	'arcs',
+	'grid',
+	'stars',
+	'moon',
+	'aurora',
+	'nebula',
+	'dawn',
+	'storm',
+	'smog',
+	'wet',
+	'water',
+	'sand',
+	'fires',
+	'beam',
+	'streaks',
+	'frame',
+	'branches',
+];
+
+/**
+ * How each kind of thing moves through the air. Colour alone made all five
+ * read as the same mote: rain has to fall the whole frame as a hard streak,
+ * and an ember has to burn out low down.
+ */
+const AIR: Record<
+	ParticleType,
+	{
+		size: number;
+		sway: number;
+		rise: number;
+		span: number;
+		stretch: number;
+		twinkle: number;
+	}
+> = {
+	embers: { size: 7.5, sway: 1, rise: 1, span: 0, stretch: 1, twinkle: 0.3 },
+	dust: { size: 4.5, sway: 0.8, rise: 0, span: 1, stretch: 1, twinkle: 0.15 },
+	rain: { size: 16, sway: 0.1, rise: 0, span: 1, stretch: 5.5, twinkle: 0 },
+	snow: { size: 6, sway: 1.6, rise: 0, span: 1, stretch: 1, twinkle: 0.1 },
+	energy: { size: 8, sway: 1.2, rise: 1, span: 0.7, stretch: 1, twinkle: 0.85 },
+};
+
+/** Their names in the shader, worked out once rather than once a frame. */
+const WORLD_UNIFORMS: readonly (readonly [string, keyof WorldShape])[] =
+	WORLD_MOTIFS.map((motif) => [
+		`u${motif[0].toUpperCase()}${motif.slice(1)}`,
+		motif,
+	]);
+
 export interface VisualEngineOptions {
 	canvas: HTMLCanvasElement;
 	profile: SongVisualProfile;
@@ -88,151 +160,6 @@ export interface VisualEngineOptions {
 	quality?: VisualQuality;
 	/** Called once per rendered frame, for a debug panel or an FPS readout. */
 	onFrame?: (state: Readonly<VisualState>, fps: number) => void;
-}
-
-/** A stable number per key, so one song's city is always the same city. */
-function seedFrom(id: string): number {
-	let hash = 0;
-	for (let i = 0; i < id.length; i++) {
-		hash = (hash * 31 + id.charCodeAt(i)) % 100000;
-	}
-	return hash / 1000;
-}
-
-/**
- * Which city gets built. It is the record's, not the track's: a new skyline at
- * every track would say the listener had gone somewhere else, when they have
- * only turned the record over.
- */
-function worldSeed(profile: SongVisualProfile): number {
-	return seedFrom(profile.world ?? profile.id);
-}
-
-/**
- * The shape of a world, as opposed to its colour and its weather. This is what
- * the profile's `environment.type` finally means: until now every record was
- * the same city repainted, which is exactly what it looked like.
- */
-interface WorldShape {
-	/** Where the ground line sits in the frame. */
-	horizon: number;
-	/** 0 a city of blocks, 1 a ridge of hills. */
-	ridge: number;
-	density: number;
-	height: number;
-	stacks: number;
-	windows: number;
-	stars: number;
-	wet: number;
-	beam: number;
-	fires: number;
-	/** The poles and cable in front of everything. */
-	frame: number;
-}
-
-const WORLDS: Record<EnvironmentType, WorldShape> = {
-	// A city of furnaces: close-packed blocks, stacks, wet ground, no sky.
-	industrial: {
-		horizon: -0.15,
-		ridge: 0,
-		density: 1,
-		height: 1,
-		stacks: 1,
-		windows: 1,
-		stars: 0,
-		wet: 1,
-		beam: 1,
-		frame: 1,
-		fires: 1,
-	},
-	// Taller and thinner, lit from its own windows rather than from fire.
-	urban: {
-		horizon: -0.2,
-		ridge: 0,
-		density: 1.45,
-		height: 1.5,
-		stacks: 0.25,
-		windows: 1.4,
-		stars: 0.15,
-		wet: 0.8,
-		beam: 0.6,
-		frame: 0.85,
-		fires: 0.35,
-	},
-	// Nothing was built here: a low ridge under a sky that has stars in it.
-	space: {
-		horizon: -0.26,
-		ridge: 0.95,
-		density: 0.45,
-		height: 0.85,
-		stacks: 0,
-		windows: 0,
-		stars: 1,
-		wet: 0.35,
-		beam: 0,
-		frame: 0,
-		fires: 0.25,
-	},
-	nature: {
-		horizon: -0.18,
-		ridge: 1,
-		density: 0.35,
-		height: 1.3,
-		stacks: 0,
-		windows: 0,
-		stars: 0.7,
-		wet: 0.5,
-		beam: 0,
-		frame: 0.15,
-		fires: 0.3,
-	},
-	// Half a horizon: something rises, but it is not a city and not a hill.
-	abstract: {
-		horizon: -0.1,
-		ridge: 0.55,
-		density: 0.7,
-		height: 0.55,
-		stacks: 0,
-		windows: 0.35,
-		stars: 0.45,
-		wet: 0.25,
-		beam: 0.3,
-		frame: 0.25,
-		fires: 0.5,
-	},
-	custom: {
-		horizon: -0.15,
-		ridge: 0.3,
-		density: 1,
-		height: 1,
-		stacks: 0.6,
-		windows: 0.8,
-		stars: 0.2,
-		wet: 0.8,
-		beam: 0.6,
-		frame: 0.7,
-		fires: 0.8,
-	},
-};
-
-/**
- * The world a record stands in, jittered off its family by the record's own
- * seed so two industrial bands do not get the same skyline either.
- */
-function worldShapeFor(
-	type: EnvironmentType,
-	seed: number
-): Readonly<WorldShape> {
-	const base = WORLDS[type];
-	const jitter = (offset: number) => hash(seed * 0.37 + offset) - 0.5;
-
-	return {
-		...base,
-		horizon: base.horizon + jitter(1.3) * 0.08,
-		ridge: clamp(base.ridge + jitter(2.7) * 0.25, 0, 1),
-		density: base.density * (1 + jitter(4.1) * 0.5),
-		height: base.height * (1 + jitter(5.9) * 0.45),
-	};
 }
 
 /**
@@ -616,6 +543,18 @@ export class VisualEngine {
 		return { x, y, zoom };
 	}
 
+	/**
+	 * Every motif weight the scene shader reads. Uploaded from a list so that
+	 * adding a motif is one line in `WorldShape`, one in `WORLD_MOTIFS` and
+	 * nothing here. The names are precomputed: building twenty-nine strings a
+	 * frame is exactly the kind of allocation this file avoids elsewhere.
+	 */
+	private uploadWorld(scene: GlProgram): void {
+		for (const [name, motif] of WORLD_UNIFORMS) {
+			scene.float(name, this.world[motif]);
+		}
+	}
+
 	private draw(): void {
 		const { gl, state } = this;
 		const camera = this.camera();
@@ -646,17 +585,7 @@ export class VisualEngine {
 		scene.float('uPulse', state.pulse);
 		scene.vec2('uCam', camera.x, camera.y);
 		scene.float('uZoom', camera.zoom);
-		scene.float('uHorizon', this.world.horizon);
-		scene.float('uRidge', this.world.ridge);
-		scene.float('uDensity', this.world.density);
-		scene.float('uHeight', this.world.height);
-		scene.float('uStacks', this.world.stacks);
-		scene.float('uWindows', this.world.windows);
-		scene.float('uStars', this.world.stars);
-		scene.float('uWet', this.world.wet);
-		scene.float('uBeam', this.world.beam);
-		scene.float('uFires', this.world.fires);
-		scene.float('uFrame', this.world.frame);
+		this.uploadWorld(scene);
 		scene.vec3('uBackground', this.palette.background);
 		scene.vec3('uPrimary', this.palette.primary);
 		scene.vec3('uSecondary', this.palette.secondary);
@@ -689,14 +618,18 @@ export class VisualEngine {
 		gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
 
 		const colours = this.particleColours();
+		const air = AIR[type];
 		const program = this.particleProgram;
 		program.use();
 		program.vec2('uResolution', this.width, this.height);
 		program.float('uTime', this.elapsed);
 		program.float('uPhase', this.phase);
-		program.float('uSize', type === 'dust' ? 4.5 : 7.5);
-		program.float('uSway', type === 'rain' || type === 'snow' ? 0.2 : 1);
-		program.float('uRise', type === 'rain' || type === 'snow' ? 0 : 1);
+		program.float('uSize', air.size);
+		program.float('uSway', air.sway);
+		program.float('uRise', air.rise);
+		program.float('uSpan', air.span);
+		program.float('uStretch', air.stretch);
+		program.float('uTwinkle', air.twinkle);
 		program.vec2('uCam', camera.x, camera.y);
 		program.float('uGlow', state.glow);
 		program.vec3('uCore', colours.core);
@@ -742,15 +675,10 @@ export class VisualEngine {
 	private buildSceneProgram(): GlProgram {
 		// The octave count has to be a constant for the loop to unroll, so it
 		// is injected as a define rather than passed as a uniform.
-		const source = INDUSTRIAL_SCENE_FRAGMENT.replace(
+		const source = SCENE_FRAGMENT.replace(
 			'precision highp float;',
 			`precision highp float;\n#define FBM_OCTAVES ${this.settings.octaves}`
 		);
-		return new GlProgram(
-			this.gl,
-			FULLSCREEN_VERTEX,
-			source,
-			'industrial scene'
-		);
+		return new GlProgram(this.gl, FULLSCREEN_VERTEX, source, 'scene');
 	}
 }
