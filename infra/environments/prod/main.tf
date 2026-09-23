@@ -159,6 +159,12 @@ module "service_accounts" {
     "roles/cloudbuild.builds.editor",
     "roles/artifactregistry.writer",
     "roles/iam.serviceAccountUser",
+    # Az ütemezett function (`refreshUpcomingReleases`) deployja maga hozza
+    # létre és frissíti a Cloud Scheduler jobját, ezért a deployernek kell rá
+    # jog. Szűkebb beépített szerepkör nincs: a `jobRunner` csak futtat, a
+    # `viewer` csak olvas — create/update-hez az admin az egyetlen előre
+    # definiált. Az API-t a `services` kapcsolja be, az önmagában kevés volt.
+    "roles/cloudscheduler.admin",
   ]
 
   depends_on = [google_project_service.enabled]
