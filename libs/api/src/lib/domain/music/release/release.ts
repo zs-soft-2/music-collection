@@ -14,6 +14,12 @@ import { LabelEntity } from '../label';
 export interface Release {
 	album: AlbumEntity;
 	artist: ReleaseArtist;
+	/**
+	 * The catalog number the label printed on this pressing (e.g. "MOVLP2620").
+	 * It is what a spine or a back cover shows, so it is the key a scanned
+	 * photo can be matched on without asking Discogs.
+	 */
+	catno?: string | null;
 	country: ReleaseCountryEnum;
 	/** The Discogs pressing this release was imported from, when it was. */
 	discogsReleaseId?: number | null;

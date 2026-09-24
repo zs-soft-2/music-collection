@@ -1,4 +1,5 @@
 import {
+	discogsCatno,
 	discogsFormatDescriptions,
 	discogsMedia,
 	discogsReleaseDate,
@@ -46,6 +47,31 @@ describe('discogsFormatDescriptions', () => {
 	});
 });
 
+describe('discogsCatno', () => {
+	it('az első címke katalógusszámát adja', () => {
+		expect(discogsCatno(RELEASE)).toBe('NB 2166-1');
+	});
+
+	it('nullát ad, ha a Discogs nem ismeri', () => {
+		expect(discogsCatno({ id: 1 })).toBeNull();
+		expect(
+			discogsCatno({ id: 1, labels: [{ name: 'Vertigo' }] })
+		).toBeNull();
+	});
+
+	it('a hiányt kiíró jelöléseket eldobja', () => {
+		const withCatno = (catno: string) =>
+			discogsCatno({ id: 1, labels: [{ name: 'Vertigo', catno }] });
+
+		expect(withCatno('none')).toBeNull();
+		expect(withCatno('None')).toBeNull();
+		expect(withCatno('not on label')).toBeNull();
+		expect(withCatno('-')).toBeNull();
+		// A "NONESUCH" nem hiány-jelölés, csak úgy kezdődik.
+		expect(withCatno('NONESUCH 79173')).toBe('NONESUCH 79173');
+	});
+});
+
 describe('discogsReleaseDate', () => {
 	it('pontos dátumnál azt, csak évnél január 1-jét adja', () => {
 		expect(discogsReleaseDate(RELEASE)).toBe(Date.UTC(2011, 8, 13));
@@ -81,6 +107,7 @@ describe('toCatalogRelease', () => {
 					entityType: 'Artist',
 					name: 'Anthrax',
 				},
+				catno: 'NB 2166-1',
 				country: 'Europe',
 				formatDescription: ['limited edition', '180g'],
 				label: {

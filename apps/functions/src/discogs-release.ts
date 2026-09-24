@@ -127,6 +127,25 @@ export function discogsLabelName(release: DiscogsRelease): string | null {
 }
 
 /**
+ * A Discogs a katalógusszám hiányát nem üresen, hanem kiírva jelöli. Ezeket
+ * el kell dobni: tárolva mindegyik ugyanarra az értékre normalizálódna, és
+ * onnantól bármelyik két szám nélküli préselés egyezőnek látszana.
+ * A `tools/sync/backfill-release-catno.mjs` ugyanezt a listát ismeri.
+ */
+const NO_CATNO = ['none', 'not on label', 'n/a', '-'];
+
+/**
+ * A kiadó katalógusszáma ezen a préselésen — ugyanabból a címkéből, mint a
+ * neve. Ez az, ami a gerincen és a hátlapon nyomtatva áll, így egy fotóról
+ * kiolvasva ez köti össze a képet a katalógussal, Discogs-hívás nélkül.
+ */
+export function discogsCatno(release: DiscogsRelease): string | null {
+	const catno = text(release.labels?.[0]?.catno);
+
+	return catno && !NO_CATNO.includes(catno.toLowerCase()) ? catno : null;
+}
+
+/**
  * A katalógus-dokumentum. `album` a katalógus albuma (beágyazva, mint a többi
  * kiadásnál), `label` a katalógus kiadója.
  */
@@ -150,6 +169,7 @@ export function toCatalogRelease(
 			entityType: 'Artist',
 			name: album.artist?.name ?? null,
 		},
+		catno: discogsCatno(release),
 		country: text(release.country),
 		date: discogsReleaseDate(release),
 		formatDescription: descriptions.length ? descriptions : null,
