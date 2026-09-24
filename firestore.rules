@@ -633,6 +633,24 @@ service cloud.firestore {
       allow write: if false; // refreshUpcomingReleases / syncUpcomingReleasesNow
     }
 
+    // ── Napi kérdés ─────────────────────────────────────────────────────────
+    // Egy kérdés egy napra, a nap az azonosítója. Csak bejelentkezve
+    // olvasható: a játék a gyűjtőké. A kérdést a `composeDailyQuestionDaily`
+    // (Admin SDK) írja, a kliens soha.
+    //
+    // A megfejtés SZÁNDÉKOSAN nincs ebben a dokumentumban, hanem a `secret`
+    // alkollekcióban, amit senki nem olvashat — négy opciónál a válasz
+    // hashelése értelmetlen volna, mind a négyet végig lehetne próbálni.
+    // A választ ezért callable értékeli ki.
+    match /daily-question/{day} {
+      allow read: if isAuthed();
+      allow write: if false; // composeDailyQuestionDaily / composeDailyQuestionNow
+
+      match /secret/{documentId} {
+        allow read, write: if false;
+      }
+    }
+
     // ── Alapértelmezés: tiltás ──────────────────────────────────────────────
     // (Az `id` collectiont a kliens csak ID-generálásra használja, nem írja.)
     match /{document=**} {

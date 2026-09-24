@@ -70,6 +70,7 @@ import {
 	createVisionClient,
 } from './photo-signals';
 import { approveReleaseRequest as approve } from './release-request-approval';
+import { composeDailyQuestion } from './daily-question-compose';
 import { syncUpcomingReleases } from './upcoming-release';
 import {
 	CatalogRole,
@@ -969,3 +970,54 @@ export const syncUpcomingReleasesNow = onCall(
 		return syncUpcomingReleases(database());
 	}
 );
+
+/**
+ * A nap kérdése, éjfél után néhány perccel — hogy aki a nap első percében
+ * nyit rá, már találjon kérdést.
+ *
+ * Idempotens: ha a nap kérdése megvan, a futás nem ír újra. Az ütemező
+ * újrapróbálkozása így nem cserélheti le a kérdést az alól, aki már
+ * válaszolt rá.
+ */
+export const composeDailyQuestionDaily = onSchedule(
+	{
+		schedule: '5 0 * * *',
+		timeZone: 'Europe/Budapest',
+		timeoutSeconds: 120,
+		// Ütemezett futás, nem a böngészőből: App Check tokenje nincs.
+		enforceAppCheck: false,
+	},
+	async () => {
+		const result = await composeDailyQuestion(database());
+
+		logger.info(
+			result.created
+				? `Napi kérdés (${result.day}): ${result.templateKey} / ${result.difficulty}, ${result.tries} húzásból`
+				: `Napi kérdés (${result.day}): ${
+						result.templateKey
+							? 'már megvolt'
+							: 'nem állt össze kérdés'
+					}`
+		);
+	}
+);
+
+/**
+ * Ugyanaz kézzel, az adminnak: holnapi kérdés előre, vagy egy rossz kérdés
+ * lecserélése (`force`). A `force` azt is felülírja, amire már válaszoltak,
+ * ezért ADMIN kell hozzá.
+ */
+export const composeDailyQuestionNow = onCall(async (request) => {
+	await requireCaller(request, 'ADMIN');
+
+	const input = (request.data ?? {}) as { day?: string; force?: boolean };
+
+	if (input.day && !/^\d{4}-\d{2}-\d{2}$/.test(input.day)) {
+		throw new HttpsError('invalid-argument', 'A nap YYYY-MM-DD alakú.');
+	}
+
+	return composeDailyQuestion(database(), {
+		day: input.day,
+		force: !!input.force,
+	});
+});
