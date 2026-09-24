@@ -110,6 +110,21 @@ initializeApp();
 setGlobalOptions({
 	region: REGION,
 	maxInstances: 10,
+	// A Cloud Run régiós kerete 20 vCPU (`CpuAllocPerProjectRegion`, 20 000
+	// mvCPU), a firebase-functions viszont minden functionnek egy egész vCPU-t
+	// ad — 256 MiB memória mellett is. Huszonkét functionnél ez már a deployba
+	// sem fér bele: egy deploy mindegyiknek új revíziót indít (közös
+	// forrás-archívum, bármelyik fájl változása átírja mindegyikük hash-ét), és
+	// minden induló revízió lefoglalja a maga CPU-ját, amíg a healthcheck le nem
+	// fut. A példány a deploy után is él még egy ideig, ezért a deploy körökre
+	// osztása önmagában csak eltolta a problémát. Fél CPU-val a teljes készlet
+	// bőven a keret alatt marad.
+	//
+	// Egy alatti CPU-hoz a Cloud Run 1-es concurrency-t követel: innentől egy
+	// példány egy kérést szolgál ki egyszerre, a párhuzamosságot a `maxInstances`
+	// szabja. Amelyik functionnek a fél CPU kevés, az helyben felülírja.
+	cpu: 0.5,
+	concurrency: 1,
 	serviceAccount: `functions-runtime@${process.env['GCLOUD_PROJECT']}.iam.gserviceaccount.com`,
 	// Minden callable csak a saját appunkból hívható. A jogosultság-ellenőrzés
 	// önmagában nem elég: egy ID token a böngészőből kimásolható, és onnantól a
@@ -599,6 +614,9 @@ export const identifyRecordFromPhoto = onCall(
 	{
 		secrets: [discogsToken, anthropicApiKey],
 		memory: '512MiB',
+		// A kép base64-be csomagolása és a válasz feldolgozása érdemi CPU-munka,
+		// nem csak várakozás a modellre — ez marad egész CPU-n.
+		cpu: 1,
 		// A képolvasás újrapróbálkozásai is ebbe a keretbe férnek bele.
 		timeoutSeconds: 180,
 	},
@@ -693,6 +711,8 @@ export const identifyShelfFromPhotos = onCall(
 	{
 		secrets: [anthropicApiKey],
 		memory: '512MiB',
+		// Mint az `identifyRecordFromPhoto`, csak két képpel.
+		cpu: 1,
 		// Két kép, egyenként egy modellkérés, újrapróbálkozásokkal.
 		timeoutSeconds: 300,
 	},
@@ -871,7 +891,9 @@ export const deleteMusicCollectionEntity = onCall(async (request) => {
  * memória a base64 képek miatt.
  */
 export const generateMusicCollectionBadge = onCall(
-	{ timeoutSeconds: 300, memory: '1GiB' },
+	// A generált képeket a memóriában mozgatjuk, ezért a nagyobb keret és a
+	// globálisnál több CPU.
+	{ timeoutSeconds: 300, memory: '1GiB', cpu: 1 },
 	async (request) => {
 		await requireCaller(request, 'updateMusicCollectionEntity');
 

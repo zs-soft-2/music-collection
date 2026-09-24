@@ -73,11 +73,17 @@ jobs:
       #
       # Egy deploy MINDEN functionnek új revíziót indít, mert egy közös
       # forrás-archívumból élnek: bármelyik fájl változása mindegyikük hash-ét
-      # átírja. Minden induló revízió egy vCPU-t foglal, amíg a healthcheck le
-      # nem fut, és ezek egyszerre indulnak — a Cloud Run régiós kerete viszont
-      # 20 vCPU (`CpuAllocPerProjectRegion`). Huszonkét functionnél ebből kettő
-      # mindig kiszorul, és a deploy elszáll. Kvótaemelést kértünk, de a projekt
+      # átírja. Minden induló revízió lefoglalja a CPU-ját, amíg a healthcheck
+      # le nem fut — a Cloud Run régiós kerete viszont 20 vCPU
+      # (`CpuAllocPerProjectRegion`). Kvótaemelést kértünk, de a projekt
       # használati előzménye kevés hozzá (`NOT_ENOUGH_USAGE_HISTORY`).
+      #
+      # A körökre osztás önmagában nem volt elég: a kvóta nem deployonként,
+      # hanem a régióban egyszerre futó összes példányra számít, és az első kör
+      # frissen indított példányai a második kör alatt még élnek — 11 + 11
+      # ugyanúgy 22. A tényleges megoldás a fél CPU a `setGlobalOptions`-ben
+      # (apps/functions/src/index.ts); a két kör az e melletti tartalék, hogy
+      # egy új function ne feszítse rögtön a keretet.
       #
       # A névsor a forrásból jön, hogy új functionnél itt ne kelljen átírni
       # semmit. Amit viszont kivesznek a kódból, azt egyik kör sem törli:
