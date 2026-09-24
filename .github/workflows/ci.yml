@@ -67,6 +67,29 @@ jobs:
           workload_identity_provider: ${{ vars.WIF_PROVIDER }}
           service_account: ${{ vars.DEPLOYER_SA }}
       # A hosting mellett a firebase.json többi része is: Firestore rules és indexek,
-      # Storage rules, és a jogosultság-szinkron function (apps/functions — a
-      # predeploy hook telepíti és fordítja).
-      - run: npx firebase-tools deploy --only hosting:${{ vars.FIREBASE_HOSTING }},firestore,storage,functions --project ${{ vars.GCP_PROJECT }} --non-interactive
+      # Storage rules. A functionök külön mennek, alatta.
+      - run: npx firebase-tools deploy --only hosting:${{ vars.FIREBASE_HOSTING }},firestore,storage --project ${{ vars.GCP_PROJECT }} --non-interactive
+      # A functionök két körben.
+      #
+      # Egy deploy MINDEN functionnek új revíziót indít, mert egy közös
+      # forrás-archívumból élnek: bármelyik fájl változása mindegyikük hash-ét
+      # átírja. Minden induló revízió egy vCPU-t foglal, amíg a healthcheck le
+      # nem fut, és ezek egyszerre indulnak — a Cloud Run régiós kerete viszont
+      # 20 vCPU (`CpuAllocPerProjectRegion`). Huszonkét functionnél ebből kettő
+      # mindig kiszorul, és a deploy elszáll. Kvótaemelést kértünk, de a projekt
+      # használati előzménye kevés hozzá (`NOT_ENOUGH_USAGE_HISTORY`).
+      #
+      # A névsor a forrásból jön, hogy új functionnél itt ne kelljen átírni
+      # semmit. Amit viszont kivesznek a kódból, azt egyik kör sem törli:
+      # a `firebase functions:delete` marad kézi lépésnek.
+      - name: Functionök deployja két körben (Cloud Run CPU-kvóta)
+        run: |
+          names=$(grep -o '^export const [a-zA-Z0-9_]*' apps/functions/src/index.ts | awk '{print $3}')
+          total=$(echo "$names" | wc -l | tr -d ' ')
+          half=$(( (total + 1) / 2 ))
+          first=$(echo "$names" | head -n "$half" | sed 's/^/functions:security:/' | paste -sd, -)
+          second=$(echo "$names" | tail -n +$((half + 1)) | sed 's/^/functions:security:/' | paste -sd, -)
+          echo "Első kör ($half): $first"
+          npx firebase-tools deploy --only "$first" --project ${{ vars.GCP_PROJECT }} --non-interactive
+          echo "Második kör ($((total - half))): $second"
+          npx firebase-tools deploy --only "$second" --project ${{ vars.GCP_PROJECT }} --non-interactive
