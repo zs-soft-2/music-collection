@@ -104,6 +104,7 @@ describe('TopBarComponent', () => {
 			'Home',
 			'My Collection',
 			'Scan',
+			'Shelf',
 			'Collections',
 			'Radio',
 			'Coming out',

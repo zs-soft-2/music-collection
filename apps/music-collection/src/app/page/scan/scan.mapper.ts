@@ -15,7 +15,10 @@ import {
 	ScanCandidate,
 	ScanMatch,
 } from '@music-collection/api';
-import { isSameCatalogName } from '@music-collection/common/engine';
+import {
+	isSameCatalogName,
+	isSameCatalogNumber,
+} from '@music-collection/common/engine';
 
 /**
  * - `in-collection`: the collector already owns a copy of this pressing.
@@ -74,16 +77,30 @@ export function candidateSummary(candidate: ScanCandidate): string {
 		.join(' · ');
 }
 
-/** The catalog release of the pressing, when it was already imported. */
+/**
+ * The catalog release of the pressing, when it was already imported: by the
+ * Discogs id it was imported under, then by the catalog number printed on it
+ * — that is all a photographed spine gives us, and it identifies a pressing
+ * as well as the id does.
+ */
 function findRelease(
 	releases: CatalogRelease[],
 	candidate: ScanCandidate
 ): CatalogRelease | null {
-	if (!candidate.discogsReleaseId) return null;
+	const byDiscogs = candidate.discogsReleaseId
+		? releases.find(
+				(release) =>
+					release.discogsReleaseId === candidate.discogsReleaseId
+			)
+		: undefined;
+
+	if (byDiscogs) return byDiscogs;
+
+	if (!candidate.catno) return null;
 
 	return (
-		releases.find(
-			(release) => release.discogsReleaseId === candidate.discogsReleaseId
+		releases.find((release) =>
+			isSameCatalogNumber(release.catno, candidate.catno)
 		) ?? null
 	);
 }

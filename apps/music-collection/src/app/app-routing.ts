@@ -155,6 +155,17 @@ export const routes: Routes = [
 		canActivate: [authenticatedGuard],
 	},
 	{
+		path: 'shelf-scan',
+		loadComponent: () =>
+			import('./page/shelf-scan/shelf-scan-page.component').then(
+				(module) => module.ShelfScanPageComponent
+			),
+		data: {
+			breadcrumb: 'shelf-scan',
+		},
+		canActivate: [authenticatedGuard],
+	},
+	{
 		path: 'radio',
 		loadComponent: () =>
 			import('./page/radio/radio-page.component').then(

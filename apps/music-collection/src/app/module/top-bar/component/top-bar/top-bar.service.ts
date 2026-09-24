@@ -40,6 +40,12 @@ export class TopBarService {
 				requiresAuth: true,
 			},
 			{
+				labelKey: 'nav.shelf-scan',
+				icon: 'pi-images',
+				routerLink: ['/shelf-scan'],
+				requiresAuth: true,
+			},
+			{
 				labelKey: 'nav.collections',
 				icon: 'pi-bookmark',
 				routerLink: ['/collections'],

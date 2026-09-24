@@ -1,0 +1,357 @@
+<div class="page">
+	<header class="hero">
+		<div class="hero-text">
+			<p class="eyebrow">musiCollection</p>
+			<h1>{{ 'page.shelf-scan.scan-a-shelf' | transloco }}</h1>
+			<p class="lead">
+				{{
+					'page.shelf-scan.photograph-one-compartment-twice'
+						| transloco
+				}}
+			</p>
+		</div>
+	</header>
+
+	@if (!store.canCollect()) {
+		<div class="notice">
+			@if (store.userId()) {
+				<p>{{ 'page.shelf-scan.your-account-may-not' | transloco }}</p>
+			} @else {
+				<p>{{ 'page.shelf-scan.sign-in-as-a' | transloco }}</p>
+
+				<button type="button" (click)="store.login()">
+					<i class="pi pi-sign-in" aria-hidden="true"></i>
+					{{ 'page.shelf-scan.log-in' | transloco }}
+				</button>
+			}
+		</div>
+	} @else {
+		<input
+			#file
+			type="file"
+			class="file-input"
+			accept="image/*"
+			multiple
+			aria-hidden="true"
+			tabindex="-1"
+			(change)="onFile($event)"
+		/>
+
+		<section class="shots" aria-labelledby="shots-title">
+			<h2 id="shots-title">
+				{{ 'page.shelf-scan.the-photos' | transloco }}
+			</h2>
+			<p class="hint">
+				{{ 'page.shelf-scan.one-from-the-front' | transloco }}
+			</p>
+
+			<div class="thumbs">
+				@for (photo of store.photos(); track photo.previewUrl) {
+					<figure class="thumb">
+						<img
+							[src]="photo.previewUrl"
+							[alt]="
+								'page.shelf-scan.the-compartment-photographed'
+									| transloco
+							"
+						/>
+						<figcaption>
+							{{ photo.width }}×{{ photo.height }}
+						</figcaption>
+						@if (!store.scanning()) {
+							<button
+								type="button"
+								class="drop"
+								[attr.aria-label]="
+									'page.shelf-scan.remove-this-photo'
+										| transloco
+								"
+								(click)="store.removePhoto($index)"
+							>
+								<i class="pi pi-times" aria-hidden="true"></i>
+							</button>
+						}
+					</figure>
+				}
+
+				@if (store.canAddPhoto() && !store.scanning()) {
+					<button type="button" class="shoot" (click)="pick()">
+						<i class="pi pi-camera" aria-hidden="true"></i>
+						<span>{{
+							'page.shelf-scan.add-a-photo' | transloco
+						}}</span>
+					</button>
+				}
+			</div>
+
+			<div class="controls">
+				<label for="media">
+					{{
+						'page.shelf-scan.what-is-in-the-compartment' | transloco
+					}}
+				</label>
+				<select
+					id="media"
+					[value]="store.media()"
+					(change)="onMedia($event)"
+				>
+					@for (option of mediaOptions; track option) {
+						<option [value]="option">
+							{{ 'page.shelf-scan.media.' + option | transloco }}
+						</option>
+					}
+				</select>
+
+				<button
+					type="button"
+					class="primary"
+					[disabled]="!store.photos().length || store.scanning()"
+					(click)="store.identify()"
+				>
+					@if (store.scanning()) {
+						<i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+						{{ 'page.shelf-scan.reading-the-spines' | transloco }}
+					} @else {
+						<i class="pi pi-search" aria-hidden="true"></i>
+						{{ 'page.shelf-scan.read-the-shelf' | transloco }}
+					}
+				</button>
+
+				@if (store.scanned() && !store.scanning()) {
+					<button
+						type="button"
+						class="secondary"
+						(click)="store.reset()"
+					>
+						<i class="pi pi-refresh" aria-hidden="true"></i>
+						{{ 'page.shelf-scan.start-over' | transloco }}
+					</button>
+				}
+			</div>
+		</section>
+
+		@if (store.error()) {
+			<div class="notice error" role="alert">{{ store.error() }}</div>
+		}
+
+		@if (store.empty()) {
+			<div class="notice">
+				{{ 'page.shelf-scan.no-spine-could-be' | transloco }}
+			</div>
+		}
+
+		@if (store.rows().length) {
+			<section class="review" aria-labelledby="review-title">
+				<h2 id="review-title">
+					{{ 'page.shelf-scan.check-what-was-read' | transloco }}
+				</h2>
+
+				<p class="summary">
+					{{
+						'page.shelf-scan.rows-read'
+							| transloco: { rows: store.rows().length }
+					}}
+					@if (store.needsAttention()) {
+						<strong>
+							{{
+								'page.shelf-scan.need-a-look'
+									| transloco
+										: { count: store.needsAttention() }
+							}}
+						</strong>
+					}
+				</p>
+
+				@if (store.countMismatch()) {
+					<div class="notice warn" role="alert">
+						{{
+							'page.shelf-scan.the-photos-counted-differently'
+								| transloco
+									: {
+											counts: store
+												.spineCounts()
+												.join(' / '),
+									  }
+						}}
+					</div>
+				}
+
+				<ol class="rows">
+					@for (row of store.rows(); track trackRow($index, row)) {
+						<li
+							class="row"
+							[class.skipped]="
+								store.skipped().includes(row.position)
+							"
+							[class.attention]="
+								row.unreadable || row.conflicts.length
+							"
+							[class.done]="
+								store
+									.requestedPositions()
+									.includes(row.position)
+							"
+						>
+							<span class="position">{{ row.position }}</span>
+
+							<div class="fields">
+								<label class="field">
+									<span>{{
+										'page.shelf-scan.artist' | transloco
+									}}</span>
+									<input
+										type="text"
+										[value]="row.artist ?? ''"
+										(change)="onEdit(row, 'artist', $event)"
+									/>
+								</label>
+
+								<label class="field">
+									<span>{{
+										'page.shelf-scan.album' | transloco
+									}}</span>
+									<input
+										type="text"
+										[value]="row.albumTitle ?? ''"
+										(change)="
+											onEdit(row, 'albumTitle', $event)
+										"
+									/>
+								</label>
+
+								<label class="field">
+									<span>{{
+										'page.shelf-scan.label' | transloco
+									}}</span>
+									<input
+										type="text"
+										[value]="row.label ?? ''"
+										(change)="onEdit(row, 'label', $event)"
+									/>
+								</label>
+
+								<label class="field">
+									<span>
+										{{
+											'page.shelf-scan.catalogue-number'
+												| transloco
+										}}
+									</span>
+									<input
+										type="text"
+										[value]="row.catalogNumber ?? ''"
+										(change)="
+											onEdit(row, 'catalogNumber', $event)
+										"
+									/>
+								</label>
+							</div>
+
+							<div class="verdict">
+								<span
+									class="state"
+									[class]="'state-' + row.state"
+								>
+									{{ stateLabels[row.state] }}
+								</span>
+								<span class="seen">
+									{{
+										'page.shelf-scan.seen-on-photos'
+											| transloco: { seen: row.seenOn }
+									}}
+								</span>
+
+								<button
+									type="button"
+									class="skip"
+									(click)="store.toggleSkipped(row.position)"
+								>
+									@if (
+										store.skipped().includes(row.position)
+									) {
+										{{
+											'page.shelf-scan.keep-it'
+												| transloco
+										}}
+									} @else {
+										{{
+											'page.shelf-scan.leave-it-out'
+												| transloco
+										}}
+									}
+								</button>
+							</div>
+
+							@if (row.unreadable) {
+								<p class="flag">
+									{{
+										'page.shelf-scan.nothing-could-be-read'
+											| transloco
+									}}
+								</p>
+							}
+
+							@for (field of row.conflicts; track field) {
+								<p class="flag conflict">
+									{{
+										'page.shelf-scan.the-photos-disagree'
+											| transloco: { field: field }
+									}}
+									<button
+										type="button"
+										(click)="
+											store.takeAlternative(
+												row.position,
+												field
+											)
+										"
+									>
+										{{ 'page.shelf-scan.take' | transloco }}
+										"{{ alternative(row, field) }}"
+									</button>
+								</p>
+							}
+						</li>
+					}
+				</ol>
+
+				@if (store.submitError()) {
+					<div class="notice error" role="alert">
+						{{ store.submitError() }}
+					</div>
+				}
+
+				<div class="submit">
+					<button
+						type="button"
+						class="primary"
+						[disabled]="
+							!store.submittable().length || store.submitting()
+						"
+						(click)="submit()"
+					>
+						@if (store.submitting()) {
+							<i
+								class="pi pi-spin pi-spinner"
+								aria-hidden="true"
+							></i>
+							{{ 'page.shelf-scan.sending' | transloco }}
+						} @else {
+							<i class="pi pi-send" aria-hidden="true"></i>
+							{{
+								'page.shelf-scan.ask-for-these'
+									| transloco
+										: { count: store.submittable().length }
+							}}
+						}
+					</button>
+					<p class="hint">
+						{{
+							'page.shelf-scan.an-admin-approves-each' | transloco
+						}}
+					</p>
+				</div>
+			</section>
+		}
+	}
+</div>
