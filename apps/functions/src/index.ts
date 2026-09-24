@@ -58,6 +58,12 @@ import {
 import { DiscogsSearchHit } from './discogs-search';
 import { ScanAlbumContext, scanPhoto } from './photo-scan';
 import {
+	MAX_SHELF_PHOTOS,
+	ShelfPhotoContext,
+	mergeShelfReads,
+	readShelfSignals,
+} from './shelf-signals';
+import {
 	PHOTO_MEDIA_TYPES,
 	PhotoInput,
 	VisionError,
@@ -656,6 +662,92 @@ export const identifyRecordFromPhoto = onCall(
 			throw new HttpsError(
 				'internal',
 				'A fotó feldolgozása nem sikerült.',
+				{ source: 'unknown' }
+			);
+		}
+	}
+);
+
+/** A rekesz hordozója, ha a gyűjtő megadta — csak a kép olvasását szűkíti. */
+function readShelfMedia(value: unknown): ShelfPhotoContext['media'] {
+	const media = ['vinyl', 'cd', 'cassette', 'dvd'] as const;
+
+	return media.find((known) => known === value) ?? null;
+}
+
+/**
+ * Egy polcrekesz gerinceinek kiolvasása egy vagy két fotóról. Gyűjtő
+ * (createCollectionItemEntity) vagy ADMIN hívhatja.
+ *
+ * A két fotó két külön modellkérésbe megy: egy kérésben a modell összefésülné
+ * őket, és egyetlen magabiztos választ adna — pont az veszne el, amiért a
+ * második kép készült. A két független olvasatból derül ki, melyik mezőben
+ * nem értenek egyet, és a gyűjtőnek csak azokat kell átnéznie.
+ *
+ * Préselést itt nem keresünk: rekeszenként tíz-húsz Discogs-kérés belefutna a
+ * percenkénti keretbe, és a sorok nagy része a kliensnél lévő katalógusból is
+ * megválaszolható. A Discogs a beküldött soroké, a review után.
+ */
+export const identifyShelfFromPhotos = onCall(
+	{
+		secrets: [anthropicApiKey],
+		memory: '512MiB',
+		// Két kép, egyenként egy modellkérés, újrapróbálkozásokkal.
+		timeoutSeconds: 300,
+	},
+	async (request) => {
+		const uid = request.auth?.uid;
+
+		if (!uid) {
+			throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
+		}
+
+		const permissions = await callerPermissions(uid);
+
+		if (
+			!permissions.includes('ADMIN') &&
+			!permissions.includes('createCollectionItemEntity')
+		) {
+			throw new HttpsError('permission-denied', 'Nincs jogosultság.');
+		}
+
+		const sent = request.data?.photos;
+		const photos = (Array.isArray(sent) ? sent : [])
+			.map((photo) => readPhotoInput(photo))
+			.filter((photo): photo is PhotoInput => !!photo);
+
+		if (!photos.length) {
+			throw new HttpsError('invalid-argument', 'Legalább egy kép kell.');
+		}
+		if (photos.length > MAX_SHELF_PHOTOS) {
+			throw new HttpsError(
+				'invalid-argument',
+				`Legfeljebb ${MAX_SHELF_PHOTOS} kép küldhető egy rekeszről.`
+			);
+		}
+
+		const context = { media: readShelfMedia(request.data?.media) };
+		const client = createVisionClient(anthropicApiKey.value());
+
+		try {
+			const reads = await Promise.all(
+				photos.map((photo) => readShelfSignals(photo, client, context))
+			);
+
+			return { ...mergeShelfReads(reads), usedVision: true };
+		} catch (error) {
+			logger.warn(`identifyShelfFromPhotos ${uid}`, error);
+
+			if (error instanceof VisionError) {
+				throw new HttpsError(
+					error.retryable ? 'resource-exhausted' : 'internal',
+					error.message,
+					{ source: 'vision' }
+				);
+			}
+			throw new HttpsError(
+				'internal',
+				'A polc feldolgozása nem sikerült.',
 				{ source: 'unknown' }
 			);
 		}
