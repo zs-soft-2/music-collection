@@ -54,12 +54,28 @@ export class TopBarComponent extends BaseComponent {
 	);
 
 	/**
-	 * A guest is offered what there is to browse, and nothing that would only
-	 * ever be empty for them. The personal links appear as the session is
-	 * restored, the same moment the avatar takes the place of the Log in
-	 * button.
+	 * The bar carries what anyone may browse, and only that. It used to grow
+	 * by six links the moment a session was restored, which both crowded the
+	 * row and moved every link that was already on it.
 	 */
-	protected readonly navItems = computed(() =>
+	protected readonly navItems = this.menuItems.filter(
+		(item) => !item.requiresAuth
+	);
+
+	/**
+	 * The collector's own pages sit under their avatar, where the rest of what
+	 * is theirs already lives. Nothing filters them: the menu itself only
+	 * exists once there is somebody signed in to own them.
+	 */
+	protected readonly accountItems = this.menuItems.filter(
+		(item) => item.requiresAuth
+	);
+
+	/**
+	 * The sheet has a whole screen to fill and no avatar to hide anything
+	 * behind, so on a phone every page stays one list and one tap deep.
+	 */
+	protected readonly sheetItems = computed(() =>
 		this.menuItems.filter(
 			(item) => !item.requiresAuth || this.isAuthenticated()
 		)

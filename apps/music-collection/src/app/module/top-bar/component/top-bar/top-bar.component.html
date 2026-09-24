@@ -25,7 +25,7 @@
 	</button>
 
 	<nav class="nav" [attr.aria-label]="t('nav.main')">
-		@for (item of navItems(); track item.labelKey) {
+		@for (item of navItems; track item.labelKey) {
 			<a
 				class="nav-link"
 				[routerLink]="item.routerLink"
@@ -36,16 +36,6 @@
 				{{ t(item.labelKey) }}
 			</a>
 		}
-		<a
-			*ngxPermissionsOnly="adminRoles"
-			class="nav-link"
-			routerLink="/admin"
-			routerLinkActive="is-active"
-			ariaCurrentWhenActive="page"
-		>
-			<i class="pi pi-cog" aria-hidden="true"></i>
-			{{ t('nav.admin') }}
-		</a>
 	</nav>
 
 	<div class="actions">
@@ -135,10 +125,31 @@
 								<span>{{ email }}</span>
 							}
 						</div>
+						@for (item of accountItems; track item.labelKey) {
+							<a
+								class="menu-item collector"
+								role="menuitem"
+								[routerLink]="item.routerLink"
+								routerLinkActive="is-active"
+								ariaCurrentWhenActive="page"
+								(click)="closeMenus()"
+							>
+								<i
+									class="pi {{ item.icon }}"
+									aria-hidden="true"
+								></i>
+								{{ t(item.labelKey) }}
+							</a>
+						}
+						<!-- Az oldalak alatt a fiók maga: a profil, az
+						     admin és a kilépés nem a gyűjteményről szól. -->
+						<hr class="menu-divider" />
 						<a
 							class="menu-item"
 							role="menuitem"
 							routerLink="/profile"
+							routerLinkActive="is-active"
+							ariaCurrentWhenActive="page"
 							(click)="closeMenus()"
 						>
 							<i class="pi pi-user" aria-hidden="true"></i>
@@ -149,6 +160,8 @@
 							class="menu-item"
 							role="menuitem"
 							routerLink="/admin"
+							routerLinkActive="is-active"
+							ariaCurrentWhenActive="page"
 							(click)="closeMenus()"
 						>
 							<i class="pi pi-cog" aria-hidden="true"></i>
@@ -205,7 +218,7 @@
 		*transloco="let t"
 		[attr.aria-label]="t('nav.main')"
 	>
-		@for (item of navItems(); track item.labelKey) {
+		@for (item of sheetItems(); track item.labelKey) {
 			<a
 				class="sheet-link"
 				[routerLink]="item.routerLink"
