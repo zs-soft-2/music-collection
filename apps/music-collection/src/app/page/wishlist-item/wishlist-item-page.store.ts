@@ -1,6 +1,7 @@
 import { map, of, pipe, switchMap, tap } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
+import { TextService } from '@music-collection/core/i18n';
 import { ActivatedRoute } from '@angular/router';
 import { ReleaseEntity, WishlistItemEntity } from '@music-collection/api';
 import { tapResponse } from '@ngrx/operators';
@@ -43,7 +44,7 @@ const initialState: WishlistItemPageState = {
  */
 export const WishlistItemPageStore = signalStore(
 	withState(initialState),
-	withComputed((store) => {
+	withComputed((store, text = inject(TextService)) => {
 		const album = computed(() => store.item()?.albumReference ?? null);
 		const artist = computed(() => store.item()?.artistReference ?? null);
 
@@ -65,7 +66,7 @@ export const WishlistItemPageStore = signalStore(
 			),
 			notFound: computed(() => !store.loading() && !store.item()),
 			trail: computed<Crumb[]>(() => [
-				{ label: 'Wishlist', link: '/wishlist' },
+				{ label: text.translator()('nav.wishlist'), link: '/wishlist' },
 				{ label: album()?.name ?? 'Wish' },
 			]),
 		};

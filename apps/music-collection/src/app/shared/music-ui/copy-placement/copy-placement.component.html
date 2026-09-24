@@ -7,13 +7,15 @@
 >
 	<header class="placement-header">
 		<div>
-			<p class="eyebrow">Place on the shelf</p>
+			<p class="eyebrow">
+				{{ 'ui.copyPlacement.place-on-the-shelf' | transloco }}
+			</p>
 			<h2 id="copy-placement-title">{{ albumTitle() }}</h2>
 		</div>
 		<button
 			type="button"
 			class="icon-button"
-			aria-label="Close"
+			[attr.aria-label]="'ui.copyPlacement.close' | transloco"
 			[disabled]="busy()"
 			(click)="close()"
 		>
@@ -36,7 +38,9 @@
 	<form (submit)="$event.preventDefault(); submit()">
 		@if (units().length > 1) {
 			<fieldset class="units">
-				<legend>Which shelf</legend>
+				<legend>
+					{{ 'ui.copyPlacement.which-shelf' | transloco }}
+				</legend>
 				<div class="chips">
 					@for (drawn of units(); track drawn.id) {
 						<label class="chip">
@@ -55,7 +59,9 @@
 		}
 
 		<fieldset class="compartments">
-			<legend>Which compartment</legend>
+			<legend>
+				{{ 'ui.copyPlacement.which-compartment' | transloco }}
+			</legend>
 			@if (unit(); as drawn) {
 				<div class="grid" [style.--cols]="drawn.columns">
 					@for (cell of cells(); track cell.key) {
@@ -90,7 +96,9 @@
 		</fieldset>
 
 		<label class="field">
-			<span>Position in the compartment</span>
+			<span>{{
+				'ui.copyPlacement.position-in-the-compartment' | transloco
+			}}</span>
 			<input
 				type="number"
 				min="1"
@@ -102,12 +110,16 @@
 		</label>
 
 		<p class="hint">
-			Counted from the left. Records you have not placed yourself keep
-			filling the compartments you left free.
+			{{ 'ui.copyPlacement.counted-from-the-left' | transloco }}
 		</p>
 
 		@if (error()) {
-			<p class="error" role="alert">Could not place it: {{ error() }}</p>
+			<p class="error" role="alert">
+				{{
+					'ui.copyPlacement.placeFailed'
+						| transloco: { error: error() }
+				}}
+			</p>
 		}
 
 		<div class="form-actions">
@@ -118,7 +130,7 @@
 					[disabled]="busy()"
 					(click)="takeOff()"
 				>
-					Take off the shelf
+					{{ 'ui.copyPlacement.take-off-the-shelf' | transloco }}
 				</button>
 			}
 			<button
@@ -127,7 +139,7 @@
 				[disabled]="busy()"
 				(click)="close()"
 			>
-				Cancel
+				{{ 'ui.copyPlacement.cancel' | transloco }}
 			</button>
 			<button
 				type="submit"

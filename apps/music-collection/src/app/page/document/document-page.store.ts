@@ -1,6 +1,7 @@
 import { map, of, pipe, switchMap, tap } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
+import { TextService } from '@music-collection/core/i18n';
 import { ActivatedRoute } from '@angular/router';
 import { DocumentEntity, isWithdrawnDocument } from '@music-collection/api';
 import { tapResponse } from '@ngrx/operators';
@@ -39,7 +40,7 @@ const initialState: DocumentPageState = {
  */
 export const DocumentPageStore = signalStore(
 	withState(initialState),
-	withComputed((store) => {
+	withComputed((store, text = inject(TextService)) => {
 		const name = computed(() => store.document()?.name ?? '');
 
 		return {
@@ -61,7 +62,10 @@ export const DocumentPageStore = signalStore(
 			}),
 			notFound: computed(() => !store.loading() && !store.document()),
 			trail: computed<Crumb[]>(() => [
-				{ label: 'Documents', link: '/admin/document' },
+				{
+					label: text.translator()('admin.nav.documents'),
+					link: '/admin/document',
+				},
 				{ label: name() || 'Document' },
 			]),
 		};

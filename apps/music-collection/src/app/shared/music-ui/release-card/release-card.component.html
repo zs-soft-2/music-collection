@@ -102,7 +102,9 @@
 				<span class="jewel-reflection" aria-hidden="true"></span>
 			}
 			@if (item.format === 'dvd') {
-				<span class="case-band" aria-hidden="true">DVD</span>
+				<span class="case-band" aria-hidden="true">{{
+					'ui.releaseCard.dvd' | transloco
+				}}</span>
 			}
 		</div>
 
@@ -157,9 +159,7 @@
 		class="mc-card-place"
 		[attr.data-place-copy]="item.id"
 		[attr.aria-label]="
-			(item.placement ? 'Move ' : 'Place ') +
-			item.title +
-			' on the shelf'
+			(item.placement ? 'Move ' : 'Place ') + item.title + ' on the shelf'
 		"
 		[title]="item.placement ? 'Move on the shelf' : 'Place on the shelf'"
 		(click)="place.emit(item.id)"

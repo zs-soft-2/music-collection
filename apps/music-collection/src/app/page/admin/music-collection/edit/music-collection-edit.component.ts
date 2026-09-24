@@ -2,6 +2,7 @@ import { map } from 'rxjs';
 
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
 	CollectionForm,
@@ -28,7 +29,7 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-music-collection-edit',
 	providers: [MusicCollectionEditStore],
-	imports: [RouterLink, EntityPickerComponent],
+	imports: [...I18N_IMPORTS, RouterLink, EntityPickerComponent],
 	template: `
 		<header class="mc-page-head">
 			<div>
@@ -36,8 +37,7 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 					{{ store.isNew() ? 'Add collection' : 'Edit collection' }}
 				</h1>
 				<p>
-					A collection is a rule, not a list: what belongs to it is
-					resolved against the catalog every time it is read.
+					{{ 'ui.musicCollectionEdit.a-collection-is-a' | transloco }}
 				</p>
 			</div>
 		</header>
@@ -48,7 +48,9 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 
 		@if (store.isLoading()) {
 			<div class="skeleton" role="status" aria-busy="true">
-				<span class="visually-hidden">Loading…</span>
+				<span class="visually-hidden">{{
+					'ui.musicCollectionEdit.loading' | transloco
+				}}</span>
 			</div>
 		} @else {
 			@let form = store.form();
@@ -56,11 +58,18 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 			<div class="layout">
 				<div class="mc-form">
 					<section class="mc-form-section">
-						<h2>The collection</h2>
+						<h2>
+							{{
+								'ui.musicCollectionEdit.the-collection'
+									| transloco
+							}}
+						</h2>
 
 						<div class="mc-form-grid">
 							<div class="mc-field">
-								<label for="name">Name</label>
+								<label for="name">{{
+									'ui.musicCollectionEdit.name' | transloco
+								}}</label>
 								<input
 									id="name"
 									type="text"
@@ -70,7 +79,9 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 							</div>
 
 							<div class="mc-field">
-								<label for="slug">Slug</label>
+								<label for="slug">{{
+									'ui.musicCollectionEdit.slug' | transloco
+								}}</label>
 								<input
 									id="slug"
 									type="text"
@@ -83,7 +94,10 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 							</div>
 
 							<div class="mc-field is-wide">
-								<label for="description">Description</label>
+								<label for="description">{{
+									'ui.musicCollectionEdit.description'
+										| transloco
+								}}</label>
 								<textarea
 									id="description"
 									rows="2"
@@ -97,23 +111,32 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 							</div>
 
 							<div class="mc-field">
-								<label for="icon">Icon</label>
+								<label for="icon">{{
+									'ui.musicCollectionEdit.icon' | transloco
+								}}</label>
 								<input
 									id="icon"
 									type="text"
-									placeholder="pi pi-box"
+									[placeholder]="
+										'ui.musicCollectionEdit.pi-pi-box'
+											| transloco
+									"
 									[value]="form.icon"
 									(input)="
 										store.setField({ icon: value($event) })
 									"
 								/>
-								<small
-									>A PrimeIcons class, as in the menu.</small
-								>
+								<small>{{
+									'ui.musicCollectionEdit.a-primeicons-class-as'
+										| transloco
+								}}</small>
 							</div>
 
 							<div class="mc-field">
-								<label for="cover">Cover image URL</label>
+								<label for="cover">{{
+									'ui.musicCollectionEdit.cover-image-url'
+										| transloco
+								}}</label>
 								<input
 									id="cover"
 									type="url"
@@ -127,7 +150,9 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 							</div>
 
 							<div class="mc-field">
-								<label for="status">Status</label>
+								<label for="status">{{
+									'ui.musicCollectionEdit.status' | transloco
+								}}</label>
 								<select
 									id="status"
 									(change)="
@@ -152,13 +177,18 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 									}
 								</select>
 								<small>
-									A draft is not listed and earns nobody a
-									badge.
+									{{
+										'ui.musicCollectionEdit.a-draft-is-not'
+											| transloco
+									}}
 								</small>
 							</div>
 
 							<div class="mc-field">
-								<label for="visibility">Visibility</label>
+								<label for="visibility">{{
+									'ui.musicCollectionEdit.visibility'
+										| transloco
+								}}</label>
 								<select
 									id="visibility"
 									(change)="onVisibility($event)"
@@ -173,14 +203,16 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 												form.visibility === option.value
 											"
 										>
-											{{ option.label }}
+											{{ option.labelKey | transloco }}
 										</option>
 									}
 								</select>
 							</div>
 
 							<div class="mc-field">
-								<label for="base-points">Points</label>
+								<label for="base-points">{{
+									'ui.musicCollectionEdit.points' | transloco
+								}}</label>
 								<input
 									id="base-points"
 									type="number"
@@ -194,18 +226,26 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 									"
 								/>
 								<small>
-									What finishing it is worth. Left empty the
-									rule decides — how many records it asks for,
-									and how old they are — which right now would
-									be
-									{{ store.derivedPoints() }} points.
+									{{
+										store.derivedPoints()
+											| mcPlural
+												: 'ui.musicCollectionEdit.pointsHint'
+									}}
 								</small>
 							</div>
 
 							<div class="mc-field">
-								<label for="parent">Parent collection</label>
+								<label for="parent">{{
+									'ui.musicCollectionEdit.parent-collection'
+										| transloco
+								}}</label>
 								<select id="parent" (change)="onParent($event)">
-									<option value="">— none —</option>
+									<option value="">
+										{{
+											'ui.musicCollectionEdit.none'
+												| transloco
+										}}
+									</option>
 									@for (
 										parent of parents();
 										track parent.uid
@@ -225,16 +265,22 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 					</section>
 
 					<section class="mc-form-section">
-						<h2>The rule</h2>
+						<h2>
+							{{ 'ui.musicCollectionEdit.the-rule' | transloco }}
+						</h2>
 						<p class="hint">
-							Every filter given must hold. A filter left empty
-							says nothing — with all of them empty the collection
-							asks for the whole catalog.
+							{{
+								'ui.musicCollectionEdit.every-filter-given-must'
+									| transloco
+							}}
 						</p>
 
 						<div class="mc-form-grid">
 							<div class="mc-field">
-								<label for="year-from">Released from</label>
+								<label for="year-from">{{
+									'ui.musicCollectionEdit.released-from'
+										| transloco
+								}}</label>
 								<input
 									id="year-from"
 									type="number"
@@ -244,7 +290,10 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 							</div>
 
 							<div class="mc-field">
-								<label for="year-to">Released to</label>
+								<label for="year-to">{{
+									'ui.musicCollectionEdit.released-to'
+										| transloco
+								}}</label>
 								<input
 									id="year-to"
 									type="number"
@@ -259,13 +308,19 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 							) {
 								<div class="mc-field is-wide">
 									<label [attr.for]="criterion.key">
-										{{ criterion.label }}
+										{{ criterion.labelKey | transloco }}
 									</label>
 									<div class="criterion">
 										<select
 											class="operator"
 											[attr.aria-label]="
-												criterion.label + ' operator'
+												'admin.criterion.operatorFor'
+													| transloco
+														: {
+																field:
+																	criterion.labelKey
+																	| transloco,
+														  }
 											"
 											(change)="
 												onOperator(
@@ -287,7 +342,10 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 														operator.value
 													"
 												>
-													{{ operator.label }}
+													{{
+														operator.labelKey
+															| transloco
+													}}
 												</option>
 											}
 										</select>
@@ -324,26 +382,40 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 							}
 
 							<div class="mc-field is-wide">
-								<label for="artists">Artists</label>
+								<label for="artists">{{
+									'ui.musicCollectionEdit.artists' | transloco
+								}}</label>
 								<mc-entity-picker
 									inputId="artists"
-									placeholder="Search artists…"
+									[placeholder]="
+										'ui.musicCollectionEdit.search-artists'
+											| transloco
+									"
 									[options]="store.artists()"
 									[selected]="form.criteria.artists"
 									(selectedChange)="
 										onCriteria({ artists: $event })
 									"
 								/>
-								<small>Nothing picked means any artist.</small>
+								<small>{{
+									'ui.musicCollectionEdit.nothing-picked-means-any'
+										| transloco
+								}}</small>
 							</div>
 
 							<div class="mc-field">
 								<label for="credit-musicians">
-									Credited musicians
+									{{
+										'ui.musicCollectionEdit.credited-musicians'
+											| transloco
+									}}
 								</label>
 								<mc-entity-picker
 									inputId="credit-musicians"
-									placeholder="Search musicians…"
+									[placeholder]="
+										'ui.musicCollectionEdit.search-musicians'
+											| transloco
+									"
 									[options]="store.musicians()"
 									[selected]="form.criteria.creditMusicians"
 									(selectedChange)="
@@ -353,31 +425,42 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 							</div>
 
 							<div class="mc-field">
-								<label for="credit-roles">Credited as</label>
+								<label for="credit-roles">{{
+									'ui.musicCollectionEdit.credited-as'
+										| transloco
+								}}</label>
 								<input
 									id="credit-roles"
 									type="text"
-									placeholder="Drums, Producer"
+									[placeholder]="
+										'ui.musicCollectionEdit.drums-producer'
+											| transloco
+									"
 									[value]="
 										form.criteria.creditRoles.join(', ')
 									"
 									(change)="onRoles($event)"
 								/>
 								<small>
-									Discogs roles, comma separated. One credit
-									must satisfy both: the musician in that
-									role, not two credits together.
+									{{
+										'ui.musicCollectionEdit.discogs-roles-comma-separated'
+											| transloco
+									}}
 								</small>
 							</div>
 						</div>
 					</section>
 
 					<section class="mc-form-section">
-						<h2>The badge</h2>
+						<h2>
+							{{ 'ui.musicCollectionEdit.the-badge' | transloco }}
+						</h2>
 
 						<div class="mc-form-grid">
 							<div class="mc-field">
-								<label for="badge-name">Name</label>
+								<label for="badge-name">{{
+									'ui.musicCollectionEdit.name2' | transloco
+								}}</label>
 								<input
 									id="badge-name"
 									type="text"
@@ -389,17 +472,24 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 									"
 								/>
 								<small>
-									Without a name the collection rewards no
-									badge.
+									{{
+										'ui.musicCollectionEdit.without-a-name-the'
+											| transloco
+									}}
 								</small>
 							</div>
 
 							<div class="mc-field">
-								<label for="badge-icon">Icon</label>
+								<label for="badge-icon">{{
+									'ui.musicCollectionEdit.icon2' | transloco
+								}}</label>
 								<input
 									id="badge-icon"
 									type="text"
-									placeholder="pi pi-star"
+									[placeholder]="
+										'ui.musicCollectionEdit.pi-pi-star'
+											| transloco
+									"
 									[value]="form.badgeIcon"
 									(input)="
 										store.setField({
@@ -410,9 +500,10 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 							</div>
 
 							<div class="mc-field is-wide">
-								<label for="badge-description"
-									>Description</label
-								>
+								<label for="badge-description">{{
+									'ui.musicCollectionEdit.description2'
+										| transloco
+								}}</label>
 								<textarea
 									id="badge-description"
 									rows="2"
@@ -426,7 +517,10 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 							</div>
 
 							<div class="mc-field is-wide">
-								<label for="badge-art">Artwork URL</label>
+								<label for="badge-art">{{
+									'ui.musicCollectionEdit.artwork-url'
+										| transloco
+								}}</label>
 								<input
 									id="badge-art"
 									type="url"
@@ -438,24 +532,25 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 									"
 								/>
 								<small>
-									A hand-made image, for the rare badge that
-									wants one. The generated pin below wins over
-									it.
+									{{
+										'ui.musicCollectionEdit.a-hand-made-image'
+											| transloco
+									}}
 								</small>
 							</div>
 
 							<div class="mc-field is-wide badge-art">
 								<div class="badge-art-head">
 									<div>
-										<strong>The pin</strong>
+										<strong>{{
+											'ui.musicCollectionEdit.the-pin'
+												| transloco
+										}}</strong>
 										<small>
-											Drawn by an image model, from this
-											collection's own data. The style is
-											the same on every badge — only the
-											motif, the enamel, the patina and
-											the rim follow the rule. Every image
-											drawn is kept, so the pin can be any
-											of them, today or next year.
+											{{
+												'ui.musicCollectionEdit.drawn-by-an-image'
+													| transloco
+											}}
 										</small>
 									</div>
 									<button
@@ -478,9 +573,10 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 
 								@if (store.isNew()) {
 									<p class="hint">
-										Save the collection first: the prompt is
-										built on the server from what is stored,
-										not from this form.
+										{{
+											'ui.musicCollectionEdit.save-the-collection-first'
+												| transloco
+										}}
 									</p>
 								}
 
@@ -488,7 +584,10 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 									<img
 										class="chosen"
 										[src]="badge"
-										alt="The collection's badge"
+										[alt]="
+											'ui.musicCollectionEdit.the-collection-s-badge'
+												| transloco
+										"
 									/>
 								}
 
@@ -515,7 +614,10 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 													store.badgeImageUid()
 												) {
 													<span class="current">
-														The badge
+														{{
+															'ui.musicCollectionEdit.the-badge2'
+																| transloco
+														}}
 													</span>
 												} @else {
 													<button
@@ -529,7 +631,10 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 															)
 														"
 													>
-														Pick this one
+														{{
+															'ui.musicCollectionEdit.pick-this-one'
+																| transloco
+														}}
 													</button>
 												}
 											</li>
@@ -542,30 +647,43 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 				</div>
 
 				<aside class="preview" aria-live="polite">
-					<h2>What it catches</h2>
+					<h2>
+						{{
+							'ui.musicCollectionEdit.what-it-catches' | transloco
+						}}
+					</h2>
 
 					@if (store.matchesEverything()) {
 						<p class="warning">
-							No filter yet — this rule takes in the whole
-							catalog. Publishing it is refused.
+							{{
+								'ui.musicCollectionEdit.no-filter-yet-this'
+									| transloco
+							}}
 						</p>
 					}
 
 					<p class="total">
-						<strong>{{ store.previewTotal() }}</strong> records
+						{{
+							store.previewTotal()
+								| mcPlural
+									: 'ui.musicCollectionEdit.previewTotal'
+						}}
 						@if (store.isPreviewing()) {
-							<span class="busy">· resolving…</span>
+							<span class="busy">{{
+								'ui.musicCollectionEdit.resolving' | transloco
+							}}</span>
 						}
 					</p>
 
 					<p class="points">
-						Worth
+						{{ 'ui.musicCollectionEdit.worth' | transloco }}
 						<strong>
 							{{ store.curatedPoints() ?? store.derivedPoints() }}
 						</strong>
-						points, and only once a collector owns every one of
-						them. Owning the original pressing of an old record
-						raises it further.
+						{{
+							'ui.musicCollectionEdit.points-and-only-once'
+								| transloco
+						}}
 					</p>
 
 					<ul class="albums">
@@ -587,21 +705,25 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 
 					@if (store.previewTotal() > store.previewAlbums().length) {
 						<p class="more">
-							…and
 							{{
-								store.previewTotal() -
-									store.previewAlbums().length
+								'ui.musicCollectionEdit.andMore'
+									| transloco
+										: {
+												count:
+													store.previewTotal() -
+													store.previewAlbums()
+														.length,
+										  }
 							}}
-							more.
 						</p>
 					}
 				</aside>
 			</div>
 
 			<div class="mc-form-actions">
-				<a class="button" routerLink="/admin/music-collection"
-					>Cancel</a
-				>
+				<a class="button" routerLink="/admin/music-collection">{{
+					'ui.musicCollectionEdit.cancel' | transloco
+				}}</a>
 				<button
 					type="button"
 					class="button is-primary"

@@ -6,6 +6,7 @@ import {
 	output,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
 	AdminAccessService,
@@ -18,7 +19,12 @@ import {
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-release-row',
-	imports: [RouterLink, FormatBadgeComponent, AdminEditLinkComponent],
+	imports: [
+		...I18N_IMPORTS,
+		RouterLink,
+		FormatBadgeComponent,
+		AdminEditLinkComponent,
+	],
 	host: {
 		'[class.has-admin]': 'adminAccess.isAdmin()',
 		'[class.has-place]': 'canPlace()',

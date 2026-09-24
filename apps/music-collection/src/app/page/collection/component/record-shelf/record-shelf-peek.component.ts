@@ -4,6 +4,7 @@ import {
 	computed,
 	signal,
 } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { ReleaseView } from '../../../../shared/music-ui';
 
@@ -28,6 +29,7 @@ interface Peek {
 		'[style.left.px]': 'peek()?.x',
 		'[style.top.px]': 'peek()?.y',
 	},
+	imports: [...I18N_IMPORTS],
 	template: `
 		@if (release(); as release) {
 			@if (release.coverUrl) {

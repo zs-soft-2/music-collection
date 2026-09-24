@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import {
 	ChangeDetectionStrategy,
 	Component,
@@ -28,6 +29,7 @@ const MEDIA_OPTIONS: MediaEnum[] = [
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-wishlist-dialog',
+	imports: [...I18N_IMPORTS],
 	templateUrl: './wishlist-dialog.component.html',
 	styleUrls: ['./wishlist-dialog.component.scss'],
 })

@@ -5,6 +5,7 @@ import {
 	inject,
 	signal,
 } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
 	PLAYER_CONTEXT_LABELS,
@@ -18,7 +19,7 @@ import { PlayerStore } from './player.store';
 
 interface Choice<T> {
 	value: T;
-	label: string;
+	labelKey: string;
 }
 
 /**
@@ -28,11 +29,14 @@ interface Choice<T> {
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-player-settings-menu',
+	imports: [...I18N_IMPORTS],
 	template: `
 		<button
 			type="button"
 			class="toggle"
-			aria-label="Player settings"
+			[attr.aria-label]="
+				'ui.playerSettingsMenu.player-settings' | transloco
+			"
 			[attr.aria-expanded]="open()"
 			(click)="open.set(!open())"
 		>
@@ -40,11 +44,24 @@ interface Choice<T> {
 		</button>
 
 		@if (open()) {
-			<div class="menu" role="group" aria-label="Player settings">
-				<p class="scope">Settings for {{ contextLabel() }}</p>
+			<div
+				class="menu"
+				role="group"
+				[attr.aria-label]="
+					'ui.playerSettingsMenu.player-settings2' | transloco
+				"
+			>
+				<p class="scope">
+					{{
+						'ui.playerSettingsMenu.scope'
+							| transloco: { context: contextLabel() }
+					}}
+				</p>
 
 				<fieldset>
-					<legend>Play on</legend>
+					<legend>
+						{{ 'ui.playerSettingsMenu.play-on' | transloco }}
+					</legend>
 					@for (choice of sources; track choice.value) {
 						<button
 							type="button"
@@ -54,25 +71,33 @@ interface Choice<T> {
 							[disabled]="!sourceAvailable(choice.value)"
 							(click)="set({ source: choice.value })"
 						>
-							{{ choice.label }}
+							{{ choice.labelKey | transloco }}
 						</button>
 					}
 				</fieldset>
 
 				@if (player.spotifyConfigured()) {
 					<div class="output">
-						<span class="legend">Spotify output</span>
+						<span class="legend">{{
+							'ui.playerSettingsMenu.spotify-output' | transloco
+						}}</span>
 						@if (player.spotifyConnected()) {
 							<div class="device-row">
 								<select
-									aria-label="Play Spotify on"
+									[attr.aria-label]="
+										'ui.playerSettingsMenu.play-spotify-on'
+											| transloco
+									"
 									(change)="selectDevice($event)"
 								>
 									<option
 										value=""
 										[selected]="!player.selectedDeviceId()"
 									>
-										This browser
+										{{
+											'ui.playerSettingsMenu.this-browser'
+												| transloco
+										}}
 									</option>
 									@for (
 										device of player.devices();
@@ -94,8 +119,14 @@ interface Choice<T> {
 								<button
 									type="button"
 									class="refresh"
-									aria-label="Refresh device list"
-									title="Refresh device list"
+									[attr.aria-label]="
+										'ui.playerSettingsMenu.refresh-device-list'
+											| transloco
+									"
+									[title]="
+										'ui.playerSettingsMenu.refresh-device-list2'
+											| transloco
+									"
 									(click)="player.refreshDevices()"
 								>
 									<i
@@ -105,16 +136,20 @@ interface Choice<T> {
 								</button>
 							</div>
 							<p class="note">
-								Speakers show up when they support Spotify
-								Connect and are on. Missing? Play something on
-								it once from the Spotify app, then refresh.
+								{{
+									'ui.playerSettingsMenu.speakers-show-up-when'
+										| transloco
+								}}
 							</p>
 							<button
 								type="button"
 								class="reset"
 								(click)="player.disconnectSpotify()"
 							>
-								Disconnect Spotify
+								{{
+									'ui.playerSettingsMenu.disconnect-spotify'
+										| transloco
+								}}
 							</button>
 						} @else {
 							<button
@@ -123,27 +158,34 @@ interface Choice<T> {
 								[disabled]="player.spotifyConnecting()"
 								(click)="player.connectSpotify()"
 							>
-								Connect Spotify (Premium)
+								{{
+									'ui.playerSettingsMenu.connect-spotify-premium'
+										| transloco
+								}}
 							</button>
 						}
 					</div>
 				}
 
 				<fieldset>
-					<legend>Open as</legend>
+					<legend>
+						{{ 'ui.playerSettingsMenu.open-as' | transloco }}
+					</legend>
 					@for (choice of views; track choice.value) {
 						<button
 							type="button"
 							[class.selected]="settings().view === choice.value"
 							(click)="set({ view: choice.value })"
 						>
-							{{ choice.label }}
+							{{ choice.labelKey | transloco }}
 						</button>
 					}
 				</fieldset>
 
 				<fieldset>
-					<legend>Backdrop</legend>
+					<legend>
+						{{ 'ui.playerSettingsMenu.backdrop' | transloco }}
+					</legend>
 					@for (choice of backdrops; track choice.value) {
 						<button
 							type="button"
@@ -152,13 +194,15 @@ interface Choice<T> {
 							"
 							(click)="set({ backdrop: choice.value })"
 						>
-							{{ choice.label }}
+							{{ choice.labelKey | transloco }}
 						</button>
 					}
 				</fieldset>
 
 				<fieldset>
-					<legend>Effects</legend>
+					<legend>
+						{{ 'ui.playerSettingsMenu.effects' | transloco }}
+					</legend>
 					@for (choice of effects; track choice.value) {
 						<button
 							type="button"
@@ -167,7 +211,7 @@ interface Choice<T> {
 							"
 							(click)="set({ effects: choice.value })"
 						>
-							{{ choice.label }}
+							{{ choice.labelKey | transloco }}
 						</button>
 					}
 				</fieldset>
@@ -178,7 +222,9 @@ interface Choice<T> {
 						[checked]="settings().lyrics"
 						(change)="set({ lyrics: !settings().lyrics })"
 					/>
-					<span>Show lyrics</span>
+					<span>{{
+						'ui.playerSettingsMenu.show-lyrics' | transloco
+					}}</span>
 				</label>
 				<label class="switch">
 					<input
@@ -186,7 +232,9 @@ interface Choice<T> {
 						[checked]="settings().autoAdvance"
 						(change)="set({ autoAdvance: !settings().autoAdvance })"
 					/>
-					<span>Play on to the next track</span>
+					<span>{{
+						'ui.playerSettingsMenu.play-on-to-the' | transloco
+					}}</span>
 				</label>
 				@if (player.hasSides()) {
 					<label class="switch">
@@ -195,7 +243,9 @@ interface Choice<T> {
 							[checked]="settings().sideBreak"
 							(change)="set({ sideBreak: !settings().sideBreak })"
 						/>
-						<span>Stop to turn the record over</span>
+						<span>{{
+							'ui.playerSettingsMenu.stop-to-turn-the' | transloco
+						}}</span>
 					</label>
 				}
 
@@ -204,7 +254,7 @@ interface Choice<T> {
 					class="reset"
 					(click)="player.resetSettings()"
 				>
-					Reset to defaults
+					{{ 'ui.playerSettingsMenu.reset-to-defaults' | transloco }}
 				</button>
 			</div>
 		}
@@ -412,22 +462,22 @@ export class PlayerSettingsMenuComponent {
 	);
 
 	protected readonly sources: Choice<PlayerSourceSetting>[] = [
-		{ value: 'auto', label: 'Auto' },
-		{ value: 'spotify', label: 'Spotify' },
-		{ value: 'youtube', label: 'YouTube' },
+		{ value: 'auto', labelKey: 'ui.playback.auto' },
+		{ value: 'spotify', labelKey: 'ui.playback.spotify' },
+		{ value: 'youtube', labelKey: 'ui.playback.youtube' },
 	];
 	protected readonly views: Choice<PlayerView>[] = [
-		{ value: 'panel', label: 'Page' },
-		{ value: 'stage', label: 'Full screen' },
+		{ value: 'panel', labelKey: 'ui.playback.page' },
+		{ value: 'stage', labelKey: 'ui.playback.fullScreen' },
 	];
 	protected readonly backdrops: Choice<PlayerBackdrop>[] = [
-		{ value: 'cover', label: 'Cover' },
-		{ value: 'scene', label: 'Animated world' },
+		{ value: 'cover', labelKey: 'ui.playback.cover' },
+		{ value: 'scene', labelKey: 'ui.playback.animatedWorld' },
 	];
 	protected readonly effects: Choice<PlayerEffects>[] = [
-		{ value: 'off', label: 'Off' },
-		{ value: 'subtle', label: 'Subtle' },
-		{ value: 'full', label: 'Full' },
+		{ value: 'off', labelKey: 'ui.playback.off' },
+		{ value: 'subtle', labelKey: 'ui.playback.subtle' },
+		{ value: 'full', labelKey: 'ui.playback.full' },
 	];
 
 	protected sourceAvailable(source: PlayerSourceSetting): boolean {

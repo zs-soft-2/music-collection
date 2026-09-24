@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 /**
  * The YouTube logo mark: a red rounded rectangle with a white play triangle.
@@ -7,6 +8,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-youtube-icon',
+	imports: [...I18N_IMPORTS],
 	template: `
 		<svg viewBox="0 0 28 20" aria-hidden="true" focusable="false">
 			<path

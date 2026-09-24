@@ -2,11 +2,9 @@
 	<header class="hero">
 		<div class="hero-text">
 			<p class="eyebrow">musiCollection</p>
-			<h1>Radio</h1>
+			<h1>{{ 'page.radio.radio' | transloco }}</h1>
 			<p class="lead">
-				A record chosen for you: what the catalog has just taken in,
-				what your shelf says you like, one compartment of that shelf, a
-				collection you are after — or nothing in particular.
+				{{ 'page.radio.a-record-chosen-for' | transloco }}
 			</p>
 		</div>
 
@@ -17,27 +15,34 @@
 				(change)="store.setShuffled(!store.shuffled())"
 			/>
 			<span>
-				<span class="order-label">Random order</span>
+				<span class="order-label">{{
+					'page.radio.random-order' | transloco
+				}}</span>
 				<span class="order-hint">
-					Draw the records out of a hat instead of playing the station
-					as it comes.
+					{{ 'page.radio.draw-the-records-out' | transloco }}
 				</span>
 			</span>
 		</label>
 	</header>
 
 	@if (player.station(); as playing) {
-		<section class="on-air" aria-label="On air">
+		<section
+			class="on-air"
+			[attr.aria-label]="'page.radio.on-air' | transloco"
+		>
 			<div class="on-air-text">
-				<p class="on-air-label">On air</p>
+				<p class="on-air-label">
+					{{ 'page.radio.on-air2' | transloco }}
+				</p>
 				<p class="on-air-station">{{ player.stationLabel() }}</p>
 				<p class="on-air-queue">
 					@if (player.queue().length) {
-						{{ player.queue().length }} more
-						{{ player.queue().length === 1 ? 'record' : 'records' }}
-						waiting
+						{{
+							player.queue().length
+								| mcPlural: 'ui.playerStation.waiting'
+						}}
 					} @else {
-						Last record of the station
+						{{ 'ui.playerStation.last-record-of-the' | transloco }}
 					}
 				</p>
 			</div>
@@ -49,16 +54,21 @@
 					(click)="store.skip()"
 				>
 					<i class="pi pi-step-forward" aria-hidden="true"></i>
-					Next record
+					{{ 'page.radio.next-record' | transloco }}
 				</button>
 				<button type="button" class="ghost" (click)="store.stop()">
 					<i class="pi pi-times" aria-hidden="true"></i>
-					Stop the station
+					{{ 'page.radio.stop-the-station' | transloco }}
 				</button>
 			</div>
 
 			@if (store.upNext().length) {
-				<ol class="up-next" aria-label="Waiting to go on">
+				<ol
+					class="up-next"
+					[attr.aria-label]="
+						'page.radio.waiting-to-go-on' | transloco
+					"
+				>
 					@for (record of store.upNext(); track record.albumId) {
 						<li>
 							<button
@@ -101,17 +111,14 @@
 		<p class="blocked">
 			@switch (store.blocked()) {
 				@case ('sign-in') {
-					The radio plays records through YouTube and Spotify. Sign in
-					to listen — both are somebody else's player, and neither is
-					put on the page for a visitor.
+					{{ 'page.radio.blocked.signIn' | transloco }}
 				}
 				@case ('consent') {
-					The radio plays records through YouTube and Spotify.
-					Embedding either one writes its owner's storage and tells
-					them you were here, so it takes your leave first — the bar
-					at the bottom asks, and the
-					<a routerLink="/profile">privacy card on your profile</a>
-					takes the answer back at any time.
+					{{ 'page.radio.blocked.consentBefore' | transloco }}
+					<a routerLink="/profile">{{
+						'page.radio.privacy-card-on-your' | transloco
+					}}</a>
+					{{ 'page.radio.blocked.consentAfter' | transloco }}
 				}
 			}
 		</p>
@@ -151,14 +158,16 @@
 									</span>
 								}
 								@if (station.count > station.preview.length) {
-									<span class="rest">
-										and
-										{{
-											station.count -
-												station.preview.length
-										}}
-										more
-									</span>
+									<span class="rest">{{
+										'page.radio.andMore'
+											| transloco
+												: {
+														count:
+															station.count -
+															station.preview
+																.length,
+												  }
+									}}</span>
 								}
 							</p>
 						}
@@ -167,7 +176,10 @@
 						type="button"
 						class="play"
 						[disabled]="store.tuning()"
-						[attr.aria-label]="'Play ' + station.label"
+						[attr.aria-label]="
+							'page.radio.playStation'
+								| transloco: { station: station.label }
+						"
 						(click)="play(station)"
 					>
 						<i class="pi pi-play" aria-hidden="true"></i>
@@ -177,9 +189,7 @@
 		</ul>
 	} @else {
 		<p class="empty">
-			Nothing to play yet. The radio needs records with a Spotify or
-			YouTube link behind them — add a few to the catalog and the stations
-			appear here.
+			{{ 'page.radio.nothing-to-play-yet' | transloco }}
 		</p>
 	}
 </div>

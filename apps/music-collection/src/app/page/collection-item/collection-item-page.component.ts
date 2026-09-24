@@ -6,6 +6,7 @@ import {
 	inject,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS, TextService } from '@music-collection/core/i18n';
 
 import { Crumb, PageBreadcrumbComponent } from '../../shared/page-breadcrumb';
 import { FormatBadgeComponent } from '../../shared/music-ui';
@@ -32,6 +33,7 @@ import { CopyPhotosComponent } from './component/copy-photos';
 	templateUrl: './collection-item-page.component.html',
 	styleUrls: ['./collection-item-page.component.scss'],
 	imports: [
+		...I18N_IMPORTS,
 		PageBreadcrumbComponent,
 		RouterLink,
 		FormatBadgeComponent,
@@ -42,12 +44,16 @@ import { CopyPhotosComponent } from './component/copy-photos';
 })
 export class CollectionItemPageComponent {
 	protected readonly store = inject(CollectionItemPageStore);
+	private readonly text = inject(TextService);
 
 	protected readonly trail = computed((): Crumb[] => {
 		const album = this.store.album();
 
 		return [
-			{ label: 'Collection', link: '/collection' },
+			{
+				label: this.text.translator()('nav.collection'),
+				link: '/collection',
+			},
 			{ label: album?.title ?? 'Copy' },
 		];
 	});

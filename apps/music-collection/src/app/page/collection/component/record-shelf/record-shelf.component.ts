@@ -10,6 +10,7 @@ import {
 	viewChild,
 } from '@angular/core';
 import { Router } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { MediaFormat, ReleaseView } from '../../../../shared/music-ui';
 import {
@@ -100,7 +101,7 @@ function hueOf(text: string): number {
 	selector: 'mc-record-shelf',
 	templateUrl: './record-shelf.component.html',
 	styleUrls: ['./record-shelf.component.scss'],
-	imports: [RecordShelfPeekComponent],
+	imports: [...I18N_IMPORTS, RecordShelfPeekComponent],
 })
 export class RecordShelfComponent {
 	public readonly shelves = input.required<ShelfUnitView[]>();

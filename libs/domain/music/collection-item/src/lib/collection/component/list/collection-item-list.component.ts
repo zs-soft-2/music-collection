@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import { Observable } from 'rxjs';
 
 import {
@@ -29,6 +30,7 @@ import { CollectionItemSimpleViewComponent } from '../../../view/component/simpl
 	templateUrl: './collection-item-list.component.html',
 	styleUrls: ['./collection-item-list.component.scss'],
 	imports: [
+		...I18N_IMPORTS,
 		Bind,
 		ProgressSpinner,
 		DefaultLayoutDirective,

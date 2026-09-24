@@ -194,26 +194,46 @@ describe('toForm', () => {
 });
 
 describe('describeCriteria', () => {
+	/**
+	 * The words come from the dictionary now, so the test brings its own:
+	 * asserting on English wording here would break every time the wording
+	 * is improved, and say nothing about the summary being put together
+	 * right. This one stands in for the dictionary and shows the shape.
+	 */
+	const t = (key: string, params: Record<string, unknown> = {}) =>
+		({
+			'admin.criterion.albumStyles': 'Album styles',
+			'admin.summary.artists': `${params['count']} artist(s)`,
+			'admin.summary.musicians': `${params['count']} musician(s)`,
+			'admin.summary.credited': `credited: ${params['credited']}`,
+			'admin.summary.as': ' as ',
+			'admin.summary.noRule': 'No rule — matches the whole catalog',
+		})[key] ?? '';
+
 	it('says in one line what the rule asks for', () => {
 		expect(
-			describeCriteria({
-				years: { from: 1980, to: 1989 },
-				styles: { includesAny: ['Thrash'] },
-				artists: { includesAny: ['a', 'b'] },
-			})
+			describeCriteria(
+				{
+					years: { from: 1980, to: 1989 },
+					styles: { includesAny: ['Thrash'] },
+					artists: { includesAny: ['a', 'b'] },
+				},
+				t
+			)
 		).toBe('1980–1989 · album styles Thrash · 2 artist(s)');
 	});
 
 	it('names who must be credited, and in what role', () => {
 		expect(
-			describeCriteria({
-				credits: { musicians: ['hoglan'], roles: ['Drums'] },
-			})
+			describeCriteria(
+				{ credits: { musicians: ['hoglan'], roles: ['Drums'] } },
+				t
+			)
 		).toBe('credited: 1 musician(s) as Drums');
 	});
 
 	it('warns when the rule catches everything', () => {
-		expect(describeCriteria({})).toMatch(/whole catalog/);
+		expect(describeCriteria({}, t)).toMatch(/whole catalog/);
 	});
 });
 
@@ -234,10 +254,13 @@ describe('toRows', () => {
 				calculatedAt: 0,
 			},
 		});
-		const rows = toRows([
-			resolution('child', 'Bay Area', 6, 'parent'),
-			resolution('parent', 'American Thrash', 40),
-		]);
+		const rows = toRows(
+			[
+				resolution('child', 'Bay Area', 6, 'parent'),
+				resolution('parent', 'American Thrash', 40),
+			],
+			() => ''
+		);
 
 		expect(
 			rows.map(({ name, total, parentName }) => [name, total, parentName])

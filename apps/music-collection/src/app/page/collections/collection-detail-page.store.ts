@@ -1,6 +1,7 @@
 import { of, pipe, switchMap, tap } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
+import { TextService } from '@music-collection/core/i18n';
 import {
 	MusicCollectionEffect,
 	MusicCollectionStanding,
@@ -41,7 +42,7 @@ const initialState: CollectionDetailPageState = {
 export const CollectionDetailPageStore = signalStore(
 	withState(initialState),
 	withCollectionFollowing(),
-	withComputed((store) => ({
+	withComputed((store, text = inject(TextService)) => ({
 		/** Whether this collection is one the collector is after. */
 		followed: computed(() => {
 			const uid = store.collection()?.uid;
@@ -53,7 +54,10 @@ export const CollectionDetailPageStore = signalStore(
 			const name = store.collection()?.name;
 
 			return [
-				{ label: 'Collections', link: '/collections' },
+				{
+					label: text.translator()('nav.collections'),
+					link: '/collections',
+				},
 				...(name ? [{ label: name }] : []),
 			];
 		}),

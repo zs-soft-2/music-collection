@@ -6,6 +6,7 @@ import {
 	output,
 	signal,
 } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { CopyPhotoView } from '../../collection-item.mapper';
 import { PhotoSlot } from '../../collection-item-page.store';
@@ -22,6 +23,7 @@ import { PhotoSlot } from '../../collection-item-page.store';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-copy-photos',
+	imports: [...I18N_IMPORTS],
 	templateUrl: './copy-photos.component.html',
 	styleUrls: ['./copy-photos.component.scss'],
 })

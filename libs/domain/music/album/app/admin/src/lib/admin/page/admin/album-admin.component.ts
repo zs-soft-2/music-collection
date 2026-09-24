@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import { Observable } from 'rxjs';
 
 import {
@@ -24,7 +25,14 @@ import { AsyncPipe } from '@angular/common';
 	selector: 'mc-album-admin',
 	templateUrl: './album-admin.component.html',
 	styleUrls: ['./album-admin.component.scss'],
-	imports: [Bind, NgxPermissionsModule, Button, RouterOutlet, AsyncPipe],
+	imports: [
+		...I18N_IMPORTS,
+		Bind,
+		NgxPermissionsModule,
+		Button,
+		RouterOutlet,
+		AsyncPipe,
+	],
 })
 export class AlbumAdminComponent extends BaseComponent implements OnInit {
 	private activatedRoute = inject(ActivatedRoute);

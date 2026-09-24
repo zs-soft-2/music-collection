@@ -3,13 +3,15 @@
 		[items]="params.collectionItems"
 		[place]="place"
 		[view]="collectionView"
-		emptyMessage="No collection items found."
+		[emptyMessage]="
+			'ui.collectionItemTable.no-collection-items-found' | transloco
+		"
 	>
 		<p-autocomplete
 			tools
 			class="mc-table-search"
-			placeholder="Filter by name…"
-			ariaLabel="Filter by name"
+			[placeholder]="'ui.collectionItemTable.filter-by-name' | transloco"
+			[ariaLabel]="'ui.collectionItemTable.filter-by-name2' | transloco"
 			[ngModel]="place.filterOf('name')"
 			[suggestions]="params.empty"
 			[showClear]="true"
@@ -23,8 +25,10 @@
 		<p-autocomplete
 			tools
 			class="mc-table-search"
-			placeholder="Filter by artist…"
-			ariaLabel="Filter by artist"
+			[placeholder]="
+				'ui.collectionItemTable.filter-by-artist' | transloco
+			"
+			[ariaLabel]="'ui.collectionItemTable.filter-by-artist2' | transloco"
 			[ngModel]="place.filterOf('artist')"
 			[suggestions]="params.empty"
 			[showClear]="true"
@@ -59,7 +63,10 @@
 					cardActions
 					pButton
 					pRipple
-					aria-label="Delete collection item"
+					[attr.aria-label]="
+						'ui.collectionItemTable.delete-collection-item'
+							| transloco
+					"
 					class="p-button-text p-button-rounded p-button-danger"
 					(click)="deleteCollectionItem(collectionItem)"
 					iconOnly
@@ -69,28 +76,45 @@
 			</mc-entity-card>
 		</ng-template>
 
-		<ng-template mcColumn header="Name" let-collectionItem>
+		<ng-template
+			mcColumn
+			[header]="'ui.collectionItemTable.name' | transloco"
+			let-collectionItem
+		>
 			{{ collectionItem.release.name }}
 		</ng-template>
 
-		<ng-template mcColumn header="Artist" let-collectionItem>
+		<ng-template
+			mcColumn
+			[header]="'ui.collectionItemTable.artist' | transloco"
+			let-collectionItem
+		>
 			{{ collectionItem.release.artist?.name }}
 		</ng-template>
 
-		<ng-template mcColumn header="Year" let-collectionItem>
+		<ng-template
+			mcColumn
+			[header]="'ui.collectionItemTable.year' | transloco"
+			let-collectionItem
+		>
 			{{ collectionItem.date | date: 'yyyy' }}
 		</ng-template>
 
 		<ng-template
 			mcColumn
-			header="Updated"
+			[header]="'ui.collectionItemTable.updated' | transloco"
 			field="updatedAt"
 			let-collectionItem
 		>
 			{{ collectionItem.updatedAt | date: 'yyyy-MM-dd HH:mm' }}
 		</ng-template>
 
-		<ng-template mcColumn header="Actions" headerHidden let-collectionItem>
+		<ng-template
+			mcColumn
+			[header]="'ui.collectionItemTable.actions' | transloco"
+			headerHidden
+			let-collectionItem
+		>
 			<mc-view-action
 				[link]="viewLink(collectionItem)"
 				entity="copy"
@@ -99,7 +123,9 @@
 			<button
 				pButton
 				pRipple
-				aria-label="Edit collection item"
+				[attr.aria-label]="
+					'ui.collectionItemTable.edit-collection-item' | transloco
+				"
 				class="p-button-text p-button-rounded p-button-secondary"
 				(click)="editCollectionItem(collectionItem)"
 				iconOnly
@@ -110,7 +136,9 @@
 			<button
 				pButton
 				pRipple
-				aria-label="Delete collection item"
+				[attr.aria-label]="
+					'ui.collectionItemTable.delete-collection-item2' | transloco
+				"
 				class="p-button-text p-button-rounded p-button-danger"
 				(click)="deleteCollectionItem(collectionItem)"
 				iconOnly

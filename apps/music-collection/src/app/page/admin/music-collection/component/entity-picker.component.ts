@@ -6,6 +6,7 @@ import {
 	output,
 	signal,
 } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 export interface PickerOption {
 	uid: string;
@@ -23,6 +24,7 @@ const MATCH_LIMIT = 12;
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-entity-picker',
+	imports: [...I18N_IMPORTS],
 	template: `
 		@if (chips().length) {
 			<ul class="chips">
@@ -62,7 +64,12 @@ const MATCH_LIMIT = 12;
 					}
 				</ul>
 			} @else {
-				<p class="none">Nothing matches “{{ query() }}”.</p>
+				<p class="none">
+					{{
+						'ui.entityPicker.noMatch'
+							| transloco: { query: query() }
+					}}
+				</p>
 			}
 		}
 	`,

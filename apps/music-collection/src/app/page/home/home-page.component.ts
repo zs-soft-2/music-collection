@@ -1,6 +1,6 @@
-import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
 	ArtistTileComponent,
@@ -33,7 +33,7 @@ import { HomePageStore } from './home-page.store';
 	templateUrl: './home-page.component.html',
 	styleUrls: ['./home-page.component.scss'],
 	imports: [
-		DecimalPipe,
+		...I18N_IMPORTS,
 		RouterLink,
 		ReleaseCardComponent,
 		AlbumGroupComponent,

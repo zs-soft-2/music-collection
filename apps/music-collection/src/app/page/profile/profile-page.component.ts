@@ -1,7 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { ProfileAccountComponent } from './component/profile-account/profile-account.component';
 import { ProfileAppearanceComponent } from './component/profile-appearance/profile-appearance.component';
+import { ProfileLanguageComponent } from './component/profile-language/profile-language.component';
 import { ProfileListsComponent } from './component/profile-lists/profile-lists.component';
 import { ProfileListeningComponent } from './component/profile-listening/profile-listening.component';
 import { ProfilePlaybackComponent } from './component/profile-playback/profile-playback.component';
@@ -22,8 +24,10 @@ import { ProfilePageStore } from './profile-page.store';
 	templateUrl: './profile-page.component.html',
 	styleUrls: ['./profile-page.component.scss'],
 	imports: [
+		...I18N_IMPORTS,
 		ProfileAccountComponent,
 		ProfileAppearanceComponent,
+		ProfileLanguageComponent,
 		ProfileListsComponent,
 		ProfileListeningComponent,
 		ProfilePlaybackComponent,

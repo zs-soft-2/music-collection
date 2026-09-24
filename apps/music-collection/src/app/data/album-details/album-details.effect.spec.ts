@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { firstValueFrom, of } from 'rxjs';
 
 import { TestBed } from '@angular/core/testing';
@@ -40,6 +41,7 @@ const ALBUM_TRACKS = [
 function setUp(): AlbumDetailsEffect {
 	TestBed.configureTestingModule({
 		providers: [
+			provideI18nTesting(),
 			AlbumDetailsEffect,
 			{
 				provide: AlbumDetailsRepository,

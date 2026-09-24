@@ -29,32 +29,37 @@
 				}
 
 				<div class="identity">
-					<p class="eyebrow">Artist</p>
+					<p class="eyebrow">
+						{{ 'page.artist.artist' | transloco }}
+					</p>
 					<h1>{{ artist.name }}</h1>
 
 					<dl class="facts">
 						@if (artist.country) {
 							<div>
-								<dt>Country</dt>
+								<dt>{{ 'page.artist.country' | transloco }}</dt>
 								<dd>{{ artist.country }}</dd>
 							</div>
 						}
 						@if (artist.formedYear) {
 							<div>
-								<dt>Formed</dt>
+								<dt>{{ 'page.artist.formed' | transloco }}</dt>
 								<dd>{{ artist.formedYear }}</dd>
 							</div>
 						}
 						@if (artist.genre) {
 							<div>
-								<dt>Genre</dt>
+								<dt>{{ 'page.artist.genre' | transloco }}</dt>
 								<dd>{{ artist.genre }}</dd>
 							</div>
 						}
 					</dl>
 
 					@if (artist.styles.length) {
-						<ul class="styles" aria-label="Styles">
+						<ul
+							class="styles"
+							[attr.aria-label]="'page.artist.styles' | transloco"
+						>
 							@for (style of artist.styles; track style) {
 								<li>{{ style }}</li>
 							}
@@ -62,7 +67,10 @@
 					}
 
 					@if (artist.sites.length) {
-						<ul class="sites" aria-label="Links">
+						<ul
+							class="sites"
+							[attr.aria-label]="'page.artist.links' | transloco"
+						>
 							@for (site of artist.sites; track site.url) {
 								<li>
 									<a
@@ -75,9 +83,10 @@
 											class="pi pi-external-link"
 											aria-hidden="true"
 										></i>
-										<span class="visually-hidden"
-											>(opens in a new tab)</span
-										>
+										<span class="visually-hidden">{{
+											'page.artist.opens-in-a-new'
+												| transloco
+										}}</span>
 									</a>
 								</li>
 							}
@@ -90,13 +99,15 @@
 		<!-- Key figures -->
 		<dl class="stats">
 			<div class="stat">
-				<dt>Albums in the catalog</dt>
+				<dt>{{ 'page.artist.albums-in-the-catalog' | transloco }}</dt>
 				<dd>
 					{{ store.albumsLoading() ? '–' : store.stats().albums }}
 				</dd>
 			</div>
 			<div class="stat">
-				<dt>Releases in your collection</dt>
+				<dt>
+					{{ 'page.artist.releases-in-your-collection' | transloco }}
+				</dt>
 				<dd>
 					{{ store.releasesLoading() ? '–' : store.stats().releases }}
 				</dd>
@@ -109,7 +120,7 @@
 			}
 			@if (store.stats().firstYear) {
 				<div class="stat">
-					<dt>On record</dt>
+					<dt>{{ 'page.artist.on-record' | transloco }}</dt>
 					<dd>
 						{{ store.stats().firstYear }}
 						@if (
@@ -123,7 +134,10 @@
 		</dl>
 
 		<!-- In-page navigation -->
-		<nav class="section-nav" aria-label="Sections">
+		<nav
+			class="section-nav"
+			[attr.aria-label]="'page.artist.sections' | transloco"
+		>
 			@for (section of sections(); track section.id) {
 				<a
 					[href]="'#' + section.id"
@@ -132,7 +146,7 @@
 						activeSection() === section.id ? 'location' : null
 					"
 					(click)="$event.preventDefault(); scrollTo(section.id)"
-					>{{ section.label }}</a
+					>{{ section.labelKey | transloco }}</a
 				>
 			}
 		</nav>
@@ -140,7 +154,9 @@
 		<!-- About -->
 		@if (artist.paragraphs.length) {
 			<section id="about" class="section" aria-labelledby="about-title">
-				<h2 id="about-title" class="section-title">About</h2>
+				<h2 id="about-title" class="section-title">
+					{{ 'page.artist.about' | transloco }}
+				</h2>
 				<div class="bio" id="artist-bio">
 					@for (paragraph of visibleParagraphs(); track $index) {
 						<p>{{ paragraph }}</p>
@@ -163,7 +179,9 @@
 		<!-- Line-up -->
 		@if (hasLineup()) {
 			<section id="lineup" class="section" aria-labelledby="lineup-title">
-				<h2 id="lineup-title" class="section-title">Line-up</h2>
+				<h2 id="lineup-title" class="section-title">
+					{{ 'page.artist.line-up' | transloco }}
+				</h2>
 				@defer (
 					on viewport({ rootMargin: '800px' });
 					when revealAll()
@@ -181,7 +199,7 @@
 					[queryParams]="{ focus: 'artist:' + artist.id }"
 				>
 					<i class="pi pi-sitemap" aria-hidden="true"></i>
-					View in the relationship network
+					{{ 'page.artist.view-in-the-relationship' | transloco }}
 				</a>
 			</section>
 		}
@@ -194,14 +212,16 @@
 		>
 			<header class="section-head">
 				<h2 id="discography-title" class="section-title">
-					Discography
+					{{ 'page.artist.discography' | transloco }}
 				</h2>
 
 				@if (store.albumTypes().length > 1) {
 					<div
 						class="chips"
 						role="group"
-						aria-label="Filter by album type"
+						[attr.aria-label]="
+							'page.artist.filter-by-album-type' | transloco
+						"
 					>
 						<button
 							type="button"
@@ -209,7 +229,7 @@
 							[attr.aria-pressed]="store.albumType() === null"
 							(click)="store.setAlbumType(null)"
 						>
-							All
+							{{ 'page.artist.all' | transloco }}
 							<span class="chip-count">{{
 								store.discography().length
 							}}</span>
@@ -266,7 +286,10 @@
 				}
 			} @else {
 				<p class="empty">
-					No albums of {{ artist.name }} in the catalog yet.
+					{{
+						'page.artist.noAlbums'
+							| transloco: { artist: artist.name }
+					}}
 				</p>
 			}
 		</section>
@@ -280,10 +303,10 @@
 			>
 				<header class="section-head">
 					<h2 id="collection-title" class="section-title">
-						In your collection
+						{{ 'page.artist.in-your-collection' | transloco }}
 					</h2>
 					<a class="more" routerLink="/collection">
-						Open collection
+						{{ 'page.artist.open-collection' | transloco }}
 						<i class="pi pi-arrow-right" aria-hidden="true"></i>
 					</a>
 				</header>
@@ -317,7 +340,7 @@
 				aria-labelledby="similar-title"
 			>
 				<h2 id="similar-title" class="section-title">
-					Similar artists
+					{{ 'page.artist.similar-artists' | transloco }}
 				</h2>
 				@defer (
 					on viewport({ rootMargin: '800px' });
@@ -339,13 +362,17 @@
 	} @else if (store.notFound()) {
 		<div class="not-found">
 			<p class="not-found-icon" aria-hidden="true">♪</p>
-			<h1>Artist not found</h1>
-			<p>This artist is not in the catalog.</p>
-			<a class="button" routerLink="/home">Back to home</a>
+			<h1>{{ 'page.artist.artist-not-found' | transloco }}</h1>
+			<p>{{ 'page.artist.this-artist-is-not' | transloco }}</p>
+			<a class="button" routerLink="/home">{{
+				'page.artist.back-to-home' | transloco
+			}}</a>
 		</div>
 	} @else {
 		<div role="status" aria-busy="true">
-			<span class="visually-hidden">Loading artist…</span>
+			<span class="visually-hidden">{{
+				'page.artist.loading-artist' | transloco
+			}}</span>
 			<div class="skeleton hero-skeleton"></div>
 			<div class="skeleton stats-skeleton"></div>
 		</div>

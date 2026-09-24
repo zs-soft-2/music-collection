@@ -13,6 +13,7 @@ import {
 } from 'rxjs';
 
 import { DestroyRef, Signal, computed, effect, inject } from '@angular/core';
+import { TextService } from '@music-collection/core/i18n';
 import { ActivatedRoute } from '@angular/router';
 import {
 	AlbumEntity,
@@ -405,7 +406,7 @@ function entities$<T>(
 export const AlbumPageStore = signalStore(
 	withState(initialState),
 	withPageOrigin(),
-	withComputed((store) => {
+	withComputed((store, text = inject(TextService)) => {
 		const albumEntity = computed(
 			() =>
 				store.albums().find((album) => album.uid === store.albumId()) ??
@@ -432,7 +433,7 @@ export const AlbumPageStore = signalStore(
 						? origin
 						: [
 								{
-									label: 'My Collection',
+									label: text.translator()('nav.collection'),
 									link: '/collection',
 								},
 								...(profile?.artistId

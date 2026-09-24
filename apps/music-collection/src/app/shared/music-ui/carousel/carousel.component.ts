@@ -10,6 +10,7 @@ import {
 	signal,
 	viewChild,
 } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 /**
  * A row of cards that scrolls sideways: swiped on a phone, stepped through
@@ -31,6 +32,7 @@ import {
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-carousel',
+	imports: [...I18N_IMPORTS],
 	template: `
 		<div
 			class="viewport"

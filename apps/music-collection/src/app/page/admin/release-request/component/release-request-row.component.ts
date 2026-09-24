@@ -6,6 +6,7 @@ import {
 	signal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { ReleaseRequestRow } from '../release-request-admin.mapper';
 
@@ -13,7 +14,7 @@ import { ReleaseRequestRow } from '../release-request-admin.mapper';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-release-request-row',
-	imports: [RouterLink],
+	imports: [...I18N_IMPORTS, RouterLink],
 	template: `
 		<article class="request" [attr.aria-labelledby]="'request-' + row().id">
 			<header class="head">
@@ -33,8 +34,10 @@ import { ReleaseRequestRow } from '../release-request-admin.mapper';
 					@if (row().newAlbum) {
 						<p class="new-album">
 							<i class="pi pi-plus-circle" aria-hidden="true"></i>
-							Not in the catalog — approving creates the album
-							too
+							{{
+								'ui.releaseRequestRow.not-in-the-catalog'
+									| transloco
+							}}
 						</p>
 					}
 					<p class="meta">
@@ -60,10 +63,18 @@ import { ReleaseRequestRow } from '../release-request-admin.mapper';
 				}
 			</p>
 			@if (row().note) {
-				<p class="note"><span>Collector:</span> {{ row().note }}</p>
+				<p class="note">
+					<span>{{
+						'ui.releaseRequestRow.collector' | transloco
+					}}</span>
+					{{ row().note }}
+				</p>
 			}
 			@if (row().adminNote) {
-				<p class="note"><span>Admin:</span> {{ row().adminNote }}</p>
+				<p class="note">
+					<span>{{ 'ui.releaseRequestRow.admin' | transloco }}</span>
+					{{ row().adminNote }}
+				</p>
 			}
 
 			@if (error()) {
@@ -73,7 +84,10 @@ import { ReleaseRequestRow } from '../release-request-admin.mapper';
 			@if (row().status === 'pending') {
 				@if (rejecting()) {
 					<label class="field">
-						<span>Reason (shown to the collector, optional)</span>
+						<span>{{
+							'ui.releaseRequestRow.reason-shown-to-the'
+								| transloco
+						}}</span>
 						<textarea
 							rows="2"
 							maxlength="500"
@@ -88,7 +102,7 @@ import { ReleaseRequestRow } from '../release-request-admin.mapper';
 							[disabled]="busy()"
 							(click)="rejecting.set(false)"
 						>
-							Cancel
+							{{ 'ui.releaseRequestRow.cancel' | transloco }}
 						</button>
 						<button
 							type="button"
@@ -96,7 +110,10 @@ import { ReleaseRequestRow } from '../release-request-admin.mapper';
 							[disabled]="busy()"
 							(click)="reject.emit(rejectNote().trim() || null)"
 						>
-							Reject request
+							{{
+								'ui.releaseRequestRow.reject-request'
+									| transloco
+							}}
 						</button>
 					</div>
 				} @else {
@@ -122,7 +139,10 @@ import { ReleaseRequestRow } from '../release-request-admin.mapper';
 								<label
 									class="visually-hidden"
 									[for]="'release-' + row().id"
-									>Catalog release</label
+									>{{
+										'ui.releaseRequestRow.catalog-release'
+											| transloco
+									}}</label
 								>
 								<select
 									[id]="'release-' + row().id"
@@ -134,7 +154,10 @@ import { ReleaseRequestRow } from '../release-request-admin.mapper';
 									"
 								>
 									<option value="" [selected]="!releaseUid()">
-										Link a catalog release…
+										{{
+											'ui.releaseRequestRow.link-a-catalog-release'
+												| transloco
+										}}
 									</option>
 									@for (
 										release of row().catalogReleases;
@@ -156,7 +179,10 @@ import { ReleaseRequestRow } from '../release-request-admin.mapper';
 									[disabled]="busy() || !releaseUid()"
 									(click)="approve.emit(releaseUid())"
 								>
-									Approve with it
+									{{
+										'ui.releaseRequestRow.approve-with-it'
+											| transloco
+									}}
 								</button>
 							</span>
 						}
@@ -166,13 +192,15 @@ import { ReleaseRequestRow } from '../release-request-admin.mapper';
 							[disabled]="busy()"
 							(click)="rejecting.set(true)"
 						>
-							Reject
+							{{ 'ui.releaseRequestRow.reject' | transloco }}
 						</button>
 					</div>
 					@if (!row().importable && !row().catalogReleases.length) {
 						<p class="hint">
-							Add the release to the album in the admin, then link
-							it here.
+							{{
+								'ui.releaseRequestRow.add-the-release-to'
+									| transloco
+							}}
 						</p>
 					}
 				}

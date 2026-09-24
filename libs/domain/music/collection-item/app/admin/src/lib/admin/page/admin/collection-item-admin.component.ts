@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import { Observable } from 'rxjs';
 
 import {
@@ -24,7 +25,14 @@ import { AsyncPipe } from '@angular/common';
 	selector: 'mc-collection-item-admin',
 	templateUrl: './collection-item-admin.component.html',
 	styleUrls: ['./collection-item-admin.component.scss'],
-	imports: [Bind, NgxPermissionsModule, Button, RouterOutlet, AsyncPipe],
+	imports: [
+		...I18N_IMPORTS,
+		Bind,
+		NgxPermissionsModule,
+		Button,
+		RouterOutlet,
+		AsyncPipe,
+	],
 })
 export class CollectionItemAdminComponent
 	extends BaseComponent

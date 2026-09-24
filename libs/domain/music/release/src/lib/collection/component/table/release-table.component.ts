@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import { Observable } from 'rxjs';
 
 import { FormsModule } from '@angular/forms';
@@ -33,6 +34,7 @@ import {
 	templateUrl: './release-table.component.html',
 	styleUrls: ['./release-table.component.scss'],
 	imports: [
+		...I18N_IMPORTS,
 		FormsModule,
 		AutoComplete,
 		Chip,

@@ -39,12 +39,7 @@ const uids = (count: number, prefix: string) =>
 	Array.from({ length: count }, (_unused, index) => `${prefix}-${index}`);
 
 /** Four albums, worth 400, and only one of them still to find. */
-const NEARLY = shortfall(
-	'nearly',
-	uids(4, 'nearly'),
-	['nearly-3'],
-	400
-);
+const NEARLY = shortfall('nearly', uids(4, 'nearly'), ['nearly-3'], 400);
 /** Ten albums, worth 1000, five to find: one of them moves 200. */
 const HALFWAY = shortfall(
 	'halfway',
@@ -55,8 +50,9 @@ const HALFWAY = shortfall(
 /** Ten albums, worth only 100, five to find: one of them moves 20. */
 const SLIM = shortfall('slim', uids(10, 'slim'), uids(5, 'slim'), 100);
 
-const byUid = (albumUid: string) => (suggestion: { album: { albumUid: string } }) =>
-	suggestion.album.albumUid === albumUid;
+const byUid =
+	(albumUid: string) => (suggestion: { album: { albumUid: string } }) =>
+		suggestion.album.albumUid === albumUid;
 
 describe('suggestNextAlbums', () => {
 	it('puts the record that finishes a collection first', () => {
@@ -74,7 +70,12 @@ describe('suggestNextAlbums', () => {
 	 * the first one tonight.
 	 */
 	it('ranks finishing a cheap collection above moving a rich one', () => {
-		const rich = shortfall('rich', uids(10, 'rich'), uids(2, 'rich'), 10_000);
+		const rich = shortfall(
+			'rich',
+			uids(10, 'rich'),
+			uids(2, 'rich'),
+			10_000
+		);
 		const cheap = shortfall('cheap', uids(2, 'cheap'), ['cheap-1'], 100);
 
 		const [first, second] = suggestNextAlbums([rich, cheap]);
@@ -127,10 +128,9 @@ describe('suggestNextAlbums', () => {
 		const wanted = suggestions.find(byUid('halfway-0'));
 
 		expect(wanted?.potentialPoints).toBe(200 + share);
-		expect(wanted?.wantedBy.map(({ collectionUid }) => collectionUid)).toEqual([
-			'halfway',
-			'shared',
-		]);
+		expect(
+			wanted?.wantedBy.map(({ collectionUid }) => collectionUid)
+		).toEqual(['halfway', 'shared']);
 	});
 
 	it('names every collection that wants it, the nearest to done first', () => {
@@ -154,9 +154,9 @@ describe('suggestNextAlbums', () => {
 
 		// Three of the four are owned: only what is missing can be bought.
 		expect(suggestions).toHaveLength(1);
-		expect(suggestions.map((suggestion) => suggestion.album.albumUid)).not.toContain(
-			'nearly-0'
-		);
+		expect(
+			suggestions.map((suggestion) => suggestion.album.albumUid)
+		).not.toContain('nearly-0');
 	});
 
 	it('takes nothing from a collection that is complete', () => {
@@ -193,7 +193,12 @@ describe('suggestNextAlbums', () => {
 	});
 
 	it('still lists the records of a collection worth nothing, at the back', () => {
-		const worthless = shortfall('worthless', uids(2, 'worthless'), ['worthless-1'], 0);
+		const worthless = shortfall(
+			'worthless',
+			uids(2, 'worthless'),
+			['worthless-1'],
+			0
+		);
 
 		const suggestions = suggestNextAlbums([HALFWAY, worthless]);
 

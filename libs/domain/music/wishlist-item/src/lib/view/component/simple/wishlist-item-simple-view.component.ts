@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import {
 	ChangeDetectionStrategy,
 	Component,
@@ -21,6 +22,7 @@ import { Chip } from 'primeng/chip';
 	templateUrl: './wishlist-item-simple-view.component.html',
 	styleUrls: ['./wishlist-item-simple-view.component.scss'],
 	imports: [
+		...I18N_IMPORTS,
 		DefaultLayoutDirective,
 		DefaultLayoutAlignDirective,
 		DefaultLayoutGapDirective,

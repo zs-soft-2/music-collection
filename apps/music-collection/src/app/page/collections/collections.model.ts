@@ -100,19 +100,20 @@ export interface CollectionDetailView extends CollectionCardView {
 /** Which albums the detail page lists. */
 export type AlbumFilter = 'all' | 'missing' | 'owned';
 
-export const ALBUM_FILTER_OPTIONS: { value: AlbumFilter; label: string }[] = [
-	{ value: 'all', label: 'All' },
-	{ value: 'owned', label: 'Owned' },
-	{ value: 'missing', label: 'Missing' },
-];
+export const ALBUM_FILTER_OPTIONS: { value: AlbumFilter; labelKey: string }[] =
+	[
+		{ value: 'all', labelKey: 'page.collections.filter.all' },
+		{ value: 'owned', labelKey: 'page.collections.filter.owned' },
+		{ value: 'missing', labelKey: 'page.collections.filter.missing' },
+	];
 
 /** Which collections the list shows. */
 export type CollectionsTab = 'following' | 'all';
 
 export const COLLECTIONS_TAB_OPTIONS: {
 	value: CollectionsTab;
-	label: string;
+	labelKey: string;
 }[] = [
-	{ value: 'following', label: 'Following' },
-	{ value: 'all', label: 'All' },
+	{ value: 'following', labelKey: 'page.collections.filter.following' },
+	{ value: 'all', labelKey: 'page.collections.filter.all' },
 ];

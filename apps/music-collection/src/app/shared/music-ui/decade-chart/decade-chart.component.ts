@@ -4,6 +4,7 @@ import {
 	computed,
 	input,
 } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { CountDatum } from '../count-stats';
 
@@ -15,6 +16,7 @@ import { CountDatum } from '../count-stats';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-decade-chart',
+	imports: [...I18N_IMPORTS],
 	template: `
 		<figure class="chart">
 			<figcaption class="title">{{ heading() }}</figcaption>

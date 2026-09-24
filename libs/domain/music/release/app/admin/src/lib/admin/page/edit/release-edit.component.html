@@ -2,8 +2,12 @@
 	@if (isExisting) {
 		<p-tabs value="details">
 			<p-tablist>
-				<p-tab value="details">Details</p-tab>
-				<p-tab value="tracks">Tracks</p-tab>
+				<p-tab value="details">{{
+					'ui.releaseEdit.details' | transloco
+				}}</p-tab>
+				<p-tab value="tracks">{{
+					'ui.releaseEdit.tracks' | transloco
+				}}</p-tab>
 			</p-tablist>
 			<p-tabpanels>
 				<p-tabpanel value="details">

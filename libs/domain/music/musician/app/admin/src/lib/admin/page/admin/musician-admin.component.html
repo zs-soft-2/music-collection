@@ -1,13 +1,13 @@
 <section class="entity-admin">
 	<header class="mc-page-head">
 		<div>
-			<h1>Musicians</h1>
-			<p>Musicians of the global catalog, with their Discogs profile.</p>
+			<h1>{{ 'ui.musicianAdmin.musicians' | transloco }}</h1>
+			<p>{{ 'ui.musicianAdmin.musicians-of-the-global' | transloco }}</p>
 		</div>
 
 		<div class="mc-page-actions" *ngxPermissionsOnly="buttonPermissions">
 			<p-button
-				label="Add musician"
+				[label]="'ui.musicianAdmin.add-musician' | transloco"
 				icon="pi pi-plus"
 				(onClick)="clickHandler()"
 				[disabled]="(isNewEntityButtonEnabled$ | async) === false"

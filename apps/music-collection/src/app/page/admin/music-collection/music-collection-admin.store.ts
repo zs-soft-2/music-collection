@@ -1,6 +1,7 @@
 import { exhaustMap, of, pipe, switchMap, tap } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
+import { TextService } from '@music-collection/core/i18n';
 import { MusicCollectionEffect } from '@music-collection/domain/music-collection/core';
 import { tapResponse } from '@ngrx/operators';
 import {
@@ -61,68 +62,74 @@ export const MusicCollectionAdminStore = signalStore(
 			return counts;
 		}),
 	})),
-	withMethods((store, effect = inject(MusicCollectionEffect)) => ({
-		load: rxMethod<void>(
-			pipe(
-				tap(() => patchState(store, { isLoading: true })),
-				switchMap(() => effect.listAllResolutions$()),
-				tapResponse({
-					next: (resolutions) =>
-						patchState(store, {
-							rows: toRows(resolutions),
-							isLoading: false,
-						}),
-					error: (error) => {
-						console.error(error);
-						patchState(store, {
-							isLoading: false,
-							error: describeWriteError(error),
-						});
-					},
-				})
-			)
-		),
-		setStatusFilter: (statusFilter: StatusFilter) =>
-			patchState(store, { statusFilter }),
-		/**
-		 * Deleting is asked for twice: the definition is what a badge is
-		 * measured against, and it cannot be brought back from the client.
-		 */
-		askDeletion: (pendingDeletion: CollectionRow) =>
-			patchState(store, { pendingDeletion, error: null }),
-		cancelDeletion: () => patchState(store, { pendingDeletion: null }),
-		confirmDeletion: rxMethod<void>(
-			pipe(
-				tap(() =>
-					patchState(store, {
-						busyUid: store.pendingDeletion()?.uid ?? null,
-						error: null,
+	withMethods(
+		(
+			store,
+			effect = inject(MusicCollectionEffect),
+			text = inject(TextService)
+		) => ({
+			load: rxMethod<void>(
+				pipe(
+					tap(() => patchState(store, { isLoading: true })),
+					switchMap(() => effect.listAllResolutions$()),
+					tapResponse({
+						next: (resolutions) =>
+							patchState(store, {
+								rows: toRows(resolutions, text.translator()),
+								isLoading: false,
+							}),
+						error: (error) => {
+							console.error(error);
+							patchState(store, {
+								isLoading: false,
+								error: describeWriteError(error),
+							});
+						},
 					})
-				),
-				exhaustMap(() => {
-					const uid = store.pendingDeletion()?.uid;
+				)
+			),
+			setStatusFilter: (statusFilter: StatusFilter) =>
+				patchState(store, { statusFilter }),
+			/**
+			 * Deleting is asked for twice: the definition is what a badge is
+			 * measured against, and it cannot be brought back from the client.
+			 */
+			askDeletion: (pendingDeletion: CollectionRow) =>
+				patchState(store, { pendingDeletion, error: null }),
+			cancelDeletion: () => patchState(store, { pendingDeletion: null }),
+			confirmDeletion: rxMethod<void>(
+				pipe(
+					tap(() =>
+						patchState(store, {
+							busyUid: store.pendingDeletion()?.uid ?? null,
+							error: null,
+						})
+					),
+					exhaustMap(() => {
+						const uid = store.pendingDeletion()?.uid;
 
-					return uid ? effect.delete$(uid) : of(undefined);
-				}),
-				tapResponse({
-					next: () =>
-						// A törölt definíció a cache-ből is kiesik, a lista
-						// magától újrarajzolódik — csak a párbeszéd zárul itt.
-						patchState(store, {
-							pendingDeletion: null,
-							busyUid: null,
-						}),
-					error: (error) => {
-						console.error(error);
-						patchState(store, {
-							busyUid: null,
-							error: describeWriteError(error),
-						});
-					},
-				})
-			)
-		),
-	})),
+						return uid ? effect.delete$(uid) : of(undefined);
+					}),
+					tapResponse({
+						next: () =>
+							// A törölt definíció a cache-ből is kiesik, a lista
+							// magától újrarajzolódik — csak a párbeszéd zárul itt.
+							patchState(store, {
+								pendingDeletion: null,
+								busyUid: null,
+							}),
+						error: (error) => {
+							console.error(error);
+							patchState(store, {
+								busyUid: null,
+								error: describeWriteError(error),
+							});
+						},
+					})
+				)
+			),
+		})
+	),
 	withHooks({
 		onInit(store) {
 			store.load(of(undefined));

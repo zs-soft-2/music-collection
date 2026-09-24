@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { AlbumCollectionView } from '../../album.mapper';
 
@@ -11,9 +12,9 @@ import { AlbumCollectionView } from '../../album.mapper';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-album-collections',
-	imports: [RouterLink],
+	imports: [...I18N_IMPORTS, RouterLink],
 	template: `
-		<p class="label">Part of</p>
+		<p class="label">{{ 'ui.albumCollections.part-of' | transloco }}</p>
 		<ul class="collections">
 			@for (collection of collections(); track collection.uid) {
 				<li>
@@ -33,7 +34,10 @@ import { AlbumCollectionView } from '../../album.mapper';
 								{{ collection.badgeName }}
 							</span>
 						} @else if (!collection.ownsThisAlbum) {
-							<span class="missing">missing this one</span>
+							<span class="missing">{{
+								'ui.albumCollections.missing-this-one'
+									| transloco
+							}}</span>
 						}
 					</a>
 				</li>

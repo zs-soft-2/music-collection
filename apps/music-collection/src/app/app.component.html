@@ -6,7 +6,9 @@
 		<router-outlet></router-outlet>
 	</div>
 
-	<footer [title]="'Build: ' + buildTime">Version: {{ version }} by Zsagia</footer>
+	<footer [title]="'app.build' | transloco: { time: buildTime }">
+		{{ 'app.version' | transloco: { version } }}
+	</footer>
 </main>
 
 <mc-error-toast></mc-error-toast>

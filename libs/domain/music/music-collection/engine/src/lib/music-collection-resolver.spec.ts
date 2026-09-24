@@ -83,7 +83,9 @@ describe('resolveMusicCollection', () => {
 		catalog.artists.push(artist('moved-on', [StyleEnum.Groove]));
 
 		const byAlbumStyle = resolveMusicCollection(
-			collection({ styles: { includesAny: [StyleEnum.Bay_Area_Thrash] } }),
+			collection({
+				styles: { includesAny: [StyleEnum.Bay_Area_Thrash] },
+			}),
 			catalog
 		);
 		const byArtistStyle = resolveMusicCollection(

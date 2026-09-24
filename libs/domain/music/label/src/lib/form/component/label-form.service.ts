@@ -32,7 +32,7 @@ import {
 export interface LabelExternalRow {
 	current: string;
 	field: LabelExternalField;
-	label: string;
+	labelKey: string;
 	loaded: string;
 	/** Whether the loaded value goes into the form on apply. */
 	selected: boolean;
@@ -50,12 +50,12 @@ export interface LabelExternalComparison {
 	sourceUrl: string;
 }
 
-const EXTERNAL_FIELDS: { field: LabelExternalField; label: string }[] = [
-	{ field: 'name', label: 'Name' },
-	{ field: 'description', label: 'Profile' },
-	{ field: 'imageUrl', label: 'Logo URL' },
-	{ field: 'sites', label: 'Links' },
-	{ field: 'discogsId', label: 'Discogs ID' },
+const EXTERNAL_FIELDS: { field: LabelExternalField; labelKey: string }[] = [
+	{ field: 'name', labelKey: 'ui.labelForm.name' },
+	{ field: 'description', labelKey: 'ui.labelForm.profile' },
+	{ field: 'imageUrl', labelKey: 'ui.labelForm.logo-url' },
+	{ field: 'sites', labelKey: 'ui.labelForm.links' },
+	{ field: 'discogsId', labelKey: 'ui.labelForm.discogs-id' },
 ];
 
 /** Links are edited one per line in a textarea. */
@@ -282,14 +282,14 @@ export class LabelFormService {
 	 */
 	private compare(profile: LabelExternalProfile): LabelExternalComparison {
 		const formValue = this.params.formGroup.value;
-		const rows = EXTERNAL_FIELDS.map(({ field, label }) => {
+		const rows = EXTERNAL_FIELDS.map(({ field, labelKey }) => {
 			const current = formatValue(formValue[field]);
 			const loaded = formatValue(profile[field]);
 
 			return {
 				current,
 				field,
-				label,
+				labelKey,
 				loaded,
 				selected: !current && !!loaded,
 				value: LINE_FIELDS.includes(field) ? loaded : profile[field],

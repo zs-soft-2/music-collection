@@ -42,7 +42,7 @@ import {
 export interface ArtistExternalRow {
 	current: string;
 	field: ArtistExternalField;
-	label: string;
+	labelKey: string;
 	loaded: string;
 	/** Whether the loaded value goes into the form on apply. */
 	selected: boolean;
@@ -54,15 +54,15 @@ export interface ArtistExternalComparison {
 	sourceUrl: string;
 }
 
-const EXTERNAL_FIELDS: { field: ArtistExternalField; label: string }[] = [
-	{ field: 'name', label: 'Name' },
-	{ field: 'artistType', label: 'Type' },
-	{ field: 'country', label: 'Country' },
-	{ field: 'formedIn', label: 'Formed in' },
-	{ field: 'styles', label: 'Styles' },
-	{ field: 'description', label: 'Description' },
-	{ field: 'imageUrl', label: 'Photo URL' },
-	{ field: 'musicBrainzId', label: 'MusicBrainz ID' },
+const EXTERNAL_FIELDS: { field: ArtistExternalField; labelKey: string }[] = [
+	{ field: 'name', labelKey: 'ui.artistForm.name' },
+	{ field: 'artistType', labelKey: 'ui.artistForm.type' },
+	{ field: 'country', labelKey: 'ui.artistForm.country' },
+	{ field: 'formedIn', labelKey: 'ui.artistForm.formed-in' },
+	{ field: 'styles', labelKey: 'ui.artistForm.styles' },
+	{ field: 'description', labelKey: 'ui.artistForm.description' },
+	{ field: 'imageUrl', labelKey: 'ui.artistForm.photo-url' },
+	{ field: 'musicBrainzId', labelKey: 'ui.artistForm.musicbrainzId' },
 ];
 
 function isEmpty(value: unknown): boolean {
@@ -412,14 +412,14 @@ export class ArtistFormService {
 	 * Fields with the same value are left out.
 	 */
 	private compare(profile: ArtistExternalProfile): ArtistExternalComparison {
-		const rows = EXTERNAL_FIELDS.map(({ field, label }) => {
+		const rows = EXTERNAL_FIELDS.map(({ field, labelKey }) => {
 			const current = formatValue(this.formGroup.value[field]);
 			const loaded = formatValue(profile[field]);
 
 			return {
 				current,
 				field,
-				label,
+				labelKey,
 				loaded,
 				selected: !current && !!loaded,
 				value: profile[field],

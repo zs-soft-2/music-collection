@@ -8,6 +8,7 @@ import {
 	untracked,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
 	AdminEditLinkComponent,
@@ -34,6 +35,7 @@ const PRESSING_PREVIEW = 48;
 	templateUrl: './label-page.component.html',
 	styleUrls: ['./label-page.component.scss'],
 	imports: [
+		...I18N_IMPORTS,
 		PageBreadcrumbComponent,
 		RouterLink,
 		EntityFactsComponent,
@@ -80,21 +82,24 @@ export class LabelPageComponent {
 
 		return [
 			{
-				label: 'Parent label',
+				labelKey: 'fact.parentLabel',
 				value: parent?.name ?? null,
 				link: parent ? ['/label', parent.uid] : null,
 			},
 			{
-				label: 'Sub-labels',
+				labelKey: 'fact.subLabels',
 				value: this.store.children().length || null,
 			},
 			{
-				label: 'Pressings',
+				labelKey: 'fact.pressings',
 				value: this.store.pressings().length || null,
 			},
-			{ label: 'Artists', value: this.store.artists().length || null },
 			{
-				label: 'Years',
+				labelKey: 'fact.artists',
+				value: this.store.artists().length || null,
+			},
+			{
+				labelKey: 'fact.years',
 				value: years
 					? years.from === years.to
 						? `${years.from}`

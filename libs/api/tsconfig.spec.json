@@ -5,7 +5,9 @@
 		"module": "preserve",
 		"types": ["jest", "node"],
 		"moduleResolution": "bundler",
-		"isolatedModules": true
+		"isolatedModules": true,
+		// A teszt-provider a valódi szótárat olvassa be.
+		"resolveJsonModule": true
 	},
 	"files": ["src/test-setup.ts"],
 	"include": ["jest.config.ts", "**/*.test.ts", "**/*.spec.ts", "**/*.d.ts"]

@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import {
 	ChangeDetectionStrategy,
 	Component,
@@ -26,6 +27,7 @@ import { FormatBadgeComponent } from '../format-badge/format-badge.component';
 	templateUrl: './release-card.component.html',
 	styleUrls: ['./release-card.component.scss'],
 	imports: [
+		...I18N_IMPORTS,
 		RouterLink,
 		FormatBadgeComponent,
 		AdminEditLinkComponent,

@@ -8,6 +8,7 @@ import {
 	signal,
 } from '@angular/core';
 import { Router } from '@angular/router';
+import { I18N_IMPORTS, TextService } from '@music-collection/core/i18n';
 
 import { HomeSearchGroup, HomeSearchItem } from '../../home.mapper';
 
@@ -23,101 +24,115 @@ import { HomeSearchGroup, HomeSearchItem } from '../../home.mapper';
 	host: {
 		'(focusout)': 'onFocusOut($event)',
 	},
+	imports: [...I18N_IMPORTS],
 	template: `
-		<div class="search">
-			<i class="pi pi-search" aria-hidden="true"></i>
-			<label class="visually-hidden" for="home-search"
-				>Search artists and albums</label
-			>
-			<input
-				id="home-search"
-				type="search"
-				role="combobox"
-				placeholder="Search artists and albums…"
-				autocomplete="off"
-				aria-autocomplete="list"
-				aria-controls="home-search-results"
-				[attr.aria-expanded]="expanded()"
-				[attr.aria-activedescendant]="activeItem()?.id ?? null"
-				[value]="query()"
-				(input)="onInput($event)"
-				(focus)="open.set(true)"
-				(keydown)="onKeydown($event)"
-			/>
-		</div>
-
-		<div
-			id="home-search-results"
-			class="results"
-			role="listbox"
-			aria-label="Search results"
-			[hidden]="!expanded()"
-		>
-			@for (group of results(); track group.kind) {
-				<div
-					class="group"
-					role="group"
-					[attr.aria-labelledby]="'home-search-' + group.kind"
-				>
-					<div class="group-label" [id]="'home-search-' + group.kind">
-						{{ group.label }}
-					</div>
-					@for (item of group.items; track item.id) {
-						<!-- Combobox-minta: a billentyűzetet az input kezeli (aria-activedescendant), az opció nem fókuszálható. -->
-						<!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
-						<div
-							class="option"
-							role="option"
-							[id]="item.id"
-							[attr.aria-selected]="item.id === activeItem()?.id"
-							(mousedown)="$event.preventDefault()"
-							(click)="select(item)"
-						>
-							@if (item.imageUrl) {
-								<img
-									[src]="item.imageUrl"
-									alt=""
-									loading="lazy"
-									[class.round]="item.kind === 'artist'"
-								/>
-							} @else {
-								<span
-									class="placeholder"
-									[class.round]="item.kind === 'artist'"
-									aria-hidden="true"
-									>♪</span
-								>
-							}
-							<span class="text">
-								<span class="title">{{ item.title }}</span>
-								@if (item.subtitle) {
-									<span class="subtitle">{{
-										item.subtitle
-									}}</span>
-								}
-							</span>
-						</div>
-					}
-				</div>
-			} @empty {
-				<p class="empty">No artists or albums found.</p>
-			}
-
-			<!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
-			<div
-				class="option all"
-				role="option"
-				id="home-search-all"
-				[attr.aria-selected]="activeItem()?.id === 'home-search-all'"
-				(mousedown)="$event.preventDefault()"
-				(click)="searchCollection()"
-			>
-				<i class="pi pi-arrow-right" aria-hidden="true"></i>
-				Search “{{ query().trim() }}” in your collection
+		<ng-container *transloco="let t">
+			<div class="search">
+				<i class="pi pi-search" aria-hidden="true"></i>
+				<label class="visually-hidden" for="home-search">{{
+					t('home.search.label')
+				}}</label>
+				<input
+					id="home-search"
+					type="search"
+					role="combobox"
+					[placeholder]="t('home.search.placeholder')"
+					autocomplete="off"
+					aria-autocomplete="list"
+					aria-controls="home-search-results"
+					[attr.aria-expanded]="expanded()"
+					[attr.aria-activedescendant]="activeItem()?.id ?? null"
+					[value]="query()"
+					(input)="onInput($event)"
+					(focus)="open.set(true)"
+					(keydown)="onKeydown($event)"
+				/>
 			</div>
-		</div>
 
-		<p class="visually-hidden" aria-live="polite">{{ announcement() }}</p>
+			<div
+				id="home-search-results"
+				class="results"
+				role="listbox"
+				[attr.aria-label]="t('home.search.results')"
+				[hidden]="!expanded()"
+			>
+				@for (group of results(); track group.kind) {
+					<div
+						class="group"
+						role="group"
+						[attr.aria-labelledby]="'home-search-' + group.kind"
+					>
+						<div
+							class="group-label"
+							[id]="'home-search-' + group.kind"
+						>
+							{{ t(group.labelKey) }}
+						</div>
+						@for (item of group.items; track item.id) {
+							<!-- Combobox-minta: a billentyűzetet az input kezeli (aria-activedescendant), az opció nem fókuszálható. -->
+							<!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+							<div
+								class="option"
+								role="option"
+								[id]="item.id"
+								[attr.aria-selected]="
+									item.id === activeItem()?.id
+								"
+								(mousedown)="$event.preventDefault()"
+								(click)="select(item)"
+							>
+								@if (item.imageUrl) {
+									<img
+										[src]="item.imageUrl"
+										alt=""
+										loading="lazy"
+										[class.round]="item.kind === 'artist'"
+									/>
+								} @else {
+									<span
+										class="placeholder"
+										[class.round]="item.kind === 'artist'"
+										aria-hidden="true"
+										>♪</span
+									>
+								}
+								<span class="text">
+									<span class="title">{{ item.title }}</span>
+									@if (item.subtitle) {
+										<span class="subtitle">{{
+											item.subtitle
+										}}</span>
+									}
+								</span>
+							</div>
+						}
+					</div>
+				} @empty {
+					<p class="empty">{{ t('home.search.empty') }}</p>
+				}
+
+				<!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
+				<div
+					class="option all"
+					role="option"
+					id="home-search-all"
+					[attr.aria-selected]="
+						activeItem()?.id === 'home-search-all'
+					"
+					(mousedown)="$event.preventDefault()"
+					(click)="searchCollection()"
+				>
+					<i class="pi pi-arrow-right" aria-hidden="true"></i>
+					{{
+						t('home.search.inCollection', { query: query().trim() })
+					}}
+				</div>
+			</div>
+
+			<p class="visually-hidden" aria-live="polite">
+				{{ announcement() }}
+			</p>
+		</ng-container>
 	`,
 	styles: `
 		:host {
@@ -305,12 +320,19 @@ export class HomeSearchComponent {
 		this.expanded() ? (this.options()[this.activeIndex()] ?? null) : null
 	);
 
+	private readonly text = inject(TextService);
+
 	protected readonly announcement = computed(() => {
 		if (!this.expanded()) {
 			return '';
 		}
-		const count = this.options().length - 1;
-		return count === 1 ? '1 result' : `${count} results`;
+
+		// Read aloud, so it has to be a sentence in the reader's language and
+		// not a number with an English word after it.
+		return this.text.pluralizer()(
+			'home.search.announcement',
+			this.options().length - 1
+		);
 	});
 
 	protected onInput(event: Event): void {

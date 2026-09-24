@@ -18,10 +18,10 @@ export type ArtistType = 'band' | 'project' | 'formation';
 
 export const DEFAULT_ARTIST_TYPE: ArtistType = 'band';
 
-export const ARTIST_TYPE_OPTIONS: { label: string; value: ArtistType }[] = [
-	{ label: 'Band', value: 'band' },
-	{ label: 'Project', value: 'project' },
-	{ label: 'Formation', value: 'formation' },
+export const ARTIST_TYPE_OPTIONS: { labelKey: string; value: ArtistType }[] = [
+	{ labelKey: 'catalog.artistType.band', value: 'band' },
+	{ labelKey: 'catalog.artistType.project', value: 'project' },
+	{ labelKey: 'catalog.artistType.formation', value: 'formation' },
 ];
 
 /** Where an artist imported from Discogs comes from. */

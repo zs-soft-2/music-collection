@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import { NgTemplateOutlet } from '@angular/common';
 import {
 	ChangeDetectionStrategy,
@@ -14,7 +15,10 @@ import {
 	signal,
 	viewChild,
 } from '@angular/core';
-import { copySerialProblem, parseDiscogsReleaseId } from '@music-collection/api';
+import {
+	copySerialProblem,
+	parseDiscogsReleaseId,
+} from '@music-collection/api';
 
 import {
 	FORMAT_LABELS,
@@ -59,7 +63,7 @@ const NOTE_MAX_LENGTH = 500;
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-release-picker',
-	imports: [FormatBadgeComponent, NgTemplateOutlet],
+	imports: [...I18N_IMPORTS, FormatBadgeComponent, NgTemplateOutlet],
 	templateUrl: './release-picker.component.html',
 	styleUrls: ['./release-picker.component.scss'],
 })

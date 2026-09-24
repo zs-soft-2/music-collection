@@ -6,6 +6,7 @@ import {
 	output,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
 	AdminEditLinkComponent,
@@ -24,7 +25,7 @@ import {
 	selector: 'mc-artist-spotlight',
 	templateUrl: './artist-spotlight.component.html',
 	styleUrls: ['./artist-spotlight.component.scss'],
-	imports: [RouterLink, AdminEditLinkComponent],
+	imports: [...I18N_IMPORTS, RouterLink, AdminEditLinkComponent],
 })
 export class ArtistSpotlightComponent {
 	public readonly artist = input.required<ArtistView>();

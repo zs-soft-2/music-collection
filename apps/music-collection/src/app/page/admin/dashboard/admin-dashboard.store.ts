@@ -10,6 +10,7 @@ import {
 	EntityCounts,
 	EntityQuantityStateService,
 } from '@music-collection/api';
+import { LanguageService } from '@music-collection/core/i18n';
 import { tapResponse } from '@ngrx/operators';
 import {
 	patchState,
@@ -106,7 +107,7 @@ function entities$<T>(
  */
 export const AdminDashboardStore = signalStore(
 	withState(initialState),
-	withComputed((store) => ({
+	withComputed((store, language = inject(LanguageService)) => ({
 		tiles: computed<AdminDashboardTile[]>(() =>
 			COUNTED_ITEMS.map((item) => ({
 				...item,
@@ -115,7 +116,7 @@ export const AdminDashboardStore = signalStore(
 		),
 		quickActions: computed(() =>
 			ADMIN_NAV.flatMap((group) => group.items).filter(
-				(item) => !!item.createLabel
+				(item) => !!item.createLabelKey
 			)
 		),
 		catalogLoading: computed(
@@ -134,7 +135,9 @@ export const AdminDashboardStore = signalStore(
 				...(trackStats ? [trackCompleteness(trackStats)] : []),
 			];
 		}),
-		growth: computed(() => collectionGrowth(store.releases())),
+		growth: computed(() =>
+			collectionGrowth(store.releases(), language.locale())
+		),
 		albumTypes: computed(() => albumTypeDistribution(store.albums())),
 		styles: computed(() =>
 			topStyles(

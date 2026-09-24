@@ -13,6 +13,7 @@ import {
 } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { ExternalPlayerConsentService } from '../../data/external-player';
 import { PlayerStore } from '../player/player.store';
@@ -34,7 +35,7 @@ interface Box {
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-youtube-dock',
-	imports: [RouterLink],
+	imports: [...I18N_IMPORTS, RouterLink],
 	template: `
 		@if (visible()) {
 			<div
@@ -59,7 +60,10 @@ interface Box {
 						<button
 							type="button"
 							class="close"
-							aria-label="Close YouTube player"
+							[attr.aria-label]="
+								'ui.youtubeDock.close-youtube-player'
+									| transloco
+							"
 							(click)="youtube.close()"
 						>
 							<i class="pi pi-times" aria-hidden="true"></i>

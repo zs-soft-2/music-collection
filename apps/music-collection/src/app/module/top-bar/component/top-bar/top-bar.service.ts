@@ -26,44 +26,49 @@ export class TopBarService {
 
 	public createMenuItems(): MenuItem[] {
 		return [
+			{ labelKey: 'nav.home', icon: 'pi-home', routerLink: ['/home'] },
 			{
-				label: 'Home',
-				routerLink: ['/home'],
-			},
-			{
-				label: 'My Collection',
+				labelKey: 'nav.collection',
+				icon: 'pi-th-large',
 				routerLink: ['/collection'],
 				requiresAuth: true,
 			},
 			{
-				label: 'Scan',
+				labelKey: 'nav.scan',
+				icon: 'pi-camera',
 				routerLink: ['/scan'],
 				requiresAuth: true,
 			},
 			{
-				label: 'Collections',
+				labelKey: 'nav.collections',
+				icon: 'pi-bookmark',
 				routerLink: ['/collections'],
 			},
 			{
-				label: 'Radio',
+				labelKey: 'nav.radio',
+				icon: 'pi-play-circle',
 				routerLink: ['/radio'],
 				requiresAuth: true,
 			},
 			{
-				label: 'Coming out',
+				labelKey: 'nav.upcoming',
+				icon: 'pi-calendar',
 				routerLink: ['/upcoming'],
 			},
 			{
-				label: 'Wishlist',
+				labelKey: 'nav.wishlist',
+				icon: 'pi-heart',
 				routerLink: ['/wishlist'],
 				requiresAuth: true,
 			},
 			{
-				label: 'Network',
+				labelKey: 'nav.network',
+				icon: 'pi-sitemap',
 				routerLink: ['/network'],
 			},
 			{
-				label: 'Map',
+				labelKey: 'nav.map',
+				icon: 'pi-map-marker',
 				routerLink: ['/map'],
 				requiresAuth: true,
 			},

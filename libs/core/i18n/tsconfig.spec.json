@@ -1,0 +1,20 @@
+{
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"outDir": "../../../dist/out-tsc",
+		"module": "preserve",
+		"types": ["jest", "node"],
+		"moduleResolution": "bundler",
+		"isolatedModules": true,
+		// A szótár-teszt és a teszt-provider a valódi JSON-okat olvassa.
+		"resolveJsonModule": true
+	},
+	"files": ["src/test-setup.ts"],
+	"include": [
+		"jest.config.ts",
+		"**/*.test.ts",
+		"**/*.spec.ts",
+		"**/*.d.ts",
+		"assets/i18n/*.json"
+	]
+}

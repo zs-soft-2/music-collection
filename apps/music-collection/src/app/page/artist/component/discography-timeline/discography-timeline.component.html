@@ -1,14 +1,18 @@
 <figure class="timeline">
 	<figcaption class="head">
-		<span class="title">Releases over time</span>
+		<span class="title">{{
+			'ui.discographyTimeline.releases-over-time' | transloco
+		}}</span>
 		<span class="legend">
 			<span class="key"
-				><span class="swatch owned" aria-hidden="true"></span>In your
-				collection</span
+				><span class="swatch owned" aria-hidden="true"></span
+				>{{
+					'ui.discographyTimeline.in-your-collection' | transloco
+				}}</span
 			>
 			<span class="key"
-				><span class="swatch" aria-hidden="true"></span>Not
-				collected</span
+				><span class="swatch" aria-hidden="true"></span
+				>{{ 'ui.discographyTimeline.not-collected' | transloco }}</span
 			>
 		</span>
 	</figcaption>
@@ -46,9 +50,10 @@
 									}
 								</span>
 								@if (marker.owned) {
-									<span class="tooltip-owned"
-										>In your collection</span
-									>
+									<span class="tooltip-owned">{{
+										'ui.discographyTimeline.in-your-collection2'
+											| transloco
+									}}</span>
 								}
 							</span>
 						</span>

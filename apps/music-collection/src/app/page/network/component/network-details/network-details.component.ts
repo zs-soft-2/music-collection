@@ -7,6 +7,7 @@ import {
 	output,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { NETWORK_KIND_LABELS, NetworkDetailsView } from '../../network.model';
 
@@ -21,7 +22,7 @@ const PREVIEW = 8;
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-network-details',
-	imports: [RouterLink],
+	imports: [...I18N_IMPORTS, RouterLink],
 	templateUrl: './network-details.component.html',
 	styleUrls: ['./network-details.component.scss'],
 })

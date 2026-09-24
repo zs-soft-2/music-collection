@@ -10,13 +10,15 @@ import {
 
 /** One field checked for completeness, e.g. "Cover image" of the albums. */
 export interface CompletenessCheck {
-	label: string;
+	/** Dictionary key of the field's name. */
+	labelKey: string;
 	missing: number;
 }
 
 /** Completeness of one entity type: how many records lack each field. */
 export interface CompletenessGroup {
-	label: string;
+	/** Dictionary key of the entity type's name. */
+	labelKey: string;
 	/** Admin list route of the entity type, when it has a list. */
 	route?: string;
 	total: number;
@@ -32,55 +34,68 @@ export interface GrowthPoint {
 	total: number;
 }
 
-type Check<T> = { label: string; isFilled: (item: T) => boolean };
+/** One field the catalog would like filled, named by its dictionary key. */
+type Check<T> = { labelKey: string; isFilled: (item: T) => boolean };
 
 const ALBUM_CHECKS: Check<AlbumEntity>[] = [
 	{
-		label: 'Cover image',
+		labelKey: 'admin.field.coverImage',
 		isFilled: (album) => !!toAlbumView(album).coverUrl,
 	},
 	{
-		label: 'Release year',
+		labelKey: 'admin.field.releaseYear',
 		isFilled: (album) => toAlbumView(album).year !== null,
 	},
-	{ label: 'Styles', isFilled: (album) => !!album.styles?.length },
-	{ label: 'Spotify link', isFilled: (album) => !!album.spotifyAlbumId },
 	{
-		label: 'YouTube playlist',
+		labelKey: 'admin.field.styles',
+		isFilled: (album) => !!album.styles?.length,
+	},
+	{
+		labelKey: 'admin.field.spotifyLink',
+		isFilled: (album) => !!album.spotifyAlbumId,
+	},
+	{
+		labelKey: 'admin.field.youtubePlaylist',
 		isFilled: (album) => !!album.youtubePlaylistId,
 	},
 ];
 
 const ARTIST_CHECKS: Check<ArtistEntity>[] = [
-	{ label: 'Photo', isFilled: (artist) => !!toArtistView(artist).imageUrl },
 	{
-		label: 'Header image',
+		labelKey: 'admin.field.photo',
+		isFilled: (artist) => !!toArtistView(artist).imageUrl,
+	},
+	{
+		labelKey: 'admin.field.headerImage',
 		isFilled: (artist) => !!artist.headerImage?.filePath,
 	},
-	{ label: 'Country', isFilled: (artist) => !!artist.country },
+	{ labelKey: 'admin.field.country', isFilled: (artist) => !!artist.country },
 	{
-		label: 'Formed year',
+		labelKey: 'admin.field.formedYear',
 		isFilled: (artist) => toArtistView(artist).formedYear !== null,
 	},
 	{
-		label: 'Description',
+		labelKey: 'admin.field.description',
 		isFilled: (artist) => !!artist.description?.trim(),
 	},
-	{ label: 'Styles', isFilled: (artist) => !!artist.styles?.length },
+	{
+		labelKey: 'admin.field.styles',
+		isFilled: (artist) => !!artist.styles?.length,
+	},
 ];
 
 function completenessGroup<T>(
-	label: string,
+	labelKey: string,
 	route: string,
 	items: T[],
 	checks: Check<T>[]
 ): CompletenessGroup {
 	return {
-		label,
+		labelKey,
 		route,
 		total: items.length,
 		checks: checks.map((check) => ({
-			label: check.label,
+			labelKey: check.labelKey,
 			missing: items.filter((item) => !check.isFilled(item)).length,
 		})),
 	};
@@ -102,7 +117,7 @@ export function catalogCompleteness(
 		? [
 				...ALBUM_CHECKS,
 				{
-					label: 'Tracklist',
+					labelKey: 'admin.field.tracklist',
 					isFilled: (album) => albumUidsWithTracks.has(album.uid),
 				},
 			]
@@ -112,15 +127,20 @@ export function catalogCompleteness(
 		? [
 				...ARTIST_CHECKS,
 				{
-					label: 'Line-up',
+					labelKey: 'admin.field.lineUp',
 					isFilled: (artist) => artistUidsWithLineup.has(artist.uid),
 				},
 			]
 		: ARTIST_CHECKS;
 
 	return [
-		completenessGroup('Albums', 'album', albums, albumChecks),
-		completenessGroup('Artists', 'artist', artists, artistChecks),
+		completenessGroup('admin.field.albums', 'album', albums, albumChecks),
+		completenessGroup(
+			'admin.field.artists',
+			'artist',
+			artists,
+			artistChecks
+		),
 	];
 }
 
@@ -134,14 +154,25 @@ export function trackCompleteness(stats: TrackStats): CompletenessGroup {
 	const missing = (filled: number) => Math.max(stats.total - filled, 0);
 
 	return {
-		label: 'Tracks',
+		labelKey: 'admin.field.tracks',
 		total: stats.total,
 		checks: [
 			...(stats.withLyrics === null
 				? []
-				: [{ label: 'Lyrics', missing: missing(stats.withLyrics) }]),
-			{ label: 'Spotify link', missing: missing(stats.withSpotify) },
-			{ label: 'YouTube video', missing: missing(stats.withYoutube) },
+				: [
+						{
+							labelKey: 'admin.field.lyrics',
+							missing: missing(stats.withLyrics),
+						},
+					]),
+			{
+				labelKey: 'admin.field.spotifyLink',
+				missing: missing(stats.withSpotify),
+			},
+			{
+				labelKey: 'admin.field.youtubeVideo',
+				missing: missing(stats.withYoutube),
+			},
 		],
 	};
 }
@@ -149,17 +180,24 @@ export function trackCompleteness(stats: TrackStats): CompletenessGroup {
 /** Collections spanning more years than this are shown per year, not month. */
 const MONTHLY_MAX_YEARS = 3;
 
-const monthFormat = new Intl.DateTimeFormat(undefined, {
-	year: 'numeric',
-	month: 'short',
-});
+/**
+ * Built per locale rather than once, because a formatter holds the locale it
+ * was made with: the old one would go on writing "Mar" after the reader had
+ * switched to German.
+ */
+const monthFormat = (locale: string) =>
+	new Intl.DateTimeFormat(locale, { year: 'numeric', month: 'short' });
 
 /**
  * Releases added to the collection over time, with the running total. Short
  * histories are bucketed per month, longer ones per year; empty periods in
  * between are kept, so the time axis stays even.
  */
-export function collectionGrowth(releases: ReleaseView[]): GrowthPoint[] {
+export function collectionGrowth(
+	releases: ReleaseView[],
+	/** The reader's locale; the month names are written in it. */
+	locale: string
+): GrowthPoint[] {
 	const dates = releases
 		.filter((release) => release.addedAt > 0)
 		.map((release) => new Date(release.addedAt));
@@ -189,7 +227,7 @@ export function collectionGrowth(releases: ReleaseView[]): GrowthPoint[] {
 	return added.map((count, i) => {
 		total += count;
 		const label = monthly
-			? monthFormat.format(
+			? monthFormat(locale).format(
 					new Date(first.getFullYear(), first.getMonth() + i, 1)
 				)
 			: String(first.getFullYear() + i);

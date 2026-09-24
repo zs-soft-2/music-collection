@@ -6,6 +6,7 @@ import {
 	signal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import {
 	parseSpotifyTrackId,
 	parseYoutubeVideoId,
@@ -36,6 +37,7 @@ interface TrackForm {
 	templateUrl: './track-page.component.html',
 	styleUrls: ['./track-page.component.scss'],
 	imports: [
+		...I18N_IMPORTS,
 		PageBreadcrumbComponent,
 		RouterLink,
 		CoverBackdropComponent,

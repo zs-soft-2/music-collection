@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import { Observable } from 'rxjs';
 
 import {
@@ -26,6 +27,7 @@ import { AsyncPipe } from '@angular/common';
 	templateUrl: './release-form.component.html',
 	styleUrls: ['./release-form.component.scss'],
 	imports: [
+		...I18N_IMPORTS,
 		ReactiveFormsModule,
 		Bind,
 		AutoComplete,

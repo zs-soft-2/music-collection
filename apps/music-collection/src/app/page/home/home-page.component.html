@@ -1,4 +1,4 @@
-<div class="page">
+<div class="page" *transloco="let t">
 	<search>
 		<mc-home-search
 			[query]="store.query()"
@@ -18,33 +18,33 @@
 		/>
 	} @else if (store.artistsPending()) {
 		<div class="skeleton spotlight-skeleton" role="status" aria-busy="true">
-			<span class="visually-hidden">Loading…</span>
+			<span class="visually-hidden">{{ t('common.loading') }}</span>
 		</div>
 	}
 
 	<!-- Catalog at a glance -->
 	<section class="section" aria-labelledby="glance-title">
 		<header class="section-head">
-			<h2 id="glance-title">The catalog at a glance</h2>
+			<h2 id="glance-title">{{ t('home.glance.title') }}</h2>
 			<a class="more" routerLink="/collection">
-				Open my collection
+				{{ t('home.glance.openCollection') }}
 				<i class="pi pi-arrow-right" aria-hidden="true"></i>
 			</a>
 		</header>
 
 		@if (store.catalog().length) {
 			<dl class="catalog">
-				@for (item of store.catalog(); track item.label) {
+				@for (item of store.catalog(); track item.labelKey) {
 					<div class="stat">
-						<dt>{{ item.label }}</dt>
-						<dd>{{ item.count | number }}</dd>
+						<dt>{{ t(item.labelKey) }}</dt>
+						<dd>{{ item.count | mcNumber }}</dd>
 					</div>
 				}
 			</dl>
 		} @else if (store.countsLoading()) {
 			<div class="skeleton glance-skeleton"></div>
 		} @else {
-			<p class="muted">The catalog counts are not available right now.</p>
+			<p class="muted">{{ t('home.glance.unavailable') }}</p>
 		}
 
 		@if (store.albumsLoading() || store.releasesLoading()) {
@@ -52,7 +52,7 @@
 		} @else if (store.coverage().length) {
 			<div class="panel coverage">
 				<mc-catalog-coverage-chart
-					heading="Catalog albums by decade"
+					[heading]="t('home.glance.coverage')"
 					[data]="store.coverage()"
 				/>
 			</div>
@@ -69,14 +69,16 @@
 			<header class="section-head">
 				<h2 id="recent-title">
 					{{
-						store.catalogOnly()
-							? 'Recently added to the catalog'
-							: 'Recently added'
+						t(
+							store.catalogOnly()
+								? 'home.recent.catalogTitle'
+								: 'home.recent.title'
+						)
 					}}
 				</h2>
 				@if (!store.catalogOnly()) {
 					<a class="more" routerLink="/collection">
-						All releases
+						{{ t('home.recent.allReleases') }}
 						<i class="pi pi-arrow-right" aria-hidden="true"></i>
 					</a>
 				}
@@ -128,9 +130,11 @@
 	@if (store.collectionsLoading() || store.collections().length) {
 		<section class="section" aria-labelledby="collections-title">
 			<header class="section-head">
-				<h2 id="collections-title">Collections</h2>
+				<h2 id="collections-title">
+					{{ t('home.collections.title') }}
+				</h2>
 				<a class="more" routerLink="/collections">
-					All collections
+					{{ t('home.collections.all') }}
 					<i class="pi pi-arrow-right" aria-hidden="true"></i>
 				</a>
 			</header>
@@ -159,9 +163,9 @@
 	@if (store.showsHunt()) {
 		<section class="section" aria-labelledby="hunt-title">
 			<header class="section-head">
-				<h2 id="hunt-title">Next on the hunt</h2>
+				<h2 id="hunt-title">{{ t('home.hunt.title') }}</h2>
 				<a class="more" routerLink="/collections">
-					The whole hunt
+					{{ t('home.hunt.all') }}
 					<i class="pi pi-arrow-right" aria-hidden="true"></i>
 				</a>
 			</header>
@@ -175,9 +179,11 @@
 		<header class="section-head">
 			<h2 id="artists-title">
 				{{
-					store.catalogOnly()
-						? 'Artists in the catalog'
-						: 'Most collected artists'
+					t(
+						store.catalogOnly()
+							? 'home.artists.catalog'
+							: 'home.artists.collected'
+					)
 				}}
 			</h2>
 		</header>
@@ -207,7 +213,7 @@
 	@if (store.albumsLoading() || store.styleGroups().length) {
 		<section class="section" aria-labelledby="styles-title">
 			<header class="section-head">
-				<h2 id="styles-title">By style</h2>
+				<h2 id="styles-title">{{ t('home.byStyle') }}</h2>
 			</header>
 
 			@if (store.albumsLoading()) {
@@ -229,7 +235,7 @@
 	@if (store.decadeGroups().length) {
 		<section class="section" aria-labelledby="decades-title">
 			<header class="section-head">
-				<h2 id="decades-title">By decade</h2>
+				<h2 id="decades-title">{{ t('home.byDecade') }}</h2>
 			</header>
 
 			<div class="groups">
@@ -243,7 +249,7 @@
 	@if (store.artistGroups().length) {
 		<section class="section" aria-labelledby="acts-title">
 			<header class="section-head">
-				<h2 id="acts-title">Bands, projects and formations</h2>
+				<h2 id="acts-title">{{ t('home.byAct') }}</h2>
 			</header>
 
 			<div class="groups">
@@ -257,7 +263,7 @@
 	<!-- Newest albums in the catalog -->
 	<section class="section" aria-labelledby="albums-title">
 		<header class="section-head">
-			<h2 id="albums-title">Newest albums in the catalog</h2>
+			<h2 id="albums-title">{{ t('home.newestAlbums') }}</h2>
 		</header>
 
 		<ul class="album-wall">

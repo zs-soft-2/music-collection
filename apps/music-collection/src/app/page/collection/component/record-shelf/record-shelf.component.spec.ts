@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import {
 	ComponentFixture,
 	DeferBlockState,
@@ -86,7 +87,7 @@ describe('RecordShelfComponent', () => {
 	beforeEach(() => {
 		TestBed.configureTestingModule({
 			imports: [RecordShelfComponent],
-			providers: [provideRouter([])],
+			providers: [provideI18nTesting(), provideRouter([])],
 		});
 
 		fixture = TestBed.createComponent(RecordShelfComponent);

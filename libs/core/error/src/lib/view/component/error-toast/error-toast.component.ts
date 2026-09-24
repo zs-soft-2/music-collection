@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
@@ -5,7 +6,7 @@ import { ErrorStateService } from '@music-collection/api';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	imports: [CommonModule],
+	imports: [...I18N_IMPORTS, CommonModule],
 	selector: 'mc-error-toast',
 	styleUrls: ['./error-toast.component.scss'],
 	templateUrl: './error-toast.component.html',

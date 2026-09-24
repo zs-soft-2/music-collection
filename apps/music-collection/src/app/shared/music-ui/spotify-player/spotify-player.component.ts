@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import {
 	ChangeDetectionStrategy,
 	Component,
@@ -17,6 +18,7 @@ import { ExternalPlayerConsentService } from '../../../data/external-player';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-spotify-player',
+	imports: [...I18N_IMPORTS],
 	template: `
 		@if (src(); as src) {
 			<iframe

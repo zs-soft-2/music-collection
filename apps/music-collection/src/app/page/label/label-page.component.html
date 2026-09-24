@@ -1,16 +1,17 @@
-<div class="page">
+<div class="page" *transloco="let t">
 	<mc-page-breadcrumb [trail]="store.trail()" />
 
 	@if (store.loading()) {
-		<p class="status">Looking for this label…</p>
+		<p class="status">{{ t('page.label.looking-for-this-label') }}</p>
 	} @else if (store.notFound()) {
 		<section class="missing">
-			<h1>No label under this name.</h1>
+			<h1>{{ t('page.label.no-label-under-this') }}</h1>
 			<p>
-				Either it was never in the catalog, or it has been removed. The
-				records that named it keep the name they were pressed with.
+				{{ t('page.label.either-it-was-never') }}
 			</p>
-			<a class="button" routerLink="/home">Back to the catalog</a>
+			<a class="button" routerLink="/home">{{
+				t('page.label.back-to-the-catalog')
+			}}</a>
 		</section>
 	} @else {
 		<header class="hero">
@@ -19,12 +20,12 @@
 			</div>
 
 			<div class="identity">
-				<p class="eyebrow">Label</p>
+				<p class="eyebrow">{{ t('page.label.label') }}</p>
 				<h1>{{ store.name() }}</h1>
 
 				@if (store.parent(); as parent) {
 					<p class="lead">
-						<span>A label of</span>
+						<span>{{ t('page.label.a-label-of') }}</span>
 						<a [routerLink]="['/label', parent.uid]">{{
 							parent.name
 						}}</a>
@@ -45,7 +46,7 @@
 
 		@if (store.children().length) {
 			<section class="section">
-				<h2>Sub-labels</h2>
+				<h2>{{ t('page.label.sub-labels') }}</h2>
 				<ul class="entries">
 					@for (child of store.children(); track child.uid) {
 						<li>
@@ -68,7 +69,7 @@
 
 		@if (store.artists().length) {
 			<section class="section">
-				<h2>Artists</h2>
+				<h2>{{ t('page.label.artists') }}</h2>
 				<ul class="entries">
 					@for (artist of visibleArtists(); track artist.uid) {
 						<li>
@@ -98,14 +99,17 @@
 						class="button more"
 						(click)="showAllArtists.set(true)"
 					>
-						Show all {{ store.artists().length }} artists
+						{{
+							store.artists().length
+								| mcPlural: 'page.label.showAllArtists'
+						}}
 					</button>
 				}
 			</section>
 		}
 
 		<section class="section">
-			<h2>Pressings</h2>
+			<h2>{{ t('page.label.pressings') }}</h2>
 
 			@if (store.pressings().length) {
 				<ul class="entries">
@@ -153,12 +157,15 @@
 						class="button more"
 						(click)="showAllPressings.set(true)"
 					>
-						Show all {{ store.pressings().length }} pressings
+						{{
+							store.pressings().length
+								| mcPlural: 'page.label.showAllPressings'
+						}}
 					</button>
 				}
 			} @else {
 				<p class="empty">
-					No pressing in the catalog carries this label yet.
+					{{ t('page.label.no-pressing-in-the') }}
 				</p>
 			}
 		</section>

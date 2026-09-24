@@ -7,6 +7,7 @@ import {
 	CollectionItemPlacement,
 	CollectionItemStateService,
 } from '@music-collection/api';
+import { TextService } from '@music-collection/core/i18n';
 import {
 	MusicCollectionEffect,
 	MusicCollectionStanding,
@@ -133,7 +134,7 @@ function chosen(
 export const CollectionPageStore = signalStore(
 	withState(initialState),
 	withCollectionFollowing(),
-	withComputed((store) => {
+	withComputed((store, text = inject(TextService)) => {
 		const stats = computed(() => collectionStats(store.releases()));
 		const visible = computed(() =>
 			sortReleases(
@@ -142,7 +143,15 @@ export const CollectionPageStore = signalStore(
 			)
 		);
 
-		const groups = computed(() => groupReleases(visible(), store.group()));
+		/** The dictionary the group headings are written from. */
+		const words = computed(() => ({
+			t: text.translator(),
+			catalog: text.catalog(),
+		}));
+
+		const groups = computed(() =>
+			groupReleases(visible(), store.group(), words())
+		);
 
 		/*
 		 * The collections this shelf is measured against: the collector's
@@ -225,7 +234,8 @@ export const CollectionPageStore = signalStore(
 				const compartments: ReleaseGroup[] = packShelf(
 					groupReleases(
 						loose,
-						store.group() === 'none' ? 'format' : store.group()
+						store.group() === 'none' ? 'format' : store.group(),
+						words()
 					),
 					SHELF_CUBBY_SIZE
 				);
@@ -312,7 +322,9 @@ export const CollectionPageStore = signalStore(
 				 */
 				watchSession: rxMethod<void>(
 					pipe(
-						switchMap(() => authentication.selectIsAuthenticated$()),
+						switchMap(() =>
+							authentication.selectIsAuthenticated$()
+						),
 						tap((isAuthenticated) =>
 							patchState(store, { isAuthenticated })
 						)

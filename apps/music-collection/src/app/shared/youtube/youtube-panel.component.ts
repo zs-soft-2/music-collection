@@ -9,6 +9,7 @@ import {
 	untracked,
 	viewChild,
 } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import {
 	YoutubeAlbum,
 	YoutubeItem,
@@ -23,12 +24,18 @@ import {
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-youtube-panel',
+	imports: [...I18N_IMPORTS],
 	template: `
 		@if (isLoaded()) {
 			<div #slot class="slot"></div>
 
 			@if (items().length > 1) {
-				<ul class="picker" aria-label="Choose what to play">
+				<ul
+					class="picker"
+					[attr.aria-label]="
+						'ui.youtubePanel.choose-what-to-play' | transloco
+					"
+				>
 					@for (
 						item of items();
 						track item.kind + item.id;
@@ -48,7 +55,9 @@ import {
 									>
 										<i class="pi pi-list"></i>
 									</span>
-									<span class="label">Full album</span>
+									<span class="label">{{
+										'ui.youtubePanel.full-album' | transloco
+									}}</span>
 								} @else {
 									<img
 										class="thumb"
@@ -61,7 +70,11 @@ import {
 										loading="lazy"
 									/>
 									<span class="label">
-										Video {{ videoNumber(i) }}
+										{{
+											'ui.youtubePanel.video'
+												| transloco
+													: { number: videoNumber(i) }
+										}}
 									</span>
 								}
 							</button>
@@ -72,12 +85,13 @@ import {
 		} @else if (youtube.album(); as playing) {
 			<div class="busy">
 				<p>
-					Playing now: <strong>{{ playing.title }}</strong>
+					{{ 'ui.youtubePanel.playing-now' | transloco }}
+					<strong>{{ playing.title }}</strong>
 					<span class="muted"> · {{ playing.artistName }}</span>
 				</p>
 				<button type="button" class="button" (click)="switchHere()">
 					<i class="pi pi-play" aria-hidden="true"></i>
-					Play this album instead
+					{{ 'ui.youtubePanel.play-this-album-instead' | transloco }}
 				</button>
 			</div>
 		}

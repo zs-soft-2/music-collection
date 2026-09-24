@@ -3,13 +3,13 @@
 		[items]="params.artists"
 		[place]="place"
 		[view]="collectionView"
-		emptyMessage="No artists found."
+		[emptyMessage]="'ui.artistTable.no-artists-found' | transloco"
 	>
 		<p-autocomplete
 			tools
 			class="mc-table-search"
-			placeholder="Filter by name…"
-			ariaLabel="Filter by name"
+			[placeholder]="'ui.artistTable.filter-by-name' | transloco"
+			[ariaLabel]="'ui.artistTable.filter-by-name2' | transloco"
 			[ngModel]="place.filterOf('name')"
 			[suggestions]="params.empty"
 			[showClear]="true"
@@ -44,7 +44,9 @@
 					cardActions
 					pButton
 					pRipple
-					aria-label="Export artist"
+					[attr.aria-label]="
+						'ui.artistTable.export-artist' | transloco
+					"
 					class="p-button-text p-button-rounded p-button-secondary"
 					(click)="exportArtist(artist)"
 					iconOnly
@@ -55,7 +57,9 @@
 					cardActions
 					pButton
 					pRipple
-					aria-label="Delete artist"
+					[attr.aria-label]="
+						'ui.artistTable.delete-artist' | transloco
+					"
 					class="p-button-text p-button-rounded p-button-danger"
 					(click)="deleteArtist(artist)"
 					iconOnly
@@ -65,15 +69,29 @@
 			</mc-entity-card>
 		</ng-template>
 
-		<ng-template mcColumn header="Name" field="name" let-artist>
+		<ng-template
+			mcColumn
+			[header]="'ui.artistTable.name' | transloco"
+			field="name"
+			let-artist
+		>
 			{{ artist.name }}
 		</ng-template>
 
-		<ng-template mcColumn header="Formed in" field="formedIn" let-artist>
+		<ng-template
+			mcColumn
+			[header]="'ui.artistTable.formed-in' | transloco"
+			field="formedIn"
+			let-artist
+		>
 			{{ artist.formedIn | date: 'yyyy' }}
 		</ng-template>
 
-		<ng-template mcColumn header="Styles" let-artist>
+		<ng-template
+			mcColumn
+			[header]="'ui.artistTable.styles' | transloco"
+			let-artist
+		>
 			@for (style of artist.styles; track style) {
 				<p-chip styleClass="style">
 					{{ style }}
@@ -81,22 +99,40 @@
 			}
 		</ng-template>
 
-		<ng-template mcColumn header="Images" let-artist>
+		<ng-template
+			mcColumn
+			[header]="'ui.artistTable.images' | transloco"
+			let-artist
+		>
 			<div class="mc-image-flags">
 				@if (artist.headerImage) {
-					<span class="p-chip">Header</span>
+					<span class="p-chip">{{
+						'ui.artistTable.header' | transloco
+					}}</span>
 				}
 				@if (artist.mainImage) {
-					<span class="p-chip">Main</span>
+					<span class="p-chip">{{
+						'ui.artistTable.main' | transloco
+					}}</span>
 				}
 			</div>
 		</ng-template>
 
-		<ng-template mcColumn header="Updated" field="updatedAt" let-artist>
+		<ng-template
+			mcColumn
+			[header]="'ui.artistTable.updated' | transloco"
+			field="updatedAt"
+			let-artist
+		>
 			{{ artist.updatedAt | date: 'yyyy-MM-dd HH:mm' }}
 		</ng-template>
 
-		<ng-template mcColumn header="Actions" headerHidden let-artist>
+		<ng-template
+			mcColumn
+			[header]="'ui.artistTable.actions' | transloco"
+			headerHidden
+			let-artist
+		>
 			<mc-view-action
 				[link]="viewLink(artist)"
 				entity="artist"
@@ -105,7 +141,7 @@
 			<button
 				pButton
 				pRipple
-				aria-label="Edit artist"
+				[attr.aria-label]="'ui.artistTable.edit-artist' | transloco"
 				class="p-button-text p-button-rounded p-button-secondary"
 				(click)="editArtist(artist)"
 				iconOnly
@@ -115,7 +151,7 @@
 			<button
 				pButton
 				pRipple
-				aria-label="Delete artist"
+				[attr.aria-label]="'ui.artistTable.delete-artist2' | transloco"
 				class="p-button-text p-button-rounded p-button-danger"
 				(click)="deleteArtist(artist)"
 				iconOnly
@@ -126,7 +162,7 @@
 			<button
 				pButton
 				pRipple
-				aria-label="Export artist"
+				[attr.aria-label]="'ui.artistTable.export-artist2' | transloco"
 				class="p-button-text p-button-rounded p-button-secondary"
 				(click)="exportArtist(artist)"
 				iconOnly

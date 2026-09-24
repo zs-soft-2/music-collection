@@ -2,15 +2,18 @@
 	<mc-page-breadcrumb [trail]="store.trail()" />
 
 	@if (store.loading()) {
-		<p class="status">Looking for this pressing…</p>
+		<p class="status">
+			{{ 'page.release.looking-for-this-pressing' | transloco }}
+		</p>
 	} @else if (store.notFound()) {
 		<section class="missing">
-			<h1>No pressing under this id.</h1>
+			<h1>{{ 'page.release.no-pressing-under-this' | transloco }}</h1>
 			<p>
-				The catalog holds the album it belonged to, but this edition of
-				it is not in it — or no longer is.
+				{{ 'page.release.the-catalog-holds-the' | transloco }}
 			</p>
-			<a class="button" routerLink="/home">Back to the catalog</a>
+			<a class="button" routerLink="/home">{{
+				'page.release.back-to-the-catalog' | transloco
+			}}</a>
 		</section>
 	} @else if (store.pressing(); as pressing) {
 		<header class="hero" [class.on-cover]="!!pressing.coverUrl">
@@ -37,7 +40,7 @@
 			</div>
 
 			<div class="identity">
-				<p class="eyebrow">Pressing</p>
+				<p class="eyebrow">{{ 'page.release.pressing' | transloco }}</p>
 				<h1>{{ pressing.name }}</h1>
 
 				<p class="lead">
@@ -62,7 +65,7 @@
 							class="button"
 							[routerLink]="['/album', pressing.albumUid]"
 						>
-							Open the album
+							{{ 'page.release.open-the-album' | transloco }}
 						</a>
 					}
 
@@ -78,7 +81,7 @@
 		<mc-entity-facts [facts]="facts()" />
 
 		<section class="section">
-			<h2>Other pressings of this album</h2>
+			<h2>{{ 'page.release.other-pressings-of-this' | transloco }}</h2>
 
 			@if (store.siblings().length) {
 				<ul class="entries">
@@ -126,7 +129,7 @@
 				</ul>
 			} @else {
 				<p class="empty">
-					This is the only pressing of the album the catalog knows.
+					{{ 'page.release.this-is-the-only' | transloco }}
 				</p>
 			}
 		</section>

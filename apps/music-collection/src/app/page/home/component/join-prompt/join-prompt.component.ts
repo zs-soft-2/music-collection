@@ -1,10 +1,10 @@
-import { DecimalPipe } from '@angular/common';
 import {
 	ChangeDetectionStrategy,
 	Component,
 	input,
 	output,
 } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 /**
  * What a guest gains by signing in, said once, where they have just seen the
@@ -13,23 +13,28 @@ import {
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-join-prompt',
-	imports: [DecimalPipe],
+	imports: [...I18N_IMPORTS],
 	template: `
 		<section class="prompt" aria-labelledby="join-title">
 			<div class="copy">
-				<h2 id="join-title">Make it your collection</h2>
+				<h2 id="join-title">
+					{{ 'ui.joinPrompt.make-it-your-collection' | transloco }}
+				</h2>
 				<p>
-					The catalog is open to everyone —
-					{{ albums() | number }} albums of
-					{{ artists() | number }} artists to read through. Sign in to
-					keep the copies you own, see what a collection is still
-					missing and have your shelf follow you between devices.
+					{{
+						'ui.joinPrompt.pitch'
+							| transloco
+								: {
+										albums: albums() | mcNumber,
+										artists: artists() | mcNumber,
+								  }
+					}}
 				</p>
 			</div>
 
 			<button type="button" class="button" (click)="join.emit()">
 				<i class="pi pi-google" aria-hidden="true"></i>
-				Continue with Google
+				{{ 'ui.joinPrompt.continue-with-google' | transloco }}
 			</button>
 		</section>
 	`,

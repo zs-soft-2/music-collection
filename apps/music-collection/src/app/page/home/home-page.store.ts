@@ -14,6 +14,7 @@ import {
 import { computed, inject } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { measure } from '@music-collection/common/engine';
+import { TextService } from '@music-collection/core/i18n';
 import {
 	AlbumStateService,
 	AnalyticsService,
@@ -147,231 +148,244 @@ function entities$<T>(
 
 export const HomePageStore = signalStore(
 	withState(initialState),
-	withComputed((store, musicCollectionEffect = inject(MusicCollectionEffect)) => {
-		const counts = computed(() =>
-			measure(
-				'home.releaseCounts',
-				{ releases: store.releases().length },
-				() => releaseCountsByArtist(store.releases())
-			)
-		);
-
-		const albumCounts = computed(() =>
-			measure('home.albumCounts', { albums: store.albums().length }, () =>
-				albumCountsByArtist(store.albums())
-			)
-		);
-
-		/**
-		 * The collection has arrived and there is none — a guest, or a
-		 * collector who has not added a copy yet. The catalog is the content
-		 * then: its artists are ranked by the albums it holds of them, and
-		 * it stands in wherever the collection would have been shown.
-		 */
-		const catalogOnly = computed(
-			() => !store.releasesLoading() && store.releases().length === 0
-		);
-
-		/** What the artists are ranked by: the collection, or the catalog. */
-		const ranking = computed(() =>
-			catalogOnly() ? albumCounts() : counts()
-		);
-
-		/** Spotlight candidates: ranked artists with a header photo. */
-		const spotlightCandidates = computed(() =>
-			store
-				.artists()
-				.filter(
-					(artist) => artist.headerUrl && ranking().has(artist.id)
+	withComputed(
+		(
+			store,
+			musicCollectionEffect = inject(MusicCollectionEffect),
+			text = inject(TextService)
+		) => {
+			const counts = computed(() =>
+				measure(
+					'home.releaseCounts',
+					{ releases: store.releases().length },
+					() => releaseCountsByArtist(store.releases())
 				)
-		);
+			);
 
-		const spotlight = computed(
-			() =>
+			const albumCounts = computed(() =>
+				measure(
+					'home.albumCounts',
+					{ albums: store.albums().length },
+					() => albumCountsByArtist(store.albums())
+				)
+			);
+
+			/**
+			 * The collection has arrived and there is none — a guest, or a
+			 * collector who has not added a copy yet. The catalog is the content
+			 * then: its artists are ranked by the albums it holds of them, and
+			 * it stands in wherever the collection would have been shown.
+			 */
+			const catalogOnly = computed(
+				() => !store.releasesLoading() && store.releases().length === 0
+			);
+
+			/** What the artists are ranked by: the collection, or the catalog. */
+			const ranking = computed(() =>
+				catalogOnly() ? albumCounts() : counts()
+			);
+
+			/** Spotlight candidates: ranked artists with a header photo. */
+			const spotlightCandidates = computed(() =>
 				store
 					.artists()
-					.find((artist) => artist.id === store.spotlightId()) ?? null
-		);
-
-		const collections = computed<CollectionCardView[]>(() =>
-			sortCollectionCards(
-				store.collectionStandings().map(toCollectionCard)
-			)
-		);
-
-		/**
-		 * Which records to buy next. The standings are already in state to
-		 * draw the collection rows, so ranking them costs a pass over what is
-		 * in hand — no query, and nothing kept.
-		 */
-		const nextAlbums = computed<NextAlbumView[]>(() => {
-			const cards = collections();
-
-			// The hunt is about a shelf, and a guest has none: nothing is
-			// ranked until there is something to continue.
-			if (!cards.some((collection) => collection.owned > 0)) {
-				return [];
-			}
-
-			return toNextAlbums(
-				musicCollectionEffect.suggestNextAlbums(
-					store.collectionStandings()
-				),
-				cards,
-				HOME_HUNT_COUNT
+					.filter(
+						(artist) => artist.headerUrl && ranking().has(artist.id)
+					)
 			);
-		});
 
-		/** The catalog ranks a guest's artists, so it is waited for too. */
-		const artistsPending = computed(
-			() =>
-				store.artistsLoading() ||
-				store.releasesLoading() ||
-				(catalogOnly() && store.albumsLoading())
-		);
-
-		return {
-			catalogOnly,
-			artistsPending,
-			/** Only a guest is asked to sign in. */
-			isGuest: computed(() => !store.authenticated()),
-			/** Waiting on whichever list the "recently added" row shows. */
-			recentPending: computed(
+			const spotlight = computed(
 				() =>
+					store
+						.artists()
+						.find((artist) => artist.id === store.spotlightId()) ??
+					null
+			);
+
+			const collections = computed<CollectionCardView[]>(() =>
+				sortCollectionCards(
+					store.collectionStandings().map(toCollectionCard)
+				)
+			);
+
+			/**
+			 * Which records to buy next. The standings are already in state to
+			 * draw the collection rows, so ranking them costs a pass over what is
+			 * in hand — no query, and nothing kept.
+			 */
+			const nextAlbums = computed<NextAlbumView[]>(() => {
+				const cards = collections();
+
+				// The hunt is about a shelf, and a guest has none: nothing is
+				// ranked until there is something to continue.
+				if (!cards.some((collection) => collection.owned > 0)) {
+					return [];
+				}
+
+				return toNextAlbums(
+					musicCollectionEffect.suggestNextAlbums(
+						store.collectionStandings()
+					),
+					cards,
+					HOME_HUNT_COUNT
+				);
+			});
+
+			/** The catalog ranks a guest's artists, so it is waited for too. */
+			const artistsPending = computed(
+				() =>
+					store.artistsLoading() ||
 					store.releasesLoading() ||
 					(catalogOnly() && store.albumsLoading())
-			),
-			/** Catalog-wide totals named in the sign-in prompt. */
-			albumTotal: computed(
-				() => store.counts()['Album'] ?? store.albums().length
-			),
-			artistTotal: computed(
-				() => store.counts()['Artist'] ?? store.artists().length
-			),
-			/** The few worth showing: nearest to complete, empty ones never. */
-			collections: computed(() =>
-				collections()
-					.filter((collection) => collection.total > 0)
-					.slice(0, HOME_COLLECTION_COUNT)
-			),
-			nextAlbums,
-			/** Empty where there is no shelf to continue, or no gap left. */
-			showsHunt: computed(() => nextAlbums().length > 0),
-			completedCollections: computed(
-				() =>
-					collections().filter((collection) => collection.completed)
-						.length
-			),
-			spotlightCandidates,
-			spotlight,
-			spotlightReleaseCount: computed(() => {
-				const artist = spotlight();
-				return artist ? (counts().get(artist.id) ?? 0) : 0;
-			}),
-			spotlightAlbumCount: computed(() => {
-				const artist = spotlight();
-				return artist ? (albumCounts().get(artist.id) ?? 0) : 0;
-			}),
-			spotlightReleases: computed(() => {
-				const artist = spotlight();
+			);
 
-				return artist
-					? store
-							.releases()
-							.filter((release) => release.artistId === artist.id)
-							.sort((a, b) => (a.year ?? 0) - (b.year ?? 0))
-							.slice(0, SPOTLIGHT_RELEASE_COUNT)
-					: [];
-			}),
-			catalog: computed(() => catalogStats(store.counts())),
-			/** Catalog rows: by style, by decade, by kind of act. */
-			styleGroups: computed(() =>
-				measure(
-					'home.styleGroups',
-					{ albums: store.albums().length },
+			return {
+				catalogOnly,
+				artistsPending,
+				/** Only a guest is asked to sign in. */
+				isGuest: computed(() => !store.authenticated()),
+				/** Waiting on whichever list the "recently added" row shows. */
+				recentPending: computed(
 					() =>
-						albumsByStyle(
-							store.albums(),
-							GROUP_COUNT,
-							GROUP_ALBUM_COUNT
-						)
-				)
-			),
-			decadeGroups: computed(() =>
-				measure(
-					'home.decadeGroups',
-					{ albums: store.albums().length },
+						store.releasesLoading() ||
+						(catalogOnly() && store.albumsLoading())
+				),
+				/** Catalog-wide totals named in the sign-in prompt. */
+				albumTotal: computed(
+					() => store.counts()['Album'] ?? store.albums().length
+				),
+				artistTotal: computed(
+					() => store.counts()['Artist'] ?? store.artists().length
+				),
+				/** The few worth showing: nearest to complete, empty ones never. */
+				collections: computed(() =>
+					collections()
+						.filter((collection) => collection.total > 0)
+						.slice(0, HOME_COLLECTION_COUNT)
+				),
+				nextAlbums,
+				/** Empty where there is no shelf to continue, or no gap left. */
+				showsHunt: computed(() => nextAlbums().length > 0),
+				completedCollections: computed(
 					() =>
-						albumsByDecade(
-							store.albums(),
-							GROUP_COUNT,
-							GROUP_ALBUM_COUNT
-						)
-				)
-			),
-			artistGroups: computed(() =>
-				artistsByType(
-					store.artists(),
-					albumCounts(),
-					GROUP_ARTIST_COUNT
-				)
-			),
-			/** The catalog entries written last — what stands in for the
-			 * recently added copies when there is no collection. */
-			newInCatalog: computed(() =>
-				newInCatalog(store.albums(), RECENT_COUNT)
-			),
-			coverage: computed(() =>
-				measure(
-					'home.coverage',
-					{
-						albums: store.albums().length,
-						releases: store.releases().length,
-					},
-					() => decadeCoverage(store.albums(), store.releases())
-				)
-			),
-			recentReleases: computed(() =>
-				[...store.releases()]
-					.sort((a, b) => b.addedAt - a.addedAt)
-					.slice(0, RECENT_COUNT)
-			),
-			topArtists: computed(() =>
-				catalogOnly()
-					? mostCatalogedArtists(
-							store.artists(),
-							albumCounts(),
-							ARTIST_COUNT
-						)
-					: mostCollectedArtists(
-							store.artists(),
-							counts(),
-							ARTIST_COUNT
-						)
-			),
-			searchResults: computed(() =>
-				searchHome(
-					store.query(),
-					store.artists(),
-					store.releases(),
-					store.albums(),
-					SEARCH_RESULT_COUNT
-				)
-			),
-			newestAlbums: computed(() =>
-				measure(
-					'home.newestAlbums',
-					{ albums: store.albums().length },
-					() =>
-						store
-							.albums()
-							.filter((album) => album.coverUrl)
-							.sort((a, b) => (b.year ?? 0) - (a.year ?? 0))
-							.slice(0, ALBUM_COUNT)
-				)
-			),
-		};
-	}),
+						collections().filter(
+							(collection) => collection.completed
+						).length
+				),
+				spotlightCandidates,
+				spotlight,
+				spotlightReleaseCount: computed(() => {
+					const artist = spotlight();
+					return artist ? (counts().get(artist.id) ?? 0) : 0;
+				}),
+				spotlightAlbumCount: computed(() => {
+					const artist = spotlight();
+					return artist ? (albumCounts().get(artist.id) ?? 0) : 0;
+				}),
+				spotlightReleases: computed(() => {
+					const artist = spotlight();
+
+					return artist
+						? store
+								.releases()
+								.filter(
+									(release) => release.artistId === artist.id
+								)
+								.sort((a, b) => (a.year ?? 0) - (b.year ?? 0))
+								.slice(0, SPOTLIGHT_RELEASE_COUNT)
+						: [];
+				}),
+				catalog: computed(() => catalogStats(store.counts())),
+				/** Catalog rows: by style, by decade, by kind of act. */
+				styleGroups: computed(() =>
+					measure(
+						'home.styleGroups',
+						{ albums: store.albums().length },
+						() =>
+							albumsByStyle(
+								store.albums(),
+								GROUP_COUNT,
+								GROUP_ALBUM_COUNT
+							)
+					)
+				),
+				decadeGroups: computed(() =>
+					measure(
+						'home.decadeGroups',
+						{ albums: store.albums().length },
+						() =>
+							albumsByDecade(
+								store.albums(),
+								GROUP_COUNT,
+								GROUP_ALBUM_COUNT
+							)
+					)
+				),
+				artistGroups: computed(() =>
+					artistsByType(
+						store.artists(),
+						albumCounts(),
+						GROUP_ARTIST_COUNT
+					)
+				),
+				/** The catalog entries written last — what stands in for the
+				 * recently added copies when there is no collection. */
+				newInCatalog: computed(() =>
+					newInCatalog(store.albums(), RECENT_COUNT)
+				),
+				coverage: computed(() =>
+					measure(
+						'home.coverage',
+						{
+							albums: store.albums().length,
+							releases: store.releases().length,
+						},
+						() => decadeCoverage(store.albums(), store.releases())
+					)
+				),
+				recentReleases: computed(() =>
+					[...store.releases()]
+						.sort((a, b) => b.addedAt - a.addedAt)
+						.slice(0, RECENT_COUNT)
+				),
+				topArtists: computed(() =>
+					catalogOnly()
+						? mostCatalogedArtists(
+								store.artists(),
+								albumCounts(),
+								ARTIST_COUNT
+							)
+						: mostCollectedArtists(
+								store.artists(),
+								counts(),
+								ARTIST_COUNT
+							)
+				),
+				searchResults: computed(() =>
+					searchHome(
+						store.query(),
+						store.artists(),
+						store.releases(),
+						store.albums(),
+						SEARCH_RESULT_COUNT,
+						text.catalog()
+					)
+				),
+				newestAlbums: computed(() =>
+					measure(
+						'home.newestAlbums',
+						{ albums: store.albums().length },
+						() =>
+							store
+								.albums()
+								.filter((album) => album.coverUrl)
+								.sort((a, b) => (b.year ?? 0) - (a.year ?? 0))
+								.slice(0, ALBUM_COUNT)
+					)
+				),
+			};
+		}
+	),
 	withMethods(
 		(
 			store,
@@ -571,7 +585,8 @@ export const HomePageStore = signalStore(
 							results: store
 								.searchResults()
 								.reduce(
-									(found, group) => found + group.items.length,
+									(found, group) =>
+										found + group.items.length,
 									0
 								),
 						})

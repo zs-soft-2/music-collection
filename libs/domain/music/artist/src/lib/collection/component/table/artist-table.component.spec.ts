@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { of } from 'rxjs';
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -25,6 +26,7 @@ describe('ArtistTableComponent', () => {
 		await TestBed.configureTestingModule({
 			imports: [ArtistTableComponent],
 			providers: [
+				provideI18nTesting(),
 				provideRouter([]),
 				provideNoopAnimations(),
 				{

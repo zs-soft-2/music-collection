@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import {
 	ChangeDetectionStrategy,
 	Component,
@@ -55,6 +56,7 @@ const BAR_COUNT = { off: 0, subtle: 32, full: 64 };
 	templateUrl: './player-stage.component.html',
 	styleUrls: ['./player-stage.component.scss'],
 	imports: [
+		...I18N_IMPORTS,
 		SpotifyIconComponent,
 		YoutubeIconComponent,
 		PlayerSettingsMenuComponent,

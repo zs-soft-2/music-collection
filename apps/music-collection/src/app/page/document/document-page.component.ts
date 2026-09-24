@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { AdminEditLinkComponent } from '../../shared/music-ui';
 import { DocumentPageStore } from './document-page.store';
@@ -25,6 +26,7 @@ import { PageBreadcrumbComponent } from '../../shared/page-breadcrumb';
 	templateUrl: './document-page.component.html',
 	styleUrls: ['./document-page.component.scss'],
 	imports: [
+		...I18N_IMPORTS,
 		PageBreadcrumbComponent,
 		RouterLink,
 		EntityFactsComponent,
@@ -52,26 +54,29 @@ export class DocumentPageComponent {
 		const withdrawnAt = this.store.withdrawnAt();
 
 		return [
-			{ label: 'Original name', value: document?.originalName ?? null },
 			{
-				label: 'Made for',
+				labelKey: 'fact.originalName',
+				value: document?.originalName ?? null,
+			},
+			{
+				labelKey: 'fact.madeFor',
 				value: document?.category ?? 'Uploaded by hand',
 			},
-			{ label: 'File type', value: document?.fileType ?? null },
+			{ labelKey: 'fact.fileType', value: document?.fileType ?? null },
 			{
-				label: 'Last change',
+				labelKey: 'fact.lastChange',
 				value: document?.updatedAt
 					? this.datePipe.transform(document.updatedAt, 'medium')
 					: null,
 			},
 			{
-				label: 'Withdrawn',
+				labelKey: 'fact.withdrawn',
 				value: withdrawnAt
 					? this.datePipe.transform(withdrawnAt, 'medium')
 					: null,
 			},
 			{
-				label: 'File',
+				labelKey: 'fact.file',
 				value: this.store.fileUrl() ? 'Open in a new tab' : null,
 				href: this.store.fileUrl(),
 			},

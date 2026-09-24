@@ -1,89 +1,97 @@
 export interface AdminNavItem {
-	label: string;
+	/** A menüpont szövegének szótárkulcsa, pl. `admin.nav.artists`. */
+	labelKey: string;
 	/** Útvonal az /admin alatt. */
 	route: string;
 	icon: string;
 	/** A megszámolt entitás típusa (`EntityCounts` kulcs), ha van. */
 	countType?: string;
-	/** Új elem felvétele (a lista „Add” gombjával azonos cél). */
-	createLabel?: string;
+	/** Új elem felvételének szótárkulcsa (a lista „Add” gombjával azonos cél). */
+	createLabelKey?: string;
 	/** Teendők száma a menüpont mellett (pl. függő kérések). */
 	badge?: 'pendingReleaseRequests';
 }
 
 export interface AdminNavGroup {
-	label: string;
+	/** A csoport címének szótárkulcsa; üres, ha a csoportnak nincs címe. */
+	labelKey: string;
 	items: AdminNavItem[];
 }
 
 export const ADMIN_NAV: AdminNavGroup[] = [
 	{
-		label: '',
-		items: [{ label: 'Dashboard', route: 'dashboard', icon: 'pi-home' }],
-	},
-	{
-		label: 'Catalog',
+		labelKey: '',
 		items: [
 			{
-				label: 'Artists',
-				route: 'artist',
-				icon: 'pi-microphone',
-				countType: 'Artist',
-				createLabel: 'Add artist',
-			},
-			{
-				label: 'Musicians',
-				route: 'musician',
-				icon: 'pi-user',
-				countType: 'Musician',
-				createLabel: 'Add musician',
-			},
-			{
-				label: 'Albums',
-				route: 'album',
-				icon: 'pi-circle',
-				countType: 'Album',
-				createLabel: 'Add album',
-			},
-			{
-				label: 'Releases',
-				route: 'release',
-				icon: 'pi-clone',
-				countType: 'Release',
-				createLabel: 'Add release',
-			},
-			{
-				label: 'Labels',
-				route: 'label',
-				icon: 'pi-building',
-				countType: 'Label',
-				createLabel: 'Add label',
-			},
-			{
-				label: 'Collections',
-				route: 'music-collection',
-				icon: 'pi-bookmark',
-				createLabel: 'Add collection',
+				labelKey: 'admin.nav.dashboard',
+				route: 'dashboard',
+				icon: 'pi-home',
 			},
 		],
 	},
 	{
-		label: 'User data',
+		labelKey: 'admin.nav.catalog',
 		items: [
 			{
-				label: 'Collection items',
+				labelKey: 'admin.nav.artists',
+				route: 'artist',
+				icon: 'pi-microphone',
+				countType: 'Artist',
+				createLabelKey: 'ui.artistAdmin.add-artist',
+			},
+			{
+				labelKey: 'admin.nav.musicians',
+				route: 'musician',
+				icon: 'pi-user',
+				countType: 'Musician',
+				createLabelKey: 'ui.musicianAdmin.add-musician',
+			},
+			{
+				labelKey: 'admin.nav.albums',
+				route: 'album',
+				icon: 'pi-circle',
+				countType: 'Album',
+				createLabelKey: 'ui.albumAdmin.add-album',
+			},
+			{
+				labelKey: 'admin.nav.releases',
+				route: 'release',
+				icon: 'pi-clone',
+				countType: 'Release',
+				createLabelKey: 'ui.releaseAdmin.add-release',
+			},
+			{
+				labelKey: 'admin.nav.labels',
+				route: 'label',
+				icon: 'pi-building',
+				countType: 'Label',
+				createLabelKey: 'ui.labelAdmin.add-label',
+			},
+			{
+				labelKey: 'admin.nav.collections',
+				route: 'music-collection',
+				icon: 'pi-bookmark',
+				createLabelKey: 'ui.musicCollectionAdmin.add-collection',
+			},
+		],
+	},
+	{
+		labelKey: 'admin.nav.userData',
+		items: [
+			{
+				labelKey: 'admin.nav.collectionItems',
 				route: 'collection-item',
 				icon: 'pi-th-large',
 				countType: 'Collection Item',
 			},
 			{
-				label: 'Release requests',
+				labelKey: 'admin.nav.releaseRequests',
 				route: 'release-request',
 				icon: 'pi-inbox',
 				badge: 'pendingReleaseRequests',
 			},
 			{
-				label: 'Wishlist items',
+				labelKey: 'admin.nav.wishlistItems',
 				route: 'wishlist-item',
 				icon: 'pi-heart',
 				countType: 'Wishlist Item',
@@ -91,18 +99,23 @@ export const ADMIN_NAV: AdminNavGroup[] = [
 		],
 	},
 	{
-		label: 'System',
+		labelKey: 'admin.nav.system',
 		items: [
 			{
-				label: 'Documents',
+				labelKey: 'admin.nav.documents',
 				route: 'document',
 				icon: 'pi-file',
 				countType: 'Document',
 			},
 			{
-				label: 'Badge generation',
+				labelKey: 'admin.nav.badgeGeneration',
 				route: 'badge-settings',
 				icon: 'pi-sparkles',
+			},
+			{
+				labelKey: 'admin.nav.language',
+				route: 'language-settings',
+				icon: 'pi-globe',
 			},
 		],
 	},

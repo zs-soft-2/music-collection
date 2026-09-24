@@ -26,7 +26,7 @@ import {
 export interface MusicianExternalRow {
 	current: string;
 	field: MusicianExternalField;
-	label: string;
+	labelKey: string;
 	loaded: string;
 	/** Whether the loaded value goes into the form on apply. */
 	selected: boolean;
@@ -39,14 +39,14 @@ export interface MusicianExternalComparison {
 	sourceUrl: string;
 }
 
-const EXTERNAL_FIELDS: { field: MusicianExternalField; label: string }[] = [
-	{ field: 'name', label: 'Name' },
-	{ field: 'realName', label: 'Real name' },
-	{ field: 'description', label: 'Biography' },
-	{ field: 'imageUrl', label: 'Portrait URL' },
-	{ field: 'sites', label: 'Links' },
-	{ field: 'aliases', label: 'Also known as' },
-	{ field: 'nameVariations', label: 'Name variations' },
+const EXTERNAL_FIELDS: { field: MusicianExternalField; labelKey: string }[] = [
+	{ field: 'name', labelKey: 'ui.musicianForm.name' },
+	{ field: 'realName', labelKey: 'ui.musicianForm.real-name' },
+	{ field: 'description', labelKey: 'ui.musicianForm.biography' },
+	{ field: 'imageUrl', labelKey: 'ui.musicianForm.portrait-url' },
+	{ field: 'sites', labelKey: 'ui.musicianForm.links' },
+	{ field: 'aliases', labelKey: 'ui.musicianForm.also-known-as' },
+	{ field: 'nameVariations', labelKey: 'ui.musicianForm.nameVariations' },
 ];
 
 /** Links and aliases are edited one per line in a textarea. */
@@ -198,14 +198,14 @@ export class MusicianFormService {
 		profile: MusicianExternalProfile
 	): MusicianExternalComparison {
 		const formValue = this.params.formGroup.value;
-		const rows = EXTERNAL_FIELDS.map(({ field, label }) => {
+		const rows = EXTERNAL_FIELDS.map(({ field, labelKey }) => {
 			const current = formatValue(formValue[field]);
 			const loaded = formatValue(profile[field]);
 
 			return {
 				current,
 				field,
-				label,
+				labelKey,
 				loaded,
 				selected: !current && !!loaded,
 				value: LINE_FIELDS.includes(field) ? loaded : profile[field],

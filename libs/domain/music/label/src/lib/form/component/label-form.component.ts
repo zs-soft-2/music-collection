@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import { Observable } from 'rxjs';
 
 import { AsyncPipe } from '@angular/common';
@@ -33,6 +34,7 @@ import { LabelFormService } from './label-form.service';
 	templateUrl: './label-form.component.html',
 	styleUrls: ['./label-form.component.scss'],
 	imports: [
+		...I18N_IMPORTS,
 		FormsModule,
 		ReactiveFormsModule,
 		Bind,

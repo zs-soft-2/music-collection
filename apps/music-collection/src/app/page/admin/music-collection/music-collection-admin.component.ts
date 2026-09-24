@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
 	MusicCollectionAdminStore,
@@ -11,25 +12,32 @@ import {
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-music-collection-admin',
 	providers: [MusicCollectionAdminStore],
-	imports: [RouterLink],
+	imports: [...I18N_IMPORTS, RouterLink],
 	template: `
 		<header class="mc-page-head">
 			<div>
-				<h1>Collections</h1>
+				<h1>{{ 'ui.musicCollectionAdmin.collections' | transloco }}</h1>
 				<p>
-					Sets of records defined by a rule. What belongs to one is
-					resolved against the catalog, so a collection grows with it
-					— and the badge is earned by owning all of them.
+					{{
+						'ui.musicCollectionAdmin.sets-of-records-defined'
+							| transloco
+					}}
 				</p>
 			</div>
 			<div class="mc-page-actions">
 				<a class="button is-primary" [routerLink]="['edit', 0]">
-					Add collection
+					{{ 'ui.musicCollectionAdmin.add-collection' | transloco }}
 				</a>
 			</div>
 		</header>
 
-		<div class="filters" role="group" aria-label="Filter by status">
+		<div
+			class="filters"
+			role="group"
+			[attr.aria-label]="
+				'ui.musicCollectionAdmin.filter-by-status' | transloco
+			"
+		>
 			@for (filter of filters; track filter.value) {
 				<button
 					type="button"
@@ -37,7 +45,7 @@ import {
 					[attr.aria-pressed]="store.statusFilter() === filter.value"
 					(click)="store.setStatusFilter(filter.value)"
 				>
-					{{ filter.label }}
+					{{ filter.labelKey | transloco }}
 					<span class="count">{{
 						store.counts()[filter.value]
 					}}</span>
@@ -51,10 +59,16 @@ import {
 
 		@if (store.isLoading()) {
 			<div class="skeleton" role="status" aria-busy="true">
-				<span class="visually-hidden">Loading collections…</span>
+				<span class="visually-hidden">{{
+					'ui.musicCollectionAdmin.loading-collections' | transloco
+				}}</span>
 			</div>
 		} @else if (!store.visibleRows().length) {
-			<p class="empty">No collection here yet.</p>
+			<p class="empty">
+				{{
+					'ui.musicCollectionAdmin.no-collection-here-yet' | transloco
+				}}
+			</p>
 		} @else {
 			<ul class="rows">
 				@for (row of store.visibleRows(); track row.uid) {
@@ -79,7 +93,11 @@ import {
 							<span class="tag">{{ row.status }}</span>
 							<span class="tag">{{ row.visibility }}</span>
 							<span class="total">
-								<strong>{{ row.total }}</strong> records
+								<strong>{{ row.total }}</strong>
+								{{
+									'ui.musicCollectionAdmin.records'
+										| transloco
+								}}
 							</span>
 							<span
 								class="points"
@@ -90,13 +108,18 @@ import {
 										: 'Set by the curator'
 								"
 							>
-								<strong>{{ row.points }}</strong> pts
+								<strong>{{ row.points }}</strong>
+								{{ 'ui.musicCollectionAdmin.pts' | transloco }}
 							</span>
 						</div>
 
 						<div class="actions">
-							<a class="button" [routerLink]="['edit', row.uid]"
-								>Edit</a
+							<a
+								class="button"
+								[routerLink]="['edit', row.uid]"
+								>{{
+									'ui.musicCollectionAdmin.edit' | transloco
+								}}</a
 							>
 							<button
 								type="button"
@@ -104,7 +127,9 @@ import {
 								[disabled]="store.busyUid() === row.uid"
 								(click)="store.askDeletion(row)"
 							>
-								Delete
+								{{
+									'ui.musicCollectionAdmin.delete' | transloco
+								}}
 							</button>
 						</div>
 					</li>
@@ -119,9 +144,12 @@ import {
 				aria-labelledby="confirm-title"
 			>
 				<p id="confirm-title">
-					Delete <strong>{{ pending.name }}</strong
-					>? Whoever earned its badge loses it, and this cannot be
-					undone here.
+					{{ 'ui.musicCollectionAdmin.delete2' | transloco }}
+					<strong>{{ pending.name }}</strong
+					>{{
+						'ui.musicCollectionAdmin.whoever-earned-its-badge'
+							| transloco
+					}}
 				</p>
 				<div class="confirm-actions">
 					<button
@@ -129,7 +157,7 @@ import {
 						class="button"
 						(click)="store.cancelDeletion()"
 					>
-						Cancel
+						{{ 'ui.musicCollectionAdmin.cancel' | transloco }}
 					</button>
 					<button
 						type="button"
@@ -374,9 +402,9 @@ import {
 export class MusicCollectionAdminComponent {
 	protected readonly store = inject(MusicCollectionAdminStore);
 
-	protected readonly filters: { value: StatusFilter; label: string }[] = [
-		{ value: 'all', label: 'All' },
-		{ value: 'published', label: 'Published' },
-		{ value: 'draft', label: 'Drafts' },
+	protected readonly filters: { value: StatusFilter; labelKey: string }[] = [
+		{ value: 'all', labelKey: 'admin.filter.all' },
+		{ value: 'published', labelKey: 'admin.filter.published' },
+		{ value: 'draft', labelKey: 'admin.filter.drafts' },
 	];
 }

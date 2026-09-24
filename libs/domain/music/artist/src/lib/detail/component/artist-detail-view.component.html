@@ -6,7 +6,7 @@
 			<div class="header-content">
 				<p-image
 					[src]="store.artist()?.headerImage?.filePath || ''"
-					alt="Image"
+					[alt]="'ui.artistDetailView.image' | transloco"
 				></p-image>
 
 				<div class="tab-menu">
@@ -35,13 +35,17 @@
 				@case ('info') {
 					<div>
 						<div class="property">
-							<span>Country:</span>
+							<span>{{
+								'ui.artistDetailView.country' | transloco
+							}}</span>
 
 							<span>{{ store.artist()?.country }}</span>
 						</div>
 
 						<div class="property">
-							<span>Formed in:</span>
+							<span>{{
+								'ui.artistDetailView.formed-in' | transloco
+							}}</span>
 
 							<span>{{
 								$safeNavigationMigration(
@@ -51,7 +55,9 @@
 						</div>
 
 						<div class="property">
-							<span>Styles:</span>
+							<span>{{
+								'ui.artistDetailView.styles' | transloco
+							}}</span>
 
 							<span>
 								@for (
@@ -84,7 +90,7 @@
 					</div>
 				}
 				@case ('members') {
-					<div>Members</div>
+					<div>{{ 'ui.artistDetailView.members' | transloco }}</div>
 				}
 				@default {}
 			}

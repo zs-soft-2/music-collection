@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { BehaviorSubject, Observable } from 'rxjs';
 
 import { TestBed } from '@angular/core/testing';
@@ -61,6 +62,7 @@ describe('UserSettingsRepository', () => {
 
 		TestBed.configureTestingModule({
 			providers: [
+				provideI18nTesting(),
 				UserSettingsRepository,
 				{ provide: Firestore, useValue: {} },
 				{

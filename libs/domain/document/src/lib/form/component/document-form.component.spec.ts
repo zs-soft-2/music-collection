@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { of } from 'rxjs';
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -18,6 +19,7 @@ describe('DocumentFormComponent', () => {
 		await TestBed.configureTestingModule({
 			imports: [DocumentFormComponent],
 			providers: [
+				provideI18nTesting(),
 				provideRouter([]),
 				{
 					provide: DocumentStateService,
@@ -26,7 +28,10 @@ describe('DocumentFormComponent', () => {
 						selectFilePath$: jest.fn(() => of(undefined)),
 					},
 				},
-				{ provide: DocumentUtilService, useClass: DocumentUtilServiceImpl },
+				{
+					provide: DocumentUtilService,
+					useClass: DocumentUtilServiceImpl,
+				},
 			],
 		}).compileComponents();
 

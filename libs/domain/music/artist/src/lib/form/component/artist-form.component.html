@@ -5,16 +5,20 @@
 
 			<section class="mc-form-section" aria-labelledby="artist-details">
 				<div class="artist-form-heading">
-					<h2 id="artist-details">Details</h2>
+					<h2 id="artist-details">
+						{{ 'ui.artistForm.details' | transloco }}
+					</h2>
 					<p-button
-						label="Load"
+						[label]="'ui.artistForm.load' | transloco"
 						icon="pi pi-cloud-download"
 						size="small"
 						severity="secondary"
 						[outlined]="true"
 						[loading]="externalLoading()"
 						[disabled]="!params.formGroup.value.name"
-						ariaLabel="Load missing data from MusicBrainz and Wikipedia"
+						[ariaLabel]="
+							'ui.artistForm.load-missing-data-from' | transloco
+						"
 						(onClick)="loadExternal()"
 					></p-button>
 				</div>
@@ -25,7 +29,9 @@
 				}
 				<div class="mc-form-grid">
 					<div class="mc-field">
-						<label for="name">Name</label>
+						<label for="name">{{
+							'ui.artistForm.name' | transloco
+						}}</label>
 						<input
 							id="name"
 							type="text"
@@ -37,7 +43,10 @@
 								class="artist-form-duplicate"
 								[class.is-warning]="!twin.blocking"
 							>
-								The catalog already has
+								{{
+									'ui.artistForm.the-catalog-already-has'
+										| transloco
+								}}
 								<button
 									type="button"
 									class="artist-form-duplicate-link"
@@ -46,15 +55,16 @@
 									{{ twin.name }}</button
 								>.
 								@if (!twin.blocking) {
-									Saving keeps both — merge one away in the
-									catalog.
+									{{ 'ui.form.savingKeepsBoth' | transloco }}
 								}
 							</small>
 						}
 					</div>
 
 					<div class="mc-field">
-						<label for="artistType">Type</label>
+						<label for="artistType">{{
+							'ui.artistForm.type' | transloco
+						}}</label>
 						<p-select
 							inputId="artistType"
 							[options]="params.artistTypes"
@@ -65,18 +75,24 @@
 					</div>
 
 					<div class="mc-field">
-						<label for="country">Country</label>
+						<label for="country">{{
+							'ui.artistForm.country' | transloco
+						}}</label>
 						<p-select
 							inputId="country"
 							[options]="params.countries"
-							placeholder="Select a country"
+							[placeholder]="
+								'ui.artistForm.select-a-country' | transloco
+							"
 							formControlName="country"
 							[filter]="true"
 						></p-select>
 					</div>
 
 					<div class="mc-field">
-						<label for="formedIn">Formed in</label>
+						<label for="formedIn">{{
+							'ui.artistForm.formed-in' | transloco
+						}}</label>
 						<p-datepicker
 							inputId="formedIn"
 							formControlName="formedIn"
@@ -84,19 +100,25 @@
 					</div>
 
 					<div class="mc-field">
-						<label for="styles">Styles</label>
+						<label for="styles">{{
+							'ui.artistForm.styles' | transloco
+						}}</label>
 						<p-multiselect
 							inputId="styles"
 							[options]="params.styleList"
 							[filter]="false"
 							formControlName="styles"
 							display="chip"
-							placeholder="Select styles"
+							[placeholder]="
+								'ui.artistForm.select-styles' | transloco
+							"
 						></p-multiselect>
 					</div>
 
 					<div class="mc-field is-wide">
-						<label for="description">Description</label>
+						<label for="description">{{
+							'ui.artistForm.description' | transloco
+						}}</label>
 						<textarea
 							id="description"
 							[rows]="5"
@@ -109,22 +131,28 @@
 			</section>
 
 			<section class="mc-form-section" aria-labelledby="artist-images">
-				<h2 id="artist-images">Images</h2>
+				<h2 id="artist-images">
+					{{ 'ui.artistForm.images' | transloco }}
+				</h2>
 				<div class="mc-field">
-					<label for="imageUrl">Photo URL</label>
+					<label for="imageUrl">{{
+						'ui.artistForm.photo-url' | transloco
+					}}</label>
 					<input
 						pInputText
 						id="imageUrl"
 						type="url"
 						formControlName="imageUrl"
-						placeholder="Used when no main image is attached"
+						[placeholder]="
+							'ui.artistForm.used-when-no-main' | transloco
+						"
 					/>
 					@if (params.formGroup.value.imageUrl; as url) {
 						<p-image
 							class="mc-form-image"
 							[src]="url"
 							[preview]="true"
-							alt="Photo"
+							[alt]="'ui.artistForm.photo' | transloco"
 							width="200"
 						></p-image>
 					}
@@ -132,7 +160,9 @@
 				@if (params.isImagesTabActive) {
 					<div class="mc-form-grid">
 						<div class="mc-field">
-							<label for="headerImage">Header image</label>
+							<label for="headerImage">{{
+								'ui.artistForm.header-image' | transloco
+							}}</label>
 							<p-autocomplete
 								inputId="headerImage"
 								formControlName="headerImage"
@@ -140,7 +170,9 @@
 								[minQueryLength]="3"
 								[delay]="400"
 								optionLabel="name"
-								placeholder="Search documents…"
+								[placeholder]="
+									'ui.artistForm.search-documents' | transloco
+								"
 								(completeMethod)="searchDocument($event)"
 							></p-autocomplete>
 							@if (params.formGroup.value.headerImage) {
@@ -153,13 +185,18 @@
 										)
 									"
 									[preview]="true"
-									alt="Header image"
+									[alt]="
+										'ui.artistForm.header-image2'
+											| transloco
+									"
 									width="200"
 								></p-image>
 							}
 						</div>
 						<div class="mc-field">
-							<label for="mainImage">Main image</label>
+							<label for="mainImage">{{
+								'ui.artistForm.main-image' | transloco
+							}}</label>
 							<p-autocomplete
 								inputId="mainImage"
 								formControlName="mainImage"
@@ -167,7 +204,10 @@
 								[minQueryLength]="3"
 								[delay]="400"
 								optionLabel="name"
-								placeholder="Search documents…"
+								[placeholder]="
+									'ui.artistForm.search-documents2'
+										| transloco
+								"
 								(completeMethod)="searchDocument($event)"
 							></p-autocomplete>
 							@if (params.formGroup.value.mainImage) {
@@ -180,7 +220,9 @@
 										)
 									"
 									[preview]="true"
-									alt="Main image"
+									[alt]="
+										'ui.artistForm.main-image2' | transloco
+									"
 									width="200"
 								></p-image>
 							}
@@ -188,41 +230,46 @@
 					</div>
 				} @else {
 					<p class="mc-form-note">
-						Save the artist first to attach images.
+						{{ 'ui.artistForm.save-the-artist-first' | transloco }}
 					</p>
 				}
 			</section>
 
 			<section class="mc-form-section" aria-labelledby="artist-source">
-				<h2 id="artist-source">Source</h2>
+				<h2 id="artist-source">
+					{{ 'ui.artistForm.source' | transloco }}
+				</h2>
 				<div class="mc-form-grid">
 					<div class="mc-field">
-						<label for="musicBrainzId">MusicBrainz</label>
+						<label for="musicBrainzId">{{
+							'ui.artistForm.musicbrainz' | transloco
+						}}</label>
 						<input
 							id="musicBrainzId"
 							type="text"
 							pInputText
 							formControlName="musicBrainzId"
-							placeholder="Artist id or page URL"
+							[placeholder]="
+								'ui.artistForm.artist-id-or-page' | transloco
+							"
 							aria-describedby="musicBrainzId-hint"
 						/>
-						<small id="musicBrainzId-hint"
-							>Load looks the artist up by this instead of
-							searching on the name.</small
-						>
+						<small id="musicBrainzId-hint">{{
+							'ui.artistForm.load-looks-the-artist' | transloco
+						}}</small>
 					</div>
 				</div>
 			</section>
 
 			<div class="mc-form-actions">
 				<p-button
-					label="Cancel"
+					[label]="'ui.artistForm.cancel' | transloco"
 					severity="secondary"
 					[outlined]="true"
 					(onClick)="cancel()"
 				></p-button>
 				<p-button
-					label="Save"
+					[label]="'ui.artistForm.save' | transloco"
 					icon="pi pi-check"
 					[disabled]="!params.formGroup.valid"
 					(onClick)="submit()"
@@ -233,13 +280,13 @@
 
 	<mc-artist-candidate-picker
 		[candidates]="externalCandidates()"
-		hint="Pick the one this is — its id comes back as a row to keep."
+		[hint]="'ui.artistForm.pick-the-one-this' | transloco"
 		(picked)="chooseExternalCandidate($event)"
 		(closed)="closeExternalCandidates()"
 	></mc-artist-candidate-picker>
 
 	<p-dialog
-		header="Loaded artist data"
+		[header]="'ui.artistForm.loaded-artist-data' | transloco"
 		[modal]="true"
 		[visible]="!!externalComparison()"
 		(visibleChange)="$event || closeExternal()"
@@ -248,7 +295,7 @@
 	>
 		@if (externalComparison(); as comparison) {
 			<p class="artist-external-source">
-				Source:
+				{{ 'ui.artistForm.source2' | transloco }}
 				<a
 					[href]="comparison.sourceUrl"
 					target="_blank"
@@ -262,11 +309,19 @@
 						<thead>
 							<tr>
 								<th scope="col">
-									<span class="visually-hidden">Apply</span>
+									<span class="visually-hidden">{{
+										'ui.artistForm.apply' | transloco
+									}}</span>
 								</th>
-								<th scope="col">Field</th>
-								<th scope="col">Current</th>
-								<th scope="col">Loaded</th>
+								<th scope="col">
+									{{ 'ui.artistForm.field' | transloco }}
+								</th>
+								<th scope="col">
+									{{ 'ui.artistForm.current' | transloco }}
+								</th>
+								<th scope="col">
+									{{ 'ui.artistForm.loaded' | transloco }}
+								</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -288,7 +343,9 @@
 									<th scope="row">
 										<label
 											[for]="'external-' + row.field"
-											>{{ row.label }}</label
+											>{{
+												row.labelKey | transloco
+											}}</label
 										>
 									</th>
 									<td class="is-current">
@@ -301,18 +358,18 @@
 					</table>
 				</div>
 			} @else {
-				<p>The loaded data matches the form.</p>
+				<p>{{ 'ui.artistForm.the-loaded-data-matches' | transloco }}</p>
 			}
 		}
 		<ng-template #footer>
 			<p-button
-				label="Cancel"
+				[label]="'ui.artistForm.cancel2' | transloco"
 				severity="secondary"
 				[outlined]="true"
 				(onClick)="closeExternal()"
 			></p-button>
 			<p-button
-				label="Apply to form"
+				[label]="'ui.artistForm.apply-to-form' | transloco"
 				icon="pi pi-check"
 				[disabled]="!hasSelectedExternalRow()"
 				(onClick)="applyExternal()"

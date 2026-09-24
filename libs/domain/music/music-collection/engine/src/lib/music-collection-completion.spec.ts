@@ -100,10 +100,7 @@ describe('compareWithCollection', () => {
 
 	it('takes the badge away when a record is sold', () => {
 		const { resolved, copies } = tenAlbums(10);
-		const afterSelling = [
-			...copies.slice(1),
-			disposed(copies[0].albumUid),
-		];
+		const afterSelling = [...copies.slice(1), disposed(copies[0].albumUid)];
 
 		expect(compareWithCollection(resolved, copies).completed).toBe(true);
 
@@ -148,7 +145,11 @@ describe('compareWithCollection', () => {
 
 	it('does not complete a collection that resolves to nothing', () => {
 		const resolved = resolveMusicCollection(
-			{ uid: 'empty', criteriaVersion: 1, criteria: { years: { equals: 1066 } } },
+			{
+				uid: 'empty',
+				criteriaVersion: 1,
+				criteria: { years: { equals: 1066 } },
+			},
 			bayAreaCatalog()
 		);
 

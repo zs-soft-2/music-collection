@@ -10,8 +10,11 @@
 		</div>
 	} @else if (store.notFound() || !store.collection()) {
 		<p class="empty">
-			This collection is not published, or it no longer exists.
-			<a routerLink="/collections">Back to the collections</a>.
+			{{ 'ui.collectionDetailPage.this-collection-is-not' | transloco }}
+			<a routerLink="/collections">{{
+				'ui.collectionDetailPage.back-to-the-collections' | transloco
+			}}</a
+			>.
 		</p>
 	} @else {
 		@let collection = store.collection()!;
@@ -25,7 +28,9 @@
 			/>
 
 			<div class="hero-text">
-				<p class="eyebrow">Collection</p>
+				<p class="eyebrow">
+					{{ 'ui.collectionDetailPage.collection' | transloco }}
+				</p>
 				<h1>{{ collection.name }}</h1>
 
 				@if (collection.description) {
@@ -56,7 +61,10 @@
 							(click)="onPlay(collection.slug, collection.name)"
 						>
 							<i class="pi pi-play" aria-hidden="true"></i>
-							Play this collection
+							{{
+								'ui.collectionDetailPage.play-this-collection'
+									| transloco
+							}}
 						</button>
 					}
 				</div>
@@ -94,7 +102,7 @@
 								? collection.earnedPoints
 								: collection.points
 						}}</strong>
-						points
+						{{ 'ui.collectionDetailPage.points' | transloco }}
 						<span class="score-state">
 							{{
 								collection.completed
@@ -106,12 +114,20 @@
 
 					@if (collection.bonusPoints) {
 						<p class="score-parts">
-							{{ collection.points - collection.bonusPoints }}
-							base
-							<span class="bonus"
-								>+ {{ collection.bonusPoints }} for your
-								pressings</span
-							>
+							{{
+								'page.collections.basePoints'
+									| transloco
+										: {
+												points:
+													collection.points -
+													collection.bonusPoints,
+										  }
+							}}
+							<span class="bonus">{{
+								'page.collections.bonusPoints'
+									| transloco
+										: { points: collection.bonusPoints }
+							}}</span>
 						</p>
 					}
 
@@ -174,10 +190,18 @@
 
 		@if (!collection.total) {
 			<p class="empty">
-				Nothing in the catalog answers this collection yet.
+				{{
+					'ui.collectionDetailPage.nothing-in-the-catalog' | transloco
+				}}
 			</p>
 		} @else {
-			<div class="toolbar" role="tablist" aria-label="Which records">
+			<div
+				class="toolbar"
+				role="tablist"
+				[attr.aria-label]="
+					'ui.collectionDetailPage.which-records' | transloco
+				"
+			>
 				@for (option of filterOptions; track option.value) {
 					<button
 						type="button"
@@ -187,7 +211,7 @@
 						[attr.aria-selected]="store.filter() === option.value"
 						(click)="onFilter(option.value)"
 					>
-						{{ option.label }}
+						{{ option.labelKey | transloco }}
 						<span class="count">
 							{{
 								option.value === 'owned'
@@ -202,7 +226,11 @@
 			</div>
 
 			@if (!store.albums().length) {
-				<p class="empty">No record here yet.</p>
+				<p class="empty">
+					{{
+						'ui.collectionDetailPage.no-record-here-yet' | transloco
+					}}
+				</p>
 			} @else {
 				<ul class="grid">
 					@for (album of store.albums(); track album.albumUid) {

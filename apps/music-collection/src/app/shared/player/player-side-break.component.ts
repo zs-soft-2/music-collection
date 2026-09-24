@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { PlayerStore } from './player.store';
 
@@ -9,16 +10,25 @@ import { PlayerStore } from './player.store';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-player-side-break',
+	imports: [...I18N_IMPORTS],
 	template: `
 		@if (player.sideBreak(); as held) {
 			<div class="side-break" role="status">
 				<i class="pi pi-refresh" aria-hidden="true"></i>
 				<span class="text">
-					<span class="lead">Turn the record over</span>
-					<span class="side">{{ held.label }} is up next</span>
+					<span class="lead">{{
+						'ui.playerSideBreak.turn-the-record-over' | transloco
+					}}</span>
+					<span class="side">{{
+						'ui.playerSideBreak.upNext'
+							| transloco: { side: held.label }
+					}}</span>
 				</span>
 				<button type="button" (click)="player.continueSide()">
-					Play {{ held.label }}
+					{{
+						'ui.playerSideBreak.play'
+							| transloco: { side: held.label }
+					}}
 				</button>
 			</div>
 		}

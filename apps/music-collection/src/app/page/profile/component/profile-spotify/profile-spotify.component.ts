@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { PlayerStore } from '../../../../shared/player';
 
@@ -10,25 +11,25 @@ import { PlayerStore } from '../../../../shared/player';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-profile-spotify',
+	imports: [...I18N_IMPORTS],
 	template: `
 		@if (!player.spotifyConfigured()) {
 			<p class="note">
-				Spotify is not set up for this app, so there is nothing to
-				connect to.
+				{{ 'ui.profileSpotify.spotify-is-not-set' | transloco }}
 			</p>
 		} @else {
 			<div class="connection">
 				@if (player.spotifyConnected()) {
 					<p class="state">
 						<i class="pi pi-check-circle" aria-hidden="true"></i>
-						Connected
+						{{ 'ui.profileSpotify.connected' | transloco }}
 					</p>
 					<button
 						type="button"
 						class="link"
 						(click)="player.disconnectSpotify()"
 					>
-						Disconnect
+						{{ 'ui.profileSpotify.disconnect' | transloco }}
 					</button>
 				} @else {
 					<button
@@ -48,18 +49,24 @@ import { PlayerStore } from '../../../../shared/player';
 
 			@if (player.spotifyConnected()) {
 				<div class="output">
-					<span class="label">Play on</span>
+					<span class="label">{{
+						'ui.profileSpotify.play-on' | transloco
+					}}</span>
 
 					<div class="device-row">
 						<select
-							aria-label="Play Spotify on"
+							[attr.aria-label]="
+								'ui.profileSpotify.play-spotify-on' | transloco
+							"
 							(change)="selectDevice($event)"
 						>
 							<option
 								value=""
 								[selected]="!player.selectedDeviceId()"
 							>
-								This browser
+								{{
+									'ui.profileSpotify.this-browser' | transloco
+								}}
 							</option>
 							@for (device of player.devices(); track device.id) {
 								<option
@@ -76,8 +83,14 @@ import { PlayerStore } from '../../../../shared/player';
 						<button
 							type="button"
 							class="refresh"
-							aria-label="Refresh device list"
-							title="Refresh device list"
+							[attr.aria-label]="
+								'ui.profileSpotify.refresh-device-list'
+									| transloco
+							"
+							[title]="
+								'ui.profileSpotify.refresh-device-list2'
+									| transloco
+							"
 							(click)="player.refreshDevices()"
 						>
 							<i class="pi pi-refresh" aria-hidden="true"></i>
@@ -85,16 +98,17 @@ import { PlayerStore } from '../../../../shared/player';
 					</div>
 
 					<p class="note">
-						Speakers show up when they support Spotify Connect and
-						are on. Missing? Play something on it once from the
-						Spotify app, then refresh.
+						{{
+							'ui.profileSpotify.speakers-show-up-when'
+								| transloco
+						}}
 					</p>
 				</div>
 			}
 
 			<div class="volume">
 				<label class="label" for="mc-spotify-volume">
-					Volume in this browser
+					{{ 'ui.profileSpotify.volume-in-this-browser' | transloco }}
 				</label>
 
 				<div class="slider-row">
@@ -113,9 +127,9 @@ import { PlayerStore } from '../../../../shared/player';
 				</div>
 
 				<p class="note">
-					What the browser player starts at. This one stays in the
-					browser rather than the account — the speakers differ from
-					machine to machine.
+					{{
+						'ui.profileSpotify.what-the-browser-player' | transloco
+					}}
 				</p>
 			</div>
 		}

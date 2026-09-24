@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { TestBed } from '@angular/core/testing';
 
 import { ReleaseUtilServiceImpl } from './release-util.service.impl';
@@ -7,7 +8,7 @@ describe('ReleaseUtilServiceImpl', () => {
 
 	beforeEach(() => {
 		TestBed.configureTestingModule({
-			providers: [ReleaseUtilServiceImpl],
+			providers: [provideI18nTesting(), ReleaseUtilServiceImpl],
 		});
 		service = TestBed.inject(ReleaseUtilServiceImpl);
 	});

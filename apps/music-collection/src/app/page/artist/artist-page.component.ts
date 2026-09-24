@@ -13,6 +13,7 @@ import {
 	untracked,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
 	AdminEditLinkComponent,
@@ -45,6 +46,7 @@ const SECTION_REACHED_OFFSET = 24;
 	templateUrl: './artist-page.component.html',
 	styleUrls: ['./artist-page.component.scss'],
 	imports: [
+		...I18N_IMPORTS,
 		PageBreadcrumbComponent,
 		RouterLink,
 		ArtistTileComponent,
@@ -105,17 +107,25 @@ export class ArtistPageComponent {
 	protected readonly sections = computed(() => {
 		const artist = this.store.artist();
 		const sections = [
-			{ id: 'about', label: 'About', shown: !!artist?.paragraphs.length },
-			{ id: 'lineup', label: 'Line-up', shown: this.hasLineup() },
-			{ id: 'discography', label: 'Discography', shown: true },
+			{
+				id: 'about',
+				labelKey: 'section.about',
+				shown: !!artist?.paragraphs.length,
+			},
+			{
+				id: 'lineup',
+				labelKey: 'section.lineUp',
+				shown: this.hasLineup(),
+			},
+			{ id: 'discography', labelKey: 'section.discography', shown: true },
 			{
 				id: 'in-collection',
-				label: 'In your collection',
+				labelKey: 'section.inYourCollection',
 				shown: this.store.ownReleases().length > 0,
 			},
 			{
 				id: 'similar',
-				label: 'Similar artists',
+				labelKey: 'section.similarArtists',
 				shown: this.store.similar().length > 0,
 			},
 		];

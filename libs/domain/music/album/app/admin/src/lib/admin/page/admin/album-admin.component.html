@@ -1,13 +1,13 @@
 <section class="entity-admin">
 	<header class="mc-page-head">
 		<div>
-			<h1>Albums</h1>
-			<p>Albums of the global catalog.</p>
+			<h1>{{ 'ui.albumAdmin.albums' | transloco }}</h1>
+			<p>{{ 'ui.albumAdmin.albums-of-the-global' | transloco }}</p>
 		</div>
 
 		<div class="mc-page-actions" *ngxPermissionsOnly="buttonPermissions">
 			<p-button
-				label="Add album"
+				[label]="'ui.albumAdmin.add-album' | transloco"
 				icon="pi pi-plus"
 				(onClick)="clickHandler()"
 				[disabled]="(isNewEntityButtonEnabled$ | async) === false"

@@ -17,15 +17,15 @@ import { ArtistDetailViewService } from './artist-detail-view.service';
 
 const menuItems: MenuItem[] = [
 	{
-		label: 'Info',
+		labelKey: 'ui.artistDetailView.info',
 		icon: '',
 	},
 	{
-		label: 'Discography',
+		labelKey: 'ui.artistDetailView.discography',
 		icon: '',
 	},
 	{
-		label: 'Members',
+		labelKey: 'ui.artistDetailView.members',
 		icon: '',
 	},
 ];

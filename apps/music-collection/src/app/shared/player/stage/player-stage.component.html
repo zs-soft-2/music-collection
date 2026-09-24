@@ -45,7 +45,7 @@
 		<button
 			type="button"
 			class="icon-button"
-			aria-label="Close"
+			[attr.aria-label]="'ui.playerStage.close' | transloco"
 			(click)="close()"
 		>
 			<i class="pi pi-times" aria-hidden="true"></i>
@@ -94,15 +94,14 @@
 
 	@if (lyrics() && !synced()) {
 		<p class="hint">
-			No synced lyrics saved for this track: the text scrolls with the
-			song.
+			{{ 'ui.playerStage.no-synced-lyrics-saved' | transloco }}
 		</p>
 	}
 
 	@switch (player.source()) {
 		@case (null) {
 			<p class="hint">
-				Nothing to play this on: no Spotify or YouTube link.
+				{{ 'ui.playerStage.nothing-to-play-this' | transloco }}
 			</p>
 		}
 		@default {
@@ -112,7 +111,7 @@
 					class="bar"
 					[class.disabled]="!player.canSeek()"
 					role="slider"
-					aria-label="Position"
+					[attr.aria-label]="'ui.playerStage.position' | transloco"
 					[attr.tabindex]="player.canSeek() ? 0 : -1"
 					aria-valuemin="0"
 					[attr.aria-valuemax]="player.durationMs()"
@@ -138,8 +137,10 @@
 					<button
 						type="button"
 						class="icon-button small"
-						title="Lyrics earlier"
-						aria-label="Lyrics earlier"
+						[title]="'ui.playerStage.lyrics-earlier' | transloco"
+						[attr.aria-label]="
+							'ui.playerStage.lyrics-earlier2' | transloco
+						"
 						(click)="nudge(1)"
 					>
 						<i class="pi pi-minus" aria-hidden="true"></i>
@@ -149,7 +150,9 @@
 					<button
 						type="button"
 						class="icon-button"
-						aria-label="Previous track"
+						[attr.aria-label]="
+							'ui.playerStage.previous-track' | transloco
+						"
 						(click)="player.skip('previous')"
 					>
 						<i class="pi pi-step-backward" aria-hidden="true"></i>
@@ -162,7 +165,9 @@
 						(click)="player.togglePlay()"
 					>
 						<mc-spotify-icon />
-						<span>Connect Spotify to play</span>
+						<span>{{
+							'ui.playerStage.connect-spotify-to-play' | transloco
+						}}</span>
 					</button>
 				} @else {
 					<button
@@ -183,7 +188,9 @@
 					<button
 						type="button"
 						class="icon-button"
-						aria-label="Next track"
+						[attr.aria-label]="
+							'ui.playerStage.next-track' | transloco
+						"
 						(click)="player.skip('next')"
 					>
 						<i class="pi pi-step-forward" aria-hidden="true"></i>
@@ -193,8 +200,10 @@
 					<button
 						type="button"
 						class="icon-button small"
-						title="Lyrics later"
-						aria-label="Lyrics later"
+						[title]="'ui.playerStage.lyrics-later' | transloco"
+						[attr.aria-label]="
+							'ui.playerStage.lyrics-later2' | transloco
+						"
 						(click)="nudge(-1)"
 					>
 						<i class="pi pi-plus" aria-hidden="true"></i>
@@ -217,7 +226,7 @@
 						min="0"
 						max="100"
 						step="1"
-						aria-label="Volume"
+						[attr.aria-label]="'ui.playerStage.volume' | transloco"
 						[value]="player.volume()"
 						[disabled]="!player.volumeSupported()"
 						[title]="
@@ -252,8 +261,15 @@
 				</button>
 				@if (player.audioStatus() === 'starting') {
 					<p class="hint">
-						Pick <strong>this tab</strong> and tick
-						<strong>Share tab audio</strong>.
+						{{ 'ui.playerStage.pick' | transloco }}
+						<strong>{{
+							'ui.playerStage.this-tab' | transloco
+						}}</strong>
+						{{ 'ui.playerStage.and-tick' | transloco }}
+						<strong>{{
+							'ui.playerStage.share-tab-audio' | transloco
+						}}</strong
+						>.
 					</p>
 				}
 			}
@@ -263,17 +279,25 @@
 			<p class="source">
 				@if (player.source() === 'spotify') {
 					<mc-spotify-icon />
-					<span>Spotify</span>
+					<span>{{ 'ui.playerStage.spotify' | transloco }}</span>
 				} @else {
 					<mc-youtube-icon />
-					<span>YouTube</span>
+					<span>{{ 'ui.playerStage.youtube' | transloco }}</span>
 				}
 				@if (offsetMs()) {
-					<span>
-						· lyrics {{ offsetMs() > 0 ? 'earlier' : 'later' }} by
-						{{ (offsetMs() < 0 ? -offsetMs() : offsetMs()) / 1000 }}
-						s
-					</span>
+					<span>{{
+						(offsetMs() > 0
+							? 'ui.playerStage.lyricsEarlierBy'
+							: 'ui.playerStage.lyricsLaterBy'
+						)
+							| transloco
+								: {
+										seconds:
+											(offsetMs() < 0
+												? -offsetMs()
+												: offsetMs()) / 1000,
+								  }
+					}}</span>
 				}
 			</p>
 		}

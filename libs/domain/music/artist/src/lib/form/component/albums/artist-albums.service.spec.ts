@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { of } from 'rxjs';
 
 import { TestBed } from '@angular/core/testing';
@@ -50,6 +51,7 @@ function setup(
 
 	TestBed.configureTestingModule({
 		providers: [
+			provideI18nTesting(),
 			ArtistAlbumsService,
 			{
 				provide: ArtistStateService,

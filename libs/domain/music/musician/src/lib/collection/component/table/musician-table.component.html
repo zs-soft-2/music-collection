@@ -5,15 +5,17 @@
 		[view]="collectionView"
 		[loading]="params.loading && !params.musicians.length"
 		[tableRowsOptions]="[25, 50, 100]"
-		emptyMessage="No musicians found."
+		[emptyMessage]="'ui.musicianTable.no-musicians-found' | transloco"
 	>
 		<p-iconfield tools class="mc-table-search">
 			<p-inputicon styleClass="pi pi-search" />
 			<input
 				pInputText
 				type="search"
-				placeholder="Filter by name…"
-				aria-label="Filter musicians by name, real name or alias"
+				[placeholder]="'ui.musicianTable.filter-by-name' | transloco"
+				[attr.aria-label]="
+					'ui.musicianTable.filter-musicians-by-name' | transloco
+				"
 				[ngModel]="place.filterOf('name')"
 				(ngModelChange)="filter($event)"
 			/>
@@ -42,7 +44,12 @@
 			</mc-entity-card>
 		</ng-template>
 
-		<ng-template mcColumn header="Portrait" headerHidden let-musician>
+		<ng-template
+			mcColumn
+			[header]="'ui.musicianTable.portrait' | transloco"
+			headerHidden
+			let-musician
+		>
 			@if (musician.imageUrl) {
 				<img
 					class="thumb"
@@ -57,17 +64,27 @@
 			}
 		</ng-template>
 
-		<ng-template mcColumn header="Name" field="name" let-musician>
+		<ng-template
+			mcColumn
+			[header]="'ui.musicianTable.name' | transloco"
+			field="name"
+			let-musician
+		>
 			{{ musician.name }}
 		</ng-template>
 
-		<ng-template mcColumn header="Real name" field="realName" let-musician>
+		<ng-template
+			mcColumn
+			[header]="'ui.musicianTable.real-name' | transloco"
+			field="realName"
+			let-musician
+		>
 			{{ musician.realName }}
 		</ng-template>
 
 		<ng-template
 			mcColumn
-			header="Profile"
+			[header]="'ui.musicianTable.profile' | transloco"
 			columnClass="profile"
 			let-musician
 		>
@@ -79,11 +96,21 @@
 			/>
 		</ng-template>
 
-		<ng-template mcColumn header="Updated" field="updatedAt" let-musician>
+		<ng-template
+			mcColumn
+			[header]="'ui.musicianTable.updated' | transloco"
+			field="updatedAt"
+			let-musician
+		>
 			{{ musician.updatedAt | date: 'yyyy-MM-dd HH:mm' }}
 		</ng-template>
 
-		<ng-template mcColumn header="Actions" headerHidden let-musician>
+		<ng-template
+			mcColumn
+			[header]="'ui.musicianTable.actions' | transloco"
+			headerHidden
+			let-musician
+		>
 			<mc-view-action
 				[link]="viewLink(musician)"
 				entity="musician"
@@ -104,12 +131,12 @@
 
 <ng-template #profileTags let-musician>
 	@if (musician.description) {
-		<span class="tag">Biography</span>
+		<span class="tag">{{ 'ui.musicianTable.biography' | transloco }}</span>
 	}
 	@if (musician.sites?.length) {
 		<span class="tag">{{ musician.sites.length }} links</span>
 	}
 	@if (musician.discogsId) {
-		<span class="tag">Discogs</span>
+		<span class="tag">{{ 'ui.musicianTable.discogs' | transloco }}</span>
 	}
 </ng-template>

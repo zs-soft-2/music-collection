@@ -2,7 +2,7 @@
 	<section class="stage">
 		@if (failure(); as message) {
 			<p class="stage__failure">
-				A vizuális motor nem indult el: {{ message }}
+				{{ 'ui.visualLab.engineFailed' | transloco: { message } }}
 			</p>
 		} @else {
 			<mc-visual-scene
@@ -57,7 +57,7 @@
 				[max]="duration()"
 				step="0.1"
 				[value]="positionSeconds()"
-				aria-label="Pozíció"
+				[attr.aria-label]="'ui.visualLab.poz-ci' | transloco"
 				(input)="seek($any($event.target).value)"
 			/>
 
@@ -70,7 +70,7 @@
 					<button
 						type="button"
 						(click)="skip(-15)"
-						title="15 mp vissza"
+						[title]="'ui.visualLab.15-mp-vissza' | transloco"
 					>
 						◀◀
 					</button>
@@ -84,7 +84,7 @@
 					<button
 						type="button"
 						(click)="skip(15)"
-						title="15 mp előre"
+						[title]="'ui.visualLab.15-mp-el-re' | transloco"
 					>
 						▶▶
 					</button>
@@ -106,19 +106,19 @@
 
 		@if (panelOpen()) {
 			<div class="panel__body">
-				<h2>Lemez</h2>
+				<h2>{{ 'ui.visualLab.lemez' | transloco }}</h2>
 				<div class="record">
 					<button
 						type="button"
 						class="record__step"
-						title="Előző"
+						[title]="'ui.visualLab.el-z' | transloco"
 						(click)="stepSubject(-1)"
 					>
 						‹
 					</button>
 					<select
 						class="record__list"
-						aria-label="Lemez"
+						[attr.aria-label]="'ui.visualLab.lemez2' | transloco"
 						(change)="pickSubject($any($event.target).value)"
 					>
 						@for (
@@ -139,32 +139,31 @@
 					<button
 						type="button"
 						class="record__step"
-						title="Következő"
+						[title]="'ui.visualLab.k-vetkez' | transloco"
 						(click)="stepSubject(1)"
 					>
 						›
 					</button>
 				</div>
 				<p class="panel__hint">
-					Minden családhoz egy lemez, hogy végig lehessen lépni a
-					motor összes világán.
+					{{ 'ui.visualLab.minden-csal-dhoz-egy' | transloco }}
 				</p>
 
 				<h2>
-					Sajátot
+					{{ 'ui.visualLab.own' | transloco }}
 					@if (typed()) {
 						<button
 							type="button"
 							class="panel__manual chips__on"
 							(click)="clearTyped()"
 						>
-							vissza a listához
+							{{ 'ui.visualLab.vissza-a-list-hoz' | transloco }}
 						</button>
 					}
 				</h2>
 				<div class="fields">
 					<label>
-						<span>Előadó</span>
+						<span>{{ 'ui.visualLab.el-ad' | transloco }}</span>
 						<input
 							type="text"
 							[value]="typedValue('artist')"
@@ -172,7 +171,7 @@
 						/>
 					</label>
 					<label>
-						<span>Lemez</span>
+						<span>{{ 'ui.visualLab.lemez3' | transloco }}</span>
 						<input
 							type="text"
 							[value]="typedValue('album')"
@@ -180,7 +179,7 @@
 						/>
 					</label>
 					<label>
-						<span>Szám</span>
+						<span>{{ 'ui.visualLab.sz-m' | transloco }}</span>
 						<input
 							type="text"
 							[value]="typedValue('song')"
@@ -188,17 +187,19 @@
 						/>
 					</label>
 					<label>
-						<span>Stílus</span>
+						<span>{{ 'ui.visualLab.st-lus' | transloco }}</span>
 						<input
 							type="text"
 							[value]="typedValue('style')"
-							placeholder="Thrash, Doom, Black…"
+							[placeholder]="
+								'ui.visualLab.thrash-doom-black' | transloco
+							"
 							(input)="type('style', $any($event.target).value)"
 						/>
 					</label>
 				</div>
 
-				<h2>Világ</h2>
+				<h2>{{ 'ui.visualLab.vil-g' | transloco }}</h2>
 				<p class="world">
 					<strong>{{ profile().environment.type }}</strong>
 					· {{ profile().particles.type }} ·
@@ -221,7 +222,7 @@
 					}
 				</div>
 
-				<h2>Bemenet</h2>
+				<h2>{{ 'ui.visualLab.bemenet' | transloco }}</h2>
 				<div class="chips">
 					@for (
 						option of ['ambient', 'timeline', 'audio-reactive'];
@@ -237,18 +238,17 @@
 					}
 				</div>
 				<p class="panel__hint">
-					Az audio-reactive mód szimulált hangadatot kap, hogy a
-					szolgáltatói hozzáférés nélkül is tesztelhető legyen.
+					{{ 'ui.visualLab.az-audio-reactive-m' | transloco }}
 				</p>
 
-				<h2>Szekció</h2>
+				<h2>{{ 'ui.visualLab.szekci' | transloco }}</h2>
 				<div class="chips">
 					<button
 						type="button"
 						[class.chips__on]="sectionOverride() === null"
 						(click)="clearSection()"
 					>
-						auto
+						{{ 'ui.visualLab.auto' | transloco }}
 					</button>
 					@for (section of sections; track section) {
 						<button
@@ -261,7 +261,7 @@
 					}
 				</div>
 
-				<h2>Minőség</h2>
+				<h2>{{ 'ui.visualLab.min-s-g' | transloco }}</h2>
 				<div class="chips">
 					@for (level of ['low', 'medium', 'high']; track level) {
 						<button
@@ -275,7 +275,7 @@
 				</div>
 
 				<h2>
-					Paraméterek
+					{{ 'ui.visualLab.param-terek' | transloco }}
 					<button
 						type="button"
 						class="panel__manual"
@@ -289,7 +289,7 @@
 				@for (knob of knobs; track knob.key) {
 					<label class="knob">
 						<span class="knob__label">
-							{{ knob.label }}
+							{{ knob.labelKey | transloco }}
 							<em>{{ knobValue(knob.key).toFixed(2) }}</em>
 						</span>
 						<input

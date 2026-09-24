@@ -4,13 +4,13 @@
 		[place]="place"
 		[view]="collectionView"
 		[rowClass]="withdrawnClass"
-		emptyMessage="No documents found."
+		[emptyMessage]="'ui.documentTable.no-documents-found' | transloco"
 	>
 		<p-autocomplete
 			tools
 			class="mc-table-search"
-			placeholder="Filter by name…"
-			ariaLabel="Filter by name"
+			[placeholder]="'ui.documentTable.filter-by-name' | transloco"
+			[ariaLabel]="'ui.documentTable.filter-by-name2' | transloco"
 			[ngModel]="place.filterOf('name')"
 			[suggestions]="params.empty"
 			[showClear]="true"
@@ -21,14 +21,19 @@
 		>
 		</p-autocomplete>
 
-		<div tools class="category-filter" role="group" aria-label="Category">
+		<div
+			tools
+			class="category-filter"
+			role="group"
+			[attr.aria-label]="'ui.documentTable.category' | transloco"
+		>
 			@for (option of filters; track option.value) {
 				<button
 					type="button"
 					[attr.aria-pressed]="params.filter === option.value"
 					(click)="setFilter(option.value)"
 				>
-					{{ option.label }}
+					{{ option.labelKey | transloco }}
 				</button>
 			}
 		</div>
@@ -41,10 +46,9 @@
 				aria-labelledby="withdrawal-title"
 			>
 				<p id="withdrawal-title">
-					Withdraw <strong>{{ document.name }}</strong
-					>? The file stays where it is — everything that already
-					points at it goes on working — but it will not be offered
-					again.
+					{{ 'ui.documentTable.withdraw' | transloco }}
+					<strong>{{ document.name }}</strong
+					>{{ 'ui.documentTable.the-file-stays-where' | transloco }}
 				</p>
 
 				<div class="withdrawal-actions">
@@ -54,7 +58,7 @@
 						class="p-button-text p-button-secondary"
 						(click)="cancelWithdrawal()"
 					>
-						Cancel
+						{{ 'ui.documentTable.cancel' | transloco }}
 					</button>
 					<button
 						pButton
@@ -62,7 +66,7 @@
 						class="p-button-danger"
 						(click)="confirmWithdrawal()"
 					>
-						Withdraw
+						{{ 'ui.documentTable.withdraw2' | transloco }}
 					</button>
 				</div>
 			</div>
@@ -87,7 +91,9 @@
 						cardActions
 						pButton
 						pRipple
-						aria-label="Restore document"
+						[attr.aria-label]="
+							'ui.documentTable.restore-document' | transloco
+						"
 						class="p-button-text p-button-rounded p-button-secondary"
 						(click)="restoreDocument(document)"
 						iconOnly
@@ -99,7 +105,9 @@
 						cardActions
 						pButton
 						pRipple
-						aria-label="Withdraw document"
+						[attr.aria-label]="
+							'ui.documentTable.withdraw-document' | transloco
+						"
 						class="p-button-text p-button-rounded p-button-danger"
 						(click)="askWithdrawal(document)"
 						iconOnly
@@ -112,7 +120,7 @@
 
 		<ng-template
 			mcColumn
-			header="Thumbnail"
+			[header]="'ui.documentTable.thumbnail' | transloco"
 			headerHidden
 			columnClass="thumbnail-column"
 			let-document
@@ -127,25 +135,47 @@
 			}
 		</ng-template>
 
-		<ng-template mcColumn header="Name" let-document>
+		<ng-template
+			mcColumn
+			[header]="'ui.documentTable.name' | transloco"
+			let-document
+		>
 			{{ document.name }}
 		</ng-template>
 
-		<ng-template mcColumn header="Original name" let-document>
+		<ng-template
+			mcColumn
+			[header]="'ui.documentTable.original-name' | transloco"
+			let-document
+		>
 			{{ document.originalName }}
 		</ng-template>
 
-		<ng-template mcColumn header="Category" let-document>
+		<ng-template
+			mcColumn
+			[header]="'ui.documentTable.category2' | transloco"
+			let-document
+		>
 			@if (document.category) {
 				<span class="category">{{ document.category }}</span>
 			}
 		</ng-template>
 
-		<ng-template mcColumn header="Updated" field="updatedAt" let-document>
+		<ng-template
+			mcColumn
+			[header]="'ui.documentTable.updated' | transloco"
+			field="updatedAt"
+			let-document
+		>
 			{{ document.updatedAt | date: 'yyyy-MM-dd HH:mm' }}
 		</ng-template>
 
-		<ng-template mcColumn header="Actions" headerHidden let-document>
+		<ng-template
+			mcColumn
+			[header]="'ui.documentTable.actions' | transloco"
+			headerHidden
+			let-document
+		>
 			<mc-view-action
 				[link]="viewLink(document)"
 				entity="document"
@@ -155,7 +185,9 @@
 				<button
 					pButton
 					pRipple
-					aria-label="Restore document"
+					[attr.aria-label]="
+						'ui.documentTable.restore-document2' | transloco
+					"
 					class="p-button-text p-button-rounded p-button-secondary"
 					(click)="restoreDocument(document)"
 					iconOnly
@@ -166,7 +198,9 @@
 				<button
 					pButton
 					pRipple
-					aria-label="Edit document"
+					[attr.aria-label]="
+						'ui.documentTable.edit-document' | transloco
+					"
 					class="p-button-text p-button-rounded p-button-secondary"
 					(click)="editDocument(document)"
 					iconOnly
@@ -176,7 +210,9 @@
 				<button
 					pButton
 					pRipple
-					aria-label="Withdraw document"
+					[attr.aria-label]="
+						'ui.documentTable.withdraw-document2' | transloco
+					"
 					class="p-button-text p-button-rounded p-button-danger"
 					(click)="askWithdrawal(document)"
 					iconOnly

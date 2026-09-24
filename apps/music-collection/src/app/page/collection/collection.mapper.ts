@@ -1,11 +1,7 @@
 import { CollectionItemPlacement } from '@music-collection/api';
+import { CatalogLabeller, Translator } from '@music-collection/core/i18n';
 
-import {
-	FORMAT_LABELS,
-	FORMAT_ORDER,
-	MediaFormat,
-	ReleaseView,
-} from '../../shared/music-ui';
+import { FORMAT_ORDER, MediaFormat, ReleaseView } from '../../shared/music-ui';
 import {
 	CollectionGroup,
 	CollectionSort,
@@ -71,9 +67,18 @@ export function sortReleases(
 	}
 }
 
+/**
+ * The heading a release is filed under, and the stable key of that heading.
+ *
+ * The key is never translated and the label always is, which is the whole
+ * distinction: grouping by format must put every LP together whichever
+ * language the shelf is being read in, and a heading that doubled as an
+ * identity would split the group in two the moment the reader switched.
+ */
 function groupKey(
 	release: ReleaseView,
-	group: CollectionGroup
+	group: CollectionGroup,
+	words: GroupWords
 ): { key: string; label: string } {
 	switch (group) {
 		case 'artist':
@@ -81,22 +86,44 @@ function groupKey(
 		case 'format':
 			return {
 				key: release.format,
-				label: FORMAT_LABELS[release.format],
+				label: words.catalog('media', release.format),
 			};
 		case 'style': {
-			const style = release.styles[0] ?? 'Unknown style';
-			return { key: style, label: style };
+			// Styles are not translated — "Melodic Death" is what the
+			// Hungarian and German press call it too — but "no style at all"
+			// is the app's own words, and is.
+			const style = release.styles[0];
+
+			return style
+				? { key: style, label: style }
+				: {
+						key: 'unknown',
+						label: words.t('page.collection.unknownStyle'),
+					};
 		}
 		case 'decade': {
 			if (release.year === null) {
-				return { key: 'unknown', label: 'Unknown year' };
+				return {
+					key: 'unknown',
+					label: words.t('page.collection.unknownYear'),
+				};
 			}
 			const decade = Math.floor(release.year / 10) * 10;
-			return { key: String(decade), label: `${decade}s` };
+
+			return {
+				key: String(decade),
+				label: words.catalog('decade', String(decade)),
+			};
 		}
 		case 'none':
 			return { key: 'all', label: '' };
 	}
+}
+
+/** What a grouping needs from the dictionary to write its headings. */
+export interface GroupWords {
+	t: Translator;
+	catalog: CatalogLabeller;
 }
 
 /**
@@ -105,12 +132,13 @@ function groupKey(
  */
 export function groupReleases(
 	releases: ReleaseView[],
-	group: CollectionGroup
+	group: CollectionGroup,
+	words: GroupWords
 ): ReleaseGroup[] {
 	const groups = new Map<string, ReleaseGroup>();
 
 	for (const release of releases) {
-		const { key, label } = groupKey(release, group);
+		const { key, label } = groupKey(release, group, words);
 		const existing = groups.get(key);
 
 		if (existing) {

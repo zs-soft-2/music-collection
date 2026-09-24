@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import { Observable } from 'rxjs';
 
 import { FormsModule } from '@angular/forms';
@@ -34,6 +35,7 @@ import {
 	templateUrl: './document-table.component.html',
 	styleUrls: ['./document-table.component.scss'],
 	imports: [
+		...I18N_IMPORTS,
 		FormsModule,
 		AutoComplete,
 		Ripple,
@@ -59,12 +61,22 @@ export class DocumentTableComponent extends BaseComponent implements OnInit {
 	public readonly pendingWithdrawal = this.componentService.pendingWithdrawal;
 
 	/** The sets an admin can look at; the generated ones have their own. */
-	public readonly filters: { value: DocumentFilterEnum; label: string }[] = [
-		{ value: DocumentFilterEnum.All, label: 'All' },
-		{ value: DocumentFilterEnum.Badge, label: 'Badges' },
-		{ value: DocumentFilterEnum.Other, label: 'Uploads' },
-		{ value: DocumentFilterEnum.Withdrawn, label: 'Withdrawn' },
-	];
+	public readonly filters: { value: DocumentFilterEnum; labelKey: string }[] =
+		[
+			{ value: DocumentFilterEnum.All, labelKey: 'common.all' },
+			{
+				value: DocumentFilterEnum.Badge,
+				labelKey: 'ui.documentTable.badges',
+			},
+			{
+				value: DocumentFilterEnum.Other,
+				labelKey: 'ui.documentTable.uploads',
+			},
+			{
+				value: DocumentFilterEnum.Withdrawn,
+				labelKey: 'ui.documentTable.withdrawn',
+			},
+		];
 
 	/** Withdrawn documents are faded, so the list says which are on offer. */
 	public readonly withdrawnClass = (document: DocumentEntity): string =>

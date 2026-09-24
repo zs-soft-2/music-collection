@@ -3,14 +3,14 @@
 
 <mc-cover-backdrop [src]="album?.coverUrl" />
 
-<div class="page">
+<div class="page" *transloco="let t">
 	<mc-page-breadcrumb [trail]="store.trail()" />
 	@if (store.loading()) {
-		<p class="muted">Loading…</p>
+		<p class="muted">{{ t('page.track.loading') }}</p>
 	} @else if (store.failed()) {
-		<p class="muted">The track could not be loaded.</p>
+		<p class="muted">{{ t('page.track.the-track-could-not') }}</p>
 	} @else if (store.notFound() || !track) {
-		<p class="muted">Track not found.</p>
+		<p class="muted">{{ t('page.track.track-not-found') }}</p>
 	} @else {
 		<header class="hero">
 			@if (album?.coverUrl) {
@@ -64,7 +64,7 @@
 				@if (store.canEdit() && !editing()) {
 					<button type="button" class="button" (click)="startEdit()">
 						<i class="pi pi-pencil" aria-hidden="true"></i>
-						<span>Edit</span>
+						<span>{{ t('page.track.edit') }}</span>
 					</button>
 				}
 			</div>
@@ -73,31 +73,35 @@
 		@if (editing()) {
 			<form class="panel form" (submit)="$event.preventDefault(); save()">
 				<label>
-					<span>Spotify link</span>
+					<span>{{ t('page.track.spotify-link') }}</span>
 					<input
 						type="text"
-						placeholder="https://open.spotify.com/track/…"
+						[placeholder]="t('page.track.https-open-spotify-com')"
 						[value]="form().spotify"
 						(input)="setField('spotify', $event)"
 					/>
 					@if (spotifyInvalid()) {
-						<small class="error">Not a Spotify track link.</small>
+						<small class="error">{{
+							t('page.track.not-a-spotify-track')
+						}}</small>
 					}
 				</label>
 				<label>
-					<span>YouTube video</span>
+					<span>{{ t('page.track.youtube-video') }}</span>
 					<input
 						type="text"
-						placeholder="https://www.youtube.com/watch?v=…"
+						[placeholder]="t('page.track.https-www-youtube-com')"
 						[value]="form().youtube"
 						(input)="setField('youtube', $event)"
 					/>
 					@if (youtubeInvalid()) {
-						<small class="error">Not a YouTube video link.</small>
+						<small class="error">{{
+							t('page.track.not-a-youtube-video')
+						}}</small>
 					}
 				</label>
 				<label>
-					<span>Writers (comma separated)</span>
+					<span>{{ t('page.track.writers-comma-separated') }}</span>
 					<input
 						type="text"
 						[value]="form().writers"
@@ -106,7 +110,9 @@
 				</label>
 				<label>
 					<span class="label-row">
-						<span>Lyrics (visible to signed-in users only)</span>
+						<span>{{
+							t('page.track.lyrics-visible-to-signed')
+						}}</span>
 						<button
 							type="button"
 							class="button"
@@ -114,9 +120,11 @@
 							(click)="loadLyrics()"
 						>
 							{{
-								store.fetchingLyrics()
-									? 'Loading…'
-									: 'Load lyrics'
+								t(
+									store.fetchingLyrics()
+										? 'common.loading'
+										: 'page.track.loadLyrics'
+								)
 							}}
 						</button>
 					</span>
@@ -132,10 +140,10 @@
 					></textarea>
 				</label>
 				<label>
-					<span>Synced lyrics (LRC, for the lyrics player)</span>
+					<span>{{ t('page.track.synced-lyrics-lrc-for') }}</span>
 					<textarea
 						rows="6"
-						placeholder="[00:12.34] First line"
+						[placeholder]="t('page.track.00-12-34-first')"
 						[value]="form().synced"
 						(input)="setField('synced', $event)"
 					></textarea>
@@ -149,7 +157,7 @@
 						class="button"
 						(click)="editing.set(false)"
 					>
-						Cancel
+						{{ t('page.track.cancel') }}
 					</button>
 					<button
 						type="submit"
@@ -160,33 +168,38 @@
 							youtubeInvalid()
 						"
 					>
-						{{ store.saving() ? 'Saving…' : 'Save' }}
+						{{
+							t(store.saving() ? 'common.saving' : 'common.save')
+						}}
 					</button>
 				</div>
 			</form>
 		}
 
 		@if (store.playerAvailable()) {
-			<section class="panel" aria-label="Player">
+			<section class="panel" [attr.aria-label]="t('page.track.player')">
 				<mc-player-panel />
 			</section>
 		}
 
 		<div class="columns">
 			<section class="panel" aria-labelledby="lyrics-title">
-				<h2 id="lyrics-title" class="section-title">Lyrics</h2>
+				<h2 id="lyrics-title" class="section-title">
+					{{ t('page.track.lyrics') }}
+				</h2>
 				@if (store.lyrics(); as lyrics) {
 					<p class="lyrics">{{ lyrics.text }}</p>
 				} @else {
 					<p class="muted">
-						No lyrics here. Lyrics are shown only when you are
-						signed in.
+						{{ t('page.track.no-lyrics-here-lyrics') }}
 					</p>
 				}
 			</section>
 
 			<section class="panel" aria-labelledby="credits-title">
-				<h2 id="credits-title" class="section-title">Credits</h2>
+				<h2 id="credits-title" class="section-title">
+					{{ t('page.track.credits') }}
+				</h2>
 				@if (store.credits().length) {
 					<ul class="credits">
 						@for (credit of store.credits(); track credit.name) {
@@ -210,12 +223,17 @@
 						}
 					</ul>
 				} @else {
-					<p class="muted">No credits for this track.</p>
+					<p class="muted">
+						{{ t('page.track.no-credits-for-this') }}
+					</p>
 				}
 			</section>
 		</div>
 
-		<nav class="neighbours" aria-label="Other tracks">
+		<nav
+			class="neighbours"
+			[attr.aria-label]="t('page.track.other-tracks')"
+		>
 			@if (store.neighbours().previous; as previous) {
 				<a
 					[routerLink]="[

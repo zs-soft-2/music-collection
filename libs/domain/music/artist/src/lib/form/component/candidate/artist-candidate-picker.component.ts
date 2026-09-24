@@ -4,6 +4,7 @@ import {
 	input,
 	output,
 } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import { Button } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
 
@@ -19,7 +20,7 @@ import { ArtistExternalCandidateRow } from '../artist-external-candidate';
 	selector: 'mc-artist-candidate-picker',
 	templateUrl: './artist-candidate-picker.component.html',
 	styleUrls: ['./artist-candidate-picker.component.scss'],
-	imports: [Button, Dialog],
+	imports: [...I18N_IMPORTS, Button, Dialog],
 })
 export class ArtistCandidatePickerComponent {
 	/** The namesakes to choose between; null while there is nothing to ask. */

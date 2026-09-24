@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
@@ -8,7 +9,11 @@ describe('MCAlbumHookService', () => {
 
 	beforeEach(() => {
 		TestBed.configureTestingModule({
-			providers: [provideRouter([]), MCAlbumHookService],
+			providers: [
+				provideI18nTesting(),
+				provideRouter([]),
+				MCAlbumHookService,
+			],
 		});
 
 		service = TestBed.inject(MCAlbumHookService);

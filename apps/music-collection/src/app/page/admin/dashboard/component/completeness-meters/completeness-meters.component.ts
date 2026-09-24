@@ -5,6 +5,7 @@ import {
 	input,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { CompletenessGroup } from '../../admin-dashboard.mapper';
 
@@ -17,38 +18,42 @@ import { CompletenessGroup } from '../../admin-dashboard.mapper';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-completeness-meters',
-	imports: [RouterLink],
+	imports: [...I18N_IMPORTS, RouterLink],
 	template: `
-		@for (group of groups(); track group.label) {
-			<section class="group" [attr.aria-label]="group.label">
+		@for (group of groups(); track group.labelKey) {
+			<section
+				class="group"
+				[attr.aria-label]="group.labelKey | transloco"
+			>
 				<header class="group-head">
 					<h3>
-						{{ group.label }}
+						{{ group.labelKey | transloco }}
 						<span class="group-total">{{ group.total }}</span>
 					</h3>
 					@if (group.route) {
 						<a class="more" [routerLink]="['..', group.route]">
-							Open list
+							{{ 'ui.completenessMeters.open-list' | transloco }}
 							<i class="pi pi-arrow-right" aria-hidden="true"></i>
 						</a>
 					}
 				</header>
 
 				<ul class="meters">
-					@for (row of group.rows; track row.label) {
+					@for (row of group.rows; track row.labelKey) {
 						<li
 							class="row"
 							[attr.aria-label]="
-								row.label +
-								': ' +
-								row.share +
-								'% filled, ' +
-								row.missing +
-								' missing'
+								'admin.meter.row'
+									| transloco
+										: {
+												field: row.labelKey | transloco,
+												share: row.share,
+												missing: row.missing,
+										  }
 							"
 						>
 							<span class="label" aria-hidden="true">{{
-								row.label
+								row.labelKey | transloco
 							}}</span>
 							<span class="track" aria-hidden="true">
 								<span
@@ -68,7 +73,10 @@ import { CompletenessGroup } from '../../admin-dashboard.mapper';
 											class="pi pi-check"
 											aria-hidden="true"
 										></i>
-										complete
+										{{
+											'ui.completenessMeters.complete'
+												| transloco
+										}}
 									</span>
 								}
 							</span>

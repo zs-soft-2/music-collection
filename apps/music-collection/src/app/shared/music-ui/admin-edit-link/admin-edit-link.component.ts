@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import { filter, map } from 'rxjs';
 
 import {
@@ -44,7 +45,7 @@ const ENTITY_NAMES: Record<AdminEditEntity, string> = {
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-admin-edit-link',
-	imports: [RouterLink],
+	imports: [...I18N_IMPORTS, RouterLink],
 	host: {
 		'[class.is-icon]': "variant() === 'icon'",
 		'[hidden]': '!visible()',
@@ -60,7 +61,9 @@ const ENTITY_NAMES: Record<AdminEditEntity, string> = {
 			>
 				<i class="pi pi-pencil" aria-hidden="true"></i>
 				@if (variant() === 'button') {
-					<span>Edit in admin</span>
+					<span>{{
+						'ui.adminEditLink.edit-in-admin' | transloco
+					}}</span>
 				}
 			</a>
 		}

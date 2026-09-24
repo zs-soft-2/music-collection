@@ -3,13 +3,13 @@
 		[items]="params.labels"
 		[place]="place"
 		[view]="collectionView"
-		emptyMessage="No labels found."
+		[emptyMessage]="'ui.labelTable.no-labels-found' | transloco"
 	>
 		<p-autocomplete
 			tools
 			class="mc-table-search"
-			placeholder="Filter by name…"
-			ariaLabel="Filter by name"
+			[placeholder]="'ui.labelTable.filter-by-name' | transloco"
+			[ariaLabel]="'ui.labelTable.filter-by-name2' | transloco"
 			[ngModel]="place.filterOf('name')"
 			[suggestions]="params.empty"
 			[showClear]="true"
@@ -37,7 +37,7 @@
 					cardActions
 					pButton
 					pRipple
-					aria-label="Delete label"
+					[attr.aria-label]="'ui.labelTable.delete-label' | transloco"
 					class="p-button-text p-button-rounded p-button-danger"
 					(click)="deleteLabel(label)"
 					iconOnly
@@ -47,19 +47,37 @@
 			</mc-entity-card>
 		</ng-template>
 
-		<ng-template mcColumn header="Name" let-label>
+		<ng-template
+			mcColumn
+			[header]="'ui.labelTable.name' | transloco"
+			let-label
+		>
 			{{ label.name }}
 		</ng-template>
 
-		<ng-template mcColumn header="Parent" let-label>
+		<ng-template
+			mcColumn
+			[header]="'ui.labelTable.parent' | transloco"
+			let-label
+		>
 			{{ label.parent?.name }}
 		</ng-template>
 
-		<ng-template mcColumn header="Updated" field="updatedAt" let-label>
+		<ng-template
+			mcColumn
+			[header]="'ui.labelTable.updated' | transloco"
+			field="updatedAt"
+			let-label
+		>
 			{{ label.updatedAt | date: 'yyyy-MM-dd HH:mm' }}
 		</ng-template>
 
-		<ng-template mcColumn header="Actions" headerHidden let-label>
+		<ng-template
+			mcColumn
+			[header]="'ui.labelTable.actions' | transloco"
+			headerHidden
+			let-label
+		>
 			<mc-view-action
 				[link]="viewLink(label)"
 				entity="label"
@@ -68,7 +86,7 @@
 			<button
 				pButton
 				pRipple
-				aria-label="Edit label"
+				[attr.aria-label]="'ui.labelTable.edit-label' | transloco"
 				class="p-button-text p-button-rounded p-button-secondary"
 				(click)="editLabel(label)"
 				iconOnly
@@ -79,7 +97,7 @@
 			<button
 				pButton
 				pRipple
-				aria-label="Delete label"
+				[attr.aria-label]="'ui.labelTable.delete-label2' | transloco"
 				class="p-button-text p-button-rounded p-button-danger"
 				(click)="deleteLabel(label)"
 				iconOnly

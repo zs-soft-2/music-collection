@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import {
 	ArtistEntity,
@@ -26,6 +27,7 @@ describe('ArtistSimpleViewComponent', () => {
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
+			providers: [provideI18nTesting()],
 			imports: [ArtistSimpleViewComponent],
 		}).compileComponents();
 

@@ -6,6 +6,7 @@ import {
 	linkedSignal,
 	signal,
 } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { ProfilePageStore } from '../../profile-page.store';
 
@@ -16,6 +17,7 @@ import { ProfilePageStore } from '../../profile-page.store';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-profile-account',
+	imports: [...I18N_IMPORTS],
 	template: `
 		<div class="identity">
 			@if (photo(); as url) {
@@ -38,7 +40,9 @@ import { ProfilePageStore } from '../../profile-page.store';
 			</div>
 		</div>
 
-		<label class="label" for="mc-display-name">Display name</label>
+		<label class="label" for="mc-display-name">{{
+			'ui.profileAccount.display-name' | transloco
+		}}</label>
 		<div class="row">
 			<input
 				id="mc-display-name"
@@ -54,14 +58,19 @@ import { ProfilePageStore } from '../../profile-page.store';
 				[disabled]="!changed() || store.saving()"
 				(click)="save()"
 			>
-				{{ store.saving() ? 'Saving…' : 'Save' }}
+				{{
+					(store.saving() ? 'common.saving' : 'common.save')
+						| transloco
+				}}
 			</button>
 		</div>
 
 		<p class="note">
-			This is the name shown next to what you add to the catalog.
+			{{ 'ui.profileAccount.note' | transloco }}
 			@if (store.savedAt()) {
-				<span class="saved">Saved.</span>
+				<span class="saved">{{
+					'ui.profileAccount.saved' | transloco
+				}}</span>
 			}
 		</p>
 	`,

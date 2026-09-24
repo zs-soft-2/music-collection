@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { LayoutWidthService, ThemeMode, ThemeService } from '../../../../theme';
 
@@ -10,9 +11,10 @@ import { LayoutWidthService, ThemeMode, ThemeService } from '../../../../theme';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-profile-appearance',
+	imports: [...I18N_IMPORTS],
 	template: `
 		<fieldset>
-			<legend>Theme</legend>
+			<legend>{{ 'ui.profileAppearance.theme' | transloco }}</legend>
 			@for (choice of themes; track choice.value) {
 				<button
 					type="button"
@@ -21,13 +23,13 @@ import { LayoutWidthService, ThemeMode, ThemeService } from '../../../../theme';
 					(click)="theme.mode.set(choice.value)"
 				>
 					<i class="pi {{ choice.icon }}" aria-hidden="true"></i>
-					{{ choice.label }}
+					{{ choice.labelKey | transloco }}
 				</button>
 			}
 		</fieldset>
 
 		<fieldset>
-			<legend>Page width</legend>
+			<legend>{{ 'ui.profileAppearance.page-width' | transloco }}</legend>
 			@for (choice of widths; track choice.wide) {
 				<button
 					type="button"
@@ -36,13 +38,13 @@ import { LayoutWidthService, ThemeMode, ThemeService } from '../../../../theme';
 					(click)="layoutWidth.isWide.set(choice.wide)"
 				>
 					<i class="pi {{ choice.icon }}" aria-hidden="true"></i>
-					{{ choice.label }}
+					{{ choice.labelKey | transloco }}
 				</button>
 			}
 		</fieldset>
 
 		<p class="note">
-			The wide setting only shows on a screen with room to spare.
+			{{ 'ui.profileAppearance.the-wide-setting-only' | transloco }}
 		</p>
 	`,
 	styles: `
@@ -108,15 +110,31 @@ export class ProfileAppearanceComponent {
 
 	protected readonly themes: {
 		value: ThemeMode;
-		label: string;
+		labelKey: string;
 		icon: string;
 	}[] = [
-		{ value: 'dark', label: 'Dark', icon: 'pi-moon' },
-		{ value: 'light', label: 'Light', icon: 'pi-sun' },
+		{
+			value: 'dark',
+			labelKey: 'ui.profileAppearance.dark',
+			icon: 'pi-moon',
+		},
+		{
+			value: 'light',
+			labelKey: 'ui.profileAppearance.light',
+			icon: 'pi-sun',
+		},
 	];
 
 	protected readonly widths = [
-		{ wide: false, label: 'Standard', icon: 'pi-window-minimize' },
-		{ wide: true, label: 'Full width', icon: 'pi-window-maximize' },
+		{
+			wide: false,
+			labelKey: 'ui.profileAppearance.standard',
+			icon: 'pi-window-minimize',
+		},
+		{
+			wide: true,
+			labelKey: 'ui.profileAppearance.fullWidth',
+			icon: 'pi-window-maximize',
+		},
 	];
 }

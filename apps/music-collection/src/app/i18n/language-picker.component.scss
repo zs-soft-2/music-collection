@@ -1,0 +1,94 @@
+// Deliberately the top bar's own shapes — the same radius, surfaces and
+// menu geometry — so the switch reads as one of its buttons rather than as
+// something bolted on beside them.
+.picker {
+	position: relative;
+	display: inline-flex;
+}
+
+.icon-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	padding: 0;
+	border: 0;
+	border-radius: var(--mc-radius-md);
+	background: transparent;
+	color: var(--mc-text-muted);
+	cursor: pointer;
+
+	&:hover {
+		color: var(--mc-text);
+		background: var(--mc-surface-2);
+	}
+}
+
+// The code, not an icon: no glyph says "language" without being read as a
+// globe, a flag or a translation tool. A flag would be worse still — German
+// is not Germany, and Hungarian speakers live in five countries.
+.code {
+	font: inherit;
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+}
+
+.scrim {
+	position: fixed;
+	inset: 0;
+	z-index: 1;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	cursor: default;
+}
+
+.menu {
+	position: absolute;
+	top: calc(100% + 4px);
+	right: 0;
+	z-index: 2;
+	width: 180px;
+	display: flex;
+	flex-direction: column;
+	padding: 0.375rem;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border-strong);
+	border-radius: var(--mc-radius-lg);
+	box-shadow: var(--mc-shadow-menu);
+}
+
+.menu-item {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	width: 100%;
+	min-height: 40px;
+	padding: 0 0.75rem;
+	border: 0;
+	border-radius: var(--mc-radius-md);
+	background: transparent;
+	color: var(--mc-text);
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+
+	&:hover {
+		background: var(--mc-surface-2);
+	}
+
+	&.is-active {
+		color: var(--mc-accent, var(--mc-text));
+		font-weight: 600;
+	}
+}
+
+.tag {
+	min-width: 1.75rem;
+	color: var(--mc-text-muted);
+	font-size: 0.6875rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+}

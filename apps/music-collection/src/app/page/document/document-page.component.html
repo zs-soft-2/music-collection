@@ -1,25 +1,22 @@
-<div class="page">
+<div class="page" *transloco="let t">
 	<mc-page-breadcrumb [trail]="store.trail()" />
 
 	@if (store.loading()) {
-		<p class="status">Looking for this document…</p>
+		<p class="status">{{ t('page.document.looking-for-this-document') }}</p>
 	} @else if (store.notFound()) {
 		<section class="missing">
-			<h1>No document under this id.</h1>
+			<h1>{{ t('page.document.no-document-under-this') }}</h1>
 			<p>
-				Documents are never deleted, only withdrawn — so this one was
-				either never here, or was removed by hand.
+				{{ t('page.document.documents-are-never-deleted') }}
 			</p>
-			<a class="button" routerLink="/admin/document"
-				>Back to the documents</a
-			>
+			<a class="button" routerLink="/admin/document">{{
+				t('page.document.back-to-the-documents')
+			}}</a>
 		</section>
 	} @else if (store.document(); as document) {
 		@if (store.withdrawnAt()) {
 			<p class="banner">
-				This document is withdrawn: nothing is offered it again. The
-				file stays where it is, so everything that already points at it
-				goes on working.
+				{{ t('page.document.this-document-is-withdrawn') }}
 			</p>
 		}
 
@@ -33,7 +30,7 @@
 			</div>
 
 			<div class="identity">
-				<p class="eyebrow">Document</p>
+				<p class="eyebrow">{{ t('page.document.document') }}</p>
 				<h1>{{ document.name }}</h1>
 
 				<p class="lead">
@@ -48,7 +45,7 @@
 							target="_blank"
 							rel="noopener noreferrer"
 						>
-							Open the file
+							{{ t('page.document.open-the-file') }}
 						</a>
 					}
 

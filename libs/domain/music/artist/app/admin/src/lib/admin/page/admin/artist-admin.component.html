@@ -1,20 +1,20 @@
 <section class="entity-admin">
 	<header class="mc-page-head">
 		<div>
-			<h1>Artists</h1>
-			<p>Artists and bands of the global catalog.</p>
+			<h1>{{ 'ui.artistAdmin.artists' | transloco }}</h1>
+			<p>{{ 'ui.artistAdmin.artists-and-bands-of' | transloco }}</p>
 		</div>
 
 		<div class="mc-page-actions" *ngxPermissionsOnly="buttonPermissions">
 			<p-button
-				label="Import artists"
+				[label]="'ui.artistAdmin.import-artists' | transloco"
 				icon="pi pi-upload"
 				severity="secondary"
 				[outlined]="true"
 				(onClick)="importClickHandler()"
 			></p-button>
 			<p-button
-				label="Add artist"
+				[label]="'ui.artistAdmin.add-artist' | transloco"
 				icon="pi pi-plus"
 				(onClick)="clickHandler()"
 				[disabled]="(isNewEntityButtonEnabled$ | async) === false"

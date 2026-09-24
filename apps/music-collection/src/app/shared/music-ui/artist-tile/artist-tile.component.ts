@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
@@ -11,7 +12,7 @@ import { ArtistTileView } from '@music-collection/ui/music-view';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-artist-tile',
-	imports: [RouterLink, AdminEditLinkComponent],
+	imports: [...I18N_IMPORTS, RouterLink, AdminEditLinkComponent],
 	template: `
 		@let item = artist();
 

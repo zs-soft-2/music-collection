@@ -5,6 +5,7 @@ import {
 	input,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 /**
  * The eye on a collection row and card: it opens the entity's own page —
@@ -17,7 +18,7 @@ import { RouterLink } from '@angular/router';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-view-action',
-	imports: [RouterLink],
+	imports: [...I18N_IMPORTS, RouterLink],
 	host: { '[hidden]': '!link()?.length' },
 	template: `
 		@if (link(); as route) {

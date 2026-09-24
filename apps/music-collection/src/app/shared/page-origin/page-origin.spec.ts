@@ -23,8 +23,14 @@ describe('page origin', () => {
 		expect(collectionOriginParams(null)).toBeUndefined();
 	});
 
+	/** The first crumb is the app's word; the second is the collection's own. */
+	const t = (key: string) =>
+		key === 'nav.collections' ? 'Collections' : key;
+
 	it('leads back to the collection the page was opened from', () => {
-		expect(collectionTrail('bay-area-thrash', 'Bay Area Thrash')).toEqual([
+		expect(
+			collectionTrail('bay-area-thrash', 'Bay Area Thrash', t)
+		).toEqual([
 			{ label: 'Collections', link: '/collections' },
 			{
 				label: 'Bay Area Thrash',
@@ -34,12 +40,12 @@ describe('page origin', () => {
 	});
 
 	it('waits for the name rather than showing a wrong step', () => {
-		expect(collectionTrail('bay-area-thrash', null)).toEqual([
+		expect(collectionTrail('bay-area-thrash', null, t)).toEqual([
 			{ label: 'Collections', link: '/collections' },
 		]);
 	});
 
 	it('gives no trail to a page opened on its own', () => {
-		expect(collectionTrail(null, null)).toEqual([]);
+		expect(collectionTrail(null, null, t)).toEqual([]);
 	});
 });

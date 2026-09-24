@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { firstValueFrom, of } from 'rxjs';
 
 import { TestBed } from '@angular/core/testing';
@@ -41,6 +42,7 @@ describe('CollectionItemFormService', () => {
 	): Promise<CollectionItemFormParams> => {
 		TestBed.configureTestingModule({
 			providers: [
+				provideI18nTesting(),
 				provideRouter([]),
 				CollectionItemFormService,
 				{

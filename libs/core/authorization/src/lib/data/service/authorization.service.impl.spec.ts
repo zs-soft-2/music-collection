@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { NgxPermissionsModule } from 'ngx-permissions';
 
 import { TestBed } from '@angular/core/testing';
@@ -8,7 +9,7 @@ describe('AuthorizationServiceImpl', () => {
 	beforeEach(() =>
 		TestBed.configureTestingModule({
 			imports: [NgxPermissionsModule.forRoot()],
-			providers: [AuthorizationServiceImpl],
+			providers: [provideI18nTesting(), AuthorizationServiceImpl],
 		})
 	);
 

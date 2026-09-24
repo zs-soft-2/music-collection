@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { TestBed } from '@angular/core/testing';
 import {
 	CollectionItemEntity,
@@ -20,7 +21,7 @@ describe('CollectionItemUtilServiceImpl', () => {
 
 	beforeEach(() => {
 		TestBed.configureTestingModule({
-			providers: [CollectionItemUtilServiceImpl],
+			providers: [provideI18nTesting(), CollectionItemUtilServiceImpl],
 		});
 		service = TestBed.inject(CollectionItemUtilServiceImpl);
 	});

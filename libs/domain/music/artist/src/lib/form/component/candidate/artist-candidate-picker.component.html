@@ -1,5 +1,5 @@
 <p-dialog
-	header="Which artist is this?"
+	[header]="'ui.artistCandidatePicker.which-artist-is-this' | transloco"
 	[modal]="true"
 	[visible]="!!candidates()"
 	(visibleChange)="$event || closed.emit()"
@@ -8,7 +8,9 @@
 >
 	@if (candidates(); as rows) {
 		<p class="artist-candidate-hint">
-			MusicBrainz knows several artists by this name. {{ hint() }}
+			{{
+				'ui.artistCandidatePicker.several' | transloco: { hint: hint() }
+			}}
 		</p>
 		<ul class="artist-candidates">
 			@for (candidate of rows; track candidate.musicBrainzId) {
@@ -35,7 +37,10 @@
 						[href]="candidate.sourceUrl"
 						target="_blank"
 						rel="noopener"
-						>Open on MusicBrainz</a
+						>{{
+							'ui.artistCandidatePicker.open-on-musicbrainz'
+								| transloco
+						}}</a
 					>
 				</li>
 			}
@@ -43,7 +48,7 @@
 	}
 	<ng-template #footer>
 		<p-button
-			label="Cancel"
+			[label]="'ui.artistCandidatePicker.cancel' | transloco"
 			severity="secondary"
 			[outlined]="true"
 			(onClick)="closed.emit()"

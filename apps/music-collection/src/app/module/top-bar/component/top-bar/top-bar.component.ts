@@ -1,3 +1,4 @@
+import { TranslocoDirective } from '@jsverse/transloco';
 import { NgxPermissionsModule } from 'ngx-permissions';
 
 import {
@@ -13,16 +14,9 @@ import { BaseComponent, RoleNames } from '@music-collection/api';
 
 import { PlayerMiniComponent } from '../../../../shared/player';
 import { ExternalPlayerConsentService } from '../../../../data/external-player';
+import { LanguagePickerComponent } from '../../../../i18n';
 import { LayoutWidthService, ThemeService } from '../../../../theme';
 import { TopBarService } from './top-bar.service';
-
-const NAV_ICONS: Record<string, string> = {
-	Home: 'pi-home',
-	Collection: 'pi-th-large',
-	Wishlist: 'pi-heart',
-	Network: 'pi-sitemap',
-	Map: 'pi-map-marker',
-};
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -35,6 +29,8 @@ const NAV_ICONS: Record<string, string> = {
 		RouterLinkActive,
 		NgxPermissionsModule,
 		PlayerMiniComponent,
+		LanguagePickerComponent,
+		TranslocoDirective,
 	],
 	host: {
 		'(document:keydown.escape)': 'closeMenus()',
@@ -49,12 +45,7 @@ export class TopBarComponent extends BaseComponent {
 
 	protected readonly adminRoles = [RoleNames.ADMIN];
 
-	private readonly menuItems = this.componentService
-		.createMenuItems()
-		.map((item) => ({
-			...item,
-			icon: NAV_ICONS[item.label] ?? 'pi-circle',
-		}));
+	private readonly menuItems = this.componentService.createMenuItems();
 
 	protected readonly params = toSignal(this.componentService.init$());
 	protected readonly isAuthenticated = toSignal(

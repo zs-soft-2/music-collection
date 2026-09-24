@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import { Observable } from 'rxjs';
 
 import { AsyncPipe } from '@angular/common';
@@ -20,7 +21,7 @@ import { AlbumTracksParams, AlbumTracksService } from './album-tracks.service';
 	selector: 'mc-album-tracks',
 	templateUrl: './album-tracks.component.html',
 	styleUrls: ['./album-tracks.component.scss'],
-	imports: [AsyncPipe, Button, Dialog],
+	imports: [...I18N_IMPORTS, AsyncPipe, Button, Dialog],
 })
 export class AlbumTracksComponent extends BaseComponent implements OnInit {
 	private componentService = inject(AlbumTracksService);

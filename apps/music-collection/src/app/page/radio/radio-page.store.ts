@@ -6,6 +6,7 @@ import {
 	CollectionItemEntity,
 	CollectionItemStateService,
 } from '@music-collection/api';
+import { TextService } from '@music-collection/core/i18n';
 import { MusicCollectionEffect } from '@music-collection/domain/music-collection/core';
 import {
 	patchState,
@@ -99,7 +100,8 @@ export const RadioPageStore = signalStore(
 			radio = inject(RadioEffect),
 			settings = inject(UserSettingsEffect),
 			musicCollections = inject(MusicCollectionEffect),
-			collectionItems = inject(CollectionItemStateService)
+			collectionItems = inject(CollectionItemStateService),
+			text = inject(TextService)
 		) => {
 			const playable$ = toObservable(player.playableAlbumIds);
 
@@ -125,6 +127,7 @@ export const RadioPageStore = signalStore(
 								(layout ?? NO_SHELF_LAYOUT).units,
 								standings,
 								copies as CollectionItemEntity[],
+								text.translator(),
 								playable
 							).map((station) => ({ station, playable, names }))
 						),

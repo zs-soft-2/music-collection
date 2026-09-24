@@ -1,13 +1,13 @@
 <section class="entity-admin">
 	<header class="mc-page-head">
 		<div>
-			<h1>Labels</h1>
-			<p>Record labels of the global catalog.</p>
+			<h1>{{ 'ui.labelAdmin.labels' | transloco }}</h1>
+			<p>{{ 'ui.labelAdmin.record-labels-of-the' | transloco }}</p>
 		</div>
 
 		<div class="mc-page-actions" *ngxPermissionsOnly="buttonPermissions">
 			<p-button
-				label="Add label"
+				[label]="'ui.labelAdmin.add-label' | transloco"
 				icon="pi pi-plus"
 				(onClick)="clickHandler()"
 				[disabled]="(isNewEntityButtonEnabled$ | async) === false"

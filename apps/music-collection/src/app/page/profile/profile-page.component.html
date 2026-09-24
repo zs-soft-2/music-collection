@@ -2,11 +2,9 @@
 	<header class="hero">
 		<div class="hero-text">
 			<p class="eyebrow">musiCollection</p>
-			<h1>Profile</h1>
+			<h1>{{ 'page.profile.profile' | transloco }}</h1>
 			<p class="lead">
-				Your account, and how the app behaves for you. What you set here
-				is kept for the account, so it follows you to the next browser
-				you sign in on.
+				{{ 'page.profile.your-account-and-how' | transloco }}
 			</p>
 		</div>
 	</header>
@@ -15,8 +13,8 @@
 		<div class="sections">
 			<section class="card">
 				<header class="card-head">
-					<h2>Account</h2>
-					<p>How you appear in the app.</p>
+					<h2>{{ 'page.profile.account' | transloco }}</h2>
+					<p>{{ 'page.profile.how-you-appear-in' | transloco }}</p>
 				</header>
 
 				<mc-profile-account />
@@ -24,8 +22,17 @@
 
 			<section class="card">
 				<header class="card-head">
-					<h2>Appearance</h2>
-					<p>The theme and how much of the screen the pages use.</p>
+					<h2>{{ 'page.profile.language' | transloco }}</h2>
+					<p>{{ 'page.profile.languageIntro' | transloco }}</p>
+				</header>
+
+				<mc-profile-language />
+			</section>
+
+			<section class="card">
+				<header class="card-head">
+					<h2>{{ 'page.profile.appearance' | transloco }}</h2>
+					<p>{{ 'page.profile.the-theme-and-how' | transloco }}</p>
 				</header>
 
 				<mc-profile-appearance />
@@ -33,10 +40,11 @@
 
 			<section class="card">
 				<header class="card-head">
-					<h2>Lists</h2>
+					<h2>{{ 'page.profile.lists' | transloco }}</h2>
 					<p>
-						What the collection opens with, and how much of an album
-						page shows at once.
+						{{
+							'page.profile.what-the-collection-opens' | transloco
+						}}
 					</p>
 				</header>
 
@@ -45,12 +53,12 @@
 
 			<section class="card">
 				<header class="card-head">
-					<h2>Shelves</h2>
+					<h2>{{ 'page.profile.shelves' | transloco }}</h2>
 					<p>
-						The furniture your records stand in. Draw what you
-						actually own — how many units, and how many compartments
-						across and down — and the collection's shelf view is
-						filed into it.
+						{{
+							'page.profile.the-furniture-your-records'
+								| transloco
+						}}
 					</p>
 				</header>
 
@@ -59,10 +67,9 @@
 
 			<section class="card">
 				<header class="card-head">
-					<h2>Playback</h2>
+					<h2>{{ 'page.profile.playback' | transloco }}</h2>
 					<p>
-						How the player starts, one setting per kind of page — a
-						track page may well want a fuller stage than the rest.
+						{{ 'page.profile.how-the-player-starts' | transloco }}
 					</p>
 				</header>
 
@@ -71,10 +78,9 @@
 
 			<section class="card">
 				<header class="card-head">
-					<h2>Listening</h2>
+					<h2>{{ 'page.profile.listening' | transloco }}</h2>
 					<p>
-						What you have actually put on here, counted for the
-						records rather than for an account somewhere else.
+						{{ 'page.profile.what-you-have-actually' | transloco }}
 					</p>
 				</header>
 
@@ -83,11 +89,11 @@
 
 			<section class="card">
 				<header class="card-head">
-					<h2>Privacy</h2>
+					<h2>{{ 'page.profile.privacy' | transloco }}</h2>
 					<p>
-						What other collectors get to see about you. Nothing here
-						is shared until you say so, and turning it back off
-						takes it away at once.
+						{{
+							'page.profile.what-other-collectors-get' | transloco
+						}}
 					</p>
 				</header>
 
@@ -96,8 +102,10 @@
 
 			<section class="card">
 				<header class="card-head">
-					<h2>Spotify</h2>
-					<p>Where Spotify plays, and how loud it starts here.</p>
+					<h2>{{ 'page.profile.spotify' | transloco }}</h2>
+					<p>
+						{{ 'page.profile.where-spotify-plays-and' | transloco }}
+					</p>
 				</header>
 
 				<mc-profile-spotify />
@@ -105,11 +113,11 @@
 		</div>
 	} @else {
 		<div class="signed-out">
-			<p>Sign in to set up your profile.</p>
+			<p>{{ 'page.profile.sign-in-to-set' | transloco }}</p>
 
 			<button type="button" (click)="store.login()">
 				<i class="pi pi-sign-in" aria-hidden="true"></i>
-				Log in
+				{{ 'page.profile.log-in' | transloco }}
 			</button>
 		</div>
 	}

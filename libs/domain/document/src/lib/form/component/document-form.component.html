@@ -4,9 +4,13 @@
 			<input name="uid" formControlName="uid" hidden />
 
 			<section class="mc-form-section" aria-labelledby="document-file">
-				<h2 id="document-file">File</h2>
+				<h2 id="document-file">
+					{{ 'ui.documentForm.file' | transloco }}
+				</h2>
 				<div class="mc-field">
-					<label for="name">Name</label>
+					<label for="name">{{
+						'ui.documentForm.name' | transloco
+					}}</label>
 					<input
 						id="name"
 						type="text"
@@ -16,7 +20,9 @@
 				</div>
 
 				<div class="mc-field">
-					<span class="mc-field-label">Upload</span>
+					<span class="mc-field-label">{{
+						'ui.documentForm.upload' | transloco
+					}}</span>
 					<p-fileupload
 						name="file"
 						chooseLabel="Choose file"
@@ -30,17 +36,23 @@
 						class="mc-form-image"
 						[src]="params.formGroup.value.filePath"
 						[preview]="true"
-						alt="Uploaded file preview"
+						[alt]="
+							'ui.documentForm.uploaded-file-preview' | transloco
+						"
 						width="250"
 					></p-image>
 				}
 			</section>
 
 			<section class="mc-form-section" aria-labelledby="document-meta">
-				<h2 id="document-meta">Stored file</h2>
+				<h2 id="document-meta">
+					{{ 'ui.documentForm.stored-file' | transloco }}
+				</h2>
 				<div class="mc-form-grid">
 					<div class="mc-field is-wide">
-						<label for="filePath">File path</label>
+						<label for="filePath">{{
+							'ui.documentForm.file-path' | transloco
+						}}</label>
 						<input
 							id="filePath"
 							type="text"
@@ -50,7 +62,9 @@
 					</div>
 
 					<div class="mc-field">
-						<label for="originalName">Original name</label>
+						<label for="originalName">{{
+							'ui.documentForm.original-name' | transloco
+						}}</label>
 						<input
 							id="originalName"
 							type="text"
@@ -60,7 +74,9 @@
 					</div>
 
 					<div class="mc-field">
-						<label for="fileType">File type</label>
+						<label for="fileType">{{
+							'ui.documentForm.file-type' | transloco
+						}}</label>
 						<input
 							id="fileType"
 							type="text"
@@ -73,13 +89,13 @@
 
 			<div class="mc-form-actions">
 				<p-button
-					label="Cancel"
+					[label]="'ui.documentForm.cancel' | transloco"
 					severity="secondary"
 					[outlined]="true"
 					(onClick)="cancel()"
 				></p-button>
 				<p-button
-					label="Save"
+					[label]="'ui.documentForm.save' | transloco"
 					icon="pi pi-check"
 					[disabled]="!params.formGroup.valid"
 					(onClick)="submit()"

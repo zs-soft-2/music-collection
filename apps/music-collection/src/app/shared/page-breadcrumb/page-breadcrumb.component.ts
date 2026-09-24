@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 /** One step of the trail. Without a `link` it is the page we are on. */
 export interface Crumb {
@@ -21,9 +22,9 @@ export interface Crumb {
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-page-breadcrumb',
-	imports: [RouterLink],
+	imports: [...I18N_IMPORTS, RouterLink],
 	template: `
-		<nav aria-label="Breadcrumb">
+		<nav [attr.aria-label]="'ui.pageBreadcrumb.breadcrumb' | transloco">
 			<ol>
 				@for (crumb of trail(); track crumb.label; let last = $last) {
 					<li>

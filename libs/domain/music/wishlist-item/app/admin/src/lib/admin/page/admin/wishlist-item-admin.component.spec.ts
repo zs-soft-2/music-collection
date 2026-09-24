@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { NgxPermissionsModule } from 'ngx-permissions';
 import { of } from 'rxjs';
 
@@ -13,8 +14,12 @@ describe('WishlistItemAdminComponent', () => {
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			imports: [WishlistItemAdminComponent, NgxPermissionsModule.forRoot()],
+			imports: [
+				WishlistItemAdminComponent,
+				NgxPermissionsModule.forRoot(),
+			],
 			providers: [
+				provideI18nTesting(),
 				provideRouter([]),
 				{
 					provide: WishlistItemStateService,

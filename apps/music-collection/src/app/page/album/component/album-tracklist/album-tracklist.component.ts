@@ -6,6 +6,7 @@ import {
 } from '@angular/core';
 
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { TrackGroup } from '../../album.mapper';
 
@@ -13,7 +14,7 @@ import { TrackGroup } from '../../album.mapper';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-album-tracklist',
-	imports: [RouterLink],
+	imports: [...I18N_IMPORTS, RouterLink],
 	template: `
 		@for (group of groups(); track $index) {
 			<div class="group">
@@ -84,7 +85,7 @@ import { TrackGroup } from '../../album.mapper';
 
 		@if (total()) {
 			<p class="total">
-				<span>Total length</span>
+				<span>{{ 'ui.albumTracklist.total-length' | transloco }}</span>
 				<span class="duration">{{ total() }}</span>
 			</p>
 		}

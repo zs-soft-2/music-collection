@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import { Observable } from 'rxjs';
 
 import { AsyncPipe, DatePipe, NgTemplateOutlet } from '@angular/common';
@@ -33,6 +34,7 @@ import { MusicianTableService } from './musician-table.service';
 	templateUrl: './musician-table.component.html',
 	styleUrls: ['./musician-table.component.scss'],
 	imports: [
+		...I18N_IMPORTS,
 		FormsModule,
 		ButtonDirective,
 		IconField,

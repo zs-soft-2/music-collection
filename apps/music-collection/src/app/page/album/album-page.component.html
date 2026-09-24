@@ -48,32 +48,35 @@
 					<dl class="facts">
 						@if (album.year) {
 							<div>
-								<dt>Year</dt>
+								<dt>{{ 'page.album.year' | transloco }}</dt>
 								<dd>{{ album.year }}</dd>
 							</div>
 						}
 						@if (album.genre) {
 							<div>
-								<dt>Genre</dt>
+								<dt>{{ 'page.album.genre' | transloco }}</dt>
 								<dd>{{ album.genre }}</dd>
 							</div>
 						}
 						@if (store.tracks().length) {
 							<div>
-								<dt>Tracks</dt>
+								<dt>{{ 'page.album.tracks' | transloco }}</dt>
 								<dd>{{ store.tracks().length }}</dd>
 							</div>
 						}
 						@if (store.totalDuration()) {
 							<div>
-								<dt>Length</dt>
+								<dt>{{ 'page.album.length' | transloco }}</dt>
 								<dd>{{ store.totalDuration() }}</dd>
 							</div>
 						}
 					</dl>
 
 					@if (album.styles.length) {
-						<ul class="styles" aria-label="Styles">
+						<ul
+							class="styles"
+							[attr.aria-label]="'page.album.styles' | transloco"
+						>
 							@for (style of album.styles; track style) {
 								<li>{{ style }}</li>
 							}
@@ -101,8 +104,14 @@
 								<button
 									type="button"
 									class="player-button"
-									title="Full-screen player"
-									aria-label="Open the full-screen player"
+									[title]="
+										'page.album.full-screen-player'
+											| transloco
+									"
+									[attr.aria-label]="
+										'page.album.open-the-full-screen'
+											| transloco
+									"
 									(click)="store.openPlayer()"
 								>
 									<i
@@ -139,7 +148,10 @@
 											class="pi pi-clock"
 											aria-hidden="true"
 										></i>
-										Release requested · pending
+										{{
+											'page.album.release-requested-pending'
+												| transloco
+										}}
 									</button>
 								}
 							}
@@ -153,7 +165,10 @@
 											class="pi pi-heart-fill"
 											aria-hidden="true"
 										></i>
-										On your wishlist
+										{{
+											'page.album.on-your-wishlist'
+												| transloco
+										}}
 									</a>
 								} @else {
 									<button
@@ -167,7 +182,10 @@
 											class="pi pi-heart"
 											aria-hidden="true"
 										></i>
-										<span>Add to wishlist</span>
+										<span>{{
+											'page.album.add-to-wishlist'
+												| transloco
+										}}</span>
 									</button>
 								}
 							}
@@ -196,7 +214,7 @@
 					[class.pi-bars]="compact()"
 					aria-hidden="true"
 				></i>
-				Compact view
+				{{ 'page.album.compact-view' | transloco }}
 			</button>
 			@if (compact() && openSections().size) {
 				<button
@@ -204,7 +222,7 @@
 					class="text-button"
 					(click)="collapseAll()"
 				>
-					Collapse all
+					{{ 'page.album.collapse-all' | transloco }}
 				</button>
 			}
 		</div>
@@ -226,7 +244,7 @@
 								[class.pi-chevron-down]="isOpen('original')"
 								aria-hidden="true"
 							></i>
-							Original release
+							{{ 'page.album.original-release' | transloco }}
 						</button>
 					} @else {
 						Original release
@@ -236,25 +254,25 @@
 					<dl class="original-facts">
 						@if (original.released) {
 							<div>
-								<dt>Released</dt>
+								<dt>{{ 'page.album.released' | transloco }}</dt>
 								<dd>{{ original.released }}</dd>
 							</div>
 						}
 						@if (original.country) {
 							<div>
-								<dt>Country</dt>
+								<dt>{{ 'page.album.country' | transloco }}</dt>
 								<dd>{{ original.country }}</dd>
 							</div>
 						}
 						@if (original.labels) {
 							<div>
-								<dt>Label</dt>
+								<dt>{{ 'page.album.label' | transloco }}</dt>
 								<dd>{{ original.labels }}</dd>
 							</div>
 						}
 						@if (original.formats) {
 							<div>
-								<dt>Format</dt>
+								<dt>{{ 'page.album.format' | transloco }}</dt>
 								<dd>{{ original.formats }}</dd>
 							</div>
 						}
@@ -265,11 +283,11 @@
 						target="_blank"
 						rel="noopener noreferrer"
 					>
-						Data from Discogs
+						{{ 'page.album.data-from-discogs' | transloco }}
 						<i class="pi pi-external-link" aria-hidden="true"></i>
-						<span class="visually-hidden"
-							>(opens in a new tab)</span
-						>
+						<span class="visually-hidden">{{
+							'page.album.opens-in-a-new' | transloco
+						}}</span>
 					</a>
 				}
 			</section>
@@ -292,7 +310,7 @@
 								[class.pi-chevron-down]="isOpen('listen')"
 								aria-hidden="true"
 							></i>
-							Listen
+							{{ 'page.album.listen' | transloco }}
 						</button>
 					} @else {
 						Listen
@@ -305,21 +323,32 @@
 						@if (listening.plays) {
 							<p class="listening">
 								<i class="pi pi-history" aria-hidden="true"></i>
-								You have put this record on
-								{{ listening.plays }}
-								{{ listening.plays === 1 ? 'time' : 'times' }}
+								{{
+									listening.plays
+										| mcPlural: 'page.album.playCount'
+								}}
 								@if (listening.fullPlays) {
 									<span class="through">
-										· {{ listening.fullPlays }} right
-										through
+										{{
+											'page.album.rightThrough'
+												| transloco
+													: {
+															count: listening.fullPlays,
+													  }
+										}}
 									</span>
 								}
 								@if (listening.lastPlayedAt) {
 									<span class="last">
-										· last on
 										{{
-											listening.lastPlayedAt
-												| date: 'mediumDate'
+											'page.album.lastOn'
+												| transloco
+													: {
+															date:
+																listening.lastPlayedAt
+																| mcDate
+																	: 'mediumDate',
+													  }
 										}}
 									</span>
 								}
@@ -347,7 +376,7 @@
 								[class.pi-chevron-down]="isOpen('tracklist')"
 								aria-hidden="true"
 							></i>
-							Tracklist
+							{{ 'page.album.tracklist' | transloco }}
 						</button>
 					} @else {
 						Tracklist
@@ -356,7 +385,9 @@
 				@if (!isOpen('tracklist')) {
 				} @else if (store.detailsLoading()) {
 					<div role="status" aria-busy="true">
-						<span class="visually-hidden">Loading tracklist…</span>
+						<span class="visually-hidden">{{
+							'page.album.loading-tracklist' | transloco
+						}}</span>
 						@for (i of placeholders(8); track i) {
 							<div class="skeleton row-skeleton"></div>
 						}
@@ -396,7 +427,7 @@
 								[class.pi-chevron-down]="isOpen('credits')"
 								aria-hidden="true"
 							></i>
-							Credits
+							{{ 'page.album.credits' | transloco }}
 						</button>
 					} @else {
 						Credits
@@ -405,7 +436,9 @@
 				@if (!isOpen('credits')) {
 				} @else if (store.detailsLoading()) {
 					<div role="status" aria-busy="true">
-						<span class="visually-hidden">Loading credits…</span>
+						<span class="visually-hidden">{{
+							'page.album.loading-credits' | transloco
+						}}</span>
 						@for (i of placeholders(6); track i) {
 							<div class="skeleton row-skeleton"></div>
 						}
@@ -421,7 +454,7 @@
 					}
 				} @else if (!store.detailsFailed()) {
 					<p class="empty">
-						No credits have been imported for this album yet.
+						{{ 'page.album.no-credits-have-been' | transloco }}
 					</p>
 				}
 			</section>
@@ -443,7 +476,7 @@
 							[class.pi-chevron-down]="isOpen('copies')"
 							aria-hidden="true"
 						></i>
-						In your collection
+						{{ 'page.album.in-your-collection' | transloco }}
 					</button>
 				} @else {
 					In your collection
@@ -456,7 +489,9 @@
 					role="status"
 					aria-busy="true"
 				>
-					<span class="visually-hidden">Loading…</span>
+					<span class="visually-hidden">{{
+						'page.album.loading' | transloco
+					}}</span>
 				</div>
 			} @else if (store.copies().length) {
 				<ul class="copies">
@@ -492,8 +527,17 @@
 										class="pi pi-bookmark"
 										aria-hidden="true"
 									></i>
-									{{ shelfName(spot.unitId) }} · Row
-									{{ spot.row }} · Slot {{ spot.column }}
+									{{
+										'page.album.shelfSpot'
+											| transloco
+												: {
+														shelf: shelfName(
+															spot.unitId
+														),
+														row: spot.row,
+														slot: spot.column,
+												  }
+									}}
 								</span>
 							}
 							<span class="copy-actions">
@@ -510,9 +554,10 @@
 											aria-hidden="true"
 										></i>
 										{{ copy.placement ? 'Move' : 'Place' }}
-										<span class="visually-hidden"
-											>on the shelf</span
-										>
+										<span class="visually-hidden">{{
+											'page.album.on-the-shelf'
+												| transloco
+										}}</span>
 									</button>
 								}
 								@if (store.canManageCopies()) {
@@ -527,10 +572,11 @@
 											class="pi pi-sign-out"
 											aria-hidden="true"
 										></i>
-										Remove
-										<span class="visually-hidden"
-											>from your collection</span
-										>
+										{{ 'page.album.remove' | transloco }}
+										<span class="visually-hidden">{{
+											'page.album.from-your-collection'
+												| transloco
+										}}</span>
 									</button>
 								}
 								<mc-admin-edit-link
@@ -544,13 +590,20 @@
 					}
 				</ul>
 			} @else {
-				<p class="empty">This album is not in your collection.</p>
+				<p class="empty">
+					{{ 'page.album.this-album-is-not' | transloco }}
+				</p>
 			}
 			@if (isOpen('copies') && store.pastCopies().length) {
-				<h3 class="past-title">Previously owned</h3>
+				<h3 class="past-title">
+					{{ 'page.album.previously-owned' | transloco }}
+				</h3>
 				@if (store.disposeError() && !store.removingCopyId()) {
 					<p class="past-error" role="alert">
-						Could not take it back: {{ store.disposeError() }}
+						{{
+							'page.album.takeBackFailed'
+								| transloco: { error: store.disposeError() }
+						}}
 					</p>
 				}
 				<ul class="copies">
@@ -594,10 +647,11 @@
 											class="pi pi-undo"
 											aria-hidden="true"
 										></i>
-										Take back
-										<span class="visually-hidden"
-											>into your collection</span
-										>
+										{{ 'page.album.take-back' | transloco }}
+										<span class="visually-hidden">{{
+											'page.album.into-your-collection'
+												| transloco
+										}}</span>
 									</button>
 								</span>
 							}
@@ -625,14 +679,18 @@
 									[class.pi-chevron-down]="isOpen('more')"
 									aria-hidden="true"
 								></i>
-								More from {{ album.artistName }}
+								{{
+									'page.album.moreFrom'
+										| transloco
+											: { artist: album.artistName }
+								}}
 							</button>
 						} @else {
 							More from {{ album.artistName }}
 						}
 					</h2>
 					<a class="more" [routerLink]="['/artist', album.artistId]">
-						Full discography
+						{{ 'page.album.full-discography' | transloco }}
 						<i class="pi pi-arrow-right" aria-hidden="true"></i>
 					</a>
 				</header>
@@ -655,13 +713,17 @@
 	} @else if (store.notFound()) {
 		<div class="not-found">
 			<p class="not-found-icon" aria-hidden="true">♪</p>
-			<h1>Album not found</h1>
-			<p>This album is not in the catalog.</p>
-			<a class="button" routerLink="/home">Back to home</a>
+			<h1>{{ 'page.album.album-not-found' | transloco }}</h1>
+			<p>{{ 'page.album.this-album-is-not2' | transloco }}</p>
+			<a class="button" routerLink="/home">{{
+				'page.album.back-to-home' | transloco
+			}}</a>
 		</div>
 	} @else {
 		<div role="status" aria-busy="true">
-			<span class="visually-hidden">Loading album…</span>
+			<span class="visually-hidden">{{
+				'page.album.loading-album' | transloco
+			}}</span>
 			<div class="skeleton hero-skeleton"></div>
 		</div>
 	}

@@ -5,7 +5,7 @@
 				[src]="album.coverImage?.filePath || album.coverImageUrl || ''"
 				[height]="'100'"
 				[width]="width"
-				alt="Image"
+				[alt]="'ui.albumItemView.image' | transloco"
 				styleClass="item-image"
 			></p-image>
 		</div>
@@ -22,6 +22,10 @@
 	</div>
 
 	<div class="album-item-action">
-		<p-button label="detail" (click)="detailClickHandler()"> </p-button>
+		<p-button
+			[label]="'ui.albumItemView.detail' | transloco"
+			(click)="detailClickHandler()"
+		>
+		</p-button>
 	</div>
 </div>

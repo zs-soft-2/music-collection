@@ -26,21 +26,21 @@
 			</div>
 		}
 		<div>
-			<dt>Connections in view</dt>
+			<dt>{{ 'ui.networkDetails.connections-in-view' | transloco }}</dt>
 			<dd>{{ view.connectionCount }}</dd>
 		</div>
 		@if (view.albums.length) {
 			<div>
-				<dt>Albums</dt>
+				<dt>{{ 'ui.networkDetails.albums' | transloco }}</dt>
 				<dd>{{ view.albums.length }}</dd>
 			</div>
 		}
 		@if (node.owned) {
 			<div>
-				<dt>Collection</dt>
+				<dt>{{ 'ui.networkDetails.collection' | transloco }}</dt>
 				<dd class="owned">
 					<i class="pi pi-check-circle" aria-hidden="true"></i>
-					In your collection
+					{{ 'ui.networkDetails.in-your-collection' | transloco }}
 				</dd>
 			</div>
 		}
@@ -50,13 +50,13 @@
 		@if (node.link) {
 			<a class="btn btn-primary" [routerLink]="node.link">
 				<i class="pi pi-external-link" aria-hidden="true"></i>
-				Open page
+				{{ 'ui.networkDetails.open-page' | transloco }}
 			</a>
 		}
 		@if (node.id !== focusId()) {
 			<button type="button" class="btn" (click)="nodeFocus.emit(node.id)">
 				<i class="pi pi-bullseye" aria-hidden="true"></i>
-				Focus here
+				{{ 'ui.networkDetails.focus-here' | transloco }}
 			</button>
 		}
 	</div>
@@ -64,7 +64,9 @@
 
 @if (view.parallel.length) {
 	<section class="card" aria-labelledby="mc-net-parallel">
-		<h3 id="mc-net-parallel">Parallel groups</h3>
+		<h3 id="mc-net-parallel">
+			{{ 'ui.networkDetails.parallel-groups' | transloco }}
+		</h3>
 		<ul class="rows">
 			@for (item of view.parallel; track $index) {
 				<li class="row">
@@ -83,7 +85,7 @@
 @if (view.together.length) {
 	<section class="card" aria-labelledby="mc-net-together">
 		<h3 id="mc-net-together">
-			Played together with
+			{{ 'ui.networkDetails.played-together-with' | transloco }}
 			<span class="count">({{ view.together.length }})</span>
 		</h3>
 		<ul class="rows">
@@ -162,7 +164,7 @@
 @if (view.albums.length) {
 	<section class="card" aria-labelledby="mc-net-albums">
 		<h3 id="mc-net-albums">
-			Related albums
+			{{ 'ui.networkDetails.related-albums' | transloco }}
 			<span class="count">({{ view.albums.length }})</span>
 		</h3>
 		<ul class="albums">
@@ -190,7 +192,7 @@
 								class="pi pi-check-circle"
 								aria-hidden="true"
 							></i>
-							Owned
+							{{ 'ui.networkDetails.owned' | transloco }}
 						</span>
 					}
 				</li>

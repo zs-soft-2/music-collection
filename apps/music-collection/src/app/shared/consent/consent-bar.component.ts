@@ -4,6 +4,7 @@ import {
 	computed,
 	inject,
 } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
 	MEASUREMENT_OFFERED,
@@ -24,15 +25,18 @@ import { ExternalPlayerConsentService } from '../../data/external-player';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-consent-bar',
+	imports: [...I18N_IMPORTS],
 	template: `
 		@if (askingMeasurement() || players.asking()) {
-			<div class="bar" role="region" aria-label="Your choices">
+			<div
+				class="bar"
+				role="region"
+				[attr.aria-label]="'ui.consentBar.your-choices' | transloco"
+			>
 				@if (askingMeasurement()) {
 					<div class="question">
 						<p>
-							May we count which pages and features get used?
-							Google Analytics, no advertising — what you own and
-							what you search for stays out of it.
+							{{ 'ui.consentBar.may-we-count-which' | transloco }}
 						</p>
 
 						<div class="choice">
@@ -41,14 +45,14 @@ import { ExternalPlayerConsentService } from '../../data/external-player';
 								class="decline"
 								(click)="measurement.decide(false)"
 							>
-								No thanks
+								{{ 'ui.consentBar.no-thanks' | transloco }}
 							</button>
 							<button
 								type="button"
 								class="allow"
 								(click)="measurement.decide(true)"
 							>
-								Allow
+								{{ 'ui.consentBar.allow' | transloco }}
 							</button>
 						</div>
 					</div>
@@ -57,11 +61,7 @@ import { ExternalPlayerConsentService } from '../../data/external-player';
 				@if (players.asking()) {
 					<div class="question">
 						<p>
-							May we put YouTube's and Spotify's players on the
-							page so you can listen here? They are not ours:
-							each one writes its own storage and tells its owner
-							you were here. Without this the records stay
-							silent.
+							{{ 'ui.consentBar.may-we-put-youtube' | transloco }}
 						</p>
 
 						<div class="choice">
@@ -70,21 +70,21 @@ import { ExternalPlayerConsentService } from '../../data/external-player';
 								class="decline"
 								(click)="players.decide(false)"
 							>
-								Keep them off
+								{{ 'ui.consentBar.keep-them-off' | transloco }}
 							</button>
 							<button
 								type="button"
 								class="allow"
 								(click)="players.decide(true)"
 							>
-								Allow
+								{{ 'ui.consentBar.allow2' | transloco }}
 							</button>
 						</div>
 					</div>
 				}
 
 				<p class="note">
-					You can change either of these any time on your profile.
+					{{ 'ui.consentBar.you-can-change-either' | transloco }}
 				</p>
 			</div>
 		}

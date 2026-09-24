@@ -49,6 +49,7 @@ export interface UpcomingDayView {
 export interface UpcomingMonthView {
 	days: UpcomingDayView[];
 	key: string;
+	/** The month's name, written by Intl in the reader's own locale. */
 	label: string;
 }
 
@@ -56,10 +57,10 @@ export interface UpcomingMonthView {
 export type UpcomingFilter = 'all' | 'new' | 'reissue';
 
 export const UPCOMING_FILTER_OPTIONS: {
-	label: string;
+	labelKey: string;
 	value: UpcomingFilter;
 }[] = [
-	{ label: 'Everything', value: 'all' },
-	{ label: 'New records', value: 'new' },
-	{ label: 'Reissues', value: 'reissue' },
+	{ labelKey: 'page.upcoming.filter.all', value: 'all' },
+	{ labelKey: 'page.upcoming.filter.new', value: 'new' },
+	{ labelKey: 'page.upcoming.filter.reissue', value: 'reissue' },
 ];

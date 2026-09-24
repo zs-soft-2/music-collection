@@ -39,7 +39,7 @@
 		}
 	</div>
 } @else if (!canEdit()) {
-	<p class="empty">No photos of this copy.</p>
+	<p class="empty">{{ 'ui.copyPhotos.no-photos-of-this' | transloco }}</p>
 }
 
 @if (canEdit()) {
@@ -56,7 +56,7 @@
 							choose($index === 0 ? 'front' : 'back', $event)
 						"
 					/>
-					Replace
+					{{ 'ui.copyPhotos.replace' | transloco }}
 				</label>
 				<button
 					type="button"
@@ -64,7 +64,7 @@
 					[disabled]="busy()"
 					(click)="removed.emit($index)"
 				>
-					Remove
+					{{ 'ui.copyPhotos.remove' | transloco }}
 				</button>
 			</div>
 		}
@@ -87,8 +87,7 @@
 	</div>
 
 	<p class="note">
-		At most two pictures — the front and the back. They are scaled down in
-		the browser before anything is uploaded.
+		{{ 'ui.copyPhotos.at-most-two-pictures' | transloco }}
 	</p>
 
 	@if (error()) {

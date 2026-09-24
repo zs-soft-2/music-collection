@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import {
 	ChangeDetectionStrategy,
 	Component,
@@ -14,7 +15,15 @@ import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
 	selector: 'mc-album-edit',
 	templateUrl: './album-edit.component.html',
 	styleUrls: ['./album-edit.component.scss'],
-	imports: [AlbumFormModule, Tab, TabList, TabPanel, TabPanels, Tabs],
+	imports: [
+		...I18N_IMPORTS,
+		AlbumFormModule,
+		Tab,
+		TabList,
+		TabPanel,
+		TabPanels,
+		Tabs,
+	],
 })
 export class AlbumEditComponent extends BaseComponent implements OnInit {
 	private activatedRoute = inject(ActivatedRoute);

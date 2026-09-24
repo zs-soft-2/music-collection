@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import { Observable } from 'rxjs';
 
 import {
@@ -37,6 +38,7 @@ import { AsyncPipe } from '@angular/common';
 	templateUrl: './artist-form.component.html',
 	styleUrls: ['./artist-form.component.scss'],
 	imports: [
+		...I18N_IMPORTS,
 		FormsModule,
 		ReactiveFormsModule,
 		Bind,

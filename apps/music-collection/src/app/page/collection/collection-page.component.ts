@@ -1,13 +1,13 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { RecordShelfComponent } from './component/record-shelf/record-shelf.component';
 import { ReleaseRowComponent } from './component/release-row/release-row.component';
 import {
 	CopyPlacementComponent,
 	DecadeChartComponent,
-	FORMAT_LABELS,
 	FORMAT_ORDER,
 	ReleaseCardComponent,
 	StyleBarsComponent,
@@ -35,6 +35,7 @@ import { CollectionPageStore } from './collection-page.store';
 	templateUrl: './collection-page.component.html',
 	styleUrls: ['./collection-page.component.scss'],
 	imports: [
+		...I18N_IMPORTS,
 		NgTemplateOutlet,
 		ReleaseCardComponent,
 		ReleaseRowComponent,
@@ -50,7 +51,6 @@ export class CollectionPageComponent {
 	protected readonly store = inject(CollectionPageStore);
 	protected readonly player = inject(PlayerStore);
 
-	protected readonly formatLabels = FORMAT_LABELS;
 	protected readonly formatOrder = FORMAT_ORDER;
 	protected readonly sortOptions = SORT_OPTIONS;
 	protected readonly groupOptions = GROUP_OPTIONS;

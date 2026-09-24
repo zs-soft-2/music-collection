@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { PlayerStore } from '../../shared/player';
 
@@ -19,7 +20,7 @@ import { RadioStationView } from './radio.model';
 	selector: 'mc-radio-page',
 	templateUrl: './radio-page.component.html',
 	styleUrls: ['./radio-page.component.scss'],
-	imports: [RouterLink],
+	imports: [...I18N_IMPORTS, RouterLink],
 })
 export class RadioPageComponent {
 	protected readonly store = inject(RadioPageStore);

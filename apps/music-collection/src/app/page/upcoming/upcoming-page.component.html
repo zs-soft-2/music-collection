@@ -2,30 +2,28 @@
 	<header class="hero">
 		<div class="hero-text">
 			<p class="eyebrow">musiCollection</p>
-			<h1>Coming out</h1>
+			<h1>{{ 'page.upcoming.coming-out' | transloco }}</h1>
 			<p class="lead">
-				The next few weeks of records by the artists already in the
-				catalog — new ones and reissues alike, gathered from MusicBrainz
-				once a day.
+				{{ 'page.upcoming.the-next-few-weeks' | transloco }}
 			</p>
 		</div>
 
 		@if (!store.isLoading() && store.releases().length) {
 			<dl class="stats">
 				<div class="stat">
-					<dt>Records</dt>
+					<dt>{{ 'page.upcoming.records' | transloco }}</dt>
 					<dd>{{ store.releases().length }}</dd>
 				</div>
 				<div class="stat">
-					<dt>New</dt>
+					<dt>{{ 'page.upcoming.new' | transloco }}</dt>
 					<dd>{{ store.newCount() }}</dd>
 				</div>
 				<div class="stat">
-					<dt>Reissues</dt>
+					<dt>{{ 'page.upcoming.reissues' | transloco }}</dt>
 					<dd>{{ store.reissueCount() }}</dd>
 				</div>
 				<div class="stat">
-					<dt>Artists</dt>
+					<dt>{{ 'page.upcoming.artists' | transloco }}</dt>
 					<dd>{{ store.artistCount() }}</dd>
 				</div>
 			</dl>
@@ -40,13 +38,15 @@
 		</div>
 	} @else if (store.isEmpty()) {
 		<p class="empty">
-			Nothing is announced for the coming weeks. Once a record by one of
-			the catalog's artists gets a date on MusicBrainz, it shows up here —
-			usually a few weeks ahead.
+			{{ 'page.upcoming.nothing-is-announced-for' | transloco }}
 		</p>
 	} @else {
 		<div class="toolbar">
-			<div class="tabs" role="tablist" aria-label="Which records">
+			<div
+				class="tabs"
+				role="tablist"
+				[attr.aria-label]="'page.upcoming.which-records' | transloco"
+			>
 				@for (option of filterOptions; track option.value) {
 					<button
 						type="button"
@@ -56,7 +56,7 @@
 						[attr.aria-selected]="store.filter() === option.value"
 						(click)="onFilter(option.value)"
 					>
-						{{ option.label }}
+						{{ option.labelKey | transloco }}
 					</button>
 				}
 			</div>
@@ -67,14 +67,16 @@
 					[checked]="store.vinylOnly()"
 					(change)="onVinylOnly()"
 				/>
-				On vinyl
+				{{ 'page.upcoming.on-vinyl' | transloco }}
 			</label>
 		</div>
 
 		@if (store.isFilteredOut()) {
 			<p class="empty">
-				Nothing in the next few weeks matches that. There are still
-				{{ store.releases().length }} records coming.
+				{{
+					store.releases().length
+						| mcPlural: 'page.upcoming.filteredOut'
+				}}
 			</p>
 		}
 
@@ -135,8 +137,14 @@
 											@if (record.namesake) {
 												<span
 													class="namesake"
-													title="Matched on the artist's name only — it could be a namesake."
-													>name match</span
+													[title]="
+														'page.upcoming.matched-on-the-artist'
+															| transloco
+													"
+													>{{
+														'page.upcoming.name-match'
+															| transloco
+													}}</span
 												>
 											}
 										</p>
@@ -152,18 +160,24 @@
 
 										<p class="meta">
 											@if (record.kind === 'reissue') {
-												<span class="chip chip-reissue"
-													>Reissue{{
+												<span
+													class="chip chip-reissue"
+													>{{
 														record.originalYear
-															? ' of ' +
-																record.originalYear
-															: ''
+															? ('page.upcoming.reissueOf'
+																| transloco
+																	: {
+																			year: record.originalYear,
+																	  })
+															: ('page.upcoming.reissue'
+																| transloco)
 													}}</span
 												>
 											} @else {
-												<span class="chip chip-new"
-													>New</span
-												>
+												<span class="chip chip-new">{{
+													'page.upcoming.new2'
+														| transloco
+												}}</span>
 											}
 
 											@if (record.typeLabel) {

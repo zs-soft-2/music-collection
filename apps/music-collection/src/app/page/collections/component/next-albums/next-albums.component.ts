@@ -1,6 +1,7 @@
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { NextAlbumView } from '../../collections.model';
 
@@ -20,7 +21,7 @@ import { NextAlbumView } from '../../collections.model';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-next-albums',
-	imports: [RouterLink, DecimalPipe],
+	imports: [...I18N_IMPORTS, RouterLink, DecimalPipe],
 	template: `
 		<ul class="hunt">
 			@for (album of albums(); track album.albumUid) {
@@ -38,14 +39,18 @@ import { NextAlbumView } from '../../collections.model';
 									loading="lazy"
 								/>
 							} @else {
-								<span class="hunt-placeholder" aria-hidden="true"
+								<span
+									class="hunt-placeholder"
+									aria-hidden="true"
 									>♪</span
 								>
 							}
 						</span>
 
 						<span class="hunt-body">
-							<span class="hunt-title">{{ album.albumName }}</span>
+							<span class="hunt-title">{{
+								album.albumName
+							}}</span>
 							<span class="hunt-artist">
 								{{ album.artistName }}
 								@if (album.year) {
@@ -57,8 +62,20 @@ import { NextAlbumView } from '../../collections.model';
 
 							@if (album.unlockedPoints > 0) {
 								<span class="hunt-worth is-unlocked">
-									<i class="pi pi-check-circle" aria-hidden="true"></i>
-									Completes {{ album.completes.join(', ') }}
+									<i
+										class="pi pi-check-circle"
+										aria-hidden="true"
+									></i>
+									{{
+										'ui.nextAlbums.completes'
+											| transloco
+												: {
+														collections:
+															album.completes.join(
+																', '
+															),
+												  }
+									}}
 								</span>
 								<span class="hunt-points">
 									<strong
@@ -67,7 +84,10 @@ import { NextAlbumView } from '../../collections.model';
 										}}
 										pts</strong
 									>
-									the moment it is on the shelf
+									{{
+										'ui.nextAlbums.the-moment-it-is'
+											| transloco
+									}}
 								</span>
 							} @else {
 								<span class="hunt-worth">
@@ -80,14 +100,14 @@ import { NextAlbumView } from '../../collections.model';
 									}
 								</span>
 								<span class="hunt-points">
-									moves
+									{{ 'ui.nextAlbums.moves' | transloco }}
 									<strong
 										>{{
 											album.potentialPoints | number
 										}}
 										pts</strong
 									>
-									closer
+									{{ 'ui.nextAlbums.closer' | transloco }}
 								</span>
 							}
 						</span>

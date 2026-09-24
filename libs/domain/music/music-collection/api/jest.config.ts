@@ -4,7 +4,8 @@ module.exports = {
 	displayName: 'music-collection-api',
 	preset: '../../../../../jest.preset.js',
 	testEnvironment: 'node',
-	coverageDirectory: '../../../../../coverage/libs/domain/music/music-collection/api',
+	coverageDirectory:
+		'../../../../../coverage/libs/domain/music/music-collection/api',
 	transform: {
 		'^.+\\.[tj]s$': [
 			'ts-jest',

@@ -21,15 +21,18 @@ const standing = (slug: string, name: string, albumUids: string[] = []) =>
 		resolved: { albums: albumUids.map((albumUid) => ({ albumUid })) },
 	}) as MusicCollectionStanding;
 
+/** Stands in for the dictionary: a key comes back as itself. */
+const t = (key: string) => key;
+
 describe('radioStations', () => {
 	it('offers the catalog stations to everyone', () => {
-		const stations = radioStations([], [], []);
+		const stations = radioStations([], [], [], t);
 
 		expect(stations.map((item) => item.id)).toEqual(['new', 'random']);
 	});
 
 	it('offers the shelf stations once something stands on it', () => {
-		const stations = radioStations([], [], [{ placement: null }]);
+		const stations = radioStations([], [], [{ placement: null }], t);
 
 		expect(stations.map((item) => item.id)).toEqual([
 			'new',
@@ -43,7 +46,8 @@ describe('radioStations', () => {
 		const stations = radioStations(
 			[unit('living-room', 'Living room'), unit('attic', 'Attic')],
 			[],
-			[filed('living-room')]
+			[filed('living-room')],
+			t
 		);
 
 		expect(stations.map((item) => item.id)).toContain('shelf:living-room');
@@ -54,10 +58,10 @@ describe('radioStations', () => {
 	});
 
 	it('names an unnamed unit rather than leaving it blank', () => {
-		const stations = radioStations([unit('u1')], [], [filed('u1')]);
+		const stations = radioStations([unit('u1')], [], [filed('u1')], t);
 
 		expect(stations.find((item) => item.id === 'shelf:u1')?.label).toBe(
-			'Unnamed unit'
+			'radio.unnamedUnit'
 		);
 	});
 
@@ -65,7 +69,8 @@ describe('radioStations', () => {
 		const stations = radioStations(
 			[],
 			[standing('prog', 'Prog classics')],
-			[]
+			[],
+			t
 		);
 
 		expect(stations.at(-1)).toMatchObject({
@@ -80,6 +85,7 @@ describe('radioStations', () => {
 			[],
 			[standing('prog', 'Prog classics', ['a', 'b', 'gone'])],
 			[],
+			t,
 			new Set(['a', 'b'])
 		);
 
@@ -87,7 +93,7 @@ describe('radioStations', () => {
 	});
 
 	it('leaves the other stations to say what they hold', () => {
-		const stations = radioStations([], [], []);
+		const stations = radioStations([], [], [], t);
 
 		expect(stations.every((station) => station.albumIds === null)).toBe(
 			true
@@ -99,6 +105,7 @@ describe('radioStations', () => {
 			[],
 			[standing('prog', 'Prog classics', ['a', 'b', 'gone'])],
 			[],
+			t,
 			new Set(['a', 'b'])
 		);
 
@@ -106,7 +113,7 @@ describe('radioStations', () => {
 	});
 
 	it('leaves the other stations to be counted', () => {
-		const stations = radioStations([], [], []);
+		const stations = radioStations([], [], [], t);
 
 		expect(stations.every((station) => station.count === null)).toBe(true);
 	});

@@ -1,13 +1,16 @@
 <section class="error" aria-labelledby="error-title">
 	<i class="pi pi-lock error-icon" aria-hidden="true"></i>
 	<p class="eyebrow">musiCollection</p>
-	<h1 id="error-title">This page is not available</h1>
+	<h1 id="error-title">{{ 'page.error.this-page-is-not' | transloco }}</h1>
 	<p class="text">
-		It doesn't exist, or your account doesn't have access to it. Admin pages
-		need an administrator login.
+		{{ 'page.error.it-doesn-t-exist' | transloco }}
 	</p>
 	<div class="actions">
-		<a class="button is-primary" routerLink="/home">Go to home</a>
-		<a class="button" routerLink="/collection">Open collection</a>
+		<a class="button is-primary" routerLink="/home">{{
+			'page.error.go-to-home' | transloco
+		}}</a>
+		<a class="button" routerLink="/collection">{{
+			'page.error.open-collection' | transloco
+		}}</a>
 	</div>
 </section>

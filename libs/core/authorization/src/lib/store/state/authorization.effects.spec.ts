@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { BehaviorSubject, Subject, throwError } from 'rxjs';
 
 import { TestBed } from '@angular/core/testing';
@@ -39,6 +40,7 @@ describe('AuthorizationEffects', () => {
 
 		TestBed.configureTestingModule({
 			providers: [
+				provideI18nTesting(),
 				AuthorizationEffects,
 				{
 					provide: AuthenticationStateService,
@@ -46,7 +48,10 @@ describe('AuthorizationEffects', () => {
 						selectAuthenticatedUser$: () => authenticatedUser$,
 					},
 				},
-				{ provide: AuthorizationService, useValue: authorizationService },
+				{
+					provide: AuthorizationService,
+					useValue: authorizationService,
+				},
 				{
 					provide: EffectivePermissionsDataService,
 					useValue: { load$: load },
@@ -70,7 +75,9 @@ describe('AuthorizationEffects', () => {
 		});
 
 		expect(load).toHaveBeenCalledWith('u1');
-		expect(authorizationService.addPermission).toHaveBeenCalledWith('ADMIN');
+		expect(authorizationService.addPermission).toHaveBeenCalledWith(
+			'ADMIN'
+		);
 		expect(authorizationService.addPermission).toHaveBeenCalledWith(
 			'createMusicianEntity'
 		);

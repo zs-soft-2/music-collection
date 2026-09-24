@@ -7,6 +7,7 @@ import {
 	signal,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { SpotifyIconComponent } from '../spotify/spotify-icon.component';
 import { YoutubeIconComponent } from '../youtube/youtube-icon.component';
@@ -19,10 +20,19 @@ import { PlayerStore } from './player.store';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-player-mini',
-	imports: [RouterLink, SpotifyIconComponent, YoutubeIconComponent],
+	imports: [
+		...I18N_IMPORTS,
+		RouterLink,
+		SpotifyIconComponent,
+		YoutubeIconComponent,
+	],
 	template: `
 		@if (player.now(); as now) {
-			<div class="player" role="group" aria-label="Player">
+			<div
+				class="player"
+				role="group"
+				[attr.aria-label]="'ui.playerMini.player' | transloco"
+			>
 				<a
 					class="now"
 					[routerLink]="now.albumId ? ['/album', now.albumId] : null"
@@ -47,7 +57,9 @@ import { PlayerStore } from './player.store';
 					<button
 						type="button"
 						class="control secondary"
-						aria-label="Previous track"
+						[attr.aria-label]="
+							'ui.playerMini.previous-track' | transloco
+						"
 						(click)="player.skip('previous')"
 					>
 						<i class="pi pi-step-backward" aria-hidden="true"></i>
@@ -81,7 +93,9 @@ import { PlayerStore } from './player.store';
 					<button
 						type="button"
 						class="control secondary"
-						aria-label="Next track"
+						[attr.aria-label]="
+							'ui.playerMini.next-track' | transloco
+						"
 						(click)="player.skip('next')"
 					>
 						<i class="pi pi-step-forward" aria-hidden="true"></i>
@@ -91,7 +105,9 @@ import { PlayerStore } from './player.store';
 					<button
 						type="button"
 						class="control secondary"
-						aria-label="Next record of the station"
+						[attr.aria-label]="
+							'ui.playerMini.next-record-of-the' | transloco
+						"
 						[attr.title]="
 							player.stationLabel() +
 							' · ' +
@@ -108,7 +124,9 @@ import { PlayerStore } from './player.store';
 						<button
 							type="button"
 							class="control"
-							aria-label="Volume"
+							[attr.aria-label]="
+								'ui.playerMini.volume' | transloco
+							"
 							aria-controls="mini-player-volume"
 							[attr.aria-expanded]="volumeOpen()"
 							(click)="volumeOpen.set(!volumeOpen())"
@@ -131,7 +149,9 @@ import { PlayerStore } from './player.store';
 									min="0"
 									max="100"
 									step="1"
-									aria-label="Volume"
+									[attr.aria-label]="
+										'ui.playerMini.volume2' | transloco
+									"
 									[value]="player.volume()"
 									[disabled]="!player.volumeSupported()"
 									(input)="setVolume($event)"
@@ -150,8 +170,10 @@ import { PlayerStore } from './player.store';
 				<button
 					type="button"
 					class="control"
-					aria-label="Open the full-screen player"
-					title="Full screen"
+					[attr.aria-label]="
+						'ui.playerMini.open-the-full-screen' | transloco
+					"
+					[title]="'ui.playerMini.full-screen' | transloco"
 					(click)="player.openStage()"
 				>
 					<i class="pi pi-window-maximize" aria-hidden="true"></i>

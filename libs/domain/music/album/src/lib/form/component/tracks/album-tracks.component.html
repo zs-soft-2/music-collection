@@ -2,17 +2,22 @@
 	<section class="mc-form-section" aria-labelledby="album-tracks">
 		<div class="album-tracks-heading">
 			<h2 id="album-tracks">
-				Tracks ({{ params.tracks.length }})
+				{{
+					'ui.albumTracks.heading'
+						| transloco: { count: params.tracks.length }
+				}}
 			</h2>
 			<p-button
-				label="Load"
+				[label]="'ui.albumTracks.load' | transloco"
 				icon="pi pi-cloud-download"
 				size="small"
 				severity="secondary"
 				[outlined]="true"
 				[loading]="externalLoading()"
 				[disabled]="!params.album"
-				ariaLabel="Load the tracklist from MusicBrainz"
+				[ariaLabel]="
+					'ui.albumTracks.load-the-tracklist-from' | transloco
+				"
 				(onClick)="loadExternal()"
 			></p-button>
 		</div>
@@ -34,13 +39,13 @@
 			</ol>
 		} @else {
 			<p class="mc-form-note">
-				No tracks yet. Load them from MusicBrainz.
+				{{ 'ui.albumTracks.no-tracks-yet-load' | transloco }}
 			</p>
 		}
 	</section>
 
 	<p-dialog
-		header="Tracks found"
+		[header]="'ui.albumTracks.tracks-found' | transloco"
 		[modal]="true"
 		[visible]="!!externalTracks()"
 		(visibleChange)="$event || closeExternal()"
@@ -49,16 +54,17 @@
 	>
 		@if (externalTracks(); as tracks) {
 			<p class="album-tracks-source">
-				Source:
+				{{ 'ui.albumTracks.source' | transloco }}
 				<a [href]="tracks.sourceUrl" target="_blank" rel="noopener">{{
 					tracks.sourceUrl
 				}}</a>
 			</p>
 			@if (params.tracks.length) {
 				<p class="album-tracks-note">
-					Saving replaces the current
-					{{ params.tracks.length }}
-					tracks; their links and lyrics are kept by position.
+					{{
+						params.tracks.length
+							| mcPlural: 'ui.albumTracks.saveNote'
+					}}
 				</p>
 			}
 			<ol class="album-tracks-list">
@@ -76,14 +82,16 @@
 		}
 		<ng-template #footer>
 			<p-button
-				label="Cancel"
+				[label]="'ui.albumTracks.cancel' | transloco"
 				severity="secondary"
 				[outlined]="true"
 				(onClick)="closeExternal()"
 			></p-button>
 			<p-button
 				[label]="
-					'Save ' + (externalTracks()?.tracks?.length ?? 0) + ' tracks'
+					'Save ' +
+					(externalTracks()?.tracks?.length ?? 0) +
+					' tracks'
 				"
 				icon="pi pi-check"
 				[loading]="saving()"

@@ -3,13 +3,13 @@
 		<button
 			type="button"
 			class="scrim"
-			aria-label="Close admin menu"
+			[attr.aria-label]="'ui.admin.close-admin-menu' | transloco"
 			tabindex="-1"
 			(click)="expanded.set(false)"
 		></button>
 	}
 
-	<aside class="side" aria-label="Admin">
+	<aside class="side" [attr.aria-label]="'ui.admin.admin' | transloco">
 		<div class="side-head">
 			<button
 				type="button"
@@ -28,14 +28,16 @@
 					aria-hidden="true"
 				></i>
 			</button>
-			<span class="side-title">Admin</span>
+			<span class="side-title">{{ 'ui.admin.admin2' | transloco }}</span>
 		</div>
 
 		<nav id="mc-admin-nav" class="side-nav">
-			@for (group of groups; track group.label) {
+			@for (group of groups; track group.labelKey) {
 				<div class="group">
-					@if (group.label) {
-						<h2 class="group-label">{{ group.label }}</h2>
+					@if (group.labelKey) {
+						<h2 class="group-label">
+							{{ group.labelKey | transloco }}
+						</h2>
 					}
 					@for (item of group.items; track item.route) {
 						<a
@@ -43,13 +45,15 @@
 							[routerLink]="item.route"
 							routerLinkActive="is-active"
 							ariaCurrentWhenActive="page"
-							[attr.title]="item.label"
+							[attr.title]="item.labelKey | transloco"
 						>
 							<i
 								class="pi {{ item.icon }}"
 								aria-hidden="true"
 							></i>
-							<span class="nav-label">{{ item.label }}</span>
+							<span class="nav-label">{{
+								item.labelKey | transloco
+							}}</span>
 							@if (
 								item.badge && store.badges()[item.badge];
 								as count
@@ -71,11 +75,14 @@
 		@if (returnLink(); as returnLink) {
 			<a class="back" [routerLink]="returnLink">
 				<i class="pi pi-arrow-left" aria-hidden="true"></i>
-				<span>Back to page</span>
+				<span>{{ 'ui.admin.back-to-page' | transloco }}</span>
 			</a>
 		}
 
-		<nav class="crumbs" aria-label="Breadcrumb">
+		<nav
+			class="crumbs"
+			[attr.aria-label]="'ui.admin.breadcrumb' | transloco"
+		>
 			<mc-breadcrumb [autoGenerate]="true" separator="/"></mc-breadcrumb>
 		</nav>
 

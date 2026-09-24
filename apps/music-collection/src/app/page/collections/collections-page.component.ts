@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { CollectionArtworkComponent } from '../../shared/collection-artwork';
 
@@ -26,7 +27,12 @@ import { COLLECTIONS_TAB_OPTIONS, CollectionsTab } from './collections.model';
 	selector: 'mc-collections-page',
 	templateUrl: './collections-page.component.html',
 	styleUrls: ['./collections-page.component.scss'],
-	imports: [RouterLink, CollectionArtworkComponent, NextAlbumsComponent],
+	imports: [
+		...I18N_IMPORTS,
+		RouterLink,
+		CollectionArtworkComponent,
+		NextAlbumsComponent,
+	],
 })
 export class CollectionsPageComponent {
 	protected readonly store = inject(CollectionsPageStore);

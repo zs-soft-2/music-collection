@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { of } from 'rxjs';
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -21,12 +22,18 @@ describe('ReleaseFormComponent', () => {
 		await TestBed.configureTestingModule({
 			imports: [ReleaseFormComponent],
 			providers: [
+				provideI18nTesting(),
 				provideRouter([]),
 				{
 					provide: ReleaseStateService,
-					useValue: { selectEntityById$: jest.fn(() => of(undefined)) },
+					useValue: {
+						selectEntityById$: jest.fn(() => of(undefined)),
+					},
 				},
-				{ provide: ReleaseUtilService, useClass: ReleaseUtilServiceImpl },
+				{
+					provide: ReleaseUtilService,
+					useClass: ReleaseUtilServiceImpl,
+				},
 				{
 					provide: AlbumStateService,
 					useValue: { selectSearchResult$: jest.fn(() => of([])) },

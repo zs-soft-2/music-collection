@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { TestBed } from '@angular/core/testing';
 
 import { EntityQuantityUtilServiceImpl } from './entity-quantity-util.service.impl';
@@ -7,7 +8,7 @@ describe('EntityQuantityUtilServiceImpl', () => {
 
 	beforeEach(() => {
 		TestBed.configureTestingModule({
-			providers: [EntityQuantityUtilServiceImpl],
+			providers: [provideI18nTesting(), EntityQuantityUtilServiceImpl],
 		});
 		service = TestBed.inject(EntityQuantityUtilServiceImpl);
 	});

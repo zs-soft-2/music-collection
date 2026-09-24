@@ -29,6 +29,7 @@ import { CoreAuthenticationModule } from '@music-collection/core/authentication'
 import { CoreAuthorizationModule } from '@music-collection/core/authorization';
 import { CoreEntityQuantityModule } from '@music-collection/core/entity-quantity';
 import { CoreErrorModule } from '@music-collection/core/error';
+import { provideI18n } from '@music-collection/core/i18n';
 import { CoreExportImportModule } from '@music-collection/core/export-import';
 import { DomainAlbumModule } from '@music-collection/domain/album';
 import { DomainArtistModule } from '@music-collection/domain/artist';
@@ -53,6 +54,7 @@ import { CollectorShelfLayoutService } from './page/collection/shelf-layout.serv
 import { HookModule } from './module/hook';
 import { installPerformanceConsole } from './performance';
 import { metaReducers } from './reducer';
+import { DefaultLanguageSyncService, LanguageSyncService } from './i18n';
 import { AppearanceSyncService, MusicPreset } from './theme';
 import { NgxPermissionsModule } from 'ngx-permissions';
 
@@ -88,6 +90,12 @@ export const appConfig: ApplicationConfig = {
 	providers: [
 		provideZonelessChangeDetection(),
 		provideRouter(routes),
+		// Hungarian, English and German. The dictionary is fetched before
+		// the first screen, so nothing is ever drawn in the wrong language.
+		provideI18n({
+			version: environment.version,
+			production: environment.production,
+		}),
 		provideFirebaseApp(() => initializeApp(environment.firebase)),
 		// App Check: a callable-ök (apps/functions) App Check tokent követelnek,
 		// mert a bejelentkezés önmagában nem mondja meg, hogy a hívás a mi
@@ -136,12 +144,21 @@ export const appConfig: ApplicationConfig = {
 		// The admin form files a copy into the same furniture the shelf page
 		// draws: the drawing is a setting of the signed-in collector, which
 		// only the app can read.
-		{ provide: ShelfLayoutService, useExisting: CollectorShelfLayoutService },
+		{
+			provide: ShelfLayoutService,
+			useExisting: CollectorShelfLayoutService,
+		},
 		provideAnimationsAsync(),
 		// Carries the look of the app to and from the account. It has to be
 		// alive wherever the theme is switched, which is every page, so it
 		// starts with the app rather than with the page that shows it.
 		provideEnvironmentInitializer(() => inject(AppearanceSyncService)),
+		// The same for the language, and alive from the start for the same
+		// reason: the switch sits in the top bar, which every page has.
+		provideEnvironmentInitializer(() => inject(LanguageSyncService)),
+		// And the default an administrator set for everybody, which applies to
+		// whoever has not picked one of their own.
+		provideEnvironmentInitializer(() => inject(DefaultLanguageSyncService)),
 		// Measurement. Nothing is sent — and the analytics SDK is not even
 		// fetched — until the collector has allowed it, but the service has to
 		// be alive from the start: it follows the navigations and the sign-in

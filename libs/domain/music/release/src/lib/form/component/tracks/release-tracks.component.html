@@ -2,18 +2,19 @@
 	@if (!params.release?.album?.uid) {
 		<section class="mc-form-section">
 			<p class="mc-form-note">
-				Give the pressing an album first — a track of a release is a
-				track of the album it pressed.
+				{{ 'ui.releaseTracks.give-the-pressing-an' | transloco }}
 			</p>
 		</section>
 	} @else {
 		<section class="mc-form-section" aria-labelledby="release-album-tracks">
 			<h2 id="release-album-tracks">
-				The album ({{ params.albumTracks.length }})
+				{{
+					'ui.releaseTracks.albumHeading'
+						| transloco: { count: params.albumTracks.length }
+				}}
 			</h2>
 			<p class="mc-form-note">
-				Every pressing of this album plays these. They are edited on the
-				album, not here.
+				{{ 'ui.releaseTracks.every-pressing-of-this' | transloco }}
 			</p>
 			@if (params.albumTracks.length) {
 				<ol class="release-tracks-list is-album">
@@ -36,7 +37,10 @@
 
 		<section class="mc-form-section" aria-labelledby="release-own-tracks">
 			<h2 id="release-own-tracks">
-				Only on this pressing ({{ params.releaseTracks.length }})
+				{{
+					'ui.releaseTracks.ownHeading'
+						| transloco: { count: params.releaseTracks.length }
+				}}
 			</h2>
 
 			@if (params.releaseTracks.length) {
@@ -58,7 +62,10 @@
 									size="small"
 									severity="secondary"
 									[text]="true"
-									ariaLabel="Edit this track"
+									[ariaLabel]="
+										'ui.releaseTracks.edit-this-track'
+											| transloco
+									"
 									[disabled]="saving()"
 									(onClick)="edit(track)"
 								></p-button>
@@ -67,7 +74,10 @@
 									size="small"
 									severity="danger"
 									[text]="true"
-									ariaLabel="Remove this track"
+									[ariaLabel]="
+										'ui.releaseTracks.remove-this-track'
+											| transloco
+									"
 									[disabled]="saving()"
 									(onClick)="remove(track)"
 								></p-button>
@@ -77,13 +87,17 @@
 				</ol>
 			} @else {
 				<p class="mc-form-note">
-					Nothing yet. This pressing plays the album as it is.
+					{{
+						'ui.releaseTracks.nothing-yet-this-pressing' | transloco
+					}}
 				</p>
 			}
 
 			<div class="mc-form-grid release-tracks-form">
 				<div class="mc-field release-tracks-field-position">
-					<label for="track-position">Position</label>
+					<label for="track-position">{{
+						'ui.releaseTracks.position' | transloco
+					}}</label>
 					<input
 						id="track-position"
 						type="text"
@@ -100,7 +114,9 @@
 				</div>
 
 				<div class="mc-field is-wide">
-					<label for="track-name">Title</label>
+					<label for="track-name">{{
+						'ui.releaseTracks.title' | transloco
+					}}</label>
 					<input
 						id="track-name"
 						type="text"
@@ -111,7 +127,9 @@
 				</div>
 
 				<div class="mc-field release-tracks-field-duration">
-					<label for="track-duration">Length</label>
+					<label for="track-duration">{{
+						'ui.releaseTracks.length' | transloco
+					}}</label>
 					<input
 						id="track-duration"
 						type="text"
@@ -130,7 +148,7 @@
 			<div class="mc-form-actions">
 				@if (editing()) {
 					<p-button
-						label="Cancel"
+						[label]="'ui.releaseTracks.cancel' | transloco"
 						severity="secondary"
 						[outlined]="true"
 						[disabled]="saving()"

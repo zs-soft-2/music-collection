@@ -1,10 +1,12 @@
 <form class="form" (submit)="$event.preventDefault(); submit()">
 	<fieldset class="group" [disabled]="busy()">
-		<legend>How you came by it</legend>
+		<legend>{{ 'ui.copyDetailsForm.how-you-came-by' | transloco }}</legend>
 
 		<div class="fields">
 			<label class="field">
-				<span class="label">Bought on</span>
+				<span class="label">{{
+					'ui.copyDetailsForm.bought-on' | transloco
+				}}</span>
 				<input
 					type="date"
 					[max]="today"
@@ -13,15 +15,21 @@
 					(input)="purchaseDate.set(text($event))"
 				/>
 				@if (dateInvalid()) {
-					<span class="field-error">That day is still ahead.</span>
+					<span class="field-error">{{
+						'ui.copyDetailsForm.that-day-is-still' | transloco
+					}}</span>
 				}
 			</label>
 
 			<label class="field wide">
-				<span class="label">Where from</span>
+				<span class="label">{{
+					'ui.copyDetailsForm.where-from' | transloco
+				}}</span>
 				<input
 					type="text"
-					placeholder="A shop, a fair, a webshop, a person…"
+					[placeholder]="
+						'ui.copyDetailsForm.a-shop-a-fair' | transloco
+					"
 					[attr.maxlength]="placeMaxLength"
 					[value]="purchasePlace()"
 					(input)="purchasePlace.set(text($event))"
@@ -29,7 +37,9 @@
 			</label>
 
 			<label class="field narrow">
-				<span class="label">Price</span>
+				<span class="label">{{
+					'ui.copyDetailsForm.price' | transloco
+				}}</span>
 				<input
 					type="text"
 					inputmode="decimal"
@@ -38,16 +48,20 @@
 					(input)="purchasePrice.set(text($event))"
 				/>
 				@if (priceInvalid()) {
-					<span class="field-error">This is not an amount.</span>
+					<span class="field-error">{{
+						'ui.copyDetailsForm.this-is-not-an' | transloco
+					}}</span>
 				}
 			</label>
 
 			<label class="field narrow">
-				<span class="label">Currency</span>
+				<span class="label">{{
+					'ui.copyDetailsForm.currency' | transloco
+				}}</span>
 				<input
 					type="text"
 					maxlength="3"
-					placeholder="HUF"
+					[placeholder]="'ui.copyDetailsForm.huf' | transloco"
 					[value]="purchaseCurrency()"
 					(input)="purchaseCurrency.set(text($event))"
 				/>
@@ -56,16 +70,20 @@
 	</fieldset>
 
 	<fieldset class="group" [disabled]="busy()">
-		<legend>How it has held up</legend>
+		<legend>{{ 'ui.copyDetailsForm.how-it-has-held' | transloco }}</legend>
 
 		<div class="fields">
 			<label class="field">
-				<span class="label">Record</span>
+				<span class="label">{{
+					'ui.copyDetailsForm.record' | transloco
+				}}</span>
 				<select
 					[value]="mediaGrade() ?? ''"
 					(change)="mediaGrade.set(grade($event))"
 				>
-					<option value="">Not graded</option>
+					<option value="">
+						{{ 'ui.copyDetailsForm.not-graded' | transloco }}
+					</option>
 					@for (value of grades; track value) {
 						<option [value]="value">
 							{{ value }} — {{ gradeLabels[value] }}
@@ -75,12 +93,16 @@
 			</label>
 
 			<label class="field">
-				<span class="label">Sleeve</span>
+				<span class="label">{{
+					'ui.copyDetailsForm.sleeve' | transloco
+				}}</span>
 				<select
 					[value]="sleeveGrade() ?? ''"
 					(change)="sleeveGrade.set(grade($event))"
 				>
-					<option value="">Not graded</option>
+					<option value="">
+						{{ 'ui.copyDetailsForm.not-graded2' | transloco }}
+					</option>
 					@for (value of grades; track value) {
 						<option [value]="value">
 							{{ value }} — {{ gradeLabels[value] }}
@@ -92,17 +114,19 @@
 	</fieldset>
 
 	<fieldset class="group" [disabled]="busy()">
-		<legend>Which one of them it is</legend>
+		<legend>
+			{{ 'ui.copyDetailsForm.which-one-of-them' | transloco }}
+		</legend>
 
 		<p class="group-lead">
-			Only a numbered edition carries this — the number stamped, embossed
-			or written by hand on the record. It is registered across the whole
-			site: two collectors cannot write down the same copy.
+			{{ 'ui.copyDetailsForm.only-a-numbered-edition' | transloco }}
 		</p>
 
 		<div class="fields">
 			<label class="field narrow">
-				<span class="label">Copy number</span>
+				<span class="label">{{
+					'ui.copyDetailsForm.copy-number' | transloco
+				}}</span>
 				<input
 					type="text"
 					inputmode="numeric"
@@ -117,18 +141,23 @@
 					(input)="serialNumber.set(text($event))"
 				/>
 				@if (serialProblem() === 'number') {
-					<span class="field-error">This is not a copy number.</span>
+					<span class="field-error">{{
+						'ui.copyDetailsForm.this-is-not-a' | transloco
+					}}</span>
 				}
 				@if (serialProblem() === 'totalAlone') {
 					<span class="field-error">
-						Which one of them is yours? An edition size on its own
-						says nothing about this copy.
+						{{
+							'ui.copyDetailsForm.which-one-of-them2' | transloco
+						}}
 					</span>
 				}
 			</label>
 
 			<label class="field narrow">
-				<span class="label">Out of</span>
+				<span class="label">{{
+					'ui.copyDetailsForm.out-of' | transloco
+				}}</span>
 				<input
 					type="text"
 					inputmode="numeric"
@@ -144,12 +173,15 @@
 				/>
 				@if (serialProblem() === 'total') {
 					<span class="field-error">
-						This is not an edition size.
+						{{ 'ui.copyDetailsForm.this-is-not-an2' | transloco }}
 					</span>
 				}
 				@if (serialProblem() === 'tooLarge') {
 					<span class="field-error">
-						The edition is smaller than this copy's number.
+						{{
+							'ui.copyDetailsForm.the-edition-is-smaller'
+								| transloco
+						}}
 					</span>
 				}
 			</label>
@@ -157,24 +189,32 @@
 	</fieldset>
 
 	<fieldset class="group" [disabled]="busy()">
-		<legend>What there is to tell</legend>
+		<legend>{{ 'ui.copyDetailsForm.what-there-is-to' | transloco }}</legend>
 
 		<label class="field">
-			<span class="label">Note</span>
+			<span class="label">{{
+				'ui.copyDetailsForm.note' | transloco
+			}}</span>
 			<input
 				type="text"
-				placeholder="The one line that stands next to the record"
+				[placeholder]="
+					'ui.copyDetailsForm.the-one-line-that' | transloco
+				"
 				[value]="description()"
 				(input)="description.set(text($event))"
 			/>
 		</label>
 
 		<label class="field">
-			<span class="label">Story</span>
+			<span class="label">{{
+				'ui.copyDetailsForm.story' | transloco
+			}}</span>
 			<textarea
 				rows="6"
 				[attr.maxlength]="storyMaxLength"
-				placeholder="How it found you, and what it has been through since."
+				[placeholder]="
+					'ui.copyDetailsForm.how-it-found-you' | transloco
+				"
 				[value]="story()"
 				(input)="story.set(text($event))"
 			></textarea>
@@ -195,7 +235,7 @@
 			[disabled]="busy()"
 			(click)="cancelled.emit()"
 		>
-			Cancel
+			{{ 'ui.copyDetailsForm.cancel' | transloco }}
 		</button>
 		<button
 			type="submit"

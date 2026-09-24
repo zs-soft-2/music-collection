@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import {
 	ChangeDetectionStrategy,
 	Component,
@@ -12,6 +13,7 @@ import { FORMAT_LABELS, MediaFormat } from '@music-collection/ui/music-view';
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-format-badge',
 	host: { class: 'format-badge' },
+	imports: [...I18N_IMPORTS],
 	template: `
 		@switch (format()) {
 			@case ('cd') {

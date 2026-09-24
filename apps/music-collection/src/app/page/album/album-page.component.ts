@@ -11,6 +11,7 @@ import {
 	untracked,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
 	AdminEditLinkComponent,
@@ -43,6 +44,7 @@ type AlbumSection =
 	templateUrl: './album-page.component.html',
 	styleUrls: ['./album-page.component.scss'],
 	imports: [
+		...I18N_IMPORTS,
 		PageBreadcrumbComponent,
 		RouterLink,
 		DiscographyCardComponent,

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { StyleBarsComponent } from '../../../shared/music-ui';
 import { AdminDashboardStore } from './admin-dashboard.store';
@@ -17,6 +18,7 @@ import { CompletenessMetersComponent } from './component/completeness-meters/com
 	templateUrl: './admin-dashboard.component.html',
 	styleUrls: ['./admin-dashboard.component.scss'],
 	imports: [
+		...I18N_IMPORTS,
 		RouterLink,
 		CollectionGrowthChartComponent,
 		CompletenessMetersComponent,

@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
@@ -14,6 +15,7 @@ import { PlayAlbumButtonComponent } from '../../player/play-album-button.compone
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-discography-card',
 	imports: [
+		...I18N_IMPORTS,
 		RouterLink,
 		FormatBadgeComponent,
 		AdminEditLinkComponent,
@@ -51,13 +53,17 @@ import { PlayAlbumButtonComponent } from '../../player/play-album-button.compone
 
 				@if (item.ownedFormats.length) {
 					<span class="owned-row">
-						<span class="owned-label">In your collection</span>
+						<span class="owned-label">{{
+							'ui.discographyCard.in-your-collection' | transloco
+						}}</span>
 						@for (format of item.ownedFormats; track format) {
 							<mc-format-badge [format]="format" />
 						}
 					</span>
 				} @else {
-					<span class="not-owned">Not in your collection</span>
+					<span class="not-owned">{{
+						'ui.discographyCard.not-in-your-collection' | transloco
+					}}</span>
 				}
 			</span>
 		</a>

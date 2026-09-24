@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { of } from 'rxjs';
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -16,11 +17,14 @@ describe('CollectionItemListComponent', () => {
 		await TestBed.configureTestingModule({
 			imports: [CollectionItemListComponent],
 			providers: [
+				provideI18nTesting(),
 				{
 					provide: CollectionItemStateService,
 					useValue: {
 						selectEntities$: jest.fn(() => of([])),
-						selectCollectionItemListConfig$: jest.fn(() => of(null)),
+						selectCollectionItemListConfig$: jest.fn(() =>
+							of(null)
+						),
 						dispatchListEntitiesAction: jest.fn(),
 					},
 				},

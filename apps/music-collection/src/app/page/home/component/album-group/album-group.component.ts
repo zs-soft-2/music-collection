@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { CarouselComponent } from '../../../../shared/music-ui';
 import { AlbumGroup } from '../../home.mapper';
@@ -11,19 +12,22 @@ import { AlbumGroup } from '../../home.mapper';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-album-group',
-	imports: [RouterLink, CarouselComponent],
+	imports: [...I18N_IMPORTS, RouterLink, CarouselComponent],
 	template: `
 		@let item = group();
+		@let heading =
+			item.labelGroup
+				? (item.label | mcCatalog: item.labelGroup)
+				: item.label;
 
 		<h3 class="label">
-			{{ item.label }}
-			<span class="count"
-				>{{ item.total }}
-				{{ item.total === 1 ? 'album' : 'albums' }}</span
-			>
+			{{ heading }}
+			<span class="count">{{
+				item.total | mcPlural: 'home.group.albums'
+			}}</span>
 		</h3>
 
-		<mc-carousel [label]="item.label">
+		<mc-carousel [label]="heading">
 			@for (album of item.albums; track album.id) {
 				<li>
 					<a

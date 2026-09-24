@@ -22,6 +22,7 @@ import {
 	untracked,
 	viewChild,
 } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { NetworkEdge, NetworkNode } from '../../network.model';
 import {
@@ -54,6 +55,7 @@ const ALL_EDGE_LABELS_MAX = 16;
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	providers: [NetworkLayoutService],
 	selector: 'mc-network-graph',
+	imports: [...I18N_IMPORTS],
 	templateUrl: './network-graph.component.html',
 	styleUrls: ['./network-graph.component.scss'],
 })

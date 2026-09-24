@@ -223,6 +223,21 @@ service cloud.firestore {
       };
     }
 
+    // Az app alapértelmezett nyelve. Kivétel az alábbi szabály alól: ezt a
+    // kijelentkezett látogatónak is látnia kell, mert ez dönti el, milyen
+    // nyelven nyílik meg neki az oldal. Nincs benne semmi védeni való — egy
+    // háromértékű kód —, írni viszont csak jogosultsággal lehet. A szabályok
+    // VAGY-olnak, ezért ez a pontosabb szabály a lenti mellett áll meg.
+    match /app-setting/language {
+      allow get: if true;
+      // A `FirestoreSyncService` a szinkron-bélyeget is ráírja, ezért az
+      // `updatedAt` is megengedett kulcs — a `language` viszont csak a
+      // három nyelv egyike lehet.
+      allow write: if hasPerm('updateDefaultLanguage')
+        && request.resource.data.keys().hasOnly(['language', 'updatedAt'])
+        && request.resource.data.language in ['hu', 'en', 'de'];
+    }
+
     // Alkalmazás-szintű beállítások (pl. `badge-generation`). Írni csak a
     // callable tud, mert a napi keret számlálója is itt él — a kliens nem
     // nullázhatja le magának.

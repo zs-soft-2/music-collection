@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { ProfilePageStore } from '../../profile-page.store';
 
@@ -11,35 +12,51 @@ import { ProfilePageStore } from '../../profile-page.store';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-profile-listening',
-	imports: [RouterLink],
+	imports: [...I18N_IMPORTS, RouterLink],
 	template: `
 		@if (store.listening(); as listening) {
 			@if (listening.plays) {
 				<dl class="totals">
 					<div>
-						<dt>Records put on</dt>
+						<dt>
+							{{
+								'ui.profileListening.records-put-on' | transloco
+							}}
+						</dt>
 						<dd>{{ listening.plays }}</dd>
 					</div>
 					<div>
-						<dt>Heard right through</dt>
+						<dt>
+							{{
+								'ui.profileListening.heard-right-through'
+									| transloco
+							}}
+						</dt>
 						<dd>{{ listening.fullPlays }}</dd>
 					</div>
 					<div>
-						<dt>Different records</dt>
+						<dt>
+							{{
+								'ui.profileListening.different-records'
+									| transloco
+							}}
+						</dt>
 						<dd>{{ listening.records }}</dd>
 					</div>
 					<div>
-						<dt>This year</dt>
+						<dt>
+							{{ 'ui.profileListening.this-year' | transloco }}
+						</dt>
 						<dd>{{ listening.playsThisYear }}</dd>
 					</div>
 					<div>
-						<dt>Hours</dt>
+						<dt>{{ 'ui.profileListening.hours' | transloco }}</dt>
 						<dd>{{ listening.hours }}</dd>
 					</div>
 				</dl>
 
 				@if (listening.top.length) {
-					<h3>Put on most</h3>
+					<h3>{{ 'ui.profileListening.put-on-most' | transloco }}</h3>
 					<ol class="top">
 						@for (record of listening.top; track record.albumId) {
 							<li>
@@ -54,12 +71,18 @@ import { ProfilePageStore } from '../../profile-page.store';
 									}
 								</a>
 								<span class="count">
-									{{ record.plays }}×
+									{{
+										'ui.profileListening.plays'
+											| transloco: { count: record.plays }
+									}}
 									@if (record.fullPlays) {
-										<span class="through"
-											>· {{ record.fullPlays }} right
-											through</span
-										>
+										<span class="through">{{
+											'ui.profileListening.through'
+												| transloco
+													: {
+															count: record.fullPlays,
+													  }
+										}}</span>
 									}
 								</span>
 							</li>
@@ -68,10 +91,7 @@ import { ProfilePageStore } from '../../profile-page.store';
 				}
 			} @else {
 				<p class="empty">
-					Nothing yet. Put a record on from an album page and it is
-					counted here — a record counts once it has played for half a
-					minute, and counts as heard right through once every track
-					of it has been.
+					{{ 'ui.profileListening.nothing-yet-put-a' | transloco }}
 				</p>
 			}
 		}

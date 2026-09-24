@@ -13,6 +13,7 @@ import {
 	signal,
 	viewChild,
 } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import { FeatureCollection } from 'geojson';
 
 /** One place on the map, and how many collectors it stands for. */
@@ -47,6 +48,7 @@ const HIT_RADIUS = 9;
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-world-map',
+	imports: [...I18N_IMPORTS],
 	template: `
 		<svg
 			#canvas

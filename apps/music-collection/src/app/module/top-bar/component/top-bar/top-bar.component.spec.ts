@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { NgxPermissionsModule } from 'ngx-permissions';
 import { BehaviorSubject, of } from 'rxjs';
 
@@ -32,6 +33,7 @@ describe('TopBarComponent', () => {
 			imports: [TopBarComponent, NgxPermissionsModule.forRoot()],
 			providers: [
 				provideRouter([]),
+				provideI18nTesting(),
 				{
 					// A külső lejátszók hozzájárulása a beállításokból jönne
 					// (Firestore/Auth); itt elég, hogy a mini player kimarad.

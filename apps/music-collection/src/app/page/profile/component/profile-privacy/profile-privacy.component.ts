@@ -5,6 +5,7 @@ import {
 	inject,
 	linkedSignal,
 } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
 	CITY_MAX_LENGTH,
@@ -16,7 +17,7 @@ import { ProfilePageStore } from '../../profile-page.store';
 
 interface LevelChoice {
 	value: UserLocationLevel;
-	label: string;
+	labelKey: string;
 	description: string;
 }
 
@@ -28,9 +29,12 @@ interface LevelChoice {
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-profile-privacy',
+	imports: [...I18N_IMPORTS],
 	template: `
 		<fieldset class="levels">
-			<legend>Show where you collect from</legend>
+			<legend>
+				{{ 'ui.profilePrivacy.show-where-you-collect' | transloco }}
+			</legend>
 
 			@for (choice of levels; track choice.value) {
 				<label
@@ -44,7 +48,7 @@ interface LevelChoice {
 						(change)="store.setLocation({ level: choice.value })"
 					/>
 					<span class="level-text">
-						<b>{{ choice.label }}</b>
+						<b>{{ choice.labelKey | transloco }}</b>
 						<span>{{ choice.description }}</span>
 					</span>
 				</label>
@@ -53,13 +57,15 @@ interface LevelChoice {
 
 		@if (level() !== 'off') {
 			<div class="place">
-				<label class="label" for="mc-location-country">Country</label>
+				<label class="label" for="mc-location-country">{{
+					'ui.profilePrivacy.country' | transloco
+				}}</label>
 				<select
 					id="mc-location-country"
 					(change)="selectCountry($event)"
 				>
 					<option value="" [selected]="!store.location().countryCode">
-						Not chosen
+						{{ 'ui.profilePrivacy.not-chosen' | transloco }}
 					</option>
 					@for (country of countries; track country.code) {
 						<option
@@ -74,7 +80,9 @@ interface LevelChoice {
 				</select>
 
 				@if (level() !== 'country') {
-					<label class="label" for="mc-location-city">City</label>
+					<label class="label" for="mc-location-city">{{
+						'ui.profilePrivacy.city' | transloco
+					}}</label>
 					<input
 						id="mc-location-city"
 						type="text"
@@ -92,7 +100,9 @@ interface LevelChoice {
 		<p class="preview">{{ preview() }}</p>
 
 		<fieldset class="levels">
-			<legend>Outside players</legend>
+			<legend>
+				{{ 'ui.profilePrivacy.outside-players' | transloco }}
+			</legend>
 
 			<label class="level" [class.selected]="store.externalPlayers()">
 				<input
@@ -103,19 +113,20 @@ interface LevelChoice {
 					"
 				/>
 				<span class="level-text">
-					<b>Let me listen here</b>
+					<b>{{
+						'ui.profilePrivacy.let-me-listen-here' | transloco
+					}}</b>
 					<span>
-						Puts YouTube's and Spotify's players on the page. They
-						are not ours: each one writes its own storage and tells
-						its owner you were here. Switching it off takes them
-						off the page at once, and the records go silent.
+						{{ 'ui.profilePrivacy.puts-youtube-s-and' | transloco }}
 					</span>
 				</span>
 			</label>
 		</fieldset>
 
 		<fieldset class="levels">
-			<legend>Usage measurement</legend>
+			<legend>
+				{{ 'ui.profilePrivacy.usage-measurement' | transloco }}
+			</legend>
 
 			<label class="level" [class.selected]="store.measurement()">
 				<input
@@ -124,12 +135,14 @@ interface LevelChoice {
 					(change)="store.setMeasurement($any($event.target).checked)"
 				/>
 				<span class="level-text">
-					<b>Count how the app is used</b>
+					<b>{{
+						'ui.profilePrivacy.count-how-the-app' | transloco
+					}}</b>
 					<span>
-						Which pages and features get opened, through Google
-						Analytics. No advertising, and nothing about your
-						records or your searches. Switching it off stops it at
-						once and clears what it left in this browser.
+						{{
+							'ui.profilePrivacy.which-pages-and-features'
+								| transloco
+						}}
 					</span>
 				</span>
 			</label>
@@ -245,24 +258,24 @@ export class ProfilePrivacyComponent {
 	protected readonly levels: LevelChoice[] = [
 		{
 			value: 'off',
-			label: 'Not at all',
+			labelKey: 'ui.profilePrivacy.place.off',
 			description:
 				'Nothing about where you are leaves your own settings.',
 		},
 		{
 			value: 'country',
-			label: 'My country',
+			labelKey: 'ui.profilePrivacy.place.country',
 			description:
 				'You are counted into your country, with nothing that points back to you.',
 		},
 		{
 			value: 'city',
-			label: 'My country and city',
+			labelKey: 'ui.profilePrivacy.place.city',
 			description: 'A pin on your city, with no name on it.',
 		},
 		{
 			value: 'profile',
-			label: 'My country, city and me',
+			labelKey: 'ui.profilePrivacy.place.profile',
 			description:
 				'The pin carries your name and picture, and leads to your profile.',
 		},

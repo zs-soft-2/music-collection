@@ -4,6 +4,7 @@ import {
 	computed,
 	input,
 } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 /**
  * The picture that stands for a collection. The curator's own artwork comes
@@ -17,6 +18,7 @@ import {
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-collection-artwork',
+	imports: [...I18N_IMPORTS],
 	template: `
 		@if (coverImageUrl(); as url) {
 			<img class="cover" [src]="url" alt="" loading="lazy" />

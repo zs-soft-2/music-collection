@@ -318,7 +318,13 @@ describe('toNextAlbums', () => {
 					'frolic',
 					400,
 					400,
-					[{ collectionUid: 'bay-area', missing: 1, totalPoints: 400 }],
+					[
+						{
+							collectionUid: 'bay-area',
+							missing: 1,
+							totalPoints: 400,
+						},
+					],
 					['bay-area']
 				),
 			],
@@ -366,7 +372,9 @@ describe('toNextAlbums', () => {
 	});
 
 	it('shows at most what the page has room for', () => {
-		const wanted = [{ collectionUid: 'doom', missing: 9, totalPoints: 900 }];
+		const wanted = [
+			{ collectionUid: 'doom', missing: 9, totalPoints: 900 },
+		];
 		const many = Array.from({ length: 20 }, (_unused, index) =>
 			suggestion(`album-${index}`, 0, 100, wanted)
 		);

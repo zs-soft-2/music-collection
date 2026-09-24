@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { firstValueFrom, of } from 'rxjs';
 
 import { TestBed } from '@angular/core/testing';
@@ -17,7 +18,10 @@ import {
 	ResolvedMusicCollection,
 } from '@music-collection/domain/music-collection/api';
 
-import { MusicCollectionEffect, MusicCollectionStanding } from './music-collection.effect';
+import {
+	MusicCollectionEffect,
+	MusicCollectionStanding,
+} from './music-collection.effect';
 
 /**
  * Only `suggestNextAlbums` is exercised here, and it asks nothing of the
@@ -79,6 +83,7 @@ describe('MusicCollectionEffect.suggestNextAlbums', () => {
 	beforeEach(() => {
 		TestBed.configureTestingModule({
 			providers: [
+				provideI18nTesting(),
 				MusicCollectionEffect,
 				{ provide: MusicCollectionRepository, useValue: {} },
 				{ provide: AlbumStateService, useValue: {} },
@@ -155,6 +160,7 @@ describe('MusicCollectionEffect credits', () => {
 
 		TestBed.configureTestingModule({
 			providers: [
+				provideI18nTesting(),
 				MusicCollectionEffect,
 				{
 					provide: MusicCollectionRepository,
@@ -168,7 +174,10 @@ describe('MusicCollectionEffect credits', () => {
 								{
 									uid: 'justice',
 									name: '...And Justice for All',
-									artist: { uid: 'metallica', name: 'Metallica' },
+									artist: {
+										uid: 'metallica',
+										name: 'Metallica',
+									},
 									styles: [StyleEnum.Thrash],
 								} as AlbumEntity,
 							]),
@@ -207,7 +216,9 @@ describe('MusicCollectionEffect credits', () => {
 	/* The point of the whole arrangement: one drummer, not ten thousand credits. */
 	it('asks only for the credits of the musicians a rule names', async () => {
 		await firstValueFrom(
-			effect.preview$({ credits: { musicians: ['hoglan'], roles: ['Drums'] } })
+			effect.preview$({
+				credits: { musicians: ['hoglan'], roles: ['Drums'] },
+			})
 		);
 
 		expect(listCredits).toHaveBeenCalledWith({

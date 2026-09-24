@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
 	PLAYER_CONTEXT_LABELS,
@@ -13,7 +14,7 @@ import { PlayerStore } from '../../../../shared/player';
 
 interface Choice<T> {
 	value: T;
-	label: string;
+	labelKey: string;
 }
 
 /**
@@ -23,6 +24,7 @@ interface Choice<T> {
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-profile-playback',
+	imports: [...I18N_IMPORTS],
 	template: `
 		@for (context of contexts; track context) {
 			<article class="context">
@@ -34,14 +36,19 @@ interface Choice<T> {
 							class="reset"
 							(click)="player.resetSettingsFor(context)"
 						>
-							Back to defaults
+							{{
+								'ui.profilePlayback.back-to-defaults'
+									| transloco
+							}}
 						</button>
 					}
 				</header>
 
 				<div class="choices">
 					<fieldset>
-						<legend>Play on</legend>
+						<legend>
+							{{ 'ui.profilePlayback.play-on' | transloco }}
+						</legend>
 						@for (choice of sources; track choice.value) {
 							<button
 								type="button"
@@ -50,13 +57,15 @@ interface Choice<T> {
 								"
 								(click)="set(context, { source: choice.value })"
 							>
-								{{ choice.label }}
+								{{ choice.labelKey | transloco }}
 							</button>
 						}
 					</fieldset>
 
 					<fieldset>
-						<legend>Opens</legend>
+						<legend>
+							{{ 'ui.profilePlayback.opens' | transloco }}
+						</legend>
 						@for (choice of views; track choice.value) {
 							<button
 								type="button"
@@ -65,13 +74,15 @@ interface Choice<T> {
 								"
 								(click)="set(context, { view: choice.value })"
 							>
-								{{ choice.label }}
+								{{ choice.labelKey | transloco }}
 							</button>
 						}
 					</fieldset>
 
 					<fieldset>
-						<legend>Visuals</legend>
+						<legend>
+							{{ 'ui.profilePlayback.visuals' | transloco }}
+						</legend>
 						@for (choice of effects; track choice.value) {
 							<button
 								type="button"
@@ -82,7 +93,7 @@ interface Choice<T> {
 									set(context, { effects: choice.value })
 								"
 							>
-								{{ choice.label }}
+								{{ choice.labelKey | transloco }}
 							</button>
 						}
 					</fieldset>
@@ -99,7 +110,10 @@ interface Choice<T> {
 								})
 							"
 						/>
-						Show the lyrics when there are any
+						{{
+							'ui.profilePlayback.show-the-lyrics-when'
+								| transloco
+						}}
 					</label>
 
 					<label class="switch">
@@ -112,7 +126,7 @@ interface Choice<T> {
 								})
 							"
 						/>
-						Play on to the next track
+						{{ 'ui.profilePlayback.play-on-to-the' | transloco }}
 					</label>
 				</div>
 			</article>
@@ -241,18 +255,18 @@ export class ProfilePlaybackComponent {
 	) as PlayerContext[];
 
 	protected readonly sources: Choice<PlayerSourceSetting>[] = [
-		{ value: 'auto', label: 'Auto' },
-		{ value: 'spotify', label: 'Spotify' },
-		{ value: 'youtube', label: 'YouTube' },
+		{ value: 'auto', labelKey: 'ui.playback.auto' },
+		{ value: 'spotify', labelKey: 'ui.playback.spotify' },
+		{ value: 'youtube', labelKey: 'ui.playback.youtube' },
 	];
 	protected readonly views: Choice<PlayerView>[] = [
-		{ value: 'panel', label: 'Page' },
-		{ value: 'stage', label: 'Full screen' },
+		{ value: 'panel', labelKey: 'ui.playback.page' },
+		{ value: 'stage', labelKey: 'ui.playback.fullScreen' },
 	];
 	protected readonly effects: Choice<PlayerEffects>[] = [
-		{ value: 'off', label: 'Off' },
-		{ value: 'subtle', label: 'Subtle' },
-		{ value: 'full', label: 'Full' },
+		{ value: 'off', labelKey: 'ui.playback.off' },
+		{ value: 'subtle', labelKey: 'ui.playback.subtle' },
+		{ value: 'full', labelKey: 'ui.playback.full' },
 	];
 
 	protected settings(context: PlayerContext): PlayerSettings {

@@ -5,6 +5,7 @@ import {
 	inject,
 	input,
 } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { ExternalPlayerConsentService } from '../../data/external-player';
 import { PlayerStore } from './player.store';
@@ -17,6 +18,7 @@ import { PlayerStore } from './player.store';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-play-album-button',
+	imports: [...I18N_IMPORTS],
 	template: `
 		@if (playable()) {
 			<button

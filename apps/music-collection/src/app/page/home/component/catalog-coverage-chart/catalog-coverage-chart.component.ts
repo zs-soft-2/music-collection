@@ -4,6 +4,7 @@ import {
 	computed,
 	input,
 } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { DecadeCoverage } from '../../home.mapper';
 
@@ -16,25 +17,38 @@ import { DecadeCoverage } from '../../home.mapper';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-catalog-coverage-chart',
+	imports: [...I18N_IMPORTS],
 	template: `
 		<figure class="chart">
 			<div class="head">
 				<figcaption class="title">{{ heading() }}</figcaption>
 				<ul class="legend" aria-hidden="true">
 					<li>
-						<span class="swatch is-collected"></span>In my
-						collection
+						<span class="swatch is-collected"></span
+						>{{
+							'ui.catalogCoverageChart.in-my-collection'
+								| transloco
+						}}
 					</li>
 					<li>
-						<span class="swatch is-catalog"></span>Rest of the
-						catalog
+						<span class="swatch is-catalog"></span
+						>{{
+							'ui.catalogCoverageChart.rest-of-the-catalog'
+								| transloco
+						}}
 					</li>
 				</ul>
 			</div>
 
 			<p class="summary">
-				<strong>{{ total().collected }}</strong> of
-				{{ total().catalog }} catalog albums collected
+				{{
+					'ui.catalogCoverageChart.summary'
+						| transloco
+							: {
+									collected: total().collected,
+									catalog: total().catalog,
+							  }
+				}}
 				<span class="share">{{ total().share }}%</span>
 			</p>
 
@@ -79,8 +93,11 @@ import { DecadeCoverage } from '../../home.mapper';
 								column.label
 							}}</span>
 							<span
-								><strong>{{ column.catalog }}</strong> in the
-								catalog</span
+								><strong>{{ column.catalog }}</strong>
+								{{
+									'ui.catalogCoverageChart.in-the-catalog'
+										| transloco
+								}}</span
 							>
 							<span
 								><strong>{{ column.collected }}</strong>

@@ -1,29 +1,35 @@
 <header class="mc-page-head">
 	<div>
-		<h1>Dashboard</h1>
-		<p>The catalog and the collection data at a glance.</p>
+		<h1>{{ 'ui.adminDashboard.dashboard' | transloco }}</h1>
+		<p>{{ 'ui.adminDashboard.the-catalog-and-the' | transloco }}</p>
 	</div>
 </header>
 
 <section aria-labelledby="counts-title">
-	<h2 id="counts-title" class="visually-hidden">Record counts</h2>
+	<h2 id="counts-title" class="visually-hidden">
+		{{ 'ui.adminDashboard.record-counts' | transloco }}
+	</h2>
 	<ul class="tiles">
 		@for (tile of store.tiles(); track tile.route) {
 			<li>
 				<a class="tile" [routerLink]="['..', tile.route]">
 					<span class="tile-label">
 						<i class="pi {{ tile.icon }}" aria-hidden="true"></i>
-						{{ tile.label }}
+						{{ tile.labelKey | transloco }}
 					</span>
 					@if (tile.count === null) {
-						<span class="tile-value is-loading" aria-label="Loading"
+						<span
+							class="tile-value is-loading"
+							[attr.aria-label]="
+								'ui.adminDashboard.loading' | transloco
+							"
 							>—</span
 						>
 					} @else {
 						<span class="tile-value">{{ tile.count }}</span>
 					}
 					<span class="tile-sub">
-						Open list
+						{{ 'ui.adminDashboard.open-list' | transloco }}
 						<i class="pi pi-arrow-right" aria-hidden="true"></i>
 					</span>
 				</a>
@@ -34,21 +40,27 @@
 
 <div class="charts">
 	<section class="mc-card chart-card is-wide" aria-labelledby="growth-title">
-		<h2 id="growth-title" class="visually-hidden">Collection growth</h2>
+		<h2 id="growth-title" class="visually-hidden">
+			{{ 'ui.adminDashboard.collection-growth' | transloco }}
+		</h2>
 		@if (store.releasesLoading()) {
 			<div class="skeleton" role="status" aria-busy="true"></div>
 		} @else if (!store.growth().length) {
-			<p class="chart-empty">No dated collection items yet.</p>
+			<p class="chart-empty">
+				{{ 'ui.adminDashboard.no-dated-collection-items' | transloco }}
+			</p>
 		} @else {
 			<mc-collection-growth-chart
-				heading="Collection growth"
+				[heading]="'ui.adminDashboard.collection-growth2' | transloco"
 				[data]="store.growth()"
 			/>
 		}
 	</section>
 
 	<section class="mc-card chart-card is-tall" aria-labelledby="quality-title">
-		<h2 id="quality-title" class="chart-title">Data completeness</h2>
+		<h2 id="quality-title" class="chart-title">
+			{{ 'ui.adminDashboard.data-completeness' | transloco }}
+		</h2>
 		@if (store.catalogLoading()) {
 			<div class="skeleton" role="status" aria-busy="true"></div>
 		} @else {
@@ -56,24 +68,30 @@
 		}
 	</section>
 
-	<section class="mc-card chart-card" aria-label="Album types">
+	<section
+		class="mc-card chart-card"
+		[attr.aria-label]="'ui.adminDashboard.album-types' | transloco"
+	>
 		@if (store.albumsLoading()) {
 			<div class="skeleton" role="status" aria-busy="true"></div>
 		} @else {
 			<mc-style-bars
-				heading="Album types in the catalog"
+				[heading]="'ui.adminDashboard.album-types-in-the' | transloco"
 				unit="albums"
 				[data]="store.albumTypes()"
 			/>
 		}
 	</section>
 
-	<section class="mc-card chart-card" aria-label="Top styles">
+	<section
+		class="mc-card chart-card"
+		[attr.aria-label]="'ui.adminDashboard.top-styles' | transloco"
+	>
 		@if (store.albumsLoading()) {
 			<div class="skeleton" role="status" aria-busy="true"></div>
 		} @else {
 			<mc-style-bars
-				heading="Top styles in the catalog"
+				[heading]="'ui.adminDashboard.top-styles-in-the' | transloco"
 				unit="albums"
 				[data]="store.styles()"
 			/>
@@ -83,7 +101,9 @@
 
 <section class="mc-card panel" aria-labelledby="actions-title">
 	<header class="panel-head">
-		<h2 id="actions-title">Quick actions</h2>
+		<h2 id="actions-title">
+			{{ 'ui.adminDashboard.quick-actions' | transloco }}
+		</h2>
 	</header>
 	<ul class="actions">
 		@for (action of store.quickActions(); track action.route) {
@@ -95,7 +115,9 @@
 					<span class="action-icon">
 						<i class="pi {{ action.icon }}" aria-hidden="true"></i>
 					</span>
-					<span class="action-text">{{ action.createLabel }}</span>
+					<span class="action-text">{{
+						action.createLabelKey | transloco
+					}}</span>
 					<i class="pi pi-plus" aria-hidden="true"></i>
 				</a>
 			</li>

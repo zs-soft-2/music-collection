@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { TestBed } from '@angular/core/testing';
 import { performanceLog } from '@music-collection/common/engine';
 
@@ -57,6 +58,7 @@ describe('NetworkLayoutService', () => {
 	function serviceWith(worker?: Worker): NetworkLayoutService {
 		TestBed.configureTestingModule({
 			providers: [
+				provideI18nTesting(),
 				NetworkLayoutService,
 				...(worker
 					? [

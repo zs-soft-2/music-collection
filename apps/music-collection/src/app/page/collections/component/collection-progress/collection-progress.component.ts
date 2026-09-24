@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { CollectionArtworkComponent } from '../../../../shared/collection-artwork';
 import { CollectionCardView } from '../../collections.model';
@@ -13,7 +14,7 @@ import { CollectionCardView } from '../../collections.model';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-collection-progress',
-	imports: [RouterLink, CollectionArtworkComponent],
+	imports: [...I18N_IMPORTS, RouterLink, CollectionArtworkComponent],
 	template: `
 		<a
 			class="collection"

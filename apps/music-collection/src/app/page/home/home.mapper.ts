@@ -1,33 +1,37 @@
 import { ARTIST_TYPE_OPTIONS, EntityCounts } from '@music-collection/api';
+import {
+	CatalogGroup as CatalogVocabulary,
+	CatalogLabeller,
+} from '@music-collection/core/i18n';
 
 import {
 	AlbumView,
 	ArtistTileView,
 	ArtistView,
-	FORMAT_LABELS,
 	ReleaseView,
 } from '../../shared/music-ui';
 
 /** One catalog-wide entity count shown in the catalog panel. */
 export interface CatalogStat {
-	label: string;
+	/** Dictionary key of what is being counted, e.g. `home.count.albums`. */
+	labelKey: string;
 	count: number;
 }
 
 /** Entity types counted on the home page, in display order. */
-export const CATALOG_TYPES: { type: string; label: string }[] = [
-	{ type: 'Artist', label: 'Artists' },
-	{ type: 'Album', label: 'Albums' },
-	{ type: 'Label', label: 'Labels' },
-	{ type: 'Release', label: 'Releases' },
-	{ type: 'Musician', label: 'Musicians' },
-	{ type: 'Track', label: 'Tracks' },
+export const CATALOG_TYPES: { type: string; labelKey: string }[] = [
+	{ type: 'Artist', labelKey: 'home.count.artists' },
+	{ type: 'Album', labelKey: 'home.count.albums' },
+	{ type: 'Label', labelKey: 'home.count.labels' },
+	{ type: 'Release', labelKey: 'home.count.releases' },
+	{ type: 'Musician', labelKey: 'home.count.musicians' },
+	{ type: 'Track', labelKey: 'home.count.tracks' },
 ];
 
 /** Catalog-wide live counts; types not counted (yet) are left out. */
 export function catalogStats(counts: EntityCounts): CatalogStat[] {
-	return CATALOG_TYPES.flatMap(({ type, label }) =>
-		counts[type] === undefined ? [] : [{ label, count: counts[type] }]
+	return CATALOG_TYPES.flatMap(({ type, labelKey }) =>
+		counts[type] === undefined ? [] : [{ labelKey, count: counts[type] }]
 	);
 }
 
@@ -108,7 +112,17 @@ export function mostCatalogedArtists(
 interface CatalogGroup {
 	/** Stable `track` key — the style, the decade or the artist type. */
 	key: string;
+	/** The heading, as the catalog itself spells it. */
 	label: string;
+	/**
+	 * Which catalog vocabulary `label` is a word of, where the app owns the
+	 * words; the template puts it through the dictionary. Null for a style,
+	 * which reads the same in all three languages and is not translated.
+	 *
+	 * The mapper stays a pure function this way: it says *what* the heading
+	 * is, and the template — which has the language — says it.
+	 */
+	labelGroup: CatalogVocabulary | null;
 	/** Everything the catalog holds under the heading, not only the shown. */
 	total: number;
 }
@@ -132,7 +146,7 @@ const compareAlbums = (a: AlbumView, b: AlbumView): number =>
  */
 function toAlbumGroups(
 	grouped: Map<string, AlbumView[]>,
-	label: (key: string) => string,
+	labelGroup: CatalogVocabulary | null,
 	groupLimit: number,
 	itemLimit: number
 ): AlbumGroup[] {
@@ -142,7 +156,8 @@ function toAlbumGroups(
 		.slice(0, groupLimit)
 		.map(([key, albums]) => ({
 			key,
-			label: label(key),
+			label: key,
+			labelGroup,
 			total: albums.length,
 			albums: [...albums].sort(compareAlbums).slice(0, itemLimit),
 		}));
@@ -170,7 +185,9 @@ export function albumsByStyle(
 ): AlbumGroup[] {
 	return toAlbumGroups(
 		groupBy(albums, (album) => album.styles),
-		(style) => style,
+		// Not translated: "Melodic Death" and "Grindcore" are what the
+		// Hungarian and German press call them too.
+		null,
 		groupLimit,
 		itemLimit
 	);
@@ -186,7 +203,7 @@ export function albumsByDecade(
 		groupBy(albums, (album) =>
 			album.year === null ? [] : [`${Math.floor(album.year / 10) * 10}`]
 		),
-		(decade) => `${decade}s`,
+		'decade',
 		groupLimit,
 		itemLimit
 	);
@@ -201,7 +218,7 @@ export function artistsByType(
 	albumCounts: Map<string, number>,
 	itemLimit: number
 ): ArtistGroup[] {
-	return ARTIST_TYPE_OPTIONS.flatMap(({ label, value }) => {
+	return ARTIST_TYPE_OPTIONS.flatMap(({ value }) => {
 		const ofType = artists.filter((artist) => artist.type === value);
 		const shown = mostCatalogedArtists(ofType, albumCounts, itemLimit);
 
@@ -209,7 +226,10 @@ export function artistsByType(
 			? [
 					{
 						key: value,
-						label: `${label}s`,
+						label: value,
+						// The heading names several of them, and only English
+						// makes that plural by adding an `s`.
+						labelGroup: 'artistTypePlural' as const,
 						total: ofType.length,
 						artists: shown,
 					},
@@ -248,7 +268,8 @@ export interface HomeSearchItem {
 
 export interface HomeSearchGroup {
 	kind: HomeSearchKind;
-	label: string;
+	/** Dictionary key of the group's heading. */
+	labelKey: string;
 	items: HomeSearchItem[];
 }
 
@@ -264,7 +285,14 @@ export function searchHome(
 	artists: ArtistView[],
 	releases: ReleaseView[],
 	albums: AlbumView[],
-	limit: number
+	limit: number,
+	/**
+	 * The catalog words for the subtitles. Passed in rather than looked up
+	 * here, so that this stays a pure function of what it is given — and so
+	 * that a subtitle built out of three joined parts is built once, in the
+	 * language in force, instead of being taken apart again in the template.
+	 */
+	label: CatalogLabeller
 ): HomeSearchGroup[] {
 	const needle = query.trim().toLocaleLowerCase();
 
@@ -279,7 +307,7 @@ export function searchHome(
 	const groups: HomeSearchGroup[] = [
 		{
 			kind: 'artist',
-			label: 'Artists',
+			labelKey: 'home.search.artists',
 			items: artists
 				.filter((artist) => matches(needle, artist.name))
 				.slice(0, limit)
@@ -287,7 +315,10 @@ export function searchHome(
 					id: `artist-${artist.id}`,
 					kind: 'artist',
 					title: artist.name,
-					subtitle: [artist.country, artist.formedYear]
+					subtitle: [
+						artist.country && label('country', artist.country),
+						artist.formedYear,
+					]
 						.filter(Boolean)
 						.join(' · '),
 					imageUrl: artist.imageUrl,
@@ -296,7 +327,7 @@ export function searchHome(
 		},
 		{
 			kind: 'release',
-			label: 'In your collection',
+			labelKey: 'home.search.collected',
 			items: releases
 				.filter((release) =>
 					matches(needle, release.title, release.artistName)
@@ -309,7 +340,7 @@ export function searchHome(
 					subtitle: [
 						release.artistName,
 						release.year,
-						FORMAT_LABELS[release.format],
+						label('media', release.format),
 					]
 						.filter(Boolean)
 						.join(' · '),
@@ -319,7 +350,7 @@ export function searchHome(
 		},
 		{
 			kind: 'album',
-			label: 'In the catalog',
+			labelKey: 'home.search.catalog',
 			items: albums
 				.filter(
 					(album) =>

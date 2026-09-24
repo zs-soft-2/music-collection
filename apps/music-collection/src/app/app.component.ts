@@ -1,4 +1,10 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	OnInit,
+	inject,
+} from '@angular/core';
 import { RouterModule } from '@angular/router';
 import {
 	AuthenticationStateService,
@@ -21,6 +27,7 @@ import { YoutubeDockComponent } from './shared/youtube';
 	templateUrl: './app.component.html',
 	styleUrls: ['./app.component.scss'],
 	imports: [
+		...I18N_IMPORTS,
 		TopBarModule,
 		RouterModule,
 		CoreErrorModule,

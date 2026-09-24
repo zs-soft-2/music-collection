@@ -8,8 +8,16 @@ export interface RadioStationView {
 	/** Stable `track` key. */
 	id: string;
 	station: RadioStation;
+	/**
+	 * What the station is called, already in the reader's language.
+	 *
+	 * Words, not a key: half the stations are named after a shelf unit or a
+	 * collection the collector named themselves, and those are not ours to
+	 * translate. The ones that are ours go through the dictionary where they
+	 * are built.
+	 */
 	label: string;
-	/** What it puts on, in one line. */
+	/** What it puts on, in one line; likewise already in the language. */
 	description: string;
 	/** PrimeIcons class for the card. */
 	icon: string;

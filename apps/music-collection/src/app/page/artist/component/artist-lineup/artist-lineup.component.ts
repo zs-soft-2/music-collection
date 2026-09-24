@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { LineupMember, LineupView } from '../../artist.mapper';
 
@@ -19,7 +20,7 @@ import { LineupMember, LineupView } from '../../artist.mapper';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-artist-lineup',
-	imports: [NgTemplateOutlet, RouterLink],
+	imports: [...I18N_IMPORTS, NgTemplateOutlet, RouterLink],
 	template: `
 		@let view = lineup();
 
@@ -40,7 +41,7 @@ import { LineupMember, LineupView } from '../../artist.mapper';
 		@if (formerMembers().length) {
 			<div class="collapsible-head">
 				<h3 class="subsection-title" id="former-members-title">
-					Former members
+					{{ 'ui.artistLineup.former-members' | transloco }}
 					<span class="count">{{ formerMembers().length }}</span>
 				</h3>
 				<button
@@ -144,7 +145,7 @@ import { LineupMember, LineupView } from '../../artist.mapper';
 		@if (view.guests.length) {
 			<div class="collapsible-head">
 				<h3 class="subsection-title" id="guest-musicians-title">
-					Guest musicians
+					{{ 'ui.artistLineup.guest-musicians' | transloco }}
 					<span class="count">{{ view.guests.length }}</span>
 				</h3>
 				<button

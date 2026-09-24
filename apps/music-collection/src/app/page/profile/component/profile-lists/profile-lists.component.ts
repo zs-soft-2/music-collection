@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
 	GROUP_OPTIONS,
@@ -15,61 +16,70 @@ import { ProfilePageStore } from '../../profile-page.store';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-profile-lists',
+	imports: [...I18N_IMPORTS],
 	template: `
-		<fieldset>
-			<legend>Collection order</legend>
-			@for (option of sorts; track option.value) {
-				<button
-					type="button"
-					[class.selected]="
-						store.collectionView().sort === option.value
-					"
-					(click)="store.setCollectionView({ sort: option.value })"
-				>
-					{{ option.label }}
-				</button>
-			}
-		</fieldset>
+		<ng-container *transloco="let t">
+			<fieldset>
+				<legend>{{ t('page.profile.listSettings.order') }}</legend>
+				@for (option of sorts; track option.value) {
+					<button
+						type="button"
+						[class.selected]="
+							store.collectionView().sort === option.value
+						"
+						(click)="
+							store.setCollectionView({ sort: option.value })
+						"
+					>
+						{{ t(option.labelKey) }}
+					</button>
+				}
+			</fieldset>
 
-		<fieldset>
-			<legend>Collection grouping</legend>
-			@for (option of groups; track option.value) {
-				<button
-					type="button"
-					[class.selected]="
-						store.collectionView().group === option.value
-					"
-					(click)="store.setCollectionView({ group: option.value })"
-				>
-					{{ option.label }}
-				</button>
-			}
-		</fieldset>
+			<fieldset>
+				<legend>{{ t('page.profile.listSettings.grouping') }}</legend>
+				@for (option of groups; track option.value) {
+					<button
+						type="button"
+						[class.selected]="
+							store.collectionView().group === option.value
+						"
+						(click)="
+							store.setCollectionView({ group: option.value })
+						"
+					>
+						{{ t(option.labelKey) }}
+					</button>
+				}
+			</fieldset>
 
-		<fieldset>
-			<legend>Collection view</legend>
-			@for (option of views; track option.value) {
-				<button
-					type="button"
-					[class.selected]="
-						store.collectionView().view === option.value
-					"
-					(click)="store.setCollectionView({ view: option.value })"
-				>
-					<i class="{{ option.icon }}" aria-hidden="true"></i>
-					{{ option.label }}
-				</button>
-			}
-		</fieldset>
+			<fieldset>
+				<legend>{{ t('page.profile.listSettings.view') }}</legend>
+				@for (option of views; track option.value) {
+					<button
+						type="button"
+						[class.selected]="
+							store.collectionView().view === option.value
+						"
+						(click)="
+							store.setCollectionView({ view: option.value })
+						"
+					>
+						<i class="{{ option.icon }}" aria-hidden="true"></i>
+						{{ t(option.labelKey) }}
+					</button>
+				}
+			</fieldset>
 
-		<label class="switch">
-			<input
-				type="checkbox"
-				[checked]="store.albumCompact()"
-				(change)="store.setAlbumCompact(!store.albumCompact())"
-			/>
-			Open album pages with the sections collapsed
-		</label>
+			<label class="switch">
+				<input
+					type="checkbox"
+					[checked]="store.albumCompact()"
+					(change)="store.setAlbumCompact(!store.albumCompact())"
+				/>
+				{{ t('page.profile.listSettings.albumCompact') }}
+			</label>
+		</ng-container>
 	`,
 	styles: `
 		:host {

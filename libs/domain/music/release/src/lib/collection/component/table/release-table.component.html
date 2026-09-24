@@ -3,13 +3,13 @@
 		[items]="params.releases"
 		[place]="place"
 		[view]="collectionView"
-		emptyMessage="No releases found."
+		[emptyMessage]="'ui.releaseTable.no-releases-found' | transloco"
 	>
 		<p-autocomplete
 			tools
 			class="mc-table-search"
-			placeholder="Filter by name…"
-			ariaLabel="Filter by name"
+			[placeholder]="'ui.releaseTable.filter-by-name' | transloco"
+			[ariaLabel]="'ui.releaseTable.filter-by-name2' | transloco"
 			[ngModel]="place.filterOf('name')"
 			[suggestions]="params.empty"
 			[showClear]="true"
@@ -54,7 +54,9 @@
 					cardActions
 					pButton
 					pRipple
-					aria-label="Delete release"
+					[attr.aria-label]="
+						'ui.releaseTable.delete-release' | transloco
+					"
 					class="p-button-text p-button-rounded p-button-danger"
 					(click)="deleteRelease(release)"
 					iconOnly
@@ -64,31 +66,61 @@
 			</mc-entity-card>
 		</ng-template>
 
-		<ng-template mcColumn header="Name" let-release>
+		<ng-template
+			mcColumn
+			[header]="'ui.releaseTable.name' | transloco"
+			let-release
+		>
 			{{ release.name }}
 		</ng-template>
 
-		<ng-template mcColumn header="Artist" let-release>
+		<ng-template
+			mcColumn
+			[header]="'ui.releaseTable.artist' | transloco"
+			let-release
+		>
 			{{ release.artist.name }}
 		</ng-template>
 
-		<ng-template mcColumn header="Date" let-release>
+		<ng-template
+			mcColumn
+			[header]="'ui.releaseTable.date' | transloco"
+			let-release
+		>
 			{{ release.date | date: 'yyyy' }}
 		</ng-template>
 
-		<ng-template mcColumn header="Media" let-release>
+		<ng-template
+			mcColumn
+			[header]="'ui.releaseTable.media' | transloco"
+			let-release
+		>
 			{{ release.media }}
 		</ng-template>
 
-		<ng-template mcColumn header="Format" let-release>
+		<ng-template
+			mcColumn
+			[header]="'ui.releaseTable.format' | transloco"
+			let-release
+		>
 			{{ release.format }}
 		</ng-template>
 
-		<ng-template mcColumn header="Updated" field="updatedAt" let-release>
+		<ng-template
+			mcColumn
+			[header]="'ui.releaseTable.updated' | transloco"
+			field="updatedAt"
+			let-release
+		>
 			{{ release.updatedAt | date: 'yyyy-MM-dd HH:mm' }}
 		</ng-template>
 
-		<ng-template mcColumn header="Actions" headerHidden let-release>
+		<ng-template
+			mcColumn
+			[header]="'ui.releaseTable.actions' | transloco"
+			headerHidden
+			let-release
+		>
 			<mc-view-action
 				[link]="viewLink(release)"
 				entity="release"
@@ -97,7 +129,7 @@
 			<button
 				pButton
 				pRipple
-				aria-label="Edit release"
+				[attr.aria-label]="'ui.releaseTable.edit-release' | transloco"
 				class="p-button-text p-button-rounded p-button-secondary"
 				(click)="editRelease(release)"
 				iconOnly
@@ -108,7 +140,9 @@
 			<button
 				pButton
 				pRipple
-				aria-label="Delete release"
+				[attr.aria-label]="
+					'ui.releaseTable.delete-release2' | transloco
+				"
 				class="p-button-text p-button-rounded p-button-danger"
 				(click)="deleteRelease(release)"
 				iconOnly

@@ -1,3 +1,4 @@
+import { Translator } from '@music-collection/core/i18n';
 import {
 	EnumCriterion,
 	MusicCollectionCriteria,
@@ -190,8 +191,17 @@ export function toDraft(form: CollectionForm): MusicCollectionDraft {
 	};
 }
 
-/** The rule in one line, so the list says what a collection asks for. */
-export function describeCriteria(criteria: MusicCollectionCriteria): string {
+/**
+ * The rule in one line, so the list says what a collection asks for.
+ *
+ * The words come in rather than being written here: this is a sentence a
+ * German admin reads too, and the pieces of it — the field names, the "not"
+ * and the "all" — are the app's own words, not the catalog's.
+ */
+export function describeCriteria(
+	criteria: MusicCollectionCriteria,
+	t: Translator
+): string {
 	const parts: string[] = [];
 	const { years } = criteria;
 
@@ -203,46 +213,62 @@ export function describeCriteria(criteria: MusicCollectionCriteria): string {
 		}
 	}
 
-	for (const { key, label } of ENUM_CRITERIA) {
+	for (const { key, labelKey } of ENUM_CRITERIA) {
 		const criterion = criteria[key] as EnumCriterion<string> | undefined;
 		const form = toEnumCriterionForm(criterion);
 
 		if (form.values.length) {
 			const operator =
 				form.operator === 'excludes'
-					? 'not '
+					? t('admin.summary.not')
 					: form.operator === 'includesAll'
-						? 'all '
+						? t('admin.summary.all')
 						: '';
 
 			parts.push(
-				`${label.toLowerCase()} ${operator}${form.values.join(', ')}`
+				`${t(labelKey).toLocaleLowerCase()} ${operator}${form.values.join(', ')}`.replace(
+					/\s+/g,
+					' '
+				)
 			);
 		}
 	}
 
 	if (criteria.artists?.includesAny?.length) {
-		parts.push(`${criteria.artists.includesAny.length} artist(s)`);
+		parts.push(
+			t('admin.summary.artists', {
+				count: criteria.artists.includesAny.length,
+			})
+		);
 	}
 	if (criteria.credits) {
 		const credited = [];
 
 		if (criteria.credits.musicians?.length) {
-			credited.push(`${criteria.credits.musicians.length} musician(s)`);
+			credited.push(
+				t('admin.summary.musicians', {
+					count: criteria.credits.musicians.length,
+				})
+			);
 		}
 		if (criteria.credits.roles?.length) {
 			credited.push(criteria.credits.roles.join(', '));
 		}
 
-		parts.push(`credited: ${credited.join(' as ')}`);
+		parts.push(
+			t('admin.summary.credited', {
+				credited: credited.join(t('admin.summary.as')),
+			})
+		);
 	}
 
-	return parts.join(' · ') || 'No rule — matches the whole catalog';
+	return parts.join(' · ') || t('admin.summary.noRule');
 }
 
 /** Alphabetical: the admin looks a collection up by name, not by progress. */
 export function toRows(
-	resolutions: MusicCollectionResolution[]
+	resolutions: MusicCollectionResolution[],
+	t: Translator
 ): CollectionRow[] {
 	const names = new Map(
 		resolutions.map(({ collection }) => [collection.uid, collection.name])
@@ -259,7 +285,7 @@ export function toRows(
 			points: collection.basePoints ?? derivedBasePoints(resolved.albums),
 			derivedPoints: collection.basePoints === null,
 			badgeName: collection.badge?.name ?? null,
-			summary: describeCriteria(collection.criteria),
+			summary: describeCriteria(collection.criteria, t),
 			parentName: collection.parentUid
 				? (names.get(collection.parentUid) ?? null)
 				: null,

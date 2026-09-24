@@ -2,29 +2,30 @@
 	<header class="hero">
 		<div class="hero-text">
 			<p class="eyebrow">musiCollection</p>
-			<h1>Collections</h1>
+			<h1>{{ 'page.collections.collections' | transloco }}</h1>
 			<p class="lead">
-				Sets of records defined by a rule, not by a list — they grow
-				with the catalog.
+				{{ 'page.collections.sets-of-records-defined' | transloco }}
 			</p>
 		</div>
 
 		@if (!store.isLoading() && store.collections().length) {
 			<dl class="stats">
 				<div class="stat">
-					<dt>Collections</dt>
+					<dt>{{ 'page.collections.collections2' | transloco }}</dt>
 					<dd>{{ store.collections().length }}</dd>
 				</div>
 				<div class="stat">
-					<dt>Completed</dt>
+					<dt>{{ 'page.collections.completed' | transloco }}</dt>
 					<dd>{{ store.completedCount() }}</dd>
 				</div>
 				<div class="stat">
-					<dt>Records missing</dt>
+					<dt>
+						{{ 'page.collections.records-missing' | transloco }}
+					</dt>
 					<dd>{{ store.missingCount() }}</dd>
 				</div>
 				<div class="stat">
-					<dt>Points earned</dt>
+					<dt>{{ 'page.collections.points-earned' | transloco }}</dt>
 					<dd>{{ store.earnedPoints() }}</dd>
 				</div>
 			</dl>
@@ -39,17 +40,20 @@
 		</div>
 	} @else if (!store.collections().length) {
 		<p class="empty">
-			No collection has been published yet. Once one is, this is where you
-			see how far your shelf gets you.
+			{{ 'page.collections.no-collection-has-been' | transloco }}
 		</p>
 	} @else {
 		@if (store.showsHunt()) {
 			<section class="section" aria-labelledby="hunt-title">
 				<header class="section-head">
-					<h2 id="hunt-title">Next on the hunt</h2>
+					<h2 id="hunt-title">
+						{{ 'page.collections.next-on-the-hunt' | transloco }}
+					</h2>
 					<p class="section-lead">
-						A collection pays only once it is complete — these are
-						the records that move that along fastest.
+						{{
+							'page.collections.a-collection-pays-only'
+								| transloco
+						}}
 					</p>
 				</header>
 
@@ -58,7 +62,13 @@
 		}
 
 		<div class="toolbar">
-			<div class="tabs" role="tablist" aria-label="Which collections">
+			<div
+				class="tabs"
+				role="tablist"
+				[attr.aria-label]="
+					'page.collections.which-collections' | transloco
+				"
+			>
 				@for (option of tabOptions; track option.value) {
 					<button
 						type="button"
@@ -68,7 +78,7 @@
 						[attr.aria-selected]="store.tab() === option.value"
 						(click)="onTab(option.value)"
 					>
-						{{ option.label }}
+						{{ option.labelKey | transloco }}
 						<span class="count">
 							{{
 								option.value === 'following'
@@ -84,8 +94,12 @@
 				<i class="pi pi-search" aria-hidden="true"></i>
 				<input
 					type="search"
-					placeholder="Search collections"
-					aria-label="Search collections"
+					[placeholder]="
+						'page.collections.search-collections' | transloco
+					"
+					[attr.aria-label]="
+						'page.collections.search-collections2' | transloco
+					"
 					[value]="store.query()"
 					(input)="onQuery($event)"
 				/>
@@ -95,8 +109,7 @@
 		@if (store.showsEverything()) {
 			<p class="hint">
 				<i class="pi pi-star" aria-hidden="true"></i>
-				Star the collections you are after — Following then keeps just
-				those, however many are published.
+				{{ 'page.collections.star-the-collections-you' | transloco }}
 			</p>
 		}
 
@@ -205,22 +218,17 @@
 										</p>
 										<p class="points">
 											@if (collection.completed) {
-												<strong
-													>{{
-														collection.earnedPoints
-													}}
-													pts</strong
-												>
-												earned
+												{{
+													collection.earnedPoints
+														| mcPlural
+															: 'page.collections.pointsEarned'
+												}}
 											} @else {
-												worth
-												<strong
-													>{{
-														collection.points
-													}}
-													pts</strong
-												>
-												when complete
+												{{
+													collection.points
+														| mcPlural
+															: 'page.collections.pointsWorth'
+												}}
 											}
 										</p>
 									</div>

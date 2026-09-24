@@ -1,16 +1,23 @@
 @if (params$ | async; as params) {
 	<section class="mc-form-section" aria-labelledby="artist-albums">
 		<div class="artist-albums-heading">
-			<h2 id="artist-albums">Albums ({{ params.albums.length }})</h2>
+			<h2 id="artist-albums">
+				{{
+					'ui.artistAlbums.heading'
+						| transloco: { count: params.albums.length }
+				}}
+			</h2>
 			<p-button
-				label="Load"
+				[label]="'ui.artistAlbums.load' | transloco"
 				icon="pi pi-cloud-download"
 				size="small"
 				severity="secondary"
 				[outlined]="true"
 				[loading]="externalLoading()"
 				[disabled]="!params.artist"
-				ariaLabel="Load the missing studio albums and EPs from MusicBrainz"
+				[ariaLabel]="
+					'ui.artistAlbums.load-the-missing-studio' | transloco
+				"
 				(onClick)="loadExternal()"
 			></p-button>
 		</div>
@@ -22,9 +29,15 @@
 				<table>
 					<thead>
 						<tr>
-							<th scope="col">Year</th>
-							<th scope="col">Name</th>
-							<th scope="col">Format</th>
+							<th scope="col">
+								{{ 'ui.artistAlbums.year' | transloco }}
+							</th>
+							<th scope="col">
+								{{ 'ui.artistAlbums.name' | transloco }}
+							</th>
+							<th scope="col">
+								{{ 'ui.artistAlbums.format' | transloco }}
+							</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -48,20 +61,20 @@
 			</div>
 		} @else {
 			<p class="mc-form-note">
-				No albums yet. Load them from MusicBrainz.
+				{{ 'ui.artistAlbums.no-albums-yet-load' | transloco }}
 			</p>
 		}
 	</section>
 
 	<mc-artist-candidate-picker
 		[candidates]="externalCandidates()"
-		hint="Pick the one whose albums these are — save its id on the Details tab to keep the choice."
+		[hint]="'ui.artistAlbums.pick-the-one-whose' | transloco"
 		(picked)="chooseExternalCandidate($event)"
 		(closed)="closeExternalCandidates()"
 	></mc-artist-candidate-picker>
 
 	<p-dialog
-		header="Albums found"
+		[header]="'ui.artistAlbums.albums-found' | transloco"
 		[modal]="true"
 		[visible]="!!externalAlbums()"
 		(visibleChange)="$event || closeExternal()"
@@ -71,15 +84,17 @@
 		@if (externalAlbums(); as rows) {
 			@if (rows.length) {
 				<p class="artist-albums-note">
-					Studio albums and EPs of MusicBrainz not in the catalog yet.
-					The selected ones are created.
+					{{ 'ui.artistAlbums.note' | transloco }}
 					@if (externalSourceUrl(); as sourceUrl) {
 						<a
 							class="artist-albums-source-artist"
 							[href]="sourceUrl"
 							target="_blank"
 							rel="noopener"
-							>Check the artist they came from</a
+							>{{
+								'ui.artistAlbums.check-the-artist-they'
+									| transloco
+							}}</a
 						>
 					}
 				</p>
@@ -90,7 +105,10 @@
 								<th scope="col">
 									<p-checkbox
 										inputId="external-album-all"
-										ariaLabel="Select all"
+										[ariaLabel]="
+											'ui.artistAlbums.select-all'
+												| transloco
+										"
 										[binary]="true"
 										[ngModel]="
 											selectedCount() === rows.length
@@ -102,9 +120,15 @@
 										"
 									></p-checkbox>
 								</th>
-								<th scope="col">Year</th>
-								<th scope="col">Name</th>
-								<th scope="col">Format</th>
+								<th scope="col">
+									{{ 'ui.artistAlbums.year2' | transloco }}
+								</th>
+								<th scope="col">
+									{{ 'ui.artistAlbums.name2' | transloco }}
+								</th>
+								<th scope="col">
+									{{ 'ui.artistAlbums.format2' | transloco }}
+								</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -132,7 +156,10 @@
 											[href]="row.album.sourceUrl"
 											target="_blank"
 											rel="noopener"
-											aria-label="Open on MusicBrainz"
+											[attr.aria-label]="
+												'ui.artistAlbums.open-on-musicbrainz'
+													| transloco
+											"
 											><i class="pi pi-external-link"></i
 										></a>
 									</th>
@@ -143,12 +170,12 @@
 					</table>
 				</div>
 			} @else {
-				<p>Every album found is already in the catalog.</p>
+				<p>{{ 'ui.artistAlbums.every-album-found-is' | transloco }}</p>
 			}
 		}
 		<ng-template #footer>
 			<p-button
-				label="Cancel"
+				[label]="'ui.artistAlbums.cancel' | transloco"
 				severity="secondary"
 				[outlined]="true"
 				(onClick)="closeExternal()"

@@ -4,6 +4,7 @@ import {
 	computed,
 	inject,
 } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
 	SHELF_CUBBY_SIZE,
@@ -38,11 +39,10 @@ interface ShelfDrawing {
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-profile-shelves',
+	imports: [...I18N_IMPORTS],
 	template: `
 		<p class="intro">
-			Draw the shelving you actually own. A unit is a grid of square
-			compartments, so 4 × 2 stands upright and 2 × 4 is the same unit on
-			its side. Records are filed from the first unit to the last.
+			{{ 'ui.profileShelves.draw-the-shelving-you' | transloco }}
 		</p>
 
 		@if (shelves().length) {
@@ -70,7 +70,9 @@ interface ShelfDrawing {
 								#name
 								class="name"
 								type="text"
-								placeholder="Shelf name"
+								[placeholder]="
+									'ui.profileShelves.shelf-name' | transloco
+								"
 								[value]="shelf.name"
 								[attr.maxlength]="limits.maxNameLength"
 								[attr.aria-label]="'Shelf name'"
@@ -81,10 +83,15 @@ interface ShelfDrawing {
 
 							<div class="sizes">
 								<span class="size">
-									<span class="size-label">Rows</span>
+									<span class="size-label">{{
+										'ui.profileShelves.rows' | transloco
+									}}</span>
 									<button
 										type="button"
-										aria-label="One row fewer"
+										[attr.aria-label]="
+											'ui.profileShelves.one-row-fewer'
+												| transloco
+										"
 										[disabled]="
 											shelf.rows <= limits.minSide
 										"
@@ -101,7 +108,10 @@ interface ShelfDrawing {
 									}}</span>
 									<button
 										type="button"
-										aria-label="One row more"
+										[attr.aria-label]="
+											'ui.profileShelves.one-row-more'
+												| transloco
+										"
 										[disabled]="
 											shelf.rows >= limits.maxSide
 										"
@@ -118,10 +128,15 @@ interface ShelfDrawing {
 								<span class="times" aria-hidden="true">×</span>
 
 								<span class="size">
-									<span class="size-label">Columns</span>
+									<span class="size-label">{{
+										'ui.profileShelves.columns' | transloco
+									}}</span>
 									<button
 										type="button"
-										aria-label="One column fewer"
+										[attr.aria-label]="
+											'ui.profileShelves.one-column-fewer'
+												| transloco
+										"
 										[disabled]="
 											shelf.columns <= limits.minSide
 										"
@@ -138,7 +153,10 @@ interface ShelfDrawing {
 									}}</span>
 									<button
 										type="button"
-										aria-label="One column more"
+										[attr.aria-label]="
+											'ui.profileShelves.one-column-more'
+												| transloco
+										"
 										[disabled]="
 											shelf.columns >= limits.maxSide
 										"
@@ -155,15 +173,24 @@ interface ShelfDrawing {
 
 							<p class="note">
 								{{ shelf.stance }} ·
-								{{ shelf.compartments }} compartments · room for
-								{{ shelf.records }}
-								records
+								{{
+									'ui.profileShelves.unitNote'
+										| transloco
+											: {
+													compartments:
+														shelf.compartments,
+													records: shelf.records,
+											  }
+								}}
 							</p>
 
 							<div class="actions">
 								<button
 									type="button"
-									aria-label="Move this shelf earlier"
+									[attr.aria-label]="
+										'ui.profileShelves.move-this-shelf-earlier'
+											| transloco
+									"
 									[disabled]="shelf.first"
 									(click)="store.moveShelf(shelf.id, -1)"
 								>
@@ -171,7 +198,10 @@ interface ShelfDrawing {
 								</button>
 								<button
 									type="button"
-									aria-label="Move this shelf later"
+									[attr.aria-label]="
+										'ui.profileShelves.move-this-shelf-later'
+											| transloco
+									"
 									[disabled]="shelf.last"
 									(click)="store.moveShelf(shelf.id, 1)"
 								>
@@ -180,7 +210,10 @@ interface ShelfDrawing {
 								<button
 									type="button"
 									class="remove"
-									aria-label="Remove this shelf"
+									[attr.aria-label]="
+										'ui.profileShelves.remove-this-shelf'
+											| transloco
+									"
 									(click)="store.removeShelf(shelf.id)"
 								>
 									<i class="pi pi-trash"></i>
@@ -192,8 +225,7 @@ interface ShelfDrawing {
 			</ul>
 		} @else {
 			<p class="empty">
-				Nothing drawn yet — the collection stands on one open wall that
-				grows with it.
+				{{ 'ui.profileShelves.nothing-drawn-yet-the' | transloco }}
 			</p>
 		}
 
@@ -205,7 +237,7 @@ interface ShelfDrawing {
 				(click)="store.addShelf()"
 			>
 				<i class="pi pi-plus" aria-hidden="true"></i>
-				Add shelf
+				{{ 'ui.profileShelves.add-shelf' | transloco }}
 			</button>
 
 			@if (shelves().length) {
@@ -214,20 +246,25 @@ interface ShelfDrawing {
 					class="clear"
 					(click)="store.clearShelves()"
 				>
-					Remove all
+					{{ 'ui.profileShelves.remove-all' | transloco }}
 				</button>
 			}
 
 			<p class="summary">
 				@if (room().units) {
-					{{ room().units }} shelves ·
-					{{ room().compartments }} compartments · room for
-					{{ room().records }} records.
+					{{
+						'ui.profileShelves.roomNote'
+							| transloco
+								: {
+										units: room().units,
+										compartments: room().compartments,
+										records: room().records,
+								  }
+					}}
 				}
 				@if (room().short) {
 					<span class="short">
-						{{ room().short }} records have nowhere to stand — they
-						show below the furniture until you draw more.
+						{{ room().short | mcPlural: 'ui.profileShelves.short' }}
 					</span>
 				}
 			</p>

@@ -2,6 +2,7 @@ import { map } from 'rxjs';
 
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { CollectionArtworkComponent } from '../../shared/collection-artwork';
 import { PageBreadcrumbComponent } from '../../shared/page-breadcrumb';
@@ -21,7 +22,12 @@ import { ALBUM_FILTER_OPTIONS, AlbumFilter } from './collections.model';
 	selector: 'mc-collection-detail-page',
 	templateUrl: './collection-detail-page.component.html',
 	styleUrls: ['./collection-detail-page.component.scss'],
-	imports: [RouterLink, CollectionArtworkComponent, PageBreadcrumbComponent],
+	imports: [
+		...I18N_IMPORTS,
+		RouterLink,
+		CollectionArtworkComponent,
+		PageBreadcrumbComponent,
+	],
 })
 export class CollectionDetailPageComponent {
 	protected readonly store = inject(CollectionDetailPageStore);

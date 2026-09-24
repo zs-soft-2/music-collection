@@ -168,6 +168,21 @@ const routes: Routes = [
 				canActivate: [NgxPermissionsGuard],
 			},
 			{
+				path: 'language-settings',
+				data: {
+					breadcrumb: 'language-settings',
+					permissions: {
+						only: [RoleNames.ADMIN],
+						redirectTo: '/error',
+					},
+				},
+				loadComponent: () =>
+					import('./language-settings/language-settings.component').then(
+						(module) => module.LanguageSettingsComponent
+					),
+				canActivate: [NgxPermissionsGuard],
+			},
+			{
 				path: 'badge-settings',
 				data: {
 					breadcrumb: 'badge-settings',

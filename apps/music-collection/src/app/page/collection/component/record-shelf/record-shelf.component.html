@@ -11,10 +11,14 @@
 			@if (unit.name || unit.overflow || unit.columns) {
 				<header class="unit-head">
 					@if (unit.overflow) {
-						<span class="unit-name">Off the shelf</span>
+						<span class="unit-name">{{
+							'ui.recordShelf.off-the-shelf' | transloco
+						}}</span>
 						<span class="unit-note">
-							No drawn compartment left — add a shelf in your
-							profile.
+							{{
+								'ui.recordShelf.no-drawn-compartment-left'
+									| transloco
+							}}
 						</span>
 					} @else {
 						<span class="unit-name">{{ unit.name }}</span>
@@ -27,7 +31,10 @@
 								'Play what stands in ' +
 								(unit.name || 'this unit')
 							"
-							title="Play what stands here"
+							[title]="
+								'ui.recordShelf.play-what-stands-here'
+									| transloco
+							"
 							(click)="
 								putOn.emit({
 									label: unit.name || 'Your shelf',
@@ -71,7 +78,10 @@
 											'Play what stands in ' +
 											compartment.label
 										"
-										title="Play what stands here"
+										[title]="
+											'ui.recordShelf.play-what-stands-here2'
+												| transloco
+										"
 										(click)="
 											putOn.emit({
 												label: compartment.label,

@@ -6,6 +6,7 @@ import {
 	inject,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
 	AdminEditLinkComponent,
@@ -23,6 +24,7 @@ import { WishlistItemPageStore } from './wishlist-item-page.store';
 	templateUrl: './wishlist-item-page.component.html',
 	styleUrls: ['./wishlist-item-page.component.scss'],
 	imports: [
+		...I18N_IMPORTS,
 		PageBreadcrumbComponent,
 		RouterLink,
 		EntityFactsComponent,
@@ -43,27 +45,27 @@ export class WishlistItemPageComponent {
 
 		return [
 			{
-				label: 'Album',
+				labelKey: 'fact.album',
 				value: album?.name ?? null,
 				link: album?.uid ? ['/album', album.uid] : null,
 			},
 			{
-				label: 'Artist',
+				labelKey: 'fact.artist',
 				value: artist?.name ?? null,
 				link: artist?.uid ? ['/artist', artist.uid] : null,
 			},
 			{
-				label: 'Wanted on',
+				labelKey: 'fact.wantedOn',
 				value: medias.length ? medias.join(', ') : 'Any format',
 			},
-			{ label: 'Collector', value: this.store.collector() },
+			{ labelKey: 'fact.collector', value: this.store.collector() },
 			{
-				label: 'Where it was seen',
+				labelKey: 'fact.whereSeen',
 				value: item?.sourceLink ? 'Open the offer' : null,
 				href: item?.sourceLink ?? null,
 			},
 			{
-				label: 'Last change',
+				labelKey: 'fact.lastChange',
 				value: item?.updatedAt
 					? this.datePipe.transform(item.updatedAt, 'medium')
 					: null,

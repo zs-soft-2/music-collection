@@ -1,8 +1,8 @@
-<header class="bar">
+<header class="bar" *transloco="let t">
 	<button
 		type="button"
 		class="brand"
-		aria-label="Music Collection — home"
+		[attr.aria-label]="t('nav.brandHome')"
 		(click)="goHome()"
 	>
 		<svg
@@ -19,11 +19,13 @@
 				d="M3.5 12a8.5 8.5 0 1 0 17 0a8.5 8.5 0 1 0-17 0M10 12a2 2 0 1 0 4 0a2 2 0 1 0-4 0M12 6.5a5.5 5.5 0 0 0-5.5 5.5"
 			/>
 		</svg>
+		<!-- The app's own name, and so the one string on the bar that is the
+		     same in all three languages. -->
 		<span class="word">Music Collection</span>
 	</button>
 
-	<nav class="nav" aria-label="Main">
-		@for (item of navItems(); track item.label) {
+	<nav class="nav" [attr.aria-label]="t('nav.main')">
+		@for (item of navItems(); track item.labelKey) {
 			<a
 				class="nav-link"
 				[routerLink]="item.routerLink"
@@ -31,7 +33,7 @@
 				ariaCurrentWhenActive="page"
 			>
 				<i class="pi {{ item.icon }}" aria-hidden="true"></i>
-				{{ item.label }}
+				{{ t(item.labelKey) }}
 			</a>
 		}
 		<a
@@ -42,7 +44,7 @@
 			ariaCurrentWhenActive="page"
 		>
 			<i class="pi pi-cog" aria-hidden="true"></i>
-			Admin
+			{{ t('nav.admin') }}
 		</a>
 	</nav>
 
@@ -57,10 +59,12 @@
 		<button
 			type="button"
 			class="icon-btn width-btn"
-			aria-label="Wide layout"
+			[attr.aria-label]="t('nav.wideLayout')"
 			[attr.aria-pressed]="layoutWidth.isWide()"
 			[attr.title]="
-				layoutWidth.isWide() ? 'Standard width' : 'Use the full width'
+				layoutWidth.isWide()
+					? t('nav.widthStandard')
+					: t('nav.widthFull')
 			"
 			(click)="layoutWidth.toggle()"
 		>
@@ -72,13 +76,13 @@
 			></i>
 		</button>
 
+		<mc-language-picker />
+
 		<button
 			type="button"
 			class="icon-btn"
 			[attr.aria-label]="
-				theme.isDark()
-					? 'Switch to light theme'
-					: 'Switch to dark theme'
+				theme.isDark() ? t('nav.themeLight') : t('nav.themeDark')
 			"
 			(click)="theme.toggle()"
 		>
@@ -95,7 +99,7 @@
 				<button
 					type="button"
 					class="avatar-btn"
-					aria-label="Account menu"
+					[attr.aria-label]="t('nav.accountMenu')"
 					aria-haspopup="menu"
 					[attr.aria-expanded]="accountOpen()"
 					(click)="toggleAccount()"
@@ -118,13 +122,15 @@
 					<button
 						type="button"
 						class="scrim"
-						aria-label="Close account menu"
+						[attr.aria-label]="t('nav.closeAccountMenu')"
 						tabindex="-1"
 						(click)="closeMenus()"
 					></button>
 					<div class="menu" role="menu">
 						<div class="menu-user">
-							<b>{{ user()?.displayName || 'Signed in' }}</b>
+							<b>{{
+								user()?.displayName || t('nav.signedIn')
+							}}</b>
 							@if (user()?.email; as email) {
 								<span>{{ email }}</span>
 							}
@@ -136,7 +142,7 @@
 							(click)="closeMenus()"
 						>
 							<i class="pi pi-user" aria-hidden="true"></i>
-							Profile
+							{{ t('nav.profile') }}
 						</a>
 						<a
 							*ngxPermissionsOnly="adminRoles"
@@ -146,7 +152,7 @@
 							(click)="closeMenus()"
 						>
 							<i class="pi pi-cog" aria-hidden="true"></i>
-							Admin
+							{{ t('nav.admin') }}
 						</a>
 						<button
 							type="button"
@@ -155,7 +161,7 @@
 							(click)="logout()"
 						>
 							<i class="pi pi-sign-out" aria-hidden="true"></i>
-							Log out
+							{{ t('nav.logOut') }}
 						</button>
 					</div>
 				}
@@ -164,18 +170,20 @@
 			<button
 				type="button"
 				class="login-btn"
-				aria-label="Log in"
+				[attr.aria-label]="t('nav.logIn')"
 				(click)="login()"
 			>
 				<i class="pi pi-sign-in" aria-hidden="true"></i>
-				<span class="login-text">Log in</span>
+				<span class="login-text">{{ t('nav.logIn') }}</span>
 			</button>
 		}
 
 		<button
 			type="button"
 			class="icon-btn menu-toggle"
-			[attr.aria-label]="menuOpen() ? 'Close menu' : 'Open menu'"
+			[attr.aria-label]="
+				menuOpen() ? t('nav.closeMenu') : t('nav.openMenu')
+			"
 			aria-controls="mc-mobile-nav"
 			[attr.aria-expanded]="menuOpen()"
 			(click)="toggleMenu()"
@@ -191,8 +199,13 @@
 </header>
 
 @if (menuOpen()) {
-	<nav id="mc-mobile-nav" class="sheet" aria-label="Main">
-		@for (item of navItems(); track item.label) {
+	<nav
+		id="mc-mobile-nav"
+		class="sheet"
+		*transloco="let t"
+		[attr.aria-label]="t('nav.main')"
+	>
+		@for (item of navItems(); track item.labelKey) {
 			<a
 				class="sheet-link"
 				[routerLink]="item.routerLink"
@@ -201,7 +214,7 @@
 				(click)="closeMenus()"
 			>
 				<i class="pi {{ item.icon }}" aria-hidden="true"></i>
-				{{ item.label }}
+				{{ t(item.labelKey) }}
 			</a>
 		}
 		<a
@@ -213,7 +226,7 @@
 			(click)="closeMenus()"
 		>
 			<i class="pi pi-cog" aria-hidden="true"></i>
-			Admin
+			{{ t('nav.admin') }}
 		</a>
 	</nav>
 }

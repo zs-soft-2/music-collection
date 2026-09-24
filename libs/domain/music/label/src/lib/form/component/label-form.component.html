@@ -5,9 +5,11 @@
 
 			<section class="mc-form-section" aria-labelledby="label-details">
 				<div class="label-form-heading">
-					<h2 id="label-details">Details</h2>
+					<h2 id="label-details">
+						{{ 'ui.labelForm.details' | transloco }}
+					</h2>
 					<p-button
-						label="Load"
+						[label]="'ui.labelForm.load' | transloco"
 						icon="pi pi-cloud-download"
 						size="small"
 						severity="secondary"
@@ -17,7 +19,9 @@
 							!params.formGroup.value.name &&
 							!params.formGroup.value.discogsId
 						"
-						ariaLabel="Load data from Discogs by the Discogs ID, or by the name"
+						[ariaLabel]="
+							'ui.labelForm.load-data-from-discogs' | transloco
+						"
 						(onClick)="loadExternal()"
 					></p-button>
 				</div>
@@ -28,7 +32,9 @@
 				}
 				<div class="mc-form-grid">
 					<div class="mc-field">
-						<label for="name">Name</label>
+						<label for="name">{{
+							'ui.labelForm.name' | transloco
+						}}</label>
 						<input
 							id="name"
 							type="text"
@@ -38,7 +44,9 @@
 					</div>
 
 					<div class="mc-field">
-						<label for="parent">Parent label</label>
+						<label for="parent">{{
+							'ui.labelForm.parent-label' | transloco
+						}}</label>
 						<p-autocomplete
 							inputId="parent"
 							formControlName="parent"
@@ -46,13 +54,17 @@
 							[minQueryLength]="3"
 							[delay]="400"
 							optionLabel="name"
-							placeholder="Start typing a label…"
+							[placeholder]="
+								'ui.labelForm.start-typing-a-label' | transloco
+							"
 							(completeMethod)="searchLabel($event)"
 						></p-autocomplete>
 					</div>
 
 					<div class="mc-field is-wide">
-						<label for="description">Profile</label>
+						<label for="description">{{
+							'ui.labelForm.profile' | transloco
+						}}</label>
 						<textarea
 							id="description"
 							pTextarea
@@ -60,18 +72,24 @@
 							formControlName="description"
 						></textarea>
 						<small>
-							Discogs markup such as [a=Name] is cleaned up on the
-							public page.
+							{{
+								'ui.labelForm.discogs-markup-such-as'
+									| transloco
+							}}
 						</small>
 					</div>
 				</div>
 			</section>
 
 			<section class="mc-form-section" aria-labelledby="label-links">
-				<h2 id="label-links">Image and links</h2>
+				<h2 id="label-links">
+					{{ 'ui.labelForm.image-and-links' | transloco }}
+				</h2>
 				<div class="mc-form-grid">
 					<div class="mc-field is-wide">
-						<label for="imageUrl">Logo URL</label>
+						<label for="imageUrl">{{
+							'ui.labelForm.logo-url' | transloco
+						}}</label>
 						<input
 							id="imageUrl"
 							type="url"
@@ -81,20 +99,24 @@
 						/>
 						@if (params.formGroup.get('imageUrl')?.invalid) {
 							<small id="imageUrl-hint" class="is-error">
-								Enter a full http(s) address.
+								{{
+									'ui.labelForm.enter-a-full-http' | transloco
+								}}
 							</small>
 						}
 						@if (params.formGroup.get('imageUrl')?.value; as url) {
 							<img
 								class="logo-preview"
 								[src]="url"
-								alt="Logo preview"
+								[alt]="'ui.labelForm.logo-preview' | transloco"
 							/>
 						}
 					</div>
 
 					<div class="mc-field">
-						<label for="sites">Links</label>
+						<label for="sites">{{
+							'ui.labelForm.links' | transloco
+						}}</label>
 						<textarea
 							id="sites"
 							pTextarea
@@ -102,16 +124,22 @@
 							formControlName="sites"
 							aria-describedby="sites-hint"
 						></textarea>
-						<small id="sites-hint">One address per line.</small>
+						<small id="sites-hint">{{
+							'ui.labelForm.one-address-per-line' | transloco
+						}}</small>
 					</div>
 				</div>
 			</section>
 
 			<section class="mc-form-section" aria-labelledby="label-source">
-				<h2 id="label-source">Source</h2>
+				<h2 id="label-source">
+					{{ 'ui.labelForm.source' | transloco }}
+				</h2>
 				<div class="mc-form-grid">
 					<div class="mc-field">
-						<label for="discogsId">Discogs ID</label>
+						<label for="discogsId">{{
+							'ui.labelForm.discogs-id' | transloco
+						}}</label>
 						<input
 							id="discogsId"
 							type="number"
@@ -121,7 +149,10 @@
 							aria-describedby="discogsId-hint"
 						/>
 						<small id="discogsId-hint">
-							Empty: the load searches Discogs for the name.
+							{{
+								'ui.labelForm.empty-the-load-searches'
+									| transloco
+							}}
 						</small>
 					</div>
 				</div>
@@ -129,13 +160,13 @@
 
 			<div class="mc-form-actions">
 				<p-button
-					label="Cancel"
+					[label]="'ui.labelForm.cancel' | transloco"
 					severity="secondary"
 					[outlined]="true"
 					(onClick)="cancel()"
 				></p-button>
 				<p-button
-					label="Save"
+					[label]="'ui.labelForm.save' | transloco"
 					icon="pi pi-check"
 					[disabled]="!params.formGroup.valid"
 					(onClick)="submit()"
@@ -145,7 +176,7 @@
 	</section>
 
 	<p-dialog
-		header="Which label is this?"
+		[header]="'ui.labelForm.which-label-is-this' | transloco"
 		[modal]="true"
 		[visible]="!!externalCandidates()"
 		(visibleChange)="$event || closeExternalCandidates()"
@@ -154,8 +185,7 @@
 	>
 		@if (externalCandidates(); as candidates) {
 			<p class="label-candidate-hint">
-				Discogs knows several labels by this name. Pick the one this is
-				— its id comes back as a row to keep.
+				{{ 'ui.labelForm.discogs-knows-several-labels' | transloco }}
 			</p>
 			<ul class="label-candidates">
 				@for (candidate of candidates; track candidate.discogsId) {
@@ -181,7 +211,7 @@
 							[href]="discogsLabelUrl(candidate.discogsId)"
 							target="_blank"
 							rel="noopener"
-							>Open on Discogs</a
+							>{{ 'ui.labelForm.open-on-discogs' | transloco }}</a
 						>
 					</li>
 				}
@@ -189,7 +219,7 @@
 		}
 		<ng-template #footer>
 			<p-button
-				label="Cancel"
+				[label]="'ui.labelForm.cancel2' | transloco"
 				severity="secondary"
 				[outlined]="true"
 				(onClick)="closeExternalCandidates()"
@@ -198,7 +228,7 @@
 	</p-dialog>
 
 	<p-dialog
-		header="Loaded label data"
+		[header]="'ui.labelForm.loaded-label-data' | transloco"
 		[modal]="true"
 		[visible]="!!externalComparison()"
 		(visibleChange)="$event || closeExternal()"
@@ -207,15 +237,17 @@
 	>
 		@if (externalComparison(); as comparison) {
 			<p class="label-external-source">
-				Source:
+				{{ 'ui.labelForm.source2' | transloco }}
 				<a [href]="comparison.sourceUrl" target="_blank" rel="noopener">
 					{{ comparison.sourceUrl }}
 				</a>
 			</p>
 			@if (comparison.parentName) {
 				<p class="label-external-parent">
-					Parent label on Discogs: {{ comparison.parentName }}. Pick
-					it by hand — the catalog may not have it yet.
+					{{
+						'ui.labelForm.parentOnDiscogs'
+							| transloco: { name: comparison.parentName }
+					}}
 				</p>
 			}
 			@if (comparison.rows.length) {
@@ -224,11 +256,19 @@
 						<thead>
 							<tr>
 								<th scope="col">
-									<span class="visually-hidden">Apply</span>
+									<span class="visually-hidden">{{
+										'ui.labelForm.apply' | transloco
+									}}</span>
 								</th>
-								<th scope="col">Field</th>
-								<th scope="col">Current</th>
-								<th scope="col">Loaded</th>
+								<th scope="col">
+									{{ 'ui.labelForm.field' | transloco }}
+								</th>
+								<th scope="col">
+									{{ 'ui.labelForm.current' | transloco }}
+								</th>
+								<th scope="col">
+									{{ 'ui.labelForm.loaded' | transloco }}
+								</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -250,7 +290,9 @@
 									<th scope="row">
 										<label
 											[for]="'external-' + row.field"
-											>{{ row.label }}</label
+											>{{
+												row.labelKey | transloco
+											}}</label
 										>
 									</th>
 									<td class="is-current">
@@ -263,18 +305,18 @@
 					</table>
 				</div>
 			} @else {
-				<p>The loaded data matches the form.</p>
+				<p>{{ 'ui.labelForm.the-loaded-data-matches' | transloco }}</p>
 			}
 		}
 		<ng-template #footer>
 			<p-button
-				label="Cancel"
+				[label]="'ui.labelForm.cancel3' | transloco"
 				severity="secondary"
 				[outlined]="true"
 				(onClick)="closeExternal()"
 			></p-button>
 			<p-button
-				label="Apply to form"
+				[label]="'ui.labelForm.apply-to-form' | transloco"
 				icon="pi pi-check"
 				[disabled]="!hasSelectedExternalRow()"
 				(onClick)="applyExternal()"

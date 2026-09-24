@@ -2,6 +2,7 @@ import { NgxPermissionsService } from 'ngx-permissions';
 import { filter, firstValueFrom, map, of, pipe, switchMap, tap } from 'rxjs';
 
 import { DestroyRef, computed, effect, inject } from '@angular/core';
+import { TextService } from '@music-collection/core/i18n';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import {
@@ -74,113 +75,125 @@ const initialState: TrackPageState = {
 export const TrackPageStore = signalStore(
 	withState(initialState),
 	withPageOrigin(),
-	withComputed((store, permissions = inject(NgxPermissionsService)) => {
-		const track = computed(
-			() =>
-				store.tracks().find((item) => item.uid === store.trackId()) ??
-				null
-		);
-		const permissionNames = toSignal(
-			permissions.permissions$.pipe(map((all) => Object.keys(all))),
-			{ initialValue: [] as string[] }
-		);
+	withComputed(
+		(
+			store,
+			permissions = inject(NgxPermissionsService),
+			text = inject(TextService)
+		) => {
+			const track = computed(
+				() =>
+					store
+						.tracks()
+						.find((item) => item.uid === store.trackId()) ?? null
+			);
+			const permissionNames = toSignal(
+				permissions.permissions$.pipe(map((all) => Object.keys(all))),
+				{ initialValue: [] as string[] }
+			);
 
-		const album = computed(() => {
-			const entity = store
-				.albums()
-				.find((item) => item.uid === store.albumId());
+			const album = computed(() => {
+				const entity = store
+					.albums()
+					.find((item) => item.uid === store.albumId());
 
-			return entity ? toAlbumProfile(entity) : null;
-		});
+				return entity ? toAlbumProfile(entity) : null;
+			});
 
-		return {
-			track,
-			album,
-			/**
-			 * Where the album was opened from › the album › this track: the
-			 * collection it was picked out of when it was, My Collection ›
-			 * the artist otherwise.
-			 */
-			trail: computed<Crumb[]>(() => {
-				const profile = album();
-				const name = track()?.name;
-				const origin = store.originTrail();
-				const originSlug = store.originSlug();
+			return {
+				track,
+				album,
+				/**
+				 * Where the album was opened from › the album › this track: the
+				 * collection it was picked out of when it was, My Collection ›
+				 * the artist otherwise.
+				 */
+				trail: computed<Crumb[]>(() => {
+					const profile = album();
+					const name = track()?.name;
+					const origin = store.originTrail();
+					const originSlug = store.originSlug();
 
-				return [
-					...(origin.length
-						? origin
-						: [
-								{
-									label: 'My Collection',
-									link: '/collection',
-								},
-								...(profile?.artistId
-									? [
-											{
-												label: profile.artistName,
-												link: [
-													'/artist',
-													profile.artistId,
-												],
-											},
-										]
-									: []),
-							]),
-					...(profile
-						? [
-								{
-									label: profile.title,
-									link: ['/album', profile.id],
-									// The album is read where the track was.
-									queryParams:
-										collectionOriginParams(originSlug),
-								},
-							]
-						: []),
-					...(name ? [{ label: name }] : []),
-				];
-			}),
-			spotifyTrackId: computed(() => {
-				const id = track()?.spotifyTrackId;
-				return isSpotifyTrackId(id) ? id : null;
-			}),
-			youtubeVideoId: computed(() => {
-				const id = track()?.youtubeVideoId;
-				return isYoutubeVideoId(id) ? id : null;
-			}),
-			credits: computed(() => {
-				const current = track();
-				return current
-					? toTrackCredits(
-							current,
-							store.tracks(),
-							store.contributions()
-						)
-					: [];
-			}),
-			/** Previous and next track of the album, in play order. */
-			neighbours: computed(() => {
-				const index = store
-					.tracks()
-					.findIndex((item) => item.uid === store.trackId());
-				return {
-					previous: index > 0 ? store.tracks()[index - 1] : null,
-					next:
-						index >= 0 ? (store.tracks()[index + 1] ?? null) : null,
-				};
-			}),
-			canEdit: computed(() =>
-				permissionNames().some(
-					(name) =>
-						name === UPDATE_PERMISSION || name === RoleNames.ADMIN
-				)
-			),
-			notFound: computed(
-				() => !store.loading() && !store.failed() && !track()
-			),
-		};
-	}),
+					return [
+						...(origin.length
+							? origin
+							: [
+									{
+										label: text.translator()(
+											'nav.collection'
+										),
+										link: '/collection',
+									},
+									...(profile?.artistId
+										? [
+												{
+													label: profile.artistName,
+													link: [
+														'/artist',
+														profile.artistId,
+													],
+												},
+											]
+										: []),
+								]),
+						...(profile
+							? [
+									{
+										label: profile.title,
+										link: ['/album', profile.id],
+										// The album is read where the track was.
+										queryParams:
+											collectionOriginParams(originSlug),
+									},
+								]
+							: []),
+						...(name ? [{ label: name }] : []),
+					];
+				}),
+				spotifyTrackId: computed(() => {
+					const id = track()?.spotifyTrackId;
+					return isSpotifyTrackId(id) ? id : null;
+				}),
+				youtubeVideoId: computed(() => {
+					const id = track()?.youtubeVideoId;
+					return isYoutubeVideoId(id) ? id : null;
+				}),
+				credits: computed(() => {
+					const current = track();
+					return current
+						? toTrackCredits(
+								current,
+								store.tracks(),
+								store.contributions()
+							)
+						: [];
+				}),
+				/** Previous and next track of the album, in play order. */
+				neighbours: computed(() => {
+					const index = store
+						.tracks()
+						.findIndex((item) => item.uid === store.trackId());
+					return {
+						previous: index > 0 ? store.tracks()[index - 1] : null,
+						next:
+							index >= 0
+								? (store.tracks()[index + 1] ?? null)
+								: null,
+					};
+				}),
+				canEdit: computed(() =>
+					permissionNames().some(
+						(name) =>
+							name === UPDATE_PERMISSION ||
+							name === RoleNames.ADMIN
+					)
+				),
+				notFound: computed(
+					() => !store.loading() && !store.failed() && !track()
+				),
+			};
+		}
+	),
 	withMethods(
 		(
 			store,

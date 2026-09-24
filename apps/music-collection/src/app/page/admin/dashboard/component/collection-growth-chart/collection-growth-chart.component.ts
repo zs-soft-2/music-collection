@@ -4,6 +4,7 @@ import {
 	computed,
 	input,
 } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { GrowthPoint } from '../../admin-dashboard.mapper';
 
@@ -19,6 +20,7 @@ const MAX_TICKS = 6;
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-collection-growth-chart',
+	imports: [...I18N_IMPORTS],
 	template: `
 		<figure class="chart">
 			<figcaption class="head">
@@ -75,11 +77,17 @@ const MAX_TICKS = 6;
 								}}</span>
 								<span
 									><strong>+{{ point.added }}</strong>
-									added</span
+									{{
+										'ui.collectionGrowthChart.added'
+											| transloco
+									}}</span
 								>
 								<span
-									><strong>{{ point.total }}</strong> in
-									total</span
+									><strong>{{ point.total }}</strong>
+									{{
+										'ui.collectionGrowthChart.in-total'
+											| transloco
+									}}</span
 								>
 							</span>
 						</li>

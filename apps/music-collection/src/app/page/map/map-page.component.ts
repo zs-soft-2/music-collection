@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { WorldMapComponent } from '../../shared/world-map';
 
@@ -16,7 +17,7 @@ import { MapPageStore } from './map-page.store';
 	selector: 'mc-map-page',
 	templateUrl: './map-page.component.html',
 	styleUrls: ['./map-page.component.scss'],
-	imports: [RouterLink, WorldMapComponent],
+	imports: [...I18N_IMPORTS, RouterLink, WorldMapComponent],
 })
 export class MapPageComponent {
 	protected readonly store = inject(MapPageStore);

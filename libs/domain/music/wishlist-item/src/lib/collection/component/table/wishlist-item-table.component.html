@@ -3,13 +3,15 @@
 		[items]="params.wishlistItems"
 		[place]="place"
 		[view]="collectionView"
-		emptyMessage="No wishlist items found."
+		[emptyMessage]="
+			'ui.wishlistItemTable.no-wishlist-items-found' | transloco
+		"
 	>
 		<p-autocomplete
 			tools
 			class="mc-table-search"
-			placeholder="Filter by name…"
-			ariaLabel="Filter by name"
+			[placeholder]="'ui.wishlistItemTable.filter-by-name' | transloco"
+			[ariaLabel]="'ui.wishlistItemTable.filter-by-name2' | transloco"
 			[ngModel]="place.filterOf('name')"
 			[suggestions]="params.empty"
 			[showClear]="true"
@@ -44,7 +46,9 @@
 					cardActions
 					pButton
 					pRipple
-					aria-label="Delete wishlist item"
+					[attr.aria-label]="
+						'ui.wishlistItemTable.delete-wishlist-item' | transloco
+					"
 					class="p-button-text p-button-rounded p-button-danger"
 					(click)="deleteWishlistItem(wishlistItem)"
 					iconOnly
@@ -56,7 +60,7 @@
 
 		<ng-template
 			mcColumn
-			header="Artist name"
+			[header]="'ui.wishlistItemTable.artist-name' | transloco"
 			field="artistReference.name"
 			let-wishlistItem
 		>
@@ -65,14 +69,18 @@
 
 		<ng-template
 			mcColumn
-			header="Album name"
+			[header]="'ui.wishlistItemTable.album-name' | transloco"
 			field="albumReference.name"
 			let-wishlistItem
 		>
 			{{ wishlistItem.albumReference.name }}
 		</ng-template>
 
-		<ng-template mcColumn header="Medias" let-wishlistItem>
+		<ng-template
+			mcColumn
+			[header]="'ui.wishlistItemTable.medias' | transloco"
+			let-wishlistItem
+		>
 			@for (media of wishlistItem.medias; track media) {
 				<p-chip styleClass="style">
 					{{ media }}
@@ -82,14 +90,19 @@
 
 		<ng-template
 			mcColumn
-			header="Updated"
+			[header]="'ui.wishlistItemTable.updated' | transloco"
 			field="updatedAt"
 			let-wishlistItem
 		>
 			{{ wishlistItem.updatedAt | date: 'yyyy-MM-dd HH:mm' }}
 		</ng-template>
 
-		<ng-template mcColumn header="Actions" headerHidden let-wishlistItem>
+		<ng-template
+			mcColumn
+			[header]="'ui.wishlistItemTable.actions' | transloco"
+			headerHidden
+			let-wishlistItem
+		>
 			<mc-view-action
 				[link]="viewLink(wishlistItem)"
 				entity="wishlist item"
@@ -98,7 +111,9 @@
 			<button
 				pButton
 				pRipple
-				aria-label="Edit wishlist item"
+				[attr.aria-label]="
+					'ui.wishlistItemTable.edit-wishlist-item' | transloco
+				"
 				class="p-button-text p-button-rounded p-button-secondary"
 				(click)="editWishlistItem(wishlistItem)"
 				iconOnly
@@ -109,7 +124,9 @@
 			<button
 				pButton
 				pRipple
-				aria-label="Delete wishlist item"
+				[attr.aria-label]="
+					'ui.wishlistItemTable.delete-wishlist-item2' | transloco
+				"
 				class="p-button-text p-button-rounded p-button-danger"
 				(click)="deleteWishlistItem(wishlistItem)"
 				iconOnly

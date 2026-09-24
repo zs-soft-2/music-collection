@@ -10,6 +10,7 @@ import {
 	untracked,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
 	AdminEditLinkComponent,
@@ -45,6 +46,7 @@ const TYPE_LABELS: Record<string, string> = {
 	templateUrl: './musician-page.component.html',
 	styleUrls: ['./musician-page.component.scss'],
 	imports: [
+		...I18N_IMPORTS,
 		PageBreadcrumbComponent,
 		RouterLink,
 		DiscographyCardComponent,
@@ -126,27 +128,27 @@ export class MusicianPageComponent {
 		[
 			{
 				id: 'about',
-				label: 'About',
+				labelKey: 'section.about',
 				shown: !!this.store.header()?.paragraphs.length,
 			},
 			{
 				id: 'bands',
-				label: 'Bands',
+				labelKey: 'section.bands',
 				shown: this.store.members().length > 0,
 			},
 			{
 				id: 'guest',
-				label: 'Guest appearances',
+				labelKey: 'section.guestAppearances',
 				shown: this.store.guestBands().length > 0,
 			},
 			{
 				id: 'albums',
-				label: 'Albums',
+				labelKey: 'section.albums',
 				shown: this.store.albums().length > 0,
 			},
 			{
 				id: 'bandmates',
-				label: 'Bandmates',
+				labelKey: 'section.bandmates',
 				shown: this.store.bandmates().length > 0,
 			},
 		].filter((section) => section.shown)

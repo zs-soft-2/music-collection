@@ -8,13 +8,15 @@
 >
 	<header class="picker-header">
 		<div>
-			<p class="eyebrow">Add to collection</p>
+			<p class="eyebrow">
+				{{ 'ui.releasePicker.add-to-collection' | transloco }}
+			</p>
 			<h2 id="release-picker-title">{{ albumTitle() }}</h2>
 		</div>
 		<button
 			type="button"
 			class="icon-button"
-			aria-label="Close"
+			[attr.aria-label]="'ui.releasePicker.close' | transloco"
 			[disabled]="busy()"
 			(click)="close()"
 		>
@@ -26,7 +28,7 @@
 		<section class="pending" aria-labelledby="pending-title">
 			<h3 id="pending-title" class="subtitle">
 				<i class="pi pi-clock" aria-hidden="true"></i>
-				Requested, waiting for an admin
+				{{ 'ui.releasePicker.requested-waiting-for-an' | transloco }}
 			</h3>
 			<ul>
 				@for (request of pendingRequests(); track request.id) {
@@ -54,7 +56,7 @@
 		<section class="pending is-rejected" aria-labelledby="rejected-title">
 			<h3 id="rejected-title" class="subtitle">
 				<i class="pi pi-times-circle" aria-hidden="true"></i>
-				Not added by the admin
+				{{ 'ui.releasePicker.not-added-by-the' | transloco }}
 			</h3>
 			<ul>
 				@for (request of rejectedRequests(); track request.id) {
@@ -74,11 +76,16 @@
 	@switch (view()) {
 		@case ('catalog') {
 			@if (chosenRelease(); as chosen) {
-				<p class="lead">Is your copy a numbered one?</p>
+				<p class="lead">
+					{{ 'ui.releasePicker.is-your-copy-a' | transloco }}
+				</p>
 
 				@if (error()) {
 					<p class="error" role="alert">
-						Could not add it to your collection: {{ error() }}
+						{{
+							'ui.releasePicker.addFailed'
+								| transloco: { error: error() }
+						}}
 					</p>
 				}
 
@@ -99,14 +106,14 @@
 				</p>
 
 				<p class="hint serial-lead">
-					Only a numbered edition carries this — the number stamped or
-					written on the record. Leave it empty if yours has none; you
-					can add it later on the copy's own page.
+					{{ 'ui.releasePicker.only-a-numbered-edition' | transloco }}
 				</p>
 
 				<div class="serial-fields">
 					<label class="field">
-						<span>Copy number</span>
+						<span>{{
+							'ui.releasePicker.copy-number' | transloco
+						}}</span>
 						<input
 							type="text"
 							inputmode="numeric"
@@ -124,7 +131,7 @@
 					</label>
 
 					<label class="field">
-						<span>Out of</span>
+						<span>{{ 'ui.releasePicker.out-of' | transloco }}</span>
 						<input
 							type="text"
 							inputmode="numeric"
@@ -144,20 +151,28 @@
 
 				@switch (serialProblem()) {
 					@case ('number') {
-						<p class="field-error">This is not a copy number.</p>
+						<p class="field-error">
+							{{ 'ui.releasePicker.this-is-not-a' | transloco }}
+						</p>
 					}
 					@case ('total') {
-						<p class="field-error">This is not an edition size.</p>
+						<p class="field-error">
+							{{ 'ui.releasePicker.this-is-not-an' | transloco }}
+						</p>
 					}
 					@case ('tooLarge') {
 						<p class="field-error">
-							The edition is smaller than this copy's number.
+							{{
+								'ui.releasePicker.the-edition-is-smaller'
+									| transloco
+							}}
 						</p>
 					}
 					@case ('totalAlone') {
 						<p class="field-error">
-							Which one of them is yours? An edition size on its
-							own says nothing about this copy.
+							{{
+								'ui.releasePicker.which-one-of-them' | transloco
+							}}
 						</p>
 					}
 				}
@@ -169,7 +184,7 @@
 						[disabled]="busy()"
 						(click)="unchoose()"
 					>
-						Another pressing
+						{{ 'ui.releasePicker.another-pressing' | transloco }}
 					</button>
 					<button
 						type="button"
@@ -181,17 +196,24 @@
 					</button>
 				</div>
 			} @else {
-				<p class="lead">Which pressing do you have?</p>
+				<p class="lead">
+					{{ 'ui.releasePicker.which-pressing-do-you' | transloco }}
+				</p>
 
 				@if (error()) {
 					<p class="error" role="alert">
-						Could not add it to your collection: {{ error() }}
+						{{
+							'ui.releasePicker.addFailed'
+								| transloco: { error: error() }
+						}}
 					</p>
 				}
 
 				@if (loading()) {
 					<div class="skeleton" role="status" aria-busy="true">
-						<span class="visually-hidden">Loading releases…</span>
+						<span class="visually-hidden">{{
+							'ui.releasePicker.loading-releases' | transloco
+						}}</span>
 					</div>
 				} @else if (releases().length) {
 					<ul class="options">
@@ -241,16 +263,20 @@
 													class="pi pi-check"
 													aria-hidden="true"
 												></i>
-												In your collection
+												{{
+													'ui.releasePicker.in-your-collection'
+														| transloco
+												}}
 											</span>
 										} @else {
 											<i
 												class="pi pi-plus"
 												aria-hidden="true"
 											></i>
-											<span class="visually-hidden"
-												>Add</span
-											>
+											<span class="visually-hidden">{{
+												'ui.releasePicker.add'
+													| transloco
+											}}</span>
 										}
 									</span>
 								</button>
@@ -259,12 +285,12 @@
 					</ul>
 				} @else {
 					<p class="empty">
-						No release of this album is in the catalog yet.
+						{{ 'ui.releasePicker.no-release-of-this' | transloco }}
 					</p>
 				}
 
 				<footer class="missing">
-					<p>Don't see your pressing? Ask an admin to add it.</p>
+					<p>{{ 'ui.releasePicker.don-t-see-your' | transloco }}</p>
 					<div class="missing-actions">
 						@if (discogsAvailable()) {
 							<button
@@ -273,7 +299,10 @@
 								(click)="show('discogs')"
 							>
 								<i class="pi pi-search" aria-hidden="true"></i>
-								Find it on Discogs
+								{{
+									'ui.releasePicker.find-it-on-discogs'
+										| transloco
+								}}
 							</button>
 						}
 						<button
@@ -282,14 +311,17 @@
 							(click)="show('photo')"
 						>
 							<i class="pi pi-camera" aria-hidden="true"></i>
-							Identify from a photo
+							{{
+								'ui.releasePicker.identify-from-a-photo'
+									| transloco
+							}}
 						</button>
 						<button
 							type="button"
 							class="text-button"
 							(click)="show('describe')"
 						>
-							Describe it
+							{{ 'ui.releasePicker.describe-it' | transloco }}
 						</button>
 					</div>
 				</footer>
@@ -299,19 +331,22 @@
 		@case ('discogs') {
 			<button type="button" class="back" (click)="show('catalog')">
 				<i class="pi pi-arrow-left" aria-hidden="true"></i>
-				Catalog releases
+				{{ 'ui.releasePicker.catalog-releases' | transloco }}
 			</button>
 
 			@if (selectedVersion()) {
 				<ng-container *ngTemplateOutlet="confirmPressing" />
 			} @else {
-				<p class="lead">Pick your pressing from Discogs:</p>
+				<p class="lead">
+					{{ 'ui.releasePicker.pick-your-pressing-from' | transloco }}
+				</p>
 
 				@if (discogsLoading()) {
 					<div class="skeleton" role="status" aria-busy="true">
-						<span class="visually-hidden"
-							>Loading Discogs pressings…</span
-						>
+						<span class="visually-hidden">{{
+							'ui.releasePicker.loading-discogs-pressings'
+								| transloco
+						}}</span>
 					</div>
 				} @else if (discogsError()) {
 					<p class="error" role="alert">{{ discogsError() }}</p>
@@ -321,7 +356,7 @@
 							class="secondary-button"
 							(click)="discogsRequested.emit()"
 						>
-							Try again
+							{{ 'ui.releasePicker.try-again' | transloco }}
 						</button>
 					</div>
 				} @else if (discogsVersions().length) {
@@ -329,7 +364,9 @@
 						<div
 							class="filters"
 							role="group"
-							aria-label="Filter by format"
+							[attr.aria-label]="
+								'ui.releasePicker.filter-by-format' | transloco
+							"
 						>
 							<button
 								type="button"
@@ -337,7 +374,7 @@
 								[attr.aria-pressed]="formatFilter() === 'all'"
 								(click)="formatFilter.set('all')"
 							>
-								All
+								{{ 'ui.releasePicker.all' | transloco }}
 							</button>
 							@for (format of discogsFormats(); track format) {
 								<button
@@ -375,7 +412,10 @@
 									</span>
 									<span class="action">
 										@if (version.requested) {
-											<span class="state">Requested</span>
+											<span class="state">{{
+												'ui.releasePicker.requested'
+													| transloco
+											}}</span>
 										} @else {
 											<i
 												class="pi pi-chevron-right"
@@ -388,17 +428,22 @@
 						}
 					</ul>
 				} @else {
-					<p class="empty">Discogs lists no pressings of it.</p>
+					<p class="empty">
+						{{
+							'ui.releasePicker.discogs-lists-no-pressings'
+								| transloco
+						}}
+					</p>
 				}
 
 				<p class="hint">
-					Not there?
+					{{ 'ui.releasePicker.not-there' | transloco }}
 					<button
 						type="button"
 						class="text-button"
 						(click)="show('describe')"
 					>
-						Describe it
+						{{ 'ui.releasePicker.describe-it2' | transloco }}
 					</button>
 				</p>
 			}
@@ -407,7 +452,7 @@
 		@case ('photo') {
 			<button type="button" class="back" (click)="show('catalog')">
 				<i class="pi pi-arrow-left" aria-hidden="true"></i>
-				Catalog releases
+				{{ 'ui.releasePicker.catalog-releases2' | transloco }}
 			</button>
 
 			@if (selectedVersion()) {
@@ -429,22 +474,32 @@
 
 				@if (photoPreviewUrl(); as preview) {
 					<figure class="shot" [class.is-reading]="photoScanning()">
-						<img [src]="preview" alt="The record photographed" />
+						<img
+							[src]="preview"
+							[alt]="
+								'ui.releasePicker.the-record-photographed'
+									| transloco
+							"
+						/>
 						@if (photoScanning()) {
 							<figcaption class="shot-status" role="status">
 								<i
 									class="pi pi-spin pi-spinner"
 									aria-hidden="true"
 								></i>
-								Reading the photo…
+								{{
+									'ui.releasePicker.reading-the-photo'
+										| transloco
+								}}
 							</figcaption>
 						}
 					</figure>
 				} @else {
 					<p class="lead">
-						Photograph the record — the back cover or the label, so
-						the catalogue number or the barcode is legible. That is
-						what tells your pressing from the others.
+						{{
+							'ui.releasePicker.photograph-the-record-the'
+								| transloco
+						}}
 					</p>
 
 					<button
@@ -455,9 +510,13 @@
 						(click)="takePhoto()"
 					>
 						<i class="pi pi-camera" aria-hidden="true"></i>
-						<span class="dropzone-title">Add a photo</span>
+						<span class="dropzone-title">{{
+							'ui.releasePicker.add-a-photo' | transloco
+						}}</span>
 						<span class="dropzone-hint">
-							or paste an image, or drop one here
+							{{
+								'ui.releasePicker.or-paste-an-image' | transloco
+							}}
 						</span>
 					</button>
 				}
@@ -481,7 +540,7 @@
 								(click)="photoRetried.emit()"
 							>
 								<i class="pi pi-refresh" aria-hidden="true"></i>
-								Try again
+								{{ 'ui.releasePicker.try-again2' | transloco }}
 							</button>
 						}
 						<button
@@ -490,13 +549,15 @@
 							(click)="takePhoto()"
 						>
 							<i class="pi pi-camera" aria-hidden="true"></i>
-							Another photo
+							{{ 'ui.releasePicker.another-photo' | transloco }}
 						</button>
 					</div>
 				}
 
 				@if (photoVersions().length) {
-					<p class="lead">Which one is yours?</p>
+					<p class="lead">
+						{{ 'ui.releasePicker.which-one-is-yours' | transloco }}
+					</p>
 					<ul class="options">
 						@for (version of photoVersions(); track version.id) {
 							<li>
@@ -533,7 +594,10 @@
 											>
 										}
 										@if (version.requested) {
-											<span class="state">Requested</span>
+											<span class="state">{{
+												'ui.releasePicker.requested2'
+													| transloco
+											}}</span>
 										} @else {
 											<i
 												class="pi pi-chevron-right"
@@ -547,19 +611,21 @@
 					</ul>
 				} @else if (photoEmpty()) {
 					<p class="empty">
-						Nothing recognised on this photo. Try the side with the
-						catalogue number or the barcode.
+						{{
+							'ui.releasePicker.nothing-recognised-on-this'
+								| transloco
+						}}
 					</p>
 				}
 
 				<p class="hint">
-					Rather type it?
+					{{ 'ui.releasePicker.rather-type-it' | transloco }}
 					<button
 						type="button"
 						class="text-button"
 						(click)="show('describe')"
 					>
-						Describe it
+						{{ 'ui.releasePicker.describe-it3' | transloco }}
 					</button>
 				</p>
 			}
@@ -568,35 +634,40 @@
 		@case ('describe') {
 			<button type="button" class="back" (click)="show('catalog')">
 				<i class="pi pi-arrow-left" aria-hidden="true"></i>
-				Catalog releases
+				{{ 'ui.releasePicker.catalog-releases3' | transloco }}
 			</button>
 
 			<p class="lead">
-				Paste its Discogs link, or describe it: format, label, country,
-				year.
+				{{ 'ui.releasePicker.paste-its-discogs-link' | transloco }}
 			</p>
 			<label class="field">
-				<span>Discogs release link</span>
+				<span>{{
+					'ui.releasePicker.discogs-release-link' | transloco
+				}}</span>
 				<input
 					type="url"
 					inputmode="url"
-					placeholder="https://www.discogs.com/release/…"
+					[placeholder]="
+						'ui.releasePicker.https-www-discogs-com' | transloco
+					"
 					[value]="discogsLink()"
 					[attr.aria-invalid]="linkInvalid()"
 					(input)="onInput('link', $event)"
 				/>
 				@if (linkInvalid()) {
-					<span class="field-error">Not a Discogs release link.</span>
+					<span class="field-error">{{
+						'ui.releasePicker.not-a-discogs-release' | transloco
+					}}</span>
 				}
 			</label>
 			<label class="field">
-				<span>Description</span>
+				<span>{{ 'ui.releasePicker.description' | transloco }}</span>
 				<textarea
 					rows="4"
 					[attr.maxlength]="noteMaxLength"
 					[value]="note()"
 					(input)="onInput('note', $event)"
-					placeholder="e.g. Vinyl LP, Nuclear Blast, Germany, 2016, red vinyl"
+					[placeholder]="'ui.releasePicker.e-g-vinyl-lp' | transloco"
 				></textarea>
 			</label>
 			@if (requestError()) {
@@ -620,7 +691,9 @@
      of the record. From here the request is the same. -->
 <ng-template #confirmPressing>
 	@if (selectedVersion(); as version) {
-		<p class="lead">Request this pressing:</p>
+		<p class="lead">
+			{{ 'ui.releasePicker.request-this-pressing' | transloco }}
+		</p>
 		<div class="option is-selected">
 			<ng-container
 				*ngTemplateOutlet="
@@ -639,13 +712,13 @@
 			</span>
 		</div>
 		<label class="field">
-			<span>Note for the admin (optional)</span>
+			<span>{{ 'ui.releasePicker.note-for-the-admin' | transloco }}</span>
 			<textarea
 				rows="3"
 				[attr.maxlength]="noteMaxLength"
 				[value]="note()"
 				(input)="onInput('note', $event)"
-				placeholder="e.g. signed copy, coloured vinyl"
+				[placeholder]="'ui.releasePicker.e-g-signed-copy' | transloco"
 			></textarea>
 		</label>
 		@if (requestError()) {
@@ -658,7 +731,7 @@
 				[disabled]="requesting()"
 				(click)="selectedVersion.set(null)"
 			>
-				Choose another
+				{{ 'ui.releasePicker.choose-another' | transloco }}
 			</button>
 			<button
 				type="button"

@@ -3,7 +3,7 @@
 		[src]="album.coverImage?.filePath || album.coverImageUrl || ''"
 		[width]="width"
 		[height]="height"
-		alt="Image"
+		[alt]="'ui.albumSimpleView.image' | transloco"
 		styleClass="view-image"
 	></p-image>
 </div>

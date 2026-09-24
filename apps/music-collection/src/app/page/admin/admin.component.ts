@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import {
 	ChangeDetectionStrategy,
 	Component,
@@ -30,7 +31,13 @@ import { AdminStore } from './admin.store';
 	selector: 'mc-admin',
 	templateUrl: './admin.component.html',
 	styleUrls: ['./admin.component.scss'],
-	imports: [BreadcrumbModule, RouterLink, RouterLinkActive, RouterOutlet],
+	imports: [
+		...I18N_IMPORTS,
+		BreadcrumbModule,
+		RouterLink,
+		RouterLinkActive,
+		RouterOutlet,
+	],
 	providers: [AdminStore],
 	host: {
 		'(document:keydown.escape)': 'expanded.set(false)',

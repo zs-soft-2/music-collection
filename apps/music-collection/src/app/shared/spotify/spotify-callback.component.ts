@@ -6,6 +6,7 @@ import {
 	signal,
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { SpotifyIconComponent } from './spotify-icon.component';
 import { SpotifyPlaybackStore } from './spotify-playback.store';
@@ -14,17 +15,23 @@ import { SpotifyPlaybackStore } from './spotify-playback.store';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-spotify-callback',
-	imports: [RouterLink, SpotifyIconComponent],
+	imports: [...I18N_IMPORTS, RouterLink, SpotifyIconComponent],
 	template: `
 		<div class="callback">
 			@if (error(); as error) {
-				<h1>Spotify sign-in failed</h1>
+				<h1>
+					{{
+						'ui.spotifyCallback.spotify-sign-in-failed' | transloco
+					}}
+				</h1>
 				<p role="alert">{{ error }}</p>
-				<a routerLink="/home">Back to home</a>
+				<a routerLink="/home">{{
+					'ui.spotifyCallback.back-to-home' | transloco
+				}}</a>
 			} @else {
 				<p class="connecting" role="status">
 					<mc-spotify-icon />
-					Connecting to Spotify…
+					{{ 'ui.spotifyCallback.connecting-to-spotify' | transloco }}
 				</p>
 			}
 		</div>

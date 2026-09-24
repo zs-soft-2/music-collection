@@ -1,11 +1,27 @@
-<div class="zoom" role="toolbar" aria-label="View">
-	<button type="button" aria-label="Zoom in" (click)="zoomIn()">
+<div
+	class="zoom"
+	role="toolbar"
+	[attr.aria-label]="'ui.networkGraph.view' | transloco"
+>
+	<button
+		type="button"
+		[attr.aria-label]="'ui.networkGraph.zoom-in' | transloco"
+		(click)="zoomIn()"
+	>
 		<i class="pi pi-plus" aria-hidden="true"></i>
 	</button>
-	<button type="button" aria-label="Zoom out" (click)="zoomOut()">
+	<button
+		type="button"
+		[attr.aria-label]="'ui.networkGraph.zoom-out' | transloco"
+		(click)="zoomOut()"
+	>
 		<i class="pi pi-minus" aria-hidden="true"></i>
 	</button>
-	<button type="button" aria-label="Fit to screen" (click)="fit()">
+	<button
+		type="button"
+		[attr.aria-label]="'ui.networkGraph.fit-to-screen' | transloco"
+		(click)="fit()"
+	>
 		<i class="pi pi-expand" aria-hidden="true"></i>
 	</button>
 	<button

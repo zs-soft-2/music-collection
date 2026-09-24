@@ -2,6 +2,7 @@ import { map, of, pipe, switchMap, tap } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { TextService } from '@music-collection/core/i18n';
 import { MusicCollectionEffect } from '@music-collection/domain/music-collection/core';
 import { MusicCollectionEntity } from '@music-collection/domain/music-collection/api';
 import { tapResponse } from '@ngrx/operators';
@@ -46,10 +47,14 @@ const initialState: PageOriginState = {
 export function withPageOrigin() {
 	return signalStoreFeature(
 		withState(initialState),
-		withComputed((store) => ({
+		withComputed((store, text = inject(TextService)) => ({
 			/** The steps up to the origin; empty when opened on its own. */
 			originTrail: computed<Crumb[]>(() =>
-				collectionTrail(store.originSlug(), store.originName())
+				collectionTrail(
+					store.originSlug(),
+					store.originName(),
+					text.translator()
+				)
 			),
 		})),
 		withMethods(

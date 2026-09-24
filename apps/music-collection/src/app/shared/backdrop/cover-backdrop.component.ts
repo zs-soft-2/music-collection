@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 /**
  * Tartalomhoz igazodó háttér: a borítókép erősen elmosva, halványan a lap
@@ -7,6 +8,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-cover-backdrop',
+	imports: [...I18N_IMPORTS],
 	template: `
 		@if (src()) {
 			<img [src]="src()" alt="" />
@@ -20,7 +22,11 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 			z-index: -1;
 			pointer-events: none;
 			overflow: hidden;
-			mask-image: linear-gradient(to bottom, #000 0%, transparent max(70vh, 640px));
+			mask-image: linear-gradient(
+				to bottom,
+				#000 0%,
+				transparent max(70vh, 640px)
+			);
 		}
 
 		img {

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
 	ArtistTileComponent,
@@ -10,16 +11,22 @@ import { ArtistGroup } from '../../home.mapper';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-artist-group',
-	imports: [ArtistTileComponent, CarouselComponent],
+	imports: [...I18N_IMPORTS, ArtistTileComponent, CarouselComponent],
 	template: `
 		@let item = group();
+		@let heading =
+			item.labelGroup
+				? (item.label | mcCatalog: item.labelGroup)
+				: item.label;
 
 		<h3 class="label">
-			{{ item.label }}
-			<span class="count">{{ item.total }} in the catalog</span>
+			{{ heading }}
+			<span class="count">{{
+				item.total | mcPlural: 'home.group.inCatalog'
+			}}</span>
 		</h3>
 
-		<mc-carousel [label]="item.label">
+		<mc-carousel [label]="heading">
 			@for (artist of item.artists; track artist.id) {
 				<li><mc-artist-tile [artist]="artist" /></li>
 			}

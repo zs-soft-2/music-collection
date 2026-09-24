@@ -35,7 +35,7 @@ import {
 export interface AlbumExternalRow {
 	current: string;
 	field: AlbumExternalField;
-	label: string;
+	labelKey: string;
 	loaded: string;
 	/** Whether the loaded value goes into the form on apply. */
 	selected: boolean;
@@ -47,12 +47,12 @@ export interface AlbumExternalComparison {
 	sourceUrl: string;
 }
 
-const EXTERNAL_FIELDS: { field: AlbumExternalField; label: string }[] = [
-	{ field: 'name', label: 'Title' },
-	{ field: 'format', label: 'Format' },
-	{ field: 'year', label: 'Year' },
-	{ field: 'styles', label: 'Styles' },
-	{ field: 'coverImageUrl', label: 'Cover URL' },
+const EXTERNAL_FIELDS: { field: AlbumExternalField; labelKey: string }[] = [
+	{ field: 'name', labelKey: 'ui.albumForm.title' },
+	{ field: 'format', labelKey: 'ui.albumForm.format' },
+	{ field: 'year', labelKey: 'ui.albumForm.year' },
+	{ field: 'styles', labelKey: 'ui.albumForm.styles' },
+	{ field: 'coverImageUrl', labelKey: 'ui.albumForm.cover-url' },
 ];
 
 function isEmpty(value: unknown): boolean {
@@ -336,14 +336,14 @@ export class AlbumFormService {
 	 * Fields with the same value are left out.
 	 */
 	private compare(profile: AlbumExternalProfile): AlbumExternalComparison {
-		const rows = EXTERNAL_FIELDS.map(({ field, label }) => {
+		const rows = EXTERNAL_FIELDS.map(({ field, labelKey }) => {
 			const current = formatValue(this.params.formGroup.value[field]);
 			const loaded = formatValue(profile[field]);
 
 			return {
 				current,
 				field,
-				label,
+				labelKey,
 				loaded,
 				selected: !current && !!loaded,
 				value: profile[field],

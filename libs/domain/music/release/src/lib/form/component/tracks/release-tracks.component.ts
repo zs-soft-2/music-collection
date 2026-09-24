@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import { Observable } from 'rxjs';
 
 import { AsyncPipe } from '@angular/common';
@@ -32,7 +33,7 @@ import {
 	selector: 'mc-release-tracks',
 	templateUrl: './release-tracks.component.html',
 	styleUrls: ['./release-tracks.component.scss'],
-	imports: [AsyncPipe, Button, InputText],
+	imports: [...I18N_IMPORTS, AsyncPipe, Button, InputText],
 })
 export class ReleaseTracksComponent extends BaseComponent implements OnInit {
 	private componentService = inject(ReleaseTracksService);

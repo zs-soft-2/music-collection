@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import {
 	ChangeDetectionStrategy,
 	Component,
@@ -14,7 +15,15 @@ import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
 	selector: 'mc-release-edit',
 	templateUrl: './release-edit.component.html',
 	styleUrls: ['./release-edit.component.scss'],
-	imports: [ReleaseFormModule, Tab, TabList, TabPanel, TabPanels, Tabs],
+	imports: [
+		...I18N_IMPORTS,
+		ReleaseFormModule,
+		Tab,
+		TabList,
+		TabPanel,
+		TabPanels,
+		Tabs,
+	],
 })
 export class ReleaseEditComponent extends BaseComponent implements OnInit {
 	private activatedRoute = inject(ActivatedRoute);

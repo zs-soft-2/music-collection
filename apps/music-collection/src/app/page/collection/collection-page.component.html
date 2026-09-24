@@ -1,16 +1,16 @@
-<div class="page">
+<div class="page" *transloco="let t">
 	<!-- Header -->
 	<header class="hero">
 		<div class="hero-text">
 			<p class="eyebrow">musiCollection</p>
-			<h1>My Collection</h1>
+			<h1>{{ t('page.collection.my-collection') }}</h1>
 		</div>
 	</header>
 
 	<!-- At a glance -->
 	<section class="glance-section" aria-labelledby="glance-title">
 		<h2 id="glance-title" class="glance-title">
-			Your collection at a glance
+			{{ t('page.collection.your-collection-at-a') }}
 		</h2>
 
 		@if (store.isLoading()) {
@@ -19,18 +19,23 @@
 			<div class="glance">
 				<dl class="stats">
 					<div class="stat is-hero">
-						<dt>Releases</dt>
+						<dt>{{ t('page.collection.releases') }}</dt>
 						<dd>{{ store.stats().total }}</dd>
 					</div>
 					<div class="stat">
-						<dt>Artists</dt>
+						<dt>{{ t('page.collection.artists') }}</dt>
 						<dd>{{ store.stats().artists }}</dd>
 					</div>
 					@for (format of formatOrder; track format) {
 						@if (store.stats().byFormat[format]) {
 							<div class="stat">
-								<dt>{{ formatLabels[format] }}</dt>
-								<dd>{{ store.stats().byFormat[format] }}</dd>
+								<dt>{{ format | mcCatalog: 'media' }}</dt>
+								<dd>
+									{{
+										store.stats().byFormat[format]
+											| mcNumber
+									}}
+								</dd>
 							</div>
 						}
 					}
@@ -38,14 +43,14 @@
 
 				<div class="panel">
 					<mc-decade-chart
-						heading="Releases by decade"
+						[heading]="t('page.collection.releases-by-decade')"
 						[data]="store.decades()"
 					/>
 				</div>
 
 				<div class="panel">
 					<mc-style-bars
-						heading="Top styles"
+						[heading]="t('page.collection.top-styles')"
 						[data]="store.styles()"
 					/>
 				</div>
@@ -61,22 +66,32 @@
 		>
 			<header class="collections-head">
 				<h2 id="collections-title" class="glance-title">
-					Collection goals
+					{{ t('page.collection.collection-goals') }}
 				</h2>
 
 				@if (!store.collectionsLoading()) {
 					<p class="collections-summary">
-						{{ store.collectionsSummary().completed }} of
-						{{ store.collectionsSummary().total }} complete
+						{{
+							t('page.collection.summary.complete', {
+								completed: store.collectionsSummary().completed,
+								total: store.collectionsSummary().total,
+							})
+						}}
 						<span aria-hidden="true">·</span>
-						{{ store.collectionsSummary().missing }} records missing
+						{{
+							store.collectionsSummary().missing
+								| mcPlural: 'page.collection.summary.missing'
+						}}
 						<span aria-hidden="true">·</span>
-						{{ store.collectionsSummary().earnedPoints }} pts earned
+						{{
+							store.collectionsSummary().earnedPoints
+								| mcPlural: 'page.collection.summary.points'
+						}}
 					</p>
 				}
 
 				<a class="collections-more" routerLink="/collections">
-					All collections
+					{{ t('page.collection.all-collections') }}
 					<i class="pi pi-arrow-right" aria-hidden="true"></i>
 				</a>
 			</header>
@@ -106,27 +121,31 @@
 	<div class="toolbar">
 		<div class="search">
 			<i class="pi pi-search" aria-hidden="true"></i>
-			<label class="visually-hidden" for="collection-search"
-				>Search artist or album</label
-			>
+			<label class="visually-hidden" for="collection-search">{{
+				t('page.collection.search-artist-or-album')
+			}}</label>
 			<input
 				id="collection-search"
 				type="search"
-				placeholder="Search artist or album…"
+				[placeholder]="t('page.collection.search-artist-or-album2')"
 				autocomplete="off"
 				[value]="store.query()"
 				(input)="onQuery($event)"
 			/>
 		</div>
 
-		<div class="chips" role="group" aria-label="Filter by format">
+		<div
+			class="chips"
+			role="group"
+			[attr.aria-label]="t('page.collection.filter-by-format')"
+		>
 			<button
 				type="button"
 				class="chip"
 				[attr.aria-pressed]="store.format() === 'all'"
 				(click)="store.setFormat('all')"
 			>
-				All
+				{{ t('page.collection.all') }}
 			</button>
 			@for (format of formatOrder; track format) {
 				@if (store.stats().byFormat[format]) {
@@ -136,9 +155,9 @@
 						[attr.aria-pressed]="store.format() === format"
 						(click)="store.setFormat(format)"
 					>
-						{{ formatLabels[format] }}
+						{{ format | mcCatalog: 'media' }}
 						<span class="chip-count">{{
-							store.stats().byFormat[format]
+							store.stats().byFormat[format] | mcNumber
 						}}</span>
 					</button>
 				}
@@ -147,40 +166,44 @@
 
 		<div class="controls">
 			<label class="select">
-				<span>Sort</span>
+				<span>{{ t('page.collection.sort') }}</span>
 				<select [value]="store.sort()" (change)="onSort($event)">
 					@for (option of sortOptions; track option.value) {
 						<option
 							[value]="option.value"
 							[selected]="option.value === store.sort()"
 						>
-							{{ option.label }}
+							{{ t(option.labelKey) }}
 						</option>
 					}
 				</select>
 			</label>
 
 			<label class="select">
-				<span>Group</span>
+				<span>{{ t('page.collection.group') }}</span>
 				<select [value]="store.group()" (change)="onGroup($event)">
 					@for (option of groupOptions; track option.value) {
 						<option
 							[value]="option.value"
 							[selected]="option.value === store.group()"
 						>
-							{{ option.label }}
+							{{ t(option.labelKey) }}
 						</option>
 					}
 				</select>
 			</label>
 
-			<div class="view-toggle" role="group" aria-label="View">
+			<div
+				class="view-toggle"
+				role="group"
+				[attr.aria-label]="t('page.collection.view')"
+			>
 				@for (option of viewOptions; track option.value) {
 					<button
 						type="button"
 						[attr.aria-pressed]="store.view() === option.value"
-						[attr.aria-label]="option.label"
-						[title]="option.label"
+						[attr.aria-label]="t(option.labelKey)"
+						[title]="t(option.labelKey)"
 						(click)="store.setView(option.value)"
 					>
 						<i [class]="option.icon" aria-hidden="true"></i>
@@ -193,17 +216,24 @@
 	<p class="summary" aria-live="polite">
 		@if (!store.isLoading()) {
 			@if (store.hasFilter()) {
-				Showing {{ store.visible().length }} of
-				{{ store.stats().total }} releases
+				{{
+					t('page.collection.showingOf', {
+						shown: store.visible().length,
+						total: store.stats().total,
+					})
+				}}
 				<button
 					type="button"
 					class="link-button"
 					(click)="store.clearFilters()"
 				>
-					Clear filters
+					{{ t('page.collection.clear-filters') }}
 				</button>
 			} @else {
-				{{ store.stats().total }} releases
+				{{
+					store.stats().total
+						| mcPlural: 'page.collection.releaseCount'
+				}}
 			}
 		}
 	</p>
@@ -211,7 +241,9 @@
 	<!-- Content -->
 	@if (store.isLoading()) {
 		<div class="grid" role="status" aria-busy="true">
-			<span class="visually-hidden">Loading collection…</span>
+			<span class="visually-hidden">{{
+				t('page.collection.loading-collection')
+			}}</span>
 			@for (skeleton of skeletons; track skeleton) {
 				<div class="skeleton"></div>
 			}
@@ -219,20 +251,20 @@
 	} @else if (!store.isAuthenticated()) {
 		<div class="empty">
 			<p class="empty-icon" aria-hidden="true">♪</p>
-			<h2>Your collection lives behind the sign-in</h2>
-			<p>Log in to see the records you have, and to add new ones.</p>
+			<h2>{{ t('page.collection.your-collection-lives-behind') }}</h2>
+			<p>{{ t('page.collection.log-in-to-see') }}</p>
 			<button type="button" class="button" (click)="store.login()">
 				<i class="pi pi-sign-in" aria-hidden="true"></i>
-				Log in
+				{{ t('page.collection.log-in') }}
 			</button>
 		</div>
 	} @else if (!store.visible().length) {
 		<div class="empty">
 			<p class="empty-icon" aria-hidden="true">♪</p>
-			<h2>No releases found</h2>
-			<p>Try another search or format.</p>
+			<h2>{{ t('page.collection.no-releases-found') }}</h2>
+			<p>{{ t('page.collection.try-another-search-or') }}</p>
 			<button type="button" class="button" (click)="store.clearFilters()">
-				Clear filters
+				{{ t('page.collection.clear-filters2') }}
 			</button>
 		</div>
 	} @else {
@@ -241,19 +273,15 @@
 				@if (store.shelfUnits().length) {
 					<p class="shelf-note">
 						@if (store.placeable()) {
-							Drag a record to file it where it really stands. A
-							compartment you have arranged keeps the room you
-							made in it; everything you have not placed keeps
-							filling the compartments you left free.
+							{{ t('page.collection.shelf.dragHint') }}
 						} @else {
-							Clear the search and the format filter to rearrange
-							the shelf by hand.
+							{{ t('page.collection.shelf.filterHint') }}
 						}
 					</p>
 				}
 				@if (store.placeError(); as error) {
 					<p class="shelf-error" role="alert">
-						Could not file it: {{ error }}
+						{{ t('page.collection.shelf.fileFailed', { error }) }}
 					</p>
 				}
 				<mc-record-shelf
@@ -272,7 +300,9 @@
 				) {
 					<section
 						class="group"
-						[attr.aria-label]="group.label || 'Collection'"
+						[attr.aria-label]="
+							group.label || t('page.collection.groupFallback')
+						"
 					>
 						@if (group.label) {
 							<h2 class="group-title">

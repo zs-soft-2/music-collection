@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import {
 	ChangeDetectionStrategy,
 	Component,
@@ -33,7 +34,7 @@ function toDateInput(date: Date): string {
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-copy-removal',
-	imports: [FormatBadgeComponent],
+	imports: [...I18N_IMPORTS, FormatBadgeComponent],
 	templateUrl: './copy-removal.component.html',
 	styleUrls: ['./copy-removal.component.scss'],
 })

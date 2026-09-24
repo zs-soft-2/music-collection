@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import {
 	ChangeDetectionStrategy,
 	Component,
@@ -44,7 +45,7 @@ interface SpotCell {
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-copy-placement',
-	imports: [FormatBadgeComponent],
+	imports: [...I18N_IMPORTS, FormatBadgeComponent],
 	templateUrl: './copy-placement.component.html',
 	styleUrls: ['./copy-placement.component.scss'],
 })

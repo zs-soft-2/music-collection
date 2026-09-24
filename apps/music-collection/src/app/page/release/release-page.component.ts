@@ -6,6 +6,7 @@ import {
 	inject,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
 	AdminEditLinkComponent,
@@ -25,6 +26,7 @@ import { ReleasePageStore } from './release-page.store';
 	templateUrl: './release-page.component.html',
 	styleUrls: ['./release-page.component.scss'],
 	imports: [
+		...I18N_IMPORTS,
 		PageBreadcrumbComponent,
 		RouterLink,
 		EntityFactsComponent,
@@ -43,32 +45,35 @@ export class ReleasePageComponent {
 
 		return [
 			{
-				label: 'Album',
+				labelKey: 'fact.album',
 				value: pressing?.albumName ?? null,
 				link: pressing?.albumUid ? ['/album', pressing.albumUid] : null,
 			},
 			{
-				label: 'Artist',
+				labelKey: 'fact.artist',
 				value: pressing?.artistName ?? null,
 				link: pressing?.artistUid
 					? ['/artist', pressing.artistUid]
 					: null,
 			},
 			{
-				label: 'Label',
+				labelKey: 'fact.label',
 				value: pressing?.labelName ?? null,
 				link: pressing?.labelUid ? ['/label', pressing.labelUid] : null,
 			},
-			{ label: 'Country', value: pressing?.country ?? null },
-			{ label: 'Format', value: pressing?.formatDescription ?? null },
+			{ labelKey: 'fact.country', value: pressing?.country ?? null },
 			{
-				label: 'Released',
+				labelKey: 'fact.format',
+				value: pressing?.formatDescription ?? null,
+			},
+			{
+				labelKey: 'fact.released',
 				value: releasedAt
 					? this.datePipe.transform(releasedAt, 'longDate')
 					: null,
 			},
 			{
-				label: 'Discogs',
+				labelKey: 'fact.discogs',
 				value: this.store.discogsUrl() ? 'Open the pressing' : null,
 				href: this.store.discogsUrl(),
 			},

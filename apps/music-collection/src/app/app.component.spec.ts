@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { NgxPermissionsModule } from 'ngx-permissions';
 import { of } from 'rxjs';
 
@@ -30,6 +31,7 @@ describe('AppComponent', () => {
 			],
 			providers: [
 				provideRouter([]),
+				provideI18nTesting(),
 				{
 					provide: AuthenticationStateService,
 					useValue: {

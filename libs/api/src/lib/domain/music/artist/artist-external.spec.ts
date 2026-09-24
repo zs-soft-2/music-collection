@@ -4,7 +4,9 @@ describe('toMusicBrainzId', () => {
 	const id = '1c225a00-c3d7-4156-9c3b-1dfb37692fa0';
 
 	it('takes the id out of an artist page URL', () => {
-		expect(toMusicBrainzId(`https://musicbrainz.org/artist/${id}`)).toBe(id);
+		expect(toMusicBrainzId(`https://musicbrainz.org/artist/${id}`)).toBe(
+			id
+		);
 	});
 
 	it('takes it out of a URL with a tab and a query', () => {

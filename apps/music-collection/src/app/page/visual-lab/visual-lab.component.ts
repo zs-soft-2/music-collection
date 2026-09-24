@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import {
 	ChangeDetectionStrategy,
 	Component,
@@ -23,18 +24,26 @@ import { VisualFrame, VisualSceneComponent } from '../../shared/visual-scene';
 
 /** The knobs the panel can pin. Names match the fields on `VisualState`. */
 const KNOBS = [
-	{ key: 'intensity', label: 'Intenzitás', max: 1 },
-	{ key: 'fog', label: 'Köd', max: 1.6 },
-	{ key: 'fogSpeed', label: 'Ködsebesség', max: 2 },
-	{ key: 'particleDensity', label: 'Részecskesűrűség', max: 1.6 },
-	{ key: 'particleSpeed', label: 'Részecskesebesség', max: 2 },
-	{ key: 'camera', label: 'Kameramozgás', max: 1 },
-	{ key: 'light', label: 'Fényerő', max: 1.6 },
-	{ key: 'glow', label: 'Ragyogás', max: 1.5 },
-	{ key: 'shake', label: 'Rázkódás', max: 1 },
-	{ key: 'darkness', label: 'Sötétség', max: 1 },
-	{ key: 'vignette', label: 'Vignetta', max: 1 },
-	{ key: 'surreal', label: 'Szürreális', max: 1 },
+	{ key: 'intensity', labelKey: 'ui.visualLab.knob.intensity', max: 1 },
+	{ key: 'fog', labelKey: 'ui.visualLab.knob.fog', max: 1.6 },
+	{ key: 'fogSpeed', labelKey: 'ui.visualLab.knob.fogSpeed', max: 2 },
+	{
+		key: 'particleDensity',
+		labelKey: 'ui.visualLab.knob.particleDensity',
+		max: 1.6,
+	},
+	{
+		key: 'particleSpeed',
+		labelKey: 'ui.visualLab.knob.particleSpeed',
+		max: 2,
+	},
+	{ key: 'camera', labelKey: 'ui.visualLab.knob.camera', max: 1 },
+	{ key: 'light', labelKey: 'ui.visualLab.knob.light', max: 1.6 },
+	{ key: 'glow', labelKey: 'ui.visualLab.knob.glow', max: 1.5 },
+	{ key: 'shake', labelKey: 'ui.visualLab.knob.shake', max: 1 },
+	{ key: 'darkness', labelKey: 'ui.visualLab.knob.darkness', max: 1 },
+	{ key: 'vignette', labelKey: 'ui.visualLab.knob.vignette', max: 1 },
+	{ key: 'surreal', labelKey: 'ui.visualLab.knob.surreal', max: 1 },
 ] as const;
 
 type KnobKey = (typeof KNOBS)[number]['key'];
@@ -190,7 +199,7 @@ const CLOCK_MS = 100;
 	selector: 'mc-visual-lab',
 	templateUrl: './visual-lab.component.html',
 	styleUrls: ['./visual-lab.component.scss'],
-	imports: [VisualSceneComponent],
+	imports: [...I18N_IMPORTS, VisualSceneComponent],
 })
 export class VisualLabComponent {
 	private readonly destroyRef = inject(DestroyRef);
@@ -347,8 +356,7 @@ export class VisualLabComponent {
 	protected stepSubject(by: number): void {
 		this.typed.set(null);
 		this.subjectIndex.update(
-			(index) =>
-				(index + by + SUBJECTS.length * 2) % SUBJECTS.length
+			(index) => (index + by + SUBJECTS.length * 2) % SUBJECTS.length
 		);
 	}
 

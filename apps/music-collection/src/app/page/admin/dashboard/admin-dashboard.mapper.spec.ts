@@ -66,9 +66,9 @@ describe('trackCompleteness', () => {
 
 		expect(group.total).toBe(100);
 		expect(group.checks).toEqual([
-			{ label: 'Lyrics', missing: 60 },
-			{ label: 'Spotify link', missing: 0 },
-			{ label: 'YouTube video', missing: 100 },
+			{ labelKey: 'admin.field.lyrics', missing: 60 },
+			{ labelKey: 'admin.field.spotifyLink', missing: 0 },
+			{ labelKey: 'admin.field.youtubeVideo', missing: 100 },
 		]);
 	});
 
@@ -81,9 +81,9 @@ describe('trackCompleteness', () => {
 	it('leaves the lyrics row out when they could not be counted', () => {
 		const group = trackCompleteness(stats({ withLyrics: null }));
 
-		expect(group.checks.map((check) => check.label)).toEqual([
-			'Spotify link',
-			'YouTube video',
+		expect(group.checks.map((check) => check.labelKey)).toEqual([
+			'admin.field.spotifyLink',
+			'admin.field.youtubeVideo',
 		]);
 	});
 });
@@ -99,7 +99,7 @@ describe('catalogCompleteness', () => {
 		const [group] = catalogCompleteness(albums, [], new Set(['a']));
 
 		expect(group.checks).toContainEqual({
-			label: 'Tracklist',
+			labelKey: 'admin.field.tracklist',
 			missing: 2,
 		});
 	});
@@ -107,8 +107,8 @@ describe('catalogCompleteness', () => {
 	it('leaves the tracklist row out until the tracks are known', () => {
 		const [group] = catalogCompleteness(albums, [], null);
 
-		expect(group.checks.map((check) => check.label)).not.toContain(
-			'Tracklist'
+		expect(group.checks.map((check) => check.labelKey)).not.toContain(
+			'admin.field.tracklist'
 		);
 	});
 
@@ -120,14 +120,17 @@ describe('catalogCompleteness', () => {
 			new Set(['x'])
 		);
 
-		expect(group.checks).toContainEqual({ label: 'Line-up', missing: 1 });
+		expect(group.checks).toContainEqual({
+			labelKey: 'admin.field.lineUp',
+			missing: 1,
+		});
 	});
 
 	it('leaves the line-up row out until the memberships are known', () => {
 		const [, group] = catalogCompleteness([], artists, null);
 
-		expect(group.checks.map((check) => check.label)).not.toContain(
-			'Line-up'
+		expect(group.checks.map((check) => check.labelKey)).not.toContain(
+			'admin.field.lineUp'
 		);
 	});
 });

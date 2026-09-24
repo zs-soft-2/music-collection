@@ -155,9 +155,17 @@ describe('albumsByDecade', () => {
 			10
 		);
 
-		expect(groups.map(({ label, total }) => [label, total])).toEqual([
-			['1980s', 2],
-			['1970s', 2],
+		// The decade itself, not the words for it: which of "1980s",
+		// "1980-as évek" and "1980er" is shown is the dictionary's business.
+		expect(
+			groups.map(({ label, labelGroup, total }) => [
+				label,
+				labelGroup,
+				total,
+			])
+		).toEqual([
+			['1980', 'decade', 2],
+			['1970', 'decade', 2],
 		]);
 	});
 });
@@ -177,9 +185,15 @@ describe('artistsByType', () => {
 
 		const groups = artistsByType(artists, counts, 10);
 
-		expect(groups.map(({ label, total }) => [label, total])).toEqual([
-			['Bands', 2],
-			['Projects', 1],
+		expect(
+			groups.map(({ label, labelGroup, total }) => [
+				label,
+				labelGroup,
+				total,
+			])
+		).toEqual([
+			['band', 'artistTypePlural', 2],
+			['project', 'artistTypePlural', 1],
 		]);
 		expect(groups[0].artists.map(({ id }) => id)).toEqual([
 			'maiden',

@@ -7,7 +7,9 @@
 >
 	<header class="wish-header">
 		<div>
-			<p class="eyebrow">Add to wishlist</p>
+			<p class="eyebrow">
+				{{ 'ui.wishlistDialog.add-to-wishlist' | transloco }}
+			</p>
 			<h2 id="wishlist-dialog-title">{{ albumTitle() }}</h2>
 			@if (artistName()) {
 				<p class="artist">{{ artistName() }}</p>
@@ -16,7 +18,7 @@
 		<button
 			type="button"
 			class="icon-button"
-			aria-label="Close"
+			[attr.aria-label]="'ui.wishlistDialog.close' | transloco"
 			[disabled]="busy()"
 			(click)="close()"
 		>
@@ -26,7 +28,9 @@
 
 	<form (submit)="$event.preventDefault(); submit()">
 		<fieldset class="medias">
-			<legend>Which format are you after?</legend>
+			<legend>
+				{{ 'ui.wishlistDialog.which-format-are-you' | transloco }}
+			</legend>
 			<div class="chips">
 				@for (option of options; track option) {
 					<label class="chip">
@@ -44,28 +48,35 @@
 		</fieldset>
 
 		<label class="field">
-			<span>Shop link (optional)</span>
+			<span>{{
+				'ui.wishlistDialog.shop-link-optional' | transloco
+			}}</span>
 			<input
 				type="url"
 				inputmode="url"
-				placeholder="https://…"
+				[placeholder]="'ui.wishlistDialog.https' | transloco"
 				[value]="sourceLink()"
 				[attr.aria-invalid]="linkInvalid()"
 				(input)="onLink($event)"
 			/>
 			@if (linkInvalid()) {
 				<span class="field-error">
-					Paste a full address, starting with http:// or https://.
+					{{ 'ui.wishlistDialog.paste-a-full-address' | transloco }}
 				</span>
 			}
 		</label>
 
 		<p class="hint">
-			It lands on your own wishlist. Mark it found there once you have it.
+			{{ 'ui.wishlistDialog.it-lands-on-your' | transloco }}
 		</p>
 
 		@if (error()) {
-			<p class="error" role="alert">Could not add it: {{ error() }}</p>
+			<p class="error" role="alert">
+				{{
+					'ui.wishlistDialog.addFailed'
+						| transloco: { error: error() }
+				}}
+			</p>
 		}
 
 		<div class="form-actions">
@@ -75,7 +86,7 @@
 				[disabled]="busy()"
 				(click)="close()"
 			>
-				Cancel
+				{{ 'ui.wishlistDialog.cancel' | transloco }}
 			</button>
 			<button
 				type="submit"

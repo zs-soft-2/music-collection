@@ -1,6 +1,7 @@
 import { Observable, filter, map, of, pipe, switchMap, tap } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
+import { TextService } from '@music-collection/core/i18n';
 import { ActivatedRoute } from '@angular/router';
 import {
 	AlbumStateService,
@@ -89,7 +90,7 @@ function entities$<T>(
 
 export const ArtistPageStore = signalStore(
 	withState(initialState),
-	withComputed((store) => {
+	withComputed((store, text = inject(TextService)) => {
 		/** The collection's releases of this artist. */
 		const ownReleases = computed(() =>
 			store
@@ -129,7 +130,10 @@ export const ArtistPageStore = signalStore(
 				const name = store.artist()?.name;
 
 				return [
-					{ label: 'My Collection', link: '/collection' },
+					{
+						label: text.translator()('nav.collection'),
+						link: '/collection',
+					},
 					...(name ? [{ label: name }] : []),
 				];
 			}),

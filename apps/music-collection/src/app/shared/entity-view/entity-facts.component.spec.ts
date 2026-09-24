@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
@@ -16,7 +17,7 @@ describe('EntityFactsComponent', () => {
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
 			imports: [EntityFactsComponent],
-			providers: [provideRouter([])],
+			providers: [provideI18nTesting(), provideRouter([])],
 		}).compileComponents();
 
 		fixture = TestBed.createComponent(EntityFactsComponent);
@@ -24,11 +25,13 @@ describe('EntityFactsComponent', () => {
 
 	it('leaves out what was never filled in', () => {
 		const host = render([
-			{ label: 'Country', value: 'Europe' },
-			{ label: 'Format', value: null },
-			{ label: 'Weight', value: '' },
+			{ labelKey: 'fact.country', value: 'Europe' },
+			{ labelKey: 'fact.format', value: null },
+			{ labelKey: 'fact.years', value: '' },
 		]);
 
+		// The dictionary's own words, so this still says which fact survived
+		// rather than which key did.
 		expect(
 			Array.from(host.querySelectorAll('dt')).map((term) =>
 				term.textContent?.trim()
@@ -38,9 +41,9 @@ describe('EntityFactsComponent', () => {
 
 	it('links a fact that stands for another record', () => {
 		const host = render([
-			{ label: 'Label', value: 'Sub Pop', link: ['/label', '1'] },
+			{ labelKey: 'fact.label', value: 'Sub Pop', link: ['/label', '1'] },
 			{
-				label: 'Discogs',
+				labelKey: 'fact.discogs',
 				value: 'Open',
 				href: 'https://www.discogs.com/release/2',
 			},

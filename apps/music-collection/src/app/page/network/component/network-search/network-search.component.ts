@@ -7,6 +7,7 @@ import {
 	output,
 	signal,
 } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { NETWORK_KIND_LABELS, NetworkSearchResult } from '../../network.model';
 
@@ -20,17 +21,20 @@ import { NETWORK_KIND_LABELS, NetworkSearchResult } from '../../network.model';
 	host: {
 		'(focusout)': 'onFocusOut($event)',
 	},
+	imports: [...I18N_IMPORTS],
 	template: `
 		<div class="search">
 			<i class="pi pi-search" aria-hidden="true"></i>
 			<label class="visually-hidden" for="network-search">
-				Search the network
+				{{ 'ui.networkSearch.search-the-network' | transloco }}
 			</label>
 			<input
 				id="network-search"
 				type="search"
 				role="combobox"
-				placeholder="Search the network…"
+				[placeholder]="
+					'ui.networkSearch.search-the-network2' | transloco
+				"
 				autocomplete="off"
 				aria-autocomplete="list"
 				aria-controls="network-search-results"
@@ -51,7 +55,7 @@ import { NETWORK_KIND_LABELS, NetworkSearchResult } from '../../network.model';
 			id="network-search-results"
 			class="results"
 			role="listbox"
-			aria-label="Search results"
+			[attr.aria-label]="'ui.networkSearch.search-results' | transloco"
 			[hidden]="!expanded()"
 		>
 			@for (result of results(); track result.nodeId; let i = $index) {

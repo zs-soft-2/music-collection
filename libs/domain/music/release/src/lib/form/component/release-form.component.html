@@ -4,10 +4,14 @@
 			<input name="uid" formControlName="uid" hidden />
 
 			<section class="mc-form-section" aria-labelledby="release-details">
-				<h2 id="release-details">Details</h2>
+				<h2 id="release-details">
+					{{ 'ui.releaseForm.details' | transloco }}
+				</h2>
 				<div class="mc-form-grid">
 					<div class="mc-field is-wide">
-						<label for="name">Name</label>
+						<label for="name">{{
+							'ui.releaseForm.name' | transloco
+						}}</label>
 						<input
 							id="name"
 							type="text"
@@ -17,7 +21,9 @@
 					</div>
 
 					<div class="mc-field">
-						<label for="artist">Artist</label>
+						<label for="artist">{{
+							'ui.releaseForm.artist' | transloco
+						}}</label>
 						<p-autocomplete
 							inputId="artist"
 							formControlName="artist"
@@ -25,13 +31,18 @@
 							[minQueryLength]="3"
 							[delay]="400"
 							optionLabel="name"
-							placeholder="Start typing an artist…"
+							[placeholder]="
+								'ui.releaseForm.start-typing-an-artist'
+									| transloco
+							"
 							(completeMethod)="searchArtistHandler($event)"
 						></p-autocomplete>
 					</div>
 
 					<div class="mc-field">
-						<label for="album">Album</label>
+						<label for="album">{{
+							'ui.releaseForm.album' | transloco
+						}}</label>
 						<p-autocomplete
 							inputId="album"
 							formControlName="album"
@@ -39,13 +50,18 @@
 							[minQueryLength]="3"
 							[delay]="400"
 							optionLabel="name"
-							placeholder="Start typing an album…"
+							[placeholder]="
+								'ui.releaseForm.start-typing-an-album'
+									| transloco
+							"
 							(completeMethod)="searchAlbumHandler($event)"
 						></p-autocomplete>
 					</div>
 
 					<div class="mc-field">
-						<label for="label">Label</label>
+						<label for="label">{{
+							'ui.releaseForm.label' | transloco
+						}}</label>
 						<p-autocomplete
 							inputId="label"
 							formControlName="label"
@@ -53,13 +69,18 @@
 							[minQueryLength]="3"
 							[delay]="400"
 							optionLabel="name"
-							placeholder="Start typing a label…"
+							[placeholder]="
+								'ui.releaseForm.start-typing-a-label'
+									| transloco
+							"
 							(completeMethod)="searchLabelHandler($event)"
 						></p-autocomplete>
 					</div>
 
 					<div class="mc-field">
-						<label for="date">Date</label>
+						<label for="date">{{
+							'ui.releaseForm.date' | transloco
+						}}</label>
 						<p-datepicker
 							inputId="date"
 							formControlName="date"
@@ -69,37 +90,50 @@
 			</section>
 
 			<section class="mc-form-section" aria-labelledby="release-pressing">
-				<h2 id="release-pressing">Pressing</h2>
+				<h2 id="release-pressing">
+					{{ 'ui.releaseForm.pressing' | transloco }}
+				</h2>
 				<div class="mc-form-grid">
 					<div class="mc-field">
-						<label for="media">Media</label>
+						<label for="media">{{
+							'ui.releaseForm.media' | transloco
+						}}</label>
 						<p-select
 							inputId="media"
 							[options]="params.mediaList"
-							placeholder="Select a media"
+							[placeholder]="
+								'ui.releaseForm.select-a-media' | transloco
+							"
 							formControlName="media"
 						></p-select>
 					</div>
 
 					<div class="mc-field">
-						<label for="country">Country</label>
+						<label for="country">{{
+							'ui.releaseForm.country' | transloco
+						}}</label>
 						<p-select
 							inputId="country"
 							[options]="params.countryList"
-							placeholder="Select a country"
+							[placeholder]="
+								'ui.releaseForm.select-a-country' | transloco
+							"
 							formControlName="country"
 							[filter]="true"
 						></p-select>
 					</div>
 
 					<div class="mc-field is-wide">
-						<label for="formatDescription"
-							>Format description</label
-						>
+						<label for="formatDescription">{{
+							'ui.releaseForm.format-description' | transloco
+						}}</label>
 						<p-multiselect
 							inputId="formatDescription"
 							[options]="params.formatDescriptionList"
-							placeholder="Select a format description"
+							[placeholder]="
+								'ui.releaseForm.select-a-format-description'
+									| transloco
+							"
 							[filter]="false"
 							formControlName="formatDescription"
 							display="chip"
@@ -110,13 +144,13 @@
 
 			<div class="mc-form-actions">
 				<p-button
-					label="Cancel"
+					[label]="'ui.releaseForm.cancel' | transloco"
 					severity="secondary"
 					[outlined]="true"
 					(onClick)="cancel()"
 				></p-button>
 				<p-button
-					label="Save"
+					[label]="'ui.releaseForm.save' | transloco"
 					icon="pi pi-check"
 					[disabled]="!params.formGroup.valid"
 					(onClick)="submit()"

@@ -1,11 +1,15 @@
 <section class="mc-form">
 	<section class="mc-form-section" aria-labelledby="artist-import-title">
-		<h2 id="artist-import-title">Import artists</h2>
+		<h2 id="artist-import-title">
+			{{ 'ui.artistImport.import-artists' | transloco }}
+		</h2>
 		<p class="mc-form-note">
-			Upload an artist bundle exported from the artist list.
+			{{ 'ui.artistImport.upload-an-artist-bundle' | transloco }}
 		</p>
 		<div class="mc-field">
-			<span class="mc-field-label">File</span>
+			<span class="mc-field-label">{{
+				'ui.artistImport.file' | transloco
+			}}</span>
 			<p-fileupload
 				name="file"
 				chooseLabel="Choose file"

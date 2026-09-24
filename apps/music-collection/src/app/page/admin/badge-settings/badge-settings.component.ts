@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { BadgeSettingsStore } from './badge-settings.store';
 
@@ -11,13 +12,13 @@ import { BadgeSettingsStore } from './badge-settings.store';
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-badge-settings',
 	providers: [BadgeSettingsStore],
+	imports: [...I18N_IMPORTS],
 	template: `
 		<header class="mc-page-head">
 			<div>
-				<h1>Badge generation</h1>
+				<h1>{{ 'ui.badgeSettings.badge-generation' | transloco }}</h1>
 				<p>
-					A collection's badge is drawn once by an image model, from
-					the collection's own data, and then it is fixed.
+					{{ 'ui.badgeSettings.a-collection-s-badge' | transloco }}
 				</p>
 			</div>
 		</header>
@@ -28,14 +29,16 @@ import { BadgeSettingsStore } from './badge-settings.store';
 
 		@if (store.isLoading()) {
 			<div class="skeleton" role="status" aria-busy="true">
-				<span class="visually-hidden">Loading…</span>
+				<span class="visually-hidden">{{
+					'ui.badgeSettings.loading' | transloco
+				}}</span>
 			</div>
 		} @else {
 			@let settings = store.settings();
 
 			<div class="mc-form">
 				<section class="mc-form-section">
-					<h2>The model</h2>
+					<h2>{{ 'ui.badgeSettings.the-model' | transloco }}</h2>
 
 					<div class="mc-form-grid">
 						<div class="mc-field is-wide">
@@ -47,16 +50,23 @@ import { BadgeSettingsStore } from './badge-settings.store';
 										store.set({ enabled: checked($event) })
 									"
 								/>
-								<span>Generation is on</span>
+								<span>{{
+									'ui.badgeSettings.generation-is-on'
+										| transloco
+								}}</span>
 							</label>
 							<small>
-								Switched off, no badge can be drawn and nothing
-								can be spent.
+								{{
+									'ui.badgeSettings.switched-off-no-badge'
+										| transloco
+								}}
 							</small>
 						</div>
 
 						<div class="mc-field">
-							<label for="model">Model</label>
+							<label for="model">{{
+								'ui.badgeSettings.model' | transloco
+							}}</label>
 							<select
 								id="model"
 								[value]="settings.model"
@@ -86,8 +96,9 @@ import { BadgeSettingsStore } from './badge-settings.store';
 								@if (store.isLoadingModels()) {
 									Reading the region's catalogue…
 								} @else if (store.modelsError(); as error) {
-									The catalogue could not be read
-									({{ error }}). The saved model is kept.
+									The catalogue could not be read ({{
+										error
+									}}). The saved model is kept.
 								} @else {
 									What this project can actually call in the
 									region below, read from Vertex when the page
@@ -98,7 +109,9 @@ import { BadgeSettingsStore } from './badge-settings.store';
 						</div>
 
 						<div class="mc-field">
-							<label for="location">Region</label>
+							<label for="location">{{
+								'ui.badgeSettings.region' | transloco
+							}}</label>
 							<input
 								id="location"
 								type="text"
@@ -106,19 +119,26 @@ import { BadgeSettingsStore } from './badge-settings.store';
 								(input)="store.set({ location: value($event) })"
 							/>
 							<small>
-								The Vertex region — not necessarily the one the
-								database is in.
+								{{
+									'ui.badgeSettings.the-vertex-region-not'
+										| transloco
+								}}
 							</small>
 						</div>
 					</div>
 				</section>
 
 				<section class="mc-form-section">
-					<h2>What a badge costs</h2>
+					<h2>
+						{{ 'ui.badgeSettings.what-a-badge-costs' | transloco }}
+					</h2>
 
 					<div class="mc-form-grid">
 						<div class="mc-field">
-							<label for="candidates">Candidates per run</label>
+							<label for="candidates">{{
+								'ui.badgeSettings.candidates-per-run'
+									| transloco
+							}}</label>
 							<input
 								id="candidates"
 								type="number"
@@ -133,13 +153,17 @@ import { BadgeSettingsStore } from './badge-settings.store';
 								"
 							/>
 							<small>
-								How many the admin picks between. More costs
-								more, and every one of them is billed.
+								{{
+									'ui.badgeSettings.how-many-the-admin'
+										| transloco
+								}}
 							</small>
 						</div>
 
 						<div class="mc-field">
-							<label for="daily">Images per day</label>
+							<label for="daily">{{
+								'ui.badgeSettings.images-per-day' | transloco
+							}}</label>
 							<input
 								id="daily"
 								type="number"
@@ -154,23 +178,21 @@ import { BadgeSettingsStore } from './badge-settings.store';
 								"
 							/>
 							<small>
-								The ceiling for the whole day, counted on the
-								server. A loop that goes wrong stops here
-								instead of on the invoice.
+								{{
+									'ui.badgeSettings.the-ceiling-for-the'
+										| transloco
+								}}
 							</small>
 						</div>
 					</div>
 				</section>
 
 				<section class="mc-form-section locked">
-					<h2>What cannot be set here</h2>
+					<h2>
+						{{ 'ui.badgeSettings.what-cannot-be-set' | transloco }}
+					</h2>
 					<p>
-						The style lock — the fixed sentences every badge is
-						drawn from — and the style version live in code. They
-						are the only reason a shelf of badges reads as one set:
-						if a curator could edit them per badge, the set would
-						drift apart within weeks. Changing them is a deliberate
-						act, and it means regenerating every badge.
+						{{ 'ui.badgeSettings.the-style-lock-the' | transloco }}
 					</p>
 				</section>
 
@@ -184,7 +206,9 @@ import { BadgeSettingsStore } from './badge-settings.store';
 						{{ store.isSaving() ? 'Saving…' : 'Save' }}
 					</button>
 					@if (store.savedAt()) {
-						<span class="saved" role="status">Saved.</span>
+						<span class="saved" role="status">{{
+							'ui.badgeSettings.saved' | transloco
+						}}</span>
 					}
 				</div>
 			</div>

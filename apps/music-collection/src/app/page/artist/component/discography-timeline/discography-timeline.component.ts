@@ -5,6 +5,7 @@ import {
 	input,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { DiscographyAlbum } from '../../../../shared/music-ui';
 
@@ -32,7 +33,7 @@ const LEVEL_STEP = 22;
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-discography-timeline',
-	imports: [RouterLink],
+	imports: [...I18N_IMPORTS, RouterLink],
 	templateUrl: './discography-timeline.component.html',
 	styleUrls: ['./discography-timeline.component.scss'],
 })

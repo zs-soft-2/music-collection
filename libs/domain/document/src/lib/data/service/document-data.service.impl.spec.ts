@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { firstValueFrom } from 'rxjs';
 
 import { TestBed } from '@angular/core/testing';
@@ -38,6 +39,7 @@ describe('DocumentDataServiceImpl', () => {
 
 		TestBed.configureTestingModule({
 			providers: [
+				provideI18nTesting(),
 				DocumentDataServiceImpl,
 				{ provide: Firestore, useValue: {} },
 				{ provide: FirestoreSyncService, useValue: { update } },

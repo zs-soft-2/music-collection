@@ -7,13 +7,15 @@
 >
 	<header class="removal-header">
 		<div>
-			<p class="eyebrow">Remove from collection</p>
+			<p class="eyebrow">
+				{{ 'ui.copyRemoval.remove-from-collection' | transloco }}
+			</p>
 			<h2 id="copy-removal-title">{{ albumTitle() }}</h2>
 		</div>
 		<button
 			type="button"
 			class="icon-button"
-			aria-label="Close"
+			[attr.aria-label]="'ui.copyRemoval.close' | transloco"
 			[disabled]="busy()"
 			(click)="close()"
 		>
@@ -35,7 +37,9 @@
 
 	<form (submit)="$event.preventDefault(); submit()">
 		<fieldset class="reasons">
-			<legend>What happened to it?</legend>
+			<legend>
+				{{ 'ui.copyRemoval.what-happened-to-it' | transloco }}
+			</legend>
 			<div class="chips">
 				@for (option of reasons; track option) {
 					<label class="chip">
@@ -53,7 +57,7 @@
 		</fieldset>
 
 		<label class="field">
-			<span>When</span>
+			<span>{{ 'ui.copyRemoval.when' | transloco }}</span>
 			<input
 				type="date"
 				required
@@ -63,29 +67,34 @@
 				(input)="onInput('date', $event)"
 			/>
 			@if (dateInvalid()) {
-				<span class="field-error"
-					>Pick a day, today at the latest.</span
-				>
+				<span class="field-error">{{
+					'ui.copyRemoval.pick-a-day-today' | transloco
+				}}</span>
 			}
 		</label>
 
 		<label class="field">
-			<span>Note (optional)</span>
+			<span>{{ 'ui.copyRemoval.note-optional' | transloco }}</span>
 			<textarea
 				rows="3"
 				[attr.maxlength]="noteMaxLength"
 				[value]="note()"
 				(input)="onInput('note', $event)"
-				placeholder="e.g. sold on Discogs, traded for a Death LP"
+				[placeholder]="'ui.copyRemoval.e-g-sold-on' | transloco"
 			></textarea>
 		</label>
 
 		<p class="hint">
-			It stays in your history, and you can take it back any time.
+			{{ 'ui.copyRemoval.it-stays-in-your' | transloco }}
 		</p>
 
 		@if (error()) {
-			<p class="error" role="alert">Could not remove it: {{ error() }}</p>
+			<p class="error" role="alert">
+				{{
+					'ui.copyRemoval.removeFailed'
+						| transloco: { error: error() }
+				}}
+			</p>
 		}
 
 		<div class="form-actions">
@@ -95,7 +104,7 @@
 				[disabled]="busy()"
 				(click)="close()"
 			>
-				Cancel
+				{{ 'ui.copyRemoval.cancel' | transloco }}
 			</button>
 			<button
 				type="submit"

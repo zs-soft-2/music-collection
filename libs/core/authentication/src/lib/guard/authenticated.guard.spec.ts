@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { Observable, Subject } from 'rxjs';
 
 import { TestBed } from '@angular/core/testing';
@@ -38,6 +39,7 @@ describe('authenticatedGuard', () => {
 
 		TestBed.configureTestingModule({
 			providers: [
+				provideI18nTesting(),
 				{
 					provide: AuthenticatedUserService,
 					useValue: { user$: session$.asObservable() },

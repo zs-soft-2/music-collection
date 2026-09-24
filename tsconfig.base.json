@@ -41,6 +41,10 @@
 			"@music-collection/core/export-import": [
 				"libs/core/export-import/src/index.ts"
 			],
+			"@music-collection/core/i18n": ["libs/core/i18n/src/index.ts"],
+			"@music-collection/core/i18n/testing": [
+				"libs/core/i18n/src/testing.ts"
+			],
 			"@music-collection/domain/album": [
 				"libs/domain/music/album/src/index.ts"
 			],

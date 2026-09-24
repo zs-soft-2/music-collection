@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import { FormsModule } from '@angular/forms';
 import {
 	ChangeDetectionStrategy,
@@ -32,6 +33,7 @@ import {
 	templateUrl: './album-table.component.html',
 	styleUrls: ['./album-table.component.scss'],
 	imports: [
+		...I18N_IMPORTS,
 		FormsModule,
 		AutoComplete,
 		Chip,

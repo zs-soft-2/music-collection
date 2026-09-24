@@ -13,11 +13,11 @@ export type EnumOperator = 'includesAny' | 'includesAll' | 'excludes';
 
 export const ENUM_OPERATOR_OPTIONS: {
 	value: EnumOperator;
-	label: string;
+	labelKey: string;
 }[] = [
-	{ value: 'includesAny', label: 'any of' },
-	{ value: 'includesAll', label: 'all of' },
-	{ value: 'excludes', label: 'none of' },
+	{ value: 'includesAny', labelKey: 'admin.criterion.anyOf' },
+	{ value: 'includesAll', labelKey: 'admin.criterion.allOf' },
+	{ value: 'excludes', labelKey: 'admin.criterion.noneOf' },
 ];
 
 export interface EnumCriterionForm {
@@ -70,31 +70,31 @@ export const ENUM_CRITERIA: {
 		CriteriaForm,
 		'styles' | 'artistStyles' | 'albumFormats' | 'artistCountries'
 	>;
-	label: string;
+	labelKey: string;
 	hint: string;
 	options: string[];
 }[] = [
 	{
 		key: 'styles',
-		label: 'Album styles',
+		labelKey: 'admin.criterion.albumStyles',
 		hint: 'The style the record was written in.',
 		options: StyleList,
 	},
 	{
 		key: 'artistStyles',
-		label: 'Artist styles',
+		labelKey: 'admin.criterion.artistStyles',
 		hint: 'What the artist is known for — it may be decades from the album.',
 		options: StyleList,
 	},
 	{
 		key: 'albumFormats',
-		label: 'Album formats',
+		labelKey: 'admin.criterion.albumFormats',
 		hint: '`lp` for studio albums; take in `ep` or `live` deliberately.',
 		options: FormatList,
 	},
 	{
 		key: 'artistCountries',
-		label: 'Artist countries',
+		labelKey: 'admin.criterion.artistCountries',
 		hint: 'Where the artist is from, not where the pressing was made.',
 		options: CountryList,
 	},
@@ -104,11 +104,11 @@ export const STATUS_OPTIONS: MusicCollectionStatus[] = ['draft', 'published'];
 
 export const VISIBILITY_OPTIONS: {
 	value: MusicCollectionVisibility;
-	label: string;
+	labelKey: string;
 }[] = [
-	{ value: 'public', label: 'Public — listed to everyone' },
-	{ value: 'link', label: 'Link — readable by whoever knows it' },
-	{ value: 'private', label: 'Private — only an admin' },
+	{ value: 'public', labelKey: 'admin.visibility.public' },
+	{ value: 'link', labelKey: 'admin.visibility.link' },
+	{ value: 'private', labelKey: 'admin.visibility.private' },
 ];
 
 const emptyEnumCriterion = (): EnumCriterionForm => ({

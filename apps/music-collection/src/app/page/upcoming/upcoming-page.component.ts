@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { hasVinyl } from './upcoming.mapper';
 import { UpcomingPageStore } from './upcoming-page.store';
@@ -20,7 +21,7 @@ import { UPCOMING_FILTER_OPTIONS, UpcomingFilter } from './upcoming.model';
 	selector: 'mc-upcoming-page',
 	templateUrl: './upcoming-page.component.html',
 	styleUrls: ['./upcoming-page.component.scss'],
-	imports: [RouterLink],
+	imports: [...I18N_IMPORTS, RouterLink],
 })
 export class UpcomingPageComponent {
 	protected readonly store = inject(UpcomingPageStore);

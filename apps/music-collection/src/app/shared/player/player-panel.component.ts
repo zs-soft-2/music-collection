@@ -4,6 +4,7 @@ import {
 	computed,
 	inject,
 } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { SpotifyPlayerComponent } from '../music-ui/spotify-player/spotify-player.component';
 import { SpotifyIconComponent } from '../spotify/spotify-icon.component';
@@ -24,6 +25,7 @@ import { PlayerStore } from './player.store';
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-player-panel',
 	imports: [
+		...I18N_IMPORTS,
 		SpotifyIconComponent,
 		SpotifyPlayerComponent,
 		YoutubeIconComponent,
@@ -58,7 +60,9 @@ import { PlayerStore } from './player.store';
 						<button
 							type="button"
 							class="icon-button"
-							aria-label="Previous track"
+							[attr.aria-label]="
+								'ui.playerPanel.previous-track' | transloco
+							"
 							(click)="player.skip('previous')"
 						>
 							<i
@@ -89,7 +93,9 @@ import { PlayerStore } from './player.store';
 						<button
 							type="button"
 							class="icon-button"
-							aria-label="Next track"
+							[attr.aria-label]="
+								'ui.playerPanel.next-track' | transloco
+							"
 							(click)="player.skip('next')"
 						>
 							<i
@@ -106,7 +112,9 @@ import { PlayerStore } from './player.store';
 								min="0"
 								max="100"
 								step="1"
-								aria-label="Volume"
+								[attr.aria-label]="
+									'ui.playerPanel.volume' | transloco
+								"
 								[value]="player.volume()"
 								[disabled]="!player.volumeSupported()"
 								(input)="setVolume($event)"
@@ -116,8 +124,10 @@ import { PlayerStore } from './player.store';
 					<button
 						type="button"
 						class="icon-button"
-						aria-label="Open the full-screen player"
-						title="Full screen"
+						[attr.aria-label]="
+							'ui.playerPanel.open-the-full-screen' | transloco
+						"
+						[title]="'ui.playerPanel.full-screen' | transloco"
 						(click)="player.openStage()"
 					>
 						<i class="pi pi-window-maximize" aria-hidden="true"></i>
@@ -145,9 +155,7 @@ import { PlayerStore } from './player.store';
 					[albumTitle]="page.artistName + ' – ' + page.albumTitle"
 				/>
 				<p class="hint">
-					This player only plays previews. Connect your Spotify
-					Premium account (play button or settings) to play in full
-					here or on your speakers.
+					{{ 'ui.playerPanel.this-player-only-plays' | transloco }}
 				</p>
 			}
 

@@ -85,28 +85,40 @@ export interface CollectionStats {
 	byFormat: Record<MediaFormat, number>;
 }
 
-export const SORT_OPTIONS: { value: CollectionSort; label: string }[] = [
-	{ value: 'artist', label: 'Artist A–Z' },
-	{ value: 'title', label: 'Album A–Z' },
-	{ value: 'year-desc', label: 'Newest release' },
-	{ value: 'year-asc', label: 'Oldest release' },
-	{ value: 'added', label: 'Recently added' },
+export const SORT_OPTIONS: { value: CollectionSort; labelKey: string }[] = [
+	{ value: 'artist', labelKey: 'page.collection.sortBy.artist' },
+	{ value: 'title', labelKey: 'page.collection.sortBy.title' },
+	{ value: 'year-desc', labelKey: 'page.collection.sortBy.newest' },
+	{ value: 'year-asc', labelKey: 'page.collection.sortBy.oldest' },
+	{ value: 'added', labelKey: 'page.collection.sortBy.added' },
 ];
 
-export const GROUP_OPTIONS: { value: CollectionGroup; label: string }[] = [
-	{ value: 'none', label: 'No grouping' },
-	{ value: 'artist', label: 'Artist' },
-	{ value: 'format', label: 'Format' },
-	{ value: 'style', label: 'Style' },
-	{ value: 'decade', label: 'Decade' },
+export const GROUP_OPTIONS: { value: CollectionGroup; labelKey: string }[] = [
+	{ value: 'none', labelKey: 'page.collection.groupBy.none' },
+	{ value: 'artist', labelKey: 'page.collection.groupBy.artist' },
+	{ value: 'format', labelKey: 'page.collection.groupBy.format' },
+	{ value: 'style', labelKey: 'page.collection.groupBy.style' },
+	{ value: 'decade', labelKey: 'page.collection.groupBy.decade' },
 ];
 
 export const VIEW_OPTIONS: {
 	value: CollectionView;
-	label: string;
+	labelKey: string;
 	icon: string;
 }[] = [
-	{ value: 'grid', label: 'Grid', icon: 'pi pi-th-large' },
-	{ value: 'list', label: 'List', icon: 'pi pi-list' },
-	{ value: 'shelf', label: 'Shelf', icon: 'pi pi-book' },
+	{
+		value: 'grid',
+		labelKey: 'page.collection.viewAs.grid',
+		icon: 'pi pi-th-large',
+	},
+	{
+		value: 'list',
+		labelKey: 'page.collection.viewAs.list',
+		icon: 'pi pi-list',
+	},
+	{
+		value: 'shelf',
+		labelKey: 'page.collection.viewAs.shelf',
+		icon: 'pi pi-book',
+	},
 ];

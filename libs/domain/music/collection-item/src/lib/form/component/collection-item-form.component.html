@@ -8,10 +8,14 @@
 				class="mc-form-section"
 				aria-labelledby="collection-item-details"
 			>
-				<h2 id="collection-item-details">Details</h2>
+				<h2 id="collection-item-details">
+					{{ 'ui.collectionItemForm.details' | transloco }}
+				</h2>
 				<div class="mc-form-grid">
 					<div class="mc-field">
-						<label for="release">Release</label>
+						<label for="release">{{
+							'ui.collectionItemForm.release' | transloco
+						}}</label>
 						<p-autocomplete
 							inputId="release"
 							formControlName="release"
@@ -19,13 +23,18 @@
 							[minQueryLength]="3"
 							[delay]="400"
 							optionLabel="nameAndMedia"
-							placeholder="Start typing a release…"
+							[placeholder]="
+								'ui.collectionItemForm.start-typing-a-release'
+									| transloco
+							"
 							(completeMethod)="searchRelease($event)"
 						></p-autocomplete>
 					</div>
 
 					<div class="mc-field">
-						<label for="date">Date</label>
+						<label for="date">{{
+							'ui.collectionItemForm.date' | transloco
+						}}</label>
 						<p-datepicker
 							inputId="date"
 							formControlName="date"
@@ -38,12 +47,16 @@
 				class="mc-form-section"
 				aria-labelledby="collection-item-place"
 			>
-				<h2 id="collection-item-place">Shelf place</h2>
+				<h2 id="collection-item-place">
+					{{ 'ui.collectionItemForm.shelf-place' | transloco }}
+				</h2>
 
 				@if (params.placement.units.length) {
 					<div class="mc-form-grid">
 						<div class="mc-field">
-							<label for="placement-unit">Unit</label>
+							<label for="placement-unit">{{
+								'ui.collectionItemForm.unit' | transloco
+							}}</label>
 							<p-select
 								inputId="placement-unit"
 								[options]="params.placement.units"
@@ -51,13 +64,18 @@
 								[ngModelOptions]="{ standalone: true }"
 								optionLabel="label"
 								optionValue="value"
-								placeholder="Select a unit"
+								[placeholder]="
+									'ui.collectionItemForm.select-a-unit'
+										| transloco
+								"
 								(onChange)="chooseUnit($event)"
 							></p-select>
 						</div>
 
 						<div class="mc-field">
-							<label for="placement-spot">Compartment</label>
+							<label for="placement-spot">{{
+								'ui.collectionItemForm.compartment' | transloco
+							}}</label>
 							<p-select
 								inputId="placement-spot"
 								[options]="params.placement.spots"
@@ -65,13 +83,18 @@
 								[ngModelOptions]="{ standalone: true }"
 								optionLabel="label"
 								optionValue="value"
-								placeholder="Filed by the shelf"
+								[placeholder]="
+									'ui.collectionItemForm.filed-by-the-shelf'
+										| transloco
+								"
 								(onChange)="chooseSpot($event)"
 							></p-select>
 						</div>
 
 						<div class="mc-field">
-							<label for="placement-position">Position</label>
+							<label for="placement-position">{{
+								'ui.collectionItemForm.position' | transloco
+							}}</label>
 							<p-inputnumber
 								inputId="placement-position"
 								[ngModel]="params.placement.position"
@@ -101,7 +124,10 @@
 
 					@if (params.placement.spot || params.placement.lost) {
 						<p-button
-							label="Take the place back"
+							[label]="
+								'ui.collectionItemForm.take-the-place-back'
+									| transloco
+							"
 							severity="secondary"
 							[text]="true"
 							(onClick)="clearPlace()"
@@ -109,21 +135,23 @@
 					}
 				} @else {
 					<p class="mc-form-note">
-						No shelf drawn yet. Draw the units in your profile, and
-						the copies can be filed into them here.
+						{{
+							'ui.collectionItemForm.no-shelf-drawn-yet'
+								| transloco
+						}}
 					</p>
 				}
 			</section>
 
 			<div class="mc-form-actions">
 				<p-button
-					label="Cancel"
+					[label]="'ui.collectionItemForm.cancel' | transloco"
 					severity="secondary"
 					[outlined]="true"
 					(onClick)="cancel()"
 				></p-button>
 				<p-button
-					label="Save"
+					[label]="'ui.collectionItemForm.save' | transloco"
 					icon="pi pi-check"
 					[disabled]="!params.formGroup.valid"
 					(onClick)="submit()"

@@ -4,6 +4,7 @@ import {
 	inject,
 	signal,
 } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { PlayerStore } from './player.store';
 
@@ -20,9 +21,14 @@ import { PlayerStore } from './player.store';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-player-station',
+	imports: [...I18N_IMPORTS],
 	template: `
 		@if (player.stationLabel()) {
-			<div class="station" role="group" aria-label="Station">
+			<div
+				class="station"
+				role="group"
+				[attr.aria-label]="'ui.playerStation.station' | transloco"
+			>
 				<div class="head">
 					<i class="pi pi-wifi" aria-hidden="true"></i>
 					<span class="text">
@@ -34,13 +40,10 @@ import { PlayerStore } from './player.store';
 								[attr.aria-expanded]="open()"
 								(click)="open.set(!open())"
 							>
-								{{ player.queue().length }} more
 								{{
-									player.queue().length === 1
-										? 'record'
-										: 'records'
+									player.queue().length
+										| mcPlural: 'ui.playerStation.waiting'
 								}}
-								waiting
 								<i
 									class="pi"
 									[class.pi-chevron-down]="!open()"
@@ -50,7 +53,10 @@ import { PlayerStore } from './player.store';
 							</button>
 						} @else {
 							<span class="queue quiet">
-								Last record of the station
+								{{
+									'ui.playerStation.last-record-of-the'
+										| transloco
+								}}
 							</span>
 						}
 					</span>
@@ -59,8 +65,12 @@ import { PlayerStore } from './player.store';
 						class="icon-button"
 						[class.on]="player.shuffled()"
 						[attr.aria-pressed]="player.shuffled()"
-						aria-label="Play in a random order"
-						title="Play in a random order"
+						[attr.aria-label]="
+							'ui.playerStation.play-in-a-random' | transloco
+						"
+						[title]="
+							'ui.playerStation.play-in-a-random2' | transloco
+						"
 						(click)="player.setShuffled(!player.shuffled())"
 					>
 						<i class="pi pi-sync" aria-hidden="true"></i>
@@ -68,8 +78,10 @@ import { PlayerStore } from './player.store';
 					<button
 						type="button"
 						class="icon-button"
-						aria-label="Next record"
-						title="Next record"
+						[attr.aria-label]="
+							'ui.playerStation.next-record' | transloco
+						"
+						[title]="'ui.playerStation.next-record2' | transloco"
 						[disabled]="!player.queue().length"
 						(click)="player.playNextAlbum()"
 					>
@@ -78,8 +90,12 @@ import { PlayerStore } from './player.store';
 					<button
 						type="button"
 						class="icon-button"
-						aria-label="Stop the station"
-						title="Stop the station"
+						[attr.aria-label]="
+							'ui.playerStation.stop-the-station' | transloco
+						"
+						[title]="
+							'ui.playerStation.stop-the-station2' | transloco
+						"
 						(click)="player.stopStation()"
 					>
 						<i class="pi pi-times" aria-hidden="true"></i>

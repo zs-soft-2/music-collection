@@ -2,6 +2,7 @@ import {
 	CollectionItemPlacement,
 	ShelfUnitLayout,
 } from '@music-collection/api';
+import { Translator } from '@music-collection/core/i18n';
 import { MusicCollectionStanding } from '@music-collection/domain/music-collection/core';
 
 import {
@@ -61,13 +62,15 @@ export function radioStations(
 	units: readonly ShelfUnitLayout[],
 	standings: readonly MusicCollectionStanding[],
 	owned: readonly FiledCopy[],
+	/** The words the app owns; the shelf and collection names are the user's. */
+	t: Translator,
 	playable: ReadonlySet<string> = new Set()
 ): CountedStation[] {
 	const stations: CountedStation[] = [
 		station({
 			station: { kind: 'new' },
-			label: 'Just in',
-			description: 'The records the catalog has taken in most recently.',
+			label: t('radio.justIn.name'),
+			description: t('radio.justIn.description'),
 			icon: 'pi pi-sparkles',
 		}),
 	];
@@ -76,15 +79,14 @@ export function radioStations(
 		stations.push(
 			station({
 				station: { kind: 'taste' },
-				label: 'Your taste',
-				description:
-					'Records in the styles your shelf is fullest of — owned or not.',
+				label: t('radio.yourTaste.name'),
+				description: t('radio.yourTaste.description'),
 				icon: 'pi pi-heart',
 			}),
 			station({
 				station: { kind: 'shelf' },
-				label: 'Your shelf',
-				description: 'Your own copies, one after another.',
+				label: t('radio.yourShelf.name'),
+				description: t('radio.yourShelf.description'),
 				icon: 'pi pi-box',
 			})
 		);
@@ -93,8 +95,8 @@ export function radioStations(
 	stations.push(
 		station({
 			station: { kind: 'random' },
-			label: 'Anything at all',
-			description: 'The catalog, in no order whatsoever.',
+			label: t('radio.anything.name'),
+			description: t('radio.anything.description'),
 			icon: 'pi pi-question-circle',
 		})
 	);
@@ -108,9 +110,8 @@ export function radioStations(
 			stations.push(
 				station({
 					station: { kind: 'shelf', unitId: unit.id },
-					label: unit.name || 'Unnamed unit',
-					description:
-						'The records you filed into this unit, read out the way they stand.',
+					label: unit.name || t('radio.unnamedUnit'),
+					description: t('radio.unit.description'),
 					icon: 'pi pi-th-large',
 				})
 			);
@@ -134,7 +135,7 @@ export function radioStations(
 				label: standing.collection.name,
 				description:
 					standing.collection.description ??
-					'Every record this collection asks for.',
+					t('radio.collection.description'),
 				icon: standing.collection.icon || 'pi pi-star',
 			})
 		);

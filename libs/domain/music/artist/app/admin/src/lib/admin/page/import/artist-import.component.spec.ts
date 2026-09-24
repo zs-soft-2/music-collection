@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ExportImportService } from '@music-collection/api';
 
@@ -10,7 +11,10 @@ describe('ArtistImportComponent', () => {
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
 			imports: [ArtistImportComponent],
-			providers: [{ provide: ExportImportService, useValue: {} }],
+			providers: [
+				provideI18nTesting(),
+				{ provide: ExportImportService, useValue: {} },
+			],
 		}).compileComponents();
 
 		fixture = TestBed.createComponent(ArtistImportComponent);

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { ReleaseRequestRowComponent } from './component/release-request-row.component';
 import { StatusFilter } from './release-request-admin.mapper';
@@ -9,20 +10,29 @@ import { ReleaseRequestAdminStore } from './release-request-admin.store';
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-release-request-admin',
 	providers: [ReleaseRequestAdminStore],
-	imports: [ReleaseRequestRowComponent],
+	imports: [...I18N_IMPORTS, ReleaseRequestRowComponent],
 	template: `
 		<header class="mc-page-head">
 			<div>
-				<h1>Release requests</h1>
+				<h1>
+					{{ 'ui.releaseRequestAdmin.release-requests' | transloco }}
+				</h1>
 				<p>
-					Pressings the collectors own but the catalog is missing.
-					Approving adds the release to the catalog and the copy to
-					the collector's collection.
+					{{
+						'ui.releaseRequestAdmin.pressings-the-collectors-own'
+							| transloco
+					}}
 				</p>
 			</div>
 		</header>
 
-		<div class="filters" role="group" aria-label="Filter by status">
+		<div
+			class="filters"
+			role="group"
+			[attr.aria-label]="
+				'ui.releaseRequestAdmin.filter-by-status' | transloco
+			"
+		>
 			@for (filter of filters; track filter.value) {
 				<button
 					type="button"
@@ -30,7 +40,7 @@ import { ReleaseRequestAdminStore } from './release-request-admin.store';
 					[attr.aria-pressed]="store.statusFilter() === filter.value"
 					(click)="store.setStatusFilter(filter.value)"
 				>
-					{{ filter.label }}
+					{{ filter.labelKey | transloco }}
 					<span class="count">{{
 						store.counts()[filter.value]
 					}}</span>
@@ -40,7 +50,9 @@ import { ReleaseRequestAdminStore } from './release-request-admin.store';
 
 		@if (store.loading()) {
 			<div class="skeleton" role="status" aria-busy="true">
-				<span class="visually-hidden">Loading requests…</span>
+				<span class="visually-hidden">{{
+					'ui.releaseRequestAdmin.loading-requests' | transloco
+				}}</span>
 			</div>
 		} @else if (store.rows().length) {
 			<ul class="requests">
@@ -64,7 +76,9 @@ import { ReleaseRequestAdminStore } from './release-request-admin.store';
 				}
 			</ul>
 		} @else {
-			<p class="empty">No requests here.</p>
+			<p class="empty">
+				{{ 'ui.releaseRequestAdmin.no-requests-here' | transloco }}
+			</p>
 		}
 	`,
 	styles: `
@@ -132,10 +146,10 @@ import { ReleaseRequestAdminStore } from './release-request-admin.store';
 export class ReleaseRequestAdminComponent {
 	protected readonly store = inject(ReleaseRequestAdminStore);
 
-	protected readonly filters: { value: StatusFilter; label: string }[] = [
-		{ value: 'pending', label: 'Pending' },
-		{ value: 'approved', label: 'Approved' },
-		{ value: 'rejected', label: 'Rejected' },
-		{ value: 'all', label: 'All' },
+	protected readonly filters: { value: StatusFilter; labelKey: string }[] = [
+		{ value: 'pending', labelKey: 'admin.filter.pending' },
+		{ value: 'approved', labelKey: 'admin.filter.approved' },
+		{ value: 'rejected', labelKey: 'admin.filter.rejected' },
+		{ value: 'all', labelKey: 'admin.filter.all' },
 	];
 }

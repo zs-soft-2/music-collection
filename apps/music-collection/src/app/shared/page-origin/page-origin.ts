@@ -1,3 +1,5 @@
+import { Translator } from '@music-collection/core/i18n';
+
 import { Crumb } from '../page-breadcrumb';
 
 /**
@@ -35,14 +37,16 @@ export function collectionOriginSlug(origin: string | null): string | null {
  */
 export function collectionTrail(
 	slug: string | null,
-	name: string | null
+	name: string | null,
+	/** The app's own word for the first crumb; the rest is the data's. */
+	t: Translator
 ): Crumb[] {
 	if (!slug) {
 		return [];
 	}
 
 	return [
-		{ label: 'Collections', link: '/collections' },
+		{ label: t('nav.collections'), link: '/collections' },
 		...(name ? [{ label: name, link: ['/collections', slug] }] : []),
 	];
 }

@@ -18,7 +18,9 @@ describe('SPOTIFY_TOKEN_SETTING', () => {
 	/** What disconnecting writes: the document stays, the connection does not. */
 	it('reads the emptied document as no connection', () => {
 		expect(
-			SPOTIFY_TOKEN_SETTING.toValue(SPOTIFY_TOKEN_SETTING.toDocument(null))
+			SPOTIFY_TOKEN_SETTING.toValue(
+				SPOTIFY_TOKEN_SETTING.toDocument(null)
+			)
 		).toBeNull();
 	});
 
