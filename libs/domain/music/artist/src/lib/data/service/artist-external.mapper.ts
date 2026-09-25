@@ -67,6 +67,7 @@ const COUNTRY_BY_CODE: Record<string, CountryEnum> = {
 	FR: CountryEnum.France,
 	GB: CountryEnum.UK,
 	GR: CountryEnum.Greece,
+	HU: CountryEnum.Hungary,
 	IE: CountryEnum.Ireland,
 	NL: CountryEnum.The_Netherlands,
 	NO: CountryEnum.Norway,
