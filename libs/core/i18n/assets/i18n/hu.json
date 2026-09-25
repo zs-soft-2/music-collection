@@ -568,6 +568,15 @@
 				"streak": "Sorozat",
 				"speed": "Gyorsaság"
 			},
+			"history": {
+				"title": "Korábbi kérdések",
+				"played-of": "Az utóbbi {{days}} nap kérdéseiből {{played}} napon tippeltél.",
+				"nothing-yet": "Még nincs mögötted nap — a mai az első kérdés.",
+				"skipped": "Kihagyva",
+				"late": "Későn",
+				"the-answer-was": "A megfejtés: {{answer}}",
+				"you-said": "a te tipped: {{picked}}"
+			},
 			"leaderboard": {
 				"title": "Ranglista",
 				"players": "{{players}} játékos",
@@ -2024,6 +2033,11 @@
 			"edit-on-the-band": "A felállást a banda oldalán, a Felállás fülön lehet szerkeszteni.",
 			"error-general": "Valami hiba történt. Próbáld újra később."
 		},
+		"dailyQuestionBanner": {
+			"there-is-a-question": "Itt a mai kérdés, és még nem tippeltél rá.",
+			"play-it": "Mehet a tipp",
+			"not-now": "Most nem"
+		},
 		"dailyQuestionSettings": {
 			"title": "Napi kérdés",
 			"lead": "A játék szabályai: mennyi idő van válaszolni, mit fizet egy tipp, és miből kérdezhet a motor.",
@@ -2065,7 +2079,10 @@
 			"compose-exists": "{{day}}: a kérdés már megvolt, nem írtuk felül.",
 			"compose-disabled": "A játék ki van kapcsolva, ezért nem készült kérdés.",
 			"compose-no-material": "Nem volt elég anyag a katalógusban a kérdéshez.",
-			"leaderboard-refreshed": "{{players}} játékos, {{ranked}} helyezés frissült."
+			"leaderboard-refreshed": "{{players}} játékos, {{ranked}} helyezés frissült.",
+			"history": "Korábbi kérdések",
+			"history-hint": "Amit a játék eddig kérdezett. A megfejtés nincs a listában — az a szerveren marad. Az összeállítás két hétre néz vissza: a lemezt addig nem kérdezi újra, a kérdésfajtát egy hétig, az előadót négy napig.",
+			"history-empty": "Még nincs korábbi kérdés."
 		}
 	},
 	"admin": {

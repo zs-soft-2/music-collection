@@ -568,6 +568,15 @@
 				"streak": "Streak",
 				"speed": "Speed"
 			},
+			"history": {
+				"title": "Past questions",
+				"played-of": "You guessed on {{played}} of the last {{days}} days.",
+				"nothing-yet": "No days behind you yet — today is the first question.",
+				"skipped": "Skipped",
+				"late": "Late",
+				"the-answer-was": "The answer: {{answer}}",
+				"you-said": "you said: {{picked}}"
+			},
 			"leaderboard": {
 				"title": "Leaderboard",
 				"players": "{{players}} players",
@@ -2024,6 +2033,11 @@
 			"edit-on-the-band": "Edit a line-up on the band’s own page, under Line-up.",
 			"error-general": "Something went wrong. Try again later."
 		},
+		"dailyQuestionBanner": {
+			"there-is-a-question": "Today's question is up, and you have not guessed yet.",
+			"play-it": "Play it",
+			"not-now": "Not now"
+		},
 		"dailyQuestionSettings": {
 			"title": "Daily question",
 			"lead": "The rules of the game: how long there is to answer, what a guess pays, and what the engine may ask about.",
@@ -2065,7 +2079,10 @@
 			"compose-exists": "{{day}}: the question was already up; nothing was overwritten.",
 			"compose-disabled": "The game is switched off, so no question was composed.",
 			"compose-no-material": "There was not enough in the catalog to make a question.",
-			"leaderboard-refreshed": "{{players}} players, {{ranked}} places updated."
+			"leaderboard-refreshed": "{{players}} players, {{ranked}} places updated.",
+			"history": "Past questions",
+			"history-hint": "What the game has been asking. The answers are not in the list — those stay on the server. The composing looks a fortnight back: it will not ask about the same album again until then, about the same kind of question for a week, or about the same artist for four days.",
+			"history-empty": "Nothing has been asked yet."
 		}
 	},
 	"admin": {

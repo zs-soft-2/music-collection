@@ -3,7 +3,16 @@ import {
 	assertFails,
 	assertSucceeds,
 } from '@firebase/rules-unit-testing';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import {
+	collection,
+	doc,
+	getDoc,
+	getDocs,
+	limit,
+	orderBy,
+	query,
+	setDoc,
+} from 'firebase/firestore';
 
 import { createTestEnvironment } from './test-environment';
 
@@ -79,6 +88,32 @@ describe('daily question: the collector', () => {
 
 	it('does not write the answer', () =>
 		assertFails(setDoc(answerOf(asMe()), answer)));
+});
+
+/*
+ * A napokra visszanézés listakérdés, nem dokumentum-olvasás: a szabály
+ * ugyanaz, de más hívás fut bele, és ha az elbukik, a lap üres marad minden
+ * hibaüzenet nélkül.
+ */
+describe('daily question: the days behind', () => {
+	const pastQuestions = (database: ReturnType<typeof asMe>) =>
+		query(
+			collection(database, 'daily-question'),
+			orderBy('day', 'desc'),
+			limit(14)
+		);
+
+	it('the collector lists them', async () => {
+		await composed();
+
+		await assertSucceeds(getDocs(pastQuestions(asMe())));
+	});
+
+	it('a visitor does not', async () => {
+		await composed();
+
+		await assertFails(getDocs(pastQuestions(asVisitor())));
+	});
 });
 
 describe('daily question: a visitor', () => {
@@ -159,6 +194,27 @@ describe('daily answer', () => {
 		assertFails(setDoc(guessOf(asMe()), guess)));
 });
 
+describe('the guesses behind', () => {
+	const guesses = (database: ReturnType<typeof asMe>, uid = ME) =>
+		query(
+			collection(database, 'user', uid, 'daily-answer'),
+			orderBy('day', 'desc'),
+			limit(14)
+		);
+
+	it('are listed by the collector they belong to', async () => {
+		await graded();
+
+		await assertSucceeds(getDocs(guesses(asMe())));
+	});
+
+	it('are not listed by anybody else', async () => {
+		await graded();
+
+		await assertFails(getDocs(guesses(asOther(), ME)));
+	});
+});
+
 describe('the game pot', () => {
 	it('is read by its owner', async () => {
 		await graded();
@@ -199,10 +255,7 @@ const leaderboardOf = (database: ReturnType<typeof asMe>) =>
 
 const published = () =>
 	testEnv.withSecurityRulesDisabled(async (context) => {
-		await setDoc(
-			leaderboardOf(context.firestore() as never),
-			leaderboard
-		);
+		await setDoc(leaderboardOf(context.firestore() as never), leaderboard);
 	});
 
 describe('the leaderboard', () => {

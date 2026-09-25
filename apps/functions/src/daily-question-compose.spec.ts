@@ -1,10 +1,16 @@
 import {
+	ARTIST_DAYS,
 	MAX_TRIES,
+	RecentQuestion,
+	TEMPLATE_DAYS,
+	albumKey,
 	gatherMaterial,
+	isStale,
 	randomKey,
 	releasePath,
+	toRecent,
 } from './daily-question-compose';
-import { createRandom, hashSeed } from './daily-question';
+import { QuestionMaterial, createRandom, hashSeed } from './daily-question';
 
 const random = () => createRandom(hashSeed('2026-09-24'));
 
@@ -345,5 +351,93 @@ describe('gatherMaterial — emberek és borító', () => {
 				(member) => member.artistUid === 'artist-1'
 			)
 		).toBe(false);
+	});
+});
+
+// ── A közelmúlt ────────────────────────────────────────────────────────────
+
+const asked_ = (templateKey: string, artist: string, album?: string) =>
+	({
+		templateKey,
+		params: album ? { artist, album } : { artist },
+	}) as RecentQuestion;
+
+describe('toRecent', () => {
+	it('a sablonokat csak egy hétre visszamenőleg kerüli', () => {
+		const rows = Array.from({ length: TEMPLATE_DAYS + 3 }, (_, index) =>
+			asked_(`template-${index}`, `Artist ${index}`, `Album ${index}`)
+		);
+
+		const recent = toRecent(rows);
+
+		expect(recent.templateKeys).toHaveLength(TEMPLATE_DAYS);
+		expect(recent.templateKeys[0]).toBe('template-0');
+		expect(recent.templateKeys).not.toContain(`template-${TEMPLATE_DAYS}`);
+	});
+
+	it('a lemezt viszont az egész ablakban számon tartja', () => {
+		const rows = Array.from({ length: TEMPLATE_DAYS + 3 }, (_, index) =>
+			asked_(`template-${index}`, `Artist ${index}`, `Album ${index}`)
+		);
+
+		expect(toRecent(rows).albums).toContain(
+			albumKey(
+				`Artist ${TEMPLATE_DAYS + 2}`,
+				`Album ${TEMPLATE_DAYS + 2}`
+			)
+		);
+	});
+
+	it('az előadót csak néhány napig — tőle hamarabb jöhet újra kérdés', () => {
+		const rows = Array.from({ length: ARTIST_DAYS + 2 }, (_, index) =>
+			asked_(`template-${index}`, `Artist ${index}`, `Album ${index}`)
+		);
+
+		const recent = toRecent(rows);
+
+		expect(recent.artists).toContain('artist 0');
+		expect(recent.artists).not.toContain(`artist ${ARTIST_DAYS}`);
+	});
+
+	it('a lemez nélküli kérdést sem hagyja figyelmen kívül', () => {
+		const recent = toRecent([asked_('artistCountry', 'Morbid Angel')]);
+
+		expect(recent.artists).toContain('morbid angel');
+		expect(recent.albums.size).toBe(0);
+	});
+});
+
+describe('isStale', () => {
+	const material = (name: string, artistName: string) =>
+		({ album: { name, artistName } }) as QuestionMaterial;
+
+	it('a múlt heti lemezt kerüli — az írásmódtól függetlenül', () => {
+		const recent = toRecent([
+			asked_('albumYear', 'Morbid Angel', 'Altars Of Madness'),
+		]);
+
+		expect(
+			isStale(material('  altars of madness ', 'MORBID ANGEL'), recent)
+		).toBe(true);
+	});
+
+	it('a tegnapi előadó másik lemeze sem érdekes', () => {
+		const recent = toRecent([
+			asked_('albumYear', 'Morbid Angel', 'Altars Of Madness'),
+		]);
+
+		expect(
+			isStale(material('Blessed Are The Sick', 'Morbid Angel'), recent)
+		).toBe(true);
+	});
+
+	it('amiről rég nem volt kérdés, az mehet', () => {
+		const recent = toRecent([
+			asked_('albumYear', 'Morbid Angel', 'Altars Of Madness'),
+		]);
+
+		expect(isStale(material('Reign In Blood', 'Slayer'), recent)).toBe(
+			false
+		);
 	});
 });

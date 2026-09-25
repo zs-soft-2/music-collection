@@ -1,4 +1,12 @@
-import { Observable, catchError, map, of, startWith, throwError } from 'rxjs';
+import {
+	Observable,
+	catchError,
+	combineLatest,
+	map,
+	of,
+	startWith,
+	throwError,
+} from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
 import {
@@ -44,6 +52,19 @@ export function toAnswerFailure(error: unknown): DailyAnswerFailure {
 	const code = (error as { code?: unknown } | null)?.code;
 
 	return (typeof code === 'string' && FAILURES[code]) || 'unknown';
+}
+
+/**
+ * The days behind the collector: what was asked, and what they guessed.
+ *
+ * The two lists are kept side by side rather than merged here — which day
+ * lines up with which guess is a question about the view, and the view is
+ * where it is answered.
+ */
+export interface DailyQuestionHistory {
+	questions: DailyQuestionEntity[];
+	/** Only the days the collector played; the rest they skipped. */
+	answers: DailyAnswer[];
 }
 
 /** Raised for the store; carries the reason rather than the wire error. */
@@ -100,6 +121,44 @@ export class DailyQuestionEffect {
 
 	public answer$(day: string): Observable<DailyAnswer | null> {
 		return this.repository.answer$(day);
+	}
+
+	/**
+	 * The questions of the last days, newest first — the admin's list of what
+	 * the game has been asking.
+	 *
+	 * The public documents carry no answer, so this says what was asked and
+	 * nothing about who got it right.
+	 */
+	public questionHistory$(days: number): Observable<DailyQuestionEntity[]> {
+		return this.repository.history$(days);
+	}
+
+	/**
+	 * The same days with the collector's own guesses beside them.
+	 *
+	 * Read on demand rather than with the page: a collector who never opens
+	 * their history pays nothing for it, and the days that are over do not
+	 * change while they are being read.
+	 */
+	public playHistory$(days: number): Observable<DailyQuestionHistory> {
+		return combineLatest([
+			this.repository.history$(days),
+			this.repository.answerHistory$(days),
+		]).pipe(map(([questions, answers]) => ({ questions, answers })));
+	}
+
+	/**
+	 * The reminder for the day was sent away in this browser. Asked once, at
+	 * the moment the banner would go up.
+	 */
+	public isDismissed(day: string): boolean {
+		return this.repository.isDismissed(day);
+	}
+
+	/** Sends the day's reminder away until the day turns. */
+	public dismiss(day: string): void {
+		this.repository.dismiss(day);
 	}
 
 	/**

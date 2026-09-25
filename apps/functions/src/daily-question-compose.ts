@@ -25,7 +25,6 @@ import {
 	gameDay,
 	hashSeed,
 	pick,
-	previousDay,
 	toAnswerDocument,
 	toQuestionDocument,
 	yearOf,
@@ -74,6 +73,17 @@ const DISTRACTOR_LIMIT = 8;
 /** Egy zenekar felállása és egy lemez stáblistája ennél nem hosszabb. */
 const MEMBER_LIMIT = 20;
 const CREDIT_LIMIT = 40;
+
+/**
+ * Ennyi napra nézünk vissza, hogy a játék ne ismételje magát. Egyetlen
+ * lekérdezés, ennyi olvasás, naponta egyszer — a kérdés maga ennél jóval
+ * többe kerül.
+ */
+export const RECENT_DAYS = 14;
+/** Ezen belül ugyanaz a kérdésfajta ne jöjjön ki még egyszer. */
+export const TEMPLATE_DAYS = 7;
+/** Ezen belül ugyanaz az előadó se kerüljön újra sorra. */
+export const ARTIST_DAYS = 4;
 
 // ── Anyaggyűjtés ────────────────────────────────────────────────────────────
 
@@ -371,17 +381,112 @@ export interface ComposeResult {
 	multiplier: number;
 }
 
-/** Tegnap melyik sablon jött ki; egy olvasás. */
-async function previousTemplateKey(
+// ── A közelmúlt ────────────────────────────────────────────────────────────
+
+/** Egy visszaolvasott nap; ennyi kell belőle a döntéshez. */
+export interface RecentQuestion {
+	templateKey: string;
+	/** A kérdés katalógusértékei: ebből tudjuk, miről szólt. */
+	params: Record<string, string>;
+}
+
+/**
+ * Amit a közelmúltból kerülni akarunk.
+ *
+ * A megfejtés alkollekcióját szándékosan nem olvassuk hozzá: a nyilvános
+ * dokumentum `params`-a megnevezi a lemezt és az előadót, tehát ugyanazt
+ * tudja, fele annyi olvasásból — és a szerver így sem visz egyetlen
+ * megfejtést sem olyan helyre, ahol nem kellene lennie.
+ */
+export interface RecentQuestions {
+	/** A legutóbbi napok sablonjai, a mai naphoz legközelebbi elöl. */
+	templateKeys: string[];
+	/** „előadó|lemez” kulcsok: ennyi ideig ugyanaz a lemez ne jöjjön elő. */
+	albums: Set<string>;
+	/** Előadónevek a legutóbbi néhány napból. */
+	artists: Set<string>;
+}
+
+/** Katalógusnevek összehasonlításhoz: kisbetűs, levágott. */
+const normalize = (value: string | undefined | null): string =>
+	(value ?? '').trim().toLowerCase();
+
+/** Egy lemez kulcsa; a lemezcím önmagában nem elég (sok az `Elso lemez`). */
+export const albumKey = (
+	artist: string | undefined | null,
+	album: string | undefined | null
+): string => `${normalize(artist)}|${normalize(album)}`;
+
+/**
+ * A közelmúlt kérdései, a maihoz legközelebbi nappal kezdve. Egy lekérdezés;
+ * a kimaradt napok nem számítanak külön, tehát ez pontosan „az utolsó N
+ * kérdés”, nem „az utolsó N naptári nap”.
+ *
+ * A rendezés a `day` mezőre megy, nem a dokumentum azonosítójára, pedig a
+ * kettő ugyanaz a dátum: a Firestore a kulcsot visszafelé nem olvassa, a
+ * mezőre viszont magától tart indexet — egy mezőhöz nem kell kézzel
+ * felvenni.
+ */
+export async function recentQuestions(
 	database: Firestore,
-	day: string
-): Promise<string | null> {
+	day: string,
+	days = RECENT_DAYS
+): Promise<RecentQuestion[]> {
 	const snapshot = await database
 		.collection(DAILY_QUESTION_COLLECTION)
-		.doc(previousDay(day))
+		.where('day', '<', day)
+		.orderBy('day', 'desc')
+		.limit(days)
 		.get();
 
-	return (snapshot.get('templateKey') as string) ?? null;
+	return snapshot.docs.map((document) => ({
+		templateKey: (document.get('templateKey') as string) ?? '',
+		params:
+			(document.get('params') as Record<string, string> | undefined) ??
+			{},
+	}));
+}
+
+/** Amit a visszaolvasott napokból kerülni érdemes. */
+export function toRecent(rows: RecentQuestion[]): RecentQuestions {
+	const albums = new Set<string>();
+	const artists = new Set<string>();
+
+	rows.forEach((row, index) => {
+		const params = row.params ?? {};
+
+		if (params['album']) {
+			albums.add(albumKey(params['artist'], params['album']));
+		}
+		if (index < ARTIST_DAYS && params['artist']) {
+			artists.add(normalize(params['artist']));
+		}
+	});
+
+	return {
+		templateKeys: rows
+			.slice(0, TEMPLATE_DAYS)
+			.map((row) => row.templateKey)
+			.filter(Boolean),
+		albums,
+		artists,
+	};
+}
+
+/**
+ * Erről a lemezről (vagy ettől az előadótól) nemrég volt kérdés. Nem hiba,
+ * csak nem érdekes: inkább húzunk másik albumot, amíg van még húzás.
+ */
+export function isStale(
+	material: QuestionMaterial,
+	recent: RecentQuestions
+): boolean {
+	const album = material.album;
+
+	return (
+		recent.albums.has(albumKey(album.artistName, album.name)) ||
+		recent.artists.has(normalize(album.artistName))
+	);
 }
 
 /**
@@ -438,14 +543,21 @@ export async function composeDailyQuestion(
 
 	const random = createRandom(hashSeed(day));
 	const preferred = difficultyForDay(day);
-	const yesterday = await previousTemplateKey(database, day);
+	const recent = toRecent(await recentQuestions(database, day));
 
 	for (let attempt = 1; attempt <= MAX_TRIES; attempt++) {
 		const material = await gatherMaterial(database, random);
+
+		// A múlt heti lemezt inkább újrahúzzuk — de az utolsó húzásnál a
+		// semminél a visszatérő előadó is jobb.
+		if (material && attempt < MAX_TRIES && isStale(material, recent)) {
+			continue;
+		}
+
 		const draft = material
 			? buildQuestion(material, random, {
 					preferred,
-					avoid: yesterday,
+					avoid: recent.templateKeys,
 					disabled: settings.disabledTemplates,
 				})
 			: null;

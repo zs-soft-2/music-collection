@@ -3,6 +3,7 @@ import { pipe, switchMap, tap } from 'rxjs';
 import { computed, inject } from '@angular/core';
 import {
 	ComposeDailyQuestionResult,
+	DailyQuestionEntity,
 	DailyQuestionSettings,
 	DailyQuestionTemplateInfo,
 	RefreshLeaderboardResult,
@@ -23,6 +24,7 @@ import {
 	DEFAULT_DAILY_QUESTION_SETTINGS,
 	DailyQuestionEffect,
 } from '../../../data/daily-question';
+import { toQuestionFrame } from '../../../shared/daily-question';
 import { describeWriteError } from '../music-collection/music-collection-admin.errors';
 
 /** What the server clamps to as well; the form refuses the nonsense first. */
@@ -39,6 +41,13 @@ const LIMITS = {
 /** Which number fields there are, and what each may reach. */
 export type NumberField = keyof typeof LIMITS;
 
+/**
+ * How many days back the list of past questions goes. A month is enough to
+ * see whether the game repeats itself; every day of it is a document read,
+ * and the composing only looks two weeks back anyway.
+ */
+export const HISTORY_DAYS = 30;
+
 interface DailyQuestionSettingsState {
 	settings: DailyQuestionSettings;
 	/** Every kind of question the engine knows, as the server reports it. */
@@ -53,6 +62,9 @@ interface DailyQuestionSettingsState {
 	composed: ComposeDailyQuestionResult | null;
 	isRefreshing: boolean;
 	refreshed: RefreshLeaderboardResult | null;
+	/** What the game has been asking, newest first. */
+	history: DailyQuestionEntity[];
+	isHistoryLoading: boolean;
 }
 
 const initialState: DailyQuestionSettingsState = {
@@ -66,6 +78,8 @@ const initialState: DailyQuestionSettingsState = {
 	composed: null,
 	isRefreshing: false,
 	refreshed: null,
+	history: [],
+	isHistoryLoading: true,
 };
 
 /**
@@ -110,6 +124,19 @@ export const DailyQuestionSettingsStore = signalStore(
 			Math.round(store.settings().bonusDayChance * 100)
 		),
 		today: computed(() => dailyQuestionDay()),
+		/**
+		 * The past questions as sentences, the way the collector read them —
+		 * a list of template keys would say what was drawn, not what was
+		 * asked.
+		 */
+		historyRows: computed(() =>
+			store.history().map((question) => ({
+				day: question.day,
+				difficulty: question.difficulty,
+				templateKey: question.templateKey,
+				frame: toQuestionFrame(question.templateKey, question.params),
+			}))
+		),
 	})),
 	withMethods((store, effect = inject(DailyQuestionEffect)) => {
 		const load = rxMethod<void>(
@@ -134,6 +161,27 @@ export const DailyQuestionSettingsStore = signalStore(
 			)
 		);
 
+		/**
+		 * What the game has been asking. Read straight from the questions
+		 * rather than through a callable: the documents are public — the
+		 * answer lives elsewhere — so a list of them needs no server of its
+		 * own, and no deploy to stay in step.
+		 */
+		const loadHistory = rxMethod<void>(
+			pipe(
+				tap(() => patchState(store, { isHistoryLoading: true })),
+				switchMap(() => effect.questionHistory$(HISTORY_DAYS)),
+				tapResponse({
+					next: (history) =>
+						patchState(store, { history, isHistoryLoading: false }),
+					error: (error: unknown) => {
+						console.error(error);
+						patchState(store, { isHistoryLoading: false });
+					},
+				})
+			)
+		);
+
 		const set = (change: Partial<DailyQuestionSettings>): void =>
 			patchState(store, {
 				settings: { ...store.settings(), ...change },
@@ -142,6 +190,7 @@ export const DailyQuestionSettingsStore = signalStore(
 
 		return {
 			load,
+			loadHistory,
 			set,
 			setNumber(field: NumberField, value: string): void {
 				const parsed = Number.parseInt(value, 10);
@@ -233,11 +282,15 @@ export const DailyQuestionSettingsStore = signalStore(
 					),
 					switchMap((force) => effect.compose$(undefined, force)),
 					tapResponse({
-						next: (composed) =>
+						next: (composed) => {
 							patchState(store, {
 								composed,
 								isComposing: false,
-							}),
+							});
+
+							// A lista élére most került oda a mai kérdés.
+							if (composed.created) loadHistory();
+						},
 						error: (error: unknown) => {
 							console.error(error);
 							patchState(store, {
@@ -279,6 +332,7 @@ export const DailyQuestionSettingsStore = signalStore(
 	withHooks({
 		onInit(store) {
 			store.load();
+			store.loadHistory();
 		},
 	})
 );

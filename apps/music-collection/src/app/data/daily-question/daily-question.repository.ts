@@ -6,7 +6,16 @@ import {
 	inject,
 	runInInjectionContext,
 } from '@angular/core';
-import { Firestore, doc, docData } from '@angular/fire/firestore';
+import {
+	Firestore,
+	collection,
+	doc,
+	docData,
+	getDocs,
+	limit,
+	orderBy,
+	query,
+} from '@angular/fire/firestore';
 import { Functions, httpsCallable } from '@angular/fire/functions';
 import {
 	ANSWER_DAILY_QUESTION_FUNCTION,
@@ -40,6 +49,15 @@ import {
 const USER_COLLECTION = 'user';
 /** Where this browser remembers when the round started, per day. */
 const CLOCK_STORAGE_PREFIX = 'mc.daily-question.started.';
+/** …and where it remembers that the day's banner was sent away. */
+const BANNER_STORAGE_PREFIX = 'mc.daily-question.dismissed.';
+/**
+ * What the past is ordered by. It carries the same `YYYY-MM-DD` as the
+ * document id, and it is a field rather than the id on purpose: Firestore
+ * does not scan keys backwards, so the newest-first list has to be ordered by
+ * something it indexes — which, for a single field, it does by itself.
+ */
+const DAY_FIELD = 'day';
 
 /**
  * Data access for the daily question: the question of the day, the
@@ -90,22 +108,43 @@ export class DailyQuestionRepository {
 
 	/** Remembers the start of the round, and forgets the days before it. */
 	public rememberStart(day: string, startedAt: number): void {
+		this.remember(CLOCK_STORAGE_PREFIX, day, String(startedAt));
+	}
+
+	/**
+	 * The banner for the day was sent away in this browser.
+	 *
+	 * Kept here rather than on the collector's document for the same reason
+	 * as the clock: closing a banner is not worth a write, and a browser is
+	 * the right scope for it — the reminder is about this screen, not about
+	 * the collector. A new day brings a new banner, because the key carries
+	 * the day.
+	 */
+	public isDismissed(day: string): boolean {
+		try {
+			return !!localStorage.getItem(`${BANNER_STORAGE_PREFIX}${day}`);
+		} catch {
+			return false;
+		}
+	}
+
+	/** Sends the day's banner away, and forgets the days before it. */
+	public dismiss(day: string): void {
+		this.remember(BANNER_STORAGE_PREFIX, day, '1');
+	}
+
+	/** One value per day, and only the day at hand is kept. */
+	private remember(prefix: string, day: string, value: string): void {
 		try {
 			for (const key of Object.keys(localStorage)) {
-				if (
-					key.startsWith(CLOCK_STORAGE_PREFIX) &&
-					key !== `${CLOCK_STORAGE_PREFIX}${day}`
-				) {
+				if (key.startsWith(prefix) && key !== `${prefix}${day}`) {
 					localStorage.removeItem(key);
 				}
 			}
 
-			localStorage.setItem(
-				`${CLOCK_STORAGE_PREFIX}${day}`,
-				String(startedAt)
-			);
+			localStorage.setItem(`${prefix}${day}`, value);
 		} catch {
-			// A browser that cannot remember it plays with a fresh clock.
+			// A browser that cannot remember it starts the day over.
 		}
 	}
 
@@ -132,6 +171,37 @@ export class DailyQuestionRepository {
 			DAILY_ANSWER_FEATURE_KEY,
 			day,
 		]);
+	}
+
+	/**
+	 * The questions of the days before, newest first.
+	 *
+	 * Read once rather than followed: a day that is over does not change, and
+	 * a listener on a list of them would cost the same reads for nothing.
+	 */
+	public history$(days: number): Observable<DailyQuestionEntity[]> {
+		return this.list$<DailyQuestionEntity>(
+			[DAILY_QUESTION_FEATURE_KEY],
+			days
+		);
+	}
+
+	/** The collector's own guesses, newest first; empty while signed out. */
+	public answerHistory$(days: number): Observable<DailyAnswer[]> {
+		return this.authenticatedUser.user$.pipe(
+			switchMap((user) =>
+				user
+					? this.list$<DailyAnswer>(
+							[
+								USER_COLLECTION,
+								user.uid,
+								DAILY_ANSWER_FEATURE_KEY,
+							],
+							days
+						)
+					: of([])
+			)
+		);
 	}
 
 	/** The game's pot; null until the first guess created it. */
@@ -223,6 +293,31 @@ export class DailyQuestionRepository {
 		return this.authenticatedUser.user$.pipe(
 			switchMap((user) =>
 				user ? this.document$<T>(path(user.uid)) : of(null)
+			)
+		);
+	}
+
+	/**
+	 * The newest documents of a collection of days: the last `days` of them,
+	 * latest first. One read apiece, and none at all for the days nobody asks
+	 * about.
+	 */
+	private list$<T>(path: string[], days: number): Observable<T[]> {
+		const [first, ...rest] = path;
+
+		return runInInjectionContext(this.injector, () =>
+			from(
+				getDocs(
+					query(
+						collection(this.firestore, first, ...rest),
+						orderBy(DAY_FIELD, 'desc'),
+						limit(days)
+					)
+				)
+			).pipe(
+				map((snapshot) =>
+					snapshot.docs.map((document) => document.data() as T)
+				)
 			)
 		);
 	}

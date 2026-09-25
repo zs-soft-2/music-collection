@@ -11,9 +11,8 @@ import { EMPTY_DAILY_QUESTION_LEADERBOARD } from '../../data/daily-question';
 
 import {
 	toAccuracy,
-	toEdition,
 	toFrame,
-	toFrameKey,
+	toHistoryRows,
 	toLeaderboardView,
 	toOptions,
 	toSubjectLink,
@@ -52,44 +51,6 @@ const answer = (overrides: Partial<DailyAnswer> = {}): DailyAnswer => ({
 	streak: 1,
 	answeredAt: 1774000000000,
 	...overrides,
-});
-
-describe('toEdition', () => {
-	it('évet és országot ír egymás mellé', () => {
-		expect(toEdition({ year: '1986', country: 'US' })).toBe('1986 US');
-	});
-
-	it('a hiányzó felét elhagyja', () => {
-		expect(toEdition({ year: '1986', country: '' })).toBe('1986');
-		expect(toEdition({ year: '', country: 'US' })).toBe('US');
-		expect(toEdition({})).toBe('');
-	});
-});
-
-describe('toFrameKey', () => {
-	it('a kiadót a kiadás megnevezésével kérdezi, ha van mivel', () => {
-		expect(toFrameKey('releaseLabel', { year: '1986' })).toBe(
-			'releaseLabelEdition'
-		);
-	});
-
-	it('a kiadás megnevezése nélkül a rövid kerettel kérdez', () => {
-		expect(toFrameKey('releaseLabel', { year: '', country: '' })).toBe(
-			'releaseLabel'
-		);
-	});
-
-	it('a katalógusszámhoz a kiadót is odaírja, ha ismert', () => {
-		expect(toFrameKey('releaseCatno', { label: 'Elektra' })).toBe(
-			'releaseCatnoLabel'
-		);
-		expect(toFrameKey('releaseCatno', { label: '' })).toBe('releaseCatno');
-	});
-
-	// A szerver hamarabb tudhat egy sablont, mint ahogy a fordítás megjön.
-	it('az ismeretlen sablont nem hagyja kulcsként a lapra kerülni', () => {
-		expect(toFrameKey('producerOfTheAlbum', {})).toBe('fallback');
-	});
 });
 
 describe('toFrame', () => {
@@ -285,5 +246,84 @@ describe('toLeaderboardView', () => {
 
 		expect(view.rows.every((item) => !item.isMe)).toBe(true);
 		expect(view.me).toBeNull();
+	});
+});
+
+describe('toHistoryRows', () => {
+	const past = (day: string) => question({ day, uid: day });
+
+	it('a mai napot kihagyja — az fent van a lapon', () => {
+		const rows = toHistoryRows(
+			[past('2026-09-25'), past('2026-09-24')],
+			[],
+			'2026-09-25'
+		);
+
+		expect(rows.map((row) => row.day)).toEqual(['2026-09-24']);
+	});
+
+	it('a tipp mellé a megfejtést is odaírja', () => {
+		const rows = toHistoryRows(
+			[past('2026-09-24')],
+			[answer({ day: '2026-09-24' })],
+			'2026-09-25'
+		);
+
+		expect(rows[0]).toMatchObject({
+			played: true,
+			correct: true,
+			answerLabel: 'Battery',
+			// Jó tippnél nincs mit szembeállítani vele.
+			pickedLabel: '',
+			points: 20,
+		});
+	});
+
+	it('rossz tippnél azt is megmutatja, mire tippelt', () => {
+		const rows = toHistoryRows(
+			[past('2026-09-24')],
+			[
+				answer({
+					day: '2026-09-24',
+					optionId: 'track-3',
+					correct: false,
+					points: 0,
+				}),
+			],
+			'2026-09-25'
+		);
+
+		expect(rows[0]).toMatchObject({
+			correct: false,
+			answerLabel: 'Battery',
+			pickedLabel: 'The Thing That Should Not Be',
+		});
+	});
+
+	/*
+	 * A ki nem játszott nap megfejtését már nem lehet megtudni — a
+	 * kiértékelés csak a mai tippet veszi el —, ezért a sor nem tesz úgy,
+	 * mintha felfedne valamit.
+	 */
+	it('a kihagyott napról csak azt mondja, hogy kimaradt', () => {
+		const rows = toHistoryRows([past('2026-09-24')], [], '2026-09-25');
+
+		expect(rows[0]).toMatchObject({
+			played: false,
+			correct: false,
+			answerLabel: '',
+			pickedLabel: '',
+			points: 0,
+		});
+	});
+
+	it('a késve beküldött tippet megjelöli', () => {
+		const rows = toHistoryRows(
+			[past('2026-09-24')],
+			[answer({ day: '2026-09-24', timedOut: true, points: 0 })],
+			'2026-09-25'
+		);
+
+		expect(rows[0].late).toBe(true);
 	});
 });

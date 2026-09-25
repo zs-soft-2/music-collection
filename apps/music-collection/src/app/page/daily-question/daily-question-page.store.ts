@@ -31,14 +31,18 @@ import {
 	DailyAnswerFailure,
 	DailyAnswerRejected,
 	DailyQuestionEffect,
+	DailyQuestionHistory,
 	EMPTY_DAILY_QUESTION_LEADERBOARD,
 } from '../../data/daily-question';
 
 import {
+	toHistoryRows,
 	toLeaderboardView,
 	toSubjectLink,
 	toView,
 } from './daily-question.mapper';
+import { HistoryRowView } from './daily-question.model';
+
 interface DailyQuestionPageState {
 	/** The day being played, `YYYY-MM-DD`; the effect decides which. */
 	day: string;
@@ -62,7 +66,20 @@ interface DailyQuestionPageState {
 	startedAt: number | null;
 	/** Moved by the ticker; the countdown is computed from it. */
 	nowMs: number;
+	/** The days behind, once the collector has asked to see them. */
+	history: HistoryRowView[];
+	isHistoryOpen: boolean;
+	isHistoryLoading: boolean;
+	/** Read once per visit: a day that is over does not change under it. */
+	isHistoryLoaded: boolean;
 }
+
+/**
+ * How far back the history goes. Two weeks is what a streak is measured in,
+ * and every day of it is a document read — so the list stops where looking
+ * back stops being interesting.
+ */
+export const HISTORY_DAYS = 14;
 
 const initialState: DailyQuestionPageState = {
 	day: '',
@@ -77,6 +94,10 @@ const initialState: DailyQuestionPageState = {
 	failure: null,
 	startedAt: null,
 	nowMs: 0,
+	history: [],
+	isHistoryOpen: false,
+	isHistoryLoading: false,
+	isHistoryLoaded: false,
 };
 
 export const DailyQuestionPageStore = signalStore(
@@ -176,6 +197,12 @@ export const DailyQuestionPageStore = signalStore(
 			/** Nothing to show until somebody has played. */
 			hasLeaderboard: computed(
 				() => !!leaderboardView().rows.length || !!leaderboardView().me
+			),
+			/** The list is worth showing once a day has gone by. */
+			hasHistory: computed(() => !!store.history().length),
+			/** Days guessed at, out of the days listed. */
+			historyPlayed: computed(
+				() => store.history().filter((row) => row.played).length
 			),
 		};
 	}),
@@ -280,6 +307,44 @@ export const DailyQuestionPageStore = signalStore(
 			)
 		);
 
+		/**
+		 * The days behind, read once and only when they are asked for.
+		 *
+		 * A collector who never opens the list pays for none of it; the days
+		 * that are over do not change while it is open, so one read is all it
+		 * ever takes.
+		 */
+		const loadHistory = rxMethod<void>(
+			pipe(
+				tap(() => patchState(store, { isHistoryLoading: true })),
+				switchMap(() =>
+					effect.playHistory$(HISTORY_DAYS).pipe(
+						tapResponse({
+							next: (history: DailyQuestionHistory) =>
+								patchState(store, {
+									history: toHistoryRows(
+										history.questions,
+										history.answers,
+										effect.today()
+									),
+									isHistoryLoading: false,
+									isHistoryLoaded: true,
+								}),
+							error: (error) => {
+								console.error(error);
+								// A list that cannot be read stays closed
+								// rather than empty: the next open tries again.
+								patchState(store, {
+									isHistoryLoading: false,
+									isHistoryOpen: false,
+								});
+							},
+						})
+					)
+				)
+			)
+		);
+
 		/** Opens a day: the question, and whatever was guessed on it. */
 		const open = (day: string): void => {
 			patchState(store, {
@@ -302,6 +367,23 @@ export const DailyQuestionPageStore = signalStore(
 			followScore,
 			followLeaderboard,
 			tick,
+			/**
+			 * Shows the days behind, and fetches them the first time. Closing
+			 * the list keeps what was read: the days have not changed.
+			 */
+			toggleHistory: (): void => {
+				const isOpen = !store.isHistoryOpen();
+
+				patchState(store, { isHistoryOpen: isOpen });
+
+				if (
+					isOpen &&
+					!store.isHistoryLoaded() &&
+					!store.isHistoryLoading()
+				) {
+					loadHistory(of(undefined));
+				}
+			},
 			/** Today's question, again. */
 			reopen: (): void => open(effect.today()),
 			/** Picking is not guessing: it can be changed until it is sent. */

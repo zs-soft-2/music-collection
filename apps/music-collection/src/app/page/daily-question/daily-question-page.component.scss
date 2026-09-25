@@ -336,6 +336,120 @@ a.subject:hover {
 	}
 }
 
+/* ── The days behind ──────────────────────────────────────────────────── */
+
+.history {
+	max-width: 46rem;
+	margin-top: 2.5rem;
+}
+
+.history-toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--mc-text);
+	font-family: var(--mc-font-display, inherit);
+	font-size: 1.5rem;
+	cursor: pointer;
+
+	&:hover {
+		color: var(--mc-primary);
+	}
+}
+
+.chevron {
+	font-size: 0.9rem;
+	color: var(--mc-text-subtle);
+}
+
+.history-note {
+	margin: 0.75rem 0 0;
+	font-size: 0.85rem;
+	color: var(--mc-text-subtle);
+}
+
+.past {
+	display: grid;
+	gap: 0.75rem;
+	padding: 0;
+	margin: 1rem 0 0;
+	list-style: none;
+}
+
+.past-day {
+	padding: 0.75rem 0.9rem;
+	border: 1px solid var(--mc-border);
+	border-radius: 0.6rem;
+	background: var(--mc-card-bg);
+
+	/* The verdict is carried by the edge, so the row stays readable. */
+	&.is-correct {
+		border-left: 3px solid var(--mc-status-ok);
+	}
+
+	&.is-missed {
+		border-left: 3px solid var(--mc-status-bad);
+	}
+}
+
+.past-meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.6rem;
+	margin: 0;
+	font-size: 0.75rem;
+
+	.day {
+		font-variant-numeric: tabular-nums;
+		color: var(--mc-text-subtle);
+	}
+
+	.mark {
+		font-size: 0.9rem;
+	}
+
+	.is-correct & .mark {
+		color: var(--mc-status-ok);
+	}
+
+	.points {
+		color: var(--mc-primary);
+		font-weight: 600;
+	}
+}
+
+.skipped,
+.late-mark {
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--mc-text-subtle);
+}
+
+.past-question {
+	margin: 0.4rem 0 0;
+	line-height: 1.5;
+}
+
+.past-answer {
+	margin: 0.3rem 0 0;
+	font-size: 0.85rem;
+	color: var(--mc-text-muted);
+}
+
+.past-pick {
+	margin-left: 0.5rem;
+	color: var(--mc-text-subtle);
+}
+
+.history-skeleton {
+	height: 8rem;
+	margin-top: 1rem;
+}
+
 /* ── The field ────────────────────────────────────────────────────────── */
 
 .leaderboard {

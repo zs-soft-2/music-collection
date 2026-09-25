@@ -568,6 +568,15 @@
 				"streak": "Serie",
 				"speed": "Tempo"
 			},
+			"history": {
+				"title": "Frühere Fragen",
+				"played-of": "An {{played}} der letzten {{days}} Tage hast du geraten.",
+				"nothing-yet": "Noch keine Tage hinter dir — heute ist die erste Frage.",
+				"skipped": "Ausgelassen",
+				"late": "Zu spät",
+				"the-answer-was": "Die Lösung: {{answer}}",
+				"you-said": "dein Tipp: {{picked}}"
+			},
 			"leaderboard": {
 				"title": "Rangliste",
 				"players": "{{players}} Spieler",
@@ -2024,6 +2033,11 @@
 			"edit-on-the-band": "Die Besetzung wird auf der Seite der Band unter „Besetzung“ bearbeitet.",
 			"error-general": "Etwas ist schiefgelaufen. Versuche es später erneut."
 		},
+		"dailyQuestionBanner": {
+			"there-is-a-question": "Die heutige Frage steht, und du hast noch nicht geraten.",
+			"play-it": "Jetzt raten",
+			"not-now": "Jetzt nicht"
+		},
 		"dailyQuestionSettings": {
 			"title": "Tagesfrage",
 			"lead": "Die Spielregeln: wie viel Zeit zum Antworten bleibt, was ein Tipp zahlt und woraus die Maschine fragen darf.",
@@ -2065,7 +2079,10 @@
 			"compose-exists": "{{day}}: die Frage stand schon; nichts wurde überschrieben.",
 			"compose-disabled": "Das Spiel ist ausgeschaltet, daher wurde keine Frage erstellt.",
 			"compose-no-material": "Im Katalog war nicht genug für eine Frage.",
-			"leaderboard-refreshed": "{{players}} Spieler, {{ranked}} Plätze aktualisiert."
+			"leaderboard-refreshed": "{{players}} Spieler, {{ranked}} Plätze aktualisiert.",
+			"history": "Frühere Fragen",
+			"history-hint": "Was das Spiel bisher gefragt hat. Die Lösungen stehen nicht in der Liste — die bleiben auf dem Server. Die Zusammenstellung schaut zwei Wochen zurück: dieselbe Platte kommt so lange nicht wieder, dieselbe Fragenart eine Woche lang nicht, derselbe Künstler vier Tage lang nicht.",
+			"history-empty": "Es wurde noch nichts gefragt."
 		}
 	},
 	"admin": {

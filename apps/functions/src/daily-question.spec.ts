@@ -300,7 +300,7 @@ const draftBy = (key: string, source = material()) =>
 /** A nap kérdése, ha össze kell állnia — különben a teszt itt bukik el. */
 const built = (
 	preferred: QuestionDifficulty,
-	avoid?: string | null,
+	avoid?: readonly string[],
 	source = material()
 ) => {
 	const draft = buildQuestion(source, random(), { preferred, avoid });
@@ -588,15 +588,17 @@ describe('buildQuestion', () => {
 		).toBe('easy');
 	});
 
-	it('kerüli a tegnapi sablont', () => {
+	it('kerüli a közelmúlt sablonjait', () => {
 		const yesterday = built('easy');
+		const before = built('easy', [yesterday.templateKey]);
 
-		expect(built('easy', yesterday.templateKey).templateKey).not.toBe(
-			yesterday.templateKey
+		expect([yesterday.templateKey, before.templateKey]).not.toContain(
+			built('easy', [yesterday.templateKey, before.templateKey])
+				.templateKey
 		);
 	});
 
-	it('a tegnapi sablonhoz visszanyúl, ha más nem áll össze', () => {
+	it('a közelmúlt sablonjához visszanyúl, ha más nem áll össze', () => {
 		// Ebből az anyagból egyedül az előadó kérdezhető.
 		const single = material({
 			album: {
@@ -617,7 +619,7 @@ describe('buildQuestion', () => {
 		expect(
 			buildQuestion(single, random(), {
 				preferred: 'easy',
-				avoid: 'albumArtist',
+				avoid: ['albumArtist'],
 			})?.templateKey
 		).toBe('albumArtist');
 	});

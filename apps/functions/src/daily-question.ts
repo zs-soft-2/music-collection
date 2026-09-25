@@ -1581,8 +1581,8 @@ export function draftsFor(
 export interface QuestionChoice {
 	/** A nap kívánt nehézsége. */
 	preferred?: QuestionDifficulty;
-	/** A tegnapi sablon: kétszer ugyanazt kérdezni fárasztó. */
-	avoid?: string | null;
+	/** A közelmúlt sablonjai: ugyanazt a kérdésfajtát hetente egyszer elég. */
+	avoid?: readonly string[];
 	/** Amit az admin kikapcsolt. */
 	disabled?: string[];
 }
@@ -1590,10 +1590,10 @@ export interface QuestionChoice {
 /**
  * A nap kérdése ebből az anyagból.
  *
- * A nehézség kívánság, az `avoid` pedig a tegnapi sablon. Mindkettő csak
- * akkor érvényesül, ha marad utána választható kérdés — a semminél a tegnapi
- * sablon is jobb. A kikapcsolt sablon viszont parancs: abból nem lesz kérdés
- * akkor sem, ha nem marad más.
+ * A nehézség kívánság, az `avoid` pedig a közelmúlt sablonjai. Mindkettő
+ * csak akkor érvényesül, ha marad utána választható kérdés — a semminél a
+ * múlt heti sablon is jobb. A kikapcsolt sablon viszont parancs: abból nem
+ * lesz kérdés akkor sem, ha nem marad más.
  */
 export function buildQuestion(
 	material: QuestionMaterial,
@@ -1604,7 +1604,8 @@ export function buildQuestion(
 
 	if (!drafts.length) return null;
 
-	const fresh = drafts.filter((draft) => draft.templateKey !== choice.avoid);
+	const seen = new Set(choice.avoid ?? []);
+	const fresh = drafts.filter((draft) => !seen.has(draft.templateKey));
 	const choices = fresh.length ? fresh : drafts;
 	const wanted = choices.filter(
 		(draft) => draft.difficulty === choice.preferred

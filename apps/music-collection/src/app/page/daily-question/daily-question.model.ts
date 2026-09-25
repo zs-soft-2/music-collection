@@ -1,15 +1,6 @@
 import { DailyQuestionDifficulty } from '@music-collection/api';
 
-/**
- * The question as a sentence: which frame to put it in, and the catalog
- * values that go in the frame's slots. The values are never translated —
- * an album is called what it is called.
- */
-export interface QuestionFrame {
-	/** Full i18n key, `dailyQuestion.template.<key>`. */
-	key: string;
-	params: Record<string, string>;
-}
+import { QuestionFrame } from '../../shared/daily-question';
 
 /** One of the four buttons. */
 export interface DailyQuestionOptionView {
@@ -78,3 +69,27 @@ export const EMPTY_LEADERBOARD_VIEW: LeaderboardView = {
 	updatedAt: 0,
 	me: null,
 };
+
+/**
+ * One day behind the collector.
+ *
+ * A day they did not play carries the question and nothing else: the answer
+ * of a day that is over cannot be learned any more — the grading only ever
+ * takes today's guess — so the row says they skipped it rather than pretending
+ * to reveal something.
+ */
+export interface HistoryRowView {
+	day: string;
+	difficulty: DailyQuestionDifficulty;
+	frame: QuestionFrame;
+	/** They guessed on the day at all. */
+	played: boolean;
+	correct: boolean;
+	/** The right option, as it read; empty on a day they skipped. */
+	answerLabel: string;
+	/** What they picked, when it was not the right one. */
+	pickedLabel: string;
+	points: number;
+	/** The guess came in after the clock ran out, and paid nothing. */
+	late: boolean;
+}

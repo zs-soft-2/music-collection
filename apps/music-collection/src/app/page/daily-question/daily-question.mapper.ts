@@ -6,91 +6,19 @@ import {
 	DailyQuestionSubject,
 } from '@music-collection/api';
 
+import { QuestionFrame, toQuestionFrame } from '../../shared/daily-question';
+
 import {
 	DailyQuestionOptionView,
 	DailyQuestionView,
 	EMPTY_LEADERBOARD_VIEW,
+	HistoryRowView,
 	LeaderboardRowView,
 	LeaderboardView,
-	QuestionFrame,
 } from './daily-question.model';
 
-/** i18n prefix of the question frames. */
-export const TEMPLATE_KEY_PREFIX = 'dailyQuestion.template.';
-
-/**
- * The frames this client has words for. The server may learn a template
- * before the client does — the app talks to the deployed functions even in
- * development — and a question in a frame nobody translated would show its
- * i18n key to the collector. An unknown template gets the plain frame
- * instead: the options still say everything needed to guess.
- */
-export const KNOWN_TEMPLATE_KEYS = [
-	'albumArtist',
-	'albumYear',
-	'openingTrack',
-	'trackCount',
-	'releaseLabel',
-	'artistCountry',
-	'longestTrack',
-	'sideBOpener',
-	'releaseCatno',
-	'albumStyle',
-	'earliestAlbum',
-	'trackAlbum',
-	'nextTrack',
-	'trackPosition',
-	'shortestTrack',
-	'albumLength',
-	'notOnAlbum',
-	'coverAlbum',
-	'releaseCountry',
-	'artistFormedIn',
-	'bandMember',
-	'memberBand',
-	'memberInstrument',
-	'albumCredit',
-	'albumProducer',
-];
-
-/**
- * How the question says which pressing it means — `1986 US`. Both halves are
- * optional: the catalog knows the year of some pressings and the country of
- * others, and of many neither.
- */
-export function toEdition(params: Record<string, string>): string {
-	return [params['year'], params['country']].filter(Boolean).join(' ');
-}
-
-/**
- * Which frame the question goes in. Two templates have a longer frame for
- * when the catalog knows enough to use it: a question about the label names
- * the pressing when the album has several, and the catalogue number names
- * the label when the pressing has one.
- */
-export function toFrameKey(
-	templateKey: string,
-	params: Record<string, string>
-): string {
-	if (!KNOWN_TEMPLATE_KEYS.includes(templateKey)) return 'fallback';
-
-	if (templateKey === 'releaseLabel') {
-		return toEdition(params) ? 'releaseLabelEdition' : 'releaseLabel';
-	}
-	if (templateKey === 'releaseCatno') {
-		return params['label'] ? 'releaseCatnoLabel' : 'releaseCatno';
-	}
-
-	return templateKey;
-}
-
 export function toFrame(question: DailyQuestionEntity): QuestionFrame {
-	const params = question.params ?? {};
-
-	return {
-		key: `${TEMPLATE_KEY_PREFIX}${toFrameKey(question.templateKey, params)}`,
-		params: { ...params, edition: toEdition(params) },
-	};
+	return toQuestionFrame(question.templateKey, question.params);
 }
 
 /**
@@ -215,4 +143,43 @@ export function toSubjectLink(
 		default:
 			return null;
 	}
+}
+
+/**
+ * The days behind, newest first: what was asked, and how the collector did.
+ *
+ * Today is left out — it is the question standing at the top of the page, and
+ * a history that repeats it would say the same thing twice. A day with no
+ * guess is still listed: what the question was is public, only its answer is
+ * not, and seeing a skipped day is the point of a streak.
+ */
+export function toHistoryRows(
+	questions: DailyQuestionEntity[],
+	answers: DailyAnswer[],
+	today: string
+): HistoryRowView[] {
+	const byDay = new Map(answers.map((answer) => [answer.day, answer]));
+
+	return questions
+		.filter((question) => question.day && question.day < today)
+		.map((question) => {
+			const answer = byDay.get(question.day) ?? null;
+			const labelOf = (optionId: string): string =>
+				(question.options ?? []).find(
+					(option) => option.id === optionId
+				)?.label ?? '';
+
+			return {
+				day: question.day,
+				difficulty: question.difficulty,
+				frame: toFrame(question),
+				played: !!answer,
+				correct: !!answer?.correct,
+				answerLabel: answer ? labelOf(answer.answerId) : '',
+				pickedLabel:
+					answer && !answer.correct ? labelOf(answer.optionId) : '',
+				points: answer?.points ?? 0,
+				late: !!answer?.timedOut,
+			};
+		});
 }

@@ -245,6 +245,135 @@
 		</p>
 	}
 
+	<!--
+		The days behind. Collapsed until it is asked for: every day in it is a
+		document read, and a collector who only wants today's question should
+		not pay for a fortnight of them.
+	-->
+	<section class="history">
+		<button
+			type="button"
+			class="history-toggle"
+			[attr.aria-expanded]="store.isHistoryOpen()"
+			aria-controls="daily-question-history"
+			(click)="store.toggleHistory()"
+		>
+			{{ 'page.daily-question.history.title' | transloco }}
+			<span class="chevron" aria-hidden="true">
+				{{ store.isHistoryOpen() ? '▾' : '▸' }}
+			</span>
+		</button>
+
+		@if (store.isHistoryOpen()) {
+			<div id="daily-question-history">
+				@if (store.isHistoryLoading()) {
+					<div class="skeleton history-skeleton"></div>
+				} @else if (store.hasHistory()) {
+					<p class="history-note">
+						{{
+							'page.daily-question.history.played-of'
+								| transloco
+									: {
+											played: store.historyPlayed(),
+											days: store.history().length,
+									  }
+						}}
+					</p>
+
+					<ol class="past">
+						@for (row of store.history(); track row.day) {
+							<li
+								class="past-day"
+								[class.is-correct]="row.correct"
+								[class.is-missed]="row.played && !row.correct"
+							>
+								<p class="past-meta">
+									<span class="day">{{ row.day }}</span>
+									<span
+										[class]="
+											'difficulty is-' + row.difficulty
+										"
+									>
+										{{
+											difficultyPrefix + row.difficulty
+												| transloco
+										}}
+									</span>
+									@if (row.played) {
+										<span class="mark" aria-hidden="true">
+											{{ row.correct ? '✓' : '✕' }}
+										</span>
+										@if (row.points) {
+											<span class="points">
+												+{{ row.points }}
+												{{
+													'page.daily-question.points'
+														| transloco
+												}}
+											</span>
+										}
+										@if (row.late) {
+											<span class="late-mark">
+												{{
+													'page.daily-question.history.late'
+														| transloco
+												}}
+											</span>
+										}
+									} @else {
+										<span class="skipped">
+											{{
+												'page.daily-question.history.skipped'
+													| transloco
+											}}
+										</span>
+									}
+								</p>
+
+								<p class="past-question">
+									{{
+										row.frame.key
+											| transloco: row.frame.params
+									}}
+								</p>
+
+								@if (row.played) {
+									<p class="past-answer">
+										{{
+											'page.daily-question.history.the-answer-was'
+												| transloco
+													: {
+															answer: row.answerLabel,
+													  }
+										}}
+										@if (row.pickedLabel) {
+											<span class="past-pick">
+												{{
+													'page.daily-question.history.you-said'
+														| transloco
+															: {
+																	picked: row.pickedLabel,
+															  }
+												}}
+											</span>
+										}
+									</p>
+								}
+							</li>
+						}
+					</ol>
+				} @else {
+					<p class="history-note">
+						{{
+							'page.daily-question.history.nothing-yet'
+								| transloco
+						}}
+					</p>
+				}
+			</div>
+		}
+	</section>
+
 	@if (store.hasLeaderboard()) {
 		@let board = store.leaderboardView();
 

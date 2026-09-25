@@ -16,6 +16,7 @@ import { StoreModule } from '@ngrx/store';
 
 import { AppComponent } from './app.component';
 import { MeasurementConsentService } from './data/analytics';
+import { DailyQuestionEffect } from './data/daily-question';
 import { ExternalPlayerConsentService } from './data/external-player';
 import { PlayerStore } from './shared/player';
 
@@ -66,6 +67,20 @@ describe('AppComponent', () => {
 						allowed: signal(false),
 						asking: signal(false),
 						decide: jest.fn(),
+					},
+				},
+				{
+					// A napi kérdés sávja a játék adataiból élne (Firestore);
+					// itt elég annyi, hogy ne legyen kérdés, tehát ne is
+					// szóljon róla.
+					provide: DailyQuestionEffect,
+					useValue: {
+						today: () => '2026-09-25',
+						uid$: () => of(null),
+						question$: () => of(null),
+						answer$: () => of(null),
+						isDismissed: () => false,
+						dismiss: jest.fn(),
 					},
 				},
 				{

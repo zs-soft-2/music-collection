@@ -468,6 +468,59 @@ import { DailyQuestionSettingsStore } from './daily-question-settings.store';
 						</p>
 					}
 				</section>
+
+				<!--
+					What the game has been asking. The questions are public
+					documents — the answer is not in them — so this is read
+					straight from Firestore, and says what the collector read.
+				-->
+				<section class="mc-form-section">
+					<h2>
+						{{ 'ui.dailyQuestionSettings.history' | transloco }}
+						<span class="count">{{ store.history().length }}</span>
+					</h2>
+					<p class="section-hint">
+						{{
+							'ui.dailyQuestionSettings.history-hint' | transloco
+						}}
+					</p>
+
+					@if (store.isHistoryLoading()) {
+						<div class="skeleton" role="status" aria-busy="true">
+							<span class="visually-hidden">{{
+								'ui.dailyQuestionSettings.loading' | transloco
+							}}</span>
+						</div>
+					} @else if (store.historyRows().length) {
+						<ol class="history">
+							@for (row of store.historyRows(); track row.day) {
+								<li>
+									<span class="history-day">{{
+										row.day
+									}}</span>
+									<span class="template-key">{{
+										row.templateKey
+									}}</span>
+									<span class="template-difficulty">{{
+										difficultyPrefix + row.difficulty
+											| transloco
+									}}</span>
+									<span class="history-question">{{
+										row.frame.key
+											| transloco: row.frame.params
+									}}</span>
+								</li>
+							}
+						</ol>
+					} @else {
+						<p class="outcome">
+							{{
+								'ui.dailyQuestionSettings.history-empty'
+									| transloco
+							}}
+						</p>
+					}
+				</section>
 			</div>
 		}
 	`,
@@ -534,6 +587,35 @@ import { DailyQuestionSettingsStore } from './daily-question-settings.store';
 			gap: 1rem;
 		}
 
+		/* A napok listája: dátum, sablon, nehézség, majd maga a mondat. */
+		.history {
+			display: grid;
+			gap: 0.4rem;
+			padding: 0;
+			margin: 0;
+			list-style: none;
+
+			li {
+				display: grid;
+				grid-template-columns: 6.5rem minmax(10rem, auto) 6rem 1fr;
+				gap: 0.75rem;
+				align-items: baseline;
+				padding: 0.4rem 0;
+				border-bottom: 1px solid var(--mc-border);
+			}
+		}
+
+		.history-day {
+			font-variant-numeric: tabular-nums;
+			font-size: 0.85rem;
+			color: var(--mc-text-subtle);
+		}
+
+		.history-question {
+			font-size: 0.85rem;
+			color: var(--mc-text-muted);
+		}
+
 		.saved {
 			color: var(--mc-status-ok);
 			font-size: 0.85rem;
@@ -546,7 +628,8 @@ import { DailyQuestionSettingsStore } from './daily-question-settings.store';
 		}
 
 		@media (width <= 720px) {
-			.templates li {
+			.templates li,
+			.history li {
 				grid-template-columns: 1fr;
 				gap: 0.2rem;
 			}
