@@ -1,5 +1,6 @@
 export * from './album';
 export * from './artist';
+export * from './band-of-the-week';
 export * from './collection-item';
 export * from './contribution';
 export * from './daily-question';

@@ -10,6 +10,8 @@ export interface RadioAlbum {
 	styles: string[];
 	/** When the catalog last had it, epoch milliseconds. */
 	addedAt: number;
+	/** Whose record it is; null on a catalog entry with no artist. */
+	artistUid: string | null;
 }
 
 /** A shuffle that can be told what randomness to use. */
@@ -74,6 +76,25 @@ export function byTaste(
 		.sort((a, b) => b.score - a.score);
 
 	return shuffle(scored.slice(0, limit * 3), random)
+		.slice(0, limit)
+		.map((album) => album.uid);
+}
+
+/**
+ * One artist's records, shuffled — what the band of the week brings to their
+ * own station. Shuffled rather than in order of release: a week that always
+ * opened with the debut would be the same week every time.
+ */
+export function byArtist(
+	albums: readonly RadioAlbum[],
+	artistUid: string,
+	limit: number,
+	random = Math.random
+): string[] {
+	return shuffle(
+		albums.filter((album) => album.artistUid === artistUid),
+		random
+	)
 		.slice(0, limit)
 		.map((album) => album.uid);
 }
@@ -152,4 +173,43 @@ export function onShelf(
 			)
 			.map((copy) => copy.albumUid)
 	);
+}
+
+/**
+ * Two runs of records woven into one: every `every`-th place goes to the
+ * guest, the rest to the base.
+ *
+ * This is what makes the band of the week a presence on the radio rather
+ * than the whole of it — one record of theirs, then three of everything
+ * else. The same weave mixes the base itself: taste and the open catalog
+ * every other place.
+ *
+ * A record is only put on once, however many of the runs reach for it, and
+ * when the guest runs out the base carries on alone — a band with three
+ * records to their name does not get to repeat them to fill the hour.
+ */
+export function weave(
+	base: readonly string[],
+	guest: readonly string[],
+	every: number
+): string[] {
+	const woven: string[] = [];
+	const seen = new Set<string>();
+	let atBase = 0;
+	let atGuest = 0;
+
+	while (atBase < base.length || atGuest < guest.length) {
+		const guestsTurn = (woven.length + 1) % every === 0;
+		const next =
+			(guestsTurn || atBase >= base.length) && atGuest < guest.length
+				? guest[atGuest++]
+				: base[atBase++];
+
+		if (!seen.has(next)) {
+			seen.add(next);
+			woven.push(next);
+		}
+	}
+
+	return woven;
 }

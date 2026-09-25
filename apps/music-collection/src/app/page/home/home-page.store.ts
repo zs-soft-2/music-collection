@@ -20,6 +20,7 @@ import {
 	AnalyticsService,
 	ArtistStateService,
 	AuthenticationStateService,
+	BandOfTheWeek,
 	CollectionItemStateService,
 	EntityCounts,
 	EntityQuantityStateService,
@@ -39,6 +40,7 @@ import {
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
+import { BandOfTheWeekEffect } from '../../data/band-of-the-week';
 import {
 	AlbumView,
 	ArtistView,
@@ -93,6 +95,9 @@ interface HomePageState {
 	collectionStandings: MusicCollectionStanding[];
 	collectionsLoading: boolean;
 	spotlightId: string | null;
+	/** This week's band; null on a week nobody chose one for. */
+	bandOfTheWeek: BandOfTheWeek | null;
+	bandLoading: boolean;
 	query: string;
 	/** Signed in, as opposed to reading the catalog as a guest. */
 	authenticated: boolean;
@@ -110,6 +115,8 @@ const initialState: HomePageState = {
 	collectionStandings: [],
 	collectionsLoading: true,
 	spotlightId: null,
+	bandOfTheWeek: null,
+	bandLoading: true,
 	query: '',
 	authenticated: false,
 };
@@ -239,9 +246,36 @@ export const HomePageStore = signalStore(
 					(catalogOnly() && store.albumsLoading())
 			);
 
+			/**
+			 * The hero is the week's band, as opposed to an artist the reader
+			 * went looking for with "show another".
+			 */
+			const showingBand = computed(() => {
+				const band = store.bandOfTheWeek();
+
+				return !!band && store.spotlightId() === band.artistUid;
+			});
+
 			return {
 				catalogOnly,
 				artistsPending,
+				showingBand,
+				/** Why they are the band of the week, in the reader's language. */
+				bandReasonKey: computed(() => {
+					const band = store.bandOfTheWeek();
+
+					return band ? `bandOfTheWeek.reason.${band.reason}` : null;
+				}),
+				bandReasonParams: computed(
+					() => store.bandOfTheWeek()?.reasonParams ?? {}
+				),
+				/**
+				 * There is a band of the week to go back to, and the reader is
+				 * not looking at them — what the way back is offered on.
+				 */
+				canReturnToBand: computed(
+					() => !!store.bandOfTheWeek() && !showingBand()
+				),
 				/** Only a guest is asked to sign in. */
 				isGuest: computed(() => !store.authenticated()),
 				/** Waiting on whichever list the "recently added" row shows. */
@@ -394,20 +428,46 @@ export const HomePageStore = signalStore(
 			authenticationStateService = inject(AuthenticationStateService),
 			collectionItemStateService = inject(CollectionItemStateService),
 			quantityStateService = inject(EntityQuantityStateService),
-			musicCollectionEffect = inject(MusicCollectionEffect)
+			musicCollectionEffect = inject(MusicCollectionEffect),
+			bandOfTheWeekEffect = inject(BandOfTheWeekEffect)
 		) => {
 			/**
-			 * Picks the spotlight once everything it is ranked by has
-			 * arrived, so the artists of the catalog are not passed over
-			 * while the collection is still on its way.
+			 * Picks the hero once everything it stands on has arrived: the
+			 * week's band where a run has chosen one, and an artist of the
+			 * catalog otherwise.
+			 *
+			 * It waits for the ranking as well as for the week, so the
+			 * artists of the catalog are not passed over while the collection
+			 * is still on its way — and for the week even where the band is
+			 * not needed, because arriving late it would replace the artist
+			 * already on show.
 			 */
 			const ensureSpotlight = () => {
-				if (!store.spotlightId() && !store.artistsPending()) {
-					patchState(store, {
-						spotlightId:
-							pickRandom(store.spotlightCandidates())?.id ?? null,
-					});
+				if (
+					store.spotlightId() ||
+					store.artistsPending() ||
+					store.bandLoading()
+				) {
+					return;
 				}
+
+				const band = store.bandOfTheWeek();
+				// A band the catalog no longer holds cannot be shown; the
+				// week then goes on as an ordinary spotlight.
+				const theirs =
+					band &&
+					store
+						.artists()
+						.some((artist) => artist.id === band.artistUid)
+						? band.artistUid
+						: null;
+
+				patchState(store, {
+					spotlightId:
+						theirs ??
+						pickRandom(store.spotlightCandidates())?.id ??
+						null,
+				});
 			};
 
 			return {
@@ -535,6 +595,30 @@ export const HomePageStore = signalStore(
 						})
 					)
 				),
+				/**
+				 * The band of the week: one document, read once a week by
+				 * everybody. It decides what stands in the hero, so the hero
+				 * waits for it rather than swapping under the reader.
+				 */
+				loadBandOfTheWeek: rxMethod<void>(
+					pipe(
+						switchMap(() => bandOfTheWeekEffect.current$()),
+						tapResponse({
+							next: (bandOfTheWeek: BandOfTheWeek | null) => {
+								patchState(store, {
+									bandOfTheWeek,
+									bandLoading: false,
+								});
+								ensureSpotlight();
+							},
+							error: (error) => {
+								console.error(error);
+								patchState(store, { bandLoading: false });
+								ensureSpotlight();
+							},
+						})
+					)
+				),
 				/** Follows sign-in and sign-out while the page is open. */
 				loadAuthentication: rxMethod<void>(
 					pipe(
@@ -560,6 +644,14 @@ export const HomePageStore = signalStore(
 								store.spotlight() ?? undefined
 							)?.id ?? null,
 					}),
+				/** Back from browsing to the band the week belongs to. */
+				showBandOfTheWeek: () => {
+					const band = store.bandOfTheWeek();
+
+					if (band) {
+						patchState(store, { spotlightId: band.artistUid });
+					}
+				},
 			};
 		}
 	),
@@ -602,6 +694,7 @@ export const HomePageStore = signalStore(
 			store.loadReleases(of(undefined));
 			store.loadCounts(of(undefined));
 			store.loadCollections(of(undefined));
+			store.loadBandOfTheWeek(of(undefined));
 			store.loadAuthentication(of(undefined));
 			store.watchSearches(of(undefined));
 		},

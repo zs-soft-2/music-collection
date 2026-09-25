@@ -12,21 +12,27 @@ import {
 } from '@music-collection/api';
 import { MusicCollectionEffect } from '@music-collection/domain/music-collection/core';
 
+import { BandOfTheWeekEffect } from '../band-of-the-week';
+
 import {
+	BAND_OF_THE_WEEK_EVERY,
 	RADIO_LENGTH,
 	RadioRecordName,
 	RadioStation,
+	TASTE_EVERY,
 	TASTE_STYLES,
 } from './radio.model';
 import {
 	RadioAlbum,
 	ShelfCopy,
+	byArtist,
 	byTaste,
 	distinct,
 	newest,
 	onShelf,
 	shuffle,
 	styleWeights,
+	weave,
 } from './radio-picks';
 
 /** An album the app could put on at all, whichever source ends up playing it. */
@@ -41,6 +47,7 @@ const toRadioAlbum = (album: AlbumEntity): RadioAlbum => ({
 	// A year is a poor stand-in for when the catalog got the record, but it
 	// is what a document written before the sync stamps existed can offer.
 	addedAt: album.updatedAt ?? album.year?.getTime() ?? 0,
+	artistUid: album.artist?.uid ?? null,
 });
 
 const toShelfCopy = (item: CollectionItemEntity): ShelfCopy | null => {
@@ -71,6 +78,7 @@ export class RadioEffect {
 		CollectionItemStateService
 	);
 	private readonly musicCollectionEffect = inject(MusicCollectionEffect);
+	private readonly bandOfTheWeek = inject(BandOfTheWeekEffect);
 
 	public albums$(
 		station: RadioStation,
@@ -80,6 +88,57 @@ export class RadioEffect {
 			uids.filter((uid) => playable.has(uid)).slice(0, RADIO_LENGTH);
 
 		switch (station.kind) {
+			case 'week':
+				return combineLatest([
+					this.catalog$(),
+					this.owned$(),
+					this.bandOfTheWeek.current$(),
+				]).pipe(
+					map(([albums, copies, band]) => {
+						const playing = (uids: string[]) =>
+							uids.filter((uid) => playable.has(uid));
+						// Weighed before the weave, not after: a record the
+						// player cannot put on would take a place in the
+						// order and leave a gap where it was passed over.
+						const theirs = band
+							? playing(
+									byArtist(
+										albums,
+										band.artistUid,
+										RADIO_LENGTH
+									)
+								)
+							: [];
+						const ours = new Set(theirs);
+						const taste = playing(
+							byTaste(
+								albums,
+								styleWeights(
+									this.stylesOf(copies),
+									TASTE_STYLES
+								),
+								RADIO_LENGTH * 2
+							)
+						);
+						const anything = playing(
+							shuffle(albums).map((album) => album.uid)
+						);
+						// The band keeps their own places: between them it is
+						// taste and the open catalog, theirs held back so the
+						// weave does not spend one early.
+						const between = weave(
+							taste,
+							anything,
+							TASTE_EVERY
+						).filter((uid) => !ours.has(uid));
+
+						return weave(
+							between,
+							theirs,
+							BAND_OF_THE_WEEK_EVERY
+						).slice(0, RADIO_LENGTH);
+					})
+				);
 			case 'new':
 				return this.catalog$().pipe(
 					map((albums) => keep(newest(albums, RADIO_LENGTH * 2)))

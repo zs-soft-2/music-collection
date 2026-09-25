@@ -225,6 +225,15 @@
 			"albumProducer": "Wer produzierte „{{album}}“ ({{artist}})?"
 		}
 	},
+	"bandOfTheWeek": {
+		"reason": {
+			"random": "Der Katalog hat sie für diese Woche gezogen.",
+			"anniversary": "Eine ihrer Platten wird diese Woche {{years}}: {{album}}.",
+			"new-in-catalog": "Diese Woche kamen von ihnen die meisten Platten in den Katalog.",
+			"upcoming": "Eine neue Platte von ihnen ist unterwegs: {{album}}."
+		},
+		"week": "{{start}} – {{end}}"
+	},
 	"home": {
 		"glance": {
 			"title": "Der Katalog auf einen Blick",
@@ -869,7 +878,10 @@
 			"albumsInCatalog": {
 				"one": "{{count}} Album im Katalog",
 				"other": "{{count}} Alben im Katalog"
-			}
+			},
+			"band-of-the-week": "Band der Woche",
+			"back-to-band": "Zurück zur Band der Woche",
+			"listen-radio": "Das Radio der Woche"
 		},
 		"recordShelf": {
 			"off-the-shelf": "Außerhalb des Regals",
@@ -2271,6 +2283,10 @@
 		"bandmates": "Bandkollegen"
 	},
 	"radio": {
+		"bandOfTheWeek": {
+			"name": "Band der Woche: {{name}}",
+			"description": "Jede vierte Platte ist ihre, dazwischen dein Geschmack und der Katalog."
+		},
 		"justIn": {
 			"description": "Die Platten, die der Katalog zuletzt aufgenommen hat.",
 			"name": "Frisch eingetroffen"

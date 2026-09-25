@@ -37,6 +37,11 @@ interface FiledCopy {
 	placement?: CollectionItemPlacement | null;
 }
 
+/** The week's band, as the station that plays them is named after them. */
+interface BandName {
+	artistName: string;
+}
+
 const station = (
 	view: Omit<CountedStation, 'id' | 'count' | 'albumIds'> & {
 		count?: number | null;
@@ -64,16 +69,36 @@ export function radioStations(
 	owned: readonly FiledCopy[],
 	/** The words the app owns; the shelf and collection names are the user's. */
 	t: Translator,
-	playable: ReadonlySet<string> = new Set()
+	playable: ReadonlySet<string> = new Set(),
+	/** The week's band, where a run has chosen one; null keeps it off. */
+	bandOfTheWeek: BandName | null = null
 ): CountedStation[] {
-	const stations: CountedStation[] = [
+	const stations: CountedStation[] = [];
+
+	// The week's own station opens the list — it is what the radio plays
+	// unless the collector says otherwise. A week nobody chose a band for
+	// simply has no such station, and the catalog's own leads instead.
+	if (bandOfTheWeek) {
+		stations.push(
+			station({
+				station: { kind: 'week' },
+				label: t('radio.bandOfTheWeek.name', {
+					name: bandOfTheWeek.artistName,
+				}),
+				description: t('radio.bandOfTheWeek.description'),
+				icon: 'pi pi-star-fill',
+			})
+		);
+	}
+
+	stations.push(
 		station({
 			station: { kind: 'new' },
 			label: t('radio.justIn.name'),
 			description: t('radio.justIn.description'),
 			icon: 'pi pi-sparkles',
-		}),
-	];
+		})
+	);
 
 	if (owned.length) {
 		stations.push(

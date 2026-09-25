@@ -681,6 +681,15 @@ service cloud.firestore {
       }
     }
 
+    // A hét bandája: egy előadó egy hétre, mindenkinek ugyanaz. A home
+    // főhelyén áll, ezért a napi kérdéssel ellentétben a kijelentkezett
+    // látogatónak is olvashatónak kell lennie — ahogy maga a katalógus is az.
+    // Nincs benne titok: egy előadó-hivatkozás és az apropója.
+    match /band-of-the-week/{week} {
+      allow read: if true;
+      allow write: if false; // composeBandOfTheWeekWeekly / composeBandOfTheWeekNow
+    }
+
     // ── Alapértelmezés: tiltás ──────────────────────────────────────────────
     // (Az `id` collectiont a kliens csak ID-generálásra használja, nem írja.)
     match /{document=**} {

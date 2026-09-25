@@ -18,6 +18,7 @@ import {
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
+import { BandOfTheWeekEffect } from '../../data/band-of-the-week';
 import { ExternalPlayerConsentService } from '../../data/external-player';
 import { RadioEffect, RadioStation } from '../../data/radio';
 import { UserSettingsEffect } from '../../data/user-settings';
@@ -98,6 +99,7 @@ export const RadioPageStore = signalStore(
 			store,
 			player = inject(PlayerStore),
 			radio = inject(RadioEffect),
+			bandOfTheWeek = inject(BandOfTheWeekEffect),
 			settings = inject(UserSettingsEffect),
 			musicCollections = inject(MusicCollectionEffect),
 			collectionItems = inject(CollectionItemStateService),
@@ -120,16 +122,30 @@ export const RadioPageStore = signalStore(
 								collectionItems.selectLoadedEntities$(),
 								playable$,
 								radio.names$(),
+								bandOfTheWeek.current$(),
 							])
 						),
-						map(([layout, standings, copies, playable, names]) =>
-							radioStations(
-								(layout ?? NO_SHELF_LAYOUT).units,
+						map(
+							([
+								layout,
 								standings,
-								copies as CollectionItemEntity[],
-								text.translator(),
-								playable
-							).map((station) => ({ station, playable, names }))
+								copies,
+								playable,
+								names,
+								band,
+							]) =>
+								radioStations(
+									(layout ?? NO_SHELF_LAYOUT).units,
+									standings,
+									copies as CollectionItemEntity[],
+									text.translator(),
+									playable,
+									band
+								).map((station) => ({
+									station,
+									playable,
+									names,
+								}))
 						),
 						switchMap((stations) =>
 							stations.length

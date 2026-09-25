@@ -225,6 +225,15 @@
 			"albumProducer": "Ki a producere a(z) „{{album}}” lemeznek ({{artist}})?"
 		}
 	},
+	"bandOfTheWeek": {
+		"reason": {
+			"random": "Erre a hétre a katalógus sorsolása hozta őket.",
+			"anniversary": "Ezen a héten {{years}} éves a lemezük: {{album}}.",
+			"new-in-catalog": "A héten tőlük került be a legtöbb lemez a katalógusba.",
+			"upcoming": "Jön az új lemezük: {{album}}."
+		},
+		"week": "{{start}} – {{end}}"
+	},
 	"home": {
 		"glance": {
 			"title": "A katalógus egy pillantásra",
@@ -869,7 +878,10 @@
 			"albumsInCatalog": {
 				"one": "{{count}} album a katalógusban",
 				"other": "{{count}} album a katalógusban"
-			}
+			},
+			"band-of-the-week": "A hét bandája",
+			"back-to-band": "Vissza a hét bandájához",
+			"listen-radio": "A hét rádiója"
 		},
 		"recordShelf": {
 			"off-the-shelf": "Polcon kívül",
@@ -2271,6 +2283,10 @@
 		"bandmates": "Zenekartársak"
 	},
 	"radio": {
+		"bandOfTheWeek": {
+			"name": "A hét bandája: {{name}}",
+			"description": "Minden negyedik lemez az övék, közte az ízlésed és a katalógus."
+		},
 		"justIn": {
 			"description": "A lemezek, amiket a katalógus legutóbb vett fel.",
 			"name": "Frissen érkezett"

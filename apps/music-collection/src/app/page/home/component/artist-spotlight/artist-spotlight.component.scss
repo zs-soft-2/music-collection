@@ -61,6 +61,30 @@
 	letter-spacing: 0.2em;
 	text-transform: uppercase;
 	color: var(--mc-primary);
+
+	// The band of the week wears a pin: the week's hero is a standing
+	// appointment, not the same "spotlight" line as a browsed artist.
+	&.weekly {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.3rem 0.7rem;
+		background: rgba(255, 255, 255, 0.08);
+		border: 1px solid var(--mc-border-strong);
+		border-radius: 999px;
+
+		i {
+			font-size: 0.7rem;
+		}
+	}
+}
+
+.reason {
+	max-width: 46ch;
+	margin: 0 0 0.9rem;
+	font-size: 1rem;
+	line-height: 1.45;
+	color: var(--mc-text-muted);
 }
 
 h1 {

@@ -6,6 +6,7 @@ import {
 	onShelf,
 	shuffle,
 	styleWeights,
+	weave,
 } from './radio-picks';
 
 /** A random that walks 0, 0.1, 0.2 … so a shuffle can be predicted. */
@@ -167,5 +168,60 @@ describe('onShelf', () => {
 		const copies = [copy('a', place(1, 1, 1)), copy('a', place(1, 1, 2))];
 
 		expect(onShelf(copies, { unitId: 'living-room' })).toEqual(['a']);
+	});
+});
+
+describe('weave', () => {
+	const base = ['b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7', 'b8', 'b9'];
+
+	it('gives the guest every fourth place', () => {
+		const woven = weave(base, ['g1', 'g2'], 4);
+
+		expect(woven.slice(0, 8)).toEqual([
+			'b1',
+			'b2',
+			'b3',
+			'g1',
+			'b4',
+			'b5',
+			'b6',
+			'g2',
+		]);
+	});
+
+	it('carries on with the base once the guest runs out', () => {
+		const woven = weave(base, ['g1'], 4);
+
+		expect(woven).toEqual([
+			'b1',
+			'b2',
+			'b3',
+			'g1',
+			'b4',
+			'b5',
+			'b6',
+			'b7',
+			'b8',
+			'b9',
+		]);
+	});
+
+	it('plays a record the two runs share only once', () => {
+		expect(weave(['a', 'b', 'c'], ['b'], 4)).toEqual(['a', 'b', 'c']);
+	});
+
+	it('takes every other place at two — taste and the open catalog', () => {
+		expect(weave(['t1', 't2', 't3'], ['r1', 'r2', 'r3'], 2)).toEqual([
+			't1',
+			'r1',
+			't2',
+			'r2',
+			't3',
+			'r3',
+		]);
+	});
+
+	it('is the guest alone when there is no base', () => {
+		expect(weave([], ['g1', 'g2'], 4)).toEqual(['g1', 'g2']);
 	});
 });

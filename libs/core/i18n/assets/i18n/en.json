@@ -225,6 +225,15 @@
 			"albumProducer": "Who produced “{{album}}” ({{artist}})?"
 		}
 	},
+	"bandOfTheWeek": {
+		"reason": {
+			"random": "The catalog drew them for this week.",
+			"anniversary": "A record of theirs turns {{years}} this week: {{album}}.",
+			"new-in-catalog": "The catalog took in more of their records this week than anybody else’s.",
+			"upcoming": "A new record of theirs is on its way: {{album}}."
+		},
+		"week": "{{start}} – {{end}}"
+	},
 	"home": {
 		"glance": {
 			"title": "The catalog at a glance",
@@ -869,7 +878,10 @@
 			"albumsInCatalog": {
 				"one": "{{count}} album in the catalog",
 				"other": "{{count}} albums in the catalog"
-			}
+			},
+			"band-of-the-week": "Band of the week",
+			"back-to-band": "Back to the band of the week",
+			"listen-radio": "This week's radio"
 		},
 		"recordShelf": {
 			"off-the-shelf": "Off the shelf",
@@ -2271,6 +2283,10 @@
 		"bandmates": "Bandmates"
 	},
 	"radio": {
+		"bandOfTheWeek": {
+			"name": "Band of the week: {{name}}",
+			"description": "Every fourth record is theirs, your taste and the catalog in between."
+		},
 		"justIn": {
 			"description": "The records the catalog has taken in most recently.",
 			"name": "Just in"

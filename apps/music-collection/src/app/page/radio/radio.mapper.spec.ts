@@ -31,6 +31,35 @@ describe('radioStations', () => {
 		expect(stations.map((item) => item.id)).toEqual(['new', 'random']);
 	});
 
+	it('opens on the band of the week where a run has chosen one', () => {
+		const stations = radioStations([], [], [], t, new Set(), {
+			artistName: 'Metallica',
+		});
+
+		expect(stations.map((item) => item.id)).toEqual([
+			'week',
+			'new',
+			'random',
+		]);
+	});
+
+	it('leaves the week out where no band was chosen', () => {
+		const stations = radioStations([], [], [], t, new Set(), null);
+
+		expect(stations.map((item) => item.id)).not.toContain('week');
+	});
+
+	it('names the week station after the band', () => {
+		const [week] = radioStations([], [], [], t, new Set(), {
+			artistName: 'Metallica',
+		});
+
+		// The dictionary stands in for itself here; what matters is that the
+		// band's name is what the station is named with.
+		expect(week.label).toBe('radio.bandOfTheWeek.name');
+		expect(week.station.kind).toBe('week');
+	});
+
 	it('offers the shelf stations once something stands on it', () => {
 		const stations = radioStations([], [], [{ placement: null }], t);
 

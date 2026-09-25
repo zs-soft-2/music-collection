@@ -12,10 +12,22 @@
 	<div class="shade" aria-hidden="true"></div>
 
 	<div class="content">
-		<p class="eyebrow">
-			{{ 'ui.artistSpotlight.artist-spotlight' | transloco }}
+		<p class="eyebrow" [class.weekly]="weekly()">
+			@if (weekly()) {
+				<i class="pi pi-star-fill" aria-hidden="true"></i>
+			}
+			{{
+				(weekly()
+					? 'ui.artistSpotlight.band-of-the-week'
+					: 'ui.artistSpotlight.artist-spotlight'
+				) | transloco
+			}}
 		</p>
 		<h1 id="spotlight-name">{{ item.name }}</h1>
+
+		@if (weekly() && reasonKey(); as reason) {
+			<p class="reason">{{ reason | transloco: reasonParams() }}</p>
+		}
 
 		<p class="meta">
 			@for (part of meta(); track part) {
@@ -50,10 +62,26 @@
 				{{ 'ui.artistSpotlight.view-artist' | transloco }}
 				<i class="pi pi-arrow-right" aria-hidden="true"></i>
 			</a>
+			@if (weekly()) {
+				<a class="button ghost" routerLink="/radio">
+					<i class="pi pi-play-circle" aria-hidden="true"></i>
+					{{ 'ui.artistSpotlight.listen-radio' | transloco }}
+				</a>
+			}
 			<button type="button" class="button ghost" (click)="shuffle.emit()">
 				<i class="pi pi-sync" aria-hidden="true"></i>
 				{{ 'ui.artistSpotlight.show-another-artist' | transloco }}
 			</button>
+			@if (canReturn()) {
+				<button
+					type="button"
+					class="button ghost"
+					(click)="showBand.emit()"
+				>
+					<i class="pi pi-star-fill" aria-hidden="true"></i>
+					{{ 'ui.artistSpotlight.back-to-band' | transloco }}
+				</button>
+			}
 			<mc-admin-edit-link
 				entity="artist"
 				[id]="item.id"

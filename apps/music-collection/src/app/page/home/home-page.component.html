@@ -14,7 +14,12 @@
 			[releases]="store.spotlightReleases()"
 			[releaseCount]="store.spotlightReleaseCount()"
 			[albumCount]="store.spotlightAlbumCount()"
+			[weekly]="store.showingBand()"
+			[reasonKey]="store.bandReasonKey()"
+			[reasonParams]="store.bandReasonParams()"
+			[canReturn]="store.canReturnToBand()"
 			(shuffle)="store.shuffleSpotlight()"
+			(showBand)="store.showBandOfTheWeek()"
 		/>
 	} @else if (store.artistsPending()) {
 		<div class="skeleton spotlight-skeleton" role="status" aria-busy="true">
