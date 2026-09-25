@@ -130,6 +130,20 @@ describe('musician mapper', () => {
 		expect(bands[0].artist).toBeNull();
 	});
 
+	it('keeps a member with a start and no end year in the band', () => {
+		// What the line-up editor leaves behind: no end year, flag off.
+		const bands = toMusicianBands(
+			[membership('thanos', 'chronosphere', 2012, null, false)],
+			[],
+			[],
+			YEAR
+		);
+
+		expect(bands[0].active).toBe(true);
+		expect(bands[0].years).toBe('2012–present');
+		expect(bands[0].span).toEqual({ from: 2012, to: YEAR, active: true });
+	});
+
 	it('merges the credits of an album and skips albums not in the catalog', () => {
 		const albums = toMusicianAlbums(
 			[

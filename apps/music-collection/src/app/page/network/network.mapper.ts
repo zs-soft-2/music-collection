@@ -1,6 +1,6 @@
 import { MembershipEntity } from '@music-collection/api';
 
-import { AlbumView, ArtistView } from '../../shared/music-ui';
+import { AlbumView, ArtistView, isCurrentMember } from '../../shared/music-ui';
 import {
 	NetworkAlbumView,
 	NetworkDetailsView,
@@ -73,7 +73,7 @@ export function spanOf(
 	if (typeof membership.from !== 'number') {
 		return null;
 	}
-	const active = !!membership.active;
+	const active = isCurrentMember(membership);
 
 	return {
 		from: membership.from,
@@ -107,14 +107,14 @@ export function membershipYears(
 	if (span) {
 		return formatSpan(span);
 	}
-	return membership.active ? 'present' : null;
+	return isCurrentMember(membership) ? 'present' : null;
 }
 
 /** Members before guests, current before former, then by joining year. */
 function byImportance(a: MembershipEntity, b: MembershipEntity): number {
 	return (
 		Number(a.kind !== 'member') - Number(b.kind !== 'member') ||
-		Number(!!b.active) - Number(!!a.active) ||
+		Number(isCurrentMember(b)) - Number(isCurrentMember(a)) ||
 		(a.from ?? 9999) - (b.from ?? 9999) ||
 		(b.albumCount ?? 0) - (a.albumCount ?? 0)
 	);
@@ -220,12 +220,10 @@ function membershipEdge(
 	membership: MembershipEntity,
 	currentYear: number
 ): NetworkEdge {
+	// Former only where it is known they left; an unset flag says nothing.
+	const left = membership.active === false && !isCurrentMember(membership);
 	const kind =
-		membership.kind !== 'member'
-			? 'guest'
-			: membership.active === false
-				? 'former'
-				: 'member';
+		membership.kind !== 'member' ? 'guest' : left ? 'former' : 'member';
 
 	return {
 		id: `${membership.musicianUid}>${membership.artistUid}`,
@@ -332,7 +330,7 @@ function toMembershipView(
 		kind: membership.kind === 'member' ? 'member' : 'guest',
 		instruments: [...new Set(membership.instruments ?? [])],
 		years: membershipYears(membership, currentYear),
-		active: !!membership.active,
+		active: isCurrentMember(membership),
 	};
 }
 

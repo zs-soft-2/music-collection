@@ -9,6 +9,7 @@ import {
 	MusicianEntity,
 	toMusicBrainzId,
 } from '@music-collection/api';
+import { isCurrentMember } from '@music-collection/ui/music-view';
 import { tapResponse } from '@ngrx/operators';
 import {
 	patchState,
@@ -111,7 +112,16 @@ const toDraft = (row: MembershipEntity): MembershipDraft => ({
 	instruments: [...(row.instruments ?? [])],
 	from: row.from,
 	to: row.to,
-	active: !!row.active,
+	active: isCurrentMember(row),
+});
+
+/**
+ * The row as the line-up reads it: an end year left empty means the musician
+ * is still in the band, whatever the imported flag holds.
+ */
+const withCurrent = (row: MembershipEntity): MembershipEntity => ({
+	...row,
+	active: isCurrentMember(row),
 });
 
 /** What the candidate lookup needs, read off the store as it stands. */
@@ -164,9 +174,10 @@ export const ArtistMembersStore = signalStore(
 			store
 				.rows()
 				.filter((row) => row.kind === 'member')
+				.map(withCurrent)
 				.sort(
 					(a, b) =>
-						Number(!!b.active) - Number(!!a.active) ||
+						Number(b.active) - Number(a.active) ||
 						(a.from ?? 9999) - (b.from ?? 9999) ||
 						a.musicianName.localeCompare(b.musicianName)
 				)
@@ -175,6 +186,7 @@ export const ArtistMembersStore = signalStore(
 			store
 				.rows()
 				.filter((row) => row.kind !== 'member')
+				.map(withCurrent)
 				.sort(
 					(a, b) =>
 						b.albumCount - a.albumCount ||

@@ -2,6 +2,7 @@ import { pipe, switchMap, tap } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
 import { MembershipEntity } from '@music-collection/api';
+import { isCurrentMember } from '@music-collection/ui/music-view';
 import { tapResponse } from '@ngrx/operators';
 import {
 	patchState,
@@ -34,12 +35,16 @@ export const MusicianBandsStore = signalStore(
 	withState(initialState),
 	withComputed((store) => ({
 		bands: computed(() =>
-			[...store.rows()].sort(
-				(a, b) =>
-					Number(!!b.active) - Number(!!a.active) ||
-					(a.from ?? 9999) - (b.from ?? 9999) ||
-					a.artistName.localeCompare(b.artistName)
-			)
+			store
+				.rows()
+				// An end year left empty means they are still in the band.
+				.map((row) => ({ ...row, active: isCurrentMember(row) }))
+				.sort(
+					(a, b) =>
+						Number(b.active) - Number(a.active) ||
+						(a.from ?? 9999) - (b.from ?? 9999) ||
+						a.artistName.localeCompare(b.artistName)
+				)
 		),
 	})),
 	withMethods((store, effect = inject(MembershipEffect)) => ({

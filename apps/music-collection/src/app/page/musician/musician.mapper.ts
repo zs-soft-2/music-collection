@@ -8,6 +8,7 @@ import {
 import {
 	CreditCategory,
 	creditCategory,
+	isCurrentMember,
 	performerOrder,
 } from '@music-collection/ui/music-view';
 import { toDiscography } from '@music-collection/ui/music-view';
@@ -176,7 +177,7 @@ export function toMusicianBands(
 		.sort(
 			(a, b) =>
 				Number(a.kind !== 'member') - Number(b.kind !== 'member') ||
-				Number(!!b.active) - Number(!!a.active) ||
+				Number(isCurrentMember(b)) - Number(isCurrentMember(a)) ||
 				(a.from ?? 9999) - (b.from ?? 9999) ||
 				a.artistName.localeCompare(b.artistName)
 		)
@@ -192,7 +193,7 @@ export function toMusicianBands(
 				instruments: sortInstruments(membership.instruments ?? []),
 				years: membershipYears(membership, currentYear),
 				span: spanOf(membership, currentYear),
-				active: !!membership.active,
+				active: isCurrentMember(membership),
 				albumCount: membership.albumCount ?? 0,
 				collectedReleases: releases.filter(
 					(release) => release.artistId === membership.artistUid
@@ -296,7 +297,7 @@ export function toBandmates(
 			const overlap: Span | null =
 				span && otherSpan
 					? overlapOf(span, otherSpan)
-					: own.active && other.active
+					: isCurrentMember(own) && isCurrentMember(other)
 						? { from: currentYear, to: currentYear, active: true }
 						: null;
 
