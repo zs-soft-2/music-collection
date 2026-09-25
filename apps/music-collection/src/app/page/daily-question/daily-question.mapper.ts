@@ -1,12 +1,17 @@
 import {
 	DailyAnswer,
 	DailyQuestionEntity,
+	DailyQuestionLeaderboard,
+	DailyQuestionScore,
 	DailyQuestionSubject,
 } from '@music-collection/api';
 
 import {
 	DailyQuestionOptionView,
 	DailyQuestionView,
+	EMPTY_LEADERBOARD_VIEW,
+	LeaderboardRowView,
+	LeaderboardView,
 	QuestionFrame,
 } from './daily-question.model';
 
@@ -30,6 +35,22 @@ export const KNOWN_TEMPLATE_KEYS = [
 	'longestTrack',
 	'sideBOpener',
 	'releaseCatno',
+	'albumStyle',
+	'earliestAlbum',
+	'trackAlbum',
+	'nextTrack',
+	'trackPosition',
+	'shortestTrack',
+	'albumLength',
+	'notOnAlbum',
+	'coverAlbum',
+	'releaseCountry',
+	'artistFormedIn',
+	'bandMember',
+	'memberBand',
+	'memberInstrument',
+	'albumCredit',
+	'albumProducer',
 ];
 
 /**
@@ -104,6 +125,73 @@ export function toView(
 		difficulty: question.difficulty,
 		frame: toFrame(question),
 		options: toOptions(question, answer, selectedOptionId),
+		// Questions composed before the game had a clock carry neither; a
+		// day without a limit and a plain day are the honest defaults.
+		timeLimitSec: Math.max(question.timeLimitSec ?? 0, 0),
+		multiplier: question.scoring?.multiplier ?? 1,
+		imageUrl: question.imageUrl ?? null,
+	};
+}
+
+/** Guesses that landed, as a percentage; 0 before the first one. */
+export function toAccuracy(correct: number, answered: number): number {
+	return answered ? Math.round((correct / answered) * 100) : 0;
+}
+
+const toRow = (
+	row: DailyQuestionLeaderboard['rows'][number],
+	uid: string | null
+): LeaderboardRowView => ({
+	rank: row.rank,
+	name: row.name ?? '',
+	points: row.points,
+	streak: row.streak,
+	longestStreak: row.longestStreak,
+	answered: row.answered,
+	correct: row.correct,
+	accuracy: toAccuracy(row.correct, row.answered),
+	isMe: !!uid && row.uid === uid,
+});
+
+/**
+ * The table.
+ *
+ * The reader's own row comes from two places: from the field document when
+ * they are near the top, and from their own pot otherwise — the pot is where
+ * the nightly run leaves everybody's place. The pot is also the fresher of
+ * the two for the points: it has today's guess in it, while the field is as
+ * old as the last run.
+ */
+export function toLeaderboardView(
+	leaderboard: DailyQuestionLeaderboard,
+	score: DailyQuestionScore,
+	uid: string | null
+): LeaderboardView {
+	if (!leaderboard.rows.length && !score.answered) {
+		return EMPTY_LEADERBOARD_VIEW;
+	}
+
+	const rows = leaderboard.rows.map((row) => toRow(row, uid));
+	const listed = rows.some((row) => row.isMe);
+
+	return {
+		rows,
+		players: Math.max(leaderboard.players, score.answered ? 1 : 0),
+		updatedAt: leaderboard.updatedAt,
+		me:
+			listed || !score.answered
+				? null
+				: {
+						rank: score.rank ?? 0,
+						name: '',
+						points: score.points,
+						streak: score.streak,
+						longestStreak: score.longestStreak,
+						answered: score.answered,
+						correct: score.correct,
+						accuracy: toAccuracy(score.correct, score.answered),
+						isMe: true,
+					},
 	};
 }
 
@@ -122,6 +210,8 @@ export function toSubjectLink(
 			return ['/artist', subject.uid];
 		case 'release':
 			return ['/release', subject.uid];
+		case 'musician':
+			return ['/musician', subject.uid];
 		default:
 			return null;
 	}

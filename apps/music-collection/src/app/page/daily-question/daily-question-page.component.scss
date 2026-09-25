@@ -112,6 +112,69 @@ h1 {
 	}
 }
 
+.bonus-day {
+	padding: 0.15rem 0.5rem;
+	font-weight: 700;
+	color: var(--mc-accent);
+	border: 1px solid var(--mc-accent);
+	border-radius: 999px;
+}
+
+/* ── The clock ────────────────────────────────────────────────────────── */
+
+.clock {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	margin-top: 1rem;
+}
+
+.clock-track {
+	flex: 1;
+	height: 4px;
+	overflow: hidden;
+	background: var(--mc-bg-muted);
+	border-radius: 999px;
+}
+
+.clock-fill {
+	display: block;
+	height: 100%;
+	background: var(--mc-primary);
+	transition: width 1s linear;
+
+	.clock.is-expired & {
+		background: var(--mc-status-bad);
+	}
+}
+
+.clock-value {
+	min-width: 6.5rem;
+	font-size: 0.8rem;
+	font-variant-numeric: tabular-nums;
+	text-align: right;
+	color: var(--mc-text-subtle);
+
+	.clock.is-expired & {
+		color: var(--mc-status-bad);
+	}
+}
+
+/* ── A question that is a picture ─────────────────────────────────────── */
+
+.cover {
+	margin: 0 0 1.5rem;
+
+	img {
+		width: 100%;
+		max-width: 20rem;
+		aspect-ratio: 1;
+		object-fit: cover;
+		border: 1px solid var(--mc-border);
+		border-radius: var(--mc-radius-md, 8px);
+	}
+}
+
 h2 {
 	margin: 0.9rem 0 1.5rem;
 	font-family: var(--mc-font-display);
@@ -251,6 +314,109 @@ a.subject:hover {
 
 .tomorrow {
 	margin-top: 0.75rem;
+}
+
+.late {
+	margin: 0.6rem 0 0;
+	font-size: 0.9rem;
+	color: var(--mc-status-warn);
+}
+
+.breakdown {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	margin: 0.6rem 0 0;
+	font-size: 0.8rem;
+	color: var(--mc-text-subtle);
+
+	.is-bonus {
+		font-weight: 700;
+		color: var(--mc-accent);
+	}
+}
+
+/* ── The field ────────────────────────────────────────────────────────── */
+
+.leaderboard {
+	max-width: 46rem;
+	margin-top: 2.5rem;
+}
+
+.leaderboard-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.75rem;
+
+	h2 {
+		margin: 0;
+		font-size: 1.5rem;
+	}
+
+	p {
+		margin: 0;
+		font-size: 0.85rem;
+		color: var(--mc-text-subtle);
+	}
+}
+
+.board {
+	width: 100%;
+	margin-top: 1rem;
+	border-collapse: collapse;
+	font-size: 0.9rem;
+
+	th,
+	td {
+		padding: 0.55rem 0.6rem;
+		text-align: left;
+		border-bottom: 1px solid var(--mc-border);
+	}
+
+	th {
+		font-size: 0.7rem;
+		font-weight: 600;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--mc-text-subtle);
+	}
+
+	.is-number {
+		text-align: right;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.is-rank {
+		width: 3rem;
+		font-variant-numeric: tabular-nums;
+	}
+
+	/* The reader's own row, wherever it stands. */
+	.is-me {
+		background: var(--mc-bg-muted);
+		font-weight: 600;
+	}
+
+	/* Their row when it is not part of the top: set off from the list. */
+	.is-apart td {
+		border-top: 2px solid var(--mc-border-strong);
+	}
+}
+
+.you {
+	margin-left: 0.4rem;
+	font-size: 0.7rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--mc-primary);
+}
+
+.board-note {
+	margin: 0.75rem 0 0;
+	font-size: 0.8rem;
+	color: var(--mc-text-subtle);
 }
 
 /* ── Nothing to play, and what went wrong ─────────────────────────────── */

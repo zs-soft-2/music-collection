@@ -174,6 +174,35 @@ describe('gatherMaterial', () => {
 				'track'
 			),
 		];
+		contents['membership'] = [
+			document(
+				'membership-1',
+				{
+					musicianUid: 'musician-1',
+					musicianName: 'Trey Azagthoth',
+					artistUid: 'artist-1',
+					artistName: 'Morbid Angel',
+					instruments: ['Guitar'],
+					kind: 'member',
+				},
+				asked,
+				'membership'
+			),
+		];
+		contents['contribution'] = [
+			document(
+				'contribution-1',
+				{
+					musicianUid: 'musician-2',
+					name: 'Digby Pearson',
+					creditedAs: null,
+					role: 'Producer',
+					albumUid: 'album-1',
+				},
+				asked,
+				'contribution'
+			),
+		];
 	});
 
 	it('az előadó alól veszi az albumot, nem a gyökérből', async () => {
@@ -215,5 +244,106 @@ describe('gatherMaterial', () => {
 
 		expect(await gatherMaterial(firestore(asked), random())).toBeNull();
 		expect(MAX_TRIES).toBeGreaterThan(1);
+	});
+});
+
+describe('gatherMaterial — emberek és borító', () => {
+	let asked: Asked;
+
+	beforeEach(() => {
+		asked = {
+			collections: [],
+			groups: [],
+			subcollections: [],
+			filters: [],
+		};
+
+		for (const key of Object.keys(contents)) delete contents[key];
+
+		contents['artist'] = [
+			document(
+				'artist-1',
+				{ name: 'Morbid Angel', country: 'USA', formedIn: 1983 },
+				asked,
+				'artist'
+			),
+		];
+		contents['artist/artist-1/album'] = [
+			document(
+				'album-1',
+				{
+					name: 'Altars Of Madness',
+					artist: { uid: 'artist-1', name: 'Morbid Angel' },
+					year: 599616000000,
+					styles: ['Death Metal'],
+					genre: 'Rock',
+					coverImage: { filePath: 'https://example.invalid/a.jpg' },
+				},
+				asked,
+				'artist/artist-1/album'
+			),
+		];
+		contents['membership'] = [
+			document(
+				'membership-1',
+				{
+					musicianUid: 'musician-1',
+					musicianName: 'Trey Azagthoth',
+					artistUid: 'artist-1',
+					artistName: 'Morbid Angel',
+					instruments: ['Guitar'],
+					kind: 'member',
+				},
+				asked,
+				'membership'
+			),
+		];
+		contents['contribution'] = [
+			document(
+				'contribution-1',
+				{
+					musicianUid: 'musician-2',
+					name: 'Digby Pearson',
+					creditedAs: 'Dig',
+					role: 'Producer',
+					albumUid: 'album-1',
+				},
+				asked,
+				'contribution'
+			),
+		];
+	});
+
+	it('a felállást az előadóra, a stáblistát az albumra szűrve kéri', async () => {
+		await gatherMaterial(firestore(asked), random());
+
+		expect(asked.filters).toContain('membership.artistUid=artist-1');
+		expect(asked.filters).toContain('contribution.albumUid=album-1');
+	});
+
+	it('a borítót és a műfajt átveszi az albumról', async () => {
+		const material = await gatherMaterial(firestore(asked), random());
+
+		expect(material?.album.coverUrl).toBe('https://example.invalid/a.jpg');
+		expect(material?.album.genre).toBe('Rock');
+	});
+
+	it('a közreműködőt azon a néven adja, ahogy a lemezen szerepel', async () => {
+		const material = await gatherMaterial(firestore(asked), random());
+
+		expect(material?.credits[0]).toMatchObject({
+			name: 'Dig',
+			role: 'Producer',
+		});
+	});
+
+	it('a saját zenekar tagja nem csali a többi zenekar tagjai közt', async () => {
+		const material = await gatherMaterial(firestore(asked), random());
+
+		expect(
+			material?.otherMembers.some(
+				(member) => member.artistUid === 'artist-1'
+			)
+		).toBe(false);
 	});
 });

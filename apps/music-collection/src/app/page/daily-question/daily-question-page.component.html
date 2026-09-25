@@ -45,9 +45,57 @@
 				<span [class]="'difficulty is-' + view.difficulty">
 					{{ difficultyPrefix + view.difficulty | transloco }}
 				</span>
+				@if (store.isBonusDay()) {
+					<span class="bonus-day">
+						{{
+							'page.daily-question.bonus-day'
+								| transloco: { multiplier: store.multiplier() }
+						}}
+					</span>
+				}
 			</p>
 
+			@if (store.hasClock() && !store.isAnswered()) {
+				<div
+					class="clock"
+					[class.is-expired]="store.isExpired()"
+					role="timer"
+					[attr.aria-label]="
+						'page.daily-question.seconds-left'
+							| transloco: { seconds: store.remainingSec() }
+					"
+				>
+					<div class="clock-track">
+						<span
+							class="clock-fill"
+							[style.width.%]="store.clockPercent()"
+						></span>
+					</div>
+					<span class="clock-value">
+						@if (store.isExpired()) {
+							{{ 'page.daily-question.time-is-up' | transloco }}
+						} @else {
+							{{
+								'page.daily-question.seconds-left'
+									| transloco
+										: { seconds: store.remainingSec() }
+							}}
+						}
+					</span>
+				</div>
+			}
+
 			<h2>{{ view.frame.key | transloco: view.frame.params }}</h2>
+
+			@if (view.imageUrl; as cover) {
+				<figure class="cover">
+					<img
+						[src]="cover"
+						[alt]="'page.daily-question.the-cover' | transloco"
+						loading="lazy"
+					/>
+				</figure>
+			}
 
 			<ul class="options">
 				@for (option of view.options; track option.id) {
@@ -76,7 +124,10 @@
 			</ul>
 
 			@if (store.isAnswered()) {
-				<div class="verdict" [class.is-correct]="store.isCorrect()">
+				<div
+					class="verdict"
+					[class.is-correct]="store.isCorrect() && !store.wasLate()"
+				>
 					<p class="verdict-text">
 						{{
 							(store.isCorrect()
@@ -91,6 +142,51 @@
 							</span>
 						}
 					</p>
+
+					@if (store.wasLate()) {
+						<p class="late">
+							{{
+								'page.daily-question.answered-late' | transloco
+							}}
+						</p>
+					}
+
+					@if (store.breakdown(); as breakdown) {
+						@if (store.answer()?.points) {
+							<p class="breakdown">
+								<span>
+									{{
+										'page.daily-question.breakdown.base'
+											| transloco
+									}}
+									{{ breakdown.base }}
+								</span>
+								@if (breakdown.streakBonus) {
+									<span>
+										{{
+											'page.daily-question.breakdown.streak'
+												| transloco
+										}}
+										+{{ breakdown.streakBonus }}
+									</span>
+								}
+								@if (breakdown.speedBonus) {
+									<span>
+										{{
+											'page.daily-question.breakdown.speed'
+												| transloco
+										}}
+										+{{ breakdown.speedBonus }}
+									</span>
+								}
+								@if (breakdown.multiplier > 1) {
+									<span class="is-bonus">
+										×{{ breakdown.multiplier }}
+									</span>
+								}
+							</p>
+						}
+					}
 
 					@if (store.subjectLink(); as link) {
 						<a class="subject" [routerLink]="link">
@@ -127,7 +223,16 @@
 						}}
 					</button>
 					<p class="hint">
-						{{ 'page.daily-question.one-guess-only' | transloco }}
+						@if (store.isExpired()) {
+							{{
+								'page.daily-question.late-guess-is-free'
+									| transloco
+							}}
+						} @else {
+							{{
+								'page.daily-question.one-guess-only' | transloco
+							}}
+						}
 					</p>
 				</div>
 			}
@@ -138,5 +243,118 @@
 		<p class="failure" role="alert">
 			{{ 'page.daily-question.failure.' + failure | transloco }}
 		</p>
+	}
+
+	@if (store.hasLeaderboard()) {
+		@let board = store.leaderboardView();
+
+		<section class="leaderboard">
+			<header class="leaderboard-head">
+				<h2>
+					{{ 'page.daily-question.leaderboard.title' | transloco }}
+				</h2>
+				<p>
+					{{
+						'page.daily-question.leaderboard.players'
+							| transloco: { players: board.players }
+					}}
+					@if (store.rank(); as rank) {
+						·
+						{{
+							'page.daily-question.leaderboard.your-place'
+								| transloco: { rank: rank }
+						}}
+					}
+				</p>
+			</header>
+
+			<table class="board">
+				<thead>
+					<tr>
+						<th scope="col" class="is-rank">
+							{{
+								'page.daily-question.leaderboard.rank'
+									| transloco
+							}}
+						</th>
+						<th scope="col">
+							{{
+								'page.daily-question.leaderboard.collector'
+									| transloco
+							}}
+						</th>
+						<th scope="col" class="is-number">
+							{{ 'page.daily-question.stat.points' | transloco }}
+						</th>
+						<th scope="col" class="is-number">
+							{{ 'page.daily-question.stat.streak' | transloco }}
+						</th>
+						<th scope="col" class="is-number">
+							{{ 'page.daily-question.stat.best' | transloco }}
+						</th>
+						<th scope="col" class="is-number">
+							{{
+								'page.daily-question.stat.hit-rate' | transloco
+							}}
+						</th>
+					</tr>
+				</thead>
+				<tbody>
+					@for (row of board.rows; track row.rank + '-' + row.name) {
+						<tr [class.is-me]="row.isMe">
+							<td class="is-rank">{{ row.rank }}</td>
+							<td>
+								{{
+									row.name ||
+										('page.daily-question.leaderboard.anonymous'
+											| transloco)
+								}}
+								@if (row.isMe) {
+									<span class="you">{{
+										'page.daily-question.leaderboard.you'
+											| transloco
+									}}</span>
+								}
+							</td>
+							<td class="is-number">{{ row.points }}</td>
+							<td class="is-number">{{ row.streak }}</td>
+							<td class="is-number">{{ row.longestStreak }}</td>
+							<td class="is-number">{{ row.accuracy }}%</td>
+						</tr>
+					}
+
+					@if (board.me; as me) {
+						<tr class="is-me is-apart">
+							<td class="is-rank">
+								{{
+									me.rank ||
+										('page.daily-question.leaderboard.unplaced'
+											| transloco)
+								}}
+							</td>
+							<td>
+								{{
+									'page.daily-question.leaderboard.you'
+										| transloco
+								}}
+							</td>
+							<td class="is-number">{{ me.points }}</td>
+							<td class="is-number">{{ me.streak }}</td>
+							<td class="is-number">{{ me.longestStreak }}</td>
+							<td class="is-number">{{ me.accuracy }}%</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+
+			@if (board.updatedAt) {
+				<p class="board-note">
+					{{
+						'page.daily-question.leaderboard.rebuilt-nightly'
+							| transloco
+					}}
+				</p>
+			}
+		</section>
 	}
 </div>

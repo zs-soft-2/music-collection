@@ -24,6 +24,7 @@ import {
 	DailyQuestionAnswer,
 	QuestionDifficulty,
 	QuestionOption,
+	QuestionScoring,
 	QuestionSubject,
 	gameDay,
 	previousDay,
@@ -67,7 +68,11 @@ export class DailyAnswerError extends Error {
 	}
 }
 
-/** Amit egy jó tipp fizet, nehézség szerint. */
+/**
+ * Amit egy jó tipp fizet, nehézség szerint — ha a kérdés nem hozza magával a
+ * saját pontozását. A mai kérdésekre rá van írva (`scoring`); ez azoknak
+ * marad, amelyek még e nélkül álltak össze.
+ */
 export const POINTS: Record<QuestionDifficulty, number> = {
 	easy: 10,
 	medium: 20,
@@ -78,6 +83,17 @@ export const POINTS: Record<QuestionDifficulty, number> = {
 export const STREAK_BONUS_PER_DAY = 2;
 /** …de legföljebb ennyi napig; a hatodik naptól a bónusz nem nő tovább. */
 export const MAX_STREAK_BONUS_DAYS = 5;
+
+/**
+ * Ennyi másodperc késést még elnézünk a határidőn túl.
+ *
+ * Az időt a kliens méri és küldi. Ez tudatos csere: a szerveren mért kör egy
+ * plusz írás lenne naponta és játékosonként, a játék pedig játék. A szerver
+ * azért nem hiszi el vakon — a hiányzó vagy képtelen érték a teljes
+ * időkorlátnak számít, tehát a hazugság legföljebb annyit érhet, mint a
+ * tisztességes, azonnali válasz.
+ */
+export const LATE_GRACE_SEC = 3;
 
 /** A gyűjtő tippje egy napra. Ebben már benne van a megfejtés is. */
 export interface DailyAnswerDocument {
@@ -96,6 +112,24 @@ export interface DailyAnswerDocument {
 	streak: number;
 	/** A tipp ideje, epoch millisecundumban. */
 	answeredAt: number;
+	/** Ennyi másodpercig tartott a tipp; óra nélküli napon 0. */
+	elapsedSec: number;
+	/** Lejárt idő után érkezett: jó tipp is nullát fizet, és a sorozat szakad. */
+	timedOut: boolean;
+	/** Miből áll a pont — a lap ezt mutatja meg a tipp után. */
+	breakdown: AnswerBreakdown;
+}
+
+/** A pont összetevői. Egy szám, aminek nincs elszámolása, nem jutalom. */
+export interface AnswerBreakdown {
+	/** Amit a nehézség fizet. */
+	base: number;
+	/** Amit a sorozat tett hozzá. */
+	streakBonus: number;
+	/** Amit a gyorsaság tett hozzá. */
+	speedBonus: number;
+	/** A nap szorzója; bónusz napon több mint 1. */
+	multiplier: number;
 }
 
 /** A játék kasszája: ennyit gyűjtött össze a gyűjtő a napi kérdéssel. */
@@ -140,24 +174,110 @@ export function streakAfter(
 }
 
 /**
- * Amit a tipp fizet: a nehézség alappontja, mellé a sorozat bónusza. A
- * sorozat első napja még nem bónuszol — a bónusz azért van, hogy a
- * visszatérést díjazza, nem az első kattintást.
+ * A nap pontozása a kérdésből. Ami e nélkül a mező nélkül állt össze — a
+ * játék első napjai —, az a régi, kódba írt értékeket kapja.
  */
-export function pointsFor(
+export function scoringOf(
 	difficulty: QuestionDifficulty,
-	streak: number,
-	correct: boolean
-): number {
-	if (!correct) return 0;
-
-	const base = POINTS[difficulty] ?? POINTS.medium;
-	const bonusDays = Math.min(Math.max(streak - 1, 0), MAX_STREAK_BONUS_DAYS);
-
-	return base + bonusDays * STREAK_BONUS_PER_DAY;
+	scoring: Partial<QuestionScoring> | undefined | null
+): QuestionScoring {
+	return {
+		base: scoring?.base ?? POINTS[difficulty] ?? POINTS.medium,
+		streakBonusPerDay: scoring?.streakBonusPerDay ?? STREAK_BONUS_PER_DAY,
+		maxStreakBonusDays:
+			scoring?.maxStreakBonusDays ?? MAX_STREAK_BONUS_DAYS,
+		speedBonusMax: scoring?.speedBonusMax ?? 0,
+		multiplier: scoring?.multiplier ?? 1,
+	};
 }
 
-/** A kiértékelés maga, Firestore nélkül: a tippből dokumentum és kassza. */
+/**
+ * A kliens által mért idő, józan határok közé szorítva.
+ *
+ * Óra nélküli napon nincs mit mérni: nulla. Hiányzó, negatív vagy képtelen
+ * érték a teljes időkorlát — aki nem mond időt, az a leglassabb.
+ */
+export function clampElapsed(
+	elapsedSec: unknown,
+	timeLimitSec: number
+): number {
+	if (timeLimitSec <= 0) return 0;
+
+	if (typeof elapsedSec !== 'number' || !Number.isFinite(elapsedSec)) {
+		return timeLimitSec;
+	}
+
+	return Math.min(Math.max(Math.round(elapsedSec), 0), timeLimitSec + 60);
+}
+
+/** Lejárt-e az idő, a hálózat türelmi másodperceivel együtt. */
+export function isTimedOut(elapsedSec: number, timeLimitSec: number): boolean {
+	return timeLimitSec > 0 && elapsedSec > timeLimitSec + LATE_GRACE_SEC;
+}
+
+/**
+ * Amit a gyorsaság fizet: csúszó skálán, az azonnali tippnek az egészet, az
+ * utolsó másodpercben érkezőnek semmit. Óra nélkül nincs mihez képest
+ * gyorsnak lenni, tehát nem fizet.
+ */
+export function speedBonusFor(
+	scoring: QuestionScoring,
+	elapsedSec: number,
+	timeLimitSec: number
+): number {
+	if (scoring.speedBonusMax <= 0 || timeLimitSec <= 0) return 0;
+
+	const left = Math.max(timeLimitSec - elapsedSec, 0) / timeLimitSec;
+
+	return Math.round(scoring.speedBonusMax * left);
+}
+
+/**
+ * Amit a tipp fizet: a nehézség alappontja, mellé a sorozaté és a
+ * gyorsaságé, az egész pedig a nap szorzójával. A sorozat első napja még nem
+ * bónuszol — a bónusz azért van, hogy a visszatérést díjazza, nem az első
+ * kattintást.
+ */
+export function pointsFor(
+	scoring: QuestionScoring,
+	streak: number,
+	correct: boolean,
+	speedBonus = 0
+): { points: number; breakdown: AnswerBreakdown } {
+	const bonusDays = Math.min(
+		Math.max(streak - 1, 0),
+		scoring.maxStreakBonusDays
+	);
+	const breakdown: AnswerBreakdown = {
+		base: correct ? scoring.base : 0,
+		streakBonus: correct ? bonusDays * scoring.streakBonusPerDay : 0,
+		speedBonus: correct ? speedBonus : 0,
+		multiplier: scoring.multiplier,
+	};
+
+	return {
+		points: correct
+			? Math.round(
+					(breakdown.base +
+						breakdown.streakBonus +
+						breakdown.speedBonus) *
+						scoring.multiplier
+				)
+			: 0,
+		breakdown,
+	};
+}
+
+/**
+ * A kiértékelés maga, Firestore nélkül: a tippből dokumentum és kassza.
+ *
+ * A lejárt idő úgy viselkedik, mint a rossz tipp: nem fizet, és a sorozatot
+ * is elvágja. A megfejtést azért megmondja — az időt húzó gyűjtő is
+ * megérdemli, hogy megtudja, mi lett volna a válasz. A találat ténye
+ * (`correct`) megmarad, de a kassza `correct` számlálójába csak a határidőn
+ * belüli talált tipp számít bele: a találati arány azt mérje, hány kérdést
+ * oldott meg, ne azt, hányra tudta volna a választ ráérősen.
+ */
 export function gradeAnswer(input: {
 	day: string;
 	optionId: string;
@@ -165,30 +285,49 @@ export function gradeAnswer(input: {
 	answer: DailyQuestionAnswer;
 	score: DailyQuestionScoreDocument;
 	answeredAt: number;
+	/** A nap pontozása, ahogy a kérdésre írva áll. */
+	scoring?: Partial<QuestionScoring> | null;
+	/** A nap időkorlátja, másodpercben; 0 = nincs óra. */
+	timeLimitSec?: number;
+	/** Amennyit a kliens mért. A hívó már szorította józan határok közé. */
+	elapsedSec?: number;
 }): { answer: DailyAnswerDocument; score: DailyQuestionScoreDocument } {
-	const correct = input.optionId === input.answer.answerId;
-	const streak = streakAfter(input.score, input.day, correct);
-	const points = pointsFor(input.difficulty, streak, correct);
+	const scoring = scoringOf(input.difficulty, input.scoring);
+	const timeLimitSec = Math.max(input.timeLimitSec ?? 0, 0);
+	const elapsedSec = clampElapsed(input.elapsedSec, timeLimitSec);
+	const timedOut = isTimedOut(elapsedSec, timeLimitSec);
+	const hit = input.optionId === input.answer.answerId;
+	const counts = hit && !timedOut;
+	const streak = streakAfter(input.score, input.day, counts);
+	const { points, breakdown } = pointsFor(
+		scoring,
+		streak,
+		counts,
+		speedBonusFor(scoring, elapsedSec, timeLimitSec)
+	);
 
 	return {
 		answer: {
 			day: input.day,
 			optionId: input.optionId,
 			answerId: input.answer.answerId,
-			correct,
+			correct: hit,
 			templateKey: input.answer.templateKey,
 			difficulty: input.difficulty,
 			subject: input.answer.subject,
 			points,
 			streak,
 			answeredAt: input.answeredAt,
+			elapsedSec,
+			timedOut,
+			breakdown,
 		},
 		score: {
 			points: input.score.points + points,
 			streak,
 			longestStreak: Math.max(input.score.longestStreak, streak),
 			answered: input.score.answered + 1,
-			correct: input.score.correct + (correct ? 1 : 0),
+			correct: input.score.correct + (counts ? 1 : 0),
 			lastDay: input.day,
 		},
 	};
@@ -233,6 +372,14 @@ function readAnswer(
 		points: (data['points'] as number) ?? 0,
 		streak: (data['streak'] as number) ?? 0,
 		answeredAt: (data['answeredAt'] as number) ?? 0,
+		elapsedSec: (data['elapsedSec'] as number) ?? 0,
+		timedOut: !!data['timedOut'],
+		breakdown: (data['breakdown'] as AnswerBreakdown) ?? {
+			base: (data['points'] as number) ?? 0,
+			streakBonus: 0,
+			speedBonus: 0,
+			multiplier: 1,
+		},
 	};
 }
 
@@ -249,7 +396,9 @@ export async function answerDailyQuestion(
 	uid: string,
 	day: string,
 	optionId: string,
-	now: Date = new Date()
+	now: Date = new Date(),
+	/** Ennyi ideig tartott a tipp, a kliens órája szerint. */
+	elapsedSec?: number
 ): Promise<AnswerResult> {
 	const today = gameDay(now);
 
@@ -305,6 +454,12 @@ export async function answerDailyQuestion(
 			answer: secretSnapshot.data() as DailyQuestionAnswer,
 			score,
 			answeredAt: now.getTime(),
+			scoring: questionSnapshot.get('scoring') as
+				Partial<QuestionScoring> | undefined,
+			timeLimitSec:
+				(questionSnapshot.get('timeLimitSec') as number | undefined) ??
+				0,
+			elapsedSec,
 		});
 
 		transaction.set(mine, stamp(result.answer));

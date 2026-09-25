@@ -1,15 +1,23 @@
 import {
 	DailyAnswer,
 	DailyQuestionEntity,
+	DailyQuestionLeaderboard,
+	DailyQuestionScore,
+	EMPTY_DAILY_QUESTION_SCORE,
 	EntityTypeEnum,
 } from '@music-collection/api';
 
+import { EMPTY_DAILY_QUESTION_LEADERBOARD } from '../../data/daily-question';
+
 import {
+	toAccuracy,
 	toEdition,
 	toFrame,
 	toFrameKey,
+	toLeaderboardView,
 	toOptions,
 	toSubjectLink,
+	toView,
 } from './daily-question.mapper';
 
 const DAY = '2026-09-24';
@@ -144,5 +152,138 @@ describe('toSubjectLink', () => {
 			toSubjectLink({ kind: 'track', uid: 't-1', name: 'Battery' })
 		).toBeNull();
 		expect(toSubjectLink(null)).toBeNull();
+	});
+});
+
+describe('toView', () => {
+	it('a nap óráját és szorzóját átveszi a kérdésről', () => {
+		const view = toView(
+			question({
+				timeLimitSec: 45,
+				scoring: {
+					base: 20,
+					streakBonusPerDay: 2,
+					maxStreakBonusDays: 5,
+					speedBonusMax: 10,
+					multiplier: 2,
+				},
+				imageUrl: 'https://example.invalid/cover.jpg',
+			}),
+			null,
+			null
+		);
+
+		expect(view).toMatchObject({
+			timeLimitSec: 45,
+			multiplier: 2,
+			imageUrl: 'https://example.invalid/cover.jpg',
+		});
+	});
+
+	// A játék első napjainak kérdésein még nincs se óra, se pontozás.
+	it('a régi kérdést óra és szorzó nélkül mutatja', () => {
+		expect(toView(question(), null, null)).toMatchObject({
+			timeLimitSec: 0,
+			multiplier: 1,
+			imageUrl: null,
+		});
+	});
+});
+
+describe('toAccuracy', () => {
+	it('kerekített százalék', () => {
+		expect(toAccuracy(2, 3)).toBe(67);
+	});
+
+	it('tipp nélkül nulla, nem osztás nullával', () => {
+		expect(toAccuracy(0, 0)).toBe(0);
+	});
+});
+
+describe('toLeaderboardView', () => {
+	const row = (
+		uid: string,
+		rank: number,
+		points: number,
+		name = uid
+	): DailyQuestionLeaderboard['rows'][number] => ({
+		rank,
+		uid,
+		name,
+		points,
+		streak: 1,
+		longestStreak: 3,
+		answered: 10,
+		correct: 5,
+	});
+
+	const board = (
+		rows: DailyQuestionLeaderboard['rows']
+	): DailyQuestionLeaderboard => ({
+		rows,
+		players: rows.length,
+		updatedAt: 1774000000000,
+	});
+
+	const score = (
+		overrides: Partial<DailyQuestionScore> = {}
+	): DailyQuestionScore => ({
+		...EMPTY_DAILY_QUESTION_SCORE,
+		...overrides,
+	});
+
+	it('üres mezőnyből és üres kasszából nincs táblázat', () => {
+		expect(
+			toLeaderboardView(EMPTY_DAILY_QUESTION_LEADERBOARD, score(), 'me')
+				.rows
+		).toEqual([]);
+	});
+
+	it('megjelöli a saját sort', () => {
+		const view = toLeaderboardView(
+			board([row('other', 1, 100), row('me', 2, 50)]),
+			score({ answered: 10 }),
+			'me'
+		);
+
+		expect(view.rows.map((item) => item.isMe)).toEqual([false, true]);
+		// Aki benne van a listában, annak nem kell külön sor.
+		expect(view.me).toBeNull();
+	});
+
+	it('a listán kívül állónak külön sort ad a kasszájából', () => {
+		const view = toLeaderboardView(
+			board([row('other', 1, 100)]),
+			score({ answered: 8, correct: 4, points: 42, rank: 34 }),
+			'me'
+		);
+
+		expect(view.me).toMatchObject({
+			rank: 34,
+			points: 42,
+			accuracy: 50,
+			isMe: true,
+		});
+	});
+
+	it('helyezés nélkül is megmutatja a saját sort', () => {
+		const view = toLeaderboardView(
+			board([row('other', 1, 100)]),
+			score({ answered: 1, points: 10 }),
+			'me'
+		);
+
+		expect(view.me?.rank).toBe(0);
+	});
+
+	it('bejelentkezés nélkül senki nem „én” vagyok', () => {
+		const view = toLeaderboardView(
+			board([row('other', 1, 100)]),
+			score(),
+			null
+		);
+
+		expect(view.rows.every((item) => !item.isMe)).toBe(true);
+		expect(view.me).toBeNull();
 	});
 });

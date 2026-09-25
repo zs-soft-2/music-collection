@@ -151,7 +151,23 @@
 			"releaseCatno": "Which catalogue number is on the pressing of “{{album}}” ({{artist}})?",
 			"releaseCatnoLabel": "Which catalogue number is on the {{label}} pressing of “{{album}}” ({{artist}})?",
 			"artistCountry": "Where does {{artist}} come from?",
-			"fallback": "Pick the right answer out of the catalog."
+			"fallback": "Pick the right answer out of the catalog.",
+			"albumStyle": "Which style does the catalog give “{{album}}” ({{artist}})?",
+			"earliestAlbum": "Which is the earliest {{artist}} album in the catalog?",
+			"trackAlbum": "Which album is “{{track}}” ({{artist}}) on?",
+			"nextTrack": "Which track follows “{{track}}” on “{{album}}” ({{artist}})?",
+			"trackPosition": "Which place does “{{track}}” take on “{{album}}” ({{artist}})?",
+			"shortestTrack": "Which is the shortest track on “{{album}}” ({{artist}})?",
+			"albumLength": "About how many minutes long is “{{album}}” ({{artist}})?",
+			"notOnAlbum": "Which track is NOT on “{{album}}” ({{artist}})?",
+			"coverAlbum": "Which {{artist}} album has this cover?",
+			"releaseCountry": "Which country was this pressing of “{{album}}” ({{artist}}) released in?",
+			"artistFormedIn": "Which year was {{artist}} formed?",
+			"bandMember": "Who played in {{artist}}?",
+			"memberBand": "Which band did {{musician}} play in?",
+			"memberInstrument": "What did {{musician}} play in {{artist}}?",
+			"albumCredit": "Who is credited as “{{role}}” on “{{album}}” ({{artist}})?",
+			"albumProducer": "Who produced “{{album}}” ({{artist}})?"
 		}
 	},
 	"home": {
@@ -540,6 +556,28 @@
 				"no-question": "There is no question for this day.",
 				"signed-out": "The session is gone. Sign in again and the guess can go.",
 				"unknown": "The guess did not get through. Try again."
+			},
+			"bonus-day": "Bonus day · {{multiplier}}× points",
+			"seconds-left": "{{seconds}}s left",
+			"time-is-up": "Time is up",
+			"the-cover": "The cover in question",
+			"answered-late": "The guess came after the time ran out: the answer is yours, the points are not.",
+			"late-guess-is-free": "Time is up — a guess no longer pays, but it still reveals the answer.",
+			"breakdown": {
+				"base": "Base",
+				"streak": "Streak",
+				"speed": "Speed"
+			},
+			"leaderboard": {
+				"title": "Leaderboard",
+				"players": "{{players}} players",
+				"your-place": "your place: {{rank}}",
+				"rank": "Place",
+				"collector": "Collector",
+				"anonymous": "Nameless collector",
+				"you": "You",
+				"unplaced": "—",
+				"rebuilt-nightly": "The field is rebuilt once a day, in the evening; your points update at once, your place at the next run."
 			}
 		},
 		"error": {
@@ -1985,6 +2023,49 @@
 			"no-bands-yet": "This musician is not in any line-up yet.",
 			"edit-on-the-band": "Edit a line-up on the band’s own page, under Line-up.",
 			"error-general": "Something went wrong. Try again later."
+		},
+		"dailyQuestionSettings": {
+			"title": "Daily question",
+			"lead": "The rules of the game: how long there is to answer, what a guess pays, and what the engine may ask about.",
+			"loading": "Loading…",
+			"the-game": "The game",
+			"game-is-on": "The game is on",
+			"switched-off": "Switched off, no new question is composed and the page says so. The days already composed stay as they are.",
+			"time-limit": "Time limit (s)",
+			"time-limit-hint": "How long there is to answer. Zero takes the clock off, and with it the speed bonus. A late guess is still taken — it just pays nothing.",
+			"what-a-guess-pays": "What a guess pays",
+			"points-easy": "Easy question",
+			"points-medium": "Medium question",
+			"points-hard": "Hard question",
+			"streak-bonus": "Streak bonus per day",
+			"streak-bonus-hint": "The first day of a run pays no bonus: the bonus is for coming back.",
+			"streak-days": "For this many days",
+			"speed-bonus": "Speed bonus (max)",
+			"speed-bonus-hint": "Paid on a sliding scale: all of it for an instant answer, nothing for one that used up the clock. Without a clock it pays nothing.",
+			"the-luck": "The luck",
+			"bonus-day-chance": "Bonus day chance (%)",
+			"bonus-day-chance-hint": "Drawn from the day itself, so the same day is a bonus day for everybody.",
+			"bonus-day-multiplier": "Bonus day multiplier",
+			"question-kinds": "Kinds of question",
+			"question-kinds-hint": "What you switch off is never drawn. The material-hungry kinds switch themselves on as the data fills in — switching one off always wins.",
+			"enabled-count": "{{enabled}} of {{all}} on",
+			"the-field": "The leaderboard",
+			"leaderboard-size": "Places shown",
+			"leaderboard-size-hint": "Everybody else still sees their own place: the nightly run writes it into their pot.",
+			"save": "Save",
+			"saving": "Saving…",
+			"saved": "Saved",
+			"today": "Today",
+			"compose-now": "Compose the question now",
+			"compose-force": "Replace today's question",
+			"composing": "Composing…",
+			"refresh-leaderboard": "Rebuild the leaderboard",
+			"refreshing": "Rebuilding…",
+			"composed": "{{day}}: {{template}} ({{difficulty}}), from {{tries}} draws",
+			"compose-exists": "{{day}}: the question was already up; nothing was overwritten.",
+			"compose-disabled": "The game is switched off, so no question was composed.",
+			"compose-no-material": "There was not enough in the catalog to make a question.",
+			"leaderboard-refreshed": "{{players}} players, {{ranked}} places updated."
 		}
 	},
 	"admin": {
@@ -2004,7 +2085,8 @@
 			"system": "System",
 			"documents": "Documents",
 			"badgeGeneration": "Badge generation",
-			"language": "Language"
+			"language": "Language",
+			"dailyQuestion": "Daily question"
 		},
 		"field": {
 			"albums": "Albums",

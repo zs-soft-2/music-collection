@@ -13,6 +13,8 @@ import { stamp } from './catalog-sync';
 import {
 	MaterialAlbum,
 	MaterialArtist,
+	MaterialCredit,
+	MaterialMember,
 	MaterialRelease,
 	MaterialTrack,
 	QuestionDifficulty,
@@ -28,6 +30,11 @@ import {
 	toQuestionDocument,
 	yearOf,
 } from './daily-question';
+import {
+	DailyQuestionSettings,
+	dayRulesFor,
+	readDailyQuestionSettings,
+} from './daily-question-settings';
 
 export const DAILY_QUESTION_COLLECTION = 'daily-question';
 /** A megfejtés alkollekciója; a szabályok nem engedik olvasni. */
@@ -43,6 +50,10 @@ const ALBUM_COLLECTION = 'album';
 const ARTIST_COLLECTION = 'artist';
 const RELEASE_COLLECTION = 'release';
 const TRACK_COLLECTION = 'track';
+/** Zenész ↔ zenekar, a gyökérben; `artistUid` / `musicianUid` mezőkkel. */
+const MEMBERSHIP_COLLECTION = 'membership';
+/** Közreműködés egy lemezen, a gyökérben; `albumUid` mezővel. */
+const CONTRIBUTION_COLLECTION = 'contribution';
 
 /** Egy kiadás útvonala; a collection-group kurzorhoz kell, ami teljes út. */
 export const releasePath = (key: string): string =>
@@ -60,6 +71,9 @@ const TRACK_LIMIT = 60;
 const RELEASE_LIMIT = 20;
 const SIBLING_LIMIT = 12;
 const DISTRACTOR_LIMIT = 8;
+/** Egy zenekar felállása és egy lemez stáblistája ennél nem hosszabb. */
+const MEMBER_LIMIT = 20;
+const CREDIT_LIMIT = 40;
 
 // ── Anyaggyűjtés ────────────────────────────────────────────────────────────
 
@@ -142,6 +156,9 @@ const toMaterialAlbum = (
 	const artist = document.get('artist') as
 		{ uid?: string; name?: string } | undefined;
 
+	const cover = document.get('coverImage') as
+		{ filePath?: string } | undefined;
+
 	return {
 		uid: document.id,
 		name: (document.get('name') as string) ?? '',
@@ -149,6 +166,13 @@ const toMaterialAlbum = (
 		artistName: artist?.name ?? '',
 		year: yearOf(document.get('year')),
 		styles: (document.get('styles') as string[]) ?? [],
+		genre: (document.get('genre') as string | null) ?? null,
+		// Ugyanaz a sorrend, mint a felületen (`music-view.mapper`): a
+		// feltöltött borító előbbre való a netről talált címnél.
+		coverUrl:
+			cover?.filePath ||
+			(document.get('coverImageUrl') as string | null) ||
+			null,
 	};
 };
 
@@ -167,6 +191,28 @@ const toMaterialTrack = (
 	position: toText(document.get('position')),
 	durationSec: (document.get('durationSec') as number | null) ?? null,
 	releaseUid: (document.get('releaseUid') as string | null) ?? null,
+	albumUid: (document.get('albumUid') as string) ?? '',
+});
+
+const toMaterialMember = (
+	document: FirebaseFirestore.DocumentSnapshot
+): MaterialMember => ({
+	musicianUid: (document.get('musicianUid') as string) ?? '',
+	musicianName: (document.get('musicianName') as string) ?? '',
+	artistUid: (document.get('artistUid') as string) ?? '',
+	artistName: (document.get('artistName') as string) ?? '',
+	instruments: (document.get('instruments') as string[]) ?? [],
+	kind: (document.get('kind') as string) ?? 'member',
+});
+
+const toMaterialCredit = (
+	document: FirebaseFirestore.DocumentSnapshot
+): MaterialCredit => ({
+	musicianUid: (document.get('musicianUid') as string) ?? '',
+	name:
+		(document.get('creditedAs') as string | null) ||
+		((document.get('name') as string) ?? ''),
+	role: (document.get('role') as string) ?? '',
 });
 
 const toMaterialRelease = (
@@ -226,7 +272,22 @@ export async function gatherMaterial(
 
 	const anchor = pick(albums.docs, random);
 	const album = toMaterialAlbum(anchor);
-	const [tracks, releases, otherArtists, otherReleases] = await Promise.all([
+	const siblings = albums.docs.filter(
+		(document) => document.id !== anchor.id
+	);
+	/** Egy testvérlemez — a „melyik szám nincs rajta” kérdés csalijaihoz. */
+	const sibling = siblings.length ? pick(siblings, random) : null;
+	const [
+		tracks,
+		releases,
+		otherArtists,
+		otherReleases,
+		siblingTracks,
+		members,
+		otherMembers,
+		credits,
+		otherCredits,
+	] = await Promise.all([
 		database
 			.collection(TRACK_COLLECTION)
 			.where('albumUid', '==', album.uid)
@@ -245,6 +306,33 @@ export async function gatherMaterial(
 			random,
 			DISTRACTOR_LIMIT
 		),
+		sibling
+			? database
+					.collection(TRACK_COLLECTION)
+					.where('albumUid', '==', sibling.id)
+					.limit(TRACK_LIMIT)
+					.get()
+			: null,
+		database
+			.collection(MEMBERSHIP_COLLECTION)
+			.where('artistUid', '==', anchorArtist.id)
+			.limit(MEMBER_LIMIT)
+			.get(),
+		randomDocuments(
+			database.collection(MEMBERSHIP_COLLECTION),
+			random,
+			MEMBER_LIMIT
+		),
+		database
+			.collection(CONTRIBUTION_COLLECTION)
+			.where('albumUid', '==', album.uid)
+			.limit(CREDIT_LIMIT)
+			.get(),
+		randomDocuments(
+			database.collection(CONTRIBUTION_COLLECTION),
+			random,
+			DISTRACTOR_LIMIT
+		),
 	]);
 
 	return {
@@ -252,15 +340,20 @@ export async function gatherMaterial(
 		artist: toMaterialArtist(anchorArtist),
 		tracks: tracks.docs.map(toMaterialTrack),
 		releases: releases.docs.map(toMaterialRelease),
-		siblingAlbums: albums.docs
-			.filter((document) => document.id !== anchor.id)
-			.map(toMaterialAlbum),
+		siblingAlbums: siblings.map(toMaterialAlbum),
 		otherArtists: otherArtists
 			.filter((document) => document.id !== anchorArtist.id)
 			.map(toMaterialArtist),
 		otherReleases: otherReleases
 			.filter((document) => document.ref.parent.parent?.id !== album.uid)
 			.map(toMaterialRelease),
+		siblingTracks: (siblingTracks?.docs ?? []).map(toMaterialTrack),
+		members: members.docs.map(toMaterialMember),
+		otherMembers: otherMembers
+			.map(toMaterialMember)
+			.filter((member) => member.artistUid !== anchorArtist.id),
+		credits: credits.docs.map(toMaterialCredit),
+		otherCredits: otherCredits.map(toMaterialCredit),
 	};
 }
 
@@ -272,6 +365,10 @@ export interface ComposeResult {
 	difficulty: QuestionDifficulty | null;
 	/** Ennyi albumot kellett húzni, amíg kérdés lett belőle. */
 	tries: number;
+	/** Miért ennyi: az admin felület ebből mond valamit. */
+	reason: 'created' | 'exists' | 'disabled' | 'no-material';
+	/** Bónusz nap-e — a szorzó 1-nél nagyobb. */
+	multiplier: number;
 }
 
 /** Tegnap melyik sablon jött ki; egy olvasás. */
@@ -298,10 +395,31 @@ async function previousTemplateKey(
  */
 export async function composeDailyQuestion(
 	database: Firestore,
-	options: { day?: string; today?: Date; force?: boolean } = {}
+	options: {
+		day?: string;
+		today?: Date;
+		force?: boolean;
+		/** A teszteknek; élesben a beállítás a Firestore-ból jön. */
+		settings?: DailyQuestionSettings;
+	} = {}
 ): Promise<ComposeResult> {
 	const day = options.day ?? gameDay(options.today ?? new Date());
+	const settings =
+		options.settings ?? (await readDailyQuestionSettings(database));
 	const reference = database.collection(DAILY_QUESTION_COLLECTION).doc(day);
+
+	if (!settings.enabled) {
+		return {
+			day,
+			created: false,
+			templateKey: null,
+			difficulty: null,
+			tries: 0,
+			reason: 'disabled',
+			multiplier: 1,
+		};
+	}
+
 	const existing = await reference.get();
 
 	if (existing.exists && !options.force) {
@@ -312,6 +430,9 @@ export async function composeDailyQuestion(
 			difficulty:
 				(existing.get('difficulty') as QuestionDifficulty) ?? null,
 			tries: 0,
+			reason: 'exists',
+			multiplier:
+				(existing.get('scoring.multiplier') as number | undefined) ?? 1,
 		};
 	}
 
@@ -322,14 +443,19 @@ export async function composeDailyQuestion(
 	for (let attempt = 1; attempt <= MAX_TRIES; attempt++) {
 		const material = await gatherMaterial(database, random);
 		const draft = material
-			? buildQuestion(material, random, preferred, yesterday)
+			? buildQuestion(material, random, {
+					preferred,
+					avoid: yesterday,
+					disabled: settings.disabledTemplates,
+				})
 			: null;
 
 		if (!draft) continue;
 
+		const rules = dayRulesFor(day, draft.difficulty, settings);
 		const batch = database.batch();
 
-		batch.set(reference, stamp(toQuestionDocument(day, draft)));
+		batch.set(reference, stamp(toQuestionDocument(day, draft, rules)));
 		batch.set(
 			reference.collection(ANSWER_COLLECTION).doc(ANSWER_DOCUMENT),
 			stamp(toAnswerDocument(day, draft))
@@ -343,6 +469,8 @@ export async function composeDailyQuestion(
 			templateKey: draft.templateKey,
 			difficulty: draft.difficulty,
 			tries: attempt,
+			reason: 'created',
+			multiplier: rules.scoring.multiplier,
 		};
 	}
 
@@ -352,5 +480,7 @@ export async function composeDailyQuestion(
 		templateKey: null,
 		difficulty: null,
 		tries: MAX_TRIES,
+		reason: 'no-material',
+		multiplier: 1,
 	};
 }

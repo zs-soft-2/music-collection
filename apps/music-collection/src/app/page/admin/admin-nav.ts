@@ -108,6 +108,11 @@ export const ADMIN_NAV: AdminNavGroup[] = [
 				countType: 'Document',
 			},
 			{
+				labelKey: 'admin.nav.dailyQuestion',
+				route: 'daily-question',
+				icon: 'pi-question-circle',
+			},
+			{
 				labelKey: 'admin.nav.badgeGeneration',
 				route: 'badge-settings',
 				icon: 'pi-sparkles',

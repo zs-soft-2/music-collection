@@ -175,3 +175,50 @@ describe('the game pot', () => {
 	it('is not written by the collector', () =>
 		assertFails(setDoc(potOf(asMe()), pot)));
 });
+
+/** The field, as the daily run writes it. */
+const leaderboard = {
+	rows: [
+		{
+			rank: 1,
+			uid: OTHER,
+			name: 'Another Collector',
+			points: 300,
+			streak: 4,
+			longestStreak: 9,
+			answered: 20,
+			correct: 15,
+		},
+	],
+	players: 2,
+	updatedAt: 1774000000000,
+};
+
+const leaderboardOf = (database: ReturnType<typeof asMe>) =>
+	doc(database, 'leaderboard', 'daily-question');
+
+const published = () =>
+	testEnv.withSecurityRulesDisabled(async (context) => {
+		await setDoc(
+			leaderboardOf(context.firestore() as never),
+			leaderboard
+		);
+	});
+
+describe('the leaderboard', () => {
+	it('is read by any signed-in collector', async () => {
+		await published();
+
+		await assertSucceeds(getDoc(leaderboardOf(asMe())));
+	});
+
+	// The field carries other collectors' names: the game is for the players.
+	it('is not read by a visitor', async () => {
+		await published();
+
+		await assertFails(getDoc(leaderboardOf(asVisitor())));
+	});
+
+	it('is not written by a collector', () =>
+		assertFails(setDoc(leaderboardOf(asMe()), leaderboard)));
+});

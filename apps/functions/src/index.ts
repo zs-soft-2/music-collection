@@ -76,6 +76,12 @@ import {
 	answerDailyQuestion as gradeDailyAnswer,
 } from './daily-answer';
 import { composeDailyQuestion } from './daily-question-compose';
+import { refreshDailyQuestionLeaderboard } from './daily-question-leaderboard';
+import {
+	readDailyQuestionSettings as readGameSettings,
+	writeDailyQuestionSettings,
+} from './daily-question-settings';
+import { templateCatalog } from './daily-question';
 import { syncUpcomingReleases } from './upcoming-release';
 import {
 	CatalogRole,
@@ -1016,16 +1022,18 @@ export const composeDailyQuestionDaily = onSchedule(
 	},
 	async () => {
 		const result = await composeDailyQuestion(database());
+		const outcome = {
+			created: `${result.templateKey} / ${result.difficulty}, ${result.tries} húzásból${
+				result.multiplier > 1
+					? `, bónusz nap ×${result.multiplier}`
+					: ''
+			}`,
+			exists: 'már megvolt',
+			disabled: 'a játék ki van kapcsolva',
+			'no-material': 'nem állt össze kérdés',
+		};
 
-		logger.info(
-			result.created
-				? `Napi kérdés (${result.day}): ${result.templateKey} / ${result.difficulty}, ${result.tries} húzásból`
-				: `Napi kérdés (${result.day}): ${
-						result.templateKey
-							? 'már megvolt'
-							: 'nem állt össze kérdés'
-					}`
-		);
+		logger.info(`Napi kérdés (${result.day}): ${outcome[result.reason]}`);
 	}
 );
 
@@ -1081,7 +1089,11 @@ export const answerDailyQuestion = onCall(async (request) => {
 		throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
 	}
 
-	const input = (request.data ?? {}) as { day?: string; optionId?: string };
+	const input = (request.data ?? {}) as {
+		day?: string;
+		optionId?: string;
+		elapsedSec?: number;
+	};
 
 	if (!input.day || !/^\d{4}-\d{2}-\d{2}$/.test(input.day)) {
 		throw new HttpsError('invalid-argument', 'A nap YYYY-MM-DD alakú.');
@@ -1095,11 +1107,16 @@ export const answerDailyQuestion = onCall(async (request) => {
 			database(),
 			uid,
 			input.day,
-			input.optionId
+			input.optionId,
+			new Date(),
+			input.elapsedSec
 		);
 	} catch (error) {
 		if (error instanceof DailyAnswerError) {
-			throw new HttpsError(ANSWER_ERROR_CODES[error.reason], error.message);
+			throw new HttpsError(
+				ANSWER_ERROR_CODES[error.reason],
+				error.message
+			);
 		}
 
 		logger.warn(`answerDailyQuestion ${uid} ${input.day}`, error);
@@ -1107,3 +1124,72 @@ export const answerDailyQuestion = onCall(async (request) => {
 		throw new HttpsError('internal', 'A tipp kiértékelése nem sikerült.');
 	}
 });
+
+/**
+ * A játék beállításai az admin felületnek, és amit ki-be lehet kapcsolni: a
+ * kérdésfajták listája a motorból jön, nem egy kézzel karbantartott
+ * másolatból — így nem lehet olyan sablont kapcsolgatni, amit senki nem húz.
+ */
+export const readDailyQuestionSettings = onCall(async (request) => {
+	await requireCaller(request, 'ADMIN');
+
+	return {
+		settings: await readGameSettings(database()),
+		templates: templateCatalog(),
+	};
+});
+
+export const updateDailyQuestionSettings = onCall(async (request) => {
+	await requireCaller(request, 'ADMIN');
+
+	return {
+		settings: await writeDailyQuestionSettings(
+			database(),
+			request.data?.settings
+		),
+		templates: templateCatalog(),
+	};
+});
+
+/**
+ * A ranglista újraépítése, naponta egyszer — nem éjfélkor, hanem este:
+ * akkor van a legtöbb tipp a mai napról a kasszákban, tehát a lista akkor
+ * mond a legtöbbet.
+ *
+ * A mezőnyt egyedül ez a futás olvassa végig; a látogató egy dokumentumot
+ * olvas belőle, a saját helyezését pedig a kasszájából.
+ */
+export const refreshDailyQuestionLeaderboardDaily = onSchedule(
+	{
+		schedule: '40 23 * * *',
+		timeZone: 'Europe/Budapest',
+		timeoutSeconds: 300,
+		enforceAppCheck: false,
+	},
+	async () => {
+		const settings = await readGameSettings(database());
+		const result = await refreshDailyQuestionLeaderboard(
+			database(),
+			settings.leaderboardSize
+		);
+
+		logger.info(
+			`Napi kérdés ranglista: ${result.players} játékos, ${result.ranked} helyezés frissült`
+		);
+	}
+);
+
+/** Ugyanaz kézzel, az adminnak — a beállítás mentése után jól jön. */
+export const refreshDailyQuestionLeaderboardNow = onCall(
+	{ timeoutSeconds: 300 },
+	async (request) => {
+		await requireCaller(request, 'ADMIN');
+
+		const settings = await readGameSettings(database());
+
+		return refreshDailyQuestionLeaderboard(
+			database(),
+			settings.leaderboardSize
+		);
+	}
+);

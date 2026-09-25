@@ -151,7 +151,23 @@
 			"releaseCatno": "Welche Katalognummer steht auf der Pressung von „{{album}}“ ({{artist}})?",
 			"releaseCatnoLabel": "Welche Katalognummer steht auf der {{label}}-Pressung von „{{album}}“ ({{artist}})?",
 			"artistCountry": "Aus welchem Land kommt {{artist}}?",
-			"fallback": "Wähle die richtige Antwort aus dem Katalog."
+			"fallback": "Wähle die richtige Antwort aus dem Katalog.",
+			"albumStyle": "Welchen Stil gibt der Katalog „{{album}}“ ({{artist}})?",
+			"earliestAlbum": "Welches ist das früheste {{artist}}-Album im Katalog?",
+			"trackAlbum": "Auf welchem Album ist „{{track}}“ ({{artist}})?",
+			"nextTrack": "Welcher Titel folgt auf „{{track}}“ auf „{{album}}“ ({{artist}})?",
+			"trackPosition": "An welcher Stelle steht „{{track}}“ auf „{{album}}“ ({{artist}})?",
+			"shortestTrack": "Welches ist der kürzeste Titel auf „{{album}}“ ({{artist}})?",
+			"albumLength": "Wie lang ist „{{album}}“ ({{artist}}) ungefähr, in Minuten?",
+			"notOnAlbum": "Welcher Titel ist NICHT auf „{{album}}“ ({{artist}})?",
+			"coverAlbum": "Von welchem {{artist}}-Album ist dieses Cover?",
+			"releaseCountry": "In welchem Land erschien diese Ausgabe von „{{album}}“ ({{artist}})?",
+			"artistFormedIn": "In welchem Jahr wurde {{artist}} gegründet?",
+			"bandMember": "Wer spielte bei {{artist}}?",
+			"memberBand": "In welcher Band spielte {{musician}}?",
+			"memberInstrument": "Was spielte {{musician}} bei {{artist}}?",
+			"albumCredit": "Wer ist auf „{{album}}“ ({{artist}}) als „{{role}}“ angegeben?",
+			"albumProducer": "Wer produzierte „{{album}}“ ({{artist}})?"
 		}
 	},
 	"home": {
@@ -540,6 +556,28 @@
 				"no-question": "Für diesen Tag gibt es keine Frage.",
 				"signed-out": "Die Sitzung ist abgelaufen. Melde dich neu an, dann kann der Tipp raus.",
 				"unknown": "Der Tipp ist nicht durchgekommen. Versuche es noch einmal."
+			},
+			"bonus-day": "Bonustag · {{multiplier}}× Punkte",
+			"seconds-left": "noch {{seconds}} s",
+			"time-is-up": "Zeit abgelaufen",
+			"the-cover": "Das gesuchte Cover",
+			"answered-late": "Der Tipp kam nach Ablauf der Zeit: die Lösung gibt es, Punkte nicht.",
+			"late-guess-is-free": "Die Zeit ist um — der Tipp bringt keine Punkte mehr, zeigt aber die Lösung.",
+			"breakdown": {
+				"base": "Basis",
+				"streak": "Serie",
+				"speed": "Tempo"
+			},
+			"leaderboard": {
+				"title": "Rangliste",
+				"players": "{{players}} Spieler",
+				"your-place": "dein Platz: {{rank}}",
+				"rank": "Platz",
+				"collector": "Sammler",
+				"anonymous": "Namenloser Sammler",
+				"you": "Du",
+				"unplaced": "—",
+				"rebuilt-nightly": "Die Rangliste wird einmal täglich am Abend neu gebaut; deine Punkte sind sofort aktuell, dein Platz beim nächsten Lauf."
 			}
 		},
 		"error": {
@@ -1985,6 +2023,49 @@
 			"no-bands-yet": "Dieser Musiker steht noch in keiner Besetzung.",
 			"edit-on-the-band": "Die Besetzung wird auf der Seite der Band unter „Besetzung“ bearbeitet.",
 			"error-general": "Etwas ist schiefgelaufen. Versuche es später erneut."
+		},
+		"dailyQuestionSettings": {
+			"title": "Tagesfrage",
+			"lead": "Die Spielregeln: wie viel Zeit zum Antworten bleibt, was ein Tipp zahlt und woraus die Maschine fragen darf.",
+			"loading": "Wird geladen…",
+			"the-game": "Das Spiel",
+			"game-is-on": "Das Spiel läuft",
+			"switched-off": "Ausgeschaltet entsteht keine neue Frage, und die Seite sagt das. Bereits erstellte Tage bleiben.",
+			"time-limit": "Zeitlimit (s)",
+			"time-limit-hint": "So viel Zeit bleibt zum Antworten. Null nimmt die Uhr weg und damit den Tempobonus. Ein später Tipp wird angenommen, zahlt aber nichts.",
+			"what-a-guess-pays": "Was ein Tipp zahlt",
+			"points-easy": "Leichte Frage",
+			"points-medium": "Mittlere Frage",
+			"points-hard": "Schwere Frage",
+			"streak-bonus": "Serienbonus pro Tag",
+			"streak-bonus-hint": "Der erste Tag einer Serie zahlt noch keinen Bonus: der Bonus belohnt die Rückkehr.",
+			"streak-days": "So viele Tage lang",
+			"speed-bonus": "Tempobonus (max.)",
+			"speed-bonus-hint": "Gleitend: ein sofortiger Tipp bekommt alles, ein Tipp in der letzten Sekunde nichts. Ohne Uhr zahlt er nicht.",
+			"the-luck": "Das Glück",
+			"bonus-day-chance": "Chance auf einen Bonustag (%)",
+			"bonus-day-chance-hint": "Ergibt sich aus dem Tag selbst — derselbe Tag ist für alle ein Bonustag.",
+			"bonus-day-multiplier": "Multiplikator am Bonustag",
+			"question-kinds": "Fragearten",
+			"question-kinds-hint": "Was ausgeschaltet ist, wird nie gezogen. Materialabhängige Arten schalten sich von selbst ein, sobald die Daten da sind — das Ausschalten gewinnt immer.",
+			"enabled-count": "{{enabled}} von {{all}} an",
+			"the-field": "Die Rangliste",
+			"leaderboard-size": "Sichtbare Plätze",
+			"leaderboard-size-hint": "Alle anderen sehen ihren eigenen Platz trotzdem: der nächtliche Lauf schreibt ihn in ihre Kasse.",
+			"save": "Speichern",
+			"saving": "Wird gespeichert…",
+			"saved": "Gespeichert",
+			"today": "Heute",
+			"compose-now": "Frage jetzt erstellen",
+			"compose-force": "Heutige Frage ersetzen",
+			"composing": "Wird erstellt…",
+			"refresh-leaderboard": "Rangliste neu bauen",
+			"refreshing": "Wird gebaut…",
+			"composed": "{{day}}: {{template}} ({{difficulty}}), aus {{tries}} Zügen",
+			"compose-exists": "{{day}}: die Frage stand schon; nichts wurde überschrieben.",
+			"compose-disabled": "Das Spiel ist ausgeschaltet, daher wurde keine Frage erstellt.",
+			"compose-no-material": "Im Katalog war nicht genug für eine Frage.",
+			"leaderboard-refreshed": "{{players}} Spieler, {{ranked}} Plätze aktualisiert."
 		}
 	},
 	"admin": {
@@ -2004,7 +2085,8 @@
 			"system": "System",
 			"documents": "Dokumente",
 			"badgeGeneration": "Abzeichen-Erzeugung",
-			"language": "Sprache"
+			"language": "Sprache",
+			"dailyQuestion": "Tagesfrage"
 		},
 		"field": {
 			"albums": "Alben",

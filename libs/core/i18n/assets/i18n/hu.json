@@ -151,7 +151,23 @@
 			"releaseCatno": "Melyik katalógusszám szerepel a(z) „{{album}}” ({{artist}}) kiadásán?",
 			"releaseCatnoLabel": "Melyik katalógusszám szerepel a(z) „{{album}}” ({{artist}}) {{label}} által kiadott lemezén?",
 			"artistCountry": "Melyik országból származik a(z) {{artist}}?",
-			"fallback": "Válaszd ki a helyes választ a katalógusból."
+			"fallback": "Válaszd ki a helyes választ a katalógusból.",
+			"albumStyle": "Melyik stílust adja a katalógus a(z) „{{album}}” lemezhez ({{artist}})?",
+			"earliestAlbum": "Melyik a(z) {{artist}} legkorábbi lemeze a katalógusban?",
+			"trackAlbum": "Melyik lemezen szerepel a(z) „{{track}}” ({{artist}})?",
+			"nextTrack": "Melyik szám következik a(z) „{{track}}” után a(z) „{{album}}” lemezen ({{artist}})?",
+			"trackPosition": "Hányadik szám a(z) „{{track}}” a(z) „{{album}}” lemezen ({{artist}})?",
+			"shortestTrack": "Melyik a legrövidebb szám a(z) „{{album}}” lemezen ({{artist}})?",
+			"albumLength": "Körülbelül hány perc a(z) „{{album}}” ({{artist}}) teljes játékideje?",
+			"notOnAlbum": "Melyik szám NEM szerepel a(z) „{{album}}” lemezen ({{artist}})?",
+			"coverAlbum": "Melyik {{artist}}-lemez borítója ez?",
+			"releaseCountry": "Melyik országban jelent meg a(z) „{{album}}” ({{artist}}) kiadása?",
+			"artistFormedIn": "Melyik évben alakult a(z) {{artist}}?",
+			"bandMember": "Ki játszott a(z) {{artist}} zenekarban?",
+			"memberBand": "Melyik zenekarban játszott {{musician}}?",
+			"memberInstrument": "Milyen hangszeren játszott {{musician}} a(z) {{artist}} zenekarban?",
+			"albumCredit": "Ki szerepel „{{role}}” szerepben a(z) „{{album}}” lemezen ({{artist}})?",
+			"albumProducer": "Ki a producere a(z) „{{album}}” lemeznek ({{artist}})?"
 		}
 	},
 	"home": {
@@ -540,6 +556,28 @@
 				"no-question": "Erre a napra nincs kérdés.",
 				"signed-out": "Lejárt a munkamenet. Jelentkezz be újra, és mehet a tipp.",
 				"unknown": "A tipp nem ment át. Próbáld meg újra."
+			},
+			"bonus-day": "Bónusz nap · {{multiplier}}× pont",
+			"seconds-left": "{{seconds}} mp van hátra",
+			"time-is-up": "Lejárt az idő",
+			"the-cover": "A keresett lemez borítója",
+			"answered-late": "A tipp az idő lejárta után érkezett: a megfejtés megvan, pont nem jár érte.",
+			"late-guess-is-free": "Lejárt az idő — a tipp már nem ér pontot, de a megfejtést megmutatjuk.",
+			"breakdown": {
+				"base": "Alap",
+				"streak": "Sorozat",
+				"speed": "Gyorsaság"
+			},
+			"leaderboard": {
+				"title": "Ranglista",
+				"players": "{{players}} játékos",
+				"your-place": "a te helyed: {{rank}}.",
+				"rank": "Hely",
+				"collector": "Gyűjtő",
+				"anonymous": "Névtelen gyűjtő",
+				"you": "Te",
+				"unplaced": "—",
+				"rebuilt-nightly": "A ranglista naponta egyszer, este épül újra; a pontod azonnal frissül, a helyezésed a következő futáskor."
 			}
 		},
 		"error": {
@@ -1985,6 +2023,49 @@
 			"no-bands-yet": "Ez a zenész még egyetlen felállásban sem szerepel.",
 			"edit-on-the-band": "A felállást a banda oldalán, a Felállás fülön lehet szerkeszteni.",
 			"error-general": "Valami hiba történt. Próbáld újra később."
+		},
+		"dailyQuestionSettings": {
+			"title": "Napi kérdés",
+			"lead": "A játék szabályai: mennyi idő van válaszolni, mit fizet egy tipp, és miből kérdezhet a motor.",
+			"loading": "Betöltés…",
+			"the-game": "A játék",
+			"game-is-on": "A játék megy",
+			"switched-off": "Kikapcsolva nem áll össze új kérdés, és a lap ezt mondja a gyűjtőnek. A meglévő napok kérdései megmaradnak.",
+			"time-limit": "Időkorlát (mp)",
+			"time-limit-hint": "Ennyi idő van válaszolni. Nulla: nincs óra, és gyorsasági bónusz sincs. A késői tippet a szerver elfogadja, de nem fizeti.",
+			"what-a-guess-pays": "Mit fizet egy tipp",
+			"points-easy": "Könnyű kérdés",
+			"points-medium": "Közepes kérdés",
+			"points-hard": "Nehéz kérdés",
+			"streak-bonus": "Sorozat-bónusz naponta",
+			"streak-bonus-hint": "A sorozat első napja még nem bónuszol: a bónusz a visszatérést díjazza.",
+			"streak-days": "Ennyi napig",
+			"speed-bonus": "Gyorsasági bónusz (max)",
+			"speed-bonus-hint": "Csúszó skálán fizet: az azonnali tipp az egészet viszi, az utolsó másodpercben érkező semmit. Óra nélkül nem fizet.",
+			"the-luck": "A szerencse",
+			"bonus-day-chance": "Bónusz nap esélye (%)",
+			"bonus-day-chance-hint": "A napból dől el, tehát mindenkinek ugyanaz a nap a bónusz nap.",
+			"bonus-day-multiplier": "Bónusz napi szorzó",
+			"question-kinds": "Kérdésfajták",
+			"question-kinds-hint": "Amit kikapcsolsz, abból nem lesz kérdés. A merítés-függő fajták maguktól kapcsolnak be, ahogy az adat pótlódik — a kikapcsolás viszont mindig erősebb.",
+			"enabled-count": "{{enabled}} / {{all}} bekapcsolva",
+			"the-field": "A ranglista",
+			"leaderboard-size": "Ennyi hely látszik",
+			"leaderboard-size-hint": "A többi gyűjtő a saját helyezését így is látja: azt a kasszájába írja a napi futás.",
+			"save": "Mentés",
+			"saving": "Mentés…",
+			"saved": "Mentve",
+			"today": "A mai nap",
+			"compose-now": "Kérdés összeállítása most",
+			"compose-force": "Mai kérdés lecserélése",
+			"composing": "Összeállítás…",
+			"refresh-leaderboard": "Ranglista újraépítése",
+			"refreshing": "Építés…",
+			"composed": "{{day}}: {{template}} ({{difficulty}}), {{tries}} húzásból",
+			"compose-exists": "{{day}}: a kérdés már megvolt, nem írtuk felül.",
+			"compose-disabled": "A játék ki van kapcsolva, ezért nem készült kérdés.",
+			"compose-no-material": "Nem volt elég anyag a katalógusban a kérdéshez.",
+			"leaderboard-refreshed": "{{players}} játékos, {{ranked}} helyezés frissült."
 		}
 	},
 	"admin": {
@@ -2004,7 +2085,8 @@
 			"system": "Rendszer",
 			"documents": "Dokumentumok",
 			"badgeGeneration": "Jelvénygenerálás",
-			"language": "Nyelv"
+			"language": "Nyelv",
+			"dailyQuestion": "Napi kérdés"
 		},
 		"field": {
 			"albums": "Albumok",

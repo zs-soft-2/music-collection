@@ -660,6 +660,18 @@ service cloud.firestore {
     // alkollekcióban, amit senki nem olvashat — négy opciónál a válasz
     // hashelése értelmetlen volna, mind a négyet végig lehetne próbálni.
     // A választ ezért callable értékeli ki.
+    // A napi kérdés ranglistája: egy dokumentum, amit egy napi futás épít
+    // (`refreshDailyQuestionLeaderboardDaily`). Bejelentkezve olvasható —
+    // ez a játék mezőnye, nevekkel együtt.
+    //
+    // Azért egy dokumentum, és nem kliens-lekérdezés: az élő ranglista
+    // látogatónként egy lekérdezés lenne, és a mezőnnyel együtt romlana.
+    // A saját helyezés nem is innen jön, hanem a gyűjtő saját kasszájából.
+    match /leaderboard/{gameId} {
+      allow read: if isAuthed();
+      allow write: if false; // refreshDailyQuestionLeaderboard
+    }
+
     match /daily-question/{day} {
       allow read: if isAuthed();
       allow write: if false; // composeDailyQuestionDaily / composeDailyQuestionNow

@@ -1,9 +1,18 @@
-import { filter, of, pipe, switchMap, tap } from 'rxjs';
+import {
+	combineLatest,
+	filter,
+	interval,
+	of,
+	pipe,
+	switchMap,
+	tap,
+} from 'rxjs';
 
 import { computed, inject } from '@angular/core';
 import {
 	DailyAnswer,
 	DailyQuestionEntity,
+	DailyQuestionLeaderboard,
 	DailyQuestionScore,
 	EMPTY_DAILY_QUESTION_SCORE,
 } from '@music-collection/api';
@@ -22,10 +31,14 @@ import {
 	DailyAnswerFailure,
 	DailyAnswerRejected,
 	DailyQuestionEffect,
+	EMPTY_DAILY_QUESTION_LEADERBOARD,
 } from '../../data/daily-question';
 
-import { toSubjectLink, toView } from './daily-question.mapper';
-
+import {
+	toLeaderboardView,
+	toSubjectLink,
+	toView,
+} from './daily-question.mapper';
 interface DailyQuestionPageState {
 	/** The day being played, `YYYY-MM-DD`; the effect decides which. */
 	day: string;
@@ -34,10 +47,21 @@ interface DailyQuestionPageState {
 	/** The guess, once made; this is also what reveals the answer. */
 	answer: DailyAnswer | null;
 	score: DailyQuestionScore;
+	leaderboard: DailyQuestionLeaderboard;
+	/** Who is playing; the leaderboard marks their row. */
+	uid: string | null;
 	/** Picked but not sent yet — a guess is only spent when it is sent. */
 	selectedOptionId: string | null;
 	isSubmitting: boolean;
 	failure: DailyAnswerFailure | null;
+	/**
+	 * When the clock started, epoch milliseconds: the moment the question
+	 * appeared on this page. Null on a day without a limit, and once the
+	 * guess is in.
+	 */
+	startedAt: number | null;
+	/** Moved by the ticker; the countdown is computed from it. */
+	nowMs: number;
 }
 
 const initialState: DailyQuestionPageState = {
@@ -46,45 +70,115 @@ const initialState: DailyQuestionPageState = {
 	question: null,
 	answer: null,
 	score: EMPTY_DAILY_QUESTION_SCORE,
+	leaderboard: EMPTY_DAILY_QUESTION_LEADERBOARD,
+	uid: null,
 	selectedOptionId: null,
 	isSubmitting: false,
 	failure: null,
+	startedAt: null,
+	nowMs: 0,
 };
 
 export const DailyQuestionPageStore = signalStore(
 	withState(initialState),
-	withComputed((store) => ({
-		/** The question as a sentence and four buttons. */
-		view: computed(() => {
-			const question = store.question();
+	withComputed((store) => {
+		/** Seconds gone since the question appeared here. */
+		const elapsedSec = computed(() => {
+			const startedAt = store.startedAt();
 
-			return question
-				? toView(question, store.answer(), store.selectedOptionId())
-				: null;
-		}),
-		isAnswered: computed(() => !!store.answer()),
-		isCorrect: computed(() => !!store.answer()?.correct),
-		/** The day has no question: the composing found no material, or has not run. */
-		hasNoQuestion: computed(() => !store.isLoading() && !store.question()),
-		canSubmit: computed(
-			() =>
-				!!store.selectedOptionId() &&
-				!store.answer() &&
-				!store.isSubmitting()
-		),
-		/** Where the reveal leads — the album, artist or pressing behind it. */
-		subjectLink: computed(() => toSubjectLink(store.answer()?.subject)),
-		subjectName: computed(() => store.answer()?.subject?.name ?? ''),
-		/** The pot is worth showing once there is something in it. */
-		hasPot: computed(() => store.score().answered > 0),
-		accuracy: computed(() => {
-			const score = store.score();
+			if (!startedAt) return 0;
 
-			return score.answered
-				? Math.round((score.correct / score.answered) * 100)
-				: 0;
-		}),
-	})),
+			return Math.max(Math.floor((store.nowMs() - startedAt) / 1000), 0);
+		});
+		const timeLimitSec = computed(() =>
+			Math.max(store.question()?.timeLimitSec ?? 0, 0)
+		);
+		/** The table, built once and read by both the list and its guard. */
+		const leaderboardView = computed(() =>
+			toLeaderboardView(store.leaderboard(), store.score(), store.uid())
+		);
+
+		return {
+			/** The question as a sentence and four buttons. */
+			view: computed(() => {
+				const question = store.question();
+
+				return question
+					? toView(question, store.answer(), store.selectedOptionId())
+					: null;
+			}),
+			isAnswered: computed(() => !!store.answer()),
+			isCorrect: computed(() => !!store.answer()?.correct),
+			/** The day has no question: the composing found no material, or has not run. */
+			hasNoQuestion: computed(
+				() => !store.isLoading() && !store.question()
+			),
+			elapsedSec,
+			timeLimitSec,
+			/** Whether the day is played against a clock at all. */
+			hasClock: computed(() => timeLimitSec() > 0),
+			/** Seconds left; 0 once the time is up. */
+			remainingSec: computed(() =>
+				Math.max(timeLimitSec() - elapsedSec(), 0)
+			),
+			/**
+			 * The time ran out before the guess went in. The guess is still
+			 * allowed — the server takes it, marks it late and pays nothing —
+			 * because knowing the answer is worth more than the points.
+			 */
+			isExpired: computed(
+				() =>
+					timeLimitSec() > 0 &&
+					!store.answer() &&
+					elapsedSec() >= timeLimitSec()
+			),
+			/** How much of the clock is gone, for the bar. */
+			clockPercent: computed(() =>
+				timeLimitSec()
+					? Math.min(
+							Math.round((elapsedSec() / timeLimitSec()) * 100),
+							100
+						)
+					: 0
+			),
+			/** Today pays more than usual, and the page says so. */
+			isBonusDay: computed(
+				() => (store.question()?.scoring?.multiplier ?? 1) > 1
+			),
+			multiplier: computed(
+				() => store.question()?.scoring?.multiplier ?? 1
+			),
+			/** The guess is late: it was graded, but paid nothing. */
+			wasLate: computed(() => !!store.answer()?.timedOut),
+			breakdown: computed(() => store.answer()?.breakdown ?? null),
+			canSubmit: computed(
+				() =>
+					!!store.selectedOptionId() &&
+					!store.answer() &&
+					!store.isSubmitting()
+			),
+			/** Where the reveal leads — the album, artist or pressing behind it. */
+			subjectLink: computed(() => toSubjectLink(store.answer()?.subject)),
+			subjectName: computed(() => store.answer()?.subject?.name ?? ''),
+			/** The pot is worth showing once there is something in it. */
+			hasPot: computed(() => store.score().answered > 0),
+			accuracy: computed(() => {
+				const score = store.score();
+
+				return score.answered
+					? Math.round((score.correct / score.answered) * 100)
+					: 0;
+			}),
+			/** The collector's own place, as the last run saw it. */
+			rank: computed(() => store.score().rank ?? null),
+			/** The table: the top of the field and the reader's own row. */
+			leaderboardView,
+			/** Nothing to show until somebody has played. */
+			hasLeaderboard: computed(
+				() => !!leaderboardView().rows.length || !!leaderboardView().me
+			),
+		};
+	}),
 	withMethods((store, effect = inject(DailyQuestionEffect)) => {
 		const loadQuestion = rxMethod<string>(
 			pipe(
@@ -95,6 +189,14 @@ export const DailyQuestionPageStore = signalStore(
 								patchState(store, {
 									question,
 									isLoading: false,
+									// The clock starts when the question
+									// first appears in this browser — and a
+									// reload does not restart it.
+									startedAt:
+										question && !store.answer()
+											? effect.startedAt(day)
+											: null,
+									nowMs: Date.now(),
 								}),
 							error: (error) => {
 								console.error(error);
@@ -117,7 +219,13 @@ export const DailyQuestionPageStore = signalStore(
 					effect.answer$(day).pipe(
 						tapResponse({
 							next: (answer: DailyAnswer | null) =>
-								patchState(store, { answer }),
+								patchState(store, {
+									answer,
+									// An answered day has no clock left to run.
+									startedAt: answer
+										? null
+										: store.startedAt(),
+								}),
 							error: (error) => console.error(error),
 						})
 					)
@@ -139,6 +247,39 @@ export const DailyQuestionPageStore = signalStore(
 			)
 		);
 
+		/** The field, and who is reading it. */
+		const followLeaderboard = rxMethod<void>(
+			pipe(
+				switchMap(() =>
+					combineLatest([effect.leaderboard$(), effect.uid$()]).pipe(
+						tapResponse({
+							next: ([leaderboard, uid]) =>
+								patchState(store, { leaderboard, uid }),
+							error: (error) => console.error(error),
+						})
+					)
+				)
+			)
+		);
+
+		/**
+		 * The countdown, a second at a time. It only writes while a clock is
+		 * actually running, so an answered question — or a day without a
+		 * limit — costs the page nothing.
+		 */
+		const tick = rxMethod<void>(
+			pipe(
+				switchMap(() => interval(1000)),
+				filter(
+					() =>
+						!!store.startedAt() &&
+						!store.answer() &&
+						(store.question()?.timeLimitSec ?? 0) > 0
+				),
+				tap(() => patchState(store, { nowMs: Date.now() }))
+			)
+		);
+
 		/** Opens a day: the question, and whatever was guessed on it. */
 		const open = (day: string): void => {
 			patchState(store, {
@@ -149,6 +290,8 @@ export const DailyQuestionPageStore = signalStore(
 				selectedOptionId: null,
 				isSubmitting: false,
 				failure: null,
+				startedAt: null,
+				nowMs: Date.now(),
 			});
 			loadQuestion(day);
 			followAnswer(day);
@@ -157,6 +300,8 @@ export const DailyQuestionPageStore = signalStore(
 		return {
 			open,
 			followScore,
+			followLeaderboard,
+			tick,
 			/** Today's question, again. */
 			reopen: (): void => open(effect.today()),
 			/** Picking is not guessing: it can be changed until it is sent. */
@@ -180,13 +325,24 @@ export const DailyQuestionPageStore = signalStore(
 						patchState(store, {
 							isSubmitting: true,
 							failure: null,
+							nowMs: Date.now(),
 						})
 					),
 					switchMap(() =>
 						effect
 							.submit$(
 								store.day(),
-								store.selectedOptionId() as string
+								store.selectedOptionId() as string,
+								store.startedAt()
+									? Math.max(
+											Math.floor(
+												(Date.now() -
+													(store.startedAt() as number)) /
+													1000
+											),
+											0
+										)
+									: undefined
 							)
 							.pipe(
 								tapResponse({
@@ -195,6 +351,7 @@ export const DailyQuestionPageStore = signalStore(
 											answer: result.answer,
 											score: result.score,
 											isSubmitting: false,
+											startedAt: null,
 										}),
 									error: (error: unknown) => {
 										const failure =
@@ -227,6 +384,8 @@ export const DailyQuestionPageStore = signalStore(
 		onInit(store, effect = inject(DailyQuestionEffect)) {
 			store.open(effect.today());
 			store.followScore(of(undefined));
+			store.followLeaderboard(of(undefined));
+			store.tick(of(undefined));
 		},
 	})
 );

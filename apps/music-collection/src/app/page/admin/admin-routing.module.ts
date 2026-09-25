@@ -183,6 +183,21 @@ const routes: Routes = [
 				canActivate: [NgxPermissionsGuard],
 			},
 			{
+				path: 'daily-question',
+				data: {
+					breadcrumb: 'daily-question',
+					permissions: {
+						only: [RoleNames.ADMIN],
+						redirectTo: '/error',
+					},
+				},
+				loadComponent: () =>
+					import(
+						'./daily-question/daily-question-settings.component'
+					).then((module) => module.DailyQuestionSettingsComponent),
+				canActivate: [NgxPermissionsGuard],
+			},
+			{
 				path: 'badge-settings',
 				data: {
 					breadcrumb: 'badge-settings',
