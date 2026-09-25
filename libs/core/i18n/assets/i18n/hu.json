@@ -1951,7 +1951,21 @@
 			"no-members-yet": "Még nincs tag. Vedd fel őket kézzel, vagy töltsd be a felállást a Discogs importtal.",
 			"error-duplicate": "Ez a zenész már szerepel a felállásban. Azt a sort szerkeszd.",
 			"error-permission": "Nincs jogosultságod a felállás módosításához.",
-			"error-general": "Valami hiba történt. Próbáld újra később."
+			"error-general": "Valami hiba történt. Próbáld újra később.",
+			"load": "Betöltés",
+			"load-hint": "A felállás betöltése a MusicBrainzről és a katalógus kreditjeiből",
+			"pick-the-band": "Válaszd ki, melyik banda felállása ez — mentsd az azonosítóját az Adatok fülön, hogy a választás megmaradjon.",
+			"found": "Talált felállás",
+			"found-note": "A tagok és az évek a MusicBrainzről, a vendégek és a hangszerek a katalógusban már meglévő kreditekből. Aki már szerepel a felállásban, az kimarad.",
+			"select-all": "Mind kijelölése",
+			"new-musician": "új",
+			"source": "Forrás",
+			"source-musicbrainz": "MusicBrainz",
+			"source-catalog": "Kreditek",
+			"current": "Jelenlegi tag",
+			"add-selected": "{{count}} sor felvétele",
+			"error-nothing-found": "Nincs mit felvenni: a MusicBrainzen nincs felállás, a katalógusban pedig nincs kredit a banda albumaihoz.",
+			"external-failed": "A MusicBrainz nem volt elérhető, ezért csak a katalógus kreditjei szerepelnek. A tagokért és az évekért próbáld újra a betöltést később."
 		},
 		"musicianBands": {
 			"heading": "Bandák ({{count}})",

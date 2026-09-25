@@ -1,7 +1,14 @@
 import { exhaustMap, map, of, pipe, switchMap, tap } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
-import { MembershipEntity, MusicianEntity } from '@music-collection/api';
+import {
+	AlbumEntity,
+	ArtistEntity,
+	ArtistExternalCandidate,
+	MembershipEntity,
+	MusicianEntity,
+	toMusicBrainzId,
+} from '@music-collection/api';
 import { tapResponse } from '@ngrx/operators';
 import {
 	patchState,
@@ -12,11 +19,25 @@ import {
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
-import { MembershipDraft, MembershipEffect } from '../data/membership.effect';
+import { LineupCandidate } from '../data/lineup-candidates';
+import {
+	LineupLookupResult,
+	MembershipDraft,
+	MembershipEffect,
+} from '../data/membership.effect';
+
+/** A candidate as the load dialog lists it. */
+export interface CandidateRow extends LineupCandidate {
+	/** Whether the row is written when the dialog is applied. */
+	selected: boolean;
+}
 
 interface ArtistMembersState {
 	artistUid: string;
 	artistName: string;
+	artist: ArtistEntity | undefined;
+	/** The band's albums, which the catalog's credits are read through. */
+	albums: AlbumEntity[];
 	rows: MembershipEntity[];
 	isLoading: boolean;
 	/** The row being added or edited; null while the form is closed. */
@@ -27,12 +48,26 @@ interface ArtistMembersState {
 	/** Names offered for the musician field. */
 	musicianOptions: MusicianEntity[];
 	pendingDeletion: MembershipEntity | null;
+	/** The loaded candidates; null while the load dialog is closed. */
+	candidates: CandidateRow[] | null;
+	isLoadingCandidates: boolean;
+	/** True when the last load could not reach MusicBrainz. */
+	externalFailed: boolean;
+	/** Bands of the same name to choose between, when the id is unknown. */
+	namesakes: ArtistExternalCandidate[] | null;
+	/**
+	 * The namesake picked here, for as long as the tab is open. Saving the
+	 * id on the details tab is what makes the choice outlast the page.
+	 */
+	pickedMusicBrainzId: string | null;
 	error: string | null;
 }
 
 const initialState: ArtistMembersState = {
 	artistUid: '',
 	artistName: '',
+	artist: undefined,
+	albums: [],
 	rows: [],
 	isLoading: true,
 	draft: null,
@@ -40,6 +75,11 @@ const initialState: ArtistMembersState = {
 	isSaving: false,
 	musicianOptions: [],
 	pendingDeletion: null,
+	candidates: null,
+	isLoadingCandidates: false,
+	externalFailed: false,
+	namesakes: null,
+	pickedMusicBrainzId: null,
 	error: null,
 };
 
@@ -73,6 +113,35 @@ const toDraft = (row: MembershipEntity): MembershipDraft => ({
 	to: row.to,
 	active: !!row.active,
 });
+
+/** What the candidate lookup needs, read off the store as it stands. */
+const lookup = (
+	store: {
+		artistUid: () => string;
+		artistName: () => string;
+		albums: () => AlbumEntity[];
+		rows: () => MembershipEntity[];
+	},
+	musicBrainzId: string | null
+) => ({
+	artistUid: store.artistUid(),
+	artistName: store.artistName(),
+	albums: store.albums(),
+	musicBrainzId,
+	existing: store.rows(),
+});
+
+const toRows = (candidates: LineupCandidate[]): CandidateRow[] =>
+	candidates.map((candidate) => ({ ...candidate, selected: true }));
+
+/** Nothing found is worth a sentence; a pending namesake question is not. */
+const emptyError = (
+	result?: LineupLookupResult,
+	namesakes?: ArtistExternalCandidate[]
+): string | null =>
+	!result || result.candidates.length || namesakes
+		? null
+		: 'ui.artistMembers.error-nothing-found';
 
 const describeError = (error: unknown): string => {
 	const code = (error as { code?: string })?.code ?? '';
@@ -114,6 +183,9 @@ export const ArtistMembersStore = signalStore(
 		),
 		/** A draft is only saveable once it names a musician. */
 		isSaveable: computed(() => !!store.draft()?.musicianUid),
+		selectedCandidates: computed(
+			() => store.candidates()?.filter((row) => row.selected) ?? []
+		),
 	})),
 	withMethods((store, effect = inject(MembershipEffect)) => ({
 		load: rxMethod<string>(
@@ -123,8 +195,9 @@ export const ArtistMembersStore = signalStore(
 				),
 				switchMap((artistUid) => effect.loadLineup$(artistUid)),
 				tapResponse({
-					next: ({ artistName, rows }) =>
+					next: ({ artist, artistName, rows }) =>
 						patchState(store, {
+							artist,
 							artistName,
 							rows,
 							isLoading: false,
@@ -133,6 +206,170 @@ export const ArtistMembersStore = signalStore(
 						console.error(error);
 						patchState(store, {
 							isLoading: false,
+							error: describeError(error),
+						});
+					},
+				})
+			)
+		),
+		/** The band's albums, kept current while the tab is open. */
+		loadAlbums: rxMethod<string>(
+			pipe(
+				switchMap((artistUid) => effect.loadAlbums$(artistUid)),
+				tapResponse({
+					next: (albums) => patchState(store, { albums }),
+					error: (error) => console.error(error),
+				})
+			)
+		),
+		/**
+		 * Offers the line-up both sources know about. Without a MusicBrainz
+		 * id the band is searched by name first, and where several bands
+		 * carry it the admin is asked which theirs is — a namesake's members
+		 * are worse than none.
+		 */
+		loadCandidates: rxMethod<void>(
+			pipe(
+				tap(() =>
+					patchState(store, {
+						isLoadingCandidates: true,
+						error: null,
+					})
+				),
+				exhaustMap(() => {
+					const musicBrainzId =
+						toMusicBrainzId(store.artist()?.musicBrainzId) ??
+						store.pickedMusicBrainzId();
+
+					if (musicBrainzId) {
+						return effect
+							.loadCandidates$(lookup(store, musicBrainzId))
+							.pipe(map((result) => ({ result })));
+					}
+
+					return effect
+						.searchExternalArtists$({
+							country: store.artist()?.country ?? null,
+							musicBrainzId: store.artist()?.musicBrainzId,
+							name: store.artistName(),
+							styles: store.artist()?.styles ?? [],
+						})
+						.pipe(
+							switchMap((hits) =>
+								hits.length > 1
+									? of({ namesakes: hits })
+									: effect
+											.loadCandidates$(
+												lookup(
+													store,
+													hits[0]?.musicBrainzId ??
+														null
+												)
+											)
+											.pipe(map((result) => ({ result })))
+							)
+						);
+				}),
+				tapResponse({
+					next: (found: {
+						result?: LineupLookupResult;
+						namesakes?: ArtistExternalCandidate[];
+					}) =>
+						patchState(store, {
+							isLoadingCandidates: false,
+							namesakes: found.namesakes ?? null,
+							externalFailed: !!found.result?.externalFailed,
+							candidates: found.result
+								? toRows(found.result.candidates)
+								: null,
+							error: emptyError(found.result, found.namesakes),
+						}),
+					error: (error) => {
+						console.error(error);
+						patchState(store, {
+							isLoadingCandidates: false,
+							error: describeError(error),
+						});
+					},
+				})
+			)
+		),
+		/** Loads the line-up of the namesake the admin picked. */
+		chooseNamesake: rxMethod<ArtistExternalCandidate>(
+			pipe(
+				tap((candidate) =>
+					patchState(store, {
+						namesakes: null,
+						isLoadingCandidates: true,
+						pickedMusicBrainzId: candidate.musicBrainzId,
+					})
+				),
+				exhaustMap((candidate) =>
+					effect.loadCandidates$(
+						lookup(store, candidate.musicBrainzId)
+					)
+				),
+				tapResponse({
+					next: (result) =>
+						patchState(store, {
+							isLoadingCandidates: false,
+							externalFailed: result.externalFailed,
+							candidates: toRows(result.candidates),
+							error: emptyError(result),
+						}),
+					error: (error) => {
+						console.error(error);
+						patchState(store, {
+							isLoadingCandidates: false,
+							error: describeError(error),
+						});
+					},
+				})
+			)
+		),
+		closeNamesakes: () => patchState(store, { namesakes: null }),
+		closeCandidates: () => patchState(store, { candidates: null }),
+		toggleCandidate: (row: CandidateRow) =>
+			patchState(store, {
+				candidates:
+					store.candidates()?.map((candidate) =>
+						candidate === row
+							? {
+									...candidate,
+									selected: !candidate.selected,
+								}
+							: candidate
+					) ?? null,
+			}),
+		toggleAllCandidates: (selected: boolean) =>
+			patchState(store, {
+				candidates:
+					store
+						.candidates()
+						?.map((candidate) => ({ ...candidate, selected })) ??
+					null,
+			}),
+		/** Writes the ticked candidates as line-up rows. */
+		applyCandidates: rxMethod<void>(
+			pipe(
+				tap(() => patchState(store, { isSaving: true, error: null })),
+				exhaustMap(() =>
+					effect.applyCandidates$(
+						store.candidates()?.filter((row) => row.selected) ?? [],
+						store.artistUid(),
+						store.artistName()
+					)
+				),
+				tapResponse({
+					next: () =>
+						patchState(store, {
+							isSaving: false,
+							candidates: null,
+						}),
+					error: (error) => {
+						console.error(error);
+						patchState(store, {
+							isSaving: false,
 							error: describeError(error),
 						});
 					},

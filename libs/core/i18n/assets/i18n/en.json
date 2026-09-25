@@ -1951,7 +1951,21 @@
 			"no-members-yet": "No members yet. Add them by hand, or let the Discogs import fill the line-up in.",
 			"error-duplicate": "This musician is already in the line-up. Edit that row instead.",
 			"error-permission": "You may not change the line-up.",
-			"error-general": "Something went wrong. Try again later."
+			"error-general": "Something went wrong. Try again later.",
+			"load": "Load",
+			"load-hint": "Load the line-up from MusicBrainz and the catalog’s own credits",
+			"pick-the-band": "Pick the band whose line-up this is — save its id on the Details tab to make the choice stick.",
+			"found": "Line-up found",
+			"found-note": "Members and years from MusicBrainz, guests and instruments from the credits already in the catalog. Musicians already in the line-up are left out.",
+			"select-all": "Select all",
+			"new-musician": "new",
+			"source": "Source",
+			"source-musicbrainz": "MusicBrainz",
+			"source-catalog": "Credits",
+			"current": "Current member",
+			"add-selected": "Add {{count}} rows",
+			"error-nothing-found": "Nothing to add: no line-up on MusicBrainz, and the catalog has no credits for this band’s albums.",
+			"external-failed": "MusicBrainz could not be reached, so only the catalog’s own credits are listed. Try the load again later for the members and their years."
 		},
 		"musicianBands": {
 			"heading": "Bands ({{count}})",

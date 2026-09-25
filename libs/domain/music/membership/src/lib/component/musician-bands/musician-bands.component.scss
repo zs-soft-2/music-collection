@@ -3,27 +3,3 @@
 	margin: 0.5rem 0;
 	color: var(--p-red-400, #f87171);
 }
-
-.musician-bands-table {
-	overflow-x: auto;
-
-	table {
-		width: 100%;
-		border-collapse: collapse;
-	}
-
-	th,
-	td {
-		padding: 0.5rem 0.75rem;
-		text-align: left;
-		border-bottom: 1px solid var(--p-content-border-color, #3f3f46);
-		white-space: nowrap;
-	}
-
-	thead th {
-		font-size: 0.8rem;
-		text-transform: uppercase;
-		letter-spacing: 0.06em;
-		opacity: 0.7;
-	}
-}

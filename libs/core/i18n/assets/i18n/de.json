@@ -1951,7 +1951,21 @@
 			"no-members-yet": "Noch keine Mitglieder. Von Hand eintragen oder den Discogs-Import die Besetzung füllen lassen.",
 			"error-duplicate": "Dieser Musiker steht bereits in der Besetzung. Bearbeite stattdessen diese Zeile.",
 			"error-permission": "Du darfst die Besetzung nicht ändern.",
-			"error-general": "Etwas ist schiefgelaufen. Versuche es später erneut."
+			"error-general": "Etwas ist schiefgelaufen. Versuche es später erneut.",
+			"load": "Laden",
+			"load-hint": "Besetzung aus MusicBrainz und den Credits des Katalogs laden",
+			"pick-the-band": "Wähle die Band, deren Besetzung das ist — speichere ihre ID im Reiter „Daten“, damit die Wahl bleibt.",
+			"found": "Gefundene Besetzung",
+			"found-note": "Mitglieder und Jahre aus MusicBrainz, Gäste und Instrumente aus den Credits im Katalog. Wer schon in der Besetzung steht, bleibt weg.",
+			"select-all": "Alle auswählen",
+			"new-musician": "neu",
+			"source": "Quelle",
+			"source-musicbrainz": "MusicBrainz",
+			"source-catalog": "Credits",
+			"current": "Aktuelles Mitglied",
+			"add-selected": "{{count}} Zeilen hinzufügen",
+			"error-nothing-found": "Nichts hinzuzufügen: keine Besetzung auf MusicBrainz, und der Katalog hat keine Credits zu den Alben dieser Band.",
+			"external-failed": "MusicBrainz war nicht erreichbar, daher stehen hier nur die Credits des Katalogs. Für Mitglieder und Jahre später erneut laden."
 		},
 		"musicianBands": {
 			"heading": "Bands ({{count}})",

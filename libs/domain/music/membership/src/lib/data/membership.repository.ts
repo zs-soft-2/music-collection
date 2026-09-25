@@ -1,18 +1,24 @@
-import { Observable } from 'rxjs';
+import { Observable, forkJoin, from, map, of } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
 import {
 	Firestore,
 	collection,
 	doc,
+	getDocs,
 	query,
 	where,
 } from '@angular/fire/firestore';
 import {
+	CONTRIBUTION_FEATURE_KEY,
+	ContributionEntity,
 	FirestoreSyncService,
 	MEMBERSHIP_FEATURE_KEY,
 	MembershipEntity,
 } from '@music-collection/api';
+
+/** How many values an `in` filter takes in one query. */
+const IN_LIMIT = 30;
 
 /**
  * Data access for `membership` documents (musician ↔ band, from–to years).
@@ -53,6 +59,66 @@ export class MembershipRepository {
 			MEMBERSHIP_FEATURE_KEY,
 			membership
 		);
+	}
+
+	/** Creates or overwrites several memberships in one batch. */
+	public saveAll(memberships: MembershipEntity[]): Promise<void> {
+		return this.firestoreSync.setAll(
+			MEMBERSHIP_FEATURE_KEY,
+			memberships.map((membership) => ({
+				reference: doc(
+					this.firestore,
+					MEMBERSHIP_FEATURE_KEY,
+					membership.uid
+				),
+				data: membership,
+			}))
+		);
+	}
+
+	/**
+	 * The credits of the given albums. Asked for by album rather than synced:
+	 * the contributions outnumber everything else in the catalog, and a
+	 * line-up needs the credits of one band's records only.
+	 */
+	public listContributionsByAlbums$(
+		albumUids: string[]
+	): Observable<ContributionEntity[]> {
+		if (!albumUids.length) {
+			return of([]);
+		}
+
+		const chunks: string[][] = [];
+
+		for (let index = 0; index < albumUids.length; index += IN_LIMIT) {
+			chunks.push(albumUids.slice(index, index + IN_LIMIT));
+		}
+
+		return forkJoin(
+			chunks.map((chunk) =>
+				from(
+					getDocs(
+						query(
+							collection(
+								this.firestore,
+								CONTRIBUTION_FEATURE_KEY
+							),
+							where('albumUid', 'in', chunk)
+						)
+					)
+				).pipe(
+					map((snapshot) =>
+						snapshot.docs.map(
+							(document) =>
+								({
+									...document.data(),
+									uid: document.id,
+								}) as ContributionEntity
+						)
+					)
+				)
+			)
+		).pipe(map((results) => results.flat()));
 	}
 
 	public remove(uid: string): Promise<void> {

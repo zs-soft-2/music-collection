@@ -15,7 +15,7 @@
 	@if (store.isLoading()) {
 		<p class="mc-form-note">{{ 'ui.musicianBands.loading' | transloco }}</p>
 	} @else if (store.bands().length) {
-		<div class="musician-bands-table">
+		<div class="mc-stacked-table">
 			<table>
 				<thead>
 					<tr>
@@ -48,7 +48,11 @@
 									>{{ band.artistName }}</a
 								>
 							</th>
-							<td>
+							<td
+								[attr.data-label]="
+									'ui.musicianBands.kind' | transloco
+								"
+							>
 								{{
 									(band.kind === 'member'
 										? 'ui.musicianBands.kind-member'
@@ -56,8 +60,18 @@
 									) | transloco
 								}}
 							</td>
-							<td>{{ band.instruments.join(', ') || '—' }}</td>
-							<td>
+							<td
+								[attr.data-label]="
+									'ui.musicianBands.instruments' | transloco
+								"
+							>
+								{{ band.instruments.join(', ') || '—' }}
+							</td>
+							<td
+								[attr.data-label]="
+									'ui.musicianBands.years' | transloco
+								"
+							>
 								@if (band.from) {
 									{{ band.from }}
 									@if (band.active) {
@@ -76,7 +90,13 @@
 									—
 								}
 							</td>
-							<td>{{ band.albumCount }}</td>
+							<td
+								[attr.data-label]="
+									'ui.musicianBands.albums' | transloco
+								"
+							>
+								{{ band.albumCount }}
+							</td>
 						</tr>
 					}
 				</tbody>

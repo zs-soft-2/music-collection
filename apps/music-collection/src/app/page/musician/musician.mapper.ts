@@ -9,7 +9,7 @@ import {
 	CreditCategory,
 	creditCategory,
 	performerOrder,
-} from '../../shared/music-ui/credit-roles';
+} from '@music-collection/ui/music-view';
 import { toDiscography } from '@music-collection/ui/music-view';
 import {
 	AlbumView,

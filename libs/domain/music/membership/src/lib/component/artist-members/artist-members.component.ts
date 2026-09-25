@@ -15,6 +15,10 @@ import {
 	MusicianEntity,
 	RoleNames,
 } from '@music-collection/api';
+import {
+	ArtistCandidatePickerComponent,
+	toCandidateRow,
+} from '@music-collection/domain/artist';
 import { NgxPermissionsModule } from 'ngx-permissions';
 import { AutoComplete } from 'primeng/autocomplete';
 import { Button } from 'primeng/button';
@@ -45,6 +49,7 @@ const EARLIEST_YEAR = 1900;
 		...I18N_IMPORTS,
 		FormsModule,
 		NgxPermissionsModule,
+		ArtistCandidatePickerComponent,
 		AutoComplete,
 		Button,
 		Checkbox,
@@ -97,8 +102,25 @@ export class ArtistMembersComponent implements OnInit {
 		return !draft?.musicianUid && name.length > 1 ? name : null;
 	});
 
+	/** The namesakes as the picker lists them. */
+	public readonly namesakeRows = computed(
+		() => this.store.namesakes()?.map(toCandidateRow) ?? null
+	);
+
 	public ngOnInit(): void {
 		this.store.load(this.artistId());
+		this.store.loadAlbums(this.artistId());
+	}
+
+	/** The picker hands back a row; the store works from the candidate. */
+	public chooseNamesake(row: { musicBrainzId: string }): void {
+		const candidate = this.store
+			.namesakes()
+			?.find((hit) => hit.musicBrainzId === row.musicBrainzId);
+
+		if (candidate) {
+			this.store.chooseNamesake(candidate);
+		}
 	}
 
 	public edit(row: MembershipEntity): void {

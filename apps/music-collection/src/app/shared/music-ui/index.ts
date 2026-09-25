@@ -4,7 +4,6 @@ export * from './artist-tile/artist-tile.component';
 export * from './carousel/carousel.component';
 export * from './copy-placement/copy-placement.component';
 export * from './count-stats';
-export * from './credit-roles';
 export * from './decade-chart/decade-chart.component';
 export * from './defer-reveal';
 export * from './discography-card/discography-card.component';
