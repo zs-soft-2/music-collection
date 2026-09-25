@@ -1242,7 +1242,8 @@
 		},
 		"artistEdit": {
 			"details": "Adatok",
-			"albums": "Albumok"
+			"albums": "Albumok",
+			"members": "Felállás"
 		},
 		"artistImport": {
 			"import-artists": "Előadók importálása",
@@ -1864,6 +1865,62 @@
 			"legend": "Nyelv",
 			"chosen": "A saját választásod. Az app alapértelmezése rád már nem vonatkozik.",
 			"following": "Az app alapértelmezését követi, vagy azt, amit a böngésződ kér."
+		},
+		"musicianEdit": {
+			"details": "Adatok",
+			"bands": "Bandák"
+		},
+		"artistMembers": {
+			"heading": "Tagok ({{count}})",
+			"guests": "Vendégzenészek ({{count}})",
+			"add-member": "Tag hozzáadása",
+			"add-guest": "Vendég hozzáadása",
+			"loading": "Felállás betöltése…",
+			"musician": "Zenész",
+			"musician-fixed": "A sort a banda és a zenész azonosítja; ha mást akarsz, töröld ezt a sort, és vegyél fel újat.",
+			"search-musicians": "Kezdd el gépelni a nevet",
+			"create-musician": "„{{name}}” létrehozása zenészként",
+			"instruments": "Hangszerek",
+			"instruments-placeholder": "Ének, Gitár",
+			"instruments-hint": "Vesszővel elválasztva, ahogy a lemezen szerepelnek.",
+			"kind": "Szerep a bandában",
+			"kind-member": "Tag",
+			"kind-guest": "Vendég",
+			"from": "Kezdés",
+			"to": "Befejezés",
+			"to-optional": "Nem kötelező",
+			"to-hint": "Hagyd üresen, ha nem tudni, mikor ért véget.",
+			"year": "Év",
+			"still-a-member": "Jelenleg is tag",
+			"present": "napjainkig",
+			"years": "Évek",
+			"albums": "Albumok",
+			"row-actions": "Műveletek",
+			"edit": "Szerkesztés",
+			"edit-member": "Tag szerkesztése",
+			"delete": "Törlés",
+			"delete-member": "Kivétel a felállásból",
+			"delete-question": "Kiveszed {{name}} nevű zenészt a felállásból? A zenész a katalógusban marad.",
+			"no-members-yet": "Még nincs tag. Vedd fel őket kézzel, vagy töltsd be a felállást a Discogs importtal.",
+			"error-duplicate": "Ez a zenész már szerepel a felállásban. Azt a sort szerkeszd.",
+			"error-permission": "Nincs jogosultságod a felállás módosításához.",
+			"error-general": "Valami hiba történt. Próbáld újra később."
+		},
+		"musicianBands": {
+			"heading": "Bandák ({{count}})",
+			"loading": "Bandák betöltése…",
+			"band": "Banda",
+			"kind": "Szerep",
+			"kind-member": "Tag",
+			"kind-guest": "Vendég",
+			"instruments": "Hangszerek",
+			"years": "Évek",
+			"albums": "Albumok",
+			"present": "napjainkig",
+			"current": "Jelenlegi tag",
+			"no-bands-yet": "Ez a zenész még egyetlen felállásban sem szerepel.",
+			"edit-on-the-band": "A felállást a banda oldalán, a Felállás fülön lehet szerkeszteni.",
+			"error-general": "Valami hiba történt. Próbáld újra később."
 		}
 	},
 	"admin": {

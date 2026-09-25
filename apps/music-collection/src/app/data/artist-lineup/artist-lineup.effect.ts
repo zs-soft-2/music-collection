@@ -3,7 +3,7 @@ import { Observable, map } from 'rxjs';
 import { Injectable, inject } from '@angular/core';
 import { MembershipEntity } from '@music-collection/api';
 
-import { MembershipRepository } from './membership.repository';
+import { MembershipRepository } from '@music-collection/domain/membership';
 
 /**
  * Loads line-ups from the `membership` documents: one band's members, or

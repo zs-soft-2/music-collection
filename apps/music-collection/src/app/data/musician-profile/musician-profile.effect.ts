@@ -7,7 +7,7 @@ import {
 	MusicianEntity,
 } from '@music-collection/api';
 
-import { MembershipRepository } from '../artist-lineup/membership.repository';
+import { MembershipRepository } from '@music-collection/domain/membership';
 import { MusicianRepository } from './musician.repository';
 
 export interface MusicianProfile {

@@ -8,6 +8,7 @@ import {
 import { ActivatedRoute } from '@angular/router';
 import { BaseComponent } from '@music-collection/api';
 import { ArtistFormModule } from '@music-collection/domain/artist';
+import { ArtistMembersComponent } from '@music-collection/domain/membership';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
 
 @Component({
@@ -18,6 +19,7 @@ import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
 	imports: [
 		...I18N_IMPORTS,
 		ArtistFormModule,
+		ArtistMembersComponent,
 		Tab,
 		TabList,
 		TabPanel,
@@ -29,7 +31,7 @@ export class ArtistEditComponent extends BaseComponent implements OnInit {
 	private activatedRoute = inject(ActivatedRoute);
 
 	public artistId!: string;
-	/** A new artist (`edit/0`) has no albums yet. */
+	/** A new artist (`edit/0`) has no line-up or albums yet. */
 	public isExisting = false;
 
 	public ngOnInit(): void {

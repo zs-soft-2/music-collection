@@ -1,0 +1,93 @@
+<section class="mc-form-section" aria-labelledby="musician-bands">
+	<h2 id="musician-bands">
+		{{
+			'ui.musicianBands.heading'
+				| transloco: { count: store.bands().length }
+		}}
+	</h2>
+
+	@if (store.error(); as error) {
+		<small class="musician-bands-error" role="alert">{{
+			error | transloco
+		}}</small>
+	}
+
+	@if (store.isLoading()) {
+		<p class="mc-form-note">{{ 'ui.musicianBands.loading' | transloco }}</p>
+	} @else if (store.bands().length) {
+		<div class="musician-bands-table">
+			<table>
+				<thead>
+					<tr>
+						<th scope="col">
+							{{ 'ui.musicianBands.band' | transloco }}
+						</th>
+						<th scope="col">
+							{{ 'ui.musicianBands.kind' | transloco }}
+						</th>
+						<th scope="col">
+							{{ 'ui.musicianBands.instruments' | transloco }}
+						</th>
+						<th scope="col">
+							{{ 'ui.musicianBands.years' | transloco }}
+						</th>
+						<th scope="col">
+							{{ 'ui.musicianBands.albums' | transloco }}
+						</th>
+					</tr>
+				</thead>
+				<tbody>
+					@for (band of store.bands(); track band.uid) {
+						<tr>
+							<th scope="row">
+								<a
+									[routerLink]="[
+										'../../../artist/edit',
+										band.artistUid,
+									]"
+									>{{ band.artistName }}</a
+								>
+							</th>
+							<td>
+								{{
+									(band.kind === 'member'
+										? 'ui.musicianBands.kind-member'
+										: 'ui.musicianBands.kind-guest'
+									) | transloco
+								}}
+							</td>
+							<td>{{ band.instruments.join(', ') || '—' }}</td>
+							<td>
+								@if (band.from) {
+									{{ band.from }}
+									@if (band.active) {
+										–{{
+											'ui.musicianBands.present'
+												| transloco
+										}}
+									} @else if (
+										band.to && band.to !== band.from
+									) {
+										–{{ band.to }}
+									}
+								} @else if (band.active) {
+									{{ 'ui.musicianBands.current' | transloco }}
+								} @else {
+									—
+								}
+							</td>
+							<td>{{ band.albumCount }}</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+		<p class="mc-form-note">
+			{{ 'ui.musicianBands.edit-on-the-band' | transloco }}
+		</p>
+	} @else {
+		<p class="mc-form-note">
+			{{ 'ui.musicianBands.no-bands-yet' | transloco }}
+		</p>
+	}
+</section>

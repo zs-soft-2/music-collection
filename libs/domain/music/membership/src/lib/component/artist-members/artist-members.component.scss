@@ -1,0 +1,61 @@
+.artist-members-heading {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.artist-members-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.artist-members-subheading {
+	margin: 2rem 0 0.5rem;
+	font-size: 1rem;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	opacity: 0.7;
+}
+
+.artist-members-error {
+	display: block;
+	margin: 0.5rem 0;
+	color: var(--p-red-400, #f87171);
+}
+
+.artist-members-table {
+	overflow-x: auto;
+
+	table {
+		width: 100%;
+		border-collapse: collapse;
+	}
+
+	th,
+	td {
+		padding: 0.5rem 0.75rem;
+		text-align: left;
+		border-bottom: 1px solid var(--p-content-border-color, #3f3f46);
+		white-space: nowrap;
+	}
+
+	thead th {
+		font-size: 0.8rem;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		opacity: 0.7;
+	}
+}
+
+.artist-members-row-actions {
+	display: flex;
+	gap: 0.25rem;
+	justify-content: flex-end;
+}
+
+.artist-members-create {
+	margin-top: 0.5rem;
+}

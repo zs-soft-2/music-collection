@@ -75,6 +75,9 @@
 			"@music-collection/domain/label/admin": [
 				"libs/domain/music/label/app/admin/src/index.ts"
 			],
+			"@music-collection/domain/membership": [
+				"libs/domain/music/membership/src/index.ts"
+			],
 			"@music-collection/domain/music-collection/api": [
 				"libs/domain/music/music-collection/api/src/index.ts"
 			],

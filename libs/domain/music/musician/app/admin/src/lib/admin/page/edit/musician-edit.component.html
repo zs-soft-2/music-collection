@@ -1,3 +1,26 @@
 <section class="musician-edit">
-	<mc-musician-form></mc-musician-form>
+	@if (isExisting) {
+		<p-tabs value="details">
+			<p-tablist>
+				<p-tab value="details">{{
+					'ui.musicianEdit.details' | transloco
+				}}</p-tab>
+				<p-tab value="bands">{{
+					'ui.musicianEdit.bands' | transloco
+				}}</p-tab>
+			</p-tablist>
+			<p-tabpanels>
+				<p-tabpanel value="details">
+					<mc-musician-form></mc-musician-form>
+				</p-tabpanel>
+				<p-tabpanel value="bands">
+					<mc-musician-bands
+						[musicianId]="musicianId"
+					></mc-musician-bands>
+				</p-tabpanel>
+			</p-tabpanels>
+		</p-tabs>
+	} @else {
+		<mc-musician-form></mc-musician-form>
+	}
 </section>

@@ -1242,7 +1242,8 @@
 		},
 		"artistEdit": {
 			"details": "Details",
-			"albums": "Albums"
+			"albums": "Albums",
+			"members": "Line-up"
 		},
 		"artistImport": {
 			"import-artists": "Import artists",
@@ -1864,6 +1865,62 @@
 			"legend": "Language",
 			"chosen": "Your own pick. The app's default no longer applies to you.",
 			"following": "Following the app's default, or what your browser asks for."
+		},
+		"musicianEdit": {
+			"details": "Details",
+			"bands": "Bands"
+		},
+		"artistMembers": {
+			"heading": "Members ({{count}})",
+			"guests": "Guest musicians ({{count}})",
+			"add-member": "Add member",
+			"add-guest": "Add guest",
+			"loading": "Loading the line-up…",
+			"musician": "Musician",
+			"musician-fixed": "The band and the musician are what identify this row; remove it and add another one to change the musician.",
+			"search-musicians": "Start typing a name",
+			"create-musician": "Create \"{{name}}\" as a musician",
+			"instruments": "Instruments",
+			"instruments-placeholder": "Vocals, Guitar",
+			"instruments-hint": "Separated by commas, as the credits spell them.",
+			"kind": "Role in the band",
+			"kind-member": "Member",
+			"kind-guest": "Guest",
+			"from": "From",
+			"to": "To",
+			"to-optional": "Optional",
+			"to-hint": "Leave it empty when the end year is unknown.",
+			"year": "Year",
+			"still-a-member": "Still in the band",
+			"present": "present",
+			"years": "Years",
+			"albums": "Albums",
+			"row-actions": "Actions",
+			"edit": "Edit",
+			"edit-member": "Edit member",
+			"delete": "Delete",
+			"delete-member": "Remove from the line-up",
+			"delete-question": "Remove {{name}} from the line-up? The musician stays in the catalog.",
+			"no-members-yet": "No members yet. Add them by hand, or let the Discogs import fill the line-up in.",
+			"error-duplicate": "This musician is already in the line-up. Edit that row instead.",
+			"error-permission": "You may not change the line-up.",
+			"error-general": "Something went wrong. Try again later."
+		},
+		"musicianBands": {
+			"heading": "Bands ({{count}})",
+			"loading": "Loading the bands…",
+			"band": "Band",
+			"kind": "Role",
+			"kind-member": "Member",
+			"kind-guest": "Guest",
+			"instruments": "Instruments",
+			"years": "Years",
+			"albums": "Albums",
+			"present": "present",
+			"current": "Current member",
+			"no-bands-yet": "This musician is not in any line-up yet.",
+			"edit-on-the-band": "Edit a line-up on the band’s own page, under Line-up.",
+			"error-general": "Something went wrong. Try again later."
 		}
 	},
 	"admin": {

@@ -1242,7 +1242,8 @@
 		},
 		"artistEdit": {
 			"details": "Details",
-			"albums": "Alben"
+			"albums": "Alben",
+			"members": "Besetzung"
 		},
 		"artistImport": {
 			"import-artists": "Künstler importieren",
@@ -1864,6 +1865,62 @@
 			"legend": "Sprache",
 			"chosen": "Deine eigene Wahl. Die Standardsprache der App gilt für dich nicht mehr.",
 			"following": "Folgt der Standardsprache der App oder dem, was dein Browser verlangt."
+		},
+		"musicianEdit": {
+			"details": "Daten",
+			"bands": "Bands"
+		},
+		"artistMembers": {
+			"heading": "Mitglieder ({{count}})",
+			"guests": "Gastmusiker ({{count}})",
+			"add-member": "Mitglied hinzufügen",
+			"add-guest": "Gast hinzufügen",
+			"loading": "Besetzung wird geladen…",
+			"musician": "Musiker",
+			"musician-fixed": "Band und Musiker bilden die Kennung dieser Zeile; für einen anderen Musiker die Zeile löschen und eine neue anlegen.",
+			"search-musicians": "Namen eintippen",
+			"create-musician": "„{{name}}“ als Musiker anlegen",
+			"instruments": "Instrumente",
+			"instruments-placeholder": "Gesang, Gitarre",
+			"instruments-hint": "Mit Komma getrennt, so wie in den Credits.",
+			"kind": "Rolle in der Band",
+			"kind-member": "Mitglied",
+			"kind-guest": "Gast",
+			"from": "Von",
+			"to": "Bis",
+			"to-optional": "Optional",
+			"to-hint": "Leer lassen, wenn das Endjahr unbekannt ist.",
+			"year": "Jahr",
+			"still-a-member": "Weiterhin in der Band",
+			"present": "heute",
+			"years": "Jahre",
+			"albums": "Alben",
+			"row-actions": "Aktionen",
+			"edit": "Bearbeiten",
+			"edit-member": "Mitglied bearbeiten",
+			"delete": "Löschen",
+			"delete-member": "Aus der Besetzung entfernen",
+			"delete-question": "{{name}} aus der Besetzung entfernen? Der Musiker bleibt im Katalog.",
+			"no-members-yet": "Noch keine Mitglieder. Von Hand eintragen oder den Discogs-Import die Besetzung füllen lassen.",
+			"error-duplicate": "Dieser Musiker steht bereits in der Besetzung. Bearbeite stattdessen diese Zeile.",
+			"error-permission": "Du darfst die Besetzung nicht ändern.",
+			"error-general": "Etwas ist schiefgelaufen. Versuche es später erneut."
+		},
+		"musicianBands": {
+			"heading": "Bands ({{count}})",
+			"loading": "Bands werden geladen…",
+			"band": "Band",
+			"kind": "Rolle",
+			"kind-member": "Mitglied",
+			"kind-guest": "Gast",
+			"instruments": "Instrumente",
+			"years": "Jahre",
+			"albums": "Alben",
+			"present": "heute",
+			"current": "Aktuelles Mitglied",
+			"no-bands-yet": "Dieser Musiker steht noch in keiner Besetzung.",
+			"edit-on-the-band": "Die Besetzung wird auf der Seite der Band unter „Besetzung“ bearbeitet.",
+			"error-general": "Etwas ist schiefgelaufen. Versuche es später erneut."
 		}
 	},
 	"admin": {

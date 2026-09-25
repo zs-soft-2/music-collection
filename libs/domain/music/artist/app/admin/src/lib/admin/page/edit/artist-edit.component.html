@@ -5,6 +5,9 @@
 				<p-tab value="details">{{
 					'ui.artistEdit.details' | transloco
 				}}</p-tab>
+				<p-tab value="members">{{
+					'ui.artistEdit.members' | transloco
+				}}</p-tab>
 				<p-tab value="albums">{{
 					'ui.artistEdit.albums' | transloco
 				}}</p-tab>
@@ -12,6 +15,11 @@
 			<p-tabpanels>
 				<p-tabpanel value="details">
 					<mc-artist-form></mc-artist-form>
+				</p-tabpanel>
+				<p-tabpanel value="members">
+					<mc-artist-members
+						[artistId]="artistId"
+					></mc-artist-members>
 				</p-tabpanel>
 				<p-tabpanel value="albums">
 					<mc-artist-albums [artistId]="artistId"></mc-artist-albums>
