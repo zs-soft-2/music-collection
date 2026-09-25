@@ -22,6 +22,7 @@ import {
 	difficultyForDay,
 	gameDay,
 	hashSeed,
+	pick,
 	previousDay,
 	toAnswerDocument,
 	toQuestionDocument,
@@ -33,10 +34,19 @@ export const DAILY_QUESTION_COLLECTION = 'daily-question';
 export const ANSWER_COLLECTION = 'secret';
 export const ANSWER_DOCUMENT = 'answer';
 
+/**
+ * A katalógus nem lapos: az album az előadó alatt él, a kiadás az album
+ * alatt (`artist/{a}/album/{b}/release/{c}`). Csak az előadó és a szám áll a
+ * gyökérben — a szám az `albumUid` mezővel hivatkozik az albumára.
+ */
 const ALBUM_COLLECTION = 'album';
 const ARTIST_COLLECTION = 'artist';
 const RELEASE_COLLECTION = 'release';
 const TRACK_COLLECTION = 'track';
+
+/** Egy kiadás útvonala; a collection-group kurzorhoz kell, ami teljes út. */
+export const releasePath = (key: string): string =>
+	`${ARTIST_COLLECTION}/${key}/${ALBUM_COLLECTION}/${key}/${RELEASE_COLLECTION}/${key}`;
 
 /**
  * Ennyiszer húzunk másik albumot, ha az előzőből egyetlen sablon sem tudott
@@ -94,12 +104,43 @@ export async function randomDocuments(
 	return [...after.docs, ...before.docs];
 }
 
+/**
+ * Ugyanaz collection-group lekérdezésre — oda a kurzor nem azonosító, hanem
+ * teljes dokumentum-út lehet, mert a rendezés is az útvonal szerint megy.
+ * A húzott kulcsból ezért utat építünk; a kollekció végén itt is a lista
+ * elejére fordulunk.
+ */
+export async function randomGroupDocuments(
+	database: Firestore,
+	group: string,
+	path: (key: string) => string,
+	random: () => number,
+	limit: number
+): Promise<FirebaseFirestore.QueryDocumentSnapshot[]> {
+	const ordered = database
+		.collectionGroup(group)
+		.orderBy(FieldPath.documentId());
+	const after = await ordered
+		.startAt(database.doc(path(randomKey(random))))
+		.limit(limit)
+		.get();
+
+	if (after.size >= limit) return after.docs;
+
+	const before = await ordered.limit(limit - after.size).get();
+	const seen = new Set(after.docs.map((document) => document.ref.path));
+
+	return [
+		...after.docs,
+		...before.docs.filter((document) => !seen.has(document.ref.path)),
+	];
+}
+
 const toMaterialAlbum = (
 	document: FirebaseFirestore.DocumentSnapshot
 ): MaterialAlbum => {
 	const artist = document.get('artist') as
-		| { uid?: string; name?: string }
-		| undefined;
+		{ uid?: string; name?: string } | undefined;
 
 	return {
 		uid: document.id,
@@ -111,13 +152,19 @@ const toMaterialAlbum = (
 	};
 };
 
+/** A `position` a katalógusban hol szöveg („A1”), hol szám (1). */
+const toText = (value: unknown): string | null =>
+	value === null || value === undefined || value === ''
+		? null
+		: String(value);
+
 const toMaterialTrack = (
 	document: FirebaseFirestore.DocumentSnapshot
 ): MaterialTrack => ({
 	uid: document.id,
 	name: (document.get('name') as string) ?? '',
 	index: (document.get('index') as number) ?? 0,
-	position: (document.get('position') as string | null) ?? null,
+	position: toText(document.get('position')),
 	durationSec: (document.get('durationSec') as number | null) ?? null,
 	releaseUid: (document.get('releaseUid') as string | null) ?? null,
 });
@@ -146,69 +193,74 @@ const toMaterialArtist = (
 	formedIn: yearOf(document.get('formedIn')),
 });
 
-/** Egy véletlen album és a szomszédsága, amiből a sablonok dolgoznak. */
+/**
+ * Egy véletlen album és a szomszédsága, amiből a sablonok dolgoznak.
+ *
+ * A húzás az ELŐADÓVAL kezdődik, nem az albummal: az albumok az előadó alatt
+ * élnek, a collection-group lekérdezésen pedig az azonosító-tartományos
+ * trükk nem megy — ott a kurzor teljes útvonal kell legyen. Az előadó felől
+ * ráadásul olcsóbb is: az előadó dokumentuma és a többi lemeze — a hihető
+ * évszámokhoz — ugyanabból az egy lekérdezésből megvan.
+ *
+ * Ha a húzott előadónak nincs albuma, `null`-t adunk: a hívó másik előadót
+ * húz, ennyi az egész.
+ */
 export async function gatherMaterial(
 	database: Firestore,
 	random: () => number
 ): Promise<QuestionMaterial | null> {
-	const [anchor] = await randomDocuments(
-		database.collection(ALBUM_COLLECTION),
+	const [anchorArtist] = await randomDocuments(
+		database.collection(ARTIST_COLLECTION),
 		random,
 		1
 	);
 
-	if (!anchor) return null;
+	if (!anchorArtist) return null;
 
+	const albums = await anchorArtist.ref
+		.collection(ALBUM_COLLECTION)
+		.limit(SIBLING_LIMIT)
+		.get();
+
+	if (albums.empty) return null;
+
+	const anchor = pick(albums.docs, random);
 	const album = toMaterialAlbum(anchor);
-	const [tracks, releases, artist, siblings, otherArtists, otherReleases] =
-		await Promise.all([
-			database
-				.collection(TRACK_COLLECTION)
-				.where('albumUid', '==', album.uid)
-				.limit(TRACK_LIMIT)
-				.get(),
-			database
-				.collection(RELEASE_COLLECTION)
-				.where('album.uid', '==', album.uid)
-				.limit(RELEASE_LIMIT)
-				.get(),
-			album.artistUid
-				? database
-						.collection(ARTIST_COLLECTION)
-						.doc(album.artistUid)
-						.get()
-				: Promise.resolve(null),
-			album.artistUid
-				? database
-						.collection(ALBUM_COLLECTION)
-						.where('artist.uid', '==', album.artistUid)
-						.limit(SIBLING_LIMIT)
-						.get()
-				: Promise.resolve(null),
-			randomDocuments(
-				database.collection(ARTIST_COLLECTION),
-				random,
-				DISTRACTOR_LIMIT
-			),
-			randomDocuments(
-				database.collection(RELEASE_COLLECTION),
-				random,
-				DISTRACTOR_LIMIT
-			),
-		]);
+	const [tracks, releases, otherArtists, otherReleases] = await Promise.all([
+		database
+			.collection(TRACK_COLLECTION)
+			.where('albumUid', '==', album.uid)
+			.limit(TRACK_LIMIT)
+			.get(),
+		anchor.ref.collection(RELEASE_COLLECTION).limit(RELEASE_LIMIT).get(),
+		randomDocuments(
+			database.collection(ARTIST_COLLECTION),
+			random,
+			DISTRACTOR_LIMIT
+		),
+		randomGroupDocuments(
+			database,
+			RELEASE_COLLECTION,
+			releasePath,
+			random,
+			DISTRACTOR_LIMIT
+		),
+	]);
 
 	return {
 		album,
-		artist: artist?.exists ? toMaterialArtist(artist) : null,
+		artist: toMaterialArtist(anchorArtist),
 		tracks: tracks.docs.map(toMaterialTrack),
 		releases: releases.docs.map(toMaterialRelease),
-		siblingAlbums: (siblings?.docs ?? [])
-			.filter((document) => document.id !== album.uid)
+		siblingAlbums: albums.docs
+			.filter((document) => document.id !== anchor.id)
 			.map(toMaterialAlbum),
 		otherArtists: otherArtists
-			.filter((document) => document.id !== album.artistUid)
+			.filter((document) => document.id !== anchorArtist.id)
 			.map(toMaterialArtist),
-		otherReleases: otherReleases.map(toMaterialRelease),
+		otherReleases: otherReleases
+			.filter((document) => document.ref.parent.parent?.id !== album.uid)
+			.map(toMaterialRelease),
 	};
 }
 
