@@ -20,13 +20,13 @@ import {
 	buildQuestion,
 	createRandom,
 	difficultyForDay,
+	gameDay,
 	hashSeed,
 	previousDay,
 	toAnswerDocument,
 	toQuestionDocument,
 	yearOf,
 } from './daily-question';
-import { isoDay } from './upcoming-release';
 
 export const DAILY_QUESTION_COLLECTION = 'daily-question';
 /** A megfejtés alkollekciója; a szabályok nem engedik olvasni. */
@@ -248,7 +248,7 @@ export async function composeDailyQuestion(
 	database: Firestore,
 	options: { day?: string; today?: Date; force?: boolean } = {}
 ): Promise<ComposeResult> {
-	const day = options.day ?? isoDay(options.today ?? new Date());
+	const day = options.day ?? gameDay(options.today ?? new Date());
 	const reference = database.collection(DAILY_QUESTION_COLLECTION).doc(day);
 	const existing = await reference.get();
 

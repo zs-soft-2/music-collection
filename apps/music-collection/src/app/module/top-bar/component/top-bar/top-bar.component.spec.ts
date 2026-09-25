@@ -143,6 +143,7 @@ describe('TopBarComponent', () => {
 			'Scan',
 			'Shelf',
 			'Radio',
+			'Daily question',
 			'Wishlist',
 			'Map',
 			'Profile',
@@ -165,6 +166,7 @@ describe('TopBarComponent', () => {
 			'Scan',
 			'Shelf',
 			'Radio',
+			'Daily question',
 			'Wishlist',
 			'Map',
 		]);
@@ -182,6 +184,7 @@ describe('TopBarComponent', () => {
 			'Shelf',
 			'Collections',
 			'Radio',
+			'Daily question',
 			'Coming out',
 			'Wishlist',
 			'Network',

@@ -200,6 +200,20 @@ export const routes: Routes = [
 		},
 	},
 	{
+		// One question a day, the same for everybody, out of the catalog.
+		// Signed in only: the guess is graded against an answer nobody may
+		// read, and the points are kept per collector.
+		path: 'daily-question',
+		loadComponent: () =>
+			import('./page/daily-question/daily-question-page.component').then(
+				(module) => module.DailyQuestionPageComponent
+			),
+		data: {
+			breadcrumb: 'daily-question',
+		},
+		canActivate: [authenticatedGuard],
+	},
+	{
 		path: 'collections',
 		loadComponent: () =>
 			import('./page/collections/collections-page.component').then(

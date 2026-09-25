@@ -8,6 +8,7 @@
 		"shelf-scan": "Regal",
 		"collections": "Kollektionen",
 		"radio": "Radio",
+		"daily-question": "Tagesfrage",
 		"upcoming": "Erscheint",
 		"wishlist": "Wunschliste",
 		"network": "Netzwerk",
@@ -134,6 +135,22 @@
 			"2010": "2010er",
 			"2020": "2020er",
 			"2030": "2030er"
+		}
+	},
+	"dailyQuestion": {
+		"template": {
+			"albumArtist": "Von welchem Interpreten ist „{{album}}“?",
+			"albumYear": "In welchem Jahr erschien „{{album}}“ ({{artist}})?",
+			"openingTrack": "Welcher Titel eröffnet „{{album}}“ ({{artist}})?",
+			"longestTrack": "Welcher ist der längste Titel auf „{{album}}“ ({{artist}})?",
+			"sideBOpener": "Welcher Titel eröffnet die B-Seite von „{{album}}“ ({{artist}})?",
+			"trackCount": "Wie viele Titel sind auf „{{album}}“ ({{artist}})?",
+			"releaseLabel": "Bei welchem Label erschien „{{album}}“ ({{artist}})?",
+			"releaseLabelEdition": "Bei welchem Label erschien die Pressung {{edition}} von „{{album}}“ ({{artist}})?",
+			"releaseCatno": "Welche Katalognummer steht auf der Pressung von „{{album}}“ ({{artist}})?",
+			"releaseCatnoLabel": "Welche Katalognummer steht auf der {{label}}-Pressung von „{{album}}“ ({{artist}})?",
+			"artistCountry": "Aus welchem Land kommt {{artist}}?",
+			"fallback": "Wähle die richtige Antwort aus dem Katalog."
 		}
 	},
 	"home": {
@@ -493,6 +510,36 @@
 			},
 			"basePoints": "{{points}} Grundpunkte",
 			"bonusPoints": "+ {{points}} für deine Pressungen"
+		},
+		"daily-question": {
+			"question-of-the-day": "Frage des Tages",
+			"one-question-out-of": "Eine Frage pro Tag, für alle dieselbe — aus dem Katalog geschöpft. Du hast einen Versuch, danach wird die Lösung verraten.",
+			"stat": {
+				"points": "Punkte",
+				"streak": "Serie",
+				"best": "Längste",
+				"hit-rate": "Treffer"
+			},
+			"difficulty": {
+				"easy": "Leicht",
+				"medium": "Mittel",
+				"hard": "Schwer"
+			},
+			"no-question-today": "Heute gibt es keine Frage. Sie entsteht wenige Minuten nach Mitternacht aus dem Katalog; reichte das Material nicht, versucht es morgen erneut.",
+			"send-the-guess": "Tipp abschicken",
+			"sending": "Wird gesendet…",
+			"one-guess-only": "Nur ein Versuch — danach erscheint die Lösung sofort.",
+			"that-was-right": "Richtig!",
+			"that-was-wrong": "Leider nicht.",
+			"points": "Punkte",
+			"more-about": "Mehr zu {{subject}}",
+			"a-new-question-tomorrow": "Morgen kommt eine neue Frage.",
+			"failure": {
+				"stale-day": "Der Tag hat gewechselt — hier ist die heutige Frage.",
+				"no-question": "Für diesen Tag gibt es keine Frage.",
+				"signed-out": "Die Sitzung ist abgelaufen. Melde dich neu an, dann kann der Tipp raus.",
+				"unknown": "Der Tipp ist nicht durchgekommen. Versuche es noch einmal."
+			}
 		},
 		"error": {
 			"this-page-is-not": "Diese Seite ist nicht verfügbar",

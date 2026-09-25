@@ -97,3 +97,81 @@ describe('daily question: a visitor', () => {
 	it('does not write the question', () =>
 		assertFails(setDoc(questionOf(asVisitor()), question)));
 });
+
+/** The graded guess, as `answerDailyQuestion` writes it. */
+const guess = {
+	day: DAY,
+	optionId: 'track-2',
+	answerId: 'track-1',
+	correct: false,
+	templateKey: 'openingTrack',
+	difficulty: 'medium',
+	subject: { kind: 'album', uid: 'album-motp', name: 'Master of Puppets' },
+	points: 0,
+	streak: 0,
+	answeredAt: 1774000000000,
+};
+
+/** The game's own pot, which the same callable keeps. */
+const pot = {
+	points: 120,
+	streak: 3,
+	longestStreak: 7,
+	answered: 12,
+	correct: 9,
+	lastDay: DAY,
+};
+
+const OTHER = 'collector-2';
+
+const asOther = () => testEnv.authenticatedContext(OTHER).firestore();
+
+const guessOf = (database: ReturnType<typeof asMe>, uid = ME) =>
+	doc(database, 'user', uid, 'daily-answer', DAY);
+const potOf = (database: ReturnType<typeof asMe>, uid = ME) =>
+	doc(database, 'user', uid, 'game', 'daily-question');
+
+/** Grades the guess the way the callable does, past the rules. */
+const graded = () =>
+	testEnv.withSecurityRulesDisabled(async (context) => {
+		const database = context.firestore() as never;
+
+		await setDoc(guessOf(database), guess);
+		await setDoc(potOf(database), pot);
+	});
+
+describe('daily answer', () => {
+	it('is read by the collector it belongs to', async () => {
+		await graded();
+
+		await assertSucceeds(getDoc(guessOf(asMe())));
+	});
+
+	it('is not read by anybody else', async () => {
+		await graded();
+
+		await assertFails(getDoc(guessOf(asOther(), ME)));
+	});
+
+	// A guess the client could write is a guess it could correct, and points
+	// it could award itself.
+	it('is not written by the collector', () =>
+		assertFails(setDoc(guessOf(asMe()), guess)));
+});
+
+describe('the game pot', () => {
+	it('is read by its owner', async () => {
+		await graded();
+
+		await assertSucceeds(getDoc(potOf(asMe())));
+	});
+
+	it('is not read by anybody else', async () => {
+		await graded();
+
+		await assertFails(getDoc(potOf(asOther(), ME)));
+	});
+
+	it('is not written by the collector', () =>
+		assertFails(setDoc(potOf(asMe()), pot)));
+});

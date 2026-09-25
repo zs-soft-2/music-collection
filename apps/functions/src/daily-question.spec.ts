@@ -9,6 +9,7 @@ import {
 	createRandom,
 	difficultyForDay,
 	draftsFor,
+	gameDay,
 	hashSeed,
 	previousDay,
 	shuffle,
@@ -475,5 +476,21 @@ describe('toQuestionDocument', () => {
 			answerId: draft.answerId,
 			subject: draft.subject,
 		});
+	});
+});
+
+describe('gameDay', () => {
+	it('a játék időzónájában adja a napot, nem UTC-ben', () => {
+		// Budapesten 2026-09-25 00:05 — UTC szerint még 24-e este.
+		expect(gameDay(new Date('2026-09-24T22:05:00Z'))).toBe('2026-09-25');
+	});
+
+	it('az éjfél előtti perc még a régi nap', () => {
+		expect(gameDay(new Date('2026-09-24T21:59:00Z'))).toBe('2026-09-24');
+	});
+
+	it('téli időszámításban is a helyi napot adja', () => {
+		// Budapesten 2026-12-01 00:30 (UTC+1).
+		expect(gameDay(new Date('2026-11-30T23:30:00Z'))).toBe('2026-12-01');
 	});
 });

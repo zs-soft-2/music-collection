@@ -57,6 +57,12 @@ export class TopBarService {
 				requiresAuth: true,
 			},
 			{
+				labelKey: 'nav.daily-question',
+				icon: 'pi-question-circle',
+				routerLink: ['/daily-question'],
+				requiresAuth: true,
+			},
+			{
 				labelKey: 'nav.upcoming',
 				icon: 'pi-calendar',
 				routerLink: ['/upcoming'],

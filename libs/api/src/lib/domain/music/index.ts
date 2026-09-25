@@ -2,6 +2,7 @@ export * from './album';
 export * from './artist';
 export * from './collection-item';
 export * from './contribution';
+export * from './daily-question';
 export * from './label';
 export * from './membership';
 export * from './musician';

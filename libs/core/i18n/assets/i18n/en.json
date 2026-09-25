@@ -8,6 +8,7 @@
 		"shelf-scan": "Shelf",
 		"collections": "Collections",
 		"radio": "Radio",
+		"daily-question": "Daily question",
 		"upcoming": "Coming out",
 		"wishlist": "Wishlist",
 		"network": "Network",
@@ -134,6 +135,22 @@
 			"2010": "2010s",
 			"2020": "2020s",
 			"2030": "2030s"
+		}
+	},
+	"dailyQuestion": {
+		"template": {
+			"albumArtist": "Whose album is “{{album}}”?",
+			"albumYear": "What year did “{{album}}” come out ({{artist}})?",
+			"openingTrack": "Which track opens “{{album}}” ({{artist}})?",
+			"longestTrack": "Which is the longest track on “{{album}}” ({{artist}})?",
+			"sideBOpener": "Which track opens side B of “{{album}}” ({{artist}})?",
+			"trackCount": "How many tracks are on “{{album}}” ({{artist}})?",
+			"releaseLabel": "Which label put out “{{album}}” ({{artist}})?",
+			"releaseLabelEdition": "Which label put out the {{edition}} pressing of “{{album}}” ({{artist}})?",
+			"releaseCatno": "Which catalogue number is on the pressing of “{{album}}” ({{artist}})?",
+			"releaseCatnoLabel": "Which catalogue number is on the {{label}} pressing of “{{album}}” ({{artist}})?",
+			"artistCountry": "Where does {{artist}} come from?",
+			"fallback": "Pick the right answer out of the catalog."
 		}
 	},
 	"home": {
@@ -493,6 +510,36 @@
 			},
 			"basePoints": "{{points}} base",
 			"bonusPoints": "+ {{points}} for your pressings"
+		},
+		"daily-question": {
+			"question-of-the-day": "Question of the day",
+			"one-question-out-of": "One question a day, the same for everybody, drawn out of the catalog. You get one guess, and then the answer.",
+			"stat": {
+				"points": "Points",
+				"streak": "Streak",
+				"best": "Longest",
+				"hit-rate": "Hit rate"
+			},
+			"difficulty": {
+				"easy": "Easy",
+				"medium": "Medium",
+				"hard": "Hard"
+			},
+			"no-question-today": "No question today. It is put together out of the catalog a few minutes after midnight; when there was not enough to build one, it tries again tomorrow.",
+			"send-the-guess": "Send the guess",
+			"sending": "Sending…",
+			"one-guess-only": "One guess only — the answer shows the moment it is in.",
+			"that-was-right": "That is it!",
+			"that-was-wrong": "Not this one.",
+			"points": "points",
+			"more-about": "More about {{subject}}",
+			"a-new-question-tomorrow": "A new question tomorrow.",
+			"failure": {
+				"stale-day": "The day turned while you were here — this is today’s question.",
+				"no-question": "There is no question for this day.",
+				"signed-out": "The session is gone. Sign in again and the guess can go.",
+				"unknown": "The guess did not get through. Try again."
+			}
 		},
 		"error": {
 			"this-page-is-not": "This page is not available",

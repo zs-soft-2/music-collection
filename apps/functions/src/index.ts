@@ -70,6 +70,11 @@ import {
 	createVisionClient,
 } from './photo-signals';
 import { approveReleaseRequest as approve } from './release-request-approval';
+import {
+	DailyAnswerError,
+	DailyAnswerFailure,
+	answerDailyQuestion as gradeDailyAnswer,
+} from './daily-answer';
 import { composeDailyQuestion } from './daily-question-compose';
 import { syncUpcomingReleases } from './upcoming-release';
 import {
@@ -1042,4 +1047,63 @@ export const composeDailyQuestionNow = onCall(async (request) => {
 		day: input.day,
 		force: !!input.force,
 	});
+});
+
+/**
+ * A kiértékelés elakadásai hibakódra fordítva. A nap fordulása nem
+ * „érvénytelen adat": a kliens ebből tudja, hogy a kérdést kell újratöltenie,
+ * nem a tippet javítania.
+ */
+const ANSWER_ERROR_CODES: Record<
+	DailyAnswerFailure,
+	'failed-precondition' | 'not-found' | 'invalid-argument'
+> = {
+	'stale-day': 'failed-precondition',
+	'no-question': 'not-found',
+	'unknown-option': 'invalid-argument',
+};
+
+/**
+ * A nap kérdésére adott tipp: kiértékelés, pont, sorozat.
+ *
+ * Bejelentkezés kell hozzá, permission nem — a napi kérdés a gyűjtőké, mint
+ * a hallgatási napló. A tipp helyességét csak itt lehet megtudni: a
+ * megfejtés olyan dokumentumban áll, amit a szabályok senkinek nem engednek
+ * olvasni.
+ *
+ * Egy tipp: a második hívás ugyanazt a választ adja vissza (`graded: false`),
+ * nem értékel újra.
+ */
+export const answerDailyQuestion = onCall(async (request) => {
+	const uid = request.auth?.uid;
+
+	if (!uid) {
+		throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
+	}
+
+	const input = (request.data ?? {}) as { day?: string; optionId?: string };
+
+	if (!input.day || !/^\d{4}-\d{2}-\d{2}$/.test(input.day)) {
+		throw new HttpsError('invalid-argument', 'A nap YYYY-MM-DD alakú.');
+	}
+	if (typeof input.optionId !== 'string' || !input.optionId) {
+		throw new HttpsError('invalid-argument', 'Hiányzó válaszlehetőség.');
+	}
+
+	try {
+		return await gradeDailyAnswer(
+			database(),
+			uid,
+			input.day,
+			input.optionId
+		);
+	} catch (error) {
+		if (error instanceof DailyAnswerError) {
+			throw new HttpsError(ANSWER_ERROR_CODES[error.reason], error.message);
+		}
+
+		logger.warn(`answerDailyQuestion ${uid} ${input.day}`, error);
+
+		throw new HttpsError('internal', 'A tipp kiértékelése nem sikerült.');
+	}
 });

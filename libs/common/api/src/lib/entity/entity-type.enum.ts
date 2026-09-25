@@ -13,6 +13,7 @@ export const enum EntityTypeEnum {
 	UpcomingRelease = 'Upcoming Release',
 	CollectionItem = 'Collection Item',
 	Contribution = 'Contribution',
+	DailyQuestion = 'Daily Question',
 	User = 'User',
 	WishlistItem = 'Wishlist Item',
 }

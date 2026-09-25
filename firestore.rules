@@ -308,6 +308,24 @@ service cloud.firestore {
       match /play-log/{entryId} {
         allow read, write: if isSelf(uid);
       }
+
+      // Napi kérdés: a gyűjtő tippje egy napra, a megfejtéssel együtt — a
+      // kiértékelés után már megmutatható neki. Kizárólag az
+      // `answerDailyQuestion` callable írja (Admin SDK): a kliens a saját
+      // tippjét sem javíthatja át, és pontot sem írhat magának.
+      match /daily-answer/{day} {
+        allow read: if isSelf(uid);
+        allow write: if false; // answerDailyQuestion
+      }
+
+      // A játékok kasszája (`game/daily-question`): pont, sorozat, találat.
+      // Szándékosan külön a collection-pontoktól — ott semmi nem fizet a
+      // collection befejezéséig, és ha a kvíz ugyanabba a kasszába
+      // csordogálna, az a szabály elveszítené az értelmét.
+      match /game/{gameId} {
+        allow read: if isSelf(uid);
+        allow write: if false; // answerDailyQuestion
+      }
     }
 
     // ── Megosztott hely (közösségi térkép) ──────────────────────────────────

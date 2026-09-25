@@ -8,6 +8,7 @@
 		"shelf-scan": "Polc",
 		"collections": "Kollekciók",
 		"radio": "Rádió",
+		"daily-question": "Napi kérdés",
 		"upcoming": "Megjelenik",
 		"wishlist": "Kívánságlista",
 		"network": "Kapcsolatháló",
@@ -134,6 +135,22 @@
 			"2010": "2010-es évek",
 			"2020": "2020-as évek",
 			"2030": "2030-as évek"
+		}
+	},
+	"dailyQuestion": {
+		"template": {
+			"albumArtist": "Melyik előadó lemeze a(z) „{{album}}”?",
+			"albumYear": "Melyik évben jelent meg a(z) „{{album}}” ({{artist}})?",
+			"openingTrack": "Melyik szám nyitja a(z) „{{album}}” lemezt ({{artist}})?",
+			"longestTrack": "Melyik a leghosszabb szám a(z) „{{album}}” lemezen ({{artist}})?",
+			"sideBOpener": "Melyik szám nyitja a B oldalt a(z) „{{album}}” lemezen ({{artist}})?",
+			"trackCount": "Hány szám van a(z) „{{album}}” lemezen ({{artist}})?",
+			"releaseLabel": "Melyik kiadó adta ki a(z) „{{album}}” lemezt ({{artist}})?",
+			"releaseLabelEdition": "Melyik kiadó adta ki a(z) „{{album}}” ({{artist}}) {{edition}} kiadását?",
+			"releaseCatno": "Melyik katalógusszám szerepel a(z) „{{album}}” ({{artist}}) kiadásán?",
+			"releaseCatnoLabel": "Melyik katalógusszám szerepel a(z) „{{album}}” ({{artist}}) {{label}} által kiadott lemezén?",
+			"artistCountry": "Melyik országból származik a(z) {{artist}}?",
+			"fallback": "Válaszd ki a helyes választ a katalógusból."
 		}
 	},
 	"home": {
@@ -493,6 +510,36 @@
 			},
 			"basePoints": "{{points}} alappont",
 			"bonusPoints": "+ {{points}} a nyomásaidért"
+		},
+		"daily-question": {
+			"question-of-the-day": "Napi kérdés",
+			"one-question-out-of": "Egy kérdés egy napra, mindenkinek ugyanaz — a katalógusból merítve. Egy tipped van, utána rögtön kiderül a megfejtés.",
+			"stat": {
+				"points": "Pont",
+				"streak": "Sorozat",
+				"best": "Leghosszabb",
+				"hit-rate": "Találat"
+			},
+			"difficulty": {
+				"easy": "Könnyű",
+				"medium": "Közepes",
+				"hard": "Nehéz"
+			},
+			"no-question-today": "Ma nincs kérdés. A kérdés éjfél után néhány perccel áll össze a katalógusból; ha nem volt hozzá elég adat, holnap újra próbálkozik.",
+			"send-the-guess": "Tipp beküldése",
+			"sending": "Küldés…",
+			"one-guess-only": "Egy tipped van — a válasz után azonnal látszik a megfejtés.",
+			"that-was-right": "Ez az!",
+			"that-was-wrong": "Nem ez volt.",
+			"points": "pont",
+			"more-about": "Tovább: {{subject}}",
+			"a-new-question-tomorrow": "Holnap új kérdés jön.",
+			"failure": {
+				"stale-day": "Közben fordult a nap — itt a mai kérdés.",
+				"no-question": "Erre a napra nincs kérdés.",
+				"signed-out": "Lejárt a munkamenet. Jelentkezz be újra, és mehet a tipp.",
+				"unknown": "A tipp nem ment át. Próbáld meg újra."
+			}
 		},
 		"error": {
 			"this-page-is-not": "Ez az oldal nem érhető el",

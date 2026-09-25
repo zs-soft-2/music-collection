@@ -1,0 +1,142 @@
+<div class="page">
+	<header class="hero">
+		<div class="hero-text">
+			<p class="eyebrow">musiCollection</p>
+			<h1>{{ 'page.daily-question.question-of-the-day' | transloco }}</h1>
+			<p class="lead">
+				{{ 'page.daily-question.one-question-out-of' | transloco }}
+			</p>
+		</div>
+
+		@if (store.hasPot()) {
+			<dl class="stats">
+				<div class="stat">
+					<dt>{{ 'page.daily-question.stat.points' | transloco }}</dt>
+					<dd>{{ store.score().points }}</dd>
+				</div>
+				<div class="stat">
+					<dt>{{ 'page.daily-question.stat.streak' | transloco }}</dt>
+					<dd>{{ store.score().streak }}</dd>
+				</div>
+				<div class="stat">
+					<dt>{{ 'page.daily-question.stat.best' | transloco }}</dt>
+					<dd>{{ store.score().longestStreak }}</dd>
+				</div>
+				<div class="stat">
+					<dt>
+						{{ 'page.daily-question.stat.hit-rate' | transloco }}
+					</dt>
+					<dd>{{ store.accuracy() }}%</dd>
+				</div>
+			</dl>
+		}
+	</header>
+
+	@if (store.isLoading()) {
+		<div class="skeleton question-skeleton"></div>
+	} @else if (store.hasNoQuestion()) {
+		<p class="empty">
+			{{ 'page.daily-question.no-question-today' | transloco }}
+		</p>
+	} @else if (store.view(); as view) {
+		<section class="question">
+			<p class="meta">
+				<span class="day">{{ view.day }}</span>
+				<span [class]="'difficulty is-' + view.difficulty">
+					{{ difficultyPrefix + view.difficulty | transloco }}
+				</span>
+			</p>
+
+			<h2>{{ view.frame.key | transloco: view.frame.params }}</h2>
+
+			<ul class="options">
+				@for (option of view.options; track option.id) {
+					<li>
+						<button
+							type="button"
+							class="option"
+							[class.is-picked]="option.picked"
+							[class.is-correct]="option.correct"
+							[class.is-missed]="option.missed"
+							[attr.aria-pressed]="option.picked"
+							[disabled]="
+								store.isAnswered() || store.isSubmitting()
+							"
+							(click)="store.select(option.id)"
+						>
+							<span class="option-label">{{ option.label }}</span>
+							@if (option.correct) {
+								<span class="mark" aria-hidden="true">✓</span>
+							} @else if (option.missed) {
+								<span class="mark" aria-hidden="true">✕</span>
+							}
+						</button>
+					</li>
+				}
+			</ul>
+
+			@if (store.isAnswered()) {
+				<div class="verdict" [class.is-correct]="store.isCorrect()">
+					<p class="verdict-text">
+						{{
+							(store.isCorrect()
+								? 'page.daily-question.that-was-right'
+								: 'page.daily-question.that-was-wrong'
+							) | transloco
+						}}
+						@if (store.answer()?.points) {
+							<span class="points">
+								+{{ store.answer()?.points }}
+								{{ 'page.daily-question.points' | transloco }}
+							</span>
+						}
+					</p>
+
+					@if (store.subjectLink(); as link) {
+						<a class="subject" [routerLink]="link">
+							{{
+								'page.daily-question.more-about'
+									| transloco
+										: { subject: store.subjectName() }
+							}}
+						</a>
+					} @else if (store.subjectName()) {
+						<p class="subject">{{ store.subjectName() }}</p>
+					}
+
+					<p class="tomorrow">
+						{{
+							'page.daily-question.a-new-question-tomorrow'
+								| transloco
+						}}
+					</p>
+				</div>
+			} @else {
+				<div class="actions">
+					<button
+						type="button"
+						class="send"
+						[disabled]="!store.canSubmit()"
+						(click)="store.submit()"
+					>
+						{{
+							(store.isSubmitting()
+								? 'page.daily-question.sending'
+								: 'page.daily-question.send-the-guess'
+							) | transloco
+						}}
+					</button>
+					<p class="hint">
+						{{ 'page.daily-question.one-guess-only' | transloco }}
+					</p>
+				</div>
+			}
+		</section>
+	}
+
+	@if (store.failure(); as failure) {
+		<p class="failure" role="alert">
+			{{ 'page.daily-question.failure.' + failure | transloco }}
+		</p>
+	}
+</div>

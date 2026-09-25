@@ -733,6 +733,37 @@ export function buildQuestion(
 	return pick(wanted.length ? wanted : choices, random);
 }
 
+// ── A játék napja ───────────────────────────────────────────────────────────
+
+/**
+ * A játék napja ebben az időzónában telik. Ugyanez az időzóna áll a
+ * `composeDailyQuestionDaily` ütemezésén is: a kérdés éjfél után néhány
+ * perccel áll össze, és a nap azonosítója ugyanaz a nap kell legyen, amit a
+ * gyűjtő az óráján lát.
+ *
+ * UTC-vel ez elcsúszna: budapesti 00:05-kor UTC szerint még az előző nap
+ * este van, tehát a futás a tegnapi nap kérdését írná meg — a mai naphoz
+ * pedig egész nap nem tartozna dokumentum.
+ */
+export const GAME_TIME_ZONE = 'Europe/Budapest';
+
+/** A nap `YYYY-MM-DD` alakban, a játék időzónájában. */
+export function gameDay(
+	now: Date = new Date(),
+	timeZone: string = GAME_TIME_ZONE
+): string {
+	const parts = new Intl.DateTimeFormat('en-US', {
+		timeZone,
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit',
+	}).formatToParts(now);
+	const value = (type: string) =>
+		parts.find((part) => part.type === type)?.value ?? '';
+
+	return `${value('year')}-${value('month')}-${value('day')}`;
+}
+
 // ── Dokumentumok ────────────────────────────────────────────────────────────
 
 /** Az előző nap dátuma, `YYYY-MM-DD` alakban. */
