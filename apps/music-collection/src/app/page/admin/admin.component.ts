@@ -21,10 +21,14 @@ import { filter, map } from 'rxjs';
 import { ADMIN_NAV } from './admin-nav';
 import { AdminStore } from './admin.store';
 
+const HIDDEN_STORAGE_KEY = 'mc-admin-nav-hidden';
+
 /**
  * Az admin felület héja: csoportosított oldalsáv (tableten és mobilon
- * ikonsáv, a menügombbal kinyitható), morzsamenü és a tartalom. Ha egy
- * nyilvános oldalról érkeztünk (`returnUrl`), vissza link oda.
+ * ikonsáv, a menügombbal kinyitható), morzsamenü és a tartalom. Az
+ * oldalsáv teljesen el is rejthető, hogy a tartalomé legyen a szélesség;
+ * a választás ebben a böngészőben megmarad. Ha egy nyilvános oldalról
+ * érkeztünk (`returnUrl`), vissza link oda.
  */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -58,6 +62,8 @@ export class AdminComponent {
 		{ initialValue: this.createReturnLink() }
 	);
 	protected readonly expanded = signal(false);
+	/** Teljesen elrejtett oldalsáv: a tartalom kapja a teljes szélességet. */
+	protected readonly hidden = signal(readHidden());
 
 	public constructor() {
 		// Oldalváltáskor a kinyitott (overlay) oldalsáv bezárul.
@@ -77,5 +83,32 @@ export class AdminComponent {
 
 	protected toggle(): void {
 		this.expanded.update((open) => !open);
+	}
+
+	protected hide(): void {
+		this.expanded.set(false);
+		this.setHidden(true);
+	}
+
+	protected show(): void {
+		this.setHidden(false);
+	}
+
+	private setHidden(hidden: boolean): void {
+		this.hidden.set(hidden);
+
+		try {
+			localStorage.setItem(HIDDEN_STORAGE_KEY, String(hidden));
+		} catch {
+			// A tárolás nem elérhető (pl. privát ablak): a munkamenetig él.
+		}
+	}
+}
+
+function readHidden(): boolean {
+	try {
+		return localStorage.getItem(HIDDEN_STORAGE_KEY) === 'true';
+	} catch {
+		return false;
 	}
 }

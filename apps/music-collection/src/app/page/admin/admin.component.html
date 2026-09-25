@@ -1,4 +1,8 @@
-<div class="admin" [class.is-expanded]="expanded()">
+<div
+	class="admin"
+	[class.is-expanded]="expanded()"
+	[class.is-hidden]="hidden()"
+>
 	@if (expanded()) {
 		<button
 			type="button"
@@ -9,67 +13,86 @@
 		></button>
 	}
 
-	<aside class="side" [attr.aria-label]="'ui.admin.admin' | transloco">
-		<div class="side-head">
-			<button
-				type="button"
-				class="side-toggle"
-				aria-controls="mc-admin-nav"
-				[attr.aria-expanded]="expanded()"
-				[attr.aria-label]="
-					expanded() ? 'Collapse admin menu' : 'Expand admin menu'
-				"
-				(click)="toggle()"
-			>
-				<i
-					class="pi"
-					[class.pi-bars]="!expanded()"
-					[class.pi-times]="expanded()"
-					aria-hidden="true"
-				></i>
-			</button>
-			<span class="side-title">{{ 'ui.admin.admin2' | transloco }}</span>
-		</div>
+	@if (!hidden()) {
+		<aside class="side" [attr.aria-label]="'ui.admin.admin' | transloco">
+			<div class="side-head">
+				<button
+					type="button"
+					class="side-toggle"
+					aria-controls="mc-admin-nav"
+					[attr.aria-expanded]="expanded()"
+					[attr.aria-label]="
+						expanded() ? 'Collapse admin menu' : 'Expand admin menu'
+					"
+					(click)="toggle()"
+				>
+					<i
+						class="pi"
+						[class.pi-bars]="!expanded()"
+						[class.pi-times]="expanded()"
+						aria-hidden="true"
+					></i>
+				</button>
+				<span class="side-title">{{
+					'ui.admin.admin2' | transloco
+				}}</span>
+			</div>
 
-		<nav id="mc-admin-nav" class="side-nav">
-			@for (group of groups; track group.labelKey) {
-				<div class="group">
-					@if (group.labelKey) {
-						<h2 class="group-label">
-							{{ group.labelKey | transloco }}
-						</h2>
-					}
-					@for (item of group.items; track item.route) {
-						<a
-							class="nav-item"
-							[routerLink]="item.route"
-							routerLinkActive="is-active"
-							ariaCurrentWhenActive="page"
-							[attr.title]="item.labelKey | transloco"
-						>
-							<i
-								class="pi {{ item.icon }}"
-								aria-hidden="true"
-							></i>
-							<span class="nav-label">{{
-								item.labelKey | transloco
-							}}</span>
-							@if (
-								item.badge && store.badges()[item.badge];
-								as count
-							) {
-								<span
-									class="nav-badge"
-									[attr.aria-label]="count + ' to do'"
-									>{{ count }}</span
-								>
-							}
-						</a>
-					}
-				</div>
-			}
-		</nav>
-	</aside>
+			<nav id="mc-admin-nav" class="side-nav">
+				@for (group of groups; track group.labelKey) {
+					<div class="group">
+						@if (group.labelKey) {
+							<h2 class="group-label">
+								{{ group.labelKey | transloco }}
+							</h2>
+						}
+						@for (item of group.items; track item.route) {
+							<a
+								class="nav-item"
+								[routerLink]="item.route"
+								routerLinkActive="is-active"
+								ariaCurrentWhenActive="page"
+								[attr.title]="item.labelKey | transloco"
+							>
+								<i
+									class="pi {{ item.icon }}"
+									aria-hidden="true"
+								></i>
+								<span class="nav-label">{{
+									item.labelKey | transloco
+								}}</span>
+								@if (
+									item.badge && store.badges()[item.badge];
+									as count
+								) {
+									<span
+										class="nav-badge"
+										[attr.aria-label]="count + ' to do'"
+										>{{ count }}</span
+									>
+								}
+							</a>
+						}
+					</div>
+				}
+			</nav>
+
+			<div class="side-foot">
+				<button
+					type="button"
+					class="side-hide"
+					[attr.aria-label]="'ui.admin.hide-menu' | transloco"
+					[attr.title]="'ui.admin.hide-menu' | transloco"
+					(click)="hide()"
+				>
+					<i class="pi pi-angle-double-left" aria-hidden="true"></i>
+					<span class="nav-label">{{
+						'ui.admin.hide-menu' | transloco
+					}}</span>
+				</button>
+			</div>
+		</aside>
+	}
 
 	<div class="main">
 		@if (returnLink(); as returnLink) {
@@ -79,12 +102,29 @@
 			</a>
 		}
 
-		<nav
-			class="crumbs"
-			[attr.aria-label]="'ui.admin.breadcrumb' | transloco"
-		>
-			<mc-breadcrumb [autoGenerate]="true" separator="/"></mc-breadcrumb>
-		</nav>
+		<div class="crumb-row">
+			@if (hidden()) {
+				<button
+					type="button"
+					class="show-menu"
+					[attr.aria-label]="'ui.admin.show-menu' | transloco"
+					[attr.title]="'ui.admin.show-menu' | transloco"
+					(click)="show()"
+				>
+					<i class="pi pi-bars" aria-hidden="true"></i>
+				</button>
+			}
+
+			<nav
+				class="crumbs"
+				[attr.aria-label]="'ui.admin.breadcrumb' | transloco"
+			>
+				<mc-breadcrumb
+					[autoGenerate]="true"
+					separator="/"
+				></mc-breadcrumb>
+			</nav>
+		</div>
 
 		<div class="content">
 			<router-outlet></router-outlet>

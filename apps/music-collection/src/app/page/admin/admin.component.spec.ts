@@ -12,6 +12,8 @@ describe('AdminComponent', () => {
 	let fixture: ComponentFixture<AdminComponent>;
 
 	beforeEach(async () => {
+		localStorage.removeItem('mc-admin-nav-hidden');
+
 		await TestBed.configureTestingModule({
 			imports: [AdminComponent],
 			providers: [
@@ -34,4 +36,51 @@ describe('AdminComponent', () => {
 	it('should create', () => {
 		expect(component).toBeTruthy();
 	});
+
+	it('shows the side nav until it is hidden', () => {
+		expect(sideNav()).toBeTruthy();
+		expect(showButton()).toBeFalsy();
+
+		hideButton().click();
+		fixture.detectChanges();
+
+		expect(sideNav()).toBeFalsy();
+		expect(showButton()).toBeTruthy();
+	});
+
+	it('brings the side nav back', () => {
+		hideButton().click();
+		fixture.detectChanges();
+
+		showButton().click();
+		fixture.detectChanges();
+
+		expect(sideNav()).toBeTruthy();
+		expect(showButton()).toBeFalsy();
+	});
+
+	it('remembers the hidden side nav in this browser', () => {
+		hideButton().click();
+		fixture.detectChanges();
+
+		expect(localStorage.getItem('mc-admin-nav-hidden')).toBe('true');
+
+		const next = TestBed.createComponent(AdminComponent);
+
+		next.detectChanges();
+
+		expect(next.nativeElement.querySelector('.side')).toBeFalsy();
+	});
+
+	function sideNav(): HTMLElement | null {
+		return fixture.nativeElement.querySelector('.side');
+	}
+
+	function hideButton(): HTMLButtonElement {
+		return fixture.nativeElement.querySelector('.side-hide');
+	}
+
+	function showButton(): HTMLButtonElement {
+		return fixture.nativeElement.querySelector('.show-menu');
+	}
 });

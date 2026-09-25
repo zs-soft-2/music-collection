@@ -912,7 +912,9 @@
 			"admin": "Admin",
 			"admin2": "Admin",
 			"back-to-page": "Vissza az oldalra",
-			"breadcrumb": "Morzsamenü"
+			"breadcrumb": "Morzsamenü",
+			"hide-menu": "Menü elrejtése",
+			"show-menu": "Menü megjelenítése"
 		},
 		"adminDashboard": {
 			"dashboard": "Áttekintés",

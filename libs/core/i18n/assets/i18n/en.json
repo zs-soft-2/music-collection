@@ -912,7 +912,9 @@
 			"admin": "Admin",
 			"admin2": "Admin",
 			"back-to-page": "Back to page",
-			"breadcrumb": "Breadcrumb"
+			"breadcrumb": "Breadcrumb",
+			"hide-menu": "Hide menu",
+			"show-menu": "Show menu"
 		},
 		"adminDashboard": {
 			"dashboard": "Dashboard",

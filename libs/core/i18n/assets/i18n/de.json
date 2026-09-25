@@ -912,7 +912,9 @@
 			"admin": "Admin",
 			"admin2": "Admin",
 			"back-to-page": "Zurück zur Seite",
-			"breadcrumb": "Brotkrümelnavigation"
+			"breadcrumb": "Brotkrümelnavigation",
+			"hide-menu": "Menü ausblenden",
+			"show-menu": "Menü einblenden"
 		},
 		"adminDashboard": {
 			"dashboard": "Übersicht",
