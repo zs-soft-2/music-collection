@@ -80,7 +80,6 @@ export type ArtistReference = {
 } & Identifiable;
 
 export type ArtistFormParams = {
-	artistTypes: typeof ARTIST_TYPE_OPTIONS;
 	countries: CountryEnum[];
 	documents: DocumentEntity[];
 	formGroup: FormGroup;

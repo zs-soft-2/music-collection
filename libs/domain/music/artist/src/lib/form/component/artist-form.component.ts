@@ -1,4 +1,4 @@
-import { I18N_IMPORTS } from '@music-collection/core/i18n';
+import { I18N_IMPORTS, TextService } from '@music-collection/core/i18n';
 import { Observable } from 'rxjs';
 
 import {
@@ -9,6 +9,7 @@ import {
 	inject,
 } from '@angular/core';
 import {
+	ARTIST_TYPE_OPTIONS,
 	ArtistExternalField,
 	ArtistFormParams,
 	BaseComponent,
@@ -58,8 +59,23 @@ import { AsyncPipe } from '@angular/common';
 })
 export class ArtistFormComponent extends BaseComponent implements OnInit {
 	private componentService = inject(ArtistFormService);
+	private readonly text = inject(TextService);
 
 	public params$!: Observable<ArtistFormParams>;
+
+	/**
+	 * What kind of act the artist is, in the language in force. The options
+	 * carry a key rather than a word, so the select is handed the translation
+	 * instead: without it every row reads `empty`.
+	 */
+	public readonly artistTypes = computed(() => {
+		const translate = this.text.translator();
+
+		return ARTIST_TYPE_OPTIONS.map(({ labelKey, value }) => ({
+			label: translate(labelKey),
+			value,
+		}));
+	});
 
 	public readonly duplicate = this.componentService.duplicate;
 	public readonly externalCandidates =
