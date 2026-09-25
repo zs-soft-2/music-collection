@@ -2079,6 +2079,7 @@
 			"source-catalog": "Kreditek",
 			"current": "Jelenlegi tag",
 			"add-selected": "{{count}} sor felvétele",
+			"adding": "Felvétel folyamatban… az új zenészek egyesével jönnek létre, ez eltarthat pár másodpercig.",
 			"error-nothing-found": "Nincs mit felvenni: a MusicBrainzen nincs felállás, a katalógusban pedig nincs kredit a banda albumaihoz.",
 			"external-failed": "A MusicBrainz nem volt elérhető, ezért csak a katalógus kreditjei szerepelnek. A tagokért és az évekért próbáld újra a betöltést később.",
 			"instruments-empty": "Nincs ilyen hangszer a listán."

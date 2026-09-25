@@ -2079,6 +2079,7 @@
 			"source-catalog": "Credits",
 			"current": "Aktuelles Mitglied",
 			"add-selected": "{{count}} Zeilen hinzufügen",
+			"adding": "Zeilen werden hinzugefügt… neue Musiker werden einzeln angelegt, das kann ein paar Sekunden dauern.",
 			"error-nothing-found": "Nichts hinzuzufügen: keine Besetzung auf MusicBrainz, und der Katalog hat keine Credits zu den Alben dieser Band.",
 			"external-failed": "MusicBrainz war nicht erreichbar, daher stehen hier nur die Credits des Katalogs. Für Mitglieder und Jahre später erneut laden.",
 			"instruments-empty": "Kein solches Instrument auf der Liste."

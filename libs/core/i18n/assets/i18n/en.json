@@ -2079,6 +2079,7 @@
 			"source-catalog": "Credits",
 			"current": "Current member",
 			"add-selected": "Add {{count}} rows",
+			"adding": "Adding the rows… new musicians are created one at a time, which can take a few seconds.",
 			"error-nothing-found": "Nothing to add: no line-up on MusicBrainz, and the catalog has no credits for this band’s albums.",
 			"external-failed": "MusicBrainz could not be reached, so only the catalog’s own credits are listed. Try the load again later for the members and their years.",
 			"instruments-empty": "No such instrument on the list."

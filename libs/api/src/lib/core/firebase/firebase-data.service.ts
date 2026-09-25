@@ -34,6 +34,12 @@ export abstract class FirebaseDataService<
 	protected collection!: CollectionReference<DocumentData>;
 	protected featureKey!: string;
 
+	/**
+	 * One write, then done: the stream completes, so an operator that waits
+	 * for the end of it — `concatMap`, `forkJoin`, `toArray` — moves on
+	 * instead of holding the caller forever. A failed write is reported as
+	 * an error for the same reason: a silent stop looks like a slow save.
+	 */
 	protected addModel$(entityAdd: S): Observable<R> {
 		const uid = doc(collection(this.firestore, 'id')).id;
 		const newEntity = {
@@ -48,7 +54,9 @@ export abstract class FirebaseDataService<
 					subscriber.next(
 						withLocalUpdatedAt(newEntity) as unknown as R
 					);
-				});
+					subscriber.complete();
+				})
+				.catch((error) => subscriber.error(error));
 		});
 	}
 
@@ -73,15 +81,18 @@ export abstract class FirebaseDataService<
 		);
 
 		return new Observable((subscriber) => {
-			getDocs(albumsQuery).then((snapshots) => {
-				const entities: R[] = [];
+			getDocs(albumsQuery)
+				.then((snapshots) => {
+					const entities: R[] = [];
 
-				snapshots.forEach((doc) => {
-					entities.push(toSyncedData(doc) as unknown as R);
-				});
+					snapshots.forEach((doc) => {
+						entities.push(toSyncedData(doc) as unknown as R);
+					});
 
-				subscriber.next(entities);
-			});
+					subscriber.next(entities);
+					subscriber.complete();
+				})
+				.catch((error) => subscriber.error(error));
 		});
 	}
 
@@ -118,6 +129,7 @@ export abstract class FirebaseDataService<
 								}) as unknown as R
 						)
 					);
+					subscriber.complete();
 				})
 				.catch((error) => {
 					subscriber.error(error);
@@ -141,7 +153,9 @@ export abstract class FirebaseDataService<
 					subscriber.next(
 						withLocalUpdatedAt(newEntity) as unknown as T
 					);
-				});
+					subscriber.complete();
+				})
+				.catch((error) => subscriber.error(error));
 		});
 	}
 }
