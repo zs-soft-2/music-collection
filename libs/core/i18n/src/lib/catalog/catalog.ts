@@ -25,6 +25,17 @@ export type CatalogGroup =
 	| 'releaseCountry'
 	/** The Goldmine grades, spelled out. */
 	| 'grade'
+	/**
+	 * What a musician plays: `guitar`, `drums`, `backing vocals`.
+	 *
+	 * Here and not with the styles because an instrument is a common noun,
+	 * not a genre name: the Hungarian press writes "dob" and the German one
+	 * "Schlagzeug", and neither writes "drums". The line-up is picked from
+	 * `INSTRUMENT_GROUPS`, so the vocabulary is a closed list — but an older
+	 * document may hold whatever the import wrote, and an unknown value is
+	 * shown as it stands.
+	 */
+	| 'instrument'
 	/** What kind of act an artist is: a band, a project, a formation. */
 	| 'artistType'
 	/**

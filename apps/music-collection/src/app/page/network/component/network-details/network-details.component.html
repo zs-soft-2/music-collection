@@ -141,7 +141,7 @@
 							Guest ·
 						}
 						@if (item.instruments.length) {
-							{{ item.instruments.slice(0, 3).join(', ') }} ·
+							{{ item.instruments.slice(0, 3) | mcCatalog: 'instrument' }} ·
 						}
 						{{ item.years ?? 'Years unknown' }}
 					</span>

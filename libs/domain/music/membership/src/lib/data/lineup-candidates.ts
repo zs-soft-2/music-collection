@@ -1,6 +1,8 @@
 import { AlbumEntity, ContributionEntity } from '@music-collection/api';
 import { creditCategory } from '@music-collection/ui/music-view';
 
+import { toCatalogInstruments } from './instruments';
+
 /** One musician the line-up could take in, from either source. */
 export interface LineupCandidate {
 	/** The catalog's musician, or null when the name is not in it yet. */
@@ -77,9 +79,11 @@ export function toExternalMembers(band: MusicBrainzBand): LineupCandidate[] {
 				kind: attributes.includes('additional')
 					? ('guest' as const)
 					: ('member' as const),
-				instruments: attributes
-					.filter((attribute) => !ROLE_ATTRIBUTES.has(attribute))
-					.map(titleCase),
+				instruments: toCatalogInstruments(
+					attributes
+						.filter((attribute) => !ROLE_ATTRIBUTES.has(attribute))
+						.map(titleCase)
+				),
 				from: yearOf(relation.begin),
 				to,
 				// Ended, or dated to an end year: either way they left.
@@ -152,7 +156,7 @@ export function toCatalogCandidates(
 		musicianUid,
 		musicianName: person.name,
 		kind: person.releaseWide ? ('member' as const) : ('guest' as const),
-		instruments: [...person.instruments],
+		instruments: toCatalogInstruments([...person.instruments]),
 		from: person.years.length ? Math.min(...person.years) : null,
 		to: person.years.length ? Math.max(...person.years) : null,
 		active: false,

@@ -65,7 +65,7 @@
 									'ui.musicianBands.instruments' | transloco
 								"
 							>
-								{{ band.instruments.join(', ') || '—' }}
+								{{ (band.instruments | mcCatalog: 'instrument') || '—' }}
 							</td>
 							<td
 								[attr.data-label]="

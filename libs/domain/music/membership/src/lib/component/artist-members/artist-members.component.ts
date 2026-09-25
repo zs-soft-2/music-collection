@@ -26,9 +26,11 @@ import { Checkbox } from 'primeng/checkbox';
 import { Dialog } from 'primeng/dialog';
 import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
+import { MultiSelect } from 'primeng/multiselect';
 import { Select } from 'primeng/select';
 
 import { MembershipEffect } from '../../data/membership.effect';
+import { INSTRUMENT_GROUPS, unlistedInstruments } from '../../data/instruments';
 import { ArtistMembersStore } from '../../store/artist-members.store';
 
 /** The year a band can first have played in, to catch a mistyped year. */
@@ -56,6 +58,7 @@ const EARLIEST_YEAR = 1900;
 		Dialog,
 		InputNumber,
 		InputText,
+		MultiSelect,
 		Select,
 	],
 })
@@ -89,10 +92,45 @@ export class ArtistMembersComponent implements OnInit {
 		];
 	});
 
-	/** The instruments of the open row, as the text field shows them. */
-	public readonly instrumentsText = computed(() =>
-		(this.store.draft()?.instruments ?? []).join(', ')
-	);
+	/**
+	 * The instruments the field offers, grouped, each in the language on
+	 * screen — so that a Hungarian admin picks "Dob" and the row still holds
+	 * `Drums`.
+	 *
+	 * Whatever the open row holds that the list does not offer is added as a
+	 * group of its own. It is there to be kept or taken off, not to be picked
+	 * again: an import from before the list, or a Discogs credit calling
+	 * something an instrument, would otherwise vanish on the next save.
+	 */
+	public readonly instrumentGroups = computed(() => {
+		const translate = this.text.translator();
+		const label = this.text.catalog();
+		const groups = INSTRUMENT_GROUPS.map((group) => ({
+			label: translate(`ui.artistMembers.instrument-group.${group.key}`),
+			items: group.instruments.map((instrument) => ({
+				label: label('instrument', instrument),
+				value: instrument,
+			})),
+		}));
+		const unlisted = unlistedInstruments(
+			this.store.draft()?.instruments ?? []
+		);
+
+		return unlisted.length
+			? [
+					...groups,
+					{
+						label: translate(
+							'ui.artistMembers.instrument-group.unlisted'
+						),
+						items: unlisted.map((instrument) => ({
+							label: instrument,
+							value: instrument,
+						})),
+					},
+				]
+			: groups;
+	});
 
 	/** A name typed but not picked can be created as a musician. */
 	public readonly creatable = computed(() => {
@@ -141,13 +179,8 @@ export class ArtistMembersComponent implements OnInit {
 		});
 	}
 
-	public setInstruments(text: string): void {
-		this.store.patchDraft({
-			instruments: text
-				.split(',')
-				.map((instrument) => instrument.trim())
-				.filter(Boolean),
-		});
+	public setInstruments(instruments: string[]): void {
+		this.store.patchDraft({ instruments });
 	}
 
 	public setKind(kind: 'member' | 'guest'): void {

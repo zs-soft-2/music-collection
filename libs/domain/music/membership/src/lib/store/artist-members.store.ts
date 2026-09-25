@@ -20,6 +20,7 @@ import {
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
+import { toCatalogInstruments } from '../data/instruments';
 import { LineupCandidate } from '../data/lineup-candidates';
 import {
 	LineupLookupResult,
@@ -109,7 +110,9 @@ const toDraft = (row: MembershipEntity): MembershipDraft => ({
 	musicianUid: row.musicianUid,
 	musicianName: row.musicianName,
 	kind: row.kind,
-	instruments: [...(row.instruments ?? [])],
+	// An older row may hold what an import wrote; the field speaks the
+	// list's own words, and a row edited at all is corrected to them.
+	instruments: toCatalogInstruments(row.instruments ?? []),
 	from: row.from,
 	to: row.to,
 	active: isCurrentMember(row),

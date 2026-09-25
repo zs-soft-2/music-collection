@@ -83,7 +83,10 @@
 											| transloco
 									"
 								>
-									{{ row.instruments.join(', ') || '—' }}
+									{{
+										(row.instruments
+											| mcCatalog: 'instrument') || '—'
+									}}
 								</td>
 								<td
 									[attr.data-label]="
@@ -192,7 +195,10 @@
 											| transloco
 									"
 								>
-									{{ row.instruments.join(', ') || '—' }}
+									{{
+										(row.instruments
+											| mcCatalog: 'instrument') || '—'
+									}}
 								</td>
 								<td
 									[attr.data-label]="
@@ -320,17 +326,31 @@
 				<label for="member-instruments">{{
 					'ui.artistMembers.instruments' | transloco
 				}}</label>
-				<input
-					id="member-instruments"
-					type="text"
-					pInputText
-					[ngModel]="instrumentsText()"
+				<p-multiselect
+					inputId="member-instruments"
+					[options]="instrumentGroups()"
+					[group]="true"
+					optionLabel="label"
+					optionValue="value"
+					optionGroupLabel="label"
+					optionGroupChildren="items"
+					[filter]="true"
+					display="chip"
+					[showToggleAll]="false"
+					[maxSelectedLabels]="null"
+					[ngModel]="draft.instruments"
 					[ngModelOptions]="{ standalone: true }"
 					[placeholder]="
 						'ui.artistMembers.instruments-placeholder' | transloco
 					"
+					[filterPlaceHolder]="
+						'ui.artistMembers.instruments-placeholder' | transloco
+					"
+					[emptyFilterMessage]="
+						'ui.artistMembers.instruments-empty' | transloco
+					"
 					(ngModelChange)="setInstruments($event)"
-				/>
+				></p-multiselect>
 				<small>{{
 					'ui.artistMembers.instruments-hint' | transloco
 				}}</small>
@@ -560,7 +580,10 @@
 									'ui.artistMembers.instruments' | transloco
 								"
 							>
-								{{ candidate.instruments.join(', ') || '—' }}
+								{{
+									(candidate.instruments
+										| mcCatalog: 'instrument') || '—'
+								}}
 							</td>
 							<td
 								[attr.data-label]="

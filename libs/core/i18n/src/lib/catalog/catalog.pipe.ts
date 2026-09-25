@@ -5,14 +5,18 @@ import { Pipe, PipeTransform, inject } from '@angular/core';
 import { LanguageService } from '../language.service';
 import { CatalogGroup, catalogKey } from './catalog';
 
+/** How a list of catalog values reads on one line. */
+const SEPARATOR = ', ';
+
 /**
  * A catalog value in the language in force: `{{ album.format | mcCatalog:
- * 'format' }}`.
+ * 'format' }}`. A list is read the same way and joined: `{{
+ * member.instruments | mcCatalog: 'instrument' }}` → "Ének, Gitár".
  *
  * A value the dictionary does not know is shown as it stands rather than as a
- * key. The catalog grows from Discogs, which knows formats and pressing
- * countries this app has never heard of; an unknown one is better read in
- * English than as `catalog.format.shellac`.
+ * key. The catalog grows from Discogs, which knows formats, instruments and
+ * pressing countries this app has never heard of; an unknown one is better
+ * read in English than as `catalog.format.shellac`.
  */
 @Pipe({ name: 'mcCatalog', pure: false })
 export class McCatalogPipe implements PipeTransform {
@@ -23,18 +27,24 @@ export class McCatalogPipe implements PipeTransform {
 	private label = '';
 
 	public transform(
-		value: string | null | undefined,
+		value: string | readonly string[] | null | undefined,
 		group: CatalogGroup
 	): string {
-		if (!value) {
+		const values = (Array.isArray(value) ? value : [value]).filter(
+			(item): item is string => !!item
+		);
+
+		if (!values.length) {
 			return '';
 		}
 
-		const memo = `${this.language.language()}|${group}|${value}`;
+		const memo = `${this.language.language()}|${group}|${values.join('|')}`;
 
 		if (memo !== this.memo) {
 			this.memo = memo;
-			this.label = catalogLabel(this.transloco, group, value);
+			this.label = values
+				.map((item) => catalogLabel(this.transloco, group, item))
+				.join(SEPARATOR);
 		}
 
 		return this.label;

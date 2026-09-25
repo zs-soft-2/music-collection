@@ -57,7 +57,7 @@
 							<div>
 								<dt>{{ 'page.musician.plays' | transloco }}</dt>
 								<dd>
-									{{ store.summary().instruments.join(', ') }}
+									{{ store.summary().instruments | mcCatalog: 'instrument' }}
 								</dd>
 							</div>
 						}
@@ -244,7 +244,8 @@
 									}
 									@if (band.instruments.length) {
 										<span class="instruments">{{
-											band.instruments.join(', ')
+											band.instruments
+												| mcCatalog: 'instrument'
 										}}</span>
 									}
 								</div>
@@ -347,7 +348,8 @@
 								}
 								@if (band.instruments.length) {
 									<span class="instruments">{{
-										band.instruments.join(', ')
+										band.instruments
+											| mcCatalog: 'instrument'
 									}}</span>
 								}
 								<span class="meta">

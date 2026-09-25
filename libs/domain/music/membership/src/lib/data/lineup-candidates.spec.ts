@@ -50,7 +50,7 @@ describe('toExternalMembers', () => {
 		expect(member).toMatchObject({ active: true, to: null });
 	});
 
-	it('spells the instruments as the credits do', () => {
+	it('spells the instruments as the catalog does', () => {
 		const [member] = toExternalMembers({
 			relations: [relation({ attributes: ['lead vocals', 'guitar'] })],
 		});
@@ -58,13 +58,18 @@ describe('toExternalMembers', () => {
 		expect(member.instruments).toEqual(['Lead Vocals', 'Guitar']);
 	});
 
+	/**
+	 * MusicBrainz names an instrument in the singular. The line-up is picked
+	 * from a list that says `Keyboards`, and a row has to hold the word the
+	 * list offers or it can be neither translated nor picked again.
+	 */
 	it('takes an additional member for a guest, and drops the marker', () => {
 		const [member] = toExternalMembers({
 			relations: [relation({ attributes: ['additional', 'keyboard'] })],
 		});
 
 		expect(member.kind).toBe('guest');
-		expect(member.instruments).toEqual(['Keyboard']);
+		expect(member.instruments).toEqual(['Keyboards']);
 	});
 
 	it('leaves relations that are not memberships alone', () => {

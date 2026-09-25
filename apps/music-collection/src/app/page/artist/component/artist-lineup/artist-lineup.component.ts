@@ -95,7 +95,7 @@ import { LineupMember, LineupView } from '../../artist.mapper';
 					>
 					@if (member.instruments.length) {
 						<span class="instruments">{{
-							member.instruments.join(', ')
+							member.instruments | mcCatalog: 'instrument'
 						}}</span>
 					}
 				</div>
@@ -180,7 +180,7 @@ import { LineupMember, LineupView } from '../../artist.mapper';
 							>
 							@if (guest.instruments.length) {
 								<span class="instruments">{{
-									guest.instruments.join(', ')
+									guest.instruments | mcCatalog: 'instrument'
 								}}</span>
 							}
 							@if (guest.years) {
