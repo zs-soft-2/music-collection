@@ -1974,7 +1974,7 @@
 			"open-the-full-screen": "Vollbild-Player öffnen",
 			"full-screen": "Vollbild",
 			"this-player-only-plays": "Das ist Spotifys eigener Rahmen: Er spielt vollständig, wenn du bei Spotify angemeldet bist, steuerbar ist er von hier aus aber nicht. Verbinde dein Spotify-Premium-Konto (Play-Taste oder Einstellungen), damit Warteschlange, Radio und deine Lautsprecher funktionieren.",
-			"spotifys-own-frame": "Das ist Spotifys eigener Rahmen: Er spielt vollständig, wenn du bei Spotify angemeldet bist, steuerbar ist er von hier aus aber nicht. Für Warteschlange, Radio und deine Lautsprecher trage deine eigene Spotify-App in deinem Profil ein."
+			"spotifys-own-frame": "Das ist Spotifys eigener Rahmen: Die Play-Taste oben startet ihn, und er spielt vollständig, wenn du bei Spotify angemeldet bist. Für Warteschlange, Radio und deine Lautsprecher trage deine eigene Spotify-App in deinem Profil ein."
 		},
 		"playerSideBreak": {
 			"turn-the-record-over": "Dreh die Platte um",

@@ -1974,7 +1974,7 @@
 			"open-the-full-screen": "Teljes képernyős lejátszó megnyitása",
 			"full-screen": "Teljes képernyő",
 			"this-player-only-plays": "Ez a Spotify saját kerete: teljes hosszban szól, ha be vagy jelentkezve a Spotifyba, de innen nem vezérelhető. Kösd össze a Spotify Premium fiókodat (lejátszás gomb vagy beállítások), hogy a sor, a rádió és a hangszóróid is működjenek.",
-			"spotifys-own-frame": "Ez a Spotify saját kerete: teljes hosszban szól, ha be vagy jelentkezve a Spotifyba, de innen nem vezérelhető. A sorhoz, a rádióhoz és a hangszóróidhoz add meg a saját Spotify appodat a profilodban."
+			"spotifys-own-frame": "Ez a Spotify saját kerete: a fenti lejátszás gomb ezt indítja, és teljes hosszban szól, ha be vagy jelentkezve a Spotifyba. A sorhoz, a rádióhoz és a hangszóróidhoz add meg a saját Spotify appodat a profilodban."
 		},
 		"playerSideBreak": {
 			"turn-the-record-over": "Fordítsd meg a lemezt",

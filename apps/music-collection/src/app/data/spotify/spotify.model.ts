@@ -1,3 +1,5 @@
+import { isSpotifyAlbumId, isSpotifyTrackId } from '@music-collection/api';
+
 export interface SpotifyToken {
 	accessToken: string;
 	refreshToken: string;
@@ -87,4 +89,21 @@ export class SpotifyNotConnectedError extends Error {
 	public constructor() {
 		super('Not connected to Spotify.');
 	}
+}
+
+/**
+ * What Spotify's embedded frame would hold for a record, or for the one
+ * track in focus: the same answer for the frame that shows it and for the
+ * player that presses its play button, so the two can never disagree about
+ * which record is in there.
+ */
+export function spotifyEmbedUri(
+	albumId: string | null | undefined,
+	trackId: string | null | undefined = null
+): string | null {
+	if (isSpotifyTrackId(trackId)) {
+		return `spotify:track:${trackId}`;
+	}
+
+	return isSpotifyAlbumId(albumId) ? `spotify:album:${albumId}` : null;
 }

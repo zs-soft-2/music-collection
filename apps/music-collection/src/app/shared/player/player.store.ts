@@ -59,9 +59,14 @@ import {
 	PlayerSource,
 	resolvePlayerSettings,
 } from '../../data/player';
-import { TrackToMatch, currentPositionMs } from '../../data/spotify';
+import {
+	TrackToMatch,
+	currentPositionMs,
+	spotifyEmbedUri,
+} from '../../data/spotify';
 import { UserSettingsEffect } from '../../data/user-settings';
 import { TrackDetailsEffect } from '../../data/track-details';
+import { SpotifyEmbedStore } from '../spotify/spotify-embed.store';
 import { SpotifyPlaybackStore } from '../spotify/spotify-playback.store';
 import {
 	YoutubeAlbum,
@@ -329,6 +334,7 @@ export const PlayerStore = signalStore(
 		(
 			store,
 			spotify = inject(SpotifyPlaybackStore),
+			embed = inject(SpotifyEmbedStore),
 			youtube = inject(YoutubePlaybackStore),
 			albumStateService = inject(AlbumStateService),
 			consent = inject(ExternalPlayerConsentService)
@@ -394,6 +400,35 @@ export const PlayerStore = signalStore(
 									? 'spotify'
 									: null;
 				}
+			};
+
+			/**
+			 * Spotify's embedded frame holds this record and can be pressed
+			 * from here.
+			 *
+			 * For a collector who has not registered their own Spotify app
+			 * the frame is the whole of Spotify, so the play button over it
+			 * presses that rather than doing nothing. It reaches no further
+			 * than the page showing it: this one record, play and pause, and
+			 * not a track it could name, a next, or a volume.
+			 */
+			const embedDrives = (request: PlayRequest | null): boolean => {
+				const uri = spotifyEmbedUri(
+					request?.spotifyAlbumId,
+					request?.spotifyTrackId
+				);
+
+				return (
+					!!uri &&
+					sourceFor(request) === 'spotify' &&
+					!spotify.connected() &&
+					// A collector who registered an app did it for the
+					// playback this player drives, so their play button
+					// still takes them to the sign-in that buys it.
+					!spotify.hasOwnApp() &&
+					embed.controllable() &&
+					embed.uri() === uri
+				);
 			};
 
 			/** The session or the page, whichever is about the album. */
@@ -548,7 +583,11 @@ export const PlayerStore = signalStore(
 			const durationMs = computed(() => {
 				const current = now();
 				if (!current) {
-					return 0;
+					// Nothing of ours plays: the frame still says how long
+					// what is in it runs, which is all it says.
+					return embedDrives(shown().request)
+						? embed.durationMs()
+						: 0;
 				}
 				return current.source === 'spotify'
 					? (spotify.nowPlaying()?.durationMs ?? 0)
@@ -592,9 +631,31 @@ export const PlayerStore = signalStore(
 				}),
 				pageActive,
 				/** The page's album / track plays now. */
-				pagePlaying: computed(() => pageActive() && !!now()?.playing),
-				/** The page's album / track can be played. */
-				pagePlayable: computed(() => sourceFor(store.page()) !== null),
+				pagePlaying: computed(
+					() =>
+						(pageActive() && !!now()?.playing) ||
+						(embedDrives(store.page()) && embed.playing())
+				),
+				/**
+				 * The page's album / track can be played — by this player,
+				 * or by pressing the frame the page puts it in. Where neither
+				 * can, no button is offered: one that does nothing when
+				 * pressed is worse than none at all.
+				 */
+				pagePlayable: computed(() => {
+					const page = store.page();
+					const source = sourceFor(page);
+
+					return (
+						!!source &&
+						(source !== 'spotify' ||
+							spotify.connected() ||
+							spotify.hasOwnApp() ||
+							embedDrives(page))
+					);
+				}),
+				/** What plays is the page's frame, not this player. */
+				embedDrives: computed(() => embedDrives),
 				shown,
 				settings,
 				/** Sources for the settings menu. */
@@ -603,7 +664,11 @@ export const PlayerStore = signalStore(
 				source: computed(
 					() => now()?.source ?? sourceFor(shown().request)
 				),
-				playing: computed(() => !!now()?.playing),
+				playing: computed(
+					() =>
+						!!now()?.playing ||
+						(embedDrives(shown().request) && embed.playing())
+				),
 				durationMs,
 				canSeek: computed(() => !!now() && durationMs() > 0),
 				canSkip: computed(() => {
@@ -619,7 +684,9 @@ export const PlayerStore = signalStore(
 					() =>
 						!now() &&
 						sourceFor(shown().request) === 'spotify' &&
-						!spotify.connected()
+						!spotify.connected() &&
+						// The frame plays it without any sign-in at all.
+						!embedDrives(shown().request)
 				),
 				/** Volume of what plays (0–100); null when nothing plays. */
 				volume: computed(() => {
@@ -638,7 +705,7 @@ export const PlayerStore = signalStore(
 				/** The source's last error, e.g. a missing Premium account. */
 				error: computed(() =>
 					(now()?.source ?? sourceFor(shown().request)) === 'spotify'
-						? spotify.error()
+						? (spotify.error() ?? embed.error())
 						: null
 				),
 				sourceFor: computed(() => sourceFor),
@@ -705,6 +772,7 @@ export const PlayerStore = signalStore(
 			albumDetailsEffect = inject(AlbumDetailsEffect),
 			albumStateService = inject(AlbumStateService),
 			spotify = inject(SpotifyPlaybackStore),
+			embed = inject(SpotifyEmbedStore),
 			youtube = inject(YoutubePlaybackStore),
 			audioCaptureEffect = inject(AudioCaptureEffect),
 			radioEffect = inject(RadioEffect),
@@ -758,12 +826,20 @@ export const PlayerStore = signalStore(
 					store.overrides()
 				);
 				if (source === 'spotify' && !spotify.connected()) {
-					// Without their own app there is no sign-in to send them
-					// to. Spotify's embedded frame on the album page is the
-					// whole of Spotify here, and it plays on its own.
+					// Their own app buys the queue, the stage and their own
+					// speakers, so a collector who has one is sent to sign in
+					// rather than left with the frame.
 					if (spotify.hasOwnApp()) {
 						await spotify.connect();
+
+						return;
 					}
+					// Otherwise the page's own frame is the whole of Spotify
+					// here, and pressing it is the one thing this can do.
+					if (store.embedDrives()(request)) {
+						await embed.play();
+					}
+
 					return;
 				}
 				patchState(store, {
@@ -876,6 +952,9 @@ export const PlayerStore = signalStore(
 					await spotify.togglePlay();
 				} else if (current?.source === 'youtube') {
 					youtube.togglePlay();
+				} else if (store.embedDrives()(store.shown().request)) {
+					// Nothing of ours plays, but the page's frame does.
+					await embed.togglePlay();
 				}
 			};
 
@@ -953,6 +1032,10 @@ export const PlayerStore = signalStore(
 						await continueSide();
 					} else if (store.pageActive()) {
 						await toggle();
+					} else if (store.embedDrives()(page)) {
+						// The page's frame is what plays it: the same button
+						// pauses and lets it on again.
+						await embed.togglePlay();
 					} else if (page) {
 						await start(page);
 					}
@@ -1127,7 +1210,7 @@ export const PlayerStore = signalStore(
 					const request = store.shown().request;
 					if (store.sideBreak()) {
 						await continueSide();
-					} else if (store.now()) {
+					} else if (store.now() || store.embedDrives()(request)) {
 						await toggle();
 					} else if (request) {
 						await start(request);
@@ -1170,6 +1253,19 @@ export const PlayerStore = signalStore(
 						return Math.min(
 							Math.max(0, position),
 							youtube.durationMs() || position
+						);
+					}
+					if (store.embedDrives()(store.shown().request)) {
+						// The frame reports where it is now and then; the
+						// seconds in between are counted here, as they are
+						// for the sources this player drives itself.
+						const position = embed.playing()
+							? embed.positionMs() + (now - embed.positionAt())
+							: embed.positionMs();
+
+						return Math.min(
+							Math.max(0, position),
+							embed.durationMs() || position
 						);
 					}
 					return 0;

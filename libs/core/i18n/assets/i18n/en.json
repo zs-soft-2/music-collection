@@ -1974,7 +1974,7 @@
 			"open-the-full-screen": "Open the full-screen player",
 			"full-screen": "Full screen",
 			"this-player-only-plays": "This is Spotify's own frame: it plays in full if you are signed in to Spotify, but nothing here drives it. Connect your Spotify Premium account (play button or settings) for the queue, the radio and your own speakers.",
-			"spotifys-own-frame": "This is Spotify's own frame: it plays in full if you are signed in to Spotify, but nothing here drives it. For the queue, the radio and your own speakers, name your own Spotify app in your profile."
+			"spotifys-own-frame": "This is Spotify's own frame: the play button above starts it, and it plays in full if you are signed in to Spotify. For the queue, the radio and your own speakers, name your own Spotify app in your profile."
 		},
 		"playerSideBreak": {
 			"turn-the-record-over": "Turn the record over",
