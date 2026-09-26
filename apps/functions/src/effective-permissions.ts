@@ -8,6 +8,14 @@
  * másolata, és két igazságforrás egyben a hiba forrása is.
  */
 
+/**
+ * Az alapértelmezett szerepkör neve (`RoleNames.USER`): minden user megkapja,
+ * amikor a dokumentuma létrejön. A kliens magának nem írhat szerepkört (a
+ * rules tiltja), ezért ezt a function teszi a `roleIds`-be — enélkül egy új
+ * gyűjtőnek egyetlen permissionje sincs, és a saját polcára sem tehet lemezt.
+ */
+export const DEFAULT_ROLE = 'USER';
+
 /** A `role/{roleId}` dokumentum, az azonosítójával együtt. */
 export interface CatalogRole {
 	id: string;
@@ -50,6 +58,34 @@ export function roleReferences(user: UserDocument | undefined): Set<string> {
 	}
 
 	return references;
+}
+
+/**
+ * Az alapértelmezett szerepkör hivatkozása, ha a user még nem kapta meg;
+ * `null`, ha már megvan. A hivatkozás a szerepkör-dokumentum azonosítója (az
+ * admin felületen létrehozotté generált), ha ilyen nincs, a neve — arra is
+ * illeszkedik, amint a szerepkör létrejön.
+ */
+export function missingDefaultRole(
+	user: UserDocument | undefined,
+	roles: CatalogRole[]
+): string | null {
+	const references = roleReferences(user);
+	const role = roles.find(
+		(candidate) =>
+			candidate.id === DEFAULT_ROLE || candidate.name === DEFAULT_ROLE
+	);
+
+	if (
+		references.has(DEFAULT_ROLE) ||
+		(role &&
+			(references.has(role.id) ||
+				(!!role.name && references.has(role.name))))
+	) {
+		return null;
+	}
+
+	return role?.id ?? DEFAULT_ROLE;
 }
 
 /** A user szerepköreiből következő permissionök, rendezve és duplikátum nélkül. */

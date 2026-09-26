@@ -231,6 +231,7 @@ gcloud secrets versions add DISCOGS_TOKEN --data-file=-
 | `sync/build-bundles.mjs` | katalógus-bundle-ök építése |
 | `sync/copy-prod-to-dev.mjs` | prod adat áthozása devbe |
 | `sync/grant-permissions.mjs` | jogosultság adása |
+| `sync/seed-user-role.mjs` | a `USER` szerepkör létrehozása, és kiosztása a meglévő usereknek |
 | `sync/backfill-collection-item-artist.mjs` | előadó-kereséshez visszatöltés |
 | `sync/delete-collection-item.mjs` | egy példány törlése parancssorból |
 | `catalog/merge-duplicate-albums.mjs`, `find-duplicate-names.mjs` | duplikátumok |

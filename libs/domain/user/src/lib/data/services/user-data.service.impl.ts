@@ -30,8 +30,27 @@ export class UserDataServiceImpl extends UserDataService {
 		this.collection = collection(this.firestore, this.featureKey);
 	}
 
+	/**
+	 * A user dokumentum azonosítója az Auth uid, nem generált: a rules csak
+	 * így engedi a saját dokumentum létrehozását (`isSelf(uid)`), a
+	 * belépés ezen keresi, és a `USER` szerepkört is ide írja a function
+	 * (`assignDefaultRole`). Generált azonosítóval az első belépés írása
+	 * elhasalt, és a gyűjtőnek sosem lett se dokumentuma, se jogosultsága.
+	 */
 	public add$(user: User): Observable<User> {
-		return super.addModel$(user);
+		if (!user.uid) {
+			return super.addModel$(user);
+		}
+
+		return new Observable((subscriber) => {
+			this.firestoreSync
+				.set(doc(this.collection, user.uid), this.featureKey, user)
+				.then(() => {
+					subscriber.next(withLocalUpdatedAt(user));
+					subscriber.complete();
+				})
+				.catch((error) => subscriber.error(error));
+		});
 	}
 
 	public addCollectionItem$(

@@ -10,6 +10,10 @@ rules_version = '2';
 //    syncRolePermissions) a user összes szerepkörének permissionjeit a
 //    `security/users/{uid}/effective_permissions` dokumentumba gyűjti
 //    (`permissions: string[]`, `roles: string[]`).
+//  - A `USER` szerepkör a gyűjtő alapjoga (saját példány, kívánságlista): az
+//    első belépéskor a kliens létrehozza a `user/{uid}` dokumentumot (az Auth
+//    uid-dal, szerepkör nélkül), a `syncUserPermissions` function pedig
+//    beírja a `roleIds`-be.
 //  - Egyetlen igazságforrás ez a dokumentum: a storage.rules is ezt olvassa
 //    (cross-service `firestore.get()`). Custom claimet nem használunk, mert a
 //    claimek együtt 1000 bájtba férnek, amit a teljes permission-lista

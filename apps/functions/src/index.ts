@@ -94,6 +94,7 @@ import {
 	UserDocument,
 	calculateEffectivePermissions,
 	isSameEffectivePermissions,
+	missingDefaultRole,
 	roleReferences,
 } from './effective-permissions';
 
@@ -215,12 +216,32 @@ function sameReferences(before?: UserDocument, after?: UserDocument): boolean {
 	return a.size === b.size && [...a].every((reference) => b.has(reference));
 }
 
-/** A user szerepkör-hivatkozásainak változása. */
+/**
+ * A user szerepkör-hivatkozásainak változása. Az új user dokumentumba (a
+ * kliens az első belépéskor hozza létre, az Auth uid-dal) itt kerül be az
+ * alapértelmezett `USER` szerepkör; az írás újra elindítja ezt a triggert, és
+ * az már a szerepkörrel együtt számol.
+ */
 export const syncUserPermissions = onDocumentWritten(
 	`${USER_COLLECTION}/{uid}`,
 	async (event) => {
 		const before = event.data?.before.data() as UserDocument | undefined;
 		const after = event.data?.after.data() as UserDocument | undefined;
+
+		if (!event.data?.before.exists && event.data?.after.exists) {
+			const defaultRole = missingDefaultRole(after, await loadRoles());
+
+			if (defaultRole) {
+				await event.data.after.ref.update({
+					roleIds: FieldValue.arrayUnion(defaultRole),
+				});
+				logger.info(
+					`${event.params.uid}: ${defaultRole} szerepkör hozzáadva`
+				);
+
+				return;
+			}
+		}
 
 		// A user saját adatainak (név, kép) írása nem érinti a jogosultságot.
 		if (
