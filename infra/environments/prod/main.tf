@@ -39,6 +39,10 @@ resource "google_project_iam_member" "functions_runtime" {
   for_each = toset([
     "roles/datastore.user",
     "roles/eventarc.eventReceiver",
+    # A 2. generációs Firestore-trigger ezzel a fiókkal hívja a function
+    # Cloud Run szolgáltatását; enélkül minden esemény elakad, és a
+    # jogosultság-szinkron (effective_permissions) sosem fut le.
+    "roles/run.invoker",
     "roles/logging.logWriter",
     # A badge-generálás: az Imagen hívása, és a kész kép a Storage
     # `badge/` útvonalára. A Firestore-t a datastore.user fedi.
