@@ -15,11 +15,6 @@ import {
 	CollectionItemDataService,
 	CollectionItemEntity,
 	CollectionItemUtilService,
-	EntityQuantityEntity,
-	EntityQuantityStateService,
-	EntityQuantityUtilService,
-	EntityTypeEnum,
-	UpdateEntityQuantityTypeEnum,
 	UserDataService,
 } from '@music-collection/api';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
@@ -31,27 +26,19 @@ export class CollectionItemEffects {
 	private actions$: Actions = inject(Actions);
 	private collectionItemDataService = inject(CollectionItemDataService);
 	private collectionItemUtilService = inject(CollectionItemUtilService);
-	private entityQuantityStateService = inject(EntityQuantityStateService);
-	private entityQuantityUtilService = inject(EntityQuantityUtilService);
 	private userDataService = inject(UserDataService);
 	private authenticationStateService = inject(AuthenticationStateService);
 	private analytics = inject(AnalyticsService);
 
+	/**
+	 * No stored count is kept for copies, here or on removal: the pages count
+	 * them live (see `ENTITY_COUNT_COLLECTIONS`), and the shared
+	 * `entity-quantity` counter is the admin's to write, not a collector's.
+	 */
 	public addCollectionItem = createEffect(() =>
 		this.actions$.pipe(
 			ofType(collectionItemActions.addCollectionItem),
 			switchMap((action) =>
-				this.entityQuantityStateService
-					.selectEntityById$(EntityTypeEnum.CollectionItem)
-					.pipe(
-						map((entityQuantityEntity) => ({
-							action,
-							entityQuantityEntity,
-						})),
-						first()
-					)
-			),
-			switchMap(({ action, entityQuantityEntity }) =>
 				this.userDataService
 					.addCollectionItem$(
 						this.collectionItemUtilService.convertEntityAddToModelAdd(
@@ -60,24 +47,10 @@ export class CollectionItemEffects {
 					)
 					.pipe(
 						map((collectionItem) => {
-							entityQuantityEntity =
-								entityQuantityEntity ||
-								this.entityQuantityUtilService.createEntityQuantity(
-									EntityTypeEnum.CollectionItem
-								);
-
 							const collectionItemEntity: CollectionItemEntity =
 								this.collectionItemUtilService.convertModelToEntity(
 									collectionItem
 								);
-
-							this.entityQuantityStateService.dispatchUpdateEntityAction(
-								this.collectionItemUtilService.updateEntityQuantity(
-									entityQuantityEntity,
-									collectionItemEntity,
-									UpdateEntityQuantityTypeEnum.increase
-								)
-							);
 
 							// What was added, and on what it plays: the media
 							// is a closed list, so it says which shelves fill
@@ -108,17 +81,6 @@ export class CollectionItemEffects {
 		this.actions$.pipe(
 			ofType(collectionItemActions.deleteCollectionItem),
 			switchMap((action) =>
-				this.entityQuantityStateService
-					.selectEntityById$(EntityTypeEnum.CollectionItem)
-					.pipe(
-						map((entityQuantityEntity) => ({
-							action,
-							entityQuantityEntity,
-						})),
-						first()
-					)
-			),
-			switchMap(({ action, entityQuantityEntity }) =>
 				this.userDataService
 					.deleteCollectionItem$(
 						this.collectionItemUtilService.convertEntityToModel(
@@ -126,76 +88,41 @@ export class CollectionItemEffects {
 						)
 					)
 					.pipe(
-						map((collectionItem) => {
-							this.entityQuantityStateService.dispatchUpdateEntityAction(
-								this.collectionItemUtilService.updateEntityQuantity(
-									entityQuantityEntity as EntityQuantityEntity,
-									this.collectionItemUtilService.convertModelToEntity(
-										collectionItem
-									),
-									UpdateEntityQuantityTypeEnum.decrease
-								)
-							);
-
-							return collectionItemActions.deleteCollectionItemSuccess(
-								{
-									collectionItemId: collectionItem.uid,
-								}
-							);
-						})
+						map((collectionItem) =>
+							collectionItemActions.deleteCollectionItemSuccess({
+								collectionItemId: collectionItem.uid,
+							})
+						)
 					)
 			)
 		)
 	);
-	/**
-	 * Disposes of a copy or restores it. The item is kept either way; only
-	 * the owned ones count.
-	 */
+	/** Disposes of a copy or restores it. The item is kept either way. */
 	public changeCollectionItemDisposal = createEffect(() =>
 		this.actions$.pipe(
 			ofType(collectionItemActions.changeCollectionItemDisposal),
 			mergeMap(({ collectionItem, disposal }) =>
-				this.entityQuantityStateService
-					.selectEntityById$(EntityTypeEnum.CollectionItem)
+				this.userDataService
+					.updateCollectionItem$({
+						uid: collectionItem.uid,
+						entityType: collectionItem.entityType,
+						userId: collectionItem.userId,
+						disposal,
+					})
 					.pipe(
 						first(),
-						switchMap((entityQuantityEntity) =>
-							this.userDataService
-								.updateCollectionItem$({
-									uid: collectionItem.uid,
-									entityType: collectionItem.entityType,
-									userId: collectionItem.userId,
-									disposal,
-								})
-								.pipe(
-									first(),
-									map(({ updatedAt }) => {
-										this.entityQuantityStateService.dispatchUpdateEntityAction(
-											this.collectionItemUtilService.updateEntityQuantity(
-												entityQuantityEntity ||
-													this.entityQuantityUtilService.createEntityQuantity(
-														EntityTypeEnum.CollectionItem
-													),
-												collectionItem,
-												disposal
-													? UpdateEntityQuantityTypeEnum.decrease
-													: UpdateEntityQuantityTypeEnum.increase
-											)
-										);
-
-										return collectionItemActions.changeCollectionItemDisposalSuccess(
-											{
-												collectionItem: {
-													id: collectionItem.uid,
-													changes: {
-														disposal,
-														updatedAt,
-													},
-												},
-											}
-										);
-									})
-								)
+						map(({ updatedAt }) =>
+							collectionItemActions.changeCollectionItemDisposalSuccess(
+								{
+									collectionItem: {
+										id: collectionItem.uid,
+										changes: {
+											disposal,
+											updatedAt,
+										},
+									},
+								}
+							)
 						),
 						catchError((error) => {
 							console.error(error);
