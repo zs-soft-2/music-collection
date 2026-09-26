@@ -91,6 +91,11 @@ export const MOTIFS_BY_STYLE: Record<string, string[]> = {
 		'a shattered lightbulb with a bird skull inside',
 		'a worn guitar plectrum over a broken vinyl record',
 	],
+	Ambient: [
+		'a still lake reflecting a single pale moon',
+		'a feather drifting through slow rings of fog',
+		'a hollow skull filled with softly glowing mist',
+	],
 	'Avantgarde metal': [
 		'a fractured theatre mask breaking into geometric shards',
 		'a skull unfolding into sharp paper planes',
@@ -150,6 +155,16 @@ export const MOTIFS_BY_STYLE: Record<string, string[]> = {
 		'a cracked church bell hanging from a heavy chain',
 		'a cowled monk skull under a collapsing stone arch',
 		'a single black candle melting over a tombstone',
+	],
+	Drone: [
+		'a monolith humming in an empty desert',
+		'an endless power line vanishing into grey haze',
+		'a skull resonating inside a massive tuning fork',
+	],
+	Experimental: [
+		'a skull reassembled from mismatched machine parts',
+		'a tangle of patch cables sprouting from a seed pod',
+		'a warped cassette tape spiralling into a mobius strip',
 	],
 	'First wave of black metal': [
 		'a three branched candelabra with guttering candles',
@@ -221,6 +236,11 @@ export const MOTIFS_BY_STYLE: Record<string, string[]> = {
 		'a winged skull crowned with a ring of rivets',
 		'a skull over two crossed lightning bolts in a spiked ring',
 	],
+	'Math Rock': [
+		'a skull traced over a grid of irregular time signatures',
+		'a guitar fretboard folded into a tangram puzzle',
+		'a set square and compass crossed over a tapping hand',
+	],
 	'Melodic Death': [
 		'a stag skull with antlers wound in thorns',
 		'a skull cradled in a pair of feathered wings',
@@ -236,6 +256,16 @@ export const MOTIFS_BY_STYLE: Record<string, string[]> = {
 		'a skull stitched shut with heavy gauge wire',
 		'a taped fist over a shield split down the middle',
 	],
+	Noise: [
+		'a speaker cone torn open by a burst of static',
+		'a skull dissolving into television snow',
+		'a jagged waveform clipped flat against its limits',
+	],
+	'Noise Rock': [
+		'a skull wrapped in a snarl of frayed live wires',
+		'a distortion pedal cracked open and sparking',
+		'a jackhammer driven through a cracked loudspeaker horn',
+	],
 	'New Wave Of British Heavy Metal': [
 		'a knight helmet visor over two crossed broadswords',
 		'a screaming skull sealed in a riveted iron mask',
@@ -245,6 +275,11 @@ export const MOTIFS_BY_STYLE: Record<string, string[]> = {
 		'a raven perched inside a ring of rune stones',
 		'a horned skull bound with braided leather cord',
 		'a burning torch crossed with a bone handled spear',
+	],
+	'Post-Rock': [
+		'a lone lighthouse beam cutting through a crescendo of waves',
+		'a skull silhouetted against a slow sunrise over ruins',
+		'a flock of birds lifting off a rusted radio tower',
 	],
 	'Power metal': [
 		'a winged sword rising out of a crown',
@@ -266,6 +301,11 @@ export const MOTIFS_BY_STYLE: Record<string, string[]> = {
 		'a skull with a metronome arm through its jaw',
 		'a pocket watch shattered by a lightning bolt',
 	],
+	'Psychedelic Rock': [
+		'a third eye opening in a melting kaleidoscope',
+		'a mushroom cap sprouting from a paisley skull',
+		'a butterfly with wings of swirling liquid colour',
+	],
 	'Rap Rock': [
 		'a microphone crossed with a spray can',
 		'a skull in a backwards cap over a boombox',
@@ -280,6 +320,11 @@ export const MOTIFS_BY_STYLE: Record<string, string[]> = {
 		'a flaming motorcycle wheel trailing speed lines',
 		'a skull in a flight helmet against a shockwave',
 		'a winged boot spurred with a lightning bolt',
+	],
+	'Space Rock': [
+		'a skull in a cracked astronaut helmet drifting past a ringed planet',
+		'a rocket trailing a comet tail of glowing sparks',
+		'a flying saucer beaming down over a lonely standing stone',
 	],
 	'Symphonic Heavy metal': [
 		'a violin scroll crossed with a sword beneath a crown',
