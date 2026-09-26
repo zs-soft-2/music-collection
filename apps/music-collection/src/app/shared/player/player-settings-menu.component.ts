@@ -76,7 +76,14 @@ interface Choice<T> {
 					}
 				</fieldset>
 
-				@if (player.spotifyConfigured()) {
+				@if (!player.spotifyHasOwnApp()) {
+					<p class="note">
+						{{
+							'ui.playerSettingsMenu.own-app-in-profile'
+								| transloco
+						}}
+					</p>
+				} @else {
 					<div class="output">
 						<span class="legend">{{
 							'ui.playerSettingsMenu.spotify-output' | transloco

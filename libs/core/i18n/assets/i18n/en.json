@@ -1857,7 +1857,18 @@
 			"roomNote": "{{units}} shelves · {{compartments}} compartments · room for {{records}} records."
 		},
 		"profileSpotify": {
-			"spotify-is-not-set": "Spotify is not set up for this app, so there is nothing to connect to.",
+			"your-own-app-explained": "With your own Spotify app this player drives Spotify: the queue, the radio, the next track, your own speakers. Without it, Spotify's embedded frame on the album page is what is left — it plays in full if you are signed in to Spotify, but nothing here drives it. Spotify counts who signs in through an app — one app holds twenty-five people — which is why yours has to be your own.",
+			"step-create-app": "Open developer.spotify.com/dashboard and create an app (Web Playback SDK).",
+			"step-redirect-uri": "Add this to the app's Redirect URIs:",
+			"step-copy-client-id": "Copy the app's Client ID here.",
+			"same-account-and-premium": "Create the app with the same Spotify account you will sign in with: an app in development mode lets nobody in but its own owner. Playback driven from here also needs Spotify Premium — without it the player does not start at all.",
+			"client-id": "Spotify client ID",
+			"client-id-placeholder": "The 32-character id from your app's page",
+			"save-app": "Save",
+			"cancel": "Cancel",
+			"your-app": "Your app:",
+			"change-app": "Change",
+			"forget-app": "Forget",
 			"connected": "Connected",
 			"disconnect": "Disconnect",
 			"play-on": "Play on",
@@ -1962,7 +1973,8 @@
 			"volume": "Volume",
 			"open-the-full-screen": "Open the full-screen player",
 			"full-screen": "Full screen",
-			"this-player-only-plays": "This player only plays previews. Connect your Spotify Premium account (play button or settings) to play in full here or on your speakers."
+			"this-player-only-plays": "This is Spotify's own frame: it plays in full if you are signed in to Spotify, but nothing here drives it. Connect your Spotify Premium account (play button or settings) for the queue, the radio and your own speakers.",
+			"spotifys-own-frame": "This is Spotify's own frame: it plays in full if you are signed in to Spotify, but nothing here drives it. For the queue, the radio and your own speakers, name your own Spotify app in your profile."
 		},
 		"playerSideBreak": {
 			"turn-the-record-over": "Turn the record over",
@@ -2002,7 +2014,8 @@
 			"play-on-to-the": "Play on to the next track",
 			"stop-to-turn-the": "Stop to turn the record over",
 			"reset-to-defaults": "Reset to defaults",
-			"scope": "Settings for {{context}}"
+			"scope": "Settings for {{context}}",
+			"own-app-in-profile": "To drive Spotify from here — queue, radio, speakers — name your own Spotify app in your profile."
 		},
 		"playback": {
 			"auto": "Auto",

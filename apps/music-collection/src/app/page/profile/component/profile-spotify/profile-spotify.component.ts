@@ -1,23 +1,107 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	inject,
+	signal,
+} from '@angular/core';
 import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { PlayerStore } from '../../../../shared/player';
 
 /**
- * Where Spotify plays and how loud it starts. The output device belongs to
- * the Spotify account, so it follows the user; the volume is this browser's
- * own, because the speakers are.
+ * The collector's own Spotify app, where Spotify plays and how loud it
+ * starts.
+ *
+ * The app is theirs because Spotify counts the people who sign in through
+ * one: an app in development mode takes twenty-five, so a single shared app
+ * would spend those on whoever arrived first. Naming it costs them a few
+ * minutes in Spotify's dashboard, and until they do there is no Spotify here
+ * at all. The output device belongs to their Spotify account, so it follows
+ * them; the volume is this browser's own, because the speakers are.
  */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-profile-spotify',
 	imports: [...I18N_IMPORTS],
 	template: `
-		@if (!player.spotifyConfigured()) {
-			<p class="note">
-				{{ 'ui.profileSpotify.spotify-is-not-set' | transloco }}
-			</p>
+		@if (!player.spotifyHasOwnApp() || editingApp()) {
+			<div class="app-setup">
+				<p class="note">
+					{{ 'ui.profileSpotify.your-own-app-explained' | transloco }}
+				</p>
+
+				<ol class="steps">
+					<li>
+						{{ 'ui.profileSpotify.step-create-app' | transloco }}
+					</li>
+					<li>
+						{{ 'ui.profileSpotify.step-redirect-uri' | transloco }}
+						<code>{{ player.spotifyRedirectUri() }}</code>
+					</li>
+					<li>
+						{{
+							'ui.profileSpotify.step-copy-client-id' | transloco
+						}}
+					</li>
+				</ol>
+
+				<p class="note">
+					{{
+						'ui.profileSpotify.same-account-and-premium' | transloco
+					}}
+				</p>
+
+				<form class="app-form" (submit)="saveApp($event)">
+					<label class="label" for="mc-spotify-client-id">
+						{{ 'ui.profileSpotify.client-id' | transloco }}
+					</label>
+					<div class="app-row">
+						<input
+							id="mc-spotify-client-id"
+							name="clientId"
+							type="text"
+							autocomplete="off"
+							spellcheck="false"
+							[value]="player.spotifyClientId() ?? ''"
+							[placeholder]="
+								'ui.profileSpotify.client-id-placeholder'
+									| transloco
+							"
+						/>
+						<button type="submit" class="connect">
+							{{ 'ui.profileSpotify.save-app' | transloco }}
+						</button>
+					</div>
+				</form>
+
+				@if (editingApp()) {
+					<button
+						type="button"
+						class="link"
+						(click)="editingApp.set(false)"
+					>
+						{{ 'ui.profileSpotify.cancel' | transloco }}
+					</button>
+				}
+			</div>
 		} @else {
+			<div class="app-named">
+				<p class="state">
+					{{ 'ui.profileSpotify.your-app' | transloco }}
+					<code>{{ player.spotifyClientId() }}</code>
+				</p>
+				<button
+					type="button"
+					class="link"
+					(click)="editingApp.set(true)"
+				>
+					{{ 'ui.profileSpotify.change-app' | transloco }}
+				</button>
+				<button type="button" class="link" (click)="forgetApp()">
+					{{ 'ui.profileSpotify.forget-app' | transloco }}
+				</button>
+			</div>
+
 			<div class="connection">
 				@if (player.spotifyConnected()) {
 					<p class="state">
@@ -141,6 +225,61 @@ import { PlayerStore } from '../../../../shared/player';
 			gap: 1.25rem;
 		}
 
+		.app-setup {
+			display: flex;
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 0.75rem;
+		}
+
+		.steps {
+			max-width: 52ch;
+			margin: 0;
+			padding-left: 1.2rem;
+			font-size: 0.8125rem;
+			line-height: 1.6;
+			color: var(--mc-text-muted);
+		}
+
+		code {
+			padding: 0.1rem 0.35rem;
+			font-size: 0.8125rem;
+			color: var(--mc-text);
+			background: var(--mc-bg-muted);
+			border-radius: var(--mc-radius-sm);
+			overflow-wrap: anywhere;
+		}
+
+		.app-form {
+			width: 100%;
+			max-width: 32rem;
+		}
+
+		.app-row {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 0.5rem;
+		}
+
+		input[type='text'] {
+			flex: 1 1 16rem;
+			min-width: 0;
+			padding: 0.45rem 0.6rem;
+			font: inherit;
+			font-size: 0.875rem;
+			color: var(--mc-text);
+			background: var(--mc-bg-muted);
+			border: 1px solid var(--mc-border-strong);
+			border-radius: var(--mc-radius-md);
+		}
+
+		.app-named {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 0.75rem;
+		}
+
 		.connection {
 			display: flex;
 			flex-wrap: wrap;
@@ -259,6 +398,25 @@ import { PlayerStore } from '../../../../shared/player';
 })
 export class ProfileSpotifyComponent {
 	protected readonly player = inject(PlayerStore);
+
+	/** Their app is named, and they are naming another one. */
+	protected readonly editingApp = signal(false);
+
+	protected async saveApp(event: Event): Promise<void> {
+		event.preventDefault();
+		const form = event.target as HTMLFormElement;
+		const clientId = (
+			form.elements.namedItem('clientId') as HTMLInputElement
+		).value;
+
+		await this.player.saveSpotifyClientId(clientId);
+		this.editingApp.set(false);
+	}
+
+	protected async forgetApp(): Promise<void> {
+		await this.player.saveSpotifyClientId('');
+		this.editingApp.set(false);
+	}
 
 	protected selectDevice(event: Event): void {
 		const value = (event.target as HTMLSelectElement).value;

@@ -1857,7 +1857,18 @@
 			"roomNote": "{{units}} Regale · {{compartments}} Fächer · Platz für {{records}} Platten."
 		},
 		"profileSpotify": {
-			"spotify-is-not-set": "Spotify ist für diese App nicht eingerichtet, es gibt also nichts zu verbinden.",
+			"your-own-app-explained": "Mit deiner eigenen Spotify-App steuert dieser Player Spotify: Warteschlange, Radio, nächster Titel, deine eigenen Lautsprecher. Ohne sie bleibt Spotifys eingebetteter Rahmen auf der Albumseite — er spielt vollständig, wenn du bei Spotify angemeldet bist, gesteuert wird er von hier aus aber nicht. Spotify zählt, wer sich über eine App anmeldet — eine App fasst fünfundzwanzig Leute —, deshalb muss es deine eigene sein.",
+			"step-create-app": "Öffne developer.spotify.com/dashboard und lege eine App an (Web Playback SDK).",
+			"step-redirect-uri": "Trage das bei den Redirect-URIs der App ein:",
+			"step-copy-client-id": "Kopiere die Client ID der App hierher.",
+			"same-account-and-premium": "Lege die App mit demselben Spotify-Konto an, mit dem du dich anmeldest: eine App im Entwicklungsmodus lässt nur ihren eigenen Besitzer hinein. Für die von hier gesteuerte Wiedergabe brauchst du außerdem Spotify Premium — ohne das startet der Player gar nicht.",
+			"client-id": "Spotify Client ID",
+			"client-id-placeholder": "Die 32-stellige ID von der Seite deiner App",
+			"save-app": "Speichern",
+			"cancel": "Abbrechen",
+			"your-app": "Deine App:",
+			"change-app": "Ändern",
+			"forget-app": "Entfernen",
 			"connected": "Verbunden",
 			"disconnect": "Trennen",
 			"play-on": "Abspielen auf",
@@ -1962,7 +1973,8 @@
 			"volume": "Lautstärke",
 			"open-the-full-screen": "Vollbild-Player öffnen",
 			"full-screen": "Vollbild",
-			"this-player-only-plays": "Dieser Player spielt nur Ausschnitte. Verbinde dein Spotify-Premium-Konto (Abspielknopf oder Einstellungen), um hier oder auf deinen Lautsprechern in voller Länge zu hören."
+			"this-player-only-plays": "Das ist Spotifys eigener Rahmen: Er spielt vollständig, wenn du bei Spotify angemeldet bist, steuerbar ist er von hier aus aber nicht. Verbinde dein Spotify-Premium-Konto (Play-Taste oder Einstellungen), damit Warteschlange, Radio und deine Lautsprecher funktionieren.",
+			"spotifys-own-frame": "Das ist Spotifys eigener Rahmen: Er spielt vollständig, wenn du bei Spotify angemeldet bist, steuerbar ist er von hier aus aber nicht. Für Warteschlange, Radio und deine Lautsprecher trage deine eigene Spotify-App in deinem Profil ein."
 		},
 		"playerSideBreak": {
 			"turn-the-record-over": "Dreh die Platte um",
@@ -2002,7 +2014,8 @@
 			"play-on-to-the": "Weiter zum nächsten Titel",
 			"stop-to-turn-the": "Zum Plattenwenden anhalten",
 			"reset-to-defaults": "Auf Standard zurücksetzen",
-			"scope": "Einstellungen für {{context}}"
+			"scope": "Einstellungen für {{context}}",
+			"own-app-in-profile": "Um Spotify von hier aus zu steuern — Warteschlange, Radio, Lautsprecher —, trage deine eigene Spotify-App in deinem Profil ein."
 		},
 		"playback": {
 			"auto": "Automatisch",

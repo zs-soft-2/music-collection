@@ -341,7 +341,11 @@ export const PlayerStore = signalStore(
 				resolvePlayerSettings(context ?? 'default', store.overrides());
 
 			const availableFor = (request: PlayRequest | null) => ({
-				spotify: !!request?.spotifyAlbumId && spotify.configured(),
+				// Spotify's embedded player needs no app of ours and no
+				// token, so the source is there the moment the album has a
+				// Spotify id. Their own app is what lets this player drive
+				// Spotify rather than hand the album to Spotify's own frame.
+				spotify: !!request?.spotifyAlbumId,
 				youtube:
 					!!request?.youtubeVideoId ||
 					!!request?.youtubePlaylistId ||
@@ -646,7 +650,12 @@ export const PlayerStore = signalStore(
 					const page = store.page();
 					return page ? youtubeAlbumOf(page) : null;
 				}),
-				spotifyConfigured: computed(() => spotify.configured()),
+				/** Their own app is named: this player can drive Spotify. */
+				spotifyHasOwnApp: computed(() => spotify.hasOwnApp()),
+				/** The collector's own Spotify app, when they named one. */
+				spotifyClientId: computed(() => spotify.clientId()),
+				/** What that app has to send the sign-in back to. */
+				spotifyRedirectUri: computed(() => spotify.redirectUri()),
 				spotifyConnected: computed(() => spotify.connected()),
 				spotifyConnecting: computed(
 					() => spotify.status() === 'connecting'
@@ -660,9 +669,13 @@ export const PlayerStore = signalStore(
 				/** The outside players may be put on the page at all. */
 				playersAllowed: computed(() => consent.allowed()),
 				/**
-				 * Albums of the catalog with a Spotify or YouTube link — none
+				 * Albums of the catalog this player can start itself — none
 				 * at all while the outside players are not allowed, so a
 				 * button that could only disappoint is never offered.
+				 *
+				 * A Spotify album counts only with the collector's own app:
+				 * Spotify's embedded frame plays on the album's own page, but
+				 * nothing here can press its play button for them.
 				 */
 				playableAlbumIds: computed(
 					() =>
@@ -673,7 +686,7 @@ export const PlayerStore = signalStore(
 										(isSpotifyAlbumId(
 											album.spotifyAlbumId
 										) &&
-											spotify.configured()) ||
+											spotify.hasOwnApp()) ||
 										isYoutubePlaylistId(
 											album.youtubePlaylistId
 										)
@@ -745,7 +758,12 @@ export const PlayerStore = signalStore(
 					store.overrides()
 				);
 				if (source === 'spotify' && !spotify.connected()) {
-					await spotify.connect();
+					// Without their own app there is no sign-in to send them
+					// to. Spotify's embedded frame on the album page is the
+					// whole of Spotify here, and it plays on its own.
+					if (spotify.hasOwnApp()) {
+						await spotify.connect();
+					}
 					return;
 				}
 				patchState(store, {
@@ -1179,6 +1197,11 @@ export const PlayerStore = signalStore(
 
 				connectSpotify(): Promise<void> {
 					return spotify.connect();
+				},
+
+				/** Names the collector's own Spotify app (empty: forgets it). */
+				saveSpotifyClientId(clientId: string): Promise<void> {
+					return spotify.saveClientId(clientId);
 				},
 
 				disconnectSpotify(): void {

@@ -5,6 +5,22 @@ export interface SpotifyToken {
 	expiresAt: number;
 }
 
+/**
+ * The collector's own Spotify app, and the connection made with it.
+ *
+ * The app is theirs rather than ours because Spotify counts the people who
+ * sign in through an app: one in development mode takes twenty-five, and a
+ * single shared app would spend those on whoever arrived first and leave
+ * every collector after them with nothing. Their own app costs them a few
+ * minutes in Spotify's dashboard and answers only for them.
+ */
+export interface SpotifyAccount {
+	/** Client id of their app. Not a secret: the sign-in uses PKCE. */
+	clientId: string;
+	/** The connection made with that app, while there is one. */
+	token: SpotifyToken | null;
+}
+
 /** A Spotify Connect device of the signed-in account. */
 export interface SpotifyDevice {
 	id: string;

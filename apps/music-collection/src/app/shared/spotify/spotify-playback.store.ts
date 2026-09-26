@@ -23,7 +23,6 @@ import {
 type SpotifyStatus = 'disconnected' | 'connecting' | 'ready';
 
 interface SpotifyPlaybackState {
-	configured: boolean;
 	status: SpotifyStatus;
 	/** This browser as a Spotify Connect device. */
 	browserDeviceId: string | null;
@@ -71,7 +70,6 @@ const errorMessage = (error: unknown): string => {
 export const SpotifyPlaybackStore = signalStore(
 	{ providedIn: 'root' },
 	withState<SpotifyPlaybackState>({
-		configured: false,
 		status: 'disconnected',
 		browserDeviceId: null,
 		selectedDeviceId: null,
@@ -83,7 +81,15 @@ export const SpotifyPlaybackStore = signalStore(
 		browserVolume: 80,
 		error: null,
 	}),
-	withComputed((store) => ({
+	withComputed((store, effect = inject(SpotifyPlaybackEffect)) => ({
+		/**
+		 * The collector named their own Spotify app: what the player needs to
+		 * drive Spotify itself. The embedded player asks for none of it.
+		 */
+		hasOwnApp: effect.hasOwnApp,
+		clientId: effect.clientId,
+		/** What their Spotify app has to send the sign-in back to. */
+		redirectUri: computed(() => effect.redirectUri),
 		connected: computed(() => store.status() === 'ready'),
 		outputDeviceId: computed(
 			() => store.selectedDeviceId() ?? store.browserDeviceId()
@@ -220,14 +226,15 @@ export const SpotifyPlaybackStore = signalStore(
 
 			/** Starts the browser player when signed in before. */
 			const start = async () => {
-				if (!store.configured() || player) {
+				if (player) {
 					return;
 				}
-				// The connection hangs on the account, so it arrives with a
-				// document rather than out of browser storage: asking before
-				// the answer is in would read "never connected".
-				await effect.tokenReady();
-				if (!effect.hasToken || player) {
+				// The app and the connection both hang on the account, so
+				// they arrive with a document rather than out of browser
+				// storage: asking before the answer is in would read "no app,
+				// never connected".
+				await effect.accountReady();
+				if (!store.hasOwnApp() || !effect.hasToken || player) {
 					return;
 				}
 				patchState(store, { status: 'connecting', error: null });
@@ -313,6 +320,23 @@ export const SpotifyPlaybackStore = signalStore(
 					effect.signOut();
 					reset();
 					patchState(store, { error: null });
+				},
+
+				/**
+				 * Names the collector's own Spotify app; an empty id forgets
+				 * it. Whatever was playing belonged to the app before this
+				 * one, so the player goes with it and the new app starts from
+				 * its own sign-in.
+				 */
+				async saveClientId(clientId: string): Promise<void> {
+					try {
+						await effect.saveClientId(clientId);
+						reset();
+						patchState(store, { error: null });
+						await start();
+					} catch (error) {
+						fail(error);
+					}
 				},
 
 				dismissError(): void {
@@ -512,7 +536,6 @@ export const SpotifyPlaybackStore = signalStore(
 	withHooks({
 		onInit(store, effect = inject(SpotifyPlaybackEffect)) {
 			patchState(store, {
-				configured: effect.configured,
 				volume: effect.browserVolume,
 				browserVolume: effect.browserVolume,
 			});

@@ -155,7 +155,13 @@ import { PlayerStore } from './player.store';
 					[albumTitle]="page.artistName + ' – ' + page.albumTitle"
 				/>
 				<p class="hint">
-					{{ 'ui.playerPanel.this-player-only-plays' | transloco }}
+					@if (player.spotifyHasOwnApp()) {
+						{{
+							'ui.playerPanel.this-player-only-plays' | transloco
+						}}
+					} @else {
+						{{ 'ui.playerPanel.spotifys-own-frame' | transloco }}
+					}
 				</p>
 			}
 

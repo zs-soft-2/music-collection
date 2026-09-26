@@ -1857,7 +1857,18 @@
 			"roomNote": "{{units}} polc · {{compartments}} rekesz · {{records}} lemeznek van hely."
 		},
 		"profileSpotify": {
-			"spotify-is-not-set": "A Spotify nincs beállítva ehhez az apphoz, így nincs mihez csatlakozni.",
+			"your-own-app-explained": "A saját Spotify appoddal ez a lejátszó vezérli a Spotifyt: sor, rádió, következő szám, a saját hangszóróid. Nélküle marad a Spotify beágyazott kerete az album oldalán — abban teljes hosszban szól a szám, ha be vagy jelentkezve a Spotifyba, de innen semmi nem vezérli. A Spotify appokhoz köti, ki léphet be rajtuk — egy app huszonöt embert bír el —, ezért kell a sajátod.",
+			"step-create-app": "Nyisd meg a developer.spotify.com/dashboard oldalt, és hozz létre egy appot (Web Playback SDK).",
+			"step-redirect-uri": "Vedd fel az app Redirect URI-jai közé ezt:",
+			"step-copy-client-id": "Másold ide az app Client ID-ját.",
+			"same-account-and-premium": "Az appot azzal a Spotify-fiókkal hozd létre, amelyikkel majd belépsz: a fejlesztői módban lévő app csak a saját tulajdonosát engedi be. Az innen vezérelt lejátszáshoz Spotify Premium is kell — anélkül a lejátszó el sem indul.",
+			"client-id": "Spotify client ID",
+			"client-id-placeholder": "A 32 karakteres azonosító az appod oldaláról",
+			"save-app": "Mentés",
+			"cancel": "Mégse",
+			"your-app": "A te appod:",
+			"change-app": "Csere",
+			"forget-app": "Elfelejtés",
 			"connected": "Csatlakoztatva",
 			"disconnect": "Szétkapcsolás",
 			"play-on": "Lejátszás itt",
@@ -1962,7 +1973,8 @@
 			"volume": "Hangerő",
 			"open-the-full-screen": "Teljes képernyős lejátszó megnyitása",
 			"full-screen": "Teljes képernyő",
-			"this-player-only-plays": "Ez a lejátszó csak részleteket játszik. Kösd össze a Spotify Premium fiókodat (lejátszás gomb vagy beállítások), hogy itt vagy a hangszóróidon teljes hosszban szóljon."
+			"this-player-only-plays": "Ez a Spotify saját kerete: teljes hosszban szól, ha be vagy jelentkezve a Spotifyba, de innen nem vezérelhető. Kösd össze a Spotify Premium fiókodat (lejátszás gomb vagy beállítások), hogy a sor, a rádió és a hangszóróid is működjenek.",
+			"spotifys-own-frame": "Ez a Spotify saját kerete: teljes hosszban szól, ha be vagy jelentkezve a Spotifyba, de innen nem vezérelhető. A sorhoz, a rádióhoz és a hangszóróidhoz add meg a saját Spotify appodat a profilodban."
 		},
 		"playerSideBreak": {
 			"turn-the-record-over": "Fordítsd meg a lemezt",
@@ -2002,7 +2014,8 @@
 			"play-on-to-the": "Menjen tovább a következő számra",
 			"stop-to-turn-the": "Álljon meg lemezfordításhoz",
 			"reset-to-defaults": "Vissza az alapértelmezettre",
-			"scope": "{{context}} beállításai"
+			"scope": "{{context}} beállításai",
+			"own-app-in-profile": "A Spotify innen vezérléséhez — sor, rádió, hangszórók — add meg a saját Spotify appodat a profilodban."
 		},
 		"playback": {
 			"auto": "Automatikus",

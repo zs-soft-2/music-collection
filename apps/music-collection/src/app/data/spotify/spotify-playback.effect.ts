@@ -1,11 +1,11 @@
-import { DOCUMENT, Injectable, inject } from '@angular/core';
+import { DOCUMENT, Injectable, computed, inject } from '@angular/core';
 
+import { SpotifyAccountService } from './spotify-account.service';
 import { SpotifyApiRepository } from './spotify-api.repository';
 import { SpotifyAuthRepository } from './spotify-auth.repository';
 import { SpotifyPreferencesRepository } from './spotify-preferences.repository';
 import { SdkPlayer } from './spotify-sdk.types';
 import { SpotifySdkRepository } from './spotify-sdk.repository';
-import { SpotifyTokenService } from './spotify-token.service';
 import {
 	SpotifyDevice,
 	SpotifyNotConnectedError,
@@ -43,29 +43,51 @@ export function normalizeTrackName(name: string): string {
  */
 @Injectable({ providedIn: 'root' })
 export class SpotifyPlaybackEffect {
+	private readonly account = inject(SpotifyAccountService);
 	private readonly api = inject(SpotifyApiRepository);
 	private readonly auth = inject(SpotifyAuthRepository);
 	private readonly document = inject(DOCUMENT);
 	private readonly preferences = inject(SpotifyPreferencesRepository);
 	private readonly sdk = inject(SpotifySdkRepository);
-	private readonly tokens = inject(SpotifyTokenService);
 
-	public get configured(): boolean {
-		return !!this.auth.clientId;
+	/** The collector's own Spotify app, once they have named one. */
+	public readonly clientId = computed(() => this.account.clientId());
+
+	/**
+	 * The collector named their own app, so they can sign in and have this
+	 * player drive Spotify itself.
+	 *
+	 * Spotify without it is not nothing: the embedded player needs no app of
+	 * ours and no token, and plays in full for anyone signed in to Spotify in
+	 * their browser. What the app buys is playback this player drives — the
+	 * queue, the stage, their own speakers — so it gates those and not the
+	 * album's Spotify surface as a whole.
+	 */
+	public readonly hasOwnApp = computed(() => !!this.clientId());
+
+	/** Where their Spotify app has to send the sign-in back to. */
+	public get redirectUri(): string {
+		return this.auth.redirectUri;
 	}
 
 	public get hasToken(): boolean {
-		return !!this.tokens.token();
+		return !!this.account.token();
 	}
 
 	/**
-	 * Resolves once the account's connection is known. The token used to come
-	 * out of browser storage the instant it was asked for; it now comes from a
-	 * document, so anything acting on "is there a connection" has to wait for
-	 * the answer rather than read a not-yet as a no.
+	 * Resolves once the account's app and connection are known. They used to
+	 * come out of browser storage the instant they were asked for; they now
+	 * come from a document, so anything acting on "is there an app, is there
+	 * a connection" has to wait for the answer rather than read a not-yet as
+	 * a no.
 	 */
-	public tokenReady(): Promise<void> {
-		return this.tokens.ready();
+	public accountReady(): Promise<void> {
+		return this.account.ready();
+	}
+
+	/** Names the collector's own Spotify app; an empty id forgets it. */
+	public saveClientId(clientId: string): Promise<void> {
+		return this.account.saveApp(clientId);
 	}
 
 	/** Remembered volume of the browser player, 0–100. */
@@ -78,13 +100,23 @@ export class SpotifyPlaybackEffect {
 	}
 
 	public async beginLogin(returnUrl: string): Promise<void> {
-		this.document.location.assign(await this.auth.authorizeUrl(returnUrl));
+		const clientId = this.clientId();
+		if (!clientId) {
+			throw new Error('Name a Spotify app before signing in to it.');
+		}
+
+		this.document.location.assign(
+			await this.auth.authorizeUrl(clientId, returnUrl)
+		);
 	}
 
 	/** Finishes the sign-in; returns the page to go back to. */
 	public async completeLogin(code: string, state: string): Promise<string> {
-		const { token, returnUrl } = await this.auth.exchangeCode(code, state);
-		await this.tokens.save(token);
+		const { clientId, token, returnUrl } = await this.auth.exchangeCode(
+			code,
+			state
+		);
+		await this.account.saveConnection(clientId, token);
 
 		return returnUrl;
 	}
@@ -93,27 +125,28 @@ export class SpotifyPlaybackEffect {
 		// The callers treat disconnecting as done the moment they ask for it:
 		// the connection is already gone from the signal, and the account
 		// catching up is not something to hold them on.
-		void this.tokens.clear().catch((error) => {
+		void this.account.clearToken().catch((error) => {
 			console.error('Spotify connection not cleared', error);
 		});
 	}
 
 	/** A valid access token, refreshed when about to expire. */
 	public async accessToken(): Promise<string> {
-		await this.tokens.ready();
+		await this.account.ready();
 
-		let token = this.tokens.token();
-		if (!token) {
+		const clientId = this.clientId();
+		let token = this.account.token();
+		if (!clientId || !token) {
 			throw new SpotifyNotConnectedError();
 		}
 		if (token.expiresAt - EXPIRY_MARGIN_MS < Date.now()) {
 			try {
-				token = await this.auth.refresh(token);
+				token = await this.auth.refresh(clientId, token);
 			} catch {
 				this.signOut();
 				throw new SpotifyNotConnectedError();
 			}
-			await this.tokens.save(token);
+			await this.account.saveConnection(clientId, token);
 		}
 		return token.accessToken;
 	}

@@ -56,14 +56,6 @@ export const environment = {
 		 */
 		enabled: true,
 	},
-	spotify: {
-		/**
-		 * Client ID of the Spotify app (developer.spotify.com/dashboard) for
-		 * full playback on the album page. Not a secret (PKCE flow). Empty
-		 * leaves only the embedded preview player.
-		 */
-		clientId: '0ab3fba0933440238c563c337700db27',
-	},
 	type: 'develop',
 	/** Base version + per-build suffix (tools/version/generate-version.mjs). */
 	version: `1.0.0-${VERSION.build}`,

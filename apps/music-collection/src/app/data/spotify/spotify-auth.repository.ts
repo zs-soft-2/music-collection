@@ -1,6 +1,5 @@
 import { DOCUMENT, Injectable, inject } from '@angular/core';
 
-import { environment } from '../../../environments/environment';
 import { SpotifyToken } from './spotify.model';
 
 const ACCOUNTS = 'https://accounts.spotify.com';
@@ -14,6 +13,8 @@ const SCOPES = [
 const PENDING_KEY = 'mc-spotify-pending-login';
 
 interface PendingLogin {
+	/** The app the sign-in was started with. */
+	clientId: string;
 	state: string;
 	verifier: string;
 	returnUrl: string;
@@ -36,23 +37,23 @@ const randomString = (byteCount: number) =>
 
 /**
  * Spotify sign-in with the Authorization Code + PKCE flow (no client secret).
- * Only the exchange lives here: where the resulting token is kept is the
- * account's business, and `SpotifyTokenService` answers for it.
+ * Only the exchange lives here: which app is signed in to, and where the
+ * resulting token is kept, are the account's business, and
+ * `SpotifyAccountService` answers for both.
  */
 @Injectable({ providedIn: 'root' })
 export class SpotifyAuthRepository {
 	private readonly document = inject(DOCUMENT);
-
-	public get clientId(): string {
-		return environment.spotify.clientId;
-	}
 
 	/** Spotify allows http only on a loopback IP, so use 127.0.0.1 locally. */
 	public get redirectUri(): string {
 		return `${this.document.location.origin}/spotify/callback`;
 	}
 
-	public async authorizeUrl(returnUrl: string): Promise<string> {
+	public async authorizeUrl(
+		clientId: string,
+		returnUrl: string
+	): Promise<string> {
 		const verifier = randomString(48);
 		const challenge = base64Url(
 			new Uint8Array(
@@ -63,6 +64,7 @@ export class SpotifyAuthRepository {
 			)
 		);
 		const pending: PendingLogin = {
+			clientId,
 			state: randomString(16),
 			verifier,
 			returnUrl,
@@ -70,7 +72,7 @@ export class SpotifyAuthRepository {
 		sessionStorage.setItem(PENDING_KEY, JSON.stringify(pending));
 
 		const params = new URLSearchParams({
-			client_id: this.clientId,
+			client_id: clientId,
 			response_type: 'code',
 			redirect_uri: this.redirectUri,
 			code_challenge_method: 'S256',
@@ -82,11 +84,16 @@ export class SpotifyAuthRepository {
 		return `${ACCOUNTS}/authorize?${params}`;
 	}
 
-	/** Exchanges the callback's code; returns the page the login started on. */
+	/**
+	 * Exchanges the callback's code; returns the app it was signed in to and
+	 * the page the login started on. The app comes back from the pending
+	 * login rather than from the account, so a client id changed in another
+	 * tab meanwhile cannot claim a token that was never issued to it.
+	 */
 	public async exchangeCode(
 		code: string,
 		state: string
-	): Promise<{ token: SpotifyToken; returnUrl: string }> {
+	): Promise<{ clientId: string; token: SpotifyToken; returnUrl: string }> {
 		const pending = this.takePendingLogin();
 		if (!pending || pending.state !== state) {
 			throw new Error('The Spotify sign-in could not be verified.');
@@ -97,21 +104,29 @@ export class SpotifyAuthRepository {
 				grant_type: 'authorization_code',
 				code,
 				redirect_uri: this.redirectUri,
-				client_id: this.clientId,
+				client_id: pending.clientId,
 				code_verifier: pending.verifier,
 			}),
 			null
 		);
 
-		return { token, returnUrl: pending.returnUrl };
+		return {
+			clientId: pending.clientId,
+			token,
+			returnUrl: pending.returnUrl,
+		};
 	}
 
-	public refresh(token: SpotifyToken): Promise<SpotifyToken> {
+	/** Refreshes with the app the token was issued to; no other app can. */
+	public refresh(
+		clientId: string,
+		token: SpotifyToken
+	): Promise<SpotifyToken> {
 		return this.requestToken(
 			new URLSearchParams({
 				grant_type: 'refresh_token',
 				refresh_token: token.refreshToken,
-				client_id: this.clientId,
+				client_id: clientId,
 			}),
 			token.refreshToken
 		);
