@@ -191,7 +191,8 @@
 			"2010": "2010er",
 			"2020": "2020er",
 			"2030": "2030er"
-		}
+		},
+		"genericPressing": "Pressung nicht angegeben"
 	},
 	"dailyQuestion": {
 		"template": {
@@ -1058,7 +1059,12 @@
 			"note-for-the-admin": "Notiz für den Admin (optional)",
 			"e-g-signed-copy": "z. B. signiertes Exemplar, farbiges Vinyl",
 			"choose-another": "Andere wählen",
-			"addFailed": "Konnte nicht in deine Sammlung aufgenommen werden: {{error}}"
+			"addFailed": "Konnte nicht in deine Sammlung aufgenommen werden: {{error}}",
+			"generic-hint": "Du weißt nicht, welche Pressung es ist?",
+			"generic-open": "Nur mit Format aufnehmen",
+			"generic-lead": "Wähle das Format, auf dem du es hast. Es kommt als das Album selbst in deine Sammlung — ohne Label, Land und Katalognummer.",
+			"generic-option": "Pressung nicht angegeben",
+			"generic-adding": "Wird hinzugefügt…"
 		},
 		"discographyTimeline": {
 			"releases-over-time": "Veröffentlichungen im Zeitverlauf",

@@ -191,7 +191,8 @@
 			"2010": "2010s",
 			"2020": "2020s",
 			"2030": "2030s"
-		}
+		},
+		"genericPressing": "Pressing not specified"
 	},
 	"dailyQuestion": {
 		"template": {
@@ -1058,7 +1059,12 @@
 			"note-for-the-admin": "Note for the admin (optional)",
 			"e-g-signed-copy": "e.g. signed copy, coloured vinyl",
 			"choose-another": "Choose another",
-			"addFailed": "Could not add it to your collection: {{error}}"
+			"addFailed": "Could not add it to your collection: {{error}}",
+			"generic-hint": "Don't know which pressing it is?",
+			"generic-open": "Add it by format only",
+			"generic-lead": "Pick the format you have it on. It goes into your collection as the album itself — without label, country or catalogue number.",
+			"generic-option": "Pressing not specified",
+			"generic-adding": "Adding…"
 		},
 		"discographyTimeline": {
 			"releases-over-time": "Releases over time",

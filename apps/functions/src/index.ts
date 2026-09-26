@@ -71,6 +71,10 @@ import {
 } from './photo-signals';
 import { approveReleaseRequest as approve } from './release-request-approval';
 import {
+	ensureGenericRelease as ensureGeneric,
+	isGenericReleaseMedia,
+} from './generic-release';
+import {
 	DailyAnswerError,
 	DailyAnswerFailure,
 	answerDailyQuestion as gradeDailyAnswer,
@@ -868,6 +872,54 @@ async function requireCaller(
 
 	return uid;
 }
+
+/**
+ * Az album általános kiadása egy hordozón (bakelit, CD, DVD, kazetta): a
+ * meglévő, vagy most létrehozva. A gyűjtő ezzel vesz fel egy példányt,
+ * amelynek csak a hordozóját tudja — a préselést nem.
+ * `{ artistUid, albumUid, media }` → `{ release, created }`.
+ */
+export const ensureGenericRelease = onCall(async (request) => {
+	await requireCaller(request, 'createCollectionItemEntity');
+
+	const artistUid = request.data?.artistUid;
+	const albumUid = request.data?.albumUid;
+	const media = request.data?.media;
+
+	if (
+		typeof artistUid !== 'string' ||
+		!artistUid ||
+		typeof albumUid !== 'string' ||
+		!albumUid
+	) {
+		throw new HttpsError('invalid-argument', 'Hiányzó album.');
+	}
+	if (!isGenericReleaseMedia(media)) {
+		throw new HttpsError('invalid-argument', 'Érvénytelen hordozó.');
+	}
+
+	let result: Awaited<ReturnType<typeof ensureGeneric>>;
+
+	try {
+		result = await ensureGeneric(database(), {
+			artistUid,
+			albumUid,
+			media,
+		});
+	} catch (error) {
+		logger.warn(`ensureGenericRelease ${albumUid}/${media}`, error);
+		throw new HttpsError(
+			'internal',
+			'Az általános kiadás létrehozása nem sikerült.'
+		);
+	}
+
+	if (!result) {
+		throw new HttpsError('not-found', 'Nincs ilyen album.');
+	}
+
+	return result;
+});
 
 /**
  * Egy collection-definíció létrehozása, módosítása és törlése. A

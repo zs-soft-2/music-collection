@@ -38,6 +38,8 @@ export interface CopyPressingView {
 	formatDescription: string | null;
 	labelName: string | null;
 	country: string | null;
+	/** Only the format is known: the album, not a pressing of it. */
+	generic: boolean;
 	/** Link out to the pressing on Discogs, when it was imported from there. */
 	discogsUrl: string | null;
 }
@@ -95,6 +97,7 @@ export function toCopyPressing(item: CollectionItemEntity): CopyPressingView {
 		formatDescription: descriptions.length ? descriptions.join(', ') : null,
 		labelName: release?.label?.name || null,
 		country: formatCountry(release?.country),
+		generic: !!release?.generic,
 		discogsUrl: release?.discogsReleaseId
 			? `https://www.discogs.com/release/${release.discogsReleaseId}`
 			: null,

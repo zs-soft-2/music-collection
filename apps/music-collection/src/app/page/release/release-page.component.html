@@ -107,7 +107,11 @@
 									<strong>{{ sibling.name }}</strong>
 									<span>
 										{{
-											sibling.labelName ?? 'Unknown label'
+											sibling.generic
+												? ('catalog.genericPressing'
+													| transloco)
+												: (sibling.labelName ??
+													'Unknown label')
 										}}
 										@if (sibling.country) {
 											· {{ sibling.country }}

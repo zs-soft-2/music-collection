@@ -14,9 +14,12 @@ import {
 	ApproveReleaseRequestInput,
 	ApproveReleaseRequestResult,
 	DISCOGS_MASTER_VERSIONS_FUNCTION,
+	ENSURE_GENERIC_RELEASE_FUNCTION,
 	DiscogsMasterVersionsRequest,
 	DiscogsMasterVersionsResponse,
 	DiscogsVersion,
+	EnsureGenericReleaseInput,
+	EnsureGenericReleaseResult,
 	FirestoreSyncService,
 	RELEASE_REQUEST_FEATURE_KEY,
 	ReleaseRequest,
@@ -27,8 +30,9 @@ import {
 const USER_COLLECTION = 'user';
 
 /**
- * Data access for release requests (`release-request/{uid}`) and the Discogs
- * pressings of a master (`discogsMasterVersions` callable).
+ * Data access for release requests (`release-request/{uid}`), the Discogs
+ * pressings of a master (`discogsMasterVersions` callable) and the album's
+ * generic release on a medium (`ensureGenericRelease` callable).
  */
 @Injectable({ providedIn: 'root' })
 export class ReleaseRequestRepository {
@@ -108,6 +112,21 @@ export class ReleaseRequestRepository {
 				created
 			)
 		).pipe(map(() => created));
+	}
+
+	/**
+	 * The album's generic release on the medium, created on the server when
+	 * it is the first such copy: a collector may not write the catalog.
+	 */
+	public ensureGenericRelease$(
+		input: EnsureGenericReleaseInput
+	): Observable<EnsureGenericReleaseResult> {
+		const callable = httpsCallable<
+			EnsureGenericReleaseInput,
+			EnsureGenericReleaseResult
+		>(this.functions, ENSURE_GENERIC_RELEASE_FUNCTION);
+
+		return from(callable(input)).pipe(map((result) => result.data));
 	}
 
 	public listDiscogsVersions$(

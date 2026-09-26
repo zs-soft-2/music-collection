@@ -5,6 +5,8 @@ import {
 	AnalyticsService,
 	ApproveReleaseRequestResult,
 	DiscogsVersion,
+	GenericReleaseMedia,
+	ReleaseEntity,
 	ReleaseRequest,
 	ReleaseRequestAdd,
 	User,
@@ -61,6 +63,33 @@ export class ReleaseRequestEffect {
 		releaseUid: string | null
 	): Observable<ApproveReleaseRequestResult> {
 		return this.repository.approve$({ requestId, releaseUid });
+	}
+
+	/**
+	 * The album's generic release on the medium, ready to embed in a copy —
+	 * the one other collectors of it already share, or a new one.
+	 */
+	public ensureGenericRelease$(
+		artistUid: string,
+		albumUid: string,
+		media: GenericReleaseMedia
+	): Observable<ReleaseEntity> {
+		return this.repository
+			.ensureGenericRelease$({ artistUid, albumUid, media })
+			.pipe(
+				map(
+					({ release }) =>
+						({
+							...release,
+							// An undated album leaves the release undated too,
+							// rather than dated 1970.
+							date:
+								release.date === null
+									? null
+									: new Date(release.date),
+						}) as ReleaseEntity
+				)
+			);
 	}
 
 	public reject$(

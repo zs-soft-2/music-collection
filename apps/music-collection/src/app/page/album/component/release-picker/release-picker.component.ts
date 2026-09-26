@@ -16,6 +16,8 @@ import {
 	viewChild,
 } from '@angular/core';
 import {
+	GENERIC_RELEASE_MEDIA,
+	GenericReleaseMedia,
 	copySerialProblem,
 	parseDiscogsReleaseId,
 } from '@music-collection/api';
@@ -25,6 +27,7 @@ import {
 	FormatBadgeComponent,
 	MATCH_LABELS,
 	MediaFormat,
+	toMediaFormat,
 } from '../../../../shared/music-ui';
 import {
 	DiscogsVersionView,
@@ -36,9 +39,9 @@ import {
 
 /**
  * The catalog releases, the album's Discogs pressings, a photo of the record
- * itself, or a description.
+ * itself, a description, or only the format the album is on.
  */
-type PickerView = 'catalog' | 'discogs' | 'photo' | 'describe';
+type PickerView = 'catalog' | 'discogs' | 'photo' | 'describe' | 'generic';
 
 type FormatFilter = MediaFormat | 'all';
 
@@ -58,7 +61,8 @@ const NOTE_MAX_LENGTH = 500;
 /**
  * Modal to add a copy of the album: the collector picks the pressing they own
  * from the catalog. When it is missing, they request it from the admin — picked
- * from the album's Discogs pressings or described.
+ * from the album's Discogs pressings or described. When they do not know the
+ * pressing at all, they add the album on its format alone.
  */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -70,6 +74,8 @@ const NOTE_MAX_LENGTH = 500;
 export class ReleasePickerComponent {
 	public readonly albumTitle = input.required<string>();
 	public readonly releases = input.required<ReleaseOptionView[]>();
+	/** The formats the collector already has the album on, pressing unknown. */
+	public readonly ownedGenericMedia = input<GenericReleaseMedia[]>([]);
 	public readonly loading = input(false);
 	public readonly adding = input(false);
 	public readonly error = input<string | null>(null);
@@ -102,6 +108,8 @@ export class ReleasePickerComponent {
 
 	/** The catalog pressing picked, with the copy's number where it has one. */
 	public readonly picked = output<CopyPick>();
+	/** The album on this format, the pressing left unknown. */
+	public readonly genericPicked = output<GenericReleaseMedia>();
 	/** The Discogs pressings are needed. */
 	public readonly discogsRequested = output<void>();
 	/** A photo of the record, to identify the pressing from. */
@@ -134,6 +142,15 @@ export class ReleasePickerComponent {
 	protected readonly noteMaxLength = NOTE_MAX_LENGTH;
 	protected readonly formatLabels = FORMAT_LABELS;
 	protected readonly matchLabels = MATCH_LABELS;
+
+	/** The formats to add the album on, those it is already on marked. */
+	protected readonly genericOptions = computed(() =>
+		GENERIC_RELEASE_MEDIA.map((media) => ({
+			media,
+			format: toMediaFormat(media),
+			owned: this.ownedGenericMedia().includes(media),
+		}))
+	);
 
 	protected readonly busy = computed(
 		() => this.adding() || this.requesting() || this.photoScanning()
@@ -403,6 +420,16 @@ export class ReleasePickerComponent {
 			serialNumber: this.serialNumber(),
 			serialTotal: this.serialTotal(),
 		});
+	}
+
+	/**
+	 * Added at once: there is no number step, because a numbered edition is
+	 * a pressing, and the pressing is exactly what is not known here.
+	 */
+	protected pickGeneric(media: GenericReleaseMedia): void {
+		if (!this.busy() && !this.ownedGenericMedia().includes(media)) {
+			this.genericPicked.emit(media);
+		}
 	}
 
 	protected onSerialInput(part: 'number' | 'total', event: Event): void {

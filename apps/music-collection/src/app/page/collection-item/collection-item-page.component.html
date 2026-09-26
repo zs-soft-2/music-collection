@@ -67,7 +67,13 @@
 						<p class="pressing-line">
 							<mc-format-badge [format]="pressing.format" />
 							<span>
-								{{ pressing.labelName ?? 'Unknown label' }}
+								{{
+									pressing.generic
+										? ('catalog.genericPressing'
+											| transloco)
+										: (pressing.labelName ??
+											'Unknown label')
+								}}
 								@if (pressing.country) {
 									· {{ pressing.country }}
 								}

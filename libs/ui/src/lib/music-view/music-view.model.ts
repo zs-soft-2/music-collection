@@ -50,6 +50,11 @@ export interface ReleaseView {
 	/** Label and country of the collected pressing. */
 	labelName: string | null;
 	country: string | null;
+	/**
+	 * The album on a medium, not a known pressing: the collector gave only
+	 * the format, so there is no label or country to show.
+	 */
+	generic: boolean;
 	/** Where the collector filed the copy; `null` leaves it to the shelf. */
 	placement: CollectionItemPlacement | null;
 }

@@ -191,7 +191,8 @@
 			"2010": "2010-es évek",
 			"2020": "2020-as évek",
 			"2030": "2030-as évek"
-		}
+		},
+		"genericPressing": "Kiadás nincs megadva"
 	},
 	"dailyQuestion": {
 		"template": {
@@ -1058,7 +1059,12 @@
 			"note-for-the-admin": "Megjegyzés az adminnak (nem kötelező)",
 			"e-g-signed-copy": "pl. dedikált példány, színes bakelit",
 			"choose-another": "Másikat választok",
-			"addFailed": "Nem sikerült felvenni a gyűjteményedbe: {{error}}"
+			"addFailed": "Nem sikerült felvenni a gyűjteményedbe: {{error}}",
+			"generic-hint": "Nem tudod, melyik kiadás?",
+			"generic-open": "Felvétel csak formátummal",
+			"generic-lead": "Válaszd ki, milyen formátumon van meg. Magaként az albumként kerül a gyűjteményedbe — kiadó, ország és katalógusszám nélkül.",
+			"generic-option": "Kiadás nincs megadva",
+			"generic-adding": "Hozzáadás…"
 		},
 		"discographyTimeline": {
 			"releases-over-time": "Kiadások az időben",

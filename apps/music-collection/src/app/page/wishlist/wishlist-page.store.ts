@@ -116,6 +116,7 @@ export function toWishlistEntryView(
 			addedAt: 0,
 			labelName: null,
 			country: null,
+			generic: false,
 			/* A wanted record stands nowhere yet. */
 			placement: null,
 		},

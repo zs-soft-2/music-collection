@@ -156,7 +156,9 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 				country: [release?.country || null, [Validators.required]],
 				date: [release?.date || null, [Validators.required]],
 				formatDescription: [release?.formatDescription || null],
-				label: [release?.label || null, [Validators.required]],
+				// A generic release has none: it is the album on a medium,
+				// not a pressing of it.
+				label: [release?.label || null],
 				media: [release?.media || null, [Validators.required]],
 				name: [release?.name || null, [Validators.required]],
 				uid: [release?.uid],
@@ -288,7 +290,11 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 		};
 	}
 
-	private createReleaseLabel(label: LabelEntity): ReleaseLabel {
+	private createReleaseLabel(label: LabelEntity | null): ReleaseLabel | null {
+		if (!label) {
+			return null;
+		}
+
 		const { entityType, uid, name } = label;
 
 		return {

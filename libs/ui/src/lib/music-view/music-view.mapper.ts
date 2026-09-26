@@ -82,6 +82,7 @@ export function toReleaseView(item: CollectionItemEntity): ReleaseView {
 		addedAt: toEpochMs(item.date) ?? 0,
 		labelName: release.label?.name || null,
 		country: formatCountry(release.country),
+		generic: !!release.generic,
 		placement: item.placement ?? null,
 	};
 }

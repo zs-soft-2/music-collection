@@ -21,6 +21,8 @@ export interface PressingRow {
 	labelUid: string | null;
 	labelName: string | null;
 	country: string | null;
+	/** The album on a medium, not a pressing: no label, country or year. */
+	generic: boolean;
 }
 
 /** The year a pressing came out, as far as its date says. */
@@ -47,6 +49,7 @@ export function toPressingRow(release: ReleaseEntity): PressingRow {
 		labelUid: release.label?.uid ?? null,
 		labelName: release.label?.name ?? null,
 		country: release.country ?? null,
+		generic: !!release.generic,
 	};
 }
 

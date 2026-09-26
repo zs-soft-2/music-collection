@@ -3,6 +3,7 @@ import {
 	combineLatest,
 	exhaustMap,
 	filter,
+	firstValueFrom,
 	from,
 	map,
 	of,
@@ -29,6 +30,7 @@ import {
 	ContributionEntity,
 	DiscogsVersion,
 	EntityTypeEnum,
+	GenericReleaseMedia,
 	ReleaseEntity,
 	ReleaseRequest,
 	ReleaseStateService,
@@ -39,6 +41,7 @@ import {
 	WishlistItemEntityAdd,
 	WishlistItemPermissionsService,
 	WishlistItemStateService,
+	genericReleaseUid,
 	toCollectionItemSerial,
 } from '@music-collection/api';
 import { tapResponse } from '@ngrx/operators';
@@ -176,6 +179,11 @@ interface AlbumPageState {
 	 * write is refused, so a copy that never arrived locks nothing away.
 	 */
 	claimedSerial: { releaseId: string; number: number } | null;
+	/**
+	 * The album's generic release is being fetched — or made, for the first
+	 * such copy — before the copy of it can be written.
+	 */
+	preparingGeneric: boolean;
 	/** The signed-in user's release requests (all albums). */
 	requests: ReleaseRequest[];
 	/** Discogs pressings of the master `discogsVersionsFor`. */
@@ -247,6 +255,7 @@ const initialState: AlbumPageState = {
 	addError: null,
 	claiming: false,
 	claimedSerial: null,
+	preparingGeneric: false,
 	requests: [],
 	discogsVersions: [],
 	discogsVersionsFor: null,
@@ -530,12 +539,31 @@ export const AlbumPageStore = signalStore(
 						)
 				);
 
+				// The generic releases are not pressings to pick from: they
+				// are offered by medium, in the picker's own view.
 				return toReleaseOptions(
 					store
 						.catalogReleases()
-						.filter((release) => release.album?.uid === albumId),
+						.filter(
+							(release) =>
+								release.album?.uid === albumId &&
+								!release.generic
+						),
 					owned
 				);
+			}),
+			/** The media the collector has the album on without a pressing. */
+			ownedGenericMedia: computed(() => {
+				const albumId = store.albumId();
+
+				return store
+					.ownedItems()
+					.filter(
+						(item) =>
+							item.release?.generic &&
+							item.release.album?.uid === albumId
+					)
+					.map((item) => item.release.media as GenericReleaseMedia);
 			}),
 			trackGroups: computed(() =>
 				groupTracks(store.tracks(), store.contributions())
@@ -1219,6 +1247,81 @@ export const AlbumPageStore = signalStore(
 						? { releaseId: pick.releaseId, number: serial.number }
 						: null,
 				});
+				collectionItemStateService.dispatchAddEntityAction(
+					collectionItem
+				);
+			},
+			/**
+			 * Adds the album on a medium, without a pressing: the collector
+			 * knows it is a vinyl or a CD of it and nothing more. The copy is
+			 * of the album's generic release, which the server makes for the
+			 * first such copy; from there it is added like any other copy,
+			 * only without a number — a numbered edition is a pressing.
+			 */
+			async addGenericCopy(media: GenericReleaseMedia): Promise<void> {
+				const album = store
+					.albums()
+					.find((item) => item.uid === store.albumId());
+				const userId = store.userId();
+
+				if (
+					!album?.artist?.uid ||
+					!userId ||
+					store.adding() ||
+					store.claiming() ||
+					store.preparingGeneric()
+				) {
+					return;
+				}
+				if (
+					ownsRelease(
+						store.ownedItems(),
+						genericReleaseUid(album.uid, media)
+					)
+				) {
+					patchState(store, {
+						addError:
+							'This album is already in your collection on this format.',
+					});
+					return;
+				}
+
+				patchState(store, { addError: null, preparingGeneric: true });
+
+				let release: ReleaseEntity;
+
+				try {
+					release = await firstValueFrom(
+						releaseRequestEffect.ensureGenericRelease$(
+							album.artist.uid,
+							album.uid,
+							media
+						)
+					);
+				} catch (error) {
+					console.error(error);
+					const code = (error as { code?: string })?.code ?? '';
+
+					patchState(store, {
+						preparingGeneric: false,
+						// Here it is the album the server did not find, not
+						// a Discogs one.
+						addError: code.endsWith('not-found')
+							? 'This album is no longer in the catalog.'
+							: describeError(error),
+					});
+					return;
+				}
+
+				patchState(store, { preparingGeneric: false });
+
+				const collectionItem: CollectionItemEntityAdd = {
+					entityType: EntityTypeEnum.CollectionItem,
+					date: new Date(),
+					release,
+					userId,
+				};
+
 				collectionItemStateService.dispatchAddEntityAction(
 					collectionItem
 				);

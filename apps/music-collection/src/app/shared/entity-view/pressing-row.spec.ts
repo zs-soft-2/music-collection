@@ -41,6 +41,22 @@ describe('pressing rows', () => {
 		);
 	});
 
+	it('tells the album on a format apart from a pressing of it', () => {
+		const row = toPressingRow(
+			release({ generic: true, label: null, country: null })
+		);
+
+		expect(row).toEqual(
+			expect.objectContaining({
+				generic: true,
+				labelUid: null,
+				labelName: null,
+				country: null,
+			})
+		);
+		expect(toPressingRow(release()).generic).toBe(false);
+	});
+
 	it('falls back to the album name when the pressing was left unnamed', () => {
 		expect(toPressingRow(release({ name: '' })).name).toBe('Nevermind');
 	});

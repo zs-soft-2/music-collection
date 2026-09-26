@@ -502,7 +502,11 @@
 								[weight]="copy.weight"
 							/>
 							<span class="copy-details">
-								@if (copy.labelName) {
+								@if (copy.generic) {
+									<span>{{
+										'catalog.genericPressing' | transloco
+									}}</span>
+								} @else if (copy.labelName) {
 									<span>{{ copy.labelName }}</span>
 								}
 								@if (copy.country) {
@@ -614,7 +618,11 @@
 								[weight]="copy.weight"
 							/>
 							<span class="copy-details">
-								@if (copy.labelName) {
+								@if (copy.generic) {
+									<span>{{
+										'catalog.genericPressing' | transloco
+									}}</span>
+								} @else if (copy.labelName) {
 									<span>{{ copy.labelName }}</span>
 								}
 								@if (copy.country) {
@@ -733,8 +741,11 @@
 	<mc-release-picker
 		[albumTitle]="album.title"
 		[releases]="store.releaseOptions()"
+		[ownedGenericMedia]="store.ownedGenericMedia()"
 		[loading]="store.catalogReleasesLoading()"
-		[adding]="store.adding() || store.claiming()"
+		[adding]="
+			store.adding() || store.claiming() || store.preparingGeneric()
+		"
 		[error]="store.addError()"
 		[pendingRequests]="store.pendingRequests()"
 		[rejectedRequests]="store.rejectedRequests()"
@@ -753,6 +764,7 @@
 		[photoError]="store.photoError()"
 		[photoPreviewUrl]="store.photoPreviewUrl()"
 		(picked)="store.addToCollection($event)"
+		(genericPicked)="store.addGenericCopy($event)"
 		(photoPicked)="store.scanPressingPhoto($event)"
 		(photoRetried)="store.scanPressingPhoto('again')"
 		(discogsRequested)="store.showDiscogsVersions()"

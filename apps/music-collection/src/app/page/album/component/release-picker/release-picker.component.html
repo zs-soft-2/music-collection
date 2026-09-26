@@ -324,6 +324,16 @@
 							{{ 'ui.releasePicker.describe-it' | transloco }}
 						</button>
 					</div>
+					<p class="hint">
+						{{ 'ui.releasePicker.generic-hint' | transloco }}
+						<button
+							type="button"
+							class="text-button"
+							(click)="show('generic')"
+						>
+							{{ 'ui.releasePicker.generic-open' | transloco }}
+						</button>
+					</p>
 				</footer>
 			}
 		}
@@ -627,6 +637,75 @@
 					>
 						{{ 'ui.releasePicker.describe-it3' | transloco }}
 					</button>
+				</p>
+			}
+		}
+
+		@case ('generic') {
+			<button type="button" class="back" (click)="show('catalog')">
+				<i class="pi pi-arrow-left" aria-hidden="true"></i>
+				{{ 'ui.releasePicker.catalog-releases' | transloco }}
+			</button>
+
+			<p class="lead">
+				{{ 'ui.releasePicker.generic-lead' | transloco }}
+			</p>
+
+			@if (error()) {
+				<p class="error" role="alert">
+					{{
+						'ui.releasePicker.addFailed'
+							| transloco: { error: error() }
+					}}
+				</p>
+			}
+
+			<ul class="options">
+				@for (option of genericOptions(); track option.media) {
+					<li>
+						<button
+							type="button"
+							class="option"
+							[disabled]="busy() || option.owned"
+							(click)="pickGeneric(option.media)"
+						>
+							<mc-format-badge [format]="option.format" />
+							<span class="details">
+								<span>{{
+									'ui.releasePicker.generic-option'
+										| transloco
+								}}</span>
+							</span>
+							<span class="action">
+								@if (option.owned) {
+									<span class="state">
+										<i
+											class="pi pi-check"
+											aria-hidden="true"
+										></i>
+										{{
+											'ui.releasePicker.in-your-collection'
+												| transloco
+										}}
+									</span>
+								} @else {
+									<i
+										class="pi pi-plus"
+										aria-hidden="true"
+									></i>
+									<span class="visually-hidden">{{
+										'ui.releasePicker.add' | transloco
+									}}</span>
+								}
+							</span>
+						</button>
+					</li>
+				}
+			</ul>
+
+			@if (adding()) {
+				<p class="hint" role="status">
+					{{ 'ui.releasePicker.generic-adding' | transloco }}
 				</p>
 			}
 		}
