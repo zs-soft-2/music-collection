@@ -1,4 +1,4 @@
-import { Observable, ReplaySubject, Subject, switchMap } from 'rxjs';
+import { Observable, map } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
@@ -15,14 +15,6 @@ export class TopBarService {
 	private authenticationStateService = inject(AuthenticationStateService);
 	private authorizationService = inject(AuthorizationService);
 	private router = inject(Router);
-
-	private currentPath!: string;
-	private params!: TopBarParams;
-	private params$$: Subject<TopBarParams>;
-
-	constructor() {
-		this.params$$ = new ReplaySubject();
-	}
 
 	public createMenuItems(): MenuItem[] {
 		return [
@@ -91,16 +83,15 @@ export class TopBarService {
 		this.router.navigate(['/']);
 	}
 
+	/**
+	 * A fresh object for every user: the bar reads it through a signal, and
+	 * the same object with its user swapped inside would never count as a
+	 * change — the bar kept whoever was signed in when the page loaded.
+	 */
 	public init$(): Observable<TopBarParams> {
-		return this.authenticationStateService.selectAuthenticatedUser$().pipe(
-			switchMap((user) => {
-				this.params = this.updateParams(this.params, user);
-
-				this.params$$.next(this.params);
-
-				return this.params$$;
-			})
-		);
+		return this.authenticationStateService
+			.selectAuthenticatedUser$()
+			.pipe(map((user) => this.toParams(user)));
 	}
 
 	public selectIsAuthenticated$(): Observable<boolean> {
@@ -117,23 +108,13 @@ export class TopBarService {
 		this.router.navigate(['/home']);
 	}
 
-	private updateParams(params: TopBarParams, user: User): TopBarParams {
-		let newParams: TopBarParams;
-
-		if (!params) {
-			newParams = {
-				addPagePermissions: [],
-				editPagePermissions: [],
-				isAuthenticated: user && user.displayName !== 'GUEST',
-				menuItems: this.createMenuItems(),
-				user,
-			};
-		} else {
-			params.user = user;
-
-			newParams = params;
-		}
-
-		return newParams;
+	private toParams(user: User): TopBarParams {
+		return {
+			addPagePermissions: [],
+			editPagePermissions: [],
+			isAuthenticated: !!user && user.displayName !== 'GUEST',
+			menuItems: this.createMenuItems(),
+			user,
+		};
 	}
 }

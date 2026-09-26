@@ -18,7 +18,11 @@ export class WebAuthenticationProviderService extends AuthenticationProviderServ
 	private readonly auth: Auth = inject(Auth);
 
 	public async signInWithGoogle(): Promise<void> {
-		await signInWithPopup(this.auth, new GoogleAuthProvider());
+		const provider = new GoogleAuthProvider();
+		// A Google különben csendben a böngésző aktív fiókját választja,
+		// így több fióknál nem lehetne másikkal belépni.
+		provider.setCustomParameters({ prompt: 'select_account' });
+		await signInWithPopup(this.auth, provider);
 	}
 
 	public async signOut(): Promise<void> {
