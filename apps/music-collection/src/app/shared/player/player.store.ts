@@ -270,6 +270,52 @@ export function albumPlayRequest(
 	};
 }
 
+/** A record being listened to, and what is playing it. */
+export interface Listening {
+	/** The record, as whoever put it on asked for it. */
+	request: PlayRequest;
+	source: PlayerSource;
+	playing: boolean;
+	/** Our track, where the source can name one. */
+	trackId: string | null;
+}
+
+/**
+ * The record being listened to, whoever is playing it: the one this player
+ * put on, or the one the page's Spotify frame plays.
+ *
+ * The frame is a listening like any other — it is how a collector without
+ * their own Spotify app hears everything — so the log follows it too. What
+ * the frame cannot say is which track is on, so a sitting with it names none
+ * and therefore never finishes a record. Nor does it need to leave out the
+ * thirty-second tastes the frame plays for a visitor not signed in to
+ * Spotify: they are over before a sitting is long enough to be written.
+ */
+export function listeningTo(
+	now: NowPlaying | null,
+	session: PlayRequest | null,
+	page: PlayRequest | null,
+	frame: { drives: boolean; playing: boolean }
+): Listening | null {
+	if (now && session && now.albumId && session.albumId === now.albumId) {
+		return {
+			request: session,
+			source: now.source,
+			playing: now.playing,
+			trackId: now.trackId,
+		};
+	}
+
+	return page && frame.drives
+		? {
+				request: page,
+				source: 'spotify',
+				playing: frame.playing,
+				trackId: null,
+			}
+		: null;
+}
+
 /**
  * A request as an album of the YouTube player: the track's video first, then
  * the album playlist and the other videos.
@@ -1424,6 +1470,7 @@ export const PlayerStore = signalStore(
 		onInit(
 			store,
 			spotify = inject(SpotifyPlaybackStore),
+			embed = inject(SpotifyEmbedStore),
 			youtube = inject(YoutubePlaybackStore),
 			playLog = inject(PlayLogEffect),
 			document = inject(DOCUMENT),
@@ -1513,20 +1560,24 @@ export const PlayerStore = signalStore(
 			/** Whether this record has actually played, so it can run out. */
 			let played = false;
 
+			/** What is being listened to, this player's doing or not. */
+			const listening = computed(() => {
+				const page = store.page();
+
+				return listeningTo(store.now(), store.session(), page, {
+					drives: store.embedDrives()(page),
+					playing: embed.playing(),
+				});
+			});
+
 			// What is playing, as the log follows it, and where the queue
 			// takes over once a record has run out.
 			effect(() => {
-				const current = store.now();
-				const session = store.session();
+				const heard = listening();
 				const at = Date.now();
 
 				untracked(() => {
-					const albumId = current?.albumId ?? null;
-					const ours =
-						!!current &&
-						!!session &&
-						!!albumId &&
-						session.albumId === albumId;
+					const albumId = heard?.request.albumId ?? null;
 
 					if (sitting && sitting.albumId !== albumId) {
 						// Another record went on, or the player fell silent.
@@ -1538,26 +1589,26 @@ export const PlayerStore = signalStore(
 						}
 						flush(true);
 					}
-					if (!ours || !current || !session) {
+					if (!heard || !albumId) {
 						return;
 					}
 					sitting ??= {
-						albumId: albumId as string,
-						albumTitle: session.albumTitle,
-						artistName: session.artistName,
-						source: current.source,
+						albumId,
+						albumTitle: heard.request.albumTitle,
+						artistName: heard.request.artistName,
+						source: heard.source,
 						startedAt: at,
-						trackCount: session.tracks.length,
+						trackCount: heard.request.tracks.length,
 						heard: new Set<string>(),
 						playedMs: 0,
 						playingSince: null,
 						endedAt: at,
 					};
-					if (current.playing) {
+					if (heard.playing) {
 						sitting.playingSince ??= at;
 						sitting.endedAt = at;
-						if (current.trackId) {
-							sitting.heard.add(current.trackId);
+						if (heard.trackId) {
+							sitting.heard.add(heard.trackId);
 						}
 					} else if (sitting.playingSince !== null) {
 						sitting.playedMs += at - sitting.playingSince;
@@ -1565,7 +1616,7 @@ export const PlayerStore = signalStore(
 						sitting.endedAt = at;
 					}
 
-					if (current.playing) {
+					if (heard.playing) {
 						played = true;
 					} else if (played && store.queue().length && ranOut()) {
 						played = false;
