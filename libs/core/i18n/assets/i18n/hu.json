@@ -1957,6 +1957,12 @@
 		"adminEditLink": {
 			"edit-in-admin": "Szerkesztés az adminban"
 		},
+		"playAlbumButton": {
+			"play-on-spotify": "Lejátszás a Spotifyon: {{title}}",
+			"pause-on-spotify": "Szünet a Spotifyon: {{title}}",
+			"play-on-youtube": "Lejátszás a YouTube-on: {{title}}",
+			"pause-on-youtube": "Szünet a YouTube-on: {{title}}"
+		},
 		"playerMini": {
 			"player": "Lejátszó",
 			"previous-track": "Előző szám",

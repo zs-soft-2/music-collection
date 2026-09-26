@@ -191,6 +191,8 @@ interface PlayerState {
 	lyrics: TrackLyrics | null;
 	/** Album being loaded to be played. */
 	loadingAlbumId: string | null;
+	/** The source it was asked for on; null when nobody named one. */
+	loadingSource: PlayerSource | null;
 	/** The tab's sound is analysed for the visuals. */
 	audioStatus: 'off' | 'starting' | 'on';
 	audioError: string | null;
@@ -359,6 +361,7 @@ export const PlayerStore = signalStore(
 		stageOpen: false,
 		lyrics: null,
 		loadingAlbumId: null,
+		loadingSource: null,
 		audioStatus: 'off',
 		audioError: null,
 		sideBreak: null,
@@ -398,10 +401,14 @@ export const PlayerStore = signalStore(
 				// Spotify id. Their own app is what lets this player drive
 				// Spotify rather than hand the album to Spotify's own frame.
 				spotify: !!request?.spotifyAlbumId,
+				// YouTube's frame is nothing this player can offer once its
+				// script has been blocked: the frame plays by its own
+				// buttons, and every button of ours for it would be dead.
 				youtube:
-					!!request?.youtubeVideoId ||
-					!!request?.youtubePlaylistId ||
-					!!request?.youtubeVideoIds.length,
+					youtube.controllable() &&
+					(!!request?.youtubeVideoId ||
+						!!request?.youtubePlaylistId ||
+						!!request?.youtubeVideoIds.length),
 			});
 
 			/**
@@ -640,6 +647,42 @@ export const PlayerStore = signalStore(
 					: youtube.durationMs();
 			});
 
+			/**
+			 * The records a card can start, by the source it would start
+			 * them on — none at all while the outside players are not
+			 * allowed, so a button that could only disappoint is never
+			 * offered.
+			 *
+			 * A Spotify record counts only with the collector's own app:
+			 * Spotify's embedded frame plays on the record's own page, but a
+			 * card has no frame whose play button could be pressed. A
+			 * YouTube record counts by its playlist or its videos, and only
+			 * while YouTube's player can be driven at all.
+			 */
+			const playableSources = computed(() => {
+				const onSpotify = new Set<string>();
+				const onYoutube = new Set<string>();
+				const ownApp = spotify.hasOwnApp();
+				const canDriveYoutube = youtube.controllable();
+
+				for (const album of consent.allowed() ? (albums() ?? []) : []) {
+					if (ownApp && isSpotifyAlbumId(album.spotifyAlbumId)) {
+						onSpotify.add(album.uid);
+					}
+					if (
+						canDriveYoutube &&
+						(isYoutubePlaylistId(album.youtubePlaylistId) ||
+							(album.youtubeVideoIds ?? []).some(
+								isYoutubeVideoId
+							))
+					) {
+						onYoutube.add(album.uid);
+					}
+				}
+
+				return { spotify: onSpotify, youtube: onYoutube };
+			});
+
 			return {
 				now,
 				sides,
@@ -748,13 +791,20 @@ export const PlayerStore = signalStore(
 					() =>
 						now()?.source !== 'spotify' || spotify.volumeSupported()
 				),
-				/** The source's last error, e.g. a missing Premium account. */
+				/**
+				 * The source's last error, e.g. a missing Premium account or
+				 * a YouTube player nothing here can reach. A blocked YouTube
+				 * leaves no source at all, so it is said whenever the page
+				 * has nothing better to report.
+				 */
 				error: computed(() =>
 					(now()?.source ?? sourceFor(shown().request)) === 'spotify'
 						? (spotify.error() ?? embed.error())
-						: null
+						: youtube.error()
 				),
 				sourceFor: computed(() => sourceFor),
+				/** Which sources a record could be played on at all. */
+				availableFor: computed(() => availableFor),
 				/** The source the page plays on (what plays, when it is the page's). */
 				pageSource: computed(() =>
 					pageActive() ? now()!.source : sourceFor(store.page())
@@ -782,30 +832,23 @@ export const PlayerStore = signalStore(
 				/** The outside players may be put on the page at all. */
 				playersAllowed: computed(() => consent.allowed()),
 				/**
-				 * Albums of the catalog this player can start itself — none
-				 * at all while the outside players are not allowed, so a
-				 * button that could only disappoint is never offered.
+				 * Albums of the catalog this player can start itself, by the
+				 * source it would start them on — none at all while the
+				 * outside players are not allowed, so a button that could
+				 * only disappoint is never offered.
 				 *
 				 * A Spotify album counts only with the collector's own app:
 				 * Spotify's embedded frame plays on the album's own page, but
-				 * nothing here can press its play button for them.
+				 * a card has no frame whose play button could be pressed.
 				 */
+				playableSources,
+				/** Every record a card could start, on whichever source. */
 				playableAlbumIds: computed(
 					() =>
-						new Set(
-							(consent.allowed() ? (albums() ?? []) : [])
-								.filter(
-									(album) =>
-										(isSpotifyAlbumId(
-											album.spotifyAlbumId
-										) &&
-											spotify.hasOwnApp()) ||
-										isYoutubePlaylistId(
-											album.youtubePlaylistId
-										)
-								)
-								.map((album) => album.uid)
-						)
+						new Set([
+							...playableSources().spotify,
+							...playableSources().youtube,
+						])
 				),
 			};
 		}
@@ -861,12 +904,22 @@ export const PlayerStore = signalStore(
 				saveOverrides(overrides);
 			};
 
-			/** Plays the request from its track (or the album's start). */
-			const start = async (request: PlayRequest): Promise<void> => {
-				const source = store.sourceFor()(request);
-				if (!source) {
+			/**
+			 * Plays the request from its track (or the album's start), on the
+			 * source asked for where the record has one — a card offers a
+			 * button per source, and each plays what its colour promises.
+			 */
+			const start = async (
+				request: PlayRequest,
+				on?: PlayerSource
+			): Promise<void> => {
+				// Without leave there is no source at all, whoever asked.
+				const settled = store.sourceFor()(request);
+				if (!settled) {
 					return;
 				}
+				const source =
+					on && store.availableFor()(request)[on] ? on : settled;
 				const settings = resolvePlayerSettings(
 					request.context,
 					store.overrides()
@@ -932,8 +985,14 @@ export const PlayerStore = signalStore(
 			};
 
 			/** Plays an album of the catalog from its start. */
-			const playAlbumById = async (albumId: string): Promise<void> => {
-				patchState(store, { loadingAlbumId: albumId });
+			const playAlbumById = async (
+				albumId: string,
+				on?: PlayerSource
+			): Promise<void> => {
+				patchState(store, {
+					loadingAlbumId: albumId,
+					loadingSource: on ?? null,
+				});
 				try {
 					const albums = await firstValueFrom(
 						albumStateService.selectEntities$().pipe(
@@ -954,11 +1013,14 @@ export const PlayerStore = signalStore(
 						albumDetailsEffect.load$(albumId)
 					);
 
-					await start(albumPlayRequest(album, tracks));
+					await start(albumPlayRequest(album, tracks), on);
 				} catch (error) {
 					console.error(error);
 				} finally {
-					patchState(store, { loadingAlbumId: null });
+					patchState(store, {
+						loadingAlbumId: null,
+						loadingSource: null,
+					});
 				}
 			};
 
@@ -1106,11 +1168,17 @@ export const PlayerStore = signalStore(
 					}
 				},
 
-				/** Plays an album of the catalog from its start. */
-				playAlbum(albumId: string): Promise<void> {
+				/**
+				 * Plays an album of the catalog from its start, on the source
+				 * asked for. A card offers one button per source the record
+				 * has, so the button that was pressed decides — not the
+				 * settings, which cannot know which colour was under the
+				 * finger.
+				 */
+				playAlbum(albumId: string, on?: PlayerSource): Promise<void> {
 					activate();
 
-					return playAlbumById(albumId);
+					return playAlbumById(albumId, on);
 				},
 
 				/**

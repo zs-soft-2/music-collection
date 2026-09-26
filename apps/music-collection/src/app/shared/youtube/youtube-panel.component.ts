@@ -187,7 +187,7 @@ import {
 			font: inherit;
 			font-weight: 600;
 			color: #fff;
-			background: #cc0029;
+			background: var(--mc-youtube);
 			border: 0;
 			border-radius: var(--mc-radius-md);
 			cursor: pointer;

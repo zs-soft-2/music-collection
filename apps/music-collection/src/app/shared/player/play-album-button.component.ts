@@ -7,42 +7,58 @@ import {
 } from '@angular/core';
 import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
-import { ExternalPlayerConsentService } from '../../data/external-player';
+import { PlayerSource } from '../../data/player';
 import { PlayerStore } from './player.store';
 
 /**
- * Round play button over an album card: plays the album on the app's player
- * without opening its page, or pauses / resumes it when it plays already.
- * Shows nothing for an album with neither Spotify nor YouTube link.
+ * Round play buttons over an album card: play the album without opening its
+ * page, or pause / resume it when it plays already.
+ *
+ * One button per source the record can actually be started on, in that
+ * source's own colour — Spotify green, YouTube red — so the button says
+ * before it is pressed what will come out of it, and a record on both offers
+ * both. A source this player cannot drive gets no button at all: the settings
+ * decide which source a page plays on, but a card is not a page, and a colour
+ * that does nothing when pressed is worse than a colour that is not there.
  */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-play-album-button',
 	imports: [...I18N_IMPORTS],
 	template: `
-		@if (playable()) {
+		@for (source of sources(); track source) {
 			<button
 				type="button"
 				class="play"
-				[class.on]="isCurrent()"
+				[class.spotify]="source === 'spotify'"
+				[class.youtube]="source === 'youtube'"
+				[class.on]="isCurrent(source)"
 				[attr.aria-label]="
-					(playing() ? 'Pause ' : 'Play ') + (title() ?? 'album')
+					(isPlaying(source)
+						? 'ui.playAlbumButton.pause-on-' + source
+						: 'ui.playAlbumButton.play-on-' + source
+					) | transloco: { title: title() ?? '' }
 				"
-				[disabled]="loading()"
-				(click)="toggle($event)"
+				[disabled]="isLoading(source)"
+				(click)="toggle($event, source)"
 			>
 				<i
 					class="pi"
-					[class.pi-spin]="loading()"
-					[class.pi-spinner]="loading()"
-					[class.pi-pause]="!loading() && playing()"
-					[class.pi-play]="!loading() && !playing()"
+					[class.pi-spin]="isLoading(source)"
+					[class.pi-spinner]="isLoading(source)"
+					[class.pi-pause]="!isLoading(source) && isPlaying(source)"
+					[class.pi-play]="!isLoading(source) && !isPlaying(source)"
 					aria-hidden="true"
 				></i>
 			</button>
 		}
 	`,
 	styles: `
+		:host {
+			display: flex;
+			gap: 0.375rem;
+		}
+
 		.play {
 			display: grid;
 			place-items: center;
@@ -57,6 +73,16 @@ import { PlayerStore } from './player.store';
 			box-shadow: 0 6px 18px rgb(0 0 0 / 0.45);
 			cursor: pointer;
 			transition: transform var(--mc-duration-fast) ease;
+
+			&.spotify {
+				color: var(--mc-on-spotify);
+				background: var(--mc-spotify);
+			}
+
+			&.youtube {
+				color: var(--mc-on-youtube);
+				background: var(--mc-youtube);
+			}
 
 			&:hover:not(:disabled) {
 				transform: scale(1.08);
@@ -80,35 +106,58 @@ export class PlayAlbumButtonComponent {
 	public readonly title = input<string | null>(null);
 
 	private readonly player = inject(PlayerStore);
-	private readonly consent = inject(ExternalPlayerConsentService);
 
 	/**
-	 * Nothing to offer without a player to play it on: a guest, or a
-	 * collector who keeps the outside players off, is not shown a button that
-	 * could only disappoint them.
+	 * The sources this record can be started on from here. Empty for a guest
+	 * or a collector who keeps the outside players off — the store answers
+	 * for that, so nothing here has to remember it.
 	 */
-	protected readonly playable = computed(
-		() =>
-			this.consent.allowed() &&
-			this.player.playableAlbumIds().has(this.albumId())
-	);
-	protected readonly isCurrent = computed(
-		() => this.player.now()?.albumId === this.albumId()
-	);
-	protected readonly playing = computed(
-		() => this.isCurrent() && !!this.player.now()?.playing
-	);
-	protected readonly loading = computed(
-		() => this.player.loadingAlbumId() === this.albumId()
-	);
+	protected readonly sources = computed<PlayerSource[]>(() => {
+		const albumId = this.albumId();
+		const playable = this.player.playableSources();
 
-	protected toggle(event: MouseEvent): void {
+		return [
+			...(playable.spotify.has(albumId)
+				? (['spotify'] as PlayerSource[])
+				: []),
+			...(playable.youtube.has(albumId)
+				? (['youtube'] as PlayerSource[])
+				: []),
+		];
+	});
+
+	/** This record is in the player, on this source. */
+	protected isCurrent(source: PlayerSource): boolean {
+		const now = this.player.now();
+
+		return now?.albumId === this.albumId() && now?.source === source;
+	}
+
+	protected isPlaying(source: PlayerSource): boolean {
+		return this.isCurrent(source) && !!this.player.now()?.playing;
+	}
+
+	/**
+	 * Waiting for this record to go on. A queue or a station names no source,
+	 * and then both buttons wait together: it is the record being fetched,
+	 * not one colour of it.
+	 */
+	protected isLoading(source: PlayerSource): boolean {
+		const loadingSource = this.player.loadingSource();
+
+		return (
+			this.player.loadingAlbumId() === this.albumId() &&
+			(loadingSource === null || loadingSource === source)
+		);
+	}
+
+	protected toggle(event: MouseEvent, source: PlayerSource): void {
 		event.preventDefault();
 		event.stopPropagation();
-		if (this.isCurrent()) {
+		if (this.isCurrent(source)) {
 			void this.player.togglePlay();
 		} else {
-			void this.player.playAlbum(this.albumId());
+			void this.player.playAlbum(this.albumId(), source);
 		}
 	}
 }

@@ -256,7 +256,7 @@ import { PlayerStore } from './player.store';
 
 			&.youtube {
 				color: #fff;
-				background: #cc0029;
+				background: var(--mc-youtube);
 			}
 		}
 

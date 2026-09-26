@@ -52,6 +52,14 @@ interface YoutubePlaybackState {
 	positionAt: number;
 	/** 0–100; kept when the player is reloaded. */
 	volume: number;
+	/**
+	 * The frame can be taken over from here. False once YouTube's own script
+	 * has not come — an extension blocking it is the usual reason — and then
+	 * the frame plays by its own buttons alone.
+	 */
+	controllable: boolean;
+	/** What stopped this side from driving the frame, for the page to say. */
+	error: string | null;
 }
 
 const initialState: YoutubePlaybackState = {
@@ -67,6 +75,8 @@ const initialState: YoutubePlaybackState = {
 	durationMs: 0,
 	positionAt: 0,
 	volume: 100,
+	controllable: true,
+	error: null,
 };
 
 const sameItem = (a: YoutubeItem | null, b: YoutubeItem | null) =>
@@ -115,6 +125,16 @@ export const YoutubePlaybackStore = signalStore(
 	withMethods((store, effect = inject(YoutubePlaybackEffect)) => {
 		let player: YtPlayer | null = null;
 		let ready = false;
+		/**
+		 * What a reset keeps: this browser's own settings, and what it has
+		 * learnt about the frame. A blocked script is blocked for the next
+		 * record too, and the buttons would flicker back for nothing.
+		 */
+		const kept = () => ({
+			volume: store.volume(),
+			controllable: store.controllable(),
+			error: store.error(),
+		});
 		/** Increases with every attach, so a late one does not win. */
 		let generation = 0;
 
@@ -154,7 +174,7 @@ export const YoutubePlaybackStore = signalStore(
 				detach();
 				patchState(store, {
 					...initialState,
-					volume: store.volume(),
+					...kept(),
 					album,
 					selection: album.items[0] ?? null,
 				});
@@ -165,7 +185,7 @@ export const YoutubePlaybackStore = signalStore(
 				detach();
 				patchState(store, {
 					...initialState,
-					volume: store.volume(),
+					...kept(),
 					album,
 					selection: album.items[0] ?? null,
 					autoplay: true,
@@ -175,7 +195,7 @@ export const YoutubePlaybackStore = signalStore(
 			/** Stops playback and closes the player. */
 			close(): void {
 				detach();
-				patchState(store, { ...initialState, volume: store.volume() });
+				patchState(store, { ...initialState, ...kept() });
 			},
 
 			/** Takes control of the player frame showing the current item. */
@@ -225,13 +245,29 @@ export const YoutubePlaybackStore = signalStore(
 						},
 					})
 					.then((created) => {
-						if (current === generation) {
-							player = created;
-						} else {
+						if (current !== generation) {
 							created.destroy();
+
+							return;
 						}
+						player = created;
+						patchState(store, {
+							controllable: true,
+							error: null,
+						});
 					})
-					.catch((error) => console.error(error));
+					.catch((error) => {
+						console.error(error);
+						if (current === generation) {
+							// The frame is still there and still plays by its
+							// own buttons; what is gone is this side's hold
+							// on it, and every button that stood for it.
+							patchState(store, {
+								controllable: false,
+								error: 'YouTube could not be controlled from here — an extension is most likely blocking its player script. Its own buttons still work.',
+							});
+						}
+					});
 			},
 
 			select(item: YoutubeItem): void {
@@ -295,7 +331,7 @@ export const YoutubePlaybackStore = signalStore(
 				detach();
 				patchState(store, {
 					...initialState,
-					volume: store.volume(),
+					...kept(),
 					album,
 					selection: item,
 					autoplay: true,

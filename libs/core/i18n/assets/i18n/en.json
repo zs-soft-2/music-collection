@@ -1957,6 +1957,12 @@
 		"adminEditLink": {
 			"edit-in-admin": "Edit in admin"
 		},
+		"playAlbumButton": {
+			"play-on-spotify": "Play {{title}} on Spotify",
+			"pause-on-spotify": "Pause {{title}} on Spotify",
+			"play-on-youtube": "Play {{title}} on YouTube",
+			"pause-on-youtube": "Pause {{title}} on YouTube"
+		},
 		"playerMini": {
 			"player": "Player",
 			"previous-track": "Previous track",
