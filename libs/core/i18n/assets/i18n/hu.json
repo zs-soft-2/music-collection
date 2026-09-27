@@ -934,6 +934,7 @@
 			"change": "módosítás",
 			"accepted": "Elfogadva",
 			"rejected": "Elutasítva",
+			"what-you-asked": "Amit beküldtél ({{count}} mező)",
 			"from-the-admin": "Admin",
 			"new-release": "kiadás-kérés",
 			"missing-something": "Hiányzik valami a katalógusból?",

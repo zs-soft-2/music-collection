@@ -934,6 +934,7 @@
 			"change": "change",
 			"accepted": "Accepted",
 			"rejected": "Refused",
+			"what-you-asked": "What you asked for ({{count}} fields)",
 			"from-the-admin": "Admin",
 			"new-release": "release request",
 			"missing-something": "Is something missing from the catalog?",

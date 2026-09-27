@@ -62,38 +62,40 @@
 						<p class="summary">{{ row.summary }}</p>
 					}
 
-					<ul class="fields">
-						@for (field of row.fields; track field.field) {
-							<li
-								class="field"
-								[attr.data-verdict]="field.verdict"
-							>
-								<span class="label">{{
-									field.labelKey | transloco
-								}}</span>
-								<span class="change">
-									<span class="was">{{ field.before }}</span>
-									<span class="arrow" aria-hidden="true"
-										>→</span
-									>
-									<span>{{ field.after }}</span>
-								</span>
-								@if (field.verdict) {
-									<span class="verdict">{{
-										(field.verdict === 'accepted'
-											? 'page.my-request.accepted'
-											: 'page.my-request.rejected'
-										) | transloco
-									}}</span>
+					@if (row.refused.length) {
+						<ul class="fields">
+							@for (field of row.refused; track field.field) {
+								<li>
+									<mc-my-request-field
+										[field]="field"
+										[isNew]="row.isNew"
+									/>
+								</li>
+							}
+						</ul>
+					}
+
+					@if (row.fields.length) {
+						<details class="asked">
+							<summary>
+								{{
+									'page.my-request.what-you-asked'
+										| transloco
+											: { count: row.fields.length }
+								}}
+							</summary>
+							<ul class="fields">
+								@for (field of row.fields; track field.field) {
+									<li>
+										<mc-my-request-field
+											[field]="field"
+											[isNew]="row.isNew"
+										/>
+									</li>
 								}
-								@if (field.reason) {
-									<span class="reason">{{
-										field.reason
-									}}</span>
-								}
-							</li>
-						}
-					</ul>
+							</ul>
+						</details>
+					}
 
 					@if (row.adminNote) {
 						<p class="note">

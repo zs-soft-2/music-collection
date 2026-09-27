@@ -123,53 +123,28 @@ h1 {
 	font-size: 0.875rem;
 }
 
-.field {
-	display: grid;
-	gap: 0.125rem;
-	padding-left: 0.75rem;
-	border-left: 2px solid var(--mc-border);
+.asked {
+	margin-top: 0.75rem;
 
-	&[data-verdict='rejected'] {
-		border-left-color: var(--mc-status-bad, #b3261e);
+	summary {
+		font-size: 0.8125rem;
+		color: var(--mc-text-muted);
+		cursor: pointer;
+
+		&:hover {
+			color: var(--mc-text);
+		}
 	}
 
-	&[data-verdict='accepted'] {
-		border-left-color: var(--mc-accent);
+	.fields {
+		margin-top: 0.5rem;
 	}
-}
-
-.label {
-	font-weight: 600;
-}
-
-.change {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.375rem;
-	color: var(--mc-text-muted);
-}
-
-.was {
-	text-decoration: line-through;
-	color: var(--mc-text-subtle);
-}
-
-.arrow {
-	color: var(--mc-text-subtle);
-}
-
-.verdict {
-	font-weight: 600;
-}
-
-.reason,
-.note {
-	color: var(--mc-text-muted);
 }
 
 .note {
 	margin: 0.75rem 0 0;
 	font-size: 0.875rem;
+	color: var(--mc-text-muted);
 
 	span {
 		margin-right: 0.375rem;

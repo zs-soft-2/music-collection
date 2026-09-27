@@ -122,6 +122,42 @@ describe('toMyRequestRows', () => {
 		});
 	});
 
+	it('keeps a refusal to hand, where the rest is folded away', () => {
+		const [row] = toMyRequestRows(
+			[
+				request({
+					status: 'partially-approved',
+					changes: [
+						{
+							field: 'country',
+							before: 'Hungary',
+							after: 'Germany',
+							reference: null,
+						},
+						{
+							field: 'name',
+							before: 'Pozvakowski',
+							after: 'Pozvakowsky',
+							reference: null,
+						},
+					],
+				} as Partial<EntityRequest>),
+			],
+			[response({ status: 'partially-approved' })]
+		);
+
+		expect(row.fields).toHaveLength(2);
+		expect(row.refused.map((field) => field.field)).toEqual(['country']);
+	});
+
+	it('marks a new entity, which has nothing to be compared against', () => {
+		const [asked] = toMyRequestRows([request({ operation: 'create' })], []);
+		const [changed] = toMyRequestRows([request()], []);
+
+		expect(asked.isNew).toBe(true);
+		expect(changed.isNew).toBe(false);
+	});
+
 	it('passes the admin word on to the collector it was written for', () => {
 		const [row] = toMyRequestRows(
 			[request({ status: 'partially-approved' })],

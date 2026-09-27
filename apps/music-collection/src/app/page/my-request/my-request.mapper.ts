@@ -37,7 +37,12 @@ export interface MyRequestRow {
 	adminNote: string | null;
 	/** What was asked for in one line, where there are no fields to show. */
 	summary: string | null;
+	/** True where there is nothing to compare against: a new entity. */
+	isNew: boolean;
+	/** Everything that was asked, kept folded away. */
 	fields: MyRequestFieldRow[];
+	/** The fields that were turned down — the part worth reading at once. */
+	refused: MyRequestFieldRow[];
 }
 
 const DATE_FORMAT = new Intl.DateTimeFormat('en-GB', {
@@ -102,7 +107,9 @@ export function toReleaseRequestRow(request: ReleaseRequest): MyRequestRow {
 		note: request.note ?? null,
 		adminNote: request.adminNote ?? null,
 		summary: pressingSummary(request),
+		isNew: true,
 		fields: [],
+		refused: [],
 	};
 }
 
@@ -123,6 +130,18 @@ export function toMyRequestRows(
 			])
 		);
 
+		const fields: MyRequestFieldRow[] = (request.changes ?? []).map(
+			(change) => ({
+				field: change.field,
+				labelKey: requestFieldLabelKey(change.field),
+				before: formatRequestValue(change.before),
+				after: formatRequestValue(change.after),
+				reference: change.reference?.value ?? null,
+				verdict: verdicts.get(change.field)?.kind ?? null,
+				reason: verdicts.get(change.field)?.reason ?? null,
+			})
+		);
+
 		return {
 			id: request.uid,
 			status: request.status,
@@ -138,15 +157,9 @@ export function toMyRequestRows(
 			answeredOn: formatDate(request.decidedAt),
 			note: request.note,
 			adminNote: response?.adminNote ?? null,
-			fields: (request.changes ?? []).map((change) => ({
-				field: change.field,
-				labelKey: requestFieldLabelKey(change.field),
-				before: formatRequestValue(change.before),
-				after: formatRequestValue(change.after),
-				reference: change.reference?.value ?? null,
-				verdict: verdicts.get(change.field)?.kind ?? null,
-				reason: verdicts.get(change.field)?.reason ?? null,
-			})),
+			isNew: request.operation === 'create',
+			fields,
+			refused: fields.filter((field) => field.verdict === 'rejected'),
 		};
 	});
 }

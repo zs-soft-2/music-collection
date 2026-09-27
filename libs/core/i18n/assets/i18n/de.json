@@ -934,6 +934,7 @@
 			"change": "Änderung",
 			"accepted": "Übernommen",
 			"rejected": "Abgelehnt",
+			"what-you-asked": "Was du angeboten hast ({{count}} Felder)",
 			"from-the-admin": "Admin",
 			"new-release": "Pressungs-Anfrage",
 			"missing-something": "Fehlt etwas im Katalog?",
