@@ -176,12 +176,19 @@ export class OwnedArtistStateService extends ArtistStateService {
 	/**
 	 * Runs the write and keeps whatever it says. The form has navigated away
 	 * by the time an answer arrives, so nobody else is listening.
+	 *
+	 * The page shows a sentence a collector can read, which says nothing to
+	 * whoever has to fix it — and a refused write is silent otherwise, because
+	 * this is the only subscriber. So the error is also logged as it came:
+	 * a missing permission and an offline browser look the same on the page.
 	 */
 	private write(write$: Observable<unknown>): void {
 		this.lastError.set(null);
 		write$.subscribe({
-			error: (error: Error) =>
-				this.lastError.set(error?.message ?? 'failed'),
+			error: (error: Error) => {
+				console.error('An owned band was not saved', error);
+				this.lastError.set(error?.message ?? 'failed');
+			},
 		});
 	}
 }
