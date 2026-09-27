@@ -62,6 +62,8 @@ Thumbs.db
 
 # OpenTofu
 .terraform/
+# Mentett tofu plan: egy futáshoz készül, és a state-tel együtt avul el.
+*.tfplan
 *.tfstate
 *.tfstate.*
 .zs-cloud-progress.json

@@ -7,7 +7,10 @@ env                 = "prod"
 project_id          = "music-collection-4e074"
 region              = "europe-west1"
 is_production       = true
-hosting_sites       = ["music-collection-4e074"]
+# A projekt alapértelmezett hosting site-ja (`music-collection-4e074`) a Firebase-szel együtt
+# jött létre — a Hosting API `DEFAULT_SITE`-nak mutatja —, tofu-ból tehát nem teremthető: egy
+# `google_firebase_hosting_site` rá 409-cel esik el. A deploy az `app` targeten (.firebaserc) éri el.
+hosting_sites       = []
 build_configuration = "production"
 reviewer_users      = ["zsagia"]
 firestore_location  = "eur3"
