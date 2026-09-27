@@ -34,7 +34,34 @@ import { ENV_OPTION, readEnvironment } from './environment.mjs';
 
 const ROLE = 'USER';
 
-/** A gyűjtő alapjogai: saját példányok és kívánságlista. */
+/**
+ * A gyűjtő saját entitásai (`user/{uid}/owned-*`): amit magának vehet fel,
+ * ha a katalógus nem ismeri. A nevek a `firestore.rules` `syncResources()`
+ * mapjéből jönnek — ott dől el, melyik collectionhöz melyik jog kell.
+ *
+ * Mind a kilenc katalógus-entitás szerepel, mert a szabály mindegyiket
+ * engedi, és a jog nélkül a felület sem tudná felkínálni. Ami nincs kész,
+ * azt a felület hiánya tartja vissza, nem a jog.
+ */
+const OWNED_RESOURCES = [
+	'OwnedArtistEntity',
+	'OwnedAlbumEntity',
+	'OwnedReleaseEntity',
+	'OwnedLabelEntity',
+	'OwnedMusicianEntity',
+	'OwnedDocumentEntity',
+	'OwnedTrackEntity',
+	'OwnedContributionEntity',
+	'OwnedMembershipEntity',
+];
+
+const OWNED_PERMISSIONS = OWNED_RESOURCES.flatMap((resource) =>
+	['create', 'delete', 'update', 'view'].map(
+		(action) => `${action}${resource}`
+	)
+);
+
+/** A gyűjtő alapjogai: saját példányok, kívánságlista, saját entitások. */
 const PERMISSIONS = [
 	'createCollectionItemEntity',
 	'deleteCollectionItemEntity',
@@ -44,6 +71,7 @@ const PERMISSIONS = [
 	'deleteWishlistItemEntity',
 	'updateWishlistItemEntity',
 	'viewWishlistItemEntity',
+	...OWNED_PERMISSIONS,
 ];
 
 const { values: options } = parseArgs({

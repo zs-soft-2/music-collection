@@ -206,6 +206,9 @@ service cloud.firestore {
     }
 
     // A sync-marker feature key → permission-erőforrás. Ismeretlen kulcs → tiltás.
+    // Az `owned-` előtagúak a gyűjtő saját entitásai (lásd lent): külön
+    // erőforrás, külön jog — a katalógusba írni továbbra is `createArtistEntity`
+    // kell, a saját előadóhoz `createOwnedArtistEntity` elég.
     function syncResources() {
       return {
         'artist': 'ArtistEntity',
@@ -223,8 +226,32 @@ service cloud.firestore {
         'entity-quantity': 'EntityQuantityEntity',
         'collection-item': 'CollectionItemEntity',
         'wishlist-item': 'WishlistItemEntity',
-        'release-request': 'ReleaseRequestEntity'
+        'release-request': 'ReleaseRequestEntity',
+        'owned-artist': 'OwnedArtistEntity',
+        'owned-album': 'OwnedAlbumEntity',
+        'owned-release': 'OwnedReleaseEntity',
+        'owned-label': 'OwnedLabelEntity',
+        'owned-musician': 'OwnedMusicianEntity',
+        'owned-document': 'OwnedDocumentEntity',
+        'owned-track': 'OwnedTrackEntity',
+        'owned-contribution': 'OwnedContributionEntity',
+        'owned-membership': 'OwnedMembershipEntity'
       };
+    }
+
+    // A gyűjtő saját entitásának collectionje: `owned-` előtag, és csak a
+    // fenti listán szereplő erőforrásra. Ismeretlen `owned-…` név → tiltás.
+    function isOwnedFeature(featureKey) {
+      return featureKey.matches('^owned-[a-z-]+$')
+          && featureKey in syncResources();
+    }
+
+    // A saját entitás tulajdonosa maga a gyűjtő — és csak ő. Ez tiltja meg,
+    // hogy bárki a sajátját `GLOBAL`-ra emelje: a katalógusba egyedül a
+    // jóváhagyás viheti át.
+    function isOwnedBy(uid) {
+      return request.resource.data.meta is map
+          && request.resource.data.meta.ownerId == uid;
     }
 
     // Az app alapértelmezett nyelve. Kivétel az alábbi szabály alól: ezt a
@@ -329,6 +356,36 @@ service cloud.firestore {
       match /game/{gameId} {
         allow read: if isSelf(uid);
         allow write: if false; // answerDailyQuestion
+      }
+
+      // ── Amit a gyűjtő magának vett fel ────────────────────────────────
+      // Egy zenekar, amiről a katalógus még nem hallott, és idővel a lemezei:
+      // ugyanaz a modell, mint a katalógusé, csak nem a katalógusban él.
+      //
+      // Az `owned-` előtag nem díszítés. A katalógus collection-group
+      // szabályai (`/{path=**}/artist/{artistId}`) minden `artist` nevű
+      // collectiont publikussá tesznek bármilyen mélységben, tehát a saját
+      // előadót nem hívhatjuk `artist`-nak: a privát bejegyzést mindenki
+      // olvasná. A név tartja szét a két világot, és velük a bundle-öket, a
+      // darabszámokat és minden mást, amit a katalógus collection-group
+      // lekérdezései táplálnak.
+      //
+      // Csak a tulaj látja. A kliens sima collection-lekérdezéssel olvassa
+      // (nem collection-grouppal), ezért állhat meg a szabály az `isSelf`-nél
+      // — és ezért nem kell hozzá összetett index.
+      match /{ownedCollection}/{ownedId} {
+        allow read: if isSelf(uid) && isOwnedFeature(ownedCollection);
+        allow create: if isSelf(uid)
+                      && isOwnedFeature(ownedCollection)
+                      && hasPerm('create' + syncResources()[ownedCollection])
+                      && isOwnedBy(uid);
+        allow update: if isSelf(uid)
+                      && isOwnedFeature(ownedCollection)
+                      && hasPerm('update' + syncResources()[ownedCollection])
+                      && isOwnedBy(uid);
+        allow delete: if isSelf(uid)
+                      && isOwnedFeature(ownedCollection)
+                      && hasPerm('delete' + syncResources()[ownedCollection]);
       }
     }
 
@@ -617,7 +674,8 @@ service cloud.firestore {
       allow read: if true;
       allow create, update: if (featureKey in syncResources()
                                 && hasPerm('delete' + syncResources()[featureKey])
-                                && (!(featureKey in ['collection-item', 'wishlist-item'])
+                                && ((!(featureKey in ['collection-item', 'wishlist-item'])
+                                     && !isOwnedFeature(featureKey))
                                     || markerId.matches('user~' + request.auth.uid + '~' + featureKey + '~.+')))
                             // A saját megosztott helyét bárki visszavonhatja,
                             // permission nélkül is: ez a hozzájárulás vége.
