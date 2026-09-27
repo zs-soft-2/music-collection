@@ -67,6 +67,22 @@ resource "google_project_iam_member" "functions_build" {
   depends_on = [google_project_service.enabled]
 }
 
+# A Storage-szabályok a permission-listát a Firestore-ból olvassák (a
+# storage.rules `firestore.get()`-jei). Ez cross-service Rules, amihez a Cloud
+# Storage for Firebase service agentnek külön szerepkör kell. Enélkül a
+# `firestore.get()` hibára fut, a kiértékelés megszakad, és MINDEN írás tiltott
+# lesz (`storage/unauthorized`) — az adminé is, miközben az olvasás (`if true`)
+# látszólag rendben működik. A `firebase deploy` interaktívan rákérdez erre a
+# kiosztásra, a CI viszont `--non-interactive` (.github/workflows/ci.yml), és
+# olyankor szó nélkül kihagyja; ezért áll itt, és nem a deployra bízzuk.
+resource "google_project_iam_member" "storage_rules_cross_service" {
+  project = local.project_id
+  role    = "roles/firebaserules.firestoreServiceAgent"
+  member  = "serviceAccount:service-${local.project_number}@gcp-sa-firebasestorage.iam.gserviceaccount.com"
+
+  depends_on = [google_project_service.enabled]
+}
+
 # A Discogs personal access token (60 kérés/perc a token nélküli 25 helyett) a
 # Discogs-lekérdező functionöknek. A secretet a tofu teremti, az ÉRTÉKÉT nem:
 # az nem kerülhet a state-be, kézzel tesszük fel —
