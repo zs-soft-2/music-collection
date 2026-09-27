@@ -48,7 +48,12 @@
 		"all": "Alle",
 		"unknown": "Unbekannt",
 		"loadingLabel": "Wird geladen…",
-		"saving": "Wird gespeichert…"
+		"saving": "Wird gespeichert…",
+		"match": {
+			"exact": "Genaue Übereinstimmung",
+			"likely": "Wahrscheinlich",
+			"possible": "Möglich"
+		}
 	},
 	"catalog": {
 		"format": {
@@ -764,6 +769,12 @@
 			"this-is-the-only": "Dies ist die einzige Pressung des Albums, die der Katalog kennt."
 		},
 		"scan": {
+			"state": {
+				"in-collection": "Schon in deiner Sammlung",
+				"in-catalog": "Im Katalog",
+				"new-release": "Neue Pressung",
+				"new-album": "Neues Album"
+			},
 			"scan-a-record": "Platte scannen",
 			"photograph-the-sleeve-the": "Fotografiere die Hülle — die Rückseite mit Barcode oder Katalognummer funktioniert am besten.",
 			"your-account-may-not": "Dein Konto darf noch keine Platten in eine Sammlung aufnehmen. Bitte um die Sammlerrolle, dann öffnet sich der Scan.",
@@ -879,7 +890,48 @@
 			"edit": "Bearbeiten",
 			"remove": "Löschen",
 			"remove-it": "Wirklich löschen?",
-			"yes": "Ja"
+			"yes": "Ja",
+			"submit": "In den Katalog einreichen",
+			"submitting": "Wird eingereicht…",
+			"could-not-submit": "Einreichen fehlgeschlagen. Versuche es erneut.",
+			"request-pending": "Wartet auf Entscheidung",
+			"request-approved": "In den Katalog übernommen",
+			"request-partly-approved": "Teilweise übernommen",
+			"request-rejected": "Abgelehnt"
+		},
+		"propose": {
+			"suggest-a-change": "Änderung vorschlagen",
+			"lead": "Ändere, was im Katalog deiner Meinung nach falsch steht. Das Speichern schreibt nichts — im nächsten Schritt fragen wir nach dem Beleg, danach geht es an einen Admin.",
+			"what-backs-it": "Was belegt es?",
+			"every-field-needs-one": "Jedes geänderte Feld braucht einen Beleg: einen Link, eine Katalognummer oder deine eigenen Worte, wenn du die Platte in der Hand hast.",
+			"reference-placeholder": "Link, Kennung oder ein Satz",
+			"anything-else": "Sonst noch etwas für den Admin (optional)",
+			"send": "Absenden",
+			"sending": "Wird gesendet…",
+			"discard": "Verwerfen",
+			"sent": "Gesendet. Ein Admin entscheidet Feld für Feld und begründet jede Ablehnung.",
+			"see-my-requests": "Meine Anfragen",
+			"nothing-to-send": "Du hast nichts zu senden. Öffne einen Künstler und schlage dort eine Änderung vor.",
+			"back-to-the-catalog": "Zurück zum Katalog",
+			"could-not-send": "Senden fehlgeschlagen. Versuche es erneut."
+		},
+		"my-request": {
+			"title": "Meine Anfragen",
+			"lead": "Was du dem Katalog angeboten hast und was zurückkam. Eine Ablehnung trägt ihre Begründung — darauf kannst du antworten.",
+			"loading": "Anfragen werden geladen…",
+			"could-not-read": "Deine Anfragen konnten nicht geladen werden.",
+			"nothing-yet": "Du hast noch nichts gesendet.",
+			"my-bands": "Meine Bands",
+			"status-pending": "Wartet auf Entscheidung",
+			"status-approved": "Übernommen",
+			"status-partly": "Teilweise übernommen",
+			"status-rejected": "Abgelehnt",
+			"new-entity": "neuer Eintrag",
+			"change": "Änderung",
+			"accepted": "Übernommen",
+			"rejected": "Abgelehnt",
+			"from-the-admin": "Admin",
+			"new-release": "Pressungs-Anfrage"
 		}
 	},
 	"ui": {
@@ -1037,8 +1089,8 @@
 			"loading-releases": "Veröffentlichungen werden geladen…",
 			"in-your-collection": "In deiner Sammlung",
 			"add": "Hinzufügen",
-			"no-release-of-this": "Noch keine Veröffentlichung dieses Albums ist im Katalog.",
-			"don-t-see-your": "Deine Pressung ist nicht dabei? Bitte einen Admin, sie aufzunehmen.",
+			"no-release-of-this": "Noch keine Veröffentlichung dieses Albums ist im Katalog. So kannst du es trotzdem aufnehmen:",
+			"don-t-see-your": "Du siehst deine Pressung nicht?",
 			"find-it-on-discogs": "Auf Discogs finden",
 			"identify-from-a-photo": "Anhand eines Fotos erkennen",
 			"describe-it": "Beschreiben",
@@ -1081,7 +1133,19 @@
 			"generic-open": "Nur mit Format aufnehmen",
 			"generic-lead": "Wähle das Format, auf dem du es hast. Es kommt als das Album selbst in deine Sammlung — ohne Label, Land und Katalognummer.",
 			"generic-option": "Pressung nicht angegeben",
-			"generic-adding": "Wird hinzugefügt…"
+			"generic-adding": "Wird hinzugefügt…",
+			"routes-now": "Kommt sofort in deine Sammlung",
+			"routes-request": "Geht als Anfrage an den Admin",
+			"generic-route-hint": "Du wählst nur das Format, auf dem du es hast. Es kommt ohne Label, Land und Katalognummer hinein.",
+			"discogs-route-hint": "Wähle deine Pressung aus der Discogs-Liste.",
+			"photo-route-hint": "Fotografiere die Rückseite oder das Label, und wir suchen heraus, welche Pressung es ist.",
+			"describe-route-hint": "Füge den Discogs-Link ein oder beschreibe sie in ein paar Worten.",
+			"add-to-my-collection": "Zu meiner Sammlung hinzufügen",
+			"adding": "Wird hinzugefügt…",
+			"send-request": "Anfrage senden",
+			"sending": "Wird gesendet…",
+			"paste-not-an-image": "Das war kein Bild. Kopiere das Bild selbst — im Browser Rechtsklick und „Bild kopieren“. Eine aus dem Finder kopierte Datei lässt sich nicht einfügen, aber du kannst sie hier ablegen.",
+			"clipboard-empty": "Die Zwischenablage ist leer."
 		},
 		"discographyTimeline": {
 			"releases-over-time": "Veröffentlichungen im Zeitverlauf",
@@ -2206,6 +2270,43 @@
 			"history": "Frühere Fragen",
 			"history-hint": "Was das Spiel bisher gefragt hat. Die Lösungen stehen nicht in der Liste — die bleiben auf dem Server. Die Zusammenstellung schaut zwei Wochen zurück: dieselbe Platte kommt so lange nicht wieder, dieselbe Fragenart eine Woche lang nicht, derselbe Künstler vier Tage lang nicht.",
 			"history-empty": "Es wurde noch nichts gefragt."
+		},
+		"requestAdmin": {
+			"requests": "Anfragen",
+			"what-collectors-ask": "Was Sammler in den Katalog bringen möchten. Du entscheidest Feld für Feld — eine Ablehnung braucht eine Begründung, und der Sammler liest sie.",
+			"filter-by-status": "Nach Status filtern",
+			"loading-requests": "Anfragen werden geladen…",
+			"no-requests-here": "Hier gibt es keine Anfragen.",
+			"error-not-found": "Die Anfrage oder das Katalogdokument gibt es nicht mehr.",
+			"error-moved-on": "Der Katalog hat sich inzwischen geändert, oder die Anfrage wurde bereits entschieden. Lade die Seite neu.",
+			"error-invalid": "Die Entscheidung ist unvollständig: Jedes Feld braucht ein Urteil, jede Ablehnung eine Begründung.",
+			"error-not-allowed": "Nur ein Admin darf Anfragen entscheiden.",
+			"error-unknown": "Etwas ist schiefgelaufen. Versuche es später erneut."
+		},
+		"requestRow": {
+			"new-entity": "neuer Eintrag",
+			"change": "Änderung",
+			"collector": "Sammler",
+			"admin": "Admin",
+			"field": "Feld",
+			"now": "Jetzt",
+			"asked": "Gewünscht",
+			"reference": "Beleg",
+			"decision": "Entscheidung",
+			"no-reference": "kein Beleg",
+			"accept": "Übernehmen",
+			"reject": "Ablehnen",
+			"accepted": "Übernommen",
+			"rejected": "Abgelehnt",
+			"why-not": "Warum nicht? (erforderlich)",
+			"admin-note": "Ein Wort an den Sammler",
+			"save-decision": "Entscheidung speichern",
+			"saving": "Wird gespeichert…",
+			"decide-every-field": "Jedes Feld braucht ein Urteil, jede Ablehnung eine Begründung.",
+			"taken-in": "Übernommen als:"
+		},
+		"proposeLink": {
+			"suggest-a-change": "Änderung vorschlagen"
 		}
 	},
 	"admin": {
@@ -2226,7 +2327,8 @@
 			"documents": "Dokumente",
 			"badgeGeneration": "Abzeichen-Erzeugung",
 			"language": "Sprache",
-			"dailyQuestion": "Tagesfrage"
+			"dailyQuestion": "Tagesfrage",
+			"requests": "Anfragen"
 		},
 		"field": {
 			"albums": "Alben",
@@ -2269,7 +2371,8 @@
 			"drafts": "Entwürfe",
 			"pending": "Ausstehend",
 			"approved": "Freigegeben",
-			"rejected": "Abgelehnt"
+			"rejected": "Abgelehnt",
+			"partially-approved": "Teilweise"
 		},
 		"summary": {
 			"not": "nicht ",
@@ -2290,6 +2393,61 @@
 			"hint": "Ein Besucher, dessen Browser eine Sprache verlangt, die die App nicht spricht, sieht diese.",
 			"unset": "Nichts gesetzt: die App folgt jedem Browser und fällt auf Englisch zurück.",
 			"saved": "Gespeichert."
+		},
+		"requestField": {
+			"name": "Name",
+			"artistType": "Art",
+			"country": "Land",
+			"description": "Beschreibung",
+			"genre": "Genre",
+			"styles": "Stile",
+			"sites": "Webseiten",
+			"imageUrl": "Bild-URL",
+			"musicBrainzId": "MusicBrainz-ID",
+			"formedIn": "Gegründet",
+			"discogs": "Discogs",
+			"members": "Mitglieder",
+			"mainImage": "Hauptbild",
+			"headerImage": "Kopfbild",
+			"year": "Jahr",
+			"format": "Format",
+			"songs": "Titel",
+			"coverImageUrl": "Cover-URL",
+			"spotifyAlbumId": "Spotify-Album",
+			"youtubePlaylistId": "YouTube-Playlist",
+			"youtubeVideoIds": "YouTube-Videos",
+			"catno": "Katalognummer",
+			"media": "Medium",
+			"formatDescription": "Format",
+			"date": "Datum",
+			"discogsReleaseId": "Discogs-Pressung",
+			"discogsId": "Discogs-ID",
+			"realName": "Echter Name",
+			"aliases": "Aliasse",
+			"nameVariations": "Namensvarianten",
+			"albumUid": "Album",
+			"releaseUid": "Pressung",
+			"artistUid": "Künstler",
+			"musicianUid": "Musiker",
+			"musicianName": "Name des Musikers",
+			"artistName": "Name des Künstlers",
+			"index": "Titelnummer",
+			"position": "Position",
+			"duration": "Länge",
+			"durationSec": "Länge (s)",
+			"heading": "Abschnitt",
+			"spotifyTrackId": "Spotify-Titel",
+			"youtubeVideoId": "YouTube-Video",
+			"writers": "Autoren",
+			"role": "Rolle",
+			"roleDetail": "Rollendetail",
+			"creditedAs": "Genannt als",
+			"tracks": "Titel",
+			"kind": "Art",
+			"instruments": "Instrumente",
+			"from": "Von",
+			"to": "Bis",
+			"active": "Aktiv"
 		}
 	},
 	"fact": {

@@ -48,7 +48,12 @@
 		"all": "All",
 		"unknown": "Unknown",
 		"loadingLabel": "Loading…",
-		"saving": "Saving…"
+		"saving": "Saving…",
+		"match": {
+			"exact": "Exact match",
+			"likely": "Likely",
+			"possible": "Possible"
+		}
 	},
 	"catalog": {
 		"format": {
@@ -764,6 +769,12 @@
 			"this-is-the-only": "This is the only pressing of the album the catalog knows."
 		},
 		"scan": {
+			"state": {
+				"in-collection": "Already in your collection",
+				"in-catalog": "In the catalog",
+				"new-release": "New pressing",
+				"new-album": "New album"
+			},
 			"scan-a-record": "Scan a record",
 			"photograph-the-sleeve-the": "Photograph the sleeve — the back cover with the barcode or the catalogue number works best.",
 			"your-account-may-not": "Your account may not add records to a collection yet. Ask for the collector role and the scan opens up.",
@@ -879,7 +890,48 @@
 			"edit": "Edit",
 			"remove": "Remove",
 			"remove-it": "Remove it?",
-			"yes": "Yes"
+			"yes": "Yes",
+			"submit": "Submit to the catalog",
+			"submitting": "Submitting…",
+			"could-not-submit": "It could not be submitted. Try again.",
+			"request-pending": "Waiting for a decision",
+			"request-approved": "Taken into the catalog",
+			"request-partly-approved": "Partly taken in",
+			"request-rejected": "Turned down"
+		},
+		"propose": {
+			"suggest-a-change": "Suggest a change",
+			"lead": "Change what you think the catalog has wrong. Saving writes nothing — the next step asks what backs it, and then it goes to an admin.",
+			"what-backs-it": "What backs it?",
+			"every-field-needs-one": "Every changed field needs something behind it: a link, a catalogue number, or your own words if the record is in your hands.",
+			"reference-placeholder": "A link, an id, or a sentence",
+			"anything-else": "Anything else the admin should know (optional)",
+			"send": "Send it",
+			"sending": "Sending…",
+			"discard": "Discard",
+			"sent": "Sent. An admin decides field by field, and gives a reason for anything they turn down.",
+			"see-my-requests": "My requests",
+			"nothing-to-send": "You have nothing to send. Open an artist and suggest a change there.",
+			"back-to-the-catalog": "Back to the catalog",
+			"could-not-send": "It could not be sent. Try again."
+		},
+		"my-request": {
+			"title": "My requests",
+			"lead": "What you asked the catalog to take in, and what came back. A refusal carries its reason — that is what you can answer.",
+			"loading": "Loading your requests…",
+			"could-not-read": "Your requests could not be read.",
+			"nothing-yet": "You have not sent anything yet.",
+			"my-bands": "My bands",
+			"status-pending": "Waiting for a decision",
+			"status-approved": "Accepted",
+			"status-partly": "Partly accepted",
+			"status-rejected": "Turned down",
+			"new-entity": "new entity",
+			"change": "change",
+			"accepted": "Accepted",
+			"rejected": "Refused",
+			"from-the-admin": "Admin",
+			"new-release": "release request"
 		}
 	},
 	"ui": {
@@ -1037,8 +1089,8 @@
 			"loading-releases": "Loading releases…",
 			"in-your-collection": "In your collection",
 			"add": "Add",
-			"no-release-of-this": "No release of this album is in the catalog yet.",
-			"don-t-see-your": "Don't see your pressing? Ask an admin to add it.",
+			"no-release-of-this": "No release of this album is in the catalog yet. Here is how you can still add it:",
+			"don-t-see-your": "Don't see your pressing?",
 			"find-it-on-discogs": "Find it on Discogs",
 			"identify-from-a-photo": "Identify from a photo",
 			"describe-it": "Describe it",
@@ -1081,7 +1133,19 @@
 			"generic-open": "Add it by format only",
 			"generic-lead": "Pick the format you have it on. It goes into your collection as the album itself — without label, country or catalogue number.",
 			"generic-option": "Pressing not specified",
-			"generic-adding": "Adding…"
+			"generic-adding": "Adding…",
+			"routes-now": "Goes into your collection now",
+			"routes-request": "Goes to an admin to add",
+			"generic-route-hint": "You only pick the format you have it on. It goes in without label, country or catalogue number.",
+			"discogs-route-hint": "Pick your pressing from the Discogs list.",
+			"photo-route-hint": "Photograph the back cover or the label, and we look up which pressing it is.",
+			"describe-route-hint": "Paste its Discogs link, or describe it in a few words.",
+			"add-to-my-collection": "Add to my collection",
+			"adding": "Adding…",
+			"send-request": "Send request",
+			"sending": "Sending…",
+			"paste-not-an-image": "That was not an image. Copy the picture itself — in a browser, right-click it and choose “Copy image”. A file copied from Finder cannot be pasted, but you can drop it here.",
+			"clipboard-empty": "The clipboard is empty."
 		},
 		"discographyTimeline": {
 			"releases-over-time": "Releases over time",
@@ -2206,6 +2270,43 @@
 			"history": "Past questions",
 			"history-hint": "What the game has been asking. The answers are not in the list — those stay on the server. The composing looks a fortnight back: it will not ask about the same album again until then, about the same kind of question for a week, or about the same artist for four days.",
 			"history-empty": "Nothing has been asked yet."
+		},
+		"requestAdmin": {
+			"requests": "Requests",
+			"what-collectors-ask": "What collectors ask the catalog to take in. You decide field by field — a refusal needs a reason, and the collector reads it.",
+			"filter-by-status": "Filter by status",
+			"loading-requests": "Loading requests…",
+			"no-requests-here": "No requests here.",
+			"error-not-found": "The request, or the catalog document it is about, is gone.",
+			"error-moved-on": "The catalog has changed since, or the request was already decided. Reload the page.",
+			"error-invalid": "The decision is incomplete: every field needs a verdict, and every refusal a reason.",
+			"error-not-allowed": "Only an admin may decide requests.",
+			"error-unknown": "Something went wrong. Try again later."
+		},
+		"requestRow": {
+			"new-entity": "new entity",
+			"change": "change",
+			"collector": "Collector",
+			"admin": "Admin",
+			"field": "Field",
+			"now": "Now",
+			"asked": "Asked for",
+			"reference": "Reference",
+			"decision": "Decision",
+			"no-reference": "no reference",
+			"accept": "Accept",
+			"reject": "Refuse",
+			"accepted": "Accepted",
+			"rejected": "Refused",
+			"why-not": "Why not? (required)",
+			"admin-note": "A word to the collector",
+			"save-decision": "Save the decision",
+			"saving": "Saving…",
+			"decide-every-field": "Every field needs a verdict, and every refusal a reason.",
+			"taken-in": "Taken in as:"
+		},
+		"proposeLink": {
+			"suggest-a-change": "Suggest a change"
 		}
 	},
 	"admin": {
@@ -2226,7 +2327,8 @@
 			"documents": "Documents",
 			"badgeGeneration": "Badge generation",
 			"language": "Language",
-			"dailyQuestion": "Daily question"
+			"dailyQuestion": "Daily question",
+			"requests": "Requests"
 		},
 		"field": {
 			"albums": "Albums",
@@ -2269,7 +2371,8 @@
 			"drafts": "Drafts",
 			"pending": "Pending",
 			"approved": "Approved",
-			"rejected": "Rejected"
+			"rejected": "Rejected",
+			"partially-approved": "Partly"
 		},
 		"summary": {
 			"not": "not ",
@@ -2290,6 +2393,61 @@
 			"hint": "A visitor whose browser asks for a language the app does not speak sees this one.",
 			"unset": "Nothing is set: the app follows each browser, and falls back to English.",
 			"saved": "Saved."
+		},
+		"requestField": {
+			"name": "Name",
+			"artistType": "Type",
+			"country": "Country",
+			"description": "Description",
+			"genre": "Genre",
+			"styles": "Styles",
+			"sites": "Sites",
+			"imageUrl": "Image URL",
+			"musicBrainzId": "MusicBrainz id",
+			"formedIn": "Formed in",
+			"discogs": "Discogs",
+			"members": "Members",
+			"mainImage": "Main image",
+			"headerImage": "Header image",
+			"year": "Year",
+			"format": "Format",
+			"songs": "Songs",
+			"coverImageUrl": "Cover URL",
+			"spotifyAlbumId": "Spotify album",
+			"youtubePlaylistId": "YouTube playlist",
+			"youtubeVideoIds": "YouTube videos",
+			"catno": "Catalogue number",
+			"media": "Medium",
+			"formatDescription": "Format",
+			"date": "Date",
+			"discogsReleaseId": "Discogs release",
+			"discogsId": "Discogs id",
+			"realName": "Real name",
+			"aliases": "Aliases",
+			"nameVariations": "Name variations",
+			"albumUid": "Album",
+			"releaseUid": "Release",
+			"artistUid": "Artist",
+			"musicianUid": "Musician",
+			"musicianName": "Musician name",
+			"artistName": "Artist name",
+			"index": "Track number",
+			"position": "Position",
+			"duration": "Length",
+			"durationSec": "Length (s)",
+			"heading": "Section",
+			"spotifyTrackId": "Spotify track",
+			"youtubeVideoId": "YouTube video",
+			"writers": "Writers",
+			"role": "Role",
+			"roleDetail": "Role detail",
+			"creditedAs": "Credited as",
+			"tracks": "Tracks",
+			"kind": "Kind",
+			"instruments": "Instruments",
+			"from": "From",
+			"to": "To",
+			"active": "Active"
 		}
 	},
 	"fact": {

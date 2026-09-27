@@ -1,0 +1,95 @@
+<div class="page">
+	<mc-page-breadcrumb [trail]="store.trail()" />
+
+	<header class="head">
+		<h1>{{ 'page.my-request.title' | transloco }}</h1>
+		<p class="lead">{{ 'page.my-request.lead' | transloco }}</p>
+	</header>
+
+	@if (store.failed()) {
+		<p class="error">{{ 'page.my-request.could-not-read' | transloco }}</p>
+	}
+
+	@if (store.loading()) {
+		<p class="status">{{ 'page.my-request.loading' | transloco }}</p>
+	} @else if (store.isEmpty()) {
+		<section class="empty">
+			<p>{{ 'page.my-request.nothing-yet' | transloco }}</p>
+			<a class="secondary" routerLink="/my-bands">
+				{{ 'page.my-request.my-bands' | transloco }}
+			</a>
+		</section>
+	} @else {
+		<ul class="requests">
+			@for (row of store.rows(); track row.id) {
+				<li class="request">
+					<header class="request-head">
+						<div>
+							<h3>
+								{{ row.subject }}
+								<span class="kind">{{
+									row.operationLabelKey | transloco
+								}}</span>
+							</h3>
+							<p class="meta">
+								{{ row.entityType }} · {{ row.askedOn }}
+								@if (row.answeredOn) {
+									· {{ row.answeredOn }}
+								}
+							</p>
+						</div>
+						<span class="status" [attr.data-status]="row.status">{{
+							row.statusLabelKey | transloco
+						}}</span>
+					</header>
+
+					@if (row.summary) {
+						<p class="summary">{{ row.summary }}</p>
+					}
+
+					<ul class="fields">
+						@for (field of row.fields; track field.field) {
+							<li
+								class="field"
+								[attr.data-verdict]="field.verdict"
+							>
+								<span class="label">{{
+									field.labelKey | transloco
+								}}</span>
+								<span class="change">
+									<span class="was">{{ field.before }}</span>
+									<span class="arrow" aria-hidden="true"
+										>→</span
+									>
+									<span>{{ field.after }}</span>
+								</span>
+								@if (field.verdict) {
+									<span class="verdict">{{
+										(field.verdict === 'accepted'
+											? 'page.my-request.accepted'
+											: 'page.my-request.rejected'
+										) | transloco
+									}}</span>
+								}
+								@if (field.reason) {
+									<span class="reason">{{
+										field.reason
+									}}</span>
+								}
+							</li>
+						}
+					</ul>
+
+					@if (row.adminNote) {
+						<p class="note">
+							<span>{{
+								'page.my-request.from-the-admin' | transloco
+							}}</span>
+							{{ row.adminNote }}
+						</p>
+					}
+				</li>
+			}
+		</ul>
+	}
+</div>

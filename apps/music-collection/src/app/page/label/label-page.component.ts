@@ -12,6 +12,7 @@ import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
 	AdminEditLinkComponent,
+	ProposeLinkComponent,
 	FormatBadgeComponent,
 } from '../../shared/music-ui';
 import { EntityFact, EntityFactsComponent } from '../../shared/entity-view';
@@ -41,6 +42,7 @@ const PRESSING_PREVIEW = 48;
 		EntityFactsComponent,
 		FormatBadgeComponent,
 		AdminEditLinkComponent,
+		ProposeLinkComponent,
 	],
 })
 export class LabelPageComponent {

@@ -34,6 +34,13 @@ export type AnalyticsEventName =
 	 */
 	| 'owned_artist_added'
 	/**
+	 * A collector submitted what they entered for themselves to the catalog.
+	 * Carries which kind of entity and whether it is a new one or a change —
+	 * never the entity: how often collectors ask, and what for, is the
+	 * question, not what they own.
+	 */
+	| 'entity_request_submitted'
+	/**
 	 * Photos of a copy were added, replaced or removed. Carries how many the
 	 * copy is left with — never the pictures or what they show.
 	 */

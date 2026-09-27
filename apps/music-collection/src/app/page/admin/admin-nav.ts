@@ -9,7 +9,7 @@ export interface AdminNavItem {
 	/** Új elem felvételének szótárkulcsa (a lista „Add” gombjával azonos cél). */
 	createLabelKey?: string;
 	/** Teendők száma a menüpont mellett (pl. függő kérések). */
-	badge?: 'pendingReleaseRequests';
+	badge?: 'pendingReleaseRequests' | 'pendingRequests';
 }
 
 export interface AdminNavGroup {
@@ -83,6 +83,12 @@ export const ADMIN_NAV: AdminNavGroup[] = [
 				route: 'collection-item',
 				icon: 'pi-th-large',
 				countType: 'Collection Item',
+			},
+			{
+				labelKey: 'admin.nav.requests',
+				route: 'request',
+				icon: 'pi-file-edit',
+				badge: 'pendingRequests',
 			},
 			{
 				labelKey: 'admin.nav.releaseRequests',

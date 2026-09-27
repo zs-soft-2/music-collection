@@ -17,9 +17,9 @@ import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
 	AdminEditLinkComponent,
+	ProposeLinkComponent,
 	ArtistTileComponent,
 	DiscographyCardComponent,
-	FORMAT_LABELS,
 	ReleaseCardComponent,
 	whenDeferredRendered,
 } from '../../shared/music-ui';
@@ -55,6 +55,7 @@ const SECTION_REACHED_OFFSET = 24;
 		DiscographyTimelineComponent,
 		ArtistLineupComponent,
 		AdminEditLinkComponent,
+		ProposeLinkComponent,
 	],
 })
 export class ArtistPageComponent {
@@ -65,7 +66,6 @@ export class ArtistPageComponent {
 	private readonly zone = inject(NgZone);
 	private readonly destroyRef = inject(DestroyRef);
 
-	protected readonly formatLabels = FORMAT_LABELS;
 	protected readonly bioExpanded = signal(false);
 
 	/** Renders every deferred section at once (before an in-page jump). */

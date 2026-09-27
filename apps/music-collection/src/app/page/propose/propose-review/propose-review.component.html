@@ -1,0 +1,96 @@
+<div class="page">
+	<mc-page-breadcrumb [trail]="trail()" />
+
+	<h1>{{ 'page.propose.what-backs-it' | transloco }}</h1>
+
+	@if (store.sent()) {
+		<section class="sent">
+			<p>{{ 'page.propose.sent' | transloco }}</p>
+			<a class="primary" routerLink="/my-requests">
+				{{ 'page.propose.see-my-requests' | transloco }}
+			</a>
+		</section>
+	} @else if (store.isEmpty()) {
+		<section class="empty">
+			<p>{{ 'page.propose.nothing-to-send' | transloco }}</p>
+			<a class="secondary" routerLink="/home">
+				{{ 'page.propose.back-to-the-catalog' | transloco }}
+			</a>
+		</section>
+	} @else {
+		<p class="lead">
+			{{ 'page.propose.every-field-needs-one' | transloco }}
+		</p>
+
+		<ul class="fields">
+			@for (row of store.rows(); track row.field) {
+				<li class="field">
+					<h3>{{ row.labelKey | transloco }}</h3>
+					<p class="change">
+						<span class="was">{{ row.before }}</span>
+						<span class="arrow" aria-hidden="true">→</span>
+						<span class="asked">{{ row.after }}</span>
+					</p>
+					<input
+						type="text"
+						[value]="store.references()[row.field] ?? ''"
+						[disabled]="store.submitting()"
+						[attr.placeholder]="
+							'page.propose.reference-placeholder' | transloco
+						"
+						(input)="
+							store.setReference({
+								field: row.field,
+								value: value($event),
+							})
+						"
+					/>
+				</li>
+			}
+		</ul>
+
+		<label class="note">
+			<span>{{ 'page.propose.anything-else' | transloco }}</span>
+			<input
+				type="text"
+				[value]="store.note()"
+				[disabled]="store.submitting()"
+				(input)="store.setNote(value($event))"
+			/>
+		</label>
+
+		@if (store.failed()) {
+			<p class="error">{{ store.failed()! | transloco }}</p>
+		}
+
+		<div class="what-now">
+			<button
+				type="button"
+				class="primary"
+				[disabled]="store.submitting() || !store.canSubmit()"
+				(click)="store.submit()"
+			>
+				{{
+					(store.submitting()
+						? 'page.propose.sending'
+						: 'page.propose.send'
+					) | transloco
+				}}
+			</button>
+			<button
+				type="button"
+				class="secondary"
+				[disabled]="store.submitting()"
+				(click)="store.discard()"
+			>
+				{{ 'page.propose.discard' | transloco }}
+			</button>
+		</div>
+
+		@if (!store.canSubmit()) {
+			<p class="hint">
+				{{ 'page.propose.every-field-needs-one' | transloco }}
+			</p>
+		}
+	}
+</div>

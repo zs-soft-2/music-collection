@@ -16,6 +16,10 @@
 		<p class="error">
 			{{ 'page.owned-artist.could-not-save' | transloco }}
 		</p>
+	} @else if (store.submitFailed()) {
+		<p class="error">
+			{{ 'page.owned-artist.could-not-submit' | transloco }}
+		</p>
 	} @else if (store.failed()) {
 		<p class="error">
 			{{ 'page.owned-artist.could-not-save' | transloco }}
@@ -73,6 +77,31 @@
 						</div>
 					} @else {
 						<div class="what-now">
+							@if (statusLabelOf(artist); as statusLabel) {
+								<span
+									class="request-status"
+									[class.turned-down]="
+										statusOf(artist) === 'rejected'
+									"
+								>
+									{{ statusLabel | transloco }}
+								</span>
+							}
+							@if (canSubmit(artist)) {
+								<button
+									type="button"
+									class="secondary"
+									[disabled]="isSubmitting(artist)"
+									(click)="store.submit(artist)"
+								>
+									{{
+										(isSubmitting(artist)
+											? 'page.owned-artist.submitting'
+											: 'page.owned-artist.submit'
+										) | transloco
+									}}
+								</button>
+							}
 							<a
 								class="secondary"
 								[routerLink]="['../edit', artist.uid]"

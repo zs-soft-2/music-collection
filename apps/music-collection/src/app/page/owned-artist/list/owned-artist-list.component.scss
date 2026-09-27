@@ -148,3 +148,20 @@ a.secondary {
 	font-size: 0.875rem;
 	color: var(--mc-text-muted);
 }
+
+/* ── Where a band stands with the catalog ─────────────────────────────── */
+
+.request-status {
+	font-size: 0.875rem;
+	color: var(--mc-text-muted);
+	white-space: nowrap;
+
+	&.turned-down {
+		color: var(--mc-status-bad, #b3261e);
+	}
+}
+
+button[disabled] {
+	opacity: 0.6;
+	cursor: default;
+}

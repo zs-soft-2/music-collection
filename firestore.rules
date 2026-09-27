@@ -511,6 +511,55 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // ── Kérés és válasz: amit a gyűjtő a katalógusba szánna ─────────────────
+    // A gyűjtő nem ír a katalógusba. Amit felvesz, a saját fiókjában él
+    // (`user/{uid}/owned-…`), és egy kérésen keresztül kerülhet át: a kérés
+    // viszi a beküldött állapotot (`before`/`after`), a mezőnkénti eltéréseket
+    // és a hozzájuk tartozó referenciákat.
+    //
+    // A beküldés joga a tükrözött `owned-` erőforrásé: aki magának felvehet
+    // egy bandát (`createOwnedArtistEntity`), be is küldheti. A katalógusba
+    // ettől még egyedül a `decideRequest` ír.
+    match /entity-request/{requestId} {
+      function ownedResource() {
+        return 'owned-' + request.resource.data.target.featureKey;
+      }
+
+      allow read: if isAdmin()
+                  || (isAuthed() && resource.data.userId == request.auth.uid);
+      // A `changes` felső korlátja a MAX_ENTITY_REQUEST_CHANGES
+      // (libs/common/api) — a kettőt együtt kell mozgatni.
+      allow create: if isAuthed()
+                    && request.resource.data.keys().hasOnly([
+                         'uid', 'userId', 'operation', 'target', 'before',
+                         'after', 'changes', 'status', 'baseUpdatedAt',
+                         'note', 'createdAt', 'updatedAt'
+                       ])
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.uid == requestId
+                    && request.resource.data.status == 'pending'
+                    && request.resource.data.operation in ['create', 'update']
+                    && request.resource.data.target is map
+                    && request.resource.data.target.featureKey is string
+                    && isOwnedFeature(ownedResource())
+                    && hasPerm('create' + syncResources()[ownedResource()])
+                    && request.resource.data.changes is list
+                    && request.resource.data.changes.size() > 0
+                    && request.resource.data.changes.size() <= 40;
+      // A beküldött kérés nem változik többé: az elbírálás a `decideRequest`
+      // dolga, és az Admin SDK-val ír.
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+
+    // A kérésre adott válasz: mezőnkénti verdikt, az elutasításokhoz
+    // indoklással. Azé, akinek szól, és az adminé.
+    match /entity-response/{responseId} {
+      allow read: if isAdmin()
+                  || (isAuthed() && resource.data.userId == request.auth.uid);
+      allow write: if false; // decideRequest callable
+    }
+
     // ── Globális katalógus: publikus olvasás, permission-alapú írás ─────────
     match /artist/{artistId} {
       allow read: if true;

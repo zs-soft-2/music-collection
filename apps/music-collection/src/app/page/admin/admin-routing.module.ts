@@ -123,6 +123,21 @@ const routes: Routes = [
 				canLoad: [NgxPermissionsGuard],
 			},
 			{
+				path: 'request',
+				data: {
+					breadcrumb: 'request',
+					permissions: {
+						only: [RoleNames.ADMIN],
+						redirectTo: '/error',
+					},
+				},
+				loadComponent: () =>
+					import('./request/request-admin.component').then(
+						(module) => module.RequestAdminComponent
+					),
+				canActivate: [NgxPermissionsGuard],
+			},
+			{
 				path: 'release-request',
 				data: {
 					breadcrumb: 'release-request',
@@ -192,9 +207,9 @@ const routes: Routes = [
 					},
 				},
 				loadComponent: () =>
-					import(
-						'./daily-question/daily-question-settings.component'
-					).then((module) => module.DailyQuestionSettingsComponent),
+					import('./daily-question/daily-question-settings.component').then(
+						(module) => module.DailyQuestionSettingsComponent
+					),
 				canActivate: [NgxPermissionsGuard],
 			},
 			{

@@ -70,6 +70,8 @@ import {
 	createVisionClient,
 } from './photo-signals';
 import { approveReleaseRequest as approve } from './release-request-approval';
+import { decideRequest as decide } from './request-decision';
+import { RequestDecisionError } from './request-schema';
 import {
 	ensureGenericRelease as ensureGeneric,
 	isGenericReleaseMedia,
@@ -940,6 +942,48 @@ export const ensureGenericRelease = onCall(async (request) => {
 	}
 
 	return result;
+});
+
+/**
+ * Kérés elbírálása (ADMIN). A gyűjtő kérésének mezőiről az admin egyenként
+ * dönt; az elfogadottak a katalógusba kerülnek, és megszületik a válasz
+ * (`entity-response`), amiben minden elutasítás mellett ott az indoklás.
+ * `{ requestId, verdicts: [{ field, kind, reason? }], adminNote? }`
+ */
+export const decideRequest = onCall(async (request) => {
+	const uid = await requireCaller(request, 'ADMIN');
+	const requestId = request.data?.requestId;
+
+	if (typeof requestId !== 'string' || !requestId) {
+		throw new HttpsError('invalid-argument', 'Hiányzó requestId.');
+	}
+	if (!Array.isArray(request.data?.verdicts)) {
+		throw new HttpsError('invalid-argument', 'Hiányzó döntések.');
+	}
+
+	try {
+		return await decide(
+			database(),
+			{
+				requestId,
+				verdicts: request.data.verdicts,
+				adminNote: request.data?.adminNote ?? null,
+			},
+			{ adminUid: uid }
+		);
+	} catch (error) {
+		if (error instanceof HttpsError) throw error;
+		// A döntés logikája nem ismeri a callable hibáit (a
+		// `firebase-functions` importja tesztelhetetlenné tenné); a sajátját
+		// itt fordítjuk azzá, amit a kliens olvas.
+		if (error instanceof RequestDecisionError) {
+			throw new HttpsError(error.code, error.message);
+		}
+
+		logger.warn(`decideRequest ${requestId}`, error);
+
+		throw new HttpsError('internal', 'Az elbírálás nem sikerült.');
+	}
 });
 
 /**

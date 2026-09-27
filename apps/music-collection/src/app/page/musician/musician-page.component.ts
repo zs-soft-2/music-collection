@@ -14,6 +14,7 @@ import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
 	AdminEditLinkComponent,
+	ProposeLinkComponent,
 	CREDIT_CATEGORY_LABELS,
 	DiscographyCardComponent,
 	whenDeferredRendered,
@@ -51,6 +52,7 @@ const TYPE_LABELS: Record<string, string> = {
 		RouterLink,
 		DiscographyCardComponent,
 		AdminEditLinkComponent,
+		ProposeLinkComponent,
 	],
 })
 export class MusicianPageComponent {

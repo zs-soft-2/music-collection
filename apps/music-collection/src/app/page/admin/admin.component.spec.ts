@@ -5,6 +5,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
 import { ReleaseRequestEffect } from '../../data/release-request';
+import { RequestEffect } from '../../data/request';
 import { AdminComponent } from './admin.component';
 
 describe('AdminComponent', () => {
@@ -21,6 +22,10 @@ describe('AdminComponent', () => {
 				provideRouter([]),
 				{
 					provide: ReleaseRequestEffect,
+					useValue: { countPending$: () => of(0) },
+				},
+				{
+					provide: RequestEffect,
 					useValue: { countPending$: () => of(0) },
 				},
 			],

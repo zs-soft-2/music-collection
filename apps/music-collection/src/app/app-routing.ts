@@ -256,6 +256,28 @@ export const routes: Routes = [
 		canActivate: [authenticatedGuard],
 	},
 	{
+		path: 'propose',
+		loadChildren: () =>
+			import('./page/propose/propose.routes').then(
+				(module) => module.proposeRoutes
+			),
+		data: {
+			breadcrumb: 'propose',
+		},
+		canActivate: [authenticatedGuard],
+	},
+	{
+		path: 'my-requests',
+		loadComponent: () =>
+			import('./page/my-request/my-request-page.component').then(
+				(module) => module.MyRequestPageComponent
+			),
+		data: {
+			breadcrumb: 'my-requests',
+		},
+		canActivate: [authenticatedGuard],
+	},
+	{
 		path: 'my-bands',
 		loadChildren: () =>
 			import('./page/owned-artist/owned-artist.routes').then(

@@ -10,6 +10,7 @@ import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
 	AdminEditLinkComponent,
+	ProposeLinkComponent,
 	FormatBadgeComponent,
 } from '../../shared/music-ui';
 import { EntityFact, EntityFactsComponent } from '../../shared/entity-view';
@@ -32,6 +33,7 @@ import { ReleasePageStore } from './release-page.store';
 		EntityFactsComponent,
 		FormatBadgeComponent,
 		AdminEditLinkComponent,
+		ProposeLinkComponent,
 	],
 })
 export class ReleasePageComponent {

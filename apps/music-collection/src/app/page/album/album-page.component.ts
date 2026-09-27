@@ -15,6 +15,7 @@ import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
 	AdminEditLinkComponent,
+	ProposeLinkComponent,
 	CopyPlacementComponent,
 	DiscographyCardComponent,
 	FormatBadgeComponent,
@@ -53,6 +54,7 @@ type AlbumSection =
 		AlbumCreditsComponent,
 		AlbumTracklistComponent,
 		AdminEditLinkComponent,
+		ProposeLinkComponent,
 		PlayerPanelComponent,
 		ReleasePickerComponent,
 		CopyRemovalComponent,

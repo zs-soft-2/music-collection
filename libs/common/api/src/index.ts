@@ -10,5 +10,6 @@ export * from './lib/key-value';
 export * from './lib/meta';
 export * from './lib/music';
 export * from './lib/owned';
+export * from './lib/request';
 export * from './lib/search';
 export * from './lib/state';

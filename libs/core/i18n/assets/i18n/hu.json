@@ -48,7 +48,12 @@
 		"all": "Mind",
 		"unknown": "Ismeretlen",
 		"loadingLabel": "Betöltés…",
-		"saving": "Mentés…"
+		"saving": "Mentés…",
+		"match": {
+			"exact": "Biztos találat",
+			"likely": "Valószínű",
+			"possible": "Lehetséges"
+		}
 	},
 	"catalog": {
 		"format": {
@@ -764,6 +769,12 @@
 			"this-is-the-only": "A katalógus csak ezt az egy nyomást ismeri az albumból."
 		},
 		"scan": {
+			"state": {
+				"in-collection": "Már a gyűjteményedben",
+				"in-catalog": "A katalógusban",
+				"new-release": "Új nyomás",
+				"new-album": "Új album"
+			},
 			"scan-a-record": "Lemez beolvasása",
 			"photograph-the-sleeve-the": "Fényképezd le a borítót — a hátlap a vonalkóddal vagy a katalógusszámmal a legjobb.",
 			"your-account-may-not": "A fiókod még nem vehet fel lemezt gyűjteménybe. Kérd a gyűjtő szerepet, és a beolvasás megnyílik.",
@@ -879,7 +890,48 @@
 			"edit": "Szerkesztés",
 			"remove": "Törlés",
 			"remove-it": "Biztosan törlöd?",
-			"yes": "Igen"
+			"yes": "Igen",
+			"submit": "Beküldés a katalógusba",
+			"submitting": "Beküldés…",
+			"could-not-submit": "A beküldés nem sikerült. Próbáld újra.",
+			"request-pending": "Elbírálásra vár",
+			"request-approved": "Bekerült a katalógusba",
+			"request-partly-approved": "Részben bekerült",
+			"request-rejected": "Elutasítva"
+		},
+		"propose": {
+			"suggest-a-change": "Módosítási javaslat",
+			"lead": "Írd át, aminek szerinted másképp kellene állnia a katalógusban. A mentés nem ír semmit — a következő lépésben megkérdezzük, mi támasztja alá, és utána megy be egy adminhoz.",
+			"what-backs-it": "Mi támasztja alá?",
+			"every-field-needs-one": "Minden megváltoztatott mezőhöz kell egy forrás: link, katalógusszám, vagy a saját szavaiddal, ha a lemez a kezedben van.",
+			"reference-placeholder": "Link, azonosító vagy egy mondat",
+			"anything-else": "Bármi más, amit az adminnak tudnia kell (nem kötelező)",
+			"send": "Beküldés",
+			"sending": "Beküldés…",
+			"discard": "Elvetem",
+			"sent": "Beküldtük. Egy admin mezőnként dönt róla, és minden elutasítást megindokol.",
+			"see-my-requests": "A kéréseim",
+			"nothing-to-send": "Nincs beküldhető javaslatod. Nyiss meg egy előadót, és ott javasold a módosítást.",
+			"back-to-the-catalog": "Vissza a katalógushoz",
+			"could-not-send": "A beküldés nem sikerült. Próbáld újra."
+		},
+		"my-request": {
+			"title": "A kéréseim",
+			"lead": "Amit a katalógusba szántál, és ami visszajött rá. Az elutasításnál ott az indok — arra jöhetsz vissza jobb forrással.",
+			"loading": "Kérések betöltése…",
+			"could-not-read": "A kérések betöltése nem sikerült.",
+			"nothing-yet": "Még nem küldtél be semmit.",
+			"my-bands": "A saját zenekaraim",
+			"status-pending": "Elbírálásra vár",
+			"status-approved": "Elfogadva",
+			"status-partly": "Részben elfogadva",
+			"status-rejected": "Elutasítva",
+			"new-entity": "új felvétel",
+			"change": "módosítás",
+			"accepted": "Elfogadva",
+			"rejected": "Elutasítva",
+			"from-the-admin": "Admin",
+			"new-release": "kiadás-kérés"
 		}
 	},
 	"ui": {
@@ -1037,8 +1089,8 @@
 			"loading-releases": "Kiadások betöltése…",
 			"in-your-collection": "A gyűjteményedben",
 			"add": "Hozzáadás",
-			"no-release-of-this": "Ennek az albumnak még egy kiadása sincs a katalógusban.",
-			"don-t-see-your": "Nem látod a nyomásodat? Kérd meg egy adminot, hogy vegye fel.",
+			"no-release-of-this": "Ennek az albumnak még egy kiadása sincs a katalógusban. Így veheted fel a gyűjteményedbe:",
+			"don-t-see-your": "Nem látod a nyomásodat?",
 			"find-it-on-discogs": "Megkeresem a Discogson",
 			"identify-from-a-photo": "Felismerés fényképről",
 			"describe-it": "Leírom",
@@ -1081,7 +1133,19 @@
 			"generic-open": "Felvétel csak formátummal",
 			"generic-lead": "Válaszd ki, milyen formátumon van meg. Magaként az albumként kerül a gyűjteményedbe — kiadó, ország és katalógusszám nélkül.",
 			"generic-option": "Kiadás nincs megadva",
-			"generic-adding": "Hozzáadás…"
+			"generic-adding": "Hozzáadás…",
+			"routes-now": "Rögtön bekerül a gyűjteményedbe",
+			"routes-request": "Kérés az adminhoz — ő veszi fel",
+			"generic-route-hint": "Csak azt választod ki, milyen formátumon van meg. Kiadó, ország és katalógusszám nélkül kerül be.",
+			"discogs-route-hint": "Kiválasztod a nyomásodat a Discogs listájából.",
+			"photo-route-hint": "Lefényképezed a lemez hátulját vagy a címkéjét, és megkeressük, melyik nyomás.",
+			"describe-route-hint": "Beírod a Discogs-linkjét, vagy leírod pár szóval.",
+			"add-to-my-collection": "Hozzáadás a gyűjteményemhez",
+			"adding": "Hozzáadás…",
+			"send-request": "Kérés küldése",
+			"sending": "Küldés…",
+			"paste-not-an-image": "Ez nem kép volt. Magát a képet másold — böngészőben jobb gomb, „Kép másolása”. A Finderből másolt fájlt nem lehet beilleszteni, de ide ejtheted.",
+			"clipboard-empty": "A vágólap üres."
 		},
 		"discographyTimeline": {
 			"releases-over-time": "Kiadások az időben",
@@ -2206,6 +2270,43 @@
 			"history": "Korábbi kérdések",
 			"history-hint": "Amit a játék eddig kérdezett. A megfejtés nincs a listában — az a szerveren marad. Az összeállítás két hétre néz vissza: a lemezt addig nem kérdezi újra, a kérdésfajtát egy hétig, az előadót négy napig.",
 			"history-empty": "Még nincs korábbi kérdés."
+		},
+		"requestAdmin": {
+			"requests": "Kérések",
+			"what-collectors-ask": "Amit a gyűjtők a katalógusba szánnak. Mezőnként dönthetsz róla — az elutasítást indokolni kell, a gyűjtő ezt olvassa.",
+			"filter-by-status": "Szűrés állapot szerint",
+			"loading-requests": "Kérések betöltése…",
+			"no-requests-here": "Itt nincs kérés.",
+			"error-not-found": "A kérés vagy a katalógus dokumentuma már nincs meg.",
+			"error-moved-on": "A katalógus időközben megváltozott, vagy a kérést már elbírálták. Töltsd újra az oldalt.",
+			"error-invalid": "A döntés hiányos: minden mezőről dönteni kell, és minden elutasítást indokolni.",
+			"error-not-allowed": "Kérést csak admin bírálhat el.",
+			"error-unknown": "Valami félresikerült. Próbáld újra később."
+		},
+		"requestRow": {
+			"new-entity": "új felvétel",
+			"change": "módosítás",
+			"collector": "Gyűjtő",
+			"admin": "Admin",
+			"field": "Mező",
+			"now": "Most",
+			"asked": "Kérve",
+			"reference": "Forrás",
+			"decision": "Döntés",
+			"no-reference": "nincs forrás",
+			"accept": "Elfogad",
+			"reject": "Elutasít",
+			"accepted": "Elfogadva",
+			"rejected": "Elutasítva",
+			"why-not": "Miért nem? (kötelező)",
+			"admin-note": "Megjegyzés a gyűjtőnek",
+			"save-decision": "Döntés mentése",
+			"saving": "Mentés…",
+			"decide-every-field": "Minden mezőről dönteni kell, és minden elutasításhoz indoklás kell.",
+			"taken-in": "Bekerült ide:"
+		},
+		"proposeLink": {
+			"suggest-a-change": "Módosítást javaslok"
 		}
 	},
 	"admin": {
@@ -2226,7 +2327,8 @@
 			"documents": "Dokumentumok",
 			"badgeGeneration": "Jelvénygenerálás",
 			"language": "Nyelv",
-			"dailyQuestion": "Napi kérdés"
+			"dailyQuestion": "Napi kérdés",
+			"requests": "Kérések"
 		},
 		"field": {
 			"albums": "Albumok",
@@ -2269,7 +2371,8 @@
 			"drafts": "Piszkozatok",
 			"pending": "Függőben",
 			"approved": "Jóváhagyva",
-			"rejected": "Elutasítva"
+			"rejected": "Elutasítva",
+			"partially-approved": "Részben"
 		},
 		"summary": {
 			"not": "nem ",
@@ -2290,6 +2393,61 @@
 			"hint": "Az a látogató látja ezt, akinek a böngészője olyan nyelvet kér, amit az app nem beszél.",
 			"unset": "Nincs beállítva: az app minden böngészőt követ, és angolra esik vissza.",
 			"saved": "Mentve."
+		},
+		"requestField": {
+			"name": "Név",
+			"artistType": "Típus",
+			"country": "Ország",
+			"description": "Leírás",
+			"genre": "Műfaj",
+			"styles": "Stílusok",
+			"sites": "Honlapok",
+			"imageUrl": "Kép URL",
+			"musicBrainzId": "MusicBrainz-azonosító",
+			"formedIn": "Alakulás",
+			"discogs": "Discogs",
+			"members": "Tagok",
+			"mainImage": "Főkép",
+			"headerImage": "Fejléckép",
+			"year": "Év",
+			"format": "Formátum",
+			"songs": "Dalok",
+			"coverImageUrl": "Borító URL",
+			"spotifyAlbumId": "Spotify album",
+			"youtubePlaylistId": "YouTube lejátszási lista",
+			"youtubeVideoIds": "YouTube videók",
+			"catno": "Katalógusszám",
+			"media": "Hordozó",
+			"formatDescription": "Formátum",
+			"date": "Dátum",
+			"discogsReleaseId": "Discogs kiadás",
+			"discogsId": "Discogs azonosító",
+			"realName": "Valódi név",
+			"aliases": "Álnevek",
+			"nameVariations": "Névváltozatok",
+			"albumUid": "Album",
+			"releaseUid": "Kiadás",
+			"artistUid": "Előadó",
+			"musicianUid": "Zenész",
+			"musicianName": "Zenész neve",
+			"artistName": "Előadó neve",
+			"index": "Sorszám",
+			"position": "Pozíció",
+			"duration": "Hossz",
+			"durationSec": "Hossz (mp)",
+			"heading": "Szakasz",
+			"spotifyTrackId": "Spotify szám",
+			"youtubeVideoId": "YouTube videó",
+			"writers": "Szerzők",
+			"role": "Szerep",
+			"roleDetail": "Szerep részlete",
+			"creditedAs": "Feltüntetve mint",
+			"tracks": "Számok",
+			"kind": "Fajta",
+			"instruments": "Hangszerek",
+			"from": "Ettől",
+			"to": "Eddig",
+			"active": "Aktív"
 		}
 	},
 	"fact": {

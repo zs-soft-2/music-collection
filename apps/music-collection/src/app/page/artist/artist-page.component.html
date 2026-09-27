@@ -18,6 +18,11 @@
 				[id]="artist.id"
 				[name]="artist.name"
 			/>
+			<mc-propose-link
+				class="mc-hero-admin"
+				entity="artist"
+				[id]="artist.id"
+			/>
 
 			<div class="profile">
 				@if (artist.imageUrl) {
@@ -114,7 +119,7 @@
 			</div>
 			@for (entry of store.stats().formats; track entry.format) {
 				<div class="stat">
-					<dt>{{ formatLabels[entry.format] }}</dt>
+					<dt>{{ entry.format | mcCatalog: 'media' }}</dt>
 					<dd>{{ entry.count }}</dd>
 				</div>
 			}
