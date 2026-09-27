@@ -916,8 +916,8 @@
 			"back-to-the-catalog": "Back to the catalog",
 			"could-not-send": "It could not be sent. Try again.",
 			"what-you-are-adding": "What you are adding",
-			"say-where-it-is-from": "Say how you know — a link, a catalogue number, or that the record is in your hands. It cannot be sent without it.",
-			"where-is-it-from": "How do you know? (required)"
+			"say-where-it-is-from": "Say how you know if you can — a link, a catalogue number, or that the record is in your hands. It can be sent either way.",
+			"where-is-it-from": "How do you know? (optional)"
 		},
 		"my-request": {
 			"title": "My requests",

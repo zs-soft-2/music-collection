@@ -916,8 +916,8 @@
 			"back-to-the-catalog": "Vissza a katalógushoz",
 			"could-not-send": "A beküldés nem sikerült. Próbáld újra.",
 			"what-you-are-adding": "Mit veszel fel?",
-			"say-where-it-is-from": "Írd meg, honnan tudod — link, katalógusszám, vagy hogy a kezedben van a lemez. Enélkül nem küldhető be.",
-			"where-is-it-from": "Honnan tudod? (kötelező)"
+			"say-where-it-is-from": "Ha tudod, írd meg, honnan — link, katalógusszám, vagy hogy a kezedben van a lemez. Enélkül is beküldhető.",
+			"where-is-it-from": "Honnan tudod? (nem kötelező)"
 		},
 		"my-request": {
 			"title": "A kéréseim",

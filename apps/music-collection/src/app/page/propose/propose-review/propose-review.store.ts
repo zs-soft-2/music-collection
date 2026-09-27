@@ -59,6 +59,10 @@ const initialState: ProposeArtistReviewState = {
  * decides one field at a time, and a single note at the bottom would leave
  * most of those decisions unsupported. So every changed field is asked about
  * separately, and nothing is sent until each has an answer.
+ *
+ * Adding something the catalog does not have is the other case: there is no
+ * held answer to argue against, so it goes in without grounds, and the note
+ * is only an offer.
  */
 export const ProposeReviewStore = signalStore(
 	withState(initialState),
@@ -97,15 +101,16 @@ export const ProposeReviewStore = signalStore(
 			/**
 			 * Enough to send. A change to something the catalog holds needs
 			 * its grounds field by field — that is what an admin decides on.
-			 * A new entity needs one reason for the whole of it: there is
-			 * nothing to argue against yet, only something to add.
+			 * A new entity needs nothing: there is no catalog answer to argue
+			 * against yet, only something the catalog does not have. The note
+			 * is there for whoever wants to help, and asked for either way.
 			 */
-			canSubmit: computed(() =>
-				isNew()
-					? !!store.note().trim()
-					: changes().every((change) =>
-							store.references()[change.field]?.trim()
-						)
+			canSubmit: computed(
+				() =>
+					isNew() ||
+					changes().every((change) =>
+						store.references()[change.field]?.trim()
+					)
 			),
 		};
 	}),

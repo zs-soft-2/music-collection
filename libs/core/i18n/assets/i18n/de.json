@@ -916,8 +916,8 @@
 			"back-to-the-catalog": "Zurück zum Katalog",
 			"could-not-send": "Senden fehlgeschlagen. Versuche es erneut.",
 			"what-you-are-adding": "Was du hinzufügst",
-			"say-where-it-is-from": "Sag, woher du es weißt — ein Link, eine Katalognummer, oder dass du die Platte in der Hand hast. Ohne das lässt es sich nicht senden.",
-			"where-is-it-from": "Woher weißt du es? (erforderlich)"
+			"say-where-it-is-from": "Sag, woher du es weißt, wenn du kannst — ein Link, eine Katalognummer, oder dass du die Platte in der Hand hast. Es lässt sich auch ohne senden.",
+			"where-is-it-from": "Woher weißt du es? (optional)"
 		},
 		"my-request": {
 			"title": "Meine Anfragen",

@@ -166,7 +166,7 @@ describe('ProposeReviewStore', () => {
 		expect(effect.submitUpdate$).toHaveBeenCalledTimes(1);
 	});
 
-	it('asks a new entity for one reason, not one per field', () => {
+	it('takes a new entity without asking what backs it', () => {
 		const { effect, store } = setUp({
 			...proposal,
 			operation: 'create',
@@ -178,11 +178,8 @@ describe('ProposeReviewStore', () => {
 		expect(store.isNew()).toBe(true);
 		// Every filled-in field is a change from nothing…
 		expect(store.rows().length).toBeGreaterThan(1);
-		// …but what it needs is one answer about the whole of it.
-		expect(store.canSubmit()).toBe(false);
-
-		store.setNote('  It is in my hands.  ');
-
+		// …and none of them is asked about: there is nothing held to argue
+		// against, so it goes in as it is.
 		expect(store.canSubmit()).toBe(true);
 
 		store.submit();
@@ -192,9 +189,26 @@ describe('ProposeReviewStore', () => {
 			expect.objectContaining({
 				featureKey: 'artist',
 				parentPath: 'artist/a1',
-				note: 'It is in my hands.',
+				note: null,
 				entity: expect.objectContaining({ name: 'Pozvakowski' }),
 			})
+		);
+	});
+
+	it('carries the note of a new entity when there is one', () => {
+		const { effect, store } = setUp({
+			...proposal,
+			operation: 'create',
+			path: null,
+			parentPath: 'artist/a1',
+			before: null,
+		});
+
+		store.setNote('  It is in my hands.  ');
+		store.submit();
+
+		expect(effect.submitCreate$).toHaveBeenCalledWith(
+			expect.objectContaining({ note: 'It is in my hands.' })
 		);
 	});
 

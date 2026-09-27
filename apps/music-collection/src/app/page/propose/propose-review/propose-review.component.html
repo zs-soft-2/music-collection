@@ -110,12 +110,7 @@
 
 		@if (!store.canSubmit()) {
 			<p class="hint">
-				{{
-					(store.isNew()
-						? 'page.propose.say-where-it-is-from'
-						: 'page.propose.every-field-needs-one'
-					) | transloco
-				}}
+				{{ 'page.propose.every-field-needs-one' | transloco }}
 			</p>
 		}
 	}
