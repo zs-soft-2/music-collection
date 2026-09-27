@@ -16,7 +16,7 @@ import {
 	doc,
 } from '@angular/fire/firestore';
 
-import { Entity } from '../../common';
+import { Entity, GLOBAL_OWNER_ID } from '../../common';
 import { FirebaseDataService } from './firebase-data.service';
 import { FirestoreSyncService } from './firestore-sync.service';
 
@@ -99,5 +99,13 @@ describe('FirebaseDataService', () => {
 				service().update$({ uid: 'u1', name: 'Ted Lundström' } as Row)
 			)
 		).resolves.toMatchObject({ uid: 'u1' });
+	});
+
+	it('writes the catalog as the owner, so nobody reads it as somebody own', async () => {
+		const added = await firstValueFrom(
+			service().add$({ name: 'Johan Hegg' })
+		);
+
+		expect(added.meta?.ownerId).toBe(GLOBAL_OWNER_ID);
 	});
 });

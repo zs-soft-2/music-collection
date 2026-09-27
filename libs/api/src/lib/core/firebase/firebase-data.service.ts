@@ -15,7 +15,13 @@ import {
 	where,
 } from '@angular/fire/firestore';
 
-import { Entity, EntityDataService, SearchParams } from '../../common';
+import {
+	Entity,
+	EntityDataService,
+	GLOBAL_OWNER_ID,
+	SearchParams,
+	withOwner,
+} from '../../common';
 import {
 	FirestoreSyncService,
 	toSyncedData,
@@ -42,10 +48,13 @@ export abstract class FirebaseDataService<
 	 */
 	protected addModel$(entityAdd: S): Observable<R> {
 		const uid = doc(collection(this.firestore, 'id')).id;
-		const newEntity = {
-			...entityAdd,
-			uid,
-		};
+		const newEntity = withOwner(
+			{
+				...entityAdd,
+				uid,
+			},
+			this.ownerId()
+		);
 
 		return new Observable((subscriber) => {
 			this.firestoreSync
@@ -58,6 +67,14 @@ export abstract class FirebaseDataService<
 				})
 				.catch((error) => subscriber.error(error));
 		});
+	}
+
+	/**
+	 * Who the documents written here belong to. The catalog is everybody's;
+	 * a collector's own side of a feature says their uid instead.
+	 */
+	protected ownerId(): string {
+		return GLOBAL_OWNER_ID;
 	}
 
 	protected deleteModel$(entity: R): Observable<R> {
@@ -138,9 +155,12 @@ export abstract class FirebaseDataService<
 	}
 
 	protected updateModel$(entity: T): Observable<T> {
-		const newEntity: T = {
-			...entity,
-		} as T;
+		const newEntity: T = withOwner(
+			{
+				...entity,
+			},
+			this.ownerId()
+		) as T;
 
 		return new Observable((subscriber) => {
 			this.firestoreSync
