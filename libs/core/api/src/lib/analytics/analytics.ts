@@ -28,6 +28,12 @@ export type AnalyticsEventName =
 	/** A collector asked for a release the catalog does not have yet. */
 	| 'release_requested'
 	/**
+	 * A collector entered a band of their own, because the catalog does not
+	 * know it. Carries nothing: whether collectors reach for this at all is
+	 * the question, not which bands they are missing.
+	 */
+	| 'owned_artist_added'
+	/**
 	 * Photos of a copy were added, replaced or removed. Carries how many the
 	 * copy is left with — never the pictures or what they show.
 	 */

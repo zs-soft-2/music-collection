@@ -256,6 +256,17 @@ export const routes: Routes = [
 		canActivate: [authenticatedGuard],
 	},
 	{
+		path: 'my-bands',
+		loadChildren: () =>
+			import('./page/owned-artist/owned-artist.routes').then(
+				(module) => module.ownedArtistRoutes
+			),
+		data: {
+			breadcrumb: 'my-bands',
+		},
+		canActivate: [authenticatedGuard],
+	},
+	{
 		path: 'wishlist',
 		loadChildren: () =>
 			import('./page/wishlist/wishlist.module').then(

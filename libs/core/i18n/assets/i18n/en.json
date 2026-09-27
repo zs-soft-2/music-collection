@@ -27,7 +27,8 @@
 		"widthStandard": "Standard width",
 		"widthFull": "Use the full width",
 		"themeLight": "Switch to light theme",
-		"themeDark": "Switch to dark theme"
+		"themeDark": "Switch to dark theme",
+		"owned-artists": "My bands"
 	},
 	"common": {
 		"save": "Save",
@@ -863,6 +864,22 @@
 			"open-the-album": "Open the album",
 			"pressings-that-would-do": "Pressings that would do",
 			"the-catalog-knows-no": "The catalog knows no pressing of this album yet."
+		},
+		"owned-artist": {
+			"title": "My bands",
+			"lead": "When the catalog has never heard of a band, you can enter it here. Only you see it, and it counts towards no score and no statistic.",
+			"add": "New band",
+			"new-band": "New band",
+			"edit-band": "Edit band",
+			"cancel": "Cancel",
+			"could-not-save": "It could not be saved. Try again.",
+			"loading": "Loading your bands…",
+			"nothing-yet": "You have no bands of your own yet.",
+			"only-yours": "What you enter here stays yours — only an approval takes it into the catalog.",
+			"edit": "Edit",
+			"remove": "Remove",
+			"remove-it": "Remove it?",
+			"yes": "Yes"
 		}
 	},
 	"ui": {

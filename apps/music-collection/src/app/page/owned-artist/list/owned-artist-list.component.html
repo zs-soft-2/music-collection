@@ -1,0 +1,95 @@
+<div class="page">
+	<mc-page-breadcrumb [trail]="store.trail()" />
+
+	<header class="head">
+		<div class="intro">
+			<h1>{{ 'page.owned-artist.title' | transloco }}</h1>
+			<p class="lead">{{ 'page.owned-artist.lead' | transloco }}</p>
+		</div>
+
+		<a class="primary" routerLink="../edit/0">
+			{{ 'page.owned-artist.add' | transloco }}
+		</a>
+	</header>
+
+	@if (writeError()) {
+		<p class="error">
+			{{ 'page.owned-artist.could-not-save' | transloco }}
+		</p>
+	} @else if (store.failed()) {
+		<p class="error">
+			{{ 'page.owned-artist.could-not-save' | transloco }}
+		</p>
+	}
+
+	@if (store.loading()) {
+		<p class="status">{{ 'page.owned-artist.loading' | transloco }}</p>
+	} @else if (store.isEmpty()) {
+		<section class="empty">
+			<p>{{ 'page.owned-artist.nothing-yet' | transloco }}</p>
+			<p class="hint">{{ 'page.owned-artist.only-yours' | transloco }}</p>
+		</section>
+	} @else {
+		<ul class="bands">
+			@for (artist of store.artists(); track artist.uid) {
+				<li class="band">
+					<div class="what">
+						<h3>{{ artist.name }}</h3>
+						<p class="facts">
+							<span>{{
+								labelOf(artist.artistType) | transloco
+							}}</span>
+							@if (artist.country) {
+								<span>{{ artist.country }}</span>
+							}
+							@if (yearOf(artist); as year) {
+								<span>{{ year }}</span>
+							}
+						</p>
+						@if (artist.description) {
+							<p class="about">{{ artist.description }}</p>
+						}
+					</div>
+
+					@if (isPending(artist)) {
+						<div class="asking">
+							<span>{{
+								'page.owned-artist.remove-it' | transloco
+							}}</span>
+							<button
+								type="button"
+								class="danger"
+								(click)="store.confirmRemove()"
+							>
+								{{ 'page.owned-artist.yes' | transloco }}
+							</button>
+							<button
+								type="button"
+								class="secondary"
+								(click)="store.cancelRemove()"
+							>
+								{{ 'page.owned-artist.cancel' | transloco }}
+							</button>
+						</div>
+					} @else {
+						<div class="what-now">
+							<a
+								class="secondary"
+								[routerLink]="['../edit', artist.uid]"
+							>
+								{{ 'page.owned-artist.edit' | transloco }}
+							</a>
+							<button
+								type="button"
+								class="secondary"
+								(click)="store.askRemove(artist)"
+							>
+								{{ 'page.owned-artist.remove' | transloco }}
+							</button>
+						</div>
+					}
+				</li>
+			}
+		</ul>
+	}
+</div>

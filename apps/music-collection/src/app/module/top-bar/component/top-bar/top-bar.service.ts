@@ -66,6 +66,12 @@ export class TopBarService {
 				requiresAuth: true,
 			},
 			{
+				labelKey: 'nav.owned-artists',
+				icon: 'pi-user-edit',
+				routerLink: ['/my-bands'],
+				requiresAuth: true,
+			},
+			{
 				labelKey: 'nav.network',
 				icon: 'pi-sitemap',
 				routerLink: ['/network'],

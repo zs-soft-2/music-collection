@@ -27,7 +27,8 @@
 		"widthStandard": "Normál szélesség",
 		"widthFull": "Teljes szélesség",
 		"themeLight": "Váltás világos témára",
-		"themeDark": "Váltás sötét témára"
+		"themeDark": "Váltás sötét témára",
+		"owned-artists": "Saját zenekaraim"
 	},
 	"common": {
 		"save": "Mentés",
@@ -863,6 +864,22 @@
 			"open-the-album": "Album megnyitása",
 			"pressings-that-would-do": "Nyomások, amik megtennék",
 			"the-catalog-knows-no": "A katalógus még egyetlen nyomását sem ismeri ennek az albumnak."
+		},
+		"owned-artist": {
+			"title": "Saját zenekaraim",
+			"lead": "Ha a katalógus nem ismeri a zenekart, itt felveheted magadnak. Csak te látod, és nem számít bele sem a pontokba, sem a statisztikákba.",
+			"add": "Új zenekar",
+			"new-band": "Új zenekar",
+			"edit-band": "Zenekar szerkesztése",
+			"cancel": "Mégse",
+			"could-not-save": "A mentés nem sikerült. Próbáld újra.",
+			"loading": "Zenekarok betöltése…",
+			"nothing-yet": "Még nincs saját zenekarod.",
+			"only-yours": "Amit itt felveszel, csak a tiéd — a katalógusba a jóváhagyás viszi át.",
+			"edit": "Szerkesztés",
+			"remove": "Törlés",
+			"remove-it": "Biztosan törlöd?",
+			"yes": "Igen"
 		}
 	},
 	"ui": {

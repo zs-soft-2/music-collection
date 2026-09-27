@@ -145,6 +145,7 @@ describe('TopBarComponent', () => {
 			'Radio',
 			'Daily question',
 			'Wishlist',
+			'My bands',
 			'Map',
 			'Profile',
 			'Log out',
@@ -168,6 +169,7 @@ describe('TopBarComponent', () => {
 			'Radio',
 			'Daily question',
 			'Wishlist',
+			'My bands',
 			'Map',
 		]);
 	});
@@ -187,6 +189,7 @@ describe('TopBarComponent', () => {
 			'Daily question',
 			'Coming out',
 			'Wishlist',
+			'My bands',
 			'Network',
 			'Map',
 		]);

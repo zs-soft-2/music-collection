@@ -27,7 +27,8 @@
 		"widthStandard": "Normale Breite",
 		"widthFull": "Volle Breite nutzen",
 		"themeLight": "Zum hellen Design wechseln",
-		"themeDark": "Zum dunklen Design wechseln"
+		"themeDark": "Zum dunklen Design wechseln",
+		"owned-artists": "Meine Bands"
 	},
 	"common": {
 		"save": "Speichern",
@@ -863,6 +864,22 @@
 			"open-the-album": "Album öffnen",
 			"pressings-that-would-do": "Pressungen, die es täten",
 			"the-catalog-knows-no": "Der Katalog kennt noch keine Pressung dieses Albums."
+		},
+		"owned-artist": {
+			"title": "Meine Bands",
+			"lead": "Kennt der Katalog eine Band nicht, kannst du sie hier selbst anlegen. Nur du siehst sie, und sie zählt weder für Punkte noch für Statistiken.",
+			"add": "Neue Band",
+			"new-band": "Neue Band",
+			"edit-band": "Band bearbeiten",
+			"cancel": "Abbrechen",
+			"could-not-save": "Speichern fehlgeschlagen. Versuche es erneut.",
+			"loading": "Bands werden geladen…",
+			"nothing-yet": "Du hast noch keine eigenen Bands.",
+			"only-yours": "Was du hier anlegst, bleibt deins — in den Katalog bringt es nur eine Freigabe.",
+			"edit": "Bearbeiten",
+			"remove": "Löschen",
+			"remove-it": "Wirklich löschen?",
+			"yes": "Ja"
 		}
 	},
 	"ui": {
