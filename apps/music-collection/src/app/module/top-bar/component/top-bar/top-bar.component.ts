@@ -16,6 +16,7 @@ import { PlayerMiniComponent } from '../../../../shared/player';
 import { ExternalPlayerConsentService } from '../../../../data/external-player';
 import { LanguagePickerComponent } from '../../../../i18n';
 import { LayoutWidthService, ThemeService } from '../../../../theme';
+import { MenuGroup, MenuItem, MenuSection } from '../../api';
 import { TopBarService } from './top-bar.service';
 
 @Component({
@@ -64,20 +65,24 @@ export class TopBarComponent extends BaseComponent {
 
 	/**
 	 * The collector's own pages sit under their avatar, where the rest of what
-	 * is theirs already lives. Nothing filters them: the menu itself only
-	 * exists once there is somebody signed in to own them.
+	 * is theirs already lives, laid out under the headings that say why each
+	 * one is there. Nothing filters them: the menu itself only exists once
+	 * there is somebody signed in to own them.
 	 */
-	protected readonly accountItems = this.menuItems.filter(
-		(item) => item.requiresAuth
+	protected readonly accountSections = this.toSections(
+		this.menuItems.filter((item) => item.requiresAuth)
 	);
 
 	/**
 	 * The sheet has a whole screen to fill and no avatar to hide anything
-	 * behind, so on a phone every page stays one list and one tap deep.
+	 * behind, so on a phone every page stays one list and one tap deep — the
+	 * same headings, with the home link above them all.
 	 */
-	protected readonly sheetItems = computed(() =>
-		this.menuItems.filter(
-			(item) => !item.requiresAuth || this.isAuthenticated()
+	protected readonly sheetSections = computed(() =>
+		this.toSections(
+			this.menuItems.filter(
+				(item) => !item.requiresAuth || this.isAuthenticated()
+			)
 		)
 	);
 
@@ -106,6 +111,27 @@ export class TopBarComponent extends BaseComponent {
 			.join('')
 			.toUpperCase();
 	});
+
+	/**
+	 * Keeps the groups in the order they were declared in, and drops the ones
+	 * nothing fell into — a guest's sheet has no `contribute` links at all.
+	 */
+	private toSections(items: MenuItem[]): MenuSection[] {
+		const order: MenuGroup[] = [
+			'general',
+			'collection',
+			'explore',
+			'contribute',
+		];
+
+		return order
+			.map((group) => ({
+				group,
+				titleKey: group === 'general' ? null : `nav.group.${group}`,
+				items: items.filter((item) => item.group === group),
+			}))
+			.filter((section) => section.items.length > 0);
+	}
 
 	protected closeMenus(): void {
 		this.accountOpen.set(false);

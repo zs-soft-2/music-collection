@@ -6,7 +6,7 @@
 		"collection": "Gyűjteményem",
 		"scan": "Beolvasás",
 		"shelf-scan": "Polc",
-		"collections": "Kollekciók",
+		"collections": "Kihívások",
 		"radio": "Rádió",
 		"daily-question": "Napi kérdés",
 		"upcoming": "Megjelenik",
@@ -29,7 +29,12 @@
 		"themeLight": "Váltás világos témára",
 		"themeDark": "Váltás sötét témára",
 		"owned-artists": "Saját zenekaraim",
-		"my-requests": "Kéréseim"
+		"my-requests": "Kéréseim",
+		"group": {
+			"collection": "Gyűjtés",
+			"explore": "Felfedezés",
+			"contribute": "Közreműködés"
+		}
 	},
 	"common": {
 		"save": "Mentés",
@@ -263,8 +268,8 @@
 			"allReleases": "Összes kiadás"
 		},
 		"collections": {
-			"title": "Kollekciók",
-			"all": "Összes kollekció"
+			"title": "Kihívások",
+			"all": "Összes kihívás"
 		},
 		"hunt": {
 			"title": "Következő a vadászlistán",
@@ -312,7 +317,7 @@
 			"releases-by-decade": "Kiadások évtizedenként",
 			"top-styles": "Vezető stílusok",
 			"collection-goals": "Gyűjtői célok",
-			"all-collections": "Összes kollekció",
+			"all-collections": "Összes kihívás",
 			"search-artist-or-album": "Előadó vagy album keresése",
 			"search-artist-or-album2": "Előadó vagy album keresése…",
 			"filter-by-format": "Szűrés formátumra",
@@ -348,7 +353,7 @@
 				"shelf": "Polc"
 			},
 			"summary": {
-				"complete": "{{total}} kollekcióból {{completed}} teljes",
+				"complete": "{{total}} kihívásból {{completed}} teljes",
 				"missing": {
 					"one": "{{count}} lemez hiányzik",
 					"other": "{{count}} lemez hiányzik"
@@ -570,19 +575,19 @@
 			"spot": "{{row}}. sor · {{slot}}. hely · {{position}}. pozíció"
 		},
 		"collections": {
-			"collections": "Kollekciók",
+			"collections": "Kihívások",
 			"sets-of-records-defined": "Lemezek halmaza szabály szerint, nem felsorolás szerint — a katalógussal együtt nőnek.",
-			"collections2": "Kollekciók",
+			"collections2": "Kihívások",
 			"completed": "Teljesítve",
 			"records-missing": "Hiányzó lemez",
 			"points-earned": "Megszerzett pont",
-			"no-collection-has-been": "Még nincs közzétett kollekció. Ha lesz, itt látod majd, meddig jut el a polcod.",
+			"no-collection-has-been": "Még nincs közzétett kihívás. Ha lesz, itt látod majd, meddig jut el a polcod.",
 			"next-on-the-hunt": "Következő a vadászlistán",
-			"a-collection-pays-only": "Egy kollekció csak teljesen fizet — ezek a lemezek visznek a legtöbbet előre.",
-			"which-collections": "Mely kollekciók",
-			"search-collections": "Kollekciók keresése",
-			"search-collections2": "Kollekciók keresése",
-			"star-the-collections-you": "Csillagozd meg a kollekciókat, amikre hajtasz — a Követett ezután csak azokat tartja meg, bármennyit tesznek is közzé.",
+			"a-collection-pays-only": "Egy kihívás csak teljesen fizet — ezek a lemezek visznek a legtöbbet előre.",
+			"which-collections": "Mely kihívások",
+			"search-collections": "Kihívások keresése",
+			"search-collections2": "Kihívások keresése",
+			"star-the-collections-you": "Csillagozd meg a kihívásokat, amikre hajtasz — a Követett ezután csak azokat tartja meg, bármennyit tesznek is közzé.",
 			"filter": {
 				"all": "Mind",
 				"owned": "Megvan",
@@ -741,7 +746,7 @@
 		},
 		"radio": {
 			"radio": "Rádió",
-			"a-record-chosen-for": "Egy lemez, neked válogatva: amit a katalógus épp bevett, amit a polcod szerint szeretsz, a polc egy rekesze, egy kollekció, amire hajtasz — vagy semmi különös.",
+			"a-record-chosen-for": "Egy lemez, neked válogatva: amit a katalógus épp bevett, amit a polcod szerint szeretsz, a polc egy rekesze, egy kihívás, amire hajtasz — vagy semmi különös.",
 			"random-order": "Véletlen sorrend",
 			"draw-the-records-out": "Húzd a lemezeket kalapból, ahelyett hogy sorban szólna az adó.",
 			"on-air": "Adásban",
@@ -1014,12 +1019,12 @@
 			"quick-actions": "Gyors műveletek"
 		},
 		"collectionDetailPage": {
-			"this-collection-is-not": "Ez a kollekció nincs közzétéve, vagy már nem létezik.",
-			"back-to-the-collections": "Vissza a kollekciókhoz",
-			"collection": "Kollekció",
-			"play-this-collection": "Kollekció lejátszása",
+			"this-collection-is-not": "Ez a kihívás nincs közzétéve, vagy már nem létezik.",
+			"back-to-the-collections": "Vissza a kihívásokhoz",
+			"collection": "Kihívás",
+			"play-this-collection": "Kihívás lejátszása",
 			"points": "pont",
-			"nothing-in-the-catalog": "A katalógusban még semmi nem felel meg ennek a kollekciónak.",
+			"nothing-in-the-catalog": "A katalógusban még semmi nem felel meg ennek a kihívásnak.",
 			"which-records": "Mely lemezek",
 			"no-record-here-yet": "Itt még nincs lemez."
 		},
@@ -1772,7 +1777,7 @@
 		"joinPrompt": {
 			"make-it-your-collection": "Legyen a tiéd a gyűjtemény",
 			"continue-with-google": "Folytatás Google-fiókkal",
-			"pitch": "A katalógus mindenki előtt nyitva áll — {{albums}} album {{artists}} előadótól, végigolvasásra. Jelentkezz be, hogy nyilvántartsd a saját példányaidat, lásd, mi hiányzik még egy kollekcióból, és a polcod kövessen az eszközeid között."
+			"pitch": "A katalógus mindenki előtt nyitva áll — {{albums}} album {{artists}} előadótól, végigolvasásra. Jelentkezz be, hogy nyilvántartsd a saját példányaidat, lásd, mi hiányzik még egy kihíváshoz, és a polcod kövessen az eszközeid között."
 		},
 		"catalogCoverageChart": {
 			"in-my-collection": "A gyűjteményemben",
@@ -2533,7 +2538,7 @@
 			"description": "A lemezek, amiket ebbe az elembe raktál, úgy végigolvasva, ahogy állnak."
 		},
 		"collection": {
-			"description": "Minden lemez, amit ez a kollekció kér."
+			"description": "Minden lemez, amit ez a kihívás kér."
 		}
 	},
 	"app": {

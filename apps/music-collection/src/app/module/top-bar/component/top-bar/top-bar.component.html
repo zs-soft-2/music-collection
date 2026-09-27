@@ -125,21 +125,43 @@
 								<span>{{ email }}</span>
 							}
 						</div>
-						@for (item of accountItems; track item.labelKey) {
-							<a
-								class="menu-item collector"
-								role="menuitem"
-								[routerLink]="item.routerLink"
-								routerLinkActive="is-active"
-								ariaCurrentWhenActive="page"
-								(click)="closeMenus()"
+						<!-- A cím maga nem menüelem: a csoport viseli a nevét,
+						     hogy a felolvasó is a többivel együtt mondja ki. -->
+						@for (section of accountSections; track section.group) {
+							<div
+								class="menu-group collector"
+								role="group"
+								[attr.aria-label]="
+									section.titleKey
+										? t(section.titleKey)
+										: null
+								"
 							>
-								<i
-									class="pi {{ item.icon }}"
-									aria-hidden="true"
-								></i>
-								{{ t(item.labelKey) }}
-							</a>
+								@if (section.titleKey; as titleKey) {
+									<p class="menu-section" aria-hidden="true">
+										{{ t(titleKey) }}
+									</p>
+								}
+								@for (
+									item of section.items;
+									track item.labelKey
+								) {
+									<a
+										class="menu-item"
+										role="menuitem"
+										[routerLink]="item.routerLink"
+										routerLinkActive="is-active"
+										ariaCurrentWhenActive="page"
+										(click)="closeMenus()"
+									>
+										<i
+											class="pi {{ item.icon }}"
+											aria-hidden="true"
+										></i>
+										{{ t(item.labelKey) }}
+									</a>
+								}
+							</div>
 						}
 						<!-- Az oldalak alatt a fiók maga: a profil, az
 						     admin és a kilépés nem a gyűjteményről szól. -->
@@ -218,17 +240,32 @@
 		*transloco="let t"
 		[attr.aria-label]="t('nav.main')"
 	>
-		@for (item of sheetItems(); track item.labelKey) {
-			<a
-				class="sheet-link"
-				[routerLink]="item.routerLink"
-				routerLinkActive="is-active"
-				ariaCurrentWhenActive="page"
-				(click)="closeMenus()"
+		@for (section of sheetSections(); track section.group) {
+			<div
+				class="sheet-group"
+				role="group"
+				[attr.aria-label]="
+					section.titleKey ? t(section.titleKey) : null
+				"
 			>
-				<i class="pi {{ item.icon }}" aria-hidden="true"></i>
-				{{ t(item.labelKey) }}
-			</a>
+				@if (section.titleKey; as titleKey) {
+					<p class="sheet-section" aria-hidden="true">
+						{{ t(titleKey) }}
+					</p>
+				}
+				@for (item of section.items; track item.labelKey) {
+					<a
+						class="sheet-link"
+						[routerLink]="item.routerLink"
+						routerLinkActive="is-active"
+						ariaCurrentWhenActive="page"
+						(click)="closeMenus()"
+					>
+						<i class="pi {{ item.icon }}" aria-hidden="true"></i>
+						{{ t(item.labelKey) }}
+					</a>
+				}
+			</div>
 		}
 		<a
 			*ngxPermissionsOnly="adminRoles"

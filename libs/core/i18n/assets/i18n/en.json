@@ -6,7 +6,7 @@
 		"collection": "My Collection",
 		"scan": "Scan",
 		"shelf-scan": "Shelf",
-		"collections": "Collections",
+		"collections": "Challenges",
 		"radio": "Radio",
 		"daily-question": "Daily question",
 		"upcoming": "Coming out",
@@ -29,7 +29,12 @@
 		"themeLight": "Switch to light theme",
 		"themeDark": "Switch to dark theme",
 		"owned-artists": "My bands",
-		"my-requests": "My requests"
+		"my-requests": "My requests",
+		"group": {
+			"collection": "Collecting",
+			"explore": "Exploring",
+			"contribute": "Contributing"
+		}
 	},
 	"common": {
 		"save": "Save",
@@ -263,8 +268,8 @@
 			"allReleases": "All releases"
 		},
 		"collections": {
-			"title": "Collections",
-			"all": "All collections"
+			"title": "Challenges",
+			"all": "All challenges"
 		},
 		"hunt": {
 			"title": "Next on the hunt",
@@ -312,7 +317,7 @@
 			"releases-by-decade": "Releases by decade",
 			"top-styles": "Top styles",
 			"collection-goals": "Collection goals",
-			"all-collections": "All collections",
+			"all-collections": "All challenges",
 			"search-artist-or-album": "Search artist or album",
 			"search-artist-or-album2": "Search artist or album…",
 			"filter-by-format": "Filter by format",
@@ -570,19 +575,19 @@
 			"spot": "Row {{row}} · Slot {{slot}} · Position {{position}}"
 		},
 		"collections": {
-			"collections": "Collections",
+			"collections": "Challenges",
 			"sets-of-records-defined": "Sets of records defined by a rule, not by a list — they grow with the catalog.",
-			"collections2": "Collections",
+			"collections2": "Challenges",
 			"completed": "Completed",
 			"records-missing": "Records missing",
 			"points-earned": "Points earned",
-			"no-collection-has-been": "No collection has been published yet. Once one is, this is where you see how far your shelf gets you.",
+			"no-collection-has-been": "No challenge has been published yet. Once one is, this is where you see how far your shelf gets you.",
 			"next-on-the-hunt": "Next on the hunt",
-			"a-collection-pays-only": "A collection pays only once it is complete — these are the records that move that along fastest.",
-			"which-collections": "Which collections",
-			"search-collections": "Search collections",
-			"search-collections2": "Search collections",
-			"star-the-collections-you": "Star the collections you are after — Following then keeps just those, however many are published.",
+			"a-collection-pays-only": "A challenge pays only once it is complete — these are the records that move that along fastest.",
+			"which-collections": "Which challenges",
+			"search-collections": "Search challenges",
+			"search-collections2": "Search challenges",
+			"star-the-collections-you": "Star the challenges you are after — Following then keeps just those, however many are published.",
 			"filter": {
 				"all": "All",
 				"owned": "Owned",
@@ -741,7 +746,7 @@
 		},
 		"radio": {
 			"radio": "Radio",
-			"a-record-chosen-for": "A record chosen for you: what the catalog has just taken in, what your shelf says you like, one compartment of that shelf, a collection you are after — or nothing in particular.",
+			"a-record-chosen-for": "A record chosen for you: what the catalog has just taken in, what your shelf says you like, one compartment of that shelf, a challenge you are after — or nothing in particular.",
 			"random-order": "Random order",
 			"draw-the-records-out": "Draw the records out of a hat instead of playing the station as it comes.",
 			"on-air": "On air",
@@ -1014,12 +1019,12 @@
 			"quick-actions": "Quick actions"
 		},
 		"collectionDetailPage": {
-			"this-collection-is-not": "This collection is not published, or it no longer exists.",
-			"back-to-the-collections": "Back to the collections",
-			"collection": "Collection",
-			"play-this-collection": "Play this collection",
+			"this-collection-is-not": "This challenge is not published, or it no longer exists.",
+			"back-to-the-collections": "Back to the challenges",
+			"collection": "Challenge",
+			"play-this-collection": "Play this challenge",
 			"points": "points",
-			"nothing-in-the-catalog": "Nothing in the catalog answers this collection yet.",
+			"nothing-in-the-catalog": "Nothing in the catalog answers this challenge yet.",
 			"which-records": "Which records",
 			"no-record-here-yet": "No record here yet."
 		},
@@ -1772,7 +1777,7 @@
 		"joinPrompt": {
 			"make-it-your-collection": "Make it your collection",
 			"continue-with-google": "Continue with Google",
-			"pitch": "The catalog is open to everyone — {{albums}} albums of {{artists}} artists to read through. Sign in to keep the copies you own, see what a collection is still missing and have your shelf follow you between devices."
+			"pitch": "The catalog is open to everyone — {{albums}} albums of {{artists}} artists to read through. Sign in to keep the copies you own, see what a challenge is still missing and have your shelf follow you between devices."
 		},
 		"catalogCoverageChart": {
 			"in-my-collection": "In my collection",
@@ -2533,7 +2538,7 @@
 			"description": "The records you filed into this unit, read out the way they stand."
 		},
 		"collection": {
-			"description": "Every record this collection asks for."
+			"description": "Every record this challenge asks for."
 		}
 	},
 	"app": {

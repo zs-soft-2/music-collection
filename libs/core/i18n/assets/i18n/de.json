@@ -6,7 +6,7 @@
 		"collection": "Meine Sammlung",
 		"scan": "Scannen",
 		"shelf-scan": "Regal",
-		"collections": "Kollektionen",
+		"collections": "Challenges",
 		"radio": "Radio",
 		"daily-question": "Tagesfrage",
 		"upcoming": "Erscheint",
@@ -29,7 +29,12 @@
 		"themeLight": "Zum hellen Design wechseln",
 		"themeDark": "Zum dunklen Design wechseln",
 		"owned-artists": "Meine Bands",
-		"my-requests": "Meine Anfragen"
+		"my-requests": "Meine Anfragen",
+		"group": {
+			"collection": "Sammeln",
+			"explore": "Entdecken",
+			"contribute": "Mitwirken"
+		}
 	},
 	"common": {
 		"save": "Speichern",
@@ -263,8 +268,8 @@
 			"allReleases": "Alle Veröffentlichungen"
 		},
 		"collections": {
-			"title": "Kollektionen",
-			"all": "Alle Kollektionen"
+			"title": "Challenges",
+			"all": "Alle Challenges"
 		},
 		"hunt": {
 			"title": "Als Nächstes auf der Jagd",
@@ -312,7 +317,7 @@
 			"releases-by-decade": "Veröffentlichungen nach Jahrzehnt",
 			"top-styles": "Häufigste Stile",
 			"collection-goals": "Sammlungsziele",
-			"all-collections": "Alle Kollektionen",
+			"all-collections": "Alle Challenges",
 			"search-artist-or-album": "Künstler oder Album suchen",
 			"search-artist-or-album2": "Künstler oder Album suchen…",
 			"filter-by-format": "Nach Format filtern",
@@ -570,19 +575,19 @@
 			"spot": "Reihe {{row}} · Platz {{slot}} · Position {{position}}"
 		},
 		"collections": {
-			"collections": "Kollektionen",
+			"collections": "Challenges",
 			"sets-of-records-defined": "Plattenmengen, die eine Regel bestimmt, keine Liste — sie wachsen mit dem Katalog.",
-			"collections2": "Kollektionen",
+			"collections2": "Challenges",
 			"completed": "Vollständig",
 			"records-missing": "Fehlende Platten",
 			"points-earned": "Erreichte Punkte",
-			"no-collection-has-been": "Noch wurde keine Kollektion veröffentlicht. Sobald es eine gibt, siehst du hier, wie weit dein Regal kommt.",
+			"no-collection-has-been": "Noch wurde keine Challenge veröffentlicht. Sobald es eine gibt, siehst du hier, wie weit dein Regal kommt.",
 			"next-on-the-hunt": "Als Nächstes auf der Jagd",
-			"a-collection-pays-only": "Eine Kollektion zahlt sich erst vollständig aus — diese Platten bringen dich am schnellsten dorthin.",
-			"which-collections": "Welche Kollektionen",
-			"search-collections": "Kollektionen suchen",
-			"search-collections2": "Kollektionen suchen",
-			"star-the-collections-you": "Markiere die Kollektionen, die du verfolgst — „Gefolgt“ behält dann nur diese, wie viele auch veröffentlicht werden.",
+			"a-collection-pays-only": "Eine Challenge zahlt sich erst vollständig aus — diese Platten bringen dich am schnellsten dorthin.",
+			"which-collections": "Welche Challenges",
+			"search-collections": "Challenges suchen",
+			"search-collections2": "Challenges suchen",
+			"star-the-collections-you": "Markiere die Challenges, die du verfolgst — „Gefolgt“ behält dann nur diese, wie viele auch veröffentlicht werden.",
 			"filter": {
 				"all": "Alle",
 				"owned": "Vorhanden",
@@ -741,7 +746,7 @@
 		},
 		"radio": {
 			"radio": "Radio",
-			"a-record-chosen-for": "Eine Platte, für dich ausgewählt: was der Katalog gerade aufgenommen hat, was dein Regal über deinen Geschmack sagt, ein Fach dieses Regals, eine Kollektion, die du verfolgst — oder nichts Bestimmtes.",
+			"a-record-chosen-for": "Eine Platte, für dich ausgewählt: was der Katalog gerade aufgenommen hat, was dein Regal über deinen Geschmack sagt, ein Fach dieses Regals, eine Challenge, die du verfolgst — oder nichts Bestimmtes.",
 			"random-order": "Zufällige Reihenfolge",
 			"draw-the-records-out": "Zieh die Platten aus dem Hut, statt den Sender der Reihe nach zu spielen.",
 			"on-air": "Auf Sendung",
@@ -1014,12 +1019,12 @@
 			"quick-actions": "Schnellaktionen"
 		},
 		"collectionDetailPage": {
-			"this-collection-is-not": "Diese Kollektion ist nicht veröffentlicht oder existiert nicht mehr.",
-			"back-to-the-collections": "Zurück zu den Kollektionen",
-			"collection": "Kollektion",
-			"play-this-collection": "Diese Kollektion abspielen",
+			"this-collection-is-not": "Diese Challenge ist nicht veröffentlicht oder existiert nicht mehr.",
+			"back-to-the-collections": "Zurück zu den Challenges",
+			"collection": "Challenge",
+			"play-this-collection": "Diese Challenge abspielen",
 			"points": "Punkte",
-			"nothing-in-the-catalog": "Noch nichts im Katalog entspricht dieser Kollektion.",
+			"nothing-in-the-catalog": "Noch nichts im Katalog entspricht dieser Challenge.",
 			"which-records": "Welche Platten",
 			"no-record-here-yet": "Hier steht noch keine Platte."
 		},
@@ -1772,7 +1777,7 @@
 		"joinPrompt": {
 			"make-it-your-collection": "Mach sie zu deiner Sammlung",
 			"continue-with-google": "Weiter mit Google",
-			"pitch": "Der Katalog steht allen offen — {{albums}} Alben von {{artists}} Künstlern zum Durchlesen. Melde dich an, um deine eigenen Exemplare zu führen, zu sehen, was einer Kollektion noch fehlt, und dein Regal zwischen Geräten mitzunehmen."
+			"pitch": "Der Katalog steht allen offen — {{albums}} Alben von {{artists}} Künstlern zum Durchlesen. Melde dich an, um deine eigenen Exemplare zu führen, zu sehen, was einer Challenge noch fehlt, und dein Regal zwischen Geräten mitzunehmen."
 		},
 		"catalogCoverageChart": {
 			"in-my-collection": "In meiner Sammlung",
@@ -2533,7 +2538,7 @@
 			"description": "Die Platten, die du in dieses Element eingeräumt hast, in der Reihenfolge, in der sie stehen."
 		},
 		"collection": {
-			"description": "Jede Platte, die diese Kollektion verlangt."
+			"description": "Jede Platte, die diese Challenge verlangt."
 		}
 	},
 	"app": {

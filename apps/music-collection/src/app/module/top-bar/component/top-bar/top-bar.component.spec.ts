@@ -40,10 +40,21 @@ describe('TopBarComponent', () => {
 		return labels('.menu .menu-item');
 	};
 
+	/** The headings the menu's groups are laid out under, in order. */
+	const accountSectionLabels = (): string[] => {
+		openAccount();
+
+		return labels('.menu .menu-section');
+	};
+
 	/** The labels on the sheet the hamburger opens, in order. */
-	const sheetLabels = (): string[] => {
+	const openSheet = (): void => {
 		fixture.nativeElement.querySelector('.menu-toggle').click();
 		fixture.detectChanges();
+	};
+
+	const sheetLabels = (): string[] => {
+		openSheet();
 
 		return labels('.sheet .sheet-link');
 	};
@@ -112,7 +123,7 @@ describe('TopBarComponent', () => {
 	it('keeps the personal links from a guest', () => {
 		expect(navLabels()).toEqual([
 			'Home',
-			'Collections',
+			'Challenges',
 			'Coming out',
 			'Network',
 		]);
@@ -128,7 +139,7 @@ describe('TopBarComponent', () => {
 
 		expect(navLabels()).toEqual([
 			'Home',
-			'Collections',
+			'Challenges',
 			'Coming out',
 			'Network',
 		]);
@@ -142,37 +153,58 @@ describe('TopBarComponent', () => {
 			'My Collection',
 			'Scan',
 			'Shelf',
+			'Wishlist',
 			'Radio',
 			'Daily question',
-			'Wishlist',
+			'Map',
 			'My bands',
 			'My requests',
-			'Map',
 			'Profile',
 			'Log out',
 		]);
 	});
 
 	/**
+	 * What the menu is for: nine links that used to be one undifferentiated
+	 * run now sit under what the collector came to do.
+	 */
+	it('lays the personal pages out under their headings', () => {
+		isAuthenticated$.next(true);
+		fixture.detectChanges();
+
+		expect(accountSectionLabels()).toEqual([
+			'Collecting',
+			'Exploring',
+			'Contributing',
+		]);
+	});
+
+	/**
 	 * On a phone the sheet already carries these at full width, so the
-	 * stylesheet leaves them out of the menu. The class is what it holds on
-	 * to, and jsdom applies no media query — hence the class, not the count.
+	 * stylesheet leaves them out of the menu — heading and links together,
+	 * which is why the group carries the class. jsdom applies no media
+	 * query, hence the class, not the count.
 	 */
 	it('marks the pages the phone stylesheet drops from the menu', () => {
 		isAuthenticated$.next(true);
 		fixture.detectChanges();
 		openAccount();
 
-		expect(labels('.menu .collector')).toEqual([
+		expect(labels('.menu .collector .menu-item')).toEqual([
 			'My Collection',
 			'Scan',
 			'Shelf',
+			'Wishlist',
 			'Radio',
 			'Daily question',
-			'Wishlist',
+			'Map',
 			'My bands',
 			'My requests',
-			'Map',
+		]);
+		// The account's own three stay: they have nowhere else to go.
+		expect(labels('.menu .menu-item:not(.collector *)')).toEqual([
+			'Profile',
+			'Log out',
 		]);
 	});
 
@@ -186,15 +218,22 @@ describe('TopBarComponent', () => {
 			'My Collection',
 			'Scan',
 			'Shelf',
-			'Collections',
+			'Wishlist',
+			'Challenges',
 			'Radio',
 			'Daily question',
+			'Map',
 			'Coming out',
-			'Wishlist',
+			'Network',
 			'My bands',
 			'My requests',
-			'Network',
-			'Map',
 		]);
+	});
+
+	/** A guest has nothing to contribute yet, so that heading stays away. */
+	it('leaves out the heading no link fell under', () => {
+		openSheet();
+
+		expect(labels('.sheet .sheet-section')).toEqual(['Exploring']);
 	});
 });
