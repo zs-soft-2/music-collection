@@ -15,6 +15,15 @@ import {
 
 export type StatusFilter = EntityRequestStatus | 'all';
 
+/**
+ * The status as a word the admin reads, not as the word the document holds.
+ * Both kinds of request name their states the same, so one list of keys
+ * serves the mixed list.
+ */
+export function requestStatusLabelKey(status: string): string {
+	return `admin.requestStatus.${status}`;
+}
+
 /** What the collector offers in support of a field, ready to show. */
 export interface ReferenceView {
 	label: string;
@@ -39,6 +48,8 @@ export interface RequestFieldRow {
 export interface RequestRow {
 	id: string;
 	status: EntityRequestStatus;
+	/** The status in the reader's language. */
+	statusLabelKey: string;
 	operation: EntityRequestOperation;
 	/** What kind of entity it is about, e.g. `Artist`. */
 	entityType: string;
@@ -47,6 +58,8 @@ export interface RequestRow {
 	requesterName: string;
 	/** e.g. "19 Sep 2026". */
 	requestedOn: string;
+	/** When it was asked, as the mixed list sorts on it. */
+	createdAt: number;
 	decidedOn: string | null;
 	note: string | null;
 	adminNote: string | null;
@@ -130,11 +143,13 @@ export function toRequestRows(
 		return {
 			id: request.uid,
 			status: request.status,
+			statusLabelKey: requestStatusLabelKey(request.status),
 			operation: request.operation,
 			entityType: request.target?.entityType ?? '',
 			subject: subjectOf(request),
 			requesterName: requesterName(request.userId, usersById),
 			requestedOn: formatDate(request.createdAt) ?? '',
+			createdAt: request.createdAt,
 			decidedOn: formatDate(request.decidedAt),
 			note: request.note,
 			adminNote: response?.adminNote ?? null,

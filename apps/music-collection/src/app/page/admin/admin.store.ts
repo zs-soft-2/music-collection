@@ -1,4 +1,4 @@
-import { combineLatest, of, pipe, startWith, switchMap } from 'rxjs';
+import { combineLatest, map, of, pipe, startWith, switchMap } from 'rxjs';
 
 import { inject } from '@angular/core';
 import { tapResponse } from '@ngrx/operators';
@@ -17,7 +17,7 @@ import { AdminNavItem } from './admin-nav';
 
 type AdminBadges = Record<NonNullable<AdminNavItem['badge']>, number>;
 
-const NONE: AdminBadges = { pendingReleaseRequests: 0, pendingRequests: 0 };
+const NONE: AdminBadges = { pendingRequests: 0 };
 
 /** Az admin héj állapota: a menüpontok melletti teendő-számok. */
 export const AdminStore = signalStore(
@@ -35,14 +35,19 @@ export const AdminStore = signalStore(
 							// Egy néma lekérdezés az egész menüt megfogná: a
 							// `combineLatest` addig nem emittál, amíg
 							// mindegyik ága nem szólt legalább egyszer.
-							pendingReleaseRequests: releaseRequestEffect
+							releaseRequests: releaseRequestEffect
 								.countPending$()
 								.pipe(startWith(0)),
-							pendingRequests: requestEffect
+							requests: requestEffect
 								.countPending$()
 								.pipe(startWith(0)),
 						})
 					),
+					// A kétféle kérés egy listában van, így egy szám is: az
+					// admin egy helyen dolgozza le őket.
+					map(({ releaseRequests, requests }) => ({
+						pendingRequests: releaseRequests + requests,
+					})),
 					tapResponse({
 						next: (badges) => patchState(store, { badges }),
 						error: (error) => console.error(error),

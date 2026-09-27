@@ -1822,14 +1822,17 @@
 			"link-a-catalog-release": "Link a catalog release…",
 			"approve-with-it": "Approve with it",
 			"reject": "Reject",
-			"add-the-release-to": "Add the release to the album in the admin, then link it here."
+			"add-the-release-to": "Add the release to the album in the admin, then link it here.",
+			"importing": "Working…",
+			"import-from-discogs": "Import from Discogs"
 		},
 		"releaseRequestAdmin": {
-			"release-requests": "Release requests",
-			"pressings-the-collectors-own": "Pressings the collectors own but the catalog is missing. Approving adds the release to the catalog and the copy to the collector's collection.",
-			"filter-by-status": "Filter by status",
-			"loading-requests": "Loading requests…",
-			"no-requests-here": "No requests here."
+			"error-not-found": "Not found: the request, its album, the release or the Discogs release.",
+			"error-moved-on": "Already decided — or it has no Discogs release: link a catalog release.",
+			"error-not-allowed": "Only an admin may decide requests.",
+			"error-discogs-unreachable": "Discogs cannot be reached right now. Try again later.",
+			"error-discogs-busy": "Discogs is busy right now. Try again in a minute.",
+			"error-unknown": "Something went wrong. Try again later."
 		},
 		"musicCollectionAdmin": {
 			"collections": "Collections",
@@ -2283,7 +2286,7 @@
 		},
 		"requestAdmin": {
 			"requests": "Requests",
-			"what-collectors-ask": "What collectors ask the catalog to take in. You decide field by field — a refusal needs a reason, and the collector reads it.",
+			"what-collectors-ask": "Everything the collectors ask of the catalog, in one place: what they want it to take in, and the pressings they ask for. A catalog request is decided field by field — a refusal needs a reason, and the collector reads it.",
 			"filter-by-status": "Filter by status",
 			"loading-requests": "Loading requests…",
 			"no-requests-here": "No requests here.",
@@ -2291,7 +2294,11 @@
 			"error-moved-on": "The catalog has changed since, or the request was already decided. Reload the page.",
 			"error-invalid": "The decision is incomplete: every field needs a verdict, and every refusal a reason.",
 			"error-not-allowed": "Only an admin may decide requests.",
-			"error-unknown": "Something went wrong. Try again later."
+			"error-unknown": "Something went wrong. Try again later.",
+			"filter-by-kind": "Filter by kind",
+			"kind-all": "Every kind",
+			"kind-catalog": "Catalog request",
+			"kind-release": "Release request"
 		},
 		"requestRow": {
 			"new-entity": "new entity",
@@ -2331,7 +2338,6 @@
 			"collections": "Collections",
 			"userData": "User data",
 			"collectionItems": "Collection items",
-			"releaseRequests": "Release requests",
 			"wishlistItems": "Wishlist items",
 			"system": "System",
 			"documents": "Documents",
@@ -2458,6 +2464,12 @@
 			"from": "From",
 			"to": "To",
 			"active": "Active"
+		},
+		"requestStatus": {
+			"pending": "Waiting",
+			"approved": "Approved",
+			"partially-approved": "Partly approved",
+			"rejected": "Rejected"
 		}
 	},
 	"fact": {

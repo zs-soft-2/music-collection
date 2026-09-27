@@ -8,7 +8,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
-import { ReleaseRequestRow } from '../release-request-admin.mapper';
+import { ReleaseRequestRow } from '../release-request.mapper';
 
 /** One release request with its approval and rejection. */
 @Component({
@@ -43,12 +43,12 @@ import { ReleaseRequestRow } from '../release-request-admin.mapper';
 					<p class="meta">
 						{{ row().requesterName }} · {{ row().requestedOn }}
 						@if (row().decidedOn) {
-							· decided {{ row().decidedOn }}
+							· {{ row().decidedOn }}
 						}
 					</p>
 				</div>
 				<span class="status" [attr.data-status]="row().status">{{
-					row().status
+					row().statusLabelKey | transloco
 				}}</span>
 			</header>
 
@@ -78,7 +78,7 @@ import { ReleaseRequestRow } from '../release-request-admin.mapper';
 			}
 
 			@if (error()) {
-				<p class="error" role="alert">{{ error() }}</p>
+				<p class="error" role="alert">{{ error()! | transloco }}</p>
 			}
 
 			@if (row().status === 'pending') {
@@ -130,7 +130,10 @@ import { ReleaseRequestRow } from '../release-request-admin.mapper';
 									aria-hidden="true"
 								></i>
 								{{
-									busy() ? 'Working…' : 'Import from Discogs'
+									(busy()
+										? 'ui.releaseRequestRow.importing'
+										: 'ui.releaseRequestRow.import-from-discogs'
+									) | transloco
 								}}
 							</button>
 						}

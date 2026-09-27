@@ -1,16 +1,26 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
+import { ReleaseRequestRowComponent } from './component/release-request-row.component';
 import { RequestRowComponent } from './component/request-row.component';
-import { StatusFilter } from './request-admin.mapper';
+import { ReleaseRequestRow } from './release-request.mapper';
+import { RequestRow, StatusFilter } from './request-admin.mapper';
 import { RequestAdminStore } from './request-admin.store';
+import { KindFilter, RequestFeedEntry } from './request-feed';
 
-/** Admin: what the collectors ask the catalog to take in. */
+/**
+ * Admin: everything the collectors ask of the catalog, in one list.
+ *
+ * A collector asks two different things — take this pressing in, hold this
+ * field differently — and each is decided its own way, so each keeps its own
+ * card. What they share is when they were asked, which is the order an admin
+ * works in, so the list is one and the kind is a label and a filter.
+ */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-request-admin',
 	providers: [RequestAdminStore],
-	imports: [...I18N_IMPORTS, RequestRowComponent],
+	imports: [...I18N_IMPORTS, RequestRowComponent, ReleaseRequestRowComponent],
 	template: `
 		<header class="mc-page-head">
 			<div>
@@ -18,6 +28,29 @@ import { RequestAdminStore } from './request-admin.store';
 				<p>{{ 'ui.requestAdmin.what-collectors-ask' | transloco }}</p>
 			</div>
 		</header>
+
+		<div
+			class="filters"
+			role="group"
+			[attr.aria-label]="'ui.requestAdmin.filter-by-kind' | transloco"
+		>
+			@for (kind of kinds; track kind.value) {
+				<button
+					type="button"
+					class="chip kind"
+					[attr.aria-pressed]="store.kindFilter() === kind.value"
+					(click)="store.setKindFilter(kind.value)"
+				>
+					@if (kind.icon) {
+						<i class="pi {{ kind.icon }}" aria-hidden="true"></i>
+					}
+					{{ kind.labelKey | transloco }}
+					<span class="count">{{
+						store.kindCounts()[kind.value]
+					}}</span>
+				</button>
+			}
+		</div>
 
 		<div
 			class="filters"
@@ -45,38 +78,71 @@ import { RequestAdminStore } from './request-admin.store';
 					'ui.requestAdmin.loading-requests' | transloco
 				}}</span>
 			</div>
-		} @else if (store.rows().length) {
+		} @else if (store.entries().length) {
 			<ul class="requests">
-				@for (row of store.rows(); track row.id) {
+				@for (entry of store.entries(); track entry.id) {
 					<li>
-						<mc-request-row
-							[row]="row"
-							[draft]="store.drafts()[row.id] ?? {}"
-							[note]="store.adminNotes()[row.id] ?? ''"
-							[busy]="store.busyId() === row.id"
-							[error]="store.errors()[row.id] ?? null"
-							(verdict)="
-								store.setVerdict({
-									requestId: row.id,
-									field: $event.field,
-									kind: $event.kind,
-								})
-							"
-							(reason)="
-								store.setReason({
-									requestId: row.id,
-									field: $event.field,
-									reason: $event.reason,
-								})
-							"
-							(noteChange)="
-								store.setAdminNote({
-									requestId: row.id,
-									note: $event,
-								})
-							"
-							(decide)="store.decide(row.id)"
-						/>
+						<p class="kind-tag" [attr.data-kind]="entry.kind">
+							<i
+								class="pi"
+								[class.pi-file-edit]="entry.kind === 'catalog'"
+								[class.pi-inbox]="entry.kind === 'release'"
+								aria-hidden="true"
+							></i>
+							{{
+								(entry.kind === 'catalog'
+									? 'ui.requestAdmin.kind-catalog'
+									: 'ui.requestAdmin.kind-release'
+								) | transloco
+							}}
+						</p>
+
+						@if (catalogRow(entry); as row) {
+							<mc-request-row
+								[row]="row"
+								[draft]="store.drafts()[row.id] ?? {}"
+								[note]="store.adminNotes()[row.id] ?? ''"
+								[busy]="store.busyId() === row.id"
+								[error]="store.errors()[row.id] ?? null"
+								(verdict)="
+									store.setVerdict({
+										requestId: row.id,
+										field: $event.field,
+										kind: $event.kind,
+									})
+								"
+								(reason)="
+									store.setReason({
+										requestId: row.id,
+										field: $event.field,
+										reason: $event.reason,
+									})
+								"
+								(noteChange)="
+									store.setAdminNote({
+										requestId: row.id,
+										note: $event,
+									})
+								"
+								(decide)="store.decide(row.id)"
+							/>
+						}
+						@if (releaseRow(entry); as row) {
+							<mc-release-request-row
+								[row]="row"
+								[busy]="store.busyId() === row.id"
+								[error]="store.errors()[row.id] ?? null"
+								(approve)="
+									store.approve({
+										id: row.id,
+										releaseUid: $event,
+									})
+								"
+								(reject)="
+									store.reject({ id: row.id, note: $event })
+								"
+							/>
+						}
 					</li>
 				}
 			</ul>
@@ -95,7 +161,11 @@ import { RequestAdminStore } from './request-admin.store';
 			display: flex;
 			flex-wrap: wrap;
 			gap: 0.5rem;
-			margin-bottom: 1.25rem;
+			margin-bottom: 0.6rem;
+
+			&:last-of-type {
+				margin-bottom: 1.25rem;
+			}
 		}
 
 		.chip {
@@ -123,6 +193,15 @@ import { RequestAdminStore } from './request-admin.store';
 			}
 		}
 
+		/* The kind is the coarser cut, so it reads as the quieter row. */
+		.chip.kind {
+			font-size: 0.8rem;
+
+			i {
+				font-size: 0.75rem;
+			}
+		}
+
 		.count {
 			font-variant-numeric: tabular-nums;
 			opacity: 0.8;
@@ -131,10 +210,26 @@ import { RequestAdminStore } from './request-admin.store';
 		.requests {
 			display: flex;
 			flex-direction: column;
-			gap: 0.75rem;
+			gap: 1rem;
 			margin: 0;
 			padding: 0;
 			list-style: none;
+		}
+
+		.kind-tag {
+			display: flex;
+			align-items: center;
+			gap: 0.35rem;
+			margin: 0 0 0.3rem 0.25rem;
+			font-size: 0.72rem;
+			font-weight: 700;
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
+			color: var(--mc-text-subtle);
+
+			&[data-kind='release'] {
+				color: var(--mc-accent);
+			}
 		}
 
 		.empty {
@@ -151,6 +246,24 @@ import { RequestAdminStore } from './request-admin.store';
 export class RequestAdminComponent {
 	protected readonly store = inject(RequestAdminStore);
 
+	protected readonly kinds: {
+		value: KindFilter;
+		labelKey: string;
+		icon: string | null;
+	}[] = [
+		{ value: 'all', labelKey: 'ui.requestAdmin.kind-all', icon: null },
+		{
+			value: 'catalog',
+			labelKey: 'ui.requestAdmin.kind-catalog',
+			icon: 'pi-file-edit',
+		},
+		{
+			value: 'release',
+			labelKey: 'ui.requestAdmin.kind-release',
+			icon: 'pi-inbox',
+		},
+	];
+
 	protected readonly filters: { value: StatusFilter; labelKey: string }[] = [
 		{ value: 'pending', labelKey: 'admin.filter.pending' },
 		{ value: 'approved', labelKey: 'admin.filter.approved' },
@@ -161,4 +274,17 @@ export class RequestAdminComponent {
 		{ value: 'rejected', labelKey: 'admin.filter.rejected' },
 		{ value: 'all', labelKey: 'admin.filter.all' },
 	];
+
+	/**
+	 * The entry as the card that can show it, or nothing. The two kinds are
+	 * told apart here rather than in the template, where narrowing a union
+	 * across a binding is more trouble than it is worth.
+	 */
+	protected catalogRow(entry: RequestFeedEntry): RequestRow | null {
+		return entry.kind === 'catalog' ? entry.row : null;
+	}
+
+	protected releaseRow(entry: RequestFeedEntry): ReleaseRequestRow | null {
+		return entry.kind === 'release' ? entry.row : null;
+	}
 }

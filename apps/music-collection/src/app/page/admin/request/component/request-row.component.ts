@@ -45,7 +45,7 @@ import { RequestDraft } from '../request-admin.store';
 					</p>
 				</div>
 				<span class="status" [attr.data-status]="row().status">{{
-					row().status
+					row().statusLabelKey | transloco
 				}}</span>
 			</header>
 

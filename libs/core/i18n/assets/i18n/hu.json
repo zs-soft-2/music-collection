@@ -1822,14 +1822,17 @@
 			"link-a-catalog-release": "Katalógusbeli kiadás összekötése…",
 			"approve-with-it": "Jóváhagyás ezzel",
 			"reject": "Elutasítás",
-			"add-the-release-to": "Vedd fel a kiadást az albumhoz az adminban, aztán kösd össze itt."
+			"add-the-release-to": "Vedd fel a kiadást az albumhoz az adminban, aztán kösd össze itt.",
+			"importing": "Folyamatban…",
+			"import-from-discogs": "Import a Discogsról"
 		},
 		"releaseRequestAdmin": {
-			"release-requests": "Kiadás-kérések",
-			"pressings-the-collectors-own": "Nyomások, amik megvannak a gyűjtőknek, de hiányoznak a katalógusból. A jóváhagyás felveszi a kiadást a katalógusba, a példányt pedig a gyűjtő gyűjteményébe.",
-			"filter-by-status": "Szűrés állapotra",
-			"loading-requests": "Kérések betöltése…",
-			"no-requests-here": "Itt nincs kérés."
+			"error-not-found": "Nincs meg: a kérés, az albuma, a kiadás vagy a Discogs-kiadás.",
+			"error-moved-on": "Már elbírálták — vagy nincs Discogs-kiadása: köss hozzá katalógusbeli kiadást.",
+			"error-not-allowed": "Kérést csak admin bírálhat el.",
+			"error-discogs-unreachable": "A Discogs most nem érhető el. Próbáld újra később.",
+			"error-discogs-busy": "A Discogs most túlterhelt. Próbáld újra egy perc múlva.",
+			"error-unknown": "Valami félresikerült. Próbáld újra később."
 		},
 		"musicCollectionAdmin": {
 			"collections": "Kollekciók",
@@ -2283,7 +2286,7 @@
 		},
 		"requestAdmin": {
 			"requests": "Kérések",
-			"what-collectors-ask": "Amit a gyűjtők a katalógusba szánnak. Mezőnként dönthetsz róla — az elutasítást indokolni kell, a gyűjtő ezt olvassa.",
+			"what-collectors-ask": "Minden kérés egy helyen: amit a gyűjtők a katalógusba szánnak, és amit a saját lemezükhöz kiadásként kérnek. A katalógus-kérésekről mezőnként dönthetsz — az elutasítást indokolni kell, a gyűjtő ezt olvassa.",
 			"filter-by-status": "Szűrés állapot szerint",
 			"loading-requests": "Kérések betöltése…",
 			"no-requests-here": "Itt nincs kérés.",
@@ -2291,7 +2294,11 @@
 			"error-moved-on": "A katalógus időközben megváltozott, vagy a kérést már elbírálták. Töltsd újra az oldalt.",
 			"error-invalid": "A döntés hiányos: minden mezőről dönteni kell, és minden elutasítást indokolni.",
 			"error-not-allowed": "Kérést csak admin bírálhat el.",
-			"error-unknown": "Valami félresikerült. Próbáld újra később."
+			"error-unknown": "Valami félresikerült. Próbáld újra később.",
+			"filter-by-kind": "Szűrés fajta szerint",
+			"kind-all": "Minden fajta",
+			"kind-catalog": "Katalógus-kérés",
+			"kind-release": "Kiadás-kérés"
 		},
 		"requestRow": {
 			"new-entity": "új felvétel",
@@ -2331,7 +2338,6 @@
 			"collections": "Kollekciók",
 			"userData": "Felhasználói adatok",
 			"collectionItems": "Gyűjteménytételek",
-			"releaseRequests": "Kiadás-kérések",
 			"wishlistItems": "Kívánságlista-tételek",
 			"system": "Rendszer",
 			"documents": "Dokumentumok",
@@ -2458,6 +2464,12 @@
 			"from": "Ettől",
 			"to": "Eddig",
 			"active": "Aktív"
+		},
+		"requestStatus": {
+			"pending": "Elbírálásra vár",
+			"approved": "Elfogadva",
+			"partially-approved": "Részben elfogadva",
+			"rejected": "Elutasítva"
 		}
 	},
 	"fact": {

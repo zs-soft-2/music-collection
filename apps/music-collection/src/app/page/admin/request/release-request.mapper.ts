@@ -8,6 +8,7 @@ import {
 } from '@music-collection/api';
 
 import { formatCountry, toMediaFormat, toYear } from '../../../shared/music-ui';
+import { requestStatusLabelKey } from './request-admin.mapper';
 
 export type StatusFilter = ReleaseRequestStatus | 'all';
 
@@ -21,12 +22,16 @@ export interface CatalogReleaseOption {
 export interface ReleaseRequestRow {
 	id: string;
 	status: ReleaseRequestStatus;
+	/** The status in the reader's language. */
+	statusLabelKey: string;
 	albumId: string;
 	albumName: string;
 	artistName: string | null;
 	requesterName: string;
 	/** e.g. "19 Sep 2026". */
 	requestedOn: string;
+	/** When it was asked, as the mixed list sorts on it. */
+	createdAt: number;
 	decidedOn: string | null;
 	/** What the collector requested, e.g. "Vinyl, LP · Charm (CHARM 1) · UK". */
 	summary: string;
@@ -117,11 +122,13 @@ export function toReleaseRequestRows(
 	return requests.map((request) => ({
 		id: request.uid,
 		status: request.status,
+		statusLabelKey: requestStatusLabelKey(request.status),
 		albumId: request.album?.uid ?? '',
 		albumName: request.album?.name || 'Unknown album',
 		artistName: request.album?.artistName ?? null,
 		requesterName: requesterName(request.userId, usersById),
 		requestedOn: formatDate(request.createdAt) ?? '',
+		createdAt: request.createdAt,
 		decidedOn: formatDate(request.decidedAt),
 		summary: requestSummary(request),
 		note: request.note,

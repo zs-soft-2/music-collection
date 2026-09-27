@@ -1822,14 +1822,17 @@
 			"link-a-catalog-release": "Katalog-Veröffentlichung verknüpfen…",
 			"approve-with-it": "Damit freigeben",
 			"reject": "Ablehnen",
-			"add-the-release-to": "Nimm die Veröffentlichung im Admin zum Album auf und verknüpfe sie dann hier."
+			"add-the-release-to": "Nimm die Veröffentlichung im Admin zum Album auf und verknüpfe sie dann hier.",
+			"importing": "Läuft…",
+			"import-from-discogs": "Von Discogs importieren"
 		},
 		"releaseRequestAdmin": {
-			"release-requests": "Veröffentlichungsanfragen",
-			"pressings-the-collectors-own": "Pressungen, die die Sammler besitzen, die aber im Katalog fehlen. Die Freigabe nimmt die Veröffentlichung in den Katalog auf und das Exemplar in die Sammlung des Sammlers.",
-			"filter-by-status": "Nach Status filtern",
-			"loading-requests": "Anfragen werden geladen…",
-			"no-requests-here": "Hier gibt es keine Anfragen."
+			"error-not-found": "Nicht gefunden: die Anfrage, ihr Album, die Veröffentlichung oder die Discogs-Veröffentlichung.",
+			"error-moved-on": "Bereits entschieden — oder ohne Discogs-Veröffentlichung: verknüpfe eine Katalog-Veröffentlichung.",
+			"error-not-allowed": "Nur ein Admin darf Anfragen entscheiden.",
+			"error-discogs-unreachable": "Discogs ist gerade nicht erreichbar. Versuche es später erneut.",
+			"error-discogs-busy": "Discogs ist gerade ausgelastet. Versuche es in einer Minute erneut.",
+			"error-unknown": "Etwas ist schiefgelaufen. Versuche es später erneut."
 		},
 		"musicCollectionAdmin": {
 			"collections": "Kollektionen",
@@ -2283,7 +2286,7 @@
 		},
 		"requestAdmin": {
 			"requests": "Anfragen",
-			"what-collectors-ask": "Was Sammler in den Katalog bringen möchten. Du entscheidest Feld für Feld — eine Ablehnung braucht eine Begründung, und der Sammler liest sie.",
+			"what-collectors-ask": "Alles, was die Sammler vom Katalog wollen, an einem Ort: was er aufnehmen soll, und die Pressungen, die sie anfragen. Eine Katalog-Anfrage entscheidest du Feld für Feld — eine Ablehnung braucht eine Begründung, und der Sammler liest sie.",
 			"filter-by-status": "Nach Status filtern",
 			"loading-requests": "Anfragen werden geladen…",
 			"no-requests-here": "Hier gibt es keine Anfragen.",
@@ -2291,7 +2294,11 @@
 			"error-moved-on": "Der Katalog hat sich inzwischen geändert, oder die Anfrage wurde bereits entschieden. Lade die Seite neu.",
 			"error-invalid": "Die Entscheidung ist unvollständig: Jedes Feld braucht ein Urteil, jede Ablehnung eine Begründung.",
 			"error-not-allowed": "Nur ein Admin darf Anfragen entscheiden.",
-			"error-unknown": "Etwas ist schiefgelaufen. Versuche es später erneut."
+			"error-unknown": "Etwas ist schiefgelaufen. Versuche es später erneut.",
+			"filter-by-kind": "Nach Art filtern",
+			"kind-all": "Alle Arten",
+			"kind-catalog": "Katalog-Anfrage",
+			"kind-release": "Veröffentlichungsanfrage"
 		},
 		"requestRow": {
 			"new-entity": "neuer Eintrag",
@@ -2331,7 +2338,6 @@
 			"collections": "Kollektionen",
 			"userData": "Nutzerdaten",
 			"collectionItems": "Sammlungseinträge",
-			"releaseRequests": "Veröffentlichungsanfragen",
 			"wishlistItems": "Wunschlisteneinträge",
 			"system": "System",
 			"documents": "Dokumente",
@@ -2458,6 +2464,12 @@
 			"from": "Von",
 			"to": "Bis",
 			"active": "Aktiv"
+		},
+		"requestStatus": {
+			"pending": "Ausstehend",
+			"approved": "Freigegeben",
+			"partially-approved": "Teilweise freigegeben",
+			"rejected": "Abgelehnt"
 		}
 	},
 	"fact": {

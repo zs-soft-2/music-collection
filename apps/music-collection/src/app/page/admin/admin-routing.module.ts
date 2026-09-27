@@ -138,19 +138,11 @@ const routes: Routes = [
 				canActivate: [NgxPermissionsGuard],
 			},
 			{
+				// A kiadás-kérések a kérések listájában élnek: aki a régi
+				// linket nyitja meg, oda érkezik.
 				path: 'release-request',
-				data: {
-					breadcrumb: 'release-request',
-					permissions: {
-						only: [RoleNames.ADMIN],
-						redirectTo: '/error',
-					},
-				},
-				loadComponent: () =>
-					import('./release-request/release-request-admin.component').then(
-						(module) => module.ReleaseRequestAdminComponent
-					),
-				canActivate: [NgxPermissionsGuard],
+				pathMatch: 'full',
+				redirectTo: 'request',
 			},
 			{
 				path: 'music-collection',
