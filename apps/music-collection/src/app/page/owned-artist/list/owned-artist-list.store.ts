@@ -67,9 +67,20 @@ export const OwnedArtistListStore = signalStore(
 	withState(initialState),
 	withComputed((store, text = inject(TextService)) => ({
 		isEmpty: computed(() => !store.loading() && !store.artists().length),
-		trail: computed<Crumb[]>(() => [
-			{ label: text.translator()('nav.owned-artists') },
-		]),
+		/**
+		 * The step up is the collector's requests: that is where the bands
+		 * are offered from, and where the answers to them are read. Without
+		 * it this page is a dead end — it is linked from there, and nothing
+		 * led back.
+		 */
+		trail: computed<Crumb[]>(() => {
+			const translate = text.translator();
+
+			return [
+				{ label: translate('nav.my-requests'), link: '/my-requests' },
+				{ label: translate('nav.owned-artists') },
+			];
+		}),
 		/**
 		 * The latest request per band. A band may be asked about more than
 		 * once — a refusal can be answered with better grounds — and what the

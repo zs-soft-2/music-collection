@@ -49,6 +49,7 @@ export class OwnedArtistEditComponent {
 		const translate = this.text.translator();
 
 		return [
+			{ label: translate('nav.my-requests'), link: '/my-requests' },
 			{ label: translate('nav.owned-artists'), link: '/my-bands/list' },
 			{
 				label: translate(
