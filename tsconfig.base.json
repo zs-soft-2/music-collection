@@ -16,9 +16,7 @@
 		"baseUrl": ".",
 		"paths": {
 			"@music-collection/api": ["libs/api/src/index.ts"],
-			"@music-collection/common/api": [
-				"libs/common/api/src/index.ts"
-			],
+			"@music-collection/common/api": ["libs/common/api/src/index.ts"],
 			"@music-collection/common/engine": [
 				"libs/common/engine/src/index.ts"
 			],
@@ -35,9 +33,7 @@
 			"@music-collection/core/entity-quantity": [
 				"libs/core/entity-quantity/src/index.ts"
 			],
-			"@music-collection/core/error": [
-				"libs/core/error/src/index.ts"
-			],
+			"@music-collection/core/error": ["libs/core/error/src/index.ts"],
 			"@music-collection/core/export-import": [
 				"libs/core/export-import/src/index.ts"
 			],
@@ -48,11 +44,17 @@
 			"@music-collection/domain/album": [
 				"libs/domain/music/album/src/index.ts"
 			],
+			"@music-collection/domain/album/core": [
+				"libs/domain/music/album/src/lib/domain-album.module.ts"
+			],
 			"@music-collection/domain/album/admin": [
 				"libs/domain/music/album/app/admin/src/index.ts"
 			],
 			"@music-collection/domain/artist": [
 				"libs/domain/music/artist/src/index.ts"
+			],
+			"@music-collection/domain/artist/core": [
+				"libs/domain/music/artist/src/lib/domain-artist.module.ts"
 			],
 			"@music-collection/domain/artist/admin": [
 				"libs/domain/music/artist/app/admin/src/index.ts"
@@ -60,17 +62,26 @@
 			"@music-collection/domain/collection-item": [
 				"libs/domain/music/collection-item/src/index.ts"
 			],
+			"@music-collection/domain/collection-item/core": [
+				"libs/domain/music/collection-item/src/lib/domain-collection-item.module.ts"
+			],
 			"@music-collection/domain/collection-item/admin": [
 				"libs/domain/music/collection-item/app/admin/src/index.ts"
 			],
 			"@music-collection/domain/document": [
 				"libs/domain/document/src/index.ts"
 			],
+			"@music-collection/domain/document/core": [
+				"libs/domain/document/src/lib/domain-document.module.ts"
+			],
 			"@music-collection/domain/document/admin": [
 				"libs/domain/document/app/admin/src/index.ts"
 			],
 			"@music-collection/domain/label": [
 				"libs/domain/music/label/src/index.ts"
+			],
+			"@music-collection/domain/label/core": [
+				"libs/domain/music/label/src/lib/domain-label.module.ts"
 			],
 			"@music-collection/domain/label/admin": [
 				"libs/domain/music/label/app/admin/src/index.ts"
@@ -90,18 +101,30 @@
 			"@music-collection/domain/musician": [
 				"libs/domain/music/musician/src/index.ts"
 			],
+			"@music-collection/domain/musician/core": [
+				"libs/domain/music/musician/src/lib/domain-musician.module.ts"
+			],
 			"@music-collection/domain/musician/admin": [
 				"libs/domain/music/musician/app/admin/src/index.ts"
 			],
 			"@music-collection/domain/release": [
 				"libs/domain/music/release/src/index.ts"
 			],
+			"@music-collection/domain/release/core": [
+				"libs/domain/music/release/src/lib/domain-release.module.ts"
+			],
 			"@music-collection/domain/release/admin": [
 				"libs/domain/music/release/app/admin/src/index.ts"
 			],
 			"@music-collection/domain/user": ["libs/domain/user/src/index.ts"],
+			"@music-collection/domain/user/core": [
+				"libs/domain/user/src/lib/domain-user.module.ts"
+			],
 			"@music-collection/domain/wishlist-item": [
 				"libs/domain/music/wishlist-item/src/index.ts"
+			],
+			"@music-collection/domain/wishlist-item/core": [
+				"libs/domain/music/wishlist-item/src/lib/domain-wishlist-item.module.ts"
 			],
 			"@music-collection/domain/wishlist-item/admin": [
 				"libs/domain/music/wishlist-item/app/admin/src/index.ts"
