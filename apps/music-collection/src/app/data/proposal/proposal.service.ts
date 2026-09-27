@@ -3,16 +3,20 @@ import { Observable, take } from 'rxjs';
 import { Injectable, signal } from '@angular/core';
 import { EntityTypeEnum } from '@music-collection/api';
 
-/** A change a collector has made in a form, waiting for its grounds. */
+/** What a collector has made in a form, waiting to be sent. */
 export interface EntityProposal {
+	/** Taking something in, or changing something already there. */
+	operation: 'create' | 'update';
 	/** The catalog feature, e.g. `artist`. */
 	featureKey: string;
 	entityType: EntityTypeEnum;
-	/** The catalog document it is about, e.g. `artist/a1/album/b2`. */
-	path: string;
-	/** The catalog's state as the form read it. */
-	before: Record<string, unknown>;
-	/** The same state with the collector's changes in it. */
+	/** The catalog document it is about; null when there is none yet. */
+	path: string | null;
+	/** What a new document would go under, e.g. `artist/a1` for an album. */
+	parentPath: string | null;
+	/** The catalog's state as the form read it; null on a new entity. */
+	before: Record<string, unknown> | null;
+	/** The state the collector asks for. */
 	after: Record<string, unknown>;
 	/** `updatedAt` of the catalog document when it was read. */
 	baseUpdatedAt: number | null;
@@ -33,6 +37,22 @@ export interface ProposalInput<E extends object> {
 	 * say — an album whose artist is missing has no place to be proposed to.
 	 */
 	path: (model: Record<string, unknown>) => string | null;
+}
+
+/** What a page has to say to turn a form's new entity into a proposal. */
+export interface NewProposalInput {
+	featureKey: string;
+	entityType: EntityTypeEnum;
+	/** The entity the form built, in the shape Firestore stores it. */
+	entity: Record<string, unknown>;
+	/**
+	 * What it would go under: an album belongs to an artist, a release to an
+	 * album. Null for what lives in the catalog's root — and null too when
+	 * the form did not say, which is not something to send.
+	 */
+	parentPath: (model: Record<string, unknown>) => string | null;
+	/** Whether a parent is needed at all. */
+	needsParent: boolean;
 }
 
 /**
@@ -85,9 +105,11 @@ export class ProposalService {
 				}
 
 				this.proposal.set({
+					operation: 'update',
 					featureKey,
 					entityType,
 					path: target,
+					parentPath: null,
 					before,
 					// The form hands over the fields it holds; the rest of the
 					// entity is unchanged, and has to stay in the proposal or
@@ -101,6 +123,40 @@ export class ProposalService {
 				console.error('The catalog entity could not be read', error);
 				this.lastError.set(error?.message ?? 'failed');
 			},
+		});
+	}
+
+	/**
+	 * Turns a form's new entity into a proposal. There is nothing to read
+	 * back from the catalog — the entity is not there yet — so what the form
+	 * built is the whole of it, and the only question left is where it goes.
+	 */
+	public proposeNew({
+		featureKey,
+		entityType,
+		entity,
+		parentPath,
+		needsParent,
+	}: NewProposalInput): void {
+		this.lastError.set(null);
+
+		const parent = parentPath(entity);
+
+		if (needsParent && !parent) {
+			this.lastError.set('unknown-parent');
+
+			return;
+		}
+
+		this.proposal.set({
+			operation: 'create',
+			featureKey,
+			entityType,
+			path: null,
+			parentPath: parent,
+			before: null,
+			after: entity,
+			baseUpdatedAt: null,
 		});
 	}
 

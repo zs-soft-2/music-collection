@@ -66,10 +66,11 @@ const submit = (
 	effect: RequestEffect,
 	entity: Record<string, unknown> = band
 ) =>
-	effect.submitOwned$({
+	effect.submitCreate$({
 		featureKey: 'artist',
 		entityType: EntityTypeEnum.Artist,
-		entity: entity as Record<string, unknown> & { uid: string },
+		entity,
+		ownedUid: String(entity['uid'] ?? ''),
 	});
 
 describe('RequestEffect', () => {
@@ -103,6 +104,27 @@ describe('RequestEffect', () => {
 				reference: null,
 			},
 		]);
+	});
+
+	it('points at no drawer when the entity was filled in on the form', async () => {
+		const { effect, repository } = setUp();
+
+		await firstValueFrom(
+			effect.submitCreate$({
+				featureKey: 'album',
+				entityType: EntityTypeEnum.Album,
+				entity: { name: 'Presence' },
+				parentPath: 'artist/a1',
+			})
+		);
+
+		expect(repository.add$.mock.calls[0][0].target).toEqual({
+			featureKey: 'album',
+			entityType: EntityTypeEnum.Album,
+			path: null,
+			parentPath: 'artist/a1',
+			ownedPath: null,
+		});
 	});
 
 	it('says where the collector keeps their own copy', async () => {

@@ -34,7 +34,7 @@ const proposal = {
 };
 
 function setUp(held: typeof proposal | null = proposal): {
-	effect: { submitUpdate$: jest.Mock };
+	effect: { submitUpdate$: jest.Mock; submitCreate$: jest.Mock };
 	proposals: { proposal: ReturnType<typeof signal>; clear: jest.Mock };
 	store: InstanceType<typeof ProposeReviewStore>;
 } {
@@ -42,7 +42,10 @@ function setUp(held: typeof proposal | null = proposal): {
 		proposal: signal(held),
 		clear: jest.fn(),
 	};
-	const effect = { submitUpdate$: jest.fn(() => of({ uid: 'r1' })) };
+	const effect = {
+		submitUpdate$: jest.fn(() => of({ uid: 'r1' })),
+		submitCreate$: jest.fn(() => of({ uid: 'r1' })),
+	};
 
 	TestBed.resetTestingModule();
 	TestBed.configureTestingModule({
@@ -161,6 +164,38 @@ describe('ProposeReviewStore', () => {
 		store.submit();
 
 		expect(effect.submitUpdate$).toHaveBeenCalledTimes(1);
+	});
+
+	it('asks a new entity for one reason, not one per field', () => {
+		const { effect, store } = setUp({
+			...proposal,
+			operation: 'create',
+			path: null,
+			parentPath: 'artist/a1',
+			before: null,
+		});
+
+		expect(store.isNew()).toBe(true);
+		// Every filled-in field is a change from nothing…
+		expect(store.rows().length).toBeGreaterThan(1);
+		// …but what it needs is one answer about the whole of it.
+		expect(store.canSubmit()).toBe(false);
+
+		store.setNote('  It is in my hands.  ');
+
+		expect(store.canSubmit()).toBe(true);
+
+		store.submit();
+
+		expect(effect.submitUpdate$).not.toHaveBeenCalled();
+		expect(effect.submitCreate$).toHaveBeenCalledWith(
+			expect.objectContaining({
+				featureKey: 'artist',
+				parentPath: 'artist/a1',
+				note: 'It is in my hands.',
+				entity: expect.objectContaining({ name: 'Pozvakowski' }),
+			})
+		);
 	});
 
 	it('gives the proposal up when the collector does', () => {

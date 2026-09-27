@@ -201,13 +201,17 @@ export const OwnedArtistListStore = signalStore(
 					),
 					exhaustMap((artist) =>
 						requestEffect
-							.submitOwned$({
+							.submitCreate$({
 								featureKey: ARTIST_FEATURE_KEY,
 								entityType: EntityTypeEnum.Artist,
 								entity: artist as unknown as Record<
 									string,
 									unknown
-								> & { uid: string },
+								>,
+								// The band stays in the collector's own
+								// drawer either way; the request only points
+								// at the copy it was made from.
+								ownedUid: artist.uid,
 							})
 							.pipe(
 								tapResponse({

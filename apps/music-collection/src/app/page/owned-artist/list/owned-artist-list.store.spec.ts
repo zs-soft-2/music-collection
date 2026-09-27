@@ -29,7 +29,7 @@ interface FakeEffect {
 
 interface FakeRequestEffect {
 	listMine$: jest.Mock;
-	submitOwned$: jest.Mock;
+	submitCreate$: jest.Mock;
 }
 
 const asked = (fields: Partial<EntityRequest> = {}): EntityRequest =>
@@ -63,7 +63,7 @@ function setUp(
 	};
 	const requestEffect: FakeRequestEffect = {
 		listMine$: jest.fn(() => of(requests)),
-		submitOwned$: jest.fn(() => of(asked())),
+		submitCreate$: jest.fn(() => of(asked())),
 	};
 
 	TestBed.resetTestingModule();
@@ -161,11 +161,14 @@ describe('OwnedArtistListStore', () => {
 
 		store.submit(band());
 
-		expect(requestEffect.submitOwned$).toHaveBeenCalledWith(
+		expect(requestEffect.submitCreate$).toHaveBeenCalledWith(
 			expect.objectContaining({
 				featureKey: 'artist',
 				entityType: EntityTypeEnum.Artist,
 				entity: expect.objectContaining({ uid: 'a1' }),
+				// The band stays in the collector's drawer; the request only
+				// points at the copy it was made from.
+				ownedUid: 'a1',
 			})
 		);
 	});
@@ -173,17 +176,17 @@ describe('OwnedArtistListStore', () => {
 	it('submits one band at a time', () => {
 		const { requestEffect, store } = setUp();
 
-		requestEffect.submitOwned$.mockReturnValue(NEVER);
+		requestEffect.submitCreate$.mockReturnValue(NEVER);
 		store.submit(band());
 		store.submit(band({ uid: 'a2' }));
 
-		expect(requestEffect.submitOwned$).toHaveBeenCalledTimes(1);
+		expect(requestEffect.submitCreate$).toHaveBeenCalledTimes(1);
 	});
 
 	it('says so when a band could not be submitted', () => {
 		const { requestEffect, store } = setUp();
 
-		requestEffect.submitOwned$.mockReturnValue(
+		requestEffect.submitCreate$.mockReturnValue(
 			throwError(() => new Error('denied'))
 		);
 		store.submit(band());

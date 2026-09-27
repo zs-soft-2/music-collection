@@ -1,7 +1,14 @@
 <div class="page">
 	<mc-page-breadcrumb [trail]="trail()" />
 
-	<h1>{{ 'page.propose.what-backs-it' | transloco }}</h1>
+	<h1>
+		{{
+			(store.isNew()
+				? 'page.propose.what-you-are-adding'
+				: 'page.propose.what-backs-it'
+			) | transloco
+		}}
+	</h1>
 
 	@if (store.sent()) {
 		<section class="sent">
@@ -19,7 +26,12 @@
 		</section>
 	} @else {
 		<p class="lead">
-			{{ 'page.propose.every-field-needs-one' | transloco }}
+			{{
+				(store.isNew()
+					? 'page.propose.say-where-it-is-from'
+					: 'page.propose.every-field-needs-one'
+				) | transloco
+			}}
 		</p>
 
 		<ul class="fields">
@@ -27,30 +39,39 @@
 				<li class="field">
 					<h3>{{ row.labelKey | transloco }}</h3>
 					<p class="change">
-						<span class="was">{{ row.before }}</span>
-						<span class="arrow" aria-hidden="true">→</span>
+						@if (!store.isNew()) {
+							<span class="was">{{ row.before }}</span>
+							<span class="arrow" aria-hidden="true">→</span>
+						}
 						<span class="asked">{{ row.after }}</span>
 					</p>
-					<input
-						type="text"
-						[value]="store.references()[row.field] ?? ''"
-						[disabled]="store.submitting()"
-						[attr.placeholder]="
-							'page.propose.reference-placeholder' | transloco
-						"
-						(input)="
-							store.setReference({
-								field: row.field,
-								value: value($event),
-							})
-						"
-					/>
+					@if (!store.isNew()) {
+						<input
+							type="text"
+							[value]="store.references()[row.field] ?? ''"
+							[disabled]="store.submitting()"
+							[attr.placeholder]="
+								'page.propose.reference-placeholder' | transloco
+							"
+							(input)="
+								store.setReference({
+									field: row.field,
+									value: value($event),
+								})
+							"
+						/>
+					}
 				</li>
 			}
 		</ul>
 
 		<label class="note">
-			<span>{{ 'page.propose.anything-else' | transloco }}</span>
+			<span>{{
+				(store.isNew()
+					? 'page.propose.where-is-it-from'
+					: 'page.propose.anything-else'
+				) | transloco
+			}}</span>
 			<input
 				type="text"
 				[value]="store.note()"
@@ -89,7 +110,12 @@
 
 		@if (!store.canSubmit()) {
 			<p class="hint">
-				{{ 'page.propose.every-field-needs-one' | transloco }}
+				{{
+					(store.isNew()
+						? 'page.propose.say-where-it-is-from'
+						: 'page.propose.every-field-needs-one'
+					) | transloco
+				}}
 			</p>
 		}
 	}

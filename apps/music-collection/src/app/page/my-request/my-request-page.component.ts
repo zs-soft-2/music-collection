@@ -22,4 +22,36 @@ import { MyRequestPageStore } from './my-request-page.store';
 })
 export class MyRequestPageComponent {
 	protected readonly store = inject(MyRequestPageStore);
+
+	/**
+	 * What a collector can ask the catalog to take in. `0` is the new one,
+	 * the way the admin's editors name it — the same forms open on it.
+	 */
+	protected readonly kinds = [
+		{
+			feature: 'artist',
+			icon: 'pi-microphone',
+			labelKey: 'page.my-request.add-artist',
+		},
+		{
+			feature: 'album',
+			icon: 'pi-circle',
+			labelKey: 'page.my-request.add-album',
+		},
+		{
+			feature: 'release',
+			icon: 'pi-clone',
+			labelKey: 'page.my-request.add-release',
+		},
+		{
+			feature: 'label',
+			icon: 'pi-building',
+			labelKey: 'page.my-request.add-label',
+		},
+		{
+			feature: 'musician',
+			icon: 'pi-user',
+			labelKey: 'page.my-request.add-musician',
+		},
+	];
 }

@@ -24,32 +24,56 @@ class CatalogState {
 }
 
 describe('proposalStateProxy', () => {
-	it('catches the save and proposes instead', () => {
+	const handlers = () => {
+		const updated: unknown[] = [];
+		const created: unknown[] = [];
+
+		return {
+			updated,
+			created,
+			handlers: {
+				update: (entity: unknown) => updated.push(entity),
+				create: (entity: unknown) => created.push(entity),
+			},
+		};
+	};
+
+	it('catches the save of a change and proposes instead', () => {
 		const real = new CatalogState();
-		const proposed: unknown[] = [];
-		const proxy = proposalStateProxy(real, (update) =>
-			proposed.push(update)
-		);
+		const { updated, handlers: caught } = handlers();
+		const proxy = proposalStateProxy(real, caught);
 
 		proxy.dispatchUpdateEntityAction({ uid: 'a1' });
 
-		expect(proposed).toEqual([{ uid: 'a1' }]);
+		expect(updated).toEqual([{ uid: 'a1' }]);
 		expect(real.written).toEqual([]);
 	});
 
-	it('writes nothing on a create or a delete either', () => {
+	it('catches a new entity the same way', () => {
 		const real = new CatalogState();
-		const proxy = proposalStateProxy(real, () => undefined);
+		const { created, handlers: caught } = handlers();
+		const proxy = proposalStateProxy(real, caught);
 
-		proxy.dispatchAddEntityAction({ uid: 'a1' });
+		proxy.dispatchAddEntityAction({ name: 'Pozvakowski' });
+
+		expect(created).toEqual([{ name: 'Pozvakowski' }]);
+		expect(real.written).toEqual([]);
+	});
+
+	it('writes nothing on a delete, and proposes nothing either', () => {
+		const real = new CatalogState();
+		const { updated, created, handlers: caught } = handlers();
+		const proxy = proposalStateProxy(real, caught);
+
 		proxy.dispatchDeleteEntityAction({ uid: 'a1' });
 
 		expect(real.written).toEqual([]);
+		expect([...updated, ...created]).toEqual([]);
 	});
 
 	it('passes every question through, reading the real service own fields', () => {
 		const real = new CatalogState();
-		const proxy = proposalStateProxy(real, () => undefined);
+		const proxy = proposalStateProxy(real, handlers().handlers);
 
 		expect(proxy.selectEntities$()).toEqual(['Pozvakowski']);
 	});

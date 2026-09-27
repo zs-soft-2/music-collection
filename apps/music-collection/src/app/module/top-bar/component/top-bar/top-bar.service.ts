@@ -72,6 +72,12 @@ export class TopBarService {
 				requiresAuth: true,
 			},
 			{
+				labelKey: 'nav.my-requests',
+				icon: 'pi-file-edit',
+				routerLink: ['/my-requests'],
+				requiresAuth: true,
+			},
+			{
 				labelKey: 'nav.network',
 				icon: 'pi-sitemap',
 				routerLink: ['/network'],

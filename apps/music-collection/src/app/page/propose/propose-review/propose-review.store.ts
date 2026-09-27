@@ -68,14 +68,22 @@ export const ProposeReviewStore = signalStore(
 
 			return proposal
 				? toRequestChanges(
-						toRequestSnapshot(proposal.before),
+						// Nothing to differ from on a new entity: every
+						// filled-in field is a change from nothing.
+						proposal.before
+							? toRequestSnapshot(proposal.before)
+							: null,
 						toRequestSnapshot(proposal.after)
 					)
 				: [];
 		});
+		const isNew = computed(
+			() => proposals.proposal()?.operation === 'create'
+		);
 
 		return {
 			changes,
+			isNew,
 			rows: computed<ProposedFieldRow[]>(() =>
 				changes().map((change) => ({
 					field: change.field,
@@ -86,11 +94,18 @@ export const ProposeReviewStore = signalStore(
 			),
 			/** Nothing was changed, so there is nothing to ask for. */
 			isEmpty: computed(() => !proposals.proposal() || !changes().length),
-			/** Every changed field has something behind it. */
+			/**
+			 * Enough to send. A change to something the catalog holds needs
+			 * its grounds field by field — that is what an admin decides on.
+			 * A new entity needs one reason for the whole of it: there is
+			 * nothing to argue against yet, only something to add.
+			 */
 			canSubmit: computed(() =>
-				changes().every((change) =>
-					store.references()[change.field]?.trim()
-				)
+				isNew()
+					? !!store.note().trim()
+					: changes().every((change) =>
+							store.references()[change.field]?.trim()
+						)
 			),
 		};
 	}),
@@ -149,39 +164,48 @@ export const ProposeReviewStore = signalStore(
 									},
 								])
 						);
+						const note = store.note().trim() || null;
+						const sent$ =
+							proposal.operation === 'create'
+								? requestEffect.submitCreate$({
+										featureKey: proposal.featureKey,
+										entityType: proposal.entityType,
+										entity: proposal.after,
+										parentPath: proposal.parentPath,
+										note,
+									})
+								: requestEffect.submitUpdate$({
+										featureKey: proposal.featureKey,
+										entityType: proposal.entityType,
+										path: proposal.path ?? '',
+										before: proposal.before ?? {},
+										after: proposal.after,
+										references,
+										baseUpdatedAt: proposal.baseUpdatedAt,
+										note,
+									});
 
-						return requestEffect
-							.submitUpdate$({
-								featureKey: proposal.featureKey,
-								entityType: proposal.entityType,
-								path: proposal.path,
-								before: proposal.before,
-								after: proposal.after,
-								references,
-								baseUpdatedAt: proposal.baseUpdatedAt,
-								note: store.note().trim() || null,
+						return sent$.pipe(
+							tapResponse({
+								next: () => {
+									proposals.clear();
+									patchState(store, {
+										submitting: false,
+										sent: true,
+									});
+								},
+								error: (error) => {
+									console.error(
+										'A change was not proposed',
+										error
+									);
+									patchState(store, {
+										submitting: false,
+										failed: 'page.propose.could-not-send',
+									});
+								},
 							})
-							.pipe(
-								tapResponse({
-									next: () => {
-										proposals.clear();
-										patchState(store, {
-											submitting: false,
-											sent: true,
-										});
-									},
-									error: (error) => {
-										console.error(
-											'A change was not proposed',
-											error
-										);
-										patchState(store, {
-											submitting: false,
-											failed: 'page.propose.could-not-send',
-										});
-									},
-								})
-							);
+						);
 					})
 				)
 			),

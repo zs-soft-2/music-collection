@@ -28,7 +28,8 @@
 		"widthFull": "Volle Breite nutzen",
 		"themeLight": "Zum hellen Design wechseln",
 		"themeDark": "Zum dunklen Design wechseln",
-		"owned-artists": "Meine Bands"
+		"owned-artists": "Meine Bands",
+		"my-requests": "Meine Anfragen"
 	},
 	"common": {
 		"save": "Speichern",
@@ -913,7 +914,10 @@
 			"see-my-requests": "Meine Anfragen",
 			"nothing-to-send": "Du hast nichts zu senden. Öffne einen Künstler und schlage dort eine Änderung vor.",
 			"back-to-the-catalog": "Zurück zum Katalog",
-			"could-not-send": "Senden fehlgeschlagen. Versuche es erneut."
+			"could-not-send": "Senden fehlgeschlagen. Versuche es erneut.",
+			"what-you-are-adding": "Was du hinzufügst",
+			"say-where-it-is-from": "Sag, woher du es weißt — ein Link, eine Katalognummer, oder dass du die Platte in der Hand hast. Ohne das lässt es sich nicht senden.",
+			"where-is-it-from": "Woher weißt du es? (erforderlich)"
 		},
 		"my-request": {
 			"title": "Meine Anfragen",
@@ -931,7 +935,13 @@
 			"accepted": "Übernommen",
 			"rejected": "Abgelehnt",
 			"from-the-admin": "Admin",
-			"new-release": "Pressungs-Anfrage"
+			"new-release": "Pressungs-Anfrage",
+			"missing-something": "Fehlt etwas im Katalog?",
+			"add-artist": "Neuer Künstler",
+			"add-album": "Neues Album",
+			"add-release": "Neue Pressung",
+			"add-label": "Neues Label",
+			"add-musician": "Neuer Musiker"
 		}
 	},
 	"ui": {

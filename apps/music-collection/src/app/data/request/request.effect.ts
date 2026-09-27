@@ -40,15 +40,21 @@ export interface SubmitUpdateRequestParams {
 	note?: string | null;
 }
 
-/** What a collector asks the catalog to take in, out of what they own. */
-export interface SubmitOwnedRequestParams {
-	/** The catalog feature the owned entity mirrors, e.g. `artist`. */
+/** What a collector asks the catalog to take in. */
+export interface SubmitCreateRequestParams {
+	/** The catalog feature, e.g. `artist`. */
 	featureKey: string;
 	entityType: EntityTypeEnum;
-	/** The collector's own document, as they saved it. */
-	entity: Record<string, unknown> & { uid: string };
+	/** The entity as the collector filled it in. */
+	entity: Record<string, unknown>;
 	/** What the new document would go under, e.g. `artist/{uid}`. */
 	parentPath?: string | null;
+	/**
+	 * The collector's own copy this was made from, when there is one: a band
+	 * they had already entered for themselves. A new entity filled in on the
+	 * proposal form has none, and needs none.
+	 */
+	ownedUid?: string | null;
 	/** The collector's own words about the request as a whole. */
 	note?: string | null;
 }
@@ -212,17 +218,19 @@ export class RequestEffect {
 	}
 
 	/**
-	 * Submits a document the collector keeps for themselves as a new entity
-	 * for the catalog. Every filled-in field is a change from nothing, and an
-	 * admin may take in some of them and leave others.
+	 * Submits something the catalog does not have yet: a band the collector
+	 * keeps for themselves, or an entity they filled in on the proposal form.
+	 * Every filled-in field is a change from nothing, and an admin may take
+	 * in some of them and leave others.
 	 */
-	public submitOwned$({
+	public submitCreate$({
 		featureKey,
 		entityType,
 		entity,
 		parentPath = null,
+		ownedUid = null,
 		note = null,
-	}: SubmitOwnedRequestParams): Observable<EntityRequest> {
+	}: SubmitCreateRequestParams): Observable<EntityRequest> {
 		return this.authenticatedUser.user$.pipe(
 			take(1),
 			switchMap((user) => {
@@ -254,10 +262,15 @@ export class RequestEffect {
 						entityType,
 						path: null,
 						parentPath,
-						ownedPath: [
-							...ownedCollectionPath(user.uid, featureKey),
-							entity.uid,
-						].join('/'),
+						ownedPath: ownedUid
+							? [
+									...ownedCollectionPath(
+										user.uid,
+										featureKey
+									),
+									ownedUid,
+								].join('/')
+							: null,
 					},
 					before: null,
 					after,

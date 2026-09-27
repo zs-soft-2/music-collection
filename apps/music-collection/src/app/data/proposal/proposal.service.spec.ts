@@ -93,6 +93,59 @@ describe('ProposalService', () => {
 		expect(service.lastError()).toBe('denied');
 	});
 
+	it('takes a new entity as it was filled in, with nothing to differ from', () => {
+		const service = setUp();
+
+		service.proposeNew({
+			featureKey: 'artist',
+			entityType: EntityTypeEnum.Artist,
+			entity: { name: 'Pozvakowski' },
+			parentPath: () => null,
+			needsParent: false,
+		});
+
+		expect(service.proposal()).toMatchObject({
+			operation: 'create',
+			path: null,
+			parentPath: null,
+			before: null,
+			after: { name: 'Pozvakowski' },
+		});
+	});
+
+	it('puts a new entity under the one it belongs to', () => {
+		const service = setUp();
+
+		service.proposeNew({
+			featureKey: 'album',
+			entityType: EntityTypeEnum.Album,
+			entity: { name: 'Presence', artist: { uid: 'a1' } },
+			parentPath: (model) =>
+				`artist/${String((model['artist'] as { uid: string }).uid)}`,
+			needsParent: true,
+		});
+
+		expect(service.proposal()).toMatchObject({
+			operation: 'create',
+			parentPath: 'artist/a1',
+		});
+	});
+
+	it('will not take one that does not say where it belongs', () => {
+		const service = setUp();
+
+		service.proposeNew({
+			featureKey: 'album',
+			entityType: EntityTypeEnum.Album,
+			entity: { name: 'Presence' },
+			parentPath: () => null,
+			needsParent: true,
+		});
+
+		expect(service.proposal()).toBeNull();
+		expect(service.lastError()).toBe('unknown-parent');
+	});
+
 	it('lets the proposal go once it is spent', () => {
 		const service = setUp();
 

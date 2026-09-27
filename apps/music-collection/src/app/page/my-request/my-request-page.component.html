@@ -6,6 +6,21 @@
 		<p class="lead">{{ 'page.my-request.lead' | transloco }}</p>
 	</header>
 
+	<section class="add">
+		<h2>{{ 'page.my-request.missing-something' | transloco }}</h2>
+		<nav class="kinds">
+			@for (kind of kinds; track kind.feature) {
+				<a
+					class="secondary"
+					[routerLink]="['/propose', kind.feature, 'edit', '0']"
+				>
+					<i class="pi {{ kind.icon }}" aria-hidden="true"></i>
+					{{ kind.labelKey | transloco }}
+				</a>
+			}
+		</nav>
+	</section>
+
 	@if (store.failed()) {
 		<p class="error">{{ 'page.my-request.could-not-read' | transloco }}</p>
 	}

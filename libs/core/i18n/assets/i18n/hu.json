@@ -28,7 +28,8 @@
 		"widthFull": "Teljes szélesség",
 		"themeLight": "Váltás világos témára",
 		"themeDark": "Váltás sötét témára",
-		"owned-artists": "Saját zenekaraim"
+		"owned-artists": "Saját zenekaraim",
+		"my-requests": "Kéréseim"
 	},
 	"common": {
 		"save": "Mentés",
@@ -913,7 +914,10 @@
 			"see-my-requests": "A kéréseim",
 			"nothing-to-send": "Nincs beküldhető javaslatod. Nyiss meg egy előadót, és ott javasold a módosítást.",
 			"back-to-the-catalog": "Vissza a katalógushoz",
-			"could-not-send": "A beküldés nem sikerült. Próbáld újra."
+			"could-not-send": "A beküldés nem sikerült. Próbáld újra.",
+			"what-you-are-adding": "Mit veszel fel?",
+			"say-where-it-is-from": "Írd meg, honnan tudod — link, katalógusszám, vagy hogy a kezedben van a lemez. Enélkül nem küldhető be.",
+			"where-is-it-from": "Honnan tudod? (kötelező)"
 		},
 		"my-request": {
 			"title": "A kéréseim",
@@ -931,7 +935,13 @@
 			"accepted": "Elfogadva",
 			"rejected": "Elutasítva",
 			"from-the-admin": "Admin",
-			"new-release": "kiadás-kérés"
+			"new-release": "kiadás-kérés",
+			"missing-something": "Hiányzik valami a katalógusból?",
+			"add-artist": "Új előadó",
+			"add-album": "Új album",
+			"add-release": "Új kiadás",
+			"add-label": "Új kiadó",
+			"add-musician": "Új zenész"
 		}
 	},
 	"ui": {

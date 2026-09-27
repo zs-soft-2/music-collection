@@ -60,7 +60,9 @@ beforeEach(async () => {
 		const admin = context.firestore();
 
 		await setDoc(doc(admin, `security/users/${ME}/effective_permissions`), {
-			permissions: ['createOwnedArtistEntity'],
+			// What the USER role carries (tools/sync/seed-user-role.mjs):
+			// the right to keep one's own of every catalog entity.
+			permissions: ['createOwnedArtistEntity', 'createOwnedAlbumEntity'],
 			roles: ['USER'],
 		});
 		await setDoc(
@@ -155,6 +157,31 @@ describe('entity request: asking the catalog to take something in', () => {
 
 	it('keeps a visitor from asking at all', () =>
 		assertFails(setDoc(doc(asVisitor(), PATH), request())));
+
+	it('takes a new entity that belongs under another one', () =>
+		assertSucceeds(
+			setDoc(
+				doc(asMe(), PATH),
+				request({
+					target: {
+						featureKey: 'album',
+						entityType: 'Album',
+						path: null,
+						parentPath: 'artist/a1',
+						ownedPath: null,
+					},
+					after: { name: 'Presence' },
+					changes: [
+						{
+							field: 'name',
+							before: null,
+							after: 'Presence',
+							reference: null,
+						},
+					],
+				})
+			)
+		));
 
 	it('takes a change to something the catalog already holds', () =>
 		assertSucceeds(
