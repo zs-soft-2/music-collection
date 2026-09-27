@@ -1,5 +1,6 @@
 <dialog
 	#dialog
+	tabindex="-1"
 	class="picker"
 	[class.is-dragging]="dragging()"
 	aria-labelledby="release-picker-title"
@@ -95,7 +96,7 @@
 						[weight]="chosen.weight"
 					/>
 					<span>
-						{{ chosen.labelName ?? 'Unknown label' }}
+						{{ chosen.labelName ?? ('common.unknown' | transloco) }}
 						@if (chosen.country) {
 							· {{ chosen.country }}
 						}
@@ -192,13 +193,22 @@
 						[disabled]="busy() || !!serialProblem()"
 						(click)="confirmChoice()"
 					>
-						{{ adding() ? 'Adding…' : 'Add to my collection' }}
+						{{
+							(adding()
+								? 'ui.releasePicker.adding'
+								: 'ui.releasePicker.add-to-my-collection'
+							) | transloco
+						}}
 					</button>
 				</div>
 			} @else {
-				<p class="lead">
-					{{ 'ui.releasePicker.which-pressing-do-you' | transloco }}
-				</p>
+				@if (loading() || releases().length) {
+					<p class="lead">
+						{{
+							'ui.releasePicker.which-pressing-do-you' | transloco
+						}}
+					</p>
+				}
 
 				@if (error()) {
 					<p class="error" role="alert">
@@ -283,58 +293,18 @@
 							</li>
 						}
 					</ul>
+					<footer class="missing">
+						<p class="lead">
+							{{ 'ui.releasePicker.don-t-see-your' | transloco }}
+						</p>
+						<ng-container *ngTemplateOutlet="routes" />
+					</footer>
 				} @else {
-					<p class="empty">
+					<p class="lead">
 						{{ 'ui.releasePicker.no-release-of-this' | transloco }}
 					</p>
+					<ng-container *ngTemplateOutlet="routes" />
 				}
-
-				<footer class="missing">
-					<p>{{ 'ui.releasePicker.don-t-see-your' | transloco }}</p>
-					<div class="missing-actions">
-						@if (discogsAvailable()) {
-							<button
-								type="button"
-								class="secondary-button"
-								(click)="show('discogs')"
-							>
-								<i class="pi pi-search" aria-hidden="true"></i>
-								{{
-									'ui.releasePicker.find-it-on-discogs'
-										| transloco
-								}}
-							</button>
-						}
-						<button
-							type="button"
-							class="secondary-button"
-							(click)="show('photo')"
-						>
-							<i class="pi pi-camera" aria-hidden="true"></i>
-							{{
-								'ui.releasePicker.identify-from-a-photo'
-									| transloco
-							}}
-						</button>
-						<button
-							type="button"
-							class="text-button"
-							(click)="show('describe')"
-						>
-							{{ 'ui.releasePicker.describe-it' | transloco }}
-						</button>
-					</div>
-					<p class="hint">
-						{{ 'ui.releasePicker.generic-hint' | transloco }}
-						<button
-							type="button"
-							class="text-button"
-							(click)="show('generic')"
-						>
-							{{ 'ui.releasePicker.generic-open' | transloco }}
-						</button>
-					</p>
-				</footer>
 			}
 		}
 
@@ -395,7 +365,7 @@
 									"
 									(click)="formatFilter.set(format)"
 								>
-									{{ formatLabels[format] }}
+									{{ format | mcCatalog: 'media' }}
 								</button>
 							}
 						</div>
@@ -600,6 +570,7 @@
 												"
 												>{{
 													matchLabels[version.match]
+														| transloco
 												}}</span
 											>
 										}
@@ -759,12 +730,112 @@
 					[disabled]="!canDescribe() || requesting()"
 					(click)="requestDescribed()"
 				>
-					{{ requesting() ? 'Sending…' : 'Send request' }}
+					{{
+						(requesting()
+							? 'ui.releasePicker.sending'
+							: 'ui.releasePicker.send-request'
+						) | transloco
+					}}
 				</button>
 			</div>
 		}
 	}
 </dialog>
+
+<!-- The ways in when the pressing is not in the list, each saying what it
+     does, under the heading that says what becomes of it: the format-only
+     route adds the record now, the other three only ask an admin for it. -->
+<ng-template #routes>
+	<h3 class="subtitle routes-title">
+		{{ 'ui.releasePicker.routes-now' | transloco }}
+	</h3>
+	<ul class="options">
+		<li>
+			<button
+				type="button"
+				class="option route is-now"
+				[disabled]="busy()"
+				(click)="show('generic')"
+			>
+				<i class="pi pi-bolt" aria-hidden="true"></i>
+				<span class="route-text">
+					<span class="route-name">{{
+						'ui.releasePicker.generic-open' | transloco
+					}}</span>
+					<span class="route-hint">{{
+						'ui.releasePicker.generic-route-hint' | transloco
+					}}</span>
+				</span>
+				<i class="pi pi-chevron-right" aria-hidden="true"></i>
+			</button>
+		</li>
+	</ul>
+
+	<h3 class="subtitle routes-title">
+		{{ 'ui.releasePicker.routes-request' | transloco }}
+	</h3>
+	<ul class="options">
+		@if (discogsAvailable()) {
+			<li>
+				<button
+					type="button"
+					class="option route"
+					[disabled]="busy()"
+					(click)="show('discogs')"
+				>
+					<i class="pi pi-search" aria-hidden="true"></i>
+					<span class="route-text">
+						<span class="route-name">{{
+							'ui.releasePicker.find-it-on-discogs' | transloco
+						}}</span>
+						<span class="route-hint">{{
+							'ui.releasePicker.discogs-route-hint' | transloco
+						}}</span>
+					</span>
+					<i class="pi pi-chevron-right" aria-hidden="true"></i>
+				</button>
+			</li>
+		}
+		<li>
+			<button
+				type="button"
+				class="option route"
+				[disabled]="busy()"
+				(click)="show('photo')"
+			>
+				<i class="pi pi-camera" aria-hidden="true"></i>
+				<span class="route-text">
+					<span class="route-name">{{
+						'ui.releasePicker.identify-from-a-photo' | transloco
+					}}</span>
+					<span class="route-hint">{{
+						'ui.releasePicker.photo-route-hint' | transloco
+					}}</span>
+				</span>
+				<i class="pi pi-chevron-right" aria-hidden="true"></i>
+			</button>
+		</li>
+		<li>
+			<button
+				type="button"
+				class="option route"
+				[disabled]="busy()"
+				(click)="show('describe')"
+			>
+				<i class="pi pi-pencil" aria-hidden="true"></i>
+				<span class="route-text">
+					<span class="route-name">{{
+						'ui.releasePicker.describe-it' | transloco
+					}}</span>
+					<span class="route-hint">{{
+						'ui.releasePicker.describe-route-hint' | transloco
+					}}</span>
+				</span>
+				<i class="pi pi-chevron-right" aria-hidden="true"></i>
+			</button>
+		</li>
+	</ul>
+</ng-template>
 
 <!-- The pressing picked, wherever it came from: the Discogs list or a photo
      of the record. From here the request is the same. -->
@@ -818,7 +889,12 @@
 				[disabled]="requesting()"
 				(click)="requestSelected()"
 			>
-				{{ requesting() ? 'Sending…' : 'Send request' }}
+				{{
+					(requesting()
+						? 'ui.releasePicker.sending'
+						: 'ui.releasePicker.send-request'
+					) | transloco
+				}}
 			</button>
 		</div>
 	}

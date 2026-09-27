@@ -1,4 +1,4 @@
-import { I18N_IMPORTS } from '@music-collection/core/i18n';
+import { I18N_IMPORTS, TextService } from '@music-collection/core/i18n';
 import { NgTemplateOutlet } from '@angular/common';
 import {
 	ChangeDetectionStrategy,
@@ -23,7 +23,6 @@ import {
 } from '@music-collection/api';
 
 import {
-	FORMAT_LABELS,
 	FormatBadgeComponent,
 	MATCH_LABELS,
 	MediaFormat,
@@ -140,7 +139,6 @@ export class ReleasePickerComponent {
 	protected readonly serialNumber = signal('');
 	protected readonly serialTotal = signal('');
 	protected readonly noteMaxLength = NOTE_MAX_LENGTH;
-	protected readonly formatLabels = FORMAT_LABELS;
 	protected readonly matchLabels = MATCH_LABELS;
 
 	/** The formats to add the album on, those it is already on marked. */
@@ -223,10 +221,19 @@ export class ReleasePickerComponent {
 	private readonly photoInput =
 		viewChild.required<ElementRef<HTMLInputElement>>('photo');
 	private readonly injector = inject(Injector);
+	private readonly text = inject(TextService);
 
 	public constructor() {
-		// Shown only while open; open it modally once rendered.
-		afterNextRender(() => this.dialog().nativeElement.showModal());
+		// Shown only while open; open it modally once rendered. The dialog
+		// itself takes the focus, not the close button the browser would pick
+		// on its own: the first thing outlined in a dialog about adding a
+		// record should not be the way out of it.
+		afterNextRender(() => {
+			const dialog = this.dialog().nativeElement;
+
+			dialog.showModal();
+			dialog.focus();
+		});
 
 		// A scan opens the picker on the pressing it recognised; select it as
 		// soon as the list it lives in has arrived.
@@ -271,10 +278,14 @@ export class ReleasePickerComponent {
 				// Only in the photo view: elsewhere pasting text (a Discogs
 				// link into the description) is exactly what it should do.
 				if (this.view() === 'photo') {
+					const say = this.text.translator();
+
 					this.pasteHint.set(
-						event.clipboardData?.types.length
-							? 'That was not an image. Copy the picture itself — in a browser, right-click it and choose “Copy image”. A file copied from Finder cannot be pasted, but you can drop it here.'
-							: 'The clipboard is empty.'
+						say(
+							event.clipboardData?.types.length
+								? 'ui.releasePicker.paste-not-an-image'
+								: 'ui.releasePicker.clipboard-empty'
+						)
 					);
 				}
 			};

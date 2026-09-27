@@ -292,30 +292,64 @@ button.option {
 
 .missing {
 	margin-top: 1.5rem;
-	padding-top: 1rem;
 	border-top: 1px solid var(--mc-border);
-
-	p {
-		margin: 0 0 0.75rem;
-		color: var(--mc-text-muted);
-	}
 }
 
-.missing-actions,
 .form-actions {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: 1rem;
-}
-
-.form-actions {
 	justify-content: flex-end;
+	gap: 1rem;
 	margin-top: 1rem;
 }
 
-.hint {
-	margin: 1rem 0 0;
+/* The heading over a group of ways in: the dialog's own subtitle, in the
+   quieter colour of something that labels rather than warns. */
+.routes-title {
+	margin-top: 1rem;
+	color: var(--mc-text-subtle);
+}
+
+/* A way in reads as a row of the same build as a pressing in the list, with
+   the icon and the line of consequence a pressing has no use for. */
+.route {
+	flex-wrap: nowrap;
+	gap: 0.75rem;
+
+	> .pi {
+		flex: none;
+	}
+
+	> .pi:first-child {
+		font-size: 1.15rem;
+		color: var(--mc-text-subtle);
+	}
+
+	> .pi:last-child {
+		color: var(--mc-primary);
+	}
+
+	/* The one route that ends in the collection, not in an admin's queue. */
+	&.is-now > .pi:first-child {
+		color: var(--mc-accent);
+	}
+}
+
+.route-text {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	gap: 0.15rem;
+}
+
+.route-name {
+	font-weight: 700;
+}
+
+.route-hint {
+	font-size: 0.8125rem;
+	line-height: 1.45;
 	color: var(--mc-text-muted);
 }
 
