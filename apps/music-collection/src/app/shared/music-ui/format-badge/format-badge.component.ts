@@ -1,12 +1,7 @@
 import { I18N_IMPORTS } from '@music-collection/core/i18n';
-import {
-	ChangeDetectionStrategy,
-	Component,
-	computed,
-	input,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
-import { FORMAT_LABELS, MediaFormat } from '@music-collection/ui/music-view';
+import { MediaFormat } from '@music-collection/ui/music-view';
 
 /** Inline format label with a format-specific icon. */
 @Component({
@@ -95,7 +90,7 @@ import { FORMAT_LABELS, MediaFormat } from '@music-collection/ui/music-view';
 				</svg>
 			}
 		}
-		<span>{{ label() }}</span>
+		<span>{{ format() | mcCatalog: 'media' }}</span>
 		@if (weight()) {
 			<span class="weight">{{ weight() }}g</span>
 		}
@@ -126,6 +121,4 @@ import { FORMAT_LABELS, MediaFormat } from '@music-collection/ui/music-view';
 export class FormatBadgeComponent {
 	public readonly format = input.required<MediaFormat>();
 	public readonly weight = input<number | null>(null);
-
-	protected readonly label = computed(() => FORMAT_LABELS[this.format()]);
 }

@@ -102,20 +102,16 @@ export interface DiscographyAlbum extends AlbumView {
 	ownedFormats: MediaFormat[];
 }
 
-/** How sure a photo scan is about a pressing, as the collector reads it. */
+/**
+ * How sure a photo scan is about a pressing, as the collector reads it —
+ * dictionary keys rather than words, because a scan result is shown in the
+ * album dialog and on the scan page alike, and both read it in the language
+ * in force.
+ */
 export const MATCH_LABELS: Record<ScanMatch, string> = {
-	exact: 'Exact match',
-	likely: 'Likely',
-	possible: 'Possible',
-};
-
-export const FORMAT_LABELS: Record<MediaFormat, string> = {
-	vinyl: 'Vinyl',
-	cd: 'CD',
-	cassette: 'Cassette',
-	dvd: 'DVD',
-	boxset: 'Box set',
-	other: 'Other',
+	exact: 'common.match.exact',
+	likely: 'common.match.likely',
+	possible: 'common.match.possible',
 };
 
 /** Display order of formats (stats, filter chips, shelf sections). */

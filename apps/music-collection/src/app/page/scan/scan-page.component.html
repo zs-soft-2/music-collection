@@ -120,10 +120,10 @@
 								<p class="summary">{{ candidate.summary }}</p>
 								<p class="badges">
 									<span class="badge is-match">{{
-										matchLabels[candidate.match]
+										matchLabels[candidate.match] | transloco
 									}}</span>
 									<span class="badge is-state">{{
-										stateLabels[candidate.state]
+										stateLabels[candidate.state] | transloco
 									}}</span>
 								</p>
 							</div>

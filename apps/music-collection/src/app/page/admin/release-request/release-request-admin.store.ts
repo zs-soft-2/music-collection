@@ -1,6 +1,7 @@
 import { exhaustMap, filter, map, of, pipe, switchMap, tap } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
+import { TextService } from '@music-collection/core/i18n';
 import {
 	AuthenticationStateService,
 	ReleaseEntity,
@@ -70,12 +71,13 @@ function describeError(error: unknown): string {
 /** Admin: the release requests of the collectors, to approve or reject. */
 export const ReleaseRequestAdminStore = signalStore(
 	withState(initialState),
-	withComputed((store) => {
+	withComputed((store, text = inject(TextService)) => {
 		const rows = computed(() =>
 			toReleaseRequestRows(
 				store.requests(),
 				store.users(),
-				store.releases()
+				store.releases(),
+				text.catalog()
 			)
 		);
 

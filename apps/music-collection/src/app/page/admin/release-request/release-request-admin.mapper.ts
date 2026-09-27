@@ -1,3 +1,4 @@
+import { CatalogLabeller } from '@music-collection/core/i18n';
 import {
 	ReleaseEntity,
 	ReleaseRequest,
@@ -6,12 +7,7 @@ import {
 	discogsReleaseUrl,
 } from '@music-collection/api';
 
-import {
-	FORMAT_LABELS,
-	formatCountry,
-	toMediaFormat,
-	toYear,
-} from '../../../shared/music-ui';
+import { formatCountry, toMediaFormat, toYear } from '../../../shared/music-ui';
 
 export type StatusFilter = ReleaseRequestStatus | 'all';
 
@@ -82,12 +78,13 @@ function requestSummary(request: ReleaseRequest): string {
 }
 
 export function toCatalogReleaseOption(
-	release: ReleaseEntity
+	release: ReleaseEntity,
+	word: CatalogLabeller
 ): CatalogReleaseOption {
 	return {
 		id: release.uid,
 		label: [
-			FORMAT_LABELS[toMediaFormat(release.media)],
+			word('media', toMediaFormat(release.media)),
 			release.label?.name,
 			formatCountry(release.country),
 			toYear(release.date),
@@ -102,7 +99,8 @@ export function toCatalogReleaseOption(
 export function toReleaseRequestRows(
 	requests: ReleaseRequest[],
 	users: User[],
-	releases: ReleaseEntity[]
+	releases: ReleaseEntity[],
+	word: CatalogLabeller
 ): ReleaseRequestRow[] {
 	const usersById = new Map(users.map((user) => [user.uid, user]));
 	const releasesByAlbum = new Map<string, CatalogReleaseOption[]>();
@@ -111,7 +109,7 @@ export function toReleaseRequestRows(
 		const albumId = release.album?.uid;
 		if (albumId) {
 			const options = releasesByAlbum.get(albumId) ?? [];
-			options.push(toCatalogReleaseOption(release));
+			options.push(toCatalogReleaseOption(release, word));
 			releasesByAlbum.set(albumId, options);
 		}
 	}

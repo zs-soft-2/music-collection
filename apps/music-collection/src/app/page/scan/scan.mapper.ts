@@ -54,11 +54,12 @@ type CatalogAlbum = AlbumEntity;
 
 export { MATCH_LABELS } from '@music-collection/ui/music-view';
 
+/** Where a scanned record stands, as dictionary keys: shown translated. */
 export const STATE_LABELS: Record<ScanState, string> = {
-	'in-collection': 'Already in your collection',
-	'in-catalog': 'In the catalog',
-	'new-release': 'New pressing',
-	'new-album': 'New album',
+	'in-collection': 'page.scan.state.in-collection',
+	'in-catalog': 'page.scan.state.in-catalog',
+	'new-release': 'page.scan.state.new-release',
+	'new-album': 'page.scan.state.new-album',
 };
 
 /** "Vinyl, LP · Roadrunner Records (RR 9862) · Netherlands · 1983". */

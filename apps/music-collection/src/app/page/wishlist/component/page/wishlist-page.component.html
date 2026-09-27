@@ -63,7 +63,7 @@
 					[attr.aria-pressed]="store.format() === option.format"
 					(click)="store.setFormat(option.format)"
 				>
-					{{ option.label }}
+					{{ option.format | mcCatalog: 'media' }}
 					<span class="chip-count">{{ option.count }}</span>
 				</button>
 			}

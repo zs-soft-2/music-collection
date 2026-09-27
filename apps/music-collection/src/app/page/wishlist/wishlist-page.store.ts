@@ -22,7 +22,7 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { NgxPermissionsService } from 'ngx-permissions';
 
-import { FORMAT_LABELS, MediaFormat, ReleaseView } from '../../shared/music-ui';
+import { MediaFormat, ReleaseView } from '../../shared/music-ui';
 
 export type WishlistFormatFilter = MediaFormat | 'all';
 
@@ -77,7 +77,9 @@ const FORMAT_ORDER: MediaFormat[] = [
 ];
 
 function toFormat(media: string): MediaFormat {
-	return media in FORMAT_LABELS ? (media as MediaFormat) : 'other';
+	return FORMAT_ORDER.includes(media as MediaFormat)
+		? (media as MediaFormat)
+		: 'other';
 }
 
 function safeUrl(url: string | undefined | null): string | null {
@@ -176,7 +178,6 @@ export const WishlistPageStore = signalStore(
 			formatCounts: computed(() =>
 				FORMAT_ORDER.map((format) => ({
 					format,
-					label: FORMAT_LABELS[format],
 					count: searched().filter((entry) =>
 						entry.formats.includes(format)
 					).length,
