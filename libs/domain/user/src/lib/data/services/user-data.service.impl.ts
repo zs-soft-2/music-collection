@@ -1,7 +1,7 @@
-import { Observable } from 'rxjs';
+import { Observable, from, map } from 'rxjs';
 
 import { Injectable } from '@angular/core';
-import { collection, doc } from '@angular/fire/firestore';
+import { collection, doc, getDoc } from '@angular/fire/firestore';
 import {
 	COLLECTION_ITEM_FEATURE_KEY,
 	COPY_SERIAL_FEATURE_KEY,
@@ -44,7 +44,13 @@ export class UserDataServiceImpl extends UserDataService {
 
 		return new Observable((subscriber) => {
 			this.firestoreSync
-				.set(doc(this.collection, user.uid), this.featureKey, user)
+				// Merged, because the document may already be there: the
+				// profile sent here carries no `roleIds` — that field is the
+				// permission sync's — and an overwrite would take it off,
+				// which the rules refuse outright.
+				.set(doc(this.collection, user.uid), this.featureKey, user, {
+					merge: true,
+				})
 				.then(() => {
 					subscriber.next(withLocalUpdatedAt(user));
 					subscriber.complete();
@@ -169,10 +175,7 @@ export class UserDataServiceImpl extends UserDataService {
 				doc(
 					this.firestore,
 					COPY_SERIAL_FEATURE_KEY,
-					toCopySerialClaimId(
-						releaseId,
-						collectionItem.serial.number
-					)
+					toCopySerialClaimId(releaseId, collectionItem.serial.number)
 				),
 				COPY_SERIAL_FEATURE_KEY
 			);
@@ -206,6 +209,17 @@ export class UserDataServiceImpl extends UserDataService {
 
 	public load$(uid: string): Observable<User | undefined> {
 		return super.loadModel$(uid);
+	}
+
+	/** See `UserDataService.loadExisting$`: one answer, the server's. */
+	public loadExisting$(uid: string): Observable<User | undefined> {
+		return from(getDoc(doc(this.collection, uid))).pipe(
+			map((snapshot) =>
+				snapshot.exists()
+					? ({ ...snapshot.data(), uid: snapshot.id } as User)
+					: undefined
+			)
+		);
 	}
 
 	public search$(params: SearchParams): Observable<User[]> {
