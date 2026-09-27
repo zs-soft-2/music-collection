@@ -25,7 +25,7 @@ export const environment = {
 		 * tokent követelnek (apps/functions/src/index.ts) — mindent
 		 * elutasítanak.
 		 */
-		recaptchaSiteKey: '',
+		recaptchaSiteKey: '6Le8PdItAAAAAPCTKDGgY1FmI6Du7G413PEYcRgK',
 		/**
 		 * Debug token a prod buildben SOHA: aki ismeri, az App Checket
 		 * megkerülve hívhatná a callable-öket. Csak a dev környezet kap
