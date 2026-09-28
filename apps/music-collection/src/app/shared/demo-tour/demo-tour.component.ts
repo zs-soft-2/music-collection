@@ -119,6 +119,44 @@ import { DemoTourService } from '../../data/demo-tour';
 		}
 
 		/*
+		 * The launcher wears the play triangle, which in this app is the
+		 * button that puts a record on — two different things under one
+		 * shape. The library draws it as an inline SVG, so it is hidden and
+		 * a compass set in its place out of the icon font the rest of the
+		 * app uses: pi-compass, which nothing else here wears.
+		 */
+		zs-autopilot-controls ::ng-deep .zs-autopilot-controls__fab svg,
+		zs-autopilot-controls ::ng-deep .zs-autopilot-controls__menu-icon {
+			display: none;
+		}
+
+		zs-autopilot-controls ::ng-deep .zs-autopilot-controls__fab::before,
+		zs-autopilot-controls
+			::ng-deep
+			.zs-autopilot-controls__menu-item::before {
+			font-family: 'primeicons';
+			/*
+			 * pi-compass. The code point is written as a TypeScript escape
+			 * rather than a CSS one: these styles are a template literal, and
+			 * a CSS backslash escape would be eaten before the stylesheet
+			 * ever saw it.
+			 */
+			content: '\u{e9ab}';
+			line-height: 1;
+		}
+
+		zs-autopilot-controls ::ng-deep .zs-autopilot-controls__fab::before {
+			font-size: 1.5rem;
+		}
+
+		zs-autopilot-controls
+			::ng-deep
+			.zs-autopilot-controls__menu-item::before {
+			font-size: 1.25rem;
+			color: var(--mc-text-muted);
+		}
+
+		/*
 		 * The menu of walkthroughs hangs off the right edge of the launcher,
 		 * which is where it belongs in the corner the library was written for.
 		 * Ours stands in the left corner, so from there it opened off the side
