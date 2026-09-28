@@ -1,4 +1,4 @@
-import { DemoScript, AutopilotService } from '@zssz-soft/demo-autopilot-core';
+import { AutopilotService, DemoScript } from '@zssz-soft/demo-autopilot-core';
 
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -8,17 +8,31 @@ import { AuthenticatedUserService } from '@music-collection/api';
 import { UserSettingsEffect } from '../user-settings';
 import { DEMO_TOUR_SETTING } from './demo-tour.setting';
 
+/** The two chains, once the walkthroughs have been fetched. */
+interface Tours {
+	guest: readonly DemoScript[];
+	collector: readonly DemoScript[];
+}
+
 /**
- * The guided tour of the home page: whether it is offered at all, which of
- * the two walkthroughs fits the viewer, and the one place that starts it.
+ * The guided tour: whether it is offered at all, which chain fits the viewer,
+ * and the walking on from one page to the next.
  *
- * There are two because the page is two pages. A visitor is shown the catalog
- * and the way in; a collector is shown the rows that only exist once there is
- * a shelf behind them. Only the one that fits is ever registered, so the
- * launcher offers a walkthrough rather than a choice nobody asked for.
+ * There are two chains because the app is two apps. A visitor is walked
+ * through the pages a visitor may open and left at the way in; a collector is
+ * walked through their own — the shelf, the scan, the radio, the game — and
+ * left in the profile, at the switch that turns this off. Only the first page
+ * of the fitting chain is registered, so the launcher offers a walkthrough
+ * rather than a list.
  *
- * Both are fetched the first time they are needed rather than bundled with
- * the app, because most loads never ask for either.
+ * Each page is a script of its own, and the next starts when the one before
+ * it is through. That is what makes the tour walk: a script's setup route
+ * opens its page, so nothing invisible sits between two stops, the back
+ * button lands on the words the viewer just read, and the counter in the
+ * tooltip counts the page rather than the whole app.
+ *
+ * The scripts are fetched the first time they are needed rather than bundled
+ * with the app, because most loads never ask for them.
  */
 @Injectable({ providedIn: 'root' })
 export class DemoTourService {
@@ -37,10 +51,8 @@ export class DemoTourService {
 	public readonly enabled = computed(() => this.wanted());
 
 	/** The walkthroughs, once fetched; the same objects on every later start. */
-	private loading: Promise<{
-		guest: DemoScript;
-		collector: DemoScript;
-	}> | null = null;
+	private loading: Promise<Tours> | null = null;
+	private tours: Tours | null = null;
 
 	/** Whether the shell has put the launcher on the page. */
 	private readonly asked = signal(false);
@@ -55,6 +67,26 @@ export class DemoTourService {
 			.pipe(takeUntilDestroyed())
 			.subscribe((user) => this.signedIn.set(!!user));
 
+		// One page through: on to the next, which opens its own page. Where
+		// the run was started from does not matter — the launcher starts the
+		// first page by id, and the chain is found from whichever finished.
+		//
+		// A run that was cancelled or failed stops the chain: whoever closed
+		// the overlay asked for the app back, not for the next page of it.
+		this.autopilot.results$
+			.pipe(takeUntilDestroyed())
+			.subscribe((result) => {
+				if (result.status !== 'passed') {
+					return;
+				}
+
+				const next = this.after(result.scriptId);
+
+				if (next) {
+					this.autopilot.startDemo(next);
+				}
+			});
+
 		// Switched off while the tour is playing: leaving it running would
 		// keep moving the app under somebody who just asked it to stop.
 		effect(() => {
@@ -64,9 +96,9 @@ export class DemoTourService {
 			}
 		});
 
-		// Signing in (or out) changes which walkthrough fits, and the one on
-		// offer has to change with it: the visitor's ends at the sign-in
-		// button, which the collector no longer has.
+		// Signing in (or out) changes which chain fits, and the one on offer
+		// has to change with it: the visitor's walks pages the collector's
+		// skips, and ends at a sign-in button the collector no longer has.
 		effect(() => {
 			if (!this.asked()) {
 				return;
@@ -102,24 +134,24 @@ export class DemoTourService {
 		this.asked.set(true);
 	}
 
-	/** Plays the walkthrough that fits, from its first step. */
+	/** Plays the chain that fits, from the first stop of its first page. */
 	public start(): void {
 		this.offer()
-			.then((script) => {
+			.then((first) => {
 				// `startDemo` subscribes to the run itself; subscribing to
 				// what it returns would play the script a second time.
-				this.autopilot.startDemo(script);
+				this.autopilot.startDemo(first);
 			})
 			.catch((error) => {
 				console.error('Demo tour not started', error);
 			});
 	}
 
-	/** Puts the fitting walkthrough on offer, and takes the other one back. */
+	/** Puts the fitting chain's first page on offer, and takes the other back. */
 	private async offer(): Promise<DemoScript> {
-		const { guest, collector } = await this.load();
-		const fits = this.signedIn() ? collector : guest;
-		const other = this.signedIn() ? guest : collector;
+		const tours = await this.load();
+		const [fits] = this.chainOf(tours);
+		const [other] = this.signedIn() ? tours.guest : tours.collector;
 
 		this.autopilot.unregisterScript(other.id);
 		this.autopilot.registerScript(fits);
@@ -127,12 +159,29 @@ export class DemoTourService {
 		return fits;
 	}
 
-	private load(): Promise<{ guest: DemoScript; collector: DemoScript }> {
-		this.loading ??= import('./home-tour.script').then(
-			({ homeGuestTour, homeCollectorTour }) => ({
-				guest: homeGuestTour,
-				collector: homeCollectorTour,
-			})
+	/** The page after the one that just finished, if the chain goes on. */
+	private after(scriptId: string): DemoScript | undefined {
+		if (!this.tours) {
+			return undefined;
+		}
+
+		const chain = this.chainOf(this.tours);
+		const at = chain.findIndex((script) => script.id === scriptId);
+
+		return at < 0 ? undefined : chain[at + 1];
+	}
+
+	private chainOf(tours: Tours): readonly DemoScript[] {
+		return this.signedIn() ? tours.collector : tours.guest;
+	}
+
+	private load(): Promise<Tours> {
+		this.loading ??= import('./tours.script').then(
+			({ guestTours, collectorTours }) => {
+				this.tours = { guest: guestTours, collector: collectorTours };
+
+				return this.tours;
+			}
 		);
 
 		return this.loading;

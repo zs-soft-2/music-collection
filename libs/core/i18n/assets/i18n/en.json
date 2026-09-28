@@ -2649,6 +2649,108 @@
 					}
 				}
 			}
+		},
+		"pages": {
+			"collection": {
+				"intro": {
+					"title": "Your own shelf",
+					"content": "From here on it is yours: how many records you have, from how many artists, in what format. Nobody else sees this page."
+				},
+				"stats": {
+					"title": "At a glance",
+					"content": "How many records, from how many artists, in what format — and what the shelf is worth, where you wrote down what you paid."
+				},
+				"filters": {
+					"title": "Search, filter, sort",
+					"content": "Search inside your own records, keep one format, sort by artist, year or the day it arrived — and group them the way you think about them."
+				},
+				"views": {
+					"title": "Three ways to look",
+					"content": "A wall of covers, a plain list, or the shelf itself, with every copy where it really stands. The furniture is drawn in the profile."
+				}
+			},
+			"scan": {
+				"intro": {
+					"title": "A record from a photograph",
+					"content": "Photograph the sleeve. The catalog reads the cover, says which record it thinks it is, and the copy is on your shelf a few taps later."
+				}
+			},
+			"shelfScan": {
+				"intro": {
+					"title": "A whole compartment at once",
+					"content": "One photograph of a row of spines, and every record it can make out is offered together — this is how a shelf that is already full gets in."
+				}
+			},
+			"wishlist": {
+				"intro": {
+					"title": "What is still missing",
+					"content": "The records you are after, with what you would pay for them. The hunt list on the home page is built out of this."
+				},
+				"filters": {
+					"title": "Sort and filter",
+					"content": "The same bar as on the shelf: search it, keep one format, and order it by price or by artist."
+				}
+			},
+			"challenges": {
+				"intro": {
+					"title": "Challenges",
+					"content": "Sets of records a rule defines, not a list — a label's series, a decade, a band's whole output. Finish one and it pays."
+				}
+			},
+			"radio": {
+				"intro": {
+					"title": "Your own radio",
+					"content": "A record drawn off your shelf and put on, side after side. In order or shuffled, and what actually played is kept in the log."
+				}
+			},
+			"dailyQuestion": {
+				"intro": {
+					"title": "The question of the day",
+					"content": "One question out of the catalog, the same for everybody, once a day. Points, a streak to keep alive, and a leaderboard."
+				},
+				"history": {
+					"title": "The questions before",
+					"content": "Everything asked so far, with your answers to it — and which ones you got right."
+				}
+			},
+			"upcoming": {
+				"intro": {
+					"title": "Coming out",
+					"content": "What the artists in the catalog are putting out next, gathered once a day — so a reissue you want does not slip past you."
+				}
+			},
+			"map": {
+				"intro": {
+					"title": "Collectors",
+					"content": "Where the records are kept. Your own pin is only ever as precise as you allowed in the profile."
+				}
+			},
+			"requests": {
+				"intro": {
+					"title": "Give something back",
+					"content": "An artist, an album or a pressing the catalog does not know yet? Propose it here, and follow what became of what you sent."
+				},
+				"propose": {
+					"title": "Propose something",
+					"content": "Missing an artist, an album, a pressing or a label? The form starts here, and what you send comes back to this page."
+				}
+			},
+			"profile": {
+				"intro": {
+					"title": "Your profile",
+					"content": "Your account, and everything that fits the app to you: the language, the theme, the drawing of your shelf, playback, and what you share with others."
+				},
+				"switch": {
+					"title": "And here is the switch",
+					"content": "The tour lives in the profile. Switch it off and the button in the corner is gone; switch it back on whenever you want to walk through again. Thanks for coming along."
+				}
+			},
+			"network": {
+				"intro": {
+					"title": "The network",
+					"content": "Who played with whom: the catalog's musicians and bands in one graph, where shared members are what tie the bands together."
+				}
+			}
 		}
 	},
 	"app": {

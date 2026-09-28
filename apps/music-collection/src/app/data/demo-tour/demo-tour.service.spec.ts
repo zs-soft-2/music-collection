@@ -1,5 +1,5 @@
-import { AutopilotService } from '@zssz-soft/demo-autopilot-core';
-import { BehaviorSubject } from 'rxjs';
+import { AutopilotService, ScriptResult } from '@zssz-soft/demo-autopilot-core';
+import { BehaviorSubject, Subject } from 'rxjs';
 
 import { TestBed } from '@angular/core/testing';
 import { AuthenticatedUserService } from '@music-collection/api';
@@ -16,13 +16,19 @@ describe('DemoTourService', () => {
 	let stored: BehaviorSubject<DemoTourSettings>;
 	let user$: BehaviorSubject<{ uid: string } | null>;
 	let save: jest.Mock;
+	let results: Subject<ScriptResult>;
 	let autopilot: {
 		cancel: jest.Mock;
 		reset: jest.Mock;
 		registerScript: jest.Mock;
 		unregisterScript: jest.Mock;
 		startDemo: jest.Mock;
+		results$: Subject<ScriptResult>;
 	};
+
+	/** What a finished run looks like to the chain. */
+	const finished = (scriptId: string, status = 'passed'): ScriptResult =>
+		({ scriptId, status }) as ScriptResult;
 
 	/** The ids handed to the autopilot, in the order they were handed over. */
 	const registered = (): string[] =>
@@ -34,12 +40,14 @@ describe('DemoTourService', () => {
 		stored = new BehaviorSubject<DemoTourSettings>({ enabled: null });
 		user$ = new BehaviorSubject<{ uid: string } | null>(null);
 		save = jest.fn(() => Promise.resolve());
+		results = new Subject<ScriptResult>();
 		autopilot = {
 			cancel: jest.fn(),
 			reset: jest.fn(),
 			registerScript: jest.fn(),
 			unregisterScript: jest.fn(),
 			startDemo: jest.fn(),
+			results$: results,
 		};
 
 		TestBed.configureTestingModule({
@@ -149,5 +157,48 @@ describe('DemoTourService', () => {
 		expect(autopilot.startDemo).toHaveBeenCalledWith(
 			expect.objectContaining({ id: 'home-collector' })
 		);
+	});
+
+	/**
+	 * The walking on: a page through, and the next one opens itself. This is
+	 * what makes a tour of the app out of a tour of a page.
+	 */
+	it('opens the next page once a page is through', async () => {
+		const service = tour();
+
+		service.start();
+		await flush();
+		autopilot.startDemo.mockClear();
+
+		results.next(finished('home-guest'));
+
+		expect(autopilot.startDemo).toHaveBeenCalledWith(
+			expect.objectContaining({ id: 'page-challenges' })
+		);
+	});
+
+	/** Closed halfway through: the app is wanted back, not the next page. */
+	it('stops the chain when the viewer closes the tour', async () => {
+		const service = tour();
+
+		service.start();
+		await flush();
+		autopilot.startDemo.mockClear();
+
+		results.next(finished('home-guest', 'cancelled'));
+
+		expect(autopilot.startDemo).not.toHaveBeenCalled();
+	});
+
+	it('ends the chain after its last page', async () => {
+		const service = tour();
+
+		service.start();
+		await flush();
+		autopilot.startDemo.mockClear();
+
+		results.next(finished('page-network'));
+
+		expect(autopilot.startDemo).not.toHaveBeenCalled();
 	});
 });
