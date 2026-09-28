@@ -2564,9 +2564,29 @@
 					"title": "Was der Katalog weiß",
 					"content": "Interpreten, Alben, Pressungen und Titel — und wie viel davon schon Cover, Jahr und Label hat."
 				},
+				"coverage": {
+					"title": "Wie viel davon gesammelt ist",
+					"content": "Die Alben des Katalogs nach Jahrzehnten, und wie viele davon schon im Regal stehen — angemeldet ist es deine eigene Sammlung, die daraufgezeichnet wird."
+				},
 				"artists": {
 					"title": "Die Acts",
 					"content": "Von hier öffnen die Interpretenseiten: ihre Platten, wer darin gespielt hat und wo diese Musiker sonst noch spielten."
+				},
+				"styles": {
+					"title": "Nach Stil",
+					"content": "Der Katalog nach Genres zerlegt: pro Stil eine Reihe von Alben, von der aus es weitergeht."
+				},
+				"decades": {
+					"title": "Nach Jahrzehnt",
+					"content": "Dasselbe nach Alter: wie viele Platten der Katalog aus jedem Jahrzehnt hält, beiderseits der Achtziger."
+				},
+				"acts": {
+					"title": "Bands, Projekte und Formationen",
+					"content": "Nicht jeder Act ist eine Band: Der Katalog hält Soloprojekte, Supergroups und einmalige Formationen auseinander."
+				},
+				"albums": {
+					"title": "Die neuesten Alben",
+					"content": "Was zuletzt in den Katalog kam — danach, wann es erfasst wurde, nicht wann es erschien."
 				}
 			},
 			"guest": {
@@ -2580,6 +2600,14 @@
 					"bar": {
 						"title": "Die Leiste",
 						"content": "Hier fängt alles an: die Seiten, die auch ein Gast ansehen darf — und rechts die Sprache und das helle oder dunkle Design."
+					},
+					"recent": {
+						"title": "Was zuletzt kam",
+						"content": "Die jüngsten Einträge des Katalogs: was Sammler zuletzt darin erfasst haben."
+					},
+					"challenges": {
+						"title": "Challenges",
+						"content": "Plattenmengen, die eine Regel bestimmt: eine Serie eines Labels, ein Jahrzehnt, das ganze Werk einer Band. Angemeldet siehst du auch, wie weit du bist."
 					},
 					"join": {
 						"title": "Was die Anmeldung bringt",
@@ -2610,6 +2638,10 @@
 					"challenges": {
 						"title": "Challenges",
 						"content": "Plattenmengen, die eine Regel bestimmt: eine Serie eines Labels, ein Jahrzehnt, das ganze Werk einer Band. Der Balken zeigt, wie weit du bist, und die Seite schlägt vor, welche Platte am meisten bringt."
+					},
+					"hunt": {
+						"title": "Die nächste Platte",
+						"content": "Was sich als Nächstes zu kaufen lohnt: die Platten, die den fast fertigen Challenges noch fehlen, der Reihe nach."
 					},
 					"account": {
 						"title": "Und der Rest steckt hier",

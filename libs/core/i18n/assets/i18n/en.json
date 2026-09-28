@@ -2564,9 +2564,29 @@
 					"title": "What the catalog holds",
 					"content": "Artists, albums, pressings and tracks, and how much of all that already has a cover, a year and a label on it."
 				},
+				"coverage": {
+					"title": "How much of it is collected",
+					"content": "The catalog's albums by decade, and how many of them are already on a shelf — signed in, it is your own collection drawn onto it."
+				},
 				"artists": {
 					"title": "The acts",
 					"content": "The artist pages open from here: their records, who played in them, and who those musicians played with elsewhere."
+				},
+				"styles": {
+					"title": "By style",
+					"content": "The catalog broken up by genre: a row of albums for each style, to read on from."
+				},
+				"decades": {
+					"title": "By decade",
+					"content": "The same by age: how many records the catalog holds from each decade, either side of the eighties."
+				},
+				"acts": {
+					"title": "Bands, projects and formations",
+					"content": "Not every act is a band: the catalog keeps solo projects, supergroups and one-off formations apart."
+				},
+				"albums": {
+					"title": "The newest albums",
+					"content": "What went into the catalog last — by when it was written down, not by when it came out."
 				}
 			},
 			"guest": {
@@ -2580,6 +2600,14 @@
 					"bar": {
 						"title": "The bar",
 						"content": "Everything starts here: the pages a visitor may browse, and to the right the language and the light or dark theme."
+					},
+					"recent": {
+						"title": "What arrived lately",
+						"content": "The catalog's latest entries: what collectors have most recently written down in it."
+					},
+					"challenges": {
+						"title": "Challenges",
+						"content": "Sets of records a rule defines: a label's series, a decade, a band's whole output. Signed in, you also see how far you have got in each."
 					},
 					"join": {
 						"title": "What signing in adds",
@@ -2610,6 +2638,10 @@
 					"challenges": {
 						"title": "Challenges",
 						"content": "Sets of records a rule defines: a label's series, a decade, a band's whole output. The bar shows how far you are, and the page suggests which record would pay the most."
+					},
+					"hunt": {
+						"title": "The next record",
+						"content": "What would be worth buying next: the records missing from the challenges you are closest to finishing, in order."
 					},
 					"account": {
 						"title": "And the rest is here",

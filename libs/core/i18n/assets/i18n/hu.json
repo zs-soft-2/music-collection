@@ -2564,9 +2564,29 @@
 					"title": "Mit tud a katalógus",
 					"content": "Előadók, albumok, kiadások, számok — és hogy mindebből mennyinek van már borítója, éve és kiadója."
 				},
+				"coverage": {
+					"title": "Mennyi van meg belőle",
+					"content": "A katalógus albumai évtizedenként, és hogy mennyi van már meg közülük — belépve a saját gyűjteményed rajzolódik rá."
+				},
 				"artists": {
 					"title": "Az előadók",
 					"content": "Innen nyílnak az előadó-oldalak: a lemezeikkel, a tagsággal, és azzal, hogy a zenészeik hol játszottak még."
+				},
+				"styles": {
+					"title": "Műfaj szerint",
+					"content": "A katalógus műfajonként szétszedve: stílusonként egy sor album, ahonnan tovább lehet olvasni."
+				},
+				"decades": {
+					"title": "Évtized szerint",
+					"content": "Ugyanaz kor szerint: melyik évtizedből mennyi lemez van a katalógusban, a nyolcvanas évek két oldalán."
+				},
+				"acts": {
+					"title": "Zenekarok, projektek, formációk",
+					"content": "Nem minden előadó zenekar: a katalógus külön veszi a szólóprojekteket, a szupergroupokat és az alkalmi formációkat."
+				},
+				"albums": {
+					"title": "A legfrissebb albumok",
+					"content": "Ami utoljára került a katalógusba — nem a megjelenés éve szerint, hanem aszerint, hogy mikor írtuk le."
 				}
 			},
 			"guest": {
@@ -2580,6 +2600,14 @@
 					"bar": {
 						"title": "A felső sáv",
 						"content": "Innen indul minden: a lapok, amiket vendégként is megnézhetsz, jobbra pedig a nyelv és a világos vagy sötét téma."
+					},
+					"recent": {
+						"title": "Ami mostanában került be",
+						"content": "A katalógus friss szerzeményei: amit a gyűjtők legutóbb írtak le benne."
+					},
+					"challenges": {
+						"title": "Kihívások",
+						"content": "Lemezek halmaza szabály szerint: egy kiadó sorozata, egy évtized, egy banda teljes termése. Belépve az is látszik, hol tartasz bennük."
 					},
 					"join": {
 						"title": "Ami belépés után jön",
@@ -2610,6 +2638,10 @@
 					"challenges": {
 						"title": "Kihívások",
 						"content": "Lemezek halmaza szabály szerint: egy kiadó sorozata, egy évtized, egy banda teljes termése. A sáv mutatja, hol tartasz, a lap pedig ajánlja, melyik lemez hozna a legtöbbet."
+					},
+					"hunt": {
+						"title": "A következő lemez",
+						"content": "Amit a legjobban megérné megvenni: a majdnem teljes kihívásaidból hiányzó lemezek, sorrendben."
 					},
 					"account": {
 						"title": "És a többi mind itt",
