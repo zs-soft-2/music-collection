@@ -3,6 +3,7 @@ import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { ProfileAccountComponent } from './component/profile-account/profile-account.component';
 import { ProfileAppearanceComponent } from './component/profile-appearance/profile-appearance.component';
+import { ProfileDemoTourComponent } from './component/profile-demo-tour/profile-demo-tour.component';
 import { ProfileLanguageComponent } from './component/profile-language/profile-language.component';
 import { ProfileListsComponent } from './component/profile-lists/profile-lists.component';
 import { ProfileListeningComponent } from './component/profile-listening/profile-listening.component';
@@ -27,6 +28,7 @@ import { ProfilePageStore } from './profile-page.store';
 		...I18N_IMPORTS,
 		ProfileAccountComponent,
 		ProfileAppearanceComponent,
+		ProfileDemoTourComponent,
 		ProfileLanguageComponent,
 		ProfileListsComponent,
 		ProfileListeningComponent,

@@ -385,6 +385,8 @@
 			"how-you-appear-in": "Wie du in der App erscheinst.",
 			"appearance": "Darstellung",
 			"the-theme-and-how": "Das Design und wie viel vom Bildschirm die Seiten nutzen.",
+			"demoTour": "Geführte Tour",
+			"demoTourIntro": "Der Rundgang durch die App — und ob er dir überhaupt angeboten wird.",
 			"what-the-collection-opens": "Womit die Sammlung öffnet und wie viel einer Albumseite auf einmal zu sehen ist.",
 			"shelves": "Regale",
 			"the-furniture-your-records": "Das Möbel, in dem deine Platten stehen. Zeichne, was du wirklich hast — wie viele Elemente, und wie viele Fächer in Breite und Höhe — und die Regalansicht der Sammlung wird darin eingeräumt.",
@@ -1995,6 +1997,12 @@
 			"standard": "Standard",
 			"fullWidth": "Volle Breite"
 		},
+		"profileDemoTour": {
+			"the-launcher": "Starter",
+			"show-me-around": "Zeig mir die App",
+			"puts-the-play-button": "Legt den Startknopf in die Ecke des Bildschirms — und von hier aus lässt sich die Tour ebenfalls starten.",
+			"start-the-tour-now": "Jetzt starten"
+		},
 		"profileListening": {
 			"records-put-on": "Aufgelegte Platten",
 			"heard-right-through": "Ganz durchgehört",
@@ -2539,6 +2547,86 @@
 		},
 		"collection": {
 			"description": "Jede Platte, die diese Challenge verlangt."
+		}
+	},
+	"tour": {
+		"app": {
+			"name": "Geführte Tour",
+			"description": "Zwei Minuten durch die ganze App, Seite für Seite.",
+			"steps": {
+				"welcome": {
+					"title": "Willkommen",
+					"content": "Das ist musiCollection: ein Plattenkatalog, und darin dein eigenes Regal. Zwei Minuten, und du hast alles gesehen — klick weiter, wenn du bereit bist."
+				},
+				"bar": {
+					"title": "Die Leiste",
+					"content": "Hier fängt alles an. Auf einem breiten Bildschirm stehen die Seiten in einer Reihe, auf dem Telefon hinter dem Menüknopf — und die Sprache sowie das helle oder dunkle Design immer rechts."
+				},
+				"search": {
+					"title": "Finde eine Platte",
+					"content": "Ein Feld für den ganzen Katalog: Interpret, Album oder Titel — die Treffer kommen, während du tippst."
+				},
+				"spotlight": {
+					"title": "Ein Act im Scheinwerfer",
+					"content": "Die Startseite stellt immer jemanden nach vorn: die Band der Woche oder einen Zufallsgriff aus dem Katalog. Willst du jemand anderen, mische neu."
+				},
+				"catalog": {
+					"title": "Was der Katalog weiß",
+					"content": "Interpreten, Alben, Pressungen und Titel — und wie viel davon schon Cover, Jahr und Label hat."
+				},
+				"collection": {
+					"title": "Dein eigenes Regal",
+					"content": "Von hier an ist alles deins: wie viele Platten, von wie vielen Interpreten, in welchem Format. Diese Seite sieht außer dir niemand."
+				},
+				"filters": {
+					"title": "Suchen, filtern, sortieren",
+					"content": "Suche in deinen eigenen Platten, behalte ein Format, sortiere nach Interpret, Jahr oder Zugangstag — und gruppiere sie so, wie du selbst über sie denkst."
+				},
+				"views": {
+					"title": "Drei Ansichten",
+					"content": "Eine Wand aus Covern, eine schlichte Liste, oder das Regal selbst, mit jedem Exemplar dort, wo es wirklich steht. Die Möbel zeichnest du im Profil."
+				},
+				"scan": {
+					"title": "Eine Platte aus einem Foto",
+					"content": "Fotografiere die Hülle. Der Katalog liest das Cover, sagt, welche Platte er darin erkennt, und ein paar Tipps später steht das Exemplar in deinem Regal."
+				},
+				"shelfScan": {
+					"title": "Ein ganzes Fach auf einmal",
+					"content": "Ein Foto einer Reihe von Rücken, und alles, was er entziffern kann, wird zusammen angeboten — so kommt ein schon volles Regal herein."
+				},
+				"wishlist": {
+					"title": "Was noch fehlt",
+					"content": "Die Platten, auf die du es abgesehen hast, und was du dafür zahlen würdest. Die Jagdliste der Startseite entsteht daraus."
+				},
+				"collections": {
+					"title": "Challenges",
+					"content": "Plattenmengen, die eine Regel bestimmt, keine Liste: eine Serie eines Labels, ein Jahrzehnt, das ganze Werk einer Band. Wer eine abschließt, wird bezahlt."
+				},
+				"radio": {
+					"title": "Dein eigenes Radio",
+					"content": "Eine Platte aus deinem Regal, aufgelegt, Seite für Seite. Der Reihe nach oder gemischt — und was wirklich lief, landet im Protokoll."
+				},
+				"dailyQuestion": {
+					"title": "Die Frage des Tages",
+					"content": "Eine Frage aus dem Katalog, für alle dieselbe, einmal am Tag. Punkte, eine Serie, die am Leben bleiben will, und eine Rangliste."
+				},
+				"upcoming": {
+					"title": "Was kommt",
+					"content": "Was die Interpreten des Katalogs als Nächstes herausbringen — einmal täglich zusammengetragen, damit dir eine Neuauflage nicht entgeht."
+				},
+				"map": {
+					"title": "Sammler",
+					"content": "Wo die Platten stehen. Deine eigene Nadel zeigt genau so viel, wie du im Profil erlaubt hast."
+				},
+				"requests": {
+					"title": "Gib etwas zurück",
+					"content": "Ein Interpret, ein Album oder eine Pressung, die der Katalog noch nicht kennt? Schlage sie hier vor und verfolge, was aus dem geworden ist, was du geschickt hast."
+				},
+				"profile": {
+					"title": "Und hier ist der Schalter",
+					"content": "Die Tour wohnt im Profil. Schalte sie aus, und der Knopf in der Ecke ist weg; schalte sie wieder ein, wann du erneut durchgehen willst. Danke fürs Mitkommen."
+				}
+			}
 		}
 	},
 	"app": {

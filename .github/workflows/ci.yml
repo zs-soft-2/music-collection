@@ -18,10 +18,30 @@ jobs:
         with:
           node-version: 24
           cache: npm
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@zssz-soft'
+          always-auth: true
           cache-dependency-path: |
             package-lock.json
             apps/functions/package-lock.json
+      # A @zssz-soft csomagok (a vezetett bemutató motorja) GitHub Packages
+      # registryről jönnek, ami tokent kér — és a repo nem a @zssz-soft org
+      # alatt van, ezért a workflow saját GITHUB_TOKEN-je nem nyitja. A
+      # GH_PACKAGES_TOKEN secret kell hozzá, `read:packages` joggal.
+      #
+      # Külön lépésben, mert enélkül az `npm ci` egy 401-gyel áll meg, amiből
+      # nem látszik, hogy egy hiányzó secretről van szó.
+      - name: Csomag-registry token
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "::error::Hiányzik a GH_PACKAGES_TOKEN (vagy NPM_TOKEN) secret — a @zssz-soft csomagokhoz read:packages jogú PAT kell."
+            exit 1
+          fi
       - run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.NPM_TOKEN }}
       # A functions a saját package.json-jéből él (külön tsc, külön függőségek),
       # így a gyökér `npm ci` nem hozza le neki a firebase-functions-t és a
       # @anthropic-ai/sdk-t — a tesztjei enélkül fordítani sem tudnak.
@@ -60,7 +80,22 @@ jobs:
         with:
           node-version: 24
           cache: npm
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@zssz-soft'
+          always-auth: true
+      # Ugyanaz, mint a build-test jobban: a @zssz-soft csomagokhoz a
+      # GH_PACKAGES_TOKEN secret kell.
+      - name: Csomag-registry token
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "::error::Hiányzik a GH_PACKAGES_TOKEN (vagy NPM_TOKEN) secret — a @zssz-soft csomagokhoz read:packages jogú PAT kell."
+            exit 1
+          fi
       - run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.NPM_TOKEN }}
       - run: npx nx build music-collection --configuration=${{ vars.BUILD_CONFIG }}
       - uses: google-github-actions/auth@v2
         with:

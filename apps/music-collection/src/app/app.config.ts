@@ -1,5 +1,6 @@
 import { provideAngularSvgIcon } from 'angular-svg-icon';
 import { providePrimeNG } from 'primeng/config';
+import { provideDemoAutopilot } from '@zssz-soft/demo-autopilot-core';
 
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import {
@@ -149,6 +150,24 @@ export const appConfig: ApplicationConfig = {
 			useExisting: CollectorShelfLayoutService,
 		},
 		provideAnimationsAsync(),
+		// A vezetett bemutató motorja (@zssz-soft/demo-autopilot-core). Csak a
+		// szolgáltatásai állnak itt; az overlay, a tooltip és az indító a
+		// shellben, a beállítás mögött töltődik (`mc-demo-tour`).
+		//
+		// A jobb alsó sarok a YouTube dokké (shared/youtube), ezért az indító
+		// balra kerül. Az elemkeresés határa a könyvtár 5 másodperce helyett 8:
+		// a bemutató lapról lapra lép, és egy lazy route a chunkjával együtt
+		// néha ennél is közelebb van a határhoz.
+		provideDemoAutopilot({
+			config: {
+				controlsPosition: 'bottom-left',
+				elementTimeout: 8000,
+				spotlightPadding: 10,
+				spotlightBorderRadius: 12,
+				defaultStepDelay: 7000,
+				debug: !environment.production,
+			},
+		}),
 		// Carries the look of the app to and from the account. It has to be
 		// alive wherever the theme is switched, which is every page, so it
 		// starts with the app rather than with the page that shows it.

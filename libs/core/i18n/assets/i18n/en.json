@@ -385,6 +385,8 @@
 			"how-you-appear-in": "How you appear in the app.",
 			"appearance": "Appearance",
 			"the-theme-and-how": "The theme and how much of the screen the pages use.",
+			"demoTour": "Guided tour",
+			"demoTourIntro": "The walk through the app, and whether it is offered to you at all.",
 			"what-the-collection-opens": "What the collection opens with, and how much of an album page shows at once.",
 			"shelves": "Shelves",
 			"the-furniture-your-records": "The furniture your records stand in. Draw what you actually own — how many units, and how many compartments across and down — and the collection's shelf view is filed into it.",
@@ -1995,6 +1997,12 @@
 			"standard": "Standard",
 			"fullWidth": "Full width"
 		},
+		"profileDemoTour": {
+			"the-launcher": "Launcher",
+			"show-me-around": "Show me around",
+			"puts-the-play-button": "Puts the play button in the corner of the screen, and lets the tour be started from here as well.",
+			"start-the-tour-now": "Start the tour now"
+		},
 		"profileListening": {
 			"records-put-on": "Records put on",
 			"heard-right-through": "Heard right through",
@@ -2539,6 +2547,86 @@
 		},
 		"collection": {
 			"description": "Every record this challenge asks for."
+		}
+	},
+	"tour": {
+		"app": {
+			"name": "Guided tour",
+			"description": "Two minutes through the whole app, page by page.",
+			"steps": {
+				"welcome": {
+					"title": "Welcome",
+					"content": "This is musiCollection: a catalog of records, and your own shelf standing in it. Two minutes and you have seen all of it — click on when you are ready."
+				},
+				"bar": {
+					"title": "The bar",
+					"content": "Everything starts here. On a wide screen the pages sit in a row, on a phone they are behind the menu button, and the language and the light or dark theme are always to the right."
+				},
+				"search": {
+					"title": "Find a record",
+					"content": "One field for the whole catalog: an artist, an album or a track, and the results come while you type."
+				},
+				"spotlight": {
+					"title": "One act in the light",
+					"content": "The home page always puts one artist forward — the band of the week, or a draw from the catalog. Shuffle it if you would rather see somebody else."
+				},
+				"catalog": {
+					"title": "What the catalog holds",
+					"content": "Artists, albums, pressings and tracks, and how much of all that already has a cover, a year and a label on it."
+				},
+				"collection": {
+					"title": "Your own shelf",
+					"content": "From here on it is yours: how many records you have, from how many artists, in what format. Nobody else sees this page."
+				},
+				"filters": {
+					"title": "Search, filter, sort",
+					"content": "Search inside your own records, keep one format, sort by artist, year or the day it arrived — and group them the way you think about them."
+				},
+				"views": {
+					"title": "Three ways to look",
+					"content": "A wall of covers, a plain list, or the shelf itself, with every copy where it really stands. The furniture is drawn in the profile."
+				},
+				"scan": {
+					"title": "A record from a photograph",
+					"content": "Photograph the sleeve. The catalog reads the cover, says which record it thinks it is, and the copy is on your shelf a few taps later."
+				},
+				"shelfScan": {
+					"title": "A whole compartment at once",
+					"content": "One photograph of a row of spines, and every record it can make out is offered together — this is how a shelf that is already full gets in."
+				},
+				"wishlist": {
+					"title": "What is still missing",
+					"content": "The records you are after, with what you would pay for them. The hunt list on the home page is built out of this."
+				},
+				"collections": {
+					"title": "Challenges",
+					"content": "Sets of records a rule defines, not a list — a label's series, a decade, a band's whole output. Finish one and it pays."
+				},
+				"radio": {
+					"title": "Your own radio",
+					"content": "A record drawn off your shelf and put on, side after side. In order or shuffled, and what actually played is kept in the log."
+				},
+				"dailyQuestion": {
+					"title": "The question of the day",
+					"content": "One question out of the catalog, the same for everybody, once a day. Points, a streak to keep alive, and a leaderboard."
+				},
+				"upcoming": {
+					"title": "Coming out",
+					"content": "What the artists in the catalog are putting out next, gathered once a day — so a reissue you want does not slip past you."
+				},
+				"map": {
+					"title": "Collectors",
+					"content": "Where the records are kept. Your own pin is only ever as precise as you allowed in the profile."
+				},
+				"requests": {
+					"title": "Give something back",
+					"content": "An artist, an album or a pressing the catalog does not know yet? Propose it here, and follow what became of what you sent."
+				},
+				"profile": {
+					"title": "And here is the switch",
+					"content": "The tour lives in the profile. Switch it off and the button in the corner is gone; switch it back on whenever you want to walk through again. Thanks for coming along."
+				}
+			}
 		}
 	},
 	"app": {
