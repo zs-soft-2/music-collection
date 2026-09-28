@@ -9,16 +9,16 @@ import { UserSettingsEffect } from '../user-settings';
 import { DEMO_TOUR_SETTING } from './demo-tour.setting';
 
 /**
- * The guided tour of the app: whether it is offered at all, and the one place
- * that starts it.
+ * The guided tour of the home page: whether it is offered at all, which of
+ * the two walkthroughs fits the viewer, and the one place that starts it.
  *
- * The walkthrough itself is a script the demo autopilot plays
- * (`app-tour.script.ts`); it is fetched the first time it is needed rather
- * than bundled with the app, because most loads never ask for it.
+ * There are two because the page is two pages. A visitor is shown the catalog
+ * and the way in; a collector is shown the rows that only exist once there is
+ * a shelf behind them. Only the one that fits is ever registered, so the
+ * launcher offers a walkthrough rather than a choice nobody asked for.
  *
- * The tour walks the collector's own pages — their shelf, their wishlist,
- * their radio — so it is only offered to somebody signed in. A guest would be
- * turned back by the route guards halfway through the story.
+ * Both are fetched the first time they are needed rather than bundled with
+ * the app, because most loads never ask for either.
  */
 @Injectable({ providedIn: 'root' })
 export class DemoTourService {
@@ -34,10 +34,16 @@ export class DemoTourService {
 	public readonly wanted = computed(() => this.chosen() !== false);
 
 	/** Whether the launcher may be on the page at all. */
-	public readonly enabled = computed(() => this.signedIn() && this.wanted());
+	public readonly enabled = computed(() => this.wanted());
 
-	/** The script, once fetched; the same object on every later start. */
-	private loading: Promise<DemoScript> | null = null;
+	/** The walkthroughs, once fetched; the same objects on every later start. */
+	private loading: Promise<{
+		guest: DemoScript;
+		collector: DemoScript;
+	}> | null = null;
+
+	/** Whether the shell has put the launcher on the page. */
+	private readonly asked = signal(false);
 
 	public constructor() {
 		this.settings
@@ -49,14 +55,29 @@ export class DemoTourService {
 			.pipe(takeUntilDestroyed())
 			.subscribe((user) => this.signedIn.set(!!user));
 
-		// Switched off — or signed out — while the tour is playing: the
-		// walkthrough drives the router, so leaving it running would keep
-		// moving the app under somebody who just asked it to stop.
+		// Switched off while the tour is playing: leaving it running would
+		// keep moving the app under somebody who just asked it to stop.
 		effect(() => {
 			if (!this.enabled()) {
 				this.autopilot.cancel();
 				this.autopilot.reset();
 			}
+		});
+
+		// Signing in (or out) changes which walkthrough fits, and the one on
+		// offer has to change with it: the visitor's ends at the sign-in
+		// button, which the collector no longer has.
+		effect(() => {
+			if (!this.asked()) {
+				return;
+			}
+
+			// Tracked on purpose: this is the signal the offer follows.
+			this.signedIn();
+
+			this.offer().catch((error) => {
+				console.error('Demo tour not offered', error);
+			});
 		});
 	}
 
@@ -70,18 +91,20 @@ export class DemoTourService {
 	}
 
 	/**
-	 * Registers the tour with the autopilot, which is what puts it in the
-	 * launcher's menu. Called by the shell once the launcher is on the page.
+	 * Registers the walkthrough that fits with the autopilot, which is what
+	 * puts it in the launcher's menu. Called by the shell once the launcher is
+	 * on the page.
 	 */
 	public prepare(): void {
-		this.load().catch((error) => {
-			console.error('Demo tour not loaded', error);
-		});
+		// The hook above does the registering, here and on every later change
+		// of the sign-in state; doing it here as well would hand the same
+		// walkthrough over twice.
+		this.asked.set(true);
 	}
 
-	/** Plays the tour from its first step. */
+	/** Plays the walkthrough that fits, from its first step. */
 	public start(): void {
-		this.load()
+		this.offer()
 			.then((script) => {
 				// `startDemo` subscribes to the run itself; subscribing to
 				// what it returns would play the script a second time.
@@ -92,13 +115,24 @@ export class DemoTourService {
 			});
 	}
 
-	private load(): Promise<DemoScript> {
-		this.loading ??= import('./app-tour.script').then(
-			({ appTourScript }) => {
-				this.autopilot.registerScript(appTourScript);
+	/** Puts the fitting walkthrough on offer, and takes the other one back. */
+	private async offer(): Promise<DemoScript> {
+		const { guest, collector } = await this.load();
+		const fits = this.signedIn() ? collector : guest;
+		const other = this.signedIn() ? guest : collector;
 
-				return appTourScript;
-			}
+		this.autopilot.unregisterScript(other.id);
+		this.autopilot.registerScript(fits);
+
+		return fits;
+	}
+
+	private load(): Promise<{ guest: DemoScript; collector: DemoScript }> {
+		this.loading ??= import('./home-tour.script').then(
+			({ homeGuestTour, homeCollectorTour }) => ({
+				guest: homeGuestTour,
+				collector: homeCollectorTour,
+			})
 		);
 
 		return this.loading;

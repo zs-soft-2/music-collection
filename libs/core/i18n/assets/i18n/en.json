@@ -2550,81 +2550,71 @@
 		}
 	},
 	"tour": {
-		"app": {
-			"name": "Guided tour",
-			"description": "Two minutes through the whole app, page by page.",
+		"home": {
 			"steps": {
-				"welcome": {
-					"title": "Welcome",
-					"content": "This is musiCollection: a catalog of records, and your own shelf standing in it. Two minutes and you have seen all of it — click on when you are ready."
-				},
-				"bar": {
-					"title": "The bar",
-					"content": "Everything starts here. On a wide screen the pages sit in a row, on a phone they are behind the menu button, and the language and the light or dark theme are always to the right."
-				},
 				"search": {
 					"title": "Find a record",
 					"content": "One field for the whole catalog: an artist, an album or a track, and the results come while you type."
 				},
 				"spotlight": {
 					"title": "One act in the light",
-					"content": "The home page always puts one artist forward — the band of the week, or a draw from the catalog. Shuffle it if you would rather see somebody else."
+					"content": "The home page always puts one artist forward: the band of the week, or — on a week nobody was chosen for — a draw from the catalog. Shuffle it if you would rather see somebody else."
 				},
 				"catalog": {
 					"title": "What the catalog holds",
 					"content": "Artists, albums, pressings and tracks, and how much of all that already has a cover, a year and a label on it."
 				},
-				"collection": {
-					"title": "Your own shelf",
-					"content": "From here on it is yours: how many records you have, from how many artists, in what format. Nobody else sees this page."
-				},
-				"filters": {
-					"title": "Search, filter, sort",
-					"content": "Search inside your own records, keep one format, sort by artist, year or the day it arrived — and group them the way you think about them."
-				},
-				"views": {
-					"title": "Three ways to look",
-					"content": "A wall of covers, a plain list, or the shelf itself, with every copy where it really stands. The furniture is drawn in the profile."
-				},
-				"scan": {
-					"title": "A record from a photograph",
-					"content": "Photograph the sleeve. The catalog reads the cover, says which record it thinks it is, and the copy is on your shelf a few taps later."
-				},
-				"shelfScan": {
-					"title": "A whole compartment at once",
-					"content": "One photograph of a row of spines, and every record it can make out is offered together — this is how a shelf that is already full gets in."
-				},
-				"wishlist": {
-					"title": "What is still missing",
-					"content": "The records you are after, with what you would pay for them. The hunt list on the home page is built out of this."
-				},
-				"collections": {
-					"title": "Challenges",
-					"content": "Sets of records a rule defines, not a list — a label's series, a decade, a band's whole output. Finish one and it pays."
-				},
-				"radio": {
-					"title": "Your own radio",
-					"content": "A record drawn off your shelf and put on, side after side. In order or shuffled, and what actually played is kept in the log."
-				},
-				"dailyQuestion": {
-					"title": "The question of the day",
-					"content": "One question out of the catalog, the same for everybody, once a day. Points, a streak to keep alive, and a leaderboard."
-				},
-				"upcoming": {
-					"title": "Coming out",
-					"content": "What the artists in the catalog are putting out next, gathered once a day — so a reissue you want does not slip past you."
-				},
-				"map": {
-					"title": "Collectors",
-					"content": "Where the records are kept. Your own pin is only ever as precise as you allowed in the profile."
-				},
-				"requests": {
-					"title": "Give something back",
-					"content": "An artist, an album or a pressing the catalog does not know yet? Propose it here, and follow what became of what you sent."
-				},
-				"profile": {
-					"title": "And here is the switch",
-					"content": "The tour lives in the profile. Switch it off and the button in the corner is gone; switch it back on whenever you want to walk through again. Thanks for coming along."
+				"artists": {
+					"title": "The acts",
+					"content": "The artist pages open from here: their records, who played in them, and who those musicians played with elsewhere."
+				}
+			},
+			"guest": {
+				"name": "The home page",
+				"description": "A minute on the home page: what the catalog holds, and what it becomes once you sign in.",
+				"steps": {
+					"welcome": {
+						"title": "Welcome",
+						"content": "This is musiCollection: a catalog of records — artists, albums, pressings. Here is the home page in a minute."
+					},
+					"bar": {
+						"title": "The bar",
+						"content": "Everything starts here: the pages a visitor may browse, and to the right the language and the light or dark theme."
+					},
+					"join": {
+						"title": "What signing in adds",
+						"content": "A shelf of your own, a wishlist, radio made of your own records, challenges and the question of the day — all of it hangs on an account."
+					},
+					"login": {
+						"title": "This is the way in",
+						"content": "One click with a Google account. The tour changes with it: the next one shows you what is yours."
+					}
+				}
+			},
+			"collector": {
+				"name": "Your home page",
+				"description": "A minute on the home page: what it brings out of the catalog, and what it brings off your own shelf.",
+				"steps": {
+					"welcome": {
+						"title": "Welcome back",
+						"content": "This is your home page: the catalog at the top, and below it the rows that come off your own shelf. A minute, and we have been through it."
+					},
+					"bar": {
+						"title": "The bar",
+						"content": "Everything starts here. On a wide screen the pages sit in a row, on a phone they are behind the menu button, and the language and the theme are always to the right."
+					},
+					"recent": {
+						"title": "What arrived lately",
+						"content": "The copies you put on the shelf most recently — or, on a week you added none, what the catalog itself has gained."
+					},
+					"challenges": {
+						"title": "Challenges",
+						"content": "Sets of records a rule defines: a label's series, a decade, a band's whole output. The bar shows how far you are, and the page suggests which record would pay the most."
+					},
+					"account": {
+						"title": "And the rest is here",
+						"content": "Your shelf, the scan, the radio, the wishlist and the profile — and in the profile this tour can be switched off once you have seen it."
+					}
 				}
 			}
 		}

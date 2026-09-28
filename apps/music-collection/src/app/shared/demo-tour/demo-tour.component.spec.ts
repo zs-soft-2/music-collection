@@ -8,7 +8,7 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
-import { appTourScript } from '../../data/demo-tour/app-tour.script';
+import { homeGuestTour } from '../../data/demo-tour/home-tour.script';
 import { DemoTourService } from '../../data/demo-tour';
 import { DemoTourComponent } from './demo-tour.component';
 
@@ -75,7 +75,7 @@ describe('DemoTourComponent', () => {
 
 		expect(host.querySelector('.zs-autopilot-controls__fab')).toBeNull();
 
-		TestBed.inject(AutopilotService).registerScript(appTourScript);
+		TestBed.inject(AutopilotService).registerScript(homeGuestTour);
 		fixture.detectChanges();
 
 		expect(host.querySelector('.zs-autopilot-controls__fab')).toBeTruthy();

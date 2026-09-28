@@ -20,19 +20,25 @@ describe('DemoTourService', () => {
 		cancel: jest.Mock;
 		reset: jest.Mock;
 		registerScript: jest.Mock;
+		unregisterScript: jest.Mock;
 		startDemo: jest.Mock;
 	};
+
+	/** The ids handed to the autopilot, in the order they were handed over. */
+	const registered = (): string[] =>
+		autopilot.registerScript.mock.calls.map(([script]) => script.id);
 
 	const tour = (): DemoTourService => TestBed.inject(DemoTourService);
 
 	beforeEach(() => {
 		stored = new BehaviorSubject<DemoTourSettings>({ enabled: null });
-		user$ = new BehaviorSubject<{ uid: string } | null>({ uid: 'u1' });
+		user$ = new BehaviorSubject<{ uid: string } | null>(null);
 		save = jest.fn(() => Promise.resolve());
 		autopilot = {
 			cancel: jest.fn(),
 			reset: jest.fn(),
 			registerScript: jest.fn(),
+			unregisterScript: jest.fn(),
 			startDemo: jest.fn(),
 		};
 
@@ -50,6 +56,13 @@ describe('DemoTourService', () => {
 	});
 
 	it('offers the tour to a collector who has never answered', () => {
+		user$.next({ uid: 'u1' });
+
+		expect(tour().enabled()).toBe(true);
+	});
+
+	/** A visitor gets one too — their own, which ends at the way in. */
+	it('offers it to a guest as well', () => {
 		expect(tour().enabled()).toBe(true);
 	});
 
@@ -62,20 +75,6 @@ describe('DemoTourService', () => {
 		expect(service.enabled()).toBe(false);
 	});
 
-	/**
-	 * The walkthrough opens the collection, the wishlist, the radio — pages a
-	 * guest is turned back from. Offering it to them would be offering a story
-	 * that breaks off at its second chapter.
-	 */
-	it('never offers it to a guest', () => {
-		user$.next(null);
-
-		const service = tour();
-
-		expect(service.wanted()).toBe(true);
-		expect(service.enabled()).toBe(false);
-	});
-
 	it('keeps the choice with the account', () => {
 		tour().decide(false);
 
@@ -85,8 +84,8 @@ describe('DemoTourService', () => {
 	});
 
 	/**
-	 * The tour drives the router. Switched off mid-walk, it has to stop moving
-	 * the app under the collector who just said they had seen enough.
+	 * Switched off mid-walk, the tour has to stop: it drives the page under
+	 * somebody who just said they had seen enough.
 	 */
 	it('stops a tour the collector switches off', () => {
 		const service = tour();
@@ -102,18 +101,53 @@ describe('DemoTourService', () => {
 		expect(autopilot.reset).toHaveBeenCalled();
 	});
 
-	it('hands the walkthrough to the autopilot once, however often it runs', async () => {
+	it('offers a guest the visitor’s walkthrough', async () => {
+		tour().prepare();
+		await flush();
+
+		expect(registered()).toEqual(['home-guest']);
+		expect(autopilot.unregisterScript).toHaveBeenCalledWith(
+			'home-collector'
+		);
+	});
+
+	it('offers a signed-in collector their own', async () => {
+		user$.next({ uid: 'u1' });
+
+		tour().prepare();
+		await flush();
+
+		expect(registered()).toEqual(['home-collector']);
+		expect(autopilot.unregisterScript).toHaveBeenCalledWith('home-guest');
+	});
+
+	/**
+	 * The visitor's walkthrough ends at the sign-in button, which the
+	 * collector no longer has — so signing in has to change what is on offer,
+	 * not only what it says.
+	 */
+	it('swaps the walkthrough when the visitor signs in', async () => {
 		const service = tour();
 
-		service.start();
+		service.prepare();
 		await flush();
-		service.start();
+		expect(registered()).toEqual(['home-guest']);
+
+		user$.next({ uid: 'u1' });
+		TestBed.tick();
 		await flush();
 
-		expect(autopilot.registerScript).toHaveBeenCalledTimes(1);
-		expect(autopilot.startDemo).toHaveBeenCalledTimes(2);
-		expect(autopilot.startDemo).toHaveBeenLastCalledWith(
-			expect.objectContaining({ id: 'app-tour' })
+		expect(registered()).toEqual(['home-guest', 'home-collector']);
+	});
+
+	it('plays the walkthrough that fits', async () => {
+		user$.next({ uid: 'u1' });
+
+		tour().start();
+		await flush();
+
+		expect(autopilot.startDemo).toHaveBeenCalledWith(
+			expect.objectContaining({ id: 'home-collector' })
 		);
 	});
 });

@@ -62,10 +62,50 @@ import { DemoTourService } from '../../data/demo-tour';
 			--zs-radius-lg: var(--mc-radius-lg);
 
 			/*
-			 * Darker than the library's default: this app is dark by
-			 * default, and a 50% veil over near-black barely reads as one.
+			 * Much darker than the library's default: this app is dark by
+			 * default, and a 50% veil over near-black is not a veil at all.
+			 * Everything the tour is not talking about has to fall away.
 			 */
-			--zs-autopilot-overlay-bg: rgb(0 0 0 / 68%);
+			--zs-autopilot-overlay-bg: rgb(0 0 0 / 84%);
+
+			/*
+			 * The tour's own furniture — the tooltip, the launcher's menu, the
+			 * playback bar — is laid over the page rather than being part of
+			 * it, and has to read that way: a visible edge and a shadow deep
+			 * enough to stand on a page that has been dimmed away.
+			 */
+			--zs-preset-surface-bg: var(--mc-card-bg);
+			--zs-preset-surface-border: var(--mc-border-strong);
+			--zs-preset-surface-border-width: 1px;
+			--zs-preset-surface-radius: var(--mc-radius-lg);
+			--zs-preset-surface-shadow:
+				0 1.5rem 3rem rgb(0 0 0 / 55%), 0 0 0 1px rgb(0 0 0 / 35%);
+		}
+
+		/*
+		 * In the dark theme the app's own card colour is near-black, which is
+		 * the one thing the veil behind it also is. There the panel has to be
+		 * lifted rather than merely outlined.
+		 */
+		:host-context(html.mc-dark) {
+			--zs-preset-surface-bg: color-mix(
+				in srgb,
+				var(--mc-card-bg) 82%,
+				#fff 18%
+			);
+			--zs-preset-surface-shadow:
+				0 1.5rem 3rem rgb(0 0 0 / 75%), 0 0 0 1px rgb(0 0 0 / 60%);
+		}
+
+		/*
+		 * A ring around the cut-out, in the app's own accent. Without it the
+		 * lit patch and the veil meet in a soft edge, and on a dark page it is
+		 * not obvious that anything is being pointed at.
+		 */
+		zs-autopilot-overlay ::ng-deep .zs-autopilot-overlay__spotlight {
+			outline: 2px solid
+				color-mix(in srgb, var(--mc-primary) 60%, transparent);
+			outline-offset: 0;
 		}
 
 		/*
