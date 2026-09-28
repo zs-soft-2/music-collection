@@ -10,27 +10,24 @@ export const APP_TOUR_ID = 'app-tour';
 /** Where every step's words live in the dictionaries. */
 const TEXT = 'tour.app.steps';
 
-/** How long a step's tooltip stays before the tour moves on (ms). */
-const READING_TIME = 7000;
-
 interface Stop {
 	/** The step's id, and the leaf under `tour.app.steps` that names it. */
 	id: string;
 	/** What the spotlight cuts out. */
 	selector: string;
 	position?: TooltipPosition;
-	/** Longer for a step with more to read, shorter for a one-liner. */
-	dwell?: number;
 	/** Off by default only where the element cannot be scrolled to. */
 	scroll?: boolean;
-	/** The viewer clicks on: for the opening and the closing words. */
-	confirm?: boolean;
 }
 
 /**
- * A step that says something about one part of the screen. The spotlight goes
- * up first, the tooltip with it, and the tour waits out the reading time
- * unless the viewer clicks ahead.
+ * A step that says something about one part of the screen: the spotlight goes
+ * up, the tooltip with it, and there it stays until the viewer clicks on.
+ *
+ * Every stop waits for that click rather than timing itself out. Whoever is
+ * being shown around reads at their own speed — and the tooltip only offers a
+ * way forward on a step that waits for one, so a tour that ran itself left
+ * them with a way back and a way out and nothing else.
  *
  * Every step scrolls its element into view, and this is not optional decor:
  * the router leaves the scroll position where the last page had it, so a page
@@ -43,14 +40,7 @@ interface Stop {
  * than half the screen leaves no such place, and the tooltip ends up jammed
  * against the bottom edge, under whatever else lives down there.
  */
-function look({
-	id,
-	selector,
-	position,
-	dwell,
-	scroll,
-	confirm,
-}: Stop): DemoStep {
+function look({ id, selector, position, scroll }: Stop): DemoStep {
 	return {
 		id,
 		action: { type: 'highlight', selector },
@@ -59,9 +49,11 @@ function look({
 			title: `${TEXT}.${id}.title`,
 			content: `${TEXT}.${id}.content`,
 			position: position ?? 'bottom',
-			requireConfirm: confirm ?? false,
+			requireConfirm: true,
 		},
-		delayAfter: dwell ?? READING_TIME,
+		// The click is what moves the tour on; a delay after it would only be
+		// a pause on a dimmed screen with nothing to read.
+		delayAfter: 0,
 	};
 }
 
@@ -106,12 +98,7 @@ export const appTourScript: DemoScript = {
 	},
 	steps: [
 		// --- Where everything is -------------------------------------------
-		look({
-			id: 'welcome',
-			selector: 'mc-top-bar .brand',
-			dwell: 0,
-			confirm: true,
-		}),
+		look({ id: 'welcome', selector: 'mc-top-bar .brand' }),
 		look({ id: 'bar', selector: 'mc-top-bar .bar' }),
 		look({ id: 'search', selector: 'mc-home-search' }),
 		// The artist's own block rather than the whole hero: the hero is the
@@ -169,8 +156,6 @@ export const appTourScript: DemoScript = {
 			id: 'profile',
 			selector: 'mc-profile-demo-tour',
 			position: 'top',
-			dwell: 0,
-			confirm: true,
 		}),
 	],
 };

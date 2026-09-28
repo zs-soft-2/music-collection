@@ -77,6 +77,19 @@ import { DemoTourService } from '../../data/demo-tour';
 		zs-autopilot-controls.position-bottom-left {
 			bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
 		}
+
+		/*
+		 * The menu of walkthroughs hangs off the right edge of the launcher,
+		 * which is where it belongs in the corner the library was written for.
+		 * Ours stands in the left corner, so from there it opened off the side
+		 * of the screen: it has to hang off the left edge instead.
+		 */
+		zs-autopilot-controls.position-bottom-left
+			::ng-deep
+			.zs-autopilot-controls__menu {
+			right: auto;
+			left: 0;
+		}
 	`,
 })
 export class DemoTourComponent {
