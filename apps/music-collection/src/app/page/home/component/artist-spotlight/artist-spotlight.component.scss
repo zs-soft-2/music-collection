@@ -136,9 +136,23 @@ h1 {
 	}
 }
 
+/*
+ * A gombsor egyetlen méretből él: a saját gombjaink és a beágyazott
+ * admin-link is innen veszi a magasságot, a betűméretet és az oldalpaddingot,
+ * különben a másik stíluslapból jövő admin-link kisebb marad a szomszédainál.
+ */
 .actions {
+	--mc-spotlight-button-height: 2.75rem;
+	--mc-spotlight-button-padding-x: 1.2rem;
+	--mc-spotlight-button-font-size: 0.9rem;
+
+	--mc-admin-edit-height: var(--mc-spotlight-button-height);
+	--mc-admin-edit-padding-x: var(--mc-spotlight-button-padding-x);
+	--mc-admin-edit-font-size: var(--mc-spotlight-button-font-size);
+
 	display: flex;
 	flex-wrap: wrap;
+	align-items: center;
 	gap: 0.75rem;
 }
 
@@ -146,10 +160,13 @@ h1 {
 	display: inline-flex;
 	align-items: center;
 	gap: 0.5rem;
-	padding: 0.7rem 1.2rem;
+	box-sizing: border-box;
+	height: var(--mc-spotlight-button-height);
+	padding: 0 var(--mc-spotlight-button-padding-x);
 	font: inherit;
-	font-size: 0.9rem;
+	font-size: var(--mc-spotlight-button-font-size);
 	font-weight: 600;
+	line-height: 1;
 	color: #fff;
 	text-decoration: none;
 	cursor: pointer;

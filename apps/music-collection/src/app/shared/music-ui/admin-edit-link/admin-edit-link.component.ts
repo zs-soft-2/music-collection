@@ -73,18 +73,24 @@ const ENTITY_NAMES: Record<AdminEditEntity, string> = {
 			display: inline-flex;
 		}
 
+		/*
+		 * A \`button\` változat mérete három hangolóból jön. Az alapérték a
+		 * visszafogott, fejlécbe való gomb; ahol a link a lap saját gombjai
+		 * közé kerül (pl. a kezdőlap reflektorfénye), ott a befoglaló sor
+		 * állítja át ezeket, és a link felveszi a szomszédai méretét.
+		 */
 		.edit {
 			display: inline-flex;
 			align-items: center;
 			gap: 0.5rem;
-			height: 36px;
+			height: var(--mc-admin-edit-height, 36px);
 			box-sizing: border-box;
-			padding: 0 0.875rem;
+			padding: 0 var(--mc-admin-edit-padding-x, 0.875rem);
 			border: 1px solid var(--mc-border-strong);
 			border-radius: var(--mc-radius-md);
 			background: color-mix(in srgb, var(--mc-bg) 60%, transparent);
 			color: var(--mc-text);
-			font-size: 0.8125rem;
+			font-size: var(--mc-admin-edit-font-size, 0.8125rem);
 			font-weight: 600;
 			text-decoration: none;
 			white-space: nowrap;
@@ -95,7 +101,7 @@ const ENTITY_NAMES: Record<AdminEditEntity, string> = {
 			}
 
 			i {
-				font-size: 0.8125rem;
+				font-size: inherit;
 			}
 		}
 
