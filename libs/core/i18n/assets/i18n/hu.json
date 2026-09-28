@@ -385,6 +385,8 @@
 			"how-you-appear-in": "Ahogy az appban megjelensz.",
 			"appearance": "Megjelenés",
 			"the-theme-and-how": "A téma, és hogy az oldalak mennyit használnak a képernyőből.",
+			"demoTour": "Vezetett bemutató",
+			"demoTourIntro": "A séta az appon, és hogy egyáltalán felajánljuk-e neked.",
 			"what-the-collection-opens": "Mivel nyíljon a gyűjtemény, és mennyi látszódjon egyszerre egy albumoldalból.",
 			"shelves": "Polcok",
 			"the-furniture-your-records": "A bútor, amiben a lemezeid állnak. Rajzold le, amid valóban van — hány elem, és rekeszből mennyi széltében és magasságban —, és a gyűjtemény polcnézete ebbe kerül be.",
@@ -1995,6 +1997,12 @@
 			"standard": "Normál",
 			"fullWidth": "Teljes szélesség"
 		},
+		"profileDemoTour": {
+			"the-launcher": "Indító",
+			"show-me-around": "Vezess körbe",
+			"puts-the-play-button": "Kitesz egy indítót a képernyő sarkába, és innen is elindíthatod a sétát.",
+			"start-the-tour-now": "Indítás most"
+		},
 		"profileListening": {
 			"records-put-on": "Feltett lemezek",
 			"heard-right-through": "Végighallgatva",
@@ -2539,6 +2547,210 @@
 		},
 		"collection": {
 			"description": "Minden lemez, amit ez a kihívás kér."
+		}
+	},
+	"tour": {
+		"home": {
+			"steps": {
+				"search": {
+					"title": "Keress egy lemezt",
+					"content": "Egy mező az egész katalógusra: előadó, album vagy szám — a találatok már gépelés közben jönnek."
+				},
+				"spotlight": {
+					"title": "Egy előadó a reflektorban",
+					"content": "A nyitólap mindig előrevesz valakit: a hét bandáját, vagy — ha arra a hétre nem választott senkit — egy húzást a katalógusból. Ha mást szeretnél, keverd meg."
+				},
+				"catalog": {
+					"title": "Mit tud a katalógus",
+					"content": "Előadók, albumok, kiadások, számok — és hogy mindebből mennyinek van már borítója, éve és kiadója."
+				},
+				"coverage": {
+					"title": "Mennyi van meg belőle",
+					"content": "A katalógus albumai évtizedenként, és hogy mennyi van már meg közülük — belépve a saját gyűjteményed rajzolódik rá."
+				},
+				"artists": {
+					"title": "Az előadók",
+					"content": "Innen nyílnak az előadó-oldalak: a lemezeikkel, a tagsággal, és azzal, hogy a zenészeik hol játszottak még."
+				},
+				"styles": {
+					"title": "Műfaj szerint",
+					"content": "A katalógus műfajonként szétszedve: stílusonként egy sor album, ahonnan tovább lehet olvasni."
+				},
+				"decades": {
+					"title": "Évtized szerint",
+					"content": "Ugyanaz kor szerint: melyik évtizedből mennyi lemez van a katalógusban, a nyolcvanas évek két oldalán."
+				},
+				"acts": {
+					"title": "Zenekarok, projektek, formációk",
+					"content": "Nem minden előadó zenekar: a katalógus külön veszi a szólóprojekteket, a szupergroupokat és az alkalmi formációkat."
+				},
+				"albums": {
+					"title": "A legfrissebb albumok",
+					"content": "Ami utoljára került a katalógusba — nem a megjelenés éve szerint, hanem aszerint, hogy mikor írtuk le."
+				}
+			},
+			"guest": {
+				"name": "A nyitólap",
+				"description": "Egy perc a nyitólapon: mit tud a katalógus, és mi lesz belőle, ha belépsz.",
+				"steps": {
+					"welcome": {
+						"title": "Üdv",
+						"content": "Ez a musiCollection: egy lemezkatalógus előadókkal, albumokkal, kiadásokkal. Nézzük meg egy percben a nyitólapot."
+					},
+					"bar": {
+						"title": "A felső sáv",
+						"content": "Innen indul minden: a lapok, amiket vendégként is megnézhetsz, jobbra pedig a nyelv és a világos vagy sötét téma."
+					},
+					"recent": {
+						"title": "Ami mostanában került be",
+						"content": "A katalógus friss szerzeményei: amit a gyűjtők legutóbb írtak le benne."
+					},
+					"challenges": {
+						"title": "Kihívások",
+						"content": "Lemezek halmaza szabály szerint: egy kiadó sorozata, egy évtized, egy banda teljes termése. Belépve az is látszik, hol tartasz bennük."
+					},
+					"join": {
+						"title": "Ami belépés után jön",
+						"content": "Saját polc, kívánságlista, rádió a saját lemezeidből, kihívások és a napi kérdés — ezek mind a fiókodhoz tartoznak."
+					},
+					"login": {
+						"title": "Itt tudsz belépni",
+						"content": "Google-fiókkal, egy kattintás. Utána ez a séta is másik lesz: a sajátodat mutatja meg."
+					}
+				}
+			},
+			"collector": {
+				"name": "A nyitólapod",
+				"description": "Egy perc a nyitólapon: mit hoz elő a katalógusból, és mit a saját polcodról.",
+				"steps": {
+					"welcome": {
+						"title": "Üdv újra",
+						"content": "Ez a nyitólapod: fent a katalógus, lejjebb az, ami a saját polcodról szól. Egy perc, és végigmegyünk rajta."
+					},
+					"bar": {
+						"title": "A felső sáv",
+						"content": "Innen indul minden. Nagy képernyőn egy sorban állnak a lapok, telefonon a menü mögött, a nyelv meg a téma pedig mindig jobbra."
+					},
+					"recent": {
+						"title": "Ami mostanában került be",
+						"content": "A legutóbb polcra tett lemezeid — és ha épp nem tettél fel semmit, az, amivel a katalógus bővült."
+					},
+					"challenges": {
+						"title": "Kihívások",
+						"content": "Lemezek halmaza szabály szerint: egy kiadó sorozata, egy évtized, egy banda teljes termése. A sáv mutatja, hol tartasz, a lap pedig ajánlja, melyik lemez hozna a legtöbbet."
+					},
+					"hunt": {
+						"title": "A következő lemez",
+						"content": "Amit a legjobban megérné megvenni: a majdnem teljes kihívásaidból hiányzó lemezek, sorrendben."
+					},
+					"account": {
+						"title": "És a többi mind itt",
+						"content": "A polcod, a beolvasás, a rádió, a kívánságlista és a profil — a profilban kapcsolhatod ki ezt a sétát is, ha már láttad."
+					}
+				}
+			}
+		},
+		"pages": {
+			"collection": {
+				"intro": {
+					"title": "A te polcod",
+					"content": "Innentől minden a tiéd: hány lemez, hány előadótól, milyen formátumban. Ezt a lapot rajtad kívül senki nem látja."
+				},
+				"stats": {
+					"title": "Egy pillantásra",
+					"content": "Hány lemez, hány előadótól, milyen formátumban — és mennyit ér a polc, ha beírtad, mennyiért vetted."
+				},
+				"filters": {
+					"title": "Keresés, szűrés, rendezés",
+					"content": "Keress a saját lemezeid között, hagyj meg egy formátumot, rendezz előadó, év vagy a beszerzés napja szerint — és csoportosítsd úgy, ahogy magadban is gondolsz rájuk."
+				},
+				"views": {
+					"title": "Háromféle nézet",
+					"content": "Borítófal, egyszerű lista, vagy maga a polc, minden példánnyal ott, ahol valóban áll. A bútort a profilban rajzolod meg."
+				}
+			},
+			"scan": {
+				"intro": {
+					"title": "Lemez egy fényképről",
+					"content": "Fényképezd le a borítót. A katalógus kiolvassa, megmondja, melyik lemeznek gondolja, és pár koppintással a polcodon van."
+				}
+			},
+			"shelfScan": {
+				"intro": {
+					"title": "Egy egész rekesz egyszerre",
+					"content": "Egy fénykép a gerincekről, és amit felismer, azt egyszerre ajánlja fel — így kerül be egy már tele polc."
+				}
+			},
+			"wishlist": {
+				"intro": {
+					"title": "Ami még hiányzik",
+					"content": "A lemezek, amikre vadászol, és hogy mennyit adnál értük. A nyitólap vadászlistája is ebből épül."
+				},
+				"filters": {
+					"title": "Rendezés és szűrés",
+					"content": "Ugyanaz a sáv, mint a polcon: kereshetsz benne, szűrhetsz formátumra, és rendezheted ár vagy előadó szerint."
+				}
+			},
+			"challenges": {
+				"intro": {
+					"title": "Kihívások",
+					"content": "Lemezek halmaza szabály szerint, nem felsorolás szerint: egy kiadó sorozata, egy évtized, egy banda teljes termése. Ha befejezel egyet, fizet."
+				}
+			},
+			"radio": {
+				"intro": {
+					"title": "A saját rádiód",
+					"content": "Egy lemez a polcodról, feltéve, oldalról oldalra. Sorban vagy keverve — és ami tényleg elszólt, bekerül a naplóba."
+				}
+			},
+			"dailyQuestion": {
+				"intro": {
+					"title": "A nap kérdése",
+					"content": "Egy kérdés a katalógusból, mindenkinek ugyanaz, naponta egy. Pont, sorozat, amit életben kell tartani, és ranglista."
+				},
+				"history": {
+					"title": "A korábbi kérdések",
+					"content": "Amit eddig kérdeztünk, a te válaszaiddal — és hogy melyiket találtad el."
+				}
+			},
+			"upcoming": {
+				"intro": {
+					"title": "Ami jön",
+					"content": "Mit adnak ki legközelebb a katalógus előadói — naponta egyszer összeszedve, hogy egy újrakiadás ne csússzon el melletted."
+				}
+			},
+			"map": {
+				"intro": {
+					"title": "Gyűjtők",
+					"content": "Hol állnak a lemezek. A te tűd pontosan annyit mutat, amennyit a profilban megengedtél."
+				}
+			},
+			"requests": {
+				"intro": {
+					"title": "Adj vissza valamit",
+					"content": "Hiányzik egy előadó, egy album vagy egy kiadás? Javasold itt, és kövesd, mi lett azzal, amit beküldtél."
+				},
+				"propose": {
+					"title": "Javasolj valamit",
+					"content": "Hiányzik egy előadó, album, kiadás vagy kiadó? Innen indul az űrlap, és a beküldött javaslat ide fut vissza."
+				}
+			},
+			"profile": {
+				"intro": {
+					"title": "A profilod",
+					"content": "A fiókod, és minden, ami az appot hozzád igazítja: nyelv, téma, a polc rajza, a lejátszás, és amit másokkal megosztasz."
+				},
+				"switch": {
+					"title": "És itt a kapcsoló",
+					"content": "A bemutató a profilban lakik. Kapcsold ki, és eltűnik a sarokból a gomb; kapcsold vissza, amikor újra végig akarsz menni rajta. Kösz, hogy velem jöttél."
+				}
+			},
+			"network": {
+				"intro": {
+					"title": "A kapcsolatháló",
+					"content": "Ki kivel játszott: a katalógus zenészei és zenekarai egy gráfban, ahol a közös tagok kötik össze a bandákat."
+				}
+			}
 		}
 	},
 	"app": {

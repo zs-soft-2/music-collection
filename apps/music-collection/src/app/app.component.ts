@@ -11,6 +11,7 @@ import {
 	EntityQuantityStateService,
 } from '@music-collection/api';
 
+import { DemoTourService } from './data/demo-tour';
 import { ExternalPlayerConsentService } from './data/external-player';
 import { environment } from '../environments/environment';
 import { CoreErrorModule } from '@music-collection/core/error';
@@ -18,6 +19,7 @@ import { CoreErrorModule } from '@music-collection/core/error';
 import { TopBarModule } from './module';
 import { AmbientBackdropComponent } from './shared/backdrop';
 import { ConsentBarComponent } from './shared/consent';
+import { DemoTourComponent } from './shared/demo-tour';
 import { DailyQuestionBannerComponent } from './shared/daily-question';
 import { PlayerStageComponent, PlayerStore } from './shared/player';
 import { YoutubeDockComponent } from './shared/youtube';
@@ -37,6 +39,7 @@ import { YoutubeDockComponent } from './shared/youtube';
 		PlayerStageComponent,
 		ConsentBarComponent,
 		DailyQuestionBannerComponent,
+		DemoTourComponent,
 	],
 })
 export class AppComponent implements OnInit {
@@ -45,6 +48,8 @@ export class AppComponent implements OnInit {
 	protected readonly player = inject(PlayerStore);
 	/** Whether the outside players may be on the page at all. */
 	protected readonly players = inject(ExternalPlayerConsentService);
+	/** Whether this collector asked to be shown around. */
+	protected readonly tour = inject(DemoTourService);
 
 	public title = 'music-collection';
 	public version = environment.version;

@@ -1,5 +1,6 @@
 import { combineLatest, map, of, pipe, switchMap, tap } from 'rxjs';
 
+import { DemoTourService } from '../../data/demo-tour';
 import {
 	NO_LOCATION,
 	UserLocationEffect,
@@ -456,6 +457,31 @@ export const ProfilePageStore = signalStore(
 			},
 			setExternalPlayers(allowed: boolean): void {
 				players.decide(allowed);
+			},
+		};
+	}),
+	/**
+	 * The guided tour. Not a copy of the switch either: the same service the
+	 * shell reads to decide whether the launcher is on the page is the one
+	 * answering here, so switching it off takes the launcher away at once.
+	 */
+	withComputed(() => {
+		const tour = inject(DemoTourService);
+
+		return {
+			demoTour: computed(() => tour.wanted()),
+		};
+	}),
+	withMethods(() => {
+		const tour = inject(DemoTourService);
+
+		return {
+			setDemoTour(wanted: boolean): void {
+				tour.decide(wanted);
+			},
+			/** Plays the walkthrough from its first step, on the home page. */
+			startDemoTour(): void {
+				tour.start();
 			},
 		};
 	}),

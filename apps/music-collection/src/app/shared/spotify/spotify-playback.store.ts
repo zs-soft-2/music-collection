@@ -1,4 +1,4 @@
-import { DOCUMENT, computed, inject } from '@angular/core';
+import { DOCUMENT, computed, effect, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import {
 	patchState,
@@ -9,6 +9,7 @@ import {
 	withState,
 } from '@ngrx/signals';
 
+import { ExternalPlayerConsentService } from '../../data/external-player';
 import {
 	SdkPlayer,
 	SpotifyApiError,
@@ -144,7 +145,8 @@ export const SpotifyPlaybackStore = signalStore(
 			store,
 			effect = inject(SpotifyPlaybackEffect),
 			router = inject(Router),
-			document = inject(DOCUMENT)
+			document = inject(DOCUMENT),
+			players = inject(ExternalPlayerConsentService)
 		) => {
 			let player: SdkPlayer | null = null;
 			let pollTimer: ReturnType<typeof setInterval> | null = null;
@@ -234,7 +236,17 @@ export const SpotifyPlaybackStore = signalStore(
 				// storage: asking before the answer is in would read "no app,
 				// never connected".
 				await effect.accountReady();
-				if (!store.hasOwnApp() || !effect.hasToken || player) {
+				// Spotify saját scriptje a saját szerveréről jön: betölteni
+				// annyi, mint jelenteni a látogatást. Ezért csak azzal a
+				// gyűjtővel indul, aki a külső lejátszókat megengedte — és
+				// mivel ez a válasz is dokumentumból érkezik, a hiányzó válasz
+				// „még nem", nem „nem": a hook alatt újraindítja, amint megjön.
+				if (
+					!players.allowed() ||
+					!store.hasOwnApp() ||
+					!effect.hasToken ||
+					player
+				) {
 					return;
 				}
 				patchState(store, { status: 'connecting', error: null });
@@ -287,6 +299,15 @@ export const SpotifyPlaybackStore = signalStore(
 			return {
 				start,
 				refreshDevices,
+
+				/**
+				 * Leszedi a böngésző-lejátszót: a gyűjtő visszavonta a
+				 * hozzájárulást, vagy kijelentkezett. A Spotify-kapcsolatához
+				 * nem nyúl — ez nem kiléptetés.
+				 */
+				stop(): void {
+					reset();
+				},
 
 				/**
 				 * Unlocks the player's audio element. Safari only lets sound
@@ -534,12 +555,31 @@ export const SpotifyPlaybackStore = signalStore(
 		}
 	),
 	withHooks({
-		onInit(store, effect = inject(SpotifyPlaybackEffect)) {
+		// A `playback` név azért nem `effect`, mert itt az Angular `effect`-je
+		// kell alá.
+		onInit(
+			store,
+			playback = inject(SpotifyPlaybackEffect),
+			players = inject(ExternalPlayerConsentService)
+		) {
 			patchState(store, {
-				volume: effect.browserVolume,
-				browserVolume: effect.browserVolume,
+				volume: playback.browserVolume,
+				browserVolume: playback.browserVolume,
 			});
-			void store.start();
+
+			// A lejátszó a hozzájárulást követi, mindkét irányban. A válasz a
+			// fiók dokumentumából jön, tehát az első futáskor még hiányzik és
+			// nemnek olvas: enélkül a lejátszót a válasz megérkezése előtt
+			// kérnénk el, a kérés elbukna, és többé nem próbálkoznánk — egy
+			// később visszavont hozzájárulás után pedig ott maradna a
+			// Spotifynál egy csatlakozott eszközünk.
+			effect(() => {
+				if (players.allowed()) {
+					void store.start();
+				} else {
+					store.stop();
+				}
+			});
 		},
 	})
 );

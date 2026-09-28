@@ -17,6 +17,7 @@ import { StoreModule } from '@ngrx/store';
 import { AppComponent } from './app.component';
 import { MeasurementConsentService } from './data/analytics';
 import { DailyQuestionEffect } from './data/daily-question';
+import { DemoTourService } from './data/demo-tour';
 import { ExternalPlayerConsentService } from './data/external-player';
 import { PlayerStore } from './shared/player';
 
@@ -67,6 +68,19 @@ describe('AppComponent', () => {
 						allowed: signal(false),
 						asking: signal(false),
 						decide: jest.fn(),
+					},
+				},
+				{
+					// A bemutató kapcsolója is a beállításokból jönne
+					// (Firestore/Auth); itt elég annyi, hogy a séta ne
+					// kerüljön a lapra.
+					provide: DemoTourService,
+					useValue: {
+						wanted: signal(false),
+						enabled: signal(false),
+						decide: jest.fn(),
+						prepare: jest.fn(),
+						start: jest.fn(),
 					},
 				},
 				{

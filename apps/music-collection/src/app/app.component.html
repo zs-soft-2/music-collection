@@ -34,3 +34,16 @@
 		<mc-player-stage />
 	}
 }
+
+<!--
+	A vezetett bemutató: az indító, a reflektor és a szövegbuborék.
+
+	`@if` és nem `@defer`: a kapcsoló mindkét irányban azonnal hasson. A
+	`@defer` a betöltött blokkot már nem bontja le, ha a feltétele hamisra
+	fordul — a kikapcsolás így csak újratöltés után vinné el az indítót.
+	Maga a séta (a lépések és a szövegkulcsaik) külön chunkban marad: a
+	DemoTourService csak akkor kéri le, amikor ez a blokk a lapra kerül.
+-->
+@if (tour.enabled()) {
+	<mc-demo-tour />
+}
