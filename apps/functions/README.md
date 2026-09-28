@@ -80,10 +80,23 @@ npm --prefix apps/functions install    # saját függőségek (a deploy is ezt f
 npx nx build functions                 # tsc → apps/functions/lib
 npx nx test functions                  # a számítás egységtesztjei
 firebase emulators:start --only firestore,functions --project demo-rules
+
+# egy function célzottan — a codebase nevével együtt:
+firebase deploy --only functions:security:discogsLookup --project dev
 ```
 
 A deployt a CI végzi (`--only …,functions`); a `firebase.json` predeploy hookja
 telepít és fordít.
+
+A célzott deploy szelektorába a **codebase nevét is ki kell írni**. A
+`firebase.json` ezt a forrást `security` néven definiálja, a szelektor-parser
+viszont az egyfragmentumos `functions:<név>` alakot a `default` codebase-re
+érti — és némán, `No function matches given --only filters` üzenettel abortál,
+akkor is, ha a függvény ott van a lefordított `lib/index.js`-ben. Célzott
+deployra pedig szükség van: a bukott deploy forrás-hashe rögzül, ezért egy sima
+rerun `Skipped (No changes detected)` lesz belőle, és a régi revízió szolgál
+tovább — a `--only`-val célzott function az egyetlen, ami soha nem esik
+kihagyásra.
 
 ## Bootstrap
 
