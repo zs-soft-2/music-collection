@@ -407,7 +407,14 @@
 				"albumCompact": "Open album pages with the sections collapsed"
 			},
 			"language": "Language",
-			"languageIntro": "What the app speaks to you in. Kept with the account, so it follows you to the next browser you sign in on."
+			"languageIntro": "What the app speaks to you in. Kept with the account, so it follows you to the next browser you sign in on.",
+			"tabs": {
+				"label": "Profile sections",
+				"account": "Account",
+				"collection": "Collection",
+				"playback": "Playback",
+				"data": "Data"
+			}
 		},
 		"track": {
 			"loading": "Loading…",

@@ -13,10 +13,11 @@
 
 /* ── Header ───────────────────────────────────────────────────────────── */
 
+/* No rule under the hero: the tab bar's own edge is the line that separates
+   the page's title from its contents, and two of them a finger apart read as
+   a mistake. */
 .hero {
 	padding-bottom: 1.5rem;
-	margin-bottom: 2rem;
-	border-bottom: 1px solid var(--mc-border);
 }
 
 .eyebrow {
@@ -43,40 +44,81 @@ h1 {
 	color: var(--mc-text-muted);
 }
 
+/* ── Tabs ─────────────────────────────────────────────────────────────── */
+
+/* The bar follows the reader down a long group — the shelves and Spotify
+   both run well past a screen — so switching group never means scrolling
+   back up first. It sits under the app bar, blurred rather than opaque, so
+   the backdrop still shows through the way it does everywhere else. */
+.tabs {
+	position: sticky;
+	top: var(--mc-app-bar-height);
+	z-index: 5;
+	display: flex;
+	gap: 0.25rem;
+	margin: 0 calc(clamp(1rem, 3vw, 2.5rem) * -1);
+	padding: 0.5rem clamp(1rem, 3vw, 2.5rem) 0;
+	overflow-x: auto;
+	background: color-mix(in srgb, var(--mc-bg) 82%, transparent);
+	backdrop-filter: blur(10px);
+	border-bottom: 1px solid var(--mc-border);
+	scrollbar-width: none;
+
+	&::-webkit-scrollbar {
+		display: none;
+	}
+}
+
+.tab {
+	display: inline-flex;
+	flex: 0 0 auto;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.7rem 1rem;
+	font: inherit;
+	font-size: 0.9375rem;
+	font-weight: 500;
+	white-space: nowrap;
+	color: var(--mc-text-muted);
+	background: none;
+	border: 0;
+	/* The underline is drawn on the element itself so it lines up with the
+	   bar's own bottom edge rather than floating above it. */
+	border-bottom: 2px solid transparent;
+	margin-bottom: -1px;
+	cursor: pointer;
+	transition: color var(--mc-duration-fast);
+
+	i {
+		font-size: 0.9375rem;
+	}
+
+	&:hover {
+		color: var(--mc-text);
+	}
+
+	&.is-active {
+		color: var(--mc-text);
+		font-weight: 600;
+		border-bottom-color: var(--mc-primary);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--mc-info);
+		outline-offset: -2px;
+	}
+}
+
 /* ── Sections ─────────────────────────────────────────────────────────── */
 
 .sections {
 	display: grid;
 	gap: 1.25rem;
+	margin-top: 1.75rem;
 	/* One column on a phone, and as many as the page is given room for —
 	   a card never grows past what a setting is readable at. */
 	grid-template-columns: repeat(auto-fit, minmax(min(100%, 30rem), 38rem));
-	align-items: start;
 	justify-content: start;
-}
-
-.card {
-	padding: 1.5rem;
-	background: var(--mc-card-bg);
-	border: 1px solid var(--mc-border);
-	border-radius: var(--mc-radius-lg);
-}
-
-.card-head {
-	margin-bottom: 1.25rem;
-
-	h2 {
-		margin: 0;
-		font-size: 1.125rem;
-		font-weight: 600;
-	}
-
-	p {
-		max-width: 52ch;
-		margin: 0.35rem 0 0;
-		font-size: 0.875rem;
-		color: var(--mc-text-muted);
-	}
 }
 
 /* ── Signed out ───────────────────────────────────────────────────────── */
@@ -87,6 +129,7 @@ h1 {
 	align-items: flex-start;
 	gap: 1rem;
 	max-width: 38rem;
+	margin-top: 2rem;
 	padding: 2.5rem 1.5rem;
 	background: var(--mc-card-bg);
 	border: 1px solid var(--mc-border);

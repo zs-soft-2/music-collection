@@ -407,7 +407,14 @@
 				"albumCompact": "Albumseiten mit eingeklappten Abschnitten öffnen"
 			},
 			"language": "Sprache",
-			"languageIntro": "In welcher Sprache die App mit dir spricht. Bleibt am Konto und folgt dir in den nächsten Browser, in dem du dich anmeldest."
+			"languageIntro": "In welcher Sprache die App mit dir spricht. Bleibt am Konto und folgt dir in den nächsten Browser, in dem du dich anmeldest.",
+			"tabs": {
+				"label": "Profilbereiche",
+				"account": "Konto",
+				"collection": "Sammlung",
+				"playback": "Wiedergabe",
+				"data": "Daten"
+			}
 		},
 		"track": {
 			"loading": "Wird geladen…",

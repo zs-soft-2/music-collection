@@ -407,7 +407,14 @@
 				"albumCompact": "Az albumoldalak összecsukott szakaszokkal nyíljanak"
 			},
 			"language": "Nyelv",
-			"languageIntro": "Milyen nyelven szól hozzád az app. A fiókkal marad, így követ a következő böngészőre is, ahol belépsz."
+			"languageIntro": "Milyen nyelven szól hozzád az app. A fiókkal marad, így követ a következő böngészőre is, ahol belépsz.",
+			"tabs": {
+				"label": "Profil szakaszai",
+				"account": "Fiók",
+				"collection": "Gyűjtemény",
+				"playback": "Lejátszás",
+				"data": "Adatok"
+			}
 		},
 		"track": {
 			"loading": "Betöltés…",
