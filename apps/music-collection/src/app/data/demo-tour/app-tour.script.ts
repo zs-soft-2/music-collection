@@ -21,7 +21,7 @@ interface Stop {
 	position?: TooltipPosition;
 	/** Longer for a step with more to read, shorter for a one-liner. */
 	dwell?: number;
-	/** The element is below the fold on a short screen. */
+	/** Off by default only where the element cannot be scrolled to. */
 	scroll?: boolean;
 	/** The viewer clicks on: for the opening and the closing words. */
 	confirm?: boolean;
@@ -31,6 +31,17 @@ interface Stop {
  * A step that says something about one part of the screen. The spotlight goes
  * up first, the tooltip with it, and the tour waits out the reading time
  * unless the viewer clicks ahead.
+ *
+ * Every step scrolls its element into view, and this is not optional decor:
+ * the router leaves the scroll position where the last page had it, so a page
+ * the tour opens after scrolling down opens scrolled down too — with its own
+ * heading above the top of the screen, where neither the spotlight nor the
+ * tooltip beside it could be read.
+ *
+ * What a step points at is kept small for the same reason. The tooltip looks
+ * for a place beside the spotlight that does not cover it; a cut-out taller
+ * than half the screen leaves no such place, and the tooltip ends up jammed
+ * against the bottom edge, under whatever else lives down there.
  */
 function look({
 	id,
@@ -43,7 +54,7 @@ function look({
 	return {
 		id,
 		action: { type: 'highlight', selector },
-		highlight: { selector, padding: 10, scrollIntoView: scroll ?? false },
+		highlight: { selector, padding: 10, scrollIntoView: scroll ?? true },
 		tooltip: {
 			title: `${TEXT}.${id}.title`,
 			content: `${TEXT}.${id}.content`,
@@ -103,34 +114,30 @@ export const appTourScript: DemoScript = {
 		}),
 		look({ id: 'bar', selector: 'mc-top-bar .bar' }),
 		look({ id: 'search', selector: 'mc-home-search' }),
-		// The skeleton stands in for the spotlight while the catalog is still
-		// arriving: the step has to find something, or the tour dies here.
+		// The artist's own block rather than the whole hero: the hero is the
+		// width of the page, so a tooltip has nowhere to stand beside it. The
+		// skeleton stands in while the catalog is still arriving — the step
+		// has to find something, or the tour dies here.
 		look({
 			id: 'spotlight',
-			selector: 'mc-artist-spotlight, .spotlight-skeleton',
-			scroll: true,
+			selector: 'mc-artist-spotlight .content, .spotlight-skeleton',
+			position: 'right',
 		}),
+		// The heading, not the whole section: the numbers under it stay
+		// readable through the veil, and the tooltip gets room below.
 		look({
 			id: 'catalog',
-			selector: '[aria-labelledby="glance-title"]',
-			scroll: true,
+			selector: '[aria-labelledby="glance-title"] .section-head',
 		}),
 
 		// --- The collector's own shelf --------------------------------------
 		visit('/collection'),
-		look({ id: 'collection', selector: '.page > .glance-section' }),
 		look({
-			id: 'filters',
-			selector: '.page > .toolbar',
-			position: 'bottom',
-			scroll: true,
+			id: 'collection',
+			selector: '.page > .glance-section .glance-title',
 		}),
-		look({
-			id: 'views',
-			selector: '.page > .toolbar .view-toggle',
-			position: 'bottom',
-			scroll: true,
-		}),
+		look({ id: 'filters', selector: '.page > .toolbar' }),
+		look({ id: 'views', selector: '.page > .toolbar .view-toggle' }),
 
 		// --- Putting a record on it -----------------------------------------
 		visit('/scan'),
@@ -154,7 +161,7 @@ export const appTourScript: DemoScript = {
 
 		// --- And back into the catalog --------------------------------------
 		visit('/my-requests'),
-		look({ id: 'requests', selector: '.page > .add', scroll: true }),
+		look({ id: 'requests', selector: '.page > .add' }),
 
 		// --- Where the tour itself lives ------------------------------------
 		visit('/profile'),
@@ -162,7 +169,6 @@ export const appTourScript: DemoScript = {
 			id: 'profile',
 			selector: 'mc-profile-demo-tour',
 			position: 'top',
-			scroll: true,
 			dwell: 0,
 			confirm: true,
 		}),

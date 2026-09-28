@@ -67,6 +67,16 @@ import { DemoTourService } from '../../data/demo-tour';
 			 */
 			--zs-autopilot-overlay-bg: rgb(0 0 0 / 68%);
 		}
+
+		/*
+		 * Above the bottom of the screen, which is taken: the consent bar
+		 * runs the width of the page and the YouTube dock sits in the other
+		 * corner. The library puts the launcher 1.5rem from the edge, which
+		 * lands it on top of the bar.
+		 */
+		zs-autopilot-controls.position-bottom-left {
+			bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+		}
 	`,
 })
 export class DemoTourComponent {
