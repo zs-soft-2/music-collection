@@ -321,6 +321,14 @@
 					>{{ comparison.sourceUrl }}</a
 				>
 			</p>
+			@if (comparison.fillerSourceUrl; as fillerUrl) {
+				<p class="artist-external-source">
+					{{ 'ui.artistForm.filled-in-from' | transloco }}
+					<a [href]="fillerUrl" target="_blank" rel="noopener">{{
+						fillerUrl
+					}}</a>
+				</p>
+			}
 			@if (comparison.rows.length) {
 				<div class="artist-external-table">
 					<table>

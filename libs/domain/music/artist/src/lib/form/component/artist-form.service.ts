@@ -50,7 +50,13 @@ export interface ArtistExternalRow {
 	value: unknown;
 }
 
+/**
+ * The loaded profile against the form, and where it came from. A second link
+ * appears where one source filled in what the other left empty.
+ */
 export interface ArtistExternalComparison {
+	/** Page of the source that filled in the gaps; null when there was one. */
+	fillerSourceUrl: string | null;
 	rows: ArtistExternalRow[];
 	sourceUrl: string;
 }
@@ -446,7 +452,11 @@ export class ArtistFormService {
 			};
 		}).filter((row) => row.loaded && row.loaded !== row.current);
 
-		return { rows, sourceUrl: profile.sourceUrl };
+		return {
+			fillerSourceUrl: profile.fillerSourceUrl,
+			rows,
+			sourceUrl: profile.sourceUrl,
+		};
 	}
 
 	private createArtistParams(

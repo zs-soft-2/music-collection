@@ -327,6 +327,14 @@
 					>{{ comparison.sourceUrl }}</a
 				>
 			</p>
+			@if (comparison.fillerSourceUrl; as fillerUrl) {
+				<p class="album-external-source">
+					{{ 'ui.albumForm.filled-in-from' | transloco }}
+					<a [href]="fillerUrl" target="_blank" rel="noopener">{{
+						fillerUrl
+					}}</a>
+				</p>
+			}
 			@if (comparison.rows.length) {
 				<div class="album-external-table">
 					<table>

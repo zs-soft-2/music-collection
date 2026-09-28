@@ -62,7 +62,9 @@ export function toDiscogsArtistId(
  *
  * MusicBrainz (with Wikipedia and Wikimedia Commons) is asked first; where it
  * knows the artist nothing, Discogs answers instead — it has no founding year
- * and no country, so those come back null from it.
+ * and no country, so those come back null from it. Where MusicBrainz answers
+ * but leaves fields Discogs could fill empty, both are asked and the empty
+ * ones filled in; `fillerSourceUrl` then names the second source.
  */
 export interface ArtistExternalProfile {
 	artistType: ArtistType | null;
@@ -71,6 +73,11 @@ export interface ArtistExternalProfile {
 	/** Id of the match on Discogs; null when MusicBrainz answered. */
 	discogsArtistId: number | null;
 	formedIn: Date | null;
+	/**
+	 * Page of the second source, where it filled in fields the first left
+	 * empty; null when one source answered everything it could.
+	 */
+	fillerSourceUrl: string | null;
 	/** Photo on Wikimedia Commons, or on Discogs. */
 	imageUrl: string | null;
 	/** Id of the match on MusicBrainz; null when Discogs answered. */
@@ -113,7 +120,7 @@ export interface ArtistExternalCandidate extends ArtistExternalIds {
  */
 export type ArtistExternalField = Exclude<
 	keyof ArtistExternalProfile,
-	'source' | 'sourceUrl'
+	'fillerSourceUrl' | 'source' | 'sourceUrl'
 >;
 
 /**

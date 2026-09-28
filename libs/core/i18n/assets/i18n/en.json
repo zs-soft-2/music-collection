@@ -1459,7 +1459,8 @@
 			"loaded-cover": "Loaded cover",
 			"the-loaded-data-matches": "The loaded data matches the form.",
 			"cancel2": "Cancel",
-			"apply-to-form": "Apply to form"
+			"apply-to-form": "Apply to form",
+			"filled-in-from": "Filled in from:"
 		},
 		"albumTracks": {
 			"load": "Load",
@@ -1570,7 +1571,8 @@
 			"musicbrainzId": "MusicBrainz ID",
 			"discogs": "Discogs",
 			"discogsArtistId": "Discogs ID",
-			"discogs-answers-when": "Used when MusicBrainz does not know the artist."
+			"discogs-answers-when": "Used when MusicBrainz does not know the artist.",
+			"filled-in-from": "Filled in from:"
 		},
 		"artistAlbums": {
 			"load": "Load",

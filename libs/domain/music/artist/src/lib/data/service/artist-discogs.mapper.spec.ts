@@ -1,6 +1,14 @@
-import { DiscogsBandProfile, FormatEnum } from '@music-collection/api';
+import {
+	ArtistExternalProfile,
+	CountryEnum,
+	DiscogsBandProfile,
+	FormatEnum,
+	StyleEnum,
+} from '@music-collection/api';
 
 import {
+	fillArtistGaps,
+	hasArtistGaps,
 	toDiscogsAlbum,
 	toDiscogsCandidate,
 	toDiscogsProfile,
@@ -50,6 +58,7 @@ describe('toDiscogsProfile', () => {
 			country: null,
 			description: 'Thrash metal band from Berkeley.',
 			discogsArtistId: 152122,
+			fillerSourceUrl: null,
 			formedIn: null,
 			imageUrl: 'https://img/1.jpg',
 			musicBrainzId: null,
@@ -119,5 +128,71 @@ describe('toDiscogsAlbum', () => {
 				formats: [],
 			})
 		).toBeNull();
+	});
+});
+
+/** A MusicBrainz profile as the artist form gets it. */
+const musicBrainz = (
+	fields: Partial<ArtistExternalProfile> = {}
+): ArtistExternalProfile => ({
+	artistType: 'band',
+	country: CountryEnum.USA,
+	description: 'A thrash metal band.',
+	discogsArtistId: null,
+	fillerSourceUrl: null,
+	formedIn: new Date(1983, 0, 1),
+	imageUrl: 'https://commons/photo.jpg',
+	musicBrainzId: 'mb-1',
+	name: 'Testament',
+	source: 'musicbrainz',
+	sourceUrl: 'https://musicbrainz.org/artist/mb-1',
+	styles: [StyleEnum.Thrash],
+	...fields,
+});
+
+describe('hasArtistGaps', () => {
+	it('spots the artist with no description or picture', () => {
+		expect(hasArtistGaps(musicBrainz({ description: null }))).toBe(true);
+		expect(hasArtistGaps(musicBrainz({ imageUrl: null }))).toBe(true);
+	});
+
+	it('counts a missing Discogs id as a gap worth one lookup', () => {
+		// Carrying the id back is what spares the discography and the line-up
+		// a name search next time.
+		expect(hasArtistGaps(musicBrainz())).toBe(true);
+	});
+
+	it('is false once every field Discogs could fill is filled', () => {
+		expect(hasArtistGaps(musicBrainz({ discogsArtistId: 152122 }))).toBe(
+			false
+		);
+	});
+});
+
+describe('fillArtistGaps', () => {
+	const discogs = toDiscogsProfile(profile());
+
+	it('fills the empty fields and names the source that filled them', () => {
+		const merged = fillArtistGaps(
+			musicBrainz({ description: null, imageUrl: null }),
+			discogs
+		);
+
+		expect(merged.description).toBe('Thrash metal band from Berkeley.');
+		expect(merged.imageUrl).toBe('https://img/1.jpg');
+		expect(merged.discogsArtistId).toBe(152122);
+		expect(merged.fillerSourceUrl).toBe(
+			'https://www.discogs.com/artist/152122'
+		);
+	});
+
+	it('never overwrites what MusicBrainz knew', () => {
+		const merged = fillArtistGaps(musicBrainz(), discogs);
+
+		expect(merged.description).toBe('A thrash metal band.');
+		expect(merged.imageUrl).toBe('https://commons/photo.jpg');
+		expect(merged.country).toBe(CountryEnum.USA);
+		expect(merged.formedIn).toEqual(new Date(1983, 0, 1));
+		expect(merged.source).toBe('musicbrainz');
 	});
 });

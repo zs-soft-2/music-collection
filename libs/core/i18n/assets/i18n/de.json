@@ -1459,7 +1459,8 @@
 			"loaded-cover": "Geladenes Cover",
 			"the-loaded-data-matches": "Die geladenen Daten stimmen mit dem Formular überein.",
 			"cancel2": "Abbrechen",
-			"apply-to-form": "Auf das Formular anwenden"
+			"apply-to-form": "Auf das Formular anwenden",
+			"filled-in-from": "Ergänzt aus:"
 		},
 		"albumTracks": {
 			"load": "Laden",
@@ -1570,7 +1571,8 @@
 			"musicbrainzId": "MusicBrainz-ID",
 			"discogs": "Discogs",
 			"discogsArtistId": "Discogs-ID",
-			"discogs-answers-when": "Kommt zum Einsatz, wenn MusicBrainz den Künstler nicht kennt."
+			"discogs-answers-when": "Kommt zum Einsatz, wenn MusicBrainz den Künstler nicht kennt.",
+			"filled-in-from": "Ergänzt aus:"
 		},
 		"artistAlbums": {
 			"load": "Laden",

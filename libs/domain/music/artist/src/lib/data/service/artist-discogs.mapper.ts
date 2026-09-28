@@ -54,6 +54,7 @@ export function toDiscogsProfile(
 		country: null,
 		description: profile.description,
 		discogsArtistId: profile.discogsId,
+		fillerSourceUrl: null,
 		formedIn: null,
 		imageUrl: profile.imageUrl,
 		musicBrainzId: null,
@@ -87,4 +88,38 @@ export function toDiscogsAlbum(
 				year: new Date(album.year, 0, 1),
 			}
 		: null;
+}
+
+/**
+ * The fields of an artist profile Discogs could fill in where MusicBrainz left
+ * them empty. Country, founding year and styles are not among them: Discogs
+ * keeps none of the three for an artist, so asking it about them is pointless.
+ * The Discogs id is, because carrying it back means the discography and the
+ * line-up start from an id next time instead of searching the name again.
+ */
+const ARTIST_GAPS = ['description', 'discogsArtistId', 'imageUrl'] as const;
+
+/** Whether the profile still has a field Discogs might know. */
+export function hasArtistGaps(profile: ArtistExternalProfile): boolean {
+	return ARTIST_GAPS.some((field) => profile[field] === null);
+}
+
+/**
+ * The first profile with its empty fields filled in from the second. What the
+ * first source knows always wins, and `fillerSourceUrl` names the second only
+ * where it actually filled something.
+ */
+export function fillArtistGaps(
+	base: ArtistExternalProfile,
+	filler: ArtistExternalProfile
+): ArtistExternalProfile {
+	const merged: ArtistExternalProfile = {
+		...base,
+		description: base.description ?? filler.description,
+		discogsArtistId: base.discogsArtistId ?? filler.discogsArtistId,
+		imageUrl: base.imageUrl ?? filler.imageUrl,
+	};
+	const filled = ARTIST_GAPS.some((field) => merged[field] !== base[field]);
+
+	return { ...merged, fillerSourceUrl: filled ? filler.sourceUrl : null };
 }

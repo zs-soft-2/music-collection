@@ -47,6 +47,8 @@ import {
 	toStyles,
 } from './album-external.mapper';
 import {
+	fillAlbumGaps,
+	hasAlbumGaps,
 	pickDiscogsMaster,
 	toDiscogsAlbumProfile,
 	toDiscogsTracks,
@@ -79,9 +81,12 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 	 * Looks the album of the artist up online; null when no source has it.
 	 *
 	 * MusicBrainz answers first, with the front cover from the Cover Art
-	 * Archive. Where it has no release group of that title — or has one with no
-	 * cover art, which is just as common — the Discogs master answers instead:
-	 * one call there carries the profile, the cover and the tracklist.
+	 * Archive. Discogs is asked where that leaves something open: no release
+	 * group of the title at all, or one that carries no cover and no genres —
+	 * the Cover Art Archive answers 404 for a great many albums, which used to
+	 * end the load with "the loaded data matches the form" and an empty cover
+	 * field. What MusicBrainz does know is never overwritten; Discogs only
+	 * fills the holes.
 	 */
 	public fetchExternalProfile$(
 		artistName: string,
@@ -89,9 +94,15 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 	): Observable<AlbumExternalProfile | null> {
 		return this.fetchMusicBrainzProfile$(artistName, name).pipe(
 			switchMap((profile) =>
-				profile
+				profile && !hasAlbumGaps(profile)
 					? of(profile)
-					: this.fetchDiscogsProfile$(artistName, name)
+					: this.fetchDiscogsProfile$(artistName, name).pipe(
+							map((discogs) =>
+								profile && discogs
+									? fillAlbumGaps(profile, discogs)
+									: (profile ?? discogs)
+							)
+						)
 			)
 		);
 	}
@@ -107,6 +118,7 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 					? this.fetchCoverUrl$(group.id).pipe(
 							map((coverImageUrl): AlbumExternalProfile => ({
 								coverImageUrl,
+								fillerSourceUrl: null,
 								format: toFormat(group),
 								name: group.title,
 								source: 'musicbrainz',

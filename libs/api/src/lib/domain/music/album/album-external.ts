@@ -7,11 +7,19 @@ import { ExternalSource } from '../external';
  *
  * MusicBrainz and the Cover Art Archive are asked first; where they know the
  * album nothing, the Discogs master answers instead — one call there carries
- * the profile, the cover and the tracklist.
+ * the profile, the cover and the tracklist. Where MusicBrainz has the album but
+ * leaves the cover or the styles empty — a release group with no cover art is
+ * common — both are asked and the empty fields filled in; `fillerSourceUrl`
+ * then names the second source.
  */
 export interface AlbumExternalProfile {
 	/** Front cover on the Cover Art Archive, or on Discogs. */
 	coverImageUrl: string | null;
+	/**
+	 * Page of the second source, where it filled in fields the first left
+	 * empty; null when one source answered everything it could.
+	 */
+	fillerSourceUrl: string | null;
 	format: FormatEnum | null;
 	name: string;
 	/** Which source answered. */
@@ -26,7 +34,7 @@ export interface AlbumExternalProfile {
 /** The form fields an external profile can fill in. */
 export type AlbumExternalField = Exclude<
 	keyof AlbumExternalProfile,
-	'source' | 'sourceUrl'
+	'fillerSourceUrl' | 'source' | 'sourceUrl'
 >;
 
 /** One track of the tracklist found online. */

@@ -48,6 +48,8 @@ import {
 	toWikidataId,
 } from './artist-external.mapper';
 import {
+	fillArtistGaps,
+	hasArtistGaps,
 	toDiscogsAlbum,
 	toDiscogsCandidate,
 	toDiscogsProfile,
@@ -76,12 +78,15 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 	/**
 	 * Looks the artist up online. MusicBrainz answers first — by name, country
 	 * and styles, with its description from the English Wikipedia and its
-	 * photo from Commons through Wikidata. Where MusicBrainz has no artist of
-	 * that name, Discogs answers instead; it knows no country and no founding
-	 * year, so those fields come back empty from it. Null when neither has it.
+	 * photo from Commons through Wikidata. Null when neither source has it.
 	 *
-	 * An artist already identified on one source is not looked for on the
-	 * other: the id names one artist, and there is nothing to search.
+	 * Discogs is asked where that leaves something open: no artist of the name
+	 * at all, or one MusicBrainz knows without a description or a picture. It
+	 * knows no country and no founding year, so those stay as MusicBrainz left
+	 * them; what MusicBrainz does know is never overwritten.
+	 *
+	 * An artist already identified on Discogs is not looked for on MusicBrainz:
+	 * the id names one artist, and there is nothing to search.
 	 */
 	public fetchExternalProfile$(
 		query: ArtistExternalQuery
@@ -92,7 +97,15 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 
 		return this.fetchMusicBrainzProfile$(query).pipe(
 			switchMap((profile) =>
-				profile ? of(profile) : this.searchDiscogsProfile$(query)
+				profile && !hasArtistGaps(profile)
+					? of(profile)
+					: this.searchDiscogsProfile$(query).pipe(
+							map((discogs) =>
+								profile && discogs
+									? fillArtistGaps(profile, discogs)
+									: (profile ?? discogs)
+							)
+						)
 			)
 		);
 	}
@@ -124,6 +137,7 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 									country: toCountry(artist.country),
 									description,
 									discogsArtistId: null,
+									fillerSourceUrl: null,
 									formedIn: toFormedIn(
 										artist['life-span']?.begin
 									),

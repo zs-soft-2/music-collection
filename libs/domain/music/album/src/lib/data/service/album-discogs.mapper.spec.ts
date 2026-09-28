@@ -1,6 +1,13 @@
-import { DiscogsMasterCandidate, StyleEnum } from '@music-collection/api';
+import {
+	AlbumExternalProfile,
+	DiscogsMasterCandidate,
+	FormatEnum,
+	StyleEnum,
+} from '@music-collection/api';
 
 import {
+	fillAlbumGaps,
+	hasAlbumGaps,
 	pickDiscogsMaster,
 	toDiscogsAlbumProfile,
 	toDiscogsTracks,
@@ -68,6 +75,7 @@ describe('toDiscogsAlbumProfile', () => {
 			})
 		).toEqual({
 			coverImageUrl: 'https://img/cover.jpg',
+			fillerSourceUrl: null,
 			format: null,
 			name: 'The Legacy',
 			source: 'discogs',
@@ -99,5 +107,92 @@ describe('toDiscogsTracks', () => {
 				durationSec: null,
 			},
 		]);
+	});
+});
+
+/** A MusicBrainz profile as the album form gets it. */
+const profile = (
+	fields: Partial<AlbumExternalProfile> = {}
+): AlbumExternalProfile => ({
+	coverImageUrl: 'https://coverartarchive.org/front.jpg',
+	fillerSourceUrl: null,
+	format: FormatEnum.lp,
+	name: 'The Legacy',
+	source: 'musicbrainz',
+	sourceUrl: 'https://musicbrainz.org/release-group/dc68af1c',
+	styles: [StyleEnum.Thrash],
+	year: new Date(1987, 0, 1),
+	...fields,
+});
+
+describe('hasAlbumGaps', () => {
+	it('is false for a profile the other source could not improve', () => {
+		expect(hasAlbumGaps(profile())).toBe(false);
+	});
+
+	it('spots the release group with no cover art', () => {
+		// The Cover Art Archive answers 404 for a great many albums; the album
+		// is found, the cover field stays empty, and nothing else would notice.
+		expect(hasAlbumGaps(profile({ coverImageUrl: null }))).toBe(true);
+	});
+
+	it('spots the release group with no genres', () => {
+		expect(hasAlbumGaps(profile({ styles: [] }))).toBe(true);
+	});
+});
+
+describe('fillAlbumGaps', () => {
+	const discogs = toDiscogsAlbumProfile({
+		masterId: 21929,
+		name: 'The Legacy (Reissue)',
+		artistName: 'Testament',
+		year: 2017,
+		styles: ['Thrash'],
+		coverUrl: 'https://img/discogs-cover.jpg',
+		tracks: [],
+	});
+
+	it('fills the empty fields and names the source that filled them', () => {
+		const merged = fillAlbumGaps(
+			profile({ coverImageUrl: null, styles: [] }),
+			discogs
+		);
+
+		expect(merged.coverImageUrl).toBe('https://img/discogs-cover.jpg');
+		expect(merged.styles).toEqual([StyleEnum.Thrash]);
+		expect(merged.fillerSourceUrl).toBe(
+			'https://www.discogs.com/master/21929'
+		);
+	});
+
+	it('never overwrites what the first source knew', () => {
+		const merged = fillAlbumGaps(profile(), discogs);
+
+		expect(merged.name).toBe('The Legacy');
+		expect(merged.year).toEqual(new Date(1987, 0, 1));
+		expect(merged.coverImageUrl).toBe(
+			'https://coverartarchive.org/front.jpg'
+		);
+		expect(merged.source).toBe('musicbrainz');
+		expect(merged.sourceUrl).toBe(
+			'https://musicbrainz.org/release-group/dc68af1c'
+		);
+	});
+
+	it('leaves no second link where the other source filled nothing', () => {
+		const empty = toDiscogsAlbumProfile({
+			masterId: 21929,
+			name: 'The Legacy',
+			artistName: 'Testament',
+			year: null,
+			styles: [],
+			coverUrl: null,
+			tracks: [],
+		});
+
+		expect(
+			fillAlbumGaps(profile({ coverImageUrl: null }), empty)
+				.fillerSourceUrl
+		).toBeNull();
 	});
 });
