@@ -7,7 +7,7 @@ import {
 	CountryEnum,
 	FormatEnum,
 	StyleEnum,
-	StyleList,
+	toCatalogStyles,
 } from '@music-collection/api';
 
 export const WIKIDATA_API_URL = 'https://www.wikidata.org/w/api.php';
@@ -85,16 +85,6 @@ export function toCountryCode(country?: CountryEnum | null): string | null {
 	return (country && CODE_BY_COUNTRY.get(country)) || null;
 }
 
-const normalize = (value: string): string =>
-	value
-		.toLowerCase()
-		.replace(/\bmetal\b/g, '')
-		.replace(/[^a-z0-9]/g, '');
-
-const STYLE_BY_KEY = new Map<string, StyleEnum>(
-	StyleList.map((style) => [normalize(style), style])
-);
-
 /** What each hint is worth when the hits of the same name are ranked. */
 const COUNTRY_MATCH_RANK = 4;
 const COUNTRY_MISMATCH_RANK = -4;
@@ -105,11 +95,13 @@ const GROUP_RANK = 1;
 
 /** The styles the catalog knows among the hit's tags and genres. */
 function artistStyles(artist: MusicBrainzArtist): Set<StyleEnum> {
-	const styles = [...(artist.tags ?? []), ...(artist.genres ?? [])]
-		.map((tag) => STYLE_BY_KEY.get(normalize(tag.name)))
-		.filter((style): style is StyleEnum => !!style);
-
-	return new Set(styles);
+	return new Set(
+		toCatalogStyles(
+			[...(artist.tags ?? []), ...(artist.genres ?? [])].map(
+				(tag) => tag.name
+			)
+		)
+	);
 }
 
 /**
@@ -198,12 +190,9 @@ export function toFormedIn(begin?: string | null): Date | null {
 export function toStyles(
 	genres: MusicBrainzArtist['genres'] = []
 ): StyleEnum[] {
-	const styles = [...genres]
-		.sort((a, b) => b.count - a.count)
-		.map((genre) => STYLE_BY_KEY.get(normalize(genre.name)))
-		.filter((style): style is StyleEnum => !!style);
-
-	return [...new Set(styles)];
+	return toCatalogStyles(
+		[...genres].sort((a, b) => b.count - a.count).map((genre) => genre.name)
+	);
 }
 
 /**
@@ -219,12 +208,16 @@ export function toExternalCandidate(
 
 	return {
 		country: toCountry(code) ?? code,
+		discogsArtistId: null,
 		formedIn: toFormedIn(artist['life-span']?.begin),
 		musicBrainzId: artist.id,
 		name: artist.name,
 		note: artist.disambiguation?.trim() || null,
+		source: 'musicbrainz',
 		sourceUrl: `${MUSICBRAINZ_ARTIST_URL}/${artist.id}`,
 		styles: toStyles([...(artist.tags ?? []), ...(artist.genres ?? [])]),
+		// MusicBrainz shows no picture of its own; the chooser has the note.
+		thumbUrl: null,
 		type: artist.type || null,
 	};
 }
@@ -285,6 +278,7 @@ export function toExternalAlbum(
 		? {
 				format,
 				name: group.title,
+				source: 'musicbrainz',
 				sourceUrl: `https://musicbrainz.org/release-group/${group.id}`,
 				year,
 			}

@@ -4,6 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { Firestore } from '@angular/fire/firestore';
 import {
 	ArtistStateService,
+	DiscogsLookupClient,
 	MembershipEntity,
 	MusicBrainzClient,
 	MusicianDataService,
@@ -55,6 +56,8 @@ function setUp(): {
 	effect: MembershipEffect;
 	repository: { save: jest.Mock; saveAll: jest.Mock };
 	musicians: { add$: jest.Mock };
+	musicBrainz: { get$: jest.Mock };
+	discogs: { lookupOrNull$: jest.Mock };
 } {
 	const repository = {
 		save: jest.fn().mockResolvedValue(undefined),
@@ -71,6 +74,11 @@ function setUp(): {
 				of({ uid: 'created-1', name: musician.name })
 			),
 	};
+	const musicBrainz = { get$: jest.fn().mockReturnValue(of({})) };
+	const discogs = {
+		lookup$: jest.fn(),
+		lookupOrNull$: jest.fn().mockReturnValue(of(null)),
+	};
 
 	TestBed.configureTestingModule({
 		providers: [
@@ -78,7 +86,8 @@ function setUp(): {
 			{ provide: Firestore, useValue: {} },
 			{ provide: MembershipRepository, useValue: repository },
 			{ provide: MusicianDataService, useValue: musicians },
-			{ provide: MusicBrainzClient, useValue: { get$: jest.fn() } },
+			{ provide: MusicBrainzClient, useValue: musicBrainz },
+			{ provide: DiscogsLookupClient, useValue: discogs },
 			{
 				provide: ArtistStateService,
 				useValue: {
@@ -91,7 +100,13 @@ function setUp(): {
 		],
 	});
 
-	return { effect: TestBed.inject(MembershipEffect), repository, musicians };
+	return {
+		effect: TestBed.inject(MembershipEffect),
+		repository,
+		musicians,
+		musicBrainz,
+		discogs,
+	};
 }
 
 /** A candidate as the load dialog hands it back. */
@@ -258,5 +273,107 @@ describe('MembershipEffect.applyCandidates$', () => {
 			await firstValueFrom(effect.applyCandidates$([], ARTIST, 'Carcass'))
 		).toBe(0);
 		expect(repository.saveAll).not.toHaveBeenCalled();
+	});
+});
+
+describe('MembershipEffect.fetchExternalMembers$', () => {
+	const band = {
+		relations: [
+			{
+				type: 'member of band',
+				artist: { id: 'mb-1', name: 'Bill Steer' },
+				begin: '1989',
+				attributes: ['guitar'],
+			},
+		],
+	};
+	const discogsProfile = {
+		profile: {
+			discogsId: 152122,
+			name: 'Carcass',
+			description: null,
+			sites: [],
+			imageUrl: null,
+			styles: [],
+			members: [{ discogsId: 5, name: 'Jeff Walker', active: true }],
+		},
+	};
+
+	it('takes the MusicBrainz line-up, which carries the years', async () => {
+		const { effect, musicBrainz, discogs } = setUp();
+
+		musicBrainz.get$.mockReturnValue(of(band));
+
+		const members = await firstValueFrom(
+			effect.fetchExternalMembers$({
+				musicBrainzId: 'mb-band',
+				discogsArtistId: 152122,
+			})
+		);
+
+		expect(members).toEqual([
+			expect.objectContaining({
+				musicianName: 'Bill Steer',
+				from: 1989,
+				source: 'musicbrainz',
+			}),
+		]);
+		expect(discogs.lookupOrNull$).not.toHaveBeenCalled();
+	});
+
+	it('asks Discogs where MusicBrainz lists no member', async () => {
+		const { effect, musicBrainz, discogs } = setUp();
+
+		musicBrainz.get$.mockReturnValue(of({ relations: [] }));
+		discogs.lookupOrNull$.mockReturnValue(of(discogsProfile));
+
+		const members = await firstValueFrom(
+			effect.fetchExternalMembers$({
+				musicBrainzId: 'mb-band',
+				discogsArtistId: 152122,
+			})
+		);
+
+		expect(discogs.lookupOrNull$).toHaveBeenCalledWith({
+			kind: 'artist-profile',
+			discogsId: 152122,
+		});
+		expect(members).toEqual([
+			expect.objectContaining({
+				musicianName: 'Jeff Walker',
+				active: true,
+				from: null,
+				source: 'discogs',
+			}),
+		]);
+	});
+
+	it('goes straight to Discogs without a MusicBrainz id', async () => {
+		const { effect, musicBrainz, discogs } = setUp();
+
+		discogs.lookupOrNull$.mockReturnValue(of(discogsProfile));
+
+		const members = await firstValueFrom(
+			effect.fetchExternalMembers$({
+				musicBrainzId: null,
+				discogsArtistId: 152122,
+			})
+		);
+
+		expect(musicBrainz.get$).not.toHaveBeenCalled();
+		expect(members).toHaveLength(1);
+	});
+
+	it('is empty when neither source names the band', async () => {
+		const { effect } = setUp();
+
+		expect(
+			await firstValueFrom(
+				effect.fetchExternalMembers$({
+					musicBrainzId: null,
+					discogsArtistId: null,
+				})
+			)
+		).toEqual([]);
 	});
 });

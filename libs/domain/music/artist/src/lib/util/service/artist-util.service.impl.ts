@@ -4,6 +4,7 @@ import {
 	AlbumEntityAdd,
 	ArtistEntity,
 	ArtistEntityAdd,
+	ArtistDiscogs,
 	ArtistEntityUpdate,
 	ArtistExternalAlbum,
 	ArtistModel,
@@ -15,6 +16,7 @@ import {
 	EntityQuantityEntityUpdate,
 	EntityTypeEnum,
 	GenreEnum,
+	toDiscogsArtistId,
 	toMusicBrainzId,
 } from '@music-collection/api';
 
@@ -87,6 +89,10 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 
 		if (model.description) {
 			entity.description = model.description;
+		}
+
+		if (model.discogs !== undefined) {
+			entity.discogs = model.discogs;
 		}
 
 		if (model.headerImage) {
@@ -166,6 +172,7 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 			imageUrl: formGroup.value['imageUrl'] || null,
 			mainImage: formGroup.value['mainImage'],
 			musicBrainzId: toMusicBrainzId(formGroup.value['musicBrainzId']),
+			...this.toDiscogs(formGroup),
 			name: (formGroup.value['name'] as string).trim(),
 			sites: [],
 			styles: formGroup.value['styles'],
@@ -185,6 +192,10 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 			imageUrl: [artist?.imageUrl || null],
 			mainImage: [artist?.mainImage || null],
 			musicBrainzId: [artist?.musicBrainzId || null],
+			discogsArtistId: [artist?.discogs?.artistId || null],
+			// What the Discogs import wrote besides the id — kept as it is, so
+			// saving the form cannot drop the photo it found.
+			discogs: [artist?.discogs || null],
 			name: [
 				artist?.name || null,
 				[Validators.required, Validators.min(3), Validators.max(30)],
@@ -192,6 +203,18 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 			styles: [artist?.styles || null, [Validators.required]],
 			uid: [artist?.uid],
 		});
+	}
+
+	/**
+	 * The artist's Discogs block as the form leaves it: the id from its own
+	 * field, everything else the import wrote kept untouched. Absent — not
+	 * null — when there is neither, as the field is optional on the entity.
+	 */
+	private toDiscogs(formGroup: FormGroup): { discogs?: ArtistDiscogs } {
+		const artistId = toDiscogsArtistId(formGroup.value['discogsArtistId']);
+		const discogs = formGroup.value['discogs'] as ArtistDiscogs | null;
+
+		return artistId || discogs ? { discogs: { ...discogs, artistId } } : {};
 	}
 
 	public updateEntity(formGroup: FormGroup): ArtistEntityUpdate {
@@ -206,6 +229,7 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 			imageUrl: formGroup.value['imageUrl'] || null,
 			mainImage: formGroup.value['mainImage'],
 			musicBrainzId: toMusicBrainzId(formGroup.value['musicBrainzId']),
+			...this.toDiscogs(formGroup),
 			name: (formGroup.value['name'] as string).trim(),
 			styles: formGroup.value['styles'],
 			sites: [],

@@ -1,4 +1,8 @@
-import { AlbumEntity, ContributionEntity } from '@music-collection/api';
+import {
+	AlbumEntity,
+	ContributionEntity,
+	DiscogsBandProfile,
+} from '@music-collection/api';
 import { creditCategory } from '@music-collection/ui/music-view';
 
 import { toCatalogInstruments } from './instruments';
@@ -15,8 +19,8 @@ export interface LineupCandidate {
 	active: boolean;
 	albumCount: number;
 	albumUids: string[];
-	/** Which source knows this row; a merged one counts as musicbrainz. */
-	source: 'musicbrainz' | 'catalog';
+	/** Which source knows this row; a merged one counts as the online one. */
+	source: 'musicbrainz' | 'discogs' | 'catalog';
 }
 
 /** The `member of band` relations of a band, as MusicBrainz returns them. */
@@ -96,6 +100,32 @@ export function toExternalMembers(band: MusicBrainzBand): LineupCandidate[] {
 }
 
 /**
+ * The band's line-up as Discogs has it. Discogs keeps no years and no
+ * instruments for a member — only whether they are in the current line-up — so
+ * a row from here arrives with the years empty for the admin to fill in. It is
+ * still the whole line-up of a band MusicBrainz may not know at all.
+ *
+ * Everyone counts as a member: Discogs has no way of saying guest, and the
+ * catalog's credits are what tell the guests apart on the same screen.
+ */
+export function toDiscogsMembers(
+	profile: DiscogsBandProfile
+): LineupCandidate[] {
+	return profile.members.map((member) => ({
+		musicianUid: null,
+		musicianName: member.name,
+		kind: 'member' as const,
+		instruments: [],
+		from: null,
+		to: null,
+		active: member.active,
+		albumCount: 0,
+		albumUids: [],
+		source: 'discogs' as const,
+	}));
+}
+
+/**
  * The line-up the catalog's own credits imply: who performed on the band's
  * albums, on what, and between which years. A credit that covers a whole
  * release counts as membership and a track-limited one as a guest turn —
@@ -167,10 +197,11 @@ export function toCatalogCandidates(
 }
 
 /**
- * The two sources as one list. Where both know a musician, MusicBrainz
- * decides the years and whether they are still in the band — it is the
- * source that knows them — and the catalog contributes the instruments it
- * has credits for and the album count.
+ * The two sources as one list. Where both know a musician, the online source
+ * decides whether they are still in the band, and the years where it has them;
+ * the catalog contributes the instruments it has credits for and the album
+ * count. A Discogs row brings no years at all, so there the catalog's own
+ * first and last credited year is what the admin sees.
  */
 export function mergeCandidates(
 	external: LineupCandidate[],

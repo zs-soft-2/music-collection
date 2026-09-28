@@ -6,10 +6,12 @@ import {
 	AlbumEntity,
 	ArtistEntity,
 	ArtistExternalAlbum,
+	ArtistExternalIds,
 	ArtistExternalQuery,
 	ArtistStateService,
 	ArtistUtilService,
 	MUSICBRAINZ_ARTIST_URL,
+	discogsArtistUrl,
 	toMusicBrainzId,
 } from '@music-collection/api';
 
@@ -46,7 +48,7 @@ export class ArtistAlbumsService {
 	 * the choice outlast the page — but asking again on every load would be
 	 * asking the same question twice.
 	 */
-	private pickedMusicBrainzId: string | null = null;
+	private pickedIds: ArtistExternalIds | null = null;
 
 	public readonly externalAlbums = signal<ArtistExternalAlbumRow[] | null>(
 		null
@@ -113,11 +115,15 @@ export class ArtistAlbumsService {
 	}
 
 	/**
-	 * Looks the artist's albums up online. The artist's MusicBrainz id names
-	 * the artist outright; without one the name is searched on, and where
-	 * several artists carry it the admin is asked which theirs is — the
-	 * albums of a namesake are worse than none, and nothing in the list
-	 * would tell them apart afterwards.
+	 * Looks the artist's albums up online. An id the artist already carries —
+	 * MusicBrainz or Discogs — names it outright; without one the name is
+	 * searched on, and where several artists carry it the admin is asked which
+	 * theirs is: the albums of a namesake are worse than none, and nothing in
+	 * the list would tell them apart afterwards.
+	 *
+	 * MusicBrainz is asked first. Where it lists no album of the artist — it
+	 * does not know the band, or has nothing but live records of it — the
+	 * Discogs discography answers instead.
 	 */
 	public async loadExternal(): Promise<void> {
 		const artist = this.params.artist;
@@ -125,10 +131,9 @@ export class ArtistAlbumsService {
 		if (!name || this.externalLoading()) {
 			return;
 		}
-		const musicBrainzId =
-			toMusicBrainzId(artist?.musicBrainzId) ?? this.pickedMusicBrainzId;
-		if (musicBrainzId) {
-			await this.runExternal(() => this.loadAlbums(name, musicBrainzId));
+		const ids = this.artistIds();
+		if (ids.musicBrainzId || ids.discogsArtistId) {
+			await this.runExternal(() => this.loadAlbums(name, ids));
 
 			return;
 		}
@@ -143,10 +148,7 @@ export class ArtistAlbumsService {
 			if (candidates.length > 1) {
 				this.externalCandidates.set(candidates.map(toCandidateRow));
 			} else {
-				await this.loadAlbums(
-					name,
-					candidates[0]?.musicBrainzId ?? null
-				);
+				await this.loadAlbums(name, candidates[0] ?? ids);
 			}
 		});
 	}
@@ -159,10 +161,10 @@ export class ArtistAlbumsService {
 			return;
 		}
 		this.externalCandidates.set(null);
-		this.pickedMusicBrainzId = candidate.musicBrainzId;
+		this.pickedIds = candidate;
 
 		await this.runExternal(() =>
-			this.loadAlbums(candidate.name, candidate.musicBrainzId)
+			this.loadAlbums(candidate.name, candidate)
 		);
 	}
 
@@ -176,25 +178,50 @@ export class ArtistAlbumsService {
 
 		return {
 			country: artist?.country ?? null,
-			musicBrainzId: artist?.musicBrainzId,
+			...this.artistIds(),
 			name,
 			styles: artist?.styles ?? [],
+		};
+	}
+
+	/**
+	 * The ids the artist is known by: its own, or the ones of the namesake
+	 * picked on this tab while the artist itself still carries none.
+	 */
+	private artistIds(): ArtistExternalIds {
+		const artist = this.params.artist;
+
+		return {
+			discogsArtistId:
+				artist?.discogs?.artistId ??
+				this.pickedIds?.discogsArtistId ??
+				null,
+			musicBrainzId:
+				toMusicBrainzId(artist?.musicBrainzId) ??
+				this.pickedIds?.musicBrainzId ??
+				null,
 		};
 	}
 
 	/** The albums found for one artist, those the catalog has left out. */
 	private async loadAlbums(
 		name: string,
-		musicBrainzId: string | null
+		ids: ArtistExternalIds
 	): Promise<void> {
 		const found = await firstValueFrom(
 			this.artistStateService.fetchExternalAlbums$({
 				...this.externalQuery(name),
-				musicBrainzId,
+				...ids,
 			})
 		);
+		// Whose page the list came from, as far as the load knew before it ran;
+		// a fallback that identified the artist itself leaves no link here.
 		this.externalSourceUrl.set(
-			musicBrainzId ? `${MUSICBRAINZ_ARTIST_URL}/${musicBrainzId}` : null
+			ids.musicBrainzId
+				? `${MUSICBRAINZ_ARTIST_URL}/${ids.musicBrainzId}`
+				: ids.discogsArtistId
+					? discogsArtistUrl(ids.discogsArtistId)
+					: null
 		);
 		const known = new Set(
 			this.params.albums.map((album) => albumKey(album.name))

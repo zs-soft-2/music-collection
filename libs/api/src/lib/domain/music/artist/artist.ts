@@ -26,7 +26,8 @@ export const ARTIST_TYPE_OPTIONS: { labelKey: string; value: ArtistType }[] = [
 
 /** Where an artist imported from Discogs comes from. */
 export interface ArtistDiscogs {
-	artistId?: number;
+	/** Null where the admin cleared the field the online load fills in. */
+	artistId?: number | null;
 	/** Photo on Discogs, for artists without an uploaded image. */
 	imageUrl?: string | null;
 }

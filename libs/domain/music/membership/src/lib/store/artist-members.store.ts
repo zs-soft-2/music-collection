@@ -5,6 +5,7 @@ import {
 	AlbumEntity,
 	ArtistEntity,
 	ArtistExternalCandidate,
+	ArtistExternalIds,
 	MembershipEntity,
 	MusicianEntity,
 	toMusicBrainzId,
@@ -53,15 +54,15 @@ interface ArtistMembersState {
 	/** The loaded candidates; null while the load dialog is closed. */
 	candidates: CandidateRow[] | null;
 	isLoadingCandidates: boolean;
-	/** True when the last load could not reach MusicBrainz. */
+	/** True when the last load could reach no online source. */
 	externalFailed: boolean;
 	/** Bands of the same name to choose between, when the id is unknown. */
 	namesakes: ArtistExternalCandidate[] | null;
 	/**
 	 * The namesake picked here, for as long as the tab is open. Saving the
-	 * id on the details tab is what makes the choice outlast the page.
+	 * ids on the details tab is what makes the choice outlast the page.
 	 */
-	pickedMusicBrainzId: string | null;
+	pickedIds: ArtistExternalIds | null;
 	error: string | null;
 }
 
@@ -81,7 +82,7 @@ const initialState: ArtistMembersState = {
 	isLoadingCandidates: false,
 	externalFailed: false,
 	namesakes: null,
-	pickedMusicBrainzId: null,
+	pickedIds: null,
 	error: null,
 };
 
@@ -135,14 +136,21 @@ const lookup = (
 		albums: () => AlbumEntity[];
 		rows: () => MembershipEntity[];
 	},
-	musicBrainzId: string | null
+	ids: ArtistExternalIds
 ) => ({
 	artistUid: store.artistUid(),
 	artistName: store.artistName(),
 	albums: store.albums(),
-	musicBrainzId,
+	musicBrainzId: ids.musicBrainzId,
+	discogsArtistId: ids.discogsArtistId,
 	existing: store.rows(),
 });
+
+/** No source has named the band yet; the name is what a load searches on. */
+const NO_IDS: ArtistExternalIds = {
+	discogsArtistId: null,
+	musicBrainzId: null,
+};
 
 const toRows = (candidates: LineupCandidate[]): CandidateRow[] =>
 	candidates.map((candidate) => ({ ...candidate, selected: true }));
@@ -238,10 +246,11 @@ export const ArtistMembersStore = signalStore(
 			)
 		),
 		/**
-		 * Offers the line-up both sources know about. Without a MusicBrainz
-		 * id the band is searched by name first, and where several bands
-		 * carry it the admin is asked which theirs is — a namesake's members
-		 * are worse than none.
+		 * Offers the line-up the sources know about. Without an id for the band
+		 * it is searched by name first — on MusicBrainz, and on Discogs where
+		 * MusicBrainz knows nobody of the name — and where several bands carry
+		 * it the admin is asked which theirs is: a namesake's members are worse
+		 * than none.
 		 */
 		loadCandidates: rxMethod<void>(
 			pipe(
@@ -252,20 +261,27 @@ export const ArtistMembersStore = signalStore(
 					})
 				),
 				exhaustMap(() => {
-					const musicBrainzId =
-						toMusicBrainzId(store.artist()?.musicBrainzId) ??
-						store.pickedMusicBrainzId();
+					const ids: ArtistExternalIds = {
+						discogsArtistId:
+							store.artist()?.discogs?.artistId ??
+							store.pickedIds()?.discogsArtistId ??
+							null,
+						musicBrainzId:
+							toMusicBrainzId(store.artist()?.musicBrainzId) ??
+							store.pickedIds()?.musicBrainzId ??
+							null,
+					};
 
-					if (musicBrainzId) {
+					if (ids.musicBrainzId || ids.discogsArtistId) {
 						return effect
-							.loadCandidates$(lookup(store, musicBrainzId))
+							.loadCandidates$(lookup(store, ids))
 							.pipe(map((result) => ({ result })));
 					}
 
 					return effect
 						.searchExternalArtists$({
 							country: store.artist()?.country ?? null,
-							musicBrainzId: store.artist()?.musicBrainzId,
+							...ids,
 							name: store.artistName(),
 							styles: store.artist()?.styles ?? [],
 						})
@@ -275,11 +291,7 @@ export const ArtistMembersStore = signalStore(
 									? of({ namesakes: hits })
 									: effect
 											.loadCandidates$(
-												lookup(
-													store,
-													hits[0]?.musicBrainzId ??
-														null
-												)
+												lookup(store, hits[0] ?? NO_IDS)
 											)
 											.pipe(map((result) => ({ result })))
 							)
@@ -316,13 +328,11 @@ export const ArtistMembersStore = signalStore(
 					patchState(store, {
 						namesakes: null,
 						isLoadingCandidates: true,
-						pickedMusicBrainzId: candidate.musicBrainzId,
+						pickedIds: candidate,
 					})
 				),
 				exhaustMap((candidate) =>
-					effect.loadCandidates$(
-						lookup(store, candidate.musicBrainzId)
-					)
+					effect.loadCandidates$(lookup(store, candidate))
 				),
 				tapResponse({
 					next: (result) =>

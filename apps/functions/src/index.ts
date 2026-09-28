@@ -31,6 +31,7 @@ import {
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions/v2';
 
+import { DiscogsRequestOptions } from './discogs-api';
 import { DiscogsArtistProfile, fetchArtistProfile } from './discogs-artist';
 import {
 	DiscogsLabelCandidate,
@@ -38,6 +39,13 @@ import {
 	fetchLabelProfile,
 	searchLabels,
 } from './discogs-label';
+import {
+	fetchArtistAlbums,
+	fetchBandProfile,
+	fetchMasterProfile,
+	searchArtists,
+	searchMasters,
+} from './discogs-lookup';
 import {
 	DiscogsError,
 	DiscogsVersion,
@@ -636,6 +644,178 @@ export const discogsLabelSearch = onCall(
 			logger.warn(`discogsLabelSearch ${name}`, error);
 
 			throw discogsFailure(error, 'Nincs ilyen Discogs-kiadó.');
+		}
+	}
+);
+
+/**
+ * Egy `discogsLookup` kérés: honnan olvasható a cache-ből, mit kérdezzünk a
+ * Discogstól, és mit jelent ott a 404.
+ */
+interface DiscogsLookupPlan {
+	cacheKey: string;
+	fetch: (options: DiscogsRequestOptions) => Promise<object>;
+	missing: string;
+}
+
+/** Kötelező, pozitív egész a kérésből. */
+function lookupId(value: unknown, name: string): number {
+	const id = Number(value);
+
+	if (!Number.isSafeInteger(id) || id <= 0) {
+		throw new HttpsError('invalid-argument', `Érvénytelen ${name}.`);
+	}
+
+	return id;
+}
+
+/** Kötelező, nem üres szöveg a kérésből. */
+function lookupText(value: unknown, name: string): string {
+	const term = String(value ?? '').trim();
+
+	if (!term) {
+		throw new HttpsError('invalid-argument', `Hiányzó ${name}.`);
+	}
+
+	return term;
+}
+
+/**
+ * Az üres profil ugyanaz a válasz, mint a nem létező: a Discogs 404-e és egy
+ * azonosító nélküli előadó között a hívónak nincs mit választania.
+ */
+async function requirePresent<T>(profile: T | null, what: string): Promise<T> {
+	if (!profile) {
+		throw new DiscogsError(what, 404);
+	}
+
+	return profile;
+}
+
+/** Melyik lekérdezés melyik cache-kulcson és melyik Discogs-végponton fut. */
+function discogsLookupPlan(kind: string, data: unknown): DiscogsLookupPlan {
+	const request = data as Record<string, unknown> | undefined;
+
+	switch (kind) {
+		case 'artist-search': {
+			const name = lookupText(request?.['name'], 'előadónév');
+
+			return {
+				cacheKey: `band-search-${searchCacheKey(name)}`,
+				fetch: async (options) => ({
+					candidates: await searchArtists(name, options),
+				}),
+				missing: 'Nincs ilyen Discogs-előadó.',
+			};
+		}
+		case 'artist-profile': {
+			const discogsId = lookupId(request?.['discogsId'], 'discogsId');
+
+			return {
+				cacheKey: `band-${discogsId}`,
+				fetch: async (options) => ({
+					profile: await requirePresent(
+						await fetchBandProfile(discogsId, options),
+						'Üres Discogs-előadó.'
+					),
+				}),
+				missing: 'Nincs ilyen Discogs-előadó.',
+			};
+		}
+		case 'artist-albums': {
+			const discogsId = lookupId(request?.['discogsId'], 'discogsId');
+
+			return {
+				cacheKey: `band-albums-${discogsId}`,
+				fetch: async (options) => ({
+					albums: await fetchArtistAlbums(discogsId, options),
+				}),
+				missing: 'Nincs ilyen Discogs-előadó.',
+			};
+		}
+		case 'master-search': {
+			const artist = lookupText(request?.['artist'], 'előadónév');
+			const album = lookupText(request?.['album'], 'albumcím');
+
+			return {
+				cacheKey: `master-search-${searchCacheKey(
+					artist
+				)}--${searchCacheKey(album)}`,
+				fetch: async (options) => ({
+					candidates: await searchMasters(artist, album, options),
+				}),
+				missing: 'Nincs ilyen Discogs-album.',
+			};
+		}
+		case 'master-profile': {
+			const masterId = lookupId(request?.['masterId'], 'masterId');
+
+			return {
+				// A `master-{id}` a kiadáslistát tartja (discogsMasterVersions).
+				cacheKey: `master-profile-${masterId}`,
+				fetch: async (options) => ({
+					profile: await requirePresent(
+						await fetchMasterProfile(masterId, options),
+						'Üres Discogs-master.'
+					),
+				}),
+				missing: 'Nincs ilyen Discogs-album.',
+			};
+		}
+		default:
+			throw new HttpsError(
+				'invalid-argument',
+				`Ismeretlen lekérdezés: ${kind || '—'}.`
+			);
+	}
+}
+
+/**
+ * A katalógus-űrlapok Discogs-alternatívája, amikor a MusicBrainz nem ismeri a
+ * bandát vagy a lemezt: banda keresése és profilja, diszkográfiája, album
+ * (master) keresése és profilja a tracklistával.
+ *
+ * Öt kérdés egy végponton: a europe-west4-es Cloud Run régiós CPU-kerete (20
+ * vCPU) minden új functionnel szűkül, és az öt lekérdezés ugyanazt a tokent,
+ * cache-t és hibakezelést használja.
+ *
+ * `{ kind, … }` → a kind válasza. Előadó- vagy album-szerkesztő, illetve ADMIN
+ * hívhatja; minden válasz `discogs-cache/{kulcs}` alatt egy hétig él.
+ */
+export const discogsLookup = onCall(
+	{ secrets: [discogsToken] },
+	async (request) => {
+		await requireCaller(request, [
+			'createArtistEntity',
+			'updateArtistEntity',
+			'createAlbumEntity',
+			'updateAlbumEntity',
+		]);
+
+		const kind = String(request.data?.kind ?? '');
+		const plan = discogsLookupPlan(kind, request.data);
+		const cacheReference = database()
+			.collection(DISCOGS_CACHE_COLLECTION)
+			.doc(plan.cacheKey);
+		const cached = await cacheReference.get();
+		const fetchedAt = cached.data()?.fetchedAt as number | undefined;
+
+		if (fetchedAt && Date.now() - fetchedAt < DISCOGS_CACHE_TTL_MS) {
+			return cached.data()?.result as object;
+		}
+
+		try {
+			const result = await plan.fetch({
+				token: discogsToken.value() || null,
+			});
+
+			await cacheReference.set({ fetchedAt: Date.now(), result });
+
+			return result;
+		} catch (error) {
+			logger.warn(`discogsLookup ${kind} ${plan.cacheKey}`, error);
+
+			throw discogsFailure(error, plan.missing);
 		}
 	}
 );

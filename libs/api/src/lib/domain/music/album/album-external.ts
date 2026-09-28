@@ -1,14 +1,21 @@
 import { FormatEnum, StyleEnum } from '../../../common';
+import { ExternalSource } from '../external';
 
 /**
- * Album data looked up online (MusicBrainz, Cover Art Archive) to fill in
- * the missing fields of the edit form. Null where the source knows nothing.
+ * Album data looked up online to fill in the missing fields of the edit form.
+ * Null where the source knows nothing.
+ *
+ * MusicBrainz and the Cover Art Archive are asked first; where they know the
+ * album nothing, the Discogs master answers instead — one call there carries
+ * the profile, the cover and the tracklist.
  */
 export interface AlbumExternalProfile {
-	/** Front cover on the Cover Art Archive. */
+	/** Front cover on the Cover Art Archive, or on Discogs. */
 	coverImageUrl: string | null;
 	format: FormatEnum | null;
 	name: string;
+	/** Which source answered. */
+	source: ExternalSource;
 	/** Source page of the match, for checking it is the right album. */
 	sourceUrl: string;
 	styles: StyleEnum[];
@@ -19,7 +26,7 @@ export interface AlbumExternalProfile {
 /** The form fields an external profile can fill in. */
 export type AlbumExternalField = Exclude<
 	keyof AlbumExternalProfile,
-	'sourceUrl'
+	'source' | 'sourceUrl'
 >;
 
 /** One track of the tracklist found online. */
@@ -36,6 +43,8 @@ export interface AlbumExternalTrack {
 export interface AlbumExternalTracks {
 	/** Tracks of the earliest official release, in play order. */
 	tracks: AlbumExternalTrack[];
+	/** Which source the tracklist came from. */
+	source: ExternalSource;
 	/** Source page of the release. */
 	sourceUrl: string;
 }

@@ -17,6 +17,7 @@ import {
 	ArtistModel,
 	ArtistModelAdd,
 	ArtistModelUpdate,
+	DiscogsLookupClient,
 	MUSICBRAINZ_ARTIST_URL,
 	MusicBrainzClient,
 	RELEASE_FEATURE_KEY,
@@ -46,12 +47,18 @@ import {
 	toStyles,
 	toWikidataId,
 } from './artist-external.mapper';
+import {
+	toDiscogsAlbum,
+	toDiscogsCandidate,
+	toDiscogsProfile,
+} from './artist-discogs.mapper';
 
 /** Hits of the name to rank by country and styles. */
 const SEARCH_LIMIT = 25;
 
 @Injectable()
 export class ArtistDataServiceImpl extends ArtistDataService {
+	private discogs = inject(DiscogsLookupClient);
 	private http = inject(HttpClient);
 	private musicBrainz = inject(MusicBrainzClient);
 
@@ -67,11 +74,31 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 	}
 
 	/**
-	 * Looks the artist up on MusicBrainz by name, country and styles, and
-	 * its description on the English Wikipedia and its photo on Commons
-	 * through Wikidata. Null when not found.
+	 * Looks the artist up online. MusicBrainz answers first — by name, country
+	 * and styles, with its description from the English Wikipedia and its
+	 * photo from Commons through Wikidata. Where MusicBrainz has no artist of
+	 * that name, Discogs answers instead; it knows no country and no founding
+	 * year, so those fields come back empty from it. Null when neither has it.
+	 *
+	 * An artist already identified on one source is not looked for on the
+	 * other: the id names one artist, and there is nothing to search.
 	 */
 	public fetchExternalProfile$(
+		query: ArtistExternalQuery
+	): Observable<ArtistExternalProfile | null> {
+		if (!toMusicBrainzId(query.musicBrainzId) && query.discogsArtistId) {
+			return this.fetchDiscogsProfile$(query.discogsArtistId);
+		}
+
+		return this.fetchMusicBrainzProfile$(query).pipe(
+			switchMap((profile) =>
+				profile ? of(profile) : this.searchDiscogsProfile$(query)
+			)
+		);
+	}
+
+	/** The artist on MusicBrainz, with Wikipedia and Commons; null if none. */
+	private fetchMusicBrainzProfile$(
 		query: ArtistExternalQuery
 	): Observable<ArtistExternalProfile | null> {
 		return this.searchMusicBrainzArtist$(query).pipe(
@@ -96,12 +123,14 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 									artistType: toArtistType(artist.type),
 									country: toCountry(artist.country),
 									description,
+									discogsArtistId: null,
 									formedIn: toFormedIn(
 										artist['life-span']?.begin
 									),
 									imageUrl,
 									musicBrainzId: artist.id,
 									name: artist.name,
+									source: 'musicbrainz',
 									sourceUrl: `${MUSICBRAINZ_ARTIST_URL}/${artist.id}`,
 									styles: toStyles(artist.genres),
 								})
@@ -113,12 +142,31 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 	}
 
 	/**
-	 * The official studio albums and EPs of the artist found on MusicBrainz
-	 * by name, country and styles, the oldest first. Empty when the artist
-	 * is not found. Live albums and compilations are left out: official
-	 * bootlegs outnumber the albums of some bands by far.
+	 * The albums of the artist found online, the oldest first. Empty when no
+	 * source has one.
+	 *
+	 * MusicBrainz answers first with its official studio albums and EPs; live
+	 * albums and compilations are left out, as official bootlegs outnumber the
+	 * albums of some bands by far. An empty answer — the artist is unknown
+	 * there, or it lists nothing but live records — hands the question to the
+	 * Discogs discography.
 	 */
 	public fetchExternalAlbums$(
+		query: ArtistExternalQuery
+	): Observable<ArtistExternalAlbum[]> {
+		if (!toMusicBrainzId(query.musicBrainzId) && query.discogsArtistId) {
+			return this.fetchDiscogsAlbums$(query.discogsArtistId);
+		}
+
+		return this.fetchMusicBrainzAlbums$(query).pipe(
+			switchMap((albums) =>
+				albums.length ? of(albums) : this.searchDiscogsAlbums$(query)
+			)
+		);
+	}
+
+	/** The artist's official studio albums and EPs on MusicBrainz. */
+	private fetchMusicBrainzAlbums$(
 		query: ArtistExternalQuery
 	): Observable<ArtistExternalAlbum[]> {
 		return this.searchMusicBrainzArtist$(query).pipe(
@@ -286,12 +334,21 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 	 * styles of the form first, so the admin can say which namesake theirs
 	 * is. The id in the form is not used: it already names one artist, and
 	 * there would be nothing to choose.
+	 *
+	 * A name MusicBrainz knows nobody of is searched on Discogs instead; those
+	 * hits carry no country, year or note, so they are harder to tell apart —
+	 * which is why this is the fallback and not the first question.
 	 */
 	public searchExternalArtists$(
 		query: ArtistExternalQuery
 	): Observable<ArtistExternalCandidate[]> {
 		return this.searchMusicBrainzArtists$(query).pipe(
-			map((artists) => artists.map(toExternalCandidate))
+			map((artists) => artists.map(toExternalCandidate)),
+			switchMap((candidates) =>
+				candidates.length
+					? of(candidates)
+					: this.searchDiscogsArtists$(query.name)
+			)
 		);
 	}
 
@@ -363,6 +420,94 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 		return this.musicBrainz
 			.get$<MusicBrainzSearch>('/artist', params)
 			.pipe(map((result) => rankArtists(query, result.artists ?? [])));
+	}
+
+	/**
+	 * The Discogs artists of the name, as the chooser lists them. The callable
+	 * hands back exact name matches only, so every hit here carries the name —
+	 * which of them is the right artist, only the thumbnail and the Discogs
+	 * page can say.
+	 */
+	private searchDiscogsArtists$(
+		name: string
+	): Observable<ArtistExternalCandidate[]> {
+		return this.discogs
+			.lookupOrNull$({ kind: 'artist-search', name })
+			.pipe(
+				map((result) =>
+					(result?.candidates ?? []).map(toDiscogsCandidate)
+				)
+			);
+	}
+
+	/** The Discogs artist by its id there; null when the lookup finds none. */
+	private fetchDiscogsProfile$(
+		discogsArtistId: number
+	): Observable<ArtistExternalProfile | null> {
+		return this.discogs
+			.lookupOrNull$({
+				kind: 'artist-profile',
+				discogsId: discogsArtistId,
+			})
+			.pipe(
+				map((result) =>
+					result ? toDiscogsProfile(result.profile) : null
+				)
+			);
+	}
+
+	/**
+	 * The profile of the first Discogs artist of the name. Where several carry
+	 * it, the chooser has already asked which one is meant — this runs when the
+	 * search found a single artist, or none.
+	 */
+	private searchDiscogsProfile$(
+		query: ArtistExternalQuery
+	): Observable<ArtistExternalProfile | null> {
+		return this.searchDiscogsArtists$(query.name).pipe(
+			switchMap((candidates) => {
+				const discogsArtistId = candidates[0]?.discogsArtistId;
+
+				return discogsArtistId
+					? this.fetchDiscogsProfile$(discogsArtistId)
+					: of(null);
+			})
+		);
+	}
+
+	/** The Discogs discography of the artist by its id there. */
+	private fetchDiscogsAlbums$(
+		discogsArtistId: number
+	): Observable<ArtistExternalAlbum[]> {
+		return this.discogs
+			.lookupOrNull$({
+				kind: 'artist-albums',
+				discogsId: discogsArtistId,
+			})
+			.pipe(
+				map((result) =>
+					(result?.albums ?? [])
+						.map(toDiscogsAlbum)
+						.filter(
+							(album): album is ArtistExternalAlbum => !!album
+						)
+				)
+			);
+	}
+
+	/** The discography of the first Discogs artist of the name. */
+	private searchDiscogsAlbums$(
+		query: ArtistExternalQuery
+	): Observable<ArtistExternalAlbum[]> {
+		return this.searchDiscogsArtists$(query.name).pipe(
+			switchMap((candidates) => {
+				const discogsArtistId = candidates[0]?.discogsArtistId;
+
+				return discogsArtistId
+					? this.fetchDiscogsAlbums$(discogsArtistId)
+					: of([]);
+			})
+		);
 	}
 
 	/**

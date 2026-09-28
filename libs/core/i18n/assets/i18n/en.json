@@ -1523,7 +1523,9 @@
 			"which-artist-is-this": "Which artist is this?",
 			"open-on-musicbrainz": "Open on MusicBrainz",
 			"cancel": "Cancel",
-			"several": "MusicBrainz knows several artists by this name. {{hint}}"
+			"several": "MusicBrainz knows several artists by this name. {{hint}}",
+			"open-on-discogs": "Open on Discogs",
+			"several-on-discogs": "Discogs knows several artists by this name, and MusicBrainz none. {{hint}}"
 		},
 		"artistForm": {
 			"details": "Details",
@@ -1565,7 +1567,10 @@
 			"the-loaded-data-matches": "The loaded data matches the form.",
 			"cancel2": "Cancel",
 			"apply-to-form": "Apply to form",
-			"musicbrainzId": "MusicBrainz ID"
+			"musicbrainzId": "MusicBrainz ID",
+			"discogs": "Discogs",
+			"discogsArtistId": "Discogs ID",
+			"discogs-answers-when": "Used when MusicBrainz does not know the artist."
 		},
 		"artistAlbums": {
 			"load": "Load",

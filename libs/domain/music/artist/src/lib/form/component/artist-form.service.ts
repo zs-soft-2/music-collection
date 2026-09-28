@@ -10,6 +10,7 @@ import {
 	ArtistEntityAdd,
 	ArtistEntityUpdate,
 	ArtistExternalField,
+	ArtistExternalIds,
 	ArtistExternalProfile,
 	ArtistExternalQuery,
 	ArtistFormParams,
@@ -23,6 +24,7 @@ import {
 	ReturnNavigationService,
 	SearchParams,
 	StyleList,
+	toDiscogsArtistId,
 	toMusicBrainzId,
 } from '@music-collection/api';
 import { isSameCatalogName } from '@music-collection/common/engine';
@@ -62,7 +64,14 @@ const EXTERNAL_FIELDS: { field: ArtistExternalField; labelKey: string }[] = [
 	{ field: 'description', labelKey: 'ui.artistForm.description' },
 	{ field: 'imageUrl', labelKey: 'ui.artistForm.photo-url' },
 	{ field: 'musicBrainzId', labelKey: 'ui.artistForm.musicbrainzId' },
+	{ field: 'discogsArtistId', labelKey: 'ui.artistForm.discogsArtistId' },
 ];
+
+/** No source has named the artist yet; the name is what a load searches on. */
+const NO_IDS: ArtistExternalIds = {
+	discogsArtistId: null,
+	musicBrainzId: null,
+};
 
 function isEmpty(value: unknown): boolean {
 	return (
@@ -226,23 +235,26 @@ export class ArtistFormService {
 	}
 
 	/**
-	 * Looks the artist up online. A MusicBrainz id in the form names the
-	 * artist outright; without one the name is searched on, and the country
-	 * and the styles already filled in rank the artists carrying that name.
-	 * Where several do, the admin is asked which one theirs is rather than
-	 * handed a guess: the id alone tells them nothing. The id of the match
-	 * comes back as a row of its own, so the next load is spared the asking.
+	 * Looks the artist up online. An id already in the form — MusicBrainz or
+	 * Discogs — names the artist outright; without one the name is searched on,
+	 * and the country and the styles already filled in rank the artists
+	 * carrying that name. Where several do, the admin is asked which one theirs
+	 * is rather than handed a guess: the id alone tells them nothing. The id of
+	 * the match comes back as a row of its own, so the next load is spared the
+	 * asking.
+	 *
+	 * The search asks MusicBrainz first and Discogs only where MusicBrainz
+	 * knows nobody of the name, so the hits may come from either — which is why
+	 * the load runs on whichever id the chosen hit carries.
 	 */
 	public async loadExternal(): Promise<void> {
 		const name = (this.formGroup.value['name'] as string | null)?.trim();
 		if (!name || this.externalLoading()) {
 			return;
 		}
-		const musicBrainzId = toMusicBrainzId(
-			this.formGroup.value['musicBrainzId']
-		);
-		if (musicBrainzId) {
-			await this.runExternal(() => this.loadProfile(name, musicBrainzId));
+		const ids = this.formIds();
+		if (ids.musicBrainzId || ids.discogsArtistId) {
+			await this.runExternal(() => this.loadProfile(name, ids));
 
 			return;
 		}
@@ -257,10 +269,7 @@ export class ArtistFormService {
 			if (candidates.length > 1) {
 				this.externalCandidates.set(candidates.map(toCandidateRow));
 			} else {
-				await this.loadProfile(
-					name,
-					candidates[0]?.musicBrainzId ?? null
-				);
+				await this.loadProfile(name, candidates[0] ?? NO_IDS);
 			}
 		});
 	}
@@ -275,7 +284,7 @@ export class ArtistFormService {
 		this.externalCandidates.set(null);
 
 		await this.runExternal(() =>
-			this.loadProfile(candidate.name, candidate.musicBrainzId)
+			this.loadProfile(candidate.name, candidate)
 		);
 	}
 
@@ -287,21 +296,33 @@ export class ArtistFormService {
 	private externalQuery(name: string): ArtistExternalQuery {
 		return {
 			country: this.formGroup.value['country'] ?? null,
-			musicBrainzId: this.formGroup.value['musicBrainzId'],
+			...this.formIds(),
 			name,
 			styles: this.formGroup.value['styles'] ?? [],
+		};
+	}
+
+	/** The ids typed into the form, each read out of a link as well. */
+	private formIds(): ArtistExternalIds {
+		return {
+			discogsArtistId: toDiscogsArtistId(
+				this.formGroup.value['discogsArtistId']
+			),
+			musicBrainzId: toMusicBrainzId(
+				this.formGroup.value['musicBrainzId']
+			),
 		};
 	}
 
 	/** The loaded profile against the form; the error says when there is none. */
 	private async loadProfile(
 		name: string,
-		musicBrainzId: string | null
+		ids: ArtistExternalIds
 	): Promise<void> {
 		const profile = await firstValueFrom(
 			this.artistStateService.fetchExternalProfile$({
 				...this.externalQuery(name),
-				musicBrainzId,
+				...ids,
 			})
 		);
 

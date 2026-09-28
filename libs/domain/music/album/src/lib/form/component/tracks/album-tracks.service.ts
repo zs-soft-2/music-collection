@@ -61,7 +61,8 @@ export class AlbumTracksService {
 			await this.albumStateService.saveTracks(
 				album.uid,
 				external.tracks,
-				this.params.tracks
+				this.params.tracks,
+				external.source
 			);
 			this.externalTracks.set(null);
 		} catch (error) {

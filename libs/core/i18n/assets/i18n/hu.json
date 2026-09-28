@@ -1523,7 +1523,9 @@
 			"which-artist-is-this": "Melyik előadó ez?",
 			"open-on-musicbrainz": "Megnyitás a MusicBrainzen",
 			"cancel": "Mégse",
-			"several": "A MusicBrainz több előadót is ismer ezen a néven. {{hint}}"
+			"several": "A MusicBrainz több előadót is ismer ezen a néven. {{hint}}",
+			"open-on-discogs": "Megnyitás a Discogson",
+			"several-on-discogs": "A Discogs több előadót ismer ezen a néven, a MusicBrainz egyet sem. {{hint}}"
 		},
 		"artistForm": {
 			"details": "Adatok",
@@ -1565,7 +1567,10 @@
 			"the-loaded-data-matches": "A betöltött adatok megegyeznek az űrlappal.",
 			"cancel2": "Mégse",
 			"apply-to-form": "Alkalmazás az űrlapra",
-			"musicbrainzId": "MusicBrainz-azonosító"
+			"musicbrainzId": "MusicBrainz-azonosító",
+			"discogs": "Discogs",
+			"discogsArtistId": "Discogs-azonosító",
+			"discogs-answers-when": "Akkor jön szóba, ha a MusicBrainz nem ismeri az előadót."
 		},
 		"artistAlbums": {
 			"load": "Betöltés",

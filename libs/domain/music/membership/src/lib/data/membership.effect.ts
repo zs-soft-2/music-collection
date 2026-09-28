@@ -33,6 +33,7 @@ import {
 	EntityTypeEnum,
 	MUSICIAN_FEATURE_KEY,
 	MembershipEntity,
+	DiscogsLookupClient,
 	MusicBrainzClient,
 	MusicianDataService,
 	MusicianEntity,
@@ -41,6 +42,7 @@ import {
 import {
 	LineupCandidate,
 	MusicBrainzBand,
+	toDiscogsMembers,
 	mergeCandidates,
 	nameKey,
 	toCatalogCandidates,
@@ -76,8 +78,13 @@ export interface LineupLookup {
 	artistUid: string;
 	artistName: string;
 	albums: AlbumEntity[];
-	/** The band on MusicBrainz; null leaves its members out of the list. */
+	/** The band on MusicBrainz, whose relations carry the years. */
 	musicBrainzId: string | null;
+	/**
+	 * The band on Discogs, asked where MusicBrainz lists no member. Null, with
+	 * no MusicBrainz id either, leaves the members out of the list entirely.
+	 */
+	discogsArtistId: number | null;
 	/** The rows already in the line-up, which are not offered again. */
 	existing: MembershipEntity[];
 }
@@ -85,9 +92,24 @@ export interface LineupLookup {
 /** The result of a lookup: what to offer, and whether a source failed. */
 export interface LineupLookupResult {
 	candidates: LineupCandidate[];
-	/** True when MusicBrainz could not be reached; the catalog still counts. */
+	/** True when no online source answered; the catalog's credits still count. */
 	externalFailed: boolean;
 }
+
+/**
+ * How a candidate's source is written on the membership document.
+ *
+ * A row loaded from Discogs is filed as `discogs-lookup`, never as `discogs`:
+ * the latter is the mark the Discogs importer takes for its own writing, and
+ * its replace mode would overwrite the row — including the years the admin
+ * filled in by hand, which is exactly what a Discogs member list cannot give
+ * back.
+ */
+const MEMBERSHIP_SOURCE: Record<LineupCandidate['source'], string> = {
+	catalog: 'catalog',
+	discogs: 'discogs-lookup',
+	musicbrainz: 'musicbrainz',
+};
 
 /** At most this many names are looked up in the catalog after a lookup. */
 const MATCH_LIMIT = 12;
@@ -114,6 +136,7 @@ const titleCase = (term: string): string =>
 export class MembershipEffect {
 	private readonly artistStateService = inject(ArtistStateService);
 	private readonly firestore = inject(Firestore);
+	private readonly discogs = inject(DiscogsLookupClient);
 	private readonly musicBrainz = inject(MusicBrainzClient);
 	private readonly musicianDataService = inject(MusicianDataService);
 	private readonly repository = inject(MembershipRepository);
@@ -180,8 +203,8 @@ export class MembershipEffect {
 		);
 
 		return forkJoin([
-			lookup.musicBrainzId
-				? this.fetchExternalMembers$(lookup.musicBrainzId).pipe(
+			lookup.musicBrainzId || lookup.discogsArtistId
+				? this.fetchExternalMembers$(lookup).pipe(
 						// A source that will not answer must not take the
 						// other one down with it: the credits are here.
 						catchError((error) => {
@@ -222,8 +245,31 @@ export class MembershipEffect {
 		);
 	}
 
-	/** The band's line-up on MusicBrainz, by its id there. */
+	/**
+	 * The band's line-up from the source that has one. MusicBrainz answers
+	 * first: its `member of band` relations carry the years and the
+	 * instruments, which a Discogs member list has neither of. Where it lists
+	 * nobody — a band it does not know, or knows without its line-up — Discogs
+	 * answers instead.
+	 */
 	public fetchExternalMembers$(
+		lookup: Pick<LineupLookup, 'musicBrainzId' | 'discogsArtistId'>
+	): Observable<LineupCandidate[]> {
+		const musicBrainz$ = lookup.musicBrainzId
+			? this.fetchMusicBrainzMembers$(lookup.musicBrainzId)
+			: of([]);
+
+		return musicBrainz$.pipe(
+			switchMap((members) =>
+				members.length || !lookup.discogsArtistId
+					? of(members)
+					: this.fetchDiscogsMembers$(lookup.discogsArtistId)
+			)
+		);
+	}
+
+	/** The band's line-up on MusicBrainz, by its id there. */
+	private fetchMusicBrainzMembers$(
 		musicBrainzId: string
 	): Observable<LineupCandidate[]> {
 		return this.musicBrainz
@@ -232,6 +278,22 @@ export class MembershipEffect {
 				new HttpParams().set('inc', 'artist-rels').set('fmt', 'json')
 			)
 			.pipe(map(toExternalMembers));
+	}
+
+	/** The band's member list on Discogs, by its id there. */
+	private fetchDiscogsMembers$(
+		discogsArtistId: number
+	): Observable<LineupCandidate[]> {
+		return this.discogs
+			.lookupOrNull$({
+				kind: 'artist-profile',
+				discogsId: discogsArtistId,
+			})
+			.pipe(
+				map((result) =>
+					result ? toDiscogsMembers(result.profile) : []
+				)
+			);
 	}
 
 	/** The bands of this name on MusicBrainz, to tell namesakes apart. */
@@ -452,7 +514,7 @@ export class MembershipEffect {
 		loaded?: {
 			albumCount: number;
 			albumUids: string[];
-			source: 'musicbrainz' | 'catalog';
+			source: LineupCandidate['source'];
 		}
 	): MembershipEntity {
 		const active = draft.kind === 'member' ? draft.active : null;
@@ -473,8 +535,8 @@ export class MembershipEffect {
 			albumUids: loaded?.albumUids ?? existing?.albumUids ?? [],
 			entityType: EntityTypeEnum.Membership,
 			// Anything but `discogs`, so the importer's replace mode leaves
-			// the row alone; which of the three it was stays on record.
-			source: loaded?.source ?? 'manual',
+			// the row alone; which of the sources it was stays on record.
+			source: loaded ? MEMBERSHIP_SOURCE[loaded.source] : 'manual',
 		};
 	}
 }

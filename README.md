@@ -27,6 +27,11 @@ App Check), OpenTofu/Terraform infrastruktúra.
 - **Discogs-import** — előadó-, zenész-, kiadó- és kiadásadatok betöltése
   (callable functionökön át, Secret Managerben tárolt tokennel, egy hétig
   cache-elve). A kiadó névvel is megtalálható, ha nincs id.
+- **Két online forrás, automatikus váltással** — az előadó- és album-űrlap, a
+  diszkográfia, a tracklist és a felállás előbb a MusicBrainzet kérdezi (ország,
+  alapítási év, évszámos tagsági relációk); ahol ott nincs találat, a Discogs
+  válaszol helyette (`discogsLookup`). A betöltött érték mellett a forrás lapja
+  is ott van, hogy ellenőrizhető legyen.
 - **Megjelenő lemezek** — a katalógus előadóinak közelgő kiadásai naponta
   egyszer MusicBrainzből (`refreshUpcomingReleases`); az újrakiadás ugyanúgy
   hír, mint az új lemez, de a kettő elkülönítve.
@@ -65,7 +70,7 @@ App Check), OpenTofu/Terraform infrastruktúra.
 - **Pontozás** — az alappont a collection befejezésének értéke (méret és a
   lemezek kora is számít), a bónusz az, amit a polc hozzátesz (a birtokolt
   legjobb pressing). Semmi nem fizet, amíg a collection nem teljes — ezért az
-  oldalak azt is mutatják, mennyit *érne*.
+  oldalak azt is mutatják, mennyit _érne_.
 - **Következő lemez** — mit érdemes legközelebb megvenni: a befejező lemez
   előz, mert az egész sorozatot átadja; már feloldott collectionökből
   származtatva, új lekérdezés nélkül.
@@ -225,20 +230,20 @@ gcloud secrets versions add DISCOGS_TOKEN --data-file=-
 
 ## Scriptek (`tools/`)
 
-| Script | Mire jó |
-| --- | --- |
-| `sync/catalog-sync.mjs` | katalógus-szinkron (Firestore íráshoz mindig wrapperen át) |
-| `sync/build-bundles.mjs` | katalógus-bundle-ök építése |
-| `sync/copy-prod-to-dev.mjs` | prod adat áthozása devbe |
-| `sync/grant-permissions.mjs` | jogosultság adása |
-| `sync/seed-user-role.mjs` | a `USER` szerepkör létrehozása, és kiosztása a meglévő usereknek |
-| `sync/backfill-collection-item-artist.mjs` | előadó-kereséshez visszatöltés |
-| `sync/delete-collection-item.mjs` | egy példány törlése parancssorból |
-| `catalog/merge-duplicate-albums.mjs`, `find-duplicate-names.mjs` | duplikátumok |
-| `catalog/seed-collections.mjs` | collectionök vetése |
-| `discogs/import-discogs.mjs` | tracklisták és közreműködők importja |
-| `scan/try-photo.mjs` | a fotós felismerés kipróbálása |
-| `app-check/generate-debug-token.mjs` | App Check debug token a buildhez |
+| Script                                                           | Mire jó                                                          |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `sync/catalog-sync.mjs`                                          | katalógus-szinkron (Firestore íráshoz mindig wrapperen át)       |
+| `sync/build-bundles.mjs`                                         | katalógus-bundle-ök építése                                      |
+| `sync/copy-prod-to-dev.mjs`                                      | prod adat áthozása devbe                                         |
+| `sync/grant-permissions.mjs`                                     | jogosultság adása                                                |
+| `sync/seed-user-role.mjs`                                        | a `USER` szerepkör létrehozása, és kiosztása a meglévő usereknek |
+| `sync/backfill-collection-item-artist.mjs`                       | előadó-kereséshez visszatöltés                                   |
+| `sync/delete-collection-item.mjs`                                | egy példány törlése parancssorból                                |
+| `catalog/merge-duplicate-albums.mjs`, `find-duplicate-names.mjs` | duplikátumok                                                     |
+| `catalog/seed-collections.mjs`                                   | collectionök vetése                                              |
+| `discogs/import-discogs.mjs`                                     | tracklisták és közreműködők importja                             |
+| `scan/try-photo.mjs`                                             | a fotós felismerés kipróbálása                                   |
+| `app-check/generate-debug-token.mjs`                             | App Check debug token a buildhez                                 |
 
 A katalógus-scriptek olvasásigényesek (egy futás nagyságrendileg 25 ezer
 olvasás, a dry run is) — érdemes tudni, mielőtt indítod.

@@ -9,22 +9,35 @@
 	@if (candidates(); as rows) {
 		<p class="artist-candidate-hint">
 			{{
-				'ui.artistCandidatePicker.several' | transloco: { hint: hint() }
+				(rows[0]?.source === 'discogs'
+					? 'ui.artistCandidatePicker.several-on-discogs'
+					: 'ui.artistCandidatePicker.several'
+				) | transloco: { hint: hint() }
 			}}
 		</p>
 		<ul class="artist-candidates">
-			@for (candidate of rows; track candidate.musicBrainzId) {
+			@for (candidate of rows; track candidate.sourceUrl) {
 				<li>
 					<button
 						type="button"
 						class="artist-candidate"
 						(click)="picked.emit(candidate)"
 					>
-						<span class="artist-candidate-name">
-							{{ candidate.name }}
-							@if (candidate.note) {
-								<em>({{ candidate.note }})</em>
+						<span class="artist-candidate-heading">
+							@if (candidate.thumbUrl) {
+								<img
+									class="artist-candidate-thumb"
+									[src]="candidate.thumbUrl"
+									[alt]="candidate.name"
+									loading="lazy"
+								/>
 							}
+							<span class="artist-candidate-name">
+								{{ candidate.name }}
+								@if (candidate.note) {
+									<em>({{ candidate.note }})</em>
+								}
+							</span>
 						</span>
 						@if (candidate.details) {
 							<span class="artist-candidate-details">
@@ -38,8 +51,10 @@
 						target="_blank"
 						rel="noopener"
 						>{{
-							'ui.artistCandidatePicker.open-on-musicbrainz'
-								| transloco
+							(candidate.source === 'discogs'
+								? 'ui.artistCandidatePicker.open-on-discogs'
+								: 'ui.artistCandidatePicker.open-on-musicbrainz'
+							) | transloco
 						}}</a
 					>
 				</li>

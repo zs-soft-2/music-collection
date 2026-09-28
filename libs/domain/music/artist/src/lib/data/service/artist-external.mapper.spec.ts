@@ -156,8 +156,11 @@ describe('toExternalCandidate', () => {
 			)
 		).toEqual({
 			country: CountryEnum.Greece,
+			discogsArtistId: null,
 			formedIn: new Date(1991, 4, 1),
 			musicBrainzId: 'gr',
+			source: 'musicbrainz',
+			thumbUrl: null,
 			name: 'Nightfall',
 			note: 'Greek gothic metal band',
 			sourceUrl: 'https://musicbrainz.org/artist/gr',

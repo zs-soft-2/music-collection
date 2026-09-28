@@ -40,6 +40,22 @@
 	}
 }
 
+.artist-candidate-heading {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+/* A Discogs hit has no country, year or styles — the picture is the one
+   thing besides the name that tells it from a namesake. */
+.artist-candidate-thumb {
+	flex: none;
+	inline-size: 2.5rem;
+	block-size: 2.5rem;
+	object-fit: cover;
+	border-radius: var(--p-content-border-radius);
+}
+
 .artist-candidate-name {
 	font-weight: 600;
 

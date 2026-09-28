@@ -4,6 +4,7 @@ import {
 	MusicBrainzRelation,
 	mergeCandidates,
 	toCatalogCandidates,
+	toDiscogsMembers,
 	toExternalMembers,
 } from './lineup-candidates';
 
@@ -198,5 +199,49 @@ describe('mergeCandidates', () => {
 		);
 
 		expect(rows).toHaveLength(1);
+	});
+});
+
+describe('toDiscogsMembers', () => {
+	it('takes everyone for a member, with the years left open', () => {
+		expect(
+			toDiscogsMembers({
+				discogsId: 152122,
+				name: 'Carcass',
+				description: null,
+				sites: [],
+				imageUrl: null,
+				styles: [],
+				members: [
+					{ discogsId: 1, name: 'Jeff Walker', active: true },
+					{ discogsId: 2, name: 'Bill Steer', active: false },
+				],
+			})
+		).toEqual([
+			{
+				musicianUid: null,
+				musicianName: 'Jeff Walker',
+				kind: 'member',
+				instruments: [],
+				from: null,
+				to: null,
+				active: true,
+				albumCount: 0,
+				albumUids: [],
+				source: 'discogs',
+			},
+			{
+				musicianUid: null,
+				musicianName: 'Bill Steer',
+				kind: 'member',
+				instruments: [],
+				from: null,
+				to: null,
+				active: false,
+				albumCount: 0,
+				albumUids: [],
+				source: 'discogs',
+			},
+		]);
 	});
 });

@@ -22,6 +22,24 @@ user/{uid}.roleIds ────────┘        ▲                    ▲
   (`{ masterId }` → `{ masterId, versions }`) a release-kéréshez. Gyűjtő
   (`createCollectionItemEntity`) vagy ADMIN hívhatja. Az eredményt egy hétig a
   `discogs-cache/master-{id}` dokumentumban őrzi (a kliens nem éri el).
+- **`discogsLookup`** — callable, a katalógus-űrlapok Discogs-alternatívája,
+  amikor a MusicBrainz nem ismeri a bandát vagy a lemezt. Öt kérdés egy
+  végponton (`{ kind, … }`): banda keresése névre, banda profilja és
+  taglistája, diszkográfiája, album (master) keresése és profilja a
+  tracklistával. Előadó- vagy album-szerkesztő
+  (`createArtistEntity`/`updateArtistEntity`/`createAlbumEntity`/`updateAlbumEntity`)
+  vagy ADMIN hívhatja; minden válasz egy hétig él a `discogs-cache` alatt
+  (`band-{id}`, `band-albums-{id}`, `band-search-{név}`,
+  `master-profile-{id}`, `master-search-{előadó}--{album}`).
+
+    Egy végpont, nem öt: a europe-west4-es Cloud Run régiós CPU-kerete (20 vCPU)
+    minden új functionnel szűkül, és az öt lekérdezés ugyanazt a tokent, cache-t
+    és hibakezelést használja. A leképezés csak normalizál; a katalógus enumjaira
+    (`StyleEnum`, `FormatEnum`) a kliens mapperei képeznek — a functions külön
+    npm-projekt, a `libs`-ből nem tud importálni, ezért a
+    `apps/functions/src/discogs-lookup.ts` és a
+    `libs/api/…/external/discogs-lookup.ts` alakját együtt kell tartani.
+
 - **`approveReleaseRequest`** — callable, release-kérés jóváhagyása (ADMIN): a
   kiadás a katalógusba (a Discogsról importálva, vagy egy meglévő
   katalógus-kiadás), egy példány a kérő kollekciójába kerül, egy
@@ -34,10 +52,10 @@ user/{uid}.roleIds ────────┘        ▲                    ▲
   marad, a szülőlánc nem lesz körkörös, a törlés markert hagy, és a
   `sync/catalog` is frissül.
 
-  A szabályt a `music-collection-definition.ts` validálja — fehérlistás
-  kulcsokkal, mert az ismeretlen szűrőt a resolver nem nézi, az üres criteria
-  pedig az egész katalógusra illeszkedik. Publikálni ezért csak tényleges
-  szűrővel lehet. A `criteriaVersion` csak akkor nő, ha a szabály változott.
+    A szabályt a `music-collection-definition.ts` validálja — fehérlistás
+    kulcsokkal, mert az ismeretlen szűrőt a resolver nem nézi, az üres criteria
+    pedig az egész katalógusra illeszkedik. Publikálni ezért csak tényleges
+    szűrővel lehet. A `criteriaVersion` csak akkor nő, ha a szabály változott.
 
 A Discogs-hívások a `DISCOGS_TOKEN` secretet használják (60 kérés/perc). A
 secretet és a hozzáférését az `infra/environments` teremti, az értékét kézzel

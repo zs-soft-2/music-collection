@@ -2,6 +2,7 @@ import { Observable } from 'rxjs';
 
 import { FirebaseDataService } from '../../../core';
 import { AlbumModel, AlbumModelAdd, AlbumModelUpdate } from './album';
+import { ExternalSource } from '../external';
 import { ReleaseTrackDraft, TrackEntity } from '../track';
 import {
 	AlbumExternalProfile,
@@ -28,12 +29,14 @@ export abstract class AlbumDataService extends FirebaseDataService<
 	public abstract listTracks$(albumUid: string): Observable<TrackEntity[]>;
 	/**
 	 * Replaces the album's tracklist: tracks keep their id (and hand-added
-	 * links) by play order, surplus tracks are deleted.
+	 * links) by play order, surplus tracks are deleted. The source is written
+	 * on every track, so a reload can tell where the list came from.
 	 */
 	public abstract saveTracks(
 		albumUid: string,
 		tracks: AlbumExternalTrack[],
-		existing: TrackEntity[]
+		existing: TrackEntity[],
+		source: ExternalSource
 	): Promise<void>;
 	/** The tracks one pressing added, in play order. */
 	public abstract listReleaseTracks$(

@@ -258,6 +258,24 @@
 							'ui.artistForm.load-looks-the-artist' | transloco
 						}}</small>
 					</div>
+					<div class="mc-field">
+						<label for="discogsArtistId">{{
+							'ui.artistForm.discogs' | transloco
+						}}</label>
+						<input
+							id="discogsArtistId"
+							type="text"
+							pInputText
+							formControlName="discogsArtistId"
+							[placeholder]="
+								'ui.artistForm.artist-id-or-page' | transloco
+							"
+							aria-describedby="discogsArtistId-hint"
+						/>
+						<small id="discogsArtistId-hint">{{
+							'ui.artistForm.discogs-answers-when' | transloco
+						}}</small>
+					</div>
 				</div>
 			</section>
 

@@ -4,6 +4,7 @@ export * from './band-of-the-week';
 export * from './collection-item';
 export * from './contribution';
 export * from './daily-question';
+export * from './external';
 export * from './label';
 export * from './membership';
 export * from './musician';

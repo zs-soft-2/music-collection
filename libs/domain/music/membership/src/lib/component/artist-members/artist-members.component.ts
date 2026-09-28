@@ -150,11 +150,15 @@ export class ArtistMembersComponent implements OnInit {
 		this.store.loadAlbums(this.artistId());
 	}
 
-	/** The picker hands back a row; the store works from the candidate. */
-	public chooseNamesake(row: { musicBrainzId: string }): void {
+	/**
+	 * The picker hands back a row; the store works from the candidate. The
+	 * source page is what tells the rows apart: a Discogs hit carries no
+	 * MusicBrainz id, so matching on the ids would pick the wrong namesake.
+	 */
+	public chooseNamesake(row: { sourceUrl: string }): void {
 		const candidate = this.store
 			.namesakes()
-			?.find((hit) => hit.musicBrainzId === row.musicBrainzId);
+			?.find((hit) => hit.sourceUrl === row.sourceUrl);
 
 		if (candidate) {
 			this.store.chooseNamesake(candidate);

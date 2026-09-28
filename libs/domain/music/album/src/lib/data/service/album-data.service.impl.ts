@@ -21,7 +21,11 @@ import {
 	AlbumExternalProfile,
 	AlbumExternalTrack,
 	AlbumExternalTracks,
+	DiscogsLookupClient,
+	DiscogsMasterProfile,
+	ExternalSource,
 	MusicBrainzClient,
+	discogsMasterUrl,
 	ReleaseTrackDraft,
 	TRACK_FEATURE_KEY,
 	TrackEntity,
@@ -42,9 +46,15 @@ import {
 	toTracks,
 	toStyles,
 } from './album-external.mapper';
+import {
+	pickDiscogsMaster,
+	toDiscogsAlbumProfile,
+	toDiscogsTracks,
+} from './album-discogs.mapper';
 
 @Injectable()
 export class AlbumDataServiceImpl extends AlbumDataService {
+	private discogs = inject(DiscogsLookupClient);
 	private http = inject(HttpClient);
 	private musicBrainz = inject(MusicBrainzClient);
 
@@ -66,10 +76,28 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 	}
 
 	/**
-	 * Looks the album of the artist up on MusicBrainz by title, with its
-	 * front cover on the Cover Art Archive. Null when not found.
+	 * Looks the album of the artist up online; null when no source has it.
+	 *
+	 * MusicBrainz answers first, with the front cover from the Cover Art
+	 * Archive. Where it has no release group of that title — or has one with no
+	 * cover art, which is just as common — the Discogs master answers instead:
+	 * one call there carries the profile, the cover and the tracklist.
 	 */
 	public fetchExternalProfile$(
+		artistName: string,
+		name: string
+	): Observable<AlbumExternalProfile | null> {
+		return this.fetchMusicBrainzProfile$(artistName, name).pipe(
+			switchMap((profile) =>
+				profile
+					? of(profile)
+					: this.fetchDiscogsProfile$(artistName, name)
+			)
+		);
+	}
+
+	/** The album on MusicBrainz with its Cover Art Archive front cover. */
+	private fetchMusicBrainzProfile$(
 		artistName: string,
 		name: string
 	): Observable<AlbumExternalProfile | null> {
@@ -81,6 +109,7 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 								coverImageUrl,
 								format: toFormat(group),
 								name: group.title,
+								source: 'musicbrainz',
 								sourceUrl: `https://musicbrainz.org/release-group/${group.id}`,
 								styles: toStyles(group.genres),
 								year: toDate(group['first-release-date']),
@@ -92,10 +121,28 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 	}
 
 	/**
-	 * The tracklist of the album's earliest official release on
-	 * MusicBrainz. Null when the album is not found.
+	 * The album's tracklist found online; null when no source has one.
+	 *
+	 * MusicBrainz answers first, from the earliest official release. An empty
+	 * answer hands the question to the Discogs master, whose tracklist is the
+	 * album's own — and which is often the only one there is, as a release on
+	 * MusicBrainz can carry no recordings at all.
 	 */
 	public fetchExternalTracks$(
+		artistName: string,
+		name: string
+	): Observable<AlbumExternalTracks | null> {
+		return this.fetchMusicBrainzTracks$(artistName, name).pipe(
+			switchMap((tracks) =>
+				tracks?.tracks.length
+					? of(tracks)
+					: this.fetchDiscogsTracks$(artistName, name)
+			)
+		);
+	}
+
+	/** The tracklist of the album's earliest official MusicBrainz release. */
+	private fetchMusicBrainzTracks$(
 		artistName: string,
 		name: string
 	): Observable<AlbumExternalTracks | null> {
@@ -115,7 +162,70 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 				release
 					? {
 							tracks: toTracks(release),
+							source: 'musicbrainz' as const,
 							sourceUrl: `https://musicbrainz.org/release/${release.id}`,
+						}
+					: null
+			)
+		);
+	}
+
+	/**
+	 * The Discogs master of the album: the title search, then the master
+	 * itself, which carries the profile, the cover and the tracklist together.
+	 * Null when Discogs has no master of that album either.
+	 */
+	private fetchDiscogsMaster$(
+		artistName: string,
+		name: string
+	): Observable<DiscogsMasterProfile | null> {
+		return this.discogs
+			.lookupOrNull$({
+				kind: 'master-search',
+				artist: artistName,
+				album: name,
+			})
+			.pipe(
+				switchMap((result) => {
+					const hit = pickDiscogsMaster(
+						artistName,
+						name,
+						result?.candidates ?? []
+					);
+
+					return hit
+						? this.discogs.lookupOrNull$({
+								kind: 'master-profile',
+								masterId: hit.masterId,
+							})
+						: of(null);
+				}),
+				map((result) => result?.profile ?? null)
+			);
+	}
+
+	/** The album's Discogs master as the form's fields. */
+	private fetchDiscogsProfile$(
+		artistName: string,
+		name: string
+	): Observable<AlbumExternalProfile | null> {
+		return this.fetchDiscogsMaster$(artistName, name).pipe(
+			map((master) => (master ? toDiscogsAlbumProfile(master) : null))
+		);
+	}
+
+	/** The tracklist of the album's Discogs master. */
+	private fetchDiscogsTracks$(
+		artistName: string,
+		name: string
+	): Observable<AlbumExternalTracks | null> {
+		return this.fetchDiscogsMaster$(artistName, name).pipe(
+			map((master) =>
+				master
+					? {
+							tracks: toDiscogsTracks(master.tracks),
+							source: 'discogs' as const,
+							sourceUrl: discogsMasterUrl(master.masterId),
 						}
 					: null
 			)
@@ -149,7 +259,8 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 	public saveTracks(
 		albumUid: string,
 		tracks: AlbumExternalTrack[],
-		existing: TrackEntity[]
+		existing: TrackEntity[],
+		source: ExternalSource
 	): Promise<void> {
 		const albumTracks = existing.filter((track) => !track.releaseUid);
 		const writes = tracks.map((track, i) => {
@@ -166,7 +277,7 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 					entityType: 'Track',
 					heading: null,
 					index,
-					source: 'musicbrainz',
+					source,
 					uid,
 				},
 			};

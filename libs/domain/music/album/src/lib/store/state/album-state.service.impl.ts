@@ -10,6 +10,7 @@ import {
 	AlbumExternalTrack,
 	AlbumExternalTracks,
 	AlbumStateService,
+	ExternalSource,
 	ReleaseTrackDraft,
 	TrackEntity,
 	SearchParams,
@@ -90,9 +91,15 @@ export class AlbumStateServiceImpl extends AlbumStateService {
 	public saveTracks(
 		albumUid: string,
 		tracks: AlbumExternalTrack[],
-		existing: TrackEntity[]
+		existing: TrackEntity[],
+		source: ExternalSource
 	): Promise<void> {
-		return this.albumDataService.saveTracks(albumUid, tracks, existing);
+		return this.albumDataService.saveTracks(
+			albumUid,
+			tracks,
+			existing,
+			source
+		);
 	}
 
 	public listReleaseTracks$(releaseUid: string): Observable<TrackEntity[]> {

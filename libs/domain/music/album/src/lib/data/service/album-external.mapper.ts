@@ -2,7 +2,7 @@ import {
 	AlbumExternalTrack,
 	FormatEnum,
 	StyleEnum,
-	StyleList,
+	toCatalogStyles,
 } from '@music-collection/api';
 
 export const COVER_ART_ARCHIVE_URL = 'https://coverartarchive.org';
@@ -57,16 +57,6 @@ export interface MusicBrainzRelease {
 		}[];
 	}[];
 }
-
-const normalize = (value: string): string =>
-	value
-		.toLowerCase()
-		.replace(/\bmetal\b/g, '')
-		.replace(/[^a-z0-9]/g, '');
-
-const STYLE_BY_KEY = new Map<string, StyleEnum>(
-	StyleList.map((style) => [normalize(style), style])
-);
 
 const titleKey = (value: string): string =>
 	value.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
@@ -148,12 +138,9 @@ export function toDate(value?: string | null): Date | null {
 export function toStyles(
 	genres: MusicBrainzReleaseGroup['genres'] = []
 ): StyleEnum[] {
-	const styles = [...genres]
-		.sort((a, b) => b.count - a.count)
-		.map((genre) => STYLE_BY_KEY.get(normalize(genre.name)))
-		.filter((style): style is StyleEnum => !!style);
-
-	return [...new Set(styles)];
+	return toCatalogStyles(
+		[...genres].sort((a, b) => b.count - a.count).map((genre) => genre.name)
+	);
 }
 
 /** Track titles of every medium, in order. */
