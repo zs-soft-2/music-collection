@@ -255,8 +255,8 @@ import { PlayerStore } from './player.store';
 		.control {
 			display: inline-grid;
 			place-items: center;
-			width: 36px;
-			height: 36px;
+			width: var(--mc-circle-sm);
+			height: var(--mc-circle-sm);
 			flex-shrink: 0;
 			padding: 0;
 			border: 0;

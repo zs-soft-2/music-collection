@@ -116,8 +116,8 @@ h2 {
 		position: absolute;
 		top: 0.5rem;
 		right: 0.5rem;
-		width: 2rem;
-		height: 2rem;
+		width: var(--mc-circle-xs);
+		height: var(--mc-circle-xs);
 		border: 0;
 		border-radius: 50%;
 		background: rgb(0 0 0 / 0.6);

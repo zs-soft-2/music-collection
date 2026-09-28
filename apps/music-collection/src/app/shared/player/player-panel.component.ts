@@ -222,8 +222,8 @@ import { PlayerStore } from './player.store';
 		.icon-button {
 			display: grid;
 			place-items: center;
-			width: 38px;
-			height: 38px;
+			width: var(--mc-circle-sm);
+			height: var(--mc-circle-sm);
 			padding: 0;
 			border: 1px solid var(--mc-border-strong);
 			border-radius: 50%;
@@ -239,8 +239,8 @@ import { PlayerStore } from './player.store';
 		.play {
 			display: grid;
 			place-items: center;
-			width: 48px;
-			height: 48px;
+			width: var(--mc-circle-xl);
+			height: var(--mc-circle-xl);
 			padding: 0;
 			border: 0;
 			border-radius: 50%;
@@ -274,8 +274,8 @@ import { PlayerStore } from './player.store';
 
 		/* The dark menu button of the stage, in the page's colours. */
 		.settings ::ng-deep .toggle {
-			width: 38px;
-			height: 38px;
+			width: var(--mc-circle-sm);
+			height: var(--mc-circle-sm);
 			color: var(--mc-text);
 			background: transparent;
 			border-color: var(--mc-border-strong);

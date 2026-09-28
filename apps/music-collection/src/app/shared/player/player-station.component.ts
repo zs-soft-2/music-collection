@@ -214,8 +214,8 @@ import { PlayerStore } from './player.store';
 		.icon-button {
 			display: inline-grid;
 			place-items: center;
-			width: 32px;
-			height: 32px;
+			width: var(--mc-circle-xs);
+			height: var(--mc-circle-xs);
 			flex: none;
 			padding: 0;
 			border: 0;

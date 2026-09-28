@@ -168,6 +168,25 @@ import { DemoTourService } from '../../data/demo-tour';
 			right: auto;
 			left: 0;
 		}
+
+		/*
+		 * The library draws the launcher at a fixed 3.5rem. On a phone that
+		 * corner is the busiest part of the screen, so it steps down with the
+		 * app's other round buttons (--mc-circle-* in styles.scss), and the
+		 * compass with it.
+		 */
+		@media (max-width: 720px) {
+			zs-autopilot-controls ::ng-deep .zs-autopilot-controls__fab {
+				width: var(--mc-circle-2xl);
+				height: var(--mc-circle-2xl);
+			}
+
+			zs-autopilot-controls
+				::ng-deep
+				.zs-autopilot-controls__fab::before {
+				font-size: 1.25rem;
+			}
+		}
 	`,
 })
 export class DemoTourComponent {

@@ -62,8 +62,8 @@ import { PlayerStore } from './player.store';
 		.play {
 			display: grid;
 			place-items: center;
-			width: 44px;
-			height: 44px;
+			width: var(--mc-circle-lg);
+			height: var(--mc-circle-lg);
 			padding: 0;
 			border: 0;
 			border-radius: 50%;

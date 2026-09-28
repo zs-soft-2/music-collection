@@ -274,8 +274,8 @@ interface Choice<T> {
 		.toggle {
 			display: grid;
 			place-items: center;
-			width: 40px;
-			height: 40px;
+			width: var(--mc-circle-md);
+			height: var(--mc-circle-md);
 			border: 1px solid rgb(255 255 255 / 0.2);
 			border-radius: 50%;
 			color: #fff;

@@ -262,8 +262,8 @@ h1 {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 2rem;
-	height: 2rem;
+	width: var(--mc-circle-xs);
+	height: var(--mc-circle-xs);
 	padding: 0;
 	font-size: 0.85rem;
 	color: #ffffff;

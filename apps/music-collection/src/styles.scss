@@ -85,6 +85,31 @@ html.mc-light {
 	--mc-font-body:
 		Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 	--mc-app-bar-height: 64px;
+
+	// A kör alakú (ikon-)gombok méretskálája. Mobilon minden fok egy méretpaddal
+	// kisebb: a telefon képernyőjén ugyanaz a gomb aránytalanul nagy, és a
+	// lejátszó vezérlői egymásra futnak. A gomb belsejében az ikon a törzs
+	// betűméretét követi, ezért csak a kör átmérőjét kell váltani.
+	--mc-circle-xs: 2rem;
+	--mc-circle-sm: 2.25rem;
+	--mc-circle-md: 2.5rem;
+	--mc-circle-lg: 2.75rem;
+	--mc-circle-xl: 3rem;
+	--mc-circle-2xl: 3.75rem;
+}
+
+// A mobil töréspont: a lapok egy hasábra rendeződnek, a kör alakú gombok pedig
+// mind egy fokkal kisebbek lesznek. Új kör alakú gomb ne írjon saját px-et,
+// hanem ezekre a tokenekre hivatkozzon, így a mobilos zsugorodást ingyen kapja.
+@media (max-width: 720px) {
+	:root {
+		--mc-circle-xs: 1.75rem;
+		--mc-circle-sm: 2rem;
+		--mc-circle-md: 2.125rem;
+		--mc-circle-lg: 2.375rem;
+		--mc-circle-xl: 2.625rem;
+		--mc-circle-2xl: 3.125rem;
+	}
 }
 
 html {
@@ -605,8 +630,8 @@ body .p-chip {
 	z-index: 5;
 	display: grid;
 	place-items: center;
-	width: 2rem;
-	height: 2rem;
+	width: var(--mc-circle-xs);
+	height: var(--mc-circle-xs);
 	color: var(--mc-text);
 	cursor: pointer;
 	background: var(--mc-card-bg);

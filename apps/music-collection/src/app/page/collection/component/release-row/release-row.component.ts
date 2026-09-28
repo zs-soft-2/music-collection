@@ -112,8 +112,8 @@ import {
 			right: 0.6rem;
 			display: grid;
 			place-items: center;
-			width: 2rem;
-			height: 2rem;
+			width: var(--mc-circle-xs);
+			height: var(--mc-circle-xs);
 			color: var(--mc-text-muted);
 			cursor: pointer;
 			background: transparent;

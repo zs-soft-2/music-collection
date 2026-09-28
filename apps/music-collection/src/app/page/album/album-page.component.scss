@@ -861,8 +861,8 @@ h1 {
 .player-button {
 	display: grid;
 	place-items: center;
-	width: 44px;
-	height: 44px;
+	width: var(--mc-circle-lg);
+	height: var(--mc-circle-lg);
 	border: 1px solid rgb(255 255 255 / 0.3);
 	border-radius: 50%;
 	color: #fff;

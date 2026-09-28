@@ -133,8 +133,8 @@ interface Box {
 		.close {
 			display: inline-grid;
 			place-items: center;
-			width: 2rem;
-			height: 2rem;
+			width: var(--mc-circle-xs);
+			height: var(--mc-circle-xs);
 			color: var(--mc-text);
 			background: transparent;
 			border: 0;

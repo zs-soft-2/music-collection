@@ -100,8 +100,8 @@ const ENTITY_NAMES: Record<AdminEditEntity, string> = {
 		}
 
 		:host(.is-icon) .edit {
-			width: 32px;
-			height: 32px;
+			width: var(--mc-circle-xs);
+			height: var(--mc-circle-xs);
 			justify-content: center;
 			padding: 0;
 			border-radius: 9999px;
