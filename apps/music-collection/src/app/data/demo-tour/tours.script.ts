@@ -4,7 +4,7 @@ import {
 	TooltipPosition,
 } from '@zssz-soft/demo-autopilot-core';
 
-/** The ids the launcher and the tests know the two walkthroughs by. */
+/** The ids the launcher and the tests know the two home walkthroughs by. */
 export const GUEST_TOUR_ID = 'home-guest';
 export const COLLECTOR_TOUR_ID = 'home-collector';
 
@@ -12,7 +12,7 @@ export const COLLECTOR_TOUR_ID = 'home-collector';
 const SHARED = 'tour.home.steps';
 const GUEST = 'tour.home.guest.steps';
 const COLLECTOR = 'tour.home.collector.steps';
-/** One branch per page the tour walks on to. */
+/** One branch per page that talks about itself. */
 const PAGE = 'tour.pages';
 
 interface Stop {
@@ -23,6 +23,15 @@ interface Stop {
 	/** What the spotlight cuts out. */
 	selector: string;
 	position?: TooltipPosition;
+	/**
+	 * Whether the stop presses what it points at once it has been read.
+	 *
+	 * The runner acts after the tooltip rather than before it — the spotlight
+	 * goes up, the viewer reads, and only when they press on does the step's
+	 * action run. So a stop that opens something says what is behind the door
+	 * while the door is still shut, and the next stop finds it open.
+	 */
+	opens?: boolean;
 }
 
 /**
@@ -38,12 +47,17 @@ interface Stop {
  * small: the tooltip looks for a place beside the spotlight that does not
  * cover it, and a cut-out taller than half the screen leaves no such place.
  */
-function look({ id, text, selector, position }: Stop): DemoStep {
+function look({ id, text, selector, position, opens }: Stop): DemoStep {
 	const key = `${text ?? SHARED}.${id}`;
 
 	return {
 		id,
-		action: { type: 'highlight', selector },
+		// Looking is the whole of a stop unless it opens something, and the
+		// only thing any stop is allowed to press is a switch between views —
+		// a tab. Nothing here touches a record, a setting or a form.
+		action: opens
+			? { type: 'click', selector }
+			: { type: 'highlight', selector },
 		highlight: { selector, padding: 10, scrollIntoView: true },
 		tooltip: {
 			title: `${key}.title`,
@@ -52,7 +66,9 @@ function look({ id, text, selector, position }: Stop): DemoStep {
 			requireConfirm: true,
 		},
 		// The click is what moves the tour on; a delay after it would only be
-		// a pause on a dimmed screen with nothing left to read.
+		// a pause on a dimmed screen with nothing left to read. A stop that
+		// opens a tab needs no delay either: the next stop looks for its
+		// element until it finds it, which is a frame or two later.
 		delayAfter: 0,
 	};
 }
@@ -60,34 +76,7 @@ function look({ id, text, selector, position }: Stop): DemoStep {
 /** A section's heading, which is what most stops point at. */
 const head = (id: string): string => `[aria-labelledby="${id}"] .section-head`;
 
-/**
- * One page's walkthrough.
- *
- * A page is a script of its own rather than a run of steps inside a longer
- * one, and that is what makes walking on work. The route is the script's
- * setup, so starting it opens the page; the chain in `DemoTourService` starts
- * the next one when this one is through. Nothing invisible sits between two
- * stops, so stepping back lands on the words the viewer just read, and the
- * counter in the tooltip counts this page's stops rather than the app's.
- *
- * The name is the page's own menu label: the launcher only ever offers the
- * first of a chain, but a page named after itself reads properly if one of
- * them is ever offered on its own.
- */
-function pageTour(
-	id: string,
-	route: string,
-	name: string,
-	stops: Stop[]
-): DemoScript {
-	return {
-		id,
-		name,
-		category: 'page',
-		setup: { initialRoute: route },
-		steps: stops.map(look),
-	};
-}
+// --- The home page ---------------------------------------------------------
 
 /**
  * The stops both home walkthroughs share, in the order the page lays them
@@ -98,8 +87,7 @@ const homeCatalogStops: Stop[] = [
 	{ id: 'search', selector: 'mc-home-search' },
 	// The artist's own block rather than the whole hero: the hero is the width
 	// of the page, so a tooltip has nowhere to stand beside it. The skeleton
-	// stands in while the catalog is still arriving — the step has to find
-	// something, or the tour dies here.
+	// stands in while the catalog is still arriving.
 	{
 		id: 'spotlight',
 		selector: 'mc-artist-spotlight .content, .spotlight-skeleton',
@@ -108,13 +96,9 @@ const homeCatalogStops: Stop[] = [
 	// The headings, not the whole sections: what is under them stays readable
 	// through the veil, and the tooltip gets room below.
 	{ id: 'catalog', selector: head('glance-title') },
-	// The chart is the second half of the same section. The fallback is the
-	// heading of the row below it, which is further down the page — a comma
-	// selector answers with whichever comes first in the document, so a
-	// missing chart leaves the tour standing rather than killing it.
 	{
 		id: 'coverage',
-		selector: `mc-catalog-coverage-chart, ${head('recent-title')}`,
+		selector: 'mc-catalog-coverage-chart',
 		position: 'top',
 	},
 ];
@@ -133,19 +117,32 @@ const homeGuestTour: DemoScript = {
 	name: 'tour.home.guest.name',
 	description: 'tour.home.guest.description',
 	category: 'page',
-	setup: { initialRoute: '/home' },
-	steps: [
-		{ id: 'welcome', text: GUEST, selector: 'mc-top-bar .brand' },
-		{ id: 'bar', text: GUEST, selector: 'mc-top-bar .bar' },
-		...homeCatalogStops,
-		{ id: 'recent', text: GUEST, selector: head('recent-title') },
-		{ id: 'challenges', text: GUEST, selector: head('collections-title') },
-		{ id: 'artists', selector: head('artists-title') },
-		// Only a signed-out page has this one, and it says what the sign-in
-		// is for — so it stands where the page puts it, halfway down.
-		{ id: 'join', text: GUEST, selector: 'mc-join-prompt' },
-		...homeWayStops,
-	].map(look),
+	steps: (
+		[
+			{ id: 'welcome', text: GUEST, selector: 'mc-top-bar .brand' },
+			{ id: 'bar', text: GUEST, selector: 'mc-top-bar .bar' },
+			...homeCatalogStops,
+			{ id: 'recent', text: GUEST, selector: head('recent-title') },
+			{
+				id: 'challenges',
+				text: GUEST,
+				selector: head('collections-title'),
+			},
+			{ id: 'artists', selector: head('artists-title') },
+			// Only a signed-out page has this one, and it says what the sign-in
+			// is for — so it stands where the page puts it, halfway down.
+			{ id: 'join', text: GUEST, selector: 'mc-join-prompt' },
+			...homeWayStops,
+			// The way in, last: the button is in the bar rather than on this page,
+			// so it is where a visitor who has heard the whole case should be left.
+			{
+				id: 'login',
+				text: GUEST,
+				selector: 'mc-top-bar .login-btn',
+				position: 'left',
+			},
+		] as Stop[]
+	).map(look),
 };
 
 /** The same page for somebody who has a shelf. */
@@ -154,7 +151,6 @@ const homeCollectorTour: DemoScript = {
 	name: 'tour.home.collector.name',
 	description: 'tour.home.collector.description',
 	category: 'page',
-	setup: { initialRoute: '/home' },
 	steps: [
 		{ id: 'welcome', text: COLLECTOR, selector: 'mc-top-bar .brand' },
 		{ id: 'bar', text: COLLECTOR, selector: 'mc-top-bar .bar' },
@@ -165,144 +161,389 @@ const homeCollectorTour: DemoScript = {
 			text: COLLECTOR,
 			selector: head('collections-title'),
 		},
-		// The hunt list is only drawn where there is something to hunt. Its
-		// fallback is the heading below it, for the same reason as the
-		// chart's.
-		{
-			id: 'hunt',
-			text: COLLECTOR,
-			selector: `${head('hunt-title')}, ${head('artists-title')}`,
-		},
+		{ id: 'hunt', text: COLLECTOR, selector: head('hunt-title') },
 		{ id: 'artists', selector: head('artists-title') },
 		...homeWayStops,
+		{ id: 'account', text: COLLECTOR, selector: 'mc-top-bar .account' },
 	].map(look),
 };
 
-/** Every page's hero carries its title and what the page is for. */
-const intro = (page: string, selector = '.page > .hero'): Stop => ({
-	id: 'intro',
-	text: `${PAGE}.${page}`,
-	selector,
-});
+// --- Every other page ------------------------------------------------------
 
-const on = (page: string, id: string, selector: string): Stop => ({
-	id,
-	text: `${PAGE}.${page}`,
-	selector,
+export type TourAudience = 'guest' | 'collector';
+
+/** One page, and the walkthrough of it the launcher offers while it is open. */
+export interface PageTour {
+	/** The route, spelled exactly as `app-routing` spells its path. */
+	readonly path: string;
+	/** Who it is written for; everybody, unless given. */
+	readonly audience?: TourAudience;
+	readonly script: DemoScript;
+}
+
+/** A stop, as a page lists its own: an id, what it points at, and where. */
+type Spot = Pointed | Opener;
+
+type Pointed = readonly [
+	id: string,
+	selector: string,
+	position?: TooltipPosition,
+];
+
+/**
+ * A stop that opens what it points at, for the parts of a page that are kept
+ * behind a switch.
+ *
+ * A page that draws one tab of four cannot be walked by pointing alone: three
+ * quarters of it is not on the screen, and a stop whose element is missing
+ * ends the run. So the walkthrough opens each group itself — it points at the
+ * tab, says what is inside, and presses it when the viewer moves on.
+ */
+interface Opener {
+	readonly id: string;
+	/** The switch it points at, and presses once the stop has been read. */
+	readonly opens: string;
+	readonly position?: TooltipPosition;
+}
+
+/**
+ * One page's walkthrough, named after the page and speaking only about it.
+ *
+ * A page says what it is for, then what each of its parts does, in the order
+ * the page lays them out. Nothing here opens another page: whoever pressed
+ * the launcher is reading *this* screen, and a tour that navigated away would
+ * take it out from under them. Opening a tab of the same page is another
+ * matter — that is still this screen, and the only thing a stop may press.
+ *
+ * Which of these stops are actually walked is decided when the run starts —
+ * see `onThisPage` in the service. A page draws what the collector has, so
+ * half of what is listed here may not be on the screen on any one visit.
+ */
+const pageTour = (
+	page: string,
+	path: string,
+	spots: readonly Spot[],
+	audience?: TourAudience
+): PageTour => ({
+	path,
+	audience,
+	script: {
+		id: `page-${page}`,
+		name: `${PAGE}.${page}.name`,
+		category: 'page',
+		steps: spots.map((spot) =>
+			'opens' in spot
+				? look({
+						id: spot.id,
+						text: `${PAGE}.${page}`,
+						selector: spot.opens,
+						position: spot.position,
+						opens: true,
+					})
+				: look({
+						id: spot[0],
+						text: `${PAGE}.${page}`,
+						selector: spot[1],
+						position: spot[2],
+					})
+		),
+	},
 });
 
 // --- The collector's own pages ---------------------------------------------
 
-const collectionTour = pageTour(
-	'page-collection',
-	'/collection',
-	'nav.collection',
-	[
-		intro('collection'),
-		on('collection', 'stats', '.page > .glance-section .glance-title'),
-		on('collection', 'filters', '.page > .toolbar'),
-		on('collection', 'views', '.page > .toolbar .view-toggle'),
-	]
-);
-
-const scanTour = pageTour('page-scan', '/scan', 'nav.scan', [intro('scan')]);
-
-const shelfScanTour = pageTour(
-	'page-shelf-scan',
-	'/shelf-scan',
-	'nav.shelf-scan',
-	[intro('shelfScan')]
-);
-
-const wishlistTour = pageTour('page-wishlist', '/wishlist', 'nav.wishlist', [
-	intro('wishlist'),
-	on('wishlist', 'filters', '.page > .toolbar'),
+const collectionTour = pageTour('collection', 'collection', [
+	['intro', '.page > .hero'],
+	['stats', '.page > .glance-section .glance-title'],
+	['decades', 'mc-decade-chart', 'top'],
+	['styles', 'mc-style-bars', 'top'],
+	['challenges', '[aria-labelledby="collections-title"] .collections-head'],
+	['search', '.page > .toolbar .search'],
+	['formats', '.page > .toolbar .chips'],
+	['sort', '.page > .toolbar .controls .select'],
+	['views', '.page > .toolbar .view-toggle'],
+	['shelf', 'mc-record-shelf', 'top'],
 ]);
 
-const radioTour = pageTour('page-radio', '/radio', 'nav.radio', [
-	intro('radio'),
+const copyTour = pageTour('copy', 'collection/copy/:itemId', [
+	['intro', '.page > .hero'],
+	['photos', 'mc-copy-photos'],
+	['facts', '.page .copy-facts .section-head'],
+	['form', 'mc-copy-details-form'],
 ]);
 
-const dailyQuestionTour = pageTour(
-	'page-daily-question',
-	'/daily-question',
-	'nav.daily-question',
-	[
-		intro('dailyQuestion'),
-		on('dailyQuestion', 'history', '.page > section.history'),
-	]
-);
+const scanTour = pageTour('scan', 'scan', [
+	['intro', '.page > .hero'],
+	['shot', '.page section.shot'],
+	['results', '.page section.results'],
+	['read', '.page section.read', 'top'],
+]);
 
-const mapTour = pageTour('page-map', '/map', 'nav.map', [intro('map')]);
+const shelfScanTour = pageTour('shelfScan', 'shelf-scan', [
+	['intro', '.page > .hero'],
+	['shots', '.page section.shots .thumbs, .page section.shots .shoot'],
+	['controls', '.page section.shots .controls'],
+	['review', '.page section.review'],
+]);
 
-const requestsTour = pageTour(
-	'page-requests',
-	'/my-requests',
-	'nav.my-requests',
-	[
-		intro('requests', '.page > .head'),
-		on('requests', 'propose', '.page > .add'),
-	]
-);
+const wishlistTour = pageTour('wishlist', 'wishlist', [
+	['intro', '.page > .hero'],
+	['stats', '.page > .hero .stats'],
+	['search', '.page > .toolbar .search'],
+	['formats', '.page > .toolbar .chips'],
+	['found', '.page > .toolbar .chip.toggle'],
+	['gotIt', '.page .got-it'],
+]);
 
-const profileTour = pageTour('page-profile', '/profile', 'nav.profile', [
-	intro('profile'),
-	on('profile', 'switch', 'mc-profile-demo-tour'),
+const wishlistItemTour = pageTour('wishlistItem', 'wishlist/:itemId', [
+	['intro', '.page > .hero'],
+	['facts', 'mc-entity-facts'],
+]);
+
+const radioTour = pageTour('radio', 'radio', [
+	['intro', '.page > .hero'],
+	['order', '.page > .hero .order'],
+	['onAir', '.page section.on-air'],
+	['stations', '.page ul.stations'],
+]);
+
+const dailyQuestionTour = pageTour('dailyQuestion', 'daily-question', [
+	['intro', '.page > .hero'],
+	['score', '.page > .hero .stats'],
+	['question', '.page section.question .prompt, .page section.question'],
+	['clock', '.page section.question .clock'],
+	['options', '.page section.question .options', 'top'],
+	['history', '.page section.history .history-toggle'],
+	['leaderboard', '.page section.leaderboard .leaderboard-head'],
+]);
+
+const mapTour = pageTour('map', 'map', [
+	['intro', '.page > .hero'],
+	['stats', '.page > .hero .stats'],
+	['world', '.page .map-card', 'top'],
+	['countries', '.page .panel .countries'],
+	['collectors', '.page .panel .collectors'],
+]);
+
+const requestsTour = pageTour('requests', 'my-requests', [
+	['intro', '.page > .head'],
+	['propose', '.page > .add'],
+	['list', '.page > ul.requests'],
+]);
+
+const bandsTour = pageTour('bands', 'my-bands/list', [
+	['intro', '.page > .head'],
+	['list', '.page > ul.bands'],
+]);
+
+/** A profile tab's button, which is what opens the group behind it. */
+const profileTab = (id: string): string => `#mc-profile-tab-${id}`;
+
+/**
+ * The profile: every setting the app has, and the switch that turns the tour
+ * itself off.
+ *
+ * This is the one page a walkthrough has to drive rather than only point at.
+ * The settings are read a tab at a time and only the open tab is drawn, so a
+ * tour that pointed alone would explain the four cards the collector already
+ * had in front of them and leave the other six — their shelves, their
+ * playback, their listening log, what other collectors get to see — behind
+ * three tabs nobody told them to press. Those are the settings that most need
+ * saying out loud, because nothing else in the app mentions them.
+ *
+ * So the tour opens each tab in turn, in the order the strip draws them, and
+ * walks what is inside. It ends where it started: back on the first tab, on
+ * the switch that takes the tour away — which also leaves the page on the tab
+ * the collector found it on rather than on whichever one the tour finished
+ * with.
+ */
+const profileTour = pageTour('profile', 'profile', [
+	['intro', '.page > .hero'],
+	['tabs', '.page > .tabs'],
+
+	{ id: 'accountTab', opens: profileTab('account') },
+	['account', 'mc-profile-account'],
+	['language', 'mc-profile-language'],
+	['appearance', 'mc-profile-appearance'],
+
+	{ id: 'collectionTab', opens: profileTab('collection') },
+	['lists', 'mc-profile-lists'],
+	['shelves', 'mc-profile-shelves'],
+
+	{ id: 'playbackTab', opens: profileTab('playback') },
+	['playback', 'mc-profile-playback'],
+	['spotify', 'mc-profile-spotify'],
+
+	{ id: 'dataTab', opens: profileTab('data') },
+	['listening', 'mc-profile-listening'],
+	['privacy', 'mc-profile-privacy'],
+
+	// Back to the first tab for the last word, which is about the tour.
+	{ id: 'back', opens: profileTab('account') },
+	['switch', 'mc-profile-demo-tour'],
 ]);
 
 // --- Pages open to everybody ------------------------------------------------
 
-const challengesTour = pageTour(
-	'page-challenges',
-	'/collections',
-	'nav.collections',
-	[intro('challenges')]
-);
+const challengesTour = pageTour('challenges', 'collections', [
+	['intro', '.page > .hero'],
+	['stats', '.page > .hero .stats'],
+	['hunt', '[aria-labelledby="hunt-title"] .section-head'],
+	['tabs', '.page > .toolbar .tabs'],
+	['card', '.page ul.grid > li .card'],
+	['progress', '.page ul.grid > li .card .progress'],
+	['follow', '.page ul.grid > li .card .follow'],
+]);
 
-const upcomingTour = pageTour('page-upcoming', '/upcoming', 'nav.upcoming', [
-	intro('upcoming'),
+const challengeTour = pageTour('challenge', 'collections/:slug', [
+	['intro', '.page > .hero'],
+	['progress', '.page > .progress'],
+	['score', '.page .score'],
+	['badge', '.page aside.badge'],
+	['filter', '.page > .toolbar'],
+	['grid', '.page > ul.grid', 'top'],
+]);
+
+const upcomingTour = pageTour('upcoming', 'upcoming', [
+	['intro', '.page > .hero'],
+	['stats', '.page > .hero .stats'],
+	['tabs', '.page > .toolbar .tabs'],
+	['timeline', '.page > .timeline .month-label, .page > .timeline'],
+]);
+
+const networkTour = pageTour('network', 'network', [
+	['intro', '.page > .intro'],
+	['focus', '.page .toolbar .focus'],
+	['search', 'mc-network-search'],
+	['graph', '.page .graph-area', 'top'],
+	['legend', '.page ul.legend', 'top'],
+	['details', '.page aside.details'],
+]);
+
+// --- The catalog's own pages ------------------------------------------------
+
+const artistTour = pageTour('artist', 'artist/:artistId', [
+	['intro', '.page > .hero'],
+	['stats', '.page > .stats'],
+	['nav', '.page > .section-nav'],
+	['about', '#about-title'],
+	['lineup', '#lineup-title'],
+	['discography', '#discography-title'],
+	['collection', '#collection-title'],
+	['similar', '#similar-title'],
+]);
+
+const albumTour = pageTour('album', 'album/:albumId', [
+	['intro', '.page > .hero'],
+	['collect', '.page .collect-button'],
+	['wish', '.page .wish-button'],
+	['challenges', 'mc-album-collections'],
+	['original', '#original-title'],
+	['listen', '#listen-title'],
+	['tracklist', '#tracklist-title'],
+	['credits', '#credits-title'],
+	['copies', '#copies-title'],
+	['more', '#more-title'],
+]);
+
+const trackTour = pageTour('track', 'album/:albumId/track/:trackId', [
+	['intro', '.page > .hero'],
+	['actions', '.page .hero-actions'],
+	['lyrics', '#lyrics-title'],
+	['credits', '#credits-title'],
+	['neighbours', '.page nav.neighbours', 'top'],
+]);
+
+const releaseTour = pageTour('release', 'release/:releaseId', [
+	['intro', '.page > .hero'],
+	['facts', 'mc-entity-facts'],
+	['tracks', '.page section.section'],
+]);
+
+const labelTour = pageTour('label', 'label/:labelId', [
+	['intro', '.page > .hero'],
+	['facts', 'mc-entity-facts'],
+	['catalog', '.page section.section'],
+]);
+
+const musicianTour = pageTour('musician', 'musician/:musicianId', [
+	['intro', '.page > .hero'],
+	['stats', '.page > .stats'],
+	['bands', '#bands-title'],
+	['guest', '#guest-title'],
+	['albums', '#albums-title'],
+	['bandmates', '#bandmates-title'],
 ]);
 
 /**
- * The last of a visitor's chain, so it carries the way in: the sign-in button
- * sits in the bar, which is on every page, and that is where a tour a visitor
- * has followed to the end should leave them.
- */
-const networkTour = pageTour('page-network', '/network', 'nav.network', [
-	intro('network', '.page > .intro'),
-	{
-		id: 'login',
-		text: GUEST,
-		selector: 'mc-top-bar .login-btn',
-		position: 'left',
-	},
-]);
-
-/**
- * The chains, in the order they are walked. The first is what the launcher
- * offers; the rest follow it, one page at a time, as each is finished.
+ * Every page that can talk about itself.
  *
- * A visitor is only taken through pages a visitor may open — the guarded ones
- * would turn the tour back in front of whoever was being shown around.
+ * The launcher offers the one page the collector is standing on, so the order
+ * here decides nothing but which of two entries for the same path wins — and
+ * only the home page has two.
  */
-export const guestTours: readonly DemoScript[] = [
-	homeGuestTour,
-	challengesTour,
-	upcomingTour,
-	networkTour,
-];
-
-export const collectorTours: readonly DemoScript[] = [
-	homeCollectorTour,
+export const pageTours: readonly PageTour[] = [
+	{ path: 'home', audience: 'guest', script: homeGuestTour },
+	{ path: 'home', audience: 'collector', script: homeCollectorTour },
 	collectionTour,
+	copyTour,
 	scanTour,
 	shelfScanTour,
 	wishlistTour,
-	challengesTour,
+	wishlistItemTour,
 	radioTour,
 	dailyQuestionTour,
-	upcomingTour,
 	mapTour,
 	requestsTour,
+	bandsTour,
 	profileTour,
+	challengesTour,
+	challengeTour,
+	upcomingTour,
+	networkTour,
+	artistTour,
+	albumTour,
+	trackTour,
+	releaseTour,
+	labelTour,
+	musicianTour,
 ];
+
+/** The address as the router left it: no query, no fragment, no empty parts. */
+function segmentsOf(url: string): string[] {
+	return url.split(/[?#;]/)[0].split('/').filter(Boolean);
+}
+
+/**
+ * Whether a route's path is the one the address is on.
+ *
+ * Matched a segment at a time against the app's own route paths rather than
+ * against the address as typed, so one walkthrough serves every record in the
+ * catalog: `album/:albumId` is the album page, whichever album it is drawing.
+ * Two paths of different lengths never match the same address, which is what
+ * keeps `collection` and `collection/copy/:itemId` apart.
+ */
+function matches(path: string, segments: readonly string[]): boolean {
+	const pattern = segmentsOf(path);
+
+	return (
+		pattern.length === segments.length &&
+		pattern.every(
+			(part, at) => part.startsWith(':') || part === segments[at]
+		)
+	);
+}
+
+/** The walkthrough for the page at this address, if the app has one for it. */
+export function tourFor(
+	url: string,
+	signedIn: boolean
+): DemoScript | undefined {
+	const segments = segmentsOf(url);
+
+	return pageTours.find(
+		(tour) =>
+			matches(tour.path, segments) &&
+			(!tour.audience || (tour.audience === 'collector') === signedIn)
+	)?.script;
+}

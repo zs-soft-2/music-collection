@@ -479,7 +479,7 @@ export const ProfilePageStore = signalStore(
 			setDemoTour(wanted: boolean): void {
 				tour.decide(wanted);
 			},
-			/** Plays the walkthrough from its first step, on the home page. */
+			/** Walks the page the collector is standing on — this one. */
 			startDemoTour(): void {
 				tour.start();
 			},

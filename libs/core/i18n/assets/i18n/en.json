@@ -386,7 +386,7 @@
 			"appearance": "Appearance",
 			"the-theme-and-how": "The theme and how much of the screen the pages use.",
 			"demoTour": "Guided tour",
-			"demoTourIntro": "The walk through the app, and whether it is offered to you at all.",
+			"demoTourIntro": "The compass in the corner of the screen, which always shows the page you have open.",
 			"what-the-collection-opens": "What the collection opens with, and how much of an album page shows at once.",
 			"shelves": "Shelves",
 			"the-furniture-your-records": "The furniture your records stand in. Draw what you actually own — how many units, and how many compartments across and down — and the collection's shelf view is filed into it.",
@@ -2014,8 +2014,8 @@
 		"profileDemoTour": {
 			"the-launcher": "Launcher",
 			"show-me-around": "Show me around",
-			"puts-the-play-button": "Puts the play button in the corner of the screen, and lets the tour be started from here as well.",
-			"start-the-tour-now": "Start the tour now"
+			"puts-the-play-button": "Puts a compass in the corner of every page, and lets the tour be started from here as well.",
+			"start-the-tour-now": "Show me this page"
 		},
 		"profileListening": {
 			"records-put-on": "Records put on",
@@ -2674,25 +2674,76 @@
 					"title": "At a glance",
 					"content": "How many records, from how many artists, in what format — and what the shelf is worth, where you wrote down what you paid."
 				},
-				"filters": {
-					"title": "Search, filter, sort",
-					"content": "Search inside your own records, keep one format, sort by artist, year or the day it arrived — and group them the way you think about them."
-				},
 				"views": {
 					"title": "Three ways to look",
 					"content": "A wall of covers, a plain list, or the shelf itself, with every copy where it really stands. The furniture is drawn in the profile."
+				},
+				"name": "This is your shelf",
+				"decades": {
+					"title": "By decade",
+					"content": "Your own records laid out by age: it shows at once which decade you collect hardest."
+				},
+				"styles": {
+					"title": "By style",
+					"content": "The same thing by genre: how much punk, how much jazz, how much of everything else stands on your shelf."
+				},
+				"challenges": {
+					"title": "Your challenges",
+					"content": "The ones you have started, and how much of each your shelf already holds. The full list opens from here."
+				},
+				"search": {
+					"title": "Search your own",
+					"content": "Searches your records only — by artist and by album title, as you type."
+				},
+				"formats": {
+					"title": "By format",
+					"content": "Keep only the vinyl, the CDs or the tapes. The number on the chip says how many there are."
+				},
+				"sort": {
+					"title": "Sorting and grouping",
+					"content": "Order by artist, by year or by the day you got it — and group them the way you think of them."
+				},
+				"shelf": {
+					"title": "The shelf as it stands",
+					"content": "The shelf view draws every copy where it actually stands. You lay the furniture out in the profile."
 				}
 			},
 			"scan": {
 				"intro": {
 					"title": "A record from a photograph",
 					"content": "Photograph the sleeve. The catalog reads the cover, says which record it thinks it is, and the copy is on your shelf a few taps later."
+				},
+				"name": "A record from a photograph",
+				"shot": {
+					"title": "The photograph",
+					"content": "This is where it starts: take a picture of the sleeve, or pick one from the gallery. Keep the cover in frame, as square as you can."
+				},
+				"results": {
+					"title": "What it thinks it is",
+					"content": "What the catalog turned up from the photograph, the likeliest first. Pick the one that is yours."
+				},
+				"read": {
+					"title": "What it read off the picture",
+					"content": "The text it found on the sleeve — that is what it searched with. If it misread, this is where you see why."
 				}
 			},
 			"shelfScan": {
 				"intro": {
 					"title": "A whole compartment at once",
 					"content": "One photograph of a row of spines, and every record it can make out is offered together — this is how a shelf that is already full gets in."
+				},
+				"name": "A whole compartment at once",
+				"shots": {
+					"title": "The photographs",
+					"content": "Several at a time: work along the compartment spine by spine, picture after picture."
+				},
+				"controls": {
+					"title": "What is in the compartment",
+					"content": "Say whether it is vinyl, CD or tape — that narrows what it looks for — then set it reading."
+				},
+				"review": {
+					"title": "Going through them",
+					"content": "Every spine it recognised, one by one: accept it, correct it, or skip it. Only what you approve reaches your shelf."
 				}
 			},
 			"wishlist": {
@@ -2700,21 +2751,76 @@
 					"title": "What is still missing",
 					"content": "The records you are after, with what you would pay for them. The hunt list on the home page is built out of this."
 				},
-				"filters": {
-					"title": "Sort and filter",
-					"content": "The same bar as on the shelf: search it, keep one format, and order it by price or by artist."
+				"name": "Your wishlist",
+				"stats": {
+					"title": "Where you stand",
+					"content": "How many records you are hunting, from how many artists — and how many you have already found."
+				},
+				"search": {
+					"title": "Search",
+					"content": "Searches inside the wishlist, by artist and by title."
+				},
+				"formats": {
+					"title": "By format",
+					"content": "If you only want it on vinyl, narrow the list down to it."
+				},
+				"found": {
+					"title": "The ones you found",
+					"content": "What you have already got is out of the way by default. This switch brings it back."
+				},
+				"gotIt": {
+					"title": "Got it",
+					"content": "Once you have it, one tap moves it to your shelf and takes it off the list."
 				}
 			},
 			"challenges": {
 				"intro": {
 					"title": "Challenges",
 					"content": "Sets of records a rule defines, not a list — a label's series, a decade, a band's whole output. Finish one and it pays."
+				},
+				"name": "The challenges",
+				"stats": {
+					"title": "The figures",
+					"content": "How many challenges there are, how many you have started, and how many you have finished."
+				},
+				"hunt": {
+					"title": "The next record",
+					"content": "What would be worth buying most: the records missing from your nearly finished challenges, in order."
+				},
+				"tabs": {
+					"title": "Filtering",
+					"content": "All of them, the ones you started, the ones you follow, or the ones already done."
+				},
+				"card": {
+					"title": "One challenge",
+					"content": "The artwork, the rule, and how many records it asks for. Tap it and the full list opens."
+				},
+				"progress": {
+					"title": "Where you stand",
+					"content": "The bar counts your own shelf against the records the challenge asks for."
+				},
+				"follow": {
+					"title": "Following",
+					"content": "Follow it and you can keep an eye on what is missing from the home page too."
 				}
 			},
 			"radio": {
 				"intro": {
 					"title": "Your own radio",
 					"content": "A record drawn off your shelf and put on, side after side. In order or shuffled, and what actually played is kept in the log."
+				},
+				"name": "Your radio",
+				"order": {
+					"title": "In order or shuffled",
+					"content": "Turn it on and the radio draws your records out at random."
+				},
+				"onAir": {
+					"title": "What is playing",
+					"content": "The broadcast as it runs: the record, the side, and how far in it is. This is where you stop it."
+				},
+				"stations": {
+					"title": "The stations",
+					"content": "Each station picks off your shelf differently: by genre, by decade, or by what has not been played for a long time. Choose one and it starts."
 				}
 			},
 			"dailyQuestion": {
@@ -2725,18 +2831,69 @@
 				"history": {
 					"title": "The questions before",
 					"content": "Everything asked so far, with your answers to it — and which ones you got right."
+				},
+				"name": "The question of the day",
+				"score": {
+					"title": "Where you stand",
+					"content": "Points, streak, longest streak and hit rate. A single missed day breaks the streak."
+				},
+				"question": {
+					"title": "Today’s question",
+					"content": "The same one for everybody, out of the catalog. One a day, and you answer once."
+				},
+				"clock": {
+					"title": "The clock",
+					"content": "While it runs, a right answer is worth more. No need to rush — but no need to brood either."
+				},
+				"options": {
+					"title": "The answers",
+					"content": "A few to choose from, one of them right. The moment you choose, you see which it was."
+				},
+				"leaderboard": {
+					"title": "The leaderboard",
+					"content": "How you stand against everybody else. Only those who have played are on it."
 				}
 			},
 			"upcoming": {
 				"intro": {
 					"title": "Coming out",
 					"content": "What the artists in the catalog are putting out next, gathered once a day — so a reissue you want does not slip past you."
+				},
+				"name": "What is coming",
+				"stats": {
+					"title": "The figures",
+					"content": "How many releases are ahead, and how many of them come from the catalog’s own artists."
+				},
+				"tabs": {
+					"title": "Filtering",
+					"content": "All of them, or only the artists you collect."
+				},
+				"timeline": {
+					"title": "The timeline",
+					"content": "Month by month, day by day, what comes out when. Gathered once a day."
 				}
 			},
 			"map": {
 				"intro": {
 					"title": "Collectors",
 					"content": "Where the records are kept. Your own pin is only ever as precise as you allowed in the profile."
+				},
+				"name": "The collectors’ map",
+				"stats": {
+					"title": "The figures",
+					"content": "How many collectors and how many countries reached the map — as much as they chose to share."
+				},
+				"world": {
+					"title": "The map",
+					"content": "Drag it, scroll it, tap a pin. Your own shows exactly as much as you allowed in the profile."
+				},
+				"countries": {
+					"title": "The countries",
+					"content": "Where the collectors are, country by country. Tap one and only those stay."
+				},
+				"collectors": {
+					"title": "The collectors there",
+					"content": "Everybody from that country who chose to say they are there."
 				}
 			},
 			"requests": {
@@ -2747,22 +2904,335 @@
 				"propose": {
 					"title": "Propose something",
 					"content": "Missing an artist, an album, a pressing or a label? The form starts here, and what you send comes back to this page."
+				},
+				"name": "Your proposals",
+				"list": {
+					"title": "What you sent in",
+					"content": "Every proposal of yours, and what became of it: waiting, taken, or handed back with a reason."
 				}
 			},
 			"profile": {
+				"name": "This is your profile",
 				"intro": {
 					"title": "Your profile",
 					"content": "Your account, and everything that fits the app to you: the language, the theme, the drawing of your shelf, playback, and what you share with others."
 				},
+				"tabs": {
+					"title": "Four groups",
+					"content": "The settings on four tabs: your account, your collecting, playback, and your data. One tab shows at a time — the tour opens all four in turn, and puts the page back where it found it."
+				},
+				"accountTab": {
+					"title": "First tab: your account",
+					"content": "We start here. This tab is what the app knows about you: your name, the language, the look — and the switch for this tour. Move on and I will open it."
+				},
+				"account": {
+					"title": "Your account",
+					"content": "Your name as the catalog shows it, and the account you signed in with."
+				},
+				"language": {
+					"title": "The language",
+					"content": "Hungarian, English or German. It stays with the account, so it follows you to the next browser."
+				},
+				"appearance": {
+					"title": "The look",
+					"content": "Dark or light, and how much of the screen’s width the pages are allowed to use."
+				},
+				"collectionTab": {
+					"title": "Second tab: collecting",
+					"content": "This tab is about your records: what the collection opens on, and the shelves they stand in. Move on and I will open it."
+				},
+				"lists": {
+					"title": "The lists",
+					"content": "What the collection opens on, and how it orders your records."
+				},
+				"shelves": {
+					"title": "Your shelves",
+					"content": "The furniture your records stand in: how many compartments, and how big. The shelf view is drawn from this."
+				},
+				"playbackTab": {
+					"title": "Third tab: playback",
+					"content": "This tab is about sound: which player is allowed to play, and your Spotify account. Move on and I will open it."
+				},
+				"playback": {
+					"title": "Playback",
+					"content": "Which player is allowed to sound, and what you let onto the page."
+				},
+				"spotify": {
+					"title": "Spotify",
+					"content": "Connect the account and your records play through your own Spotify."
+				},
+				"dataTab": {
+					"title": "Fourth tab: your data",
+					"content": "The last tab is about what gets written down and what leaves you: your listening log, and what other collectors see of you. Move on and I will open it."
+				},
+				"listening": {
+					"title": "The listening log",
+					"content": "What is written down about what actually played at your place."
+				},
+				"privacy": {
+					"title": "Your data",
+					"content": "What others see of you: your place on the map, your name on the leaderboard. Nothing, until you say so."
+				},
+				"back": {
+					"title": "Back to the first",
+					"content": "That is all four tabs. I am taking you back to the account tab, where I found you — one thing is left."
+				},
 				"switch": {
 					"title": "And here is the switch",
-					"content": "The tour lives in the profile. Switch it off and the button in the corner is gone; switch it back on whenever you want to walk through again. Thanks for coming along."
+					"content": "The compass sits in the corner of every page, and it always shows the page you have open. Switch it off and it is gone; switch it back on when you want it again."
 				}
 			},
 			"network": {
 				"intro": {
 					"title": "The network",
 					"content": "Who played with whom: the catalog's musicians and bands in one graph, where shared members are what tie the bands together."
+				},
+				"name": "The network",
+				"focus": {
+					"title": "The centre",
+					"content": "This is where you choose what stands at the middle of the graph, and how far from it to look."
+				},
+				"search": {
+					"title": "Search the network",
+					"content": "Type a band’s or a musician’s name and the graph jumps to them."
+				},
+				"graph": {
+					"title": "The graph",
+					"content": "The dots are bands and musicians, the lines are shared membership. Drag it, scroll it, tap a dot."
+				},
+				"legend": {
+					"title": "The key",
+					"content": "What each colour means, and what each line ties together."
+				},
+				"details": {
+					"title": "What you picked",
+					"content": "Whatever you tapped: who its members are, where the network ties it, and where to go on."
+				}
+			},
+			"copy": {
+				"name": "This copy",
+				"intro": {
+					"title": "One record, as you have it",
+					"content": "Not the album in general, but this one copy: how you bought it, how it looks, where it stands."
+				},
+				"photos": {
+					"title": "Your own photographs",
+					"content": "Photograph the sleeve, the record, the inserts. These pictures stay yours; they are not the catalog’s."
+				},
+				"facts": {
+					"title": "What this copy is",
+					"content": "Price, condition, where and when you got it, where it stands on the shelf. Edit rewrites any of it."
+				},
+				"form": {
+					"title": "The form",
+					"content": "What you write here belongs to your copy alone — it never overwrites what the catalog holds for everybody."
+				}
+			},
+			"wishlistItem": {
+				"name": "One want",
+				"intro": {
+					"title": "What you are hunting",
+					"content": "The record as the catalog knows it — and what you added: what you would pay, and which pressing it has to be."
+				},
+				"facts": {
+					"title": "What the record is",
+					"content": "Label, year, format, catalog number — enough to know it when it turns up in a shop."
+				}
+			},
+			"bands": {
+				"name": "Your bands",
+				"intro": {
+					"title": "Your bands",
+					"content": "The artists you were given the keys to: this is where you edit your own bands’ pages."
+				},
+				"list": {
+					"title": "What you look after",
+					"content": "Every band that is yours. Editing opens from here, and so does handing it back."
+				}
+			},
+			"challenge": {
+				"name": "This challenge",
+				"intro": {
+					"title": "The challenge",
+					"content": "The rule that holds these records together, and what finishing it takes."
+				},
+				"progress": {
+					"title": "Where you stand",
+					"content": "This much of the challenge’s records is already on your own shelf."
+				},
+				"score": {
+					"title": "What it pays",
+					"content": "A base score for every record you have, and a bonus for bringing the whole run together."
+				},
+				"badge": {
+					"title": "The badge",
+					"content": "Finish it and this badge goes beside your name."
+				},
+				"filter": {
+					"title": "Filtering",
+					"content": "Show all of them, or only what is still missing from your shelf."
+				},
+				"grid": {
+					"title": "The records",
+					"content": "The challenge in full. What you have is marked; the rest is what there is to hunt."
+				}
+			},
+			"artist": {
+				"name": "This artist",
+				"intro": {
+					"title": "The artist",
+					"content": "The band’s or the solo artist’s page: where they came from, when they formed, what they play."
+				},
+				"stats": {
+					"title": "The figures",
+					"content": "How many albums the catalog has of theirs, how many of those are yours, and how far their run reaches."
+				},
+				"nav": {
+					"title": "The parts of the page",
+					"content": "Jump to a section: the biography, the line-up, the records, the artists like them."
+				},
+				"about": {
+					"title": "The biography",
+					"content": "What the catalog knows about them. If it is thin, the proposal button is how you fill it in."
+				},
+				"lineup": {
+					"title": "The line-up",
+					"content": "Who played in the band, and from when to when. Each musician’s own page opens from here."
+				},
+				"discography": {
+					"title": "The records",
+					"content": "Every album in the catalog, by year. What you have is marked."
+				},
+				"collection": {
+					"title": "What you have of theirs",
+					"content": "Your own copies from this artist, pressing by pressing."
+				},
+				"similar": {
+					"title": "Alike",
+					"content": "Artists in the same genre, or ones that worked with the same musicians."
+				}
+			},
+			"album": {
+				"name": "This album",
+				"intro": {
+					"title": "The album",
+					"content": "The album as the catalog knows it: the artist, the year, the genre and the sleeve."
+				},
+				"collect": {
+					"title": "Put it on the shelf",
+					"content": "One tap and your copy joins the collection — you can name the pressing while you are at it."
+				},
+				"wish": {
+					"title": "Onto the wishlist",
+					"content": "If you do not have it yet, this is how it joins what you are hunting."
+				},
+				"challenges": {
+					"title": "In challenges",
+					"content": "Which challenges this record belongs to, and what getting it would bring in."
+				},
+				"original": {
+					"title": "The first pressing",
+					"content": "The original release: when it came out, on which label, in which format."
+				},
+				"listen": {
+					"title": "Listen to it",
+					"content": "If you allowed the players, this is where the record sounds."
+				},
+				"tracklist": {
+					"title": "The tracks",
+					"content": "The album in order, with lengths. Tap one for the track’s own page."
+				},
+				"credits": {
+					"title": "The credits",
+					"content": "Who played what on the record, and who recorded it."
+				},
+				"copies": {
+					"title": "The copies",
+					"content": "Your own copies of this album — and the ones you have let go of."
+				},
+				"more": {
+					"title": "More from them",
+					"content": "Further records by the same artist out of the catalog."
+				}
+			},
+			"track": {
+				"name": "This track",
+				"intro": {
+					"title": "The track",
+					"content": "One track off the album: which record, which place in the running order, how long."
+				},
+				"actions": {
+					"title": "What you can do with it",
+					"content": "Play it, if you allowed the players, and back to the record’s page."
+				},
+				"lyrics": {
+					"title": "The words",
+					"content": "If the catalog has them, they are here. If it does not, you can propose them."
+				},
+				"credits": {
+					"title": "The credits",
+					"content": "Who wrote, who played and who recorded this one track."
+				},
+				"neighbours": {
+					"title": "Before and after",
+					"content": "The track before and the track after, so the running order can be read through."
+				}
+			},
+			"release": {
+				"name": "This pressing",
+				"intro": {
+					"title": "The pressing",
+					"content": "One particular release: the same album, but this pressing — with its own year, label and format."
+				},
+				"facts": {
+					"title": "What this pressing is",
+					"content": "Label, catalog number, country, year, format. Enough to tell a record apart in a shop."
+				},
+				"tracks": {
+					"title": "The tracks",
+					"content": "This pressing’s running order — which is not always the original’s."
+				}
+			},
+			"label": {
+				"name": "This label",
+				"intro": {
+					"title": "The label",
+					"content": "The record company’s page: when it was founded, where, and what in the catalog carries it."
+				},
+				"facts": {
+					"title": "What the label is",
+					"content": "Founding, home, and whatever else the catalog knows about it."
+				},
+				"catalog": {
+					"title": "What came out on it",
+					"content": "The pressings this company put out — the records open from here."
+				}
+			},
+			"musician": {
+				"name": "This musician",
+				"intro": {
+					"title": "The musician",
+					"content": "A person rather than a band: what they play, when they were born, and where they have been."
+				},
+				"stats": {
+					"title": "The figures",
+					"content": "How many bands they played in, how many records they are on, and how far their run reaches."
+				},
+				"bands": {
+					"title": "Their bands",
+					"content": "Which band, from when to when, in what role. This is the backbone of the network."
+				},
+				"guest": {
+					"title": "Guest appearances",
+					"content": "Records they played on without ever being a member."
+				},
+				"albums": {
+					"title": "Their records",
+					"content": "Every album they are on, as a member or as a guest."
+				},
+				"bandmates": {
+					"title": "Who they played with",
+					"content": "The musicians they shared a band with. The network carries on from here."
 				}
 			}
 		}

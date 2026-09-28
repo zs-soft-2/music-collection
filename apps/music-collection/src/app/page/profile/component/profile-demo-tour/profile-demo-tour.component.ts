@@ -6,9 +6,12 @@ import { ProfilePageStore } from '../../profile-page.store';
 /**
  * The guided tour's switch, and the one place it can be started from other
  * than the launcher itself. It is here rather than only in the corner of the
- * screen because the launcher is what a collector who has seen the tour wants
- * gone — and the last stop of the tour is this very section, so they know
- * where to come.
+ * screen because the launcher is what a collector who has seen enough of the
+ * tour wants gone — and the profile's own walkthrough ends at this very card,
+ * so they know where to come.
+ *
+ * Started from here, the tour walks this page: the launcher always holds the
+ * page it is standing on, and this page is no exception.
  */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -38,7 +41,7 @@ import { ProfilePageStore } from '../../profile-page.store';
 
 		@if (store.demoTour()) {
 			<button type="button" class="start" (click)="store.startDemoTour()">
-				<i class="pi pi-play-circle" aria-hidden="true"></i>
+				<i class="pi pi-compass" aria-hidden="true"></i>
 				{{ 'ui.profileDemoTour.start-the-tour-now' | transloco }}
 			</button>
 		}

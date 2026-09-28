@@ -386,7 +386,7 @@
 			"appearance": "Darstellung",
 			"the-theme-and-how": "Das Design und wie viel vom Bildschirm die Seiten nutzen.",
 			"demoTour": "Geführte Tour",
-			"demoTourIntro": "Der Rundgang durch die App — und ob er dir überhaupt angeboten wird.",
+			"demoTourIntro": "Der Kompass in der Ecke des Bildschirms, der immer die gerade offene Seite erklärt.",
 			"what-the-collection-opens": "Womit die Sammlung öffnet und wie viel einer Albumseite auf einmal zu sehen ist.",
 			"shelves": "Regale",
 			"the-furniture-your-records": "Das Möbel, in dem deine Platten stehen. Zeichne, was du wirklich hast — wie viele Elemente, und wie viele Fächer in Breite und Höhe — und die Regalansicht der Sammlung wird darin eingeräumt.",
@@ -2014,8 +2014,8 @@
 		"profileDemoTour": {
 			"the-launcher": "Starter",
 			"show-me-around": "Zeig mir die App",
-			"puts-the-play-button": "Legt den Startknopf in die Ecke des Bildschirms — und von hier aus lässt sich die Tour ebenfalls starten.",
-			"start-the-tour-now": "Jetzt starten"
+			"puts-the-play-button": "Legt einen Kompass in die Ecke jeder Seite — und von hier aus lässt sich die Tour ebenfalls starten.",
+			"start-the-tour-now": "Diese Seite zeigen"
 		},
 		"profileListening": {
 			"records-put-on": "Aufgelegte Platten",
@@ -2674,25 +2674,76 @@
 					"title": "Auf einen Blick",
 					"content": "Wie viele Platten, von wie vielen Interpreten, in welchem Format — und was das Regal wert ist, wenn du eingetragen hast, was du gezahlt hast."
 				},
-				"filters": {
-					"title": "Suchen, filtern, sortieren",
-					"content": "Suche in deinen eigenen Platten, behalte ein Format, sortiere nach Interpret, Jahr oder Zugangstag — und gruppiere sie so, wie du selbst über sie denkst."
-				},
 				"views": {
 					"title": "Drei Ansichten",
 					"content": "Eine Wand aus Covern, eine schlichte Liste, oder das Regal selbst, mit jedem Exemplar dort, wo es wirklich steht. Die Möbel zeichnest du im Profil."
+				},
+				"name": "Dein Regal",
+				"decades": {
+					"title": "Nach Jahrzehnten",
+					"content": "Deine eigenen Platten nach Alter sortiert: man sieht sofort, aus welchem Jahrzehnt du am meisten sammelst."
+				},
+				"styles": {
+					"title": "Nach Stilen",
+					"content": "Dasselbe nach Genre: wie viel Punk, wie viel Jazz, wie viel von allem anderen in deinem Regal steht."
+				},
+				"challenges": {
+					"title": "Deine Herausforderungen",
+					"content": "Was du angefangen hast, und wie viel davon schon in deinem Regal steht. Die ganze Liste öffnet sich von hier."
+				},
+				"search": {
+					"title": "Suche in deinen eigenen",
+					"content": "Sucht nur in deinen Platten — nach Act und Albumtitel, schon beim Tippen."
+				},
+				"formats": {
+					"title": "Nach Format",
+					"content": "Lass nur Vinyl, CD oder Kassette stehen. Die Zahl am Chip sagt, wie viele es sind."
+				},
+				"sort": {
+					"title": "Sortieren und gruppieren",
+					"content": "Nach Act, Jahr oder dem Tag des Erwerbs — und gruppiert so, wie du selbst an sie denkst."
+				},
+				"shelf": {
+					"title": "Das Regal, wie es steht",
+					"content": "Die Regalansicht zeichnet jedes Exemplar dorthin, wo es wirklich steht. Das Möbel legst du im Profil an."
 				}
 			},
 			"scan": {
 				"intro": {
 					"title": "Eine Platte aus einem Foto",
 					"content": "Fotografiere die Hülle. Der Katalog liest das Cover, sagt, welche Platte er darin erkennt, und ein paar Tipps später steht das Exemplar in deinem Regal."
+				},
+				"name": "Eine Platte vom Foto",
+				"shot": {
+					"title": "Das Foto",
+					"content": "Hier fängt es an: fotografiere die Hülle oder wähle ein Bild aus der Galerie. Das Cover sollte drauf sein, möglichst gerade."
+				},
+				"results": {
+					"title": "Worauf es tippt",
+					"content": "Was der Katalog anhand des Fotos gefunden hat, das Wahrscheinlichste zuerst. Wähle aus, welches deins ist."
+				},
+				"read": {
+					"title": "Was vom Bild gelesen wurde",
+					"content": "Der Text, den es auf der Hülle gefunden hat — damit wurde gesucht. Wenn es sich verlesen hat, siehst du hier, warum."
 				}
 			},
 			"shelfScan": {
 				"intro": {
 					"title": "Ein ganzes Fach auf einmal",
 					"content": "Ein Foto einer Reihe von Rücken, und alles, was er entziffern kann, wird zusammen angeboten — so kommt ein schon volles Regal herein."
+				},
+				"name": "Ein ganzes Fach auf einmal",
+				"shots": {
+					"title": "Die Fotos",
+					"content": "Mehrere auf einmal: geh das Fach Rücken für Rücken ab, Bild für Bild."
+				},
+				"controls": {
+					"title": "Was im Fach steht",
+					"content": "Sag, ob dort Vinyl, CD oder Kassette steht — das grenzt die Suche ein — und starte dann die Erkennung."
+				},
+				"review": {
+					"title": "Das Durchgehen",
+					"content": "Jeder erkannte Rücken der Reihe nach: übernehmen, korrigieren oder überspringen. In dein Regal kommt nur, was du bestätigst."
 				}
 			},
 			"wishlist": {
@@ -2700,21 +2751,76 @@
 					"title": "Was noch fehlt",
 					"content": "Die Platten, auf die du es abgesehen hast, und was du dafür zahlen würdest. Die Jagdliste der Startseite entsteht daraus."
 				},
-				"filters": {
-					"title": "Sortieren und filtern",
-					"content": "Dieselbe Leiste wie im Regal: durchsuchen, ein Format behalten, nach Preis oder Interpret ordnen."
+				"name": "Deine Wunschliste",
+				"stats": {
+					"title": "Wo du stehst",
+					"content": "Wie viele Platten du jagst, von wie vielen Acts — und wie viele du schon gefunden hast."
+				},
+				"search": {
+					"title": "Suche",
+					"content": "Sucht innerhalb der Wunschliste, nach Act und Titel."
+				},
+				"formats": {
+					"title": "Nach Format",
+					"content": "Wenn du sie nur auf Vinyl willst, grenze die Liste darauf ein."
+				},
+				"found": {
+					"title": "Die gefundenen",
+					"content": "Was du schon hast, ist standardmäßig ausgeblendet. Dieser Schalter holt es zurück."
+				},
+				"gotIt": {
+					"title": "Hab ich",
+					"content": "Wenn du sie bekommen hast, legt ein Tippen sie ins Regal und nimmt sie von der Liste."
 				}
 			},
 			"challenges": {
 				"intro": {
 					"title": "Challenges",
 					"content": "Plattenmengen, die eine Regel bestimmt, keine Liste: eine Serie eines Labels, ein Jahrzehnt, das ganze Werk einer Band. Wer eine abschließt, wird bezahlt."
+				},
+				"name": "Die Herausforderungen",
+				"stats": {
+					"title": "Die Zahlen",
+					"content": "Wie viele Herausforderungen es gibt, wie viele du angefangen und wie viele du abgeschlossen hast."
+				},
+				"hunt": {
+					"title": "Die nächste Platte",
+					"content": "Was sich am meisten lohnen würde: die fehlenden Platten aus deinen fast fertigen Herausforderungen, der Reihe nach."
+				},
+				"tabs": {
+					"title": "Filtern",
+					"content": "Alle, die angefangenen, die verfolgten, oder die bereits fertigen."
+				},
+				"card": {
+					"title": "Eine Herausforderung",
+					"content": "Das Bild, die Regel und wie viele Platten dazugehören. Tippe sie an, und die ganze Liste öffnet sich."
+				},
+				"progress": {
+					"title": "Wo du stehst",
+					"content": "Der Balken zählt dein eigenes Regal gegen das, was die Herausforderung verlangt."
+				},
+				"follow": {
+					"title": "Folgen",
+					"content": "Folge ihr, und du behältst auch auf der Startseite im Auge, was noch fehlt."
 				}
 			},
 			"radio": {
 				"intro": {
 					"title": "Dein eigenes Radio",
 					"content": "Eine Platte aus deinem Regal, aufgelegt, Seite für Seite. Der Reihe nach oder gemischt — und was wirklich lief, landet im Protokoll."
+				},
+				"name": "Dein Radio",
+				"order": {
+					"title": "Der Reihe nach oder gemischt",
+					"content": "Schalte es ein, und das Radio zieht deine Platten in zufälliger Reihenfolge."
+				},
+				"onAir": {
+					"title": "Was gerade läuft",
+					"content": "Die Sendung, wie sie läuft: die Platte, die Seite und wie weit sie ist. Von hier hältst du sie an."
+				},
+				"stations": {
+					"title": "Die Sender",
+					"content": "Jeder Sender greift anders in dein Regal: nach Genre, nach Jahrzehnt, oder nach dem, was lange nicht lief. Wähl einen, und los geht es."
 				}
 			},
 			"dailyQuestion": {
@@ -2725,18 +2831,69 @@
 				"history": {
 					"title": "Die früheren Fragen",
 					"content": "Alles bisher Gefragte mit deinen Antworten — und welche davon richtig waren."
+				},
+				"name": "Die Frage des Tages",
+				"score": {
+					"title": "Dein Stand",
+					"content": "Punkte, Serie, längste Serie und Trefferquote. Ein einziger ausgelassener Tag reißt die Serie ab."
+				},
+				"question": {
+					"title": "Die Frage von heute",
+					"content": "Für alle dieselbe, aus dem Katalog. Eine pro Tag, und du antwortest einmal."
+				},
+				"clock": {
+					"title": "Die Uhr",
+					"content": "Solange sie läuft, ist eine richtige Antwort mehr wert. Hetzen musst du nicht — lange grübeln lohnt aber auch nicht."
+				},
+				"options": {
+					"title": "Die Antworten",
+					"content": "Ein paar zur Wahl, eine davon richtig. Sobald du wählst, siehst du, welche es war."
+				},
+				"leaderboard": {
+					"title": "Die Rangliste",
+					"content": "Wie du zu den anderen stehst. Darauf steht nur, wer gespielt hat."
 				}
 			},
 			"upcoming": {
 				"intro": {
 					"title": "Was kommt",
 					"content": "Was die Interpreten des Katalogs als Nächstes herausbringen — einmal täglich zusammengetragen, damit dir eine Neuauflage nicht entgeht."
+				},
+				"name": "Was kommt",
+				"stats": {
+					"title": "Die Zahlen",
+					"content": "Wie viele Veröffentlichungen bevorstehen und wie viele davon von den Acts des Katalogs kommen."
+				},
+				"tabs": {
+					"title": "Filtern",
+					"content": "Alle — oder nur die Acts, die du sammelst."
+				},
+				"timeline": {
+					"title": "Der Zeitstrahl",
+					"content": "Monat für Monat, Tag für Tag, was wann erscheint. Einmal täglich zusammengetragen."
 				}
 			},
 			"map": {
 				"intro": {
 					"title": "Sammler",
 					"content": "Wo die Platten stehen. Deine eigene Nadel zeigt genau so viel, wie du im Profil erlaubt hast."
+				},
+				"name": "Die Karte der Sammler",
+				"stats": {
+					"title": "Die Zahlen",
+					"content": "Wie viele Sammler und wie viele Länder auf der Karte gelandet sind — so viel, wie sie preisgegeben haben."
+				},
+				"world": {
+					"title": "Die Karte",
+					"content": "Ziehen, scrollen, eine Nadel antippen. Deine zeigt genau so viel, wie du im Profil erlaubt hast."
+				},
+				"countries": {
+					"title": "Die Länder",
+					"content": "Wo Sammler sind, Land für Land. Tippe eins an, und nur die von dort bleiben."
+				},
+				"collectors": {
+					"title": "Die Sammler dort",
+					"content": "Alle aus diesem Land, die gesagt haben, dass sie dort sind."
 				}
 			},
 			"requests": {
@@ -2747,22 +2904,335 @@
 				"propose": {
 					"title": "Schlag etwas vor",
 					"content": "Fehlt ein Interpret, ein Album, eine Pressung oder ein Label? Hier beginnt das Formular, und was du schickst, kommt auf diese Seite zurück."
+				},
+				"name": "Deine Vorschläge",
+				"list": {
+					"title": "Was du eingeschickt hast",
+					"content": "Jeder deiner Vorschläge und was daraus wurde: wartet, übernommen, oder mit Begründung zurück."
 				}
 			},
 			"profile": {
+				"name": "Dein Profil",
 				"intro": {
 					"title": "Dein Profil",
 					"content": "Dein Konto und alles, was die App auf dich einstellt: Sprache, Design, die Zeichnung deines Regals, die Wiedergabe und was du mit anderen teilst."
 				},
+				"tabs": {
+					"title": "Vier Gruppen",
+					"content": "Die Einstellungen auf vier Tabs: dein Konto, das Sammeln, die Wiedergabe und deine Daten. Immer nur einer ist offen — die Tour öffnet alle vier nacheinander und legt die Seite danach wieder so hin, wie sie sie vorgefunden hat."
+				},
+				"accountTab": {
+					"title": "Erster Tab: dein Konto",
+					"content": "Hier fangen wir an. Auf diesem Tab steht, was die App über dich weiß: dein Name, die Sprache, das Aussehen — und der Schalter für diese Tour. Geh weiter, ich öffne ihn."
+				},
+				"account": {
+					"title": "Dein Konto",
+					"content": "Dein Name, wie der Katalog ihn zeigt, und das Konto, mit dem du angemeldet bist."
+				},
+				"language": {
+					"title": "Die Sprache",
+					"content": "Ungarisch, Englisch oder Deutsch. Sie bleibt beim Konto und folgt dir in den nächsten Browser."
+				},
+				"appearance": {
+					"title": "Das Aussehen",
+					"content": "Dunkel oder hell — und wie viel von der Breite des Bildschirms die Seiten nutzen dürfen."
+				},
+				"collectionTab": {
+					"title": "Zweiter Tab: das Sammeln",
+					"content": "Dieser Tab handelt von deinen Platten: womit die Sammlung öffnet und in welchen Regalen sie stehen. Geh weiter, ich öffne ihn."
+				},
+				"lists": {
+					"title": "Die Listen",
+					"content": "Womit die Sammlung öffnet und wie sie deine Platten ordnet."
+				},
+				"shelves": {
+					"title": "Deine Regale",
+					"content": "Das Möbel, in dem deine Platten stehen: wie viele Fächer, wie groß. Daraus wird die Regalansicht gezeichnet."
+				},
+				"playbackTab": {
+					"title": "Dritter Tab: die Wiedergabe",
+					"content": "Dieser Tab handelt vom Ton: welcher Player klingen darf und dein Spotify-Konto. Geh weiter, ich öffne ihn."
+				},
+				"playback": {
+					"title": "Die Wiedergabe",
+					"content": "Welcher Player klingen darf und was du auf die Seite lässt."
+				},
+				"spotify": {
+					"title": "Spotify",
+					"content": "Verbindest du dein Konto, laufen deine Platten über dein eigenes Spotify."
+				},
+				"dataTab": {
+					"title": "Vierter Tab: deine Daten",
+					"content": "Der letzte Tab handelt davon, was notiert wird und was dich verlässt: dein Hörprotokoll und was andere Sammler von dir sehen. Geh weiter, ich öffne ihn."
+				},
+				"listening": {
+					"title": "Das Hörprotokoll",
+					"content": "Was darüber notiert wird, was bei dir wirklich gelaufen ist."
+				},
+				"privacy": {
+					"title": "Deine Daten",
+					"content": "Was andere von dir sehen: dein Ort auf der Karte, dein Name in der Rangliste. Nichts, bis du es sagst."
+				},
+				"back": {
+					"title": "Zurück zum ersten",
+					"content": "Das waren alle vier Tabs. Ich bringe dich zurück zum Konto-Tab, wo ich dich gefunden habe — eines fehlt noch."
+				},
 				"switch": {
 					"title": "Und hier ist der Schalter",
-					"content": "Die Tour wohnt im Profil. Schalte sie aus, und der Knopf in der Ecke ist weg; schalte sie wieder ein, wann du erneut durchgehen willst. Danke fürs Mitkommen."
+					"content": "Der Kompass sitzt in der Ecke jeder Seite und zeigt immer die Seite, die du offen hast. Schalte ihn aus, und er ist weg; schalte ihn wieder ein, wenn du ihn brauchst."
 				}
 			},
 			"network": {
 				"intro": {
 					"title": "Das Netzwerk",
 					"content": "Wer mit wem spielte: die Musiker und Bands des Katalogs in einem Graphen, in dem gemeinsame Mitglieder die Bands verbinden."
+				},
+				"name": "Das Netzwerk",
+				"focus": {
+					"title": "Die Mitte",
+					"content": "Hier wählst du, was in der Mitte des Graphen steht und wie weit von dort aus geschaut wird."
+				},
+				"search": {
+					"title": "Im Netz suchen",
+					"content": "Tippe den Namen einer Band oder eines Musikers ein, und der Graph springt hin."
+				},
+				"graph": {
+					"title": "Der Graph",
+					"content": "Die Punkte sind Bands und Musiker, die Linien gemeinsame Mitgliedschaft. Ziehen, scrollen, einen Punkt antippen."
+				},
+				"legend": {
+					"title": "Die Legende",
+					"content": "Was jede Farbe bedeutet und was jede Linie verbindet."
+				},
+				"details": {
+					"title": "Das Ausgewählte",
+					"content": "Was du angetippt hast: wer dazugehört, wohin das Netz es bindet und wo es weitergeht."
+				}
+			},
+			"copy": {
+				"name": "Dieses Exemplar",
+				"intro": {
+					"title": "Eine Platte, wie du sie hast",
+					"content": "Nicht das Album im Allgemeinen, sondern dieses eine Exemplar: wie du es gekauft hast, wie es aussieht, wo es steht."
+				},
+				"photos": {
+					"title": "Deine eigenen Fotos",
+					"content": "Fotografiere Hülle, Platte, Beilagen. Diese Bilder bleiben deine, nicht die des Katalogs."
+				},
+				"facts": {
+					"title": "Was dieses Exemplar ist",
+					"content": "Preis, Zustand, wo und wann du es bekommen hast, wo es im Regal steht. Über Bearbeiten lässt sich alles ändern."
+				},
+				"form": {
+					"title": "Das Formular",
+					"content": "Was du hier einträgst, gehört allein zu deinem Exemplar — die gemeinsamen Daten des Katalogs bleiben unberührt."
+				}
+			},
+			"wishlistItem": {
+				"name": "Ein Wunsch",
+				"intro": {
+					"title": "Was du jagst",
+					"content": "Die Platte, wie der Katalog sie kennt — und was du dazugeschrieben hast: was du zahlen würdest und welche Pressung es sein muss."
+				},
+				"facts": {
+					"title": "Was die Platte ist",
+					"content": "Label, Jahr, Format, Katalognummer — so viel, dass du sie im Laden wiedererkennst."
+				}
+			},
+			"bands": {
+				"name": "Deine Bands",
+				"intro": {
+					"title": "Deine Bands",
+					"content": "Die Acts, zu denen du den Schlüssel bekommen hast: hier bearbeitest du die Seiten deiner eigenen Bands."
+				},
+				"list": {
+					"title": "Was du betreust",
+					"content": "Jede Band, die dir gehört. Von hier öffnet sich das Bearbeiten — und hier gibst du sie auch wieder ab."
+				}
+			},
+			"challenge": {
+				"name": "Diese Herausforderung",
+				"intro": {
+					"title": "Die Herausforderung",
+					"content": "Die Regel, die diese Platten zusammenhält, und was zum Abschluss fehlt."
+				},
+				"progress": {
+					"title": "Wo du stehst",
+					"content": "So viel von den Platten dieser Herausforderung steht schon in deinem Regal."
+				},
+				"score": {
+					"title": "Was sie einbringt",
+					"content": "Grundpunkte für jede vorhandene Platte, und ein Bonus, wenn du die ganze Reihe zusammenbekommst."
+				},
+				"badge": {
+					"title": "Das Abzeichen",
+					"content": "Schließt du sie ab, steht dieses Abzeichen neben deinem Namen."
+				},
+				"filter": {
+					"title": "Filtern",
+					"content": "Alle zeigen — oder nur das, was in deinem Regal noch fehlt."
+				},
+				"grid": {
+					"title": "Die Platten",
+					"content": "Die Herausforderung in voller Länge. Was du hast, ist markiert; der Rest ist das, was zu jagen bleibt."
+				}
+			},
+			"artist": {
+				"name": "Dieser Act",
+				"intro": {
+					"title": "Der Act",
+					"content": "Die Seite der Band oder des Solokünstlers: woher sie kommen, wann sie sich gegründet haben, was sie spielen."
+				},
+				"stats": {
+					"title": "Die Zahlen",
+					"content": "Wie viele Alben der Katalog von ihnen hat, wie viele davon deine sind, und wie weit ihre Laufbahn reicht."
+				},
+				"nav": {
+					"title": "Die Teile der Seite",
+					"content": "Sprung zu einem Abschnitt: die Biografie, die Besetzung, die Platten und die ähnlichen Acts."
+				},
+				"about": {
+					"title": "Die Biografie",
+					"content": "Was der Katalog über sie weiß. Ist sie dünn, füllst du sie über den Vorschlag-Knopf auf."
+				},
+				"lineup": {
+					"title": "Die Besetzung",
+					"content": "Wer in der Band gespielt hat, und von wann bis wann. Die Seiten der Musiker öffnen sich von hier."
+				},
+				"discography": {
+					"title": "Die Platten",
+					"content": "Jedes Album aus dem Katalog, nach Jahr. Was du hast, ist markiert."
+				},
+				"collection": {
+					"title": "Was du von ihnen hast",
+					"content": "Deine eigenen Exemplare dieses Acts, Pressung für Pressung."
+				},
+				"similar": {
+					"title": "Ähnliche",
+					"content": "Acts aus demselben Genre — oder solche, die mit denselben Musikern gearbeitet haben."
+				}
+			},
+			"album": {
+				"name": "Dieses Album",
+				"intro": {
+					"title": "Das Album",
+					"content": "Das Album, wie der Katalog es kennt: der Act, das Jahr, das Genre und die Hülle."
+				},
+				"collect": {
+					"title": "Ins Regal stellen",
+					"content": "Ein Tippen, und dein Exemplar kommt in die Sammlung — die Pressung kannst du gleich dazu wählen."
+				},
+				"wish": {
+					"title": "Auf die Wunschliste",
+					"content": "Hast du es noch nicht, landet es von hier auf deiner Jagdliste."
+				},
+				"challenges": {
+					"title": "In Herausforderungen",
+					"content": "Zu welchen Herausforderungen diese Platte gehört und was sie einbringen würde."
+				},
+				"original": {
+					"title": "Die Erstpressung",
+					"content": "Die erste Veröffentlichung: wann, bei welchem Label, in welchem Format."
+				},
+				"listen": {
+					"title": "Hör hinein",
+					"content": "Hast du die Player erlaubt, klingt die Platte von hier."
+				},
+				"tracklist": {
+					"title": "Die Titel",
+					"content": "Das Album der Reihe nach, mit Längen. Tippe einen an für die eigene Seite des Titels."
+				},
+				"credits": {
+					"title": "Die Mitwirkenden",
+					"content": "Wer was auf der Platte gespielt hat und wer sie aufgenommen hat."
+				},
+				"copies": {
+					"title": "Die Exemplare",
+					"content": "Deine eigenen Exemplare dieses Albums — und die, die du wieder abgegeben hast."
+				},
+				"more": {
+					"title": "Mehr von ihnen",
+					"content": "Weitere Platten desselben Acts aus dem Katalog."
+				}
+			},
+			"track": {
+				"name": "Dieser Titel",
+				"intro": {
+					"title": "Der Titel",
+					"content": "Ein Titel vom Album: auf welcher Platte, an welcher Stelle, wie lang."
+				},
+				"actions": {
+					"title": "Was du damit tun kannst",
+					"content": "Abspielen, wenn du die Player erlaubt hast — und zurück zur Seite der Platte."
+				},
+				"lyrics": {
+					"title": "Der Text",
+					"content": "Hat der Katalog ihn, steht er hier. Hat er ihn nicht, kannst du einen vorschlagen."
+				},
+				"credits": {
+					"title": "Die Mitwirkenden",
+					"content": "Wer diesen einen Titel geschrieben, gespielt und aufgenommen hat."
+				},
+				"neighbours": {
+					"title": "Davor, danach",
+					"content": "Der Titel davor und der danach, damit sich die Reihenfolge durchlesen lässt."
+				}
+			},
+			"release": {
+				"name": "Diese Pressung",
+				"intro": {
+					"title": "Die Pressung",
+					"content": "Eine bestimmte Veröffentlichung: dasselbe Album, aber diese Pressung — mit eigenem Jahr, Label und Format."
+				},
+				"facts": {
+					"title": "Was diese Pressung ist",
+					"content": "Label, Katalognummer, Land, Jahr, Format. Genug, um eine Platte im Laden auseinanderzuhalten."
+				},
+				"tracks": {
+					"title": "Die Titel",
+					"content": "Die Reihenfolge dieser Pressung — nicht immer dieselbe wie die der Erstausgabe."
+				}
+			},
+			"label": {
+				"name": "Dieses Label",
+				"intro": {
+					"title": "Das Label",
+					"content": "Die Seite der Plattenfirma: wann sie gegründet wurde, wo, und was im Katalog ihren Namen trägt."
+				},
+				"facts": {
+					"title": "Was das Label ist",
+					"content": "Gründung, Sitz, und was der Katalog sonst über es weiß."
+				},
+				"catalog": {
+					"title": "Was dort erschienen ist",
+					"content": "Die Pressungen dieser Firma — die Platten öffnen sich von hier."
+				}
+			},
+			"musician": {
+				"name": "Dieser Musiker",
+				"intro": {
+					"title": "Der Musiker",
+					"content": "Ein Mensch, keine Band: was er spielt, wann er geboren wurde und wo er überall war."
+				},
+				"stats": {
+					"title": "Die Zahlen",
+					"content": "In wie vielen Bands er gespielt hat, auf wie vielen Platten er steht, und wie weit seine Laufbahn reicht."
+				},
+				"bands": {
+					"title": "Seine Bands",
+					"content": "In welcher Band, von wann bis wann, in welcher Rolle. Das ist das Rückgrat des Netzwerks."
+				},
+				"guest": {
+					"title": "Gastauftritte",
+					"content": "Platten, auf denen er gespielt hat, ohne je Mitglied gewesen zu sein."
+				},
+				"albums": {
+					"title": "Seine Platten",
+					"content": "Jedes Album, auf dem er steht, als Mitglied oder als Gast."
+				},
+				"bandmates": {
+					"title": "Mit wem er gespielt hat",
+					"content": "Die Musiker, mit denen er in einer Band war. Von hier geht es im Netz weiter."
 				}
 			}
 		}
