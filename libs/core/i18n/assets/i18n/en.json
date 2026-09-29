@@ -1501,7 +1501,19 @@
 			"saveNote": {
 				"one": "Saving replaces the current {{count}} track; their links and lyrics are kept by position.",
 				"other": "Saving replaces the current {{count}} tracks; their links and lyrics are kept by position."
-			}
+			},
+			"position": "Position",
+			"title": "Title",
+			"length": "Length",
+			"edit-this-track": "Edit this track",
+			"save-this-track": "Save this track",
+			"remove-this-track": "Remove this track",
+			"open-the-track-page": "The track's page: lyrics, links, writers",
+			"lyrics-and-links-live": "The lyrics, the Spotify and YouTube links and the writers are edited on the track's own page — open it from its title.",
+			"remove": "Remove",
+			"removeHeading": "Remove the track",
+			"removeQuestion": "Remove “{{name}}” from the album?",
+			"removeNote": "The track's lyrics go with it. Loading the tracklist again brings the track back, but not the lyrics."
 		},
 		"albumTable": {
 			"no-albums-found": "No albums found.",

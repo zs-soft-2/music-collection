@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { FirebaseDataService } from '../../../core';
 import { AlbumModel, AlbumModelAdd, AlbumModelUpdate } from './album';
 import { ExternalSource } from '../external';
-import { ReleaseTrackDraft, TrackEntity } from '../track';
+import { AlbumTrackDraft, ReleaseTrackDraft, TrackEntity } from '../track';
 import {
 	AlbumExternalProfile,
 	AlbumExternalTrack,
@@ -37,6 +37,21 @@ export abstract class AlbumDataService extends FirebaseDataService<
 		tracks: AlbumExternalTrack[],
 		existing: TrackEntity[],
 		source: ExternalSource
+	): Promise<void>;
+	/**
+	 * Writes one track of the album by hand: a corrected title, a missing
+	 * length. Only the fields on the form are touched, so the links, the
+	 * writers and the credits of the track stay as they are.
+	 */
+	public abstract saveAlbumTrack(track: AlbumTrackDraft): Promise<void>;
+	/**
+	 * Takes one track off the album, with its lyrics, and closes the gap in
+	 * play order behind it. `albumTracks` is the album's own list as it
+	 * stands, in play order.
+	 */
+	public abstract deleteAlbumTrack(
+		uid: string,
+		albumTracks: TrackEntity[]
 	): Promise<void>;
 	/** The tracks one pressing added, in play order. */
 	public abstract listReleaseTracks$(

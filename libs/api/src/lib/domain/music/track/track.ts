@@ -51,6 +51,23 @@ export interface ReleaseTrackDraft {
 }
 
 /**
+ * An album's own track as the album form writes it by hand: a title the
+ * import spelled wrong, a length nobody filled in, a position that reads
+ * "A1" on the sleeve and "1" in the data.
+ *
+ * Only what is printed on the record is here. The links, the writers and the
+ * lyrics belong to the track page, which is where they are edited.
+ */
+export interface AlbumTrackDraft {
+	uid: string;
+	/** Play order, 1-based. */
+	index: number;
+	position: string | null;
+	name: string;
+	duration: string | null;
+}
+
+/**
  * Lyrics of a track, kept apart from the public track document
  * (`track-lyrics/{trackUid}`): readable only when signed in.
  */

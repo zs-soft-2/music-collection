@@ -12,7 +12,7 @@ import {
 
 export interface AlbumTracksParams {
 	album: AlbumEntity | undefined;
-	/** The album's tracks (`track` collection) in play order. */
+	/** The album's own tracks (`track` collection) in play order. */
 	tracks: TrackEntity[];
 }
 
@@ -22,6 +22,9 @@ export class AlbumTracksService {
 
 	private params: AlbumTracksParams = { album: undefined, tracks: [] };
 
+	public readonly error = signal<string | null>(null);
+	/** The track the form is asking about before it deletes it. */
+	public readonly removing = signal<TrackEntity | null>(null);
 	public readonly externalError = signal<string | null>(null);
 	public readonly externalLoading = signal(false);
 	public readonly saving = signal(false);
@@ -36,7 +39,14 @@ export class AlbumTracksService {
 			switchMap((album) =>
 				this.albumStateService.listTracks$(albumId).pipe(
 					map((tracks) => {
-						this.params = { album, tracks };
+						// What one pressing added is a track of the album too,
+						// and comes back with this list. It is edited on that
+						// pressing's form, not here — and it must stay out of
+						// the count this form's Load button offers to replace.
+						this.params = {
+							album,
+							tracks: tracks.filter((track) => !track.releaseUid),
+						};
 
 						return this.params;
 					})
@@ -68,6 +78,78 @@ export class AlbumTracksService {
 		} catch (error) {
 			console.error(error);
 			this.externalError.set('Saving tracks failed.');
+		} finally {
+			this.saving.set(false);
+		}
+	}
+
+	/** Writes one track of the album: a corrected title, a missing length. */
+	public async save(draft: {
+		uid: string;
+		index: number;
+		position: string;
+		name: string;
+		duration: string;
+	}): Promise<boolean> {
+		if (!draft.name.trim() || this.saving()) {
+			return false;
+		}
+		this.saving.set(true);
+		this.error.set(null);
+
+		try {
+			await this.albumStateService.saveAlbumTrack({
+				uid: draft.uid,
+				index: draft.index,
+				position: draft.position.trim() || String(draft.index),
+				name: draft.name.trim(),
+				duration: draft.duration.trim() || null,
+			});
+
+			return true;
+		} catch (error) {
+			console.error(error);
+			this.error.set('Saving the track failed.');
+
+			return false;
+		} finally {
+			this.saving.set(false);
+		}
+	}
+
+	/**
+	 * Asks before deleting. Reloading the tracklist brings a deleted track
+	 * back, but not the lyrics written under it, so this is one of the few
+	 * things on the album form that cannot be undone by loading it again.
+	 */
+	public askRemove(track: TrackEntity): void {
+		this.error.set(null);
+		this.removing.set(track);
+	}
+
+	public cancelRemove(): void {
+		this.removing.set(null);
+	}
+
+	/** Takes one track off the album, with its lyrics. */
+	public async confirmRemove(): Promise<void> {
+		const track = this.removing();
+
+		if (!track || this.saving()) {
+			return;
+		}
+		this.saving.set(true);
+		this.error.set(null);
+
+		try {
+			await this.albumStateService.deleteAlbumTrack(
+				track.uid,
+				this.params.tracks
+			);
+			this.removing.set(null);
+		} catch (error) {
+			console.error(error);
+			this.error.set('Removing the track failed.');
 		} finally {
 			this.saving.set(false);
 		}

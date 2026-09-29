@@ -21,6 +21,7 @@ import {
 	AlbumExternalProfile,
 	AlbumExternalTrack,
 	AlbumExternalTracks,
+	AlbumTrackDraft,
 	DiscogsLookupClient,
 	DiscogsMasterProfile,
 	ExternalSource,
@@ -29,6 +30,7 @@ import {
 	ReleaseTrackDraft,
 	StyleName,
 	TRACK_FEATURE_KEY,
+	TRACK_LYRICS_FEATURE_KEY,
 	TrackEntity,
 } from '@music-collection/api';
 import { GenreEffect } from '@music-collection/domain/genre';
@@ -130,23 +132,18 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 					? this.fetchCoverUrl$(group.id).pipe(
 							switchMap((coverImageUrl) =>
 								this.knownStyles$().pipe(
-									map(
-										(known): AlbumExternalProfile => ({
-											coverImageUrl,
-											fillerSourceUrl: null,
-											format: toFormat(group),
-											name: group.title,
-											source: 'musicbrainz',
-											sourceUrl: `https://musicbrainz.org/release-group/${group.id}`,
-											styles: toStyles(
-												group.genres,
-												known
-											),
-											year: toDate(
-												group['first-release-date']
-											),
-										})
-									)
+									map((known): AlbumExternalProfile => ({
+										coverImageUrl,
+										fillerSourceUrl: null,
+										format: toFormat(group),
+										name: group.title,
+										source: 'musicbrainz',
+										sourceUrl: `https://musicbrainz.org/release-group/${group.id}`,
+										styles: toStyles(group.genres, known),
+										year: toDate(
+											group['first-release-date']
+										),
+									}))
 								)
 							)
 						)
@@ -304,11 +301,23 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 		source: ExternalSource
 	): Promise<void> {
 		const albumTracks = existing.filter((track) => !track.releaseUid);
+		// Every id the album has already handed out. A list someone deleted a
+		// track from by hand runs 001, 002, 004…, and numbering a new track
+		// by its place in play order would give 004 away a second time: two
+		// songs would write the same document and the batch would keep one.
+		const taken = new Set(albumTracks.map((track) => track.uid));
+		let free = 1;
 		const writes = tracks.map((track, i) => {
 			const index = i + 1;
-			const uid =
-				albumTracks[i]?.uid ??
-				`${albumUid}_${String(index).padStart(3, '0')}`;
+			let uid = albumTracks[i]?.uid;
+
+			if (!uid) {
+				while (taken.has(trackUidOf(albumUid, free))) {
+					free += 1;
+				}
+				uid = trackUidOf(albumUid, free);
+				taken.add(uid);
+			}
 
 			return {
 				reference: doc(this.firestore, TRACK_FEATURE_KEY, uid),
@@ -328,6 +337,60 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 			.map((track) => doc(this.firestore, TRACK_FEATURE_KEY, track.uid));
 
 		return this.firestoreSync.setAll(TRACK_FEATURE_KEY, writes, deletions);
+	}
+
+	/**
+	 * One track of the album written by hand. A merge, not a replacement: the
+	 * Spotify id, the YouTube id and the writers were added on the track page
+	 * and are not on this form, so a title corrected here must not take them
+	 * with it.
+	 */
+	public saveAlbumTrack(track: AlbumTrackDraft): Promise<void> {
+		return this.firestoreSync.set(
+			doc(this.firestore, TRACK_FEATURE_KEY, track.uid),
+			TRACK_FEATURE_KEY,
+			{
+				uid: track.uid,
+				index: track.index,
+				position: track.position,
+				name: track.name,
+				duration: track.duration,
+				durationSec: toDurationSec(track.duration),
+			},
+			{ merge: true }
+		);
+	}
+
+	/**
+	 * Takes one track off the album and closes the gap behind it: play order
+	 * is counted on and not only sorted by — the YouTube player opens a
+	 * playlist at `index - 1` — so everything behind the deleted track moves
+	 * up one.
+	 *
+	 * The lyrics go with it. They are filed under the track's id, and that id
+	 * is free again the moment the track is gone: the next import to number a
+	 * song into the empty slot would otherwise find the deleted song's words
+	 * waiting under it.
+	 */
+	public async deleteAlbumTrack(
+		uid: string,
+		albumTracks: TrackEntity[]
+	): Promise<void> {
+		const at = albumTracks.findIndex((track) => track.uid === uid);
+		const writes = (at < 0 ? [] : albumTracks.slice(at + 1)).map(
+			(track, offset) => ({
+				reference: doc(this.firestore, TRACK_FEATURE_KEY, track.uid),
+				data: { index: at + offset + 1 },
+			})
+		);
+
+		await this.firestoreSync.setAll(TRACK_FEATURE_KEY, writes, [
+			doc(this.firestore, TRACK_FEATURE_KEY, uid),
+		]);
+		await this.firestoreSync.delete(
+			doc(this.firestore, TRACK_LYRICS_FEATURE_KEY, uid),
+			TRACK_LYRICS_FEATURE_KEY
+		);
 	}
 
 	public listReleaseTracks$(releaseUid: string): Observable<TrackEntity[]> {
@@ -352,9 +415,7 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 	 * tenth song of the album would be given later.
 	 */
 	public saveReleaseTrack(track: ReleaseTrackDraft): Promise<void> {
-		const uid =
-			track.uid ||
-			`${track.releaseUid}_${String(track.index).padStart(3, '0')}`;
+		const uid = track.uid || trackUidOf(track.releaseUid, track.index);
 
 		return this.firestoreSync.set(
 			doc(this.firestore, TRACK_FEATURE_KEY, uid),
@@ -468,4 +529,12 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 	public update$(album: AlbumModelUpdate): Observable<AlbumModelUpdate> {
 		return super.updateModel$(album);
 	}
+}
+
+/**
+ * The id a track is filed under: `<ownerUid>_<index:000>`, the owner being
+ * the album for its own tracks and the pressing for what one edition added.
+ */
+function trackUidOf(ownerUid: string, index: number): string {
+	return `${ownerUid}_${String(index).padStart(3, '0')}`;
 }

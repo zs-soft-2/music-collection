@@ -1501,7 +1501,19 @@
 			"saveNote": {
 				"one": "Das Speichern ersetzt den aktuellen {{count}} Titel; ihre Links und Texte bleiben nach Position erhalten.",
 				"other": "Das Speichern ersetzt die aktuellen {{count}} Titel; ihre Links und Texte bleiben nach Position erhalten."
-			}
+			},
+			"position": "Position",
+			"title": "Titel",
+			"length": "Länge",
+			"edit-this-track": "Diesen Titel bearbeiten",
+			"save-this-track": "Diesen Titel speichern",
+			"remove-this-track": "Diesen Titel entfernen",
+			"open-the-track-page": "Die Seite des Titels: Text, Links, Autoren",
+			"lyrics-and-links-live": "Der Text, die Spotify- und YouTube-Links und die Autoren werden auf der eigenen Seite des Titels bearbeitet — öffne sie über den Titel.",
+			"remove": "Entfernen",
+			"removeHeading": "Titel entfernen",
+			"removeQuestion": "„{{name}}“ vom Album entfernen?",
+			"removeNote": "Der Text des Titels wird mit entfernt. Ein erneutes Laden der Titelliste bringt den Titel zurück, den Text nicht."
 		},
 		"albumTable": {
 			"no-albums-found": "Keine Alben gefunden.",

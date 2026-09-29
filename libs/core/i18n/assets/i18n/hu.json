@@ -1501,7 +1501,19 @@
 			"saveNote": {
 				"one": "A mentés lecseréli a jelenlegi {{count}} számot; a linkjeik és a dalszövegeik pozíció szerint megmaradnak.",
 				"other": "A mentés lecseréli a jelenlegi {{count}} számot; a linkjeik és a dalszövegeik pozíció szerint megmaradnak."
-			}
+			},
+			"position": "Pozíció",
+			"title": "Cím",
+			"length": "Hossz",
+			"edit-this-track": "Szám szerkesztése",
+			"save-this-track": "Szám mentése",
+			"remove-this-track": "Szám törlése",
+			"open-the-track-page": "A szám oldala: dalszöveg, linkek, szerzők",
+			"lyrics-and-links-live": "A dalszöveg, a Spotify- és YouTube-link és a szerzők a szám saját oldalán szerkeszthetők — kattints a címére.",
+			"remove": "Törlés",
+			"removeHeading": "Szám törlése",
+			"removeQuestion": "Törlöd a(z) „{{name}}” számot az albumról?",
+			"removeNote": "A szám dalszövege is törlődik. A számlistát újratöltve a szám visszakerül, a dalszöveg nem."
 		},
 		"albumTable": {
 			"no-albums-found": "Nincs találat.",
