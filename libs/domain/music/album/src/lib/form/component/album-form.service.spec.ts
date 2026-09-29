@@ -1,4 +1,7 @@
-import { provideGenreTesting } from '@music-collection/domain/genre/testing';
+import {
+	genreOf,
+	provideGenreTesting,
+} from '@music-collection/domain/genre/testing';
 import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { of } from 'rxjs';
 
@@ -12,6 +15,7 @@ import {
 	AlbumUtilService,
 	ArtistStateService,
 	DocumentStateService,
+	GenreEntity,
 } from '@music-collection/api';
 
 import { AlbumFormService } from './album-form.service';
@@ -31,12 +35,13 @@ const createFormGroup = (album: AlbumEntity | undefined) =>
 
 function setup(
 	catalog: AlbumEntity[],
-	edited: AlbumEntity | undefined
+	edited: AlbumEntity | undefined,
+	taxonomy: GenreEntity[] = []
 ): AlbumFormService {
 	TestBed.configureTestingModule({
 		providers: [
 			provideI18nTesting(),
-			provideGenreTesting(),
+			provideGenreTesting(taxonomy),
 			AlbumFormService,
 			provideRouter([]),
 			{
@@ -75,6 +80,18 @@ const start = (service: AlbumFormService): AlbumFormParams => {
 	service.init$().subscribe((value) => (params = value));
 
 	return params;
+};
+
+/**
+ * The params as they stand right now. Editing the form emits a fresh set, so
+ * a test that changes a field has to ask again rather than hold the first one.
+ */
+const track = (service: AlbumFormService): (() => AlbumFormParams) => {
+	let params!: AlbumFormParams;
+
+	service.init$().subscribe((value) => (params = value));
+
+	return () => params;
 };
 
 describe('AlbumFormService', () => {
@@ -125,5 +142,31 @@ describe('AlbumFormService', () => {
 		start(service);
 
 		expect(service.duplicate()).toBeNull();
+	});
+	describe('the styles a genre offers', () => {
+		const taxonomy = [
+			genreOf('Rock', ['Thrash', 'Heavy Metal']),
+			genreOf('Jazz', ['Bebop', 'Fusion']),
+		];
+
+		it('narrows the list to the genre just picked', () => {
+			const params = track(setup([], undefined, taxonomy));
+
+			params().formGroup.controls['genre'].setValue('Rock');
+
+			expect(params().styleList).toEqual(['Thrash', 'Heavy Metal']);
+		});
+
+		it('lets go of the styles of the genre before it', () => {
+			const params = track(setup([], undefined, taxonomy));
+			const formGroup = params().formGroup;
+
+			formGroup.controls['genre'].setValue('Rock');
+			formGroup.controls['styles'].setValue(['Thrash']);
+			formGroup.controls['genre'].setValue('Jazz');
+
+			expect(formGroup.controls['styles'].value).toEqual([]);
+			expect(params().styleList).toEqual(['Bebop', 'Fusion']);
+		});
 	});
 });

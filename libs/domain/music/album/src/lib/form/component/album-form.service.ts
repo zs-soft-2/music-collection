@@ -434,12 +434,16 @@ export class AlbumFormService {
 	 * The styles the form offers: the chosen genre's, and whatever the album
 	 * already carries — a style saved before the taxonomy knew it would
 	 * otherwise vanish from the list and be dropped by the next save.
+	 *
+	 * The controls are asked rather than the group: a control emits its change
+	 * before the group recomputes `value`, so a list built off the group would
+	 * answer for the genre before the one just picked.
 	 */
 	private styleList(formGroup: FormGroup): StyleName[] {
 		return styleOptions(
 			this.taxonomy,
-			formGroup.value['genre'],
-			formGroup.value['styles'] ?? []
+			formGroup.controls['genre'].value,
+			formGroup.controls['styles'].value ?? []
 		);
 	}
 
@@ -449,24 +453,24 @@ export class AlbumFormService {
 	 * genre, and keeping it would file the record under two.
 	 */
 	private genreChanged(): void {
+		const formGroup = this.params.formGroup;
 		const allowed = new Set(
-			stylesOfGenre(this.taxonomy, this.params.formGroup.value['genre']).map(
+			stylesOfGenre(this.taxonomy, formGroup.controls['genre'].value).map(
 				(style) => style.toLowerCase()
 			)
 		);
-		const selected: StyleName[] =
-			this.params.formGroup.value['styles'] ?? [];
+		const selected: StyleName[] = formGroup.controls['styles'].value ?? [];
 		const kept = selected.filter((style) =>
 			allowed.has(style.toLowerCase())
 		);
 
 		if (kept.length !== selected.length) {
-			this.params.formGroup.controls['styles'].setValue(kept);
+			formGroup.controls['styles'].setValue(kept);
 		}
 
 		this.params = {
 			...this.params,
-			styleList: this.styleList(this.params.formGroup),
+			styleList: this.styleList(formGroup),
 		};
 		this.params$$.next(this.params);
 	}

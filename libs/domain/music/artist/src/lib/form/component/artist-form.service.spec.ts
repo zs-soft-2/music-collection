@@ -1,4 +1,7 @@
-import { provideGenreTesting } from '@music-collection/domain/genre/testing';
+import {
+	genreOf,
+	provideGenreTesting,
+} from '@music-collection/domain/genre/testing';
 import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { of } from 'rxjs';
 
@@ -13,6 +16,7 @@ import {
 	ArtistStateService,
 	ArtistUtilService,
 	DocumentStateService,
+	GenreEntity,
 } from '@music-collection/api';
 
 import { ArtistFormService } from './artist-form.service';
@@ -68,14 +72,15 @@ let fetchExternalProfile$: jest.Mock;
 function setup(
 	catalog: ArtistEntity[],
 	edited: ArtistEntity | undefined,
-	external: ExternalStub = {}
+	external: ExternalStub = {},
+	taxonomy: GenreEntity[] = []
 ): ArtistFormService {
 	searchExternalArtists$ = jest.fn(() => of(external.candidates ?? []));
 	fetchExternalProfile$ = jest.fn(() => of(external.profile ?? null));
 	TestBed.configureTestingModule({
 		providers: [
 			provideI18nTesting(),
-			provideGenreTesting(),
+			provideGenreTesting(taxonomy),
 			ArtistFormService,
 			provideRouter([]),
 			{
@@ -108,6 +113,18 @@ const start = (service: ArtistFormService): ArtistFormParams => {
 	service.init$().subscribe((value) => (params = value));
 
 	return params;
+};
+
+/**
+ * The params as they stand right now. Editing the form emits a fresh set, so
+ * a test that changes a field has to ask again rather than hold the first one.
+ */
+const track = (service: ArtistFormService): (() => ArtistFormParams) => {
+	let params!: ArtistFormParams;
+
+	service.init$().subscribe((value) => (params = value));
+
+	return () => params;
 };
 
 describe('ArtistFormService', () => {
@@ -268,6 +285,43 @@ describe('ArtistFormService', () => {
 			expect(service.externalError()).toBe(
 				'No artist found for "Pariah".'
 			);
+		});
+	});
+	describe('the styles a genre offers', () => {
+		const taxonomy = [
+			genreOf('Rock', ['Thrash', 'Heavy Metal']),
+			genreOf('Jazz', ['Bebop', 'Fusion']),
+		];
+
+		it('narrows the list to the genre just picked', () => {
+			const params = track(setup([], undefined, {}, taxonomy));
+
+			params().formGroup.controls['genre'].setValue('Rock');
+
+			expect(params().styleList).toEqual(['Thrash', 'Heavy Metal']);
+		});
+
+		it('offers every style while no genre is chosen', () => {
+			const params = track(setup([], undefined, {}, taxonomy));
+
+			expect(params().styleList).toEqual([
+				'Bebop',
+				'Fusion',
+				'Heavy Metal',
+				'Thrash',
+			]);
+		});
+
+		it('lets go of the styles of the genre before it', () => {
+			const params = track(setup([], undefined, {}, taxonomy));
+			const formGroup = params().formGroup;
+
+			formGroup.controls['genre'].setValue('Rock');
+			formGroup.controls['styles'].setValue(['Thrash']);
+			formGroup.controls['genre'].setValue('Jazz');
+
+			expect(formGroup.controls['styles'].value).toEqual([]);
+			expect(params().styleList).toEqual(['Bebop', 'Fusion']);
 		});
 	});
 });
