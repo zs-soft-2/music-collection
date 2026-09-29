@@ -2,7 +2,11 @@ import { NgxPermissionsGuard } from 'ngx-permissions';
 
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { RoleNames } from '@music-collection/api';
+import {
+	RoleNames,
+	RolePermissionsService,
+	UserPermissionsService,
+} from '@music-collection/api';
 
 import { AdminComponent } from './admin.component';
 
@@ -186,6 +190,83 @@ const routes: Routes = [
 				loadComponent: () =>
 					import('./genre/genre-admin.component').then(
 						(module) => module.GenreAdminComponent
+					),
+				canActivate: [NgxPermissionsGuard],
+			},
+			{
+				// A szerepkörök szerkesztése a jogosultság írása maga: aki
+				// ide bejut, az osztja a permissionöket. Ezért a wildcard
+				// mellett csak az áll meg, akinek külön joga van rá.
+				path: 'role',
+				data: {
+					breadcrumb: 'role',
+					permissions: {
+						only: [
+							RoleNames.ADMIN,
+							RolePermissionsService.updateRoleEntity,
+						],
+						redirectTo: '/error',
+					},
+				},
+				loadComponent: () =>
+					import('./role/role-admin.component').then(
+						(module) => module.RoleAdminComponent
+					),
+				canActivate: [NgxPermissionsGuard],
+			},
+			{
+				// The editor is a page of its own so that a role has an
+				// address: one admin can send another the role in question.
+				path: 'role/new',
+				data: {
+					breadcrumb: 'role',
+					permissions: {
+						only: [
+							RoleNames.ADMIN,
+							RolePermissionsService.createRoleEntity,
+						],
+						redirectTo: '/error',
+					},
+				},
+				loadComponent: () =>
+					import('./role/edit/role-edit.component').then(
+						(module) => module.RoleEditComponent
+					),
+				canActivate: [NgxPermissionsGuard],
+			},
+			{
+				path: 'role/edit/:roleId',
+				data: {
+					breadcrumb: 'role',
+					permissions: {
+						only: [
+							RoleNames.ADMIN,
+							RolePermissionsService.updateRoleEntity,
+						],
+						redirectTo: '/error',
+					},
+				},
+				loadComponent: () =>
+					import('./role/edit/role-edit.component').then(
+						(module) => module.RoleEditComponent
+					),
+				canActivate: [NgxPermissionsGuard],
+			},
+			{
+				path: 'user',
+				data: {
+					breadcrumb: 'user',
+					permissions: {
+						only: [
+							RoleNames.ADMIN,
+							UserPermissionsService.updateUserEntity,
+						],
+						redirectTo: '/error',
+					},
+				},
+				loadComponent: () =>
+					import('./user/user-admin.component').then(
+						(module) => module.UserAdminComponent
 					),
 				canActivate: [NgxPermissionsGuard],
 			},

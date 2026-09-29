@@ -229,6 +229,7 @@ service cloud.firestore {
         'membership': 'MembershipEntity',
         'music-collection': 'MusicCollectionEntity',
         'genre': 'GenreEntity',
+        'role': 'RoleEntity',
         'user': 'UserEntity',
         'entity-quantity': 'EntityQuantityEntity',
         'collection-item': 'CollectionItemEntity',
@@ -263,6 +264,22 @@ service cloud.firestore {
                   && request.resource.data.description.size() <= 500))
           && (!('active' in request.resource.data)
               || request.resource.data.active is bool);
+    }
+
+    // Egy szerepkör dokumentum alakja. A permission-lista az, amiből a
+    // szerveroldali szinkron az effektív jogosultságot számolja, ezért kap
+    // korlátot: a felület száznál kevesebbet kínál, és egy elszabadult írás
+    // ne tudja megfeküdni minden érintett user szinkron-dokumentumát.
+    function isValidRole() {
+      return request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.name.size() <= 60
+          && request.resource.data.permissions is list
+          && request.resource.data.permissions.size() <= 200
+          && (!('description' in request.resource.data)
+              || request.resource.data.description == null
+              || (request.resource.data.description is string
+                  && request.resource.data.description.size() <= 500));
     }
 
     // A gyűjtő saját entitásának collectionje: `owned-` előtag, és csak a
@@ -306,8 +323,8 @@ service cloud.firestore {
     // ── Jogosultság: szerepkör, user, effektív permissionök ─────────────────
     match /role/{roleId} {
       allow get, list: if isAuthed();
-      allow create: if hasPerm('createRoleEntity');
-      allow update: if hasPerm('updateRoleEntity');
+      allow create: if hasPerm('createRoleEntity') && isValidRole();
+      allow update: if hasPerm('updateRoleEntity') && isValidRole();
       allow delete: if hasPerm('deleteRoleEntity');
     }
 

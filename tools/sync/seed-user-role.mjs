@@ -11,6 +11,10 @@
  * —, és a szerepkör-dokumentumot hozza létre, ami nélkül a szerepkör semmit
  * nem ér.
  *
+ * A szerepkör-írások is bélyeget kapnak és bumpolják a `role` feature
+ * verzióját: a kliens (admin felület) a szinkron-wrapperen át listázza a
+ * szerepköröket, és enélkül a cache-ében maradna a régi lista.
+ *
  * A szerepkört név vagy azonosító alapján keresi (az admin felületen létrehozott
  * szerepkör azonosítója generált). Ha nincs, `role/USER` néven létrehozza; ha
  * van, a hiányzó alapjogokat hozzáadja, a meglévőket nem veszi el. Utána
@@ -111,7 +115,8 @@ if (!existing.length) {
 	if (options.confirm) {
 		await database
 			.doc(`role/${ROLE}`)
-			.set({ uid: ROLE, name: ROLE, permissions: PERMISSIONS });
+			.set(stamp({ uid: ROLE, name: ROLE, permissions: PERMISSIONS }));
+		await touchCatalog(database, ['role']);
 	}
 } else {
 	const [role] = existing;
@@ -126,9 +131,10 @@ if (!existing.length) {
 		console.log(`role/${role.id}: hozzáadás — ${missing.join(', ')}`);
 
 		if (options.confirm) {
-			await role.ref.update({
-				permissions: FieldValue.arrayUnion(...missing),
-			});
+			await role.ref.update(
+				stamp({ permissions: FieldValue.arrayUnion(...missing) })
+			);
+			await touchCatalog(database, ['role']);
 		}
 	}
 }

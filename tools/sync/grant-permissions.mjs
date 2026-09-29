@@ -28,6 +28,7 @@ import { applicationDefault, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { FieldValue, getFirestore } from 'firebase-admin/firestore';
 
+import { stamp, touchCatalog } from './catalog-sync.mjs';
 import { readEnvironment } from './environment.mjs';
 
 const { values: options } = parseArgs({
@@ -64,11 +65,17 @@ const roleReference = database.doc(`role/${options.role}`);
 const roleSnapshot = await roleReference.get();
 
 if (!roleSnapshot.exists) {
-	await roleReference.set({
-		uid: options.role,
-		name: options.role.toUpperCase(),
-		permissions,
-	});
+	// Bélyeggel és verzió-bumppal, mert az admin felület a szinkron-
+	// wrapperen át listázza a szerepköröket: enélkül a már betöltött
+	// kliensek cache-ében nem jelenne meg az új szerepkör.
+	await roleReference.set(
+		stamp({
+			uid: options.role,
+			name: options.role.toUpperCase(),
+			permissions,
+		})
+	);
+	await touchCatalog(database, ['role']);
 	console.log(`role/${options.role}: létrehozva`);
 } else {
 	console.log(
@@ -79,7 +86,10 @@ if (!roleSnapshot.exists) {
 // 2. A szerepkör hozzáadása a userhez.
 await database
 	.doc(`user/${options.uid}`)
-	.set({ roleIds: FieldValue.arrayUnion(options.role) }, { merge: true });
+	.set(stamp({ roleIds: FieldValue.arrayUnion(options.role) }), {
+		merge: true,
+	});
+await touchCatalog(database, ['user']);
 console.log(`user/${options.uid}.roleIds: ${options.role} hozzáadva`);
 
 // 3. Effektív jogosultságok — ugyanaz az eredmény, mint a functioné.

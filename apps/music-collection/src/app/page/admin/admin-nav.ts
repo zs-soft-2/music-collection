@@ -105,6 +105,22 @@ export const ADMIN_NAV: AdminNavGroup[] = [
 		],
 	},
 	{
+		labelKey: 'admin.nav.access',
+		items: [
+			{
+				labelKey: 'admin.nav.roles',
+				route: 'role',
+				icon: 'pi-key',
+				createLabelKey: 'admin.role.add',
+			},
+			{
+				labelKey: 'admin.nav.users',
+				route: 'user',
+				icon: 'pi-users',
+			},
+		],
+	},
+	{
 		labelKey: 'admin.nav.system',
 		items: [
 			{
