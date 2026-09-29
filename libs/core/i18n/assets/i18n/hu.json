@@ -2530,7 +2530,9 @@
 			"in-use": "A katalógusban van előadó ezzel a műfajjal, ezért nem törölhető. Vond vissza helyette: így lekerül a formokról, de a mentett stílusok megtartják a műfajukat.",
 			"empty": "Még egy műfaj sincs. Vedd fel az elsőt — a formok ebből a listából választanak.",
 			"genres": "műfaj",
-			"styles-total": "stílus"
+			"styles-total": "stílus",
+			"style-hint": "Írd be a stílus nevét, és nyomj Entert. Vesszővel többet is felvehetsz egyszerre.",
+			"actions": "Műveletek"
 		},
 		"field": {
 			"albums": "Albumok",

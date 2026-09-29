@@ -2,7 +2,7 @@ import { exhaustMap, of, pipe, switchMap, tap } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
 import { GenreDraft, GenreEntity } from '@music-collection/api';
-import { GENRE_IN_USE, GenreEffect } from '@music-collection/domain/genre';
+import { GenreEffect } from '@music-collection/domain/genre';
 import { tapResponse } from '@ngrx/operators';
 import {
 	patchState,
@@ -23,8 +23,12 @@ interface GenreEdit {
 interface GenreAdminState {
 	genres: GenreEntity[];
 	isLoading: boolean;
-	/** Null while the list is only being read. */
-	edit: GenreEdit | null;
+	/**
+	 * The genre being written, null while the list is only being read. Named
+	 * apart from the `edit` method: a store's methods and its state share one
+	 * namespace, and the method would shadow the signal.
+	 */
+	editor: GenreEdit | null;
 	/** The genre the delete confirmation is open for. */
 	pendingDeletion: GenreEntity | null;
 	isSaving: boolean;
@@ -43,7 +47,7 @@ const EMPTY_DRAFT: GenreDraft = {
 const initialState: GenreAdminState = {
 	genres: [],
 	isLoading: true,
-	edit: null,
+	editor: null,
 	pendingDeletion: null,
 	isSaving: false,
 	error: null,
@@ -67,11 +71,13 @@ export const GenreAdminStore = signalStore(
 	withComputed((store) => ({
 		/** How many styles the taxonomy holds altogether. */
 		styleCount: computed(() =>
-			store.genres().reduce((total, genre) => total + genre.styles.length, 0)
+			store
+				.genres()
+				.reduce((total, genre) => total + genre.styles.length, 0)
 		),
 		/** Whether the genre being written can be saved as it stands. */
 		canSave: computed(() => {
-			const edit = store.edit();
+			const edit = store.editor();
 
 			if (!edit?.draft.name.trim()) {
 				return false;
@@ -108,7 +114,7 @@ export const GenreAdminStore = signalStore(
 		/** Opens an existing genre for editing. */
 		edit: (genre: GenreEntity) =>
 			patchState(store, {
-				edit: {
+				editor: {
 					uid: genre.uid,
 					draft: {
 						name: genre.name,
@@ -124,57 +130,37 @@ export const GenreAdminStore = signalStore(
 		/** Opens an empty genre. */
 		add: () =>
 			patchState(store, {
-				edit: { uid: null, draft: { ...EMPTY_DRAFT, styles: [] } },
+				editor: { uid: null, draft: { ...EMPTY_DRAFT, styles: [] } },
 				error: null,
 				savedAt: null,
 			}),
 
-		cancel: () => patchState(store, { edit: null, error: null }),
+		cancel: () => patchState(store, { editor: null, error: null }),
 
-		setName: (name: string) => patchState(store, patchDraft(store, { name })),
+		setName: (name: string) =>
+			patchState(store, patchDraft(store, { name })),
 		setDescription: (description: string) =>
-			patchState(store, patchDraft(store, { description: description || null })),
+			patchState(
+				store,
+				patchDraft(store, { description: description || null })
+			),
 		setActive: (active: boolean) =>
 			patchState(store, patchDraft(store, { active })),
 
 		/**
-		 * Adds a style to the genre being written. A name the genre already
-		 * holds is ignored rather than refused: the admin's intent is met
-		 * either way, and the list stays a set.
+		 * The styles of the genre being written, as the chips field hands them
+		 * over. It normalises rather than refuses what was typed: the field
+		 * takes any word, and two spellings of one style would stand on the
+		 * forms as two styles.
 		 */
-		addStyle: (name: string) => {
-			const style = name.trim();
-			const styles = store.edit()?.draft.styles ?? [];
-
-			if (!style || styles.some((held) => sameName(held, style))) {
-				return;
-			}
-
-			patchState(
-				store,
-				patchDraft(store, {
-					styles: [...styles, style].sort((left, right) =>
-						left.localeCompare(right)
-					),
-				})
-			);
-		},
-
-		removeStyle: (name: string) =>
-			patchState(
-				store,
-				patchDraft(store, {
-					styles: (store.edit()?.draft.styles ?? []).filter(
-						(style) => !sameName(style, name)
-					),
-				})
-			),
+		setStyles: (names: string[]) =>
+			patchState(store, patchDraft(store, { styles: toStyleSet(names) })),
 
 		save: rxMethod<void>(
 			pipe(
 				tap(() => patchState(store, { isSaving: true, error: null })),
 				exhaustMap(() => {
-					const edit = store.edit();
+					const edit = store.editor();
 
 					if (!edit) {
 						return of(null);
@@ -189,7 +175,7 @@ export const GenreAdminStore = signalStore(
 						// The list redraws itself from the cache; only the
 						// editor closes here.
 						patchState(store, {
-							edit: null,
+							editor: null,
 							isSaving: false,
 							savedAt: Date.now(),
 						}),
@@ -229,12 +215,12 @@ export const GenreAdminStore = signalStore(
 						}),
 					error: (error: Error) => {
 						console.error(error);
+						// A genre the catalog still names arrives as
+						// `GENRE_IN_USE`, which the page has a sentence of its
+						// own for: retire it instead of deleting it.
 						patchState(store, {
 							isSaving: false,
-							error:
-								error.message === GENRE_IN_USE
-									? GENRE_IN_USE
-									: error.message,
+							error: error.message,
 						});
 					},
 				})
@@ -248,12 +234,27 @@ export const GenreAdminStore = signalStore(
 
 /** The state patch that changes fields of the genre being written. */
 function patchDraft(
-	store: { edit: () => GenreEdit | null },
+	store: { editor: () => GenreEdit | null },
 	fields: Partial<GenreDraft>
 ): Partial<GenreAdminState> {
-	const edit = store.edit();
+	const editor = store.editor();
 
-	return edit
-		? { edit: { ...edit, draft: { ...edit.draft, ...fields } } }
+	return editor
+		? { editor: { ...editor, draft: { ...editor.draft, ...fields } } }
 		: {};
+}
+
+/** Trimmed, a set however the styles are cased, in alphabetical order. */
+function toStyleSet(names: string[]): string[] {
+	const styles: string[] = [];
+
+	for (const name of names) {
+		const style = name.trim();
+
+		if (style && !styles.some((held) => sameName(held, style))) {
+			styles.push(style);
+		}
+	}
+
+	return styles.sort((left, right) => left.localeCompare(right));
 }

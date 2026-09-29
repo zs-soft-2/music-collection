@@ -2530,7 +2530,9 @@
 			"in-use": "An artist in the catalog carries this genre, so it cannot be deleted. Retire it instead: it leaves the forms, and the styles already saved keep their genre.",
 			"empty": "No genre yet. Add the first one — the forms choose from this list.",
 			"genres": "genres",
-			"styles-total": "styles"
+			"styles-total": "styles",
+			"style-hint": "Type a style and press Enter. A comma takes several at once.",
+			"actions": "Actions"
 		},
 		"field": {
 			"albums": "Albums",

@@ -2530,7 +2530,9 @@
 			"in-use": "Ein Interpret im Katalog trägt dieses Genre, es kann daher nicht gelöscht werden. Ziehe es stattdessen zurück: es verschwindet aus den Formularen, die gespeicherten Stile behalten ihr Genre.",
 			"empty": "Noch kein Genre. Lege das erste an — die Formulare wählen aus dieser Liste.",
 			"genres": "Genres",
-			"styles-total": "Stile"
+			"styles-total": "Stile",
+			"style-hint": "Stil eintippen und Enter drücken. Ein Komma nimmt mehrere auf einmal.",
+			"actions": "Aktionen"
 		},
 		"field": {
 			"albums": "Alben",
