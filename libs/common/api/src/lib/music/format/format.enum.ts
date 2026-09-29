@@ -20,6 +20,8 @@ export enum FormatDescriptionEnum {
 	boxSet = 'box set',
 	deluxeEdition = 'deluxe edition',
 	g180 = '180g',
+	/** A jacket that folds open — and on a shelf, a visibly wider spine. */
+	gatefold = 'gatefold',
 	limitedEdition = 'limited edition',
 	pictureDisc = 'picture disc',
 	reissue = 'reissue',
@@ -30,6 +32,7 @@ export const FormatDescriptionList: FormatDescriptionEnum[] = [
 	FormatDescriptionEnum.boxSet,
 	FormatDescriptionEnum.deluxeEdition,
 	FormatDescriptionEnum.g180,
+	FormatDescriptionEnum.gatefold,
 	FormatDescriptionEnum.limitedEdition,
 	FormatDescriptionEnum.pictureDisc,
 	FormatDescriptionEnum.reissue,

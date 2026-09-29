@@ -1,13 +1,12 @@
 import {
 	CollectionItemPlacement,
-	SHELF_MEDIA_SIZES,
 	ShelfMediaSize,
 	ShelfSpot,
 	maxPositionIn,
 	nextPosition,
 	placementKey,
 	placementInLayout,
-	shelfMediaSize,
+	shelfCopySize,
 	spotKey,
 	unitSpots,
 } from '@music-collection/api';
@@ -38,11 +37,20 @@ export {
  * How much room this copy takes on a shelf. A release filed as a box set —
  * or only tagged as one — is measured as the slab it is, however its medium
  * is recorded, which is the same rule the shelf draws its spines by.
+ *
+ * Everything else is its medium plus its packaging, read off the edition
+ * tags the pressing carries. A record is not one width in a real room, and
+ * the ones the catalog knows about are the ones it can show: a gatefold
+ * jacket, a deluxe edition, a heavy pressing. An untagged copy stands at the
+ * plain width rather than at a made-up one.
  */
 export function shelfSizeOf(release: ReleaseView): ShelfMediaSize {
-	return release.boxSet
-		? SHELF_MEDIA_SIZES.boxset
-		: shelfMediaSize(release.format);
+	return shelfCopySize(release.format, {
+		boxSet: release.boxSet,
+		gatefold: release.editions.includes('gatefold'),
+		deluxe: release.editions.includes('deluxe edition'),
+		heavy: release.weight !== null,
+	});
 }
 
 /** The same compartment, the same distance along it. */

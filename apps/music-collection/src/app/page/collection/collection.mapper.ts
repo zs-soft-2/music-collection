@@ -12,7 +12,11 @@ import {
 	ShelfCompartmentView,
 	ShelfUnitView,
 } from './collection.model';
-import { DEFAULT_CUBBY, ShelfCubby, ShelfUnitLayout } from './shelf-layout.setting';
+import {
+	DEFAULT_CUBBY,
+	ShelfCubby,
+	ShelfUnitLayout,
+} from './shelf-layout.setting';
 import {
 	placementInLayout,
 	placementKey,
@@ -196,9 +200,9 @@ export function collectionStats(releases: ReleaseView[]): CollectionStats {
  * Packs the records into compartments of the sizes given, keeping order.
  *
  * A compartment fills by *length*: every copy eats its own spine thickness,
- * so a cubby that takes thirty-six LPs takes far more CDs and fewer box
- * sets. It fills until the next record would not go in, and the rest
- * continue in the compartment after it.
+ * so a cubby that takes fifty-odd plain LPs takes far more CDs, fewer
+ * gatefolds and fewer box sets still. It fills until the next record would
+ * not go in, and the rest continue in the compartment after it.
  *
  * Height is the other half of it, and the reason a record can be passed
  * over: an LP offered a CD rack simply stays in the queue and waits for a
@@ -288,7 +292,8 @@ function numberRuns(compartments: ReleaseGroup[]): ReleaseGroup[] {
 		if (!compartment.label) {
 			return compartment;
 		}
-		const same = (at: number) => compartments[at]?.label === compartment.label;
+		const same = (at: number) =>
+			compartments[at]?.label === compartment.label;
 		let from = index;
 		let to = index;
 
@@ -479,7 +484,9 @@ export function arrangeShelves(
 		});
 	}
 
-	const spilled = packed.slice(open.length).filter((group) => group.items.length);
+	const spilled = packed
+		.slice(open.length)
+		.filter((group) => group.items.length);
 
 	if (spilled.length) {
 		shelves.push({

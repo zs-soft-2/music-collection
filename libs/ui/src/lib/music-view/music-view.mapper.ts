@@ -24,6 +24,7 @@ import {
 export const EDITION_TAGS: EditionTag[] = [
 	'limited edition',
 	'deluxe edition',
+	'gatefold',
 	'reissue',
 	'remastered',
 	'box set',

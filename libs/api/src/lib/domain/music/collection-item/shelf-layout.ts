@@ -17,7 +17,7 @@ import { CollectionItemPlacement } from './collection-item';
  * because nobody measures a shelf to the centimetre and the media come in a
  * handful of heights anyway: a cassette is 2 (8 cm), a CD 3 (12 cm), a DVD 5
  * (20 cm) and an LP 8 (32 cm). Length is kept in millimetres, because an LP
- * sleeve is five of them and a compartment counted in whole centimetres would
+ * sleeve is six of them and a compartment counted in whole centimetres would
  * lose a record every time.
  */
 export const SHELF_HEIGHT_UNIT_CM = 4;
@@ -43,9 +43,16 @@ export type ShelfMedia = 'vinyl' | 'cd' | 'cassette' | 'dvd' | 'boxset';
  * spines themselves — an LP sleeve is the thinnest thing on the shelf and a
  * cassette case the chunkiest, which is why a cassette rack holds fewer
  * copies per metre than a record shelf does.
+ *
+ * The thickness is the *plainest* copy of that medium: one record in one
+ * single sleeve, one disc in one jewel case. It is a floor, not an average
+ * — what the packaging adds on top of it is `SHELF_SLEEVE_EXTRA`. Six
+ * millimetres for a record is what a tape measure says: a hundred LPs make
+ * a run of shelf about sixty centimetres long, so a Kallax cubby takes
+ * fifty-odd of them and not the seventy the cardboard alone would suggest.
  */
 export const SHELF_MEDIA_SIZES: Record<ShelfMedia, ShelfMediaSize> = {
-	vinyl: { height: 8, thickness: 5 },
+	vinyl: { height: 8, thickness: 6 },
 	boxset: { height: 8, thickness: 30 },
 	dvd: { height: 5, thickness: 14 },
 	cd: { height: 3, thickness: 10 },
@@ -69,16 +76,87 @@ export const SHELF_MEDIA: ShelfMedia[] = [
 	'cassette',
 ];
 
-/** The thinnest spine there is, which is what a compartment holds most of. */
-const THINNEST = Math.min(
-	...SHELF_MEDIA.map((media) => SHELF_MEDIA_SIZES[media].thickness)
-);
+/**
+ * The tightest a spine can be squeezed, which is what a compartment can be
+ * made to hold most of. Deliberately thinner than the plainest sleeve the
+ * shelf measures by: a collector who packs a cubby until the cardboard
+ * creaks gets more in than a tape measure allows for, and `maxPositionIn`
+ * is there to catch nonsense, not to tell them they are wrong.
+ *
+ * It is also why this is a number of its own rather than the thinnest
+ * `SHELF_MEDIA_SIZES` entry. Re-measuring a medium must not narrow the
+ * bound: a shelf someone has already arranged by hand would lose whatever
+ * stands past the new limit.
+ */
+const TIGHTEST_SPINE = 5;
 
 /** What one copy of this medium takes up, whatever word it arrived as. */
 export function shelfMediaSize(media: unknown): ShelfMediaSize {
 	return typeof media === 'string' && media in SHELF_MEDIA_SIZES
 		? SHELF_MEDIA_SIZES[media as ShelfMedia]
 		: UNKNOWN_MEDIA_SIZE;
+}
+
+/**
+ * What is known about one copy, beyond its medium, that makes it wider than
+ * the plain thing. Nothing here is about the music: it is all cardboard.
+ */
+export interface ShelfSleeve {
+	/** Packed as a box set: a slab, whatever medium is inside it. */
+	boxSet?: boolean;
+	/**
+	 * A jacket that folds open. Two boards instead of one, and more often
+	 * than not a second record between them — which is why it is the biggest
+	 * step on a record shelf short of a box.
+	 */
+	gatefold?: boolean;
+	/** A deluxe edition: the booklet, the poster and the insert go with it. */
+	deluxe?: boolean;
+	/** Heavy vinyl (180 g): a thicker record, usually a sturdier jacket. */
+	heavy?: boolean;
+}
+
+/**
+ * What each of those adds to a spine, in millimetres. They add up, because
+ * on a shelf they do: a 180 g record in a gatefold jacket really is the
+ * width of both.
+ */
+export const SHELF_SLEEVE_EXTRA: Record<
+	Exclude<keyof ShelfSleeve, 'boxSet'>,
+	number
+> = {
+	gatefold: 4,
+	deluxe: 3,
+	heavy: 1,
+};
+
+/**
+ * How much shelf one copy eats — the medium, plus whatever its packaging
+ * adds. A box set is not widened but replaced: it is measured as the slab it
+ * is however its medium is recorded, because that is the one case where the
+ * packaging *is* the thing on the shelf.
+ *
+ * A copy nobody has tagged comes out at the plain width, which is the honest
+ * answer: the shelf draws what is known about a record, not a guess at what
+ * the jacket might be.
+ */
+export function shelfCopySize(
+	media: unknown,
+	sleeve: ShelfSleeve = {}
+): ShelfMediaSize {
+	if (sleeve.boxSet) {
+		return SHELF_MEDIA_SIZES.boxset;
+	}
+
+	const size = shelfMediaSize(media);
+	const extra = (
+		Object.keys(SHELF_SLEEVE_EXTRA) as (keyof typeof SHELF_SLEEVE_EXTRA)[]
+	).reduce(
+		(sum, trait) => sum + (sleeve[trait] ? SHELF_SLEEVE_EXTRA[trait] : 0),
+		0
+	);
+
+	return extra ? { ...size, thickness: size.thickness + extra } : size;
 }
 
 /**
@@ -147,13 +225,13 @@ export function cubbyHolds(cubby: ShelfCubby, media: unknown): number {
 
 /**
  * The furthest along a compartment a copy can be filed: what it would hold
- * if it were packed with nothing but the thinnest sleeves there are. A copy
- * filed by hand is the collector's business — they may leave a compartment
- * half empty or squeeze it — so this is a bound against nonsense rather than
- * a capacity.
+ * packed as tight as a compartment can be packed. A copy filed by hand is
+ * the collector's business — they may leave a compartment half empty or
+ * squeeze it — so this is a bound against nonsense rather than a capacity,
+ * and it is measured by `TIGHTEST_SPINE` rather than by any real sleeve.
  */
 export function maxPositionIn(unit: ShelfUnitLayout): number {
-	return Math.max(1, Math.floor(unit.cubby.length / THINNEST));
+	return Math.max(1, Math.floor(unit.cubby.length / TIGHTEST_SPINE));
 }
 
 /** One compartment of a drawn unit, as a placement picker offers it. */

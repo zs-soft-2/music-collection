@@ -86,11 +86,24 @@ describe('toOwnedCopies', () => {
 	it('drops a tag the catalog does not know', () => {
 		const copies = toOwnedCopies([
 			copy('a', 'new-order', null, {
-				formatDescription: ['gatefold', FormatDescriptionEnum.boxSet],
+				formatDescription: [
+					'coloured vinyl',
+					FormatDescriptionEnum.boxSet,
+				],
 			}),
 		]);
 
 		expect(copies[0].editions).toEqual([FormatDescriptionEnum.boxSet]);
+	});
+
+	it('keeps the gatefold jacket, which the shelf measures by', () => {
+		const copies = toOwnedCopies([
+			copy('a', 'new-order', null, {
+				formatDescription: [FormatDescriptionEnum.gatefold],
+			}),
+		]);
+
+		expect(copies[0].editions).toEqual([FormatDescriptionEnum.gatefold]);
 	});
 
 	it('counts a copy filed under the box set medium as a box set', () => {

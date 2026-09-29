@@ -126,29 +126,50 @@ function runsOf(cubby: ShelfCubby): number {
 
 /**
  * Breaks a compartment's copies into the boards they are drawn on, each one
- * a board's worth of shelf. An empty compartment keeps one board, so the
- * furniture still shows the shape the collector drew.
+ * a board's worth of shelf, and never more of them than the compartment is
+ * long: a compartment the collector squeezed fuller than the tape allows —
+ * which one filed by hand may well be — does not grow a board it has not
+ * got. Its last board takes the remainder and the spines shrink into it,
+ * which is exactly what an overstuffed cubby looks like in a real room.
  */
 function toBoards(spines: Spine[], cubby: ShelfCubby): Spine[][] {
 	const per = Math.min(cubby.length, BOARD_MM);
-	const boards: Spine[][] = [];
-	let board: Spine[] = [];
+	const most = runsOf(cubby);
+	const boards: Spine[][] = [[]];
 	let used = 0;
 
 	for (const spine of spines) {
-		if (board.length && used + spine.mm > per) {
-			boards.push(board);
-			board = [];
-			used = 0;
+		const board = boards[boards.length - 1];
+
+		if (board.length && used + spine.mm > per && boards.length < most) {
+			boards.push([spine]);
+			used = spine.mm;
+			continue;
 		}
 		board.push(spine);
 		used += spine.mm;
 	}
-	if (board.length) {
-		boards.push(board);
-	}
 
-	return boards.length ? boards : [[]];
+	return boards;
+}
+
+/**
+ * The same compartment drawn over a set number of runs, the trailing ones
+ * bare.
+ *
+ * Compartments are cells of one grid, so they share a height whether they
+ * like it or not. Left to themselves a half-empty one would be drawn short
+ * and stand over a hole the height of its neighbour's second run. So the
+ * fullest compartment of a unit says how many runs the unit is drawn over,
+ * and the emptier ones show the rest of their shelf standing empty — which
+ * is what it is.
+ *
+ * It is the fullest one and not the cubby's full length on purpose: a three
+ * metre compartment holding eight CDs is drawn as the one run they stand on,
+ * not as nine runs of darkness.
+ */
+function overRuns(boards: Spine[][], runs: number): Spine[][] {
+	return Array.from({ length: runs }, (_, at) => boards[at] ?? []);
 }
 
 /** Takes the drop away from the browser, which would follow the link. */
@@ -211,7 +232,41 @@ export class RecordShelfComponent {
 		this.shelves().map((shelf) => {
 			const down = shelf.cubby.stance === 'down';
 			const board = boardOf(shelf.cubby);
-			const runs = down ? runsOf(shelf.cubby) : 1;
+			const filled = shelf.compartments.map((group) => {
+				const spines = group.items.map((release) => {
+					const size = shelfSizeOf(release);
+					const along = size.thickness * PX_PER_MM;
+					const across = size.height * PX_PER_HEIGHT_UNIT;
+
+					return {
+						release,
+						// A spine on the shelf is a copy the collector
+						// owns, so pulling it out opens that copy rather
+						// than the album.
+						href: this.router.serializeUrl(
+							this.router.createUrlTree([
+								'/collection',
+								'copy',
+								release.id,
+							])
+						),
+						width: down ? across : along,
+						height: down ? along : across,
+						mm: size.thickness,
+						readable: along >= READABLE_PX,
+						hue: hueOf(release.title + release.artistName),
+					};
+				});
+
+				return { group, spines, boards: toBoards(spines, shelf.cubby) };
+			});
+			/* What the fullest compartment needs, which they all are drawn to. */
+			const runs = Math.max(
+				1,
+				...filled.map(({ boards }) => boards.length)
+			);
+			/* A tower's runs stand side by side; a shelf's stack up. */
+			const wide = down ? runs : 1;
 
 			return {
 				key: shelf.key,
@@ -220,46 +275,19 @@ export class RecordShelfComponent {
 				overflow: shelf.overflow,
 				down,
 				board,
-				width: board.width * runs + (runs - 1) * BOARD_GAP,
+				width: board.width * wide + (wide - 1) * BOARD_GAP,
 				albumIds: shelf.compartments.flatMap((group) =>
 					group.items.map((release) => release.albumId)
 				),
-				compartments: shelf.compartments.map((group) => {
-					const spines = group.items.map((release) => {
-						const size = shelfSizeOf(release);
-						const along = size.thickness * PX_PER_MM;
-						const across = size.height * PX_PER_HEIGHT_UNIT;
-
-						return {
-							release,
-							// A spine on the shelf is a copy the collector
-							// owns, so pulling it out opens that copy rather
-							// than the album.
-							href: this.router.serializeUrl(
-								this.router.createUrlTree([
-									'/collection',
-									'copy',
-									release.id,
-								])
-							),
-							width: down ? across : along,
-							height: down ? along : across,
-							mm: size.thickness,
-							readable: along >= READABLE_PX,
-							hue: hueOf(release.title + release.artistName),
-						};
-					});
-
-					return {
-						key: group.key,
-						label: group.label,
-						empty: !spines.length,
-						spot: group.spot,
-						albumIds: group.items.map((release) => release.albumId),
-						spines,
-						boards: toBoards(spines, shelf.cubby),
-					};
-				}),
+				compartments: filled.map(({ group, spines, boards }) => ({
+					key: group.key,
+					label: group.label,
+					empty: !spines.length,
+					spot: group.spot,
+					albumIds: group.items.map((release) => release.albumId),
+					spines,
+					boards: overRuns(boards, runs),
+				})),
 			};
 		})
 	);

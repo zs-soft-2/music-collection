@@ -18,6 +18,7 @@ export type MediaFormat =
 export type EditionTag =
 	| 'limited edition'
 	| 'deluxe edition'
+	| 'gatefold'
 	| 'reissue'
 	| 'remastered'
 	| 'box set'

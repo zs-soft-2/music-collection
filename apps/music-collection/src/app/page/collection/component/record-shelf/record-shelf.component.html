@@ -180,8 +180,17 @@
 								}
 							</div>
 						} @placeholder {
+							<!--
+								The same boards, bare: a compartment must not
+								change height as it comes into view.
+							-->
 							<div class="cubby">
-								<div class="board"></div>
+								@for (
+									board of compartment.boards;
+									track $index
+								) {
+									<div class="board"></div>
+								}
 							</div>
 						}
 					</section>

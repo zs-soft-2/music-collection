@@ -109,10 +109,10 @@ describe('maxPositionIn', () => {
 });
 
 describe('shelfSizeOf', () => {
-	it('measures a copy by its medium', () => {
+	it('measures a plain copy by its medium', () => {
 		expect(shelfSizeOf(record('a'))).toEqual({
 			height: 8,
-			thickness: 5,
+			thickness: 6,
 		});
 	});
 
@@ -121,6 +121,22 @@ describe('shelfSizeOf', () => {
 			height: 8,
 			thickness: 30,
 		});
+	});
+
+	it('widens a gatefold jacket over the plain sleeve', () => {
+		expect(
+			shelfSizeOf({ ...record('a'), editions: ['gatefold'] }).thickness
+		).toBe(10);
+	});
+
+	it('adds up what the packaging of one copy comes to', () => {
+		expect(
+			shelfSizeOf({
+				...record('a'),
+				editions: ['gatefold', 'deluxe edition'],
+				weight: 180,
+			}).thickness
+		).toBe(14);
 	});
 });
 

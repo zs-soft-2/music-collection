@@ -11,7 +11,7 @@ import { ShelfCubby, ShelfUnitLayout } from './shelf-layout.setting';
  * is which compartment a record lands in, not how many go in one, so the
  * furniture is drawn to make every record fill a cubby of its own.
  */
-const ONE_RECORD: ShelfCubby = { height: 8, length: 5, stance: 'across' };
+const ONE_RECORD: ShelfCubby = { height: 8, length: 6, stance: 'across' };
 
 function release(
 	id: string,
@@ -189,9 +189,9 @@ describe('arrangeShelves, by what a compartment holds', () => {
 			[unit('one', 1, 2, kallax)]
 		);
 
-		/* 330 mm at 5 mm a sleeve, and the rest in the next compartment. */
-		expect(shelves[0].compartments[0].items).toHaveLength(66);
-		expect(shelves[0].compartments[1].items).toHaveLength(4);
+		/* 330 mm at 6 mm a sleeve, and the rest in the next compartment. */
+		expect(shelves[0].compartments[0].items).toHaveLength(55);
+		expect(shelves[0].compartments[1].items).toHaveLength(15);
 	});
 
 	it('takes far more CDs than records into the same compartment', () => {

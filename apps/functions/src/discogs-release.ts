@@ -56,6 +56,7 @@ const DESCRIPTIONS: Record<string, string> = {
 	'deluxe edition': 'deluxe edition',
 	'180 gram': '180g',
 	'180g': '180g',
+	gatefold: 'gatefold',
 	'limited edition': 'limited edition',
 	'picture disc': 'picture disc',
 	reissue: 'reissue',

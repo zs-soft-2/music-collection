@@ -140,12 +140,12 @@ describe('shelfCapacity', () => {
 	it('measures a Kallax cubby by the records that go in it', () => {
 		const room = shelfCapacity([unit('a', 1, 1)], { vinyl: 100 });
 
-		/* 330 mm of shelf at 5 mm a sleeve. */
+		/* 330 mm of shelf at 6 mm a sleeve. */
 		expect(room).toMatchObject({
 			compartments: 1,
 			length: 330,
-			holds: 66,
-			short: 34,
+			holds: 55,
+			short: 45,
 		});
 	});
 
@@ -169,17 +169,17 @@ describe('shelfCapacity', () => {
 	it('spends the CD rack on CDs rather than on records a shelf would take', () => {
 		const room = shelfCapacity(
 			[unit('shelf', 1, 1), unit('rack', 1, 1, cubby(3, 330))],
-			{ vinyl: 60, cd: 30 }
+			{ vinyl: 55, cd: 30 }
 		);
 
 		/* Both fit: the records on the shelf, the CDs in the rack. */
-		expect(room).toMatchObject({ holds: 90, short: 0 });
-		expect(room.filled).toEqual([60, 30]);
+		expect(room).toMatchObject({ holds: 85, short: 0 });
+		expect(room.filled).toEqual([55, 30]);
 	});
 
 	it('says which compartments the collection reaches', () => {
 		expect(shelfCapacity([unit('a', 1, 3)], { vinyl: 70 }).filled).toEqual([
-			66, 4, 0,
+			55, 15, 0,
 		]);
 	});
 });
