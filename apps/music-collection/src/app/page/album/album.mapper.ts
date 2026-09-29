@@ -124,28 +124,10 @@ export interface WishlistDraft {
 	sourceLink: string | null;
 }
 
-export const DISPOSAL_REASON_LABELS: Record<
-	CollectionItemDisposalReason,
-	string
-> = {
-	sold: 'Sold',
-	traded: 'Traded',
-	gifted: 'Given away',
-	lost: 'Lost',
-	other: 'Other',
-};
-
-/** What the collector tells about a copy leaving the collection. */
-export interface DisposalDraft {
-	reason: CollectionItemDisposalReason;
-	/** When it left (epoch ms). */
-	date: number;
-	note: string | null;
-}
-
 /** A copy gone from the collection. */
 export interface PastCopyView extends ReleaseView {
-	reason: string;
+	/** Why it left, as the dictionary keys it: `sold`, `traded`, `lost`… */
+	reason: CollectionItemDisposalReason;
 	/** When it left (epoch ms). */
 	disposedAt: number;
 	note: string | null;
@@ -576,10 +558,7 @@ export function toPendingRequestView(
 export function toPastCopyView(item: CollectionItemEntity): PastCopyView {
 	return {
 		...toReleaseView(item),
-		reason: item.disposal
-			? (DISPOSAL_REASON_LABELS[item.disposal.reason] ??
-				DISPOSAL_REASON_LABELS.other)
-			: DISPOSAL_REASON_LABELS.other,
+		reason: item.disposal?.reason ?? 'other',
 		disposedAt: item.disposal?.date ?? 0,
 		note: item.disposal?.note ?? null,
 	};

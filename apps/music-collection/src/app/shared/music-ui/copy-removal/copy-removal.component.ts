@@ -16,8 +16,8 @@ import {
 	CollectionItemDisposalReason,
 } from '@music-collection/api';
 
-import { FormatBadgeComponent, ReleaseView } from '../../../../shared/music-ui';
-import { DISPOSAL_REASON_LABELS, DisposalDraft } from '../../album.mapper';
+import { FormatBadgeComponent } from '../format-badge/format-badge.component';
+import { DisposalDraft, RemovedCopyView } from './copy-removal.model';
 
 const NOTE_MAX_LENGTH = 500;
 
@@ -30,6 +30,10 @@ function toDateInput(date: Date): string {
 /**
  * Modal to remove a copy from the collection: sold, traded, given away… The
  * copy is kept in the collector's history.
+ *
+ * Shared by every page that shows a copy the collector owns, so that letting
+ * a record go is done where the record is seen rather than only on the album
+ * page it was first built for.
  */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -40,7 +44,7 @@ function toDateInput(date: Date): string {
 })
 export class CopyRemovalComponent {
 	public readonly albumTitle = input.required<string>();
-	public readonly copy = input.required<ReleaseView>();
+	public readonly copy = input.required<RemovedCopyView>();
 	public readonly busy = input(false);
 	public readonly error = input<string | null>(null);
 
@@ -49,7 +53,6 @@ export class CopyRemovalComponent {
 	public readonly closed = output<void>();
 
 	protected readonly reasons = COLLECTION_ITEM_DISPOSAL_REASONS;
-	protected readonly reasonLabels = DISPOSAL_REASON_LABELS;
 	protected readonly noteMaxLength = NOTE_MAX_LENGTH;
 	protected readonly today = toDateInput(new Date());
 

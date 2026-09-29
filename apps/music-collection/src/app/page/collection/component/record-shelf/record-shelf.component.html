@@ -52,6 +52,27 @@
 				</header>
 			}
 
+			<!--
+				The unit at a glance. A narrow screen draws the compartments
+				one under the other, so this is the only place the furniture
+				is still seen whole — and tapping a cell walks over to that
+				compartment. A picture of the unit, so the reading of it is
+				left to the compartments themselves.
+			-->
+			@if (unit.plan.length) {
+				<ol class="plan" aria-hidden="true">
+					@for (cell of unit.plan; track cell.key) {
+						<li
+							class="plan-cell"
+							[class.is-blank]="!cell.fill"
+							[style.--fill]="cell.fill"
+							[attr.data-cell]="cell.key"
+							[title]="cell.label"
+						></li>
+					}
+				</ol>
+			}
+
 			<div class="grid">
 				@for (compartment of unit.compartments; track compartment.key) {
 					<section
@@ -69,12 +90,29 @@
 							placeable() ? compartment.spot?.column : null
 						"
 						[attr.data-stance]="unit.down ? 'down' : 'across'"
+						[attr.data-cell]="compartment.key"
 					>
 						<h3 class="label">
 							@if (!compartment.empty) {
 								<span class="label-text">{{
 									compartment.label
 								}}</span>
+								@if (compartment.spot; as spot) {
+									<!--
+										Which compartment of the unit this
+										is. Drawn in the grid the shelf says
+										that by where it stands; unfolded
+										into one column it has to be said.
+									-->
+									<span class="label-spot">{{
+										'ui.recordShelf.rowSlot'
+											| transloco
+												: {
+														row: spot.row,
+														slot: spot.column,
+													}
+									}}</span>
+								}
 								@if (playable()) {
 									<button
 										type="button"

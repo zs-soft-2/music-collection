@@ -24,7 +24,9 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
 import { UserSettingsEffect } from '../../data/user-settings';
+import { withCopyDisposal } from '../../shared/copy-disposal/copy-disposal.feature';
 import {
+	DisposalDraft,
 	ReleaseView,
 	decadeDistribution,
 	toReleaseView,
@@ -135,6 +137,7 @@ function chosen(
 export const CollectionPageStore = signalStore(
 	withState(initialState),
 	withCollectionFollowing(),
+	withCopyDisposal(),
 	withComputed((store, text = inject(TextService)) => {
 		const stats = computed(() => collectionStats(store.releases()));
 		const visible = computed(() =>
@@ -273,9 +276,12 @@ export const CollectionPageStore = signalStore(
 			 * A single copy can be filed by hand wherever it is found —
 			 * unlike dragging the shelf around, which arranges a whole
 			 * compartment and therefore needs the whole collection on the
-			 * page. It only asks for furniture to file it into.
+			 * page. It asks for furniture to file it into, and for the same
+			 * right as letting a copy go: filing one is a write on it.
 			 */
-			canPlaceCopies: computed(() => store.shelfUnits().length > 0),
+			canPlaceCopies: computed(
+				() => store.canManageCopies() && store.shelfUnits().length > 0
+			),
 			/**
 			 * Whether the shelf keeps itself: every record on it holds a
 			 * place of its own, so nothing the collection does — a record
@@ -293,6 +299,15 @@ export const CollectionPageStore = signalStore(
 					// it did not fit.
 					standing().length > 0 &&
 					standing().every((release) => !!release.placement)
+			),
+			/** The copy the removal dialog is open for. */
+			removingCopy: computed(
+				() =>
+					store
+						.releases()
+						.find(
+							(release) => release.id === store.removingCopyId()
+						) ?? null
 			),
 			/** The copy the placement dialog is open for. */
 			placingCopy: computed(
@@ -603,6 +618,20 @@ export const CollectionPageStore = signalStore(
 						placements
 					);
 				},
+				/**
+				 * Marks the copy the dialog is open for sold, traded… so that
+				 * a record can be let go of from the shelf it stands on,
+				 * rather than only from the album page behind it.
+				 */
+				removeCopy(draft: DisposalDraft): void {
+					const item = store
+						.items()
+						.find((owned) => owned.uid === store.removingCopyId());
+
+					if (item && store.canManageCopies()) {
+						store.disposeCopy(item, draft);
+					}
+				},
 				/** Opens the picker on one copy, wherever it is shown. */
 				openPlacement(copyId: string): void {
 					patchState(store, {
@@ -677,10 +706,12 @@ export const CollectionPageStore = signalStore(
 	withHooks({
 		onInit(store) {
 			store.watchSession(of(undefined));
+			store.watchCopyPermission(of(undefined));
 			store.loadPreferences(of(undefined));
 			store.loadShelfLayout(of(undefined));
 			store.load(of(undefined));
 			store.watchPlacing(of(undefined));
+			store.watchDisposing(of(undefined));
 			store.loadCollections(of(undefined));
 			store.loadFollowing(of(undefined));
 		},

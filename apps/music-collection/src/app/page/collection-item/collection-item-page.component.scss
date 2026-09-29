@@ -265,6 +265,42 @@
 	border-radius: 999px;
 }
 
+.section-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	align-items: center;
+}
+
+/**
+ * Letting a record go is a rare, deliberate act: the button is there to be
+ * found, not to compete with editing what the copy says.
+ */
+.button.is-quiet {
+	display: inline-flex;
+	gap: 0.4rem;
+	align-items: center;
+	color: var(--mc-text-muted);
+	background: transparent;
+
+	&:hover:not(:disabled) {
+		color: var(--mc-text);
+	}
+
+	&:disabled {
+		cursor: not-allowed;
+		opacity: 0.6;
+	}
+}
+
+.removal-error {
+	margin: 0 0 1rem;
+	padding: 0.6rem 0.8rem;
+	color: var(--mc-status-bad);
+	border: 1px solid var(--mc-status-bad);
+	border-radius: var(--mc-radius-md);
+}
+
 .button {
 	display: inline-block;
 	padding: 0.45rem 1rem;

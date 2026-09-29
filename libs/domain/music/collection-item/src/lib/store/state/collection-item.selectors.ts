@@ -58,6 +58,18 @@ export const getCollectionItemDisposing = createSelector(
 	(state: State) => state.disposing
 );
 
+/**
+ * The disposal flag and the error of that write, from one state and in one
+ * value. Read apart, the two arrive in two steps, and the step in between
+ * still carries the error of the write before — a refused disposal would
+ * read as a finished one for the length of it.
+ */
+export const getCollectionItemDisposalStatus = createSelector(
+	getCollectionItemDisposing,
+	getCollectionItemError,
+	(disposing, error) => ({ disposing, error: error ?? null })
+);
+
 export const getCollectionItemPlacing = createSelector(
 	getCollectionItemState,
 	(state: State) => state.placing

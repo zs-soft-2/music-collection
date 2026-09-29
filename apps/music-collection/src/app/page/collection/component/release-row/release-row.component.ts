@@ -1,6 +1,7 @@
 import {
 	ChangeDetectionStrategy,
 	Component,
+	computed,
 	inject,
 	input,
 	output,
@@ -26,8 +27,9 @@ import {
 		AdminEditLinkComponent,
 	],
 	host: {
-		'[class.has-admin]': 'adminAccess.isAdmin()',
-		'[class.has-place]': 'canPlace()',
+		// The row keeps room at its end for as many icons as are actually
+		// shown, rather than for every combination of them spelled out.
+		'[style.--mc-row-actions]': 'actionCount()',
 	},
 	template: `
 		@let item = release();
@@ -61,32 +63,52 @@ import {
 			/>
 		</a>
 
-		@if (canPlace()) {
-			<button
-				type="button"
-				class="row-place"
-				[attr.data-place-copy]="item.id"
-				[attr.aria-label]="
-					(item.placement ? 'Move ' : 'Place ') +
-					item.title +
-					' on the shelf'
-				"
-				[title]="
-					item.placement ? 'Move on the shelf' : 'Place on the shelf'
-				"
-				(click)="place.emit(item.id)"
-			>
-				<i class="pi pi-bookmark" aria-hidden="true"></i>
-			</button>
-		}
+		<span class="row-actions">
+			@if (canRemove()) {
+				<button
+					type="button"
+					class="row-action"
+					[attr.data-remove-copy]="item.id"
+					[attr.aria-label]="
+						'ui.copyRemoval.removeTitle'
+							| transloco: { title: item.title }
+					"
+					[title]="
+						'ui.copyRemoval.remove-from-collection' | transloco
+					"
+					(click)="remove.emit(item.id)"
+				>
+					<i class="pi pi-sign-out" aria-hidden="true"></i>
+				</button>
+			}
+			@if (canPlace()) {
+				<button
+					type="button"
+					class="row-action"
+					[attr.data-place-copy]="item.id"
+					[attr.aria-label]="
+						(item.placement ? 'Move ' : 'Place ') +
+						item.title +
+						' on the shelf'
+					"
+					[title]="
+						item.placement
+							? 'Move on the shelf'
+							: 'Place on the shelf'
+					"
+					(click)="place.emit(item.id)"
+				>
+					<i class="pi pi-bookmark" aria-hidden="true"></i>
+				</button>
+			}
 
-		<mc-admin-edit-link
-			class="mc-row-admin"
-			variant="icon"
-			entity="collection-item"
-			[id]="item.id"
-			[name]="item.artistName + ' — ' + item.title"
-		/>
+			<mc-admin-edit-link
+				variant="icon"
+				entity="collection-item"
+				[id]="item.id"
+				[name]="item.artistName + ' — ' + item.title"
+			/>
+		</span>
 	`,
 	styles: `
 		:host {
@@ -94,22 +116,17 @@ import {
 			display: block;
 		}
 
-		:host(.has-admin) .row {
-			padding-right: 3.25rem;
-		}
-
-		:host(.has-place) .row {
-			padding-right: 3.25rem;
-		}
-
-		:host(.has-place.has-admin) .row {
-			padding-right: 5.75rem;
-		}
-
-		.row-place {
+		.row-actions {
 			position: absolute;
 			top: 50%;
 			right: 0.6rem;
+			display: flex;
+			gap: 0.15rem;
+			align-items: center;
+			transform: translateY(-50%);
+		}
+
+		.row-action {
 			display: grid;
 			place-items: center;
 			width: var(--mc-circle-xs);
@@ -119,24 +136,12 @@ import {
 			background: transparent;
 			border: 0;
 			border-radius: 999px;
-			transform: translateY(-50%);
 		}
 
-		:host(.has-admin) .row-place {
-			right: 3.1rem;
-		}
-
-		.row-place:hover,
-		.row-place:focus-visible {
+		.row-action:hover,
+		.row-action:focus-visible {
 			color: var(--mc-text);
 			background: var(--mc-bg-muted);
-		}
-
-		.mc-row-admin {
-			position: absolute;
-			top: 50%;
-			right: 0.6rem;
-			transform: translateY(-50%);
 		}
 
 		.row {
@@ -144,7 +149,12 @@ import {
 			grid-template-columns: 52px minmax(0, 1fr) auto 3.5rem 5.5rem 7rem;
 			gap: 1rem;
 			align-items: center;
-			padding: 0.45rem 0.9rem 0.45rem 0.45rem;
+			padding: 0.45rem
+				calc(
+					1.1rem + var(--mc-row-actions, 0) *
+						(var(--mc-circle-xs) + 0.15rem)
+				)
+				0.45rem 0.45rem;
 			color: var(--mc-text);
 			text-decoration: none;
 			background: var(--mc-card-bg);
@@ -263,4 +273,16 @@ export class ReleaseRowComponent {
 	public readonly canPlace = input(false);
 	/** The copy to file, by its collection item id. */
 	public readonly place = output<string>();
+	/** The collector may let this copy go — sold, traded, lost. */
+	public readonly canRemove = input(false);
+	/** The copy to let go of, by its collection item id. */
+	public readonly remove = output<string>();
+
+	/** How many icons stand at the end of the row, admin's own included. */
+	protected readonly actionCount = computed(
+		() =>
+			(this.canPlace() ? 1 : 0) +
+			(this.canRemove() ? 1 : 0) +
+			(this.adminAccess.isAdmin() ? 1 : 0)
+	);
 }

@@ -180,13 +180,17 @@ service cloud.firestore {
     // Példányfotók: legfeljebb kettő (elöl-hátul), mindegyik a saját Storage
     // útvonalára mutat. A `path` ellenőrzése az, ami megakadályozza, hogy a
     // dokumentum más gyűjtő fájljára hivatkozzon.
+    //
+    // Útvonal igen, letöltési URL nem. A Storage download URL-je tokent visz,
+    // és az a token bejelentkezés nélkül, a Storage-szabályt megkerülve nyitja
+    // meg a fájlt — dokumentumban tárolva egy kiszórt kulcs, ami annyit ér,
+    // amennyit a dokumentum védettsége. A kliens a képek megjelenítésekor kéri
+    // el az URL-t a Storage-tól, azt a kérést pedig a szabály bírálja el.
     function isValidPhoto(photo, uid, itemId) {
       return photo is map
-          && photo.keys().hasOnly(['path', 'url', 'width', 'height'])
+          && photo.keys().hasOnly(['path', 'width', 'height'])
           && photo.path is string
           && photo.path.matches('^collection-item/' + uid + '/' + itemId + '/[A-Za-z0-9._-]{1,120}$')
-          && photo.url is string
-          && photo.url.size() <= 1000
           && photo.width is int && photo.width > 0
           && photo.height is int && photo.height > 0;
     }

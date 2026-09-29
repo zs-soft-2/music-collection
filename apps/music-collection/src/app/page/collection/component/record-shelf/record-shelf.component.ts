@@ -57,6 +57,19 @@ interface Compartment {
 	spot: ShelfSpotRef | null;
 }
 
+/**
+ * One compartment on the little plan of a unit. A narrow screen draws the
+ * compartments one under the other, so the plan is the only place the
+ * furniture is still seen whole — and tapping a cell walks over to it.
+ */
+interface PlanCell {
+	key: string;
+	/** How full the compartment is, 0 to 1: what the plan colours in. */
+	fill: number;
+	/** What stands in it, for the cell's tooltip. */
+	label: string;
+}
+
 /** One drawn unit standing in the room, with its compartments filled. */
 interface Unit {
 	key: string;
@@ -77,6 +90,8 @@ interface Unit {
 	 */
 	width: number;
 	compartments: Compartment[];
+	/** The unit at a glance; empty where there is no furniture to plan. */
+	plan: PlanCell[];
 }
 
 /**
@@ -170,6 +185,18 @@ function toBoards(spines: Spine[], cubby: ShelfCubby): Spine[][] {
  */
 function overRuns(boards: Spine[][], runs: number): Spine[][] {
 	return Array.from({ length: runs }, (_, at) => boards[at] ?? []);
+}
+
+/**
+ * How full a compartment is, 0 to 1. Measured against what the tape says
+ * rather than against the fullest compartment there is, so a plan of a
+ * half-empty unit reads as a half-empty unit. A compartment the collector
+ * packed tighter than the tape allows for tops out at full.
+ */
+function fillOf(spines: Spine[], cubby: ShelfCubby): number {
+	const used = spines.reduce((sum, spine) => sum + spine.mm, 0);
+
+	return Math.min(1, used / Math.max(1, cubby.length));
 }
 
 /** Takes the drop away from the browser, which would follow the link. */
@@ -268,6 +295,8 @@ export class RecordShelfComponent {
 			/* A tower's runs stand side by side; a shelf's stack up. */
 			const wide = down ? runs : 1;
 
+			const planned = shelf.columns && !shelf.overflow;
+
 			return {
 				key: shelf.key,
 				name: shelf.name,
@@ -288,6 +317,13 @@ export class RecordShelfComponent {
 					spines,
 					boards: overRuns(boards, runs),
 				})),
+				plan: planned
+					? filled.map(({ group, spines }) => ({
+							key: group.key,
+							label: group.label,
+							fill: fillOf(spines, shelf.cubby),
+						}))
+					: [],
 			};
 		})
 	);
@@ -307,6 +343,15 @@ export class RecordShelfComponent {
 
 	private readonly host: HTMLElement = inject(ElementRef).nativeElement;
 
+	/**
+	 * A screen with no hover: a phone or a tablet. The cover cannot be
+	 * brought up by moving a finger over a spine, so on one of these the tap
+	 * does it, and the tap after that opens the record.
+	 */
+	private coarse = false;
+	/** The spine a tap has pulled out, while it is out. */
+	private out: HTMLElement | null = null;
+
 	public constructor() {
 		const host = this.host;
 		const listeners: [string, (event: never) => void][] = [
@@ -325,39 +370,107 @@ export class RecordShelfComponent {
 		listeners.forEach(([type, listener]) =>
 			host.addEventListener(type, listener as EventListener)
 		);
+
+		/*
+		 * Watched rather than read once: a tablet with a keyboard and mouse
+		 * attached stops being a touch screen halfway through a session, and
+		 * the shelf has to stop asking for two taps when it does.
+		 */
+		const hover = this.media('(hover: none)');
+		const onHoverChange = (): void => {
+			this.coarse = hover?.matches ?? false;
+			this.putBack();
+		};
+
+		this.coarse = hover?.matches ?? false;
+		hover?.addEventListener('change', onHoverChange);
 		inject(DestroyRef).onDestroy(() => {
 			listeners.forEach(([type, listener]) =>
 				host.removeEventListener(type, listener as EventListener)
 			);
+			hover?.removeEventListener('change', onHoverChange);
 			this.clearDrag();
 		});
 	}
 
+	/**
+	 * What the browser says about the screen. Nothing, where there is no
+	 * browser to ask — on the server, and under a test runner, where the
+	 * shelf is drawn the way a screen with a pointer draws it.
+	 */
+	private media(query: string): MediaQueryList | null {
+		const view = this.host.ownerDocument.defaultView;
+
+		return view?.matchMedia ? view.matchMedia(query) : null;
+	}
+
+	private matches(query: string): boolean {
+		return this.media(query)?.matches ?? false;
+	}
+
 	private readonly onEnter = (event: Event): void => {
+		/* A touch screen has no hover; there the tap pulls the record out. */
+		if (this.coarse && event.type === 'pointerover') {
+			return;
+		}
+
 		const element = this.spineOf(event.target);
-		const release =
-			element && this.releasesById().get(element.dataset['id'] ?? '');
 
-		if (element && release) {
-			const { x, y } = this.offsetInRoom(element);
-
-			this.peek().show(release, x + element.offsetWidth / 2, y);
+		if (element) {
+			this.pullOut(element);
 		}
 	};
 
 	private readonly onLeave = (event: FocusEvent | PointerEvent): void => {
+		/*
+		 * A finger lifted off a spine is a `pointerout`, so left alone this
+		 * would put the record back the instant it was tapped out.
+		 */
+		if (this.coarse && event.type === 'pointerout') {
+			return;
+		}
+
 		const from = this.spineOf(event.target);
 
 		if (from && from !== this.spineOf(event.relatedTarget)) {
-			this.peek().hide();
+			this.putBack();
 		}
 	};
 
 	private readonly onClick = (event: MouseEvent): void => {
-		const element = this.spineOf(event.target);
+		const target = event.target;
+		const opened =
+			target instanceof Element
+				? target.closest<HTMLElement>('.peek-open')
+				: null;
 
+		/* The button on the cover: the record that is pulled out, opened. */
+		if (opened) {
+			event.preventDefault();
+			this.open(opened.getAttribute('href'));
+			return;
+		}
+
+		const cell =
+			target instanceof Element
+				? target.closest<HTMLElement>('.plan-cell')
+				: null;
+
+		if (cell) {
+			this.walkTo(cell.dataset['cell'] ?? '');
+			return;
+		}
+
+		const element = this.spineOf(target);
+
+		if (!element) {
+			/* A tap anywhere else on the shelf puts the record back. */
+			if (this.coarse) {
+				this.putBack();
+			}
+			return;
+		}
 		if (
-			!element ||
 			event.button !== 0 ||
 			event.metaKey ||
 			event.ctrlKey ||
@@ -366,9 +479,88 @@ export class RecordShelfComponent {
 		) {
 			return;
 		}
+		/*
+		 * On a touch screen a record is pulled out first and opened second:
+		 * one tap brings up the cover, the tap after it — or the button on
+		 * that cover — opens the copy. A record nobody can hover over would
+		 * otherwise be one nobody can look at without leaving the shelf.
+		 */
+		if (this.coarse && this.out?.dataset['id'] !== element.dataset['id']) {
+			event.preventDefault();
+			this.pullOut(element);
+			return;
+		}
 		event.preventDefault();
-		void this.router.navigateByUrl(element.getAttribute('href') ?? '/');
+		this.open(element.getAttribute('href'));
 	};
+
+	/** The cover above the spine, wherever the compartment has scrolled to. */
+	private pullOut(element: HTMLElement): void {
+		const release = this.releasesById().get(element.dataset['id'] ?? '');
+
+		if (!release) {
+			return;
+		}
+
+		const { x, y } = this.offsetInRoom(element);
+		const box = element.getBoundingClientRect();
+		const view = this.host.ownerDocument.defaultView;
+		const screen = view?.innerHeight ?? 0;
+
+		/*
+		 * With a pointer the spine is lifted by `:hover`; a tap has nothing
+		 * of the kind, so the one that is out is marked. Like the drag, it
+		 * is a class rather than a binding: lifting one spine must not mark
+		 * the other hundreds dirty.
+		 */
+		if (this.coarse) {
+			this.out?.classList.remove('is-out');
+			element.classList.add('is-out');
+			this.out = element;
+		}
+		this.peek().show({
+			release,
+			href: element.getAttribute('href') ?? '',
+			x: x + element.offsetWidth / 2,
+			y,
+			/* The other edge, for a card with no screen left to hang above. */
+			under: y + element.offsetHeight,
+			room: { above: box.top, below: screen - box.bottom },
+			within: this.room().nativeElement.clientWidth,
+		});
+	}
+
+	/** The record back in its compartment, and the cover gone with it. */
+	private putBack(): void {
+		this.out?.classList.remove('is-out');
+		this.out = null;
+		this.peek().hide();
+	}
+
+	private open(href: string | null): void {
+		this.putBack();
+		void this.router.navigateByUrl(href || '/');
+	}
+
+	/**
+	 * Walking over to a compartment the plan was tapped on. On a narrow
+	 * screen the compartments are drawn one under the other, so the plan in
+	 * the header is the only place the unit is still seen whole — and this
+	 * is what makes it more than a picture.
+	 */
+	private walkTo(key: string): void {
+		const quoted = key.replace(/["\\]/g, '\\$&');
+		const cell = this.host.querySelector<HTMLElement>(
+			`.compartment[data-cell="${quoted}"]`
+		);
+
+		cell?.scrollIntoView?.({
+			block: 'nearest',
+			behavior: this.matches('(prefers-reduced-motion: reduce)')
+				? 'auto'
+				: 'smooth',
+		});
+	}
 
 	/*
 	 * Rearranging by hand. Like the hover, this is delegated and touches the
@@ -390,7 +582,7 @@ export class RecordShelfComponent {
 			return;
 		}
 		this.dragging = id;
-		this.peek().hide();
+		this.putBack();
 		element.classList.add('is-lifted');
 		event.dataTransfer?.setData('text/plain', id);
 
@@ -543,6 +735,19 @@ export class RecordShelfComponent {
 		) {
 			x += node.offsetLeft;
 			y += node.offsetTop;
+		}
+		/*
+		 * A compartment too long for a narrow screen is walked along
+		 * sideways, and offsetLeft is blind to that: it says where the spine
+		 * was laid out, not where the scroll has since carried it.
+		 */
+		for (
+			let node: HTMLElement | null = element.parentElement;
+			node && node !== room;
+			node = node.parentElement
+		) {
+			x -= node.scrollLeft;
+			y -= node.scrollTop;
 		}
 		return { x, y };
 	}

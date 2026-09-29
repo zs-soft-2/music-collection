@@ -52,7 +52,7 @@
 							[checked]="reason() === option"
 							(change)="reason.set(option)"
 						/>
-						{{ reasonLabels[option] }}
+						{{ option | mcCatalog: 'disposalReason' }}
 					</label>
 				}
 			</div>
@@ -113,7 +113,11 @@
 				class="primary-button"
 				[disabled]="dateInvalid() || busy()"
 			>
-				{{ busy() ? 'Removing…' : 'Remove from collection' }}
+				{{
+					busy()
+						? ('ui.copyRemoval.removing' | transloco)
+						: ('ui.copyRemoval.remove-from-collection' | transloco)
+				}}
 			</button>
 		</div>
 	</form>

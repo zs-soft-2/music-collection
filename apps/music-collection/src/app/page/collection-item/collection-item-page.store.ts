@@ -18,12 +18,10 @@ import {
 	CollectionItemDetails,
 	CollectionItemEntity,
 	CollectionItemGrade,
-	CollectionItemPermissionsService,
 	CollectionItemPhoto,
 	CollectionItemSerial,
 	CollectionItemStateService,
 	ContributionEntity,
-	RoleNames,
 	TrackEntity,
 	toCollectionItemSerial,
 } from '@music-collection/api';
@@ -37,8 +35,9 @@ import {
 	withState,
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
-import { NgxPermissionsService } from 'ngx-permissions';
 
+import { withCopyDisposal } from '../../shared/copy-disposal/copy-disposal.feature';
+import { DisposalDraft } from '../../shared/music-ui';
 import { AlbumDetailsEffect } from '../../data/album-details';
 import { CopyPhotoEffect } from '../../data/copy-photo';
 import { CopySerialEffect, CopySerialTakenError } from '../../data/copy-serial';
@@ -50,6 +49,7 @@ import {
 	toCopyProvenance,
 	toCopySerial,
 	toCopyTracks,
+	toRemovedCopy,
 } from './collection-item.mapper';
 
 /** Which picture a file is chosen for: the one shown, or the one behind it. */
@@ -92,7 +92,6 @@ interface CollectionItemPageState {
 	contributions: ContributionEntity[];
 	detailsLoading: boolean;
 	userId: string | null;
-	canEdit: boolean;
 	editing: boolean;
 	draft: CopyDraft;
 	saving: boolean;
@@ -109,6 +108,13 @@ interface CollectionItemPageState {
 	 * broken page, where the other order only leaves a few unread kilobytes.
 	 */
 	pendingDiscard: CollectionItemPhoto[];
+	/**
+	 * Where each picture can be shown from, by Storage path. The document
+	 * holds the path alone — the URL carries a token that would open the file
+	 * to anyone holding it — so the page asks Storage for it, and Storage
+	 * answers the owner only.
+	 */
+	photoUrls: Record<string, string>;
 	/**
 	 * The number the copy wore before this save. Given back to the registry
 	 * once the write goes through — until then the stored copy still wears
@@ -153,7 +159,6 @@ const initialState: CollectionItemPageState = {
 	contributions: [],
 	detailsLoading: true,
 	userId: null,
-	canEdit: false,
 	editing: false,
 	draft: EMPTY_DRAFT,
 	saving: false,
@@ -162,6 +167,7 @@ const initialState: CollectionItemPageState = {
 	photoBusy: null,
 	photoError: null,
 	pendingDiscard: [],
+	photoUrls: {},
 	previousSerial: null,
 	claimedSerial: null,
 	claiming: false,
@@ -268,6 +274,7 @@ function toSerialError(error: unknown): string {
  */
 export const CollectionItemPageStore = signalStore(
 	withState(initialState),
+	withCopyDisposal(),
 	withComputed((store) => ({
 		/** The album this copy is a recording of, as the catalog holds it. */
 		album: computed(() => {
@@ -297,7 +304,9 @@ export const CollectionItemPageStore = signalStore(
 
 			return item ? toCopySerial(item) : null;
 		}),
-		photos: computed(() => toCopyPhotos(store.item()?.photos)),
+		photos: computed(() =>
+			toCopyPhotos(store.item()?.photos, store.photoUrls())
+		),
 		story: computed(() => store.item()?.story ?? null),
 		/** The copy left the collection; the page reads as history. */
 		disposal: computed(() => store.item()?.disposal ?? null),
@@ -328,9 +337,25 @@ export const CollectionItemPageStore = signalStore(
 		/** A second picture can still be added. */
 		canAddPhoto: computed(
 			() =>
-				store.canEdit() &&
+				store.canManageCopies() &&
 				store.photos().length < COLLECTION_ITEM_PHOTO_LIMIT
 		),
+		/**
+		 * The copy can be let go of: it is the collector's to change, and it
+		 * is still in the collection. One already gone is taken back on the
+		 * album page, where the collector can see what else they own of it.
+		 */
+		canRemove: computed(
+			() => store.canManageCopies() && !!store.item() && !store.disposal()
+		),
+		/** The copy as the removal dialog names it, once it is open. */
+		removingCopy: computed(() => {
+			const item = store.item();
+
+			return item && store.removingCopyId() === item.uid
+				? toRemovedCopy(item)
+				: null;
+		}),
 	})),
 	withMethods(
 		(
@@ -338,29 +363,42 @@ export const CollectionItemPageStore = signalStore(
 			route = inject(ActivatedRoute),
 			collectionItemStateService = inject(CollectionItemStateService),
 			authenticationStateService = inject(AuthenticationStateService),
-			permissionsService = inject(NgxPermissionsService),
 			albumDetailsEffect = inject(AlbumDetailsEffect),
 			photoEffect = inject(CopyPhotoEffect),
 			serialEffect = inject(CopySerialEffect)
 		) => ({
-			/** Who is signed in, and whether they may change their copies. */
+			/** Opens the removal dialog for the copy this page is about. */
+			askRemoval(): void {
+				const item = store.item();
+
+				if (item && store.canRemove()) {
+					store.openRemoval(item.uid);
+				}
+			},
+			/**
+			 * Marks the copy sold, traded… The page stays open on it: a copy
+			 * gone from the collection is still the collector's to look back
+			 * on, and now says when it left and why.
+			 */
+			removeCopy(draft: DisposalDraft): void {
+				const item = store.item();
+
+				if (item && store.canRemove()) {
+					store.disposeCopy(item, draft);
+				}
+			},
+			/**
+			 * Who is signed in. Whether they may change their copies is the
+			 * disposal feature's to follow (`watchCopyPermission`), the same
+			 * question on every page that shows a copy.
+			 */
 			loadCollector: rxMethod<void>(
 				pipe(
 					switchMap(() =>
-						combineLatest([
-							authenticationStateService.selectAuthenticatedUser$(),
-							permissionsService.permissions$,
-						])
+						authenticationStateService.selectAuthenticatedUser$()
 					),
-					tap(([user, permissions]) =>
-						patchState(store, {
-							userId: user?.uid ?? null,
-							canEdit:
-								!!user?.uid &&
-								(CollectionItemPermissionsService.updateCollectionItemEntity in
-									permissions ||
-									RoleNames.ADMIN in permissions),
-						})
+					tap((user) =>
+						patchState(store, { userId: user?.uid ?? null })
 					)
 				)
 			),
@@ -411,6 +449,28 @@ export const CollectionItemPageStore = signalStore(
 							})
 						)
 					)
+				)
+			),
+			/**
+			 * Asks Storage where the copy's pictures can be shown from.
+			 *
+			 * The document names the files and nothing more, so the URLs are
+			 * asked for here, once per set of paths — the copy arrives again
+			 * on every change to the collection, and a picture that has not
+			 * moved should not be asked about twice.
+			 */
+			resolvePhotos: rxMethod<CollectionItemPhoto[]>(
+				pipe(
+					distinctUntilChanged(
+						(before, after) =>
+							before.length === after.length &&
+							before.every(
+								(photo, index) =>
+									photo.path === after[index].path
+							)
+					),
+					switchMap((photos) => photoEffect.urls(photos)),
+					tap((photoUrls) => patchState(store, { photoUrls }))
 				)
 			),
 			/** The tracklist of this copy: the album's, plus this pressing's. */
@@ -518,7 +578,7 @@ export const CollectionItemPageStore = signalStore(
 			edit(): void {
 				const item = store.item();
 
-				if (!item || !store.canEdit()) {
+				if (!item || !store.canManageCopies()) {
 					return;
 				}
 				patchState(store, {
@@ -553,7 +613,7 @@ export const CollectionItemPageStore = signalStore(
 				if (
 					!item ||
 					!userId ||
-					!store.canEdit() ||
+					!store.canManageCopies() ||
 					store.saving() ||
 					store.claiming()
 				) {
@@ -621,7 +681,12 @@ export const CollectionItemPageStore = signalStore(
 				const item = store.item();
 				const userId = store.userId();
 
-				if (!item || !userId || !store.canEdit() || store.busy()) {
+				if (
+					!item ||
+					!userId ||
+					!store.canManageCopies() ||
+					store.busy()
+				) {
 					return;
 				}
 				patchState(store, { photoBusy: slot, photoError: null });
@@ -664,7 +729,7 @@ export const CollectionItemPageStore = signalStore(
 			removePhoto(index: number): void {
 				const item = store.item();
 
-				if (!item || !store.canEdit() || store.busy()) {
+				if (!item || !store.canManageCopies() || store.busy()) {
 					return;
 				}
 				const photos = [...(item.photos ?? [])];
@@ -688,8 +753,13 @@ export const CollectionItemPageStore = signalStore(
 	withHooks({
 		onInit(store) {
 			store.loadCollector(of(undefined));
+			store.watchCopyPermission(of(undefined));
 			store.loadCopy(of(undefined));
 			store.watchSaving(of(undefined));
+			store.watchDisposing(of(undefined));
+			// The pictures follow the copy too: the document names the
+			// files, Storage says where they can be read from.
+			store.resolvePhotos(computed(() => store.item()?.photos ?? []));
 			// The tracklist follows the copy: it cannot be asked for before
 			// the record says which album and which pressing it is.
 			store.loadDetails(

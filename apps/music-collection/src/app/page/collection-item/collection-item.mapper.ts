@@ -8,7 +8,12 @@ import {
 
 import { formatCountry, toDescriptions } from '@music-collection/common/engine';
 
-import { MediaFormat, toMediaFormat } from '../../shared/music-ui';
+import {
+	MediaFormat,
+	RemovedCopyView,
+	toMediaFormat,
+	toReleaseView,
+} from '../../shared/music-ui';
 
 /**
  * Presentation models of the copy page.
@@ -22,7 +27,12 @@ import { MediaFormat, toMediaFormat } from '../../shared/music-ui';
 
 /** A picture of the copy, as the card shows it. */
 export interface CopyPhotoView {
-	url: string;
+	/**
+	 * Where the picture can be shown from; null until Storage has answered
+	 * for it, and for a file that is no longer there. The card keeps the
+	 * place either way, so the front stays the front while it loads.
+	 */
+	url: string | null;
 	width: number;
 	height: number;
 	/** "Front" or "Back" — what the card is showing. */
@@ -75,11 +85,17 @@ export interface CopyTrackView {
 const GRADE_LABEL = (grade: CollectionItemGrade | null): string | null =>
 	grade ? `${grade} — ${COLLECTION_ITEM_GRADE_LABELS[grade]}` : null;
 
+/**
+ * The pictures the copy points at, with the URLs Storage has given back for
+ * them so far. The document names the file; only Storage can say where it is
+ * to be read from, and it says so to its owner alone.
+ */
 export function toCopyPhotos(
-	photos: CollectionItemPhoto[] | null | undefined
+	photos: CollectionItemPhoto[] | null | undefined,
+	urls: Record<string, string>
 ): CopyPhotoView[] {
 	return (photos ?? []).map((photo, index) => ({
-		url: photo.url,
+		url: urls[photo.path] ?? null,
 		width: photo.width,
 		height: photo.height,
 		side: index === 0 ? 'Front' : 'Back',
@@ -102,6 +118,21 @@ export function toCopyPressing(item: CollectionItemEntity): CopyPressingView {
 			? `https://www.discogs.com/release/${release.discogsReleaseId}`
 			: null,
 	};
+}
+
+/**
+ * The copy as the removal dialog names it, so that a collector who owns two
+ * pressings of the same album can see which one they are letting go of.
+ *
+ * The five fields are read out of the record's own view rather than worked
+ * out again here: the shelf and the album page hand the dialog exactly that
+ * view, and a pressing must not weigh 180g on two pages and nothing on the
+ * third.
+ */
+export function toRemovedCopy(item: CollectionItemEntity): RemovedCopyView {
+	const { format, weight, generic, labelName, country } = toReleaseView(item);
+
+	return { format, weight, generic, labelName, country };
 }
 
 export function toCopyProvenance(

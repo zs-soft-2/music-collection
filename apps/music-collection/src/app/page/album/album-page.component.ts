@@ -17,6 +17,7 @@ import {
 	AdminEditLinkComponent,
 	ProposeLinkComponent,
 	CopyPlacementComponent,
+	CopyRemovalComponent,
 	DiscographyCardComponent,
 	FormatBadgeComponent,
 } from '../../shared/music-ui';
@@ -25,10 +26,10 @@ import { AlbumPageStore } from './album-page.store';
 import { AlbumCollectionsComponent } from './component/album-collections/album-collections.component';
 import { AlbumCreditsComponent } from './component/album-credits/album-credits.component';
 import { AlbumTracklistComponent } from './component/album-tracklist/album-tracklist.component';
-import { CopyRemovalComponent } from './component/copy-removal/copy-removal.component';
 import { ReleasePickerComponent } from './component/release-picker/release-picker.component';
 import { WishlistDialogComponent } from './component/wishlist-dialog/wishlist-dialog.component';
 import { PageBreadcrumbComponent } from '../../shared/page-breadcrumb';
+import { focusOnClose } from '../../shared/dialog-focus';
 
 type AlbumSection =
 	'original' | 'listen' | 'tracklist' | 'credits' | 'copies' | 'more';
@@ -131,48 +132,15 @@ export class AlbumPageComponent {
 
 		// Back from the removal dialog: focus its button, or the add button once
 		// the copy is gone.
-		let removingCopyId: string | null = null;
-		effect(() => {
-			const copyId = this.store.removingCopyId();
-			if (removingCopyId && !copyId) {
-				const closedFor = removingCopyId;
-				afterNextRender(
-					() => {
-						const root = this.host.nativeElement;
-						(
-							root.querySelector<HTMLElement>(
-								`[data-remove-copy="${closedFor}"]`
-							) ??
-							root.querySelector<HTMLElement>(
-								'[data-collect-toggle]'
-							)
-						)?.focus();
-					},
-					{ injector: this.injector }
-				);
-			}
-			removingCopyId = copyId;
-		});
+		focusOnClose(this.store.removingCopyId, (copyId) => [
+			`[data-remove-copy="${copyId}"]`,
+			'[data-collect-toggle]',
+		]);
 
 		// Back from the placement dialog: focus the button it opened from.
-		let placingCopyId: string | null = null;
-		effect(() => {
-			const copyId = this.store.placingCopyId();
-			if (placingCopyId && !copyId) {
-				const closedFor = placingCopyId;
-				afterNextRender(
-					() => {
-						this.host.nativeElement
-							.querySelector<HTMLElement>(
-								`[data-place-copy="${closedFor}"]`
-							)
-							?.focus();
-					},
-					{ injector: this.injector }
-				);
-			}
-			placingCopyId = copyId;
-		});
+		focusOnClose(this.store.placingCopyId, (copyId) => [
+			`[data-place-copy="${copyId}"]`,
+		]);
 	}
 
 	/** What the collector called the unit a copy stands in. */

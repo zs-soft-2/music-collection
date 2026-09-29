@@ -189,6 +189,13 @@
 			"project": "Projektek",
 			"formation": "Formációk"
 		},
+		"disposalReason": {
+			"sold": "Eladva",
+			"traded": "Elcserélve",
+			"gifted": "Elajándékozva",
+			"lost": "Elveszett",
+			"other": "Egyéb"
+		},
 		"decade": {
 			"1900": "1900-as évek",
 			"1910": "1910-es évek",
@@ -371,6 +378,7 @@
 			},
 			"shelf": {
 				"dragHint": "Húzz egy lemezt oda, ahol valójában áll. Az általad elrendezett rekesz megtartja a benne hagyott helyet; amit nem raktál el, az továbbra is a szabadon hagyott rekeszeket tölti.",
+				"tapHint": "Koppints egy gerincre: kihúzza a lemezt és megmutatja a borítóját. Még egy koppintás, és megnyitja. Átrendezni egyelőre nagyobb képernyőn, egérrel tudod.",
 				"filterHint": "Töröld a keresést és a formátumszűrőt, hogy kézzel rendezhesd át a polcot.",
 				"fileFailed": "Nem sikerült elrakni: {{error}}",
 				"keep": "Maradjon így",
@@ -589,7 +597,9 @@
 			"this-pressing": "Ez a nyomás",
 			"no-tracklist-for-this": "Ehhez az albumhoz még nincs számlista.",
 			"leftOn": "{{date}} napon került ki a gyűjteményből ({{reason}}).",
-			"spot": "{{row}}. sor · {{slot}}. hely · {{position}}. pozíció"
+			"spot": "{{row}}. sor · {{slot}}. hely · {{position}}. pozíció",
+			"remove": "Eltávolítás",
+			"removeFailed": "Nem sikerült eltávolítani: {{error}}"
 		},
 		"collections": {
 			"collections": "Kihívások",
@@ -990,7 +1000,9 @@
 			"off-the-shelf": "Polcon kívül",
 			"no-drawn-compartment-left": "Nincs több megrajzolt rekesz, vagy egyik sem elég magas ezekhez — nézd át a polcaidat a profilodban.",
 			"play-what-stands-here": "Ami itt áll, szóljon",
-			"play-what-stands-here2": "Ami itt áll, szóljon"
+			"play-what-stands-here2": "Ami itt áll, szóljon",
+			"open": "Megnyitás",
+			"rowSlot": "{{row}}. sor · {{slot}}. hely"
 		},
 		"networkDetails": {
 			"connections-in-view": "Látható kapcsolatok",
@@ -1102,7 +1114,10 @@
 			"e-g-sold-on": "pl. eladva a Discogson, elcserélve egy Death nagylemezre",
 			"it-stays-in-your": "Az előzményeidben marad, és bármikor visszaveheted.",
 			"cancel": "Mégse",
-			"removeFailed": "Nem sikerült eltávolítani: {{error}}"
+			"removeFailed": "Nem sikerült eltávolítani: {{error}}",
+			"numberTakenMeanwhile": "A példány visszakerült, de a sorszámát időközben regisztrálta egy másik gyűjtő.",
+			"removing": "Eltávolítás…",
+			"removeTitle": "{{title}} eltávolítása a gyűjteményből"
 		},
 		"releasePicker": {
 			"add-to-collection": "Hozzáadás a gyűjteményhez",
@@ -2398,7 +2413,10 @@
 			"taken-in": "Bekerült ide:"
 		},
 		"proposeLink": {
-			"suggest-a-change": "Módosítást javaslok"
+			"suggest-a-change": "Módosítást javaslok",
+			"pending-one": "Elbírálás alatt: {{field}}",
+			"pending-many": "{{count}} mező elbírálás alatt",
+			"pending-title": "Megnézem, hol tart a javaslatom"
 		},
 		"profileAvatar": {
 			"yours": "Ez a karaktered. Ez látszik a felső sávban, a térképen és ott, ahol más gyűjtők mellett állsz.",

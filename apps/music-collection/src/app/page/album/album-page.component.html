@@ -635,7 +635,7 @@
 								}
 							</span>
 							<span class="past-state">
-								{{ copy.reason }}
+								{{ copy.reason | mcCatalog: 'disposalReason' }}
 								<time
 									[attr.datetime]="
 										copy.disposedAt | date: 'yyyy-MM-dd'

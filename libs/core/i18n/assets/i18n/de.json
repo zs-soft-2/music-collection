@@ -189,6 +189,13 @@
 			"project": "Projekte",
 			"formation": "Formationen"
 		},
+		"disposalReason": {
+			"sold": "Verkauft",
+			"traded": "Getauscht",
+			"gifted": "Verschenkt",
+			"lost": "Verloren",
+			"other": "Sonstiges"
+		},
 		"decade": {
 			"1900": "1900er",
 			"1910": "1910er",
@@ -371,6 +378,7 @@
 			},
 			"shelf": {
 				"dragHint": "Zieh eine Platte dorthin, wo sie wirklich steht. Ein Fach, das du eingeräumt hast, behält den Platz, den du darin gelassen hast; alles Unplatzierte füllt weiterhin die freigelassenen Fächer.",
+				"tapHint": "Tippe auf einen Rücken: Die Platte kommt heraus und zeigt ihr Cover. Noch ein Tippen öffnet sie. Zum Umräumen brauchst du vorerst einen größeren Bildschirm und eine Maus.",
 				"filterHint": "Lösche Suche und Formatfilter, um das Regal von Hand umzuräumen.",
 				"fileFailed": "Konnte nicht eingeordnet werden: {{error}}",
 				"keep": "So lassen",
@@ -589,7 +597,9 @@
 			"this-pressing": "Diese Pressung",
 			"no-tracklist-for-this": "Für dieses Album gibt es noch keine Titelliste.",
 			"leftOn": "Hat die Sammlung am {{date}} verlassen ({{reason}}).",
-			"spot": "Reihe {{row}} · Platz {{slot}} · Position {{position}}"
+			"spot": "Reihe {{row}} · Platz {{slot}} · Position {{position}}",
+			"remove": "Entfernen",
+			"removeFailed": "Konnte nicht entfernt werden: {{error}}"
 		},
 		"collections": {
 			"collections": "Challenges",
@@ -990,7 +1000,9 @@
 			"off-the-shelf": "Außerhalb des Regals",
 			"no-drawn-compartment-left": "Kein gezeichnetes Fach ist übrig, oder keines ist hoch genug dafür — sieh dein Regal im Profil durch.",
 			"play-what-stands-here": "Abspielen, was hier steht",
-			"play-what-stands-here2": "Abspielen, was hier steht"
+			"play-what-stands-here2": "Abspielen, was hier steht",
+			"open": "Öffnen",
+			"rowSlot": "Reihe {{row}} · Fach {{slot}}"
 		},
 		"networkDetails": {
 			"connections-in-view": "Sichtbare Verbindungen",
@@ -1102,7 +1114,10 @@
 			"e-g-sold-on": "z. B. auf Discogs verkauft, gegen eine Death-LP getauscht",
 			"it-stays-in-your": "Sie bleibt in deiner Historie, und du kannst sie jederzeit zurücknehmen.",
 			"cancel": "Abbrechen",
-			"removeFailed": "Konnte nicht entfernt werden: {{error}}"
+			"removeFailed": "Konnte nicht entfernt werden: {{error}}",
+			"numberTakenMeanwhile": "Das Exemplar ist zurück, aber seine Nummer wurde inzwischen von einem anderen Sammler registriert.",
+			"removing": "Wird entfernt…",
+			"removeTitle": "{{title}} aus der Sammlung entfernen"
 		},
 		"releasePicker": {
 			"add-to-collection": "Zur Sammlung hinzufügen",
@@ -2398,7 +2413,10 @@
 			"taken-in": "Übernommen als:"
 		},
 		"proposeLink": {
-			"suggest-a-change": "Änderung vorschlagen"
+			"suggest-a-change": "Änderung vorschlagen",
+			"pending-one": "In Prüfung: {{field}}",
+			"pending-many": "{{count}} Felder in Prüfung",
+			"pending-title": "Sieh nach, wo dein Vorschlag steht"
 		},
 		"profileAvatar": {
 			"yours": "Das ist deine Figur. Sie erscheint in der oberen Leiste, auf der Karte und überall, wo du neben anderen Sammlern stehst.",

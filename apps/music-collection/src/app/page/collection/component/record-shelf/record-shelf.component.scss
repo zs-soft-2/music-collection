@@ -120,6 +120,20 @@
 	white-space: nowrap;
 }
 
+/*
+ * Which compartment of the unit this is. Drawn in the grid the shelf says
+ * that by where the compartment stands, so it is only worth the room on a
+ * screen too narrow to draw the grid.
+ */
+.label-spot {
+	display: none;
+	flex: none;
+	font-weight: 500;
+	letter-spacing: 0.06em;
+	color: #b8a58a;
+	opacity: 0.8;
+}
+
 .label-count {
 	font-weight: 500;
 	color: #b8a58a;
@@ -157,6 +171,39 @@
 
 .compartment:hover .label-play {
 	opacity: 1;
+}
+
+/*
+ * The unit at a glance: one cell per compartment, filled the way the
+ * compartment is. Drawn only where the furniture no longer fits across the
+ * screen — see the narrow-screen rules at the foot of this file.
+ */
+.plan {
+	display: none;
+	grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+	gap: 3px;
+	margin: 0 0 10px;
+	padding: 0;
+	list-style: none;
+}
+
+/*
+ * Filled from the left, because that is how a compartment fills: the records
+ * stand along it from one end. The run is never thinner than a hairline, so
+ * a compartment holding one record still reads as holding something.
+ */
+.plan-cell {
+	height: 16px;
+	background:
+		linear-gradient(
+			to right,
+			rgba(233, 220, 198, 0.55) 0 max(2px, calc(var(--fill) * 100%)),
+			transparent 0
+		),
+		rgba(0, 0, 0, 0.45);
+	border-radius: 1px;
+	box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.5);
+	cursor: pointer;
 }
 
 .unit-play {
@@ -399,6 +446,20 @@
 	display: none;
 }
 
+/*
+ * Pulled out by a tap. On a screen with no hover this is what `:hover` does
+ * with a pointer, and like the drag it is carried by a class rather than a
+ * binding: one spine coming out must not mark the other hundreds dirty.
+ */
+.spine.is-out {
+	z-index: 5;
+	transform: translateY(-16px);
+}
+
+.is-down .spine.is-out {
+	transform: translateX(16px);
+}
+
 /* Lying flat, the spine reads the way a stacked case does: straight on. */
 .is-down .spine-text {
 	inset: 0 6px;
@@ -419,4 +480,96 @@
 
 .compartment[data-unit] .spine {
 	cursor: grab;
+}
+
+/* Nothing hovers on a touch screen, so what hover would reveal has to stay. */
+@media (hover: none) {
+	.label-play {
+		opacity: 1;
+	}
+}
+
+/*
+ * A phone cannot hold a piece of furniture. Squeezed into one, a Kallax
+ * cubby is seventy pixels across, its records are hairlines and the
+ * lettering smears over them — a picture of a shelf rather than a shelf. So
+ * the unit is unfolded instead: one compartment under the other, each drawn
+ * at the scale a shelf is drawn at, and one longer than the screen walked
+ * along sideways the way a collector walks along a shelf. The plan in the
+ * header keeps the shape of the unit that the single column gives up, and
+ * each label says which compartment of it you are standing at.
+ */
+@media (max-width: 720px) {
+	:host {
+		--shelf-gap: 10px;
+		--frame: 10px;
+	}
+
+	.room {
+		gap: 18px;
+	}
+
+	/*
+	 * Unfolded, the unit is one compartment wide — so that is how wide the
+	 * furniture is drawn. A compartment longer than the screen fills it and
+	 * is walked along; a Kallax cubby leaves the rest of the row to the page,
+	 * which is what a square cubby standing against a wall does anyway.
+	 */
+	.unit,
+	.unit.is-wall {
+		width: fit-content;
+		max-width: 100%;
+	}
+
+	.grid,
+	.is-wall .grid,
+	.is-overflow .grid {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.plan {
+		display: grid;
+	}
+
+	/* A compartment is its own height here, not a quarter of a row of them. */
+	.compartment {
+		contain-intrinsic-block-size: auto 320px;
+	}
+
+	/* The scrollbar would be a line across the shelf; the records say enough. */
+	.cubby {
+		overflow-x: auto;
+		overscroll-behavior-x: contain;
+		scrollbar-width: none;
+
+		&::-webkit-scrollbar {
+			display: none;
+		}
+	}
+
+	/* The board keeps its length: the size of a record is the whole point. */
+	.board {
+		max-width: none;
+	}
+
+	.label-spot {
+		display: inline;
+	}
+
+	/*
+	 * A compartment that scrolls clips what leaves it, so a record comes out
+	 * half as far as it does on a big screen — far enough to read as pulled
+	 * out, with the cover above it saying the rest.
+	 */
+	.spine.is-out,
+	.spine:hover,
+	.spine:focus-visible {
+		transform: translateY(-8px);
+	}
+
+	.is-down .spine.is-out,
+	.is-down .spine:hover,
+	.is-down .spine:focus-visible {
+		transform: translateX(8px);
+	}
 }

@@ -631,11 +631,12 @@ body .p-chip.archived {
 	}
 }
 
-// A kártyák polcra tevő gombja (mc-release-card): ugyanúgy hoverre / fókuszra
-// jelenik meg, mint az admin ikon, csak a kártya másik sarkában.
-.mc-card-place {
+// A kártyák alsó sarkaiban ülő gombok (mc-release-card): a polcra tevő
+// jobbra, az „eltávolítás a gyűjteményből" balra. Ugyanúgy hoverre / fókuszra
+// jelennek meg, mint az admin ikon — a sarok az egyetlen különbség köztük.
+.mc-card-place,
+.mc-card-remove {
 	position: absolute;
-	right: 0.5rem;
 	bottom: 0.5rem;
 	z-index: 5;
 	display: grid;
@@ -656,13 +657,24 @@ body .p-chip.archived {
 	}
 }
 
+.mc-card-place {
+	right: 0.5rem;
+}
+
+.mc-card-remove {
+	left: 0.5rem;
+}
+
 :hover > .mc-card-place,
-:focus-within > .mc-card-place {
+:focus-within > .mc-card-place,
+:hover > .mc-card-remove,
+:focus-within > .mc-card-remove {
 	opacity: 1;
 }
 
 @media (hover: none) {
-	.mc-card-place {
+	.mc-card-place,
+	.mc-card-remove {
 		opacity: 1;
 	}
 }

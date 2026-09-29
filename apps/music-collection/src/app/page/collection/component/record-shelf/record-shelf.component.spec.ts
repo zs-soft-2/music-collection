@@ -4,7 +4,7 @@ import {
 	DeferBlockState,
 	TestBed,
 } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 
 import { DEFAULT_CUBBY } from '@music-collection/api';
 
@@ -69,6 +69,23 @@ function empty(key: string): ShelfCompartmentView {
 	return { key, label: '', items: [], spot: null };
 }
 
+/**
+ * A screen with no hover, which jsdom has no notion of. Set before the
+ * component is built: the shelf asks once and then listens for the answer to
+ * change.
+ */
+function touchScreen(): void {
+	Object.defineProperty(window, 'matchMedia', {
+		configurable: true,
+		value: (query: string) => ({
+			matches: query === '(hover: none)',
+			media: query,
+			addEventListener: () => undefined,
+			removeEventListener: () => undefined,
+		}),
+	});
+}
+
 /** A drag event as jsdom can make one: no DataTransfer, so none is used. */
 function drag(type: string, clientX = 0): Event {
 	const event = new Event(type, { bubbles: true, cancelable: true });
@@ -87,6 +104,8 @@ describe('RecordShelfComponent', () => {
 
 		return fixture.nativeElement as HTMLElement;
 	};
+
+	afterEach(() => Reflect.deleteProperty(window, 'matchMedia'));
 
 	beforeEach(() => {
 		TestBed.configureTestingModule({
@@ -196,6 +215,67 @@ describe('RecordShelfComponent', () => {
 		cell?.dispatchEvent(drag('drop', 0));
 
 		expect(dropped).toBeNull();
+	});
+
+	it('plans the unit, each compartment as full as it is', () => {
+		const host = render([
+			shelf({
+				columns: 2,
+				compartments: [filled('a', ['one', 'two']), empty('b')],
+			}),
+		]);
+		const cells = Array.from(
+			host.querySelectorAll<HTMLElement>('.plan-cell')
+		);
+
+		expect(cells).toHaveLength(2);
+		/* Two LPs in a Kallax cubby: barely any of it. */
+		expect(Number(cells[0].style.getPropertyValue('--fill'))).toBeCloseTo(
+			(2 * 6) / 330
+		);
+		expect(cells[1].style.getPropertyValue('--fill')).toBe('0');
+		expect(cells[1].classList.contains('is-blank')).toBe(true);
+	});
+
+	it('leaves the open wall unplanned; there is no furniture to plan', () => {
+		const host = render([
+			shelf({ key: 'wall', columns: 0, compartments: [filled('a')] }),
+		]);
+
+		expect(host.querySelector('.plan')).toBeNull();
+	});
+
+	it('pulls a record out on the first tap and opens it on the second', async () => {
+		touchScreen();
+		fixture = TestBed.createComponent(RecordShelfComponent);
+
+		const host = render([
+			shelf({ columns: 2, compartments: [filled('a', ['one'])] }),
+		]);
+		const blocks = await fixture.getDeferBlocks();
+
+		await blocks[0].render(DeferBlockState.Complete);
+
+		const router = TestBed.inject(Router);
+		const went = jest
+			.spyOn(router, 'navigateByUrl')
+			.mockResolvedValue(true);
+		const [spine] = host.querySelectorAll<HTMLElement>('.spine');
+		const tap = (): boolean =>
+			spine.dispatchEvent(
+				new MouseEvent('click', { bubbles: true, cancelable: true })
+			);
+
+		tap();
+
+		/* Out of the compartment, with its cover above it — but still on the shelf. */
+		expect(spine.classList.contains('is-out')).toBe(true);
+		expect(went).not.toHaveBeenCalled();
+
+		tap();
+
+		expect(went).toHaveBeenCalledWith('/collection/copy/one');
+		expect(host.querySelector('.spine.is-out')).toBeNull();
 	});
 
 	it('says plainly what the furniture has no room for', () => {

@@ -4,6 +4,7 @@ import { EntityStateService } from '../../../common';
 import {
 	CollectionItemDetails,
 	CollectionItemDisposal,
+	CollectionItemDisposalStatus,
 	CollectionItemEntity,
 	CollectionItemEntityAdd,
 	CollectionItemEntityUpdate,
@@ -65,6 +66,12 @@ export abstract class CollectionItemStateService extends EntityStateService<
 	public abstract selectAdding$(): Observable<boolean>;
 	/** A copy is being disposed of or restored. */
 	public abstract selectDisposing$(): Observable<boolean>;
+	/**
+	 * The same flag together with the error of that write, out of one and the
+	 * same state. What follows a disposal to its end reads this rather than
+	 * the two apart: see `CollectionItemDisposalStatus`.
+	 */
+	public abstract selectDisposalStatus$(): Observable<CollectionItemDisposalStatus>;
 	/** A copy is being filed into a compartment, or taken out of one. */
 	public abstract selectPlacing$(): Observable<boolean>;
 

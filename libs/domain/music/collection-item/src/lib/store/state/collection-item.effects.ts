@@ -17,6 +17,7 @@ import {
 	CollectionItemEntity,
 	CollectionItemUtilService,
 	UserDataService,
+	toStoredPhoto,
 } from '@music-collection/api';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 
@@ -187,6 +188,13 @@ export class CollectionItemEffects {
 	public changeCollectionItemPhotos = createEffect(() =>
 		this.actions$.pipe(
 			ofType(collectionItemActions.changeCollectionItemPhotos),
+			map(({ collectionItem, photos }) => ({
+				collectionItem,
+				// Down to path and size, so that a picture taken before the
+				// URL left the document cannot carry its download token back
+				// in — see `toStoredPhoto`.
+				photos: photos.map(toStoredPhoto),
+			})),
 			mergeMap(({ collectionItem, photos }) =>
 				this.userDataService
 					.updateCollectionItem$({

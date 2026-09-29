@@ -23,6 +23,8 @@ const ACCEPTED = /^image\//;
 @Injectable({ providedIn: 'root' })
 export class CopyPhotoEffect {
 	private readonly repository = inject(CopyPhotoRepository);
+	/** Download URLs already asked for, by Storage path. */
+	private readonly resolved = new Map<string, string>();
 
 	/**
 	 * Scales the chosen file and uploads it. `slot` is the place the picture
@@ -51,15 +53,60 @@ export class CopyPhotoEffect {
 			itemId,
 			`${slot}-${Date.now()}.jpg`
 		);
-		const url = await this.repository.upload(path, blob);
+		await this.repository.upload(path, blob);
 
-		return { path, url, width, height };
+		return { path, width, height };
+	}
+
+	/**
+	 * The URLs the pictures can be shown from, by path.
+	 *
+	 * The document holds the path alone, so the page asks Storage for the URL
+	 * of each picture it is about to show. The answers are kept for the
+	 * session: a path names one file forever — a replacement is written under
+	 * a new name — so the same question cannot get a different answer.
+	 *
+	 * A picture that cannot be resolved is left out rather than thrown over
+	 * the others: a file gone from Storage should cost its own half of the
+	 * card, not the whole of it.
+	 */
+	public async urls(
+		photos: CollectionItemPhoto[]
+	): Promise<Record<string, string>> {
+		const resolved = await Promise.all(
+			photos.map((photo) => this.url(photo.path))
+		);
+
+		return Object.fromEntries(
+			resolved.filter((entry): entry is [string, string] => !!entry)
+		);
 	}
 
 	/** Drops pictures the copy no longer points at. */
 	public async discard(photos: CollectionItemPhoto[]): Promise<void> {
+		photos.forEach((photo) => this.resolved.delete(photo.path));
 		await Promise.all(
 			photos.map((photo) => this.repository.remove(photo.path))
 		);
+	}
+
+	private async url(path: string): Promise<[string, string] | null> {
+		const known = this.resolved.get(path);
+
+		if (known) {
+			return [path, known];
+		}
+
+		try {
+			const url = await this.repository.url(path);
+
+			this.resolved.set(path, url);
+
+			return [path, url];
+		} catch (error) {
+			console.error(error);
+
+			return null;
+		}
 	}
 }

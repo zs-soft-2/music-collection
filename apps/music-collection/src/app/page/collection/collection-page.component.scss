@@ -552,6 +552,21 @@ button {
 	color: var(--mc-text-muted);
 }
 
+/* The same note, said the way the screen at hand can be worked. */
+.on-touch {
+	display: none;
+}
+
+@media (hover: none) {
+	.on-pointer {
+		display: none;
+	}
+
+	.on-touch {
+		display: inline;
+	}
+}
+
 /* Freezing the arrangement, or handing it back to the shelf. */
 .shelf-keep {
 	display: inline-flex;

@@ -4,6 +4,8 @@ export * from './propose-link/propose-link.component';
 export * from './artist-tile/artist-tile.component';
 export * from './carousel/carousel.component';
 export * from './copy-placement/copy-placement.component';
+export * from './copy-removal/copy-removal.component';
+export * from './copy-removal/copy-removal.model';
 export * from './count-stats';
 export * from './decade-chart/decade-chart.component';
 export * from './defer-reveal';

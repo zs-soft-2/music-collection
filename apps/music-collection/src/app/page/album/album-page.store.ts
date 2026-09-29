@@ -21,7 +21,6 @@ import {
 	AlbumStateService,
 	ArtistStateService,
 	AuthenticationStateService,
-	COLLECTION_ITEM_DISPOSAL_REASONS,
 	CollectionItemEntity,
 	CollectionItemEntityAdd,
 	CollectionItemPermissionsService,
@@ -76,6 +75,8 @@ import {
 	toReleaseView,
 } from '../../shared/music-ui';
 import { Crumb } from '../../shared/page-breadcrumb';
+import { withCopyDisposal } from '../../shared/copy-disposal/copy-disposal.feature';
+import { DisposalDraft } from '../../shared/music-ui/copy-removal/copy-removal.model';
 import { withPageOrigin } from '../../shared/page-origin';
 import {
 	NO_SHELF_LAYOUT,
@@ -86,7 +87,6 @@ import { placementInLayout } from '../collection/shelf-placement';
 import { ALBUM_VIEW_SETTING } from './album-view.setting';
 import { CopyPick } from './component/release-picker/release-picker.component';
 import {
-	DisposalDraft,
 	groupCredits,
 	ReleaseRequestDraft,
 	WishlistDraft,
@@ -133,26 +133,6 @@ interface AlbumPageState {
 	wishlistOpen: boolean;
 	wishing: boolean;
 	wishError: string | null;
-	/** May mark their copies sold, traded… and take them back. */
-	canManageCopies: boolean;
-	/** The copy the removal dialog is open for. */
-	removingCopyId: string | null;
-	disposing: boolean;
-	disposeError: string | null;
-	/**
-	 * The number of the copy changing hands, and which way it is going. Acted
-	 * on once the write is through: a record that has left the collection
-	 * gives its number back to the registry, so whoever holds the record can
-	 * register it, and one taken back asks for the number again.
-	 */
-	serialHandover: {
-		releaseId: string;
-		number: number;
-		itemId: string;
-		userId: string;
-		/** Taking the number back, rather than giving it up. */
-		retake: boolean;
-	} | null;
 	/** The copy the placement dialog is open for. */
 	placingCopyId: string | null;
 	placing: boolean;
@@ -239,11 +219,6 @@ const initialState: AlbumPageState = {
 	wishlistOpen: false,
 	wishing: false,
 	wishError: null,
-	canManageCopies: false,
-	removingCopyId: null,
-	disposing: false,
-	disposeError: null,
-	serialHandover: null,
 	placingCopyId: null,
 	placing: false,
 	placeError: null,
@@ -278,18 +253,6 @@ const initialState: AlbumPageState = {
 
 const MORE_ALBUMS_COUNT = 6;
 
-const DISPOSAL_NOTE_MAX_LENGTH = 500;
-
-/** A removal the rules accept: a known reason, a past date, a short note. */
-function isValidDisposal(draft: DisposalDraft): boolean {
-	return (
-		COLLECTION_ITEM_DISPOSAL_REASONS.includes(draft.reason) &&
-		Number.isFinite(draft.date) &&
-		draft.date <= Date.now() &&
-		(draft.note?.length ?? 0) <= DISPOSAL_NOTE_MAX_LENGTH
-	);
-}
-
 /** A release is collected once: a copy of it is already owned. */
 function ownsRelease(
 	ownedItems: CollectionItemEntity[],
@@ -299,28 +262,6 @@ function ownsRelease(
 		!!releaseId &&
 		ownedItems.some((item) => item.release?.uid === releaseId)
 	);
-}
-
-/**
- * What the registry has to be told once a copy changes hands, or null where
- * the copy carries no number and the registry has nothing to do with it —
- * which is nearly every record.
- */
-function toSerialHandover(
-	item: CollectionItemEntity,
-	retake: boolean
-): AlbumPageState['serialHandover'] {
-	const releaseId = item.release?.uid ?? null;
-
-	return item.serial && releaseId
-		? {
-				releaseId,
-				number: item.serial.number,
-				itemId: item.uid,
-				userId: item.userId,
-				retake,
-			}
-		: null;
 }
 
 /** What the collector reads when the number is already spoken for. */
@@ -415,6 +356,7 @@ function entities$<T>(
 export const AlbumPageStore = signalStore(
 	withState(initialState),
 	withPageOrigin(),
+	withCopyDisposal(),
 	withComputed((store, text = inject(TextService)) => {
 		const albumEntity = computed(
 			() =>
@@ -1004,11 +946,6 @@ export const AlbumPageStore = signalStore(
 								(CollectionItemPermissionsService.createCollectionItemEntity in
 									permissions ||
 									RoleNames.ADMIN in permissions),
-							canManageCopies:
-								!!user?.uid &&
-								(CollectionItemPermissionsService.updateCollectionItemEntity in
-									permissions ||
-									RoleNames.ADMIN in permissions),
 						})
 					)
 				)
@@ -1070,86 +1007,15 @@ export const AlbumPageStore = signalStore(
 					})
 				)
 			),
-			/** Follows a removal or restore; the dialog closes once saved. */
-			watchDisposing: rxMethod<void>(
-				pipe(
-					switchMap(() =>
-						combineLatest([
-							collectionItemStateService.selectDisposing$(),
-							collectionItemStateService.selectError$(),
-						])
-					),
-					pairwise(),
-					tap(([[wasDisposing], [disposing, error]]) => {
-						patchState(store, { disposing });
-						if (!wasDisposing || disposing) {
-							return;
-						}
-						const handover = store.serialHandover();
-
-						patchState(store, {
-							disposeError: error,
-							removingCopyId: error
-								? store.removingCopyId()
-								: null,
-							serialHandover: null,
-						});
-						if (error || !handover) {
-							return;
-						}
-						// The copy is written; now the registry follows it.
-						if (!handover.retake) {
-							void serialEffect.release(
-								handover.releaseId,
-								handover.number
-							);
-							return;
-						}
-						serialEffect
-							.hold(
-								handover.releaseId,
-								{ number: handover.number, total: null },
-								handover.userId,
-								handover.itemId
-							)
-							.catch(() =>
-								// Someone registered it while the record was
-								// out of the collection. The copy is back and
-								// still shows the number it wore, but it no
-								// longer holds it — worth saying, because the
-								// next edit to that number will be refused.
-								patchState(store, {
-									disposeError:
-										'The copy is back, but its number has been registered by another collector in the meantime.',
-								})
-							);
-					})
-				)
-			),
 			/** Marks the copy sold, traded… It stays in the history. */
 			removeCopy(draft: DisposalDraft): void {
 				const item = store
 					.ownedItems()
 					.find((owned) => owned.uid === store.removingCopyId());
 
-				if (
-					!item ||
-					!store.canManageCopies() ||
-					store.disposing() ||
-					!isValidDisposal(draft)
-				) {
-					return;
+				if (item && store.canManageCopies()) {
+					store.disposeCopy(item, draft);
 				}
-
-				patchState(store, {
-					disposeError: null,
-					serialHandover: toSerialHandover(item, false),
-				});
-				collectionItemStateService.dispatchDisposeEntityAction(item, {
-					reason: draft.reason,
-					date: draft.date,
-					note: draft.note?.trim() || null,
-				});
 			},
 			/** Takes a copy gone from the collection back into it. */
 			restoreCopy(copyId: string): void {
@@ -1160,15 +1026,9 @@ export const AlbumPageStore = signalStore(
 				if (
 					item &&
 					store.canManageCopies() &&
-					!store.disposing() &&
 					!ownsRelease(store.ownedItems(), item.release?.uid)
 				) {
-					patchState(store, {
-						serialHandover: toSerialHandover(item, true),
-					});
-					collectionItemStateService.dispatchRestoreEntityAction(
-						item
-					);
+					store.restoreDisposedCopy(item);
 				}
 			},
 			loadPastItems: rxMethod<void>(
@@ -1553,15 +1413,6 @@ export const AlbumPageStore = signalStore(
 				closePlacement(): void {
 					patchState(store, { placingCopyId: null });
 				},
-				openRemoval(copyId: string): void {
-					patchState(store, {
-						removingCopyId: copyId,
-						disposeError: null,
-					});
-				},
-				closeRemoval(): void {
-					patchState(store, { removingCopyId: null });
-				},
 
 				/** The layout kept for the user, and any later change to it. */
 				loadView: rxMethod<void>(
@@ -1668,6 +1519,7 @@ export const AlbumPageStore = signalStore(
 			store.loadArtists(of(undefined));
 			store.loadReleases(of(undefined));
 			store.loadCollector(of(undefined));
+			store.watchCopyPermission(of(undefined));
 			store.watchAdding(of(undefined));
 			store.watchDisposing(of(undefined));
 			store.watchPlacing(of(undefined));

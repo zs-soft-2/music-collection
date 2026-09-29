@@ -278,7 +278,17 @@
 							} @else if (store.shelfIsKept()) {
 								{{ t('page.collection.shelf.keptHint') }}
 							} @else {
-								{{ t('page.collection.shelf.dragHint') }}
+								<!--
+									Dragging is a mouse's business, so a
+									finger is told what a finger can do
+									instead.
+								-->
+								<span class="on-pointer">{{
+									t('page.collection.shelf.dragHint')
+								}}</span>
+								<span class="on-touch">{{
+									t('page.collection.shelf.tapHint')
+								}}</span>
 							}
 						</p>
 						@if (store.shelfIsKept()) {
@@ -386,6 +396,8 @@
 						[release]="release"
 						[canPlace]="store.canPlaceCopies()"
 						(place)="store.openPlacement($event)"
+						[canRemove]="store.canManageCopies()"
+						(remove)="store.openRemoval($event)"
 					/>
 				</li>
 			}
@@ -400,6 +412,8 @@
 						[priority]="priority && $index < 6"
 						[canPlace]="store.canPlaceCopies()"
 						(place)="store.openPlacement($event)"
+						[canRemove]="store.canManageCopies()"
+						(remove)="store.openRemoval($event)"
 					/>
 				</li>
 			}
@@ -417,5 +431,16 @@
 		[error]="store.placeError()"
 		(placed)="store.placeCopy($event)"
 		(closed)="store.closePlacement()"
+	/>
+}
+
+@if (store.removingCopy(); as copy) {
+	<mc-copy-removal
+		[albumTitle]="copy.title"
+		[copy]="copy"
+		[busy]="store.disposing()"
+		[error]="store.disposeError()"
+		(removed)="store.removeCopy($event)"
+		(closed)="store.closeRemoval()"
 	/>
 }

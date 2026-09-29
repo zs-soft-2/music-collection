@@ -51,6 +51,13 @@ export class ReleaseCardComponent {
 	/** The copy to file, by its collection item id. */
 	public readonly place = output<string>();
 	/**
+	 * The collector may let this copy go — sold, traded, lost. Their own
+	 * collection offers it; a card anywhere else does not.
+	 */
+	public readonly canRemove = input(false);
+	/** The copy to let go of, by its collection item id. */
+	public readonly remove = output<string>();
+	/**
 	 * Where the card leads. In the collector's own collection a card is a
 	 * copy they own, so it opens that copy; everywhere else — a search, an
 	 * artist's discography, someone's wishlist — it is a record in the

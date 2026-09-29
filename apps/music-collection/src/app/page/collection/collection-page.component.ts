@@ -7,12 +7,14 @@ import { RecordShelfComponent } from './component/record-shelf/record-shelf.comp
 import { ReleaseRowComponent } from './component/release-row/release-row.component';
 import {
 	CopyPlacementComponent,
+	CopyRemovalComponent,
 	DecadeChartComponent,
 	FORMAT_ORDER,
 	ReleaseCardComponent,
 	StyleBarsComponent,
 } from '../../shared/music-ui';
 import { CollectionProgressComponent } from '../collections/component/collection-progress/collection-progress.component';
+import { focusOnClose } from '../../shared/dialog-focus';
 import { PlayerStore } from '../../shared/player';
 import {
 	CollectionGroup,
@@ -41,6 +43,7 @@ import { CollectionPageStore } from './collection-page.store';
 		ReleaseRowComponent,
 		RecordShelfComponent,
 		CopyPlacementComponent,
+		CopyRemovalComponent,
 		DecadeChartComponent,
 		StyleBarsComponent,
 		CollectionProgressComponent,
@@ -77,6 +80,16 @@ export class CollectionPageComponent {
 		if (query) {
 			this.store.setQuery(query);
 		}
+
+		// Back from a dialog: focus the icon on the card or the row it was
+		// opened from. A record let go of takes its own icon with it, and the
+		// shelf is redrawn without it — there is nothing left to go back to.
+		focusOnClose(this.store.removingCopyId, (copyId) => [
+			`[data-remove-copy="${copyId}"]`,
+		]);
+		focusOnClose(this.store.placingCopyId, (copyId) => [
+			`[data-place-copy="${copyId}"]`,
+		]);
 	}
 
 	protected onQuery(event: Event): void {

@@ -167,3 +167,18 @@
 		<i class="pi pi-bookmark" aria-hidden="true"></i>
 	</button>
 }
+
+@if (canRemove()) {
+	<button
+		type="button"
+		class="mc-card-remove"
+		[attr.data-remove-copy]="item.id"
+		[attr.aria-label]="
+			'ui.copyRemoval.removeTitle' | transloco: { title: item.title }
+		"
+		[title]="'ui.copyRemoval.remove-from-collection' | transloco"
+		(click)="remove.emit(item.id)"
+	>
+		<i class="pi pi-sign-out" aria-hidden="true"></i>
+	</button>
+}

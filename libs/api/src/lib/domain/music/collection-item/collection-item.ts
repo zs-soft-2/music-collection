@@ -23,6 +23,21 @@ export interface CollectionItemDisposal {
 }
 
 /**
+ * Whether a copy is on its way out of the collection (or back into it), and
+ * what became of that write.
+ *
+ * The two are read together rather than one by one on purpose: a refused
+ * write turns the flag off and sets the error in the same breath, and a
+ * reader watching two separate streams sees a moment in between where the
+ * write looks finished and the error is still the one before it — which is
+ * to say, looks like a success.
+ */
+export interface CollectionItemDisposalStatus {
+	disposing: boolean;
+	error: string | null;
+}
+
+/**
  * Where the copy stands in the room: which drawn unit, which compartment of
  * it, and how far along that compartment it is. Rows and columns are counted
  * from the top left starting at 1 — a place a collector could read out loud.
@@ -123,12 +138,16 @@ export const COLLECTION_ITEM_SERIAL_MAX = 1000000;
  * A photo of this very copy — the sleeve as it stands in the room, not the
  * catalog cover. At most two: the first is the front, the second the back,
  * and the page turns between them.
+ *
+ * Only the path is kept. A Storage download URL carries a token that opens
+ * the file to whoever holds the link, with no login and past every Storage
+ * rule; written into a document it would be a key lying in the open. The
+ * page asks Storage for the URL when it shows the picture, and that question
+ * is one the rules answer.
  */
 export interface CollectionItemPhoto {
 	/** Storage path, under `collection-item/{userId}/{itemId}/`. */
 	path: string;
-	/** Download URL of `path`, so the page needs no Storage round-trip. */
-	url: string;
 	width: number;
 	height: number;
 }
@@ -150,6 +169,23 @@ export interface CollectionItemDetails {
 
 /** The most photos a copy carries: a front and a back. */
 export const COLLECTION_ITEM_PHOTO_LIMIT = 2;
+
+/**
+ * The picture as the document keeps it: the path and the size, and nothing
+ * that came along with it.
+ *
+ * A copy photographed before the URL was taken out of the document still
+ * carries one in the collection the page reads from. Writing that list back
+ * unchanged — a place taken, a picture replaced — would put the download
+ * token into the document again, and the token is a key to the file for
+ * whoever holds the link. The rules refuse such a write; this is what keeps
+ * the page from attempting one.
+ */
+export const toStoredPhoto = ({
+	path,
+	width,
+	height,
+}: CollectionItemPhoto): CollectionItemPhoto => ({ path, width, height });
 
 export interface CollectionItem {
 	description?: string;

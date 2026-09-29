@@ -9,7 +9,11 @@ import { RouterLink } from '@angular/router';
 import { I18N_IMPORTS, TextService } from '@music-collection/core/i18n';
 
 import { Crumb, PageBreadcrumbComponent } from '../../shared/page-breadcrumb';
-import { FormatBadgeComponent } from '../../shared/music-ui';
+import { focusOnClose } from '../../shared/dialog-focus';
+import {
+	CopyRemovalComponent,
+	FormatBadgeComponent,
+} from '../../shared/music-ui';
 import {
 	CollectionItemPageStore,
 	CopyDraft,
@@ -37,6 +41,7 @@ import { CopyPhotosComponent } from './component/copy-photos';
 		PageBreadcrumbComponent,
 		RouterLink,
 		FormatBadgeComponent,
+		CopyRemovalComponent,
 		CopyPhotosComponent,
 		CopyDetailsFormComponent,
 		DatePipe,
@@ -57,6 +62,16 @@ export class CollectionItemPageComponent {
 			{ label: album?.title ?? 'Copy' },
 		];
 	});
+
+	public constructor() {
+		// Back from the removal dialog: focus the button it was opened from.
+		// A copy let go of no longer has one, so the heading of the section it
+		// stood in takes the focus and the reading starts at this copy.
+		focusOnClose(this.store.removingCopyId, (copyId) => [
+			`[data-remove-copy="${copyId}"]`,
+			'[data-copy-heading]',
+		]);
+	}
 
 	protected save(draft: CopyDraft): void {
 		// The store takes the copy's number from the registry before it writes,

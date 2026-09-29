@@ -196,10 +196,9 @@ describe('collection-item: where the collector filed the copy', () => {
 		));
 });
 
-/** A picture of the copy, as the page writes it. */
+/** A picture of the copy, as the page writes it: the path and its size. */
 const photo = (fields: Record<string, unknown> = {}) => ({
 	path: `collection-item/${ME}/${ITEM}/front-1758499200000.jpg`,
-	url: 'https://firebasestorage.googleapis.com/v0/b/demo/o/front.jpg',
 	width: 2000,
 	height: 1994,
 	...fields,
@@ -342,6 +341,25 @@ describe('collection-item: what the collector tells about the copy', () => {
 		assertFails(
 			updateDoc(doc(asMe(), PATH), {
 				photos: [photo({ width: 0 })],
+			})
+		));
+
+	/**
+	 * A download URL carries a token that opens the file to whoever holds the
+	 * link — no login, and past the Storage rule. Kept in a document it would
+	 * be worth exactly as much as the document is guarded, which is not how a
+	 * key should be kept. The page asks Storage for it instead.
+	 */
+	it('refuses a download URL written next to the path', () =>
+		assertFails(
+			updateDoc(doc(asMe(), PATH), {
+				photos: [
+					photo({
+						url:
+							'https://firebasestorage.googleapis.com/v0/b/' +
+							'demo/o/front.jpg?alt=media&token=secret',
+					}),
+				],
 			})
 		));
 });

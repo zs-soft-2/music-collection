@@ -4,6 +4,7 @@ import { Injectable, inject } from '@angular/core';
 import {
 	CollectionItemDetails,
 	CollectionItemDisposal,
+	CollectionItemDisposalStatus,
 	CollectionItemEntity,
 	CollectionItemEntityAdd,
 	CollectionItemEntityUpdate,
@@ -204,6 +205,12 @@ export class CollectionItemStateServiceImpl extends CollectionItemStateService {
 	public selectDisposing$(): Observable<boolean> {
 		return this.store.pipe(
 			select(collectionItemSelectors.getCollectionItemDisposing)
+		);
+	}
+
+	public selectDisposalStatus$(): Observable<CollectionItemDisposalStatus> {
+		return this.store.pipe(
+			select(collectionItemSelectors.getCollectionItemDisposalStatus)
 		);
 	}
 

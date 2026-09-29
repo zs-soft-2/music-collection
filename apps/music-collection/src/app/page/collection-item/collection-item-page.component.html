@@ -93,7 +93,10 @@
 												date:
 													disposal.date
 													| mcDate: 'longDate',
-												reason: disposal.reason,
+												reason:
+													disposal.reason
+													| mcCatalog
+														: 'disposalReason',
 										  }
 							}}
 						</p>
@@ -108,7 +111,7 @@
 				<mc-copy-photos
 					[photos]="store.photos()"
 					[albumTitle]="album.title"
-					[canEdit]="store.canEdit()"
+					[canEdit]="store.canManageCopies()"
 					[busy]="store.busy()"
 					[error]="store.photoError()"
 					(chosen)="store.addPhoto($event.slot, $event.file)"
@@ -118,17 +121,55 @@
 
 			<div class="copy-facts">
 				<div class="section-head">
-					<h2>{{ 'page.collection-item.this-copy' | transloco }}</h2>
-					@if (store.canEdit() && !store.editing()) {
-						<button
-							type="button"
-							class="button"
-							(click)="store.edit()"
-						>
-							{{ 'page.collection-item.edit' | transloco }}
-						</button>
+					<h2 tabindex="-1" data-copy-heading>
+						{{ 'page.collection-item.this-copy' | transloco }}
+					</h2>
+					@if (
+						!store.editing() &&
+						(store.canManageCopies() || store.canRemove())
+					) {
+						<div class="section-actions">
+							@if (store.canManageCopies()) {
+								<button
+									type="button"
+									class="button"
+									(click)="store.edit()"
+								>
+									{{
+										'page.collection-item.edit' | transloco
+									}}
+								</button>
+							}
+							@if (store.canRemove()) {
+								<button
+									type="button"
+									class="button is-quiet"
+									[attr.data-remove-copy]="store.itemId()"
+									[disabled]="store.disposing()"
+									(click)="store.askRemoval()"
+								>
+									<i
+										class="pi pi-sign-out"
+										aria-hidden="true"
+									></i>
+									{{
+										'page.collection-item.remove'
+											| transloco
+									}}
+								</button>
+							}
+						</div>
 					}
 				</div>
+
+				@if (store.disposeError() && !store.removingCopyId()) {
+					<p class="removal-error" role="alert">
+						{{
+							'page.collection-item.removeFailed'
+								| transloco: { error: store.disposeError() }
+						}}
+					</p>
+				}
 
 				@if (store.editing()) {
 					<mc-copy-details-form
@@ -253,7 +294,7 @@
 					@if (
 						store.provenance()?.empty &&
 						store.condition()?.empty &&
-						store.canEdit()
+						store.canManageCopies()
 					) {
 						<p class="prompt">
 							{{
@@ -412,3 +453,14 @@
 		</section>
 	}
 </div>
+
+@if (store.removingCopy(); as copy) {
+	<mc-copy-removal
+		[albumTitle]="store.album()?.title ?? ''"
+		[copy]="copy"
+		[busy]="store.disposing()"
+		[error]="store.disposeError()"
+		(removed)="store.removeCopy($event)"
+		(closed)="store.closeRemoval()"
+	/>
+}

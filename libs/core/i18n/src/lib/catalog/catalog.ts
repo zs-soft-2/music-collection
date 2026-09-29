@@ -48,6 +48,15 @@ export type CatalogGroup =
 	 */
 	| 'artistTypePlural'
 	/**
+	 * Why a copy left the collection: `sold`, `traded`, `gifted`, `lost`,
+	 * `other`.
+	 *
+	 * The collector's own word for what happened to their record, not the
+	 * catalog's — but it is the app that owns the list, so it is the app that
+	 * translates it.
+	 */
+	| 'disposalReason'
+	/**
 	 * A decade of releases, keyed by its first year: `1980`.
 	 *
 	 * Spelled out per decade rather than built from a suffix, because

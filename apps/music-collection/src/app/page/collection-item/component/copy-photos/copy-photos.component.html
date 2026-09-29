@@ -11,23 +11,33 @@
 		(keydown.space)="toggle(); $event.preventDefault()"
 	>
 		<div class="faces">
+			<!--
+				The URL arrives a moment after the picture itself: the copy
+				carries the Storage path, and where it can be read from is
+				Storage's to say. Until it has, the face stays empty rather
+				than pointing at nothing.
+			-->
 			@if (front(); as photo) {
-				<img
-					class="face front"
-					[src]="photo.url"
-					[width]="photo.width"
-					[height]="photo.height"
-					[alt]="photo.side + ' of ' + albumTitle()"
-				/>
+				@if (photo.url; as url) {
+					<img
+						class="face front"
+						[src]="url"
+						[width]="photo.width"
+						[height]="photo.height"
+						[alt]="photo.side + ' of ' + albumTitle()"
+					/>
+				}
 			}
 			@if (back(); as photo) {
-				<img
-					class="face back"
-					[src]="photo.url"
-					[width]="photo.width"
-					[height]="photo.height"
-					[alt]="photo.side + ' of ' + albumTitle()"
-				/>
+				@if (photo.url; as url) {
+					<img
+						class="face back"
+						[src]="url"
+						[width]="photo.width"
+						[height]="photo.height"
+						[alt]="photo.side + ' of ' + albumTitle()"
+					/>
+				}
 			}
 		</div>
 
