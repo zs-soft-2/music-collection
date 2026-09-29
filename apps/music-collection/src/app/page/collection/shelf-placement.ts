@@ -1,17 +1,20 @@
 import {
 	CollectionItemPlacement,
-	MAX_SHELF_POSITION,
+	SHELF_MEDIA_SIZES,
+	ShelfMediaSize,
 	ShelfSpot,
+	maxPositionIn,
 	nextPosition,
 	placementKey,
 	placementInLayout,
+	shelfMediaSize,
 	spotKey,
 	unitSpots,
 } from '@music-collection/api';
 
 import { ReleaseView } from '../../shared/music-ui';
 
-import { ShelfSpotRef } from './collection.model';
+import { ShelfCompartmentView, ShelfSpotRef } from './collection.model';
 
 /**
  * Filing a copy by hand: which drawn unit, which compartment of it, and how
@@ -23,13 +26,24 @@ import { ShelfSpotRef } from './collection.model';
 
 export type { ShelfSpot };
 export {
-	MAX_SHELF_POSITION,
+	maxPositionIn,
 	nextPosition,
 	placementInLayout,
 	placementKey,
 	spotKey,
 	unitSpots,
 };
+
+/**
+ * How much room this copy takes on a shelf. A release filed as a box set —
+ * or only tagged as one — is measured as the slab it is, however its medium
+ * is recorded, which is the same rule the shelf draws its spines by.
+ */
+export function shelfSizeOf(release: ReleaseView): ShelfMediaSize {
+	return release.boxSet
+		? SHELF_MEDIA_SIZES.boxset
+		: shelfMediaSize(release.format);
+}
 
 /** The same compartment, the same distance along it. */
 export function samePlace(
@@ -57,13 +71,15 @@ export function placementsForDrop(
 	shown: readonly ReleaseView[],
 	moved: ReleaseView,
 	spot: ShelfSpotRef,
-	index: number
+	index: number,
+	/** The furthest along this compartment a copy can be filed. */
+	max: number
 ): { releaseId: string; placement: CollectionItemPlacement }[] {
 	const rest = shown.filter((release) => release.id !== moved.id);
 	const at = Math.max(0, Math.min(index, rest.length));
 	const order = [...rest.slice(0, at), moved, ...rest.slice(at)].slice(
 		0,
-		MAX_SHELF_POSITION
+		max
 	);
 
 	return order
@@ -94,7 +110,9 @@ export function placementsForDrop(
 export function placementsLeftBehind(
 	shown: readonly ReleaseView[],
 	moved: ReleaseView,
-	spot: ShelfSpotRef
+	spot: ShelfSpotRef,
+	/** The furthest along this compartment a copy can be filed. */
+	max: number
 ): { releaseId: string; placement: CollectionItemPlacement }[] {
 	const key = spotKey(spot.unitId, spot.row, spot.column);
 	const stays = shown.filter((release) => release.id !== moved.id);
@@ -106,7 +124,7 @@ export function placementsLeftBehind(
 	}
 
 	return stays
-		.slice(0, MAX_SHELF_POSITION)
+		.slice(0, max)
 		.map((release, index) => ({
 			releaseId: release.id,
 			placement: { ...spot, position: index + 1 },
@@ -114,4 +132,55 @@ export function placementsLeftBehind(
 		}))
 		.filter(({ placement, was }) => !samePlace(was, placement))
 		.map(({ releaseId, placement }) => ({ releaseId, placement }));
+}
+
+/**
+ * Every record on the shelf given the place it already appears to have.
+ *
+ * This is what "keep it as it stands" writes. Until a record is filed, the
+ * shelf packs it afresh on every draw, so a record joining the collection —
+ * or leaving it — shifts everything after it, compartments and all. Writing
+ * the arrangement down ends that: from then on each record is where its
+ * owner last saw it, and only they move it.
+ *
+ * Compartments that are not drawn furniture (the open wall, and the
+ * overflow of what no longer fits) are left out: there is no compartment to
+ * name, and a record there is precisely one the shelf has no room for.
+ *
+ * Only what actually changes comes back, so running it twice writes nothing
+ * the second time.
+ */
+export function placementsToFreeze(
+	shelves: readonly { compartments: readonly ShelfCompartmentView[] }[]
+): { releaseId: string; placement: CollectionItemPlacement }[] {
+	return shelves
+		.flatMap((shelf) => shelf.compartments)
+		.filter((compartment) => !!compartment.spot)
+		.flatMap((compartment) =>
+			compartment.items.map((release, index) => ({
+				releaseId: release.id,
+				placement: {
+					...(compartment.spot as ShelfSpotRef),
+					position: index + 1,
+				},
+				was: release.placement,
+			}))
+		)
+		.filter(({ placement, was }) => !samePlace(was, placement))
+		.map(({ releaseId, placement }) => ({ releaseId, placement }));
+}
+
+/**
+ * Every record that holds a place, handed back to the shelf.
+ *
+ * The way out of a frozen shelf: the placements are dropped, and the packing
+ * takes over again. Only records that have a place are named, so nothing is
+ * written for a shelf that was never frozen.
+ */
+export function placementsToRelease(
+	releases: readonly ReleaseView[]
+): { releaseId: string; placement: null }[] {
+	return releases
+		.filter((release) => !!release.placement)
+		.map((release) => ({ releaseId: release.id, placement: null }));
 }

@@ -271,13 +271,40 @@
 		@switch (store.view()) {
 			@case ('shelf') {
 				@if (store.shelfUnits().length) {
-					<p class="shelf-note">
-						@if (store.placeable()) {
-							{{ t('page.collection.shelf.dragHint') }}
+					<div class="shelf-bar">
+						<p class="shelf-note">
+							@if (!store.placeable()) {
+								{{ t('page.collection.shelf.filterHint') }}
+							} @else if (store.shelfIsKept()) {
+								{{ t('page.collection.shelf.keptHint') }}
+							} @else {
+								{{ t('page.collection.shelf.dragHint') }}
+							}
+						</p>
+						@if (store.shelfIsKept()) {
+							<button
+								type="button"
+								class="shelf-keep"
+								[disabled]="
+									!store.placeable() || store.placing()
+								"
+								(click)="store.releaseShelf()"
+							>
+								{{ t('page.collection.shelf.release') }}
+							</button>
 						} @else {
-							{{ t('page.collection.shelf.filterHint') }}
+							<button
+								type="button"
+								class="shelf-keep"
+								[disabled]="
+									!store.placeable() || store.placing()
+								"
+								(click)="store.keepShelf()"
+							>
+								{{ t('page.collection.shelf.keep') }}
+							</button>
 						}
-					</p>
+					</div>
 				}
 				@if (store.placeError(); as error) {
 					<p class="shelf-error" role="alert">

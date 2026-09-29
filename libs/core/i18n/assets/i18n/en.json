@@ -371,7 +371,10 @@
 			"shelf": {
 				"dragHint": "Drag a record to file it where it really stands. A compartment you have arranged keeps the room you made in it; everything you have not placed keeps filling the compartments you left free.",
 				"filterHint": "Clear the search and the format filter to rearrange the shelf by hand.",
-				"fileFailed": "Could not file it: {{error}}"
+				"fileFailed": "Could not file it: {{error}}",
+				"keep": "Keep it as it stands",
+				"release": "Let the shelf arrange it",
+				"keptHint": "The shelf stands as you left it: the records keep their places even when you add one or a copy leaves. A new record goes into whatever compartment is still free."
 			},
 			"groupFallback": "Collection",
 			"unknownStyle": "Unknown style",
@@ -982,7 +985,7 @@
 		},
 		"recordShelf": {
 			"off-the-shelf": "Off the shelf",
-			"no-drawn-compartment-left": "No drawn compartment left — add a shelf in your profile.",
+			"no-drawn-compartment-left": "No drawn compartment is left, or none is tall enough for these — look over your shelving in your profile.",
 			"play-what-stands-here": "Play what stands here",
 			"play-what-stands-here2": "Play what stands here"
 		},
@@ -1380,6 +1383,19 @@
 			"actions": "Actions",
 			"edit-release": "Edit release",
 			"delete-release2": "Delete release"
+		},
+		"releaseDeletion": {
+			"title": "Delete release",
+			"checking": "Checking what holds it…",
+			"nothing-holds": "Nothing points at it; it can be deleted for good.",
+			"goes-with-tracks": "{{count}} track(s) go with it.",
+			"in-use": "{{count}} copy/copies of it stand in collections, so it cannot be deleted — only their owners can remove those. Archive it instead: it comes off the forms, and the copies already filed under it stay.",
+			"in-use-now": "A copy was filed in the meantime, so it cannot be deleted after all. Archive it instead.",
+			"really-delete": "Delete for good",
+			"archive": "Archive",
+			"unarchive": "Restore",
+			"cancel": "Cancel",
+			"archived": "archived"
 		},
 		"releaseDetailView": {
 			"release-detail-view-works": "release detail view works!"
@@ -1963,7 +1979,7 @@
 			"play-on-to-the": "Play on to the next track"
 		},
 		"profileShelves": {
-			"draw-the-shelving-you": "Draw the shelving you actually own. A unit is a grid of square compartments, so 4 × 2 stands upright and 2 × 4 is the same unit on its side. Records are filed from the first unit to the last.",
+			"draw-the-shelving-you": "Draw the shelving you actually own. A unit is a grid of compartments, and a compartment has two measurements: its height decides what fits (an LP needs 32 cm, a DVD 20, a CD 12, a cassette 8) and its length decides how much. Records are filed from the first unit to the last — and whatever a compartment cannot take waits for the next one.",
 			"shelf-name": "Shelf name",
 			"rows": "Rows",
 			"one-row-fewer": "One row fewer",
@@ -1981,8 +1997,18 @@
 				"one": "{{count}} record has nowhere to stand — it shows below the furniture until you draw more.",
 				"other": "{{count}} records have nowhere to stand — they show below the furniture until you draw more."
 			},
-			"unitNote": "{{compartments}} compartments · room for {{records}} records",
-			"roomNote": "{{units}} shelves · {{compartments}} compartments · room for {{records}} records."
+			"unitNote": "{{compartments}} compartments · one holds:",
+			"roomNote": "{{units}} units · {{compartments}} compartments · {{length}} cm of shelf in all, which takes {{holds}} of your records.",
+			"cubby-height": "Compartment height",
+			"cubby-length": "Compartment length",
+			"one-notch-lower": "One notch lower",
+			"one-notch-higher": "One notch higher",
+			"shorter": "One centimetre shorter",
+			"longer": "One centimetre longer",
+			"how-the-copies-lie": "How the copies lie in a compartment",
+			"standing": "Standing",
+			"stacked": "Stacked",
+			"nothing-fits": "Nothing fits a compartment this low"
 		},
 		"profileSpotify": {
 			"your-own-app-explained": "With your own Spotify app this player drives Spotify: the queue, the radio, the next track, your own speakers. Without it, Spotify's embedded frame on the album page is what is left — it plays in full if you are signed in to Spotify, but nothing here drives it. Spotify counts who signs in through an app — one app holds twenty-five people — which is why yours has to be your own.",

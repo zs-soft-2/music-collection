@@ -1,4 +1,14 @@
-import { SHELF_CUBBY_SIZE, ShelfUnitLayout } from '@music-collection/api';
+import {
+	DEFAULT_CUBBY,
+	SHELF_HEIGHT_UNIT_CM,
+	SHELF_MEDIA,
+	ShelfCubby,
+	ShelfMedia,
+	ShelfStance,
+	ShelfUnitLayout,
+	cubbyHolds,
+	shelfMediaSize,
+} from '@music-collection/api';
 
 import { UserSetting } from '../../data/user-settings';
 
@@ -7,8 +17,8 @@ import { UserSetting } from '../../data/user-settings';
  * files a copy into the same furniture), so it is kept with the collection
  * item; what a unit may be, and how it is stored, stays here.
  */
-export type { ShelfUnitLayout };
-export { SHELF_CUBBY_SIZE };
+export type { ShelfCubby, ShelfMedia, ShelfStance, ShelfUnitLayout };
+export { DEFAULT_CUBBY, SHELF_HEIGHT_UNIT_CM, SHELF_MEDIA, cubbyHolds };
 
 /** The furniture in the room, in the order records are filed into it. */
 export interface ShelfLayoutSettings {
@@ -25,24 +35,66 @@ export const SHELF_LIMITS = {
 	maxSide: 12,
 	maxUnits: 12,
 	maxNameLength: 40,
+	/** Compartment height, in `SHELF_HEIGHT_UNIT_CM` units: 4 cm to 48 cm. */
+	minHeight: 1,
+	maxHeight: 12,
+	/** Compartment length in millimetres: 5 cm to 4 m. */
+	minLength: 50,
+	maxLength: 4000,
+	/** The length steps by a centimetre, which is how a shelf is measured. */
+	lengthStep: 10,
 } as const;
 
 /** What a new unit looks like before it is redrawn: a square Kallax. */
-export const DEFAULT_SHELF = { rows: 4, columns: 4 } as const;
+export const DEFAULT_SHELF = {
+	rows: 4,
+	columns: 4,
+	cubby: DEFAULT_CUBBY,
+} as const;
 
 /** A room with no drawn furniture: the shelf falls back to one open wall. */
 export const NO_SHELF_LAYOUT: ShelfLayoutSettings = { units: [] };
 
-/** A side of the grid, kept inside what a drawn shelf may be. */
-export function clampShelfSide(value: number): number {
+function clamp(value: number, min: number, max: number, fallback: number) {
 	const rounded = Math.round(value);
 
 	return Number.isFinite(rounded)
-		? Math.min(
-				SHELF_LIMITS.maxSide,
-				Math.max(SHELF_LIMITS.minSide, rounded)
-			)
-		: SHELF_LIMITS.minSide;
+		? Math.min(max, Math.max(min, rounded))
+		: fallback;
+}
+
+/** A side of the grid, kept inside what a drawn shelf may be. */
+export function clampShelfSide(value: number): number {
+	return clamp(
+		value,
+		SHELF_LIMITS.minSide,
+		SHELF_LIMITS.maxSide,
+		SHELF_LIMITS.minSide
+	);
+}
+
+/** A compartment height, kept inside what a drawn shelf may be. */
+export function clampCubbyHeight(value: number): number {
+	return clamp(
+		value,
+		SHELF_LIMITS.minHeight,
+		SHELF_LIMITS.maxHeight,
+		DEFAULT_CUBBY.height
+	);
+}
+
+/** A compartment length in millimetres, snapped to the centimetre. */
+export function clampCubbyLength(value: number): number {
+	const step = SHELF_LIMITS.lengthStep;
+
+	return (
+		clamp(
+			value / step,
+			SHELF_LIMITS.minLength / step,
+			SHELF_LIMITS.maxLength / step,
+			DEFAULT_CUBBY.length / step
+		) * step
+	);
 }
 
 /** A side of the grid, or null where the stored value is not one. */
@@ -54,6 +106,24 @@ function side(value: unknown): number | null {
 		rounded <= SHELF_LIMITS.maxSide
 		? rounded
 		: null;
+}
+
+/**
+ * The compartment as the document has it. A unit drawn before compartments
+ * had a size at all gets the Kallax cubby the app used to assume for every
+ * shelf, so nothing the collector already drew changes shape under them.
+ */
+function toCubby(value: unknown): ShelfCubby {
+	const data =
+		typeof value === 'object' && value !== null
+			? (value as Record<string, unknown>)
+			: {};
+
+	return {
+		height: clampCubbyHeight(Number(data['height'])),
+		length: clampCubbyLength(Number(data['length'])),
+		stance: data['stance'] === 'down' ? 'down' : 'across',
+	};
 }
 
 function toUnit(value: unknown, index: number): ShelfUnitLayout | null {
@@ -80,20 +150,85 @@ function toUnit(value: unknown, index: number): ShelfUnitLayout | null {
 				: '',
 		rows,
 		columns,
+		cubby: toCubby(data['cubby']),
 	};
 }
 
-/** How many records a unit of this size holds, at `perCompartment` each. */
+/** How many copies of each medium the collector owns. */
+export type ShelfMediaMix = Partial<Record<string, number>>;
+
+/** What the drawn furniture holds, against what it has to hold. */
+export interface ShelfRoom {
+	compartments: number;
+	/** Every compartment's length added up, in millimetres. */
+	length: number;
+	/** Copies the furniture has room for, out of the ones there are. */
+	holds: number;
+	/** Copies with nowhere to stand. */
+	short: number;
+	/**
+	 * How many copies land in each compartment, in the order the units stand
+	 * in the room. It is what lets the little drawing in the settings fill up
+	 * as the collection does.
+	 */
+	filled: number[];
+}
+
+/**
+ * Fits the collection into the drawn furniture on paper. The media are
+ * offered tallest first, and each one takes the *shortest* compartment that
+ * can still hold it — so a CD rack is not spent on records that a record
+ * shelf would have taken anyway. With heights this simply ordered that is
+ * not a heuristic but the best the furniture can do.
+ */
 export function shelfCapacity(
 	units: readonly ShelfUnitLayout[],
-	perCompartment: number
-): { compartments: number; records: number } {
-	const compartments = units.reduce(
-		(sum, unit) => sum + unit.rows * unit.columns,
-		0
+	mix: ShelfMediaMix
+): ShelfRoom {
+	const compartments = units.flatMap((unit) =>
+		Array.from({ length: unit.rows * unit.columns }, () => unit.cubby)
 	);
+	const filled = compartments.map(() => 0);
+	/* Shortest first, so the fussiest compartment is offered every medium. */
+	const room = compartments
+		.map((cubby, at) => ({ at, height: cubby.height, left: cubby.length }))
+		.sort((a, b) => a.height - b.height);
+	const wanted = Object.entries(mix).filter(([, count]) => (count ?? 0) > 0);
+	/* Tallest first, because only a tall compartment will ever take them. */
+	const byHeight = wanted.sort(
+		(a, b) => shelfMediaSize(b[0]).height - shelfMediaSize(a[0]).height
+	);
+	let holds = 0;
+	let short = 0;
 
-	return { compartments, records: compartments * perCompartment };
+	for (const [media, count] of byHeight) {
+		const { height, thickness } = shelfMediaSize(media);
+		let left = count ?? 0;
+
+		for (const shelf of room) {
+			if (!left) {
+				break;
+			}
+			if (shelf.height < height) {
+				continue;
+			}
+			const fits = Math.min(left, Math.floor(shelf.left / thickness));
+
+			shelf.left -= fits * thickness;
+			filled[shelf.at] += fits;
+			left -= fits;
+			holds += fits;
+		}
+		short += left;
+	}
+
+	return {
+		compartments: compartments.length,
+		length: compartments.reduce((sum, cubby) => sum + cubby.length, 0),
+		holds,
+		short,
+		filled,
+	};
 }
 
 export const SHELF_LAYOUT_SETTING: UserSetting<ShelfLayoutSettings> = {
@@ -107,11 +242,12 @@ export const SHELF_LAYOUT_SETTING: UserSetting<ShelfLayoutSettings> = {
 			.slice(0, SHELF_LIMITS.maxUnits),
 	}),
 	toDocument: ({ units }) => ({
-		units: units.map(({ id, name, rows, columns }) => ({
+		units: units.map(({ id, name, rows, columns, cubby }) => ({
 			id,
 			name,
 			rows,
 			columns,
+			cubby: { ...cubby },
 		})),
 	}),
 };

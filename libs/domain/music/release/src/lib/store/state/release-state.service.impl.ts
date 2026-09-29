@@ -29,8 +29,14 @@ export class ReleaseStateServiceImpl extends ReleaseStateService {
 		);
 	}
 
+	/**
+	 * Not this way. Deleting a pressing has to ask first whether a collector
+	 * owns a copy of it, and then delete on the server inside a transaction;
+	 * `ReleaseDeletionEffect` is where that lives. This store held a delete
+	 * that did neither, so it is gone rather than left as a second door.
+	 */
 	public dispatchDeleteEntityAction(release: ReleaseEntity): void {
-		this.store.dispatch(releaseActions.deleteRelease({ release }));
+		throw new Error('Use ReleaseDeletionEffect to delete a release.');
 	}
 
 	public dispatchListEntitiesAction(): void {

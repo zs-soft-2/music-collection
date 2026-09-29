@@ -29,21 +29,6 @@ export const changeNewEntityButtonEnabled = createAction(
 
 export const clearReleases = createAction('[Release] Clear Releases');
 
-export const deleteRelease = createAction(
-	'[Release] Delete Release',
-	props<{ release: ReleaseEntity }>()
-);
-
-export const deleteReleaseFail = createAction(
-	'[Release] Delete Release Fail',
-	props<{ error: Error }>()
-);
-
-export const deleteReleaseSuccess = createAction(
-	'[Release] Delete Release Success',
-	props<{ releaseId: string }>()
-);
-
 export const listReleases = createAction('[Release] List Releases');
 
 export const listReleasesFail = createAction(

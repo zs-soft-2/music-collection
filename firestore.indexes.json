@@ -263,6 +263,28 @@
 		},
 		{
 			"collectionGroup": "collection-item",
+			"fieldPath": "release.uid",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "collection-item",
 			"fieldPath": "searchParameters",
 			"indexes": [
 				{

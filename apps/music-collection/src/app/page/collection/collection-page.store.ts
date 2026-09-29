@@ -43,7 +43,6 @@ import {
 	collectionStats,
 	filterReleases,
 	groupReleases,
-	packShelf,
 	sortReleases,
 	splitByPlacement,
 } from './collection.mapper';
@@ -63,14 +62,16 @@ import {
 } from './collection.model';
 import {
 	NO_SHELF_LAYOUT,
-	SHELF_CUBBY_SIZE,
 	SHELF_LAYOUT_SETTING,
 	ShelfUnitLayout,
 } from './shelf-layout.setting';
 import {
+	maxPositionIn,
 	placementInLayout,
 	placementsForDrop,
 	placementsLeftBehind,
+	placementsToFreeze,
+	placementsToRelease,
 } from './shelf-placement';
 
 /**
@@ -153,6 +154,41 @@ export const CollectionPageStore = signalStore(
 			groupReleases(visible(), store.group(), words())
 		);
 
+		/**
+		 * The shelf as it stands in the room: compartments packed the way a
+		 * collector shelves records — without grouping by format, small
+		 * groups sharing a cubby, large ones continuing in the next — and
+		 * then filed into the units the collector drew.
+		 *
+		 * A local, because what is asked of the arrangement is asked twice:
+		 * once to draw it, and once to tell whether it keeps itself.
+		 */
+		const shelves = computed<ShelfUnitView[]>(() => {
+			const units = store.shelfUnits();
+			/*
+			 * What the collector filed by hand keeps its compartment; only
+			 * the rest is packed, so a hand-filed record is never counted
+			 * twice — once where it was put, once where the shelf would
+			 * have put it.
+			 */
+			const { placed, loose } = splitByPlacement(visible(), units);
+			const shelved: ReleaseGroup[] = groupReleases(
+				loose,
+				store.group() === 'none' ? 'format' : store.group(),
+				words()
+			);
+
+			return arrangeShelves(shelved, units, placed);
+		});
+
+		/** The records standing in a drawn compartment, overflow aside. */
+		const standing = computed(() =>
+			shelves()
+				.flatMap((shelf) => shelf.compartments)
+				.filter((compartment) => !!compartment.spot)
+				.flatMap((compartment) => compartment.items)
+		);
+
 		/*
 		 * The collections this shelf is measured against: the collector's
 		 * own pick, or — while they have picked none — every published one,
@@ -216,32 +252,8 @@ export const CollectionPageStore = signalStore(
 					(group) => ({ ...group, key: `${view}:${group.key}` })
 				);
 			}),
-			/**
-			 * The shelf as it stands in the room: compartments packed the way
-			 * a collector shelves records — without grouping by format, small
-			 * groups sharing a cubby, large ones continuing in the next — and
-			 * then filed into the units the collector drew.
-			 */
-			shelves: computed<ShelfUnitView[]>(() => {
-				const units = store.shelfUnits();
-				/*
-				 * What the collector filed by hand keeps its compartment;
-				 * only the rest is packed, so a hand-filed record is never
-				 * counted twice — once where it was put, once where the
-				 * shelf would have put it.
-				 */
-				const { placed, loose } = splitByPlacement(visible(), units);
-				const compartments: ReleaseGroup[] = packShelf(
-					groupReleases(
-						loose,
-						store.group() === 'none' ? 'format' : store.group(),
-						words()
-					),
-					SHELF_CUBBY_SIZE
-				);
+			shelves,
 
-				return arrangeShelves(compartments, units, placed);
-			}),
 			hasFilter: computed(
 				() => store.query().trim() !== '' || store.format() !== 'all'
 			),
@@ -264,6 +276,24 @@ export const CollectionPageStore = signalStore(
 			 * page. It only asks for furniture to file it into.
 			 */
 			canPlaceCopies: computed(() => store.shelfUnits().length > 0),
+			/**
+			 * Whether the shelf keeps itself: every record on it holds a
+			 * place of its own, so nothing the collection does — a record
+			 * bought, a record sold, a different sort — moves any of them.
+			 *
+			 * Read off the records rather than kept as a flag, because that
+			 * is what it actually is: the moment one record is handed back
+			 * to the shelf, the shelf is packing again.
+			 */
+			shelfIsKept: computed(
+				() =>
+					// What overflowed is left out: no compartment is drawn
+					// for it, so there is no place it could be given, and a
+					// shelf would never count as kept while one record of
+					// it did not fit.
+					standing().length > 0 &&
+					standing().every((release) => !!release.placement)
+			),
 			/** The copy the placement dialog is open for. */
 			placingCopy: computed(
 				() =>
@@ -446,9 +476,22 @@ export const CollectionPageStore = signalStore(
 					const byId = new Map(
 						store.items().map((item) => [item.uid, item])
 					);
+					/* How far along a compartment goes is its own unit's. */
+					const capOf = (unitId: string): number => {
+						const unit = store
+							.shelfUnits()
+							.find((drawn) => drawn.id === unitId);
+
+						return unit ? maxPositionIn(unit) : 1;
+					};
 					const placements = [
 						...(from?.spot
-							? placementsLeftBehind(from.items, moved, from.spot)
+							? placementsLeftBehind(
+									from.items,
+									moved,
+									from.spot,
+									capOf(from.spot.unitId)
+								)
 							: []),
 						...placementsForDrop(
 							cell.items,
@@ -458,7 +501,8 @@ export const CollectionPageStore = signalStore(
 								row: drop.row,
 								column: drop.column,
 							},
-							drop.index
+							drop.index,
+							capOf(drop.unitId)
 						),
 					]
 						.map(({ releaseId, placement }) => ({
@@ -473,6 +517,86 @@ export const CollectionPageStore = signalStore(
 								placement: CollectionItemPlacement;
 							} => !!move.collectionItem
 						);
+
+					patchState(store, { placeError: null });
+					collectionItemStateService.dispatchPlaceEntitiesAction(
+						placements
+					);
+				},
+				/**
+				 * Keeps the shelf as it stands: every record on it is given
+				 * the place it is drawn in, so nothing moves it again.
+				 *
+				 * Until this is done the shelf packs itself on every draw,
+				 * and a record bought, sold or renamed shifts everything
+				 * after it — the thing that makes a shelf you have learnt by
+				 * sight unreadable. It writes what the collector is looking
+				 * at, which is why it asks for the same unfiltered shelf
+				 * that dragging does: an arrangement of a filtered part
+				 * would hand out places behind the records left off the page.
+				 */
+				keepShelf(): void {
+					if (!store.placeable() || store.placing()) {
+						return;
+					}
+
+					const byId = new Map(
+						store.items().map((item) => [item.uid, item])
+					);
+					const placements = placementsToFreeze(store.shelves())
+						.map(({ releaseId, placement }) => ({
+							collectionItem: byId.get(releaseId),
+							placement,
+						}))
+						.filter(
+							(
+								move
+							): move is {
+								collectionItem: CollectionItemEntity;
+								placement: CollectionItemPlacement;
+							} => !!move.collectionItem
+						);
+
+					if (!placements.length) {
+						return;
+					}
+
+					patchState(store, { placeError: null });
+					collectionItemStateService.dispatchPlaceEntitiesAction(
+						placements
+					);
+				},
+				/**
+				 * Hands the shelf back: every place is dropped, and the
+				 * packing takes over again. The way out for a collector who
+				 * would rather have the shelf keep itself in order than keep
+				 * it in order themselves.
+				 */
+				releaseShelf(): void {
+					if (!store.placeable() || store.placing()) {
+						return;
+					}
+
+					const byId = new Map(
+						store.items().map((item) => [item.uid, item])
+					);
+					const placements = placementsToRelease(store.releases())
+						.map(({ releaseId }) => ({
+							collectionItem: byId.get(releaseId),
+							placement: null,
+						}))
+						.filter(
+							(
+								move
+							): move is {
+								collectionItem: CollectionItemEntity;
+								placement: null;
+							} => !!move.collectionItem
+						);
+
+					if (!placements.length) {
+						return;
+					}
 
 					patchState(store, { placeError: null });
 					collectionItemStateService.dispatchPlaceEntitiesAction(

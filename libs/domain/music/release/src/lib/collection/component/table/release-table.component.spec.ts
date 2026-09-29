@@ -10,6 +10,8 @@ import {
 	ReleaseUtilService,
 } from '@music-collection/api';
 
+import { provideReleaseDeletionTesting } from '../../../deletion/release-deletion.testing';
+
 import { ReleaseTableComponent } from './release-table.component';
 
 const release = {
@@ -30,6 +32,7 @@ describe('ReleaseTableComponent', () => {
 			imports: [ReleaseTableComponent],
 			providers: [
 				provideI18nTesting(),
+				...provideReleaseDeletionTesting(),
 				provideRouter([]),
 				provideNoopAnimations(),
 				{

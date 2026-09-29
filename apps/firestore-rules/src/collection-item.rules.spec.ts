@@ -63,9 +63,17 @@ describe('collection-item: where the collector filed the copy', () => {
 			updateDoc(doc(asMe(), PATH), { placement: spot({ column: 0 }) })
 		));
 
-	it('refuses a position past what a compartment holds', () =>
+	// 800 is the longest compartment (4 m) packed with the thinnest sleeves
+	// there are (5 mm LP jackets). A full Kallax cubby holds 66, so the
+	// numbers a real shelf produces are nowhere near the ceiling.
+	it('takes a position a full compartment really reaches', () =>
+		assertSucceeds(
+			updateDoc(doc(asMe(), PATH), { placement: spot({ position: 66 }) })
+		));
+
+	it('refuses a position past what any compartment could hold', () =>
 		assertFails(
-			updateDoc(doc(asMe(), PATH), { placement: spot({ position: 37 }) })
+			updateDoc(doc(asMe(), PATH), { placement: spot({ position: 801 }) })
 		));
 
 	it('refuses a place with nothing to stand in', () =>

@@ -104,7 +104,7 @@
 			<input
 				type="number"
 				min="1"
-				[max]="maxPosition"
+				[max]="maxPosition()"
 				[value]="position()"
 				[disabled]="!spot()"
 				(input)="onPosition($event)"

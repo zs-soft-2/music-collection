@@ -12,8 +12,13 @@ import {
 	ShelfCompartmentView,
 	ShelfUnitView,
 } from './collection.model';
-import { ShelfUnitLayout } from './shelf-layout.setting';
-import { placementInLayout, placementKey, spotKey } from './shelf-placement';
+import { DEFAULT_CUBBY, ShelfCubby, ShelfUnitLayout } from './shelf-layout.setting';
+import {
+	placementInLayout,
+	placementKey,
+	shelfSizeOf,
+	spotKey,
+} from './shelf-placement';
 
 export function filterReleases(
 	releases: ReleaseView[],
@@ -188,66 +193,115 @@ export function collectionStats(releases: ReleaseView[]): CollectionStats {
 }
 
 /**
- * Packs groups into shelf compartments of a fixed capacity, keeping order.
- * Consecutive small groups share a compartment (labelled with the first and
- * last group), a group larger than a compartment is split across several.
+ * Packs the records into compartments of the sizes given, keeping order.
+ *
+ * A compartment fills by *length*: every copy eats its own spine thickness,
+ * so a cubby that takes thirty-six LPs takes far more CDs and fewer box
+ * sets. It fills until the next record would not go in, and the rest
+ * continue in the compartment after it.
+ *
+ * Height is the other half of it, and the reason a record can be passed
+ * over: an LP offered a CD rack simply stays in the queue and waits for a
+ * compartment tall enough. That is what makes a dedicated CD or cassette
+ * shelf work — it draws the CDs and cassettes out of the collection and
+ * leaves the records to the record shelving.
+ *
+ * `cubbies` are the compartments the shelf has, in the order it fills them.
+ * Records left when they run out — or that nothing drawn is tall enough for
+ * — keep coming in plain Kallax-sized cubbies, which is what the caller
+ * shows as off the shelf. Off the shelf is not furniture, so it takes
+ * anything rather than turning a record away twice.
  */
 export function packShelf(
 	groups: ReleaseGroup[],
-	capacity: number
+	cubbies: readonly ShelfCubby[]
 ): ReleaseGroup[] {
+	/* The records in filing order, each remembering the group it came from. */
+	let queue = groups.flatMap((group) =>
+		group.items.map((release) => ({ release, group }))
+	);
 	const compartments: ReleaseGroup[] = [];
-	let items: ReleaseView[] = [];
-	let labels: string[] = [];
-	let key = '';
 
-	const flush = () => {
-		if (!items.length) {
-			return;
+	for (let at = 0; queue.length; at++) {
+		const cubby = cubbies[at] ?? DEFAULT_CUBBY;
+		const taken: typeof queue = [];
+		const rest: typeof queue = [];
+		let left = cubby.length;
+		let full = false;
+
+		for (const entry of queue) {
+			const size = shelfSizeOf(entry.release);
+
+			if (full || size.height > cubby.height) {
+				rest.push(entry);
+				continue;
+			}
+			if (size.thickness > left) {
+				/* Not "too thick for the shelf" but "no room left in it". */
+				full = true;
+				rest.push(entry);
+				continue;
+			}
+			left -= size.thickness;
+			taken.push(entry);
 		}
+
+		/*
+		 * Nothing in the queue is short enough for this compartment. It stays
+		 * empty — a CD rack among record shelving is not a fault — and the
+		 * records wait for the next one. Past the drawn furniture every
+		 * compartment is alike, so there is nothing left to wait for.
+		 */
+		if (!taken.length) {
+			if (at >= cubbies.length) {
+				break;
+			}
+			compartments.push({ key: `gap-${at}`, label: '', items: [] });
+			continue;
+		}
+		queue = rest;
+
+		const labels = taken
+			.map((entry) => entry.group.label)
+			.filter((label, index, all) => label !== all[index - 1]);
 		const first = labels[0];
-		const last = labels[labels.length - 1];
+		const end = labels[labels.length - 1];
 
 		/* Keyed by content, so a filter change does not rebuild every cubby. */
 		compartments.push({
-			key,
-			label: first === last ? first : `${first} – ${last}`,
-			items,
+			key: taken[0].group.key + '#' + taken[0].release.id,
+			label: first === end ? first : `${first} – ${end}`,
+			items: taken.map((entry) => entry.release),
 		});
-		items = [];
-		labels = [];
-	};
-
-	for (const group of groups) {
-		if (group.items.length > capacity) {
-			flush();
-			const parts = Math.ceil(group.items.length / capacity);
-
-			for (let part = 0; part < parts; part++) {
-				items = group.items.slice(
-					part * capacity,
-					(part + 1) * capacity
-				);
-				labels = [`${group.label} · ${part + 1}/${parts}`];
-				key = `${group.key}#${part}`;
-				flush();
-			}
-			continue;
-		}
-		if (items.length + group.items.length > capacity) {
-			flush();
-		}
-		if (!items.length) {
-			key = group.key;
-		}
-		items = [...items, ...group.items];
-		if (labels[labels.length - 1] !== group.label) {
-			labels.push(group.label);
-		}
 	}
-	flush();
 
-	return compartments;
+	return numberRuns(compartments);
+}
+
+/**
+ * One artist, or one format, spread over several compartments in a row reads
+ * as "Judas Priest · 2/3" rather than as the same heading three times — so
+ * it is plain that the run continues rather than starting again.
+ */
+function numberRuns(compartments: ReleaseGroup[]): ReleaseGroup[] {
+	return compartments.map((compartment, index) => {
+		if (!compartment.label) {
+			return compartment;
+		}
+		const same = (at: number) => compartments[at]?.label === compartment.label;
+		let from = index;
+		let to = index;
+
+		while (same(from - 1)) from--;
+		while (same(to + 1)) to++;
+
+		return from === to
+			? compartment
+			: {
+					...compartment,
+					label: `${compartment.label} · ${index - from + 1}/${to - from + 1}`,
+				};
+	});
 }
 
 /** Splits every group into consecutive chunks of at most `size` releases. */
@@ -322,32 +376,41 @@ function handFiled(key: string, filed: PlacedRelease[]): ReleaseGroup {
 }
 
 /**
- * Files the packed compartments into the furniture the collector drew, in
- * the order the units stand in the room: the first unit fills up before the
- * next one is touched, and a unit keeps every compartment it was drawn with,
- * empty ones included — the room is theirs, not ours to resize.
+ * Packs the collection into the furniture the collector drew, in the order
+ * the units stand in the room: the first unit fills up before the next one
+ * is touched, and a unit keeps every compartment it was drawn with, empty
+ * ones included — the room is theirs, not ours to resize.
+ *
+ * Packing and filing are one step because a compartment's size is its own:
+ * how much goes into the fourth cubby cannot be worked out without knowing
+ * which cubby the fourth one is, nor which ones the collector has already
+ * filled by hand.
  *
  * Compartments the collector filed records into by hand are theirs alone:
  * the packed ones flow around them into what is left, so nothing the shelf
  * decides can push a record out of the place its owner gave it.
  *
  * Without drawn furniture the shelf stays one open wall that grows with the
- * collection. Records that no drawn compartment is left for end up in a unit
- * of their own, so nothing quietly disappears off the page.
+ * collection, in compartments the size of a Kallax cubby. Records that no
+ * drawn compartment is left for — or that nothing drawn is tall enough for —
+ * end up in a unit of their own, so nothing quietly disappears off the page.
  */
 export function arrangeShelves(
-	compartments: ReleaseGroup[],
+	groups: ReleaseGroup[],
 	units: readonly ShelfUnitLayout[],
 	placed: readonly PlacedRelease[] = []
 ): ShelfUnitView[] {
 	if (!units.length) {
-		return compartments.length
+		const wall = packShelf(groups, []);
+
+		return wall.length
 			? [
 					{
 						key: 'wall',
 						name: '',
 						columns: 0,
-						compartments: compartments.map(loose),
+						cubby: DEFAULT_CUBBY,
+						compartments: wall.map(loose),
 						overflow: false,
 					},
 				]
@@ -362,6 +425,23 @@ export function arrangeShelves(
 		byHand.set(key, [...(byHand.get(key) ?? []), entry]);
 	}
 
+	/* The compartments the shelf may fill, in the order it fills them. */
+	const open: { unit: ShelfUnitLayout; row: number; column: number }[] = [];
+
+	for (const unit of units) {
+		for (let row = 1; row <= unit.rows; row++) {
+			for (let column = 1; column <= unit.columns; column++) {
+				if (!byHand.has(spotKey(unit.id, row, column))) {
+					open.push({ unit, row, column });
+				}
+			}
+		}
+	}
+
+	const packed = packShelf(
+		groups,
+		open.map(({ unit }) => unit.cubby)
+	);
 	const shelves: ShelfUnitView[] = [];
 	let filed = 0;
 
@@ -379,14 +459,13 @@ export function arrangeShelves(
 					continue;
 				}
 
-				const packed = compartments[filed];
+				const group = packed[filed++];
 
-				if (packed) {
-					filed++;
-					cells.push({ ...packed, spot });
-				} else {
-					cells.push({ key, label: '', items: [], spot });
-				}
+				cells.push(
+					group?.items.length
+						? { ...group, spot }
+						: { key, label: '', items: [], spot }
+				);
 			}
 		}
 
@@ -394,18 +473,21 @@ export function arrangeShelves(
 			key: unit.id,
 			name: unit.name,
 			columns: unit.columns,
+			cubby: unit.cubby,
 			compartments: cells,
 			overflow: false,
 		});
 	}
 
-	const spilled = compartments.slice(filed);
+	const spilled = packed.slice(open.length).filter((group) => group.items.length);
 
 	if (spilled.length) {
 		shelves.push({
 			key: 'overflow',
 			name: '',
 			columns: units[units.length - 1].columns,
+			/* Off the shelf is not furniture; it is drawn as plain cubbies. */
+			cubby: DEFAULT_CUBBY,
 			compartments: spilled.map(loose),
 			overflow: true,
 		});

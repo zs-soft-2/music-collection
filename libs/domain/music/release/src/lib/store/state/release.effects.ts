@@ -4,7 +4,6 @@ import { catchError, first, map, switchMap } from 'rxjs/operators';
 import { inject, Injectable } from '@angular/core';
 import {
 	ArtistDataService,
-	EntityQuantityEntity,
 	EntityQuantityStateService,
 	EntityQuantityUtilService,
 	EntityTypeEnum,
@@ -70,47 +69,6 @@ export class ReleaseEffects {
 
 							return releaseActions.addReleaseSuccess({
 								release: releaseEntity,
-							});
-						})
-					)
-			)
-		)
-	);
-	public deleteRelease = createEffect(() =>
-		this.actions$.pipe(
-			ofType(releaseActions.deleteRelease),
-			switchMap((action) =>
-				this.entityQuantityStateService
-					.selectEntityById$(EntityTypeEnum.Release)
-					.pipe(
-						map((entityQuantityEntity) => ({
-							action,
-							entityQuantityEntity,
-						})),
-						first()
-					)
-			),
-			switchMap(({ action, entityQuantityEntity }) =>
-				this.artistDataService
-					.deleteRelease$(
-						this.releaseUtilService.convertEntityToModel(
-							action.release
-						)
-					)
-					.pipe(
-						map((release) => {
-							this.entityQuantityStateService.dispatchUpdateEntityAction(
-								this.releaseUtilService.updateEntityQuantity(
-									entityQuantityEntity as EntityQuantityEntity,
-									this.releaseUtilService.convertModelToEntity(
-										release
-									),
-									UpdateEntityQuantityTypeEnum.decrease
-								)
-							);
-
-							return releaseActions.deleteReleaseSuccess({
-								releaseId: release.uid,
 							});
 						})
 					)

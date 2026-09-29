@@ -9,6 +9,7 @@ import {
 	CollectionItemFormParams,
 	CollectionItemStateService,
 	CollectionItemUtilService,
+	DEFAULT_CUBBY,
 	ReleaseStateService,
 	ShelfLayoutService,
 	ShelfUnitLayout,
@@ -18,8 +19,14 @@ import { CollectionItemUtilServiceImpl } from '../../util/service/collection-ite
 import { CollectionItemFormService } from './collection-item-form.service';
 
 const UNITS: ShelfUnitLayout[] = [
-	{ id: 'living-room', name: 'Living room', rows: 2, columns: 2 },
-	{ id: 'hall', name: '', rows: 1, columns: 1 },
+	{
+		id: 'living-room',
+		name: 'Living room',
+		rows: 2,
+		columns: 2,
+		cubby: DEFAULT_CUBBY,
+	},
+	{ id: 'hall', name: '', rows: 1, columns: 1, cubby: DEFAULT_CUBBY },
 ];
 
 const copy = (

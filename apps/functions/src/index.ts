@@ -78,6 +78,7 @@ import {
 	createVisionClient,
 } from './photo-signals';
 import { approveReleaseRequest as approve } from './release-request-approval';
+import { DeletionError, deleteRelease } from './catalog-deletion';
 import { decideRequest as decide } from './request-decision';
 import { RequestDecisionError } from './request-schema';
 import {
@@ -1122,6 +1123,30 @@ export const ensureGenericRelease = onCall(async (request) => {
 	}
 
 	return result;
+});
+
+/**
+ * Egy kiadás törlése a katalógusból. `{ uid }` → `{ uid, deletedTracks,
+ * releasedSerials }`.
+ *
+ * A rules a kliensnek tiltja a kiadás törlését, mert a feltételt csak itt
+ * lehet megbízhatóan megnézni: ha bárkinek a gyűjteményében van példány a
+ * kiadásból, a törlés `failed-precondition`, és a kliens az archiválást
+ * (`active: false`) ajánlja fel helyette. A kiadás saját számai és az
+ * elárvult sorszám-foglalások vele mennek.
+ */
+export const deleteReleaseEntity = onCall(async (request) => {
+	await requireCaller(request, 'deleteReleaseEntity');
+
+	try {
+		return await deleteRelease(database(), request.data?.uid);
+	} catch (error) {
+		if (error instanceof DeletionError) {
+			throw new HttpsError(error.code, error.message);
+		}
+
+		throw error;
+	}
 });
 
 /**

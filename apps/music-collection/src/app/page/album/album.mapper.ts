@@ -12,6 +12,7 @@ import {
 	ScanMatch,
 	TrackEntity,
 	discogsReleaseUrl,
+	isReleaseArchived,
 	isSpotifyAlbumId,
 	isYoutubePlaylistId,
 	isYoutubeVideoId,
@@ -417,12 +418,23 @@ export function groupCredits(
 		});
 }
 
-/** The album's releases, owned ones last, then by year and format. */
+/**
+ * The album's releases, owned ones last, then by year and format.
+ *
+ * An archived pressing is left out: it is a page an admin took off the
+ * forms — a duplicate, or one that turned out wrong — and no new copy
+ * should join it. One the collector already owns a copy of stays on the
+ * list, marked owned, so their shelf is not missing from what they read.
+ */
 export function toReleaseOptions(
 	releases: ReleaseEntity[],
 	ownedReleaseIds: Set<string>
 ): ReleaseOptionView[] {
 	return releases
+		.filter(
+			(release) =>
+				!isReleaseArchived(release) || ownedReleaseIds.has(release.uid)
+		)
 		.map((release): ReleaseOptionView => {
 			const descriptions = toDescriptions(release.formatDescription);
 

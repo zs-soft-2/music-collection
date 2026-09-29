@@ -12,13 +12,16 @@ import {
 import { Router } from '@angular/router';
 import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
-import { MediaFormat, ReleaseView } from '../../../../shared/music-ui';
+import { SHELF_HEIGHT_UNIT_CM, ShelfCubby } from '@music-collection/api';
+
+import { ReleaseView } from '../../../../shared/music-ui';
 import {
 	ShelfDrop,
 	ShelfPlay,
 	ShelfSpotRef,
 	ShelfUnitView,
 } from '../../collection.model';
+import { shelfSizeOf } from '../../shelf-placement';
 
 import { RecordShelfPeekComponent } from './record-shelf-peek.component';
 
@@ -28,12 +31,24 @@ interface Spine {
 	width: number;
 	height: number;
 	hue: number;
+	/** What it eats of the compartment's length, so boards can be measured. */
+	mm: number;
+	/** Wide enough to carry its title without spilling over its neighbours. */
+	readable: boolean;
 }
 
 interface Compartment {
 	key: string;
 	label: string;
 	spines: Spine[];
+	/**
+	 * The compartment broken into boards it can be drawn on. A shelf three
+	 * metres long is still one compartment; drawn as one run it would be a
+	 * smear no one could read, so it is wrapped — and the boards stay inside
+	 * the compartment's one frame and its one label, which is what says they
+	 * belong together.
+	 */
+	boards: Spine[][];
 	/** The records in it, in the order they stand, by album id. */
 	albumIds: string[];
 	/** Drawn but with nothing in it; the unit keeps the shape either way. */
@@ -51,24 +66,90 @@ interface Unit {
 	/** Compartments per row; 0 for the open wall, which fills the width. */
 	columns: number;
 	overflow: boolean;
+	/** The copies lie stacked rather than standing: a tower, not a shelf. */
+	down: boolean;
+	/** One board of a compartment, in pixels. */
+	board: { width: number; height: number };
+	/**
+	 * How wide the compartment is drawn, boards and all. A tower's boards
+	 * stand side by side, so a long one is a wide column; a shelf's stack up
+	 * and stay one board wide.
+	 */
+	width: number;
 	compartments: Compartment[];
 }
 
-const BOX_SET_SIZE = { width: 30, height: 196 };
+/**
+ * The drawing's scale: one, for both ways round. A compartment 32 cm long
+ * and 32 cm tall has to come out a square, so the height cannot be drawn on
+ * a scale of its own however much roomier that would make an LP spine look.
+ * A millimetre is a little under a pixel, which puts a Kallax cubby at the
+ * 260-odd pixels a column has always been.
+ */
+const PX_PER_MM = 0.8;
+
+/** The same scale, for a height counted in four-centimetre units. */
+const PX_PER_HEIGHT_UNIT = SHELF_HEIGHT_UNIT_CM * 10 * PX_PER_MM;
 
 /**
- * Spine size per format (px), scaled from real media: a vinyl sleeve is the
- * tallest but thinnest, a cassette is short but chunky. A box set is the widest
- * of them all, whether the release is filed as one or only tagged as one.
+ * A spine narrower than this has no room for a letter: the text would spill
+ * over its neighbours and the compartment would read as noise rather than as
+ * records. Such a spine is drawn bare, and the cover still comes up on
+ * hover.
  */
-const SPINE_SIZE: Record<MediaFormat, { width: number; height: number }> = {
-	vinyl: { width: 7, height: 190 },
-	dvd: { width: 15, height: 116 },
-	cd: { width: 11, height: 80 },
-	cassette: { width: 17, height: 70 },
-	boxset: BOX_SET_SIZE,
-	other: { width: 11, height: 100 },
-};
+const READABLE_PX = 6;
+
+/**
+ * How much of a compartment goes on one drawn board: a Kallax width, which
+ * is the run a collector's eye is used to. Anything longer wraps onto the
+ * next board of the same compartment.
+ */
+const BOARD_MM = 330;
+
+/** The gap between two boards of the same compartment, as the styles set it. */
+const BOARD_GAP = 8;
+
+/** One board of a compartment this size, in pixels. */
+function boardOf(cubby: ShelfCubby): { width: number; height: number } {
+	const along = Math.min(cubby.length, BOARD_MM) * PX_PER_MM;
+	const across = cubby.height * PX_PER_HEIGHT_UNIT;
+
+	return cubby.stance === 'down'
+		? { width: across, height: along }
+		: { width: along, height: across };
+}
+
+/** The most boards a compartment this long is ever drawn over. */
+function runsOf(cubby: ShelfCubby): number {
+	return Math.max(1, Math.ceil(cubby.length / BOARD_MM));
+}
+
+/**
+ * Breaks a compartment's copies into the boards they are drawn on, each one
+ * a board's worth of shelf. An empty compartment keeps one board, so the
+ * furniture still shows the shape the collector drew.
+ */
+function toBoards(spines: Spine[], cubby: ShelfCubby): Spine[][] {
+	const per = Math.min(cubby.length, BOARD_MM);
+	const boards: Spine[][] = [];
+	let board: Spine[] = [];
+	let used = 0;
+
+	for (const spine of spines) {
+		if (board.length && used + spine.mm > per) {
+			boards.push(board);
+			board = [];
+			used = 0;
+		}
+		board.push(spine);
+		used += spine.mm;
+	}
+	if (board.length) {
+		boards.push(board);
+	}
+
+	return boards.length ? boards : [[]];
+}
 
 /** Takes the drop away from the browser, which would follow the link. */
 const swallow = (event: Event): void => event.preventDefault();
@@ -127,38 +208,60 @@ export class RecordShelfComponent {
 	private readonly room = viewChild.required<ElementRef<HTMLElement>>('room');
 
 	protected readonly units = computed<Unit[]>(() =>
-		this.shelves().map((shelf) => ({
-			key: shelf.key,
-			name: shelf.name,
-			columns: shelf.columns,
-			overflow: shelf.overflow,
-			albumIds: shelf.compartments.flatMap((group) =>
-				group.items.map((release) => release.albumId)
-			),
-			compartments: shelf.compartments.map((group) => ({
-				key: group.key,
-				label: group.label,
-				empty: !group.items.length,
-				spot: group.spot,
-				albumIds: group.items.map((release) => release.albumId),
-				spines: group.items.map((release) => ({
-					release,
-					// A spine on the shelf is a copy the collector owns, so
-					// pulling it out opens that copy rather than the album.
-					href: this.router.serializeUrl(
-						this.router.createUrlTree([
-							'/collection',
-							'copy',
-							release.id,
-						])
-					),
-					...(release.boxSet
-						? BOX_SET_SIZE
-						: SPINE_SIZE[release.format]),
-					hue: hueOf(release.title + release.artistName),
-				})),
-			})),
-		}))
+		this.shelves().map((shelf) => {
+			const down = shelf.cubby.stance === 'down';
+			const board = boardOf(shelf.cubby);
+			const runs = down ? runsOf(shelf.cubby) : 1;
+
+			return {
+				key: shelf.key,
+				name: shelf.name,
+				columns: shelf.columns,
+				overflow: shelf.overflow,
+				down,
+				board,
+				width: board.width * runs + (runs - 1) * BOARD_GAP,
+				albumIds: shelf.compartments.flatMap((group) =>
+					group.items.map((release) => release.albumId)
+				),
+				compartments: shelf.compartments.map((group) => {
+					const spines = group.items.map((release) => {
+						const size = shelfSizeOf(release);
+						const along = size.thickness * PX_PER_MM;
+						const across = size.height * PX_PER_HEIGHT_UNIT;
+
+						return {
+							release,
+							// A spine on the shelf is a copy the collector
+							// owns, so pulling it out opens that copy rather
+							// than the album.
+							href: this.router.serializeUrl(
+								this.router.createUrlTree([
+									'/collection',
+									'copy',
+									release.id,
+								])
+							),
+							width: down ? across : along,
+							height: down ? along : across,
+							mm: size.thickness,
+							readable: along >= READABLE_PX,
+							hue: hueOf(release.title + release.artistName),
+						};
+					});
+
+					return {
+						key: group.key,
+						label: group.label,
+						empty: !spines.length,
+						spot: group.spot,
+						albumIds: group.items.map((release) => release.albumId),
+						spines,
+						boards: toBoards(spines, shelf.cubby),
+					};
+				}),
+			};
+		})
 	);
 
 	private readonly releasesById = computed(
@@ -331,7 +434,7 @@ export class RecordShelfComponent {
 			unitId,
 			row,
 			column,
-			index: this.indexIn(cell, releaseId, event.clientX),
+			index: this.indexIn(cell, releaseId, event.clientX, event.clientY),
 		});
 	};
 
@@ -350,17 +453,37 @@ export class RecordShelfComponent {
 
 	/**
 	 * Where along the compartment the record was let go: before the first
-	 * spine whose middle is past the pointer, the record itself left out —
-	 * it is on its way somewhere else.
+	 * spine the pointer has not reached yet, the record itself left out — it
+	 * is on its way somewhere else.
+	 *
+	 * A long compartment is drawn over several boards, so "not reached yet"
+	 * is read the way the compartment is: a spine on a later board is always
+	 * further along, and only within one board does the pointer's place along
+	 * it decide. A tower runs the other way, bottom to top.
 	 */
-	private indexIn(cell: HTMLElement, releaseId: string, x: number): number {
+	private indexIn(
+		cell: HTMLElement,
+		releaseId: string,
+		x: number,
+		y: number
+	): number {
+		const down = cell.dataset['stance'] === 'down';
 		const spines = Array.from(
 			cell.querySelectorAll<HTMLElement>('.spine')
 		).filter((spine) => spine.dataset['id'] !== releaseId);
 		const before = spines.findIndex((spine) => {
 			const box = spine.getBoundingClientRect();
 
-			return x < box.left + box.width / 2;
+			/* On a board the pointer has not got to yet. */
+			if (down ? box.right < x : box.top > y) {
+				return true;
+			}
+			if (down ? box.left > x : box.bottom < y) {
+				return false;
+			}
+			return down
+				? y > box.top + box.height / 2
+				: x < box.left + box.width / 2;
 		});
 
 		return before === -1 ? spines.length : before;

@@ -13,8 +13,8 @@ import {
 } from '@angular/core';
 import {
 	CollectionItemPlacement,
-	MAX_SHELF_POSITION,
 	ShelfUnitLayout,
+	maxPositionIn,
 	nextPosition,
 	placementInLayout,
 	spotKey,
@@ -64,8 +64,6 @@ export class CopyPlacementComponent {
 	/** Closed by the button, Escape or the page. */
 	public readonly closed = output<void>();
 
-	protected readonly maxPosition = MAX_SHELF_POSITION;
-
 	/** Where this copy already stands, as far as the drawn furniture allows. */
 	protected readonly standing = computed(() =>
 		placementInLayout(this.copy().placement, this.units())
@@ -113,13 +111,28 @@ export class CopyPlacementComponent {
 			) {
 				return standing.position;
 			}
-			return nextPosition(this.filed(), unitId, spot.row, spot.column);
+			const unit = this.units().find((drawn) => drawn.id === unitId);
+
+			return unit
+				? nextPosition(this.filed(), unit, spot.row, spot.column)
+				: 1;
 		},
 	});
 
 	protected readonly unit = computed(
 		() => this.units().find((drawn) => drawn.id === this.unitId()) ?? null
 	);
+
+	/**
+	 * How far along a compartment of this unit a copy can be filed. It is
+	 * the unit's own: a cassette tower goes much further along than a
+	 * record cubby does.
+	 */
+	protected readonly maxPosition = computed(() => {
+		const unit = this.unit();
+
+		return unit ? maxPositionIn(unit) : 1;
+	});
 
 	/** The chosen unit drawn out, compartment by compartment. */
 	protected readonly cells = computed<SpotCell[]>(() => {
@@ -193,7 +206,7 @@ export class CopyPlacementComponent {
 
 		this.position.set(
 			Number.isFinite(value)
-				? Math.min(MAX_SHELF_POSITION, Math.max(1, Math.round(value)))
+				? Math.min(this.maxPosition(), Math.max(1, Math.round(value)))
 				: 1
 		);
 	}

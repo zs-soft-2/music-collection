@@ -197,6 +197,16 @@ body .p-chip {
 	}
 }
 
+// Egy archivált katalógus-tétel: megvan, de nem ajánljuk fel többé. A
+// figyelmeztető szín azért kell, mert a lista ugyanúgy mutatja, mint a
+// többit — az egyetlen jel, hogy erre már ne vegyen fel senki példányt.
+body .p-chip.archived {
+	border-color: var(--mc-status-warn);
+	color: var(--mc-status-warn);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
 .p-datatable {
 	.p-datatable-thead > tr > th {
 		background: var(--mc-card-bg);

@@ -4,7 +4,11 @@
 			class="unit"
 			[class.is-wall]="!unit.columns"
 			[class.is-overflow]="unit.overflow"
+			[class.is-down]="unit.down"
 			[style.--cols]="unit.columns || null"
+			[style.--board-w.px]="unit.board.width"
+			[style.--board-h.px]="unit.board.height"
+			[style.--cubby.px]="unit.width + 20"
 			[attr.aria-label]="unit.name || null"
 		>
 			<!-- The open wall stays bare; a drawn unit can be put on. -->
@@ -64,6 +68,7 @@
 						[attr.data-column]="
 							placeable() ? compartment.spot?.column : null
 						"
+						[attr.data-stance]="unit.down ? 'down' : 'across'"
 					>
 						<h3 class="label">
 							@if (!compartment.empty) {
@@ -101,48 +106,83 @@
 							}
 						</h3>
 
+						<!--
+							One compartment, however long: the boards sit
+							inside its single frame and under its single
+							label, and only the little number on each says
+							which run of it you are looking at.
+						-->
 						@defer (on viewport) {
 							<div class="cubby">
 								@for (
-									spine of compartment.spines;
-									track spine.release.id
+									board of compartment.boards;
+									track $index
 								) {
-									<a
-										class="spine"
-										[attr.draggable]="placeable()"
-										[class]="'is-' + spine.release.format"
-										[class.is-box]="spine.release.boxSet"
-										[style.width.px]="spine.width"
-										[style.height.px]="spine.height"
-										[style.--hue]="spine.hue"
-										[attr.href]="spine.href"
-										[attr.data-id]="spine.release.id"
-										[attr.aria-label]="
-											spine.release.artistName +
-											' — ' +
-											spine.release.title
-										"
-									>
-										<span
-											class="spine-cap"
-											aria-hidden="true"
-										></span>
-										<span
-											class="spine-text"
-											aria-hidden="true"
-										>
-											<span class="spine-title">{{
-												spine.release.title
-											}}</span>
-											<span class="spine-artist">{{
-												spine.release.artistName
-											}}</span>
-										</span>
-									</a>
+									<div class="board">
+										@if (compartment.boards.length > 1) {
+											<span
+												class="board-mark"
+												aria-hidden="true"
+												>{{ $index + 1 }}</span
+											>
+										}
+										@for (
+											spine of board;
+											track spine.release.id
+										) {
+											<a
+												class="spine"
+												[attr.draggable]="placeable()"
+												[class]="
+													'is-' + spine.release.format
+												"
+												[class.is-box]="
+													spine.release.boxSet
+												"
+												[class.is-bare]="
+													!spine.readable
+												"
+												[style.width.px]="spine.width"
+												[style.height.px]="spine.height"
+												[style.--hue]="spine.hue"
+												[attr.href]="spine.href"
+												[attr.data-id]="
+													spine.release.id
+												"
+												[attr.aria-label]="
+													spine.release.artistName +
+													' — ' +
+													spine.release.title
+												"
+											>
+												<span
+													class="spine-cap"
+													aria-hidden="true"
+												></span>
+												<span
+													class="spine-text"
+													aria-hidden="true"
+												>
+													<span class="spine-title">{{
+														spine.release.title
+													}}</span>
+													<span
+														class="spine-artist"
+														>{{
+															spine.release
+																.artistName
+														}}</span
+													>
+												</span>
+											</a>
+										}
+									</div>
 								}
 							</div>
 						} @placeholder {
-							<div class="cubby"></div>
+							<div class="cubby">
+								<div class="board"></div>
+							</div>
 						}
 					</section>
 				}

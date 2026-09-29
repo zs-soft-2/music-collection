@@ -1,15 +1,23 @@
 import { CollectionItemPlacement } from '@music-collection/api';
 
-import { ReleaseView } from '../../shared/music-ui';
+import { MediaFormat, ReleaseView } from '../../shared/music-ui';
 
 import { arrangeShelves, splitByPlacement } from './collection.mapper';
 import { ReleaseGroup } from './collection.model';
-import { ShelfUnitLayout } from './shelf-layout.setting';
+import { ShelfCubby, ShelfUnitLayout } from './shelf-layout.setting';
+
+/**
+ * A compartment with room for exactly one LP. Most of what is checked here
+ * is which compartment a record lands in, not how many go in one, so the
+ * furniture is drawn to make every record fill a cubby of its own.
+ */
+const ONE_RECORD: ShelfCubby = { height: 8, length: 5, stance: 'across' };
 
 function release(
 	id: string,
 	artistName = 'Judas Priest',
-	placement: CollectionItemPlacement | null = null
+	placement: CollectionItemPlacement | null = null,
+	format: MediaFormat = 'vinyl'
 ): ReleaseView {
 	return {
 		id,
@@ -19,7 +27,7 @@ function release(
 		artistId: 'artist',
 		artistName,
 		coverUrl: null,
-		format: 'vinyl',
+		format,
 		albumType: 'LP',
 		year: 1990,
 		styles: [],
@@ -30,6 +38,7 @@ function release(
 		addedAt: 0,
 		labelName: null,
 		country: null,
+		generic: false,
 		placement,
 	};
 }
@@ -38,15 +47,20 @@ function compartment(key: string): ReleaseGroup {
 	return { key, label: key.toUpperCase(), items: [release(key)] };
 }
 
-function unit(id: string, rows: number, columns: number): ShelfUnitLayout {
-	return { id, name: id, rows, columns };
+function unit(
+	id: string,
+	rows: number,
+	columns: number,
+	cubby: ShelfCubby = ONE_RECORD
+): ShelfUnitLayout {
+	return { id, name: id, rows, columns, cubby };
 }
 
-/** Compartments with something in them, in grid order. */
+/** The records standing in each compartment that has any, in grid order. */
 function held(compartments: ReleaseGroup[]): string[] {
 	return compartments
 		.filter((group) => group.items.length)
-		.map((group) => group.key);
+		.map((group) => group.items.map((item) => item.id).join(','));
 }
 
 describe('arrangeShelves', () => {
@@ -116,7 +130,7 @@ describe('arrangeShelves', () => {
 		/* Row 2, slot 1 of a two-wide unit is the third compartment. */
 		expect(cells).toHaveLength(4);
 		expect(cells[2].items.map((item) => item.id)).toEqual(['painkiller']);
-		expect(held(cells)).toEqual([cells[2].key]);
+		expect(held(cells)).toEqual(['painkiller']);
 	});
 
 	it('flows the packed compartments around the hand-filed ones', () => {
@@ -154,6 +168,82 @@ describe('arrangeShelves', () => {
 			['a', 'b']
 		);
 		expect(shelves[0].compartments[0].label).toBe('Accept – Slayer');
+	});
+});
+
+describe('arrangeShelves, by what a compartment holds', () => {
+	const kallax = { height: 8, length: 330, stance: 'across' } as const;
+	const cdRack = { height: 3, length: 330, stance: 'across' } as const;
+	const group = (key: string, items: ReleaseView[]): ReleaseGroup => ({
+		key,
+		label: key.toUpperCase(),
+		items,
+	});
+
+	it('fills a compartment by length, not by a count', () => {
+		const records = Array.from({ length: 70 }, (_, at) =>
+			release(`r${at}`)
+		);
+		const shelves = arrangeShelves(
+			[group('a', records)],
+			[unit('one', 1, 2, kallax)]
+		);
+
+		/* 330 mm at 5 mm a sleeve, and the rest in the next compartment. */
+		expect(shelves[0].compartments[0].items).toHaveLength(66);
+		expect(shelves[0].compartments[1].items).toHaveLength(4);
+	});
+
+	it('takes far more CDs than records into the same compartment', () => {
+		const cds = Array.from({ length: 40 }, (_, at) =>
+			release(`c${at}`, 'Slayer', null, 'cd')
+		);
+		const shelves = arrangeShelves(
+			[group('a', cds)],
+			[unit('one', 1, 1, kallax)]
+		);
+
+		expect(shelves[0].compartments[0].items).toHaveLength(33);
+	});
+
+	it('passes a record over a compartment nothing that tall fits in', () => {
+		const shelves = arrangeShelves(
+			[
+				group('a', [
+					release('lp', 'Judas Priest'),
+					release('cd', 'Slayer', null, 'cd'),
+				]),
+			],
+			[unit('rack', 1, 1, cdRack), unit('shelf', 1, 1, kallax)]
+		);
+
+		expect(held(shelves[0].compartments)).toEqual(['cd']);
+		expect(held(shelves[1].compartments)).toEqual(['lp']);
+	});
+
+	it('shows a record nothing drawn is tall enough for as off the shelf', () => {
+		const shelves = arrangeShelves(
+			[group('a', [release('lp')])],
+			[unit('rack', 1, 1, cdRack)]
+		);
+
+		expect(held(shelves[0].compartments)).toEqual([]);
+		expect(shelves[1].overflow).toBe(true);
+		expect(held(shelves[1].compartments)).toEqual(['lp']);
+	});
+
+	it('numbers a run that carries on over several compartments', () => {
+		const records = Array.from({ length: 3 }, (_, at) => release(`r${at}`));
+		const shelves = arrangeShelves(
+			[group('priest', records)],
+			[unit('one', 1, 3)]
+		);
+
+		expect(shelves[0].compartments.map((cell) => cell.label)).toEqual([
+			'PRIEST · 1/3',
+			'PRIEST · 2/3',
+			'PRIEST · 3/3',
+		]);
 	});
 });
 

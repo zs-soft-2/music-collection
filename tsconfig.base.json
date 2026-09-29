@@ -116,6 +116,9 @@
 			"@music-collection/domain/release": [
 				"libs/domain/music/release/src/index.ts"
 			],
+			"@music-collection/domain/release/testing": [
+				"libs/domain/music/release/src/testing.ts"
+			],
 			"@music-collection/domain/release/core": [
 				"libs/domain/music/release/src/lib/domain-release.module.ts"
 			],

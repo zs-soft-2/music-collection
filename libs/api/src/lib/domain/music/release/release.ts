@@ -12,6 +12,18 @@ import { ArtistEntity } from '../artist';
 import { LabelEntity } from '../label';
 
 export interface Release {
+	/**
+	 * Whether the pressing is still offered. Missing or `true` on everything
+	 * the catalog has ever held; `false` is a release an admin archived
+	 * because copies of it are already on somebody's shelf and it cannot be
+	 * deleted — a duplicate, or a page that turned out wrong.
+	 *
+	 * Archived is not gone: the copies keep pointing at it and its page still
+	 * reads. It is only taken off what a form offers, so no new copy is filed
+	 * under it. See `EntityUsage` for what refuses a delete in the first
+	 * place.
+	 */
+	active?: boolean;
 	album: AlbumEntity;
 	artist: ReleaseArtist;
 	/**

@@ -28,6 +28,11 @@
 				imageShape="square"
 				(open)="editRelease(release)"
 			>
+				@if (isArchived(release)) {
+					<p-chip styleClass="archived">
+						{{ 'ui.releaseDeletion.archived' | transloco }}
+					</p-chip>
+				}
 				<mc-view-action
 					cardActions
 					[link]="viewLink(release)"
@@ -72,6 +77,11 @@
 			let-release
 		>
 			{{ release.name }}
+			@if (isArchived(release)) {
+				<p-chip styleClass="archived">
+					{{ 'ui.releaseDeletion.archived' | transloco }}
+				</p-chip>
+			}
 		</ng-template>
 
 		<ng-template
@@ -151,4 +161,88 @@
 			</button>
 		</ng-template>
 	</mc-collection-list>
+
+	<p-dialog
+		[header]="'ui.releaseDeletion.title' | transloco"
+		[modal]="true"
+		[visible]="!!deletion.pending()"
+		(visibleChange)="$event || deletion.cancel()"
+		[style]="{ width: 'min(34rem, 95vw)' }"
+		[dismissableMask]="true"
+	>
+		@if (deletion.pending(); as release) {
+			<p class="release-deletion-subject">
+				<strong>{{ release.name }}</strong>
+				@if (release.artist?.name) {
+					<span> — {{ release.artist.name }}</span>
+				}
+			</p>
+
+			@if (deletion.isChecking()) {
+				<p class="release-deletion-checking">
+					{{ 'ui.releaseDeletion.checking' | transloco }}
+				</p>
+			} @else if (deletion.canDelete()) {
+				<p>{{ 'ui.releaseDeletion.nothing-holds' | transloco }}</p>
+				@if (deletion.trackCount()) {
+					<p class="release-deletion-cascade">
+						{{
+							'ui.releaseDeletion.goes-with-tracks'
+								| transloco: { count: deletion.trackCount() }
+						}}
+					</p>
+				}
+			} @else {
+				<p class="release-deletion-blocked" role="alert">
+					{{
+						'ui.releaseDeletion.in-use'
+							| transloco: { count: deletion.copyCount() }
+					}}
+				</p>
+			}
+
+			@if (deletion.error(); as error) {
+				<p class="release-deletion-error" role="alert">
+					@if (error === inUse) {
+						{{ 'ui.releaseDeletion.in-use-now' | transloco }}
+					} @else {
+						{{ error }}
+					}
+				</p>
+			}
+		}
+
+		<ng-template #footer>
+			@if (deletion.canDelete()) {
+				<p-button
+					[label]="'ui.releaseDeletion.really-delete' | transloco"
+					icon="pi pi-trash"
+					severity="danger"
+					[loading]="deletion.isWorking()"
+					(onClick)="deletion.confirmDeletion()"
+				></p-button>
+			} @else if (!deletion.isChecking()) {
+				<p-button
+					[label]="
+						(deletion.isArchived()
+							? 'ui.releaseDeletion.unarchive'
+							: 'ui.releaseDeletion.archive'
+						) | transloco
+					"
+					[icon]="
+						deletion.isArchived() ? 'pi pi-eye' : 'pi pi-eye-slash'
+					"
+					severity="warn"
+					[loading]="deletion.isWorking()"
+					(onClick)="deletion.setArchived(!deletion.isArchived())"
+				></p-button>
+			}
+			<p-button
+				[label]="'ui.releaseDeletion.cancel' | transloco"
+				severity="secondary"
+				[text]="true"
+				(onClick)="deletion.cancel()"
+			></p-button>
+		</ng-template>
+	</p-dialog>
 }

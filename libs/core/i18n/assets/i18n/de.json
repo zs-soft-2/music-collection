@@ -371,7 +371,10 @@
 			"shelf": {
 				"dragHint": "Zieh eine Platte dorthin, wo sie wirklich steht. Ein Fach, das du eingeräumt hast, behält den Platz, den du darin gelassen hast; alles Unplatzierte füllt weiterhin die freigelassenen Fächer.",
 				"filterHint": "Lösche Suche und Formatfilter, um das Regal von Hand umzuräumen.",
-				"fileFailed": "Konnte nicht eingeordnet werden: {{error}}"
+				"fileFailed": "Konnte nicht eingeordnet werden: {{error}}",
+				"keep": "So lassen",
+				"release": "Das Regal einräumen lassen",
+				"keptHint": "Das Regal steht, wie du es verlassen hast: Die Platten behalten ihren Platz, auch wenn eine dazukommt oder ein Exemplar weggeht. Eine neue Platte kommt in ein noch freies Fach."
 			},
 			"groupFallback": "Sammlung",
 			"unknownStyle": "Unbekannter Stil",
@@ -982,7 +985,7 @@
 		},
 		"recordShelf": {
 			"off-the-shelf": "Außerhalb des Regals",
-			"no-drawn-compartment-left": "Kein gezeichnetes Fach mehr frei — füge in deinem Profil ein Regal hinzu.",
+			"no-drawn-compartment-left": "Kein gezeichnetes Fach ist übrig, oder keines ist hoch genug dafür — sieh dein Regal im Profil durch.",
 			"play-what-stands-here": "Abspielen, was hier steht",
 			"play-what-stands-here2": "Abspielen, was hier steht"
 		},
@@ -1380,6 +1383,19 @@
 			"actions": "Aktionen",
 			"edit-release": "Veröffentlichung bearbeiten",
 			"delete-release2": "Veröffentlichung löschen"
+		},
+		"releaseDeletion": {
+			"title": "Ausgabe löschen",
+			"checking": "Prüfe, was sie hält …",
+			"nothing-holds": "Nichts verweist darauf, sie kann endgültig gelöscht werden.",
+			"goes-with-tracks": "{{count}} Titel gehen mit.",
+			"in-use": "{{count}} Exemplar(e) davon stehen in Sammlungen, deshalb ist die Ausgabe nicht löschbar — entfernen kann sie nur die jeweilige Besitzerin oder der Besitzer. Archiviere sie stattdessen: sie verschwindet aus den Formularen, die vorhandenen Exemplare bleiben.",
+			"in-use-now": "Inzwischen wurde ein Exemplar angelegt, daher ist die Ausgabe doch nicht löschbar. Archiviere sie lieber.",
+			"really-delete": "Endgültig löschen",
+			"archive": "Archivieren",
+			"unarchive": "Wiederherstellen",
+			"cancel": "Abbrechen",
+			"archived": "archiviert"
 		},
 		"releaseDetailView": {
 			"release-detail-view-works": "detaillierte Veröffentlichungsansicht funktioniert!"
@@ -1963,7 +1979,7 @@
 			"play-on-to-the": "Weiter zum nächsten Titel"
 		},
 		"profileShelves": {
-			"draw-the-shelving-you": "Zeichne das Regal, das du wirklich hast. Ein Element ist ein Raster quadratischer Fächer, 4 × 2 steht also hochkant und 2 × 4 ist dasselbe Element auf der Seite. Platten werden vom ersten Element bis zum letzten eingeräumt.",
+			"draw-the-shelving-you": "Zeichne das Regal, das du wirklich hast. Ein Element ist ein Raster aus Fächern, und ein Fach hat zwei Maße: die Höhe entscheidet, was hineinpasst (eine LP braucht 32 cm, eine DVD 20, eine CD 12, eine Kassette 8), die Länge, wie viel. Platten werden vom ersten Element bis zum letzten eingeräumt — was ein Fach nicht aufnehmen kann, wartet auf das nächste.",
 			"shelf-name": "Regalname",
 			"rows": "Reihen",
 			"one-row-fewer": "Eine Reihe weniger",
@@ -1981,8 +1997,18 @@
 				"one": "{{count}} Platte hat keinen Platz — sie steht unter dem Möbel, bis du mehr zeichnest.",
 				"other": "{{count}} Platten haben keinen Platz — sie stehen unter dem Möbel, bis du mehr zeichnest."
 			},
-			"unitNote": "{{compartments}} Fächer · Platz für {{records}} Platten",
-			"roomNote": "{{units}} Regale · {{compartments}} Fächer · Platz für {{records}} Platten."
+			"unitNote": "{{compartments}} Fächer · ein Fach fasst:",
+			"roomNote": "{{units}} Regale · {{compartments}} Fächer · insgesamt {{length}} cm Regallänge, darauf passen {{holds}} deiner Platten.",
+			"cubby-height": "Fachhöhe",
+			"cubby-length": "Fachlänge",
+			"one-notch-lower": "Eine Stufe niedriger",
+			"one-notch-higher": "Eine Stufe höher",
+			"shorter": "Einen Zentimeter kürzer",
+			"longer": "Einen Zentimeter länger",
+			"how-the-copies-lie": "Wie die Exemplare im Fach liegen",
+			"standing": "Stehend",
+			"stacked": "Gestapelt",
+			"nothing-fits": "In ein so niedriges Fach passt nichts"
 		},
 		"profileSpotify": {
 			"your-own-app-explained": "Mit deiner eigenen Spotify-App steuert dieser Player Spotify: Warteschlange, Radio, nächster Titel, deine eigenen Lautsprecher. Ohne sie bleibt Spotifys eingebetteter Rahmen auf der Albumseite — er spielt vollständig, wenn du bei Spotify angemeldet bist, gesteuert wird er von hier aus aber nicht. Spotify zählt, wer sich über eine App anmeldet — eine App fasst fünfundzwanzig Leute —, deshalb muss es deine eigene sein.",

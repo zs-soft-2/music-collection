@@ -14,7 +14,7 @@ import {
 	CollectionItemStateService,
 	CollectionItemUtilService,
 	EntityTypeEnum,
-	MAX_SHELF_POSITION,
+	maxPositionIn,
 	ReleaseEntity,
 	ReleaseStateService,
 	ReturnNavigationService,
@@ -199,7 +199,7 @@ export class CollectionItemFormService {
 					? spotValue(placement.row, placement.column)
 					: null,
 			position: placement?.position ?? 1,
-			maxPosition: MAX_SHELF_POSITION,
+			maxPosition: unit ? maxPositionIn(unit) : 1,
 			// A place no drawn compartment answers to any more is kept, but
 			// there is nothing to show it on.
 			lost: !!placement && !placementInLayout(placement, this.units),

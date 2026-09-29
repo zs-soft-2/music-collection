@@ -23,10 +23,14 @@ import {
 import {
 	DEFAULT_SHELF,
 	NO_SHELF_LAYOUT,
-	SHELF_CUBBY_SIZE,
 	SHELF_LAYOUT_SETTING,
 	SHELF_LIMITS,
+	ShelfCubby,
+	ShelfMediaMix,
+	ShelfStance,
 	ShelfUnitLayout,
+	clampCubbyHeight,
+	clampCubbyLength,
 	clampShelfSide,
 	shelfCapacity,
 } from '../collection/shelf-layout.setting';
@@ -34,10 +38,12 @@ import {
 import { computed, inject } from '@angular/core';
 import {
 	AuthenticationStateService,
+	CollectionItemEntity,
 	CollectionItemStateService,
 	User,
 	UserStateService,
 } from '@music-collection/api';
+import { toDescriptions } from '@music-collection/common/engine';
 import {
 	patchState,
 	signalStore,
@@ -52,6 +58,27 @@ import { rxMethod } from '@ngrx/signals/rxjs-interop';
 /** The layout of the collection page, with nothing left unchosen. */
 type CollectionViewChoice = typeof COLLECTION_VIEW_DEFAULTS;
 
+/**
+ * The collection counted by medium, the way a shelf measures it: a copy
+ * filed under the box set medium, or only tagged as one, is a box set —
+ * that is the slab which has to fit in the compartment.
+ */
+function countMedia(items: readonly CollectionItemEntity[]): ShelfMediaMix {
+	const mix: Record<string, number> = {};
+
+	for (const { release } of items) {
+		const media = toDescriptions(release?.formatDescription).includes(
+			'box set'
+		)
+			? 'boxset'
+			: (release?.media ?? '');
+
+		mix[media] = (mix[media] ?? 0) + 1;
+	}
+
+	return mix;
+}
+
 interface ProfilePageState {
 	user: User | null;
 	/** How the collection page lays the records out. */
@@ -62,6 +89,12 @@ interface ProfilePageState {
 	shelfLayout: ShelfUnitLayout[];
 	/** Records on the shelf, so the drawn furniture can be measured against it. */
 	collectionSize: number;
+	/**
+	 * How many copies of each medium there are. What a compartment holds
+	 * depends on what goes in it, so the room cannot be measured by a count
+	 * alone: five hundred CDs ask for far less shelf than five hundred LPs.
+	 */
+	mediaMix: ShelfMediaMix;
 	/** Where the collector is, and how much of it the others may see. */
 	location: UserLocationSettings;
 	isAuthenticated: boolean;
@@ -85,6 +118,7 @@ const initialState: ProfilePageState = {
 	albumCompact: false,
 	shelfLayout: NO_SHELF_LAYOUT.units,
 	collectionSize: 0,
+	mediaMix: {},
 	location: NO_LOCATION,
 	isAuthenticated: false,
 	pendingName: null,
@@ -110,17 +144,13 @@ export const ProfilePageStore = signalStore(
 		/** What the drawn furniture holds, against what it has to hold. */
 		shelfRoom: computed(() => {
 			const units = store.shelfLayout();
-			const { compartments, records } = shelfCapacity(
-				units,
-				SHELF_CUBBY_SIZE
-			);
+			const room = shelfCapacity(units, store.mediaMix());
 
 			return {
 				units: units.length,
-				compartments,
-				records,
-				/** Records that would have nowhere to stand. */
-				short: Math.max(0, store.collectionSize() - records),
+				...room,
+				/** The drawn length in whole centimetres, as it is shown. */
+				lengthCm: Math.round(room.length / 10),
 				full: units.length >= SHELF_LIMITS.maxUnits,
 			};
 		}),
@@ -439,7 +469,10 @@ export const ProfilePageStore = signalStore(
 								: of([])
 						),
 						tap((items) =>
-							patchState(store, { collectionSize: items.length })
+							patchState(store, {
+								collectionSize: items.length,
+								mediaMix: countMedia(items),
+							})
 						)
 					)
 				),
@@ -464,6 +497,7 @@ export const ProfilePageStore = signalStore(
 							name: `Shelf ${units.length + 1}`,
 							rows: last?.rows ?? DEFAULT_SHELF.rows,
 							columns: last?.columns ?? DEFAULT_SHELF.columns,
+							cubby: last?.cubby ?? DEFAULT_SHELF.cubby,
 						},
 					]);
 				},
@@ -488,6 +522,38 @@ export const ProfilePageStore = signalStore(
 						...unit,
 						rows: clampShelfSide(size.rows ?? unit.rows),
 						columns: clampShelfSide(size.columns ?? unit.columns),
+					}));
+				},
+
+				/**
+				 * Remeasures a unit's compartments. The height says what may
+				 * go in them, the length how much, and the stance how the
+				 * copies lie — all three are one compartment, so they are
+				 * changed through one door.
+				 */
+				measureShelf(
+					id: string,
+					cubby: Partial<ShelfCubby>
+				): void {
+					redraw(id, (unit) => ({
+						...unit,
+						cubby: {
+							height: clampCubbyHeight(
+								cubby.height ?? unit.cubby.height
+							),
+							length: clampCubbyLength(
+								cubby.length ?? unit.cubby.length
+							),
+							stance: cubby.stance ?? unit.cubby.stance,
+						},
+					}));
+				},
+
+				/** Stands the copies up in a compartment, or lays them down. */
+				turnShelf(id: string, stance: ShelfStance): void {
+					redraw(id, (unit) => ({
+						...unit,
+						cubby: { ...unit.cubby, stance },
 					}));
 				},
 

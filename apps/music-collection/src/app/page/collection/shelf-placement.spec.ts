@@ -3,18 +3,30 @@ import { CollectionItemPlacement } from '@music-collection/api';
 import { ReleaseView } from '../../shared/music-ui';
 
 import {
-	MAX_SHELF_POSITION,
+	maxPositionIn,
 	nextPosition,
 	placementInLayout,
 	placementsForDrop,
 	placementsLeftBehind,
+	placementsToFreeze,
+	placementsToRelease,
+	shelfSizeOf,
 	unitSpots,
 } from './shelf-placement';
-import { ShelfUnitLayout } from './shelf-layout.setting';
+import { DEFAULT_CUBBY, ShelfUnitLayout } from './shelf-layout.setting';
 
 const units: ShelfUnitLayout[] = [
-	{ id: 'one', name: 'Living room', rows: 2, columns: 3 },
+	{
+		id: 'one',
+		name: 'Living room',
+		rows: 2,
+		columns: 3,
+		cubby: DEFAULT_CUBBY,
+	},
 ];
+
+/** A Kallax cubby goes 66 sleeves deep, which is as far as filing goes. */
+const FURTHEST = maxPositionIn(units[0]);
 
 describe('placementInLayout', () => {
 	it('keeps a place the drawn furniture has', () => {
@@ -63,7 +75,7 @@ describe('placementInLayout', () => {
 					unitId: 'one',
 					row: 1,
 					column: 1,
-					position: MAX_SHELF_POSITION + 1,
+					position: FURTHEST + 1,
 				},
 				units
 			)
@@ -84,9 +96,37 @@ describe('unitSpots', () => {
 	});
 });
 
+describe('maxPositionIn', () => {
+	it('goes as far along as the compartment is long', () => {
+		expect(FURTHEST).toBe(66);
+		expect(
+			maxPositionIn({
+				...units[0],
+				cubby: { height: 3, length: 150, stance: 'across' },
+			})
+		).toBe(30);
+	});
+});
+
+describe('shelfSizeOf', () => {
+	it('measures a copy by its medium', () => {
+		expect(shelfSizeOf(record('a'))).toEqual({
+			height: 8,
+			thickness: 5,
+		});
+	});
+
+	it('measures a box set as the slab it is, whatever its medium', () => {
+		expect(shelfSizeOf({ ...record('a'), boxSet: true })).toEqual({
+			height: 8,
+			thickness: 30,
+		});
+	});
+});
+
 describe('nextPosition', () => {
 	it('starts a compartment nothing stands in', () => {
-		expect(nextPosition([], 'one', 1, 1)).toBe(1);
+		expect(nextPosition([], units[0], 1, 1)).toBe(1);
 	});
 
 	it('goes behind what is already filed there', () => {
@@ -96,15 +136,111 @@ describe('nextPosition', () => {
 			{ unitId: 'one', row: 1, column: 2, position: 9 },
 		];
 
-		expect(nextPosition(filed, 'one', 1, 1)).toBe(5);
+		expect(nextPosition(filed, units[0], 1, 1)).toBe(5);
 	});
 
 	it('stacks at the end of a compartment that is full', () => {
 		const filed = [
-			{ unitId: 'one', row: 1, column: 1, position: MAX_SHELF_POSITION },
+			{ unitId: 'one', row: 1, column: 1, position: FURTHEST },
 		];
 
-		expect(nextPosition(filed, 'one', 1, 1)).toBe(MAX_SHELF_POSITION);
+		expect(nextPosition(filed, units[0], 1, 1)).toBe(FURTHEST);
+	});
+});
+
+describe('placementsToFreeze', () => {
+	/** A shelf as it is drawn: two compartments, and what stands in them. */
+	const shelf = (
+		compartments: {
+			spot: { unitId: string; row: number; column: number } | null;
+			items: ReleaseView[];
+		}[]
+	) => [
+		{
+			compartments: compartments.map((compartment, index) => ({
+				key: `c${index}`,
+				label: '',
+				...compartment,
+			})),
+		},
+	];
+
+	it('gives every record the place it is drawn in', () => {
+		const shelves = shelf([
+			{
+				spot: { unitId: 'one', row: 1, column: 1 },
+				items: [record('a'), record('b')],
+			},
+		]);
+
+		expect(placementsToFreeze(shelves)).toEqual([
+			{
+				releaseId: 'a',
+				placement: { unitId: 'one', row: 1, column: 1, position: 1 },
+			},
+			{
+				releaseId: 'b',
+				placement: { unitId: 'one', row: 1, column: 1, position: 2 },
+			},
+		]);
+	});
+
+	it('writes nothing for a shelf already kept', () => {
+		const held = (position: number) => ({
+			unitId: 'one',
+			row: 1,
+			column: 1,
+			position,
+		});
+		const shelves = shelf([
+			{
+				spot: { unitId: 'one', row: 1, column: 1 },
+				items: [record('a', held(1)), record('b', held(2))],
+			},
+		]);
+
+		expect(placementsToFreeze(shelves)).toEqual([]);
+	});
+
+	it('leaves out what no drawn compartment holds', () => {
+		// The overflow: records the furniture has no room for. There is no
+		// compartment to name, so freezing cannot reach them.
+		const shelves = shelf([{ spot: null, items: [record('a')] }]);
+
+		expect(placementsToFreeze(shelves)).toEqual([]);
+	});
+
+	it('numbers each compartment from one', () => {
+		const shelves = shelf([
+			{
+				spot: { unitId: 'one', row: 1, column: 1 },
+				items: [record('a')],
+			},
+			{
+				spot: { unitId: 'one', row: 1, column: 2 },
+				items: [record('b')],
+			},
+		]);
+
+		expect(
+			placementsToFreeze(shelves).map(
+				({ placement }) => placement.position
+			)
+		).toEqual([1, 1]);
+	});
+});
+
+describe('placementsToRelease', () => {
+	it('hands back every record that holds a place', () => {
+		const placement = { unitId: 'one', row: 1, column: 1, position: 1 };
+
+		expect(
+			placementsToRelease([record('a', placement), record('b')])
+		).toEqual([{ releaseId: 'a', placement: null }]);
+	});
+
+	it('writes nothing for a shelf that was never kept', () => {
+		expect(placementsToRelease([record('a'), record('b')])).toEqual([]);
 	});
 });
 
@@ -131,6 +267,7 @@ function record(
 		addedAt: 0,
 		labelName: null,
 		country: null,
+		generic: false,
 		placement,
 	};
 }
@@ -142,7 +279,7 @@ describe('placementsForDrop', () => {
 		const moved = record('c');
 		const shown = [record('a'), record('b')];
 
-		expect(placementsForDrop(shown, moved, spot, 1)).toEqual([
+		expect(placementsForDrop(shown, moved, spot, 1, FURTHEST)).toEqual([
 			{ releaseId: 'a', placement: { ...spot, position: 1 } },
 			{ releaseId: 'c', placement: { ...spot, position: 2 } },
 			{ releaseId: 'b', placement: { ...spot, position: 3 } },
@@ -154,7 +291,7 @@ describe('placementsForDrop', () => {
 		const shown = [record('a'), record('b')];
 
 		expect(
-			placementsForDrop(shown, moved, spot, 9).map(
+			placementsForDrop(shown, moved, spot, 9, FURTHEST).map(
 				(move) => move.releaseId
 			)
 		).toEqual(['a', 'b', 'c']);
@@ -165,7 +302,7 @@ describe('placementsForDrop', () => {
 		const b = record('b', { ...spot, position: 2 });
 
 		/* b to the front: both change place, so both are written. */
-		expect(placementsForDrop([a, b], b, spot, 0)).toEqual([
+		expect(placementsForDrop([a, b], b, spot, 0, FURTHEST)).toEqual([
 			{ releaseId: 'b', placement: { ...spot, position: 1 } },
 			{ releaseId: 'a', placement: { ...spot, position: 2 } },
 		]);
@@ -175,17 +312,17 @@ describe('placementsForDrop', () => {
 		const a = record('a', { ...spot, position: 1 });
 		const b = record('b', { ...spot, position: 2 });
 
-		expect(placementsForDrop([a, b], b, spot, 1)).toEqual([]);
+		expect(placementsForDrop([a, b], b, spot, 1, FURTHEST)).toEqual([]);
 	});
 
 	it('leaves out what a compartment cannot hold', () => {
-		const shown = Array.from({ length: MAX_SHELF_POSITION }, (_, index) =>
+		const shown = Array.from({ length: FURTHEST }, (_, index) =>
 			record(`r${index}`)
 		);
 		const moved = record('late');
 
-		expect(placementsForDrop(shown, moved, spot, 0)).toHaveLength(
-			MAX_SHELF_POSITION
+		expect(placementsForDrop(shown, moved, spot, 0, FURTHEST)).toHaveLength(
+			FURTHEST
 		);
 	});
 });
@@ -198,7 +335,7 @@ describe('placementsLeftBehind', () => {
 		const shown = [record('a'), moved, record('c')];
 
 		/* Two left where three stood: nothing may slide into the third place. */
-		expect(placementsLeftBehind(shown, moved, spot)).toEqual([
+		expect(placementsLeftBehind(shown, moved, spot, FURTHEST)).toEqual([
 			{ releaseId: 'a', placement: { ...spot, position: 1 } },
 			{ releaseId: 'c', placement: { ...spot, position: 2 } },
 		]);
@@ -209,7 +346,9 @@ describe('placementsLeftBehind', () => {
 		const moved = record('b', { ...spot, position: 2 });
 		const c = record('c', { ...spot, position: 3 });
 
-		expect(placementsLeftBehind([a, moved, c], moved, spot)).toEqual([]);
+		expect(
+			placementsLeftBehind([a, moved, c], moved, spot, FURTHEST)
+		).toEqual([]);
 	});
 
 	it('leaves alone the records that already stand where they would be put', () => {
@@ -217,14 +356,16 @@ describe('placementsLeftBehind', () => {
 		const moved = record('b');
 		const c = record('c');
 
-		expect(placementsLeftBehind([a, moved, c], moved, spot)).toEqual([
-			{ releaseId: 'c', placement: { ...spot, position: 2 } },
-		]);
+		expect(
+			placementsLeftBehind([a, moved, c], moved, spot, FURTHEST)
+		).toEqual([{ releaseId: 'c', placement: { ...spot, position: 2 } }]);
 	});
 
 	it('empties out with the last record taken from it', () => {
 		const moved = record('a');
 
-		expect(placementsLeftBehind([moved], moved, spot)).toEqual([]);
+		expect(placementsLeftBehind([moved], moved, spot, FURTHEST)).toEqual(
+			[]
+		);
 	});
 });

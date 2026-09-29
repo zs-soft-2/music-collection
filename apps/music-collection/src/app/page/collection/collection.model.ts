@@ -1,3 +1,5 @@
+import { ShelfCubby } from '@music-collection/api';
+
 import { MediaFormat, ReleaseView } from '../../shared/music-ui';
 
 /** Filter, sort, group and view models of the collection page. */
@@ -61,6 +63,8 @@ export interface ShelfUnitView {
 	key: string;
 	name: string;
 	columns: number;
+	/** How big one of its compartments is, so the drawing can be to scale. */
+	cubby: ShelfCubby;
 	/**
 	 * The compartments in grid order, top left to bottom right — every drawn
 	 * one, including those with nothing in them, so a record filed by hand

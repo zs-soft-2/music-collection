@@ -371,7 +371,10 @@
 			"shelf": {
 				"dragHint": "Húzz egy lemezt oda, ahol valójában áll. Az általad elrendezett rekesz megtartja a benne hagyott helyet; amit nem raktál el, az továbbra is a szabadon hagyott rekeszeket tölti.",
 				"filterHint": "Töröld a keresést és a formátumszűrőt, hogy kézzel rendezhesd át a polcot.",
-				"fileFailed": "Nem sikerült elrakni: {{error}}"
+				"fileFailed": "Nem sikerült elrakni: {{error}}",
+				"keep": "Maradjon így",
+				"release": "Rendezze a polc",
+				"keptHint": "A polc úgy áll, ahogy elraktad: a lemezek a helyükön maradnak akkor is, ha újat veszel fel vagy egy példány kikerül. Az új lemez a szabadon maradt rekeszekbe áll be."
 			},
 			"groupFallback": "Gyűjtemény",
 			"unknownStyle": "Ismeretlen stílus",
@@ -982,7 +985,7 @@
 		},
 		"recordShelf": {
 			"off-the-shelf": "Polcon kívül",
-			"no-drawn-compartment-left": "Nincs több megrajzolt rekesz — adj hozzá polcot a profilodban.",
+			"no-drawn-compartment-left": "Nincs több megrajzolt rekesz, vagy egyik sem elég magas ezekhez — nézd át a polcaidat a profilodban.",
 			"play-what-stands-here": "Ami itt áll, szóljon",
 			"play-what-stands-here2": "Ami itt áll, szóljon"
 		},
@@ -1380,6 +1383,19 @@
 			"actions": "Műveletek",
 			"edit-release": "Kiadás szerkesztése",
 			"delete-release2": "Kiadás törlése"
+		},
+		"releaseDeletion": {
+			"title": "Kiadás törlése",
+			"checking": "Megnézem, mi tartja életben…",
+			"nothing-holds": "Semmi nem hivatkozik rá, véglegesen törölhető.",
+			"goes-with-tracks": "{{count}} szám megy vele.",
+			"in-use": "{{count}} példány van belőle gyűjteményben, ezért nem törölhető — a példányokat a gazdájuk tudja eltávolítani. Archiváld helyette: lekerül a formokról, de a meglévő példányok megmaradnak mellette.",
+			"in-use-now": "Közben felvettek belőle egy példányt, ezért mégsem törölhető. Archiváld inkább.",
+			"really-delete": "Végleges törlés",
+			"archive": "Archiválás",
+			"unarchive": "Visszaállítás",
+			"cancel": "Mégsem",
+			"archived": "archivált"
 		},
 		"releaseDetailView": {
 			"release-detail-view-works": "a részletes kiadásnézet működik!"
@@ -1963,7 +1979,7 @@
 			"play-on-to-the": "Menjen tovább a következő számra"
 		},
 		"profileShelves": {
-			"draw-the-shelving-you": "Rajzold le a polcot, ami valóban megvan. Egy elem négyzetes rekeszek rácsa, tehát a 4 × 2 állva áll, a 2 × 4 pedig ugyanaz az elem az oldalán. A lemezek az első elemtől az utolsóig kerülnek be.",
+			"draw-the-shelving-you": "Rajzold le a polcot, ami valóban megvan. Egy elem rekeszek rácsa, és egy rekesznek két mérete van: a magassága dönti el, mi fér bele (a bakelit 32 cm, a DVD 20, a CD 12, a kazetta 8), a hossza pedig, hogy mennyi. A lemezek az első elemtől az utolsóig kerülnek be — amit egy rekesz nem tud befogadni, az a következőre vár.",
 			"shelf-name": "Polc neve",
 			"rows": "Sorok",
 			"one-row-fewer": "Eggyel kevesebb sor",
@@ -1981,8 +1997,18 @@
 				"one": "{{count}} lemeznek nincs hol állnia — a bútor alatt látszik, amíg nem rajzolsz többet.",
 				"other": "{{count}} lemeznek nincs hol állnia — a bútor alatt látszanak, amíg nem rajzolsz többet."
 			},
-			"unitNote": "{{compartments}} rekesz · {{records}} lemeznek van hely",
-			"roomNote": "{{units}} polc · {{compartments}} rekesz · {{records}} lemeznek van hely."
+			"unitNote": "{{compartments}} rekesz · egy rekeszbe:",
+			"roomNote": "{{units}} polc · {{compartments}} rekesz · összesen {{length}} cm polchossz, amin {{holds}} lemezed elfér.",
+			"cubby-height": "Rekesz magassága",
+			"cubby-length": "Rekesz hossza",
+			"one-notch-lower": "Eggyel alacsonyabb rekesz",
+			"one-notch-higher": "Eggyel magasabb rekesz",
+			"shorter": "Egy centivel rövidebb rekesz",
+			"longer": "Egy centivel hosszabb rekesz",
+			"how-the-copies-lie": "Hogyan állnak a lemezek a rekeszben",
+			"standing": "Állva",
+			"stacked": "Fektetve",
+			"nothing-fits": "Ilyen alacsony rekeszbe semmi nem fér be"
 		},
 		"profileSpotify": {
 			"your-own-app-explained": "A saját Spotify appoddal ez a lejátszó vezérli a Spotifyt: sor, rádió, következő szám, a saját hangszóróid. Nélküle marad a Spotify beágyazott kerete az album oldalán — abban teljes hosszban szól a szám, ha be vagy jelentkezve a Spotifyba, de innen semmi nem vezérli. A Spotify appokhoz köti, ki léphet be rajtuk — egy app huszonöt embert bír el —, ezért kell a sajátod.",

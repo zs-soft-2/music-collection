@@ -56,6 +56,48 @@ export const DELETION_COLLECTION = 'deletion';
 /** Server time of a document's last write, set on every write. */
 export const UPDATED_AT_FIELD = 'updatedAt';
 
+/**
+ * How many documents one batch writes, the feature stamp left room for.
+ * Firestore takes 500 operations in a batch; a deletion is two of them,
+ * because it writes a tombstone as well.
+ */
+const BATCH_WRITE_LIMIT = 499;
+const BATCH_DELETE_LIMIT = 249;
+
+/** One document written, as `setAll` takes it. */
+interface SyncWrite {
+	reference: DocumentReference;
+	data: DocumentData;
+}
+
+/**
+ * The work split into batches Firestore will take. Never empty: a call with
+ * nothing to write still bumps the feature's stamp, the way it did when this
+ * was one batch.
+ */
+export function toSyncBatches(
+	writes: SyncWrite[],
+	deletions: DocumentReference[]
+): { writes: SyncWrite[]; deletions: DocumentReference[] }[] {
+	const rounds: { writes: SyncWrite[]; deletions: DocumentReference[] }[] =
+		[];
+
+	for (let at = 0; at < writes.length; at += BATCH_WRITE_LIMIT) {
+		rounds.push({
+			writes: writes.slice(at, at + BATCH_WRITE_LIMIT),
+			deletions: [],
+		});
+	}
+	for (let at = 0; at < deletions.length; at += BATCH_DELETE_LIMIT) {
+		rounds.push({
+			writes: [],
+			deletions: deletions.slice(at, at + BATCH_DELETE_LIMIT),
+		});
+	}
+
+	return rounds.length ? rounds : [{ writes: [], deletions: [] }];
+}
+
 type TimestampMap = Record<string, Timestamp | undefined>;
 
 /**
@@ -260,23 +302,40 @@ export class FirestoreSyncService {
 	}
 
 	/**
-	 * Sets (merges) and deletes documents of one feature in a single batch;
-	 * deletions leave tombstones like `delete`.
+	 * Sets (merges) and deletes documents of one feature; deletions leave
+	 * tombstones like `delete`.
+	 *
+	 * One batch where it fits, and Firestore allows 500 writes in one — a
+	 * deletion costs two of them (the document and its tombstone), and the
+	 * feature's own stamp one more. Beyond that the writes go in batches,
+	 * one after the other: half a shelf written is better than a shelf that
+	 * could not be written at all, and the caller learns of a failure the
+	 * same way either path.
 	 */
 	public setAll(
 		featureKey: string,
 		writes: { reference: DocumentReference; data: DocumentData }[],
 		deletions: DocumentReference[] = []
 	): Promise<void> {
-		return this.commit((batch) => {
-			writes.forEach(({ reference, data }) =>
-				batch.set(reference, this.stamp(data), { merge: true })
-			);
-			deletions.forEach((reference) =>
-				this.remove(batch, reference, featureKey)
-			);
-			this.touch(batch, featureKey);
-		});
+		const rounds = toSyncBatches(writes, deletions);
+
+		return rounds.reduce(
+			(done, round) =>
+				done.then(() =>
+					this.commit((batch) => {
+						round.writes.forEach(({ reference, data }) =>
+							batch.set(reference, this.stamp(data), {
+								merge: true,
+							})
+						);
+						round.deletions.forEach((reference) =>
+							this.remove(batch, reference, featureKey)
+						);
+						this.touch(batch, featureKey);
+					})
+				),
+			Promise.resolve()
+		);
 	}
 
 	/** Deletes a document and leaves a tombstone for the other clients. */

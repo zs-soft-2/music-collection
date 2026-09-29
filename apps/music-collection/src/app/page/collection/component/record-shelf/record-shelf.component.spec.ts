@@ -6,6 +6,8 @@ import {
 } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
+import { DEFAULT_CUBBY } from '@music-collection/api';
+
 import { ReleaseView } from '../../../../shared/music-ui';
 import {
 	ShelfCompartmentView,
@@ -20,6 +22,7 @@ function shelf(unit: Partial<ShelfUnitView>): ShelfUnitView {
 		key: 'one',
 		name: '',
 		columns: 2,
+		cubby: DEFAULT_CUBBY,
 		compartments: [],
 		overflow: false,
 		...unit,
@@ -47,6 +50,7 @@ function release(id: string): ReleaseView {
 		addedAt: 0,
 		labelName: null,
 		country: null,
+		generic: false,
 		placement: null,
 	};
 }

@@ -98,16 +98,6 @@
 	contain-intrinsic-block-size: auto 290px;
 }
 
-/*
- * In drawn furniture a compartment is as deep as it is wide — the column is
- * a fixed width, so this is the square the collector drew. The open wall
- * keeps its flexible columns instead, or a wide screen would stretch every
- * cubby into a chimney.
- */
-.unit:not(.is-wall, .is-overflow) .cubby {
-	aspect-ratio: 1;
-}
-
 .label {
 	display: flex;
 	align-items: baseline;
@@ -190,17 +180,86 @@
 	}
 }
 
-/* Recessed back panel. Overflow stays visible so the cover can pull out. */
+/*
+ * Recessed back panel — one per compartment, however long the compartment
+ * is. Overflow stays visible so the cover can pull out.
+ */
 .cubby {
 	display: flex;
-	align-items: flex-end;
-	gap: 2px;
-	min-height: 230px;
-	padding: 24px 10px 10px;
+	flex-direction: column;
+	gap: 8px;
+	/* Even all round, so a square compartment is drawn as a square. */
+	padding: 10px;
 	background: linear-gradient(180deg, #080808 0%, #151515 30%);
 	box-shadow:
 		inset 0 0 26px rgba(0, 0, 0, 0.75),
 		inset 0 0 0 1px rgba(0, 0, 0, 0.55);
+}
+
+/* A tower runs up the wall, so its boards stand next to one another. */
+.is-down .cubby {
+	flex-direction: row;
+	align-items: flex-end;
+}
+
+/*
+ * One run of a compartment. A compartment longer than a board's worth of
+ * shelf is drawn over several of these — the single frame around them and
+ * the single label above them are what say it is still one compartment, and
+ * the little number on each says which run of it this is.
+ */
+.board {
+	position: relative;
+	display: flex;
+	box-sizing: border-box;
+	align-items: flex-end;
+	gap: 1px;
+	width: var(--board-w);
+	min-width: 0;
+	max-width: 100%;
+	height: var(--board-h);
+}
+
+.board:has(.board-mark) {
+	padding-inline-start: 13px;
+}
+
+/* The run below is the same compartment carrying on, not a new one. */
+.board + .board {
+	border-top: 1px solid rgba(233, 220, 198, 0.14);
+}
+
+.is-down .board {
+	flex-direction: column-reverse;
+	align-items: center;
+	justify-content: flex-start;
+	padding-inline-start: 0;
+}
+
+.is-down .board:has(.board-mark) {
+	padding-block-end: 13px;
+}
+
+.is-down .board + .board {
+	border-top: 0;
+	border-left: 1px solid rgba(233, 220, 198, 0.14);
+}
+
+.board-mark {
+	position: absolute;
+	top: 0;
+	left: 0;
+	font-size: 0.55rem;
+	font-weight: 700;
+	line-height: 1;
+	color: #b8a58a;
+	opacity: 0.65;
+	pointer-events: none;
+}
+
+.is-down .board-mark {
+	top: auto;
+	bottom: 0;
 }
 
 /* A full cubby squeezes every spine thinner, like a packed Kallax. */
@@ -241,6 +300,16 @@
 	&:focus-visible {
 		z-index: 5;
 		transform: translateY(-16px);
+	}
+
+	/* A copy lying flat is pulled out of the stack sideways. */
+	.is-down & {
+		min-height: 0;
+
+		&:hover,
+		&:focus-visible {
+			transform: translateX(16px);
+		}
 	}
 
 	&:focus-visible {
@@ -323,6 +392,18 @@
 	.spine {
 		transition: none;
 	}
+}
+
+/* Too thin to letter: the sleeve alone, and the cover still on hover. */
+.spine.is-bare .spine-text {
+	display: none;
+}
+
+/* Lying flat, the spine reads the way a stacked case does: straight on. */
+.is-down .spine-text {
+	inset: 0 6px;
+	writing-mode: horizontal-tb;
+	transform: none;
 }
 
 /* Rearranging by hand: the record in the air, and where it would land. */
