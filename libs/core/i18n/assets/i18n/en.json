@@ -420,7 +420,9 @@
 				"collection": "Collection",
 				"playback": "Playback",
 				"data": "Data"
-			}
+			},
+			"genres": "Genres you collect",
+			"genresIntro": "Two genres at most. The app downloads the catalog of those genres only — your own collection stays whole either way."
 		},
 		"track": {
 			"loading": "Loading…",
@@ -2520,6 +2522,15 @@
 				"star": "Star",
 				"bolt": "Lightning"
 			}
+		},
+		"profileGenres": {
+			"legend": "Up to {{limit}} genres",
+			"all": "Every genre",
+			"following": "Browsing, search and the radio stay inside the genres you follow.",
+			"everything": "The whole catalog is downloaded, every genre of it.",
+			"rebuild": "The app rebuilds its local catalog and reloads the page.",
+			"apply": "Apply",
+			"applying": "Rebuilding the catalog…"
 		}
 	},
 	"admin": {
@@ -3143,6 +3154,10 @@
 				"collectionTab": {
 					"title": "Second tab: collecting",
 					"content": "This tab is about your records: what the collection opens on, and the shelves they stand in. Move on and I will open it."
+				},
+				"genres": {
+					"title": "Your genres",
+					"content": "Two genres at most, and the app downloads the catalog of those alone. It decides what browsing, search and the radio have to work with."
 				},
 				"lists": {
 					"title": "The lists",

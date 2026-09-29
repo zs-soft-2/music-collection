@@ -15,6 +15,7 @@ import { ProfileAccountComponent } from './component/profile-account/profile-acc
 import { ProfileAppearanceComponent } from './component/profile-appearance/profile-appearance.component';
 import { ProfileAvatarComponent } from './component/profile-avatar/profile-avatar.component';
 import { ProfileDemoTourComponent } from './component/profile-demo-tour/profile-demo-tour.component';
+import { ProfileGenresComponent } from './component/profile-genres/profile-genres.component';
 import { ProfileLanguageComponent } from './component/profile-language/profile-language.component';
 import { ProfileListsComponent } from './component/profile-lists/profile-lists.component';
 import { ProfileListeningComponent } from './component/profile-listening/profile-listening.component';
@@ -52,6 +53,7 @@ import {
 		ProfileAppearanceComponent,
 		ProfileAvatarComponent,
 		ProfileDemoTourComponent,
+		ProfileGenresComponent,
 		ProfileLanguageComponent,
 		ProfileListsComponent,
 		ProfileListeningComponent,

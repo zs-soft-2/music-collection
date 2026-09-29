@@ -56,6 +56,7 @@ import { CollectorShelfLayoutService } from './page/collection/shelf-layout.serv
 import { HookModule } from './module/hook';
 import { installPerformanceConsole } from './performance';
 import { metaReducers } from './reducer';
+import { GenreScopeSyncService } from './data/genre-scope';
 import { DefaultLanguageSyncService, LanguageSyncService } from './i18n';
 import { AppearanceSyncService, MusicPreset } from './theme';
 import { PageScrollService } from './scroll';
@@ -181,6 +182,11 @@ export const appConfig: ApplicationConfig = {
 		// And the default an administrator set for everybody, which applies to
 		// whoever has not picked one of their own.
 		provideEnvironmentInitializer(() => inject(DefaultLanguageSyncService)),
+		// The genres the collector follows, carried to and from the account.
+		// It starts with the app because the catalog does: the first list a
+		// page asks for is already downloading by the time that page is
+		// drawn, and it has to be downloading the right genres.
+		provideEnvironmentInitializer(() => inject(GenreScopeSyncService)),
 		// A new page starts at its top rather than wherever the last one was
 		// left. It follows every navigation, so it starts with the app.
 		provideEnvironmentInitializer(() => inject(PageScrollService)),

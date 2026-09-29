@@ -14,6 +14,7 @@ import {
 	PlayLogEntry,
 	summariseListening,
 } from '../../data/play-log';
+import { GenreScopeEffect } from '../../data/genre-scope';
 import { UserSettingsEffect } from '../../data/user-settings';
 import { ALBUM_VIEW_SETTING } from '../album/album-view.setting';
 import {
@@ -40,6 +41,8 @@ import {
 	AuthenticationStateService,
 	CollectionItemEntity,
 	CollectionItemStateService,
+	GENRE_SCOPE_LIMIT,
+	GenreEntity,
 	User,
 	UserStateService,
 } from '@music-collection/api';
@@ -104,6 +107,14 @@ interface ProfilePageState {
 	savedAt: number | null;
 	/** The collector's listening log; empty while signed out. */
 	playLog: PlayLogEntry[];
+	/** The genres to pick from: the taxonomy an admin has not retired. */
+	genres: GenreEntity[];
+	/** The genres followed, by slug, as the app is currently running. */
+	genreScope: string[];
+	/** The genres ticked on the form, which take effect on apply. */
+	genreDraft: string[];
+	/** Set while the catalog is being rebuilt for a newly chosen scope. */
+	genreScopeApplying: boolean;
 	/** The character the collector built, or null while they have not. */
 	avatar: AvatarLook | null;
 	/** Set while the character is being rendered and uploaded. */
@@ -124,6 +135,10 @@ const initialState: ProfilePageState = {
 	pendingName: null,
 	savedAt: null,
 	playLog: [],
+	genres: [],
+	genreScope: [],
+	genreDraft: [],
+	genreScopeApplying: false,
 	avatar: null,
 	avatarSaving: false,
 	avatarSavedAt: null,
@@ -156,6 +171,16 @@ export const ProfilePageStore = signalStore(
 		}),
 		/** What the collector's listening adds up to. */
 		listening: computed(() => summariseListening(store.playLog())),
+		/** Whether the form holds something other than what is running. */
+		genreScopeChanged: computed(
+			() =>
+				[...store.genreDraft()].sort().join(',') !==
+				[...store.genreScope()].sort().join(',')
+		),
+		/** Whether another genre can still be ticked. */
+		genreScopeFull: computed(
+			() => store.genreDraft().length >= GENRE_SCOPE_LIMIT
+		),
 		initials: computed(() => {
 			const name = store.user()?.displayName || store.user()?.email || '';
 
@@ -176,7 +201,8 @@ export const ProfilePageStore = signalStore(
 			settings = inject(UserSettingsEffect),
 			locations = inject(UserLocationEffect),
 			playLogEffect = inject(PlayLogEffect),
-			avatars = inject(AvatarEffect)
+			avatars = inject(AvatarEffect),
+			genreScope = inject(GenreScopeEffect)
 		) => ({
 			/** The listening log, which the player writes as records go on. */
 			loadPlayLog: rxMethod<void>(
@@ -314,6 +340,73 @@ export const ProfilePageStore = signalStore(
 					console.error('Avatar not removed', error);
 				} finally {
 					patchState(store, { avatarSaving: false });
+				}
+			},
+
+			/**
+			 * The genres to pick from, and the ones being followed now.
+			 *
+			 * The running scope is read from the scope service rather than
+			 * from the setting: that is what the sync layer actually went
+			 * by when this page loaded, and the form has to offer to change
+			 * *that* — an account value that has not taken effect yet would
+			 * show the collector a choice they are not living with.
+			 */
+			loadGenres: rxMethod<void>(
+				pipe(
+					switchMap(() => genreScope.genres$()),
+					tap((genres: GenreEntity[]) => {
+						const slugs = genreScope.slugs();
+
+						patchState(store, {
+							genres,
+							genreScope: slugs,
+							// Only while untouched: a list arriving late must
+							// not wipe what the collector has just ticked.
+							genreDraft: store.genreScopeChanged()
+								? store.genreDraft()
+								: slugs,
+						});
+					})
+				)
+			),
+
+			/**
+			 * Ticks a genre off or on, up to the limit. Nothing is written
+			 * and nothing is rebuilt until `applyGenreScope`: the change
+			 * costs a reload, so it waits for the collector to mean it.
+			 */
+			toggleGenre(slug: string): void {
+				const draft = store.genreDraft();
+				const next = draft.includes(slug)
+					? draft.filter((chosen) => chosen !== slug)
+					: [...draft, slug].slice(-GENRE_SCOPE_LIMIT);
+
+				patchState(store, { genreDraft: next });
+			},
+
+			/** Back to following the whole catalog, once applied. */
+			clearGenreDraft(): void {
+				patchState(store, { genreDraft: [] });
+			},
+
+			/**
+			 * Makes the ticked genres the ones this browser follows. The
+			 * page reloads on success, so nothing here has to put the state
+			 * back — only a failure does.
+			 */
+			async applyGenreScope(): Promise<void> {
+				if (store.genreScopeApplying() || !store.genreScopeChanged()) {
+					return;
+				}
+
+				patchState(store, { genreScopeApplying: true });
+
+				try {
+					await genreScope.apply(store.genreDraft());
+				} catch (error) {
+					console.error('Genre scope not applied', error);
+					patchState(store, { genreScopeApplying: false });
 				}
 			},
 
@@ -662,6 +755,7 @@ export const ProfilePageStore = signalStore(
 			store.loadLocation(of(undefined));
 			store.loadPlayLog(of(undefined));
 			store.loadAvatar(of(undefined));
+			store.loadGenres(of(undefined));
 		},
 	})
 );

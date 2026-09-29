@@ -420,7 +420,9 @@
 				"collection": "Gyűjtemény",
 				"playback": "Lejátszás",
 				"data": "Adatok"
-			}
+			},
+			"genres": "Műfajok, amik érdekelnek",
+			"genresIntro": "Legfeljebb két műfaj. Az alkalmazás csak a választott műfajok katalógusát tölti le — a gyűjteményed ettől függetlenül teljes marad."
 		},
 		"track": {
 			"loading": "Betöltés…",
@@ -2520,6 +2522,15 @@
 				"star": "Csillag",
 				"bolt": "Villám"
 			}
+		},
+		"profileGenres": {
+			"legend": "Legfeljebb {{limit}} műfaj",
+			"all": "Minden műfaj",
+			"following": "A böngészés, a keresés és a rádió a választott műfajokat járja.",
+			"everything": "A teljes katalógus letöltődik, minden műfajjal.",
+			"rebuild": "Az alkalmazás újraépíti a helyi katalógust, és újratölti az oldalt.",
+			"apply": "Alkalmazás",
+			"applying": "Katalógus újraépítése…"
 		}
 	},
 	"admin": {
@@ -3143,6 +3154,10 @@
 				"collectionTab": {
 					"title": "Második lap: a gyűjtés",
 					"content": "Ez a lap a lemezeidről szól: mivel nyisson a gyűjtemény, és milyen polcon állnak. Lépj tovább, és kinyitom."
+				},
+				"genres": {
+					"title": "A műfajaid",
+					"content": "Legfeljebb két műfaj, és az alkalmazás csak azoknak a katalógusát tölti le. Ez dönti el, mit látsz böngészés, keresés és rádió közben."
 				},
 				"lists": {
 					"title": "A listák",

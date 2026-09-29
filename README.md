@@ -234,6 +234,7 @@ gcloud secrets versions add DISCOGS_TOKEN --data-file=-
 | ---------------------------------------------------------------- | ---------------------------------------------------------------- |
 | `sync/catalog-sync.mjs`                                          | katalógus-szinkron (Firestore íráshoz mindig wrapperen át)       |
 | `sync/build-bundles.mjs`                                         | katalógus-bundle-ök építése                                      |
+| `sync/build-genre-bundles.mjs`                                   | műfajonkénti bundle a profilban választott műfajokhoz            |
 | `sync/copy-prod-to-dev.mjs`                                      | prod adat áthozása devbe                                         |
 | `sync/grant-permissions.mjs`                                     | jogosultság adása                                                |
 | `sync/seed-user-role.mjs`                                        | a `USER` szerepkör létrehozása, és kiosztása a meglévő usereknek |

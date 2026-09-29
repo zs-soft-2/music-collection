@@ -368,6 +368,7 @@ const profileTour = pageTour('profile', 'profile', [
 	['appearance', 'mc-profile-appearance'],
 
 	{ id: 'collectionTab', opens: profileTab('collection') },
+	['genres', 'mc-profile-genres'],
 	['lists', 'mc-profile-lists'],
 	['shelves', 'mc-profile-shelves'],
 

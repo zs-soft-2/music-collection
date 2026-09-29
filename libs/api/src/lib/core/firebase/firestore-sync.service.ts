@@ -1,6 +1,7 @@
 import {
 	Observable,
 	catchError,
+	combineLatest,
 	concat,
 	concatMap,
 	defer,
@@ -29,6 +30,7 @@ import {
 	UpdateData,
 	WriteBatch,
 	collection,
+	clearIndexedDbPersistence,
 	collectionGroup,
 	doc,
 	getDocFromServer,
@@ -39,10 +41,17 @@ import {
 	onSnapshot,
 	query,
 	serverTimestamp,
+	terminate,
 	where,
 	writeBatch,
 } from '@angular/fire/firestore';
 import { Storage, getBlob, ref } from '@angular/fire/storage';
+
+import {
+	CatalogScopeService,
+	genreScopeKey,
+	isGenreScoped,
+} from './catalog-scope.service';
 
 /** Collection of the sync bookkeeping documents. */
 export const SYNC_COLLECTION = 'sync';
@@ -114,12 +123,28 @@ interface CatalogSync {
 	modifiedAt?: TimestampMap;
 	resetAt?: TimestampMap;
 	bundles?: Record<string, CatalogBundle | undefined>;
+	/**
+	 * Per genre slug the bundle of that genre's slice of the catalog: its
+	 * bands, their albums and the musicians on them, with the tracks,
+	 * line-ups and credits that hang off those. One file per genre rather
+	 * than one per genre and feature, so a collector who follows two genres
+	 * downloads two files however many collections they are spread over.
+	 */
+	genreBundles?: Record<string, CatalogBundle | undefined>;
 }
 
 interface FeatureVersion {
 	modifiedAt: Timestamp | null;
 	resetAt: Timestamp | null;
 	bundle: CatalogBundle | null;
+	/**
+	 * The genre bundles this query is to be served from, empty where the
+	 * catalog is not narrowed. All of the scope's genres or none of them: a
+	 * scope half served is a catalog with a genre silently missing from it.
+	 */
+	scope: CatalogBundle[];
+	/** The scope the bundles above belong to, for the cache bookkeeping. */
+	scopeKey: string;
 }
 
 /** What the local cache of a query holds, kept in localStorage. */
@@ -221,8 +246,11 @@ export class FirestoreSyncService {
 	private readonly firestore = inject(Firestore);
 	private readonly injector = inject(EnvironmentInjector);
 	private readonly storage = inject(Storage);
-	/** Bundle loads in progress or done in this session, by path. */
+	private readonly scope = inject(CatalogScopeService);
+	/** Bundle loads in progress or done in this session, by bookkeeping id. */
 	private readonly bundleLoads = new Map<string, Promise<boolean>>();
+	/** Bundle files downloaded in this session, by storage path. */
+	private readonly bundleFiles = new Map<string, Promise<boolean>>();
 
 	private readonly catalog$: Observable<CatalogSync | null> =
 		new Observable<CatalogSync | null>((subscriber) =>
@@ -274,6 +302,26 @@ export class FirestoreSyncService {
 			),
 			map((docs) => docs.map((snapshot) => this.toModel<T>(snapshot)))
 		);
+	}
+
+	/**
+	 * Throws away everything this browser holds of the catalog, and the
+	 * bookkeeping that says what it holds.
+	 *
+	 * Narrowing the catalog has to take away what has fallen out of scope,
+	 * not merely stop adding to it: the documents of a genre the collector
+	 * dropped sit in Firestore's own cache, and a cached query would go on
+	 * answering with them — the collector would have chosen jazz and still
+	 * be shown the metal they were sent home with. Firestore has no "evict
+	 * this feature" call, so the cache goes whole, which it only allows on
+	 * a terminated instance. That leaves this Firestore unusable, so the
+	 * caller reloads the page afterwards.
+	 */
+	public async resetLocalCatalog(): Promise<void> {
+		this.clearMarkers();
+
+		await this.run(() => terminate(this.firestore));
+		await this.run(() => clearIndexedDbPersistence(this.firestore));
 	}
 
 	/** Creates or overwrites a document. */
@@ -392,16 +440,29 @@ export class FirestoreSyncService {
 		return doc(this.firestore, SYNC_COLLECTION, CATALOG_SYNC_DOCUMENT);
 	}
 
-	/** The feature's version; null when the sync state cannot be read. */
+	/**
+	 * The feature's version; null when the sync state cannot be read.
+	 *
+	 * It follows the scope as well as the catalog, because narrowing the
+	 * catalog invalidates every list the same way a catalog change does —
+	 * what a query is allowed to hold has changed, and it has to be asked
+	 * again rather than left on what it last read.
+	 */
 	private version$(featureKey: string): Observable<FeatureVersion | null> {
-		return this.catalog$.pipe(
-			map((catalog) =>
+		return combineLatest([this.catalog$, this.scope.scope$]).pipe(
+			map(([catalog, slugs]) =>
 				catalog
 					? {
 							modifiedAt:
 								catalog.modifiedAt?.[featureKey] ?? null,
 							resetAt: catalog.resetAt?.[featureKey] ?? null,
 							bundle: catalog.bundles?.[featureKey] ?? null,
+							scope: this.scopeBundles(
+								catalog,
+								featureKey,
+								slugs
+							),
+							scopeKey: genreScopeKey(slugs),
 						}
 					: null
 			),
@@ -413,9 +474,38 @@ export class FirestoreSyncService {
 						timestampKey(current.modifiedAt) &&
 					timestampKey(previous.resetAt) ===
 						timestampKey(current.resetAt) &&
-					previous.bundle?.path === current.bundle?.path
+					previous.bundle?.path === current.bundle?.path &&
+					this.bundleId(previous.scope, previous.scopeKey) ===
+						this.bundleId(current.scope, current.scopeKey)
 			)
 		);
+	}
+
+	/**
+	 * The genre bundles serving this feature, or none.
+	 *
+	 * None where the collector follows everything, where the feature does
+	 * not arrive in a genre bundle (a label belongs to no one genre), and —
+	 * deliberately — where any one genre of the scope has no bundle
+	 * published yet. Serving the genres that do have one would leave the
+	 * other missing from every list without saying so; falling back to the
+	 * whole feature is slower, but it is the catalog the collector asked
+	 * for.
+	 */
+	private scopeBundles(
+		catalog: CatalogSync,
+		featureKey: string,
+		slugs: string[]
+	): CatalogBundle[] {
+		if (!slugs.length || !isGenreScoped(featureKey)) {
+			return [];
+		}
+
+		const bundles = slugs.map((slug) => catalog.genreBundles?.[slug]);
+
+		return bundles.every((bundle): bundle is CatalogBundle => !!bundle)
+			? bundles
+			: [];
 	}
 
 	/**
@@ -428,6 +518,19 @@ export class FirestoreSyncService {
 	): Observable<QueryDocumentSnapshot[] | null> {
 		return defer(async () => {
 			const modifiedAt = version?.modifiedAt ?? null;
+
+			// A narrowed catalog is served from its genre bundles and from
+			// nothing else. Downloading the whole feature is the very thing
+			// the scope exists to prevent, so it is not a fallback here: a
+			// bundle that cannot be loaded leaves the paths below to it, and
+			// those only run while the catalog is not narrowed.
+			if (version?.scope.length) {
+				const scoped = await this.refreshFromScope(synced, version);
+
+				if (scoped) {
+					return scoped;
+				}
+			}
 
 			// Unversioned feature: the cache cannot be trusted.
 			if (!modifiedAt) {
@@ -473,6 +576,37 @@ export class FirestoreSyncService {
 				return of(null);
 			})
 		);
+	}
+
+	/**
+	 * The query served from the scope's genre bundles: load them once, then
+	 * read the cache they filled.
+	 *
+	 * Nothing is asked of the server beyond the tombstones — no document
+	 * reads, and none of the catch-up the unnarrowed paths do. A catalog
+	 * this client holds only part of cannot ask "what changed since?"
+	 * without being handed the genres it does not want, so a narrowed
+	 * catalog moves forward when a new bundle is published and not before.
+	 * That is also how fresh it needs to be: the catalog changes on import,
+	 * which is exactly when the bundles are built.
+	 *
+	 * Null when the bundles could not be loaded, leaving the caller on the
+	 * unnarrowed path.
+	 */
+	private async refreshFromScope(
+		synced: SyncedQuery,
+		version: FeatureVersion
+	): Promise<QueryDocumentSnapshot[] | null> {
+		const id = this.bundleId(version.scope, version.scopeKey);
+
+		if (!(await this.loadBundles(synced.featureKey, version.scope, id))) {
+			return null;
+		}
+
+		const cached = await this.run(() => getDocsFromCache(synced.query));
+
+		this.writeMarker(synced, this.newestOf(version.scope), cached.size);
+		return cached.docs;
 	}
 
 	private async downloadAll(
@@ -553,7 +687,7 @@ export class FirestoreSyncService {
 			!bundle ||
 			!behind ||
 			(resetAt && compareTimestamps(resetAt, bundle.modifiedAt) > 0) ||
-			!(await this.loadFeatureBundle(synced.featureKey, bundle))
+			!(await this.loadBundles(synced.featureKey, [bundle], bundle.path))
 		) {
 			return marker;
 		}
@@ -568,50 +702,63 @@ export class FirestoreSyncService {
 		};
 	}
 
-	/** Loads the bundle once per session; false when it cannot be used. */
-	private loadFeatureBundle(
+	/**
+	 * Fills a feature's cache from bundles, once per session: its own single
+	 * bundle, or the genre bundles of a narrowed scope. False when they
+	 * cannot be used.
+	 *
+	 * `id` is what the feature's bookkeeping records as loaded — a path for
+	 * a lone bundle, the scope and its version for several — so that a
+	 * collector who changes which genres they follow is not left on a cache
+	 * filled for the previous ones.
+	 */
+	private loadBundles(
 		featureKey: string,
-		bundle: CatalogBundle
+		bundles: CatalogBundle[],
+		id: string
 	): Promise<boolean> {
-		let loading = this.bundleLoads.get(bundle.path);
+		const key = `${featureKey}@${id}`;
+		let loading = this.bundleLoads.get(key);
 
 		if (!loading) {
-			loading = this.loadBundleIntoCache(featureKey, bundle).catch(
+			loading = this.loadBundlesIntoCache(featureKey, bundles, id).catch(
 				(error) => {
 					console.warn(
-						`Bundle "${bundle.path}" unavailable, downloading documents`,
+						`Bundle "${id}" unavailable, downloading documents`,
 						error
 					);
-					this.bundleLoads.delete(bundle.path);
+					this.bundleLoads.delete(key);
 					return false;
 				}
 			);
-			this.bundleLoads.set(bundle.path, loading);
+			this.bundleLoads.set(key, loading);
 		}
 		return loading;
 	}
 
-	private async loadBundleIntoCache(
+	private async loadBundlesIntoCache(
 		featureKey: string,
-		bundle: CatalogBundle
+		bundles: CatalogBundle[],
+		id: string
 	): Promise<boolean> {
 		const loaded = this.readJson<LoadedBundle>(
 			this.bundleStorageKey(featureKey)
 		);
 
-		if (
-			loaded?.path === bundle.path &&
-			(await this.hasCached(featureKey))
-		) {
+		if (loaded?.path === id && (await this.hasCached(featureKey))) {
 			return true;
 		}
 
-		const blob = await this.run(() =>
-			getBlob(ref(this.storage, bundle.path))
+		const fetched = await Promise.all(
+			bundles.map((bundle) => this.fetchBundle(bundle.path))
 		);
-		const data = await blob.arrayBuffer();
 
-		await this.run(() => loadBundle(this.firestore, data));
+		// All of them or none: half a scope is a genre missing from every
+		// list, and the cache would be marked as holding it.
+		if (!fetched.every(Boolean)) {
+			return false;
+		}
+
 		// Loading never removes documents: evict the ones deleted since the
 		// previous bundle, or since ever when there was none.
 		await this.evictDeleted(
@@ -619,12 +766,62 @@ export class FirestoreSyncService {
 			loaded ? new Timestamp(loaded.seconds, loaded.nanoseconds) : null
 		);
 
+		const newest = this.newestOf(bundles);
+
 		this.writeJson(this.bundleStorageKey(featureKey), {
-			path: bundle.path,
-			seconds: bundle.modifiedAt.seconds,
-			nanoseconds: bundle.modifiedAt.nanoseconds,
+			path: id,
+			seconds: newest.seconds,
+			nanoseconds: newest.nanoseconds,
 		} satisfies LoadedBundle);
 		return true;
+	}
+
+	/**
+	 * Downloads one bundle file into the local cache, once per session
+	 * however many features are served from it — a genre bundle carries six
+	 * of them, and downloading it once per feature would cost six times the
+	 * bytes for the very same documents.
+	 */
+	private fetchBundle(path: string): Promise<boolean> {
+		let loading = this.bundleFiles.get(path);
+
+		if (!loading) {
+			loading = this.run(() => getBlob(ref(this.storage, path)))
+				.then((blob) => blob.arrayBuffer())
+				.then((data) =>
+					this.run(() => loadBundle(this.firestore, data))
+				)
+				.then(() => true)
+				.catch((error) => {
+					console.warn(`Bundle file "${path}" unavailable`, error);
+					this.bundleFiles.delete(path);
+					return false;
+				});
+			this.bundleFiles.set(path, loading);
+		}
+		return loading;
+	}
+
+	/** The version of the newest bundle of a set. */
+	private newestOf(bundles: CatalogBundle[]): Timestamp {
+		return bundles.reduce(
+			(newest, bundle) =>
+				compareTimestamps(bundle.modifiedAt, newest) > 0
+					? bundle.modifiedAt
+					: newest,
+			bundles[0].modifiedAt
+		);
+	}
+
+	/** What a set of bundles is recorded as, in the cache bookkeeping. */
+	private bundleId(bundles: CatalogBundle[], scopeKey: string): string {
+		if (!bundles.length) {
+			return '';
+		}
+
+		const newest = this.newestOf(bundles);
+
+		return `genre:${scopeKey}@${newest.seconds}.${newest.nanoseconds}`;
 	}
 
 	/** Whether the cache holds any document of the feature. */
@@ -733,11 +930,28 @@ export class FirestoreSyncService {
 	}
 
 	private storageKey(synced: SyncedQuery): string {
-		return `mc.sync.${this.firestore.app.options.projectId}.${this.cacheKey(synced)}`;
+		return `${this.keyPrefix()}${this.cacheKey(synced)}${this.scopeSuffix(synced.featureKey)}`;
 	}
 
 	private bundleStorageKey(featureKey: string): string {
-		return `mc.sync.${this.firestore.app.options.projectId}.bundle:${featureKey}`;
+		return `${this.keyPrefix()}bundle:${featureKey}${this.scopeSuffix(featureKey)}`;
+	}
+
+	private keyPrefix(): string {
+		return `mc.sync.${this.firestore.app.options.projectId}.`;
+	}
+
+	/**
+	 * What tells one scope's bookkeeping from another's. Empty while the
+	 * catalog is not narrowed, so a client that never narrows goes on
+	 * reading the keys it has always written.
+	 */
+	private scopeSuffix(featureKey: string): string {
+		const scope = isGenreScoped(featureKey)
+			? genreScopeKey(this.scope.slugs())
+			: '';
+
+		return scope ? `#${scope}` : '';
 	}
 
 	private readMarker(synced: SyncedQuery): SyncMarker | null {
@@ -771,6 +985,19 @@ export class FirestoreSyncService {
 			localStorage.setItem(key, JSON.stringify(value));
 		} catch {
 			// Storage unavailable — the next start downloads again.
+		}
+	}
+
+	/** Every sync marker of this project, whatever scope wrote it. */
+	private clearMarkers(): void {
+		try {
+			const prefix = this.keyPrefix();
+
+			Object.keys(localStorage)
+				.filter((key) => key.startsWith(prefix))
+				.forEach((key) => localStorage.removeItem(key));
+		} catch {
+			// Storage unavailable — there is nothing kept to remove.
 		}
 	}
 

@@ -31,11 +31,11 @@ import {
 	BUNDLE_FEATURE_KEYS,
 	BUNDLE_FOLDER,
 	announceBundle,
+	ensureBundleCors,
 	featureVersion,
+	removeOldBundles,
 } from './catalog-sync.mjs';
 import { ENV_OPTION, readEnvironment } from './environment.mjs';
-
-const KEPT_BUNDLES = 2;
 
 const { values: options } = parseArgs({
 	options: {
@@ -64,7 +64,7 @@ const db = getFirestore();
 const bucket = getStorage().bucket();
 
 if (options.confirm) {
-	await ensureCors();
+	await ensureBundleCors(bucket);
 }
 
 for (const featureKey of featureKeys) {
@@ -113,36 +113,9 @@ for (const featureKey of featureKeys) {
 		`${featureKey}: ${snapshot.size} documents, ${kb(content.length)} → ${kb(gzipped.length)} gzip, ${path}`
 	);
 
-	await removeOldBundles(featureKey, path);
+	await removeOldBundles(bucket, `${BUNDLE_FOLDER}/${featureKey}`, path);
 }
 
 function kb(bytes) {
 	return `${Math.round(bytes / 1024)} KB`;
-}
-
-async function removeOldBundles(featureKey, current) {
-	const [files] = await bucket.getFiles({
-		prefix: `${BUNDLE_FOLDER}/${featureKey}/`,
-	});
-	const old = files
-		.filter((file) => file.name !== current)
-		.sort((a, b) => b.name.localeCompare(a.name, 'en', { numeric: true }))
-		.slice(KEPT_BUNDLES - 1);
-
-	await Promise.all(old.map((file) => file.delete()));
-}
-
-async function ensureCors() {
-	const [metadata] = await bucket.getMetadata();
-	const allowsGet = (metadata.cors ?? []).some(
-		(rule) => rule.origin?.includes('*') && rule.method?.includes('GET')
-	);
-
-	if (!allowsGet) {
-		await bucket.setCorsConfiguration([
-			...(metadata.cors ?? []),
-			{ origin: ['*'], method: ['GET'], maxAgeSeconds: 3600 },
-		]);
-		console.log('bucket CORS: GET allowed from any origin');
-	}
 }

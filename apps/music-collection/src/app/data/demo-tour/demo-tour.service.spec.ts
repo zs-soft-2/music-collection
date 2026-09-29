@@ -322,6 +322,7 @@ describe('DemoTourService', () => {
 			'language',
 			'appearance',
 			'collectionTab',
+			'genres',
 			'lists',
 			'shelves',
 			'playbackTab',

@@ -30,6 +30,8 @@ export const CATALOG_FEATURE_KEYS = [
 	'musician',
 	'release',
 	'release-request',
+	// A szerepkörök: egy maroknyi dokumentum, bundle nélkül.
+	'role',
 	'track',
 	// Bundle nélkül: néhány tucat dokumentum, naponta egyszer újraírva.
 	'upcoming-release',
@@ -133,4 +135,90 @@ export async function announceBundle(
 			},
 			{ merge: true }
 		);
+}
+
+/**
+ * The features a genre bundle carries — the slice of the catalog that
+ * belongs to one genre. Kept in step with GENRE_SCOPED_FEATURES in
+ * libs/api/src/lib/core/firebase/catalog-scope.service.ts: the client only
+ * narrows the features it knows arrive in a bundle.
+ */
+export const GENRE_BUNDLE_FEATURE_KEYS = [
+	'artist',
+	'album',
+	'musician',
+	'track',
+	'membership',
+	'contribution',
+];
+
+/** Storage folder of the genre bundles: `bundles/genre/{slug}/{seconds}.bundle`. */
+export const GENRE_BUNDLE_FOLDER = 'bundles/genre';
+
+/**
+ * Announces one genre's bundle. Separate from `bundles` because it is not a
+ * feature's bundle: it holds a slice of six of them, and the clients that
+ * follow that genre load it in place of all six.
+ */
+export async function announceGenreBundle(
+	db,
+	slug,
+	{ path, modifiedAt, count }
+) {
+	await db
+		.collection(SYNC_COLLECTION)
+		.doc(CATALOG_SYNC_DOCUMENT)
+		.set(
+			{
+				genreBundles: {
+					[slug]: {
+						path,
+						modifiedAt,
+						count,
+						builtAt: FieldValue.serverTimestamp(),
+					},
+				},
+			},
+			{ merge: true }
+		);
+}
+
+/**
+ * Lets a browser download bundles from the bucket. The browser fetches them
+ * with XHR, which is a cross-origin request; without this it never gets to
+ * ask for the file at all.
+ */
+export async function ensureBundleCors(bucket) {
+	const [metadata] = await bucket.getMetadata();
+	const allowsGet = (metadata.cors ?? []).some(
+		(rule) => rule.origin?.includes('*') && rule.method?.includes('GET')
+	);
+
+	if (allowsGet) {
+		return false;
+	}
+
+	await bucket.setCorsConfiguration([
+		...(metadata.cors ?? []),
+		{ origin: ['*'], method: ['GET'], maxAgeSeconds: 3600 },
+	]);
+
+	return true;
+}
+
+/**
+ * Deletes the bundles of a folder but the newest `kept` of them. Clients
+ * still downloading the previous one must not have it taken away mid-flight,
+ * which is why it is never only the current one that stays.
+ */
+export async function removeOldBundles(bucket, folder, current, kept = 2) {
+	const [files] = await bucket.getFiles({ prefix: `${folder}/` });
+	const old = files
+		.filter((file) => file.name !== current)
+		.sort((a, b) => b.name.localeCompare(a.name, 'en', { numeric: true }))
+		.slice(kept - 1);
+
+	await Promise.all(old.map((file) => file.delete()));
+
+	return old.length;
 }

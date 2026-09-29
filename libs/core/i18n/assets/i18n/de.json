@@ -420,7 +420,9 @@
 				"collection": "Sammlung",
 				"playback": "Wiedergabe",
 				"data": "Daten"
-			}
+			},
+			"genres": "Genres, die dich interessieren",
+			"genresIntro": "Höchstens zwei Genres. Die App lädt nur den Katalog der gewählten Genres herunter — deine eigene Sammlung bleibt davon unberührt vollständig."
 		},
 		"track": {
 			"loading": "Wird geladen…",
@@ -2520,6 +2522,15 @@
 				"star": "Stern",
 				"bolt": "Blitz"
 			}
+		},
+		"profileGenres": {
+			"legend": "Bis zu {{limit}} Genres",
+			"all": "Alle Genres",
+			"following": "Stöbern, Suche und Radio bleiben in den gewählten Genres.",
+			"everything": "Der gesamte Katalog wird heruntergeladen, mit allen Genres.",
+			"rebuild": "Die App baut den lokalen Katalog neu auf und lädt die Seite neu.",
+			"apply": "Übernehmen",
+			"applying": "Katalog wird neu aufgebaut…"
 		}
 	},
 	"admin": {
@@ -3143,6 +3154,10 @@
 				"collectionTab": {
 					"title": "Zweiter Tab: das Sammeln",
 					"content": "Dieser Tab handelt von deinen Platten: womit die Sammlung öffnet und in welchen Regalen sie stehen. Geh weiter, ich öffne ihn."
+				},
+				"genres": {
+					"title": "Deine Genres",
+					"content": "Höchstens zwei Genres, und die App lädt nur deren Katalog herunter. Das bestimmt, was du beim Stöbern, Suchen und im Radio siehst."
 				},
 				"lists": {
 					"title": "Die Listen",
