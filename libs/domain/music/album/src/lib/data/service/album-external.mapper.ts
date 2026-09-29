@@ -4,6 +4,7 @@ import {
 	StyleEnum,
 	toCatalogStyles,
 } from '@music-collection/api';
+import { isSameCatalogName } from '@music-collection/common/engine';
 
 export const COVER_ART_ARCHIVE_URL = 'https://coverartarchive.org';
 
@@ -58,27 +59,27 @@ export interface MusicBrainzRelease {
 	}[];
 }
 
-const titleKey = (value: string): string =>
-	value.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
-
 /**
  * The search hit of the artist with the same title, studio albums first;
  * the best scored hit when none has the same title.
+ *
+ * Artist and title are compared the way the catalog compares its own names,
+ * because the catalog and MusicBrainz write the same act differently: an
+ * album filed under "Beatles" is credited to "The Beatles" there, and a
+ * letter-by-letter comparison threw away every hit the search had found.
  */
 export function pickReleaseGroup(
 	artistName: string,
 	name: string,
 	groups: MusicBrainzReleaseGroup[]
 ): MusicBrainzReleaseGroup | null {
-	const artist = titleKey(artistName);
-	const title = titleKey(name);
 	const byArtist = groups.filter((group) =>
-		group['artist-credit']?.some(
-			(credit) => titleKey(credit.artist?.name ?? credit.name) === artist
+		group['artist-credit']?.some((credit) =>
+			isSameCatalogName(credit.artist?.name ?? credit.name, artistName)
 		)
 	);
-	const sameTitle = byArtist.filter(
-		(group) => titleKey(group.title) === title
+	const sameTitle = byArtist.filter((group) =>
+		isSameCatalogName(group.title, name)
 	);
 	const candidates = sameTitle.length ? sameTitle : byArtist.slice(0, 1);
 

@@ -44,6 +44,22 @@ describe('pickDiscogsMaster', () => {
 		expect(hit?.masterId).toBe(3);
 	});
 
+	/*
+	 * The catalog files the band as "Beatles" and Discogs prints it as "The
+	 * Beatles"; the same load has to reach both.
+	 */
+	it('reads the artist the way the catalog compares its own names', () => {
+		const hit = pickDiscogsMaster('Beatles', 'Abbey Road', [
+			candidate({
+				masterId: 24047,
+				name: 'Abbey Road',
+				artistName: 'The Beatles',
+			}),
+		]);
+
+		expect(hit?.masterId).toBe(24047);
+	});
+
 	it('does not rule out a hit Discogs names no artist for', () => {
 		const hit = pickDiscogsMaster('Testament', 'The Legacy', [
 			candidate({ masterId: 4, artistName: null }),

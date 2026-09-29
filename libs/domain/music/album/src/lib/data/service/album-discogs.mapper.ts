@@ -7,12 +7,9 @@ import {
 	discogsMasterUrl,
 	toCatalogStyles,
 } from '@music-collection/api';
+import { isSameCatalogName } from '@music-collection/common/engine';
 
 import { toDurationSec } from './album-external.mapper';
-
-/** Title for matching across sources: case and punctuation left out. */
-const titleKey = (value: string): string =>
-	value.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
 
 /**
  * The Discogs master of the artist with the searched title. Discogs answers a
@@ -20,20 +17,24 @@ const titleKey = (value: string): string =>
  * all come back — so only a hit whose artist and title both match is taken,
  * and the earliest of those: a master is the original album, and where several
  * exist the first one is it.
+ *
+ * Both are compared the way the catalog compares its own names, the
+ * comparison the lookup function leaves to this mapper: the catalog's
+ * "Beatles" and Discogs's "The Beatles" are one act, and read letter by
+ * letter they were two.
  */
 export function pickDiscogsMaster(
 	artistName: string,
 	name: string,
 	candidates: DiscogsMasterCandidate[]
 ): DiscogsMasterCandidate | null {
-	const artist = titleKey(artistName);
-	const title = titleKey(name);
 	const matches = candidates.filter(
 		(candidate) =>
-			titleKey(candidate.name) === title &&
+			isSameCatalogName(candidate.name, name) &&
 			// Discogs leaves the artist out of some hits; the title search
 			// already ran on the artist, so an unnamed one is not ruled out.
-			(!candidate.artistName || titleKey(candidate.artistName) === artist)
+			(!candidate.artistName ||
+				isSameCatalogName(candidate.artistName, artistName))
 	);
 
 	return (
