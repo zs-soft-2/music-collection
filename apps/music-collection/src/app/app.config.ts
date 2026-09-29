@@ -57,6 +57,7 @@ import { installPerformanceConsole } from './performance';
 import { metaReducers } from './reducer';
 import { DefaultLanguageSyncService, LanguageSyncService } from './i18n';
 import { AppearanceSyncService, MusicPreset } from './theme';
+import { PageScrollService } from './scroll';
 import { NgxPermissionsModule } from 'ngx-permissions';
 
 /** A gépek, ahol a debug token szóba jöhet: a fejlesztői gép böngészője. */
@@ -178,6 +179,9 @@ export const appConfig: ApplicationConfig = {
 		// And the default an administrator set for everybody, which applies to
 		// whoever has not picked one of their own.
 		provideEnvironmentInitializer(() => inject(DefaultLanguageSyncService)),
+		// A new page starts at its top rather than wherever the last one was
+		// left. It follows every navigation, so it starts with the app.
+		provideEnvironmentInitializer(() => inject(PageScrollService)),
 		// Measurement. Nothing is sent — and the analytics SDK is not even
 		// fetched — until the collector has allowed it, but the service has to
 		// be alive from the start: it follows the navigations and the sign-in

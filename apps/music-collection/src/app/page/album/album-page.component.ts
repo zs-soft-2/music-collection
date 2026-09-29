@@ -1,4 +1,4 @@
-import { DatePipe, ViewportScroller } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import {
 	ChangeDetectionStrategy,
 	Component,
@@ -65,7 +65,6 @@ type AlbumSection =
 })
 export class AlbumPageComponent {
 	protected readonly store = inject(AlbumPageStore);
-	private readonly viewportScroller = inject(ViewportScroller);
 	private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 	private readonly injector = inject(Injector);
 
@@ -79,11 +78,12 @@ export class AlbumPageComponent {
 		Array.from({ length: count }, (_, i) => i);
 
 	public constructor() {
-		// Moving to another album of the artist reuses this page.
+		// Moving to another album of the artist reuses this page, so the
+		// sections have to be closed again. The scroll is the shell's
+		// (PageScrollService).
 		effect(() => {
 			this.store.albumId();
 			untracked(() => {
-				this.viewportScroller.scrollToPosition([0, 0]);
 				this.openSections.set(new Set());
 			});
 		});

@@ -1,4 +1,4 @@
-import { DOCUMENT, ViewportScroller } from '@angular/common';
+import { DOCUMENT } from '@angular/common';
 import {
 	ChangeDetectionStrategy,
 	Component,
@@ -57,7 +57,6 @@ const TYPE_LABELS: Record<string, string> = {
 })
 export class MusicianPageComponent {
 	protected readonly store = inject(MusicianPageStore);
-	private readonly viewportScroller = inject(ViewportScroller);
 	private readonly document = inject(DOCUMENT);
 	private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
@@ -166,7 +165,6 @@ export class MusicianPageComponent {
 			untracked(() => {
 				this.showAllBandmates.set(false);
 				this.bioExpanded.set(false);
-				this.viewportScroller.scrollToPosition([0, 0]);
 			});
 		});
 	}
