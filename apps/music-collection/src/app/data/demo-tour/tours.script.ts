@@ -363,6 +363,7 @@ const profileTour = pageTour('profile', 'profile', [
 
 	{ id: 'accountTab', opens: profileTab('account') },
 	['account', 'mc-profile-account'],
+	['avatar', 'mc-profile-avatar'],
 	['language', 'mc-profile-language'],
 	['appearance', 'mc-profile-appearance'],
 

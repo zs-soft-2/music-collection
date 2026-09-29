@@ -1,5 +1,6 @@
 import { combineLatest, map, of, pipe, switchMap, tap } from 'rxjs';
 
+import { AvatarEffect, AvatarLook } from '../../data/avatar';
 import { DemoTourService } from '../../data/demo-tour';
 import {
 	NO_LOCATION,
@@ -70,6 +71,12 @@ interface ProfilePageState {
 	savedAt: number | null;
 	/** The collector's listening log; empty while signed out. */
 	playLog: PlayLogEntry[];
+	/** The character the collector built, or null while they have not. */
+	avatar: AvatarLook | null;
+	/** Set while the character is being rendered and uploaded. */
+	avatarSaving: boolean;
+	/** When the account last took a new character, for the "Saved" note. */
+	avatarSavedAt: number | null;
 }
 
 const initialState: ProfilePageState = {
@@ -83,6 +90,9 @@ const initialState: ProfilePageState = {
 	pendingName: null,
 	savedAt: null,
 	playLog: [],
+	avatar: null,
+	avatarSaving: false,
+	avatarSavedAt: null,
 };
 
 /**
@@ -135,7 +145,8 @@ export const ProfilePageStore = signalStore(
 			users = inject(UserStateService),
 			settings = inject(UserSettingsEffect),
 			locations = inject(UserLocationEffect),
-			playLogEffect = inject(PlayLogEffect)
+			playLogEffect = inject(PlayLogEffect),
+			avatars = inject(AvatarEffect)
 		) => ({
 			/** The listening log, which the player writes as records go on. */
 			loadPlayLog: rxMethod<void>(
@@ -202,6 +213,79 @@ export const ProfilePageStore = signalStore(
 					})
 				)
 			),
+
+			/** The character the collector built, and any later change. */
+			loadAvatar: rxMethod<void>(
+				pipe(
+					switchMap(() => avatars.look$()),
+					tap((avatar) => patchState(store, { avatar }))
+				)
+			),
+
+			/**
+			 * Keeps the character, then points the account at the picture
+			 * rendered from it.
+			 *
+			 * The two are separate on purpose: the choices are the real thing
+			 * and are saved first, so a failed upload costs the collector a
+			 * picture rather than the character they built. The account is
+			 * written the way a new display name is, and the sign-in state is
+			 * told as well — that is what the top bar reads.
+			 */
+			async saveAvatar(look: AvatarLook): Promise<void> {
+				const user = store.user();
+
+				if (!user?.uid || store.avatarSaving()) {
+					return;
+				}
+
+				patchState(store, {
+					avatar: look,
+					avatarSaving: true,
+					avatarSavedAt: null,
+				});
+
+				try {
+					const photoURL = await avatars.save(look, user.uid);
+					const updated = { ...user, photoURL };
+
+					users.dispatchUpdateEntityAction(updated);
+					authentication.dispatchAuthenticated(updated);
+					patchState(store, { avatarSavedAt: Date.now() });
+				} catch (error) {
+					console.error('Avatar not saved', error);
+				} finally {
+					patchState(store, { avatarSaving: false });
+				}
+			},
+
+			/** Takes the character away, and the picture with it. */
+			async clearAvatar(): Promise<void> {
+				const user = store.user();
+
+				if (!user?.uid || store.avatarSaving()) {
+					return;
+				}
+
+				patchState(store, {
+					avatar: null,
+					avatarSaving: true,
+					avatarSavedAt: null,
+				});
+
+				try {
+					await avatars.clear(user.uid);
+
+					const updated = { ...user, photoURL: null };
+
+					users.dispatchUpdateEntityAction(updated);
+					authentication.dispatchAuthenticated(updated);
+				} catch (error) {
+					console.error('Avatar not removed', error);
+				} finally {
+					patchState(store, { avatarSaving: false });
+				}
+			},
 
 			/** The layouts kept for the user, and any later change to them. */
 			loadViews: rxMethod<void>(
@@ -432,6 +516,24 @@ export const ProfilePageStore = signalStore(
 		}
 	),
 	/**
+	 * The picture rendered from the collector's character, where that is what
+	 * the account carries. The profile shows it rather than stacking the
+	 * character's layers again: it is loaded already — the account section
+	 * above shows the same file — and a full-length figure at six rems would
+	 * cost a hundred kilobytes to say what this says for nothing.
+	 */
+	withComputed((store) => {
+		const avatars = inject(AvatarEffect);
+
+		return {
+			avatarPicture: computed(() => {
+				const url = store.user()?.photoURL ?? null;
+
+				return url && avatars.isRenderedPicture(url) ? url : null;
+			}),
+		};
+	}),
+	/**
 	 * The two consents the app asks for, next to the shared location, which
 	 * is the third: the collector may take either back here, and it has to
 	 * take effect the moment they do. Neither answer is copied into this store
@@ -493,6 +595,7 @@ export const ProfilePageStore = signalStore(
 			store.loadCollectionSize(of(undefined));
 			store.loadLocation(of(undefined));
 			store.loadPlayLog(of(undefined));
+			store.loadAvatar(of(undefined));
 		},
 	})
 );

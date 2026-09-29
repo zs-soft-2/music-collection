@@ -383,6 +383,8 @@
 			"your-account-and-how": "A fiókod, és ahogy az app viselkedik nálad. Amit itt beállítasz, a fiókkal marad, így követ a következő böngészőre is, ahol belépsz.",
 			"account": "Fiók",
 			"how-you-appear-in": "Ahogy az appban megjelensz.",
+			"avatar": "Avatar",
+			"avatarIntro": "A karakter, ami a fényképed helyett áll — te rakod össze, a tiéd marad.",
 			"appearance": "Megjelenés",
 			"the-theme-and-how": "A téma, és hogy az oldalak mennyit használnak a képernyőből.",
 			"demoTour": "Vezetett bemutató",
@@ -2352,6 +2354,129 @@
 		},
 		"proposeLink": {
 			"suggest-a-change": "Módosítást javaslok"
+		},
+		"profileAvatar": {
+			"yours": "Ez a karaktered. Ez látszik a felső sávban, a térképen és ott, ahol más gyűjtők mellett állsz.",
+			"none": "Még nincs karaktered. Rakj össze egyet, és az lesz a profilképed a fénykép helyett.",
+			"build": "Karakter összerakása",
+			"edit": "Karakter szerkesztése",
+			"remove": "Eltávolítás",
+			"note": "Amit összeraksz, a fiókkal marad, és bármikor újraszerkesztheted.",
+			"saved": "Mentve."
+		},
+		"avatarFigure": {
+			"unavailable": "Ez a részlet még nincs megrajzolva — a karakter az előző választásnál marad."
+		},
+		"avatarEditor": {
+			"title": "Rakd össze a karakteredet",
+			"front": "Elölnézet",
+			"back": "Hátoldal",
+			"closer": "Nadrág közelről",
+			"whole": "Teljes alak",
+			"reset": "Alaphelyzet",
+			"download": "Kép letöltése",
+			"group": {
+				"body": "Testalkat",
+				"age": "Életkor",
+				"face": "Arc és szakáll",
+				"hair": "Haj",
+				"glasses": "Szemüveg",
+				"shirtStyle": "Póló mintája",
+				"outfit": "Öltözék",
+				"pants": "Nadrág",
+				"wrist": "Csuklóvédő",
+				"necklace": "Nyaklánc",
+				"patch": "Hátoldali felvarró",
+				"tattoo": "Tetoválás"
+			},
+			"needs": {
+				"patch": "A felvarró mellényre vagy dzsekire kerül — pólón nincs hova.",
+				"tattoo": "A tetoválás csupasz karon látszik, a dzseki ujja eltakarja."
+			},
+			"body": {
+				"slim": "Vékonyabb",
+				"regular": "Átlagos",
+				"broad": "Erősebb",
+				"heavy": "Kövérebb"
+			},
+			"age": {
+				"20": "20 éves",
+				"30": "30 éves",
+				"40": "40 éves",
+				"50": "50 éves",
+				"60": "60 éves",
+				"70": "70 éves"
+			},
+			"face": {
+				"stubble": "Borostás",
+				"beard": "Szakállas",
+				"longbeard": "Hosszú szakáll",
+				"sharp": "Sima arc"
+			},
+			"hair": {
+				"short": "Rövid, kócos",
+				"buzz": "Nagyon rövid",
+				"undercut": "Undercut",
+				"mohawk": "Mohawk",
+				"long": "Hosszú, egyenes",
+				"curly": "Göndör",
+				"mullet": "Mullet",
+				"topknot": "Feltűzött"
+			},
+			"glasses": {
+				"none": "Nincs",
+				"biker": "Szegecses motoros",
+				"roundmetal": "Lila kerek",
+				"mirror": "Tükrös pilóta",
+				"blood": "Vérvörös"
+			},
+			"shirtStyle": {
+				"black": "Fekete",
+				"camo": "Terepszínű"
+			},
+			"outfit": {
+				"shirt": "Rövid ujjú póló",
+				"sleeveless": "Ujjatlan póló",
+				"vest": "Farmermellény",
+				"acidvest": "Hypózott mellény",
+				"blackvest": "Fekete mellény",
+				"redvest": "Bordó mellény",
+				"olivevest": "Olívazöld mellény",
+				"leather": "Bőrdzseki",
+				"denim": "Farmerdzseki"
+			},
+			"pants": {
+				"black": "Fekete farmer",
+				"blue": "Kék farmer",
+				"acid": "Hypózott farmer",
+				"leather": "Bőrnadrág"
+			},
+			"wrist": {
+				"none": "Nincs",
+				"plain": "Rövid bőr",
+				"studded": "Rövid szegecses",
+				"longstud": "Hosszú szegecses"
+			},
+			"necklace": {
+				"none": "Nincs",
+				"chain": "Ezüst lánc",
+				"skull": "Koponya",
+				"pentagram": "Pentagram",
+				"pick": "Pengető",
+				"dogtag": "Dögcédula",
+				"tooth": "Bőrzsinór és fog"
+			},
+			"patch": {
+				"none": "Nincs",
+				"star": "Csillag",
+				"bolt": "Villám",
+				"skull": "Koponya"
+			},
+			"tattoo": {
+				"none": "Nincs",
+				"star": "Csillag",
+				"bolt": "Villám"
+			}
 		}
 	},
 	"admin": {
@@ -2928,6 +3053,10 @@
 				"account": {
 					"title": "A fiókod",
 					"content": "A neved, ahogy a katalógusban megjelensz, és a fiók, amivel beléptél."
+				},
+				"avatar": {
+					"title": "Az avatarod",
+					"content": "Nincs fényképed? Rakj össze egy karaktert — testalkat, arc, haj, ruha —, és az áll majd ott, ahol máshol a profilkép."
 				},
 				"language": {
 					"title": "A nyelv",

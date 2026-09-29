@@ -243,6 +243,7 @@ gcloud secrets versions add DISCOGS_TOKEN --data-file=-
 | `catalog/seed-collections.mjs`                                   | collectionök vetése                                              |
 | `discogs/import-discogs.mjs`                                     | tracklisták és közreműködők importja                             |
 | `scan/try-photo.mjs`                                             | a fotós felismerés kipróbálása                                   |
+| `avatar/upload-assets.mjs`                                       | az avatar-ruhatár feltöltése Storage-ba                          |
 | `app-check/generate-debug-token.mjs`                             | App Check debug token a buildhez                                 |
 
 A katalógus-scriptek olvasásigényesek (egy futás nagyságrendileg 25 ezer

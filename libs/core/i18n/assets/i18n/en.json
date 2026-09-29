@@ -383,6 +383,8 @@
 			"your-account-and-how": "Your account, and how the app behaves for you. What you set here is kept for the account, so it follows you to the next browser you sign in on.",
 			"account": "Account",
 			"how-you-appear-in": "How you appear in the app.",
+			"avatar": "Avatar",
+			"avatarIntro": "The character that stands in for your photo — you build it, and it stays yours.",
 			"appearance": "Appearance",
 			"the-theme-and-how": "The theme and how much of the screen the pages use.",
 			"demoTour": "Guided tour",
@@ -2352,6 +2354,129 @@
 		},
 		"proposeLink": {
 			"suggest-a-change": "Suggest a change"
+		},
+		"profileAvatar": {
+			"yours": "This is your character. It appears in the top bar, on the map, and wherever you stand next to other collectors.",
+			"none": "You have no character yet. Build one and it becomes your picture, in place of a photo.",
+			"build": "Build a character",
+			"edit": "Edit character",
+			"remove": "Remove",
+			"note": "What you build is kept with your account, and you can come back and change it.",
+			"saved": "Saved."
+		},
+		"avatarFigure": {
+			"unavailable": "This piece has not been drawn yet — the character stays as it was."
+		},
+		"avatarEditor": {
+			"title": "Build your character",
+			"front": "Front",
+			"back": "Back",
+			"closer": "Trousers up close",
+			"whole": "Whole figure",
+			"reset": "Start over",
+			"download": "Download picture",
+			"group": {
+				"body": "Build",
+				"age": "Age",
+				"face": "Face and beard",
+				"hair": "Hair",
+				"glasses": "Glasses",
+				"shirtStyle": "Shirt",
+				"outfit": "Outfit",
+				"pants": "Trousers",
+				"wrist": "Wristband",
+				"necklace": "Necklace",
+				"patch": "Back patch",
+				"tattoo": "Tattoo"
+			},
+			"needs": {
+				"patch": "A patch is sewn onto a vest or jacket — a t-shirt has no back for one.",
+				"tattoo": "The ink shows on a bare arm; a jacket sleeve covers it."
+			},
+			"body": {
+				"slim": "Slim",
+				"regular": "Average",
+				"broad": "Broad",
+				"heavy": "Heavy"
+			},
+			"age": {
+				"20": "20 years",
+				"30": "30 years",
+				"40": "40 years",
+				"50": "50 years",
+				"60": "60 years",
+				"70": "70 years"
+			},
+			"face": {
+				"stubble": "Stubble",
+				"beard": "Beard",
+				"longbeard": "Long beard",
+				"sharp": "Clean-shaven"
+			},
+			"hair": {
+				"short": "Short and messy",
+				"buzz": "Buzz cut",
+				"undercut": "Undercut",
+				"mohawk": "Mohawk",
+				"long": "Long and straight",
+				"curly": "Curly",
+				"mullet": "Mullet",
+				"topknot": "Top knot"
+			},
+			"glasses": {
+				"none": "None",
+				"biker": "Studded biker",
+				"roundmetal": "Purple round",
+				"mirror": "Mirrored aviator",
+				"blood": "Blood red"
+			},
+			"shirtStyle": {
+				"black": "Black",
+				"camo": "Camouflage"
+			},
+			"outfit": {
+				"shirt": "T-shirt",
+				"sleeveless": "Sleeveless shirt",
+				"vest": "Denim vest",
+				"acidvest": "Acid-washed vest",
+				"blackvest": "Black vest",
+				"redvest": "Burgundy vest",
+				"olivevest": "Olive vest",
+				"leather": "Leather jacket",
+				"denim": "Denim jacket"
+			},
+			"pants": {
+				"black": "Black jeans",
+				"blue": "Blue jeans",
+				"acid": "Acid-washed jeans",
+				"leather": "Leather trousers"
+			},
+			"wrist": {
+				"none": "None",
+				"plain": "Short leather",
+				"studded": "Short studded",
+				"longstud": "Long studded"
+			},
+			"necklace": {
+				"none": "None",
+				"chain": "Silver chain",
+				"skull": "Skull",
+				"pentagram": "Pentagram",
+				"pick": "Guitar pick",
+				"dogtag": "Dog tag",
+				"tooth": "Leather cord and tooth"
+			},
+			"patch": {
+				"none": "None",
+				"star": "Star",
+				"bolt": "Lightning",
+				"skull": "Skull"
+			},
+			"tattoo": {
+				"none": "None",
+				"star": "Star",
+				"bolt": "Lightning"
+			}
 		}
 	},
 	"admin": {
@@ -2928,6 +3053,10 @@
 				"account": {
 					"title": "Your account",
 					"content": "Your name as the catalog shows it, and the account you signed in with."
+				},
+				"avatar": {
+					"title": "Your avatar",
+					"content": "No photo? Build a character instead — build, face, hair, clothes — and it stands wherever a profile picture would."
 				},
 				"language": {
 					"title": "The language",

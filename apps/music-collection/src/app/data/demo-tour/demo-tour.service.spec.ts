@@ -318,6 +318,7 @@ describe('DemoTourService', () => {
 			'tabs',
 			'accountTab',
 			'account',
+			'avatar',
 			'language',
 			'appearance',
 			'collectionTab',

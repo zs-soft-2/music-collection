@@ -49,6 +49,30 @@ service firebase.storage {
       allow write: if false;
     }
 
+    // Avatar-ruhatár: a profil karakterkészítőjének rajzolt rétegei
+    // (`tools/avatar/upload-assets.mjs` tölti fel, Admin SDK-val). Publikus
+    // olvasás: a kliens egy sima <img>-mel rajzolja őket, ami nem visz
+    // Auth-tokent, és a katalógusképekhez hasonlóan nincs is mit védeni
+    // rajtuk. A verziózott mappát (`avatar/v1/`) örökre cache-elhetőnek
+    // adjuk ki, ezért nem felülírjuk, hanem új verziót töltünk fel.
+    match /avatar/{path=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // A gyűjtő összeállított avatarjának kirenderelt képe. Az útvonal viszi
+    // a tulajdonost, így csak ő írhatja. Az olvasás publikus: az avatar ott
+    // jelenik meg, ahol a gyűjtő mások mellett áll — a térképen, a hálózati
+    // oldalon, a felső sávban.
+    match /user-avatar/{userId}/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.auth.uid == userId
+                   && (request.resource == null
+                       || (request.resource.size < 1 * 1024 * 1024
+                           && request.resource.contentType.matches('image/.*')));
+    }
+
     // Példányfotók: a gyűjtő saját lemezéről készült kép, példányonként
     // legfeljebb kettő (elöl-hátul). Az útvonal viszi a tulajdonost, így a
     // jogosultság ránézésre eldönthető, és a Firestore-szabály ugyanerre az

@@ -383,6 +383,8 @@
 			"your-account-and-how": "Dein Konto und wie sich die App für dich verhält. Was du hier einstellst, bleibt am Konto und folgt dir in den nächsten Browser, in dem du dich anmeldest.",
 			"account": "Konto",
 			"how-you-appear-in": "Wie du in der App erscheinst.",
+			"avatar": "Avatar",
+			"avatarIntro": "Die Figur, die für dein Foto einsteht — du baust sie, und sie bleibt deine.",
 			"appearance": "Darstellung",
 			"the-theme-and-how": "Das Design und wie viel vom Bildschirm die Seiten nutzen.",
 			"demoTour": "Geführte Tour",
@@ -2352,6 +2354,129 @@
 		},
 		"proposeLink": {
 			"suggest-a-change": "Änderung vorschlagen"
+		},
+		"profileAvatar": {
+			"yours": "Das ist deine Figur. Sie erscheint in der oberen Leiste, auf der Karte und überall, wo du neben anderen Sammlern stehst.",
+			"none": "Du hast noch keine Figur. Bau eine, und sie wird dein Bild — anstelle eines Fotos.",
+			"build": "Figur bauen",
+			"edit": "Figur bearbeiten",
+			"remove": "Entfernen",
+			"note": "Was du baust, bleibt beim Konto, und du kannst es jederzeit ändern.",
+			"saved": "Gespeichert."
+		},
+		"avatarFigure": {
+			"unavailable": "Dieses Teil ist noch nicht gezeichnet — die Figur bleibt, wie sie war."
+		},
+		"avatarEditor": {
+			"title": "Bau deine Figur",
+			"front": "Vorderseite",
+			"back": "Rückseite",
+			"closer": "Hose aus der Nähe",
+			"whole": "Ganze Figur",
+			"reset": "Von vorn",
+			"download": "Bild herunterladen",
+			"group": {
+				"body": "Statur",
+				"age": "Alter",
+				"face": "Gesicht und Bart",
+				"hair": "Haare",
+				"glasses": "Brille",
+				"shirtStyle": "Shirt",
+				"outfit": "Kleidung",
+				"pants": "Hose",
+				"wrist": "Armband",
+				"necklace": "Kette",
+				"patch": "Rückenaufnäher",
+				"tattoo": "Tätowierung"
+			},
+			"needs": {
+				"patch": "Ein Aufnäher kommt auf Weste oder Jacke — ein T-Shirt hat keinen Rücken dafür.",
+				"tattoo": "Die Tinte zeigt sich auf bloßem Arm; ein Jackenärmel verdeckt sie."
+			},
+			"body": {
+				"slim": "Schmal",
+				"regular": "Durchschnittlich",
+				"broad": "Breit",
+				"heavy": "Kräftig"
+			},
+			"age": {
+				"20": "20 Jahre",
+				"30": "30 Jahre",
+				"40": "40 Jahre",
+				"50": "50 Jahre",
+				"60": "60 Jahre",
+				"70": "70 Jahre"
+			},
+			"face": {
+				"stubble": "Dreitagebart",
+				"beard": "Vollbart",
+				"longbeard": "Langer Bart",
+				"sharp": "Glatt rasiert"
+			},
+			"hair": {
+				"short": "Kurz und zerzaust",
+				"buzz": "Sehr kurz",
+				"undercut": "Undercut",
+				"mohawk": "Irokese",
+				"long": "Lang und glatt",
+				"curly": "Lockig",
+				"mullet": "Vokuhila",
+				"topknot": "Hochgebunden"
+			},
+			"glasses": {
+				"none": "Keine",
+				"biker": "Bikerbrille mit Nieten",
+				"roundmetal": "Lila rund",
+				"mirror": "Verspiegelte Pilotenbrille",
+				"blood": "Blutrot"
+			},
+			"shirtStyle": {
+				"black": "Schwarz",
+				"camo": "Tarnmuster"
+			},
+			"outfit": {
+				"shirt": "T-Shirt",
+				"sleeveless": "Ärmelloses Shirt",
+				"vest": "Jeansweste",
+				"acidvest": "Gebleichte Weste",
+				"blackvest": "Schwarze Weste",
+				"redvest": "Weinrote Weste",
+				"olivevest": "Olivgrüne Weste",
+				"leather": "Lederjacke",
+				"denim": "Jeansjacke"
+			},
+			"pants": {
+				"black": "Schwarze Jeans",
+				"blue": "Blaue Jeans",
+				"acid": "Gebleichte Jeans",
+				"leather": "Lederhose"
+			},
+			"wrist": {
+				"none": "Keins",
+				"plain": "Kurzes Leder",
+				"studded": "Kurz mit Nieten",
+				"longstud": "Lang mit Nieten"
+			},
+			"necklace": {
+				"none": "Keine",
+				"chain": "Silberkette",
+				"skull": "Totenkopf",
+				"pentagram": "Pentagramm",
+				"pick": "Plektrum",
+				"dogtag": "Erkennungsmarke",
+				"tooth": "Lederband mit Zahn"
+			},
+			"patch": {
+				"none": "Keiner",
+				"star": "Stern",
+				"bolt": "Blitz",
+				"skull": "Totenkopf"
+			},
+			"tattoo": {
+				"none": "Keine",
+				"star": "Stern",
+				"bolt": "Blitz"
+			}
 		}
 	},
 	"admin": {
@@ -2928,6 +3053,10 @@
 				"account": {
 					"title": "Dein Konto",
 					"content": "Dein Name, wie der Katalog ihn zeigt, und das Konto, mit dem du angemeldet bist."
+				},
+				"avatar": {
+					"title": "Dein Avatar",
+					"content": "Kein Foto? Bau dir eine Figur — Statur, Gesicht, Haare, Kleidung —, und sie steht dort, wo sonst ein Profilbild wäre."
 				},
 				"language": {
 					"title": "Die Sprache",

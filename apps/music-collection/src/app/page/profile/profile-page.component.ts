@@ -13,6 +13,7 @@ import { map } from 'rxjs';
 
 import { ProfileAccountComponent } from './component/profile-account/profile-account.component';
 import { ProfileAppearanceComponent } from './component/profile-appearance/profile-appearance.component';
+import { ProfileAvatarComponent } from './component/profile-avatar/profile-avatar.component';
 import { ProfileDemoTourComponent } from './component/profile-demo-tour/profile-demo-tour.component';
 import { ProfileLanguageComponent } from './component/profile-language/profile-language.component';
 import { ProfileListsComponent } from './component/profile-lists/profile-lists.component';
@@ -49,6 +50,7 @@ import {
 		...I18N_IMPORTS,
 		ProfileAccountComponent,
 		ProfileAppearanceComponent,
+		ProfileAvatarComponent,
 		ProfileDemoTourComponent,
 		ProfileLanguageComponent,
 		ProfileListsComponent,
