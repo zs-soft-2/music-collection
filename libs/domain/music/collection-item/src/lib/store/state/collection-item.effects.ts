@@ -6,6 +6,7 @@ import {
 	map,
 	mergeMap,
 	switchMap,
+	withLatestFrom,
 } from 'rxjs/operators';
 
 import { inject, Injectable } from '@angular/core';
@@ -375,11 +376,25 @@ export class CollectionItemEffects {
 			)
 		)
 	);
+	/**
+	 * A search of the collector's own shelves. The term goes to whoever is
+	 * signed in and nowhere else: the whole tree would answer the same
+	 * question about everybody's copies, which is nobody else's business.
+	 */
 	public searchCollectionItems = createEffect(() =>
 		this.actions$.pipe(
 			ofType(collectionItemActions.search),
-			switchMap((action) =>
-				this.collectionItemDataService.search$(action.params).pipe(
+			withLatestFrom(
+				this.authenticationStateService.selectAuthenticatedUser$()
+			),
+			switchMap(([action, user]) =>
+				(user?.uid
+					? this.collectionItemDataService.searchByUser$(
+							user.uid,
+							action.params
+						)
+					: of([])
+				).pipe(
 					map((result) =>
 						result.map((collectionItem) =>
 							this.collectionItemUtilService.convertModelToEntity(

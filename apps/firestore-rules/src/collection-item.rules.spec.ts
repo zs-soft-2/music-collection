@@ -3,13 +3,28 @@ import {
 	assertFails,
 	assertSucceeds,
 } from '@firebase/rules-unit-testing';
-import { doc, setDoc, updateDoc } from 'firebase/firestore';
+import {
+	collection,
+	collectionGroup,
+	doc,
+	getCountFromServer,
+	getDoc,
+	getDocs,
+	query,
+	setDoc,
+	updateDoc,
+	where,
+} from 'firebase/firestore';
 
 import { createTestEnvironment } from './test-environment';
 
 const ME = 'collector-1';
+const SOMEBODY_ELSE = 'collector-2';
+/** An admin who may delete a pressing — and only for that, count copies. */
+const CURATOR = 'curator-1';
 const ITEM = 'copy-1';
 const PATH = `user/${ME}/collection-item/${ITEM}`;
+const OTHER_PATH = `user/${SOMEBODY_ELSE}/collection-item/copy-9`;
 
 /** A place on the drawn shelf, as the picker writes it. */
 const spot = (fields: Record<string, unknown> = {}) => ({
@@ -40,11 +55,94 @@ beforeEach(async () => {
 			],
 			roles: ['collector'],
 		});
-		await setDoc(doc(admin, PATH), { userId: ME, release: { uid: 'r1' } });
+		await setDoc(
+			doc(admin, `security/users/${CURATOR}/effective_permissions`),
+			{ permissions: ['deleteReleaseEntity'], roles: ['curator'] }
+		);
+		await setDoc(doc(admin, PATH), {
+			userId: ME,
+			release: { uid: 'r1' },
+			purchase: {
+				date: null,
+				place: 'Lemezkuckó',
+				price: 4500,
+				currency: 'HUF',
+			},
+		});
+		await setDoc(doc(admin, OTHER_PATH), {
+			userId: SOMEBODY_ELSE,
+			release: { uid: 'r1' },
+		});
 	});
 });
 
 const asMe = () => testEnv.authenticatedContext(ME).firestore();
+const asSomebodyElse = () =>
+	testEnv.authenticatedContext(SOMEBODY_ELSE).firestore();
+const asCurator = () => testEnv.authenticatedContext(CURATOR).firestore();
+const asGuest = () => testEnv.unauthenticatedContext().firestore();
+
+/** Copies of one pressing, wherever they stand — what a deletion asks. */
+const copiesOfRelease = (database: ReturnType<typeof asMe>) =>
+	query(
+		collectionGroup(database, 'collection-item'),
+		where('release.uid', '==', 'r1')
+	);
+
+describe('collection-item: whose shelf it is', () => {
+	it('lets the collector read their own copy', () =>
+		assertSucceeds(getDoc(doc(asMe(), PATH))));
+
+	it('keeps another collector out of it', () =>
+		assertFails(getDoc(doc(asSomebodyElse(), PATH))));
+
+	it('keeps a visitor out of it', () =>
+		assertFails(getDoc(doc(asGuest(), PATH))));
+
+	it('lists the collector their own shelf', () =>
+		assertSucceeds(
+			getDocs(collection(asMe(), `user/${ME}/collection-item`))
+		));
+
+	it('refuses another collector the whole shelf', () =>
+		assertFails(
+			getDocs(collection(asSomebodyElse(), `user/${ME}/collection-item`))
+		));
+
+	// This is the query that made every collector's purchases, stories and
+	// placements public: one collection group, no filter, everybody's copies.
+	it('refuses the whole tree to a signed-in collector', () =>
+		assertFails(getDocs(collectionGroup(asMe(), 'collection-item'))));
+
+	it('refuses the whole tree to a visitor', () =>
+		assertFails(getDocs(collectionGroup(asGuest(), 'collection-item'))));
+
+	it('gives a collection group narrowed to the collector themselves', () =>
+		assertSucceeds(
+			getDocs(
+				query(
+					collectionGroup(asMe(), 'collection-item'),
+					where('userId', '==', ME)
+				)
+			)
+		));
+
+	it('refuses a collection group narrowed to somebody else', () =>
+		assertFails(
+			getDocs(
+				query(
+					collectionGroup(asMe(), 'collection-item'),
+					where('userId', '==', SOMEBODY_ELSE)
+				)
+			)
+		));
+
+	it('counts the copies of a pressing for whoever may delete it', () =>
+		assertSucceeds(getCountFromServer(copiesOfRelease(asCurator()))));
+
+	it('refuses that count to a collector who may not delete it', () =>
+		assertFails(getCountFromServer(copiesOfRelease(asMe()))));
+});
 
 describe('collection-item: where the collector filed the copy', () => {
 	it('files a copy into a compartment', () =>

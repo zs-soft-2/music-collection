@@ -1,7 +1,13 @@
-import { Observable } from 'rxjs';
+import { Observable, from, map } from 'rxjs';
 
 import { Injectable } from '@angular/core';
-import { collection, doc } from '@angular/fire/firestore';
+import {
+	collection,
+	doc,
+	getDocs,
+	query,
+	where,
+} from '@angular/fire/firestore';
 import {
 	COLLECTION_ITEM_FEATURE_KEY,
 	CollectionItemDataService,
@@ -9,6 +15,7 @@ import {
 	CollectionItemModelAdd,
 	CollectionItemModelUpdate,
 	SearchParams,
+	toSyncedData,
 	withLocalUpdatedAt,
 } from '@music-collection/api';
 
@@ -65,6 +72,36 @@ export class CollectionItemDataServiceImpl extends CollectionItemDataService {
 
 	public search$(params: SearchParams): Observable<CollectionItemModel[]> {
 		return super.searchModel$(params);
+	}
+
+	public searchByUser$(
+		userId: string,
+		params: SearchParams
+	): Observable<CollectionItemModel[]> {
+		const itemQuery = query(
+			collection(
+				this.firestore,
+				USER_COLLECTION,
+				userId,
+				this.featureKey
+			),
+			...params.map((param) =>
+				where(
+					param.query.field,
+					param.query.operation,
+					param.query.value
+				)
+			)
+		);
+
+		return from(getDocs(itemQuery)).pipe(
+			map((snapshot) =>
+				snapshot.docs.map(
+					(document) =>
+						toSyncedData(document) as unknown as CollectionItemModel
+				)
+			)
+		);
 	}
 
 	public update$(

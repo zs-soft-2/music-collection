@@ -1,7 +1,12 @@
 import { provideI18nTesting } from '@music-collection/core/i18n/testing';
+import { of } from 'rxjs';
+
 import { TestBed } from '@angular/core/testing';
 import { Firestore } from '@angular/fire/firestore';
-import { FirestoreSyncService } from '@music-collection/api';
+import {
+	AuthenticatedUserService,
+	FirestoreSyncService,
+} from '@music-collection/api';
 
 import { EntityQuantityDataServiceImpl } from './entity-quantity-data.service.impl';
 
@@ -19,6 +24,10 @@ describe('EntityQuantityDataServiceImpl', () => {
 				EntityQuantityDataServiceImpl,
 				{ provide: Firestore, useValue: {} },
 				{ provide: FirestoreSyncService, useValue: {} },
+				{
+					provide: AuthenticatedUserService,
+					useValue: { user$: of(null) },
+				},
 			],
 		})
 	);

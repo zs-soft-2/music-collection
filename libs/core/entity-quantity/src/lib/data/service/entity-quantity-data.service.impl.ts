@@ -1,4 +1,4 @@
-import { defer, Observable } from 'rxjs';
+import { defer, Observable, switchMap, take } from 'rxjs';
 
 import {
 	inject,
@@ -13,6 +13,7 @@ import {
 	getCountFromServer,
 } from '@angular/fire/firestore';
 import {
+	AuthenticatedUserService,
 	ENTITY_COUNT_COLLECTIONS,
 	ENTITY_QUANTITY_FEATURE_KEY,
 	EntityCounts,
@@ -20,12 +21,17 @@ import {
 	EntityQuantityEntity,
 	EntityQuantityEntityAdd,
 	EntityQuantityEntityUpdate,
+	OWN_DATA_COUNT_COLLECTIONS,
 	SearchParams,
 } from '@music-collection/api';
+
+/** Parent of the collectors' own data (`user/{uid}/…`). */
+const USER_COLLECTION = 'user';
 
 @Injectable()
 export class EntityQuantityDataServiceImpl extends EntityQuantityDataService {
 	private readonly injector = inject(Injector);
+	private readonly authenticatedUser = inject(AuthenticatedUserService);
 
 	public constructor() {
 		super();
@@ -43,34 +49,70 @@ export class EntityQuantityDataServiceImpl extends EntityQuantityDataService {
 	/**
 	 * One aggregation query per type (billed as one read per 1000 documents),
 	 * always from the server: the local cache may hold only part of a group.
+	 *
+	 * The catalog is counted whole; a collector's own collections only under
+	 * the collector (see `OWN_DATA_COUNT_COLLECTIONS`), which is also the
+	 * only part of them the rules let anyone read.
 	 */
 	public count$(types: string[]): Observable<EntityCounts> {
-		return defer(async () => {
-			const entries = await Promise.all(
-				types.map(async (type) => {
-					const collectionId = ENTITY_COUNT_COLLECTIONS[type];
+		return this.authenticatedUser.user$.pipe(
+			take(1),
+			switchMap((user) =>
+				defer(async () => {
+					const entries = await Promise.all(
+						types.map(async (type) => {
+							const collectionId = ENTITY_COUNT_COLLECTIONS[type];
 
-					if (!collectionId) {
-						throw new Error(
-							`No collection for entity type: ${type}`
-						);
-					}
+							if (!collectionId) {
+								throw new Error(
+									`No collection for entity type: ${type}`
+								);
+							}
 
-					// AngularFire expects its APIs in an injection context.
-					const snapshot = await runInInjectionContext(
-						this.injector,
-						() =>
-							getCountFromServer(
-								collectionGroup(this.firestore, collectionId)
-							)
+							return [
+								type,
+								await this.count(
+									collectionId,
+									user?.uid ?? null
+								),
+							] as const;
+						})
 					);
 
-					return [type, snapshot.data().count] as const;
+					return Object.fromEntries(entries);
 				})
-			);
+			)
+		);
+	}
 
-			return Object.fromEntries(entries);
-		});
+	/** The documents of one countable collection. */
+	private async count(
+		collectionId: string,
+		uid: string | null
+	): Promise<number> {
+		const own = OWN_DATA_COUNT_COLLECTIONS.includes(collectionId);
+
+		// A guest has no collection of their own, and asking would only earn
+		// a refusal.
+		if (own && !uid) {
+			return 0;
+		}
+
+		// AngularFire expects its APIs in an injection context.
+		const snapshot = await runInInjectionContext(this.injector, () =>
+			getCountFromServer(
+				own && uid
+					? collection(
+							this.firestore,
+							USER_COLLECTION,
+							uid,
+							collectionId
+						)
+					: collectionGroup(this.firestore, collectionId)
+			)
+		);
+
+		return snapshot.data().count;
 	}
 
 	public delete$(

@@ -323,10 +323,11 @@ service cloud.firestore {
                     || (isSelf(uid) && !changedKeys().hasAny(['roleIds', 'roles']));
       allow delete: if hasPerm('deleteUserEntity');
 
-      // A gyűjtő saját adata a user alatt él; a lenti collection-group
-      // olvasás ezt teszi elérhetővé a kliens szűretlen lekérdezésének.
+      // A gyűjtő saját adata a user alatt él, és nem is megy tovább: a
+      // példány ára, a hozzá tartozó történet, a polcon elfoglalt helye és a
+      // fényképei csak a tulajdonosáé. (A Storage ugyanígy zárja a képeket.)
       match /collection-item/{itemId} {
-        allow read: if true;
+        allow read: if isSelf(uid);
         allow create: if isSelf(uid)
                       && hasPerm('createCollectionItemEntity')
                       && request.resource.data.userId == uid
@@ -344,7 +345,7 @@ service cloud.firestore {
         allow delete: if isSelf(uid) && hasPerm('deleteCollectionItemEntity');
       }
       match /wishlist-item/{itemId} {
-        allow read: if true;
+        allow read: if isSelf(uid);
         allow create: if isSelf(uid)
                       && hasPerm('createWishlistItemEntity')
                       && request.resource.data.userReference.uid == uid;
@@ -454,14 +455,23 @@ service cloud.firestore {
       allow delete: if isSelf(uid) || hasPerm('deleteUserEntity');
     }
 
-    // A kliens szűretlen collection-group lekérdezése miatt: a saját adat
-    // bárki számára olvasható. Szűkítés csak a lekérdezés megszorításával
-    // együtt mehet, különben a meglévő kliens elhasal rajta.
+    // Collection-group olvasás a saját adaton. A szabály itt nem szűr, hanem
+    // szűrést KÖVETEL: a `resource.data`-ra hivatkozó feltételt a Firestore a
+    // lekérdezés megszorításaiból bizonyítja, ezért ilyen lekérdezés csak a
+    // saját `userId`-ra szűkítve áll meg — enélkül az egészet elutasítja.
+    //
+    // Egyetlen kivétel a kiadás törlése: a törlés előtti „hány példány áll
+    // még polcon" kérdés az egész fát számolja meg (`count()`), és ezt csak
+    // az kapja meg, aki a kiadást törölheti is. A számláló dokumentumot nem
+    // ad vissza, a szerver pedig tranzakcióban újra megkérdezi.
     match /{path=**}/collection-item/{itemId} {
-      allow read: if true;
+      allow read: if isAuthed()
+                  && (resource.data.userId == request.auth.uid
+                      || hasPerm('deleteReleaseEntity'));
     }
     match /{path=**}/wishlist-item/{itemId} {
-      allow read: if true;
+      allow read: if isAuthed()
+                  && resource.data.userReference.uid == request.auth.uid;
     }
 
     // A jogosultság-szinkron function írja (Admin SDK); a kliens csak olvassa
