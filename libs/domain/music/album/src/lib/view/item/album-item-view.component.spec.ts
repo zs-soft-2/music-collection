@@ -4,7 +4,6 @@ import {
 	AlbumEntity,
 	EntityTypeEnum,
 	FormatEnum,
-	GenreEnum,
 } from '@music-collection/api';
 
 import { AlbumItemViewComponent } from './album-item-view.component';
@@ -25,7 +24,7 @@ describe('AlbumItemViewComponent', () => {
 		},
 		coverImage: null,
 		format: FormatEnum.lp,
-		genre: GenreEnum.Rock,
+		genre: 'Rock',
 		songs: [],
 		styles: [],
 		year: new Date(1987, 0, 1),

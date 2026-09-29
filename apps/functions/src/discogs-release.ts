@@ -24,6 +24,8 @@ export interface DiscogsRelease {
 	/** A katalógusba importált albumhoz (release-kérés album nélkül). */
 	artists?: { id?: number; name?: string }[];
 	master_id?: number;
+	/** Discogs saját műfajai; a katalógus a taxonómiához illeszti őket. */
+	genres?: string[];
 	styles?: string[];
 	images?: { type?: string; uri?: string }[];
 	tracklist?: { type_?: string; title?: string }[];

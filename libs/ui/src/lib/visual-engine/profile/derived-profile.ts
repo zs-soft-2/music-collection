@@ -40,10 +40,12 @@ interface VisualFamily {
  * death goes to the cold sea rather than to the charnel house, and blackened
  * doom goes to the flooded nave rather than to the frozen wood.
  *
- * The vocabulary is the one this shelf actually uses — `StyleEnum` is forty-odd
- * metal and rock subgenres — which is why there is no family for techno and
- * four of them for kinds of dark. A taxonomy built for music in general put
- * two thirds of this collection in one world.
+ * The vocabulary is the one this shelf actually uses — the rock genre of the
+ * taxonomy is forty-odd metal and rock subgenres — which is why there is no
+ * family for techno and four of them for kinds of dark. A taxonomy built for
+ * music in general put two thirds of this collection in one world. A style
+ * added under another genre falls through to the default world until a family
+ * is written for it.
  */
 const FAMILIES: VisualFamily[] = [
 	{

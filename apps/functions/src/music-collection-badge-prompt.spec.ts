@@ -18,25 +18,27 @@ import {
 const NOW = Date.UTC(2026, 8, 21);
 
 /**
- * A functions app nem látja a libeket (saját `tsc`, `rootDir: src`), ezért a
- * stílusokat a forrásból olvassuk ki. Így a tábla nem tud csendben lemaradni
- * egy új stílusról: aki felveszi a `StyleEnum`-ba, itt bukik el, amíg nem ad
- * neki motívumot is.
+ * A stílusok a műfaj-taxonómiában élnek (`genre/{slug}`), amit az admin
+ * szerkeszt — a tábla tehát nem tudhat mindegyikről, és nem is kell:
+ * ismeretlen stílusra általános motívum jár (lásd lentebb).
+ *
+ * Amit viszont garantálni lehet: a rock-stílusokra, amelyekkel a katalógus
+ * elindult, legyen motívum. Ezeket a seed script sorolja fel, és onnan
+ * olvassuk — aki oda új stílust vesz fel, itt bukik el, amíg nem ad neki
+ * motívumot is. (A functions app nem látja a libeket: saját `tsc`,
+ * `rootDir: src`, ezért forrásból olvasunk.)
  */
-function catalogStyles(): string[] {
+function seededRockStyles(): string[] {
 	const source = readFileSync(
-		join(
-			__dirname,
-			'../../../libs/common/api/src/lib/music/genre/genre.enum.ts'
-		),
+		join(__dirname, '../../../tools/catalog/seed-genres.mjs'),
 		'utf8'
 	);
 	const block = source.slice(
-		source.indexOf('export enum StyleEnum'),
-		source.indexOf('export const StyleList')
+		source.indexOf('const ROCK_STYLES = ['),
+		source.indexOf('];', source.indexOf('const ROCK_STYLES = ['))
 	);
 
-	return [...block.matchAll(/=\s*'([^']+)'/g)].map((match) => match[1]);
+	return [...block.matchAll(/'([^']+)'/g)].map((match) => match[1]);
 }
 
 function input(overrides: Partial<BadgePromptInput> = {}): BadgePromptInput {
@@ -54,11 +56,16 @@ function input(overrides: Partial<BadgePromptInput> = {}): BadgePromptInput {
 const MOTIFS_PER_STYLE = 3;
 
 describe('a motívumtábla', () => {
-	it('a katalógus minden stílusát ismeri', () => {
-		const styles = catalogStyles();
+	it('a seedelt rock-stílusok mindegyikét ismeri', () => {
+		const styles = seededRockStyles();
 
 		expect(styles.length).toBeGreaterThan(40);
 		expect(styles.filter((style) => !MOTIFS_BY_STYLE[style])).toEqual([]);
+	});
+
+	it('az azóta felvett stílusra általános motívumot ad', () => {
+		expect(MOTIFS_BY_STYLE['Hard Bop']).toBeUndefined();
+		expect(motifOf(['Hard Bop'], 0)).toEqual(expect.any(String));
 	});
 
 	it('egy stílusra sem hagy egyetlen motívumot, mert abból nincs választás', () => {

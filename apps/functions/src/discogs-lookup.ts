@@ -5,8 +5,9 @@
  * a hívások akkor lépnek be, amikor ott nincs találat.
  *
  * A leképezés itt csak normalizál (szöveg, szám, tracklist); a katalógus
- * enumjaira (StyleEnum, FormatEnum, CountryEnum) a kliens mapperei képeznek,
- * mert a functions külön npm-projekt, és a `libs`-ből nem tud importálni.
+ * szótárára — a `genre` collection stílusaira, a FormatEnumra, a
+ * CountryEnumra — a kliens mapperei képeznek, mert a functions külön
+ * npm-projekt, és a `libs`-ből nem tud importálni.
  */
 
 import {

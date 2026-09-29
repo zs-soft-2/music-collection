@@ -1,4 +1,4 @@
-import { Observable, catchError, map, of, switchMap } from 'rxjs';
+import { Observable, catchError, map, of, switchMap, take } from 'rxjs';
 
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
@@ -25,9 +25,11 @@ import {
 	ReleaseModelAdd,
 	ReleaseModelUpdate,
 	SearchParams,
+	StyleName,
 	toMusicBrainzId,
 	withLocalUpdatedAt,
 } from '@music-collection/api';
+import { GenreEffect } from '@music-collection/domain/genre';
 
 import {
 	MusicBrainzArtist,
@@ -61,6 +63,7 @@ const SEARCH_LIMIT = 25;
 @Injectable()
 export class ArtistDataServiceImpl extends ArtistDataService {
 	private discogs = inject(DiscogsLookupClient);
+	private genre = inject(GenreEffect);
 	private http = inject(HttpClient);
 	private musicBrainz = inject(MusicBrainzClient);
 
@@ -110,6 +113,17 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 		);
 	}
 
+	/**
+	 * The styles the taxonomy holds right now, for matching what a source
+	 * names its own way. The list is shared and cached, so this is the value
+	 * already in hand; it is empty only before the first answer arrives —
+	 * which is a load started in the first moment of a form, and costs the
+	 * styles of that one load, not the load itself.
+	 */
+	private knownStyles$(): Observable<StyleName[]> {
+		return this.genre.styles$.pipe(take(1));
+	}
+
 	/** The artist on MusicBrainz, with Wikipedia and Commons; null if none. */
 	private fetchMusicBrainzProfile$(
 		query: ArtistExternalQuery
@@ -126,6 +140,11 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 					: of(null)
 			),
 			switchMap((artist) =>
+				this.knownStyles$().pipe(
+					map((known) => ({ artist, known }))
+				)
+			),
+			switchMap(({ artist, known }) =>
 				artist
 					? this.fetchWikidata$(toWikidataId(artist.relations)).pipe(
 							map(
@@ -146,7 +165,10 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 									name: artist.name,
 									source: 'musicbrainz',
 									sourceUrl: `${MUSICBRAINZ_ARTIST_URL}/${artist.id}`,
-									styles: toStyles(artist.genres),
+									styles: toStyles(
+										artist.genres,
+										known
+									),
 								})
 							)
 						)
@@ -356,8 +378,16 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 	public searchExternalArtists$(
 		query: ArtistExternalQuery
 	): Observable<ArtistExternalCandidate[]> {
-		return this.searchMusicBrainzArtists$(query).pipe(
-			map((artists) => artists.map(toExternalCandidate)),
+		return this.knownStyles$().pipe(
+			switchMap((known) =>
+				this.searchMusicBrainzArtists$(query).pipe(
+					map((artists) =>
+						artists.map((artist) =>
+							toExternalCandidate(artist, known)
+						)
+					)
+				)
+			),
 			switchMap((candidates) =>
 				candidates.length
 					? of(candidates)
@@ -431,9 +461,17 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 			.set('limit', SEARCH_LIMIT)
 			.set('fmt', 'json');
 
-		return this.musicBrainz
-			.get$<MusicBrainzSearch>('/artist', params)
-			.pipe(map((result) => rankArtists(query, result.artists ?? [])));
+		return this.knownStyles$().pipe(
+			switchMap((known) =>
+				this.musicBrainz
+					.get$<MusicBrainzSearch>('/artist', params)
+					.pipe(
+						map((result) =>
+							rankArtists(query, result.artists ?? [], known)
+						)
+					)
+			)
+		);
 	}
 
 	/**
@@ -458,16 +496,22 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 	private fetchDiscogsProfile$(
 		discogsArtistId: number
 	): Observable<ArtistExternalProfile | null> {
-		return this.discogs
-			.lookupOrNull$({
-				kind: 'artist-profile',
-				discogsId: discogsArtistId,
-			})
-			.pipe(
-				map((result) =>
-					result ? toDiscogsProfile(result.profile) : null
-				)
-			);
+		return this.knownStyles$().pipe(
+			switchMap((known) =>
+				this.discogs
+					.lookupOrNull$({
+						kind: 'artist-profile',
+						discogsId: discogsArtistId,
+					})
+					.pipe(
+						map((result) =>
+							result
+								? toDiscogsProfile(result.profile, known)
+								: null
+						)
+					)
+			)
+		);
 	}
 
 	/**

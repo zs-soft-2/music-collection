@@ -359,7 +359,7 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 											"
 										>
 											@for (
-												option of criterion.options;
+												option of options(criterion);
 												track option
 											) {
 												<option
@@ -992,6 +992,16 @@ export class MusicCollectionEditComponent {
 				map((params) => params.get('uid') ?? '0')
 			)
 		);
+	}
+
+	/**
+	 * What a criterion offers: the list the code knows, or — for the styles —
+	 * the taxonomy's, which arrives with the page rather than with the build.
+	 */
+	protected options(
+		criterion: (typeof ENUM_CRITERIA)[number]
+	): readonly string[] {
+		return criterion.options ?? this.store.styles();
 	}
 
 	/** The definitions a collection may sit under — never itself. */

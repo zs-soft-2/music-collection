@@ -114,7 +114,7 @@ export interface MaterialAlbum {
 	artistName: string;
 	year: number | null;
 	styles: string[];
-	/** A katalógus műfaj-besorolása (`GenreEnum` értéke). */
+	/** A katalógus műfaj-besorolása (a taxonómia egy műfajának neve). */
 	genre: string | null;
 	/** A borító címe, ha a katalógus tud róla — a képes kérdéshez. */
 	coverUrl: string | null;
@@ -738,8 +738,8 @@ const artistCountry: DailyQuestionTemplate = {
 /**
  * A katalógus stílus-szótárának egy metszete, hamis válaszoknak — akkor jön
  * elő, ha a szomszédságból nem telik ki három olyan stílus, ami az albumon
- * nincs rajta. A `StyleEnum` a `libs/common/api`-ban él, amit a functions
- * build nem lát; ez a lista ezért másolat, és csak csalinak való.
+ * nincs rajta. A szótár a `genre` collectionben él (admin felület), amit ez a
+ * build nem olvas; ez a lista ezért másolat, és csak csalinak való.
  */
 const STYLE_POOL = [
 	'Alternative Rock',

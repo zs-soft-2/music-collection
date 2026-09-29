@@ -76,9 +76,11 @@ export const BADGE_NEGATIVE_PROMPT =
  * hátára. Hangszer csak a rock-oldali stílusokban szerepel; egy death
  * metal pinen a gitár a legkevésbé érdekes dolog, ami ráférhet.
  *
- * A kulcsok a `StyleEnum` értékei (`libs/common/api`). Teszt tartja nyitva,
- * hogy mindegyikre jusson motívum — egy lemaradt stílus csendben ugyanazt
- * az általános pint adná egy egész műfajnak, és pont ez a tábla van ellene.
+ * A kulcsok a taxonómia stílusnevei (`genre` collection). Teszt tartja
+ * nyitva, hogy a rock-stílusokra, amikkel a katalógus elindult, jusson
+ * motívum — egy lemaradt stílus csendben ugyanazt az általános pint adná egy
+ * egész műfajnak, és pont ez a tábla van ellene. Egy új műfaj alá felvett
+ * stílus addig az általánost kapja, amíg ide nem kerül.
  */
 export const MOTIFS_BY_STYLE: Record<string, string[]> = {
 	'Alternative metal': [

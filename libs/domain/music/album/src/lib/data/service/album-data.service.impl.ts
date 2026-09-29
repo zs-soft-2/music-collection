@@ -1,4 +1,4 @@
-import { Observable, catchError, map, of, switchMap } from 'rxjs';
+import { Observable, catchError, map, of, switchMap, take } from 'rxjs';
 
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
@@ -27,9 +27,11 @@ import {
 	MusicBrainzClient,
 	discogsMasterUrl,
 	ReleaseTrackDraft,
+	StyleName,
 	TRACK_FEATURE_KEY,
 	TrackEntity,
 } from '@music-collection/api';
+import { GenreEffect } from '@music-collection/domain/genre';
 
 import {
 	COVER_ART_ARCHIVE_URL,
@@ -57,6 +59,7 @@ import {
 @Injectable()
 export class AlbumDataServiceImpl extends AlbumDataService {
 	private discogs = inject(DiscogsLookupClient);
+	private genre = inject(GenreEffect);
 	private http = inject(HttpClient);
 	private musicBrainz = inject(MusicBrainzClient);
 
@@ -107,6 +110,15 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 		);
 	}
 
+	/**
+	 * The styles the taxonomy holds right now, for matching what a source
+	 * names its own way. Shared and cached with the genres the forms read, so
+	 * this is the value already in hand.
+	 */
+	private knownStyles$(): Observable<StyleName[]> {
+		return this.genre.styles$.pipe(take(1));
+	}
+
 	/** The album on MusicBrainz with its Cover Art Archive front cover. */
 	private fetchMusicBrainzProfile$(
 		artistName: string,
@@ -116,16 +128,27 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 			switchMap((group) =>
 				group
 					? this.fetchCoverUrl$(group.id).pipe(
-							map((coverImageUrl): AlbumExternalProfile => ({
-								coverImageUrl,
-								fillerSourceUrl: null,
-								format: toFormat(group),
-								name: group.title,
-								source: 'musicbrainz',
-								sourceUrl: `https://musicbrainz.org/release-group/${group.id}`,
-								styles: toStyles(group.genres),
-								year: toDate(group['first-release-date']),
-							}))
+							switchMap((coverImageUrl) =>
+								this.knownStyles$().pipe(
+									map(
+										(known): AlbumExternalProfile => ({
+											coverImageUrl,
+											fillerSourceUrl: null,
+											format: toFormat(group),
+											name: group.title,
+											source: 'musicbrainz',
+											sourceUrl: `https://musicbrainz.org/release-group/${group.id}`,
+											styles: toStyles(
+												group.genres,
+												known
+											),
+											year: toDate(
+												group['first-release-date']
+											),
+										})
+									)
+								)
+							)
 						)
 					: of(null)
 			)
@@ -221,8 +244,14 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 		artistName: string,
 		name: string
 	): Observable<AlbumExternalProfile | null> {
-		return this.fetchDiscogsMaster$(artistName, name).pipe(
-			map((master) => (master ? toDiscogsAlbumProfile(master) : null))
+		return this.knownStyles$().pipe(
+			switchMap((known) =>
+				this.fetchDiscogsMaster$(artistName, name).pipe(
+					map((master) =>
+						master ? toDiscogsAlbumProfile(master, known) : null
+					)
+				)
+			)
 		);
 	}
 

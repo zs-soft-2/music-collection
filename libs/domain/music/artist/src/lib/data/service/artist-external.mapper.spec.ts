@@ -1,4 +1,4 @@
-import { CountryEnum, StyleEnum } from '@music-collection/api';
+import { CountryEnum } from '@music-collection/api';
 
 import {
 	MusicBrainzArtist,
@@ -12,6 +12,9 @@ const hit = (
 	partial: Partial<MusicBrainzArtist> = {}
 ): MusicBrainzArtist => ({ id, name: 'Nightfall', ...partial });
 
+/** The styles the taxonomy holds while these run; matching is against these. */
+const KNOWN = ['Doom', 'Gothic', 'Thrash'];
+
 describe('pickArtist', () => {
 	it('takes the hit of the wanted country', () => {
 		const greek = hit('gr', { country: 'GR', type: 'Group' });
@@ -20,7 +23,8 @@ describe('pickArtist', () => {
 		expect(
 			pickArtist(
 				{ country: CountryEnum.Greece, name: 'Nightfall' },
-				artists
+				artists,
+				KNOWN
 			)
 		).toBe(greek);
 	});
@@ -41,9 +45,10 @@ describe('pickArtist', () => {
 			pickArtist(
 				{
 					name: 'Nightfall',
-					styles: [StyleEnum.Gothic, StyleEnum.Doom],
+					styles: ['Gothic', 'Doom'],
 				},
-				artists
+				artists,
+				KNOWN
 			)
 		).toBe(doom);
 	});
@@ -63,9 +68,10 @@ describe('pickArtist', () => {
 				{
 					country: CountryEnum.Greece,
 					name: 'Nightfall',
-					styles: [StyleEnum.Doom],
+					styles: ['Doom'],
 				},
-				artists
+				artists,
+				KNOWN
 			)
 		).toBe(greek);
 	});
@@ -73,19 +79,20 @@ describe('pickArtist', () => {
 	it('keeps MusicBrainz order when the hints say nothing', () => {
 		const first = hit('first');
 
-		expect(pickArtist({ name: 'Nightfall' }, [first, hit('second')])).toBe(
-			first
-		);
+		expect(
+			pickArtist({ name: 'Nightfall' }, [first, hit('second')], KNOWN)
+		).toBe(first);
 	});
 
 	it('prefers a group over a person on a tie, as before', () => {
 		const group = hit('group', { type: 'Group' });
 
 		expect(
-			pickArtist({ name: 'Nightfall' }, [
-				hit('person', { type: 'Person' }),
-				group,
-			])
+			pickArtist(
+				{ name: 'Nightfall' },
+				[hit('person', { type: 'Person' }), group],
+				KNOWN
+			)
 		).toBe(group);
 	});
 
@@ -93,10 +100,11 @@ describe('pickArtist', () => {
 		const unknown = hit('unknown', { type: 'Group' });
 
 		expect(
-			pickArtist({ country: CountryEnum.Greece, name: 'Nightfall' }, [
-				unknown,
-				hit('us', { country: 'US', type: 'Group' }),
-			])
+			pickArtist(
+				{ country: CountryEnum.Greece, name: 'Nightfall' },
+				[unknown, hit('us', { country: 'US', type: 'Group' })],
+				KNOWN
+			)
 		).toBe(unknown);
 	});
 
@@ -104,15 +112,16 @@ describe('pickArtist', () => {
 		const best = hit('best', { name: 'Nightfall Overture' });
 
 		expect(
-			pickArtist({ country: CountryEnum.Greece, name: 'Nightfall' }, [
-				best,
-				hit('other', { name: 'Nightfalls', country: 'GR' }),
-			])
+			pickArtist(
+				{ country: CountryEnum.Greece, name: 'Nightfall' },
+				[best, hit('other', { name: 'Nightfalls', country: 'GR' })],
+				KNOWN
+			)
 		).toBe(best);
 	});
 
 	it('finds nothing in an empty result', () => {
-		expect(pickArtist({ name: 'Nightfall' }, [])).toBeNull();
+		expect(pickArtist({ name: 'Nightfall' }, [], KNOWN)).toBeNull();
 	});
 });
 
@@ -124,7 +133,8 @@ describe('rankArtists', () => {
 		expect(
 			rankArtists(
 				{ country: CountryEnum.Greece, name: 'Nightfall' },
-				artists
+				artists,
+				KNOWN
 			)
 		).toEqual([greek, artists[0]]);
 	});
@@ -134,10 +144,11 @@ describe('rankArtists', () => {
 
 		// The others are different artists, not namesakes to choose between.
 		expect(
-			rankArtists({ name: 'Nightfall' }, [
-				best,
-				hit('other', { name: 'Nightfalls' }),
-			])
+			rankArtists(
+				{ name: 'Nightfall' },
+				[best, hit('other', { name: 'Nightfalls' })],
+				KNOWN
+			)
 		).toEqual([best]);
 	});
 });
@@ -152,7 +163,8 @@ describe('toExternalCandidate', () => {
 					'life-span': { begin: '1991-05' },
 					tags: [{ name: 'gothic metal', count: 3 }],
 					type: 'Group',
-				})
+				}),
+				KNOWN
 			)
 		).toEqual({
 			country: CountryEnum.Greece,
@@ -164,14 +176,14 @@ describe('toExternalCandidate', () => {
 			name: 'Nightfall',
 			note: 'Greek gothic metal band',
 			sourceUrl: 'https://musicbrainz.org/artist/gr',
-			styles: [StyleEnum.Gothic],
+			styles: ['Gothic'],
 			type: 'Group',
 		});
 	});
 
 	it('keeps the source code of a country the catalog has none for', () => {
-		expect(toExternalCandidate(hit('jp', { country: 'JP' })).country).toBe(
-			'JP'
-		);
+		expect(
+			toExternalCandidate(hit('jp', { country: 'JP' }), KNOWN).country
+		).toBe('JP');
 	});
 });

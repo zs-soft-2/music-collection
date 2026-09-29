@@ -3,13 +3,14 @@ import { FormGroup } from '@angular/forms';
 import {
 	Entity,
 	FormatEnum,
-	GenreEnum,
+	GenreName,
 	Identifiable,
 	Searchable,
-	StyleEnum,
+	StyleName,
 } from '../../../common';
 import { DocumentEntity } from '../../document';
 import { ArtistEntity } from '../artist';
+import { GenreEntity } from '../genre';
 
 /** Original release of the album on Discogs (set by the Discogs import). */
 export interface AlbumDiscogs {
@@ -30,12 +31,12 @@ export interface Album {
 	coverImageUrl?: string | null;
 	discogs?: AlbumDiscogs;
 	format: FormatEnum;
-	genre: GenreEnum;
+	genre: GenreName;
 	name: string;
 	songs: string[];
 	/** Spotify album id, used for the embedded player on the album page. */
 	spotifyAlbumId?: string | null;
-	styles: StyleEnum[];
+	styles: StyleName[];
 	/** YouTube (Music) playlist of the album, for the embedded player. */
 	youtubePlaylistId?: string | null;
 	/** YouTube videos of the album (clips, live performances). */
@@ -71,8 +72,11 @@ export type AlbumFormParams = {
 	documents: DocumentEntity[];
 	formatList: FormatEnum[];
 	formGroup: FormGroup;
+	/** The genres of the taxonomy an admin has not retired. */
+	genres: GenreEntity[];
 	isImagesTabActive: boolean;
-	styleList: StyleEnum[];
+	/** The styles the chosen genre offers, plus those already on the album. */
+	styleList: StyleName[];
 };
 
 export type AlbumTableParams = {

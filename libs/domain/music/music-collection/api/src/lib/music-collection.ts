@@ -2,7 +2,7 @@ import {
 	CountryEnum,
 	Entity,
 	FormatEnum,
-	StyleEnum,
+	StyleName,
 } from '@music-collection/common/api';
 
 export type MusicCollectionStatus = 'draft' | 'published';
@@ -50,9 +50,9 @@ export interface MusicCollectionCriteria {
 	/** The album's release year. */
 	years?: NumberCriterion;
 	/** Styles of the album — the style it was written in. */
-	styles?: EnumCriterion<StyleEnum>;
+	styles?: EnumCriterion<StyleName>;
 	/** Styles of the artist, which may be decades apart from the album's. */
-	artistStyles?: EnumCriterion<StyleEnum>;
+	artistStyles?: EnumCriterion<StyleName>;
 	/** `lp` for studio albums; a collection may take in `ep` or `live` too. */
 	albumFormats?: EnumCriterion<FormatEnum>;
 	artists?: ReferenceCriterion;

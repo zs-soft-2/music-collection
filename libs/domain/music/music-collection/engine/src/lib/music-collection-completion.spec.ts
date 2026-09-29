@@ -1,4 +1,3 @@
-import { StyleEnum } from '@music-collection/common/api';
 import { OwnedCopy } from '@music-collection/domain/music-collection/api';
 
 import { compareWithCollection } from './music-collection-completion';
@@ -128,7 +127,7 @@ describe('compareWithCollection', () => {
 		// An admin adds a record that the definition matches.
 		catalog.albums.push(
 			album('bonded', 'Bonded by Blood', 'exodus', 'Exodus', 1988, [
-				StyleEnum.Bay_Area_Thrash,
+				'Bay Area Thrash',
 			])
 		);
 

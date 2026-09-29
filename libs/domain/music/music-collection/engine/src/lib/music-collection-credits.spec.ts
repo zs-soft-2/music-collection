@@ -1,11 +1,10 @@
-import { StyleEnum } from '@music-collection/common/api';
 import { MusicCollectionCriteria } from '@music-collection/domain/music-collection/api';
 
 import { creditsNeededFor } from './music-collection-credits';
 
 const rule = (criteria: MusicCollectionCriteria) => ({ criteria });
 
-const styles = rule({ styles: { includesAny: [StyleEnum.Thrash] } });
+const styles = rule({ styles: { includesAny: ['Thrash'] } });
 
 describe('creditsNeededFor', () => {
 	it('needs none while no rule asks who played', () => {

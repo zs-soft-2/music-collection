@@ -31,6 +31,7 @@ import {
 	releaseArtist,
 	sameAlbumName,
 	sameArtistName,
+	catalogGenre,
 	toCatalogAlbum,
 	toCatalogArtist,
 } from './catalog-album';
@@ -159,7 +160,8 @@ async function resolveLabel(
 /** A katalógus előadója névre, vagy egy új előadó a Discogs-kiadásból. */
 async function resolveArtist(
 	database: Firestore,
-	discogs: DiscogsRelease
+	discogs: DiscogsRelease,
+	genre: string
 ): Promise<{
 	reference: DocumentReference;
 	name: string;
@@ -194,7 +196,7 @@ async function resolveArtist(
 		name: artist.name,
 		newArtist: {
 			reference,
-			data: toCatalogArtist(reference.id, artist),
+			data: toCatalogArtist(reference.id, artist, genre),
 		},
 	};
 }
@@ -236,7 +238,10 @@ async function prepareAlbum(
 		);
 	}
 
-	const artist = await resolveArtist(database, discogs);
+	// A katalógus szótára dönt a műfajról: a Discogs műfaja, ha a taxonómia
+	// ismeri. Az előadó és az albuma ugyanazt kapja.
+	const genre = await catalogGenre(database, discogs);
+	const artist = await resolveArtist(database, discogs, genre);
 	const albums = artist.reference.collection(ALBUM_COLLECTION);
 	// A lemez már a katalógusban lehet: importálta egy korábbi jóváhagyás
 	// ugyanebből a kiadásból, vagy ott van kézzel felvéve, esetleg egy másik
@@ -270,6 +275,7 @@ async function prepareAlbum(
 	const data = toCatalogAlbum(discogs, {
 		uid: reference.id,
 		artist: { uid: artist.reference.id, name: artist.name },
+		genre,
 	});
 
 	return {

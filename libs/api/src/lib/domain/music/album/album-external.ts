@@ -1,4 +1,4 @@
-import { FormatEnum, StyleEnum } from '../../../common';
+import { FormatEnum, StyleName } from '../../../common';
 import { ExternalSource } from '../external';
 
 /**
@@ -26,7 +26,7 @@ export interface AlbumExternalProfile {
 	source: ExternalSource;
 	/** Source page of the match, for checking it is the right album. */
 	sourceUrl: string;
-	styles: StyleEnum[];
+	styles: StyleName[];
 	/** First release date. */
 	year: Date | null;
 }

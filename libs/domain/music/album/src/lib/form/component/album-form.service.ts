@@ -3,8 +3,10 @@ import { switchMap } from 'rxjs/operators';
 
 import { DestroyRef, Injectable, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
+	activeGenres,
 	AlbumEntity,
 	AlbumEntityAdd,
 	AlbumEntityUpdate,
@@ -19,12 +21,16 @@ import {
 	DocumentStateService,
 	EntityTypeEnum,
 	FormatList,
+	GenreEntity,
 	liveDocuments,
 	ReturnNavigationService,
 	SearchParams,
-	StyleList,
+	StyleName,
+	styleOptions,
+	stylesOfGenre,
 } from '@music-collection/api';
 import { isSameCatalogName } from '@music-collection/common/engine';
+import { GenreEffect } from '@music-collection/domain/genre';
 import {
 	CatalogDuplicate,
 	DUPLICATE_CATALOG_NAME,
@@ -97,6 +103,7 @@ export class AlbumFormService {
 	private componentUtil = inject(AlbumUtilService);
 	private destroyRef = inject(DestroyRef);
 	private documentStateService = inject(DocumentStateService);
+	private genreEffect = inject(GenreEffect);
 	private returnNavigation = inject(ReturnNavigationService);
 	private router = inject(Router);
 
@@ -104,6 +111,8 @@ export class AlbumFormService {
 	/** Every album of the catalog, for the duplicate check on the title. */
 	private catalogAlbums: AlbumEntity[] = [];
 	private params!: AlbumFormParams;
+	/** The taxonomy as it was last read; what the style list is narrowed by. */
+	private taxonomy: GenreEntity[] = [];
 	private params$$: ReplaySubject<AlbumFormParams>;
 
 	/** The album this title collides with, blocking or not, or null. */
@@ -280,10 +289,14 @@ export class AlbumFormService {
 					this.albumStateService.selectEntityById$(data['albumId']),
 					this.artistStateService.selectSearchResult$(),
 					this.documentStateService.selectSearchResult$(),
+					// Starts empty, so a taxonomy that cannot be read leaves
+					// the form usable instead of blank.
+					this.genreEffect.taxonomy$,
 				])
 			),
-			switchMap(([album, artists, documents]) => {
+			switchMap(([album, artists, documents, taxonomy]) => {
 				this.album = album;
+				this.taxonomy = taxonomy;
 				// A withdrawn document is not offered as a cover any more.
 				this.params = this.createAlbumParams(
 					album,
@@ -380,21 +393,82 @@ export class AlbumFormService {
 		// ask the question again.
 		formGroup.controls['artist'].valueChanges
 			.pipe(takeUntilDestroyed(this.destroyRef))
-			.subscribe(() => this.recheckName());
+			.subscribe((artist) => {
+				this.recheckName();
+				this.inheritGenre(formGroup, artist);
+			});
 		formGroup.controls['name'].valueChanges
 			.pipe(takeUntilDestroyed(this.destroyRef))
 			.subscribe(() => this.recheckName());
+		formGroup.controls['genre'].valueChanges
+			.pipe(takeUntilDestroyed(this.destroyRef))
+			.subscribe(() => this.genreChanged());
 
 		const albumFormParams: AlbumFormParams = {
 			artists,
 			documents,
 			formatList: FormatList,
 			formGroup,
-			styleList: StyleList,
+			genres: activeGenres(this.taxonomy),
+			styleList: this.styleList(formGroup),
 			isImagesTabActive: !!album,
 		};
 
 		return albumFormParams;
+	}
+
+	/**
+	 * A record is filed under its band's genre unless an admin says otherwise,
+	 * so picking the artist fills an empty genre in. A genre already chosen is
+	 * left alone — that is the "otherwise".
+	 */
+	private inheritGenre(formGroup: FormGroup, artist: unknown): void {
+		const genre = (artist as ArtistEntity | null)?.genre;
+
+		if (genre && !formGroup.value['genre']) {
+			formGroup.controls['genre'].setValue(genre);
+		}
+	}
+
+	/**
+	 * The styles the form offers: the chosen genre's, and whatever the album
+	 * already carries — a style saved before the taxonomy knew it would
+	 * otherwise vanish from the list and be dropped by the next save.
+	 */
+	private styleList(formGroup: FormGroup): StyleName[] {
+		return styleOptions(
+			this.taxonomy,
+			formGroup.value['genre'],
+			formGroup.value['styles'] ?? []
+		);
+	}
+
+	/**
+	 * A genre picked by hand narrows the styles to that genre's, and lets go
+	 * of those belonging to the genre before it: a style is a style *of* a
+	 * genre, and keeping it would file the record under two.
+	 */
+	private genreChanged(): void {
+		const allowed = new Set(
+			stylesOfGenre(this.taxonomy, this.params.formGroup.value['genre']).map(
+				(style) => style.toLowerCase()
+			)
+		);
+		const selected: StyleName[] =
+			this.params.formGroup.value['styles'] ?? [];
+		const kept = selected.filter((style) =>
+			allowed.has(style.toLowerCase())
+		);
+
+		if (kept.length !== selected.length) {
+			this.params.formGroup.controls['styles'].setValue(kept);
+		}
+
+		this.params = {
+			...this.params,
+			styleList: this.styleList(this.params.formGroup),
+		};
+		this.params$$.next(this.params);
 	}
 
 	private updateAlbum(): void {

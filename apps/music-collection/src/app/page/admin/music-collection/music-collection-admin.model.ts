@@ -1,8 +1,4 @@
-import {
-	CountryList,
-	FormatList,
-	StyleList,
-} from '@music-collection/common/api';
+import { CountryList, FormatList } from '@music-collection/common/api';
 import {
 	MusicCollectionStatus,
 	MusicCollectionVisibility,
@@ -72,19 +68,24 @@ export const ENUM_CRITERIA: {
 	>;
 	labelKey: string;
 	hint: string;
-	options: string[];
+	/**
+	 * The values to choose from, where the code knows them. Null for the two
+	 * style criteria: which styles exist is the taxonomy's answer now, so the
+	 * editor reads those from the store.
+	 */
+	options: string[] | null;
 }[] = [
 	{
 		key: 'styles',
 		labelKey: 'admin.criterion.albumStyles',
 		hint: 'The style the record was written in.',
-		options: StyleList,
+		options: null,
 	},
 	{
 		key: 'artistStyles',
 		labelKey: 'admin.criterion.artistStyles',
 		hint: 'What the artist is known for — it may be decades from the album.',
-		options: StyleList,
+		options: null,
 	},
 	{
 		key: 'albumFormats',

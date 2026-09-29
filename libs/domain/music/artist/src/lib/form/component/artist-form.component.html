@@ -100,6 +100,23 @@
 					</div>
 
 					<div class="mc-field">
+						<label for="genre">{{
+							'ui.artistForm.genre' | transloco
+						}}</label>
+						<p-select
+							inputId="genre"
+							[options]="params.genres"
+							optionLabel="name"
+							optionValue="name"
+							[placeholder]="
+								'ui.artistForm.select-a-genre' | transloco
+							"
+							formControlName="genre"
+							[filter]="true"
+						></p-select>
+					</div>
+
+					<div class="mc-field">
 						<label for="styles">{{
 							'ui.artistForm.styles' | transloco
 						}}</label>

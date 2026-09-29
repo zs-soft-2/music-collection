@@ -3,7 +3,6 @@ import {
 	CountryEnum,
 	DiscogsBandProfile,
 	FormatEnum,
-	StyleEnum,
 } from '@music-collection/api';
 
 import {
@@ -26,6 +25,9 @@ const profile = (
 	members: [{ discogsId: 1, name: 'Chuck Billy', active: true }],
 	...fields,
 });
+
+/** The styles the taxonomy holds while these run. */
+const KNOWN = ['Thrash', 'Heavy metal'];
 
 describe('toDiscogsCandidate', () => {
 	it('carries the Discogs id and leaves what Discogs cannot say empty', () => {
@@ -53,7 +55,7 @@ describe('toDiscogsCandidate', () => {
 
 describe('toDiscogsProfile', () => {
 	it('fills in what Discogs knows and no more', () => {
-		expect(toDiscogsProfile(profile())).toEqual({
+		expect(toDiscogsProfile(profile(), KNOWN)).toEqual({
 			artistType: 'band',
 			country: null,
 			description: 'Thrash metal band from Berkeley.',
@@ -71,7 +73,7 @@ describe('toDiscogsProfile', () => {
 
 	it('leaves the type open without a member list', () => {
 		expect(
-			toDiscogsProfile(profile({ members: [] })).artistType
+			toDiscogsProfile(profile({ members: [] }), KNOWN).artistType
 		).toBeNull();
 	});
 });
@@ -146,7 +148,7 @@ const musicBrainz = (
 	name: 'Testament',
 	source: 'musicbrainz',
 	sourceUrl: 'https://musicbrainz.org/artist/mb-1',
-	styles: [StyleEnum.Thrash],
+	styles: ['Thrash'],
 	...fields,
 });
 
@@ -170,7 +172,7 @@ describe('hasArtistGaps', () => {
 });
 
 describe('fillArtistGaps', () => {
-	const discogs = toDiscogsProfile(profile());
+	const discogs = toDiscogsProfile(profile(), KNOWN);
 
 	it('fills the empty fields and names the source that filled them', () => {
 		const merged = fillArtistGaps(

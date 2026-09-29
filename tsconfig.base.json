@@ -77,6 +77,12 @@
 			"@music-collection/domain/document/admin": [
 				"libs/domain/document/app/admin/src/index.ts"
 			],
+			"@music-collection/domain/genre": [
+				"libs/domain/music/genre/src/index.ts"
+			],
+			"@music-collection/domain/genre/testing": [
+				"libs/domain/music/genre/src/testing.ts"
+			],
 			"@music-collection/domain/label": [
 				"libs/domain/music/label/src/index.ts"
 			],

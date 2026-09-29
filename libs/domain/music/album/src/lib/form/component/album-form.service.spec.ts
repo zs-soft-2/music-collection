@@ -1,3 +1,4 @@
+import { provideGenreTesting } from '@music-collection/domain/genre/testing';
 import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { of } from 'rxjs';
 
@@ -23,7 +24,9 @@ const albumOf = (uid: string, name: string) =>
 const createFormGroup = (album: AlbumEntity | undefined) =>
 	new FormGroup({
 		artist: new FormControl(album?.artist ?? artist),
+		genre: new FormControl(album?.genre ?? null),
 		name: new FormControl(album?.name ?? ''),
+		styles: new FormControl([]),
 	});
 
 function setup(
@@ -33,6 +36,7 @@ function setup(
 	TestBed.configureTestingModule({
 		providers: [
 			provideI18nTesting(),
+			provideGenreTesting(),
 			AlbumFormService,
 			provideRouter([]),
 			{

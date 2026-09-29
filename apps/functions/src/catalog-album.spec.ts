@@ -2,11 +2,13 @@ import {
 	albumCoverUrl,
 	albumFormat,
 	albumSongs,
+	catalogGenre,
 	releaseArtist,
 	sameAlbumName,
 	sameArtistName,
 	toCatalogAlbum,
 	toCatalogArtist,
+	toGenreSlug,
 } from './catalog-album';
 import { DiscogsRelease } from './discogs-release';
 
@@ -101,7 +103,11 @@ describe('releaseArtist', () => {
 
 describe('toCatalogArtist', () => {
 	it('vázlatot hoz létre, ország nélkül', () => {
-		const artist = toCatalogArtist('a1', { id: 7, name: 'Mercyful Fate' });
+		const artist = toCatalogArtist(
+			'a1',
+			{ id: 7, name: 'Mercyful Fate' },
+			'Rock'
+		);
 
 		expect(artist).toMatchObject({
 			uid: 'a1',
@@ -120,6 +126,7 @@ describe('toCatalogAlbum', () => {
 		const album = toCatalogAlbum(release(), {
 			uid: 'b1',
 			artist: { uid: 'a1', name: 'Mercyful Fate' },
+			genre: 'Rock',
 		});
 
 		expect(album).toMatchObject({
@@ -168,5 +175,55 @@ describe('sameAlbumName', () => {
 			false
 		);
 		expect(sameAlbumName('', '')).toBe(false);
+	});
+});
+
+describe('toGenreSlug', () => {
+	it('ugyanazt a kulcsot adja, mint a kliens', () => {
+		expect(toGenreSlug('Rock')).toBe('rock');
+		expect(toGenreSlug('Folk, World, & Country')).toBe(
+			'folk-world-and-country'
+		);
+		expect(toGenreSlug("Children's")).toBe('children-s');
+	});
+});
+
+describe('catalogGenre', () => {
+	/** A taxonómia: amelyik slugra van dokumentum, azt a műfajt ismeri. */
+	const taxonomy = (names: Record<string, string>) => ({
+		doc: (path: string) => ({
+			get: () =>
+				Promise.resolve({
+					exists: path.slice('genre/'.length) in names,
+					get: () => names[path.slice('genre/'.length)],
+				}),
+		}),
+	});
+
+	it('a kiadás első műfaját adja, amit a taxonómia ismer', async () => {
+		await expect(
+			catalogGenre(
+				taxonomy({ jazz: 'Jazz' }),
+				release({ genres: ['Stage & Screen', 'Jazz'] })
+			)
+		).resolves.toBe('Jazz');
+	});
+
+	it('a taxonómia írásmódját adja vissza, nem a Discogsét', async () => {
+		await expect(
+			catalogGenre(
+				taxonomy({ 'funk-soul': 'Funk / Soul' }),
+				release({ genres: ['Funk / Soul'] })
+			)
+		).resolves.toBe('Funk / Soul');
+	});
+
+	it('üres, ha egyiket sem ismeri — a műfajt az admin választja ki', async () => {
+		await expect(
+			catalogGenre(taxonomy({ rock: 'Rock' }), release({ genres: ['Jazz'] }))
+		).resolves.toBe('');
+		await expect(
+			catalogGenre(taxonomy({ rock: 'Rock' }), release())
+		).resolves.toBe('');
 	});
 });

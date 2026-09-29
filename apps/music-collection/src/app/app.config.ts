@@ -36,6 +36,7 @@ import { DomainAlbumModule } from '@music-collection/domain/album/core';
 import { DomainArtistModule } from '@music-collection/domain/artist/core';
 import { DomainCollectionItemModule } from '@music-collection/domain/collection-item/core';
 import { DomainDocumentModule } from '@music-collection/domain/document/core';
+import { provideGenre } from '@music-collection/domain/genre';
 import { provideMusicCollection } from '@music-collection/domain/music-collection/core';
 import { DomainReleaseModule } from '@music-collection/domain/release/core';
 import { DomainUserModule } from '@music-collection/domain/user/core';
@@ -142,6 +143,7 @@ export const appConfig: ApplicationConfig = {
 		provideStorage(() => getStorage()),
 		provideHttpClient(withXhr()),
 		provideAngularSvgIcon(),
+		provideGenre(),
 		provideMusicCollection(),
 		// The admin form files a copy into the same furniture the shelf page
 		// draws: the drawing is a setting of the signed-in collector, which

@@ -22,6 +22,8 @@ export const CATALOG_FEATURE_KEYS = [
 	'contribution',
 	'document',
 	'entity-quantity',
+	// A műfaj-taxonómia: bundle nélkül, tucatnyi dokumentum.
+	'genre',
 	'label',
 	'membership',
 	'music-collection',

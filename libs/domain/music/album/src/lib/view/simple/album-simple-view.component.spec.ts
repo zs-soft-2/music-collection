@@ -3,7 +3,6 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import {
 	EntityTypeEnum,
 	FormatEnum,
-	GenreEnum,
 	SimpleAlbum,
 } from '@music-collection/api';
 
@@ -25,7 +24,7 @@ describe('AlbumSimpleViewComponent', () => {
 		},
 		coverImage: null,
 		format: FormatEnum.lp,
-		genre: GenreEnum.Rock,
+		genre: 'Rock',
 		songs: [],
 		styles: [],
 	};

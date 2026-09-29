@@ -2,7 +2,7 @@ import {
 	CountryEnum,
 	FormatDescriptionEnum,
 	FormatEnum,
-	StyleEnum,
+	StyleName,
 } from '@music-collection/common/api';
 import {
 	CatalogAlbum,
@@ -19,7 +19,7 @@ export function album(
 	artistUid: string,
 	artistName: string,
 	year: number | null,
-	styles: StyleEnum[],
+	styles: StyleName[],
 	format: FormatEnum | null = FormatEnum.lp
 ): CatalogAlbum {
 	return {
@@ -36,7 +36,7 @@ export function album(
 
 export function artist(
 	uid: string,
-	styles: StyleEnum[],
+	styles: StyleName[],
 	country: CountryEnum | null = CountryEnum.USA
 ): CatalogArtist {
 	return { uid, styles, country };
@@ -65,12 +65,12 @@ export const BAY_AREA_1988: ResolvableCollection = {
 	criteriaVersion: 1,
 	criteria: {
 		years: { equals: 1988 },
-		styles: { includesAny: [StyleEnum.Bay_Area_Thrash] },
+		styles: { includesAny: ['Bay Area Thrash'] },
 		albumFormats: { includesAny: [FormatEnum.lp] },
 	},
 };
 
-const BAY_AREA = [StyleEnum.Bay_Area_Thrash, StyleEnum.Thrash];
+const BAY_AREA = ['Bay Area Thrash', 'Thrash'];
 
 /**
  * A catalog holding six albums the collection asks for and four that look
@@ -90,8 +90,8 @@ export function bayAreaCatalog(): MusicCollectionCatalog {
 			album('victims', 'Victims of Deception', 'heathen', 'Heathen', 1991, BAY_AREA),
 			// Right year, wrong scene.
 			album('aggression', 'Extreme Aggression', 'kreator', 'Kreator', 1988, [
-				StyleEnum.Teutonic_Thrash,
-				StyleEnum.Thrash,
+				'Teutonic Thrash',
+				'Thrash',
 			]),
 			// Right year and scene, but not a studio album.
 			album('eindhoven', 'Live at Eindhoven', 'testament', 'Testament', 1988, BAY_AREA, FormatEnum.live),
@@ -106,7 +106,7 @@ export function bayAreaCatalog(): MusicCollectionCatalog {
 			artist('death-angel', BAY_AREA),
 			artist('vio-lence', BAY_AREA),
 			artist('heathen', BAY_AREA),
-			artist('kreator', [StyleEnum.Teutonic_Thrash], CountryEnum.Germany),
+			artist('kreator', ['Teutonic Thrash'], CountryEnum.Germany),
 		],
 	};
 }

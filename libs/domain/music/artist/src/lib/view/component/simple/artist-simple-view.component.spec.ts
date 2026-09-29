@@ -4,7 +4,6 @@ import {
 	ArtistEntity,
 	CountryEnum,
 	EntityTypeEnum,
-	GenreEnum,
 } from '@music-collection/api';
 
 import { ArtistSimpleViewComponent } from './artist-simple-view.component';
@@ -19,7 +18,7 @@ describe('ArtistSimpleViewComponent', () => {
 		country: CountryEnum.Australia,
 		description: '',
 		formedIn: null,
-		genre: GenreEnum.Rock,
+		genre: 'Rock',
 		name: 'Artist',
 		sites: [],
 		styles: [],

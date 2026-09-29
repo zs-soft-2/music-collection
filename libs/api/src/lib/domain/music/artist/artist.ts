@@ -5,12 +5,13 @@ import { FormGroup } from '@angular/forms';
 import {
 	CountryEnum,
 	Entity,
-	GenreEnum,
+	GenreName,
 	Identifiable,
 	Searchable,
-	StyleEnum,
+	StyleName,
 } from '../../../common';
 import { DocumentEntity } from '../../document';
+import { GenreEntity } from '../genre';
 import { AlbumEntity } from '../album';
 
 /** What kind of act the artist is; all artists are bands until set. */
@@ -38,7 +39,7 @@ export interface Artist {
 	country: CountryEnum;
 	description: string;
 	discogs?: ArtistDiscogs;
-	genre: GenreEnum;
+	genre: GenreName;
 	headerImage?: DocumentEntity;
 	/** Photo on the web (Wikimedia Commons), for artists without an uploaded image. */
 	imageUrl?: string | null;
@@ -53,7 +54,7 @@ export interface Artist {
 	sites: string[];
 	/** `discogs` for artists created by the Discogs import. */
 	source?: string;
-	styles: StyleEnum[];
+	styles: StyleName[];
 }
 
 export type ArtistEntity = Artist &
@@ -84,8 +85,11 @@ export type ArtistFormParams = {
 	countries: CountryEnum[];
 	documents: DocumentEntity[];
 	formGroup: FormGroup;
+	/** The genres of the taxonomy an admin has not retired. */
+	genres: GenreEntity[];
 	isImagesTabActive: boolean;
-	styleList: StyleEnum[];
+	/** The styles the chosen genre offers, plus those already on the artist. */
+	styleList: StyleName[];
 };
 
 export type ArtistDetailViewStateModel = {

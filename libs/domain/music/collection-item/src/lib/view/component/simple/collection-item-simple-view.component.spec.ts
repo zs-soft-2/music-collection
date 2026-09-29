@@ -5,7 +5,6 @@ import {
 	EntityTypeEnum,
 	FormatDescriptionEnum,
 	FormatEnum,
-	GenreEnum,
 	MediaEnum,
 	ReleaseCountryEnum,
 } from '@music-collection/api';
@@ -49,7 +48,7 @@ describe('CollectionItemSimpleViewComponent', () => {
 				artist,
 				coverImage: null,
 				format: FormatEnum.lp,
-				genre: GenreEnum.Rock,
+				genre: 'Rock',
 				songs: [],
 				styles: [],
 				year: new Date(0),

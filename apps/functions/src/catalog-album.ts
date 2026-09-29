@@ -14,8 +14,54 @@ import { DiscogsRelease, discogsReleaseDate } from './discogs-release';
 import { normalize, stripDiscogsSuffix } from './discogs-match';
 import { text } from './discogs-api';
 
-/** A katalógus egyetlen műfaja. */
-const GENRE = 'Rock';
+/**
+ * A műfaj-taxonómia collectionje (`genre/{slug}`). Ez a katalógus szótára: a
+ * műfajok és az alattuk lévő stílusok, az admin felületről szerkesztve.
+ */
+const GENRE_COLLECTION = 'genre';
+
+/**
+ * A műfaj neve → a taxonómia dokumentum-azonosítója. Ugyanaz a képzés, mint a
+ * kliens `toGenreSlug`-ja (libs/api): `Folk World & Country` → `folk-world-and-country`.
+ */
+export function toGenreSlug(name: string): string {
+	return name
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '')
+		.toLowerCase()
+		.replace(/&/g, ' and ')
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/^-+|-+$/g, '');
+}
+
+/**
+ * A kiadás műfaja a katalógus szótára szerint: a Discogs műfajai közül az
+ * első, amit a taxonómia ismer. Egy dokumentum-olvasás műfajonként, nem a
+ * teljes collection — a Discogs egy-két műfajt ad egy kiadásra.
+ *
+ * Üres, ha egyiket sem ismeri: a vázlat így is létrejön, a műfajt az admin
+ * választja ki az űrlapon. A kitalált érték rosszabb, mint a hiányzó.
+ */
+export async function catalogGenre(
+	database: {
+		doc: (path: string) => { get: () => Promise<{ exists: boolean; get: (field: string) => unknown }> };
+	},
+	release: DiscogsRelease
+): Promise<string> {
+	for (const name of release.genres ?? []) {
+		const slug = toGenreSlug(text(name) ?? '');
+
+		if (!slug) continue;
+
+		const snapshot = await database.doc(`${GENRE_COLLECTION}/${slug}`).get();
+
+		if (snapshot.exists) {
+			return String(snapshot.get('name') ?? name);
+		}
+	}
+
+	return '';
+}
 
 /** Discogs "Various" ál-előadó; nem valódi katalógus-előadó. */
 const VARIOUS_ARTIST_ID = 194;
@@ -90,14 +136,15 @@ export interface CatalogArtistReference {
 /** Új katalógus-előadó a kiadás főelőadójából. */
 export function toCatalogArtist(
 	uid: string,
-	artist: { id: number | null; name: string }
+	artist: { id: number | null; name: string },
+	genre: string
 ): Record<string, unknown> {
 	return {
 		uid,
 		entityType: 'Artist',
 		name: artist.name,
 		artistType: 'band',
-		genre: GENRE,
+		genre,
 		description: '',
 		styles: [],
 		...(artist.id ? { discogs: { artistId: artist.id } } : {}),
@@ -108,7 +155,11 @@ export function toCatalogArtist(
 /** Új katalógus-album a Discogs-kiadásból, az előadó alá. */
 export function toCatalogAlbum(
 	release: DiscogsRelease,
-	{ uid, artist }: { uid: string; artist: CatalogArtistReference }
+	{
+		uid,
+		artist,
+		genre,
+	}: { uid: string; artist: CatalogArtistReference; genre: string }
 ): Record<string, unknown> {
 	const name = albumName(release);
 	const date = discogsReleaseDate(release);
@@ -119,7 +170,7 @@ export function toCatalogAlbum(
 		name,
 		artist: { uid: artist.uid, entityType: 'Artist', name: artist.name },
 		format: albumFormat(release),
-		genre: GENRE,
+		genre,
 		styles: [],
 		songs: albumSongs(release),
 		year: date ? new Date(date) : null,

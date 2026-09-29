@@ -4,10 +4,11 @@ import {
 	ArtistExternalProfile,
 	DiscogsArtistAlbum,
 	DiscogsArtistCandidate,
-	DiscogsBandProfile,
 	discogsArtistUrl,
+	DiscogsBandProfile,
 	discogsMasterUrl,
 	discogsReleaseUrl,
+	StyleName,
 	toCatalogStyles,
 	toDiscogsAlbumFormat,
 } from '@music-collection/api';
@@ -47,7 +48,8 @@ export function toDiscogsCandidate(
  * artist page cleans it when it shows it.
  */
 export function toDiscogsProfile(
-	profile: DiscogsBandProfile
+	profile: DiscogsBandProfile,
+	known: readonly StyleName[]
 ): ArtistExternalProfile {
 	return {
 		artistType: profile.members.length ? 'band' : null,
@@ -61,7 +63,7 @@ export function toDiscogsProfile(
 		name: profile.name,
 		source: 'discogs',
 		sourceUrl: discogsArtistUrl(profile.discogsId),
-		styles: toCatalogStyles(profile.styles),
+		styles: toCatalogStyles(profile.styles, known),
 	};
 }
 

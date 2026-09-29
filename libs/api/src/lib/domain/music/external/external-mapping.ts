@@ -1,4 +1,4 @@
-import { FormatEnum, StyleEnum, StyleList } from '../../../common';
+import { FormatEnum, StyleName } from '../../../common';
 
 /**
  * A style name as it is compared across sources: case, punctuation and the
@@ -11,26 +11,41 @@ const styleKey = (value: string): string =>
 		.replace(/\bmetal\b/g, '')
 		.replace(/[^a-z0-9]/g, '');
 
-const STYLE_BY_KEY = new Map<string, StyleEnum>(
-	StyleList.map((style) => [styleKey(style), style])
-);
+/**
+ * The style of the taxonomy a source's name means; null where it holds none.
+ *
+ * `known` is the taxonomy's own styles (`allStyles`), passed in rather than
+ * read from a list here: which styles exist is an admin's answer now, and it
+ * changes while the app runs.
+ */
+export function toCatalogStyle(
+	name: string,
+	known: readonly StyleName[]
+): StyleName | null {
+	const key = styleKey(name);
 
-/** The style of the catalog a source's name means; null when it knows none. */
-export function toCatalogStyle(name: string): StyleEnum | null {
-	return STYLE_BY_KEY.get(styleKey(name)) ?? null;
+	return known.find((style) => styleKey(style) === key) ?? null;
 }
 
 /**
- * The styles of the catalog among the names a source uses, in the order the
- * source gave them, each one once. What the catalog does not know is dropped:
- * both MusicBrainz genres and Discogs styles are far wider than its own list.
+ * The styles of the taxonomy among the names a source uses, in the order the
+ * source gave them, each one once. What the taxonomy does not know is dropped:
+ * both MusicBrainz genres and Discogs styles are far wider than it is, and a
+ * name nobody has added is a name no form could show.
  */
-export function toCatalogStyles(names: string[]): StyleEnum[] {
+export function toCatalogStyles(
+	names: string[],
+	known: readonly StyleName[]
+): StyleName[] {
+	const index = new Map<string, StyleName>(
+		known.map((style) => [styleKey(style), style])
+	);
+
 	return [
 		...new Set(
 			names
-				.map(toCatalogStyle)
-				.filter((style): style is StyleEnum => !!style)
+				.map((name) => index.get(styleKey(name)))
+				.filter((style): style is StyleName => !!style)
 		),
 	];
 }

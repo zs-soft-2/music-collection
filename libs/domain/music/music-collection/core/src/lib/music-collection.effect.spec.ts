@@ -9,7 +9,6 @@ import {
 	CollectionItemStateService,
 	DocumentStateService,
 } from '@music-collection/api';
-import { StyleEnum } from '@music-collection/common/api';
 import {
 	MusicCollectionEntity,
 	MusicCollectionProgress,
@@ -178,7 +177,7 @@ describe('MusicCollectionEffect credits', () => {
 										uid: 'metallica',
 										name: 'Metallica',
 									},
-									styles: [StyleEnum.Thrash],
+									styles: ['Thrash'],
 								} as AlbumEntity,
 							]),
 						dispatchListEntitiesAction: jest.fn(),
@@ -191,7 +190,7 @@ describe('MusicCollectionEffect credits', () => {
 							of([
 								{
 									uid: 'metallica',
-									styles: [StyleEnum.Thrash],
+									styles: ['Thrash'],
 								} as ArtistEntity,
 							]),
 						dispatchListEntitiesAction: jest.fn(),
@@ -207,7 +206,7 @@ describe('MusicCollectionEffect credits', () => {
 
 	it('asks for no credits at all for a rule about styles', async () => {
 		await firstValueFrom(
-			effect.preview$({ styles: { includesAny: [StyleEnum.Thrash] } })
+			effect.preview$({ styles: { includesAny: ['Thrash'] } })
 		);
 
 		expect(listCredits).toHaveBeenCalledWith({ kind: 'none' });

@@ -16,6 +16,7 @@ import { Router } from '@angular/router';
 import {
 	ArtistStateService,
 	MusicianStateService,
+	StyleName,
 } from '@music-collection/api';
 import {
 	BadgeImage,
@@ -23,6 +24,7 @@ import {
 	MusicCollectionEntity,
 	MusicCollectionMembership,
 } from '@music-collection/domain/music-collection/api';
+import { GenreEffect } from '@music-collection/domain/genre';
 import { MusicCollectionEffect } from '@music-collection/domain/music-collection/core';
 import { tapResponse } from '@ngrx/operators';
 import {
@@ -106,6 +108,8 @@ interface MusicCollectionEditState {
 	parents: PickerOption[];
 	artists: PickerOption[];
 	musicians: PickerOption[];
+	/** Every style of the taxonomy; what the style criteria choose from. */
+	styles: StyleName[];
 	/** The badge already frozen onto the definition, as an `<img>` can load it. */
 	badgeImageUrl: string | null;
 	/** Which gallery image that is — the one marked as the current pin. */
@@ -135,6 +139,7 @@ const initialState: MusicCollectionEditState = {
 	parents: [],
 	artists: [],
 	musicians: [],
+	styles: [],
 	badgeImageUrl: null,
 	badgeImageUid: null,
 	badgeGallery: [],
@@ -169,6 +174,7 @@ export const MusicCollectionEditStore = signalStore(
 			store,
 			effect = inject(MusicCollectionEffect),
 			artistStateService = inject(ArtistStateService),
+			genreEffect = inject(GenreEffect),
 			musicianStateService = inject(MusicianStateService),
 			router = inject(Router)
 		) => {
@@ -321,6 +327,20 @@ export const MusicCollectionEditStore = signalStore(
 						})
 					)
 				),
+				/**
+				 * The styles the criteria may name: the taxonomy's, not a list
+				 * in the code. It starts empty and fills in, so a taxonomy
+				 * that cannot be read leaves the editor usable.
+				 */
+				loadStyles: rxMethod<void>(
+					pipe(
+						switchMap(() => genreEffect.styles$),
+						tapResponse({
+							next: (styles) => patchState(store, { styles }),
+							error: (error) => console.error(error),
+						})
+					)
+				),
 				loadArtists: rxMethod<void>(
 					options$(
 						() => artistStateService.selectEntities$(),
@@ -462,6 +482,7 @@ export const MusicCollectionEditStore = signalStore(
 			store.loadOptions(of(undefined));
 			store.loadArtists(of(undefined));
 			store.loadMusicians(of(undefined));
+			store.loadStyles(of(undefined));
 		},
 	})
 );

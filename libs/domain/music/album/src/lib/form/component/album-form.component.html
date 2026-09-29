@@ -107,6 +107,23 @@
 						></p-datepicker>
 					</div>
 
+					<div class="mc-field">
+						<label for="genre">{{
+							'ui.albumForm.genre' | transloco
+						}}</label>
+						<p-select
+							inputId="genre"
+							[options]="params.genres"
+							optionLabel="name"
+							optionValue="name"
+							[placeholder]="
+								'ui.albumForm.select-a-genre' | transloco
+							"
+							formControlName="genre"
+							[filter]="true"
+						></p-select>
+					</div>
+
 					<div class="mc-field is-wide">
 						<label for="styles">{{
 							'ui.albumForm.styles' | transloco

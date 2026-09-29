@@ -1,4 +1,4 @@
-import { FormatEnum, StyleEnum } from '../../../common';
+import { FormatEnum } from '../../../common';
 import {
 	toCatalogStyle,
 	toCatalogStyles,
@@ -6,29 +6,36 @@ import {
 	toDiscogsFormat,
 } from './external-mapping';
 
+/** The styles a taxonomy holds; matching is against these and nothing else. */
+const KNOWN = ['Thrash', 'Death', 'Hard rock', 'Hard Bop'];
+
 describe('toCatalogStyle', () => {
 	it('matches however the source spells the style', () => {
-		expect(toCatalogStyle('Thrash')).toBe(StyleEnum.Thrash);
-		expect(toCatalogStyle('thrash metal')).toBe(StyleEnum.Thrash);
-		expect(toCatalogStyle('Thrash Metal')).toBe(StyleEnum.Thrash);
+		expect(toCatalogStyle('Thrash', KNOWN)).toBe('Thrash');
+		expect(toCatalogStyle('thrash metal', KNOWN)).toBe('Thrash');
+		expect(toCatalogStyle('Thrash Metal', KNOWN)).toBe('Thrash');
 	});
 
-	it('is null for a style the catalog does not know', () => {
-		expect(toCatalogStyle('Bossa Nova')).toBeNull();
+	it('is null for a style the taxonomy does not hold', () => {
+		expect(toCatalogStyle('Bossa Nova', KNOWN)).toBeNull();
+	});
+
+	it('follows the taxonomy: a style added to it matches at once', () => {
+		expect(toCatalogStyle('Hard Bop', KNOWN)).toBe('Hard Bop');
+		expect(toCatalogStyle('Hard Bop', ['Thrash'])).toBeNull();
 	});
 });
 
 describe('toCatalogStyles', () => {
 	it('keeps the source order and drops what it does not know', () => {
-		expect(toCatalogStyles(['Trip Hop', 'Thrash', 'Death Metal'])).toEqual([
-			StyleEnum.Thrash,
-			StyleEnum.Death,
-		]);
+		expect(
+			toCatalogStyles(['Trip Hop', 'Thrash', 'Death Metal'], KNOWN)
+		).toEqual(['Thrash', 'Death']);
 	});
 
 	it('names each style once', () => {
-		expect(toCatalogStyles(['Thrash', 'Thrash Metal'])).toEqual([
-			StyleEnum.Thrash,
+		expect(toCatalogStyles(['Thrash', 'Thrash Metal'], KNOWN)).toEqual([
+			'Thrash',
 		]);
 	});
 });

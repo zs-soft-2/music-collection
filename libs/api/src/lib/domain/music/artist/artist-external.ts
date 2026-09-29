@@ -1,4 +1,4 @@
-import { CountryEnum, FormatEnum, StyleEnum } from '../../../common';
+import { CountryEnum, FormatEnum, StyleName } from '../../../common';
 import { ExternalSource } from '../external';
 import { ArtistType } from './artist';
 
@@ -20,7 +20,7 @@ export interface ArtistExternalIds {
 export interface ArtistExternalQuery extends Partial<ArtistExternalIds> {
 	country?: CountryEnum | null;
 	name: string;
-	styles?: StyleEnum[];
+	styles?: StyleName[];
 }
 
 /** The artist pages of MusicBrainz, one id away. */
@@ -87,7 +87,7 @@ export interface ArtistExternalProfile {
 	source: ExternalSource;
 	/** Source page of the match, for checking it is the right artist. */
 	sourceUrl: string;
-	styles: StyleEnum[];
+	styles: StyleName[];
 }
 
 /**
@@ -107,7 +107,7 @@ export interface ArtistExternalCandidate extends ArtistExternalIds {
 	source: ExternalSource;
 	/** Source page of the hit, for checking which artist this is. */
 	sourceUrl: string;
-	styles: StyleEnum[];
+	styles: StyleName[];
 	/** Thumbnail of the hit, where the source has one (Discogs). */
 	thumbUrl: string | null;
 	/** `Group`, `Person`… as the source names it; null when unknown. */

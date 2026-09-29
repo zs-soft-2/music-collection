@@ -175,6 +175,21 @@ const routes: Routes = [
 				canActivate: [NgxPermissionsGuard],
 			},
 			{
+				path: 'genre',
+				data: {
+					breadcrumb: 'genre',
+					permissions: {
+						only: [RoleNames.ADMIN],
+						redirectTo: '/error',
+					},
+				},
+				loadComponent: () =>
+					import('./genre/genre-admin.component').then(
+						(module) => module.GenreAdminComponent
+					),
+				canActivate: [NgxPermissionsGuard],
+			},
+			{
 				path: 'language-settings',
 				data: {
 					breadcrumb: 'language-settings',

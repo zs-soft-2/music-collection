@@ -1,7 +1,7 @@
 import {
 	AlbumExternalTrack,
 	FormatEnum,
-	StyleEnum,
+	StyleName,
 	toCatalogStyles,
 } from '@music-collection/api';
 import { isSameCatalogName } from '@music-collection/common/engine';
@@ -135,12 +135,14 @@ export function toDate(value?: string | null): Date | null {
 	);
 }
 
-/** The genres the catalog knows as styles, the most voted first. */
+/** The genres the taxonomy knows as styles, the most voted first. */
 export function toStyles(
-	genres: MusicBrainzReleaseGroup['genres'] = []
-): StyleEnum[] {
+	genres: MusicBrainzReleaseGroup['genres'] = [],
+	known: readonly StyleName[] = []
+): StyleName[] {
 	return toCatalogStyles(
-		[...genres].sort((a, b) => b.count - a.count).map((genre) => genre.name)
+		[...genres].sort((a, b) => b.count - a.count).map((genre) => genre.name),
+		known
 	);
 }
 

@@ -5,6 +5,7 @@ import {
 	DiscogsMasterProfile,
 	DiscogsMasterTrack,
 	discogsMasterUrl,
+	StyleName,
 	toCatalogStyles,
 } from '@music-collection/api';
 import { isSameCatalogName } from '@music-collection/common/engine';
@@ -49,7 +50,8 @@ export function pickDiscogsMaster(
  * description on its pressings, not on it.
  */
 export function toDiscogsAlbumProfile(
-	profile: DiscogsMasterProfile
+	profile: DiscogsMasterProfile,
+	known: readonly StyleName[]
 ): AlbumExternalProfile {
 	return {
 		coverImageUrl: profile.coverUrl,
@@ -58,7 +60,7 @@ export function toDiscogsAlbumProfile(
 		name: profile.name,
 		source: 'discogs',
 		sourceUrl: discogsMasterUrl(profile.masterId),
-		styles: toCatalogStyles(profile.styles),
+		styles: toCatalogStyles(profile.styles, known),
 		year: profile.year ? new Date(profile.year, 0, 1) : null,
 	};
 }

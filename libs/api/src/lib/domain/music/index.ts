@@ -5,6 +5,7 @@ export * from './collection-item';
 export * from './contribution';
 export * from './daily-question';
 export * from './external';
+export * from './genre';
 export * from './label';
 export * from './membership';
 export * from './musician';

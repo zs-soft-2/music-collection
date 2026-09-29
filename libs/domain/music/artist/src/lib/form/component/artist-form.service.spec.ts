@@ -1,3 +1,4 @@
+import { provideGenreTesting } from '@music-collection/domain/genre/testing';
 import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { of } from 'rxjs';
 
@@ -12,7 +13,6 @@ import {
 	ArtistStateService,
 	ArtistUtilService,
 	DocumentStateService,
-	StyleEnum,
 } from '@music-collection/api';
 
 import { ArtistFormService } from './artist-form.service';
@@ -23,6 +23,7 @@ const artistOf = (uid: string, name: string) =>
 const createFormGroup = (artist: ArtistEntity | undefined) =>
 	new FormGroup({
 		country: new FormControl(null),
+		genre: new FormControl(artist?.genre ?? null),
 		musicBrainzId: new FormControl(artist?.musicBrainzId ?? ''),
 		name: new FormControl(artist?.name ?? ''),
 		styles: new FormControl([]),
@@ -74,6 +75,7 @@ function setup(
 	TestBed.configureTestingModule({
 		providers: [
 			provideI18nTesting(),
+			provideGenreTesting(),
 			ArtistFormService,
 			provideRouter([]),
 			{
@@ -189,7 +191,7 @@ describe('ArtistFormService', () => {
 					candidateOf('uk-id', {
 						country: 'UK',
 						formedIn: new Date(1988, 0, 1),
-						styles: [StyleEnum.Thrash],
+						styles: ['Thrash'],
 					}),
 					candidateOf('us-id'),
 				],

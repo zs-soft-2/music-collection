@@ -1,7 +1,6 @@
 import {
 	CountryEnum,
 	FormatEnum,
-	StyleEnum,
 } from '@music-collection/common/api';
 
 import {
@@ -63,7 +62,7 @@ describe('resolveMusicCollection', () => {
 	it('reads `from` and `to` as a closed range', () => {
 		const years = uidsOf({
 			years: { from: 1988, to: 1991 },
-			styles: { includesAny: [StyleEnum.Bay_Area_Thrash] },
+			styles: { includesAny: ['Bay Area Thrash'] },
 		});
 
 		expect(years).toContain('victims');
@@ -77,20 +76,20 @@ describe('resolveMusicCollection', () => {
 		// A band that moved on: groove today, thrash on the 1988 record.
 		catalog.albums.push(
 			album('later', 'Later Record', 'moved-on', 'Moved On', 1988, [
-				StyleEnum.Bay_Area_Thrash,
+				'Bay Area Thrash',
 			])
 		);
-		catalog.artists.push(artist('moved-on', [StyleEnum.Groove]));
+		catalog.artists.push(artist('moved-on', ['Groove']));
 
 		const byAlbumStyle = resolveMusicCollection(
 			collection({
-				styles: { includesAny: [StyleEnum.Bay_Area_Thrash] },
+				styles: { includesAny: ['Bay Area Thrash'] },
 			}),
 			catalog
 		);
 		const byArtistStyle = resolveMusicCollection(
 			collection({
-				artistStyles: { includesAny: [StyleEnum.Bay_Area_Thrash] },
+				artistStyles: { includesAny: ['Bay Area Thrash'] },
 			}),
 			catalog
 		);
@@ -106,7 +105,7 @@ describe('resolveMusicCollection', () => {
 
 		catalog.albums.push(
 			album('orphan', 'Orphan', 'unknown', 'Unknown', 1988, [
-				StyleEnum.Bay_Area_Thrash,
+				'Bay Area Thrash',
 			])
 		);
 
@@ -123,7 +122,7 @@ describe('resolveMusicCollection', () => {
 		expect(
 			uidsOf({
 				years: { equals: 1988 },
-				styles: { includesAny: [StyleEnum.Bay_Area_Thrash] },
+				styles: { includesAny: ['Bay Area Thrash'] },
 				albumFormats: { includesAny: [FormatEnum.lp, FormatEnum.live] },
 			})
 		).toContain('eindhoven');
@@ -133,7 +132,7 @@ describe('resolveMusicCollection', () => {
 		expect(
 			uidsOf({
 				styles: {
-					includesAll: [StyleEnum.Bay_Area_Thrash, StyleEnum.Thrash],
+					includesAll: ['Bay Area Thrash', 'Thrash'],
 				},
 			})
 		).toContain('new-order');
@@ -141,8 +140,8 @@ describe('resolveMusicCollection', () => {
 			uidsOf({
 				styles: {
 					includesAll: [
-						StyleEnum.Bay_Area_Thrash,
-						StyleEnum.Teutonic_Thrash,
+						'Bay Area Thrash',
+						'Teutonic Thrash',
 					],
 				},
 			})
@@ -152,7 +151,7 @@ describe('resolveMusicCollection', () => {
 	it('drops what `excludes` names', () => {
 		const uids = uidsOf({
 			years: { equals: 1988 },
-			styles: { excludes: [StyleEnum.Teutonic_Thrash] },
+			styles: { excludes: ['Teutonic Thrash'] },
 		});
 
 		expect(uids).not.toContain('aggression');

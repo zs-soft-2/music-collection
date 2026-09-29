@@ -6,7 +6,7 @@ import {
 	MUSICBRAINZ_ARTIST_URL,
 	CountryEnum,
 	FormatEnum,
-	StyleEnum,
+	StyleName,
 	toCatalogStyles,
 } from '@music-collection/api';
 
@@ -93,13 +93,17 @@ const STYLE_MATCH_RANK = 2;
 const STYLE_MATCH_LIMIT = 3;
 const GROUP_RANK = 1;
 
-/** The styles the catalog knows among the hit's tags and genres. */
-function artistStyles(artist: MusicBrainzArtist): Set<StyleEnum> {
+/** The styles the taxonomy knows among the hit's tags and genres. */
+function artistStyles(
+	artist: MusicBrainzArtist,
+	known: readonly StyleName[]
+): Set<StyleName> {
 	return new Set(
 		toCatalogStyles(
 			[...(artist.tags ?? []), ...(artist.genres ?? [])].map(
 				(tag) => tag.name
-			)
+			),
+			known
 		)
 	);
 }
@@ -111,7 +115,8 @@ function artistStyles(artist: MusicBrainzArtist): Set<StyleEnum> {
  */
 export function rankArtist(
 	query: ArtistExternalQuery,
-	artist: MusicBrainzArtist
+	artist: MusicBrainzArtist,
+	known: readonly StyleName[]
 ): number {
 	let rank = artist.type === 'Group' ? GROUP_RANK : 0;
 	const wantedCode = toCountryCode(query.country);
@@ -122,7 +127,7 @@ export function rankArtist(
 			wantedCode === code ? COUNTRY_MATCH_RANK : COUNTRY_MISMATCH_RANK;
 	}
 
-	const styles = artistStyles(artist);
+	const styles = artistStyles(artist, known);
 	const matches = (query.styles ?? []).filter((style) =>
 		styles.has(style)
 	).length;
@@ -138,7 +143,8 @@ export function rankArtist(
  */
 export function rankArtists(
 	query: ArtistExternalQuery,
-	artists: MusicBrainzArtist[]
+	artists: MusicBrainzArtist[],
+	known: readonly StyleName[]
 ): MusicBrainzArtist[] {
 	const wanted = query.name.trim().toLowerCase();
 	const sameName = artists.filter(
@@ -150,7 +156,7 @@ export function rankArtists(
 		.map((artist, index) => ({
 			artist,
 			index,
-			rank: rankArtist(query, artist),
+			rank: rankArtist(query, artist, known),
 		}))
 		.sort((a, b) => b.rank - a.rank || a.index - b.index)
 		.map(({ artist }) => artist);
@@ -159,9 +165,10 @@ export function rankArtists(
 /** The hit the query fits best; null when the search found nothing. */
 export function pickArtist(
 	query: ArtistExternalQuery,
-	artists: MusicBrainzArtist[]
+	artists: MusicBrainzArtist[],
+	known: readonly StyleName[]
 ): MusicBrainzArtist | null {
-	return rankArtists(query, artists)[0] ?? null;
+	return rankArtists(query, artists, known)[0] ?? null;
 }
 
 export function toArtistType(type?: string | null): ArtistType | null {
@@ -186,12 +193,14 @@ export function toFormedIn(begin?: string | null): Date | null {
 	);
 }
 
-/** The genres the catalog knows as styles, the most voted first. */
+/** The genres the taxonomy knows as styles, the most voted first. */
 export function toStyles(
-	genres: MusicBrainzArtist['genres'] = []
-): StyleEnum[] {
+	genres: MusicBrainzArtist['genres'] = [],
+	known: readonly StyleName[] = []
+): StyleName[] {
 	return toCatalogStyles(
-		[...genres].sort((a, b) => b.count - a.count).map((genre) => genre.name)
+		[...genres].sort((a, b) => b.count - a.count).map((genre) => genre.name),
+		known
 	);
 }
 
@@ -202,7 +211,8 @@ export function toStyles(
  * source's code where it does not, so nothing the source knows is lost.
  */
 export function toExternalCandidate(
-	artist: MusicBrainzArtist
+	artist: MusicBrainzArtist,
+	known: readonly StyleName[]
 ): ArtistExternalCandidate {
 	const code = artist.country?.toUpperCase() || null;
 
@@ -215,7 +225,10 @@ export function toExternalCandidate(
 		note: artist.disambiguation?.trim() || null,
 		source: 'musicbrainz',
 		sourceUrl: `${MUSICBRAINZ_ARTIST_URL}/${artist.id}`,
-		styles: toStyles([...(artist.tags ?? []), ...(artist.genres ?? [])]),
+		styles: toStyles(
+			[...(artist.tags ?? []), ...(artist.genres ?? [])],
+			known
+		),
 		// MusicBrainz shows no picture of its own; the chooser has the note.
 		thumbUrl: null,
 		type: artist.type || null,

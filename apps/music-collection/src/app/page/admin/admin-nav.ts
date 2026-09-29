@@ -73,6 +73,12 @@ export const ADMIN_NAV: AdminNavGroup[] = [
 				icon: 'pi-bookmark',
 				createLabelKey: 'ui.musicCollectionAdmin.add-collection',
 			},
+			{
+				labelKey: 'admin.nav.genres',
+				route: 'genre',
+				icon: 'pi-tags',
+				createLabelKey: 'admin.genre.add',
+			},
 		],
 	},
 	{

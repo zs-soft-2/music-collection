@@ -63,7 +63,7 @@ interface LabSubject {
 	artist: string;
 	album: string;
 	song: string;
-	/** One of the styles this shelf uses, as `StyleEnum` spells them. */
+	/** One of the styles this shelf uses, as the taxonomy spells them. */
 	style: string;
 }
 

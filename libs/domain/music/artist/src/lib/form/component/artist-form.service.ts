@@ -6,6 +6,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
+	activeGenres,
 	ArtistEntity,
 	ArtistEntityAdd,
 	ArtistEntityUpdate,
@@ -20,14 +21,18 @@ import {
 	DocumentEntity,
 	DocumentStateService,
 	EntityTypeEnum,
+	GenreEntity,
 	liveDocuments,
 	ReturnNavigationService,
 	SearchParams,
-	StyleList,
+	StyleName,
+	styleOptions,
+	stylesOfGenre,
 	toDiscogsArtistId,
 	toMusicBrainzId,
 } from '@music-collection/api';
 import { isSameCatalogName } from '@music-collection/common/engine';
+import { GenreEffect } from '@music-collection/domain/genre';
 import {
 	CatalogDuplicate,
 	DUPLICATE_CATALOG_NAME,
@@ -114,6 +119,7 @@ export class ArtistFormService {
 	private componentUtil = inject(ArtistUtilService);
 	private destroyRef = inject(DestroyRef);
 	private documentStateService = inject(DocumentStateService);
+	private genreEffect = inject(GenreEffect);
 	private returnNavigation = inject(ReturnNavigationService);
 	private router = inject(Router);
 
@@ -122,6 +128,8 @@ export class ArtistFormService {
 	private catalogArtists: ArtistEntity[] = [];
 	private formGroup!: FormGroup;
 	private params!: ArtistFormParams;
+	/** The taxonomy as it was last read; what the style list is narrowed by. */
+	private taxonomy: GenreEntity[] = [];
 	private params$$: ReplaySubject<ArtistFormParams>;
 
 	/** The artist this name collides with, blocking or not, or null. */
@@ -373,10 +381,14 @@ export class ArtistFormService {
 				combineLatest([
 					this.artistStateService.selectEntityById$(data['artistId']),
 					this.documentStateService.selectSearchResult$(),
+					// Starts empty, so a taxonomy that cannot be read leaves
+					// the form usable instead of blank.
+					this.genreEffect.taxonomy$,
 				])
 			),
-			switchMap(([artist, documents]) => {
+			switchMap(([artist, documents, taxonomy]) => {
 				this.artist = artist;
+				this.taxonomy = taxonomy;
 				this.formGroup = this.artistUtilService.createFormGroup(artist);
 				this.formGroup.controls['name'].addValidators(
 					uniqueCatalogName(
@@ -394,6 +406,10 @@ export class ArtistFormService {
 					liveDocuments(documents),
 					!!artist
 				);
+
+				this.formGroup.controls['genre'].valueChanges
+					.pipe(takeUntilDestroyed(this.destroyRef))
+					.subscribe(() => this.genreChanged());
 
 				this.params$$.next(this.params);
 
@@ -468,11 +484,50 @@ export class ArtistFormService {
 			countries: CountryList,
 			documents,
 			formGroup,
+			genres: activeGenres(this.taxonomy),
 			isImagesTabActive,
-			styleList: StyleList,
+			styleList: this.styleList(formGroup),
 		};
 
 		return artistFormParams;
+	}
+
+	/**
+	 * The styles the form offers: the chosen genre's, and whatever the artist
+	 * already carries — a style saved before the taxonomy knew it would
+	 * otherwise vanish from the list and be dropped by the next save.
+	 */
+	private styleList(formGroup: FormGroup): StyleName[] {
+		return styleOptions(
+			this.taxonomy,
+			formGroup.value['genre'],
+			formGroup.value['styles'] ?? []
+		);
+	}
+
+	/**
+	 * A genre picked by hand narrows the styles to that genre's, and lets go
+	 * of those belonging to the genre before it: a style is a style *of* a
+	 * genre, and keeping it would file the band under two.
+	 */
+	private genreChanged(): void {
+		const genre = this.formGroup.value['genre'];
+		const allowed = new Set(
+			stylesOfGenre(this.taxonomy, genre).map((style) =>
+				style.toLowerCase()
+			)
+		);
+		const selected: StyleName[] = this.formGroup.value['styles'] ?? [];
+		const kept = selected.filter((style) =>
+			allowed.has(style.toLowerCase())
+		);
+
+		if (kept.length !== selected.length) {
+			this.formGroup.controls['styles'].setValue(kept);
+		}
+
+		this.params = { ...this.params, styleList: this.styleList(this.formGroup) };
+		this.params$$.next(this.params);
 	}
 
 	private updateArtist(): void {

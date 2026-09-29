@@ -2,7 +2,6 @@ import {
 	AlbumExternalProfile,
 	DiscogsMasterCandidate,
 	FormatEnum,
-	StyleEnum,
 } from '@music-collection/api';
 
 import {
@@ -12,6 +11,9 @@ import {
 	toDiscogsAlbumProfile,
 	toDiscogsTracks,
 } from './album-discogs.mapper';
+
+/** The styles the taxonomy holds while these run. */
+const KNOWN = ['Thrash', 'Heavy metal'];
 
 const candidate = (
 	fields: Partial<DiscogsMasterCandidate> = {}
@@ -88,7 +90,7 @@ describe('toDiscogsAlbumProfile', () => {
 				styles: ['Thrash', 'Bossa Nova'],
 				coverUrl: 'https://img/cover.jpg',
 				tracks: [],
-			})
+			}, KNOWN)
 		).toEqual({
 			coverImageUrl: 'https://img/cover.jpg',
 			fillerSourceUrl: null,
@@ -96,7 +98,7 @@ describe('toDiscogsAlbumProfile', () => {
 			name: 'The Legacy',
 			source: 'discogs',
 			sourceUrl: 'https://www.discogs.com/master/21929',
-			styles: [StyleEnum.Thrash],
+			styles: ['Thrash'],
 			year: new Date(1987, 0, 1),
 		});
 	});
@@ -136,7 +138,7 @@ const profile = (
 	name: 'The Legacy',
 	source: 'musicbrainz',
 	sourceUrl: 'https://musicbrainz.org/release-group/dc68af1c',
-	styles: [StyleEnum.Thrash],
+	styles: ['Thrash'],
 	year: new Date(1987, 0, 1),
 	...fields,
 });
@@ -158,15 +160,18 @@ describe('hasAlbumGaps', () => {
 });
 
 describe('fillAlbumGaps', () => {
-	const discogs = toDiscogsAlbumProfile({
-		masterId: 21929,
-		name: 'The Legacy (Reissue)',
-		artistName: 'Testament',
-		year: 2017,
-		styles: ['Thrash'],
-		coverUrl: 'https://img/discogs-cover.jpg',
-		tracks: [],
-	});
+	const discogs = toDiscogsAlbumProfile(
+		{
+			masterId: 21929,
+			name: 'The Legacy (Reissue)',
+			artistName: 'Testament',
+			year: 2017,
+			styles: ['Thrash'],
+			coverUrl: 'https://img/discogs-cover.jpg',
+			tracks: [],
+		},
+		KNOWN
+	);
 
 	it('fills the empty fields and names the source that filled them', () => {
 		const merged = fillAlbumGaps(
@@ -175,7 +180,7 @@ describe('fillAlbumGaps', () => {
 		);
 
 		expect(merged.coverImageUrl).toBe('https://img/discogs-cover.jpg');
-		expect(merged.styles).toEqual([StyleEnum.Thrash]);
+		expect(merged.styles).toEqual(['Thrash']);
 		expect(merged.fillerSourceUrl).toBe(
 			'https://www.discogs.com/master/21929'
 		);
@@ -196,15 +201,18 @@ describe('fillAlbumGaps', () => {
 	});
 
 	it('leaves no second link where the other source filled nothing', () => {
-		const empty = toDiscogsAlbumProfile({
-			masterId: 21929,
-			name: 'The Legacy',
-			artistName: 'Testament',
-			year: null,
-			styles: [],
-			coverUrl: null,
-			tracks: [],
-		});
+		const empty = toDiscogsAlbumProfile(
+			{
+				masterId: 21929,
+				name: 'The Legacy',
+				artistName: 'Testament',
+				year: null,
+				styles: [],
+				coverUrl: null,
+				tracks: [],
+			},
+			KNOWN
+		);
 
 		expect(
 			fillAlbumGaps(profile({ coverImageUrl: null }), empty)

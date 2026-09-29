@@ -18,12 +18,17 @@
  *   --formed-in 2000    the year the band formed (Discogs does not know it)
  *   --skip 16450872     Discogs master/release ids not to import (a
  *                       repackaging of two earlier records, a video, …)
+ *   --genre Jazz        the genre to file the band under, overriding the one
+ *                       its releases name
  *   --refresh           re-download instead of using the cache
  *
- * Styles come from the releases: the Discogs styles the catalog's StyleEnum
- * knows (a band style is one at least two releases carry), the rest are
- * reported and dropped. Needs Firebase Admin credentials for --confirm
- * (GOOGLE_APPLICATION_CREDENTIALS or `gcloud auth application-default login`).
+ * The genre and the styles come from the releases, read against the taxonomy
+ * in `genre/{slug}` (the admin page): the genre most of them name, and the
+ * styles it holds (a band style is one at least two releases carry). What the
+ * taxonomy does not know is reported and dropped — add it on /admin/genre and
+ * run again. Needs Firebase Admin credentials, the dry run included, as the
+ * taxonomy is read from Firestore (GOOGLE_APPLICATION_CREDENTIALS or
+ * `gcloud auth application-default login`).
  */
 
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -49,11 +54,6 @@ const ROOT = join(HERE, '..', '..');
 const CACHE = join(HERE, '.cache');
 const ALBUM_CACHE = join(CACHE, 'albums');
 const BAND_CACHE = join(CACHE, 'bands');
-const STYLE_ENUM = join(
-	ROOT,
-	'libs/common/api/src/lib/music/genre/genre.enum.ts'
-);
-
 /** A style is the band's own when at least this many releases carry it. */
 const BAND_STYLE_MIN = 2;
 
@@ -64,6 +64,7 @@ const { values: options } = parseArgs({
 		country: { type: 'string' },
 		'formed-in': { type: 'string' },
 		skip: { type: 'string', default: '' },
+		genre: { type: 'string' },
 		refresh: { type: 'boolean', default: false },
 		confirm: { type: 'boolean', default: false },
 	},
@@ -81,42 +82,82 @@ const skipped = new Set(
 		.filter(Boolean)
 );
 
-/** The catalog's styles, by their normalized form ("post rock" → "Post-Rock"). */
-async function catalogStyles() {
-	const source = await readFile(STYLE_ENUM, 'utf8');
-	const body = source.match(/export enum StyleEnum \{([^}]*)\}/s)?.[1] ?? '';
-	const normalize = (style) =>
-		style
-			.toLowerCase()
-			.replace(/[^a-z0-9]+/g, ' ')
-			.trim();
+const normalizeName = (name) =>
+	name
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, ' ')
+		.trim();
 
-	return new Map(
-		[...body.matchAll(/=\s*'([^']+)'/g)].map((match) => [
-			normalize(match[1]),
-			match[1],
-		])
-	);
+/**
+ * The taxonomy as the admin page keeps it (`genre/{slug}`): the styles by
+ * their normalized form ("post rock" → "Post-Rock"), and the genre each one
+ * belongs to. It is read from Firestore even for a dry run — which styles
+ * exist is data now, not a list in this repository.
+ */
+async function catalogTaxonomy(db) {
+	const styles = new Map();
+	const genres = new Map();
+
+	for (const document of (await db.collection('genre').get()).docs) {
+		const genre = document.data();
+
+		genres.set(normalizeName(genre.name), genre.name);
+		for (const style of genre.styles ?? []) {
+			if (!styles.has(normalizeName(style))) {
+				styles.set(normalizeName(style), {
+					style,
+					genre: genre.name,
+				});
+			}
+		}
+	}
+
+	return { styles, genres };
 }
 
-/** Discogs styles the catalog knows; the unknown ones are reported. */
+/** Discogs styles the taxonomy knows; the unknown ones are reported. */
 function mapStyles(styles, known, dropped) {
 	const mapped = [];
 
 	for (const style of styles) {
-		const hit = known.get(
-			style
-				.toLowerCase()
-				.replace(/[^a-z0-9]+/g, ' ')
-				.trim()
-		);
+		const hit = known.get(normalizeName(style));
+
 		if (hit) {
-			if (!mapped.includes(hit)) mapped.push(hit);
+			if (!mapped.includes(hit.style)) mapped.push(hit.style);
 		} else {
 			dropped.add(style);
 		}
 	}
 	return mapped;
+}
+
+/**
+ * The genre the band is filed under: the one named on most of its releases
+ * that the taxonomy also holds, `--genre` overriding it. Discogs names a
+ * genre on every release, so this is usually decided by the records
+ * themselves; the styles found then belong under it.
+ */
+function bandGenre(releaseGenres, taxonomy) {
+	if (options.genre) {
+		const named = taxonomy.genres.get(normalizeName(options.genre));
+
+		if (!named) {
+			throw new Error(
+				`unknown genre: ${options.genre} — add it on /admin/genre first`
+			);
+		}
+		return named;
+	}
+
+	const count = new Map();
+
+	for (const name of releaseGenres) {
+		const known = taxonomy.genres.get(normalizeName(name));
+
+		if (known) count.set(known, (count.get(known) ?? 0) + 1);
+	}
+
+	return [...count.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
 }
 
 /** Discogs formats → the catalog's album format. */
@@ -243,6 +284,7 @@ async function fetchRelease(client, entry, album) {
 		release,
 		coverImageUrl: raw ? cover(raw) : null,
 		styles: raw?.styles ?? [],
+		genres: raw?.genres ?? [],
 		fetchedAt: new Date().toISOString(),
 	};
 
@@ -296,7 +338,9 @@ async function writeOps(db, ops) {
 
 async function main() {
 	const client = new DiscogsClient();
-	const known = await catalogStyles();
+	// Firestore first: the taxonomy lives there, and a dry run needs it too.
+	const db = await openFirestore();
+	const taxonomy = await catalogTaxonomy(db);
 	const dropped = new Set();
 	const band = await fetchBand(client);
 	const artistUid = `discogs-${band.profile.id}`;
@@ -308,6 +352,7 @@ async function main() {
 
 	const albums = [];
 	const styleCount = new Map();
+	const releaseGenres = [];
 
 	for (const entry of band.entries) {
 		if (skipped.has(entry.id)) {
@@ -326,7 +371,8 @@ async function main() {
 			console.log(`  no release: ${entry.title} (${entry.id})`);
 			continue;
 		}
-		const styles = mapStyles(cached.styles, known, dropped);
+		const styles = mapStyles(cached.styles, taxonomy.styles, dropped);
+		releaseGenres.push(...(cached.genres ?? []));
 		for (const style of styles) {
 			styleCount.set(style, (styleCount.get(style) ?? 0) + 1);
 		}
@@ -338,6 +384,14 @@ async function main() {
 		.filter(([, count]) => count >= BAND_STYLE_MIN)
 		.sort((a, b) => b[1] - a[1])
 		.map(([style]) => style);
+	const genre = bandGenre(releaseGenres, taxonomy);
+
+	if (!genre) {
+		throw new Error(
+			'no genre: the releases name none the taxonomy holds — ' +
+				'pass --genre, or add the genre on /admin/genre'
+		);
+	}
 
 	const artist = {
 		uid: artistUid,
@@ -345,7 +399,7 @@ async function main() {
 		entityType: 'Artist',
 		artistType: 'band',
 		country: options.country ?? null,
-		genre: 'Rock',
+		genre,
 		description: band.profile.profile,
 		formedIn: options['formed-in']
 			? new Date(Number(options['formed-in']), 0, 1).toISOString()
@@ -360,7 +414,6 @@ async function main() {
 		source: 'discogs',
 	};
 
-	const db = await openFirestore();
 	const artistRef = db.collection('artist').doc(artistUid);
 	const albumArtist = {
 		uid: artistUid,
@@ -379,7 +432,7 @@ async function main() {
 			entityType: 'Album',
 			artist: albumArtist,
 			year: date ? date.getTime() : null,
-			genre: 'Rock',
+			genre,
 			format: albumFormat(album.release.formats),
 			styles: album.styles,
 			songs: [],

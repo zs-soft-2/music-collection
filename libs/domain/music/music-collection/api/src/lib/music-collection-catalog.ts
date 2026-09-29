@@ -2,7 +2,7 @@ import {
 	CountryEnum,
 	FormatDescriptionEnum,
 	FormatEnum,
-	StyleEnum,
+	StyleName,
 } from '@music-collection/common/api';
 
 /**
@@ -21,7 +21,7 @@ export interface CatalogAlbum {
 	artistName: string;
 	/** Release year; null when the catalog does not know it. */
 	year: number | null;
-	styles: StyleEnum[];
+	styles: StyleName[];
 	/** lp, ep, live…; null on albums saved before the field existed. */
 	format: FormatEnum | null;
 	coverUrl: string | null;
@@ -30,7 +30,7 @@ export interface CatalogAlbum {
 /** An artist of the catalog, as the criteria see it. */
 export interface CatalogArtist {
 	uid: string;
-	styles: StyleEnum[];
+	styles: StyleName[];
 	country: CountryEnum | null;
 }
 

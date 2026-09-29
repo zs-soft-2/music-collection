@@ -142,9 +142,10 @@ describe('deriveVisualProfile', () => {
 	});
 
 	it(`reads this shelf's own styles, not music in general`, () => {
-		// The vocabulary is `StyleEnum`, which is metal and rock all the way
-		// down. A taxonomy written for music in general sent two thirds of it
-		// to the same world, which is what made every record look alike.
+		// The vocabulary is what this shelf holds, which is metal and rock all
+		// the way down. A taxonomy written for music in general sent two
+		// thirds of it to the same world, which is what made every record
+		// look alike.
 		const worldOf = (style: string) =>
 			deriveVisualProfile({
 				artist: 'A',

@@ -1,3 +1,4 @@
+import { provideGenreTesting } from '@music-collection/domain/genre/testing';
 import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { of } from 'rxjs';
 
@@ -24,6 +25,7 @@ describe('ArtistFormComponent', () => {
 			imports: [ArtistFormComponent],
 			providers: [
 				provideI18nTesting(),
+				provideGenreTesting(),
 				provideRouter([]),
 				{
 					provide: ArtistStateService,

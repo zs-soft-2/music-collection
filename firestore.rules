@@ -222,6 +222,7 @@ service cloud.firestore {
         'contribution': 'ContributionEntity',
         'membership': 'MembershipEntity',
         'music-collection': 'MusicCollectionEntity',
+        'genre': 'GenreEntity',
         'user': 'UserEntity',
         'entity-quantity': 'EntityQuantityEntity',
         'collection-item': 'CollectionItemEntity',
@@ -237,6 +238,25 @@ service cloud.firestore {
         'owned-contribution': 'OwnedContributionEntity',
         'owned-membership': 'OwnedMembershipEntity'
       };
+    }
+
+    // Egy műfaj dokumentum alakja. A stíluslista az, amit a formok kínálnak,
+    // ezért kap korlátot: száz stílus fölött nem lista, hanem szótár.
+    function isValidGenre() {
+      return request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.name.size() <= 60
+          && request.resource.data.slug is string
+          && request.resource.data.slug.size() > 0
+          && request.resource.data.slug.size() <= 60
+          && request.resource.data.styles is list
+          && request.resource.data.styles.size() <= 100
+          && (!('description' in request.resource.data)
+              || request.resource.data.description == null
+              || (request.resource.data.description is string
+                  && request.resource.data.description.size() <= 500))
+          && (!('active' in request.resource.data)
+              || request.resource.data.active is bool);
     }
 
     // A gyűjtő saját entitásának collectionje: `owned-` előtag, és csak a
@@ -594,6 +614,17 @@ service cloud.firestore {
       allow create: if hasPerm('createReleaseEntity');
       allow update: if hasPerm('updateReleaseEntity');
       allow delete: if hasPerm('deleteReleaseEntity');
+    }
+
+    // A műfaj-taxonómia: műfajok és az alattuk lévő stílusok. Olvasni bárki
+    // olvashatja — ez az, amiből az előadó- és album-form választ, és amihez
+    // az online betöltés a forrásoknál talált neveket illeszti. Írni csak
+    // permissionnel lehet: ez a katalógus szótára, nem felhasználói adat.
+    match /genre/{genreId} {
+      allow read: if true;
+      allow create: if hasPerm('createGenreEntity') && isValidGenre();
+      allow update: if hasPerm('updateGenreEntity') && isValidGenre();
+      allow delete: if hasPerm('deleteGenreEntity');
     }
 
     match /label/{labelId} {
