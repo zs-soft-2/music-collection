@@ -228,6 +228,79 @@ Secret Manager hozzáféréseket. A Discogs token értékét kézzel tesszük fe
 gcloud secrets versions add DISCOGS_TOKEN --data-file=-
 ```
 
+### Költség-riasztás
+
+A Firestore-olvasás, a Storage-forgalom és a functionök számlája csendben nő: egy
+elszabadult script vagy egy nem cache-elt lekérdezés csak a hónap végi számlán
+látszana. Az `infra/modules/cost-alerts` ezért **két** riasztást teremt mindkét
+környezetre, mert a kettő más-más dolgot vesz észre.
+
+|                | Havi költségkeret                                    | Firestore olvasás-riasztás                                               |
+| -------------- | ---------------------------------------------------- | ------------------------------------------------------------------------ |
+| Mit néz        | a hónapra eső költést, dollárban                     | a dokumentum-olvasásokat, darabban                                       |
+| Mire terjed ki | mindenre (Firestore, Storage, functionök, Vertex AI) | egyetlen metrikára                                                       |
+| Mikor szól     | napok múlva                                          | perceken belül                                                           |
+| Küszöb         | `budget_amount` (dev/prod: $5)                      | `firestore_read_alert_threshold` (dev 50 000, prod 25 000 / gördülő óra) |
+| Címzett        | a számlázási fiók adminjai + `alert_emails`          | **csak** `alert_emails`                                                  |
+
+Egy elszabadult script 200 ezer olvasása néhány tíz cent — a budgetnek szinte
+láthatatlan, a használati riasztásnak azonnal feltűnik. Fordítva: egy lassan
+hízó Storage-számlát csak a budget vesz észre. Ezért van mind a kettő.
+
+**Egyik sem korlát.** A Google a keret túllépésekor tovább szolgál ki; ez
+riasztás, nem plafon. A leállítás csak a számlázás lekapcsolásával volna
+lehetséges, amit szándékosan nem automatizálunk.
+
+#### Hol látszik
+
+Nem az app admin felületén, hanem a Google Cloud Consolon — és e-mailben:
+
+| Mit                           | Hol                                                                                                   |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Riasztási incidensek, némítás | Monitoring → Alerting                                                                                 |
+| Az olvasásszám görbéje        | Monitoring → Metrics Explorer, `firestore.googleapis.com/document/read_count` (bontsd `type` szerint) |
+| Ugyanez egyszerűbben          | Firestore → Usage                                                                                     |
+| A keret állása                | Billing → Budgets & alerts                                                                            |
+
+#### Az e-mail cím
+
+**A repó publikus, ezért cím nem kerülhet a `<env>.tfvars`-ba.** A budget enélkül
+is küld levelet (a számlázási fiók adminjainak), a Firestore-riasztás viszont
+nem — annak nincs alapértelmezett címzettje, cím nélkül csak a konzolon
+látszik. A tofu ezt minden plan/apply végén kiírja figyelmeztetésként.
+
+A címet egy git által nem látott fájl adja a környezeti gyökérben
+(`.gitignore`-ban van, a tofu magától beolvassa):
+
+```bash
+cat > infra/environments/dev/local.auto.tfvars <<'EOF'
+alert_emails = ["te@pelda.hu"]
+EOF
+```
+
+Egyszeri futáshoz környezeti változó is jó:
+`TF_VAR_alert_emails='["te@pelda.hu"]' tofu plan …`
+
+#### A küszöbök honnan jönnek
+
+A Firestore-küszöb a mért forgalomhoz van szabva, nem elméletből. A dev órás
+összegei 2026-09-16 és 09-30 között: medián 97 olvasás, 90. percentilis ~2 900,
+a legnagyobb _rendes_ óra ~41 000 (egy-két katalógus-script futása; egy futás
+nagyságrendileg 25 ezer olvasás). A 2026-09-21-i elszabadulás egyetlen órája
+187 719 volt. Az 50 000-es küszöb e kettő közé esik: a script-futásokat átengedi,
+az elszabadulást elkapja. Prodban a rendes nap néhány száz olvasás, ott a 25 000
+bőven elég.
+
+#### Apply
+
+A budgethez `roles/billing.admin` (vagy `billing.costsManager`) kell a
+számlázási fiókon; a CI nem futtat tofu-t, ez kézi lépés. A budget nem a projekt
+erőforrása, hanem a **számlázási fióké**, és a dev meg a prod ugyanazon a fiókon
+ül: mindkét gyökér a sajátját teremti, a saját projektjére szűkítve. Ugyanezért
+kapott a budget egy külön provider-példányt (`google.billing`,
+`billing_project`-tel) — enélkül a Budget API-hívást az a projekt számolná el,
+ami a fejlesztő gcloud ADC-jében épp be van állítva, a prod apply is a devét.
+
 ---
 
 ## Scriptek (`tools/`)

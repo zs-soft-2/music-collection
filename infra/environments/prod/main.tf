@@ -251,6 +251,49 @@ output "measurement_id" {
   description = "A kliensbe kerülő GA4 measurement id (nem titok). Üres, ha a projekthez nincs Google Analytics kötve."
 }
 
+# ── Költség-riasztás ────────────────────────────────────────────────────────
+# A Firestore-olvasás, a Storage-forgalom és a functionök számlája csendben nő:
+# egy elszabadult script vagy egy nem cache-elt lekérdezés csak a hónap végi
+# számlán látszana. A modul két riasztást teremt — egy havi költségkeretet és
+# egy Firestore olvasás-figyelőt —, mert a kettő más-más dolgot vesz észre; a
+# részletek a modul fejlécében.
+#
+# Egyik sem korlát: a Google a keret túllépésekor tovább szolgál ki.
+#
+# A budget a SZÁMLÁZÁSI FIÓK erőforrása, nem a projekté, és a dev meg a prod
+# ugyanazon a fiókon ül. Mindkét gyökér a sajátját teremti, a saját projektjére
+# szűkítve — így a két környezet kerete külön mozog, és egyik apply sem nyúl a
+# másikéhoz.
+module "cost_alerts" {
+  source = "../../modules/cost-alerts"
+
+  providers = {
+    google.billing = google.billing
+  }
+
+  project_id      = local.project_id
+  project_number  = local.project_number
+  billing_account = data.google_project.this.billing_account
+  display_name    = "${var.github_repo} ${var.env}"
+
+  budget_amount = var.budget_amount
+  alert_emails  = var.alert_emails
+
+  firestore_read_threshold = var.firestore_read_alert_threshold
+
+  depends_on = [google_project_service.enabled]
+}
+
+output "budget_name" {
+  value       = module.cost_alerts.budget_name
+  description = "A költségvetési riasztás erőforrásneve a számlázási fiókon."
+}
+
+output "firestore_read_alert_name" {
+  value       = module.cost_alerts.firestore_read_alert_name
+  description = "A Firestore olvasás-riasztás erőforrásneve. Üres, ha ki van kapcsolva."
+}
+
 module "github_environment" {
   source         = "../../modules/github-environment"
   repository     = var.github_repo

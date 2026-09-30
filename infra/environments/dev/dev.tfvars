@@ -50,3 +50,18 @@ app_check_services = {
   "firestore.googleapis.com"       = "ENFORCED"
   "firebasestorage.googleapis.com" = "UNENFORCED"
 }
+
+# Havi költségkeret (USD — a számlázási fiók pénzneme). Nem plafon: a Google a
+# túllépéskor tovább szolgál ki, csak levelet küld. Küszöbök: 50%, 90%, 100% a
+# tényleges költésre, és 100% az előrejelzettre — ez utóbbi szólal meg elsőként,
+# ha egy script megugrasztja a hónap ütemét.
+#
+# A fogyasztás érdemi része (a modellhívások) a saját AI-gatewayre kerül át, és
+# ott van szabályozva; ez a keret a mögötte maradó GCP-számlára (Firestore-
+# olvasás, Storage, functionök) figyel.
+budget_amount = 5
+
+# Firestore olvasás-riasztás: gördülő órás ablakban ennyi dokumentum-olvasás
+# fölött szól. A dev rendes órás csúcsa ~41 ezer (katalógus-scriptek), a
+# 2026-09-21-i elszabadulásé 187 719 — az 50 ezer e kettő közé esik.
+firestore_read_alert_threshold = 50000

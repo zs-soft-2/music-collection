@@ -21,6 +21,18 @@ provider "google" {
   region  = var.region
 }
 
+# A Cloud Billing Budget API-t a hívó „quota project"-je számolja el. A sima
+# `google` providert ezért nem bántjuk (a header minden erőforrásra rámenne),
+# hanem a budget kap egy sajátot: így a prod apply a prod projekt API-ját
+# használja, nem azt, ami a fejlesztő gcloud ADC-jében épp be van állítva.
+provider "google" {
+  alias                 = "billing"
+  project               = var.project_id
+  region                = var.region
+  billing_project       = var.project_id
+  user_project_override = true
+}
+
 provider "google-beta" {
   project               = var.project_id
   region                = var.region

@@ -62,6 +62,9 @@ Thumbs.db
 
 # OpenTofu
 .terraform/
+# A riasztások e-mail címei. A repó publikus, cím nem kerülhet bele; a tofu
+# ezt a fájlt magától beolvassa a környezeti gyökérből.
+infra/environments/*/local.auto.tfvars
 # Mentett tofu plan: egy futáshoz készül, és a state-tel együtt avul el.
 *.tfplan
 *.tfstate

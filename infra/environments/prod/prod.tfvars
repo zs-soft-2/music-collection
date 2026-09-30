@@ -32,3 +32,12 @@ app_check_services = {
   "firestore.googleapis.com"       = "UNENFORCED"
   "firebasestorage.googleapis.com" = "UNENFORCED"
 }
+
+# Havi költségkeret (USD — a számlázási fiók pénzneme). Ugyanaz a rend, mint
+# devben; lásd a `dev.tfvars` megjegyzését.
+budget_amount = 5
+
+# Firestore olvasás-riasztás. Prodban a rendes nap néhány száz olvasás, ezért
+# szorosabb küszöb is elfér; a `copy-prod-to-dev.mjs` futásai (~50 ezer/óra)
+# fölötte vannak, és azokról nem baj, ha szól.
+firestore_read_alert_threshold = 25000
