@@ -15,6 +15,7 @@ import {
 	ROLE_ID_TAKEN,
 	ROLE_NAME_TAKEN,
 	RoleFinding,
+	baselinePermissions,
 } from '../../../../data/role';
 import { PermissionGridComponent } from '../component/permission-grid.component';
 import { PermissionSummaryComponent } from '../component/permission-summary.component';
@@ -22,6 +23,13 @@ import { RoleEditStore } from './role-edit.store';
 
 /** Write failures the page has a sentence of its own for. */
 const WRITE_ERRORS: string[] = [ROLE_NAME_TAKEN, ROLE_ID_TAKEN];
+
+/**
+ * What every collector holds already. A constant, not state: no role hands it
+ * out and no save can take it away, which is the whole reason it is shown
+ * apart from the grid instead of as a row of ticked boxes in it.
+ */
+const BASELINE = baselinePermissions();
 
 /**
  * Admin: one role, written.
@@ -59,7 +67,9 @@ const WRITE_ERRORS: string[] = [ROLE_NAME_TAKEN, ROLE_ID_TAKEN];
 					}
 				</h1>
 				@if (store.original(); as original) {
-					<p>{{ original.name }} · <code>{{ original.uid }}</code></p>
+					<p>
+						{{ original.name }} · <code>{{ original.uid }}</code>
+					</p>
 				} @else if (store.target().from) {
 					<p>
 						{{
@@ -87,7 +97,9 @@ const WRITE_ERRORS: string[] = [ROLE_NAME_TAKEN, ROLE_ID_TAKEN];
 			(ngSubmit)="store.save()"
 		>
 			<section class="mc-form-section" aria-labelledby="role-identity">
-				<h2 id="role-identity">{{ 'admin.role.identity' | transloco }}</h2>
+				<h2 id="role-identity">
+					{{ 'admin.role.identity' | transloco }}
+				</h2>
 
 				<div class="mc-form-grid">
 					<div class="mc-field">
@@ -201,6 +213,14 @@ const WRITE_ERRORS: string[] = [ROLE_NAME_TAKEN, ROLE_ID_TAKEN];
 					(toggled)="store.toggle($event)"
 				></mc-permission-grid>
 
+				<div class="baseline">
+					<h3>{{ 'admin.role.baseline' | transloco }}</h3>
+					<small>{{ 'admin.role.baseline-hint' | transloco }}</small>
+					<mc-permission-summary
+						[permissions]="baseline"
+					></mc-permission-summary>
+				</div>
+
 				@if (store.extraPermissions().length) {
 					<div class="extra">
 						<h3>{{ 'admin.role.extra' | transloco }}</h3>
@@ -241,7 +261,9 @@ const WRITE_ERRORS: string[] = [ROLE_NAME_TAKEN, ROLE_ID_TAKEN];
 
 				<p class="impact-line">
 					@if (store.holders(); as holders) {
-						{{ 'admin.role.reaches' | transloco: { count: holders } }}
+						{{
+							'admin.role.reaches' | transloco: { count: holders }
+						}}
 					} @else if (store.holders() === 0) {
 						{{ 'admin.role.reaches-nobody' | transloco }}
 					} @else if (store.original()) {
@@ -281,7 +303,9 @@ const WRITE_ERRORS: string[] = [ROLE_NAME_TAKEN, ROLE_ID_TAKEN];
 					</div>
 				}
 
-				@if (!store.diff().added.length && !store.diff().removed.length) {
+				@if (
+					!store.diff().added.length && !store.diff().removed.length
+				) {
 					<p class="mc-form-note">
 						{{ 'admin.role.no-change' | transloco }}
 					</p>
@@ -363,6 +387,25 @@ const WRITE_ERRORS: string[] = [ROLE_NAME_TAKEN, ROLE_ID_TAKEN];
 			}
 		}
 
+		.baseline {
+			margin-top: 1.5rem;
+			padding: 0.75rem 1rem;
+			border-left: 3px solid var(--mc-border);
+			background: var(--mc-surface-2);
+
+			h3 {
+				margin: 0;
+				font-size: 0.875rem;
+			}
+
+			small {
+				display: block;
+				margin-bottom: 0.5rem;
+				color: var(--mc-text-muted);
+				font-size: 0.75rem;
+			}
+		}
+
 		.extra {
 			margin-top: 1rem;
 
@@ -417,6 +460,7 @@ const WRITE_ERRORS: string[] = [ROLE_NAME_TAKEN, ROLE_ID_TAKEN];
 export class RoleEditComponent {
 	protected readonly store = inject(RoleEditStore);
 	protected readonly admin = ADMIN_PERMISSION;
+	protected readonly baseline = BASELINE;
 
 	private readonly route = inject(ActivatedRoute);
 	private readonly transloco = inject(TranslocoService);
@@ -426,10 +470,7 @@ export class RoleEditComponent {
 		// does not run the router's input binding, and turning it on for one
 		// page would change how every other routed component is fed.
 		this.store.open(
-			combineLatest([
-				this.route.paramMap,
-				this.route.queryParamMap,
-			]).pipe(
+			combineLatest([this.route.paramMap, this.route.queryParamMap]).pipe(
 				map(([params, query]) => ({
 					uid: params.get('roleId'),
 					from: query.get('from'),

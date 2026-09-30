@@ -9,6 +9,7 @@ export * from './genre';
 export * from './label';
 export * from './membership';
 export * from './musician';
+export * from './owned';
 export * from './photo-scan';
 export * from './release';
 export * from './release-request';

@@ -39,43 +39,53 @@ import { ENV_OPTION, readEnvironment } from './environment.mjs';
 const ROLE = 'USER';
 
 /**
- * A gyűjtő saját entitásai (`user/{uid}/owned-*`): amit magának vehet fel,
- * ha a katalógus nem ismeri. A nevek a `firestore.rules` `syncResources()`
- * mapjéből jönnek — ott dől el, melyik collectionhöz melyik jog kell.
+ * A gyűjtő alapjogai — amit minden gyűjtő megkap, mert `USER` szerepkört
+ * mindenki kap a dokumentuma létrejöttekor.
  *
- * Mind a kilenc katalógus-entitás szerepel, mert a szabály mindegyiket
- * engedi, és a jog nélkül a felület sem tudná felkínálni. Ami nincs kész,
- * azt a felület hiánya tartja vissza, nem a jog.
+ * Egy lapos lista, nem képlet: ugyanezt a harminchármat mutatja a
+ * `/admin/role` szerkesztő „ezt minden gyűjtő megkapja" blokkja, és a
+ * `permission-catalog.spec.ts` a kettőt összeméri. Ez a script nem tud
+ * TypeScriptet importálni, ezért a teszt tartja őket egyben.
+ *
+ * Olvasásra nincs jog a listán: a saját példányt, a kívánságlistát és a saját
+ * entitásokat a tulajdonosa olvashatja, és a szabály ott meg is áll
+ * (`allow read: if isSelf(uid)`). A `view…` jogok, amiket ez a script korábban
+ * kiosztott, semmit nem nyitottak.
  */
-const OWNED_RESOURCES = [
-	'OwnedArtistEntity',
-	'OwnedAlbumEntity',
-	'OwnedReleaseEntity',
-	'OwnedLabelEntity',
-	'OwnedMusicianEntity',
-	'OwnedDocumentEntity',
-	'OwnedTrackEntity',
-	'OwnedContributionEntity',
-	'OwnedMembershipEntity',
-];
-
-const OWNED_PERMISSIONS = OWNED_RESOURCES.flatMap((resource) =>
-	['create', 'delete', 'update', 'view'].map(
-		(action) => `${action}${resource}`
-	)
-);
-
-/** A gyűjtő alapjogai: saját példányok, kívánságlista, saját entitások. */
 const PERMISSIONS = [
 	'createCollectionItemEntity',
-	'deleteCollectionItemEntity',
 	'updateCollectionItemEntity',
-	'viewCollectionItemEntity',
+	'deleteCollectionItemEntity',
 	'createWishlistItemEntity',
-	'deleteWishlistItemEntity',
 	'updateWishlistItemEntity',
-	'viewWishlistItemEntity',
-	...OWNED_PERMISSIONS,
+	'deleteWishlistItemEntity',
+	'createOwnedArtistEntity',
+	'updateOwnedArtistEntity',
+	'deleteOwnedArtistEntity',
+	'createOwnedAlbumEntity',
+	'updateOwnedAlbumEntity',
+	'deleteOwnedAlbumEntity',
+	'createOwnedReleaseEntity',
+	'updateOwnedReleaseEntity',
+	'deleteOwnedReleaseEntity',
+	'createOwnedTrackEntity',
+	'updateOwnedTrackEntity',
+	'deleteOwnedTrackEntity',
+	'createOwnedLabelEntity',
+	'updateOwnedLabelEntity',
+	'deleteOwnedLabelEntity',
+	'createOwnedMusicianEntity',
+	'updateOwnedMusicianEntity',
+	'deleteOwnedMusicianEntity',
+	'createOwnedMembershipEntity',
+	'updateOwnedMembershipEntity',
+	'deleteOwnedMembershipEntity',
+	'createOwnedContributionEntity',
+	'updateOwnedContributionEntity',
+	'deleteOwnedContributionEntity',
+	'createOwnedDocumentEntity',
+	'updateOwnedDocumentEntity',
+	'deleteOwnedDocumentEntity',
 ];
 
 const { values: options } = parseArgs({

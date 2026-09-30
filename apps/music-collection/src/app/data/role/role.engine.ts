@@ -2,6 +2,7 @@ import { Role, RoleDraft } from '@music-collection/api';
 
 import {
 	ADMIN_PERMISSION,
+	ALL_PERMISSION_GROUPS,
 	PERMISSION_CATALOG,
 	PermissionGroup,
 	keepsAccess,
@@ -160,12 +161,16 @@ export interface RoleCoverage {
 /**
  * A role summed up group by group, for a list that has one line per role.
  * "12 permissions" says nothing an admin can act on; "Catalog 12/36, Collector
- * data 10/10" says what kind of role it is.
+ * data 6/6" says what kind of role it is.
+ *
+ * Over every group, the carried ones included — this describes a role rather
+ * than offering anything, and `USER` is a role like the others. Leaving the
+ * baseline out would print the role every collector holds as an empty one.
  */
 export function describeRole(permissions: string[]): RoleCoverage[] {
 	const held = new Set(permissions);
 
-	return PERMISSION_CATALOG.map((group) => {
+	return ALL_PERMISSION_GROUPS.map((group) => {
 		const all = groupPermissionNames(group);
 
 		return {
@@ -238,7 +243,9 @@ export function keepsMyAccess(
 /** Every permission one group of the catalog offers. */
 function groupPermissionNames(group: PermissionGroup): string[] {
 	return group.resources.flatMap((resource) =>
-		resource.actions.map((action) => toPermission(action, resource.resource))
+		resource.actions.map((action) =>
+			toPermission(action, resource.resource)
+		)
 	);
 }
 
@@ -281,7 +288,8 @@ function nameFindings(
 		{
 			code: collision,
 			severity: 'error',
-			params: collision === 'id-taken' ? { id: toRoleId(name) } : undefined,
+			params:
+				collision === 'id-taken' ? { id: toRoleId(name) } : undefined,
 		},
 	];
 }
@@ -304,10 +312,7 @@ function coherenceFindings(permissions: string[]): RoleFinding[] {
 
 			const entity = resource.resource.replace(/EditPage$/, 'Entity');
 
-			if (
-				!held.has(`update${entity}`) &&
-				!held.has(`create${entity}`)
-			) {
+			if (!held.has(`update${entity}`) && !held.has(`create${entity}`)) {
 				findings.push({
 					code: 'edit-page-without-write',
 					severity: 'warning',

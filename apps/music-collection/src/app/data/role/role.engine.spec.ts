@@ -1,5 +1,6 @@
 import { Role, RoleDraft } from '@music-collection/api';
 
+import { PERMISSION_CATALOG } from './permission-catalog';
 import {
 	RoleFindingCode,
 	describeRole,
@@ -154,9 +155,9 @@ describe('validateRole', () => {
 
 	/** Deleting a role first asks who holds it, and that is a user query. */
 	it('warns about a role admin who cannot find out who holds a role', () => {
-		expect(
-			codes(validate({ permissions: ['deleteRoleEntity'] }))
-		).toEqual(['role-delete-without-user-view']);
+		expect(codes(validate({ permissions: ['deleteRoleEntity'] }))).toEqual([
+			'role-delete-without-user-view',
+		]);
 	});
 
 	it('keeps quiet about all of it for the wildcard', () => {
@@ -185,7 +186,10 @@ describe('permissionDiff', () => {
 
 describe('describeRole', () => {
 	it('sums a role up group by group', () => {
-		const coverage = describeRole(['createAlbumEntity', 'updateAlbumEntity']);
+		const coverage = describeRole([
+			'createAlbumEntity',
+			'updateAlbumEntity',
+		]);
 		const catalog = coverage.find(
 			(line) => line.groupKey === 'admin.role.group.catalog'
 		);
@@ -203,7 +207,7 @@ describe('searchCatalog', () => {
 	const translate = (key: string) => key;
 
 	it('hands back the whole catalog for an empty search', () => {
-		expect(searchCatalog('  ', translate).length).toBeGreaterThan(4);
+		expect(searchCatalog('  ', translate)).toEqual(PERMISSION_CATALOG);
 	});
 
 	it('keeps a whole group when the group itself matches', () => {

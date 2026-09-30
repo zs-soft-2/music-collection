@@ -7,4 +7,5 @@ export * from './lib/entity-quantity';
 export * from './lib/error';
 export * from './lib/resource';
 export * from './lib/role';
+export * from './lib/setting';
 export * from './lib/user';

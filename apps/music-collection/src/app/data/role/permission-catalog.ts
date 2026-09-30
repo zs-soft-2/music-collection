@@ -1,17 +1,51 @@
+import {
+	ActionEnum,
+	AlbumPermissionsService,
+	AlbumResourceEnum,
+	ArtistPermissionsService,
+	ArtistResourceEnum,
+	CollectionItemPermissionsService,
+	CollectionItemResourceEnum,
+	ContributionPermissionsService,
+	DocumentPermissionsService,
+	DocumentResourceEnum,
+	EntityQuantityPermissionsService,
+	GenrePermissionsService,
+	LabelPermissionsService,
+	LabelResourceEnum,
+	MembershipPermissionsService,
+	MusicianPermissionsService,
+	MusicianResourceEnum,
+	OwnedPermissionsService,
+	ReleasePermissionsService,
+	ReleaseResourceEnum,
+	RolePermissionsService,
+	SecurityPermissionsService,
+	SettingPermissionsService,
+	TrackPermissionsService,
+	UserPermissionsService,
+	WishlistItemPermissionsService,
+	WishlistItemResourceEnum,
+} from '@music-collection/api';
+import { MusicCollectionPermissionsService } from '@music-collection/domain/music-collection/api';
+
 /**
  * The permissions a role may carry, as the admin page offers them.
  *
- * A permission name is an action followed by a resource — `createArtistEntity`
- * is `create` + `ArtistEntity` — and that is how both the Firestore rules and
- * the client check them. So the catalog is not a flat list of strings but a
- * grid: a group of resources, and per resource the actions that are actually
- * checked somewhere. Offering `viewArtistEntity` because the pattern allows it
- * would put a checkbox on the page that grants nothing.
+ * Every name here is read off a constant the codebase already declares — the
+ * `*PermissionsService` classes next to each entity, built from `ActionEnum`
+ * and the resource enums. Nothing is spelled out as a string: a permission
+ * this file invented would be a checkbox that grants nothing, and a permission
+ * that got renamed would silently become one. Referencing the constants makes
+ * the first impossible to write and the second a compile error.
  *
- * `permission-catalog.spec.ts` reads `firestore.rules` and `storage.rules` and
- * fails when they check a permission this file does not offer: the rules are
- * where a permission becomes real, and a role editor that cannot grant one is
- * worse than no editor at all.
+ * What is *offered* is narrower than what is declared, because a permission
+ * only means something where it is checked. There are three places that check
+ * one: the two rule files, the route guards (`only: [...]`), and the callables
+ * through `requireCaller`. `permission-catalog.spec.ts` reads all three and
+ * fails both ways — on a permission they check that the page cannot grant, and
+ * on a permission the page offers that none of them ever reads. That test, not
+ * the eye, is what decides which actions a row shows.
  *
  * It lives under the application rather than in `libs/api` on purpose — only
  * the two admin pages read it, and a value exported from the shared barrel is
@@ -26,11 +60,17 @@ export const ADMIN_PERMISSION = 'ADMIN';
 
 /**
  * Holding any one of these is what makes it possible to come back to the
- * access pages and put a permission back. A save that would leave the
- * signed-in admin without one of them is refused: there is no way back from
- * it inside the app, only a script run against the database.
+ * access pages and put a permission back: the wildcard, the role editor
+ * itself, or the user admin, where a role that still carries the right can be
+ * handed to somebody. A save that would leave the signed-in admin without one
+ * of them is refused — there is no way back from it inside the app, only a
+ * script run against the database.
  */
-export const ACCESS_PERMISSIONS = [ADMIN_PERMISSION, 'updateUserEntity'];
+export const ACCESS_PERMISSIONS = [
+	ADMIN_PERMISSION,
+	RolePermissionsService.updateRoleEntity,
+	UserPermissionsService.updateUserEntity,
+];
 
 /** Whether these permissions still let their holder manage access. */
 export const keepsAccess = (permissions: string[]): boolean =>
@@ -51,7 +91,7 @@ export interface PermissionResource {
 	resource: string;
 	/** Translation key of the row label. */
 	labelKey: string;
-	/** The actions the rules, the functions or the client check for it. */
+	/** The actions the rules, the callables or the guards check for it. */
 	actions: PermissionAction[];
 }
 
@@ -67,217 +107,350 @@ export const toPermission = (
 	resource: string
 ): string => `${action}${resource}`;
 
-/** Every entity that is written through the catalog's own rules. */
-const CATALOG_WRITES: PermissionAction[] = ['create', 'update', 'delete'];
+/** A permission name split back into the two halves it was built from. */
+const fromPermission = (
+	permission: string
+): { action: PermissionAction; resource: string } => {
+	const action = PERMISSION_ACTIONS.find((candidate) =>
+		permission.startsWith(candidate)
+	);
 
-/** What a collector may do with their own data, their own copies included. */
-const OWN_DATA: PermissionAction[] = ['view', 'create', 'update', 'delete'];
+	if (!action) {
+		throw new Error(`Not an action on a resource: ${permission}`);
+	}
 
-const ownedResource = (
-	entity: string,
-	labelKey: string
-): PermissionResource => ({
-	resource: `Owned${entity}Entity`,
-	labelKey,
-	actions: OWN_DATA,
-});
+	return { action, resource: permission.slice(action.length) };
+};
 
-const pageResource = (resource: string, labelKey: string) => ({
-	resource,
-	labelKey,
-	actions: ['view'] as PermissionAction[],
-});
+/**
+ * One row of the grid, read off the permissions handed in. They must all名
+ * the same resource — a row is one resource and the actions it accepts.
+ */
+const row = (
+	labelKey: string,
+	permissions: readonly string[]
+): PermissionResource => {
+	const parsed = permissions.map(fromPermission);
+	const [first] = parsed;
 
+	if (!first) {
+		throw new Error(`A row with no permission: ${labelKey}`);
+	}
+
+	if (parsed.some(({ resource }) => resource !== first.resource)) {
+		throw new Error(
+			`A row over more than one resource: ${permissions.join(', ')}`
+		);
+	}
+
+	return {
+		resource: first.resource,
+		labelKey,
+		actions: PERMISSION_ACTIONS.filter((action) =>
+			parsed.some((permission) => permission.action === action)
+		),
+	};
+};
+
+/**
+ * A page row. The constant is declared by the admin library that guards the
+ * route (`ArtistAdminPermissionsService.viewArtistListPage`), which lives
+ * behind a lazy Angular module — importing it here would drag that module into
+ * this page's bundle. So the name is composed from the same two halves it is
+ * composed from there, and the test holds the two spellings together.
+ */
+const pageRow = (labelKey: string, page: string): PermissionResource =>
+	row(labelKey, [ActionEnum.VIEW.toString() + page]);
+
+/** What an admin may be given. */
 export const PERMISSION_CATALOG: PermissionGroup[] = [
 	{
 		labelKey: 'admin.role.group.catalog',
 		hintKey: 'admin.role.group.catalog-hint',
 		resources: [
-			{
-				resource: 'ArtistEntity',
-				labelKey: 'admin.role.resource.artist',
-				actions: CATALOG_WRITES,
-			},
-			{
-				resource: 'AlbumEntity',
-				labelKey: 'admin.role.resource.album',
-				actions: CATALOG_WRITES,
-			},
-			{
-				resource: 'ReleaseEntity',
-				labelKey: 'admin.role.resource.release',
-				actions: CATALOG_WRITES,
-			},
-			{
-				resource: 'TrackEntity',
-				labelKey: 'admin.role.resource.track',
-				actions: CATALOG_WRITES,
-			},
-			{
-				resource: 'LabelEntity',
-				labelKey: 'admin.role.resource.label',
-				actions: CATALOG_WRITES,
-			},
-			{
-				resource: 'MusicianEntity',
-				labelKey: 'admin.role.resource.musician',
-				actions: CATALOG_WRITES,
-			},
-			{
-				resource: 'MembershipEntity',
-				labelKey: 'admin.role.resource.membership',
-				actions: CATALOG_WRITES,
-			},
-			{
-				resource: 'ContributionEntity',
-				labelKey: 'admin.role.resource.contribution',
-				actions: CATALOG_WRITES,
-			},
-			{
-				resource: 'DocumentEntity',
-				labelKey: 'admin.role.resource.document',
-				actions: CATALOG_WRITES,
-			},
-			{
-				resource: 'GenreEntity',
-				labelKey: 'admin.role.resource.genre',
-				actions: CATALOG_WRITES,
-			},
-			{
-				resource: 'MusicCollectionEntity',
-				labelKey: 'admin.role.resource.musicCollection',
-				actions: CATALOG_WRITES,
-			},
-			{
-				resource: 'EntityQuantityEntity',
-				labelKey: 'admin.role.resource.entityQuantity',
-				actions: CATALOG_WRITES,
-			},
-		],
-	},
-	{
-		labelKey: 'admin.role.group.collector',
-		hintKey: 'admin.role.group.collector-hint',
-		resources: [
-			{
-				resource: 'CollectionItemEntity',
-				labelKey: 'admin.role.resource.collectionItem',
-				actions: OWN_DATA,
-			},
-			{
-				resource: 'WishlistItemEntity',
-				labelKey: 'admin.role.resource.wishlistItem',
-				actions: OWN_DATA,
-			},
-			{
-				resource: 'ReleaseRequestEntity',
-				labelKey: 'admin.role.resource.releaseRequest',
-				actions: ['create', 'delete'],
-			},
-		],
-	},
-	{
-		labelKey: 'admin.role.group.owned',
-		hintKey: 'admin.role.group.owned-hint',
-		resources: [
-			ownedResource('Artist', 'admin.role.resource.artist'),
-			ownedResource('Album', 'admin.role.resource.album'),
-			ownedResource('Release', 'admin.role.resource.release'),
-			ownedResource('Track', 'admin.role.resource.track'),
-			ownedResource('Label', 'admin.role.resource.label'),
-			ownedResource('Musician', 'admin.role.resource.musician'),
-			ownedResource('Membership', 'admin.role.resource.membership'),
-			ownedResource('Contribution', 'admin.role.resource.contribution'),
-			ownedResource('Document', 'admin.role.resource.document'),
+			row('admin.role.resource.artist', [
+				ArtistPermissionsService.createArtistEntity,
+				ArtistPermissionsService.updateArtistEntity,
+				ArtistPermissionsService.deleteArtistEntity,
+			]),
+			row('admin.role.resource.album', [
+				AlbumPermissionsService.createAlbumEntity,
+				AlbumPermissionsService.updateAlbumEntity,
+				AlbumPermissionsService.deleteAlbumEntity,
+			]),
+			row('admin.role.resource.release', [
+				ReleasePermissionsService.createReleaseEntity,
+				ReleasePermissionsService.updateReleaseEntity,
+				ReleasePermissionsService.deleteReleaseEntity,
+			]),
+			row('admin.role.resource.track', [
+				TrackPermissionsService.createTrackEntity,
+				TrackPermissionsService.updateTrackEntity,
+				TrackPermissionsService.deleteTrackEntity,
+			]),
+			row('admin.role.resource.label', [
+				LabelPermissionsService.createLabelEntity,
+				LabelPermissionsService.updateLabelEntity,
+				LabelPermissionsService.deleteLabelEntity,
+			]),
+			row('admin.role.resource.musician', [
+				MusicianPermissionsService.createMusicianEntity,
+				MusicianPermissionsService.updateMusicianEntity,
+				MusicianPermissionsService.deleteMusicianEntity,
+			]),
+			row('admin.role.resource.membership', [
+				MembershipPermissionsService.createMembershipEntity,
+				MembershipPermissionsService.updateMembershipEntity,
+				MembershipPermissionsService.deleteMembershipEntity,
+			]),
+			row('admin.role.resource.contribution', [
+				ContributionPermissionsService.createContributionEntity,
+				ContributionPermissionsService.updateContributionEntity,
+				ContributionPermissionsService.deleteContributionEntity,
+			]),
+			row('admin.role.resource.document', [
+				DocumentPermissionsService.createDocumentEntity,
+				DocumentPermissionsService.updateDocumentEntity,
+				DocumentPermissionsService.deleteDocumentEntity,
+			]),
+			row('admin.role.resource.genre', [
+				GenrePermissionsService.createGenreEntity,
+				GenrePermissionsService.updateGenreEntity,
+				GenrePermissionsService.deleteGenreEntity,
+			]),
+			row('admin.role.resource.musicCollection', [
+				MusicCollectionPermissionsService.createMusicCollectionEntity,
+				MusicCollectionPermissionsService.updateMusicCollectionEntity,
+				MusicCollectionPermissionsService.deleteMusicCollectionEntity,
+			]),
+			// One permission for all three writes: the document is a
+			// by-product of the sync, and the rules gate its create, update
+			// and delete on the same name.
+			row('admin.role.resource.entityQuantity', [
+				EntityQuantityPermissionsService.updateEntityQuantityEntity,
+			]),
 		],
 	},
 	{
 		labelKey: 'admin.role.group.access',
 		hintKey: 'admin.role.group.access-hint',
 		resources: [
-			{
-				resource: 'RoleEntity',
-				labelKey: 'admin.role.resource.role',
-				actions: CATALOG_WRITES,
-			},
-			{
-				resource: 'UserEntity',
-				labelKey: 'admin.role.resource.user',
-				actions: OWN_DATA,
-			},
-			{
-				resource: 'SecurityEntity',
-				labelKey: 'admin.role.resource.security',
-				actions: ['view'],
-			},
+			row('admin.role.resource.role', [
+				RolePermissionsService.createRoleEntity,
+				RolePermissionsService.updateRoleEntity,
+				RolePermissionsService.deleteRoleEntity,
+			]),
+			row('admin.role.resource.user', [
+				UserPermissionsService.viewUserEntity,
+				UserPermissionsService.createUserEntity,
+				UserPermissionsService.updateUserEntity,
+				UserPermissionsService.deleteUserEntity,
+			]),
+			row('admin.role.resource.security', [
+				SecurityPermissionsService.viewSecurityEntity,
+			]),
 		],
 	},
 	{
 		labelKey: 'admin.role.group.system',
 		hintKey: 'admin.role.group.system-hint',
 		resources: [
-			{
-				resource: 'DefaultLanguage',
-				labelKey: 'admin.role.resource.defaultLanguage',
-				actions: ['update'],
-			},
-			{
-				resource: 'BadgeGenerationSettings',
-				labelKey: 'admin.role.resource.badgeSettings',
-				actions: ['update'],
-			},
+			row('admin.role.resource.defaultLanguage', [
+				SettingPermissionsService.updateDefaultLanguage,
+			]),
+			row('admin.role.resource.badgeSettings', [
+				SettingPermissionsService.updateBadgeGenerationSettings,
+			]),
 		],
 	},
 	{
 		labelKey: 'admin.role.group.pages',
 		hintKey: 'admin.role.group.pages-hint',
 		resources: [
-			pageResource('ArtistListPage', 'admin.role.page.artistList'),
-			pageResource('ArtistEditPage', 'admin.role.page.artistEdit'),
-			pageResource('AlbumListPage', 'admin.role.page.albumList'),
-			pageResource('AlbumEditPage', 'admin.role.page.albumEdit'),
-			pageResource('ReleaseListPage', 'admin.role.page.releaseList'),
-			pageResource('ReleaseEditPage', 'admin.role.page.releaseEdit'),
-			pageResource('LabelListPage', 'admin.role.page.labelList'),
-			pageResource('LabelEditPage', 'admin.role.page.labelEdit'),
-			pageResource('MusicianListPage', 'admin.role.page.musicianList'),
-			pageResource('MusicianEditPage', 'admin.role.page.musicianEdit'),
-			pageResource('DocumentListPage', 'admin.role.page.documentList'),
-			pageResource('DocumentEditPage', 'admin.role.page.documentEdit'),
-			pageResource(
-				'CollectionItemListPage',
-				'admin.role.page.collectionItemList'
+			pageRow(
+				'admin.role.page.artistList',
+				ArtistResourceEnum.ARTIST_LIST_PAGE
 			),
-			pageResource(
-				'CollectionItemEditPage',
-				'admin.role.page.collectionItemEdit'
+			pageRow(
+				'admin.role.page.artistEdit',
+				ArtistResourceEnum.ARTIST_EDIT_PAGE
 			),
-			pageResource(
-				'WishlistItemListPage',
-				'admin.role.page.wishlistItemList'
+			pageRow(
+				'admin.role.page.albumList',
+				AlbumResourceEnum.ALBUM_LIST_PAGE
 			),
-			pageResource(
-				'WishlistItemEditPage',
-				'admin.role.page.wishlistItemEdit'
+			pageRow(
+				'admin.role.page.albumEdit',
+				AlbumResourceEnum.ALBUM_EDIT_PAGE
+			),
+			pageRow(
+				'admin.role.page.releaseList',
+				ReleaseResourceEnum.RELEASE_LIST_PAGE
+			),
+			pageRow(
+				'admin.role.page.releaseEdit',
+				ReleaseResourceEnum.RELEASE_EDIT_PAGE
+			),
+			pageRow(
+				'admin.role.page.labelList',
+				LabelResourceEnum.LABEL_LIST_PAGE
+			),
+			pageRow(
+				'admin.role.page.labelEdit',
+				LabelResourceEnum.LABEL_EDIT_PAGE
+			),
+			pageRow(
+				'admin.role.page.musicianList',
+				MusicianResourceEnum.MUSICIAN_LIST_PAGE
+			),
+			pageRow(
+				'admin.role.page.musicianEdit',
+				MusicianResourceEnum.MUSICIAN_EDIT_PAGE
+			),
+			pageRow(
+				'admin.role.page.documentList',
+				DocumentResourceEnum.DOCUMENT_LIST_PAGE
+			),
+			pageRow(
+				'admin.role.page.documentEdit',
+				DocumentResourceEnum.DOCUMENT_EDIT_PAGE
+			),
+			pageRow(
+				'admin.role.page.collectionItemList',
+				CollectionItemResourceEnum.COLLECTION_ITEM_LIST_PAGE
+			),
+			pageRow(
+				'admin.role.page.collectionItemEdit',
+				CollectionItemResourceEnum.COLLECTION_ITEM_EDIT_PAGE
+			),
+			pageRow(
+				'admin.role.page.wishlistItemList',
+				WishlistItemResourceEnum.WISHLIST_ITEM_LIST_PAGE
+			),
+			pageRow(
+				'admin.role.page.wishlistItemEdit',
+				WishlistItemResourceEnum.WISHLIST_ITEM_EDIT_PAGE
 			),
 		],
 	},
 ];
 
-/** Every permission the catalog offers, the wildcard included. */
-export const catalogPermissions = (): string[] => [
-	ADMIN_PERMISSION,
-	...PERMISSION_CATALOG.flatMap((group) =>
+/**
+ * What every collector has already, and nobody hands out.
+ *
+ * The `USER` role carries these, and the permission sync puts that role on a
+ * user document the moment it appears (`apps/functions` — `DEFAULT_ROLE`). So
+ * they are not a role's business: a checkbox for them would say that an admin
+ * decides whether a collector may put a record on their own shelf, and the
+ * one thing it could really do is take it away from everybody at once.
+ *
+ * The editor shows them, because a page that leaves them out would suggest a
+ * new role starts from nothing. It shows them as they are — carried, not
+ * given.
+ */
+export const USER_BASELINE_GROUPS: PermissionGroup[] = [
+	{
+		labelKey: 'admin.role.group.collector',
+		hintKey: 'admin.role.group.collector-hint',
+		resources: [
+			row('admin.role.resource.collectionItem', [
+				CollectionItemPermissionsService.createCollectionItemEntity,
+				CollectionItemPermissionsService.updateCollectionItemEntity,
+				CollectionItemPermissionsService.deleteCollectionItemEntity,
+			]),
+			row('admin.role.resource.wishlistItem', [
+				WishlistItemPermissionsService.createWishlistItemEntity,
+				WishlistItemPermissionsService.updateWishlistItemEntity,
+				WishlistItemPermissionsService.deleteWishlistItemEntity,
+			]),
+		],
+	},
+	{
+		labelKey: 'admin.role.group.owned',
+		hintKey: 'admin.role.group.owned-hint',
+		resources: [
+			row('admin.role.resource.artist', [
+				OwnedPermissionsService.createOwnedArtistEntity,
+				OwnedPermissionsService.updateOwnedArtistEntity,
+				OwnedPermissionsService.deleteOwnedArtistEntity,
+			]),
+			row('admin.role.resource.album', [
+				OwnedPermissionsService.createOwnedAlbumEntity,
+				OwnedPermissionsService.updateOwnedAlbumEntity,
+				OwnedPermissionsService.deleteOwnedAlbumEntity,
+			]),
+			row('admin.role.resource.release', [
+				OwnedPermissionsService.createOwnedReleaseEntity,
+				OwnedPermissionsService.updateOwnedReleaseEntity,
+				OwnedPermissionsService.deleteOwnedReleaseEntity,
+			]),
+			row('admin.role.resource.track', [
+				OwnedPermissionsService.createOwnedTrackEntity,
+				OwnedPermissionsService.updateOwnedTrackEntity,
+				OwnedPermissionsService.deleteOwnedTrackEntity,
+			]),
+			row('admin.role.resource.label', [
+				OwnedPermissionsService.createOwnedLabelEntity,
+				OwnedPermissionsService.updateOwnedLabelEntity,
+				OwnedPermissionsService.deleteOwnedLabelEntity,
+			]),
+			row('admin.role.resource.musician', [
+				OwnedPermissionsService.createOwnedMusicianEntity,
+				OwnedPermissionsService.updateOwnedMusicianEntity,
+				OwnedPermissionsService.deleteOwnedMusicianEntity,
+			]),
+			row('admin.role.resource.membership', [
+				OwnedPermissionsService.createOwnedMembershipEntity,
+				OwnedPermissionsService.updateOwnedMembershipEntity,
+				OwnedPermissionsService.deleteOwnedMembershipEntity,
+			]),
+			row('admin.role.resource.contribution', [
+				OwnedPermissionsService.createOwnedContributionEntity,
+				OwnedPermissionsService.updateOwnedContributionEntity,
+				OwnedPermissionsService.deleteOwnedContributionEntity,
+			]),
+			row('admin.role.resource.document', [
+				OwnedPermissionsService.createOwnedDocumentEntity,
+				OwnedPermissionsService.updateOwnedDocumentEntity,
+				OwnedPermissionsService.deleteOwnedDocumentEntity,
+			]),
+		],
+	},
+];
+
+/** Every group the app can put a name to, carried ones included. */
+export const ALL_PERMISSION_GROUPS: PermissionGroup[] = [
+	...PERMISSION_CATALOG,
+	...USER_BASELINE_GROUPS,
+];
+
+const flatten = (groups: PermissionGroup[]): string[] =>
+	groups.flatMap((group) =>
 		group.resources.flatMap((resource) =>
 			resource.actions.map((action) =>
 				toPermission(action, resource.resource)
 			)
 		)
-	),
+	);
+
+/** Everything the grid can hand out, the wildcard included. */
+export const grantablePermissions = (): string[] => [
+	ADMIN_PERMISSION,
+	...flatten(PERMISSION_CATALOG),
+];
+
+/** What the `USER` role carries for every collector. */
+export const baselinePermissions = (): string[] =>
+	flatten(USER_BASELINE_GROUPS);
+
+/** Every permission the app knows by name, whether it hands it out or not. */
+export const catalogPermissions = (): string[] => [
+	ADMIN_PERMISSION,
+	...flatten(ALL_PERMISSION_GROUPS),
 ];
 
 /**
- * The permissions a role carries that the catalog does not know — written by a
+ * The permissions a role carries that the app does not know — written by a
  * script, or left over from a resource that has since been renamed. They are
  * kept and shown rather than dropped: a save that silently took a permission
  * away would be the worst kind of write on this page.

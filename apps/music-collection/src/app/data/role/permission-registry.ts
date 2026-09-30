@@ -1,6 +1,6 @@
 import {
 	ADMIN_PERMISSION,
-	PERMISSION_CATALOG,
+	ALL_PERMISSION_GROUPS,
 	PermissionAction,
 	toPermission,
 } from './permission-catalog';
@@ -29,8 +29,13 @@ export interface PermissionDescriptor {
 	groupKey: string;
 }
 
+/**
+ * Built from every group, the carried ones included: most of what a collector
+ * holds is the `USER` baseline, and the user admin page has to be able to put
+ * a name to it even though no role hands it out.
+ */
 const REGISTRY: ReadonlyMap<string, PermissionDescriptor> = new Map(
-	PERMISSION_CATALOG.flatMap((group) =>
+	ALL_PERMISSION_GROUPS.flatMap((group) =>
 		group.resources.flatMap((resource) =>
 			resource.actions.map((action): [string, PermissionDescriptor] => {
 				const permission = toPermission(action, resource.resource);
@@ -93,21 +98,21 @@ export function groupPermissions(permissions: string[]): PermissionGrouping[] {
 
 	// The catalog's own order, not the order the permissions happened to be
 	// written in: a role reads the same way wherever it is shown.
-	return PERMISSION_CATALOG.filter((group) => groups.has(group.labelKey)).map(
-		(group) => ({
-			groupKey: group.labelKey,
-			lines: group.resources
-				.filter((resource) =>
-					groups.get(group.labelKey)?.has(resource.labelKey)
-				)
-				.map((resource) => ({
-					labelKey: resource.labelKey,
-					actions: orderActions(
-						groups.get(group.labelKey)?.get(resource.labelKey) ?? []
-					),
-				})),
-		})
-	);
+	return ALL_PERMISSION_GROUPS.filter((group) =>
+		groups.has(group.labelKey)
+	).map((group) => ({
+		groupKey: group.labelKey,
+		lines: group.resources
+			.filter((resource) =>
+				groups.get(group.labelKey)?.has(resource.labelKey)
+			)
+			.map((resource) => ({
+				labelKey: resource.labelKey,
+				actions: orderActions(
+					groups.get(group.labelKey)?.get(resource.labelKey) ?? []
+				),
+			})),
+	}));
 }
 
 /** Whether the list carries the wildcard. */
@@ -118,7 +123,7 @@ export const hasWildcard = (permissions: string[]): boolean =>
 function orderActions(actions: PermissionAction[]): PermissionAction[] {
 	const held = new Set(actions);
 
-	return (['view', 'create', 'update', 'delete'] as PermissionAction[]).filter(
-		(action) => held.has(action)
-	);
+	return (
+		['view', 'create', 'update', 'delete'] as PermissionAction[]
+	).filter((action) => held.has(action));
 }
