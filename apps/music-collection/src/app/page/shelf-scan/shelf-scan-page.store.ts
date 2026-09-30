@@ -39,6 +39,7 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { NgxPermissionsService } from 'ngx-permissions';
 
+import { scanQuotaMessage } from '../../data/photo-scan';
 import { ReleaseRequestEffect } from '../../data/release-request';
 import { PreparedShelfPhoto, ShelfScanEffect } from '../../data/shelf-scan';
 import {
@@ -98,7 +99,13 @@ const initialState: ShelfScanPageState = {
 /** What the collector reads when the scan fails. */
 function describeError(error: unknown): string {
 	const code = (error as { code?: string })?.code ?? '';
+	// Two photos, two model requests — and the allowance they came out of is
+	// the same one the single-record scan spends.
+	const quota = scanQuotaMessage(error);
 
+	if (quota) {
+		return quota;
+	}
 	if (code.endsWith('resource-exhausted')) {
 		return 'The reading is busy right now. Try again in a minute.';
 	}

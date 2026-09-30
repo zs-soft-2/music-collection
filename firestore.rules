@@ -397,6 +397,16 @@ service cloud.firestore {
         allow write: if false; // answerDailyQuestion
       }
 
+      // A fotós azonosítás napi kerete: egy dokumentum egy nap, benne a ma
+      // elindított modellkérések száma. Az `identifyRecordFromPhoto` és az
+      // `identifyShelfFromPhotos` írja (Admin SDK). A gyűjtő láthatja,
+      // mennyit használt el — nullázni viszont nem tudja, különben a keret
+      // annyit érne, amennyit a kliens jókedve.
+      match /scan-quota/{day} {
+        allow read: if isSelf(uid);
+        allow write: if false; // identifyRecordFromPhoto, identifyShelfFromPhotos
+      }
+
       // A játékok kasszája (`game/daily-question`): pont, sorozat, találat.
       // Szándékosan külön a collection-pontoktól — ott semmi nem fizet a
       // collection befejezéséig, és ha a kvíz ugyanabba a kasszába

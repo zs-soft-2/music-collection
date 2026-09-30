@@ -65,6 +65,7 @@ import {
 } from './music-collection-write';
 import { DiscogsSearchHit } from './discogs-search';
 import { ScanAlbumContext, scanPhoto } from './photo-scan';
+import { ScanQuotaError, reserveVisionRequests } from './photo-scan-quota';
 import {
 	MAX_SHELF_PHOTOS,
 	ShelfPhotoContext,
@@ -403,6 +404,20 @@ function discogsFailure(error: unknown, missing: string): HttpsError {
 	}
 
 	return new HttpsError('unavailable', 'A Discogs nem érhető el.');
+}
+
+/**
+ * Az elfogyott fotós keret callable-hibája. A `source` azért kell, mert a
+ * `resource-exhausted` a fotós végpontokon háromfélét jelenthet — túlterhelt
+ * Discogs, túlterhelt modell, elfogyott keret —, és a gyűjtőnek csak az első
+ * kettőnél érdemes újra megpróbálnia.
+ */
+function scanQuotaFailure(error: ScanQuotaError): HttpsError {
+	return new HttpsError(
+		error.reason === 'off' ? 'failed-precondition' : 'resource-exhausted',
+		error.message,
+		{ source: 'quota' }
+	);
 }
 
 /**
@@ -829,6 +844,10 @@ export const discogsLookup = onCall(
  * A katalógussal a kliens veti össze a jelölteket; ez a function csak azt
  * mondja meg, mi van a fotón. A vonalkódos kereséseket
  * `discogs-cache/barcode-{ean}` alatt egy hétig őrizzük.
+ *
+ * A modell hívása napi keretbe fér (`photo-scan-quota.ts`), gyűjtőnként: a
+ * jogosultság azt mondja meg, hogy a hívó gyűjthet, nem azt, hogy mennyit
+ * költhet.
  */
 export const identifyRecordFromPhoto = onCall(
 	{
@@ -874,9 +893,23 @@ export const identifyRecordFromPhoto = onCall(
 					client: createVisionClient(anthropicApiKey.value()),
 					discogs: { token: discogsToken.value() || null },
 					barcodeCache: firestoreBarcodeCache(),
+					// A napi keret: a kép elolvasása előtt fogy, a vonalkóddal
+					// eldőlt keresés tehát ingyen van.
+					reserveVision: async () => {
+						await reserveVisionRequests(
+							database(),
+							uid,
+							1,
+							Date.now()
+						);
+					},
 				}
 			);
 		} catch (error) {
+			// Az elfogyott keret nem a mi hibánk és nem is múló baj: pontos
+			// üzenet tartozik hozzá, nem az alábbi „valami hiba történt".
+			if (error instanceof ScanQuotaError) throw scanQuotaFailure(error);
+
 			logger.warn(`identifyRecordFromPhoto ${uid}`, error);
 
 			// A `details.source` mondja meg a kliensnek, mi akadt el: a
@@ -926,6 +959,9 @@ function readShelfMedia(value: unknown): ShelfPhotoContext['media'] {
  * Préselést itt nem keresünk: rekeszenként tíz-húsz Discogs-kérés belefutna a
  * percenkénti keretbe, és a sorok nagy része a kliensnél lévő katalógusból is
  * megválaszolható. A Discogs a beküldött soroké, a review után.
+ *
+ * A két kérés a gyűjtő napi fotós keretéből megy (`photo-scan-quota.ts`) —
+ * ugyanabból, amiből az egy lemezt azonosító hívás.
  */
 export const identifyShelfFromPhotos = onCall(
 	{
@@ -971,12 +1007,24 @@ export const identifyShelfFromPhotos = onCall(
 		const client = createVisionClient(anthropicApiKey.value());
 
 		try {
+			// Minden fotó egy-egy modellkérés, és mindegyik el is indul — a
+			// keretet ezért egyben, előre vonjuk le. Ha nincs benne mind, egy
+			// sem fut le: egy félig elolvasott rekesz a gyűjtőnek semmit nem ér.
+			await reserveVisionRequests(
+				database(),
+				uid,
+				photos.length,
+				Date.now()
+			);
+
 			const reads = await Promise.all(
 				photos.map((photo) => readShelfSignals(photo, client, context))
 			);
 
 			return { ...mergeShelfReads(reads), usedVision: true };
 		} catch (error) {
+			if (error instanceof ScanQuotaError) throw scanQuotaFailure(error);
+
 			logger.warn(`identifyShelfFromPhotos ${uid}`, error);
 
 			if (error instanceof VisionError) {

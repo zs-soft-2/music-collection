@@ -35,7 +35,11 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { NgxPermissionsService } from 'ngx-permissions';
 
-import { PhotoScanEffect, PreparedPhoto } from '../../data/photo-scan';
+import {
+	PhotoScanEffect,
+	PreparedPhoto,
+	scanQuotaMessage,
+} from '../../data/photo-scan';
 import { ReleaseRequestEffect } from '../../data/release-request';
 import {
 	ScanCandidateView,
@@ -85,7 +89,13 @@ const initialState: ScanPageState = {
 /** What the collector reads when the scan fails. */
 function describeError(error: unknown): string {
 	const code = (error as { code?: string })?.code ?? '';
+	// The daily allowance comes back as `resource-exhausted` too, and for that
+	// one "try again in a minute" would send the collector back for nothing.
+	const quota = scanQuotaMessage(error);
 
+	if (quota) {
+		return quota;
+	}
 	if (code.endsWith('resource-exhausted')) {
 		return 'Discogs is busy right now. Try again in a minute.';
 	}

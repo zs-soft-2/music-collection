@@ -65,7 +65,11 @@ import { AlbumDetailsEffect } from '../../data/album-details';
 import { CopySerialEffect, CopySerialTakenError } from '../../data/copy-serial';
 import { PlayLogEffect, PlayLogEntry, listeningFor } from '../../data/play-log';
 import { UserSettingsEffect } from '../../data/user-settings';
-import { PhotoScanEffect, PreparedPhoto } from '../../data/photo-scan';
+import {
+	PhotoScanEffect,
+	PreparedPhoto,
+	scanQuotaMessage,
+} from '../../data/photo-scan';
 import { ReleaseRequestEffect } from '../../data/release-request';
 import {
 	ArtistView,
@@ -305,7 +309,11 @@ function describeScanError(error: unknown): string {
 		code?: string;
 		details?: { source?: string };
 	};
+	const quota = scanQuotaMessage(error);
 
+	if (quota) {
+		return quota;
+	}
 	if (details?.source === 'vision') {
 		return code.endsWith('resource-exhausted')
 			? 'The photo reader is busy right now. Try again in a moment.'

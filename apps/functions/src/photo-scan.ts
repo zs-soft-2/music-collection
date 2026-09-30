@@ -82,6 +82,15 @@ export interface ScanDependencies {
 	client: Anthropic;
 	discogs: DiscogsRequestOptions;
 	barcodeCache?: BarcodeCache;
+	/**
+	 * A modellkérés napi keretének levonása. Közvetlenül a hívás előtt fut, és
+	 * ha nincs miből, ő dobja a hibát — a lánc ott áll meg.
+	 *
+	 * Azért itt és nem a hívóban: a kliens vonalkódja eldöntheti a keresést a
+	 * modell futása nélkül, és azt a kérést nem is kell fizetni. A hívó a
+	 * `usedVision`-ból csak utólag látná, mi fogyott.
+	 */
+	reserveVision?: () => Promise<void>;
 }
 
 /** Ennél több jelöltet egy dialogban úgysem néz végig a gyűjtő. */
@@ -204,7 +213,9 @@ export async function scanPhoto(
 		return { signals: null, candidates: best, usedVision: false };
 	}
 
-	// 2. A kép: innentől a modell jelei viszik a keresést.
+	// 2. A kép: innentől a modell jelei viszik a keresést — és itt fogy a keret.
+	await dependencies.reserveVision?.();
+
 	const signals = await readPhotoSignals(input.photo, dependencies.client);
 	const result = (candidates: ScanCandidate[]): ScanPhotoResult => ({
 		signals,

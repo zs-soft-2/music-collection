@@ -96,6 +96,64 @@ describe('scanPhoto', () => {
 		});
 	});
 
+	it('a napi keretet a vonalkóddal eldőlt keresés nem fogyasztja', async () => {
+		const vision = visionClient(signals());
+		const api = discogs({ 'barcode=720642442524': [searchResult()] });
+		const reserved: number[] = [];
+
+		await scanPhoto(
+			{ photo, barcode: '7 2064 24425 2 4' },
+			{
+				client: vision.client,
+				discogs: api.options,
+				reserveVision: async () => {
+					reserved.push(1);
+				},
+			}
+		);
+
+		expect(reserved).toHaveLength(0);
+	});
+
+	it('a képet elolvasó hívás egy kérést von le', async () => {
+		const vision = visionClient(signals());
+		const api = discogs({ 'catno=RR+9862': [searchResult()] });
+		const reserved: number[] = [];
+
+		const result = await scanPhoto(
+			{ photo, barcode: null },
+			{
+				client: vision.client,
+				discogs: api.options,
+				reserveVision: async () => {
+					reserved.push(1);
+				},
+			}
+		);
+
+		expect(reserved).toHaveLength(1);
+		expect(result.usedVision).toBe(true);
+	});
+
+	it('az elfogyott keret a modell hívása előtt állítja meg a láncot', async () => {
+		const vision = visionClient(signals());
+		const api = discogs({});
+
+		await expect(
+			scanPhoto(
+				{ photo, barcode: null },
+				{
+					client: vision.client,
+					discogs: api.options,
+					reserveVision: async () => {
+						throw new Error('nincs keret');
+					},
+				}
+			)
+		).rejects.toThrow('nincs keret');
+		expect(vision.calls).toHaveLength(0);
+	});
+
 	it('vonalkód nélkül a katalógusszám dönt', async () => {
 		const vision = visionClient(signals());
 		const api = discogs({ 'catno=RR+9862': [searchResult()] });
