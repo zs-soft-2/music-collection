@@ -1,5 +1,6 @@
 import {
 	Observable,
+	asyncScheduler,
 	catchError,
 	combineLatest,
 	concat,
@@ -10,6 +11,7 @@ import {
 	map,
 	of,
 	shareReplay,
+	throttleTime,
 } from 'rxjs';
 
 import {
@@ -72,6 +74,24 @@ export const UPDATED_AT_FIELD = 'updatedAt';
  */
 const BATCH_WRITE_LIMIT = 499;
 const BATCH_DELETE_LIMIT = 249;
+
+/**
+ * How long a run of catalog stamps is gathered into one round of syncing.
+ *
+ * Every write bumps `modifiedAt` and every client watches that one document,
+ * so a stamp is an order to every open client to ask the feature again. A
+ * bulk edit sends one per batch, and a signed-in client can send them by
+ * hand — the rules hold the stamp to the server clock and to one feature a
+ * write, but they cannot tell a made-up stamp from a real write's. Unchecked,
+ * each one is a round of queries at every client.
+ *
+ * The first stamp goes straight through, so a collector's own write shows at
+ * once and a quiet catalog is as prompt as it ever was; only the ones treading
+ * on its heels wait for the window to close, and then one round answers all of
+ * them. The state is a whole document, not a list of events, so the last one
+ * carries everything the dropped ones said.
+ */
+const CATALOG_BUMP_WINDOW = 2000;
 
 /** One document written, as `setAll` takes it. */
 interface SyncWrite {
@@ -232,7 +252,8 @@ export const withLocalUpdatedAt = <T extends object>(
  * listening to the single `sync/catalog` document. When a feature's
  * `modifiedAt` is newer than what the cache holds, only the documents changed
  * since then are downloaded and deleted ones are evicted by their tombstones.
- * An unchanged catalog costs one document read per app start.
+ * An unchanged catalog costs one document read per app start, and a run of
+ * stamps one round of syncing rather than one apiece (CATALOG_BUMP_WINDOW).
  *
  * Bundles: when a feature is published as a bundle, a query without a
  * current cache loads the bundle from Cloud Storage (no document reads) and
@@ -279,7 +300,13 @@ export class FirestoreSyncService {
 					}
 				)
 			)
-		).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+		).pipe(
+			throttleTime(CATALOG_BUMP_WINDOW, asyncScheduler, {
+				leading: true,
+				trailing: true,
+			}),
+			shareReplay({ bufferSize: 1, refCount: true })
+		);
 
 	/**
 	 * The documents of a query: the local cache at once (when it is known to
@@ -428,6 +455,14 @@ export class FirestoreSyncService {
 		return { ...data, [UPDATED_AT_FIELD]: serverTimestamp() };
 	}
 
+	/**
+	 * Stamps the feature: the order the other clients sync by.
+	 *
+	 * One key a write and the server's own clock, because that is all the
+	 * rules let a client send (firestore.rules, `sync/catalog`) — a stamp the
+	 * client dated itself would sit in every client's marker and hide the
+	 * changes that came after it.
+	 */
 	private touch(batch: WriteBatch, featureKey: string): void {
 		batch.set(
 			this.catalogReference(),

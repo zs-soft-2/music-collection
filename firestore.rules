@@ -785,16 +785,51 @@ service cloud.firestore {
     }
 
     // ── Sync (FirestoreSyncService / catalog-sync.mjs) ──────────────────────
-    // Minden kliensírás ugyanabban a batch-ben bumpolja a `modifiedAt.<key>`-t.
-    // A rules nem tudja, melyik entitás íródik mellette, ezért bejelentkezett
-    // user a `modifiedAt`-et írhatja (legrosszabb eset: fölösleges cache-
-    // újratöltés); a `resetAt` csak ADMIN.
+    // Minden kliensírás ugyanabban a batch-ben bumpolja a `modifiedAt.<key>`-t,
+    // és ezt az egy dokumentumot figyeli minden kliens. A rules nem tudja,
+    // melyik entitás íródik mellette, ezért a bumpot bejelentkezett user is
+    // írhatja — de csak abban az alakban, ahogy a saját írása küldi:
+    //
+    //  - Egy íráson egy kulcs. Egy bump egy feature szinkron-körét indítja el
+    //    a nyitott klienseknél; ha egyszerre mindet át lehetne állítani, egy
+    //    írás rendelné újra a teljes katalógust mindenkinél.
+    //  - Az új érték a szerver órája (`serverTimestamp()` → `request.time`),
+    //    nem a kliens által választott időpont. A jövőbe állított bélyeg nem
+    //    egy fölösleges kört ér: a kliens a markerét is a jövőbe állítja, a
+    //    valódi változások alá esnek, és onnantól — a `resetAt`-ig, ami ADMIN
+    //    — néma marad a szinkron. Szám vagy szöveg a timestamp helyén
+    //    ugyanide vezet: a kliens időbélyeget hasonlít, és a lekérdezés
+    //    hibával, csendben megáll.
+    //  - Új kulcsot csak amíg van hely. A kitalált kulcs örökre a
+    //    dokumentumban marad, és minden kliens minden indulásnál letölti;
+    //    kulcsonként egy írással a dokumentumot az 1 MB-os plafonjáig lehetne
+    //    tolni, ami után már senki nem tud bumpolni. A katalógus ma ~60
+    //    kulcsot használ, a 200 ennek a háromszorosa.
+    //
+    // Ami ezután marad: ugyanannak a kulcsnak az ismétlése — annyi, amennyit
+    // egy legitim írás is okoz —, és ezt a kliens csillapítja
+    // (FirestoreSyncService, CATALOG_BUMP_WINDOW).
+    function isFeatureBump(before) {
+      let after = request.resource.data.modifiedAt;
+
+      return after is map
+          && after.diff(before).affectedKeys().size() == 1
+          && request.time in after.values()
+          && (before.keys().hasAll(after.keys())
+              || after.keys().size() <= 200);
+    }
     match /sync/catalog {
       allow read: if true;
       allow create: if isAdmin()
-                    || (isAuthed() && request.resource.data.keys().hasOnly(['modifiedAt']));
+                    || (isAuthed()
+                        && request.resource.data.keys().hasOnly(['modifiedAt'])
+                        && isFeatureBump({}));
       allow update: if isAdmin()
-                    || (isAuthed() && changedKeys().hasOnly(['modifiedAt']));
+                    || (isAuthed()
+                        && changedKeys().hasOnly(['modifiedAt'])
+                        && isFeatureBump('modifiedAt' in resource.data
+                                         ? resource.data.modifiedAt
+                                         : {}));
       allow delete: if isAdmin();
     }
 
