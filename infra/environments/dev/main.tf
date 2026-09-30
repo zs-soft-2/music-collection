@@ -211,6 +211,7 @@ module "firebase" {
   firestore_point_in_time_recovery = var.firestore_point_in_time_recovery
   app_check_domains                = var.app_check_domains
   app_check_debug_token            = var.app_check_debug_token
+  app_check_services               = var.app_check_services
 
   depends_on = [google_project_service.enabled]
 }

@@ -116,6 +116,12 @@ variable "app_check_debug_token" {
   description = "Devben: egy tofu-teremtette App Check debug token a localhosthoz. Prodban sosem."
 }
 
+variable "app_check_services" {
+  type        = map(string)
+  default     = {}
+  description = "App Check enforcement szolgáltatásonként (`firestore.googleapis.com`, `firebasestorage.googleapis.com`, `identitytoolkit.googleapis.com`) → ENFORCED vagy UNENFORCED. A fel nem soroltakon az App Check ki van kapcsolva."
+}
+
 variable "deployment_branches" {
   type        = list(string)
   default     = ["main"]

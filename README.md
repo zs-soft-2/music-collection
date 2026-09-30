@@ -124,8 +124,10 @@ App Check), OpenTofu/Terraform infrastruktúra.
   Ezt olvassa a `firestore.rules`, a `storage.rules` (cross-service
   `firestore.get()`) és a kliens (ngx-permissions). Az app a jogosultságok
   megérkezéséig vár az indulással.
-- **App Check** — minden callable bizonyítja, hogy az appunkból jött;
-  localhoston debug tokennel (lásd lentebb).
+- **App Check** — minden callable bizonyítja, hogy az appunkból jött, és a
+  dev Firestore is App Check tokent követel: a publikus olvasás így nem megy
+  tetszőleges scriptből, tetszőleges ütemben. Localhoston debug tokennel
+  (lásd lentebb).
 - **Verziózott kliens-cache és katalógus-bundle-ök** — a katalógus Firestore
   bundle-ökből, Cloud Storage-ból; egy Firestore-figyelés több olvasót szolgál
   ki, hogy ne kérdezzünk kétszer.
@@ -272,3 +274,33 @@ A `nx serve`/`nx build` innen generálja az
 nélkül is fut minden, csak a valódi reCAPTCHA-val (a `localhost` benne van a
 dev kulcs engedélyezett domainjei között). A debug mód csak a `localhost`-on
 kapcsol be, és a prod buildben sosem.
+
+### Mit véd az App Check
+
+A callable-öket a kód maga (`enforceAppCheck`), a Firestore-t és a Storage-ot
+viszont nem a mi kódunk szolgálja ki, hanem a Google API-ja: ott a védelmet az
+`app_check_services` kapcsolja be (`infra/environments/dev/dev.tfvars`,
+`infra/environments/prod/prod.tfvars`).
+
+| Szolgáltatás | dev | prod |
+| --- | --- | --- |
+| Callable-ök | a kódból, mindig | a kódból, mindig |
+| Cloud Firestore | `ENFORCED` | `UNENFORCED` (csak mér) |
+| Cloud Storage | `UNENFORCED` (csak mér) | `UNENFORCED` (csak mér) |
+
+Amit ez a fejlesztésen megváltoztat: a dev Firestore-ból App Check token nélkül
+**olvasni sem lehet**, nem csak callable-t hívni. A `nx serve` ezt a debug
+tokenből vagy a reCAPTCHA-ból szerzi meg; fejetlen Chrome-ban (ellenőrző
+scriptek) érdemes a debug tokent lehozni, mert ott a reCAPTCHA pontja alacsony
+lehet, és akkor az oldalak adat nélkül maradnak. Az Admin SDK-t — a `tools/`
+scripteket és a functionöket — az enforcement nem érinti.
+
+A Storage azért csak mér: a képek nem az SDK-n keresztül jelennek meg, hanem
+sima `<img>`-ből, közvetlen letöltési címről, ami nem visz App Check fejlécet.
+Az `UNENFORCED` mód a konzol App Check lapján megmutatja, hogy ezek
+ellenőrizetlennek számítanak-e; ha nem, a tfvars sora `ENFORCED`-ra váltható.
+Prodban azért nincs semmi élesítve, mert a hostingon egy régi build fut, amiben
+még nincs App Check — ott előbb a mai buildet kell kideployolni.
+
+Az enforcement az apply után kb. 15 perccel lép életbe, és ugyanennyivel áll
+vissza.

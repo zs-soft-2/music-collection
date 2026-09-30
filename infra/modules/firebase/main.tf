@@ -37,6 +37,31 @@ variable "app_check_debug_token" {
   description = "Devben: egy tofu-teremtette App Check debug token a localhosthoz. Prodban sosem — aki ismeri a tokent, az App Checket megkerülve hívhatja a callable-öket."
 }
 
+# Az App Check enforcement szolgáltatásonként külön kapcsoló: a kulcs a
+# szolgáltatás API-neve, az érték a mód.
+#
+#   ENFORCED   – a szolgáltatás elutasít minden App Check token nélküli kérést,
+#   UNENFORCED – nem utasít el semmit, csak méri, mennyi érkezne token nélkül.
+#
+# A fel nem sorolt szolgáltatás érintetlen marad (OFF): se nem véd, se nem mér.
+# Használható kulcsok:
+#   firestore.googleapis.com        – Cloud Firestore
+#   firebasestorage.googleapis.com  – Cloud Storage for Firebase
+#   identitytoolkit.googleapis.com  – Firebase Auth (bejelentkezés, regisztráció)
+variable "app_check_services" {
+  type        = map(string)
+  default     = {}
+  description = "App Check enforcement szolgáltatásonként: {\"firestore.googleapis.com\" = \"ENFORCED\"}. A fel nem soroltakon az App Check ki van kapcsolva."
+
+  validation {
+    condition = alltrue([
+      for mode in values(var.app_check_services) :
+      contains(["ENFORCED", "UNENFORCED"], mode)
+    ])
+    error_message = "Az App Check módja csak ENFORCED vagy UNENFORCED lehet; a kikapcsoláshoz hagyd ki a szolgáltatást a mapből."
+  }
+}
+
 variable "firestore_point_in_time_recovery" {
   type        = bool
   default     = false
@@ -130,6 +155,41 @@ resource "google_firebase_app_check_recaptcha_enterprise_config" "app" {
   project  = var.project_id
   app_id   = google_firebase_web_app.app.app_id
   site_key = google_recaptcha_enterprise_key.app_check[0].name
+}
+
+# ── App Check enforcement (Firestore, Storage) ─────────────────────────────
+# A callable-öket a kód maga védi (`enforceAppCheck`), a Firestore-t és a
+# Storage-ot viszont nem a mi kódunk szolgálja ki, hanem a Google API-ja: ott
+# egyedül ez a szolgáltatás-beállítás mondhatja ki, hogy App Check token nélkül
+# nem jön be kérés. Nélküle a szabályok publikus ágai (katalógus, borítók,
+# bundle-ök) bárki scriptjéből hívhatók, tetszőleges ütemben — a projekt-
+# azonosító és az apiKey a kliens bundle-jéből kiolvasható —, és az olvasási
+# költség is velük megy.
+#
+# A kliens megfelel a feltételnek: az App Check a Firebase appra épül
+# (`app.config.ts`), a Firestore és a Storage SDK-hívásai ebből maguktól viszik
+# a tokent. Az Admin SDK-t (`tools/`, `apps/functions`) az enforcement nem
+# érinti — a szolgáltatásfiók hitelesítése erősebb bizonyíték nála.
+#
+# Az apply után az enforcement kb. 15 perccel lép életbe (és ennyivel áll is
+# vissza), szóval nem azonnal látszik, hogy jó döntés volt-e.
+resource "google_firebase_app_check_service_config" "services" {
+  provider         = google-beta
+  for_each         = var.app_check_services
+  project          = var.project_id
+  service_id       = each.key
+  enforcement_mode = each.value
+
+  # Előbb legyen kulcs és App Checkbe regisztrált web app, utána kapcsoljon az
+  # enforcement: fordított sorrendben a saját kliensünket zárnánk ki elsőként.
+  depends_on = [google_firebase_app_check_recaptcha_enterprise_config.app]
+
+  lifecycle {
+    precondition {
+      condition     = each.value != "ENFORCED" || length(var.app_check_domains) > 0
+      error_message = "ENFORCED App Check kulcs nélkül mindenkit kizárna (a kliens sem tudna tokent szerezni): előbb add meg az `app_check_domains` értékét."
+    }
+  }
 }
 
 # ── App Check debug token (csak dev) ────────────────────────────────────────
