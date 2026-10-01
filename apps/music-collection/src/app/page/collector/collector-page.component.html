@@ -1,0 +1,345 @@
+<div class="page">
+	@if (store.loading()) {
+		<p class="note">{{ 'page.collector.loading' | transloco }}</p>
+	} @else if (store.view(); as view) {
+		<header class="hero">
+			<div class="who">
+				@if (view.hero.photoURL) {
+					<img class="avatar" [src]="view.hero.photoURL" alt="" />
+				} @else {
+					<span class="avatar initial" aria-hidden="true">{{
+						view.hero.initial
+					}}</span>
+				}
+
+				<div class="who-text">
+					<p class="eyebrow">musiCollection</p>
+					<h1>
+						{{
+							view.hero.displayName ??
+								('page.collector.aCollector' | transloco)
+						}}
+					</h1>
+					@if (view.hero.place) {
+						<p class="place">
+							<i class="pi pi-map-marker" aria-hidden="true"></i>
+							{{ view.hero.place }}
+						</p>
+					}
+				</div>
+			</div>
+
+			<dl class="totals">
+				<div>
+					<dt>{{ 'page.collector.records' | transloco }}</dt>
+					<dd>{{ view.numbers.copies }}</dd>
+				</div>
+				<div>
+					<dt>{{ 'page.collector.points' | transloco }}</dt>
+					<dd>{{ view.points.total }}</dd>
+				</div>
+				<div>
+					<dt>{{ 'page.collector.badges' | transloco }}</dt>
+					<dd>{{ view.points.completedCollections }}</dd>
+				</div>
+			</dl>
+
+			@if (view.hero.updatedAt) {
+				<p class="stamp">
+					{{ 'page.collector.asOf' | transloco }}
+					{{ view.hero.updatedAt | mcDate: 'medium' }}
+				</p>
+			}
+		</header>
+
+		<section class="glance" aria-labelledby="glance-title">
+			<h2 id="glance-title">{{ 'page.collector.shelf' | transloco }}</h2>
+
+			<ul class="facts">
+				<li>
+					<b>{{ view.numbers.albums }}</b>
+					<span>{{ 'page.collector.albums' | transloco }}</span>
+				</li>
+				<li>
+					<b>{{ view.numbers.artists }}</b>
+					<span>{{ 'page.collector.artists' | transloco }}</span>
+				</li>
+				@if (view.numbers.oldestYear) {
+					<li>
+						<b>{{ view.numbers.oldestYear }}</b>
+						<span>{{ 'page.collector.oldest' | transloco }}</span>
+					</li>
+				}
+				@if (view.numbers.since) {
+					<li>
+						<b>{{ view.numbers.since }}</b>
+						<span>{{ 'page.collector.since' | transloco }}</span>
+					</li>
+				}
+			</ul>
+
+			@if (view.numbers.formats.length) {
+				<ul class="chips">
+					@for (entry of view.numbers.formats; track entry.format) {
+						<li>
+							{{ entry.format | mcCatalog: 'media' }}
+							<b>{{ entry.count }}</b>
+						</li>
+					}
+				</ul>
+			}
+		</section>
+
+		@if (view.badges.length) {
+			<section class="badges" aria-labelledby="badges-title">
+				<h2 id="badges-title">
+					{{ 'page.collector.badgeSection' | transloco }}
+				</h2>
+
+				<ul class="badge-grid">
+					@for (badge of view.badges; track $index) {
+						<li>
+							@if (badge.imageUrl) {
+								<img [src]="badge.imageUrl" alt="" />
+							} @else {
+								<span class="pin" aria-hidden="true">
+									<i class="pi pi-shield"></i>
+								</span>
+							}
+							<b>{{ badge.name }}</b>
+							<span>{{ badge.points }}</span>
+						</li>
+					}
+				</ul>
+			</section>
+		}
+
+		@if (view.pursuits.length) {
+			<section class="pursuits" aria-labelledby="pursuits-title">
+				<h2 id="pursuits-title">
+					{{ 'page.collector.pursuitSection' | transloco }}
+				</h2>
+
+				<ul class="bars">
+					@for (pursuit of view.pursuits; track $index) {
+						<li>
+							<span class="bar-head">
+								<b>{{ pursuit.name }}</b>
+								<span
+									>{{ pursuit.owned }} /
+									{{ pursuit.total }}</span
+								>
+							</span>
+							<span class="bar" aria-hidden="true">
+								<span
+									[style.width.%]="pursuit.percentage"
+								></span>
+							</span>
+						</li>
+					}
+				</ul>
+			</section>
+		}
+
+		@if (view.showcase.length) {
+			<section class="showcase" aria-labelledby="showcase-title">
+				<h2 id="showcase-title">
+					{{ 'page.collector.showcaseSection' | transloco }}
+				</h2>
+
+				<ul class="covers">
+					@for (record of view.showcase; track $index) {
+						<li>
+							<span class="sleeve">
+								@if (record.coverUrl) {
+									<img
+										[src]="record.coverUrl"
+										[alt]="record.title"
+										loading="lazy"
+									/>
+								} @else {
+									<span class="blank" aria-hidden="true">
+										<i class="pi pi-image"></i>
+									</span>
+								}
+							</span>
+							<b>{{ record.title }}</b>
+							<span class="by">{{ record.artistName }}</span>
+							<span class="meta">
+								@if (record.year) {
+									{{ record.year }} ·
+								}
+								{{ record.format | mcCatalog: 'media' }}
+							</span>
+							@if (record.editions.length) {
+								<span class="editions">
+									@for (
+										edition of record.editions;
+										track $index
+									) {
+										<em>{{ edition }}</em>
+									}
+								</span>
+							}
+						</li>
+					}
+				</ul>
+			</section>
+		}
+
+		<!--
+			The rest of the shelf: a second document, so it is asked for on a
+			click rather than carried by every visit.
+		-->
+		@if (view.numbers.copies > view.showcase.length) {
+			<section class="shelf-all">
+				@if (store.albums(); as albums) {
+					<h2>
+						{{
+							'page.collector.showAll'
+								| transloco: { count: albums.count }
+						}}
+					</h2>
+
+					<ul class="all-list">
+						@for (album of albums.albums; track $index) {
+							<li>
+								<b>{{ album.title }}</b>
+								<span class="by">{{ album.artistName }}</span>
+								<span class="meta">
+									@if (album.year) {
+										{{ album.year }} ·
+									}
+									{{ album.format | mcCatalog: 'media' }}
+								</span>
+							</li>
+						}
+					</ul>
+				} @else {
+					<button
+						type="button"
+						class="more"
+						[disabled]="store.albumsLoading()"
+						(click)="showAll()"
+					>
+						<i class="pi pi-list" aria-hidden="true"></i>
+						{{
+							(store.albumsLoading()
+								? 'page.collector.loading'
+								: 'page.collector.showAll'
+							) | transloco: { count: view.numbers.copies }
+						}}
+					</button>
+				}
+			</section>
+		}
+
+		@if (view.wishlist.length) {
+			<section class="wishlist" aria-labelledby="wishlist-title">
+				<h2 id="wishlist-title">
+					{{ 'page.collector.wishlistSection' | transloco }}
+				</h2>
+				<p class="lead">
+					{{ 'page.collector.wishlistLead' | transloco }}
+				</p>
+
+				<ul class="wants">
+					@for (wish of view.wishlist; track $index) {
+						<li>
+							<span class="sleeve small">
+								@if (wish.coverUrl) {
+									<img
+										[src]="wish.coverUrl"
+										[alt]="wish.title"
+										loading="lazy"
+									/>
+								} @else {
+									<span class="blank" aria-hidden="true">
+										<i class="pi pi-image"></i>
+									</span>
+								}
+							</span>
+
+							<span class="want-text">
+								<b>{{ wish.title }}</b>
+								<span class="by">{{ wish.artistName }}</span>
+								@if (wish.medias.length) {
+									<span class="meta">
+										@for (
+											media of wish.medias;
+											track $index
+										) {
+											{{ media | mcCatalog: 'media' }}
+										}
+									</span>
+								}
+								@if (wish.sourceLink) {
+									<a
+										class="shop"
+										[href]="wish.sourceLink"
+										target="_blank"
+										rel="nofollow ugc noopener noreferrer"
+									>
+										{{ 'page.collector.buyAt' | transloco }}
+										{{ wish.sourceHost }}
+									</a>
+								}
+							</span>
+						</li>
+					}
+				</ul>
+			</section>
+		}
+
+		<!--
+			What the page is for. A stranger who got this far has just seen
+			somebody else's shelf; this is where they are told they could have
+			one.
+		-->
+		<section class="invite">
+			@if (store.isSelf()) {
+				<h2>{{ 'page.collector.selfTitle' | transloco }}</h2>
+				<p>{{ 'page.collector.selfLead' | transloco }}</p>
+				<a
+					class="call"
+					routerLink="/profile"
+					[queryParams]="{ tab: 'data' }"
+				>
+					<i class="pi pi-cog" aria-hidden="true"></i>
+					{{ 'page.collector.selfButton' | transloco }}
+				</a>
+			} @else if (store.isAuthenticated()) {
+				<h2>{{ 'page.collector.mineTitle' | transloco }}</h2>
+				<p>{{ 'page.collector.mineLead' | transloco }}</p>
+				<a class="call" routerLink="/collection">
+					<i class="pi pi-th-large" aria-hidden="true"></i>
+					{{ 'page.collector.mineButton' | transloco }}
+				</a>
+			} @else {
+				<h2>{{ 'page.collector.inviteTitle' | transloco }}</h2>
+				<p>{{ 'page.collector.inviteLead' | transloco }}</p>
+				<button type="button" class="call" (click)="store.login()">
+					<i class="pi pi-sign-in" aria-hidden="true"></i>
+					{{ 'page.collector.inviteButton' | transloco }}
+				</button>
+			}
+		</section>
+	} @else {
+		<div class="empty">
+			<h1>{{ 'page.collector.emptyTitle' | transloco }}</h1>
+			<p>{{ 'page.collector.emptyLead' | transloco }}</p>
+
+			@if (!store.isAuthenticated()) {
+				<button type="button" class="call" (click)="store.login()">
+					<i class="pi pi-sign-in" aria-hidden="true"></i>
+					{{ 'page.collector.inviteButton' | transloco }}
+				</button>
+			} @else {
+				<a class="call" routerLink="/collection">
+					<i class="pi pi-th-large" aria-hidden="true"></i>
+					{{ 'page.collector.mineButton' | transloco }}
+				</a>
+			}
+		</div>
+	}
+</div>

@@ -416,6 +416,8 @@
 			"listening": "Hallgatás",
 			"what-you-have-actually": "Amit ténylegesen feltettél itt, a lemezekhez számolva, nem egy máshol vezetett fiókhoz.",
 			"privacy": "Adatvédelem",
+			"sharing": "Megosztható profil",
+			"sharingIntro": "Egy lap a gyűjteményedről, amit bárkinek megmutathatsz — és egy kívánságlista, amiből meg lehet lepni.",
 			"what-other-collectors-get": "Amit más gyűjtők látnak rólad. Itt semmi nem oszlik meg, amíg rá nem bólintasz, és ha visszakapcsolod, azonnal el is tűnik.",
 			"spotify": "Spotify",
 			"where-spotify-plays-and": "Hol szól a Spotify, és milyen hangerővel indul itt.",
@@ -607,6 +609,37 @@
 			"spot": "{{row}}. sor · {{slot}}. hely · {{position}}. pozíció",
 			"remove": "Eltávolítás",
 			"removeFailed": "Nem sikerült eltávolítani: {{error}}"
+		},
+		"collector": {
+			"loading": "Lapozzuk…",
+			"aCollector": "Egy gyűjtő",
+			"records": "lemez",
+			"points": "pont",
+			"badges": "jelvény",
+			"shelf": "A polc",
+			"showAll": "Mind a {{count}} lemez",
+			"albums": "album",
+			"artists": "előadó",
+			"oldest": "a legrégebbi",
+			"since": "óta gyűjt itt",
+			"asOf": "Így állt:",
+			"badgeSection": "Jelvények",
+			"pursuitSection": "Amin épp dolgozik",
+			"showcaseSection": "A kirakat",
+			"wishlistSection": "Amit keres",
+			"wishlistLead": "Ezekre a lemezekre vár. Ha meg akarod lepni, innen válassz.",
+			"buyAt": "kapható:",
+			"emptyTitle": "Nincs itt lap",
+			"emptyLead": "Ez a gyűjtő nem osztott meg profilt — vagy visszavonta.",
+			"inviteTitle": "Készítsd el a sajátodat",
+			"inviteLead": "Vedd fel a lemezeidet, és neked is lesz egy ilyen lapod, amit bárkinek megmutathatsz.",
+			"inviteButton": "Kezdjük",
+			"mineTitle": "A te gyűjteményed",
+			"mineLead": "Nézd meg, hol tartasz — és oszd meg te is, ha kedved van.",
+			"mineButton": "A gyűjteményem",
+			"selfTitle": "Ez a te lapod",
+			"selfLead": "Így látják mások. A megosztást a profilodon kapcsolhatod ki és be.",
+			"selfButton": "Beállítások"
 		},
 		"collections": {
 			"collections": "Kihívások",
@@ -1997,6 +2030,26 @@
 			},
 			"group": "Csoport",
 			"groupHint": "Melyik cím alatt áll a listában. A diszkográfia egy zenekar saját collection-párja."
+		},
+		"profileSharing": {
+			"page": "Nyilvános gyűjtő-profil",
+			"share": "Legyen nyilvános lapom",
+			"shareHint": "Egy link, amit bárkinek továbbadhatsz: bejelentkezés nélkül is látja, mi van a polcodon. Amíg ki van kapcsolva, semmi nem kerül ki.",
+			"wishlist": "A kívánságlistám is legyen rajta",
+			"wishlistHint": "Így a család tudja, mivel lephet meg. Most {{count}} lemez van a listádon.",
+			"preview": "A lapodon {{copies}} lemez, {{badges}} jelvény és {{points}} pont látszik.",
+			"previewWishlist": "Mellettük {{count}} kívánság.",
+			"off": "Nincs nyilvános lapod, és semmi nem kerül ki a gyűjteményedről.",
+			"link": "A lapod linkje",
+			"copy": "Másolás",
+			"copied": "Kimásolva",
+			"look": "Megnézem",
+			"shareCard": "Kép megosztása",
+			"drawing": "Rajzolom…",
+			"cardTagline": "Gyűjtemény",
+			"shareText": "Nézd meg a lemezgyűjteményemet",
+			"updated": "Így állt:",
+			"pending": "A lap most készül el — egy pillanat, és a link működik."
 		},
 		"profilePrivacy": {
 			"show-where-you-collect": "Mutassuk, honnan gyűjtesz",
@@ -3399,6 +3452,10 @@
 				"privacy": {
 					"title": "Az adataid",
 					"content": "Mit látnak mások belőled: a térképen a helyed, a ranglistán a neved. Alapból semmit."
+				},
+				"sharing": {
+					"title": "Megosztható profil",
+					"content": "Egy link a gyűjteményedről, amit bárki megnyithat, bejelentkezés nélkül is — és a kívánságlistád, ha kéred. Alapból nincs ilyen lapod."
 				},
 				"back": {
 					"title": "Vissza az elsőre",

@@ -1,0 +1,493 @@
+:host {
+	display: block;
+	color: var(--mc-text);
+	font-family: var(--mc-font-body);
+}
+
+.page {
+	max-width: var(--mc-page-max-width);
+	min-height: calc(100vh - var(--mc-app-bar-height));
+	margin: 0 auto;
+	padding: 2rem clamp(1rem, 3vw, 2.5rem) 3rem;
+	display: flex;
+	flex-direction: column;
+	gap: 2.5rem;
+}
+
+.note {
+	margin: 0;
+	color: var(--mc-text-muted);
+}
+
+/* ── Who ──────────────────────────────────────────────────────────────── */
+
+.hero {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 1.5rem;
+	padding-bottom: 1.5rem;
+	border-bottom: 1px solid var(--mc-border);
+}
+
+.who {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.avatar {
+	width: 4.5rem;
+	height: 4.5rem;
+	object-fit: cover;
+	border-radius: 50%;
+	border: 1px solid var(--mc-border);
+	background: var(--mc-surface-2);
+
+	&.initial {
+		display: grid;
+		place-items: center;
+		font-family: var(--mc-font-display);
+		font-size: 2rem;
+		color: var(--mc-primary);
+	}
+}
+
+.eyebrow {
+	margin: 0;
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: var(--mc-primary);
+}
+
+h1 {
+	margin: 0.2rem 0 0;
+	font-family: var(--mc-font-display);
+	font-size: clamp(2rem, 5vw, 3.25rem);
+	font-weight: 400;
+	line-height: 1.05;
+	letter-spacing: 0.02em;
+	/* A name out of somebody else's document; it wraps rather than pushes the
+	   page sideways. */
+	overflow-wrap: anywhere;
+}
+
+.place {
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+	margin: 0.4rem 0 0;
+	font-size: 0.9rem;
+	color: var(--mc-text-muted);
+}
+
+.totals {
+	display: flex;
+	gap: 1.75rem;
+	margin: 0;
+
+	div {
+		display: flex;
+		flex-direction: column-reverse;
+		gap: 0.1rem;
+	}
+
+	dt {
+		font-size: 0.7rem;
+		font-weight: 700;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--mc-text-subtle);
+	}
+
+	dd {
+		margin: 0;
+		font-family: var(--mc-font-display);
+		font-size: 2rem;
+		line-height: 1;
+	}
+}
+
+.stamp {
+	flex-basis: 100%;
+	margin: 0;
+	font-size: 0.75rem;
+	color: var(--mc-text-subtle);
+}
+
+/* ── Sections ─────────────────────────────────────────────────────────── */
+
+h2 {
+	margin: 0 0 1rem;
+	font-family: var(--mc-font-display);
+	font-size: 1.5rem;
+	font-weight: 400;
+}
+
+.lead {
+	max-width: 52ch;
+	margin: -0.6rem 0 1rem;
+	color: var(--mc-text-muted);
+}
+
+ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.facts {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1.5rem;
+
+	li {
+		display: flex;
+		flex-direction: column;
+	}
+
+	b {
+		font-family: var(--mc-font-display);
+		font-size: 1.6rem;
+		line-height: 1;
+	}
+
+	span {
+		font-size: 0.75rem;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--mc-text-subtle);
+	}
+}
+
+.chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin-top: 1.25rem;
+
+	li {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.3rem 0.7rem;
+		font-size: 0.8rem;
+		background: var(--mc-surface-2);
+		border: 1px solid var(--mc-border);
+		border-radius: 999px;
+	}
+}
+
+.badge-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+	gap: 1rem;
+
+	li {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.3rem;
+		text-align: center;
+	}
+
+	img,
+	.pin {
+		width: 5.5rem;
+		height: 5.5rem;
+		object-fit: contain;
+	}
+
+	.pin {
+		display: grid;
+		place-items: center;
+		font-size: 2rem;
+		color: var(--mc-text-subtle);
+		background: var(--mc-surface-2);
+		border-radius: 50%;
+	}
+
+	b {
+		font-size: 0.85rem;
+		overflow-wrap: anywhere;
+	}
+
+	span:not(.pin) {
+		font-size: 0.75rem;
+		color: var(--mc-text-subtle);
+	}
+}
+
+.bars {
+	display: flex;
+	flex-direction: column;
+	gap: 0.9rem;
+
+	.bar-head {
+		display: flex;
+		justify-content: space-between;
+		gap: 1rem;
+		font-size: 0.9rem;
+
+		b {
+			overflow-wrap: anywhere;
+		}
+
+		span {
+			color: var(--mc-text-subtle);
+			white-space: nowrap;
+		}
+	}
+
+	.bar {
+		display: block;
+		height: 0.4rem;
+		margin-top: 0.35rem;
+		background: var(--mc-surface-2);
+		border-radius: 999px;
+		overflow: hidden;
+
+		span {
+			display: block;
+			height: 100%;
+			background: var(--mc-primary);
+		}
+	}
+}
+
+/* ── Records ──────────────────────────────────────────────────────────── */
+
+.covers {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+	gap: 1.25rem;
+
+	li {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		min-width: 0;
+	}
+
+	b,
+	.by,
+	.meta {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	b {
+		font-size: 0.9rem;
+	}
+}
+
+.sleeve {
+	display: block;
+	aspect-ratio: 1;
+	margin-bottom: 0.4rem;
+	background: var(--mc-surface-2);
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-md);
+	overflow: hidden;
+
+	img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.blank {
+		display: grid;
+		place-items: center;
+		width: 100%;
+		height: 100%;
+		font-size: 1.5rem;
+		color: var(--mc-text-subtle);
+	}
+
+	&.small {
+		flex: 0 0 3.5rem;
+		width: 3.5rem;
+		margin-bottom: 0;
+	}
+}
+
+.by {
+	font-size: 0.8rem;
+	color: var(--mc-text-muted);
+}
+
+.meta {
+	font-size: 0.75rem;
+	color: var(--mc-text-subtle);
+	text-transform: capitalize;
+}
+
+.editions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.3rem;
+	margin-top: 0.2rem;
+
+	em {
+		padding: 0.1rem 0.4rem;
+		font-size: 0.65rem;
+		font-style: normal;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--mc-primary);
+		border: 1px solid var(--mc-primary);
+		border-radius: 999px;
+	}
+}
+
+/* ── Wishlist ─────────────────────────────────────────────────────────── */
+
+.wants {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+	gap: 0.9rem;
+
+	li {
+		display: flex;
+		gap: 0.75rem;
+		padding: 0.6rem;
+		background: var(--mc-surface-2);
+		border: 1px solid var(--mc-border);
+		border-radius: var(--mc-radius-md);
+	}
+}
+
+.want-text {
+	display: flex;
+	flex-direction: column;
+	gap: 0.1rem;
+	min-width: 0;
+
+	b {
+		font-size: 0.9rem;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+}
+
+.shop {
+	margin-top: 0.2rem;
+	font-size: 0.75rem;
+	color: var(--mc-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* ── The rest of the shelf ────────────────────────────────────────────── */
+
+.more {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.6rem 1.1rem;
+	font: inherit;
+	font-size: 0.9rem;
+	color: var(--mc-text);
+	background: var(--mc-surface-2);
+	border: 1px solid var(--mc-border);
+	border-radius: 999px;
+	cursor: pointer;
+
+	&:hover:not(:disabled) {
+		border-color: var(--mc-primary);
+	}
+}
+
+.all-list {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+	gap: 0.5rem 1.5rem;
+	/* Hundreds of rows at once: the browser is told it may skip what is off
+	   screen, which is the difference between a list and a stutter. */
+	content-visibility: auto;
+
+	li {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0 0.4rem;
+		padding-bottom: 0.4rem;
+		border-bottom: 1px solid var(--mc-border);
+		min-width: 0;
+
+		b {
+			font-size: 0.85rem;
+		}
+
+		.by,
+		.meta {
+			font-size: 0.75rem;
+		}
+	}
+}
+
+/* ── The invitation, and the empty page ───────────────────────────────── */
+
+.invite,
+.empty {
+	padding: 1.5rem;
+	text-align: center;
+	background: var(--mc-surface-2);
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-lg);
+
+	h1,
+	h2 {
+		margin: 0;
+	}
+
+	p {
+		max-width: 46ch;
+		margin: 0.5rem auto 1.2rem;
+		color: var(--mc-text-muted);
+	}
+}
+
+.empty {
+	margin: auto 0;
+}
+
+.call {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.65rem 1.2rem;
+	font: inherit;
+	font-weight: 600;
+	color: var(--mc-bg);
+	background: var(--mc-primary);
+	border: 0;
+	border-radius: 999px;
+	cursor: pointer;
+	text-decoration: none;
+
+	&:hover {
+		filter: brightness(1.08);
+	}
+}
+
+@media (max-width: 720px) {
+	.hero {
+		align-items: flex-start;
+	}
+
+	.totals {
+		gap: 1.25rem;
+
+		dd {
+			font-size: 1.5rem;
+		}
+	}
+}

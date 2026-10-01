@@ -245,6 +245,22 @@ export const routes: Routes = [
 		canActivate: [authenticatedGuard],
 	},
 	{
+		// One collector's shelf, as anybody they sent the link to sees it.
+		//
+		// No guard: a signed-out visitor is exactly the reader this page is
+		// for — somebody who has no collection yet and might want one. The
+		// page draws a single document and asks for no catalog, so the visit
+		// stays one read.
+		path: 'collector/:uid',
+		loadComponent: () =>
+			import('./page/collector/collector-page.component').then(
+				(module) => module.CollectorPageComponent
+			),
+		data: {
+			breadcrumb: 'collector',
+		},
+	},
+	{
 		path: 'profile',
 		loadComponent: () =>
 			import('./page/profile/profile-page.component').then(

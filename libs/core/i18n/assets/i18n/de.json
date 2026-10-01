@@ -416,6 +416,8 @@
 			"listening": "Hören",
 			"what-you-have-actually": "Was du hier tatsächlich aufgelegt hast, den Platten zugerechnet statt einem Konto anderswo.",
 			"privacy": "Privatsphäre",
+			"sharing": "Geteiltes Profil",
+			"sharingIntro": "Eine Seite über deine Sammlung, die du jedem zeigen kannst — und eine Wunschliste, aus der dich jemand überraschen kann.",
 			"what-other-collectors-get": "Was andere Sammler von dir sehen. Hier wird nichts geteilt, bis du es sagst, und ein Zurückschalten nimmt es sofort wieder weg.",
 			"spotify": "Spotify",
 			"where-spotify-plays-and": "Wo Spotify spielt und wie laut es hier startet.",
@@ -607,6 +609,37 @@
 			"spot": "Reihe {{row}} · Platz {{slot}} · Position {{position}}",
 			"remove": "Entfernen",
 			"removeFailed": "Konnte nicht entfernt werden: {{error}}"
+		},
+		"collector": {
+			"loading": "Wir blättern…",
+			"aCollector": "Ein Sammler",
+			"records": "Platten",
+			"points": "Punkte",
+			"badges": "Abzeichen",
+			"shelf": "Das Regal",
+			"showAll": "Alle {{count}} Platten",
+			"albums": "Alben",
+			"artists": "Künstler",
+			"oldest": "die älteste",
+			"since": "sammelt seit",
+			"asOf": "So stand es:",
+			"badgeSection": "Abzeichen",
+			"pursuitSection": "Daran arbeitet er gerade",
+			"showcaseSection": "Die Auslage",
+			"wishlistSection": "Gesucht",
+			"wishlistLead": "Auf diese Platten wartet er. Wenn du überraschen willst, wähle hier.",
+			"buyAt": "zu haben bei",
+			"emptyTitle": "Keine Seite hier",
+			"emptyLead": "Dieser Sammler hat kein Profil geteilt — oder es zurückgenommen.",
+			"inviteTitle": "Mach dir deine eigene",
+			"inviteLead": "Trage deine Platten ein, und du bekommst so eine Seite, die du jedem zeigen kannst.",
+			"inviteButton": "Los geht es",
+			"mineTitle": "Deine Sammlung",
+			"mineLead": "Sieh, wo du stehst — und teile sie auch, wenn du magst.",
+			"mineButton": "Meine Sammlung",
+			"selfTitle": "Das ist deine Seite",
+			"selfLead": "So sehen andere sie. Das Teilen schaltest du in deinem Profil.",
+			"selfButton": "Einstellungen"
 		},
 		"collections": {
 			"collections": "Challenges",
@@ -1997,6 +2030,26 @@
 			},
 			"group": "Gruppe",
 			"groupHint": "Unter welcher Überschrift sie in der Liste steht. Eine Diskografie ist das eigene Paar einer Band."
+		},
+		"profileSharing": {
+			"page": "Öffentliche Sammlerseite",
+			"share": "Gib mir eine öffentliche Seite",
+			"shareHint": "Ein Link, den du weitergeben kannst: jeder sieht, was in deinem Regal steht, angemeldet oder nicht. Solange das aus ist, wird nichts veröffentlicht.",
+			"wishlist": "Meine Wunschliste dazu",
+			"wishlistHint": "So weiß die Familie, womit sie dich überraschen kann. Auf deiner Liste stehen {{count}} Platten.",
+			"preview": "Deine Seite zeigt {{copies}} Platten, {{badges}} Abzeichen und {{points}} Punkte.",
+			"previewWishlist": "Daneben {{count}} Wünsche.",
+			"off": "Du hast keine öffentliche Seite, und nichts von deiner Sammlung wird veröffentlicht.",
+			"link": "Der Link zu deiner Seite",
+			"copy": "Kopieren",
+			"copied": "Kopiert",
+			"look": "Ansehen",
+			"shareCard": "Bild teilen",
+			"drawing": "Wird gezeichnet…",
+			"cardTagline": "Sammlung",
+			"shareText": "Sieh dir meine Plattensammlung an",
+			"updated": "So stand es:",
+			"pending": "Die Seite wird gerade zusammengestellt — einen Moment, dann funktioniert der Link."
 		},
 		"profilePrivacy": {
 			"show-where-you-collect": "Zeigen, von wo du sammelst",
@@ -3399,6 +3452,10 @@
 				"privacy": {
 					"title": "Deine Daten",
 					"content": "Was andere von dir sehen: dein Ort auf der Karte, dein Name in der Rangliste. Nichts, bis du es sagst."
+				},
+				"sharing": {
+					"title": "Geteiltes Profil",
+					"content": "Ein Link zu deiner Sammlung, den jeder öffnen kann, angemeldet oder nicht — und deine Wunschliste, wenn du magst. Standardmäßig hast du keine solche Seite."
 				},
 				"back": {
 					"title": "Zurück zum ersten",

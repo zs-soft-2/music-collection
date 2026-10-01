@@ -203,9 +203,20 @@ ul {
 	flex-direction: column;
 	min-width: 0;
 
-	b {
+	b,
+	.name {
 		font-size: 0.875rem;
 		font-weight: 600;
+	}
+
+	.name {
+		color: var(--mc-text);
+		text-decoration: none;
+
+		&:hover {
+			color: var(--mc-primary);
+			text-decoration: underline;
+		}
 	}
 
 	span {

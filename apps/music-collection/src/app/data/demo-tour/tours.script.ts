@@ -379,6 +379,7 @@ const profileTour = pageTour('profile', 'profile', [
 	{ id: 'dataTab', opens: profileTab('data') },
 	['listening', 'mc-profile-listening'],
 	['privacy', 'mc-profile-privacy'],
+	['sharing', 'mc-profile-sharing'],
 
 	// Back to the first tab for the last word, which is about the tour.
 	{ id: 'back', opens: profileTab('account') },

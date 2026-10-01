@@ -331,6 +331,7 @@ describe('DemoTourService', () => {
 			'dataTab',
 			'listening',
 			'privacy',
+			'sharing',
 			'back',
 			'switch',
 		]);

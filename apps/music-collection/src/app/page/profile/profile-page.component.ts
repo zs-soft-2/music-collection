@@ -22,6 +22,7 @@ import { ProfileListeningComponent } from './component/profile-listening/profile
 import { ProfilePlaybackComponent } from './component/profile-playback/profile-playback.component';
 import { ProfilePrivacyComponent } from './component/profile-privacy/profile-privacy.component';
 import { ProfileSectionComponent } from './component/profile-section/profile-section.component';
+import { ProfileSharingComponent } from './component/profile-sharing/profile-sharing.component';
 import { ProfileShelvesComponent } from './component/profile-shelves/profile-shelves.component';
 import { ProfileSpotifyComponent } from './component/profile-spotify/profile-spotify.component';
 import { ProfilePageStore } from './profile-page.store';
@@ -60,6 +61,7 @@ import {
 		ProfilePlaybackComponent,
 		ProfilePrivacyComponent,
 		ProfileSectionComponent,
+		ProfileSharingComponent,
 		ProfileShelvesComponent,
 		ProfileSpotifyComponent,
 	],

@@ -1,11 +1,21 @@
 import { combineLatest, map, of, pipe, switchMap, tap } from 'rxjs';
 
 import { AvatarEffect, AvatarLook } from '../../data/avatar';
+import {
+	CollectorProfileDocument,
+	CollectorProfileEffect,
+	CollectorProfileSettings,
+	CollectorProfileSource,
+	NO_COLLECTOR_PROFILE,
+	PublicCollectorProfile,
+	toPublicCollectorProfile,
+} from '../../data/collector-profile';
 import { DemoTourService } from '../../data/demo-tour';
 import {
 	NO_LOCATION,
 	UserLocationEffect,
 	UserLocationSettings,
+	toPublicLocation,
 } from '../../data/user-location';
 import { MeasurementConsentService } from '../../data/analytics';
 import { ExternalPlayerConsentService } from '../../data/external-player';
@@ -36,6 +46,7 @@ import {
 	shelfCapacity,
 } from '../collection/shelf-layout.setting';
 
+import { DOCUMENT } from '@angular/common';
 import { computed, inject } from '@angular/core';
 import {
 	AuthenticationStateService,
@@ -45,8 +56,15 @@ import {
 	GenreEntity,
 	User,
 	UserStateService,
+	WishlistItemEntity,
+	WishlistItemStateService,
 } from '@music-collection/api';
 import { toDescriptions } from '@music-collection/common/engine';
+import {
+	MusicCollectionEffect,
+	MusicCollectionStanding,
+} from '@music-collection/domain/music-collection/core';
+import { ReleaseView, toReleaseView } from '../../shared/music-ui';
 import {
 	patchState,
 	signalStore,
@@ -121,6 +139,20 @@ interface ProfilePageState {
 	avatarSaving: boolean;
 	/** When the account last took a new character, for the "Saved" note. */
 	avatarSavedAt: number | null;
+	/** Whether the public collector page exists, and what is on it. */
+	sharing: CollectorProfileSettings;
+	/** The shelf in the shape the public snapshot is built from. */
+	profileReleases: ReleaseView[];
+	/** Every published collection with this collector's progress on it. */
+	standings: MusicCollectionStanding[];
+	/** The records still wanted — the list a family buys a present from. */
+	wishes: WishlistItemEntity[];
+	/**
+	 * The public page as it actually stands out there, or null while there is
+	 * none. This is what the section reports from: a switch says what the
+	 * collector asked for, this says what a visitor would find.
+	 */
+	sharedProfile: CollectorProfileDocument | null;
 }
 
 const initialState: ProfilePageState = {
@@ -142,6 +174,11 @@ const initialState: ProfilePageState = {
 	avatar: null,
 	avatarSaving: false,
 	avatarSavedAt: null,
+	sharing: NO_COLLECTOR_PROFILE,
+	profileReleases: [],
+	standings: [],
+	wishes: [],
+	sharedProfile: null,
 };
 
 /**
@@ -624,10 +661,7 @@ export const ProfilePageStore = signalStore(
 				 * copies lie — all three are one compartment, so they are
 				 * changed through one door.
 				 */
-				measureShelf(
-					id: string,
-					cubby: Partial<ShelfCubby>
-				): void {
+				measureShelf(id: string, cubby: Partial<ShelfCubby>): void {
 					redraw(id, (unit) => ({
 						...unit,
 						cubby: {
@@ -746,6 +780,230 @@ export const ProfilePageStore = signalStore(
 			},
 		};
 	}),
+	/**
+	 * The public collector page: what it would say, and the address of it.
+	 *
+	 * The preview is built with the sharing turned on whatever the switch
+	 * says, so the collector sees what they would publish before they publish
+	 * it — and it goes through the very same mapper that writes the document,
+	 * because a preview that guessed would be worth nothing.
+	 */
+	withComputed((store) => {
+		const document = inject(DOCUMENT);
+
+		const owner = computed(() => {
+			const user = store.user();
+
+			return user?.uid
+				? {
+						uid: user.uid,
+						displayName: user.displayName,
+						photoURL: user.photoURL,
+					}
+				: null;
+		});
+
+		const profileSource = computed<CollectorProfileSource | null>(() => {
+			const current = owner();
+
+			return current
+				? {
+						settings: store.sharing(),
+						owner: current,
+						releases: store.profileReleases(),
+						standings: store.standings(),
+						wishes: store.wishes(),
+						// The place is the map's consent, taken as it stands:
+						// this page may carry it, never widen it.
+						location: toPublicLocation(store.location(), current),
+						now: Date.now(),
+					}
+				: null;
+		});
+
+		return {
+			profileSource,
+			profilePreview: computed<PublicCollectorProfile | null>(() => {
+				const source = profileSource();
+
+				return source
+					? toPublicCollectorProfile({
+							...source,
+							settings: {
+								shared: true,
+								shareWishlist: store.sharing().shareWishlist,
+							},
+						})
+					: null;
+			}),
+			/** The address to pass on; empty while there is no account. */
+			profileLink: computed(() => {
+				const uid = owner()?.uid;
+
+				return uid
+					? `${document.location?.origin ?? ''}/collector/${uid}`
+					: '';
+			}),
+			/** The same page inside the app, for the look-at-it link. */
+			profilePath: computed(() => {
+				const uid = owner()?.uid;
+
+				return uid ? ['/collector', uid] : null;
+			}),
+			/** When the page out there was last put together. */
+			profileUpdatedAt: computed(
+				() => store.sharedProfile()?.updatedAt ?? null
+			),
+			/** Whether a visitor would find a page at that address right now. */
+			profilePublished: computed(() => !!store.sharedProfile()),
+		};
+	}),
+	withMethods(
+		(
+			store,
+			collectorProfiles = inject(CollectorProfileEffect),
+			collectionItems = inject(CollectionItemStateService),
+			collections = inject(MusicCollectionEffect),
+			wishlistItems = inject(WishlistItemStateService),
+			authentication = inject(AuthenticationStateService)
+		) => {
+			return {
+				/** The choice: whether there is a public page, and the wishlist on it. */
+				loadSharing: rxMethod<void>(
+					pipe(
+						switchMap(() => collectorProfiles.settings$()),
+						tap((sharing) => patchState(store, { sharing }))
+					)
+				),
+
+				/**
+				 * The shelf in the shape the window is cut from. The copies
+				 * are loaded for the furniture anyway, so this costs a map.
+				 */
+				loadProfileShelf: rxMethod<void>(
+					pipe(
+						switchMap(() =>
+							authentication.selectIsAuthenticated$()
+						),
+						switchMap((isAuthenticated) =>
+							isAuthenticated
+								? collectionItems.selectLoadedEntities$()
+								: of([])
+						),
+						tap((items: CollectionItemEntity[]) =>
+							patchState(store, {
+								profileReleases: items.map(toReleaseView),
+							})
+						)
+					)
+				),
+
+				/**
+				 * The badges and the points. Resolving the collections is a
+				 * pass over the cached catalog, and it is what the section
+				 * reports — "four badges, 1240 points" — so the collector is
+				 * not asked to publish a page they cannot see.
+				 */
+				loadStandings: rxMethod<void>(
+					pipe(
+						switchMap(() =>
+							authentication.selectIsAuthenticated$()
+						),
+						switchMap((isAuthenticated) =>
+							isAuthenticated
+								? collections.listStandings$()
+								: of([])
+						),
+						tapResponse({
+							next: (standings: MusicCollectionStanding[]) =>
+								patchState(store, { standings }),
+							error: (error) => {
+								console.error(
+									'Collections not resolved',
+									error
+								);
+							},
+						})
+					)
+				),
+
+				/**
+				 * The wishlist, for the count next to the switch and for the
+				 * page. The loaded list rather than the plain one: an empty
+				 * store would otherwise report "wants nothing" for as long as
+				 * the query takes.
+				 */
+				loadWishes: rxMethod<void>(
+					pipe(
+						switchMap(() =>
+							authentication.selectIsAuthenticated$()
+						),
+						switchMap((isAuthenticated) =>
+							isAuthenticated
+								? wishlistItems.selectLoadedOwnEntities$()
+								: of([])
+						),
+						tapResponse({
+							next: (wishes: WishlistItemEntity[]) =>
+								patchState(store, { wishes }),
+							error: (error) => {
+								console.error('Wishlist not loaded', error);
+							},
+						})
+					)
+				),
+
+				/**
+				 * The page as it stands out there. Watched rather than
+				 * assumed: if a write were refused, the section would still
+				 * be claiming the page exists — this way it reports what a
+				 * visitor would actually find.
+				 */
+				loadSharedProfile: rxMethod<void>(
+					pipe(
+						switchMap(() =>
+							authentication.selectAuthenticatedUser$()
+						),
+						switchMap((user) =>
+							user?.uid
+								? collectorProfiles.profile$(user.uid)
+								: of(null)
+						),
+						tap((sharedProfile) =>
+							patchState(store, { sharedProfile })
+						)
+					)
+				),
+
+				/**
+				 * Changes the sharing and publishes — or withdraws — right
+				 * away: a consent taken back has to take effect while the
+				 * collector is still looking at the switch.
+				 */
+				/** Starts the effect's own watch on the shelf; idempotent. */
+				watchProfile(): void {
+					collectorProfiles.watch();
+				},
+
+				setSharing(changes: Partial<CollectorProfileSettings>): void {
+					const sharing = { ...store.sharing(), ...changes };
+					const source = store.profileSource();
+
+					patchState(store, { sharing });
+
+					if (!source) {
+						return;
+					}
+
+					collectorProfiles
+						.save(sharing, { ...source, settings: sharing })
+						.catch((error) => {
+							console.error('Collector profile not saved', error);
+						});
+				},
+			};
+		}
+	),
 	withHooks({
 		onInit(store) {
 			store.load(of(undefined));
@@ -756,6 +1014,14 @@ export const ProfilePageStore = signalStore(
 			store.loadPlayLog(of(undefined));
 			store.loadAvatar(of(undefined));
 			store.loadGenres(of(undefined));
+			store.loadSharing(of(undefined));
+			// The effect follows the shelf from here on, whatever page the
+			// collector files a record from.
+			store.watchProfile();
+			store.loadProfileShelf(of(undefined));
+			store.loadStandings(of(undefined));
+			store.loadWishes(of(undefined));
+			store.loadSharedProfile(of(undefined));
 		},
 	})
 );

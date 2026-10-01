@@ -416,6 +416,8 @@
 			"listening": "Listening",
 			"what-you-have-actually": "What you have actually put on here, counted for the records rather than for an account somewhere else.",
 			"privacy": "Privacy",
+			"sharing": "Shared profile",
+			"sharingIntro": "A page about your collection you can show anybody — and a wishlist somebody can surprise you from.",
 			"what-other-collectors-get": "What other collectors get to see about you. Nothing here is shared until you say so, and turning it back off takes it away at once.",
 			"spotify": "Spotify",
 			"where-spotify-plays-and": "Where Spotify plays, and how loud it starts here.",
@@ -607,6 +609,37 @@
 			"spot": "Row {{row}} · Slot {{slot}} · Position {{position}}",
 			"remove": "Remove",
 			"removeFailed": "Could not remove it: {{error}}"
+		},
+		"collector": {
+			"loading": "Turning the page…",
+			"aCollector": "A collector",
+			"records": "records",
+			"points": "points",
+			"badges": "badges",
+			"shelf": "The shelf",
+			"showAll": "All {{count}} records",
+			"albums": "albums",
+			"artists": "artists",
+			"oldest": "the oldest",
+			"since": "collecting since",
+			"asOf": "As it stood:",
+			"badgeSection": "Badges",
+			"pursuitSection": "Working on",
+			"showcaseSection": "The window",
+			"wishlistSection": "Still looking for",
+			"wishlistLead": "These are the records they are waiting for. To surprise them, pick from here.",
+			"buyAt": "for sale at",
+			"emptyTitle": "No page here",
+			"emptyLead": "This collector has not shared a profile — or has taken it back.",
+			"inviteTitle": "Make your own",
+			"inviteLead": "File your records, and you get a page like this one to show anybody.",
+			"inviteButton": "Start",
+			"mineTitle": "Your collection",
+			"mineLead": "See where you stand — and share yours too, if you like.",
+			"mineButton": "My collection",
+			"selfTitle": "This is your page",
+			"selfLead": "This is how others see it. The sharing is switched on your profile.",
+			"selfButton": "Settings"
 		},
 		"collections": {
 			"collections": "Challenges",
@@ -1997,6 +2030,26 @@
 			},
 			"group": "Group",
 			"groupHint": "Which heading of the list it stands under. A discography is a band’s own pair of collections."
+		},
+		"profileSharing": {
+			"page": "Public collector page",
+			"share": "Give me a public page",
+			"shareHint": "A link you can pass on: anybody sees what is on your shelf, signed in or not. While this is off, nothing is published.",
+			"wishlist": "Put my wishlist on it",
+			"wishlistHint": "So the family knows what would surprise you. There are {{count}} records on your list.",
+			"preview": "Your page shows {{copies}} records, {{badges}} badges and {{points}} points.",
+			"previewWishlist": "Next to them, {{count}} wishes.",
+			"off": "You have no public page, and nothing of your collection is published.",
+			"link": "The link to your page",
+			"copy": "Copy",
+			"copied": "Copied",
+			"look": "Look at it",
+			"shareCard": "Share a picture",
+			"drawing": "Drawing…",
+			"cardTagline": "Collection",
+			"shareText": "Have a look at my record collection",
+			"updated": "As it stood:",
+			"pending": "The page is being put together — a moment, and the link works."
 		},
 		"profilePrivacy": {
 			"show-where-you-collect": "Show where you collect from",
@@ -3399,6 +3452,10 @@
 				"privacy": {
 					"title": "Your data",
 					"content": "What others see of you: your place on the map, your name on the leaderboard. Nothing, until you say so."
+				},
+				"sharing": {
+					"title": "Shared profile",
+					"content": "A link to your collection anybody can open, signed in or not — and your wishlist, if you want it there. By default you have no such page."
 				},
 				"back": {
 					"title": "Back to the first",

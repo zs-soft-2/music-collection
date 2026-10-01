@@ -94,9 +94,29 @@
 								}
 
 								<span class="who">
-									<b>{{
-										collector.displayName || 'A collector'
-									}}</b>
+									<!--
+										A pin that carries a name leads to that
+										collector's page. A nameless one does
+										not: its owner chose a level that keeps
+										them unnamed, and pointing at them here
+										would undo that choice. The page itself
+										says so where there is nothing shared.
+									-->
+									@if (collector.displayName) {
+										<a
+											class="name"
+											[routerLink]="[
+												'/collector',
+												collector.uid,
+											]"
+											>{{ collector.displayName }}</a
+										>
+									} @else {
+										<b>{{
+											'page.collector.aCollector'
+												| transloco
+										}}</b>
+									}
 									@if (collector.city) {
 										<span>{{ collector.city }}</span>
 									}
