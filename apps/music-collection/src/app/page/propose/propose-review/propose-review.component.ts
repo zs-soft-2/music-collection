@@ -5,6 +5,7 @@ import {
 	inject,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { MAX_REQUEST_NOTE_LENGTH } from '@music-collection/common/api';
 import { I18N_IMPORTS, TextService } from '@music-collection/core/i18n';
 
 import {
@@ -30,6 +31,8 @@ import { ProposeReviewStore } from './propose-review.store';
 })
 export class ProposeReviewComponent {
 	protected readonly store = inject(ProposeReviewStore);
+
+	protected readonly noteMaxLength = MAX_REQUEST_NOTE_LENGTH;
 
 	private readonly text = inject(TextService);
 

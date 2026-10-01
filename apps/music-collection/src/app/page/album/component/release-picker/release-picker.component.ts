@@ -1,3 +1,4 @@
+import { MAX_REQUEST_NOTE_LENGTH } from '@music-collection/common/api';
 import { I18N_IMPORTS, TextService } from '@music-collection/core/i18n';
 import { NgTemplateOutlet } from '@angular/common';
 import {
@@ -55,7 +56,8 @@ export interface CopyPick {
 	serialTotal: string;
 }
 
-const NOTE_MAX_LENGTH = 500;
+/** The same number the rules refuse a longer note by. */
+const NOTE_MAX_LENGTH = MAX_REQUEST_NOTE_LENGTH;
 
 /**
  * Modal to add a copy of the album: the collector picks the pressing they own

@@ -288,6 +288,45 @@ service cloud.firestore {
           && url.matches('^https://firebasestorage[.]googleapis[.]com/v0/b/(music-collection-16676[.]firebasestorage[.]app|music-collection-4e074[.]appspot[.]com)/o/[^?#]+([?][^#]*)?$');
     }
 
+    // ── A gyűjtő neve és képe ───────────────────────────────────────────────
+    // Mindkettőt maga a gyűjtő írja, és mindkettő kikerül mellé a ranglistára
+    // és a térképre — más gyűjtők böngészőjébe, a név szövegként, a kép
+    // `<img src>`-ként. Ezért van alakja mindkettőnek:
+    //
+    //  - A név egy soron: a ranglista és a térkép-kártya egy sorban mutatja,
+    //    és a sortörésekkel teleírt név a mezőny többi sorát tolja el. A 200
+    //    a `user-location` korábbi korlátja, és egy Google-profilnév a
+    //    töredéke.
+    //  - A kép vagy a saját Storage-unkban lakik (a profilon összerakott
+    //    figura, `user-avatar/{uid}/`), vagy a Google profilképe — a
+    //    bejelentkezés egyedül Google-lel megy, a `photoURL` onnan jön. Egy
+    //    szabadon írható cím ennél annyit jelentene, hogy a térképet megnyitó
+    //    gyűjtők böngészője egy idegen szerverre jelentkezik be, amit a
+    //    dokumentum írója választott.
+    function isDisplayName(value) {
+      return value is string
+          && value.size() <= 200
+          && value.matches('^[^[:cntrl:]]*$');
+    }
+    function isProfilePhotoUrl(url) {
+      return url is string
+          && url.size() <= 2000
+          && (isOwnStorageUrl(url)
+              || url.matches('^https://[a-z0-9.-]+[.]googleusercontent[.]com/.*$'));
+    }
+    // A user dokumentum két mezője: a hiánya és a null is rendben van — a
+    // gyűjtőnek nem kötelező se neve, se képe.
+    function isValidUserName(data) {
+      return !('displayName' in data)
+          || data.displayName == null
+          || isDisplayName(data.displayName);
+    }
+    function isValidUserPhoto(data) {
+      return !('photoURL' in data)
+          || data.photoURL == null
+          || isProfilePhotoUrl(data.photoURL);
+    }
+
     // Egy szerepkör dokumentum alakja. A permission-lista az, amiből a
     // szerveroldali szinkron az effektív jogosultságot számolja, ezért kap
     // korlátot: a felület száznál kevesebbet kínál, és egy elszabadult írás
@@ -351,15 +390,29 @@ service cloud.firestore {
     }
 
     // A `roleIds` (és a régi, beágyazott `roles`) csak permissionnel írható —
-    // a user önmagának nem adhat szerepkört.
+    // a user önmagának nem adhat szerepkört. A név és a kép alakja pedig azé
+    // a két mezőé, ami a gyűjtő mellett elhagyja a dokumentumát (lásd
+    // `isDisplayName` / `isProfilePhotoUrl`) — az adminra is, mert az sem
+    // tolhat be egy megabájtos nevet.
+    //
+    // Frissítésnél a változatlan érték átmegy, ahogy a `document.filePath`-nál
+    // is: a 2022-es prod adatra ez a szabály visszamenőleg nem lehet igaz, és
+    // egy régi dokumentumon attól még lehessen mást javítani — új nevet vagy
+    // képet viszont csak ebben az alakban lehet beírni.
     match /user/{uid} {
       allow get: if isSelf(uid) || hasPerm('viewUserEntity');
       allow list: if hasPerm('viewUserEntity');
-      allow create: if hasPerm('createUserEntity')
-                    || (isSelf(uid)
-                        && !request.resource.data.keys().hasAny(['roleIds', 'roles']));
-      allow update: if hasPerm('updateUserEntity')
-                    || (isSelf(uid) && !changedKeys().hasAny(['roleIds', 'roles']));
+      allow create: if (hasPerm('createUserEntity')
+                        || (isSelf(uid)
+                            && !request.resource.data.keys().hasAny(['roleIds', 'roles'])))
+                    && isValidUserName(request.resource.data)
+                    && isValidUserPhoto(request.resource.data);
+      allow update: if (hasPerm('updateUserEntity')
+                        || (isSelf(uid) && !changedKeys().hasAny(['roleIds', 'roles'])))
+                    && (!changedKeys().hasAny(['displayName'])
+                        || isValidUserName(request.resource.data))
+                    && (!changedKeys().hasAny(['photoURL'])
+                        || isValidUserPhoto(request.resource.data));
       allow delete: if hasPerm('deleteUserEntity');
 
       // A gyűjtő saját adata a user alatt él, és nem is megy tovább: a
@@ -489,8 +542,12 @@ service cloud.firestore {
                                            'city', 'displayName', 'photoURL',
                                            'updatedAt'])
                && isOptional('city', 60)
-               && isOptional('displayName', 200)
-               && isOptional('photoURL', 2000)
+               // A név és a kép itt kerül ki a térképre: ugyanaz az alak,
+               // amiben a user dokumentumba írható.
+               && (!('displayName' in shared().keys())
+                   || isDisplayName(shared().displayName))
+               && (!('photoURL' in shared().keys())
+                   || isProfilePhotoUrl(shared().photoURL))
                // A szintnél többet nem publikálhat: a városnév csak city-től,
                // a név és a kép csak profile szinten kerülhet ki.
                && (shared().level != 'country'
@@ -577,6 +634,41 @@ service cloud.firestore {
     // (a lekérdezésnek ezért `userId == uid`-ra kell szűrnie). Elbírálni
     // (status, törlés) csak ADMIN tud.
     match /release-request/{requestId} {
+      // A kérés szabad szövegei: a gyűjtő jegyzete, az album, amire kéri, és
+      // amit a nyomásról leírt. Korlát nélkül egy kérés a dokumentum
+      // megabájtos keretéig hízhat, és azt a jóváhagyás-lista minden
+      // megnyitásnál végigolvassa — a gyűjtő a sajátjait, az admin mindenkiét.
+      // A jegyzet korlátja a `MAX_REQUEST_NOTE_LENGTH` (libs/common/api): a
+      // kettőt együtt kell mozgatni.
+      function isText(value, maxSize) {
+        return value == null
+               || (value is string && value.size() <= maxSize);
+      }
+      function isValidAlbum() {
+        let album = request.resource.data.album;
+
+        return album is map
+               && album.keys().hasOnly(['uid', 'name', 'artistUid', 'artistName'])
+               && album.name is string
+               && album.name.size() <= 300
+               && isText(album.uid, 200)
+               && isText(album.artistUid, 200)
+               && isText(album.artistName, 300);
+      }
+      function isValidPressing() {
+        let pressing = request.resource.data.pressing;
+
+        return pressing == null
+               || (pressing is map
+                   && pressing.keys().hasOnly(['format', 'label', 'catno',
+                                               'country', 'year'])
+                   && isText(pressing.format, 300)
+                   && isText(pressing.label, 200)
+                   && isText(pressing.catno, 100)
+                   && isText(pressing.country, 100)
+                   && (pressing.year == null || pressing.year is number));
+      }
+
       allow read: if isAdmin()
                   || (isAuthed() && resource.data.userId == request.auth.uid);
       allow create: if hasPerm('createCollectionItemEntity')
@@ -588,6 +680,9 @@ service cloud.firestore {
                          'discogsMasterId', 'discogsReleaseId', 'pressing',
                          'note', 'createdAt', 'updatedAt'
                        ])
+                    && isValidAlbum()
+                    && isValidPressing()
+                    && isText(request.resource.data.note, 500)
                     // Katalógusban még nem szereplő album (fotóról azonosított
                     // lemez) csak Discogs-kiadással kérhető: abból tud a
                     // jóváhagyás albumot és előadót létrehozni.
@@ -609,11 +704,36 @@ service cloud.firestore {
       function ownedResource() {
         return 'owned-' + request.resource.data.target.featureKey;
       }
+      function isText(value, maxSize) {
+        return value == null
+               || (value is string && value.size() <= maxSize);
+      }
+      // A megnevezett dokumentum: három path és két kulcs, mind rövid szöveg.
+      function isValidTarget() {
+        let target = request.resource.data.target;
+
+        return target.keys().hasOnly(['featureKey', 'entityType', 'path',
+                                      'parentPath', 'ownedPath'])
+               && target.featureKey.size() <= 60
+               && target.entityType is string
+               && target.entityType.size() <= 60
+               && isText(target.path, 300)
+               && isText(target.parentPath, 300)
+               && isText(target.ownedPath, 300);
+      }
 
       allow read: if isAdmin()
                   || (isAuthed() && resource.data.userId == request.auth.uid);
-      // A `changes` felső korlátja a MAX_ENTITY_REQUEST_CHANGES
-      // (libs/common/api) — a kettőt együtt kell mozgatni.
+      // A `changes` felső korlátja a MAX_ENTITY_REQUEST_CHANGES, a jegyzeté a
+      // MAX_REQUEST_NOTE_LENGTH (libs/common/api) — mindkettőt együtt kell
+      // mozgatni ezzel a szabállyal.
+      //
+      // Amit a szabály nem tud megmérni, az a beküldött állapot
+      // (`before`/`after`) és a `changes` elemei: a rules nem lát bájtot egy
+      // map-en, és listát nem tud bejárni. A mezők SZÁMÁT korlátozza, a
+      // tartalmuk súlyát a `decideRequest` felé nézi el — a jegyzet és a
+      // target viszont itt kap keretet, mert azokat egy sorban meg lehet
+      // fogni.
       allow create: if isAuthed()
                     && request.resource.data.keys().hasOnly([
                          'uid', 'userId', 'operation', 'target', 'before',
@@ -628,6 +748,8 @@ service cloud.firestore {
                     && request.resource.data.target.featureKey is string
                     && isOwnedFeature(ownedResource())
                     && hasPerm('create' + syncResources()[ownedResource()])
+                    && isValidTarget()
+                    && isText(request.resource.data.note, 500)
                     && request.resource.data.changes is list
                     && request.resource.data.changes.size() > 0
                     && request.resource.data.changes.size() <= 40;
@@ -858,26 +980,64 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // A marker alakja: a törölt dokumentum path-ja, és ugyanaz a path az
+    // azonosítójában is (`a/b/c` → `a~b~c`). A kliens ebből tudja meg, mit
+    // kell újrakérnie a szerverről (FirestoreSyncService, `evictDeleted`),
+    // ezért a szabály a kettőt összeköti, és a path-ot a marker saját feature
+    // collectionjébe kényszeríti: egy szabadon írható path azt jelentené,
+    // hogy egy marker minden nyitott kliensnek bármelyik dokumentum
+    // újraolvasását fel tudja adni.
+    function isDeletionMarker(featureKey, markerId) {
+      let data = request.resource.data;
+      let parts = data.path is string ? data.path.split('/') : [];
+
+      return data.keys().hasOnly(['path', 'deletedAt'])
+          && data.deletedAt == request.time
+          && parts.size() >= 2
+          && parts[parts.size() - 2] == featureKey
+          && markerId == parts.join('~');
+    }
+
+    // A markerhez tartozó sorszám-foglalás (`copy-serial/{kiadás}_{szám}`).
+    function markedSerialClaimPath() {
+      return /databases/$(database)/documents/copy-serial/$(request.resource.data.path.split('/')[1]);
+    }
+    function ownsMarkedSerialClaim() {
+      return exists(markedSerialClaimPath())
+          && get(markedSerialClaimPath()).data.userId == request.auth.uid;
+    }
+
     // Törlési marker: aki az adott entitást törölheti, markert is írhat.
     // Saját adatnál (collection-item / wishlist-item) a marker csak a saját
     // path-ra mutathat: `user~{uid}~<featureKey>~…`.
     match /sync/{featureKey}/deletion/{markerId} {
       allow read: if true;
-      allow create, update: if (featureKey in syncResources()
-                                && hasPerm('delete' + syncResources()[featureKey])
-                                && ((!(featureKey in ['collection-item', 'wishlist-item'])
-                                     && !isOwnedFeature(featureKey))
-                                    || markerId.matches('user~' + request.auth.uid + '~' + featureKey + '~.+')))
-                            // A saját megosztott helyét bárki visszavonhatja,
-                            // permission nélkül is: ez a hozzájárulás vége.
-                            || (isAuthed()
-                                && featureKey == 'user-location'
-                                && markerId == 'user-location~' + request.auth.uid)
-                            // Egy sorszám elengedése a példány szerkesztése,
-                            // nem katalógus-törlés: aki a példányt írhatja, a
-                            // foglalását vissza is tudja vonni.
-                            || (featureKey == 'copy-serial'
-                                && hasPerm('updateCollectionItemEntity'));
+      allow create, update: if isDeletionMarker(featureKey, markerId)
+                            && ((featureKey in syncResources()
+                                 && hasPerm('delete' + syncResources()[featureKey])
+                                 && ((!(featureKey in ['collection-item', 'wishlist-item'])
+                                      && !isOwnedFeature(featureKey))
+                                     || markerId.matches('user~' + request.auth.uid + '~' + featureKey + '~.+')))
+                                // A saját megosztott helyét bárki
+                                // visszavonhatja, permission nélkül is: ez a
+                                // hozzájárulás vége.
+                                || (isAuthed()
+                                    && featureKey == 'user-location'
+                                    && markerId == 'user-location~' + request.auth.uid)
+                                // Egy sorszám elengedése a példány
+                                // szerkesztése, nem katalógus-törlés: aki a
+                                // példányt írhatja, a foglalását vissza is
+                                // tudja vonni — de csak a sajátját. Az
+                                // azonosító itt nem hordozza az uid-ot (a
+                                // foglalás globális collection), ezért magából
+                                // a foglalásból kell megtudni, kié: egy batch
+                                // minden írását a commit ELŐTTI állapoton
+                                // bírálja el a szabály, tehát a mellette
+                                // törlődő foglalás itt még látszik.
+                                || (featureKey == 'copy-serial'
+                                    && hasPerm('updateCollectionItemEntity')
+                                    && request.resource.data.path.matches('^copy-serial/[^/]+$')
+                                    && ownsMarkedSerialClaim()));
       allow delete: if isAdmin();
     }
 

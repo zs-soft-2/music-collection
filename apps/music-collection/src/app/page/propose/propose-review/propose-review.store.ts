@@ -11,6 +11,8 @@ import {
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
+import { MAX_REQUEST_NOTE_LENGTH } from '@music-collection/common/api';
+
 import { ProposalService } from '../../../data/proposal';
 import {
 	RequestEffect,
@@ -169,7 +171,11 @@ export const ProposeReviewStore = signalStore(
 									},
 								])
 						);
-						const note = store.note().trim() || null;
+						const note =
+							store
+								.note()
+								.trim()
+								.slice(0, MAX_REQUEST_NOTE_LENGTH) || null;
 						const sent$ =
 							proposal.operation === 'create'
 								? requestEffect.submitCreate$({

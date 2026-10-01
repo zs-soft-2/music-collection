@@ -32,6 +32,18 @@ export const ENTITY_RESPONSE_FEATURE_KEY = 'entity-response';
  */
 export const MAX_ENTITY_REQUEST_CHANGES = 40;
 
+/**
+ * How long the collector's own words about a request may be — the note of a
+ * catalog request and of a release request alike; the rules cap both at the
+ * same number.
+ *
+ * A note without a bound is a request filling the megabyte a document holds,
+ * and the pending list pays for it at every opening: an admin's page reads
+ * every request that waits for a decision, and a collector's page reads all
+ * of their own.
+ */
+export const MAX_REQUEST_NOTE_LENGTH = 500;
+
 export type EntityRequestOperation = 'create' | 'update';
 
 /**

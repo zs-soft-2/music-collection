@@ -8,6 +8,8 @@ import {
 	EntityTypeEnum,
 } from '@music-collection/api';
 
+import { MAX_REQUEST_NOTE_LENGTH } from '@music-collection/common/api';
+
 import { ProposalService } from '../../../data/proposal';
 import { RequestEffect } from '../../../data/request';
 import { ProposeReviewStore } from './propose-review.store';
@@ -127,6 +129,26 @@ describe('ProposeReviewStore', () => {
 						value: 'https://www.discogs.com/artist/1',
 					},
 				},
+			})
+		);
+	});
+
+	/**
+	 * The rules refuse a longer note, and a refusal here would throw away the
+	 * whole proposal — so the note is cut to what they take. The input says
+	 * the same number; this is for what a paste gets past it.
+	 */
+	it('cuts the note to what the rules take', () => {
+		const { effect, store } = setUp();
+
+		store.setReference({ field: 'country', value: 'https://one.test' });
+		store.setNote('Z'.repeat(MAX_REQUEST_NOTE_LENGTH + 100));
+
+		store.submit();
+
+		expect(effect.submitUpdate$).toHaveBeenCalledWith(
+			expect.objectContaining({
+				note: 'Z'.repeat(MAX_REQUEST_NOTE_LENGTH),
 			})
 		);
 	});

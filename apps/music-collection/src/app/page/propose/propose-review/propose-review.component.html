@@ -75,6 +75,7 @@
 			<input
 				type="text"
 				[value]="store.note()"
+				[attr.maxlength]="noteMaxLength"
 				[disabled]="store.submitting()"
 				(input)="store.setNote(value($event))"
 			/>

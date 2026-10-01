@@ -3,7 +3,14 @@ import {
 	assertFails,
 	assertSucceeds,
 } from '@firebase/rules-unit-testing';
-import { deleteDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
+import {
+	deleteDoc,
+	doc,
+	serverTimestamp,
+	setDoc,
+	updateDoc,
+	writeBatch,
+} from 'firebase/firestore';
 
 import { createTestEnvironment } from './test-environment';
 
@@ -16,6 +23,8 @@ const PATH = `user/${ME}/collection-item/${ITEM}`;
 const OTHER_PATH = `user/${OTHER}/collection-item/${OTHER_ITEM}`;
 /** Copy 123 of the pressing `r1` — the id is the whole of the exclusivity. */
 const CLAIM = `copy-serial/${RELEASE}_123`;
+/** The tombstone of that claim: the document's path is its id. */
+const MARKER = `sync/copy-serial/deletion/copy-serial~${RELEASE}_123`;
 
 /** A claim as the copy page writes it. */
 const claim = (fields: Record<string, unknown> = {}) => ({
@@ -146,13 +155,93 @@ describe('copy-serial: one number, one collector', () => {
 		await assertFails(deleteDoc(doc(as(ME), CLAIM)));
 	});
 
-	it('leaves the tombstone to whoever may edit a copy', () =>
-		assertSucceeds(
-			setDoc(doc(as(ME), `sync/copy-serial/deletion/copy-serial~${RELEASE}_123`), {
+	/**
+	 * How the client gives a number back: `FirestoreSyncService.delete`
+	 * deletes the claim and writes the tombstone in one batch, and a batch is
+	 * refused whole — so the tombstone has to pass on its own.
+	 *
+	 * That the rule can read the claim at all is what this proves: the
+	 * document is deleted in the same batch, and the rules see the state
+	 * before it.
+	 */
+	it('releases the claim and leaves its tombstone in one batch', async () => {
+		await standingClaim(ME);
+
+		const database = as(ME);
+		const batch = writeBatch(database);
+
+		batch.delete(doc(database, CLAIM));
+		batch.set(doc(database, MARKER), {
+			path: CLAIM,
+			deletedAt: serverTimestamp(),
+		});
+		batch.set(
+			doc(database, 'sync/catalog'),
+			{ modifiedAt: { 'copy-serial': serverTimestamp() } },
+			{ merge: true }
+		);
+
+		await assertSucceeds(batch.commit());
+	});
+
+	/**
+	 * The tombstone is an order to every open client to read that document
+	 * again (`FirestoreSyncService.evictDeleted`). The id carries no uid — a
+	 * claim is `{pressing}_{number}` — so the claim itself says whose it is.
+	 */
+	it('refuses the tombstone of a claim another collector holds', async () => {
+		await standingClaim(OTHER);
+
+		await assertFails(
+			setDoc(doc(as(ME), MARKER), {
 				path: CLAIM,
-				deletedAt: new Date(),
+				deletedAt: serverTimestamp(),
+			})
+		);
+	});
+
+	it('refuses a tombstone for a claim that was never taken', () =>
+		assertFails(
+			setDoc(doc(as(ME), MARKER), {
+				path: CLAIM,
+				deletedAt: serverTimestamp(),
 			})
 		));
+
+	it('refuses a tombstone pointing somewhere else than its own id', async () => {
+		await standingClaim(ME);
+
+		await assertFails(
+			setDoc(doc(as(ME), MARKER), {
+				path: OTHER_PATH,
+				deletedAt: serverTimestamp(),
+			})
+		);
+	});
+
+	/** A stamp of the client's own choosing would come back every round. */
+	it('refuses a tombstone stamped by the client', async () => {
+		await standingClaim(ME);
+
+		await assertFails(
+			setDoc(doc(as(ME), MARKER), {
+				path: CLAIM,
+				deletedAt: new Date(Date.now() + 60 * 60 * 1000),
+			})
+		);
+	});
+
+	it('refuses anything smuggled into the tombstone', async () => {
+		await standingClaim(ME);
+
+		await assertFails(
+			setDoc(doc(as(ME), MARKER), {
+				path: CLAIM,
+				deletedAt: serverTimestamp(),
+				count: 500,
+			})
+		);
+	});
 });
 
 describe('collection-item: the number on the copy', () => {

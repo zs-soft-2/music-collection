@@ -16,6 +16,14 @@ import { createTestEnvironment } from './test-environment';
 const ME = 'collector-1';
 const SOMEONE_ELSE = 'collector-2';
 
+/** A Google profile picture, which is where a collector's first one is from. */
+const GOOGLE_PICTURE = 'https://lh3.googleusercontent.com/a/ACg8ocK=s96-c';
+/** One rendered from the avatar wardrobe, in our own bucket. */
+const OWN_PICTURE =
+	'https://firebasestorage.googleapis.com/v0/b/' +
+	'music-collection-16676.firebasestorage.app/o/' +
+	`user-avatar%2F${ME}%2Favatar.jpg?alt=media&v=1`;
+
 /** What the client writes: the pin, with the stamp the sync service adds. */
 const pin = (fields: Record<string, unknown>) => ({
 	uid: ME,
@@ -82,7 +90,52 @@ describe('user-location: what a level lets out', () => {
 					level: 'profile',
 					city: 'Budapest',
 					displayName: 'Zsolt',
+					photoURL: GOOGLE_PICTURE,
+				})
+			)
+		));
+
+	/** The figure put together on the profile page, in our own Storage. */
+	it('carries a picture rendered from the wardrobe', () =>
+		assertSucceeds(
+			setDoc(
+				doc(asMe(), 'user-location', ME),
+				pin({
+					level: 'profile',
+					city: 'Budapest',
+					displayName: 'Zsolt',
+					photoURL: OWN_PICTURE,
+				})
+			)
+		));
+
+	/**
+	 * The pin is shown to every signed-in collector, and the picture goes
+	 * into an `<img src>` in their browser. An address of the pin owner's own
+	 * choosing would have the visitors of the map announce themselves to
+	 * whatever server that is.
+	 */
+	it('refuses a picture from anywhere else', () =>
+		assertFails(
+			setDoc(
+				doc(asMe(), 'user-location', ME),
+				pin({
+					level: 'profile',
+					city: 'Budapest',
+					displayName: 'Zsolt',
 					photoURL: 'https://example.test/z.jpg',
+				})
+			)
+		));
+
+	it('refuses a name written over several lines', () =>
+		assertFails(
+			setDoc(
+				doc(asMe(), 'user-location', ME),
+				pin({
+					level: 'profile',
+					city: 'Budapest',
+					displayName: 'Zsolt\n\n\n\n\n\n\n\nEverybody else',
 				})
 			)
 		));

@@ -152,6 +152,55 @@ describe('entity request: asking the catalog to take something in', () => {
 			setDoc(doc(asMe(), PATH), request({ changes: changes(40) }))
 		));
 
+	/**
+	 * The note has a bound for the same reason the number of fields has: an
+	 * admin's page reads every request that waits for a decision, and a
+	 * collector's page all of their own. One note filling the megabyte a
+	 * document holds would be paid for at every opening of those lists.
+	 */
+	it('takes the collector own words about the ask', () =>
+		assertSucceeds(
+			setDoc(doc(asMe(), PATH), request({ note: 'Z'.repeat(500) }))
+		));
+
+	it('refuses a note that would fill the document', () =>
+		assertFails(
+			setDoc(doc(asMe(), PATH), request({ note: 'Z'.repeat(501) }))
+		));
+
+	it('refuses a target path with no bound', () =>
+		assertFails(
+			setDoc(
+				doc(asMe(), PATH),
+				request({
+					target: {
+						featureKey: 'artist',
+						entityType: 'Artist',
+						path: null,
+						parentPath: null,
+						ownedPath: `user/${ME}/owned-artist/${'a'.repeat(400)}`,
+					},
+				})
+			)
+		));
+
+	it('refuses a field the request was never meant to carry', () =>
+		assertFails(
+			setDoc(
+				doc(asMe(), PATH),
+				request({
+					target: {
+						featureKey: 'artist',
+						entityType: 'Artist',
+						path: null,
+						parentPath: null,
+						ownedPath: null,
+						evidence: 'Z'.repeat(5000),
+					},
+				})
+			)
+		));
+
 	it('refuses an operation that is neither', () =>
 		assertFails(setDoc(doc(asMe(), PATH), request({ operation: 'drop' }))));
 

@@ -9,6 +9,7 @@ import {
 	doc,
 	getDoc,
 	getDocs,
+	serverTimestamp,
 	setDoc,
 	updateDoc,
 } from 'firebase/firestore';
@@ -169,7 +170,7 @@ describe('owned entity: letting one go', () => {
 					asMe(),
 					`sync/owned-artist/deletion/user~${ME}~owned-artist~${ARTIST}`
 				),
-				{ path: PATH, deletedAt: Date.now() }
+				{ path: PATH, deletedAt: serverTimestamp() }
 			)
 		));
 
@@ -180,7 +181,27 @@ describe('owned entity: letting one go', () => {
 					asMe(),
 					`sync/owned-artist/deletion/user~${SOMEBODY_ELSE}~owned-artist~${ARTIST}`
 				),
-				{ path: PATH, deletedAt: Date.now() }
+				{ path: PATH, deletedAt: serverTimestamp() }
+			)
+		));
+
+	/**
+	 * The id of a tombstone is the path of the document it stands for, and the
+	 * rules hold the two together: otherwise a tombstone of one's own could
+	 * name somebody else's document, and every open client would go and read
+	 * that one again.
+	 */
+	it('refuses a tombstone of their own naming another document', () =>
+		assertFails(
+			setDoc(
+				doc(
+					asMe(),
+					`sync/owned-artist/deletion/user~${ME}~owned-artist~${ARTIST}`
+				),
+				{
+					path: `user/${SOMEBODY_ELSE}/owned-artist/${ARTIST}`,
+					deletedAt: serverTimestamp(),
+				}
 			)
 		));
 
