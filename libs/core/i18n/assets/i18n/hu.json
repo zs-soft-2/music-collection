@@ -616,8 +616,15 @@
 			"removeFailed": "Nem sikerült eltávolítani: {{error}}"
 		},
 		"collectors": {
-			"title": "Kigyűjtött kollekciók",
-			"lead": "Akik végigvitték: ki melyik kollekciót gyűjtötte ki, és mekkora polc áll mögötte.",
+			"title": "Kollekciók és gyűjtők",
+			"lead": "Mi van kitűzve, és ki vitte végig. Nyiss meg egy kollekciót, vagy nézd meg, kinek mi áll a polcán.",
+			"view": {
+				"collections": "Kollekciók",
+				"collectors": "Gyűjtők"
+			},
+			"finishedBy": "{{count}} gyűjtő vitte végig",
+			"nobodyYet": "Még senki nem vitte végig.",
+			"noCollections": "Még nincs publikált kollekció.",
 			"collectors": "gyűjtő",
 			"finished": "kigyűjtött kollekció",
 			"all": "Mind",

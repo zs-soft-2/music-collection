@@ -51,6 +51,37 @@ export interface WallHighlight {
 	badge: WallBadge;
 }
 
+/** A face on a collection's card: who finished it. */
+export interface WallFinisher {
+	uid: string;
+	displayName: string | null;
+	photoURL: string | null;
+	initial: string;
+}
+
+/**
+ * A published collection, and who has finished it.
+ *
+ * The definitions come from the catalog, which only the server writes, so
+ * nothing here needs the border post the collector-written entries do. The
+ * faces on it do: they come from the directory.
+ */
+export interface WallCollectionCard {
+	slug: string;
+	name: string;
+	description: string | null;
+	/** PrimeIcons class, where the collection carries one. */
+	icon: string | null;
+	imageUrl: string | null;
+	/** Discographies stand apart: there is a pair of them per band. */
+	group: string | null;
+	finishers: WallFinisher[];
+	finisherCount: number;
+}
+
+/** Which way round the page is read: by collection, or by collector. */
+export type WallView = 'collections' | 'collectors';
+
 export type WallSort = 'recent' | 'badges' | 'points' | 'shelf' | 'name';
 
 export const WALL_SORTS: { value: WallSort; labelKey: string }[] = [
@@ -63,6 +94,9 @@ export const WALL_SORTS: { value: WallSort; labelKey: string }[] = [
 
 /** How many collections the filter row offers before it stops. */
 export const WALL_FILTER_LIMIT = 16;
+
+/** How many faces a collection's card carries before it only counts them. */
+export const WALL_FACES = 5;
 
 /** How many entries the home page shows of the wall. */
 export const WALL_HOME_COUNT = 6;

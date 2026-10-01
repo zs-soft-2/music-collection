@@ -190,6 +190,18 @@ export class MusicCollectionEffect {
 	}
 
 	/**
+	 * Every published definition, unresolved.
+	 *
+	 * What a page needs when it is about the collections themselves rather
+	 * than about where anybody stands on them — a wall naming them, say.
+	 * Resolving is a pass over the whole catalog per collection, and that is
+	 * a price only a page showing progress has a reason to pay.
+	 */
+	public listPublishedDefinitions$(): Observable<MusicCollectionEntity[]> {
+		return this.repository.listPublished$();
+	}
+
+	/**
 	 * One collection's definition by its slug, without resolving it: what a
 	 * page needs when all it asks is the name of the collection it was
 	 * opened from. The definitions are cached whole, so this costs nothing.

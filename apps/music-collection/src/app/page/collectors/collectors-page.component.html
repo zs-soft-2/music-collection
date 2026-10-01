@@ -18,122 +18,242 @@
 		}
 	</header>
 
-	@if (store.collections().length) {
-		<div class="toolbar">
-			<ul class="chips">
+	<div class="views" role="tablist">
+		<button
+			type="button"
+			role="tab"
+			[class.is-on]="store.view() === 'collections'"
+			[attr.aria-selected]="store.view() === 'collections'"
+			(click)="store.setView('collections')"
+		>
+			{{ 'page.collectors.view.collections' | transloco }}
+		</button>
+		<button
+			type="button"
+			role="tab"
+			[class.is-on]="store.view() === 'collectors'"
+			[attr.aria-selected]="store.view() === 'collectors'"
+			(click)="store.setView('collectors')"
+		>
+			{{ 'page.collectors.view.collectors' | transloco }}
+		</button>
+	</div>
+
+	@if (store.view() === 'collections') {
+		<!--
+			Every published collection, finished or not. A collection nobody
+			has got to the end of is the one somebody might go and finish, so
+			it belongs here even though the wall of collectors cannot show it.
+		-->
+		<ul class="collections-grid">
+			@for (card of store.cards(); track card.slug) {
 				<li>
-					<button
-						type="button"
-						[class.is-on]="!store.slug()"
-						(click)="store.selectCollection(null)"
+					<a
+						class="collection"
+						[routerLink]="['/collections', card.slug]"
 					>
-						{{ 'page.collectors.all' | transloco }}
-					</button>
-				</li>
-				@for (
-					collection of store.collections();
-					track collection.slug
-				) {
-					<li>
-						<button
-							type="button"
-							[class.is-on]="store.slug() === collection.slug"
-							(click)="store.selectCollection(collection.slug)"
-						>
-							{{ collection.name }}
-							<b>{{ collection.collectors }}</b>
-						</button>
-					</li>
-				}
-			</ul>
-
-			<div class="controls">
-				<input
-					type="search"
-					[attr.placeholder]="'page.collectors.search' | transloco"
-					[value]="store.query()"
-					(input)="store.setQuery($any($event.target).value)"
-				/>
-
-				<label class="select">
-					<span>{{ 'page.collectors.sortBy' | transloco }}</span>
-					<select (change)="onSort($any($event.target).value)">
-						@for (option of sorts; track option.value) {
-							<option
-								[value]="option.value"
-								[selected]="store.sort() === option.value"
-							>
-								{{ option.labelKey | transloco }}
-							</option>
-						}
-					</select>
-				</label>
-			</div>
-		</div>
-	}
-
-	@if (store.loading()) {
-		<p class="note">{{ 'page.collector.loading' | transloco }}</p>
-	} @else if (store.empty()) {
-		<p class="note">{{ 'page.collectors.none' | transloco }}</p>
-	} @else {
-		<ul class="wall">
-			@for (entry of store.shown(); track entry.uid) {
-				<li>
-					<a class="who" [routerLink]="['/collector', entry.uid]">
-						@if (entry.photoURL) {
-							<img class="avatar" [src]="entry.photoURL" alt="" />
-						} @else {
-							<span class="avatar initial" aria-hidden="true">{{
-								entry.initial
-							}}</span>
-						}
-
-						<span class="who-text">
-							<b>{{
-								entry.displayName ??
-									('page.collector.aCollector' | transloco)
-							}}</b>
-							<span class="meta">
-								{{ entry.copies }}
-								{{ 'page.collector.records' | transloco }}
-								@if (entry.points) {
-									· {{ entry.points }}
-									{{ 'page.collector.points' | transloco }}
-								}
-								@if (entry.place) {
-									· {{ entry.place }}
-								}
-							</span>
+						<span class="pin">
+							@if (card.imageUrl) {
+								<img
+									[src]="card.imageUrl"
+									alt=""
+									loading="lazy"
+								/>
+							} @else {
+								<i
+									class="pi {{ card.icon || 'pi-bookmark' }}"
+									aria-hidden="true"
+								></i>
+							}
 						</span>
+
+						<b>{{ card.name }}</b>
+
+						@if (card.description) {
+							<span class="desc">{{ card.description }}</span>
+						}
 					</a>
 
-					@if (entry.badges.length) {
-						<ul class="badges">
-							@for (badge of entry.badges; track badge.slug) {
-								<li [class.is-on]="store.slug() === badge.slug">
-									@if (badge.imageUrl) {
+					@if (card.finisherCount) {
+						<button
+							type="button"
+							class="finishers"
+							(click)="store.showCollectors(card.slug)"
+						>
+							<span class="faces">
+								@for (face of card.finishers; track face.uid) {
+									@if (face.photoURL) {
 										<img
-											[src]="badge.imageUrl"
+											[src]="face.photoURL"
 											alt=""
 											loading="lazy"
 										/>
 									} @else {
-										<span class="pin" aria-hidden="true">
-											<i class="pi pi-shield"></i>
-										</span>
+										<span class="face" aria-hidden="true">{{
+											face.initial
+										}}</span>
 									}
-									<span class="label">{{ badge.name }}</span>
-								</li>
-							}
-						</ul>
+								}
+							</span>
+							{{
+								'page.collectors.finishedBy'
+									| transloco: { count: card.finisherCount }
+							}}
+						</button>
 					} @else {
 						<p class="nothing">
-							{{ 'page.collectors.noBadges' | transloco }}
+							{{ 'page.collectors.nobodyYet' | transloco }}
 						</p>
 					}
 				</li>
 			}
 		</ul>
+
+		@if (!store.cards().length && !store.loading()) {
+			<p class="note">
+				{{ 'page.collectors.noCollections' | transloco }}
+			</p>
+		}
+	} @else {
+		@if (store.collections().length) {
+			<div class="toolbar">
+				<ul class="chips">
+					<li>
+						<button
+							type="button"
+							[class.is-on]="!store.slug()"
+							(click)="store.selectCollection(null)"
+						>
+							{{ 'page.collectors.all' | transloco }}
+						</button>
+					</li>
+					@for (
+						collection of store.collections();
+						track collection.slug
+					) {
+						<li>
+							<button
+								type="button"
+								[class.is-on]="store.slug() === collection.slug"
+								(click)="
+									store.selectCollection(collection.slug)
+								"
+							>
+								{{ collection.name }}
+								<b>{{ collection.collectors }}</b>
+							</button>
+						</li>
+					}
+				</ul>
+
+				<div class="controls">
+					<input
+						type="search"
+						[attr.placeholder]="
+							'page.collectors.search' | transloco
+						"
+						[value]="store.query()"
+						(input)="store.setQuery($any($event.target).value)"
+					/>
+
+					<label class="select">
+						<span>{{ 'page.collectors.sortBy' | transloco }}</span>
+						<select (change)="onSort($any($event.target).value)">
+							@for (option of sorts; track option.value) {
+								<option
+									[value]="option.value"
+									[selected]="store.sort() === option.value"
+								>
+									{{ option.labelKey | transloco }}
+								</option>
+							}
+						</select>
+					</label>
+				</div>
+			</div>
+		}
+
+		@if (store.loading()) {
+			<p class="note">{{ 'page.collector.loading' | transloco }}</p>
+		} @else if (store.empty()) {
+			<p class="note">{{ 'page.collectors.none' | transloco }}</p>
+		} @else {
+			<ul class="wall">
+				@for (entry of store.shown(); track entry.uid) {
+					<li>
+						<a class="who" [routerLink]="['/collector', entry.uid]">
+							@if (entry.photoURL) {
+								<img
+									class="avatar"
+									[src]="entry.photoURL"
+									alt=""
+								/>
+							} @else {
+								<span
+									class="avatar initial"
+									aria-hidden="true"
+									>{{ entry.initial }}</span
+								>
+							}
+
+							<span class="who-text">
+								<b>{{
+									entry.displayName ??
+										('page.collector.aCollector'
+											| transloco)
+								}}</b>
+								<span class="meta">
+									{{ entry.copies }}
+									{{ 'page.collector.records' | transloco }}
+									@if (entry.points) {
+										· {{ entry.points }}
+										{{
+											'page.collector.points' | transloco
+										}}
+									}
+									@if (entry.place) {
+										· {{ entry.place }}
+									}
+								</span>
+							</span>
+						</a>
+
+						@if (entry.badges.length) {
+							<ul class="badges">
+								@for (badge of entry.badges; track badge.slug) {
+									<li
+										[class.is-on]="
+											store.slug() === badge.slug
+										"
+									>
+										@if (badge.imageUrl) {
+											<img
+												[src]="badge.imageUrl"
+												alt=""
+												loading="lazy"
+											/>
+										} @else {
+											<span
+												class="pin"
+												aria-hidden="true"
+											>
+												<i class="pi pi-shield"></i>
+											</span>
+										}
+										<span class="label">{{
+											badge.name
+										}}</span>
+									</li>
+								}
+							</ul>
+						} @else {
+							<p class="nothing">
+								{{ 'page.collectors.noBadges' | transloco }}
+							</p>
+						}
+					</li>
+				}
+			</ul>
+		}
 	}
 </div>

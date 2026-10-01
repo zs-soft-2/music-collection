@@ -1,6 +1,8 @@
 import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { MusicCollectionEntity } from '@music-collection/domain/music-collection/api';
+import { MusicCollectionEffect } from '@music-collection/domain/music-collection/core';
 import { of } from 'rxjs';
 
 import { CollectorCardDocument } from '../../data/collector-profile';
@@ -27,10 +29,26 @@ const card = (
 		updatedAt: 1,
 	}) as CollectorCardDocument;
 
+const definition = (slug: string, name = slug): MusicCollectionEntity =>
+	({
+		uid: slug,
+		slug,
+		name,
+		description: null,
+		icon: null,
+		coverImageUrl: null,
+		badge: null,
+		status: 'published',
+		group: null,
+	}) as MusicCollectionEntity;
+
 describe('CollectorsPageComponent', () => {
 	let fixture: ComponentFixture<CollectorsPageComponent>;
 
-	const render = (cards: CollectorCardDocument[]): HTMLElement => {
+	const render = (
+		cards: CollectorCardDocument[],
+		definitions: MusicCollectionEntity[] = []
+	): HTMLElement => {
 		TestBed.resetTestingModule();
 		TestBed.configureTestingModule({
 			imports: [CollectorsPageComponent],
@@ -41,6 +59,12 @@ describe('CollectorsPageComponent', () => {
 					provide: CollectorProfileEffect,
 					useValue: { cards$: () => of(cards) },
 				},
+				{
+					provide: MusicCollectionEffect,
+					useValue: {
+						listPublishedDefinitions$: () => of(definitions),
+					},
+				},
 			],
 		});
 
@@ -50,8 +74,16 @@ describe('CollectorsPageComponent', () => {
 		return fixture.nativeElement as HTMLElement;
 	};
 
+	/** The page opens on the collections; the wall of collectors is a tab. */
+	const showCollectors = (host: HTMLElement): void => {
+		host.querySelectorAll<HTMLButtonElement>('.views button')[1].click();
+		fixture.detectChanges();
+	};
+
 	it('draws a collector with what they finished', () => {
 		const host = render([card('u1', 'Zsolt', ['doom'])]);
+
+		showCollectors(host);
 
 		expect(host.querySelector('.who b')?.textContent).toContain('Zsolt');
 		expect(host.querySelector('.badges .label')?.textContent).toContain(
@@ -63,6 +95,8 @@ describe('CollectorsPageComponent', () => {
 	it('leads to the collector the card is about', () => {
 		const host = render([card('u1', 'Zsolt', ['doom'])]);
 
+		showCollectors(host);
+
 		expect(host.querySelector('.who')?.getAttribute('href')).toBe(
 			'/collector/u1'
 		);
@@ -73,6 +107,8 @@ describe('CollectorsPageComponent', () => {
 			card('u1', 'Zsolt', ['doom']),
 			card('u2', 'Anna', ['bay-area']),
 		]);
+		showCollectors(host);
+
 		const chips = host.querySelectorAll<HTMLButtonElement>('.chips button');
 
 		// The first chip is "all"; the next is a collection somebody finished.
@@ -101,7 +137,63 @@ describe('CollectorsPageComponent', () => {
 	it('draws an empty wall where nobody shares a page', () => {
 		const host = render([]);
 
+		showCollectors(host);
+
 		expect(host.querySelector('.wall')).toBeNull();
 		expect(host.querySelector('.toolbar')).toBeNull();
+	});
+
+	/**
+	 * The other way round: the collections themselves, finished or not. A
+	 * collection nobody has got to the end of is the one somebody might go
+	 * and finish, and only this view can show it.
+	 */
+	describe('the collections', () => {
+		it('names every published collection, including the untouched', () => {
+			const host = render(
+				[card('u1', 'Zsolt', ['doom'])],
+				[definition('doom', 'Doom'), definition('glam', 'Glam Metal')]
+			);
+
+			expect(
+				host.querySelectorAll('.collections-grid > li')
+			).toHaveLength(2);
+		});
+
+		it('counts who finished one, and says where nobody has', () => {
+			const host = render(
+				[card('u1', 'Zsolt', ['doom']), card('u2', 'Anna', ['doom'])],
+				[definition('doom', 'Doom'), definition('glam', 'Glam Metal')]
+			);
+			const cards = host.querySelectorAll('.collections-grid > li');
+
+			expect(cards[0].querySelector('.finishers')?.textContent).toContain(
+				'2'
+			);
+			expect(cards[1].querySelector('.nothing')).not.toBeNull();
+		});
+
+		it('opens the collectors of the collection that was asked about', () => {
+			const host = render(
+				[card('u1', 'Zsolt', ['doom']), card('u2', 'Anna', ['glam'])],
+				[definition('doom', 'Doom'), definition('glam', 'Glam Metal')]
+			);
+
+			host.querySelector<HTMLButtonElement>('.finishers')?.click();
+			fixture.detectChanges();
+
+			expect(host.querySelectorAll('.wall > li')).toHaveLength(1);
+			expect(host.querySelector('.who b')?.textContent).toContain(
+				'Zsolt'
+			);
+		});
+
+		it('leads to the collection own page', () => {
+			const host = render([], [definition('doom', 'Doom')]);
+
+			expect(
+				host.querySelector('.collection')?.getAttribute('href')
+			).toBe('/collections/doom');
+		});
 	});
 });

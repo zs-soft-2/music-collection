@@ -9,10 +9,14 @@ import {
 import { countryName } from '../../data/user-location';
 import { NAME_MAX } from '../collector/collector.model';
 
+import { MusicCollectionEntity } from '@music-collection/domain/music-collection/api';
+
 import {
+	WALL_FACES,
 	WALL_FILTER_LIMIT,
 	WallBadge,
 	WallCollection,
+	WallCollectionCard,
 	WallEntry,
 	WallHighlight,
 	WallSort,
@@ -207,4 +211,74 @@ export function toWallHighlights(
 	}
 
 	return highlights;
+}
+
+/**
+ * Every published collection, with the faces of whoever finished it.
+ *
+ * This is the other way round from the wall of collectors, and the reason the
+ * page offers both: a collection nobody has finished is still worth naming —
+ * it is the one somebody might go and finish — while the wall of collectors
+ * can only ever show what is already done.
+ *
+ * The definitions are catalog documents, written by the callable and nobody
+ * else, so they are read as they are; the faces come from the directory and
+ * have already been through the border post above.
+ */
+export function toWallCollectionCards(
+	definitions: readonly MusicCollectionEntity[],
+	entries: readonly WallEntry[]
+): WallCollectionCard[] {
+	const finishers = new Map<string, WallFinisherList>();
+
+	for (const entry of entries) {
+		for (const badge of entry.badges) {
+			const found = finishers.get(badge.slug) ?? { faces: [], count: 0 };
+
+			found.count += 1;
+
+			if (found.faces.length < WALL_FACES) {
+				found.faces.push({
+					uid: entry.uid,
+					displayName: entry.displayName,
+					photoURL: entry.photoURL,
+					initial: entry.initial,
+				});
+			}
+
+			finishers.set(badge.slug, found);
+		}
+	}
+
+	return definitions
+		.map((definition) => {
+			const found = finishers.get(definition.slug);
+
+			return {
+				slug: definition.slug,
+				name: definition.name,
+				description: definition.description,
+				icon: definition.icon,
+				imageUrl:
+					definition.badge?.image?.filePath ??
+					definition.badge?.artworkUrl ??
+					definition.coverImageUrl,
+				group: definition.group ?? null,
+				finishers: found?.faces ?? [],
+				finisherCount: found?.count ?? 0,
+			};
+		})
+		.sort(
+			(one, other) =>
+				// The curated collections first: there is a pair of
+				// discographies per band, and they would bury them.
+				Number(!!one.group) - Number(!!other.group) ||
+				other.finisherCount - one.finisherCount ||
+				one.name.localeCompare(other.name)
+		);
+}
+
+interface WallFinisherList {
+	faces: WallCollectionCard['finishers'];
+	count: number;
 }

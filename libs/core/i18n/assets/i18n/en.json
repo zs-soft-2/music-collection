@@ -616,8 +616,15 @@
 			"removeFailed": "Could not remove it: {{error}}"
 		},
 		"collectors": {
-			"title": "Finished collections",
-			"lead": "Who got there: which collection they finished, and the shelf behind it.",
+			"title": "Collections and collectors",
+			"lead": "What is set out, and who finished it. Open a collection, or see what is on somebody shelf.",
+			"view": {
+				"collections": "Collections",
+				"collectors": "Collectors"
+			},
+			"finishedBy": "finished by {{count}}",
+			"nobodyYet": "Nobody has finished it yet.",
+			"noCollections": "No collection has been published yet.",
 			"collectors": "collectors",
 			"finished": "finished collections",
 			"all": "All",

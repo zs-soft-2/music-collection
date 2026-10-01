@@ -30,6 +30,7 @@ export class CollectorsPageComponent {
 
 	public constructor() {
 		this.store.load(of(undefined));
+		this.store.loadDefinitions(of(undefined));
 	}
 
 	protected onSort(value: string): void {

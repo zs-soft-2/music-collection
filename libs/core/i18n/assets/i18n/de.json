@@ -616,8 +616,15 @@
 			"removeFailed": "Konnte nicht entfernt werden: {{error}}"
 		},
 		"collectors": {
-			"title": "Vollendete Sammlungen",
-			"lead": "Wer es geschafft hat: welche Sammlung vollendet wurde und welches Regal dahintersteht.",
+			"title": "Sammlungen und Sammler",
+			"lead": "Was es gibt, und wer es vollendet hat. Öffne eine Sammlung, oder sieh, was bei jemandem im Regal steht.",
+			"view": {
+				"collections": "Sammlungen",
+				"collectors": "Sammler"
+			},
+			"finishedBy": "von {{count}} vollendet",
+			"nobodyYet": "Noch hat es niemand vollendet.",
+			"noCollections": "Noch wurde keine Sammlung veröffentlicht.",
 			"collectors": "Sammler",
 			"finished": "vollendete Sammlungen",
 			"all": "Alle",

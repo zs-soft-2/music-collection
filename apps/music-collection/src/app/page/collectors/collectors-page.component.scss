@@ -73,6 +73,139 @@ h1 {
 	color: var(--mc-text-muted);
 }
 
+/* ── The two ways round ───────────────────────────────────────────────── */
+
+.views {
+	display: flex;
+	gap: 0.25rem;
+
+	button {
+		padding: 0.5rem 1rem;
+		font: inherit;
+		font-size: 0.9rem;
+		color: var(--mc-text-muted);
+		background: none;
+		border: 0;
+		border-bottom: 2px solid transparent;
+		cursor: pointer;
+
+		&.is-on {
+			color: var(--mc-text);
+			border-bottom-color: var(--mc-primary);
+		}
+	}
+}
+
+/* ── Collections ──────────────────────────────────────────────────────── */
+
+.collections-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+	gap: 1rem;
+
+	> li {
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+		padding: 1rem;
+		background: var(--mc-surface-2);
+		border: 1px solid var(--mc-border);
+		border-radius: var(--mc-radius-lg);
+	}
+}
+
+.collection {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.4rem;
+	color: inherit;
+	text-decoration: none;
+
+	&:hover b {
+		color: var(--mc-primary);
+	}
+
+	b {
+		font-size: 0.95rem;
+		overflow-wrap: anywhere;
+	}
+
+	.pin {
+		display: grid;
+		place-items: center;
+		width: 3.5rem;
+		height: 3.5rem;
+		font-size: 1.4rem;
+		color: var(--mc-text-subtle);
+
+		img {
+			width: 100%;
+			height: 100%;
+			object-fit: contain;
+		}
+	}
+
+	.desc {
+		font-size: 0.8rem;
+		color: var(--mc-text-muted);
+		/* Two lines of a curator's sentence; the collection's own page has
+		   the rest of it. */
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+}
+
+.finishers {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin-top: auto;
+	padding: 0.35rem 0.6rem;
+	font: inherit;
+	font-size: 0.78rem;
+	color: var(--mc-text-subtle);
+	background: var(--mc-bg-muted);
+	border: 1px solid transparent;
+	border-radius: 999px;
+	cursor: pointer;
+	text-align: left;
+
+	&:hover {
+		border-color: var(--mc-primary);
+		color: var(--mc-text);
+	}
+}
+
+.faces {
+	display: inline-flex;
+
+	img,
+	.face {
+		width: 1.5rem;
+		height: 1.5rem;
+		object-fit: cover;
+		border-radius: 50%;
+		border: 1px solid var(--mc-surface-2);
+		background: var(--mc-surface-2);
+
+		& + img,
+		& + .face {
+			margin-left: -0.5rem;
+		}
+	}
+
+	.face {
+		display: grid;
+		place-items: center;
+		font-family: var(--mc-font-display);
+		font-size: 0.75rem;
+		color: var(--mc-primary);
+	}
+}
+
 /* ── Filtering and sorting ────────────────────────────────────────────── */
 
 .toolbar {
