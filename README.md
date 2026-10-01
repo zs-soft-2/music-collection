@@ -128,6 +128,9 @@ App Check), OpenTofu/Terraform infrastruktúra.
   dev Firestore is App Check tokent követel: a publikus olvasás így nem megy
   tetszőleges scriptből, tetszőleges ütemben. Localhoston debug tokennel
   (lásd lentebb).
+- **Biztonsági fejlécek a hostingon** — szigorú CSP (inline script csak
+  hash-sel, `eval` nélkül), `frame-ancestors 'none'` a clickjacking ellen,
+  `Referrer-Policy`, `nosniff` (lásd lentebb).
 - **Verziózott kliens-cache és katalógus-bundle-ök** — a katalógus Firestore
   bundle-ökből, Cloud Storage-ból; egy Firestore-figyelés több olvasót szolgál
   ki, hogy ne kérdezzünk kétszer.
@@ -240,7 +243,7 @@ környezetre, mert a kettő más-más dolgot vesz észre.
 | Mit néz        | a hónapra eső költést, dollárban                     | a dokumentum-olvasásokat, darabban                                       |
 | Mire terjed ki | mindenre (Firestore, Storage, functionök, Vertex AI) | egyetlen metrikára                                                       |
 | Mikor szól     | napok múlva                                          | perceken belül                                                           |
-| Küszöb         | `budget_amount` (dev/prod: $5)                      | `firestore_read_alert_threshold` (dev 50 000, prod 25 000 / gördülő óra) |
+| Küszöb         | `budget_amount` (dev/prod: $5)                       | `firestore_read_alert_threshold` (dev 50 000, prod 25 000 / gördülő óra) |
 | Címzett        | a számlázási fiók adminjai + `alert_emails`          | **csak** `alert_emails`                                                  |
 
 Egy elszabadult script 200 ezer olvasása néhány tíz cent — a budgetnek szinte
@@ -321,6 +324,7 @@ ami a fejlesztő gcloud ADC-jében épp be van állítva, a prod apply is a dev�
 | `scan/try-photo.mjs`                                             | a fotós felismerés kipróbálása                                   |
 | `avatar/upload-assets.mjs`                                       | az avatar-ruhatár feltöltése Storage-ba                          |
 | `app-check/generate-debug-token.mjs`                             | App Check debug token a buildhez                                 |
+| `hosting/verify-csp.mjs`                                         | a hosting CSP inline-hash-ei egyeznek-e a build kimenetével      |
 
 A katalógus-scriptek olvasásigényesek (egy futás nagyságrendileg 25 ezer
 olvasás, a dry run is) — érdemes tudni, mielőtt indítod.
@@ -355,11 +359,11 @@ viszont nem a mi kódunk szolgálja ki, hanem a Google API-ja: ott a védelmet a
 `app_check_services` kapcsolja be (`infra/environments/dev/dev.tfvars`,
 `infra/environments/prod/prod.tfvars`).
 
-| Szolgáltatás | dev | prod |
-| --- | --- | --- |
-| Callable-ök | a kódból, mindig | a kódból, mindig |
-| Cloud Firestore | `ENFORCED` | `UNENFORCED` (csak mér) |
-| Cloud Storage | `UNENFORCED` (csak mér) | `UNENFORCED` (csak mér) |
+| Szolgáltatás    | dev                     | prod                    |
+| --------------- | ----------------------- | ----------------------- |
+| Callable-ök     | a kódból, mindig        | a kódból, mindig        |
+| Cloud Firestore | `ENFORCED`              | `UNENFORCED` (csak mér) |
+| Cloud Storage   | `UNENFORCED` (csak mér) | `UNENFORCED` (csak mér) |
 
 Amit ez a fejlesztésen megváltoztat: a dev Firestore-ból App Check token nélkül
 **olvasni sem lehet**, nem csak callable-t hívni. A `nx serve` ezt a debug
@@ -377,3 +381,69 @@ még nincs App Check — ott előbb a mai buildet kell kideployolni.
 
 Az enforcement az apply után kb. 15 perccel lép életbe, és ugyanennyivel áll
 vissza.
+
+---
+
+## Biztonsági fejlécek a hostingon
+
+A `firebase.json` `hosting.headers` blokkja minden válaszra ráteszi őket —
+`source: "**"`, mert az SPA-útvonalak (`/album/123`) az index.html-re
+íródnak át, és a fejléc-szabály a _kért_ címre illeszkedik, nem a
+rewrite eredményére.
+
+| Fejléc                       | Mi ellen                                                                    |
+| ---------------------------- | --------------------------------------------------------------------------- |
+| `Content-Security-Policy`    | XSS: honnan futhat script, hová mehet kérés, mi kerülhet keretbe            |
+| `X-Frame-Options: DENY`      | clickjacking a régi böngészőkben (a CSP-ben `frame-ancestors 'none'`)       |
+| `X-Content-Type-Options`     | MIME-sniffing: egy feltöltött fájl ne váljon scriptté                       |
+| `Referrer-Policy`            | a teljes URL ne szivárogjon ki idegen oldalra (csak az origin)              |
+| `Permissions-Policy`         | kamera, mikrofon, helyadat, fizetés — amit az app nem használ, meg se kapja |
+| `Cross-Origin-Opener-Policy` | idegen ablak ne férjen a `window`-unkhoz (`same-origin-allow-popups`)       |
+
+A HSTS nincs köztük: azt a Firebase Hosting magától küldi
+(`max-age=31556926; includeSubDomains; preload`).
+
+### A CSP és a két inline darab
+
+Statikus hostingon nincs kérésenkénti nonce, amit egy szerver beírhatna, ezért
+az oldal két inline darabja SHA-256 hash-sel van engedve:
+
+- az `index.html` téma-scriptje (a mentett világos téma az első festés előtt),
+- az `onload="this.media='all'"` attribútum, amit az inline critical CSS lépés
+  (beasties) ír a stíluslap-linkre — ehhez az `'unsafe-hashes'` kulcsszó is
+  kell, mert eseménykezelő-attribútum.
+
+Ha a build mást ír ki, mint ami a hash-ben áll, a böngésző **némán** letiltja
+őket: a stíluslap `media="print"`-en ragad (stílus nélküli oldal), vagy
+visszatér a téma villanása. Build-logban ez nem látszik, ezért a
+`tools/hosting/verify-csp.mjs` hash-eli a felépült `index.html` inline
+darabjait, és mindkét irányban egyeztet a `firebase.json`-nel. A
+`build:dev`/`build:prod` és a CI deploy job futtatja; kézzel:
+
+```bash
+npm run verify:csp     # egy optimalizált build után (a `development` konfiguráció
+                       # nem csinál inline critical CSS-t)
+```
+
+A `style-src`-ben viszont ott az `'unsafe-inline'`: az Angular és a PrimeNG
+futásidőben ír stílust (`setAttribute('style', …)`), és azt hash nem fedi. A
+CSP védelmének java a `script-src`-ben van, ami `'unsafe-inline'` és
+`'unsafe-eval'` nélkül áll.
+
+### Ha új külső forrás kerül az appba
+
+Minden idegen origin, amit a kliens megszólít, külön direktívába tartozik:
+script `script-src`, `fetch`/XHR `connect-src`, kép `img-src`, beágyazott
+keret `frame-src`. Ami kimarad, azt a böngésző eldobja — és ez is néma: a kép
+nem jelenik meg, a lekérdezés hibára fut. Amit érdemes tudni:
+
+- a mérés a `region1.google-analytics.com`-ra is küld, nem csak a `www`-re,
+- a Spotify embed API továbbtölt egy scriptet az `*.spotifycdn.com`-ról,
+- a Cover Art Archive az `archive.org`-ra irányít át, és a CSP a
+  **redirect célját** is nézi,
+- az `authDomain` (`*.firebaseapp.com`) keretben van: a Google-bejelentkezés
+  popupját az Auth SDK egy rejtett iframe-mel kíséri.
+
+Ellenőrizni a legegyszerűbb fejetlen Chrome-mal: a build kiszolgálása ezekkel
+a fejlécekkel, majd a `securitypolicyviolation` események gyűjtése a lapon —
+a konzol `Refused to…` sorai ugyanezt mondják.

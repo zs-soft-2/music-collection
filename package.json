@@ -5,13 +5,14 @@
 	"scripts": {
 		"start": "nx serve music-collection",
 		"build": "nx build music-collection",
-		"build:prod": "nx build music-collection --configuration=production",
-		"build:dev": "nx build music-collection --configuration=dev",
+		"build:prod": "nx build music-collection --configuration=production && npm run verify:csp",
+		"build:dev": "nx build music-collection --configuration=dev && npm run verify:csp",
 		"deploy:dev": "npm run build:dev && firebase deploy --only hosting:app --project dev",
 		"deploy:prod": "npm run build:prod && firebase deploy --only hosting:app --project prod",
 		"test": "nx test music-collection",
 		"test:rules": "nx test firestore-rules",
 		"lint": "nx lint music-collection",
+		"verify:csp": "node tools/hosting/verify-csp.mjs",
 		"export": "firebase emulators:export ./emulators.backup",
 		"emulator": "firebase emulators:start --import=./emulators.backup --export-on-exit"
 	},

@@ -97,6 +97,11 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.NPM_TOKEN }}
       - run: npx nx build music-collection --configuration=${{ vars.BUILD_CONFIG }}
+      # A hosting CSP-je hash-sel engedi az index.html két inline darabját
+      # (téma-script, inline critical CSS onload). Ha a build mást írt ki,
+      # a böngésző némán tiltaná le őket — stílus nélküli oldal, villanó
+      # téma —, ezért a deploy itt áll meg, nem a látogatónál.
+      - run: npm run verify:csp
       - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ vars.WIF_PROVIDER }}
