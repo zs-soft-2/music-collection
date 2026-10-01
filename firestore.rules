@@ -270,6 +270,24 @@ service cloud.firestore {
               || request.resource.data.active is bool);
     }
 
+    // A dokumentum fájljának címe. A `filePath` a Storage letöltési URL-je: a
+    // katalógusoldalak ezt teszik <img>-be, a dokumentum-oldal pedig — PDF
+    // esetén — iframe-be. Az iframe-be tett cím idegen originként fut a saját
+    // oldalunkban, ezért nem elég, hogy „Storage-URL”: a
+    // firebasestorage.googleapis.com egyetlen host, amin a világ összes
+    // Firebase-projektje osztozik. Bárki csinálhat projektet, feltölthet rá
+    // egy oldalt, és a címe mindenben a mienkre hasonlít — egy dolog kivételével.
+    // Az a bucket neve, és ezért azt nézzük.
+    //
+    // A két saját bucket azért áll itt kiírva, mert a szabálynak nincs honnan
+    // megtudnia, melyik projektben fut: ugyanez a fájl megy a devre és a prodra.
+    // (A kliens szigorúbb: az a futó build EGY bucketjéhez köti — lásd
+    // `own-storage-file.ts`.)
+    function isOwnStorageUrl(url) {
+      return url is string
+          && url.matches('^https://firebasestorage[.]googleapis[.]com/v0/b/(music-collection-16676[.]firebasestorage[.]app|music-collection-4e074[.]appspot[.]com)/o/[^?#]+([?][^#]*)?$');
+    }
+
     // Egy szerepkör dokumentum alakja. A permission-lista az, amiből a
     // szerveroldali szinkron az effektív jogosultságot számolja, ezért kap
     // korlátot: a felület száznál kevesebbet kínál, és egy elszabadult írás
@@ -740,10 +758,17 @@ service cloud.firestore {
       allow delete: if hasPerm('deleteMusicianEntity');
     }
 
+    // A `filePath` csak a saját Storage-unkba mutathat (`isOwnStorageUrl`).
+    // Frissítésnél a változatlan érték átmegy: a 2022-es prod adatra ez a
+    // szabály visszamenőleg nem lehet igaz, és egy régi dokumentum nevét
+    // attól még lehessen javítani — új idegen címet viszont beírni ne.
     match /document/{documentId} {
       allow read: if true;
-      allow create: if hasPerm('createDocumentEntity');
-      allow update: if hasPerm('updateDocumentEntity');
+      allow create: if hasPerm('createDocumentEntity')
+                    && isOwnStorageUrl(request.resource.data.filePath);
+      allow update: if hasPerm('updateDocumentEntity')
+                    && (request.resource.data.filePath == resource.data.filePath
+                        || isOwnStorageUrl(request.resource.data.filePath));
       allow delete: if hasPerm('deleteDocumentEntity');
     }
 

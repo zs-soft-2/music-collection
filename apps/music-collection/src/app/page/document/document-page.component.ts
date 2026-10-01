@@ -40,11 +40,14 @@ export class DocumentPageComponent {
 	protected readonly store = inject(DocumentPageStore);
 
 	/**
-	 * The file's own address, marked safe to frame: it is the download URL
-	 * this catalog wrote itself, not something a reader supplied.
+	 * The file's own address, marked safe to frame — and marked so only after
+	 * the store has found it to be a file of this catalog's own bucket. The
+	 * bypass is what makes that check load-bearing: past it the browser goes
+	 * wherever the string says, and a page loaded from somebody else's bucket
+	 * would run on its own origin inside this one.
 	 */
 	protected readonly framedUrl = computed(() => {
-		const url = this.store.fileUrl();
+		const url = this.store.framableFileUrl();
 
 		return url ? this.sanitizer.bypassSecurityTrustResourceUrl(url) : null;
 	});
