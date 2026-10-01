@@ -288,4 +288,80 @@ describe('RecordShelfComponent', () => {
 			'Off the shelf'
 		);
 	});
+
+	describe('what the search found', () => {
+		/** The spines of a compartment that has come into view. */
+		const spines = async (host: HTMLElement) => {
+			const blocks = await fixture.getDeferBlocks();
+
+			await blocks[0].render(DeferBlockState.Complete);
+
+			return Array.from(host.querySelectorAll<HTMLElement>('.spine'));
+		};
+
+		it('lights up what was found and dims the rest', async () => {
+			const host = render([
+				shelf({ compartments: [filled('a', ['one', 'two'])] }),
+			]);
+
+			fixture.componentRef.setInput('found', new Set(['two']));
+			fixture.componentRef.setInput('turnedTo', 'two');
+			fixture.detectChanges();
+
+			const [first, second] = await spines(host);
+
+			expect(host.querySelector('.room.is-seeking')).not.toBeNull();
+			expect(first.classList.contains('is-found')).toBe(false);
+			expect(second.classList.contains('is-found')).toBe(true);
+			expect(second.classList.contains('is-turned-to')).toBe(true);
+			expect(host.querySelector('.compartment.has-found')).not.toBeNull();
+		});
+
+		it('leaves the shelf alone while nothing is being looked for', async () => {
+			const host = render([
+				shelf({ compartments: [filled('a', ['one'])] }),
+			]);
+
+			await spines(host);
+
+			expect(host.querySelector('.room.is-seeking')).toBeNull();
+			expect(host.querySelector('.spine.is-found')).toBeNull();
+		});
+
+		it('walks over to the spine of a record it is shown', async () => {
+			const host = render([
+				shelf({ compartments: [filled('a', ['one', 'two'])] }),
+			]);
+			const [, second] = await spines(host);
+			const walked = jest.fn();
+
+			second.scrollIntoView = walked;
+			fixture.componentInstance.reveal('two');
+
+			expect(walked).toHaveBeenCalledWith(
+				expect.objectContaining({ block: 'nearest' })
+			);
+		});
+
+		/*
+		 * A compartment the collector has not scrolled to has no spines in
+		 * the page at all, so there is nothing of the record itself to walk
+		 * over to — only the compartment it stands in.
+		 */
+		it('walks over to the compartment of one not yet drawn', () => {
+			const host = render([
+				shelf({ compartments: [filled('a', ['one', 'two'])] }),
+			]);
+			const cell = host.querySelector<HTMLElement>('.compartment');
+			const walked = jest.fn();
+
+			expect(host.querySelector('.spine')).toBeNull();
+			if (cell) {
+				cell.scrollIntoView = walked;
+			}
+			fixture.componentInstance.reveal('two');
+
+			expect(walked).toHaveBeenCalled();
+		});
+	});
 });

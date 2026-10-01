@@ -45,6 +45,8 @@ import {
 	collectionStats,
 	filterReleases,
 	groupReleases,
+	shelfMatches,
+	shelfPlaceLabel,
 	sortReleases,
 	splitByPlacement,
 } from './collection.mapper';
@@ -60,6 +62,8 @@ import {
 	FormatFilter,
 	ReleaseGroup,
 	ShelfDrop,
+	ShelfMatchListing,
+	ShelfMatchView,
 	ShelfUnitView,
 } from './collection.model';
 import {
@@ -85,6 +89,13 @@ const RENDER_CHUNK_SIZE = 30;
 /** Styles listed in the "Top styles" panel. */
 const STYLE_COUNT = 6;
 
+/**
+ * How many of the found records are listed by name above the shelf. A single
+ * letter typed into the search box finds hundreds, and a list of hundreds is
+ * no help in finding one — the shelf itself shows the rest, lit up.
+ */
+const MATCH_LIST_LIMIT = 8;
+
 interface CollectionPageState {
 	releases: ReleaseView[];
 	isLoading: boolean;
@@ -107,6 +118,8 @@ interface CollectionPageState {
 	placeError: string | null;
 	/** The copy the placement dialog is open for. */
 	placingCopyId: string | null;
+	/** The found record the shelf is pointed at, where one was picked. */
+	pickedMatchId: string | null;
 }
 
 const initialState: CollectionPageState = {
@@ -122,6 +135,7 @@ const initialState: CollectionPageState = {
 	placing: false,
 	placeError: null,
 	placingCopyId: null,
+	pickedMatchId: null,
 	...COLLECTION_VIEW_DEFAULTS,
 };
 
@@ -143,6 +157,21 @@ export const CollectionPageStore = signalStore(
 		const visible = computed(() =>
 			sortReleases(
 				filterReleases(store.releases(), store.query(), store.format()),
+				store.sort()
+			)
+		);
+
+		/**
+		 * What the shelf is built out of: the whole collection, the format
+		 * chips aside. The search deliberately takes nothing off it — a shelf
+		 * repacked out of the three records a query found would stand them
+		 * somewhere they do not stand in the room, and where a record stands
+		 * is the one thing this view is for. The search points at them
+		 * instead, which is what `matches` is.
+		 */
+		const onShelf = computed(() =>
+			sortReleases(
+				filterReleases(store.releases(), '', store.format()),
 				store.sort()
 			)
 		);
@@ -174,7 +203,7 @@ export const CollectionPageStore = signalStore(
 			 * twice — once where it was put, once where the shelf would
 			 * have put it.
 			 */
-			const { placed, loose } = splitByPlacement(visible(), units);
+			const { placed, loose } = splitByPlacement(onShelf(), units);
 			const shelved: ReleaseGroup[] = groupReleases(
 				loose,
 				store.group() === 'none' ? 'format' : store.group(),
@@ -183,6 +212,27 @@ export const CollectionPageStore = signalStore(
 
 			return arrangeShelves(shelved, units, placed);
 		});
+
+		/**
+		 * The records the search found, and where each one stands — read off
+		 * the shelf as it is drawn, so what comes back is directions to the
+		 * furniture rather than a filtered collection.
+		 */
+		const matches = computed<ShelfMatchView[]>(() =>
+			shelfMatches(shelves(), store.query())
+		);
+
+		/**
+		 * The one the shelf is turned to: what the collector picked out of
+		 * the list, or — until they pick one, and the moment their pick stops
+		 * matching — the first record found.
+		 */
+		const focusedMatch = computed<ShelfMatchView | null>(
+			() =>
+				matches().find((match) => match.id === store.pickedMatchId()) ??
+				matches()[0] ??
+				null
+		);
 
 		/** The records standing in a drawn compartment, overflow aside. */
 		const standing = computed(() =>
@@ -243,6 +293,36 @@ export const CollectionPageStore = signalStore(
 			decades: computed(() => decadeDistribution(store.releases())),
 			styles: computed(() => topStyles(store.releases(), STYLE_COUNT)),
 			visible,
+			matches,
+			focusedMatch,
+			/**
+			 * The found records named above the shelf, each with the way to
+			 * it written out; the ones past the limit are only lit up.
+			 */
+			listedMatches: computed<ShelfMatchListing[]>(() =>
+				matches()
+					.slice(0, MATCH_LIST_LIMIT)
+					.map((match) => ({
+						...match,
+						where: shelfPlaceLabel(match, words()),
+					}))
+			),
+			/** How many found records the list above the shelf leaves out. */
+			moreMatches: computed(() =>
+				Math.max(0, matches().length - MATCH_LIST_LIMIT)
+			),
+			/** The copies the shelf lights up, for the spines to read. */
+			matchIds: computed(
+				() => new Set(matches().map((match) => match.id))
+			),
+			/**
+			 * What is actually on the page. The shelf keeps the search out of
+			 * it, so "nothing to show" there means an empty collection rather
+			 * than a query nothing answers.
+			 */
+			shown: computed(() =>
+				store.view() === 'shelf' ? onShelf() : visible()
+			),
 			/*
 			 * Keyed by view as well: @for only reconciles when the array
 			 * changes, so a grid ↔ list switch must yield new groups to
@@ -257,20 +337,25 @@ export const CollectionPageStore = signalStore(
 			}),
 			shelves,
 
-			hasFilter: computed(
-				() => store.query().trim() !== '' || store.format() !== 'all'
+			/**
+			 * Less than the whole collection is on the page. On the shelf a
+			 * query takes nothing off it, so there only the format chips can.
+			 */
+			narrowed: computed(() =>
+				store.view() === 'shelf'
+					? store.format() !== 'all'
+					: store.query().trim() !== '' || store.format() !== 'all'
 			),
 			/**
 			 * The shelf can be rearranged by hand: there is furniture to file
 			 * records into, and the shelf shows the whole collection. Under a
-			 * filter it shows a part of it, and a compartment arranged out of
-			 * a part would renumber records that are not even on the page.
+			 * format chip it shows a part of it, and a compartment arranged
+			 * out of a part would renumber records that are not even on the
+			 * page. A search is not such a filter — it lights the shelf up
+			 * rather than cutting it down — so it leaves the dragging alone.
 			 */
 			placeable: computed(
-				() =>
-					store.shelfUnits().length > 0 &&
-					store.query().trim() === '' &&
-					store.format() === 'all'
+				() => store.shelfUnits().length > 0 && store.format() === 'all'
 			),
 			/**
 			 * A single copy can be filed by hand wherever it is found —
@@ -684,6 +769,14 @@ export const CollectionPageStore = signalStore(
 					)
 				),
 				setQuery: (query: string) => patchState(store, { query }),
+				/**
+				 * Points the shelf at one of the records the search found.
+				 * Forgotten as soon as that record stops being found, so a
+				 * query typed further on never leaves the shelf turned to a
+				 * record nobody is looking for any more.
+				 */
+				pickMatch: (pickedMatchId: string) =>
+					patchState(store, { pickedMatchId }),
 				setFormat: (format: FormatFilter) =>
 					patchState(store, { format }),
 				setSort: (sort: CollectionSort) => {
@@ -699,7 +792,11 @@ export const CollectionPageStore = signalStore(
 					savePreferences();
 				},
 				clearFilters: () =>
-					patchState(store, { query: '', format: 'all' }),
+					patchState(store, {
+						query: '',
+						format: 'all',
+						pickedMatchId: null,
+					}),
 			};
 		}
 	),

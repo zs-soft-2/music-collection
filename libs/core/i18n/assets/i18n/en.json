@@ -379,11 +379,18 @@
 			"shelf": {
 				"dragHint": "Drag a record to file it where it really stands. A compartment you have arranged keeps the room you made in it; everything you have not placed keeps filling the compartments you left free.",
 				"tapHint": "Tap a spine to pull the record out and see its cover. Tap again to open it. Rearranging the shelf by hand still wants a bigger screen and a mouse.",
-				"filterHint": "Clear the search and the format filter to rearrange the shelf by hand.",
+				"filterHint": "Clear the format filter to rearrange the shelf by hand. A search leaves the shelf whole — it only points at where a record stands.",
 				"fileFailed": "Could not file it: {{error}}",
 				"keep": "Keep it as it stands",
 				"release": "Let the shelf arrange it",
-				"keptHint": "The shelf stands as you left it: the records keep their places even when you add one or a copy leaves. A new record goes into whatever compartment is still free."
+				"keptHint": "The shelf stands as you left it: the records keep their places even when you add one or a copy leaves. A new record goes into whatever compartment is still free.",
+				"searchHint": "The search leaves the shelf whole: it shows you where a record stands instead of clearing the rest away.",
+				"found": {
+					"one": "{{count}} record found on the shelf",
+					"other": "{{count}} records found on the shelf"
+				},
+				"foundNone": "Nothing on the shelf answers that search.",
+				"foundMore": "+ {{count}} more, lit up on the shelf."
 			},
 			"groupFallback": "Collection",
 			"unknownStyle": "Unknown style",

@@ -379,11 +379,18 @@
 			"shelf": {
 				"dragHint": "Húzz egy lemezt oda, ahol valójában áll. Az általad elrendezett rekesz megtartja a benne hagyott helyet; amit nem raktál el, az továbbra is a szabadon hagyott rekeszeket tölti.",
 				"tapHint": "Koppints egy gerincre: kihúzza a lemezt és megmutatja a borítóját. Még egy koppintás, és megnyitja. Átrendezni egyelőre nagyobb képernyőn, egérrel tudod.",
-				"filterHint": "Töröld a keresést és a formátumszűrőt, hogy kézzel rendezhesd át a polcot.",
+				"filterHint": "Töröld a formátumszűrőt, hogy kézzel rendezhesd át a polcot. A keresés nem szűri a polcot, csak megmutatja, hol áll a lemez.",
 				"fileFailed": "Nem sikerült elrakni: {{error}}",
 				"keep": "Maradjon így",
 				"release": "Rendezze a polc",
-				"keptHint": "A polc úgy áll, ahogy elraktad: a lemezek a helyükön maradnak akkor is, ha újat veszel fel vagy egy példány kikerül. Az új lemez a szabadon maradt rekeszekbe áll be."
+				"keptHint": "A polc úgy áll, ahogy elraktad: a lemezek a helyükön maradnak akkor is, ha újat veszel fel vagy egy példány kikerül. Az új lemez a szabadon maradt rekeszekbe áll be.",
+				"searchHint": "A keresés a polcot egyben hagyja: megmutatja, hol áll a lemez, ahelyett hogy kipakolná a többit.",
+				"found": {
+					"one": "{{count}} találat a polcon",
+					"other": "{{count}} találat a polcon"
+				},
+				"foundNone": "Erre a keresésre semmi nem áll a polcon.",
+				"foundMore": "+ még {{count}}, a polcon kiemelve."
 			},
 			"groupFallback": "Gyűjtemény",
 			"unknownStyle": "Ismeretlen stílus",

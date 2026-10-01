@@ -10,6 +10,8 @@ import {
 	FormatFilter,
 	ReleaseGroup,
 	ShelfCompartmentView,
+	ShelfMatchView,
+	ShelfPlace,
 	ShelfUnitView,
 } from './collection.model';
 import {
@@ -24,19 +26,36 @@ import {
 	spotKey,
 } from './shelf-placement';
 
+/**
+ * What the search box looks for: the record's own name and its artist's.
+ * Shared, because the search does two different things with the same words —
+ * it cuts the grid and the list down to what matches, and it points at what
+ * matches on the shelf — and the two must never read a query differently.
+ */
+export function matchesQuery(release: ReleaseView, needle: string): boolean {
+	return (
+		!needle ||
+		release.title.toLocaleLowerCase().includes(needle) ||
+		release.artistName.toLocaleLowerCase().includes(needle)
+	);
+}
+
+/** The query as the match reads it: trimmed and case-blind, or empty. */
+export function searchNeedle(query: string): string {
+	return query.trim().toLocaleLowerCase();
+}
+
 export function filterReleases(
 	releases: ReleaseView[],
 	query: string,
 	format: FormatFilter
 ): ReleaseView[] {
-	const needle = query.trim().toLocaleLowerCase();
+	const needle = searchNeedle(query);
 
 	return releases.filter(
 		(release) =>
 			(format === 'all' || release.format === format) &&
-			(!needle ||
-				release.title.toLocaleLowerCase().includes(needle) ||
-				release.artistName.toLocaleLowerCase().includes(needle))
+			matchesQuery(release, needle)
 	);
 }
 
@@ -501,4 +520,70 @@ export function arrangeShelves(
 	}
 
 	return shelves;
+}
+
+/**
+ * The records the search found, and where each one stands on the shelf as it
+ * is drawn right now — in the order you would walk past them.
+ *
+ * The shelf is the one view the search does not cut down: half a collection
+ * repacked into the furniture would stand the records somewhere they do not
+ * stand in the room, which is the one thing a collector comes to this view
+ * to be told. So it is read off the arranged shelf rather than off the
+ * collection, and what comes back is a set of directions, not a filter.
+ */
+export function shelfMatches(
+	shelves: readonly ShelfUnitView[],
+	query: string
+): ShelfMatchView[] {
+	const needle = searchNeedle(query);
+
+	if (!needle) {
+		return [];
+	}
+
+	const found: ShelfMatchView[] = [];
+
+	for (const unit of shelves) {
+		for (const compartment of unit.compartments) {
+			for (const release of compartment.items) {
+				if (!matchesQuery(release, needle)) {
+					continue;
+				}
+				found.push({
+					id: release.id,
+					artistName: release.artistName,
+					title: release.title,
+					unitName: unit.name,
+					spot: compartment.spot,
+					offShelf: unit.overflow,
+					compartment: compartment.label,
+					cell: compartment.key,
+				});
+			}
+		}
+	}
+
+	return found;
+}
+
+/**
+ * Where a record stands, said the way you would say it to someone standing
+ * in the doorway: the unit by the name its owner gave it, then which
+ * compartment of it. The open wall has no units to name, so there the
+ * compartment's own heading is the direction.
+ */
+export function shelfPlaceLabel(place: ShelfPlace, words: GroupWords): string {
+	if (place.offShelf) {
+		return words.t('ui.recordShelf.off-the-shelf');
+	}
+	if (place.spot) {
+		const at = words.t('ui.recordShelf.rowSlot', {
+			row: place.spot.row,
+			slot: place.spot.column,
+		});
+
+		return place.unitName ? `${place.unitName} · ${at}` : at;
+	}
+	return place.compartment;
 }

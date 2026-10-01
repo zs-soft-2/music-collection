@@ -2,7 +2,12 @@ import { CollectionItemPlacement } from '@music-collection/api';
 
 import { MediaFormat, ReleaseView } from '../../shared/music-ui';
 
-import { arrangeShelves, splitByPlacement } from './collection.mapper';
+import {
+	arrangeShelves,
+	shelfMatches,
+	shelfPlaceLabel,
+	splitByPlacement,
+} from './collection.mapper';
 import { ReleaseGroup } from './collection.model';
 import { ShelfCubby, ShelfUnitLayout } from './shelf-layout.setting';
 
@@ -287,5 +292,98 @@ describe('splitByPlacement', () => {
 
 		expect(placed).toEqual([]);
 		expect(loose.map((item) => item.id)).toEqual(['a', 'b']);
+	});
+});
+
+describe('shelfMatches', () => {
+	/** A shelf of two units, one record per compartment. */
+	function shelf(records: ReleaseView[]) {
+		return arrangeShelves(
+			[{ key: 'all', label: 'ALL', items: records }],
+			[unit('one', 1, 2), unit('two', 1, 1)]
+		);
+	}
+
+	it('finds nothing while nothing is being looked for', () => {
+		expect(shelfMatches(shelf([release('a')]), '  ')).toEqual([]);
+	});
+
+	it('says which compartment of which unit a record stands in', () => {
+		const shelves = shelf([
+			release('painkiller', 'Judas Priest'),
+			release('reign', 'Slayer'),
+			release('tomb', 'Slayer'),
+		]);
+
+		expect(shelfMatches(shelves, 'slayer')).toEqual([
+			expect.objectContaining({
+				id: 'reign',
+				unitName: 'one',
+				spot: { unitId: 'one', row: 1, column: 2 },
+				offShelf: false,
+			}),
+			expect.objectContaining({
+				id: 'tomb',
+				unitName: 'two',
+				spot: { unitId: 'two', row: 1, column: 1 },
+			}),
+		]);
+	});
+
+	it('matches a title as readily as an artist, whatever the case', () => {
+		const shelves = shelf([release('Painkiller', 'Judas Priest')]);
+
+		expect(shelfMatches(shelves, 'PAINKILL').map((m) => m.id)).toEqual([
+			'Painkiller',
+		]);
+	});
+
+	it('owns up to a record no drawn compartment was left for', () => {
+		const records = Array.from({ length: 4 }, (_, at) =>
+			release(`r${at}`, 'Slayer')
+		);
+		const found = shelfMatches(shelf(records), 'slayer');
+
+		expect(found).toHaveLength(4);
+		expect(found[3]).toEqual(
+			expect.objectContaining({ offShelf: true, spot: null })
+		);
+	});
+});
+
+describe('shelfPlaceLabel', () => {
+	const words = {
+		t: (key: string, params?: Record<string, unknown>) =>
+			key === 'ui.recordShelf.rowSlot'
+				? `Row ${params?.['row']} · Slot ${params?.['slot']}`
+				: 'Off the shelf',
+		catalog: (_group: never, value: string) => value,
+	};
+	const place = {
+		unitName: 'Kallax',
+		spot: { unitId: 'one', row: 2, column: 3 },
+		offShelf: false,
+		compartment: 'SLAYER',
+		cell: 'one:2:3',
+	};
+
+	it('names the unit and the compartment of it', () => {
+		expect(shelfPlaceLabel(place, words)).toBe('Kallax · Row 2 · Slot 3');
+	});
+
+	it('leaves out a unit with no name of its own', () => {
+		expect(shelfPlaceLabel({ ...place, unitName: '' }, words)).toBe(
+			'Row 2 · Slot 3'
+		);
+	});
+
+	it('falls back to the compartment where nothing is drawn', () => {
+		expect(shelfPlaceLabel({ ...place, spot: null }, words)).toBe('SLAYER');
+	});
+
+	it('says plainly that a record is off the shelf', () => {
+		expect(shelfPlaceLabel({ ...place, offShelf: true }, words)).toBe(
+			'Off the shelf'
+		);
 	});
 });

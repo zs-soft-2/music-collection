@@ -215,10 +215,10 @@
 
 	<p class="summary" aria-live="polite">
 		@if (!store.isLoading()) {
-			@if (store.hasFilter()) {
+			@if (store.narrowed()) {
 				{{
 					t('page.collection.showingOf', {
-						shown: store.visible().length,
+						shown: store.shown().length,
 						total: store.stats().total,
 					})
 				}}
@@ -258,7 +258,7 @@
 				{{ t('page.collection.log-in') }}
 			</button>
 		</div>
-	} @else if (!store.visible().length) {
+	} @else if (!store.shown().length) {
 		<div class="empty">
 			<p class="empty-icon" aria-hidden="true">♪</p>
 			<h2>{{ t('page.collection.no-releases-found') }}</h2>
@@ -270,10 +270,73 @@
 	} @else {
 		@switch (store.view()) {
 			@case ('shelf') {
+				<!--
+					What the search found, and the way to each one. The shelf
+					itself is left whole and lit up rather than filtered, so
+					this is where the search says what it did.
+				-->
+				@if (store.query().trim()) {
+					<div class="shelf-found">
+						@if (store.matches().length) {
+							<p class="shelf-found-head" aria-live="polite">
+								{{
+									store.matches().length
+										| mcPlural
+											: 'page.collection.shelf.found'
+								}}
+							</p>
+							<ul class="shelf-found-list">
+								@for (
+									match of store.listedMatches();
+									track match.id
+								) {
+									<li>
+										<button
+											type="button"
+											class="found-item"
+											[class.is-current]="
+												match.id ===
+												store.focusedMatch()?.id
+											"
+											(click)="onFindMatch(match.id)"
+										>
+											<span class="found-record">
+												<span class="found-artist">{{
+													match.artistName
+												}}</span>
+												<span class="found-title">{{
+													match.title
+												}}</span>
+											</span>
+											<span class="found-where">{{
+												match.where
+											}}</span>
+										</button>
+									</li>
+								}
+							</ul>
+							@if (store.moreMatches(); as more) {
+								<p class="shelf-found-more">
+									{{
+										t('page.collection.shelf.foundMore', {
+											count: more,
+										})
+									}}
+								</p>
+							}
+						} @else {
+							<p class="shelf-found-head" aria-live="polite">
+								{{ t('page.collection.shelf.foundNone') }}
+							</p>
+						}
+					</div>
+				}
 				@if (store.shelfUnits().length) {
 					<div class="shelf-bar">
 						<p class="shelf-note">
-							@if (!store.placeable()) {
+							@if (store.query().trim()) {
+								{{ t('page.collection.shelf.searchHint') }}
+							} @else if (!store.placeable()) {
 								{{ t('page.collection.shelf.filterHint') }}
 							} @else if (store.shelfIsKept()) {
 								{{ t('page.collection.shelf.keptHint') }}
@@ -325,6 +388,8 @@
 					[shelves]="store.shelves()"
 					[placeable]="store.placeable()"
 					[playable]="player.playersAllowed()"
+					[found]="store.matchIds()"
+					[turnedTo]="store.focusedMatch()?.id ?? null"
 					(filed)="store.fileRecord($event)"
 					(putOn)="onPlayShelf($event)"
 				/>

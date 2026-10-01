@@ -53,6 +53,8 @@ interface Compartment {
 	albumIds: string[];
 	/** Drawn but with nothing in it; the unit keeps the shape either way. */
 	empty: boolean;
+	/** One of the records the search found stands here. */
+	found: boolean;
 	/** The drawn compartment this is, or null on the wall and the overflow. */
 	spot: ShelfSpotRef | null;
 }
@@ -68,6 +70,8 @@ interface PlanCell {
 	fill: number;
 	/** What stands in it, for the cell's tooltip. */
 	label: string;
+	/** One of the records the search found stands in it. */
+	found: boolean;
 }
 
 /** One drawn unit standing in the room, with its compartments filled. */
@@ -199,6 +203,11 @@ function fillOf(spines: Spine[], cubby: ShelfCubby): number {
 	return Math.min(1, used / Math.max(1, cubby.length));
 }
 
+/** A value safe to put inside a quoted attribute selector. */
+function quote(value: string): string {
+	return value.replace(/["\\]/g, '\\$&');
+}
+
 /** Takes the drop away from the browser, which would follow the link. */
 const swallow = (event: Event): void => event.preventDefault();
 
@@ -245,6 +254,17 @@ export class RecordShelfComponent {
 	 * disappoint.
 	 */
 	public readonly playable = input(false);
+	/**
+	 * The copies the search found, which the shelf lights up while the rest
+	 * of it goes quiet. Empty for a shelf nobody is searching — then nothing
+	 * is dimmed, because there is nothing to pick out.
+	 */
+	public readonly found = input<ReadonlySet<string>>(new Set<string>());
+	/**
+	 * The one of them the shelf is turned to: lit brightest, and walked over
+	 * to by `reveal`.
+	 */
+	public readonly turnedTo = input<string | null>(null);
 
 	/** A record was let go over a compartment of a drawn unit. */
 	public readonly filed = output<ShelfDrop>();
@@ -312,6 +332,9 @@ export class RecordShelfComponent {
 					key: group.key,
 					label: group.label,
 					empty: !spines.length,
+					found: spines.some((spine) =>
+						this.found().has(spine.release.id)
+					),
 					spot: group.spot,
 					albumIds: group.items.map((release) => release.albumId),
 					spines,
@@ -322,10 +345,31 @@ export class RecordShelfComponent {
 							key: group.key,
 							label: group.label,
 							fill: fillOf(spines, shelf.cubby),
+							found: spines.some((spine) =>
+								this.found().has(spine.release.id)
+							),
 						}))
 					: [],
 			};
 		})
+	);
+
+	/**
+	 * The compartment each record is drawn in. What `reveal` falls back to:
+	 * a compartment that has not come into view yet has no spines in the
+	 * page to scroll to, but the compartment itself is always there.
+	 */
+	private readonly cellByRecord = computed(
+		() =>
+			new Map(
+				this.shelves().flatMap((shelf) =>
+					shelf.compartments.flatMap((group) =>
+						group.items.map(
+							(release) => [release.id, group.key] as const
+						)
+					)
+				)
+			)
 	);
 
 	private readonly releasesById = computed(
@@ -549,9 +593,8 @@ export class RecordShelfComponent {
 	 * is what makes it more than a picture.
 	 */
 	private walkTo(key: string): void {
-		const quoted = key.replace(/["\\]/g, '\\$&');
 		const cell = this.host.querySelector<HTMLElement>(
-			`.compartment[data-cell="${quoted}"]`
+			`.compartment[data-cell="${quote(key)}"]`
 		);
 
 		cell?.scrollIntoView?.({
@@ -560,6 +603,36 @@ export class RecordShelfComponent {
 				? 'auto'
 				: 'smooth',
 		});
+	}
+
+	/**
+	 * Walks the shelf over to one record: the spine itself where the
+	 * compartment has been drawn, and the compartment where it has not come
+	 * into view yet and has no spines in the page. Called rather than bound,
+	 * because walking over to the record you are already standing at is the
+	 * point of asking twice.
+	 */
+	public reveal(id: string): void {
+		const spine = this.host.querySelector<HTMLElement>(
+			`.spine[data-id="${quote(id)}"]`
+		);
+
+		if (spine) {
+			spine.scrollIntoView?.({
+				block: 'nearest',
+				inline: 'center',
+				behavior: this.matches('(prefers-reduced-motion: reduce)')
+					? 'auto'
+					: 'smooth',
+			});
+			return;
+		}
+
+		const cell = this.cellByRecord().get(id);
+
+		if (cell) {
+			this.walkTo(cell);
+		}
 	}
 
 	/*

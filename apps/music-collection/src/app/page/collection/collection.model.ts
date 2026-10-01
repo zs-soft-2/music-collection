@@ -36,6 +36,39 @@ export interface ShelfCompartmentView extends ReleaseGroup {
 }
 
 /**
+ * Where on the shelf a record actually stands. Not a place it was given —
+ * the shelf works one out for every record it draws, filed by hand or not —
+ * but the one it is drawn in right now, which is what a collector walking up
+ * to the furniture needs to be told.
+ */
+export interface ShelfPlace {
+	/** The unit it stands in; empty on the open wall and off the shelf. */
+	unitName: string;
+	/** Which compartment of a drawn unit; null on the wall and off it. */
+	spot: ShelfSpotRef | null;
+	/** Nothing drawn was left to hold it, or tall enough for it. */
+	offShelf: boolean;
+	/** What the compartment is called, for where there is no spot to name. */
+	compartment: string;
+	/** The compartment's key: what the shelf is walked over to. */
+	cell: string;
+}
+
+/** A record the search found, and where it stands. */
+export interface ShelfMatchView extends ShelfPlace {
+	/** The copy, which is what a spine on the shelf is. */
+	id: string;
+	artistName: string;
+	title: string;
+}
+
+/** A found record as the list above the shelf names it. */
+export interface ShelfMatchListing extends ShelfMatchView {
+	/** Where it stands, in the reader's own words. */
+	where: string;
+}
+
+/**
  * A record dropped on the shelf: which compartment it landed in, and how far
  * along that compartment it was let go.
  */

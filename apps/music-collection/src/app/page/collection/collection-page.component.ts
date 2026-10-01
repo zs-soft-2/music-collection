@@ -1,5 +1,12 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import {
+	afterRenderEffect,
+	ChangeDetectionStrategy,
+	Component,
+	inject,
+	untracked,
+	viewChild,
+} from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
@@ -59,6 +66,9 @@ export class CollectionPageComponent {
 	protected readonly groupOptions = GROUP_OPTIONS;
 	protected readonly viewOptions = VIEW_OPTIONS;
 
+	/** The shelf, where the search walks over to what it found. */
+	private readonly shelf = viewChild(RecordShelfComponent);
+
 	protected readonly skeletons = Array.from({ length: 12 }, (_, i) => i);
 	protected readonly collectionSkeletons = Array.from(
 		{ length: 3 },
@@ -74,7 +84,33 @@ export class CollectionPageComponent {
 			);
 	}
 
+	/**
+	 * Turns the shelf to one of the records the search found. Asked for
+	 * outright rather than left to the effect below, because picking the
+	 * record the shelf is already turned to changes nothing to react to —
+	 * and walking back over to it is exactly why you would click it twice.
+	 */
+	protected onFindMatch(copyId: string): void {
+		this.store.pickMatch(copyId);
+		this.shelf()?.reveal(copyId);
+	}
+
 	public constructor() {
+		/*
+		 * The search points the shelf at what it found, without waiting to
+		 * be clicked: type a title and the shelf walks over to the record.
+		 * After the render, because a compartment has to be drawn before it
+		 * can be scrolled to.
+		 */
+		afterRenderEffect(() => {
+			const match = this.store.focusedMatch();
+			const shelf = this.shelf();
+
+			if (match && shelf) {
+				untracked(() => shelf.reveal(match.id));
+			}
+		});
+
 		/* The home page quick search links here with `?q=`. */
 		const query = inject(ActivatedRoute).snapshot.queryParamMap.get('q');
 		if (query) {

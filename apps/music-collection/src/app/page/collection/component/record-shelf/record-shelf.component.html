@@ -1,4 +1,8 @@
-<div #room class="room">
+<!--
+	`is-seeking`: something is being looked for, so what was not found steps
+	back and lets the shelf show where it stands.
+-->
+<div #room class="room" [class.is-seeking]="found().size > 0">
 	@for (unit of units(); track unit.key) {
 		<section
 			class="unit"
@@ -65,6 +69,7 @@
 						<li
 							class="plan-cell"
 							[class.is-blank]="!cell.fill"
+							[class.is-found]="cell.found"
 							[style.--fill]="cell.fill"
 							[attr.data-cell]="cell.key"
 							[title]="cell.label"
@@ -78,6 +83,7 @@
 					<section
 						class="compartment"
 						[class.is-blank]="compartment.empty"
+						[class.has-found]="compartment.found"
 						[attr.aria-hidden]="compartment.empty ? 'true' : null"
 						[attr.aria-label]="compartment.label || null"
 						[attr.data-unit]="
@@ -110,7 +116,7 @@
 												: {
 														row: spot.row,
 														slot: spot.column,
-													}
+												  }
 									}}</span>
 								}
 								@if (playable()) {
@@ -173,6 +179,15 @@
 												[attr.draggable]="placeable()"
 												[class]="
 													'is-' + spine.release.format
+												"
+												[class.is-found]="
+													found().has(
+														spine.release.id
+													)
+												"
+												[class.is-turned-to]="
+													spine.release.id ===
+													turnedTo()
 												"
 												[class.is-box]="
 													spine.release.boxSet

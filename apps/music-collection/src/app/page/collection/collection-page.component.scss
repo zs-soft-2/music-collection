@@ -535,6 +535,87 @@ button {
 	}
 }
 
+/*
+ * What the search found on the shelf. The shelf itself is never cut down to
+ * the matches — where a record stands is the whole point of that view — so
+ * this is where the search says what it did: how many, and the way to each
+ * one, each a step the collector can take to it.
+ */
+.shelf-found {
+	margin-bottom: 0.75rem;
+	padding: 0.7rem 0.9rem;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-left: 3px solid var(--mc-accent);
+	border-radius: var(--mc-radius-md);
+}
+
+.shelf-found-head {
+	margin: 0;
+	font-size: 0.85rem;
+	font-weight: 600;
+}
+
+.shelf-found-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	margin: 0.6rem 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.found-item {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.1rem;
+	padding: 0.35rem 0.6rem;
+	font: inherit;
+	text-align: left;
+	color: var(--mc-text);
+	background: transparent;
+	border: 1px solid var(--mc-border-strong);
+	border-radius: var(--mc-radius-md);
+	cursor: pointer;
+
+	&:hover,
+	&:focus-visible {
+		border-color: var(--mc-accent);
+	}
+
+	/* The one the shelf is turned to right now. */
+	&.is-current {
+		border-color: var(--mc-accent);
+		background: color-mix(in srgb, var(--mc-accent) 14%, transparent);
+	}
+}
+
+.found-record {
+	font-size: 0.85rem;
+}
+
+.found-artist {
+	font-weight: 600;
+
+	&::after {
+		content: ' — ';
+		font-weight: 400;
+		color: var(--mc-text-muted);
+	}
+}
+
+.found-where {
+	font-size: 0.75rem;
+	color: var(--mc-text-muted);
+}
+
+.shelf-found-more {
+	margin: 0.5rem 0 0;
+	font-size: 0.8rem;
+	color: var(--mc-text-muted);
+}
+
 /* What the shelf lets the collector do, and what went wrong if it did not. */
 .shelf-bar {
 	display: flex;

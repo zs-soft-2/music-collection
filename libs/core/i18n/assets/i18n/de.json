@@ -379,11 +379,18 @@
 			"shelf": {
 				"dragHint": "Zieh eine Platte dorthin, wo sie wirklich steht. Ein Fach, das du eingeräumt hast, behält den Platz, den du darin gelassen hast; alles Unplatzierte füllt weiterhin die freigelassenen Fächer.",
 				"tapHint": "Tippe auf einen Rücken: Die Platte kommt heraus und zeigt ihr Cover. Noch ein Tippen öffnet sie. Zum Umräumen brauchst du vorerst einen größeren Bildschirm und eine Maus.",
-				"filterHint": "Lösche Suche und Formatfilter, um das Regal von Hand umzuräumen.",
+				"filterHint": "Lösche den Formatfilter, um das Regal von Hand umzuräumen. Die Suche lässt das Regal ganz — sie zeigt nur, wo eine Platte steht.",
 				"fileFailed": "Konnte nicht eingeordnet werden: {{error}}",
 				"keep": "So lassen",
 				"release": "Das Regal einräumen lassen",
-				"keptHint": "Das Regal steht, wie du es verlassen hast: Die Platten behalten ihren Platz, auch wenn eine dazukommt oder ein Exemplar weggeht. Eine neue Platte kommt in ein noch freies Fach."
+				"keptHint": "Das Regal steht, wie du es verlassen hast: Die Platten behalten ihren Platz, auch wenn eine dazukommt oder ein Exemplar weggeht. Eine neue Platte kommt in ein noch freies Fach.",
+				"searchHint": "Die Suche lässt das Regal ganz: Sie zeigt, wo eine Platte steht, statt den Rest wegzuräumen.",
+				"found": {
+					"one": "{{count}} Platte im Regal gefunden",
+					"other": "{{count}} Platten im Regal gefunden"
+				},
+				"foundNone": "Zu dieser Suche steht nichts im Regal.",
+				"foundMore": "+ {{count}} weitere, im Regal hervorgehoben."
 			},
 			"groupFallback": "Sammlung",
 			"unknownStyle": "Unbekannter Stil",

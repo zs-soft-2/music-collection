@@ -482,6 +482,67 @@
 	cursor: grab;
 }
 
+/*
+ * Looking for a record. The shelf is not cut down to what was found — where
+ * a record stands is the whole point of this view, and a shelf repacked out
+ * of three records would stand them somewhere they do not stand in the room
+ * — so the search lights it up instead: the rest of the shelf steps back and
+ * the lamp falls on what matched.
+ *
+ * Carried by a flat opacity and an outline rather than by shadows or
+ * filters: a query is retyped letter by letter, and anything that re-rasters
+ * five hundred spines would turn every keystroke into a freeze.
+ */
+.room.is-seeking .spine:not(.is-found) {
+	opacity: 0.2;
+}
+
+.spine.is-found {
+	z-index: 4;
+	outline: 1px solid var(--mc-accent);
+	outline-offset: -1px;
+}
+
+/* The one the shelf is turned to, standing out the way a hand would pull it. */
+.spine.is-turned-to {
+	z-index: 6;
+	outline-width: 2px;
+	transform: translateY(-14px);
+}
+
+.is-down .spine.is-turned-to {
+	transform: translateX(14px);
+}
+
+/* Which compartment to walk up to, told across the width of a room. */
+.room.is-seeking .compartment.has-found {
+	.cubby {
+		outline: 2px solid color-mix(in srgb, var(--mc-accent) 65%, transparent);
+		outline-offset: -2px;
+	}
+
+	.label {
+		color: var(--mc-accent);
+	}
+}
+
+/* The same on the plan, which on a narrow screen is the whole unit. */
+.plan-cell.is-found {
+	box-shadow:
+		inset 0 0 0 1px rgba(0, 0, 0, 0.5),
+		0 0 0 2px var(--mc-accent);
+}
+
+/*
+ * Walked over to from the search. The toolbar is sticky, so a record scrolled
+ * to the very top of the page would land underneath it.
+ */
+.spine,
+.compartment {
+	scroll-margin-block: 6rem;
+	scroll-margin-inline: 1.5rem;
+}
+
 /* Nothing hovers on a touch screen, so what hover would reveal has to stay. */
 @media (hover: none) {
 	.label-play {
