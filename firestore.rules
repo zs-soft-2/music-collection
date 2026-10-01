@@ -561,6 +561,146 @@ service cloud.firestore {
       allow delete: if isSelf(uid) || hasPerm('deleteUserEntity');
     }
 
+    // ── Megosztható gyűjtő-profil ───────────────────────────────────────────
+    // Egy doksi egy gyűjtőről, és a létezése maga a megosztás: nincs
+    // `visibility` mező, amin hazudni lehetne — aki visszavonja, az törli.
+    // Ezért nincs token sem a kulcsban: a lap nyilvános, a link nem titok.
+    //
+    // Az olvasás kijelentkezve is megy, mint a katalógus és a hét bandája. Ez
+    // a funkció értelme: egy idegen attól kap kedvet a saját gyűjteményéhez,
+    // hogy belát egy polcra. Emiatt van a doksiban denormalizálva minden,
+    // amit a lap kirajzol (cím, előadó, borító-URL) — a látogatónak nincs
+    // katalógusa, vagy csak két műfajnyi van (genre bundle), tehát egy
+    // album-uid üres helyet jelentene. Ez egy olvasás egy látogatásra.
+    //
+    // A számokat a gyűjtő gépe állítja össze — a collection-feloldás és a
+    // pontozás a kliensen fut, mert a katalógus ott van a cache-ben —, tehát
+    // ÖNBEVALLÁS. A szabály a *alakot* tudja kikényszeríteni, a tartalmat
+    // nem. Következésképp ez a doksi soha nem táplálhat ranglistát, jutalmat
+    // vagy badge-et; egy hivatalos verseny szerveroldali futásból jön, a
+    // polcról (mint a `leaderboard/daily-question`).
+    //
+    // Pont igen, pénz nem: ár, becsült érték, vételi hely és dátum, sorszám,
+    // polc-pozíció és példányfotó nem kerülhet ki. A kulcslista alant ezt
+    // zárja le — amit nem sorol fel, azt a doksi nem viheti.
+    //
+    // Amit a szabály NEM tud megnézni: a listák elemeit. A rules-nak nincs
+    // iterációja, ezért a badge-ek, a kirakat és a wishlist csak típusban és
+    // hosszban van megszorítva. A megjelenítő lap tehát a doksi szövegét
+    // ADATKÉNT kezeli (Angular interpoláció escape-el), a kép-URL-eket a
+    // hosting CSP `img-src`-je szűri, a wishlist bolt-linkjét pedig a kliens
+    // szorítja https-re az írás előtt (`toSourceLink`), és
+    // `rel="nofollow ugc noopener noreferrer"`-rel adja ki.
+    match /collector/{uid} {
+      function profile() {
+        return request.resource.data;
+      }
+      function isOptionalText(field, maxSize) {
+        return !(field in profile().keys())
+               || (profile()[field] is string
+                   && profile()[field].size() <= maxSize);
+      }
+      // A polc számokban. A `byFormat` kulcsai a média-formátumok, ezért a
+      // méretük felülről zárt: egy szabadon növelhető map a doksi 1 MB-os
+      // keretét vinné el.
+      function isValidNumbers() {
+        let numbers = profile().numbers;
+
+        return numbers is map
+               && numbers.keys().hasOnly(['copies', 'albums', 'artists',
+                                          'byFormat', 'oldestYear', 'since'])
+               && numbers.copies is int && numbers.copies >= 0
+               && numbers.albums is int && numbers.albums >= 0
+               && numbers.artists is int && numbers.artists >= 0
+               && numbers.byFormat is map
+               && numbers.byFormat.keys().size() <= 10
+               && (numbers.oldestYear == null || numbers.oldestYear is int)
+               && (numbers.since == null || numbers.since is int);
+      }
+      function isValidPoints() {
+        let points = profile().points;
+
+        return points is map
+               && points.keys().hasOnly(['total', 'completedCollections'])
+               && points.total is number && points.total >= 0
+               && points.completedCollections is int
+               && points.completedCollections >= 0;
+      }
+      // A hosszak a kliens korlátaival egyeznek (`collector-profile.model.ts`:
+      // BADGE_LIMIT, PURSUIT_LIMIT, SHOWCASE_LIMIT, WISHLIST_LIMIT). A
+      // wishlist hiánya a hozzájárulás hiánya: aki nem osztja meg, annak a
+      // doksijában nincs is ilyen kulcs.
+      function isValidLists() {
+        return profile().badges is list
+               && profile().badges.size() <= 50
+               && profile().pursuits is list
+               && profile().pursuits.size() <= 3
+               && profile().showcase is list
+               && profile().showcase.size() <= 24
+               && (!('wishlist' in profile().keys())
+                   || (profile().wishlist is list
+                       && profile().wishlist.size() <= 200));
+      }
+      function isValidProfile() {
+        return profile().keys().hasOnly(['uid', 'displayName', 'photoURL',
+                                         'countryCode', 'city', 'numbers',
+                                         'points', 'badges', 'pursuits',
+                                         'showcase', 'wishlist', 'updatedAt'])
+               && profile().uid == uid
+               // A név és a kép ugyanabban az alakban, ahogy a user
+               // dokumentumba és a térkép pinjébe írható.
+               && (!('displayName' in profile().keys())
+                   || isDisplayName(profile().displayName))
+               && (!('photoURL' in profile().keys())
+                   || isProfilePhotoUrl(profile().photoURL))
+               // A hely a hely-hozzájárulásból jön (`user-location`): ez a
+               // doksi nem szélesítheti ki, csak átveheti, amit az kiengedett.
+               && (!('countryCode' in profile().keys())
+                   || (profile().countryCode is string
+                       && profile().countryCode.size() == 2))
+               && isOptionalText('city', 60)
+               && isValidNumbers()
+               && isValidPoints()
+               && isValidLists();
+      }
+
+      allow read: if true;
+      allow create, update: if isSelf(uid) && isValidProfile();
+      allow delete: if isSelf(uid) || hasPerm('deleteUserEntity');
+
+      // ── A teljes polc ───────────────────────────────────────────────────
+      // A lap két tucat lemezt mutat; az egész listát csak az kapja meg, aki
+      // rákattint. Ezért külön doksi: a belépő így marad egy olvasás, ez
+      // pedig a második — borító nélkül, tehát ezer lemez is pár száz
+      // kilobájt.
+      //
+      // Az olvasás a FÖLÖTTE álló profil létezéséhez kötött. A visszavonás a
+      // profil-doksit törli, a Firestore pedig nem kaszkádol: egy megszakadt
+      // kliens után ez a lista kint maradhatna. A `get()` ára egy olvasás —
+      // de csak azé fizeti, aki a teljes listát kérte.
+      match /albums/{listId} {
+        function albums() {
+          return request.resource.data;
+        }
+
+        allow read: if exists(/databases/$(database)/documents/collector/$(uid));
+        allow create, update: if isSelf(uid)
+                              && albums().keys().hasOnly(['uid', 'count',
+                                                          'albums', 'updatedAt'])
+                              && albums().uid == uid
+                              && albums().count is int
+                              && albums().count >= 0
+                              // A hossz a kliens korlátjával egyezik
+                              // (`collector-profile.model.ts`,
+                              // ALBUM_LIST_LIMIT); az elemeit a szabály itt
+                              // sem tudja végignézni, azokat a megjelenítő
+                              // lap kezeli adatként.
+                              && albums().albums is list
+                              && albums().albums.size() <= 3000;
+        allow delete: if isSelf(uid) || hasPerm('deleteUserEntity');
+      }
+    }
+
     // Collection-group olvasás a saját adaton. A szabály itt nem szűr, hanem
     // szűrést KÖVETEL: a `resource.data`-ra hivatkozó feltételt a Firestore a
     // lekérdezés megszorításaiból bizonyítja, ezért ilyen lekérdezés csak a
@@ -1018,12 +1158,14 @@ service cloud.firestore {
                                  && ((!(featureKey in ['collection-item', 'wishlist-item'])
                                       && !isOwnedFeature(featureKey))
                                      || markerId.matches('user~' + request.auth.uid + '~' + featureKey + '~.+')))
-                                // A saját megosztott helyét bárki
-                                // visszavonhatja, permission nélkül is: ez a
-                                // hozzájárulás vége.
+                                // A saját megosztott helyét és a saját
+                                // gyűjtő-profilját bárki visszavonhatja,
+                                // permission nélkül is: ez a hozzájárulás
+                                // vége. A marker a saját doksijára mutat,
+                                // másra nem — az azonosító viszi az uid-ot.
                                 || (isAuthed()
-                                    && featureKey == 'user-location'
-                                    && markerId == 'user-location~' + request.auth.uid)
+                                    && featureKey in ['user-location', 'collector']
+                                    && markerId == featureKey + '~' + request.auth.uid)
                                 // Egy sorszám elengedése a példány
                                 // szerkesztése, nem katalógus-törlés: aki a
                                 // példányt írhatja, a foglalását vissza is

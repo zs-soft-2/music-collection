@@ -1,4 +1,4 @@
-import { Observable, map } from 'rxjs';
+import { Observable, filter, first, map, switchMap, tap } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
 import {
@@ -88,6 +88,25 @@ export class WishlistItemStateServiceImpl extends WishlistItemStateService {
 	public selectAdding$(): Observable<boolean> {
 		return this.store.pipe(
 			select(wishlistItemSelectors.getWishlistItemAdding)
+		);
+	}
+
+	public selectLoadedOwnEntities$(): Observable<WishlistItemEntity[]> {
+		const loaded$ = this.store.pipe(
+			select(wishlistItemSelectors.getWishlistItemLoaded)
+		);
+
+		return loaded$.pipe(
+			first(),
+			tap((loaded) => {
+				if (!loaded) {
+					this.dispatchListOwnEntitiesAction();
+				}
+			}),
+			switchMap(() => loaded$),
+			filter(Boolean),
+			first(),
+			switchMap(() => this.selectEntities$())
 		);
 	}
 
