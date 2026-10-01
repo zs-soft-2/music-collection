@@ -4,6 +4,11 @@ import { FORMAT_ORDER, MediaFormat } from '@music-collection/ui/music-view';
 import {
 	CollectorAlbumsDocument,
 	CollectorProfileDocument,
+	clipText,
+	listOf,
+	pictureUrl,
+	positiveNumber,
+	wholeNumber,
 } from '../../data/collector-profile';
 import { countryName } from '../../data/user-location';
 import {
@@ -39,41 +44,10 @@ import {
  * that is not.
  */
 
-/** The last character code a line of text has no business carrying. */
-const LAST_CONTROL_CODE = 0x1f;
-const DELETE_CODE = 0x7f;
-
-/** As much of a text as the page has room for, and nothing that breaks a line. */
-function clip(value: unknown, max: number): string {
-	if (typeof value !== 'string') {
-		return '';
-	}
-
-	let plain = '';
-
-	for (const character of value.slice(0, max * 2)) {
-		const code = character.codePointAt(0) ?? 0;
-
-		plain +=
-			code <= LAST_CONTROL_CODE || code === DELETE_CODE ? ' ' : character;
-	}
-
-	return plain.trim().slice(0, max);
-}
-
-/** A picture this page may load, or nothing. */
-function picture(value: unknown): string | null {
-	return typeof value === 'string' && value.startsWith('https://')
-		? value
-		: null;
-}
-
-/** A whole number at least zero, or null where the document said otherwise. */
-function count(value: unknown): number | null {
-	return typeof value === 'number' && Number.isInteger(value) && value >= 0
-		? value
-		: null;
-}
+/** The border post's own shorthands, in the names this page reads best. */
+const clip = clipText;
+const picture = pictureUrl;
+const count = wholeNumber;
 
 function year(value: unknown): number | null {
 	return typeof value === 'number' && Number.isInteger(value) ? value : null;
@@ -86,9 +60,7 @@ function format(value: unknown): MediaFormat {
 		: 'other';
 }
 
-function list(value: unknown): unknown[] {
-	return Array.isArray(value) ? value : [];
-}
+const list = listOf;
 
 /** The shop link, with the host it leads to — or neither. */
 function shopLink(value: unknown): {
@@ -228,7 +200,7 @@ export function toCollectorView(
 		},
 		numbers: toNumbers(document),
 		points: {
-			total: count(document.points?.total) ?? 0,
+			total: positiveNumber(document.points?.total) ?? 0,
 			completedCollections:
 				count(document.points?.completedCollections) ?? 0,
 		},

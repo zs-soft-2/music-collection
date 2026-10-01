@@ -10,15 +10,21 @@ import {
 	DocumentData,
 	Firestore,
 	Timestamp,
+	collection,
 	doc,
 	docData,
+	limit,
+	orderBy,
+	query,
 } from '@angular/fire/firestore';
 import { FirestoreSyncService } from '@music-collection/api';
 
 import {
 	CollectorAlbumsDocument,
+	CollectorCardDocument,
 	CollectorProfileDocument,
 	PublicCollectorAlbums,
+	PublicCollectorCard,
 	PublicCollectorProfile,
 } from './collector-profile.model';
 
@@ -27,6 +33,16 @@ export const COLLECTOR_PROFILE_FEATURE_KEY = 'collector';
 /** The full shelf lives under the profile: `collector/{uid}/albums/all`. */
 export const COLLECTOR_ALBUMS_COLLECTION = 'albums';
 export const COLLECTOR_ALBUMS_DOCUMENT = 'all';
+
+/** The directory the wall of finished collections is drawn from. */
+export const COLLECTOR_CARD_FEATURE_KEY = 'collector-card';
+
+/**
+ * How many collectors the directory asks for at once. Everything the wall
+ * sorts and filters by travels in the card, so this is read once and worked
+ * on in the browser rather than queried per sort.
+ */
+export const DIRECTORY_LIMIT = 60;
 
 /**
  * Data access for the profiles collectors chose to share: `collector/{uid}`.
@@ -113,6 +129,43 @@ export class CollectorProfileRepository {
 	}
 
 	/**
+	 * Every collector in the directory, newest first.
+	 *
+	 * Read through the sync cache, like the map's pins: the first visit pays
+	 * for the list and later ones pay nothing until somebody's shelf changes
+	 * and bumps the feature's stamp. That is what makes a wall of collectors
+	 * affordable on a page everybody opens.
+	 */
+	public cards$(): Observable<CollectorCardDocument[]> {
+		return this.firestoreSync.list$<CollectorCardDocument>({
+			featureKey: COLLECTOR_CARD_FEATURE_KEY,
+			cacheKey: COLLECTOR_CARD_FEATURE_KEY,
+			query: runInInjectionContext(this.injector, () =>
+				query(
+					collection(this.firestore, COLLECTOR_CARD_FEATURE_KEY),
+					orderBy('updatedAt', 'desc'),
+					limit(DIRECTORY_LIMIT)
+				)
+			),
+		});
+	}
+
+	public saveCard(card: PublicCollectorCard): Promise<void> {
+		return this.firestoreSync.set(
+			this.cardReference(card.uid),
+			COLLECTOR_CARD_FEATURE_KEY,
+			card
+		);
+	}
+
+	public removeCard(uid: string): Promise<void> {
+		return this.firestoreSync.delete(
+			this.cardReference(uid),
+			COLLECTOR_CARD_FEATURE_KEY
+		);
+	}
+
+	/**
 	 * AngularFire expects its APIs in an injection context; these run from a
 	 * stream or an event handler, long after the repository was built.
 	 */
@@ -131,6 +184,12 @@ export class CollectorProfileRepository {
 	private albumsDocument$(uid: string) {
 		return runInInjectionContext(this.injector, () =>
 			docData(this.albumsReference(uid))
+		);
+	}
+
+	private cardReference(uid: string) {
+		return runInInjectionContext(this.injector, () =>
+			doc(this.firestore, COLLECTOR_CARD_FEATURE_KEY, uid)
 		);
 	}
 

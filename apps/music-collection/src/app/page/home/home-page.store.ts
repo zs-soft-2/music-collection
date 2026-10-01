@@ -42,6 +42,19 @@ import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
 import { BandOfTheWeekEffect } from '../../data/band-of-the-week';
 import {
+	CollectorCardDocument,
+	CollectorProfileEffect,
+} from '../../data/collector-profile';
+import {
+	toWallEntries,
+	toWallHighlights,
+} from '../collectors/collectors.mapper';
+import {
+	WALL_HOME_COUNT,
+	WallEntry,
+	WallHighlight,
+} from '../collectors/collectors.model';
+import {
 	AlbumView,
 	ArtistView,
 	ReleaseView,
@@ -101,6 +114,8 @@ interface HomePageState {
 	query: string;
 	/** Signed in, as opposed to reading the catalog as a guest. */
 	authenticated: boolean;
+	/** The collectors who share a page, for the wall of finished collections. */
+	wall: WallEntry[];
 }
 
 const initialState: HomePageState = {
@@ -113,6 +128,7 @@ const initialState: HomePageState = {
 	releasesLoading: true,
 	countsLoading: true,
 	collectionStandings: [],
+	wall: [],
 	collectionsLoading: true,
 	spotlightId: null,
 	bandOfTheWeek: null,
@@ -300,6 +316,10 @@ export const HomePageStore = signalStore(
 				nextAlbums,
 				/** Empty where there is no shelf to continue, or no gap left. */
 				showsHunt: computed(() => nextAlbums().length > 0),
+				/** A few finished collections, each under a different face. */
+				wallHighlights: computed<WallHighlight[]>(() =>
+					toWallHighlights(store.wall(), WALL_HOME_COUNT)
+				),
 				completedCollections: computed(
 					() =>
 						collections().filter(
@@ -429,7 +449,8 @@ export const HomePageStore = signalStore(
 			collectionItemStateService = inject(CollectionItemStateService),
 			quantityStateService = inject(EntityQuantityStateService),
 			musicCollectionEffect = inject(MusicCollectionEffect),
-			bandOfTheWeekEffect = inject(BandOfTheWeekEffect)
+			bandOfTheWeekEffect = inject(BandOfTheWeekEffect),
+			collectorProfiles = inject(CollectorProfileEffect)
 		) => {
 			/**
 			 * Picks the hero once everything it stands on has arrived: the
@@ -619,6 +640,25 @@ export const HomePageStore = signalStore(
 						})
 					)
 				),
+				/**
+				 * The collectors who share a page, for the wall of finished
+				 * collections. Read through the sync cache and shared with
+				 * the wall's own page, so a visitor pays for the directory
+				 * once rather than on every landing.
+				 */
+				loadWall: rxMethod<void>(
+					pipe(
+						switchMap(() => collectorProfiles.cards$()),
+						tapResponse({
+							next: (cards: CollectorCardDocument[]) =>
+								patchState(store, {
+									wall: toWallEntries(cards),
+								}),
+							error: (error) =>
+								console.error('Collector wall not read', error),
+						})
+					)
+				),
 				/** Follows sign-in and sign-out while the page is open. */
 				loadAuthentication: rxMethod<void>(
 					pipe(
@@ -695,6 +735,7 @@ export const HomePageStore = signalStore(
 			store.loadCounts(of(undefined));
 			store.loadCollections(of(undefined));
 			store.loadBandOfTheWeek(of(undefined));
+			store.loadWall(of(undefined));
 			store.loadAuthentication(of(undefined));
 			store.watchSearches(of(undefined));
 		},

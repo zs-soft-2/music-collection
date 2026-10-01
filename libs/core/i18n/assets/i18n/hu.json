@@ -12,6 +12,7 @@
 		"upcoming": "Megjelenik",
 		"wishlist": "Kívánságlista",
 		"network": "Kapcsolatháló",
+		"collectors": "Gyűjtők",
 		"map": "Térkép",
 		"admin": "Admin",
 		"profile": "Profil",
@@ -274,6 +275,10 @@
 			"title": "Nemrég hozzáadva",
 			"catalogTitle": "Nemrég került a katalógusba",
 			"allReleases": "Összes kiadás"
+		},
+		"collectors": {
+			"title": "Kigyűjtött kollekciók",
+			"all": "Mind"
 		},
 		"collections": {
 			"title": "Kihívások",
@@ -609,6 +614,26 @@
 			"spot": "{{row}}. sor · {{slot}}. hely · {{position}}. pozíció",
 			"remove": "Eltávolítás",
 			"removeFailed": "Nem sikerült eltávolítani: {{error}}"
+		},
+		"collectors": {
+			"title": "Kigyűjtött kollekciók",
+			"lead": "Akik végigvitték: ki melyik kollekciót gyűjtötte ki, és mekkora polc áll mögötte.",
+			"collectors": "gyűjtő",
+			"finished": "kigyűjtött kollekció",
+			"all": "Mind",
+			"search": "Keresés név vagy kollekció szerint",
+			"sortBy": "Rendezés",
+			"none": "Erre nincs találat.",
+			"noBadges": "Még nincs kigyűjtött kollekciója.",
+			"seeAll": "Mind",
+			"homeLead": "Amit a többiek végigvittek.",
+			"sort": {
+				"recent": "Legutóbbi",
+				"badges": "Legtöbb jelvény",
+				"points": "Legtöbb pont",
+				"shelf": "Legnagyobb polc",
+				"name": "Név"
+			}
 		},
 		"collector": {
 			"loading": "Lapozzuk…",

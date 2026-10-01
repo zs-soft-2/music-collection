@@ -382,6 +382,74 @@ function toWishlist(wishes: readonly WishlistItemEntity[]): CollectorWish[] {
 }
 
 /**
+ * The entry in the directory: one collector, small enough that a page may
+ * hold everybody's.
+ *
+ * The page document is ten to twenty kilobytes — a window of covers, a
+ * wishlist — and a wall of those would be half a megabyte to draw a grid of
+ * faces. This is the same collector in a few hundred bytes: who they are,
+ * what the shelf adds up to, and the collections they have finished, which is
+ * what the wall is actually about.
+ */
+export interface PublicCollectorCard {
+	uid: string;
+	displayName?: string;
+	photoURL?: string;
+	countryCode?: string;
+	city?: string;
+	/** What the shelf holds, for sorting by size. */
+	copies: number;
+	points: number;
+	/** The collections finished, the most valuable first. */
+	badges: CollectorBadge[];
+}
+
+export type CollectorCardDocument = PublicCollectorCard & {
+	updatedAt?: number;
+};
+
+/**
+ * The directory entry, or null when nothing is shared.
+ *
+ * Built from the same source as the page, so the two cannot disagree: a card
+ * showing a badge the page does not is a card nobody can trust.
+ */
+export function toPublicCollectorCard(
+	source: CollectorProfileSource
+): PublicCollectorCard | null {
+	const { settings, owner, releases, standings, location } = source;
+
+	if (!settings.shared || !owner.uid) {
+		return null;
+	}
+
+	const card: PublicCollectorCard = {
+		uid: owner.uid,
+		copies: releases.length,
+		points: toPoints(standings).total,
+		badges: toBadges(standings),
+	};
+
+	if (owner.displayName) {
+		card.displayName = owner.displayName;
+	}
+
+	if (owner.photoURL) {
+		card.photoURL = owner.photoURL;
+	}
+
+	if (location?.countryCode) {
+		card.countryCode = location.countryCode;
+	}
+
+	if (location?.city) {
+		card.city = location.city;
+	}
+
+	return card;
+}
+
+/**
  * The whole shelf, by artist and then by year — the order a collector would
  * read a shelf in, and the one the collection page opens with.
  *

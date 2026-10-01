@@ -664,7 +664,12 @@ service cloud.firestore {
                && isValidLists();
       }
 
-      allow read: if true;
+      // Címről igen, listázni nem. A lap doksija tíz-húsz kilobájt (kirakat,
+      // wishlist), és egy `list` ebből végiglapozhatná az összes gyűjtőt —
+      // azt a költséget senki nem kérte. A felfedezés a `collector-card`
+      // könyvtáron megy, ami pár száz bájtos bejegyzésekből áll.
+      allow get: if true;
+      allow list: if false;
       allow create, update: if isSelf(uid) && isValidProfile();
       allow delete: if isSelf(uid) || hasPerm('deleteUserEntity');
 
@@ -699,6 +704,49 @@ service cloud.firestore {
                               && albums().albums.size() <= 3000;
         allow delete: if isSelf(uid) || hasPerm('deleteUserEntity');
       }
+    }
+
+
+    // ── Gyűjtő-könyvtár ─────────────────────────────────────────────────────
+    // Egy bejegyzés egy megosztott gyűjtőről, pár száz bájtban: ki ő, mekkora
+    // a polca, és mely collectionöket gyűjtötte ki. Ebből áll össze a
+    // „kigyűjtött kollekciók" fala a kezdőlapon és a `/collectors` lapon —
+    // listázva, tehát a doksinak kicsinek KELL maradnia; a nagy lap-doksi
+    // épp ezért nem listázható.
+    //
+    // Ugyanaz az írás készíti, mint a lapot, ugyanabból a forrásból: egy
+    // bejegyzés, ami mást mond, mint a lap, olyan bejegyzés, amiben nem lehet
+    // megbízni. A kliens írja, tehát ez is önbevallás — és ezért nem is
+    // rangsorol: a lap rendezni enged, de pontot nem oszt.
+    match /collector-card/{uid} {
+      function card() {
+        return request.resource.data;
+      }
+
+      allow read: if true;
+      allow create, update: if isSelf(uid)
+                            && card().keys().hasOnly(['uid', 'displayName',
+                                                      'photoURL', 'countryCode',
+                                                      'city', 'copies', 'points',
+                                                      'badges', 'updatedAt'])
+                            && card().uid == uid
+                            && (!('displayName' in card().keys())
+                                || isDisplayName(card().displayName))
+                            && (!('photoURL' in card().keys())
+                                || isProfilePhotoUrl(card().photoURL))
+                            && (!('countryCode' in card().keys())
+                                || (card().countryCode is string
+                                    && card().countryCode.size() == 2))
+                            && (!('city' in card().keys())
+                                || (card().city is string
+                                    && card().city.size() <= 60))
+                            && card().copies is int
+                            && card().copies >= 0
+                            && card().points is number
+                            && card().points >= 0
+                            && card().badges is list
+                            && card().badges.size() <= 50;
+      allow delete: if isSelf(uid) || hasPerm('deleteUserEntity');
     }
 
     // Collection-group olvasás a saját adaton. A szabály itt nem szűr, hanem
@@ -1164,7 +1212,8 @@ service cloud.firestore {
                                 // vége. A marker a saját doksijára mutat,
                                 // másra nem — az azonosító viszi az uid-ot.
                                 || (isAuthed()
-                                    && featureKey in ['user-location', 'collector']
+                                    && featureKey in ['user-location', 'collector',
+                                                      'collector-card']
                                     && markerId == featureKey + '~' + request.auth.uid)
                                 // Egy sorszám elengedése a példány
                                 // szerkesztése, nem katalógus-törlés: aki a

@@ -12,6 +12,7 @@
 		"upcoming": "Coming out",
 		"wishlist": "Wishlist",
 		"network": "Network",
+		"collectors": "Collectors",
 		"map": "Map",
 		"admin": "Admin",
 		"profile": "Profile",
@@ -274,6 +275,10 @@
 			"title": "Recently added",
 			"catalogTitle": "Recently added to the catalog",
 			"allReleases": "All releases"
+		},
+		"collectors": {
+			"title": "Finished collections",
+			"all": "See all"
 		},
 		"collections": {
 			"title": "Challenges",
@@ -609,6 +614,26 @@
 			"spot": "Row {{row}} · Slot {{slot}} · Position {{position}}",
 			"remove": "Remove",
 			"removeFailed": "Could not remove it: {{error}}"
+		},
+		"collectors": {
+			"title": "Finished collections",
+			"lead": "Who got there: which collection they finished, and the shelf behind it.",
+			"collectors": "collectors",
+			"finished": "finished collections",
+			"all": "All",
+			"search": "Search by name or collection",
+			"sortBy": "Sort",
+			"none": "Nothing matches that.",
+			"noBadges": "No finished collection yet.",
+			"seeAll": "See all",
+			"homeLead": "What the others have finished.",
+			"sort": {
+				"recent": "Most recent",
+				"badges": "Most badges",
+				"points": "Most points",
+				"shelf": "Biggest shelf",
+				"name": "Name"
+			}
 		},
 		"collector": {
 			"loading": "Turning the page…",

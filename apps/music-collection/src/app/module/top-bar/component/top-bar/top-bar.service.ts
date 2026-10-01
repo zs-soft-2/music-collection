@@ -82,6 +82,12 @@ export class TopBarService {
 				requiresAuth: true,
 			},
 			{
+				labelKey: 'nav.collectors',
+				icon: 'pi-users',
+				routerLink: ['/collectors'],
+				group: 'explore',
+			},
+			{
 				labelKey: 'nav.map',
 				icon: 'pi-map-marker',
 				routerLink: ['/map'],

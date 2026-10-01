@@ -15,12 +15,14 @@ import { UserSettingsEffect } from '../user-settings';
 import {
 	COLLECTOR_PROFILE_SETTING,
 	CollectorAlbumsDocument,
+	CollectorCardDocument,
 	CollectorProfileDocument,
 	CollectorProfileOwner,
 	CollectorProfileSettings,
 	CollectorProfileSource,
 	collectorProfileFingerprint,
 	toPublicCollectorAlbums,
+	toPublicCollectorCard,
 	toPublicCollectorProfile,
 } from './collector-profile.model';
 import { CollectorProfileRepository } from './collector-profile.repository';
@@ -134,6 +136,11 @@ export class CollectorProfileEffect {
 		return this.repository.albums$(uid);
 	}
 
+	/** Every shared collector, for the wall of finished collections. */
+	public cards$(): Observable<CollectorCardDocument[]> {
+		return this.repository.cards$();
+	}
+
 	/**
 	 * Keeps the choice, then publishes what it allows — or takes the page
 	 * away. Runs at once rather than on the delay: a consent withdrawn has to
@@ -197,9 +204,15 @@ export class CollectorProfileEffect {
 
 		await this.repository.save(profile);
 
-		// The full shelf follows the page it belongs to. One fingerprint
-		// covers both: nothing can change the list without also changing the
-		// count on the page.
+		// The directory entry and the full shelf follow the page they belong
+		// to. One fingerprint covers all three: both are made of what the
+		// page already shows, so neither can change while the page does not.
+		const card = toPublicCollectorCard(source);
+
+		if (card) {
+			await this.repository.saveCard(card);
+		}
+
 		const albums = toPublicCollectorAlbums(source);
 
 		if (albums) {
@@ -282,6 +295,7 @@ export class CollectorProfileEffect {
 		// above it exists — but a withdrawal should take the data, not only
 		// the reading of it.)
 		await this.repository.removeAlbums(uid);
+		await this.repository.removeCard(uid);
 
 		return this.repository.remove(uid);
 	}

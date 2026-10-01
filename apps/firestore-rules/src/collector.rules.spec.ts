@@ -4,9 +4,11 @@ import {
 	assertSucceeds,
 } from '@firebase/rules-unit-testing';
 import {
+	collection,
 	deleteDoc,
 	doc,
 	getDoc,
+	getDocs,
 	serverTimestamp,
 	setDoc,
 } from 'firebase/firestore';
@@ -113,6 +115,80 @@ describe('collector: who may write it', () => {
 
 		await assertFails(deleteDoc(doc(asStranger(), 'collector', ME)));
 	});
+});
+
+describe('collector: the directory', () => {
+	const card = (fields: Record<string, unknown> = {}) => ({
+		uid: ME,
+		copies: 312,
+		points: 1240,
+		badges: [
+			{
+				slug: 'bay-area',
+				name: 'Thrash Historian',
+				imageUrl: null,
+				points: 620,
+			},
+		],
+		updatedAt: serverTimestamp(),
+		...fields,
+	});
+
+	const cardRef = (context: ReturnType<typeof asMe>) =>
+		doc(context, 'collector-card', ME);
+
+	it('publishes an entry about the collector own shelf', () =>
+		assertSucceeds(setDoc(cardRef(asMe()), card())));
+
+	it('refuses an entry written in somebody else name', () =>
+		assertFails(setDoc(cardRef(asStranger()), card())));
+
+	/** The wall is what a signed-out visitor came to look at. */
+	it('lets a signed-out visitor list the directory', async () => {
+		await testEnv.withSecurityRulesDisabled((context) =>
+			setDoc(doc(context.firestore(), 'collector-card', ME), card())
+		);
+
+		await assertSucceeds(
+			getDocs(collection(asVisitor(), 'collector-card'))
+		);
+	});
+
+	/**
+	 * The page document is ten to twenty kilobytes; a listable one would let
+	 * anybody page through every collector's window and wishlist at our
+	 * expense. The small entry is what the wall is for.
+	 */
+	it('refuses to list the pages themselves', async () => {
+		await publish();
+
+		await assertFails(getDocs(collection(asVisitor(), 'collector')));
+	});
+
+	it('refuses a field the entry does not have', () =>
+		assertFails(setDoc(cardRef(asMe()), card({ wishlist: ['anything'] }))));
+
+	it('refuses a picture from anywhere else', () =>
+		assertFails(
+			setDoc(
+				cardRef(asMe()),
+				card({ photoURL: 'https://tracker.test/p.png' })
+			)
+		));
+
+	it('refuses more badges than a card may carry', () =>
+		assertFails(
+			setDoc(
+				cardRef(asMe()),
+				card({
+					badges: Array.from({ length: 51 }, () => ({
+						slug: 'x',
+						name: 'X',
+						points: 1,
+					})),
+				})
+			)
+		));
 });
 
 describe('collector: pont igen, pénz nem', () => {

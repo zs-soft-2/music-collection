@@ -245,6 +245,19 @@ export const routes: Routes = [
 		canActivate: [authenticatedGuard],
 	},
 	{
+		// What the collectors here have finished, under the faces of whoever
+		// finished it. Open to everybody: a visitor with no shelf yet is the
+		// reader it was built for.
+		path: 'collectors',
+		loadComponent: () =>
+			import('./page/collectors/collectors-page.component').then(
+				(module) => module.CollectorsPageComponent
+			),
+		data: {
+			breadcrumb: 'collectors',
+		},
+	},
+	{
 		// One collector's shelf, as anybody they sent the link to sees it.
 		//
 		// No guard: a signed-out visitor is exactly the reader this page is

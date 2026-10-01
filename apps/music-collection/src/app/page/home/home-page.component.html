@@ -165,6 +165,67 @@
 		</section>
 	}
 
+	<!--
+		What the others have finished. It is the first thing on this page that
+		is about people rather than records, and for a visitor with no shelf
+		of their own it is the clearest answer to what the app is for.
+	-->
+	@if (store.wallHighlights().length) {
+		<section class="section" aria-labelledby="wall-title">
+			<header class="section-head">
+				<h2 id="wall-title">{{ t('home.collectors.title') }}</h2>
+				<a class="more" routerLink="/collectors">
+					{{ t('home.collectors.all') }}
+					<i class="pi pi-arrow-right" aria-hidden="true"></i>
+				</a>
+			</header>
+
+			<ul class="wall-list">
+				@for (
+					highlight of store.wallHighlights();
+					track highlight.uid + highlight.badge.slug
+				) {
+					<li>
+						<a [routerLink]="['/collector', highlight.uid]">
+							<span class="pin">
+								@if (highlight.badge.imageUrl) {
+									<img
+										[src]="highlight.badge.imageUrl"
+										alt=""
+										loading="lazy"
+									/>
+								} @else {
+									<i class="pi pi-shield" aria-hidden="true"></i>
+								}
+							</span>
+
+							<b>{{ highlight.badge.name }}</b>
+
+							<span class="by">
+								@if (highlight.photoURL) {
+									<img
+										class="face"
+										[src]="highlight.photoURL"
+										alt=""
+										loading="lazy"
+									/>
+								} @else {
+									<span class="face initial" aria-hidden="true">{{
+										highlight.initial
+									}}</span>
+								}
+								{{
+									highlight.displayName ??
+										t('page.collector.aCollector')
+								}}
+							</span>
+						</a>
+					</li>
+				}
+			</ul>
+		</section>
+	}
+
 	@if (store.showsHunt()) {
 		<section class="section" aria-labelledby="hunt-title">
 			<header class="section-head">

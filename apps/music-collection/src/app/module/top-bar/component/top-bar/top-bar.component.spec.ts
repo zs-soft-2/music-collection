@@ -124,6 +124,7 @@ describe('TopBarComponent', () => {
 		expect(navLabels()).toEqual([
 			'Home',
 			'Challenges',
+			'Collectors',
 			'Coming out',
 			'Network',
 		]);
@@ -140,6 +141,7 @@ describe('TopBarComponent', () => {
 		expect(navLabels()).toEqual([
 			'Home',
 			'Challenges',
+			'Collectors',
 			'Coming out',
 			'Network',
 		]);
@@ -222,6 +224,7 @@ describe('TopBarComponent', () => {
 			'Challenges',
 			'Radio',
 			'Daily question',
+			'Collectors',
 			'Map',
 			'Coming out',
 			'Network',

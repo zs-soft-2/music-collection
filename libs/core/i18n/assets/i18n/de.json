@@ -12,6 +12,7 @@
 		"upcoming": "Erscheint",
 		"wishlist": "Wunschliste",
 		"network": "Netzwerk",
+		"collectors": "Sammler",
 		"map": "Karte",
 		"admin": "Admin",
 		"profile": "Profil",
@@ -274,6 +275,10 @@
 			"title": "Zuletzt hinzugefügt",
 			"catalogTitle": "Zuletzt in den Katalog aufgenommen",
 			"allReleases": "Alle Veröffentlichungen"
+		},
+		"collectors": {
+			"title": "Vollendete Sammlungen",
+			"all": "Alle ansehen"
 		},
 		"collections": {
 			"title": "Challenges",
@@ -609,6 +614,26 @@
 			"spot": "Reihe {{row}} · Platz {{slot}} · Position {{position}}",
 			"remove": "Entfernen",
 			"removeFailed": "Konnte nicht entfernt werden: {{error}}"
+		},
+		"collectors": {
+			"title": "Vollendete Sammlungen",
+			"lead": "Wer es geschafft hat: welche Sammlung vollendet wurde und welches Regal dahintersteht.",
+			"collectors": "Sammler",
+			"finished": "vollendete Sammlungen",
+			"all": "Alle",
+			"search": "Nach Name oder Sammlung suchen",
+			"sortBy": "Sortierung",
+			"none": "Dazu gibt es nichts.",
+			"noBadges": "Noch keine vollendete Sammlung.",
+			"seeAll": "Alle ansehen",
+			"homeLead": "Was die anderen vollendet haben.",
+			"sort": {
+				"recent": "Neueste",
+				"badges": "Meiste Abzeichen",
+				"points": "Meiste Punkte",
+				"shelf": "Größtes Regal",
+				"name": "Name"
+			}
 		},
 		"collector": {
 			"loading": "Wir blättern…",
