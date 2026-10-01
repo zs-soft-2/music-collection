@@ -194,6 +194,8 @@ const COLLECTIONS = [
 		description:
 			'The studio albums of Iron Maiden — a discography rather than a scene, and the shortest way to a badge.',
 		icon: 'pi pi-user',
+		/* One band's own records, which is what the group is for. */
+		group: 'discography',
 		criteria: {
 			artists: { includesAny: [IRON_MAIDEN_UID] },
 			albumFormats: LP,
@@ -250,6 +252,8 @@ function toDocument(definition, previous) {
 		basePoints: null,
 		status: 'published',
 		visibility: 'public',
+		// Null is the curated list; `discography` is a band's own pair.
+		group: null,
 		...rest,
 		parentUid: parentSlug ?? null,
 		createdAt: previous?.createdAt ?? Date.now(),

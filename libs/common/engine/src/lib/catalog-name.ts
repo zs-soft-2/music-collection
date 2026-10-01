@@ -35,6 +35,25 @@ export function normalizeCatalogName(name: string): string {
 		.trim();
 }
 
+/**
+ * A readable slug from a name: lowercase words joined by hyphens, accents
+ * folded, everything else dropped. Collection slugs are part of the URL, so
+ * this is what turns a typed-in name — or a band's name, where a collection
+ * is opened for a whole discography — into one.
+ *
+ * It is not `normalizeCatalogName`: that one forgives a leading article and
+ * writes out an ampersand so two spellings of the same band compare equal,
+ * which would make "The Cure" and "Cure" the same slug.
+ */
+export function slugify(name: string): string {
+	return String(name ?? '')
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '')
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/^-+|-+$/g, '');
+}
+
 export function isSameCatalogName(one: string, other: string): boolean {
 	const normalized = normalizeCatalogName(one);
 

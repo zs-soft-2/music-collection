@@ -13,9 +13,13 @@ import {
 	sortCollectionCards,
 	toCollectionCard,
 	toCollectionDetail,
+	toCollectionGroups,
 	toNextAlbums,
 } from './collections.mapper';
-import { CollectionCardView } from './collections.model';
+import {
+	CollectionCardListView,
+	CollectionCardView,
+} from './collections.model';
 
 function membership(
 	albumUid: string,
@@ -60,6 +64,7 @@ function collection(
 		badge: null,
 		basePoints: null,
 		parentUid: null,
+		group: null,
 		status: 'published',
 		visibility: 'public',
 		createdAt: 0,
@@ -235,6 +240,56 @@ describe('sortCollectionCards', () => {
 		sortCollectionCards(cards);
 
 		expect(cards.map(({ name }) => name)).toEqual(['Started', 'Almost']);
+	});
+});
+
+describe('toCollectionGroups', () => {
+	const listed = (
+		name: string,
+		group: CollectionCardListView['group'] = null
+	): CollectionCardListView =>
+		({ uid: name, name, group, followed: false }) as CollectionCardListView;
+
+	it('puts the discographies under their own heading, curated first', () => {
+		const groups = toCollectionGroups([
+			listed('Iron Maiden — Studio Albums', 'discography'),
+			listed('Bay Area Thrash'),
+			listed('Iron Maiden — Beyond the Albums', 'discography'),
+		]);
+
+		expect(
+			groups.map(({ group, collections }) => [
+				group,
+				collections.map(({ name }) => name),
+			])
+		).toEqual([
+			[null, ['Bay Area Thrash']],
+			[
+				'discography',
+				[
+					'Iron Maiden — Studio Albums',
+					'Iron Maiden — Beyond the Albums',
+				],
+			],
+		]);
+	});
+
+	it('leaves out a heading with nothing under it', () => {
+		expect(
+			toCollectionGroups([listed('Bay Area Thrash')]).map(
+				({ group }) => group
+			)
+		).toEqual([null]);
+		expect(toCollectionGroups([])).toEqual([]);
+	});
+
+	it('keeps a group the code does not know in the curated list', () => {
+		const groups = toCollectionGroups([
+			listed('Something new', 'tribute' as never),
+		]);
+
+		expect(groups.map(({ group }) => group)).toEqual([null]);
+		expect(groups[0].collections).toHaveLength(1);
 	});
 });
 

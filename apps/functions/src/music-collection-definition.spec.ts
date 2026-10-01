@@ -84,9 +84,20 @@ describe('prepareDefinition', () => {
 			badge: null,
 			basePoints: null,
 			parentUid: null,
+			group: null,
 			status: 'draft',
 			visibility: 'public',
 		});
+	});
+
+	it('a csoportot csak a listáról fogadja el', () => {
+		expect(
+			prepareDefinition(definition({ group: 'discography' })).group
+		).toBe('discography');
+		expect(prepareDefinition(definition({ group: '' })).group).toBeNull();
+		expect(() =>
+			prepareDefinition(definition({ group: 'diszkografia' }))
+		).toThrow(/csoport/);
 	});
 
 	it('a slugot kisbetűsíti, és az alakját megköveteli', () => {

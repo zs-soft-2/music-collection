@@ -630,7 +630,13 @@
 				"other": "teljesen {{count}} pontot ér"
 			},
 			"basePoints": "{{points}} alappont",
-			"bonusPoints": "+ {{points}} a nyomásaidért"
+			"bonusPoints": "+ {{points}} a nyomásaidért",
+			"group": {
+				"curated": "Collectionök",
+				"curatedLead": "Kurátor által összerakott lemezhalmazok — egy szcéna, egy év, egy stílus.",
+				"discography": "Diszkográfiák",
+				"discographyLead": "Egy zenekar egyszerre: a nagylemezek, és minden más, amit mellettük kiadtak."
+			}
 		},
 		"daily-question": {
 			"question-of-the-day": "Napi kérdés",
@@ -1921,7 +1927,8 @@
 			"delete": "Törlés",
 			"delete2": "Törlés",
 			"whoever-earned-its-badge": "? Aki megszerezte a jelvényét, elveszíti, és ez innen nem vonható vissza.",
-			"cancel": "Mégse"
+			"cancel": "Mégse",
+			"add-discography": "Diszkográfia nyitása"
 		},
 		"musicCollectionEdit": {
 			"a-collection-is-a": "A kollekció szabály, nem lista: hogy mi tartozik bele, minden olvasáskor a katalógushoz mérve dől el.",
@@ -1980,7 +1987,9 @@
 			"previewTotal": {
 				"one": "{{count}} lemez",
 				"other": "{{count}} lemez"
-			}
+			},
+			"group": "Csoport",
+			"groupHint": "Melyik cím alatt áll a listában. A diszkográfia egy zenekar saját collection-párja."
 		},
 		"profilePrivacy": {
 			"show-where-you-collect": "Mutassuk, honnan gyűjtesz",
@@ -2549,6 +2558,22 @@
 			"rebuild": "Az alkalmazás újraépíti a helyi katalógust, és újratölti az oldalt.",
 			"apply": "Alkalmazás",
 			"applying": "Katalógus újraépítése…"
+		},
+		"discographyPicker": {
+			"title": "Zenekar diszkográfiájának nyitása",
+			"hint": "Két collection egyszerre: a nagylemezek, és minden más, amit a zenekar mellettük kiadott. Itt van minden zenekar, amelynek a katalógus két nagylemezét ismeri.",
+			"close": "Bezárás",
+			"searchBands": "Zenekar keresése",
+			"counts": "{{studio}} nagylemez · {{other}} egyéb kiadvány",
+			"alreadyFollowed": "Már követi: „{{collection}}”",
+			"open": "Létrehozás",
+			"opening": "Létrehozás…",
+			"opened": "Létrejött ehhez: {{band}} —",
+			"and": "és",
+			"companionIsDraft": "— piszkozat maradt: a katalógusban még nincs mit összegyűjtenie.",
+			"noBand": "Egyetlen zenekar sem felel meg ennek: „{{query}}”.",
+			"noCandidate": "A katalógusban még egy zenekarnak sincs két nagylemeze.",
+			"more": "{{shown}} zenekar látszik {{total}} közül — írj tovább a szűkítéshez."
 		}
 	},
 	"admin": {
@@ -2881,6 +2906,10 @@
 			"would-lock-out": "Magadtól nem veheted el a jogot, amivel ide bejutsz.",
 			"filtered-by": "Szűrés: {{name}}",
 			"clear-filter": "Szűrés törlése"
+		},
+		"group": {
+			"curated": "Kurált",
+			"discography": "Diszkográfiák"
 		}
 	},
 	"fact": {

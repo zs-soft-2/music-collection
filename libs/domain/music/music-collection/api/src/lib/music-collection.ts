@@ -7,6 +7,17 @@ import {
 
 export type MusicCollectionStatus = 'draft' | 'published';
 
+/**
+ * Which shelf of the list a collection stands on. `discography` is every
+ * collection that follows one band's own output rather than a scene, a year
+ * or a style: there is one pair of them per band the catalog knows two
+ * studio albums of, so they would bury the curated collections if they stood
+ * among them. Null is the curated list itself.
+ */
+export type MusicCollectionGroup = 'discography';
+
+export const MUSIC_COLLECTION_GROUPS: MusicCollectionGroup[] = ['discography'];
+
 /** `link`: readable by whoever knows the id, but never listed. */
 export type MusicCollectionVisibility = 'private' | 'link' | 'public';
 
@@ -127,6 +138,14 @@ export interface MusicCollection {
 	basePoints: number | null;
 	/** Parent in the collection tree; null at the top. */
 	parentUid: string | null;
+	/**
+	 * Which group of the list it belongs to; null is the curated list. The
+	 * group is not a parent: it says where a collection is shown, while
+	 * `parentUid` says what it belongs under — a band's companion collection
+	 * has both, the group it shares with every other discography and the
+	 * studio-album collection it completes.
+	 */
+	group: MusicCollectionGroup | null;
 	status: MusicCollectionStatus;
 	visibility: MusicCollectionVisibility;
 	/** Epoch milliseconds. */

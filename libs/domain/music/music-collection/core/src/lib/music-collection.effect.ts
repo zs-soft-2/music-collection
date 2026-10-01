@@ -23,6 +23,8 @@ import {
 	BadgeModelOption,
 	CollectionShortfall,
 	CreateMusicCollectionResult,
+	DiscographyCandidate,
+	DiscographyCreation,
 	GenerateBadgeResult,
 	MusicCollectionCatalog,
 	MusicCollectionCriteria,
@@ -38,6 +40,8 @@ import {
 import {
 	compareWithCollection,
 	creditsNeededFor,
+	listDiscographyCandidates,
+	planDiscography,
 	resolveMusicCollection,
 	scoreCollection,
 	suggestNextAlbums,
@@ -276,6 +280,74 @@ export class MusicCollectionEffect {
 		collection: MusicCollectionDraft
 	): Observable<CreateMusicCollectionResult> {
 		return this.repository.create$(collection);
+	}
+
+	/**
+	 * The bands worth a discography, and which of them one already follows.
+	 *
+	 * Only the albums are needed — the rule is about the band and the format
+	 * — so this does not ask for the artists or the credits the way resolving
+	 * does. Drafts count as following: a pair left unpublished is still a
+	 * pair, and offering the band again would open a second one.
+	 */
+	public listDiscographyCandidates$(): Observable<DiscographyCandidate[]> {
+		return combineLatest([
+			entities$(
+				() => this.albumStateService.selectEntities$(),
+				() => this.albumStateService.dispatchListEntitiesAction()
+			),
+			this.repository.listAll$(),
+		]).pipe(
+			map(([albums, definitions]) =>
+				listDiscographyCandidates(
+					albums.map(toCatalogAlbum),
+					definitions
+				)
+			)
+		);
+	}
+
+	/**
+	 * Opens a band's discography: the studio albums, and the companion
+	 * collection under it.
+	 *
+	 * Two calls rather than one, and the plan is made here rather than on the
+	 * server: the functions do not see the domain libs, so a server-side pair
+	 * would mean the naming and the rules written a second time. The price is
+	 * that the two writes are not one transaction — if the companion fails,
+	 * the studio-album collection stays, and the band then counts as followed
+	 * so the picker will not offer it again. The pair is finished in the
+	 * editor from there, which is why the error says what was created.
+	 */
+	public createDiscography$(
+		candidate: DiscographyCandidate
+	): Observable<DiscographyCreation> {
+		const plan = planDiscography(candidate);
+
+		return this.repository.create$(plan.main).pipe(
+			switchMap(({ uid }) =>
+				this.repository
+					.create$({ ...plan.companion, parentUid: uid })
+					.pipe(
+						map((created) => ({
+							artistUid: candidate.artistUid,
+							artistName: candidate.artistName,
+							main: {
+								uid,
+								name: plan.main.name,
+								slug: plan.main.slug,
+								status: plan.main.status,
+							},
+							companion: {
+								uid: created.uid,
+								name: plan.companion.name,
+								slug: plan.companion.slug,
+								status: plan.companion.status,
+							},
+						}))
+					)
+			)
+		);
 	}
 
 	public update$(

@@ -1,3 +1,4 @@
+import { slugify } from '@music-collection/common/engine';
 import { Translator } from '@music-collection/core/i18n';
 import {
 	EnumCriterion,
@@ -11,6 +12,7 @@ import { derivedBasePoints } from '@music-collection/domain/music-collection/eng
 import {
 	CollectionForm,
 	CollectionRow,
+	CollectionRowGroup,
 	CriteriaForm,
 	ENUM_CRITERIA,
 	EnumCriterionForm,
@@ -30,16 +32,6 @@ import {
  * criterion, which is what makes "this musician in this role" a single
  * condition rather than two.
  */
-
-/** A readable slug from the name: lowercase words joined by hyphens. */
-export function slugify(name: string): string {
-	return name
-		.normalize('NFD')
-		.replace(/[̀-ͯ]/g, '')
-		.toLowerCase()
-		.replace(/[^a-z0-9]+/g, '-')
-		.replace(/^-+|-+$/g, '');
-}
 
 const trimmed = (value: string): string | null => value.trim() || null;
 
@@ -158,6 +150,7 @@ export function toForm(collection: MusicCollectionEntity): CollectionForm {
 		status: collection.status,
 		visibility: collection.visibility,
 		parentUid: collection.parentUid ?? '',
+		group: collection.group ?? '',
 		badgeName: collection.badge?.name ?? '',
 		badgeDescription: collection.badge?.description ?? '',
 		badgeIcon: collection.badge?.icon ?? '',
@@ -186,6 +179,7 @@ export function toDraft(form: CollectionForm): MusicCollectionDraft {
 			: null,
 		basePoints: toBasePoints(form.basePoints),
 		parentUid: trimmed(form.parentUid),
+		group: form.group || null,
 		status: form.status,
 		visibility: form.visibility,
 	};
@@ -289,6 +283,36 @@ export function toRows(
 			parentName: collection.parentUid
 				? (names.get(collection.parentUid) ?? null)
 				: null,
+			// A definition written before the field existed has no group.
+			group: collection.group ?? null,
 		}))
 		.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/**
+ * The rows under their headings, the curated list first. The discographies
+ * are a group of their own because there is a pair of them per band: they
+ * would push the handful of curated collections off the page if they stood
+ * among them, and they are looked up by band name, not browsed.
+ *
+ * A group with no rows is left out, so the list looks the way it did before
+ * the first discography was opened.
+ */
+export function toRowGroups(rows: CollectionRow[]): CollectionRowGroup[] {
+	const groups: CollectionRowGroup[] = [
+		{ group: null, labelKey: 'admin.group.curated', rows: [] },
+		{
+			group: 'discography',
+			labelKey: 'admin.group.discography',
+			rows: [],
+		},
+	];
+
+	for (const row of rows) {
+		(
+			groups.find(({ group }) => group === row.group) ?? groups[0]
+		).rows.push(row);
+	}
+
+	return groups.filter(({ rows: grouped }) => grouped.length > 0);
 }

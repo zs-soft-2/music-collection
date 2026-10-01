@@ -630,7 +630,13 @@
 				"other": "worth {{count}} pts when complete"
 			},
 			"basePoints": "{{points}} base",
-			"bonusPoints": "+ {{points}} for your pressings"
+			"bonusPoints": "+ {{points}} for your pressings",
+			"group": {
+				"curated": "Collections",
+				"curatedLead": "Sets of records put together by a curator — a scene, a year, a style.",
+				"discography": "Discographies",
+				"discographyLead": "One band at a time: the studio albums, and everything else they put out beside them."
+			}
 		},
 		"daily-question": {
 			"question-of-the-day": "Question of the day",
@@ -1921,7 +1927,8 @@
 			"delete": "Delete",
 			"delete2": "Delete",
 			"whoever-earned-its-badge": "? Whoever earned its badge loses it, and this cannot be undone here.",
-			"cancel": "Cancel"
+			"cancel": "Cancel",
+			"add-discography": "Open a discography"
 		},
 		"musicCollectionEdit": {
 			"a-collection-is-a": "A collection is a rule, not a list: what belongs to it is resolved against the catalog every time it is read.",
@@ -1980,7 +1987,9 @@
 			"previewTotal": {
 				"one": "{{count}} record",
 				"other": "{{count}} records"
-			}
+			},
+			"group": "Group",
+			"groupHint": "Which heading of the list it stands under. A discography is a band’s own pair of collections."
 		},
 		"profilePrivacy": {
 			"show-where-you-collect": "Show where you collect from",
@@ -2549,6 +2558,22 @@
 			"rebuild": "The app rebuilds its local catalog and reloads the page.",
 			"apply": "Apply",
 			"applying": "Rebuilding the catalog…"
+		},
+		"discographyPicker": {
+			"title": "Open a band’s discography",
+			"hint": "Two collections at once: the studio albums, and everything else the band put out beside them. Every band the catalog holds two studio albums of is here.",
+			"close": "Close",
+			"searchBands": "Search bands",
+			"counts": "{{studio}} studio albums · {{other}} other records",
+			"alreadyFollowed": "Already followed by “{{collection}}”",
+			"open": "Open",
+			"opening": "Opening…",
+			"opened": "Opened for {{band}}:",
+			"and": "and",
+			"companionIsDraft": "— left a draft: the catalog has nothing for it to catch yet.",
+			"noBand": "No band matches “{{query}}”.",
+			"noCandidate": "No band in the catalog has two studio albums yet.",
+			"more": "Showing {{shown}} of {{total}} bands — keep typing to narrow it down."
 		}
 	},
 	"admin": {
@@ -2881,6 +2906,10 @@
 			"would-lock-out": "You cannot take away your own way back into these pages.",
 			"filtered-by": "Filtered: {{name}}",
 			"clear-filter": "Clear the filter"
+		},
+		"group": {
+			"curated": "Curated",
+			"discography": "Discographies"
 		}
 	},
 	"fact": {

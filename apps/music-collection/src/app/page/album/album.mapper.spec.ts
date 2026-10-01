@@ -33,6 +33,7 @@ function standing(
 			},
 			basePoints: null,
 			parentUid: null,
+			group: null,
 			status: 'published',
 			visibility: 'public',
 			createdAt: 0,

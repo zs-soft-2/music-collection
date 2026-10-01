@@ -4,14 +4,15 @@ import { MusicCollectionResolution } from '@music-collection/domain/music-collec
 
 import {
 	describeCriteria,
-	slugify,
 	toCriteria,
 	toCriteriaForm,
 	toDraft,
 	toForm,
+	toRowGroups,
 	toRows,
 } from './music-collection-admin.mapper';
 import {
+	CollectionRow,
 	emptyCollectionForm,
 	emptyCriteriaForm,
 } from './music-collection-admin.model';
@@ -31,6 +32,7 @@ function collection(
 		badge: null,
 		basePoints: null,
 		parentUid: null,
+		group: null,
 		status: 'draft',
 		visibility: 'public',
 		createdAt: 0,
@@ -38,13 +40,6 @@ function collection(
 		...overrides,
 	};
 }
-
-describe('slugify', () => {
-	it('makes a readable slug of the name', () => {
-		expect(slugify('1988 Bay Area Thrash')).toBe('1988-bay-area-thrash');
-		expect(slugify('  Mötley Crüe!  ')).toBe('motley-crue');
-	});
-});
 
 describe('toCriteria', () => {
 	it('leaves out what the editor has not filled in', () => {
@@ -187,9 +182,21 @@ describe('toForm', () => {
 			badge: original.badge,
 			basePoints: null,
 			parentUid: null,
+			group: null,
 			status: original.status,
 			visibility: original.visibility,
 		});
+	});
+
+	/**
+	 * Saving replaces the document, so a field the editor does not carry is
+	 * a field an edit drops: without this, renaming a band's collection
+	 * would quietly take it out of the discography group.
+	 */
+	it('carries the group through the editor', () => {
+		expect(
+			toDraft(toForm(collection({ group: 'discography' }))).group
+		).toBe('discography');
 	});
 });
 
@@ -268,5 +275,33 @@ describe('toRows', () => {
 			['American Thrash', 40, null],
 			['Bay Area', 6, 'American Thrash'],
 		]);
+	});
+});
+
+describe('toRowGroups', () => {
+	const row = (name: string, group: CollectionRow['group'] = null) =>
+		({ uid: name, name, group }) as CollectionRow;
+
+	it('keeps the curated list above the discographies', () => {
+		const groups = toRowGroups([
+			row('Iron Maiden — Studio Albums', 'discography'),
+			row('Bay Area Thrash'),
+		]);
+
+		expect(
+			groups.map(({ group, rows }) => [
+				group,
+				rows.map(({ name }) => name),
+			])
+		).toEqual([
+			[null, ['Bay Area Thrash']],
+			['discography', ['Iron Maiden — Studio Albums']],
+		]);
+	});
+
+	it('leaves out a heading with nothing under it', () => {
+		expect(
+			toRowGroups([row('Bay Area Thrash')]).map(({ group }) => group)
+		).toEqual([null]);
 	});
 });

@@ -20,6 +20,7 @@ import { withCollectionFollowing } from './collection-following.feature';
 import {
 	sortCollectionCards,
 	toCollectionCard,
+	toCollectionGroups,
 	toNextAlbums,
 } from './collections.mapper';
 import {
@@ -114,6 +115,14 @@ export const CollectionsPageStore = signalStore(
 		showsEverything: computed(
 			() => store.tab() === 'following' && store.followsNothing()
 		),
+	})),
+	withComputed((store) => ({
+		/**
+		 * The cards under their headings. Built from `visible`, so the search
+		 * and the pick decide what is in a group — a heading appears because
+		 * something is under it, never on its own.
+		 */
+		groups: computed(() => toCollectionGroups(store.visible())),
 	})),
 	withMethods((store, effect = inject(MusicCollectionEffect)) => ({
 		load: rxMethod<void>(

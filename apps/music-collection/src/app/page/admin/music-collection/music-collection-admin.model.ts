@@ -1,5 +1,6 @@
 import { CountryList, FormatList } from '@music-collection/common/api';
 import {
+	MusicCollectionGroup,
 	MusicCollectionStatus,
 	MusicCollectionVisibility,
 } from '@music-collection/domain/music-collection/api';
@@ -53,6 +54,8 @@ export interface CollectionForm {
 	/** Empty leaves the score to the rule. */
 	basePoints: string;
 	parentUid: string;
+	/** Empty is the curated list; the editor carries the group of a pair. */
+	group: '' | MusicCollectionGroup;
 	badgeName: string;
 	badgeDescription: string;
 	badgeIcon: string;
@@ -103,6 +106,20 @@ export const ENUM_CRITERIA: {
 
 export const STATUS_OPTIONS: MusicCollectionStatus[] = ['draft', 'published'];
 
+/**
+ * Which group the editor offers. The group is on the form rather than being
+ * left to the discography button alone, because saving a definition replaces
+ * the document: a field the editor does not send back is a field an edit
+ * would drop, and a discography would quietly leave its own group.
+ */
+export const GROUP_OPTIONS: {
+	value: '' | MusicCollectionGroup;
+	labelKey: string;
+}[] = [
+	{ value: '', labelKey: 'admin.group.curated' },
+	{ value: 'discography', labelKey: 'admin.group.discography' },
+];
+
 export const VISIBILITY_OPTIONS: {
 	value: MusicCollectionVisibility;
 	labelKey: string;
@@ -139,6 +156,7 @@ export const emptyCollectionForm = (): CollectionForm => ({
 	visibility: 'public',
 	basePoints: '',
 	parentUid: '',
+	group: '',
 	badgeName: '',
 	badgeDescription: '',
 	badgeIcon: '',
@@ -163,4 +181,13 @@ export interface CollectionRow {
 	/** The criteria in one line, so the list says what the rule is. */
 	summary: string;
 	parentName: string | null;
+	/** Which group of the list it stands in; null is the curated list. */
+	group: MusicCollectionGroup | null;
+}
+
+/** The rows of one group, as the list renders them under one heading. */
+export interface CollectionRowGroup {
+	group: MusicCollectionGroup | null;
+	labelKey: string;
+	rows: CollectionRow[];
 }

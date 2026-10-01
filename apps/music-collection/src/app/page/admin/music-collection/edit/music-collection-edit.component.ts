@@ -10,6 +10,7 @@ import {
 	ENUM_CRITERIA,
 	ENUM_OPERATOR_OPTIONS,
 	EnumOperator,
+	GROUP_OPTIONS,
 	STATUS_OPTIONS,
 	VISIBILITY_OPTIONS,
 } from '../music-collection-admin.model';
@@ -260,6 +261,33 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 										</option>
 									}
 								</select>
+							</div>
+
+							<div class="mc-field">
+								<label for="group">{{
+									'ui.musicCollectionEdit.group' | transloco
+								}}</label>
+								<select id="group" (change)="onGroup($event)">
+									@for (
+										option of groupOptions;
+										track option.value
+									) {
+										<option
+											[value]="option.value"
+											[selected]="
+												form.group === option.value
+											"
+										>
+											{{ option.labelKey | transloco }}
+										</option>
+									}
+								</select>
+								<small>
+									{{
+										'ui.musicCollectionEdit.groupHint'
+											| transloco
+									}}
+								</small>
 							</div>
 						</div>
 					</section>
@@ -985,6 +1013,7 @@ export class MusicCollectionEditComponent {
 	protected readonly operatorOptions = ENUM_OPERATOR_OPTIONS;
 	protected readonly statusOptions = STATUS_OPTIONS;
 	protected readonly visibilityOptions = VISIBILITY_OPTIONS;
+	protected readonly groupOptions = GROUP_OPTIONS;
 
 	public constructor() {
 		this.store.load(
@@ -1023,6 +1052,12 @@ export class MusicCollectionEditComponent {
 
 	protected onParent(event: Event): void {
 		this.store.setField({ parentUid: this.value(event) });
+	}
+
+	protected onGroup(event: Event): void {
+		this.store.setField({
+			group: this.value(event) as CollectionForm['group'],
+		});
 	}
 
 	protected onYear(key: 'yearFrom' | 'yearTo', event: Event): void {

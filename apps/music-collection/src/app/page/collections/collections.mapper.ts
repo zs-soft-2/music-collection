@@ -8,7 +8,9 @@ import {
 	COVER_MOSAIC_SIZE,
 	CollectionAlbumView,
 	CollectionBadgeView,
+	CollectionCardListView,
 	CollectionCardView,
+	CollectionGroupView,
 	CollectionDetailView,
 	NEXT_ALBUM_COUNT,
 	NextAlbumDemandView,
@@ -70,7 +72,45 @@ export function toCollectionCard(
 		earnedPoints: score.earnedPoints,
 		bonusPoints: score.bonusPoints,
 		covers: toCovers(standing),
+		// A definition written before the field existed has no group.
+		group: collection.group ?? null,
 	};
+}
+
+/**
+ * The cards under their headings, the curated list first.
+ *
+ * A heading per shelf rather than one long grid: a band's discography is
+ * looked up, not browsed, and there are two of them for every band the
+ * catalog knows two studio albums of — enough to push the curated
+ * collections off the screen. A shelf with nothing on it is left out, so a
+ * collector who follows no discography sees the page exactly as before.
+ */
+export function toCollectionGroups(
+	cards: CollectionCardListView[]
+): CollectionGroupView[] {
+	const groups: CollectionGroupView[] = [
+		{
+			group: null,
+			labelKey: 'page.collections.group.curated',
+			leadKey: 'page.collections.group.curatedLead',
+			collections: [],
+		},
+		{
+			group: 'discography',
+			labelKey: 'page.collections.group.discography',
+			leadKey: 'page.collections.group.discographyLead',
+			collections: [],
+		},
+	];
+
+	for (const card of cards) {
+		(
+			groups.find(({ group }) => group === card.group) ?? groups[0]
+		).collections.push(card);
+	}
+
+	return groups.filter(({ collections }) => collections.length > 0);
 }
 
 /** Nearly finished first, and an empty collection last whatever its name. */

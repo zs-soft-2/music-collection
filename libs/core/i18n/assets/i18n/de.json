@@ -630,7 +630,13 @@
 				"other": "{{count}} Punkte wert, wenn vollständig"
 			},
 			"basePoints": "{{points}} Grundpunkte",
-			"bonusPoints": "+ {{points}} für deine Pressungen"
+			"bonusPoints": "+ {{points}} für deine Pressungen",
+			"group": {
+				"curated": "Collections",
+				"curatedLead": "Von einem Kurator zusammengestellte Plattenmengen — eine Szene, ein Jahr, ein Stil.",
+				"discography": "Diskografien",
+				"discographyLead": "Eine Band auf einmal: die Studioalben, und alles andere, was sie daneben veröffentlicht hat."
+			}
 		},
 		"daily-question": {
 			"question-of-the-day": "Frage des Tages",
@@ -1921,7 +1927,8 @@
 			"delete": "Löschen",
 			"delete2": "Löschen",
 			"whoever-earned-its-badge": "? Wer ihr Abzeichen verdient hat, verliert es, und das lässt sich hier nicht rückgängig machen.",
-			"cancel": "Abbrechen"
+			"cancel": "Abbrechen",
+			"add-discography": "Diskografie anlegen"
 		},
 		"musicCollectionEdit": {
 			"a-collection-is-a": "Eine Kollektion ist eine Regel, keine Liste: was zu ihr gehört, wird bei jedem Lesen gegen den Katalog aufgelöst.",
@@ -1980,7 +1987,9 @@
 			"previewTotal": {
 				"one": "{{count}} Platte",
 				"other": "{{count}} Platten"
-			}
+			},
+			"group": "Gruppe",
+			"groupHint": "Unter welcher Überschrift sie in der Liste steht. Eine Diskografie ist das eigene Paar einer Band."
 		},
 		"profilePrivacy": {
 			"show-where-you-collect": "Zeigen, von wo du sammelst",
@@ -2549,6 +2558,22 @@
 			"rebuild": "Die App baut den lokalen Katalog neu auf und lädt die Seite neu.",
 			"apply": "Übernehmen",
 			"applying": "Katalog wird neu aufgebaut…"
+		},
+		"discographyPicker": {
+			"title": "Diskografie einer Band anlegen",
+			"hint": "Zwei Collections auf einmal: die Studioalben, und alles andere, was die Band daneben veröffentlicht hat. Hier steht jede Band, von der der Katalog zwei Studioalben kennt.",
+			"close": "Schließen",
+			"searchBands": "Bands suchen",
+			"counts": "{{studio}} Studioalben · {{other}} andere Tonträger",
+			"alreadyFollowed": "Wird schon von „{{collection}}“ verfolgt",
+			"open": "Anlegen",
+			"opening": "Wird angelegt…",
+			"opened": "Angelegt für {{band}}:",
+			"and": "und",
+			"companionIsDraft": "— bleibt ein Entwurf: der Katalog hat noch nichts dafür.",
+			"noBand": "Keine Band passt zu „{{query}}“.",
+			"noCandidate": "Noch keine Band im Katalog hat zwei Studioalben.",
+			"more": "{{shown}} von {{total}} Bands — tippe weiter, um einzugrenzen."
 		}
 	},
 	"admin": {
@@ -2881,6 +2906,10 @@
 			"would-lock-out": "Du kannst dir nicht selbst den Weg zurück in diese Seiten nehmen.",
 			"filtered-by": "Filter: {{name}}",
 			"clear-filter": "Filter aufheben"
+		},
+		"group": {
+			"curated": "Kuratiert",
+			"discography": "Diskografien"
 		}
 	},
 	"fact": {

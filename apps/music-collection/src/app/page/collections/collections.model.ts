@@ -1,4 +1,5 @@
 import {
+	MusicCollectionGroup,
 	MusicCollectionMembership,
 	ScoreHighlight,
 } from '@music-collection/domain/music-collection/api';
@@ -40,11 +41,26 @@ export interface CollectionCardView {
 	bonusPoints: number;
 	/** Covers of the first albums, for a collection without artwork. */
 	covers: string[];
+	/**
+	 * Which shelf of the list it stands on; null is the curated list. There
+	 * is a pair of discographies for every band the catalog knows, so they
+	 * stand apart rather than burying the handful of curated collections.
+	 */
+	group: MusicCollectionGroup | null;
 }
 
 /** A card as the list renders it: the collector's pick decides the star. */
 export interface CollectionCardListView extends CollectionCardView {
 	followed: boolean;
+}
+
+/** One shelf of the list, as the page renders it under a heading. */
+export interface CollectionGroupView {
+	group: MusicCollectionGroup | null;
+	labelKey: string;
+	/** What this shelf is, in one line. */
+	leadKey: string;
+	collections: CollectionCardListView[];
 }
 
 /** One collection asking for a record, as the hunt list names it. */

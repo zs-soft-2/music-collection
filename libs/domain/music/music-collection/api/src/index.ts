@@ -1,5 +1,6 @@
 export * from './lib/music-collection';
 export * from './lib/music-collection-catalog';
+export * from './lib/music-collection-discography';
 export * from './lib/music-collection-feature.key';
 export * from './lib/music-collection-function';
 export * from './lib/music-collection-next';

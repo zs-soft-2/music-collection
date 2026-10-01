@@ -28,6 +28,12 @@ export class DefinitionError extends Error {
 
 const STATUSES = ['draft', 'published'];
 const VISIBILITIES = ['private', 'link', 'public'];
+/**
+ * A lista csoportjai — a `MusicCollectionGroup` mása. Fehérlistás, mint a
+ * criteria kulcsai: egy elgépelt csoport olyan címke alá tenné a
+ * collectiont, amit a felület nem rajzol ki, vagyis eltűnne a listából.
+ */
+const GROUPS = ['discography'];
 
 /** A criteria kulcsai és operátorai — a `MusicCollectionCriteria` mása. */
 const NUMBER_OPERATORS = ['equals', 'from', 'to'];
@@ -90,6 +96,8 @@ export interface MusicCollectionDefinition {
 		artworkUrl: string | null;
 	} | null;
 	parentUid: string | null;
+	/** Null a kurált lista; a felület ez alapján csoportosít. */
+	group: string | null;
 	status: string;
 	visibility: string;
 }
@@ -334,6 +342,7 @@ export function prepareDefinition(data: unknown): MusicCollectionDefinition {
 			'badge',
 			'basePoints',
 			'parentUid',
+			'group',
 			'status',
 			'visibility',
 		],
@@ -382,6 +391,13 @@ export function prepareDefinition(data: unknown): MusicCollectionDefinition {
 			artworkUrl: optionalText(badge['artworkUrl'], 'badge képe'),
 		},
 		parentUid: optionalText(source['parentUid'], 'szülő', MAX_NAME_LENGTH),
+		// A hiányzó és az üres csoport ugyanaz: a kurált lista.
+		group:
+			source['group'] === undefined ||
+			source['group'] === null ||
+			source['group'] === ''
+				? null
+				: choice(source['group'], GROUPS, 'csoport'),
 		status,
 		visibility:
 			source['visibility'] === undefined

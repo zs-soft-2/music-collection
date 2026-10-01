@@ -37,11 +37,12 @@ import {
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
+import { slugify } from '@music-collection/common/engine';
+
 import { describeWriteError } from '../music-collection-admin.errors';
 import { derivedBasePoints } from '@music-collection/domain/music-collection/engine';
 
 import {
-	slugify,
 	toBasePoints,
 	toCriteria,
 	toDraft,

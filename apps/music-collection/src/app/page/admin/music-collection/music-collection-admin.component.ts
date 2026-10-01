@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
+import { DiscographyPickerComponent } from './component/discography-picker.component';
 import {
 	MusicCollectionAdminStore,
 	StatusFilter,
@@ -12,7 +13,7 @@ import {
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-music-collection-admin',
 	providers: [MusicCollectionAdminStore],
-	imports: [...I18N_IMPORTS, RouterLink],
+	imports: [...I18N_IMPORTS, RouterLink, DiscographyPickerComponent],
 	template: `
 		<header class="mc-page-head">
 			<div>
@@ -25,6 +26,14 @@ import {
 				</p>
 			</div>
 			<div class="mc-page-actions">
+				<button
+					type="button"
+					class="button"
+					[attr.aria-expanded]="store.showsDiscographyPicker()"
+					(click)="store.toggleDiscographyPicker()"
+				>
+					{{ 'ui.musicCollectionAdmin.add-discography' | transloco }}
+				</button>
 				<a class="button is-primary" [routerLink]="['edit', 0]">
 					{{ 'ui.musicCollectionAdmin.add-collection' | transloco }}
 				</a>
@@ -53,6 +62,19 @@ import {
 			}
 		</div>
 
+		@if (store.showsDiscographyPicker()) {
+			<mc-discography-picker
+				[candidates]="store.candidateMatches()"
+				[total]="store.candidateCount()"
+				[query]="store.candidateQuery()"
+				[busyArtistUid]="store.busyArtistUid()"
+				[created]="store.created()"
+				(queryChanged)="store.setCandidateQuery($event)"
+				(picked)="store.createDiscography($event)"
+				(closed)="store.closeDiscographyPicker()"
+			/>
+		}
+
 		@if (store.error(); as error) {
 			<p class="error" role="alert">{{ error }}</p>
 		}
@@ -70,71 +92,101 @@ import {
 				}}
 			</p>
 		} @else {
-			<ul class="rows">
-				@for (row of store.visibleRows(); track row.uid) {
-					<li class="row" [class.is-draft]="row.status === 'draft'">
-						<div class="main">
-							<a class="name" [routerLink]="['edit', row.uid]">
-								{{ row.name }}
-							</a>
-							<p class="summary">{{ row.summary }}</p>
-							<p class="meta">
-								<span class="slug">/{{ row.slug }}</span>
-								@if (row.parentName) {
-									<span>· under {{ row.parentName }}</span>
-								}
-								@if (row.badgeName) {
-									<span>· badge: {{ row.badgeName }}</span>
-								}
-							</p>
-						</div>
+			@for (group of store.groups(); track group.group) {
+				<section class="group">
+					<h2 class="group-head">
+						{{ group.labelKey | transloco }}
+						<span class="count">{{ group.rows.length }}</span>
+					</h2>
 
-						<div class="side">
-							<span class="tag">{{ row.status }}</span>
-							<span class="tag">{{ row.visibility }}</span>
-							<span class="total">
-								<strong>{{ row.total }}</strong>
-								{{
-									'ui.musicCollectionAdmin.records'
-										| transloco
-								}}
-							</span>
-							<span
-								class="points"
-								[class.is-derived]="row.derivedPoints"
-								[title]="
-									row.derivedPoints
-										? 'From the rule — no curated score'
-										: 'Set by the curator'
-								"
+					<ul class="rows">
+						@for (row of group.rows; track row.uid) {
+							<li
+								class="row"
+								[class.is-draft]="row.status === 'draft'"
 							>
-								<strong>{{ row.points }}</strong>
-								{{ 'ui.musicCollectionAdmin.pts' | transloco }}
-							</span>
-						</div>
+								<div class="main">
+									<a
+										class="name"
+										[routerLink]="['edit', row.uid]"
+									>
+										{{ row.name }}
+									</a>
+									<p class="summary">{{ row.summary }}</p>
+									<p class="meta">
+										<span class="slug"
+											>/{{ row.slug }}</span
+										>
+										@if (row.parentName) {
+											<span
+												>· under
+												{{ row.parentName }}</span
+											>
+										}
+										@if (row.badgeName) {
+											<span
+												>· badge:
+												{{ row.badgeName }}</span
+											>
+										}
+									</p>
+								</div>
 
-						<div class="actions">
-							<a
-								class="button"
-								[routerLink]="['edit', row.uid]"
-								>{{
-									'ui.musicCollectionAdmin.edit' | transloco
-								}}</a
-							>
-							<button
-								type="button"
-								class="button is-danger"
-								[disabled]="store.busyUid() === row.uid"
-								(click)="store.askDeletion(row)"
-							>
-								{{
-									'ui.musicCollectionAdmin.delete' | transloco
-								}}
-							</button>
-						</div>
-					</li>
-				}
-			</ul>
+								<div class="side">
+									<span class="tag">{{ row.status }}</span>
+									<span class="tag">{{
+										row.visibility
+									}}</span>
+									<span class="total">
+										<strong>{{ row.total }}</strong>
+										{{
+											'ui.musicCollectionAdmin.records'
+												| transloco
+										}}
+									</span>
+									<span
+										class="points"
+										[class.is-derived]="row.derivedPoints"
+										[title]="
+											row.derivedPoints
+												? 'From the rule — no curated score'
+												: 'Set by the curator'
+										"
+									>
+										<strong>{{ row.points }}</strong>
+										{{
+											'ui.musicCollectionAdmin.pts'
+												| transloco
+										}}
+									</span>
+								</div>
+
+								<div class="actions">
+									<a
+										class="button"
+										[routerLink]="['edit', row.uid]"
+										>{{
+											'ui.musicCollectionAdmin.edit'
+												| transloco
+										}}</a
+									>
+									<button
+										type="button"
+										class="button is-danger"
+										[disabled]="store.busyUid() === row.uid"
+										(click)="store.askDeletion(row)"
+									>
+										{{
+											'ui.musicCollectionAdmin.delete'
+												| transloco
+										}}
+									</button>
+								</div>
+							</li>
+						}
+					</ul>
+				</section>
+			}
 		}
 
 		@if (store.pendingDeletion(); as pending) {
@@ -211,6 +263,22 @@ import {
 		.count {
 			font-variant-numeric: tabular-nums;
 			opacity: 0.8;
+		}
+
+		.group + .group {
+			margin-top: 1.75rem;
+		}
+
+		.group-head {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			margin: 0 0 0.75rem;
+			font-size: 0.8rem;
+			font-weight: 600;
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
+			color: var(--mc-text-muted);
 		}
 
 		.rows {

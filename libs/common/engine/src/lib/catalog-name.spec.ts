@@ -2,6 +2,7 @@ import {
 	duplicateCatalogNames,
 	isSameCatalogName,
 	normalizeCatalogName,
+	slugify,
 	stripDiscogsSuffix,
 } from './catalog-name';
 
@@ -72,5 +73,21 @@ describe('duplicateCatalogNames', () => {
 		expect(
 			duplicateCatalogNames(artists, (a) => a.name).flat()
 		).not.toContainEqual({ uid: 'd', name: 'Exodus' });
+	});
+});
+
+describe('slugify', () => {
+	it('makes a readable slug of the name', () => {
+		expect(slugify('1988 Bay Area Thrash')).toBe('1988-bay-area-thrash');
+		expect(slugify('  Mötley Crüe!  ')).toBe('motley-crue');
+	});
+
+	it('keeps the article and the ampersand apart from the comparison', () => {
+		expect(slugify('The Cure')).toBe('the-cure');
+		expect(slugify('Simon & Garfunkel')).toBe('simon-garfunkel');
+	});
+
+	it('is empty where there is nothing to make a slug of', () => {
+		expect(slugify('人間椅子')).toBe('');
 	});
 });
