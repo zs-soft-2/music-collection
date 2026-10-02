@@ -2096,6 +2096,7 @@
 			"preview": "A lapodon {{copies}} lemez, {{badges}} jelvény és {{points}} pont látszik.",
 			"previewWishlist": "Mellettük {{count}} kívánság.",
 			"previewCollections": "Ezen kívül {{count}} kollekció, amit gyűjtesz — a kollekcióknál a szem ikonnal állítod.",
+			"pickCollections": "Kollekciók →",
 			"off": "Nincs nyilvános lapod, és semmi nem kerül ki a gyűjteményedről.",
 			"link": "A lapod linkje",
 			"copy": "Másolás",

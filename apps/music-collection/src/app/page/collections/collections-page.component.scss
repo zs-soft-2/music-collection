@@ -292,6 +292,12 @@ h1 {
 		color: var(--mc-primary);
 		border-color: var(--mc-primary);
 	}
+
+	/* The star sits in the corner; the eye sits beside it rather than on top
+	   of it, which is where it landed while it shared the same rule. */
+	&.show {
+		right: calc(0.55rem + var(--mc-circle-xs) + 0.35rem);
+	}
 }
 
 .artwork {

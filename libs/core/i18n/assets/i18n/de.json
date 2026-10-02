@@ -2096,6 +2096,7 @@
 			"preview": "Deine Seite zeigt {{copies}} Platten, {{badges}} Abzeichen und {{points}} Punkte.",
 			"previewWishlist": "Daneben {{count}} Wünsche.",
 			"previewCollections": "Daneben {{count}} Sammlungen, hinter denen du her bist — das Auge an der Sammlung entscheidet.",
+			"pickCollections": "Sammlungen →",
 			"off": "Du hast keine öffentliche Seite, und nichts von deiner Sammlung wird veröffentlicht.",
 			"link": "Der Link zu deiner Seite",
 			"copy": "Kopieren",

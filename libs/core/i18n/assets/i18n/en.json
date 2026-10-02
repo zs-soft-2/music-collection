@@ -2096,6 +2096,7 @@
 			"preview": "Your page shows {{copies}} records, {{badges}} badges and {{points}} points.",
 			"previewWishlist": "Next to them, {{count}} wishes.",
 			"previewCollections": "Beside them, {{count}} collections you are after — the eye on a collection decides.",
+			"pickCollections": "Collections →",
 			"off": "You have no public page, and nothing of your collection is published.",
 			"link": "The link to your page",
 			"copy": "Copy",

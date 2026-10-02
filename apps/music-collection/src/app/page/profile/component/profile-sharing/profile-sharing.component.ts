@@ -118,6 +118,9 @@ const COPIED_FOR = 2000;
 					'ui.profileSharing.previewCollections'
 						| transloco: { count: pursuits() }
 				}}
+				<a class="to-collections" routerLink="/collections">{{
+					'ui.profileSharing.pickCollections' | transloco
+				}}</a>
 				@if (store.sharing().shareRatings && rated()) {
 					{{
 						'ui.profileSharing.previewFavourites'
@@ -265,6 +268,11 @@ const COPIED_FOR = 2000;
 			margin: 0;
 			font-size: 0.85rem;
 			color: var(--mc-text-subtle);
+		}
+
+		.to-collections {
+			color: var(--mc-primary);
+			white-space: nowrap;
 		}
 
 		.link {
