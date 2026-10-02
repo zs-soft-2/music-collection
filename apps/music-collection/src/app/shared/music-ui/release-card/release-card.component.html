@@ -24,6 +24,7 @@
 							<span class="record-label">
 								@if (item.coverUrl) {
 									<img
+										mcCoverFallback
 										[src]="item.coverUrl"
 										alt=""
 										loading="lazy"
@@ -74,6 +75,7 @@
 						<span class="disc-center">
 							@if (item.coverUrl) {
 								<img
+									mcCoverFallback
 									[src]="item.coverUrl"
 									alt=""
 									loading="lazy"
@@ -90,6 +92,7 @@
 		<div class="sleeve">
 			@if (item.coverUrl) {
 				<img
+					mcCoverFallback
 					class="cover"
 					[src]="item.coverUrl"
 					[alt]="item.title"

@@ -153,6 +153,7 @@
 							<span class="sleeve">
 								@if (record.coverUrl) {
 									<img
+										mcCoverFallback
 										[src]="record.coverUrl"
 										[alt]="record.title"
 										loading="lazy"
@@ -287,6 +288,7 @@
 							<span class="sleeve small">
 								@if (wish.coverUrl) {
 									<img
+										mcCoverFallback
 										[src]="wish.coverUrl"
 										[alt]="wish.title"
 										loading="lazy"

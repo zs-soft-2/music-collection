@@ -21,6 +21,7 @@ import {
 } from './collection-item-page.store';
 import { CopyDetailsFormComponent } from './component/copy-details-form';
 import { CopyPhotosComponent } from './component/copy-photos';
+import { CoverFallbackDirective } from '../../shared/image';
 
 /**
  * The copy page: one record, on one shelf, in one collection.
@@ -38,6 +39,7 @@ import { CopyPhotosComponent } from './component/copy-photos';
 	templateUrl: './collection-item-page.component.html',
 	styleUrls: ['./collection-item-page.component.scss'],
 	imports: [
+		CoverFallbackDirective,
 		...I18N_IMPORTS,
 		PageBreadcrumbComponent,
 		RouterLink,

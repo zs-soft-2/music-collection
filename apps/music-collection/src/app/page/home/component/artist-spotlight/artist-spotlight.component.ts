@@ -13,6 +13,7 @@ import {
 	ArtistView,
 	ReleaseView,
 } from '../../../../shared/music-ui';
+import { CoverFallbackDirective } from '../../../../shared/image';
 
 /**
  * Hero of the home page: one artist, large, with the releases of theirs the
@@ -29,7 +30,12 @@ import {
 	selector: 'mc-artist-spotlight',
 	templateUrl: './artist-spotlight.component.html',
 	styleUrls: ['./artist-spotlight.component.scss'],
-	imports: [...I18N_IMPORTS, RouterLink, AdminEditLinkComponent],
+	imports: [
+		CoverFallbackDirective,
+		...I18N_IMPORTS,
+		RouterLink,
+		AdminEditLinkComponent,
+	],
 })
 export class ArtistSpotlightComponent {
 	public readonly artist = input.required<ArtistView>();

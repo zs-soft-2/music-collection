@@ -24,13 +24,23 @@
 
 		<header class="hero" [class.on-cover]="!!store.coverUrl()">
 			@if (store.coverUrl(); as cover) {
-				<img class="backdrop" [src]="cover" alt="" aria-hidden="true" />
+				<img
+					mcCoverFallback
+					class="backdrop"
+					[src]="cover"
+					alt=""
+					aria-hidden="true"
+				/>
 				<div class="shade" aria-hidden="true"></div>
 			}
 
 			<div class="art">
 				@if (store.coverUrl(); as cover) {
-					<img [src]="cover" [alt]="album.name + ' cover'" />
+					<img
+						mcCoverFallback
+						[src]="cover"
+						[alt]="album.name + ' cover'"
+					/>
 				} @else {
 					<span aria-hidden="true">♪</span>
 				}
@@ -93,6 +103,7 @@
 								<span class="entry-art">
 									@if (pressing.coverUrl) {
 										<img
+											mcCoverFallback
 											[src]="pressing.coverUrl"
 											[alt]="pressing.name + ' cover'"
 											loading="lazy"

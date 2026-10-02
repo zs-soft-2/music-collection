@@ -696,3 +696,15 @@ body .p-chip.archived {
 	right: 1rem;
 	z-index: 3;
 }
+
+// Törött borító helyőrzője (CoverFallbackDirective). A kép helyére átlátszó
+// pixel kerül, a lapot és a lemez-rajzot ez a szabály festi: így a téma
+// váltásakor is a helyes színű marad, amit egy beégetett data URI nem tudna.
+// A rajz semleges szürke, mert az mindkét témában olvasható.
+.mc-cover-failed {
+	background-color: var(--mc-surface-2);
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a8a8a' stroke-width='1.4'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Ccircle cx='12' cy='12' r='3.2'/%3E%3Ccircle cx='12' cy='12' r='.7' fill='%238a8a8a' stroke='none'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: 40%;
+}

@@ -18,6 +18,7 @@ import {
 import { EntityFact, EntityFactsComponent } from '../../shared/entity-view';
 import { LabelPageStore } from './label-page.store';
 import { PageBreadcrumbComponent } from '../../shared/page-breadcrumb';
+import { CoverFallbackDirective } from '../../shared/image';
 
 /** Artists shown before "Show all" — a label may have put out hundreds. */
 const ARTIST_PREVIEW = 24;
@@ -36,6 +37,7 @@ const PRESSING_PREVIEW = 48;
 	templateUrl: './label-page.component.html',
 	styleUrls: ['./label-page.component.scss'],
 	imports: [
+		CoverFallbackDirective,
 		...I18N_IMPORTS,
 		PageBreadcrumbComponent,
 		RouterLink,

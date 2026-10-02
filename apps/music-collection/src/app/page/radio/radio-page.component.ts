@@ -6,6 +6,7 @@ import { PlayerStore } from '../../shared/player';
 
 import { RadioPageStore } from './radio-page.store';
 import { RadioStationView } from './radio.model';
+import { CoverFallbackDirective } from '../../shared/image';
 
 /**
  * The radio: a record chosen for the collector rather than by them.
@@ -20,7 +21,7 @@ import { RadioStationView } from './radio.model';
 	selector: 'mc-radio-page',
 	templateUrl: './radio-page.component.html',
 	styleUrls: ['./radio-page.component.scss'],
-	imports: [...I18N_IMPORTS, RouterLink],
+	imports: [CoverFallbackDirective, ...I18N_IMPORTS, RouterLink],
 })
 export class RadioPageComponent {
 	protected readonly store = inject(RadioPageStore);

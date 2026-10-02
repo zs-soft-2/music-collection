@@ -19,6 +19,7 @@
 		<header class="hero" [class.on-cover]="!!pressing.coverUrl">
 			@if (pressing.coverUrl) {
 				<img
+					mcCoverFallback
 					class="backdrop"
 					[src]="pressing.coverUrl"
 					alt=""
@@ -30,6 +31,7 @@
 			<div class="art">
 				@if (pressing.coverUrl) {
 					<img
+						mcCoverFallback
 						[src]="pressing.coverUrl"
 						[alt]="pressing.name + ' cover'"
 						fetchpriority="high"
@@ -98,6 +100,7 @@
 								<span class="entry-art">
 									@if (sibling.coverUrl) {
 										<img
+											mcCoverFallback
 											[src]="sibling.coverUrl"
 											[alt]="sibling.name + ' cover'"
 											loading="lazy"

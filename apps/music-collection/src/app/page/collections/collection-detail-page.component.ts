@@ -10,6 +10,7 @@ import { PlayerStore } from '../../shared/player';
 
 import { CollectionDetailPageStore } from './collection-detail-page.store';
 import { ALBUM_FILTER_OPTIONS, AlbumFilter } from './collections.model';
+import { CoverFallbackDirective } from '../../shared/image';
 
 /**
  * One collection: what it asks for, and which of those records are already on
@@ -23,6 +24,7 @@ import { ALBUM_FILTER_OPTIONS, AlbumFilter } from './collections.model';
 	templateUrl: './collection-detail-page.component.html',
 	styleUrls: ['./collection-detail-page.component.scss'],
 	imports: [
+		CoverFallbackDirective,
 		...I18N_IMPORTS,
 		RouterLink,
 		CollectionArtworkComponent,

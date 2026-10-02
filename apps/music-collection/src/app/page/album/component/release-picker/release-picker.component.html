@@ -922,7 +922,13 @@
      list only when every line starts at the same edge. -->
 <ng-template #versionThumb let-version>
 	@if (version.thumbUrl) {
-		<img class="thumb" [src]="version.thumbUrl" alt="" loading="lazy" />
+		<img
+			mcCoverFallback
+			class="thumb"
+			[src]="version.thumbUrl"
+			alt=""
+			loading="lazy"
+		/>
 	} @else {
 		<span class="thumb is-empty" aria-hidden="true">
 			<i class="pi pi-image"></i>

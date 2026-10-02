@@ -103,6 +103,7 @@
 							>
 								@if (album.coverUrl) {
 									<img
+										mcCoverFallback
 										[src]="album.coverUrl"
 										alt=""
 										loading="lazy"
@@ -195,7 +196,10 @@
 										loading="lazy"
 									/>
 								} @else {
-									<i class="pi pi-shield" aria-hidden="true"></i>
+									<i
+										class="pi pi-shield"
+										aria-hidden="true"
+									></i>
 								}
 							</span>
 
@@ -210,9 +214,11 @@
 										loading="lazy"
 									/>
 								} @else {
-									<span class="face initial" aria-hidden="true">{{
-										highlight.initial
-									}}</span>
+									<span
+										class="face initial"
+										aria-hidden="true"
+										>{{ highlight.initial }}</span
+									>
 								}
 								{{
 									highlight.displayName ??
@@ -341,7 +347,12 @@
 				@for (album of store.newestAlbums(); track album.id) {
 					<li>
 						<a class="album" [routerLink]="['/album', album.id]">
-							<img [src]="album.coverUrl" alt="" loading="lazy" />
+							<img
+								mcCoverFallback
+								[src]="album.coverUrl"
+								alt=""
+								loading="lazy"
+							/>
 							<span class="album-info">
 								<span class="album-title">{{
 									album.title

@@ -15,6 +15,7 @@ import { CatalogCoverageChartComponent } from './component/catalog-coverage-char
 import { HomeSearchComponent } from './component/home-search/home-search.component';
 import { JoinPromptComponent } from './component/join-prompt/join-prompt.component';
 import { HomePageStore } from './home-page.store';
+import { CoverFallbackDirective } from '../../shared/image';
 
 /**
  * Home page: a quick search, an artist spotlight, the catalog at a glance
@@ -33,6 +34,7 @@ import { HomePageStore } from './home-page.store';
 	templateUrl: './home-page.component.html',
 	styleUrls: ['./home-page.component.scss'],
 	imports: [
+		CoverFallbackDirective,
 		...I18N_IMPORTS,
 		RouterLink,
 		ReleaseCardComponent,

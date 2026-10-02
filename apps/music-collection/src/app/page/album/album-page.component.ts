@@ -32,6 +32,7 @@ import { ReleasePickerComponent } from './component/release-picker/release-picke
 import { WishlistDialogComponent } from './component/wishlist-dialog/wishlist-dialog.component';
 import { PageBreadcrumbComponent } from '../../shared/page-breadcrumb';
 import { focusOnClose } from '../../shared/dialog-focus';
+import { CoverFallbackDirective } from '../../shared/image';
 
 type AlbumSection =
 	| 'original'
@@ -54,6 +55,7 @@ type AlbumSection =
 	templateUrl: './album-page.component.html',
 	styleUrls: ['./album-page.component.scss'],
 	imports: [
+		CoverFallbackDirective,
 		...I18N_IMPORTS,
 		PageBreadcrumbComponent,
 		RouterLink,

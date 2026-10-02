@@ -6,6 +6,7 @@ import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { StarRatingComponent } from '../../shared/music-ui';
 import { CollectorPageStore } from './collector-page.store';
+import { CoverFallbackDirective } from '../../shared/image';
 
 /**
  * One collector's shelf, as anybody who was given the link sees it — signed
@@ -26,7 +27,12 @@ import { CollectorPageStore } from './collector-page.store';
 	selector: 'mc-collector-page',
 	templateUrl: './collector-page.component.html',
 	styleUrls: ['./collector-page.component.scss'],
-	imports: [...I18N_IMPORTS, RouterLink, StarRatingComponent],
+	imports: [
+		CoverFallbackDirective,
+		...I18N_IMPORTS,
+		RouterLink,
+		StarRatingComponent,
+	],
 })
 export class CollectorPageComponent {
 	protected readonly store = inject(CollectorPageStore);

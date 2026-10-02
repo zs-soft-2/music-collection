@@ -16,6 +16,7 @@ import {
 import { PlayAlbumButtonComponent } from '../../player/play-album-button.component';
 import { StarRatingComponent } from '../star-rating/star-rating.component';
 import { FormatBadgeComponent } from '../format-badge/format-badge.component';
+import { CoverFallbackDirective } from '../../image';
 
 /**
  * Visual release card: the sleeve slides aside on hover / keyboard focus and
@@ -28,6 +29,7 @@ import { FormatBadgeComponent } from '../format-badge/format-badge.component';
 	templateUrl: './release-card.component.html',
 	styleUrls: ['./release-card.component.scss'],
 	imports: [
+		CoverFallbackDirective,
 		...I18N_IMPORTS,
 		RouterLink,
 		FormatBadgeComponent,

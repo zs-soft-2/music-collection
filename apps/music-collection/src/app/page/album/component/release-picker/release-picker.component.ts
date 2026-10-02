@@ -36,6 +36,7 @@ import {
 	ReleaseRequestDraft,
 	toRequestPressing,
 } from '../../album.mapper';
+import { CoverFallbackDirective } from '../../../../shared/image';
 
 /**
  * The catalog releases, the album's Discogs pressings, a photo of the record
@@ -68,7 +69,12 @@ const NOTE_MAX_LENGTH = MAX_REQUEST_NOTE_LENGTH;
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-release-picker',
-	imports: [...I18N_IMPORTS, FormatBadgeComponent, NgTemplateOutlet],
+	imports: [
+		CoverFallbackDirective,
+		...I18N_IMPORTS,
+		FormatBadgeComponent,
+		NgTemplateOutlet,
+	],
 	templateUrl: './release-picker.component.html',
 	styleUrls: ['./release-picker.component.scss'],
 })

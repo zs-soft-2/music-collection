@@ -15,6 +15,7 @@ import {
 import { EntityFact, EntityFactsComponent } from '../../shared/entity-view';
 import { PageBreadcrumbComponent } from '../../shared/page-breadcrumb';
 import { WishlistItemPageStore } from './wishlist-item-page.store';
+import { CoverFallbackDirective } from '../../shared/image';
 
 /** The wish page: one record someone is after, and what would answer it. */
 @Component({
@@ -24,6 +25,7 @@ import { WishlistItemPageStore } from './wishlist-item-page.store';
 	templateUrl: './wishlist-item-page.component.html',
 	styleUrls: ['./wishlist-item-page.component.scss'],
 	imports: [
+		CoverFallbackDirective,
 		...I18N_IMPORTS,
 		PageBreadcrumbComponent,
 		RouterLink,

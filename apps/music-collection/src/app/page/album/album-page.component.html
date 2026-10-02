@@ -5,6 +5,7 @@
 		<header class="hero">
 			@if (album.coverUrl) {
 				<img
+					mcCoverFallback
 					class="backdrop"
 					[src]="album.coverUrl"
 					alt=""
@@ -27,6 +28,7 @@
 			<div class="profile">
 				@if (album.coverUrl) {
 					<img
+						mcCoverFallback
 						class="cover"
 						[src]="album.coverUrl"
 						[alt]="album.title + ' cover'"

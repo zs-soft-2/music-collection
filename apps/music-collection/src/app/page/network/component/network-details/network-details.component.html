@@ -141,7 +141,11 @@
 							Guest ·
 						}
 						@if (item.instruments.length) {
-							{{ item.instruments.slice(0, 3) | mcCatalog: 'instrument' }} ·
+							{{
+								item.instruments.slice(0, 3)
+									| mcCatalog: 'instrument'
+							}}
+							·
 						}
 						{{ item.years ?? 'Years unknown' }}
 					</span>
@@ -171,7 +175,12 @@
 			@for (album of visible(view.albums, 'albums'); track album.id) {
 				<li class="album">
 					@if (album.coverUrl) {
-						<img [src]="album.coverUrl" alt="" loading="lazy" />
+						<img
+							mcCoverFallback
+							[src]="album.coverUrl"
+							alt=""
+							loading="lazy"
+						/>
 					} @else {
 						<span class="cover-placeholder" aria-hidden="true">
 							<i class="pi pi-circle"></i>

@@ -14,7 +14,12 @@
 	} @else {
 		<header class="hero">
 			@if (album?.coverUrl) {
-				<img class="cover" [src]="album!.coverUrl" alt="" />
+				<img
+					mcCoverFallback
+					class="cover"
+					[src]="album!.coverUrl"
+					alt=""
+				/>
 			}
 			<div class="heading">
 				<p class="eyebrow">

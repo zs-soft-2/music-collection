@@ -4,6 +4,7 @@ import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { DailyQuestionPageStore } from './daily-question-page.store';
 import { DIFFICULTY_KEY_PREFIX } from './daily-question.model';
+import { CoverFallbackDirective } from '../../shared/image';
 
 /**
  * The question of the day: one question for everybody, one guess, and the
@@ -23,7 +24,7 @@ import { DIFFICULTY_KEY_PREFIX } from './daily-question.model';
 	selector: 'mc-daily-question-page',
 	templateUrl: './daily-question-page.component.html',
 	styleUrls: ['./daily-question-page.component.scss'],
-	imports: [...I18N_IMPORTS, RouterLink],
+	imports: [CoverFallbackDirective, ...I18N_IMPORTS, RouterLink],
 })
 export class DailyQuestionPageComponent {
 	protected readonly store = inject(DailyQuestionPageStore);

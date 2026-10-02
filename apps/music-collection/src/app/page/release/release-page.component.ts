@@ -16,6 +16,7 @@ import {
 import { EntityFact, EntityFactsComponent } from '../../shared/entity-view';
 import { PageBreadcrumbComponent } from '../../shared/page-breadcrumb';
 import { ReleasePageStore } from './release-page.store';
+import { CoverFallbackDirective } from '../../shared/image';
 
 /**
  * The pressing page: one edition of an album, read next to its siblings.
@@ -27,6 +28,7 @@ import { ReleasePageStore } from './release-page.store';
 	templateUrl: './release-page.component.html',
 	styleUrls: ['./release-page.component.scss'],
 	imports: [
+		CoverFallbackDirective,
 		...I18N_IMPORTS,
 		PageBreadcrumbComponent,
 		RouterLink,

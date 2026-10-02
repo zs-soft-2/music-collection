@@ -33,6 +33,7 @@ import { PlayerStore } from '../player.store';
 import { EmberField } from './embers';
 import { EqualizerBars } from './equalizer';
 import { activeLineIndex, formatTime, parseLrc } from './lrc';
+import { CoverFallbackDirective } from '../../image';
 
 /** How often the playback position is re-read. */
 const CLOCK_MS = 50;
@@ -56,6 +57,7 @@ const BAR_COUNT = { off: 0, subtle: 32, full: 64 };
 	templateUrl: './player-stage.component.html',
 	styleUrls: ['./player-stage.component.scss'],
 	imports: [
+		CoverFallbackDirective,
 		...I18N_IMPORTS,
 		SpotifyIconComponent,
 		YoutubeIconComponent,

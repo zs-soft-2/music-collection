@@ -11,6 +11,7 @@
 	} @else {
 		@if (coverUrl(); as cover) {
 			<img
+				mcCoverFallback
 				class="blur"
 				[class.paused]="!player.playing()"
 				[src]="cover"
@@ -29,6 +30,7 @@
 	<div class="now">
 		@if (coverUrl(); as cover) {
 			<img
+				mcCoverFallback
 				class="cover"
 				[class.beat]="player.playing()"
 				[src]="cover"
@@ -83,7 +85,7 @@
 			<p #line class="plain">{{ line || ' ' }}</p>
 		}
 	} @else if (coverUrl(); as cover) {
-		<img class="hero-cover" [src]="cover" alt="" />
+		<img mcCoverFallback class="hero-cover" [src]="cover" alt="" />
 	}
 </div>
 

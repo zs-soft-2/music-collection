@@ -90,6 +90,7 @@
 			@if (view.imageUrl; as cover) {
 				<figure class="cover">
 					<img
+						mcCoverFallback
 						[src]="cover"
 						[alt]="'page.daily-question.the-cover' | transloco"
 						loading="lazy"
