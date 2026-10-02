@@ -4,6 +4,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
+import { StarRatingComponent } from '../../shared/music-ui';
 import { CollectorPageStore } from './collector-page.store';
 
 /**
@@ -25,7 +26,7 @@ import { CollectorPageStore } from './collector-page.store';
 	selector: 'mc-collector-page',
 	templateUrl: './collector-page.component.html',
 	styleUrls: ['./collector-page.component.scss'],
-	imports: [...I18N_IMPORTS, RouterLink],
+	imports: [...I18N_IMPORTS, RouterLink, StarRatingComponent],
 })
 export class CollectorPageComponent {
 	protected readonly store = inject(CollectorPageStore);

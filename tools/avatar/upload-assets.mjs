@@ -37,14 +37,7 @@
  */
 
 import { execFile } from 'node:child_process';
-import {
-	mkdtemp,
-	open,
-	readdir,
-	readFile,
-	rm,
-	stat,
-} from 'node:fs/promises';
+import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
@@ -54,6 +47,7 @@ import { applicationDefault, initializeApp } from 'firebase-admin/app';
 import { getStorage } from 'firebase-admin/storage';
 
 import { ENV_OPTION, readEnvironment } from '../sync/environment.mjs';
+import { size, unreadable } from './webp.mjs';
 
 const run = promisify(execFile);
 
@@ -287,46 +281,8 @@ async function assertCwebp() {
 	}
 }
 
-async function size(path) {
-	return (await stat(path)).size;
-}
-
-/**
- * Why a file is not a picture, or null where it is one.
- *
- * A webp announces its own length in the RIFF header, so a file cut short —
- * a download that stopped, a drawing that never finished — is recognisable
- * without decoding all three hundred of them.
- */
-async function unreadable(path) {
-	const bytes = await size(path);
-
-	if (bytes === 0) {
-		return 'empty';
-	}
-
-	const head = Buffer.alloc(12);
-	const file = await open(path);
-
-	try {
-		await file.read(head, 0, 12, 0);
-	} finally {
-		await file.close();
-	}
-
-	if (head.subarray(0, 4).toString() !== 'RIFF') {
-		return 'not a webp';
-	}
-
-	const declared = head.readUInt32LE(4) + 8;
-
-	return declared === bytes ? null : `truncated at ${bytes} of ${declared}`;
-}
-
 async function total(dir, names) {
-	const sizes = await Promise.all(
-		names.map((name) => size(join(dir, name)))
-	);
+	const sizes = await Promise.all(names.map((name) => size(join(dir, name))));
 
 	return sizes.reduce((sum, one) => sum + one, 0);
 }

@@ -52,6 +52,8 @@ export interface CollectionCardView {
 /** A card as the list renders it: the collector's pick decides the star. */
 export interface CollectionCardListView extends CollectionCardView {
 	followed: boolean;
+	/** Whether others are told the collector is after this one. */
+	shown: boolean;
 }
 
 /** One shelf of the list, as the page renders it under a heading. */

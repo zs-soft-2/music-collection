@@ -4,8 +4,10 @@ import { MediaFormat, ReleaseView } from '../../shared/music-ui';
 
 import {
 	arrangeShelves,
+	filterByStars,
 	shelfMatches,
 	shelfPlaceLabel,
+	sortReleases,
 	splitByPlacement,
 } from './collection.mapper';
 import { ReleaseGroup } from './collection.model';
@@ -385,5 +387,70 @@ describe('shelfPlaceLabel', () => {
 		expect(shelfPlaceLabel({ ...place, offShelf: true }, words)).toBe(
 			'Off the shelf'
 		);
+	});
+});
+
+describe('filterByStars', () => {
+	const loved = release('loved');
+	const liked = release('liked');
+	const unjudged = release('unjudged');
+	const shelf = [loved, liked, unjudged];
+	const stars = new Map([
+		[loved.albumId, 5],
+		[liked.albumId, 2],
+	]);
+
+	it('leaves the shelf alone where nothing is asked of it', () => {
+		expect(filterByStars(shelf, 'all', stars)).toBe(shelf);
+	});
+
+	it('keeps what the collector loves', () => {
+		expect(filterByStars(shelf, 'loved', stars)).toEqual([loved]);
+	});
+
+	it('keeps what they never said a word about', () => {
+		expect(filterByStars(shelf, 'unrated', stars)).toEqual([unjudged]);
+	});
+
+	it('has nothing loved and everything unrated without verdicts', () => {
+		expect(filterByStars(shelf, 'loved')).toEqual([]);
+		expect(filterByStars(shelf, 'unrated')).toEqual(shelf);
+	});
+});
+
+describe('sortReleases by stars', () => {
+	const five = release('five', 'Anvil');
+	const three = release('three', 'Budgie');
+	const unjudged = release('unjudged', 'Accept');
+	const stars = new Map([
+		[five.albumId, 5],
+		[three.albumId, 3],
+	]);
+
+	it('puts the best first and the unjudged last', () => {
+		const sorted = sortReleases([three, unjudged, five], 'stars', stars);
+
+		expect(sorted.map((item) => item.id)).toEqual([
+			'five',
+			'three',
+			'unjudged',
+		]);
+	});
+
+	it('falls back to the artist among equal stars', () => {
+		const other = release('other', 'Accept');
+		const sorted = sortReleases(
+			[five, other],
+			'stars',
+			new Map([
+				[five.albumId, 5],
+				[other.albumId, 5],
+			])
+		);
+
+		expect(sorted.map((item) => item.artistName)).toEqual([
+			'Accept',
+			'Anvil',
+		]);
 	});
 });

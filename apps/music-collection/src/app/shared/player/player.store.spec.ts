@@ -5,6 +5,7 @@ const request = (albumId: string): PlayRequest => ({
 	albumId,
 	albumTitle: 'V',
 	artistName: 'Havok',
+	artistId: 'artist-havok',
 	coverUrl: null,
 	styles: [],
 	spotifyAlbumId: '4aawyAB9vmqN3uQ7FjRGTy',

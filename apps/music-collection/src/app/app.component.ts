@@ -22,6 +22,7 @@ import { ConsentBarComponent } from './shared/consent';
 import { DemoTourComponent } from './shared/demo-tour';
 import { DailyQuestionBannerComponent } from './shared/daily-question';
 import { PlayerStageComponent, PlayerStore } from './shared/player';
+import { VerdictPromptComponent } from './shared/verdict-prompt';
 import { YoutubeDockComponent } from './shared/youtube';
 
 @Component({
@@ -40,6 +41,7 @@ import { YoutubeDockComponent } from './shared/youtube';
 		ConsentBarComponent,
 		DailyQuestionBannerComponent,
 		DemoTourComponent,
+		VerdictPromptComponent,
 	],
 })
 export class AppComponent implements OnInit {

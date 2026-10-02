@@ -20,7 +20,9 @@ import {
 	CopyRemovalComponent,
 	DiscographyCardComponent,
 	FormatBadgeComponent,
+	StarRatingComponent,
 } from '../../shared/music-ui';
+import { RATING_NOTE_LIMIT } from '../../data/rating';
 import { PlayerPanelComponent } from '../../shared/player';
 import { AlbumPageStore } from './album-page.store';
 import { AlbumCollectionsComponent } from './component/album-collections/album-collections.component';
@@ -32,7 +34,13 @@ import { PageBreadcrumbComponent } from '../../shared/page-breadcrumb';
 import { focusOnClose } from '../../shared/dialog-focus';
 
 type AlbumSection =
-	'original' | 'listen' | 'tracklist' | 'credits' | 'copies' | 'more';
+	| 'original'
+	| 'listen'
+	| 'verdict'
+	| 'tracklist'
+	| 'credits'
+	| 'copies'
+	| 'more';
 
 /**
  * Album page: the album with its original release, tracklist, credits
@@ -60,6 +68,7 @@ type AlbumSection =
 		ReleasePickerComponent,
 		CopyRemovalComponent,
 		CopyPlacementComponent,
+		StarRatingComponent,
 		WishlistDialogComponent,
 		DatePipe,
 	],
@@ -77,6 +86,32 @@ export class AlbumPageComponent {
 
 	protected readonly placeholders = (count: number) =>
 		Array.from({ length: count }, (_, i) => i);
+
+	/** The note next to the stars may not outgrow what the rules allow. */
+	protected readonly noteLimit = RATING_NOTE_LIMIT;
+
+	/** The collector's verdict on another record of the artist, if any. */
+	protected readonly starsFor = (albumId: string): number | null =>
+		this.store.ratings().find((rating) => rating.albumId === albumId)
+			?.stars ?? null;
+
+	/** An average is a fraction; a row of stars is not. */
+	protected readonly rounded = (value: number) => Math.round(value);
+	protected readonly absolute = (value: number) => Math.abs(value);
+
+	/**
+	 * Keeps the line about why, when it is a line the collector changed.
+	 * Leaving the field or pressing Enter is the save: a note next to five
+	 * stars that are already kept does not deserve a button of its own.
+	 */
+	protected saveNote(event: Event): void {
+		const field = event.target as HTMLInputElement;
+		const note = field.value.trim();
+
+		if (note !== (this.store.myRating()?.note ?? '')) {
+			void this.store.writeRatingNote(note);
+		}
+	}
 
 	public constructor() {
 		// Moving to another album of the artist reuses this page, so the

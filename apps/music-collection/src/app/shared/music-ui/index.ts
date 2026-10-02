@@ -13,5 +13,6 @@ export * from './discography-card/discography-card.component';
 export * from './format-badge/format-badge.component';
 export * from '@music-collection/ui/music-view';
 export * from './release-card/release-card.component';
+export * from './star-rating/star-rating.component';
 export * from './spotify-player/spotify-player.component';
 export * from './style-bars/style-bars.component';

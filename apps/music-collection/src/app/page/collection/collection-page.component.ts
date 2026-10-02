@@ -28,6 +28,7 @@ import {
 	CollectionSort,
 	GROUP_OPTIONS,
 	SORT_OPTIONS,
+	STAR_OPTIONS,
 	ShelfPlay,
 	VIEW_OPTIONS,
 } from './collection.model';
@@ -63,6 +64,7 @@ export class CollectionPageComponent {
 
 	protected readonly formatOrder = FORMAT_ORDER;
 	protected readonly sortOptions = SORT_OPTIONS;
+	protected readonly starOptions = STAR_OPTIONS;
 	protected readonly groupOptions = GROUP_OPTIONS;
 	protected readonly viewOptions = VIEW_OPTIONS;
 

@@ -239,3 +239,40 @@ describe('suggestNextAlbums', () => {
 		expect(first.unlockedPoints).toBe(400);
 	});
 });
+
+describe('suggestNextAlbums and what the collector loves', () => {
+	/**
+	 * One collection, two records still missing, worth the same share each:
+	 * the points cannot tell them apart, which is the only place the artist
+	 * is allowed to.
+	 */
+	const TIED: CollectionShortfall = {
+		collectionUid: 'tied',
+		albums: [membership('zed', 'Zed'), membership('anvil', 'Anvil')],
+		missingAlbumUids: ['zed', 'anvil'],
+		totalPoints: 200,
+	};
+
+	it('breaks a tie towards an artist the collector loves', () => {
+		const suggestions = suggestNextAlbums([TIED], new Set(['zed']));
+
+		expect(suggestions[0].album.albumUid).toBe('zed');
+	});
+
+	it('falls back to the shelf order with nothing loved', () => {
+		const suggestions = suggestNextAlbums([TIED]);
+
+		expect(suggestions[0].album.albumUid).toBe('anvil');
+	});
+
+	it('never moves a loved record past a better buy', () => {
+		const suggestions = suggestNextAlbums(
+			[HALFWAY, NEARLY],
+			// The nearly finished set is by "Artist"; this loves the other.
+			new Set(['artist'])
+		);
+
+		expect(suggestions[0].album.albumUid).toBe('nearly-3');
+		expect(suggestions[0].unlockedPoints).toBe(400);
+	});
+});

@@ -1,4 +1,4 @@
-import { of, pipe, switchMap, tap } from 'rxjs';
+import { combineLatest, of, pipe, startWith, switchMap, tap } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
 import {
@@ -16,6 +16,7 @@ import {
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
+import { AlbumRating, RatingEffect, lovedArtists } from '../../data/rating';
 import { withCollectionFollowing } from './collection-following.feature';
 import {
 	sortCollectionCards,
@@ -93,6 +94,7 @@ export const CollectionsPageStore = signalStore(
 		 */
 		visible: computed<CollectionCardListView[]>(() => {
 			const followedUids = store.followedUids();
+			const shownUids = store.shownUids();
 			const followingOnly =
 				store.tab() === 'following' && !store.followsNothing();
 			const query = store.query().trim().toLowerCase();
@@ -107,6 +109,7 @@ export const CollectionsPageStore = signalStore(
 				.map((collection) => ({
 					...collection,
 					followed: followedUids.has(collection.uid),
+					shown: shownUids.has(collection.uid),
 				}));
 		}),
 		/** Empty where there is no shelf to continue, or no gap left in one. */
@@ -124,55 +127,74 @@ export const CollectionsPageStore = signalStore(
 		 */
 		groups: computed(() => toCollectionGroups(store.visible())),
 	})),
-	withMethods((store, effect = inject(MusicCollectionEffect)) => ({
-		load: rxMethod<void>(
-			pipe(
-				tap(() => patchState(store, { isLoading: true })),
-				switchMap(() => effect.listStandings$()),
-				tapResponse({
-					next: (standings: MusicCollectionStanding[]) => {
-						const collections = sortCollectionCards(
-							standings.map(toCollectionCard)
-						);
-						/*
-						 * The hunt is about a shelf. With nothing on it — a
-						 * guest, or a collector who has not filed a record yet
-						 * — there is nothing to continue, and the records are
-						 * not ranked at all: a guest is not made to pay, even
-						 * in a pass over memory, for advice given to nobody.
-						 */
-						const hasShelf = collections.some(
-							(collection) => collection.owned > 0
-						);
-
-						patchState(store, {
-							collections,
+	withMethods(
+		(
+			store,
+			effect = inject(MusicCollectionEffect),
+			ratingEffect = inject(RatingEffect)
+		) => ({
+			load: rxMethod<void>(
+				pipe(
+					tap(() => patchState(store, { isLoading: true })),
+					switchMap(() =>
+						combineLatest([
+							effect.listStandings$(),
+							// The verdicts only break ties in the ranking, so the
+							// list is drawn without waiting for them.
+							ratingEffect.list$().pipe(startWith([])),
+						])
+					),
+					tapResponse({
+						next: ([standings, ratings]: [
+							MusicCollectionStanding[],
+							AlbumRating[],
+						]) => {
+							const collections = sortCollectionCards(
+								standings.map(toCollectionCard)
+							);
 							/*
-							 * Over every published collection, not only the
-							 * ones followed: the pick is a view, and a
-							 * collection nobody starred still pays when it is
-							 * finished — the same reason the header counts
-							 * them all.
+							 * The hunt is about a shelf. With nothing on it — a
+							 * guest, or a collector who has not filed a record yet
+							 * — there is nothing to continue, and the records are
+							 * not ranked at all: a guest is not made to pay, even
+							 * in a pass over memory, for advice given to nobody.
 							 */
-							nextAlbums: hasShelf
-								? toNextAlbums(
-										effect.suggestNextAlbums(standings),
-										collections
-									)
-								: [],
-							isLoading: false,
-						});
-					},
-					error: (error) => {
-						console.error(error);
-						patchState(store, { isLoading: false });
-					},
-				})
-			)
-		),
-		setTab: (tab: CollectionsTab) => patchState(store, { tab }),
-		setQuery: (query: string) => patchState(store, { query }),
-	})),
+							const hasShelf = collections.some(
+								(collection) => collection.owned > 0
+							);
+
+							patchState(store, {
+								collections,
+								/*
+								 * Over every published collection, not only the
+								 * ones followed: the pick is a view, and a
+								 * collection nobody starred still pays when it is
+								 * finished — the same reason the header counts
+								 * them all.
+								 */
+								nextAlbums: hasShelf
+									? toNextAlbums(
+											effect.suggestNextAlbums(
+												standings,
+												lovedArtists(ratings)
+											),
+											collections
+										)
+									: [],
+								isLoading: false,
+							});
+						},
+						error: (error) => {
+							console.error(error);
+							patchState(store, { isLoading: false });
+						},
+					})
+				)
+			),
+			setTab: (tab: CollectionsTab) => patchState(store, { tab }),
+			setQuery: (query: string) => patchState(store, { query }),
+		})
+	),
 	withHooks({
 		onInit(store) {
 			store.load(of(undefined));

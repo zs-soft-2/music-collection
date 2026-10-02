@@ -4,6 +4,7 @@ import { FORMAT_ORDER, MediaFormat } from '@music-collection/ui/music-view';
 import {
 	CollectorAlbumsDocument,
 	CollectorProfileDocument,
+	FAVOURITE_LIMIT,
 	clipText,
 	listOf,
 	pictureUrl,
@@ -14,6 +15,7 @@ import { countryName } from '../../data/user-location';
 import {
 	CollectorAlbumsView,
 	CollectorBadgeView,
+	CollectorFavouriteView,
 	CollectorFormatView,
 	CollectorNumbersView,
 	CollectorPursuitView,
@@ -23,6 +25,7 @@ import {
 	EDITION_MAX,
 	EDITIONS_MAX,
 	NAME_MAX,
+	NOTE_MAX,
 	TITLE_MAX,
 } from './collector.model';
 
@@ -169,6 +172,39 @@ function toWishlist(document: CollectorProfileDocument): CollectorWishView[] {
 	});
 }
 
+/**
+ * The records they named, with the stars they gave them.
+ *
+ * A star that is not one of the five this app can give is not shown as some
+ * other number — the entry is dropped. The rules can hold the length of this
+ * list but cannot look inside it, so a document claiming eleven stars for a
+ * record would otherwise draw eleven of them.
+ */
+function toFavourites(
+	document: CollectorProfileDocument
+): CollectorFavouriteView[] {
+	return list(document.favourites)
+		.slice(0, FAVOURITE_LIMIT)
+		.map((entry) => {
+			const favourite = entry as Record<string, unknown>;
+			const stars = favourite['stars'];
+
+			return {
+				title: clip(favourite['title'], TITLE_MAX),
+				artistName: clip(favourite['artistName'], NAME_MAX),
+				stars:
+					typeof stars === 'number' &&
+					Number.isInteger(stars) &&
+					stars >= 1 &&
+					stars <= 5
+						? stars
+						: 0,
+				note: clip(favourite['note'], NOTE_MAX),
+			};
+		})
+		.filter((favourite) => favourite.stars > 0 && !!favourite.title);
+}
+
 /** The place, as much of it as was shared. */
 function toPlace(document: CollectorProfileDocument): string | null {
 	const code = clip(document.countryCode, 2);
@@ -208,6 +244,7 @@ export function toCollectorView(
 		pursuits: toPursuits(document),
 		showcase: toShowcase(document),
 		wishlist: toWishlist(document),
+		favourites: toFavourites(document),
 	};
 }
 

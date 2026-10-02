@@ -70,6 +70,18 @@ export interface CollectorWishView {
 	sourceHost: string | null;
 }
 
+/**
+ * A record the collector thinks highly of, as this page dares to show it:
+ * the stars only where they are stars this app could have given.
+ */
+export interface CollectorFavouriteView {
+	title: string;
+	artistName: string;
+	stars: number;
+	/** What they wrote about it, clipped; empty where they wrote nothing. */
+	note: string;
+}
+
 /** One record of the full shelf — the list behind the window. */
 export interface CollectorAlbumView {
 	title: string;
@@ -93,11 +105,14 @@ export interface CollectorView {
 	pursuits: CollectorPursuitView[];
 	showcase: CollectorRecordView[];
 	wishlist: CollectorWishView[];
+	favourites: CollectorFavouriteView[];
 }
 
 /** How much of a text out of the document may reach the page. */
 export const TITLE_MAX = 200;
 export const NAME_MAX = 120;
 export const EDITION_MAX = 40;
+/** How much of a line about a record reaches the page. */
+export const NOTE_MAX = 280;
 /** How many edition tags one record may boast. */
 export const EDITIONS_MAX = 4;

@@ -215,6 +215,45 @@ service cloud.firestore {
           && isValidPhotos(data, uid, itemId);
     }
 
+    // ── Lemez-értékelés ─────────────────────────────────────────────────────
+    // Egész csillag 1 és 5 között. Félcsillag szándékosan nincs: a skála csak
+    // akkor összehasonlítható, ha mindenki ugyanazt az öt fokot használja.
+    //
+    // A dokumentum azonosítója az album azonosítója, és a szabály ezt a
+    // kettőt összekapcsolja — ez az, ami miatt egy lemezre egy értékelés jut:
+    // aki átgondolja, a magáét írja át, nem szavaz újra. A közösségi átlagot
+    // ez teszi értelmessé (`album-rating`, lásd lent).
+    //
+    // A `hasOnly` nem díszítés: a szerver ebből a dokumentumból számolja az
+    // átlagot, és csak azt a mezőkészletet olvassa, ami itt fel van sorolva.
+    // Egy szabadon bővíthető dokumentum azt jelentené, hogy a kliens olyan
+    // mezőt is elhelyezhet benne, amiről a szerveroldal nem tud.
+    // Az `updatedAt` a sync-wrapper bélyege (FirestoreSyncService), minden
+    // íráson ott van.
+    function isValidRating(data, albumId) {
+      return data.keys().hasOnly(['uid', 'albumId', 'albumTitle', 'artistName',
+                                  'artistId', 'stars', 'note', 'ratedAt',
+                                  'updatedAt'])
+          && data.keys().hasAll(['albumId', 'stars', 'ratedAt'])
+          && data.albumId == albumId
+          && (!('uid' in data) || data.uid == albumId)
+          && data.stars is int
+          && data.stars >= 1
+          && data.stars <= 5
+          && data.ratedAt is number
+          && (!('albumTitle' in data)
+              || (data.albumTitle is string && data.albumTitle.size() <= 500))
+          && (!('artistName' in data)
+              || data.artistName == null
+              || (data.artistName is string && data.artistName.size() <= 500))
+          && (!('artistId' in data)
+              || data.artistId == null
+              || (data.artistId is string && data.artistId.size() <= 200))
+          && (!('note' in data)
+              || data.note == null
+              || (data.note is string && data.note.size() <= 280));
+    }
+
     // A sync-marker feature key → permission-erőforrás. Ismeretlen kulcs → tiltás.
     // Az `owned-` előtagúak a gyűjtő saját entitásai (lásd lent): külön
     // erőforrás, külön jog — a katalógusba írni továbbra is `createArtistEntity`
@@ -459,6 +498,24 @@ service cloud.firestore {
         allow read, write: if isSelf(uid);
       }
 
+      // Amit a gyűjtő a lemezről gondol: egy dokumentum egy album, benne a
+      // csillag és egy sor arról, miért. Ugyanolyan privát, mint a napló —
+      // se collection-group olvasás, se más user nem látja. Jog nem kell
+      // hozzá: aki be van jelentkezve, a saját véleményét leírhatja.
+      //
+      // FIGYELEM: `rating` nevű collectionre collection-group szabály soha
+      // nem jöhet (`/{path=**}/rating/{...}`). A katalógus szabályai pontosan
+      // így tesznek publikussá minden `album` vagy `release` nevű collectiont
+      // bármilyen mélységben — egy ilyen szabály itt mindenki véleményét
+      // kiolvashatóvá tenné. A közösségi átlagot ezért nem a kliens gyűjti
+      // össze, hanem a szerver írja ki (`album-rating`).
+      match /rating/{albumId} {
+        allow read: if isSelf(uid);
+        allow create, update: if isSelf(uid)
+                              && isValidRating(request.resource.data, albumId);
+        allow delete: if isSelf(uid);
+      }
+
       // Napi kérdés: a gyűjtő tippje egy napra, a megfejtéssel együtt — a
       // kiértékelés után már megmutatható neki. Kizárólag az
       // `answerDailyQuestion` callable írja (Admin SDK): a kliens a saját
@@ -634,18 +691,27 @@ service cloud.firestore {
         return profile().badges is list
                && profile().badges.size() <= 50
                && profile().pursuits is list
-               && profile().pursuits.size() <= 3
+               && profile().pursuits.size() <= 12
                && profile().showcase is list
                && profile().showcase.size() <= 24
                && (!('wishlist' in profile().keys())
                    || (profile().wishlist is list
-                       && profile().wishlist.size() <= 200));
+                       && profile().wishlist.size() <= 200))
+               // A kedvencek ugyanígy: a kulcs hiánya a hozzájárulás hiánya
+               // (FAVOURITE_LIMIT). A csillagokat sem tudja a szabály
+               // végignézni — a lemezenkénti 1..5 kényszerítés a saját
+               // `rating` doksin történik, ez itt a gyűjtő által kiválasztott
+               // kivonat.
+               && (!('favourites' in profile().keys())
+                   || (profile().favourites is list
+                       && profile().favourites.size() <= 10));
       }
       function isValidProfile() {
         return profile().keys().hasOnly(['uid', 'displayName', 'photoURL',
                                          'countryCode', 'city', 'numbers',
                                          'points', 'badges', 'pursuits',
-                                         'showcase', 'wishlist', 'updatedAt'])
+                                         'showcase', 'wishlist', 'favourites',
+                                         'updatedAt'])
                && profile().uid == uid
                // A név és a kép ugyanabban az alakban, ahogy a user
                // dokumentumba és a térkép pinjébe írható.
@@ -728,7 +794,8 @@ service cloud.firestore {
                             && card().keys().hasOnly(['uid', 'displayName',
                                                       'photoURL', 'countryCode',
                                                       'city', 'copies', 'points',
-                                                      'badges', 'updatedAt'])
+                                                      'badges', 'collecting',
+                                                      'updatedAt'])
                             && card().uid == uid
                             && (!('displayName' in card().keys())
                                 || isDisplayName(card().displayName))
@@ -745,7 +812,16 @@ service cloud.firestore {
                             && card().points is number
                             && card().points >= 0
                             && card().badges is list
-                            && card().badges.size() <= 50;
+                            && card().badges.size() <= 50
+                            // A collection followed and shown: the collector
+                            // says they are after it, and the wall counts
+                            // them in beside those who finished it. Optional,
+                            // because a card written before the field existed
+                            // — or by a client that has not reloaded — has
+                            // none, and that is a card, not an attack.
+                            && (!('collecting' in card().keys())
+                                || (card().collecting is list
+                                    && card().collecting.size() <= 50));
       allow delete: if isSelf(uid) || hasPerm('deleteUserEntity');
     }
 
@@ -1228,7 +1304,24 @@ service cloud.firestore {
                                 || (featureKey == 'copy-serial'
                                     && hasPerm('updateCollectionItemEntity')
                                     && request.resource.data.path.matches('^copy-serial/[^/]+$')
-                                    && ownsMarkedSerialClaim()));
+                                    && ownsMarkedSerialClaim())
+                                // A saját értékelését bárki visszavonhatja,
+                                // permission nélkül — megadni sem kellett
+                                // hozzá. A marker a saját útvonalára mutat:
+                                // `user~{uid}~rating~…`.
+                                //
+                                // A marker publikusan olvasható (a katalógus
+                                // törléseit minden kliensnek látnia kell),
+                                // tehát egy visszavonás annyit elárul, hogy
+                                // ez a gyűjtő értékelte ezt a lemezt, majd
+                                // meggondolta magát — a csillagot nem. A
+                                // megtartott értékelések nyom nélkül élnek;
+                                // marker csak a törléshez kell, hogy a gyűjtő
+                                // másik eszköze ne a visszavont véleményt
+                                // mutassa.
+                                || (isAuthed()
+                                    && featureKey == 'rating'
+                                    && markerId.matches('user~' + request.auth.uid + '~rating~.+')));
       allow delete: if isAdmin();
     }
 
@@ -1292,6 +1385,24 @@ service cloud.firestore {
     match /band-of-the-week/{week} {
       allow read: if true;
       allow write: if false; // composeBandOfTheWeekWeekly / composeBandOfTheWeekNow
+    }
+
+    // A lemez közösségi átlaga: egy dokumentum egy album, a csillagok száma,
+    // átlaga és megoszlása. A `syncAlbumRating` trigger írja (Admin SDK) —
+    // a kliens a sajátján kívül senki értékelését nem látja, az összeg
+    // viszont mindenkinek szól, a kijelentkezett látogatónak is, ahogy maga
+    // a katalógus.
+    //
+    // Nem az album dokumentumának mezője, mert a katalógus bundle-ben
+    // utazik minden klienshez, ez a szám pedig minden csillagra változik —
+    // egy ilyen mező minden értékeléssel az egész album-bundle-t érvénytelenné
+    // tenné. Az album oldal egyetlen dokumentumot olvas, amikor megnyitják.
+    // Listázni nincs mit: nincs oldal, ami minden lemez átlagát egyszerre
+    // kérdezné.
+    match /album-rating/{albumId} {
+      allow get: if true;
+      allow list: if false;
+      allow write: if false; // syncAlbumRating
     }
 
     // ── Alapértelmezés: tiltás ──────────────────────────────────────────────

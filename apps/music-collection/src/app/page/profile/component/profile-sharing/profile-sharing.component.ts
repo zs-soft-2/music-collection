@@ -8,7 +8,10 @@ import {
 import { RouterLink } from '@angular/router';
 import { I18N_IMPORTS, TextService } from '@music-collection/core/i18n';
 
-import { renderShareCard } from '../../../../data/collector-profile';
+import {
+	FAVOURITE_LIMIT,
+	renderShareCard,
+} from '../../../../data/collector-profile';
 import { ProfilePageStore } from '../../profile-page.store';
 
 /** How long the button says it copied before going back to offering it. */
@@ -69,6 +72,28 @@ const COPIED_FOR = 2000;
 						}}</span>
 					</span>
 				</label>
+
+				<label
+					class="level"
+					[class.selected]="store.sharing().shareRatings"
+				>
+					<input
+						type="checkbox"
+						[checked]="store.sharing().shareRatings"
+						(change)="
+							store.setSharing({
+								shareRatings: $any($event.target).checked,
+							})
+						"
+					/>
+					<span class="level-text">
+						<b>{{ 'ui.profileSharing.favourites' | transloco }}</b>
+						<span>{{
+							'ui.profileSharing.favouritesHint'
+								| transloco: { count: rated() }
+						}}</span>
+					</span>
+				</label>
 			}
 		</fieldset>
 
@@ -87,6 +112,16 @@ const COPIED_FOR = 2000;
 					{{
 						'ui.profileSharing.previewWishlist'
 							| transloco: { count: wishes() }
+					}}
+				}
+				{{
+					'ui.profileSharing.previewCollections'
+						| transloco: { count: pursuits() }
+				}}
+				@if (store.sharing().shareRatings && rated()) {
+					{{
+						'ui.profileSharing.previewFavourites'
+							| transloco: { count: shownFavourites() }
 					}}
 				}
 			</p>
@@ -310,6 +345,20 @@ export class ProfileSharingComponent {
 		() => this.store.profilePreview()?.points.total ?? 0
 	);
 	protected readonly wishes = computed(() => this.store.wishes().length);
+	/**
+	 * How many collections the page names as being chased. Following one is
+	 * private until the collector shows it, and the only way to know whether
+	 * they have is to say so here.
+	 */
+	protected readonly pursuits = computed(
+		() => this.store.profilePreview()?.pursuits.length ?? 0
+	);
+	/** How many records the collector has judged at all. */
+	protected readonly rated = computed(() => this.store.verdicts().rated);
+	/** How many of those the page would actually carry. */
+	protected readonly shownFavourites = computed(() =>
+		Math.min(this.rated(), FAVOURITE_LIMIT)
+	);
 
 	/**
 	 * Draws the card and hands it to the share sheet with the link next to

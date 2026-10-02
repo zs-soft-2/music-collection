@@ -4,6 +4,7 @@ import { MusicCollectionStanding } from '@music-collection/domain/music-collecti
 import { ageWeight } from '@music-collection/domain/music-collection/engine';
 import { MediaFormat, ReleaseView } from '@music-collection/ui/music-view';
 
+import { AlbumRating } from '../rating';
 import { PublicUserLocation } from '../user-location';
 import { UserSetting } from '../user-settings';
 
@@ -33,12 +34,26 @@ import { UserSetting } from '../user-settings';
 export const SHOWCASE_LIMIT = 24;
 /** How many badges travel with the profile. Mirrored in `firestore.rules`. */
 export const BADGE_LIMIT = 50;
-/** How many collections are shown as the ones closest to finishing. */
-export const PURSUIT_LIMIT = 3;
+/**
+ * How many collections the page lists as being worked on.
+ *
+ * These are the collector's own choice — the collections they follow and have
+ * said may be shown — so the limit is only there to keep the document small,
+ * not to curate for them.
+ */
+export const PURSUIT_LIMIT = 12;
 /** How many wishes a visitor is shown. Mirrored in `firestore.rules`. */
 export const WISHLIST_LIMIT = 200;
 /** A shop link is a link, not an essay. */
 export const SOURCE_LINK_MAX_LENGTH = 500;
+/**
+ * How many favourites the page carries. Mirrored in `firestore.rules`.
+ *
+ * Ten, not fifty: a list of favourites that goes on for two screens is a
+ * catalog, and a visitor reads the first ten of anything. The collector's own
+ * profile shows them all.
+ */
+export const FAVOURITE_LIMIT = 10;
 
 /**
  * What the collector chose. Two consents, not one: a shelf worth showing is
@@ -50,11 +65,20 @@ export interface CollectorProfileSettings {
 	shared: boolean;
 	/** Whether the wishlist goes on it. */
 	shareWishlist: boolean;
+	/**
+	 * Whether the records they rated highest go on it, with the line they
+	 * wrote about them. Its own consent: the shelf says what somebody owns,
+	 * and this says what they think — the second is an opinion with a name
+	 * on it, and plenty of collectors would publish the first and not the
+	 * second.
+	 */
+	shareRatings: boolean;
 }
 
 export const NO_COLLECTOR_PROFILE: CollectorProfileSettings = {
 	shared: false,
 	shareWishlist: false,
+	shareRatings: false,
 };
 
 export const COLLECTOR_PROFILE_SETTING: UserSetting<CollectorProfileSettings> =
@@ -65,8 +89,13 @@ export const COLLECTOR_PROFILE_SETTING: UserSetting<CollectorProfileSettings> =
 		toValue: (data) => ({
 			shared: data['shared'] === true,
 			shareWishlist: data['shareWishlist'] === true,
+			shareRatings: data['shareRatings'] === true,
 		}),
-		toDocument: ({ shared, shareWishlist }) => ({ shared, shareWishlist }),
+		toDocument: ({ shared, shareWishlist, shareRatings }) => ({
+			shared,
+			shareWishlist,
+			shareRatings,
+		}),
 	};
 
 /** Who the page is about, as the user document holds it. */
@@ -114,6 +143,22 @@ export interface CollectorWish {
 	sourceLink?: string;
 }
 
+/**
+ * A record the collector rated highly, as the page shows it: the stars, and
+ * the line they wrote about it where they wrote one.
+ *
+ * No cover and no format. A favourite is about the music, not the pressing —
+ * the pressing is what the shop window is for — and the titles keep this part
+ * of the document to a few hundred bytes.
+ */
+export interface CollectorFavourite {
+	title: string;
+	artistName: string | null;
+	stars: number;
+	/** Why, in the collector's own words; absent where they said nothing. */
+	note?: string;
+}
+
 /** The shelf in numbers. */
 export interface CollectorNumbers {
 	copies: number;
@@ -149,6 +194,8 @@ export interface PublicCollectorProfile {
 	showcase: CollectorShowcaseRecord[];
 	/** Present only while the collector shares it. */
 	wishlist?: CollectorWish[];
+	/** The same, for what they think of their records. */
+	favourites?: CollectorFavourite[];
 }
 
 /** The document as it comes back: what was written, plus the sync stamp. */
@@ -195,10 +242,20 @@ export interface CollectorProfileSource {
 	releases: readonly ReleaseView[];
 	standings: readonly MusicCollectionStanding[];
 	wishes: readonly WishlistItemEntity[];
+	/** What the collector thinks of their records; empty where unasked. */
+	ratings: readonly AlbumRating[];
 	/** What the location consent already publishes, or null. */
 	location: PublicUserLocation | null;
 	/** Epoch milliseconds, so the age of a record does not depend on the clock. */
 	now: number;
+	/**
+	 * Uids of the followed collections the collector shows to others.
+	 *
+	 * Following one is taking it on; showing it is telling people so. The
+	 * page lists these as what they are after, and nothing else: a hunt kept
+	 * private stays private, which is what makes a surprise possible.
+	 */
+	shownCollections: readonly string[];
 }
 
 function toNumbers(releases: readonly ReleaseView[]): CollectorNumbers {
@@ -316,17 +373,26 @@ function toBadges(
 }
 
 /**
- * What is being worked on: started, not finished, nearest first. A
- * collection without a single record is not a pursuit, it is a list the
- * collector has not met yet.
+ * What the collector is after: the collections they follow and have chosen to
+ * show, minus the ones already finished — those are badges now, and a badge
+ * says more than a full progress bar.
+ *
+ * Nothing is picked automatically. A page that advertised whichever
+ * collections somebody happened to be nearest to finishing would be
+ * publishing a hunt they never mentioned to anybody.
  */
 function toPursuits(
-	standings: readonly MusicCollectionStanding[]
+	standings: readonly MusicCollectionStanding[],
+	shown: readonly string[]
 ): CollectorPursuit[] {
+	const chosen = new Set(shown);
+
 	return standings
 		.filter(
-			({ progress }) =>
-				!progress.completed && progress.owned > 0 && progress.total > 0
+			({ collection, progress }) =>
+				chosen.has(collection.uid) &&
+				!progress.completed &&
+				progress.total > 0
 		)
 		.sort(
 			(one, other) =>
@@ -382,6 +448,33 @@ function toWishlist(wishes: readonly WishlistItemEntity[]): CollectorWish[] {
 }
 
 /**
+ * The records the collector thinks most of, the best first and the newest
+ * judgement first among equals — the same order their own profile ranks them
+ * in, so the page a visitor reads and the page the collector sees agree.
+ */
+function toFavourites(ratings: readonly AlbumRating[]): CollectorFavourite[] {
+	return [...ratings]
+		.sort(
+			(one, other) =>
+				other.stars - one.stars || other.ratedAt - one.ratedAt
+		)
+		.slice(0, FAVOURITE_LIMIT)
+		.map((rating) => {
+			const favourite: CollectorFavourite = {
+				title: rating.albumTitle,
+				artistName: rating.artistName,
+				stars: rating.stars,
+			};
+
+			if (rating.note) {
+				favourite.note = rating.note;
+			}
+
+			return favourite;
+		});
+}
+
+/**
  * The entry in the directory: one collector, small enough that a page may
  * hold everybody's.
  *
@@ -402,6 +495,11 @@ export interface PublicCollectorCard {
 	points: number;
 	/** The collections finished, the most valuable first. */
 	badges: CollectorBadge[];
+	/**
+	 * Slugs of the collections they are after and have chosen to show — the
+	 * wall counts these as "collecting it", beside those who finished it.
+	 */
+	collecting: string[];
 }
 
 export type CollectorCardDocument = PublicCollectorCard & {
@@ -428,6 +526,9 @@ export function toPublicCollectorCard(
 		copies: releases.length,
 		points: toPoints(standings).total,
 		badges: toBadges(standings),
+		collecting: toPursuits(standings, source.shownCollections).map(
+			({ slug }) => slug
+		),
 	};
 
 	if (owner.displayName) {
@@ -509,7 +610,7 @@ export function toPublicCollectorProfile(
 		numbers: toNumbers(releases),
 		points: toPoints(standings),
 		badges: toBadges(standings),
-		pursuits: toPursuits(standings),
+		pursuits: toPursuits(standings, source.shownCollections),
 		showcase: toShowcase(releases, now),
 	};
 
@@ -531,6 +632,10 @@ export function toPublicCollectorProfile(
 
 	if (settings.shareWishlist) {
 		profile.wishlist = toWishlist(wishes);
+	}
+
+	if (settings.shareRatings) {
+		profile.favourites = toFavourites(source.ratings);
 	}
 
 	return profile;

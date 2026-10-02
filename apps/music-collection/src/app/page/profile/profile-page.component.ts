@@ -19,6 +19,7 @@ import { ProfileGenresComponent } from './component/profile-genres/profile-genre
 import { ProfileLanguageComponent } from './component/profile-language/profile-language.component';
 import { ProfileListsComponent } from './component/profile-lists/profile-lists.component';
 import { ProfileListeningComponent } from './component/profile-listening/profile-listening.component';
+import { ProfileVerdictsComponent } from './component/profile-verdicts/profile-verdicts.component';
 import { ProfilePlaybackComponent } from './component/profile-playback/profile-playback.component';
 import { ProfilePrivacyComponent } from './component/profile-privacy/profile-privacy.component';
 import { ProfileSectionComponent } from './component/profile-section/profile-section.component';
@@ -58,6 +59,7 @@ import {
 		ProfileLanguageComponent,
 		ProfileListsComponent,
 		ProfileListeningComponent,
+		ProfileVerdictsComponent,
 		ProfilePlaybackComponent,
 		ProfilePrivacyComponent,
 		ProfileSectionComponent,

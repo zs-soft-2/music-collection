@@ -351,7 +351,8 @@
 				"title": "Album A–Z",
 				"newest": "Legújabb kiadás",
 				"oldest": "Legrégebbi kiadás",
-				"added": "Nemrég hozzáadva"
+				"added": "Nemrég hozzáadva",
+				"stars": "A csillagaid"
 			},
 			"groupBy": {
 				"none": "Nincs csoportosítás",
@@ -399,7 +400,13 @@
 			},
 			"groupFallback": "Gyűjtemény",
 			"unknownStyle": "Ismeretlen stílus",
-			"unknownYear": "Ismeretlen év"
+			"unknownYear": "Ismeretlen év",
+			"filter-by-stars": "Szűrés a véleményed szerint",
+			"stars": {
+				"all": "Mind",
+				"loved": "Kedvencek",
+				"unrated": "Még nem értékelt"
+			}
 		},
 		"profile": {
 			"lists": "Listák",
@@ -444,7 +451,9 @@
 				"data": "Adatok"
 			},
 			"genres": "Műfajok, amik érdekelnek",
-			"genresIntro": "Legfeljebb két műfaj. Az alkalmazás csak a választott műfajok katalógusát tölti le — a gyűjteményed ettől függetlenül teljes marad."
+			"genresIntro": "Legfeljebb két műfaj. Az alkalmazás csak a választott műfajok katalógusát tölti le — a gyűjteményed ettől függetlenül teljes marad.",
+			"verdicts": "Amit a lemezeidről gondolsz",
+			"verdictsIntro": "A csillagok, amiket a lemezeidnek adtál, és amelyeket elsőként emlegetnél."
 		},
 		"track": {
 			"loading": "Betöltés…",
@@ -547,7 +556,16 @@
 			"lastOn": "· utoljára: {{date}}",
 			"shelfSpot": "{{shelf}} · {{row}}. sor · {{slot}}. hely",
 			"takeBackFailed": "Nem sikerült visszavenni: {{error}}",
-			"moreFrom": "Több tőle: {{artist}}"
+			"moreFrom": "Több tőle: {{artist}}",
+			"what-you-think": "Amit te gondolsz",
+			"your-verdict": "A te véleményed",
+			"why-this-record": "Miért ez a lemez",
+			"one-line-is-enough": "Egy sor is elég",
+			"what-everybody-says": "Amit a gyűjtők mondanak",
+			"communityAverage": "{{average}} átlag {{count}} gyűjtőtől",
+			"aboveTheCrowd": "te {{stars}} csillaggal fölötte vagy",
+			"belowTheCrowd": "te {{stars}} csillaggal alatta vagy",
+			"verdict-not-kept": "A véleményed nem mentődött el. Csillagozd meg újra."
 		},
 		"artist": {
 			"artist": "Előadó",
@@ -613,7 +631,8 @@
 			"leftOn": "{{date}} napon került ki a gyűjteményből ({{reason}}).",
 			"spot": "{{row}}. sor · {{slot}}. hely · {{position}}. pozíció",
 			"remove": "Eltávolítás",
-			"removeFailed": "Nem sikerült eltávolítani: {{error}}"
+			"removeFailed": "Nem sikerült eltávolítani: {{error}}",
+			"what-you-think": "Amit a lemezről gondolsz"
 		},
 		"collectors": {
 			"title": "Kollekciók és gyűjtők",
@@ -623,6 +642,7 @@
 				"collectors": "Gyűjtők"
 			},
 			"finishedBy": "{{count}} gyűjtő vitte végig",
+			"collectedBy": "{{count}} gyűjtő gyűjti",
 			"nobodyYet": "Még senki nem vitte végig.",
 			"noCollections": "Még nincs publikált kollekció.",
 			"collectors": "gyűjtő",
@@ -671,10 +691,14 @@
 			"mineButton": "A gyűjteményem",
 			"selfTitle": "Ez a te lapod",
 			"selfLead": "Így látják mások. A megosztást a profilodon kapcsolhatod ki és be.",
-			"selfButton": "Beállítások"
+			"selfButton": "Beállítások",
+			"favouritesSection": "Amit a lemezeiről gondol",
+			"favouritesLead": "A lemezek, amikre ez a gyűjtő a legtöbb csillagot adta."
 		},
 		"collections": {
 			"collections": "Kihívások",
+			"shownToOthers": "Mások is látják",
+			"onlyMine": "Csak nekem",
 			"sets-of-records-defined": "Lemezek halmaza szabály szerint, nem felsorolás szerint — a katalógussal együtt nőnek.",
 			"collections2": "Kihívások",
 			"completed": "Teljesítve",
@@ -2071,6 +2095,7 @@
 			"wishlistHint": "Így a család tudja, mivel lephet meg. Most {{count}} lemez van a listádon.",
 			"preview": "A lapodon {{copies}} lemez, {{badges}} jelvény és {{points}} pont látszik.",
 			"previewWishlist": "Mellettük {{count}} kívánság.",
+			"previewCollections": "Ezen kívül {{count}} kollekció, amit gyűjtesz — a kollekcióknál a szem ikonnal állítod.",
 			"off": "Nincs nyilvános lapod, és semmi nem kerül ki a gyűjteményedről.",
 			"link": "A lapod linkje",
 			"copy": "Másolás",
@@ -2081,7 +2106,10 @@
 			"cardTagline": "Gyűjtemény",
 			"shareText": "Nézd meg a lemezgyűjteményemet",
 			"updated": "Így állt:",
-			"pending": "A lap most készül el — egy pillanat, és a link működik."
+			"pending": "A lap most készül el — egy pillanat, és a link működik.",
+			"favourites": "Kedvencek",
+			"favouritesHint": "A legjobbra értékelt lemezeid, azzal együtt, amit írtál róluk. Eddig {{count}} lemezt értékeltél.",
+			"previewFavourites": "Vele megy a {{count}} kedvenc lemezed is."
 		},
 		"profilePrivacy": {
 			"show-where-you-collect": "Mutassuk, honnan gyűjtesz",
@@ -2666,6 +2694,25 @@
 			"noBand": "Egyetlen zenekar sem felel meg ennek: „{{query}}”.",
 			"noCandidate": "A katalógusban még egy zenekarnak sincs két nagylemeze.",
 			"more": "{{shown}} zenekar látszik {{total}} közül — írj tovább a szűkítéshez."
+		},
+		"starRating": {
+			"starCount": {
+				"one": "{{count}} csillag",
+				"other": "{{count}} csillag"
+			},
+			"your-verdict": "A te véleményed",
+			"take-it-back": "Visszavonom"
+		},
+		"verdictPrompt": {
+			"how-was-it": "Milyen volt?",
+			"not-now": "Most nem",
+			"not-kept": "Nem mentődött el. Koppints újra egy csillagra."
+		},
+		"profileVerdicts": {
+			"records-rated": "Értékelt lemez",
+			"your-average": "Az átlagod",
+			"what-you-name-first": "Amit elsőként emlegetnél",
+			"nothing-rated-yet": "Még egy csillag sem. Tegyél fel egy lemezt, vagy csillagozd meg a saját lapján."
 		}
 	},
 	"admin": {
@@ -3065,6 +3112,10 @@
 		},
 		"collection": {
 			"description": "Minden lemez, amit ez a kihívás kér."
+		},
+		"loved": {
+			"name": "Amit szeretsz",
+			"description": "A négy- és ötcsillagos lemezeid, találomra."
 		}
 	},
 	"tour": {
@@ -3480,6 +3531,10 @@
 				"listening": {
 					"title": "A hallgatás naplója",
 					"content": "Mit jegyezzünk fel arról, ami tényleg elszólt nálad."
+				},
+				"verdicts": {
+					"title": "Amit a lemezeidről gondolsz",
+					"content": "A csillagok, amiket a lemezeidnek adtál, és hogy milyen bőkezűen adod őket. Egy koppintás az album lapján, és megvan."
 				},
 				"privacy": {
 					"title": "Az adataid",

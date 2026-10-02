@@ -52,14 +52,29 @@ function compareDemands(
 	);
 }
 
-/** What is unlocked first, then what moves the most, then the shelf order. */
+/**
+ * What is unlocked first, then what moves the most, then an artist the
+ * collector loves, then the shelf order.
+ *
+ * The artist breaks ties and nothing more. Two records worth the same points
+ * are worth the same points — but of those two, the one by a band whose
+ * records they have already called the best is the one they will actually go
+ * out and buy, and a list that ignores that is a list of equally good advice
+ * nobody acts on. It cannot move a record past a better buy, which is the
+ * line between helping a collector and flattering them.
+ */
 function compareSuggestions(
 	a: NextAlbumSuggestion,
-	b: NextAlbumSuggestion
+	b: NextAlbumSuggestion,
+	lovedArtistUids: ReadonlySet<string>
 ): number {
+	const loved = (suggestion: NextAlbumSuggestion) =>
+		lovedArtistUids.has(suggestion.album.artistUid) ? 1 : 0;
+
 	return (
 		b.unlockedPoints - a.unlockedPoints ||
 		b.potentialPoints - a.potentialPoints ||
+		loved(b) - loved(a) ||
 		compareAlbums(a.album, b.album)
 	);
 }
@@ -84,7 +99,13 @@ interface Tally {
  * where to cut is a question about a page, not about a collection.
  */
 export function suggestNextAlbums(
-	shortfalls: readonly CollectionShortfall[]
+	shortfalls: readonly CollectionShortfall[],
+	/**
+	 * The artists whose records the collector has rated highly, by uid. Only
+	 * ever a tie-breaker; an empty set leaves the ranking exactly as the
+	 * points made it.
+	 */
+	lovedArtistUids: ReadonlySet<string> = new Set()
 ): NextAlbumSuggestion[] {
 	const tallies = new Map<string, Tally>();
 
@@ -144,5 +165,5 @@ export function suggestNextAlbums(
 			potentialPoints: Math.round(potential),
 			wantedBy: tally.wantedBy.sort(compareDemands),
 		}))
-		.sort(compareSuggestions);
+		.sort((a, b) => compareSuggestions(a, b, lovedArtistUids));
 }

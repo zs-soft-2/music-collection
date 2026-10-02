@@ -351,7 +351,8 @@
 				"title": "Album A–Z",
 				"newest": "Neueste Veröffentlichung",
 				"oldest": "Älteste Veröffentlichung",
-				"added": "Zuletzt hinzugefügt"
+				"added": "Zuletzt hinzugefügt",
+				"stars": "Deine Sterne"
 			},
 			"groupBy": {
 				"none": "Keine Gruppierung",
@@ -399,7 +400,13 @@
 			},
 			"groupFallback": "Sammlung",
 			"unknownStyle": "Unbekannter Stil",
-			"unknownYear": "Unbekanntes Jahr"
+			"unknownYear": "Unbekanntes Jahr",
+			"filter-by-stars": "Nach deinem Urteil filtern",
+			"stars": {
+				"all": "Alle",
+				"loved": "Lieblinge",
+				"unrated": "Nie bewertet"
+			}
 		},
 		"profile": {
 			"lists": "Listen",
@@ -444,7 +451,9 @@
 				"data": "Daten"
 			},
 			"genres": "Genres, die dich interessieren",
-			"genresIntro": "Höchstens zwei Genres. Die App lädt nur den Katalog der gewählten Genres herunter — deine eigene Sammlung bleibt davon unberührt vollständig."
+			"genresIntro": "Höchstens zwei Genres. Die App lädt nur den Katalog der gewählten Genres herunter — deine eigene Sammlung bleibt davon unberührt vollständig.",
+			"verdicts": "Was du denkst",
+			"verdictsIntro": "Die Sterne, die du deinen Platten gegeben hast, und die, die du zuerst nennen würdest."
 		},
 		"track": {
 			"loading": "Wird geladen…",
@@ -547,7 +556,16 @@
 			"lastOn": "· zuletzt am {{date}}",
 			"shelfSpot": "{{shelf}} · Reihe {{row}} · Platz {{slot}}",
 			"takeBackFailed": "Konnte nicht zurückgenommen werden: {{error}}",
-			"moreFrom": "Mehr von {{artist}}"
+			"moreFrom": "Mehr von {{artist}}",
+			"what-you-think": "Was du denkst",
+			"your-verdict": "Dein Urteil",
+			"why-this-record": "Warum diese Platte",
+			"one-line-is-enough": "Eine Zeile genügt",
+			"what-everybody-says": "Was Sammler sagen",
+			"communityAverage": "{{average}} im Schnitt von {{count}} Sammlern",
+			"aboveTheCrowd": "du liegst {{stars}} darüber",
+			"belowTheCrowd": "du liegst {{stars}} darunter",
+			"verdict-not-kept": "Dein Urteil wurde nicht gespeichert. Versuch die Sterne erneut."
 		},
 		"artist": {
 			"artist": "Künstler",
@@ -613,7 +631,8 @@
 			"leftOn": "Hat die Sammlung am {{date}} verlassen ({{reason}}).",
 			"spot": "Reihe {{row}} · Platz {{slot}} · Position {{position}}",
 			"remove": "Entfernen",
-			"removeFailed": "Konnte nicht entfernt werden: {{error}}"
+			"removeFailed": "Konnte nicht entfernt werden: {{error}}",
+			"what-you-think": "Was du von der Platte hältst"
 		},
 		"collectors": {
 			"title": "Sammlungen und Sammler",
@@ -623,6 +642,7 @@
 				"collectors": "Sammler"
 			},
 			"finishedBy": "von {{count}} vollendet",
+			"collectedBy": "{{count}} sind dahinter",
 			"nobodyYet": "Noch hat es niemand vollendet.",
 			"noCollections": "Noch wurde keine Sammlung veröffentlicht.",
 			"collectors": "Sammler",
@@ -671,10 +691,14 @@
 			"mineButton": "Meine Sammlung",
 			"selfTitle": "Das ist deine Seite",
 			"selfLead": "So sehen andere sie. Das Teilen schaltest du in deinem Profil.",
-			"selfButton": "Einstellungen"
+			"selfButton": "Einstellungen",
+			"favouritesSection": "Was sie denken",
+			"favouritesLead": "Die Platten, die diese Sammlung am höchsten bewertet."
 		},
 		"collections": {
 			"collections": "Challenges",
+			"shownToOthers": "Andere sehen es",
+			"onlyMine": "Nur für mich",
 			"sets-of-records-defined": "Plattenmengen, die eine Regel bestimmt, keine Liste — sie wachsen mit dem Katalog.",
 			"collections2": "Challenges",
 			"completed": "Vollständig",
@@ -2071,6 +2095,7 @@
 			"wishlistHint": "So weiß die Familie, womit sie dich überraschen kann. Auf deiner Liste stehen {{count}} Platten.",
 			"preview": "Deine Seite zeigt {{copies}} Platten, {{badges}} Abzeichen und {{points}} Punkte.",
 			"previewWishlist": "Daneben {{count}} Wünsche.",
+			"previewCollections": "Daneben {{count}} Sammlungen, hinter denen du her bist — das Auge an der Sammlung entscheidet.",
 			"off": "Du hast keine öffentliche Seite, und nichts von deiner Sammlung wird veröffentlicht.",
 			"link": "Der Link zu deiner Seite",
 			"copy": "Kopieren",
@@ -2081,7 +2106,10 @@
 			"cardTagline": "Sammlung",
 			"shareText": "Sieh dir meine Plattensammlung an",
 			"updated": "So stand es:",
-			"pending": "Die Seite wird gerade zusammengestellt — einen Moment, dann funktioniert der Link."
+			"pending": "Die Seite wird gerade zusammengestellt — einen Moment, dann funktioniert der Link.",
+			"favourites": "Lieblinge",
+			"favouritesHint": "Die von dir am besten bewerteten Platten, mit dem, was du über sie geschrieben hast. Bewertet hast du {{count}}.",
+			"previewFavourites": "Deine {{count}} Lieblingsplatten gehen mit."
 		},
 		"profilePrivacy": {
 			"show-where-you-collect": "Zeigen, von wo du sammelst",
@@ -2666,6 +2694,25 @@
 			"noBand": "Keine Band passt zu „{{query}}“.",
 			"noCandidate": "Noch keine Band im Katalog hat zwei Studioalben.",
 			"more": "{{shown}} von {{total}} Bands — tippe weiter, um einzugrenzen."
+		},
+		"starRating": {
+			"starCount": {
+				"one": "{{count}} Stern",
+				"other": "{{count}} Sterne"
+			},
+			"your-verdict": "Dein Urteil",
+			"take-it-back": "Zurücknehmen"
+		},
+		"verdictPrompt": {
+			"how-was-it": "Wie war sie?",
+			"not-now": "Jetzt nicht",
+			"not-kept": "Das wurde nicht gespeichert. Versuch noch einen Stern."
+		},
+		"profileVerdicts": {
+			"records-rated": "Bewertete Platten",
+			"your-average": "Dein Schnitt",
+			"what-you-name-first": "Was du zuerst nennen würdest",
+			"nothing-rated-yet": "Noch kein Stern. Leg eine Platte auf oder bewerte sie auf ihrer eigenen Seite."
 		}
 	},
 	"admin": {
@@ -3065,6 +3112,10 @@
 		},
 		"collection": {
 			"description": "Jede Platte, die diese Challenge verlangt."
+		},
+		"loved": {
+			"name": "Platten, die du liebst",
+			"description": "Die mit vier oder fünf Sternen, in beliebiger Folge."
 		}
 	},
 	"tour": {
@@ -3480,6 +3531,10 @@
 				"listening": {
 					"title": "Das Hörprotokoll",
 					"content": "Was darüber notiert wird, was bei dir wirklich gelaufen ist."
+				},
+				"verdicts": {
+					"title": "Was du denkst",
+					"content": "Die Sterne, die du deinen Platten gegeben hast, und wie freigebig du damit bist. Ein Tipp auf der Albumseite genügt."
 				},
 				"privacy": {
 					"title": "Deine Daten",

@@ -57,6 +57,11 @@ const TYPE_LABELS: Record<string, string> = {
 })
 export class MusicianPageComponent {
 	protected readonly store = inject(MusicianPageStore);
+
+	/** The collector's verdict on a record the musician played on, if any. */
+	protected readonly starsFor = (albumId: string): number | null =>
+		this.store.ratings().find((rating) => rating.albumId === albumId)
+			?.stars ?? null;
 	private readonly document = inject(DOCUMENT);
 	private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 

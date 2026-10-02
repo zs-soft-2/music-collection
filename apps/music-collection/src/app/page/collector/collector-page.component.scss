@@ -347,6 +347,41 @@ ul {
 
 /* ── Wishlist ─────────────────────────────────────────────────────────── */
 
+.loved {
+	display: grid;
+	gap: 0.6rem;
+
+	li {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem 1rem;
+		padding: 0.6rem 0.75rem;
+		background: var(--mc-surface-2);
+		border: 1px solid var(--mc-border);
+		border-radius: var(--mc-radius-md);
+	}
+}
+
+.loved-text {
+	display: flex;
+	flex-direction: column;
+	gap: 0.1rem;
+	min-width: 0;
+
+	b {
+		font-size: 0.95rem;
+	}
+}
+
+// What the collector wrote about the record, in their words.
+.said {
+	font-size: 0.8125rem;
+	font-style: italic;
+	color: var(--mc-text-muted);
+}
+
 .wants {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));

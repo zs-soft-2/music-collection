@@ -65,6 +65,11 @@ export class ArtistPageComponent {
 	private readonly zone = inject(NgZone);
 	private readonly destroyRef = inject(DestroyRef);
 
+	/** The collector's verdict on a record of the discography, if any. */
+	protected readonly starsFor = (albumId: string): number | null =>
+		this.store.ratings().find((rating) => rating.albumId === albumId)
+			?.stars ?? null;
+
 	protected readonly bioExpanded = signal(false);
 
 	/** Renders every deferred section at once (before an in-page jump). */

@@ -103,6 +103,7 @@ interface Sitting {
 	albumId: string;
 	albumTitle: string;
 	artistName: string | null;
+	artistId: string | null;
 	source: PlayerSource;
 	startedAt: number;
 	trackCount: number;
@@ -144,6 +145,12 @@ export interface PlayRequest {
 	albumId: string;
 	albumTitle: string;
 	artistName: string | null;
+	/**
+	 * Our own id of that artist, where the record names one. Nothing in the
+	 * playing uses it; it is carried so that a verdict given after the record
+	 * can say whose record it was — a name is read, a uid is matched.
+	 */
+	artistId: string | null;
 	coverUrl: string | null;
 	/**
 	 * The album's styles, as the taxonomy spells them. The animated backdrop
@@ -213,6 +220,22 @@ interface PlayerState {
 	tuning: boolean;
 	/** Queues are put on in a random order. */
 	shuffled: boolean;
+	/**
+	 * The record that just went round once, waiting for a word about it;
+	 * null while there is nothing to ask about. A sitting that was stopped
+	 * halfway never lands here: a record somebody walked away from has
+	 * already told us what they thought of it.
+	 */
+	finished: FinishedRecord | null;
+}
+
+/** A record heard right through, as the question about it names it. */
+export interface FinishedRecord {
+	albumId: string;
+	albumTitle: string;
+	artistName: string | null;
+	/** Our own artist id, where the record being played carries one. */
+	artistId: string | null;
 }
 
 /** A record waiting in the queue, as a list of what is coming shows it. */
@@ -255,6 +278,7 @@ export function albumPlayRequest(
 		albumId: album.uid,
 		albumTitle: album.name,
 		artistName: album.artist?.name ?? null,
+		artistId: album.artist?.uid ?? null,
 		coverUrl: album.coverImage?.filePath || album.coverImageUrl || null,
 		styles: album.styles ?? [],
 		spotifyAlbumId: isSpotifyAlbumId(album.spotifyAlbumId)
@@ -371,6 +395,7 @@ export const PlayerStore = signalStore(
 		stationLabel: null,
 		tuning: false,
 		shuffled: false,
+		finished: null,
 	}),
 	withProps(() => ({
 		/**
@@ -1486,6 +1511,15 @@ export const PlayerStore = signalStore(
 					patchState(store, { stageOpen: false });
 				},
 
+				/**
+				 * The question about the record that just finished is done
+				 * with — answered, or sent away. Either way it is not asked
+				 * again for that sitting.
+				 */
+				clearFinished(): void {
+					patchState(store, { finished: null });
+				},
+
 				/** Changes the settings of the shown kind of page and keeps them. */
 				updateSettings(changes: Partial<PlayerSettings>): void {
 					updateFor(shownContext(), changes);
@@ -1593,12 +1627,29 @@ export const PlayerStore = signalStore(
 				if (!done || heardMs(done, at) < MIN_SITTING_MS) {
 					return;
 				}
+				const entry = toLogEntry(done, at);
+
 				if (playLog.recording) {
 					playLog
-						.record(toLogEntry(done, at))
+						.record(entry)
 						.catch((error) =>
 							console.error('Listening not logged', error)
 						);
+				}
+
+				// A record heard right through, and over: the one moment a
+				// collector has an opinion ready and nothing else to do with
+				// it. Mid-sitting flushes are left alone — the question would
+				// arrive over the last track rather than after it.
+				if (end && entry.completed && playLog.recording) {
+					patchState(store, {
+						finished: {
+							albumId: entry.albumId,
+							albumTitle: entry.albumTitle,
+							artistName: entry.artistName,
+							artistId: done.artistId,
+						},
+					});
 				}
 			};
 
@@ -1664,6 +1715,7 @@ export const PlayerStore = signalStore(
 						albumId,
 						albumTitle: heard.request.albumTitle,
 						artistName: heard.request.artistName,
+						artistId: heard.request.artistId,
 						source: heard.source,
 						startedAt: at,
 						trackCount: heard.request.tracks.length,

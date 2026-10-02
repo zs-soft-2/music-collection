@@ -13,6 +13,7 @@ import {
 import { MusicCollectionEffect } from '@music-collection/domain/music-collection/core';
 
 import { BandOfTheWeekEffect } from '../band-of-the-week';
+import { RatingEffect, lovedAlbums } from '../rating';
 
 import {
 	BAND_OF_THE_WEEK_EVERY,
@@ -79,6 +80,7 @@ export class RadioEffect {
 	);
 	private readonly musicCollectionEffect = inject(MusicCollectionEffect);
 	private readonly bandOfTheWeek = inject(BandOfTheWeekEffect);
+	private readonly ratings = inject(RatingEffect);
 
 	public albums$(
 		station: RadioStation,
@@ -179,6 +181,15 @@ export class RadioEffect {
 						)
 					)
 				);
+			// Shuffled rather than best first: a station that opens with the
+			// collector's favourite record every time is a station they stop
+			// putting on.
+			case 'loved':
+				return this.ratings
+					.list$()
+					.pipe(
+						map((ratings) => keep(shuffle(lovedAlbums(ratings))))
+					);
 			case 'collection':
 				return station.slug
 					? this.musicCollectionEffect

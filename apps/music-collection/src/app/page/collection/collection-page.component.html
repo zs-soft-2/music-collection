@@ -164,6 +164,31 @@
 			}
 		</div>
 
+		<!--
+			What the collector thinks of the records. Only once they have said
+			it about something: before that, "never rated" is the whole shelf
+			and "loved" is nothing, which are two ways of saying the filter has
+			nothing to go on.
+		-->
+		@if (store.givenStars().size) {
+			<div
+				class="chips"
+				role="group"
+				[attr.aria-label]="t('page.collection.filter-by-stars')"
+			>
+				@for (option of starOptions; track option.value) {
+					<button
+						type="button"
+						class="chip"
+						[attr.aria-pressed]="store.stars() === option.value"
+						(click)="store.setStars(option.value)"
+					>
+						{{ t(option.labelKey) }}
+					</button>
+				}
+			</div>
+		}
+
 		<div class="controls">
 			<label class="select">
 				<span>{{ t('page.collection.sort') }}</span>
@@ -459,6 +484,9 @@
 				<li>
 					<mc-release-row
 						[release]="release"
+						[stars]="
+							store.givenStars().get(release.albumId) ?? null
+						"
 						[canPlace]="store.canPlaceCopies()"
 						(place)="store.openPlacement($event)"
 						[canRemove]="store.canManageCopies()"
@@ -475,6 +503,9 @@
 						[release]="release"
 						opens="copy"
 						[priority]="priority && $index < 6"
+						[stars]="
+							store.givenStars().get(release.albumId) ?? null
+						"
 						[canPlace]="store.canPlaceCopies()"
 						(place)="store.openPlacement($event)"
 						[canRemove]="store.canManageCopies()"

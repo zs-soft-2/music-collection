@@ -22,6 +22,7 @@ import {
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
+import { AlbumRating, RatingEffect } from '../../data/rating';
 import { MusicianProfileEffect } from '../../data/musician-profile';
 import {
 	AlbumView,
@@ -56,6 +57,8 @@ interface MusicianPageState {
 	albumsLoading: boolean;
 	/** Selected credit category of the album list. */
 	albumRole: AlbumRoleFilter;
+	/** The collector's own verdicts, for the record list to wear. */
+	ratings: AlbumRating[];
 }
 
 const initialState: MusicianPageState = {
@@ -70,6 +73,7 @@ const initialState: MusicianPageState = {
 	artists: [],
 	albumsLoading: true,
 	albumRole: 'all',
+	ratings: [],
 };
 
 /** Selects a feature's entities and requests the list while it is empty. */
@@ -185,8 +189,20 @@ export const MusicianPageStore = signalStore(
 			musicianProfileEffect = inject(MusicianProfileEffect),
 			albumStateService = inject(AlbumStateService),
 			artistStateService = inject(ArtistStateService),
-			collectionItemStateService = inject(CollectionItemStateService)
+			collectionItemStateService = inject(CollectionItemStateService),
+			ratingEffect = inject(RatingEffect)
 		) => ({
+			/** The collector's own verdicts; follows sign-in. */
+			loadRatings: rxMethod<void>(
+				pipe(
+					switchMap(() => ratingEffect.list$()),
+					tapResponse({
+						next: (ratings: AlbumRating[]) =>
+							patchState(store, { ratings }),
+						error: (error) => console.error(error),
+					})
+				)
+			),
 			/** Follows the `:musicianId` route parameter. */
 			loadProfile: rxMethod<void>(
 				pipe(
@@ -300,6 +316,7 @@ export const MusicianPageStore = signalStore(
 	withHooks({
 		onInit(store) {
 			store.loadProfile(of(undefined));
+			store.loadRatings(of(undefined));
 			store.loadLineups(
 				computed(() => [
 					...new Set(

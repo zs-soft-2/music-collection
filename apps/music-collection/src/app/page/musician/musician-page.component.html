@@ -62,7 +62,10 @@
 							<div>
 								<dt>{{ 'page.musician.plays' | transloco }}</dt>
 								<dd>
-									{{ store.summary().instruments | mcCatalog: 'instrument' }}
+									{{
+										store.summary().instruments
+											| mcCatalog: 'instrument'
+									}}
 								</dd>
 							</div>
 						}
@@ -459,7 +462,10 @@
 					<ul class="album-grid">
 						@for (album of store.filteredAlbums(); track album.id) {
 							<li class="album">
-								<mc-discography-card [album]="album" />
+								<mc-discography-card
+									[album]="album"
+									[stars]="starsFor(album.id)"
+								/>
 								<p class="album-artist">
 									{{ album.artistName }}
 								</p>

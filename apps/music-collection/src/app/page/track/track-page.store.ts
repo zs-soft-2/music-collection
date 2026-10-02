@@ -354,6 +354,7 @@ export const TrackPageStore = signalStore(
 								albumId: album.id,
 								albumTitle: album.title,
 								artistName: album.artistName ?? null,
+								artistId: album.artistId ?? null,
 								coverUrl: album.coverUrl ?? null,
 								styles: album.styles,
 								spotifyAlbumId: album.spotifyAlbumId,

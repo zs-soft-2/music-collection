@@ -41,6 +41,7 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
 import { BandOfTheWeekEffect } from '../../data/band-of-the-week';
+import { AlbumRating, RatingEffect, lovedArtists } from '../../data/rating';
 import {
 	CollectorCardDocument,
 	CollectorProfileEffect,
@@ -106,6 +107,8 @@ interface HomePageState {
 	countsLoading: boolean;
 	/** The published collections with the collector's progress on them. */
 	collectionStandings: MusicCollectionStanding[];
+	/** The collector's own verdicts, to break ties on the hunt list. */
+	ratings: AlbumRating[];
 	collectionsLoading: boolean;
 	spotlightId: string | null;
 	/** This week's band; null on a week nobody chose one for. */
@@ -128,6 +131,7 @@ const initialState: HomePageState = {
 	releasesLoading: true,
 	countsLoading: true,
 	collectionStandings: [],
+	ratings: [],
 	wall: [],
 	collectionsLoading: true,
 	spotlightId: null,
@@ -247,7 +251,8 @@ export const HomePageStore = signalStore(
 
 				return toNextAlbums(
 					musicCollectionEffect.suggestNextAlbums(
-						store.collectionStandings()
+						store.collectionStandings(),
+						lovedArtists(store.ratings())
 					),
 					cards,
 					HOME_HUNT_COUNT
@@ -450,7 +455,8 @@ export const HomePageStore = signalStore(
 			quantityStateService = inject(EntityQuantityStateService),
 			musicCollectionEffect = inject(MusicCollectionEffect),
 			bandOfTheWeekEffect = inject(BandOfTheWeekEffect),
-			collectorProfiles = inject(CollectorProfileEffect)
+			collectorProfiles = inject(CollectorProfileEffect),
+			ratingEffect = inject(RatingEffect)
 		) => {
 			/**
 			 * Picks the hero once everything it stands on has arrived: the
@@ -492,6 +498,17 @@ export const HomePageStore = signalStore(
 			};
 
 			return {
+				/** The collector's own verdicts; follows sign-in. */
+				loadRatings: rxMethod<void>(
+					pipe(
+						switchMap(() => ratingEffect.list$()),
+						tapResponse({
+							next: (ratings: AlbumRating[]) =>
+								patchState(store, { ratings }),
+							error: (error: unknown) => console.error(error),
+						})
+					)
+				),
 				loadCollections: rxMethod<void>(
 					pipe(
 						switchMap(() => musicCollectionEffect.listStandings$()),
@@ -737,6 +754,7 @@ export const HomePageStore = signalStore(
 			store.loadBandOfTheWeek(of(undefined));
 			store.loadWall(of(undefined));
 			store.loadAuthentication(of(undefined));
+			store.loadRatings(of(undefined));
 			store.watchSearches(of(undefined));
 		},
 	})

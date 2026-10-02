@@ -13,6 +13,12 @@ export type RadioStationKind =
 	| 'random'
 	/** The collector's own copies: the whole shelf, a unit, a compartment. */
 	| 'shelf'
+	/**
+	 * The records the collector rated highly. The one station built out of
+	 * what somebody *thinks* rather than what they own or what the catalog
+	 * holds — which is why it is also the one that cannot disappoint them.
+	 */
+	| 'loved'
 	/** One published collection, whether or not the records are owned. */
 	| 'collection';
 

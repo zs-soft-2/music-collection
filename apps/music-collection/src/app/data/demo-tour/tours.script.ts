@@ -378,6 +378,7 @@ const profileTour = pageTour('profile', 'profile', [
 
 	{ id: 'dataTab', opens: profileTab('data') },
 	['listening', 'mc-profile-listening'],
+	['verdicts', 'mc-profile-verdicts'],
 	['privacy', 'mc-profile-privacy'],
 	['sharing', 'mc-profile-sharing'],
 

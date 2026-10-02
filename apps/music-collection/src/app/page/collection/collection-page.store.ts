@@ -24,6 +24,7 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
 import { CollectorProfileEffect } from '../../data/collector-profile';
+import { AlbumRating, RatingEffect, starsByAlbum } from '../../data/rating';
 import { UserSettingsEffect } from '../../data/user-settings';
 import { withCopyDisposal } from '../../shared/copy-disposal/copy-disposal.feature';
 import {
@@ -44,6 +45,7 @@ import {
 	arrangeShelves,
 	chunkGroups,
 	collectionStats,
+	filterByStars,
 	filterReleases,
 	groupReleases,
 	shelfMatches,
@@ -66,6 +68,7 @@ import {
 	ShelfMatchListing,
 	ShelfMatchView,
 	ShelfUnitView,
+	StarFilter,
 } from './collection.model';
 import {
 	NO_SHELF_LAYOUT,
@@ -121,6 +124,10 @@ interface CollectionPageState {
 	placingCopyId: string | null;
 	/** The found record the shelf is pointed at, where one was picked. */
 	pickedMatchId: string | null;
+	/** Which records the stars let through: all, the loved, the unjudged. */
+	stars: StarFilter;
+	/** The collector's own verdicts, to filter and sort the shelf by. */
+	ratings: AlbumRating[];
 }
 
 const initialState: CollectionPageState = {
@@ -137,6 +144,8 @@ const initialState: CollectionPageState = {
 	placeError: null,
 	placingCopyId: null,
 	pickedMatchId: null,
+	stars: 'all',
+	ratings: [],
 	...COLLECTION_VIEW_DEFAULTS,
 };
 
@@ -155,10 +164,21 @@ export const CollectionPageStore = signalStore(
 	withCopyDisposal(),
 	withComputed((store, text = inject(TextService)) => {
 		const stats = computed(() => collectionStats(store.releases()));
+		/** The collector's verdict per record, for the filter and the sort. */
+		const givenStars = computed(() => starsByAlbum(store.ratings()));
 		const visible = computed(() =>
 			sortReleases(
-				filterReleases(store.releases(), store.query(), store.format()),
-				store.sort()
+				filterByStars(
+					filterReleases(
+						store.releases(),
+						store.query(),
+						store.format()
+					),
+					store.stars(),
+					givenStars()
+				),
+				store.sort(),
+				givenStars()
 			)
 		);
 
@@ -172,8 +192,13 @@ export const CollectionPageStore = signalStore(
 		 */
 		const onShelf = computed(() =>
 			sortReleases(
-				filterReleases(store.releases(), '', store.format()),
-				store.sort()
+				filterByStars(
+					filterReleases(store.releases(), '', store.format()),
+					store.stars(),
+					givenStars()
+				),
+				store.sort(),
+				givenStars()
 			)
 		);
 
@@ -344,9 +369,19 @@ export const CollectionPageStore = signalStore(
 			 */
 			narrowed: computed(() =>
 				store.view() === 'shelf'
-					? store.format() !== 'all'
-					: store.query().trim() !== '' || store.format() !== 'all'
+					? store.format() !== 'all' || store.stars() !== 'all'
+					: store.query().trim() !== '' ||
+						store.format() !== 'all' ||
+						store.stars() !== 'all'
 			),
+			/**
+			 * What the collector thinks of each record, for the cards to
+			 * wear. A map rather than a field on the view: a verdict changes
+			 * without the copy changing, and rebuilding every card's view
+			 * model over one star would be a strange price for a row of
+			 * five.
+			 */
+			givenStars,
 			/**
 			 * The shelf can be rearranged by hand: there is furniture to file
 			 * records into, and the shelf shows the whole collection. Under a
@@ -430,7 +465,8 @@ export const CollectionPageStore = signalStore(
 			collectionItemStateService = inject(CollectionItemStateService),
 			musicCollectionEffect = inject(MusicCollectionEffect),
 			settingsEffect = inject(UserSettingsEffect),
-			authentication = inject(AuthenticationStateService)
+			authentication = inject(AuthenticationStateService),
+			ratingEffect = inject(RatingEffect)
 		) => {
 			const savePreferences = () => {
 				settingsEffect
@@ -780,6 +816,12 @@ export const CollectionPageStore = signalStore(
 					patchState(store, { pickedMatchId }),
 				setFormat: (format: FormatFilter) =>
 					patchState(store, { format }),
+				/**
+				 * Not kept with the sort and the grouping on purpose: "show
+				 * me what I love" is a question asked of the shelf for a
+				 * minute, not a way of keeping it.
+				 */
+				setStars: (stars: StarFilter) => patchState(store, { stars }),
 				setSort: (sort: CollectionSort) => {
 					patchState(store, { sort });
 					savePreferences();
@@ -796,8 +838,20 @@ export const CollectionPageStore = signalStore(
 					patchState(store, {
 						query: '',
 						format: 'all',
+						stars: 'all',
 						pickedMatchId: null,
 					}),
+				/** The collector's own verdicts; follows sign-in. */
+				loadRatings: rxMethod<void>(
+					pipe(
+						switchMap(() => ratingEffect.list$()),
+						tapResponse({
+							next: (ratings: AlbumRating[]) =>
+								patchState(store, { ratings }),
+							error: (error: unknown) => console.error(error),
+						})
+					)
+				),
 			};
 		}
 	),
@@ -816,6 +870,7 @@ export const CollectionPageStore = signalStore(
 			store.watchDisposing(of(undefined));
 			store.loadCollections(of(undefined));
 			store.loadFollowing(of(undefined));
+			store.loadRatings(of(undefined));
 		},
 	})
 );

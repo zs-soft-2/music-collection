@@ -9,13 +9,16 @@ import { MusicCollectionStanding } from '@music-collection/domain/music-collecti
 import { scoreCollection } from '@music-collection/domain/music-collection/engine';
 import { ReleaseView } from '@music-collection/ui/music-view';
 
+import { AlbumRating } from '../rating';
 import { PublicUserLocation } from '../user-location';
 import {
 	ALBUM_LIST_LIMIT,
 	CollectorProfileSource,
+	FAVOURITE_LIMIT,
 	SHOWCASE_LIMIT,
 	collectorProfileFingerprint,
 	toPublicCollectorAlbums,
+	toPublicCollectorCard,
 	toPublicCollectorProfile,
 } from './collector-profile.model';
 
@@ -144,15 +147,35 @@ function wish(changes: Partial<WishlistItemEntity> = {}): WishlistItemEntity {
 	} as WishlistItemEntity;
 }
 
+function rating(
+	albumTitle: string,
+	stars: number,
+	changes: Partial<AlbumRating> = {}
+): AlbumRating {
+	return {
+		uid: albumTitle,
+		albumId: albumTitle,
+		albumTitle,
+		artistName: 'Iron Maiden',
+		artistId: 'artist-maiden',
+		stars,
+		note: null,
+		ratedAt: 1000,
+		...changes,
+	};
+}
+
 function source(
 	changes: Partial<CollectorProfileSource> = {}
 ): CollectorProfileSource {
 	return {
-		settings: { shared: true, shareWishlist: false },
+		settings: { shared: true, shareWishlist: false, shareRatings: false },
 		owner,
 		releases: [release()],
 		standings: [],
 		wishes: [],
+		ratings: [],
+		shownCollections: [],
 		location: null,
 		now: NOW,
 		...changes,
@@ -163,7 +186,13 @@ describe('toPublicCollectorProfile: the consents', () => {
 	it('publishes nothing while the profile is not shared', () => {
 		expect(
 			toPublicCollectorProfile(
-				source({ settings: { shared: false, shareWishlist: true } })
+				source({
+					settings: {
+						shared: false,
+						shareWishlist: true,
+						shareRatings: false,
+					},
+				})
 			)
 		).toBeNull();
 	});
@@ -183,7 +212,11 @@ describe('toPublicCollectorProfile: the consents', () => {
 	it('carries the wishlist once it is shared', () => {
 		const profile = toPublicCollectorProfile(
 			source({
-				settings: { shared: true, shareWishlist: true },
+				settings: {
+					shared: true,
+					shareWishlist: true,
+					shareRatings: false,
+				},
 				wishes: [wish()],
 			})
 		);
@@ -203,7 +236,11 @@ describe('toPublicCollectorProfile: the consents', () => {
 	it('drops the "any format" marker from a wish', () => {
 		const profile = toPublicCollectorProfile(
 			source({
-				settings: { shared: true, shareWishlist: true },
+				settings: {
+					shared: true,
+					shareWishlist: true,
+					shareRatings: false,
+				},
 				wishes: [wish({ medias: [MediaEnum.all] })],
 			})
 		);
@@ -219,7 +256,11 @@ describe('toPublicCollectorProfile: the consents', () => {
 	it('leaves out a shop link that is not https', () => {
 		const profile = toPublicCollectorProfile(
 			source({
-				settings: { shared: true, shareWishlist: true },
+				settings: {
+					shared: true,
+					shareWishlist: true,
+					shareRatings: false,
+				},
 				wishes: [wish({ sourceLink: 'javascript:alert(1)' })],
 			})
 		);
@@ -394,7 +435,11 @@ describe('toPublicCollectorProfile: points and badges', () => {
 		]);
 	});
 
-	it('shows the collections being worked on, nearest first', () => {
+	/**
+	 * What is being worked on is the collector's own word: the collections
+	 * they follow and have chosen to show. Nothing is picked for them.
+	 */
+	it('lists the collections the collector chose to show, nearest first', () => {
 		const profile = toPublicCollectorProfile(
 			source({
 				standings: [
@@ -413,11 +458,8 @@ describe('toPublicCollectorProfile: points and badges', () => {
 						['a'],
 						{ uid: 'quarter', slug: 'quarter', name: 'Quarter' }
 					),
-					standing(albums, [], {
-						uid: 'untouched',
-						slug: 'untouched',
-					}),
 				],
+				shownCollections: ['quarter', 'half'],
 			})
 		);
 
@@ -425,6 +467,47 @@ describe('toPublicCollectorProfile: points and badges', () => {
 			'half',
 			'quarter',
 		]);
+	});
+
+	it('says nothing about a hunt that was not shown', () => {
+		const profile = toPublicCollectorProfile(
+			source({
+				standings: [
+					standing(albums, ['a'], { uid: 'secret', slug: 'secret' }),
+				],
+			})
+		);
+
+		expect(profile?.pursuits).toEqual([]);
+	});
+
+	/** A shown collection with nothing in it yet is still a declared hunt. */
+	it('lists a shown collection that has not been started', () => {
+		const profile = toPublicCollectorProfile(
+			source({
+				standings: [
+					standing(albums, [], { uid: 'fresh', slug: 'fresh' }),
+				],
+				shownCollections: ['fresh'],
+			})
+		);
+
+		expect(profile?.pursuits).toEqual([
+			{ slug: 'fresh', name: 'Bay Area Thrash', owned: 0, total: 2 },
+		]);
+	});
+
+	/** A finished one is a badge; a progress bar at 100% says less. */
+	it('leaves a finished collection out of what is being worked on', () => {
+		const profile = toPublicCollectorProfile(
+			source({
+				standings: [standing(albums, ['a', 'b'])],
+				shownCollections: ['bay-area'],
+			})
+		);
+
+		expect(profile?.pursuits).toEqual([]);
+		expect(profile?.badges).toHaveLength(1);
 	});
 });
 
@@ -451,7 +534,11 @@ describe('collectorProfileFingerprint', () => {
 	it('changes when the wishlist joins the page', () => {
 		expect(fingerprint({ wishes: [wish()] })).not.toBe(
 			fingerprint({
-				settings: { shared: true, shareWishlist: true },
+				settings: {
+					shared: true,
+					shareWishlist: true,
+					shareRatings: false,
+				},
 				wishes: [wish()],
 			})
 		);
@@ -483,7 +570,13 @@ describe('toPublicCollectorAlbums', () => {
 	it('publishes nothing while the profile is not shared', () => {
 		expect(
 			toPublicCollectorAlbums(
-				source({ settings: { shared: false, shareWishlist: false } })
+				source({
+					settings: {
+						shared: false,
+						shareWishlist: false,
+						shareRatings: false,
+					},
+				})
 			)
 		).toBeNull();
 	});
@@ -528,5 +621,130 @@ describe('toPublicCollectorAlbums', () => {
 			'title',
 			'year',
 		]);
+	});
+});
+
+describe('toPublicCollectorCard', () => {
+	const albums = [membership('a'), membership('b')];
+
+	it('carries who they are, the shelf and what they finished', () => {
+		const card = toPublicCollectorCard(
+			source({ standings: [standing(albums, ['a', 'b'])] })
+		);
+
+		expect(card).toMatchObject({
+			uid: 'u1',
+			displayName: 'Zsolt',
+			copies: 1,
+			collecting: [],
+		});
+		expect(card?.badges).toHaveLength(1);
+	});
+
+	it('counts the shown collections as what they are collecting', () => {
+		const card = toPublicCollectorCard(
+			source({
+				standings: [
+					standing(albums, ['a'], { uid: 'doom', slug: 'doom' }),
+				],
+				shownCollections: ['doom'],
+			})
+		);
+
+		expect(card?.collecting).toEqual(['doom']);
+	});
+
+	it('publishes no entry while the profile is not shared', () => {
+		const settings = { ...source().settings, shared: false };
+
+		expect(toPublicCollectorCard(source({ settings }))).toBeNull();
+	});
+});
+
+describe('toPublicCollectorProfile: the favourites', () => {
+	it('leaves the verdicts out while they are not shared', () => {
+		const profile = toPublicCollectorProfile(
+			source({ ratings: [rating('Powerslave', 5)] })
+		);
+
+		expect(profile?.favourites).toBeUndefined();
+	});
+
+	it('carries them, with the line about why, once they are shared', () => {
+		const profile = toPublicCollectorProfile(
+			source({
+				settings: {
+					shared: true,
+					shareWishlist: false,
+					shareRatings: true,
+				},
+				ratings: [rating('Powerslave', 5, { note: 'The one to own' })],
+			})
+		);
+
+		expect(profile?.favourites).toEqual([
+			{
+				title: 'Powerslave',
+				artistName: 'Iron Maiden',
+				stars: 5,
+				note: 'The one to own',
+			},
+		]);
+	});
+
+	it('names the best first, and the newest judgement among equals', () => {
+		const profile = toPublicCollectorProfile(
+			source({
+				settings: {
+					shared: true,
+					shareWishlist: false,
+					shareRatings: true,
+				},
+				ratings: [
+					rating('Fair', 3),
+					rating('Older five', 5, { ratedAt: 100 }),
+					rating('Newer five', 5, { ratedAt: 900 }),
+				],
+			})
+		);
+
+		expect(profile?.favourites?.map((item) => item.title)).toEqual([
+			'Newer five',
+			'Older five',
+			'Fair',
+		]);
+	});
+
+	it('stops at the ten the page carries', () => {
+		const profile = toPublicCollectorProfile(
+			source({
+				settings: {
+					shared: true,
+					shareWishlist: false,
+					shareRatings: true,
+				},
+				ratings: Array.from({ length: 24 }, (_unused, index) =>
+					rating(`Record ${index}`, 4, { ratedAt: index })
+				),
+			})
+		);
+
+		expect(profile?.favourites).toHaveLength(FAVOURITE_LIMIT);
+	});
+
+	/** A verdict the collector took back cannot come along with the page. */
+	it('publishes an empty list where nothing was rated', () => {
+		const profile = toPublicCollectorProfile(
+			source({
+				settings: {
+					shared: true,
+					shareWishlist: false,
+					shareRatings: true,
+				},
+				ratings: [],
+			})
+		);
+
+		expect(profile?.favourites).toEqual([]);
 	});
 });

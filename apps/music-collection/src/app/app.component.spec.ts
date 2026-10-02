@@ -19,6 +19,7 @@ import { MeasurementConsentService } from './data/analytics';
 import { DailyQuestionEffect } from './data/daily-question';
 import { DemoTourService } from './data/demo-tour';
 import { ExternalPlayerConsentService } from './data/external-player';
+import { RatingEffect } from './data/rating';
 import { PlayerStore } from './shared/player';
 
 describe('AppComponent', () => {
@@ -102,6 +103,21 @@ describe('AppComponent', () => {
 					useValue: {
 						stageOpen: signal(false),
 						now: signal(null),
+						finished: signal(null),
+						clearFinished: jest.fn(),
+					},
+				},
+				{
+					// A lemez utáni kérdés a gyűjtő saját értékeléseiből élne
+					// (Firestore); itt elég annyi, hogy ne legyen mit
+					// kérdezni.
+					provide: RatingEffect,
+					useValue: {
+						list$: () => of([]),
+						summary$: () => of(null),
+						rate: jest.fn(),
+						clear: jest.fn(),
+						rating: false,
 					},
 				},
 			],

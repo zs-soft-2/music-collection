@@ -177,12 +177,21 @@ export class MusicCollectionEffect {
 	 * only views.
 	 */
 	public suggestNextAlbums(
-		standings: readonly MusicCollectionStanding[]
+		standings: readonly MusicCollectionStanding[],
+		/**
+		 * The artists whose records the collector rated highly, by uid. A
+		 * tie-breaker only, and the caller's to pass: the engine knows about
+		 * points, and what somebody loves is not a point.
+		 */
+		lovedArtistUids: ReadonlySet<string> = new Set()
 	): NextAlbumSuggestion[] {
 		const run = performanceLog.start('collection.nextAlbums', {
 			collections: standings.length,
 		});
-		const suggestions = suggestNextAlbums(standings.map(toShortfall));
+		const suggestions = suggestNextAlbums(
+			standings.map(toShortfall),
+			lovedArtistUids
+		);
 
 		run.end({ suggested: suggestions.length });
 
@@ -385,10 +394,7 @@ export class MusicCollectionEffect {
 		return this.repository.generateBadge$(uid, points);
 	}
 
-	public setBadgeImage$(
-		uid: string,
-		documentUid: string
-	): Observable<void> {
+	public setBadgeImage$(uid: string, documentUid: string): Observable<void> {
 		return this.repository.setBadgeImage$(uid, documentUid);
 	}
 

@@ -14,6 +14,7 @@ import {
 	AdminEditLinkComponent,
 	FormatBadgeComponent,
 	ReleaseView,
+	StarRatingComponent,
 } from '../../../../shared/music-ui';
 
 /** Dense list row for large collections — the whole row opens the copy. */
@@ -25,6 +26,7 @@ import {
 		RouterLink,
 		FormatBadgeComponent,
 		AdminEditLinkComponent,
+		StarRatingComponent,
 	],
 	host: {
 		// The row keeps room at its end for as many icons as are actually
@@ -47,6 +49,15 @@ import {
 				<span class="title">{{ item.title }}</span>
 				<span class="artist">{{ item.artistName }}</span>
 			</span>
+
+			@if (stars(); as given) {
+				<mc-star-rating
+					class="stars"
+					[stars]="given"
+					[readonly]="true"
+					[label]="given | mcPlural: 'ui.starRating.starCount'"
+				/>
+			}
 
 			<span class="tags">
 				@for (edition of item.editions; track edition) {
@@ -262,6 +273,10 @@ import {
 			.type {
 				display: none;
 			}
+
+			.stars {
+				display: none;
+			}
 		}
 	`,
 })
@@ -277,6 +292,8 @@ export class ReleaseRowComponent {
 	public readonly canRemove = input(false);
 	/** The copy to let go of, by its collection item id. */
 	public readonly remove = output<string>();
+	/** The collector's verdict on the record, where they gave one. */
+	public readonly stars = input<number | null>(null);
 
 	/** How many icons stand at the end of the row, admin's own included. */
 	protected readonly actionCount = computed(

@@ -136,6 +136,14 @@
 		</div>
 		<h3 class="title">{{ item.title }}</h3>
 		<p class="artist">{{ item.artistName }}</p>
+		@if (stars(); as given) {
+			<mc-star-rating
+				class="card-stars"
+				[stars]="given"
+				[readonly]="true"
+				[label]="given | mcPlural: 'ui.starRating.starCount'"
+			/>
+		}
 	</div>
 </a>
 

@@ -21,6 +21,7 @@ import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { BandOfTheWeekEffect } from '../../data/band-of-the-week';
 import { ExternalPlayerConsentService } from '../../data/external-player';
 import { RadioEffect, RadioStation } from '../../data/radio';
+import { RatingEffect, lovedAlbums } from '../../data/rating';
 import { UserSettingsEffect } from '../../data/user-settings';
 import { PlayerStore } from '../../shared/player';
 import {
@@ -103,7 +104,8 @@ export const RadioPageStore = signalStore(
 			settings = inject(UserSettingsEffect),
 			musicCollections = inject(MusicCollectionEffect),
 			collectionItems = inject(CollectionItemStateService),
-			text = inject(TextService)
+			text = inject(TextService),
+			ratingEffect = inject(RatingEffect)
 		) => {
 			const playable$ = toObservable(player.playableAlbumIds);
 
@@ -123,6 +125,7 @@ export const RadioPageStore = signalStore(
 								playable$,
 								radio.names$(),
 								bandOfTheWeek.current$(),
+								ratingEffect.list$(),
 							])
 						),
 						map(
@@ -133,6 +136,7 @@ export const RadioPageStore = signalStore(
 								playable,
 								names,
 								band,
+								ratings,
 							]) =>
 								radioStations(
 									(layout ?? NO_SHELF_LAYOUT).units,
@@ -140,7 +144,8 @@ export const RadioPageStore = signalStore(
 									copies as CollectionItemEntity[],
 									text.translator(),
 									playable,
-									band
+									band,
+									lovedAlbums(ratings)
 								).map((station) => ({
 									station,
 									playable,

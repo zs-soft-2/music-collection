@@ -22,6 +22,7 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
 import { ArtistLineupEffect } from '../../data/artist-lineup';
+import { AlbumRating, RatingEffect } from '../../data/rating';
 import {
 	AlbumView,
 	ArtistView,
@@ -55,6 +56,8 @@ interface ArtistPageState {
 	albumType: string | null;
 	memberships: MembershipEntity[];
 	lineupLoading: boolean;
+	/** The collector's own verdicts, for the discography to wear. */
+	ratings: AlbumRating[];
 }
 
 const initialState: ArtistPageState = {
@@ -69,6 +72,7 @@ const initialState: ArtistPageState = {
 	albumType: null,
 	memberships: [],
 	lineupLoading: true,
+	ratings: [],
 };
 
 const SIMILAR_COUNT = 6;
@@ -203,8 +207,20 @@ export const ArtistPageStore = signalStore(
 			artistLineupEffect = inject(ArtistLineupEffect),
 			artistStateService = inject(ArtistStateService),
 			albumStateService = inject(AlbumStateService),
-			collectionItemStateService = inject(CollectionItemStateService)
+			collectionItemStateService = inject(CollectionItemStateService),
+			ratingEffect = inject(RatingEffect)
 		) => ({
+			/** The collector's own verdicts; follows sign-in. */
+			loadRatings: rxMethod<void>(
+				pipe(
+					switchMap(() => ratingEffect.list$()),
+					tapResponse({
+						next: (ratings: AlbumRating[]) =>
+							patchState(store, { ratings }),
+						error: (error) => console.error(error),
+					})
+				)
+			),
 			/** Follows the `:artistId` route parameter. */
 			loadArtist: rxMethod<void>(
 				pipe(
@@ -333,6 +349,7 @@ export const ArtistPageStore = signalStore(
 	withHooks({
 		onInit(store) {
 			store.loadArtist(of(undefined));
+			store.loadRatings(of(undefined));
 			store.loadLineup(of(undefined));
 			store.loadAlbums(of(undefined));
 			store.loadReleases(of(undefined));

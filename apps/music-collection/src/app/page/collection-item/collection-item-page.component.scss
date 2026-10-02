@@ -333,3 +333,28 @@
 		height: 8rem;
 	}
 }
+
+// A lemezről (nem a példányról) alkotott vélemény, a katalógus-szekcióban.
+.verdict {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem 0.9rem;
+	margin-bottom: 0.75rem;
+}
+
+.verdict-label {
+	font-size: 0.68rem;
+	font-weight: 700;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--mc-text-muted);
+}
+
+.verdict-note {
+	flex: 1 1 100%;
+	margin: 0;
+	font-size: 0.8125rem;
+	font-style: italic;
+	color: var(--mc-text-muted);
+}

@@ -6,6 +6,7 @@ import { AdminEditLinkComponent } from '../admin-edit-link/admin-edit-link.compo
 import { FormatBadgeComponent } from '../format-badge/format-badge.component';
 import { DiscographyAlbum } from '@music-collection/ui/music-view';
 import { PlayAlbumButtonComponent } from '../../player/play-album-button.component';
+import { StarRatingComponent } from '../star-rating/star-rating.component';
 
 /**
  * One album of the discography. Collected albums show the formats owned;
@@ -20,6 +21,7 @@ import { PlayAlbumButtonComponent } from '../../player/play-album-button.compone
 		FormatBadgeComponent,
 		AdminEditLinkComponent,
 		PlayAlbumButtonComponent,
+		StarRatingComponent,
 	],
 	template: `
 		@let item = album();
@@ -50,6 +52,15 @@ import { PlayAlbumButtonComponent } from '../../player/play-album-button.compone
 						<span class="style">{{ item.styles.join(' · ') }}</span>
 					}
 				</span>
+
+				@if (stars(); as given) {
+					<mc-star-rating
+						class="card-stars"
+						[stars]="given"
+						[readonly]="true"
+						[label]="given | mcPlural: 'ui.starRating.starCount'"
+					/>
+				}
 
 				@if (item.ownedFormats.length) {
 					<span class="owned-row">
@@ -237,8 +248,19 @@ import { PlayAlbumButtonComponent } from '../../player/play-album-button.compone
 				transition: none;
 			}
 		}
+
+		.card-stars {
+			margin-top: 0.15rem;
+		}
 	`,
 })
 export class DiscographyCardComponent {
 	public readonly album = input.required<DiscographyAlbum>();
+	/**
+	 * The collector's verdict on this record, where they gave one. Shown and
+	 * not pressed: a discography is read to decide what to buy next, and the
+	 * stars belong to that decision — the giving of them happens where the
+	 * record itself is.
+	 */
+	public readonly stars = input<number | null>(null);
 }

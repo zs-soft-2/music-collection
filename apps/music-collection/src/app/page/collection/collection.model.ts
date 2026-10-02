@@ -7,7 +7,17 @@ import { MediaFormat, ReleaseView } from '../../shared/music-ui';
 export type CollectionView = 'grid' | 'list' | 'shelf';
 
 export type CollectionSort =
-	'artist' | 'title' | 'year-desc' | 'year-asc' | 'added';
+	'artist' | 'title' | 'year-desc' | 'year-asc' | 'added' | 'stars';
+
+/**
+ * Which records the shelf shows, by what the collector thinks of them: all
+ * of them, the ones they love, or the ones they have never said a word about.
+ *
+ * The last is the useful one. A collection outgrows anybody's memory, and
+ * "what have I never had an opinion about" is the question that puts a record
+ * back on the turntable.
+ */
+export type StarFilter = 'all' | 'loved' | 'unrated';
 
 export type CollectionGroup = 'none' | 'artist' | 'format' | 'style' | 'decade';
 
@@ -128,6 +138,13 @@ export const SORT_OPTIONS: { value: CollectionSort; labelKey: string }[] = [
 	{ value: 'year-desc', labelKey: 'page.collection.sortBy.newest' },
 	{ value: 'year-asc', labelKey: 'page.collection.sortBy.oldest' },
 	{ value: 'added', labelKey: 'page.collection.sortBy.added' },
+	{ value: 'stars', labelKey: 'page.collection.sortBy.stars' },
+];
+
+export const STAR_OPTIONS: { value: StarFilter; labelKey: string }[] = [
+	{ value: 'all', labelKey: 'page.collection.stars.all' },
+	{ value: 'loved', labelKey: 'page.collection.stars.loved' },
+	{ value: 'unrated', labelKey: 'page.collection.stars.unrated' },
 ];
 
 export const GROUP_OPTIONS: { value: CollectionGroup; labelKey: string }[] = [

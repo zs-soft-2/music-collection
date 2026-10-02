@@ -13,6 +13,7 @@ import { focusOnClose } from '../../shared/dialog-focus';
 import {
 	CopyRemovalComponent,
 	FormatBadgeComponent,
+	StarRatingComponent,
 } from '../../shared/music-ui';
 import {
 	CollectionItemPageStore,
@@ -44,6 +45,7 @@ import { CopyPhotosComponent } from './component/copy-photos';
 		CopyRemovalComponent,
 		CopyPhotosComponent,
 		CopyDetailsFormComponent,
+		StarRatingComponent,
 		DatePipe,
 	],
 })

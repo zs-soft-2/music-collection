@@ -41,6 +41,7 @@ import { DisposalDraft } from '../../shared/music-ui';
 import { AlbumDetailsEffect } from '../../data/album-details';
 import { CopyPhotoEffect } from '../../data/copy-photo';
 import { CopySerialEffect, CopySerialTakenError } from '../../data/copy-serial';
+import { AlbumRating, RatingEffect, ratingFor } from '../../data/rating';
 import { toAlbumProfile } from '../album/album.mapper';
 import {
 	toCopyCondition,
@@ -92,6 +93,10 @@ interface CollectionItemPageState {
 	contributions: ContributionEntity[];
 	detailsLoading: boolean;
 	userId: string | null;
+	/** The collector's own verdicts; empty while signed out. */
+	ratings: AlbumRating[];
+	/** A verdict is on its way; the stars wait rather than lie. */
+	ratingWriting: boolean;
 	editing: boolean;
 	draft: CopyDraft;
 	saving: boolean;
@@ -159,6 +164,8 @@ const initialState: CollectionItemPageState = {
 	contributions: [],
 	detailsLoading: true,
 	userId: null,
+	ratings: [],
+	ratingWriting: false,
 	editing: false,
 	draft: EMPTY_DRAFT,
 	saving: false,
@@ -191,7 +198,8 @@ function toDraft(item: CollectionItemEntity): CopyDraft {
 		mediaGrade: item.condition?.media ?? null,
 		sleeveGrade: item.condition?.sleeve ?? null,
 		serialNumber: item.serial ? String(item.serial.number) : '',
-		serialTotal: item.serial?.total != null ? String(item.serial.total) : '',
+		serialTotal:
+			item.serial?.total != null ? String(item.serial.total) : '',
 		story: item.story ?? '',
 	};
 }
@@ -282,6 +290,17 @@ export const CollectionItemPageStore = signalStore(
 
 			return album ? toAlbumProfile(album) : null;
 		}),
+		/**
+		 * What the collector thinks of the music — of the album, not of this
+		 * copy of it. The grades above say what the plastic is like; this
+		 * says whether the record was worth pressing.
+		 */
+		myRating: computed(() =>
+			ratingFor(
+				store.ratings(),
+				store.item()?.release?.album?.uid ?? null
+			)
+		),
 		/** The pressing: what the release adds to the album. */
 		pressing: computed(() => {
 			const item = store.item();
@@ -365,8 +384,68 @@ export const CollectionItemPageStore = signalStore(
 			authenticationStateService = inject(AuthenticationStateService),
 			albumDetailsEffect = inject(AlbumDetailsEffect),
 			photoEffect = inject(CopyPhotoEffect),
-			serialEffect = inject(CopySerialEffect)
+			serialEffect = inject(CopySerialEffect),
+			ratingEffect = inject(RatingEffect)
 		) => ({
+			/** The collector's own verdicts; follows sign-in. */
+			loadRatings: rxMethod<void>(
+				pipe(
+					switchMap(() => ratingEffect.list$()),
+					tapResponse({
+						next: (ratings: AlbumRating[]) =>
+							patchState(store, { ratings }),
+						error: (error) => console.error(error),
+					})
+				)
+			),
+			/**
+			 * Gives the record its stars, from the copy's own page: the
+			 * collector is standing here with the sleeve in their hand, which
+			 * is a better moment to ask than any page about a catalog.
+			 */
+			async rate(stars: number): Promise<void> {
+				const album = store.item()?.release?.album;
+
+				if (!album?.uid || store.ratingWriting()) {
+					return;
+				}
+
+				patchState(store, { ratingWriting: true });
+
+				try {
+					await ratingEffect.rate(
+						{
+							albumId: album.uid,
+							albumTitle: album.name,
+							artistName: album.artist?.name ?? null,
+							artistId: album.artist?.uid ?? null,
+						},
+						{ stars, note: store.myRating()?.note ?? null }
+					);
+				} catch (error) {
+					console.error('Verdict not kept', error);
+				} finally {
+					patchState(store, { ratingWriting: false });
+				}
+			},
+			/** Leaves the record unjudged again rather than poor. */
+			async clearRating(): Promise<void> {
+				const albumId = store.item()?.release?.album?.uid;
+
+				if (!albumId || store.ratingWriting()) {
+					return;
+				}
+
+				patchState(store, { ratingWriting: true });
+
+				try {
+					await ratingEffect.clear(albumId);
+				} catch (error) {
+					console.error('Verdict not taken back', error);
+				} finally {
+					patchState(store, { ratingWriting: false });
+				}
+			},
 			/** Opens the removal dialog for the copy this page is about. */
 			askRemoval(): void {
 				const item = store.item();
@@ -753,6 +832,7 @@ export const CollectionItemPageStore = signalStore(
 	withHooks({
 		onInit(store) {
 			store.loadCollector(of(undefined));
+			store.loadRatings(of(undefined));
 			store.watchCopyPermission(of(undefined));
 			store.loadCopy(of(undefined));
 			store.watchSaving(of(undefined));

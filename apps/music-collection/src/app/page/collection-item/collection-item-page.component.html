@@ -404,6 +404,31 @@
 				</a>
 			</div>
 
+			<!--
+				What the collector thinks of the music. The grades above are
+				about the plastic; this is about the record, and it is the same
+				verdict the album page keeps — one record, one opinion.
+			-->
+			@if (store.userId()) {
+				<div class="verdict">
+					<span class="verdict-label">
+						{{ 'page.collection-item.what-you-think' | transloco }}
+					</span>
+					<mc-star-rating
+						[stars]="store.myRating()?.stars ?? null"
+						[busy]="store.ratingWriting()"
+						[label]="
+							'page.collection-item.what-you-think' | transloco
+						"
+						(rated)="store.rate($event)"
+						(cleared)="store.clearRating()"
+					/>
+					@if (store.myRating()?.note; as note) {
+						<p class="verdict-note">{{ note }}</p>
+					}
+				</div>
+			}
+
 			@if (store.detailsLoading()) {
 				<p class="status">
 					{{

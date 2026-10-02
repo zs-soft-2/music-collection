@@ -14,6 +14,7 @@ import {
 	AdminEditLinkComponent,
 } from '../admin-edit-link/admin-edit-link.component';
 import { PlayAlbumButtonComponent } from '../../player/play-album-button.component';
+import { StarRatingComponent } from '../star-rating/star-rating.component';
 import { FormatBadgeComponent } from '../format-badge/format-badge.component';
 
 /**
@@ -32,6 +33,7 @@ import { FormatBadgeComponent } from '../format-badge/format-badge.component';
 		FormatBadgeComponent,
 		AdminEditLinkComponent,
 		PlayAlbumButtonComponent,
+		StarRatingComponent,
 	],
 })
 export class ReleaseCardComponent {
@@ -64,6 +66,13 @@ export class ReleaseCardComponent {
 	 * catalog, and the album page is what there is to open.
 	 */
 	public readonly opens = input<'album' | 'copy'>('album');
+	/**
+	 * What the collector thinks of the record, where they said so. Shown and
+	 * not pressed: a verdict is given on the album's own page, where the
+	 * record is in front of them — a card in a grid of two hundred is a place
+	 * to be reminded, not to judge.
+	 */
+	public readonly stars = input<number | null>(null);
 
 	protected readonly link = computed((): unknown[] => {
 		const release = this.release();

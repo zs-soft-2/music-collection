@@ -1,4 +1,4 @@
-import { ShelfUnitLayout } from '@music-collection/api';
+import { DEFAULT_CUBBY, ShelfUnitLayout } from '@music-collection/api';
 import { MusicCollectionStanding } from '@music-collection/domain/music-collection/core';
 
 import { radioStations, toStationView } from './radio.mapper';
@@ -9,6 +9,7 @@ const unit = (id: string, name = ''): ShelfUnitLayout => ({
 	name,
 	rows: 2,
 	columns: 2,
+	cubby: DEFAULT_CUBBY,
 });
 
 const filed = (unitId: string) => ({
@@ -69,6 +70,41 @@ describe('radioStations', () => {
 			'shelf',
 			'random',
 		]);
+	});
+
+	it('offers what the collector loves once they have loved something', () => {
+		const stations = radioStations(
+			[],
+			[],
+			[{ placement: null }],
+			t,
+			new Set(),
+			null,
+			['album-1']
+		);
+
+		expect(stations.map((item) => item.id)).toEqual([
+			'new',
+			'taste',
+			'shelf',
+			'loved',
+			'random',
+		]);
+	});
+
+	/** A collector may well have rated records they do not own yet. */
+	it('offers it without a shelf to stand on', () => {
+		const stations = radioStations([], [], [], t, new Set(), null, [
+			'album-1',
+		]);
+
+		expect(stations.map((item) => item.id)).toContain('loved');
+	});
+
+	it('leaves it out while nothing was rated highly', () => {
+		const stations = radioStations([], [], [{ placement: null }], t);
+
+		expect(stations.map((item) => item.id)).not.toContain('loved');
 	});
 
 	it('offers a unit only while records are filed into it', () => {

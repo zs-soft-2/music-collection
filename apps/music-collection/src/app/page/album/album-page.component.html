@@ -364,6 +364,105 @@
 			</section>
 		}
 
+		<!-- What the collector thinks -->
+		@if (store.canRate() || store.community()) {
+			<section class="verdict" aria-labelledby="verdict-title">
+				<h2 id="verdict-title" class="panel-title">
+					@if (compact()) {
+						<button
+							type="button"
+							class="section-toggle"
+							[attr.aria-expanded]="isOpen('verdict')"
+							(click)="toggleSection('verdict')"
+						>
+							<i
+								class="pi"
+								[class.pi-chevron-right]="!isOpen('verdict')"
+								[class.pi-chevron-down]="isOpen('verdict')"
+								aria-hidden="true"
+							></i>
+							{{ 'page.album.what-you-think' | transloco }}
+						</button>
+					} @else {
+						{{ 'page.album.what-you-think' | transloco }}
+					}
+				</h2>
+				@if (isOpen('verdict')) {
+					@if (store.canRate()) {
+						<mc-star-rating
+							[stars]="store.myRating()?.stars ?? null"
+							[busy]="store.ratingWriting()"
+							[label]="'page.album.your-verdict' | transloco"
+							(rated)="store.rate($event)"
+							(cleared)="store.clearRating()"
+						/>
+
+						@if (store.myRating(); as mine) {
+							<label class="verdict-note">
+								<span class="verdict-note-label">
+									{{
+										'page.album.why-this-record' | transloco
+									}}
+								</span>
+								<input
+									type="text"
+									[value]="mine.note ?? ''"
+									[attr.maxlength]="noteLimit"
+									[disabled]="store.ratingWriting()"
+									[attr.placeholder]="
+										'page.album.one-line-is-enough'
+											| transloco
+									"
+									(blur)="saveNote($event)"
+									(keydown.enter)="saveNote($event)"
+								/>
+							</label>
+						}
+					}
+
+					@if (store.community(); as crowd) {
+						<p class="crowd">
+							<mc-star-rating
+								[stars]="rounded(crowd.average)"
+								[readonly]="true"
+								[label]="
+									'page.album.what-everybody-says' | transloco
+								"
+							/>
+							<span class="crowd-average">
+								{{
+									'page.album.communityAverage'
+										| transloco
+											: {
+													average: crowd.average,
+													count: crowd.count,
+											  }
+								}}
+							</span>
+							@if (crowd.differsBy; as differsBy) {
+								<span class="crowd-gap">
+									{{
+										(differsBy > 0
+											? 'page.album.aboveTheCrowd'
+											: 'page.album.belowTheCrowd'
+										)
+											| transloco
+												: { stars: absolute(differsBy) }
+									}}
+								</span>
+							}
+						</p>
+					}
+
+					@if (store.ratingError()) {
+						<p class="verdict-error" role="alert">
+							{{ 'page.album.verdict-not-kept' | transloco }}
+						</p>
+					}
+				}
+			</section>
+		}
+
 		<!-- Tracklist and credits -->
 		<div class="details">
 			<section class="panel" aria-labelledby="tracklist-title">
@@ -711,7 +810,12 @@
 					@defer (on viewport({ rootMargin: '800px' })) {
 						<ul class="album-grid">
 							@for (other of store.moreAlbums(); track other.id) {
-								<li><mc-discography-card [album]="other" /></li>
+								<li>
+									<mc-discography-card
+										[album]="other"
+										[stars]="starsFor(other.id)"
+									/>
+								</li>
 							}
 						</ul>
 					} @placeholder {

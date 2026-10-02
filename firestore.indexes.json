@@ -564,6 +564,28 @@
 			]
 		},
 		{
+			"collectionGroup": "rating",
+			"fieldPath": "albumId",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
 			"collectionGroup": "release",
 			"fieldPath": "album.uid",
 			"indexes": [

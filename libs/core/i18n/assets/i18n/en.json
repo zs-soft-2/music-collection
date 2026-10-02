@@ -351,7 +351,8 @@
 				"title": "Album A–Z",
 				"newest": "Newest release",
 				"oldest": "Oldest release",
-				"added": "Recently added"
+				"added": "Recently added",
+				"stars": "Your stars"
 			},
 			"groupBy": {
 				"none": "No grouping",
@@ -399,7 +400,13 @@
 			},
 			"groupFallback": "Collection",
 			"unknownStyle": "Unknown style",
-			"unknownYear": "Unknown year"
+			"unknownYear": "Unknown year",
+			"filter-by-stars": "Filter by what you think",
+			"stars": {
+				"all": "All",
+				"loved": "Loved",
+				"unrated": "Never rated"
+			}
 		},
 		"profile": {
 			"lists": "Lists",
@@ -444,7 +451,9 @@
 				"data": "Data"
 			},
 			"genres": "Genres you collect",
-			"genresIntro": "Two genres at most. The app downloads the catalog of those genres only — your own collection stays whole either way."
+			"genresIntro": "Two genres at most. The app downloads the catalog of those genres only — your own collection stays whole either way.",
+			"verdicts": "What you think",
+			"verdictsIntro": "The stars you gave your records, and the ones you would name first."
 		},
 		"track": {
 			"loading": "Loading…",
@@ -547,7 +556,16 @@
 			"lastOn": "· last on {{date}}",
 			"shelfSpot": "{{shelf}} · Row {{row}} · Slot {{slot}}",
 			"takeBackFailed": "Could not take it back: {{error}}",
-			"moreFrom": "More from {{artist}}"
+			"moreFrom": "More from {{artist}}",
+			"what-you-think": "What you think",
+			"your-verdict": "Your verdict",
+			"why-this-record": "Why this record",
+			"one-line-is-enough": "One line is enough",
+			"what-everybody-says": "What collectors say",
+			"communityAverage": "{{average}} on average from {{count}} collectors",
+			"aboveTheCrowd": "you are {{stars}} above them",
+			"belowTheCrowd": "you are {{stars}} below them",
+			"verdict-not-kept": "Your verdict was not kept. Try the stars again."
 		},
 		"artist": {
 			"artist": "Artist",
@@ -613,7 +631,8 @@
 			"leftOn": "Left the collection on {{date}} ({{reason}}).",
 			"spot": "Row {{row}} · Slot {{slot}} · Position {{position}}",
 			"remove": "Remove",
-			"removeFailed": "Could not remove it: {{error}}"
+			"removeFailed": "Could not remove it: {{error}}",
+			"what-you-think": "What you think of the record"
 		},
 		"collectors": {
 			"title": "Collections and collectors",
@@ -623,6 +642,7 @@
 				"collectors": "Collectors"
 			},
 			"finishedBy": "finished by {{count}}",
+			"collectedBy": "{{count}} after it",
 			"nobodyYet": "Nobody has finished it yet.",
 			"noCollections": "No collection has been published yet.",
 			"collectors": "collectors",
@@ -671,10 +691,14 @@
 			"mineButton": "My collection",
 			"selfTitle": "This is your page",
 			"selfLead": "This is how others see it. The sharing is switched on your profile.",
-			"selfButton": "Settings"
+			"selfButton": "Settings",
+			"favouritesSection": "What they think",
+			"favouritesLead": "The records this collector rates highest."
 		},
 		"collections": {
 			"collections": "Challenges",
+			"shownToOthers": "Others see it",
+			"onlyMine": "Only mine",
 			"sets-of-records-defined": "Sets of records defined by a rule, not by a list — they grow with the catalog.",
 			"collections2": "Challenges",
 			"completed": "Completed",
@@ -2071,6 +2095,7 @@
 			"wishlistHint": "So the family knows what would surprise you. There are {{count}} records on your list.",
 			"preview": "Your page shows {{copies}} records, {{badges}} badges and {{points}} points.",
 			"previewWishlist": "Next to them, {{count}} wishes.",
+			"previewCollections": "Beside them, {{count}} collections you are after — the eye on a collection decides.",
 			"off": "You have no public page, and nothing of your collection is published.",
 			"link": "The link to your page",
 			"copy": "Copy",
@@ -2081,7 +2106,10 @@
 			"cardTagline": "Collection",
 			"shareText": "Have a look at my record collection",
 			"updated": "As it stood:",
-			"pending": "The page is being put together — a moment, and the link works."
+			"pending": "The page is being put together — a moment, and the link works.",
+			"favourites": "Favourites",
+			"favouritesHint": "The records you rated highest, with what you wrote about them. You have rated {{count}}.",
+			"previewFavourites": "Your {{count}} favourite records go with it."
 		},
 		"profilePrivacy": {
 			"show-where-you-collect": "Show where you collect from",
@@ -2666,6 +2694,25 @@
 			"noBand": "No band matches “{{query}}”.",
 			"noCandidate": "No band in the catalog has two studio albums yet.",
 			"more": "Showing {{shown}} of {{total}} bands — keep typing to narrow it down."
+		},
+		"starRating": {
+			"starCount": {
+				"one": "{{count}} star",
+				"other": "{{count}} stars"
+			},
+			"your-verdict": "Your verdict",
+			"take-it-back": "Take it back"
+		},
+		"verdictPrompt": {
+			"how-was-it": "How was it?",
+			"not-now": "Not now",
+			"not-kept": "That did not save. Try a star again."
+		},
+		"profileVerdicts": {
+			"records-rated": "Records rated",
+			"your-average": "Your average",
+			"what-you-name-first": "What you would name first",
+			"nothing-rated-yet": "No stars yet. Put a record on, or give one its stars on its own page."
 		}
 	},
 	"admin": {
@@ -3065,6 +3112,10 @@
 		},
 		"collection": {
 			"description": "Every record this challenge asks for."
+		},
+		"loved": {
+			"name": "Records you love",
+			"description": "The ones you gave four stars or five, in no order at all."
 		}
 	},
 	"tour": {
@@ -3480,6 +3531,10 @@
 				"listening": {
 					"title": "The listening log",
 					"content": "What is written down about what actually played at your place."
+				},
+				"verdicts": {
+					"title": "What you think",
+					"content": "The stars you gave your records, and how freely you give them. One tap on an album page is all it takes."
 				},
 				"privacy": {
 					"title": "Your data",

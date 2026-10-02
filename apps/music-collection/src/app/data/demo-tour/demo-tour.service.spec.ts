@@ -330,6 +330,7 @@ describe('DemoTourService', () => {
 			'spotify',
 			'dataTab',
 			'listening',
+			'verdicts',
 			'privacy',
 			'sharing',
 			'back',

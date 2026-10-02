@@ -506,6 +506,12 @@
 	white-space: nowrap;
 }
 
+// The collector's own verdict, where there is one. Close under the artist:
+// it belongs to the record, not to the card's furniture.
+.card-stars {
+	margin-top: 0.3rem;
+}
+
 @keyframes mc-spin {
 	to {
 		transform: rotate(360deg);

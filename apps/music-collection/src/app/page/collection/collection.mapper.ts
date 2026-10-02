@@ -1,6 +1,8 @@
 import { CollectionItemPlacement } from '@music-collection/api';
 import { CatalogLabeller, Translator } from '@music-collection/core/i18n';
 
+import { LOVED_FROM_STARS } from '../../data/rating';
+
 import { FORMAT_ORDER, MediaFormat, ReleaseView } from '../../shared/music-ui';
 import {
 	CollectionGroup,
@@ -13,6 +15,7 @@ import {
 	ShelfMatchView,
 	ShelfPlace,
 	ShelfUnitView,
+	StarFilter,
 } from './collection.model';
 import {
 	DEFAULT_CUBBY,
@@ -59,6 +62,37 @@ export function filterReleases(
 	);
 }
 
+/** No verdict about anything: what a signed-out page, or a shelf nobody
+ * rated, is filtered against. */
+const NO_STARS: ReadonlyMap<string, number> = new Map();
+
+/**
+ * The shelf cut down by what the collector thinks of the records: their
+ * favourites, or the ones they have never judged.
+ *
+ * Apart from `filterReleases` on purpose. That one answers the search box and
+ * the format chips, which the shelf view deliberately ignores; this one the
+ * shelf obeys, because "show me what I love" is a question about which
+ * records, not about where they stand.
+ */
+export function filterByStars(
+	releases: ReleaseView[],
+	filter: StarFilter,
+	stars: ReadonlyMap<string, number> = NO_STARS
+): ReleaseView[] {
+	if (filter === 'all') {
+		return releases;
+	}
+
+	return releases.filter((release) => {
+		const given = stars.get(release.albumId);
+
+		return filter === 'loved'
+			? given !== undefined && given >= LOVED_FROM_STARS
+			: given === undefined;
+	});
+}
+
 /* One shared collator: `localeCompare` with options builds a new one per call. */
 const collator = new Intl.Collator(undefined, { sensitivity: 'base' });
 
@@ -69,7 +103,8 @@ const byYear = (a: ReleaseView, b: ReleaseView) =>
 
 export function sortReleases(
 	releases: ReleaseView[],
-	sort: CollectionSort
+	sort: CollectionSort,
+	stars: ReadonlyMap<string, number> = NO_STARS
 ): ReleaseView[] {
 	const sorted = [...releases];
 
@@ -92,6 +127,16 @@ export function sortReleases(
 			);
 		case 'added':
 			return sorted.sort((a, b) => b.addedAt - a.addedAt);
+		// Best first, and the unjudged records after all of them rather than
+		// below the one-star ones: never having said anything about a record
+		// is not the same as thinking little of it.
+		case 'stars':
+			return sorted.sort(
+				(a, b) =>
+					(stars.get(b.albumId) ?? 0) - (stars.get(a.albumId) ?? 0) ||
+					byText(a.artistName, b.artistName) ||
+					byYear(a, b)
+			);
 	}
 }
 

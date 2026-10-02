@@ -16,16 +16,19 @@ import { UserSettingsEffect } from '../../data/user-settings';
 import {
 	COLLECTION_FOLLOWING_SETTING,
 	CollectionFollowing,
-} from './collection-following.setting';
+} from '../../data/collection-following';
 
 interface CollectionFollowingState {
 	followed: string[];
+	/** The followed collections the collector shows to others. */
+	shown: string[];
 	/** The stored pick has arrived; before that nothing is known. */
 	followingLoaded: boolean;
 }
 
 const initialState: CollectionFollowingState = {
 	followed: [],
+	shown: [],
 	followingLoaded: false,
 };
 
@@ -40,6 +43,7 @@ export function withCollectionFollowing() {
 		withState(initialState),
 		withComputed((store) => ({
 			followedUids: computed(() => new Set(store.followed())),
+			shownUids: computed(() => new Set(store.shown())),
 			/** Nothing picked: a page then stands in the whole list for it. */
 			followsNothing: computed(() => store.followed().length === 0),
 		})),
@@ -51,9 +55,10 @@ export function withCollectionFollowing() {
 						settings.value$(COLLECTION_FOLLOWING_SETTING)
 					),
 					tapResponse({
-						next: ({ followed }: CollectionFollowing) =>
+						next: ({ followed, shown }: CollectionFollowing) =>
 							patchState(store, {
 								followed,
+								shown,
 								followingLoaded: true,
 							}),
 						error: (error) => {
@@ -68,18 +73,49 @@ export function withCollectionFollowing() {
 			 * refuses is worth less than a button that answers.
 			 */
 			toggleFollow: (uid: string): void => {
-				const followed = store.followedUids().has(uid)
+				const drops = store.followedUids().has(uid);
+				const followed = drops
 					? store
 							.followed()
 							.filter((followedUid) => followedUid !== uid)
 					: [...store.followed(), uid];
+				// Dropping a collection takes it off the public page with it:
+				// what is not followed cannot be shown as followed.
+				const shown = drops
+					? store.shown().filter((shownUid) => shownUid !== uid)
+					: store.shown();
 
-				patchState(store, { followed });
+				patchState(store, { followed, shown });
 
 				settings
-					.save(COLLECTION_FOLLOWING_SETTING, { followed })
+					.save(COLLECTION_FOLLOWING_SETTING, { followed, shown })
 					.catch((error) => {
 						console.error('Followed collections not saved', error);
+					});
+			},
+			/**
+			 * Shows one of the followed collections to others, or takes it
+			 * back. Only a followed collection can be shown: the switch is
+			 * about what the collector has taken on, not about the catalog.
+			 */
+			toggleShown: (uid: string): void => {
+				if (!store.followedUids().has(uid)) {
+					return;
+				}
+
+				const shown = store.shownUids().has(uid)
+					? store.shown().filter((shownUid) => shownUid !== uid)
+					: [...store.shown(), uid];
+
+				patchState(store, { shown });
+
+				settings
+					.save(COLLECTION_FOLLOWING_SETTING, {
+						followed: store.followed(),
+						shown,
+					})
+					.catch((error) => {
+						console.error('Shown collections not saved', error);
 					});
 			},
 		}))

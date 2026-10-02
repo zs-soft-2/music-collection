@@ -12,6 +12,10 @@ import {
 } from '../../data/collector-profile';
 import { DemoTourService } from '../../data/demo-tour';
 import {
+	COLLECTION_FOLLOWING_SETTING,
+	CollectionFollowing,
+} from '../../data/collection-following';
+import {
 	NO_LOCATION,
 	UserLocationEffect,
 	UserLocationSettings,
@@ -24,6 +28,7 @@ import {
 	PlayLogEntry,
 	summariseListening,
 } from '../../data/play-log';
+import { AlbumRating, RatingEffect, summariseRatings } from '../../data/rating';
 import { GenreScopeEffect } from '../../data/genre-scope';
 import { UserSettingsEffect } from '../../data/user-settings';
 import { ALBUM_VIEW_SETTING } from '../album/album-view.setting';
@@ -125,6 +130,8 @@ interface ProfilePageState {
 	savedAt: number | null;
 	/** The collector's listening log; empty while signed out. */
 	playLog: PlayLogEntry[];
+	/** What the collector thinks of their records; empty while signed out. */
+	ratings: AlbumRating[];
 	/** The genres to pick from: the taxonomy an admin has not retired. */
 	genres: GenreEntity[];
 	/** The genres followed, by slug, as the app is currently running. */
@@ -147,6 +154,8 @@ interface ProfilePageState {
 	standings: MusicCollectionStanding[];
 	/** The records still wanted — the list a family buys a present from. */
 	wishes: WishlistItemEntity[];
+	/** The followed collections the collector lets others see. */
+	shownCollections: string[];
 	/**
 	 * The public page as it actually stands out there, or null while there is
 	 * none. This is what the section reports from: a switch says what the
@@ -167,6 +176,7 @@ const initialState: ProfilePageState = {
 	pendingName: null,
 	savedAt: null,
 	playLog: [],
+	ratings: [],
 	genres: [],
 	genreScope: [],
 	genreDraft: [],
@@ -175,6 +185,7 @@ const initialState: ProfilePageState = {
 	avatarSaving: false,
 	avatarSavedAt: null,
 	sharing: NO_COLLECTOR_PROFILE,
+	shownCollections: [],
 	profileReleases: [],
 	standings: [],
 	wishes: [],
@@ -208,6 +219,8 @@ export const ProfilePageStore = signalStore(
 		}),
 		/** What the collector's listening adds up to. */
 		listening: computed(() => summariseListening(store.playLog())),
+		/** What they think of their records, and which ones they name first. */
+		verdicts: computed(() => summariseRatings(store.ratings())),
 		/** Whether the form holds something other than what is running. */
 		genreScopeChanged: computed(
 			() =>
@@ -238,9 +251,21 @@ export const ProfilePageStore = signalStore(
 			settings = inject(UserSettingsEffect),
 			locations = inject(UserLocationEffect),
 			playLogEffect = inject(PlayLogEffect),
+			ratingEffect = inject(RatingEffect),
 			avatars = inject(AvatarEffect),
 			genreScope = inject(GenreScopeEffect)
 		) => ({
+			/** The collector's own verdicts; follows sign-in. */
+			loadRatings: rxMethod<void>(
+				pipe(
+					switchMap(() => ratingEffect.list$()),
+					tapResponse({
+						next: (ratings: AlbumRating[]) =>
+							patchState(store, { ratings }),
+						error: (error) => console.error(error),
+					})
+				)
+			),
 			/** The listening log, which the player writes as records go on. */
 			loadPlayLog: rxMethod<void>(
 				pipe(
@@ -813,10 +838,12 @@ export const ProfilePageStore = signalStore(
 						releases: store.profileReleases(),
 						standings: store.standings(),
 						wishes: store.wishes(),
+						ratings: store.ratings(),
 						// The place is the map's consent, taken as it stands:
 						// this page may carry it, never widen it.
 						location: toPublicLocation(store.location(), current),
 						now: Date.now(),
+						shownCollections: store.shownCollections(),
 					}
 				: null;
 		});
@@ -832,6 +859,7 @@ export const ProfilePageStore = signalStore(
 							settings: {
 								shared: true,
 								shareWishlist: store.sharing().shareWishlist,
+								shareRatings: store.sharing().shareRatings,
 							},
 						})
 					: null;
@@ -865,9 +893,26 @@ export const ProfilePageStore = signalStore(
 			collectionItems = inject(CollectionItemStateService),
 			collections = inject(MusicCollectionEffect),
 			wishlistItems = inject(WishlistItemStateService),
-			authentication = inject(AuthenticationStateService)
+			authentication = inject(AuthenticationStateService),
+			userSettings = inject(UserSettingsEffect)
 		) => {
 			return {
+				/**
+				 * Which collections the collector shows as theirs. The page
+				 * lists these as what they are after, so the preview has to
+				 * read the same pick the effect publishes.
+				 */
+				loadShownCollections: rxMethod<void>(
+					pipe(
+						switchMap(() =>
+							userSettings.value$(COLLECTION_FOLLOWING_SETTING)
+						),
+						tap(({ shown }: CollectionFollowing) =>
+							patchState(store, { shownCollections: shown })
+						)
+					)
+				),
+
 				/** The choice: whether there is a public page, and the wishlist on it. */
 				loadSharing: rxMethod<void>(
 					pipe(
@@ -1012,9 +1057,11 @@ export const ProfilePageStore = signalStore(
 			store.loadCollectionSize(of(undefined));
 			store.loadLocation(of(undefined));
 			store.loadPlayLog(of(undefined));
+			store.loadRatings(of(undefined));
 			store.loadAvatar(of(undefined));
 			store.loadGenres(of(undefined));
 			store.loadSharing(of(undefined));
+			store.loadShownCollections(of(undefined));
 			// The effect follows the shelf from here on, whatever page the
 			// collector files a record from.
 			store.watchProfile();

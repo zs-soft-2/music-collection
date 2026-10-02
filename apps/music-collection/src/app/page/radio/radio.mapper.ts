@@ -71,7 +71,9 @@ export function radioStations(
 	t: Translator,
 	playable: ReadonlySet<string> = new Set(),
 	/** The week's band, where a run has chosen one; null keeps it off. */
-	bandOfTheWeek: BandName | null = null
+	bandOfTheWeek: BandName | null = null,
+	/** The records the collector rated highly; none keeps the station off. */
+	loved: readonly string[] = []
 ): CountedStation[] {
 	const stations: CountedStation[] = [];
 
@@ -113,6 +115,19 @@ export function radioStations(
 				label: t('radio.yourShelf.name'),
 				description: t('radio.yourShelf.description'),
 				icon: 'pi pi-box',
+			})
+		);
+	}
+
+	// Offered as soon as one record has been loved. It does not ask for a
+	// shelf: a collector may well have rated records they do not own yet.
+	if (loved.length) {
+		stations.push(
+			station({
+				station: { kind: 'loved' },
+				label: t('radio.loved.name'),
+				description: t('radio.loved.description'),
+				icon: 'pi pi-star',
 			})
 		);
 	}

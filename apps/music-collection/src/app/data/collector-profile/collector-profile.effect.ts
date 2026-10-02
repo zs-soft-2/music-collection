@@ -10,6 +10,8 @@ import {
 import { MusicCollectionEffect } from '@music-collection/domain/music-collection/core';
 import { toReleaseView } from '@music-collection/ui/music-view';
 
+import { RatingEffect } from '../rating';
+import { COLLECTION_FOLLOWING_SETTING } from '../collection-following';
 import { UserLocationEffect, toPublicLocation } from '../user-location';
 import { UserSettingsEffect } from '../user-settings';
 import {
@@ -60,6 +62,7 @@ export class CollectorProfileEffect {
 	private readonly collections = inject(MusicCollectionEffect);
 	private readonly wishlistItems = inject(WishlistItemStateService);
 	private readonly locations = inject(UserLocationEffect);
+	private readonly ratings = inject(RatingEffect);
 
 	/** Whether the shelf is already being followed; the watch is started once. */
 	private watching = false;
@@ -239,13 +242,24 @@ export class CollectorProfileEffect {
 						.pipe(startWith([]))
 				: of([]),
 			this.locations.settings$(),
+			// The same rule as the wishlist: asked for only where the consent
+			// publishes it. The list is shared with the rest of the app, so
+			// this costs no query of its own where something else already
+			// reads it.
+			settings.shareRatings ? this.ratings.list$() : of([]),
+			// Which collections the collector has chosen to be seen chasing.
+			// Always read: this one is not a consent of its own, it IS the
+			// consent — following stays private until a collection is shown.
+			this.settings.value$(COLLECTION_FOLLOWING_SETTING),
 		]).pipe(
-			map(([items, standings, wishes, location]) => ({
+			map(([items, standings, wishes, location, ratings, following]) => ({
 				settings,
 				owner,
 				releases: items.map(toReleaseView),
 				standings,
 				wishes,
+				ratings,
+				shownCollections: following.shown,
 				// The place is the map's consent, taken as it stands: this
 				// page may carry it, never widen it.
 				location: toPublicLocation(location, owner),

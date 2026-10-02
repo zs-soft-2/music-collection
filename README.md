@@ -54,6 +54,12 @@ App Check), OpenTofu/Terraform infrastruktúra.
   lefényképezed a lemezt, az app megmondja, melyik pressing és hol van a
   katalógusban (vonalkód + Vision-jelek). Minden találat megerősítést kér —
   a scan magától semmit nem vesz fel.
+- **Lemez-értékelés** — egész 1–5 csillag a lemezre (nem a példányra: több
+  példány ugyanaz a zene, a plasztik állapotát a grading mondja), mellé egy sor
+  arról, hogy miért. Egy koppintás az albumoldalon vagy a példányoldalon, és
+  megvan; a polc szűrhető kedvencekre és „még nem értékelt"-re, és rendezhető a
+  csillagok szerint. A pontozásba szándékosan nem számít bele — a vadászlistán
+  csak holtversenyt dönt.
 - **Wishlist** — album felvétele a kívánságlistára és megjelölése megtaláltként.
 - **Release-kérés** — a gyűjtő kérheti a katalógusból hiányzó kiadást
   (a Discogs verziólistájából választva), az admin pedig jóváhagyja: a kiadás
@@ -90,6 +96,11 @@ App Check), OpenTofu/Terraform infrastruktúra.
   előre látható.
 - **Lejátszás-napló** — a következő lemez felrakása, megállás az oldal
   megfordításához, és számolás, mit hányszor hallgattak.
+- **„Milyen volt?"** — ha egy lemez körbeért, a sarokban megjelenik a kérdés:
+  egy koppintás a csillagra az egész válasz. Csak olyan lemezre kérdez rá,
+  amiről a gyűjtő még nem mondott semmit.
+- **„Amit szeretsz" állomás** — a rádió a négy- és ötcsillagos lemezekből is
+  tud műsort szőni.
 - **Külső lejátszók csak kérésre** — a Spotify/YouTube beágyazás addig nem
   kerül az oldalra, amíg a gyűjtő nem kéri.
 
@@ -105,6 +116,11 @@ App Check), OpenTofu/Terraform infrastruktúra.
 
 - **Gyűjtők a térképen** — aki kéri, felkerül a világtérképre; a pin országot
   jelöl, alatta annyi látszik, amennyit az adott gyűjtő megosztott.
+- **Közösségi átlag** — a lemez lapján ott áll, mit gondolnak róla a többiek,
+  és hogy a gyűjtő mennyivel áll fölötte vagy alatta. Három értékelés alatt
+  hallgat: egy ember véleménye nem közösségi vélemény. Az összeget egy trigger
+  számolja (`album-rating/{albumId}`); hogy ki mit adott, nem hagyja el a saját
+  user-dokumentumát, és a kliens sosem olvas más gyűjtő csillagát.
 - **Profil** — a gyűjtő adatai, beállításai, láthatósága.
 
 ### Admin
@@ -323,6 +339,7 @@ ami a fejlesztő gcloud ADC-jében épp be van állítva, a prod apply is a dev�
 | `discogs/import-discogs.mjs`                                     | tracklisták és közreműködők importja                             |
 | `scan/try-photo.mjs`                                             | a fotós felismerés kipróbálása                                   |
 | `avatar/upload-assets.mjs`                                       | az avatar-ruhatár feltöltése Storage-ba                          |
+| `avatar/archive-source.mjs`                                      | a ruhatár 1024×1536-os mesterképeinek archiválása                |
 | `app-check/generate-debug-token.mjs`                             | App Check debug token a buildhez                                 |
 | `hosting/verify-csp.mjs`                                         | a hosting CSP inline-hash-ei egyeznek-e a build kimenetével      |
 

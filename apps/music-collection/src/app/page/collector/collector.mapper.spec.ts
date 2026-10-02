@@ -4,7 +4,7 @@ import {
 	CollectorAlbumsDocument,
 	CollectorProfileDocument,
 } from '../../data/collector-profile';
-import { TITLE_MAX } from './collector.model';
+import { NOTE_MAX, TITLE_MAX } from './collector.model';
 import { toCollectorAlbums, toCollectorView } from './collector.mapper';
 
 const document = (
@@ -275,5 +275,85 @@ describe('toCollectorAlbums', () => {
 		expect(albums.albums[0].format).toBe('other');
 		// A count that is not a count falls back to the rows there are.
 		expect(albums.count).toBe(1);
+	});
+});
+
+describe('toCollectorView: the favourites', () => {
+	const favourite = (changes: Record<string, unknown> = {}) => ({
+		title: 'Powerslave',
+		artistName: 'Iron Maiden',
+		stars: 5,
+		note: 'The one to own',
+		...changes,
+	});
+
+	it('carries what the collector said, stars and all', () => {
+		const view = toCollectorView(
+			document({ favourites: [favourite()] } as never)
+		);
+
+		expect(view?.favourites).toEqual([
+			{
+				title: 'Powerslave',
+				artistName: 'Iron Maiden',
+				stars: 5,
+				note: 'The one to own',
+			},
+		]);
+	});
+
+	it('has none where the collector shares none', () => {
+		expect(toCollectorView(document())?.favourites).toEqual([]);
+	});
+
+	/**
+	 * The rules can hold the length of the list but cannot look inside it, so
+	 * a document claiming eleven stars for a record would otherwise draw
+	 * eleven of them.
+	 */
+	it('drops a verdict whose stars this app could not have given', () => {
+		const view = toCollectorView(
+			document({
+				favourites: [
+					favourite({ stars: 11 }),
+					favourite({ stars: 0 }),
+					favourite({ stars: 4.5 }),
+					favourite({ stars: '5' }),
+					favourite({ title: 'Kept', stars: 4 }),
+				],
+			} as never)
+		);
+
+		expect(view?.favourites.map((item) => item.title)).toEqual(['Kept']);
+	});
+
+	it('drops a verdict about a record with no name', () => {
+		const view = toCollectorView(
+			document({ favourites: [favourite({ title: '' })] } as never)
+		);
+
+		expect(view?.favourites).toEqual([]);
+	});
+
+	it('clips a line that would run off the page', () => {
+		const view = toCollectorView(
+			document({
+				favourites: [favourite({ note: 'x'.repeat(NOTE_MAX + 50) })],
+			} as never)
+		);
+
+		expect(view?.favourites[0].note).toHaveLength(NOTE_MAX);
+	});
+
+	it('stops at the ten the page carries', () => {
+		const view = toCollectorView(
+			document({
+				favourites: Array.from({ length: 24 }, (_unused, index) =>
+					favourite({ title: `Record ${index}` })
+				),
+			} as never)
+		);
+
+		expect(view?.favourites).toHaveLength(10);
 	});
 });
