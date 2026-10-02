@@ -52,6 +52,11 @@ export class CollectionDetailPageComponent {
 		this.store.toggleFollowed();
 	}
 
+	/** Puts this collection on the collector's public page, or takes it off. */
+	protected onToggleShown(): void {
+		this.store.toggleShownCollection();
+	}
+
 	/** Puts the collection on the radio, its records one after another. */
 	protected onPlay(slug: string, name: string): void {
 		this.player

@@ -105,6 +105,34 @@
 							{{ 'page.collectors.nobodyYet' | transloco }}
 						</p>
 					}
+
+					@if (card.hunterCount) {
+						<button
+							type="button"
+							class="finishers hunting"
+							(click)="store.showCollectors(card.slug)"
+						>
+							<span class="faces">
+								@for (face of card.hunters; track face.uid) {
+									@if (face.photoURL) {
+										<img
+											[src]="face.photoURL"
+											alt=""
+											loading="lazy"
+										/>
+									} @else {
+										<span class="face" aria-hidden="true">{{
+											face.initial
+										}}</span>
+									}
+								}
+							</span>
+							{{
+								'page.collectors.collectedBy'
+									| transloco: { count: card.hunterCount }
+							}}
+						</button>
+					}
 				</li>
 			}
 		</ul>

@@ -53,6 +53,34 @@
 						{{ store.followed() ? 'Following' : 'Follow' }}
 					</button>
 
+					<!--
+						Following is taking a collection on, and that is the
+						collector's own business until they say otherwise.
+						This is them saying otherwise: it puts the collection
+						on their public page as something they are after.
+					-->
+					@if (store.followed()) {
+						<button
+							type="button"
+							class="follow"
+							[attr.aria-pressed]="store.shown()"
+							(click)="onToggleShown()"
+						>
+							<i
+								class="pi"
+								[class.pi-eye]="store.shown()"
+								[class.pi-eye-slash]="!store.shown()"
+								aria-hidden="true"
+							></i>
+							{{
+								(store.shown()
+									? 'page.collections.shownToOthers'
+									: 'page.collections.onlyMine'
+								) | transloco
+							}}
+						</button>
+					}
+
 					@if (player.playersAllowed()) {
 						<button
 							type="button"

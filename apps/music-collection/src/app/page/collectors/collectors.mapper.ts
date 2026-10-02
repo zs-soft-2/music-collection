@@ -74,6 +74,9 @@ export function toWallEntries(
 					copies: wholeNumber(entry.copies) ?? 0,
 					points: positiveNumber(entry.points) ?? 0,
 					badges: toBadges(entry),
+					collecting: listOf(entry.collecting)
+						.map((slug) => clipText(slug, 120))
+						.filter(Boolean),
 					updatedAt: wholeNumber(entry.updatedAt) ?? 0,
 				};
 			})
@@ -131,7 +134,9 @@ export function filterWall(
 
 	return entries.filter(
 		(entry) =>
-			(!slug || entry.badges.some((badge) => badge.slug === slug)) &&
+			(!slug ||
+				entry.badges.some((badge) => badge.slug === slug) ||
+				entry.collecting.includes(slug)) &&
 			(!needle ||
 				(entry.displayName ?? '')
 					.toLocaleLowerCase()
@@ -230,29 +235,45 @@ export function toWallCollectionCards(
 	entries: readonly WallEntry[]
 ): WallCollectionCard[] {
 	const finishers = new Map<string, WallFinisherList>();
+	const hunters = new Map<string, WallFinisherList>();
+
+	const add = (
+		into: Map<string, WallFinisherList>,
+		slug: string,
+		entry: WallEntry
+	): void => {
+		const found = into.get(slug) ?? { faces: [], count: 0 };
+
+		found.count += 1;
+
+		if (found.faces.length < WALL_FACES) {
+			found.faces.push({
+				uid: entry.uid,
+				displayName: entry.displayName,
+				photoURL: entry.photoURL,
+				initial: entry.initial,
+			});
+		}
+
+		into.set(slug, found);
+	};
 
 	for (const entry of entries) {
 		for (const badge of entry.badges) {
-			const found = finishers.get(badge.slug) ?? { faces: [], count: 0 };
+			add(finishers, badge.slug, entry);
+		}
 
-			found.count += 1;
-
-			if (found.faces.length < WALL_FACES) {
-				found.faces.push({
-					uid: entry.uid,
-					displayName: entry.displayName,
-					photoURL: entry.photoURL,
-					initial: entry.initial,
-				});
-			}
-
-			finishers.set(badge.slug, found);
+		// Following a collection is private; showing it is the collector
+		// saying they are after it, and this is where that is heard.
+		for (const slug of entry.collecting) {
+			add(hunters, slug, entry);
 		}
 	}
 
 	return definitions
 		.map((definition) => {
 			const found = finishers.get(definition.slug);
+			const after = hunters.get(definition.slug);
 
 			return {
 				slug: definition.slug,
@@ -266,6 +287,8 @@ export function toWallCollectionCards(
 				group: definition.group ?? null,
 				finishers: found?.faces ?? [],
 				finisherCount: found?.count ?? 0,
+				hunters: after?.faces ?? [],
+				hunterCount: after?.count ?? 0,
 			};
 		})
 		.sort(
@@ -273,7 +296,12 @@ export function toWallCollectionCards(
 				// The curated collections first: there is a pair of
 				// discographies per band, and they would bury them.
 				Number(!!one.group) - Number(!!other.group) ||
-				other.finisherCount - one.finisherCount ||
+				// Then whichever has somebody on it at all, finished or being
+				// chased: a collection with a face on it is the one a visitor
+				// can see the point of.
+				other.finisherCount +
+					other.hunterCount -
+					(one.finisherCount + one.hunterCount) ||
 				one.name.localeCompare(other.name)
 		);
 }

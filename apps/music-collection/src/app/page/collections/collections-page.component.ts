@@ -51,4 +51,9 @@ export class CollectionsPageComponent {
 	protected onToggleFollow(uid: string): void {
 		this.store.toggleFollow(uid);
 	}
+
+	/** Shows a followed collection on the collector's public page. */
+	protected onToggleShown(uid: string): void {
+		this.store.toggleShown(uid);
+	}
 }

@@ -284,6 +284,36 @@
 											aria-hidden="true"
 										></i>
 									</button>
+
+									@if (collection.followed) {
+										<button
+											type="button"
+											class="follow show"
+											[attr.aria-pressed]="
+												collection.shown
+											"
+											[attr.aria-label]="
+												(collection.shown
+													? 'page.collections.shownToOthers'
+													: 'page.collections.onlyMine'
+												) | transloco
+											"
+											(click)="
+												onToggleShown(collection.uid)
+											"
+										>
+											<i
+												class="pi"
+												[class.pi-eye]="
+													collection.shown
+												"
+												[class.pi-eye-slash]="
+													!collection.shown
+												"
+												aria-hidden="true"
+											></i>
+										</button>
+									}
 								</div>
 							</li>
 						}

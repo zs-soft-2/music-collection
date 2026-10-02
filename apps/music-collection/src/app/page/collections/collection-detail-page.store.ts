@@ -49,6 +49,12 @@ export const CollectionDetailPageStore = signalStore(
 
 			return !!uid && store.followedUids().has(uid);
 		}),
+		/** Whether others are told they are after it. */
+		shown: computed(() => {
+			const uid = store.collection()?.uid;
+
+			return !!uid && store.shownUids().has(uid);
+		}),
 		/** Collections › this collection. */
 		trail: computed<Crumb[]>(() => {
 			const name = store.collection()?.name;
@@ -104,6 +110,14 @@ export const CollectionDetailPageStore = signalStore(
 		),
 		setFilter: (filter: AlbumFilter) => patchState(store, { filter }),
 		/** Follows or drops the collection on show. */
+		/** Shows this collection on the collector's public page, or hides it. */
+		toggleShownCollection: (): void => {
+			const uid = store.collection()?.uid;
+
+			if (uid) {
+				store.toggleShown(uid);
+			}
+		},
 		toggleFollowed: (): void => {
 			const uid = store.collection()?.uid;
 

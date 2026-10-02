@@ -3,6 +3,7 @@ import { CollectorCardDocument } from '../../data/collector-profile';
 import {
 	filterWall,
 	sortWall,
+	toWallCollectionCards,
 	toWallCollections,
 	toWallEntries,
 	toWallHighlights,
@@ -28,6 +29,7 @@ const card = (
 		copies: 312,
 		points: 1240,
 		badges: [badge('bay-area', 620)],
+		collecting: [],
 		updatedAt: 3,
 		...changes,
 	}) as CollectorCardDocument;
@@ -217,5 +219,77 @@ describe('toWallHighlights', () => {
 
 	it('shows nothing where nobody finished anything', () => {
 		expect(toWallHighlights(entries(card({ badges: [] })), 6)).toEqual([]);
+	});
+});
+
+describe('toWallCollectionCards', () => {
+	const definition = (slug: string, group: string | null = null) =>
+		({
+			uid: slug,
+			slug,
+			name: slug,
+			description: null,
+			icon: null,
+			coverImageUrl: null,
+			badge: null,
+			group,
+		}) as never;
+
+	it('names a collection nobody has touched', () => {
+		const cards = toWallCollectionCards([definition('glam')], []);
+
+		expect(cards[0]).toMatchObject({
+			slug: 'glam',
+			finisherCount: 0,
+			hunterCount: 0,
+		});
+	});
+
+	it('counts who finished it and who is after it', () => {
+		const wall = entries(
+			card({ uid: 'u1', badges: [badge('doom')], collecting: [] }),
+			card({ uid: 'u2', badges: [], collecting: ['doom'] }),
+			card({ uid: 'u3', badges: [], collecting: ['doom'] })
+		);
+		const [doom] = toWallCollectionCards([definition('doom')], wall);
+
+		expect(doom.finisherCount).toBe(1);
+		expect(doom.hunterCount).toBe(2);
+		expect(doom.hunters.map(({ uid }) => uid)).toEqual(['u2', 'u3']);
+	});
+
+	/** A collection with somebody on it is one a visitor can see the point of. */
+	it('puts the collections with people on them first', () => {
+		const wall = entries(card({ uid: 'u1', badges: [badge('doom')] }));
+		const cards = toWallCollectionCards(
+			[definition('alpha'), definition('doom')],
+			wall
+		);
+
+		expect(cards.map(({ slug }) => slug)).toEqual(['doom', 'alpha']);
+	});
+
+	it('keeps the discographies behind the curated collections', () => {
+		const cards = toWallCollectionCards(
+			[definition('maiden', 'discography'), definition('glam')],
+			[]
+		);
+
+		expect(cards.map(({ slug }) => slug)).toEqual(['glam', 'maiden']);
+	});
+});
+
+describe('filterWall with what they are after', () => {
+	it('finds whoever is collecting it, not only who finished it', () => {
+		const wall = entries(
+			card({ uid: 'u1', badges: [badge('doom')], collecting: [] }),
+			card({ uid: 'u2', badges: [], collecting: ['doom'] }),
+			card({ uid: 'u3', badges: [], collecting: ['glam'] })
+		);
+
+		expect(filterWall(wall, 'doom', '').map(({ uid }) => uid)).toEqual([
+			'u1',
+			'u2',
+		]);
 	});
 });

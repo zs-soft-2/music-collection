@@ -26,6 +26,8 @@ export interface WallEntry {
 	copies: number;
 	points: number;
 	badges: WallBadge[];
+	/** Slugs of the collections they say they are after. */
+	collecting: string[];
 	/** Epoch ms of the entry; what "recent" sorts by. */
 	updatedAt: number;
 }
@@ -77,6 +79,9 @@ export interface WallCollectionCard {
 	group: string | null;
 	finishers: WallFinisher[];
 	finisherCount: number;
+	/** Who says they are after it — following it, and showing that. */
+	hunters: WallFinisher[];
+	hunterCount: number;
 }
 
 /** Which way round the page is read: by collection, or by collector. */

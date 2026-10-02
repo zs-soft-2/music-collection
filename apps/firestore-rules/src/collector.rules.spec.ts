@@ -130,6 +130,7 @@ describe('collector: the directory', () => {
 				points: 620,
 			},
 		],
+		collecting: ['doom'],
 		updatedAt: serverTimestamp(),
 		...fields,
 	});
@@ -173,6 +174,17 @@ describe('collector: the directory', () => {
 			setDoc(
 				cardRef(asMe()),
 				card({ photoURL: 'https://tracker.test/p.png' })
+			)
+		));
+
+	/** The collections they say they are after, which the wall counts. */
+	it('refuses more shown collections than a card may carry', () =>
+		assertFails(
+			setDoc(
+				cardRef(asMe()),
+				card({
+					collecting: Array.from({ length: 51 }, () => 'doom'),
+				})
 			)
 		));
 
