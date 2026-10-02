@@ -652,6 +652,7 @@
 			"sortBy": "Sortierung",
 			"none": "Dazu gibt es nichts.",
 			"noBadges": "Noch keine vollendete Sammlung.",
+			"chasing": "Sammelt gerade",
 			"seeAll": "Alle ansehen",
 			"homeLead": "Was die anderen vollendet haben.",
 			"sort": {
@@ -677,6 +678,7 @@
 			"asOf": "So stand es:",
 			"badgeSection": "Abzeichen",
 			"pursuitSection": "Daran arbeitet er gerade",
+			"noShelf": "Diese Sammlerin oder dieser Sammler teilt das Regal nicht — nur, was gesucht wird.",
 			"showcaseSection": "Die Auslage",
 			"wishlistSection": "Gesucht",
 			"wishlistLead": "Auf diese Platten wartet er. Wenn du überraschen willst, wähle hier.",

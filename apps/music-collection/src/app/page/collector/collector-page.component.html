@@ -29,20 +29,38 @@
 				</div>
 			</div>
 
-			<dl class="totals">
-				<div>
-					<dt>{{ 'page.collector.records' | transloco }}</dt>
-					<dd>{{ view.numbers.copies }}</dd>
-				</div>
-				<div>
-					<dt>{{ 'page.collector.points' | transloco }}</dt>
-					<dd>{{ view.points.total }}</dd>
-				</div>
-				<div>
-					<dt>{{ 'page.collector.badges' | transloco }}</dt>
-					<dd>{{ view.points.completedCollections }}</dd>
-				</div>
-			</dl>
+			<!--
+				Everything counted belongs to the shelf. A page standing on a
+				shown collection alone has no shelf behind it, and drawing
+				three zeros here would say something its collector never said.
+			-->
+			@if (view.hasShelf) {
+				<dl class="totals">
+					<div>
+						<dt>{{ 'page.collector.records' | transloco }}</dt>
+						<dd>{{ view.numbers.copies }}</dd>
+					</div>
+					<div>
+						<dt>{{ 'page.collector.points' | transloco }}</dt>
+						<dd>{{ view.points.total }}</dd>
+					</div>
+					<div>
+						<dt>{{ 'page.collector.badges' | transloco }}</dt>
+						<dd>{{ view.points.completedCollections }}</dd>
+					</div>
+				</dl>
+			}
+
+			<!--
+				Why the page is this short, said plainly: the collector showed
+				a hunt and not a shelf, and a visitor should not be left
+				wondering whether something failed to load.
+			-->
+			@if (!view.hasShelf) {
+				<p class="no-shelf">
+					{{ 'page.collector.noShelf' | transloco }}
+				</p>
+			}
 
 			@if (view.hero.updatedAt) {
 				<p class="stamp">
@@ -52,43 +70,54 @@
 			}
 		</header>
 
-		<section class="glance" aria-labelledby="glance-title">
-			<h2 id="glance-title">{{ 'page.collector.shelf' | transloco }}</h2>
+		@if (view.hasShelf) {
+			<section class="glance" aria-labelledby="glance-title">
+				<h2 id="glance-title">
+					{{ 'page.collector.shelf' | transloco }}
+				</h2>
 
-			<ul class="facts">
-				<li>
-					<b>{{ view.numbers.albums }}</b>
-					<span>{{ 'page.collector.albums' | transloco }}</span>
-				</li>
-				<li>
-					<b>{{ view.numbers.artists }}</b>
-					<span>{{ 'page.collector.artists' | transloco }}</span>
-				</li>
-				@if (view.numbers.oldestYear) {
+				<ul class="facts">
 					<li>
-						<b>{{ view.numbers.oldestYear }}</b>
-						<span>{{ 'page.collector.oldest' | transloco }}</span>
+						<b>{{ view.numbers.albums }}</b>
+						<span>{{ 'page.collector.albums' | transloco }}</span>
 					</li>
-				}
-				@if (view.numbers.since) {
 					<li>
-						<b>{{ view.numbers.since }}</b>
-						<span>{{ 'page.collector.since' | transloco }}</span>
+						<b>{{ view.numbers.artists }}</b>
+						<span>{{ 'page.collector.artists' | transloco }}</span>
 					</li>
-				}
-			</ul>
-
-			@if (view.numbers.formats.length) {
-				<ul class="chips">
-					@for (entry of view.numbers.formats; track entry.format) {
+					@if (view.numbers.oldestYear) {
 						<li>
-							{{ entry.format | mcCatalog: 'media' }}
-							<b>{{ entry.count }}</b>
+							<b>{{ view.numbers.oldestYear }}</b>
+							<span>{{
+								'page.collector.oldest' | transloco
+							}}</span>
+						</li>
+					}
+					@if (view.numbers.since) {
+						<li>
+							<b>{{ view.numbers.since }}</b>
+							<span>{{
+								'page.collector.since' | transloco
+							}}</span>
 						</li>
 					}
 				</ul>
-			}
-		</section>
+
+				@if (view.numbers.formats.length) {
+					<ul class="chips">
+						@for (
+							entry of view.numbers.formats;
+							track entry.format
+						) {
+							<li>
+								{{ entry.format | mcCatalog: 'media' }}
+								<b>{{ entry.count }}</b>
+							</li>
+						}
+					</ul>
+				}
+			</section>
+		}
 
 		@if (view.badges.length) {
 			<section class="badges" aria-labelledby="badges-title">
@@ -125,16 +154,25 @@
 						<li>
 							<span class="bar-head">
 								<b>{{ pursuit.name }}</b>
-								<span
-									>{{ pursuit.owned }} /
-									{{ pursuit.total }}</span
-								>
+								@if (pursuit.progress; as progress) {
+									<span
+										>{{ progress.owned }} /
+										{{ progress.total }}</span
+									>
+								}
 							</span>
-							<span class="bar" aria-hidden="true">
-								<span
-									[style.width.%]="pursuit.percentage"
-								></span>
-							</span>
+							<!--
+								How far along is a fact about the shelf, and an
+								entry-only page publishes none: it names the
+								hunt and stops there.
+							-->
+							@if (pursuit.progress; as progress) {
+								<span class="bar" aria-hidden="true">
+									<span
+										[style.width.%]="progress.percentage"
+									></span>
+								</span>
+							}
 						</li>
 					}
 				</ul>

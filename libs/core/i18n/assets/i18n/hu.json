@@ -652,6 +652,7 @@
 			"sortBy": "Rendezés",
 			"none": "Erre nincs találat.",
 			"noBadges": "Még nincs kigyűjtött kollekciója.",
+			"chasing": "Ezeket gyűjti",
 			"seeAll": "Mind",
 			"homeLead": "Amit a többiek végigvittek.",
 			"sort": {
@@ -677,6 +678,7 @@
 			"asOf": "Így állt:",
 			"badgeSection": "Jelvények",
 			"pursuitSection": "Amin épp dolgozik",
+			"noShelf": "Ez a gyűjtő a polcát nem osztotta meg — csak azt, hogy mit gyűjt.",
 			"showcaseSection": "A kirakat",
 			"wishlistSection": "Amit keres",
 			"wishlistLead": "Ezekre a lemezekre vár. Ha meg akarod lepni, innen válassz.",

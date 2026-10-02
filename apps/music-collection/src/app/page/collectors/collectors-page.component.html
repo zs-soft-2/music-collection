@@ -210,12 +210,12 @@
 				@for (entry of store.shown(); track entry.uid) {
 					<li>
 						<!--
-							The name leads to the collector's page where there
-							is one. An entry can stand on a shown collection
-							alone, and linking that name would send a visitor
-							to "nothing here".
+							The name leads to the collector. There is always
+							something behind it: a shared shelf where that was
+							the consent, and otherwise the hunts they chose to
+							show, which is why the entry exists at all.
 						-->
-						<ng-template #who>
+						<a class="who" [routerLink]="['/collector', entry.uid]">
 							@if (entry.photoURL) {
 								<img
 									class="avatar"
@@ -261,24 +261,7 @@
 									</span>
 								}
 							</span>
-						</ng-template>
-
-						@if (entry.hasPage) {
-							<a
-								class="who"
-								[routerLink]="['/collector', entry.uid]"
-							>
-								<ng-container
-									[ngTemplateOutlet]="who"
-								></ng-container>
-							</a>
-						} @else {
-							<span class="who">
-								<ng-container
-									[ngTemplateOutlet]="who"
-								></ng-container>
-							</span>
-						}
+						</a>
 
 						@if (entry.badges.length) {
 							<ul class="badges">
@@ -308,7 +291,51 @@
 									</li>
 								}
 							</ul>
-						} @else {
+						}
+
+						<!--
+							What they are after, and have said so. A collection
+							being chased is the whole reason an entry can exist
+							without a finished one, so the row says it rather
+							than apologising for an empty shelf of badges.
+						-->
+						@if (entry.collecting.length) {
+							<p class="chasing">
+								{{ 'page.collectors.chasing' | transloco }}
+							</p>
+							<ul class="badges pursuits">
+								@for (
+									pursuit of entry.collecting;
+									track pursuit.slug
+								) {
+									<li
+										[class.is-on]="
+											store.slug() === pursuit.slug
+										"
+									>
+										@if (pursuit.imageUrl) {
+											<img
+												[src]="pursuit.imageUrl"
+												alt=""
+												loading="lazy"
+											/>
+										} @else {
+											<span
+												class="pin"
+												aria-hidden="true"
+											>
+												<i class="pi pi-bookmark"></i>
+											</span>
+										}
+										<span class="label">{{
+											pursuit.name
+										}}</span>
+									</li>
+								}
+							</ul>
+						}
+
+						@if (!entry.badges.length && !entry.collecting.length) {
 							<p class="nothing">
 								{{ 'page.collectors.noBadges' | transloco }}
 							</p>

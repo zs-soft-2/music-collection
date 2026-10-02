@@ -44,6 +44,17 @@ export interface CollectorBadgeView {
 
 export interface CollectorPursuitView {
 	name: string;
+	/**
+	 * How far along, where that is published at all.
+	 *
+	 * Null on a page built from the directory entry alone: how many of a
+	 * collection somebody owns is a fact about their shelf, and the shelf is
+	 * the other consent. Such a page names the hunt and stops there.
+	 */
+	progress: CollectorProgressView | null;
+}
+
+export interface CollectorProgressView {
 	owned: number;
 	total: number;
 	/** 0–100, rounded. */
@@ -98,6 +109,16 @@ export interface CollectorAlbumsView {
 }
 
 export interface CollectorView {
+	/**
+	 * Whether there is a shelf behind the name.
+	 *
+	 * False for a page built from the directory entry: the collector showed
+	 * what they are after and nothing else, so the page is their name and
+	 * those hunts. Everything counted — records, points, formats, the window
+	 * of covers — belongs to the shelf, and a page that drew zeros for them
+	 * would be saying something the collector never said.
+	 */
+	hasShelf: boolean;
 	hero: CollectorHeroView;
 	numbers: CollectorNumbersView;
 	points: { total: number; completedCollections: number };

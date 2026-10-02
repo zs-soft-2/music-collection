@@ -1,7 +1,6 @@
 import { of } from 'rxjs';
 
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
@@ -23,7 +22,7 @@ import { WALL_SORTS, WallSort } from './collectors.model';
 	selector: 'mc-collectors-page',
 	templateUrl: './collectors-page.component.html',
 	styleUrls: ['./collectors-page.component.scss'],
-	imports: [...I18N_IMPORTS, NgTemplateOutlet, RouterLink],
+	imports: [...I18N_IMPORTS, RouterLink],
 })
 export class CollectorsPageComponent {
 	protected readonly store = inject(CollectorsPageStore);

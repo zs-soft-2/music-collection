@@ -15,6 +15,19 @@ export interface WallBadge {
 	points: number;
 }
 
+/**
+ * A collection somebody says they are after, as a row of the wall shows it.
+ *
+ * A collector who has finished nothing still belongs on the wall: they said
+ * out loud what they are collecting, and that sentence is what the row shows
+ * until a badge replaces it.
+ */
+export interface WallPursuit {
+	slug: string;
+	name: string;
+	imageUrl: string | null;
+}
+
 /** One collector, with what they have finished. */
 export interface WallEntry {
 	uid: string;
@@ -26,14 +39,12 @@ export interface WallEntry {
 	copies: number;
 	points: number;
 	badges: WallBadge[];
-	/** Slugs of the collections they say they are after. */
-	collecting: string[];
 	/**
-	 * Whether a page stands behind the name. Showing a collection is enough
-	 * to be on the wall; a shelf of one's own is the other consent, and
-	 * without it the name is not a link to anywhere.
+	 * The collections they say they are after. The entry names them itself;
+	 * the picture — and the name of one written before the names travelled —
+	 * comes from the catalog in `dressHunts`.
 	 */
-	hasPage: boolean;
+	collecting: WallPursuit[];
 	/** Epoch ms of the entry; what "recent" sorts by. */
 	updatedAt: number;
 }

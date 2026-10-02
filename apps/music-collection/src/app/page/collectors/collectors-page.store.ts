@@ -25,6 +25,7 @@ import {
 	toWallCollectionCards,
 	toWallCollections,
 	toWallEntries,
+	dressHunts,
 } from './collectors.mapper';
 import { WallEntry, WallSort, WallView } from './collectors.model';
 
@@ -64,10 +65,17 @@ const initialState: CollectorsPageState = {
 export const CollectorsPageStore = signalStore(
 	withState(initialState),
 	withComputed((store) => {
+		/**
+		 * The rows on show: filtered, sorted, and with the hunts dressed out
+		 * of the catalog this page already holds.
+		 */
 		const shown = computed(() =>
-			sortWall(
-				filterWall(store.entries(), store.slug(), store.query()),
-				store.sort()
+			dressHunts(
+				sortWall(
+					filterWall(store.entries(), store.slug(), store.query()),
+					store.sort()
+				),
+				store.definitions()
 			)
 		);
 

@@ -407,6 +407,36 @@ ul {
 	}
 }
 
+/*
+ * What is being chased, not what is finished. Same chips, drawn as an
+ * outline: a hunt is a statement of intent, and it should not be mistaken at
+ * a glance for a badge somebody earned.
+ */
+.chasing {
+	margin: 0.25rem 0 0;
+	font-size: 0.72rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--mc-text-subtle);
+}
+
+.pursuits {
+	li {
+		background: transparent;
+		border-color: color-mix(
+			in srgb,
+			var(--mc-text-subtle) 45%,
+			transparent
+		);
+		border-style: dashed;
+
+		&.is-on {
+			border-style: solid;
+			border-color: var(--mc-primary);
+		}
+	}
+}
+
 .nothing {
 	margin: 0;
 	font-size: 0.8rem;

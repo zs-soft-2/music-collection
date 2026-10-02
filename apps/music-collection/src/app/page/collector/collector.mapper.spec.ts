@@ -2,10 +2,15 @@ import { MediaEnum } from '@music-collection/common/api';
 
 import {
 	CollectorAlbumsDocument,
+	CollectorCardDocument,
 	CollectorProfileDocument,
 } from '../../data/collector-profile';
 import { NOTE_MAX, TITLE_MAX } from './collector.model';
-import { toCollectorAlbums, toCollectorView } from './collector.mapper';
+import {
+	toCollectorAlbums,
+	toCollectorCardView,
+	toCollectorView,
+} from './collector.mapper';
 
 const document = (
 	changes: Partial<CollectorProfileDocument> = {}
@@ -158,7 +163,7 @@ describe('toCollectorView: what the rules could not check', () => {
 			} as never)
 		);
 
-		expect(view?.pursuits[0]).toMatchObject({
+		expect(view?.pursuits[0].progress).toMatchObject({
 			owned: 10,
 			percentage: 100,
 		});
@@ -226,6 +231,66 @@ describe('toCollectorView: the wishlist', () => {
 
 	it('has an empty wishlist where none was shared', () => {
 		expect(toCollectorView(document())?.wishlist).toEqual([]);
+	});
+});
+
+/**
+ * The page of a collector who shared no shelf. Everything on it came out of
+ * the directory entry, which is the smaller of the two consents — so what the
+ * page may say is smaller too.
+ */
+describe('toCollectorCardView', () => {
+	const card = (changes: Partial<CollectorCardDocument> = {}) =>
+		({
+			uid: 'u2',
+			displayName: 'Anna',
+			copies: 0,
+			points: 0,
+			badges: [],
+			collecting: [{ slug: 'doom', name: 'Doom Essentials' }],
+			hasPage: false,
+			updatedAt: 1,
+			...changes,
+		}) as CollectorCardDocument;
+
+	it('names the collections the collector is after', () => {
+		const view = toCollectorCardView(card());
+
+		expect(view?.hero.displayName).toBe('Anna');
+		expect(view?.pursuits).toEqual([
+			{ name: 'Doom Essentials', progress: null },
+		]);
+	});
+
+	/** How far along is a fact about the shelf, and this page has no shelf. */
+	it('says nothing about how far along they are', () => {
+		const view = toCollectorCardView(card());
+
+		expect(view?.hasShelf).toBe(false);
+		expect(view?.numbers.copies).toBe(0);
+		expect(view?.points.total).toBe(0);
+		expect(view?.showcase).toEqual([]);
+	});
+
+	it('has no page where there is no entry', () => {
+		expect(toCollectorCardView(null)).toBeNull();
+	});
+
+	/**
+	 * An entry carrying slugs alone was written before the names travelled.
+	 * A slug names nothing a visitor would recognise, and a page of unnamed
+	 * chips is worse than none.
+	 */
+	it('has no page where nothing in the entry can be named', () => {
+		expect(
+			toCollectorCardView(card({ collecting: ['doom'] } as never))
+		).toBeNull();
+	});
+
+	it('survives an entry whose list is not a list', () => {
+		expect(
+			toCollectorCardView(card({ collecting: 'everything' } as never))
+		).toBeNull();
 	});
 });
 

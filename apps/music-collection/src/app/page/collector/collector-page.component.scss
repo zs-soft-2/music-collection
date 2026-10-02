@@ -118,6 +118,14 @@ h1 {
 	color: var(--mc-text-subtle);
 }
 
+/* The page is short on purpose; this is the sentence that says why. */
+.no-shelf {
+	flex-basis: 100%;
+	margin: 0;
+	font-size: 0.85rem;
+	color: var(--mc-text-subtle);
+}
+
 /* ── Sections ─────────────────────────────────────────────────────────── */
 
 h2 {

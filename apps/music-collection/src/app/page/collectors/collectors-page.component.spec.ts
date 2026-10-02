@@ -148,14 +148,14 @@ describe('CollectorsPageComponent', () => {
 	});
 
 	/**
-	 * Showing a collection is enough to be on the wall, and it is a smaller
-	 * thing than publishing a shelf: there is no page behind the name, so
-	 * the name is not a link to one.
+	 * Showing a collection is enough to be on the wall, and it is the smaller
+	 * of the two consents: no shelf behind the name, so no numbers beside it.
+	 * The name still leads somewhere — to the hunts they chose to show.
 	 */
-	it('names a collector who only shows a collection, without a link', () => {
+	it('names a collector who only shows a collection, and leads to them', () => {
 		const host = render([
 			card('u2', 'Anna', [], {
-				collecting: ['doom'],
+				collecting: [{ slug: 'doom', name: 'Doom' }],
 				copies: 0,
 				points: 0,
 				hasPage: false,
@@ -164,9 +164,58 @@ describe('CollectorsPageComponent', () => {
 
 		showCollectors(host);
 
-		expect(host.querySelector('.who')?.tagName).toBe('SPAN');
+		expect(host.querySelector('.who')?.getAttribute('href')).toBe(
+			'/collector/u2'
+		);
 		expect(host.querySelector('.who b')?.textContent).toContain('Anna');
 		expect(host.querySelector('.who .meta')).toBeNull();
+	});
+
+	/**
+	 * And the collection is named under them. It is the only reason the row
+	 * exists, so a row that said nothing but "no finished collection yet"
+	 * would be withholding the one thing the collector did say.
+	 */
+	it('names the collection a collector is after', () => {
+		const host = render([
+			card('u2', 'Anna', [], {
+				collecting: [{ slug: 'doom', name: 'Doom' }],
+				hasPage: false,
+			}),
+		]);
+
+		showCollectors(host);
+
+		expect(host.querySelector('.pursuits .label')?.textContent).toContain(
+			'Doom'
+		);
+		expect(host.querySelector('.wall .nothing')).toBeNull();
+	});
+
+	/** An entry written before the names travelled: the catalog names those. */
+	it('names a hunt the entry only pointed at', () => {
+		const host = render(
+			[card('u2', 'Anna', [], { collecting: ['doom'] } as never)],
+			[definition('doom', 'Doom Essentials')]
+		);
+
+		showCollectors(host);
+
+		expect(host.querySelector('.pursuits .label')?.textContent).toContain(
+			'Doom Essentials'
+		);
+	});
+
+	/** And where neither names it, there is nothing a visitor could read. */
+	it('leaves out a hunt nothing can name', () => {
+		const host = render([
+			card('u2', 'Anna', [], { collecting: ['gone'] } as never),
+		]);
+
+		showCollectors(host);
+
+		expect(host.querySelector('.pursuits')).toBeNull();
+		expect(host.querySelector('.wall .nothing')).not.toBeNull();
 	});
 
 	/**

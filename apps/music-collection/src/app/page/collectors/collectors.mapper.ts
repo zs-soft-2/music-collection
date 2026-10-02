@@ -19,8 +19,12 @@ import {
 	WallCollectionCard,
 	WallEntry,
 	WallHighlight,
+	WallPursuit,
 	WallSort,
 } from './collectors.model';
+
+/** As much of a slug as any of ours is long. */
+const SLUG_MAX = 120;
 
 /**
  * From the published directory onto the wall.
@@ -36,13 +40,42 @@ function toBadges(entry: CollectorCardDocument): WallBadge[] {
 			const badge = value as Record<string, unknown>;
 
 			return {
-				slug: clipText(badge['slug'], 120),
+				slug: clipText(badge['slug'], SLUG_MAX),
 				name: clipText(badge['name'], NAME_MAX),
 				imageUrl: pictureUrl(badge['imageUrl']),
 				points: wholeNumber(badge['points']) ?? 0,
 			};
 		})
 		.filter((badge) => !!badge.slug && !!badge.name);
+}
+
+/**
+ * The collections the collector says they are after.
+ *
+ * The entry names them itself — that is what lets a page draw them without
+ * the catalog — but one written before the names travelled carries the slug
+ * alone, and `dressHunts` is where those get their name.
+ */
+function toHunts(entry: CollectorCardDocument): WallPursuit[] {
+	return listOf(entry.collecting)
+		.map((value) => {
+			if (typeof value === 'string') {
+				return {
+					slug: clipText(value, SLUG_MAX),
+					name: '',
+					imageUrl: null,
+				};
+			}
+
+			const hunt = value as Record<string, unknown>;
+
+			return {
+				slug: clipText(hunt['slug'], SLUG_MAX),
+				name: clipText(hunt['name'], NAME_MAX),
+				imageUrl: null,
+			};
+		})
+		.filter((hunt) => !!hunt.slug);
 }
 
 function toPlace(entry: CollectorCardDocument): string | null {
@@ -74,10 +107,7 @@ export function toWallEntries(
 					copies: wholeNumber(entry.copies) ?? 0,
 					points: positiveNumber(entry.points) ?? 0,
 					badges: toBadges(entry),
-					collecting: listOf(entry.collecting)
-						.map((slug) => clipText(slug, 120))
-						.filter(Boolean),
-					hasPage: entry.hasPage === true,
+					collecting: toHunts(entry),
 					updatedAt: wholeNumber(entry.updatedAt) ?? 0,
 				};
 			})
@@ -137,7 +167,7 @@ export function filterWall(
 		(entry) =>
 			(!slug ||
 				entry.badges.some((badge) => badge.slug === slug) ||
-				entry.collecting.includes(slug)) &&
+				entry.collecting.some((hunt) => hunt.slug === slug)) &&
 			(!needle ||
 				(entry.displayName ?? '')
 					.toLocaleLowerCase()
@@ -159,8 +189,8 @@ export function sortWall(
 	/**
 	 * Whoever finished something comes first, whatever order was asked for.
 	 * This is a wall about finishing collections, and a collector who has
-	 * finished none has nothing to show on it — they are here because they
-	 * share a page, which is worth the last row rather than the first.
+	 * finished none is here for something smaller — a shelf they share, or a
+	 * hunt they are open about — which is worth a row, but not the first one.
 	 */
 	const byFinished = (one: WallEntry, other: WallEntry) =>
 		Number(other.badges.length > 0) - Number(one.badges.length > 0);
@@ -184,6 +214,41 @@ export function sortWall(
 		(one, other) =>
 			byFinished(one, other) || order(one, other) || byName(one, other)
 	);
+}
+
+/**
+ * The hunts as the wall draws them: the picture out of the catalog, and the
+ * name out of it too wherever the entry carried none.
+ *
+ * One that is neither named by its own entry nor found in the catalog drops
+ * out — a chip with a slug on it names nothing a visitor would recognise.
+ */
+export function dressHunts(
+	entries: readonly WallEntry[],
+	definitions: readonly MusicCollectionEntity[]
+): WallEntry[] {
+	const named = new Map(
+		definitions.map((definition) => [definition.slug, definition])
+	);
+
+	return entries.map((entry) => ({
+		...entry,
+		collecting: entry.collecting
+			.map((hunt) => {
+				const definition = named.get(hunt.slug);
+
+				return {
+					slug: hunt.slug,
+					name: hunt.name || definition?.name || '',
+					imageUrl: definition
+						? (definition.badge?.image?.filePath ??
+							definition.badge?.artworkUrl ??
+							definition.coverImageUrl)
+						: null,
+				};
+			})
+			.filter((hunt) => !!hunt.name),
+	}));
 }
 
 /**
@@ -266,8 +331,8 @@ export function toWallCollectionCards(
 
 		// Following a collection is private; showing it is the collector
 		// saying they are after it, and this is where that is heard.
-		for (const slug of entry.collecting) {
-			add(hunters, slug, entry);
+		for (const hunt of entry.collecting) {
+			add(hunters, hunt.slug, entry);
 		}
 	}
 

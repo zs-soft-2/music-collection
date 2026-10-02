@@ -1,4 +1,4 @@
-import { of, pipe, switchMap, tap } from 'rxjs';
+import { map, of, pipe, switchMap, tap } from 'rxjs';
 
 import { inject } from '@angular/core';
 import { AuthenticationStateService } from '@music-collection/api';
@@ -15,12 +15,15 @@ import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
 import {
 	CollectorAlbumsDocument,
-	CollectorProfileDocument,
 	CollectorProfileEffect,
 } from '../../data/collector-profile';
 
 import { CollectorAlbumsView, CollectorView } from './collector.model';
-import { toCollectorAlbums, toCollectorView } from './collector.mapper';
+import {
+	toCollectorAlbums,
+	toCollectorCardView,
+	toCollectorView,
+} from './collector.mapper';
 
 interface CollectorPageState {
 	/** The page as it is drawn, or null while there is nothing to draw. */
@@ -78,19 +81,40 @@ export const CollectorPageStore = signalStore(
 			profiles = inject(CollectorProfileEffect),
 			authentication = inject(AuthenticationStateService)
 		) => ({
-			/** The page of the collector the address names. */
+			/**
+			 * The page of the collector the address names.
+			 *
+			 * The shelf first, and the directory entry only where there is no
+			 * shelf: a collector who showed a hunt without publishing their
+			 * records still has a page worth opening, and that second read is
+			 * made only for them — a shared page carries its own hunts
+			 * already.
+			 */
 			load: rxMethod<string>(
 				pipe(
 					tap((uid) => patchState(store, { uid, loading: true })),
 					switchMap((uid) =>
-						uid ? profiles.profile$(uid) : of(null)
+						uid
+							? profiles
+									.profile$(uid)
+									.pipe(
+										switchMap((profile) =>
+											profile
+												? of(toCollectorView(profile))
+												: profiles
+														.card$(uid)
+														.pipe(
+															map(
+																toCollectorCardView
+															)
+														)
+										)
+									)
+							: of(null)
 					),
 					tapResponse({
-						next: (profile: CollectorProfileDocument | null) =>
-							patchState(store, {
-								view: toCollectorView(profile),
-								loading: false,
-							}),
+						next: (view: CollectorView | null) =>
+							patchState(store, { view, loading: false }),
 						error: (error) => {
 							console.error('Collector page not read', error);
 							patchState(store, { view: null, loading: false });

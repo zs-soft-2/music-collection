@@ -652,7 +652,11 @@ describe('toPublicCollectorCard', () => {
 			})
 		);
 
-		expect(card?.collecting).toEqual(['doom']);
+		// Named, not just pointed at: a page that drew these should not have
+		// to fetch the catalog to find out what they are called.
+		expect(card?.collecting).toEqual([
+			{ slug: 'doom', name: 'Bay Area Thrash' },
+		]);
 	});
 
 	it('publishes no entry while nothing at all is shared', () => {
@@ -681,7 +685,7 @@ describe('toPublicCollectorCard', () => {
 		expect(card).toMatchObject({
 			uid: 'u1',
 			displayName: 'Zsolt',
-			collecting: ['doom'],
+			collecting: [{ slug: 'doom', name: 'Bay Area Thrash' }],
 			hasPage: false,
 		});
 	});

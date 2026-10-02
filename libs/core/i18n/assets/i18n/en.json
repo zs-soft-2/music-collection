@@ -652,6 +652,7 @@
 			"sortBy": "Sort",
 			"none": "Nothing matches that.",
 			"noBadges": "No finished collection yet.",
+			"chasing": "Collecting",
 			"seeAll": "See all",
 			"homeLead": "What the others have finished.",
 			"sort": {
@@ -677,6 +678,7 @@
 			"asOf": "As it stood:",
 			"badgeSection": "Badges",
 			"pursuitSection": "Working on",
+			"noShelf": "This collector has not shared their shelf — only what they are after.",
 			"showcaseSection": "The window",
 			"wishlistSection": "Still looking for",
 			"wishlistLead": "These are the records they are waiting for. To surprise them, pick from here.",

@@ -3,6 +3,7 @@ import { FORMAT_ORDER, MediaFormat } from '@music-collection/ui/music-view';
 
 import {
 	CollectorAlbumsDocument,
+	CollectorCardDocument,
 	CollectorProfileDocument,
 	FAVOURITE_LIMIT,
 	clipText,
@@ -128,12 +129,41 @@ function toPursuits(
 
 			return {
 				name: clip(pursuit['name'], NAME_MAX),
-				owned,
-				total,
-				percentage: total ? Math.round((owned / total) * 100) : 0,
+				progress: {
+					owned,
+					total,
+					percentage: total ? Math.round((owned / total) * 100) : 0,
+				},
 			};
 		})
-		.filter((pursuit) => pursuit.total > 0);
+		.filter((pursuit) => (pursuit.progress?.total ?? 0) > 0);
+}
+
+/**
+ * The hunts of a collector who published no page: named, and nothing else.
+ *
+ * The entry carries the names itself, which is what lets this page draw them
+ * without asking for the collection catalog — a visitor who followed a link
+ * has none, and fetching one to label two chips would cost the visit its
+ * promise. An entry written before the names travelled carries the slug
+ * alone, and a slug names nothing, so it is left out.
+ */
+function toCardPursuits(
+	document: CollectorCardDocument
+): CollectorPursuitView[] {
+	return list(document.collecting)
+		.map((entry) => {
+			const hunt = entry as Record<string, unknown>;
+
+			return {
+				name: clip(
+					typeof entry === 'string' ? '' : hunt['name'],
+					NAME_MAX
+				),
+				progress: null,
+			};
+		})
+		.filter((pursuit) => !!pursuit.name);
 }
 
 function toShowcase(document: CollectorProfileDocument): CollectorRecordView[] {
@@ -227,6 +257,7 @@ export function toCollectorView(
 	const displayName = clip(document.displayName, NAME_MAX) || null;
 
 	return {
+		hasShelf: true,
 		hero: {
 			displayName,
 			photoURL: picture(document.photoURL),
@@ -245,6 +276,51 @@ export function toCollectorView(
 		showcase: toShowcase(document),
 		wishlist: toWishlist(document),
 		favourites: toFavourites(document),
+	};
+}
+
+/**
+ * The page of a collector who shared no shelf, out of their directory entry.
+ *
+ * Everything the entry does not carry stays empty rather than being drawn as
+ * a zero: this is a collector and the hunts they chose to show, which is
+ * exactly what they published and no more. Null where there is no entry
+ * either — then there is genuinely nothing here.
+ */
+export function toCollectorCardView(
+	document: CollectorCardDocument | null
+): CollectorView | null {
+	const pursuits = document ? toCardPursuits(document) : [];
+
+	if (!document || !pursuits.length) {
+		return null;
+	}
+
+	const displayName = clip(document.displayName, NAME_MAX) || null;
+
+	return {
+		hasShelf: false,
+		hero: {
+			displayName,
+			photoURL: picture(document.photoURL),
+			initial: (displayName ?? '?').charAt(0).toUpperCase(),
+			place: null,
+			updatedAt: count(document.updatedAt),
+		},
+		numbers: {
+			copies: 0,
+			albums: 0,
+			artists: 0,
+			oldestYear: null,
+			since: null,
+			formats: [],
+		},
+		points: { total: 0, completedCollections: 0 },
+		badges: [],
+		pursuits,
+		showcase: [],
+		wishlist: [],
+		favourites: [],
 	};
 }
 

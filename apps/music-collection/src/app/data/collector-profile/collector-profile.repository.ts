@@ -150,6 +150,26 @@ export class CollectorProfileRepository {
 		});
 	}
 
+	/**
+	 * One collector's entry, by itself: what the wall knows about somebody
+	 * who never published a shelf.
+	 *
+	 * A read of its own rather than a hunt through `cards$`, because the page
+	 * it feeds is often reached from a link rather than from the wall — and
+	 * the directory is capped, so the entry a visitor came for may not even be
+	 * in it.
+	 */
+	public card$(uid: string): Observable<CollectorCardDocument | null> {
+		return this.cardDocument$(uid).pipe(
+			map((data) => (data ? (data as CollectorCardDocument) : null)),
+			catchError((error) => {
+				console.warn('Collector entry unavailable', error);
+
+				return of(null);
+			})
+		);
+	}
+
 	public saveCard(card: PublicCollectorCard): Promise<void> {
 		return this.firestoreSync.set(
 			this.cardReference(card.uid),
@@ -184,6 +204,12 @@ export class CollectorProfileRepository {
 	private albumsDocument$(uid: string) {
 		return runInInjectionContext(this.injector, () =>
 			docData(this.albumsReference(uid))
+		);
+	}
+
+	private cardDocument$(uid: string) {
+		return runInInjectionContext(this.injector, () =>
+			docData(this.cardReference(uid))
 		);
 	}
 

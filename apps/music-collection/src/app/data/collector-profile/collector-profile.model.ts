@@ -124,6 +124,15 @@ export interface CollectorBadge {
 	points: number;
 }
 
+/**
+ * A collection somebody says they are after, named and nothing more: the
+ * smallest thing a collector can publish about themselves.
+ */
+export interface CollectorHunt {
+	slug: string;
+	name: string;
+}
+
 /** A collection being worked on, and how far it has got. */
 export interface CollectorPursuit {
 	slug: string;
@@ -496,10 +505,16 @@ export interface PublicCollectorCard {
 	/** The collections finished, the most valuable first. */
 	badges: CollectorBadge[];
 	/**
-	 * Slugs of the collections they are after and have chosen to show — the
-	 * wall counts these as "collecting it", beside those who finished it.
+	 * The collections they are after and have chosen to show — the wall counts
+	 * these as "collecting it", beside those who finished it.
+	 *
+	 * Named, not just pointed at, for the same reason the badges are: a page
+	 * that drew these would otherwise have to fetch the collection catalog to
+	 * find out what they are called, and a visitor who followed a link has no
+	 * catalog. No progress travels with them — how far along somebody is
+	 * belongs to the shelf, and the shelf is the other consent.
 	 */
-	collecting: string[];
+	collecting: CollectorHunt[];
 	/**
 	 * Whether there is a page behind the name.
 	 *
@@ -526,9 +541,10 @@ export function toPublicCollectorCard(
 ): PublicCollectorCard | null {
 	const { settings, owner, releases, standings, location } = source;
 	const shown = new Set(source.shownCollections);
-	const collecting = toPursuits(standings, source.shownCollections).map(
-		({ slug }) => slug
-	);
+	const collecting: CollectorHunt[] = toPursuits(
+		standings,
+		source.shownCollections
+	).map(({ slug, name }) => ({ slug, name }));
 	/**
 	 * Without a page, only the shown collections speak — including the ones
 	 * finished. A collector who showed a collection and then completed it

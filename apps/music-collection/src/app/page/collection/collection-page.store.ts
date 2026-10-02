@@ -23,7 +23,6 @@ import {
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
-import { CollectorProfileEffect } from '../../data/collector-profile';
 import { AlbumRating, RatingEffect, starsByAlbum } from '../../data/rating';
 import { UserSettingsEffect } from '../../data/user-settings';
 import { withCopyDisposal } from '../../shared/copy-disposal/copy-disposal.feature';
@@ -864,10 +863,6 @@ export const CollectionPageStore = signalStore(
 	),
 	withHooks({
 		onInit(store) {
-			// The collector's public page, if they have one, is put together
-			// from this very shelf — so following it starts where the shelf is
-			// opened, and goes on wherever a record is filed from later.
-			inject(CollectorProfileEffect).watch();
 			store.watchSession(of(undefined));
 			store.watchCopyPermission(of(undefined));
 			store.loadPreferences(of(undefined));

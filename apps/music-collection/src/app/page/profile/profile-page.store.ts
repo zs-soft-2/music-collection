@@ -1025,11 +1025,6 @@ export const ProfilePageStore = signalStore(
 				 * away: a consent taken back has to take effect while the
 				 * collector is still looking at the switch.
 				 */
-				/** Starts the effect's own watch on the shelf; idempotent. */
-				watchProfile(): void {
-					collectorProfiles.watch();
-				},
-
 				setSharing(changes: Partial<CollectorProfileSettings>): void {
 					const sharing = { ...store.sharing(), ...changes };
 					const source = store.profileSource();
@@ -1064,7 +1059,6 @@ export const ProfilePageStore = signalStore(
 			store.loadShownCollections(of(undefined));
 			// The effect follows the shelf from here on, whatever page the
 			// collector files a record from.
-			store.watchProfile();
 			store.loadProfileShelf(of(undefined));
 			store.loadStandings(of(undefined));
 			store.loadWishes(of(undefined));
