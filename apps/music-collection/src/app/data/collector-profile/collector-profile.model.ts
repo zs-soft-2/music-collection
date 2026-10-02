@@ -500,6 +500,15 @@ export interface PublicCollectorCard {
 	 * wall counts these as "collecting it", beside those who finished it.
 	 */
 	collecting: string[];
+	/**
+	 * Whether there is a page behind the name.
+	 *
+	 * An entry can exist without one: showing a collection is enough to be
+	 * named on the wall, and that is a smaller thing than publishing a
+	 * shelf. The wall uses this to decide whether the name is a link — a
+	 * link to a page nobody shared leads to "nothing here".
+	 */
+	hasPage: boolean;
 }
 
 export type CollectorCardDocument = PublicCollectorCard & {
@@ -516,19 +525,41 @@ export function toPublicCollectorCard(
 	source: CollectorProfileSource
 ): PublicCollectorCard | null {
 	const { settings, owner, releases, standings, location } = source;
+	const shown = new Set(source.shownCollections);
+	const collecting = toPursuits(standings, source.shownCollections).map(
+		({ slug }) => slug
+	);
+	/**
+	 * Without a page, only the shown collections speak — including the ones
+	 * finished. A collector who showed a collection and then completed it
+	 * would otherwise vanish from the wall at the moment of finishing it,
+	 * which is the one moment the wall exists for.
+	 */
+	const badges = settings.shared
+		? toBadges(standings)
+		: toBadges(
+				standings.filter(({ collection }) => shown.has(collection.uid))
+			);
 
-	if (!settings.shared || !owner.uid) {
+	// Two ways onto the wall, and showing a collection is the smaller one.
+	// Saying "I am after this" is a public act in itself: it would be a
+	// strange app that took the statement and then left the person who made
+	// it off the page. The shelf behind the name is the other consent, and
+	// without it the entry carries no numbers and leads nowhere.
+	if (
+		!owner.uid ||
+		(!settings.shared && !collecting.length && !badges.length)
+	) {
 		return null;
 	}
 
 	const card: PublicCollectorCard = {
 		uid: owner.uid,
-		copies: releases.length,
-		points: toPoints(standings).total,
-		badges: toBadges(standings),
-		collecting: toPursuits(standings, source.shownCollections).map(
-			({ slug }) => slug
-		),
+		copies: settings.shared ? releases.length : 0,
+		points: settings.shared ? toPoints(standings).total : 0,
+		badges,
+		collecting,
+		hasPage: settings.shared,
 	};
 
 	if (owner.displayName) {
@@ -539,11 +570,14 @@ export function toPublicCollectorCard(
 		card.photoURL = owner.photoURL;
 	}
 
-	if (location?.countryCode) {
+	// The place belongs to the page: it came out of the map's consent, and
+	// an entry that is only a name beside a collection has no business
+	// carrying it.
+	if (settings.shared && location?.countryCode) {
 		card.countryCode = location.countryCode;
 	}
 
-	if (location?.city) {
+	if (settings.shared && location?.city) {
 		card.city = location.city;
 	}
 
@@ -657,7 +691,7 @@ export function toPublicCollectorProfile(
  * mistaken for one another.
  */
 export function collectorProfileFingerprint(
-	profile: PublicCollectorProfile
+	profile: PublicCollectorProfile | PublicCollectorCard
 ): string {
 	const json = JSON.stringify(profile);
 	let hash = 2166136261;

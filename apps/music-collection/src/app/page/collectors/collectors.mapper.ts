@@ -77,6 +77,7 @@ export function toWallEntries(
 					collecting: listOf(entry.collecting)
 						.map((slug) => clipText(slug, 120))
 						.filter(Boolean),
+					hasPage: entry.hasPage === true,
 					updatedAt: wholeNumber(entry.updatedAt) ?? 0,
 				};
 			})

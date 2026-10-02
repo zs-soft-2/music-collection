@@ -28,6 +28,12 @@ export interface WallEntry {
 	badges: WallBadge[];
 	/** Slugs of the collections they say they are after. */
 	collecting: string[];
+	/**
+	 * Whether a page stands behind the name. Showing a collection is enough
+	 * to be on the wall; a shelf of one's own is the other consent, and
+	 * without it the name is not a link to anywhere.
+	 */
+	hasPage: boolean;
 	/** Epoch ms of the entry; what "recent" sorts by. */
 	updatedAt: number;
 }

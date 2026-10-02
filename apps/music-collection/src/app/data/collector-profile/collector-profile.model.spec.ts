@@ -637,6 +637,7 @@ describe('toPublicCollectorCard', () => {
 			displayName: 'Zsolt',
 			copies: 1,
 			collecting: [],
+			hasPage: true,
 		});
 		expect(card?.badges).toHaveLength(1);
 	});
@@ -654,10 +655,89 @@ describe('toPublicCollectorCard', () => {
 		expect(card?.collecting).toEqual(['doom']);
 	});
 
-	it('publishes no entry while the profile is not shared', () => {
+	it('publishes no entry while nothing at all is shared', () => {
 		const settings = { ...source().settings, shared: false };
 
 		expect(toPublicCollectorCard(source({ settings }))).toBeNull();
+	});
+
+	/**
+	 * Showing a collection is a public act in itself. It would be a strange
+	 * app that took the statement and left the person who made it off the
+	 * page — so the entry exists, under their name alone.
+	 */
+	it('names a collector who only shows a collection', () => {
+		const settings = { ...source().settings, shared: false };
+		const card = toPublicCollectorCard(
+			source({
+				settings,
+				standings: [
+					standing(albums, ['a'], { uid: 'doom', slug: 'doom' }),
+				],
+				shownCollections: ['doom'],
+			})
+		);
+
+		expect(card).toMatchObject({
+			uid: 'u1',
+			displayName: 'Zsolt',
+			collecting: ['doom'],
+			hasPage: false,
+		});
+	});
+
+	/**
+	 * Finishing a shown collection is the moment the wall exists for, so the
+	 * badge for it travels even without a page — and nothing else does.
+	 */
+	it('carries the badge of a shown collection, and no shelf, without a page', () => {
+		const settings = { ...source().settings, shared: false };
+		const card = toPublicCollectorCard(
+			source({
+				settings,
+				standings: [
+					standing(albums, ['a', 'b'], {
+						uid: 'doom',
+						slug: 'doom',
+					}),
+				],
+				shownCollections: ['doom'],
+				location: {
+					uid: 'u1',
+					level: 'city',
+					countryCode: 'HU',
+					city: 'Budapest',
+				},
+			})
+		);
+
+		expect(card).toMatchObject({ copies: 0, points: 0, hasPage: false });
+		// Finished, so it left `collecting` and became a badge.
+		expect(card?.collecting).toEqual([]);
+		expect(card?.badges.map(({ slug }) => slug)).toEqual(['doom']);
+		expect(card?.city).toBeUndefined();
+	});
+
+	it('leaves another collector badge out where only one was shown', () => {
+		const settings = { ...source().settings, shared: false };
+		const card = toPublicCollectorCard(
+			source({
+				settings,
+				standings: [
+					standing(albums, ['a', 'b'], {
+						uid: 'doom',
+						slug: 'doom',
+					}),
+					standing(albums, ['a', 'b'], {
+						uid: 'quiet',
+						slug: 'quiet',
+					}),
+				],
+				shownCollections: ['doom'],
+			})
+		);
+
+		expect(card?.badges.map(({ slug }) => slug)).toEqual(['doom']);
 	});
 });
 

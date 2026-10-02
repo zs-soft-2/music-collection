@@ -795,7 +795,7 @@ service cloud.firestore {
                                                       'photoURL', 'countryCode',
                                                       'city', 'copies', 'points',
                                                       'badges', 'collecting',
-                                                      'updatedAt'])
+                                                      'hasPage', 'updatedAt'])
                             && card().uid == uid
                             && (!('displayName' in card().keys())
                                 || isDisplayName(card().displayName))
@@ -821,7 +821,12 @@ service cloud.firestore {
                             // none, and that is a card, not an attack.
                             && (!('collecting' in card().keys())
                                 || (card().collecting is list
-                                    && card().collecting.size() <= 50));
+                                    && card().collecting.size() <= 50))
+                            // Whether a page stands behind the name. An entry
+                            // may exist without one: showing a collection is
+                            // enough to be named on the wall.
+                            && (!('hasPage' in card().keys())
+                                || card().hasPage is bool);
       allow delete: if isSelf(uid) || hasPerm('deleteUserEntity');
     }
 

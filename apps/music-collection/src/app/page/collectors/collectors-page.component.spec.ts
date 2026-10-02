@@ -13,7 +13,8 @@ import { CollectorsPageComponent } from './collectors-page.component';
 const card = (
 	uid: string,
 	displayName: string,
-	slugs: string[]
+	slugs: string[],
+	extra: Partial<CollectorCardDocument> = {}
 ): CollectorCardDocument =>
 	({
 		uid,
@@ -26,7 +27,10 @@ const card = (
 			imageUrl: null,
 			points: 100,
 		})),
+		collecting: [],
+		hasPage: true,
 		updatedAt: 1,
+		...extra,
 	}) as CollectorCardDocument;
 
 const definition = (slug: string, name = slug): MusicCollectionEntity =>
@@ -141,6 +145,28 @@ describe('CollectorsPageComponent', () => {
 
 		expect(host.querySelector('.wall')).toBeNull();
 		expect(host.querySelector('.toolbar')).toBeNull();
+	});
+
+	/**
+	 * Showing a collection is enough to be on the wall, and it is a smaller
+	 * thing than publishing a shelf: there is no page behind the name, so
+	 * the name is not a link to one.
+	 */
+	it('names a collector who only shows a collection, without a link', () => {
+		const host = render([
+			card('u2', 'Anna', [], {
+				collecting: ['doom'],
+				copies: 0,
+				points: 0,
+				hasPage: false,
+			}),
+		]);
+
+		showCollectors(host);
+
+		expect(host.querySelector('.who')?.tagName).toBe('SPAN');
+		expect(host.querySelector('.who b')?.textContent).toContain('Anna');
+		expect(host.querySelector('.who .meta')).toBeNull();
 	});
 
 	/**

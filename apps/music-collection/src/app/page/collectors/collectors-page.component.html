@@ -209,7 +209,13 @@
 			<ul class="wall">
 				@for (entry of store.shown(); track entry.uid) {
 					<li>
-						<a class="who" [routerLink]="['/collector', entry.uid]">
+						<!--
+							The name leads to the collector's page where there
+							is one. An entry can stand on a shown collection
+							alone, and linking that name would send a visitor
+							to "nothing here".
+						-->
+						<ng-template #who>
 							@if (entry.photoURL) {
 								<img
 									class="avatar"
@@ -230,21 +236,49 @@
 										('page.collector.aCollector'
 											| transloco)
 								}}</b>
-								<span class="meta">
-									{{ entry.copies }}
-									{{ 'page.collector.records' | transloco }}
-									@if (entry.points) {
-										· {{ entry.points }}
-										{{
-											'page.collector.points' | transloco
-										}}
-									}
-									@if (entry.place) {
-										· {{ entry.place }}
-									}
-								</span>
+								@if (entry.copies || entry.place) {
+									<span class="meta">
+										@if (entry.copies) {
+											{{ entry.copies }}
+											{{
+												'page.collector.records'
+													| transloco
+											}}
+										}
+										@if (entry.points) {
+											· {{ entry.points }}
+											{{
+												'page.collector.points'
+													| transloco
+											}}
+										}
+										@if (entry.place) {
+											@if (entry.copies) {
+												·
+											}
+											{{ entry.place }}
+										}
+									</span>
+								}
 							</span>
-						</a>
+						</ng-template>
+
+						@if (entry.hasPage) {
+							<a
+								class="who"
+								[routerLink]="['/collector', entry.uid]"
+							>
+								<ng-container
+									[ngTemplateOutlet]="who"
+								></ng-container>
+							</a>
+						} @else {
+							<span class="who">
+								<ng-container
+									[ngTemplateOutlet]="who"
+								></ng-container>
+							</span>
+						}
 
 						@if (entry.badges.length) {
 							<ul class="badges">

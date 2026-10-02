@@ -82,6 +82,13 @@ export class CollectorProfileEffect {
 	 */
 	private shared: boolean | null = null;
 
+	/**
+	 * The same two for the directory entry, which comes and goes on its own
+	 * consent: a shown collection keeps it alive after the page is gone.
+	 */
+	private listed: boolean | null = null;
+	private cardFingerprint: string | null = null;
+
 	/** A write waiting out its delay, and the newest shelf to write. */
 	private pending: ReturnType<typeof setTimeout> | null = null;
 	private latest: CollectorProfileSource | null = null;
@@ -192,11 +199,26 @@ export class CollectorProfileEffect {
 		}
 	}
 
+	/**
+	 * Writes whatever the two consents allow, and takes away whatever they no
+	 * longer do.
+	 *
+	 * They are two, not one. Sharing the page publishes the shelf; showing a
+	 * collection publishes only the statement "I am after this" — and that
+	 * second one is enough to be named on the wall, which is why the entry
+	 * is written on its own fingerprint rather than the page's.
+	 */
 	private async write(source: CollectorProfileSource): Promise<void> {
+		await this.writePage(source);
+
+		return this.writeCard(source);
+	}
+
+	private async writePage(source: CollectorProfileSource): Promise<void> {
 		const profile = toPublicCollectorProfile(source);
 
 		if (!profile) {
-			return this.withdraw(source.owner.uid);
+			return this.withdrawPage(source.owner.uid);
 		}
 
 		const fingerprint = collectorProfileFingerprint(profile);
@@ -207,15 +229,9 @@ export class CollectorProfileEffect {
 
 		await this.repository.save(profile);
 
-		// The directory entry and the full shelf follow the page they belong
-		// to. One fingerprint covers all three: both are made of what the
-		// page already shows, so neither can change while the page does not.
-		const card = toPublicCollectorCard(source);
-
-		if (card) {
-			await this.repository.saveCard(card);
-		}
-
+		// The full shelf follows the page it belongs to. One fingerprint
+		// covers both: the list is made of what the page already counts, so
+		// it cannot change while the page does not.
 		const albums = toPublicCollectorAlbums(source);
 
 		if (albums) {
@@ -224,6 +240,25 @@ export class CollectorProfileEffect {
 
 		this.shared = true;
 		this.fingerprint = fingerprint;
+	}
+
+	private async writeCard(source: CollectorProfileSource): Promise<void> {
+		const card = toPublicCollectorCard(source);
+
+		if (!card) {
+			return this.withdrawCard(source.owner.uid);
+		}
+
+		const fingerprint = collectorProfileFingerprint(card);
+
+		if (this.listed === true && fingerprint === this.cardFingerprint) {
+			return;
+		}
+
+		await this.repository.saveCard(card);
+
+		this.listed = true;
+		this.cardFingerprint = fingerprint;
 	}
 
 	/** Everything the snapshot is made of, as the app holds it right now. */
@@ -293,7 +328,7 @@ export class CollectorProfileEffect {
 		);
 	}
 
-	private async withdraw(uid: string): Promise<void> {
+	private async withdrawPage(uid: string): Promise<void> {
 		// Nothing is out there to take away, and a withdrawal leaves a
 		// tombstone the other clients would reload for.
 		if (!uid || this.shared === false) {
@@ -303,14 +338,30 @@ export class CollectorProfileEffect {
 		this.shared = false;
 		this.fingerprint = null;
 
-		// Both documents, and the list first: Firestore does not cascade, and
-		// a list left behind under a deleted page is a shelf still published.
-		// (The rules refuse to serve it either way — they check that the page
-		// above it exists — but a withdrawal should take the data, not only
-		// the reading of it.)
+		// The list first: Firestore does not cascade, and a list left behind
+		// under a deleted page is a shelf still published. (The rules refuse
+		// to serve it either way — they check that the page above it exists
+		// — but a withdrawal should take the data, not only the reading
+		// of it.)
 		await this.repository.removeAlbums(uid);
-		await this.repository.removeCard(uid);
 
 		return this.repository.remove(uid);
+	}
+
+	/**
+	 * The directory entry goes when both consents are gone — the page
+	 * withdrawn and no collection shown. It outlives the page on purpose: a
+	 * collector who stops publishing their shelf but still says they are
+	 * after something is still on the wall, under their name alone.
+	 */
+	private async withdrawCard(uid: string): Promise<void> {
+		if (!uid || this.listed === false) {
+			return;
+		}
+
+		this.listed = false;
+		this.cardFingerprint = null;
+
+		return this.repository.removeCard(uid);
 	}
 }
