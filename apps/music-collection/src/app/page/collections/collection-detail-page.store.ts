@@ -43,14 +43,23 @@ export const CollectionDetailPageStore = signalStore(
 	withState(initialState),
 	withCollectionFollowing(),
 	withComputed((store, text = inject(TextService)) => ({
-		/** Whether this collection is one the collector is after. */
-		followed: computed(() => {
+		/**
+		 * Whether this collection is one the collector is after.
+		 *
+		 * `isFollowed`, not `followed`: the following feature already carries
+		 * a `followed` of its own — the uids — and a signal store refuses to
+		 * let a member be overridden. Named the same, this computed would
+		 * simply not be created, and the page would read the uid list as a
+		 * truthy value: the button would say "Following" about every
+		 * collection, followed or not.
+		 */
+		isFollowed: computed(() => {
 			const uid = store.collection()?.uid;
 
 			return !!uid && store.followedUids().has(uid);
 		}),
-		/** Whether others are told they are after it. */
-		shown: computed(() => {
+		/** Whether others are told they are after it; see `isFollowed`. */
+		isShown: computed(() => {
 			const uid = store.collection()?.uid;
 
 			return !!uid && store.shownUids().has(uid);

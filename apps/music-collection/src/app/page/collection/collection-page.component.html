@@ -243,7 +243,7 @@
 			@if (store.narrowed()) {
 				{{
 					t('page.collection.showingOf', {
-						shown: store.shown().length,
+						shown: store.shownReleases().length,
 						total: store.stats().total,
 					})
 				}}
@@ -283,7 +283,7 @@
 				{{ t('page.collection.log-in') }}
 			</button>
 		</div>
-	} @else if (!store.shown().length) {
+	} @else if (!store.shownReleases().length) {
 		<div class="empty">
 			<p class="empty-icon" aria-hidden="true">♪</p>
 			<h2>{{ t('page.collection.no-releases-found') }}</h2>

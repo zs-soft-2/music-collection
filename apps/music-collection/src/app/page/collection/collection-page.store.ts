@@ -345,8 +345,15 @@ export const CollectionPageStore = signalStore(
 			 * What is actually on the page. The shelf keeps the search out of
 			 * it, so "nothing to show" there means an empty collection rather
 			 * than a query nothing answers.
+			 *
+			 * `shownReleases`, not `shown`: the following feature this store
+			 * also carries holds a `shown` of its own — the collections the
+			 * collector tells people they are after — and a signal store
+			 * refuses to let a member be overridden. Under the same name this
+			 * computed would not be created at all, and the page would count
+			 * those collections instead of the records in front of it.
 			 */
-			shown: computed(() =>
+			shownReleases: computed(() =>
 				store.view() === 'shelf' ? onShelf() : visible()
 			),
 			/*

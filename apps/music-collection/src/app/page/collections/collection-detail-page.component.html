@@ -41,16 +41,16 @@
 					<button
 						type="button"
 						class="follow"
-						[attr.aria-pressed]="store.followed()"
+						[attr.aria-pressed]="store.isFollowed()"
 						(click)="onToggleFollow()"
 					>
 						<i
 							class="pi"
-							[class.pi-star-fill]="store.followed()"
-							[class.pi-star]="!store.followed()"
+							[class.pi-star-fill]="store.isFollowed()"
+							[class.pi-star]="!store.isFollowed()"
 							aria-hidden="true"
 						></i>
-						{{ store.followed() ? 'Following' : 'Follow' }}
+						{{ store.isFollowed() ? 'Following' : 'Follow' }}
 					</button>
 
 					<!--
@@ -59,21 +59,21 @@
 						This is them saying otherwise: it puts the collection
 						on their public page as something they are after.
 					-->
-					@if (store.followed()) {
+					@if (store.isFollowed()) {
 						<button
 							type="button"
 							class="follow"
-							[attr.aria-pressed]="store.shown()"
+							[attr.aria-pressed]="store.isShown()"
 							(click)="onToggleShown()"
 						>
 							<i
 								class="pi"
-								[class.pi-eye]="store.shown()"
-								[class.pi-eye-slash]="!store.shown()"
+								[class.pi-eye]="store.isShown()"
+								[class.pi-eye-slash]="!store.isShown()"
 								aria-hidden="true"
 							></i>
 							{{
-								(store.shown()
+								(store.isShown()
 									? 'page.collections.shownToOthers'
 									: 'page.collections.onlyMine'
 								) | transloco
