@@ -56,6 +56,9 @@ import { CollectorShelfLayoutService } from './page/collection/shelf-layout.serv
 import { HookModule } from './module/hook';
 import { installPerformanceConsole } from './performance';
 import { metaReducers } from './reducer';
+// Straight from the file for the same reason as above: the barrel would carry
+// the share-card drawing into the first bundle with it.
+import { CollectorProfileEffect } from './data/collector-profile/collector-profile.effect';
 import { GenreScopeSyncService } from './data/genre-scope';
 import { DefaultLanguageSyncService, LanguageSyncService } from './i18n';
 import { AppearanceSyncService, MusicPreset } from './theme';
@@ -235,6 +238,21 @@ export const appConfig: ApplicationConfig = {
 			DomainReleaseModule,
 			DomainWishlistItemModule,
 			HookModule
+		),
+		// What the collector publishes of themselves — the public page, and
+		// the entry on the wall — follows their consents rather than their
+		// route: a hunt is shown from the collections page, a record is filed
+		// from the scanner, and both change what the others would read. Two
+		// setting documents until something is actually shared; the shelf
+		// itself is only followed once it is.
+		//
+		// It stands after the modules rather than beside the other initializers:
+		// `watch()` subscribes straight away, and the first thing it reads is the
+		// authentication feature's state. `CoreAuthenticationModule` above is what
+		// registers that feature, so an initializer declared ahead of it would
+		// select from a state with no `authentication` in it yet.
+		provideEnvironmentInitializer(() =>
+			inject(CollectorProfileEffect).watch()
 		),
 	],
 };
