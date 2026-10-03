@@ -11,15 +11,9 @@
  * átnéznie.
  */
 
-import Anthropic from '@anthropic-ai/sdk';
-
 import { normalize, normalizeBarcode, normalizeCatno } from './discogs-match';
-import {
-	PhotoInput,
-	PhotoMedia,
-	PhotoSignals,
-	VisionError,
-} from './photo-signals';
+import { PhotoInput, PhotoMedia, PhotoSignals } from './photo-signals';
+import { VisionClient, readImageJson } from './vision-client';
 
 const MEDIA: PhotoMedia[] = ['vinyl', 'cd', 'cassette', 'dvd'];
 
@@ -86,8 +80,11 @@ const MODEL = 'claude-opus-5';
  * bőven bele kell férnie, mert a levágott JSON az egész olvasatot elviszi.
  */
 const MAX_TOKENS = 8000;
-const MAX_RETRIES = 3;
-const REQUEST_TIMEOUT_MS = 60_000;
+/**
+ * Egy kérés felső határa: a teli rekesz hosszú választ ír. Az újrapróbálással
+ * együtt (`vision-client.ts`) belefér a function 300 másodpercébe.
+ */
+export const SHELF_REQUEST_TIMEOUT_MS = 120_000;
 
 const nullableString = { type: ['string', 'null'] };
 
@@ -228,92 +225,22 @@ export function parseShelfRead(payload: unknown): ShelfRead {
 /** Egy fotó gerincei. Hibát nem nyel el: a hívó dönti el, mit mond. */
 export async function readShelfSignals(
 	photo: PhotoInput,
-	client: Anthropic,
+	client: VisionClient,
 	context: ShelfPhotoContext = { media: null }
 ): Promise<ShelfRead> {
-	const response = await create(client, photo, context).catch((error) => {
-		throw new VisionError(
-			'A polc olvasása nem sikerült.',
-			isRetryable(error),
-			{ cause: error }
-		);
-	});
-
-	if (response.stop_reason === 'refusal') {
-		throw new VisionError(
-			`A modell elzárkózott: ${response.stop_details?.category ?? 'ismeretlen'}`,
-			false
-		);
-	}
-
-	const block = response.content.find((item) => item.type === 'text');
-
-	if (!block || block.type !== 'text') {
-		throw new VisionError('A modell nem adott szöveges választ.', false);
-	}
-
-	try {
-		return parseShelfRead(JSON.parse(block.text));
-	} catch (error) {
-		throw new VisionError('A modell válasza nem értelmezhető.', false, {
-			cause: error,
-		});
-	}
-}
-
-/** Múló hiba-e: a kapcsolat, a 429 és az 5xx az, a 4xx többi része nem. */
-function isRetryable(error: unknown): boolean {
-	if (error instanceof Anthropic.APIConnectionError) {
-		return true;
-	}
-
-	const status =
-		error instanceof Anthropic.APIError ? (error.status ?? 0) : 0;
-
-	return status === 429 || status >= 500;
-}
-
-function create(
-	client: Anthropic,
-	photo: PhotoInput,
-	context: ShelfPhotoContext
-) {
-	return client.beta.messages.create({
-		model: MODEL,
-		max_tokens: MAX_TOKENS,
-		// Az egy lemez borítójánál ez nehezebb olvasás: apró, gyakran fekete
-		// alapon fekete gerincszöveg, ferde szögben, egymást takarva. A
-		// nagyobb ráfordítás itt kevesebb üres mezőt jelent, és az üres mező
-		// a gyűjtő munkája.
-		output_config: {
-			effort: 'medium',
-			format: { type: 'json_schema', schema: SHELF_SCHEMA },
-		},
-		betas: ['server-side-fallback-2026-07-01'],
-		fallbacks: 'default',
-		system: SYSTEM_PROMPT,
-		messages: [
-			{
-				role: 'user',
-				content: [
-					{
-						type: 'image',
-						source: {
-							type: 'base64',
-							media_type: photo.mediaType,
-							data: photo.data,
-						},
-					},
-					{
-						type: 'text',
-						text: context.media
-							? `Read the spines in this shelf compartment. Every record in it is ${context.media}.`
-							: 'Read the spines in this shelf compartment.',
-					},
-				],
-			},
-		],
-	});
+	return parseShelfRead(
+		await readImageJson(client, {
+			model: MODEL,
+			systemPrompt: SYSTEM_PROMPT,
+			prompt: context.media
+				? `Read the spines in this shelf compartment. Every record in it is ${context.media}.`
+				: 'Read the spines in this shelf compartment.',
+			photo,
+			schema: { name: 'shelf_read', schema: SHELF_SCHEMA },
+			maxTokens: MAX_TOKENS,
+			failure: 'A polc olvasása nem sikerült.',
+		})
+	);
 }
 
 /**

@@ -44,7 +44,12 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.NPM_TOKEN }}
       # A functions a saját package.json-jéből él (külön tsc, külön függőségek),
       # így a gyökér `npm ci` nem hozza le neki a firebase-functions-t és a
-      # @anthropic-ai/sdk-t — a tesztjei enélkül fordítani sem tudnak.
+      # @zssz-soft/zs-ai-sdk-t — a tesztjei enélkül fordítani sem tudnak. Az SDK
+      # `file:vendor/…tgz` hivatkozás (tools/functions/vendor-ai-sdk.mjs), ezt
+      # előbb le kell hozni a registryből.
+      - run: node tools/functions/vendor-ai-sdk.mjs
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.NPM_TOKEN }}
       - run: npm ci --prefix apps/functions
       # A firestore-rules tesztek emulátort indítanak; a runneren nincs
       # Firebase CLI, a fejlesztői gépeken viszont globálisan telepítve van.
@@ -129,6 +134,10 @@ jobs:
       # semmit. Amit viszont kivesznek a kódból, azt egyik kör sem törli:
       # a `firebase functions:delete` marad kézi lépésnek.
       - name: Functionök deployja két körben (Cloud Run CPU-kvóta)
+        # A predeploy (firebase.json) hozza le a @zssz-soft/zs-ai-sdk tarballját
+        # a functions forrása mellé — ehhez kell itt a registry-token.
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.NPM_TOKEN }}
         run: |
           names=$(grep -o '^export const [a-zA-Z0-9_]*' apps/functions/src/index.ts | awk '{print $3}')
           total=$(echo "$names" | wc -l | tr -d ' ')

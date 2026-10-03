@@ -1,2 +1,5 @@
 lib/
 node_modules/
+# A @zssz-soft/zs-ai-sdk tarballja (tools/functions/vendor-ai-sdk.mjs). A csomag
+# privát, ez a repó nyilvános — a fájl ezért soha nem kerülhet commitba.
+vendor/

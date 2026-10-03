@@ -1,14 +1,15 @@
 /**
  * Amit egy lemezfotóról ki lehet olvasni: előadó, cím, kiadó, katalógusszám,
- * vonalkód, hordozó. A képet a Claude nézi meg; a válasz alakját JSON-séma
- * kényszeríti, így a hívónak nem kell szöveget elemeznie.
+ * vonalkód, hordozó. A képet a Claude nézi meg az AI-gatewayen át
+ * (`vision-client.ts`); a válasz alakját JSON-séma kényszeríti, így a hívónak
+ * nem kell szöveget elemeznie.
  *
  * A vonalkódot a kliens dekódolja, ha látja — ide csak az a fotó jut el,
  * amelyiken nincs olvasható vonalkód (jellemzően 1980 előtti bakelit), vagy
  * amelyiknek a vonalkódjára a Discogs nem adott találatot.
  */
 
-import Anthropic from '@anthropic-ai/sdk';
+import { VisionClient, readImageJson } from './vision-client';
 
 /** A hordozó, ahogy a katalógus `media` mezője érti. */
 export type PhotoMedia = 'vinyl' | 'cd' | 'cassette' | 'dvd';
@@ -46,13 +47,11 @@ export const PHOTO_MEDIA_TYPES: PhotoInput['mediaType'][] = [
 const MODEL = 'claude-opus-5';
 
 /**
- * A modell időnként túlterhelt (529) vagy épp nem elérhető. Ez múló hiba: a
- * következő próbálkozás jellemzően átmegy, és a gyűjtőnek egy kis várakozás
- * sokkal jobb, mint egy hibaüzenet. A kettő szorzata a function 180 másodperces
- * keretén belül marad, hogy a Discogs-keresésnek is jusson idő.
+ * Egy kérés felső határa. Az újrapróbálással együtt (`vision-client.ts`) ez a
+ * function 180 másodperces keretén belül marad, hogy a Discogs-keresésnek is
+ * jusson idő.
  */
-const MAX_RETRIES = 3;
-const REQUEST_TIMEOUT_MS = 30_000;
+export const PHOTO_REQUEST_TIMEOUT_MS = 60_000;
 
 const nullableString = { type: ['string', 'null'] };
 
@@ -101,58 +100,6 @@ Notes on the fields:
 - country and year: only when printed on the item.
 - confidence: "high" when the artist, the title and at least one identifier (catalog number or barcode) are clearly legible; "low" when you are mostly inferring from the cover art.`;
 
-/**
- * Az Anthropic-kliens — egyetlen helyen, mert ez a csatlakozási pont: egy
- * saját AI-gateway mögé állva csak a `baseURL` (és a token) változik.
- *
- * Egy munkaterülethez kötött API-kulcs magától tudja, hova tartozik. A
- * szervezeti szintű kulcs nem, és header nélkül 400-zal elszáll — annak az
- * `ANTHROPIC_WORKSPACE_ID` környezeti változó mondja meg.
- */
-export function createVisionClient(apiKey: string): Anthropic {
-	const baseURL = process.env['AI_GATEWAY_URL'] || undefined;
-	const workspaceId = process.env['ANTHROPIC_WORKSPACE_ID'] || undefined;
-
-	return new Anthropic({
-		apiKey,
-		maxRetries: MAX_RETRIES,
-		timeout: REQUEST_TIMEOUT_MS,
-		...(baseURL ? { baseURL } : {}),
-		...(workspaceId
-			? { defaultHeaders: { 'anthropic-workspace-id': workspaceId } }
-			: {}),
-	});
-}
-
-/**
- * A képolvasás hibája. A hívónak el kell tudnia választani a Discogsétól,
- * különben rossz okot mond a gyűjtőnek — a modell túlterheltsége nem az,
- * hogy a Discogs elérhetetlen. `retryable`: ugyanez a fotó egy újraküldéstől
- * még sikerülhet.
- */
-export class VisionError extends Error {
-	public constructor(
-		message: string,
-		public readonly retryable: boolean,
-		options?: { cause?: unknown }
-	) {
-		super(message, options);
-		this.name = 'VisionError';
-	}
-}
-
-/** Múló hiba-e: a kapcsolat, a 429 és az 5xx az, a 4xx többi része nem. */
-function isRetryable(error: unknown): boolean {
-	if (error instanceof Anthropic.APIConnectionError) {
-		return true;
-	}
-
-	const status =
-		error instanceof Anthropic.APIError ? (error.status ?? 0) : 0;
-
-	return status === 429 || status >= 500;
-}
-
 function parseSignals(payload: unknown): PhotoSignals {
 	const value = (payload ?? {}) as Record<string, unknown>;
 	const read = (key: string): string | null => {
@@ -185,71 +132,17 @@ function parseSignals(payload: unknown): PhotoSignals {
  */
 export async function readPhotoSignals(
 	photo: PhotoInput,
-	client: Anthropic
+	client: VisionClient
 ): Promise<PhotoSignals> {
-	const response = await create(client, photo).catch((error) => {
-		throw new VisionError(
-			'A kép olvasása nem sikerült.',
-			isRetryable(error),
-			{ cause: error }
-		);
-	});
-
-	if (response.stop_reason === 'refusal') {
-		throw new VisionError(
-			`A modell elzárkózott: ${response.stop_details?.category ?? 'ismeretlen'}`,
-			false
-		);
-	}
-
-	const block = response.content.find((item) => item.type === 'text');
-
-	if (!block || block.type !== 'text') {
-		throw new VisionError('A modell nem adott szöveges választ.', false);
-	}
-
-	try {
-		return parseSignals(JSON.parse(block.text));
-	} catch (error) {
-		throw new VisionError('A modell válasza nem értelmezhető.', false, {
-			cause: error,
-		});
-	}
-}
-
-/** Maga a hívás; a hibáit a `readPhotoSignals` fordítja `VisionError`-ra. */
-function create(client: Anthropic, photo: PhotoInput) {
-	return client.beta.messages.create({
-		model: MODEL,
-		max_tokens: 2000,
-		// Rutin kiolvasás: a mély gondolkodás itt csak késleltetés és költség.
-		output_config: {
-			effort: 'low',
-			format: { type: 'json_schema', schema: SIGNALS_SCHEMA },
-		},
-		// Ha a modell mégis elzárkózna, a kérés ugyanebben a hívásban átmegy
-		// egy másik modellre, a gyűjtő hibaüzenet helyett eredményt kap.
-		betas: ['server-side-fallback-2026-07-01'],
-		fallbacks: 'default',
-		system: SYSTEM_PROMPT,
-		messages: [
-			{
-				role: 'user',
-				content: [
-					{
-						type: 'image',
-						source: {
-							type: 'base64',
-							media_type: photo.mediaType,
-							data: photo.data,
-						},
-					},
-					{
-						type: 'text',
-						text: 'Read the identifiers off this record.',
-					},
-				],
-			},
-		],
-	});
+	return parseSignals(
+		await readImageJson(client, {
+			model: MODEL,
+			systemPrompt: SYSTEM_PROMPT,
+			prompt: 'Read the identifiers off this record.',
+			photo,
+			schema: { name: 'photo_signals', schema: SIGNALS_SCHEMA },
+			maxTokens: 2000,
+			failure: 'A kép olvasása nem sikerült.',
+		})
+	);
 }

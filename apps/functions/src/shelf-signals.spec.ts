@@ -1,6 +1,5 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { ZsAiError } from '@zssz-soft/zs-ai-sdk';
 
-import { VisionError } from './photo-signals';
 import {
 	ShelfSpine,
 	mergeShelfReads,
@@ -8,21 +7,25 @@ import {
 	parseShelfRead,
 	readShelfSignals,
 } from './shelf-signals';
+import { VisionClient, VisionError } from './vision-client';
 
 const photo = { data: 'AAAA', mediaType: 'image/jpeg' } as const;
 
-/** A modell helyett: a megadott választ adja, vagy a megadott hibát dobja. */
-function client(response: unknown | (() => never)): Anthropic {
+/** A gateway helyett: a megadott szöveget adja, vagy a megadott hibát dobja. */
+function client(answer: string | ZsAiError): VisionClient {
 	return {
-		beta: {
-			messages: {
-				create: async () =>
-					typeof response === 'function'
-						? (response as () => never)()
-						: response,
-			},
+		execute: async () => {
+			if (answer instanceof ZsAiError) throw answer;
+
+			return {
+				kind: 'result',
+				executionId: 'req-1',
+				status: 'succeeded',
+				capability: 'text.complete',
+				output: { text: answer },
+			};
 		},
-	} as unknown as Anthropic;
+	};
 }
 
 /** Egy gerinc, csak a teszt szempontjából érdekes mezőkkel. */
@@ -79,32 +82,24 @@ describe('parseShelfRead', () => {
 
 describe('readShelfSignals', () => {
 	it('a modell válaszát gerincekké alakítja', async () => {
-		const response = {
-			stop_reason: 'end_turn',
-			content: [
+		const response = JSON.stringify({
+			spineCount: 1,
+			spines: [
 				{
-					type: 'text',
-					text: JSON.stringify({
-						spineCount: 1,
-						spines: [
-							{
-								position: 1,
-								unreadable: false,
-								artist: 'Katatonia',
-								albumTitle: 'City Burials',
-								label: 'Peaceville',
-								catalogNumber: 'VILELP76',
-								barcode: '0801056876010',
-								media: 'vinyl',
-								country: 'UK',
-								year: 2020,
-								confidence: 'high',
-							},
-						],
-					}),
+					position: 1,
+					unreadable: false,
+					artist: 'Katatonia',
+					albumTitle: 'City Burials',
+					label: 'Peaceville',
+					catalogNumber: 'VILELP76',
+					barcode: '0801056876010',
+					media: 'vinyl',
+					country: 'UK',
+					year: 2020,
+					confidence: 'high',
 				},
 			],
-		};
+		});
 
 		await expect(
 			readShelfSignals(photo, client(response))
@@ -123,14 +118,7 @@ describe('readShelfSignals', () => {
 	it('a túlterhelt modellt újrapróbálhatónak jelöli', async () => {
 		const error = await readShelfSignals(
 			photo,
-			client(() => {
-				throw new Anthropic.APIError(
-					529,
-					undefined,
-					'overloaded',
-					undefined
-				);
-			})
+			client(new ZsAiError('overloaded', 'PROVIDER_ERROR', 503))
 		).catch((caught: VisionError) => caught);
 
 		expect(error).toBeInstanceOf(VisionError);

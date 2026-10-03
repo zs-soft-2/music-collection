@@ -20,7 +20,7 @@ import {
 	FieldValue,
 	getFirestore,
 } from 'firebase-admin/firestore';
-import { defineSecret } from 'firebase-functions/params';
+import { defineSecret, defineString } from 'firebase-functions/params';
 import { setGlobalOptions } from 'firebase-functions/v2';
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
 import {
@@ -76,16 +76,21 @@ import { ScanAlbumContext, scanPhoto } from './photo-scan';
 import { ScanQuotaError, reserveVisionRequests } from './photo-scan-quota';
 import {
 	MAX_SHELF_PHOTOS,
+	SHELF_REQUEST_TIMEOUT_MS,
 	ShelfPhotoContext,
 	mergeShelfReads,
 	readShelfSignals,
 } from './shelf-signals';
 import {
 	PHOTO_MEDIA_TYPES,
+	PHOTO_REQUEST_TIMEOUT_MS,
 	PhotoInput,
+} from './photo-signals';
+import {
+	GatewaySettings,
 	VisionError,
 	createVisionClient,
-} from './photo-signals';
+} from './vision-client';
 import { approveReleaseRequest as approve } from './release-request-approval';
 import { DeletionError, deleteRelease } from './catalog-deletion';
 import { decideRequest as decide } from './request-decision';
@@ -134,11 +139,20 @@ const DISCOGS_CACHE_COLLECTION = 'discogs-cache';
  */
 const discogsToken = defineSecret('DISCOGS_TOKEN');
 /**
- * Anthropic API kulcs (Secret Manager, infra/environments) a fotós
- * azonosításhoz. Egy AI-gateway mögé állva a kulcs helyett a gateway tokenje
- * kerül ide, a végpontot pedig az `AI_GATEWAY_URL` környezeti változó adja.
+ * A fotós azonosítás az AI-gatewayen át megy (`vision-client.ts`). A kulcs a
+ * gateway-tenant API-kulcsa (Secret Manager, infra/environments); a
+ * szolgáltatói kulcsok a gatewaynél vannak, nem itt.
  */
-const anthropicApiKey = defineSecret('ANTHROPIC_API_KEY');
+const gatewayApiKey = defineSecret('GATEWAY_API_KEY');
+/**
+ * A gateway címe `/api/v1` nélkül. Nem titok: környezetenként az
+ * `apps/functions/.env.<projekt>` adja.
+ */
+const gatewayBaseUrl = defineString('GATEWAY_BASE_URL');
+
+function gatewaySettings(): GatewaySettings {
+	return { baseUrl: gatewayBaseUrl.value(), apiKey: gatewayApiKey.value() };
+}
 /** Ennyi ideig használjuk a cache-elt kiadáslistát. */
 const DISCOGS_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const USER_COLLECTION = 'user';
@@ -897,7 +911,7 @@ export const discogsLookup = onCall(
  */
 export const identifyRecordFromPhoto = onCall(
 	{
-		secrets: [discogsToken, anthropicApiKey],
+		secrets: [discogsToken, gatewayApiKey],
 		memory: '512MiB',
 		// A kép base64-be csomagolása és a válasz feldolgozása érdemi CPU-munka,
 		// nem csak várakozás a modellre — ez marad egész CPU-n.
@@ -936,7 +950,10 @@ export const identifyRecordFromPhoto = onCall(
 					album: readAlbumContext(request.data?.album),
 				},
 				{
-					client: createVisionClient(anthropicApiKey.value()),
+					client: createVisionClient(
+						gatewaySettings(),
+						PHOTO_REQUEST_TIMEOUT_MS
+					),
 					discogs: { token: discogsToken.value() || null },
 					barcodeCache: firestoreBarcodeCache(),
 					// A napi keret: a kép elolvasása előtt fogy, a vonalkóddal
@@ -1011,7 +1028,7 @@ function readShelfMedia(value: unknown): ShelfPhotoContext['media'] {
  */
 export const identifyShelfFromPhotos = onCall(
 	{
-		secrets: [anthropicApiKey],
+		secrets: [gatewayApiKey],
 		memory: '512MiB',
 		// Mint az `identifyRecordFromPhoto`, csak két képpel.
 		cpu: 1,
@@ -1050,7 +1067,10 @@ export const identifyShelfFromPhotos = onCall(
 		}
 
 		const context = { media: readShelfMedia(request.data?.media) };
-		const client = createVisionClient(anthropicApiKey.value());
+		const client = createVisionClient(
+			gatewaySettings(),
+			SHELF_REQUEST_TIMEOUT_MS
+		);
 
 		try {
 			// Minden fotó egy-egy modellkérés, és mindegyik el is indul — a

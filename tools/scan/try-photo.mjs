@@ -7,9 +7,10 @@
  *
  * It runs the same `scanPhoto` the callable runs, so what it prints is what
  * the collector would get. The tokens come from `apps/functions/.secret.local`
- * (ANTHROPIC_API_KEY, DISCOGS_TOKEN) — the same file the emulator reads.
+ * (GATEWAY_API_KEY, DISCOGS_TOKEN) — the same file the emulator reads.
  *
- * Every run calls Anthropic and Discogs for real, and costs about a cent.
+ * Every run calls the AI gateway and Discogs for real; the model call is
+ * billed to the gateway tenant, about a cent.
  * Build the functions first (`npm --prefix apps/functions run build`), since
  * this loads the compiled `lib/`.
  */
@@ -55,40 +56,51 @@ if (!mediaType) {
 	process.exit(1);
 }
 
-/** The emulator's secret file: KEY=value per line, no export, no quotes. */
-function readSecrets() {
-	const path = join(root, 'apps/functions/.secret.local');
-	const secrets = {};
+/** KEY=value per line, no export, no quotes — the emulator's own format. */
+function readKeyValues(relativePath) {
+	const path = join(root, relativePath);
+	const values = {};
 
-	try {
-		for (const line of readFileSync(path, 'utf8').split('\n')) {
-			const separator = line.indexOf('=');
+	for (const line of readFileSync(path, 'utf8').split('\n')) {
+		const separator = line.indexOf('=');
 
-			if (separator > 0 && !line.startsWith('#')) {
-				secrets[line.slice(0, separator).trim()] = line
-					.slice(separator + 1)
-					.trim();
-			}
+		if (separator > 0 && !line.startsWith('#')) {
+			values[line.slice(0, separator).trim()] = line
+				.slice(separator + 1)
+				.trim();
 		}
-	} catch {
-		console.error(`No ${path} — put ANTHROPIC_API_KEY and DISCOGS_TOKEN there.`);
-		process.exit(1);
 	}
 
-	return secrets;
+	return values;
+}
+
+/** The emulator's secret file. */
+function readSecrets() {
+	const path = 'apps/functions/.secret.local';
+
+	try {
+		return readKeyValues(path);
+	} catch {
+		console.error(`No ${join(root, path)} — put GATEWAY_API_KEY and DISCOGS_TOKEN there.`);
+		process.exit(1);
+	}
 }
 
 const secrets = readSecrets();
-const apiKey = process.env.ANTHROPIC_API_KEY ?? secrets.ANTHROPIC_API_KEY;
+// The same two settings the deployed function reads: the key from Secret
+// Manager (here `.secret.local`), the address from `.env.<project>` — the dev
+// gateway unless GATEWAY_BASE_URL says otherwise.
+const gateway = {
+	apiKey: process.env.GATEWAY_API_KEY ?? secrets.GATEWAY_API_KEY,
+	baseUrl:
+		process.env.GATEWAY_BASE_URL ??
+		readKeyValues('apps/functions/.env.music-collection-16676')
+			.GATEWAY_BASE_URL,
+};
 const discogsToken = process.env.DISCOGS_TOKEN ?? secrets.DISCOGS_TOKEN;
 
-// An organization-wide key needs to be told which workspace to bill.
-if (!process.env.ANTHROPIC_WORKSPACE_ID && secrets.ANTHROPIC_WORKSPACE_ID) {
-	process.env.ANTHROPIC_WORKSPACE_ID = secrets.ANTHROPIC_WORKSPACE_ID;
-}
-
-if (!apiKey) {
-	console.error('ANTHROPIC_API_KEY is missing.');
+if (!gateway.apiKey) {
+	console.error('GATEWAY_API_KEY is missing.');
 	process.exit(1);
 }
 if (!discogsToken) {
@@ -97,7 +109,8 @@ if (!discogsToken) {
 }
 
 const { scanPhoto } = require('./lib/photo-scan.js');
-const { createVisionClient } = require('./lib/photo-signals.js');
+const { PHOTO_REQUEST_TIMEOUT_MS } = require('./lib/photo-signals.js');
+const { createVisionClient } = require('./lib/vision-client.js');
 
 const image = readFileSync(imagePath);
 const started = Date.now();
@@ -111,7 +124,7 @@ const result = await scanPhoto(
 			: null,
 	},
 	{
-		client: createVisionClient(apiKey),
+		client: createVisionClient(gateway, PHOTO_REQUEST_TIMEOUT_MS),
 		discogs: { token: discogsToken },
 	}
 );

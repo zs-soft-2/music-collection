@@ -62,6 +62,21 @@ secretet és a hozzáférését az `infra/environments` teremti, az értékét k
 tesszük fel (`gcloud secrets versions add DISCOGS_TOKEN --data-file=-`); érték
 nélkül a function deployja elszáll.
 
+A fotós felismerés (`identifyRecordFromPhoto`, `identifyShelfFromPhotos`) az
+**AI-gatewayen** át hív modellt (`src/vision-client.ts`, `@zssz-soft/zs-ai-sdk`):
+`POST /api/v1/complete`, a kép az üzenetben, a válasz JSON-sémához kötve. Két
+beállítás kell hozzá:
+
+- `GATEWAY_API_KEY` — a gateway-tenant API-kulcsa, secret, ugyanúgy, mint a
+  `DISCOGS_TOKEN` (az `infra/environments` teremti, az értéket kézzel tesszük
+  fel). A tenantnak engedélyezve kell lennie a `claude-opus-5` modellnek.
+- `GATEWAY_BASE_URL` — a gateway címe `/api/v1` nélkül. Nem titok:
+  projektenként az `.env.<project_id>` fájl adja.
+
+Szolgáltatói kulcs (Anthropic, Vertex) a képolvasáshoz itt nincs. A jelvénykép
+(`badge-generation.ts`) egyelőre még közvetlenül a Vertexet hívja a projekt
+saját service accountjával.
+
 A `role` dokumentum `permissions` tömbje dönt; a user dokumentumon lévő
 hivatkozások (`roleIds`, illetve a régi, beágyazott `roles`) csak megnevezik a
 szerepkört. A beágyazott `roles[].permissions` szándékosan nem számít.
@@ -75,7 +90,13 @@ olvassa ugyanezt a dokumentumot.
 A régió a Firestore adatbázis helye (`europe-west4`) — eltérő régióval a deploy
 elszáll.
 
+A `@zssz-soft/zs-ai-sdk` privát csomag, ez a repó nyilvános. A functions ezért
+`file:vendor/…tgz`-ként függi: a tarballt a `tools/functions/vendor-ai-sdk.mjs`
+hozza le a GitHub Packagesről (token a `~/.npmrc`-ben), gitbe soha nem kerül.
+A Cloud Build így tokent sem kap, és nem is kell neki.
+
 ```bash
+node tools/functions/vendor-ai-sdk.mjs # az SDK tarballja (a predeploy is futtatja)
 npm --prefix apps/functions install    # saját függőségek (a deploy is ezt futtatja)
 npx nx build functions                 # tsc → apps/functions/lib
 npx nx test functions                  # a számítás egységtesztjei

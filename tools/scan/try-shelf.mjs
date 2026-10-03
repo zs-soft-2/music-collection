@@ -9,11 +9,11 @@
  * as the callable will do it. What it prints is the review table — the
  * conflicted fields are the ones the collector would have to look at.
  *
- * The key comes from `apps/functions/.secret.local` (ANTHROPIC_API_KEY), the
+ * The key comes from `apps/functions/.secret.local` (GATEWAY_API_KEY), the
  * same file the emulator reads. No Discogs here: this step only reads the
  * spines, the pressings are looked up later, for the submitted rows only.
  *
- * The photos go up as they are: the API downscales anything longer than
+ * The photos go up as they are: the model's API downscales anything longer than
  * 2576px on its long edge, which is exactly what the app sends after
  * `prepareShelfPhoto`, so what you see here is what the collector gets.
  *
@@ -62,46 +62,61 @@ const photos = positionals.map((path) => {
 	return { path, data: readFileSync(path).toString('base64'), mediaType };
 });
 
-/** The emulator's secret file: KEY=value per line, no export, no quotes. */
-function readSecrets() {
-	const path = join(root, 'apps/functions/.secret.local');
-	const secrets = {};
+/** KEY=value per line, no export, no quotes — the emulator's own format. */
+function readKeyValues(relativePath) {
+	const path = join(root, relativePath);
+	const values = {};
 
-	try {
-		for (const line of readFileSync(path, 'utf8').split('\n')) {
-			const separator = line.indexOf('=');
+	for (const line of readFileSync(path, 'utf8').split('\n')) {
+		const separator = line.indexOf('=');
 
-			if (separator > 0 && !line.startsWith('#')) {
-				secrets[line.slice(0, separator).trim()] = line
-					.slice(separator + 1)
-					.trim();
-			}
+		if (separator > 0 && !line.startsWith('#')) {
+			values[line.slice(0, separator).trim()] = line
+				.slice(separator + 1)
+				.trim();
 		}
-	} catch {
-		console.error(`No ${path} — put ANTHROPIC_API_KEY there.`);
-		process.exit(1);
 	}
 
-	return secrets;
+	return values;
+}
+
+/** The emulator's secret file. */
+function readSecrets() {
+	const path = 'apps/functions/.secret.local';
+
+	try {
+		return readKeyValues(path);
+	} catch {
+		console.error(`No ${join(root, path)} — put GATEWAY_API_KEY there.`);
+		process.exit(1);
+	}
 }
 
 const secrets = readSecrets();
-const apiKey = process.env.ANTHROPIC_API_KEY ?? secrets.ANTHROPIC_API_KEY;
+// The same two settings the deployed function reads: the key from Secret
+// Manager (here `.secret.local`), the address from `.env.<project>` — the dev
+// gateway unless GATEWAY_BASE_URL says otherwise.
+const gateway = {
+	apiKey: process.env.GATEWAY_API_KEY ?? secrets.GATEWAY_API_KEY,
+	baseUrl:
+		process.env.GATEWAY_BASE_URL ??
+		readKeyValues('apps/functions/.env.music-collection-16676')
+			.GATEWAY_BASE_URL,
+};
 
-// An organization-wide key needs to be told which workspace to bill.
-if (!process.env.ANTHROPIC_WORKSPACE_ID && secrets.ANTHROPIC_WORKSPACE_ID) {
-	process.env.ANTHROPIC_WORKSPACE_ID = secrets.ANTHROPIC_WORKSPACE_ID;
-}
-
-if (!apiKey) {
-	console.error('ANTHROPIC_API_KEY is missing.');
+if (!gateway.apiKey) {
+	console.error('GATEWAY_API_KEY is missing.');
 	process.exit(1);
 }
 
-const { createVisionClient } = require('./lib/photo-signals.js');
-const { readShelfSignals, mergeShelfReads } = require('./lib/shelf-signals.js');
+const { createVisionClient } = require('./lib/vision-client.js');
+const {
+	SHELF_REQUEST_TIMEOUT_MS,
+	readShelfSignals,
+	mergeShelfReads,
+} = require('./lib/shelf-signals.js');
 
-const client = createVisionClient(apiKey);
+const client = createVisionClient(gateway, SHELF_REQUEST_TIMEOUT_MS);
 const context = { media: options.media ?? null };
 const started = Date.now();
 
