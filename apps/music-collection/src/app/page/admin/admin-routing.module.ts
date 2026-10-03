@@ -7,6 +7,7 @@ import {
 	RolePermissionsService,
 	UserPermissionsService,
 } from '@music-collection/api';
+import { provideConcert } from '@music-collection/domain/concert';
 
 import { AdminComponent } from './admin.component';
 
@@ -175,6 +176,26 @@ const routes: Routes = [
 				loadComponent: () =>
 					import('./music-collection/edit/music-collection-edit.component').then(
 						(module) => module.MusicCollectionEditComponent
+					),
+				canActivate: [NgxPermissionsGuard],
+			},
+			{
+				// A koncertek: a katalógus zenekarainak fellépései, és a három
+				// betöltés, ami megtölti őket. A repositorykat itt kötjük be,
+				// nem az app configban — a lap lazy, a lib se kerüljön a fő
+				// bundle-be.
+				path: 'concert',
+				data: {
+					breadcrumb: 'concert',
+					permissions: {
+						only: [RoleNames.ADMIN],
+						redirectTo: '/error',
+					},
+				},
+				providers: [provideConcert()],
+				loadComponent: () =>
+					import('./concert/concert-admin.component').then(
+						(module) => module.ConcertAdminComponent
 					),
 				canActivate: [NgxPermissionsGuard],
 			},

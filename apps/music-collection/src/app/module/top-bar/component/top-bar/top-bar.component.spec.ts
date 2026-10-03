@@ -126,6 +126,7 @@ describe('TopBarComponent', () => {
 			'Challenges',
 			'Collectors',
 			'Coming out',
+			'Concerts',
 			'Network',
 		]);
 	});
@@ -143,6 +144,7 @@ describe('TopBarComponent', () => {
 			'Challenges',
 			'Collectors',
 			'Coming out',
+			'Concerts',
 			'Network',
 		]);
 	});
@@ -227,6 +229,7 @@ describe('TopBarComponent', () => {
 			'Collectors',
 			'Map',
 			'Coming out',
+			'Concerts',
 			'Network',
 			'My bands',
 			'My requests',

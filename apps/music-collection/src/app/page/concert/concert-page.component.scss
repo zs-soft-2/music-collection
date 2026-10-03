@@ -1,0 +1,502 @@
+:host {
+	display: block;
+	color: var(--mc-text);
+	font-family: var(--mc-font-body);
+}
+
+.page {
+	max-width: var(--mc-page-max-width);
+	min-height: calc(100vh - var(--mc-app-bar-height));
+	margin: 0 auto;
+	padding: 2rem clamp(1rem, 3vw, 2.5rem) 3rem;
+}
+
+/* ── Header ───────────────────────────────────────────────────────────── */
+
+.hero {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 1.5rem;
+	padding-bottom: 1.5rem;
+	margin-bottom: 2rem;
+	border-bottom: 1px solid var(--mc-border);
+}
+
+.eyebrow {
+	margin: 0;
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: var(--mc-primary);
+}
+
+h1 {
+	margin: 0.25rem 0 0;
+	font-family: var(--mc-font-display);
+	font-size: clamp(2.5rem, 6vw, 4rem);
+	font-weight: 400;
+	line-height: 1;
+	letter-spacing: 0.02em;
+}
+
+.lead {
+	max-width: 52ch;
+	margin: 0.6rem 0 0;
+	color: var(--mc-text-muted);
+}
+
+.stats {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1.75rem;
+	margin: 0;
+}
+
+.stat {
+	dt {
+		font-size: 0.7rem;
+		font-weight: 600;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--mc-text-subtle);
+	}
+
+	dd {
+		margin: 0.2rem 0 0;
+		font-family: var(--mc-font-display);
+		font-size: 2rem;
+		line-height: 1;
+	}
+}
+
+/* ── Toolbar ──────────────────────────────────────────────────────────── */
+
+.toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-bottom: 2rem;
+}
+
+.tabs {
+	display: flex;
+	gap: 0.25rem;
+	padding: 0.25rem;
+	background: var(--mc-surface-2);
+	border-radius: var(--mc-radius-md);
+}
+
+.tab {
+	padding: 0.45rem 0.9rem;
+	font: inherit;
+	font-size: 0.9rem;
+	color: var(--mc-text-muted);
+	cursor: pointer;
+	background: none;
+	border: none;
+	border-radius: var(--mc-radius-sm);
+	transition: background var(--mc-duration-fast);
+
+	&:hover {
+		color: var(--mc-text);
+	}
+
+	&.is-active {
+		color: var(--mc-text);
+		background: var(--mc-card-bg);
+	}
+}
+
+.city {
+	display: inline-flex;
+	gap: 0.5rem;
+	align-items: center;
+	font-size: 0.9rem;
+	color: var(--mc-text-muted);
+
+	select {
+		padding: 0.4rem 0.6rem;
+		font: inherit;
+		font-size: 0.9rem;
+		color: var(--mc-text);
+		background: var(--mc-card-bg);
+		border: 1px solid var(--mc-border);
+		border-radius: var(--mc-radius-sm);
+	}
+}
+
+.city-label {
+	font-size: 0.7rem;
+	font-weight: 600;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--mc-text-subtle);
+}
+
+/* ── Timeline ─────────────────────────────────────────────────────────── */
+
+.month {
+	margin-bottom: 2.5rem;
+}
+
+.month-label {
+	margin: 0 0 1rem;
+	font-family: var(--mc-font-display);
+	font-size: 1.5rem;
+	font-weight: 400;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--mc-text-muted);
+	border-bottom: 1px solid var(--mc-border);
+	padding-bottom: 0.4rem;
+}
+
+.day {
+	display: grid;
+	grid-template-columns: 5.5rem 1fr;
+	gap: 1.25rem;
+	padding: 1rem 0;
+
+	& + .day {
+		border-top: 1px solid var(--mc-border);
+	}
+}
+
+.day-mark {
+	display: flex;
+	flex-direction: column;
+	padding-top: 0.2rem;
+	line-height: 1.2;
+	text-align: right;
+}
+
+.day-number {
+	font-family: var(--mc-font-display);
+	font-size: 2.25rem;
+	line-height: 1;
+}
+
+.day-weekday {
+	font-size: 0.8rem;
+	color: var(--mc-text-muted);
+}
+
+.day-countdown {
+	margin-top: 0.2rem;
+	font-size: 0.7rem;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--mc-primary);
+}
+
+.concerts {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	padding: 0;
+	margin: 0;
+	list-style: none;
+}
+
+.concert {
+	display: grid;
+	grid-template-columns: 72px 1fr;
+	gap: 1rem;
+	align-items: start;
+	padding: 0.75rem;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-md);
+	transition: background var(--mc-duration-fast);
+
+	&:hover {
+		background: var(--mc-card-bg-hover);
+	}
+}
+
+// A band photo, or the empty square in its place: the row stands on its text.
+.art {
+	display: block;
+	width: 72px;
+	height: 72px;
+	object-fit: cover;
+	background-color: var(--mc-surface-2);
+	border-radius: var(--mc-radius-sm);
+}
+
+.art-empty {
+	background-image: linear-gradient(
+		135deg,
+		var(--mc-surface-2),
+		var(--mc-card-bg-hover)
+	);
+}
+
+.concert-text {
+	min-width: 0;
+}
+
+.artist {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	align-items: baseline;
+	margin: 0;
+	font-size: 0.85rem;
+	color: var(--mc-text-muted);
+
+	a {
+		color: inherit;
+		text-decoration: none;
+
+		&:hover {
+			color: var(--mc-primary);
+			text-decoration: underline;
+		}
+	}
+}
+
+.namesake {
+	padding: 0.05rem 0.35rem;
+	font-size: 0.65rem;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--mc-status-warn);
+	border: 1px solid currentcolor;
+	border-radius: var(--mc-radius-sm);
+	cursor: help;
+}
+
+.title {
+	margin: 0.15rem 0 0;
+	font-size: 1.05rem;
+	font-weight: 600;
+	line-height: 1.3;
+
+	a {
+		color: inherit;
+		text-decoration: none;
+
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+}
+
+.meta {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem;
+	margin: 0.5rem 0 0;
+}
+
+.chip {
+	padding: 0.1rem 0.45rem;
+	font-size: 0.7rem;
+	letter-spacing: 0.04em;
+	color: var(--mc-text-muted);
+	background: var(--mc-surface-2);
+	border-radius: var(--mc-radius-sm);
+}
+
+.chip-fest {
+	color: var(--mc-on-accent);
+	background: var(--mc-accent);
+}
+
+// Amit modell javasolt és ember hagyott jóvá. A jelölés nem dicsekvés: a
+// MusicBrainzről betöltött est mbid-del horgonyzott, ez pedig egy forrással
+// és egy döntéssel — az olvasó joggal méri a kettőt máshogy.
+.chip-ai {
+	color: var(--mc-text);
+	border: 1px solid var(--mc-border-strong);
+	cursor: help;
+}
+
+.chip-off {
+	color: var(--mc-on-primary);
+	background: var(--mc-status-danger, var(--mc-primary));
+}
+
+// A lemaradt est megmarad: akinek jegye volt, az is keresi.
+.is-cancelled {
+	.title,
+	.where {
+		text-decoration: line-through;
+	}
+
+	opacity: 0.7;
+}
+
+.where {
+	margin: 0.3rem 0 0;
+	font-size: 0.9rem;
+	color: var(--mc-text);
+
+	a {
+		color: inherit;
+		text-decoration: none;
+
+		&:hover {
+			color: var(--mc-primary);
+			text-decoration: underline;
+		}
+	}
+}
+
+.dot {
+	padding: 0 0.15rem;
+	color: var(--mc-text-subtle);
+}
+
+// Kik játszanak aznap. A hét zenekaros est címe egy pipe-okkal elválasztott
+// szövegfolyam; ez ugyanazt a névsort olvashatóvá teszi, és ami a polcon van,
+// az külön is kiemelve, mert a gyűjtő azért nézi a lapot.
+.lineup {
+	margin: 0.5rem 0 0;
+}
+
+.lineup-label {
+	margin: 0;
+	font-size: 0.65rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--mc-text-subtle);
+}
+
+.acts {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.3rem;
+	margin: 0.3rem 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.act {
+	padding: 0.12rem 0.45rem;
+	font-size: 0.8rem;
+	color: var(--mc-text-muted);
+	background: var(--mc-surface-2);
+	border: 1px solid transparent;
+	border-radius: var(--mc-radius-sm);
+
+	a {
+		color: inherit;
+		text-decoration: none;
+
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+}
+
+// Ami a katalógusban megvan: ide vezet link, és ez a sor lényege.
+.act.is-known {
+	color: var(--mc-text);
+	border-color: var(--mc-border-strong);
+
+	a:hover {
+		color: var(--mc-primary);
+	}
+}
+
+.footnote {
+	margin: 0.4rem 0 0;
+	font-size: 0.75rem;
+	color: var(--mc-text-subtle);
+}
+
+.links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	margin: 0.6rem 0 0;
+	font-size: 0.8rem;
+
+	a {
+		color: var(--mc-primary);
+		text-decoration: none;
+
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+}
+
+.ticket {
+	font-weight: 600;
+}
+
+/* ── Empty and loading ────────────────────────────────────────────────── */
+
+.empty {
+	max-width: 56ch;
+	padding: 1.5rem 0;
+	color: var(--mc-text-muted);
+}
+
+.timeline {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.skeleton {
+	background: linear-gradient(
+		100deg,
+		var(--mc-card-bg) 40%,
+		var(--mc-surface-2) 50%,
+		var(--mc-card-bg) 60%
+	);
+	background-size: 200% 100%;
+	border-radius: var(--mc-radius-md);
+	animation: mc-shimmer 1.4s linear infinite;
+}
+
+.row-skeleton {
+	height: 96px;
+}
+
+@keyframes mc-shimmer {
+	from {
+		background-position: 200% 0;
+	}
+
+	to {
+		background-position: -200% 0;
+	}
+}
+
+@media (width <= 640px) {
+	.day {
+		grid-template-columns: 1fr;
+		gap: 0.5rem;
+	}
+
+	.day-mark {
+		flex-direction: row;
+		gap: 0.6rem;
+		align-items: baseline;
+		text-align: left;
+	}
+
+	.day-number {
+		font-size: 1.6rem;
+	}
+
+	.concert {
+		grid-template-columns: 56px 1fr;
+	}
+
+	.art {
+		width: 56px;
+		height: 56px;
+	}
+}

@@ -272,6 +272,9 @@ service cloud.firestore {
         'membership': 'MembershipEntity',
         'music-collection': 'MusicCollectionEntity',
         'genre': 'GenreEntity',
+        'venue': 'VenueEntity',
+        'concert': 'ConcertEntity',
+        'concert-suggestion': 'ConcertEntity',
         'role': 'RoleEntity',
         'user': 'UserEntity',
         'entity-quantity': 'EntityQuantityEntity',
@@ -288,6 +291,70 @@ service cloud.firestore {
         'owned-contribution': 'OwnedContributionEntity',
         'owned-membership': 'OwnedMembershipEntity'
       };
+    }
+
+    // Egy helyszín dokumentum alakja. A koordináta szám, nem szöveg: a térkép
+    // és a távolságszámítás ebből él.
+    function isValidVenue() {
+      let data = request.resource.data;
+
+      return data.name is string
+          && data.name.size() > 0
+          && data.name.size() <= 200
+          && data.countryCode is string
+          && data.countryCode.size() == 2
+          && (!('city' in data) || data.city == null
+              || (data.city is string && data.city.size() <= 120))
+          && (!('address' in data) || data.address == null
+              || (data.address is string && data.address.size() <= 300))
+          && (!('type' in data) || data.type == null
+              || (data.type is string && data.type.size() <= 60))
+          && (!('coordinates' in data) || data.coordinates == null
+              || (data.coordinates.latitude is number
+                  && data.coordinates.longitude is number))
+          && (!('source' in data)
+              || data.source in ['musicbrainz', 'ai', 'manual']);
+    }
+
+    // Egy koncert dokumentum alakja. A nap teljes dátum: részleges dátumra a
+    // lap nem tud idővonalat rajzolni, és a lejárat-söprés sem működne.
+    function isValidConcert() {
+      let data = request.resource.data;
+
+      return data.artistUid is string
+          && data.artistUid.size() > 0
+          && data.artistName is string
+          && data.artistName.size() > 0
+          && data.artistName.size() <= 300
+          && data.venueName is string
+          && data.venueName.size() > 0
+          && data.venueName.size() <= 200
+          && data.title is string
+          && data.title.size() > 0
+          && data.title.size() <= 300
+          && data.countryCode is string
+          && data.countryCode.size() == 2
+          && data.startsAt is string
+          && data.startsAt.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')
+          && (!('endsAt' in data) || data.endsAt == null
+              || data.endsAt.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}'))
+          && (!('startsAtTime' in data) || data.startsAtTime == null
+              || data.startsAtTime.matches('[0-9]{2}:[0-9]{2}'))
+          && data.eventType in ['concert', 'festival', 'other']
+          && data.source in ['musicbrainz', 'ai', 'manual']
+          && data.cancelled is bool
+          && (!('ticketUrl' in data) || data.ticketUrl == null
+              || (data.ticketUrl is string && data.ticketUrl.size() <= 1000))
+          && (!('sourceUrl' in data) || data.sourceUrl == null
+              || (data.sourceUrl is string && data.sourceUrl.size() <= 1000))
+          && (!('supportingActs' in data)
+              || (data.supportingActs is list
+                  && data.supportingActs.size() <= 30))
+          // A teljes műsor, a főfellépővel együtt: a fenti névsor plusz egy,
+          // és a lista elemei a lapon linkké válnak.
+          && (!('lineup' in data)
+              || (data.lineup is list
+                  && data.lineup.size() <= 31));
     }
 
     // Egy műfaj dokumentum alakja. A stíluslista az, amit a formok kínálnak,
@@ -1351,6 +1418,47 @@ service cloud.firestore {
     match /upcoming-release/{releaseGroupId} {
       allow read: if true;
       allow write: if false; // refreshUpcomingReleases / syncUpcomingReleasesNow
+    }
+
+    // ── Koncertek ───────────────────────────────────────────────────────────
+    // Helyszínek: a MusicBrainz `place` entitásából a `loadConcertVenues`
+    // (Admin SDK) tölti, kézzel pedig az admin javítja. Olvasni bárki
+    // olvashatja — ez a katalógus törzsadata, mint a kiadók listája.
+    match /venue/{venueId} {
+      allow read: if true;
+      allow create: if hasPerm('createVenueEntity') && isValidVenue();
+      allow update: if hasPerm('updateVenueEntity') && isValidVenue();
+      allow delete: if hasPerm('deleteVenueEntity');
+    }
+
+    // Beiktatott koncertek: amit a `loadConcertsFromMusicBrainz` mbid-del
+    // horgonyozva írt, vagy amit egy admin a javaslatok közül jóváhagyott.
+    // Ami ide bekerül, az a nyilvános lapon látszik — ezért ide a kliens csak
+    // permissionnel és csak érvényes alakban írhat.
+    match /concert/{concertId} {
+      allow read: if true;
+      allow create: if hasPerm('createConcertEntity') && isValidConcert();
+      allow update: if hasPerm('updateConcertEntity') && isValidConcert();
+      allow delete: if hasPerm('deleteConcertEntity');
+    }
+
+    // Koncert-javaslatok: amit a modell ajánlott (`suggestConcerts`), és ami
+    // emberre vár. SZÁNDÉKOSAN nem nyilvános: egy groundolt keresés is
+    // tévedhet, és amíg valaki nem nézte meg a hivatkozott forrást, addig ez
+    // nem állítás, csak jelölt. Írni a kliens csak a döntést tudja — az
+    // elutasítást —, a javaslatokat a function hozza.
+    match /concert-suggestion/{suggestionId} {
+      allow read: if hasPerm('viewConcertEntity')
+                  || hasPerm('createConcertEntity');
+      allow create: if false; // suggestConcerts (Admin SDK)
+      // A döntés: a felülvizsgálat három mezője. Maga a javaslat nem írható
+      // át itt — amit javítani kell, az jóváhagyáskor a `concert` alá kerül.
+      allow update: if hasPerm('updateConcertEntity')
+                    && changedKeys().hasOnly([
+                         'reviewState', 'reviewedAt', 'reviewedBy', 'updatedAt'
+                       ])
+                    && request.resource.data.reviewState in ['pending', 'rejected'];
+      allow delete: if hasPerm('updateConcertEntity');
     }
 
     // ── Napi kérdés ─────────────────────────────────────────────────────────

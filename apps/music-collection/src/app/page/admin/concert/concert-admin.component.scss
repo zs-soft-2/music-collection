@@ -1,0 +1,319 @@
+/* A lap kerete az admin közös elemeiből áll (`mc-page-head`, `mc-card`,
+   `mc-form`, `mc-stacked-table`); itt csak az van, ami ezen a lapon sajátos:
+   a három betöltő sáv, a fülek és a javaslat-kártyák. */
+
+.loads {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+	gap: 1rem;
+	align-items: start;
+	padding: 1rem;
+	margin-bottom: 1.5rem;
+}
+
+.load {
+	display: flex;
+	gap: 1rem;
+	align-items: flex-start;
+	justify-content: space-between;
+
+	h2 {
+		margin: 0;
+		font-size: 0.9375rem;
+	}
+
+	p {
+		margin: 0.25rem 0 0;
+		font-size: 0.8125rem;
+		color: var(--mc-text-muted);
+	}
+}
+
+/* A fizetős betöltés külön jelölve: ez az, ami pénzbe kerül. */
+.is-ai {
+	padding-left: 1rem;
+	border-left: 2px solid var(--mc-accent);
+}
+
+.load-result {
+	display: block;
+	margin-top: 0.4rem;
+	font-size: 0.75rem;
+	color: var(--mc-text-subtle);
+}
+
+.load-window {
+	max-width: 10rem;
+}
+
+.load-settings {
+	align-self: end;
+}
+
+.tabs {
+	display: flex;
+	gap: 0.25rem;
+	padding: 0.25rem;
+	margin-bottom: 1.5rem;
+	background: var(--mc-surface-2);
+	border-radius: var(--mc-radius-md);
+}
+
+.tab {
+	display: inline-flex;
+	gap: 0.4rem;
+	align-items: center;
+	padding: 0.45rem 0.9rem;
+	font: inherit;
+	font-size: 0.875rem;
+	color: var(--mc-text-muted);
+	cursor: pointer;
+	background: none;
+	border: none;
+	border-radius: var(--mc-radius-sm);
+
+	&:hover {
+		color: var(--mc-text);
+	}
+
+	&.is-active {
+		color: var(--mc-text);
+		background: var(--mc-card-bg);
+	}
+}
+
+.badge {
+	padding: 0.05rem 0.4rem;
+	font-size: 0.6875rem;
+	font-weight: 700;
+	color: var(--mc-on-primary);
+	background: var(--mc-primary);
+	border-radius: 999px;
+}
+
+/* ── Javaslatok ───────────────────────────────────────────────────────── */
+
+.suggestions {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	padding: 0;
+	margin: 0;
+	list-style: none;
+}
+
+.suggestion {
+	display: grid;
+	grid-template-columns: 7rem 1fr auto;
+	gap: 1rem;
+	align-items: start;
+	padding: 1rem;
+}
+
+.suggestion-when {
+	display: flex;
+	flex-direction: column;
+	gap: 0.2rem;
+}
+
+.suggestion-day {
+	font-family: var(--mc-font-display);
+	font-size: 1.125rem;
+}
+
+.suggestion-time {
+	font-size: 0.8125rem;
+	color: var(--mc-text-muted);
+}
+
+.suggestion-text {
+	min-width: 0;
+
+	h3 {
+		margin: 0.1rem 0 0.3rem;
+		font-size: 1rem;
+	}
+}
+
+.suggestion-artist {
+	margin: 0;
+	font-size: 0.8125rem;
+	color: var(--mc-text-muted);
+}
+
+.suggestion-where {
+	margin: 0;
+	font-size: 0.875rem;
+}
+
+/* Amivel a modell indokolja. Nem bizonyíték — a forrás az, ezért halkabb. */
+.suggestion-note {
+	margin: 0.4rem 0 0;
+	font-size: 0.8125rem;
+	font-style: italic;
+	color: var(--mc-text-subtle);
+}
+
+.suggestion-links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	margin: 0.5rem 0 0;
+	font-size: 0.8125rem;
+
+	a {
+		color: var(--mc-primary);
+		text-decoration: none;
+
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+}
+
+.suggestion-actions {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+}
+
+/* ── Koncert szerkesztése ─────────────────────────────────────────────── */
+
+/* A cím a fellépés neve; alatta halkan az, akinek a koncertjeként áll. */
+.concert-editor-sub {
+	margin: -0.75rem 0 0;
+	font-size: 0.8125rem;
+	color: var(--mc-text-muted);
+}
+
+.concert-acts {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+	padding: 0;
+	margin: 0;
+	list-style: none;
+}
+
+.concert-act {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+
+	input {
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+
+	/* A katalógus-keresőt a sor szélessége tartja, nem a benne ülő input:
+	   a PrimeNG a saját gyökerét teszi ide, az input alatta ül. */
+	.p-autocomplete {
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+}
+
+/* A legördülő sorai: csak a név, ennyiből lehet választani. */
+.concert-act-option {
+	display: block;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* A beiktatott előadó nem szerkeszthető: ő adja a dokumentum azonosítóját. */
+.is-credited {
+	padding: 0.35rem 0;
+}
+
+.concert-act-name {
+	flex: 1 1 auto;
+	min-width: 0;
+	font-weight: 600;
+}
+
+.concert-acts-add {
+	display: flex;
+}
+
+/* ── Közös apróságok ──────────────────────────────────────────────────── */
+
+.chip {
+	padding: 0.1rem 0.45rem;
+	font-size: 0.6875rem;
+	letter-spacing: 0.04em;
+	color: var(--mc-text-muted);
+	background: var(--mc-surface-2);
+	border-radius: var(--mc-radius-sm);
+}
+
+/* Amiben hiányosság van: a helyszín nincs a listán, vagy nincs forrás. */
+.chip-warn {
+	color: var(--mc-status-warn);
+	background: none;
+	border: 1px solid currentcolor;
+}
+
+.chip-ai {
+	color: var(--mc-text);
+	border: 1px solid var(--mc-border-strong);
+}
+
+.concert-switch {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+
+	label {
+		font-size: 0.8125rem;
+		font-weight: 600;
+	}
+}
+
+.is-error {
+	display: block;
+	margin-bottom: 1rem;
+	color: var(--mc-status-bad);
+}
+
+.is-cancelled {
+	text-decoration: line-through;
+	opacity: 0.65;
+}
+
+.is-retired {
+	opacity: 0.65;
+}
+
+.venues-actions {
+	margin-bottom: 1rem;
+}
+
+.mc-confirm {
+	padding: 1rem;
+	margin-top: 1rem;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border-strong);
+	border-radius: var(--mc-radius-md);
+
+	p {
+		margin: 0 0 0.75rem;
+	}
+}
+
+@media (width <= 720px) {
+	.suggestion {
+		grid-template-columns: 1fr;
+	}
+
+	.suggestion-when {
+		flex-direction: row;
+		gap: 0.6rem;
+		align-items: baseline;
+	}
+
+	.suggestion-actions {
+		flex-direction: row;
+		flex-wrap: wrap;
+	}
+}

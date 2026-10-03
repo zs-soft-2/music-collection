@@ -77,6 +77,12 @@
 			"@music-collection/domain/document/admin": [
 				"libs/domain/document/app/admin/src/index.ts"
 			],
+			"@music-collection/domain/concert": [
+				"libs/domain/music/concert/src/index.ts"
+			],
+			"@music-collection/domain/concert/testing": [
+				"libs/domain/music/concert/src/testing.ts"
+			],
 			"@music-collection/domain/genre": [
 				"libs/domain/music/genre/src/index.ts"
 			],

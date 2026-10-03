@@ -101,6 +101,12 @@ export class TopBarService {
 				group: 'explore',
 			},
 			{
+				labelKey: 'nav.concerts',
+				icon: 'pi-ticket',
+				routerLink: ['/concert'],
+				group: 'explore',
+			},
+			{
 				labelKey: 'nav.network',
 				icon: 'pi-sitemap',
 				routerLink: ['/network'],

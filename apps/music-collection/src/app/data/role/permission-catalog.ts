@@ -6,6 +6,7 @@ import {
 	ArtistResourceEnum,
 	CollectionItemPermissionsService,
 	CollectionItemResourceEnum,
+	ConcertPermissionsService,
 	ContributionPermissionsService,
 	DocumentPermissionsService,
 	DocumentResourceEnum,
@@ -217,6 +218,22 @@ export const PERMISSION_CATALOG: PermissionGroup[] = [
 				GenrePermissionsService.createGenreEntity,
 				GenrePermissionsService.updateGenreEntity,
 				GenrePermissionsService.deleteGenreEntity,
+			]),
+			// A helyszín és a koncert külön erőforrás: a helyszínlista
+			// törzsadat, amit egy betöltés tölt fel, a koncert pedig az, ami a
+			// nyilvános lapon megjelenik.
+			row('admin.role.resource.venue', [
+				ConcertPermissionsService.createVenueEntity,
+				ConcertPermissionsService.updateVenueEntity,
+				ConcertPermissionsService.deleteVenueEntity,
+			]),
+			// A `view` is szerepel: a jóváhagyásra váró javaslatokat ez a jog
+			// nyitja meg, és az nem a nyilvános lap része.
+			row('admin.role.resource.concert', [
+				ConcertPermissionsService.viewConcertEntity,
+				ConcertPermissionsService.createConcertEntity,
+				ConcertPermissionsService.updateConcertEntity,
+				ConcertPermissionsService.deleteConcertEntity,
 			]),
 			row('admin.role.resource.musicCollection', [
 				MusicCollectionPermissionsService.createMusicCollectionEntity,

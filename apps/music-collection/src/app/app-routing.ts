@@ -3,6 +3,7 @@ import { NgxPermissionsGuard } from 'ngx-permissions';
 import { Routes } from '@angular/router';
 import { RoleNames } from '@music-collection/api';
 import { authenticatedGuard } from '@music-collection/core/authentication';
+import { provideConcert } from '@music-collection/domain/concert';
 
 export const routes: Routes = [
 	{
@@ -197,6 +198,23 @@ export const routes: Routes = [
 			),
 		data: {
 			breadcrumb: 'upcoming',
+		},
+	},
+	{
+		// Where the bands of the catalog are playing. The concerts are loaded
+		// in the admin — MusicBrainz for what is anchored on an mbid, a model
+		// for the rest — and a model's night only arrives here once a person
+		// has approved it. The page reads; the repositories it needs are
+		// provided on the route rather than in the app config, so the concert
+		// lib stays out of the main bundle.
+		path: 'concert',
+		loadComponent: () =>
+			import('./page/concert/concert-page.component').then(
+				(module) => module.ConcertPageComponent
+			),
+		providers: [provideConcert()],
+		data: {
+			breadcrumb: 'concert',
 		},
 	},
 	{

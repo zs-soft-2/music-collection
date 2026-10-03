@@ -79,6 +79,14 @@ export const ADMIN_NAV: AdminNavGroup[] = [
 				icon: 'pi-tags',
 				createLabelKey: 'admin.genre.add',
 			},
+			{
+				// Számláló nélkül: az `entity-quantity` dokumentumokat a kliens
+				// írásai tartják karban, a koncerteket viszont egy betöltés
+				// írja. A darabszám a koncert-lapon áll, ahol a lista is.
+				labelKey: 'admin.nav.concerts',
+				route: 'concert',
+				icon: 'pi-calendar-clock',
+			},
 		],
 	},
 	{

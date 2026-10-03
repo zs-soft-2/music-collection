@@ -2,6 +2,7 @@ export * from './album';
 export * from './artist';
 export * from './band-of-the-week';
 export * from './collection-item';
+export * from './concert';
 export * from './contribution';
 export * from './daily-question';
 export * from './external';

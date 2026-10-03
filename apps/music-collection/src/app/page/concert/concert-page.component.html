@@ -1,0 +1,284 @@
+<div class="page">
+	<header class="hero">
+		<div class="hero-text">
+			<p class="eyebrow">musiCollection</p>
+			<h1>{{ 'page.concert.title' | transloco }}</h1>
+			<p class="lead">{{ 'page.concert.lead' | transloco }}</p>
+		</div>
+
+		@if (!store.isLoading() && store.rows().length) {
+			<dl class="stats">
+				<div class="stat">
+					<dt>{{ 'page.concert.nights' | transloco }}</dt>
+					<dd>{{ store.rows().length }}</dd>
+				</div>
+				<div class="stat">
+					<dt>{{ 'page.concert.bands' | transloco }}</dt>
+					<dd>{{ store.artistCount() }}</dd>
+				</div>
+				<div class="stat">
+					<dt>{{ 'page.concert.festivals' | transloco }}</dt>
+					<dd>{{ store.festivalCount() }}</dd>
+				</div>
+				<div class="stat">
+					<dt>{{ 'page.concert.cities' | transloco }}</dt>
+					<dd>{{ store.cities().length }}</dd>
+				</div>
+			</dl>
+		}
+	</header>
+
+	@if (store.isLoading()) {
+		<div class="timeline">
+			@for (skeleton of skeletons; track skeleton) {
+				<div class="skeleton row-skeleton"></div>
+			}
+		</div>
+	} @else if (store.isEmpty()) {
+		<p class="empty">{{ 'page.concert.nothing' | transloco }}</p>
+	} @else {
+		<div class="toolbar">
+			<div
+				class="tabs"
+				role="tablist"
+				[attr.aria-label]="'page.concert.which-nights' | transloco"
+			>
+				@for (option of filterOptions; track option.value) {
+					<button
+						type="button"
+						role="tab"
+						class="tab"
+						[class.is-active]="store.filter() === option.value"
+						[attr.aria-selected]="store.filter() === option.value"
+						(click)="onFilter(option.value)"
+					>
+						{{ option.labelKey | transloco }}
+					</button>
+				}
+			</div>
+
+			@if (store.cities().length > 1) {
+				<label class="city">
+					<span class="city-label">{{
+						'page.concert.city' | transloco
+					}}</span>
+					<select [value]="store.city()" (change)="onCity($event)">
+						<option value="">
+							{{ 'page.concert.every-city' | transloco }}
+						</option>
+						@for (city of store.cities(); track city) {
+							<option [value]="city">{{ city }}</option>
+						}
+					</select>
+				</label>
+			}
+		</div>
+
+		@if (store.isFilteredOut()) {
+			<p class="empty">{{ 'page.concert.filtered-out' | transloco }}</p>
+		}
+
+		@for (month of store.months(); track month.key) {
+			<section class="month" [attr.aria-label]="month.label">
+				<h2 class="month-label">{{ month.label }}</h2>
+
+				@for (day of month.days; track day.key) {
+					<div class="day">
+						<div class="day-mark">
+							<span class="day-number">{{ day.day }}</span>
+							<span class="day-weekday">{{ day.weekday }}</span>
+							<span class="day-countdown">{{
+								day.countdown
+									| transloco
+										: { value: countdownValue(day.key) }
+							}}</span>
+						</div>
+
+						<ul class="concerts">
+							@for (concert of day.concerts; track concert.uid) {
+								<li
+									class="concert"
+									[class.is-cancelled]="concert.cancelled"
+								>
+									@if (concert.artistImageUrl) {
+										<img
+											class="art"
+											[src]="concert.artistImageUrl"
+											[alt]="concert.artistName"
+											loading="lazy"
+											(error)="onImageError($event)"
+										/>
+									} @else {
+										<div class="art art-empty"></div>
+									}
+
+									<div class="concert-text">
+										@if (!concert.titleIsArtist) {
+											<p class="artist">
+												<a
+													[routerLink]="[
+														'/artist',
+														concert.artistUid,
+													]"
+													>{{ concert.artistName }}</a
+												>
+											</p>
+										}
+
+										<h3 class="title">
+											@if (concert.titleIsArtist) {
+												<a
+													[routerLink]="[
+														'/artist',
+														concert.artistUid,
+													]"
+													>{{ concert.title }}</a
+												>
+											} @else {
+												{{ concert.title }}
+											}
+										</h3>
+
+										<p class="where">
+											@if (concert.venueUrl) {
+												<a
+													[href]="concert.venueUrl"
+													target="_blank"
+													rel="noopener noreferrer"
+													>{{ concert.venueName }}</a
+												>
+											} @else {
+												{{ concert.venueName }}
+											}
+											@if (concert.city) {
+												<span class="dot">·</span>
+												{{ concert.city }}
+											}
+											@if (concert.startsAtTime) {
+												<span class="dot">·</span>
+												{{ concert.startsAtTime }}
+											}
+										</p>
+
+										<p class="meta">
+											@if (concert.cancelled) {
+												<span class="chip chip-off">{{
+													'page.concert.cancelled'
+														| transloco
+												}}</span>
+											}
+
+											@if (
+												concert.eventType === 'festival'
+											) {
+												<span class="chip chip-fest">{{
+													'page.concert.festival'
+														| transloco
+												}}</span>
+											}
+
+											@if (concert.endsAt) {
+												<span class="chip">{{
+													'page.concert.until'
+														| transloco
+															: {
+																	day: concert.endsAt,
+															  }
+												}}</span>
+											}
+
+											@if (concert.source === 'ai') {
+												<span
+													class="chip chip-ai"
+													[title]="
+														'page.concert.checked-hint'
+															| transloco
+													"
+													>{{
+														'page.concert.checked'
+															| transloco
+													}}</span
+												>
+											}
+										</p>
+
+										@if (concert.lineup.length > 1) {
+											<div class="lineup">
+												<p class="lineup-label">
+													{{
+														'page.concert.lineup'
+															| transloco
+													}}
+												</p>
+												<ul class="acts">
+													@for (
+														act of concert.lineup;
+														track act.name
+													) {
+														<li
+															class="act"
+															[class.is-known]="
+																act.artistUid
+															"
+														>
+															@if (act.artistUid) {
+																<a
+																	[routerLink]="[
+																		'/artist',
+																		act.artistUid,
+																	]"
+																	>{{
+																		act.name
+																	}}</a
+																>
+															} @else {
+																{{ act.name }}
+															}
+														</li>
+													}
+												</ul>
+											</div>
+										}
+
+										@if (concert.venueAddress) {
+											<p class="footnote">
+												{{ concert.venueAddress }}
+											</p>
+										}
+
+										<p class="links">
+											@if (concert.ticketUrl) {
+												<a
+													class="ticket"
+													[href]="concert.ticketUrl"
+													target="_blank"
+													rel="noopener noreferrer"
+													>{{
+														'page.concert.tickets'
+															| transloco
+													}}</a
+												>
+											}
+											@if (concert.sourceUrl) {
+												<a
+													class="source"
+													[href]="concert.sourceUrl"
+													target="_blank"
+													rel="noopener noreferrer"
+													>{{
+														'page.concert.source'
+															| transloco
+													}}</a
+												>
+											}
+										</p>
+									</div>
+								</li>
+							}
+						</ul>
+					</div>
+				}
+			</section>
+		}
+	}
+</div>
