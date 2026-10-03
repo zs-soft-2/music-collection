@@ -1,7 +1,7 @@
 /**
  * A pénzbe kerülő callable-ök védelme.
  *
- * Az `identifyRecordFromPhoto` minden hívása egy Anthropic vision kérés és
+ * Az `identifyRecordFromPhoto` minden hívása egy képolvasó modellkérés és
  * több Discogs keresés — tehát pénz. A jogosultság-ellenőrzés önmagában nem
  * elég hozzá: egy Firebase ID token a böngészőből kimásolható, és onnantól a
  * végpont a mi appunk nélkül, scriptből is hívható, akárhányszor. Ezt csak az

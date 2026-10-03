@@ -117,13 +117,43 @@ resource "google_secret_manager_secret_iam_member" "discogs_token_deployer" {
   member    = "serviceAccount:${module.service_accounts.deployer_email}"
 }
 
-# Az Anthropic API kulcs a fotós lemezazonosításhoz (`identifyRecordFromPhoto`).
-# Ugyanaz a szabály, mint a Discogs tokennél: a secretet a tofu teremti, az
-# ÉRTÉKÉT nem —
-#   printf %s "$KEY" | gcloud secrets versions add ANTHROPIC_API_KEY \
+# Az AI-gateway tenant API-kulcsa (`zsk_…`) a fotós lemez- és polcfelismeréshez
+# (`identifyRecordFromPhoto`, `identifyShelfFromPhotos`). A modellt a gateway
+# hívja, a szolgáltatói kulcsok nála vannak. Ugyanaz a szabály, mint a Discogs
+# tokennél: a secretet a tofu teremti, az ÉRTÉKÉT nem —
+#   printf %s "$KEY" | gcloud secrets versions add GATEWAY_API_KEY \
 #     --data-file=- --project <project_id>
-# Egy saját AI-gateway mögé állva ide a gateway tokenje kerül, a végpontot
-# pedig a function `AI_GATEWAY_URL` környezeti változója adja.
+# A gateway címe nem titok: az `apps/functions/.env.<project_id>` adja.
+resource "google_secret_manager_secret" "gateway_api_key" {
+  project   = local.project_id
+  secret_id = "GATEWAY_API_KEY"
+
+  replication {
+    auto {}
+  }
+
+  depends_on = [google_project_service.enabled]
+}
+
+resource "google_secret_manager_secret_iam_member" "gateway_api_key_runtime" {
+  project   = local.project_id
+  secret_id = google_secret_manager_secret.gateway_api_key.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.functions_runtime.email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "gateway_api_key_deployer" {
+  project   = local.project_id
+  secret_id = google_secret_manager_secret.gateway_api_key.secret_id
+  role      = "roles/secretmanager.viewer"
+  member    = "serviceAccount:${module.service_accounts.deployer_email}"
+}
+
+# KIVEZETÉS ALATT: az Anthropic API kulcs, amivel a functions korábban
+# közvetlenül hívta a modellt. A kód már a GATEWAY_API_KEY-t olvassa; ez a
+# secret addig marad, amíg az új functionök mindkét környezetben futnak (a
+# még futó régi revíziók ebből olvasnak). Utána a három erőforrás törlendő, a
+# kulcs pedig visszavonandó az Anthropic konzolon.
 resource "google_secret_manager_secret" "anthropic_api_key" {
   project   = local.project_id
   secret_id = "ANTHROPIC_API_KEY"

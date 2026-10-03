@@ -2,7 +2,7 @@
  * A fotós azonosítás napi kerete — felhasználónként és az egész appra.
  *
  * Az `identifyRecordFromPhoto` és az `identifyShelfFromPhotos` minden hívása
- * legalább egy Anthropic vision kérés (a polcnál annyi, ahány fotó), tehát
+ * legalább egy képolvasó modellkérés (a polcnál annyi, ahány fotó), tehát
  * pénz. Az App Check azt fogja meg, hogy a végpontot a mi appunk nélkül,
  * scriptből hívják; azt nem, hogy egy valódi, bejelentkezett gyűjtő a saját
  * böngészőjéből küldjön be ezer fotót egy délután. A jogosultság is csak

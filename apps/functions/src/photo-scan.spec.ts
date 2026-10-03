@@ -1,8 +1,7 @@
-import Anthropic from '@anthropic-ai/sdk';
-
 import { FetchResponse } from './discogs-api';
 import { PhotoSignals } from './photo-signals';
 import { ScanDependencies, scanPhoto } from './photo-scan';
+import { VisionClient } from './vision-client';
 
 const photo = { data: 'AAAA', mediaType: 'image/jpeg' } as const;
 
@@ -34,25 +33,22 @@ const signals = (overrides: Partial<PhotoSignals> = {}): PhotoSignals => ({
 	...overrides,
 });
 
-/** A modell helyett: a megadott jeleket adja vissza, és számolja a hívásait. */
+/** A gateway helyett: a megadott jeleket adja vissza, és számolja a hívásait. */
 function visionClient(value: PhotoSignals) {
 	const calls: number[] = [];
-	const client = {
-		beta: {
-			messages: {
-				create: async () => {
-					calls.push(Date.now());
+	const client: VisionClient = {
+		execute: async () => {
+			calls.push(Date.now());
 
-					return {
-						stop_reason: 'end_turn',
-						content: [
-							{ type: 'text', text: JSON.stringify(value) },
-						],
-					};
-				},
-			},
+			return {
+				kind: 'result',
+				executionId: 'req-1',
+				status: 'succeeded',
+				capability: 'text.complete',
+				output: { text: JSON.stringify(value) },
+			};
 		},
-	} as unknown as Anthropic;
+	};
 
 	return { client, calls };
 }

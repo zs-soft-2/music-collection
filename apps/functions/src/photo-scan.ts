@@ -9,8 +9,6 @@
  * melyik Discogs-kiadás az.
  */
 
-import Anthropic from '@anthropic-ai/sdk';
-
 import { DiscogsRequestOptions } from './discogs-api';
 import {
 	DiscogsSearchHit,
@@ -22,6 +20,7 @@ import {
 	searchByCatalogNumber,
 } from './discogs-search';
 import { PhotoInput, PhotoSignals, readPhotoSignals } from './photo-signals';
+import { VisionClient } from './vision-client';
 
 /** Egy jelölt: a Discogs kiadása (vagy mastere), a találat erősségével. */
 export interface ScanCandidate {
@@ -79,7 +78,7 @@ export interface BarcodeCache {
 }
 
 export interface ScanDependencies {
-	client: Anthropic;
+	client: VisionClient;
 	discogs: DiscogsRequestOptions;
 	barcodeCache?: BarcodeCache;
 	/**
