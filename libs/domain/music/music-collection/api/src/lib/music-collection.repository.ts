@@ -3,7 +3,6 @@ import { Observable } from 'rxjs';
 import { CatalogCredit, CreditsNeeded } from './music-collection-catalog';
 import {
 	BadgeGenerationSettings,
-	BadgeModelOption,
 	CreateMusicCollectionResult,
 	GenerateBadgeResult,
 	MusicCollectionDraft,
@@ -76,6 +75,4 @@ export abstract class MusicCollectionRepository {
 	public abstract updateBadgeSettings$(
 		settings: BadgeGenerationSettings
 	): Observable<BadgeGenerationSettings>;
-	/** A választható képmodellek, élőben — nem egy kódba írt lista. */
-	public abstract listBadgeModels$(): Observable<BadgeModelOption[]>;
 }

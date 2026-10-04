@@ -53,7 +53,6 @@ import {
 } from './discogs-versions';
 import {
 	generateBadgeCandidates,
-	listBadgeModels,
 	readBadgeSettings,
 	setBadgeImage,
 	writeBadgeSettings,
@@ -86,11 +85,8 @@ import {
 	PHOTO_REQUEST_TIMEOUT_MS,
 	PhotoInput,
 } from './photo-signals';
-import {
-	GatewaySettings,
-	VisionError,
-	createVisionClient,
-} from './vision-client';
+import { VisionError, createVisionClient } from './vision-client';
+import { GatewaySettings, createGatewayClient } from './gateway-client';
 import { approveReleaseRequest as approve } from './release-request-approval';
 import { DeletionError, deleteRelease } from './catalog-deletion';
 import { decideRequest as decide } from './request-decision';
@@ -1341,13 +1337,20 @@ export const deleteMusicCollectionEntity = onCall(async (request) => {
 export const generateMusicCollectionBadge = onCall(
 	// A generált képeket a memóriában mozgatjuk, ezért a nagyobb keret és a
 	// globálisnál több CPU.
-	{ timeoutSeconds: 300, memory: '1GiB', cpu: 1 },
+	{
+		timeoutSeconds: 300,
+		memory: '1GiB',
+		cpu: 1,
+		secrets: [gatewayApiKey],
+	},
 	async (request) => {
 		await requireCaller(request, 'updateMusicCollectionEntity');
 
 		return generateBadgeCandidates(
 			database(),
-			process.env['GCLOUD_PROJECT'] ?? '',
+			// A rajzolás a function idejének a java része; a keret a
+			// `timeoutSeconds` alatt marad, hogy a hiba a miénk legyen.
+			createGatewayClient(gatewaySettings(), 240_000),
 			request.data?.uid,
 			request.data?.points,
 			Date.now()
@@ -1385,18 +1388,10 @@ export const readBadgeGenerationSettings = onCall(async (request) => {
 	return readBadgeSettings(database());
 });
 
-/**
- * A választható képmodellek, a Vertex katalógusából, élőben — hogy a
- * felület ne a mi emlékezetünkből kínáljon modellnevet.
- */
-export const listBadgeGenerationModels = onCall(
-	{ timeoutSeconds: 60 },
-	async (request) => {
-		await requireCaller(request, 'updateBadgeGenerationSettings');
-
-		return listBadgeModels(database(), process.env['GCLOUD_PROJECT'] ?? '');
-	}
-);
+// A `listBadgeGenerationModels` innen kivezetve: a modellt a gateway
+// választja, nem az admin. Amíg a régi revízió él, a kliens hívhatná — a
+// felület viszont már nem kéri. A Cloud Run szolgáltatást kézzel kell
+// eltüntetni: `firebase functions:delete security:listBadgeGenerationModels`.
 
 /**
  * Ami még nem jelent meg: a katalógus előadóinak következő lemezei a

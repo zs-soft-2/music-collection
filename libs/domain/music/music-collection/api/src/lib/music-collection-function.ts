@@ -48,8 +48,6 @@ export const READ_BADGE_GENERATION_SETTINGS_FUNCTION =
 	'readBadgeGenerationSettings';
 export const UPDATE_BADGE_GENERATION_SETTINGS_FUNCTION =
 	'updateBadgeGenerationSettings';
-export const LIST_BADGE_GENERATION_MODELS_FUNCTION =
-	'listBadgeGenerationModels';
 
 /**
  * What generating returns. Every drawn image is kept: each one becomes a
@@ -84,18 +82,6 @@ export interface BadgeImagePick {
  */
 export interface BadgeGenerationSettings {
 	enabled: boolean;
-	model: string;
-	location: string;
 	candidateCount: number;
 	dailyImageLimit: number;
-}
-
-/**
- * A választható képmodellek egyike, ahogy a Vertex katalógusa adja. A
- * katalógus olyat is listáz, amit a projekt nem hívhat, ezért a felület
- * nem csak a nevet kapja meg, hanem azt is, válaszol-e.
- */
-export interface BadgeModelOption {
-	name: string;
-	isReachable: boolean;
 }

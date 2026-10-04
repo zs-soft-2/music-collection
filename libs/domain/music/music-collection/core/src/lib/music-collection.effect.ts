@@ -20,7 +20,6 @@ import {
 import {
 	BadgeGenerationSettings,
 	BadgeImage,
-	BadgeModelOption,
 	CollectionShortfall,
 	CreateMusicCollectionResult,
 	DiscographyCandidate,
@@ -435,10 +434,6 @@ export class MusicCollectionEffect {
 		settings: BadgeGenerationSettings
 	): Observable<BadgeGenerationSettings> {
 		return this.repository.updateBadgeSettings$(settings);
-	}
-
-	public listBadgeModels$(): Observable<BadgeModelOption[]> {
-		return this.repository.listBadgeModels$();
 	}
 
 	private toStanding(

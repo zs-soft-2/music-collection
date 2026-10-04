@@ -12,14 +12,15 @@
  * elzárkózás pedig hibaként jön vissza.
  */
 
-import {
-	AiGatewayClient,
-	type ResponseSchema,
-	ZsAiError,
-} from '@zssz-soft/zs-ai-sdk';
+import { type ResponseSchema, ZsAiError } from '@zssz-soft/zs-ai-sdk';
 
-/** A gateway naplóiban és fogyasztási soraiban ez a név azonosít minket. */
-const APPLICATION_ID = 'music-collection';
+import {
+	GatewayClient,
+	GatewaySettings,
+	createGatewayClient,
+} from './gateway-client';
+
+export { GatewaySettings };
 
 /**
  * Egy újrapróbálás a múló hibákra (túlterhelt szolgáltató, hálózat, rövid
@@ -31,29 +32,14 @@ const MAX_ATTEMPTS = 2;
 const MAX_RETRY_WAIT_MS = 5_000;
 
 /** Amit a képolvasás a gateway-klienstől használ — a tesztek ezt cserélik. */
-export type VisionClient = Pick<AiGatewayClient, 'execute'>;
+export type VisionClient = GatewayClient;
 
-export interface GatewaySettings {
-	/** A gateway címe `/api/v1` nélkül, pl. `https://….run.app`. */
-	baseUrl: string;
-	apiKey: string;
-}
-
-/**
- * A kliens egy adott kérés-időkerettel. A keret a hívóé, mert ő tudja,
- * mennyi fér bele a function idejébe a modell mellett (Discogs, újrapróba).
- */
+/** A képolvasás kliense; a kliens maga a `gateway-client.ts`-ből jön. */
 export function createVisionClient(
 	settings: GatewaySettings,
 	timeoutMs: number
 ): VisionClient {
-	return new AiGatewayClient({
-		baseUrl: settings.baseUrl.replace(/\/+$/, ''),
-		apiKey: settings.apiKey,
-		applicationId: APPLICATION_ID,
-		fetchImpl: (input, init) =>
-			fetch(input, { ...init, signal: AbortSignal.timeout(timeoutMs) }),
-	});
+	return createGatewayClient(settings, timeoutMs);
 }
 
 /**

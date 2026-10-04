@@ -2000,12 +2000,9 @@
 			"badge-generation": "Abzeichen-Erzeugung",
 			"a-collection-s-badge": "Das Abzeichen einer Kollektion wird einmal von einem Bildmodell aus ihren eigenen Daten gezeichnet und steht dann fest.",
 			"loading": "Wird geladen…",
-			"the-model": "Das Modell",
+			"the-model": "Das Zeichnen",
 			"generation-is-on": "Erzeugung ist eingeschaltet",
 			"switched-off-no-badge": "Ausgeschaltet lässt sich kein Abzeichen zeichnen und nichts ausgeben.",
-			"model": "Modell",
-			"region": "Region",
-			"the-vertex-region-not": "Die Vertex-Region — nicht zwingend die, in der die Datenbank liegt.",
 			"what-a-badge-costs": "Was ein Abzeichen kostet",
 			"candidates-per-run": "Kandidaten pro Lauf",
 			"how-many-the-admin": "Zwischen wie vielen der Admin wählt. Mehr kostet mehr, und jedes einzelne wird berechnet.",
@@ -2013,7 +2010,8 @@
 			"the-ceiling-for-the": "Die Obergrenze für den ganzen Tag, serverseitig gezählt. Eine entgleiste Schleife endet hier statt auf der Rechnung.",
 			"what-cannot-be-set": "Was sich hier nicht einstellen lässt",
 			"the-style-lock-the": "Die Stilsperre — die festen Sätze, aus denen jedes Abzeichen gezeichnet wird — und die Stilversion stehen im Code. Nur deshalb liest sich ein Regal voller Abzeichen als ein Satz: könnte ein Kurator sie je Abzeichen ändern, liefe der Satz binnen Wochen auseinander. Sie zu ändern ist eine bewusste Tat und bedeutet, jedes Abzeichen neu zu erzeugen.",
-			"saved": "Gespeichert."
+			"saved": "Gespeichert.",
+			"the-gateway-picks": "Das Modell wählt das AI-Gateway: Es weiß, welches Bildmodell bei welchem Anbieter erreichbar ist und was es kostet. Kein Modellname und keine Region mehr — die alte Einstellung konnte genau deshalb monatelang mit einem 404 sterben, weil das Formular einen Namen aus unserem Gedächtnis anbot."
 		},
 		"collectionGrowthChart": {
 			"added": "hinzugefügt",

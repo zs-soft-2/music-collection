@@ -1,10 +1,7 @@
 import { pipe, switchMap, tap } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
-import {
-	BadgeGenerationSettings,
-	BadgeModelOption,
-} from '@music-collection/domain/music-collection/api';
+import { BadgeGenerationSettings } from '@music-collection/domain/music-collection/api';
 import { MusicCollectionEffect } from '@music-collection/domain/music-collection/core';
 import { tapResponse } from '@ngrx/operators';
 import {
@@ -22,8 +19,6 @@ import { describeWriteError } from '../music-collection/music-collection-admin.e
 /** What the server falls back to; shown until the real values arrive. */
 const FALLBACK: BadgeGenerationSettings = {
 	enabled: true,
-	model: 'gemini-2.5-flash-image',
-	location: 'us-central1',
 	candidateCount: 4,
 	dailyImageLimit: 200,
 };
@@ -34,11 +29,6 @@ const MAX_DAILY_IMAGES = 2000;
 
 interface BadgeSettingsState {
 	settings: BadgeGenerationSettings;
-	/** What the region actually offers; loaded on init, next to the form. */
-	models: BadgeModelOption[];
-	isLoadingModels: boolean;
-	/** Why the list is empty, when it is. The form still works without it. */
-	modelsError: string | null;
 	isLoading: boolean;
 	isSaving: boolean;
 	error: string | null;
@@ -48,9 +38,6 @@ interface BadgeSettingsState {
 
 const initialState: BadgeSettingsState = {
 	settings: FALLBACK,
-	models: [],
-	isLoadingModels: true,
-	modelsError: null,
 	isLoading: true,
 	isSaving: false,
 	error: null,
@@ -58,33 +45,21 @@ const initialState: BadgeSettingsState = {
 };
 
 /**
- * Admin: how badges get generated — which model, in which region, how many
- * candidates to draw, and what a day may cost.
+ * Admin: how badges get generated — how many candidates to draw, and what a
+ * day may cost.
  *
- * What is deliberately absent: the style lock and the style version. Those
- * are the only reason a shelf of badges reads as one set, so they stay in
- * code, versioned, where a change means regenerating all of them rather
- * than quietly drifting one badge at a time.
+ * What is deliberately absent: the model and the region. Both moved to the
+ * gateway, which picks the provider and knows where it can reach it; naming
+ * a model here would only override what it knows better. The style lock and
+ * the style version are absent for a different reason — they are the only
+ * thing making a shelf of badges read as one set, so they stay in code,
+ * versioned, where a change means regenerating all of them rather than
+ * quietly drifting one badge at a time.
  */
 export const BadgeSettingsStore = signalStore(
 	withState(initialState),
 	withComputed((store) => ({
-		canSave: computed(
-			() => !store.isSaving() && !!store.settings().model.trim()
-		),
-		/**
-		 * The saved model is always among the choices, even when the
-		 * catalogue no longer lists it — opening the page must not quietly
-		 * switch a collection's badge to another model.
-		 */
-		modelOptions: computed(() => {
-			const models = store.models();
-			const current = store.settings().model;
-
-			return models.some((model) => model.name === current)
-				? models
-				: [...models, { name: current, isReachable: false }];
-		}),
+		canSave: computed(() => !store.isSaving()),
 	})),
 	withMethods((store, effect = inject(MusicCollectionEffect)) => {
 		const load = rxMethod<void>(
@@ -105,32 +80,8 @@ export const BadgeSettingsStore = signalStore(
 			)
 		);
 
-		const loadModels = rxMethod<void>(
-			pipe(
-				tap(() =>
-					patchState(store, {
-						isLoadingModels: true,
-						modelsError: null,
-					})
-				),
-				switchMap(() => effect.listBadgeModels$()),
-				tapResponse({
-					next: (models) =>
-						patchState(store, { models, isLoadingModels: false }),
-					error: (error: unknown) => {
-						console.error(error);
-						patchState(store, {
-							isLoadingModels: false,
-							modelsError: describeWriteError(error),
-						});
-					},
-				})
-			)
-		);
-
 		return {
 			load,
-			loadModels,
 			set(change: Partial<BadgeGenerationSettings>): void {
 				patchState(store, {
 					settings: { ...store.settings(), ...change },
@@ -189,7 +140,6 @@ export const BadgeSettingsStore = signalStore(
 	withHooks({
 		onInit(store) {
 			store.load();
-			store.loadModels();
 		},
 	})
 );

@@ -15,7 +15,6 @@ import {
 } from '@music-collection/api';
 import {
 	BadgeGenerationSettings,
-	BadgeModelOption,
 	CREATE_MUSIC_COLLECTION_FUNCTION,
 	CatalogCredit,
 	CreateMusicCollectionResult,
@@ -29,7 +28,6 @@ import {
 	MusicCollectionRepository,
 	READ_BADGE_GENERATION_SETTINGS_FUNCTION,
 	SET_MUSIC_COLLECTION_BADGE_IMAGE_FUNCTION,
-	LIST_BADGE_GENERATION_MODELS_FUNCTION,
 	UPDATE_BADGE_GENERATION_SETTINGS_FUNCTION,
 	UPDATE_MUSIC_COLLECTION_FUNCTION,
 	UpdateMusicCollectionResult,
@@ -221,13 +219,6 @@ export class MusicCollectionFirestoreRepository extends MusicCollectionRepositor
 		return this.call$<BadgeGenerationSettings>(
 			UPDATE_BADGE_GENERATION_SETTINGS_FUNCTION,
 			{ settings }
-		);
-	}
-
-	public listBadgeModels$(): Observable<BadgeModelOption[]> {
-		return this.call$<BadgeModelOption[]>(
-			LIST_BADGE_GENERATION_MODELS_FUNCTION,
-			{}
 		);
 	}
 

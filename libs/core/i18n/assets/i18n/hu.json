@@ -2000,12 +2000,9 @@
 			"badge-generation": "Jelvénygenerálás",
 			"a-collection-s-badge": "Egy kollekció jelvényét egyszer rajzolja meg egy képmodell a kollekció saját adataiból, és onnantól rögzül.",
 			"loading": "Betöltés…",
-			"the-model": "A modell",
+			"the-model": "A rajzolás",
 			"generation-is-on": "A generálás be van kapcsolva",
 			"switched-off-no-badge": "Kikapcsolva nem rajzolható jelvény, és nem költhető semmi.",
-			"model": "Modell",
-			"region": "Régió",
-			"the-vertex-region-not": "A Vertex régiója — nem feltétlenül az, ahol az adatbázis van.",
 			"what-a-badge-costs": "Mibe kerül egy jelvény",
 			"candidates-per-run": "Jelöltek futásonként",
 			"how-many-the-admin": "Hány közül válogat az admin. Több többe kerül, és mindegyik számlázódik.",
@@ -2013,7 +2010,8 @@
 			"the-ceiling-for-the": "A teljes napra vett felső korlát, szerveroldalon számolva. Egy elszabadult ciklus itt áll meg, nem a számlán.",
 			"what-cannot-be-set": "Amit itt nem lehet állítani",
 			"the-style-lock-the": "A stílus-zár — a rögzített mondatok, amikből minden jelvény készül — és a stílusverzió kódban élnek. Csak emiatt olvasható egy polcnyi jelvény egyetlen sorozatként: ha egy kurátor jelvényenként szerkeszthetné őket, a sorozat hetek alatt szétesne. Megváltoztatni szándékos tett, és minden jelvény újragenerálását jelenti.",
-			"saved": "Mentve."
+			"saved": "Mentve.",
+			"the-gateway-picks": "A modellt az AI-gateway választja: ő tudja, melyik szolgáltatónál melyik képmodell érhető el, és melyik mennyibe kerül. Itt nincs modellnév és régió — a korábbi beállítás épp attól tudott hónapokig 404-gyel elhalni, hogy a felület a mi emlékezetünkből kínált nevet."
 		},
 		"collectionGrowthChart": {
 			"added": "hozzáadva",

@@ -63,64 +63,10 @@ import { BadgeSettingsStore } from './badge-settings.store';
 							</small>
 						</div>
 
-						<div class="mc-field">
-							<label for="model">{{
-								'ui.badgeSettings.model' | transloco
-							}}</label>
-							<select
-								id="model"
-								[value]="settings.model"
-								[disabled]="store.isLoadingModels()"
-								(change)="store.set({ model: value($event) })"
-							>
-								@for (
-									model of store.modelOptions();
-									track model.name
-								) {
-									<option
-										[value]="model.name"
-										[selected]="
-											model.name === settings.model
-										"
-									>
-										{{ model.name }}
-										{{
-											model.isReachable
-												? ''
-												: '— not available here'
-										}}
-									</option>
-								}
-							</select>
-							<small>
-								@if (store.isLoadingModels()) {
-									Reading the region's catalogue…
-								} @else if (store.modelsError(); as error) {
-									The catalogue could not be read ({{
-										error
-									}}). The saved model is kept.
-								} @else {
-									What this project can actually call in the
-									region below, read from Vertex when the page
-									opened — not a list kept in our code. One
-									marked as unavailable will fail with a 404.
-								}
-							</small>
-						</div>
-
-						<div class="mc-field">
-							<label for="location">{{
-								'ui.badgeSettings.region' | transloco
-							}}</label>
-							<input
-								id="location"
-								type="text"
-								[value]="settings.location"
-								(input)="store.set({ location: value($event) })"
-							/>
+						<div class="mc-field is-wide">
 							<small>
 								{{
-									'ui.badgeSettings.the-vertex-region-not'
+									'ui.badgeSettings.the-gateway-picks'
 										| transloco
 								}}
 							</small>
