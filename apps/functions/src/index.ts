@@ -168,13 +168,32 @@ setGlobalOptions({
 	// forrás-archívum, bármelyik fájl változása átírja mindegyikük hash-ét), és
 	// minden induló revízió lefoglalja a maga CPU-ját, amíg a healthcheck le nem
 	// fut. A példány a deploy után is él még egy ideig, ezért a deploy körökre
-	// osztása önmagában csak eltolta a problémát. Fél CPU-val a teljes készlet
-	// bőven a keret alatt marad.
+	// osztása önmagában csak eltolta a problémát.
+	//
+	// 2026-10-04: a keret egyszer már elfogyott, 37 functionnél. Két oka volt,
+	// és mindkettő tanulság. Az egyik, hogy három function egész CPU-n maradt
+	// abból az időből, amikor a modellt még innen hívtuk — mióta a gateway
+	// hívja, egyik sem számol, csak vár, úgyhogy ma mind a fél CPU-n fut. A
+	// másik, hogy a forrásból törölt function Cloud Run szolgáltatása életben
+	// maradt: a `firebase deploy` a bukásra `Skipping deletes`-szel felel, így
+	// a hely, ami kellett volna, épp a hiba miatt nem szabadult fel. Törölni
+	// kézzel kell: `firebase functions:delete security:<név>`.
+	//
+	// Fél CPU-val a mostani készlet 18,5 vCPU — másfél vCPU tartalék, ami egy
+	// deploy átfedését is elbírja. Egy új function fél vCPU; harminckilencnél
+	// megint a határon állunk.
 	//
 	// Egy alatti CPU-hoz a Cloud Run 1-es concurrency-t követel: innentől egy
 	// példány egy kérést szolgál ki egyszerre, a párhuzamosságot a `maxInstances`
 	// szabja. Amelyik functionnek a fél CPU kevés, az helyben felülírja.
-	cpu: 0.5,
+	// ÁTMENETI ÉRTÉK. A keret egyszer megtelt, és onnan nem volt kiút: egy
+	// deploy a RÉGI revízió mellé indítja az újat, tehát ahhoz, hogy egy
+	// function kevesebbet kérjen, előbb el kell férnie annak, ami majd
+	// kevesebbet kér. 19,5 + 0,5 = 20,0, vagyis semmit nem lehetett
+	// telepíteni. A kiút a kisebb falat: egy negyed CPU befér a maradékba, és
+	// ahogy a készlet lecserélődik, magától szabadul fel a hely. Ha mind a 37
+	// function ezen van (9,25 vCPU), a `0.5` visszaemelhető.
+	cpu: 0.25,
 	concurrency: 1,
 	serviceAccount: `functions-runtime@${process.env['GCLOUD_PROJECT']}.iam.gserviceaccount.com`,
 	// Minden callable csak a saját appunkból hívható. A jogosultság-ellenőrzés
@@ -909,9 +928,10 @@ export const identifyRecordFromPhoto = onCall(
 	{
 		secrets: [discogsToken, gatewayApiKey],
 		memory: '512MiB',
-		// A kép base64-be csomagolása és a válasz feldolgozása érdemi CPU-munka,
-		// nem csak várakozás a modellre — ez marad egész CPU-n.
-		cpu: 1,
+		// A globális negyednél több: a kép base64-be csomagolása és a válasz
+		// feldolgozása számol, nem csak vár. Egész CPU-t akkor kapott, amikor
+		// a modellt még innen hívtuk — azóta a gateway hívja, és a fél elég.
+		cpu: 0.5,
 		// A képolvasás újrapróbálkozásai is ebbe a keretbe férnek bele.
 		timeoutSeconds: 180,
 	},
@@ -1027,7 +1047,7 @@ export const identifyShelfFromPhotos = onCall(
 		secrets: [gatewayApiKey],
 		memory: '512MiB',
 		// Mint az `identifyRecordFromPhoto`, csak két képpel.
-		cpu: 1,
+		cpu: 0.5,
 		// Két kép, egyenként egy modellkérés, újrapróbálkozásokkal.
 		timeoutSeconds: 300,
 	},
@@ -1335,12 +1355,15 @@ export const deleteMusicCollectionEntity = onCall(async (request) => {
  * memória a base64 képek miatt.
  */
 export const generateMusicCollectionBadge = onCall(
-	// A generált képeket a memóriában mozgatjuk, ezért a nagyobb keret és a
-	// globálisnál több CPU.
+	// A jelölteket base64-ben mozgatjuk, ezért a nagyobb memória-keret. CPU-ból
+	// a globális fél elég: a rajzolás a gatewayen történik, itt a kép csak
+	// megérkezik és továbbmegy.
 	{
 		timeoutSeconds: 300,
 		memory: '1GiB',
-		cpu: 1,
+		// A Cloud Run 512 MiB fölötti memóriához legalább fél CPU-t követel,
+		// ezért ez a function nem követi a globális negyedet.
+		cpu: 0.5,
 		secrets: [gatewayApiKey],
 	},
 	async (request) => {
