@@ -161,38 +161,6 @@
 					</div>
 
 					<div class="mc-field">
-						<label for="ai-model">{{
-							'admin.concert.model' | transloco
-						}}</label>
-						<input
-							id="ai-model"
-							type="text"
-							pInputText
-							[value]="settings.model"
-							(input)="
-								store.setSettingsField({ model: value($event) })
-							"
-						/>
-					</div>
-
-					<div class="mc-field">
-						<label for="ai-location">{{
-							'admin.concert.location' | transloco
-						}}</label>
-						<input
-							id="ai-location"
-							type="text"
-							pInputText
-							[value]="settings.location"
-							(input)="
-								store.setSettingsField({
-									location: value($event),
-								})
-							"
-						/>
-					</div>
-
-					<div class="mc-field">
 						<label for="ai-venues">{{
 							'admin.concert.venues-a-run' | transloco
 						}}</label>

@@ -471,68 +471,77 @@ describe('sanitizeConcertAiSettings', () => {
 });
 
 describe('askModel', () => {
-	// Grounding nélkül a modell a tanítóadatából írna le jövőbeli koncerteket,
+	/** A gateway kliensének az a fele, amit ez a hívás használ. */
+	const clientReturning = (result: Record<string, unknown>) =>
+		({ execute: async () => result }) as never;
+
+	// Keresés nélkül a modell a tanítóadatából írna le jövőbeli koncerteket,
 	// ami majdnem biztosan kitalált dátum.
-	it('Google-kereséssel kéri a választ', async () => {
-		let body: Record<string, unknown> = {};
-		const fetchImpl = (async (_url: string, init: { body: string }) => {
-			body = JSON.parse(init.body);
+	it('keresésre támaszkodva kéri a választ', async () => {
+		let sent: Record<string, unknown> = {};
+		const client = {
+			execute: async (request: Record<string, unknown>) => {
+				sent = request;
 
-			return {
-				ok: true,
-				status: 200,
-				json: async () => ({
-					candidates: [
-						{
-							content: {
-								parts: [
-									{
-										text: '{"concerts":[{"date":"2026-11-12","venue":"A38"}]}',
-									},
-								],
-							},
-							groundingMetadata: {
-								groundingChunks: [
-									{ web: { uri: 'https://example.test/a' } },
-								],
-							},
-						},
-					],
-				}),
-			};
-		}) as unknown as typeof fetch;
+				return {
+					kind: 'result',
+					model: 'gemini-2.5-flash',
+					output: {
+						text: '{"concerts":[{"date":"2026-11-12","venue":"A38"}]}',
+					},
+					grounding: {
+						citations: [{ uri: 'https://example.test/a', title: '' }],
+					},
+				};
+			},
+		} as never;
 
-		const answer = await askModel(
-			DEFAULT_CONCERT_AI_SETTINGS,
-			'project-1',
-			'kérdés',
-			'token',
-			fetchImpl
-		);
+		const answer = await askModel(client, 'kérdés');
 
-		expect(body['tools']).toEqual([{ googleSearch: {} }]);
+		expect(
+			(sent['input'] as Record<string, unknown> | undefined)?.['webSearch']
+		).toBe(true);
+		expect(sent['capability']).toBe('text.complete');
 		expect(answer.concerts).toHaveLength(1);
 		expect(answer.citations).toEqual([
 			{ uri: 'https://example.test/a', title: '' },
 		]);
+		// A modellt a gateway választja; a javaslat mellé az kerül, amit adott.
+		expect(answer.model).toBe('gemini-2.5-flash');
 	});
 
-	it('a modell hibáját a modell nevével adja tovább', async () => {
-		const fetchImpl = (async () => ({
-			ok: false,
-			status: 404,
-			text: async () => 'not found',
-		})) as unknown as typeof fetch;
+	// Egy keresés nélküli válasz forrás nélküli dátum lenne, amit a jóváhagyó
+	// nem tud ellenőrizni — ilyet nem teszünk elé.
+	it('elutasítja a keresés nélkül készült választ', async () => {
+		const client = clientReturning({
+			kind: 'result',
+			model: 'gemini-2.5-flash',
+			output: { text: '{"concerts":[]}' },
+		});
 
-		await expect(
-			askModel(
-				DEFAULT_CONCERT_AI_SETTINGS,
-				'project-1',
-				'kérdés',
-				'token',
-				fetchImpl
-			)
-		).rejects.toThrow('gemini-2.5-flash');
+		await expect(askModel(client, 'kérdés')).rejects.toThrow('keresés nélküli');
+	});
+
+	it('elutasítja, ha a gateway végrehajtásnak vette a kérést', async () => {
+		const client = clientReturning({ kind: 'accepted', executionId: 'x' });
+
+		await expect(askModel(client, 'kérdés')).rejects.toThrow('végrehajtásnak');
+	});
+
+	// A keresés talál vagy nem talál; az üres forráslista nem hiba, csak nem
+	// lesz belőle javaslat, mert a dátumot semmi nem támasztja alá.
+	it('az üres forráslistát átengedi, javaslat nélkül', async () => {
+		const client = clientReturning({
+			kind: 'result',
+			model: 'gemini-2.5-flash',
+			output: { text: 'nincs adat' },
+			grounding: { citations: [] },
+		});
+
+		const answer = await askModel(client, 'kérdés');
+
+		expect(answer.concerts).toEqual([]);
+		expect(answer.citations).toEqual([]);
 	});
 });
 
@@ -541,7 +550,7 @@ describe('a kikapcsolt alapértelmezés', () => {
 	// egy üres mentés sem kapcsolhatja be.
 	it('üres mentésből nem lesz bekapcsolt javaslatkérés', () => {
 		expect(sanitizeConcertAiSettings({}).enabled).toBe(false);
-		expect(sanitizeConcertAiSettings({ model: 'x' }).enabled).toBe(false);
+		expect(sanitizeConcertAiSettings({ venuesARun: 3 }).enabled).toBe(false);
 	});
 
 	it('csak a kifejezett igenre kapcsol be', () => {

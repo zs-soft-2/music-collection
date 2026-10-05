@@ -3184,8 +3184,6 @@
 			"budget": "Modell-Budget",
 			"budget-hint": "Was der Vorschlagslauf darf. Der Prompt lässt sich hier nicht setzen: Er wird auf dem Server aus den eigenen Daten des Katalogs gebaut, damit niemand auf unsere Rechnung etwas beantworten lassen kann.",
 			"ai-enabled": "Vorschlagsläufe sind an",
-			"model": "Modell",
-			"location": "Vertex-Region",
 			"venues-a-run": "Spielstätten je Lauf",
 			"venues-a-run-hint": "Nach wie vielen Spielstätten-Programmen ein Lauf fragt — und wie viele Anfragen er verbraucht.",
 			"daily-limit": "Tägliches Anfragelimit",

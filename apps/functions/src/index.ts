@@ -1744,7 +1744,7 @@ export const loadConcertsFromMusicBrainz = onCall(
  * ki, hogy valaki megnyitotta a hivatkozott forrást és jóváhagyta.
  */
 export const suggestConcerts = onCall(
-	{ timeoutSeconds: 900, memory: '512MiB' },
+	{ timeoutSeconds: 900, memory: '512MiB', secrets: [gatewayApiKey] },
 	async (request) => {
 		await requireCaller(request, 'createConcertEntity');
 
@@ -1754,6 +1754,9 @@ export const suggestConcerts = onCall(
 				typeof request.data?.countryCode === 'string'
 					? request.data.countryCode
 					: 'HU',
+				// Egy futás több helyszínt kérdez végig, helyszínenként egy
+				// keresésre támaszkodó hívással; a keret a function idejéből jön.
+				createGatewayClient(gatewaySettings(), 120_000),
 				{
 					venueUids: Array.isArray(request.data?.venueUids)
 						? (request.data.venueUids as string[])

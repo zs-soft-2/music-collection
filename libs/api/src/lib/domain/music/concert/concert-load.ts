@@ -1,7 +1,8 @@
 /**
  * What the admin's three Load buttons send and get back.
  *
- * All three are server work: they talk to MusicBrainz and to a Vertex model
+ * All three are server work: they talk to MusicBrainz and, through the AI
+ * gateway, to a model that can search
  * with the project's own credentials, and they cost either requests or money.
  * The client therefore sends what to load, never what to write.
  */
@@ -76,6 +77,7 @@ export interface SuggestConcertsResult {
 	rejected: number;
 	/** Dropped: outside the window, the country, or missing a day. */
 	discarded: number;
+	/** Which model the gateway picked; recorded beside each proposal. */
 	model: string;
 	/** What the run cost against the daily cap, and what is left of it. */
 	requestsUsed: number;
@@ -95,10 +97,6 @@ export const CONCERT_AI_QUOTA = 'concert-ai-quota';
 export interface ConcertAiSettings {
 	/** Whether suggestions are asked for at all. Switched off costs nothing. */
 	enabled: boolean;
-	/** Vertex model, as the publisher path spells it. */
-	model: string;
-	/** The Vertex region; not necessarily the one Firestore is in. */
-	location: string;
 	/** How many venues one run covers. That is also its request count. */
 	venuesARun: number;
 	/** The daily cap on model requests, so a mistake cannot cost a fortune. */
@@ -116,8 +114,6 @@ export interface ConcertAiSettings {
  */
 export const DEFAULT_CONCERT_AI_SETTINGS: ConcertAiSettings = {
 	enabled: false,
-	model: 'gemini-2.5-flash',
-	location: 'global',
 	venuesARun: 5,
 	dailyRequestLimit: 10,
 };

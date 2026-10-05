@@ -41,7 +41,8 @@
  */
 
 import { Firestore, FieldValue } from 'firebase-admin/firestore';
-import { GoogleAuth } from 'google-auth-library';
+
+import { GatewayClient } from './gateway-client';
 
 import { stamp } from './catalog-sync';
 import { gameDay } from './daily-question';
@@ -59,7 +60,6 @@ export const CONCERT_SUGGESTION_COLLECTION = 'concert-suggestion';
 const ENTITY_TYPE = 'Concert';
 const APP_SETTING_COLLECTION = 'app-setting';
 const CONCERT_SETTING_DOCUMENT = 'concert-ai';
-const VERTEX_SCOPE = 'https://www.googleapis.com/auth/cloud-platform';
 /** Egy Firestore batch 500 művelet; a szinkron-bump is elfér mellette. */
 const BATCH_LIMIT = 400;
 /** Csak a teljes dátumot fogadjuk el: "2026" vagy "2026-10" nem nap. */
@@ -93,10 +93,6 @@ export class ConcertAiError extends Error {
 export interface ConcertAiSettings {
 	/** Fut-e egyáltalán a javaslatkérés. Kikapcsolva a költség is nulla. */
 	enabled: boolean;
-	/** Vertex modell, ahogy a publisher-útvonal írja. */
-	model: string;
-	/** A Vertex régiója; nem feltétlenül a Firestore-é. */
-	location: string;
 	/** Ennyi helyszínről kérdez egy futás. A kérés száma ennyi. */
 	venuesARun: number;
 	/** Napi felső korlát a modellkérésekre, hogy egy hiba ne vigyen vagyont. */
@@ -119,8 +115,6 @@ export interface ConcertAiSettings {
  */
 export const DEFAULT_CONCERT_AI_SETTINGS: ConcertAiSettings = {
 	enabled: false,
-	model: 'gemini-2.5-flash',
-	location: 'global',
 	venuesARun: 5,
 	dailyRequestLimit: 10,
 };
@@ -154,8 +148,6 @@ export function sanitizeConcertAiSettings(data: unknown): ConcertAiSettings {
 		// Nem `!== false`: a hiányzó mező itt „nem kapcsoltuk be"-t jelent, és
 		// egy felületről érkező üres mentés nem indíthatja el a költést.
 		enabled: input.enabled === true,
-		model: text(input.model, DEFAULT_CONCERT_AI_SETTINGS.model),
-		location: text(input.location, DEFAULT_CONCERT_AI_SETTINGS.location),
 		venuesARun: positive(
 			input.venuesARun,
 			DEFAULT_CONCERT_AI_SETTINGS.venuesARun,
@@ -379,81 +371,51 @@ export function buildVenuePrompt(
 	].join('\n');
 }
 
-/** A régió API-hosztja; a `global`-nak nincs régió-előtagja. */
-function hostOf(location: string): string {
-	return location === 'global'
-		? 'https://aiplatform.googleapis.com'
-		: `https://${location}-aiplatform.googleapis.com`;
-}
-
 /**
- * Egy előadó koncertjei a modelltől, keresésre támaszkodva.
+ * Egy előadó koncertjei a modelltől, keresésre támaszkodva — a gatewayen át.
  *
- * A `googleSearch` eszköz miatt nem kérhetünk `responseMimeType: json`-t
- * (a Vertex a kettőt együtt nem engedi), ezért a JSON-t a szövegből szedjük
- * ki — a prompt ezt kéri, és ami nem így jön, azt eldobjuk.
+ * A keresés miatt nem kérhetünk sémához kötött JSON-t: egyik szolgáltató sem
+ * tartja be a kettőt egy hívásban, és a gateway a párost meg is tagadja
+ * (`WEB_SEARCH_WITH_SCHEMA`). Ezért a JSON-t a szövegből szedjük ki — a prompt
+ * ezt kéri, és ami nem így jön, azt eldobjuk.
+ *
+ * A modellt nem mi nevezzük meg: a gateway választ olyat, ami tud keresni, és
+ * a válaszában meg is mondja, melyiket — azt jegyezzük fel a javaslat mellé.
  */
 export interface Citation {
-	/** A Vertex átirányítója; a végleges címre a `resolveSource` oldja fel. */
+	/** A szolgáltató átirányítója; a végleges címre a `resolveSource` oldja fel. */
 	uri: string;
 	/** Amit a kereső a találatra ír — jellemzően a hoszt neve. */
 	title: string;
 }
 
 export async function askModel(
-	settings: ConcertAiSettings,
-	projectId: string,
-	prompt: string,
-	token: string,
-	fetchImpl: typeof fetch = fetch
-): Promise<{ concerts: ProposedConcert[]; citations: Citation[] }> {
-	const response = await fetchImpl(
-		`${hostOf(settings.location)}/v1/projects/${projectId}/locations/` +
-			`${settings.location}/publishers/google/models/` +
-			`${settings.model}:generateContent`,
-		{
-			method: 'POST',
-			headers: {
-				Authorization: `Bearer ${token}`,
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify({
-				contents: [{ role: 'user', parts: [{ text: prompt }] }],
-				tools: [{ googleSearch: {} }],
-				generationConfig: { temperature: 0 },
-			}),
-		}
-	);
+	client: GatewayClient,
+	prompt: string
+): Promise<{ concerts: ProposedConcert[]; citations: Citation[]; model: string }> {
+	const result = await client.execute({
+		capability: 'text.complete',
+		input: { prompt, webSearch: true, temperature: 0 },
+	});
 
-	if (!response.ok) {
-		throw new Error(
-			`A modell (${settings.model} @ ${settings.location}) ` +
-				`hibát adott (${response.status}): ${await response.text()}`
-		);
+	if (result.kind !== 'result') {
+		throw new Error('A gateway a javaslatkérést végrehajtásnak vette.');
 	}
 
-	const body = (await response.json()) as {
-		candidates?: {
-			content?: { parts?: { text?: string }[] };
-			groundingMetadata?: {
-				groundingChunks?: {
-					web?: { uri?: string; title?: string };
-				}[];
-			};
-		}[];
-	};
-	const candidate = body.candidates?.[0];
-	const text = (candidate?.content?.parts ?? [])
-		.map((part) => part.text ?? '')
-		.join('');
-	const citations = (candidate?.groundingMetadata?.groundingChunks ?? [])
-		.map((chunk) => ({
-			uri: chunk.web?.uri ?? '',
-			title: chunk.web?.title ?? '',
-		}))
-		.filter((citation) => !!citation.uri);
+	// A grounding blokk jelenléte maga a tény, hogy keresés futott. Ha hiányzik,
+	// a válasz nem forrásokból készült — ilyet nem teszünk a jóváhagyó elé.
+	if (!result.grounding) {
+		throw new Error('A gateway keresés nélküli választ adott.');
+	}
 
-	return { concerts: parseConcerts(text), citations };
+	return {
+		concerts: parseConcerts(result.output?.text ?? ''),
+		citations: result.grounding.citations.map((citation) => ({
+			uri: citation.uri,
+			title: citation.title,
+		})),
+		model: result.model ?? 'ismeretlen',
+	};
 }
 
 /**
@@ -772,13 +734,16 @@ const COUNTRY_NAMES: Record<string, string> = {
 export async function suggestConcerts(
 	database: Firestore,
 	countryCode: string,
+	client: GatewayClient,
 	options: {
 		venueUids?: string[];
 		today?: Date;
 		windowDays?: number;
-		projectId?: string;
+		/**
+		 * A forrás-hivatkozások feloldásához, nem modellhíváshoz: a gateway
+		 * átirányítókat ad tovább, és a jóváhagyó a végleges címet nyitja meg.
+		 */
 		fetchImpl?: typeof fetch;
-		token?: string;
 	} = {}
 ): Promise<SuggestResult> {
 	const today = options.today ?? new Date();
@@ -837,12 +802,6 @@ export async function suggestConcerts(
 	// amiatt, hogy kevesebb helyszín jött össze, mint amennyit lefoglaltunk.
 	await releaseRequests(database, granted - asked.length);
 
-	const auth = new GoogleAuth({ scopes: [VERTEX_SCOPE] });
-	const token = options.token ?? ((await auth.getAccessToken()) as string);
-	const projectId =
-		options.projectId ??
-		process.env['GCLOUD_PROJECT'] ??
-		(await auth.getProjectId());
 	const now = Date.now();
 	const documents: ConcertSuggestionDocument[] = [];
 	/** Feloldott hivatkozások a futás alatt; egy lap sok estet hirdet. */
@@ -853,22 +812,27 @@ export async function suggestConcerts(
 	let rejected = 0;
 	let discarded = 0;
 
+	/** Amelyik modellt a gateway választotta; a javaslatok mellé ez kerül. */
+	let answeringModel = 'ismeretlen';
+
 	for (const venue of asked) {
-		let answer: { concerts: ProposedConcert[]; citations: Citation[] };
+		let answer: {
+			concerts: ProposedConcert[];
+			citations: Citation[];
+			model: string;
+		};
 
 		try {
 			answer = await askModel(
-				settings,
-				projectId,
+				client,
 				buildVenuePrompt(
 					venue.name,
 					venue.city,
 					COUNTRY_NAMES[countryCode.toUpperCase()] ?? countryCode,
 					window
-				),
-				token,
-				options.fetchImpl
+				)
 			);
+			answeringModel = answer.model;
 		} catch (error) {
 			// Egy bukott kérés egy helyszínt visz, nem a futást. A keretet már
 			// levontuk érte: a kérés elment, fizetni is kell.
@@ -941,7 +905,7 @@ export async function suggestConcerts(
 					artist,
 					venues,
 					countryCode,
-					settings.model,
+					answeringModel,
 					window,
 					now,
 					source,
@@ -1000,7 +964,7 @@ export async function suggestConcerts(
 		duplicates,
 		rejected,
 		discarded,
-		model: settings.model,
+		model: answeringModel,
 		requestsUsed: asked.length,
 		requestsLeft: left + (granted - asked.length),
 	};

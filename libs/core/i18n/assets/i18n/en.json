@@ -3184,8 +3184,6 @@
 			"budget": "Model budget",
 			"budget-hint": "What the suggestion run may do. The prompt is not settable here: it is built on the server from the catalog's own data, so a caller cannot have anything answered on our bill.",
 			"ai-enabled": "Suggestion runs are on",
-			"model": "Model",
-			"location": "Vertex region",
 			"venues-a-run": "Venues per run",
 			"venues-a-run-hint": "How many venues' programmes one run asks for — and how many requests it spends.",
 			"daily-limit": "Daily request cap",

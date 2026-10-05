@@ -3184,8 +3184,6 @@
 			"budget": "Modell-keret",
 			"budget-hint": "Mit tehet a javaslatkérés. A promptot nem lehet innen állítani: az a szerveren épül a katalógus adataiból, hogy a hívó ne rajzoltathasson bármit a mi számlánkra.",
 			"ai-enabled": "A javaslatkérés fut",
-			"model": "Modell",
-			"location": "Vertex régió",
 			"venues-a-run": "Helyszín / futás",
 			"venues-a-run-hint": "Ennyi helyszín programját kéri el egy futás — és ennyi kérés megy el.",
 			"daily-limit": "Napi kérés-korlát",
