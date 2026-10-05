@@ -137,6 +137,28 @@
 		},
 		{
 			"collectionGroup": "album",
+			"fieldPath": "spotifyAlbumId",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "album",
 			"fieldPath": "uid",
 			"indexes": [
 				{
@@ -160,6 +182,50 @@
 		{
 			"collectionGroup": "album",
 			"fieldPath": "updatedAt",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "album",
+			"fieldPath": "youtubePlaylistId",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "album",
+			"fieldPath": "youtubeVideoIds",
 			"indexes": [
 				{
 					"order": "ASCENDING",

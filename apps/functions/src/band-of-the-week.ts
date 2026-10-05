@@ -22,8 +22,8 @@ import {
 	createRandom,
 	gameDay,
 	hashSeed,
+	shuffle,
 } from './daily-question';
-import { randomDocuments } from './daily-question-compose';
 
 export const BAND_OF_THE_WEEK_COLLECTION = 'band-of-the-week';
 
@@ -31,12 +31,17 @@ const ARTIST_COLLECTION = 'artist';
 const ALBUM_COLLECTION = 'album';
 
 /**
- * Ennyi előadót húzunk, amíg találunk olyat, aki megállja a helyét a home
- * főhelyén. Egy húzás néhány olvasás, és hetente egyszer fut.
+ * Ennyi jelöltet próbálunk végig a sorból. Nem a választás ereje múlik rajta,
+ * csak fék: a jelölt azonosítója a lemeze útjából jön, az előadó lapja viszont
+ * elvben hiányozhat mellőle.
  */
 export const MAX_TRIES = 8;
-/** Ennyi lemezét nézzük meg annak, akit húztunk. */
-const ALBUM_LIMIT = 30;
+/**
+ * Ennyi lejátszható lemeznél többet egy választás nem olvas végig. Hetente
+ * egyszer fut, és a mai dev katalógusban 55 ilyen lemez van — a korlát a
+ * katalógus növekedése elleni fék, nem a mai méret kérdése.
+ */
+const PLAYABLE_SCAN_LIMIT = 20000;
 /** Ennyi lejátszható lemez kell, hogy a rádió is megálljon rajta. */
 export const MIN_PLAYABLE_ALBUMS = 3;
 /**
@@ -88,8 +93,15 @@ export interface BandOfTheWeekResult {
 	created: boolean;
 	artistUid: string | null;
 	artistName: string | null;
-	/** Hányadik húzásra állt össze. */
+	/** Hányadik jelöltnél állt meg a sor. */
 	tries: number;
+	/** A választott zenekar lejátszható lemezei. */
+	playableAlbums: number;
+	/**
+	 * Hány zenekar közül választhatott. Ez mondja meg a naplóban, hogy egy
+	 * bandátlan hét a katalóguson múlt-e, vagy a választáson.
+	 */
+	candidates: number;
 	reason: 'created' | 'exists' | 'no-material';
 }
 
@@ -190,6 +202,78 @@ const toCandidateAlbum = (
 	youtubeVideoIds: (document.get('youtubeVideoIds') as string[]) ?? [],
 });
 
+/**
+ * Ugyanaz a három forrás lekérdezésként, és az, amit náluk az „üres” jelent:
+ * a két azonosítónál `null`, a videólistánál az üres tömb.
+ *
+ * Három lekérdezés, nem egy `Filter.or`: a Firestore egyetlen `!=` szűrőt
+ * engedélyez lekérdezésenként („Only a single 'NOT_EQUAL' … filter allowed
+ * per query”), tehát a hármat nem lehet egybefogni. Az `!=` a `null`-t és a
+ * hiányzó mezőt is kiszűri, mert az egyenlőtlenség-szűrőből a Firestore
+ * kihagyja azt, aminek a mezője nincs.
+ *
+ * Mindhárom mező collection-group hatókörű egymezős indexet kér
+ * (`firestore.indexes.json`, `fieldOverrides`); index nélkül a lekérdezés
+ * FAILED_PRECONDITION-nel áll meg.
+ */
+const PLAYABLE_SOURCES: [keyof CandidateAlbum, null | string[]][] = [
+	['spotifyAlbumId', null],
+	['youtubePlaylistId', null],
+	['youtubeVideoIds', []],
+];
+
+/**
+ * Kinek hány lejátszható lemeze van.
+ *
+ * Miért nem vaktában húzott előadókat mérünk (ez volt az első változat): a
+ * katalógusban a lemezek töredékéhez van Spotify- vagy YouTube-azonosító —
+ * devben 2817-ből 55 —, és a 735 előadóból hétnek van meg a három
+ * lejátszható lemeze. Egy véletlen húzásnak így egy százalék esélye volt
+ * megállni a főhelyen, nyolcnak nyolc: 2026-W40 és W41 bandátlan maradt. A
+ * lejátszható lemezek viszont pont azért kevesen vannak, mert őket érdemes
+ * megkérdezni — az útjukból (`artist/{uid}/album/{uid}`) az előadó is
+ * kiderül, külön olvasás nélkül.
+ *
+ * A lekérdezés csak annyit tud, hogy a mező nem üres; hogy a lemez valóban
+ * szól-e, itt az `isPlayable` dönti el.
+ */
+export async function playableAlbumCounts(
+	database: Firestore
+): Promise<Map<string, number>> {
+	const albums = database.collectionGroup(ALBUM_COLLECTION);
+	const fields = PLAYABLE_SOURCES.map(([field]) => field);
+	const snapshots = await Promise.all(
+		PLAYABLE_SOURCES.map(([field, empty]) =>
+			albums
+				.where(field, '!=', empty)
+				.select(...fields)
+				.limit(PLAYABLE_SCAN_LIMIT)
+				.get()
+		)
+	);
+	const counts = new Map<string, number>();
+	const seen = new Set<string>();
+
+	for (const document of snapshots.flatMap((snapshot) => snapshot.docs)) {
+		const artist = document.ref.parent.parent?.id;
+
+		// Egy lemez a három lekérdezésből többször is jöhet (Spotify és
+		// YouTube is megvan hozzá) — egyszer számít.
+		if (
+			!artist ||
+			seen.has(document.ref.path) ||
+			!isPlayable(toCandidateAlbum(document))
+		) {
+			continue;
+		}
+
+		seen.add(document.ref.path);
+		counts.set(artist, (counts.get(artist) ?? 0) + 1);
+	}
+
+	return counts;
+}
+
 /** Egy előadó, ahogy a választás méri. */
 export interface Candidate {
 	uid: string;
@@ -205,28 +289,73 @@ export interface Candidate {
  * spotlight ma is megy stílus-háttérrel), és a kép megléte a katalógus
  * dolga, nem a választásé.
  */
-export function isEligible(candidate: Candidate): boolean {
-	return candidate.playableAlbums >= MIN_PLAYABLE_ALBUMS;
+export function isEligible(playableAlbums: number): boolean {
+	return playableAlbums >= MIN_PLAYABLE_ALBUMS;
 }
 
-/** Egy húzott előadó és a lemezei — egy lekérdezés az albumaira. */
+/**
+ * A jelöltek sorrendje: az első, akinek az előadó-lapja megvan, lesz a hét
+ * bandája.
+ *
+ * Négy sáv, ebben a rendben: aki megállja a helyét és nem volt soron
+ * nemrég — aki megállja, de már volt — aki szűken van lemezzel, de nem volt
+ * soron — végül a visszatérő szűkösök. A sávon belül a hét véletlene dönt
+ * (a keverés sorrendjét a stabil rendezés nem bontja meg), a küszöb alatt
+ * viszont a több lejátszható lemez előbb: ott már nem a választék a kérdés,
+ * hanem hogy a rádió megszólal-e.
+ *
+ * A szűkös sávok azért vannak, mert a semminél a két lemezes zenekar is
+ * jobb: a hero üresen hagyása a hetet a véletlen spotlightra fokozza le,
+ * és a rádióból kiveszi a csatornát.
+ */
+export function candidateOrder(
+	counts: Map<string, number>,
+	recent: Set<string>,
+	random: () => number
+): string[] {
+	const place = (uid: string): [number, number] => {
+		const playable = counts.get(uid) ?? 0;
+		const eligible = isEligible(playable);
+
+		return [
+			(eligible ? 0 : 2) + (recent.has(uid) ? 1 : 0),
+			eligible ? 0 : -playable,
+		];
+	};
+	const withAlbum = [...counts]
+		.filter(([, playable]) => playable > 0)
+		.map(([uid]) => uid);
+
+	return shuffle(withAlbum, random).sort((first, second) => {
+		const [band, playable] = place(first);
+		const [otherBand, otherPlayable] = place(second);
+
+		return band - otherBand || playable - otherPlayable;
+	});
+}
+
+/**
+ * A választott előadó lapja és a lemezei száma. A lejátszhatókat a
+ * `playableAlbumCounts` már megszámolta, az összes lemez pedig egy
+ * aggregáció — egy olvasás a harminc helyett, és nem vág el a limitnél.
+ */
 export async function measureCandidate(
 	database: Firestore,
-	document: FirebaseFirestore.DocumentSnapshot
+	document: FirebaseFirestore.DocumentSnapshot,
+	playableAlbums: number
 ): Promise<Candidate> {
 	const albums = await database
 		.collection(ARTIST_COLLECTION)
 		.doc(document.id)
 		.collection(ALBUM_COLLECTION)
-		.limit(ALBUM_LIMIT)
+		.count()
 		.get();
 
 	return {
 		uid: document.id,
 		name: (document.get('name') as string) ?? '',
-		albumCount: albums.size,
-		playableAlbums: albums.docs.map(toCandidateAlbum).filter(isPlayable)
-			.length,
+		albumCount: albums.data().count,
+		playableAlbums,
 	};
 }
 
@@ -263,7 +392,7 @@ export async function recentArtists(
  * ütemező újrapróbálkozása nem cserélheti le a bandát a hét közben az alól,
  * aki már hallgatja.
  *
- * A véletlen a hétből származik, ezért ugyanaz a hét ugyanazzal a húzással
+ * A véletlen a hétből származik, ezért ugyanaz a hét ugyanazzal a sorrenddel
  * indul: egy megismételt futás nem más zenekart talál, csak ugyanazt.
  */
 export async function composeBandOfTheWeek(
@@ -291,31 +420,35 @@ export async function composeBandOfTheWeek(
 			artistUid: (existing.get('artistUid') as string) ?? null,
 			artistName: (existing.get('artistName') as string) ?? null,
 			tries: 0,
+			playableAlbums: (existing.get('playableAlbums') as number) ?? 0,
+			candidates: 0,
 			reason: 'exists',
 		};
 	}
 
 	const random = createRandom(hashSeed(week));
-	const recent = await recentArtists(database, week);
+	const [recent, counts] = await Promise.all([
+		recentArtists(database, week),
+		playableAlbumCounts(database),
+	]);
+	const order = candidateOrder(counts, recent, random);
 	const artists = database.collection(ARTIST_COLLECTION);
+	const tried = order.slice(0, MAX_TRIES);
 
-	for (let attempt = 1; attempt <= MAX_TRIES; attempt++) {
-		const [document] = await randomDocuments(artists, random, 1);
+	for (const [index, uid] of tried.entries()) {
+		const document = await artists.doc(uid).get();
 
-		if (!document) {
-			break;
-		}
-
-		const candidate = await measureCandidate(database, document);
-
-		if (!isEligible(candidate)) {
+		// A lemez megvan, az előadó lapja nem: a katalógusból kikerült,
+		// miközben a lemezei ott maradtak. A sor következő jelöltje jön.
+		if (!document.exists) {
 			continue;
 		}
-		// A múlt heteket inkább újrahúzzuk — de az utolsó húzásnál a
-		// semminél a visszatérő zenekar is jobb.
-		if (recent.has(candidate.uid) && attempt < MAX_TRIES) {
-			continue;
-		}
+
+		const candidate = await measureCandidate(
+			database,
+			document,
+			counts.get(uid) ?? 0
+		);
 
 		await reference.set(
 			stamp<BandOfTheWeekDocument>({
@@ -337,7 +470,9 @@ export async function composeBandOfTheWeek(
 			created: true,
 			artistUid: candidate.uid,
 			artistName: candidate.name,
-			tries: attempt,
+			tries: index + 1,
+			playableAlbums: candidate.playableAlbums,
+			candidates: order.length,
 			reason: 'created',
 		};
 	}
@@ -347,7 +482,9 @@ export async function composeBandOfTheWeek(
 		created: false,
 		artistUid: null,
 		artistName: null,
-		tries: MAX_TRIES,
+		tries: tried.length,
+		playableAlbums: 0,
+		candidates: order.length,
 		reason: 'no-material',
 	};
 }

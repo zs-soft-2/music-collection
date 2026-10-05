@@ -1674,9 +1674,14 @@ export const composeBandOfTheWeekDaily = onSchedule(
 	async () => {
 		const result = await composeBandOfTheWeek(database());
 		const outcome = {
-			created: `${result.artistName} (${result.tries} húzásból)`,
+			created:
+				`${result.artistName} ` +
+				`(${result.playableAlbums} lejátszható lemez, ` +
+				`${result.candidates} jelöltből)`,
 			exists: `már megvolt: ${result.artistName}`,
-			'no-material': 'nem akadt zenekar, aki megállná a helyét',
+			'no-material':
+				'nem akadt zenekar, aki megállná a helyét ' +
+				`(${result.candidates} jelölt)`,
 		};
 
 		logger.info(

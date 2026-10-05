@@ -1,6 +1,6 @@
 import {
-	Candidate,
 	MIN_PLAYABLE_ALBUMS,
+	candidateOrder,
 	gameWeek,
 	isEligible,
 	isPlayable,
@@ -8,13 +8,11 @@ import {
 	weekOf,
 	weekStart,
 } from './band-of-the-week';
+import { createRandom, hashSeed } from './daily-question';
 
-const candidate = (playableAlbums: number): Candidate => ({
-	uid: 'artist-1',
-	name: 'Zenekar',
-	albumCount: playableAlbums + 2,
-	playableAlbums,
-});
+/** A hét véletlene, ahogy a választás is csinálja. */
+const weekRandom = (week = '2026-W41'): (() => number) =>
+	createRandom(hashSeed(week));
 
 describe('weekOf', () => {
 	it('a hét minden napja ugyanazt a hetet adja', () => {
@@ -107,10 +105,96 @@ describe('isPlayable', () => {
 
 describe('isEligible', () => {
 	it('kevés lejátszható lemezzel nem áll meg a rádió', () => {
-		expect(isEligible(candidate(MIN_PLAYABLE_ALBUMS - 1))).toBe(false);
+		expect(isEligible(MIN_PLAYABLE_ALBUMS - 1)).toBe(false);
 	});
 
 	it('a küszöbtől felfelé jó', () => {
-		expect(isEligible(candidate(MIN_PLAYABLE_ALBUMS))).toBe(true);
+		expect(isEligible(MIN_PLAYABLE_ALBUMS)).toBe(true);
+	});
+});
+
+describe('candidateOrder', () => {
+	it('a küszöböt elérő zenekar előbb jön a szűkösnél', () => {
+		const counts = new Map([
+			['szűkös', MIN_PLAYABLE_ALBUMS - 1],
+			['bőséges', MIN_PLAYABLE_ALBUMS],
+		]);
+
+		expect(candidateOrder(counts, new Set(), weekRandom())).toEqual([
+			'bőséges',
+			'szűkös',
+		]);
+	});
+
+	it('a nemrég soron volt zenekar a sávja végére kerül', () => {
+		const counts = new Map([
+			['volt-már', MIN_PLAYABLE_ALBUMS + 5],
+			['friss', MIN_PLAYABLE_ALBUMS],
+		]);
+		const order = candidateOrder(
+			counts,
+			new Set(['volt-már']),
+			weekRandom()
+		);
+
+		// Több lemeze van, mégis a friss jelölt az első: a sáv erősebb
+		// szempont, mint a lemezszám.
+		expect(order).toEqual(['friss', 'volt-már']);
+	});
+
+	it('a visszatérő zenekar is jobb a semminél', () => {
+		const counts = new Map([['volt-már', MIN_PLAYABLE_ALBUMS]]);
+
+		expect(
+			candidateOrder(counts, new Set(['volt-már']), weekRandom())
+		).toEqual(['volt-már']);
+	});
+
+	it('a küszöb alatt a több lejátszható lemez előbb', () => {
+		const counts = new Map([
+			['egy', 1],
+			['kettő', 2],
+		]);
+
+		expect(candidateOrder(counts, new Set(), weekRandom())).toEqual([
+			'kettő',
+			'egy',
+		]);
+	});
+
+	it('aki egy lemezzel sem szól, nem jelölt', () => {
+		const counts = new Map([
+			['néma', 0],
+			['szól', 1],
+		]);
+
+		expect(candidateOrder(counts, new Set(), weekRandom())).toEqual([
+			'szól',
+		]);
+	});
+
+	it('ugyanaz a hét ugyanazt a sorrendet adja', () => {
+		const counts = new Map(
+			['a', 'b', 'c', 'd', 'e'].map((uid) => [uid, MIN_PLAYABLE_ALBUMS])
+		);
+		const first = candidateOrder(counts, new Set(), weekRandom());
+		const second = candidateOrder(counts, new Set(), weekRandom());
+
+		expect(first).toEqual(second);
+		// …és nem a beírás sorrendje: a hét keveri meg a sávot.
+		expect(first).not.toEqual(['a', 'b', 'c', 'd', 'e']);
+	});
+
+	it('más hét más sorrenddel indul', () => {
+		const counts = new Map(
+			['a', 'b', 'c', 'd', 'e', 'f'].map((uid) => [
+				uid,
+				MIN_PLAYABLE_ALBUMS,
+			])
+		);
+
+		expect(candidateOrder(counts, new Set(), weekRandom())).not.toEqual(
+			candidateOrder(counts, new Set(), weekRandom('2026-W42'))
+		);
 	});
 });
