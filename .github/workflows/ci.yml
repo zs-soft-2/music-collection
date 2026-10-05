@@ -81,7 +81,31 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
+      # Egy futás nem akkor telepít, amikor pusholták, hanem amikor a
+      # `deploy-dev` sorban rá kerül a sor — és ez nem a commitok sorrendje.
+      # 2026-10-04: két push ment ki percek különbséggel, a régebbiké viszont
+      # lassabb build-testet kapott, így a deployja a frissebbé UTÁN indult, és
+      # visszatette a régi `firebase.json`-t: a CSP-ből eltűnt egy host, a képek
+      # pedig a látogatónál haltak el. A `cancel-in-progress` ezen nem segít —
+      # a régebbi futás nem várakozott a csoportban a frissebb alatt, csak
+      # utána lépett be.
+      #
+      # Ezért itt, a sor megnyerése után kérdezzük meg, mi az ág teteje. Ha
+      # közben továbbment, ez a futás egy régebbi állapotot tenne ki, és
+      # kiszáll. Veszteség nincs: a dev lineáris, tehát amit ez vinne, azt a
+      # tetején álló futás is tartalmazza.
+      - name: Csak az ág teteje mehet ki
+        id: tip
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tip=$(gh api "repos/${{ github.repository }}/commits/${{ github.ref_name }}" --jq .sha)
+          if [ "$tip" != "$GITHUB_SHA" ]; then
+            echo "stale=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::A(z) ${GITHUB_SHA:0:8} commit már nem a(z) ${GITHUB_REF_NAME} teteje (${tip:0:8}), ezért ez a deploy kimarad."
+          fi
       - uses: actions/setup-node@v4
+        if: steps.tip.outputs.stale != 'true'
         with:
           node-version: 24
           cache: npm
@@ -91,6 +115,7 @@ jobs:
       # Ugyanaz, mint a build-test jobban: a @zssz-soft csomagokhoz a
       # GH_PACKAGES_TOKEN secret kell.
       - name: Csomag-registry token
+        if: steps.tip.outputs.stale != 'true'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.NPM_TOKEN }}
         run: |
@@ -98,22 +123,27 @@ jobs:
             echo "::error::Hiányzik a GH_PACKAGES_TOKEN (vagy NPM_TOKEN) secret — a @zssz-soft csomagokhoz read:packages jogú PAT kell."
             exit 1
           fi
-      - run: npm ci
+      - if: steps.tip.outputs.stale != 'true'
+        run: npm ci
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.NPM_TOKEN }}
-      - run: npx nx build music-collection --configuration=${{ vars.BUILD_CONFIG }}
+      - if: steps.tip.outputs.stale != 'true'
+        run: npx nx build music-collection --configuration=${{ vars.BUILD_CONFIG }}
       # A hosting CSP-je hash-sel engedi az index.html két inline darabját
       # (téma-script, inline critical CSS onload). Ha a build mást írt ki,
       # a böngésző némán tiltaná le őket — stílus nélküli oldal, villanó
       # téma —, ezért a deploy itt áll meg, nem a látogatónál.
-      - run: npm run verify:csp
+      - if: steps.tip.outputs.stale != 'true'
+        run: npm run verify:csp
       - uses: google-github-actions/auth@v2
+        if: steps.tip.outputs.stale != 'true'
         with:
           workload_identity_provider: ${{ vars.WIF_PROVIDER }}
           service_account: ${{ vars.DEPLOYER_SA }}
       # A hosting mellett a firebase.json többi része is: Firestore rules és indexek,
       # Storage rules. A functionök külön mennek, alatta.
-      - run: npx firebase-tools deploy --only hosting:${{ vars.FIREBASE_HOSTING }},firestore,storage --project ${{ vars.GCP_PROJECT }} --non-interactive
+      - if: steps.tip.outputs.stale != 'true'
+        run: npx firebase-tools deploy --only hosting:${{ vars.FIREBASE_HOSTING }},firestore,storage --project ${{ vars.GCP_PROJECT }} --non-interactive
       # A functionök két körben.
       #
       # Egy deploy MINDEN functionnek új revíziót indít, mert egy közös
@@ -134,6 +164,7 @@ jobs:
       # semmit. Amit viszont kivesznek a kódból, azt egyik kör sem törli:
       # a `firebase functions:delete` marad kézi lépésnek.
       - name: Functionök deployja két körben (Cloud Run CPU-kvóta)
+        if: steps.tip.outputs.stale != 'true'
         # A predeploy (firebase.json) hozza le a @zssz-soft/zs-ai-sdk tarballját
         # a functions forrása mellé — ehhez kell itt a registry-token.
         env:
