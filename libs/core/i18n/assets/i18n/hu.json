@@ -2011,7 +2011,12 @@
 			"what-cannot-be-set": "Amit itt nem lehet állítani",
 			"the-style-lock-the": "A stílus-zár — a rögzített mondatok, amikből minden jelvény készül — és a stílusverzió kódban élnek. Csak emiatt olvasható egy polcnyi jelvény egyetlen sorozatként: ha egy kurátor jelvényenként szerkeszthetné őket, a sorozat hetek alatt szétesne. Megváltoztatni szándékos tett, és minden jelvény újragenerálását jelenti.",
 			"saved": "Mentve.",
-			"the-gateway-picks": "A modellt az AI-gateway választja: ő tudja, melyik szolgáltatónál melyik képmodell érhető el, és melyik mennyibe kerül. Itt nincs modellnév és régió — a korábbi beállítás épp attól tudott hónapokig 404-gyel elhalni, hogy a felület a mi emlékezetünkből kínált nevet."
+			"the-gateway-picks": "A modellt az AI-gateway választja: ő tudja, melyik szolgáltatónál melyik képmodell érhető el, és melyik mennyibe kerül. Itt nincs modellnév és régió — a korábbi beállítás épp attól tudott hónapokig 404-gyel elhalni, hogy a felület a mi emlékezetünkből kínált nevet.",
+			"price-bracket": "Ársáv",
+			"the-bracket-decides-the-model": "A sáv dönti el, mennyit szabad egy képre költeni; a hozzá tartozó modellt a gateway rendeli hozzá. Amelyik sávhoz nincs modellje, az hibával tér vissza.",
+			"bracket-economy": "Takarékos",
+			"bracket-normal": "Alap",
+			"bracket-premium": "Prémium"
 		},
 		"collectionGrowthChart": {
 			"added": "hozzáadva",

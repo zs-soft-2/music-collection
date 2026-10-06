@@ -51,12 +51,8 @@ import {
 	DiscogsVersion,
 	fetchMasterVersions,
 } from './discogs-versions';
-import {
-	generateBadgeCandidates,
-	readBadgeSettings,
-	setBadgeImage,
-	writeBadgeSettings,
-} from './badge-generation';
+import { generateBadgeCandidates, setBadgeImage } from './badge-generation';
+import { readBadgeSettings, writeBadgeSettings } from './badge-settings';
 import {
 	createMusicCollection,
 	deleteMusicCollection,

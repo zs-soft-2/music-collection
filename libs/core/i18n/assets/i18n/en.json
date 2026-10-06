@@ -2011,7 +2011,12 @@
 			"what-cannot-be-set": "What cannot be set here",
 			"the-style-lock-the": "The style lock — the fixed sentences every badge is drawn from — and the style version live in code. They are the only reason a shelf of badges reads as one set: if a curator could edit them per badge, the set would drift apart within weeks. Changing them is a deliberate act, and it means regenerating every badge.",
 			"saved": "Saved.",
-			"the-gateway-picks": "The model is the gateway’s choice: it knows which image model each provider offers, where, and at what price. No model name or region here — the old setting could die with a 404 for months precisely because the form offered a name out of our own memory."
+			"the-gateway-picks": "The model is the gateway’s choice: it knows which image model each provider offers, where, and at what price. No model name or region here — the old setting could die with a 404 for months precisely because the form offered a name out of our own memory.",
+			"price-bracket": "Price bracket",
+			"the-bracket-decides-the-model": "The bracket decides what an image may cost; the gateway assigns the model to it. A bracket it has no model for comes back as an error.",
+			"bracket-economy": "Economy",
+			"bracket-normal": "Normal",
+			"bracket-premium": "Premium"
 		},
 		"collectionGrowthChart": {
 			"added": "added",

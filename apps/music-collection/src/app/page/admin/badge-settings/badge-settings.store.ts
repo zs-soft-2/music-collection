@@ -21,6 +21,7 @@ const FALLBACK: BadgeGenerationSettings = {
 	enabled: true,
 	candidateCount: 4,
 	dailyImageLimit: 200,
+	qualityProfile: 'normal',
 };
 
 /** The server clamps these too; the form refuses the obvious nonsense first. */

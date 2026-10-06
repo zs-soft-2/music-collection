@@ -34,6 +34,12 @@ import { logger } from 'firebase-functions/v2';
 import { HttpsError } from 'firebase-functions/v2/https';
 import { ZsAiError } from '@zssz-soft/zs-ai-sdk';
 
+import {
+	APP_SETTING_COLLECTION,
+	BADGE_SETTING_DOCUMENT,
+	BadgeGenerationSettings,
+	readBadgeSettings,
+} from './badge-settings';
 import { stamp, touchCatalog } from './catalog-sync';
 import { GatewayClient } from './gateway-client';
 import {
@@ -66,35 +72,6 @@ const DOCUMENT_BADGE_CATEGORY = 'badge';
 const ENTITY_QUANTITY_COLLECTION = 'entity-quantity';
 /** `catalog-sync`: a kliens-cache ezen a kulcson látja a változást. */
 const FEATURE_KEYS = [MUSIC_COLLECTION_COLLECTION];
-/** Az alkalmazás-szintű beállítások; a kliens csak olvassa. */
-const APP_SETTING_COLLECTION = 'app-setting';
-const BADGE_SETTING_DOCUMENT = 'badge-generation';
-
-/**
- * Amit az admin felületről lehet állítani. A stíluszár nincs köztük: az
- * tartja egy készletben a badge-eket, és kódban marad, verziózva.
- *
- * A modell és a régió sincs köztük, mióta a rajzolás a gatewayen megy: a
- * gateway maga választ szolgáltatót és modellt a minőségi sáv alapján, és ő
- * tudja, melyik hol érhető el. Egy itteni modellnév csak felülbírálná a
- * tudását — és épp az volt a baj vele, hogy a felület a mi emlékezetünkből
- * kínált nevet, ami aztán 404-gyel halt el.
- */
-export interface BadgeGenerationSettings {
-	/** Fut-e egyáltalán a generálás. Kikapcsolva a költség is nulla. */
-	enabled: boolean;
-	/** Hány jelölt készüljön egy kérésre — ennyiből választ az admin. */
-	candidateCount: number;
-	/** Napi felső korlát a generált képekre, hogy egy hiba ne vigyen vagyont. */
-	dailyImageLimit: number;
-}
-
-export const DEFAULT_BADGE_SETTINGS: BadgeGenerationSettings = {
-	enabled: true,
-	candidateCount: 4,
-	dailyImageLimit: 200,
-};
-
 export interface GenerateBadgeResult {
 	/** Amit ez a rajzolás tett a galériába, a rajzolás sorrendjében. */
 	candidates: BadgeImage[];
@@ -104,43 +81,6 @@ export interface GenerateBadgeResult {
 	seed: number;
 	styleVersion: number;
 	model: string;
-}
-
-/** A beállítás hiánya nem hiba: ilyenkor az alapértelmezés érvényes. */
-export async function readBadgeSettings(
-	database: Firestore
-): Promise<BadgeGenerationSettings> {
-	const snapshot = await database
-		.collection(APP_SETTING_COLLECTION)
-		.doc(BADGE_SETTING_DOCUMENT)
-		.get();
-
-	// Szűrve, nem szórva: a dokumentumban a napi számláló is itt lakik, és a
-	// gateway előtti modell/régió mezők is itt maradtak. Egyik sem beállítás.
-	return sanitizeBadgeSettings(snapshot.data() ?? {});
-}
-
-/** Az admin felület mentése. Csak a ismert mezők mennek át. */
-export function sanitizeBadgeSettings(data: unknown): BadgeGenerationSettings {
-	const input = (data ?? {}) as Partial<BadgeGenerationSettings>;
-	const positive = (value: unknown, fallback: number, max: number): number =>
-		typeof value === 'number' && Number.isFinite(value) && value > 0
-			? Math.min(Math.floor(value), max)
-			: fallback;
-
-	return {
-		enabled: input.enabled !== false,
-		candidateCount: positive(
-			input.candidateCount,
-			DEFAULT_BADGE_SETTINGS.candidateCount,
-			8
-		),
-		dailyImageLimit: positive(
-			input.dailyImageLimit,
-			DEFAULT_BADGE_SETTINGS.dailyImageLimit,
-			2000
-		),
-	};
 }
 
 /** A ma elhasznált képek; a limit ennél nem enged tovább. */
@@ -298,6 +238,7 @@ async function draw(
 				size: BADGE_SIZE,
 				n: settings.candidateCount,
 			},
+			qualityProfile: settings.qualityProfile,
 		});
 	} catch (error) {
 		// A gateway hibakódja többet mond, mint egy HTTP-státusz: a kvóta, a
@@ -614,10 +555,7 @@ export async function setBadgeImage(
 	}
 
 	if (typeof documentUid !== 'string' || !documentUid.trim()) {
-		throw new HttpsError(
-			'invalid-argument',
-			'Hiányzik a kép azonosítója.'
-		);
+		throw new HttpsError('invalid-argument', 'Hiányzik a kép azonosítója.');
 	}
 
 	const collectionUid = uid.trim();
@@ -664,19 +602,4 @@ export async function setBadgeImage(
 	logger.info(`badge kiválasztva: ${collectionUid} → document/${pickedUid}`);
 
 	return { uid: collectionUid, documentUid: pickedUid };
-}
-
-/** Az admin felület mentése; a stíluszár szándékosan nincs köztük. */
-export async function writeBadgeSettings(
-	database: Firestore,
-	data: unknown
-): Promise<BadgeGenerationSettings> {
-	const settings = sanitizeBadgeSettings(data);
-
-	await database
-		.collection(APP_SETTING_COLLECTION)
-		.doc(BADGE_SETTING_DOCUMENT)
-		.set(settings, { merge: true });
-
-	return settings;
 }

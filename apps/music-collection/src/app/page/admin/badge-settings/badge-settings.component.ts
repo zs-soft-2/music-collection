@@ -1,7 +1,19 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { I18N_IMPORTS } from '@music-collection/core/i18n';
+import { BadgeQualityProfile } from '@music-collection/domain/music-collection/api';
 
 import { BadgeSettingsStore } from './badge-settings.store';
+
+/**
+ * The gateway's price brackets, cheapest first. The list lives here rather
+ * than in the api barrel: this page is lazy, and a value exported from
+ * there would travel in the main bundle for everyone.
+ */
+const BRACKETS: readonly BadgeQualityProfile[] = [
+	'economy',
+	'normal',
+	'premium',
+];
 
 /**
  * Admin: the badge generation settings. Everything here costs money when a
@@ -58,6 +70,40 @@ import { BadgeSettingsStore } from './badge-settings.store';
 							<small>
 								{{
 									'ui.badgeSettings.switched-off-no-badge'
+										| transloco
+								}}
+							</small>
+						</div>
+
+						<div class="mc-field">
+							<label for="bracket">{{
+								'ui.badgeSettings.price-bracket' | transloco
+							}}</label>
+							<select
+								id="bracket"
+								(change)="
+									store.set({
+										qualityProfile: bracket($event),
+									})
+								"
+							>
+								@for (name of brackets; track name) {
+									<option
+										[value]="name"
+										[selected]="
+											name === settings.qualityProfile
+										"
+									>
+										{{
+											'ui.badgeSettings.bracket-' + name
+												| transloco
+										}}
+									</option>
+								}
+							</select>
+							<small>
+								{{
+									'ui.badgeSettings.the-bracket-decides-the-model'
 										| transloco
 								}}
 							</small>
@@ -188,6 +234,7 @@ import { BadgeSettingsStore } from './badge-settings.store';
 })
 export class BadgeSettingsComponent {
 	protected readonly store = inject(BadgeSettingsStore);
+	protected readonly brackets = BRACKETS;
 
 	protected value(event: Event): string {
 		return (event.target as HTMLInputElement).value;
@@ -195,5 +242,9 @@ export class BadgeSettingsComponent {
 
 	protected checked(event: Event): boolean {
 		return (event.target as HTMLInputElement).checked;
+	}
+
+	protected bracket(event: Event): BadgeQualityProfile {
+		return (event.target as HTMLSelectElement).value as BadgeQualityProfile;
 	}
 }

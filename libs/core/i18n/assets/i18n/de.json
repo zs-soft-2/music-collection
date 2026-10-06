@@ -2011,7 +2011,12 @@
 			"what-cannot-be-set": "Was sich hier nicht einstellen lässt",
 			"the-style-lock-the": "Die Stilsperre — die festen Sätze, aus denen jedes Abzeichen gezeichnet wird — und die Stilversion stehen im Code. Nur deshalb liest sich ein Regal voller Abzeichen als ein Satz: könnte ein Kurator sie je Abzeichen ändern, liefe der Satz binnen Wochen auseinander. Sie zu ändern ist eine bewusste Tat und bedeutet, jedes Abzeichen neu zu erzeugen.",
 			"saved": "Gespeichert.",
-			"the-gateway-picks": "Das Modell wählt das AI-Gateway: Es weiß, welches Bildmodell bei welchem Anbieter erreichbar ist und was es kostet. Kein Modellname und keine Region mehr — die alte Einstellung konnte genau deshalb monatelang mit einem 404 sterben, weil das Formular einen Namen aus unserem Gedächtnis anbot."
+			"the-gateway-picks": "Das Modell wählt das AI-Gateway: Es weiß, welches Bildmodell bei welchem Anbieter erreichbar ist und was es kostet. Kein Modellname und keine Region mehr — die alte Einstellung konnte genau deshalb monatelang mit einem 404 sterben, weil das Formular einen Namen aus unserem Gedächtnis anbot.",
+			"price-bracket": "Preisklasse",
+			"the-bracket-decides-the-model": "Die Klasse bestimmt, was ein Bild kosten darf; das passende Modell weist das Gateway zu. Eine Klasse ohne Modell kommt als Fehler zurück.",
+			"bracket-economy": "Sparsam",
+			"bracket-normal": "Normal",
+			"bracket-premium": "Premium"
 		},
 		"collectionGrowthChart": {
 			"added": "hinzugefügt",

@@ -84,4 +84,19 @@ export interface BadgeGenerationSettings {
 	enabled: boolean;
 	candidateCount: number;
 	dailyImageLimit: number;
+	/**
+	 * Which of the gateway's price brackets the drawing runs in. Not a
+	 * model name: the gateway assigns a model to the bracket, and it is the
+	 * one that knows which provider has what.
+	 */
+	qualityProfile: BadgeQualityProfile;
 }
+
+/**
+ * The gateway's three price brackets, cheapest first.
+ *
+ * A type, not a list: a value exported from this barrel lands in the main
+ * bundle, and the only thing that enumerates the brackets is the admin
+ * page, which is lazy. The list lives there.
+ */
+export type BadgeQualityProfile = 'economy' | 'normal' | 'premium';
