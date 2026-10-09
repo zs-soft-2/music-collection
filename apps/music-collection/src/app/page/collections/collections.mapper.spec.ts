@@ -17,6 +17,7 @@ import {
 	toNextAlbums,
 } from './collections.mapper';
 import {
+	COVER_POOL_SIZE,
 	CollectionCardListView,
 	CollectionCardView,
 } from './collections.model';
@@ -198,7 +199,7 @@ describe('toCollectionCard', () => {
 		expect(view.badgeArtworkUrl).toBeNull();
 	});
 
-	it('takes at most four covers, skipping the albums without one', () => {
+	it('carries the covers in order, skipping the albums without one', () => {
 		const view = toCollectionCard(
 			standing(
 				[
@@ -213,7 +214,32 @@ describe('toCollectionCard', () => {
 			)
 		);
 
-		expect(view.covers).toEqual(['b.jpg', 'c.jpg', 'd.jpg', 'e.jpg']);
+		expect(view.covers).toEqual([
+			'b.jpg',
+			'c.jpg',
+			'd.jpg',
+			'e.jpg',
+			'f.jpg',
+		]);
+	});
+
+	/**
+	 * More than the four tiles, because a moving mosaic turns over to the
+	 * rest — but not the whole discography: a collection of two hundred would
+	 * otherwise put two hundred urls in a card nobody has scrolled to.
+	 */
+	it('stops at the pool a mosaic can turn over', () => {
+		const view = toCollectionCard(
+			standing(
+				Array.from({ length: COVER_POOL_SIZE + 4 }, (_, index) =>
+					membership(String(index), `${index}.jpg`)
+				),
+				[]
+			)
+		);
+
+		expect(view.covers).toHaveLength(COVER_POOL_SIZE);
+		expect(view.covers.at(-1)).toBe(`${COVER_POOL_SIZE - 1}.jpg`);
 	});
 });
 

@@ -1,12 +1,19 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
+import {
+	COVER_ROTATION_CHOICES,
+	COVER_TURNS,
+	CoverMosaicService,
+	NO_COVER_ROTATION,
+} from '../../../../data/cover-mosaic';
 import { LayoutWidthService, ThemeMode, ThemeService } from '../../../../theme';
 
 /**
- * The look of the app. The same switches sit in the top bar; here they are
- * spelled out, and — like everything on this page — they are kept for the
- * account, so a second machine opens the way the first one was left.
+ * The look of the app: the theme and the page width, which also sit in the
+ * top bar, and the pace of the collection mosaics, which is only here. Like
+ * everything on this page they are kept for the account, so a second machine
+ * opens the way the first one was left.
  */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -45,6 +52,57 @@ import { LayoutWidthService, ThemeMode, ThemeService } from '../../../../theme';
 
 		<p class="note">
 			{{ 'ui.profileAppearance.the-wide-setting-only' | transloco }}
+		</p>
+
+		<fieldset>
+			<legend>{{ 'ui.profileAppearance.mosaic' | transloco }}</legend>
+			@for (choice of paces; track choice) {
+				<button
+					type="button"
+					[class.selected]="mosaic.rotateSeconds() === choice"
+					[attr.aria-pressed]="mosaic.rotateSeconds() === choice"
+					(click)="mosaic.set({ rotateSeconds: choice })"
+				>
+					<i
+						class="pi {{ choice ? 'pi-sync' : 'pi-pause' }}"
+						aria-hidden="true"
+					></i>
+					@if (choice === still) {
+						{{ 'ui.profileAppearance.mosaic-still' | transloco }}
+					} @else {
+						{{ choice }}
+						{{ 'ui.profileAppearance.seconds-short' | transloco }}
+					}
+				</button>
+			}
+		</fieldset>
+
+		<!--
+			How it changes is only a question once it changes at all, so the
+			movements are not offered to a mosaic that stands still.
+		-->
+		@if (mosaic.rotateSeconds() !== still) {
+			<fieldset>
+				<legend>
+					{{ 'ui.profileAppearance.mosaic-turn' | transloco }}
+				</legend>
+				@for (choice of turns; track choice) {
+					<button
+						type="button"
+						[class.selected]="mosaic.turn() === choice"
+						[attr.aria-pressed]="mosaic.turn() === choice"
+						(click)="mosaic.set({ turn: choice })"
+					>
+						{{ 'ui.profileAppearance.turn.' + choice | transloco }}
+					</button>
+				}
+			</fieldset>
+		}
+
+		<p class="note">
+			{{
+				'ui.profileAppearance.a-collection-without-artwork' | transloco
+			}}
 		</p>
 	`,
 	styles: `
@@ -107,6 +165,13 @@ import { LayoutWidthService, ThemeMode, ThemeService } from '../../../../theme';
 export class ProfileAppearanceComponent {
 	protected readonly theme = inject(ThemeService);
 	protected readonly layoutWidth = inject(LayoutWidthService);
+	protected readonly mosaic = inject(CoverMosaicService);
+
+	/** How often a collection's mosaic turns a cover over; the first stands. */
+	protected readonly paces = COVER_ROTATION_CHOICES;
+	protected readonly still = NO_COVER_ROTATION;
+	/** What that turn looks like. */
+	protected readonly turns = COVER_TURNS;
 
 	protected readonly themes: {
 		value: ThemeMode;

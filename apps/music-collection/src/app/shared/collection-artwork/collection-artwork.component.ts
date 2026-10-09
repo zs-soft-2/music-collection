@@ -1,10 +1,7 @@
-import {
-	ChangeDetectionStrategy,
-	Component,
-	computed,
-	input,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { I18N_IMPORTS } from '@music-collection/core/i18n';
+
+import { CoverMosaicComponent } from '../cover-mosaic';
 
 /**
  * The picture that stands for a collection. The curator's own artwork comes
@@ -12,22 +9,22 @@ import { I18N_IMPORTS } from '@music-collection/core/i18n';
  * of their covers; and when the catalog has no cover to show either, the
  * collection's icon stands in.
  *
+ * Which of the three it is, is all this decides — the mosaic is a picture in
+ * its own right, with its own rules about turning covers over, and it is
+ * `CoverMosaicComponent` that keeps them.
+ *
  * The host carries the size, so the same symbol works as a thumbnail in a
  * list row and as the artwork of a card.
  */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-collection-artwork',
-	imports: [...I18N_IMPORTS],
+	imports: [...I18N_IMPORTS, CoverMosaicComponent],
 	template: `
 		@if (coverImageUrl(); as url) {
 			<img class="cover" [src]="url" alt="" loading="lazy" />
-		} @else if (mosaic().length) {
-			<div class="mosaic" [attr.data-count]="mosaic().length">
-				@for (cover of mosaic(); track cover) {
-					<img [src]="cover" alt="" loading="lazy" />
-				}
-			</div>
+		} @else if (covers().length) {
+			<mc-cover-mosaic [covers]="covers()" [limit]="limit()" />
 		} @else {
 			<i
 				class="placeholder"
@@ -44,27 +41,11 @@ import { I18N_IMPORTS } from '@music-collection/core/i18n';
 			background: var(--mc-surface-2);
 		}
 
-		.cover,
-		.mosaic img {
+		.cover {
+			display: block;
 			width: 100%;
 			height: 100%;
 			object-fit: cover;
-		}
-
-		.mosaic {
-			display: grid;
-			grid-template-columns: repeat(2, 1fr);
-			width: 100%;
-			height: 100%;
-
-			&[data-count='1'] {
-				grid-template-columns: 1fr;
-			}
-
-			/* Two covers stand side by side, three keep the first whole. */
-			&[data-count='3'] img:first-child {
-				grid-row: span 2;
-			}
 		}
 
 		.placeholder {
@@ -84,10 +65,6 @@ export class CollectionArtworkComponent {
 	public readonly covers = input<string[]>([]);
 	/** PrimeIcons class shown when there is no picture at all. */
 	public readonly icon = input<string | null>(null);
-	/** How many covers the mosaic may show; fewer keeps it readable when small. */
+	/** How many covers the mosaic shows; fewer keeps it readable when small. */
 	public readonly limit = input(4);
-
-	protected readonly mosaic = computed(() =>
-		this.covers().slice(0, this.limit())
-	);
 }

@@ -4,8 +4,17 @@ import {
 	ScoreHighlight,
 } from '@music-collection/domain/music-collection/api';
 
-/** Covers shown on a collection card that has no artwork of its own. */
-export const COVER_MOSAIC_SIZE = 4;
+/**
+ * How many covers a card carries for the mosaic that stands in for a
+ * collection without artwork of its own.
+ *
+ * More than the four the mosaic shows, because it can be set to turn them
+ * over: a tile changing to a cover already standing beside it would read as
+ * the picture glitching rather than moving on. Sixteen is a set a collector
+ * will not see repeat while the card is on the screen, and it is only the
+ * urls — a cover itself is fetched when a tile asks for it.
+ */
+export const COVER_POOL_SIZE = 16;
 
 /**
  * How many records the hunt list shows. A collector with eight hundred gaps

@@ -5,7 +5,7 @@ import {
 import { MusicCollectionStanding } from '@music-collection/domain/music-collection/core';
 
 import {
-	COVER_MOSAIC_SIZE,
+	COVER_POOL_SIZE,
 	CollectionAlbumView,
 	CollectionBadgeView,
 	CollectionCardListView,
@@ -33,6 +33,11 @@ function toBadgeArtwork(badge: BadgeDefinition | null): string | null {
 	return badge ? (badge.image?.filePath ?? badge.artworkUrl) : null;
 }
 
+/**
+ * The covers the card draws its mosaic from. The first four are the four
+ * tiles; the rest are what a moving mosaic turns over to, and cost nothing
+ * until one is asked for.
+ */
 function toCovers(standing: MusicCollectionStanding): string[] {
 	const covers: string[] = [];
 
@@ -40,7 +45,7 @@ function toCovers(standing: MusicCollectionStanding): string[] {
 		if (album.coverUrl) {
 			covers.push(album.coverUrl);
 
-			if (covers.length === COVER_MOSAIC_SIZE) {
+			if (covers.length === COVER_POOL_SIZE) {
 				break;
 			}
 		}

@@ -89,16 +89,21 @@ import { CollectionCardView } from '../../collections.model';
 			}
 		}
 
-		/* The picture that stands for the set, next to its name. */
+		/*
+		 * The picture that stands for the set, next to its name. Big enough
+		 * that four covers in it are four records a collector can recognise
+		 * — at a quarter of a thumbnail they were four smudges, and the row
+		 * is the only place most of these collections are ever seen.
+		 */
 		.collection-art {
 			grid-row: 1 / span 2;
 			grid-column: 1;
 			align-self: center;
-			width: 3.25rem;
-			height: 3.25rem;
+			width: 4.5rem;
+			height: 4.5rem;
 			border: 1px solid var(--mc-border);
 			border-radius: var(--mc-radius-md);
-			--mc-collection-artwork-icon: 1.25rem;
+			--mc-collection-artwork-icon: 1.75rem;
 		}
 
 		.collection-name {
