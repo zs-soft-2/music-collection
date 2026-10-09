@@ -63,8 +63,9 @@ const DOCUMENT_FOLDER = '/document/';
 /** `libs/common/api` EntityTypeEnum.Document. */
 const DOCUMENT_ENTITY_TYPE = 'Document';
 /**
- * `libs/api` DocumentCategoryEnum.Badge. A kézzel feltöltött dokumentumnak
- * nincs kategóriája; amit gép iktat, az megmondja, mire készült — az admin
+ * `libs/api` DocumentCategoryEnum.Badge. Amit a dokumentum-adminban kézzel
+ * iktatnak be, annak nincs kategóriája; ami jelvénynek készült — rajzolva
+ * vagy a szerkesztőből feltöltve —, az megmondja magáról, és az admin
  * felületen ez alapján áll külön listába a sok jelölt.
  */
 const DOCUMENT_BADGE_CATEGORY = 'badge';
@@ -368,11 +369,21 @@ export interface BadgeImage {
 	name: string;
 	/** A kész letöltési URL, ahogy a borítóknál is — egyenesen `<img src>`-be. */
 	filePath: string;
-	prompt: string;
-	negativePrompt: string;
-	seed: number;
-	styleVersion: number;
-	model: string;
+	/**
+	 * Honnan jött a kép. A mező hiánya a rajzolt: a galériák tele vannak
+	 * olyan bejegyzésekkel, amelyek még azelőtt készültek, hogy feltölteni
+	 * lehetett volna.
+	 */
+	source?: 'drawn' | 'uploaded';
+	/**
+	 * Amivel a modell rajzolta. Csak a rajzolt képnek van ilyenje: egy
+	 * kézzel feltöltött pinnek nincs mit újra előállítani.
+	 */
+	prompt?: string;
+	negativePrompt?: string;
+	seed?: number;
+	styleVersion?: number;
+	model?: string;
 	/** Epoch ezredmásodperc. */
 	generatedAt: number;
 }
@@ -544,22 +555,30 @@ async function fileCandidates(
  * A választott kép befagyasztása a definícióba. Fájl már nem készül: a kép a
  * rajzolás óta megvan, ez a hívás csak azt mondja meg, a galéria melyik
  * darabja a jelvény — így egy hónapja rajzolt jelöltre is eshet a választás.
+ *
+ * Üres azonosító a pin levétele: a jelvény képe ilyenkor a kézzel feltöltött
+ * grafikára esik vissza. A galéria marad, ahol van, így a levett pin bármikor
+ * visszaválasztható.
  */
 export async function setBadgeImage(
 	database: Firestore,
 	uid: unknown,
 	documentUid: unknown
-): Promise<{ uid: string; documentUid: string }> {
+): Promise<{ uid: string; documentUid: string | null }> {
 	if (typeof uid !== 'string' || !uid.trim()) {
 		throw new HttpsError('invalid-argument', 'Hiányzó uid.');
 	}
 
-	if (typeof documentUid !== 'string' || !documentUid.trim()) {
+	if (
+		documentUid !== null &&
+		documentUid !== undefined &&
+		typeof documentUid !== 'string'
+	) {
 		throw new HttpsError('invalid-argument', 'Hiányzik a kép azonosítója.');
 	}
 
 	const collectionUid = uid.trim();
-	const pickedUid = documentUid.trim();
+	const pickedUid = typeof documentUid === 'string' ? documentUid.trim() : '';
 	const reference = database
 		.collection(MUSIC_COLLECTION_COLLECTION)
 		.doc(collectionUid);
@@ -580,11 +599,11 @@ export async function setBadgeImage(
 			: [];
 		// A kép csak a saját collectionje galériájából jöhet: a kliens nem
 		// mutathat rá egy másik collection badge-ére, sem bármi másra.
-		const picked = gallery.find(
-			(image) => image?.documentUid === pickedUid
-		);
+		const picked = pickedUid
+			? gallery.find((image) => image?.documentUid === pickedUid)
+			: null;
 
-		if (!picked) {
+		if (pickedUid && !picked) {
 			throw new HttpsError(
 				'not-found',
 				'Ez a kép nincs a collection galériájában.'
@@ -593,13 +612,212 @@ export async function setBadgeImage(
 
 		transaction.set(
 			reference,
-			stamp({ badge: { ...badge, image: picked } }),
+			stamp({ badge: { ...badge, image: picked ?? null } }),
 			{ merge: true }
 		);
 		touchCatalog(database, transaction, [MUSIC_COLLECTION_COLLECTION]);
 	});
 
-	logger.info(`badge kiválasztva: ${collectionUid} → document/${pickedUid}`);
+	logger.info(
+		pickedUid
+			? `badge kiválasztva: ${collectionUid} → document/${pickedUid}`
+			: `badge pin levéve: ${collectionUid}`
+	);
 
-	return { uid: collectionUid, documentUid: pickedUid };
+	return { uid: collectionUid, documentUid: pickedUid || null };
+}
+
+/** Amit a kliens a `document/` mappába tölthet (`storage.rules`). */
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+
+/**
+ * A feltöltött fájl letöltési URL-je és típusa. A kliens SDK
+ * `getDownloadURL`-je már tokent tesz az objektumra; ha mégsem volna rajta,
+ * itt kap egyet — így a `filePath` ugyanolyan alakú, mint a rajzolt pineké.
+ */
+async function uploadedDocumentFile(
+	storagePath: string
+): Promise<{ filePath: string; contentType: string }> {
+	const bucket = getStorage().bucket();
+	const file = bucket.file(storagePath);
+	const [exists] = await file.exists();
+
+	if (!exists) {
+		throw new HttpsError('not-found', 'Nincs ilyen feltöltött fájl.');
+	}
+
+	const [metadata] = await file.getMetadata();
+	const contentType = String(metadata.contentType ?? '');
+
+	if (!contentType.startsWith('image/')) {
+		throw new HttpsError('invalid-argument', 'A feltöltött fájl nem kép.');
+	}
+
+	if (Number(metadata.size ?? 0) > MAX_UPLOAD_BYTES) {
+		throw new HttpsError('invalid-argument', 'A kép nagyobb 5 MB-nál.');
+	}
+
+	const tokens = String(
+		metadata.metadata?.['firebaseStorageDownloadTokens'] ?? ''
+	)
+		.split(',')
+		.filter(Boolean);
+	const token = tokens[0] ?? randomUUID();
+
+	if (!tokens.length) {
+		await file.setMetadata({
+			metadata: { firebaseStorageDownloadTokens: token },
+		});
+	}
+
+	return {
+		contentType,
+		filePath:
+			`https://firebasestorage.googleapis.com/v0/b/${bucket.name}` +
+			`/o/${encodeURIComponent(storagePath)}?alt=media&token=${token}`,
+	};
+}
+
+/**
+ * A kézzel feltöltött kép beiktatása. A fájl ilyenkor már a Storage-ban van
+ * — a szerkesztő tölti fel, abba a `document/` mappába, ahová a rajzolt
+ * pinek is kerülnek —, és itt kap fölé dokumentumot, galéria-bejegyzést, és
+ * egyből ez lesz a jelvény.
+ *
+ * Miért a szerveren: a `music-collection` dokumentumra a rules egyetlen
+ * kliens-írást sem enged, a galéria tehát csak innen bővülhet.
+ *
+ * És miért lesz egyből pin: a rajzolt jelöltek közül azért választ az admin,
+ * mert a modell rajzolt négyet helyette — a feltöltött képet viszont ő maga
+ * hozta, épp azért, hogy az legyen a jelvény. Levenni ugyanúgy lehet, és a
+ * galériában marad, mint bármelyik rajzolt kép.
+ */
+export async function adoptBadgeImage(
+	database: Firestore,
+	uid: unknown,
+	storagePath: unknown,
+	fileName: unknown,
+	now: number
+): Promise<BadgeImage> {
+	if (typeof uid !== 'string' || !uid.trim()) {
+		throw new HttpsError('invalid-argument', 'Hiányzó uid.');
+	}
+
+	if (typeof storagePath !== 'string' || !storagePath.trim()) {
+		throw new HttpsError('invalid-argument', 'Hiányzik a fájl útvonala.');
+	}
+
+	const folder = DOCUMENT_FOLDER.replace(/^\//, '');
+	const path = storagePath.trim().replace(/^\//, '');
+
+	// Csak a dokumentum-mappából: a hívó nem mutathat rá a bucket bármelyik
+	// objektumára, és nem iktathat dokumentum mögé rejtve mást.
+	if (!path.startsWith(folder) || path.includes('..')) {
+		throw new HttpsError(
+			'invalid-argument',
+			'A kép nem a dokumentum-mappában van.'
+		);
+	}
+
+	const collectionUid = uid.trim();
+	const reference = database
+		.collection(MUSIC_COLLECTION_COLLECTION)
+		.doc(collectionUid);
+	const snapshot = await reference.get();
+
+	if (!snapshot.exists) {
+		throw new HttpsError('not-found', 'Nincs ilyen collection.');
+	}
+
+	const { filePath, contentType } = await uploadedDocumentFile(path);
+	const collectionName = String(snapshot.get('name') ?? reference.id);
+	const documentReference = database.collection(DOCUMENT_COLLECTION).doc();
+	const originalName =
+		typeof fileName === 'string' && fileName.trim()
+			? fileName.trim().slice(0, 200)
+			: (path.split('/').pop() ?? 'badge');
+
+	return database.runTransaction(async (transaction) => {
+		const fresh = await transaction.get(reference);
+		const badge = (fresh.data()?.['badge'] ?? {}) as Record<
+			string,
+			unknown
+		>;
+		const gallery = Array.isArray(badge['gallery'])
+			? (badge['gallery'] as BadgeImage[])
+			: [];
+		// Ugyanazt a fájlt kétszer nem iktatjuk be: a második hívás a már
+		// meglévő bejegyzést teszi jelvénnyé, új dokumentum nélkül.
+		const already = gallery.find((image) => image?.filePath === filePath);
+
+		if (already) {
+			transaction.set(
+				reference,
+				stamp({ badge: { ...badge, image: already } }),
+				{ merge: true }
+			);
+			touchCatalog(database, transaction, FEATURE_KEYS);
+			logger.info(
+				`feltöltött badge újra jelvény: ${collectionUid} → ` +
+					`document/${already.documentUid}`
+			);
+
+			return already;
+		}
+
+		const adopted: BadgeImage = {
+			documentUid: documentReference.id,
+			name: `Badge — ${collectionName} (feltöltött)`,
+			filePath,
+			source: 'uploaded',
+			generatedAt: now,
+		};
+
+		transaction.set(
+			documentReference,
+			stamp({
+				uid: documentReference.id,
+				entityType: DOCUMENT_ENTITY_TYPE,
+				category: DOCUMENT_BADGE_CATEGORY,
+				name: adopted.name,
+				originalName,
+				fileType: contentType,
+				filePath,
+				createdAt: now,
+			})
+		);
+		// Az admin darabszám, amit egyébként a kliens léptet.
+		transaction.set(
+			database
+				.collection(ENTITY_QUANTITY_COLLECTION)
+				.doc(DOCUMENT_ENTITY_TYPE),
+			{
+				type: DOCUMENT_ENTITY_TYPE,
+				quantity: FieldValue.increment(1),
+				modifyDate: new Date(now),
+			},
+			{ merge: true }
+		);
+		transaction.set(
+			reference,
+			stamp({
+				badge: {
+					...badge,
+					image: adopted,
+					gallery: [...gallery, adopted],
+				},
+			}),
+			{ merge: true }
+		);
+		touchCatalog(database, transaction, [
+			MUSIC_COLLECTION_COLLECTION,
+			DOCUMENT_COLLECTION,
+		]);
+		logger.info(
+			`feltöltött badge beiktatva: ${collectionUid} → ` +
+				`document/${adopted.documentUid} (${path})`
+		);
+
+		return adopted;
+	});
 }

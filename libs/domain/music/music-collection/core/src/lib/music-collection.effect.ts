@@ -393,12 +393,29 @@ export class MusicCollectionEffect {
 		return this.repository.generateBadge$(uid, points);
 	}
 
-	public setBadgeImage$(uid: string, documentUid: string): Observable<void> {
+	/** `null` takes the pin off: the hand-made artwork becomes the badge. */
+	public setBadgeImage$(
+		uid: string,
+		documentUid: string | null
+	): Observable<void> {
 		return this.repository.setBadgeImage$(uid, documentUid);
 	}
 
 	/**
-	 * The drawn images that are still on offer. A candidate withdrawn in the
+	 * An image an admin uploaded, taken into the gallery and made the badge.
+	 * The editor has already put the file in Storage; this is what gives it
+	 * a document and a place among the pins.
+	 */
+	public adoptBadgeImage$(
+		uid: string,
+		storagePath: string,
+		fileName: string
+	): Observable<BadgeImage> {
+		return this.repository.adoptBadgeImage$(uid, storagePath, fileName);
+	}
+
+	/**
+	 * The images that are still on offer. A candidate withdrawn in the
 	 * document admin keeps its file — whatever already points at it goes on
 	 * loading, the frozen badge included — but it is not among what a pin
 	 * can be picked from any more.

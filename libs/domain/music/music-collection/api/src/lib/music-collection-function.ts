@@ -44,6 +44,14 @@ export const GENERATE_MUSIC_COLLECTION_BADGE_FUNCTION =
 	'generateMusicCollectionBadge';
 export const SET_MUSIC_COLLECTION_BADGE_IMAGE_FUNCTION =
 	'setMusicCollectionBadgeImage';
+/**
+ * Taking an image an admin uploaded into the gallery. The file is already in
+ * Storage — the editor put it there, in the folder the drawn pins share — so
+ * what travels is its path, and the server is what files a document over it
+ * and writes the gallery, which no client may touch.
+ */
+export const ADOPT_MUSIC_COLLECTION_BADGE_IMAGE_FUNCTION =
+	'adoptMusicCollectionBadgeImage';
 export const READ_BADGE_GENERATION_SETTINGS_FUNCTION =
 	'readBadgeGenerationSettings';
 export const UPDATE_BADGE_GENERATION_SETTINGS_FUNCTION =
@@ -68,11 +76,24 @@ export interface GenerateBadgeResult {
 /**
  * Picking a badge points at an image the gallery already holds — nothing
  * travels back but its `document` id, because the file has existed since the
- * moment it was drawn.
+ * moment it was drawn. A null id is the pin taken off: the badge falls back
+ * to the artwork an admin uploaded by hand.
  */
 export interface BadgeImagePick {
 	uid: string;
-	documentUid: string;
+	documentUid: string | null;
+}
+
+/**
+ * What adopting an uploaded image needs: which collection it is for, where
+ * the file landed, and what it was called when it was chosen — the name a
+ * person would recognise it by in the document admin.
+ */
+export interface BadgeImageAdoption {
+	uid: string;
+	/** The object's path in the bucket, under `document/`. */
+	storagePath: string;
+	fileName: string;
 }
 
 /**

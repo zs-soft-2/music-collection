@@ -8,7 +8,7 @@ import {
 	MusicCollectionDraft,
 	UpdateMusicCollectionResult,
 } from './music-collection-function';
-import { MusicCollectionEntity } from './music-collection';
+import { BadgeImage, MusicCollectionEntity } from './music-collection';
 
 /**
  * Data access for the collection definitions. The application binds the
@@ -63,12 +63,24 @@ export abstract class MusicCollectionRepository {
 	/**
 	 * Makes one image from the collection's gallery its badge. No file is
 	 * made here: every image has been one since it was drawn, so this only
-	 * says which of them the pin is.
+	 * says which of them the pin is. `null` takes the pin off, leaving the
+	 * hand-made artwork to speak for the badge.
 	 */
 	public abstract setBadgeImage$(
 		uid: string,
-		documentUid: string
+		documentUid: string | null
 	): Observable<void>;
+	/**
+	 * Takes an image an admin uploaded into the gallery and makes it the
+	 * badge. The file is already in Storage; what the server adds is the
+	 * `document` over it and the gallery entry — without which a hand-made
+	 * image could never be a pin, only the artwork behind one.
+	 */
+	public abstract adoptBadgeImage$(
+		uid: string,
+		storagePath: string,
+		fileName: string
+	): Observable<BadgeImage>;
 
 	/** What an admin may set about generation; the style lock is not in it. */
 	public abstract readBadgeSettings$(): Observable<BadgeGenerationSettings>;

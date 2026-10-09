@@ -51,7 +51,11 @@ import {
 	DiscogsVersion,
 	fetchMasterVersions,
 } from './discogs-versions';
-import { generateBadgeCandidates, setBadgeImage } from './badge-generation';
+import {
+	adoptBadgeImage,
+	generateBadgeCandidates,
+	setBadgeImage,
+} from './badge-generation';
 import { readBadgeSettings, writeBadgeSettings } from './badge-settings';
 import {
 	createMusicCollection,
@@ -66,6 +70,7 @@ import {
 	sanitizeConcertAiSettings,
 	suggestConcerts as askForConcerts,
 } from './concert-suggestion';
+import { suggestVenues as askForVenues } from './venue-suggestion';
 import { DiscogsSearchHit } from './discogs-search';
 import { ScanAlbumContext, scanPhoto } from './photo-scan';
 import { ScanQuotaError, reserveVisionRequests } from './photo-scan-quota';
@@ -1392,6 +1397,23 @@ export const setMusicCollectionBadgeImage = onCall(async (request) => {
 });
 
 /**
+ * A szerkesztőből feltöltött kép beiktatása jelvénynek. A fájl már a
+ * Storage-ban van; innentől dokumentum is van fölötte, a galériában is ott
+ * áll, és ez a collection pinje.
+ */
+export const adoptMusicCollectionBadgeImage = onCall(async (request) => {
+	await requireCaller(request, 'updateMusicCollectionEntity');
+
+	return adoptBadgeImage(
+		database(),
+		request.data?.uid,
+		request.data?.storagePath,
+		request.data?.fileName,
+		Date.now()
+	);
+});
+
+/**
  * A generálás beállításai. A stíluszár szándékosan nincs köztük: az tartja
  * egy készletben a badge-eket, és kódban marad, verziózva.
  */
@@ -1771,6 +1793,57 @@ export const suggestConcerts = onCall(
 		} catch (error) {
 			if (error instanceof ConcertAiError) {
 				// Ugyanaz a minta, mint a fotós keretnél: a kód a
+				// `details`-ben utazik, a mondat marad mondatnak.
+				throw new HttpsError(
+					error.reason === 'off'
+						? 'failed-precondition'
+						: 'resource-exhausted',
+					error.message,
+					{
+						source: 'quota',
+						code:
+							error.reason === 'off'
+								? 'concert-ai-disabled'
+								: 'concert-ai-quota',
+					}
+				);
+			}
+
+			throw error;
+		}
+	}
+);
+
+/**
+ * Helyszín-javaslatok egy modelltől, keresésre támaszkodva — más országokra.
+ *
+ * Ugyanaz a keret és ugyanaz a gateway, mint a koncert-javaslatnál: egy
+ * kérdés egy kérés, és a kérdés vagy az egész országra megy, vagy a
+ * megnevezett városokra, városonként egy kéréssel. Amit a modell ad, az a
+ * `venue-suggestion` kollekcióba kerül `pending` állapotban — a katalógus
+ * helyszínei közé csak az kerül, amit valaki megnyitott és jóváhagyott.
+ */
+export const suggestVenues = onCall(
+	{ timeoutSeconds: 540, memory: '512MiB', secrets: [gatewayApiKey] },
+	async (request) => {
+		await requireCaller(request, 'createVenueEntity');
+
+		try {
+			return await askForVenues(
+				database(),
+				typeof request.data?.countryCode === 'string'
+					? request.data.countryCode
+					: 'HU',
+				createGatewayClient(gatewaySettings(), 120_000),
+				{
+					cities: Array.isArray(request.data?.cities)
+						? (request.data.cities as string[])
+						: undefined,
+				}
+			);
+		} catch (error) {
+			if (error instanceof ConcertAiError) {
+				// Ugyanaz a minta, mint a koncert-javaslatnál: a kód a
 				// `details`-ben utazik, a mondat marad mondatnak.
 				throw new HttpsError(
 					error.reason === 'off'

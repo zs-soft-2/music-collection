@@ -73,11 +73,15 @@ export interface MusicCollectionCriteria {
 }
 
 /**
- * A generated pin. Every image a model draws is one of these: filed as a
+ * A pin on offer. Every image a model draws is one of these: filed as a
  * `document` entity the moment it exists, whether or not it ever becomes
  * the badge. It keeps everything needed to cast the same badge again — a
  * badge nobody can reproduce could never be regenerated larger, or replaced
  * when one came out wrong.
+ *
+ * An image an admin uploads by hand is one of these too, and reaches the
+ * gallery the same way: there is no second kind of pin, so a hand-made
+ * image can be picked, taken off and picked again like any drawn one.
  */
 export interface BadgeImage {
 	/** The `document` entity wrapping the file, where metadata can hang. */
@@ -85,11 +89,20 @@ export interface BadgeImage {
 	name: string;
 	/** The ready download URL, as covers have — straight into `<img src>`. */
 	filePath: string;
-	prompt: string;
-	negativePrompt: string;
-	seed: number;
-	styleVersion: number;
-	model: string;
+	/**
+	 * Where the image came from. Absent means drawn: galleries are full of
+	 * entries filed before uploading one was possible.
+	 */
+	source?: 'drawn' | 'uploaded';
+	/**
+	 * What the model drew it from. Only a drawn image has these — an
+	 * uploaded pin has nothing to cast again.
+	 */
+	prompt?: string;
+	negativePrompt?: string;
+	seed?: number;
+	styleVersion?: number;
+	model?: string;
 	/** Epoch milliseconds. */
 	generatedAt: number;
 }
@@ -109,10 +122,11 @@ export interface BadgeDefinition {
 	 */
 	image?: BadgeImage | null;
 	/**
-	 * Every image ever drawn for this collection, oldest first — the one
+	 * Every image ever offered for this collection, oldest first — the one
 	 * above among them. Drawing keeps them all rather than three in four
 	 * dying with the page, so a later admin can still reach back and make
-	 * any of them the badge without paying the model again.
+	 * any of them the badge without paying the model again; an uploaded
+	 * image joins them, which is what makes it pickable at all.
 	 */
 	gallery?: BadgeImage[];
 }

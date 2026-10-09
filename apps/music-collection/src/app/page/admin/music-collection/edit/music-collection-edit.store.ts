@@ -1,6 +1,7 @@
 import {
 	Observable,
 	combineLatest,
+	from,
 	debounceTime,
 	exhaustMap,
 	filter,
@@ -38,6 +39,11 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
 import { slugify } from '@music-collection/common/engine';
+
+import {
+	CollectionImageEffect,
+	StoredImage,
+} from '../../../../data/collection-image';
 
 import { describeWriteError } from '../music-collection-admin.errors';
 import { derivedBasePoints } from '@music-collection/domain/music-collection/engine';
@@ -91,6 +97,9 @@ const PREVIEW_SIZE = 24;
 /** Keystrokes settle before the catalog is walked again. */
 const PREVIEW_DEBOUNCE_MS = 250;
 
+/** The form fields an admin may fill by uploading a picture. */
+export type UploadableField = 'coverImageUrl' | 'badgeArtworkUrl';
+
 interface MusicCollectionEditState {
 	/** Null while adding a new collection. */
 	uid: string | null;
@@ -124,6 +133,14 @@ interface MusicCollectionEditState {
 	badgeGallery: BadgeImage[];
 	isGeneratingBadge: boolean;
 	isPickingBadge: boolean;
+	/** Which picture is on its way to Storage, if any. */
+	uploadingField: UploadableField | null;
+	/**
+	 * A hand-made pin on its way: it travels further than the other two —
+	 * Storage, then the server, which files a document over it and takes it
+	 * into the gallery — so it has its own flag rather than a form field's.
+	 */
+	isUploadingPin: boolean;
 }
 
 const initialState: MusicCollectionEditState = {
@@ -146,6 +163,8 @@ const initialState: MusicCollectionEditState = {
 	badgeGallery: [],
 	isGeneratingBadge: false,
 	isPickingBadge: false,
+	uploadingField: null,
+	isUploadingPin: false,
 };
 
 /**
@@ -174,6 +193,7 @@ export const MusicCollectionEditStore = signalStore(
 		(
 			store,
 			effect = inject(MusicCollectionEffect),
+			imageEffect = inject(CollectionImageEffect),
 			artistStateService = inject(ArtistStateService),
 			genreEffect = inject(GenreEffect),
 			musicianStateService = inject(MusicianStateService),
@@ -374,6 +394,133 @@ export const MusicCollectionEditStore = signalStore(
 				setCriteria: (criteria: CriteriaForm) =>
 					patchForm({ criteria }),
 				/**
+				 * Takes a hand-made image into Storage and writes the URL it
+				 * can be loaded from into the field it was chosen for — the
+				 * cover or the badge artwork. Nothing is saved here: the Save
+				 * button writes the definition, as it does for every other
+				 * field of the form.
+				 */
+				uploadImage: rxMethod<{ field: UploadableField; file: File }>(
+					pipe(
+						filter(() => !store.uploadingField()),
+						tap(({ field }) =>
+							patchState(store, {
+								uploadingField: field,
+								error: null,
+							})
+						),
+						exhaustMap(({ field, file }) =>
+							from(
+								imageEffect.store(
+									`${store.form().slug}-${
+										field === 'coverImageUrl'
+											? 'cover'
+											: 'badge'
+									}`,
+									file
+								)
+							).pipe(
+								tapResponse({
+									next: ({ url }: StoredImage) => {
+										patchForm({ [field]: url });
+										patchState(store, {
+											uploadingField: null,
+										});
+									},
+									error: (error: unknown) => {
+										console.error(error);
+										patchState(store, {
+											uploadingField: null,
+											error:
+												error instanceof Error
+													? error.message
+													: describeWriteError(error),
+										});
+									},
+								})
+							)
+						)
+					)
+				),
+
+				/**
+				 * Takes a picture the admin made and makes it the pin.
+				 *
+				 * It goes the same road as a drawn one from here on: the file
+				 * lands in Storage, the server files a `document` over it and
+				 * takes it into the gallery, and from there it is a pin like
+				 * any other — pickable later, and visible in the document
+				 * admin. What it does not do is wait to be chosen: an admin
+				 * who uploads a picture has already chosen it.
+				 *
+				 * The collection must be saved first, as drawing must: the
+				 * gallery lives on the stored definition.
+				 */
+				uploadPin: rxMethod<File>(
+					pipe(
+						filter(() => !!store.uid() && !store.isUploadingPin()),
+						tap(() =>
+							patchState(store, {
+								isUploadingPin: true,
+								error: null,
+							})
+						),
+						exhaustMap((file) =>
+							from(
+								imageEffect.store(
+									`${store.form().slug}-pin`,
+									file
+								)
+							).pipe(
+								switchMap(({ path }: StoredImage) =>
+									effect.adoptBadgeImage$(
+										store.uid() as string,
+										path,
+										file.name
+									)
+								),
+								tapResponse({
+									next: (image: BadgeImage) => {
+										const gallery = [
+											...store
+												.badgeGallery()
+												.filter(
+													({ documentUid }) =>
+														documentUid !==
+														image.documentUid
+												),
+											image,
+										];
+
+										patchState(store, {
+											badgeGallery: gallery,
+											badgeImageUrl: image.filePath,
+											badgeImageUid: image.documentUid,
+											isUploadingPin: false,
+										});
+										// A galéria élő stream mögött áll: ha
+										// a dokumentumok újra megszólalnak, a
+										// betöltéskori listát írnák vissza —
+										// ezért a frissel etetjük meg.
+										offerGallery(of(gallery));
+									},
+									error: (error: unknown) => {
+										console.error(error);
+										patchState(store, {
+											isUploadingPin: false,
+											error:
+												error instanceof Error
+													? error.message
+													: describeWriteError(error),
+										});
+									},
+								})
+							)
+						)
+					)
+				),
+
+				/**
 				 * Draws candidates. Each one is filed the moment it exists and
 				 * joins the gallery, but none of them becomes the badge until
 				 * an admin picks it — so a bad draw is never a pin, and a good
@@ -399,17 +546,21 @@ export const MusicCollectionEditStore = signalStore(
 							)
 						),
 						tapResponse({
-							next: (draw: GenerateBadgeResult) =>
+							next: (draw: GenerateBadgeResult) => {
+								// A szerver már beírta őket a galériába; itt
+								// csak a végére fűzzük, hogy ne kelljen
+								// újratölteni a definíciót.
+								const badgeGallery = [
+									...store.badgeGallery(),
+									...draw.candidates,
+								];
+
 								patchState(store, {
-									// A szerver már beírta őket a galériába;
-									// itt csak a végére fűzzük, hogy ne kelljen
-									// újratölteni a definíciót.
-									badgeGallery: [
-										...store.badgeGallery(),
-										...draw.candidates,
-									],
+									badgeGallery,
 									isGeneratingBadge: false,
-								}),
+								});
+								offerGallery(of(badgeGallery));
+							},
 							error: (error: unknown) => {
 								console.error(error);
 								patchState(store, {
@@ -446,6 +597,47 @@ export const MusicCollectionEditStore = signalStore(
 								patchState(store, {
 									badgeImageUrl: image.filePath,
 									badgeImageUid: image.documentUid,
+									isPickingBadge: false,
+								}),
+							error: (error: unknown) => {
+								console.error(error);
+								patchState(store, {
+									isPickingBadge: false,
+									error: describeWriteError(error),
+								});
+							},
+						})
+					)
+				),
+
+				/**
+				 * Takes the pin off. The gallery is left alone — the image
+				 * stays among the ones on offer — so what changes is only
+				 * which picture the badge wears: with no pin, the hand-made
+				 * artwork is the badge.
+				 */
+				clearBadgeImage: rxMethod<void>(
+					pipe(
+						filter(
+							() =>
+								!!store.uid() &&
+								!!store.badgeImageUid() &&
+								!store.isPickingBadge()
+						),
+						tap(() =>
+							patchState(store, {
+								isPickingBadge: true,
+								error: null,
+							})
+						),
+						exhaustMap(() =>
+							effect.setBadgeImage$(store.uid() as string, null)
+						),
+						tapResponse({
+							next: () =>
+								patchState(store, {
+									badgeImageUrl: null,
+									badgeImageUid: null,
 									isPickingBadge: false,
 								}),
 							error: (error: unknown) => {

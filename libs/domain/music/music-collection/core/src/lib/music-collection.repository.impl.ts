@@ -1,12 +1,7 @@
 import { Observable, combineLatest, from, map, of } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
-import {
-	Firestore,
-	collection,
-	query,
-	where,
-} from '@angular/fire/firestore';
+import { Firestore, collection, query, where } from '@angular/fire/firestore';
 import { Functions, httpsCallable } from '@angular/fire/functions';
 import {
 	CONTRIBUTION_FEATURE_KEY,
@@ -14,7 +9,9 @@ import {
 	FirestoreSyncService,
 } from '@music-collection/api';
 import {
+	ADOPT_MUSIC_COLLECTION_BADGE_IMAGE_FUNCTION,
 	BadgeGenerationSettings,
+	BadgeImage,
 	CREATE_MUSIC_COLLECTION_FUNCTION,
 	CatalogCredit,
 	CreateMusicCollectionResult,
@@ -105,10 +102,7 @@ export class MusicCollectionFirestoreRepository extends MusicCollectionRepositor
 			return this.firestoreSync
 				.list$<ContributionEntity>({
 					featureKey: CONTRIBUTION_FEATURE_KEY,
-					query: collection(
-						this.firestore,
-						CONTRIBUTION_FEATURE_KEY
-					),
+					query: collection(this.firestore, CONTRIBUTION_FEATURE_KEY),
 					// The credits outnumber every other collection: a single
 					// new one must not cost a download of all of them.
 					incremental: true,
@@ -151,9 +145,9 @@ export class MusicCollectionFirestoreRepository extends MusicCollectionRepositor
 			)
 		).pipe(
 			map((batched) =>
-				batched.flat().map((contribution) =>
-					toCatalogCredit(contribution)
-				)
+				batched
+					.flat()
+					.map((contribution) => toCatalogCredit(contribution))
 			)
 		);
 	}
@@ -198,12 +192,28 @@ export class MusicCollectionFirestoreRepository extends MusicCollectionRepositor
 
 	public setBadgeImage$(
 		uid: string,
-		documentUid: string
+		documentUid: string | null
 	): Observable<void> {
 		return this.call$<void>(SET_MUSIC_COLLECTION_BADGE_IMAGE_FUNCTION, {
 			uid,
 			documentUid,
 		});
+	}
+
+	/**
+	 * The uploaded file, taken into the gallery. Only its path travels: the
+	 * server reads the object back from the bucket, so what becomes a pin is
+	 * what is actually stored, not what a client says about it.
+	 */
+	public adoptBadgeImage$(
+		uid: string,
+		storagePath: string,
+		fileName: string
+	): Observable<BadgeImage> {
+		return this.call$<BadgeImage>(
+			ADOPT_MUSIC_COLLECTION_BADGE_IMAGE_FUNCTION,
+			{ uid, storagePath, fileName }
+		);
 	}
 
 	public readBadgeSettings$(): Observable<BadgeGenerationSettings> {

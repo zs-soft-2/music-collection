@@ -1,4 +1,4 @@
-import { map } from 'rxjs';
+import { map, of } from 'rxjs';
 
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -15,9 +15,14 @@ import {
 	VISIBILITY_OPTIONS,
 } from '../music-collection-admin.model';
 
+import { AiMarkComponent } from '../../../../shared/music-ui';
+
 import { EntityPickerComponent } from '../component/entity-picker.component';
 
-import { MusicCollectionEditStore } from './music-collection-edit.store';
+import {
+	MusicCollectionEditStore,
+	UploadableField,
+} from './music-collection-edit.store';
 
 type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 
@@ -30,7 +35,12 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-music-collection-edit',
 	providers: [MusicCollectionEditStore],
-	imports: [...I18N_IMPORTS, RouterLink, EntityPickerComponent],
+	imports: [
+		...I18N_IMPORTS,
+		AiMarkComponent,
+		RouterLink,
+		EntityPickerComponent,
+	],
 	template: `
 		<header class="mc-page-head">
 			<div>
@@ -148,6 +158,48 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 										})
 									"
 								/>
+
+								<div class="image-upload">
+									<!--
+										A rejtett input és a köré írt label: a
+										lap sehol nem hoz be PrimeNG-t, a
+										példányfotóknál is ez a gomb alakja.
+									-->
+									<label class="button">
+										<input
+											type="file"
+											accept="image/*"
+											[disabled]="
+												!!store.uploadingField()
+											"
+											(change)="
+												chooseImage(
+													'coverImageUrl',
+													$event
+												)
+											"
+										/>
+										{{
+											store.uploadingField() ===
+											'coverImageUrl'
+												? ('ui.musicCollectionEdit.uploading-the-image'
+													| transloco)
+												: ('ui.musicCollectionEdit.upload-an-image'
+													| transloco)
+										}}
+									</label>
+
+									@if (form.coverImageUrl) {
+										<img
+											class="image-preview"
+											[src]="form.coverImageUrl"
+											[alt]="
+												'ui.musicCollectionEdit.cover-image-url'
+													| transloco
+											"
+										/>
+									}
+								</div>
 							</div>
 
 							<div class="mc-field">
@@ -565,15 +617,73 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 											| transloco
 									}}
 								</small>
+
+								<div class="image-upload">
+									<label class="button">
+										<input
+											type="file"
+											accept="image/*"
+											[disabled]="
+												!!store.uploadingField()
+											"
+											(change)="
+												chooseImage(
+													'badgeArtworkUrl',
+													$event
+												)
+											"
+										/>
+										{{
+											store.uploadingField() ===
+											'badgeArtworkUrl'
+												? ('ui.musicCollectionEdit.uploading-the-image'
+													| transloco)
+												: ('ui.musicCollectionEdit.upload-an-image'
+													| transloco)
+										}}
+									</label>
+
+									@if (form.badgeArtworkUrl) {
+										<img
+											class="image-preview"
+											[src]="form.badgeArtworkUrl"
+											[alt]="
+												'ui.musicCollectionEdit.the-uploaded-artwork'
+													| transloco
+											"
+										/>
+									}
+								</div>
+
+								@if (store.badgeImageUid()) {
+									<p class="hint">
+										{{
+											'ui.musicCollectionEdit.a-chosen-pin-covers'
+												| transloco
+										}}
+									</p>
+								}
 							</div>
 
 							<div class="mc-field is-wide badge-art">
 								<div class="badge-art-head">
 									<div>
-										<strong>{{
-											'ui.musicCollectionEdit.the-pin'
-												| transloco
-										}}</strong>
+										<strong>
+											{{
+												'ui.musicCollectionEdit.the-pin'
+													| transloco
+											}}
+											<!-- A képet képmodell rajzolja: a
+											     jelzés ugyanaz, mint a fotós
+											     felismerésen és a koncertlapon. -->
+											<mc-ai-mark
+												[compact]="true"
+												[hint]="
+													'ui.aiMark.hint.image'
+														| transloco
+												"
+											></mc-ai-mark>
+										</strong>
 										<small>
 											{{
 												'ui.musicCollectionEdit.drawn-by-an-image'
@@ -581,22 +691,75 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 											}}
 										</small>
 									</div>
-									<button
-										type="button"
-										[disabled]="
-											store.isNew() ||
-											store.isGeneratingBadge()
-										"
-										(click)="store.generateBadge()"
-									>
-										{{
-											store.isGeneratingBadge()
-												? 'Drawing…'
-												: store.badgeImageUrl()
-													? 'Draw again'
-													: 'Generate'
-										}}
-									</button>
+									<div class="badge-art-actions">
+										<!--
+											A saját kép ugyanúgy pin lesz, mint
+											egy rajzolt: dokumentum készül fölé,
+											bekerül a galériába, és ott marad,
+											ha később mégis másikra esik a
+											választás.
+										-->
+										<label
+											class="button pin-upload"
+											[class.is-disabled]="store.isNew()"
+										>
+											<input
+												type="file"
+												accept="image/*"
+												[disabled]="
+													store.isNew() ||
+													store.isUploadingPin()
+												"
+												(change)="choosePin($event)"
+											/>
+											{{
+												store.isUploadingPin()
+													? ('ui.musicCollectionEdit.uploading-the-image'
+														| transloco)
+													: ('ui.musicCollectionEdit.my-own-picture-as-pin'
+														| transloco)
+											}}
+										</label>
+
+										<button
+											type="button"
+											[disabled]="
+												store.isNew() ||
+												store.isGeneratingBadge()
+											"
+											(click)="store.generateBadge()"
+										>
+											{{
+												store.isGeneratingBadge()
+													? 'Drawing…'
+													: store.badgeImageUrl()
+														? 'Draw again'
+														: 'Generate'
+											}}
+										</button>
+
+										<!--
+											A pin levétele nem törli a képet: a
+											galériában marad, csak a jelvény
+											esik vissza a feltöltött grafikára.
+										-->
+										@if (store.badgeImageUid()) {
+											<button
+												type="button"
+												[disabled]="
+													store.isPickingBadge()
+												"
+												(click)="
+													store.clearBadgeImage()
+												"
+											>
+												{{
+													'ui.musicCollectionEdit.take-the-pin-off'
+														| transloco
+												}}
+											</button>
+										}
+									</div>
 								</div>
 
 								@if (store.isNew()) {
@@ -764,11 +927,52 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 		}
 	`,
 	styles: `
+		.image-upload {
+			display: flex;
+			align-items: center;
+			gap: 0.75rem;
+			margin-top: 0.6rem;
+		}
+
+		/* A gomb maga a label; a fájlválasztó mögötte áll. */
+		.image-upload input,
+		.pin-upload input {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			opacity: 0;
+			pointer-events: none;
+		}
+
+		.image-upload .button,
+		.pin-upload {
+			cursor: pointer;
+		}
+
+		/* Mentetlen collectionön nincs hová beiktatni a képet. */
+		.pin-upload.is-disabled {
+			opacity: 0.5;
+			cursor: not-allowed;
+		}
+
+		.image-preview {
+			width: 64px;
+			height: 64px;
+			object-fit: contain;
+			border-radius: var(--mc-radius-md);
+		}
+
 		.badge-art-head {
 			display: flex;
 			align-items: flex-start;
 			justify-content: space-between;
 			gap: 1rem;
+		}
+
+		.badge-art-actions {
+			display: flex;
+			flex-shrink: 0;
+			gap: 0.5rem;
 		}
 
 		.badge-art-head small {
@@ -1042,6 +1246,37 @@ export class MusicCollectionEditComponent {
 
 	protected value(event: Event): string {
 		return (event.target as HTMLInputElement | HTMLSelectElement).value;
+	}
+
+	/**
+	 * A hand-made pin. It is not a form field like the other two uploads:
+	 * the picture goes to the server, which files it and makes it the
+	 * badge, so there is nothing here to write into the form.
+	 */
+	protected choosePin(event: Event): void {
+		const input = event.target as HTMLInputElement;
+		const file = input.files?.[0];
+
+		if (file) {
+			this.store.uploadPin(of(file));
+		}
+
+		input.value = '';
+	}
+
+	/**
+	 * The chosen file on its way to Storage. The input is cleared afterwards,
+	 * so picking the same file twice still counts as a change.
+	 */
+	protected chooseImage(field: UploadableField, event: Event): void {
+		const input = event.target as HTMLInputElement;
+		const file = input.files?.[0];
+
+		if (file) {
+			this.store.uploadImage(of({ field, file }));
+		}
+
+		input.value = '';
 	}
 
 	protected onVisibility(event: Event): void {
