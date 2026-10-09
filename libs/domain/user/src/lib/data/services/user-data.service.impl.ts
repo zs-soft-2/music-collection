@@ -1,7 +1,7 @@
 import { Observable, from, map } from 'rxjs';
 
 import { Injectable } from '@angular/core';
-import { collection, doc, getDoc } from '@angular/fire/firestore';
+import { collection, deleteField, doc, getDoc } from '@angular/fire/firestore';
 import {
 	COLLECTION_ITEM_FEATURE_KEY,
 	COPY_SERIAL_FEATURE_KEY,
@@ -20,6 +20,32 @@ import {
 } from '@music-collection/api';
 
 import { USER_FEATURE_KEY } from '../../store/state/user.reducer';
+
+/**
+ * A copy as it is written into a batch, where the write merges into whatever
+ * is already in the document.
+ *
+ * The one field that cannot be merged is `placement`: the left-hand wall of
+ * a compartment is written as the *absence* of `side` (see `placementAt`),
+ * and Firestore merges a map field by field — so a record moved from the
+ * right-hand row to the left-hand one would keep the `side: 'right'` it was
+ * written with, and jump back against the far wall the moment the shelf read
+ * itself back. Written as a deletion, the field goes.
+ */
+function forBatch(
+	collectionItem: CollectionItemModelUpdate
+): Record<string, unknown> {
+	const data: Record<string, unknown> = { ...collectionItem };
+
+	if (collectionItem.placement) {
+		data['placement'] = {
+			...collectionItem.placement,
+			side: collectionItem.placement.side ?? deleteField(),
+		};
+	}
+
+	return data;
+}
 
 @Injectable()
 export class UserDataServiceImpl extends UserDataService {
@@ -259,7 +285,7 @@ export class UserDataServiceImpl extends UserDataService {
 				this.firestore,
 				`${USER_FEATURE_KEY}/${collectionItem.userId}/${COLLECTION_ITEM_FEATURE_KEY}/${collectionItem.uid}`
 			),
-			data: { ...collectionItem },
+			data: forBatch(collectionItem),
 		}));
 
 		return new Observable((subscriber) => {

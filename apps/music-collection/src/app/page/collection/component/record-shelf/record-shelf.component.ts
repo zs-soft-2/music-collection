@@ -7,14 +7,20 @@ import {
 	inject,
 	input,
 	output,
+	signal,
 	viewChild,
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
-import { SHELF_HEIGHT_UNIT_CM, ShelfCubby } from '@music-collection/api';
+import {
+	SHELF_HEIGHT_UNIT_CM,
+	ShelfCubby,
+	ShelfSide,
+} from '@music-collection/api';
 
 import { ReleaseView } from '../../../../shared/music-ui';
+import { ShelfWidths } from '../../shelf-layout.setting';
 import {
 	ShelfDrop,
 	ShelfPlay,
@@ -35,6 +41,19 @@ interface Spine {
 	mm: number;
 	/** Wide enough to carry its title without spilling over its neighbours. */
 	readable: boolean;
+	/** The wall of the compartment it leans on; what a drop reads back. */
+	side: ShelfSide;
+}
+
+/**
+ * One drawn run of a compartment, with the gap in it. The spines stand in
+ * the order they are drawn; `rightFrom` is where the ones leaning on the far
+ * wall begin, and what is between the two runs is the empty shelf the
+ * collector left there.
+ */
+interface Board {
+	spines: Spine[];
+	rightFrom: number;
 }
 
 interface Compartment {
@@ -48,9 +67,11 @@ interface Compartment {
 	 * the compartment's one frame and its one label, which is what says they
 	 * belong together.
 	 */
-	boards: Spine[][];
+	boards: Board[];
 	/** The records in it, in the order they stand, by album id. */
 	albumIds: string[];
+	/** How many stand against the near wall: where "put them here" files. */
+	leftCount: number;
 	/** Drawn but with nothing in it; the unit keeps the shape either way. */
 	empty: boolean;
 	/** One of the records the search found stands here. */
@@ -138,29 +159,29 @@ function boardOf(cubby: ShelfCubby): { width: number; height: number } {
 		: { width: along, height: across };
 }
 
-/** The most boards a compartment this long is ever drawn over. */
-function runsOf(cubby: ShelfCubby): number {
-	return Math.max(1, Math.ceil(cubby.length / BOARD_MM));
+/** How much shelf a run of records takes, in millimetres. */
+function mmOf(spines: readonly Spine[]): number {
+	return spines.reduce((sum, spine) => sum + spine.mm, 0);
 }
 
 /**
  * Breaks a compartment's copies into the boards they are drawn on, each one
- * a board's worth of shelf, and never more of them than the compartment is
- * long: a compartment the collector squeezed fuller than the tape allows —
- * which one filed by hand may well be — does not grow a board it has not
- * got. Its last board takes the remainder and the spines shrink into it,
- * which is exactly what an overstuffed cubby looks like in a real room.
+ * a board's worth of shelf. What will not go on a board carries on on the
+ * next one — always, even past the length the compartment was measured at:
+ * a record is drawn at its own thickness and at nothing else, so a
+ * compartment packed fuller than the tape allows (which one filed by hand
+ * may well be) is drawn over the runs it actually needs rather than having
+ * everything in it squeezed thinner to keep up appearances.
  */
 function toBoards(spines: Spine[], cubby: ShelfCubby): Spine[][] {
 	const per = Math.min(cubby.length, BOARD_MM);
-	const most = runsOf(cubby);
 	const boards: Spine[][] = [[]];
 	let used = 0;
 
 	for (const spine of spines) {
 		const board = boards[boards.length - 1];
 
-		if (board.length && used + spine.mm > per && boards.length < most) {
+		if (board.length && used + spine.mm > per) {
 			boards.push([spine]);
 			used = spine.mm;
 			continue;
@@ -170,6 +191,19 @@ function toBoards(spines: Spine[], cubby: ShelfCubby): Spine[][] {
 	}
 
 	return boards;
+}
+
+/**
+ * The runs a compartment's contents need: what the left-hand records take,
+ * plus one where the run leaning on the far wall will not share the last
+ * board with them.
+ */
+function runsFor(boards: Spine[][], right: Spine[], per: number): number {
+	const last = boards[boards.length - 1] ?? [];
+
+	return (
+		boards.length + (right.length && mmOf(last) + mmOf(right) > per ? 1 : 0)
+	);
 }
 
 /**
@@ -186,9 +220,22 @@ function toBoards(spines: Spine[], cubby: ShelfCubby): Spine[][] {
  * It is the fullest one and not the cubby's full length on purpose: a three
  * metre compartment holding eight CDs is drawn as the one run they stand on,
  * not as nine runs of darkness.
+ *
+ * The run leaning on the far wall goes on the last board drawn, not on the
+ * last one with anything on it: a compartment drawn over three boards has
+ * its far wall at the end of the third, wherever the left-hand run gave out.
+ *
+ * Which is also why the far-hand run may ask for a run of its own: the two
+ * share the last board, and where they will not both go on it the
+ * compartment carries on rather than the runs being pushed into each other.
  */
-function overRuns(boards: Spine[][], runs: number): Spine[][] {
-	return Array.from({ length: runs }, (_, at) => boards[at] ?? []);
+function overRuns(boards: Spine[][], runs: number, right: Spine[]): Board[] {
+	return Array.from({ length: runs }, (_, at) => {
+		const left = boards[at] ?? [];
+		const far = at === runs - 1 ? right : [];
+
+		return { spines: [...left, ...far], rightFrom: left.length };
+	});
 }
 
 /**
@@ -198,15 +245,50 @@ function overRuns(boards: Spine[][], runs: number): Spine[][] {
  * packed tighter than the tape allows for tops out at full.
  */
 function fillOf(spines: Spine[], cubby: ShelfCubby): number {
-	const used = spines.reduce((sum, spine) => sum + spine.mm, 0);
-
-	return Math.min(1, used / Math.max(1, cubby.length));
+	return Math.min(1, mmOf(spines) / Math.max(1, cubby.length));
 }
 
 /** A value safe to put inside a quoted attribute selector. */
 function quote(value: string): string {
 	return value.replace(/["\\]/g, '\\$&');
 }
+
+/** The wall a drawn record leans on; one drawn before there were two, the left. */
+function sideOfSpine(spine: HTMLElement): ShelfSide {
+	return spine.dataset['side'] === 'right' ? 'right' : 'left';
+}
+
+/** One wall of a compartment, as the button that files an armful against it. */
+interface WallButton {
+	side: ShelfSide;
+	/** What the wall is called, for the label and the screen reader. */
+	label: string;
+	icon: string;
+}
+
+/**
+ * The two walls a compartment is filled from. A shelf's are its left and
+ * right; a tower's are its floor and its ceiling, which is the same two runs
+ * stood on end — so they are named and drawn as what the collector is
+ * looking at rather than as what the data calls them.
+ */
+const WALLS: WallButton[] = [
+	{
+		side: 'left',
+		label: 'ui.recordShelf.put-left',
+		icon: 'pi-arrow-down-left',
+	},
+	{
+		side: 'right',
+		label: 'ui.recordShelf.put-right',
+		icon: 'pi-arrow-down-right',
+	},
+];
+
+const TOWER_WALLS: WallButton[] = [
+	{ side: 'left', label: 'ui.recordShelf.put-bottom', icon: 'pi-arrow-down' },
+	{ side: 'right', label: 'ui.recordShelf.put-top', icon: 'pi-arrow-up' },
+];
 
 /** Takes the drop away from the browser, which would follow the link. */
 const swallow = (event: Event): void => event.preventDefault();
@@ -244,6 +326,12 @@ function hueOf(text: string): number {
 export class RecordShelfComponent {
 	public readonly shelves = input.required<ShelfUnitView[]>();
 	/**
+	 * How wide the collector measured their own copies, in millimetres. It is
+	 * the same measurement the records were filed by, so what is drawn and
+	 * what was reckoned to fit are never two different shelves.
+	 */
+	public readonly widths = input<ShelfWidths>({});
+	/**
 	 * The collector may rearrange this shelf by hand. Off while a filter is
 	 * on: half a collection is no shelf to file records into.
 	 */
@@ -265,6 +353,15 @@ export class RecordShelfComponent {
 	 * to by `reveal`.
 	 */
 	public readonly turnedTo = input<string | null>(null);
+	/**
+	 * The collector is rearranging rather than looking. The room is laid out
+	 * as one long row of compartments — every unit beside the last, every
+	 * compartment beside the one before it — so a record never has to be
+	 * hauled diagonally across a wall of furniture to reach its place: it
+	 * only ever travels sideways, and the row scrolls itself as a record is
+	 * carried to its edge.
+	 */
+	public readonly arranging = input(false);
 
 	/** A record was let go over a compartment of a drawn unit. */
 	public readonly filed = output<ShelfDrop>();
@@ -274,19 +371,51 @@ export class RecordShelfComponent {
 	private readonly router = inject(Router);
 	private readonly peek = viewChild.required(RecordShelfPeekComponent);
 	private readonly room = viewChild.required<ElementRef<HTMLElement>>('room');
+	/** The floor the furniture stands on, and what scrolls while arranging. */
+	private readonly floor =
+		viewChild.required<ElementRef<HTMLElement>>('floor');
+
+	/**
+	 * The records the collector has picked out to move together, by copy id.
+	 *
+	 * A signal and not a class on the spine, unlike the hover and the drag:
+	 * picking is a click, not a gesture that fires with every pixel of mouse
+	 * movement, so the shelf can afford to redraw for it — and in exchange
+	 * the picking survives the shelf being drawn again under it.
+	 */
+	protected readonly picked = signal<ReadonlySet<string>>(new Set());
+
+	/**
+	 * What is picked, in the order it stands on the shelf rather than the
+	 * order it was clicked. An armful put down keeps the order it came off
+	 * the shelf in, which is the only order the collector can see.
+	 */
+	protected readonly carried = computed(() => {
+		const picked = this.picked();
+
+		return picked.size
+			? [...this.releasesById().keys()].filter((id) => picked.has(id))
+			: [];
+	});
 
 	protected readonly units = computed<Unit[]>(() =>
 		this.shelves().map((shelf) => {
 			const down = shelf.cubby.stance === 'down';
 			const board = boardOf(shelf.cubby);
+			/* One board's worth of shelf, and how many of them the cubby is. */
+			const per = Math.min(shelf.cubby.length, BOARD_MM);
+			const fits = Math.max(1, Math.ceil(shelf.cubby.length / BOARD_MM));
 			const filled = shelf.compartments.map((group) => {
-				const spines = group.items.map((release) => {
-					const size = shelfSizeOf(release);
+				const spines = group.items.map((release, at) => {
+					const size = shelfSizeOf(release, this.widths());
 					const along = size.thickness * PX_PER_MM;
 					const across = size.height * PX_PER_HEIGHT_UNIT;
 
 					return {
 						release,
+						side: (at < group.rightFrom
+							? 'left'
+							: 'right') as ShelfSide,
 						// A spine on the shelf is a copy the collector
 						// owns, so pulling it out opens that copy rather
 						// than the album.
@@ -305,15 +434,42 @@ export class RecordShelfComponent {
 					};
 				});
 
-				return { group, spines, boards: toBoards(spines, shelf.cubby) };
+				/*
+				 * Only the left-hand run is wrapped onto boards: the one
+				 * leaning on the far wall is drawn at the end of the
+				 * compartment, which is the end of its last board.
+				 */
+				const boards = toBoards(
+					spines.slice(0, group.rightFrom),
+					shelf.cubby
+				);
+				const right = spines.slice(group.rightFrom);
+
+				return {
+					group,
+					spines,
+					boards,
+					right,
+					needs: runsFor(boards, right, per),
+				};
 			});
-			/* What the fullest compartment needs, which they all are drawn to. */
-			const runs = Math.max(
-				1,
-				...filled.map(({ boards }) => boards.length)
+			/*
+			 * What the fullest compartment needs, which they all are drawn
+			 * to — but never more runs than the cubby itself has. A
+			 * compartment the collector packed fuller than the tape allows
+			 * runs on by itself: made the measure of the unit it would add
+			 * an empty run to every other compartment in the furniture, and
+			 * the whole thing would be drawn twice as tall for the sake of
+			 * three records that did not fit in one of its cubbies.
+			 */
+			const runs = Math.min(
+				fits,
+				Math.max(1, ...filled.map(({ needs }) => needs))
 			);
+			/* What the deepest compartment is drawn over, overfull or not. */
+			const most = Math.max(runs, ...filled.map(({ needs }) => needs));
 			/* A tower's runs stand side by side; a shelf's stack up. */
-			const wide = down ? runs : 1;
+			const wide = down ? most : 1;
 
 			const planned = shelf.columns && !shelf.overflow;
 
@@ -328,18 +484,21 @@ export class RecordShelfComponent {
 				albumIds: shelf.compartments.flatMap((group) =>
 					group.items.map((release) => release.albumId)
 				),
-				compartments: filled.map(({ group, spines, boards }) => ({
-					key: group.key,
-					label: group.label,
-					empty: !spines.length,
-					found: spines.some((spine) =>
-						this.found().has(spine.release.id)
-					),
-					spot: group.spot,
-					albumIds: group.items.map((release) => release.albumId),
-					spines,
-					boards: overRuns(boards, runs),
-				})),
+				compartments: filled.map(
+					({ group, spines, boards, right, needs }) => ({
+						key: group.key,
+						label: group.label,
+						leftCount: group.rightFrom,
+						empty: !spines.length,
+						found: spines.some((spine) =>
+							this.found().has(spine.release.id)
+						),
+						spot: group.spot,
+						albumIds: group.items.map((release) => release.albumId),
+						spines,
+						boards: overRuns(boards, Math.max(runs, needs), right),
+					})
+				),
 				plan: planned
 					? filled.map(({ group, spines }) => ({
 							key: group.key,
@@ -495,6 +654,21 @@ export class RecordShelfComponent {
 			return;
 		}
 
+		const put =
+			target instanceof Element
+				? target.closest<HTMLElement>('.label-put')
+				: null;
+
+		/* A wall's button: the armful walked over rather than dragged. */
+		if (put) {
+			event.preventDefault();
+			this.putPicked(
+				this.compartmentOf(put),
+				put.dataset['side'] === 'right' ? 'right' : 'left'
+			);
+			return;
+		}
+
 		const cell =
 			target instanceof Element
 				? target.closest<HTMLElement>('.plan-cell')
@@ -512,17 +686,47 @@ export class RecordShelfComponent {
 			if (this.coarse) {
 				this.putBack();
 			}
+			/* And lets go of whatever was picked up; the room is clear. */
+			this.unpick();
 			return;
 		}
-		if (
-			event.button !== 0 ||
-			event.metaKey ||
-			event.ctrlKey ||
-			event.shiftKey ||
-			event.altKey
-		) {
+		if (event.button !== 0 || event.altKey) {
 			return;
 		}
+		/*
+		 * Picking records out to carry together. On a shelf that can be
+		 * rearranged this takes the modified click off the browser — no new
+		 * tab, no system selection — because filing twenty records one drag
+		 * at a time is the thing that makes rearranging a chore. On a shelf
+		 * that cannot be rearranged the click is left alone.
+		 */
+		if (this.placeable() && (event.metaKey || event.ctrlKey)) {
+			event.preventDefault();
+			this.pick(element);
+			return;
+		}
+		if (this.placeable() && event.shiftKey) {
+			event.preventDefault();
+			this.pickTo(element);
+			return;
+		}
+		/*
+		 * Arranging is not looking. With the furniture pulled out into a
+		 * row the collector is filing records, not reading sleeves, so the
+		 * plain click picks one up rather than opening it — which is also
+		 * the only way a finger can gather an armful, there being no
+		 * modifier key on a phone.
+		 */
+		if (this.placeable() && this.arranging()) {
+			event.preventDefault();
+			this.pick(element);
+			return;
+		}
+		if (event.metaKey || event.ctrlKey || event.shiftKey) {
+			return;
+		}
+		/* A plain click on the shelf is a look, so the armful is put down. */
+		this.unpick();
 		/*
 		 * On a touch screen a record is pulled out first and opened second:
 		 * one tap brings up the cover, the tap after it — or the button on
@@ -636,14 +840,127 @@ export class RecordShelfComponent {
 	}
 
 	/*
+	 * Picking records out. A collector rearranging a shelf moves a run of
+	 * records, not one record twenty times over, so the shelf lets them be
+	 * gathered first and carried in one go — by drag, or by the button on
+	 * the compartment they are to stand in.
+	 */
+
+	/** The spine a shift-click measures its run from. */
+	private anchor: string | null = null;
+
+	/** One record in or out of the armful. */
+	private pick(spine: HTMLElement): void {
+		const id = spine.dataset['id'];
+
+		if (!id) {
+			return;
+		}
+
+		const picked = new Set(this.picked());
+
+		if (!picked.delete(id)) {
+			picked.add(id);
+			this.anchor = id;
+		}
+		this.putBack();
+		this.picked.set(picked);
+	}
+
+	/**
+	 * Everything from the last record picked out to this one, the way the
+	 * compartment reads. Only within one compartment: a run across the room
+	 * would be a hundred records nobody asked for, and the gesture a
+	 * collector actually makes is "this shelf-ful, from here to here".
+	 */
+	private pickTo(spine: HTMLElement): void {
+		const cell = spine.closest<HTMLElement>('.compartment');
+		const spines = cell
+			? Array.from(cell.querySelectorAll<HTMLElement>('.spine'))
+			: [];
+		const to = spines.indexOf(spine);
+		const from = spines.findIndex(
+			(stood) => stood.dataset['id'] === this.anchor
+		);
+
+		if (from === -1 || to === -1) {
+			this.pick(spine);
+			return;
+		}
+
+		const picked = new Set(this.picked());
+
+		spines
+			.slice(Math.min(from, to), Math.max(from, to) + 1)
+			.forEach((stood) => {
+				const id = stood.dataset['id'];
+
+				if (id) {
+					picked.add(id);
+				}
+			});
+		this.putBack();
+		this.picked.set(picked);
+	}
+
+	protected readonly walls = WALLS;
+	protected readonly towerWalls = TOWER_WALLS;
+
+	/** The armful put down; nothing is carried any more. */
+	protected unpick(): void {
+		if (this.picked().size) {
+			this.picked.set(new Set());
+		}
+		this.anchor = null;
+	}
+
+	/**
+	 * The armful filed against one wall of a compartment without being
+	 * dragged there: the one gesture that works the same on a phone, over a
+	 * long distance, and with forty records in hand.
+	 *
+	 * They go at the inner end of that wall's run — up against what is
+	 * already leaning on it, growing towards the middle of the compartment —
+	 * which is both where a collector putting a stack down puts it and what
+	 * leaves the other wall alone: the boxes standing at the far end of a
+	 * half-empty cubby are the whole reason that run exists.
+	 *
+	 * The left-hand run is numbered from the left, so its inner end is its
+	 * length (`data-left`, how long it is drawn); the right-hand run is
+	 * numbered from the right, so its inner end is where it starts. The
+	 * filing clamps anything past the end of a run to the end, so neither
+	 * needs the spines read.
+	 */
+	private putPicked(cell: HTMLElement | null, side: ShelfSide): void {
+		const releaseIds = this.carried();
+		const unitId = cell?.dataset['unit'];
+		const row = Number(cell?.dataset['row']);
+		const column = Number(cell?.dataset['column']);
+
+		if (!releaseIds.length || !unitId || !row || !column) {
+			return;
+		}
+		this.putBack();
+		this.unpick();
+		this.filed.emit({
+			releaseIds,
+			unitId,
+			row,
+			column,
+			side,
+			index: side === 'right' ? 0 : Number(cell?.dataset['left']) || 0,
+		});
+	}
+
+	/*
 	 * Rearranging by hand. Like the hover, this is delegated and touches the
 	 * DOM directly: a drag crossing forty compartments must not mark forty
 	 * views dirty, so the drop target is highlighted by a class rather than
 	 * by a binding.
 	 */
 
-	/** The record being dragged, while it is in the air. */
-	private dragging: string | null = null;
+	/** The records being carried, while they are in the air. */
+	private dragging: string[] = [];
 	/** The compartment the pointer is over, highlighted. */
 	private over: HTMLElement | null = null;
 
@@ -654,10 +971,21 @@ export class RecordShelfComponent {
 		if (!this.placeable() || !element || !id) {
 			return;
 		}
-		this.dragging = id;
+		/*
+		 * A record picked out carries the whole armful with it; one that is
+		 * not picked out is a fresh gesture, and what was gathered before it
+		 * is put back down.
+		 */
+		if (!this.picked().has(id)) {
+			this.unpick();
+		}
+
+		this.dragging = this.picked().has(id) ? this.carried() : [id];
 		this.putBack();
-		element.classList.add('is-lifted');
-		event.dataTransfer?.setData('text/plain', id);
+		this.dragging.forEach((carried) =>
+			this.spineFor(carried)?.classList.add('is-lifted')
+		);
+		event.dataTransfer?.setData('text/plain', this.dragging.join(' '));
 
 		if (event.dataTransfer) {
 			event.dataTransfer.effectAllowed = 'move';
@@ -675,7 +1003,17 @@ export class RecordShelfComponent {
 	private readonly onDragOver = (event: DragEvent): void => {
 		const cell = this.compartmentOf(event.target);
 
-		if (!this.dragging || !cell) {
+		if (!this.dragging.length) {
+			return;
+		}
+		/*
+		 * Held near one end of the row, the row walks that way by itself —
+		 * the far compartment comes to the record rather than the record
+		 * being hauled off the edge of the screen to reach it.
+		 */
+		this.rollTowards(event.clientX);
+
+		if (!cell) {
 			return;
 		}
 		/* Only a prevented dragover makes a drop possible at all. */
@@ -685,10 +1023,25 @@ export class RecordShelfComponent {
 			event.dataTransfer.dropEffect = 'move';
 		}
 		if (this.over !== cell) {
-			this.over?.classList.remove('is-drop');
+			this.clearDropMark();
 			cell.classList.add('is-drop');
 			this.over = cell;
 		}
+		/*
+		 * Which half of the compartment the record would go in. Drawn while
+		 * the record is still in the air, because the two halves are not
+		 * drawn on the furniture: without it the only way to find out which
+		 * wall you are over is to let go and see.
+		 */
+		const side = this.placeIn(
+			cell,
+			new Set(this.dragging),
+			event.clientX,
+			event.clientY
+		).side;
+
+		cell.classList.toggle('is-drop-left', side === 'left');
+		cell.classList.toggle('is-drop-right', side === 'right');
 	};
 
 	private readonly onDragLeave = (event: DragEvent): void => {
@@ -699,18 +1052,19 @@ export class RecordShelfComponent {
 			cell === this.over &&
 			!cell.contains(event.relatedTarget as Node)
 		) {
-			cell.classList.remove('is-drop');
+			this.clearDropMark();
 			this.over = null;
 		}
 	};
 
 	private readonly onDrop = (event: DragEvent): void => {
 		const cell = this.compartmentOf(event.target);
-		const releaseId = this.dragging;
+		const releaseIds = this.dragging;
 
 		this.clearDrag();
+		this.unpick();
 
-		if (!releaseId || !cell) {
+		if (!releaseIds.length || !cell) {
 			return;
 		}
 		event.preventDefault();
@@ -723,63 +1077,241 @@ export class RecordShelfComponent {
 			return;
 		}
 		this.filed.emit({
-			releaseId,
+			releaseIds,
 			unitId,
 			row,
 			column,
-			index: this.indexIn(cell, releaseId, event.clientX, event.clientY),
+			...this.placeIn(
+				cell,
+				new Set(releaseIds),
+				event.clientX,
+				event.clientY
+			),
 		});
 	};
 
 	private readonly onDragEnd = (): void => this.clearDrag();
 
+	private clearDropMark(): void {
+		this.over?.classList.remove('is-drop', 'is-drop-left', 'is-drop-right');
+	}
+
 	private clearDrag(): void {
 		document.removeEventListener('dragover', swallow);
 		document.removeEventListener('drop', swallow);
-		this.over?.classList.remove('is-drop');
+		this.clearDropMark();
 		this.over = null;
-		this.dragging = null;
+		this.dragging = [];
+		this.stopRolling();
 		this.host
-			.querySelector('.spine.is-lifted')
-			?.classList.remove('is-lifted');
+			.querySelectorAll('.spine.is-lifted')
+			.forEach((spine) => spine.classList.remove('is-lifted'));
+	}
+
+	/*
+	 * The row walking itself along under a record held at its edge. A drag
+	 * is the one gesture during which the collector cannot scroll: both
+	 * hands are busy holding the record. The nearer the edge the faster it
+	 * goes, so the far end of a long row is reachable without the pointer
+	 * ever leaving the window.
+	 */
+
+	/** How hard the row is being pushed, -1 to 1; 0 for not at all. */
+	private roll = 0;
+	/** The frame the rolling is waiting on, if it is rolling. */
+	private rolling: number | null = null;
+
+	/** The most a row walks in one frame, held at the very edge. */
+	private static readonly ROLL_PX = 22;
+	/** How far in from the edge the pull starts being felt. */
+	private static readonly ROLL_REACH = 110;
+
+	private rollTowards(x: number): void {
+		const floor = this.floor().nativeElement;
+
+		/* A room that is not a row has nowhere to walk to. */
+		if (floor.scrollWidth <= floor.clientWidth) {
+			this.roll = 0;
+			return;
+		}
+
+		const box = floor.getBoundingClientRect();
+		const reach = Math.min(
+			RecordShelfComponent.ROLL_REACH,
+			box.width / 4 || 0
+		);
+		const near = x - box.left;
+		const far = box.right - x;
+
+		this.roll =
+			near < reach
+				? -(1 - Math.max(0, near) / reach)
+				: far < reach
+					? 1 - Math.max(0, far) / reach
+					: 0;
+
+		if (this.roll && this.rolling === null) {
+			this.keepRolling();
+		}
+	}
+
+	private keepRolling(): void {
+		const view = this.host.ownerDocument.defaultView;
+		const floor = this.floor().nativeElement;
+		const step = (): void => {
+			if (!this.roll || !this.dragging.length) {
+				this.rolling = null;
+				return;
+			}
+			floor.scrollLeft += this.roll * RecordShelfComponent.ROLL_PX;
+			this.rolling = view?.requestAnimationFrame(step) ?? null;
+		};
+
+		this.rolling = view?.requestAnimationFrame(step) ?? null;
+	}
+
+	private stopRolling(): void {
+		if (this.rolling !== null) {
+			this.host.ownerDocument.defaultView?.cancelAnimationFrame(
+				this.rolling
+			);
+		}
+		this.rolling = null;
+		this.roll = 0;
 	}
 
 	/**
-	 * Where along the compartment the record was let go: before the first
-	 * spine the pointer has not reached yet, the record itself left out — it
-	 * is on its way somewhere else.
+	 * Where the records were let go: which wall of the compartment, and
+	 * where among the records already leaning on that wall. What is being
+	 * carried is left out of the reckoning — it is on its way somewhere
+	 * else, even where that is back into the compartment it came from.
 	 *
 	 * A long compartment is drawn over several boards, so "not reached yet"
-	 * is read the way the compartment is: a spine on a later board is always
-	 * further along, and only within one board does the pointer's place along
-	 * it decide. A tower runs the other way, bottom to top.
+	 * is read the way the compartment is: a spine on a later run of shelf is
+	 * always further along, and only among the spines of the run the pointer
+	 * is over does its place along that run decide. A tower runs the other
+	 * way, bottom to top.
+	 *
+	 * Which wall is `sideUnder`: a run of shelf is two places to put a
+	 * record down, split at the middle of the empty shelf between its two
+	 * rows. Only where the record goes *along* that row is read off the
+	 * spines, so how high above them it was let go decides nothing — in a
+	 * compartment measured for LPs a CD case stands a third of the way up
+	 * the board, and the air over it is still shelf.
 	 */
-	private indexIn(
+	private placeIn(
 		cell: HTMLElement,
-		releaseId: string,
+		carried: ReadonlySet<string>,
 		x: number,
 		y: number
-	): number {
+	): { side: ShelfSide; index: number } {
 		const down = cell.dataset['stance'] === 'down';
+		const boards = Array.from(cell.querySelectorAll<HTMLElement>('.board'));
 		const spines = Array.from(
 			cell.querySelectorAll<HTMLElement>('.spine')
-		).filter((spine) => spine.dataset['id'] !== releaseId);
-		const before = spines.findIndex((spine) => {
-			const box = spine.getBoundingClientRect();
+		).filter((spine) => !carried.has(spine.dataset['id'] ?? ''));
+		const over = this.runUnder(boards, down, x, y);
+		const runOf = (spine: HTMLElement): number => {
+			const board = spine.closest<HTMLElement>('.board');
 
-			/* On a board the pointer has not got to yet. */
-			if (down ? box.right < x : box.top > y) {
+			return board ? boards.indexOf(board) : over;
+		};
+		const side = this.sideUnder(
+			boards[over],
+			spines.filter((spine) => runOf(spine) === over),
+			down,
+			x,
+			y
+		);
+		const run = spines.filter((spine) => sideOfSpine(spine) === side);
+		/* Where among that run's records the pointer is. */
+		const before = run.findIndex((spine) => {
+			const on = runOf(spine);
+
+			/* On a run of shelf the pointer has not got to yet. */
+			if (on > over) {
 				return true;
 			}
-			if (down ? box.left > x : box.bottom < y) {
+			/* On one it is already past. */
+			if (on < over) {
 				return false;
 			}
+
+			const box = spine.getBoundingClientRect();
+
 			return down
 				? y > box.top + box.height / 2
 				: x < box.left + box.width / 2;
 		});
 
-		return before === -1 ? spines.length : before;
+		return { side, index: before === -1 ? run.length : before };
+	}
+
+	/**
+	 * The run of shelf the pointer is over. A compartment too long for one
+	 * board is drawn over several, and which of them a record was let go on
+	 * is the board's business and not the spines': a CD standing in an LP
+	 * compartment is a third of the board tall, and the air above it is
+	 * still its own run of shelf — as is the compartment's label above the
+	 * first board, which is where a record carried in from outside the
+	 * compartment arrives.
+	 *
+	 * Let go past the last run, that run answers: there is no shelf beyond
+	 * it to belong to.
+	 */
+	private runUnder(
+		boards: readonly HTMLElement[],
+		down: boolean,
+		x: number,
+		y: number
+	): number {
+		const at = boards.findIndex((board) => {
+			const box = board.getBoundingClientRect();
+
+			return down ? x <= box.right : y <= box.bottom;
+		});
+
+		return at === -1 ? boards.length - 1 : at;
+	}
+
+	/**
+	 * The wall a record let go on a run of shelf leans on. A run is two
+	 * places to put a record down, not one, and the line between them is
+	 * the middle of the shelf standing empty between its two rows — so it
+	 * moves as the rows grow: an empty run is halved, a run with a long
+	 * left-hand row is mostly left-hand, and one packed solid is split
+	 * where its two rows meet.
+	 *
+	 * An empty compartment is halved too, which is what lets a right-hand
+	 * row be started at all.
+	 */
+	private sideUnder(
+		board: HTMLElement | undefined,
+		spines: readonly HTMLElement[],
+		down: boolean,
+		x: number,
+		y: number
+	): ShelfSide {
+		const run = board?.getBoundingClientRect();
+
+		if (!run) {
+			return 'left';
+		}
+
+		const leaning = (side: ShelfSide) =>
+			spines.filter((spine) => sideOfSpine(spine) === side);
+		const left = leaning('left').at(-1)?.getBoundingClientRect();
+		const right = leaning('right').at(0)?.getBoundingClientRect();
+		/* The empty shelf: from the end of one row to the start of the other. */
+		const from = down
+			? (left?.top ?? run.bottom)
+			: (left?.right ?? run.left);
+		const to = down
+			? (right?.bottom ?? run.top)
+			: (right?.left ?? run.right);
+		const half = (from + to) / 2;
+
+		return (down ? y < half : x > half) ? 'right' : 'left';
 	}
 
 	/** The drawn compartment under the pointer; the wall has none. */
@@ -829,5 +1361,12 @@ export class RecordShelfComponent {
 		return target instanceof Element
 			? target.closest<HTMLElement>('.spine')
 			: null;
+	}
+
+	/** The spine standing for one copy, where it is drawn at all. */
+	private spineFor(id: string): HTMLElement | null {
+		return this.host.querySelector<HTMLElement>(
+			`.spine[data-id="${quote(id)}"]`
+		);
 	}
 }

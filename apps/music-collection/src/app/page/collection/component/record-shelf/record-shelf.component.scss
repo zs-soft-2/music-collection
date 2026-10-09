@@ -8,30 +8,116 @@
 
 /*
  * The room the furniture stands in, and the one positioned ancestor: the
- * cover preview is placed against it, so it may not scroll or clip — a unit
- * too wide for the screen squeezes its columns instead.
+ * cover preview is placed against it, so it may not scroll or clip. What
+ * scrolls is the floor inside it, which the preview stands outside of.
  */
 .room {
 	position: relative;
+	display: block;
+}
+
+/*
+ * The floor the furniture stands on. Standing still it is a room seen from
+ * above: units set out across the width, wrapping onto the next line as the
+ * width runs out, and a unit too wide for the screen walked along sideways.
+ */
+.floor {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: flex-start;
 	gap: 28px;
+	/*
+	 * A unit too wide for the room is walked along, not squeezed into it: a
+	 * Kallax does not get narrower because the wall is short. The padding is
+	 * the room a record pulled out of the top row needs, which a scrolling
+	 * floor would otherwise cut off.
+	 */
+	overflow-x: auto;
+	overscroll-behavior-x: contain;
+	padding-block: 20px 10px;
+}
+
+/*
+ * Arranging. The furniture is pulled out into one long row — every unit
+ * beside the last, every compartment beside the one before it — and the row
+ * is walked along sideways.
+ *
+ * It is the drag that asks for this. Filing a record means carrying it from
+ * one compartment to another, and in a drawn room that is a diagonal haul
+ * across a wall of furniture, over everything standing in between, with the
+ * page scrolling under the hand. In a row it is one sideways pull, the
+ * shortest gesture there is, and the row brings the far end to the record
+ * as it is held near the edge.
+ */
+.room.is-arranging .floor {
+	flex-wrap: nowrap;
+	align-items: flex-end;
+	overflow-x: auto;
+	overscroll-behavior-x: contain;
+	padding-bottom: 10px;
+	scroll-padding-inline: 2rem;
+}
+
+/* In a row a unit is as wide as what it holds, and is not squeezed. */
+.room.is-arranging .unit {
+	flex: none;
+	width: auto;
+	max-width: none;
+}
+
+/* One row of compartments, each at the width it is drawn at. */
+.room.is-arranging .unit-grid {
+	grid-auto-flow: column;
+	grid-auto-columns: var(--cubby);
+	grid-template-columns: none;
+}
+
+/*
+ * The plan is a picture of a unit standing up; of a unit pulled out into a
+ * row it would be a picture of something that is no longer there.
+ */
+.room.is-arranging .plan {
+	display: none;
+}
+
+/* Out of the grid, a compartment has to say which one of the unit it is. */
+.room.is-arranging .label-spot {
+	display: inline;
+}
+
+/*
+ * A unit pulled out into a row is wider than the screen, so its name would
+ * be left behind at the first compartment. It follows the row instead: at
+ * any point along it, the furniture being worked on says what it is.
+ */
+.room.is-arranging .unit-head {
+	position: sticky;
+	left: 0;
+	width: fit-content;
 }
 
 /*
  * One piece of shelving as the collector drew it: the frame color shows
  * through the grid gaps, and the column count decides whether it stands up
  * (4 × 2) or lies down (2 × 4).
+ *
+ * The frame is counted inside that width, so the compartments come out at
+ * the width they are drawn at. Measured from the outside instead, the frame
+ * would be added on top of a width that already allows for it and every
+ * compartment would be drawn a share of it too wide — a cubby wider than the
+ * shelf inside it, with the slack left standing at the far end where no
+ * record could ever reach.
  */
 .unit {
 	display: flex;
+	/* The room never takes a slice off the furniture to make it fit. */
+	flex: none;
 	flex-direction: column;
+	box-sizing: border-box;
 	width: calc(
 		var(--cols) * var(--cubby) + (var(--cols) - 1) * var(--shelf-gap) + 2 *
 			var(--frame)
 	);
-	max-width: 100%;
 	padding: var(--frame);
 	background: linear-gradient(180deg, #4a3826 0%, #2b1f14 100%);
 	border-radius: 6px;
@@ -41,9 +127,13 @@
 		inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
-/* Nothing drawn: one open wall that grows with the collection. */
+/*
+ * Nothing drawn: one open wall that grows with the collection — and never
+ * narrower than the one compartment it is made of.
+ */
 .unit.is-wall {
 	width: 100%;
+	min-width: fit-content;
 }
 
 /* What no drawn compartment was left for; plainly not furniture. */
@@ -53,15 +143,28 @@
 	box-shadow: none;
 }
 
-.grid {
+/*
+ * The compartments of one unit. Named for the unit and not `grid`, which is
+ * PrimeFlex's own: a global `.grid` carries negative margins, and a
+ * component class of that name is handed them on top of its own rules —
+ * the unit's compartments pulled half a gutter wider than the furniture
+ * they stand in.
+ */
+.unit-grid {
 	display: grid;
 	grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
 	gap: var(--shelf-gap);
 }
 
-.is-wall .grid,
-.is-overflow .grid {
-	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+/*
+ * No furniture was drawn, so there is nothing saying how many compartments
+ * go in a row — as many as the room takes. Each is as wide as a compartment
+ * is drawn (`--cubby`) and not a round number close to it: a column short of
+ * that would squeeze every record standing in it.
+ */
+.is-wall .unit-grid,
+.is-overflow .unit-grid {
+	grid-template-columns: repeat(auto-fill, minmax(var(--cubby), 1fr));
 }
 
 .unit-head {
@@ -254,21 +357,22 @@
  * shelf is drawn over several of these — the single frame around them and
  * the single label above them are what say it is still one compartment, and
  * the little number on each says which run of it this is.
+ *
+ * Nothing stands between two records. A gap here would not be shelf — the
+ * tape the compartment was measured with knows nothing about it — so every
+ * record would have to give up a sliver of its own width to pay for one,
+ * and the more of them stood on the board the thinner they would all be
+ * drawn. What separates two spines is the shading on their own edges.
  */
 .board {
 	position: relative;
 	display: flex;
 	box-sizing: border-box;
+	/* A run of shelf is as long as it was measured, whatever the room does. */
+	flex: none;
 	align-items: flex-end;
-	gap: 1px;
 	width: var(--board-w);
-	min-width: 0;
-	max-width: 100%;
 	height: var(--board-h);
-}
-
-.board:has(.board-mark) {
-	padding-inline-start: 13px;
 }
 
 /* The run below is the same compartment carrying on, not a new one. */
@@ -283,19 +387,21 @@
 	padding-inline-start: 0;
 }
 
-.is-down .board:has(.board-mark) {
-	padding-block-end: 13px;
-}
-
 .is-down .board + .board {
 	border-top: 0;
 	border-left: 1px solid rgba(233, 220, 198, 0.14);
 }
 
+/*
+ * Which run of the compartment this is. It stands in the recess beside the
+ * shelf rather than on it: a number drawn on the board would be room taken
+ * out of the run, and every record standing in it would be drawn narrower
+ * to pay for the number.
+ */
 .board-mark {
 	position: absolute;
 	top: 0;
-	left: 0;
+	right: calc(100% + 2px);
 	font-size: 0.55rem;
 	font-weight: 700;
 	line-height: 1;
@@ -304,16 +410,39 @@
 	pointer-events: none;
 }
 
+/* A tower numbers its runs below them, there being no room beside them. */
 .is-down .board-mark {
-	top: auto;
-	bottom: 0;
+	top: calc(100% + 2px);
+	right: auto;
+	left: 0;
 }
 
-/* A full cubby squeezes every spine thinner, like a packed Kallax. */
+/*
+ * The shelf standing empty between a compartment's two runs. It is the one
+ * thing on the board that wants to be big — the records keep their measured
+ * width and the gap takes whatever is left, which is what pushes the second
+ * run against the far wall.
+ *
+ * It is also the only thing on the board that ever gives way: nothing else
+ * here is squeezed, so where the two runs would meet the gap simply closes
+ * and the compartment carries on on the next run.
+ */
+.board-space {
+	flex: 1 1 auto;
+	min-width: 0;
+	min-height: 0;
+}
+
+/*
+ * One record. It is drawn at its own thickness — a CD at ten millimetres, an
+ * LP at six — and at nothing else: never squeezed to make a compartment's
+ * contents fit the compartment, because then the shelf would stop saying how
+ * much room the collection takes, which is the one thing it is for. What
+ * does not fit on a run of shelf carries on on the next one.
+ */
 .spine {
 	position: relative;
-	flex: 0 1 auto;
-	min-width: 0;
+	flex: none;
 	color: #eee;
 	text-decoration: none;
 	background: linear-gradient(
@@ -352,6 +481,20 @@
 	/* A copy lying flat is pulled out of the stack sideways. */
 	.is-down & {
 		min-height: 0;
+
+		/*
+		 * Stacked flat, two copies meet along their long edges, so the edge
+		 * shading has to run that way too — drawn across, as it is on a
+		 * standing spine, a tower would read as one unbroken slab.
+		 */
+		&::before {
+			background: linear-gradient(
+				180deg,
+				rgba(255, 255, 255, 0.06) 0 1px,
+				transparent 1px calc(100% - 3px),
+				rgba(0, 0, 0, 0.45)
+			);
+		}
 
 		&:hover,
 		&:focus-visible {
@@ -473,13 +616,170 @@
 }
 
 .compartment.is-drop .cubby {
+	position: relative;
 	background: color-mix(in srgb, var(--mc-primary) 14%, transparent);
 	outline: 2px dashed var(--mc-primary);
 	outline-offset: -2px;
 }
 
+/*
+ * Which wall of the compartment the record is being held over. A
+ * compartment is two places to put a record down and the furniture says so
+ * nowhere — the gap between its two rows is just shelf — so the wall itself
+ * lights up while the record is in the air over it. Without it the only way
+ * to find out which row you are about to join is to let go and look.
+ */
+.compartment.is-drop-left .cubby::after,
+.compartment.is-drop-right .cubby::after {
+	position: absolute;
+	top: 2px;
+	bottom: 2px;
+	width: 5px;
+	content: '';
+	background: var(--mc-primary);
+	border-radius: 3px;
+	box-shadow: 0 0 10px color-mix(in srgb, var(--mc-primary) 70%, transparent);
+	pointer-events: none;
+}
+
+.compartment.is-drop-left .cubby::after {
+	left: 2px;
+}
+
+.compartment.is-drop-right .cubby::after {
+	right: 2px;
+}
+
+/* A tower's walls are its floor and its ceiling. */
+.is-down .compartment.is-drop-left .cubby::after,
+.is-down .compartment.is-drop-right .cubby::after {
+	top: auto;
+	right: 2px;
+	bottom: auto;
+	left: 2px;
+	width: auto;
+	height: 5px;
+}
+
+.is-down .compartment.is-drop-left .cubby::after {
+	bottom: 2px;
+}
+
+.is-down .compartment.is-drop-right .cubby::after {
+	top: 2px;
+}
+
 .compartment[data-unit] .spine {
 	cursor: grab;
+}
+
+/*
+ * Picked out to be carried. Drawn like a record half pulled off the shelf,
+ * because that is what it is: in the collector's hand, waiting to be put
+ * down somewhere. A whole run of them reads as a gap in the compartment
+ * with the records themselves standing proud of it.
+ */
+.spine.is-picked {
+	z-index: 5;
+	outline: 1px solid var(--mc-primary);
+	outline-offset: -1px;
+	box-shadow: 0 0 10px color-mix(in srgb, var(--mc-primary) 55%, transparent);
+	transform: translateY(-6px);
+}
+
+.is-down .spine.is-picked {
+	transform: translateX(6px);
+}
+
+/*
+ * What is in the collector's hands, and how to put it down. It follows the
+ * page because the compartment they are carrying records to is rarely the
+ * one they gathered them in.
+ */
+.hands {
+	position: sticky;
+	z-index: 8;
+	top: 0.5rem;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+	margin: 0 0 12px;
+	padding: 0.45rem 0.75rem;
+	border: 1px solid color-mix(in srgb, var(--mc-primary) 45%, transparent);
+	border-radius: var(--mc-radius, 8px);
+	font-size: 0.8rem;
+	color: var(--mc-text);
+	background: var(--mc-surface-2, #1c1a17);
+	box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.8);
+}
+
+.hands-count {
+	display: inline-grid;
+	place-items: center;
+	min-width: 1.6em;
+	padding: 0.1em 0.4em;
+	border-radius: 999px;
+	font-weight: 700;
+	color: var(--mc-on-primary, #fff);
+	background: var(--mc-primary);
+}
+
+.hands-how {
+	color: var(--mc-text-muted);
+}
+
+.hands-drop {
+	margin-left: auto;
+	padding: 0.2rem 0.6rem;
+	border: 1px solid var(--mc-border);
+	border-radius: 999px;
+	font: inherit;
+	color: var(--mc-text-muted);
+	background: transparent;
+	cursor: pointer;
+
+	&:hover {
+		color: var(--mc-text);
+		background: var(--mc-surface-3, rgb(255 255 255 / 8%));
+	}
+}
+
+/*
+ * "Put them here." Out of the way until something is actually being
+ * carried: a compartment with nothing in hand has nothing to take.
+ */
+.label-put {
+	display: none;
+	place-items: center;
+	width: 20px;
+	height: 20px;
+	flex: none;
+	padding: 0;
+	border: 1px solid color-mix(in srgb, var(--mc-primary) 55%, transparent);
+	border-radius: 50%;
+	font-size: 0.55rem;
+	color: var(--mc-on-primary, #fff);
+	background: var(--mc-primary);
+	cursor: pointer;
+
+	&:hover {
+		filter: brightness(1.15);
+	}
+}
+
+.room.is-picking .label-put {
+	display: inline-grid;
+}
+
+/*
+ * A compartment that can take the armful says so while one is being
+ * carried, so the collector can see where there is room from across the
+ * row rather than by reading every label.
+ */
+.room.is-picking .compartment[data-unit] .cubby {
+	outline: 1px dashed color-mix(in srgb, var(--mc-primary) 35%, transparent);
+	outline-offset: -2px;
 }
 
 /*
@@ -566,7 +866,7 @@
 		--frame: 10px;
 	}
 
-	.room {
+	.floor {
 		gap: 18px;
 	}
 
@@ -578,13 +878,17 @@
 	 */
 	.unit,
 	.unit.is-wall {
-		width: fit-content;
-		max-width: 100%;
+		/*
+		 * `max-content` and not `fit-content`: a phone is a short wall, not a
+		 * reason to draw the records thinner than they are. A compartment
+		 * wider than the screen is walked along instead.
+		 */
+		width: max-content;
 	}
 
-	.grid,
-	.is-wall .grid,
-	.is-overflow .grid {
+	.unit-grid,
+	.is-wall .unit-grid,
+	.is-overflow .unit-grid {
 		grid-template-columns: minmax(0, 1fr);
 	}
 
@@ -613,8 +917,35 @@
 		max-width: none;
 	}
 
+	/*
+	 * The two walls stand side by side here and a thumb is wider than
+	 * either of them, so they are drawn bigger than on a screen with a
+	 * pointer: a missed tap does not just miss, it files the armful
+	 * against the wrong wall.
+	 */
+	.label-put {
+		width: 26px;
+		height: 26px;
+		font-size: 0.65rem;
+	}
+
 	.label-spot {
 		display: inline;
+	}
+
+	/*
+	 * A compartment longer than the screen is walked along, and its label
+	 * would be walked off the far end of it — along with the count and the
+	 * two buttons that file an armful against one of its walls. It follows
+	 * the screen instead: what the compartment is called, and where an
+	 * armful may go in it, stay to hand wherever along the shelf the
+	 * collector is standing.
+	 */
+	.label {
+		position: sticky;
+		left: 0;
+		width: fit-content;
+		max-width: 100%;
 	}
 
 	/*

@@ -20,9 +20,12 @@ import {
 	ReturnNavigationService,
 	SearchParams,
 	ShelfLayoutService,
+	ShelfSide,
 	ShelfUnitLayout,
 	User,
+	placementAt,
 	placementInLayout,
+	placementSide,
 	unitSpots,
 } from '@music-collection/api';
 
@@ -131,17 +134,34 @@ export class CollectionItemFormService {
 			standing.row === row &&
 			standing.column === column;
 
-		this.setPlacement({
-			unitId: this.unitId,
-			row,
-			column,
-			position: staying ? standing.position : 1,
-		});
+		this.setPlacement(
+			placementAt(
+				{ unitId: this.unitId, row, column },
+				staying ? placementSide(standing) : 'left',
+				staying ? standing.position : 1
+			)
+		);
+	}
+
+	/** The wall of the compartment the copy leans on; the place keeps its
+	 * number, which is read from that wall either way. */
+	public chooseSide(side: ShelfSide): void {
+		const placement = this.placement;
+
+		if (placement) {
+			this.setPlacement(placementAt(placement, side, placement.position));
+		}
 	}
 
 	public choosePosition(position: number): void {
 		if (this.placement) {
-			this.setPlacement({ ...this.placement, position });
+			this.setPlacement(
+				placementAt(
+					this.placement,
+					placementSide(this.placement),
+					position
+				)
+			);
 		}
 	}
 
@@ -198,6 +218,7 @@ export class CollectionItemFormService {
 				placement && placement.unitId === this.unitId
 					? spotValue(placement.row, placement.column)
 					: null,
+			side: placementSide(placement),
 			position: placement?.position ?? 1,
 			maxPosition: unit ? maxPositionIn(unit) : 1,
 			// A place no drawn compartment answers to any more is kept, but

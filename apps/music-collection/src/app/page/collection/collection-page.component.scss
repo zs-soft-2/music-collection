@@ -480,7 +480,7 @@ button {
 }
 
 .collection-skeleton {
-	height: 5rem;
+	height: 6.25rem;
 	border-radius: var(--mc-radius-lg);
 }
 
@@ -680,4 +680,16 @@ button {
 	color: var(--mc-status-bad);
 	border: 1px solid var(--mc-status-bad);
 	border-radius: var(--mc-radius-md);
+}
+
+/* The arranging switch, while the furniture is laid out in a row. */
+.shelf-keep.is-on {
+	color: var(--mc-on-primary, #fff);
+	background: var(--mc-primary);
+	border-color: var(--mc-primary);
+
+	&:hover:not(:disabled) {
+		background: var(--mc-primary);
+		filter: brightness(1.1);
+	}
 }

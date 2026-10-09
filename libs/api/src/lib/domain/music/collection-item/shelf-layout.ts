@@ -1,4 +1,4 @@
-import { CollectionItemPlacement } from './collection-item';
+import { CollectionItemPlacement, ShelfSide } from './collection-item';
 
 /**
  * The furniture a collector drew for their records, and reading a placement
@@ -22,6 +22,18 @@ import { CollectionItemPlacement } from './collection-item';
  */
 export const SHELF_HEIGHT_UNIT_CM = 4;
 
+/**
+ * How much of a pixel a millimetre of shelf is drawn at. The shelf page
+ * measures in millimetres and draws in pixels, and this is the one place
+ * the two meet — which is why it lives here beside the sizes rather than in
+ * the component: the collector sets a spine width in pixels, by eye, and
+ * what is stored is the shelf it stands for.
+ *
+ * A little under a pixel to the millimetre, which puts a Kallax cubby at the
+ * 260-odd pixels a column has always been.
+ */
+export const SHELF_PX_PER_MM = 0.8;
+
 /** What one copy takes up on a shelf. */
 export interface ShelfMediaSize {
 	/** How tall it stands, in `SHELF_HEIGHT_UNIT_CM` units. */
@@ -35,7 +47,8 @@ export interface ShelfMediaSize {
  * comes in (`MediaEnum` in the catalog, `MediaFormat` in the UI); anything
  * else is measured by `UNKNOWN_MEDIA_SIZE`.
  */
-export type ShelfMedia = 'vinyl' | 'cd' | 'cassette' | 'dvd' | 'boxset';
+export type ShelfMedia =
+	'vinyl' | 'cd' | 'cassette' | 'dvd' | 'boxset' | 'cdbox';
 
 /**
  * Real sleeves and cases, rounded to what a shelf cares about. The heights
@@ -56,8 +69,22 @@ export const SHELF_MEDIA_SIZES: Record<ShelfMedia, ShelfMediaSize> = {
 	boxset: { height: 8, thickness: 30 },
 	dvd: { height: 5, thickness: 14 },
 	cd: { height: 3, thickness: 10 },
+	cdbox: { height: 3, thickness: 24 },
 	cassette: { height: 2, thickness: 17 },
 };
+
+/**
+ * The spine widths a collector may set for themselves, in millimetres,
+ * against the medium each one measures. What is not set is measured by
+ * `SHELF_MEDIA_SIZES`.
+ *
+ * It is a measurement and not a drawing preference: the same number says how
+ * wide the spine is drawn *and* how many copies a compartment holds, because
+ * on a real shelf those are the same question. A collector whose CDs are in
+ * slim cases says so once, and the shelf both draws them slim and fits more
+ * of them in a cubby.
+ */
+export type ShelfWidths = Partial<Record<ShelfMedia, number>>;
 
 /**
  * A copy whose medium the shelf has no word for. It is given an LP's height
@@ -73,6 +100,7 @@ export const SHELF_MEDIA: ShelfMedia[] = [
 	'boxset',
 	'dvd',
 	'cd',
+	'cdbox',
 	'cassette',
 ];
 
@@ -90,11 +118,25 @@ export const SHELF_MEDIA: ShelfMedia[] = [
  */
 const TIGHTEST_SPINE = 5;
 
-/** What one copy of this medium takes up, whatever word it arrived as. */
-export function shelfMediaSize(media: unknown): ShelfMediaSize {
-	return typeof media === 'string' && media in SHELF_MEDIA_SIZES
+/**
+ * What one copy of this medium takes up, whatever word it arrived as — at
+ * the width the collector set for it, where they set one.
+ *
+ * Only the thickness is theirs to set. The height is what the medium is: a
+ * CD case is twelve centimetres tall whatever the collector thinks of it,
+ * and it is the height that decides which compartments a copy may go in.
+ */
+export function shelfMediaSize(
+	media: unknown,
+	widths?: ShelfWidths
+): ShelfMediaSize {
+	const known = typeof media === 'string' && media in SHELF_MEDIA_SIZES;
+	const size = known
 		? SHELF_MEDIA_SIZES[media as ShelfMedia]
 		: UNKNOWN_MEDIA_SIZE;
+	const set = known ? widths?.[media as ShelfMedia] : undefined;
+
+	return set && set > 0 ? { ...size, thickness: set } : size;
 }
 
 /**
@@ -136,19 +178,25 @@ export const SHELF_SLEEVE_EXTRA: Record<
  * is however its medium is recorded, because that is the one case where the
  * packaging *is* the thing on the shelf.
  *
+ * Which slab depends on what is in it. A box of CDs is a CD's height however
+ * many discs it holds, so a CD rack takes it and a record shelf is not spent
+ * on it; everything else is boxed at an LP's height, which is what a box set
+ * is when nothing says otherwise.
+ *
  * A copy nobody has tagged comes out at the plain width, which is the honest
  * answer: the shelf draws what is known about a record, not a guess at what
  * the jacket might be.
  */
 export function shelfCopySize(
 	media: unknown,
-	sleeve: ShelfSleeve = {}
+	sleeve: ShelfSleeve = {},
+	widths?: ShelfWidths
 ): ShelfMediaSize {
 	if (sleeve.boxSet) {
-		return SHELF_MEDIA_SIZES.boxset;
+		return shelfMediaSize(media === 'cd' ? 'cdbox' : 'boxset', widths);
 	}
 
-	const size = shelfMediaSize(media);
+	const size = shelfMediaSize(media, widths);
 	const extra = (
 		Object.keys(SHELF_SLEEVE_EXTRA) as (keyof typeof SHELF_SLEEVE_EXTRA)[]
 	).reduce(
@@ -215,8 +263,12 @@ export function cubbyTakes(cubby: ShelfCubby, media: unknown): boolean {
 }
 
 /** How many copies of one medium alone a compartment this size holds. */
-export function cubbyHolds(cubby: ShelfCubby, media: unknown): number {
-	const size = shelfMediaSize(media);
+export function cubbyHolds(
+	cubby: ShelfCubby,
+	media: unknown,
+	widths?: ShelfWidths
+): number {
+	const size = shelfMediaSize(media, widths);
 
 	return size.height <= cubby.height
 		? Math.floor(cubby.length / size.thickness)
@@ -248,9 +300,42 @@ export function spotKey(unitId: string, row: number, column: number): string {
 	return `${unitId}#${row}:${column}`;
 }
 
-/** The compartment a placement names, as a key. */
+/** The compartment a placement names, as a key. Both walls of a compartment
+ * are the same compartment, so the side is deliberately left out of it. */
 export function placementKey(placement: CollectionItemPlacement): string {
 	return spotKey(placement.unitId, placement.row, placement.column);
+}
+
+/**
+ * The wall a placement stands against. A placement with nothing to say about
+ * it stands at the left, which is both where a compartment fills from and
+ * where every copy filed before the right wall existed already stands.
+ */
+export function placementSide(
+	placement: CollectionItemPlacement | null | undefined
+): ShelfSide {
+	return placement?.side === 'right' ? 'right' : 'left';
+}
+
+/**
+ * A placement as it is stored: the left wall is written as the absence of a
+ * side rather than as a word.
+ *
+ * It keeps the documents of a collection that never used the right wall byte
+ * for byte what they were, which is what lets "keep the shelf as it stands"
+ * stay a no-op on a shelf already frozen — a few hundred writes saved every
+ * time somebody presses it twice.
+ */
+export function placementAt(
+	spot: { unitId: string; row: number; column: number },
+	side: ShelfSide,
+	position: number
+): CollectionItemPlacement {
+	const { unitId, row, column } = spot;
+
+	return side === 'right'
+		? { unitId, row, column, side, position }
+		: { unitId, row, column, position };
 }
 
 function whole(value: unknown): number | null {
@@ -286,24 +371,34 @@ export function placementInLayout(
 		row <= unit.rows &&
 		column <= unit.columns &&
 		position <= maxPositionIn(unit)
-		? { unitId: unit.id, row, column, position }
+		? placementAt(
+				{ unitId: unit.id, row, column },
+				placementSide(placement),
+				position
+			)
 		: null;
 }
 
 /**
- * The position that puts a copy at the end of a compartment, given what is
- * already filed there. Kept inside what the compartment could hold, so a
- * crowded one stacks at its last position rather than growing without end.
+ * The position that puts a copy at the inner end of one of a compartment's
+ * two runs, given what is already filed against that wall. Kept inside what
+ * the compartment could hold, so a crowded one stacks at its last position
+ * rather than growing without end.
  */
 export function nextPosition(
 	filed: readonly CollectionItemPlacement[],
 	unit: ShelfUnitLayout,
 	row: number,
-	column: number
+	column: number,
+	side: ShelfSide = 'left'
 ): number {
 	const key = spotKey(unit.id, row, column);
 	const taken = filed
-		.filter((placement) => placementKey(placement) === key)
+		.filter(
+			(placement) =>
+				placementKey(placement) === key &&
+				placementSide(placement) === side
+		)
 		.map((placement) => placement.position);
 
 	return Math.min(maxPositionIn(unit), Math.max(0, ...taken) + 1);

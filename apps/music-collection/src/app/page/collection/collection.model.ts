@@ -1,4 +1,4 @@
-import { ShelfCubby } from '@music-collection/api';
+import { ShelfCubby, ShelfSide } from '@music-collection/api';
 
 import { MediaFormat, ReleaseView } from '../../shared/music-ui';
 
@@ -40,9 +40,20 @@ export interface ShelfSpotRef {
  * A compartment as the shelf draws it: the records in it, and — in a drawn
  * unit — which compartment of the furniture it is, so a record dropped on it
  * knows where it landed.
+ *
+ * `items` reads the way the compartment does, left to right, whichever wall
+ * each record leans against; `rightFrom` is where the run standing against
+ * the right wall begins in it. Everything that only wants to know what is in
+ * the compartment — the play button, the search, the heading — can go on
+ * reading `items` and never hear about the two walls at all.
  */
 export interface ShelfCompartmentView extends ReleaseGroup {
 	spot: ShelfSpotRef | null;
+	/**
+	 * Where in `items` the right-hand run starts; `items.length` where
+	 * nothing stands against the right wall, which is most compartments.
+	 */
+	rightFrom: number;
 }
 
 /**
@@ -79,12 +90,19 @@ export interface ShelfMatchListing extends ShelfMatchView {
 }
 
 /**
- * A record dropped on the shelf: which compartment it landed in, and how far
- * along that compartment it was let go.
+ * Records put down on the shelf: which compartment they landed in, and how
+ * far along that compartment they were let go.
+ *
+ * An armful rather than a record, because a collector rearranging a shelf
+ * moves a run of them at a time — the ones they picked out travel together
+ * and are put down side by side, in the order they stood in.
  */
 export interface ShelfDrop extends ShelfSpotRef {
-	releaseId: string;
-	/** Where among the records the compartment shows, 0-based. */
+	/** What was carried, in the order it is to stand; never empty. */
+	releaseIds: string[];
+	/** Which wall of that compartment it was let go against. */
+	side: ShelfSide;
+	/** Where among the records standing against that wall, 0-based. */
 	index: number;
 }
 

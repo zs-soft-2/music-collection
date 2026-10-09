@@ -2,8 +2,13 @@ import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { firstValueFrom } from 'rxjs';
 
 import { TestBed } from '@angular/core/testing';
-import { Firestore, doc, getDoc } from '@angular/fire/firestore';
-import { FirestoreSyncService, User } from '@music-collection/api';
+import { Firestore, deleteField, doc, getDoc } from '@angular/fire/firestore';
+import {
+	CollectionItemModelUpdate,
+	CollectionItemPlacement,
+	FirestoreSyncService,
+	User,
+} from '@music-collection/api';
 
 import { UserDataServiceImpl } from './user-data.service.impl';
 
@@ -23,12 +28,15 @@ const profile = (): User =>
 	}) as User;
 
 describe('UserDataServiceImpl', () => {
-	let sync: { set: jest.Mock };
+	let sync: { set: jest.Mock; setAll: jest.Mock };
 
 	const service = () => TestBed.inject(UserDataServiceImpl);
 
 	beforeEach(() => {
-		sync = { set: jest.fn().mockResolvedValue(undefined) };
+		sync = {
+			set: jest.fn().mockResolvedValue(undefined),
+			setAll: jest.fn().mockResolvedValue(undefined),
+		};
 		(doc as jest.Mock).mockReturnValue({});
 
 		TestBed.configureTestingModule({
@@ -60,6 +68,72 @@ describe('UserDataServiceImpl', () => {
 			expect.objectContaining({ uid: 'collector-1' }),
 			{ merge: true }
 		);
+	});
+
+	/**
+	 * Filing a whole compartment is one batch, and a batch merges into what
+	 * is already in the document. Every field can be merged except the one
+	 * whose absence means something: a placement without `side` is a record
+	 * against the left-hand wall, and merged over a `side: 'right'` it would
+	 * read as the record never having moved.
+	 */
+	describe('updateCollectionItems$', () => {
+		const copy = (placement: CollectionItemPlacement | null) =>
+			({
+				uid: 'copy-1',
+				entityType: 'collectionItem',
+				userId: 'collector-1',
+				placement,
+			}) as CollectionItemModelUpdate;
+
+		const written = async (placement: CollectionItemPlacement | null) => {
+			await firstValueFrom(
+				service().updateCollectionItems$([copy(placement)])
+			);
+
+			const [, writes] = sync.setAll.mock.calls[0];
+
+			return writes[0].data;
+		};
+
+		it('takes the side off a copy moved to the left-hand wall', async () => {
+			const data = await written({
+				unitId: 'unit-1',
+				row: 1,
+				column: 1,
+				position: 2,
+			});
+
+			expect(data.placement).toEqual({
+				unitId: 'unit-1',
+				row: 1,
+				column: 1,
+				position: 2,
+				side: deleteField(),
+			});
+		});
+
+		it('writes the right-hand wall as the word it is', async () => {
+			const data = await written({
+				unitId: 'unit-1',
+				row: 1,
+				column: 1,
+				side: 'right',
+				position: 1,
+			});
+
+			expect(data.placement).toEqual({
+				unitId: 'unit-1',
+				row: 1,
+				column: 1,
+				side: 'right',
+				position: 1,
+			});
+		});
+
+		it('leaves a copy taken off the shelf with no placement at all', async () => {
+			expect((await written(null)).placement).toBeNull();
+		});
 	});
 
 	describe('loadExisting$', () => {

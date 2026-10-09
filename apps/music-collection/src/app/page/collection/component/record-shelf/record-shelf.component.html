@@ -1,256 +1,383 @@
 <!--
 	`is-seeking`: something is being looked for, so what was not found steps
 	back and lets the shelf show where it stands.
--->
-<div #room class="room" [class.is-seeking]="found().size > 0">
-	@for (unit of units(); track unit.key) {
-		<section
-			class="unit"
-			[class.is-wall]="!unit.columns"
-			[class.is-overflow]="unit.overflow"
-			[class.is-down]="unit.down"
-			[style.--cols]="unit.columns || null"
-			[style.--board-w.px]="unit.board.width"
-			[style.--board-h.px]="unit.board.height"
-			[style.--cubby.px]="unit.width + 20"
-			[attr.aria-label]="unit.name || null"
-		>
-			<!-- The open wall stays bare; a drawn unit can be put on. -->
-			@if (unit.name || unit.overflow || unit.columns) {
-				<header class="unit-head">
-					@if (unit.overflow) {
-						<span class="unit-name">{{
-							'ui.recordShelf.off-the-shelf' | transloco
-						}}</span>
-						<span class="unit-note">
-							{{
-								'ui.recordShelf.no-drawn-compartment-left'
-									| transloco
-							}}
-						</span>
-					} @else {
-						<span class="unit-name">{{ unit.name }}</span>
-					}
-					@if (playable() && unit.albumIds.length) {
-						<button
-							type="button"
-							class="unit-play"
-							[attr.aria-label]="
-								'Play what stands in ' +
-								(unit.name || 'this unit')
-							"
-							[title]="
-								'ui.recordShelf.play-what-stands-here'
-									| transloco
-							"
-							(click)="
-								putOn.emit({
-									label: unit.name || 'Your shelf',
-									albumIds: unit.albumIds,
-								})
-							"
-						>
-							<i class="pi pi-play" aria-hidden="true"></i>
-						</button>
-					}
-				</header>
-			}
 
-			<!--
+	`is-arranging`: the furniture is laid out as one row to be worked on, so
+	a record only ever travels sideways to reach its place.
+
+	`is-picking`: records are being carried, so every compartment offers to
+	take them.
+-->
+<div
+	#room
+	class="room"
+	[class.is-seeking]="found().size > 0"
+	[class.is-arranging]="arranging()"
+	[class.is-picking]="carried().length > 0"
+>
+	<!--
+		What is in the collector's hands. It follows the page down, because
+		the compartment they are carrying records to is rarely the one they
+		gathered them in.
+	-->
+	@if (carried().length; as carrying) {
+		<p class="hands" aria-live="polite">
+			<span class="hands-count">{{ carrying }}</span>
+			<span class="hands-what">{{
+				'ui.recordShelf.in-hand' | transloco
+			}}</span>
+			<span class="hands-how">{{
+				'ui.recordShelf.in-hand-how' | transloco
+			}}</span>
+			<button type="button" class="hands-drop" (click)="unpick()">
+				{{ 'ui.recordShelf.put-down' | transloco }}
+			</button>
+		</p>
+	}
+
+	<div #floor class="floor">
+		@for (unit of units(); track unit.key) {
+			<section
+				class="unit"
+				[class.is-wall]="!unit.columns"
+				[class.is-overflow]="unit.overflow"
+				[class.is-down]="unit.down"
+				[style.--cols]="unit.columns || null"
+				[style.--board-w.px]="unit.board.width"
+				[style.--board-h.px]="unit.board.height"
+				[style.--cubby.px]="unit.width + 20"
+				[attr.aria-label]="unit.name || null"
+			>
+				<!-- The open wall stays bare; a drawn unit can be put on. -->
+				@if (unit.name || unit.overflow || unit.columns) {
+					<header class="unit-head">
+						@if (unit.overflow) {
+							<span class="unit-name">{{
+								'ui.recordShelf.off-the-shelf' | transloco
+							}}</span>
+							<span class="unit-note">
+								{{
+									'ui.recordShelf.no-drawn-compartment-left'
+										| transloco
+								}}
+							</span>
+						} @else {
+							<span class="unit-name">{{ unit.name }}</span>
+						}
+						@if (playable() && unit.albumIds.length) {
+							<button
+								type="button"
+								class="unit-play"
+								[attr.aria-label]="
+									'Play what stands in ' +
+									(unit.name || 'this unit')
+								"
+								[title]="
+									'ui.recordShelf.play-what-stands-here'
+										| transloco
+								"
+								(click)="
+									putOn.emit({
+										label: unit.name || 'Your shelf',
+										albumIds: unit.albumIds,
+									})
+								"
+							>
+								<i class="pi pi-play" aria-hidden="true"></i>
+							</button>
+						}
+					</header>
+				}
+
+				<!--
 				The unit at a glance. A narrow screen draws the compartments
 				one under the other, so this is the only place the furniture
 				is still seen whole — and tapping a cell walks over to that
 				compartment. A picture of the unit, so the reading of it is
 				left to the compartments themselves.
 			-->
-			@if (unit.plan.length) {
-				<ol class="plan" aria-hidden="true">
-					@for (cell of unit.plan; track cell.key) {
-						<li
-							class="plan-cell"
-							[class.is-blank]="!cell.fill"
-							[class.is-found]="cell.found"
-							[style.--fill]="cell.fill"
-							[attr.data-cell]="cell.key"
-							[title]="cell.label"
-						></li>
-					}
-				</ol>
-			}
+				@if (unit.plan.length) {
+					<ol class="plan" aria-hidden="true">
+						@for (cell of unit.plan; track cell.key) {
+							<li
+								class="plan-cell"
+								[class.is-blank]="!cell.fill"
+								[class.is-found]="cell.found"
+								[style.--fill]="cell.fill"
+								[attr.data-cell]="cell.key"
+								[title]="cell.label"
+							></li>
+						}
+					</ol>
+				}
 
-			<div class="grid">
-				@for (compartment of unit.compartments; track compartment.key) {
-					<section
-						class="compartment"
-						[class.is-blank]="compartment.empty"
-						[class.has-found]="compartment.found"
-						[attr.aria-hidden]="compartment.empty ? 'true' : null"
-						[attr.aria-label]="compartment.label || null"
-						[attr.data-unit]="
-							placeable() ? compartment.spot?.unitId : null
-						"
-						[attr.data-row]="
-							placeable() ? compartment.spot?.row : null
-						"
-						[attr.data-column]="
-							placeable() ? compartment.spot?.column : null
-						"
-						[attr.data-stance]="unit.down ? 'down' : 'across'"
-						[attr.data-cell]="compartment.key"
-					>
-						<h3 class="label">
-							@if (!compartment.empty) {
-								<span class="label-text">{{
-									compartment.label
-								}}</span>
-								@if (compartment.spot; as spot) {
-									<!--
+				<div class="unit-grid">
+					@for (
+						compartment of unit.compartments;
+						track compartment.key
+					) {
+						<section
+							class="compartment"
+							[class.is-blank]="compartment.empty"
+							[class.has-found]="compartment.found"
+							[attr.aria-hidden]="
+								compartment.empty ? 'true' : null
+							"
+							[attr.aria-label]="compartment.label || null"
+							[attr.data-unit]="
+								placeable() ? compartment.spot?.unitId : null
+							"
+							[attr.data-row]="
+								placeable() ? compartment.spot?.row : null
+							"
+							[attr.data-column]="
+								placeable() ? compartment.spot?.column : null
+							"
+							[attr.data-stance]="unit.down ? 'down' : 'across'"
+							[attr.data-cell]="compartment.key"
+							[attr.data-left]="compartment.leftCount"
+						>
+							<h3 class="label">
+								@if (!compartment.empty) {
+									<span class="label-text">{{
+										compartment.label
+									}}</span>
+									@if (compartment.spot; as spot) {
+										<!--
 										Which compartment of the unit this
 										is. Drawn in the grid the shelf says
 										that by where it stands; unfolded
 										into one column it has to be said.
 									-->
-									<span class="label-spot">{{
-										'ui.recordShelf.rowSlot'
-											| transloco
-												: {
-														row: spot.row,
-														slot: spot.column,
-												  }
+										<span class="label-spot">{{
+											'ui.recordShelf.rowSlot'
+												| transloco
+													: {
+															row: spot.row,
+															slot: spot.column,
+													  }
+										}}</span>
+									}
+									@if (playable()) {
+										<button
+											type="button"
+											class="label-play"
+											[attr.aria-label]="
+												'Play what stands in ' +
+												compartment.label
+											"
+											[title]="
+												'ui.recordShelf.play-what-stands-here2'
+													| transloco
+											"
+											(click)="
+												putOn.emit({
+													label: compartment.label,
+													albumIds:
+														compartment.albumIds,
+												})
+											"
+										>
+											<i
+												class="pi pi-play"
+												aria-hidden="true"
+											></i>
+										</button>
+									}
+									<span class="label-count">{{
+										compartment.spines.length
 									}}</span>
 								}
-								@if (playable()) {
-									<button
-										type="button"
-										class="label-play"
-										[attr.aria-label]="
-											'Play what stands in ' +
-											compartment.label
-										"
-										[title]="
-											'ui.recordShelf.play-what-stands-here2'
-												| transloco
-										"
-										(click)="
-											putOn.emit({
-												label: compartment.label,
-												albumIds: compartment.albumIds,
-											})
-										"
-									>
-										<i
-											class="pi pi-play"
-											aria-hidden="true"
-										></i>
-									</button>
-								}
-								<span class="label-count">{{
-									compartment.spines.length
-								}}</span>
-							}
-						</h3>
+								<!--
+								Which wall of this compartment the armful
+								goes against. Shown only while something is
+								being carried, and only on a drawn
+								compartment — an armful cannot be put down on
+								the open wall, because there is no place
+								there to give it.
 
-						<!--
+								It is how the shelf is rearranged without a
+								drag: on a phone, which has no drag at all,
+								and across a room, where a drag is a long
+								haul over everything in between. There are
+								two buttons and not one because a compartment
+								has two walls, and a phone cannot say which
+								one it means by where the finger came down —
+								the records are drawn at the size they are,
+								so the far wall of a long compartment is
+								often off the side of the screen.
+							-->
+								@if (placeable() && compartment.spot) {
+									@for (
+										wall of unit.down ? towerWalls : walls;
+										track wall.side
+									) {
+										<button
+											type="button"
+											class="label-put"
+											[attr.data-side]="wall.side"
+											[attr.aria-label]="
+												wall.label
+													| transloco
+														: {
+																where: compartment.label,
+														  }
+											"
+											[title]="
+												wall.label
+													| transloco
+														: {
+																where: compartment.label,
+														  }
+											"
+										>
+											<i
+												[class]="'pi ' + wall.icon"
+												aria-hidden="true"
+											></i>
+										</button>
+									}
+								}
+							</h3>
+
+							<!--
 							One compartment, however long: the boards sit
 							inside its single frame and under its single
 							label, and only the little number on each says
 							which run of it you are looking at.
 						-->
-						@defer (on viewport) {
-							<div class="cubby">
-								@for (
-									board of compartment.boards;
-									track $index
-								) {
-									<div class="board">
-										@if (compartment.boards.length > 1) {
-											<span
-												class="board-mark"
-												aria-hidden="true"
-												>{{ $index + 1 }}</span
-											>
-										}
-										@for (
-											spine of board;
-											track spine.release.id
-										) {
-											<a
-												class="spine"
-												[attr.draggable]="placeable()"
-												[class]="
-													'is-' + spine.release.format
-												"
-												[class.is-found]="
-													found().has(
-														spine.release.id
-													)
-												"
-												[class.is-turned-to]="
-													spine.release.id ===
-													turnedTo()
-												"
-												[class.is-box]="
-													spine.release.boxSet
-												"
-												[class.is-bare]="
-													!spine.readable
-												"
-												[style.width.px]="spine.width"
-												[style.height.px]="spine.height"
-												[style.--hue]="spine.hue"
-												[attr.href]="spine.href"
-												[attr.data-id]="
-													spine.release.id
-												"
-												[attr.aria-label]="
-													spine.release.artistName +
-													' — ' +
-													spine.release.title
-												"
-											>
+							@defer (on viewport) {
+								<div class="cubby">
+									@for (
+										board of compartment.boards;
+										track $index
+									) {
+										<div class="board">
+											@if (
+												compartment.boards.length > 1
+											) {
 												<span
-													class="spine-cap"
+													class="board-mark"
 													aria-hidden="true"
-												></span>
-												<span
-													class="spine-text"
-													aria-hidden="true"
+													>{{ $index + 1 }}</span
 												>
-													<span class="spine-title">{{
-														spine.release.title
-													}}</span>
+											}
+											@for (
+												spine of board.spines;
+												track spine.release.id
+											) {
+												<!--
+												The empty shelf between the
+												two runs: what the collector
+												left when they leaned the
+												rest on the far wall.
+											-->
+												@if (
+													$index === board.rightFrom
+												) {
 													<span
-														class="spine-artist"
-														>{{
-															spine.release
-																.artistName
-														}}</span
+														class="board-space"
+														aria-hidden="true"
+													></span>
+												}
+												<a
+													class="spine"
+													[attr.draggable]="
+														placeable()
+													"
+													[class]="
+														'is-' +
+														spine.release.format
+													"
+													[class.is-found]="
+														found().has(
+															spine.release.id
+														)
+													"
+													[class.is-turned-to]="
+														spine.release.id ===
+														turnedTo()
+													"
+													[class.is-box]="
+														spine.release.boxSet
+													"
+													[class.is-bare]="
+														!spine.readable
+													"
+													[class.is-picked]="
+														picked().has(
+															spine.release.id
+														)
+													"
+													[style.width.px]="
+														spine.width
+													"
+													[style.height.px]="
+														spine.height
+													"
+													[style.--hue]="spine.hue"
+													[attr.href]="spine.href"
+													[attr.data-id]="
+														spine.release.id
+													"
+													[attr.data-side]="
+														spine.side
+													"
+													[attr.aria-label]="
+														spine.release
+															.artistName +
+														' — ' +
+														spine.release.title
+													"
+												>
+													<span
+														class="spine-cap"
+														aria-hidden="true"
+													></span>
+													<span
+														class="spine-text"
+														aria-hidden="true"
 													>
-												</span>
-											</a>
-										}
-									</div>
-								}
-							</div>
-						} @placeholder {
-							<!--
+														<span
+															class="spine-title"
+															>{{
+																spine.release
+																	.title
+															}}</span
+														>
+														<span
+															class="spine-artist"
+															>{{
+																spine.release
+																	.artistName
+															}}</span
+														>
+													</span>
+												</a>
+											}
+										</div>
+									}
+								</div>
+							} @placeholder {
+								<!--
 								The same boards, bare: a compartment must not
 								change height as it comes into view.
 							-->
-							<div class="cubby">
-								@for (
-									board of compartment.boards;
-									track $index
-								) {
-									<div class="board"></div>
-								}
-							</div>
-						}
-					</section>
-				}
-			</div>
-		</section>
-	}
+								<div class="cubby">
+									@for (
+										board of compartment.boards;
+										track $index
+									) {
+										<div class="board"></div>
+									}
+								</div>
+							}
+						</section>
+					}
+				</div>
+			</section>
+		}
+	</div>
 
 	<mc-record-shelf-peek />
 </div>

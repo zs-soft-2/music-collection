@@ -13,10 +13,13 @@ import {
 } from '@angular/core';
 import {
 	CollectionItemPlacement,
+	ShelfSide,
 	ShelfUnitLayout,
 	maxPositionIn,
 	nextPosition,
+	placementAt,
 	placementInLayout,
+	placementSide,
 	spotKey,
 	unitSpots,
 } from '@music-collection/api';
@@ -89,15 +92,48 @@ export class CopyPlacementComponent {
 	});
 
 	/**
-	 * Where along the compartment the record goes: where it already stands,
-	 * or behind whatever is filed there.
+	 * Which wall of the compartment the copy leans on. A compartment is
+	 * filled from the left, so that is where a copy goes unless the collector
+	 * says otherwise — and one already standing against the right wall is
+	 * offered the wall it is standing against.
 	 */
-	protected readonly position = linkedSignal<
+	protected readonly side = linkedSignal<
 		{ unitId: string; spot: { row: number; column: number } | null },
-		number
+		ShelfSide
 	>({
 		source: () => ({ unitId: this.unitId(), spot: this.spot() }),
 		computation: ({ unitId, spot }) => {
+			const standing = this.standing();
+
+			return spot &&
+				standing &&
+				standing.unitId === unitId &&
+				standing.row === spot.row &&
+				standing.column === spot.column
+				? placementSide(standing)
+				: 'left';
+		},
+	});
+
+	/**
+	 * Where along the compartment the record goes, counted from the wall it
+	 * leans on: where it already stands, or behind whatever is filed against
+	 * that same wall.
+	 */
+	protected readonly position = linkedSignal<
+		{
+			unitId: string;
+			spot: { row: number; column: number } | null;
+			side: ShelfSide;
+		},
+		number
+	>({
+		source: () => ({
+			unitId: this.unitId(),
+			spot: this.spot(),
+			side: this.side(),
+		}),
+		computation: ({ unitId, spot, side }) => {
 			const standing = this.standing();
 
 			if (!spot) {
@@ -107,14 +143,15 @@ export class CopyPlacementComponent {
 				standing &&
 				standing.unitId === unitId &&
 				standing.row === spot.row &&
-				standing.column === spot.column
+				standing.column === spot.column &&
+				placementSide(standing) === side
 			) {
 				return standing.position;
 			}
 			const unit = this.units().find((drawn) => drawn.id === unitId);
 
 			return unit
-				? nextPosition(this.filed(), unit, spot.row, spot.column)
+				? nextPosition(this.filed(), unit, spot.row, spot.column, side)
 				: 1;
 		},
 	});
@@ -201,6 +238,10 @@ export class CopyPlacementComponent {
 		this.spot.set({ row, column });
 	}
 
+	protected lean(side: ShelfSide): void {
+		this.side.set(side);
+	}
+
 	protected onPosition(event: Event): void {
 		const value = Number((event.target as HTMLInputElement).value);
 
@@ -215,12 +256,17 @@ export class CopyPlacementComponent {
 		const spot = this.spot();
 
 		if (spot && this.canPlace()) {
-			this.placed.emit({
-				unitId: this.unitId(),
-				row: spot.row,
-				column: spot.column,
-				position: this.position(),
-			});
+			this.placed.emit(
+				placementAt(
+					{
+						unitId: this.unitId(),
+						row: spot.row,
+						column: spot.column,
+					},
+					this.side(),
+					this.position()
+				)
+			);
 		}
 	}
 

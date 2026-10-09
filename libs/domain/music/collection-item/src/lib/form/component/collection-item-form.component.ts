@@ -46,6 +46,12 @@ export class CollectionItemFormComponent
 
 	public params$!: Observable<CollectionItemFormParams>;
 
+	/** The two walls of a compartment a copy can lean on. */
+	public readonly sideOptions = [
+		{ value: 'left', label: 'Left wall' },
+		{ value: 'right', label: 'Right wall' },
+	];
+
 	public cancel(): void {
 		this.componentService.cancel();
 	}
@@ -69,6 +75,13 @@ export class CollectionItemFormComponent
 
 	public chooseSpot(event: any): void {
 		this.componentService.chooseSpot(event['value']);
+	}
+
+	/** Which wall of the compartment the copy leans on. */
+	public chooseSide(event: any): void {
+		this.componentService.chooseSide(
+			event['value'] === 'right' ? 'right' : 'left'
+		);
 	}
 
 	public choosePosition(event: any): void {

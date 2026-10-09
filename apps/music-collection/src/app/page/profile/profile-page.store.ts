@@ -42,12 +42,15 @@ import {
 	SHELF_LAYOUT_SETTING,
 	SHELF_LIMITS,
 	ShelfCubby,
+	ShelfMedia,
 	ShelfMediaMix,
 	ShelfStance,
 	ShelfUnitLayout,
+	ShelfWidths,
 	clampCubbyHeight,
 	clampCubbyLength,
 	clampShelfSide,
+	clampSpineWidth,
 	shelfCapacity,
 } from '../collection/shelf-layout.setting';
 
@@ -93,10 +96,14 @@ function countMedia(items: readonly CollectionItemEntity[]): ShelfMediaMix {
 	const mix: Record<string, number> = {};
 
 	for (const { release } of items) {
-		const media = toDescriptions(release?.formatDescription).includes(
+		const boxed = toDescriptions(release?.formatDescription).includes(
 			'box set'
-		)
-			? 'boxset'
+		);
+		/* A box of CDs is still CD-high, and goes where CDs go. */
+		const media = boxed
+			? release?.media === 'cd'
+				? 'cdbox'
+				: 'boxset'
 			: (release?.media ?? '');
 
 		mix[media] = (mix[media] ?? 0) + 1;
@@ -113,6 +120,12 @@ interface ProfilePageState {
 	albumCompact: boolean;
 	/** The shelving the collector drew, in the order it stands in the room. */
 	shelfLayout: ShelfUnitLayout[];
+	/**
+	 * How wide the things standing on it are, in millimetres. It is one
+	 * measurement with two jobs: how wide a spine is drawn, and how many
+	 * copies a compartment is reckoned to hold.
+	 */
+	shelfWidths: ShelfWidths;
 	/** Records on the shelf, so the drawn furniture can be measured against it. */
 	collectionSize: number;
 	/**
@@ -169,6 +182,7 @@ const initialState: ProfilePageState = {
 	collectionView: COLLECTION_VIEW_DEFAULTS,
 	albumCompact: false,
 	shelfLayout: NO_SHELF_LAYOUT.units,
+	shelfWidths: NO_SHELF_LAYOUT.widths,
 	collectionSize: 0,
 	mediaMix: {},
 	location: NO_LOCATION,
@@ -207,7 +221,11 @@ export const ProfilePageStore = signalStore(
 		/** What the drawn furniture holds, against what it has to hold. */
 		shelfRoom: computed(() => {
 			const units = store.shelfLayout();
-			const room = shelfCapacity(units, store.mediaMix());
+			const room = shelfCapacity(
+				units,
+				store.mediaMix(),
+				store.shelfWidths()
+			);
 
 			return {
 				units: units.length,
@@ -577,11 +595,18 @@ export const ProfilePageStore = signalStore(
 			settings = inject(UserSettingsEffect),
 			collectionItems = inject(CollectionItemStateService)
 		) => {
-			/** Keeps the drawn furniture, and writes it back to the account. */
-			const keep = (units: ShelfUnitLayout[]): void => {
-				patchState(store, { shelfLayout: units });
+			/**
+			 * Keeps the drawn room, and writes it back to the account. The
+			 * furniture and the widths of what stands in it are one document,
+			 * because they are one answer to "what is on my shelf".
+			 */
+			const keep = (
+				units: ShelfUnitLayout[],
+				widths: ShelfWidths = store.shelfWidths()
+			): void => {
+				patchState(store, { shelfLayout: units, shelfWidths: widths });
 				settings
-					.save(SHELF_LAYOUT_SETTING, { units })
+					.save(SHELF_LAYOUT_SETTING, { units, widths })
 					.catch((error) => {
 						console.error('Shelf layout not saved', error);
 					});
@@ -602,8 +627,11 @@ export const ProfilePageStore = signalStore(
 				loadShelfLayout: rxMethod<void>(
 					pipe(
 						switchMap(() => settings.value$(SHELF_LAYOUT_SETTING)),
-						tap(({ units }) =>
-							patchState(store, { shelfLayout: units })
+						tap(({ units, widths }) =>
+							patchState(store, {
+								shelfLayout: units,
+								shelfWidths: widths,
+							})
 						)
 					)
 				),
@@ -724,6 +752,27 @@ export const ProfilePageStore = signalStore(
 
 					units.splice(to, 0, ...units.splice(from, 1));
 					keep(units);
+				},
+
+				/**
+				 * How wide one kind of copy stands, in millimetres. It is the
+				 * collector's own tape measure: the same number both draws the
+				 * spine and decides how many of them go in a compartment, so a
+				 * shelf of slim cases holds what it really holds.
+				 *
+				 * Set back to the standard size by passing nothing, which is how
+				 * the collector undoes a measurement rather than having to
+				 * remember what it was.
+				 */
+				measureSpine(media: ShelfMedia, mm: number | null): void {
+					const widths = { ...store.shelfWidths() };
+
+					if (mm === null) {
+						delete widths[media];
+					} else {
+						widths[media] = clampSpineWidth(mm);
+					}
+					keep(store.shelfLayout(), widths);
 				},
 
 				/** Empties the room; the shelf goes back to one open wall. */

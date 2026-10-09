@@ -10,9 +10,13 @@ import {
 	SHELF_HEIGHT_UNIT_CM,
 	SHELF_LIMITS,
 	SHELF_MEDIA,
+	SHELF_MEDIA_SIZES,
+	SHELF_PX_PER_MM,
+	SHELF_WIDTH_KINDS,
 	ShelfMedia,
 	ShelfStance,
 	ShelfUnitLayout,
+	ShelfWidths,
 	cubbyHolds,
 } from '../../../collection/shelf-layout.setting';
 import { ProfilePageStore } from '../../profile-page.store';
@@ -21,6 +25,17 @@ import { ProfilePageStore } from '../../profile-page.store';
 interface Holds {
 	media: ShelfMedia;
 	count: number;
+}
+
+/** One kind of copy, at the width the collector measured it at. */
+interface SpineWidth {
+	media: ShelfMedia;
+	/** What is typed: whole pixels of drawn spine. */
+	px: number;
+	/** The same width as the shelf counts it, to the tenth of a millimetre. */
+	mm: number;
+	/** The collector set this one; the rest are the standard sizes. */
+	set: boolean;
 }
 
 /** One drawn unit, with the compartments the collection would fill in it. */
@@ -429,6 +444,72 @@ const DRAWING = { width: 132, height: 120, minCell: 4 };
 			</p>
 		}
 
+		<!--
+			How wide the things standing on the shelf are. It is one measurement
+			doing two jobs: how wide a spine is drawn, and how many copies a
+			compartment is reckoned to hold — which on a real shelf is the same
+			question. Typed in pixels because that is what the collector is
+			looking at while they set it; the millimetres beside it are what the
+			shelf files by.
+		-->
+		<section class="widths">
+			<h4 class="widths-head">
+				{{ 'ui.profileShelves.widths-title' | transloco }}
+			</h4>
+			<p class="intro">
+				{{ 'ui.profileShelves.widths-intro' | transloco }}
+			</p>
+
+			<ul class="width-list">
+				@for (width of widths(); track width.media) {
+					<li class="width" [class.is-set]="width.set">
+						<span class="width-label">{{
+							'ui.profileShelves.spine.' + width.media | transloco
+						}}</span>
+
+						<span class="size">
+							<button
+								type="button"
+								[attr.aria-label]="
+									'ui.profileShelves.one-pixel-narrower'
+										| transloco
+								"
+								[disabled]="width.px <= minPx"
+								(click)="setWidth(width, -1)"
+							>
+								−
+							</button>
+							<span class="size-value">{{ width.px }}</span>
+							<button
+								type="button"
+								[attr.aria-label]="
+									'ui.profileShelves.one-pixel-wider'
+										| transloco
+								"
+								[disabled]="width.px >= maxPx"
+								(click)="setWidth(width, 1)"
+							>
+								+
+							</button>
+							<span class="unit-of">px</span>
+						</span>
+
+						<span class="width-mm">{{ width.mm }} mm</span>
+
+						@if (width.set) {
+							<button
+								type="button"
+								class="width-reset"
+								(click)="store.measureSpine(width.media, null)"
+							>
+								{{ 'ui.profileShelves.standard' | transloco }}
+							</button>
+						}
+					</li>
+				}
+			</ul>
+		</section>
+
 		<div class="room-foot">
 			<button
 				type="button"
@@ -696,6 +777,75 @@ const DRAWING = { width: 132, height: 120, minCell: 4 };
 			display: block;
 			color: var(--mc-primary);
 		}
+
+		.widths {
+			display: flex;
+			flex-direction: column;
+			gap: 0.6rem;
+			padding-top: 0.75rem;
+			border-top: 1px solid var(--mc-border);
+		}
+
+		.widths-head {
+			margin: 0;
+			font-size: 0.8125rem;
+			font-weight: 600;
+			color: var(--mc-text);
+		}
+
+		.width-list {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+			gap: 0.4rem 1rem;
+			padding: 0;
+			margin: 0;
+			list-style: none;
+		}
+
+		/*
+		 * Two lines whatever the name is: what it is and how wide, then what
+		 * that comes to in millimetres. A row that laid itself out around the
+		 * label would put the millimetres in a different place on every line.
+		 */
+		.width {
+			display: grid;
+			grid-template-columns: 1fr auto;
+			gap: 0.1rem 0.5rem;
+			align-items: center;
+			padding: 0.35rem 0.5rem;
+			background: var(--mc-surface-2);
+			border-radius: var(--mc-radius-sm);
+		}
+
+		.width-mm {
+			grid-column: 1;
+		}
+
+		.width-reset {
+			grid-column: 2;
+			justify-self: end;
+		}
+
+		/* A width the collector set themselves, against the standard ones. */
+		.width.is-set {
+			box-shadow: inset 2px 0 0 var(--mc-primary);
+		}
+
+		.width-label {
+			font-size: 0.8125rem;
+			color: var(--mc-text);
+		}
+
+		.width-mm,
+		.width-reset {
+			font-size: 0.75rem;
+			color: var(--mc-text-subtle);
+		}
+
+		.width-reset {
+			padding: 0.1rem 0.4rem;
+			background: none;
+		}
 	`,
 })
 export class ProfileShelvesComponent {
@@ -703,6 +853,41 @@ export class ProfileShelvesComponent {
 	protected readonly limits = SHELF_LIMITS;
 	protected readonly heightUnitCm = SHELF_HEIGHT_UNIT_CM;
 	protected readonly room = this.store.shelfRoom;
+	/* The same bounds the setting clamps to, said in what is typed. */
+	protected readonly minPx = Math.round(
+		SHELF_LIMITS.minWidth * SHELF_PX_PER_MM
+	);
+	protected readonly maxPx = Math.round(
+		SHELF_LIMITS.maxWidth * SHELF_PX_PER_MM
+	);
+
+	/**
+	 * How wide each kind of copy stands. What the collector has not measured
+	 * shows the standard size rather than nothing: it is the number they are
+	 * about to change, and a blank would make them guess at it first.
+	 */
+	protected readonly widths = computed<SpineWidth[]>(() => {
+		const set: ShelfWidths = this.store.shelfWidths();
+
+		return SHELF_WIDTH_KINDS.map((media) => {
+			const mm = set[media] ?? SHELF_MEDIA_SIZES[media].thickness;
+
+			return {
+				media,
+				px: Math.round(mm * SHELF_PX_PER_MM),
+				mm: Math.round(mm * 10) / 10,
+				set: set[media] !== undefined,
+			};
+		});
+	});
+
+	/** One pixel wider or narrower, in the millimetres that are stored. */
+	protected setWidth(width: SpineWidth, step: -1 | 1): void {
+		this.store.measureSpine(
+			width.media,
+			(width.px + step) / SHELF_PX_PER_MM
+		);
+	}
 
 	/**
 	 * The furniture as drawn, with the collection filed into it the way the
@@ -710,6 +895,7 @@ export class ProfileShelvesComponent {
 	 */
 	protected readonly shelves = computed<ShelfDrawing[]>(() => {
 		const units = this.store.shelfLayout();
+		const widths = this.store.shelfWidths();
 		const filled = this.room().filled;
 		let at = 0;
 
@@ -730,7 +916,7 @@ export class ProfileShelvesComponent {
 				height: unit.cubby.height,
 				lengthCm: Math.round(unit.cubby.length / 10),
 				stance: unit.cubby.stance,
-				holds: holdsOf(unit),
+				holds: holdsOf(unit, widths),
 				cell: cellOf(unit),
 				/* A drawing shorter than the grid means nothing is in the rest. */
 				cells: Array.from(
@@ -744,11 +930,15 @@ export class ProfileShelvesComponent {
 	});
 }
 
-/** What one compartment holds of each medium that fits, roomiest first. */
-function holdsOf(unit: ShelfUnitLayout): Holds[] {
+/**
+ * What one compartment holds of each medium that fits, roomiest first — at
+ * the widths the collector measured, so the readout answers the question
+ * they are actually asking while they set them.
+ */
+function holdsOf(unit: ShelfUnitLayout, widths: ShelfWidths): Holds[] {
 	return SHELF_MEDIA.map((media) => ({
 		media,
-		count: cubbyHolds(unit.cubby, media),
+		count: cubbyHolds(unit.cubby, media, widths),
 	}))
 		.filter((hold) => hold.count > 0)
 		.sort((a, b) => b.count - a.count);

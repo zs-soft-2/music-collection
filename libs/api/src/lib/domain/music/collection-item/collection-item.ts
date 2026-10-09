@@ -53,9 +53,34 @@ export interface CollectionItemPlacement {
 	row: number;
 	/** Compartment column, counted from the left, 1-based. */
 	column: number;
-	/** Order within the compartment, counted from the left, 1-based. */
+	/**
+	 * Which wall of the compartment the copy leans against. Missing is the
+	 * left one, which is where a compartment fills from and where every copy
+	 * filed before compartments had two sides still stands.
+	 */
+	side?: ShelfSide;
+	/**
+	 * Order within the run it belongs to, 1-based — counted from the wall
+	 * that run stands against. On the left that is the left wall, as it
+	 * always was; on the right it is the right one, so a record standing at
+	 * the far end keeps its place however much the left side grows.
+	 */
 	position: number;
 }
+
+/**
+ * Which wall of a compartment a run of records stands against.
+ *
+ * A real cubby is rarely filled from one end: a half-empty one has its
+ * records leaning on the left, and a collector who keeps the heavy boxes at
+ * the far end has a second run standing against the right wall with a gap
+ * between them. Both runs are the collector's, and neither is pushed about
+ * by the other.
+ */
+export type ShelfSide = 'left' | 'right';
+
+/** The two walls, as a picker offers them. */
+export const SHELF_SIDES: ShelfSide[] = ['left', 'right'];
 
 /**
  * Goldmine grades — the scale record fairs and Discogs both price by, from
@@ -266,6 +291,8 @@ export type CollectionItemPlacementParams = {
 	spots: SelectItem<string>[];
 	/** The chosen compartment, `null` while the copy is filed by the shelf. */
 	spot: string | null;
+	/** Which wall of that compartment the copy stands against. */
+	side: ShelfSide;
 	position: number;
 	maxPosition: number;
 	/**

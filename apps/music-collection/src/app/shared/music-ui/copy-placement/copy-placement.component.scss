@@ -120,7 +120,8 @@ button {
 	}
 }
 
-.units {
+.units,
+.sides {
 	margin: 1rem 0 0;
 	padding: 0;
 	border: 0;
@@ -137,6 +138,11 @@ button {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 0.4rem;
+}
+
+.chip:has(input:disabled) {
+	opacity: 0.5;
+	cursor: default;
 }
 
 .chip {

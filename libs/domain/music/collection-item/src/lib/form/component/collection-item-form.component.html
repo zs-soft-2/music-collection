@@ -92,6 +92,22 @@
 						</div>
 
 						<div class="mc-field">
+							<label for="placement-side">{{
+								'ui.collectionItemForm.side' | transloco
+							}}</label>
+							<p-select
+								inputId="placement-side"
+								[options]="sideOptions"
+								[ngModel]="params.placement.side"
+								[ngModelOptions]="{ standalone: true }"
+								optionLabel="label"
+								optionValue="value"
+								[disabled]="!params.placement.spot"
+								(onChange)="chooseSide($event)"
+							></p-select>
+						</div>
+
+						<div class="mc-field">
 							<label for="placement-position">{{
 								'ui.collectionItemForm.position' | transloco
 							}}</label>
@@ -114,8 +130,14 @@
 							drawn any more. Pick another one, or take the place
 							back — until then it keeps the one it has.
 						} @else if (params.placement.spot) {
-							Counted from the left of the compartment; the shelf
-							files the rest around it.
+							@if (params.placement.side === 'right') {
+								Counted from the right wall of the compartment,
+								so the far end of it stays put however the
+								left-hand run grows.
+							} @else {
+								Counted from the left of the compartment; the
+								shelf files the rest around it.
+							}
 						} @else {
 							Not filed by hand: the shelf puts this copy where
 							the reading order takes it.

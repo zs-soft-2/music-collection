@@ -26,7 +26,10 @@ function unit(
 
 describe('SHELF_LAYOUT_SETTING', () => {
 	it('draws no furniture without a document', () => {
-		expect(SHELF_LAYOUT_SETTING.toValue({})).toEqual({ units: [] });
+		expect(SHELF_LAYOUT_SETTING.toValue({})).toEqual({
+			units: [],
+			widths: {},
+		});
 	});
 
 	it('reads the units the collector drew', () => {
@@ -52,6 +55,7 @@ describe('SHELF_LAYOUT_SETTING', () => {
 					cubby: { height: 3, length: 600, stance: 'down' },
 				},
 			],
+			widths: {},
 		});
 	});
 
@@ -97,7 +101,9 @@ describe('SHELF_LAYOUT_SETTING', () => {
 	it('writes back what it read', () => {
 		const units = [unit('a', 5, 1, cubby(5, 600))];
 
-		expect(SHELF_LAYOUT_SETTING.toDocument({ units })).toEqual({
+		expect(
+			SHELF_LAYOUT_SETTING.toDocument({ units, widths: { cd: 12.5 } })
+		).toEqual({
 			units: [
 				{
 					id: 'a',
@@ -107,7 +113,31 @@ describe('SHELF_LAYOUT_SETTING', () => {
 					cubby: { height: 5, length: 600, stance: 'across' },
 				},
 			],
+			widths: { cd: 12.5 },
 		});
+	});
+
+	/*
+	 * The collector's own tape measure. A width is read back as the whole
+	 * pixel it was set at, and nonsense is simply not a measurement — the
+	 * medium keeps its standard size rather than the collection becoming
+	 * unfilable.
+	 */
+	it('reads the widths the collector measured', () => {
+		expect(
+			SHELF_LAYOUT_SETTING.toValue({
+				widths: { cd: 12.5, cdbox: 25, vinyl: 'thick', dvd: 0 },
+			}).widths
+		).toEqual({ cd: 12.5, cdbox: 25 });
+	});
+
+	it('keeps a measured width inside what a spine can be', () => {
+		expect(
+			SHELF_LAYOUT_SETTING.toValue({ widths: { cd: 9999 } }).widths.cd
+		).toBe(SHELF_LIMITS.maxWidth);
+		expect(
+			SHELF_LAYOUT_SETTING.toValue({ widths: { cd: 0.5 } }).widths.cd
+		).toBe(SHELF_LIMITS.minWidth);
 	});
 });
 

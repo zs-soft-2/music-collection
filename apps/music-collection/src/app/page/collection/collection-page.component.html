@@ -363,6 +363,8 @@
 								{{ t('page.collection.shelf.searchHint') }}
 							} @else if (!store.placeable()) {
 								{{ t('page.collection.shelf.filterHint') }}
+							} @else if (store.arranging()) {
+								{{ t('page.collection.shelf.arrangeHint') }}
 							} @else if (store.shelfIsKept()) {
 								{{ t('page.collection.shelf.keptHint') }}
 							} @else {
@@ -379,6 +381,26 @@
 								}}</span>
 							}
 						</p>
+						<!--
+							Laying the furniture out in a row to be worked
+							on. Carrying a record from one compartment to
+							another across a drawn room is a diagonal haul
+							over everything in between; in a row it is one
+							sideways pull.
+						-->
+						<button
+							type="button"
+							class="shelf-keep"
+							[class.is-on]="store.arranging()"
+							[disabled]="!store.placeable()"
+							(click)="store.setArranging(!store.arranging())"
+						>
+							{{
+								store.arranging()
+									? t('page.collection.shelf.arrangeDone')
+									: t('page.collection.shelf.arrange')
+							}}
+						</button>
 						@if (store.shelfIsKept()) {
 							<button
 								type="button"
@@ -411,7 +433,9 @@
 				}
 				<mc-record-shelf
 					[shelves]="store.shelves()"
+					[widths]="store.shelfWidths()"
 					[placeable]="store.placeable()"
+					[arranging]="store.arranging()"
 					[playable]="player.playersAllowed()"
 					[found]="store.matchIds()"
 					[turnedTo]="store.focusedMatch()?.id ?? null"

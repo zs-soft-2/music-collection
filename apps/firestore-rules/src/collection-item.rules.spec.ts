@@ -174,6 +174,18 @@ describe('collection-item: where the collector filed the copy', () => {
 			updateDoc(doc(asMe(), PATH), { placement: spot({ position: 801 }) })
 		));
 
+	it('leans a copy on the right wall of a compartment', () =>
+		assertSucceeds(
+			updateDoc(doc(asMe(), PATH), {
+				placement: spot({ side: 'right' }),
+			})
+		));
+
+	it('refuses a wall a compartment has not got', () =>
+		assertFails(
+			updateDoc(doc(asMe(), PATH), { placement: spot({ side: 'back' }) })
+		));
+
 	it('refuses a place with nothing to stand in', () =>
 		assertFails(
 			updateDoc(doc(asMe(), PATH), { placement: spot({ unitId: '' }) })

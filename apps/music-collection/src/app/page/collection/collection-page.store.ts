@@ -73,12 +73,12 @@ import {
 	NO_SHELF_LAYOUT,
 	SHELF_LAYOUT_SETTING,
 	ShelfUnitLayout,
+	ShelfWidths,
 } from './shelf-layout.setting';
 import {
 	maxPositionIn,
 	placementInLayout,
-	placementsForDrop,
-	placementsLeftBehind,
+	placementsForMove,
 	placementsToFreeze,
 	placementsToRelease,
 } from './shelf-placement';
@@ -114,6 +114,8 @@ interface CollectionPageState {
 	view: CollectionView;
 	/** The furniture the collector drew in their profile; empty for none. */
 	shelfUnits: ShelfUnitLayout[];
+	/** How wide the copies standing in it are, as the collector measured. */
+	shelfWidths: ShelfWidths;
 	/** The collection items behind `releases`, to write a place back onto. */
 	items: CollectionItemEntity[];
 	/** A rearrangement is on its way to the server. */
@@ -123,6 +125,13 @@ interface CollectionPageState {
 	placingCopyId: string | null;
 	/** The found record the shelf is pointed at, where one was picked. */
 	pickedMatchId: string | null;
+	/**
+	 * The collector is rearranging rather than looking: the furniture is
+	 * laid out as one row of compartments, so a record only ever travels
+	 * sideways. Not kept between visits — it is a job, not a way of keeping
+	 * the shelf.
+	 */
+	arranging: boolean;
 	/** Which records the stars let through: all, the loved, the unjudged. */
 	stars: StarFilter;
 	/** The collector's own verdicts, to filter and sort the shelf by. */
@@ -138,11 +147,13 @@ const initialState: CollectionPageState = {
 	query: '',
 	format: 'all',
 	shelfUnits: NO_SHELF_LAYOUT.units,
+	shelfWidths: NO_SHELF_LAYOUT.widths,
 	items: [],
 	placing: false,
 	placeError: null,
 	placingCopyId: null,
 	pickedMatchId: null,
+	arranging: false,
 	stars: 'all',
 	ratings: [],
 	...COLLECTION_VIEW_DEFAULTS,
@@ -235,7 +246,7 @@ export const CollectionPageStore = signalStore(
 				words()
 			);
 
-			return arrangeShelves(shelved, units, placed);
+			return arrangeShelves(shelved, units, placed, store.shelfWidths());
 		});
 
 		/**
@@ -584,6 +595,11 @@ export const CollectionPageStore = signalStore(
 				 * collector meant to stand there. A record is usually pulled
 				 * out to make room, not to have the shelf close the gap
 				 * behind it.
+				 *
+				 * Which wall it was let go against comes with the drop: a
+				 * compartment has two, and a record dropped into the empty
+				 * right-hand half of one is a record leaned on the right
+				 * wall, not one appended to the left-hand run.
 				 */
 				fileRecord(drop: ShelfDrop): void {
 					const cells = store
@@ -595,21 +611,18 @@ export const CollectionPageStore = signalStore(
 							compartment.spot.row === drop.row &&
 							compartment.spot.column === drop.column
 					);
-					const from = cells.find(
-						(compartment) =>
-							compartment.spot &&
-							compartment !== cell &&
-							compartment.items.some(
-								(release) => release.id === drop.releaseId
-							)
-					);
+					const carried = new Set(drop.releaseIds);
+					/*
+					 * In the order the shelf draws them, not the order they
+					 * were picked out: an armful put down keeps the order it
+					 * stood in, however the collector gathered it.
+					 */
 					const moved = store
 						.releases()
-						.find((release) => release.id === drop.releaseId);
-
+						.filter((release) => carried.has(release.id));
 					if (
-						!cell ||
-						!moved ||
+						!cell?.spot ||
+						!moved.length ||
 						!store.placeable() ||
 						store.placing()
 					) {
@@ -627,27 +640,14 @@ export const CollectionPageStore = signalStore(
 
 						return unit ? maxPositionIn(unit) : 1;
 					};
-					const placements = [
-						...(from?.spot
-							? placementsLeftBehind(
-									from.items,
-									moved,
-									from.spot,
-									capOf(from.spot.unitId)
-								)
-							: []),
-						...placementsForDrop(
-							cell.items,
-							moved,
-							{
-								unitId: drop.unitId,
-								row: drop.row,
-								column: drop.column,
-							},
-							drop.index,
-							capOf(drop.unitId)
-						),
-					]
+					const placements = placementsForMove(
+						cells,
+						cell,
+						cell.spot,
+						moved,
+						{ side: drop.side, index: drop.index },
+						capOf
+					)
 						.map(({ releaseId, placement }) => ({
 							collectionItem: byId.get(releaseId),
 							placement,
@@ -797,8 +797,11 @@ export const CollectionPageStore = signalStore(
 						switchMap(() =>
 							settingsEffect.value$(SHELF_LAYOUT_SETTING)
 						),
-						tap(({ units }) =>
-							patchState(store, { shelfUnits: units })
+						tap(({ units, widths }) =>
+							patchState(store, {
+								shelfUnits: units,
+								shelfWidths: widths,
+							})
 						)
 					)
 				),
@@ -822,6 +825,15 @@ export const CollectionPageStore = signalStore(
 					patchState(store, { pickedMatchId }),
 				setFormat: (format: FormatFilter) =>
 					patchState(store, { format }),
+				/**
+				 * Lays the furniture out in one row to be worked on, or
+				 * stands it back up. Filing a record means dragging it from
+				 * one compartment to another, and across a drawn room that
+				 * is a long diagonal haul over everything in between; in a
+				 * row it is one sideways pull.
+				 */
+				setArranging: (arranging: boolean) =>
+					patchState(store, { arranging }),
 				/**
 				 * Not kept with the sort and the grouping on purpose: "show
 				 * me what I love" is a question asked of the shelf for a

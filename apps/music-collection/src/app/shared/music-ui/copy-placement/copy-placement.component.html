@@ -97,6 +97,34 @@
 			}
 		</fieldset>
 
+		<fieldset class="sides">
+			<legend>{{ 'ui.copyPlacement.which-side' | transloco }}</legend>
+			<div class="chips">
+				<label class="chip">
+					<input
+						type="radio"
+						name="side"
+						value="left"
+						[checked]="side() === 'left'"
+						[disabled]="!spot() || busy()"
+						(change)="lean('left')"
+					/>
+					{{ 'ui.copyPlacement.against-the-left-wall' | transloco }}
+				</label>
+				<label class="chip">
+					<input
+						type="radio"
+						name="side"
+						value="right"
+						[checked]="side() === 'right'"
+						[disabled]="!spot() || busy()"
+						(change)="lean('right')"
+					/>
+					{{ 'ui.copyPlacement.against-the-right-wall' | transloco }}
+				</label>
+			</div>
+		</fieldset>
+
 		<label class="field">
 			<span>{{
 				'ui.copyPlacement.position-in-the-compartment' | transloco
@@ -112,7 +140,11 @@
 		</label>
 
 		<p class="hint">
-			{{ 'ui.copyPlacement.counted-from-the-left' | transloco }}
+			@if (side() === 'right') {
+				{{ 'ui.copyPlacement.counted-from-the-right' | transloco }}
+			} @else {
+				{{ 'ui.copyPlacement.counted-from-the-left' | transloco }}
+			}
 		</p>
 
 		@if (error()) {

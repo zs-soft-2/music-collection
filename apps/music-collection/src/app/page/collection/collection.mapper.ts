@@ -23,8 +23,10 @@ import {
 	ShelfUnitLayout,
 } from './shelf-layout.setting';
 import {
+	ShelfWidths,
 	placementInLayout,
 	placementKey,
+	placementSide,
 	shelfSizeOf,
 	spotKey,
 } from './shelf-placement';
@@ -282,7 +284,8 @@ export function collectionStats(releases: ReleaseView[]): CollectionStats {
  */
 export function packShelf(
 	groups: ReleaseGroup[],
-	cubbies: readonly ShelfCubby[]
+	cubbies: readonly ShelfCubby[],
+	widths?: ShelfWidths
 ): ReleaseGroup[] {
 	/* The records in filing order, each remembering the group it came from. */
 	let queue = groups.flatMap((group) =>
@@ -298,7 +301,7 @@ export function packShelf(
 		let full = false;
 
 		for (const entry of queue) {
-			const size = shelfSizeOf(entry.release);
+			const size = shelfSizeOf(entry.release, widths);
 
 			if (full || size.height > cubby.height) {
 				rest.push(entry);
@@ -426,14 +429,30 @@ export function splitByPlacement(
 
 /** A compartment that is not one of the drawn ones: the wall, or the overflow. */
 function loose(group: ReleaseGroup): ShelfCompartmentView {
-	return { ...group, spot: null };
+	return { ...group, spot: null, rightFrom: group.items.length };
 }
 
-/** A compartment the collector filled themselves, in the order they left it. */
-function handFiled(key: string, filed: PlacedRelease[]): ReleaseGroup {
-	const items = [...filed]
+/**
+ * A compartment the collector filled themselves, read left to right.
+ *
+ * Its two runs are numbered from the walls they lean on, so the right-hand
+ * one counts the other way: position 1 is the record against the right wall,
+ * and it is drawn last. What comes out is one list in the order you would
+ * walk past it, with the gap — if there is one — sitting between the runs.
+ */
+function handFiled(
+	key: string,
+	filed: PlacedRelease[]
+): ReleaseGroup & { rightFrom: number } {
+	const against = (side: 'left' | 'right') =>
+		filed.filter((entry) => placementSide(entry.placement) === side);
+	const left = against('left')
 		.sort((a, b) => a.placement.position - b.placement.position)
 		.map((entry) => entry.release);
+	const right = against('right')
+		.sort((a, b) => b.placement.position - a.placement.position)
+		.map((entry) => entry.release);
+	const items = [...left, ...right];
 	const first = items[0].artistName;
 	const last = items[items.length - 1].artistName;
 
@@ -441,6 +460,7 @@ function handFiled(key: string, filed: PlacedRelease[]): ReleaseGroup {
 		key,
 		label: first === last ? first : `${first} – ${last}`,
 		items,
+		rightFrom: left.length,
 	};
 }
 
@@ -467,10 +487,11 @@ function handFiled(key: string, filed: PlacedRelease[]): ReleaseGroup {
 export function arrangeShelves(
 	groups: ReleaseGroup[],
 	units: readonly ShelfUnitLayout[],
-	placed: readonly PlacedRelease[] = []
+	placed: readonly PlacedRelease[] = [],
+	widths?: ShelfWidths
 ): ShelfUnitView[] {
 	if (!units.length) {
-		const wall = packShelf(groups, []);
+		const wall = packShelf(groups, [], widths);
 
 		return wall.length
 			? [
@@ -509,7 +530,8 @@ export function arrangeShelves(
 
 	const packed = packShelf(
 		groups,
-		open.map(({ unit }) => unit.cubby)
+		open.map(({ unit }) => unit.cubby),
+		widths
 	);
 	const shelves: ShelfUnitView[] = [];
 	let filed = 0;
@@ -530,10 +552,11 @@ export function arrangeShelves(
 
 				const group = packed[filed++];
 
+				/* The shelf fills a compartment from the left wall, always. */
 				cells.push(
 					group?.items.length
-						? { ...group, spot }
-						: { key, label: '', items: [], spot }
+						? { ...group, spot, rightFrom: group.items.length }
+						: { key, label: '', items: [], spot, rightFrom: 0 }
 				);
 			}
 		}

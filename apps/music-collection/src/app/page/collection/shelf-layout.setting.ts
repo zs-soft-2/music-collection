@@ -2,10 +2,13 @@ import {
 	DEFAULT_CUBBY,
 	SHELF_HEIGHT_UNIT_CM,
 	SHELF_MEDIA,
+	SHELF_MEDIA_SIZES,
+	SHELF_PX_PER_MM,
 	ShelfCubby,
 	ShelfMedia,
 	ShelfStance,
 	ShelfUnitLayout,
+	ShelfWidths,
 	cubbyHolds,
 	shelfMediaSize,
 } from '@music-collection/api';
@@ -17,12 +20,35 @@ import { UserSetting } from '../../data/user-settings';
  * files a copy into the same furniture), so it is kept with the collection
  * item; what a unit may be, and how it is stored, stays here.
  */
-export type { ShelfCubby, ShelfMedia, ShelfStance, ShelfUnitLayout };
-export { DEFAULT_CUBBY, SHELF_HEIGHT_UNIT_CM, SHELF_MEDIA, cubbyHolds };
+export type {
+	ShelfCubby,
+	ShelfMedia,
+	ShelfStance,
+	ShelfUnitLayout,
+	ShelfWidths,
+};
+export {
+	DEFAULT_CUBBY,
+	SHELF_HEIGHT_UNIT_CM,
+	SHELF_MEDIA,
+	SHELF_MEDIA_SIZES,
+	SHELF_PX_PER_MM,
+	cubbyHolds,
+};
 
-/** The furniture in the room, in the order records are filed into it. */
+/**
+ * The furniture in the room, in the order records are filed into it, and how
+ * wide the things standing in it are.
+ *
+ * The widths are kept with the furniture and not with the catalog on
+ * purpose: they are a measurement of *this* collector's copies — their
+ * cases, their pressings — and the same album is a different width on
+ * someone else's shelf.
+ */
 export interface ShelfLayoutSettings {
 	units: ShelfUnitLayout[];
+	/** Spine widths in millimetres; what is unset is the standard size. */
+	widths: ShelfWidths;
 }
 
 /**
@@ -43,6 +69,14 @@ export const SHELF_LIMITS = {
 	maxLength: 4000,
 	/** The length steps by a centimetre, which is how a shelf is measured. */
 	lengthStep: 10,
+	/**
+	 * A spine width in millimetres: 5 mm to 12 cm. The floor is the tightest
+	 * a spine is ever drawn — anything narrower and a compartment's contents
+	 * could be filed past the end of it — and the ceiling is a box no record
+	 * shop has ever stocked.
+	 */
+	minWidth: 5,
+	maxWidth: 120,
 } as const;
 
 /** What a new unit looks like before it is redrawn: a square Kallax. */
@@ -53,7 +87,53 @@ export const DEFAULT_SHELF = {
 } as const;
 
 /** A room with no drawn furniture: the shelf falls back to one open wall. */
-export const NO_SHELF_LAYOUT: ShelfLayoutSettings = { units: [] };
+export const NO_SHELF_LAYOUT: ShelfLayoutSettings = { units: [], widths: {} };
+
+/**
+ * The widths the collector may set, in the order they are offered: the four
+ * media first, then the two boxes — which are the sizes a collector thinks
+ * of last, and reaches for only when they own one.
+ */
+export const SHELF_WIDTH_KINDS: ShelfMedia[] = [
+	'vinyl',
+	'cd',
+	'dvd',
+	'cassette',
+	'boxset',
+	'cdbox',
+];
+
+/** A spine width as the collector typed it: whole pixels on the shelf. */
+export function clampSpineWidth(mm: number): number {
+	const px = Math.round(mm * SHELF_PX_PER_MM);
+	const snapped = Number.isFinite(px) ? px / SHELF_PX_PER_MM : 0;
+
+	return Math.min(
+		SHELF_LIMITS.maxWidth,
+		Math.max(SHELF_LIMITS.minWidth, snapped || SHELF_LIMITS.minWidth)
+	);
+}
+
+/**
+ * The widths as the document has it. A width that is not a width is simply
+ * not set, and the medium keeps its standard size: a bad number must not be
+ * able to make a collection unfilable.
+ */
+function toWidths(value: unknown): ShelfWidths {
+	const data =
+		typeof value === 'object' && value !== null
+			? (value as Record<string, unknown>)
+			: {};
+
+	return SHELF_WIDTH_KINDS.reduce<ShelfWidths>((widths, media) => {
+		const mm = Number(data[media]);
+
+		if (Number.isFinite(mm) && mm > 0) {
+			widths[media] = clampSpineWidth(mm);
+		}
+		return widths;
+	}, {});
+}
 
 function clamp(value: number, min: number, max: number, fallback: number) {
 	const rounded = Math.round(value);
@@ -183,7 +263,8 @@ export interface ShelfRoom {
  */
 export function shelfCapacity(
 	units: readonly ShelfUnitLayout[],
-	mix: ShelfMediaMix
+	mix: ShelfMediaMix,
+	widths: ShelfWidths = {}
 ): ShelfRoom {
 	const compartments = units.flatMap((unit) =>
 		Array.from({ length: unit.rows * unit.columns }, () => unit.cubby)
@@ -202,7 +283,7 @@ export function shelfCapacity(
 	let short = 0;
 
 	for (const [media, count] of byHeight) {
-		const { height, thickness } = shelfMediaSize(media);
+		const { height, thickness } = shelfMediaSize(media, widths);
 		let left = count ?? 0;
 
 		for (const shelf of room) {
@@ -240,8 +321,9 @@ export const SHELF_LAYOUT_SETTING: UserSetting<ShelfLayoutSettings> = {
 			.map(toUnit)
 			.filter((unit): unit is ShelfUnitLayout => unit !== null)
 			.slice(0, SHELF_LIMITS.maxUnits),
+		widths: toWidths(data['widths']),
 	}),
-	toDocument: ({ units }) => ({
+	toDocument: ({ units, widths }) => ({
 		units: units.map(({ id, name, rows, columns, cubby }) => ({
 			id,
 			name,
@@ -249,5 +331,6 @@ export const SHELF_LAYOUT_SETTING: UserSetting<ShelfLayoutSettings> = {
 			columns,
 			cubby: { ...cubby },
 		})),
+		widths: { ...widths },
 	}),
 };

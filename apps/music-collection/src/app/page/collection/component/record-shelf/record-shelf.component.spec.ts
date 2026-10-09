@@ -55,18 +55,24 @@ function release(id: string): ReleaseView {
 	};
 }
 
-function filled(key: string, ids: string[] = [key]): ShelfCompartmentView {
+function filled(
+	key: string,
+	ids: string[] = [key],
+	/** Where the run leaning on the right wall begins; none, by default. */
+	rightFrom = ids.length
+): ShelfCompartmentView {
 	return {
 		key,
 		label: 'VINYL',
 		items: ids.map(release),
 		spot: { unitId: 'one', row: 1, column: 1 },
+		rightFrom,
 	};
 }
 
 /** A compartment the unit was drawn with, with nothing in it. */
 function empty(key: string): ShelfCompartmentView {
-	return { key, label: '', items: [], spot: null };
+	return { key, label: '', items: [], spot: null, rightFrom: 0 };
 }
 
 /**
@@ -86,11 +92,21 @@ function touchScreen(): void {
 	});
 }
 
+/** Picking a record out to be carried: the modified click that does it. */
+function pick(): MouseEvent {
+	return new MouseEvent('click', {
+		bubbles: true,
+		cancelable: true,
+		ctrlKey: true,
+	});
+}
+
 /** A drag event as jsdom can make one: no DataTransfer, so none is used. */
-function drag(type: string, clientX = 0): Event {
+function drag(type: string, clientX = 0, clientY = 0): Event {
 	const event = new Event(type, { bubbles: true, cancelable: true });
 
 	Object.defineProperty(event, 'clientX', { value: clientX });
+	Object.defineProperty(event, 'clientY', { value: clientY });
 
 	return event;
 }
@@ -174,7 +190,11 @@ describe('RecordShelfComponent', () => {
 		/* jsdom measures everything as zero, so the spines say where they are. */
 		spines.forEach((spine, index) => {
 			spine.getBoundingClientRect = () =>
-				({ left: index * 10, width: 10 }) as DOMRect;
+				({
+					left: index * 10,
+					right: index * 10 + 10,
+					width: 10,
+				}) as DOMRect;
 		});
 
 		spines[1].dispatchEvent(drag('dragstart'));
@@ -186,13 +206,467 @@ describe('RecordShelfComponent', () => {
 		cell?.dispatchEvent(drag('drop', 2));
 
 		expect(dropped).toEqual({
-			releaseId: 'two',
+			releaseIds: ['two'],
 			unitId: 'one',
 			row: 1,
 			column: 1,
+			side: 'left',
 			index: 0,
 		});
 		expect(host.querySelector('.compartment.is-drop')).toBeNull();
+	});
+
+	it('leans a record on the right wall when it is let go out there', async () => {
+		const host = render([
+			shelf({ columns: 2, compartments: [filled('a', ['one'])] }),
+		]);
+
+		fixture.componentRef.setInput('placeable', true);
+		fixture.detectChanges();
+
+		const blocks = await fixture.getDeferBlocks();
+		await blocks[0].render(DeferBlockState.Complete);
+
+		let dropped: ShelfDrop | null = null;
+		fixture.componentInstance.filed.subscribe((drop) => (dropped = drop));
+
+		const spine = host.querySelector<HTMLElement>('.spine');
+		const board = host.querySelector<HTMLElement>('.board');
+		const cell = host.querySelector<HTMLElement>('.compartment');
+
+		/* One record at the near end of a board a hundred wide. */
+		spine!.getBoundingClientRect = () =>
+			({ left: 0, right: 10, width: 10 }) as DOMRect;
+		board!.getBoundingClientRect = () =>
+			({ left: 0, right: 100, width: 100 }) as DOMRect;
+
+		spine!.dispatchEvent(drag('dragstart'));
+		/* Let go past the middle of the shelf standing empty beyond it. */
+		cell?.dispatchEvent(drag('drop', 80));
+
+		expect(dropped).toEqual({
+			releaseIds: ['one'],
+			unitId: 'one',
+			row: 1,
+			column: 1,
+			side: 'right',
+			index: 0,
+		});
+	});
+
+	/*
+	 * A compartment is drawn as tall as it was measured, so anything shorter
+	 * than it stands with empty air above it — a CD case in an LP cubby has
+	 * two thirds of the board over its head, and the compartment's label
+	 * another strip above that. Where a record is let go along the shelf is
+	 * the only thing that may decide where it goes; how high above the
+	 * records it was let go may decide nothing.
+	 */
+	describe('a record let go above the records standing there', () => {
+		/** A CD case at the near end of a compartment an LP tall. */
+		async function cdInATallCubby(): Promise<{
+			host: HTMLElement;
+			cell: HTMLElement | null;
+			spines: HTMLElement[];
+		}> {
+			const host = render([
+				shelf({
+					columns: 2,
+					compartments: [filled('a', ['one', 'two'])],
+				}),
+			]);
+
+			fixture.componentRef.setInput('placeable', true);
+			fixture.detectChanges();
+
+			const blocks = await fixture.getDeferBlocks();
+			await blocks[0].render(DeferBlockState.Complete);
+
+			const spines = Array.from(
+				host.querySelectorAll<HTMLElement>('.spine')
+			);
+			const board = host.querySelector<HTMLElement>('.board');
+
+			spines.forEach((spine, index) => {
+				spine.getBoundingClientRect = () =>
+					({
+						left: index * 10,
+						right: index * 10 + 10,
+						width: 10,
+						top: 200,
+						bottom: 240,
+						height: 40,
+					}) as DOMRect;
+			});
+			board!.getBoundingClientRect = () =>
+				({
+					left: 0,
+					right: 100,
+					width: 100,
+					top: 0,
+					bottom: 240,
+					height: 240,
+				}) as DOMRect;
+
+			return {
+				host,
+				cell: host.querySelector<HTMLElement>('.compartment'),
+				spines,
+			};
+		}
+
+		it('leans on the right wall when it is let go out by it', async () => {
+			const { cell, spines } = await cdInATallCubby();
+
+			let dropped: ShelfDrop | null = null;
+			fixture.componentInstance.filed.subscribe(
+				(drop) => (dropped = drop)
+			);
+
+			spines[1].dispatchEvent(drag('dragstart'));
+			/* Out by the far wall, high above the case standing there. */
+			cell?.dispatchEvent(drag('drop', 80, 40));
+
+			expect(dropped).toEqual({
+				releaseIds: ['two'],
+				unitId: 'one',
+				row: 1,
+				column: 1,
+				side: 'right',
+				index: 0,
+			});
+		});
+
+		it('marks the wall it is being held over, before it is let go', async () => {
+			const { cell, spines } = await cdInATallCubby();
+
+			spines[1].dispatchEvent(drag('dragstart'));
+			cell?.dispatchEvent(drag('dragover', 80, 40));
+
+			expect(cell?.classList.contains('is-drop-right')).toBe(true);
+			expect(cell?.classList.contains('is-drop-left')).toBe(false);
+
+			/* Carried back over the near wall, the mark follows it. */
+			cell?.dispatchEvent(drag('dragover', 2, 40));
+
+			expect(cell?.classList.contains('is-drop-left')).toBe(true);
+			expect(cell?.classList.contains('is-drop-right')).toBe(false);
+		});
+
+		it('still goes in front of the first record let go there', async () => {
+			const { cell, spines } = await cdInATallCubby();
+
+			let dropped: ShelfDrop | null = null;
+			fixture.componentInstance.filed.subscribe(
+				(drop) => (dropped = drop)
+			);
+
+			spines[1].dispatchEvent(drag('dragstart'));
+			/* At the near wall, just as high up. */
+			cell?.dispatchEvent(drag('drop', 2, 40));
+
+			expect(dropped).toEqual({
+				releaseIds: ['two'],
+				unitId: 'one',
+				row: 1,
+				column: 1,
+				side: 'left',
+				index: 0,
+			});
+		});
+	});
+
+	/*
+	 * The two halves of a compartment are not drawn on the furniture, so the
+	 * line between them is the middle of the shelf its rows left empty: it
+	 * moves as they grow, and a compartment with a record against each wall
+	 * is split between them.
+	 */
+	it('splits a compartment down the middle of the shelf left empty', async () => {
+		const host = render([
+			shelf({
+				columns: 2,
+				compartments: [
+					filled('a', ['one', 'two'], 1),
+					{
+						...filled('b', ['three']),
+						spot: { unitId: 'one', row: 1, column: 2 },
+					},
+				],
+			}),
+		]);
+
+		fixture.componentRef.setInput('placeable', true);
+		fixture.detectChanges();
+
+		const blocks = await fixture.getDeferBlocks();
+		await Promise.all(
+			blocks.map((block) => block.render(DeferBlockState.Complete))
+		);
+
+		let dropped: ShelfDrop | null = null;
+		fixture.componentInstance.filed.subscribe((drop) => (dropped = drop));
+
+		const spines = Array.from(host.querySelectorAll<HTMLElement>('.spine'));
+		const cell = host.querySelector<HTMLElement>('.compartment');
+		const board = host.querySelector<HTMLElement>('.board');
+		const standing = (left: number) => () =>
+			({
+				left,
+				right: left + 10,
+				width: 10,
+				top: 200,
+				bottom: 240,
+				height: 40,
+			}) as DOMRect;
+
+		/* One record against each wall of a board a hundred wide. */
+		spines[0].getBoundingClientRect = standing(0);
+		spines[1].getBoundingClientRect = standing(90);
+		board!.getBoundingClientRect = () =>
+			({
+				left: 0,
+				right: 100,
+				width: 100,
+				top: 0,
+				bottom: 240,
+				height: 240,
+			}) as DOMRect;
+
+		/* Let go in the near half of the gap: behind the left-hand row. */
+		spines[2].dispatchEvent(drag('dragstart'));
+		cell?.dispatchEvent(drag('drop', 30, 220));
+
+		expect(dropped).toEqual({
+			releaseIds: ['three'],
+			unitId: 'one',
+			row: 1,
+			column: 1,
+			side: 'left',
+			index: 1,
+		});
+
+		/* And in the far half: behind the record against the right wall. */
+		spines[2].dispatchEvent(drag('dragstart'));
+		cell?.dispatchEvent(drag('drop', 70, 220));
+
+		expect(dropped).toEqual({
+			releaseIds: ['three'],
+			unitId: 'one',
+			row: 1,
+			column: 1,
+			side: 'right',
+			index: 0,
+		});
+	});
+
+	it('carries every record picked out, in the order they stand', async () => {
+		const host = render([
+			shelf({
+				columns: 2,
+				compartments: [filled('a', ['one', 'two', 'three'])],
+			}),
+		]);
+
+		fixture.componentRef.setInput('placeable', true);
+		fixture.detectChanges();
+
+		const blocks = await fixture.getDeferBlocks();
+		await blocks[0].render(DeferBlockState.Complete);
+
+		let dropped: ShelfDrop | null = null;
+		fixture.componentInstance.filed.subscribe((drop) => (dropped = drop));
+
+		const spines = Array.from(host.querySelectorAll<HTMLElement>('.spine'));
+		const cell = host.querySelector<HTMLElement>('.compartment');
+
+		/* Picked out the other way round; they travel in shelf order. */
+		spines[2].dispatchEvent(pick());
+		spines[0].dispatchEvent(pick());
+		fixture.detectChanges();
+
+		expect(host.querySelectorAll('.spine.is-picked')).toHaveLength(2);
+		expect(host.querySelector('.hands-count')?.textContent).toBe('2');
+
+		spines.forEach((spine, index) => {
+			spine.getBoundingClientRect = () =>
+				({
+					left: index * 10,
+					right: index * 10 + 10,
+					width: 10,
+				}) as DOMRect;
+		});
+
+		spines[0].dispatchEvent(drag('dragstart'));
+		cell?.dispatchEvent(drag('drop', 2));
+
+		expect(dropped).toEqual({
+			releaseIds: ['one', 'three'],
+			unitId: 'one',
+			row: 1,
+			column: 1,
+			side: 'left',
+			index: 0,
+		});
+		/* Put down is put down: nothing is left in hand. */
+		fixture.detectChanges();
+		expect(host.querySelector('.hands')).toBeNull();
+	});
+
+	it('files the armful into the compartment that asks for it', async () => {
+		const host = render([
+			shelf({
+				columns: 2,
+				compartments: [
+					filled('a', ['one', 'two']),
+					{
+						...filled('b', ['three']),
+						spot: { unitId: 'one', row: 1, column: 2 },
+					},
+				],
+			}),
+		]);
+
+		fixture.componentRef.setInput('placeable', true);
+		fixture.detectChanges();
+
+		const blocks = await fixture.getDeferBlocks();
+		await Promise.all(
+			blocks.map((block) => block.render(DeferBlockState.Complete))
+		);
+
+		let dropped: ShelfDrop | null = null;
+		fixture.componentInstance.filed.subscribe((drop) => (dropped = drop));
+
+		host.querySelector<HTMLElement>('.spine')?.dispatchEvent(pick());
+		fixture.detectChanges();
+
+		const second = host.querySelectorAll<HTMLElement>('.compartment')[1];
+
+		second.querySelector<HTMLElement>('.label-put')?.click();
+
+		/* The end of the near-hand run of the compartment it was put in. */
+		expect(dropped).toEqual({
+			releaseIds: ['one'],
+			unitId: 'one',
+			row: 1,
+			column: 2,
+			side: 'left',
+			index: 1,
+		});
+	});
+
+	/*
+	 * A compartment has two walls, and a tap says nothing about which one is
+	 * meant — so each is offered its own button. It is the only way to lean
+	 * a record on the far wall on a phone, which has no drag at all.
+	 */
+	it('leans the armful on the far wall when that wall asks for it', async () => {
+		const host = render([
+			shelf({
+				columns: 2,
+				compartments: [
+					filled('a', ['one', 'two']),
+					{
+						...filled('b', ['three']),
+						spot: { unitId: 'one', row: 1, column: 2 },
+					},
+				],
+			}),
+		]);
+
+		fixture.componentRef.setInput('placeable', true);
+		fixture.detectChanges();
+
+		const blocks = await fixture.getDeferBlocks();
+		await Promise.all(
+			blocks.map((block) => block.render(DeferBlockState.Complete))
+		);
+
+		let dropped: ShelfDrop | null = null;
+		fixture.componentInstance.filed.subscribe((drop) => (dropped = drop));
+
+		host.querySelector<HTMLElement>('.spine')?.dispatchEvent(pick());
+		fixture.detectChanges();
+
+		const second = host.querySelectorAll<HTMLElement>('.compartment')[1];
+		const walls = second.querySelectorAll<HTMLElement>('.label-put');
+
+		expect(walls).toHaveLength(2);
+		walls[1].click();
+
+		/*
+		 * The inner end of the right-hand run: what already leans on that
+		 * wall stays against it, and the run grows towards the middle.
+		 */
+		expect(dropped).toEqual({
+			releaseIds: ['one'],
+			unitId: 'one',
+			row: 1,
+			column: 2,
+			side: 'right',
+			index: 0,
+		});
+	});
+
+	it('takes a plain click as picking a record up while arranging', async () => {
+		const host = render([
+			shelf({ columns: 2, compartments: [filled('a', ['one', 'two'])] }),
+		]);
+
+		fixture.componentRef.setInput('placeable', true);
+		fixture.componentRef.setInput('arranging', true);
+		fixture.detectChanges();
+
+		const blocks = await fixture.getDeferBlocks();
+		await blocks[0].render(DeferBlockState.Complete);
+
+		const spine = host.querySelector<HTMLElement>('.spine');
+
+		spine?.click();
+		fixture.detectChanges();
+
+		expect(host.querySelectorAll('.spine.is-picked')).toHaveLength(1);
+
+		/* And the click after it puts that record back down. */
+		spine?.click();
+		fixture.detectChanges();
+
+		expect(host.querySelector('.spine.is-picked')).toBeNull();
+	});
+
+	it('lays the furniture out in a row while it is being arranged', () => {
+		const host = render([
+			shelf({ columns: 2, compartments: [filled('a', ['one'])] }),
+		]);
+
+		expect(host.querySelector('.room.is-arranging')).toBeNull();
+
+		fixture.componentRef.setInput('arranging', true);
+		fixture.detectChanges();
+
+		expect(host.querySelector('.room.is-arranging')).not.toBeNull();
+	});
+
+	it("draws the gap between a compartment's two runs", async () => {
+		const host = render([
+			shelf({
+				columns: 2,
+				compartments: [filled('a', ['one', 'two', 'far'], 2)],
+			}),
+		]);
+		const blocks = await fixture.getDeferBlocks();
+
+		await blocks[0].render(DeferBlockState.Complete);
+
+		const drawn = Array.from(
+			host.querySelectorAll<HTMLElement>('.board > *')
+		).map((node) => node.className.split(' ')[0]);
+
+		expect(drawn).toEqual(['spine', 'spine', 'board-space', 'spine']);
+		expect(
+			host.querySelectorAll<HTMLElement>('.spine')[2].dataset['side']
+		).toBe('right');
 	});
 
 	it('leaves the records alone while the shelf cannot be rearranged', async () => {
