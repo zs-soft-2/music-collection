@@ -3,7 +3,12 @@ import { Observable } from 'rxjs';
 import { EntityStateService } from '../../../common';
 import { AlbumEntity, AlbumEntityAdd, AlbumEntityUpdate } from './album';
 import { ExternalSource } from '../external';
-import { AlbumTrackDraft, ReleaseTrackDraft, TrackEntity } from '../track';
+import {
+	AlbumTrackAdd,
+	AlbumTrackDraft,
+	ReleaseTrackDraft,
+	TrackEntity,
+} from '../track';
 import {
 	AlbumExternalProfile,
 	AlbumExternalTrack,
@@ -47,6 +52,18 @@ export abstract class AlbumStateService extends EntityStateService<
 	 * writers and the credits of the track stay as they are.
 	 */
 	public abstract saveAlbumTrack(track: AlbumTrackDraft): Promise<void>;
+	/**
+	 * Adds one track to the end of the album's own tracklist: a song the
+	 * import never listed, typed in by hand. It is given the first id the
+	 * album has not handed out yet, so it can never land on a track that is
+	 * already there. `albumTracks` is the album's own list as it stands, and
+	 * the track as written comes back — the list itself only catches up when
+	 * the catalog sync does.
+	 */
+	public abstract addAlbumTrack(
+		track: AlbumTrackAdd,
+		albumTracks: TrackEntity[]
+	): Promise<TrackEntity>;
 	/**
 	 * Takes one track off the album, with its lyrics, and closes the gap in
 	 * play order behind it. `albumTracks` is the album's own list as it

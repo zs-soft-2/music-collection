@@ -68,6 +68,21 @@ export interface AlbumTrackDraft {
 }
 
 /**
+ * A track typed into the album form by hand, for a record no import lists:
+ * a private pressing, a tape, a single MusicBrainz never heard of.
+ *
+ * It carries no id and no play order — the album hands both out when the
+ * track is written, so that a new song lands after the ones already there
+ * and never on top of an id another song still holds.
+ */
+export interface AlbumTrackAdd {
+	albumUid: string;
+	position: string | null;
+	name: string;
+	duration: string | null;
+}
+
+/**
  * Lyrics of a track, kept apart from the public track document
  * (`track-lyrics/{trackUid}`): readable only when signed in.
  */

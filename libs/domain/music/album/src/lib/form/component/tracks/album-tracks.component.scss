@@ -9,6 +9,12 @@
 	gap: 1rem;
 }
 
+.album-tracks-heading-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
 .album-tracks-error {
 	display: block;
 	margin-block-end: 0.75rem;
@@ -41,6 +47,11 @@
 	input {
 		inline-size: 100%;
 		min-inline-size: 0;
+	}
+
+	/* The row being typed into closes the list; nothing follows it. */
+	li.is-new {
+		border-block-end: none;
 	}
 
 	/* What the dialog loaded is only read, and reads as a numbered list. */

@@ -21,9 +21,11 @@ import {
 	AlbumExternalProfile,
 	AlbumExternalTrack,
 	AlbumExternalTracks,
+	AlbumTrackAdd,
 	AlbumTrackDraft,
 	DiscogsLookupClient,
 	DiscogsMasterProfile,
+	EntityTypeEnum,
 	ExternalSource,
 	MusicBrainzClient,
 	discogsMasterUrl,
@@ -359,6 +361,57 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 			},
 			{ merge: true }
 		);
+	}
+
+	/**
+	 * Adds one track to the end of the album's own tracklist.
+	 *
+	 * Both the id and the play order are handed out here rather than counted
+	 * by the form: a list someone deleted the third track from runs 001,
+	 * 002, 004…, and a fourth song numbered by its place would write over
+	 * 004. The first free id is taken instead, and the new track plays after
+	 * the highest number the album already uses.
+	 *
+	 * The written track is returned, because the list it belongs to is only
+	 * read again when the catalog sync comes round, and a second track typed
+	 * in before that has to know this one is there.
+	 */
+	public async addAlbumTrack(
+		track: AlbumTrackAdd,
+		albumTracks: TrackEntity[]
+	): Promise<TrackEntity> {
+		const taken = new Set(albumTracks.map((existing) => existing.uid));
+		let free = 1;
+
+		while (taken.has(trackUidOf(track.albumUid, free))) {
+			free += 1;
+		}
+
+		const index =
+			albumTracks.reduce(
+				(highest, existing) => Math.max(highest, existing.index ?? 0),
+				0
+			) + 1;
+		const added: TrackEntity = {
+			uid: trackUidOf(track.albumUid, free),
+			albumUid: track.albumUid,
+			entityType: EntityTypeEnum.Track,
+			index,
+			position: track.position || String(index),
+			name: track.name,
+			duration: track.duration,
+			durationSec: toDurationSec(track.duration),
+			heading: null,
+			source: 'manual',
+		};
+
+		await this.firestoreSync.set(
+			doc(this.firestore, TRACK_FEATURE_KEY, added.uid),
+			TRACK_FEATURE_KEY,
+			added
+		);
+
+		return added;
 	}
 
 	/**

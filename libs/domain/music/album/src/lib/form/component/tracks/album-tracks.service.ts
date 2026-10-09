@@ -1,5 +1,11 @@
-import { Observable, firstValueFrom, of } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import {
+	BehaviorSubject,
+	Observable,
+	combineLatest,
+	firstValueFrom,
+	of,
+} from 'rxjs';
+import { map } from 'rxjs/operators';
 
 import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
@@ -21,6 +27,13 @@ export class AlbumTracksService {
 	private albumStateService = inject(AlbumStateService);
 
 	private params: AlbumTracksParams = { album: undefined, tracks: [] };
+	/**
+	 * Tracks added here that the list has not read back yet. The catalog sync
+	 * takes a couple of seconds to come round, and a tracklist is typed in
+	 * faster than that: until it carries them, the form does, so a second
+	 * track is numbered after the first rather than over it.
+	 */
+	private readonly pending$ = new BehaviorSubject<TrackEntity[]>([]);
 
 	public readonly error = signal<string | null>(null);
 	/** The track the form is asking about before it deletes it. */
@@ -35,23 +48,34 @@ export class AlbumTracksService {
 			return of(this.params);
 		}
 
-		return this.albumStateService.selectEntityById$(albumId).pipe(
-			switchMap((album) =>
-				this.albumStateService.listTracks$(albumId).pipe(
-					map((tracks) => {
-						// What one pressing added is a track of the album too,
-						// and comes back with this list. It is edited on that
-						// pressing's form, not here — and it must stay out of
-						// the count this form's Load button offers to replace.
-						this.params = {
-							album,
-							tracks: tracks.filter((track) => !track.releaseUid),
-						};
+		return combineLatest([
+			this.albumStateService.selectEntityById$(albumId),
+			this.albumStateService.listTracks$(albumId),
+			this.pending$,
+		]).pipe(
+			map(([album, tracks, pending]) => {
+				// What one pressing added is a track of the album too, and
+				// comes back with this list. It is edited on that pressing's
+				// form, not here — and it must stay out of the count this
+				// form's Load button offers to replace.
+				const albumTracks = tracks.filter((track) => !track.releaseUid);
+				const known = new Set(albumTracks.map((track) => track.uid));
+				const waiting = pending.filter(
+					(track) => !known.has(track.uid)
+				);
 
-						return this.params;
-					})
-				)
-			)
+				this.params = {
+					album,
+					tracks: [...albumTracks, ...waiting],
+				};
+
+				// What the list has caught up with is the list's again.
+				if (waiting.length !== pending.length) {
+					this.pending$.next(waiting);
+				}
+
+				return this.params;
+			})
 		);
 	}
 
@@ -74,6 +98,9 @@ export class AlbumTracksService {
 				this.params.tracks,
 				external.source
 			);
+			// The loaded list is the album's tracklist now, surplus deleted
+			// and all: nothing is waiting to be read back any more.
+			this.pending$.next([]);
 			this.externalTracks.set(null);
 		} catch (error) {
 			console.error(error);
@@ -118,6 +145,48 @@ export class AlbumTracksService {
 	}
 
 	/**
+	 * Adds a track to the album by hand, for a record no import lists. Where
+	 * it lands and what id it gets is the album's to decide, so only what was
+	 * typed is passed on.
+	 */
+	public async add(draft: {
+		position: string;
+		name: string;
+		duration: string;
+	}): Promise<boolean> {
+		const album = this.params.album;
+
+		if (!album || !draft.name.trim() || this.saving()) {
+			return false;
+		}
+		this.saving.set(true);
+		this.error.set(null);
+
+		try {
+			const added = await this.albumStateService.addAlbumTrack(
+				{
+					albumUid: album.uid,
+					position: draft.position.trim() || null,
+					name: draft.name.trim(),
+					duration: draft.duration.trim() || null,
+				},
+				this.params.tracks
+			);
+
+			this.pending$.next([...this.pending$.value, added]);
+
+			return true;
+		} catch (error) {
+			console.error(error);
+			this.error.set('Adding the track failed.');
+
+			return false;
+		} finally {
+			this.saving.set(false);
+		}
+	}
+
+	/**
 	 * Asks before deleting. Reloading the tracklist brings a deleted track
 	 * back, but not the lyrics written under it, so this is one of the few
 	 * things on the album form that cannot be undone by loading it again.
@@ -145,6 +214,13 @@ export class AlbumTracksService {
 			await this.albumStateService.deleteAlbumTrack(
 				track.uid,
 				this.params.tracks
+			);
+			// A track the list is still waiting for can be deleted before it
+			// ever arrives, and then nothing is coming.
+			this.pending$.next(
+				this.pending$.value.filter(
+					(waiting) => waiting.uid !== track.uid
+				)
 			);
 			this.removing.set(null);
 		} catch (error) {
