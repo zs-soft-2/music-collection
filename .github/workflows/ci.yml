@@ -127,8 +127,13 @@ jobs:
         run: npm ci
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.NPM_TOKEN }}
+      # A PrimeNG licenckulcsa a fejlesztőhöz kötött, ezért nincs a (nyilvános)
+      # repóban: a build innen, secretből kapja. Hiánya nem állítja meg a
+      # deployt, csak ott marad a lapokon az „Invalid PrimeUI License” sáv.
       - if: steps.tip.outputs.stale != 'true'
         run: npx nx build music-collection --configuration=${{ vars.BUILD_CONFIG }}
+        env:
+          MC_PRIMEUI_LICENSE: ${{ secrets.PRIMEUI_LICENSE }}
       # A hosting CSP-je hash-sel engedi az index.html két inline darabját
       # (téma-script, inline critical CSS onload). Ha a build mást írt ki,
       # a böngésző némán tiltaná le őket — stílus nélküli oldal, villanó

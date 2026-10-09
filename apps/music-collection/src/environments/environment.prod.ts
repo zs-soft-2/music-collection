@@ -1,3 +1,4 @@
+import { PRIMEUI_LICENSE } from './primeui-license';
 import { VERSION } from './version';
 
 export const environment = {
@@ -40,6 +41,15 @@ export const environment = {
 		 * először a böngésző (`FirebaseAnalyticsService`).
 		 */
 		enabled: true,
+	},
+	primeui: {
+		/**
+		 * Ugyanaz a generált kulcs, mint devben: nem környezetfüggő. A CI a
+		 * `MC_PRIMEUI_LICENSE` környezeti változóból kapja
+		 * (.github/workflows/ci.yml); enélkül a kitett oldalon is ott a
+		 * licenc-sáv.
+		 */
+		license: PRIMEUI_LICENSE,
 	},
 	type: 'production',
 	/** Base version + per-build suffix (tools/version/generate-version.mjs). */

@@ -341,6 +341,7 @@ ami a fejlesztő gcloud ADC-jében épp be van állítva, a prod apply is a dev�
 | `avatar/upload-assets.mjs`                                       | az avatar-ruhatár feltöltése Storage-ba                          |
 | `avatar/archive-source.mjs`                                      | a ruhatár 1024×1536-os mesterképeinek archiválása                |
 | `app-check/generate-debug-token.mjs`                             | App Check debug token a buildhez                                 |
+| `primeui/generate-license.mjs`                                   | PrimeNG licenckulcs a buildhez                                   |
 | `hosting/verify-csp.mjs`                                         | a hosting CSP inline-hash-ei egyeznek-e a build kimenetével      |
 
 A katalógus-scriptek olvasásigényesek (egy futás nagyságrendileg 25 ezer
@@ -398,6 +399,41 @@ még nincs App Check — ott előbb a mai buildet kell kideployolni.
 
 Az enforcement az apply után kb. 15 perccel lép életbe, és ugyanennyivel áll
 vissza.
+
+---
+
+## PrimeNG licenckulcs
+
+A PrimeNG 22 kereskedelmi könyvtár (PrimeUI): induláskor offline ellenőrzi a
+licencet, és ha nincs kulcs, minden lap jobb alsó sarkába kitesz egy piros
+„Invalid PrimeUI License” sávot. Más baja nincs — a komponensek működnek.
+
+Egy személyes projekt belefér az ingyenes **Community License** feltételeibe
+(1 M$ alatti árbevétel, 5-nél kevesebb fejlesztő, 10-nél kevesebb alkalmazott,
+3 M$ alatti külső tőke; magánszemély, diák, nonprofit külön is jogosult), de
+kulcsot így is igényelni kell, és évente — a jogosultság megerősítésével — meg
+kell újítani. A feltételek: <https://primeui.dev/licenses/community>; a kulcs a
+<https://primeui.store> oldalon áll. A pontos szöveg a csomagban is ott van
+(`node_modules/primeng/LICENSE.md`).
+
+A kulcs a fejlesztőhöz kötött, ez a repó pedig nyilvános, ezért nem kerül bele.
+A gépen egyszer kell letenni:
+
+```
+echo 'ide-jön-a-kulcs' > .primeui-license
+```
+
+A `nx serve`/`nx build`/`nx test` innen (vagy az `MC_PRIMEUI_LICENSE`
+környezeti változóból) generálja az
+`apps/music-collection/src/environments/primeui-license.ts` fájlt, amit a
+`providePrimeNG` megkap. A kitett oldalhoz a CI ugyanezt a `PRIMEUI_LICENSE`
+repository secretből veszi (`.github/workflows/ci.yml`); enélkül a deployolt
+appon is ott marad a sáv.
+
+A kulcsnak van lejárata: a token `exp`-jénél később _kiadott_ PrimeNG verziót
+már nem fedi (a Community kulcs 30 nap türelmi időt kap a lejárat után). Ha a
+sáv egy frissítés után jelenik meg, vagy megújítás kell, vagy a frissítést kell
+visszavonni.
 
 ---
 

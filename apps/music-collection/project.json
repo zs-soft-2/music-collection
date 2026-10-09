@@ -20,6 +20,13 @@
 				"command": "node tools/app-check/generate-debug-token.mjs"
 			}
 		},
+		"primeui-license": {
+			"executor": "nx:run-commands",
+			"cache": false,
+			"options": {
+				"command": "node tools/primeui/generate-license.mjs"
+			}
+		},
 		"build": {
 			"executor": "@angular-devkit/build-angular:browser",
 			"outputs": [
@@ -109,7 +116,8 @@
 			"dependsOn": [
 				"^build",
 				"version",
-				"app-check-token"
+				"app-check-token",
+				"primeui-license"
 			],
 			"inputs": [
 				"production",
@@ -122,6 +130,9 @@
 				},
 				{
 					"env": "MC_APP_CHECK_DEBUG_TOKEN"
+				},
+				{
+					"env": "MC_PRIMEUI_LICENSE"
 				}
 			]
 		},
@@ -142,7 +153,8 @@
 			"continuous": true,
 			"dependsOn": [
 				"version",
-				"app-check-token"
+				"app-check-token",
+				"primeui-license"
 			]
 		},
 		"extract-i18n": {
@@ -160,7 +172,8 @@
 			},
 			"dependsOn": [
 				"version",
-				"app-check-token"
+				"app-check-token",
+				"primeui-license"
 			]
 		},
 		"lint": {

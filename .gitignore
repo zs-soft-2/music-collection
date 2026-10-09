@@ -78,3 +78,9 @@ infra/environments/*/local.auto.tfvars
 # and the file it reads — the token is a secret, this repo is public
 /apps/music-collection/src/environments/app-check-debug-token.ts
 /.app-check-debug-token
+
+# Generated PrimeUI license key (tools/primeui/generate-license.mjs), and the
+# file it reads — the key is tied to the developer who claimed it, this repo
+# is public
+/apps/music-collection/src/environments/primeui-license.ts
+/.primeui-license

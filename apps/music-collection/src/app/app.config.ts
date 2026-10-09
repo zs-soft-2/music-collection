@@ -203,6 +203,10 @@ export const appConfig: ApplicationConfig = {
 		// build, so a slow machine's numbers can be read where it is slow.
 		provideEnvironmentInitializer(() => installPerformanceConsole()),
 		providePrimeNG({
+			// A PrimeNG 22 licencet ellenőriz induláskor: kulcs nélkül minden
+			// lapra kirak egy „Invalid PrimeUI License” sávot. A kulcs a
+			// repón kívülről jön (tools/primeui/generate-license.mjs).
+			license: environment.primeui.license,
 			theme: {
 				preset: MusicPreset,
 				options: {

@@ -5,6 +5,7 @@
  * a `--env prod` kapcsolóval kérik.
  */
 import { APP_CHECK_DEBUG_TOKEN } from './app-check-debug-token';
+import { PRIMEUI_LICENSE } from './primeui-license';
 import { VERSION } from './version';
 
 export const environment = {
@@ -55,6 +56,20 @@ export const environment = {
 		 * Kikapcsolva a sáv sem jelenik meg, és az SDK-t se tölti be semmi.
 		 */
 		enabled: true,
+	},
+	primeui: {
+		/**
+		 * A PrimeNG licenckulcsa. A könyvtár fizetős (PrimeUI); egy személyes
+		 * projekt belefér az ingyenes Community License korlátaiba, de kulcs
+		 * nélkül minden lap jobb alsó sarkába kiteszi az „Invalid PrimeUI
+		 * License” sávot.
+		 *
+		 * A kulcs a fejlesztőhöz kötött, ez a repó pedig nyilvános, ezért nem
+		 * itt áll, hanem generált fájlból jön
+		 * (tools/primeui/generate-license.mjs). Üresen minden működik, csak a
+		 * sáv látszik.
+		 */
+		license: PRIMEUI_LICENSE,
 	},
 	type: 'develop',
 	/** Base version + per-build suffix (tools/version/generate-version.mjs). */
