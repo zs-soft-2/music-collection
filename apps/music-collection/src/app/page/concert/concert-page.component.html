@@ -187,18 +187,17 @@
 												}}</span>
 											}
 
+											<!-- Ami modell javaslatából került ki,
+											     azon ott áll a jelzés — ugyanaz,
+											     mint a fotós felismerésen és a
+											     jelvényeken. -->
 											@if (concert.source === 'ai') {
-												<span
-													class="chip chip-ai"
-													[title]="
+												<mc-ai-mark
+													[hint]="
 														'page.concert.checked-hint'
 															| transloco
 													"
-													>{{
-														'page.concert.checked'
-															| transloco
-													}}</span
-												>
+												></mc-ai-mark>
 											}
 										</p>
 
@@ -221,7 +220,9 @@
 																act.artistUid
 															"
 														>
-															@if (act.artistUid) {
+															@if (
+																act.artistUid
+															) {
 																<a
 																	[routerLink]="[
 																		'/artist',

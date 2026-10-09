@@ -14,3 +14,9 @@ export const CONCERT_FEATURE_KEY = 'concert';
  * moves to `concert`, so the public page can never show a hallucination.
  */
 export const CONCERT_SUGGESTION_FEATURE_KEY = 'concert-suggestion';
+/**
+ * Where a venue a model proposed waits for an admin. Kept apart from `venue`
+ * for the same reason the concert suggestions are kept apart from `concert`:
+ * what the catalog offers has been looked at by someone.
+ */
+export const VENUE_SUGGESTION_FEATURE_KEY = 'venue-suggestion';

@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
+import { AiMarkComponent } from '../../shared/music-ui';
+
 import { ConcertPageStore } from './concert-page.store';
 import { toCountdownValue } from './concert.mapper';
 import { CONCERT_FILTER_OPTIONS, ConcertFilter } from './concert.model';
@@ -24,7 +26,7 @@ import { CONCERT_FILTER_OPTIONS, ConcertFilter } from './concert.model';
 	selector: 'mc-concert-page',
 	templateUrl: './concert-page.component.html',
 	styleUrls: ['./concert-page.component.scss'],
-	imports: [...I18N_IMPORTS, RouterLink],
+	imports: [...I18N_IMPORTS, AiMarkComponent, RouterLink],
 })
 export class ConcertPageComponent {
 	protected readonly store = inject(ConcertPageStore);

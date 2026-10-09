@@ -95,7 +95,8 @@
 			"cd": "CD",
 			"dvd": "DVD",
 			"vinyl": "Vinyl",
-			"other": "Other"
+			"other": "Other",
+			"cdbox": "CD box"
 		},
 		"country": {
 			"australia": "Australia",
@@ -436,7 +437,10 @@
 					"other": "{{count}} records found on the shelf"
 				},
 				"foundNone": "Nothing on the shelf answers that search.",
-				"foundMore": "+ {{count}} more, lit up on the shelf."
+				"foundMore": "+ {{count}} more, lit up on the shelf.",
+				"arrange": "Arrange",
+				"arrangeDone": "Done arranging",
+				"arrangeHint": "The units stand in one row, so a record only travels sideways. Click a spine and it comes into your hands — shift-click takes a whole run within a compartment — then drag them over, or tap the button on the compartment they are to stand in."
 			},
 			"groupFallback": "Collection",
 			"unknownStyle": "Unknown style",
@@ -1138,7 +1142,6 @@
 			"lineup": "Line-up",
 			"tickets": "Tickets",
 			"source": "Source",
-			"checked": "Checked",
 			"checked-hint": "A search-grounded suggestion that a person approved. The source opens from the bottom of the card.",
 			"filter": {
 				"all": "All",
@@ -1179,7 +1182,14 @@
 			"play-what-stands-here": "Play what stands here",
 			"play-what-stands-here2": "Play what stands here",
 			"open": "Open",
-			"rowSlot": "Row {{row}} · Slot {{slot}}"
+			"rowSlot": "Row {{row}} · Slot {{slot}}",
+			"in-hand": "records in hand",
+			"in-hand-how": "Drag them to a compartment, or tap the wall of the one they are to stand against.",
+			"put-down": "Put them down",
+			"put-left": "Against the left wall: {{where}}",
+			"put-right": "Against the right wall: {{where}}",
+			"put-bottom": "At the bottom: {{where}}",
+			"put-top": "At the top: {{where}}"
 		},
 		"networkDetails": {
 			"connections-in-view": "Connections in view",
@@ -1413,11 +1423,15 @@
 			"close": "Close",
 			"which-shelf": "Which shelf",
 			"which-compartment": "Which compartment",
+			"which-side": "Which side of it",
 			"position-in-the-compartment": "Position in the compartment",
 			"counted-from-the-left": "Counted from the left. Records you have not placed yourself keep filling the compartments you left free.",
+			"counted-from-the-right": "Counted from the right wall. The far end of the compartment stays put however the left-hand run grows.",
 			"take-off-the-shelf": "Take off the shelf",
 			"cancel": "Cancel",
-			"placeFailed": "Could not place it: {{error}}"
+			"placeFailed": "Could not place it: {{error}}",
+			"against-the-left-wall": "Left wall",
+			"against-the-right-wall": "Right wall"
 		},
 		"collectionViewToggle": {
 			"view": "View",
@@ -1609,6 +1623,7 @@
 			"unit": "Unit",
 			"select-a-unit": "Select a unit",
 			"compartment": "Compartment",
+			"side": "Side",
 			"filed-by-the-shelf": "Filed by the shelf",
 			"position": "Position",
 			"take-the-place-back": "Take the place back",
@@ -1687,7 +1702,10 @@
 		"albumTracks": {
 			"load": "Load",
 			"load-the-tracklist-from": "Load the tracklist from MusicBrainz",
-			"no-tracks-yet-load": "No tracks yet. Load them from MusicBrainz.",
+			"add": "Add",
+			"add-a-track-by": "Add a track by hand",
+			"add-this-track": "Add this track",
+			"no-tracks-yet-load": "No tracks yet. Load them from MusicBrainz, or add them by hand.",
 			"tracks-found": "Tracks found",
 			"source": "Source:",
 			"cancel": "Cancel",
@@ -2142,7 +2160,7 @@
 			"artwork-url": "Artwork URL",
 			"a-hand-made-image": "A hand-made image, for the rare badge that wants one. The generated pin below wins over it.",
 			"the-pin": "The pin",
-			"drawn-by-an-image": "Drawn by an image model, from this collection's own data. The style is the same on every badge — only the motif, the enamel, the patina and the rim follow the rule. Every image drawn is kept, so the pin can be any of them, today or next year.",
+			"drawn-by-an-image": "Drawn by an image model, from this collection's own data. The style is the same on every badge — only the motif, the enamel, the patina and the rim follow the rule. Every image drawn is kept, so the pin can be any of them, today or next year. A picture of your own can be a pin too: an uploaded image joins the gallery just the same, and becomes the badge at once.",
 			"save-the-collection-first": "Save the collection first: the prompt is built on the server from what is stored, not from this form.",
 			"the-collection-s-badge": "The collection's badge",
 			"the-badge2": "The badge",
@@ -2163,7 +2181,13 @@
 				"other": "{{count}} records"
 			},
 			"group": "Group",
-			"groupHint": "Which heading of the list it stands under. A discography is a band’s own pair of collections."
+			"groupHint": "Which heading of the list it stands under. A discography is a band’s own pair of collections.",
+			"upload-an-image": "Upload an image",
+			"uploading-the-image": "Uploading…",
+			"the-uploaded-artwork": "The uploaded artwork",
+			"take-the-pin-off": "Take the pin off",
+			"a-chosen-pin-covers": "The chosen pin covers the uploaded artwork. Take the pin off to let your own image be the badge.",
+			"my-own-picture-as-pin": "My own picture as the pin"
 		},
 		"profileSharing": {
 			"page": "Public collector page",
@@ -2246,7 +2270,20 @@
 			"how-the-copies-lie": "How the copies lie in a compartment",
 			"standing": "Standing",
 			"stacked": "Stacked",
-			"nothing-fits": "Nothing fits a compartment this low"
+			"nothing-fits": "Nothing fits a compartment this low",
+			"widths-title": "Spine widths",
+			"widths-intro": "How thick one case is on your shelf. The same number draws the spine and decides how many fit in a compartment — measure your own if they are not the standard ones.",
+			"one-pixel-narrower": "One pixel narrower",
+			"one-pixel-wider": "One pixel wider",
+			"standard": "Standard",
+			"spine": {
+				"vinyl": "Vinyl",
+				"boxset": "Vinyl box set",
+				"dvd": "DVD",
+				"cd": "CD",
+				"cdbox": "Multi-CD release",
+				"cassette": "Cassette"
+			}
 		},
 		"profileSpotify": {
 			"your-own-app-explained": "With your own Spotify app this player drives Spotify: the queue, the radio, the next track, your own speakers. Without it, Spotify's embedded frame on the album page is what is left — it plays in full if you are signed in to Spotify, but nothing here drives it. Spotify counts who signs in through an app — one app holds twenty-five people — which is why yours has to be your own.",
@@ -2279,7 +2316,19 @@
 			"dark": "Dark",
 			"light": "Light",
 			"standard": "Standard",
-			"fullWidth": "Full width"
+			"fullWidth": "Full width",
+			"mosaic": "Cover mosaic",
+			"mosaic-still": "Still",
+			"seconds-short": "s",
+			"a-collection-without-artwork": "A collection without artwork of its own is drawn as four covers. Set it moving and one tile turns over to another record of the set this often — only on the cards you are actually looking at, and on each card at its own moment, so the page does not change all at once.",
+			"mosaic-turn": "Change",
+			"turn": {
+				"fade": "Dissolve",
+				"slide": "Slide",
+				"flip": "Flip",
+				"zoom": "Zoom",
+				"random": "Random"
+			}
 		},
 		"profileDemoTour": {
 			"the-launcher": "Launcher",
@@ -2792,6 +2841,16 @@
 			"your-average": "Your average",
 			"what-you-name-first": "What you would name first",
 			"nothing-rated-yet": "No stars yet. Put a record on, or give one its stars on its own page."
+		},
+		"aiMark": {
+			"label": "Model",
+			"hint": {
+				"proposed": "A model proposed this from a search. Until somebody opens the cited source it is a candidate, not a claim.",
+				"approved": "It came from a model's proposal: somebody opened the cited source and approved it.",
+				"load": "This load asks a model, leaning on a search, and it is billed per request. What it finds waits for approval.",
+				"photo": "A model reads the photo. What it recognises is a proposal — the decision is yours.",
+				"image": "An image model drew this picture from the data itself."
+			}
 		}
 	},
 	"admin": {
@@ -3134,26 +3193,29 @@
 		},
 		"concert": {
 			"title": "Concerts",
-			"intro": "The concerts of the catalog's bands. Three loads fill them: the venues from MusicBrainz, the mbid-anchored concerts from the same place, and the rest from a model's search-grounded suggestions — those wait here for approval.",
+			"intro": "The concerts of the catalog's bands. Four loads fill them: the venues from MusicBrainz and, beyond those, the ones a model lists from a search; the mbid-anchored concerts from MusicBrainz too, and the rest from that same model's proposals — both the venues and the nights it proposes wait here for a decision.",
 			"loads": "Loads",
 			"load": "Load",
 			"ask": "Ask for suggestions",
-			"load-venues": "Venues",
+			"load-venues": "Venues from MusicBrainz",
 			"load-venues-hint": "A country's places from MusicBrainz. Slow (a request a second), but rarely needed: the hall stays where it was.",
-			"venues-loaded": "{{venues}} concert venues out of {{scanned}} places, {{written}} written.",
 			"load-concerts": "Concerts from MusicBrainz",
 			"load-concerts-hint": "The catalog's artists that have a MusicBrainz id. What it finds is anchored on an mbid, so it goes out without approval.",
-			"concerts-loaded": "{{events}} events for {{artists}} artists, {{written}} written, {{deleted}} cleared.",
-			"load-ai": "Suggestions from a model",
-			"load-ai-hint": "One paid request per artist, grounded on Google Search. What it proposes waits on the Suggestions tab until someone opens the cited source.",
-			"ai-loaded": "{{seen}} nights in {{venues}} venues' programmes, {{suggested}} of them suggested ({{duplicates}} already held). {{left}} requests left of today's cap.",
+			"load-ai": "Concerts from a model",
+			"load-ai-hint": "One paid request per venue, grounded on Google Search. What it proposes waits on the Concert proposals tab until someone opens the cited source.",
+			"ai-venues": "Venues asked",
+			"ai-venues-all": "In turn, where the round stands",
+			"ai-venues-selected": "{0} venues picked",
+			"ai-venues-hint": "Left empty, the run carries on where the last one stopped.",
+			"ai-venues-cost": "{{count}} venues, one paid request each.",
 			"window": "Window (days)",
 			"window-hint": "How far ahead the loads ask.",
 			"sections": "Sections",
 			"tab": {
-				"suggestions": "Suggestions",
+				"suggestions": "Concert proposals",
 				"concerts": "Concerts",
-				"venues": "Venues"
+				"venues": "Venues",
+				"venue-suggestions": "Venue proposals"
 			},
 			"type": {
 				"concert": "Concert",
@@ -3231,7 +3293,63 @@
 			"venues-a-run": "Venues per run",
 			"venues-a-run-hint": "How many venues' programmes one run asks for — and how many requests it spends.",
 			"daily-limit": "Daily request cap",
-			"daily-limit-hint": "The last brake: no mistake should cost a month's budget."
+			"daily-limit-hint": "The last brake: no mistake should cost a month's budget.",
+			"country": "Country",
+			"country-hint": "All four loads run against this country.",
+			"load-ai-venues": "Venues from a model",
+			"load-ai-venues-hint": "Where MusicBrainz is thin — which, outside Hungary, it usually is — a model lists the country's concert venues from a search. One paid request per question, and what it finds waits on the Venue proposals tab.",
+			"ai-cities": "Cities to ask about",
+			"ai-cities-all": "The whole country, in one request",
+			"ai-cities-hint": "Separate them with commas. Left empty the country is asked as a whole, in a single request — that is what names the big halls.",
+			"ai-cities-cost": "{{count}} cities, one paid request each.",
+			"no-pending-venues": "No venue is waiting for a decision. The “Venues from a model” load asks for more.",
+			"approving-venue": "Reviewing a proposed venue",
+			"approve-and-add": "Approve and file",
+			"retire": "Retire",
+			"restore": "Put back",
+			"venue-held-by": "{{count}} concert(s) are filed at {{name}}, so it cannot be deleted. Retire it instead: it is no longer offered on the forms, and the concerts stay as they are.",
+			"counting-venue-use": "Counting what points at this venue…",
+			"venue-use-unknown": "There was no answer on whether any concert is filed at {{name}}. The delete can still be attempted: if anything is filed there, the server refuses it.",
+			"run": {
+				"running": "Running… {{elapsed}}",
+				"done": "Done",
+				"failed": "Failed",
+				"meta": "{{country}} · {{time}}",
+				"meta-running": "{{country}} · started {{time}}",
+				"empty-venues": "MusicBrainz holds no concert venue for this country. Ask the model for venues instead.",
+				"empty-ai-venues": "The model named no venue at all. Ask it city by city: the country question gives the big halls, the cities give the clubs.",
+				"empty-concerts": "MusicBrainz knows of no coming night for the catalog's artists — in this country, this many days ahead. It holds two Hungarian events in total, which is why the model is here.",
+				"empty-ai": "The model found no night in the programmes it was asked about. Try other venues, or widen the window.",
+				"nothing-new": "An answer came back, but nothing new came of it: what it named is either already held or was turned down once before.",
+				"failed-questions": "The model answered none of {{count}} questions — that many requests left the cap for nothing. The error: {{message}}",
+				"failed-questions-plain": "The model answered none of {{count}} questions — that many requests left the cap for nothing.",
+				"row": {
+					"scanned": "Places from MusicBrainz",
+					"venues": "Of those, concert venues",
+					"written": "Written",
+					"unchanged": "Unchanged",
+					"artists": "Artists asked about",
+					"events": "Events scanned",
+					"matched": "A catalog artist's",
+					"deleted": "Past, cleared",
+					"venues-created": "Venues it had to create",
+					"asked": "Questions",
+					"queried": "Venues asked about",
+					"seen": "Named by the answer",
+					"proposed": "A catalog artist's",
+					"suggested": "Waiting for approval",
+					"duplicates": "Already held",
+					"rejected": "Turned down before",
+					"discarded": "Dropped by the filter",
+					"left": "Left of today's cap",
+					"model": "Model",
+					"failed": "Questions left unanswered"
+				}
+			},
+			"cost": {
+				"free": "free",
+				"paid": "paid"
+			}
 		}
 	},
 	"fact": {

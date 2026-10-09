@@ -18,8 +18,8 @@ import { createTestEnvironment } from './test-environment';
 
 const VENUE_PATH = 'venue/mbid-park';
 const CONCERT_PATH = 'concert/artist-tank_2026-11-12_budapest-park';
-const SUGGESTION_PATH =
-	'concert-suggestion/artist-tank_2026-12-05_a38';
+const SUGGESTION_PATH = 'concert-suggestion/artist-tank_2026-12-05_a38';
+const VENUE_SUGGESTION_PATH = 'venue-suggestion/arena-wien-wien';
 const ADMIN = 'admin-1';
 const COLLECTOR = 'collector-1';
 
@@ -88,6 +88,28 @@ const suggestion = (fields: Record<string, unknown> = {}) => ({
 	...fields,
 });
 
+/** What `suggestVenues` writes: a venue the model proposed, waiting. */
+const venueSuggestion = (fields: Record<string, unknown> = {}) => ({
+	...venue({
+		address: 'Baumgasse 80',
+		city: 'Wien',
+		countryCode: 'AT',
+		musicBrainzId: null,
+		name: 'Arena Wien',
+		source: 'ai',
+		uid: 'arena-wien-wien',
+	}),
+	confidence: 0.8,
+	model: 'gemini-2.5-flash',
+	note: 'Nagy klub a Duna-csatorna mellett.',
+	reviewState: 'pending',
+	reviewedAt: null,
+	reviewedBy: null,
+	sourceUrl: 'https://example.test/arena',
+	suggestedAt: 1_760_000_000_000,
+	...fields,
+});
+
 let testEnv: RulesTestEnvironment;
 
 beforeAll(async () => {
@@ -126,6 +148,7 @@ beforeEach(async () => {
 		await setDoc(doc(admin, VENUE_PATH), venue());
 		await setDoc(doc(admin, CONCERT_PATH), concert());
 		await setDoc(doc(admin, SUGGESTION_PATH), suggestion());
+		await setDoc(doc(admin, VENUE_SUGGESTION_PATH), venueSuggestion());
 	});
 });
 
@@ -140,7 +163,10 @@ describe('venue/{venueId}', () => {
 
 	it('is written by whoever may edit the venues', async () => {
 		await assertSucceeds(
-			setDoc(doc(as(ADMIN), 'venue/a38'), venue({ name: 'A38', uid: 'a38' }))
+			setDoc(
+				doc(as(ADMIN), 'venue/a38'),
+				venue({ name: 'A38', uid: 'a38' })
+			)
 		);
 		await assertSucceeds(deleteDoc(doc(as(ADMIN), VENUE_PATH)));
 	});
@@ -151,7 +177,9 @@ describe('venue/{venueId}', () => {
 	});
 
 	it('refuses a venue without a name or a country', async () => {
-		await assertFails(setDoc(doc(as(ADMIN), VENUE_PATH), venue({ name: '' })));
+		await assertFails(
+			setDoc(doc(as(ADMIN), VENUE_PATH), venue({ name: '' }))
+		);
 		await assertFails(
 			setDoc(doc(as(ADMIN), VENUE_PATH), venue({ countryCode: 'HUN' }))
 		);
@@ -177,7 +205,10 @@ describe('concert/{concertId}', () => {
 
 	it('is written by whoever may file concerts', async () => {
 		await assertSucceeds(
-			setDoc(doc(as(ADMIN), CONCERT_PATH), concert({ startsAtTime: '21:00' }))
+			setDoc(
+				doc(as(ADMIN), CONCERT_PATH),
+				concert({ startsAtTime: '21:00' })
+			)
 		);
 		await assertSucceeds(deleteDoc(doc(as(ADMIN), CONCERT_PATH)));
 	});
@@ -201,13 +232,19 @@ describe('concert/{concertId}', () => {
 
 	it('refuses a start time that is not a time', async () => {
 		await assertFails(
-			setDoc(doc(as(ADMIN), CONCERT_PATH), concert({ startsAtTime: '8pm' }))
+			setDoc(
+				doc(as(ADMIN), CONCERT_PATH),
+				concert({ startsAtTime: '8pm' })
+			)
 		);
 	});
 
 	it('refuses an unknown kind or source', async () => {
 		await assertFails(
-			setDoc(doc(as(ADMIN), CONCERT_PATH), concert({ eventType: 'party' }))
+			setDoc(
+				doc(as(ADMIN), CONCERT_PATH),
+				concert({ eventType: 'party' })
+			)
 		);
 		await assertFails(
 			setDoc(doc(as(ADMIN), CONCERT_PATH), concert({ source: 'guess' }))
@@ -355,6 +392,102 @@ describe('concert-suggestion/{suggestionId}', () => {
 					'sync/concert-suggestion/deletion/concert-suggestion~artist-tank_2026-12-05_a38'
 				),
 				{ path: SUGGESTION_PATH, deletedAt: serverTimestamp() }
+			)
+		);
+	});
+});
+
+describe('venue-suggestion/{suggestionId}', () => {
+	/**
+	 * Kept out of sight for the same reason the concert suggestions are: a
+	 * search-grounded model can name a club that closed two years ago, and a
+	 * venue is what every concert row points at.
+	 */
+	it('is not readable by a visitor or a collector', async () => {
+		await assertFails(getDoc(doc(asVisitor(), VENUE_SUGGESTION_PATH)));
+		await assertFails(getDoc(doc(as(COLLECTOR), VENUE_SUGGESTION_PATH)));
+	});
+
+	it('is readable by whoever reviews venues', async () => {
+		await assertSucceeds(getDoc(doc(as(ADMIN), VENUE_SUGGESTION_PATH)));
+		await assertSucceeds(
+			getDocs(collection(as(ADMIN), 'venue-suggestion'))
+		);
+	});
+
+	/** Only the function proposes; a client that could write here could plant one. */
+	it('is not created by anybody, admin included', async () => {
+		await assertFails(
+			setDoc(
+				doc(as(ADMIN), 'venue-suggestion/planted'),
+				venueSuggestion()
+			)
+		);
+	});
+
+	it('takes the decision from whoever reviews venues', async () => {
+		await assertSucceeds(
+			updateDoc(doc(as(ADMIN), VENUE_SUGGESTION_PATH), {
+				reviewState: 'rejected',
+				reviewedAt: 1_760_000_100_000,
+				reviewedBy: ADMIN,
+				updatedAt: serverTimestamp(),
+			})
+		);
+	});
+
+	/**
+	 * The proposal itself is not editable here. What needs correcting is
+	 * corrected on the way into `venue`, where the document is validated.
+	 */
+	it('refuses an edit of the proposal beside the decision', async () => {
+		await assertFails(
+			updateDoc(doc(as(ADMIN), VENUE_SUGGESTION_PATH), {
+				name: 'Arena Wien Open Air',
+				reviewState: 'rejected',
+				updatedAt: serverTimestamp(),
+			})
+		);
+	});
+
+	it('refuses a review state nothing knows', async () => {
+		await assertFails(
+			updateDoc(doc(as(ADMIN), VENUE_SUGGESTION_PATH), {
+				reviewState: 'approved',
+				updatedAt: serverTimestamp(),
+			})
+		);
+	});
+
+	/** Approving files the venue and drops the proposal, in one batch. */
+	it('is deleted by whoever reviews venues', async () => {
+		await assertSucceeds(deleteDoc(doc(as(ADMIN), VENUE_SUGGESTION_PATH)));
+		await assertFails(deleteDoc(doc(as(COLLECTOR), VENUE_SUGGESTION_PATH)));
+	});
+
+	/**
+	 * Approving drops the proposal, which leaves a tombstone so the other
+	 * clients take it off their list too. Without `venue-suggestion` among the
+	 * sync resources the marker is refused — and approving then fails halfway,
+	 * with the venue filed and the proposal still on the list.
+	 */
+	it('lets whoever approves leave the tombstone of the proposal', async () => {
+		await assertSucceeds(
+			setDoc(
+				doc(
+					as(ADMIN),
+					'sync/venue-suggestion/deletion/venue-suggestion~arena-wien-wien'
+				),
+				{ path: VENUE_SUGGESTION_PATH, deletedAt: serverTimestamp() }
+			)
+		);
+		await assertFails(
+			setDoc(
+				doc(
+					as(COLLECTOR),
+					'sync/venue-suggestion/deletion/venue-suggestion~arena-wien-wien'
+				),
+				{ path: VENUE_SUGGESTION_PATH, deletedAt: serverTimestamp() }
 			)
 		);
 	});

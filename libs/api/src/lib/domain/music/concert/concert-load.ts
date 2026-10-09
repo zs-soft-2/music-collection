@@ -7,7 +7,11 @@
  * The client therefore sends what to load, never what to write.
  */
 
-/** Hungary for now. The loads take the country, so widening is a parameter. */
+/**
+ * Where the admin page opens. Not the only country any more — the page has a
+ * picker, and every load takes the country — but a default it must have, and
+ * this is the one the catalog's own bands play in.
+ */
 export const DEFAULT_CONCERT_COUNTRY = 'HU';
 
 /**
@@ -77,6 +81,13 @@ export interface SuggestConcertsResult {
 	rejected: number;
 	/** Dropped: outside the window, the country, or missing a day. */
 	discarded: number;
+	/**
+	 * Venues the model did not answer about at all. Optional for the same
+	 * reason as on the venue run: an older function does not send it.
+	 */
+	failed?: number;
+	/** What the first of those failures said. */
+	failure?: string | null;
 	/** Which model the gateway picked; recorded beside each proposal. */
 	model: string;
 	/** What the run cost against the daily cap, and what is left of it. */
@@ -117,3 +128,50 @@ export const DEFAULT_CONCERT_AI_SETTINGS: ConcertAiSettings = {
 	venuesARun: 5,
 	dailyRequestLimit: 10,
 };
+
+/**
+ * What a venue proposal run asks about.
+ *
+ * The country is the whole question in the simple case, and that is one
+ * request: a model that searched for a country's concert halls names the
+ * twenty or thirty that matter. Cities are for going deeper — one request per
+ * city — and that is what fills in a country beyond its capital.
+ */
+export interface SuggestVenuesInput {
+	countryCode?: string;
+	/**
+	 * Which cities to ask about, one request each. Empty asks about the
+	 * country as a whole, which is one request.
+	 */
+	cities?: string[];
+}
+
+export interface SuggestVenuesResult {
+	/** How many questions went out: a country is one, a city each is one. */
+	asked: number;
+	/** Places those answers named, whatever they turned out to be. */
+	venuesSeen: number;
+	/** Of those, the ones now waiting for an admin. */
+	suggested: number;
+	/** Dropped: the catalog already holds the venue. */
+	duplicates: number;
+	/** Dropped: proposed before and turned down. */
+	rejected: number;
+	/** Dropped: no name, or not a place a concert is played. */
+	discarded: number;
+	/**
+	 * Questions the model did not answer at all.
+	 *
+	 * Optional because a client can be talking to a function deployed before
+	 * this field existed. Without it a run that failed and a run that came
+	 * back empty are the same zero on screen, and the reason sits in a log
+	 * only whoever opens the Cloud Console will read.
+	 */
+	failed?: number;
+	/** What the first of those failures said. */
+	failure?: string | null;
+	/** Which model the gateway picked; recorded beside each proposal. */
+	model: string;
+	requestsUsed: number;
+	requestsLeft: number;
+}

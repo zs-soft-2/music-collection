@@ -95,7 +95,8 @@
 			"cd": "CD",
 			"dvd": "DVD",
 			"vinyl": "Vinyl",
-			"other": "Sonstige"
+			"other": "Sonstige",
+			"cdbox": "CD-Box"
 		},
 		"country": {
 			"australia": "Australien",
@@ -436,7 +437,10 @@
 					"other": "{{count}} Platten im Regal gefunden"
 				},
 				"foundNone": "Zu dieser Suche steht nichts im Regal.",
-				"foundMore": "+ {{count}} weitere, im Regal hervorgehoben."
+				"foundMore": "+ {{count}} weitere, im Regal hervorgehoben.",
+				"arrange": "Ordnen",
+				"arrangeDone": "Fertig geordnet",
+				"arrangeHint": "Die Regale stehen in einer Reihe, eine Platte wandert nur noch seitwärts. Klick auf einen Rücken nimmt sie in die Hand — Shift-Klick eine ganze Reihe innerhalb eines Fachs —, dann zieh sie hinüber oder tippe auf die Schaltfläche des Zielfachs."
 			},
 			"groupFallback": "Sammlung",
 			"unknownStyle": "Unbekannter Stil",
@@ -1138,7 +1142,6 @@
 			"lineup": "Line-up",
 			"tickets": "Tickets",
 			"source": "Quelle",
-			"checked": "Geprüft",
 			"checked-hint": "Ein suchgestützter Vorschlag, den jemand bestätigt hat. Die Quelle öffnet sich unten auf der Karte.",
 			"filter": {
 				"all": "Alle",
@@ -1179,7 +1182,14 @@
 			"play-what-stands-here": "Abspielen, was hier steht",
 			"play-what-stands-here2": "Abspielen, was hier steht",
 			"open": "Öffnen",
-			"rowSlot": "Reihe {{row}} · Fach {{slot}}"
+			"rowSlot": "Reihe {{row}} · Fach {{slot}}",
+			"in-hand": "Platten in der Hand",
+			"in-hand-how": "Zieh sie in ein Fach oder tippe auf die Wand, an die sie sollen.",
+			"put-down": "Ablegen",
+			"put-left": "An die linke Wand: {{where}}",
+			"put-right": "An die rechte Wand: {{where}}",
+			"put-bottom": "Nach unten: {{where}}",
+			"put-top": "Nach oben: {{where}}"
 		},
 		"networkDetails": {
 			"connections-in-view": "Sichtbare Verbindungen",
@@ -1413,11 +1423,15 @@
 			"close": "Schließen",
 			"which-shelf": "Welches Regal",
 			"which-compartment": "Welches Fach",
+			"which-side": "Welche Seite des Fachs",
 			"position-in-the-compartment": "Position im Fach",
 			"counted-from-the-left": "Von links gezählt. Platten, die du nicht selbst eingeräumt hast, füllen weiterhin die freigelassenen Fächer.",
+			"counted-from-the-right": "Von rechts gezählt. Das rechte Ende des Fachs bleibt stehen, auch wenn die linke Reihe wächst.",
 			"take-off-the-shelf": "Aus dem Regal nehmen",
 			"cancel": "Abbrechen",
-			"placeFailed": "Konnte nicht eingeräumt werden: {{error}}"
+			"placeFailed": "Konnte nicht eingeräumt werden: {{error}}",
+			"against-the-left-wall": "Linke Seite",
+			"against-the-right-wall": "Rechte Seite"
 		},
 		"collectionViewToggle": {
 			"view": "Ansicht",
@@ -1609,6 +1623,7 @@
 			"unit": "Element",
 			"select-a-unit": "Element wählen",
 			"compartment": "Fach",
+			"side": "Seite",
 			"filed-by-the-shelf": "Vom Regal eingeordnet",
 			"position": "Position",
 			"take-the-place-back": "Platz zurücknehmen",
@@ -1687,7 +1702,10 @@
 		"albumTracks": {
 			"load": "Laden",
 			"load-the-tracklist-from": "Titelliste von MusicBrainz laden",
-			"no-tracks-yet-load": "Noch keine Titel. Lade sie von MusicBrainz.",
+			"add": "Hinzufügen",
+			"add-a-track-by": "Titel von Hand hinzufügen",
+			"add-this-track": "Diesen Titel hinzufügen",
+			"no-tracks-yet-load": "Noch keine Titel. Lade sie von MusicBrainz oder füge sie von Hand hinzu.",
 			"tracks-found": "Gefundene Titel",
 			"source": "Quelle:",
 			"cancel": "Abbrechen",
@@ -2142,7 +2160,7 @@
 			"artwork-url": "Grafik-URL",
 			"a-hand-made-image": "Ein handgemachtes Bild, für das seltene Abzeichen, das eines will. Der erzeugte Pin darunter sticht es.",
 			"the-pin": "Der Pin",
-			"drawn-by-an-image": "Von einem Bildmodell gezeichnet, aus den eigenen Daten dieser Kollektion. Der Stil ist auf jedem Abzeichen derselbe — nur Motiv, Emaille, Patina und Rand folgen der Regel. Jedes gezeichnete Bild bleibt erhalten, der Pin kann also jedes davon sein, heute oder nächstes Jahr.",
+			"drawn-by-an-image": "Von einem Bildmodell gezeichnet, aus den eigenen Daten dieser Kollektion. Der Stil ist auf jedem Abzeichen derselbe — nur Motiv, Emaille, Patina und Rand folgen der Regel. Jedes gezeichnete Bild bleibt erhalten, der Pin kann also jedes davon sein, heute oder nächstes Jahr. Auch ein eigenes Bild kann Pin sein: Das hochgeladene Bild kommt ebenso in die Galerie und wird sofort zum Abzeichen.",
 			"save-the-collection-first": "Speichere die Kollektion zuerst: der Prompt wird auf dem Server aus dem Gespeicherten gebaut, nicht aus diesem Formular.",
 			"the-collection-s-badge": "Das Abzeichen der Kollektion",
 			"the-badge2": "Das Abzeichen",
@@ -2163,7 +2181,13 @@
 				"other": "{{count}} Platten"
 			},
 			"group": "Gruppe",
-			"groupHint": "Unter welcher Überschrift sie in der Liste steht. Eine Diskografie ist das eigene Paar einer Band."
+			"groupHint": "Unter welcher Überschrift sie in der Liste steht. Eine Diskografie ist das eigene Paar einer Band.",
+			"upload-an-image": "Bild hochladen",
+			"uploading-the-image": "Wird hochgeladen…",
+			"the-uploaded-artwork": "Das hochgeladene Bild",
+			"take-the-pin-off": "Pin abnehmen",
+			"a-chosen-pin-covers": "Der gewählte Pin verdeckt das hochgeladene Bild. Nimm den Pin ab, damit dein eigenes Bild das Abzeichen wird.",
+			"my-own-picture-as-pin": "Eigenes Bild als Pin"
 		},
 		"profileSharing": {
 			"page": "Öffentliche Sammlerseite",
@@ -2246,7 +2270,20 @@
 			"how-the-copies-lie": "Wie die Exemplare im Fach liegen",
 			"standing": "Stehend",
 			"stacked": "Gestapelt",
-			"nothing-fits": "In ein so niedriges Fach passt nichts"
+			"nothing-fits": "In ein so niedriges Fach passt nichts",
+			"widths-title": "Rückenbreiten",
+			"widths-intro": "Wie dick eine Hülle in deinem Regal ist. Dieselbe Zahl zeichnet den Rücken und entscheidet, wie viele in ein Fach passen — miss deine eigenen, wenn sie nicht dem Standard entsprechen.",
+			"one-pixel-narrower": "Ein Pixel schmaler",
+			"one-pixel-wider": "Ein Pixel breiter",
+			"standard": "Standard",
+			"spine": {
+				"vinyl": "Vinyl",
+				"boxset": "Vinyl-Box",
+				"dvd": "DVD",
+				"cd": "CD",
+				"cdbox": "Mehr-CD-Ausgabe",
+				"cassette": "Kassette"
+			}
 		},
 		"profileSpotify": {
 			"your-own-app-explained": "Mit deiner eigenen Spotify-App steuert dieser Player Spotify: Warteschlange, Radio, nächster Titel, deine eigenen Lautsprecher. Ohne sie bleibt Spotifys eingebetteter Rahmen auf der Albumseite — er spielt vollständig, wenn du bei Spotify angemeldet bist, gesteuert wird er von hier aus aber nicht. Spotify zählt, wer sich über eine App anmeldet — eine App fasst fünfundzwanzig Leute —, deshalb muss es deine eigene sein.",
@@ -2279,7 +2316,19 @@
 			"dark": "Dunkel",
 			"light": "Hell",
 			"standard": "Standard",
-			"fullWidth": "Volle Breite"
+			"fullWidth": "Volle Breite",
+			"mosaic": "Cover-Mosaik",
+			"mosaic-still": "Steht",
+			"seconds-short": "Sek.",
+			"a-collection-without-artwork": "Eine Sammlung ohne eigenes Bild wird als vier Cover gezeichnet. In Bewegung wechselt in diesem Takt jeweils eine Kachel zu einer weiteren Platte der Sammlung — nur auf den Karten, die gerade zu sehen sind, und auf jeder Karte zu ihrem eigenen Zeitpunkt, damit nicht die ganze Seite auf einmal wechselt.",
+			"mosaic-turn": "Wechsel",
+			"turn": {
+				"fade": "Überblenden",
+				"slide": "Schieben",
+				"flip": "Umschlagen",
+				"zoom": "Heranzoomen",
+				"random": "Zufällig"
+			}
 		},
 		"profileDemoTour": {
 			"the-launcher": "Starter",
@@ -2792,6 +2841,16 @@
 			"your-average": "Dein Schnitt",
 			"what-you-name-first": "Was du zuerst nennen würdest",
 			"nothing-rated-yet": "Noch kein Stern. Leg eine Platte auf oder bewerte sie auf ihrer eigenen Seite."
+		},
+		"aiMark": {
+			"label": "Modell",
+			"hint": {
+				"proposed": "Das hat ein Modell auf Basis einer Suche vorgeschlagen. Solange niemand die genannte Quelle geöffnet hat, ist es ein Kandidat, keine Aussage.",
+				"approved": "Aus dem Vorschlag eines Modells übernommen: jemand hat die genannte Quelle geöffnet und zugestimmt.",
+				"load": "Dieser Abruf fragt ein Modell mit Suche, und er wird pro Anfrage abgerechnet. Was er findet, wartet auf die Freigabe.",
+				"photo": "Ein Modell liest das Foto. Was es erkennt, ist ein Vorschlag — entschieden wird von dir.",
+				"image": "Ein Bildmodell hat dieses Bild aus den eigenen Daten gezeichnet."
+			}
 		}
 	},
 	"admin": {
@@ -3134,26 +3193,29 @@
 		},
 		"concert": {
 			"title": "Konzerte",
-			"intro": "Die Konzerte der Bands aus dem Katalog. Drei Ladeläufe füllen sie: die Spielstätten von MusicBrainz, die mbid-verankerten Konzerte von derselben Stelle, und der Rest aus den suchgestützten Vorschlägen eines Modells — die warten hier auf Bestätigung.",
+			"intro": "Die Konzerte der Bands aus dem Katalog. Vier Ladeläufe füllen sie: die Spielstätten von MusicBrainz und darüber hinaus die, die ein Modell aus einer Suche aufzählt; die mbid-verankerten Konzerte ebenfalls von dort, der Rest aus den Vorschlägen desselben Modells — vorgeschlagene Spielstätten und Abende warten beide hier auf eine Entscheidung.",
 			"loads": "Ladeläufe",
 			"load": "Laden",
 			"ask": "Vorschläge anfragen",
-			"load-venues": "Spielstätten",
+			"load-venues": "Spielstätten von MusicBrainz",
 			"load-venues-hint": "Die Orte eines Landes von MusicBrainz. Langsam (eine Anfrage pro Sekunde), aber selten nötig: die Halle bleibt, wo sie war.",
-			"venues-loaded": "{{venues}} Spielstätten aus {{scanned}} Orten, {{written}} geschrieben.",
 			"load-concerts": "Konzerte von MusicBrainz",
 			"load-concerts-hint": "Die Künstler des Katalogs, die eine MusicBrainz-Id haben. Was dabei gefunden wird, hängt an einer mbid und geht darum ohne Bestätigung raus.",
-			"concerts-loaded": "{{events}} Termine für {{artists}} Künstler, {{written}} geschrieben, {{deleted}} entfernt.",
-			"load-ai": "Vorschläge von einem Modell",
-			"load-ai-hint": "Eine kostenpflichtige Anfrage je Künstler, gestützt auf die Google-Suche. Was sie vorschlägt, wartet im Reiter Vorschläge, bis jemand die genannte Quelle öffnet.",
-			"ai-loaded": "{{seen}} Abende in den Programmen von {{venues}} Spielstätten, davon {{suggested}} vorgeschlagen ({{duplicates}} schon vorhanden). {{left}} Anfragen bleiben vom heutigen Limit.",
+			"load-ai": "Konzerte von einem Modell",
+			"load-ai-hint": "Eine kostenpflichtige Anfrage je Spielstätte, gestützt auf die Google-Suche. Was sie vorschlägt, wartet im Reiter Konzert-Vorschläge, bis jemand die genannte Quelle öffnet.",
+			"ai-venues": "Abgefragte Spielstätten",
+			"ai-venues-all": "Der Reihe nach, wo die Runde steht",
+			"ai-venues-selected": "{0} Spielstätten gewählt",
+			"ai-venues-hint": "Leer gelassen, läuft die Runde dort weiter, wo der letzte Lauf endete.",
+			"ai-venues-cost": "{{count}} Spielstätten, je eine kostenpflichtige Anfrage.",
 			"window": "Zeitfenster (Tage)",
 			"window-hint": "Wie weit die Ladeläufe vorausfragen.",
 			"sections": "Bereiche",
 			"tab": {
-				"suggestions": "Vorschläge",
+				"suggestions": "Konzert-Vorschläge",
 				"concerts": "Konzerte",
-				"venues": "Spielstätten"
+				"venues": "Spielstätten",
+				"venue-suggestions": "Spielstätten-Vorschläge"
 			},
 			"type": {
 				"concert": "Konzert",
@@ -3231,7 +3293,63 @@
 			"venues-a-run": "Spielstätten je Lauf",
 			"venues-a-run-hint": "Nach wie vielen Spielstätten-Programmen ein Lauf fragt — und wie viele Anfragen er verbraucht.",
 			"daily-limit": "Tägliches Anfragelimit",
-			"daily-limit-hint": "Die letzte Bremse: Kein Fehler soll ein Monatsbudget kosten."
+			"daily-limit-hint": "Die letzte Bremse: Kein Fehler soll ein Monatsbudget kosten.",
+			"country": "Land",
+			"country-hint": "Alle vier Ladeläufe gelten für dieses Land.",
+			"load-ai-venues": "Spielstätten von einem Modell",
+			"load-ai-venues-hint": "Wo MusicBrainz dünn ist — außerhalb Ungarns meist —, zählt ein Modell die Konzertorte des Landes aus einer Suche auf. Eine kostenpflichtige Anfrage je Frage, und das Ergebnis wartet im Reiter „Spielstätten-Vorschläge“.",
+			"ai-cities": "Gefragte Städte",
+			"ai-cities-all": "Das ganze Land, in einer Anfrage",
+			"ai-cities-hint": "Mit Komma trennen. Leer gelassen fragen wir das ganze Land in einer einzigen Anfrage — daraus kommen die großen Häuser.",
+			"ai-cities-cost": "{{count}} Städte, je eine kostenpflichtige Anfrage.",
+			"no-pending-venues": "Keine Spielstätte wartet auf eine Entscheidung. Der Ladelauf „Spielstätten von einem Modell“ holt neue.",
+			"approving-venue": "Vorgeschlagene Spielstätte prüfen",
+			"approve-and-add": "Freigeben und aufnehmen",
+			"retire": "Zurückziehen",
+			"restore": "Zurückholen",
+			"venue-held-by": "An {{name}} sind {{count}} Konzert(e) abgelegt, sie lässt sich darum nicht löschen. Zieh sie stattdessen zurück: in den Formularen erscheint sie nicht mehr, die Konzerte bleiben.",
+			"counting-venue-use": "Es wird gezählt, was auf diese Spielstätte verweist…",
+			"venue-use-unknown": "Es kam keine Antwort darauf, ob an {{name}} ein Konzert abgelegt ist. Der Löschversuch ist möglich: ist dort etwas abgelegt, lehnt der Server ab.",
+			"run": {
+				"running": "Läuft… {{elapsed}}",
+				"done": "Fertig",
+				"failed": "Fehlgeschlagen",
+				"meta": "{{country}} · {{time}}",
+				"meta-running": "{{country}} · gestartet {{time}}",
+				"empty-venues": "MusicBrainz kennt für dieses Land keine Konzert-Spielstätte. Frag stattdessen das Modell nach Spielstätten.",
+				"empty-ai-venues": "Das Modell hat keine einzige Spielstätte genannt. Frag stadtweise nach: Die Landesfrage bringt die großen Häuser, die Städte die Clubs.",
+				"empty-concerts": "MusicBrainz kennt keinen kommenden Auftritt der Künstler des Katalogs — in diesem Land, für so viele Tage im Voraus. Es kennt insgesamt zwei ungarische Ereignisse, darum gibt es das Modell.",
+				"empty-ai": "Das Modell hat in den abgefragten Programmen keinen Abend gefunden. Versuch andere Spielstätten oder ein größeres Fenster.",
+				"nothing-new": "Eine Antwort kam, nur nichts Neues: Was sie nennt, ist entweder schon da oder wurde schon einmal abgelehnt.",
+				"failed-questions": "Das Modell hat {{count}} Fragen nicht beantwortet — so viele Anfragen gingen ergebnislos vom Limit ab. Der Fehler: {{message}}",
+				"failed-questions-plain": "Das Modell hat {{count}} Fragen nicht beantwortet — so viele Anfragen gingen ergebnislos vom Limit ab.",
+				"row": {
+					"scanned": "Orte von MusicBrainz",
+					"venues": "Davon Spielstätten",
+					"written": "Geschrieben",
+					"unchanged": "Unverändert",
+					"artists": "Abgefragte Künstler",
+					"events": "Geprüfte Ereignisse",
+					"matched": "Von Katalog-Künstlern",
+					"deleted": "Vergangen, gelöscht",
+					"venues-created": "Neu angelegte Spielstätten",
+					"asked": "Fragen",
+					"queried": "Abgefragte Spielstätten",
+					"seen": "Von der Antwort genannt",
+					"proposed": "Von Katalog-Künstlern",
+					"suggested": "Wartet auf Freigabe",
+					"duplicates": "Schon vorhanden",
+					"rejected": "Früher abgelehnt",
+					"discarded": "Vom Filter verworfen",
+					"left": "Vom Tageslimit übrig",
+					"model": "Modell",
+					"failed": "Unbeantwortete Fragen"
+				}
+			},
+			"cost": {
+				"free": "kostenlos",
+				"paid": "kostenpflichtig"
+			}
 		}
 	},
 	"fact": {

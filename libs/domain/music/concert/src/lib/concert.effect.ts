@@ -21,10 +21,15 @@ import {
 	LoadVenuesResult,
 	SuggestConcertsInput,
 	SuggestConcertsResult,
+	SuggestVenuesInput,
+	SuggestVenuesResult,
 	VenueDraft,
 	VenueEntity,
 	VenueRepository,
+	VenueSuggestionEntity,
+	VenueUsage,
 	isComingConcert,
+	isVenueInUse,
 } from '@music-collection/api';
 
 /** A venue a concert is filed at cannot be deleted; it is retired instead. */
@@ -106,7 +111,9 @@ export class ConcertEffect {
 	): Observable<{ concert: ConcertEntity; venue: VenueEntity | null }[]> {
 		return combineLatest([this.coming$(from), this.venues$]).pipe(
 			map(([concerts, venues]) => {
-				const byUid = new Map(venues.map((venue) => [venue.uid, venue]));
+				const byUid = new Map(
+					venues.map((venue) => [venue.uid, venue])
+				);
 
 				return concerts.map((concert) => ({
 					concert,
@@ -166,6 +173,34 @@ export class ConcertEffect {
 			shareReplay({ bufferSize: 1, refCount: false })
 		);
 
+	/**
+	 * Every venue proposal, pending and decided both — read once and shared,
+	 * like the concert ones, and for the same reason: an admin's two lists are
+	 * one query over the collection.
+	 */
+	private readonly venueProposals$: Observable<VenueSuggestionEntity[]> =
+		this.venues
+			.suggestions$()
+			.pipe(shareReplay({ bufferSize: 1, refCount: false }));
+
+	/** The venues waiting for an admin, the most certain first. */
+	public readonly pendingVenues$: Observable<VenueSuggestionEntity[]> =
+		this.venueProposals$.pipe(
+			map((suggestions) =>
+				suggestions
+					.filter(
+						(suggestion) => suggestion.reviewState === 'pending'
+					)
+					.sort(
+						(left, right) =>
+							(right.confidence ?? 0) - (left.confidence ?? 0) ||
+							left.name.localeCompare(right.name, 'hu')
+					)
+			),
+			startWith([] as VenueSuggestionEntity[]),
+			shareReplay({ bufferSize: 1, refCount: false })
+		);
+
 	public create$(concert: ConcertDraft): Observable<ConcertEntity> {
 		return this.concerts.create$(concert);
 	}
@@ -202,11 +237,33 @@ export class ConcertEffect {
 		return this.venues.create$(venue);
 	}
 
+	/**
+	 * Saves an edit on top of the stored venue, not in place of it: what the
+	 * form has no field for — the mbid, where the venue came from, the day it
+	 * closed — belongs to the document and has to survive the edit.
+	 */
 	public updateVenue$(
-		uid: string,
-		venue: VenueDraft
+		venue: VenueEntity,
+		draft: VenueDraft
 	): Observable<VenueEntity> {
-		return this.venues.update$(uid, venue);
+		return this.venues.update$(venue, draft);
+	}
+
+	/**
+	 * Takes the venue off the forms, or puts it back. This is the answer to a
+	 * venue that may not be deleted, and it is one write: the concerts already
+	 * filed there go on pointing at a place that still has its address.
+	 */
+	public retireVenue$(venue: VenueEntity, active: boolean): Observable<void> {
+		return this.venues.retire$(venue, active);
+	}
+
+	/**
+	 * What is filed at the venue — this is what the delete dialogue says, and
+	 * what it offers instead of deleting.
+	 */
+	public venueUsage$(uid: string): Observable<VenueUsage> {
+		return this.venues.usage$(uid);
 	}
 
 	/**
@@ -214,15 +271,41 @@ export class ConcertEffect {
 	 * concerts would be left pointing at nothing, and nothing on the client
 	 * could put the venue back. Retiring it takes it off the forms without
 	 * touching what is already saved.
+	 *
+	 * Asked again here rather than trusted from the dialogue: between opening
+	 * the dialogue and pressing the button a load may have filed a concert at
+	 * the venue, and this is the client's last word before the write. The
+	 * rules have theirs after it.
 	 */
 	public deleteVenue$(venue: VenueEntity): Observable<void> {
-		return this.venues.isInUse$(venue.uid).pipe(
-			switchMap((inUse) =>
-				inUse
-					? throwError(() => new Error(VENUE_IN_USE))
-					: this.venues.delete$(venue)
-			)
-		);
+		return this.venues
+			.usage$(venue.uid)
+			.pipe(
+				switchMap((usage) =>
+					isVenueInUse(usage)
+						? throwError(() => new Error(VENUE_IN_USE))
+						: this.venues.delete$(venue)
+				)
+			);
+	}
+
+	/** What a model proposes as a country's venues (paid, server work). */
+	public suggestVenues$(
+		input: SuggestVenuesInput
+	): Observable<SuggestVenuesResult> {
+		return this.venues.suggest$(input);
+	}
+
+	/** Files a proposed venue, with the admin's corrections where there are any. */
+	public approveVenue$(
+		suggestion: VenueSuggestionEntity,
+		draft?: VenueDraft
+	): Observable<VenueEntity> {
+		return this.venues.approveSuggestion$(suggestion, draft);
+	}
+
+	public rejectVenue$(suggestion: VenueSuggestionEntity): Observable<void> {
+		return this.venues.rejectSuggestion$(suggestion);
 	}
 
 	public loadVenues$(countryCode: string): Observable<LoadVenuesResult> {

@@ -3,99 +3,14 @@
 		<h1>{{ 'admin.concert.title' | transloco }}</h1>
 		<p>{{ 'admin.concert.intro' | transloco }}</p>
 	</div>
-</header>
-
-<!-- A három betöltés. Külön gombok, mert nem ugyanannyiba kerülnek. -->
-<section class="loads mc-card" [attr.aria-label]="'admin.concert.loads' | transloco">
-	<div class="load">
-		<div class="load-text">
-			<h2>{{ 'admin.concert.load-venues' | transloco }}</h2>
-			<p>{{ 'admin.concert.load-venues-hint' | transloco }}</p>
-			@if (store.loadedVenues(); as result) {
-				<small class="load-result" role="status">{{
-					'admin.concert.venues-loaded'
-						| transloco
-							: {
-									scanned: result.scanned,
-									venues: result.venues,
-									written: result.written,
-							  }
-				}}</small>
-			}
-		</div>
-		<p-button
-			[label]="'admin.concert.load' | transloco"
-			icon="pi pi-download"
-			severity="secondary"
-			[outlined]="true"
-			[loading]="store.running() === 'venues'"
-			[disabled]="store.isBusy()"
-			(onClick)="store.loadVenues()"
-		></p-button>
-	</div>
-
-	<div class="load">
-		<div class="load-text">
-			<h2>{{ 'admin.concert.load-concerts' | transloco }}</h2>
-			<p>{{ 'admin.concert.load-concerts-hint' | transloco }}</p>
-			@if (store.loadedConcerts(); as result) {
-				<small class="load-result" role="status">{{
-					'admin.concert.concerts-loaded'
-						| transloco
-							: {
-									artists: result.artistsQueried,
-									events: result.eventsScanned,
-									written: result.written,
-									deleted: result.deleted,
-							  }
-				}}</small>
-			}
-		</div>
-		<p-button
-			[label]="'admin.concert.load' | transloco"
-			icon="pi pi-download"
-			severity="secondary"
-			[outlined]="true"
-			[loading]="store.running() === 'concerts'"
-			[disabled]="store.isBusy()"
-			(onClick)="store.loadConcerts()"
-		></p-button>
-	</div>
-
-	<div class="load is-ai">
-		<div class="load-text">
-			<h2>{{ 'admin.concert.load-ai' | transloco }}</h2>
-			<p>{{ 'admin.concert.load-ai-hint' | transloco }}</p>
-			@if (store.suggested(); as result) {
-				<small class="load-result" role="status">{{
-					'admin.concert.ai-loaded'
-						| transloco
-							: {
-									venues: result.venuesQueried,
-									seen: result.concertsSeen,
-									suggested: result.suggested,
-									duplicates: result.duplicates,
-									left: result.requestsLeft,
-							  }
-				}}</small>
-			}
-		</div>
-		<p-button
-			[label]="'admin.concert.ask' | transloco"
-			icon="pi pi-sparkles"
-			[loading]="store.running() === 'ai'"
-			[disabled]="store.isBusy()"
-			(onClick)="store.suggest()"
-		></p-button>
-	</div>
-
-	<div class="load-settings">
+	<!-- A keret nem egy betöltésé, hanem a lapé: mind a két fizetős futás
+	     abból a napi keretből kér. Ezért a lapfejben áll, nem a sávban. -->
+	<div class="mc-page-actions">
 		<p-button
 			[label]="'admin.concert.budget' | transloco"
 			icon="pi pi-sliders-h"
 			severity="secondary"
-			[text]="true"
-			size="small"
+			[outlined]="true"
 			[disabled]="store.isBusy()"
 			(onClick)="
 				store.isSettingsOpen()
@@ -104,24 +19,275 @@
 			"
 		></p-button>
 	</div>
+</header>
 
-	<div class="load-window mc-field">
-		<label for="concert-days">{{
-			'admin.concert.window' | transloco
-		}}</label>
-		<input
-			id="concert-days"
-			type="number"
-			pInputText
-			min="1"
-			max="365"
-			[value]="store.days()"
-			aria-describedby="concert-days-hint"
-			(input)="store.setDays(+value($event))"
-		/>
-		<small id="concert-days-hint">{{
-			'admin.concert.window-hint' | transloco
-		}}</small>
+<!-- A négy betöltés. Külön gombok, mert nem ugyanannyiba kerülnek: kettő
+     ingyenes MusicBrainz-kérés, kettő fizetős modellkérdés — utóbbi kettőn ott
+     van a modell-jelzés is. Mind a négy ugyanarra az országra fut.
+
+     A rács két oszlopa a két forrás: balra, ami a MusicBrainzről jön, jobbra,
+     amit a modell ad. Egy sorban az áll, ami ugyanazt tölti — előbb a
+     helyszínek, aztán a koncertek -, és a fizetős futás hatóköre a saját
+     kártyáján ül, nem külön mezőként valahol a sávban. -->
+<!-- Amit a négy kártya egyformán mond a saját futásáról: fut-e, mióta, mi
+     jött belőle, és melyik országra. Egy sablon mind a négyre, mert az a
+     kérdés, hogy mi történt, mindegyiknél ugyanaz — csak a számok mások. -->
+<ng-template #loadReport let-key>
+	@if (report(key); as run) {
+		<div
+			class="load-report"
+			[class.is-running]="run.state === 'running'"
+			[class.is-failed]="run.state === 'error'"
+			role="status"
+			aria-live="polite"
+		>
+			<p class="load-report-head">
+				<span class="load-report-dot" aria-hidden="true"></span>
+				<strong>{{ run.headline }}</strong>
+				<small>{{ run.meta }}</small>
+			</p>
+			@if (run.error) {
+				<p class="load-report-error">{{ run.error }}</p>
+			} @else if (run.note) {
+				<p
+					class="load-report-note"
+					[class.is-failed-note]="run.noteFailed"
+				>
+					{{ run.note }}
+				</p>
+			}
+			@if (run.rows.length) {
+				<dl class="load-report-rows">
+					@for (row of run.rows; track row.label) {
+						<div [class.is-lead]="row.lead">
+							<dt>{{ row.label }}</dt>
+							<dd>{{ row.value }}</dd>
+						</div>
+					}
+				</dl>
+			}
+		</div>
+	}
+</ng-template>
+
+<section class="loads" [attr.aria-label]="'admin.concert.loads' | transloco">
+	<!-- Ami mind a négy betöltésre áll, az a sáv élén ül. Egy ország: két
+	     betöltés két országra a katalógusba olyan koncertet írna, aminek a
+	     helyszíne nincs is meg. -->
+	<div class="load-scope mc-card">
+		<div class="load-country mc-field">
+			<label for="concert-country">{{
+				'admin.concert.country' | transloco
+			}}</label>
+			<p-select
+				inputId="concert-country"
+				[options]="countryOptions()"
+				optionLabel="label"
+				optionValue="value"
+				[filter]="true"
+				filterBy="label"
+				[disabled]="store.isBusy()"
+				[ngModel]="store.countryCode()"
+				[ngModelOptions]="{ standalone: true }"
+				(ngModelChange)="store.setCountry($event)"
+				aria-describedby="concert-country-hint"
+			></p-select>
+			<small id="concert-country-hint">{{
+				'admin.concert.country-hint' | transloco
+			}}</small>
+		</div>
+
+		<div class="load-window mc-field">
+			<label for="concert-days">{{
+				'admin.concert.window' | transloco
+			}}</label>
+			<input
+				id="concert-days"
+				type="number"
+				pInputText
+				min="1"
+				max="365"
+				[value]="store.days()"
+				aria-describedby="concert-days-hint"
+				(input)="store.setDays(+value($event))"
+			/>
+			<small id="concert-days-hint">{{
+				'admin.concert.window-hint' | transloco
+			}}</small>
+		</div>
+	</div>
+
+	<div class="load-grid">
+		<article class="load mc-card">
+			<h2>
+				{{ 'admin.concert.load-venues' | transloco }}
+				<span class="load-cost">{{
+					'admin.concert.cost.free' | transloco
+				}}</span>
+			</h2>
+			<p>{{ 'admin.concert.load-venues-hint' | transloco }}</p>
+			<ng-container
+				[ngTemplateOutlet]="loadReport"
+				[ngTemplateOutletContext]="{ $implicit: 'venues' }"
+			/>
+			<div class="load-run">
+				<p-button
+					[label]="'admin.concert.load' | transloco"
+					icon="pi pi-download"
+					severity="secondary"
+					[outlined]="true"
+					[loading]="store.running() === 'venues'"
+					[disabled]="store.isBusy()"
+					(onClick)="store.loadVenues()"
+				></p-button>
+			</div>
+		</article>
+
+		<!-- Ugyanaz a helyszínlista, más forrásból: ahol a MusicBrainz szegény
+		     (és Magyarországon kívül jellemzően az), ott a modell hozza a
+		     klubokat — jóváhagyásra. Üresen hagyott városokkal az egész
+		     országot kérdezzük egy kérésből; városonként egy-egy továbbit.
+		     Nem választó, mert nincs miből választani: az országnak még
+		     nincs helyszíne. -->
+		<article class="load mc-card is-ai">
+			<h2>
+				{{ 'admin.concert.load-ai-venues' | transloco }}
+				<mc-ai-mark
+					[compact]="true"
+					[hint]="'ui.aiMark.hint.load' | transloco"
+				></mc-ai-mark>
+				<span class="load-cost is-paid">{{
+					'admin.concert.cost.paid' | transloco
+				}}</span>
+			</h2>
+			<p>{{ 'admin.concert.load-ai-venues-hint' | transloco }}</p>
+			<div class="load-ai-cities mc-field">
+				<label for="concert-ai-cities">{{
+					'admin.concert.ai-cities' | transloco
+				}}</label>
+				<input
+					id="concert-ai-cities"
+					type="text"
+					pInputText
+					[value]="store.askCities().join(', ')"
+					[disabled]="store.isBusy()"
+					[placeholder]="'admin.concert.ai-cities-all' | transloco"
+					aria-describedby="concert-ai-cities-hint"
+					(change)="onCities($event)"
+				/>
+				<small id="concert-ai-cities-hint">
+					@if (store.askCities().length; as picked) {
+						{{
+							'admin.concert.ai-cities-cost'
+								| transloco: { count: picked }
+						}}
+					} @else {
+						{{ 'admin.concert.ai-cities-hint' | transloco }}
+					}
+				</small>
+			</div>
+			<ng-container
+				[ngTemplateOutlet]="loadReport"
+				[ngTemplateOutletContext]="{ $implicit: 'ai-venues' }"
+			/>
+			<div class="load-run">
+				<p-button
+					[label]="'admin.concert.ask' | transloco"
+					icon="pi pi-sparkles"
+					[loading]="store.running() === 'ai-venues'"
+					[disabled]="store.isBusy()"
+					(onClick)="store.suggestVenues()"
+				></p-button>
+			</div>
+		</article>
+
+		<article class="load mc-card">
+			<h2>
+				{{ 'admin.concert.load-concerts' | transloco }}
+				<span class="load-cost">{{
+					'admin.concert.cost.free' | transloco
+				}}</span>
+			</h2>
+			<p>{{ 'admin.concert.load-concerts-hint' | transloco }}</p>
+			<ng-container
+				[ngTemplateOutlet]="loadReport"
+				[ngTemplateOutletContext]="{ $implicit: 'concerts' }"
+			/>
+			<div class="load-run">
+				<p-button
+					[label]="'admin.concert.load' | transloco"
+					icon="pi pi-download"
+					severity="secondary"
+					[outlined]="true"
+					[loading]="store.running() === 'concerts'"
+					[disabled]="store.isBusy()"
+					(onClick)="store.loadConcerts()"
+				></p-button>
+			</div>
+		</article>
+
+		<!-- Melyik helyekről kérdezzen. Üresen hagyva a szerver viszi tovább a
+		     kört; megnevezve pontosan ezek programját kéri le, egy kérés
+		     mindegyik. -->
+		<article class="load mc-card is-ai">
+			<h2>
+				{{ 'admin.concert.load-ai' | transloco }}
+				<mc-ai-mark
+					[compact]="true"
+					[hint]="'ui.aiMark.hint.load' | transloco"
+				></mc-ai-mark>
+				<span class="load-cost is-paid">{{
+					'admin.concert.cost.paid' | transloco
+				}}</span>
+			</h2>
+			<p>{{ 'admin.concert.load-ai-hint' | transloco }}</p>
+			<div class="load-ai-venues mc-field">
+				<label for="concert-ai-venues">{{
+					'admin.concert.ai-venues' | transloco
+				}}</label>
+				<p-multiselect
+					inputId="concert-ai-venues"
+					[options]="venueOptions()"
+					optionLabel="label"
+					optionValue="value"
+					[filter]="true"
+					[showToggleAll]="false"
+					[maxSelectedLabels]="1"
+					[selectedItemsLabel]="
+						'admin.concert.ai-venues-selected' | transloco
+					"
+					[placeholder]="'admin.concert.ai-venues-all' | transloco"
+					[disabled]="store.isBusy()"
+					[ngModel]="store.askVenueUids()"
+					[ngModelOptions]="{ standalone: true }"
+					(ngModelChange)="store.setAskVenues($event)"
+					aria-describedby="concert-ai-venues-hint"
+				></p-multiselect>
+				<small id="concert-ai-venues-hint">
+					@if (store.askVenueUids().length; as picked) {
+						{{
+							'admin.concert.ai-venues-cost'
+								| transloco: { count: picked }
+						}}
+					} @else {
+						{{ 'admin.concert.ai-venues-hint' | transloco }}
+					}
+				</small>
+			</div>
+			<ng-container
+				[ngTemplateOutlet]="loadReport"
+				[ngTemplateOutletContext]="{ $implicit: 'ai' }"
+			/>
+			<div class="load-run">
+				<p-button
+					[label]="'admin.concert.ask' | transloco"
+					icon="pi pi-sparkles"
+					[loading]="store.running() === 'ai'"
+					[disabled]="store.isBusy()"
+					(onClick)="store.suggest()"
+				></p-button>
+			</div>
+		</article>
 	</div>
 </section>
 
@@ -232,18 +398,10 @@
 	}
 }
 
+<!-- Ami itt áll, az már csak az írásoké: egy betöltés hibája a saját
+     kártyáján szólal meg, a gomb mellett, ami elindította. -->
 @if (store.error(); as error) {
-	<small class="mc-form-note is-error" role="alert">
-		@if (error === inUse) {
-			{{ 'admin.concert.venue-in-use' | transloco }}
-		} @else if (error.includes('concert-ai-disabled')) {
-			{{ 'admin.concert.ai-disabled' | transloco }}
-		} @else if (error.includes('concert-ai-quota')) {
-			{{ 'admin.concert.ai-quota' | transloco }}
-		} @else {
-			{{ error }}
-		}
-	</small>
+	<p class="mc-form-note is-error" role="alert">{{ errorText(error) }}</p>
 }
 
 <div
@@ -263,6 +421,9 @@
 			{{ tab.labelKey | transloco }}
 			@if (tab.key === 'suggestions' && store.pendingCount()) {
 				<span class="badge">{{ store.pendingCount() }}</span>
+			}
+			@if (tab.key === 'venue-suggestions' && store.pendingVenueCount()) {
+				<span class="badge">{{ store.pendingVenueCount() }}</span>
 			}
 		</button>
 	}
@@ -538,7 +699,9 @@
 						[value]="edit.draft.sourceUrl ?? ''"
 						aria-describedby="concert-source-hint"
 						(input)="
-							store.setConcertField({ sourceUrl: optional($event) })
+							store.setConcertField({
+								sourceUrl: optional($event),
+							})
 						"
 					/>
 					<small id="concert-source-hint">{{
@@ -584,6 +747,161 @@
 				"
 				icon="pi pi-check"
 				[disabled]="!store.canSaveConcert() || store.isSaving()"
+				[loading]="store.isSaving()"
+			></p-button>
+		</div>
+	</form>
+}
+
+<!-- ── Helyszín szerkesztése ───────────────────────────────────────────────
+     A fülektől függetlenül áll, mint a koncert-szerkesztő: egy javaslatot a
+     javaslat-fülről is lehet javítás után jóváhagyni, és ott a „Helyszínek"
+     fül alatt rejtőző form úgy látszott volna, mintha a gomb nem tenne
+     semmit. -->
+@if (store.venueEditor(); as edit) {
+	<form
+		class="mc-form"
+		[attr.aria-label]="'admin.concert.venue-editor' | transloco"
+		(ngSubmit)="store.saveVenue()"
+	>
+		<section class="mc-form-section" aria-labelledby="venue-editor">
+			<h2 id="venue-editor">
+				@if (edit.suggestion) {
+					{{ 'admin.concert.approving-venue' | transloco }}
+				} @else if (edit.uid) {
+					{{ 'admin.concert.editing-venue' | transloco }}
+				} @else {
+					{{ 'admin.concert.adding-venue' | transloco }}
+				}
+			</h2>
+
+			<!-- Amit a modell javasolt, azt jelezzük, és a forrását is: ez az,
+			     amit jóváhagyás előtt érdemes megnyitni. -->
+			@if (edit.suggestion; as suggestion) {
+				<p class="venue-editor-source">
+					<mc-ai-mark
+						[hint]="'ui.aiMark.hint.proposed' | transloco"
+					></mc-ai-mark>
+					@if (suggestion.sourceUrl) {
+						<a
+							[href]="suggestion.sourceUrl"
+							target="_blank"
+							rel="noopener noreferrer"
+							>{{ 'admin.concert.open-source' | transloco }}</a
+						>
+					} @else {
+						<span class="chip chip-warn">{{
+							'admin.concert.no-source' | transloco
+						}}</span>
+					}
+					@if (suggestion.note) {
+						<span class="venue-editor-note">{{
+							suggestion.note
+						}}</span>
+					}
+				</p>
+			}
+
+			<div class="mc-form-grid">
+				<div class="mc-field">
+					<label for="venue-name">{{
+						'admin.concert.venue-name' | transloco
+					}}</label>
+					<input
+						id="venue-name"
+						type="text"
+						pInputText
+						[value]="edit.draft.name"
+						(input)="store.setVenueField({ name: value($event) })"
+					/>
+				</div>
+
+				<div class="mc-field">
+					<label for="venue-city">{{
+						'admin.concert.city' | transloco
+					}}</label>
+					<input
+						id="venue-city"
+						type="text"
+						pInputText
+						[value]="edit.draft.city ?? ''"
+						(input)="
+							store.setVenueField({ city: optional($event) })
+						"
+					/>
+				</div>
+
+				<div class="mc-field is-wide">
+					<label for="venue-address">{{
+						'admin.concert.address' | transloco
+					}}</label>
+					<input
+						id="venue-address"
+						type="text"
+						pInputText
+						[value]="edit.draft.address ?? ''"
+						(input)="
+							store.setVenueField({
+								address: optional($event),
+							})
+						"
+					/>
+				</div>
+
+				<div class="mc-field">
+					<label for="venue-type">{{
+						'admin.concert.venue-type' | transloco
+					}}</label>
+					<input
+						id="venue-type"
+						type="text"
+						pInputText
+						[value]="edit.draft.type ?? ''"
+						(input)="
+							store.setVenueField({ type: optional($event) })
+						"
+					/>
+				</div>
+
+				<div class="mc-field is-wide">
+					<div class="concert-switch">
+						<p-checkbox
+							inputId="venue-active"
+							[binary]="true"
+							[ngModel]="edit.draft.active"
+							[ngModelOptions]="{ standalone: true }"
+							(onChange)="
+								store.setVenueField({
+									active: $event.checked,
+								})
+							"
+						></p-checkbox>
+						<label for="venue-active">{{
+							'admin.concert.offered-on-forms' | transloco
+						}}</label>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<div class="mc-form-actions">
+			<p-button
+				[label]="'admin.concert.cancel' | transloco"
+				severity="secondary"
+				[outlined]="true"
+				[disabled]="store.isSaving()"
+				(onClick)="store.cancelVenue()"
+			></p-button>
+			<p-button
+				type="submit"
+				[label]="
+					(edit.suggestion
+						? 'admin.concert.approve-and-add'
+						: 'admin.concert.save'
+					) | transloco
+				"
+				icon="pi pi-check"
+				[disabled]="!store.canSaveVenue() || store.isSaving()"
 				[loading]="store.isSaving()"
 			></p-button>
 		</div>
@@ -651,7 +969,9 @@
 									[href]="suggestion.ticketUrl"
 									target="_blank"
 									rel="noopener noreferrer"
-									>{{ 'admin.concert.tickets' | transloco }}</a
+									>{{
+										'admin.concert.tickets' | transloco
+									}}</a
 								>
 							}
 						</p>
@@ -662,7 +982,7 @@
 							[label]="'admin.concert.approve' | transloco"
 							icon="pi pi-check"
 							size="small"
-							[disabled]="store.isBusy()"
+							[disabled]="store.isSaving()"
 							(onClick)="store.approve(suggestion)"
 						></p-button>
 						<p-button
@@ -671,7 +991,7 @@
 							size="small"
 							severity="secondary"
 							[outlined]="true"
-							[disabled]="store.isBusy()"
+							[disabled]="store.isSaving()"
 							(onClick)="store.editSuggestion(suggestion)"
 						></p-button>
 						<p-button
@@ -680,8 +1000,99 @@
 							size="small"
 							severity="danger"
 							[outlined]="true"
-							[disabled]="store.isBusy()"
+							[disabled]="store.isSaving()"
 							(onClick)="store.reject(suggestion)"
+						></p-button>
+					</div>
+				</li>
+			}
+		</ul>
+	}
+}
+
+<!-- ── Helyszín-javaslatok ─────────────────────────────────────────────── -->
+@if (store.tab() === 'venue-suggestions') {
+	@if (!store.venueSuggestions().length) {
+		<p class="mc-form-note">
+			{{ 'admin.concert.no-pending-venues' | transloco }}
+		</p>
+	} @else {
+		<ul class="suggestions">
+			@for (
+				suggestion of store.venueSuggestions();
+				track suggestion.uid
+			) {
+				<li class="suggestion mc-card">
+					<div class="suggestion-when">
+						<mc-ai-mark
+							[hint]="'ui.aiMark.hint.proposed' | transloco"
+						></mc-ai-mark>
+						@if (confidence(suggestion); as certainty) {
+							<span class="chip">{{ certainty }}</span>
+						}
+					</div>
+
+					<div class="suggestion-text">
+						<h3>{{ suggestion.name }}</h3>
+						<p class="suggestion-where">
+							@if (suggestion.city) {
+								{{ suggestion.city }}
+							}
+							@if (suggestion.type) {
+								<span class="chip">{{ suggestion.type }}</span>
+							}
+						</p>
+						@if (suggestion.address) {
+							<p class="suggestion-note">
+								{{ suggestion.address }}
+							</p>
+						}
+						@if (suggestion.note) {
+							<p class="suggestion-note">{{ suggestion.note }}</p>
+						}
+						<p class="suggestion-links">
+							@if (suggestion.sourceUrl) {
+								<a
+									[href]="suggestion.sourceUrl"
+									target="_blank"
+									rel="noopener noreferrer"
+									>{{
+										'admin.concert.open-source' | transloco
+									}}</a
+								>
+							} @else {
+								<span class="chip chip-warn">{{
+									'admin.concert.no-source' | transloco
+								}}</span>
+							}
+						</p>
+					</div>
+
+					<div class="suggestion-actions">
+						<p-button
+							[label]="'admin.concert.approve' | transloco"
+							icon="pi pi-check"
+							size="small"
+							[disabled]="store.isSaving()"
+							(onClick)="store.approveVenue(suggestion)"
+						></p-button>
+						<p-button
+							[label]="'admin.concert.fix' | transloco"
+							icon="pi pi-pencil"
+							size="small"
+							severity="secondary"
+							[outlined]="true"
+							[disabled]="store.isSaving()"
+							(onClick)="store.editVenueSuggestion(suggestion)"
+						></p-button>
+						<p-button
+							[label]="'admin.concert.reject' | transloco"
+							icon="pi pi-times"
+							size="small"
+							severity="danger"
+							[outlined]="true"
+							[disabled]="store.isSaving()"
+							(onClick)="store.rejectVenue(suggestion)"
 						></p-button>
 					</div>
 				</li>
@@ -697,7 +1108,9 @@
 			{{ 'common.loading' | transloco }}
 		</p>
 	} @else if (!store.coming().length) {
-		<p class="mc-form-note">{{ 'admin.concert.no-concerts' | transloco }}</p>
+		<p class="mc-form-note">
+			{{ 'admin.concert.no-concerts' | transloco }}
+		</p>
 	} @else {
 		<div class="mc-card">
 			<div class="mc-table-tools">
@@ -736,7 +1149,9 @@
 								<th scope="row">
 									{{ concert.startsAt }}
 									@if (concert.startsAtTime) {
-										<small>{{ concert.startsAtTime }}</small>
+										<small>{{
+											concert.startsAtTime
+										}}</small>
 									}
 								</th>
 								<td>{{ concert.artistName }}</td>
@@ -766,7 +1181,7 @@
 										[attr.aria-label]="
 											'admin.concert.edit' | transloco
 										"
-										[disabled]="store.isBusy()"
+										[disabled]="store.isSaving()"
 										(onClick)="store.editConcert(concert)"
 									></p-button>
 									<p-button
@@ -777,7 +1192,7 @@
 										[attr.aria-label]="
 											'admin.concert.delete' | transloco
 										"
-										[disabled]="store.isBusy()"
+										[disabled]="store.isSaving()"
 										(onClick)="
 											store.askConcertDeletion(concert)
 										"
@@ -792,7 +1207,11 @@
 	}
 
 	@if (store.pendingConcert(); as concert) {
-		<div class="mc-confirm" role="alertdialog" aria-labelledby="concert-del">
+		<div
+			class="mc-confirm"
+			role="alertdialog"
+			aria-labelledby="concert-del"
+		>
 			<p id="concert-del">
 				{{
 					'admin.concert.confirm-delete'
@@ -827,128 +1246,10 @@
 		<p-button
 			[label]="'admin.concert.add-venue' | transloco"
 			icon="pi pi-plus"
-			[disabled]="!!store.venueEditor() || store.isBusy()"
+			[disabled]="!!store.venueEditor() || store.isSaving()"
 			(onClick)="store.addVenue()"
 		></p-button>
 	</div>
-
-	@if (store.venueEditor(); as edit) {
-		<form
-			class="mc-form"
-			[attr.aria-label]="'admin.concert.venue-editor' | transloco"
-			(ngSubmit)="store.saveVenue()"
-		>
-			<section class="mc-form-section" aria-labelledby="venue-editor">
-				<h2 id="venue-editor">
-					@if (edit.uid) {
-						{{ 'admin.concert.editing-venue' | transloco }}
-					} @else {
-						{{ 'admin.concert.adding-venue' | transloco }}
-					}
-				</h2>
-
-				<div class="mc-form-grid">
-					<div class="mc-field">
-						<label for="venue-name">{{
-							'admin.concert.venue-name' | transloco
-						}}</label>
-						<input
-							id="venue-name"
-							type="text"
-							pInputText
-							[value]="edit.draft.name"
-							(input)="
-								store.setVenueField({ name: value($event) })
-							"
-						/>
-					</div>
-
-					<div class="mc-field">
-						<label for="venue-city">{{
-							'admin.concert.city' | transloco
-						}}</label>
-						<input
-							id="venue-city"
-							type="text"
-							pInputText
-							[value]="edit.draft.city ?? ''"
-							(input)="
-								store.setVenueField({ city: optional($event) })
-							"
-						/>
-					</div>
-
-					<div class="mc-field is-wide">
-						<label for="venue-address">{{
-							'admin.concert.address' | transloco
-						}}</label>
-						<input
-							id="venue-address"
-							type="text"
-							pInputText
-							[value]="edit.draft.address ?? ''"
-							(input)="
-								store.setVenueField({
-									address: optional($event),
-								})
-							"
-						/>
-					</div>
-
-					<div class="mc-field">
-						<label for="venue-type">{{
-							'admin.concert.venue-type' | transloco
-						}}</label>
-						<input
-							id="venue-type"
-							type="text"
-							pInputText
-							[value]="edit.draft.type ?? ''"
-							(input)="
-								store.setVenueField({ type: optional($event) })
-							"
-						/>
-					</div>
-
-					<div class="mc-field is-wide">
-						<div class="concert-switch">
-							<p-checkbox
-								inputId="venue-active"
-								[binary]="true"
-								[ngModel]="edit.draft.active"
-								[ngModelOptions]="{ standalone: true }"
-								(onChange)="
-									store.setVenueField({
-										active: $event.checked,
-									})
-								"
-							></p-checkbox>
-							<label for="venue-active">{{
-								'admin.concert.offered-on-forms' | transloco
-							}}</label>
-						</div>
-					</div>
-				</div>
-			</section>
-
-			<div class="mc-form-actions">
-				<p-button
-					[label]="'admin.concert.cancel' | transloco"
-					severity="secondary"
-					[outlined]="true"
-					[disabled]="store.isSaving()"
-					(onClick)="store.cancelVenue()"
-				></p-button>
-				<p-button
-					type="submit"
-					[label]="'admin.concert.save' | transloco"
-					icon="pi pi-check"
-					[disabled]="!store.canSaveVenue() || store.isSaving()"
-					[loading]="store.isSaving()"
-				></p-button>
-			</div>
-		</form>
-	}
 
 	@if (!store.venues().length) {
 		<p class="mc-form-note">{{ 'admin.concert.no-venues' | transloco }}</p>
@@ -1001,10 +1302,23 @@
 								<td>{{ venue.city }}</td>
 								<td>{{ venue.type }}</td>
 								<td>
-									<span class="chip">{{
-										'admin.concert.source.' + venue.source
-											| transloco
-									}}</span>
+									<!-- Amit modell javasolt, az a listában is
+									     jelölve van: a forrás-chip mellett ott
+									     áll a jelzés, ugyanaz, mint máshol. -->
+									@if (isFromModel(venue)) {
+										<mc-ai-mark
+											[compact]="true"
+											[hint]="
+												'ui.aiMark.hint.approved'
+													| transloco
+											"
+										></mc-ai-mark>
+									} @else {
+										<span class="chip">{{
+											'admin.concert.source.' +
+												venue.source | transloco
+										}}</span>
+									}
 								</td>
 								<td class="mc-row-actions">
 									<p-button
@@ -1014,8 +1328,39 @@
 										[attr.aria-label]="
 											'admin.concert.edit' | transloco
 										"
-										[disabled]="store.isBusy()"
+										[disabled]="store.isSaving()"
 										(onClick)="store.editVenue(venue)"
+									></p-button>
+									<!-- Visszavonás és visszaállítás egy
+									     gombon: ez a válasz arra a helyszínre,
+									     amit nem lehet törölni. -->
+									<p-button
+										[icon]="
+											isRetired(venue)
+												? 'pi pi-undo'
+												: 'pi pi-eye-slash'
+										"
+										size="small"
+										[text]="true"
+										[attr.aria-label]="
+											(isRetired(venue)
+												? 'admin.concert.restore'
+												: 'admin.concert.retire'
+											) | transloco
+										"
+										[attr.title]="
+											(isRetired(venue)
+												? 'admin.concert.restore'
+												: 'admin.concert.retire'
+											) | transloco
+										"
+										[disabled]="store.isSaving()"
+										(onClick)="
+											store.retireVenue({
+												venue: venue,
+												active: isRetired(venue),
+											})
+										"
 									></p-button>
 									<p-button
 										icon="pi pi-trash"
@@ -1025,8 +1370,10 @@
 										[attr.aria-label]="
 											'admin.concert.delete' | transloco
 										"
-										[disabled]="store.isBusy()"
-										(onClick)="store.askVenueDeletion(venue)"
+										[disabled]="store.isSaving()"
+										(onClick)="
+											store.askVenueDeletion(venue)
+										"
 									></p-button>
 								</td>
 							</tr>
@@ -1037,14 +1384,43 @@
 		</div>
 	}
 
+	<!-- A kliens kérdez, a szerver dönt: a párbeszéd szövege a szerver
+	     megszámolta koncertekből áll, és ahol van ilyen, ott nem törlést
+	     kínál, hanem visszavonást. -->
 	@if (store.pendingVenue(); as venue) {
 		<div class="mc-confirm" role="alertdialog" aria-labelledby="venue-del">
-			<p id="venue-del">
-				{{
-					'admin.concert.confirm-delete-venue'
-						| transloco: { name: venue.name }
-				}}
-			</p>
+			@if (store.pendingVenueUsage(); as usage) {
+				<p id="venue-del">
+					@if (usage.concerts) {
+						{{
+							'admin.concert.venue-held-by'
+								| transloco
+									: {
+											name: venue.name,
+											count: usage.concerts,
+									  }
+						}}
+					} @else if (usage.concerts === null) {
+						<!-- A számolás nem jött össze (nincs hálózat, nem
+						     válaszolt). Nem tiltunk le gombot magyarázat
+						     nélkül: a kísérlet mehet, a szerver dönt. -->
+						{{
+							'admin.concert.venue-use-unknown'
+								| transloco: { name: venue.name }
+						}}
+					} @else {
+						{{
+							'admin.concert.confirm-delete-venue'
+								| transloco: { name: venue.name }
+						}}
+					}
+				</p>
+			} @else {
+				<p id="venue-del" role="status" aria-busy="true">
+					{{ 'admin.concert.counting-venue-use' | transloco }}
+				</p>
+			}
+
 			<div class="mc-form-actions">
 				<p-button
 					[label]="'admin.concert.cancel' | transloco"
@@ -1052,9 +1428,22 @@
 					[outlined]="true"
 					(onClick)="store.cancelVenueDeletion()"
 				></p-button>
+				@if (!isRetired(venue)) {
+					<p-button
+						[label]="'admin.concert.retire' | transloco"
+						icon="pi pi-eye-slash"
+						severity="secondary"
+						[outlined]="true"
+						[disabled]="store.isSaving()"
+						(onClick)="
+							store.retireVenue({ venue: venue, active: false })
+						"
+					></p-button>
+				}
 				<p-button
 					[label]="'admin.concert.delete' | transloco"
 					severity="danger"
+					[disabled]="!store.canDeleteVenue() || store.isSaving()"
 					[loading]="store.isSaving()"
 					(onClick)="store.confirmVenueDeletion()"
 				></p-button>

@@ -90,7 +90,7 @@ service cloud.firestore {
       return !('placement' in data)
           || data.placement == null
           || (data.placement is map
-              && data.placement.keys().hasOnly(['unitId', 'row', 'column', 'position'])
+              && data.placement.keys().hasOnly(['unitId', 'row', 'column', 'side', 'position'])
               && data.placement.unitId is string
               && data.placement.unitId.size() > 0
               && data.placement.unitId.size() <= 100
@@ -99,7 +99,12 @@ service cloud.firestore {
               && data.placement.column is int
               && data.placement.column >= 1 && data.placement.column <= 12
               && data.placement.position is int
-              && data.placement.position >= 1 && data.placement.position <= 800);
+              && data.placement.position >= 1 && data.placement.position <= 800
+              // A rekesz melyik falánál áll: hiánya a bal oldal, mert a
+              // rekeszek onnan telnek, és a jobb fal előtt kiírt helyek
+              // mind ott állnak.
+              && (!('side' in data.placement)
+                  || data.placement.side in ['left', 'right']));
     }
 
     // A beszerzés: mikor, hol, mennyiért. Minden mező önmagában állhat —
@@ -273,6 +278,7 @@ service cloud.firestore {
         'music-collection': 'MusicCollectionEntity',
         'genre': 'GenreEntity',
         'venue': 'VenueEntity',
+        'venue-suggestion': 'VenueEntity',
         'concert': 'ConcertEntity',
         'concert-suggestion': 'ConcertEntity',
         'role': 'RoleEntity',
@@ -1459,6 +1465,26 @@ service cloud.firestore {
                        ])
                     && request.resource.data.reviewState in ['pending', 'rejected'];
       allow delete: if hasPerm('updateConcertEntity');
+    }
+
+    // Helyszín-javaslatok: amit a modell ajánlott (`suggestVenues`), és ami
+    // emberre vár. SZÁNDÉKOSAN nem nyilvános, ugyanazért, amiért a
+    // koncert-javaslat sem: egy groundolt keresés is nevezhet olyan klubot,
+    // ami két éve bezárt — a helyszín meg a koncertlap törzsadata, arra
+    // hivatkozik minden est. Írni a kliens csak a döntést tudja, a
+    // javaslatokat a function hozza.
+    match /venue-suggestion/{suggestionId} {
+      allow read: if hasPerm('viewVenueEntity')
+                  || hasPerm('createVenueEntity');
+      allow create: if false; // suggestVenues (Admin SDK)
+      // A döntés: a felülvizsgálat három mezője. Magát a javaslatot nem lehet
+      // itt átírni — amit javítani kell, az jóváhagyáskor a `venue` alá kerül.
+      allow update: if hasPerm('updateVenueEntity')
+                    && changedKeys().hasOnly([
+                         'reviewState', 'reviewedAt', 'reviewedBy', 'updatedAt'
+                       ])
+                    && request.resource.data.reviewState in ['pending', 'rejected'];
+      allow delete: if hasPerm('updateVenueEntity');
     }
 
     // ── Napi kérdés ─────────────────────────────────────────────────────────

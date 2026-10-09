@@ -95,7 +95,8 @@
 			"cd": "CD",
 			"dvd": "DVD",
 			"vinyl": "Bakelit",
-			"other": "Egyéb"
+			"other": "Egyéb",
+			"cdbox": "CD doboz"
 		},
 		"country": {
 			"australia": "Ausztrália",
@@ -436,7 +437,10 @@
 					"other": "{{count}} találat a polcon"
 				},
 				"foundNone": "Erre a keresésre semmi nem áll a polcon.",
-				"foundMore": "+ még {{count}}, a polcon kiemelve."
+				"foundMore": "+ még {{count}}, a polcon kiemelve.",
+				"arrange": "Rendezés",
+				"arrangeDone": "Kész a rendezés",
+				"arrangeHint": "A polcok egy sorban állnak: a lemez már csak oldalra utazik. Kattints egy gerincre, és a kezedbe kerül — Shift + kattintás egy egész sort fog meg a rekeszen belül —, aztán húzd át, vagy koppints a cél rekesz gombjára."
 			},
 			"groupFallback": "Gyűjtemény",
 			"unknownStyle": "Ismeretlen stílus",
@@ -1138,7 +1142,6 @@
 			"lineup": "Fellépők",
 			"tickets": "Jegyek",
 			"source": "Forrás",
-			"checked": "Ellenőrzött",
 			"checked-hint": "Keresésre támaszkodó javaslat, amit ember hagyott jóvá. A forrás a kártya alján nyitható.",
 			"filter": {
 				"all": "Minden",
@@ -1179,7 +1182,14 @@
 			"play-what-stands-here": "Ami itt áll, szóljon",
 			"play-what-stands-here2": "Ami itt áll, szóljon",
 			"open": "Megnyitás",
-			"rowSlot": "{{row}}. sor · {{slot}}. hely"
+			"rowSlot": "{{row}}. sor · {{slot}}. hely",
+			"in-hand": "lemez a kezedben",
+			"in-hand-how": "Húzd őket egy rekeszbe, vagy koppints arra a falra, amelyikhez kerüljenek.",
+			"put-down": "Leteszem",
+			"put-left": "A bal falhoz: {{where}}",
+			"put-right": "A jobb falhoz: {{where}}",
+			"put-bottom": "Az aljára: {{where}}",
+			"put-top": "A tetejére: {{where}}"
 		},
 		"networkDetails": {
 			"connections-in-view": "Látható kapcsolatok",
@@ -1413,11 +1423,15 @@
 			"close": "Bezárás",
 			"which-shelf": "Melyik polc",
 			"which-compartment": "Melyik rekesz",
+			"which-side": "A rekesz melyik oldalán",
 			"position-in-the-compartment": "Hely a rekeszben",
 			"counted-from-the-left": "Balról számolva. Amit nem raktál el magad, az továbbra is a szabadon hagyott rekeszeket tölti.",
+			"counted-from-the-right": "Jobbról számolva. A rekesz jobb vége akkor is a helyén marad, ha a bal oldali sor nő.",
 			"take-off-the-shelf": "Levétel a polcról",
 			"cancel": "Mégse",
-			"placeFailed": "Nem sikerült elhelyezni: {{error}}"
+			"placeFailed": "Nem sikerült elhelyezni: {{error}}",
+			"against-the-left-wall": "Bal oldalt",
+			"against-the-right-wall": "Jobb oldalt"
 		},
 		"collectionViewToggle": {
 			"view": "Nézet",
@@ -1609,6 +1623,7 @@
 			"unit": "Elem",
 			"select-a-unit": "Válassz elemet",
 			"compartment": "Rekesz",
+			"side": "Oldal",
 			"filed-by-the-shelf": "A polc rakja el",
 			"position": "Pozíció",
 			"take-the-place-back": "Polchely visszavétele",
@@ -1687,7 +1702,10 @@
 		"albumTracks": {
 			"load": "Betöltés",
 			"load-the-tracklist-from": "Számlista betöltése a MusicBrainzről",
-			"no-tracks-yet-load": "Még nincs szám. Töltsd be őket a MusicBrainzről.",
+			"add": "Hozzáadás",
+			"add-a-track-by": "Szám hozzáadása kézzel",
+			"add-this-track": "A szám hozzáadása",
+			"no-tracks-yet-load": "Még nincs szám. Töltsd be őket a MusicBrainzről, vagy vedd fel őket kézzel.",
 			"tracks-found": "Talált számok",
 			"source": "Forrás:",
 			"cancel": "Mégse",
@@ -2142,7 +2160,7 @@
 			"artwork-url": "Grafika URL",
 			"a-hand-made-image": "Kézzel készült kép, arra a ritka jelvényre, aminek kell. Az alábbi generált pin felülírja.",
 			"the-pin": "A pin",
-			"drawn-by-an-image": "Képmodell rajzolja, a kollekció saját adataiból. A stílus minden jelvényen ugyanaz — csak a motívum, a zománc, a patina és a perem követi a szabályt. Minden megrajzolt kép megmarad, így a pin bármelyik lehet, ma vagy jövőre.",
+			"drawn-by-an-image": "Képmodell rajzolja, a kollekció saját adataiból. A stílus minden jelvényen ugyanaz — csak a motívum, a zománc, a patina és a perem követi a szabályt. Minden megrajzolt kép megmarad, így a pin bármelyik lehet, ma vagy jövőre. Saját kép is lehet pin: a feltöltött kép ugyanúgy a galériába kerül, és rögtön jelvény lesz.",
 			"save-the-collection-first": "Előbb mentsd a kollekciót: a promptot a szerver a tároltakból építi, nem ebből az űrlapból.",
 			"the-collection-s-badge": "A kollekció jelvénye",
 			"the-badge2": "A jelvény",
@@ -2163,7 +2181,13 @@
 				"other": "{{count}} lemez"
 			},
 			"group": "Csoport",
-			"groupHint": "Melyik cím alatt áll a listában. A diszkográfia egy zenekar saját collection-párja."
+			"groupHint": "Melyik cím alatt áll a listában. A diszkográfia egy zenekar saját collection-párja.",
+			"upload-an-image": "Kép feltöltése",
+			"uploading-the-image": "Feltöltés…",
+			"the-uploaded-artwork": "A feltöltött grafika",
+			"take-the-pin-off": "Pin levétele",
+			"a-chosen-pin-covers": "A kiválasztott pin takarja a feltöltött grafikát. Vedd le a pint, ha a saját képed legyen a jelvény.",
+			"my-own-picture-as-pin": "Saját kép pinnek"
 		},
 		"profileSharing": {
 			"page": "Nyilvános gyűjtő-profil",
@@ -2246,7 +2270,20 @@
 			"how-the-copies-lie": "Hogyan állnak a lemezek a rekeszben",
 			"standing": "Állva",
 			"stacked": "Fektetve",
-			"nothing-fits": "Ilyen alacsony rekeszbe semmi nem fér be"
+			"nothing-fits": "Ilyen alacsony rekeszbe semmi nem fér be",
+			"widths-title": "Lemezvastagságok",
+			"widths-intro": "Milyen vastag egy-egy tok a polcodon. Ugyanez a szám rajzolja ki a gerincet és dönti el, mennyi fér egy rekeszbe — mérd meg a sajátjaidat, ha nem szabványosak.",
+			"one-pixel-narrower": "Egy pixellel keskenyebb",
+			"one-pixel-wider": "Egy pixellel szélesebb",
+			"standard": "Alapérték",
+			"spine": {
+				"vinyl": "Bakelit",
+				"boxset": "Bakelit díszdoboz",
+				"dvd": "DVD",
+				"cd": "CD",
+				"cdbox": "Több CD-s kiadás",
+				"cassette": "Kazetta"
+			}
 		},
 		"profileSpotify": {
 			"your-own-app-explained": "A saját Spotify appoddal ez a lejátszó vezérli a Spotifyt: sor, rádió, következő szám, a saját hangszóróid. Nélküle marad a Spotify beágyazott kerete az album oldalán — abban teljes hosszban szól a szám, ha be vagy jelentkezve a Spotifyba, de innen semmi nem vezérli. A Spotify appokhoz köti, ki léphet be rajtuk — egy app huszonöt embert bír el —, ezért kell a sajátod.",
@@ -2279,7 +2316,19 @@
 			"dark": "Sötét",
 			"light": "Világos",
 			"standard": "Normál",
-			"fullWidth": "Teljes szélesség"
+			"fullWidth": "Teljes szélesség",
+			"mosaic": "Borítómozaik",
+			"mosaic-still": "Áll",
+			"seconds-short": "mp",
+			"a-collection-without-artwork": "A saját kép nélküli gyűjteményeket négy borító képviseli. Ha mozgásra állítod, ennyi időnként egy csempe átfordul a gyűjtemény egy következő lemezére — csak azokon a kártyákon, amiket éppen látsz, és kártyánként más ütemben, hogy ne az egész oldal váltson egyszerre.",
+			"mosaic-turn": "Váltás",
+			"turn": {
+				"fade": "Átúszás",
+				"slide": "Csúszás",
+				"flip": "Fordulás",
+				"zoom": "Ráközelítés",
+				"random": "Véletlen"
+			}
 		},
 		"profileDemoTour": {
 			"the-launcher": "Indító",
@@ -2792,6 +2841,16 @@
 			"your-average": "Az átlagod",
 			"what-you-name-first": "Amit elsőként emlegetnél",
 			"nothing-rated-yet": "Még egy csillag sem. Tegyél fel egy lemezt, vagy csillagozd meg a saját lapján."
+		},
+		"aiMark": {
+			"label": "Modell",
+			"hint": {
+				"proposed": "Ezt egy modell javasolta, keresésre támaszkodva. Amíg valaki nem nyitotta meg a hivatkozott forrást, addig jelölt, nem állítás.",
+				"approved": "Modell javaslatából került be: valaki megnyitotta a hivatkozott forrást, és jóváhagyta.",
+				"load": "A betöltés egy modellt kérdez, keresésre támaszkodva, és fizetős kérésenként megy. Amit talál, az jóváhagyásra vár.",
+				"photo": "A fotót egy modell olvassa le. Amit felismer, az javaslat — te döntesz róla.",
+				"image": "A képet egy képmodell rajzolta, a saját adataiból."
+			}
 		}
 	},
 	"admin": {
@@ -3134,26 +3193,29 @@
 		},
 		"concert": {
 			"title": "Koncertek",
-			"intro": "A katalógus zenekarainak fellépései. Három betöltés tölti meg: a helyszínek a MusicBrainzről, a mbid-del horgonyzott koncertek ugyanonnan, a többi pedig egy modell keresésre támaszkodó javaslataiból — azok itt várnak jóváhagyásra.",
+			"intro": "A katalógus zenekarainak fellépései. Négy betöltés tölti meg: a helyszínek a MusicBrainzről, azokon túl pedig egy modell keresésből sorolt helyszínei; a mbid-del horgonyzott koncertek ugyanonnan, a többi pedig ugyanannak a modellnek a javaslataiból — a modell adta helyszínek és estek egyaránt itt várnak jóváhagyásra.",
 			"loads": "Betöltések",
 			"load": "Betöltés",
 			"ask": "Javaslatokat kérek",
-			"load-venues": "Helyszínek",
+			"load-venues": "Helyszínek a MusicBrainzről",
 			"load-venues-hint": "Egy ország helyei a MusicBrainzről. Lassú (másodpercenként egy kérés), de ritkán kell: a hall ott marad, ahol volt.",
-			"venues-loaded": "{{scanned}} helyből {{venues}} koncerthelyszín, {{written}} írva.",
 			"load-concerts": "Koncertek a MusicBrainzről",
 			"load-concerts-hint": "A katalógus azon előadói, akiknek van MusicBrainz-azonosítójuk. Amit hoz, az mbid-del horgonyzott, ezért jóváhagyás nélkül is kimegy.",
-			"concerts-loaded": "{{artists}} előadóra {{events}} esemény, {{written}} írva, {{deleted}} törölve.",
-			"load-ai": "Javaslatok modelltől",
-			"load-ai-hint": "Előadónként egy fizetős kérés, Google-kereséssel megtámasztva. Amit ad, az a Javaslatok fülön várja, hogy valaki megnyissa a hivatkozott forrást.",
-			"ai-loaded": "{{venues}} helyszín programjában {{seen}} est, ebből {{suggested}} javaslat ({{duplicates}} már megvolt). A mai keretből {{left}} kérés maradt.",
+			"load-ai": "Koncertek modelltől",
+			"load-ai-hint": "Helyszínenként egy fizetős kérés, Google-kereséssel megtámasztva. Amit ad, az a Koncert-javaslatok fülön várja, hogy valaki megnyissa a hivatkozott forrást.",
+			"ai-venues": "Kérdezett helyszínek",
+			"ai-venues-all": "Sorban, ahol a kör tart",
+			"ai-venues-selected": "{0} helyszín kijelölve",
+			"ai-venues-hint": "Üresen hagyva ott folytatja a sort, ahol az előző futás abbahagyta.",
+			"ai-venues-cost": "{{count}} helyszín, helyszínenként egy fizetős kérés.",
 			"window": "Ablak (nap)",
 			"window-hint": "Ennyi napra előre kérdezünk.",
 			"sections": "Szakaszok",
 			"tab": {
-				"suggestions": "Javaslatok",
+				"suggestions": "Koncert-javaslatok",
 				"concerts": "Koncertek",
-				"venues": "Helyszínek"
+				"venues": "Helyszínek",
+				"venue-suggestions": "Helyszín-javaslatok"
 			},
 			"type": {
 				"concert": "Koncert",
@@ -3165,7 +3227,7 @@
 				"ai": "Modell",
 				"manual": "Kézi"
 			},
-			"no-pending": "Nincs jóváhagyásra váró javaslat. A „Javaslatokat kérek” gombbal kérhetsz újakat.",
+			"no-pending": "Nincs jóváhagyásra váró koncert-javaslat. A „Koncertek modelltől” kártya „Javaslatokat kérek” gombjával kérhetsz újakat.",
 			"no-concerts": "Még nincs beiktatott koncert. Kezdd a helyszínekkel, aztán töltsd be a koncerteket.",
 			"no-venues": "Még nincs helyszín. A „Helyszínek” betöltés egy ország összes helyét elhozza a MusicBrainzről.",
 			"approve": "Jóváhagyás",
@@ -3231,7 +3293,63 @@
 			"venues-a-run": "Helyszín / futás",
 			"venues-a-run-hint": "Ennyi helyszín programját kéri el egy futás — és ennyi kérés megy el.",
 			"daily-limit": "Napi kérés-korlát",
-			"daily-limit-hint": "A végső fék: egy hiba se vihessen el egy havi keretet."
+			"daily-limit-hint": "A végső fék: egy hiba se vihessen el egy havi keretet.",
+			"country": "Ország",
+			"country-hint": "Mind a négy betöltés erre az országra fut.",
+			"load-ai-venues": "Helyszínek modelltől",
+			"load-ai-venues-hint": "Ahol a MusicBrainz szegény — Magyarországon kívül jellemzően az —, ott a modell sorolja fel keresésből az ország koncerthelyszíneit. Kérdésenként egy fizetős kérés, és amit ad, az a Helyszín-javaslatok fülön vár valakire.",
+			"ai-cities": "Kérdezett városok",
+			"ai-cities-all": "Az egész ország, egy kérésből",
+			"ai-cities-hint": "Vesszővel válaszd el őket. Üresen hagyva az egész országot kérdezzük, egyetlen kérésből — a nagy házakat az adja ki.",
+			"ai-cities-cost": "{{count}} város, városonként egy fizetős kérés.",
+			"no-pending-venues": "Nincs jóváhagyásra váró helyszín. A „Helyszínek modelltől” betöltéssel kérhetsz újakat.",
+			"approving-venue": "Helyszín-javaslat átnézése",
+			"approve-and-add": "Jóváhagyás és felvétel",
+			"retire": "Visszavonás",
+			"restore": "Visszaállítás",
+			"venue-held-by": "A(z) {{name}} helyszínre {{count}} koncert hivatkozik, ezért nem törölhető. Vond vissza helyette: a formokon nem jelenik meg többé, a már beiktatott koncertek viszont megmaradnak.",
+			"counting-venue-use": "Számolom, mi hivatkozik a helyszínre…",
+			"venue-use-unknown": "A(z) {{name}} helyszínről most nem jött válasz arra, hogy hivatkozik-e rá koncert. A törlés megkísérelhető: ha hivatkozik rá valami, a szerver megtagadja.",
+			"run": {
+				"running": "Fut… {{elapsed}}",
+				"done": "Kész",
+				"failed": "Nem sikerült",
+				"meta": "{{country}} · {{time}}",
+				"meta-running": "{{country}} · indult {{time}}",
+				"empty-venues": "A MusicBrainz egyetlen koncerthelyszínt sem ad erre az országra. Kérd a helyszíneket a modelltől.",
+				"empty-ai-venues": "A modell egyetlen helyszínt sem sorolt fel. Kérdezd meg városonként: a nagy házakat az ország-kérdés adja ki, a klubokat a városok.",
+				"empty-concerts": "A katalógus előadóinak egyetlen közelgő fellépése sincs a MusicBrainzen — ebben az országban, ennyi napra előre. A MusicBrainz két magyar eseményt ismer összesen, ezért van a modell.",
+				"empty-ai": "A modell egyetlen estet sem talált a kérdezett helyszínek programjában. Próbálj más helyszíneket, vagy tágítsd az ablakot.",
+				"nothing-new": "Jött válasz, csak új javaslat nem lett belőle: amit adott, az vagy megvan már, vagy egyszer már el lett utasítva.",
+				"failed-questions": "A modell {{count}} kérdésre nem válaszolt — ennyi kérés elment a keretből eredmény nélkül. A hiba: {{message}}",
+				"failed-questions-plain": "A modell {{count}} kérdésre nem válaszolt — ennyi kérés elment a keretből eredmény nélkül.",
+				"row": {
+					"scanned": "Hely a MusicBrainzről",
+					"venues": "Ebből koncerthelyszín",
+					"written": "Írva",
+					"unchanged": "Változatlan",
+					"artists": "Kérdezett előadó",
+					"events": "Átnézett esemény",
+					"matched": "Katalógusbeli előadóé",
+					"deleted": "Lejárt, törölve",
+					"venues-created": "Új helyszín kellett hozzá",
+					"asked": "Kérdés",
+					"queried": "Kérdezett helyszín",
+					"seen": "Amit a válasz felsorolt",
+					"proposed": "Katalógusbeli előadóé",
+					"suggested": "Jóváhagyásra vár",
+					"duplicates": "Már megvolt",
+					"rejected": "Egyszer már elutasítva",
+					"discarded": "Kiesett a szűrőn",
+					"left": "Mai keretből maradt",
+					"model": "Modell",
+					"failed": "Válasz nélkül maradt kérdés"
+				}
+			},
+			"cost": {
+				"free": "ingyenes",
+				"paid": "fizetős"
+			}
 		}
 	},
 	"fact": {

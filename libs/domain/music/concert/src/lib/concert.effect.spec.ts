@@ -1,6 +1,7 @@
-import { firstValueFrom, lastValueFrom } from 'rxjs';
+import { firstValueFrom, lastValueFrom, of } from 'rxjs';
 
 import { TestBed } from '@angular/core/testing';
+import { VenueRepository } from '@music-collection/api';
 
 import { ConcertEffect, VENUE_IN_USE, sortConcerts } from './concert.effect';
 import {
@@ -8,6 +9,7 @@ import {
 	provideConcertTesting,
 	suggestionOf,
 	venueOf,
+	venueSuggestionOf,
 } from './concert.testing';
 
 describe('ConcertEffect', () => {
@@ -21,10 +23,19 @@ describe('ConcertEffect', () => {
 	function effectWith(
 		concerts = [concertOf()],
 		venues = [park, closed],
-		suggestions = [suggestionOf()]
+		suggestions = [suggestionOf()],
+		venueSuggestions = [venueSuggestionOf()]
 	): ConcertEffect {
 		TestBed.configureTestingModule({
-			providers: [provideConcertTesting(concerts, venues, suggestions)],
+			providers: [
+				provideConcertTesting(
+					concerts,
+					venues,
+					suggestions,
+					[],
+					venueSuggestions
+				),
+			],
 		});
 
 		return TestBed.inject(ConcertEffect);
@@ -44,7 +55,10 @@ describe('ConcertEffect', () => {
 
 		const coming = await lastValueFrom(effect.coming$('2026-11-12'));
 
-		expect(coming.map((concert) => concert.uid)).toEqual(['today', 'future']);
+		expect(coming.map((concert) => concert.uid)).toEqual([
+			'today',
+			'future',
+		]);
 	});
 
 	// A többnapos fesztivál addig tart, amíg le nem zárult: a második napján
@@ -111,7 +125,10 @@ describe('ConcertEffect', () => {
 	// A helyszínre hivatkozó koncertek enélkül a semmibe mutatnának, és a
 	// kliens nem tudná visszatenni a helyszínt.
 	it('a használatban lévő helyszín törlését megtagadja', async () => {
-		const effect = effectWith([concertOf({ venueUid: 'mbid-park' })], [park]);
+		const effect = effectWith(
+			[concertOf({ venueUid: 'mbid-park' })],
+			[park]
+		);
 
 		await expect(firstValueFrom(effect.deleteVenue$(park))).rejects.toThrow(
 			VENUE_IN_USE
@@ -120,6 +137,63 @@ describe('ConcertEffect', () => {
 
 	it('a szabad helyszínt törli', async () => {
 		const effect = effectWith([], [park]);
+
+		await expect(
+			firstValueFrom(effect.deleteVenue$(park))
+		).resolves.toBeUndefined();
+	});
+
+	// Ugyanaz a rendezés, mint a koncert-javaslatoknál: a biztosabb elöl, és
+	// az elutasított kimarad — azt a lista csak azért tartja, hogy a
+	// következő futás ne hozza fel újra.
+	it('a helyszín-javaslatok közül a döntésre várók jönnek, a biztosabb elöl', async () => {
+		const effect = effectWith(
+			[],
+			[park],
+			[],
+			[
+				venueSuggestionOf({ uid: 'unsure', confidence: 0.3 }),
+				venueSuggestionOf({ uid: 'sure', confidence: 0.9 }),
+				venueSuggestionOf({ uid: 'gone', reviewState: 'rejected' }),
+			]
+		);
+
+		const pending = await lastValueFrom(effect.pendingVenues$);
+
+		expect(pending.map((suggestion) => suggestion.uid)).toEqual([
+			'sure',
+			'unsure',
+		]);
+	});
+
+	// A szám a párbeszéd szövege, nem csak igen-nem: ezért számol, és ezért a
+	// szervertől kérdezi.
+	it('megszámolja, mi tartja életben a helyszínt', async () => {
+		const effect = effectWith(
+			[
+				concertOf({ uid: 'one', venueUid: 'mbid-park' }),
+				concertOf({ uid: 'two', venueUid: 'mbid-park' }),
+			],
+			[park]
+		);
+
+		await expect(
+			firstValueFrom(effect.venueUsage$('mbid-park'))
+		).resolves.toEqual({ concerts: 2 });
+	});
+
+	/*
+	 * A meg nem számolható helyszín nem „használatban van": a kliens nem tud
+	 * kérdezni, és ilyenkor a kísérlet mehet — a szerver dönt. A fordítottja
+	 * egy tiltott gomb magyarázat nélkül, és abból lett a „nem működik a
+	 * törlés".
+	 */
+	it('a meg nem számolható helyszínt nem mondja használatban lévőnek', async () => {
+		const effect = effectWith([], [park]);
+
+		jest.spyOn(TestBed.inject(VenueRepository), 'usage$').mockReturnValue(
+			of({ concerts: null })
+		);
 
 		await expect(
 			firstValueFrom(effect.deleteVenue$(park))
@@ -140,9 +214,17 @@ describe('ConcertEffect', () => {
 describe('sortConcerts', () => {
 	it('nap, majd kezdés, majd előadó szerint', () => {
 		const sorted = sortConcerts([
-			concertOf({ uid: 'b', startsAt: '2026-11-12', startsAtTime: '21:00' }),
+			concertOf({
+				uid: 'b',
+				startsAt: '2026-11-12',
+				startsAtTime: '21:00',
+			}),
 			concertOf({ uid: 'c', startsAt: '2026-11-13' }),
-			concertOf({ uid: 'a', startsAt: '2026-11-12', startsAtTime: '19:00' }),
+			concertOf({
+				uid: 'a',
+				startsAt: '2026-11-12',
+				startsAtTime: '19:00',
+			}),
 		]);
 
 		expect(sorted.map((concert) => concert.uid)).toEqual(['a', 'b', 'c']);

@@ -19,6 +19,7 @@
 import { FieldValue, Firestore } from 'firebase-admin/firestore';
 
 import { stamp } from './catalog-sync';
+import { englishCountryName } from './country-name';
 import { MusicBrainzRequestOptions, musicBrainzGet } from './musicbrainz-api';
 
 export const VENUE_COLLECTION = 'venue';
@@ -201,15 +202,12 @@ export function toVenueDocument(
 }
 
 /**
- * Az ország nevei, amennyi a város-mező eldöntéséhez kell. Csak az kell
- * belőle, hogy az ország neve ne kerüljön városként a dokumentumba.
+ * Az ország neve, amennyi a város-mező eldöntéséhez kell: csak az kell
+ * belőle, hogy az ország neve ne kerüljön városként a dokumentumba. A
+ * MusicBrainz angolul nevezi az area-kat, ezért az angol név kell.
  */
-const COUNTRY_NAMES: Record<string, string> = {
-	HU: 'Hungary',
-};
-
 function countryName(countryCode: string): string {
-	return COUNTRY_NAMES[countryCode.toUpperCase()] ?? countryCode;
+	return englishCountryName(countryCode);
 }
 
 /**
@@ -272,9 +270,7 @@ function changed(
 	}
 
 	const coordinates = current['coordinates'] as
-		| { latitude?: number; longitude?: number }
-		| null
-		| undefined;
+		{ latitude?: number; longitude?: number } | null | undefined;
 
 	return (
 		(coordinates?.latitude ?? null) !==

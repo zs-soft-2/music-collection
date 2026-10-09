@@ -1,53 +1,252 @@
 /* A lap kerete az admin közös elemeiből áll (`mc-page-head`, `mc-card`,
    `mc-form`, `mc-stacked-table`); itt csak az van, ami ezen a lapon sajátos:
-   a három betöltő sáv, a fülek és a javaslat-kártyák. */
+   a négy betöltő sáv, a fülek és a javaslat-kártyák. */
 
+/* Ennek a lapnak hosszú az intrója: hagyni kell zsugorodni, különben a
+   keret-gomb nem fér el mellette, és leesik a cím alá. */
+.mc-page-head > div:first-child {
+	flex: 1 1 28rem;
+	min-width: 0;
+}
+
+/* A sáv két részből áll: felül, ami mind a négy betöltésre áll (melyik ország,
+   meddig előre, mekkora keretből), alatta a négy betöltés egy-egy kártyán. */
 .loads {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+	display: flex;
+	flex-direction: column;
 	gap: 1rem;
-	align-items: start;
-	padding: 1rem;
 	margin-bottom: 1.5rem;
+
+	/* A kártya alapból vágja, ami kilóg belőle (`mc-card`), a PrimeNG pedig a
+	   legördülő panelt magába a mezőbe teszi — a helyszín-választóból így egy
+	   sor látszott. Itt nincs mit vágni: a kártyákban csak mezők és gombok
+	   ülnek. */
+	.mc-card {
+		overflow: visible;
+	}
+}
+
+/* Az ország és az ablak mind a négy betöltésé, ezért a sáv élén állnak: a
+   gombok alatta már tudják, mire és meddig fut a kérdés. */
+.load-scope {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem 1.5rem;
+	align-items: flex-start;
+	padding: 1rem;
+}
+
+.load-country {
+	flex: 1 1 16rem;
+	max-width: 22rem;
+
+	p-select {
+		width: 100%;
+	}
+}
+
+.load-window {
+	flex: 0 0 9rem;
+}
+
+/* A két oszlop a két forrás: balra, ami a MusicBrainzről jön, jobbra, amit a
+   modell ad. Egy sorban az áll, ami ugyanazt tölti — előbb a helyszínek,
+   aztán a koncertek. Keskenyen egymás alá kerülnek, a markup sorrendjében. */
+.load-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 1rem;
+	/* Mindegyik kártya a saját tartalmához méretezve: a hatókör-mező a
+	   fizetős oldalt magasabbra viszi, de a másik alján ettől ne tátongjon
+	   üres sáv. */
+	align-items: start;
+
+	@media (max-width: 900px) {
+		grid-template-columns: minmax(0, 1fr);
+	}
 }
 
 .load {
 	display: flex;
-	gap: 1rem;
-	align-items: flex-start;
-	justify-content: space-between;
+	flex-direction: column;
+	gap: 0.5rem;
+	padding: 1rem;
 
 	h2 {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		align-items: center;
 		margin: 0;
 		font-size: 0.9375rem;
 	}
 
 	p {
-		margin: 0.25rem 0 0;
+		margin: 0;
 		font-size: 0.8125rem;
 		color: var(--mc-text-muted);
+		max-width: 44rem;
 	}
 }
 
 /* A fizetős betöltés külön jelölve: ez az, ami pénzbe kerül. */
 .is-ai {
-	padding-left: 1rem;
 	border-left: 2px solid var(--mc-accent);
 }
 
-.load-result {
-	display: block;
-	margin-top: 0.4rem;
-	font-size: 0.75rem;
+/* Mibe kerül a betöltés — ez az, ami a két oszlopot megkülönbözteti. */
+.load-cost {
+	padding: 0.0625rem 0.375rem;
+	font-size: 0.6875rem;
+	font-weight: 600;
+	text-transform: lowercase;
 	color: var(--mc-text-subtle);
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-sm);
+
+	&.is-paid {
+		color: var(--mc-accent);
+		border-color: var(--mc-accent);
+	}
 }
 
-.load-window {
-	max-width: 10rem;
+/* A futás jelentése: a kártya saját sávja, nem egy halk sor a gomb fölött.
+   Ez volt az, ami hiányzott — egy lefutott betöltés és egy el sem indított
+   ugyanúgy nézett ki. */
+.load-report {
+	padding: 0.5rem 0.625rem;
+	font-size: 0.75rem;
+	background: var(--mc-surface-2);
+	border-left: 2px solid var(--mc-border-strong);
+	border-radius: var(--mc-radius-sm);
+
+	&.is-running {
+		border-left-color: var(--mc-status-warn);
+	}
+
+	&.is-failed {
+		border-left-color: var(--mc-status-bad);
+	}
 }
 
-.load-settings {
-	align-self: end;
+.load-report-head {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.375rem 0.5rem;
+	align-items: baseline;
+	margin: 0;
+
+	strong {
+		font-size: 0.8125rem;
+	}
+
+	small {
+		color: var(--mc-text-subtle);
+	}
+}
+
+/* A pont a futás állapota egy pillantásra; futás közben lüktet. */
+.load-report-dot {
+	width: 0.5rem;
+	height: 0.5rem;
+	border-radius: 50%;
+	background: var(--mc-status-ok);
+
+	.is-running & {
+		background: var(--mc-status-warn);
+		animation: load-pulse 1.2s ease-in-out infinite;
+	}
+
+	.is-failed & {
+		background: var(--mc-status-bad);
+	}
+}
+
+@keyframes load-pulse {
+	0%,
+	100% {
+		opacity: 1;
+	}
+
+	50% {
+		opacity: 0.25;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.load-report-dot {
+		animation: none;
+	}
+}
+
+.load-report-error {
+	margin: 0.375rem 0 0;
+	color: var(--mc-status-bad);
+}
+
+/* Amiért a nullák oszlopa helyett egy mondat áll: a nulla nem mondja meg,
+   hogy a kérdés ment-e el üresen, vagy a válasz jött üresen. */
+.load-report-note {
+	margin: 0.375rem 0 0;
+	color: var(--mc-text-muted);
+
+	/* A meg nem válaszolt kérdés nem ugyanaz, mint az üres válasz: azért
+	   fizettünk, és nem kaptunk érte semmit. */
+	&.is-failed-note {
+		color: var(--mc-status-warn);
+	}
+}
+
+.load-report-rows {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+	gap: 0.25rem 0.75rem;
+	margin: 0.5rem 0 0;
+
+	div {
+		display: flex;
+		gap: 0.375rem;
+		justify-content: space-between;
+		padding-bottom: 0.125rem;
+		border-bottom: 1px solid var(--mc-border);
+	}
+
+	dt {
+		color: var(--mc-text-subtle);
+	}
+
+	dd {
+		margin: 0;
+		font-variant-numeric: tabular-nums;
+	}
+
+	/* Amiért a futás ment: ezt az egy számot keresi, aki ránéz. */
+	.is-lead {
+		dt,
+		dd {
+			color: var(--mc-text);
+			font-weight: 600;
+		}
+	}
+}
+
+/* A fizetős futás hatóköre a saját kártyáján ül, a gombja fölött. */
+.load-ai-cities,
+.load-ai-venues {
+	max-width: 24rem;
+	margin-top: 0.25rem;
+
+	input,
+	p-multiselect {
+		width: 100%;
+	}
+}
+
+/* A futtató gomb a kártya zárása: a leírás és a hatókör után, jobbra. */
+.load-run {
+	display: flex;
+	justify-content: flex-end;
+	padding-top: 0.25rem;
 }
 
 .tabs {
@@ -316,4 +515,19 @@
 		flex-direction: row;
 		flex-wrap: wrap;
 	}
+}
+
+/* A javaslatból nyitott helyszín-form feje: a jelzés, a forrás és a modell
+   egysoros megjegyzése — ez az, amit jóváhagyás előtt elolvas az ember. */
+.venue-editor-source {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.6rem;
+	align-items: center;
+	margin: 0 0 0.75rem;
+	font-size: 0.8125rem;
+}
+
+.venue-editor-note {
+	color: var(--mc-text-muted);
 }

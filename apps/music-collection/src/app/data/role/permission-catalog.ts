@@ -222,7 +222,12 @@ export const PERMISSION_CATALOG: PermissionGroup[] = [
 			// A helyszín és a koncert külön erőforrás: a helyszínlista
 			// törzsadat, amit egy betöltés tölt fel, a koncert pedig az, ami a
 			// nyilvános lapon megjelenik.
+			//
+			// A `view` itt is szerepel, ugyanazért, amiért a koncertnél: a
+			// modell javasolta helyszínek (`venue-suggestion`) nem
+			// nyilvánosak, és ez a jog nyitja meg őket.
 			row('admin.role.resource.venue', [
+				ConcertPermissionsService.viewVenueEntity,
 				ConcertPermissionsService.createVenueEntity,
 				ConcertPermissionsService.updateVenueEntity,
 				ConcertPermissionsService.deleteVenueEntity,

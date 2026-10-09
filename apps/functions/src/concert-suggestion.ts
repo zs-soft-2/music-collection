@@ -45,13 +45,18 @@ import { Firestore, FieldValue } from 'firebase-admin/firestore';
 import { GatewayClient } from './gateway-client';
 
 import { stamp } from './catalog-sync';
+import { hungarianCountryName } from './country-name';
 import { gameDay } from './daily-question';
 import {
 	CONCERT_COLLECTION,
 	ConcertActDocument,
 	toConcertId,
 } from './concert-event';
-import { VENUE_COLLECTION, VenueDocument, venueSearchParameters } from './concert-venue';
+import {
+	VENUE_COLLECTION,
+	VenueDocument,
+	venueSearchParameters,
+} from './concert-venue';
 import { CatalogArtist, loadCatalogArtists } from './upcoming-release';
 import { normalize } from './discogs-match';
 
@@ -320,6 +325,14 @@ export interface SuggestResult {
 	duplicates: number;
 	rejected: number;
 	discarded: number;
+	/**
+	 * Helyszín, amire a modell nem válaszolt. Enélkül a kliens egy elhasalt
+	 * futást nem tud megkülönböztetni egy üres választól: mindkettő nulla
+	 * est, és a hiba csak a szerver logjában van.
+	 */
+	failed: number;
+	/** Az első hiba szövege, hogy a lap meg tudja mondani, mi történt. */
+	failure: string | null;
 	model: string;
 	requestsUsed: number;
 	requestsLeft: number;
@@ -392,7 +405,11 @@ export interface Citation {
 export async function askModel(
 	client: GatewayClient,
 	prompt: string
-): Promise<{ concerts: ProposedConcert[]; citations: Citation[]; model: string }> {
+): Promise<{
+	concerts: ProposedConcert[];
+	citations: Citation[];
+	model: string;
+}> {
 	const result = await client.execute({
 		capability: 'text.complete',
 		input: { prompt, webSearch: true, temperature: 0 },
@@ -721,11 +738,6 @@ export function matchCatalogArtists(
 	return [...found.values()];
 }
 
-/** Az ország neve a promptban. Egyelőre egy, ahogy a lap hatóköre is. */
-const COUNTRY_NAMES: Record<string, string> = {
-	HU: 'Magyarország',
-};
-
 /**
  * Egy futás: néhány helyszín, helyszínenként egy modellkérés, és ami a
  * programból a polcot érinti, az a javaslatok közé kerül — pending
@@ -763,7 +775,8 @@ export async function suggestConcerts(
 			database.collection(CONCERT_SUGGESTION_COLLECTION).get(),
 		]);
 	const venues = venueSnapshot.docs.map(
-		(document) => ({ ...document.data(), uid: document.id }) as VenueDocument
+		(document) =>
+			({ ...document.data(), uid: document.id }) as VenueDocument
 	);
 	const byName = new Map(
 		artists.map((artist) => [normalize(artist.name), artist])
@@ -811,6 +824,8 @@ export async function suggestConcerts(
 	let duplicates = 0;
 	let rejected = 0;
 	let discarded = 0;
+	let failed = 0;
+	let failure: string | null = null;
 
 	/** Amelyik modellt a gateway választotta; a javaslatok mellé ez kerül. */
 	let answeringModel = 'ismeretlen';
@@ -828,15 +843,19 @@ export async function suggestConcerts(
 				buildVenuePrompt(
 					venue.name,
 					venue.city,
-					COUNTRY_NAMES[countryCode.toUpperCase()] ?? countryCode,
+					hungarianCountryName(countryCode),
 					window
 				)
 			);
 			answeringModel = answer.model;
 		} catch (error) {
 			// Egy bukott kérés egy helyszínt visz, nem a futást. A keretet már
-			// levontuk érte: a kérés elment, fizetni is kell.
+			// levontuk érte: a kérés elment, fizetni is kell. A kliens viszont
+			// megtudja: egy logbejegyzés annak szól, aki a Cloud Console-t
+			// nézi, nem annak, aki a gombot nyomta.
 			console.warn(`A modell ${venue.name}-ra hibát adott`, error);
+			failed += 1;
+			failure ??= error instanceof Error ? error.message : `${error}`;
 			continue;
 		}
 
@@ -964,6 +983,8 @@ export async function suggestConcerts(
 		duplicates,
 		rejected,
 		discarded,
+		failed,
+		failure,
 		model: answeringModel,
 		requestsUsed: asked.length,
 		requestsLeft: left + (granted - asked.length),

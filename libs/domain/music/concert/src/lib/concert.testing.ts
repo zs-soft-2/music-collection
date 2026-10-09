@@ -14,9 +14,12 @@ import {
 	LoadConcertsResult,
 	LoadVenuesResult,
 	SuggestConcertsResult,
+	SuggestVenuesResult,
 	VenueDraft,
 	VenueEntity,
 	VenueRepository,
+	VenueSuggestionEntity,
+	VenueUsage,
 	toConcertId,
 	toVenueSlug,
 } from '@music-collection/api';
@@ -100,6 +103,25 @@ export function venueOf(overrides: Partial<VenueEntity> = {}): VenueEntity {
 	};
 }
 
+/** A venue proposal as a test needs it: a place the model named, waiting. */
+export function venueSuggestionOf(
+	overrides: Partial<VenueSuggestionEntity> = {}
+): VenueSuggestionEntity {
+	return {
+		...venueOf(overrides as Partial<VenueEntity>),
+		confidence: 0.8,
+		model: 'gemini-2.5-flash',
+		note: null,
+		reviewState: 'pending',
+		reviewedAt: null,
+		reviewedBy: null,
+		source: 'ai',
+		sourceUrl: 'https://example.test/venue',
+		suggestedAt: 1_760_000_000_000,
+		...overrides,
+	};
+}
+
 const EMPTY_VENUE_LOAD: LoadVenuesResult = {
 	scanned: 0,
 	venues: 0,
@@ -129,6 +151,18 @@ const EMPTY_SUGGEST: SuggestConcertsResult = {
 	requestsLeft: 50,
 };
 
+const EMPTY_VENUE_SUGGEST: SuggestVenuesResult = {
+	asked: 0,
+	venuesSeen: 0,
+	suggested: 0,
+	duplicates: 0,
+	rejected: 0,
+	discarded: 0,
+	model: 'gemini-2.5-flash',
+	requestsUsed: 0,
+	requestsLeft: 50,
+};
+
 /**
  * The concerts a test runs against, in memory. Everything that reads a concert
  * goes through these two contracts, so this is all a test has to provide — and
@@ -138,7 +172,8 @@ export function provideConcertTesting(
 	concerts: ConcertEntity[] = [],
 	venues: VenueEntity[] = [],
 	suggestions: ConcertSuggestionEntity[] = [],
-	artists: ConcertArtistMatch[] = []
+	artists: ConcertArtistMatch[] = [],
+	venueSuggestions: VenueSuggestionEntity[] = []
 ): Provider[] {
 	return [
 		// Az effect itt is a listában áll, mint élesben: nem gyökér-szolgáltatás,
@@ -155,8 +190,7 @@ export function provideConcertTesting(
 				update$: (
 					concert: ConcertEntity,
 					draft: ConcertDraft
-				): Observable<ConcertEntity> =>
-					of({ ...concert, ...draft }),
+				): Observable<ConcertEntity> => of({ ...concert, ...draft }),
 				delete$: (): Observable<void> => of(undefined),
 				approve$: (
 					suggestion: ConcertSuggestionEntity
@@ -191,17 +225,32 @@ export function provideConcertTesting(
 			provide: VenueRepository,
 			useValue: {
 				list$: (): Observable<VenueEntity[]> => of(venues),
+				suggestions$: (): Observable<VenueSuggestionEntity[]> =>
+					of(venueSuggestions),
 				create$: (venue: VenueDraft): Observable<VenueEntity> =>
 					of(venueOf(venue as Partial<VenueEntity>)),
 				update$: (
-					uid: string,
-					venue: VenueDraft
-				): Observable<VenueEntity> =>
-					of({ ...venueOf(venue as Partial<VenueEntity>), uid }),
+					venue: VenueEntity,
+					draft: VenueDraft
+				): Observable<VenueEntity> => of({ ...venue, ...draft }),
+				retire$: (): Observable<void> => of(undefined),
 				delete$: (): Observable<void> => of(undefined),
-				isInUse$: (uid: string): Observable<boolean> =>
-					of(concerts.some((concert) => concert.venueUid === uid)),
+				usage$: (uid: string): Observable<VenueUsage> =>
+					of({
+						concerts: concerts.filter(
+							(concert) => concert.venueUid === uid
+						).length,
+					}),
+				// A `null` (meg nem számolható) eset a store tesztjeiben áll,
+				// ahol a repository helyén egy mock ül.
 				load$: (): Observable<LoadVenuesResult> => of(EMPTY_VENUE_LOAD),
+				suggest$: (): Observable<SuggestVenuesResult> =>
+					of(EMPTY_VENUE_SUGGEST),
+				approveSuggestion$: (
+					suggestion: VenueSuggestionEntity
+				): Observable<VenueEntity> =>
+					of(venueOf(suggestion as Partial<VenueEntity>)),
+				rejectSuggestion$: (): Observable<void> => of(undefined),
 			},
 		},
 	];
