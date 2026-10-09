@@ -183,6 +183,56 @@ export async function announceGenreBundle(
 		);
 }
 
+/** How many times a bundle upload is retried before the run gives up. */
+const UPLOAD_ATTEMPTS = 3;
+
+/**
+ * Puts a built bundle in the bucket.
+ *
+ * It is written to a local file and streamed up from there, rather than
+ * pushed out of memory in a single request: a genre bundle is tens of
+ * megabytes, and one socket dying mid-write (EPIPE) would throw away a
+ * catalog read that costs tens of thousands of documents. For the same
+ * reason it retries, and leaves the file behind when it finally gives up, so
+ * the bundle can be put up without reading the catalog again.
+ */
+export async function uploadBundle(bucket, path, gzipped) {
+	const { writeFile, rm } = await import('node:fs/promises');
+	const { tmpdir } = await import('node:os');
+	const { join } = await import('node:path');
+	const local = join(tmpdir(), path.replace(/\//g, '-'));
+
+	await writeFile(local, gzipped);
+
+	for (let attempt = 1; ; attempt++) {
+		try {
+			await bucket.upload(local, {
+				destination: path,
+				resumable: true,
+				metadata: {
+					contentType: 'application/octet-stream',
+					contentEncoding: 'gzip',
+					cacheControl: 'public, max-age=31536000, immutable',
+				},
+			});
+			await rm(local, { force: true });
+			return;
+		} catch (error) {
+			if (attempt >= UPLOAD_ATTEMPTS) {
+				console.error(
+					`Upload of ${path} failed ${attempt} times; the bundle is kept at ${local} — ` +
+						`put it up with: gcloud storage cp --content-encoding=gzip ${local} gs://${bucket.name}/${path}`
+				);
+				throw error;
+			}
+			console.warn(
+				`  upload of ${path} failed (${error.code ?? error.message}), retrying ${attempt}/${UPLOAD_ATTEMPTS - 1}`
+			);
+			await new Promise((resolve) => setTimeout(resolve, 2000 * attempt));
+		}
+	}
+}
+
 /**
  * Lets a browser download bundles from the bucket. The browser fetches them
  * with XHR, which is a cross-origin request; without this it never gets to

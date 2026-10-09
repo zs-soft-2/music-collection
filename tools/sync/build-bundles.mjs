@@ -31,6 +31,7 @@ import {
 	BUNDLE_FEATURE_KEYS,
 	BUNDLE_FOLDER,
 	announceBundle,
+	uploadBundle,
 	ensureBundleCors,
 	featureVersion,
 	removeOldBundles,
@@ -96,14 +97,7 @@ for (const featureKey of featureKeys) {
 	const gzipped = gzipSync(content);
 	const path = `${BUNDLE_FOLDER}/${featureKey}/${modifiedAt.seconds}.bundle`;
 
-	await bucket.file(path).save(gzipped, {
-		resumable: false,
-		metadata: {
-			contentType: 'application/octet-stream',
-			contentEncoding: 'gzip',
-			cacheControl: 'public, max-age=31536000, immutable',
-		},
-	});
+	await uploadBundle(bucket, path, gzipped);
 	await announceBundle(db, featureKey, {
 		path,
 		modifiedAt,

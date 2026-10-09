@@ -38,6 +38,7 @@ import {
 	GENRE_BUNDLE_FEATURE_KEYS,
 	GENRE_BUNDLE_FOLDER,
 	announceGenreBundle,
+	uploadBundle,
 	ensureBundleCors,
 	featureVersion,
 	removeOldBundles,
@@ -113,14 +114,7 @@ for (const [slug, documents] of slices) {
 	const gzipped = gzipSync(content);
 	const path = `${GENRE_BUNDLE_FOLDER}/${slug}/${version.seconds}.bundle`;
 
-	await bucket.file(path).save(gzipped, {
-		resumable: false,
-		metadata: {
-			contentType: 'application/octet-stream',
-			contentEncoding: 'gzip',
-			cacheControl: 'public, max-age=31536000, immutable',
-		},
-	});
+	await uploadBundle(bucket, path, gzipped);
 	await announceGenreBundle(db, slug, {
 		path,
 		modifiedAt: version,
