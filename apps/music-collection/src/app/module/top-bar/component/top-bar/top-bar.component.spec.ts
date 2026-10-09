@@ -154,6 +154,7 @@ describe('TopBarComponent', () => {
 		fixture.detectChanges();
 
 		expect(accountLabels()).toEqual([
+			'Overview',
 			'My Collection',
 			'Scan',
 			'Shelf',
@@ -195,6 +196,7 @@ describe('TopBarComponent', () => {
 		openAccount();
 
 		expect(labels('.menu .collector .menu-item')).toEqual([
+			'Overview',
 			'My Collection',
 			'Scan',
 			'Shelf',
@@ -219,6 +221,7 @@ describe('TopBarComponent', () => {
 
 		expect(sheetLabels()).toEqual([
 			'Home',
+			'Overview',
 			'My Collection',
 			'Scan',
 			'Shelf',

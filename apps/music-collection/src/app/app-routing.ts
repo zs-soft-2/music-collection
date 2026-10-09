@@ -120,6 +120,19 @@ export const routes: Routes = [
 			),
 	},
 	{
+		// The collection in one screen, ahead of the shelf itself: what a
+		// collector opens to see how they stand, not to find a record.
+		path: 'overview',
+		loadComponent: () =>
+			import('./page/overview/overview-page.component').then(
+				(module) => module.OverviewPageComponent
+			),
+		data: {
+			breadcrumb: 'overview',
+		},
+		canActivate: [authenticatedGuard],
+	},
+	{
 		path: 'collection',
 		loadComponent: () =>
 			import('./page/collection/collection-page.component').then(

@@ -16,8 +16,15 @@ import { ExternalPlayerConsentService } from './data/external-player';
 import { environment } from '../environments/environment';
 import { CoreErrorModule } from '@music-collection/core/error';
 
-import { TopBarModule } from './module';
-import { AmbientBackdropComponent } from './shared/backdrop';
+import {
+	SideRailComponent,
+	TabBarComponent,
+	TopBarModule,
+} from './module';
+import {
+	AmbientBackdropComponent,
+	SceneBackdropComponent,
+} from './shared/backdrop';
 import { ConsentBarComponent } from './shared/consent';
 import { DemoTourComponent } from './shared/demo-tour';
 import { DailyQuestionBannerComponent } from './shared/daily-question';
@@ -33,10 +40,13 @@ import { YoutubeDockComponent } from './shared/youtube';
 	imports: [
 		...I18N_IMPORTS,
 		TopBarModule,
+		SideRailComponent,
+		TabBarComponent,
 		RouterModule,
 		CoreErrorModule,
 		YoutubeDockComponent,
 		AmbientBackdropComponent,
+		SceneBackdropComponent,
 		PlayerStageComponent,
 		ConsentBarComponent,
 		DailyQuestionBannerComponent,

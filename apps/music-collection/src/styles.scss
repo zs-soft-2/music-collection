@@ -39,6 +39,39 @@ html.mc-dark {
 	--mc-status-bad: #ff6b6b;
 	--mc-shadow-menu:
 		0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+
+	/*
+	 * A diagramok sorozat-színei: hat rögzített árnyalat, mindig ebben a
+	 * sorrendben kiosztva, soha nem körbeforgatva. Maga a sorrend a
+	 * biztonsági háló — az egymás mellé kerülő párok színtévesztéssel is
+	 * elválnak (protan/deutan ΔE ≥ 8, OKLab ×100), a hetedik sorozat ezért
+	 * nem kap kitalált hetedik árnyalatot, hanem az „egyéb” szürkéjébe
+	 * olvad. A két mód ugyanaz a hat árnyalat, a saját hátterére lépve.
+	 */
+	--mc-series-1: #e66767;
+	--mc-series-2: #3987e5;
+	--mc-series-3: #d95926;
+	--mc-series-4: #199e70;
+	--mc-series-5: #9085e9;
+	--mc-series-6: #c98500;
+	--mc-series-other: #6b6b6b;
+}
+
+/*
+ * Üveglapok a világ fölött. Amíg jelenet áll a lap mögött, a felületek
+ * átengednek belőle valamennyit — ettől ül a tartalom a világban ahelyett,
+ * hogy eltakarná. Csak a sötét témán: a világos témának nincs jelenete.
+ *
+ * Szándékosan nincs rajtuk `backdrop-filter`. Egy lapon több tucat kártya
+ * van, és mindegyiken egy-egy elmosás külön réteget és külön rajzolást
+ * jelentene; a 12–20% átengedés ugyanazt a hatást adja ingyen.
+ */
+html.mc-dark.mc-scene,
+html.mc-scene:not(.mc-light) {
+	--mc-card-bg: rgba(22, 22, 22, 0.82);
+	--mc-card-bg-hover: rgba(31, 31, 31, 0.88);
+	--mc-surface-2: rgba(30, 30, 30, 0.85);
+	--mc-bg-muted: rgba(17, 17, 17, 0.78);
 }
 
 html.mc-light {
@@ -71,6 +104,14 @@ html.mc-light {
 	--mc-shadow-menu:
 		0 10px 15px -3px rgb(15 23 42 / 0.1),
 		0 4px 6px -4px rgb(15 23 42 / 0.08);
+
+	--mc-series-1: #e34948;
+	--mc-series-2: #2a78d6;
+	--mc-series-3: #eb6834;
+	--mc-series-4: #1baf7a;
+	--mc-series-5: #4a3aa7;
+	--mc-series-6: #eda100;
+	--mc-series-other: #8a8a8a;
 }
 
 :root {
@@ -85,6 +126,18 @@ html.mc-light {
 	--mc-font-body:
 		Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 	--mc-app-bar-height: 64px;
+	/*
+	 * Az álló bal oldali navigáció szélessége. Csak 1100px felett van
+	 * ilyen sáv; a lap ennyivel beljebb kezdődik, nem a sáv úszik a
+	 * tartalom fölött.
+	 */
+	--mc-rail-width: 15rem;
+	/*
+	 * Az alsó lapsáv magassága. Nulla mindenütt, ahol nincs ilyen sáv,
+	 * hogy a lap alja és a lebegő lejátszó egy képlettel számolhasson
+	 * vele, töréspont-figyelés nélkül.
+	 */
+	--mc-tab-bar-height: 0px;
 
 	// A kör alakú (ikon-)gombok méretskálája. Mobilon minden fok egy méretpaddal
 	// kisebb: a telefon képernyőjén ugyanaz a gomb aránytalanul nagy, és a
@@ -103,6 +156,7 @@ html.mc-light {
 // hanem ezekre a tokenekre hivatkozzon, így a mobilos zsugorodást ingyen kapja.
 @media (max-width: 720px) {
 	:root {
+		--mc-tab-bar-height: 3.75rem;
 		--mc-circle-xs: 1.75rem;
 		--mc-circle-sm: 2rem;
 		--mc-circle-md: 2.125rem;

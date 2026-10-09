@@ -99,7 +99,8 @@ import { ExternalPlayerConsentService } from '../../data/external-player';
 			 */
 			z-index: 1100;
 			inset-inline: 0;
-			bottom: 0;
+			/* A telefonos lapsáv fölé: az sem takarható ki. */
+			bottom: var(--mc-tab-bar-height);
 			display: flex;
 			flex-direction: column;
 			gap: 0.75rem;

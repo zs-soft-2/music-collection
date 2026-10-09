@@ -1,3 +1,9 @@
+<!--
+	A világ, amiben a lap áll: a lejátszott lemezből épül, és állóképként
+	megáll, hacsak a gyűjtő nem kért élőt. Alatta marad a mintás réteg,
+	ami akkor is kitölti a lapot, ha nincs jelenet.
+-->
+<mc-scene-backdrop />
 <mc-ambient-backdrop />
 <mc-top-bar></mc-top-bar>
 
@@ -7,6 +13,13 @@
 	it or send it away.
 -->
 <mc-daily-question-banner />
+
+<!--
+	A bal oldali álló navigáció. Széles képernyőn ez a fő menü, és a
+	felső sáv vízszintes linksora elmarad mellőle; keskenyen a sáv
+	nem is rajzolódik ki.
+-->
+<mc-side-rail />
 
 <main>
 	<div class="content">
@@ -24,6 +37,12 @@
 	collector who wants nothing to do with it should be able to look past it.
 -->
 <mc-verdict-prompt />
+
+<!--
+	A hüvelykujj menüje: öt hely a képernyő alján, telefonon. Nagyobb
+	képernyőn nem rajzolódik ki — ott a bal oldali sáv navigál.
+-->
+<mc-tab-bar />
 
 <mc-error-toast></mc-error-toast>
 <mc-consent-bar />

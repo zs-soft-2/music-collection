@@ -32,6 +32,13 @@ export class TopBarService {
 
 			// A polc és ami rajta van: megnézni, gyarapítani, kívánni.
 			{
+				labelKey: 'nav.overview',
+				icon: 'pi-chart-pie',
+				routerLink: ['/overview'],
+				group: 'collection',
+				requiresAuth: true,
+			},
+			{
 				labelKey: 'nav.collection',
 				icon: 'pi-th-large',
 				routerLink: ['/collection'],

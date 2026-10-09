@@ -103,6 +103,8 @@ describe('AppComponent', () => {
 					useValue: {
 						stageOpen: signal(false),
 						now: signal(null),
+						// Amit a háttérvilág olvas: mi szól éppen, ha szól.
+						shown: signal({ request: null }),
 						finished: signal(null),
 						clearFinished: jest.fn(),
 					},

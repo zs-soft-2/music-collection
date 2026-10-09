@@ -1,0 +1,226 @@
+<div class="page" *transloco="let t">
+	<header class="hero">
+		<div class="hero-text">
+			<p class="eyebrow">{{ t('page.overview.eyebrow') }}</p>
+			<h1>{{ t('page.overview.title') }}</h1>
+		</div>
+
+		<a class="hero-link" routerLink="/collection">
+			{{ t('page.overview.openCollection') }}
+			<i class="pi pi-arrow-right" aria-hidden="true"></i>
+		</a>
+	</header>
+
+	@if (!store.isAuthenticated()) {
+		<section class="notice">
+			<p>{{ t('page.overview.guest') }}</p>
+			<button type="button" class="primary-btn" (click)="store.login()">
+				<i class="pi pi-sign-in" aria-hidden="true"></i>
+				{{ t('nav.logIn') }}
+			</button>
+		</section>
+	} @else if (store.isLoading()) {
+		<div class="skeleton-grid" aria-hidden="true">
+			@for (slot of [1, 2, 3, 4, 5, 6]; track slot) {
+				<div class="skeleton"></div>
+			}
+		</div>
+	} @else if (!store.stats().total) {
+		<section class="notice">
+			<p>{{ t('page.overview.empty') }}</p>
+			<a class="primary-btn" routerLink="/scan">
+				<i class="pi pi-camera" aria-hidden="true"></i>
+				{{ t('nav.scan') }}
+			</a>
+		</section>
+	} @else {
+		<!--
+			The headline row and the ring sit together: the numbers say how
+			much, the ring says what of — the two halves of the same answer.
+		-->
+		<section class="top" aria-labelledby="overview-headline">
+			<h2 id="overview-headline" class="visually-hidden">
+				{{ t('page.overview.headline') }}
+			</h2>
+
+			<ul class="kpis">
+				@for (stat of store.headline(); track stat.key) {
+					<li class="kpi">
+						<i class="pi {{ stat.icon }}" aria-hidden="true"></i>
+						<span class="kpi-label">{{ t(stat.labelKey) }}</span>
+						<b class="kpi-value">{{ stat.value | mcNumber }}</b>
+
+						@if (stat.delta) {
+							<span class="kpi-delta">
+								<i class="pi pi-arrow-up" aria-hidden="true"></i>
+								{{
+									t('page.overview.stat.delta', {
+										count: stat.delta,
+										days: recentDays
+									})
+								}}
+							</span>
+						} @else {
+							<span class="kpi-delta is-quiet">
+								{{ t('page.overview.stat.noChange') }}
+							</span>
+						}
+					</li>
+				}
+			</ul>
+
+			<div class="panel">
+				<mc-donut-chart
+					[heading]="t('page.overview.styles')"
+					[data]="store.styles()"
+					[otherLabel]="t('page.overview.otherStyles')"
+					[centerValue]="store.stats().total"
+					[totalLabel]="t('page.overview.copies')"
+					[emptyText]="t('page.overview.noStyles')"
+				/>
+			</div>
+		</section>
+
+		<div class="grid">
+			<section class="panel is-wide" aria-labelledby="overview-arrivals">
+				<div class="panel-head">
+					<h2 id="overview-arrivals">
+						{{ t('page.overview.arrivals') }}
+					</h2>
+					<a class="panel-link" routerLink="/collection">
+						{{ t('page.overview.seeAll') }}
+						<i class="pi pi-angle-right" aria-hidden="true"></i>
+					</a>
+				</div>
+
+				<div class="arrivals">
+					@for (
+						release of store.arrivals();
+						track release.id;
+						let first = $first
+					) {
+						<mc-release-card
+							[release]="release"
+							[priority]="first"
+						/>
+					}
+				</div>
+			</section>
+
+			<section class="panel" aria-labelledby="overview-growth">
+				<h2 id="overview-growth" class="panel-title">
+					{{ t('page.overview.growth') }}
+				</h2>
+
+				<p class="figure">
+					<b>{{ store.headline()[0].delta | mcNumber }}</b>
+					<span>{{
+						t('page.overview.growthCaption', { days: recentDays })
+					}}</span>
+				</p>
+
+				<mc-sparkline
+					[data]="store.growth()"
+					[label]="t('page.overview.growth')"
+				/>
+			</section>
+
+			<section class="panel" aria-labelledby="overview-formats">
+				<h2 id="overview-formats" class="visually-hidden">
+					{{ t('page.overview.formats') }}
+				</h2>
+				<mc-style-bars
+					[heading]="t('page.overview.formats')"
+					[data]="store.formats()"
+					[unit]="t('page.overview.copies')"
+				/>
+			</section>
+
+			<section class="panel" aria-labelledby="overview-artists">
+				<h2 id="overview-artists" class="visually-hidden">
+					{{ t('page.overview.topArtists') }}
+				</h2>
+				<mc-style-bars
+					[heading]="t('page.overview.topArtists')"
+					[data]="store.topArtists()"
+					[unit]="t('page.overview.copies')"
+				/>
+			</section>
+
+			<!--
+				The collections the collector follows, as one ring and the
+				two counts behind it. The list itself is on /collections —
+				this is only how far along it says they are.
+			-->
+			<section class="panel" aria-labelledby="overview-progress">
+				<div class="panel-head">
+					<h2 id="overview-progress">
+						{{ t('page.overview.progress') }}
+					</h2>
+					<a class="panel-link" routerLink="/collections">
+						{{ t('page.overview.seeAll') }}
+						<i class="pi pi-angle-right" aria-hidden="true"></i>
+					</a>
+				</div>
+
+				@if (store.collectionsLoading()) {
+					<div class="skeleton" aria-hidden="true"></div>
+				} @else if (store.collectionsSummary().total) {
+					<div class="progress">
+						<mc-progress-ring
+							[value]="store.collectionsSummary().completed"
+							[max]="store.collectionsSummary().total"
+							[caption]="t('page.overview.done')"
+							[label]="t('page.overview.progress')"
+						/>
+
+						<dl class="facts">
+							<div class="fact">
+								<dt>{{ t('page.overview.completed') }}</dt>
+								<dd>
+									{{
+										store.collectionsSummary().completed
+											| mcNumber
+									}}
+									/
+									{{
+										store.collectionsSummary().total
+											| mcNumber
+									}}
+								</dd>
+							</div>
+							<div class="fact">
+								<dt>{{ t('page.overview.missing') }}</dt>
+								<dd>
+									{{
+										store.collectionsSummary().missing
+											| mcNumber
+									}}
+								</dd>
+							</div>
+							<div class="fact">
+								<dt>{{ t('page.overview.rated') }}</dt>
+								<dd>
+									{{ store.rated() | mcNumber }} /
+									{{ store.stats().total | mcNumber }}
+								</dd>
+							</div>
+						</dl>
+					</div>
+				} @else {
+					<p class="quiet">{{ t('page.overview.noCollections') }}</p>
+				}
+			</section>
+
+			<section class="panel is-wide" aria-labelledby="overview-decades">
+				<h2 id="overview-decades" class="visually-hidden">
+					{{ t('page.overview.decades') }}
+				</h2>
+				<mc-decade-chart
+					[heading]="t('page.overview.decades')"
+					[data]="store.decades()"
+				/>
+			</section>
+		</div>
+	}
+</div>

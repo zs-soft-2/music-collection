@@ -15,6 +15,7 @@ import { BaseComponent, RoleNames } from '@music-collection/api';
 import { PlayerMiniComponent } from '../../../../shared/player';
 import { ExternalPlayerConsentService } from '../../../../data/external-player';
 import { LanguagePickerComponent } from '../../../../i18n';
+import { SceneBackdropService } from '../../../../shared/backdrop';
 import { LayoutWidthService, ThemeService } from '../../../../theme';
 import { MenuGroup, MenuItem, MenuSection } from '../../api';
 import { TopBarService } from './top-bar.service';
@@ -41,6 +42,8 @@ export class TopBarComponent extends BaseComponent {
 	private readonly componentService = inject(TopBarService);
 	protected readonly theme = inject(ThemeService);
 	protected readonly layoutWidth = inject(LayoutWidthService);
+	/** Milyen világ áll a lap mögött: nincs, álló vagy élő. */
+	protected readonly backdrop = inject(SceneBackdropService);
 	/** Whether the outside players may be on the page at all. */
 	protected readonly players = inject(ExternalPlayerConsentService);
 

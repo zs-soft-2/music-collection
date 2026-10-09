@@ -4,6 +4,19 @@ main {
 	display: flex;
 	flex-direction: column;
 	min-height: calc(100vh - var(--mc-app-bar-height));
+	/* Telefonon az alsó lapsáv alatt is van lap; ennyi marad neki. */
+	padding-bottom: var(--mc-tab-bar-height);
+}
+
+/*
+ * A lap a sáv mellé kerül, nem alá: a sáv fix, így semmi nem görögne ki
+ * alóla. Ugyanez a töréspont van a sávon és a felső sáv linksorán, hogy a
+ * kettő soha ne legyen egyszerre a képernyőn.
+ */
+@media (min-width: 1100px) {
+	main {
+		padding-left: var(--mc-rail-width);
+	}
 }
 
 .content {

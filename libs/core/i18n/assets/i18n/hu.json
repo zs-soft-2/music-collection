@@ -1,5 +1,11 @@
 {
 	"nav": {
+		"backdrop": {
+			"off": "Háttér: nincs jelenet",
+			"still": "Háttér: álló jelenet",
+			"live": "Háttér: élő jelenet"
+		},
+		"overview": "Áttekintés",
 		"brandHome": "Music Collection — főoldal",
 		"main": "Fő menü",
 		"home": "Főoldal",
@@ -323,6 +329,39 @@
 		}
 	},
 	"page": {
+		"overview": {
+			"eyebrow": "Üdvözöllek vissza",
+			"title": "Gyűjtemény áttekintés",
+			"openCollection": "Polc megnyitása",
+			"headline": "A gyűjtemény számokban",
+			"guest": "Jelentkezz be, és itt látod a saját gyűjteményed összegzését.",
+			"empty": "Még nincs lemez a polcodon. Olvass be egyet, és itt megjelenik az összegzés.",
+			"stat": {
+				"copies": "Lemezek",
+				"artists": "Előadók",
+				"styles": "Műfajok",
+				"labels": "Kiadók",
+				"delta": "+{{count}} az elmúlt {{days}} napban",
+				"noChange": "nem változott"
+			},
+			"styles": "Műfajok megoszlása",
+			"otherStyles": "Egyéb",
+			"copies": "lemez",
+			"noStyles": "Egyetlen lemezed sincs műfajhoz kötve.",
+			"arrivals": "Legutóbb hozzáadott",
+			"seeAll": "Összes",
+			"growth": "Gyarapodás",
+			"growthCaption": "új lemez az elmúlt {{days}} napban",
+			"formats": "Adathordozók",
+			"topArtists": "Top előadók",
+			"progress": "Kihívások",
+			"done": "teljesítve",
+			"completed": "Teljesítve",
+			"missing": "Hiányzik",
+			"rated": "Értékelve",
+			"noCollections": "Még egy kihívást sem követsz.",
+			"decades": "Évtizedek"
+		},
 		"collection": {
 			"my-collection": "Gyűjteményem",
 			"your-collection-at-a": "A gyűjteményed egy pillantásra",

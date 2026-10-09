@@ -1,5 +1,11 @@
 {
 	"nav": {
+		"backdrop": {
+			"off": "Backdrop: no scene",
+			"still": "Backdrop: still scene",
+			"live": "Backdrop: live scene"
+		},
+		"overview": "Overview",
 		"brandHome": "Music Collection — home",
 		"main": "Main",
 		"home": "Home",
@@ -323,6 +329,39 @@
 		}
 	},
 	"page": {
+		"overview": {
+			"eyebrow": "Welcome back",
+			"title": "Collection overview",
+			"openCollection": "Open the shelf",
+			"headline": "The collection in numbers",
+			"guest": "Sign in to see the overview of your own collection.",
+			"empty": "Nothing on the shelf yet. Scan a record and the summary shows up here.",
+			"stat": {
+				"copies": "Records",
+				"artists": "Artists",
+				"styles": "Styles",
+				"labels": "Labels",
+				"delta": "+{{count}} in the last {{days}} days",
+				"noChange": "unchanged"
+			},
+			"styles": "Style distribution",
+			"otherStyles": "Other",
+			"copies": "records",
+			"noStyles": "None of your records carries a style yet.",
+			"arrivals": "Latest arrivals",
+			"seeAll": "See all",
+			"growth": "Growth",
+			"growthCaption": "new records in the last {{days}} days",
+			"formats": "Media",
+			"topArtists": "Top artists",
+			"progress": "Challenges",
+			"done": "complete",
+			"completed": "Completed",
+			"missing": "Missing",
+			"rated": "Rated",
+			"noCollections": "You are not following any challenge yet.",
+			"decades": "Decades"
+		},
 		"collection": {
 			"my-collection": "My Collection",
 			"your-collection-at-a": "Your collection at a glance",

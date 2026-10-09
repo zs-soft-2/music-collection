@@ -1,5 +1,11 @@
 {
 	"nav": {
+		"backdrop": {
+			"off": "Hintergrund: keine Szene",
+			"still": "Hintergrund: stehende Szene",
+			"live": "Hintergrund: lebendige Szene"
+		},
+		"overview": "Überblick",
 		"brandHome": "Music Collection — Startseite",
 		"main": "Hauptmenü",
 		"home": "Startseite",
@@ -323,6 +329,39 @@
 		}
 	},
 	"page": {
+		"overview": {
+			"eyebrow": "Willkommen zurück",
+			"title": "Sammlungsüberblick",
+			"openCollection": "Regal öffnen",
+			"headline": "Die Sammlung in Zahlen",
+			"guest": "Melde dich an, um den Überblick über deine eigene Sammlung zu sehen.",
+			"empty": "Noch nichts im Regal. Scanne eine Platte, dann erscheint hier die Übersicht.",
+			"stat": {
+				"copies": "Platten",
+				"artists": "Künstler",
+				"styles": "Stilrichtungen",
+				"labels": "Labels",
+				"delta": "+{{count}} in den letzten {{days}} Tagen",
+				"noChange": "unverändert"
+			},
+			"styles": "Verteilung der Stilrichtungen",
+			"otherStyles": "Sonstige",
+			"copies": "Platten",
+			"noStyles": "Keine deiner Platten hat bisher eine Stilrichtung.",
+			"arrivals": "Zuletzt hinzugefügt",
+			"seeAll": "Alle",
+			"growth": "Zuwachs",
+			"growthCaption": "neue Platten in den letzten {{days}} Tagen",
+			"formats": "Tonträger",
+			"topArtists": "Top-Künstler",
+			"progress": "Herausforderungen",
+			"done": "geschafft",
+			"completed": "Abgeschlossen",
+			"missing": "Fehlt",
+			"rated": "Bewertet",
+			"noCollections": "Du folgst noch keiner Herausforderung.",
+			"decades": "Jahrzehnte"
+		},
 		"collection": {
 			"my-collection": "Meine Sammlung",
 			"your-collection-at-a": "Deine Sammlung auf einen Blick",

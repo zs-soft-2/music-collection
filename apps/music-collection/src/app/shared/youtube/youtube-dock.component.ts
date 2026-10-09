@@ -103,7 +103,10 @@ interface Box {
 		.dock.floating {
 			position: fixed;
 			right: 1rem;
-			bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+			bottom: calc(
+				1rem + var(--mc-tab-bar-height) +
+					env(safe-area-inset-bottom, 0px)
+			);
 			z-index: 1000;
 			width: min(22rem, calc(100vw - 2rem));
 			border: 1px solid var(--mc-border);
