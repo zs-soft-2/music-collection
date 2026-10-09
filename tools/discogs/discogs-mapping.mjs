@@ -135,6 +135,7 @@ export function trimRelease(release) {
 		id: artist.id,
 		name: artist.name,
 		anv: artist.anv || null,
+		join: artist.join || '',
 		role: artist.role || '',
 		tracks: artist.tracks || '',
 	});
@@ -143,6 +144,9 @@ export function trimRelease(release) {
 		type: track.type_ || 'track',
 		title: track.title || '',
 		duration: track.duration || '',
+		// Who plays the track, where that is not the release's own artist:
+		// on a compilation every track names its own performer.
+		artists: (track.artists || []).map(trimArtist),
 		extraartists: (track.extraartists || []).map(trimArtist),
 		subTracks: (track.sub_tracks || []).map(trimTrack),
 	});
@@ -227,17 +231,47 @@ export function musicianUid(artist) {
 		: `discogs-name-${slug(stripDiscogsSuffix(artist.name))}`;
 }
 
-/** Tracks in play order; index tracks are replaced by their sub-tracks. */
-export function toTrackDocs(albumUid, release) {
+/**
+ * The performers Discogs names on a track, joined the way it prints them:
+ * "Richie Sambora & Bruce Foster", "Jason Andrews & Jasy Andrews". The
+ * catalog name is used, not the one credited on the sleeve ("Jon Bon Jovi",
+ * not "John Bongiovi"), so the same person reads the same everywhere.
+ */
+export function trackArtistName(track) {
+	return (track.artists ?? [])
+		.map((artist, index, all) => {
+			const name = stripDiscogsSuffix(artist.name);
+			const join = index < all.length - 1 ? artist.join || '&' : '';
+
+			return join === ','
+				? `${name}, `
+				: join
+					? `${name} ${join} `
+					: name;
+		})
+		.join('')
+		.trim();
+}
+
+/**
+ * Tracks in play order; index tracks are replaced by their sub-tracks.
+ *
+ * With `withArtists` the track's own performer is written into its name
+ * ("Jon Bon Jovi – Open Your Heart"): on a compilation every track has a
+ * different one, and a track document has nowhere else to keep it.
+ */
+export function toTrackDocs(albumUid, release, { withArtists = false } = {}) {
 	const tracks = [];
 	let heading = null;
 
 	const add = (track) => {
+		const artist = withArtists ? trackArtistName(track) : '';
+
 		tracks.push({
 			albumUid,
 			index: tracks.length + 1,
 			position: track.position || null,
-			name: track.title,
+			name: artist ? `${artist} – ${track.title}` : track.title,
 			duration: track.duration || null,
 			durationSec: toSeconds(track.duration),
 			heading,
@@ -327,6 +361,39 @@ export function toCreditDocs(albumUid, release) {
 		contributions: Array.from(contributions.values()),
 	};
 }
+
+/** Discogs formats → the catalog's album format. */
+export function albumFormat(formats) {
+	const descriptions = (formats ?? []).flatMap((format) => [
+		format.name,
+		...(format.descriptions ?? []),
+	]);
+	const has = (name) =>
+		descriptions.some((d) => d.toLowerCase() === name.toLowerCase());
+
+	if (has('Compilation')) return 'compilation';
+	if (has('Live')) return 'live';
+	if (has('Maxi-Single')) return 'maxi';
+	if (has('EP')) return 'ep';
+	if (has('Single') || (has('7"') && !has('Album'))) return 'single';
+
+	return 'lp';
+}
+
+/**
+ * "2016-05-05" or "2016" → local midnight, the way the catalog stores an
+ * album's year: epoch milliseconds, which the client reads back as a Date.
+ */
+export function releaseDate(release) {
+	const [year, month, day] = String(release.released || release.year || '')
+		.split('-')
+		.map((part) => Number(part));
+
+	return year ? new Date(year, (month || 1) - 1, day || 1) : null;
+}
+
+/** First image of a Discogs release or artist, if it has one. */
+export const coverUrl = (payload) => payload?.images?.[0]?.uri ?? null;
 
 /** Summary of the original release stored on the album document. */
 export function toOriginalRelease(match, release) {

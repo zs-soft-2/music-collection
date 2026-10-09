@@ -37,9 +37,21 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 
-import { ENV_OPTION, readEnvironment } from '../sync/environment.mjs';
+import { readEnvironment } from '../sync/environment.mjs';
+import {
+	ENV_OPTION,
+	catalogTaxonomy,
+	createMissing,
+	mapStyles,
+	normalizeName,
+	openFirestore,
+	writeOps,
+} from './catalog-write.mjs';
 import { DiscogsClient } from './discogs-client.mjs';
 import {
+	albumFormat,
+	coverUrl,
+	releaseDate,
 	searchParameters,
 	stripDiscogsSuffix,
 	toCreditDocs,
@@ -50,7 +62,6 @@ import {
 } from './discogs-mapping.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const ROOT = join(HERE, '..', '..');
 const CACHE = join(HERE, '.cache');
 const ALBUM_CACHE = join(CACHE, 'albums');
 const BAND_CACHE = join(CACHE, 'bands');
@@ -82,55 +93,6 @@ const skipped = new Set(
 		.filter(Boolean)
 );
 
-const normalizeName = (name) =>
-	name
-		.toLowerCase()
-		.replace(/[^a-z0-9]+/g, ' ')
-		.trim();
-
-/**
- * The taxonomy as the admin page keeps it (`genre/{slug}`): the styles by
- * their normalized form ("post rock" → "Post-Rock"), and the genre each one
- * belongs to. It is read from Firestore even for a dry run — which styles
- * exist is data now, not a list in this repository.
- */
-async function catalogTaxonomy(db) {
-	const styles = new Map();
-	const genres = new Map();
-
-	for (const document of (await db.collection('genre').get()).docs) {
-		const genre = document.data();
-
-		genres.set(normalizeName(genre.name), genre.name);
-		for (const style of genre.styles ?? []) {
-			if (!styles.has(normalizeName(style))) {
-				styles.set(normalizeName(style), {
-					style,
-					genre: genre.name,
-				});
-			}
-		}
-	}
-
-	return { styles, genres };
-}
-
-/** Discogs styles the taxonomy knows; the unknown ones are reported. */
-function mapStyles(styles, known, dropped) {
-	const mapped = [];
-
-	for (const style of styles) {
-		const hit = known.get(normalizeName(style));
-
-		if (hit) {
-			if (!mapped.includes(hit.style)) mapped.push(hit.style);
-		} else {
-			dropped.add(style);
-		}
-	}
-	return mapped;
-}
-
 /**
  * The genre the band is filed under: the one named on most of its releases
  * that the taxonomy also holds, `--genre` overriding it. Discogs names a
@@ -159,38 +121,6 @@ function bandGenre(releaseGenres, taxonomy) {
 
 	return [...count.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
 }
-
-/** Discogs formats → the catalog's album format. */
-function albumFormat(formats) {
-	const descriptions = formats.flatMap((format) => [
-		format.name,
-		...(format.descriptions ?? []),
-	]);
-	const has = (name) =>
-		descriptions.some((d) => d.toLowerCase() === name.toLowerCase());
-
-	if (has('Compilation')) return 'compilation';
-	if (has('Live')) return 'live';
-	if (has('Maxi-Single')) return 'maxi';
-	if (has('EP')) return 'ep';
-	if (has('Single') || (has('7"') && !has('Album'))) return 'single';
-
-	return 'lp';
-}
-
-/**
- * "2016-05-05" or "2016" → local midnight, the way the catalog stores an
- * album's year: epoch milliseconds, which the client reads back as a Date.
- */
-function releaseDate(release) {
-	const [year, month, day] = String(release.released || release.year || '')
-		.split('-')
-		.map((part) => Number(part));
-
-	return year ? new Date(year, (month || 1) - 1, day || 1) : null;
-}
-
-const cover = (release) => release.images?.[0]?.uri ?? null;
 
 /** The band's own releases on Discogs: masters and the loose releases. */
 async function fetchBand(client) {
@@ -223,7 +153,7 @@ async function fetchBand(client) {
 			name: stripDiscogsSuffix(profile.name),
 			profile: profile.profile?.trim() || '',
 			urls: profile.urls ?? [],
-			imageUrl: cover(profile),
+			imageUrl: coverUrl(profile),
 			members: (profile.members ?? []).map((member) => ({
 				id: member.id,
 				name: member.name,
@@ -282,7 +212,7 @@ async function fetchRelease(client, entry, album) {
 			candidates: [],
 		},
 		release,
-		coverImageUrl: raw ? cover(raw) : null,
+		coverImageUrl: coverUrl(raw),
 		styles: raw?.styles ?? [],
 		genres: raw?.genres ?? [],
 		fetchedAt: new Date().toISOString(),
@@ -292,54 +222,10 @@ async function fetchRelease(client, entry, album) {
 	return cached;
 }
 
-async function openFirestore() {
-	const { initializeApp, applicationDefault } =
-		await import('firebase-admin/app');
-	const { getFirestore } = await import('firebase-admin/firestore');
-	const { projectId } = await readEnvironment(options.env);
-
-	initializeApp({ credential: applicationDefault(), projectId });
-	return getFirestore();
-}
-
-/** Creates the documents that do not exist yet; never touches the others. */
-async function createMissing(db, items) {
-	const snaps = items.length
-		? await db.getAll(...items.map((item) => item.ref))
-		: [];
-	const missing = items.filter((_, index) => !snaps[index].exists);
-
-	return { ops: missing.map((item) => ({ type: 'create', ...item })) };
-}
-
-async function writeOps(db, ops) {
-	const { featureKeyOf, stamp, touchCatalog } =
-		await import('../sync/catalog-sync.mjs');
-	const writer = db.bulkWriter();
-	const failures = [];
-
-	writer.onWriteError((error) => {
-		const fatal = [7, 8].includes(error.code);
-		if (fatal || error.failedAttempts >= 3) {
-			failures.push(`${error.documentRef.path}: ${error.message}`);
-			return false;
-		}
-		return true;
-	});
-	for (const op of ops) {
-		writer.create(op.ref, stamp(op.data));
-	}
-	await writer.close();
-	// After the writes: the version must not be older than what it covers.
-	await touchCatalog(db, [...new Set(ops.map((op) => featureKeyOf(op.ref)))]);
-
-	return failures;
-}
-
 async function main() {
 	const client = new DiscogsClient();
 	// Firestore first: the taxonomy lives there, and a dry run needs it too.
-	const db = await openFirestore();
+	const db = await openFirestore(options.env);
 	const taxonomy = await catalogTaxonomy(db);
 	const dropped = new Set();
 	const band = await fetchBand(client);
