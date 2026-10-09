@@ -1,6 +1,13 @@
 :host {
 	position: relative;
 	display: block;
+	/*
+	 * A card fills the cell it was given. Left to its own height a row of
+	 * cards is as ragged as its titles are long — one of two lines stands a
+	 * line taller than its neighbour, and the sleeves below it no longer
+	 * line up with anything.
+	 */
+	height: 100%;
 }
 
 .card {
@@ -532,5 +539,30 @@
 	.card:focus-visible .disc-surface,
 	.card:focus-visible .reel {
 		animation: none;
+	}
+}
+
+/*
+ * A screen with no hover has no way to call the card's buttons up, so they
+ * are all shown at once (styles.scss). Two of them sit at the foot of the
+ * card, which on a phone is where the title, the artist and the collector's
+ * stars are — the left-hand one lands squarely on the first star.
+ *
+ * So on such a screen they move up onto the sleeve, into the two corners the
+ * play and edit buttons left free. The artwork keeps its middle, which is
+ * what a sleeve is read by, and the words below it are left whole.
+ *
+ * `100cqw` is the card's own width, and the sleeve is square — so that is
+ * also where its bottom edge is.
+ */
+@media (hover: none) {
+	:host {
+		container-type: inline-size;
+	}
+
+	.mc-card-place,
+	.mc-card-remove {
+		top: calc(100cqw - 0.5rem - var(--mc-circle-xs));
+		bottom: auto;
 	}
 }
