@@ -8,6 +8,8 @@ import {
 import { PhotoMedia, SpineField } from '@music-collection/api';
 import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
+import { AiMarkComponent } from '../../shared/music-ui';
+
 import { ShelfScanPageStore } from './shelf-scan-page.store';
 import { ShelfRow, STATE_LABELS } from './shelf-scan.mapper';
 
@@ -22,7 +24,7 @@ import { ShelfRow, STATE_LABELS } from './shelf-scan.mapper';
 	selector: 'mc-shelf-scan-page',
 	templateUrl: './shelf-scan-page.component.html',
 	styleUrls: ['./shelf-scan-page.component.scss'],
-	imports: [...I18N_IMPORTS],
+	imports: [...I18N_IMPORTS, AiMarkComponent],
 })
 export class ShelfScanPageComponent {
 	protected readonly store = inject(ShelfScanPageStore);

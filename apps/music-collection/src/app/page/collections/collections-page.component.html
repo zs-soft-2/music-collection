@@ -166,6 +166,9 @@
 												[icon]="collection.icon"
 											/>
 
+											<!-- A rácsban nincs hely a jelzésnek,
+											     a kép viszont megmondja magáról,
+											     hogy képmodell rajzolta. -->
 											@if (collection.badgeArtworkUrl) {
 												<img
 													class="badge-pin"
@@ -174,6 +177,10 @@
 													"
 													[src]="
 														collection.badgeArtworkUrl
+													"
+													[attr.title]="
+														'ui.aiMark.hint.image'
+															| transloco
 													"
 													[alt]="
 														collection.badgeName

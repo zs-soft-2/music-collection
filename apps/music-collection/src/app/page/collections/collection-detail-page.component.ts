@@ -11,6 +11,7 @@ import { PlayerStore } from '../../shared/player';
 import { CollectionDetailPageStore } from './collection-detail-page.store';
 import { ALBUM_FILTER_OPTIONS, AlbumFilter } from './collections.model';
 import { CoverFallbackDirective } from '../../shared/image';
+import { AiMarkComponent } from '../../shared/music-ui';
 
 /**
  * One collection: what it asks for, and which of those records are already on
@@ -24,6 +25,7 @@ import { CoverFallbackDirective } from '../../shared/image';
 	templateUrl: './collection-detail-page.component.html',
 	styleUrls: ['./collection-detail-page.component.scss'],
 	imports: [
+		AiMarkComponent,
 		CoverFallbackDirective,
 		...I18N_IMPORTS,
 		RouterLink,

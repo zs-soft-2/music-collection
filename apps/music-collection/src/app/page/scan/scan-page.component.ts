@@ -11,6 +11,7 @@ import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import { ScanPageStore } from './scan-page.store';
 import { ScanCandidateView, MATCH_LABELS, STATE_LABELS } from './scan.mapper';
 import { CoverFallbackDirective } from '../../shared/image';
+import { AiMarkComponent } from '../../shared/music-ui';
 
 /**
  * Scan page: photograph a record, and the app says which pressing it is and
@@ -23,7 +24,12 @@ import { CoverFallbackDirective } from '../../shared/image';
 	selector: 'mc-scan-page',
 	templateUrl: './scan-page.component.html',
 	styleUrls: ['./scan-page.component.scss'],
-	imports: [CoverFallbackDirective, ...I18N_IMPORTS, RouterLink],
+	imports: [
+		AiMarkComponent,
+		CoverFallbackDirective,
+		...I18N_IMPORTS,
+		RouterLink,
+	],
 })
 export class ScanPageComponent {
 	protected readonly store = inject(ScanPageStore);

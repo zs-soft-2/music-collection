@@ -198,7 +198,17 @@
 						></i>
 					}
 					<div>
-						<p class="badge-name">{{ badge.name }}</p>
+						<p class="badge-name">
+							{{ badge.name }}
+							<!-- A pin képét képmodell rajzolta; ahol látszik,
+							     ott ezt ki is mondjuk. -->
+							@if (badge.artworkUrl) {
+								<mc-ai-mark
+									[compact]="true"
+									[hint]="'ui.aiMark.hint.image' | transloco"
+								></mc-ai-mark>
+							}
+						</p>
 						@if (badge.description) {
 							<p class="badge-description">
 								{{ badge.description }}

@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import { BadgeQualityProfile } from '@music-collection/domain/music-collection/api';
 
+import { AiMarkComponent } from '../../../shared/music-ui';
+
 import { BadgeSettingsStore } from './badge-settings.store';
 
 /**
@@ -24,11 +26,16 @@ const BRACKETS: readonly BadgeQualityProfile[] = [
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-badge-settings',
 	providers: [BadgeSettingsStore],
-	imports: [...I18N_IMPORTS],
+	imports: [...I18N_IMPORTS, AiMarkComponent],
 	template: `
 		<header class="mc-page-head">
 			<div>
-				<h1>{{ 'ui.badgeSettings.badge-generation' | transloco }}</h1>
+				<h1>
+					{{ 'ui.badgeSettings.badge-generation' | transloco }}
+					<mc-ai-mark
+						[hint]="'ui.aiMark.hint.image' | transloco"
+					></mc-ai-mark>
+				</h1>
 				<p>
 					{{ 'ui.badgeSettings.a-collection-s-badge' | transloco }}
 				</p>
