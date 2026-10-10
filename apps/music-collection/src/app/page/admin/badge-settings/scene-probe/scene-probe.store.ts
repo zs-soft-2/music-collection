@@ -2,8 +2,10 @@ import { pipe, switchMap, tap } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
 import {
+	SceneLockText,
 	SceneModel,
 	SceneProbeResult,
+	SceneProbeSetup,
 	SceneStyleDraft,
 } from '@music-collection/domain/music-collection/api';
 import { MusicCollectionEffect } from '@music-collection/domain/music-collection/core';
@@ -46,13 +48,23 @@ interface SceneProbeState {
 	error: string | null;
 	/** What this tenant can actually reach. Free to ask for; nothing is drawn. */
 	models: SceneModel[];
-	modelsError: string | null;
+	/** The lock texts, so the page can show what will be sent. */
+	locks: SceneLockText[];
+	/** Until this is true, an empty list means "not asked yet", not "none". */
+	setupLoaded: boolean;
+	setupError: string | null;
 }
 
 const initialState: SceneProbeState = {
 	subject: '',
-	// The one the mockup's hero came closest to; the others are a click away.
-	draft: 'nocturne',
+	/*
+	 * No lock by default. Anything typed or pasted here goes to the model
+	 * exactly as written — a lock wrapping a finished prompt produced
+	 * "…at blue hour of Use case: stylized-concept", and nothing on the page
+	 * said it would. The locks are still a click away, and the preview under
+	 * the field shows what each one does before it costs anything.
+	 */
+	draft: 'none',
 	// 16:9, because a backdrop is wider than it is tall. Whether this model
 	// accepts it is exactly what a probe finds out.
 	size: '1536x864',
@@ -65,7 +77,9 @@ const initialState: SceneProbeState = {
 	result: null,
 	error: null,
 	models: [],
-	modelsError: null,
+	locks: [],
+	setupLoaded: false,
+	setupError: null,
 };
 
 /** The server clamps this too; the form refuses the obvious nonsense first. */
@@ -78,6 +92,23 @@ export const SceneProbeStore = signalStore(
 		canProbe: computed(
 			() => !store.isProbing() && store.subject().trim().length > 0
 		),
+		/**
+		 * Exactly what the model will be sent.
+		 *
+		 * Built from the server's own lock texts rather than a copy kept
+		 * here: a second copy would drift, and the whole point of showing
+		 * this is that it is the truth rather than a description of it.
+		 */
+		outgoingPrompt: computed(() => {
+			const subject = store.subject().trim();
+			const lock = store.locks().find((one) => one.id === store.draft());
+
+			if (!subject) {
+				return '';
+			}
+
+			return lock ? `${lock.prefix}${subject}${lock.suffix}` : subject;
+		}),
 	})),
 	withMethods((store, effect = inject(MusicCollectionEffect)) => ({
 		set(change: Partial<SceneProbeState>): void {
@@ -129,20 +160,28 @@ export const SceneProbeStore = signalStore(
 			)
 		),
 		/**
-		 * What this tenant may draw with. Free — nothing is generated — and
-		 * the only honest answer to "why does it look like that": until now
-		 * the bracket picked, and the bracket picks the cheapest.
+		 * What this tenant may draw with, and what each lock would send.
+		 *
+		 * Free — nothing is generated — and the only honest answer to "why
+		 * does it look like that": until now the bracket picked the model,
+		 * and the bracket picks the cheapest.
 		 */
-		loadModels: rxMethod<void>(
+		loadSetup: rxMethod<void>(
 			pipe(
-				switchMap(() => effect.listSceneModels$()),
+				switchMap(() => effect.loadProbeSetup$()),
 				tapResponse({
-					next: (models: SceneModel[]) =>
-						patchState(store, { models, modelsError: null }),
+					next: (setup: SceneProbeSetup) =>
+						patchState(store, {
+							models: setup.models,
+							locks: setup.locks,
+							setupLoaded: true,
+							setupError: null,
+						}),
 					error: (error: unknown) => {
 						console.error(error);
 						patchState(store, {
-							modelsError: describeWriteError(error),
+							setupLoaded: true,
+							setupError: describeWriteError(error),
 						});
 					},
 				})
@@ -151,7 +190,7 @@ export const SceneProbeStore = signalStore(
 	})),
 	withHooks({
 		onInit(store) {
-			store.loadModels();
+			store.loadSetup();
 		},
 	})
 );

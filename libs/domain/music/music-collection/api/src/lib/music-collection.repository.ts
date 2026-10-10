@@ -6,9 +6,9 @@ import {
 	CreateMusicCollectionResult,
 	GenerateBadgeResult,
 	MusicCollectionDraft,
-	SceneModel,
 	SceneProbeInput,
 	SceneProbeResult,
+	SceneProbeSetup,
 	UpdateMusicCollectionResult,
 } from './music-collection-function';
 import { BadgeImage, MusicCollectionEntity } from './music-collection';
@@ -123,5 +123,5 @@ export abstract class MusicCollectionRepository {
 	 * down anywhere, and until now every picture we have made came from
 	 * whichever one that happened to be.
 	 */
-	public abstract listSceneModels$(): Observable<SceneModel[]>;
+	public abstract loadProbeSetup$(): Observable<SceneProbeSetup>;
 }

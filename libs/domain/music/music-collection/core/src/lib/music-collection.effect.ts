@@ -37,9 +37,9 @@ import {
 	MusicCollectionScore,
 	NextAlbumSuggestion,
 	ResolvedMusicCollection,
-	SceneModel,
 	SceneProbeInput,
 	SceneProbeResult,
+	SceneProbeSetup,
 	UpdateMusicCollectionResult,
 } from '@music-collection/domain/music-collection/api';
 import {
@@ -517,8 +517,8 @@ export class MusicCollectionEffect {
 	 * guessing: the bracket the gateway routes on picks a model by itself,
 	 * and that pick is what every picture this app has made came out of.
 	 */
-	public listSceneModels$(): Observable<SceneModel[]> {
-		return this.repository.listSceneModels$();
+	public loadProbeSetup$(): Observable<SceneProbeSetup> {
+		return this.repository.loadProbeSetup$();
 	}
 
 	private toStanding(

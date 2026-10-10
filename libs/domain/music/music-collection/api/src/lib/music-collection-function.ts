@@ -167,6 +167,25 @@ export interface SceneProbeInput {
 	model: string | null;
 }
 
+/**
+ * Egy stíluszár szövege, ahogy a szerver a tárgy köré fűzi.
+ *
+ * A lap ebből rakja össze élőben a kimenő promptot. Enélkül egy kész,
+ * beillesztett prompt elé csendben odaragad az előtag, és csak a kész kép
+ * árulja el, hogy értelmetlen mondat ment ki.
+ */
+export interface SceneLockText {
+	id: SceneStyleDraft;
+	prefix: string;
+	suffix: string;
+}
+
+/** Amit a próbapad a betöltéskor kér: modellek és zárak. Rajzolás nincs. */
+export interface SceneProbeSetup {
+	models: SceneModel[];
+	locks: SceneLockText[];
+}
+
 /** Egy képmodell, amihez ez a tenant hozzáfér. */
 export interface SceneModel {
 	id: string;

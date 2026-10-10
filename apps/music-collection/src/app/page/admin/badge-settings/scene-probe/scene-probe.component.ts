@@ -14,10 +14,10 @@ import { SceneProbeStore } from './scene-probe.store';
  * unled is the baseline every lock has to beat.
  */
 const DRAFTS: readonly { id: SceneStyleDraft; label: string }[] = [
+	{ id: 'none', label: 'Nincs zár — a szöveg megy ki, változtatás nélkül' },
 	{ id: 'nocturne', label: 'Nocturne — éjszaka, egy meleg fénnyel' },
 	{ id: 'weathered', label: 'Weathered — hideg, ködös, nap nélkül' },
 	{ id: 'interior', label: 'Interior — belső tér, egy lámpával' },
-	{ id: 'none', label: 'Zár nélkül — a tárgy az egész prompt' },
 ];
 
 /**
@@ -39,30 +39,47 @@ const SIZES: readonly string[] = [
  * Subjects worth starting from: the collections that would get a backdrop
  * first, written the way a prompt wants them — a place, not a band.
  */
+const BRIEF =
+	'Standalone production-quality wide landscape website background, 16:9. ' +
+	'Generate ONLY the background image: not a webpage, not a collage, no ' +
+	'UI, no text, no lettering, no logos, no watermark, no people. Full ' +
+	'bleed cinematic composition, deep atmospheric perspective, restrained ' +
+	'sophisticated detail. It sits behind cards and white headline text, so ' +
+	'keep the value range dark and the centre quiet, with the interest at ' +
+	'the edges and no bright central focal point. ';
+
 const EXAMPLES: readonly { label: string; subject: string }[] = [
 	{
 		label: 'Bay Area Thrash',
 		subject:
-			'the Bay Bridge and the San Francisco skyline seen across the ' +
-			'water from an industrial Oakland shoreline',
+			BRIEF +
+			'Subject: the Bay Bridge and the San Francisco skyline seen ' +
+			'across the water from an industrial Oakland shoreline at ' +
+			'night, warm sodium lights in the far distance, low haze over ' +
+			'the water, 1980s Bay Area thrash atmosphere.',
 	},
 	{
 		label: 'Gothenburg Sound',
 		subject:
-			'a dense Nordic pine forest on a steep hillside above a cold ' +
-			'fjord, snow still lying in the shadows',
+			BRIEF +
+			'Subject: a dense Nordic pine forest on a steep hillside above ' +
+			'a cold fjord at blue hour, mist in receding layers, snow ' +
+			'still lying in the shadows.',
 	},
 	{
 		label: 'Doom',
 		subject:
-			'a derelict stone chapel on a moor under a low heavy sky, its ' +
-			'windows long gone',
+			BRIEF +
+			'Subject: a derelict stone chapel on an open moor under a low ' +
+			'heavy sky, its windows long gone, rain in the air.',
 	},
 	{
 		label: 'A lap háttere',
 		subject:
-			'a wall of shelved vinyl records in a closed record shop, seen ' +
-			'from across the room',
+			BRIEF +
+			'Subject: a wall of shelved vinyl records in a closed record ' +
+			'shop seen from across the room, a single warm lamp just out ' +
+			'of frame, everything beyond the foreground in soft bokeh.',
 	},
 ];
 
@@ -193,19 +210,44 @@ const EXAMPLES: readonly { label: string; subject: string }[] = [
 						}
 					</select>
 					<small>
-						@if (store.modelsError(); as error) {
+						@if (store.setupError(); as error) {
 							<span class="warn">{{ error }}</span>
+						} @else if (!store.setupLoaded()) {
+							A modell-lista töltődik…
 						} @else if (store.models().length) {
-							{{ store.models().length }} képmodellhez van
+							{{ store.models().length }} modellhez van
 							jogosultságunk. A gatewayre bízva mindig a
 							legolcsóbb rajzol — azon készült eddig minden
 							jelvény is.
 						} @else {
-							A modell-lista töltődik; addig a gateway választ.
+							<span class="warn">
+								A gateway egyetlen modellt sem listázott
+								ennek a tenantnak. Marad az ársáv szerinti
+								választás.
+							</span>
 						}
 					</small>
 				</div>
 			</div>
+
+			<!--
+				What will actually be sent. The locks wrap the text, and a
+				lock around a finished prompt makes nonsense of it — that
+				has to be visible before it costs a draw, not after.
+			-->
+			@if (store.outgoingPrompt(); as outgoing) {
+				<div class="preview">
+					<p class="preview-head">
+						Ez megy ki
+						@if (store.draft() !== 'none') {
+							<span class="warn">
+								— a(z) {{ store.draft() }} zár közé fűzve
+							</span>
+						}
+					</p>
+					<p class="preview-body">{{ outgoing }}</p>
+				</div>
+			}
 
 			<div class="mc-form-actions">
 				<button
@@ -375,6 +417,33 @@ const EXAMPLES: readonly { label: string; subject: string }[] = [
 
 		.warn {
 			color: var(--mc-status-warn);
+		}
+
+		.preview {
+			margin: 1rem 0;
+			padding: 0.85rem 1rem;
+			background: var(--mc-surface-2);
+			border-left: 3px solid var(--mc-info);
+			border-radius: 0 var(--mc-radius-md) var(--mc-radius-md) 0;
+		}
+
+		.preview-head {
+			margin: 0 0 0.4rem;
+			font-size: 0.7rem;
+			font-weight: 700;
+			letter-spacing: 0.1em;
+			text-transform: uppercase;
+			color: var(--mc-text-subtle);
+		}
+
+		.preview-body {
+			max-width: 90ch;
+			margin: 0;
+			max-height: 9rem;
+			overflow-y: auto;
+			color: var(--mc-text-muted);
+			font-size: 0.8rem;
+			line-height: 1.6;
 		}
 
 		.count {

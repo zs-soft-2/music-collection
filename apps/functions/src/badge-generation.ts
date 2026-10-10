@@ -1235,7 +1235,15 @@ export async function listSceneModels(
 	let models;
 
 	try {
-		models = await client.listModels({ capability: 'image.generate' });
+		/*
+		 * Szűrő nélkül, szándékosan. A `capability: 'image.generate'` szűrő
+		 * üres listát adott: a kérésben ez a képesség neve, a modellek
+		 * leírásában viszont `image_generation` áll — a gateway korábbi
+		 * hibaüzenete is így nevezte. Egy üres lista pedig pont arról nem
+		 * mond semmit, hogy miért üres, úgyhogy a szűrés itt történik, ahol
+		 * látszik, mennyiből mennyi maradt.
+		 */
+		models = await client.listModels();
 	} catch (error) {
 		throw new HttpsError(
 			'internal',
@@ -1245,7 +1253,27 @@ export async function listSceneModels(
 		);
 	}
 
-	return models.map((model) => {
+	/*
+	 * Ami képet rajzol. Ami nem mond magáról képességet, az bent marad: egy
+	 * hiányzó mező nem bizonyíték arra, hogy a modell nem tud rajzolni, és
+	 * egy kísérleti padon a téves kizárás drágább, mint egy fölösleges sor.
+	 */
+	const drawing = models.filter((model) => {
+		const capabilities = model.capabilities;
+
+		return (
+			!capabilities?.length ||
+			capabilities.some((capability) => /image/i.test(capability))
+		);
+	});
+
+	logger.info(
+		`képmodellek: ${models.length} a katalógusban, ${drawing.length} rajzol képet`
+	);
+
+	// Ha a szűrés mindent kivett, inkább a teljes lista: a próbapad akkor is
+	// többet ér, ha az admin maga nézi végig, mint ha üresen hallgat.
+	return (drawing.length ? drawing : models).map((model) => {
 		// A katalógus pont- és árnevei nincsenek szerződésben rögzítve, csak
 		// a leíró `id`-je és a szolgáltatója. Ami megvan, az kiíródik; ami
 		// nincs, attól a név még választható marad.
@@ -1263,6 +1291,9 @@ export async function listSceneModels(
 			label: [
 				score === null ? null : `${score} pont`,
 				price === null ? null : `$${price}`,
+				model.capabilities?.length
+					? model.capabilities.join(', ')
+					: null,
 			]
 				.filter((part): part is string => !!part)
 				.join(' · '),

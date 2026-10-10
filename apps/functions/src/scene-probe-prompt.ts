@@ -75,6 +75,33 @@ const LOCKS: Record<Exclude<SceneStyleDraft, 'none'>, StyleLock> = {
 	},
 };
 
+/** Egy zár szövege, ahogy a felület kiírja, mi megy ki. */
+export interface SceneLockText {
+	id: SceneStyleDraft;
+	prefix: string;
+	suffix: string;
+}
+
+/**
+ * A zárak szövege a felületnek.
+ *
+ * Azért innen, és nem a kliensen leírva: a zár az egyetlen dolog, amitől a
+ * képek egy készletnek látszanak, és két példánya két igazság lenne. A lap
+ * ebből rakja össze élőben a kimenő promptot — enélkül egy beillesztett,
+ * kész prompt elé csendben odaragad a `… of` előtag, és csak a válasz
+ * mondja meg, hogy értelmetlen mondat ment ki.
+ */
+export function describeLocks(): SceneLockText[] {
+	return [
+		...Object.entries(LOCKS).map(([id, lock]) => ({
+			id: id as SceneStyleDraft,
+			prefix: lock.prefix,
+			suffix: `${lock.suffix} Do not include: ${SCENE_NEGATIVE_PROMPT}.`,
+		})),
+		{ id: 'none' as SceneStyleDraft, prefix: '', suffix: '' },
+	];
+}
+
 /**
  * Ami egyik jeleneten sem lehet rajta.
  *

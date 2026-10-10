@@ -25,9 +25,9 @@ import {
 	MusicCollectionRepository,
 	READ_BADGE_GENERATION_SETTINGS_FUNCTION,
 	SET_MUSIC_COLLECTION_BADGE_IMAGE_FUNCTION,
-	SceneModel,
 	SceneProbeInput,
 	SceneProbeResult,
+	SceneProbeSetup,
 	UPDATE_BADGE_GENERATION_SETTINGS_FUNCTION,
 	UPDATE_MUSIC_COLLECTION_FUNCTION,
 	UpdateMusicCollectionResult,
@@ -282,11 +282,16 @@ export class MusicCollectionFirestoreRepository extends MusicCollectionRepositor
 	 * the gateway's price bracket happened to land on, with nothing on any
 	 * screen saying so.
 	 */
-	public listSceneModels$(): Observable<SceneModel[]> {
-		return this.call$<{ models: SceneModel[] }>(
+	public loadProbeSetup$(): Observable<SceneProbeSetup> {
+		return this.call$<SceneProbeSetup>(
 			GENERATE_MUSIC_COLLECTION_BADGE_FUNCTION,
 			{ probe: { list: true } }
-		).pipe(map((result) => result.models ?? []));
+		).pipe(
+			map((setup) => ({
+				models: setup.models ?? [],
+				locks: setup.locks ?? [],
+			}))
+		);
 	}
 
 	private call$<T>(name: string, input: object): Observable<T> {

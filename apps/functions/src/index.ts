@@ -59,6 +59,7 @@ import {
 	probeSceneCandidates,
 	setBadgeImage,
 } from './badge-generation';
+import { describeLocks } from './scene-probe-prompt';
 import { readBadgeSettings, writeBadgeSettings } from './badge-settings';
 import {
 	createMusicCollection,
@@ -1385,7 +1386,14 @@ export const generateMusicCollectionBadge = onCall(
 			// a próba vagy találgat, vagy marad a sáv-routing legolcsóbb
 			// modelljénél, ami ma mindent rajzol, badge-et is.
 			if (request.data.probe.list) {
-				return { models: await listSceneModels(client) };
+				// A zárak szövege is innen megy: a lap ebből rakja össze
+				// élőben a kimenő promptot, és így nem fordulhat elő, hogy
+				// egy beillesztett, kész prompt elé csendben odaragad egy
+				// előtag, amiről csak a kész kép árulkodik.
+				return {
+					models: await listSceneModels(client),
+					locks: describeLocks(),
+				};
 			}
 
 			return probeSceneCandidates(
