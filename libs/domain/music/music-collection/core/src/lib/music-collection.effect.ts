@@ -4,6 +4,7 @@ import {
 	filter,
 	map,
 	of,
+	startWith,
 	switchMap,
 	tap,
 } from 'rxjs';
@@ -14,8 +15,10 @@ import {
 	AlbumStateService,
 	ArtistStateService,
 	CollectionItemStateService,
+	DocumentEntity,
 	DocumentStateService,
 	isWithdrawnDocument,
+	liveDocuments,
 } from '@music-collection/api';
 import {
 	BadgeGenerationSettings,
@@ -412,6 +415,45 @@ export class MusicCollectionEffect {
 		fileName: string
 	): Observable<BadgeImage> {
 		return this.repository.adoptBadgeImage$(uid, storagePath, fileName);
+	}
+
+	/**
+	 * An image that is already filed, taken into this collection's gallery
+	 * and made its badge — the way out of uploading the same picture again
+	 * for every collection that should wear it.
+	 */
+	public adoptBadgeDocument$(
+		uid: string,
+		documentUid: string
+	): Observable<BadgeImage> {
+		return this.repository.adoptBadgeDocument$(uid, documentUid);
+	}
+
+	/**
+	 * Every picture already uploaded, newest first: what a field can be
+	 * filled from instead of uploading. They are the `document` entities —
+	 * the drawn pins, the ones adopted from the editor, and whatever was
+	 * filed in the document admin — narrowed to images that are still on
+	 * offer.
+	 *
+	 * It starts empty rather than staying silent until the documents
+	 * arrive: a library with nothing in it is an answer, and a picker that
+	 * never renders is not.
+	 */
+	public uploadedImages$(): Observable<DocumentEntity[]> {
+		return entities$(
+			() => this.documentStateService.selectEntities$(),
+			() => this.documentStateService.dispatchListEntitiesAction()
+		).pipe(
+			map((documents) =>
+				liveDocuments(documents)
+					.filter((document) =>
+						(document.fileType ?? '').startsWith('image/')
+					)
+					.sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0))
+			),
+			startWith([] as DocumentEntity[])
+		);
 	}
 
 	/**

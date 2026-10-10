@@ -2214,7 +2214,14 @@
 			"the-uploaded-artwork": "Das hochgeladene Bild",
 			"take-the-pin-off": "Pin abnehmen",
 			"a-chosen-pin-covers": "Der gewählte Pin verdeckt das hochgeladene Bild. Nimm den Pin ab, damit dein eigenes Bild das Abzeichen wird.",
-			"my-own-picture-as-pin": "Eigenes Bild als Pin"
+			"my-own-picture-as-pin": "Eigenes Bild als Pin",
+			"pick-from-uploaded": "Hochgeladenes wählen",
+			"already-uploaded": "Bereits hochgeladene Bilder",
+			"search-images": "Bilder nach Namen suchen…",
+			"no-uploaded-image": "Noch nichts hochgeladen. Nach dem ersten Hochladen kannst du hier wählen.",
+			"more-images": "…und {{count}} weitere. Suche nach dem Namen.",
+			"close-the-library": "Schließen",
+			"the-picked-image-becomes": "Das gewählte Bild wird sofort zum Abzeichen — nichts wird hochgeladen, die Datei ist schon da."
 		},
 		"profileSharing": {
 			"page": "Öffentliche Sammlerseite",
@@ -2878,6 +2885,18 @@
 				"photo": "Ein Modell liest das Foto. Was es erkennt, ist ein Vorschlag — entschieden wird von dir.",
 				"image": "Ein Bildmodell hat dieses Bild aus den eigenen Daten gezeichnet."
 			}
+		},
+		"pressingSwitch": {
+			"which-one-is-yours": "Welche ist deine? Unter der markierten Ausgabe steht dieses Exemplar derzeit; du kannst es jederzeit einer anderen zuordnen.",
+			"reading-the-catalog": "Ausgaben des Albums werden geladen…",
+			"your-copy": "Dein Exemplar",
+			"another-copy-of-yours": "Dein anderes Exemplar",
+			"the-catalog-knows-no-other": "Der Katalog kennt zu diesem Album noch keine andere Ausgabe. Ist deine eine andere Pressung, bitte auf der Albumseite darum.",
+			"cancel": "Abbrechen",
+			"moving": "Wird zugeordnet…",
+			"move-this-copy": "Exemplar hierher verschieben",
+			"the-copy-keeps": "Alles Festgehaltene bleibt erhalten: Preis, Zustand, Geschichte, Fotos, Regalplatz und die Nummer wandern mit.",
+			"moveFailed": "Das Exemplar konnte nicht verschoben werden: {{error}}"
 		}
 	},
 	"admin": {

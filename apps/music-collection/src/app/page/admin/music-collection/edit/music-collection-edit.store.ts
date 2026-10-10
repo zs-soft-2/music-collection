@@ -16,6 +16,7 @@ import { computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import {
 	ArtistStateService,
+	DocumentEntity,
 	MusicianStateService,
 	StyleName,
 } from '@music-collection/api';
@@ -55,6 +56,7 @@ import {
 	toForm,
 } from '../music-collection-admin.mapper';
 import { PickerOption } from '../component/entity-picker.component';
+import { LibraryImage } from '../component/image-library.component';
 import {
 	CollectionForm,
 	CriteriaForm,
@@ -100,6 +102,13 @@ const PREVIEW_DEBOUNCE_MS = 250;
 /** The form fields an admin may fill by uploading a picture. */
 export type UploadableField = 'coverImageUrl' | 'badgeArtworkUrl';
 
+/**
+ * What the image library was opened for: one of the two picture fields, or
+ * the pin itself. A field only takes the address of the picture; the pin
+ * goes to the server, because the gallery is the server's to write.
+ */
+export type LibraryTarget = UploadableField | 'pin';
+
 interface MusicCollectionEditState {
 	/** Null while adding a new collection. */
 	uid: string | null;
@@ -141,6 +150,15 @@ interface MusicCollectionEditState {
 	 * into the gallery — so it has its own flag rather than a form field's.
 	 */
 	isUploadingPin: boolean;
+	/**
+	 * Every picture already uploaded, newest first — what the library
+	 * offers instead of a fresh upload. It is every image `document`: the
+	 * pins drawn for any collection, the ones uploaded from this editor,
+	 * and whatever was filed in the document admin.
+	 */
+	library: LibraryImage[];
+	/** Which field the library is open for, if any. */
+	libraryTarget: LibraryTarget | null;
 }
 
 const initialState: MusicCollectionEditState = {
@@ -165,6 +183,8 @@ const initialState: MusicCollectionEditState = {
 	isPickingBadge: false,
 	uploadingField: null,
 	isUploadingPin: false,
+	library: [],
+	libraryTarget: null,
 };
 
 /**
@@ -241,6 +261,84 @@ export const MusicCollectionEditStore = signalStore(
 						next: (badgeGallery: BadgeImage[]) =>
 							patchState(store, { badgeGallery }),
 						error: (error: unknown) => console.error(error),
+					})
+				)
+			);
+
+			/**
+			 * The library: every picture already uploaded. Asked for when it
+			 * is first opened rather than on load, so a collection whose
+			 * pictures are all in place never pays for the list.
+			 */
+			const loadLibrary = rxMethod<void>(
+				pipe(
+					switchMap(() => effect.uploadedImages$()),
+					tapResponse({
+						next: (documents: DocumentEntity[]) =>
+							patchState(store, {
+								library: documents.map(
+									({ uid, name, filePath }) => ({
+										uid,
+										name,
+										filePath,
+									})
+								),
+							}),
+						error: (error: unknown) => console.error(error),
+					})
+				)
+			);
+
+			/**
+			 * A picture out of the library, taken into this collection's
+			 * gallery and made its pin. Nothing travels: the file is where it
+			 * was, and the document over it stays the one it always was — the
+			 * gallery only comes to point at it as well.
+			 */
+			const adoptLibraryImage = rxMethod<LibraryImage>(
+				pipe(
+					filter(() => !!store.uid() && !store.isPickingBadge()),
+					tap(() =>
+						patchState(store, {
+							isPickingBadge: true,
+							error: null,
+						})
+					),
+					exhaustMap((image) =>
+						effect.adoptBadgeDocument$(
+							store.uid() as string,
+							image.uid
+						)
+					),
+					tapResponse({
+						next: (image: BadgeImage) => {
+							// Ugyanaz a sorrend, amit a szerver írt: ami már
+							// bent volt, marad a helyén.
+							const gallery = store
+								.badgeGallery()
+								.some(
+									({ documentUid }) =>
+										documentUid === image.documentUid
+								)
+								? store.badgeGallery()
+								: [...store.badgeGallery(), image];
+
+							patchState(store, {
+								badgeGallery: gallery,
+								badgeImageUrl: image.filePath,
+								badgeImageUid: image.documentUid,
+								isPickingBadge: false,
+								libraryTarget: null,
+							});
+							offerGallery(of(gallery));
+						},
+						error: (error: unknown) => {
+							console.error(error);
+							patchState(store, {
+								isPickingBadge: false,
+								error: describeWriteError(error),
+							});
+						},
 					})
 				)
 			);
@@ -411,7 +509,10 @@ export const MusicCollectionEditStore = signalStore(
 						),
 						exhaustMap(({ field, file }) =>
 							from(
-								imageEffect.store(
+								// Dokumentummal: a feltöltött kép így marad
+								// megtalálható, és a következő collectionhöz
+								// már a könyvtárból választható.
+								imageEffect.storeAsDocument(
 									`${store.form().slug}-${
 										field === 'coverImageUrl'
 											? 'cover'
@@ -519,6 +620,46 @@ export const MusicCollectionEditStore = signalStore(
 						)
 					)
 				),
+
+				/**
+				 * Opens the library for one field. The list is asked for at
+				 * the same time: by the time an admin has looked at the
+				 * panel, the pictures are in it.
+				 */
+				openLibrary(target: LibraryTarget): void {
+					patchState(store, { libraryTarget: target, error: null });
+					loadLibrary(of(undefined));
+				},
+
+				closeLibrary(): void {
+					patchState(store, { libraryTarget: null });
+				},
+
+				/**
+				 * A picture picked out of the library.
+				 *
+				 * Into a field it is only an address, written like any other
+				 * value of the form and saved with it. As the pin it is more
+				 * than that — the gallery has to come to hold it — so that
+				 * one goes to the server, and happens at once, as uploading
+				 * a pin does.
+				 */
+				pickFromLibrary(image: LibraryImage): void {
+					const target = store.libraryTarget();
+
+					if (!target) {
+						return;
+					}
+
+					if (target === 'pin') {
+						adoptLibraryImage(of(image));
+
+						return;
+					}
+
+					patchForm({ [target]: image.filePath });
+					patchState(store, { libraryTarget: null });
+				},
 
 				/**
 				 * Draws candidates. Each one is filed the moment it exists and

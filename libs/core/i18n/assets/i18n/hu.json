@@ -2214,7 +2214,14 @@
 			"the-uploaded-artwork": "A feltöltött grafika",
 			"take-the-pin-off": "Pin levétele",
 			"a-chosen-pin-covers": "A kiválasztott pin takarja a feltöltött grafikát. Vedd le a pint, ha a saját képed legyen a jelvény.",
-			"my-own-picture-as-pin": "Saját kép pinnek"
+			"my-own-picture-as-pin": "Saját kép pinnek",
+			"pick-from-uploaded": "Válassz a feltöltöttekből",
+			"already-uploaded": "Már feltöltött képek",
+			"search-images": "Kép keresése név szerint…",
+			"no-uploaded-image": "Még nincs feltöltött kép. Az első feltöltés után innen is választhatsz.",
+			"more-images": "…és még {{count}} kép. Keress rá a nevére.",
+			"close-the-library": "Bezárás",
+			"the-picked-image-becomes": "A kiválasztott kép rögtön a jelvény lesz — feltöltés nélkül, mert a fájl már megvan."
 		},
 		"profileSharing": {
 			"page": "Nyilvános gyűjtő-profil",
@@ -2878,6 +2885,18 @@
 				"photo": "A fotót egy modell olvassa le. Amit felismer, az javaslat — te döntesz róla.",
 				"image": "A képet egy képmodell rajzolta, a saját adataiból."
 			}
+		},
+		"pressingSwitch": {
+			"which-one-is-yours": "Melyik kiadás a tiéd? A kijelölt alatt áll most a példány; egy másikra bármikor átvezetheted.",
+			"reading-the-catalog": "Az album kiadásainak betöltése…",
+			"your-copy": "A te példányod",
+			"another-copy-of-yours": "Másik példányod",
+			"the-catalog-knows-no-other": "A katalógus egyelőre csak ezt az egy kiadást ismeri ennél az albumnál. Ha a tiéd más, kérd a felvételét az album lapján.",
+			"cancel": "Mégsem",
+			"moving": "Átvezetés…",
+			"move-this-copy": "Átvezetés erre a kiadásra",
+			"the-copy-keeps": "A példányról feljegyzett adatok megmaradnak: az ár, az állapot, a történet, a fotók, a polchely és a sorszám is átkerül.",
+			"moveFailed": "Az átvezetés nem sikerült: {{error}}"
 		}
 	},
 	"admin": {

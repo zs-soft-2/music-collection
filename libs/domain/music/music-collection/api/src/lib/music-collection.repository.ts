@@ -81,6 +81,19 @@ export abstract class MusicCollectionRepository {
 		storagePath: string,
 		fileName: string
 	): Observable<BadgeImage>;
+	/**
+	 * Takes an image that is already filed — a pin of another collection, a
+	 * drawn candidate, a picture uploaded in the document admin — into this
+	 * collection's gallery and makes it the badge.
+	 *
+	 * The difference from `adoptBadgeImage$` is what the admin is spared:
+	 * there is nothing to upload and nothing to file, so the same picture
+	 * can be the badge of a second collection without travelling again.
+	 */
+	public abstract adoptBadgeDocument$(
+		uid: string,
+		documentUid: string
+	): Observable<BadgeImage>;
 
 	/** What an admin may set about generation; the style lock is not in it. */
 	public abstract readBadgeSettings$(): Observable<BadgeGenerationSettings>;

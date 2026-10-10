@@ -18,6 +18,7 @@ import {
 import { AiMarkComponent } from '../../../../shared/music-ui';
 
 import { EntityPickerComponent } from '../component/entity-picker.component';
+import { ImageLibraryComponent } from '../component/image-library.component';
 
 import {
 	MusicCollectionEditStore,
@@ -40,6 +41,7 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 		AiMarkComponent,
 		RouterLink,
 		EntityPickerComponent,
+		ImageLibraryComponent,
 	],
 	template: `
 		<header class="mc-page-head">
@@ -189,6 +191,23 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 										}}
 									</label>
 
+									<!--
+										Amit egyszer feltöltöttek, azt nem kell
+										másodszor: a könyvtárból is választható.
+									-->
+									<button
+										type="button"
+										class="button"
+										(click)="
+											store.openLibrary('coverImageUrl')
+										"
+									>
+										{{
+											'ui.musicCollectionEdit.pick-from-uploaded'
+												| transloco
+										}}
+									</button>
+
 									@if (form.coverImageUrl) {
 										<img
 											class="image-preview"
@@ -200,6 +219,16 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 										/>
 									}
 								</div>
+
+								@if (
+									store.libraryTarget() === 'coverImageUrl'
+								) {
+									<mc-image-library
+										[images]="store.library()"
+										(picked)="store.pickFromLibrary($event)"
+										(closed)="store.closeLibrary()"
+									></mc-image-library>
+								}
 							</div>
 
 							<div class="mc-field">
@@ -643,6 +672,19 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 										}}
 									</label>
 
+									<button
+										type="button"
+										class="button"
+										(click)="
+											store.openLibrary('badgeArtworkUrl')
+										"
+									>
+										{{
+											'ui.musicCollectionEdit.pick-from-uploaded'
+												| transloco
+										}}
+									</button>
+
 									@if (form.badgeArtworkUrl) {
 										<img
 											class="image-preview"
@@ -654,6 +696,16 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 										/>
 									}
 								</div>
+
+								@if (
+									store.libraryTarget() === 'badgeArtworkUrl'
+								) {
+									<mc-image-library
+										[images]="store.library()"
+										(picked)="store.pickFromLibrary($event)"
+										(closed)="store.closeLibrary()"
+									></mc-image-library>
+								}
 
 								@if (store.badgeImageUid()) {
 									<p class="hint">
@@ -721,6 +773,26 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 											}}
 										</label>
 
+										<!--
+											Egy már beiktatott kép — másik
+											collection pinje, korábbi jelölt,
+											feltöltött grafika — újra pin lehet,
+											feltöltés nélkül.
+										-->
+										<button
+											type="button"
+											[disabled]="
+												store.isNew() ||
+												store.isPickingBadge()
+											"
+											(click)="store.openLibrary('pin')"
+										>
+											{{
+												'ui.musicCollectionEdit.pick-from-uploaded'
+													| transloco
+											}}
+										</button>
+
 										<button
 											type="button"
 											[disabled]="
@@ -769,6 +841,22 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 												| transloco
 										}}
 									</p>
+								}
+
+								@if (store.libraryTarget() === 'pin') {
+									<p class="hint">
+										{{
+											'ui.musicCollectionEdit.the-picked-image-becomes'
+												| transloco
+										}}
+									</p>
+									<mc-image-library
+										[images]="store.library()"
+										[chosenUid]="store.badgeImageUid()"
+										[busy]="store.isPickingBadge()"
+										(picked)="store.pickFromLibrary($event)"
+										(closed)="store.closeLibrary()"
+									></mc-image-library>
 								}
 
 								@if (store.badgeImageUrl(); as badge) {
@@ -929,6 +1017,7 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 	styles: `
 		.image-upload {
 			display: flex;
+			flex-wrap: wrap;
 			align-items: center;
 			gap: 0.75rem;
 			margin-top: 0.6rem;
@@ -964,13 +1053,16 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 
 		.badge-art-head {
 			display: flex;
+			flex-wrap: wrap;
 			align-items: flex-start;
 			justify-content: space-between;
 			gap: 1rem;
 		}
 
+		/* Négy gomb: telefonon törik, nem lóg ki a kártyából. */
 		.badge-art-actions {
 			display: flex;
+			flex-wrap: wrap;
 			flex-shrink: 0;
 			gap: 0.5rem;
 		}

@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { DocumentStateService, EntityTypeEnum } from '@music-collection/api';
 
 import { CollectionImageRepository } from './collection-image.repository';
 
@@ -22,6 +23,7 @@ const ACCEPTED = /^image\//;
 @Injectable({ providedIn: 'root' })
 export class CollectionImageEffect {
 	private readonly repository = inject(CollectionImageRepository);
+	private readonly documentStateService = inject(DocumentStateService);
 
 	/**
 	 * Uploads the chosen file and answers with its URL and where it landed.
@@ -50,5 +52,35 @@ export class CollectionImageEffect {
 		);
 
 		return { path, url: await this.repository.upload(path, file) };
+	}
+
+	/**
+	 * Ugyanaz, dokumentummal: a kép a könyvtárba is bekerül.
+	 *
+	 * Nem a fájl kedvéért — az a feltöltéssel megvan —, hanem hogy legyen
+	 * hol megtalálni. A könyvtár a dokumentumokból áll, és abból választhat
+	 * a következő collection ahelyett, hogy ugyanazt a képet újra
+	 * feltöltenék; ami csak a bucketben hever, azt senki nem leli meg többé.
+	 *
+	 * A pin útja ezért marad a `store`-nál: azt a szerver iktatja be, és
+	 * egy fájl fölé nem kell két dokumentum.
+	 */
+	public async storeAsDocument(
+		name: string,
+		file: File
+	): Promise<StoredImage> {
+		const stored = await this.store(name, file);
+
+		// Kategóriát nem kap: ezt kézzel töltötte fel egy admin, és a
+		// dokumentum-adminban is a kézi feltöltések közt a helye.
+		this.documentStateService.dispatchAddEntityAction({
+			entityType: EntityTypeEnum.Document,
+			name: name || file.name,
+			originalName: file.name,
+			fileType: file.type,
+			filePath: stored.url,
+		});
+
+		return stored;
 	}
 }

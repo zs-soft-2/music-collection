@@ -37,16 +37,27 @@ import { ZsAiError } from '@zssz-soft/zs-ai-sdk';
 import {
 	APP_SETTING_COLLECTION,
 	BADGE_SETTING_DOCUMENT,
+	BadgeContextLevel,
 	BadgeGenerationSettings,
 	readBadgeSettings,
 } from './badge-settings';
 import { stamp, touchCatalog } from './catalog-sync';
+import { readCoverColor } from './cover-color';
 import { GatewayClient } from './gateway-client';
+import {
+	dominantStyles,
+	earliestYearOf,
+	enamelFromColor,
+	titleMotifOf,
+} from './music-collection-badge-context';
+import { readBadgeFacts } from './music-collection-badge-facts';
+import { MotifError, writeBadgeMotif } from './music-collection-badge-motif';
 import {
 	BADGE_STYLE_VERSION,
 	BadgePrompt,
 	buildBadgePrompt,
 	criterionList,
+	seedOf,
 	styleNames,
 } from './music-collection-badge-prompt';
 
@@ -81,6 +92,8 @@ export interface GenerateBadgeResult {
 	negativePrompt: string;
 	seed: number;
 	styleVersion: number;
+	/** Mennyit tudott a collectionről, ami ezt a promptot megírta. */
+	contextLevel: BadgeContextLevel;
 	model: string;
 }
 
@@ -117,45 +130,120 @@ async function reserveDailyQuota(
 	});
 }
 
-/** Ennyi előadóig nézzük meg a stílusukat; ennél többet nem ér egy pin. */
-const STYLE_LOOKUP_ARTIST_LIMIT = 5;
-/** `libs/api` Artist: az előadó a saját stílusait hordozza. */
-const ARTIST_COLLECTION = 'artist';
-
 /**
- * A megnevezett előadók stílusai, ha a szabály maga egyet sem mond.
+ * Amit a collection a szabályán túl elmond magáról.
  *
- * Egy diszkográfia-collection („Iron Maiden on Vinyl") stílusról nem beszél,
- * mert nem kell neki: az előadó uid-je pontosabban jelöli ki a lemezeket,
- * mint bármelyik műfajnév. A pinnek viszont motívum kell, és az előadó
- * stílusát a katalógus így is tudja — innen már csak el kell olvasni.
+ * Itt dől el, mennyi tény jut a modellig — és ez a kontextusszinten múlik,
+ * nem a képmodellen. A `catalog` szint már a valódi lemezekből dolgozik: a
+ * stílusuk többségéből és a legkorábbi évükből. Eddig az előadó `styles`
+ * tömbjének nulladik eleme döntött, vagyis a pin tárgyát az szabta meg,
+ * milyen sorrendben írta be a stílusokat egy importáló script.
  */
-async function artistStyleNames(
+async function ingredients(
 	database: Firestore,
-	artistUids: string[]
-): Promise<string[]> {
-	const looked = artistUids.slice(0, STYLE_LOOKUP_ARTIST_LIMIT);
+	client: GatewayClient,
+	level: BadgeContextLevel,
+	collection: Record<string, unknown>,
+	seed: number
+): Promise<{
+	styles: string[];
+	earliestYear: number | null;
+	motif: string | null;
+	enamel: string | null;
+	secondaryMotif: string | null;
+}> {
+	const criteria = (collection['criteria'] ?? {}) as Record<string, unknown>;
+	const years = (criteria['years'] ?? {}) as Record<string, unknown>;
+	const number = (key: string): number | null =>
+		typeof years[key] === 'number' ? (years[key] as number) : null;
+	const named = styleNames(criteria);
+	const facts = await readBadgeFacts(database, {
+		artistUids: criterionList(criteria['artists'], 'includesAny'),
+		albumStyles: [
+			...criterionList(criteria['styles'], 'includesAny'),
+			...criterionList(criteria['styles'], 'includesAll'),
+		],
+		namedStyles: named,
+		years: {
+			from: number('from'),
+			to: number('to'),
+			equals: number('equals'),
+		},
+		formats: [
+			...criterionList(criteria['albumFormats'], 'includesAny'),
+			...criterionList(criteria['albumFormats'], 'includesAll'),
+		],
+	});
+	// A szabály megnevezett stílusa erősebb, mint az előadóé: azt valaki
+	// leírta erről a collectionről. Az előadó stílusa a végső tartalék.
+	const styles = dominantStyles(
+		facts.albums,
+		named.length ? named : facts.artistStyles
+	);
+	const earliestYear = earliestYearOf(
+		facts.albums,
+		number('from') ?? number('equals')
+	);
 
-	if (!looked.length) {
-		return [];
+	if (level === 'catalog') {
+		return {
+			styles,
+			earliestYear,
+			motif: null,
+			enamel: null,
+			secondaryMotif: null,
+		};
 	}
 
-	const snapshots = await database.getAll(
-		...looked.map((artistUid) =>
-			database.collection(ARTIST_COLLECTION).doc(artistUid)
+	// Hány borítót nézünk meg, azt a `readCoverColor` tudja — a lemezek a
+	// kiadás sorrendjében állnak, tehát a legkorábbiak felé vágja el.
+	const enamel = enamelFromColor(
+		await readCoverColor(
+			facts.albums
+				.map((album) => album.coverUrl)
+				.filter((url): url is string => !!url)
 		)
 	);
 
-	return snapshots.flatMap((snapshot) => {
-		const styles = snapshot.get('styles');
+	if (level === 'rich') {
+		return {
+			styles,
+			earliestYear,
+			motif: null,
+			enamel,
+			secondaryMotif: titleMotifOf(
+				facts.albums.map((album) => album.name),
+				seed
+			),
+		};
+	}
 
-		return Array.isArray(styles) ? (styles as string[]) : [];
+	// `ai`: a modell már látta a lemezcímeket, tehát a címekből vett második
+	// tárgy nem hozzátenne, hanem versengene azzal, amit ő választott.
+	const written = await writeBadgeMotif(client, {
+		collectionName: String(collection['name'] ?? ''),
+		artistNames: facts.artistNames,
+		styles,
+		albums: facts.albums.map((album) => ({
+			name: album.name,
+			year: album.year,
+		})),
 	});
+
+	return {
+		styles,
+		earliestYear,
+		motif: written.motif,
+		enamel,
+		secondaryMotif: null,
+	};
 }
 
 /** A collection adatai, ahogy a prompt kéri őket. */
 async function promptFor(
 	database: Firestore,
+	client: GatewayClient,
+	level: BadgeContextLevel,
 	uid: string,
 	points: number,
 	now: number
@@ -171,26 +259,17 @@ async function promptFor(
 	}
 
 	const criteria = (collection['criteria'] ?? {}) as Record<string, unknown>;
-	const years = (criteria['years'] ?? {}) as Record<string, unknown>;
-	const artistUids = criterionList(criteria['artists'], 'includesAny');
-	const named = styleNames(criteria);
-	const styles = named.length
-		? named
-		: await artistStyleNames(database, artistUids);
-	const from =
-		typeof years['from'] === 'number' ? (years['from'] as number) : null;
-	const equals =
-		typeof years['equals'] === 'number'
-			? (years['equals'] as number)
-			: null;
+	const slug = String(collection['slug'] ?? uid);
+	const seed = seedOf(slug);
 
 	return buildBadgePrompt(
 		{
-			styles,
-			earliestYear: from ?? equals,
+			...(await ingredients(database, client, level, collection, seed)),
 			points,
-			isSingleArtist: artistUids.length === 1,
-			slug: String(collection['slug'] ?? uid),
+			isSingleArtist:
+				criterionList(criteria['artists'], 'includesAny').length === 1,
+			slug,
+			level,
 		},
 		now
 	);
@@ -332,7 +411,24 @@ export async function generateBadgeCandidates(
 		typeof points === 'number' && Number.isFinite(points) && points > 0
 			? Math.min(Math.floor(points), 10000)
 			: 0;
-	const built = await promptFor(database, uid, safePoints, now);
+	// A motívumírás a rajzolás előtt van, és ezért dobhat: ha az admin `ai`
+	// szintet kért, és a modell nem ad megönthető tárgyat, inkább ne készüljön
+	// jelvény, mint hogy csendben a táblázatos essen vissza — a felületen
+	// ugyanaz látszana, és semmi nem mondaná meg, hogy nem az lett, amit kért.
+	const built = await promptFor(
+		database,
+		client,
+		settings.contextLevel,
+		uid,
+		safePoints,
+		now
+	).catch((error) => {
+		if (error instanceof MotifError) {
+			throw new HttpsError('internal', error.message);
+		}
+
+		throw error;
+	});
 
 	await reserveDailyQuota(database, settings, settings.candidateCount, now);
 
@@ -352,6 +448,7 @@ export async function generateBadgeCandidates(
 		negativePrompt: built.negativePrompt,
 		seed: built.seed,
 		styleVersion: built.styleVersion,
+		contextLevel: built.contextLevel,
 		model,
 	};
 }
@@ -383,6 +480,12 @@ export interface BadgeImage {
 	negativePrompt?: string;
 	seed?: number;
 	styleVersion?: number;
+	/**
+	 * Mennyit tudott a collectionről, ami ezt rajzoltatta. A régi képeken
+	 * nincs ilyen mező — azok a szabály stílusnevéből készültek, és a prompt
+	 * szövegén kívül semmi nem mondja meg róluk, miből.
+	 */
+	contextLevel?: BadgeContextLevel;
 	model?: string;
 	/** Epoch ezredmásodperc. */
 	generatedAt: number;
@@ -486,6 +589,7 @@ async function fileCandidates(
 		negativePrompt: built.negativePrompt,
 		seed: built.seed,
 		styleVersion: built.styleVersion,
+		contextLevel: built.contextLevel,
 		model,
 		generatedAt: now,
 	}));
@@ -819,5 +923,125 @@ export async function adoptBadgeImage(
 		);
 
 		return adopted;
+	});
+}
+
+/**
+ * Egy már feltöltött kép újra pinné tétele — új feltöltés nélkül.
+ *
+ * A fájl fölött már van dokumentum: egy korábbi collectionnek rajzolták
+ * vagy oda töltötték fel, esetleg a dokumentum-adminban iktatták be. Így
+ * nincs mit a Storage-ba tenni, és nincs mit újra iktatni: a dokumentum
+ * marad, ami volt — a galéria csak hivatkozik rá.
+ *
+ * Ezért nem keletkezik második dokumentum ugyanarról a fájlról, és ezért
+ * nem lép a darabszám sem: nem új fájl érkezett, csak egy meglévő kapott
+ * még egy helyet, ahol jelvény lehet.
+ */
+export async function adoptBadgeDocument(
+	database: Firestore,
+	uid: unknown,
+	documentUid: unknown,
+	now: number
+): Promise<BadgeImage> {
+	if (typeof uid !== 'string' || !uid.trim()) {
+		throw new HttpsError('invalid-argument', 'Hiányzó uid.');
+	}
+
+	if (typeof documentUid !== 'string' || !documentUid.trim()) {
+		throw new HttpsError(
+			'invalid-argument',
+			'Hiányzik a dokumentum azonosítója.'
+		);
+	}
+
+	const collectionUid = uid.trim();
+	const reference = database
+		.collection(MUSIC_COLLECTION_COLLECTION)
+		.doc(collectionUid);
+	const documentReference = database
+		.collection(DOCUMENT_COLLECTION)
+		.doc(documentUid.trim());
+	const [collection, document] = await Promise.all([
+		reference.get(),
+		documentReference.get(),
+	]);
+
+	if (!collection.exists) {
+		throw new HttpsError('not-found', 'Nincs ilyen collection.');
+	}
+
+	if (!document.exists) {
+		throw new HttpsError('not-found', 'Nincs ilyen dokumentum.');
+	}
+
+	// A visszavont dokumentum fájlja megmarad, és ami addig rámutatott,
+	// tovább tölt — de újat nem kap: a dokumentum-adminban épp azért vonták
+	// vissza, hogy ne ajánljuk többé.
+	if (document.get('deletedAt')) {
+		throw new HttpsError(
+			'failed-precondition',
+			'A dokumentum vissza van vonva.'
+		);
+	}
+
+	const fileType = String(document.get('fileType') ?? '');
+	const filePath = String(document.get('filePath') ?? '');
+
+	if (!fileType.startsWith('image/')) {
+		throw new HttpsError('invalid-argument', 'A dokumentum nem kép.');
+	}
+
+	if (!filePath) {
+		throw new HttpsError(
+			'failed-precondition',
+			'A dokumentumhoz nem tartozik fájl.'
+		);
+	}
+
+	const name = String(document.get('name') ?? documentReference.id);
+
+	return database.runTransaction(async (transaction) => {
+		const fresh = await transaction.get(reference);
+		const badge = (fresh.data()?.['badge'] ?? {}) as Record<
+			string,
+			unknown
+		>;
+		const gallery = Array.isArray(badge['gallery'])
+			? (badge['gallery'] as BadgeImage[])
+			: [];
+		// Ami ennek a collectionnek már a galériájában áll, az nem kerül bele
+		// másodszor: ilyenkor ez a hívás annyit tesz, amennyit a választás.
+		const already = gallery.find(
+			(image) =>
+				image?.documentUid === documentReference.id ||
+				image?.filePath === filePath
+		);
+		const chosen: BadgeImage = already ?? {
+			documentUid: documentReference.id,
+			name,
+			filePath,
+			source: 'uploaded',
+			generatedAt: now,
+		};
+
+		transaction.set(
+			reference,
+			stamp({
+				badge: {
+					...badge,
+					image: chosen,
+					gallery: already ? gallery : [...gallery, chosen],
+				},
+			}),
+			{ merge: true }
+		);
+		touchCatalog(database, transaction, [MUSIC_COLLECTION_COLLECTION]);
+		logger.info(
+			`meglévő kép jelvény lett: ${collectionUid} → ` +
+				`document/${chosen.documentUid}`
+		);
+
+		return chosen;
 	});
 }

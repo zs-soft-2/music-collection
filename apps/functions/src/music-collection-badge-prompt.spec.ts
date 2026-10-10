@@ -48,6 +48,7 @@ function input(overrides: Partial<BadgePromptInput> = {}): BadgePromptInput {
 		points: 480,
 		isSingleArtist: false,
 		slug: 'thrash-big-four',
+		level: 'catalog',
 		...overrides,
 	};
 }
@@ -247,5 +248,94 @@ describe('a seed', () => {
 
 	it('collectiononként más', () => {
 		expect(seedOf('thrash-big-four')).not.toBe(seedOf('prog-69-75'));
+	});
+});
+
+describe('amit a kontextusszintek hoznak', () => {
+	const NOW = Date.UTC(2026, 9, 9);
+
+	it('a megírt motívum a táblázatos helyére lép', () => {
+		const built = buildBadgePrompt(
+			input({
+				level: 'ai',
+				motif: 'a snapped olive branch bound in barbed wire',
+			}),
+			NOW
+		);
+
+		expect(built.prompt).toContain(
+			'a snapped olive branch bound in barbed wire'
+		);
+		expect(built.prompt).not.toContain(
+			'screaming skull wreathed in flames'
+		);
+	});
+
+	it('a borítóból jött zománc a műfajé helyére lép', () => {
+		const built = buildBadgePrompt(
+			input({ level: 'rich', enamel: 'royal blue enamel' }),
+			NOW
+		);
+
+		expect(built.prompt).toContain('royal blue enamel');
+		expect(built.prompt).not.toContain('fiery orange and red enamel');
+	});
+
+	it('a második tárgy kisebb, és a fő motívum alá kerül', () => {
+		const built = buildBadgePrompt(
+			input({ level: 'rich', secondaryMotif: 'a snapped olive branch' }),
+			NOW
+		);
+
+		// Egy pinen egy főszereplő van: enélkül a képmodell két egyforma
+		// súlyú tárgyat tesz egymás mellé.
+		expect(built.prompt).toContain(
+			'the field carries a snapped olive branch'
+		);
+	});
+
+	it('a szint a prompt mellé kerül, hogy később meg lehessen mondani', () => {
+		expect(
+			buildBadgePrompt(input({ level: 'rich' }), NOW).contextLevel
+		).toBe('rich');
+	});
+
+	it('a stíluszár és a stílusverzió szinttől függetlenül ugyanaz', () => {
+		// Ettől marad egy készlet a polc: a szint a tárgyat pontosítja, a
+		// nyelvet nem.
+		const catalog = buildBadgePrompt(input({ level: 'catalog' }), NOW);
+		const rich = buildBadgePrompt(
+			input({ level: 'rich', enamel: 'royal blue enamel' }),
+			NOW
+		);
+
+		expect(rich.styleVersion).toBe(catalog.styleVersion);
+		expect(
+			rich.prompt.startsWith('Antique cast pewter enamel pin badge')
+		).toBe(true);
+		expect(rich.prompt.endsWith('square frame.')).toBe(true);
+	});
+
+	it('a többes számú második tárgy mondata is nyelvtani marad', () => {
+		// A tárgyak a saját névelőjükkel érkeznek, és van köztük többes
+		// számú — a mondat ezért nem tehet eléjük se névelőt, se létigét.
+		const built = buildBadgePrompt(
+			input({ level: 'rich', secondaryMotif: 'two small crossed bones' }),
+			NOW
+		);
+
+		expect(built.prompt).toContain(
+			'the field carries two small crossed bones.'
+		);
+	});
+
+	it('üres motívumra és zománcra a tábla marad érvényben', () => {
+		const built = buildBadgePrompt(
+			input({ level: 'rich', motif: '  ', enamel: '' }),
+			NOW
+		);
+
+		expect(built.prompt).toContain('enamel');
+		expect(built.prompt).toContain('The pin is round, struck with');
 	});
 });

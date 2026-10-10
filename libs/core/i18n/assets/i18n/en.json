@@ -2214,7 +2214,14 @@
 			"the-uploaded-artwork": "The uploaded artwork",
 			"take-the-pin-off": "Take the pin off",
 			"a-chosen-pin-covers": "The chosen pin covers the uploaded artwork. Take the pin off to let your own image be the badge.",
-			"my-own-picture-as-pin": "My own picture as the pin"
+			"my-own-picture-as-pin": "My own picture as the pin",
+			"pick-from-uploaded": "Pick an uploaded one",
+			"already-uploaded": "Pictures already uploaded",
+			"search-images": "Search pictures by name…",
+			"no-uploaded-image": "Nothing uploaded yet. After the first upload you can pick from here.",
+			"more-images": "…and {{count}} more. Search for its name.",
+			"close-the-library": "Close",
+			"the-picked-image-becomes": "The picked image becomes the badge at once — nothing is uploaded, the file is already there."
 		},
 		"profileSharing": {
 			"page": "Public collector page",
@@ -2878,6 +2885,18 @@
 				"photo": "A model reads the photo. What it recognises is a proposal — the decision is yours.",
 				"image": "An image model drew this picture from the data itself."
 			}
+		},
+		"pressingSwitch": {
+			"which-one-is-yours": "Which one is yours? The marked release is where this copy stands now; you can move it onto another at any time.",
+			"reading-the-catalog": "Reading the album’s releases…",
+			"your-copy": "Your copy",
+			"another-copy-of-yours": "Another copy of yours",
+			"the-catalog-knows-no-other": "The catalog knows no other release of this album yet. If yours is a different pressing, ask for it on the album page.",
+			"cancel": "Cancel",
+			"moving": "Moving…",
+			"move-this-copy": "Move this copy here",
+			"the-copy-keeps": "The copy keeps everything written down about it: the price, the grades, the story, the photographs, the shelf place and its number.",
+			"moveFailed": "The copy could not be moved: {{error}}"
 		}
 	},
 	"admin": {

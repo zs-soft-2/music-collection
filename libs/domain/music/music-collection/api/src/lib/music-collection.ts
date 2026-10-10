@@ -102,10 +102,33 @@ export interface BadgeImage {
 	negativePrompt?: string;
 	seed?: number;
 	styleVersion?: number;
+	/**
+	 * How much of the collection reached the model. Absent on images drawn
+	 * before the levels existed — those came from the rule's style name
+	 * alone, and nothing but the prompt text says so.
+	 */
+	contextLevel?: BadgeContextLevel;
 	model?: string;
 	/** Epoch milliseconds. */
 	generatedAt: number;
 }
+
+/**
+ * How much a badge knows about the collection it belongs to.
+ *
+ * - `catalog`: the real records the rule reaches — the majority of their
+ *   styles, their earliest year. No extra model call, no extra cost.
+ * - `rich`: on top of that, the covers decide the enamel colour and a
+ *   recurring object in the album titles earns a second, smaller motif.
+ *   The covers are fetched and measured; no model is asked.
+ * - `ai`: a text model writes the main motif from the collection's facts,
+ *   inside the same fixed style lock. One extra call per badge.
+ *
+ * A type, not a list: a value exported from this barrel would land in the
+ * main bundle, and the only thing that enumerates the levels is the admin
+ * page, which is lazy. The list lives there.
+ */
+export type BadgeContextLevel = 'catalog' | 'rich' | 'ai';
 
 /** The reward for owning every album of the collection. */
 export interface BadgeDefinition {

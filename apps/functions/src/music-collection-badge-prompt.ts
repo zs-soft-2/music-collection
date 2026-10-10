@@ -15,7 +15,16 @@
  * megtartják a saját promptjukat, és csak az újak beszélik az új nyelvet.
  * Két stílusverzió egy polcon pont az a következetlenség, ami ellen ez a
  * fájl készült — vagyis az emelés az összes badge újragenerálását jelenti.
+ *
+ * A kontextusszint (`BadgeContextLevel`) NEM emeli a stílusverziót, és ez
+ * szándékos: a zár betűre ugyanaz marad minden szinten, csak a tárgy, a
+ * zománc és a patina lesz pontosabb attól, hogy honnan jön. Egy `catalog`
+ * és egy `ai` szinten készült pin egymás mellett is egy készlet; a szint
+ * azért kerül a badge mellé, hogy később meg lehessen mondani, melyikük
+ * mennyit tudott magáról.
  */
+
+import type { BadgeContextLevel } from './badge-settings';
 
 /** Csak akkor emeld, ha a lenti zár változik. Minden badge mellé bekerül. */
 export const BADGE_STYLE_VERSION = 2;
@@ -405,7 +414,10 @@ const TIER_3_POINTS = 450;
 
 /** Amit a collection elmond magáról az öntőnek. */
 export interface BadgePromptInput {
-	/** A collection stílusai, abban a sorrendben, ahogy a criteria mondja. */
+	/**
+	 * A collection stílusai, a legjellemzőbbel elöl. `catalog` szinttől ez
+	 * az elért lemezek stílusainak többsége, nem a criteria első neve.
+	 */
 	styles: string[];
 	/** A legkorábbi album-év, amit a szabály elér; `null`, ha ismeretlen. */
 	earliestYear: number | null;
@@ -415,6 +427,18 @@ export interface BadgePromptInput {
 	isSingleArtist: boolean;
 	/** Ebből lesz a seed, így ugyanaz a collection ugyanazt a pint önti. */
 	slug: string;
+	/** Melyik szint építette; a badge mellé kerül. */
+	level: BadgeContextLevel;
+	/**
+	 * A pin tárgya, ha nem a táblából való (`ai` szint). A táblázatos
+	 * motívum a tartalék, nem a kiindulás: ha a szint motívumot ígért, és
+	 * nincs, az hiba, nem elnézés — a hívó áll meg, nem itt esünk vissza.
+	 */
+	motif?: string | null;
+	/** A borítókból olvasott zománc (`rich` szint); `null`: marad a műfajé. */
+	enamel?: string | null;
+	/** A lemezcímekből jövő második, kisebb tárgy (`rich` szint). */
+	secondaryMotif?: string | null;
 }
 
 /** Minden, ami a generáló függvénynek kell, és amit a badge megőriz. */
@@ -424,6 +448,8 @@ export interface BadgePrompt {
 	/** Ugyanaz a collection, ugyanaz a seed — a badge újraelőállítható. */
 	seed: number;
 	styleVersion: number;
+	/** Mennyit tudott a collectionről, ami ezt a promptot megírta. */
+	contextLevel: BadgeContextLevel;
 	aspectRatio: '1:1';
 }
 
@@ -532,24 +558,45 @@ export function seedOf(slug: string): number {
 	return hash >>> 0;
 }
 
+/**
+ * A második, kisebb tárgy mondata.
+ *
+ * Külön mondatban és kifejezetten kisebben, mert egy pinen egy főszereplő
+ * van. Enélkül a képmodell két egyforma súlyú tárgyat tesz egymás mellé, és
+ * abból nem jelvény lesz, hanem két fél jelvény.
+ *
+ * A mondat azért „the field carries", és nem „a much smaller X is": a
+ * tárgyak a saját névelőjükkel érkeznek, és közülük néhány többes számú
+ * („two small crossed bones"). Egy olyan mondat, ami névelőt vagy létigét
+ * tesz eléjük, a felük mellett hibás lenne.
+ */
+function companion(secondary: string): string {
+	return ` Below the main relief and much smaller than it, the field carries ${secondary}.`;
+}
+
 /** A mondatok, amik egy collection pinjét öntik. */
 export function buildBadgePrompt(
 	input: BadgePromptInput,
 	now: number
 ): BadgePrompt {
 	const seed = seedOf(input.slug);
-	const motif = motifOf(input.styles, seed);
+	const motif = input.motif?.trim() || motifOf(input.styles, seed);
 	const subject = input.isSingleArtist
 		? `The pin is die cut to the silhouette of ${motif}, with ${rimOf(input.points)} following its outline.`
 		: `The pin is round, struck with ${motif} in raised relief, inside ${rimOf(input.points)}.`;
 
-	const finish = `The metal is ${patinaOf(input.earliestYear, now)}, and ${enamelOf(input.styles)} fills the recesses of the relief.`;
+	const second = input.secondaryMotif?.trim()
+		? companion(input.secondaryMotif.trim())
+		: '';
+	const enamel = input.enamel?.trim() || enamelOf(input.styles);
+	const finish = `The metal is ${patinaOf(input.earliestYear, now)}, and ${enamel} fills the recesses of the relief.`;
 
 	return {
-		prompt: `${STYLE_PREFIX}${subject} ${finish}${STYLE_SUFFIX}`,
+		prompt: `${STYLE_PREFIX}${subject}${second} ${finish}${STYLE_SUFFIX}`,
 		negativePrompt: BADGE_NEGATIVE_PROMPT,
 		seed,
 		styleVersion: BADGE_STYLE_VERSION,
+		contextLevel: input.level,
 		aspectRatio: '1:1',
 	};
 }

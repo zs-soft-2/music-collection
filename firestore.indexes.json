@@ -159,6 +159,28 @@
 		},
 		{
 			"collectionGroup": "album",
+			"fieldPath": "styles",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "album",
 			"fieldPath": "uid",
 			"indexes": [
 				{

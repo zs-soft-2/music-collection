@@ -1,6 +1,6 @@
 import { Firestore } from 'firebase-admin/firestore';
 
-import { adoptBadgeImage } from './badge-generation';
+import { adoptBadgeDocument, adoptBadgeImage } from './badge-generation';
 
 // ── Storage-utánzat ───────────────────────────────────────────────────────
 //
@@ -258,5 +258,122 @@ describe('adoptBadgeImage', () => {
 			adoptBadgeImage(store.database, 'wave', UPLOADED, 'pin.png', NOW)
 		).rejects.toThrow('Nincs ilyen collection');
 		expect(Object.keys(store.documents)).toHaveLength(0);
+	});
+});
+
+describe('adoptBadgeDocument', () => {
+	const PICKED = {
+		uid: 'pin-1',
+		name: 'Badge — The Wave (feltöltött)',
+		fileType: 'image/png',
+		filePath: 'https://example.test/pin-1.png',
+	};
+
+	it('a meglévő dokumentumot teszi jelvénnyé, újat nem ír', async () => {
+		const store = fakeDatabase({
+			'music-collection/wave': { name: 'The Wave' },
+			'document/pin-1': PICKED,
+		});
+
+		const chosen = await adoptBadgeDocument(
+			store.database,
+			'wave',
+			'pin-1',
+			NOW
+		);
+
+		expect(chosen).toEqual({
+			documentUid: 'pin-1',
+			name: PICKED.name,
+			filePath: PICKED.filePath,
+			source: 'uploaded',
+			generatedAt: NOW,
+		});
+
+		const badge = store.documents['music-collection/wave'][
+			'badge'
+		] as Record<string, unknown>;
+
+		expect(badge['image']).toEqual(chosen);
+		expect(badge['gallery']).toEqual([chosen]);
+		// A dokumentum azé marad, akié volt: nem kap kategóriát, nem
+		// keletkezik mellé másik, és a darabszám sem lép.
+		expect(store.documents['document/pin-1']).toEqual(PICKED);
+		expect(
+			Object.keys(store.documents).filter((path) =>
+				path.startsWith('document/')
+			)
+		).toEqual(['document/pin-1']);
+	});
+
+	it('a galériában már bent lévő képet nem fűzi be másodszor', async () => {
+		const inGallery = {
+			documentUid: 'pin-1',
+			name: PICKED.name,
+			filePath: PICKED.filePath,
+			generatedAt: 1,
+		};
+		const store = fakeDatabase({
+			'music-collection/wave': {
+				name: 'The Wave',
+				badge: { gallery: [inGallery] },
+			},
+			'document/pin-1': PICKED,
+		});
+
+		const chosen = await adoptBadgeDocument(
+			store.database,
+			'wave',
+			'pin-1',
+			NOW
+		);
+		const badge = store.documents['music-collection/wave'][
+			'badge'
+		] as Record<string, unknown>;
+
+		expect(chosen).toEqual(inGallery);
+		expect(badge['gallery']).toEqual([inGallery]);
+		expect(badge['image']).toEqual(inGallery);
+	});
+
+	it('visszavont dokumentumot nem ajánl fel', async () => {
+		const store = fakeDatabase({
+			'music-collection/wave': { name: 'The Wave' },
+			'document/pin-1': { ...PICKED, deletedAt: NOW - 1000 },
+		});
+
+		await expect(
+			adoptBadgeDocument(store.database, 'wave', 'pin-1', NOW)
+		).rejects.toThrow('vissza van vonva');
+		expect(
+			store.documents['music-collection/wave']['badge']
+		).toBeUndefined();
+	});
+
+	it('nem képet nem tesz jelvénnyé', async () => {
+		const store = fakeDatabase({
+			'music-collection/wave': { name: 'The Wave' },
+			'document/notes': {
+				...PICKED,
+				fileType: 'application/pdf',
+			},
+		});
+
+		await expect(
+			adoptBadgeDocument(store.database, 'wave', 'notes', NOW)
+		).rejects.toThrow('nem kép');
+	});
+
+	it('nem létező dokumentumra nem ír semmit', async () => {
+		const store = fakeDatabase({
+			'music-collection/wave': { name: 'The Wave' },
+		});
+
+		await expect(
+			adoptBadgeDocument(store.database, 'wave', 'pin-1', NOW)
+		).rejects.toThrow('Nincs ilyen dokumentum');
+		expect(
+			store.documents['music-collection/wave']['badge']
+		).toBeUndefined();
 	});
 });

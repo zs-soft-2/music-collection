@@ -1,6 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { I18N_IMPORTS } from '@music-collection/core/i18n';
-import { BadgeQualityProfile } from '@music-collection/domain/music-collection/api';
+import {
+	BadgeContextLevel,
+	BadgeQualityProfile,
+} from '@music-collection/domain/music-collection/api';
 
 import { AiMarkComponent } from '../../../shared/music-ui';
 
@@ -16,6 +19,18 @@ const BRACKETS: readonly BadgeQualityProfile[] = [
 	'normal',
 	'premium',
 ];
+
+/**
+ * How much of the collection reaches the model, narrowest first.
+ *
+ * Its own setting, not a side effect of the bracket. The bracket says what
+ * an image may cost; this says what the prompt is built from. They cross
+ * freely — a cheap model can draw from the real records, an expensive one
+ * can draw blind — and the gateway assigns no image model to `premium`
+ * today, so hanging the context off the bracket would put the widest level
+ * out of reach for a reason that has nothing to do with it.
+ */
+const LEVELS: readonly BadgeContextLevel[] = ['catalog', 'rich', 'ai'];
 
 /**
  * Admin: the badge generation settings. Everything here costs money when a
@@ -112,6 +127,40 @@ const BRACKETS: readonly BadgeQualityProfile[] = [
 								{{
 									'ui.badgeSettings.the-bracket-decides-the-model'
 										| transloco
+								}}
+							</small>
+						</div>
+
+						<div class="mc-field">
+							<label for="context">{{
+								'ui.badgeSettings.what-the-badge-knows'
+									| transloco
+							}}</label>
+							<select
+								id="context"
+								(change)="
+									store.set({ contextLevel: level($event) })
+								"
+							>
+								@for (name of levels; track name) {
+									<option
+										[value]="name"
+										[selected]="
+											name === settings.contextLevel
+										"
+									>
+										{{
+											'ui.badgeSettings.level-' + name
+												| transloco
+										}}
+									</option>
+								}
+							</select>
+							<small>
+								{{
+									'ui.badgeSettings.level-' +
+										settings.contextLevel +
+										'-explained' | transloco
 								}}
 							</small>
 						</div>
@@ -242,6 +291,7 @@ const BRACKETS: readonly BadgeQualityProfile[] = [
 export class BadgeSettingsComponent {
 	protected readonly store = inject(BadgeSettingsStore);
 	protected readonly brackets = BRACKETS;
+	protected readonly levels = LEVELS;
 
 	protected value(event: Event): string {
 		return (event.target as HTMLInputElement).value;
@@ -253,5 +303,9 @@ export class BadgeSettingsComponent {
 
 	protected bracket(event: Event): BadgeQualityProfile {
 		return (event.target as HTMLSelectElement).value as BadgeQualityProfile;
+	}
+
+	protected level(event: Event): BadgeContextLevel {
+		return (event.target as HTMLSelectElement).value as BadgeContextLevel;
 	}
 }

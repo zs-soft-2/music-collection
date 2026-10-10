@@ -1,5 +1,5 @@
 import { provideI18nTesting } from '@music-collection/core/i18n/testing';
-import { firstValueFrom, of } from 'rxjs';
+import { firstValueFrom, last, of } from 'rxjs';
 
 import { TestBed } from '@angular/core/testing';
 import { AlbumEntity, ArtistEntity } from '@music-collection/api';
@@ -232,5 +232,88 @@ describe('MusicCollectionEffect credits', () => {
 		);
 
 		expect(listCredits).toHaveBeenCalledWith({ kind: 'all' });
+	});
+});
+
+/**
+ * The image library: what an admin may pick instead of uploading the same
+ * picture again. The seam it guards is which documents are on offer — a
+ * withdrawn one is withdrawn everywhere, and a PDF is not a badge.
+ */
+describe('MusicCollectionEffect uploaded images', () => {
+	const documents = [
+		{
+			uid: 'old-pin',
+			name: 'Badge — The Wave',
+			fileType: 'image/png',
+			filePath: 'https://example.test/old-pin.png',
+			updatedAt: 10,
+		},
+		{
+			uid: 'fresh-cover',
+			name: 'the-wave-cover',
+			fileType: 'image/jpeg',
+			filePath: 'https://example.test/cover.jpg',
+			updatedAt: 20,
+		},
+		{
+			uid: 'withdrawn',
+			name: 'A rossz rajz',
+			fileType: 'image/png',
+			filePath: 'https://example.test/withdrawn.png',
+			deletedAt: 5,
+			updatedAt: 30,
+		},
+		{
+			uid: 'notes',
+			name: 'Szerződés',
+			fileType: 'application/pdf',
+			filePath: 'https://example.test/notes.pdf',
+			updatedAt: 40,
+		},
+	];
+	let effect: MusicCollectionEffect;
+
+	beforeEach(() => {
+		TestBed.configureTestingModule({
+			providers: [
+				provideI18nTesting(),
+				MusicCollectionEffect,
+				{ provide: MusicCollectionRepository, useValue: {} },
+				{ provide: AlbumStateService, useValue: {} },
+				{ provide: ArtistStateService, useValue: {} },
+				{ provide: CollectionItemStateService, useValue: {} },
+				{
+					provide: DocumentStateService,
+					useValue: {
+						selectEntities$: () => of(documents),
+						dispatchListEntitiesAction: jest.fn(),
+					},
+				},
+			],
+		});
+
+		effect = TestBed.inject(MusicCollectionEffect);
+	});
+
+	it('offers the live images, newest first', async () => {
+		const images = await firstValueFrom(
+			effect.uploadedImages$().pipe(last())
+		);
+
+		expect(images.map(({ uid }) => uid)).toEqual([
+			'fresh-cover',
+			'old-pin',
+		]);
+	});
+
+	/*
+	 * A picker that stays silent until the documents arrive would never
+	 * render — and an empty library is an answer, not a reason to hide.
+	 */
+	it('starts with an empty library rather than waiting', async () => {
+		const first = await firstValueFrom(effect.uploadedImages$());
+
+		expect(first).toEqual([]);
 	});
 });

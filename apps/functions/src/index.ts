@@ -52,6 +52,7 @@ import {
 	fetchMasterVersions,
 } from './discogs-versions';
 import {
+	adoptBadgeDocument,
 	adoptBadgeImage,
 	generateBadgeCandidates,
 	setBadgeImage,
@@ -1400,17 +1401,29 @@ export const setMusicCollectionBadgeImage = onCall(async (request) => {
  * A szerkesztőből feltöltött kép beiktatása jelvénynek. A fájl már a
  * Storage-ban van; innentől dokumentum is van fölötte, a galériában is ott
  * áll, és ez a collection pinje.
+ *
+ * Két út, egy hívás. A frissen feltöltött kép a fájl útvonalával érkezik —
+ * dokumentumot is itt kap. Amire viszont már van dokumentum (egy korábbi
+ * collection pinje, egy rajzolt jelölt, egy adminban feltöltött kép), az az
+ * azonosítójával: azt nem kell sem feltölteni, sem újra beiktatni.
  */
 export const adoptMusicCollectionBadgeImage = onCall(async (request) => {
 	await requireCaller(request, 'updateMusicCollectionEntity');
 
-	return adoptBadgeImage(
-		database(),
-		request.data?.uid,
-		request.data?.storagePath,
-		request.data?.fileName,
-		Date.now()
-	);
+	return request.data?.documentUid
+		? adoptBadgeDocument(
+				database(),
+				request.data?.uid,
+				request.data?.documentUid,
+				Date.now()
+			)
+		: adoptBadgeImage(
+				database(),
+				request.data?.uid,
+				request.data?.storagePath,
+				request.data?.fileName,
+				Date.now()
+			);
 });
 
 /**

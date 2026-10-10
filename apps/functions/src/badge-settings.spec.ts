@@ -34,6 +34,32 @@ describe('sanitizeBadgeSettings', () => {
 		).toBe(DEFAULT_BADGE_SETTINGS.qualityProfile);
 	});
 
+	it('a kontextusszintet átveszi', () => {
+		expect(sanitizeBadgeSettings({ contextLevel: 'ai' }).contextLevel).toBe(
+			'ai'
+		);
+	});
+
+	it('az ismeretlen kontextusszint az alapértelmezésre esik vissza', () => {
+		expect(
+			sanitizeBadgeSettings({ contextLevel: 'mindent' }).contextLevel
+		).toBe(DEFAULT_BADGE_SETTINGS.contextLevel);
+	});
+
+	it('a kontextusszint és az ársáv külön állítható', () => {
+		// A kettő szándékosan nincs összekötve: az egyik azt mondja meg,
+		// mennyibe kerülhet egy kép, a másik azt, miből készül a prompt.
+		const settings = sanitizeBadgeSettings({
+			qualityProfile: 'economy',
+			contextLevel: 'ai',
+		});
+
+		expect(settings).toMatchObject({
+			qualityProfile: 'economy',
+			contextLevel: 'ai',
+		});
+	});
+
 	it('a jelöltszámot a felső korlátjáig engedi', () => {
 		expect(
 			sanitizeBadgeSettings({ candidateCount: 99 }).candidateCount

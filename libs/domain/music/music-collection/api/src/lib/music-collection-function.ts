@@ -1,4 +1,8 @@
-import { BadgeImage, MusicCollection } from './music-collection';
+import {
+	BadgeContextLevel,
+	BadgeImage,
+	MusicCollection,
+} from './music-collection';
 
 /**
  * The callables that write the definitions. `firestore.rules` refuses every
@@ -70,6 +74,8 @@ export interface GenerateBadgeResult {
 	negativePrompt: string;
 	seed: number;
 	styleVersion: number;
+	/** How much of the collection reached the model. */
+	contextLevel: BadgeContextLevel;
 	model: string;
 }
 
@@ -111,6 +117,13 @@ export interface BadgeGenerationSettings {
 	 * one that knows which provider has what.
 	 */
 	qualityProfile: BadgeQualityProfile;
+	/**
+	 * How much of the collection reaches the model before it draws. Not the
+	 * same knob as the price bracket, and deliberately not hung off it: the
+	 * bracket says what an *image* may cost, this says how many *facts* the
+	 * prompt is built from.
+	 */
+	contextLevel: BadgeContextLevel;
 }
 
 /**

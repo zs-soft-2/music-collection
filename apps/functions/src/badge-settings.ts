@@ -25,6 +25,29 @@ export const BADGE_QUALITY_PROFILES = ['economy', 'normal', 'premium'] as const;
 export type BadgeQualityProfile = (typeof BADGE_QUALITY_PROFILES)[number];
 
 /**
+ * Mennyit tudjon a pin arról a collectionről, amelyiké.
+ *
+ * Ez nem ugyanaz, mint az ársáv, és szándékosan nem is arra van ráakasztva.
+ * Az ársáv azt mondja meg, mennyibe kerülhet egy *kép*; ez azt, hogy mennyi
+ * *tény* jut el a modellig, mielőtt rajzol. A kettő keresztbe is állhat: egy
+ * olcsó modell is rajzolhat a valódi lemezekből, egy drága is rajzolhat
+ * vakon. Ráadásul a `premium` sávhoz a gateway ma egyetlen képmodellt sem
+ * rendel — ha a kontextus rá lenne kötve, a legbővebb szint elérhetetlen
+ * lenne egy tőlünk független hiányosság miatt.
+ *
+ * - `catalog`: a szabály által elért valódi lemezek — a stílusuk többsége,
+ *   a legkorábbi évük. Nincs plusz modellhívás, nincs plusz költség.
+ * - `rich`: ezen felül a borítók színe adja a zománcot, és a lemezcímek
+ *   visszatérő tárgyi szava egy második, kisebb motívumot. A borítót
+ *   letöltjük és megnézzük, de modellt nem kérdezünk.
+ * - `ai`: a fő motívumot egy szöveges modell írja a collection tényeiből,
+ *   a kötött stíluszár közé. Badge-enként egy plusz hívás.
+ */
+export const BADGE_CONTEXT_LEVELS = ['catalog', 'rich', 'ai'] as const;
+
+export type BadgeContextLevel = (typeof BADGE_CONTEXT_LEVELS)[number];
+
+/**
  * Amit az admin felületről lehet állítani. A stíluszár nincs köztük: az
  * tartja egy készletben a badge-eket, és kódban marad, verziózva.
  *
@@ -47,6 +70,8 @@ export interface BadgeGenerationSettings {
 	dailyImageLimit: number;
 	/** Melyik ársávban rajzoljon a gateway. */
 	qualityProfile: BadgeQualityProfile;
+	/** Mennyi tény jusson el a modellig a collectionről. */
+	contextLevel: BadgeContextLevel;
 }
 
 export const DEFAULT_BADGE_SETTINGS: BadgeGenerationSettings = {
@@ -56,6 +81,9 @@ export const DEFAULT_BADGE_SETTINGS: BadgeGenerationSettings = {
 	// A `normal` az, amihez a gateway minden tenantnál rendel modellt; a
 	// másik kettő üresen is állhat, és akkor a kérés hibával jön vissza.
 	qualityProfile: 'normal',
+	// A `catalog` az, ami semmivel nem kerül többe a réginél, és már az is
+	// igazat mond az évszámról — ezért ez az alapértelmezés, nem a `rich`.
+	contextLevel: 'catalog',
 };
 
 /** A beállítás hiánya nem hiba: ilyenkor az alapértelmezés érvényes. */
@@ -97,6 +125,11 @@ export function sanitizeBadgeSettings(data: unknown): BadgeGenerationSettings {
 		)
 			? (input.qualityProfile as BadgeQualityProfile)
 			: DEFAULT_BADGE_SETTINGS.qualityProfile,
+		contextLevel: BADGE_CONTEXT_LEVELS.includes(
+			input.contextLevel as BadgeContextLevel
+		)
+			? (input.contextLevel as BadgeContextLevel)
+			: DEFAULT_BADGE_SETTINGS.contextLevel,
 	};
 }
 

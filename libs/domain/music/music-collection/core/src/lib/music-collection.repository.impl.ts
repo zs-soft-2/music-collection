@@ -216,6 +216,21 @@ export class MusicCollectionFirestoreRepository extends MusicCollectionRepositor
 		);
 	}
 
+	/**
+	 * Egy már beiktatott kép a galériába. Ugyanaz a callable szolgálja ki,
+	 * mint a frissen feltöltöttet: a szerveren ez a kettő egy művelet két
+	 * bemenettel — amott az útvonal, itt a dokumentum azonosítója.
+	 */
+	public adoptBadgeDocument$(
+		uid: string,
+		documentUid: string
+	): Observable<BadgeImage> {
+		return this.call$<BadgeImage>(
+			ADOPT_MUSIC_COLLECTION_BADGE_IMAGE_FUNCTION,
+			{ uid, documentUid }
+		);
+	}
+
 	public readBadgeSettings$(): Observable<BadgeGenerationSettings> {
 		return this.call$<BadgeGenerationSettings>(
 			READ_BADGE_GENERATION_SETTINGS_FUNCTION,
