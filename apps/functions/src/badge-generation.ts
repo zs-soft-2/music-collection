@@ -1214,6 +1214,15 @@ export async function probeSceneCandidates(
 	};
 }
 
+/**
+ * Amiről egy modellnévről látszik, hogy képet rajzol.
+ *
+ * A szolgáltatók ebben következetesek — `gemini-3-pro-image`, `gpt-image-1`,
+ * `imagen-*`, `dall-e-*`, `flux`, `stable-diffusion` —, és ez az egyetlen
+ * jel, ami tényleg megjön: a katalógus leírói képességet nem adnak.
+ */
+const IMAGE_MODEL_NAME = /image|imagen|dall-?e|flux|diffusion|sdxl/i;
+
 /** Egy képmodell, ahogy a próbapad legördülője mutatja. */
 export interface SceneModel {
 	id: string;
@@ -1254,26 +1263,27 @@ export async function listSceneModels(
 	}
 
 	/*
-	 * Ami képet rajzol. Ami nem mond magáról képességet, az bent marad: egy
-	 * hiányzó mező nem bizonyíték arra, hogy a modell nem tud rajzolni, és
-	 * egy kísérleti padon a téves kizárás drágább, mint egy fölösleges sor.
+	 * Ami képet rajzol — a **neve** alapján, nem a képességei alapján.
+	 *
+	 * A katalógus ugyanis nem ad `capabilities` mezőt, és az a szabály, hogy
+	 * „ami nem mond magáról semmit, az maradjon bent", az egész katalógust
+	 * bent hagyta: szövegmodellek, hangmodellek, beágyazók, hetven sor egy
+	 * legördülőben, amiből három való oda. A név viszont megbízható — egy
+	 * képmodell neve kimondja, hogy az.
 	 */
-	const drawing = models.filter((model) => {
-		const capabilities = model.capabilities;
-
-		return (
-			!capabilities?.length ||
-			capabilities.some((capability) => /image/i.test(capability))
-		);
-	});
+	const drawing = models.filter(
+		(model) =>
+			IMAGE_MODEL_NAME.test(model.id) ||
+			model.capabilities?.some((capability) =>
+				IMAGE_MODEL_NAME.test(capability)
+			)
+	);
 
 	logger.info(
 		`képmodellek: ${models.length} a katalógusban, ${drawing.length} rajzol képet`
 	);
 
-	// Ha a szűrés mindent kivett, inkább a teljes lista: a próbapad akkor is
-	// többet ér, ha az admin maga nézi végig, mint ha üresen hallgat.
-	return (drawing.length ? drawing : models).map((model) => {
+	return drawing.map((model) => {
 		// A katalógus pont- és árnevei nincsenek szerződésben rögzítve, csak
 		// a leíró `id`-je és a szolgáltatója. Ami megvan, az kiíródik; ami
 		// nincs, attól a név még választható marad.
