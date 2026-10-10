@@ -1,5 +1,11 @@
+import { firstValueFrom } from 'rxjs';
+
 import { Injectable, inject } from '@angular/core';
-import { DocumentStateService, EntityTypeEnum } from '@music-collection/api';
+import {
+	DocumentDataService,
+	DocumentUtilService,
+	EntityTypeEnum,
+} from '@music-collection/api';
 
 import { CollectionImageRepository } from './collection-image.repository';
 
@@ -23,7 +29,8 @@ const ACCEPTED = /^image\//;
 @Injectable({ providedIn: 'root' })
 export class CollectionImageEffect {
 	private readonly repository = inject(CollectionImageRepository);
-	private readonly documentStateService = inject(DocumentStateService);
+	private readonly documents = inject(DocumentDataService);
+	private readonly documentUtil = inject(DocumentUtilService);
 
 	/**
 	 * Uploads the chosen file and answers with its URL and where it landed.
@@ -71,16 +78,43 @@ export class CollectionImageEffect {
 	): Promise<StoredImage> {
 		const stored = await this.store(name, file);
 
-		// Kategóriát nem kap: ezt kézzel töltötte fel egy admin, és a
-		// dokumentum-adminban is a kézi feltöltések közt a helye.
-		this.documentStateService.dispatchAddEntityAction({
-			entityType: EntityTypeEnum.Document,
-			name: name || file.name,
-			originalName: file.name,
-			fileType: file.type,
-			filePath: stored.url,
-		});
+		/*
+		 * Megvárjuk az írást, és nem a state service-en dispatcheljük.
+		 *
+		 * A dispatch tűzd-és-felejtsd: ha a Firestore-írás elbukik — hiányzó
+		 * jogosultság, elutasító szabály —, a hívó akkor is késznek látja,
+		 * kiírja a felületre, és a kép ott marad a bucketben dokumentum
+		 * nélkül, vagyis láthatatlanul. Pont az a baj, ami ellen a
+		 * dokumentum készül.
+		 *
+		 * Kategóriát nem kap: ezt kézzel töltötte fel vagy rajzoltatta egy
+		 * admin, és a dokumentum-adminban is a kézi feltöltések közt a helye.
+		 */
+		await firstValueFrom(
+			this.documents.add$(
+				this.documentUtil.convertEntityAddToModelAdd({
+					entityType: EntityTypeEnum.Document,
+					name: name || file.name,
+					originalName: file.name,
+					fileType: file.type,
+					filePath: stored.url,
+				})
+			)
+		);
 
+		/*
+		 * A darabszámlálót itt NEM léptetjük, és ez szándékos.
+		 *
+		 * Az NgRx út első lépése az `entity-quantity` Document bejegyzésének
+		 * megvárása volt (`first()`), és ha az a store-ba még nem töltött be,
+		 * a selector nem emittál: az effect csendben vár, az írás soha nem
+		 * történik meg, a felület meg kiírja, hogy kész. Ugyanez a csapda
+		 * várna itt is, csak az írás után — a hívó ragadna be.
+		 *
+		 * A számláló admin-statisztika; a képkönyvtár és a dokumentum-lista
+		 * a Firestore-ból olvas, nem belőle. Egy el nem mozduló szám
+		 * kellemetlen, egy el nem készülő dokumentum működésképtelen.
+		 */
 		return stored;
 	}
 }
