@@ -111,8 +111,16 @@ export type SceneSize = (typeof SCENE_SIZES)[number];
 /** Hány kép készüljön egy próbán. Négynél több egy kísérlethez pazarlás. */
 export const MAX_PROBE_IMAGES = 4;
 
-/** A tárgy felső hossza. Egy mondatnyi hely egy jelenetnek bőven elég. */
-export const MAX_SUBJECT_LENGTH = 400;
+/**
+ * A tárgy felső hossza.
+ *
+ * Bőven a használható prompt fölött, szándékosan: a `none` záron a tárgy az
+ * **egész** prompt, és egy kézzel csiszolt jelenet-leírás több bekezdés is
+ * lehet. Ez a szám nem ízlést fejez ki, hanem azt, hogy egy elszabadult
+ * kliens ne küldhessen regényt a mi számlánkra — a próba padja pont attól
+ * pad, hogy szabadon lehet rajta írni.
+ */
+export const MAX_SUBJECT_LENGTH = 4000;
 
 /** Amit a kliens küld, miután a szerver megnézte. */
 export interface SceneProbeRequest {

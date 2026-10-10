@@ -15,6 +15,13 @@ const DRAFTS: readonly { id: SceneStyleDraft; label: string }[] = [
 	{ id: 'none', label: 'Zár nélkül — a tárgy az egész prompt' },
 ];
 
+/**
+ * What the server lets a subject run to. Shown rather than enforced: the
+ * ceiling is the server's, and a form that silently truncated would hide
+ * the end of a prompt somebody wrote on purpose.
+ */
+const MAX_SUBJECT = 4000;
+
 /** What the server will accept; which of them the model takes is the question. */
 const SIZES: readonly string[] = [
 	'1536x864',
@@ -101,7 +108,14 @@ const EXAMPLES: readonly { label: string; subject: string }[] = [
 				></textarea>
 				<small>
 					Egy hely, ne egy zenekar: a név védjegy, és a modell
-					úgyis rosszul rajzolja.
+					úgyis rosszul rajzolja. Zár nélkül ez az egész prompt,
+					tehát itt hosszan is lehet írni.
+					<span
+						class="count"
+						[class.is-over]="store.subject().length > maxSubject"
+					>
+						{{ store.subject().length }} / {{ maxSubject }}
+					</span>
 				</small>
 			</div>
 
@@ -285,6 +299,22 @@ const EXAMPLES: readonly { label: string; subject: string }[] = [
 			resize: vertical;
 		}
 
+		/*
+		 * The count is here because the ceiling is the server's: a subject
+		 * over it comes back as an error after the round trip, which is a
+		 * slow way to learn you wrote too much.
+		 */
+		.count {
+			float: right;
+			font-variant-numeric: tabular-nums;
+			color: var(--mc-text-subtle);
+
+			&.is-over {
+				color: var(--mc-status-bad);
+				font-weight: 700;
+			}
+		}
+
 		.shots {
 			display: grid;
 			grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -371,6 +401,7 @@ export class SceneProbeComponent {
 	protected readonly drafts = DRAFTS;
 	protected readonly sizes = SIZES;
 	protected readonly examples = EXAMPLES;
+	protected readonly maxSubject = MAX_SUBJECT;
 
 	protected value(event: Event): string {
 		return (event.target as HTMLInputElement | HTMLTextAreaElement).value;
