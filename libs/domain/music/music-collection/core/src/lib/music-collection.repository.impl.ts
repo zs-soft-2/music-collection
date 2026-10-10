@@ -185,11 +185,20 @@ export class MusicCollectionFirestoreRepository extends MusicCollectionRepositor
 	 */
 	public generateBadge$(
 		uid: string,
-		points: number
+		points: number,
+		model: string | null
 	): Observable<GenerateBadgeResult> {
-		return this.call$<GenerateBadgeResult>(
+		// Not `call$`: drawing four candidates runs well past the callable
+		// client's seventy-second default, and a picture that outlives the
+		// deadline is paid for and never arrives.
+		const callable = httpsCallable<object, GenerateBadgeResult>(
+			this.functions,
 			GENERATE_MUSIC_COLLECTION_BADGE_FUNCTION,
-			{ uid, points }
+			{ timeout: 300_000 }
+		);
+
+		return from(callable({ uid, points, model })).pipe(
+			map((result) => result.data)
 		);
 	}
 

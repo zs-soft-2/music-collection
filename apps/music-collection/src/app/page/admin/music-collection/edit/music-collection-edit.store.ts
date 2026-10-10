@@ -22,6 +22,8 @@ import {
 } from '@music-collection/api';
 import {
 	BadgeImage,
+	SceneLockText,
+	SceneModel,
 	GenerateBadgeResult,
 	MusicCollectionEntity,
 	MusicCollectionMembership,
@@ -140,6 +142,18 @@ interface MusicCollectionEditState {
 	 * again; the ones withdrawn in the document admin are left out.
 	 */
 	badgeGallery: BadgeImage[];
+	/**
+	 * Which model draws the pin; empty leaves it to the gateway's bracket.
+	 *
+	 * It had no setting at all until now, and the bracket's own choice is
+	 * the cheapest image model there is — so every pin ever drawn here came
+	 * from that one, with nothing on the page saying so.
+	 */
+	badgeModel: string;
+	/** The image models this tenant can reach, for both pickers on the page. */
+	imageModels: SceneModel[];
+	/** The style lock texts, so the backdrop panel can preview its prompt. */
+	sceneLocks: SceneLockText[];
 	isGeneratingBadge: boolean;
 	isPickingBadge: boolean;
 	/** Which picture is on its way to Storage, if any. */
@@ -179,6 +193,9 @@ const initialState: MusicCollectionEditState = {
 	badgeImageUrl: null,
 	badgeImageUid: null,
 	badgeGallery: [],
+	badgeModel: '',
+	imageModels: [],
+	sceneLocks: [],
 	isGeneratingBadge: false,
 	isPickingBadge: false,
 	uploadingField: null,
@@ -683,7 +700,8 @@ export const MusicCollectionEditStore = signalStore(
 						exhaustMap(() =>
 							effect.generateBadge$(
 								store.uid() as string,
-								store.curatedPoints() ?? store.derivedPoints()
+								store.curatedPoints() ?? store.derivedPoints(),
+								store.badgeModel().trim() || null
 							)
 						),
 						tapResponse({
@@ -808,6 +826,46 @@ export const MusicCollectionEditStore = signalStore(
 						tapResponse({ next: finish, error: fail })
 					)
 				),
+
+				/** Which model draws the pin; empty is the gateway's choice. */
+				setBadgeModel(model: string): void {
+					patchState(store, { badgeModel: model });
+				},
+
+				/**
+				 * The picture a backdrop draw produced, taken as the
+				 * collection's artwork. It is already in Storage with a
+				 * document over it by the time it gets here, so this only
+				 * points the form at it.
+				 */
+				useAsCover(url: string): void {
+					patchForm({ coverImageUrl: url });
+				},
+
+				/**
+				 * The image models this tenant can reach, and the lock texts
+				 * the backdrop panel previews with.
+				 *
+				 * Asked for once, here, and handed to both panels: the call
+				 * draws nothing, but two of them would still be two.
+				 */
+				loadImageSetup: rxMethod<void>(
+					pipe(
+						switchMap(() => effect.loadProbeSetup$()),
+						tapResponse({
+							next: (setup) =>
+								patchState(store, {
+									imageModels: setup.models,
+									sceneLocks: setup.locks,
+								}),
+							error: (error: unknown) =>
+								// Not shown: without it both pickers fall back
+								// to the gateway's own choice, which is what
+								// they did before any of this existed.
+								console.error('Image models unavailable', error),
+						})
+					)
+				),
 			};
 		}
 	),
@@ -817,6 +875,7 @@ export const MusicCollectionEditStore = signalStore(
 			store.loadArtists(of(undefined));
 			store.loadMusicians(of(undefined));
 			store.loadStyles(of(undefined));
+			store.loadImageSetup(of(undefined));
 		},
 	})
 );

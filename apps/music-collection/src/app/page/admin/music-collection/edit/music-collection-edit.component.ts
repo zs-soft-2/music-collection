@@ -19,6 +19,7 @@ import { AiMarkComponent } from '../../../../shared/music-ui';
 
 import { EntityPickerComponent } from '../component/entity-picker.component';
 import { ImageLibraryComponent } from '../component/image-library.component';
+import { SceneGeneratorComponent } from './scene-generator/scene-generator.component';
 
 import {
 	MusicCollectionEditStore,
@@ -42,6 +43,7 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 		RouterLink,
 		EntityPickerComponent,
 		ImageLibraryComponent,
+		SceneGeneratorComponent,
 	],
 	template: `
 		<header class="mc-page-head">
@@ -229,6 +231,22 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 										(closed)="store.closeLibrary()"
 									></mc-image-library>
 								}
+
+								<!--
+									A háttérkép rajzolása ide tartozik, és nem
+									egy beállítás-lapra: ugyanaz a döntés, mint
+									a feltöltés fölötte — hogy néz ki ez a
+									kollekció —, csak a kép nem kész, hanem
+									most készül. Ami megszületik, a borító
+									URL-jébe kerül, ahonnan mentéskor a
+									definícióba.
+								-->
+								<mc-scene-generator
+									[models]="store.imageModels()"
+									[locks]="store.sceneLocks()"
+									[title]="form.name"
+									(picked)="store.useAsCover($event)"
+								></mc-scene-generator>
 							</div>
 
 							<div class="mc-field">
@@ -792,6 +810,51 @@ type EnumCriterionKey = (typeof ENUM_CRITERIA)[number]['key'];
 													| transloco
 											}}
 										</button>
+
+										<!--
+											Melyik modell rajzolja. Üresen a
+											gateway dönt, és az ársáv szerinti
+											választása a legolcsóbb képmodell —
+											minden eddigi pin azon készült,
+											anélkül hogy ez bárhol látszott
+											volna.
+										-->
+										<label class="model-pick">
+											<span class="visually-hidden">
+												A pin modellje
+											</span>
+											<select
+												[disabled]="store.isNew()"
+												(change)="
+													store.setBadgeModel(
+														value($event)
+													)
+												"
+											>
+												<option
+													value=""
+													[selected]="
+														!store.badgeModel()
+													"
+												>
+													A gateway válasszon
+												</option>
+												@for (
+													model of store.imageModels();
+													track model.id
+												) {
+													<option
+														[value]="model.id"
+														[selected]="
+															model.id ===
+															store.badgeModel()
+														"
+													>
+														{{ model.id }}
+													</option>
+												}
+											</select>
+										</label>
 
 										<button
 											type="button"

@@ -8,7 +8,6 @@ import {
 import { AiMarkComponent } from '../../../shared/music-ui';
 
 import { BadgeSettingsStore } from './badge-settings.store';
-import { SceneProbeComponent } from './scene-probe/scene-probe.component';
 
 /**
  * The gateway's price brackets, cheapest first. The list lives here rather
@@ -42,7 +41,7 @@ const LEVELS: readonly BadgeContextLevel[] = ['catalog', 'rich', 'ai'];
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-badge-settings',
 	providers: [BadgeSettingsStore],
-	imports: [...I18N_IMPORTS, AiMarkComponent, SceneProbeComponent],
+	imports: [...I18N_IMPORTS, AiMarkComponent],
 	template: `
 		<header class="mc-page-head">
 			<div>
@@ -260,14 +259,6 @@ const LEVELS: readonly BadgeContextLevel[] = ['catalog', 'rich', 'ai'];
 						}}</span>
 					}
 				</div>
-
-				<!--
-					The scene probe, TEMPORARY. It sits under the badge
-					settings because it spends the same daily image budget
-					and draws in the same price bracket — the two knobs
-					above are the ones that decide what a probe costs.
-				-->
-				<mc-scene-probe />
 			</div>
 		}
 	`,

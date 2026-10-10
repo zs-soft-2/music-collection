@@ -61,7 +61,9 @@ export abstract class MusicCollectionRepository {
 	 */
 	public abstract generateBadge$(
 		uid: string,
-		points: number
+		points: number,
+		/** Which model draws it; null leaves the gateway's bracket to decide. */
+		model: string | null
 	): Observable<GenerateBadgeResult>;
 	/**
 	 * Makes one image from the collection's gallery its badge. No file is

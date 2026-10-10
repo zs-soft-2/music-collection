@@ -312,13 +312,15 @@ const BADGE_SIZE = '1024x1024';
 async function draw(
 	client: GatewayClient,
 	settings: BadgeGenerationSettings,
-	built: BadgePrompt
+	built: BadgePrompt,
+	model: string | null
 ): Promise<DrawnImages> {
 	return drawImages(client, {
 		prompt: `${built.prompt} Do not include: ${built.negativePrompt}.`,
 		size: BADGE_SIZE,
 		count: settings.candidateCount,
 		qualityProfile: settings.qualityProfile,
+		model,
 	});
 }
 
@@ -439,7 +441,16 @@ export async function generateBadgeCandidates(
 	client: GatewayClient,
 	uid: string,
 	points: unknown,
-	now: number
+	now: number,
+	/**
+	 * Melyik modell rajzoljon; üresen a gateway választ az ársáv alapján.
+	 *
+	 * Sokáig nem volt ilyen, és ez tévedés volt: a sáv-routing modellnév
+	 * nélkül a legolcsóbb képmodellre megy, tehát minden eddigi jelvény
+	 * azon készült, anélkül hogy bárki eldönthette volna. A név a felületről
+	 * jön, de csak az admin felületéről — a prompthoz a hívó most sem fér.
+	 */
+	requestedModel?: unknown
 ): Promise<GenerateBadgeResult> {
 	const settings = await readBadgeSettings(database);
 
@@ -475,7 +486,16 @@ export async function generateBadgeCandidates(
 
 	await reserveDailyQuota(database, settings, settings.candidateCount, now);
 
-	const { images, model } = await draw(client, settings, built);
+	// A modellnév szabad szöveg, de csak józan hosszig: egy ismeretlen név
+	// a gatewaytől hibát kap vissza, nem képet, tehát pénzt nem visz.
+	const chosenModel =
+		typeof requestedModel === 'string' &&
+		requestedModel.trim() &&
+		requestedModel.length <= 100
+			? requestedModel.trim()
+			: null;
+
+	const { images, model } = await draw(client, settings, built, chosenModel);
 	const drawn = await fileCandidates(
 		database,
 		database.collection(MUSIC_COLLECTION_COLLECTION).doc(uid),

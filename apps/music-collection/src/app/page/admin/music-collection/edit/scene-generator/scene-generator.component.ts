@@ -1,12 +1,19 @@
 import {
 	ChangeDetectionStrategy,
 	Component,
+	computed,
 	inject,
+	input,
+	output,
 	signal,
 } from '@angular/core';
-import { SceneStyleDraft } from '@music-collection/domain/music-collection/api';
+import {
+	SceneLockText,
+	SceneModel,
+	SceneStyleDraft,
+} from '@music-collection/domain/music-collection/api';
 
-import { SceneProbeStore } from './scene-probe.store';
+import { SceneGeneratorStore } from './scene-generator.store';
 
 /**
  * The style lock candidates, in the order they are worth trying. `none` is
@@ -84,27 +91,29 @@ const EXAMPLES: readonly { label: string; subject: string }[] = [
 ];
 
 /**
- * The scene probe — TEMPORARY.
+ * The collection's backdrop, drawn.
  *
- * A bench for finding the style lock the collection backdrops will share.
- * The pictures are drawn, looked at and dropped: nothing is stored, so a
- * run costs the draw and nothing else.
+ * Beside the pin, not on a settings page: both answer the same question —
+ * what this collection looks like — and both are a thing an admin decides
+ * while looking at the collection, not while looking at a budget.
  *
- * Deliberately not translated. This page is admin-only and it goes as soon
- * as the lock is settled — three locale files gaining keys that have to be
- * taken back out is work in both directions for a bench.
+ * The models and the lock texts come in from the page, which asks the
+ * gateway for them once and hands them to both panels; the picture that is
+ * taken goes back out as a url, already uploaded and filed.
+ *
+ * Deliberately not translated. The locks are still being settled, and three
+ * locale files gaining keys that may have to come back out is work in both
+ * directions while that is true.
  */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	selector: 'mc-scene-probe',
-	providers: [SceneProbeStore],
+	selector: 'mc-scene-generator',
+	providers: [SceneGeneratorStore],
 	template: `
-		<section class="mc-form-section probe">
-			<h2>Jelenet-próba <span class="tag">kísérlet</span></h2>
+		<div class="probe">
 			<p class="lead">
-				A kollekciók háttérképéhez keressük a stíluszárat. Ami itt
-				nyer, abból lesz a kötött zár — addig ezek a képek nem
-				maradnak meg sehol, csak amíg nézed őket.
+				A kollekció háttérképe. A kép csak akkor marad meg, ha
+				ráteszed a kollekcióra — addig csak itt van, a lapon.
 			</p>
 
 			<div class="examples">
@@ -199,7 +208,7 @@ const EXAMPLES: readonly { label: string; subject: string }[] = [
 						<option value="" [selected]="!store.model()">
 							A gateway válasszon (ársáv szerint)
 						</option>
-						@for (model of store.models(); track model.id) {
+						@for (model of models(); track model.id) {
 							<option
 								[value]="model.id"
 								[selected]="model.id === store.model()"
@@ -210,21 +219,11 @@ const EXAMPLES: readonly { label: string; subject: string }[] = [
 						}
 					</select>
 					<small>
-						@if (store.setupError(); as error) {
-							<span class="warn">{{ error }}</span>
-						} @else if (!store.setupLoaded()) {
-							A modell-lista töltődik…
-						} @else if (store.models().length) {
-							{{ store.models().length }} modellhez van
-							jogosultságunk. A gatewayre bízva mindig a
-							legolcsóbb rajzol — azon készült eddig minden
-							jelvény is.
+						@if (models().length) {
+							A gatewayre bízva mindig a legolcsóbb rajzol — a
+							legjobb képet a pro modell adja.
 						} @else {
-							<span class="warn">
-								A gateway egyetlen modellt sem listázott
-								ennek a tenantnak. Marad az ársáv szerinti
-								választás.
-							</span>
+							A modell-lista töltődik; addig a gateway választ.
 						}
 					</small>
 				</div>
@@ -235,7 +234,7 @@ const EXAMPLES: readonly { label: string; subject: string }[] = [
 				lock around a finished prompt makes nonsense of it — that
 				has to be visible before it costs a draw, not after.
 			-->
-			@if (store.outgoingPrompt(); as outgoing) {
+			@if (outgoing(); as outgoing) {
 				<div class="preview">
 					<p class="preview-head">
 						Ez megy ki
@@ -305,7 +304,7 @@ const EXAMPLES: readonly { label: string; subject: string }[] = [
 									-->
 									@if (store.kept().includes($index)) {
 										<span class="kept">
-											✓ A könyvtárban
+											✓ Ez a háttér
 										</span>
 									} @else {
 										<button
@@ -313,12 +312,12 @@ const EXAMPLES: readonly { label: string; subject: string }[] = [
 											[disabled]="
 												store.keeping() !== null
 											"
-											(click)="store.keep($index)"
+											(click)="take($index)"
 										>
 											{{
 												store.keeping() === $index
 													? 'Mentés…'
-													: 'Megtartom'
+													: 'Ez legyen a háttér'
 											}}
 										</button>
 									}
@@ -368,7 +367,7 @@ const EXAMPLES: readonly { label: string; subject: string }[] = [
 					</details>
 				</div>
 			}
-		</section>
+		</div>
 	`,
 	styles: `
 		.probe {
@@ -592,8 +591,47 @@ const EXAMPLES: readonly { label: string; subject: string }[] = [
 		}
 	`,
 })
-export class SceneProbeComponent {
-	protected readonly store = inject(SceneProbeStore);
+export class SceneGeneratorComponent {
+	/** The image models the page asked the gateway for, once, for both panels. */
+	public readonly models = input<SceneModel[]>([]);
+	/** The lock texts, so the outgoing prompt can be shown before it is sent. */
+	public readonly locks = input<SceneLockText[]>([]);
+	/** The collection's name, written across each candidate as a title would be. */
+	public readonly title = input<string>('');
+	/** A picture taken as the artwork: already uploaded and filed, by url. */
+	public readonly picked = output<string>();
+
+	protected readonly store = inject(SceneGeneratorStore);
+
+	/**
+	 * Exactly what the model will be sent.
+	 *
+	 * Assembled from the server's own lock texts rather than a copy kept
+	 * here: a copy would drift, and the only reason to show this is that it
+	 * is the thing itself. A lock wrapped around a finished prompt once
+	 * produced "…at blue hour of Use case: stylized-concept", and nothing on
+	 * the page said it would.
+	 */
+	protected readonly outgoing = computed(() => {
+		const subject = this.store.subject().trim();
+
+		if (!subject) {
+			return '';
+		}
+
+		const lock = this.locks().find((one) => one.id === this.store.draft());
+
+		return lock ? `${lock.prefix}${subject}${lock.suffix}` : subject;
+	});
+
+	/** Files the picture, then hands its url to the page. */
+	protected async take(index: number): Promise<void> {
+		const url = await this.store.keep(index);
+
+		if (url) {
+			this.picked.emit(url);
+		}
+	}
 	protected readonly drafts = DRAFTS;
 	protected readonly sizes = SIZES;
 	protected readonly examples = EXAMPLES;

@@ -2,10 +2,7 @@ import { pipe, switchMap, tap } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
 import {
-	SceneLockText,
-	SceneModel,
 	SceneProbeResult,
-	SceneProbeSetup,
 	SceneStyleDraft,
 } from '@music-collection/domain/music-collection/api';
 import { MusicCollectionEffect } from '@music-collection/domain/music-collection/core';
@@ -14,29 +11,28 @@ import {
 	patchState,
 	signalStore,
 	withComputed,
-	withHooks,
 	withMethods,
 	withState,
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
-import { CollectionImageEffect } from '../../../../data/collection-image';
-import { describeWriteError } from '../../music-collection/music-collection-admin.errors';
+import { CollectionImageEffect } from '../../../../../data/collection-image';
+import { describeWriteError } from '../../music-collection-admin.errors';
 
 /**
- * The scene probe — TEMPORARY.
+ * Drawing a collection's backdrop.
  *
- * The collection backdrops need a style lock the way the badges have one:
- * the same sentences on every draw, or six pictures that were meant to be a
- * set read as six pictures. A lock like that cannot be written blind, so
- * this is the bench where the candidates are tried out, cheaply, before the
- * real thing is built around the winner.
+ * It sits beside the pin rather than on a page of its own, because the two
+ * are the same decision made twice: what this collection looks like. The
+ * difference is what they are for — a pin is a cast object on a transparent
+ * ground, a backdrop is a place, wide, with room left in it for a title.
  *
- * Nothing it draws is kept. The images arrive as `data:` urls and leave with
- * the page — a probe costs the draw and nothing else, which is the whole
- * reason to run one first.
+ * Nothing is stored until somebody says so. The candidates arrive as `data:`
+ * urls and leave with the page; only the one taken as the artwork is
+ * uploaded and filed, because three quarters of what a draw produces is
+ * born to be thrown away.
  */
-interface SceneProbeState {
+interface SceneGeneratorState {
 	/** What should be in the picture: the collection's "place", in a sentence. */
 	subject: string;
 	draft: SceneStyleDraft;
@@ -47,20 +43,13 @@ interface SceneProbeState {
 	isProbing: boolean;
 	result: SceneProbeResult | null;
 	error: string | null;
-	/** What this tenant can actually reach. Free to ask for; nothing is drawn. */
-	models: SceneModel[];
-	/** The lock texts, so the page can show what will be sent. */
-	locks: SceneLockText[];
-	/** Until this is true, an empty list means "not asked yet", not "none". */
-	setupLoaded: boolean;
-	setupError: string | null;
 	/** Which picture is being filed right now; null when none is. */
 	keeping: number | null;
 	/** Which ones are already in the library, by their place in the grid. */
 	kept: number[];
 }
 
-const initialState: SceneProbeState = {
+const initialState: SceneGeneratorState = {
 	subject: '',
 	/*
 	 * No lock by default. Anything typed or pasted here goes to the model
@@ -81,10 +70,6 @@ const initialState: SceneProbeState = {
 	isProbing: false,
 	result: null,
 	error: null,
-	models: [],
-	locks: [],
-	setupLoaded: false,
-	setupError: null,
 	keeping: null,
 	kept: [],
 };
@@ -92,30 +77,13 @@ const initialState: SceneProbeState = {
 /** The server clamps this too; the form refuses the obvious nonsense first. */
 const MAX_IMAGES = 4;
 
-export const SceneProbeStore = signalStore(
+export const SceneGeneratorStore = signalStore(
 	withState(initialState),
 	withComputed((store) => ({
 		/** Nothing is drawn for an empty subject — it would cost and say nothing. */
 		canProbe: computed(
 			() => !store.isProbing() && store.subject().trim().length > 0
 		),
-		/**
-		 * Exactly what the model will be sent.
-		 *
-		 * Built from the server's own lock texts rather than a copy kept
-		 * here: a second copy would drift, and the whole point of showing
-		 * this is that it is the truth rather than a description of it.
-		 */
-		outgoingPrompt: computed(() => {
-			const subject = store.subject().trim();
-			const lock = store.locks().find((one) => one.id === store.draft());
-
-			if (!subject) {
-				return '';
-			}
-
-			return lock ? `${lock.prefix}${subject}${lock.suffix}` : subject;
-		}),
 	})),
 	withMethods((
 		store,
@@ -133,12 +101,12 @@ export const SceneProbeStore = signalStore(
 		 * `document` is filed over it, which is what puts it in the picture
 		 * library every collection can pick from.
 		 */
-		async keep(index: number): Promise<void> {
+		async keep(index: number): Promise<string | null> {
 			const result = store.result();
 			const image = result?.images[index];
 
 			if (!image || store.keeping() !== null) {
-				return;
+				return null;
 			}
 
 			patchState(store, { keeping: index, error: null });
@@ -149,7 +117,7 @@ export const SceneProbeStore = signalStore(
 				// kézi base64-dekódolás nélkül, és a típus is megmarad.
 				const blob = await (await fetch(image)).blob();
 
-				await images.storeAsDocument(
+				const stored = await images.storeAsDocument(
 					name,
 					new File([blob], `${name}.png`, {
 						type: blob.type || 'image/png',
@@ -160,15 +128,19 @@ export const SceneProbeStore = signalStore(
 					keeping: null,
 					kept: [...store.kept(), index],
 				});
+
+				return stored.url;
 			} catch (error) {
 				console.error(error);
 				patchState(store, {
 					keeping: null,
 					error: describeWriteError(error),
 				});
+
+				return null;
 			}
 		},
-		set(change: Partial<SceneProbeState>): void {
+		set(change: Partial<SceneGeneratorState>): void {
 			patchState(store, { ...change, error: null });
 		},
 		setCount(value: string): void {
@@ -216,38 +188,5 @@ export const SceneProbeStore = signalStore(
 				})
 			)
 		),
-		/**
-		 * What this tenant may draw with, and what each lock would send.
-		 *
-		 * Free — nothing is generated — and the only honest answer to "why
-		 * does it look like that": until now the bracket picked the model,
-		 * and the bracket picks the cheapest.
-		 */
-		loadSetup: rxMethod<void>(
-			pipe(
-				switchMap(() => effect.loadProbeSetup$()),
-				tapResponse({
-					next: (setup: SceneProbeSetup) =>
-						patchState(store, {
-							models: setup.models,
-							locks: setup.locks,
-							setupLoaded: true,
-							setupError: null,
-						}),
-					error: (error: unknown) => {
-						console.error(error);
-						patchState(store, {
-							setupLoaded: true,
-							setupError: describeWriteError(error),
-						});
-					},
-				})
-			)
-		),
-	})),
-	withHooks({
-		onInit(store) {
-			store.loadSetup();
-		},
-	})
+	}))
 );

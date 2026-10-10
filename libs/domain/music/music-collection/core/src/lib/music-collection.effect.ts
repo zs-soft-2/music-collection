@@ -394,9 +394,10 @@ export class MusicCollectionEffect {
 	 */
 	public generateBadge$(
 		uid: string,
-		points: number
+		points: number,
+		model: string | null = null
 	): Observable<GenerateBadgeResult> {
-		return this.repository.generateBadge$(uid, points);
+		return this.repository.generateBadge$(uid, points, model);
 	}
 
 	/** `null` takes the pin off: the hand-made artwork becomes the badge. */
