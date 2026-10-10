@@ -4,9 +4,30 @@
 			<input name="uid" formControlName="uid" hidden />
 
 			<section class="mc-form-section" aria-labelledby="release-details">
-				<h2 id="release-details">
-					{{ 'ui.releaseForm.details' | transloco }}
-				</h2>
+				<div class="release-form-heading">
+					<h2 id="release-details">
+						{{ 'ui.releaseForm.details' | transloco }}
+					</h2>
+					<p-button
+						[label]="'ui.releaseForm.load' | transloco"
+						icon="pi pi-cloud-download"
+						size="small"
+						severity="secondary"
+						[outlined]="true"
+						[loading]="externalLoading()"
+						[disabled]="!params.formGroup.value.album"
+						[ariaLabel]="
+							'ui.releaseForm.load-pressings-from-discogs'
+								| transloco
+						"
+						(onClick)="loadExternal()"
+					></p-button>
+				</div>
+				@if (externalError()) {
+					<small class="release-form-error">{{
+						externalError()
+					}}</small>
+				}
 				<div class="mc-form-grid">
 					<div class="mc-field is-wide">
 						<label for="name">{{
@@ -123,6 +144,62 @@
 						></p-select>
 					</div>
 
+					<div class="mc-field">
+						<label for="catno">{{
+							'ui.releaseForm.catno' | transloco
+						}}</label>
+						<input
+							id="catno"
+							type="text"
+							pInputText
+							formControlName="catno"
+							aria-describedby="catno-hint"
+							[placeholder]="
+								'ui.releaseForm.catno-example' | transloco
+							"
+						/>
+						<small id="catno-hint">{{
+							'ui.releaseForm.catno-hint' | transloco
+						}}</small>
+					</div>
+
+					<div class="mc-field">
+						<label for="coverColor">{{
+							'ui.releaseForm.cover-color' | transloco
+						}}</label>
+						<div class="release-color">
+							<p-colorpicker
+								inputId="coverColor"
+								formControlName="coverColor"
+								format="hex"
+								appendTo="body"
+							></p-colorpicker>
+							@if (coverColor(); as color) {
+								<code class="release-color-value">{{
+									color
+								}}</code>
+								<p-button
+									icon="pi pi-times"
+									size="small"
+									severity="secondary"
+									[text]="true"
+									[label]="
+										'ui.releaseForm.clear-cover-color'
+											| transloco
+									"
+									(onClick)="clearCoverColor()"
+								></p-button>
+							} @else {
+								<span class="release-color-value is-unset">{{
+									'ui.releaseForm.no-cover-color' | transloco
+								}}</span>
+							}
+						</div>
+						<small id="cover-color-hint">{{
+							'ui.releaseForm.cover-color-hint' | transloco
+						}}</small>
+					</div>
+
 					<div class="mc-field is-wide">
 						<label for="formatDescription">{{
 							'ui.releaseForm.format-description' | transloco
@@ -158,4 +235,194 @@
 			</div>
 		</form>
 	</section>
+
+	<p-dialog
+		[header]="'ui.releaseForm.which-pressing-is-this' | transloco"
+		[modal]="true"
+		[visible]="!!externalVersions()"
+		(visibleChange)="$event || closeExternalVersions()"
+		[style]="{ width: 'min(56rem, 95vw)' }"
+		[dismissableMask]="true"
+	>
+		@if (externalVersions(); as versions) {
+			<p class="release-version-hint">
+				{{
+					'ui.releaseForm.discogs-lists-these-pressings'
+						| transloco: { count: versions.length }
+				}}
+			</p>
+			<div class="mc-field">
+				<label for="version-filter">{{
+					'ui.releaseForm.filter-pressings' | transloco
+				}}</label>
+				<input
+					id="version-filter"
+					type="search"
+					pInputText
+					[ngModel]="versionFilter()"
+					[ngModelOptions]="{ standalone: true }"
+					(ngModelChange)="versionFilter.set($event)"
+					[placeholder]="
+						'ui.releaseForm.filter-pressings-example' | transloco
+					"
+				/>
+			</div>
+			<ul class="release-versions">
+				@for (version of filteredVersions(); track version.id) {
+					<li>
+						<button
+							type="button"
+							class="release-version"
+							(click)="chooseExternalVersion(version)"
+						>
+							@if (version.thumbUrl) {
+								<img
+									class="release-version-thumb"
+									[src]="version.thumbUrl"
+									alt=""
+								/>
+							}
+							<span class="release-version-details">
+								<span class="release-version-format">{{
+									version.format ?? version.title
+								}}</span>
+								<span class="release-version-meta">
+									{{ version.label ?? '—' }}
+									@if (version.catno) {
+										· {{ version.catno }}
+									}
+									@if (version.country) {
+										· {{ version.country }}
+									}
+									@if (version.year) {
+										· {{ version.year }}
+									}
+								</span>
+							</span>
+						</button>
+						<a
+							class="release-version-link"
+							[href]="discogsReleaseUrl(version.id)"
+							target="_blank"
+							rel="noopener"
+							>{{
+								'ui.releaseForm.open-on-discogs' | transloco
+							}}</a
+						>
+					</li>
+				} @empty {
+					<li class="release-version-empty">
+						{{ 'ui.releaseForm.no-pressing-matches' | transloco }}
+					</li>
+				}
+			</ul>
+		}
+		<ng-template #footer>
+			<p-button
+				[label]="'ui.releaseForm.cancel2' | transloco"
+				severity="secondary"
+				[outlined]="true"
+				(onClick)="closeExternalVersions()"
+			></p-button>
+		</ng-template>
+	</p-dialog>
+
+	<p-dialog
+		[header]="'ui.releaseForm.loaded-pressing-data' | transloco"
+		[modal]="true"
+		[visible]="!!externalComparison()"
+		(visibleChange)="$event || closeExternal()"
+		[style]="{ width: 'min(56rem, 95vw)' }"
+		[dismissableMask]="true"
+	>
+		@if (externalComparison(); as comparison) {
+			<p class="release-external-source">
+				{{ 'ui.releaseForm.source' | transloco }}
+				<a [href]="comparison.sourceUrl" target="_blank" rel="noopener">
+					{{ comparison.sourceUrl }}
+				</a>
+			</p>
+			@if (comparison.labelMissing) {
+				<p class="release-external-label">
+					{{
+						'ui.releaseForm.labelOnDiscogs'
+							| transloco: { name: comparison.labelMissing }
+					}}
+				</p>
+			}
+			@if (comparison.rows.length) {
+				<div class="release-external-table">
+					<table>
+						<thead>
+							<tr>
+								<th scope="col">
+									<span class="visually-hidden">{{
+										'ui.releaseForm.apply' | transloco
+									}}</span>
+								</th>
+								<th scope="col">
+									{{ 'ui.releaseForm.field' | transloco }}
+								</th>
+								<th scope="col">
+									{{ 'ui.releaseForm.current' | transloco }}
+								</th>
+								<th scope="col">
+									{{ 'ui.releaseForm.loaded' | transloco }}
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							@for (row of comparison.rows; track row.field) {
+								<tr [class.is-selected]="row.selected">
+									<td>
+										<p-checkbox
+											[inputId]="'external-' + row.field"
+											[binary]="true"
+											[ngModel]="row.selected"
+											[ngModelOptions]="{
+												standalone: true,
+											}"
+											(onChange)="
+												toggleExternalRow(row.field)
+											"
+										></p-checkbox>
+									</td>
+									<th scope="row">
+										<label
+											[for]="'external-' + row.field"
+											>{{
+												row.labelKey | transloco
+											}}</label
+										>
+									</th>
+									<td class="is-current">
+										{{ row.current || '—' }}
+									</td>
+									<td class="is-loaded">{{ row.loaded }}</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			} @else {
+				<p>
+					{{ 'ui.releaseForm.the-loaded-data-matches' | transloco }}
+				</p>
+			}
+		}
+		<ng-template #footer>
+			<p-button
+				[label]="'ui.releaseForm.cancel3' | transloco"
+				severity="secondary"
+				[outlined]="true"
+				(onClick)="closeExternal()"
+			></p-button>
+			<p-button
+				[label]="'ui.releaseForm.apply-to-form' | transloco"
+				icon="pi pi-check"
+				[disabled]="!hasSelectedExternalRow()"
+				(onClick)="applyExternal()"
+			></p-button>
+		</ng-template>
+	</p-dialog>
 }

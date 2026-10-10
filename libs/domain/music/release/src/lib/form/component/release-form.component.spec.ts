@@ -44,7 +44,11 @@ describe('ReleaseFormComponent', () => {
 				},
 				{
 					provide: LabelStateService,
-					useValue: { selectSearchResult$: jest.fn(() => of([])) },
+					useValue: {
+						dispatchListEntitiesAction: jest.fn(),
+						selectEntities$: jest.fn(() => of([])),
+						selectSearchResult$: jest.fn(() => of([])),
+					},
 				},
 			],
 		}).compileComponents();

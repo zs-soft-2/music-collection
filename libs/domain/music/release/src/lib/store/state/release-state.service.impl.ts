@@ -2,6 +2,8 @@ import { Observable } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
 import {
+	DiscogsVersion,
+	ReleaseDataService,
 	ReleaseEntity,
 	ReleaseEntityAdd,
 	ReleaseEntityUpdate,
@@ -16,8 +18,8 @@ import * as releaseSelectors from './release.selectors';
 
 @Injectable()
 export class ReleaseStateServiceImpl extends ReleaseStateService {
+	private releaseDataService = inject(ReleaseDataService);
 	private store = inject<Store<fromRelease.ReleasePartialState>>(Store);
-
 
 	public dispatchAddEntityAction(release: ReleaseEntityAdd): void {
 		this.store.dispatch(releaseActions.addRelease({ release }));
@@ -69,8 +71,24 @@ export class ReleaseStateServiceImpl extends ReleaseStateService {
 		this.store.dispatch(releaseActions.updateRelease({ release }));
 	}
 
+	public findExternalMaster$(
+		artistName: string,
+		albumName: string
+	): Observable<number | null> {
+		return this.releaseDataService.findExternalMaster$(
+			artistName,
+			albumName
+		);
+	}
+
 	public isLoading$(): Observable<boolean> {
 		throw new Error('Method not implemented.');
+	}
+
+	public listExternalVersions$(
+		masterId: number
+	): Observable<DiscogsVersion[]> {
+		return this.releaseDataService.listExternalVersions$(masterId);
 	}
 
 	public selectEntities$(): Observable<ReleaseEntity[]> {

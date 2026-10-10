@@ -37,8 +37,11 @@ describe('ReleaseEditComponent', () => {
 							new FormBuilder().group({
 								album: [null],
 								artist: [null],
+								catno: [null],
 								country: [null],
+								coverColor: [null],
 								date: [null],
+								discogsReleaseId: [null],
 								formatDescription: [null],
 								label: [null],
 								media: [null],
@@ -58,7 +61,11 @@ describe('ReleaseEditComponent', () => {
 				},
 				{
 					provide: LabelStateService,
-					useValue: { selectSearchResult$: jest.fn(() => of([])) },
+					useValue: {
+						dispatchListEntitiesAction: jest.fn(),
+						selectEntities$: jest.fn(() => of([])),
+						selectSearchResult$: jest.fn(() => of([])),
+					},
 				},
 			],
 		}).compileComponents();

@@ -23,6 +23,7 @@ import {
 	SimpleAlbum,
 	UpdateEntityQuantityType,
 	UpdateEntityQuantityTypeEnum,
+	toCoverColor,
 } from '@music-collection/api';
 
 @Injectable()
@@ -96,8 +97,26 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 			entity.artist = model.artist;
 		}
 
+		// Cleared by hand, these are null rather than missing, and the store
+		// has to hear that too: a `catno` removed from the form must not
+		// leave the old number standing in the list behind it.
+		if (model.catno !== undefined) {
+			entity.catno = model.catno;
+		}
+
 		if (model.country) {
 			entity.country = model.country;
+		}
+
+		// Like `catno`: a colour the admin took off the pressing is null and
+		// not missing, and the store has to hear that too — otherwise the
+		// shelf keeps drawing the spine in a colour nobody chose any more.
+		if (model.coverColor !== undefined) {
+			entity.coverColor = model.coverColor;
+		}
+
+		if (model.discogsReleaseId !== undefined) {
+			entity.discogsReleaseId = model.discogsReleaseId;
 		}
 
 		if (model.formatDescription) {
@@ -127,8 +146,11 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 		return {
 			album: formGroup.value['album'],
 			artist: this.createReleaseArtist(formGroup.value['artist']),
+			catno: formGroup.value['catno'] || null,
 			country: formGroup.value['country'],
+			coverColor: toCoverColor(formGroup.value['coverColor']),
 			date: formGroup.value['date'],
+			discogsReleaseId: formGroup.value['discogsReleaseId'] ?? null,
 			entityType: EntityTypeEnum.Release,
 			formatDescription: formGroup.value['formatDescription'],
 			label: this.createReleaseLabel(formGroup.value['label']),
@@ -153,8 +175,21 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 			newFormGroup = this.formBuilder.group({
 				album: [release?.album || null, [Validators.required]],
 				artist: [release?.artist || null, [Validators.required]],
+				// The number the label printed on this pressing. Typed in by
+				// hand or loaded from Discogs; it is what a photographed
+				// spine is matched against, so it is worth having on a
+				// pressing an admin enters.
+				catno: [release?.catno || null],
 				country: [release?.country || null, [Validators.required]],
+				// What this pressing's sleeve looks like, for the shelf to
+				// draw the spine in. Optional: most of the catalog was
+				// seeded from elsewhere and nobody has had the record in
+				// their hands to say.
+				coverColor: [toCoverColor(release?.coverColor)],
 				date: [release?.date || null, [Validators.required]],
+				// The Discogs pressing a load came from. No field of its own
+				// on the form: it is set by the load and carried on.
+				discogsReleaseId: [release?.discogsReleaseId ?? null],
 				formatDescription: [release?.formatDescription || null],
 				// A generic release has none: it is the album on a medium,
 				// not a pressing of it.
@@ -206,8 +241,11 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 		return {
 			album: formGroup.value['album'],
 			artist: this.createReleaseArtist(formGroup.value['artist']),
+			catno: formGroup.value['catno'] || null,
 			country: formGroup.value['country'],
+			coverColor: toCoverColor(formGroup.value['coverColor']),
 			date: formGroup.value['date'],
+			discogsReleaseId: formGroup.value['discogsReleaseId'] ?? null,
 			entityType: EntityTypeEnum.Release,
 			name: formGroup.value['name'],
 			label: this.createReleaseLabel(formGroup.value['label']),
