@@ -25,6 +25,8 @@ import {
 	MusicCollectionRepository,
 	READ_BADGE_GENERATION_SETTINGS_FUNCTION,
 	SET_MUSIC_COLLECTION_BADGE_IMAGE_FUNCTION,
+	SceneProbeInput,
+	SceneProbeResult,
 	UPDATE_BADGE_GENERATION_SETTINGS_FUNCTION,
 	UPDATE_MUSIC_COLLECTION_FUNCTION,
 	UpdateMusicCollectionResult,
@@ -244,6 +246,30 @@ export class MusicCollectionFirestoreRepository extends MusicCollectionRepositor
 		return this.call$<BadgeGenerationSettings>(
 			UPDATE_BADGE_GENERATION_SETTINGS_FUNCTION,
 			{ settings }
+		);
+	}
+
+	/**
+	 * A scene probe — TEMPORARY.
+	 *
+	 * It travels on the badge callable, in a `probe` field, because the dev
+	 * region's CPU quota cannot spare a function for an experiment. When the
+	 * style lock is settled this goes, and the backdrops get their own call
+	 * with the prompt built server-side, as the badge's is.
+	 */
+	public probeScene$(input: SceneProbeInput): Observable<SceneProbeResult> {
+		// Not `call$`: a draw runs for minutes, and the callable client gives
+		// up after seventy seconds by default — the picture would be drawn
+		// and paid for, and simply never arrive. The server's own ceiling is
+		// five minutes, so that is what the client waits for.
+		const callable = httpsCallable<object, SceneProbeResult>(
+			this.functions,
+			GENERATE_MUSIC_COLLECTION_BADGE_FUNCTION,
+			{ timeout: 300_000 }
+		);
+
+		return from(callable({ probe: input })).pipe(
+			map((result) => result.data)
 		);
 	}
 

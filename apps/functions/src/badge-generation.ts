@@ -39,6 +39,7 @@ import {
 	BADGE_SETTING_DOCUMENT,
 	BadgeContextLevel,
 	BadgeGenerationSettings,
+	BadgeQualityProfile,
 	readBadgeSettings,
 } from './badge-settings';
 import { stamp, touchCatalog } from './catalog-sync';
@@ -60,6 +61,12 @@ import {
 	seedOf,
 	styleNames,
 } from './music-collection-badge-prompt';
+import {
+	SceneProbeInputError,
+	SceneStyleDraft,
+	buildProbePrompt,
+	readProbeRequest,
+} from './scene-probe-prompt';
 
 const MUSIC_COLLECTION_COLLECTION = 'music-collection';
 /**
@@ -307,18 +314,43 @@ async function draw(
 	settings: BadgeGenerationSettings,
 	built: BadgePrompt
 ): Promise<DrawnImages> {
-	const prompt = `${built.prompt} Do not include: ${built.negativePrompt}.`;
+	return drawImages(client, {
+		prompt: `${built.prompt} Do not include: ${built.negativePrompt}.`,
+		size: BADGE_SIZE,
+		count: settings.candidateCount,
+		qualityProfile: settings.qualityProfile,
+	});
+}
+
+/** Egy rajzolás, a tárgyától függetlenül: mit, mekkorát, hányat, milyen sávban. */
+interface DrawRequest {
+	prompt: string;
+	size: string;
+	count: number;
+	qualityProfile: BadgeQualityProfile;
+}
+
+/**
+ * A rajzolás maga. Azért áll külön a badge-től, mert a jelenet-próba
+ * ugyanezt kéri a gatewaytől, csak más mérettel és más prompttal — a hibák
+ * fordítása, az `accepted` válasz elutasítása és a kép beágyazása pedig
+ * mindkettőn ugyanaz.
+ */
+async function drawImages(
+	client: GatewayClient,
+	request: DrawRequest
+): Promise<DrawnImages> {
 	let result;
 
 	try {
 		result = await client.execute({
 			capability: 'image.generate',
 			input: {
-				prompt,
-				size: BADGE_SIZE,
-				n: settings.candidateCount,
+				prompt: request.prompt,
+				size: request.size,
+				n: request.count,
 			},
-			qualityProfile: settings.qualityProfile,
+			qualityProfile: request.qualityProfile,
 		});
 	} catch (error) {
 		// A gateway hibakódja többet mond, mint egy HTTP-státusz: a kvóta, a
@@ -336,7 +368,7 @@ async function draw(
 	if (result.kind !== 'result') {
 		throw new HttpsError(
 			'internal',
-			'A gateway a képet végrehajtásnak vette; a badge szinkron választ vár.'
+			'A gateway a képet végrehajtásnak vette; a rajzolás szinkron választ vár.'
 		);
 	}
 
@@ -1044,4 +1076,118 @@ export async function adoptBadgeDocument(
 
 		return chosen;
 	});
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+ * Jelenet-próba — IDEIGLENES
+ *
+ * A kollekciók háttérképéhez keressük a stíluszárat, és ez a pad, amin a
+ * jelöltek kiderülnek. Ami nyer, abból kész funkció lesz (szerveren épülő
+ * prompt a tárolt definícióból, galéria, `coverImageUrl`), és ez a blokk
+ * akkor kikerül innen — a `scene-probe-prompt.ts`-sel együtt.
+ *
+ * Itt él, és nem külön callable-ben, mert a dev régió CPU-kvótája szűk: egy
+ * új function most egy valódi funkció helyét venné el egy kísérlet kedvéért.
+ * ──────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Mennyi kép mehet vissza egy válaszban.
+ *
+ * A callable válasza 10 MB-nál elhasal, egy base64 PNG pedig könnyen 2 MB
+ * fölött van: négy kép simán átlépné. Ami nem fér bele, az kimarad — és a
+ * válasz megmondja, hány maradt ki, mert egy csendben eltűnt kép azt a
+ * látszatot keltené, hogy a modell rajzolt kevesebbet.
+ */
+const PROBE_RESPONSE_BUDGET = 8 * 1024 * 1024;
+
+export interface SceneProbeResult {
+	/** A képek `data:` URL-ként — se fájl, se `document` entitás nem készül. */
+	images: string[];
+	/** Hány kép nem fért a válaszba. */
+	dropped: number;
+	prompt: string;
+	negativePrompt: string;
+	draft: SceneStyleDraft;
+	size: string;
+	model: string;
+}
+
+/**
+ * Néhány próbakép egy szabad tárgyra, a választott stíluszárral.
+ *
+ * A szabad prompt szándékos, és csak itt megengedhető: a hívás
+ * admin-jogosultságot kér, a napi képkeret számlálója alatt fut, és a
+ * kísérlet tárgya épp az, hogy mi legyen a promptban. A kész funkcióban a
+ * szerver írja majd a promptot a tárolt definícióból, mint a badge-nél.
+ *
+ * Semmit nem ír, a napi számlálón kívül: a próbaképek háromnegyede
+ * eldobásra születik, dokumentum nélküli Storage-objektum pedig nálunk nem
+ * keletkezhet.
+ */
+export async function probeSceneCandidates(
+	database: Firestore,
+	client: GatewayClient,
+	data: unknown,
+	now: number
+): Promise<SceneProbeResult> {
+	const settings = await readBadgeSettings(database);
+
+	if (!settings.enabled) {
+		throw new HttpsError(
+			'failed-precondition',
+			'A képgenerálás ki van kapcsolva.'
+		);
+	}
+
+	let request;
+
+	try {
+		request = readProbeRequest(data);
+	} catch (error) {
+		if (error instanceof SceneProbeInputError) {
+			throw new HttpsError('invalid-argument', error.message);
+		}
+
+		throw error;
+	}
+
+	const built = buildProbePrompt(request);
+
+	await reserveDailyQuota(database, settings, built.count, now);
+
+	const { images, model } = await drawImages(client, {
+		prompt: built.prompt,
+		size: built.size,
+		count: built.count,
+		qualityProfile: settings.qualityProfile,
+	});
+
+	const fitting: string[] = [];
+	let budget = PROBE_RESPONSE_BUDGET;
+
+	for (const image of images) {
+		const url = `data:image/png;base64,${image}`;
+
+		if (url.length > budget) {
+			continue;
+		}
+
+		budget -= url.length;
+		fitting.push(url);
+	}
+
+	logger.info(
+		`jelenet-próba: ${built.draft} / ${built.size} / ${images.length} kép ` +
+			`(${model}), ${images.length - fitting.length} nem fért a válaszba`
+	);
+
+	return {
+		images: fitting,
+		dropped: images.length - fitting.length,
+		prompt: built.prompt,
+		negativePrompt: built.negativePrompt,
+		draft: built.draft,
+		size: built.size,
+		model,
+	};
 }

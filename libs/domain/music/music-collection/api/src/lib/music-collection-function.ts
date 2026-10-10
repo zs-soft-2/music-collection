@@ -134,3 +134,41 @@ export interface BadgeGenerationSettings {
  * page, which is lazy. The list lives there.
  */
 export type BadgeQualityProfile = 'economy' | 'normal' | 'premium';
+
+/* ────────────────────────────────────────────────────────────────────────
+ * Jelenet-próba — IDEIGLENES
+ *
+ * A kollekciók háttérképéhez keressük a stíluszárat. A próba a badge
+ * generáló callable-jén utazik (`probe` mezőben), mert a dev régió
+ * CPU-kvótája nem bír el egy új function-t egy kísérlet kedvéért.
+ *
+ * Csak típusok: egy innen exportált *érték* a fő bundle-be kerülne, a
+ * zárak és a méretek listáját pedig egyedül a lusta admin lap sorolja fel.
+ * ──────────────────────────────────────────────────────────────────────── */
+
+/** Melyik fogalmazás szerint szól a zár; a `none` a zár nélküli, nyers próba. */
+export type SceneStyleDraft = 'nocturne' | 'weathered' | 'interior' | 'none';
+
+/** Amit a próba kér: egy tárgy, egy zár, egy méret, néhány kép. */
+export interface SceneProbeInput {
+	/** Mi legyen a képen — a kollekció „helye”, egy mondatban. */
+	subject: string;
+	draft: SceneStyleDraft;
+	size: string;
+	count: number;
+}
+
+/**
+ * Amit a próba ad. A képek `data:` URL-ek: nem készül belőlük se fájl, se
+ * `document` entitás, mert háromnegyedük eldobásra születik.
+ */
+export interface SceneProbeResult {
+	images: string[];
+	/** Hány kép nem fért a válaszba — a callable 10 MB-nál elhasal. */
+	dropped: number;
+	prompt: string;
+	negativePrompt: string;
+	draft: SceneStyleDraft;
+	size: string;
+	model: string;
+}

@@ -6,6 +6,8 @@ import {
 	CreateMusicCollectionResult,
 	GenerateBadgeResult,
 	MusicCollectionDraft,
+	SceneProbeInput,
+	SceneProbeResult,
 	UpdateMusicCollectionResult,
 } from './music-collection-function';
 import { BadgeImage, MusicCollectionEntity } from './music-collection';
@@ -100,4 +102,15 @@ export abstract class MusicCollectionRepository {
 	public abstract updateBadgeSettings$(
 		settings: BadgeGenerationSettings
 	): Observable<BadgeGenerationSettings>;
+
+	/**
+	 * A scene probe — TEMPORARY.
+	 *
+	 * A few images for a free-text subject, to find the style lock the
+	 * collection backdrops will be drawn with. Nothing is stored: the
+	 * pictures come back as `data:` urls and are gone when the page is.
+	 */
+	public abstract probeScene$(
+		input: SceneProbeInput
+	): Observable<SceneProbeResult>;
 }

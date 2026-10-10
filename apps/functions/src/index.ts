@@ -55,6 +55,7 @@ import {
 	adoptBadgeDocument,
 	adoptBadgeImage,
 	generateBadgeCandidates,
+	probeSceneCandidates,
 	setBadgeImage,
 } from './badge-generation';
 import { readBadgeSettings, writeBadgeSettings } from './badge-settings';
@@ -1370,6 +1371,19 @@ export const generateMusicCollectionBadge = onCall(
 	},
 	async (request) => {
 		await requireCaller(request, 'updateMusicCollectionEntity');
+
+		// IDEIGLENES: a kollekciók háttérképéhez keressük a stíluszárat, és a
+		// próba ezen a function-ön utazik, nem sajáton — a dev régió
+		// CPU-kvótája szűk, és egy kísérlet nem vehet el helyet egy valódi
+		// funkciótól. A nyertes zárral ez az ág kikerül innen.
+		if (request.data?.probe) {
+			return probeSceneCandidates(
+				database(),
+				createGatewayClient(gatewaySettings(), 240_000),
+				request.data.probe,
+				Date.now()
+			);
+		}
 
 		return generateBadgeCandidates(
 			database(),

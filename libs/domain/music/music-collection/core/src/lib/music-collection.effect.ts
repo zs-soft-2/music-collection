@@ -37,6 +37,8 @@ import {
 	MusicCollectionScore,
 	NextAlbumSuggestion,
 	ResolvedMusicCollection,
+	SceneProbeInput,
+	SceneProbeResult,
 	UpdateMusicCollectionResult,
 } from '@music-collection/domain/music-collection/api';
 import {
@@ -493,6 +495,18 @@ export class MusicCollectionEffect {
 		settings: BadgeGenerationSettings
 	): Observable<BadgeGenerationSettings> {
 		return this.repository.updateBadgeSettings$(settings);
+	}
+
+	/**
+	 * A scene probe — TEMPORARY.
+	 *
+	 * Images for a free-text subject, to settle the style lock the collection
+	 * backdrops will be drawn with. Nothing is kept: a probe costs the draw
+	 * and nothing else, which is the point of running it before the real
+	 * thing is built.
+	 */
+	public probeScene$(input: SceneProbeInput): Observable<SceneProbeResult> {
+		return this.repository.probeScene$(input);
 	}
 
 	private toStanding(
