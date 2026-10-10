@@ -118,6 +118,8 @@ export function toWishlistEntryView(
 			addedAt: 0,
 			labelName: null,
 			country: null,
+			/* No pressing picked out yet, so no sleeve to know the colour of. */
+			coverColor: null,
 			generic: false,
 			/* A wanted record stands nowhere yet. */
 			placement: null,

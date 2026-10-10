@@ -333,6 +333,7 @@ ami a fejlesztő gcloud ADC-jében épp be van állítva, a prod apply is a dev�
 | `sync/grant-permissions.mjs`                                     | jogosultság adása                                                |
 | `sync/seed-user-role.mjs`                                        | a `USER` szerepkör létrehozása, és kiosztása a meglévő usereknek |
 | `sync/backfill-collection-item-artist.mjs`                       | előadó-kereséshez visszatöltés                                   |
+| `sync/backfill-collection-item-cover-color.mjs`                  | a kiadás borítószíne a már bepolcozott példányokra               |
 | `sync/delete-collection-item.mjs`                                | egy példány törlése parancssorból                                |
 | `catalog/merge-duplicate-albums.mjs`, `find-duplicate-names.mjs` | duplikátumok                                                     |
 | `catalog/seed-collections.mjs`                                   | collectionök vetése                                              |

@@ -30,7 +30,7 @@ function shelf(unit: Partial<ShelfUnitView>): ShelfUnitView {
 }
 
 /** Just enough of a record for a spine to be drawn. */
-function release(id: string): ReleaseView {
+function release(id: string, coverColor: string | null = null): ReleaseView {
 	return {
 		id,
 		albumId: `album-${id}`,
@@ -50,6 +50,7 @@ function release(id: string): ReleaseView {
 		addedAt: 0,
 		labelName: null,
 		country: null,
+		coverColor,
 		generic: false,
 		placement: null,
 	};
@@ -64,7 +65,7 @@ function filled(
 	return {
 		key,
 		label: 'VINYL',
-		items: ids.map(release),
+		items: ids.map((id) => release(id)),
 		spot: { unitId: 'one', row: 1, column: 1 },
 		rightFrom,
 	};
@@ -164,6 +165,51 @@ describe('RecordShelfComponent', () => {
 
 		expect(host.querySelector('.unit.is-wall')).not.toBeNull();
 		expect(host.querySelector('.unit-head')).toBeNull();
+	});
+
+	/*
+	 * The colour goes into a CSS custom property, so the test is as much
+	 * about what is kept out of it: a string CSS cannot paint with takes the
+	 * whole gradient down and leaves a see-through record in the cubby.
+	 */
+	it('draws a spine in the sleeve colour the catalog holds', async () => {
+		const host = render([
+			shelf({
+				columns: 2,
+				compartments: [
+					{
+						key: 'a',
+						label: 'VINYL',
+						spot: { unitId: 'one', row: 1, column: 1 },
+						rightFrom: 3,
+						items: [
+							release('dark', '#1a3c8c'),
+							release('pale', '#f2e6c9'),
+							release('junk', 'crimson'),
+						],
+					},
+				],
+			}),
+		]);
+
+		const blocks = await fixture.getDeferBlocks();
+		await blocks[0].render(DeferBlockState.Complete);
+
+		const [dark, pale, junk] = Array.from(
+			host.querySelectorAll<HTMLElement>('.spine')
+		);
+
+		expect(dark.style.getPropertyValue('--tint')).toBe('#1a3c8c');
+		expect(dark.classList.contains('is-tinted')).toBe(true);
+		expect(dark.classList.contains('is-pale')).toBe(false);
+
+		/* Pale enough that white lettering on it would be gone. */
+		expect(pale.classList.contains('is-pale')).toBe(true);
+
+		expect(junk.style.getPropertyValue('--tint')).toBe('');
+		expect(junk.classList.contains('is-tinted')).toBe(false);
+		/* And it still gets the shelf's own made-up colour. */
+		expect(junk.style.getPropertyValue('--hue')).not.toBe('');
 	});
 
 	it('hands back where a record was let go', async () => {

@@ -37,6 +37,10 @@ interface Spine {
 	width: number;
 	height: number;
 	hue: number;
+	/** The sleeve colour the catalog holds, or null to fall back to `hue`. */
+	tint: string | null;
+	/** The tint is light enough that the lettering on it has to go dark. */
+	pale: boolean;
 	/** What it eats of the compartment's length, so boards can be measured. */
 	mm: number;
 	/** Wide enough to carry its title without spilling over its neighbours. */
@@ -138,6 +142,9 @@ const PX_PER_HEIGHT_UNIT = SHELF_HEIGHT_UNIT_CM * 10 * PX_PER_MM;
  * hover.
  */
 const READABLE_PX = 6;
+
+/** A sleeve colour the shelf will hand to CSS: `#rrggbb` and nothing else. */
+const HEX_COLOR = /^#[0-9a-f]{6}$/i;
 
 /**
  * How much of a compartment goes on one drawn board: a Kallax width, which
@@ -304,6 +311,20 @@ function hueOf(text: string): number {
 }
 
 /**
+ * Whether a sleeve colour is light enough that white lettering would be
+ * lost on it. Perceived brightness rather than the plain average: the eye
+ * reads a yellow sleeve as far lighter than a blue one of the same numbers.
+ */
+function isPale(color: string): boolean {
+	const value = parseInt(color.slice(1), 16);
+	const red = (value >> 16) & 0xff;
+	const green = (value >> 8) & 0xff;
+	const blue = value & 0xff;
+
+	return (red * 299 + green * 587 + blue * 114) / 1000 > 150;
+}
+
+/**
  * Collection shelf — releases stand spine-out in square, Kallax-like
  * compartments, in the units the collector drew in their profile. Hovering or
  * focusing a spine pulls it out and shows the cover.
@@ -411,6 +432,14 @@ export class RecordShelfComponent {
 					const along = size.thickness * PX_PER_MM;
 					const across = size.height * PX_PER_HEIGHT_UNIT;
 
+					// Drawn straight into a CSS custom property, so a value
+					// of any other shape is left off rather than passed on:
+					// one bad string takes the whole gradient down and
+					// leaves a see-through record standing in the cubby.
+					const tint = HEX_COLOR.test(release.coverColor ?? '')
+						? release.coverColor
+						: null;
+
 					return {
 						release,
 						side: (at < group.rightFrom
@@ -431,6 +460,8 @@ export class RecordShelfComponent {
 						mm: size.thickness,
 						readable: along >= READABLE_PX,
 						hue: hueOf(release.title + release.artistName),
+						tint,
+						pale: !!tint && isPale(tint),
 					};
 				});
 

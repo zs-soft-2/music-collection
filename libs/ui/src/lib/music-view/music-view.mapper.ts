@@ -3,6 +3,7 @@ import {
 	ArtistEntity,
 	CollectionItemEntity,
 	DEFAULT_ARTIST_TYPE,
+	toCoverColor,
 } from '@music-collection/api';
 import {
 	formatCountry,
@@ -83,6 +84,7 @@ export function toReleaseView(item: CollectionItemEntity): ReleaseView {
 		addedAt: toEpochMs(item.date) ?? 0,
 		labelName: release.label?.name || null,
 		country: formatCountry(release.country),
+		coverColor: toCoverColor(release.coverColor),
 		generic: !!release.generic,
 		placement: item.placement ?? null,
 	};

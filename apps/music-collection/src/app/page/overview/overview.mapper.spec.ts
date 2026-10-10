@@ -31,6 +31,7 @@ function copy(partial: Partial<ReleaseView>): ReleaseView {
 		addedAt: 0,
 		labelName: null,
 		country: null,
+		coverColor: null,
 		generic: false,
 		placement: null,
 		...partial,

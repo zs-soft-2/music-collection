@@ -529,6 +529,30 @@
 		color: #fff;
 		background: linear-gradient(180deg, var(--mc-primary), #6e1717);
 	}
+
+	/*
+	 * The sleeve colour the catalog holds for this pressing. Last of the
+	 * sleeves, so it wins over the per-medium ones above: somebody has had
+	 * this record in their hands and said what it looks like, and that
+	 * beats what a CD usually looks like. Still a gradient — a flat fill
+	 * would read as a swatch rather than as a record standing in a cubby.
+	 */
+	&.is-tinted {
+		background: linear-gradient(
+			180deg,
+			color-mix(in srgb, var(--tint), #fff 14%),
+			color-mix(in srgb, var(--tint), #000 34%)
+		);
+	}
+
+	/* A pale sleeve cannot carry pale lettering. */
+	&.is-pale {
+		color: #1c1c22;
+
+		.spine-cap {
+			background: rgba(0, 0, 0, 0.12);
+		}
+	}
 }
 
 .spine-cap {

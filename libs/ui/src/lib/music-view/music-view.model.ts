@@ -52,6 +52,12 @@ export interface ReleaseView {
 	labelName: string | null;
 	country: string | null;
 	/**
+	 * What colour the pressing's sleeve is, as `#rrggbb`, where the catalog
+	 * knows. The shelf draws the spine in it; null is a record nobody has
+	 * said anything about, and the shelf falls back to its own colour.
+	 */
+	coverColor: string | null;
+	/**
 	 * The album on a medium, not a known pressing: the collector gave only
 	 * the format, so there is no label or country to show.
 	 */

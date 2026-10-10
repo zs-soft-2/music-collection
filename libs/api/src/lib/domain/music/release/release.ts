@@ -34,6 +34,16 @@ export interface Release {
 	catno?: string | null;
 	/** Unknown on a generic release, and on some imported pressings. */
 	country: ReleaseCountryEnum | null;
+	/**
+	 * What colour this pressing's sleeve is, as `#rrggbb`.
+	 *
+	 * It belongs to the pressing and not to the album on purpose: the same
+	 * record is pressed in a black sleeve one year and a red one the next,
+	 * and on a shelf that is the whole difference between them. The shelf
+	 * draws the spine in it; a pressing without one keeps the colour the
+	 * shelf has always made up from its title.
+	 */
+	coverColor?: string | null;
 	/** The Discogs pressing this release was imported from, when it was. */
 	discogsReleaseId?: number | null;
 	formatDescription: FormatDescriptionEnum;
@@ -100,6 +110,33 @@ export type ReleaseArtist = Omit<
 >;
 
 export type ReleaseLabel = Omit<LabelEntity, 'parent'>;
+
+/**
+ * A sleeve colour as the catalog keeps it: `#rrggbb` in lower case, or null
+ * where there is none.
+ *
+ * Everything that writes the colour goes through here, and everything that
+ * draws with it reads the same shape back. That matters more than it looks:
+ * the shelf feeds the value straight to CSS, and one malformed string there
+ * does not tint a spine wrong — it takes the whole declaration down and
+ * leaves a see-through record standing in the cubby.
+ */
+export function toCoverColor(value: unknown): string | null {
+	if (typeof value !== 'string') {
+		return null;
+	}
+
+	const hex = value.trim().toLowerCase();
+	const short = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/.exec(hex);
+
+	if (short) {
+		const [, red, green, blue] = short;
+
+		return `#${red}${red}${green}${green}${blue}${blue}`;
+	}
+
+	return /^#[0-9a-f]{6}$/.test(hex) ? hex : null;
+}
 
 /** The media a generic release can be on: a copy the collector can hold. */
 export const GENERIC_RELEASE_MEDIA = [

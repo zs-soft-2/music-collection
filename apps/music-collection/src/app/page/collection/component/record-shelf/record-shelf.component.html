@@ -315,7 +315,12 @@
 													[style.height.px]="
 														spine.height
 													"
-													[style.--hue]="spine.hue"
+													[class.is-tinted]="
+													!!spine.tint
+												"
+												[class.is-pale]="spine.pale"
+												[style.--hue]="spine.hue"
+												[style.--tint]="spine.tint"
 													[attr.href]="spine.href"
 													[attr.data-id]="
 														spine.release.id

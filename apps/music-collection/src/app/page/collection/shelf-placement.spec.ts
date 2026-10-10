@@ -357,6 +357,7 @@ function record(
 		addedAt: 0,
 		labelName: null,
 		country: null,
+		coverColor: null,
 		generic: false,
 		placement,
 	};

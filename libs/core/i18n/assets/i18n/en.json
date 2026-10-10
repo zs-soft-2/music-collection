@@ -2995,6 +2995,7 @@
 			"youtubePlaylistId": "YouTube playlist",
 			"youtubeVideoIds": "YouTube videos",
 			"catno": "Catalogue number",
+			"coverColor": "Cover colour",
 			"media": "Medium",
 			"formatDescription": "Format",
 			"date": "Date",
