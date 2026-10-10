@@ -143,11 +143,6 @@ export const ADMIN_NAV: AdminNavGroup[] = [
 				icon: 'pi-question-circle',
 			},
 			{
-				labelKey: 'admin.nav.badgeGeneration',
-				route: 'badge-settings',
-				icon: 'pi-sparkles',
-			},
-			{
 				labelKey: 'admin.nav.language',
 				route: 'language-settings',
 				icon: 'pi-globe',
