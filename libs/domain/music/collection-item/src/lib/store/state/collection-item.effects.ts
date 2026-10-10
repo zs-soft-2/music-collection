@@ -181,6 +181,63 @@ export class CollectionItemEffects {
 	);
 
 	/**
+	 * Moves the copy to another release of the same album.
+	 *
+	 * The search prefixes go with it: the collection is searched by the
+	 * release's name and by the artist's, and a copy refiled under another
+	 * pressing whose old prefixes stayed behind would answer to a name it no
+	 * longer carries. Nothing is counted here either — what is owned did not
+	 * change, only which pressing it is owned as.
+	 */
+	public changeCollectionItemRelease = createEffect(() =>
+		this.actions$.pipe(
+			ofType(collectionItemActions.changeCollectionItemRelease),
+			mergeMap(({ collectionItem, release }) =>
+				this.userDataService
+					.updateCollectionItem$({
+						uid: collectionItem.uid,
+						entityType: collectionItem.entityType,
+						userId: collectionItem.userId,
+						release,
+						searchParameters:
+							this.collectionItemUtilService.createSearchParameters(
+								release.name || ''
+							),
+						artistSearchParameters:
+							this.collectionItemUtilService.createSearchParameters(
+								release.artist?.name || ''
+							),
+					})
+					.pipe(
+						first(),
+						map(({ updatedAt }) => {
+							this.analytics.track('copy_release_changed', {
+								from_generic: !!collectionItem.release?.generic,
+							});
+
+							return collectionItemActions.changeCollectionItemReleaseSuccess(
+								{
+									collectionItem: {
+										id: collectionItem.uid,
+										changes: { release, updatedAt },
+									},
+								}
+							);
+						}),
+						catchError((error) => {
+							console.error(error);
+							return of(
+								collectionItemActions.changeCollectionItemReleaseFail(
+									{ error }
+								)
+							);
+						})
+					)
+			)
+		)
+	);
+
+	/**
 	 * Writes the list of photos. The pictures are already uploaded; a write
 	 * that fails here leaves them in Storage unreferenced, which costs a few
 	 * kilobytes and is the harmless half of the two ways this can go wrong.

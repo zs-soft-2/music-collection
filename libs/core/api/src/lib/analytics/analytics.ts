@@ -44,7 +44,14 @@ export type AnalyticsEventName =
 	 * Photos of a copy were added, replaced or removed. Carries how many the
 	 * copy is left with — never the pictures or what they show.
 	 */
-	| 'copy_photos_changed';
+	| 'copy_photos_changed'
+	/**
+	 * A copy was moved to another release of the same album — the collector
+	 * found the pressing they actually own. Carries whether it was filed
+	 * under the album's format alone until now, which is the question the
+	 * catalog's generic releases raise, not which record it was.
+	 */
+	| 'copy_release_changed';
 
 /**
  * An event's parameters. Nothing here may name a record, a person or a place

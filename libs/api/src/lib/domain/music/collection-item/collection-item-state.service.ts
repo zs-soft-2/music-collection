@@ -12,6 +12,7 @@ import {
 	CollectionItemPhoto,
 	CollectionItemPlacement,
 } from './collection-item';
+import { ReleaseEntity } from '../release';
 
 export abstract class CollectionItemStateService extends EntityStateService<
 	CollectionItemEntity,
@@ -43,6 +44,16 @@ export abstract class CollectionItemStateService extends EntityStateService<
 	public abstract dispatchChangeDetailsAction(
 		collectionItem: CollectionItemEntity,
 		details: CollectionItemDetails
+	): void;
+	/**
+	 * Writes which pressing the copy is of. The copy itself does not change —
+	 * what was paid for it, its grades, its place on the shelf and its
+	 * photographs are of this very record whichever release the catalog says
+	 * it came out on. Only the pressing it is filed under is corrected.
+	 */
+	public abstract dispatchChangeReleaseAction(
+		collectionItem: CollectionItemEntity,
+		release: ReleaseEntity
 	): void;
 	/** Writes the photos of the copy, front first. */
 	public abstract dispatchChangePhotosAction(

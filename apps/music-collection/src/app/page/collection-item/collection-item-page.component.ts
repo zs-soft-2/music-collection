@@ -21,6 +21,7 @@ import {
 } from './collection-item-page.store';
 import { CopyDetailsFormComponent } from './component/copy-details-form';
 import { CopyPhotosComponent } from './component/copy-photos';
+import { PressingSwitchComponent } from './component/pressing-switch';
 import { CoverFallbackDirective } from '../../shared/image';
 
 /**
@@ -47,6 +48,7 @@ import { CoverFallbackDirective } from '../../shared/image';
 		CopyRemovalComponent,
 		CopyPhotosComponent,
 		CopyDetailsFormComponent,
+		PressingSwitchComponent,
 		StarRatingComponent,
 		DatePipe,
 	],
@@ -81,5 +83,12 @@ export class CollectionItemPageComponent {
 		// The store takes the copy's number from the registry before it writes,
 		// which is a round trip; the page has nothing to do while it waits.
 		void this.store.save(draft);
+	}
+
+	/** Moves the copy onto another release of the same album. */
+	protected changeRelease(releaseId: string): void {
+		// A numbered copy's number is taken on the new pressing first, which
+		// is a round trip of its own; the store holds the list shut over it.
+		void this.store.changeRelease(releaseId);
 	}
 }

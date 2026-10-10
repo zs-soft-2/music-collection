@@ -676,7 +676,10 @@
 			"spot": "Reihe {{row}} · Platz {{slot}} · Position {{position}}",
 			"remove": "Entfernen",
 			"removeFailed": "Konnte nicht entfernt werden: {{error}}",
-			"what-you-think": "Was du von der Platte hältst"
+			"what-you-think": "Was du von der Platte hältst",
+			"another-release": "Andere Ausgabe",
+			"filed-on-format-alone": "Dieses Exemplar ist nur nach Format eingeordnet — der Katalog weiß nicht, welche Pressung du besitzt. Findest du sie in der Liste, ordne das Exemplar ihr zu.",
+			"moveFailed": "Die Ausgabe konnte nicht geändert werden: {{error}}"
 		},
 		"collectors": {
 			"title": "Sammlungen und Sammler",
@@ -2100,7 +2103,14 @@
 			"the-bracket-decides-the-model": "Die Klasse bestimmt, was ein Bild kosten darf; das passende Modell weist das Gateway zu. Eine Klasse ohne Modell kommt als Fehler zurück.",
 			"bracket-economy": "Sparsam",
 			"bracket-normal": "Normal",
-			"bracket-premium": "Premium"
+			"bracket-premium": "Premium",
+			"what-the-badge-knows": "Was das Abzeichen weiß",
+			"level-catalog": "Die Platten",
+			"level-rich": "Die Platten und die Cover",
+			"level-ai": "Von einem Modell geschrieben",
+			"level-catalog-explained": "Das Abzeichen entsteht aus den Platten, die die Regel tatsächlich erreicht: Die Mehrheit ihrer Stile bestimmt das Motiv, ihre früheste Veröffentlichung die Patina. Kein zusätzlicher Aufruf, keine zusätzlichen Kosten.",
+			"level-rich-explained": "Zusätzlich zu den Platten bestimmen die Cover die Emailfarbe, und ein Wort, zu dem die Albumtitel immer wieder zurückkehren, bringt ein zweites, kleineres Objekt auf den Pin. Die Cover werden hier geladen und vermessen; kein Modell wird gefragt.",
+			"level-ai-explained": "Ein Textmodell schreibt das Hauptmotiv aus den eigenen Fakten dieser Kollektion, innerhalb derselben festen Stilsperre. Ein zusätzlicher Aufruf je Abzeichen — und nennt das Modell nichts Gießbares, bricht das Zeichnen ab, statt still zurückzufallen."
 		},
 		"collectionGrowthChart": {
 			"added": "hinzugefügt",

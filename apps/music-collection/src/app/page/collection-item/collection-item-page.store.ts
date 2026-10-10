@@ -22,6 +22,8 @@ import {
 	CollectionItemSerial,
 	CollectionItemStateService,
 	ContributionEntity,
+	ReleaseEntity,
+	ReleaseStateService,
 	TrackEntity,
 	toCollectionItemSerial,
 } from '@music-collection/api';
@@ -50,6 +52,7 @@ import {
 	toCopyProvenance,
 	toCopySerial,
 	toCopyTracks,
+	toPressingOptions,
 	toRemovedCopy,
 } from './collection-item.mapper';
 
@@ -100,9 +103,24 @@ interface CollectionItemPageState {
 	editing: boolean;
 	draft: CopyDraft;
 	saving: boolean;
-	/** Which write is in flight — the two share one flag in the store. */
-	savingKind: 'details' | 'photos' | null;
+	/** Which write is in flight — they share one flag in the store. */
+	savingKind: 'details' | 'photos' | 'release' | null;
 	saveError: string | null;
+	/**
+	 * The catalog's releases, asked for only once the collector opens the
+	 * list of them: a page read to look at a record should not pay for the
+	 * catalog nobody asked to see.
+	 */
+	catalogReleases: ReleaseEntity[];
+	catalogReleasesLoading: boolean;
+	/** The releases of this album are open to be picked from. */
+	choosingRelease: boolean;
+	/** Which release is picked in the open list, before it is written. */
+	pickedReleaseId: string | null;
+	/** Why the move to another release did not go through. */
+	releaseError: string | null;
+	/** Every release the collector already has a copy of. */
+	ownedReleaseIds: string[];
 	/** A picture is being scaled and uploaded for this slot. */
 	photoBusy: PhotoSlot | null;
 	photoError: string | null;
@@ -171,6 +189,12 @@ const initialState: CollectionItemPageState = {
 	saving: false,
 	savingKind: null,
 	saveError: null,
+	catalogReleases: [],
+	catalogReleasesLoading: false,
+	choosingRelease: false,
+	pickedReleaseId: null,
+	releaseError: null,
+	ownedReleaseIds: [],
 	photoBusy: null,
 	photoError: null,
 	pendingDiscard: [],
@@ -332,6 +356,20 @@ export const CollectionItemPageStore = signalStore(
 		tracklist: computed(() =>
 			toCopyTracks(store.tracks(), store.item()?.release?.uid ?? null)
 		),
+		/**
+		 * The releases of this album, with the copy's own marked. This is
+		 * what a collector reads to tell which pressing they filed the record
+		 * under — a question most albums answer with one line today, and
+		 * will answer with a dozen once the catalog knows the pressings.
+		 */
+		pressingOptions: computed(() =>
+			toPressingOptions(
+				store.catalogReleases(),
+				store.item()?.release?.album?.uid ?? '',
+				store.item()?.release?.uid ?? null,
+				new Set(store.ownedReleaseIds())
+			)
+		),
 	})),
 	withComputed((store) => ({
 		/** How many tracks this pressing adds beyond the album's own. */
@@ -367,6 +405,20 @@ export const CollectionItemPageStore = signalStore(
 		canRemove: computed(
 			() => store.canManageCopies() && !!store.item() && !store.disposal()
 		),
+		/**
+		 * The copy can be moved onto another release of the same album: it is
+		 * the collector's to change, and it is still in the collection. One
+		 * that has left it is history, and history is not refiled.
+		 */
+		canChangeRelease: computed(
+			() => store.canManageCopies() && !!store.item() && !store.disposal()
+		),
+		/** The copy is being moved onto another release. */
+		changingRelease: computed(
+			() =>
+				store.claiming() ||
+				(store.saving() && store.savingKind() === 'release')
+		),
 		/** The copy as the removal dialog names it, once it is open. */
 		removingCopy: computed(() => {
 			const item = store.item();
@@ -381,6 +433,7 @@ export const CollectionItemPageStore = signalStore(
 			store,
 			route = inject(ActivatedRoute),
 			collectionItemStateService = inject(CollectionItemStateService),
+			releaseStateService = inject(ReleaseStateService),
 			authenticationStateService = inject(AuthenticationStateService),
 			albumDetailsEffect = inject(AlbumDetailsEffect),
 			photoEffect = inject(CopyPhotoEffect),
@@ -503,17 +556,27 @@ export const CollectionItemPageStore = signalStore(
 							collectionItemStateService.selectLoadedEntities$(),
 							collectionItemStateService.selectLoadedDisposedEntities$(),
 						]).pipe(
-							map(([owned, gone]) =>
-								[...owned, ...gone].find(
+							map(([owned, gone]) => ({
+								item: [...owned, ...gone].find(
 									(item) => item.uid === itemId
-								)
-							),
+								),
+								// Which releases a copy of this
+								// collector's already stands under:
+								// the list offers no move that would
+								// file two copies under one pressing,
+								// the way the album page adds no
+								// second copy of one.
+								ownedReleaseIds: owned.flatMap((copy) =>
+									copy.release?.uid ? [copy.release.uid] : []
+								),
+							})),
 							tapResponse({
-								next: (item) =>
+								next: ({ item, ownedReleaseIds }) =>
 									patchState(store, {
 										item: item ?? null,
 										itemLoading: false,
 										notFound: !item,
+										ownedReleaseIds,
 										draft: item
 											? toDraft(item)
 											: EMPTY_DRAFT,
@@ -528,6 +591,44 @@ export const CollectionItemPageStore = signalStore(
 							})
 						)
 					)
+				)
+			),
+			/**
+			 * The catalog's releases, so the album's pressings can be listed
+			 * next to the copy's own. Asked for only when the collector opens
+			 * the list: a visit to look at a record should not pay for a
+			 * catalog nobody asked to see.
+			 */
+			loadCatalogReleases: rxMethod<void>(
+				pipe(
+					switchMap(() =>
+						releaseStateService.selectEntities$().pipe(
+							tap((releases) => {
+								if (!releases?.length) {
+									releaseStateService.dispatchListEntitiesAction();
+								}
+							}),
+							filter(
+								(releases: ReleaseEntity[]) =>
+									releases?.length > 0
+							)
+						)
+					),
+					tapResponse({
+						next: (catalogReleases: ReleaseEntity[]) =>
+							patchState(store, {
+								catalogReleases,
+								catalogReleasesLoading: false,
+							}),
+						error: (error) => {
+							console.error(error);
+							patchState(store, {
+								catalogReleasesLoading: false,
+								releaseError:
+									'The album\u2019s releases could not be read just now.',
+							});
+						},
+					})
 				)
 			),
 			/**
@@ -624,6 +725,37 @@ export const CollectionItemPageStore = signalStore(
 							// The write decides which of the two numbers the
 							// registry should still be holding: the one the
 							// copy now wears, or the one it wore before.
+							const stale = error ? claimed : previous;
+
+							if (stale) {
+								void serialEffect.release(
+									stale.releaseId,
+									stale.number
+								);
+							}
+							return;
+						}
+						if (kind === 'release') {
+							const previous = store.previousSerial();
+							const claimed = store.claimedSerial();
+
+							patchState(store, {
+								releaseError: error,
+								// A refused move leaves the list open on what
+								// was picked, so the reason stands next to it.
+								choosingRelease: !!error,
+								savingKind: null,
+								previousSerial: null,
+								claimedSerial: null,
+							});
+
+							if (!error) {
+								patchState(store, { pickedReleaseId: null });
+							}
+							// The number travelled with the copy, so one of
+							// the two pressings is holding it for nothing:
+							// the new one if the write was refused, the old
+							// one if it went through.
 							const stale = error ? claimed : previous;
 
 							if (stale) {
@@ -828,6 +960,156 @@ export const CollectionItemPageStore = signalStore(
 				);
 			},
 		})
+	),
+	/**
+	 * Which release the copy is filed under.
+	 *
+	 * A block of its own because it reaches for `loadCatalogReleases` above
+	 * it: the releases are asked for when the collector opens the list, not
+	 * when the page loads.
+	 */
+	withMethods(
+		(
+			store,
+			collectionItemStateService = inject(CollectionItemStateService),
+			serialEffect = inject(CopySerialEffect)
+		) => {
+			let catalogRequested = false;
+
+			return {
+				/** Opens the album's releases to be read through. */
+				chooseRelease(): void {
+					if (!store.canChangeRelease()) {
+						return;
+					}
+					if (!catalogRequested) {
+						catalogRequested = true;
+						patchState(store, { catalogReleasesLoading: true });
+						store.loadCatalogReleases(of(undefined));
+					}
+					patchState(store, {
+						choosingRelease: true,
+						pickedReleaseId: null,
+						releaseError: null,
+					});
+				},
+				closeReleaseChoice(): void {
+					patchState(store, {
+						choosingRelease: false,
+						pickedReleaseId: null,
+						releaseError: null,
+					});
+				},
+				/**
+				 * Points at a release without moving the copy onto it. The
+				 * move is a second click on purpose: the list is read far
+				 * more often than it is changed, and a pressing picked by
+				 * accident would take the copy's number with it.
+				 */
+				pickRelease(releaseId: string | null): void {
+					patchState(store, {
+						pickedReleaseId: releaseId,
+						releaseError: null,
+					});
+				},
+				/**
+				 * Moves the copy onto another release of the same album —
+				 * the collector found the pressing they actually own, or
+				 * filed the record on its format alone until now.
+				 *
+				 * Everything the page keeps about the copy stays: the price,
+				 * the grades, the story, the photographs and the shelf place
+				 * are of this very record whichever release the catalog says
+				 * it came out on.
+				 *
+				 * A numbered copy's number travels with it, and is taken on
+				 * the new pressing before the copy is written — the same
+				 * order the form saves in, and for the same reason: a number
+				 * another collector holds stops the move while nothing has
+				 * changed yet. The one left behind is given back once the
+				 * write has had its say (see `watchSaving`).
+				 */
+				async changeRelease(releaseId: string): Promise<void> {
+					const item = store.item();
+					const userId = store.userId();
+
+					if (
+						!item ||
+						!userId ||
+						!store.canChangeRelease() ||
+						store.saving() ||
+						store.claiming()
+					) {
+						return;
+					}
+					const release = store
+						.catalogReleases()
+						.find((candidate) => candidate.uid === releaseId);
+
+					if (!release) {
+						patchState(store, {
+							releaseError:
+								'That release is not in the catalog any more.',
+						});
+						return;
+					}
+					if (release.uid === item.release?.uid) {
+						patchState(store, {
+							choosingRelease: false,
+							pickedReleaseId: null,
+						});
+						return;
+					}
+					if (store.ownedReleaseIds().includes(release.uid)) {
+						patchState(store, {
+							releaseError:
+								'Another of your copies is already filed under that release.',
+						});
+						return;
+					}
+					const serial = item.serial ?? null;
+					const previousReleaseId = item.release?.uid ?? null;
+
+					patchState(store, { releaseError: null });
+
+					if (serial) {
+						patchState(store, { claiming: true });
+						try {
+							await serialEffect.hold(
+								release.uid,
+								serial,
+								userId,
+								item.uid
+							);
+						} catch (error) {
+							patchState(store, {
+								claiming: false,
+								releaseError: toSerialError(error),
+							});
+							return;
+						}
+						patchState(store, { claiming: false });
+					}
+					patchState(store, {
+						savingKind: 'release',
+						claimedSerial: serial
+							? { releaseId: release.uid, number: serial.number }
+							: null,
+						previousSerial:
+							serial && previousReleaseId
+								? {
+										releaseId: previousReleaseId,
+										number: serial.number,
+									}
+								: null,
+					});
+					collectionItemStateService.dispatchChangeReleaseAction(
+						item,
+						release
+					);
+				},
+			};
+		}
 	),
 	withHooks({
 		onInit(store) {

@@ -676,7 +676,10 @@
 			"spot": "Row {{row}} · Slot {{slot}} · Position {{position}}",
 			"remove": "Remove",
 			"removeFailed": "Could not remove it: {{error}}",
-			"what-you-think": "What you think of the record"
+			"what-you-think": "What you think of the record",
+			"another-release": "Another release",
+			"filed-on-format-alone": "This copy is filed on its format alone — the catalog does not know which pressing you own. Find it in the list below and move the copy onto it.",
+			"moveFailed": "The release could not be changed: {{error}}"
 		},
 		"collectors": {
 			"title": "Collections and collectors",
@@ -2100,7 +2103,14 @@
 			"the-bracket-decides-the-model": "The bracket decides what an image may cost; the gateway assigns the model to it. A bracket it has no model for comes back as an error.",
 			"bracket-economy": "Economy",
 			"bracket-normal": "Normal",
-			"bracket-premium": "Premium"
+			"bracket-premium": "Premium",
+			"what-the-badge-knows": "What the badge knows",
+			"level-catalog": "The records",
+			"level-rich": "The records and the covers",
+			"level-ai": "Written by a model",
+			"level-catalog-explained": "The badge is built from the records the rule actually reaches: the majority of their styles decides the motif, their earliest release decides the patina. No extra call, no extra cost.",
+			"level-rich-explained": "On top of the records, the covers decide the enamel colour and a word the album titles keep returning to earns a second, smaller object on the pin. The covers are fetched and measured here; no model is asked.",
+			"level-ai-explained": "A text model writes the main motif from this collection’s own facts, inside the same fixed style lock. One extra call per badge, and the drawing stops rather than falling back quietly if the model names nothing castable."
 		},
 		"collectionGrowthChart": {
 			"added": "added",

@@ -12,6 +12,7 @@ import {
 	CollectionItemPhoto,
 	CollectionItemPlacement,
 	CollectionItemStateService,
+	ReleaseEntity,
 	SearchParams,
 } from '@music-collection/api';
 import { select, Store } from '@ngrx/store';
@@ -51,6 +52,18 @@ export class CollectionItemStateServiceImpl extends CollectionItemStateService {
 			collectionItemActions.changeCollectionItemDetails({
 				collectionItem,
 				details,
+			})
+		);
+	}
+
+	public dispatchChangeReleaseAction(
+		collectionItem: CollectionItemEntity,
+		release: ReleaseEntity
+	): void {
+		this.store.dispatch(
+			collectionItemActions.changeCollectionItemRelease({
+				collectionItem,
+				release,
 			})
 		);
 	}

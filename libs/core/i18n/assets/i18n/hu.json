@@ -676,7 +676,10 @@
 			"spot": "{{row}}. sor · {{slot}}. hely · {{position}}. pozíció",
 			"remove": "Eltávolítás",
 			"removeFailed": "Nem sikerült eltávolítani: {{error}}",
-			"what-you-think": "Amit a lemezről gondolsz"
+			"what-you-think": "Amit a lemezről gondolsz",
+			"another-release": "Másik kiadás",
+			"filed-on-format-alone": "Ez a példány csak a formátum szerint van beosztva — a katalógus nem tudja, melyik nyomás van nálad. Ha megtalálod a listában, válts rá.",
+			"moveFailed": "A kiadás módosítása nem sikerült: {{error}}"
 		},
 		"collectors": {
 			"title": "Kollekciók és gyűjtők",
@@ -2100,7 +2103,14 @@
 			"the-bracket-decides-the-model": "A sáv dönti el, mennyit szabad egy képre költeni; a hozzá tartozó modellt a gateway rendeli hozzá. Amelyik sávhoz nincs modellje, az hibával tér vissza.",
 			"bracket-economy": "Takarékos",
 			"bracket-normal": "Alap",
-			"bracket-premium": "Prémium"
+			"bracket-premium": "Prémium",
+			"what-the-badge-knows": "Mit tud a jelvény",
+			"level-catalog": "A lemezek",
+			"level-rich": "A lemezek és a borítók",
+			"level-ai": "Modell írja",
+			"level-catalog-explained": "A jelvény a szabály által ténylegesen elért lemezekből készül: a stílusaik többsége adja a motívumot, a legkorábbi kiadásuk a patinát. Nincs plusz hívás, nincs plusz költség.",
+			"level-rich-explained": "A lemezeken felül a borítók adják a zománc színét, és a lemezcímek visszatérő szava egy második, kisebb tárgyat tesz a pinre. A borítót itt töltjük le és nézzük meg; modellt nem kérdezünk.",
+			"level-ai-explained": "A fő motívumot egy szöveges modell írja a collection saját tényeiből, ugyanazon kötött stíluszár közé. Badge-enként egy plusz hívás, és ha a modell nem ad megönthető tárgyat, a rajzolás megáll, nem esik vissza csendben."
 		},
 		"collectionGrowthChart": {
 			"added": "hozzáadva",

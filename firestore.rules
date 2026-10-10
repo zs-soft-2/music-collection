@@ -538,13 +538,20 @@ service cloud.firestore {
                       && isValidPlacement(request.resource.data)
                       && isValidCopyStory(request.resource.data, uid, itemId)
                       && ownsSerialClaim(request.resource.data, uid);
+        // A `release` is a foglalást kéri, nem csak a `serial`: a foglalás
+        // kiadásra és számra szól, így a példányt átvinni egy másik kiadásra
+        // ugyanúgy új foglalás, mint új számot beírni. Nélküle a sorszám úgy
+        // sétálhatna át egy kiadásra, amelynek azt a számát más gyűjtő
+        // jelentette be — vagyis a registry pont ott nem fogna, ahol való.
+        // Számozatlan példánynál az `ownsSerialClaim` rövidre zár, olvasás
+        // nélkül.
         allow update: if isSelf(uid)
                       && hasPerm('updateCollectionItemEntity')
                       && request.resource.data.userId == uid
                       && isValidDisposal(request.resource.data)
                       && isValidPlacement(request.resource.data)
                       && isValidCopyStory(request.resource.data, uid, itemId)
-                      && (!changedKeys().hasAny(['serial'])
+                      && (!changedKeys().hasAny(['serial', 'release'])
                           || ownsSerialClaim(request.resource.data, uid));
         allow delete: if isSelf(uid) && hasPerm('deleteCollectionItemEntity');
       }

@@ -7,6 +7,7 @@ import {
 	CollectionItemEntityAdd,
 	CollectionItemEntityUpdate,
 	CollectionItemListConfig,
+	ReleaseEntity,
 	SearchParams,
 } from '@music-collection/api';
 import { Update } from '@ngrx/entity';
@@ -109,6 +110,33 @@ export const changeCollectionItemDetailsFail = createAction(
 
 export const changeCollectionItemDetailsSuccess = createAction(
 	'[CollectionItem] Change CollectionItem Details Success',
+	props<{ collectionItem: Update<CollectionItemEntity> }>()
+);
+
+/**
+ * Writes which pressing the copy is of: the collector found the right release
+ * for a record they had filed under another one — or under none, having given
+ * only the format when they added it.
+ *
+ * The copy keeps everything else. The price, the grades, the story, the
+ * shelf place and the photographs are of this very record; what changes is
+ * only which release of the catalog it is a copy of.
+ */
+export const changeCollectionItemRelease = createAction(
+	'[CollectionItem] Change CollectionItem Release',
+	props<{
+		collectionItem: CollectionItemEntity;
+		release: ReleaseEntity;
+	}>()
+);
+
+export const changeCollectionItemReleaseFail = createAction(
+	'[CollectionItem] Change CollectionItem Release Fail',
+	props<{ error: Error }>()
+);
+
+export const changeCollectionItemReleaseSuccess = createAction(
+	'[CollectionItem] Change CollectionItem Release Success',
 	props<{ collectionItem: Update<CollectionItemEntity> }>()
 );
 

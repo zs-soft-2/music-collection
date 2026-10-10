@@ -161,6 +161,20 @@
 }
 
 /**
+ * A copy filed on its format alone: the facts below it are empty not because
+ * the pressing has nothing to say, but because nobody has said which pressing
+ * it is. It reads as a prompt rather than as a fact.
+ */
+.pressing-generic {
+	max-width: 44rem;
+	padding: 0.6rem 0.8rem;
+	margin: 0 0 1rem;
+	color: var(--mc-text-muted);
+	background: var(--mc-bg-muted);
+	border-radius: var(--mc-radius-md);
+}
+
+/**
  * The copy and its photographs stand side by side: the picture is the thing
  * itself, and the facts next to it are what the picture cannot say.
  */

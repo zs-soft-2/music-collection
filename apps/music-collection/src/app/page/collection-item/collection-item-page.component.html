@@ -320,13 +320,46 @@
 		<!-- The pressing -->
 		@if (store.pressing(); as pressing) {
 			<section class="section">
-				<h2>{{ 'page.collection-item.the-pressing' | transloco }}</h2>
+				<div class="section-head">
+					<h2>
+						{{ 'page.collection-item.the-pressing' | transloco }}
+					</h2>
+					@if (store.canChangeRelease() && !store.choosingRelease()) {
+						<button
+							type="button"
+							class="button"
+							data-change-release
+							(click)="store.chooseRelease()"
+						>
+							{{
+								'page.collection-item.another-release'
+									| transloco
+							}}
+						</button>
+					}
+				</div>
 				<p class="section-lead">
 					{{
 						'page.collection-item.what-this-release-adds'
 							| transloco
 					}}
 				</p>
+
+				<!--
+					A copy filed on its format alone has no label, country or
+					year to list, so the facts below would read as an empty
+					pressing rather than an unknown one. It is also the copy
+					most likely to be sitting under the wrong release, which
+					is what the list next to it is for.
+				-->
+				@if (pressing.generic) {
+					<p class="pressing-generic">
+						{{
+							'page.collection-item.filed-on-format-alone'
+								| transloco
+						}}
+					</p>
+				}
 
 				<dl class="facts">
 					@if (pressing.name) {
@@ -393,6 +426,33 @@
 								| transloco
 						}}
 					</a>
+				}
+
+				<!--
+					Which of the album's releases this copy stands under, and
+					the move onto another one. It opens on a click rather than
+					with the page: the catalog's releases are a list of their
+					own to read, and a visit to look at a record should not
+					pay for it.
+				-->
+				@if (store.choosingRelease()) {
+					<mc-pressing-switch
+						[options]="store.pressingOptions()"
+						[loading]="store.catalogReleasesLoading()"
+						[busy]="store.changingRelease()"
+						[picked]="store.pickedReleaseId()"
+						[error]="store.releaseError()"
+						(pick)="store.pickRelease($event)"
+						(confirmed)="changeRelease($event)"
+						(cancelled)="store.closeReleaseChoice()"
+					/>
+				} @else if (store.releaseError(); as releaseError) {
+					<p class="removal-error" role="alert">
+						{{
+							'page.collection-item.moveFailed'
+								| transloco: { error: releaseError }
+						}}
+					</p>
 				}
 			</section>
 		}

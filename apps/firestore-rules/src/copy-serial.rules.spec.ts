@@ -21,8 +21,12 @@ const OTHER_ITEM = 'copy-2';
 const RELEASE = 'r1';
 const PATH = `user/${ME}/collection-item/${ITEM}`;
 const OTHER_PATH = `user/${OTHER}/collection-item/${OTHER_ITEM}`;
+/** Another pressing of the same album, to move a copy onto. */
+const OTHER_RELEASE = 'r2';
 /** Copy 123 of the pressing `r1` — the id is the whole of the exclusivity. */
 const CLAIM = `copy-serial/${RELEASE}_123`;
+/** The same number on that other pressing: a claim of its own. */
+const OTHER_CLAIM = `copy-serial/${OTHER_RELEASE}_123`;
 /** The tombstone of that claim: the document's path is its id. */
 const MARKER = `sync/copy-serial/deletion/copy-serial~${RELEASE}_123`;
 
@@ -106,9 +110,7 @@ describe('copy-serial: one number, one collector', () => {
 	});
 
 	it('refuses a claim taken out in someone else’s name', () =>
-		assertFails(
-			setDoc(doc(as(ME), CLAIM), claim({ userId: OTHER }))
-		));
+		assertFails(setDoc(doc(as(ME), CLAIM), claim({ userId: OTHER }))));
 
 	it('refuses a claim whose id is not the number it says', () =>
 		assertFails(
@@ -131,9 +133,7 @@ describe('copy-serial: one number, one collector', () => {
 	 * held before the copy exists, so there is nothing to point at yet.
 	 */
 	it('claims a number for a copy that does not exist yet', () =>
-		assertSucceeds(
-			setDoc(doc(as(ME), CLAIM), claim({ itemId: null }))
-		));
+		assertSucceeds(setDoc(doc(as(ME), CLAIM), claim({ itemId: null }))));
 
 	it('refuses a claim pointing at nothing in particular', () =>
 		assertFails(setDoc(doc(as(ME), CLAIM), claim({ itemId: '' }))));
@@ -368,6 +368,93 @@ describe('collection-item: the number on the copy', () => {
 				userId: ME,
 				release: { uid: RELEASE },
 				serial: { number: 123, total: 500 },
+			})
+		));
+});
+
+/**
+ * Moving a copy onto another pressing of the same album — the collector
+ * found the release they actually own.
+ *
+ * A claim is for a number *on a pressing*, so carrying the copy to another
+ * one needs a claim there just as writing a new number does. Otherwise the
+ * number could walk onto a pressing where another collector has registered
+ * it, and the registry would fail at exactly the thing it exists for.
+ */
+describe('collection-item: moving the copy onto another release', () => {
+	/** The common case: almost no record is numbered. */
+	it('moves a copy that carries no number', () =>
+		assertSucceeds(
+			updateDoc(doc(as(ME), PATH), {
+				release: { uid: OTHER_RELEASE },
+			})
+		));
+
+	it('moves a numbered copy onto a release whose number it holds', async () => {
+		await standingClaim(ME);
+		await assertSucceeds(
+			updateDoc(doc(as(ME), PATH), {
+				serial: { number: 123, total: 500 },
+			})
+		);
+		await testEnv.withSecurityRulesDisabled((context) =>
+			setDoc(doc(context.firestore(), OTHER_CLAIM), {
+				releaseId: OTHER_RELEASE,
+				number: 123,
+				userId: ME,
+				itemId: ITEM,
+			})
+		);
+
+		await assertSucceeds(
+			updateDoc(doc(as(ME), PATH), {
+				release: { uid: OTHER_RELEASE },
+			})
+		);
+	});
+
+	it('refuses to carry the number onto a release it holds no claim on', async () => {
+		await standingClaim(ME);
+		await assertSucceeds(
+			updateDoc(doc(as(ME), PATH), {
+				serial: { number: 123, total: 500 },
+			})
+		);
+
+		await assertFails(
+			updateDoc(doc(as(ME), PATH), {
+				release: { uid: OTHER_RELEASE },
+			})
+		);
+	});
+
+	it('refuses to carry the number onto a release another collector holds it on', async () => {
+		await standingClaim(ME);
+		await assertSucceeds(
+			updateDoc(doc(as(ME), PATH), {
+				serial: { number: 123, total: 500 },
+			})
+		);
+		await testEnv.withSecurityRulesDisabled((context) =>
+			setDoc(doc(context.firestore(), OTHER_CLAIM), {
+				releaseId: OTHER_RELEASE,
+				number: 123,
+				userId: OTHER,
+				itemId: OTHER_ITEM,
+			})
+		);
+
+		await assertFails(
+			updateDoc(doc(as(ME), PATH), {
+				release: { uid: OTHER_RELEASE },
+			})
+		);
+	});
+
+	it('refuses to move a copy of another collector', () =>
+		assertFails(
+			updateDoc(doc(as(ME), OTHER_PATH), {
+				release: { uid: OTHER_RELEASE },
 			})
 		));
 });

@@ -3,6 +3,7 @@ import {
 	CollectionItemEntity,
 	CollectionItemGrade,
 	CollectionItemPhoto,
+	ReleaseEntity,
 	TrackEntity,
 } from '@music-collection/api';
 
@@ -52,6 +53,87 @@ export interface CopyPressingView {
 	generic: boolean;
 	/** Link out to the pressing on Discogs, when it was imported from there. */
 	discogsUrl: string | null;
+}
+
+/**
+ * A release of the album as the copy page offers it: one line the collector
+ * can tell their own pressing by, and what stands in the way of moving the
+ * copy onto it.
+ */
+export interface CopyPressingOption {
+	id: string;
+	/** The pressing's own name, or the album's where it carries none. */
+	name: string;
+	format: MediaFormat;
+	/** e.g. "LP, Album, Reissue, 180g". */
+	formatDescription: string | null;
+	labelName: string | null;
+	country: string | null;
+	year: number | null;
+	/** The album on a medium, not a pressing of it. */
+	generic: boolean;
+	/** The release this copy is filed under right now. */
+	current: boolean;
+	/** Another copy of this collector's already stands under this release. */
+	taken: boolean;
+}
+
+/** The year a release came out, as far as its date says. */
+function releaseYear(release: ReleaseEntity): number | null {
+	const date = release.date ? new Date(release.date) : null;
+
+	return date && !Number.isNaN(date.getTime()) ? date.getFullYear() : null;
+}
+
+/**
+ * The releases of one album, as the copy page lists them to be picked from.
+ *
+ * Archived pressings are left out unless this very copy stands on one: a
+ * release an admin took off the catalog is not one to move a record onto,
+ * but a record already there must still be able to name where it stands.
+ *
+ * The one the copy is filed under comes first — the question the list answers
+ * is "which one is mine", and that is read before anything is changed — and
+ * the rest follow by year, newest last, the way a discography reads.
+ */
+export function toPressingOptions(
+	releases: ReleaseEntity[],
+	albumId: string,
+	currentReleaseId: string | null,
+	ownedReleaseIds: Set<string>
+): CopyPressingOption[] {
+	return releases
+		.filter(
+			(release) =>
+				release.album?.uid === albumId &&
+				(release.active !== false || release.uid === currentReleaseId)
+		)
+		.map((release): CopyPressingOption => {
+			const descriptions = toDescriptions(release.formatDescription);
+			const current = release.uid === currentReleaseId;
+
+			return {
+				id: release.uid,
+				name: release.name || release.album?.name || '',
+				format: toMediaFormat(release.media),
+				formatDescription: descriptions.length
+					? descriptions.join(', ')
+					: null,
+				labelName: release.label?.name || null,
+				country: formatCountry(release.country),
+				year: releaseYear(release),
+				generic: !!release.generic,
+				current,
+				taken: !current && ownedReleaseIds.has(release.uid),
+			};
+		})
+		.sort(
+			(a, b) =>
+				Number(b.current) - Number(a.current) ||
+				Number(a.generic) - Number(b.generic) ||
+				(a.year ?? Infinity) - (b.year ?? Infinity) ||
+				a.format.localeCompare(b.format)
+		);
 }
 
 /** How the copy was come by, ready to read. */

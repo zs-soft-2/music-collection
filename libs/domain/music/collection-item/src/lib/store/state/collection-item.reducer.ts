@@ -148,6 +148,27 @@ export const collectionItemReducer = createReducer(
 			error: error?.message ?? String(error),
 		})
 	),
+	on(collectionItemActions.changeCollectionItemRelease, (state) => ({
+		...state,
+		saving: true,
+		error: null,
+	})),
+	on(
+		collectionItemActions.changeCollectionItemReleaseSuccess,
+		(state, { collectionItem }) =>
+			collectionItemAdapter.updateOne(collectionItem, {
+				...state,
+				saving: false,
+			})
+	),
+	on(
+		collectionItemActions.changeCollectionItemReleaseFail,
+		(state, { error }) => ({
+			...state,
+			saving: false,
+			error: error?.message ?? String(error),
+		})
+	),
 	on(collectionItemActions.changeCollectionItemPhotos, (state) => ({
 		...state,
 		saving: true,
