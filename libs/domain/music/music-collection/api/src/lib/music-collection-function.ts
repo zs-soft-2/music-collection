@@ -156,6 +156,23 @@ export interface SceneProbeInput {
 	draft: SceneStyleDraft;
 	size: string;
 	count: number;
+	/**
+	 * Melyik modell rajzoljon; üresen a gateway választ az ársáv alapján.
+	 *
+	 * Ez a mező a próbapad létének fele. A sáv-routing modellnév nélkül
+	 * mindig a legolcsóbb képmodellre megy — azon készült eddig minden
+	 * jelvény is —, és a drágább sávhoz a gateway nem rendel modellt, tehát
+	 * fölfelé csak néven vezet út.
+	 */
+	model: string | null;
+}
+
+/** Egy képmodell, amihez ez a tenant hozzáfér. */
+export interface SceneModel {
+	id: string;
+	provider: string | null;
+	/** Minőségpont és ár, ha a gateway katalógusa mond ilyet. */
+	label: string;
 }
 
 /**
@@ -169,6 +186,14 @@ export interface SceneProbeResult {
 	prompt: string;
 	negativePrompt: string;
 	draft: SceneStyleDraft;
+	/**
+	 * A kért méret — nem feltétlenül a kapott. A Gemini képmodellek
+	 * képarányt vesznek, nem pixelt, és négyzetest adnak vissza akkor is, ha
+	 * 16:9 ment ki; a valódi méretet a lap a betöltött képről olvassa le.
+	 */
 	size: string;
+	/** Amit kértünk; üres, ha a gateway routingjára bíztuk. */
+	requestedModel: string | null;
+	/** Amelyik ténylegesen rajzolt. */
 	model: string;
 }

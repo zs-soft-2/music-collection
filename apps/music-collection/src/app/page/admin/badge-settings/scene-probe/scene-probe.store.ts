@@ -2,6 +2,7 @@ import { pipe, switchMap, tap } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
 import {
+	SceneModel,
 	SceneProbeResult,
 	SceneStyleDraft,
 } from '@music-collection/domain/music-collection/api';
@@ -11,6 +12,7 @@ import {
 	patchState,
 	signalStore,
 	withComputed,
+	withHooks,
 	withMethods,
 	withState,
 } from '@ngrx/signals';
@@ -37,9 +39,14 @@ interface SceneProbeState {
 	draft: SceneStyleDraft;
 	size: string;
 	count: number;
+	/** Which model to draw with; empty leaves it to the gateway's bracket. */
+	model: string;
 	isProbing: boolean;
 	result: SceneProbeResult | null;
 	error: string | null;
+	/** What this tenant can actually reach. Free to ask for; nothing is drawn. */
+	models: SceneModel[];
+	modelsError: string | null;
 }
 
 const initialState: SceneProbeState = {
@@ -51,9 +58,14 @@ const initialState: SceneProbeState = {
 	size: '1536x864',
 	// Two is enough to tell whether a lock holds, and half the bill of four.
 	count: 2,
+	// Empty means the gateway's bracket decides — which is how every picture
+	// so far came out of the cheapest image model it has.
+	model: '',
 	isProbing: false,
 	result: null,
 	error: null,
+	models: [],
+	modelsError: null,
 };
 
 /** The server clamps this too; the form refuses the obvious nonsense first. */
@@ -100,6 +112,7 @@ export const SceneProbeStore = signalStore(
 						draft: store.draft(),
 						size: store.size(),
 						count: store.count(),
+						model: store.model().trim() || null,
 					})
 				),
 				tapResponse({
@@ -115,5 +128,30 @@ export const SceneProbeStore = signalStore(
 				})
 			)
 		),
-	}))
+		/**
+		 * What this tenant may draw with. Free — nothing is generated — and
+		 * the only honest answer to "why does it look like that": until now
+		 * the bracket picked, and the bracket picks the cheapest.
+		 */
+		loadModels: rxMethod<void>(
+			pipe(
+				switchMap(() => effect.listSceneModels$()),
+				tapResponse({
+					next: (models: SceneModel[]) =>
+						patchState(store, { models, modelsError: null }),
+					error: (error: unknown) => {
+						console.error(error);
+						patchState(store, {
+							modelsError: describeWriteError(error),
+						});
+					},
+				})
+			)
+		),
+	})),
+	withHooks({
+		onInit(store) {
+			store.loadModels();
+		},
+	})
 );

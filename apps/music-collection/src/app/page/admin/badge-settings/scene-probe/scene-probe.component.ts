@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	inject,
+	signal,
+} from '@angular/core';
 import { SceneStyleDraft } from '@music-collection/domain/music-collection/api';
 
 import { SceneProbeStore } from './scene-probe.store';
@@ -167,6 +172,39 @@ const EXAMPLES: readonly { label: string; subject: string }[] = [
 					/>
 					<small>A napi képkeret ezekre is fogy.</small>
 				</div>
+
+				<div class="mc-field is-wide">
+					<label for="probe-model">Modell</label>
+					<select
+						id="probe-model"
+						(change)="store.set({ model: value($event) })"
+					>
+						<option value="" [selected]="!store.model()">
+							A gateway válasszon (ársáv szerint)
+						</option>
+						@for (model of store.models(); track model.id) {
+							<option
+								[value]="model.id"
+								[selected]="model.id === store.model()"
+							>
+								{{ model.id
+								}}{{ model.label ? ' — ' + model.label : '' }}
+							</option>
+						}
+					</select>
+					<small>
+						@if (store.modelsError(); as error) {
+							<span class="warn">{{ error }}</span>
+						} @else if (store.models().length) {
+							{{ store.models().length }} képmodellhez van
+							jogosultságunk. A gatewayre bízva mindig a
+							legolcsóbb rajzol — azon készült eddig minden
+							jelvény is.
+						} @else {
+							A modell-lista töltődik; addig a gateway választ.
+						}
+					</small>
+				</div>
 			</div>
 
 			<div class="mc-form-actions">
@@ -199,7 +237,18 @@ const EXAMPLES: readonly { label: string; subject: string }[] = [
 											result.draft +
 											' zárral'
 										"
+										(load)="measure($index, $event)"
 									/>
+									<!--
+										The size the picture actually came
+										back at. The requested one is a wish:
+										these models take an aspect ratio, not
+										pixels, and hand back a square however
+										wide you ask.
+									-->
+									<span class="measured" aria-hidden="true">
+										{{ measured()[$index] ?? '…' }}
+									</span>
 									<figcaption aria-hidden="true">
 										BAY AREA THRASH
 									</figcaption>
@@ -228,9 +277,16 @@ const EXAMPLES: readonly { label: string; subject: string }[] = [
 					}
 
 					<dl class="facts">
-						<dt>Modell</dt>
+						<dt>Rajzolta</dt>
 						<dd>{{ result.model }}</dd>
-						<dt>Méret</dt>
+						<dt>Kértük</dt>
+						<dd>
+							{{
+								result.requestedModel ??
+									'a gateway választott'
+							}}
+						</dd>
+						<dt>Kért méret</dt>
 						<dd>{{ result.size }}</dd>
 						<dt>Zár</dt>
 						<dd>{{ result.draft }}</dd>
@@ -304,6 +360,23 @@ const EXAMPLES: readonly { label: string; subject: string }[] = [
 		 * over it comes back as an error after the round trip, which is a
 		 * slow way to learn you wrote too much.
 		 */
+		/* The size that actually came back, over the corner of the picture. */
+		.measured {
+			position: absolute;
+			top: 0.5rem;
+			right: 0.5rem;
+			padding: 0.2rem 0.5rem;
+			border-radius: var(--mc-radius-sm);
+			background: rgb(0 0 0 / 70%);
+			color: #fff;
+			font-size: 0.7rem;
+			font-variant-numeric: tabular-nums;
+		}
+
+		.warn {
+			color: var(--mc-status-warn);
+		}
+
 		.count {
 			float: right;
 			font-variant-numeric: tabular-nums;
@@ -402,6 +475,23 @@ export class SceneProbeComponent {
 	protected readonly sizes = SIZES;
 	protected readonly examples = EXAMPLES;
 	protected readonly maxSubject = MAX_SUBJECT;
+
+	/**
+	 * What each picture actually came back as, by its place in the grid.
+	 *
+	 * Purely a view concern, so it stays out of the store: the browser is
+	 * the only one that knows, and it only knows once the image has loaded.
+	 */
+	protected readonly measured = signal<Record<number, string>>({});
+
+	protected measure(index: number, event: Event): void {
+		const image = event.target as HTMLImageElement;
+
+		this.measured.update((sizes) => ({
+			...sizes,
+			[index]: `${image.naturalWidth}×${image.naturalHeight}`,
+		}));
+	}
 
 	protected value(event: Event): string {
 		return (event.target as HTMLInputElement | HTMLTextAreaElement).value;

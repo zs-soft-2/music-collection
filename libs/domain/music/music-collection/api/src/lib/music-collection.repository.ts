@@ -6,6 +6,7 @@ import {
 	CreateMusicCollectionResult,
 	GenerateBadgeResult,
 	MusicCollectionDraft,
+	SceneModel,
 	SceneProbeInput,
 	SceneProbeResult,
 	UpdateMusicCollectionResult,
@@ -113,4 +114,14 @@ export abstract class MusicCollectionRepository {
 	public abstract probeScene$(
 		input: SceneProbeInput
 	): Observable<SceneProbeResult>;
+
+	/**
+	 * The image models this tenant can actually reach — TEMPORARY.
+	 *
+	 * Draws nothing, so it costs nothing, and it is the only source there
+	 * is: which model the gateway's price bracket lands on is not written
+	 * down anywhere, and until now every picture we have made came from
+	 * whichever one that happened to be.
+	 */
+	public abstract listSceneModels$(): Observable<SceneModel[]>;
 }

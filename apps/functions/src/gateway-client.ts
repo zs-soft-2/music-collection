@@ -19,8 +19,15 @@ export interface GatewaySettings {
 	apiKey: string;
 }
 
-/** Amit a hívók a kliensből használnak — a tesztek ezt cserélik. */
-export type GatewayClient = Pick<AiGatewayClient, 'execute'>;
+/**
+ * Amit a hívók a kliensből használnak — a tesztek ezt cserélik.
+ *
+ * A `listModels` nem rajzol és nem kerül semmibe: azt mondja meg, mihez van
+ * egyáltalán joga ennek a tenantnak. A hívások túlnyomó része ezt nem
+ * kérdezi — a modellt a gateway választja —, de ahol a kérdés maga az, hogy
+ * melyik modell kell, ott nincs más forrás: a katalógus nincs leírva sehol.
+ */
+export type GatewayClient = Pick<AiGatewayClient, 'execute' | 'listModels'>;
 
 /**
  * A kliens egy adott kérés-időkerettel. A keret a hívóé, mert ő tudja,

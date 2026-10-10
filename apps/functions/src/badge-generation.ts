@@ -328,6 +328,14 @@ interface DrawRequest {
 	size: string;
 	count: number;
 	qualityProfile: BadgeQualityProfile;
+	/**
+	 * Melyik modell rajzoljon. A badge sosem ad meg ilyet — ott a gateway
+	 * tudja jobban, melyik szolgáltatónál mi él. A jelenet-próbáé viszont
+	 * épp az a kérdés, hogy melyik modell kell: az ársávos routing ma a
+	 * leggyengébb képmodellre megy, és onnan nem jön olyan kép, amilyet a
+	 * mockup ígér.
+	 */
+	model?: string | null;
 }
 
 /**
@@ -349,6 +357,9 @@ async function drawImages(
 				prompt: request.prompt,
 				size: request.size,
 				n: request.count,
+				// Csak ha van: a mező puszta jelenléte kiiktatná a gateway
+				// saját választását, és a badge-nek pont az kell.
+				...(request.model ? { model: request.model } : {}),
 			},
 			qualityProfile: request.qualityProfile,
 		});
@@ -1108,7 +1119,16 @@ export interface SceneProbeResult {
 	prompt: string;
 	negativePrompt: string;
 	draft: SceneStyleDraft;
+	/**
+	 * A kért méret. Hogy a modell megadta-e, az külön kérdés: a Gemini
+	 * képmodellek képarányt vesznek, nem pixelt, és négyzetest adnak vissza
+	 * akkor is, ha 16:9 ment ki. A valódi méretet a felület a betöltött
+	 * képről olvassa le, nem innen.
+	 */
 	size: string;
+	/** Amit kértünk; üres, ha a gateway routingjára bíztuk. */
+	requestedModel: string | null;
+	/** Amelyik ténylegesen rajzolt, a gateway válasza szerint. */
 	model: string;
 }
 
@@ -1160,6 +1180,7 @@ export async function probeSceneCandidates(
 		size: built.size,
 		count: built.count,
 		qualityProfile: settings.qualityProfile,
+		model: built.model,
 	});
 
 	const fitting: string[] = [];
@@ -1188,6 +1209,79 @@ export async function probeSceneCandidates(
 		negativePrompt: built.negativePrompt,
 		draft: built.draft,
 		size: built.size,
+		requestedModel: built.model,
 		model,
 	};
+}
+
+/** Egy képmodell, ahogy a próbapad legördülője mutatja. */
+export interface SceneModel {
+	id: string;
+	provider: string | null;
+	/** Minőségpont és ár, ha a katalógus mond ilyet — máskülönben üres. */
+	label: string;
+}
+
+/**
+ * A képmodellek, amiket ez a tenant elérhet — IDEIGLENES, a próbapadnak.
+ *
+ * Nem rajzol, tehát nem kerül semmibe, és ez a különbség a lényeg: az
+ * ársávos routing ma a legolcsóbb képmodellre megy, és a nevek nincsenek
+ * leírva sehol. Enélkül a próba vagy találgat, vagy marad a gyengénél.
+ */
+export async function listSceneModels(
+	client: GatewayClient
+): Promise<SceneModel[]> {
+	let models;
+
+	try {
+		models = await client.listModels({ capability: 'image.generate' });
+	} catch (error) {
+		throw new HttpsError(
+			'internal',
+			error instanceof ZsAiError
+				? `A gateway nem adta a modelleket (${error.code}): ${error.message}`
+				: `A gateway nem válaszolt: ${String(error)}`
+		);
+	}
+
+	return models.map((model) => {
+		// A katalógus pont- és árnevei nincsenek szerződésben rögzítve, csak
+		// a leíró `id`-je és a szolgáltatója. Ami megvan, az kiíródik; ami
+		// nincs, attól a név még választható marad.
+		const score = pick(model, ['qualityScore', 'score', 'quality']);
+		const price = pick(model, [
+			'pricePerImage',
+			'pricePerUnit',
+			'price',
+			'costPerImage',
+		]);
+
+		return {
+			id: model.id,
+			provider: model.provider ?? null,
+			label: [
+				score === null ? null : `${score} pont`,
+				price === null ? null : `$${price}`,
+			]
+				.filter((part): part is string => !!part)
+				.join(' · '),
+		};
+	});
+}
+
+/** Az első kulcs, aminek szám vagy szöveg az értéke; semmi, ha egyik sem. */
+function pick(
+	source: Record<string, unknown>,
+	keys: string[]
+): string | number | null {
+	for (const key of keys) {
+		const value = source[key];
+
+		if (typeof value === 'number' || typeof value === 'string') {
+			return value;
+		}
+	}
+
+	return null;
 }

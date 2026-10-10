@@ -15,7 +15,25 @@ const valid = {
 
 describe('readProbeRequest', () => {
 	it('a jó kérést átengedi', () => {
-		expect(readProbeRequest(valid)).toEqual(valid);
+		expect(readProbeRequest(valid)).toEqual({ ...valid, model: null });
+	});
+
+	it('a modellnevet átveszi, és üresen a gatewayre hagyja', () => {
+		// Szabad szöveg, mint a tárgy: a próbapad arra való, hogy kiderüljön,
+		// melyik modell rajzol úgy, ahogy kell. Egy rossz név hibát ad, nem
+		// pénzt visz — és üresen marad a gateway sáv-routingja, ami ma a
+		// leggyengébb képmodellre megy.
+		expect(
+			readProbeRequest({ ...valid, model: ' gemini-3-pro-image ' }).model
+		).toBe('gemini-3-pro-image');
+		expect(readProbeRequest({ ...valid, model: '  ' }).model).toBeNull();
+		expect(readProbeRequest(valid).model).toBeNull();
+	});
+
+	it('a képtelenül hosszú modellnevet visszautasítja', () => {
+		expect(() =>
+			readProbeRequest({ ...valid, model: 'm'.repeat(101) })
+		).toThrow(SceneProbeInputError);
 	});
 
 	it('a tárgy sortöréseit egy szóközre húzza', () => {

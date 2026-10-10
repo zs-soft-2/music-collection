@@ -37,6 +37,7 @@ import {
 	MusicCollectionScore,
 	NextAlbumSuggestion,
 	ResolvedMusicCollection,
+	SceneModel,
 	SceneProbeInput,
 	SceneProbeResult,
 	UpdateMusicCollectionResult,
@@ -507,6 +508,17 @@ export class MusicCollectionEffect {
 	 */
 	public probeScene$(input: SceneProbeInput): Observable<SceneProbeResult> {
 		return this.repository.probeScene$(input);
+	}
+
+	/**
+	 * The image models this tenant can reach — TEMPORARY.
+	 *
+	 * Free, because it draws nothing. It exists because the alternative is
+	 * guessing: the bracket the gateway routes on picks a model by itself,
+	 * and that pick is what every picture this app has made came out of.
+	 */
+	public listSceneModels$(): Observable<SceneModel[]> {
+		return this.repository.listSceneModels$();
 	}
 
 	private toStanding(

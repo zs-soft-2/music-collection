@@ -55,6 +55,7 @@ import {
 	adoptBadgeDocument,
 	adoptBadgeImage,
 	generateBadgeCandidates,
+	listSceneModels,
 	probeSceneCandidates,
 	setBadgeImage,
 } from './badge-generation';
@@ -1377,9 +1378,19 @@ export const generateMusicCollectionBadge = onCall(
 		// CPU-kvótája szűk, és egy kísérlet nem vehet el helyet egy valódi
 		// funkciótól. A nyertes zárral ez az ág kikerül innen.
 		if (request.data?.probe) {
+			const client = createGatewayClient(gatewaySettings(), 240_000);
+
+			// A modell-lista nem rajzol, tehát nem kerül semmibe — és ez az
+			// egyetlen forrás arra, hogy ez a tenant mihez jogosult. Enélkül
+			// a próba vagy találgat, vagy marad a sáv-routing legolcsóbb
+			// modelljénél, ami ma mindent rajzol, badge-et is.
+			if (request.data.probe.list) {
+				return { models: await listSceneModels(client) };
+			}
+
 			return probeSceneCandidates(
 				database(),
-				createGatewayClient(gatewaySettings(), 240_000),
+				client,
 				request.data.probe,
 				Date.now()
 			);

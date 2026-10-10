@@ -122,6 +122,13 @@ export const MAX_PROBE_IMAGES = 4;
  */
 export const MAX_SUBJECT_LENGTH = 4000;
 
+/**
+ * A modellnév felső hossza. Szabad szöveg, mint a tárgy, és ugyanazért: a
+ * próbapad arra való, hogy kiderüljön, melyik modell rajzol úgy, ahogy kell.
+ * Egy rossz név hibát ad vissza, nem pénzt visz.
+ */
+const MAX_MODEL_LENGTH = 100;
+
 /** Amit a kliens küld, miután a szerver megnézte. */
 export interface SceneProbeRequest {
 	/** Mi legyen a képen — a kollekció „helye”, egy mondatban. */
@@ -129,6 +136,12 @@ export interface SceneProbeRequest {
 	draft: SceneStyleDraft;
 	size: SceneSize;
 	count: number;
+	/**
+	 * Melyik modell rajzoljon. Üresen hagyva a gateway választ az ársáv
+	 * alapján — és az ma a leggyengébb képmodellre megy, ami pont az a baj,
+	 * amiért ez a mező létezik.
+	 */
+	model: string | null;
 }
 
 /** A kész prompt, és amiből lett. */
@@ -138,6 +151,7 @@ export interface SceneProbePrompt {
 	draft: SceneStyleDraft;
 	size: SceneSize;
 	count: number;
+	model: string | null;
 }
 
 /** Hibás bemenet. A hívó fordítja `HttpsError`-ra; ez a fájl tiszta marad. */
@@ -188,8 +202,13 @@ export function readProbeRequest(data: unknown): SceneProbeRequest {
 	const count = Number.isFinite(requested)
 		? Math.min(Math.max(Math.floor(requested), 1), MAX_PROBE_IMAGES)
 		: 1;
+	const model = text(input['model']).trim();
 
-	return { subject, draft, size, count };
+	if (model.length > MAX_MODEL_LENGTH) {
+		throw new SceneProbeInputError('A modell neve túl hosszú.');
+	}
+
+	return { subject, draft, size, count, model: model || null };
 }
 
 /**
@@ -201,7 +220,7 @@ export function readProbeRequest(data: unknown): SceneProbeRequest {
  * kérdés, mit csinál a modell magától.
  */
 export function buildProbePrompt(request: SceneProbeRequest): SceneProbePrompt {
-	const { subject, draft, size, count } = request;
+	const { subject, draft, size, count, model } = request;
 
 	if (draft === 'none') {
 		return {
@@ -210,6 +229,7 @@ export function buildProbePrompt(request: SceneProbeRequest): SceneProbePrompt {
 			draft,
 			size,
 			count,
+			model,
 		};
 	}
 
@@ -222,5 +242,6 @@ export function buildProbePrompt(request: SceneProbeRequest): SceneProbePrompt {
 		draft,
 		size,
 		count,
+		model,
 	};
 }

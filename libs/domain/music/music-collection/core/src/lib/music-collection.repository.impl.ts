@@ -25,6 +25,7 @@ import {
 	MusicCollectionRepository,
 	READ_BADGE_GENERATION_SETTINGS_FUNCTION,
 	SET_MUSIC_COLLECTION_BADGE_IMAGE_FUNCTION,
+	SceneModel,
 	SceneProbeInput,
 	SceneProbeResult,
 	UPDATE_BADGE_GENERATION_SETTINGS_FUNCTION,
@@ -271,6 +272,21 @@ export class MusicCollectionFirestoreRepository extends MusicCollectionRepositor
 		return from(callable({ probe: input })).pipe(
 			map((result) => result.data)
 		);
+	}
+
+	/**
+	 * The image models this tenant can reach — TEMPORARY.
+	 *
+	 * Draws nothing, so it is free, and it rides on the same callable as the
+	 * probe. Until this existed, which model drew our pictures was whatever
+	 * the gateway's price bracket happened to land on, with nothing on any
+	 * screen saying so.
+	 */
+	public listSceneModels$(): Observable<SceneModel[]> {
+		return this.call$<{ models: SceneModel[] }>(
+			GENERATE_MUSIC_COLLECTION_BADGE_FUNCTION,
+			{ probe: { list: true } }
+		).pipe(map((result) => result.models ?? []));
 	}
 
 	private call$<T>(name: string, input: object): Observable<T> {
