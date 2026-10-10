@@ -20,6 +20,7 @@ import {
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
+import { CollectionImageEffect } from '../../../../data/collection-image';
 import { describeWriteError } from '../../music-collection/music-collection-admin.errors';
 
 /**
@@ -53,6 +54,10 @@ interface SceneProbeState {
 	/** Until this is true, an empty list means "not asked yet", not "none". */
 	setupLoaded: boolean;
 	setupError: string | null;
+	/** Which picture is being filed right now; null when none is. */
+	keeping: number | null;
+	/** Which ones are already in the library, by their place in the grid. */
+	kept: number[];
 }
 
 const initialState: SceneProbeState = {
@@ -80,6 +85,8 @@ const initialState: SceneProbeState = {
 	locks: [],
 	setupLoaded: false,
 	setupError: null,
+	keeping: null,
+	kept: [],
 };
 
 /** The server clamps this too; the form refuses the obvious nonsense first. */
@@ -110,7 +117,57 @@ export const SceneProbeStore = signalStore(
 			return lock ? `${lock.prefix}${subject}${lock.suffix}` : subject;
 		}),
 	})),
-	withMethods((store, effect = inject(MusicCollectionEffect)) => ({
+	withMethods((
+		store,
+		effect = inject(MusicCollectionEffect),
+		images = inject(CollectionImageEffect)
+	) => ({
+		/**
+		 * One probe picture, kept.
+		 *
+		 * The bench stores nothing by itself — three quarters of what it
+		 * draws is born to be thrown away — but the one that works has to
+		 * survive the page, and downloading it only to upload it again is a
+		 * silly way to spend somebody's evening. This is the same path the
+		 * editor's own upload takes: the file goes to Storage and a
+		 * `document` is filed over it, which is what puts it in the picture
+		 * library every collection can pick from.
+		 */
+		async keep(index: number): Promise<void> {
+			const result = store.result();
+			const image = result?.images[index];
+
+			if (!image || store.keeping() !== null) {
+				return;
+			}
+
+			patchState(store, { keeping: index, error: null });
+
+			try {
+				const name = `jelenet-${result.draft}-${Date.now()}`;
+				// A `data:` url-t a böngésző maga bontja vissza bájtokra;
+				// kézi base64-dekódolás nélkül, és a típus is megmarad.
+				const blob = await (await fetch(image)).blob();
+
+				await images.storeAsDocument(
+					name,
+					new File([blob], `${name}.png`, {
+						type: blob.type || 'image/png',
+					})
+				);
+
+				patchState(store, {
+					keeping: null,
+					kept: [...store.kept(), index],
+				});
+			} catch (error) {
+				console.error(error);
+				patchState(store, {
+					keeping: null,
+					error: describeWriteError(error),
+				});
+			}
+		},
 		set(change: Partial<SceneProbeState>): void {
 			patchState(store, { ...change, error: null });
 		},

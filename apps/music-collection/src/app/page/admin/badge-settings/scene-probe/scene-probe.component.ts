@@ -295,18 +295,46 @@ const EXAMPLES: readonly { label: string; subject: string }[] = [
 										BAY AREA THRASH
 									</figcaption>
 								</figure>
-								<a
-									[href]="image"
-									[download]="
-										'jelenet-' +
-										result.draft +
-										'-' +
-										($index + 1) +
-										'.png'
-									"
-								>
-									Letöltés
-								</a>
+								<div class="shot-actions">
+									<!--
+										The library is where a picture becomes
+										usable: the file alone would sit in the
+										bucket where nothing can find it, so
+										this files a document over it, the same
+										way the editor's own upload does.
+									-->
+									@if (store.kept().includes($index)) {
+										<span class="kept">
+											✓ A könyvtárban
+										</span>
+									} @else {
+										<button
+											type="button"
+											[disabled]="
+												store.keeping() !== null
+											"
+											(click)="store.keep($index)"
+										>
+											{{
+												store.keeping() === $index
+													? 'Mentés…'
+													: 'Megtartom'
+											}}
+										</button>
+									}
+									<a
+										[href]="image"
+										[download]="
+											'jelenet-' +
+											result.draft +
+											'-' +
+											($index + 1) +
+											'.png'
+										"
+									>
+										Letöltés
+									</a>
+								</div>
 							</li>
 						}
 					</ul>
@@ -500,10 +528,36 @@ const EXAMPLES: readonly { label: string; subject: string }[] = [
 			}
 		}
 
-		.shots a {
-			display: inline-block;
-			margin-top: 0.4rem;
+		.shot-actions {
+			display: flex;
+			align-items: center;
+			gap: 0.75rem;
+			margin-top: 0.5rem;
 			font-size: 0.8rem;
+
+			button {
+				padding: 0.35rem 0.85rem;
+				background: transparent;
+				border: 1px solid var(--mc-border-strong);
+				border-radius: 999px;
+				color: var(--mc-text);
+				font: inherit;
+				cursor: pointer;
+
+				&:hover:not(:disabled) {
+					border-color: var(--mc-accent);
+				}
+
+				&:disabled {
+					opacity: 0.5;
+					cursor: default;
+				}
+			}
+		}
+
+		.kept {
+			font-weight: 600;
+			color: var(--mc-status-ok);
 		}
 
 		.dropped {
