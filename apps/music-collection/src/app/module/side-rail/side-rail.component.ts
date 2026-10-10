@@ -1,13 +1,19 @@
 import { TranslocoDirective } from '@jsverse/transloco';
 import { NgxPermissionsModule } from 'ngx-permissions';
 
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	computed,
+	inject,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { RoleNames } from '@music-collection/api';
 
 import { MenuGroup, MenuItem, MenuSection } from '../top-bar/api';
 import { TopBarService } from '../top-bar/component/top-bar/top-bar.service';
+import { SideRailService } from './side-rail.service';
 
 /** The order the groups stand in on the rail; `general` carries no heading. */
 const GROUP_ORDER: MenuGroup[] = [
@@ -18,15 +24,20 @@ const GROUP_ORDER: MenuGroup[] = [
 ];
 
 /**
- * The standing navigation on a wide screen: every page the collector can
- * open, down the left-hand side, under the heading that says why it is
- * there.
+ * The navigation on a wide screen: every page the collector can open, down
+ * the left-hand side, under the heading that says why it is there.
  *
  * It exists because the bar across the top had run out of room — it could
  * only ever carry the pages a guest may see, and everything of the
  * collector's own had to hide under their avatar. A column has room for all
  * of it at once, which is the whole point: the shelf, the hunt and the
  * catalog are one tap apart rather than one tap plus a menu.
+ *
+ * It is a drawer, not a column the page stands beside: it slides over what
+ * is already on the page and slides back off it, so the page keeps its full
+ * width and nothing reflows under the reader as the rail comes and goes.
+ * Closed, it stays in the DOM behind the screen's edge — `inert` keeps it
+ * out of the tab order — so that both directions can be animated.
  *
  * Below the rail's breakpoint it draws nothing at all. The phone keeps the
  * bar and its sheet, which is a better shape for a thumb than a column is.
@@ -41,49 +52,79 @@ const GROUP_ORDER: MenuGroup[] = [
 		NgxPermissionsModule,
 		TranslocoDirective,
 	],
+	host: {
+		'(document:keydown.escape)': 'rail.close()',
+	},
 	template: `
-		<nav class="rail" *transloco="let t" [attr.aria-label]="t('nav.main')">
-			@for (section of sections(); track section.group) {
-				<div
-					class="group"
-					role="group"
-					[attr.aria-label]="
-						section.titleKey ? t(section.titleKey) : null
-					"
-				>
-					@if (section.titleKey; as titleKey) {
-						<p class="heading" aria-hidden="true">
-							{{ t(titleKey) }}
-						</p>
-					}
+		<ng-container *transloco="let t">
+			<!--
+				A tartalom elé húzott réteg: tompítja azt, amire a sáv
+				ráfeküdt, és bárhová kattintva becsukja — a nyitott sáv ne
+				legyen zsákutca.
+			-->
+			<button
+				type="button"
+				class="scrim"
+				[class.is-open]="rail.isOpen()"
+				[attr.aria-label]="t('nav.closeMenu')"
+				tabindex="-1"
+				(click)="rail.close()"
+			></button>
 
-					@for (item of section.items; track item.labelKey) {
-						<a
-							class="link"
-							[routerLink]="item.routerLink"
-							routerLinkActive="is-active"
-							ariaCurrentWhenActive="page"
-						>
-							<i class="pi {{ item.icon }}" aria-hidden="true"></i>
-							<span>{{ t(item.labelKey) }}</span>
-						</a>
-					}
+			<nav
+				id="mc-side-rail"
+				class="rail"
+				[class.is-open]="rail.isOpen()"
+				[attr.inert]="rail.isOpen() ? null : ''"
+				[attr.aria-label]="t('nav.main')"
+			>
+				@for (section of sections(); track section.group) {
+					<div
+						class="group"
+						role="group"
+						[attr.aria-label]="
+							section.titleKey ? t(section.titleKey) : null
+						"
+					>
+						@if (section.titleKey; as titleKey) {
+							<p class="heading" aria-hidden="true">
+								{{ t(titleKey) }}
+							</p>
+						}
+
+						@for (item of section.items; track item.labelKey) {
+							<a
+								class="link"
+								[routerLink]="item.routerLink"
+								routerLinkActive="is-active"
+								ariaCurrentWhenActive="page"
+								(click)="rail.close()"
+							>
+								<i
+									class="pi {{ item.icon }}"
+									aria-hidden="true"
+								></i>
+								<span>{{ t(item.labelKey) }}</span>
+							</a>
+						}
+					</div>
+				}
+
+				<div class="group" role="group">
+					<a
+						*ngxPermissionsOnly="adminRoles"
+						class="link"
+						routerLink="/admin"
+						routerLinkActive="is-active"
+						ariaCurrentWhenActive="page"
+						(click)="rail.close()"
+					>
+						<i class="pi pi-cog" aria-hidden="true"></i>
+						<span>{{ t('nav.admin') }}</span>
+					</a>
 				</div>
-			}
-
-			<div class="group" role="group">
-				<a
-					*ngxPermissionsOnly="adminRoles"
-					class="link"
-					routerLink="/admin"
-					routerLinkActive="is-active"
-					ariaCurrentWhenActive="page"
-				>
-					<i class="pi pi-cog" aria-hidden="true"></i>
-					<span>{{ t('nav.admin') }}</span>
-				</a>
-			</div>
-		</nav>
+			</nav>
+		</ng-container>
 	`,
 	styles: `
 		:host {
@@ -94,32 +135,77 @@ const GROUP_ORDER: MenuGroup[] = [
 		 * The rail only appears where there is room for it beside the page
 		 * rather than on top of it. Below this width the top bar's own menu
 		 * is what navigates, and the rail is not rendered at all.
+		 *
+		 * The host itself is only an anchor — both the drawer and its scrim
+		 * are fixed, so it takes up no room in the flow between the bar and
+		 * the page.
 		 */
 		@media (min-width: 1100px) {
 			:host {
-				position: fixed;
-				top: var(--mc-app-bar-height);
-				bottom: 0;
-				left: 0;
-				z-index: 2;
 				display: block;
-				width: var(--mc-rail-width);
-				overflow-y: auto;
-				background: color-mix(
-					in srgb,
-					var(--mc-bg-muted) 72%,
-					transparent
-				);
-				backdrop-filter: blur(14px);
-				border-right: 1px solid var(--mc-border);
 			}
 		}
 
+		.scrim {
+			position: fixed;
+			/* A felső sáv marad kattintható: a réteg alatta kezdődik,
+			   hogy ugyanaz a gomb csukja be, amelyik kinyitotta. */
+			inset: var(--mc-app-bar-height) 0 0 0;
+			/*
+			 * A sáv a bar alatt, de a lap minden lebegő darabja — a napi
+			 * kérdés csíkja, az értékelés-kérdés — fölött áll: nyitva ő az,
+			 * amivel a gyűjtőnek dolga van.
+			 */
+			z-index: 95;
+			padding: 0;
+			border: 0;
+			background: color-mix(in srgb, #000 42%, transparent);
+			cursor: default;
+			opacity: 0;
+			visibility: hidden;
+			transition:
+				opacity var(--mc-duration) ease,
+				visibility var(--mc-duration) ease;
+		}
+
+		.scrim.is-open {
+			opacity: 1;
+			visibility: visible;
+		}
+
 		.rail {
+			position: fixed;
+			top: var(--mc-app-bar-height);
+			bottom: 0;
+			left: 0;
+			z-index: 96;
 			display: flex;
 			flex-direction: column;
 			gap: 1.25rem;
+			width: var(--mc-rail-width);
+			box-sizing: border-box;
 			padding: 1.25rem 0.75rem 2rem;
+			overflow-y: auto;
+			background: color-mix(in srgb, var(--mc-bg-muted) 92%, transparent);
+			backdrop-filter: blur(14px);
+			border-right: 1px solid var(--mc-border);
+			/* Csukva a képernyő szélén kívül áll, de a lapon marad, hogy a
+			   becsukás is végigcsússzon, ne csak a nyitás. */
+			transform: translateX(-100%);
+			transition: transform var(--mc-duration) ease;
+		}
+
+		.rail.is-open {
+			transform: none;
+			/* Az árnyék mondja meg, hogy a sáv a lap fölött áll, nem mellette. */
+			box-shadow: 0 0 2rem color-mix(in srgb, #000 45%, transparent);
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			.scrim,
+			.rail {
+				transition: none;
+			}
 		}
 
 		.group {
@@ -199,6 +285,9 @@ const GROUP_ORDER: MenuGroup[] = [
 })
 export class SideRailComponent {
 	private readonly componentService = inject(TopBarService);
+
+	/** Nyitva van-e a sáv; a gombja a felső sávon ül. */
+	protected readonly rail = inject(SideRailService);
 
 	protected readonly adminRoles = [RoleNames.ADMIN];
 

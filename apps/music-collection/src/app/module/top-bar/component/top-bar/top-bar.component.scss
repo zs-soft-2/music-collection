@@ -287,6 +287,20 @@
 	display: none;
 }
 
+/*
+ * A bal oldali sáv kapcsolója ugyanannál a töréspontnál jelenik meg, ahol
+ * a sáv maga: alatta a felső sáv linksora, illetve telefonon a jobb szélső
+ * hamburger navigál, és nincs mit nyitni vele.
+ */
+.rail-toggle {
+	display: none;
+
+	@media (min-width: 1100px) {
+		display: inline-flex;
+		margin-right: -0.75rem;
+	}
+}
+
 .sheet {
 	position: fixed;
 	top: var(--mc-app-bar-height);

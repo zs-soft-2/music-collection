@@ -17,6 +17,9 @@ import { ExternalPlayerConsentService } from '../../../../data/external-player';
 import { LanguagePickerComponent } from '../../../../i18n';
 import { SceneBackdropService } from '../../../../shared/backdrop';
 import { LayoutWidthService, ThemeService } from '../../../../theme';
+// A fájlra közvetlenül, nem a sáv barreljére: az a komponenst is exportálja,
+// az pedig innen, a top-bar szolgáltatásából kér menüelemeket — körbeérne.
+import { SideRailService } from '../../../side-rail/side-rail.service';
 import { MenuGroup, MenuItem, MenuSection } from '../../api';
 import { TopBarService } from './top-bar.service';
 
@@ -42,6 +45,8 @@ export class TopBarComponent extends BaseComponent {
 	private readonly componentService = inject(TopBarService);
 	protected readonly theme = inject(ThemeService);
 	protected readonly layoutWidth = inject(LayoutWidthService);
+	/** A bal oldali sáv: a gombja itt van, maga a sáv a lap másik végén. */
+	protected readonly rail = inject(SideRailService);
 	/** Milyen világ áll a lap mögött: nincs, álló vagy élő. */
 	protected readonly backdrop = inject(SceneBackdropService);
 	/** Whether the outside players may be on the page at all. */
@@ -144,6 +149,15 @@ export class TopBarComponent extends BaseComponent {
 	protected toggleAccount(): void {
 		this.menuOpen.set(false);
 		this.accountOpen.update((open) => !open);
+	}
+
+	/**
+	 * A sáv és a fiókmenü egyszerre a képernyő két szélét takarná el, úgyhogy
+	 * a nyíló mindig becsukja a másikat.
+	 */
+	protected toggleRail(): void {
+		this.closeMenus();
+		this.rail.toggle();
 	}
 
 	protected toggleMenu(): void {

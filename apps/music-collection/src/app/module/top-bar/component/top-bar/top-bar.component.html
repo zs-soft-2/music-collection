@@ -1,4 +1,28 @@
 <header class="bar" *transloco="let t">
+	<!--
+		A bal oldali sáv kapcsolója. Csak ott van, ahol a sáv maga is:
+		keskenyebb képernyőn a jobb szélső hamburger nyitja a lapot
+		kitöltő lemezt, és a kettő egyszerre csak zavarná egymást.
+	-->
+	<button
+		type="button"
+		class="icon-btn rail-toggle"
+		aria-controls="mc-side-rail"
+		[attr.aria-expanded]="rail.isOpen()"
+		[attr.aria-label]="
+			rail.isOpen() ? t('nav.closeMenu') : t('nav.openMenu')
+		"
+		[attr.title]="rail.isOpen() ? t('nav.closeMenu') : t('nav.openMenu')"
+		(click)="toggleRail()"
+	>
+		<i
+			class="pi"
+			[class.pi-bars]="!rail.isOpen()"
+			[class.pi-times]="rail.isOpen()"
+			aria-hidden="true"
+		></i>
+	</button>
+
 	<button
 		type="button"
 		class="brand"
