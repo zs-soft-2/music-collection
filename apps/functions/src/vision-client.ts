@@ -31,8 +31,14 @@ const MAX_ATTEMPTS = 2;
 /** A gateway `Retry-After`-jéből legfeljebb ennyit várunk ki. */
 const MAX_RETRY_WAIT_MS = 5_000;
 
-/** Amit a képolvasás a gateway-klienstől használ — a tesztek ezt cserélik. */
-export type VisionClient = GatewayClient;
+/**
+ * Amit a képolvasás a gateway-klienstől használ — a tesztek ezt cserélik.
+ *
+ * Csak a `execute`, mert a képolvasás csak azt hívja. A teljes `GatewayClient`
+ * helyett azért ennyi, mert az SDK bővülése (legutóbb a `listModels`) különben
+ * minden tesztbeli álklienst elromlaszt, holott egyikük sem hívná.
+ */
+export type VisionClient = Pick<GatewayClient, 'execute'>;
 
 /** A képolvasás kliense; a kliens maga a `gateway-client.ts`-ből jön. */
 export function createVisionClient(
