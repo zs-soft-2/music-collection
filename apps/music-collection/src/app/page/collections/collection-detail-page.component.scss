@@ -1,3 +1,5 @@
+@use '../../shared/music-ui/music-tokens' as mc;
+
 :host {
 	display: block;
 	color: var(--mc-text);
@@ -11,76 +13,267 @@
 	padding: 2rem clamp(1rem, 3vw, 2.5rem) 3rem;
 }
 
-.visually-hidden {
-	position: absolute;
-	width: 1px;
-	height: 1px;
-	margin: -1px;
-	overflow: hidden;
-	clip: rect(0 0 0 0);
-	white-space: nowrap;
-	border: 0;
+ul,
+ol {
+	margin: 0;
+	padding: 0;
+	list-style: none;
 }
 
-/* ── Header ───────────────────────────────────────────────────────────── */
+/* ── A fejléc: a nagy kártya, oldalméretben ───────────────────────────── */
 
 .hero {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: flex-start;
-	justify-content: space-between;
-	gap: 1.5rem;
-	padding-bottom: 1.5rem;
-	margin-bottom: 1.5rem;
-	border-bottom: 1px solid var(--mc-border);
-}
+	@include mc.on-image;
 
-.hero-art {
-	flex: 0 0 auto;
-	width: 8rem;
-	height: 8rem;
+	position: relative;
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	align-items: center;
+	gap: clamp(1.25rem, 3vw, 2.5rem);
+	overflow: hidden;
+	margin-top: 1rem;
+	padding: clamp(1.5rem, 3vw, 2.5rem);
+	background: var(--mc-card-bg);
 	border: 1px solid var(--mc-border);
 	border-radius: var(--mc-radius-lg);
-	--mc-collection-artwork-icon: 2rem;
+
+	/* Csak a borítófalé: a kurátor képe élesen marad. */
+	--mc-backdrop-blur: 18px;
+
+	&.is-completed {
+		border-color: var(--mc-accent);
+	}
 }
 
-.hero-text {
-	flex: 1 1 22rem;
+.hero-emblem {
+	position: relative;
+	z-index: 1;
+	width: clamp(8rem, 15vw, 12rem);
+
+	--mc-emblem-radius: var(--mc-radius-md, 0.9rem);
+	--mc-emblem-share-size: 0.9rem;
+	--mc-emblem-art-icon: 3.5rem;
+}
+
+/* A jelvény a pontblokk fölött ül, a panel jobb felső sarkában. */
+.hero-pin {
+	width: clamp(3.5rem, 5vw, 4.5rem);
+	margin-bottom: 0.5rem;
+
+	--mc-pin-size: 1.6rem;
+}
+
+/*
+ * A szöveg a saját árnyékát hozza, nem a háttér sötétítését: a kurátor
+ * képe élesen áll a panel mögött, és egy akkora fedés, ami minden képen
+ * olvashatóvá tenné a betűt, pont azt a képet takarná el.
+ */
+.hero-text,
+.hero-score {
+	position: relative;
+	z-index: 1;
+	text-shadow: 0 1px 14px rgba(10, 10, 10, 0.85);
 }
 
 .eyebrow {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
 	margin: 0;
-	font-size: 0.75rem;
+	padding: 0.3rem 0.7rem;
+	font-size: 0.7rem;
 	font-weight: 700;
-	letter-spacing: 0.2em;
+	letter-spacing: 0.18em;
 	text-transform: uppercase;
-	color: var(--mc-primary);
+	color: var(--mc-accent);
+	background: rgba(255, 255, 255, 0.08);
+	border: 1px solid var(--mc-border-strong);
+	border-radius: 999px;
+
+	i {
+		font-size: 0.7rem;
+	}
 }
 
 h1 {
-	margin: 0.25rem 0 0;
+	margin: 0.6rem 0 0.5rem;
 	font-family: var(--mc-font-display);
-	font-size: clamp(2rem, 5vw, 3.25rem);
+	font-size: clamp(2.2rem, 5vw, 4rem);
 	font-weight: 400;
-	line-height: 1.05;
-	letter-spacing: 0.02em;
+	line-height: 0.95;
+	letter-spacing: 0.01em;
+	text-transform: uppercase;
+	overflow-wrap: anywhere;
 }
 
 .lead {
-	max-width: 60ch;
-	margin: 0.6rem 0 0;
+	max-width: 56ch;
+	margin: 0 0 0.9rem;
+	font-size: 0.95rem;
+	line-height: 1.45;
 	color: var(--mc-text-muted);
 }
 
-.progress {
-	max-width: 32rem;
-	margin-top: 1.25rem;
+.chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	margin: 0 0 1.25rem;
+
+	li {
+		padding: 0.25rem 0.65rem;
+		font-size: 0.7rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		background: rgba(255, 255, 255, 0.08);
+		border: 1px solid var(--mc-border-strong);
+		border-radius: 999px;
+	}
+}
+
+.hero-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.6rem;
+}
+
+.action {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	box-sizing: border-box;
+	height: 2.6rem;
+	padding: 0 1.1rem;
+	font: inherit;
+	font-size: 0.88rem;
+	font-weight: 600;
+	color: #fff;
+	cursor: pointer;
+	background: rgba(10, 10, 10, 0.4);
+	border: 1px solid var(--mc-border-strong);
+	border-radius: 999px;
+	transition:
+		background var(--mc-duration-fast) ease,
+		border-color var(--mc-duration-fast) ease;
+
+	&:hover:not(:disabled) {
+		border-color: var(--mc-text-muted);
+	}
+
+	&:focus-visible {
+		outline: 2px solid #fff;
+		outline-offset: 2px;
+	}
+
+	&.is-on {
+		color: var(--mc-accent);
+		border-color: var(--mc-accent);
+	}
+
+	&:disabled {
+		cursor: default;
+		opacity: 0.5;
+	}
+}
+
+/* ── A pont és a haladás a fejlécben ──────────────────────────────────── */
+
+.hero-score {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 0.4rem;
+	min-width: 13rem;
+	text-align: right;
+}
+
+.points {
+	display: flex;
+	align-items: baseline;
+	gap: 0.35rem;
+	margin: 0;
+
+	b {
+		font-family: var(--mc-font-display);
+		font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+		font-weight: 400;
+		line-height: 1;
+		color: var(--mc-accent);
+		font-variant-numeric: tabular-nums;
+	}
+
+	span {
+		font-size: 0.8rem;
+		font-weight: 700;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--mc-accent);
+	}
+}
+
+.worth,
+.parts {
+	margin: 0;
+	font-size: 0.78rem;
+	color: var(--mc-text-muted);
+	font-variant-numeric: tabular-nums;
+}
+
+.parts {
+	margin-bottom: 0.4rem;
+}
+
+.bonus {
+	color: var(--mc-accent);
+}
+
+.faces {
+	display: flex;
+	gap: 0.3rem;
+
+	li {
+		display: grid;
+		place-items: center;
+		width: 1.9rem;
+		height: 1.9rem;
+		overflow: hidden;
+		font-family: var(--mc-font-display);
+		font-size: 0.8rem;
+		color: var(--mc-primary);
+		background: var(--mc-bg-muted);
+		border: 1px solid var(--mc-border-strong);
+		border-radius: 50%;
+	}
+
+	img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+}
+
+.crowd-line {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 0.25rem 0.6rem;
+	margin: 0;
+	font-size: 0.75rem;
+	color: var(--mc-text-muted);
+
+	.done {
+		color: var(--mc-accent);
+	}
 }
 
 .bar {
-	height: 8px;
+	display: block;
+	width: 100%;
+	height: 6px;
 	overflow: hidden;
-	background: var(--mc-surface-2);
+	background: rgba(255, 255, 255, 0.14);
 	border-radius: 999px;
 }
 
@@ -89,227 +282,81 @@ h1 {
 	height: 100%;
 	background: var(--mc-primary);
 	border-radius: inherit;
-	transition: width 0.3s ease;
-}
+	transition: width var(--mc-duration) ease;
 
-.is-completed .fill {
-	background: var(--mc-accent);
+	.is-completed & {
+		background: var(--mc-accent);
+	}
 }
 
 .counts {
-	margin: 0.5rem 0 0;
-	font-size: 0.85rem;
-	color: var(--mc-text-muted);
-	font-variant-numeric: tabular-nums;
-
-	strong {
-		color: var(--mc-text);
-		font-size: 1.05rem;
-	}
-}
-
-.missing {
-	color: var(--mc-text-subtle);
-}
-
-/* ── Score ────────────────────────────────────────────────────────────── */
-
-.score {
-	max-width: 32rem;
-	margin-top: 1.25rem;
-	padding: 0.9rem 1.1rem;
-	background: var(--mc-card-bg);
-	border: 1px solid var(--mc-border);
-	border-radius: var(--mc-radius-lg);
-
-	&.is-earned {
-		border-color: var(--mc-accent);
-	}
-}
-
-.score-value {
 	margin: 0;
-	font-size: 0.85rem;
-	color: var(--mc-text-muted);
-	font-variant-numeric: tabular-nums;
-
-	strong {
-		font-size: 1.5rem;
-		color: var(--mc-text);
-	}
-
-	.is-earned & strong {
-		color: var(--mc-accent);
-	}
-}
-
-.score-state {
-	margin-left: 0.25rem;
-	font-size: 0.75rem;
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
-	color: var(--mc-text-subtle);
-}
-
-.score-parts {
-	margin: 0.3rem 0 0;
 	font-size: 0.8rem;
-	color: var(--mc-text-subtle);
+	color: var(--mc-text-muted);
 	font-variant-numeric: tabular-nums;
 }
 
-.bonus {
-	color: var(--mc-accent);
+/* A számsor saját komponens; itt csak a helye van. */
+.stats {
+	margin-top: 1rem;
 }
 
-.highlights {
+/* ── Két hasáb: mit tegyél, és mi ez ──────────────────────────────────── */
+
+.columns {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 20rem;
+	gap: clamp(1.25rem, 3vw, 2rem);
+	margin-top: 2rem;
+	align-items: start;
+}
+
+.main,
+.aside {
 	display: flex;
+	min-width: 0;
 	flex-direction: column;
-	gap: 0.2rem;
-	margin: 0.6rem 0 0;
-	padding: 0.6rem 0 0;
-	border-top: 1px solid var(--mc-border);
-	list-style: none;
+	gap: 1.5rem;
+}
 
-	li {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) auto;
-		gap: 0 0.6rem;
-		font-size: 0.78rem;
+.block-head {
+	margin-bottom: 1rem;
+	padding-bottom: 0.6rem;
+	border-bottom: 1px solid var(--mc-border);
+
+	h2 {
+		margin: 0;
+		font-family: var(--mc-font-display);
+		font-size: clamp(1.5rem, 2.5vw, 2rem);
+		font-weight: 400;
+		line-height: 1;
+		letter-spacing: 0.02em;
 	}
 }
 
-.highlight-album {
-	font-weight: 600;
-}
-
-.highlight-points {
-	grid-row: 1;
-	grid-column: 2;
-	color: var(--mc-accent);
-	font-variant-numeric: tabular-nums;
-}
-
-.highlight-reasons {
-	grid-column: 1;
-	color: var(--mc-text-subtle);
-}
-
-/* ── Badge ────────────────────────────────────────────────────────────── */
-
-.badge {
-	display: flex;
-	flex: 0 1 20rem;
-	gap: 1rem;
-	align-items: center;
-	padding: 1rem 1.25rem;
-	background: var(--mc-card-bg);
-	border: 1px solid var(--mc-border);
-	border-radius: var(--mc-radius-lg);
-
-	&.is-earned {
-		border-color: var(--mc-accent);
-	}
-}
-
-.badge-art {
-	flex: none;
-	width: 4rem;
-	height: 4rem;
-	object-fit: contain;
-
-	/* A pin not yet won is shown faded, as a record still to find is. */
-	.badge:not(.is-earned) & {
-		filter: grayscale(1);
-		opacity: 0.55;
-	}
-}
-
-.badge-icon {
-	font-size: 2.25rem;
-	color: var(--mc-text-subtle);
-
-	.is-earned & {
-		color: var(--mc-accent);
-	}
-}
-
-.badge-name {
-	margin: 0;
-	font-weight: 600;
-}
-
-.badge-description {
-	margin: 0.2rem 0 0;
+.block-lead {
+	margin: 0.4rem 0 0;
 	font-size: 0.82rem;
 	color: var(--mc-text-muted);
 }
 
-.badge-state {
-	margin: 0.35rem 0 0;
-	font-size: 0.75rem;
-	font-weight: 600;
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
-	color: var(--mc-text-subtle);
-
-	.is-earned & {
-		color: var(--mc-accent);
-	}
-}
-
-/* ── Follow ────────────────────────────────────────────────────────────── */
-
-.hero-actions {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.5rem;
-	margin-top: 1rem;
-}
-
-.follow {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.45rem;
-	padding: 0.45rem 0.9rem;
-	font: inherit;
-	font-size: 0.85rem;
-	color: var(--mc-text-muted);
-	cursor: pointer;
-	background: var(--mc-card-bg);
-	border: 1px solid var(--mc-border);
-	border-radius: 999px;
-	transition:
-		color 0.2s ease,
-		background 0.2s ease,
-		border-color 0.2s ease;
-
-	&:hover {
-		color: var(--mc-text);
-		border-color: var(--mc-border-strong);
-	}
-
-	&[aria-pressed='true'] {
-		color: var(--mc-primary);
-		border-color: var(--mc-primary);
-	}
-
-	&:disabled {
-		opacity: 0.5;
-		cursor: default;
-	}
-}
-
-/* ── Toolbar ──────────────────────────────────────────────────────────── */
+/* ── Szűrő és rendezés ────────────────────────────────────────────────── */
 
 .toolbar {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 0.5rem;
+	justify-content: space-between;
+	gap: 0.75rem;
 	margin-bottom: 1.25rem;
 }
 
-.filter {
+.switches {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.chip {
 	display: inline-flex;
 	align-items: center;
 	gap: 0.45rem;
@@ -322,9 +369,9 @@ h1 {
 	border: 1px solid var(--mc-border);
 	border-radius: 999px;
 	transition:
-		color 0.2s ease,
-		background 0.2s ease,
-		border-color 0.2s ease;
+		color var(--mc-duration-fast) ease,
+		background var(--mc-duration-fast) ease,
+		border-color var(--mc-duration-fast) ease;
 
 	&:hover {
 		color: var(--mc-text);
@@ -336,6 +383,13 @@ h1 {
 		background: var(--mc-primary);
 		border-color: var(--mc-primary);
 	}
+
+	/* A rendezés nem szűr: halkabb, hogy ne versenyezzen a szűrőkkel. */
+	&.is-quiet.is-active {
+		color: var(--mc-text);
+		background: var(--mc-surface-2);
+		border-color: var(--mc-border-strong);
+	}
 }
 
 .count {
@@ -343,92 +397,70 @@ h1 {
 	opacity: 0.75;
 }
 
-/* ── Albums ───────────────────────────────────────────────────────────── */
+/* ── A lemezek ────────────────────────────────────────────────────────── */
 
 .grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
 	gap: 1.25rem;
-	padding: 0;
-	margin: 0;
-	list-style: none;
 }
 
-.album {
-	display: block;
-	color: inherit;
-	text-decoration: none;
+/* ── A jobb hasáb paneljei ────────────────────────────────────────────── */
 
-	&:hover .sleeve,
-	&:focus-visible .sleeve {
-		border-color: var(--mc-border-strong);
-		transform: translateY(-2px);
-	}
-}
-
-.sleeve {
-	position: relative;
-	display: grid;
-	place-items: center;
-	aspect-ratio: 1;
-	overflow: hidden;
-	font-size: 1.75rem;
-	color: var(--mc-text-subtle);
-	background: var(--mc-surface-2);
-	border: 1px solid var(--mc-border);
-	border-radius: var(--mc-radius-md);
-	transition:
-		border-color 0.2s ease,
-		transform 0.2s ease;
-
-	img {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-	}
-
-	/* A record still to find is shown faded, so the shelf reads at a glance. */
-	.album:not(.is-owned) & img {
-		filter: grayscale(1);
-		opacity: 0.45;
-	}
-}
-
-.mark {
-	position: absolute;
-	right: 0.4rem;
-	bottom: 0.4rem;
-	display: grid;
-	place-items: center;
-	width: 1.6rem;
-	height: 1.6rem;
-	font-size: 0.7rem;
-	color: var(--mc-text-muted);
+.panel {
+	padding: 1.1rem 1.25rem;
 	background: var(--mc-card-bg);
 	border: 1px solid var(--mc-border);
-	border-radius: 999px;
-
-	.is-owned & {
-		color: var(--mc-on-accent);
-		background: var(--mc-accent);
-		border-color: var(--mc-accent);
-	}
+	border-radius: var(--mc-radius-lg);
 }
 
-.album-name {
-	margin: 0.6rem 0 0;
-	font-size: 0.88rem;
-	font-weight: 600;
-	line-height: 1.3;
+.panel-title {
+	margin: 0;
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--mc-text-subtle);
 }
 
-.album-meta {
-	margin: 0.15rem 0 0;
-	font-size: 0.78rem;
+.panel-lead {
+	margin: 0.45rem 0 0;
+	font-size: 0.8rem;
+	line-height: 1.4;
 	color: var(--mc-text-muted);
 }
 
-/* ── Loading and empty ────────────────────────────────────────────────── */
+/* Mi adta a pontot */
+.highlights {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	margin-top: 0.9rem;
+
+	li {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: 0 0.6rem;
+		font-size: 0.8rem;
+	}
+}
+
+.highlight-album {
+	font-weight: 600;
+}
+
+.highlight-points {
+	color: var(--mc-accent);
+	font-variant-numeric: tabular-nums;
+}
+
+.highlight-reasons {
+	grid-column: 1 / -1;
+	font-size: 0.75rem;
+	color: var(--mc-text-subtle);
+}
+
+/* ── Töltés és üres állapot ───────────────────────────────────────────── */
 
 .skeleton {
 	background: linear-gradient(
@@ -443,8 +475,8 @@ h1 {
 }
 
 .hero-skeleton {
-	height: 12rem;
-	margin-bottom: 2rem;
+	height: 16rem;
+	margin: 1rem 0 2rem;
 }
 
 .album-skeleton {
@@ -453,7 +485,7 @@ h1 {
 
 .empty {
 	max-width: 46ch;
-	padding: 4rem 1rem;
+	padding: 3rem 1rem;
 	margin: 0 auto;
 	text-align: center;
 	color: var(--mc-text-muted);
@@ -470,5 +502,69 @@ h1 {
 
 	to {
 		background-position: -200% 0;
+	}
+}
+
+/* ── Keskenyebb képernyők ─────────────────────────────────────────────── */
+
+@media (max-width: 1100px) {
+	.columns {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	/* Telefonon az „mi ez" előbb jön, mint a száz lemez rácsa. */
+	.aside {
+		order: -1;
+	}
+}
+
+@media (max-width: 1000px) {
+	.hero {
+		grid-template-columns: auto minmax(0, 1fr);
+	}
+
+	.hero-score {
+		grid-column: 1 / -1;
+		align-items: flex-start;
+		width: 100%;
+		text-align: left;
+	}
+
+	.crowd-line {
+		justify-content: flex-start;
+	}
+}
+
+@media (max-width: 640px) {
+	.hero {
+		grid-template-columns: minmax(0, 1fr);
+		justify-items: center;
+		text-align: center;
+	}
+
+	.chips,
+	.hero-actions {
+		justify-content: center;
+	}
+
+	.lead {
+		margin-inline: auto;
+	}
+
+	.hero-score {
+		align-items: center;
+		text-align: center;
+	}
+
+	.crowd-line {
+		justify-content: center;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.fill,
+	.chip,
+	.action {
+		transition: none;
 	}
 }

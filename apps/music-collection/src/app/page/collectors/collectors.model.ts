@@ -57,19 +57,6 @@ export interface WallCollection {
 	collectors: number;
 }
 
-/**
- * One finished collection under the face of whoever finished it — what the
- * home page shows a few of, and the shortest answer to "what is this app
- * for" that a visitor can be given.
- */
-export interface WallHighlight {
-	uid: string;
-	displayName: string | null;
-	photoURL: string | null;
-	initial: string;
-	badge: WallBadge;
-}
-
 /** A face on a collection's card: who finished it. */
 export interface WallFinisher {
 	uid: string;
@@ -85,7 +72,7 @@ export interface WallFinisher {
  * nothing here needs the border post the collector-written entries do. The
  * faces on it do: they come from the directory.
  */
-export interface WallCollectionCard {
+export interface WallCollectionCard extends CollectionCrowd {
 	slug: string;
 	name: string;
 	description: string | null;
@@ -94,6 +81,17 @@ export interface WallCollectionCard {
 	imageUrl: string | null;
 	/** Discographies stand apart: there is a pair of them per band. */
 	group: string | null;
+}
+
+/**
+ * Who stands on one collection: the faces of whoever finished it, and of
+ * whoever says they are after it, with how many there are of each.
+ *
+ * It is what turns a rule into something a visitor can see the point of, so
+ * it is read the same way wherever a collection is drawn — this page's cards
+ * and the home page's grid alike.
+ */
+export interface CollectionCrowd {
 	finishers: WallFinisher[];
 	finisherCount: number;
 	/** Who says they are after it — following it, and showing that. */
@@ -119,6 +117,3 @@ export const WALL_FILTER_LIMIT = 16;
 
 /** How many faces a collection's card carries before it only counts them. */
 export const WALL_FACES = 5;
-
-/** How many entries the home page shows of the wall. */
-export const WALL_HOME_COUNT = 6;

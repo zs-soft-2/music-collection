@@ -16,6 +16,7 @@ import { computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import {
 	ArtistStateService,
+	DocumentCategoryEnum,
 	DocumentEntity,
 	MusicianStateService,
 	StyleName,
@@ -110,6 +111,24 @@ export type UploadableField = 'coverImageUrl' | 'badgeArtworkUrl';
  * goes to the server, because the gallery is the server's to write.
  */
 export type LibraryTarget = UploadableField | 'pin';
+
+/**
+ * Melyik kategóriából válogat az adott cél.
+ *
+ * A borító háttér, a jelvény grafikája és a pin jelvény — nem a találgatás
+ * mondja meg, hanem a dokumentum, amit a feltöltés és a rajzolás egyaránt
+ * ráír a fájlra. Egy mező, ami a teljes könyvtárat kínálja, használhatatlan:
+ * kilencszáz pin közt senki nem talál meg egy hátteret.
+ *
+ * Ennek ára van: ami még nincs besorolva, az egyik ajánlatban sem jelenik
+ * meg. A régi feltöltéseket a `tools/catalog/mark-*-documents.mjs`
+ * scriptek iktatják be.
+ */
+const LIBRARY_CATEGORY: Record<LibraryTarget, DocumentCategoryEnum> = {
+	coverImageUrl: DocumentCategoryEnum.Scene,
+	badgeArtworkUrl: DocumentCategoryEnum.Badge,
+	pin: DocumentCategoryEnum.Badge,
+};
 
 interface MusicCollectionEditState {
 	/** Null while adding a new collection. */
@@ -287,9 +306,11 @@ export const MusicCollectionEditStore = signalStore(
 			 * is first opened rather than on load, so a collection whose
 			 * pictures are all in place never pays for the list.
 			 */
-			const loadLibrary = rxMethod<void>(
+			const loadLibrary = rxMethod<LibraryTarget>(
 				pipe(
-					switchMap(() => effect.uploadedImages$()),
+					switchMap((target: LibraryTarget) =>
+						effect.uploadedImages$(LIBRARY_CATEGORY[target])
+					),
 					tapResponse({
 						next: (documents: DocumentEntity[]) =>
 							patchState(store, {
@@ -535,7 +556,13 @@ export const MusicCollectionEditStore = signalStore(
 											? 'cover'
 											: 'badge'
 									}`,
-									file
+									file,
+									// Amit itt töltenek fel, annak a helye
+									// ebből a mezőből következik: a borító
+									// háttér, a grafika jelvény. Besorolás
+									// nélkül a kép a saját mezője
+									// ajánlatából is kiesne.
+									LIBRARY_CATEGORY[field]
 								)
 							).pipe(
 								tapResponse({
@@ -644,8 +671,15 @@ export const MusicCollectionEditStore = signalStore(
 				 * panel, the pictures are in it.
 				 */
 				openLibrary(target: LibraryTarget): void {
-					patchState(store, { libraryTarget: target, error: null });
-					loadLibrary(of(undefined));
+					patchState(store, {
+						libraryTarget: target,
+						// A régi lista a régi célé: a jelvényekre nyitott
+						// könyvtár képei egy pillanatra sem villanhatnak be
+						// a háttér alatt.
+						library: [],
+						error: null,
+					});
+					loadLibrary(of(target));
 				},
 
 				closeLibrary(): void {

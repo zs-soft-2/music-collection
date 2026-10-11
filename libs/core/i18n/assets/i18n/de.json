@@ -291,12 +291,27 @@
 			"allReleases": "Alle Veröffentlichungen"
 		},
 		"collectors": {
-			"title": "Vollendete Sammlungen",
-			"all": "Alle ansehen"
+			"title": "Wer hier sammelt",
+			"all": "Alle ansehen",
+			"allOf": "Alle {{count}} Sammler",
+			"join": {
+				"title": "Hier wäre Platz für dich",
+				"lead": "Sag, was du sammelst, und dein Name steht an der Wand.",
+				"signIn": "Anmelden",
+				"share": "Mein Regal teilen"
+			}
 		},
 		"collections": {
-			"title": "Challenges",
-			"all": "Alle Challenges"
+			"title": "Sammlungen",
+			"all": "Alle",
+			"done": "Fertig",
+			"yoursToTake": "noch ist niemand dahinter — greif zu",
+			"tab": {
+				"mine": "Was ich sammle",
+				"curated": "Kuratiert",
+				"discography": "Diskografien",
+				"completed": "Vollendet"
+			}
 		},
 		"hunt": {
 			"title": "Als Nächstes auf der Jagd",
@@ -332,6 +347,24 @@
 			"inCatalog": {
 				"one": "{{count}} im Katalog",
 				"other": "{{count}} im Katalog"
+			}
+		},
+		"weekly": {
+			"eyebrow": "Sammlung der Woche",
+			"featured": "Sammlung zum Entdecken",
+			"pick": "Sammlung wählen",
+			"previous": "Vorherige Sammlung",
+			"next": "Nächste Sammlung",
+			"open": "Öffnen",
+			"collect": "Das sammle ich",
+			"collecting": "Du sammelst das",
+			"signInToCollect": "Anmelden und sammeln",
+			"points": "Pkt",
+			"worth": "so viel bringt sie vollendet",
+			"progress": "Fortschritt bei dieser Sammlung",
+			"albums": {
+				"one": "{{count}} Platte",
+				"other": "{{count}} Platten"
 			}
 		}
 	},
@@ -1244,14 +1277,78 @@
 			"quick-actions": "Schnellaktionen"
 		},
 		"collectionDetailPage": {
-			"this-collection-is-not": "Diese Challenge ist nicht veröffentlicht oder existiert nicht mehr.",
-			"back-to-the-collections": "Zurück zu den Challenges",
-			"collection": "Challenge",
-			"play-this-collection": "Diese Challenge abspielen",
+			"this-collection-is-not": "Diese Sammlung ist nicht veröffentlicht oder existiert nicht mehr.",
+			"back-to-the-collections": "Zurück zu den Sammlungen",
+			"collection": "Sammlung",
+			"play-this-collection": "Sammlung abspielen",
 			"points": "Punkte",
-			"nothing-in-the-catalog": "Noch nichts im Katalog entspricht dieser Challenge.",
+			"nothing-in-the-catalog": "Im Katalog entspricht dieser Sammlung noch nichts.",
 			"which-records": "Welche Platten",
-			"no-record-here-yet": "Hier steht noch keine Platte."
+			"no-record-here-yet": "Hier steht noch keine Platte.",
+			"earned": "so viel hast du damit geholt",
+			"sortBy": "Sortierung",
+			"stat": {
+				"records": "Platten",
+				"owned": "Im Regal",
+				"missing": "Fehlt",
+				"done": "Fortschritt",
+				"points": "Punkte",
+				"finishers": "Vollendet",
+				"hunters": "Sammeln sie"
+			},
+			"sort": {
+				"year": "Nach Jahr",
+				"artist": "Nach Interpret",
+				"name": "Nach Name"
+			},
+			"state": {
+				"owned": "Vorhanden",
+				"missing": "Fehlt"
+			},
+			"albums": {
+				"title": "Die Platten"
+			},
+			"hunt": {
+				"title": "Was als Nächstes",
+				"lead": "Aus dieser Sammlung bringen dich diese am weitesten."
+			},
+			"badge": {
+				"earned": "Erreicht",
+				"toGo": {
+					"one": "Noch {{count}} Platte",
+					"other": "Noch {{count}} Platten"
+				}
+			},
+			"rule": {
+				"title": "Was hineingehört",
+				"lead": "Eine Sammlung ist eine Regel, keine Liste: Was passt, kommt von selbst dazu, sobald der Katalog wächst.",
+				"years": "Jahre",
+				"styles": "Stil",
+				"allStyles": "Alle diese Stile",
+				"artistStyles": "Stil des Interpreten",
+				"artists": "Interpreten",
+				"moreArtists": "Weitere Interpreten",
+				"formats": "Format",
+				"countries": "Land",
+				"roles": "Mitwirkung",
+				"musicians": "Genannte Musiker",
+				"notStyles": "Nicht dieser Stil",
+				"notArtistStyles": "Nicht dieser Interpretenstil"
+			},
+			"decades": {
+				"title": "Jahrzehnte",
+				"lead": "Die ganze Säule ist die Sammlung, der gefüllte Teil dein Regal.",
+				"one": "{{decade}}: {{owned}} von {{total}} Platten"
+			},
+			"crowd": {
+				"title": "Wer sie sammelt",
+				"finished": "vollendet",
+				"hunting": "sammelt sie"
+			},
+			"score": {
+				"title": "Was die Punkte brachte",
+				"lead": "Diese Platten machen die Sammlung wertvoller."
+			}
 		},
 		"copyPhotos": {
 			"no-photos-of-this": "Keine Fotos von diesem Exemplar.",
@@ -2211,10 +2308,18 @@
 			"pick-from-uploaded": "Hochgeladenes wählen",
 			"already-uploaded": "Bereits hochgeladene Bilder",
 			"search-images": "Bilder nach Namen suchen…",
-			"no-uploaded-image": "Noch nichts hochgeladen. Nach dem ersten Hochladen kannst du hier wählen.",
+			"no-uploaded-image": "Unter dieser Rubrik ist noch kein Bild abgelegt. Ein nicht eingeordneter Upload wird hier nicht angeboten.",
 			"more-images": "…und {{count}} weitere. Suche nach dem Namen.",
 			"close-the-library": "Schließen",
-			"the-picked-image-becomes": "Das gewählte Bild wird sofort zum Abzeichen — nichts wird hochgeladen, die Datei ist schon da."
+			"the-picked-image-becomes": "Das gewählte Bild wird sofort zum Abzeichen — nichts wird hochgeladen, die Datei ist schon da.",
+			"collection-editor": "Sammlungseditor",
+			"the-editor-s-sections": "Die Abschnitte des Editors",
+			"basics": "Grunddaten",
+			"rule": "Regel",
+			"looks": "Aussehen",
+			"badge": "Abzeichen",
+			"the-look": "Das Aussehen",
+			"the-cover-stands-behind": "Das Titelbild steht hinter der Sammlung, wo immer sie gezeigt wird: auf ihrer Karte und über ihrer eigenen Seite."
 		},
 		"profileSharing": {
 			"page": "Öffentliche Sammlerseite",
@@ -3962,30 +4067,46 @@
 				}
 			},
 			"challenge": {
-				"name": "Diese Herausforderung",
+				"name": "Diese Sammlung",
 				"intro": {
-					"title": "Die Herausforderung",
+					"title": "Die Sammlung",
 					"content": "Die Regel, die diese Platten zusammenhält, und was zum Abschluss fehlt."
 				},
 				"progress": {
 					"title": "Wo du stehst",
-					"content": "So viel von den Platten dieser Herausforderung steht schon in deinem Regal."
+					"content": "So viel von der Sammlung steht schon in deinem Regal — und so viel bringt sie vollendet."
 				},
 				"score": {
-					"title": "Was sie einbringt",
-					"content": "Grundpunkte für jede vorhandene Platte, und ein Bonus, wenn du die ganze Reihe zusammenbekommst."
+					"title": "Sechs Zahlen",
+					"content": "Vorhanden, fehlend, Fortschritt, Punkte — und wie viele andere sie vollendet haben oder sammeln."
 				},
 				"badge": {
 					"title": "Das Abzeichen",
 					"content": "Schließt du sie ab, steht dieses Abzeichen neben deinem Namen."
 				},
 				"filter": {
-					"title": "Filtern",
-					"content": "Alle zeigen — oder nur das, was in deinem Regal noch fehlt."
+					"title": "Filtern und sortieren",
+					"content": "Alle, was du hast oder was fehlt — nach Jahr, Interpret oder Name."
 				},
 				"grid": {
 					"title": "Die Platten",
-					"content": "Die Herausforderung in voller Länge. Was du hast, ist markiert; der Rest ist das, was zu jagen bleibt."
+					"content": "Die Sammlung in voller Länge. Was du hast, ist markiert; der Rest bleibt zu jagen."
+				},
+				"rule": {
+					"title": "Was hineingehört",
+					"content": "Eine Sammlung ist eine Regel, keine Liste: Was passt, kommt von selbst dazu, sobald der Katalog wächst."
+				},
+				"decades": {
+					"title": "Jahrzehnte",
+					"content": "Die ganze Säule ist die Sammlung, der gefüllte Teil dein Regal — hier zeigt sich die Lücke."
+				},
+				"crowd": {
+					"title": "Wer sie sammelt",
+					"content": "Wer sie vollendet hat und wer ihr nachjagt. Ihre Regale sind einen Tipp entfernt."
+				},
+				"hunt": {
+					"title": "Was als Nächstes",
+					"content": "Aus dieser Sammlung bringen dich diese Platten am weitesten."
 				}
 			},
 			"artist": {

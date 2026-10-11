@@ -36,6 +36,16 @@ ul {
 	border: 0;
 }
 
+mc-collection-big-card,
+.big-card-skeleton {
+	display: block;
+	margin-top: 1.25rem;
+}
+
+.big-card-skeleton {
+	height: 20rem;
+}
+
 /* ── Sections ─────────────────────────────────────────────────────────── */
 
 .section {
@@ -336,89 +346,124 @@ ul {
 
 /* ── Collections ──────────────────────────────────────────────────────── */
 
-.collection-list {
+/* Melyik polcot mutatja a rács; ugyanaz a fülsor, mint a /collections-on. */
+.tabs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	margin: -0.5rem 0 1.25rem;
+}
+
+.tab {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	padding: 0.35rem 0.8rem;
+	font: inherit;
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: var(--mc-text-muted);
+	cursor: pointer;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: 999px;
+
+	&:hover {
+		border-color: var(--mc-border-strong);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--mc-primary);
+		outline-offset: 2px;
+	}
+
+	&.is-on {
+		color: var(--mc-text);
+		background: var(--mc-surface-2);
+		border-color: var(--mc-border-strong);
+	}
+
+	.count {
+		font-size: 0.72rem;
+		font-variant-numeric: tabular-nums;
+		color: var(--mc-text-subtle);
+	}
+}
+
+.collection-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
-	gap: 0.75rem;
+	grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+	gap: 1rem;
 	margin: 0;
 	padding: 0;
 	list-style: none;
 }
 
 .collection-skeleton {
-	height: 6.25rem;
+	height: 15rem;
 }
 
-/* ── The wall of finished collections ─────────────────────────────────── */
+/* ── Who is collecting here ───────────────────────────────────────────── */
 
-.wall-list {
+.collector-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
 	gap: 0.75rem;
 	margin: 0;
 	padding: 0;
 	list-style: none;
+}
 
-	a {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.4rem;
-		height: 100%;
-		padding: 1rem 0.75rem;
-		text-align: center;
-		color: inherit;
-		text-decoration: none;
-		background: var(--mc-surface-2);
-		border: 1px solid var(--mc-border);
-		border-radius: var(--mc-radius-lg);
+/* A szabad hely az asztalnál: ugyanakkora kártya, csak nem vezet sehova. */
+.join {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+	height: 100%;
+	padding: 1rem;
+	background: var(--mc-card-bg);
+	border: 1px dashed var(--mc-border-strong);
+	border-radius: var(--mc-radius-lg);
 
-		&:hover {
-			border-color: var(--mc-primary);
-		}
+	h3 {
+		margin: 0;
+		font-size: 0.95rem;
 	}
 
-	b {
-		font-size: 0.9rem;
-		overflow-wrap: anywhere;
+	p {
+		margin: 0;
+		font-size: 0.8rem;
+		line-height: 1.4;
+		color: var(--mc-text-muted);
+	}
+}
+
+.join-cta {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	margin-top: auto;
+	padding: 0;
+	font: inherit;
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: var(--mc-accent);
+	text-align: left;
+	text-decoration: none;
+	cursor: pointer;
+	background: none;
+	border: 0;
+
+	i {
+		font-size: 0.75rem;
 	}
 
-	.pin {
-		display: grid;
-		place-items: center;
-		width: 4.5rem;
-		height: 4.5rem;
-		font-size: 1.5rem;
-		color: var(--mc-text-subtle);
-
-		img {
-			width: 100%;
-			height: 100%;
-			object-fit: contain;
-		}
+	&:hover {
+		text-decoration: underline;
 	}
 
-	.by {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.35rem;
-		font-size: 0.78rem;
-		color: var(--mc-text-subtle);
-	}
-
-	.face {
-		width: 1.5rem;
-		height: 1.5rem;
-		object-fit: cover;
-		border-radius: 50%;
-		background: var(--mc-bg-muted);
-
-		&.initial {
-			display: grid;
-			place-items: center;
-			font-family: var(--mc-font-display);
-			font-size: 0.8rem;
-			color: var(--mc-primary);
-		}
+	&:focus-visible {
+		outline: 2px solid var(--mc-primary);
+		outline-offset: 3px;
 	}
 }

@@ -401,11 +401,15 @@ const challengesTour = pageTour('challenges', 'collections', [
 
 const challengeTour = pageTour('challenge', 'collections/:slug', [
 	['intro', '.page > .hero'],
-	['progress', '.page > .progress'],
-	['score', '.page .score'],
-	['badge', '.page aside.badge'],
-	['filter', '.page > .toolbar'],
-	['grid', '.page > ul.grid', 'top'],
+	['progress', '.page > .hero .hero-score'],
+	['score', '.page > .stats'],
+	['badge', '.page mc-collection-badge'],
+	['rule', '.page mc-collection-rule'],
+	['decades', '.page mc-collection-decades'],
+	['crowd', '.page mc-collection-crowd'],
+	['hunt', '[aria-labelledby="hunt-title"] .block-head'],
+	['filter', '.page .toolbar'],
+	['grid', '.page ul.grid', 'top'],
 ]);
 
 const upcomingTour = pageTour('upcoming', 'upcoming', [

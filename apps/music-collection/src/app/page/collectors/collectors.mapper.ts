@@ -12,13 +12,13 @@ import { NAME_MAX } from '../collector/collector.model';
 import { MusicCollectionEntity } from '@music-collection/domain/music-collection/api';
 
 import {
+	CollectionCrowd,
 	WALL_FACES,
 	WALL_FILTER_LIMIT,
 	WallBadge,
 	WallCollection,
 	WallCollectionCard,
 	WallEntry,
-	WallHighlight,
 	WallPursuit,
 	WallSort,
 } from './collectors.model';
@@ -252,39 +252,6 @@ export function dressHunts(
 }
 
 /**
- * The newest finished collections, one per collector before anybody gets a
- * second one.
- *
- * A collector who finished four collections last night would otherwise fill
- * the row by themselves, and a row of four badges belonging to one person
- * says far less than four people do.
- */
-export function toWallHighlights(
-	entries: readonly WallEntry[],
-	count: number
-): WallHighlight[] {
-	const highlights: WallHighlight[] = [];
-
-	for (let round = 0; highlights.length < count && round < 3; round += 1) {
-		for (const entry of entries) {
-			const badge = entry.badges[round];
-
-			if (badge && highlights.length < count) {
-				highlights.push({
-					uid: entry.uid,
-					displayName: entry.displayName,
-					photoURL: entry.photoURL,
-					initial: entry.initial,
-					badge,
-				});
-			}
-		}
-	}
-
-	return highlights;
-}
-
-/**
  * Every published collection, with the faces of whoever finished it.
  *
  * This is the other way round from the wall of collectors, and the reason the
@@ -300,63 +267,21 @@ export function toWallCollectionCards(
 	definitions: readonly MusicCollectionEntity[],
 	entries: readonly WallEntry[]
 ): WallCollectionCard[] {
-	const finishers = new Map<string, WallFinisherList>();
-	const hunters = new Map<string, WallFinisherList>();
-
-	const add = (
-		into: Map<string, WallFinisherList>,
-		slug: string,
-		entry: WallEntry
-	): void => {
-		const found = into.get(slug) ?? { faces: [], count: 0 };
-
-		found.count += 1;
-
-		if (found.faces.length < WALL_FACES) {
-			found.faces.push({
-				uid: entry.uid,
-				displayName: entry.displayName,
-				photoURL: entry.photoURL,
-				initial: entry.initial,
-			});
-		}
-
-		into.set(slug, found);
-	};
-
-	for (const entry of entries) {
-		for (const badge of entry.badges) {
-			add(finishers, badge.slug, entry);
-		}
-
-		// Following a collection is private; showing it is the collector
-		// saying they are after it, and this is where that is heard.
-		for (const hunt of entry.collecting) {
-			add(hunters, hunt.slug, entry);
-		}
-	}
+	const crowds = crowdBySlug(entries);
 
 	return definitions
-		.map((definition) => {
-			const found = finishers.get(definition.slug);
-			const after = hunters.get(definition.slug);
-
-			return {
-				slug: definition.slug,
-				name: definition.name,
-				description: definition.description,
-				icon: definition.icon,
-				imageUrl:
-					definition.badge?.image?.filePath ??
-					definition.badge?.artworkUrl ??
-					definition.coverImageUrl,
-				group: definition.group ?? null,
-				finishers: found?.faces ?? [],
-				finisherCount: found?.count ?? 0,
-				hunters: after?.faces ?? [],
-				hunterCount: after?.count ?? 0,
-			};
-		})
+		.map((definition) => ({
+			slug: definition.slug,
+			name: definition.name,
+			description: definition.description,
+			icon: definition.icon,
+			imageUrl:
+				definition.badge?.image?.filePath ??
+				definition.badge?.artworkUrl ??
+				definition.coverImageUrl,
+			group: definition.group ?? null,
+			...(crowds.get(definition.slug) ?? emptyCrowd()),
+		}))
 		.sort(
 			(one, other) =>
 				// The curated collections first: there is a pair of
@@ -372,7 +297,56 @@ export function toWallCollectionCards(
 		);
 }
 
-interface WallFinisherList {
-	faces: WallCollectionCard['finishers'];
-	count: number;
+function emptyCrowd(): CollectionCrowd {
+	return { finishers: [], finisherCount: 0, hunters: [], hunterCount: 0 };
+}
+
+/**
+ * Who stands on each collection, by slug: whoever finished it, and whoever
+ * says they are after it.
+ *
+ * One pass over the directory rather than one per collection — there are far
+ * more collections than collectors, and every page that draws a collection
+ * wants the same two lists.
+ */
+export function crowdBySlug(
+	entries: readonly WallEntry[]
+): Map<string, CollectionCrowd> {
+	const crowds = new Map<string, CollectionCrowd>();
+
+	const add = (
+		slug: string,
+		entry: WallEntry,
+		side: 'finishers' | 'hunters'
+	): void => {
+		const crowd = crowds.get(slug) ?? emptyCrowd();
+		const faces = crowd[side];
+
+		crowd[side === 'finishers' ? 'finisherCount' : 'hunterCount'] += 1;
+
+		if (faces.length < WALL_FACES) {
+			faces.push({
+				uid: entry.uid,
+				displayName: entry.displayName,
+				photoURL: entry.photoURL,
+				initial: entry.initial,
+			});
+		}
+
+		crowds.set(slug, crowd);
+	};
+
+	for (const entry of entries) {
+		for (const badge of entry.badges) {
+			add(badge.slug, entry, 'finishers');
+		}
+
+		// Following a collection is private; showing it is the collector
+		// saying they are after it, and this is where that is heard.
+		for (const hunt of entry.collecting) {
+			add(hunt.slug, entry, 'hunters');
+		}
+	}
+
+	return crowds;
 }

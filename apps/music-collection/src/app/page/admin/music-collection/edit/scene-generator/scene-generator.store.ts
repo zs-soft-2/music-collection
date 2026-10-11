@@ -1,6 +1,7 @@
 import { pipe, switchMap, tap } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
+import { DocumentCategoryEnum } from '@music-collection/api';
 import {
 	SceneProbeResult,
 	SceneStyleDraft,
@@ -121,7 +122,12 @@ export const SceneGeneratorStore = signalStore(
 					name,
 					new File([blob], `${name}.png`, {
 						type: blob.type || 'image/png',
-					})
+					}),
+					// Ami itt készül, az háttér: a dokumentum ezt mondja ki,
+					// mert a bájtokból senki nem olvassa ki. Enélkül a
+					// besorolatlan feltöltések közé esne, holott a padnak épp
+					// az a dolga, hogy jelenetet rajzoljon.
+					DocumentCategoryEnum.Scene
 				);
 
 				patchState(store, {

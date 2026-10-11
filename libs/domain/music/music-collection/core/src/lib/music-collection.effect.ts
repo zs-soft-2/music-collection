@@ -15,6 +15,7 @@ import {
 	AlbumStateService,
 	ArtistStateService,
 	CollectionItemStateService,
+	DocumentCategoryEnum,
 	DocumentEntity,
 	DocumentStateService,
 	isWithdrawnDocument,
@@ -440,11 +441,21 @@ export class MusicCollectionEffect {
 	 * filed in the document admin — narrowed to images that are still on
 	 * offer.
 	 *
+	 * With a category, only the pictures filed under it. That is the whole
+	 * point of the category: a backdrop field offering nine hundred pins is
+	 * a field nobody can use, and the document over the file is the only
+	 * place that says what the bytes were made for. Nine hundred unfiled
+	 * pictures are hidden by the same rule, so a narrowed picker is only
+	 * worth opening once the library has been filed
+	 * (`tools/catalog/mark-*-documents.mjs`).
+	 *
 	 * It starts empty rather than staying silent until the documents
 	 * arrive: a library with nothing in it is an answer, and a picker that
 	 * never renders is not.
 	 */
-	public uploadedImages$(): Observable<DocumentEntity[]> {
+	public uploadedImages$(
+		category?: DocumentCategoryEnum
+	): Observable<DocumentEntity[]> {
 		return entities$(
 			() => this.documentStateService.selectEntities$(),
 			() => this.documentStateService.dispatchListEntitiesAction()
@@ -453,6 +464,10 @@ export class MusicCollectionEffect {
 				liveDocuments(documents)
 					.filter((document) =>
 						(document.fileType ?? '').startsWith('image/')
+					)
+					.filter(
+						(document) =>
+							!category || document.category === category
 					)
 					.sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0))
 			),

@@ -1,0 +1,458 @@
+@use '../../../../shared/music-ui/music-tokens' as mc;
+
+:host {
+	display: block;
+}
+
+/*
+ * Három oszlop: a kollekció jele, a szöveg, és jobbra a pont a haladással.
+ * A kártya mögött a kollekció saját képe áll — ha nincs, az egyik lemez
+ * borítója —, ezért a panel mindig képre rajzol, és a sötét tokeneket veszi.
+ */
+.big-card {
+	@include mc.on-image;
+
+	position: relative;
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	align-items: center;
+	gap: clamp(1.25rem, 3vw, 2.5rem);
+	overflow: hidden;
+	padding: clamp(1.5rem, 3vw, 2.5rem);
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-lg);
+
+	/* A lapozó a kártya alján ül: a saroknak hely kell alatta. */
+	&.has-switch {
+		padding-bottom: calc(clamp(1.5rem, 3vw, 2.5rem) + 2.25rem);
+	}
+
+	/* Csak a borítófalé: a kurátor képe élesen marad. */
+	--mc-backdrop-blur: 18px;
+}
+
+/* ── A kollekció jele: mozaik, rajta a jelvény a haladás gyűrűjében ───── */
+
+.emblem {
+	position: relative;
+	z-index: 1;
+	width: clamp(8rem, 14vw, 11rem);
+
+	--mc-emblem-radius: var(--mc-radius-md, 0.9rem);
+	--mc-emblem-share-size: 0.9rem;
+	--mc-emblem-art-icon: 3.5rem;
+}
+
+/* A jelvény a pontblokk fölött ül, a panel jobb felső sarkában. */
+.pin {
+	width: clamp(3.25rem, 5vw, 4.25rem);
+	margin-bottom: 0.5rem;
+
+	--mc-pin-size: 1.5rem;
+}
+
+/* ── A szöveg ─────────────────────────────────────────────────────────── */
+
+/*
+ * A szöveg a saját árnyékát hozza, nem a háttér sötétítését: a kurátor
+ * képe élesen áll a panel mögött, és egy akkora fedés, ami minden képen
+ * olvashatóvá tenné a betűt, pont azt a képet takarná el.
+ */
+.text,
+.score {
+	position: relative;
+	z-index: 1;
+	text-shadow: 0 1px 14px rgba(10, 10, 10, 0.85);
+}
+
+.eyebrow {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	margin: 0;
+	padding: 0.3rem 0.7rem;
+	font-size: 0.7rem;
+	font-weight: 700;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--mc-accent);
+	background: rgba(255, 255, 255, 0.08);
+	border: 1px solid var(--mc-border-strong);
+	border-radius: 999px;
+
+	i {
+		font-size: 0.7rem;
+	}
+}
+
+h1 {
+	margin: 0.6rem 0 0.5rem;
+	font-family: var(--mc-font-display);
+	font-size: clamp(2.2rem, 5vw, 4rem);
+	font-weight: 400;
+	line-height: 0.95;
+	letter-spacing: 0.01em;
+	text-transform: uppercase;
+	overflow-wrap: anywhere;
+}
+
+.lead {
+	max-width: 52ch;
+	margin: 0 0 0.9rem;
+	font-size: 0.95rem;
+	line-height: 1.45;
+	color: var(--mc-text-muted);
+}
+
+.chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	margin: 0 0 1.25rem;
+	padding: 0;
+	list-style: none;
+
+	li {
+		padding: 0.25rem 0.65rem;
+		font-size: 0.7rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		background: rgba(255, 255, 255, 0.08);
+		border: 1px solid var(--mc-border-strong);
+		border-radius: 999px;
+	}
+}
+
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.button {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	box-sizing: border-box;
+	height: 2.75rem;
+	padding: 0 1.2rem;
+	font: inherit;
+	font-size: 0.9rem;
+	font-weight: 600;
+	line-height: 1;
+	color: #fff;
+	text-decoration: none;
+	cursor: pointer;
+	border-radius: 999px;
+	transition:
+		background var(--mc-duration-fast) ease,
+		border-color var(--mc-duration-fast) ease;
+
+	&:focus-visible {
+		outline: 2px solid #fff;
+		outline-offset: 2px;
+	}
+
+	&.primary {
+		color: var(--mc-on-primary);
+		background: var(--mc-primary);
+		border: 1px solid var(--mc-primary);
+
+		&:hover {
+			background: #e53b3b;
+		}
+	}
+
+	&.ghost {
+		background: rgba(10, 10, 10, 0.4);
+		border: 1px solid var(--mc-border-strong);
+
+		&:hover {
+			border-color: var(--mc-text-muted);
+		}
+
+		&.is-on {
+			color: var(--mc-accent);
+			border-color: var(--mc-accent);
+		}
+	}
+}
+
+/* ── A pont és a haladás ──────────────────────────────────────────────── */
+
+.score {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 0.4rem;
+	min-width: 13rem;
+	text-align: right;
+}
+
+.points {
+	display: flex;
+	align-items: baseline;
+	gap: 0.35rem;
+	margin: 0;
+
+	b {
+		font-family: var(--mc-font-display);
+		font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+		font-weight: 400;
+		line-height: 1;
+		color: var(--mc-accent);
+		font-variant-numeric: tabular-nums;
+	}
+
+	span {
+		font-size: 0.8rem;
+		font-weight: 700;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--mc-accent);
+	}
+}
+
+.worth {
+	margin: 0 0 0.5rem;
+	font-size: 0.78rem;
+	color: var(--mc-text-muted);
+}
+
+.faces {
+	display: flex;
+	gap: 0.3rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+
+	li {
+		display: grid;
+		place-items: center;
+		width: 1.9rem;
+		height: 1.9rem;
+		overflow: hidden;
+		font-family: var(--mc-font-display);
+		font-size: 0.8rem;
+		color: var(--mc-primary);
+		background: var(--mc-bg-muted);
+		border: 1px solid var(--mc-border-strong);
+		border-radius: 50%;
+	}
+
+	img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+}
+
+.crowd {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 0.25rem 0.6rem;
+	margin: 0;
+	font-size: 0.75rem;
+	color: var(--mc-text-muted);
+
+	.done {
+		color: var(--mc-accent);
+	}
+}
+
+.bar {
+	display: block;
+	width: 100%;
+	height: 6px;
+	overflow: hidden;
+	background: rgba(255, 255, 255, 0.14);
+	border-radius: 999px;
+
+	.fill {
+		display: block;
+		height: 100%;
+		background: var(--mc-primary);
+		border-radius: inherit;
+	}
+}
+
+.counts {
+	margin: 0;
+	font-size: 0.8rem;
+	font-variant-numeric: tabular-nums;
+	color: var(--mc-text-muted);
+}
+
+/* ── A váltó ──────────────────────────────────────────────────────────── */
+
+/*
+ * A kártya sarkában ül, nem a szöveg között: a lapozás a panel kerete, nem
+ * a kollekcióról szóló mondat része.
+ */
+.switch {
+	position: absolute;
+	z-index: 2;
+	right: clamp(1rem, 2vw, 1.5rem);
+	bottom: clamp(0.75rem, 2vw, 1.25rem);
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.25rem;
+	background: rgba(10, 10, 10, 0.55);
+	border: 1px solid var(--mc-border-strong);
+	border-radius: 999px;
+	backdrop-filter: blur(6px);
+}
+
+.arrow {
+	display: grid;
+	place-items: center;
+	width: 1.9rem;
+	height: 1.9rem;
+	padding: 0;
+	font-size: 0.75rem;
+	color: var(--mc-text);
+	cursor: pointer;
+	background: transparent;
+	border: 0;
+	border-radius: 50%;
+	transition: background var(--mc-duration-fast) ease;
+
+	&:hover {
+		background: rgba(255, 255, 255, 0.12);
+	}
+
+	&:focus-visible {
+		outline: 2px solid #fff;
+		outline-offset: 2px;
+	}
+}
+
+.dots {
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.dot {
+	display: block;
+	width: 0.5rem;
+	height: 0.5rem;
+	padding: 0;
+	cursor: pointer;
+	background: rgba(255, 255, 255, 0.3);
+	border: 0;
+	border-radius: 50%;
+	transition:
+		background var(--mc-duration-fast) ease,
+		width var(--mc-duration-fast) ease;
+
+	&:hover {
+		background: rgba(255, 255, 255, 0.6);
+	}
+
+	&:focus-visible {
+		outline: 2px solid #fff;
+		outline-offset: 3px;
+	}
+
+	/* A soron lévő hosszabb, nem csak világosabb: színvakon is látszik. */
+	&.is-on {
+		width: 1.4rem;
+		background: var(--mc-primary);
+		border-radius: 999px;
+	}
+}
+
+/* A váltott kártya egyszer beúszik; a lapozó a helyén marad. */
+.emblem,
+.text,
+.score {
+	animation: mc-big-card-in 320ms ease-out;
+}
+
+@keyframes mc-big-card-in {
+	from {
+		opacity: 0;
+		transform: translateY(0.6rem);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* A hármas osztás 1000 alatt kettőre, telefonon egyre esik össze. */
+@media (max-width: 1000px) {
+	.big-card {
+		grid-template-columns: auto minmax(0, 1fr);
+	}
+
+	.score {
+		grid-column: 1 / -1;
+		align-items: flex-start;
+		width: 100%;
+		text-align: left;
+	}
+
+	.crowd {
+		justify-content: flex-start;
+	}
+}
+
+@media (max-width: 640px) {
+	.big-card {
+		grid-template-columns: minmax(0, 1fr);
+		justify-items: center;
+		text-align: center;
+	}
+
+	.text {
+		text-align: center;
+	}
+
+	.chips,
+	.actions {
+		justify-content: center;
+	}
+
+	.lead {
+		margin-inline: auto;
+	}
+
+	.score {
+		align-items: center;
+		text-align: center;
+	}
+
+	.crowd {
+		justify-content: center;
+	}
+
+	.switch {
+		right: 50%;
+		transform: translateX(50%);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.button,
+	.arrow,
+	.dot {
+		transition: none;
+	}
+
+	.emblem,
+	.text,
+	.score {
+		animation: none;
+	}
+}

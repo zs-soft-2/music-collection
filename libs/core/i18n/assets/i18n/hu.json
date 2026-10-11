@@ -291,12 +291,27 @@
 			"allReleases": "Összes kiadás"
 		},
 		"collectors": {
-			"title": "Kigyűjtött kollekciók",
-			"all": "Mind"
+			"title": "Kik gyűjtenek itt",
+			"all": "Mind",
+			"allOf": "Mind a {{count}} gyűjtő",
+			"join": {
+				"title": "Te is itt lehetsz",
+				"lead": "Jelöld meg, mit gyűjtesz, és a neved kikerül a falra.",
+				"signIn": "Belépek",
+				"share": "Megosztom a polcom"
+			}
 		},
 		"collections": {
-			"title": "Kihívások",
-			"all": "Összes kihívás"
+			"title": "Kollekciók",
+			"all": "Mind",
+			"done": "Kész",
+			"yoursToTake": "még senki nem gyűjti — tiéd a terep",
+			"tab": {
+				"mine": "Amiket gyűjtök",
+				"curated": "Kurált",
+				"discography": "Diszkográfiák",
+				"completed": "Kész"
+			}
 		},
 		"hunt": {
 			"title": "Következő a vadászlistán",
@@ -332,6 +347,24 @@
 			"inCatalog": {
 				"one": "{{count}} a katalógusban",
 				"other": "{{count}} a katalógusban"
+			}
+		},
+		"weekly": {
+			"eyebrow": "A hét kollekciója",
+			"featured": "Kiemelt kollekció",
+			"pick": "Kollekció választása",
+			"previous": "Előző kollekció",
+			"next": "Következő kollekció",
+			"open": "Megnyitom",
+			"collect": "Gyűjtöm",
+			"collecting": "Ezt gyűjtöd",
+			"signInToCollect": "Lépj be, és gyűjtheted",
+			"points": "pts",
+			"worth": "ennyit ér, ha végigviszed",
+			"progress": "Haladás ezen a kollekción",
+			"albums": {
+				"one": "{{count}} lemez",
+				"other": "{{count}} lemez"
 			}
 		}
 	},
@@ -1244,14 +1277,78 @@
 			"quick-actions": "Gyors műveletek"
 		},
 		"collectionDetailPage": {
-			"this-collection-is-not": "Ez a kihívás nincs közzétéve, vagy már nem létezik.",
-			"back-to-the-collections": "Vissza a kihívásokhoz",
-			"collection": "Kihívás",
-			"play-this-collection": "Kihívás lejátszása",
+			"this-collection-is-not": "Ez a kollekció nincs közzétéve, vagy már nem létezik.",
+			"back-to-the-collections": "Vissza a kollekciókhoz",
+			"collection": "Kollekció",
+			"play-this-collection": "Kollekció lejátszása",
 			"points": "pont",
-			"nothing-in-the-catalog": "A katalógusban még semmi nem felel meg ennek a kihívásnak.",
+			"nothing-in-the-catalog": "A katalógusban még semmi nem felel meg ennek a kollekciónak.",
 			"which-records": "Mely lemezek",
-			"no-record-here-yet": "Itt még nincs lemez."
+			"no-record-here-yet": "Itt még nincs lemez.",
+			"earned": "ennyit szereztél vele",
+			"sortBy": "Rendezés",
+			"stat": {
+				"records": "Lemez",
+				"owned": "Megvan",
+				"missing": "Hiányzik",
+				"done": "Készültség",
+				"points": "Pont",
+				"finishers": "Végigvitte",
+				"hunters": "Gyűjti"
+			},
+			"sort": {
+				"year": "Év szerint",
+				"artist": "Előadó szerint",
+				"name": "Név szerint"
+			},
+			"state": {
+				"owned": "Megvan",
+				"missing": "Hiányzik"
+			},
+			"albums": {
+				"title": "A lemezek"
+			},
+			"hunt": {
+				"title": "Mit vegyél legközelebb",
+				"lead": "Ebből a kollekcióból ezek visznek a legtöbbet előre."
+			},
+			"badge": {
+				"earned": "Megszerezve",
+				"toGo": {
+					"one": "Még {{count}} lemez",
+					"other": "Még {{count}} lemez"
+				}
+			},
+			"rule": {
+				"title": "Mi kerül bele",
+				"lead": "A kollekció szabály, nem felsorolás: ami ráillik, az magától bekerül, ahogy a katalógus nő.",
+				"years": "Évek",
+				"styles": "Stílus",
+				"allStyles": "Mindegyik stílus",
+				"artistStyles": "Az előadó stílusa",
+				"artists": "Előadók",
+				"moreArtists": "További előadó",
+				"formats": "Forma",
+				"countries": "Ország",
+				"roles": "Közreműködés",
+				"musicians": "Megnevezett zenész",
+				"notStyles": "Nem ez a stílus",
+				"notArtistStyles": "Nem ez az előadói stílus"
+			},
+			"decades": {
+				"title": "Évtizedek",
+				"lead": "A teljes oszlop a kollekcióé, a kitöltött rész a polcodé.",
+				"one": "{{decade}}: {{owned}} megvan a {{total}} lemezből"
+			},
+			"crowd": {
+				"title": "Kik gyűjtik",
+				"finished": "végigvitte",
+				"hunting": "gyűjti"
+			},
+			"score": {
+				"title": "Mi adta a pontot",
+				"lead": "Ezek a lemezek emelték a kollekció értékét."
+			}
 		},
 		"copyPhotos": {
 			"no-photos-of-this": "Nincs fénykép erről a példányról.",
@@ -2211,10 +2308,18 @@
 			"pick-from-uploaded": "Válassz a feltöltöttekből",
 			"already-uploaded": "Már feltöltött képek",
 			"search-images": "Kép keresése név szerint…",
-			"no-uploaded-image": "Még nincs feltöltött kép. Az első feltöltés után innen is választhatsz.",
+			"no-uploaded-image": "Ebbe a kategóriába még nincs kép beiktatva. Ami besorolatlan, itt nem jelenik meg.",
 			"more-images": "…és még {{count}} kép. Keress rá a nevére.",
 			"close-the-library": "Bezárás",
-			"the-picked-image-becomes": "A kiválasztott kép rögtön a jelvény lesz — feltöltés nélkül, mert a fájl már megvan."
+			"the-picked-image-becomes": "A kiválasztott kép rögtön a jelvény lesz — feltöltés nélkül, mert a fájl már megvan.",
+			"collection-editor": "Kollekció-szerkesztő",
+			"the-editor-s-sections": "A szerkesztő lapjai",
+			"basics": "Alapok",
+			"rule": "Szabály",
+			"looks": "Kinézet",
+			"badge": "Jelvény",
+			"the-look": "A kinézet",
+			"the-cover-stands-behind": "A borító a kollekció mögött áll, bárhol is mutatják: a kártyáján és a saját lapja fején."
 		},
 		"profileSharing": {
 			"page": "Nyilvános gyűjtő-profil",
@@ -3962,30 +4067,46 @@
 				}
 			},
 			"challenge": {
-				"name": "Ez a kihívás",
+				"name": "Ez a kollekció",
 				"intro": {
-					"title": "A kihívás",
+					"title": "A kollekció",
 					"content": "A szabály, ami a lemezeket összefogja, és hogy mi kell a teljesítéséhez."
 				},
 				"progress": {
 					"title": "Hol tartasz",
-					"content": "Ennyi van meg a kihívás lemezeiből a saját polcodról."
+					"content": "Ennyi van meg a kollekció lemezeiből a saját polcodról, és ennyit fizet, ha végigviszed."
 				},
 				"score": {
-					"title": "Amit fizet",
-					"content": "Alappont minden meglévő lemezért, és bónusz, ha a teljes sort összehozod."
+					"title": "Hat szám",
+					"content": "Megvan, hiányzik, készültség, pont — és hányan vitték végig vagy gyűjtik rajtad kívül."
 				},
 				"badge": {
 					"title": "A jelvény",
 					"content": "Ha befejezed, ez a jelvény kerül a neved mellé."
 				},
 				"filter": {
-					"title": "Szűrés",
-					"content": "Mutasd mind, vagy csak azt, ami még hiányzik a polcodról."
+					"title": "Szűrés és rendezés",
+					"content": "Mind, ami megvan, vagy ami hiányzik — év, előadó vagy név szerint."
 				},
 				"grid": {
 					"title": "A lemezek",
-					"content": "A kihívás teljes listája. Ami megvan, kiemelve; a többi az, amire vadászni kell."
+					"content": "A kollekció teljes egészében. Ami megvan, jelölve; a többi az, amire vadászni lehet."
+				},
+				"rule": {
+					"title": "Mi kerül bele",
+					"content": "A kollekció szabály, nem felsorolás: ami ráillik, magától bekerül, ahogy a katalógus nő."
+				},
+				"decades": {
+					"title": "Évtizedek",
+					"content": "A teljes oszlop a kollekcióé, a kitöltött rész a polcodé — itt látszik, melyik évtized hiányzik."
+				},
+				"crowd": {
+					"title": "Kik gyűjtik",
+					"content": "Aki végigvitte, és aki épp hajt rá. A nevükre koppintva a polcuk is megnézhető."
+				},
+				"hunt": {
+					"title": "Mit vegyél legközelebb",
+					"content": "Ebből a kollekcióból ezek a lemezek visznek a legtöbbet előre."
 				}
 			},
 			"artist": {

@@ -1,4 +1,4 @@
-<div class="page">
+<div class="page" *transloco="let t">
 	<mc-page-breadcrumb [trail]="store.trail()" />
 
 	@if (store.isLoading()) {
@@ -10,48 +10,96 @@
 		</div>
 	} @else if (store.notFound() || !store.collection()) {
 		<p class="empty">
-			{{ 'ui.collectionDetailPage.this-collection-is-not' | transloco }}
+			{{ t('ui.collectionDetailPage.this-collection-is-not') }}
 			<a routerLink="/collections">{{
-				'ui.collectionDetailPage.back-to-the-collections' | transloco
+				t('ui.collectionDetailPage.back-to-the-collections')
 			}}</a
 			>.
 		</p>
 	} @else {
 		@let collection = store.collection()!;
+		@let crowd = store.crowd();
 
+		<!--
+			The header is the big card at page scale: the same backdrop, the
+			same emblem, the same ring — so arriving here from a card is
+			arriving at the thing that was clicked, not at a list.
+		-->
 		<header class="hero" [class.is-completed]="collection.completed">
-			<mc-collection-artwork
-				class="hero-art"
+			<mc-collection-backdrop
+				shade="hero"
 				[coverImageUrl]="collection.coverImageUrl"
 				[covers]="collection.covers"
+			/>
+
+			<mc-collection-emblem
+				class="hero-emblem"
+				[covers]="collection.covers"
+				[coverImageUrl]="collection.coverImageUrl"
 				[icon]="collection.icon"
+				[percentage]="collection.percentage"
+				[share]="store.isSignedIn()"
+				[mosaicFirst]="true"
 			/>
 
 			<div class="hero-text">
 				<p class="eyebrow">
-					{{ 'ui.collectionDetailPage.collection' | transloco }}
+					<i class="pi pi-bookmark-fill" aria-hidden="true"></i>
+					{{ t('ui.collectionDetailPage.collection') }}
 				</p>
+
 				<h1>{{ collection.name }}</h1>
 
 				@if (collection.description) {
 					<p class="lead">{{ collection.description }}</p>
 				}
 
+				<ul class="chips">
+					@for (chip of store.chips(); track chip) {
+						<li>{{ chip }}</li>
+					}
+					<li>
+						{{ collection.total | mcPlural: 'home.weekly.albums' }}
+					</li>
+				</ul>
+
 				<div class="hero-actions">
-					<button
-						type="button"
-						class="follow"
-						[attr.aria-pressed]="store.isFollowed()"
-						(click)="onToggleFollow()"
-					>
-						<i
-							class="pi"
-							[class.pi-star-fill]="store.isFollowed()"
-							[class.pi-star]="!store.isFollowed()"
-							aria-hidden="true"
-						></i>
-						{{ store.isFollowed() ? 'Following' : 'Follow' }}
-					</button>
+					<!--
+						Taking a collection on needs somebody to take it on:
+						"I'm collecting this" said to a guest is a claim about
+						a collector who is not there. They are asked in, and
+						the star is waiting on the far side.
+					-->
+					@if (store.isSignedIn()) {
+						<button
+							type="button"
+							class="action"
+							[class.is-on]="store.isFollowed()"
+							[attr.aria-pressed]="store.isFollowed()"
+							(click)="onToggleFollow()"
+						>
+							<i
+								class="pi"
+								[class.pi-star-fill]="store.isFollowed()"
+								[class.pi-star]="!store.isFollowed()"
+								aria-hidden="true"
+							></i>
+							{{
+								store.isFollowed()
+									? t('home.weekly.collecting')
+									: t('home.weekly.collect')
+							}}
+						</button>
+					} @else {
+						<button
+							type="button"
+							class="action"
+							(click)="store.signIn()"
+						>
+							<i class="pi pi-sign-in" aria-hidden="true"></i>
+							{{ t('home.weekly.signInToCollect') }}
+						</button>
+					}
 
 					<!--
 						Following is taking a collection on, and that is the
@@ -62,7 +110,7 @@
 					@if (store.isFollowed()) {
 						<button
 							type="button"
-							class="follow"
+							class="action"
 							[attr.aria-pressed]="store.isShown()"
 							(click)="onToggleShown()"
 						>
@@ -73,10 +121,9 @@
 								aria-hidden="true"
 							></i>
 							{{
-								(store.isShown()
-									? 'page.collections.shownToOthers'
-									: 'page.collections.onlyMine'
-								) | transloco
+								store.isShown()
+									? t('page.collections.shownToOthers')
+									: t('page.collections.onlyMine')
 							}}
 						</button>
 					}
@@ -84,242 +131,331 @@
 					@if (player.playersAllowed()) {
 						<button
 							type="button"
-							class="follow"
+							class="action"
 							[disabled]="player.tuning()"
 							(click)="onPlay(collection.slug, collection.name)"
 						>
 							<i class="pi pi-play" aria-hidden="true"></i>
 							{{
-								'ui.collectionDetailPage.play-this-collection'
-									| transloco
+								t(
+									'ui.collectionDetailPage.play-this-collection'
+								)
 							}}
 						</button>
 					}
 				</div>
+			</div>
 
-				<div class="progress">
-					<div
+			<div class="hero-score">
+				<!-- A jelvény a panel jobb felső sarkában: azért megy a játék. -->
+				<mc-collection-pin
+					class="hero-pin"
+					[badgeArtworkUrl]="collection.badge?.artworkUrl ?? null"
+					[badgeName]="collection.badge?.name ?? null"
+					[icon]="collection.icon"
+					[percentage]="collection.percentage"
+					[ring]="store.isSignedIn()"
+					[completed]="collection.completed"
+				/>
+
+				<p class="points">
+					<b>{{
+						(collection.completed
+							? collection.earnedPoints
+							: collection.points
+						) | mcNumber
+					}}</b>
+					<span>{{ t('ui.collectionDetailPage.points') }}</span>
+				</p>
+				<p class="worth">
+					{{
+						collection.completed
+							? t('ui.collectionDetailPage.earned')
+							: t('home.weekly.worth')
+					}}
+				</p>
+
+				@if (collection.bonusPoints) {
+					<p class="parts">
+						{{
+							t('page.collections.basePoints', {
+								points:
+									collection.points - collection.bonusPoints,
+							})
+						}}
+						<span class="bonus">{{
+							t('page.collections.bonusPoints', {
+								points: collection.bonusPoints,
+							})
+						}}</span>
+					</p>
+				}
+
+				@if (crowd.finishers.length || crowd.hunters.length) {
+					<ul class="faces">
+						@for (face of heroFaces(); track face.uid) {
+							<li [attr.title]="face.displayName">
+								@if (face.photoURL) {
+									<img
+										[src]="face.photoURL"
+										alt=""
+										loading="lazy"
+									/>
+								} @else {
+									<span aria-hidden="true">{{
+										face.initial
+									}}</span>
+								}
+							</li>
+						}
+					</ul>
+				}
+
+				<p class="crowd-line">
+					@if (crowd.finisherCount) {
+						<span class="done">{{
+							t('page.collectors.finishedBy', {
+								count: crowd.finisherCount,
+							})
+						}}</span>
+					}
+					@if (crowd.hunterCount) {
+						<span>{{
+							t('page.collectors.collectedBy', {
+								count: crowd.hunterCount,
+							})
+						}}</span>
+					}
+					@if (!crowd.finisherCount && !crowd.hunterCount) {
+						<span>{{ t('page.collectors.nobodyYet') }}</span>
+					}
+				</p>
+
+				<!--
+					A haladás a sajátja: egy vendégnek nincs polca, és a
+					0 / 20 nem a kollekcióról szólna, hanem arról, hogy nincs
+					bejelentkezve.
+				-->
+				@if (store.isSignedIn()) {
+					<span
 						class="bar"
 						role="progressbar"
 						[attr.aria-valuenow]="collection.percentage"
 						aria-valuemin="0"
 						aria-valuemax="100"
-						[attr.aria-label]="'Progress on ' + collection.name"
+						[attr.aria-label]="t('home.weekly.progress')"
 					>
 						<span
 							class="fill"
 							[style.width.%]="collection.percentage"
 						></span>
-					</div>
+					</span>
+
 					<p class="counts">
-						<strong>{{ collection.owned }}</strong> of
-						{{ collection.total }} records ·
+						{{ collection.owned }} / {{ collection.total }} ·
 						{{ collection.percentage }}%
-						@if (collection.missing) {
-							<span class="missing"
-								>· {{ collection.missing }} missing</span
-							>
-						}
 					</p>
-				</div>
-
-				<div class="score" [class.is-earned]="collection.completed">
-					<p class="score-value">
-						<strong>{{
-							collection.completed
-								? collection.earnedPoints
-								: collection.points
-						}}</strong>
-						{{ 'ui.collectionDetailPage.points' | transloco }}
-						<span class="score-state">
-							{{
-								collection.completed
-									? 'earned'
-									: 'once complete'
-							}}
-						</span>
-					</p>
-
-					@if (collection.bonusPoints) {
-						<p class="score-parts">
-							{{
-								'page.collections.basePoints'
-									| transloco
-										: {
-												points:
-													collection.points -
-													collection.bonusPoints,
-										  }
-							}}
-							<span class="bonus">{{
-								'page.collections.bonusPoints'
-									| transloco
-										: { points: collection.bonusPoints }
-							}}</span>
-						</p>
-					}
-
-					@if (collection.highlights.length) {
-						<ul class="highlights">
-							@for (
-								highlight of collection.highlights;
-								track highlight.albumUid
-							) {
-								<li>
-									<span class="highlight-album">{{
-										highlight.albumName
-									}}</span>
-									<span class="highlight-reasons">{{
-										highlight.reasons.join(' · ')
-									}}</span>
-									<span class="highlight-points"
-										>+{{ highlight.points }}</span
-									>
-								</li>
-							}
-						</ul>
-					}
-				</div>
+				}
 			</div>
-
-			@if (collection.badge; as badge) {
-				<aside class="badge" [class.is-earned]="badge.earned">
-					@if (badge.artworkUrl) {
-						<img
-							class="badge-art"
-							[src]="badge.artworkUrl"
-							alt=""
-						/>
-					} @else {
-						<i
-							class="badge-icon"
-							[class]="badge.icon || 'pi pi-star'"
-							aria-hidden="true"
-						></i>
-					}
-					<div>
-						<p class="badge-name">
-							{{ badge.name }}
-							<!-- A pin képét képmodell rajzolta; ahol látszik,
-							     ott ezt ki is mondjuk. -->
-							@if (badge.artworkUrl) {
-								<mc-ai-mark
-									[compact]="true"
-									[hint]="'ui.aiMark.hint.image' | transloco"
-								></mc-ai-mark>
-							}
-						</p>
-						@if (badge.description) {
-							<p class="badge-description">
-								{{ badge.description }}
-							</p>
-						}
-						<p class="badge-state">
-							{{
-								badge.earned
-									? 'Earned'
-									: collection.missing + ' record(s) to go'
-							}}
-						</p>
-					</div>
-				</aside>
-			}
 		</header>
+
+		<!-- Hol tart a polc ezen a kollekción, hat számban. -->
+		<mc-collection-stats
+			class="stats"
+			[collection]="collection"
+			[crowd]="crowd"
+			[signedIn]="store.isSignedIn()"
+		/>
 
 		@if (!collection.total) {
 			<p class="empty">
-				{{
-					'ui.collectionDetailPage.nothing-in-the-catalog' | transloco
-				}}
+				{{ t('ui.collectionDetailPage.nothing-in-the-catalog') }}
 			</p>
 		} @else {
-			<div
-				class="toolbar"
-				role="tablist"
-				[attr.aria-label]="
-					'ui.collectionDetailPage.which-records' | transloco
-				"
-			>
-				@for (option of filterOptions; track option.value) {
-					<button
-						type="button"
-						role="tab"
-						class="filter"
-						[class.is-active]="store.filter() === option.value"
-						[attr.aria-selected]="store.filter() === option.value"
-						(click)="onFilter(option.value)"
-					>
-						{{ option.labelKey | transloco }}
-						<span class="count">
-							{{
-								option.value === 'owned'
-									? collection.owned
-									: option.value === 'missing'
-										? collection.missing
-										: collection.total
-							}}
-						</span>
-					</button>
-				}
-			</div>
-
-			@if (!store.albums().length) {
-				<p class="empty">
-					{{
-						'ui.collectionDetailPage.no-record-here-yet' | transloco
-					}}
-				</p>
-			} @else {
-				<ul class="grid">
-					@for (album of store.albums(); track album.albumUid) {
-						<li>
-							<a
-								class="album"
-								[class.is-owned]="album.owned"
-								[routerLink]="['/album', album.albumUid]"
-								[queryParams]="store.albumOrigin() ?? null"
-							>
-								<div class="sleeve">
-									@if (album.coverUrl) {
-										<img
-											mcCoverFallback
-											[src]="album.coverUrl"
-											alt=""
-											loading="lazy"
-										/>
-									} @else {
-										<i
-											class="pi pi-image"
-											aria-hidden="true"
-										></i>
-									}
-
-									<span class="mark" aria-hidden="true">
-										<i
-											[class]="
-												album.owned
-													? 'pi pi-check'
-													: 'pi pi-plus'
-											"
-										></i>
-									</span>
-								</div>
-
-								<p class="album-name">{{ album.albumName }}</p>
-								<p class="album-meta">
-									{{ album.artistName }}
-									@if (album.year) {
-										· {{ album.year }}
-									}
+			<div class="columns">
+				<div class="main">
+					<!-- A legcselekvőbb rész: mit érdemes legközelebb megvenni. -->
+					@if (store.nextAlbums().length) {
+						<section class="block" aria-labelledby="hunt-title">
+							<header class="block-head">
+								<h2 id="hunt-title">
+									{{
+										t('ui.collectionDetailPage.hunt.title')
+									}}
+								</h2>
+								<p class="block-lead">
+									{{ t('ui.collectionDetailPage.hunt.lead') }}
 								</p>
-								<span class="visually-hidden">
-									{{ album.owned ? 'Owned' : 'Missing' }}
-								</span>
-							</a>
-						</li>
+							</header>
+
+							<mc-next-albums [albums]="store.nextAlbums()" />
+						</section>
 					}
-				</ul>
-			}
+
+					<section class="block" aria-labelledby="albums-title">
+						<header class="block-head">
+							<h2 id="albums-title">
+								{{ t('ui.collectionDetailPage.albums.title') }}
+							</h2>
+						</header>
+
+						<div class="toolbar">
+							<!-- A megvan / hiányzik a saját polcról kérdez. -->
+							@if (store.isSignedIn()) {
+								<div
+									class="switches"
+									role="tablist"
+									[attr.aria-label]="
+										t(
+											'ui.collectionDetailPage.which-records'
+										)
+									"
+								>
+									@for (
+										option of filterOptions;
+										track option.value
+									) {
+										<button
+											type="button"
+											role="tab"
+											class="chip"
+											[class.is-active]="
+												store.filter() === option.value
+											"
+											[attr.aria-selected]="
+												store.filter() === option.value
+											"
+											(click)="onFilter(option.value)"
+										>
+											{{ t(option.labelKey) }}
+											<span class="count">
+												{{
+													option.value === 'owned'
+														? collection.owned
+														: option.value ===
+															  'missing'
+															? collection.missing
+															: collection.total
+												}}
+											</span>
+										</button>
+									}
+								</div>
+							}
+
+							<div
+								class="switches"
+								[attr.aria-label]="
+									t('ui.collectionDetailPage.sortBy')
+								"
+							>
+								@for (
+									option of sortOptions;
+									track option.value
+								) {
+									<button
+										type="button"
+										class="chip is-quiet"
+										[class.is-active]="
+											store.sort() === option.value
+										"
+										[attr.aria-pressed]="
+											store.sort() === option.value
+										"
+										(click)="onSort(option.value)"
+									>
+										{{ t(option.labelKey) }}
+									</button>
+								}
+							</div>
+						</div>
+
+						@if (!store.albums().length) {
+							<p class="empty">
+								{{
+									t(
+										'ui.collectionDetailPage.no-record-here-yet'
+									)
+								}}
+							</p>
+						} @else {
+							<ul class="grid">
+								@for (
+									album of store.albums();
+									track album.albumUid
+								) {
+									<li>
+										<mc-collection-album
+											[album]="album"
+											[origin]="
+												store.albumOrigin() ?? null
+											"
+										/>
+									</li>
+								}
+							</ul>
+						}
+					</section>
+				</div>
+
+				<aside class="aside">
+					@if (collection.badge; as badge) {
+						<mc-collection-badge
+							class="panel"
+							[badge]="badge"
+							[missing]="collection.missing"
+						/>
+					}
+
+					@if (store.rule().length) {
+						<mc-collection-rule
+							class="panel"
+							[rows]="store.rule()"
+						/>
+					}
+
+					@if (store.decades().length > 1) {
+						<mc-collection-decades
+							class="panel"
+							[decades]="store.decades()"
+						/>
+					}
+
+					@if (crowd.finishers.length || crowd.hunters.length) {
+						<mc-collection-crowd class="panel" [crowd]="crowd" />
+					}
+
+					@if (collection.highlights.length) {
+						<section class="panel" aria-labelledby="score-title">
+							<h2 class="panel-title" id="score-title">
+								{{ t('ui.collectionDetailPage.score.title') }}
+							</h2>
+							<p class="panel-lead">
+								{{ t('ui.collectionDetailPage.score.lead') }}
+							</p>
+
+							<ul class="highlights">
+								@for (
+									highlight of collection.highlights;
+									track highlight.albumUid
+								) {
+									<li>
+										<span class="highlight-album">{{
+											highlight.albumName
+										}}</span>
+										<span class="highlight-points"
+											>+{{ highlight.points }}</span
+										>
+										<span class="highlight-reasons">{{
+											highlight.reasons.join(' · ')
+										}}</span>
+									</li>
+								}
+							</ul>
+						</section>
+					}
+				</aside>
+			</div>
 		}
 	}
 </div>

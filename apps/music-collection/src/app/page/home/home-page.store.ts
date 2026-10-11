@@ -47,14 +47,12 @@ import {
 	CollectorProfileEffect,
 } from '../../data/collector-profile';
 import {
+	crowdBySlug,
+	dressHunts,
+	sortWall,
 	toWallEntries,
-	toWallHighlights,
 } from '../collectors/collectors.mapper';
-import {
-	WALL_HOME_COUNT,
-	WallEntry,
-	WallHighlight,
-} from '../collectors/collectors.model';
+import { WallEntry } from '../collectors/collectors.model';
 import {
 	AlbumView,
 	ArtistView,
@@ -72,6 +70,19 @@ import {
 	CollectionCardView,
 	NextAlbumView,
 } from '../collections/collections.model';
+import { withCollectionFollowing } from '../collections/collection-following.feature';
+import {
+	filterCollectionTiles,
+	pickHeroCollections,
+	toCollectionTabs,
+	toCollectionTiles,
+} from './home-collections.mapper';
+import {
+	HOME_COLLECTION_TILES,
+	HOME_COLLECTOR_CARDS,
+	HOME_HERO_CARDS,
+	HomeCollectionTab,
+} from './home.model';
 import {
 	CATALOG_TYPES,
 	albumCountsByArtist,
@@ -88,8 +99,6 @@ import {
 	searchHome,
 } from './home.mapper';
 
-/** Collections on the home page; the rest is one click away. */
-const HOME_COLLECTION_COUNT = 3;
 /**
  * How many records the home page names to hunt for. Fewer than the hunt list
  * on `/collections`: this is a nudge on the way past, not the list itself.
@@ -119,6 +128,20 @@ interface HomePageState {
 	authenticated: boolean;
 	/** The collectors who share a page, for the wall of finished collections. */
 	wall: WallEntry[];
+	/** Which tab of the collection grid is open; null is the first on offer. */
+	collectionTab: HomeCollectionTab | null;
+	/**
+	 * Which collection the big card has been turned to; null is the week's,
+	 * which is where the page opens and where it stays unless the reader
+	 * turns it themselves.
+	 */
+	heroSlug: string | null;
+	/**
+	 * When the page was opened. The week's collection is picked against it
+	 * rather than against the clock, so the hero cannot change under a reader
+	 * who happens to be here at midnight on Sunday.
+	 */
+	openedAt: number;
 }
 
 const initialState: HomePageState = {
@@ -139,6 +162,9 @@ const initialState: HomePageState = {
 	bandLoading: true,
 	query: '',
 	authenticated: false,
+	collectionTab: null,
+	heroSlug: null,
+	openedAt: Date.now(),
 };
 
 const RECENT_COUNT = 6;
@@ -175,6 +201,9 @@ function entities$<T>(
 
 export const HomePageStore = signalStore(
 	withState(initialState),
+	// The collector's pick of collections, shared with `/collections`: the
+	// hero's "I'm collecting this" is the same star as the one over there.
+	withCollectionFollowing(),
 	withComputed(
 		(
 			store,
@@ -233,6 +262,79 @@ export const HomePageStore = signalStore(
 				sortCollectionCards(
 					store.collectionStandings().map(toCollectionCard)
 				)
+			);
+
+			/**
+			 * The collectors who share a page, with their hunts named: an
+			 * entry written before the names travelled carries a slug alone,
+			 * and the definitions already in hand are what name it.
+			 */
+			const wallEntries = computed(() =>
+				sortWall(
+					dressHunts(
+						store.wall(),
+						store
+							.collectionStandings()
+							.map((standing) => standing.collection)
+					),
+					'badges'
+				)
+			);
+
+			/** Who is on each collection, by slug: one pass over the wall. */
+			const crowds = computed(() => crowdBySlug(wallEntries()));
+
+			/**
+			 * The collections as the grid draws them: the cards, who is on
+			 * each, and whether this collector starred it. An empty one is
+			 * nobody's hunt — it is left out before anything is counted.
+			 */
+			const collectionTiles = computed(() =>
+				toCollectionTiles(
+					collections().filter((collection) => collection.total > 0),
+					crowds(),
+					store.followedUids()
+				)
+			);
+
+			const collectionTabs = computed(() =>
+				toCollectionTabs(collectionTiles())
+			);
+
+			/**
+			 * What the big card can show, the week's collection first. The
+			 * week is read off when the page was opened rather than off the
+			 * clock, so the card cannot change under a reader who happens to
+			 * be here at midnight on Sunday.
+			 */
+			const heroCollections = computed(() =>
+				pickHeroCollections(
+					collectionTiles(),
+					store.collectionStandings(),
+					store.openedAt(),
+					HOME_HERO_CARDS
+				)
+			);
+
+			/**
+			 * Which of them is on show. A collection turned to and then gone
+			 * — the standings came back and it is no longer among them —
+			 * falls back to the week's rather than to an empty card.
+			 */
+			const heroIndex = computed(() => {
+				const at = heroCollections().findIndex(
+					(hero) => hero.slug === store.heroSlug()
+				);
+
+				return at < 0 ? 0 : at;
+			});
+
+			/** The tab chosen, or the first one with anything behind it. */
+			const activeCollectionTab = computed<HomeCollectionTab>(
+				() =>
+					store.collectionTab() ??
+					collectionTabs()[0]?.value ??
+					'curated'
 			);
 
 			/**
@@ -312,19 +414,38 @@ export const HomePageStore = signalStore(
 				artistTotal: computed(
 					() => store.counts()['Artist'] ?? store.artists().length
 				),
-				/** The few worth showing: nearest to complete, empty ones never. */
-				collections: computed(() =>
-					collections()
-						.filter((collection) => collection.total > 0)
-						.slice(0, HOME_COLLECTION_COUNT)
+				collectionTabs,
+				activeCollectionTab,
+				/** The tiles of the open tab; the rest is one click away. */
+				visibleCollections: computed(() =>
+					filterCollectionTiles(
+						collectionTiles(),
+						activeCollectionTab(),
+						HOME_COLLECTION_TILES
+					)
 				),
+				heroCollections,
+				heroIndex,
+				/**
+				 * The collection the big card shows — what the page opens on,
+				 * and the one thing on it that says what this app is for. The
+				 * week's until the reader turns the card.
+				 */
+				bigCard: computed(() => heroCollections()[heroIndex()] ?? null),
+				/** The week's pick is always the first one the card can show. */
+				showingWeekly: computed(() => heroIndex() === 0),
+				/** What the card's dots are named after. */
+				heroNames: computed(() =>
+					heroCollections().map((hero) => hero.name)
+				),
+				/** The collectors the page introduces, the finishers first. */
+				collectorCards: computed(() =>
+					wallEntries().slice(0, HOME_COLLECTOR_CARDS)
+				),
+				collectorTotal: computed(() => store.wall().length),
 				nextAlbums,
 				/** Empty where there is no shelf to continue, or no gap left. */
 				showsHunt: computed(() => nextAlbums().length > 0),
-				/** A few finished collections, each under a different face. */
-				wallHighlights: computed<WallHighlight[]>(() =>
-					toWallHighlights(store.wall(), WALL_HOME_COUNT)
-				),
 				completedCollections: computed(
 					() =>
 						collections().filter(
@@ -458,6 +579,24 @@ export const HomePageStore = signalStore(
 			collectorProfiles = inject(CollectorProfileEffect),
 			ratingEffect = inject(RatingEffect)
 		) => {
+			/**
+			 * Turns the big card to one of the collections it can show. It
+			 * wraps round, so the arrows never dead-end on a panel that is
+			 * only a handful of collections wide.
+			 */
+			const showBigCard = (index: number): void => {
+				const heroes = store.heroCollections();
+
+				if (!heroes.length) {
+					return;
+				}
+
+				const at =
+					((index % heroes.length) + heroes.length) % heroes.length;
+
+				patchState(store, { heroSlug: heroes[at].slug });
+			};
+
 			/**
 			 * Picks the hero once everything it stands on has arrived: the
 			 * week's band where a run has chosen one, and an artist of the
@@ -691,6 +830,13 @@ export const HomePageStore = signalStore(
 				),
 				/** Google sign-in, the same the top bar offers. */
 				signIn: () => authenticationStateService.dispatchLogin(),
+				/** Which collections the grid shows. */
+				setCollectionTab: (collectionTab: HomeCollectionTab) =>
+					patchState(store, { collectionTab }),
+				showBigCard,
+				/** The arrows on the big card; both wrap round. */
+				nextBigCard: () => showBigCard(store.heroIndex() + 1),
+				previousBigCard: () => showBigCard(store.heroIndex() - 1),
 				setQuery: (query: string) => patchState(store, { query }),
 				/** Shows another artist in the spotlight. */
 				shuffleSpotlight: () =>
@@ -753,6 +899,7 @@ export const HomePageStore = signalStore(
 			store.loadCollections(of(undefined));
 			store.loadBandOfTheWeek(of(undefined));
 			store.loadWall(of(undefined));
+			store.loadFollowing(of(undefined));
 			store.loadAuthentication(of(undefined));
 			store.loadRatings(of(undefined));
 			store.watchSearches(of(undefined));

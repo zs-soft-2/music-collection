@@ -10,14 +10,18 @@ import { MusicCollectionStanding } from '@music-collection/domain/music-collecti
 import { scoreCollection } from '@music-collection/domain/music-collection/engine';
 
 import {
+	sortCollectionAlbums,
 	sortCollectionCards,
 	toCollectionCard,
+	toCollectionDecades,
 	toCollectionDetail,
 	toCollectionGroups,
+	toCollectionRule,
 	toNextAlbums,
 } from './collections.mapper';
 import {
 	COVER_POOL_SIZE,
+	CollectionAlbumView,
 	CollectionCardListView,
 	CollectionCardView,
 } from './collections.model';
@@ -515,5 +519,136 @@ describe('toNextAlbums', () => {
 
 	it('has nothing to show a collector who is missing nothing', () => {
 		expect(toNextAlbums([], [named('doom', 'Doom')])).toEqual([]);
+	});
+});
+
+function albumOf(
+	overrides: Partial<CollectionAlbumView> = {}
+): CollectionAlbumView {
+	return { ...membership('a'), owned: false, ...overrides };
+}
+
+describe('toCollectionRule', () => {
+	it('says what the rule asks for, line by line', () => {
+		const rows = toCollectionRule({
+			years: { from: 1983, to: 1991 },
+			styles: { includesAny: ['Thrash', 'Speed Metal'] },
+			albumFormats: { includesAny: ['lp'] },
+		});
+
+		expect(rows).toEqual([
+			{
+				labelKey: 'ui.collectionDetailPage.rule.years',
+				values: ['1983–1991'],
+			},
+			{
+				labelKey: 'ui.collectionDetailPage.rule.styles',
+				values: ['Thrash', 'Speed Metal'],
+			},
+			{
+				labelKey: 'ui.collectionDetailPage.rule.formats',
+				values: ['lp'],
+			},
+		]);
+	});
+
+	it('names the bands from the records the rule caught', () => {
+		const rows = toCollectionRule(
+			{ artists: { includesAny: ['artist-a', 'gone'] } },
+			[albumOf()]
+		);
+
+		expect(rows).toEqual([
+			{
+				labelKey: 'ui.collectionDetailPage.rule.artists',
+				values: ['Artist a'],
+			},
+			// A band no record of which is in the catalog cannot be named,
+			// so it is counted rather than invented.
+			{
+				labelKey: 'ui.collectionDetailPage.rule.moreArtists',
+				values: ['1'],
+			},
+		]);
+	});
+
+	it('marks what the rule keeps out as kept out', () => {
+		const [row] = toCollectionRule({ styles: { excludes: ['Glam'] } });
+
+		expect(row).toEqual({
+			labelKey: 'ui.collectionDetailPage.rule.notStyles',
+			values: ['Glam'],
+			excluded: true,
+		});
+	});
+
+	it('says nothing where there is no rule to say', () => {
+		expect(toCollectionRule(undefined)).toEqual([]);
+		expect(toCollectionRule({})).toEqual([]);
+	});
+});
+
+describe('toCollectionDecades', () => {
+	it('counts the records and the shelf by decade, oldest first', () => {
+		const decades = toCollectionDecades([
+			albumOf({ albumUid: '1', year: 1986, owned: true }),
+			albumOf({ albumUid: '2', year: 1989 }),
+			albumOf({ albumUid: '3', year: 1991, owned: true }),
+			// A record with no year stands in no decade rather than a made-up one.
+			albumOf({ albumUid: '4', year: null, owned: true }),
+		]);
+
+		expect(decades).toEqual([
+			{
+				label: '1980s',
+				short: "'80",
+				total: 2,
+				owned: 1,
+				share: 50,
+				height: 100,
+			},
+			{
+				label: '1990s',
+				short: "'90",
+				total: 1,
+				owned: 1,
+				share: 100,
+				height: 50,
+			},
+		]);
+	});
+
+	it('has nothing to draw for a collection with no years at all', () => {
+		expect(toCollectionDecades([albumOf({ year: null })])).toEqual([]);
+	});
+});
+
+describe('sortCollectionAlbums', () => {
+	const albums = [
+		albumOf({ albumUid: 'c', albumName: 'Crimson', year: 1990 }),
+		albumOf({ albumUid: 'a', albumName: 'Attack', year: 1986 }),
+		albumOf({ albumUid: 'b', albumName: 'Beyond', year: 1986 }),
+	];
+
+	it('tells the collection in its own order: by year', () => {
+		expect(
+			sortCollectionAlbums(albums, 'year').map(
+				({ albumName }) => albumName
+			)
+		).toEqual(['Attack', 'Beyond', 'Crimson']);
+	});
+
+	it('finds one record among many: by name', () => {
+		expect(
+			sortCollectionAlbums(albums, 'name').map(
+				({ albumName }) => albumName
+			)
+		).toEqual(['Attack', 'Beyond', 'Crimson']);
+	});
+
+	it('leaves the list it was given alone', () => {
+		sortCollectionAlbums(albums, 'name');
+
+		expect(albums[0].albumName).toBe('Crimson');
 	});
 });

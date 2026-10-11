@@ -124,8 +124,53 @@ export interface CollectionDetailView extends CollectionCardView {
 	highlights: ScoreHighlight[];
 }
 
+/**
+ * One line of what the rule asks for, as the collection's page says it.
+ *
+ * The values are the rule's own words — a style name, a year range, a
+ * band's name — and the key only says what they are. A reader who can see
+ * why these records and not others can tell whether the collection is for
+ * them before counting what is missing.
+ */
+export interface CollectionRuleRow {
+	labelKey: string;
+	values: string[];
+	/** The rule keeps these out rather than asking for them. */
+	excluded?: boolean;
+}
+
+/** One decade of the collection: how many records, and how many are here. */
+export interface CollectionDecadeView {
+	/** `1980s`, as the catalog's own chart writes it. */
+	label: string;
+	/** What fits under a column: `'80`. */
+	short: string;
+	total: number;
+	owned: number;
+	/** 0–100 of this decade. */
+	share: number;
+	/** 0–100 against the fullest decade: how tall the column stands. */
+	height: number;
+}
+
+/**
+ * How many records the collection's own hunt list names. Fewer than the
+ * list on `/collections`, which ranks every collection at once: here the
+ * question is already narrowed to this one set.
+ */
+export const COLLECTION_HUNT_COUNT = 4;
+
 /** Which albums the detail page lists. */
 export type AlbumFilter = 'all' | 'missing' | 'owned';
+
+/** The order the album grid is read in. */
+export type AlbumSort = 'year' | 'artist' | 'name';
+
+export const ALBUM_SORT_OPTIONS: { value: AlbumSort; labelKey: string }[] = [
+	{ value: 'year', labelKey: 'ui.collectionDetailPage.sort.year' },
+	{ value: 'artist', labelKey: 'ui.collectionDetailPage.sort.artist' },
+	{ value: 'name', labelKey: 'ui.collectionDetailPage.sort.name' },
+];
 
 export const ALBUM_FILTER_OPTIONS: { value: AlbumFilter; labelKey: string }[] =
 	[

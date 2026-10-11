@@ -6,7 +6,6 @@ import {
 	toWallCollectionCards,
 	toWallCollections,
 	toWallEntries,
-	toWallHighlights,
 } from './collectors.mapper';
 import { WallEntry } from './collectors.model';
 
@@ -195,30 +194,6 @@ describe('sortWall', () => {
 			'u2',
 			'u1',
 		]);
-	});
-});
-
-describe('toWallHighlights', () => {
-	/**
-	 * One collector who finished four collections last night would otherwise
-	 * fill the row by themselves, and four badges on one face say far less
-	 * than four people do.
-	 */
-	it('gives everybody one before anybody gets a second', () => {
-		const wall = entries(
-			card({ uid: 'u1', badges: [badge('a'), badge('b'), badge('c')] }),
-			card({ uid: 'u2', badges: [badge('d')] })
-		);
-
-		expect(
-			toWallHighlights(wall, 3).map(
-				(highlight) => `${highlight.uid}:${highlight.badge.slug}`
-			)
-		).toEqual(['u1:a', 'u2:d', 'u1:b']);
-	});
-
-	it('shows nothing where nobody finished anything', () => {
-		expect(toWallHighlights(entries(card({ badges: [] })), 6)).toEqual([]);
 	});
 });
 

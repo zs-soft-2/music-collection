@@ -2,7 +2,11 @@ import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { firstValueFrom, last, of } from 'rxjs';
 
 import { TestBed } from '@angular/core/testing';
-import { AlbumEntity, ArtistEntity } from '@music-collection/api';
+import {
+	AlbumEntity,
+	ArtistEntity,
+	DocumentCategoryEnum,
+} from '@music-collection/api';
 import {
 	AlbumStateService,
 	ArtistStateService,
@@ -245,6 +249,7 @@ describe('MusicCollectionEffect uploaded images', () => {
 		{
 			uid: 'old-pin',
 			name: 'Badge — The Wave',
+			category: DocumentCategoryEnum.Badge,
 			fileType: 'image/png',
 			filePath: 'https://example.test/old-pin.png',
 			updatedAt: 10,
@@ -252,9 +257,17 @@ describe('MusicCollectionEffect uploaded images', () => {
 		{
 			uid: 'fresh-cover',
 			name: 'the-wave-cover',
+			category: DocumentCategoryEnum.Scene,
 			fileType: 'image/jpeg',
 			filePath: 'https://example.test/cover.jpg',
 			updatedAt: 20,
+		},
+		{
+			uid: 'unfiled',
+			name: 'valami-regi-feltoltes',
+			fileType: 'image/png',
+			filePath: 'https://example.test/unfiled.png',
+			updatedAt: 25,
 		},
 		{
 			uid: 'withdrawn',
@@ -302,9 +315,27 @@ describe('MusicCollectionEffect uploaded images', () => {
 		);
 
 		expect(images.map(({ uid }) => uid)).toEqual([
+			'unfiled',
 			'fresh-cover',
 			'old-pin',
 		]);
+	});
+
+	/*
+	 * Egy háttér-mezőnek a pinek nem jelöltek, és fordítva. A besorolatlan
+	 * feltöltés egyikbe sem fér bele: a fájlról semmi nem mondja meg, minek
+	 * készült, és a találgatás pont az, amit a kategória kivált.
+	 */
+	it('offers only what was filed under the asked category', async () => {
+		const scenes = await firstValueFrom(
+			effect.uploadedImages$(DocumentCategoryEnum.Scene).pipe(last())
+		);
+		const badges = await firstValueFrom(
+			effect.uploadedImages$(DocumentCategoryEnum.Badge).pipe(last())
+		);
+
+		expect(scenes.map(({ uid }) => uid)).toEqual(['fresh-cover']);
+		expect(badges.map(({ uid }) => uid)).toEqual(['old-pin']);
 	});
 
 	/*

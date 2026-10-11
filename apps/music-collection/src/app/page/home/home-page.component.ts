@@ -6,11 +6,13 @@ import {
 	ArtistTileComponent,
 	ReleaseCardComponent,
 } from '../../shared/music-ui';
-import { CollectionProgressComponent } from '../collections/component/collection-progress/collection-progress.component';
 import { NextAlbumsComponent } from '../collections/component/next-albums/next-albums.component';
 import { AlbumGroupComponent } from './component/album-group/album-group.component';
 import { ArtistGroupComponent } from './component/artist-group/artist-group.component';
 import { ArtistSpotlightComponent } from './component/artist-spotlight/artist-spotlight.component';
+import { CollectionBigCardComponent } from './component/collection-big-card/collection-big-card.component';
+import { CollectionTileComponent } from './component/collection-tile/collection-tile.component';
+import { CollectorCardComponent } from './component/collector-card/collector-card.component';
 import { CatalogCoverageChartComponent } from './component/catalog-coverage-chart/catalog-coverage-chart.component';
 import { HomeSearchComponent } from './component/home-search/home-search.component';
 import { JoinPromptComponent } from './component/join-prompt/join-prompt.component';
@@ -18,10 +20,15 @@ import { HomePageStore } from './home-page.store';
 import { CoverFallbackDirective } from '../../shared/image';
 
 /**
- * Home page: a quick search, an artist spotlight, the catalog at a glance
- * (counts and collection coverage by decade), recently added releases, the
- * most collected artists, then ways through the catalog itself — by style,
- * by decade and by kind of act — and the newest albums of the catalog.
+ * Home page. It opens on the big card — the collection of the week, which
+ * can be turned to a handful of others — then on who is collecting here,
+ * then on the collections themselves: what there is to do with this catalog
+ * comes before how big the catalog is.
+ *
+ * Below that the catalog has its own half of the page: the counts and the
+ * coverage by decade, the band of the week, what was added recently, the
+ * most collected artists, ways through the catalog by style, by decade and
+ * by kind of act, and its newest albums.
  *
  * Everything the catalog holds is shown to a guest as well; what needs a
  * collection behind it falls back to the catalog, and the sign-in prompt
@@ -45,7 +52,9 @@ import { CoverFallbackDirective } from '../../shared/image';
 		CatalogCoverageChartComponent,
 		HomeSearchComponent,
 		JoinPromptComponent,
-		CollectionProgressComponent,
+		CollectionBigCardComponent,
+		CollectionTileComponent,
+		CollectorCardComponent,
 		NextAlbumsComponent,
 	],
 })

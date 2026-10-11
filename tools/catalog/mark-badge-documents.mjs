@@ -9,7 +9,10 @@
  * list can keep the generated pins apart from what people upload by hand.
  * The ones drawn before that were filed without a category — this script
  * gives it to them, reading which documents the definitions point at
- * (`badge.gallery` and `badge.image`).
+ * (`badge.gallery` and `badge.image`). Beside them the hand-made artwork a
+ * definition wears (`badge.artworkUrl`): that one the client uploaded, so it
+ * carries no category of its own, and the editor's picker now offers
+ * badges only — unfiled, it would be a picture nobody could find again.
  *
  * Re-running is free: a document already carrying the category is left
  * alone. Writes go through the sync wrapper, so the clients' caches learn
@@ -30,6 +33,8 @@ const DOCUMENT_FEATURE_KEY = 'document';
 const BADGE_CATEGORY = 'badge';
 /** `getAll` takes them one by one; this keeps the batches sane. */
 const BATCH_SIZE = 200;
+/** Amennyi értéket egy `in` lekérdezés elbír. */
+const IN_LIMIT = 30;
 
 const { values: options } = parseArgs({
 	options: {
@@ -45,6 +50,7 @@ initializeApp({ credential: applicationDefault(), projectId });
 const db = getFirestore();
 const definitions = await db.collection(COLLECTION_FEATURE_KEY).get();
 const uids = new Set();
+const artworks = new Set();
 
 for (const definition of definitions.docs) {
 	const badge = definition.get('badge') ?? {};
@@ -54,6 +60,22 @@ for (const definition of definitions.docs) {
 	}
 
 	if (badge.image?.documentUid) uids.add(badge.image.documentUid);
+	if (typeof badge.artworkUrl === 'string' && badge.artworkUrl) {
+		artworks.add(badge.artworkUrl);
+	}
+}
+
+// A kézzel feltöltött grafikát a definíció csak címmel tárolja, nem
+// dokumentum-azonosítóval: a `filePath` felől kell visszakeresni.
+const addresses = [...artworks];
+
+for (let index = 0; index < addresses.length; index += IN_LIMIT) {
+	const matches = await db
+		.collection(DOCUMENT_FEATURE_KEY)
+		.where('filePath', 'in', addresses.slice(index, index + IN_LIMIT))
+		.get();
+
+	for (const snapshot of matches.docs) uids.add(snapshot.id);
 }
 
 console.log(

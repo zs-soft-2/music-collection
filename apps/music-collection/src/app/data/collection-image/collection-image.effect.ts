@@ -2,6 +2,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
 import {
+	DocumentCategoryEnum,
 	DocumentDataService,
 	DocumentUtilService,
 	EntityTypeEnum,
@@ -74,7 +75,8 @@ export class CollectionImageEffect {
 	 */
 	public async storeAsDocument(
 		name: string,
-		file: File
+		file: File,
+		category?: DocumentCategoryEnum
 	): Promise<StoredImage> {
 		const stored = await this.store(name, file);
 
@@ -87,8 +89,11 @@ export class CollectionImageEffect {
 		 * nélkül, vagyis láthatatlanul. Pont az a baj, ami ellen a
 		 * dokumentum készül.
 		 *
-		 * Kategóriát nem kap: ezt kézzel töltötte fel vagy rajzoltatta egy
-		 * admin, és a dokumentum-adminban is a kézi feltöltések közt a helye.
+		 * Kategóriát a hívó mond, ha tudja, mire készült a kép — a
+		 * jelenetpadon rajzolt háttér háttér, bárki kérte is. Aki nem mond
+		 * semmit, annak a dokumentuma kategória nélkül áll, és a
+		 * dokumentum-adminban a be nem sorolt feltöltések közt a helye;
+		 * `undefined` mezőt a Firestore nem vesz át, ezért marad ki.
 		 */
 		await firstValueFrom(
 			this.documents.add$(
@@ -98,6 +103,7 @@ export class CollectionImageEffect {
 					originalName: file.name,
 					fileType: file.type,
 					filePath: stored.url,
+					...(category ? { category } : {}),
 				})
 			)
 		);

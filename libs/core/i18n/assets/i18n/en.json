@@ -291,12 +291,27 @@
 			"allReleases": "All releases"
 		},
 		"collectors": {
-			"title": "Finished collections",
-			"all": "See all"
+			"title": "Who collects here",
+			"all": "See all",
+			"allOf": "All {{count}} collectors",
+			"join": {
+				"title": "You could be here",
+				"lead": "Say what you are collecting, and your name goes up on the wall.",
+				"signIn": "Sign in",
+				"share": "Share my shelf"
+			}
 		},
 		"collections": {
-			"title": "Challenges",
-			"all": "All challenges"
+			"title": "Collections",
+			"all": "All",
+			"done": "Done",
+			"yoursToTake": "nobody is after it yet — yours to take",
+			"tab": {
+				"mine": "What I'm collecting",
+				"curated": "Curated",
+				"discography": "Discographies",
+				"completed": "Finished"
+			}
 		},
 		"hunt": {
 			"title": "Next on the hunt",
@@ -332,6 +347,24 @@
 			"inCatalog": {
 				"one": "{{count}} in the catalog",
 				"other": "{{count}} in the catalog"
+			}
+		},
+		"weekly": {
+			"eyebrow": "Collection of the week",
+			"featured": "A collection to look at",
+			"pick": "Pick a collection",
+			"previous": "Previous collection",
+			"next": "Next collection",
+			"open": "Open it",
+			"collect": "I'm collecting this",
+			"collecting": "You are collecting this",
+			"signInToCollect": "Sign in to collect it",
+			"points": "pts",
+			"worth": "what finishing it is worth",
+			"progress": "Progress on this collection",
+			"albums": {
+				"one": "{{count}} record",
+				"other": "{{count}} records"
 			}
 		}
 	},
@@ -1244,14 +1277,78 @@
 			"quick-actions": "Quick actions"
 		},
 		"collectionDetailPage": {
-			"this-collection-is-not": "This challenge is not published, or it no longer exists.",
-			"back-to-the-collections": "Back to the challenges",
-			"collection": "Challenge",
-			"play-this-collection": "Play this challenge",
+			"this-collection-is-not": "This collection is not published, or it no longer exists.",
+			"back-to-the-collections": "Back to the collections",
+			"collection": "Collection",
+			"play-this-collection": "Play this collection",
 			"points": "points",
-			"nothing-in-the-catalog": "Nothing in the catalog answers this challenge yet.",
+			"nothing-in-the-catalog": "Nothing in the catalog answers this collection yet.",
 			"which-records": "Which records",
-			"no-record-here-yet": "No record here yet."
+			"no-record-here-yet": "No record here yet.",
+			"earned": "what you have earned with it",
+			"sortBy": "Order",
+			"stat": {
+				"records": "Records",
+				"owned": "On the shelf",
+				"missing": "Missing",
+				"done": "Done",
+				"points": "Points",
+				"finishers": "Finished it",
+				"hunters": "Collecting it"
+			},
+			"sort": {
+				"year": "By year",
+				"artist": "By artist",
+				"name": "By name"
+			},
+			"state": {
+				"owned": "Owned",
+				"missing": "Missing"
+			},
+			"albums": {
+				"title": "The records"
+			},
+			"hunt": {
+				"title": "What to buy next",
+				"lead": "Out of this collection, these move you furthest."
+			},
+			"badge": {
+				"earned": "Earned",
+				"toGo": {
+					"one": "{{count}} record to go",
+					"other": "{{count}} records to go"
+				}
+			},
+			"rule": {
+				"title": "What belongs here",
+				"lead": "A collection is a rule, not a list: whatever answers it joins on its own as the catalog grows.",
+				"years": "Years",
+				"styles": "Style",
+				"allStyles": "All of these styles",
+				"artistStyles": "The artist's style",
+				"artists": "Artists",
+				"moreArtists": "More artists",
+				"formats": "Format",
+				"countries": "Country",
+				"roles": "Credited as",
+				"musicians": "Named musicians",
+				"notStyles": "Not this style",
+				"notArtistStyles": "Not this artist style"
+			},
+			"decades": {
+				"title": "Decades",
+				"lead": "The whole column is the collection; the filled part is your shelf.",
+				"one": "{{decade}}: {{owned}} of {{total}} records"
+			},
+			"crowd": {
+				"title": "Who is on it",
+				"finished": "finished it",
+				"hunting": "collecting it"
+			},
+			"score": {
+				"title": "What raised the score",
+				"lead": "These records are what the collection is worth more for."
+			}
 		},
 		"copyPhotos": {
 			"no-photos-of-this": "No photos of this copy.",
@@ -2211,10 +2308,18 @@
 			"pick-from-uploaded": "Pick an uploaded one",
 			"already-uploaded": "Pictures already uploaded",
 			"search-images": "Search pictures by name…",
-			"no-uploaded-image": "Nothing uploaded yet. After the first upload you can pick from here.",
+			"no-uploaded-image": "No picture is filed under this heading yet. An upload nobody has filed is not offered here.",
 			"more-images": "…and {{count}} more. Search for its name.",
 			"close-the-library": "Close",
-			"the-picked-image-becomes": "The picked image becomes the badge at once — nothing is uploaded, the file is already there."
+			"the-picked-image-becomes": "The picked image becomes the badge at once — nothing is uploaded, the file is already there.",
+			"collection-editor": "Collection editor",
+			"the-editor-s-sections": "The editor's sections",
+			"basics": "Basics",
+			"rule": "Rule",
+			"looks": "Looks",
+			"badge": "Badge",
+			"the-look": "The look",
+			"the-cover-stands-behind": "The cover stands behind the collection wherever it is shown: on its card, and across the top of its own page."
 		},
 		"profileSharing": {
 			"page": "Public collector page",
@@ -3962,30 +4067,46 @@
 				}
 			},
 			"challenge": {
-				"name": "This challenge",
+				"name": "This collection",
 				"intro": {
-					"title": "The challenge",
+					"title": "The collection",
 					"content": "The rule that holds these records together, and what finishing it takes."
 				},
 				"progress": {
 					"title": "Where you stand",
-					"content": "This much of the challenge’s records is already on your own shelf."
+					"content": "This much of the collection is already on your own shelf, and this is what finishing it pays."
 				},
 				"score": {
-					"title": "What it pays",
-					"content": "A base score for every record you have, and a bonus for bringing the whole run together."
+					"title": "Six numbers",
+					"content": "On the shelf, missing, how far along, what it pays — and how many others finished it or are after it."
 				},
 				"badge": {
 					"title": "The badge",
 					"content": "Finish it and this badge goes beside your name."
 				},
 				"filter": {
-					"title": "Filtering",
-					"content": "Show all of them, or only what is still missing from your shelf."
+					"title": "Filter and order",
+					"content": "All of them, what you have or what is missing — by year, by artist or by name."
 				},
 				"grid": {
 					"title": "The records",
-					"content": "The challenge in full. What you have is marked; the rest is what there is to hunt."
+					"content": "The collection in full. What you have is marked; the rest is what there is to hunt."
+				},
+				"rule": {
+					"title": "What belongs here",
+					"content": "A collection is a rule, not a list: whatever answers it joins on its own as the catalog grows."
+				},
+				"decades": {
+					"title": "Decades",
+					"content": "The whole column is the collection, the filled part your shelf — this is where the gap shows."
+				},
+				"crowd": {
+					"title": "Who is on it",
+					"content": "Whoever finished it, and whoever is after it. Their own shelves are one tap away."
+				},
+				"hunt": {
+					"title": "What to buy next",
+					"content": "Out of this collection, these records move you furthest."
 				}
 			},
 			"artist": {
