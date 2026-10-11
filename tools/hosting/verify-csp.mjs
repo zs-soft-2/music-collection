@@ -4,15 +4,20 @@
  *
  * The hosting headers carry a strict CSP, and a static site has no per-request
  * nonce to hand out: the two inline things on the page are allowed by their
- * SHA-256 instead — the theme script of `index.html`, and the
- * `onload="this.media='all'"` attribute that the inline-critical-CSS step
- * (beasties) writes onto the stylesheet link.
+ * SHA-256 instead — the theme script of `index.html`, and the short script the
+ * inline-critical-CSS step (beasties) appends to swap the stylesheet from
+ * `media="print"` to its `data-beasties-media` value.
  *
  * A hash that falls out of step fails silently in the browser, and in the two
  * worst possible ways: the theme flashes the dark page before the light one,
  * or the stylesheet stays `media="print"` and the app is drawn with no styles
  * at all. Neither shows up in a build log, so it is checked here instead —
  * after the build, before the deploy (`npm run build:prod`, CI).
+ *
+ * The shapes above are what beasties emits today; it has changed the mechanism
+ * before (it used to write an `onload` handler, which needed `'unsafe-hashes'`
+ * as well), so an upgrade can land here as a pair of complaints: one inline
+ * thing unallowed, one hash left over.
  *
  * The check runs in both directions: every inline script and handler of the
  * built page has to be in the policy, and every hash in the policy has to

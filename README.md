@@ -463,9 +463,9 @@ Statikus hostingon nincs kérésenkénti nonce, amit egy szerver beírhatna, ez�
 az oldal két inline darabja SHA-256 hash-sel van engedve:
 
 - az `index.html` téma-scriptje (a mentett világos téma az első festés előtt),
-- az `onload="this.media='all'"` attribútum, amit az inline critical CSS lépés
-  (beasties) ír a stíluslap-linkre — ehhez az `'unsafe-hashes'` kulcsszó is
-  kell, mert eseménykezelő-attribútum.
+- az a rövid script, amit az inline critical CSS lépés (beasties) ír a lap
+  végére: ez kapcsolja át a `media="print"`-en várakozó stíluslapot a
+  `data-beasties-media` értékére.
 
 Ha a build mást ír ki, mint ami a hash-ben áll, a böngésző **némán** letiltja
 őket: a stíluslap `media="print"`-en ragad (stílus nélküli oldal), vagy
