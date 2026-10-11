@@ -1,16 +1,22 @@
 /**
  * A zeneszám képei és rövid videója, az AI-gatewayen át.
  *
- * Kép: egy `image.generate` hívás, a szám adataiból írt prompttal. A modellt
- * a hívó választhatja — a gateway katalógusából, nem egy itt bedrótozott
+ * Mindkettő a DAL SZÖVEGÉBŐL indul. Nem a szöveg megy ki a képmodellnek —
+ * egy prompt ezer karakternyi, egy dal hosszabb, és a szó szerinti versszak
+ * nem a miénk —, hanem az, amit látni lehet belőle: a hely, a tárgy, az
+ * időjárás, a fény. Ezt egy olcsó szöveges hívás szedi ki, és ez a jelenet
+ * megy tovább. Szöveg nélküli számnál marad a cím és a hívó iránya.
+ *
+ * Kép: a jelenet + a stíluszár egy `image.generate` hívásba. A modellt a
+ * hívó választhatja — a gateway katalógusából, nem egy itt bedrótozott
  * listából —, mert az, hogy ez a tenant mihez jogosult, az appon kívül
  * változik.
  *
- * Videó: két hívás. A gateway videó-képessége (`video.scene.generate`)
- * promptot kap, képet nem — a képeket tehát előbb el kell olvasni. Az első
- * hívás egy képolvasó modellel megnézi, mi van a fotókon, és abból ír egy
- * jelenetet ÉS egy kameramozgást; a második ebből készíti a klipet. Így a
- * videó tényleg a feltöltött képekről szól, nem a szám címéről.
+ * Videó: ugyanez, a feltöltött képekkel együtt. A gateway videó-képessége
+ * (`video.scene.generate`) promptot kap, képet nem — a képeket tehát előbb
+ * el kell olvasni. Az első hívás egy képolvasó modellel megnézi, mi van a
+ * fotókon, a dal szövegéből meg azt, miről szól, és a kettőből ír egy
+ * jelenetet ÉS egy kameramozgást; a második ebből készíti a klipet.
  *
  * Mindkettő fájlja úgy kerül be, ahogy a katalógus minden képe: objektum a
  * `document/` mappába, fölé dokumentum (`document-file.ts`). Enélkül a fájl
@@ -42,6 +48,8 @@ import {
 import { GatewayClient } from './gateway-client';
 
 const TRACK_COLLECTION = 'track';
+/** A dalszöveg külön dokumentumban él, mert nem publikus. */
+const TRACK_LYRICS_COLLECTION = 'track-lyrics';
 /** A futó és a lefutott klip-generálások, számonként egy dokumentum. */
 export const TRACK_CLIP_COLLECTION = 'track-clip';
 const APP_SETTING_COLLECTION = 'app-setting';
@@ -85,6 +93,11 @@ const MAX_HINT_CHARS = 200;
 const MAX_FILE_BYTES = 40 * 1024 * 1024;
 /** Ennyi képet olvas el a modell; a többi nem ad hozzá, csak kerül. */
 const MAX_PICTURES_READ = 6;
+/**
+ * Ennyi dalszöveget adunk oda a jelenetíró modellnek. Egy dal ennél
+ * majdnem mindig rövidebb; a határ a végtelen ismétlődő refrén ellen van.
+ */
+const MAX_LYRICS_CHARS = 4000;
 
 /**
  * A hiba, amit a callable fordít `HttpsError`-rá (`index.ts`), mint a fotós
@@ -341,6 +354,31 @@ async function readSong(database: Firestore, trackUid: string): Promise<Song> {
 const pictureUrls = (song: Song): string[] =>
 	song.images.slice(0, MAX_PICTURES_READ).map((image) => image.filePath);
 
+/**
+ * A szám szövege, ha van. A dalszöveg nem publikus (`track-lyrics`), de ezt
+ * a szerver olvassa Admin SDK-val — és nem adja tovább sehová: a modellnek
+ * az megy, amit a szövegből LÁTNI lehet, nem a szöveg maga.
+ */
+export async function readLyrics(
+	database: Firestore,
+	trackUid: string
+): Promise<string> {
+	const snapshot = await database
+		.collection(TRACK_LYRICS_COLLECTION)
+		.doc(trackUid)
+		.get();
+
+	return trimLyrics(snapshot.get('text'));
+}
+
+/** A szöveg, amennyi a jelenetíró modellnek elég. */
+export function trimLyrics(text: unknown): string {
+	return String(text ?? '')
+		.replace(/\r\n/g, '\n')
+		.trim()
+		.slice(0, MAX_LYRICS_CHARS);
+}
+
 /** Amit a hívó irányként küldhet: rövid, egysoros, vezérlőkarakter nélkül. */
 export function cleanHint(hint: unknown): string {
 	return String(hint ?? '')
@@ -368,9 +406,109 @@ export async function listImageModels(
 	}));
 }
 
-/** A rajzolás prompja: a szám, a hívó iránya, és a zár. Vágva. */
-export function buildImagePrompt(song: Song, hint: string): string {
-	return [`Album art for the song "${song.name}".`, hint, IMAGE_STYLE_LOCK]
+const IMAGE_SCENE_SCHEMA = {
+	name: 'track_image_scene',
+	schema: {
+		type: 'object',
+		additionalProperties: false,
+		required: ['scene', 'palette'],
+		properties: {
+			scene: {
+				type: 'string',
+				description:
+					'One still image the lyrics call up: what is in the frame, where, in what light. Built from the images the words themselves use.',
+			},
+			palette: {
+				type: 'string',
+				description:
+					'The colours and the light of that image, in a few words.',
+			},
+		},
+	},
+} as const;
+
+/**
+ * A dal szövegéből egy látvány.
+ *
+ * Miért nem megy a dalszöveg egy az egyben a képmodellnek: egy prompt ezer
+ * karakternyi, egy dal ennél hosszabb, a szolgáltatók pedig a szó szerinti
+ * versszakot gyakran vissza is utasítják — és nem is a mi szövegünk. A képet
+ * az adja, amit a szövegből LÁTNI lehet: a hely, a tárgy, az időjárás, a
+ * fény. Ez a lépés pont azt szedi ki belőle.
+ *
+ * Szöveg nélküli számnál nincs mit kiszedni: marad a cím és az irány.
+ */
+export async function writeImageScene(
+	client: GatewayClient,
+	song: Song,
+	lyrics: string,
+	hint: string,
+	quality: QualityProfile
+): Promise<{ scene: string; palette: string }> {
+	if (!lyrics) {
+		return { scene: '', palette: '' };
+	}
+
+	const result = await client.execute({
+		capability: 'text.complete',
+		qualityProfile: quality === 'premium' ? 'normal' : 'economy',
+		input: {
+			prompt:
+				`Below are the lyrics of the song "${song.name}". Read them ` +
+				'and describe ONE still image the words call up: what is in ' +
+				'the frame, where it is, in what light and weather. Take the ' +
+				'imagery from the words themselves — a line naming a place, ' +
+				'an object or a sky is worth more than a summary of the ' +
+				'meaning. Never quote a line, and never put writing in the ' +
+				'picture.' +
+				(hint ? ` Lean towards: ${hint}.` : '') +
+				`\n\n${lyrics}`,
+			systemPrompt:
+				'You write briefs for an image model. You are precise, ' +
+				'visual and short, and you never quote song lyrics.',
+			responseSchema: IMAGE_SCENE_SCHEMA,
+			maxTokens: 400,
+		},
+		context: { sceneType: 'track-image', templateId: song.uid },
+	});
+
+	if (result.kind !== 'result' || !result.output?.text) {
+		// A szöveg elolvasása nem sikerült — a rajzolás ettől még mehet a cím
+		// és az irány alapján. Egy hiba itt ne vigye el az egész gombot.
+		return { scene: '', palette: '' };
+	}
+
+	try {
+		const parsed = JSON.parse(result.output.text) as {
+			scene?: string;
+			palette?: string;
+		};
+
+		return {
+			scene: String(parsed.scene ?? '').trim(),
+			palette: String(parsed.palette ?? '').trim(),
+		};
+	} catch {
+		return { scene: result.output.text.trim(), palette: '' };
+	}
+}
+
+/**
+ * A rajzolás prompja: ami a dal szövegéből látszik, a hívó iránya, és a zár.
+ * Vágva. A cím akkor is ott van, amikor a szövegből nem lett jelenet.
+ */
+export function buildImagePrompt(
+	song: Song,
+	scene: string,
+	palette: string,
+	hint: string
+): string {
+	return [
+		scene || `Album art for the song "${song.name}".`,
+		palette,
+		hint,
+		IMAGE_STYLE_LOCK,
+	]
 		.filter(Boolean)
 		.join(' ')
 		.slice(0, MAX_PROMPT_CHARS);
@@ -390,7 +528,19 @@ export async function drawTrackImage(
 ): Promise<TrackImageResult> {
 	const song = await readSong(database, trackUid);
 	const left = await reserve(database, 'image', now);
-	const prompt = buildImagePrompt(song, cleanHint(options.hint));
+	const hint = cleanHint(options.hint);
+	// A kép a dal szövegéből indul: előbb az, ami látszik belőle, aztán a
+	// rajzolás. Két hívás egy kép helyett — a szöveges lépés a töredéke a
+	// képének, és nélküle minden szám ugyanarról a címről kapna képet.
+	const lyrics = await readLyrics(database, song.uid);
+	const { scene, palette } = await writeImageScene(
+		client,
+		song,
+		lyrics,
+		hint,
+		options.quality
+	);
+	const prompt = buildImagePrompt(song, scene, palette, hint);
 	const result = await client.execute({
 		capability: 'image.generate',
 		qualityProfile: options.quality,
@@ -492,6 +642,7 @@ export async function writeClipPrompt(
 	client: GatewayClient,
 	song: Song,
 	urls: string[],
+	lyrics: string,
 	quality: QualityProfile
 ): Promise<string> {
 	const result = await client.execute({
@@ -500,13 +651,20 @@ export async function writeClipPrompt(
 		input: {
 			prompt:
 				`These pictures belong to the song "${song.name}". ` +
-				'Describe, from the pictures themselves, one scene a short ' +
-				'looping music-video clip could be built from, and one slow ' +
-				'movement for it. Stay with what the pictures actually show; ' +
-				'invent nothing that is not there.',
+				'Describe one scene a short looping music-video clip could ' +
+				'be built from, and one slow movement for it. The pictures ' +
+				'say what it looks like; stay with what they actually show.' +
+				(lyrics
+					? ' The words of the song say what it is about — take ' +
+						'the place, the objects, the weather and the light ' +
+						'from them where the pictures leave room. Never ' +
+						'quote a line, and never put writing in the frame.' +
+						`\n\nLyrics:\n${lyrics}`
+					: ' Invent nothing that is not there.'),
 			systemPrompt:
 				'You write briefs for a video model. You are precise, ' +
-				'visual and short, and you never describe text or logos.',
+				'visual and short, you never quote song lyrics, and you ' +
+				'never describe text or logos.',
 			images: urls.map((url) => ({ url })),
 			responseSchema: SCENE_SCHEMA,
 			maxTokens: 400,
@@ -647,10 +805,12 @@ export async function startTrackClip(
 	}
 
 	const left = await reserve(database, 'clip', now);
+	// A képek mondják meg, hogy néz ki; a dal szövege, hogy miről szól.
 	const prompt = await writeClipPrompt(
 		client,
 		song,
 		pictureUrls(song),
+		await readLyrics(database, song.uid),
 		quality
 	);
 

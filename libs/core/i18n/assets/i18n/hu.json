@@ -3014,14 +3014,15 @@
 			"gateway-chooses": "A gateway válasszon",
 			"direction": "Irány (nem kötelező)",
 			"direction-example": "pl. esős utca éjjel, neonfény",
-			"draw": "Kép generálása"
+			"draw": "Kép generálása",
+			"drawn-from-lyrics": "A kép a szám dalszövegéből készül: a gateway előbb kiolvassa belőle, mi látszik — hely, tárgy, idő, fény —, és abból rajzol. Dalszöveg nélkül a cím és az irány marad."
 		},
 		"trackClip": {
 			"title": "Videó a szám képeiből",
 			"being-made": "készül…",
 			"ready": "kész",
 			"needs-pictures": "Előbb tölts fel legalább egy képet — a videó azokból készül.",
-			"what-it-does": "A gateway elolvassa a feltöltött képeket, és egy rövid, néma, ismétlődő klipet generál belőlük a lejátszó hátterébe. Percekig tart; a lapot addig el lehet hagyni.",
+			"what-it-does": "A gateway elolvassa a feltöltött képeket és a szám dalszövegét, és egy rövid, néma, ismétlődő klipet generál belőlük a lejátszó hátterébe. Percekig tart; a lapot addig el lehet hagyni.",
 			"ask-the-price": "Mennyibe kerül?",
 			"generate": "Videó generálása",
 			"generate-again": "Új videó generálása",

@@ -14,6 +14,7 @@ import {
 	buildImagePrompt,
 	cleanHint,
 	sanitizeTrackMediaQuota,
+	trimLyrics,
 } from './track-media';
 
 const song: Song = {
@@ -22,6 +23,7 @@ const song: Song = {
 	albumUid: 'a1',
 	images: [
 		{
+			entityType: 'Document',
 			uid: 'd1',
 			name: 'Shine On — 1',
 			filePath: 'https://example.test/one.webp',
@@ -82,23 +84,47 @@ describe('cleanHint', () => {
 	});
 });
 
-describe('buildImagePrompt', () => {
-	it('names the song and locks the style', () => {
-		const prompt = buildImagePrompt(song, 'a rainy street at night');
+describe('trimLyrics', () => {
+	it('hands the words over, trimmed', () => {
+		expect(trimLyrics('  one line\r\nanother  ')).toBe('one line\nanother');
+	});
 
-		expect(prompt).toContain('Shine On');
-		expect(prompt).toContain('rainy street');
+	it('cuts a lyric that never ends', () => {
+		expect(trimLyrics('la '.repeat(5000)).length).toBe(4000);
+	});
+
+	it('answers with nothing for a song nobody has typed out', () => {
+		expect(trimLyrics(undefined)).toBe('');
+	});
+});
+
+describe('buildImagePrompt', () => {
+	/** What the song is about comes from its words, through the scene. */
+	it('draws the scene the lyrics gave, with the style locked', () => {
+		const prompt = buildImagePrompt(
+			song,
+			'An hourglass over a drowned city at dusk.',
+			'amber and ash',
+			'wide shot'
+		);
+
+		expect(prompt).toContain('drowned city');
+		expect(prompt).toContain('amber and ash');
+		expect(prompt).toContain('wide shot');
 		expect(prompt).toContain('35mm grain');
 	});
 
-	/** The style lock is ours even when nobody gives direction. */
-	it('stands without a hint', () => {
-		expect(buildImagePrompt(song, '')).toContain('35mm grain');
+	/** A song nobody has typed the words of still gets a picture. */
+	it('falls back to the title when the lyrics gave nothing', () => {
+		const prompt = buildImagePrompt(song, '', '', '');
+
+		expect(prompt).toContain('Shine On');
+		expect(prompt).toContain('35mm grain');
 	});
 
 	it('keeps the prompt within what a model reads', () => {
 		expect(
-			buildImagePrompt(song, 'neon '.repeat(500)).length
+			buildImagePrompt(song, 'neon '.repeat(500), '', '').length
 		).toBeLessThanOrEqual(1200);
 	});
 });

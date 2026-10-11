@@ -3014,14 +3014,15 @@
 			"gateway-chooses": "Let the gateway choose",
 			"direction": "Direction (optional)",
 			"direction-example": "e.g. a rainy street at night, neon light",
-			"draw": "Draw a picture"
+			"draw": "Draw a picture",
+			"drawn-from-lyrics": "The picture is drawn from the song’s lyrics: the gateway first reads what can be seen in them — place, objects, weather, light — and draws that. Without lyrics the title and your direction are what remain."
 		},
 		"trackClip": {
 			"title": "Clip from the song’s pictures",
 			"being-made": "being made…",
 			"ready": "ready",
 			"needs-pictures": "Upload a picture first — the clip is built from those.",
-			"what-it-does": "The gateway reads the uploaded pictures and generates a short, silent, looping clip from them for the player’s backdrop. It takes minutes; the page can be left in the meantime.",
+			"what-it-does": "The gateway reads the uploaded pictures and the song’s lyrics, and generates a short, silent, looping clip from them for the player’s backdrop. It takes minutes; the page can be left in the meantime.",
 			"ask-the-price": "What would it cost?",
 			"generate": "Generate a clip",
 			"generate-again": "Generate a new clip",

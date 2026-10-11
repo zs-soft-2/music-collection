@@ -3014,14 +3014,15 @@
 			"gateway-chooses": "Das Gateway soll wählen",
 			"direction": "Richtung (optional)",
 			"direction-example": "z. B. regnerische Straße bei Nacht, Neonlicht",
-			"draw": "Bild erzeugen"
+			"draw": "Bild erzeugen",
+			"drawn-from-lyrics": "Das Bild entsteht aus dem Songtext: Das Gateway liest zuerst heraus, was darin zu sehen ist — Ort, Objekte, Wetter, Licht — und zeichnet das. Ohne Text bleiben der Titel und deine Richtung."
 		},
 		"trackClip": {
 			"title": "Clip aus den Bildern des Songs",
 			"being-made": "wird erstellt…",
 			"ready": "fertig",
 			"needs-pictures": "Lade zuerst ein Bild hoch — daraus entsteht der Clip.",
-			"what-it-does": "Das Gateway liest die hochgeladenen Bilder und erzeugt daraus einen kurzen, stummen, wiederholten Clip für den Hintergrund des Players. Es dauert Minuten; die Seite kann in der Zwischenzeit verlassen werden.",
+			"what-it-does": "Das Gateway liest die hochgeladenen Bilder und den Songtext und erzeugt daraus einen kurzen, stummen, wiederholten Clip für den Hintergrund des Players. Es dauert Minuten; die Seite kann in der Zwischenzeit verlassen werden.",
 			"ask-the-price": "Was würde es kosten?",
 			"generate": "Clip erzeugen",
 			"generate-again": "Neuen Clip erzeugen",
