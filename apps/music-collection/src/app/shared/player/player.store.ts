@@ -26,6 +26,8 @@ import {
 	AlbumStateService,
 	TrackEntity,
 	TrackLyrics,
+	type TrackClip,
+	type TrackImage,
 	isSpotifyAlbumId,
 	isYoutubePlaylistId,
 	isYoutubeVideoId,
@@ -260,11 +262,15 @@ export const toTrackToMatch = ({
 	name,
 	index,
 	position,
+	images,
+	clip,
 }: TrackEntity): TrackToMatch => ({
 	id: uid,
 	name,
 	index,
 	position,
+	images: images ?? [],
+	clip: clip ?? null,
 });
 
 /** An album of the catalog as something to play. */
@@ -713,6 +719,35 @@ export const PlayerStore = signalStore(
 				sides,
 				/** The record on show has sides, so it can be turned over. */
 				hasSides: computed(() => sides().size > 0),
+				/**
+				 * The pictures of the track on show, in the order they were
+				 * put there. The stage plays them through behind the words;
+				 * an empty list is what sends it back to the blurred cover.
+				 *
+				 * They come off the track the player is already holding, so
+				 * a song changing costs no read — only a lookup.
+				 */
+				trackPhotos: computed((): TrackImage[] => {
+					const { request, trackId } = shown();
+					const track = request?.tracks.find(
+						(item) => item.id === trackId
+					);
+
+					return track?.images ?? [];
+				}),
+				/**
+				 * The moving clip made from those pictures, when the song has
+				 * one. The stage prefers it to the slideshow: it was built
+				 * from the very same pictures, and it moves.
+				 */
+				trackClip: computed((): TrackClip | null => {
+					const { request, trackId } = shown();
+					const track = request?.tracks.find(
+						(item) => item.id === trackId
+					);
+
+					return track?.clip ?? null;
+				}),
 				/**
 				 * The records waiting to go on, in the order they will. The
 				 * queue holds ids and the catalog holds the titles, so a

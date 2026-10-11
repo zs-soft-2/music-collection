@@ -45,6 +45,9 @@ service firebase.storage {
     }
 
     // Document entitás fájljai (document-form, export-import: `/document/{hash}`).
+    // Ide kerül minden katalógus-kép: a borítók, a jelvények, és a
+    // zeneszámok képei meg generált klipjei is — a fájl fölött mindig egy
+    // dokumentum áll, azon keresztül található meg.
     // Publikus olvasás: a katalógusoldalak borítóit bárki letöltheti.
     //
     // Feltölteni csak képet lehet, legfeljebb 5 MB-ot: a kézzel feltöltött

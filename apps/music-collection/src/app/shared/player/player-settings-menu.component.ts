@@ -479,6 +479,7 @@ export class PlayerSettingsMenuComponent {
 	];
 	protected readonly backdrops: Choice<PlayerBackdrop>[] = [
 		{ value: 'cover', labelKey: 'ui.playback.cover' },
+		{ value: 'photos', labelKey: 'ui.playback.songPictures' },
 		{ value: 'scene', labelKey: 'ui.playback.animatedWorld' },
 	];
 	protected readonly effects: Choice<PlayerEffects>[] = [

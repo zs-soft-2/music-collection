@@ -1,4 +1,26 @@
 import { Entity } from '../../../common';
+import { DocumentEntity } from '../../document';
+import { TrackClip } from './track-media';
+
+/**
+ * A picture put on a track: a still from the video, a photograph of the band
+ * the night it was recorded, or one a model drew from the song.
+ *
+ * It is a document over a file, like every other picture in the catalog —
+ * the album's cover is the same shape. The document is what makes the file
+ * findable again: it carries the name, the category and the address, and the
+ * document library lists it. A file sitting in the bucket with nothing over
+ * it is a file nobody will ever find.
+ */
+export type TrackDocument = Omit<DocumentEntity, 'originalName' | 'fileType'>;
+
+export interface TrackImage extends TrackDocument {
+	/** Size of the stored picture, so the page keeps the box before it loads. */
+	width?: number | null;
+	height?: number | null;
+	/** True when a model drew it rather than somebody uploading one. */
+	generated?: boolean;
+}
 
 /** One track of an album, in play order (imported from Discogs). */
 export interface Track {
@@ -25,6 +47,18 @@ export interface Track {
 	youtubeVideoId?: string | null;
 	/** Songwriters added by hand, beyond the Discogs credits. */
 	writers?: string[] | null;
+	/**
+	 * Pictures of the song, in the order they are shown: the track page's
+	 * header runs through them, and the player's stage can play them behind
+	 * the words while the song is on.
+	 */
+	images?: TrackImage[] | null;
+	/**
+	 * The short moving clip made from those pictures, once somebody has had
+	 * one generated. The player prefers it to the slideshow; without it the
+	 * pictures simply take their turns.
+	 */
+	clip?: TrackClip | null;
 	source?: string;
 }
 

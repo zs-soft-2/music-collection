@@ -1,0 +1,72 @@
+<section class="clip" *transloco="let t">
+	<header class="head">
+		<h3 class="title">{{ t('ui.trackClip.title') }}</h3>
+		@if (running()) {
+			<span class="badge running">
+				<i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+				{{ t('ui.trackClip.being-made') }}
+			</span>
+		} @else if (clip()) {
+			<span class="badge done">{{ t('ui.trackClip.ready') }}</span>
+		}
+	</header>
+
+	@if (clip(); as video) {
+		<!--
+			Muted and looping: it is a backdrop, not a film. The song is the
+			sound; the clip only moves.
+		-->
+		<video
+			class="preview"
+			[src]="video.filePath"
+			muted
+			loop
+			playsinline
+			controls
+		></video>
+	}
+
+	@if (!hasPictures()) {
+		<p class="note">{{ t('ui.trackClip.needs-pictures') }}</p>
+	} @else {
+		<p class="note">{{ t('ui.trackClip.what-it-does') }}</p>
+	}
+
+	<div class="actions">
+		<button
+			type="button"
+			class="clip-button"
+			[disabled]="busy() || !hasPictures()"
+			(click)="priceAsked.emit()"
+		>
+			<i class="pi pi-tag" aria-hidden="true"></i>
+			<span>{{ t('ui.trackClip.ask-the-price') }}</span>
+		</button>
+		<button
+			type="button"
+			class="clip-button primary"
+			[disabled]="!canGenerate()"
+			(click)="generateAsked.emit()"
+		>
+			<i class="pi pi-video" aria-hidden="true"></i>
+			<span>{{
+				clip()
+					? t('ui.trackClip.generate-again')
+					: t('ui.trackClip.generate')
+			}}</span>
+		</button>
+
+		@if (price(); as line) {
+			<span class="price">{{ line }}</span>
+		}
+		@if (remainingToday() !== null) {
+			<span class="left">{{
+				t('ui.trackClip.left-today', { count: remainingToday() })
+			}}</span>
+		}
+	</div>
+
+	@if (error()) {
+		<p class="error" role="alert">{{ error() }}</p>
+	}
+</section>

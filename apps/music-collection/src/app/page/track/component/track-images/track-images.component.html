@@ -1,0 +1,186 @@
+@if (images().length || canEdit()) {
+	<section class="images" *transloco="let t">
+		@if (opened(); as photo) {
+			<figure class="opened">
+				<img
+					[src]="photo.filePath"
+					[width]="photo.width"
+					[height]="photo.height"
+					[alt]="trackName()"
+				/>
+				<button
+					type="button"
+					class="close"
+					[attr.aria-label]="t('ui.trackImages.close')"
+					(click)="close()"
+				>
+					<i class="pi pi-times" aria-hidden="true"></i>
+				</button>
+			</figure>
+		}
+
+		@if (images().length) {
+			<ul class="strip">
+				@for (photo of images(); track photo.uid) {
+					<li class="shot">
+						<button
+							type="button"
+							class="thumb"
+							[class.open]="photo.uid === opened()?.uid"
+							[attr.aria-label]="
+								t('ui.trackImages.show-picture', {
+									number: $index + 1,
+								})
+							"
+							(click)="open(photo)"
+						>
+							<img
+								[src]="photo.filePath"
+								[width]="photo.width"
+								[height]="photo.height"
+								loading="lazy"
+								alt=""
+							/>
+						</button>
+
+						@if (canEdit()) {
+							<div class="shot-actions">
+								<button
+									type="button"
+									class="icon"
+									[disabled]="busy() || $first"
+									[attr.aria-label]="
+										t('ui.trackImages.move-earlier')
+									"
+									(click)="
+										moved.emit({
+											index: $index,
+											direction: -1,
+										})
+									"
+								>
+									<i
+										class="pi pi-chevron-left"
+										aria-hidden="true"
+									></i>
+								</button>
+								<button
+									type="button"
+									class="icon"
+									[disabled]="busy() || $last"
+									[attr.aria-label]="
+										t('ui.trackImages.move-later')
+									"
+									(click)="
+										moved.emit({
+											index: $index,
+											direction: 1,
+										})
+									"
+								>
+									<i
+										class="pi pi-chevron-right"
+										aria-hidden="true"
+									></i>
+								</button>
+								<button
+									type="button"
+									class="icon danger"
+									[disabled]="busy()"
+									[attr.aria-label]="
+										t('ui.trackImages.remove')
+									"
+									(click)="removed.emit($index)"
+								>
+									<i
+										class="pi pi-trash"
+										aria-hidden="true"
+									></i>
+								</button>
+							</div>
+						}
+					</li>
+				}
+			</ul>
+		}
+
+		@if (canEdit()) {
+			<div class="controls">
+				@if (canAdd()) {
+					<label class="add">
+						<input
+							type="file"
+							accept="image/*"
+							[disabled]="busy()"
+							(change)="choose($event)"
+						/>
+						<i class="pi pi-image" aria-hidden="true"></i>
+						<span>{{
+							busy()
+								? t('ui.trackImages.uploading')
+								: t('ui.trackImages.add-a-picture')
+						}}</span>
+					</label>
+				}
+				<p class="note">{{ t('ui.trackImages.scaled-to-webp') }}</p>
+			</div>
+
+			<!--
+				Drawing one instead of taking one. The model is picked here
+				rather than assumed: what a tenant may draw with changes at
+				the gateway, and a picture is paid for per press, so the
+				editor should see which one is about to draw.
+			-->
+			<div class="draw">
+				<label class="field">
+					<span>{{ t('ui.trackImages.model') }}</span>
+					<select
+						[disabled]="busy() || loadingModels()"
+						[value]="model()"
+						(change)="setModel($event)"
+					>
+						<option value="">
+							{{
+								loadingModels()
+									? t('common.loading')
+									: t('ui.trackImages.gateway-chooses')
+							}}
+						</option>
+						@for (choice of models(); track choice.id) {
+							<option [value]="choice.id">
+								{{ choice.label }}
+							</option>
+						}
+					</select>
+				</label>
+				<label class="field grow">
+					<span>{{ t('ui.trackImages.direction') }}</span>
+					<input
+						type="text"
+						[attr.maxlength]="hintLimit"
+						[placeholder]="t('ui.trackImages.direction-example')"
+						[value]="hint()"
+						(input)="setHint($event)"
+					/>
+				</label>
+				<button
+					type="button"
+					class="draw-button"
+					[disabled]="busy() || !canAdd()"
+					(click)="draw()"
+				>
+					<i class="pi pi-sparkles" aria-hidden="true"></i>
+					<span>{{
+						busy()
+							? t('ui.trackImages.uploading')
+							: t('ui.trackImages.draw')
+					}}</span>
+				</button>
+			</div>
+
+			@if (error()) {
+				<p class="error" role="alert">{{ error() }}</p>
+			}
+		}
+	</section>
+}

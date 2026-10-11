@@ -29,7 +29,6 @@ import {
 	Firestore,
 } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
-import objectHash from 'object-hash';
 import { logger } from 'firebase-functions/v2';
 import { HttpsError } from 'firebase-functions/v2/https';
 import { ZsAiError } from '@zssz-soft/zs-ai-sdk';
@@ -44,6 +43,7 @@ import {
 } from './badge-settings';
 import { stamp, touchCatalog } from './catalog-sync';
 import { readCoverColor } from './cover-color';
+import { uploadDocumentFile } from './document-file';
 import { GatewayClient } from './gateway-client';
 import {
 	dominantStyles,
@@ -557,40 +557,6 @@ export interface BadgeImage {
 
 /** A base64 kép mérete józan határon belül; enélkül a memória a határ. */
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
-
-/**
- * A fájl feltöltése oda, ahová a borítók is mennek, és a `getDownloadURL`
- * alakú URL előállítása. A kliens SDK tokenes URL-t ad vissza; ugyanolyat
- * adunk, hogy a `filePath` mezők egyformák legyenek a katalógusban.
- */
-async function uploadDocumentFile(
-	image: Buffer,
-	fileName: string
-): Promise<{ filePath: string; storagePath: string }> {
-	const bucket = getStorage().bucket();
-	// `DocumentUtilService.createFilePath`: mappa + a fájlnév hashe. A vezető
-	// perjelet a kliens SDK lenyeli, az Admin SDK nem — itt kell levenni.
-	const storagePath = `${DOCUMENT_FOLDER}${objectHash(fileName)}`.replace(
-		/^\//,
-		''
-	);
-	const token = randomUUID();
-
-	await bucket.file(storagePath).save(image, {
-		contentType: 'image/png',
-		metadata: {
-			cacheControl: 'public, max-age=31536000, immutable',
-			metadata: { firebaseStorageDownloadTokens: token },
-		},
-	});
-
-	return {
-		storagePath,
-		filePath:
-			`https://firebasestorage.googleapis.com/v0/b/${bucket.name}` +
-			`/o/${encodeURIComponent(storagePath)}?alt=media&token=${token}`,
-	};
-}
 
 /**
  * A megrajzolt képek fájlba tétele: mindegyikből Storage-objektum, fölé egy

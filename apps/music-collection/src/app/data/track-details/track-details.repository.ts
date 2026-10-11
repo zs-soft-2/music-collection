@@ -17,6 +17,7 @@ import {
 	TRACK_FEATURE_KEY,
 	TRACK_LYRICS_FEATURE_KEY,
 	Track,
+	type TrackImage,
 	TrackLyrics,
 } from '@music-collection/api';
 
@@ -128,6 +129,19 @@ export class TrackDetailsRepository {
 			doc(this.firestore, TRACK_FEATURE_KEY, trackUid),
 			TRACK_FEATURE_KEY,
 			changes
+		);
+	}
+
+	/**
+	 * Writes the pictures of a track, in the order they are shown. An empty
+	 * list is written as one: the field says there are none, which is what a
+	 * reader coming from a bundle with pictures in it has to be told.
+	 */
+	public updateImages(trackUid: string, images: TrackImage[]): Promise<void> {
+		return this.firestoreSync.update(
+			doc(this.firestore, TRACK_FEATURE_KEY, trackUid),
+			TRACK_FEATURE_KEY,
+			{ images }
 		);
 	}
 

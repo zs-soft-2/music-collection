@@ -17,6 +17,11 @@ import { PlayerPanelComponent } from '../../shared/player';
 import { TrackPageStore } from './track-page.store';
 import { PageBreadcrumbComponent } from '../../shared/page-breadcrumb';
 import { CoverFallbackDirective } from '../../shared/image';
+import { TrackClipPanelComponent } from './component/track-clip';
+import {
+	TrackImageBackdropComponent,
+	TrackImagesComponent,
+} from './component/track-images';
 
 interface TrackForm {
 	spotify: string;
@@ -44,6 +49,9 @@ interface TrackForm {
 		RouterLink,
 		CoverBackdropComponent,
 		PlayerPanelComponent,
+		TrackClipPanelComponent,
+		TrackImageBackdropComponent,
+		TrackImagesComponent,
 	],
 })
 export class TrackPageComponent {
@@ -69,6 +77,10 @@ export class TrackPageComponent {
 	});
 
 	protected startEdit(): void {
+		// The picker is filled while the editor reads the form, so pressing
+		// draw does not first wait for a round trip to the gateway.
+		void this.store.loadImageModels();
+
 		const track = this.store.track();
 		this.form.set({
 			spotify: this.store.spotifyTrackId()

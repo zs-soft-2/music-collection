@@ -1,4 +1,9 @@
-import { isSpotifyAlbumId, isSpotifyTrackId } from '@music-collection/api';
+import {
+	type TrackClip,
+	type TrackImage,
+	isSpotifyAlbumId,
+	isSpotifyTrackId,
+} from '@music-collection/api';
 
 export interface SpotifyToken {
 	accessToken: string;
@@ -71,6 +76,16 @@ export interface TrackToMatch {
 	 * it; the player reads the record's sides off it.
 	 */
 	position?: string | null;
+	/**
+	 * The track's own pictures, carried so the player's stage can put them up
+	 * behind the words. They travel with the track rather than being looked
+	 * up when it starts playing: the list is already loaded wherever a record
+	 * is played from, and a read per track change would cost one for every
+	 * song of every record anybody puts on.
+	 */
+	images?: TrackImage[];
+	/** The clip generated from those pictures, where one was. */
+	clip?: TrackClip | null;
 }
 
 /** Where the track is now: measured position plus the time since, unless paused. */

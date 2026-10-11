@@ -1,7 +1,7 @@
 @let track = store.track();
 @let album = store.album();
 
-<mc-cover-backdrop [src]="album?.coverUrl" />
+<mc-cover-backdrop [src]="store.pageBackdrop()" />
 
 <div class="page" *transloco="let t">
 	<mc-page-breadcrumb
@@ -15,7 +15,15 @@
 	} @else if (store.notFound() || !track) {
 		<p class="muted">{{ t('page.track.track-not-found') }}</p>
 	} @else {
-		<header class="hero">
+		<header class="hero" [class.pictured]="store.images().length > 0">
+			<!--
+				The song's own pictures as the header's background, one after
+				another. What can be done with them — adding, ordering, the
+				clip — is behind the edit button with the rest of the editing.
+			-->
+			@if (store.images().length) {
+				<mc-track-image-backdrop [images]="store.images()" />
+			}
 			@if (album?.coverUrl) {
 				<img
 					mcCoverFallback
@@ -79,6 +87,40 @@
 		</header>
 
 		@if (editing()) {
+			<section class="panel media">
+				<h2 class="section-title">{{ t('page.track.pictures') }}</h2>
+				<mc-track-images
+					[images]="store.images()"
+					[trackName]="track.name"
+					[canEdit]="true"
+					[canAdd]="store.canAddImage()"
+					[busy]="store.storingImage()"
+					[error]="store.imageError()"
+					[models]="store.imageModels()"
+					[loadingModels]="store.loadingModels()"
+					(chosen)="store.addImage($event)"
+					(removed)="store.removeImage($event)"
+					(moved)="store.moveImage($event.index, $event.direction)"
+					(drawAsked)="store.drawImage($event.model, $event.hint)"
+				/>
+
+				<!--
+					The clip costs money per press, so it sits with the
+					pictures it is made from, behind the edit button.
+				-->
+				<mc-track-clip-panel
+					[clip]="store.clip()"
+					[status]="store.clipStatus()"
+					[estimate]="store.clipEstimate()"
+					[error]="store.clipError()"
+					[busy]="store.clipBusy()"
+					[hasPictures]="store.hasPictures()"
+					[remainingToday]="store.clipRemainingToday()"
+					(priceAsked)="store.estimateClip()"
+					(generateAsked)="store.generateClip()"
+				/>
+			</section>
+
 			<form class="panel form" (submit)="$event.preventDefault(); save()">
 				<label>
 					<span>{{ t('page.track.spotify-link') }}</span>

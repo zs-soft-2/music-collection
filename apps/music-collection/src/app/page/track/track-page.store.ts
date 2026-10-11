@@ -1,5 +1,17 @@
 import { NgxPermissionsService } from 'ngx-permissions';
-import { filter, firstValueFrom, map, of, pipe, switchMap, tap } from 'rxjs';
+import {
+	EMPTY,
+	distinctUntilChanged,
+	filter,
+	firstValueFrom,
+	from,
+	map,
+	of,
+	pipe,
+	switchMap,
+	tap,
+	timer,
+} from 'rxjs';
 
 import { DestroyRef, computed, effect, inject } from '@angular/core';
 import { TextService } from '@music-collection/core/i18n';
@@ -11,6 +23,12 @@ import {
 	ContributionEntity,
 	RoleNames,
 	TrackEntity,
+	type TrackClip,
+	type TrackClipEstimate,
+	type TrackClipState,
+	type TrackClipStatus,
+	type TrackImage,
+	type TrackImageModel,
 	TrackLyrics,
 	isSpotifyTrackId,
 	isYoutubeVideoId,
@@ -31,6 +49,8 @@ import {
 	TrackDetailsEffect,
 	TrackDetailsUpdate,
 } from '../../data/track-details';
+import { MAX_TRACK_IMAGES, TrackImageEffect } from '../../data/track-image';
+import { CLIP_POLL_MS, TrackMediaEffect } from '../../data/track-media';
 import { Crumb, pageTrail } from '../../shared/page-breadcrumb';
 import {
 	collectionOriginParams,
@@ -55,6 +75,24 @@ interface TrackPageState {
 	saveError: string | null;
 	fetchingLyrics: boolean;
 	fetchLyricsError: string | null;
+	/** A picture is being scaled, uploaded or written. */
+	storingImage: boolean;
+	imageError: string | null;
+	/**
+	 * Where the song's generated clip stands. It comes from the server —
+	 * the work runs at the gateway, not in this browser — so a page that is
+	 * opened while a clip is being made finds it already under way.
+	 */
+	clipStatus: TrackClipStatus;
+	clipError: string | null;
+	clipPrompt: string | null;
+	clipEstimate: TrackClipEstimate | null;
+	/** A clip call is in flight (the price, the start, the asking). */
+	clipBusy: boolean;
+	clipRemainingToday: number | null;
+	/** The models the gateway would let this tenant draw with. */
+	imageModels: TrackImageModel[];
+	loadingModels: boolean;
 }
 
 const initialState: TrackPageState = {
@@ -70,6 +108,16 @@ const initialState: TrackPageState = {
 	saveError: null,
 	fetchingLyrics: false,
 	fetchLyricsError: null,
+	storingImage: false,
+	imageError: null,
+	clipStatus: 'none',
+	clipError: null,
+	clipPrompt: null,
+	clipEstimate: null,
+	clipBusy: false,
+	clipRemainingToday: null,
+	imageModels: [],
+	loadingModels: false,
 };
 
 export const TrackPageStore = signalStore(
@@ -103,6 +151,42 @@ export const TrackPageStore = signalStore(
 			return {
 				track,
 				album,
+				/**
+				 * The song's pictures, in the order they are shown. They
+				 * come off the track document, which is followed live, so a
+				 * picture added or dropped shows up without reloading.
+				 */
+				images: computed((): TrackImage[] => track()?.images ?? []),
+				/** There is room for one more picture on this song. */
+				canAddImage: computed(
+					() => (track()?.images ?? []).length < MAX_TRACK_IMAGES
+				),
+				/**
+				 * The finished clip, with the address it plays from. It is
+				 * read off the track document rather than off the job, so it
+				 * survives the job being forgotten.
+				 */
+				clip: computed((): TrackClip | null => track()?.clip ?? null),
+				/**
+				 * What the whole page is dressed in: the song's own first
+				 * picture where it has one, the record's cover otherwise.
+				 * The player's panel has no backdrop of its own, so this is
+				 * also what stands behind the music while it plays here.
+				 */
+				pageBackdrop: computed(
+					() =>
+						track()?.images?.[0]?.filePath ??
+						album()?.coverUrl ??
+						null
+				),
+				/** A clip is being made for this song right now. */
+				clipRunning: computed(
+					() =>
+						store.clipStatus() === 'queued' ||
+						store.clipStatus() === 'running'
+				),
+				/** There are pictures a clip could be built from. */
+				hasPictures: computed(() => (track()?.images ?? []).length > 0),
 				/**
 				 * Home › the band › the album › this track. The track is part
 				 * of the record whoever opened it and from wherever; the way back
@@ -185,6 +269,8 @@ export const TrackPageStore = signalStore(
 			albumStateService = inject(AlbumStateService),
 			albumDetailsEffect = inject(AlbumDetailsEffect),
 			trackDetailsEffect = inject(TrackDetailsEffect),
+			trackImageEffect = inject(TrackImageEffect),
+			trackMediaEffect = inject(TrackMediaEffect),
 			player = inject(PlayerStore)
 		) => ({
 			/** Follows `:albumId` / `:trackId`. */
@@ -284,6 +370,275 @@ export const TrackPageStore = signalStore(
 					return null;
 				}
 			},
+			/**
+			 * Scales the chosen file to WebP, stores it and writes it onto
+			 * the track. The list written is the one the page is showing,
+			 * which is the one the live listener last brought.
+			 */
+			async addImage(file: File): Promise<void> {
+				const trackUid = store.trackId();
+
+				if (!trackUid || !store.canEdit() || store.storingImage()) {
+					return;
+				}
+
+				patchState(store, { storingImage: true, imageError: null });
+
+				try {
+					await trackImageEffect.add(
+						trackUid,
+						store.track()?.name ?? '',
+						store.track()?.images ?? [],
+						file
+					);
+					patchState(store, { storingImage: false });
+				} catch (error) {
+					console.error(error);
+					patchState(store, {
+						storingImage: false,
+						imageError:
+							error instanceof Error
+								? error.message
+								: 'A kép feltöltése nem sikerült.',
+					});
+				}
+			},
+
+			/** Drops one picture, and the file behind it. */
+			async removeImage(index: number): Promise<void> {
+				const trackUid = store.trackId();
+
+				if (!trackUid || !store.canEdit() || store.storingImage()) {
+					return;
+				}
+
+				patchState(store, { storingImage: true, imageError: null });
+
+				try {
+					await trackImageEffect.remove(
+						trackUid,
+						store.track()?.images ?? [],
+						index
+					);
+					patchState(store, { storingImage: false });
+				} catch (error) {
+					console.error(error);
+					patchState(store, {
+						storingImage: false,
+						imageError: 'A kép törlése nem sikerült.',
+					});
+				}
+			},
+
+			/** Moves one picture one place earlier or later in the order. */
+			async moveImage(index: number, direction: -1 | 1): Promise<void> {
+				const trackUid = store.trackId();
+
+				if (!trackUid || !store.canEdit() || store.storingImage()) {
+					return;
+				}
+
+				patchState(store, { storingImage: true, imageError: null });
+
+				try {
+					await trackImageEffect.move(
+						trackUid,
+						store.track()?.images ?? [],
+						index,
+						direction
+					);
+					patchState(store, { storingImage: false });
+				} catch (error) {
+					console.error(error);
+					patchState(store, {
+						storingImage: false,
+						imageError: 'A sorrend mentése nem sikerült.',
+					});
+				}
+			},
+
+			/**
+			 * The models this tenant may draw with. Asked of the gateway
+			 * once the editor opens the panel, because entitlements change
+			 * without this app being rebuilt — a list hard-coded here would
+			 * offer models nobody can call.
+			 */
+			async loadImageModels(): Promise<void> {
+				const trackUid = store.trackId();
+
+				if (
+					!trackUid ||
+					!store.canEdit() ||
+					store.loadingModels() ||
+					store.imageModels().length
+				) {
+					return;
+				}
+
+				patchState(store, { loadingModels: true });
+
+				try {
+					const models = await trackMediaEffect.imageModels(trackUid);
+
+					patchState(store, {
+						loadingModels: false,
+						imageModels: models,
+					});
+				} catch (error) {
+					patchState(store, {
+						loadingModels: false,
+						imageError: clipMessage(
+							error,
+							'A modell-listát nem tudtuk lekérni.'
+						),
+					});
+				}
+			},
+
+			/**
+			 * Has a picture drawn for the song and puts it after the others.
+			 * The server writes the prompt and files the document; `hint` is
+			 * a short line of direction and nothing more.
+			 */
+			async drawImage(model: string | null, hint: string): Promise<void> {
+				const trackUid = store.trackId();
+
+				if (!trackUid || !store.canEdit() || store.storingImage()) {
+					return;
+				}
+
+				patchState(store, { storingImage: true, imageError: null });
+
+				try {
+					const drawn = await trackMediaEffect.drawImage(
+						trackUid,
+						model,
+						hint
+					);
+
+					await trackImageEffect.append(
+						trackUid,
+						store.track()?.images ?? [],
+						drawn
+					);
+					patchState(store, { storingImage: false });
+				} catch (error) {
+					patchState(store, {
+						storingImage: false,
+						imageError: clipMessage(
+							error,
+							'A kép generálása nem sikerült.'
+						),
+					});
+				}
+			},
+
+			/**
+			 * What a clip would cost, and what is left of today's allowance.
+			 * Asked for before the button is pressed, not after: the video
+			 * model is the most expensive thing this app calls.
+			 */
+			async estimateClip(): Promise<void> {
+				const trackUid = store.trackId();
+
+				if (!trackUid || !store.canEdit() || store.clipBusy()) {
+					return;
+				}
+
+				patchState(store, { clipBusy: true, clipError: null });
+
+				try {
+					const estimate =
+						await trackMediaEffect.estimateClip(trackUid);
+
+					patchState(store, {
+						clipBusy: false,
+						clipEstimate: estimate,
+						clipRemainingToday: estimate.remainingToday,
+					});
+				} catch (error) {
+					patchState(store, {
+						clipBusy: false,
+						clipError: clipMessage(
+							error,
+							'Az árat nem tudtuk megkérdezni.'
+						),
+					});
+				}
+			},
+
+			/**
+			 * Has a clip made of the song's pictures. Returns as soon as the
+			 * gateway has taken the work on; the watcher below follows it to
+			 * the end, and closing the page does not stop it.
+			 */
+			async generateClip(): Promise<void> {
+				const trackUid = store.trackId();
+
+				if (!trackUid || !store.canEdit() || store.clipBusy()) {
+					return;
+				}
+
+				patchState(store, { clipBusy: true, clipError: null });
+
+				try {
+					const state = await trackMediaEffect.startClip(trackUid);
+
+					patchState(store, { clipBusy: false, ...read(state) });
+				} catch (error) {
+					patchState(store, {
+						clipBusy: false,
+						clipError: clipMessage(
+							error,
+							'A videó-generálás nem indult el.'
+						),
+					});
+				}
+			},
+
+			/**
+			 * Where the clip got to. The same call files a finished clip, so
+			 * this is also what finishes a job the page was away for.
+			 */
+			askClipState: rxMethod<string | null>(
+				pipe(
+					distinctUntilChanged(),
+					switchMap((trackUid) =>
+						trackUid
+							? from(trackMediaEffect.clipState(trackUid))
+							: EMPTY
+					),
+					tapResponse({
+						next: (state) => patchState(store, read(state)),
+						error: (error) => console.error(error),
+					})
+				)
+			),
+
+			/**
+			 * While a clip is being made, asks again every so often. Driven
+			 * by the state rather than by a timer of its own: when nothing is
+			 * running, nothing is asked.
+			 */
+			watchClip: rxMethod<boolean>(
+				pipe(
+					switchMap((running) =>
+						running ? timer(CLIP_POLL_MS, CLIP_POLL_MS) : EMPTY
+					),
+					switchMap(() => {
+						const trackUid = store.trackId();
+
+						return trackUid
+							? from(trackMediaEffect.clipState(trackUid))
+							: EMPTY;
+					}),
+					tapResponse({
+						next: (state) => patchState(store, read(state)),
+						error: (error) => console.error(error),
+					})
+				)
+			),
+
 			/** Plays the track, or pauses / resumes it. */
 			togglePlay(): Promise<void> {
 				return player.togglePage();
@@ -359,6 +714,43 @@ export const TrackPageStore = signalStore(
 			store.loadTrack(of(undefined));
 			store.loadLyrics(of(undefined));
 			store.loadAlbums(of(undefined));
+			// Only an editor may ask about a clip, and only a song with
+			// pictures can have one — both are known a moment after the page
+			// opens, so the question waits for them rather than being asked
+			// into the void.
+			store.askClipState(() =>
+				store.canEdit() && store.hasPictures() ? store.trackId() : null
+			);
+			store.watchClip(() => store.clipRunning());
 		},
 	})
 );
+
+/** The clip fields of a state the server sent. */
+function read(state: TrackClipState): {
+	clipStatus: TrackClipStatus;
+	clipError: string | null;
+	clipPrompt: string | null;
+	clipRemainingToday: number | null;
+} {
+	return {
+		clipStatus: state.status,
+		clipError: state.error,
+		clipPrompt: state.prompt,
+		clipRemainingToday: state.remainingToday,
+	};
+}
+
+/**
+ * What to show about a failed clip call. The callable's own message is
+ * written for the person who pressed the button — the daily allowance, a song
+ * with no pictures — so it is shown rather than swallowed, and the sentence
+ * here is only for an error that never reached the function.
+ */
+function clipMessage(error: unknown, fallback: string): string {
+	console.error(error);
+
+	const message = (error as { message?: string } | null)?.message?.trim();
+
+	return message || fallback;
+}

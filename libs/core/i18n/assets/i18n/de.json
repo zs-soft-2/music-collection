@@ -560,7 +560,8 @@
 			"credits": "Mitwirkende",
 			"no-credits-for-this": "Keine Mitwirkenden für diesen Titel.",
 			"other-tracks": "Weitere Titel",
-			"loadLyrics": "Songtext laden"
+			"loadLyrics": "Songtext laden",
+			"pictures": "Bilder"
 		},
 		"label": {
 			"looking-for-this-label": "Label wird gesucht…",
@@ -2615,7 +2616,8 @@
 			"animatedWorld": "Animierte Welt",
 			"off": "Aus",
 			"subtle": "Dezent",
-			"full": "Voll"
+			"full": "Voll",
+			"songPictures": "Bilder des Songs"
 		},
 		"collectionItemList": {
 			"allItems": "Alle Einträge: {{count}}"
@@ -2998,6 +3000,32 @@
 			"move-this-copy": "Exemplar hierher verschieben",
 			"the-copy-keeps": "Alles Festgehaltene bleibt erhalten: Preis, Zustand, Geschichte, Fotos, Regalplatz und die Nummer wandern mit.",
 			"moveFailed": "Das Exemplar konnte nicht verschoben werden: {{error}}"
+		},
+		"trackImages": {
+			"close": "Schließen",
+			"show-picture": "Bild {{number}} anzeigen",
+			"move-earlier": "Nach vorne",
+			"move-later": "Nach hinten",
+			"remove": "Bild entfernen",
+			"add-a-picture": "Bild hinzufügen",
+			"uploading": "Wird hochgeladen…",
+			"scaled-to-webp": "Der Browser verkleinert das Bild zu WebP, bevor etwas hochgeladen wird. Die Reihenfolge ist die, in der der Player sie abspielt.",
+			"model": "Modell",
+			"gateway-chooses": "Das Gateway soll wählen",
+			"direction": "Richtung (optional)",
+			"direction-example": "z. B. regnerische Straße bei Nacht, Neonlicht",
+			"draw": "Bild erzeugen"
+		},
+		"trackClip": {
+			"title": "Clip aus den Bildern des Songs",
+			"being-made": "wird erstellt…",
+			"ready": "fertig",
+			"needs-pictures": "Lade zuerst ein Bild hoch — daraus entsteht der Clip.",
+			"what-it-does": "Das Gateway liest die hochgeladenen Bilder und erzeugt daraus einen kurzen, stummen, wiederholten Clip für den Hintergrund des Players. Es dauert Minuten; die Seite kann in der Zwischenzeit verlassen werden.",
+			"ask-the-price": "Was würde es kosten?",
+			"generate": "Clip erzeugen",
+			"generate-again": "Neuen Clip erzeugen",
+			"left-today": "heute noch {{count}} Clips"
 		}
 	},
 	"admin": {

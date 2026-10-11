@@ -33,6 +33,7 @@ import { PlayerStore } from '../player.store';
 import { EmberField } from './embers';
 import { EqualizerBars } from './equalizer';
 import { activeLineIndex, formatTime, parseLrc } from './lrc';
+import { TrackPhotosComponent } from './photos';
 import { CoverFallbackDirective } from '../../image';
 
 /** How often the playback position is re-read. */
@@ -64,6 +65,7 @@ const BAR_COUNT = { off: 0, subtle: 32, full: 64 };
 		PlayerSettingsMenuComponent,
 		PlayerSideBreakComponent,
 		PlayerStationComponent,
+		TrackPhotosComponent,
 		VisualSceneComponent,
 	],
 	host: {
@@ -93,6 +95,8 @@ export class PlayerStageComponent {
 	private equalizer: EqualizerBars | null = null;
 	private readonly equalizerCanvas =
 		viewChild<ElementRef<HTMLCanvasElement>>('equalizer');
+	private readonly clipVideo =
+		viewChild<ElementRef<HTMLVideoElement>>('clipVideo');
 
 	private readonly reducedMotion =
 		this.document.defaultView?.matchMedia(
@@ -112,6 +116,35 @@ export class PlayerStageComponent {
 		() =>
 			this.effects() !== 'off' &&
 			this.player.settings().backdrop === 'scene'
+	);
+
+	/** The pictures put on the song being played, in the order they go up. */
+	protected readonly photos = computed(() => this.player.trackPhotos());
+
+	/**
+	 * The clip generated from those pictures. Where there is one it takes the
+	 * backdrop: it was made from the same photographs and it actually moves,
+	 * which is what the slideshow could only imitate.
+	 *
+	 * Not while the effects are off, though — which is also what a browser
+	 * asking for reduced motion gets. A moving picture is the one thing
+	 * somebody turning the effects off is asking not to see; the stills it
+	 * was made from are still there.
+	 */
+	protected readonly clip = computed(() =>
+		this.effects() === 'off' ? null : this.player.trackClip()
+	);
+
+	/**
+	 * The song's own pictures behind the words. Asked for by the setting —
+	 * and the default on a track page — but only where the song actually has
+	 * pictures: for the thousands that have none, this falls back to the
+	 * blurred cover rather than to a black rectangle.
+	 */
+	protected readonly photosOn = computed(
+		() =>
+			this.player.settings().backdrop === 'photos' &&
+			(this.photos().length > 0 || !!this.player.trackClip())
 	);
 
 	protected readonly visualProfile = computed<SongVisualProfile>(() => {
@@ -272,6 +305,25 @@ export class PlayerStageComponent {
 			untracked(() => {
 				this.embers?.setRunning(playing);
 				this.equalizer?.setRunning(playing);
+			});
+		});
+
+		// The clip is a backdrop, so it runs with the music and stops with
+		// it. A browser that refuses to start it (autoplay, even muted) is
+		// left alone: the frame it is holding is still a picture of the song.
+		effect(() => {
+			const playing = this.player.playing();
+			const video = this.clipVideo()?.nativeElement;
+
+			untracked(() => {
+				if (!video) {
+					return;
+				}
+				if (playing) {
+					void video.play().catch(() => undefined);
+				} else {
+					video.pause();
+				}
 			});
 		});
 

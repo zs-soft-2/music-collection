@@ -560,7 +560,8 @@
 			"credits": "Credits",
 			"no-credits-for-this": "No credits for this track.",
 			"other-tracks": "Other tracks",
-			"loadLyrics": "Load lyrics"
+			"loadLyrics": "Load lyrics",
+			"pictures": "Pictures"
 		},
 		"label": {
 			"looking-for-this-label": "Looking for this label…",
@@ -2615,7 +2616,8 @@
 			"animatedWorld": "Animated world",
 			"off": "Off",
 			"subtle": "Subtle",
-			"full": "Full"
+			"full": "Full",
+			"songPictures": "Song pictures"
 		},
 		"collectionItemList": {
 			"allItems": "All items: {{count}}"
@@ -2998,6 +3000,32 @@
 			"move-this-copy": "Move this copy here",
 			"the-copy-keeps": "The copy keeps everything written down about it: the price, the grades, the story, the photographs, the shelf place and its number.",
 			"moveFailed": "The copy could not be moved: {{error}}"
+		},
+		"trackImages": {
+			"close": "Close",
+			"show-picture": "Show picture {{number}}",
+			"move-earlier": "Move earlier",
+			"move-later": "Move later",
+			"remove": "Remove picture",
+			"add-a-picture": "Add a picture",
+			"uploading": "Uploading…",
+			"scaled-to-webp": "The browser scales the picture down to WebP before anything is uploaded. The order is the order the player plays them in.",
+			"model": "Model",
+			"gateway-chooses": "Let the gateway choose",
+			"direction": "Direction (optional)",
+			"direction-example": "e.g. a rainy street at night, neon light",
+			"draw": "Draw a picture"
+		},
+		"trackClip": {
+			"title": "Clip from the song’s pictures",
+			"being-made": "being made…",
+			"ready": "ready",
+			"needs-pictures": "Upload a picture first — the clip is built from those.",
+			"what-it-does": "The gateway reads the uploaded pictures and generates a short, silent, looping clip from them for the player’s backdrop. It takes minutes; the page can be left in the meantime.",
+			"ask-the-price": "What would it cost?",
+			"generate": "Generate a clip",
+			"generate-again": "Generate a new clip",
+			"left-today": "{{count}} clips left today"
 		}
 	},
 	"admin": {

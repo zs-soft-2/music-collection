@@ -9,10 +9,15 @@ export type PlayerView = 'panel' | 'stage';
 /** Strength of the stage's visual effects. */
 export type PlayerEffects = 'off' | 'subtle' | 'full';
 /**
- * What fills the stage behind the words: the record's own cover, blurred, or
- * an animated world built from the song's visual profile.
+ * What fills the stage behind the words: the record's own cover, blurred, an
+ * animated world built from the song's visual profile, or the song's own
+ * pictures played through.
+ *
+ * `photos` falls back to the blurred cover for a song nobody has put any
+ * pictures on, which is most of them — so it can be the default on a page
+ * about one song without changing what anybody sees elsewhere.
  */
-export type PlayerBackdrop = 'cover' | 'scene';
+export type PlayerBackdrop = 'cover' | 'scene' | 'photos';
 /** The kind of page the player is used on; each has its own defaults. */
 export type PlayerContext = 'default' | 'album' | 'track';
 
@@ -50,8 +55,9 @@ const BASE: PlayerSettings = {
 export const PLAYER_DEFAULTS: Record<PlayerContext, PlayerSettings> = {
 	default: BASE,
 	album: BASE,
-	// One track in focus: its lyrics on a full stage, stopping at its end.
-	track: { ...BASE, effects: 'full', autoAdvance: false },
+	// One track in focus: its lyrics on a full stage, stopping at its end,
+	// and its own pictures behind the words where there are any.
+	track: { ...BASE, effects: 'full', backdrop: 'photos', autoAdvance: false },
 };
 
 export const PLAYER_CONTEXT_LABELS: Record<PlayerContext, string> = {

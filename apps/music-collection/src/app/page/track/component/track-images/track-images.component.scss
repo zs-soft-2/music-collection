@@ -1,0 +1,225 @@
+:host {
+	display: block;
+}
+
+.images {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+/**
+ * The opened picture. It keeps its own aspect ratio and never grows past a
+ * band of the page: the header is the song's, not the photograph's.
+ */
+.opened {
+	position: relative;
+	margin: 0;
+
+	img {
+		display: block;
+		width: 100%;
+		max-height: 24rem;
+		object-fit: contain;
+		border-radius: var(--mc-radius-lg);
+		background: var(--mc-bg-muted);
+		box-shadow: var(--mc-shadow-menu);
+	}
+}
+
+.close {
+	position: absolute;
+	top: 0.5rem;
+	right: 0.5rem;
+	width: var(--mc-circle-sm);
+	height: var(--mc-circle-sm);
+	color: #fff;
+	cursor: pointer;
+	background: rgb(0 0 0 / 0.55);
+	border: 1px solid var(--mc-border-strong);
+	border-radius: 50%;
+}
+
+.strip {
+	display: flex;
+	gap: 0.5rem;
+	padding: 0;
+	margin: 0;
+	overflow-x: auto;
+	list-style: none;
+	/* Thumbnails are a row to run along, not a grid to wrap into. */
+	scrollbar-width: thin;
+}
+
+.shot {
+	display: flex;
+	flex: 0 0 auto;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.thumb {
+	padding: 0;
+	cursor: pointer;
+	background: none;
+	border: 2px solid transparent;
+	border-radius: var(--mc-radius-md);
+	transition: border-color var(--mc-duration-fast);
+
+	img {
+		display: block;
+		width: 5.25rem;
+		height: 5.25rem;
+		object-fit: cover;
+		border-radius: calc(var(--mc-radius-md) - 2px);
+	}
+
+	&:hover {
+		border-color: var(--mc-border-strong);
+	}
+
+	&.open {
+		border-color: var(--mc-primary);
+	}
+}
+
+.shot-actions {
+	display: flex;
+	gap: 0.25rem;
+	justify-content: center;
+}
+
+.icon {
+	display: grid;
+	place-items: center;
+	width: var(--mc-circle-xs);
+	height: var(--mc-circle-xs);
+	color: var(--mc-text-muted);
+	cursor: pointer;
+	background: var(--mc-surface-2);
+	border: 1px solid var(--mc-border);
+	border-radius: 50%;
+	font-size: 0.75rem;
+
+	&:hover:not(:disabled) {
+		color: var(--mc-text);
+	}
+
+	&:disabled {
+		cursor: default;
+		opacity: 0.4;
+	}
+
+	&.danger:hover:not(:disabled) {
+		color: var(--mc-status-bad);
+	}
+}
+
+.controls {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem 0.75rem;
+	align-items: center;
+}
+
+/* The file input is the label; the input itself is never seen. */
+.add {
+	display: inline-flex;
+	gap: 0.375rem;
+	align-items: center;
+	padding: 0.375rem 0.75rem;
+	cursor: pointer;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border-strong);
+	border-radius: var(--mc-radius-md);
+
+	&:hover {
+		background: var(--mc-card-bg-hover);
+	}
+
+	input {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
+	}
+}
+
+/* Drawing one: which model, what direction, and the button. */
+.draw {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem 0.75rem;
+	align-items: flex-end;
+	padding-top: 0.25rem;
+	border-top: 1px solid var(--mc-border);
+}
+
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	font-size: 0.75rem;
+	color: var(--mc-text-muted);
+
+	&.grow {
+		flex: 1;
+		min-width: 12rem;
+	}
+
+	select,
+	input {
+		padding: 0.375rem 0.5rem;
+		color: var(--mc-text);
+		background: var(--mc-bg-muted);
+		border: 1px solid var(--mc-border-strong);
+		border-radius: var(--mc-radius-sm);
+		font: inherit;
+		font-size: 0.8125rem;
+	}
+}
+
+.draw-button {
+	display: inline-flex;
+	gap: 0.375rem;
+	align-items: center;
+	padding: 0.375rem 0.75rem;
+	color: var(--mc-text);
+	cursor: pointer;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border-strong);
+	border-radius: var(--mc-radius-md);
+
+	&:hover:not(:disabled) {
+		background: var(--mc-card-bg-hover);
+	}
+
+	&:disabled {
+		cursor: default;
+		opacity: 0.5;
+	}
+}
+
+.note {
+	margin: 0;
+	font-size: 0.75rem;
+	color: var(--mc-text-subtle);
+}
+
+.error {
+	margin: 0;
+	color: var(--mc-status-bad);
+}
+
+@media (max-width: 720px) {
+	.thumb img {
+		width: 4rem;
+		height: 4rem;
+	}
+
+	.opened img {
+		max-height: 14rem;
+	}
+}

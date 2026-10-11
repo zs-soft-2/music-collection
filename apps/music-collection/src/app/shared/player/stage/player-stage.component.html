@@ -8,6 +8,33 @@
 			[positionSeconds]="positionSeconds()"
 			[analyser]="player.analyser()"
 		/>
+	} @else if (photosOn()) {
+		@if (clip(); as video) {
+			<!--
+				Muted and looping: the song is the sound, the clip only
+				moves. It plays while the music plays and holds still when
+				the music does.
+			-->
+			<video
+				#clipVideo
+				class="scene clip"
+				[src]="video.filePath"
+				[class.paused]="!player.playing()"
+				autoplay
+				muted
+				loop
+				playsinline
+			></video>
+		} @else {
+			<mc-track-photos
+				class="scene"
+				[photos]="photos()"
+				[positionSeconds]="positionSeconds()"
+				[moving]="effects() !== 'off'"
+			/>
+		}
+		<canvas #equalizer class="equalizer"></canvas>
+		<canvas #embers class="embers"></canvas>
 	} @else {
 		@if (coverUrl(); as cover) {
 			<img

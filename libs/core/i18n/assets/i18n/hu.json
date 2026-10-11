@@ -560,7 +560,8 @@
 			"credits": "Közreműködők",
 			"no-credits-for-this": "Ehhez a számhoz nincs közreműködő.",
 			"other-tracks": "További számok",
-			"loadLyrics": "Dalszöveg betöltése"
+			"loadLyrics": "Dalszöveg betöltése",
+			"pictures": "Képek"
 		},
 		"label": {
 			"looking-for-this-label": "Kiadó keresése…",
@@ -2615,7 +2616,8 @@
 			"animatedWorld": "Animált világ",
 			"off": "Ki",
 			"subtle": "Visszafogott",
-			"full": "Teljes"
+			"full": "Teljes",
+			"songPictures": "A szám képei"
 		},
 		"collectionItemList": {
 			"allItems": "Összes tétel: {{count}}"
@@ -2998,6 +3000,32 @@
 			"move-this-copy": "Átvezetés erre a kiadásra",
 			"the-copy-keeps": "A példányról feljegyzett adatok megmaradnak: az ár, az állapot, a történet, a fotók, a polchely és a sorszám is átkerül.",
 			"moveFailed": "Az átvezetés nem sikerült: {{error}}"
+		},
+		"trackImages": {
+			"close": "Bezárás",
+			"show-picture": "{{number}}. kép megjelenítése",
+			"move-earlier": "Előbbre",
+			"move-later": "Hátrébb",
+			"remove": "Kép törlése",
+			"add-a-picture": "Kép hozzáadása",
+			"uploading": "Feltöltés…",
+			"scaled-to-webp": "A böngésző WebP-re kicsinyíti a képet, mielőtt bármi feltöltődik. A sorrend az, ahogy a lejátszó végigjátssza őket.",
+			"model": "Modell",
+			"gateway-chooses": "A gateway válasszon",
+			"direction": "Irány (nem kötelező)",
+			"direction-example": "pl. esős utca éjjel, neonfény",
+			"draw": "Kép generálása"
+		},
+		"trackClip": {
+			"title": "Videó a szám képeiből",
+			"being-made": "készül…",
+			"ready": "kész",
+			"needs-pictures": "Előbb tölts fel legalább egy képet — a videó azokból készül.",
+			"what-it-does": "A gateway elolvassa a feltöltött képeket, és egy rövid, néma, ismétlődő klipet generál belőlük a lejátszó hátterébe. Percekig tart; a lapot addig el lehet hagyni.",
+			"ask-the-price": "Mennyibe kerül?",
+			"generate": "Videó generálása",
+			"generate-again": "Új videó generálása",
+			"left-today": "ma még {{count}} klip"
 		}
 	},
 	"admin": {

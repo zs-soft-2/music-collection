@@ -26,8 +26,17 @@ export interface GatewaySettings {
  * egyáltalán joga ennek a tenantnak. A hívások túlnyomó része ezt nem
  * kérdezi — a modellt a gateway választja —, de ahol a kérdés maga az, hogy
  * melyik modell kell, ott nincs más forrás: a katalógus nincs leírva sehol.
+ *
+ * Az `estimate` és a `getExecution` az aszinkron képességek miatt van itt. A
+ * videó a gatewaynél execution: az `execute` egy azonosítóval tér vissza, a
+ * kész fájlért a `getExecution` megy el később (`track-clip.ts`). Az
+ * `estimate` pedig az egyetlen mód megmondani egy drága hívás árát anélkül,
+ * hogy kifizetnénk — a gomb melletti szám jön belőle.
  */
-export type GatewayClient = Pick<AiGatewayClient, 'execute' | 'listModels'>;
+export type GatewayClient = Pick<
+	AiGatewayClient,
+	'execute' | 'listModels' | 'estimate' | 'getExecution'
+>;
 
 /**
  * A kliens egy adott kérés-időkerettel. A keret a hívóé, mert ő tudja,

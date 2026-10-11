@@ -16,6 +16,7 @@ export enum DocumentCategoryEnum {
 	ArtistImage = 'artist-image',
 	Badge = 'badge',
 	Scene = 'scene',
+	TrackImage = 'track-image',
 }
 
 /**
@@ -25,6 +26,7 @@ export enum DocumentCategoryEnum {
 export const DOCUMENT_CATEGORIES: DocumentCategoryEnum[] = [
 	DocumentCategoryEnum.AlbumCover,
 	DocumentCategoryEnum.ArtistImage,
+	DocumentCategoryEnum.TrackImage,
 	DocumentCategoryEnum.Scene,
 	DocumentCategoryEnum.Badge,
 ];

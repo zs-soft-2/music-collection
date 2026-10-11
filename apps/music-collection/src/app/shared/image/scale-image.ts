@@ -15,14 +15,24 @@
 export interface ScaleOptions {
 	/** Long edge in pixels; a smaller picture is left alone. */
 	maxEdge: number;
-	/** JPEG quality, 0-1. */
+	/** Encoder quality, 0-1. */
 	quality: number;
+	/**
+	 * What to encode as; JPEG unless asked otherwise. WebP is the smaller
+	 * file at the same quality, and every browser this app runs in decodes
+	 * it — but not all of them *encode* it, and a canvas asked for a format
+	 * it cannot write answers with a PNG instead of an error. Hence `type`
+	 * on the way back: what came out, not what was asked for.
+	 */
+	type?: 'image/jpeg' | 'image/webp';
 }
 
 export interface ScaledImage {
 	blob: Blob;
 	width: number;
 	height: number;
+	/** The media type actually encoded, which names the file. */
+	type: string;
 }
 
 function scaledSize(
@@ -97,10 +107,13 @@ async function decode(
 	}
 }
 
-/** The scaled picture as a JPEG. Throws when the file is not an image. */
+/**
+ * The scaled picture, encoded as asked for. Throws when the file is not an
+ * image.
+ */
 export async function scaleImage(
 	file: Blob,
-	{ maxEdge, quality }: ScaleOptions
+	{ maxEdge, quality, type = 'image/jpeg' }: ScaleOptions
 ): Promise<ScaledImage> {
 	const source = await decode(file, quality);
 	const [width, height] = scaledSize(
@@ -119,10 +132,12 @@ export async function scaleImage(
 	}
 
 	const blob = await new Promise<Blob | null>((resolve) =>
-		canvas.toBlob(resolve, 'image/jpeg', quality)
+		canvas.toBlob(resolve, type, quality)
 	);
 
 	if (!blob) throw new Error('A kép feldolgozása nem sikerült.');
 
-	return { blob, width, height };
+	// A canvas that cannot write the format asked for writes a PNG and says
+	// so on the blob, so the file is named after what is in it.
+	return { blob, width, height, type: blob.type || type };
 }

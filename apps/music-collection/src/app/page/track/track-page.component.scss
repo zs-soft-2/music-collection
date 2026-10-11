@@ -27,14 +27,46 @@ a {
 }
 
 .hero {
+	position: relative;
 	display: flex;
 	flex-wrap: wrap;
 	gap: 1.25rem 2rem;
 	align-items: flex-end;
 	padding: clamp(1.25rem, 3vw, 2rem);
+	overflow: hidden;
 	background: var(--mc-card-bg);
 	border: 1px solid var(--mc-border);
 	border-radius: var(--mc-radius-lg);
+
+	/* Everything the header says stands above the picture behind it. */
+	> *:not(mc-track-image-backdrop) {
+		position: relative;
+		z-index: 1;
+	}
+}
+
+/*
+ * With a picture behind it the header is taller: a photograph needs room to
+ * be a photograph, and the scrim needs somewhere to fade.
+ */
+.hero.pictured {
+	min-height: clamp(14rem, 26vw, 20rem);
+	align-items: flex-end;
+	border-color: var(--mc-border-strong);
+
+	/*
+	 * Over a photograph the words carry their own readability: a shadow
+	 * mixed from the card's colour, which is dark in the dark theme and
+	 * light in the light one. It costs the picture nothing, where a heavier
+	 * veil would cost it everything.
+	 */
+	.eyebrow,
+	.title,
+	.muted {
+		text-shadow:
+			0 1px 2px var(--mc-card-bg),
+			0 2px 18px var(--mc-card-bg);
+	}
 }
 
 .cover {
@@ -47,6 +79,18 @@ a {
 .heading {
 	flex: 1;
 	min-width: 0;
+}
+
+/* The editor's half of the pictures: the same strip, with what to do to it. */
+.media {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+
+	/* The gap below is the panel's; the heading does not add its own. */
+	.section-title {
+		margin: 0;
+	}
 }
 
 .eyebrow {
