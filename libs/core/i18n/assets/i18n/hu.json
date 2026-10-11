@@ -2347,7 +2347,7 @@
 			"mosaic": "Borítómozaik",
 			"mosaic-still": "Áll",
 			"seconds-short": "mp",
-			"a-collection-without-artwork": "A saját kép nélküli gyűjteményeket négy borító képviseli. Ha mozgásra állítod, ennyi időnként egy csempe átfordul a gyűjtemény egy következő lemezére — csak azokon a kártyákon, amiket éppen látsz, és kártyánként más ütemben, hogy ne az egész oldal váltson egyszerre.",
+			"a-collection-without-artwork": "A saját kép nélküli gyűjteményeket négy borító képviseli. Ha mozgásra állítod, ennyi időnként az oldalon egyetlen borító fordul át a gyűjtemény egy következő lemezére — a látható mozaikok összes csempéje közül sorsolva, hogy mindig csak egy kép mozduljon, ne az egész oldal.",
 			"mosaic-turn": "Váltás",
 			"turn": {
 				"fade": "Átúszás",

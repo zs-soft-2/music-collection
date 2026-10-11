@@ -43,11 +43,13 @@ export const DEFAULT_COVER_TURN: CoverMovement = 'fade';
  * forever and says nothing about the other sixteen. Letting one tile change
  * every so often gives the rest of the set a turn.
  *
- * It stays off until the collector asks for it: a moving picture nobody asked
+ * The pace is the page's rather than each mosaic's: `CoverMosaicConductor`
+ * turns one cover somewhere on the screen per pace, out of all of them. It
+ * stays off until the collector asks for it: a moving picture nobody asked
  * for is a distraction, and every swap is a cover fetched over the network.
  */
 export interface CoverMosaicSettings {
-	/** Seconds between two swaps; 0 holds the mosaic still. */
+	/** Seconds between two swaps anywhere on the page; 0 holds them all still. */
 	rotateSeconds: number;
 	/** What the swap itself looks like. */
 	turn: CoverTurn;
@@ -58,8 +60,8 @@ export const NO_COVER_ROTATION = 0;
 
 /**
  * The paces the profile offers. Nothing faster than five seconds: below that
- * the tile is changing while it is still being looked at, and a page of cards
- * becomes a page of flicker.
+ * a cover is changing while it is still being looked at, which reads as a
+ * page that will not settle however few of them move at a time.
  */
 export const COVER_ROTATION_CHOICES: readonly number[] = [
 	NO_COVER_ROTATION,

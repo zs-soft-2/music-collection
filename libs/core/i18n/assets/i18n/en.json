@@ -2347,7 +2347,7 @@
 			"mosaic": "Cover mosaic",
 			"mosaic-still": "Still",
 			"seconds-short": "s",
-			"a-collection-without-artwork": "A collection without artwork of its own is drawn as four covers. Set it moving and one tile turns over to another record of the set this often — only on the cards you are actually looking at, and on each card at its own moment, so the page does not change all at once.",
+			"a-collection-without-artwork": "A collection without artwork of its own is drawn as four covers. Set it moving and one single cover on the page turns over to another record this often — drawn from the tiles of every mosaic you can see, so it is always one picture changing rather than the whole page.",
 			"mosaic-turn": "Change",
 			"turn": {
 				"fade": "Dissolve",

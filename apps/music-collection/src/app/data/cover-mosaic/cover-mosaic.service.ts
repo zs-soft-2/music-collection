@@ -24,7 +24,7 @@ export class CoverMosaicService {
 		turn: DEFAULT_COVER_TURN,
 	});
 
-	/** Seconds between two covers swapping; 0 holds the mosaic still. */
+	/** Seconds between two covers swapping anywhere on the page; 0 holds them. */
 	public readonly rotateSeconds = computed(
 		() => this.current().rotateSeconds
 	);

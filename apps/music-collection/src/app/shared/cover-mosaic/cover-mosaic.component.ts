@@ -5,7 +5,6 @@ import {
 	DestroyRef,
 	ElementRef,
 	computed,
-	effect,
 	inject,
 	input,
 	linkedSignal,
@@ -14,6 +13,7 @@ import {
 
 import {
 	COVER_MOVEMENTS,
+	CoverMosaicConductor,
 	CoverMosaicService,
 	CoverMovement,
 	DEFAULT_COVER_TURN,
@@ -39,10 +39,15 @@ interface MosaicTile {
  * and it stands still until they do, because a picture that moves unasked is
  * a distraction and every turn is a cover fetched over the network.
  *
- * What it costs is kept to what is being looked at: a tile turns only while
- * the mosaic is on the screen and in the tab the reader is in, the new cover
- * is fetched before the tile is pointed at it, and a cover that will not load
- * is not asked for twice.
+ * It keeps no clock of its own. `CoverMosaicConductor` holds the one clock
+ * the page moves to and picks the single tile that turns on each beat, out
+ * of every tile every mosaic on the page is offering — so the pace the
+ * collector set is a cover changing somewhere, not a cover changing on each
+ * of twenty cards at once.
+ *
+ * What it costs is kept to what is being looked at: a mosaic off the screen
+ * offers no tiles at all, the new cover is fetched before the tile is
+ * pointed at it, and a cover that will not load is not asked for twice.
  *
  * The host carries the size, so the same square works as a thumbnail in a
  * list row and as the artwork of a card.
@@ -235,6 +240,7 @@ export class CoverMosaicComponent {
 	private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 	private readonly destroyRef = inject(DestroyRef);
 	private readonly settings = inject(CoverMosaicService);
+	private readonly conductor = inject(CoverMosaicConductor);
 
 	/** Covers of the set, in the order they are resolved. */
 	public readonly covers = input<string[]>([]);
@@ -322,111 +328,67 @@ export class CoverMosaicComponent {
 		},
 	});
 
-	/** Keys handed out in order, so the lowest is the tile that has stood longest. */
+	/** Keys handed out in order; a turned tile gets a fresh one, so it is a new element. */
 	private keys = 0;
 	/** Covers that would not load, so a tile stops asking for them. */
 	private readonly broken = new Set<string>();
-	/** Whether a turn is still waiting on its cover, so they do not pile up. */
-	private turning = false;
 	/** Whether the mosaic is on the screen at all. */
 	private readonly onScreen = signal(true);
-	/** Whether this is the tab the reader is looking at. */
-	private readonly awake = signal(true);
-	/** A reader who asked for less movement gets none. */
-	private readonly still =
-		this.document.defaultView?.matchMedia?.(
-			'(prefers-reduced-motion: reduce)'
-		)?.matches ?? false;
-
-	/**
-	 * How long a tile stands before the next one turns, in milliseconds; 0
-	 * where nothing should move. A set with no more covers than tiles has
-	 * nothing to turn over to.
-	 */
-	private readonly pace = computed(() => {
-		const seconds = this.settings.rotateSeconds();
-
-		if (
-			!seconds ||
-			this.still ||
-			this.set().length <= this.limit() ||
-			!this.onScreen() ||
-			!this.awake()
-		) {
-			return 0;
-		}
-
-		return seconds * 1000;
-	});
 
 	public constructor() {
 		this.watchScreen();
-		this.watchTab();
 
-		effect((onCleanup) => {
-			const pace = this.pace();
-
-			if (!pace) {
-				return;
-			}
-
-			let repeat: ReturnType<typeof setInterval> | null = null;
-			/*
-			 * A page draws a mosaic for every collection the collector is
-			 * after, and they all arrive at the same moment. Starting each
-			 * one's clock where it was built would have the whole screen
-			 * blink at once, every time. The first turn is waited out
-			 * somewhere between one and two paces instead, and the rest of
-			 * them follow from wherever that landed — so the page keeps
-			 * moving, a tile here and a tile there.
-			 */
-			const first = setTimeout(
-				() => {
-					this.turnOne();
-					repeat = setInterval(() => this.turnOne(), pace);
-				},
-				pace + Math.random() * pace
-			);
-
-			onCleanup(() => {
-				clearTimeout(first);
-
-				if (repeat) {
-					clearInterval(repeat);
-				}
-			});
+		const leave = this.conductor.register({
+			turnable: () => this.turnable(),
+			turn: (tile) => this.turnTile(tile),
 		});
+
+		this.destroyRef.onDestroy(leave);
 	}
 
 	/**
-	 * Turns the tile that has stood longest over to a cover none of the
-	 * others is showing. The cover is fetched first and the tile changes once
-	 * it is there: pointing a tile at a url the browser has not loaded yet
-	 * would leave a hole where a cover was.
+	 * The tiles this mosaic is putting up for the next turn, by key.
+	 *
+	 * Nothing is offered while the mosaic is off the screen — the
+	 * collections page draws a card for every discography the catalog knows,
+	 * and a cover fetched below the fold is a cover fetched for nobody — nor
+	 * from a set with no more covers than tiles, which has nothing to turn
+	 * over to. Offering none is how a mosaic stands still: the conductor
+	 * simply draws from the rest of the page.
+	 */
+	private turnable(): readonly number[] {
+		if (!this.onScreen() || this.set().length <= this.limit()) {
+			return [];
+		}
+
+		return this.tiles().map((tile) => tile.key);
+	}
+
+	/**
+	 * Turns the tile the conductor picked over to a cover none of the others
+	 * is showing. The cover is fetched first and the tile changes once it is
+	 * there: pointing a tile at a url the browser has not loaded yet would
+	 * leave a hole where a cover was.
 	 *
 	 * A cover that will not load is written off and the next one tried in the
 	 * same turn rather than at the following one. Covers come from other
-	 * people's servers and a dead one among them is ordinary; spending a whole
-	 * pace on each is how a mosaic comes to look like it has stopped.
+	 * people's servers and a dead one among them is ordinary; spending a
+	 * whole pace on each is how a page comes to look like it has stopped.
+	 *
+	 * A tile that is no longer there — the set changed between the draw and
+	 * this — is left alone, and the turn is simply given up.
 	 */
-	private turnOne(): void {
-		if (this.turning) {
-			return;
-		}
-
+	private turnTile(tile: number): Promise<void> {
 		const covers = this.set();
 		const tiles = this.tiles();
+		const replaced = tiles.find((standing) => standing.key === tile);
 
-		if (!tiles.length) {
-			return;
+		if (!replaced) {
+			return Promise.resolve();
 		}
 
-		this.turning = true;
-		this.tryNext(
-			covers,
-			tiles,
-			tiles.reduce((kept, tile) => (tile.key < kept.key ? tile : kept)),
-			covers.length
+		return new Promise((done) =>
+			this.tryNext(covers, tiles, replaced, covers.length, done)
 		);
 	}
 
@@ -440,12 +402,13 @@ export class CoverMosaicComponent {
 		covers: string[],
 		tiles: MosaicTile[],
 		replaced: MosaicTile,
-		left: number
+		left: number,
+		done: () => void
 	): void {
 		const at = left > 0 ? this.nextCover(covers, tiles) : null;
 
 		if (at === null) {
-			this.turning = false;
+			done();
 
 			return;
 		}
@@ -455,11 +418,11 @@ export class CoverMosaicComponent {
 		this.load(url).then(
 			() => {
 				this.show(replaced, url);
-				this.turning = false;
+				done();
 			},
 			() => {
 				this.broken.add(url);
-				this.tryNext(covers, tiles, replaced, left - 1);
+				this.tryNext(covers, tiles, replaced, left - 1, done);
 			}
 		);
 	}
@@ -554,11 +517,7 @@ export class CoverMosaicComponent {
 		});
 	}
 
-	/**
-	 * A mosaic the reader cannot see does not turn. The collections page
-	 * draws a card for every discography the catalog knows, and a mosaic
-	 * turning below the fold is a cover fetched for nobody.
-	 */
+	/** Follows whether the mosaic is on the screen, so `turnable` can say. */
 	private watchScreen(): void {
 		const view = this.document.defaultView;
 
@@ -580,17 +539,5 @@ export class CoverMosaicComponent {
 
 		observer.observe(this.host.nativeElement);
 		this.destroyRef.onDestroy(() => observer.disconnect());
-	}
-
-	/** Nor does a mosaic in a tab somebody left open behind another one. */
-	private watchTab(): void {
-		const wake = () =>
-			this.awake.set(this.document.visibilityState === 'visible');
-
-		wake();
-		this.document.addEventListener('visibilitychange', wake);
-		this.destroyRef.onDestroy(() =>
-			this.document.removeEventListener('visibilitychange', wake)
-		);
 	}
 }

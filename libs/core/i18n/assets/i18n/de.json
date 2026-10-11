@@ -2347,7 +2347,7 @@
 			"mosaic": "Cover-Mosaik",
 			"mosaic-still": "Steht",
 			"seconds-short": "Sek.",
-			"a-collection-without-artwork": "Eine Sammlung ohne eigenes Bild wird als vier Cover gezeichnet. In Bewegung wechselt in diesem Takt jeweils eine Kachel zu einer weiteren Platte der Sammlung — nur auf den Karten, die gerade zu sehen sind, und auf jeder Karte zu ihrem eigenen Zeitpunkt, damit nicht die ganze Seite auf einmal wechselt.",
+			"a-collection-without-artwork": "Eine Sammlung ohne eigenes Bild wird als vier Cover gezeichnet. In Bewegung wechselt in diesem Takt genau ein Cover auf der Seite zu einer weiteren Platte — ausgelost aus den Kacheln aller sichtbaren Mosaike, sodass immer nur ein Bild wechselt und nicht die ganze Seite.",
 			"mosaic-turn": "Wechsel",
 			"turn": {
 				"fade": "Überblenden",

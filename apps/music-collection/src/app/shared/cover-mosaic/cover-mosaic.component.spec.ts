@@ -1,4 +1,4 @@
-import { signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { CoverTurn, CoverMosaicService } from '../../data/cover-mosaic';
@@ -54,6 +54,19 @@ class FakeIntersectionObserver {
 	}
 }
 
+/** A page with two mosaics on it, the way a list of collections is. */
+@Component({
+	imports: [CoverMosaicComponent],
+	selector: 'mc-two-mosaics',
+	template: `
+		<mc-cover-mosaic [covers]="covers" />
+		<mc-cover-mosaic [covers]="covers" />
+	`,
+})
+class TwoMosaics {
+	public readonly covers = covers(9);
+}
+
 function covers(count: number): string[] {
 	return Array.from({ length: count }, (_, index) => `cover-${index}.jpg`);
 }
@@ -62,8 +75,8 @@ describe('CoverMosaicComponent', () => {
 	let fixture: ComponentFixture<CoverMosaicComponent>;
 	const rotateSeconds = signal(0);
 	const turn = signal<CoverTurn>('fade');
-	/** No scatter on the first turn, so a test can say when it happens. */
-	let scatter: jest.SpyInstance<number, []>;
+	/** The conductor's draw, fixed so a test can say which tile it lands on. */
+	let draw: jest.SpyInstance<number, []>;
 
 	/** The cover each tile is showing, left to right. */
 	const onShow = (): (string | null)[] =>
@@ -94,7 +107,7 @@ describe('CoverMosaicComponent', () => {
 			configurable: true,
 			value: CachedImage,
 		});
-		scatter = jest.spyOn(Math, 'random').mockReturnValue(0);
+		draw = jest.spyOn(Math, 'random').mockReturnValue(0);
 		rotateSeconds.set(0);
 		turn.set('fade');
 
@@ -111,7 +124,7 @@ describe('CoverMosaicComponent', () => {
 
 	afterEach(() => {
 		jest.useRealTimers();
-		scatter.mockRestore();
+		draw.mockRestore();
 		Reflect.deleteProperty(window, 'Image');
 		Reflect.deleteProperty(window, 'IntersectionObserver');
 	});
@@ -160,11 +173,12 @@ describe('CoverMosaicComponent', () => {
 	});
 
 	/**
-	 * The tile that has stood longest goes first, and it turns to the cover
-	 * after the last one on show — so the mosaic walks the set rather than
-	 * swapping the same two pictures back and forth.
+	 * Which tile turns is the conductor's draw — here, fixed on the first —
+	 * and the cover it turns to is the one after the last on show, so the
+	 * mosaic walks the set rather than swapping the same two pictures back
+	 * and forth.
 	 */
-	it('turns one tile over to the next cover', async () => {
+	it('turns the tile it is asked for, to the next cover', async () => {
 		rotateSeconds.set(5);
 		render(covers(9));
 
@@ -180,9 +194,25 @@ describe('CoverMosaicComponent', () => {
 		await waitOneTurn(5);
 
 		expect(onShow()).toEqual([
-			'cover-4.jpg',
 			'cover-5.jpg',
+			'cover-1.jpg',
 			'cover-2.jpg',
+			'cover-3.jpg',
+		]);
+	});
+
+	/** A draw landing further along the hat turns that tile instead. */
+	it('turns whichever tile the draw lands on', async () => {
+		draw.mockReturnValue(0.5);
+		rotateSeconds.set(5);
+		render(covers(9));
+
+		await waitOneTurn(5);
+
+		expect(onShow()).toEqual([
+			'cover-0.jpg',
+			'cover-1.jpg',
+			'cover-4.jpg',
 			'cover-3.jpg',
 		]);
 	});
@@ -217,22 +247,40 @@ describe('CoverMosaicComponent', () => {
 	});
 
 	/**
-	 * Every mosaic on a page is built in the same moment. Were they all to
-	 * start counting from there, the whole screen would change at once; the
-	 * first turn waits between one and two paces instead.
+	 * The pace is the page's, not each card's: a page of mosaics changes one
+	 * cover a pace, drawn from all of them, rather than every card on the
+	 * screen changing at once.
 	 */
-	it('scatters the first turn rather than moving with the others', async () => {
-		scatter.mockReturnValue(0.5);
-		rotateSeconds.set(10);
-		render(covers(9));
+	it('moves one cover on the page, not one on every mosaic', async () => {
+		rotateSeconds.set(5);
+		TestBed.configureTestingModule({ imports: [TwoMosaics] });
 
-		await waitOneTurn(10);
+		const page = TestBed.createComponent(TwoMosaics);
 
-		expect(onShow()[0]).toBe('cover-0.jpg');
+		page.detectChanges();
 
-		await waitOneTurn(5);
+		jest.advanceTimersByTime(5000);
+		await page.whenStable();
+		page.detectChanges();
 
-		expect(onShow()[0]).toBe('cover-4.jpg');
+		const shown = Array.from(
+			(page.nativeElement as HTMLElement).querySelectorAll(
+				'.tile > img:last-child'
+			)
+		).map((image) => image.getAttribute('src'));
+
+		// The draw is fixed on the first ticket, so the first mosaic's first
+		// tile is the one cover that moved; the second mosaic stands.
+		expect(shown).toEqual([
+			'cover-4.jpg',
+			'cover-1.jpg',
+			'cover-2.jpg',
+			'cover-3.jpg',
+			'cover-0.jpg',
+			'cover-1.jpg',
+			'cover-2.jpg',
+			'cover-3.jpg',
+		]);
 	});
 
 	/** The movement itself is the collector's, and the styles read it here. */
@@ -304,7 +352,7 @@ describe('CoverMosaicComponent', () => {
 
 		await waitOneTurn(5);
 
-		expect(onShow()[1]).toBe('cover-5.jpg');
+		expect(onShow()[0]).toBe('cover-5.jpg');
 	});
 
 	/**
@@ -332,11 +380,15 @@ describe('CoverMosaicComponent', () => {
 	 * just changed.
 	 */
 	it('leaves only the tile it has just turned turning', async () => {
-		turn.set('random');
+		// A draw that walks the four tiles, so each of them turns once.
+		const tiles = [0, 0.25, 0.5, 0.75, 0];
+		let taken = 0;
+
+		draw.mockImplementation(() => tiles[taken++ % tiles.length]);
 		rotateSeconds.set(5);
 		render(covers(9));
 
-		for (let taken = 0; taken < 5; taken++) {
+		for (let turned = 0; turned < 5; turned++) {
 			await waitOneTurn(5);
 		}
 
@@ -361,8 +413,8 @@ describe('CoverMosaicComponent', () => {
 		await waitOneTurn(5);
 
 		expect(onShow()).toEqual([
-			'cover-4.jpg',
 			'cover-5.jpg',
+			'cover-1.jpg',
 			'cover-2.jpg',
 			'cover-3.jpg',
 		]);
@@ -371,8 +423,8 @@ describe('CoverMosaicComponent', () => {
 		fixture.detectChanges();
 
 		expect(onShow()).toEqual([
-			'cover-4.jpg',
 			'cover-5.jpg',
+			'cover-1.jpg',
 			'cover-2.jpg',
 			'cover-3.jpg',
 		]);
@@ -412,8 +464,8 @@ describe('CoverMosaicComponent', () => {
 		await waitOneTurn(5);
 
 		expect(onShow()).toEqual([
-			'cover-4.jpg',
 			'cover-5.jpg',
+			'cover-1.jpg',
 			'cover-2.jpg',
 			'cover-3.jpg',
 		]);
