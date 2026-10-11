@@ -8,7 +8,11 @@ import {
 import { RouterLink } from '@angular/router';
 import { I18N_IMPORTS, TextService } from '@music-collection/core/i18n';
 
-import { Crumb, PageBreadcrumbComponent } from '../../shared/page-breadcrumb';
+import {
+	Crumb,
+	PageBreadcrumbComponent,
+	pageTrail,
+} from '../../shared/page-breadcrumb';
 import { focusOnClose } from '../../shared/dialog-focus';
 import {
 	CopyRemovalComponent,
@@ -57,16 +61,17 @@ export class CollectionItemPageComponent {
 	protected readonly store = inject(CollectionItemPageStore);
 	private readonly text = inject(TextService);
 
+	/** Home › my collection › this copy — the address it is under. */
 	protected readonly trail = computed((): Crumb[] => {
 		const album = this.store.album();
 
-		return [
+		return pageTrail(this.text.translator(), [
 			{
 				label: this.text.translator()('nav.collection'),
 				link: '/collection',
 			},
 			{ label: album?.title ?? 'Copy' },
-		];
+		]);
 	});
 
 	public constructor() {

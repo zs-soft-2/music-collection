@@ -31,7 +31,7 @@ import {
 	TrackDetailsEffect,
 	TrackDetailsUpdate,
 } from '../../data/track-details';
-import { Crumb } from '../../shared/page-breadcrumb';
+import { Crumb, pageTrail } from '../../shared/page-breadcrumb';
 import {
 	collectionOriginParams,
 	withPageOrigin,
@@ -104,52 +104,36 @@ export const TrackPageStore = signalStore(
 				track,
 				album,
 				/**
-				 * Where the album was opened from › the album › this track: the
-				 * collection it was picked out of when it was, My Collection ›
-				 * the artist otherwise.
+				 * Home › the band › the album › this track. The track is part
+				 * of the record whoever opened it and from wherever; the way back
+				 * is the Back control's business.
 				 */
 				trail: computed<Crumb[]>(() => {
 					const profile = album();
 					const name = track()?.name;
-					const origin = store.originTrail();
 					const originSlug = store.originSlug();
 
-					return [
-						...(origin.length
-							? origin
-							: [
-									{
-										label: text.translator()(
-											'nav.collection'
-										),
-										link: '/collection',
-									},
-									...(profile?.artistId
-										? [
-												{
-													label: profile.artistName,
-													link: [
-														'/artist',
-														profile.artistId,
-													],
-												},
-											]
-										: []),
-								]),
-						...(profile
-							? [
-									{
-										label: profile.title,
-										link: ['/album', profile.id],
-										// The album is read where the track was.
-										queryParams:
-											collectionOriginParams(originSlug),
-									},
-								]
-							: []),
-						...(name ? [{ label: name }] : []),
-					];
+					return pageTrail(text.translator(), [
+						profile?.artistId
+							? {
+									label: profile.artistName,
+									link: ['/artist', profile.artistId],
+								}
+							: null,
+						profile
+							? {
+									label: profile.title,
+									link: ['/album', profile.id],
+									// The album is read where the track was.
+									queryParams:
+										collectionOriginParams(originSlug),
+								}
+							: null,
+						name ? { label: name } : null,
+					]);
 				}),
+				/** The collection the record was opened from, for the way back. */
+				backLabel: computed(() => store.originName()),
 				spotifyTrackId: computed(() => {
 					const id = track()?.spotifyTrackId;
 					return isSpotifyTrackId(id) ? id : null;

@@ -33,7 +33,7 @@ import {
 	toDiscography,
 	toReleaseView,
 } from '../../shared/music-ui';
-import { Crumb } from '../../shared/page-breadcrumb';
+import { Crumb, pageTrail } from '../../shared/page-breadcrumb';
 import {
 	ArtistProfileView,
 	albumTypeCounts,
@@ -129,17 +129,17 @@ export const ArtistPageStore = signalStore(
 		});
 
 		return {
-			/** My Collection › this artist. */
+			/**
+			 * Home › this artist. A band stands on its own: it is in the
+			 * catalog whether or not a copy of anything it made is on the
+			 * shelf, so the collection is no step on the way to it.
+			 */
 			trail: computed<Crumb[]>(() => {
 				const name = store.artist()?.name;
 
-				return [
-					{
-						label: text.translator()('nav.collection'),
-						link: '/collection',
-					},
-					...(name ? [{ label: name }] : []),
-				];
+				return pageTrail(text.translator(), [
+					name ? { label: name } : null,
+				]);
 			}),
 			ownReleases,
 			discography,

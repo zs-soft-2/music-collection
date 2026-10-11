@@ -1,5 +1,8 @@
 <div class="page" [class.is-compact]="compact()">
-	<mc-page-breadcrumb [trail]="store.trail()" />
+	<mc-page-breadcrumb
+		[trail]="store.trail()"
+		[backLabel]="store.backLabel()"
+	/>
 	@if (store.album(); as album) {
 		<!-- Album -->
 		<header class="hero">

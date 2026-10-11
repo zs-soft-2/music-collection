@@ -15,7 +15,7 @@ import {
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
-import { Crumb } from '../../shared/page-breadcrumb';
+import { Crumb, pageTrail } from '../../shared/page-breadcrumb';
 import {
 	PressingRow,
 	newestPressingFirst,
@@ -65,10 +65,16 @@ export const WishlistItemPageStore = signalStore(
 				newestPressingFirst(store.pressings().map(toPressingRow))
 			),
 			notFound: computed(() => !store.loading() && !store.item()),
-			trail: computed<Crumb[]>(() => [
-				{ label: text.translator()('nav.wishlist'), link: '/wishlist' },
-				{ label: album()?.name ?? 'Wish' },
-			]),
+			/** Home › the wishlist › this wish. */
+			trail: computed<Crumb[]>(() =>
+				pageTrail(text.translator(), [
+					{
+						label: text.translator()('nav.wishlist'),
+						link: '/wishlist',
+					},
+					{ label: album()?.name ?? 'Wish' },
+				])
+			),
 		};
 	}),
 	withMethods(

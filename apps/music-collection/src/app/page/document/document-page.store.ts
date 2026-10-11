@@ -17,7 +17,7 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
 import { DocumentDetailsEffect } from '../../data/document-details';
-import { Crumb } from '../../shared/page-breadcrumb';
+import { Crumb, pageTrail } from '../../shared/page-breadcrumb';
 import { ownStorageFileUrl } from '../../shared/storage-url';
 
 interface DocumentPageState {
@@ -83,13 +83,23 @@ export const DocumentPageStore = signalStore(
 						: null;
 				}),
 				notFound: computed(() => !store.loading() && !store.document()),
-				trail: computed<Crumb[]>(() => [
-					{
-						label: text.translator()('admin.nav.documents'),
-						link: '/admin/document',
-					},
-					{ label: name() || 'Document' },
-				]),
+				/**
+				 * Home › Admin › Documents › this one — every step an
+				 * address this page's own address is under.
+				 */
+				trail: computed<Crumb[]>(() =>
+					pageTrail(text.translator(), [
+						{
+							label: text.translator()('nav.admin'),
+							link: '/admin',
+						},
+						{
+							label: text.translator()('admin.nav.documents'),
+							link: '/admin/document',
+						},
+						{ label: name() || 'Document' },
+					])
+				),
 			};
 		}
 	),

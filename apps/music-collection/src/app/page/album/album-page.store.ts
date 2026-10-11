@@ -87,7 +87,7 @@ import {
 	toDiscography,
 	toReleaseView,
 } from '../../shared/music-ui';
-import { Crumb } from '../../shared/page-breadcrumb';
+import { Crumb, pageTrail } from '../../shared/page-breadcrumb';
 import { withCopyDisposal } from '../../shared/copy-disposal/copy-disposal.feature';
 import { DisposalDraft } from '../../shared/music-ui/copy-removal/copy-removal.model';
 import { withPageOrigin } from '../../shared/page-origin';
@@ -399,37 +399,25 @@ export const AlbumPageStore = signalStore(
 		return {
 			album,
 			/**
-			 * Where this album was opened from › this album: the collection
-			 * it was picked out of when it was, My Collection › the artist
-			 * (when known) otherwise.
+			 * Home › the band › this album. The record is the band's, and
+			 * that is true of it wherever it was opened from; where the
+			 * reader came from is the Back control's business.
 			 */
 			trail: computed<Crumb[]>(() => {
 				const profile = album();
-				const origin = store.originTrail();
 
-				return [
-					...(origin.length
-						? origin
-						: [
-								{
-									label: text.translator()('nav.collection'),
-									link: '/collection',
-								},
-								...(profile?.artistId
-									? [
-											{
-												label: profile.artistName,
-												link: [
-													'/artist',
-													profile.artistId,
-												],
-											},
-										]
-									: []),
-							]),
-					...(profile ? [{ label: profile.title }] : []),
-				];
+				return pageTrail(text.translator(), [
+					profile?.artistId
+						? {
+								label: profile.artistName,
+								link: ['/artist', profile.artistId],
+							}
+						: null,
+					profile ? { label: profile.title } : null,
+				]);
 			}),
+			/** The collection this album was opened from, for the way back. */
+			backLabel: computed(() => store.originName()),
 			/** The collections this record is part of, nearest to complete. */
 			collections: computed(() =>
 				toAlbumCollections(

@@ -32,7 +32,7 @@ import {
 	toArtistView,
 	toReleaseView,
 } from '../../shared/music-ui';
-import { Crumb } from '../../shared/page-breadcrumb';
+import { Crumb, pageTrail } from '../../shared/page-breadcrumb';
 import {
 	AlbumRoleFilter,
 	albumRoleCounts,
@@ -125,16 +125,17 @@ export const MusicianPageStore = signalStore(
 		return {
 			header,
 			/** Network › this musician. */
+			/** Home › the network of players › this one. */
 			trail: computed<Crumb[]>(() => {
 				const name = header()?.name;
 
-				return [
+				return pageTrail(text.translator(), [
 					{
 						label: text.translator()('nav.network'),
 						link: '/network',
 					},
-					...(name ? [{ label: name }] : []),
-				];
+					name ? { label: name } : null,
+				]);
 			}),
 			summary: computed(() =>
 				toMusicianSummary(

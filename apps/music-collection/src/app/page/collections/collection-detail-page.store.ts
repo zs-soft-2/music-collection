@@ -22,7 +22,7 @@ import {
 	CollectorCardDocument,
 	CollectorProfileEffect,
 } from '../../data/collector-profile';
-import { Crumb } from '../../shared/page-breadcrumb';
+import { Crumb, pageTrail } from '../../shared/page-breadcrumb';
 import { collectionOriginParams } from '../../shared/page-origin';
 import { crowdBySlug, toWallEntries } from '../collectors/collectors.mapper';
 import { CollectionCrowd, WallEntry } from '../collectors/collectors.model';
@@ -112,16 +112,17 @@ export const CollectionDetailPageStore = signalStore(
 			return !!uid && store.shownUids().has(uid);
 		}),
 		/** Collections › this collection. */
+		/** Home › the collections › this one. */
 		trail: computed<Crumb[]>(() => {
 			const name = store.collection()?.name;
 
-			return [
+			return pageTrail(text.translator(), [
 				{
 					label: text.translator()('nav.collections'),
 					link: '/collections',
 				},
-				...(name ? [{ label: name }] : []),
-			];
+				name ? { label: name } : null,
+			]);
 		}),
 		/**
 		 * Carried on to every album opened from here, so its own trail leads

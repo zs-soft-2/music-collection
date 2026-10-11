@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	computed,
+	inject,
+} from '@angular/core';
 import { I18N_IMPORTS, TextService } from '@music-collection/core/i18n';
 import { AlbumFormModule } from '@music-collection/domain/album';
 import { ArtistFormModule } from '@music-collection/domain/artist';
@@ -13,7 +18,10 @@ import {
 	provideMusicianProposal,
 	provideReleaseProposal,
 } from '../../data/proposal';
-import { PageBreadcrumbComponent } from '../../shared/page-breadcrumb';
+import {
+	PageBreadcrumbComponent,
+	pageTrail,
+} from '../../shared/page-breadcrumb';
 
 /**
  * What a collector would change about something in the catalog, in the
@@ -35,7 +43,7 @@ import { PageBreadcrumbComponent } from '../../shared/page-breadcrumb';
 	imports: [...I18N_IMPORTS, PageBreadcrumbComponent],
 	template: `
 		<div class="page">
-			<mc-page-breadcrumb [trail]="trail" />
+			<mc-page-breadcrumb [trail]="trail()" />
 
 			<p class="lead">{{ 'page.propose.lead' | transloco }}</p>
 
@@ -64,13 +72,19 @@ import { PageBreadcrumbComponent } from '../../shared/page-breadcrumb';
 	`,
 })
 export class ProposePageComponent {
-	protected readonly trail = [
-		{
-			label: inject(TextService).translator()(
-				'page.propose.suggest-a-change'
-			),
-		},
-	];
+	private readonly text = inject(TextService);
+
+	/**
+	 * Home › this proposal. The form and the review page that follows it
+	 * are two steps of one errand rather than one inside the other.
+	 */
+	protected readonly trail = computed(() =>
+		pageTrail(this.text.translator(), [
+			{
+				label: this.text.translator()('page.propose.suggest-a-change'),
+			},
+		])
+	);
 }
 
 @Component({

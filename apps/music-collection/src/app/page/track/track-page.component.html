@@ -4,7 +4,10 @@
 <mc-cover-backdrop [src]="album?.coverUrl" />
 
 <div class="page" *transloco="let t">
-	<mc-page-breadcrumb [trail]="store.trail()" />
+	<mc-page-breadcrumb
+		[trail]="store.trail()"
+		[backLabel]="store.backLabel()"
+	/>
 	@if (store.loading()) {
 		<p class="muted">{{ t('page.track.loading') }}</p>
 	} @else if (store.failed()) {

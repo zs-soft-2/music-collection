@@ -1,12 +1,13 @@
-import { Translator } from '@music-collection/core/i18n';
-
-import { Crumb } from '../page-breadcrumb';
-
 /**
  * The query parameter a detail page is opened with to say where it was
  * opened from: `?from=collection:bay-area-thrash`. It is in the URL rather
- * than in memory so the trail survives a reload, a bookmark and a link sent
- * to someone else — the page is then still read where it was read from.
+ * than in memory so it survives a reload, a bookmark and a link sent to
+ * someone else — the page is then still read where it was read from.
+ *
+ * It names the way *back*, not where the page sits. A record is on the shelf
+ * and in every collection that asks for it; which of them the reader came
+ * through is their own step, so it belongs to the Back control and never to
+ * the breadcrumb, whose trail leads up through the record itself.
  */
 export const PAGE_ORIGIN_PARAM = 'from';
 
@@ -29,24 +30,4 @@ export function collectionOriginSlug(origin: string | null): string | null {
 	return origin?.startsWith(COLLECTION_PREFIX)
 		? origin.slice(COLLECTION_PREFIX.length) || null
 		: null;
-}
-
-/**
- * The steps up to a collection a page was opened from. The name joins once
- * it is known, so the trail never shows a wrong step while it loads.
- */
-export function collectionTrail(
-	slug: string | null,
-	name: string | null,
-	/** The app's own word for the first crumb; the rest is the data's. */
-	t: Translator
-): Crumb[] {
-	if (!slug) {
-		return [];
-	}
-
-	return [
-		{ label: t('nav.collections'), link: '/collections' },
-		...(name ? [{ label: name, link: ['/collections', slug] }] : []),
-	];
 }

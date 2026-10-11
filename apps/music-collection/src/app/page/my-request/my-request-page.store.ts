@@ -21,7 +21,7 @@ import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
 import { ReleaseRequestEffect } from '../../data/release-request';
 import { RequestEffect } from '../../data/request';
-import { Crumb } from '../../shared/page-breadcrumb';
+import { Crumb, pageTrail } from '../../shared/page-breadcrumb';
 import { toMyRequestRows, toReleaseRequestRow } from './my-request.mapper';
 
 interface MyRequestPageState {
@@ -68,9 +68,12 @@ export const MyRequestPageStore = signalStore(
 				!store.requests().length &&
 				!store.releaseRequests().length
 		),
-		trail: computed<Crumb[]>(() => [
-			{ label: text.translator()('page.my-request.title') },
-		]),
+		/** Home › my requests. */
+		trail: computed<Crumb[]>(() =>
+			pageTrail(text.translator(), [
+				{ label: text.translator()('page.my-request.title') },
+			])
+		),
 	})),
 	withMethods(
 		(

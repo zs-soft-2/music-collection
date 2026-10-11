@@ -129,7 +129,7 @@ export class DocumentTableService extends BaseComponent {
 	 * the admin list's way of looking rather than editing.
 	 */
 	public viewLink(document: DocumentEntity): unknown[] {
-		return ['/document', document.uid];
+		return ['/admin/document/view', document.uid];
 	}
 
 	/**

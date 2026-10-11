@@ -13,6 +13,7 @@ import { OwnedArtistStateService } from '../../../data/owned-artist';
 import {
 	Crumb,
 	PageBreadcrumbComponent,
+	pageTrail,
 } from '../../../shared/page-breadcrumb';
 
 /**
@@ -45,11 +46,11 @@ export class OwnedArtistEditComponent {
 	protected readonly isNew =
 		(this.route.snapshot.params['artistId'] ?? '0') === '0';
 
+	/** Home › my bands › this one. */
 	protected readonly trail = computed<Crumb[]>(() => {
 		const translate = this.text.translator();
 
-		return [
-			{ label: translate('nav.my-requests'), link: '/my-requests' },
+		return pageTrail(translate, [
 			{ label: translate('nav.owned-artists'), link: '/my-bands/list' },
 			{
 				label: translate(
@@ -58,6 +59,6 @@ export class OwnedArtistEditComponent {
 						: 'page.owned-artist.edit-band'
 				),
 			},
-		];
+		]);
 	});
 }

@@ -62,6 +62,7 @@ import { CollectorProfileEffect } from './data/collector-profile/collector-profi
 import { GenreScopeSyncService } from './data/genre-scope';
 import { DefaultLanguageSyncService, LanguageSyncService } from './i18n';
 import { AppearanceSyncService, MusicPreset } from './theme';
+import { NavigationHistoryService } from './shared/page-back';
 import { PageScrollService } from './scroll';
 import { NgxPermissionsModule } from 'ngx-permissions';
 
@@ -193,6 +194,11 @@ export const appConfig: ApplicationConfig = {
 		// A new page starts at its top rather than wherever the last one was
 		// left. It follows every navigation, so it starts with the app.
 		provideEnvironmentInitializer(() => inject(PageScrollService)),
+		// Which pages this visit has read, for the Back control. It has to
+		// start with the app too: a page can only be gone back from if the
+		// step onto it was watched, and the first Back control is drawn long
+		// after the visit began.
+		provideEnvironmentInitializer(() => inject(NavigationHistoryService)),
 		// Measurement. Nothing is sent — and the analytics SDK is not even
 		// fetched — until the collector has allowed it, but the service has to
 		// be alive from the start: it follows the navigations and the sign-in

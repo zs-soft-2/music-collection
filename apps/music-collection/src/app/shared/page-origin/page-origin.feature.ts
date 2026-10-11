@@ -1,27 +1,19 @@
 import { map, of, pipe, switchMap, tap } from 'rxjs';
 
-import { computed, inject } from '@angular/core';
+import { inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { TextService } from '@music-collection/core/i18n';
 import { MusicCollectionEffect } from '@music-collection/domain/music-collection/core';
 import { MusicCollectionEntity } from '@music-collection/domain/music-collection/api';
 import { tapResponse } from '@ngrx/operators';
 import {
 	patchState,
 	signalStoreFeature,
-	withComputed,
 	withMethods,
 	withState,
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
-import { Crumb } from '../page-breadcrumb';
-
-import {
-	PAGE_ORIGIN_PARAM,
-	collectionOriginSlug,
-	collectionTrail,
-} from './page-origin';
+import { PAGE_ORIGIN_PARAM, collectionOriginSlug } from './page-origin';
 
 interface PageOriginState {
 	/** The collection this page was opened from, when it was. */
@@ -35,28 +27,20 @@ const initialState: PageOriginState = {
 };
 
 /**
- * Where a detail page was opened from, for its breadcrumb.
+ * Where a detail page was opened from, for its Back control.
  *
  * A record belongs to more than one place: the shelf it stands on and every
- * collection asking for it. Which of them the trail should lead back to is
- * not a property of the record — it is where the reader came from, so the
- * link that opened the page says it, and the page reads it here.
+ * collection asking for it. Which of them the reader came through is not a
+ * property of the record and not its place in the app — it is the reader's
+ * own last step, so the link that opened the page says it, and the page reads
+ * it here to put a name on the way back ("← Bay Area Thrash").
  *
- * Without the parameter the trail is empty and the page keeps its own root.
+ * The breadcrumb is left out of this on purpose: it leads up through the
+ * record itself, the same way for everybody.
  */
 export function withPageOrigin() {
 	return signalStoreFeature(
 		withState(initialState),
-		withComputed((store, text = inject(TextService)) => ({
-			/** The steps up to the origin; empty when opened on its own. */
-			originTrail: computed<Crumb[]>(() =>
-				collectionTrail(
-					store.originSlug(),
-					store.originName(),
-					text.translator()
-				)
-			),
-		})),
 		withMethods(
 			(
 				store,

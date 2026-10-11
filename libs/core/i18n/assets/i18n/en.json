@@ -2529,6 +2529,9 @@
 		"pageBreadcrumb": {
 			"breadcrumb": "Breadcrumb"
 		},
+		"pageBack": {
+			"back": "Back"
+		},
 		"discographyCard": {
 			"in-your-collection": "In your collection",
 			"not-in-your-collection": "Not in your collection"

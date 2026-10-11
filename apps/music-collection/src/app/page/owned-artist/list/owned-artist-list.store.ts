@@ -21,7 +21,7 @@ import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
 import { OwnedArtistEffect } from '../../../data/owned-artist';
 import { RequestEffect } from '../../../data/request';
-import { Crumb } from '../../../shared/page-breadcrumb';
+import { Crumb, pageTrail } from '../../../shared/page-breadcrumb';
 
 interface OwnedArtistListState {
 	artists: ArtistModel[];
@@ -73,13 +73,17 @@ export const OwnedArtistListStore = signalStore(
 		 * it this page is a dead end — it is linked from there, and nothing
 		 * led back.
 		 */
+		/**
+		 * Home › my bands. The requests page is where these bands are
+		 * answered, not where they live: `/my-bands` is under neither it nor
+		 * anything else.
+		 */
 		trail: computed<Crumb[]>(() => {
 			const translate = text.translator();
 
-			return [
-				{ label: translate('nav.my-requests'), link: '/my-requests' },
+			return pageTrail(translate, [
 				{ label: translate('nav.owned-artists') },
-			];
+			]);
 		}),
 		/**
 		 * The latest request per band. A band may be asked about more than

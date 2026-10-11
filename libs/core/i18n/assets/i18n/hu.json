@@ -2529,6 +2529,9 @@
 		"pageBreadcrumb": {
 			"breadcrumb": "Morzsamenü"
 		},
+		"pageBack": {
+			"back": "Vissza"
+		},
 		"discographyCard": {
 			"in-your-collection": "A gyűjteményedben",
 			"not-in-your-collection": "Nincs a gyűjteményedben"

@@ -11,6 +11,7 @@ import { I18N_IMPORTS, TextService } from '@music-collection/core/i18n';
 import {
 	Crumb,
 	PageBreadcrumbComponent,
+	pageTrail,
 } from '../../../shared/page-breadcrumb';
 import { ProposeReviewStore } from './propose-review.store';
 
@@ -36,9 +37,16 @@ export class ProposeReviewComponent {
 
 	private readonly text = inject(TextService);
 
-	protected readonly trail = computed<Crumb[]>(() => [
-		{ label: this.text.translator()('page.propose.suggest-a-change') },
-	]);
+	/**
+	 * Home › this proposal. The form and this page are two steps of one
+	 * errand rather than one inside the other, so neither is the other's
+	 * step up; Back is what leads between them.
+	 */
+	protected readonly trail = computed<Crumb[]>(() =>
+		pageTrail(this.text.translator(), [
+			{ label: this.text.translator()('page.propose.suggest-a-change') },
+		])
+	);
 
 	protected value(event: Event): string {
 		return (event.target as HTMLInputElement).value;

@@ -61,6 +61,20 @@ describe('PageBreadcrumbComponent', () => {
 		expect(host.querySelectorAll('a').length).toBe(1);
 	});
 
+	it('stands a step back beside the trail, and not inside it', () => {
+		const host = render([
+			{ label: 'My Collection', link: '/collection' },
+			{ label: 'Nevermind' },
+		]);
+		const back = host.querySelector('button');
+
+		// Two different questions, two different controls: the trail is a
+		// nav of links to where the page sits, and Back is a button beside
+		// it leading where the reader was.
+		expect(back).not.toBeNull();
+		expect(host.querySelector('nav')?.contains(back)).toBe(false);
+	});
+
 	it('shows the steps up while the name of the page is still unknown', () => {
 		const host = render([{ label: 'Collections', link: '/collections' }]);
 

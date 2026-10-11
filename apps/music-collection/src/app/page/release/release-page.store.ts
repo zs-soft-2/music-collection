@@ -3,6 +3,7 @@ import { map, of, pipe, switchMap, tap } from 'rxjs';
 import { computed, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ReleaseEntity } from '@music-collection/api';
+import { TextService } from '@music-collection/core/i18n';
 import { tapResponse } from '@ngrx/operators';
 import {
 	patchState,
@@ -15,7 +16,7 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
 import { ReleaseDetailsEffect } from '../../data/release-details';
-import { Crumb } from '../../shared/page-breadcrumb';
+import { Crumb, pageTrail } from '../../shared/page-breadcrumb';
 import {
 	PressingRow,
 	newestPressingFirst,
@@ -50,7 +51,7 @@ const DISCOGS_RELEASE_URL = 'https://www.discogs.com/release/';
  */
 export const ReleasePageStore = signalStore(
 	withState(initialState),
-	withComputed((store) => {
+	withComputed((store, text = inject(TextService)) => {
 		const pressing = computed<PressingRow | null>(() => {
 			const release = store.release();
 
@@ -76,20 +77,25 @@ export const ReleasePageStore = signalStore(
 				return discogsId ? `${DISCOGS_RELEASE_URL}${discogsId}` : null;
 			}),
 			notFound: computed(() => !store.loading() && !store.release()),
+			/** Home › the band › the album › this pressing. */
 			trail: computed<Crumb[]>(() => {
 				const row = pressing();
 
-				return [
-					...(row?.albumUid
-						? [
-								{
-									label: row.albumName ?? 'Album',
-									link: ['/album', row.albumUid],
-								},
-							]
-						: []),
+				return pageTrail(text.translator(), [
+					row?.artistUid && row.artistName
+						? {
+								label: row.artistName,
+								link: ['/artist', row.artistUid],
+							}
+						: null,
+					row?.albumUid
+						? {
+								label: row.albumName ?? 'Album',
+								link: ['/album', row.albumUid],
+							}
+						: null,
 					{ label: row?.name ?? 'Pressing' },
-				];
+				]);
 			}),
 		};
 	}),

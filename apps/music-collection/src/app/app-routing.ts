@@ -65,24 +65,6 @@ export const routes: Routes = [
 		},
 	},
 	{
-		// An uploaded file as the catalog holds it. Documents are the
-		// machinery behind the covers and the badges rather than something
-		// to browse, so only an admin opens one.
-		path: 'document/:documentId',
-		loadComponent: () =>
-			import('./page/document/document-page.component').then(
-				(module) => module.DocumentPageComponent
-			),
-		data: {
-			breadcrumb: 'document',
-			permissions: {
-				only: [RoleNames.ADMIN],
-				redirectTo: '/error',
-			},
-		},
-		canActivate: [NgxPermissionsGuard],
-	},
-	{
 		path: 'artist/:artistId',
 		loadComponent: () =>
 			import('./page/artist/artist-page.component').then(
@@ -358,6 +340,35 @@ export const routes: Routes = [
 			breadcrumb: 'wishlist',
 		},
 		canActivate: [authenticatedGuard],
+	},
+	{
+		// Where a document used to open. Links were only ever made by the
+		// admin's own table, but a bookmark outlives a route.
+		path: 'document/:documentId',
+		redirectTo: 'admin/document/view/:documentId',
+	},
+	{
+		// An uploaded file as the catalog holds it. Documents are the
+		// machinery behind the covers and the badges rather than something
+		// to browse, so only an admin opens one — which is why the page
+		// lives at an admin address: a reader can see from the URL where
+		// they are, and the trail leads back up through the admin.
+		//
+		// Before `admin`, so the longer path wins; outside its shell, because
+		// the page is the catalog's own view of a document rather than a form.
+		path: 'admin/document/view/:documentId',
+		loadComponent: () =>
+			import('./page/document/document-page.component').then(
+				(module) => module.DocumentPageComponent
+			),
+		data: {
+			breadcrumb: 'document',
+			permissions: {
+				only: [RoleNames.ADMIN],
+				redirectTo: '/error',
+			},
+		},
+		canActivate: [NgxPermissionsGuard],
 	},
 	{
 		path: 'admin',

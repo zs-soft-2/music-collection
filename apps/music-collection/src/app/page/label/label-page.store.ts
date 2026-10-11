@@ -3,6 +3,7 @@ import { map, of, pipe, switchMap, tap } from 'rxjs';
 import { computed, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { LabelEntity, ReleaseEntity } from '@music-collection/api';
+import { TextService } from '@music-collection/core/i18n';
 import { tapResponse } from '@ngrx/operators';
 import {
 	patchState,
@@ -15,7 +16,7 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
 import { LabelDetailsEffect } from '../../data/label-details';
-import { Crumb } from '../../shared/page-breadcrumb';
+import { Crumb, pageTrail } from '../../shared/page-breadcrumb';
 import {
 	PressingRow,
 	newestPressingFirst,
@@ -55,7 +56,7 @@ const initialState: LabelPageState = {
  */
 export const LabelPageStore = signalStore(
 	withState(initialState),
-	withComputed((store) => {
+	withComputed((store, text = inject(TextService)) => {
 		const pressings = computed<PressingRow[]>(() =>
 			newestPressingFirst(store.releases().map(toPressingRow))
 		);
@@ -123,20 +124,19 @@ export const LabelPageStore = signalStore(
 					!store.label() &&
 					!store.releases().length
 			),
+			/** Home › the label it is an imprint of › this label. */
 			trail: computed<Crumb[]>(() => {
 				const parentLabel = parent();
 
-				return [
-					...(parentLabel
-						? [
-								{
-									label: parentLabel.name,
-									link: ['/label', parentLabel.uid],
-								},
-							]
-						: []),
+				return pageTrail(text.translator(), [
+					parentLabel
+						? {
+								label: parentLabel.name,
+								link: ['/label', parentLabel.uid],
+							}
+						: null,
 					{ label: name() || 'Label' },
-				];
+				]);
 			}),
 		};
 	}),
