@@ -1,4 +1,4 @@
-import { Translation, TranslocoLoader } from '@jsverse/transloco';
+import { type Translation, type TranslocoLoader } from '@jsverse/transloco';
 import { Observable } from 'rxjs';
 
 import { HttpClient } from '@angular/common/http';

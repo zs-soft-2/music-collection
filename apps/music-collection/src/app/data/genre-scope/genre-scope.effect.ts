@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
 
 import { DOCUMENT } from '@angular/common';
-import { Injectable, Signal, inject } from '@angular/core';
+import { Injectable, type Signal, inject } from '@angular/core';
 import {
 	CatalogScopeService,
 	FirestoreSyncService,

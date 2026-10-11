@@ -1,6 +1,6 @@
 import { BehaviorSubject, Observable, distinctUntilChanged } from 'rxjs';
 
-import { Injectable, Signal, computed, signal } from '@angular/core';
+import { Injectable, type Signal, computed, signal } from '@angular/core';
 
 /**
  * How many genres a collector may follow at once.

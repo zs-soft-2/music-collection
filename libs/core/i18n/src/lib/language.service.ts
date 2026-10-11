@@ -3,7 +3,7 @@ import { TranslocoService } from '@jsverse/transloco';
 import { DOCUMENT } from '@angular/common';
 import {
 	Injectable,
-	Signal,
+	type Signal,
 	computed,
 	effect,
 	inject,
