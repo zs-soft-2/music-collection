@@ -127,6 +127,12 @@ export class DocumentFormService {
 	): FormGroup {
 		return this.documentUtilService.createFormGroupByProperties({
 			...document,
+			// What the form already holds wins, and a cleared category stays
+			// cleared: the form is re-made when an upload lands, and a
+			// category picked a moment earlier must survive that.
+			category: formGroup
+				? formGroup.value['category'] || undefined
+				: document?.category,
 			name: formGroup?.value['name'] || document?.name || undefined,
 			filePath:
 				filePath ||

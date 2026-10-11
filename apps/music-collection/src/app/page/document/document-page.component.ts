@@ -7,7 +7,7 @@ import {
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
-import { I18N_IMPORTS } from '@music-collection/core/i18n';
+import { I18N_IMPORTS, TextService } from '@music-collection/core/i18n';
 
 import { AdminEditLinkComponent } from '../../shared/music-ui';
 import { DocumentPageStore } from './document-page.store';
@@ -36,6 +36,7 @@ import { PageBreadcrumbComponent } from '../../shared/page-breadcrumb';
 export class DocumentPageComponent {
 	private readonly datePipe = inject(DatePipe);
 	private readonly sanitizer = inject(DomSanitizer);
+	private readonly text = inject(TextService);
 
 	protected readonly store = inject(DocumentPageStore);
 
@@ -63,7 +64,9 @@ export class DocumentPageComponent {
 			},
 			{
 				labelKey: 'fact.madeFor',
-				value: document?.category ?? 'Uploaded by hand',
+				value: document?.category
+					? this.text.catalog()('documentCategory', document.category)
+					: 'Uploaded by hand',
 			},
 			{ labelKey: 'fact.fileType', value: document?.fileType ?? null },
 			{

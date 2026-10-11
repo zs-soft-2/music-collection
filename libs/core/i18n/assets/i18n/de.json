@@ -205,6 +205,12 @@
 			"lost": "Verloren",
 			"other": "Sonstiges"
 		},
+		"documentCategory": {
+			"album-cover": "Albumcover",
+			"artist-image": "Künstlerbild",
+			"badge": "Abzeichen",
+			"scene": "Szenenhintergrund"
+		},
 		"decade": {
 			"1900": "1900er",
 			"1910": "1910er",
@@ -1967,6 +1973,9 @@
 		"documentForm": {
 			"file": "Datei",
 			"name": "Name",
+			"category": "Kategorie",
+			"no-category": "Keine Kategorie",
+			"category-hint": "Wofür die Datei gemacht wurde. Danach richten sich die Auswahllisten: Cover für ein Album, Bilder für einen Künstler.",
 			"upload": "Hochladen",
 			"uploaded-file-preview": "Vorschau der hochgeladenen Datei",
 			"stored-file": "Gespeicherte Datei",
@@ -1997,6 +2006,9 @@
 			"edit-document": "Dokument bearbeiten",
 			"withdraw-document2": "Dokument zurückziehen",
 			"badges": "Abzeichen",
+			"album-covers": "Albumcover",
+			"artist-images": "Künstlerbilder",
+			"scenes": "Szenenhintergründe",
 			"uploads": "Uploads",
 			"withdrawn": "Zurückgezogene"
 		},

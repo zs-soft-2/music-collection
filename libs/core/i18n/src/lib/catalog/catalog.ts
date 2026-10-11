@@ -57,6 +57,14 @@ export type CatalogGroup =
 	 */
 	| 'disposalReason'
 	/**
+	 * What a document was made for: `album-cover`, `badge`, `scene`.
+	 *
+	 * The app's own list — an admin picks from it in the document admin —
+	 * so the app translates it. A value the dictionary does not know is
+	 * shown as it stands, which is what an older document needs.
+	 */
+	| 'documentCategory'
+	/**
 	 * A decade of releases, keyed by its first year: `1980`.
 	 *
 	 * Spelled out per decade rather than built from a suffix, because

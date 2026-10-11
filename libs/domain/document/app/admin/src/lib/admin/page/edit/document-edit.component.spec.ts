@@ -33,6 +33,7 @@ describe('DocumentEditComponent', () => {
 					useValue: {
 						createFormGroupByProperties: jest.fn(() =>
 							new FormBuilder().group({
+								category: [null],
 								filePath: [null],
 								fileType: [null],
 								name: [null],

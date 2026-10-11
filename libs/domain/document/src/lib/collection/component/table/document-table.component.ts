@@ -1,4 +1,4 @@
-import { I18N_IMPORTS } from '@music-collection/core/i18n';
+import { I18N_IMPORTS, TextService } from '@music-collection/core/i18n';
 import { Observable } from 'rxjs';
 
 import { FormsModule } from '@angular/forms';
@@ -6,6 +6,7 @@ import {
 	ChangeDetectionStrategy,
 	Component,
 	OnInit,
+	computed,
 	inject,
 } from '@angular/core';
 import {
@@ -27,6 +28,26 @@ import {
 	EntityCardComponent,
 	ViewActionComponent,
 } from '@music-collection/ui';
+
+/** The tabs over the list, in the order they are offered. */
+const FILTER_TABS: { value: DocumentFilterEnum; labelKey: string }[] = [
+	{ value: DocumentFilterEnum.All, labelKey: 'common.all' },
+	{
+		value: DocumentFilterEnum.AlbumCover,
+		labelKey: 'ui.documentTable.album-covers',
+	},
+	{
+		value: DocumentFilterEnum.ArtistImage,
+		labelKey: 'ui.documentTable.artist-images',
+	},
+	{ value: DocumentFilterEnum.Scene, labelKey: 'ui.documentTable.scenes' },
+	{ value: DocumentFilterEnum.Badge, labelKey: 'ui.documentTable.badges' },
+	{ value: DocumentFilterEnum.Other, labelKey: 'ui.documentTable.uploads' },
+	{
+		value: DocumentFilterEnum.Withdrawn,
+		labelKey: 'ui.documentTable.withdrawn',
+	},
+];
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -50,6 +71,7 @@ import {
 })
 export class DocumentTableComponent extends BaseComponent implements OnInit {
 	private componentService = inject(DocumentTableService);
+	private text = inject(TextService);
 
 	public params$!: Observable<DocumentTableParams>;
 
@@ -60,23 +82,19 @@ export class DocumentTableComponent extends BaseComponent implements OnInit {
 	/** The document waiting for the withdrawal to be confirmed, if any. */
 	public readonly pendingWithdrawal = this.componentService.pendingWithdrawal;
 
-	/** The sets an admin can look at; the generated ones have their own. */
-	public readonly filters: { value: DocumentFilterEnum; labelKey: string }[] =
-		[
-			{ value: DocumentFilterEnum.All, labelKey: 'common.all' },
-			{
-				value: DocumentFilterEnum.Badge,
-				labelKey: 'ui.documentTable.badges',
-			},
-			{
-				value: DocumentFilterEnum.Other,
-				labelKey: 'ui.documentTable.uploads',
-			},
-			{
-				value: DocumentFilterEnum.Withdrawn,
-				labelKey: 'ui.documentTable.withdrawn',
-			},
-		];
+	/**
+	 * The sets an admin can look at: the whole catalog, one tab per
+	 * category, then what nobody has filed and what was withdrawn.
+	 *
+	 * The words are taken through `text.translator()` rather than a pipe
+	 * per button, so that a language switch re-makes the whole row.
+	 */
+	public readonly filters = computed(() =>
+		FILTER_TABS.map(({ value, labelKey }) => ({
+			value,
+			label: this.text.translator()(labelKey),
+		}))
+	);
 
 	/** Withdrawn documents are faded, so the list says which are on offer. */
 	public readonly withdrawnClass = (document: DocumentEntity): string =>

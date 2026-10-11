@@ -1,11 +1,18 @@
 .category-filter {
 	display: inline-flex;
-	overflow: hidden;
+	// One tab per category, which is more than a phone's width holds: the
+	// row slides rather than pushing the search box off the screen.
+	max-width: 100%;
+	overflow-x: auto;
+	overflow-y: hidden;
 	border: 1px solid var(--mc-border-strong);
 	border-radius: var(--mc-radius-md);
+	scrollbar-width: thin;
 
 	button {
+		flex: 0 0 auto;
 		padding: 0.5rem 0.75rem;
+		white-space: nowrap;
 		font-size: 0.85rem;
 		color: var(--mc-text-muted);
 		cursor: pointer;

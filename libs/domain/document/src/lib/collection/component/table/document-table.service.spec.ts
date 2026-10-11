@@ -32,6 +32,9 @@ const document = (
 
 const upload = document('upload', 2);
 const badge = document('badge', 3, { category: DocumentCategoryEnum.Badge });
+const cover = document('cover', 4, {
+	category: DocumentCategoryEnum.AlbumCover,
+});
 const withdrawn = document('withdrawn', 1, {
 	category: DocumentCategoryEnum.Badge,
 	deletedAt: 42,
@@ -62,7 +65,7 @@ describe('DocumentTableService', () => {
 					useValue: {
 						dispatchDeleteEntityAction,
 						selectEntities$: jest.fn(() =>
-							of([upload, badge, withdrawn])
+							of([upload, badge, cover, withdrawn])
 						),
 						selectSearchResult$: jest.fn(() => of([])),
 					},
@@ -85,7 +88,17 @@ describe('DocumentTableService', () => {
 	});
 
 	it('opens on the catalog, the last changed first', () => {
-		expect(shown()).toEqual(['badge', 'upload']);
+		expect(shown()).toEqual(['cover', 'badge', 'upload']);
+	});
+
+	it('gives every category a tab of its own', () => {
+		service.setFilter(DocumentFilterEnum.AlbumCover);
+
+		expect(shown()).toEqual(['cover']);
+
+		service.setFilter(DocumentFilterEnum.Scene);
+
+		expect(shown()).toEqual([]);
 	});
 
 	it('keeps the generated badges on their own tab', () => {

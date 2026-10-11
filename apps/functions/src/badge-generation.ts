@@ -81,10 +81,11 @@ const DOCUMENT_FOLDER = '/document/';
 /** `libs/common/api` EntityTypeEnum.Document. */
 const DOCUMENT_ENTITY_TYPE = 'Document';
 /**
- * `libs/api` DocumentCategoryEnum.Badge. Amit a dokumentum-adminban kézzel
- * iktatnak be, annak nincs kategóriája; ami jelvénynek készült — rajzolva
- * vagy a szerkesztőből feltöltve —, az megmondja magáról, és az admin
- * felületen ez alapján áll külön listába a sok jelölt.
+ * `libs/api` DocumentCategoryEnum.Badge. Ami jelvénynek készült — rajzolva
+ * vagy a szerkesztőből feltöltve —, az itt mondja meg magáról; a többi
+ * feltöltést a dokumentum-adminban kézzel sorolják be, vagy kategória
+ * nélkül maradnak. Az admin felületen ez alapján áll külön listába a sok
+ * jelölt.
  */
 const DOCUMENT_BADGE_CATEGORY = 'badge';
 /** Az admin darabszámláló dokumentuma, amit a kliens is karbantart. */

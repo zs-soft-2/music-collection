@@ -1,7 +1,10 @@
 import { FormGroup } from '@angular/forms';
 
 import { Entity, Searchable } from '../../common';
-import { DocumentCategoryEnum } from './document-category.enum';
+import {
+	DocumentCategoryEnum,
+	documentCategoryOf,
+} from './document-category.enum';
 
 export const DOCUMENT_FEATURE_KEY = 'document';
 
@@ -53,15 +56,27 @@ export type DocumentFormParams = {
 };
 
 /**
- * Which documents the admin list shows. `Other` is the plain uploads: the
- * ones no machine filed, so they carry no category.
+ * Which documents the admin list shows. Every category is a tab of its own —
+ * the value is the category's, so the two line up — and `Other` is what is
+ * left: the uploads nobody has filed, so they carry no category.
  */
 export enum DocumentFilterEnum {
 	All = 'all',
+	AlbumCover = 'album-cover',
+	ArtistImage = 'artist-image',
+	Scene = 'scene',
 	Badge = 'badge',
 	Other = 'other',
 	Withdrawn = 'withdrawn',
 }
+
+/**
+ * The category a tab stands for, or `undefined` for the tabs that are not a
+ * category — the whole catalog, the unfiled uploads and the withdrawn ones.
+ */
+export const filterCategory = (
+	filter: DocumentFilterEnum
+): DocumentCategoryEnum | undefined => documentCategoryOf(filter);
 
 export type DocumentTableParams = {
 	documents: DocumentEntity[];

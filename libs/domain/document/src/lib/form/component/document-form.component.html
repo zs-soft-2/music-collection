@@ -20,6 +20,26 @@
 				</div>
 
 				<div class="mc-field">
+					<label for="category">{{
+						'ui.documentForm.category' | transloco
+					}}</label>
+					<p-select
+						inputId="category"
+						[options]="categoryOptions()"
+						optionLabel="label"
+						optionValue="value"
+						[placeholder]="
+							'ui.documentForm.no-category' | transloco
+						"
+						[showClear]="true"
+						formControlName="category"
+					></p-select>
+					<small>{{
+						'ui.documentForm.category-hint' | transloco
+					}}</small>
+				</div>
+
+				<div class="mc-field">
 					<span class="mc-field-label">{{
 						'ui.documentForm.upload' | transloco
 					}}</span>

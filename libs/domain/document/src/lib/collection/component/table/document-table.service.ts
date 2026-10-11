@@ -11,13 +11,13 @@ import { Injectable, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
 	BaseComponent,
-	DocumentCategoryEnum,
 	DocumentEntity,
 	DocumentFilterEnum,
 	DocumentStateService,
 	DocumentTableParams,
 	DocumentUtilService,
 	EntityTypeEnum,
+	filterCategory,
 	isWithdrawnDocument,
 	SearchParams,
 	sortByRecent,
@@ -49,8 +49,10 @@ function matchesFilter(
 		return false;
 	}
 
-	if (filter === DocumentFilterEnum.Badge) {
-		return document.category === DocumentCategoryEnum.Badge;
+	const category = filterCategory(filter);
+
+	if (category) {
+		return document.category === category;
 	}
 
 	if (filter === DocumentFilterEnum.Other) {

@@ -134,8 +134,10 @@ export class DocumentUtilServiceImpl extends DocumentUtilService {
 			],
 			filePath: [document.filePath || null, [Validators.required]],
 			fileType: [document.fileType || null, [Validators.required]],
-			// Carried, not edited: a save writes the whole document.
+			// What the document was made for, picked by hand; empty is a
+			// document nobody has filed yet.
 			category: [document.category || null],
+			// Carried, not edited: a save writes the whole document.
 			deletedAt: [document.deletedAt ?? null],
 			uid: [document.uid || null],
 		});
@@ -163,8 +165,10 @@ export class DocumentUtilServiceImpl extends DocumentUtilService {
 	}
 
 	/**
-	 * What the form carries but nobody edits. Left out while empty: an
-	 * undefined field is not something Firestore takes.
+	 * How the document is filed: the category an admin picked and the
+	 * withdrawal mark the form only carries. Left out while empty — an
+	 * undefined field is not something Firestore takes, and the save writes
+	 * the whole document, so a category cleared here is gone from it.
 	 */
 	private filedProperties(
 		formGroup: FormGroup

@@ -27,13 +27,13 @@
 			role="group"
 			[attr.aria-label]="'ui.documentTable.category' | transloco"
 		>
-			@for (option of filters; track option.value) {
+			@for (option of filters(); track option.value) {
 				<button
 					type="button"
 					[attr.aria-pressed]="params.filter === option.value"
 					(click)="setFilter(option.value)"
 				>
-					{{ option.labelKey | transloco }}
+					{{ option.label }}
 				</button>
 			}
 		</div>
@@ -157,7 +157,9 @@
 			let-document
 		>
 			@if (document.category) {
-				<span class="category">{{ document.category }}</span>
+				<span class="category">{{
+					document.category | mcCatalog: 'documentCategory'
+				}}</span>
 			}
 		</ng-template>
 

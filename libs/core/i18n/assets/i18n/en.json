@@ -205,6 +205,12 @@
 			"lost": "Lost",
 			"other": "Other"
 		},
+		"documentCategory": {
+			"album-cover": "Album cover",
+			"artist-image": "Artist picture",
+			"badge": "Badge",
+			"scene": "Scene backdrop"
+		},
 		"decade": {
 			"1900": "1900s",
 			"1910": "1910s",
@@ -1967,6 +1973,9 @@
 		"documentForm": {
 			"file": "File",
 			"name": "Name",
+			"category": "Category",
+			"no-category": "No category",
+			"category-hint": "What the file was made for. It is what the pickers go by: covers offered to an album, pictures to an artist.",
 			"upload": "Upload",
 			"uploaded-file-preview": "Uploaded file preview",
 			"stored-file": "Stored file",
@@ -1997,6 +2006,9 @@
 			"edit-document": "Edit document",
 			"withdraw-document2": "Withdraw document",
 			"badges": "Badges",
+			"album-covers": "Album covers",
+			"artist-images": "Artist pictures",
+			"scenes": "Scene backdrops",
 			"uploads": "Uploads",
 			"withdrawn": "Withdrawn"
 		},

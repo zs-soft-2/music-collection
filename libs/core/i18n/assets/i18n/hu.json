@@ -205,6 +205,12 @@
 			"lost": "Elveszett",
 			"other": "Egyéb"
 		},
+		"documentCategory": {
+			"album-cover": "Albumborító",
+			"artist-image": "Előadó kép",
+			"badge": "Jelvény",
+			"scene": "Jelenet-háttér"
+		},
 		"decade": {
 			"1900": "1900-as évek",
 			"1910": "1910-es évek",
@@ -1967,6 +1973,9 @@
 		"documentForm": {
 			"file": "Fájl",
 			"name": "Név",
+			"category": "Kategória",
+			"no-category": "Nincs kategória",
+			"category-hint": "Mire készült a fájl. Ebből tudják a választók, mit ajánljanak fel: borítót az albumnak, képet az előadónak.",
 			"upload": "Feltöltés",
 			"uploaded-file-preview": "Feltöltött fájl előnézete",
 			"stored-file": "Tárolt fájl",
@@ -1997,6 +2006,9 @@
 			"edit-document": "Dokumentum szerkesztése",
 			"withdraw-document2": "Dokumentum visszavonása",
 			"badges": "Jelvények",
+			"album-covers": "Albumborítók",
+			"artist-images": "Előadó képek",
+			"scenes": "Jelenet-hátterek",
 			"uploads": "Feltöltések",
 			"withdrawn": "Visszavontak"
 		},
