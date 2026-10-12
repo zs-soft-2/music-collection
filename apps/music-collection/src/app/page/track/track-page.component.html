@@ -252,7 +252,10 @@
 				</h2>
 				@if (store.credits().length) {
 					<ul class="credits">
-						@for (credit of store.credits(); track credit.name) {
+						@for (
+							credit of store.credits();
+							track credit.musicianUid ?? credit.name
+						) {
 							<li>
 								@if (credit.musicianUid) {
 									<a
