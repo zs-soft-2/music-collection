@@ -97,6 +97,26 @@ export class SpotifyApiRepository {
 		);
 	}
 
+	/**
+	 * Plays the one track on the device, with nothing after it.
+	 *
+	 * For a song whose record Spotify has not got — or whose record never
+	 * got matched to one — there is no album context to play through, so the
+	 * song is handed over on its own.
+	 */
+	public playTrack(
+		accessToken: string,
+		deviceId: string,
+		trackUri: string
+	): Promise<void> {
+		return this.request(
+			accessToken,
+			'PUT',
+			`${API}/me/player/play?device_id=${encodeURIComponent(deviceId)}`,
+			{ uris: [trackUri] }
+		);
+	}
+
 	public seek(accessToken: string, positionMs: number): Promise<void> {
 		return this.request(
 			accessToken,

@@ -430,6 +430,39 @@ export const SpotifyPlaybackStore = signalStore(
 					}
 				},
 
+				/**
+				 * Plays the one track, and Spotify stops after it.
+				 *
+				 * A song can carry a Spotify id of its own while its record
+				 * carries none — the catalog was seeded from elsewhere, or
+				 * Spotify simply has not got the release. There is no album
+				 * to play on into, so the song is all this puts on.
+				 */
+				async playTrack(spotifyTrackId: string): Promise<void> {
+					// Browsers only allow audio started from the click itself.
+					void player?.activateElement();
+
+					const deviceId = store.outputDeviceId();
+					if (!deviceId) {
+						patchState(store, {
+							error: 'The Spotify player is not ready yet.',
+						});
+						return;
+					}
+					try {
+						await effect.playTrack(
+							deviceId,
+							`spotify:track:${spotifyTrackId}`
+						);
+						patchState(store, { error: null });
+						if (store.selectedDeviceId()) {
+							setTimeout(refreshNowPlaying, 800);
+						}
+					} catch (error) {
+						fail(error);
+					}
+				},
+
 				async togglePlay(): Promise<void> {
 					void player?.activateElement();
 					const nowPlaying = store.nowPlaying();

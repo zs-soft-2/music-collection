@@ -29,6 +29,7 @@ import {
 	type TrackClip,
 	type TrackImage,
 	isSpotifyAlbumId,
+	isSpotifyTrackId,
 	isYoutubePlaylistId,
 	isYoutubeVideoId,
 } from '@music-collection/api';
@@ -302,6 +303,32 @@ export function albumPlayRequest(
 	};
 }
 
+/** What Spotify has of a request: the record, or the song alone. */
+export type SpotifyPlayable =
+	| { kind: 'album'; id: string }
+	| { kind: 'track'; id: string };
+
+/**
+ * What Spotify would play for this request, and null where it has nothing.
+ *
+ * The record comes first: played from it, a song has what follows it. But
+ * most of the catalog was seeded from elsewhere, so Spotify can be missing
+ * the record while having the song on it — and then the song on its own is
+ * still better than a play button that does nothing.
+ */
+export function onSpotify(
+	request: PlayRequest | null | undefined
+): SpotifyPlayable | null {
+	const albumId = request?.spotifyAlbumId;
+	const trackId = request?.spotifyTrackId;
+
+	if (albumId) {
+		return { kind: 'album', id: albumId };
+	}
+
+	return isSpotifyTrackId(trackId) ? { kind: 'track', id: trackId } : null;
+}
+
 /** A record being listened to, and what is playing it. */
 export interface Listening {
 	/** The record, as whoever put it on asked for it. */
@@ -428,10 +455,11 @@ export const PlayerStore = signalStore(
 
 			const availableFor = (request: PlayRequest | null) => ({
 				// Spotify's embedded player needs no app of ours and no
-				// token, so the source is there the moment the album has a
-				// Spotify id. Their own app is what lets this player drive
-				// Spotify rather than hand the album to Spotify's own frame.
-				spotify: !!request?.spotifyAlbumId,
+				// token, so the source is there the moment Spotify has the
+				// record — or, failing that, the song. Their own app is what
+				// lets this player drive Spotify rather than hand the record
+				// to Spotify's own frame.
+				spotify: !!onSpotify(request),
 				// YouTube's frame is nothing this player can offer once its
 				// script has been blocked: the frame plays by its own
 				// buttons, and every button of ours for it would be dead.
@@ -533,20 +561,34 @@ export const PlayerStore = signalStore(
 				if (!spotify.connected() || !nowPlaying) {
 					return null;
 				}
+				// A record is recognised by the album playing; a song put on
+				// without its record, by the song itself — there is no album
+				// uri of ours to match it against.
+				const onItsOwn = (request: PlayRequest): boolean => {
+					const playable = onSpotify(request);
+
+					return (
+						playable?.kind === 'track' &&
+						nowPlaying.trackUri === `spotify:track:${playable.id}`
+					);
+				};
 				const session = requestFor(
 					(request) =>
-						!!request.spotifyAlbumId &&
-						nowPlaying.albumUri ===
-							`spotify:album:${request.spotifyAlbumId}`
+						(!!request.spotifyAlbumId &&
+							nowPlaying.albumUri ===
+								`spotify:album:${request.spotifyAlbumId}`) ||
+						onItsOwn(request)
 				);
 
-				const trackId =
-					session &&
-					spotify.tracksAlbumId() === session.spotifyAlbumId
-						? (Object.entries(spotify.trackUris()).find(
-								([, uri]) => uri === nowPlaying.trackUri
-							)?.[0] ?? null)
-						: null;
+				const trackId = !session
+					? null
+					: onItsOwn(session)
+						? session.trackId
+						: spotify.tracksAlbumId() === session.spotifyAlbumId
+							? (Object.entries(spotify.trackUris()).find(
+									([, uri]) => uri === nowPlaying.trackUri
+								)?.[0] ?? null)
+							: null;
 				// Started elsewhere (e.g. on the phone): our album, if in the catalog.
 				const spotifyAlbumId = nowPlaying.albumUri.replace(
 					'spotify:album:',
@@ -691,14 +733,14 @@ export const PlayerStore = signalStore(
 			 * while YouTube's player can be driven at all.
 			 */
 			const playableSources = computed(() => {
-				const onSpotify = new Set<string>();
-				const onYoutube = new Set<string>();
+				const spotifyAlbums = new Set<string>();
+				const youtubeAlbums = new Set<string>();
 				const ownApp = spotify.hasOwnApp();
 				const canDriveYoutube = youtube.controllable();
 
 				for (const album of consent.allowed() ? (albums() ?? []) : []) {
 					if (ownApp && isSpotifyAlbumId(album.spotifyAlbumId)) {
-						onSpotify.add(album.uid);
+						spotifyAlbums.add(album.uid);
 					}
 					if (
 						canDriveYoutube &&
@@ -707,12 +749,59 @@ export const PlayerStore = signalStore(
 								isYoutubeVideoId
 							))
 					) {
-						onYoutube.add(album.uid);
+						youtubeAlbums.add(album.uid);
 					}
 				}
 
-				return { spotify: onSpotify, youtube: onYoutube };
+				return { spotify: spotifyAlbums, youtube: youtubeAlbums };
 			});
+
+			/**
+			 * The page's album / track can be played — by this player, or by
+			 * pressing the frame the page puts it in. Where neither can, no
+			 * button is offered: one that does nothing when pressed is worse
+			 * than none at all.
+			 */
+			const pagePlayable = computed(() => {
+				const page = store.page();
+				const source = sourceFor(page);
+
+				return (
+					!!source &&
+					(source !== 'spotify' ||
+						spotify.connected() ||
+						spotify.hasOwnApp() ||
+						embedDrives(page))
+				);
+			});
+
+			/**
+			 * The page puts the record in Spotify's own frame: it plays on
+			 * Spotify and the collector has not signed in here, so Spotify's
+			 * frame is what carries it.
+			 */
+			const pageFrame = computed(() => {
+				const page = store.page();
+
+				return (
+					sourceFor(page) === 'spotify' &&
+					!spotify.connected() &&
+					!!onSpotify(page)
+				);
+			});
+
+			/**
+			 * The play button on the page is ours to put there.
+			 *
+			 * Where Spotify's own frame carries the record, that frame's
+			 * button is the one place to press: a second remote for the same
+			 * device is only a second thing to explain. Signing in — which
+			 * is what buys this player its own buttons — is in the settings
+			 * beside it, and the frame's own note says so.
+			 */
+			const pagePlayButton = computed(
+				() => pagePlayable() && !pageFrame()
+			);
 
 			return {
 				now,
@@ -736,9 +825,10 @@ export const PlayerStore = signalStore(
 					return track?.images ?? [];
 				}),
 				/**
-				 * The moving clip made from those pictures, when the song has
-				 * one. The stage prefers it to the slideshow: it was built
-				 * from the very same pictures, and it moves.
+				 * The moving clip written from the song's lyrics, when it
+				 * has one. The stage prefers it to the slideshow: it comes
+				 * from the same words the pictures were drawn from, and it
+				 * moves.
 				 */
 				trackClip: computed((): TrackClip | null => {
 					const { request, trackId } = shown();
@@ -785,24 +875,9 @@ export const PlayerStore = signalStore(
 						(pageActive() && !!now()?.playing) ||
 						(embedDrives(store.page()) && embed.playing())
 				),
-				/**
-				 * The page's album / track can be played — by this player,
-				 * or by pressing the frame the page puts it in. Where neither
-				 * can, no button is offered: one that does nothing when
-				 * pressed is worse than none at all.
-				 */
-				pagePlayable: computed(() => {
-					const page = store.page();
-					const source = sourceFor(page);
-
-					return (
-						!!source &&
-						(source !== 'spotify' ||
-							spotify.connected() ||
-							spotify.hasOwnApp() ||
-							embedDrives(page))
-					);
-				}),
+				pagePlayable,
+				pagePlayButton,
+				pageFrame,
 				/** What plays is the page's frame, not this player. */
 				embedDrives: computed(() => embedDrives),
 				shown,
@@ -1011,18 +1086,27 @@ export const PlayerStore = signalStore(
 					patchState(store, { stageOpen: true });
 				}
 
-				if (source === 'spotify' && request.spotifyAlbumId) {
-					if (request.trackId) {
-						await spotify.loadAlbumTracks(
-							request.spotifyAlbumId,
-							request.tracks
+				if (source === 'spotify') {
+					const playable = onSpotify(request);
+
+					if (playable?.kind === 'album') {
+						if (request.trackId) {
+							await spotify.loadAlbumTracks(
+								playable.id,
+								request.tracks
+							);
+						}
+						await spotify.play(
+							playable.id,
+							request.trackId,
+							!settings.autoAdvance
 						);
+					} else if (playable) {
+						// Only the song is Spotify's, so there is no record
+						// to play it from and nothing can come after it —
+						// autoAdvance has nowhere to advance to.
+						await spotify.playTrack(playable.id);
 					}
-					await spotify.play(
-						request.spotifyAlbumId,
-						request.trackId,
-						!settings.autoAdvance
-					);
 					return;
 				}
 				const album = youtubeAlbumOf(request);

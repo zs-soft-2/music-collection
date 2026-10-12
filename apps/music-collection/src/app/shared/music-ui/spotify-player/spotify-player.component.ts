@@ -70,7 +70,11 @@ export class SpotifyPlayerComponent {
 	private readonly consent = inject(ExternalPlayerConsentService);
 	protected readonly embed = inject(SpotifyEmbedStore);
 
-	public readonly albumId = input.required<string>();
+	/**
+	 * Spotify album id. Null where only the track has one: a record missing
+	 * from Spotify still has songs Spotify knows.
+	 */
+	public readonly albumId = input<string | null>(null);
 	/** Spotify track id: shows only that track. */
 	public readonly trackId = input<string | null>(null);
 	/** Album title, names the frame for screen readers. */

@@ -257,6 +257,11 @@ export class SpotifyPlaybackEffect {
 		);
 	}
 
+	/** Plays the one track, where there is no album to play it from. */
+	public async playTrack(deviceId: string, trackUri: string): Promise<void> {
+		await this.api.playTrack(await this.accessToken(), deviceId, trackUri);
+	}
+
 	public async setPaused(paused: boolean): Promise<void> {
 		const token = await this.accessToken();
 		await (paused ? this.api.pause(token) : this.api.resume(token));

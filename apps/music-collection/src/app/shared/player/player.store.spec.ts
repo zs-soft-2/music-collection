@@ -1,4 +1,9 @@
-import { NowPlaying, PlayRequest, listeningTo } from './player.store';
+import {
+	NowPlaying,
+	PlayRequest,
+	listeningTo,
+	onSpotify,
+} from './player.store';
 
 const request = (albumId: string): PlayRequest => ({
 	context: 'album',
@@ -104,6 +109,56 @@ describe('listeningTo', () => {
 	it('hears nothing from a frame that holds no record of ours', () => {
 		expect(
 			listeningTo(null, null, null, { drives: true, playing: true })
+		).toBeNull();
+	});
+});
+
+describe('onSpotify', () => {
+	const ALBUM = '4aawyAB9vmqN3uQ7FjRGTy';
+	const TRACK = '5tBbtSg9wpiWnJfXXnXQnf';
+
+	it('plays the record where Spotify has it', () => {
+		expect(onSpotify(request('album-1'))).toEqual({
+			kind: 'album',
+			id: ALBUM,
+		});
+	});
+
+	// Played from the record, a song has what follows it, so the record wins
+	// even on a page that is about one song.
+	it('keeps to the record even when the song names itself', () => {
+		expect(
+			onSpotify({ ...request('album-1'), spotifyTrackId: TRACK })
+		).toEqual({ kind: 'album', id: ALBUM });
+	});
+
+	// Most of the catalog was seeded from elsewhere: Spotify can be missing
+	// the record while having the song on it.
+	it('falls back to the song alone where the record is missing', () => {
+		expect(
+			onSpotify({
+				...request('album-1'),
+				spotifyAlbumId: null,
+				spotifyTrackId: TRACK,
+			})
+		).toEqual({ kind: 'track', id: TRACK });
+	});
+
+	it('has nothing where Spotify names neither', () => {
+		expect(
+			onSpotify({ ...request('album-1'), spotifyAlbumId: null })
+		).toBeNull();
+		expect(onSpotify(null)).toBeNull();
+	});
+
+	// A half-typed id in the song's field is not something to hand Spotify.
+	it('ignores a song id that is not one', () => {
+		expect(
+			onSpotify({
+				...request('album-1'),
+				spotifyAlbumId: null,
+				spotifyTrackId: 'not-an-id',
+			})
 		).toBeNull();
 	});
 });
