@@ -17,6 +17,8 @@ export enum DocumentCategoryEnum {
 	Badge = 'badge',
 	Scene = 'scene',
 	TrackImage = 'track-image',
+	/** The short, silent clip generated for a song. A video, not a picture. */
+	TrackClip = 'track-clip',
 }
 
 /**
@@ -27,6 +29,7 @@ export const DOCUMENT_CATEGORIES: DocumentCategoryEnum[] = [
 	DocumentCategoryEnum.AlbumCover,
 	DocumentCategoryEnum.ArtistImage,
 	DocumentCategoryEnum.TrackImage,
+	DocumentCategoryEnum.TrackClip,
 	DocumentCategoryEnum.Scene,
 	DocumentCategoryEnum.Badge,
 ];

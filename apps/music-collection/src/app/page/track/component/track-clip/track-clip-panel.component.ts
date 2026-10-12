@@ -13,7 +13,7 @@ import {
 } from '@music-collection/api';
 
 /**
- * The moving clip made from the song's pictures: what it would cost, the
+ * The moving clip made from the song's words: what it would cost, the
  * button that orders it, and the clip itself once it is there.
  *
  * Only an editor sees this. The generation runs on the gateway and is paid
@@ -35,8 +35,8 @@ export class TrackClipPanelComponent {
 	public readonly error = input<string | null>(null);
 	/** A call is in flight. */
 	public readonly busy = input(false);
-	/** There are pictures to build a clip from. */
-	public readonly hasPictures = input(false);
+	/** There are lyrics to build a clip from. */
+	public readonly hasLyrics = input(false);
 	public readonly remainingToday = input<number | null>(null);
 
 	public readonly priceAsked = output<void>();
@@ -47,13 +47,13 @@ export class TrackClipPanelComponent {
 	);
 
 	/**
-	 * Nothing is ordered without pictures, while one is being made, or when
+	 * Nothing is ordered without lyrics, while one is being made, or when
 	 * the day's allowance is gone — the server refuses all three, and a
 	 * button that can only be refused should not be offered.
 	 */
 	protected readonly canGenerate = computed(
 		() =>
-			this.hasPictures() &&
+			this.hasLyrics() &&
 			!this.running() &&
 			!this.busy() &&
 			this.remainingToday() !== 0

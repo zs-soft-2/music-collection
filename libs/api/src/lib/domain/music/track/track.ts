@@ -54,9 +54,10 @@ export interface Track {
 	 */
 	images?: TrackImage[] | null;
 	/**
-	 * The short moving clip made from those pictures, once somebody has had
-	 * one generated. The player prefers it to the slideshow; without it the
-	 * pictures simply take their turns.
+	 * The short moving clip written from the song's lyrics, once somebody
+	 * has had one generated — a document over a file like the pictures, in
+	 * its own category. The player prefers it to the slideshow; without it
+	 * the pictures simply take their turns.
 	 */
 	clip?: TrackClip | null;
 	source?: string;

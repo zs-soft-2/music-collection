@@ -26,8 +26,8 @@
 		></video>
 	}
 
-	@if (!hasPictures()) {
-		<p class="note">{{ t('ui.trackClip.needs-pictures') }}</p>
+	@if (!hasLyrics()) {
+		<p class="note">{{ t('ui.trackClip.needs-lyrics') }}</p>
 	} @else {
 		<p class="note">{{ t('ui.trackClip.what-it-does') }}</p>
 	}
@@ -36,7 +36,7 @@
 		<button
 			type="button"
 			class="clip-button"
-			[disabled]="busy() || !hasPictures()"
+			[disabled]="busy() || !hasLyrics()"
 			(click)="priceAsked.emit()"
 		>
 			<i class="pi pi-tag" aria-hidden="true"></i>

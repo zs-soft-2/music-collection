@@ -1,8 +1,9 @@
 import { DocumentEntity } from '../../document';
+import type { TrackDocument } from './track';
 
 /**
  * What a song's media costs, how it is ordered and where it got to: the
- * pictures a model draws for it, and the short clip made from them.
+ * pictures a model draws for it, and the short clip made from the song.
  *
  * Both go through the AI gateway, and both end up as documents over files,
  * the way every other picture in the catalog does. Video runs there as an
@@ -12,18 +13,23 @@ import { DocumentEntity } from '../../document';
  *
  * Ordering belongs to whoever may edit the track, the same permission the
  * links and the lyrics are written with. The prompt is written on the
- * server from the song and its pictures; the caller may add a short line of
+ * server from the song and its words; the caller may add a short line of
  * direction and pick a model, and nothing else.
  */
 
-/** A finished clip, as the track document carries it. */
-export interface TrackClip {
-	/** The document over the file — where the clip is found again. */
-	documentUid: string;
-	/** Download address, straight into a `<video src>`. */
-	filePath: string;
+/**
+ * A finished clip, as the track document carries it.
+ *
+ * The same wrapper as a picture (`TrackDocument`), carrying its own
+ * category: a document over the file, with the name and the address on it.
+ * A video is not a picture, but it is just as much a file somebody has to
+ * find again — the document library lists it under `track-clip`, and
+ * nothing of ours ever points at a bucket path nobody filed.
+ */
+export interface TrackClip extends TrackDocument {
 	/** What it runs for, as the model reported it. */
 	durationSeconds: number | null;
+	/** The video's own type, which the wrapper leaves off. */
 	mimeType: string | null;
 	/** The gateway execution that made it — the thread back to its logs. */
 	executionId: string;
@@ -61,8 +67,6 @@ export interface TrackClipEstimate {
 	model: string | null;
 	/** Clips left in today's allowance. */
 	remainingToday: number;
-	/** The pictures the clip would be built from. */
-	pictureCount: number;
 }
 
 /**

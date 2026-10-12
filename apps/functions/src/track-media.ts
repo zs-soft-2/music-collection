@@ -12,14 +12,16 @@
  * listából —, mert az, hogy ez a tenant mihez jogosult, az appon kívül
  * változik.
  *
- * Videó: ugyanez, a feltöltött képekkel együtt. A gateway videó-képessége
- * (`video.scene.generate`) promptot kap, képet nem — a képeket tehát előbb
- * el kell olvasni. Az első hívás egy képolvasó modellel megnézi, mi van a
- * fotókon, a dal szövegéből meg azt, miről szól, és a kettőből ír egy
- * jelenetet ÉS egy kameramozgást; a második ebből készíti a klipet.
+ * Videó: ugyanebből a szövegből. A gateway videó-képessége
+ * (`video.scene.generate`) promptot kap, képet nem — a kész képeket tehát
+ * hiába adnánk oda. Egy képolvasó hívás meg pont azt a kört futná körbe,
+ * amit a kép már megjárt: a szavakból lett a kép, abból megint szavak. Az
+ * első hívás ezért a dalszövegből ír egy jelenetet ÉS egy kameramozgást,
+ * a második ebből készíti a klipet. Így a klipnek szöveg kell, nem kép.
  *
  * Mindkettő fájlja úgy kerül be, ahogy a katalógus minden képe: objektum a
- * `document/` mappába, fölé dokumentum (`document-file.ts`). Enélkül a fájl
+ * `document/` mappába, fölé dokumentum (`document-file.ts`), a saját
+ * kategóriájával — a kép `track-image`, a klip `track-clip`. Enélkül a fájl
  * ott hever a bucketben, és sem a dokumentum-admin, sem a következő
  * szerkesztő nem tud róla.
  *
@@ -56,6 +58,8 @@ const APP_SETTING_COLLECTION = 'app-setting';
 const TRACK_MEDIA_SETTING_DOCUMENT = 'track-media';
 /** `libs/api` DocumentCategoryEnum.TrackImage. */
 const TRACK_IMAGE_CATEGORY = 'track-image';
+/** `libs/api` DocumentCategoryEnum.TrackClip — a videó, nem kép. */
+const TRACK_CLIP_CATEGORY = 'track-clip';
 /** A kliens-cache ezeken a kulcsokon látja meg, hogy lett új média. */
 const FEATURE_KEYS = [TRACK_COLLECTION, DOCUMENT_COLLECTION];
 
@@ -91,8 +95,6 @@ const MAX_HINT_CHARS = 200;
  * vigye el a példányt.
  */
 const MAX_FILE_BYTES = 40 * 1024 * 1024;
-/** Ennyi képet olvas el a modell; a többi nem ad hozzá, csak kerül. */
-const MAX_PICTURES_READ = 6;
 /**
  * Ennyi dalszöveget adunk oda a jelenetíró modellnek. Egy dal ennél
  * majdnem mindig rövidebb; a határ a végtelen ismétlődő refrén ellen van.
@@ -107,7 +109,7 @@ export class TrackMediaError extends Error {
 	public constructor(
 		message: string,
 		public readonly reason:
-			'not-found' | 'no-pictures' | 'running' | 'quota' | 'gateway'
+			'not-found' | 'no-lyrics' | 'running' | 'quota' | 'gateway'
 	) {
 		super(message);
 		this.name = 'TrackMediaError';
@@ -130,9 +132,20 @@ export interface TrackImage {
 	generated?: boolean;
 }
 
+/**
+ * A kész klip, ahogy a szám dokumentuma hordozza. Ugyanaz a burok, mint egy
+ * képé (`TrackImage`), csak a saját kategóriájával: a videó nem kép, de
+ * ugyanúgy fájl, amit meg kell találni — a dokumentum-admin a `track-clip`
+ * alatt listázza, és semmink nem mutat egy beiktatatlan bucket-útra.
+ */
 export interface TrackClip {
-	documentUid: string;
+	/** `libs/common/api` EntityTypeEnum.Document. */
+	entityType: string;
+	/** A dokumentum uid-je — ezen találni meg újra. */
+	uid: string;
+	name: string;
 	filePath: string;
+	category: string;
 	durationSeconds: number | null;
 	mimeType: string | null;
 	executionId: string;
@@ -155,7 +168,6 @@ export interface TrackClipEstimate {
 	currency: string;
 	model: string | null;
 	remainingToday: number;
-	pictureCount: number;
 }
 
 export interface TrackImageModel {
@@ -347,14 +359,6 @@ async function readSong(database: Firestore, trackUid: string): Promise<Song> {
 }
 
 /**
- * A képek címe a modellnek. A `filePath` a dokumentum letöltési URL-je:
- * tokenes, tehát a gateway modellje egyszerűen letölti — sem base64-ben nem
- * kell átvinni, sem aláírt URL-t kitalálni.
- */
-const pictureUrls = (song: Song): string[] =>
-	song.images.slice(0, MAX_PICTURES_READ).map((image) => image.filePath);
-
-/**
  * A szám szövege, ha van. A dalszöveg nem publikus (`track-lyrics`), de ezt
  * a szerver olvassa Admin SDK-val — és nem adja tovább sehová: a modellnek
  * az megy, amit a szövegből LÁTNI lehet, nem a szöveg maga.
@@ -369,6 +373,28 @@ export async function readLyrics(
 		.get();
 
 	return trimLyrics(snapshot.get('text'));
+}
+
+/**
+ * A szöveg, amire a klipnek szüksége van — enélkül nem indul.
+ *
+ * A kép elmegy a cím alapján is, egy nyolc másodperces videó viszont a
+ * legdrágább hívásunk: amiből nincs mit megírni, azt ne is rendeljük meg.
+ */
+async function requireLyrics(
+	database: Firestore,
+	song: Song
+): Promise<string> {
+	const lyrics = await readLyrics(database, song.uid);
+
+	if (!lyrics) {
+		throw new TrackMediaError(
+			'Ehhez a számhoz még nincs dalszöveg, amiből videó készülhetne.',
+			'no-lyrics'
+		);
+	}
+
+	return lyrics;
 }
 
 /** A szöveg, amennyi a jelenetíró modellnek elég. */
@@ -437,13 +463,17 @@ const IMAGE_SCENE_SCHEMA = {
  * fény. Ez a lépés pont azt szedi ki belőle.
  *
  * Szöveg nélküli számnál nincs mit kiszedni: marad a cím és az irány.
+ *
+ * Minőségi profilt nem kér: a gateway tenantjánál a szöveges képességhez nem
+ * minden sávban áll modell, és ez a négyszáz tokenes lépés amúgy sem a
+ * költség — azt a mellette futó kép viszi. A modellt a gateway választja, ahogy
+ * a többi szöveges hívásunknál is.
  */
 export async function writeImageScene(
 	client: GatewayClient,
 	song: Song,
 	lyrics: string,
-	hint: string,
-	quality: QualityProfile
+	hint: string
 ): Promise<{ scene: string; palette: string }> {
 	if (!lyrics) {
 		return { scene: '', palette: '' };
@@ -451,7 +481,6 @@ export async function writeImageScene(
 
 	const result = await client.execute({
 		capability: 'text.complete',
-		qualityProfile: quality === 'premium' ? 'normal' : 'economy',
 		input: {
 			prompt:
 				`Below are the lyrics of the song "${song.name}". Read them ` +
@@ -533,13 +562,7 @@ export async function drawTrackImage(
 	// rajzolás. Két hívás egy kép helyett — a szöveges lépés a töredéke a
 	// képének, és nélküle minden szám ugyanarról a címről kapna képet.
 	const lyrics = await readLyrics(database, song.uid);
-	const { scene, palette } = await writeImageScene(
-		client,
-		song,
-		lyrics,
-		hint,
-		options.quality
-	);
+	const { scene, palette } = await writeImageScene(client, song, lyrics, hint);
 	const prompt = buildImagePrompt(song, scene, palette, hint);
 	const result = await client.execute({
 		capability: 'image.generate',
@@ -622,50 +645,51 @@ const SCENE_SCHEMA = {
 			scene: {
 				type: 'string',
 				description:
-					'What the pictures show, as one sentence a video model can build: subject, place, light, mood.',
+					'What the lyrics call up, as one sentence a video model can build: subject, place, light, mood.',
 			},
 			motion: {
 				type: 'string',
 				description:
-					'One slow camera or subject movement that suits the pictures, e.g. "a slow push in through drifting smoke".',
+					'One slow camera or subject movement that suits the scene, e.g. "a slow push in through drifting smoke".',
 			},
 		},
 	},
 } as const;
 
 /**
- * A képek elolvasása és a jelenet megírása. Egy szöveges hívás, képekkel — a
- * gateway ettől olyan modellre küldi, ami képet is olvas (`photo-signals.ts`
- * ugyanezt teszi a borítókkal).
+ * A klip jelenete, a dal szövegéből — ugyanonnan, ahonnan a kép.
+ *
+ * Képet nem olvastat. A `video.scene.generate` úgyis csak promptot fogad, a
+ * szám képei pedig maguk is ebből a szövegből készültek: visszakérdezni
+ * róluk annyi, mint a saját válaszunkat olvastatni vissza egy képolvasó
+ * modellel — egy hívással drágább, egy lépéssel pontatlanabb, és olyan
+ * sávhoz köt, amiben nem mindig áll modell. Profilt ezért sem kér: lásd
+ * `writeImageScene`.
+ *
+ * Szöveg nélkül nincs miből: a hívó szűr rá (`no-lyrics`).
  */
 export async function writeClipPrompt(
 	client: GatewayClient,
 	song: Song,
-	urls: string[],
-	lyrics: string,
-	quality: QualityProfile
+	lyrics: string
 ): Promise<string> {
 	const result = await client.execute({
 		capability: 'text.complete',
-		qualityProfile: quality === 'premium' ? 'normal' : 'economy',
 		input: {
 			prompt:
-				`These pictures belong to the song "${song.name}". ` +
-				'Describe one scene a short looping music-video clip could ' +
-				'be built from, and one slow movement for it. The pictures ' +
-				'say what it looks like; stay with what they actually show.' +
-				(lyrics
-					? ' The words of the song say what it is about — take ' +
-						'the place, the objects, the weather and the light ' +
-						'from them where the pictures leave room. Never ' +
-						'quote a line, and never put writing in the frame.' +
-						`\n\nLyrics:\n${lyrics}`
-					: ' Invent nothing that is not there.'),
+				`Below are the lyrics of the song "${song.name}". Read them ` +
+				'and describe ONE scene a short looping music-video clip ' +
+				'could be built from — what is in the frame, where it is, ' +
+				'in what light and weather — and ONE slow movement for it. ' +
+				'Take the imagery from the words themselves: a line naming ' +
+				'a place, an object or a sky is worth more than a summary ' +
+				'of the meaning. Never quote a line, and never put writing ' +
+				'in the frame.' +
+				`\n\n${lyrics}`,
 			systemPrompt:
 				'You write briefs for a video model. You are precise, ' +
 				'visual and short, you never quote song lyrics, and you ' +
 				'never describe text or logos.',
-			images: urls.map((url) => ({ url })),
 			responseSchema: SCENE_SCHEMA,
 			maxTokens: 400,
 		},
@@ -674,7 +698,7 @@ export async function writeClipPrompt(
 
 	if (result.kind !== 'result' || !result.output?.text) {
 		throw new TrackMediaError(
-			'A képek elolvasása nem sikerült.',
+			'A jelenet megírása nem sikerült.',
 			'gateway'
 		);
 	}
@@ -732,12 +756,7 @@ export async function estimateTrackClip(
 ): Promise<TrackClipEstimate> {
 	const song = await readSong(database, trackUid);
 
-	if (!song.images.length) {
-		throw new TrackMediaError(
-			'Ehhez a számhoz még nincs kép, amiből videó készülhetne.',
-			'no-pictures'
-		);
-	}
+	await requireLyrics(database, song);
 
 	const [left, estimate] = await Promise.all([
 		remaining(database, 'clip', now),
@@ -765,7 +784,6 @@ export async function estimateTrackClip(
 		currency: 'USD',
 		model: estimate?.model ?? null,
 		remainingToday: left,
-		pictureCount: song.images.length,
 	};
 }
 
@@ -785,14 +803,7 @@ export async function startTrackClip(
 	now: number
 ): Promise<TrackClipState> {
 	const song = await readSong(database, trackUid);
-
-	if (!song.images.length) {
-		throw new TrackMediaError(
-			'Ehhez a számhoz még nincs kép, amiből videó készülhetne.',
-			'no-pictures'
-		);
-	}
-
+	const lyrics = await requireLyrics(database, song);
 	const job = database.collection(TRACK_CLIP_COLLECTION).doc(song.uid);
 	const existing = await job.get();
 	const status = existing.get('status') as TrackClipStatus | undefined;
@@ -805,14 +816,9 @@ export async function startTrackClip(
 	}
 
 	const left = await reserve(database, 'clip', now);
-	// A képek mondják meg, hogy néz ki; a dal szövege, hogy miről szól.
-	const prompt = await writeClipPrompt(
-		client,
-		song,
-		pictureUrls(song),
-		await readLyrics(database, song.uid),
-		quality
-	);
+	// A jelenet a dal szavaiból; a képek ugyanonnan jöttek, őket a
+	// videómodell úgysem látná.
+	const prompt = await writeClipPrompt(client, song, lyrics);
 
 	const accepted = await client.execute({
 		capability: 'video.scene.generate',
@@ -838,7 +844,6 @@ export async function startTrackClip(
 		executionId: accepted.executionId,
 		prompt,
 		styleVersion: MEDIA_STYLE_VERSION,
-		pictureCount: song.images.length,
 		startedBy: uid,
 		startedAt: now,
 		updatedAt: now,
@@ -1021,7 +1026,8 @@ async function download(url: string): Promise<Buffer> {
 
 /**
  * A kész klip eltevése: letöltés a gateway címéről, objektum a `document/`
- * mappába, fölé dokumentum, és a hivatkozás a szám dokumentumába.
+ * mappába, fölé dokumentum a `track-clip` kategóriával, és a hivatkozás a
+ * szám dokumentumába.
  *
  * Miért nem a gateway URL-je kerül a katalógusba: az aláírt artifact-cím
  * lejár, a katalógus pedig marad. A fájl a sajátunk, a `document/` mappa
@@ -1050,9 +1056,13 @@ async function keepClip(
 		details.mimeType
 	);
 	const documentUid = database.collection(DOCUMENT_COLLECTION).doc().id;
+	const name = `${song.name} — videó`;
 	const clip: TrackClip = {
-		documentUid,
+		entityType: DOCUMENT_ENTITY_TYPE,
+		uid: documentUid,
+		name,
 		filePath: uploaded.filePath,
+		category: TRACK_CLIP_CATEGORY,
 		durationSeconds: details.durationSeconds,
 		mimeType: details.mimeType,
 		executionId,
@@ -1067,11 +1077,11 @@ async function keepClip(
 			transaction,
 			{
 				uid: documentUid,
-				name: `${song.name} — videó`,
+				name,
 				originalName,
 				fileType: details.mimeType,
 				filePath: uploaded.filePath,
-				category: TRACK_IMAGE_CATEGORY,
+				category: TRACK_CLIP_CATEGORY,
 			},
 			details.now
 		);

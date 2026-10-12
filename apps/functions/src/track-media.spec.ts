@@ -12,6 +12,7 @@ import {
 	TrackMediaError,
 	buildClipPrompt,
 	buildImagePrompt,
+	writeClipPrompt,
 	cleanHint,
 	sanitizeTrackMediaQuota,
 	trimLyrics,
@@ -170,5 +171,52 @@ describe('buildClipPrompt', () => {
 
 	it('has a style version to read a stored prompt against', () => {
 		expect(MEDIA_STYLE_VERSION).toBe(1);
+	});
+});
+
+describe('writeClipPrompt', () => {
+	const answered = (scene: unknown) =>
+		jest.fn().mockResolvedValue({
+			kind: 'result',
+			output: { text: JSON.stringify(scene) },
+		});
+
+	const client = (execute: jest.Mock) =>
+		({ execute }) as unknown as Parameters<typeof writeClipPrompt>[0];
+
+	/**
+	 * The video capability is only ever handed a prompt, and the song's
+	 * pictures were drawn from these very words — reading them back with a
+	 * vision model would be the same answer, one call dearer, and in a price
+	 * bracket this tenant has no model in.
+	 */
+	it('writes the scene from the words, with no pictures and no bracket', async () => {
+		const execute = answered({
+			scene: 'A rain-lit street outside a record shop at night.',
+			motion: 'A slow push in towards the window.',
+		});
+
+		const prompt = await writeClipPrompt(
+			client(execute),
+			song,
+			'Rain on the window of the record shop'
+		);
+
+		const request = execute.mock.calls[0][0];
+
+		expect(request.capability).toBe('text.complete');
+		expect(request.qualityProfile).toBeUndefined();
+		expect(request.input.images).toBeUndefined();
+		expect(request.input.prompt).toContain('Rain on the window');
+		expect(prompt).toContain('rain-lit street');
+		expect(prompt).toContain('slow push in');
+	});
+
+	it('refuses a gateway answer with nothing in it', async () => {
+		const execute = jest.fn().mockResolvedValue({ kind: 'refusal' });
+
+		await expect(
+			writeClipPrompt(client(execute), song, 'Rain on the window')
+		).rejects.toThrow(TrackMediaError);
 	});
 });

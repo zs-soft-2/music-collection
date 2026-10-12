@@ -3020,11 +3020,11 @@
 			"drawn-from-lyrics": "A kép a szám dalszövegéből készül: a gateway előbb kiolvassa belőle, mi látszik — hely, tárgy, idő, fény —, és abból rajzol. Dalszöveg nélkül a cím és az irány marad."
 		},
 		"trackClip": {
-			"title": "Videó a szám képeiből",
+			"title": "Videó a dal szövegéből",
 			"being-made": "készül…",
 			"ready": "kész",
-			"needs-pictures": "Előbb tölts fel legalább egy képet — a videó azokból készül.",
-			"what-it-does": "A gateway elolvassa a feltöltött képeket és a szám dalszövegét, és egy rövid, néma, ismétlődő klipet generál belőlük a lejátszó hátterébe. Percekig tart; a lapot addig el lehet hagyni.",
+			"needs-lyrics": "Előbb vedd fel a dalszöveget — a videó abból íródik.",
+			"what-it-does": "A gateway elolvassa a szám dalszövegét, ír belőle egy jelenetet és egy lassú kameramozgást, és ebből generál egy rövid, néma, ismétlődő klipet a lejátszó hátterébe. Percekig tart; a lapot addig el lehet hagyni.",
 			"ask-the-price": "Mennyibe kerül?",
 			"generate": "Videó generálása",
 			"generate-again": "Új videó generálása",

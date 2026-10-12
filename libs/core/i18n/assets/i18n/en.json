@@ -3020,11 +3020,11 @@
 			"drawn-from-lyrics": "The picture is drawn from the song’s lyrics: the gateway first reads what can be seen in them — place, objects, weather, light — and draws that. Without lyrics the title and your direction are what remain."
 		},
 		"trackClip": {
-			"title": "Clip from the song’s pictures",
+			"title": "Clip from the song’s words",
 			"being-made": "being made…",
 			"ready": "ready",
-			"needs-pictures": "Upload a picture first — the clip is built from those.",
-			"what-it-does": "The gateway reads the uploaded pictures and the song’s lyrics, and generates a short, silent, looping clip from them for the player’s backdrop. It takes minutes; the page can be left in the meantime.",
+			"needs-lyrics": "Add the lyrics first — the clip is written from those.",
+			"what-it-does": "The gateway reads the song’s lyrics, writes a scene and a slow camera move from them, and generates a short, silent, looping clip for the player’s backdrop. It takes minutes; the page can be left in the meantime.",
 			"ask-the-price": "What would it cost?",
 			"generate": "Generate a clip",
 			"generate-again": "Generate a new clip",

@@ -193,8 +193,14 @@ export const TrackPageStore = signalStore(
 						store.clipStatus() === 'queued' ||
 						store.clipStatus() === 'running'
 				),
-				/** There are pictures a clip could be built from. */
-				hasPictures: computed(() => (track()?.images ?? []).length > 0),
+				/**
+				 * There are words a clip could be built from. The video
+				 * model is only ever handed a prompt, and that prompt is
+				 * written from the lyrics — the same source the song's
+				 * pictures came from — so a song without lyrics has nothing
+				 * to order a clip with.
+				 */
+				hasLyrics: computed(() => !!store.lyrics()?.text?.trim()),
 				/**
 				 * Home › the band › the album › this track. The track is part
 				 * of the record whoever opened it and from wherever; the way back
@@ -584,7 +590,7 @@ export const TrackPageStore = signalStore(
 			},
 
 			/**
-			 * Has a clip made of the song's pictures. Returns as soon as the
+			 * Has a clip made of the song's words. Returns as soon as the
 			 * gateway has taken the work on; the watcher below follows it to
 			 * the end, and closing the page does not stop it.
 			 */
@@ -725,11 +731,11 @@ export const TrackPageStore = signalStore(
 			store.loadLyrics(of(undefined));
 			store.loadAlbums(of(undefined));
 			// Only an editor may ask about a clip, and only a song with
-			// pictures can have one — both are known a moment after the page
+			// lyrics can have one — both are known a moment after the page
 			// opens, so the question waits for them rather than being asked
 			// into the void.
 			store.askClipState(() =>
-				store.canEdit() && store.hasPictures() ? store.trackId() : null
+				store.canEdit() && store.hasLyrics() ? store.trackId() : null
 			);
 			store.watchClip(() => store.clipRunning());
 		},

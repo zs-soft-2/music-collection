@@ -1946,9 +1946,9 @@ export const updateConcertAiSettings = onCall(async (request) => {
  * beállítást), és az ár, a rajzolás, az indítás meg a visszakérdezés
  * ugyanarról a számról szól. Az `action` dönti el, melyik.
  *
- * A prompt a szerveren, a szám tárolt adataiból és a saját képeiből készül —
+ * A prompt a szerveren, a szám tárolt adataiból és a dalszövegéből készül —
  * a hívó a szám uid-jét küldi, a modellt, és legfeljebb egy rövid irányt. A
- * `timeoutSeconds` a kép- és képolvasó modell miatt bőséges; a videóra nem
+ * `timeoutSeconds` a jelenetíró és a képmodell miatt bőséges; a videóra nem
  * várunk, azt a gateway futtatja, és a `status` szedi össze.
  *
  * 512 MiB: a kész fájl a memórián át kerül a bucketbe (néhány MB), és ennél
@@ -2033,7 +2033,7 @@ export const generateTrackMedia = onCall(
 							? 'resource-exhausted'
 							: error.reason === 'running'
 								? 'already-exists'
-								: error.reason === 'no-pictures'
+								: error.reason === 'no-lyrics'
 									? 'failed-precondition'
 									: 'internal',
 					error.message,
