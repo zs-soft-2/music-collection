@@ -12,6 +12,17 @@ import {
 } from '@music-collection/api';
 
 /**
+ * How long the browser waits for a picture to be drawn.
+ *
+ * The callable gives itself 300 s because a scene is written first and only
+ * then drawn, while the SDK waits 70 s by default — long enough to give up
+ * on a picture that is still being made, after the allowance has already
+ * been spent on it. The browser therefore waits as long as the function may
+ * run; the other actions are a single read and keep the default.
+ */
+const DRAW_TIMEOUT_MS = 300_000;
+
+/**
  * Data access of the song's generated media: the `generateTrackMedia`
  * callable.
  *
@@ -44,12 +55,15 @@ export class TrackMediaRepository {
 		model: string | null,
 		hint: string
 	): Observable<TrackImageResult> {
-		return this.call$<TrackImageResult>({
-			trackUid,
-			action: 'image',
-			...(model ? { model } : {}),
-			...(hint ? { hint } : {}),
-		});
+		return this.call$<TrackImageResult>(
+			{
+				trackUid,
+				action: 'image',
+				...(model ? { model } : {}),
+				...(hint ? { hint } : {}),
+			},
+			DRAW_TIMEOUT_MS
+		);
 	}
 
 	public startClip$(
@@ -67,10 +81,14 @@ export class TrackMediaRepository {
 		return this.call$<TrackClipState>({ trackUid, action: 'status' });
 	}
 
-	private call$<T>(request: TrackMediaRequest): Observable<T> {
+	private call$<T>(
+		request: TrackMediaRequest,
+		timeoutMs?: number
+	): Observable<T> {
 		const callable = httpsCallable<TrackMediaRequest, T>(
 			this.functions,
-			TRACK_MEDIA_FUNCTION
+			TRACK_MEDIA_FUNCTION,
+			timeoutMs ? { timeout: timeoutMs } : undefined
 		);
 
 		return from(callable(request)).pipe(map((result) => result.data));
