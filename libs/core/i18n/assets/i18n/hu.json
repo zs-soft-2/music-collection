@@ -3014,6 +3014,8 @@
 			"gateway-chooses": "A gateway válasszon",
 			"direction": "Irány (nem kötelező)",
 			"direction-example": "pl. esős utca éjjel, neonfény",
+			"drawing": "A modell rajzol…",
+			"being-drawn": "A modell most rajzolja a képet a dalszövegből. Ez fél percig vagy tovább is eltarthat — a lapot addig ne frissítsd.",
 			"draw": "Kép generálása",
 			"drawn-from-lyrics": "A kép a szám dalszövegéből készül: a gateway előbb kiolvassa belőle, mi látszik — hely, tárgy, idő, fény —, és abból rajzol. Dalszöveg nélkül a cím és az irány marad."
 		},

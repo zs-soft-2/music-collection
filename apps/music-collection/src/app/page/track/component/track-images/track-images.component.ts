@@ -2,11 +2,14 @@ import {
 	ChangeDetectionStrategy,
 	Component,
 	computed,
+	effect,
 	input,
 	output,
 	signal,
 } from '@angular/core';
 import { I18N_IMPORTS } from '@music-collection/core/i18n';
+
+import { AiMarkComponent } from '../../../../shared/music-ui';
 
 import {
 	MAX_TRACK_IMAGE_HINT,
@@ -26,7 +29,7 @@ import {
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-track-images',
-	imports: [...I18N_IMPORTS],
+	imports: [...I18N_IMPORTS, AiMarkComponent],
 	templateUrl: './track-images.component.html',
 	styleUrls: ['./track-images.component.scss'],
 })
@@ -38,6 +41,8 @@ export class TrackImagesComponent {
 	public readonly canAdd = input(true);
 	/** A picture is being scaled, uploaded or written. */
 	public readonly busy = input(false);
+	/** A model is drawing one right now — the long wait, not the short one. */
+	public readonly drawing = input(false);
 	public readonly error = input<string | null>(null);
 
 	/** What the gateway would let this tenant draw with. */
@@ -87,6 +92,41 @@ export class TrackImagesComponent {
 	protected setHint(event: Event): void {
 		this.hint.set((event.target as HTMLInputElement).value);
 	}
+
+	/**
+	 * How long the model has been drawing, as a clock.
+	 *
+	 * A spinner alone says "something is happening"; after twenty silent
+	 * seconds it stops saying even that. The count is what tells the editor
+	 * the call is still alive and that waiting is the right thing to do, so
+	 * it is worth the one timer this component keeps.
+	 */
+	protected readonly elapsed = signal(0);
+
+	private readonly tick = effect((onCleanup) => {
+		if (!this.drawing()) {
+			this.elapsed.set(0);
+
+			return;
+		}
+
+		const startedAt = Date.now();
+		const timer = setInterval(
+			() => this.elapsed.set(Math.round((Date.now() - startedAt) / 1000)),
+			1000
+		);
+
+		onCleanup(() => clearInterval(timer));
+	});
+
+	protected readonly elapsedClock = computed(() => {
+		const seconds = this.elapsed();
+
+		return `${Math.floor(seconds / 60)}:${`${seconds % 60}`.padStart(
+			2,
+			'0'
+		)}`;
+	});
 
 	protected draw(): void {
 		this.drawAsked.emit({

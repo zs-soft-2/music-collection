@@ -116,7 +116,7 @@
 						/>
 						<i class="pi pi-image" aria-hidden="true"></i>
 						<span>{{
-							busy()
+							busy() && !drawing()
 								? t('ui.trackImages.uploading')
 								: t('ui.trackImages.add-a-picture')
 						}}</span>
@@ -169,16 +169,39 @@
 					[disabled]="busy() || !canAdd()"
 					(click)="draw()"
 				>
-					<i class="pi pi-sparkles" aria-hidden="true"></i>
+					@if (drawing()) {
+						<i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+					} @else {
+						<i class="pi pi-sparkles" aria-hidden="true"></i>
+					}
 					<span>{{
-						busy()
-							? t('ui.trackImages.uploading')
-							: t('ui.trackImages.draw')
+						drawing()
+							? t('ui.trackImages.drawing')
+							: busy()
+								? t('ui.trackImages.uploading')
+								: t('ui.trackImages.draw')
 					}}</span>
 				</button>
-				<p class="note">
-					{{ t('ui.trackImages.drawn-from-lyrics') }}
-				</p>
+				<!--
+					The drawing takes half a minute or more at the gateway,
+					and until it lands nothing on the page moves. This line
+					is what says the model is still at it: the mark that a
+					model is working, the sentence, and a clock that keeps
+					counting so the wait never looks like a page that died.
+				-->
+				@if (drawing()) {
+					<p class="working" role="status">
+						<mc-ai-mark
+							[hint]="t('ui.trackImages.drawn-from-lyrics')"
+						/>
+						<span>{{ t('ui.trackImages.being-drawn') }}</span>
+						<span class="clock">{{ elapsedClock() }}</span>
+					</p>
+				} @else {
+					<p class="note">
+						{{ t('ui.trackImages.drawn-from-lyrics') }}
+					</p>
+				}
 			</div>
 
 			@if (error()) {

@@ -3014,6 +3014,8 @@
 			"gateway-chooses": "Let the gateway choose",
 			"direction": "Direction (optional)",
 			"direction-example": "e.g. a rainy street at night, neon light",
+			"drawing": "The model is drawing…",
+			"being-drawn": "The model is drawing the picture from the lyrics. This takes half a minute or more — don’t reload the page while it works.",
 			"draw": "Draw a picture",
 			"drawn-from-lyrics": "The picture is drawn from the song’s lyrics: the gateway first reads what can be seen in them — place, objects, weather, light — and draws that. Without lyrics the title and your direction are what remain."
 		},

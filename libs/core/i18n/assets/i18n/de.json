@@ -3014,6 +3014,8 @@
 			"gateway-chooses": "Das Gateway soll wählen",
 			"direction": "Richtung (optional)",
 			"direction-example": "z. B. regnerische Straße bei Nacht, Neonlicht",
+			"drawing": "Das Modell zeichnet…",
+			"being-drawn": "Das Modell zeichnet das Bild gerade aus dem Songtext. Das dauert eine halbe Minute oder länger — lade die Seite währenddessen nicht neu.",
 			"draw": "Bild erzeugen",
 			"drawn-from-lyrics": "Das Bild entsteht aus dem Songtext: Das Gateway liest zuerst heraus, was darin zu sehen ist — Ort, Objekte, Wetter, Licht — und zeichnet das. Ohne Text bleiben der Titel und deine Richtung."
 		},

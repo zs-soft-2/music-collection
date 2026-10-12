@@ -77,6 +77,13 @@ interface TrackPageState {
 	fetchLyricsError: string | null;
 	/** A picture is being scaled, uploaded or written. */
 	storingImage: boolean;
+	/**
+	 * A model is drawing a picture right now. Told apart from the storing
+	 * above because the waits are nothing alike: an upload is a moment, a
+	 * drawing is half a minute of a call nobody can see. The page has to say
+	 * which of the two the editor is waiting for.
+	 */
+	drawingImage: boolean;
 	imageError: string | null;
 	/**
 	 * Where the song's generated clip stands. It comes from the server —
@@ -109,6 +116,7 @@ const initialState: TrackPageState = {
 	fetchingLyrics: false,
 	fetchLyricsError: null,
 	storingImage: false,
+	drawingImage: false,
 	imageError: null,
 	clipStatus: 'none',
 	clipError: null,
@@ -507,7 +515,11 @@ export const TrackPageStore = signalStore(
 					return;
 				}
 
-				patchState(store, { storingImage: true, imageError: null });
+				patchState(store, {
+					storingImage: true,
+					drawingImage: true,
+					imageError: null,
+				});
 
 				try {
 					const drawn = await trackMediaEffect.drawImage(
@@ -521,10 +533,14 @@ export const TrackPageStore = signalStore(
 						store.track()?.images ?? [],
 						drawn
 					);
-					patchState(store, { storingImage: false });
+					patchState(store, {
+						storingImage: false,
+						drawingImage: false,
+					});
 				} catch (error) {
 					patchState(store, {
 						storingImage: false,
+						drawingImage: false,
 						imageError: clipMessage(
 							error,
 							'A kép generálása nem sikerült.'

@@ -202,6 +202,23 @@
 	}
 }
 
+/* The line that says a model is working: full width under the row. */
+.working {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.375rem 0.5rem;
+	align-items: center;
+	width: 100%;
+	margin: 0;
+	font-size: 0.75rem;
+	color: var(--mc-text-muted);
+}
+
+.clock {
+	font-variant-numeric: tabular-nums;
+	color: var(--mc-text-subtle);
+}
+
 .note {
 	margin: 0;
 	font-size: 0.75rem;
