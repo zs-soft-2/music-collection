@@ -20,6 +20,11 @@ import { PlayerStore } from './player.store';
  * the settings (source, output device, …), and what the source needs on the
  * page: Spotify's preview player until signed in, the YouTube video and its
  * picker.
+ *
+ * Starting it is not among them. The page's own Play button is the one place
+ * a record is put on from — the same button pressed the same way on every
+ * page — and what is left here is what only makes sense while it already
+ * plays: the way through the record, the volume, the sources.
  */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -67,24 +72,6 @@ import { PlayerStore } from './player.store';
 						>
 							<i
 								class="pi pi-step-backward"
-								aria-hidden="true"
-							></i>
-						</button>
-					}
-					@if (player.pagePlayable()) {
-						<button
-							type="button"
-							class="play"
-							[class.youtube]="player.pageSource() === 'youtube'"
-							[attr.aria-label]="
-								player.pagePlaying() ? 'Pause' : 'Play'
-							"
-							(click)="player.togglePage()"
-						>
-							<i
-								class="pi"
-								[class.pi-pause]="player.pagePlaying()"
-								[class.pi-play]="!player.pagePlaying()"
 								aria-hidden="true"
 							></i>
 						</button>
@@ -144,11 +131,7 @@ import { PlayerStore } from './player.store';
 				<p class="error">{{ error }}</p>
 			}
 
-			@if (
-				player.pageSource() === 'spotify' &&
-				!player.spotifyConnected() &&
-				page.spotifyAlbumId
-			) {
+			@if (player.pageFrame()) {
 				<mc-spotify-player
 					[albumId]="page.spotifyAlbumId"
 					[trackId]="page.spotifyTrackId"
@@ -233,30 +216,6 @@ import { PlayerStore } from './player.store';
 
 			&:hover {
 				background: var(--mc-surface-2);
-			}
-		}
-
-		.play {
-			display: grid;
-			place-items: center;
-			width: var(--mc-circle-xl);
-			height: var(--mc-circle-xl);
-			padding: 0;
-			border: 0;
-			border-radius: 50%;
-			font-size: 1.1rem;
-			color: var(--mc-on-spotify);
-			background: var(--mc-spotify);
-			cursor: pointer;
-			transition: transform var(--mc-duration-fast) ease;
-
-			&:hover {
-				transform: scale(1.06);
-			}
-
-			&.youtube {
-				color: #fff;
-				background: var(--mc-youtube);
 			}
 		}
 

@@ -13,7 +13,10 @@ import {
 } from '@music-collection/api';
 
 import { CoverBackdropComponent } from '../../shared/backdrop';
-import { PlayerPanelComponent } from '../../shared/player';
+import {
+	PagePlayButtonComponent,
+	PlayerPanelComponent,
+} from '../../shared/player';
 import { TrackPageStore } from './track-page.store';
 import { PageBreadcrumbComponent } from '../../shared/page-breadcrumb';
 import { CoverFallbackDirective } from '../../shared/image';
@@ -48,6 +51,7 @@ interface TrackForm {
 		PageBreadcrumbComponent,
 		RouterLink,
 		CoverBackdropComponent,
+		PagePlayButtonComponent,
 		PlayerPanelComponent,
 		TrackClipPanelComponent,
 		TrackImageBackdropComponent,

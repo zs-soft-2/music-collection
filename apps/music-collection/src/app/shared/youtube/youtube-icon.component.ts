@@ -4,6 +4,10 @@ import { I18N_IMPORTS } from '@music-collection/core/i18n';
 /**
  * The YouTube logo mark: a red rounded rectangle with a white play triangle.
  * Decorative: the surrounding text names the action.
+ *
+ * On YouTube's own red — a filled play button, say — the two colours are
+ * swapped with `--mc-youtube-mark-box` and `--mc-youtube-mark-arrow`, which
+ * is what keeps the mark visible where its own red is the background.
  */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -12,10 +16,10 @@ import { I18N_IMPORTS } from '@music-collection/core/i18n';
 	template: `
 		<svg viewBox="0 0 28 20" aria-hidden="true" focusable="false">
 			<path
-				fill="#ff0033"
+				class="box"
 				d="M27.4 3.1A3.5 3.5 0 0 0 24.9.6C22.7 0 14 0 14 0S5.3 0 3.1.6A3.5 3.5 0 0 0 .6 3.1C0 5.3 0 10 0 10s0 4.7.6 6.9a3.5 3.5 0 0 0 2.5 2.5C5.3 20 14 20 14 20s8.7 0 10.9-.6a3.5 3.5 0 0 0 2.5-2.5C28 14.7 28 10 28 10s0-4.7-.6-6.9Z"
 			/>
-			<path fill="#fff" d="m11.2 14.3 7.2-4.3-7.2-4.3v8.6Z" />
+			<path class="arrow" d="m11.2 14.3 7.2-4.3-7.2-4.3v8.6Z" />
 		</svg>
 	`,
 	styles: `
@@ -29,6 +33,14 @@ import { I18N_IMPORTS } from '@music-collection/core/i18n';
 		svg {
 			width: 100%;
 			height: 100%;
+		}
+
+		.box {
+			fill: var(--mc-youtube-mark-box, #ff0033);
+		}
+
+		.arrow {
+			fill: var(--mc-youtube-mark-arrow, #fff);
 		}
 	`,
 })

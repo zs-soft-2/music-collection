@@ -1,3 +1,4 @@
+export * from './page-play-button.component';
 export * from './player-panel.component';
 export * from './play-album-button.component';
 export * from './player-mini.component';

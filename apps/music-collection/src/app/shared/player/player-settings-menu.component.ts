@@ -308,6 +308,17 @@ interface Choice<T> {
 			backdrop-filter: blur(12px);
 		}
 
+		.toggle:focus-visible,
+		.menu :focus-visible {
+			outline: 2px solid rgb(255 140 90 / 0.9);
+			outline-offset: 2px;
+		}
+
+		/* the choice buttons sit too close for an outset ring */
+		.menu fieldset button:focus-visible {
+			outline-offset: -3px;
+		}
+
 		.scope {
 			margin: 0;
 			font-size: 0.6875rem;
@@ -319,6 +330,7 @@ interface Choice<T> {
 
 		fieldset {
 			display: flex;
+			align-items: stretch;
 			gap: 0.25rem;
 			margin: 0;
 			padding: 0;
@@ -332,11 +344,18 @@ interface Choice<T> {
 			}
 
 			button {
-				flex: 1;
-				height: 30px;
+				display: grid;
+				place-items: center;
+				flex: 1 1 0;
+				min-width: 0;
+				min-height: 30px;
+				padding: 0.25rem 0.375rem;
 				font: inherit;
 				font-size: 0.75rem;
 				font-weight: 600;
+				line-height: 1.2;
+				text-align: center;
+				text-wrap: balance;
 				color: rgb(255 255 255 / 0.8);
 				background: rgb(255 255 255 / 0.06);
 				border: 1px solid transparent;

@@ -268,4 +268,10 @@ a {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 0.5rem;
+
+	/* The track page's buttons stand lower than the album page's, and the
+	   Play button stands with them. */
+	--mc-page-play-height: 36px;
+	--mc-page-play-padding: 0.875rem;
+	--mc-page-play-font-size: 0.8125rem;
 }

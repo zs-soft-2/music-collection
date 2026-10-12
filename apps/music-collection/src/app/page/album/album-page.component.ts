@@ -23,7 +23,10 @@ import {
 	StarRatingComponent,
 } from '../../shared/music-ui';
 import { RATING_NOTE_LIMIT } from '../../data/rating';
-import { PlayerPanelComponent } from '../../shared/player';
+import {
+	PagePlayButtonComponent,
+	PlayerPanelComponent,
+} from '../../shared/player';
 import { AlbumPageStore } from './album-page.store';
 import { AlbumCollectionsComponent } from './component/album-collections/album-collections.component';
 import { AlbumCreditsComponent } from './component/album-credits/album-credits.component';
@@ -66,6 +69,7 @@ type AlbumSection =
 		AlbumTracklistComponent,
 		AdminEditLinkComponent,
 		ProposeLinkComponent,
+		PagePlayButtonComponent,
 		PlayerPanelComponent,
 		ReleasePickerComponent,
 		CopyRemovalComponent,

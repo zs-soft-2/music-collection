@@ -1618,15 +1618,10 @@ export const AlbumPageStore = signalStore(
 			const now = player.now();
 			return now?.albumId === store.albumId() ? now.trackId : null;
 		}),
-		/** The album plays now. */
-		playing: computed(() => player.pagePlaying()),
+		/** The page has a player to show at all. */
 		playable: computed(() => player.pagePlayable()),
 	})),
 	withMethods((store, player = inject(PlayerStore)) => ({
-		/** Plays the album, or pauses / resumes it. */
-		togglePlay(): Promise<void> {
-			return player.togglePage();
-		},
 		playTrack(trackId: string): Promise<void> {
 			return player.playPageTrack(trackId);
 		},

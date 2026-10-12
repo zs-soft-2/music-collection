@@ -655,11 +655,6 @@ export const TrackPageStore = signalStore(
 				)
 			),
 
-			/** Plays the track, or pauses / resumes it. */
-			togglePlay(): Promise<void> {
-				return player.togglePage();
-			},
-
 			openPlayer(): void {
 				player.openStage();
 			},
@@ -691,8 +686,7 @@ export const TrackPageStore = signalStore(
 		})
 	),
 	withComputed((store, player = inject(PlayerStore)) => ({
-		/** The player is on this track. */
-		playing: computed(() => player.pagePlaying()),
+		/** The page has a player to show at all. */
 		playerAvailable: computed(() => player.pagePlayable()),
 	})),
 	withHooks({
