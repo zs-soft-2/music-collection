@@ -34,11 +34,15 @@ const DRAW_TIMEOUT_MS = 300_000;
 export class TrackMediaRepository {
 	private readonly functions = inject(Functions);
 
+	/**
+	 * What a clip would cost. No bracket is named: nothing on this page asks
+	 * the collector to choose one, and a bracket the gateway has no model
+	 * assigned to is refused outright rather than served from a dearer one.
+	 */
 	public estimate$(trackUid: string): Observable<TrackClipEstimate> {
 		return this.call$<TrackClipEstimate>({
 			trackUid,
 			action: 'estimate',
-			qualityProfile: 'economy',
 		});
 	}
 
@@ -66,14 +70,15 @@ export class TrackMediaRepository {
 		);
 	}
 
+	/** Starts the clip, naming a bracket only when the caller named one. */
 	public startClip$(
 		trackUid: string,
-		qualityProfile: TrackMediaRequest['qualityProfile']
+		qualityProfile?: TrackMediaRequest['qualityProfile']
 	): Observable<TrackClipState> {
 		return this.call$<TrackClipState>({
 			trackUid,
 			action: 'start',
-			qualityProfile,
+			...(qualityProfile ? { qualityProfile } : {}),
 		});
 	}
 

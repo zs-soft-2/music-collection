@@ -73,10 +73,14 @@ export class TrackMediaEffect {
 	/**
 	 * Starts the clip. Resolves as soon as the gateway has accepted the
 	 * work — the clip itself arrives minutes later, through `clipState`.
+	 *
+	 * The bracket is optional and nothing passes one today: left out, the
+	 * gateway runs the clip at its own default, which is the bracket it has
+	 * models for. Naming one is a claim that it is configured there.
 	 */
 	public startClip(
 		trackUid: string,
-		qualityProfile: TrackMediaRequest['qualityProfile'] = 'economy'
+		qualityProfile?: TrackMediaRequest['qualityProfile']
 	): Promise<TrackClipState> {
 		return firstValueFrom(
 			this.repository.startClip$(trackUid, qualityProfile)
