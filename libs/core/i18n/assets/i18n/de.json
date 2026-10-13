@@ -1872,6 +1872,8 @@
 			"artist": "Künstler",
 			"year": "Jahr",
 			"styles": "Stile",
+			"songs": "Titel",
+			"no-songs": "Keine Titel",
 			"cover": "Cover",
 			"cover2": "Cover",
 			"no-cover": "Kein Cover",

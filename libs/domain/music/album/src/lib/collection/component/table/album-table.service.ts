@@ -31,6 +31,19 @@ import {
 /** Which box the list was last narrowed from — only one search runs at a time. */
 type AlbumSearchField = 'artist' | 'name';
 
+/**
+ * The albums with a song list even where none was ever written. The songs
+ * column sorts by the length of that list, and a missing one would be read
+ * as an empty cell and sent to the end whichever way the column is turned —
+ * while an album whose songs are still to be typed in is the very one that
+ * belongs at the front.
+ */
+export function withSongList(albums: AlbumEntity[]): AlbumEntity[] {
+	return albums.map((album) =>
+		album.songs ? album : { ...album, songs: [] }
+	);
+}
+
 @Injectable()
 export class AlbumTableService extends BaseComponent {
 	private activatedRoute = inject(ActivatedRoute);
@@ -102,7 +115,7 @@ export class AlbumTableService extends BaseComponent {
 			this.term$$,
 		]).pipe(
 			map(([albums, result, term]) => ({
-				albums: sortByRecent(term ? result : albums),
+				albums: withSongList(sortByRecent(term ? result : albums)),
 				empty: [],
 			})),
 			switchMap((params) => {

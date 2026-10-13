@@ -67,6 +67,23 @@ describe('AlbumTableComponent', () => {
 		).toContain('Nevermind');
 	});
 
+	it('marks an album still without songs, and sorts the list by them', () => {
+		expect(
+			fixture.nativeElement.querySelector('tbody').textContent
+		).toContain('No tracks');
+
+		const header: HTMLElement = [
+			...fixture.nativeElement.querySelectorAll('thead th'),
+		].find((th) => (th as HTMLElement).textContent?.includes('Tracks'));
+
+		header.click();
+
+		// Up first: an album with no songs at all comes before every other.
+		expect(component.place.sort()).toEqual([
+			{ field: 'songs.length', order: 1 },
+		]);
+	});
+
 	it('offers a way to look at the album, not only to edit it', () => {
 		expect(
 			fixture.nativeElement

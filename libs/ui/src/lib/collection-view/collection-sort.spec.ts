@@ -2,6 +2,7 @@ import { orderOf, sortItems, sortedBy } from './collection-sort';
 
 interface Record {
 	name?: string;
+	songs?: string[];
 	year?: number;
 	artist?: { name?: string };
 }
@@ -56,6 +57,20 @@ describe('sortItems', () => {
 				)
 			)
 		).toEqual(['Doolittle', 'Nevermind']);
+	});
+
+	it('sorts by how long a list is, the empty one first', () => {
+		expect(
+			names(
+				sortItems(
+					[
+						{ name: 'filled', songs: ['One', 'Two'] },
+						{ name: 'empty', songs: [] },
+					],
+					[{ field: 'songs.length', order: 1 }]
+				)
+			)
+		).toEqual(['empty', 'filled']);
 	});
 
 	it('leaves the list it was given alone', () => {

@@ -1872,6 +1872,8 @@
 			"artist": "Előadó",
 			"year": "Év",
 			"styles": "Stílusok",
+			"songs": "Számok",
+			"no-songs": "Nincs szám",
 			"cover": "Borító",
 			"cover2": "Borító",
 			"no-cover": "Nincs borító",

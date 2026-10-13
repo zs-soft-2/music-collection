@@ -115,6 +115,21 @@
 
 		<ng-template
 			mcColumn
+			[header]="'ui.albumTable.songs' | transloco"
+			field="songs.length"
+			let-album
+		>
+			@if (album.songs?.length) {
+				{{ album.songs.length }}
+			} @else {
+				<span class="mc-missing">{{
+					'ui.albumTable.no-songs' | transloco
+				}}</span>
+			}
+		</ng-template>
+
+		<ng-template
+			mcColumn
 			[header]="'ui.albumTable.cover' | transloco"
 			let-album
 		>
