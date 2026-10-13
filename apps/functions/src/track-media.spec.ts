@@ -14,6 +14,7 @@ import {
 	buildImagePrompt,
 	writeClipPrompt,
 	cleanHint,
+	imageSource,
 	profileOf,
 	sanitizeTrackMediaQuota,
 	trimLyrics,
@@ -86,6 +87,27 @@ describe('profileOf', () => {
 
 	it('carries the bracket the caller asked for', () => {
 		expect(profileOf('premium')).toEqual({ qualityProfile: 'premium' });
+	});
+});
+
+describe('imageSource', () => {
+	/*
+	 * Ahol a gateway mindkét mezőt megadja, a címet követjük: az a letárolt,
+	 * egész fájl, a beágyazott példány pedig a válaszba fér bele.
+	 */
+	it('follows the url when both came back', () => {
+		expect(imageSource({ url: 'https://a/kep.png', b64: 'QUJD' })).toEqual({
+			url: 'https://a/kep.png',
+		});
+	});
+
+	it('takes the inline copy when that is all there is', () => {
+		expect(imageSource({ b64: 'QUJD' })).toEqual({ b64: 'QUJD' });
+	});
+
+	it('has nothing to take from an empty picture', () => {
+		expect(imageSource(undefined)).toBeNull();
+		expect(imageSource({})).toBeNull();
 	});
 });
 

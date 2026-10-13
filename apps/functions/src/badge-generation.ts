@@ -459,17 +459,18 @@ export async function drawImages(
 /**
  * Egy kép base64-ben. A gateway vagy beágyazva adja (`b64`), vagy egy
  * letölthető címmel — a méretkorlát miatt az utóbbi a gyakoribb, ahogy a kép
- * nő.
+ * nő. Ahol mindkettő megjön, a címet választjuk: az a letárolt, egész fájlra
+ * mutat, a beágyazott példánynak viszont bele kell férnie a válaszba.
  */
 async function inlineImage(image: {
 	readonly url?: string;
 	readonly b64?: string;
 }): Promise<string> {
-	if (image.b64) {
-		return image.b64;
-	}
-
 	if (!image.url) {
+		if (image.b64) {
+			return image.b64;
+		}
+
 		throw new HttpsError(
 			'internal',
 			'A gateway képe se beágyazva, se címmel nem jött meg.'

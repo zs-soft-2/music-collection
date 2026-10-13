@@ -198,6 +198,27 @@ export function profileOf(
 	return quality ? { qualityProfile: quality } : {};
 }
 
+/**
+ * Honnan vesszük a kész képet. A gateway vagy beágyazva adja (`b64`), vagy
+ * egy letölthető címmel — ahol mindkettő megjön, a cím élvez elsőbbséget: az
+ * a letárolt, egész fájlra mutat, a beágyazott példánynak viszont bele kell
+ * férnie a válaszba, és ahogy a kép nő, a gateway már csak címet ad. Egy
+ * letöltéssel drágább, cserébe azt a fájlt iktatjuk, amit a modell rajzolt.
+ */
+export function imageSource(
+	drawn: { readonly url?: string; readonly b64?: string } | undefined
+): { url: string } | { b64: string } | null {
+	if (drawn?.url) {
+		return { url: drawn.url };
+	}
+
+	if (drawn?.b64) {
+		return { b64: drawn.b64 };
+	}
+
+	return null;
+}
+
 export interface Song {
 	uid: string;
 	name: string;
@@ -593,11 +614,12 @@ export async function drawTrackImage(
 	}
 
 	const drawn = result.output?.images?.[0];
-	const bytes = drawn?.b64
-		? Buffer.from(drawn.b64, 'base64')
-		: drawn?.url
-			? await download(drawn.url)
-			: null;
+	const source = imageSource(drawn);
+	const bytes = !source
+		? null
+		: 'url' in source
+			? await download(source.url)
+			: Buffer.from(source.b64, 'base64');
 
 	if (!bytes?.length) {
 		throw new TrackMediaError('A képmodell üres képet adott.', 'gateway');
