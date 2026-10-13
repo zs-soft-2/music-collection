@@ -194,6 +194,24 @@ const BRIEF =
 					<p class="error" role="alert">{{ error }}</p>
 				}
 
+				<!--
+					A tárgy szabad szöveg, és az is marad: a pad arra való,
+					hogy ki lehessen próbálni, mitől lesz jó a kép. Ami a
+					felelősséget mégis viselhetővé teszi, az nem egy tiltás,
+					hanem az, hogy amikor a modell elzárkózik, az ne egy
+					néma hiba legyen.
+				-->
+				@if (store.errorReason() === 'no-image') {
+					<p class="refused">
+						A hívás sikerült, kép mégsem lett — ez rendszerint a
+						modell elzárkózása. A leggyakoribb ok, hogy a
+						szövegben valódi előadó-, zenekar- vagy személynév
+						áll; a modell ilyenkor nem rajzol, és a gateway
+						oldalán sikeres, nulla dolláros hívás marad utána.
+						Írd körül a helyet név nélkül, és indítsd újra.
+					</p>
+				}
+
 				@if (store.result(); as result) {
 					<ul class="shots">
 						@for (image of result.images; track $index) {
@@ -426,6 +444,17 @@ const BRIEF =
 		.warn {
 			color: var(--mc-status-warn);
 			font-size: 0.75rem;
+		}
+
+		.refused {
+			margin: 0;
+			padding: 0.5rem 0.7rem;
+			border-left: 3px solid var(--mc-status-warn);
+			border-radius: 0 var(--mc-radius-sm) var(--mc-radius-sm) 0;
+			background: var(--mc-surface-2);
+			font-size: 0.75rem;
+			line-height: 1.55;
+			color: var(--mc-text-muted);
 		}
 
 		.shots {

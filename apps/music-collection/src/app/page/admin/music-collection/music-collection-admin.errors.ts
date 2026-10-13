@@ -32,3 +32,28 @@ export function describeWriteError(error: unknown): string {
 
 	return ERRORS[code] ?? 'Something went wrong. Try again later.';
 }
+
+/**
+ * Amit egy rajzolás hibájából az admin lát.
+ *
+ * A `describeWriteError` az `internal`-t egy kész mondatra cseréli, és jól
+ * teszi: a legtöbb íráshiba olyasmi, amivel ő nem tud kezdeni semmit. Egy
+ * rajzolás viszont más. A szerver pontosan tudja, mi jött vissza a
+ * gatewaytől — és a próbapadon épp az a kérdés, mit írjon át a következő
+ * próbához. Ezért ami okot hoz magával, annak az üzenete kimegy a képernyőre.
+ */
+export interface DrawFailure {
+	message: string;
+	/** `no-image`, `gateway-error`, `unexpected-shape` — vagy semmi. */
+	reason: string | null;
+}
+
+export function describeDrawError(error: unknown): DrawFailure {
+	const reason = (error as { details?: { reason?: unknown } })?.details
+		?.reason;
+	const message = (error as { message?: string })?.message;
+
+	return typeof reason === 'string' && message
+		? { message, reason }
+		: { message: describeWriteError(error), reason: null };
+}

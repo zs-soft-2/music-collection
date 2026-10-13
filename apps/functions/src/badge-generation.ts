@@ -373,7 +373,11 @@ async function drawImages(
 			'internal',
 			error instanceof ZsAiError
 				? `A gateway a képet nem rajzolta meg (${error.code}): ${error.message}`
-				: `A gateway nem válaszolt: ${String(error)}`
+				: `A gateway nem válaszolt: ${String(error)}`,
+			// A `details` a kliensig eljut, az üzenet önmagában nem: az admin
+			// felülete az `internal`-t egy általános mondatra cseréli, hacsak
+			// nem mondja meg valami, hogy ez a mondat érdemi.
+			{ reason: 'gateway-error' }
 		);
 	}
 
@@ -382,7 +386,8 @@ async function drawImages(
 	if (result.kind !== 'result') {
 		throw new HttpsError(
 			'internal',
-			'A gateway a képet végrehajtásnak vette; a rajzolás szinkron választ vár.'
+			'A gateway a képet végrehajtásnak vette; a rajzolás szinkron választ vár.',
+			{ reason: 'unexpected-shape' }
 		);
 	}
 
@@ -430,11 +435,17 @@ async function drawImages(
 			prompt: request.prompt.slice(0, 500),
 		});
 
+		/*
+		 * A `no-image` külön ok, nem csak egy üzenet: a hívás sikeres volt,
+		 * fizetni nem fizettünk, kép mégsem lett — ez a modell elzárkózásának
+		 * az alakja. A pad ebből tudja, hogy a *szövegre* érdemes ránézni.
+		 */
 		throw new HttpsError(
 			'internal',
 			said
 				? `A gateway kép helyett szöveget adott: ${said.slice(0, 200)}`
-				: `A gateway egyetlen képet sem adott vissza (${drew}).`
+				: `A gateway egyetlen képet sem adott vissza (${drew}).`,
+			{ reason: 'no-image', model: drew }
 		);
 	}
 

@@ -18,7 +18,10 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
 import { CollectionImageEffect } from '../../../../../data/collection-image';
-import { describeWriteError } from '../../music-collection-admin.errors';
+import {
+	describeDrawError,
+	describeWriteError,
+} from '../../music-collection-admin.errors';
 
 /**
  * Drawing a collection's backdrop.
@@ -44,6 +47,12 @@ interface SceneGeneratorState {
 	isProbing: boolean;
 	result: SceneProbeResult | null;
 	error: string | null;
+	/**
+	 * Miféle hiba volt, ha a szerver megmondta. A `no-image` az, amit a pad
+	 * használóját érdemes megszólítani vele: a hívás sikerült, kép mégsem
+	 * lett — a tárgy szövegén múlik.
+	 */
+	errorReason: string | null;
 	/** Which picture is being filed right now; null when none is. */
 	keeping: number | null;
 	/** Which ones are already in the library, by their place in the grid. */
@@ -71,6 +80,7 @@ const initialState: SceneGeneratorState = {
 	isProbing: false,
 	result: null,
 	error: null,
+	errorReason: null,
 	keeping: null,
 	kept: [],
 };
@@ -141,13 +151,14 @@ export const SceneGeneratorStore = signalStore(
 				patchState(store, {
 					keeping: null,
 					error: describeWriteError(error),
+					errorReason: null,
 				});
 
 				return null;
 			}
 		},
 		set(change: Partial<SceneGeneratorState>): void {
-			patchState(store, { ...change, error: null });
+			patchState(store, { ...change, error: null, errorReason: null });
 		},
 		setCount(value: string): void {
 			const parsed = Number.parseInt(value, 10);
@@ -157,6 +168,7 @@ export const SceneGeneratorStore = signalStore(
 					? Math.min(Math.max(parsed, 1), MAX_IMAGES)
 					: store.count(),
 				error: null,
+				errorReason: null,
 			});
 		},
 		run: rxMethod<void>(
@@ -165,6 +177,7 @@ export const SceneGeneratorStore = signalStore(
 					patchState(store, {
 						isProbing: true,
 						error: null,
+						errorReason: null,
 						// The old pictures go the moment a new draw starts:
 						// a grid that still shows the previous lock's work
 						// while the next is drawing is how two of them end
@@ -199,9 +212,13 @@ export const SceneGeneratorStore = signalStore(
 									}),
 								error: (error: unknown) => {
 									console.error(error);
+
+									const failure = describeDrawError(error);
+
 									patchState(store, {
 										isProbing: false,
-										error: describeWriteError(error),
+										error: failure.message,
+										errorReason: failure.reason,
 									});
 								},
 							})

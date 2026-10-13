@@ -49,7 +49,10 @@ import {
 	StoredImage,
 } from '../../../../data/collection-image';
 
-import { describeWriteError } from '../music-collection-admin.errors';
+import {
+	describeDrawError,
+	describeWriteError,
+} from '../music-collection-admin.errors';
 import { derivedBasePoints } from '@music-collection/domain/music-collection/engine';
 
 import {
@@ -776,7 +779,12 @@ export const MusicCollectionEditStore = signalStore(
 										console.error(error);
 										patchState(store, {
 											isGeneratingBadge: false,
-											error: describeWriteError(error),
+											// A rajzolás hibájából a szerver
+											// mondata a hasznos: az mondja
+											// meg, mit felelt a modell a kép
+											// helyett.
+											error: describeDrawError(error)
+												.message,
 										});
 									},
 								})
