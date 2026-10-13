@@ -17,9 +17,16 @@ export interface Slide {
 	next: number;
 	/** How far that one has come, 0-1. */
 	fade: number;
+	/**
+	 * Which turn of the slideshow this is, counted from the start of the
+	 * song and never reset by the pictures running out. It is what picks
+	 * the crossing, so the crossings keep changing even when the pictures
+	 * have started coming round again.
+	 */
+	turn: number;
 }
 
-const NONE: Slide = { index: -1, next: -1, fade: 0 };
+const NONE: Slide = { index: -1, next: -1, fade: 0, turn: 0 };
 
 /**
  * The slide at `positionSeconds`, given how long each is up and how long the
@@ -35,7 +42,7 @@ export function slideAt(
 		return NONE;
 	}
 	if (count === 1) {
-		return { index: 0, next: 0, fade: 0 };
+		return { index: 0, next: 0, fade: 0, turn: 0 };
 	}
 
 	const position = Number.isFinite(positionSeconds)
@@ -50,6 +57,7 @@ export function slideAt(
 		index: turn % count,
 		next: (turn + 1) % count,
 		fade: within > begins ? Math.min((within - begins) / crossing, 1) : 0,
+		turn,
 	};
 }
 
