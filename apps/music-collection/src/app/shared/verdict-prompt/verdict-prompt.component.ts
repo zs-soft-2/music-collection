@@ -1,7 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
-import { StarRatingComponent } from '../music-ui';
+// Egyenesen a fájlra: a `music-ui` barrelje a diagramokat, a borítókártyákat
+// és a Spotify-lejátszót is exportálja, és ez a kérdés a shellben él —
+// a barrelen át mind a ~180 kB az első bundle-be kerülne egy csillagért.
+import { StarRatingComponent } from '../music-ui/star-rating/star-rating.component';
 import { VerdictPromptStore } from './verdict-prompt.store';
 
 /**

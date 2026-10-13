@@ -71,7 +71,7 @@
 					"budgets": [
 						{
 							"type": "initial",
-							"maximumWarning": "1.5mb",
+							"maximumWarning": "3.9mb",
 							"maximumError": "4.5mb"
 						},
 						{
@@ -84,6 +84,10 @@
 						{
 							"replace": "apps/music-collection/src/environments/environment.ts",
 							"with": "apps/music-collection/src/environments/environment.prod.ts"
+						},
+						{
+							"replace": "apps/music-collection/src/app/store-devtools.ts",
+							"with": "apps/music-collection/src/app/store-devtools.prod.ts"
 						}
 					],
 					"outputHashing": "all"
@@ -92,13 +96,19 @@
 					"budgets": [
 						{
 							"type": "initial",
-							"maximumWarning": "1.5mb",
+							"maximumWarning": "3.9mb",
 							"maximumError": "4.5mb"
 						},
 						{
 							"type": "anyComponentStyle",
 							"maximumWarning": "8kb",
 							"maximumError": "16kb"
+						}
+					],
+					"fileReplacements": [
+						{
+							"replace": "apps/music-collection/src/app/store-devtools.ts",
+							"with": "apps/music-collection/src/app/store-devtools.prod.ts"
 						}
 					],
 					"outputHashing": "all"

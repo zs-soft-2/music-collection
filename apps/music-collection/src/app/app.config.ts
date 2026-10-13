@@ -43,7 +43,6 @@ import { DomainUserModule } from '@music-collection/domain/user/core';
 import { DomainWishlistItemModule } from '@music-collection/domain/wishlist-item/core';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
-import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 
 import { AnalyticsService, ShelfLayoutService } from '@music-collection/api';
 
@@ -56,6 +55,7 @@ import { CollectorShelfLayoutService } from './page/collection/shelf-layout.serv
 import { HookModule } from './module/hook';
 import { installPerformanceConsole } from './performance';
 import { metaReducers } from './reducer';
+import { storeDevtools } from './store-devtools';
 // Straight from the file for the same reason as above: the barrel would carry
 // the share-card drawing into the first bundle with it.
 import { CollectorProfileEffect } from './data/collector-profile/collector-profile.effect';
@@ -231,7 +231,7 @@ export const appConfig: ApplicationConfig = {
 					},
 				}
 			),
-			!environment.production ? StoreDevtoolsModule.instrument() : [],
+			...storeDevtools,
 			EffectsModule.forRoot([]),
 			NgxPermissionsModule.forRoot(),
 			// Elsőként: a globális ErrorHandler a többi modul indulását is fedi.
