@@ -386,14 +386,55 @@ async function drawImages(
 		);
 	}
 
+	const output = result.output;
 	const images = await Promise.all(
-		(result.output?.images ?? []).map((image) => inlineImage(image))
+		(output?.images ?? []).map((image) => inlineImage(image))
 	);
 
+	/*
+	 * Egyetlen kép a `mediaUrl`-ben. A szerződés szerint a képek az
+	 * `images`-ben jönnek, és a gateway így is adja őket — de ugyanaz a
+	 * kimenet ismeri a `mediaUrl`-t is, és ahol egy szolgáltató egyetlen
+	 * fájllal felel, ott könnyen oda esik. Egy kifizetett képet nem dobunk
+	 * el amiatt, hogy melyik mezőben állt.
+	 */
+	if (!images.length && output?.mediaUrl) {
+		images.push(await inlineImage({ url: output.mediaUrl }));
+	}
+
 	if (!images.length) {
+		const said = output?.text?.trim() || null;
+		const drew = result.model ?? 'ismeretlen modell';
+
+		/*
+		 * A „sikeres, de kép nélküli" válasz kívülről néma: a böngészőben
+		 * csak egy 500 látszik, a gateway listájában meg egy zöld sor nulla
+		 * dollárral. Ezért írjuk le itt, mi jött valójában — ebből derül ki,
+		 * hogy a modell kép helyett szöveggel felelt (ez a szűrője), vagy
+		 * hogy a kép olyan mezőben érkezett, amit nem ismerünk.
+		 */
+		logger.warn('a gateway nem adott képet', {
+			requestedModel: request.model ?? null,
+			model: result.model ?? null,
+			provider: result.provider ?? null,
+			status: result.status,
+			executionId: result.executionId,
+			size: request.size,
+			count: request.count,
+			qualityProfile: request.qualityProfile,
+			usage: result.usage ?? null,
+			cost: result.cost ?? null,
+			gatewayError: result.error ?? null,
+			outputFields: output ? Object.keys(output) : [],
+			text: said?.slice(0, 500) ?? null,
+			prompt: request.prompt.slice(0, 500),
+		});
+
 		throw new HttpsError(
 			'internal',
-			'A gateway egyetlen képet sem adott vissza.'
+			said
+				? `A gateway kép helyett szöveget adott: ${said.slice(0, 200)}`
+				: `A gateway egyetlen képet sem adott vissza (${drew}).`
 		);
 	}
 
