@@ -99,7 +99,11 @@ export interface TrackMediaRequest {
 	action: TrackMediaAction;
 	/**
 	 * Which price bracket to run at. The gateway picks the model unless one
-	 * is named; `economy` is what a first take should cost.
+	 * is named, and leaving this out leaves the bracket to it too — which is
+	 * what a caller with no opinion should do. A bracket the gateway has no
+	 * model assigned to is refused outright (`QUALITY_PROFILE_UNAVAILABLE`),
+	 * never quietly served from a dearer one, so naming one is a claim that
+	 * it is configured there.
 	 */
 	qualityProfile?: 'economy' | 'normal' | 'premium';
 	/** The model to draw with, from the `models` action's list. */

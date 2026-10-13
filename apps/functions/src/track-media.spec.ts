@@ -14,6 +14,7 @@ import {
 	buildImagePrompt,
 	writeClipPrompt,
 	cleanHint,
+	profileOf,
 	sanitizeTrackMediaQuota,
 	trimLyrics,
 } from './track-media';
@@ -67,6 +68,24 @@ describe('sanitizeTrackMediaQuota', () => {
 		expect(
 			sanitizeTrackMediaQuota({ dailyClipLimit: 0 }).dailyClipLimit
 		).toBe(0);
+	});
+});
+
+describe('profileOf', () => {
+	/*
+	 * A sáv csak akkor megy ki, ha a hívó kért egyet. Egy bedrótozott
+	 * alapértelmezés nem olcsóbb hívás volt, hanem semmilyen: a gateway
+	 * profil-routere 409-cel (`QUALITY_PROFILE_UNAVAILABLE`) áll meg azon a
+	 * sávon, amihez a katalógusban nincs modell rendelve, és szándékosan nem
+	 * esik vissza egy másikra. Profil nélkül a gateway a sajátját választja.
+	 */
+	it('leaves the bracket out when nobody asked for one', () => {
+		expect(profileOf(undefined)).toEqual({});
+		expect('qualityProfile' in profileOf(undefined)).toBe(false);
+	});
+
+	it('carries the bracket the caller asked for', () => {
+		expect(profileOf('premium')).toEqual({ qualityProfile: 'premium' });
 	});
 });
 

@@ -14,6 +14,8 @@
  * régióval a deploy elszáll.
  */
 
+import { ZsAiError } from '@zssz-soft/zs-ai-sdk';
+
 import { initializeApp } from 'firebase-admin/app';
 import {
 	DocumentReference,
@@ -1965,12 +1967,19 @@ export const generateTrackMedia = onCall(
 		const uid = await requireCaller(request, 'updateTrackEntity');
 		const trackUid = String(request.data?.trackUid ?? '');
 		const action = String(request.data?.action ?? 'status');
+		// A sávot a hívó választja — és ha nem választ, nem is kérünk egyet.
+		// Egy bedrótozott alapértelmezés itt azt jelentette, hogy minden
+		// hívás abba az egy sávba ment, amihez a gateway katalógusában nem
+		// volt modell rendelve: a profil-router szándékosan nem esik vissza
+		// egy másik sávra, hanem 409-cel megáll
+		// (`QUALITY_PROFILE_UNAVAILABLE`). Profil nélkül a gateway a saját
+		// alapértelmezését választja, és a kérés él.
 		const quality =
-			request.data?.qualityProfile === 'premium'
-				? 'premium'
-				: request.data?.qualityProfile === 'normal'
-					? 'normal'
-					: 'economy';
+			request.data?.qualityProfile === 'premium' ||
+			request.data?.qualityProfile === 'normal' ||
+			request.data?.qualityProfile === 'economy'
+				? request.data.qualityProfile
+				: undefined;
 		// A rajzolás és a megrendelés is a gatewayen történik; itt a kérés
 		// csak elindul és visszajön.
 		const client = createGatewayClient(gatewaySettings(), 240_000);
@@ -2042,6 +2051,21 @@ export const generateTrackMedia = onCall(
 			}
 
 			logger.error('A szám médiájának generálása elszállt', error);
+
+			// A gateway hibakódja megmondja, hogy van-e értelme újrapróbálni.
+			// Egy beállítatlan minőségi sáv, egy jogosulatlan modell vagy egy
+			// kimerült keret ugyanúgy jön vissza, mint egy percnyi zavar —
+			// „próbáld újra később" pedig mindháromra hazugság: a hívás
+			// holnap is ugyanígy áll meg, amíg a gatewayen nem történik
+			// valami. A kódot és a gateway saját mondatát ezért kiadjuk; a
+			// kliens ezt az üzenetet mutatja a gomb mellett.
+			if (error instanceof ZsAiError) {
+				throw new HttpsError(
+					'failed-precondition',
+					`A gateway nem vállalta a hívást (${error.code}): ${error.message}`,
+					{ reason: 'gateway-error', code: error.code }
+				);
+			}
 
 			throw new HttpsError(
 				'internal',

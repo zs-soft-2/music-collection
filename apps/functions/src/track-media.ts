@@ -183,7 +183,20 @@ export interface TrackImageResult {
 	remainingToday: number;
 }
 
+/**
+ * A gateway ársávja. Az `undefined` nem hiányzó adat, hanem a harmadik
+ * válasz: a hívó nem köti meg a sávot, a gateway a sajátját választja. Egy
+ * kitalált alapértelmezés itt nem olcsóbb hívás lenne, hanem semmilyen — a
+ * profil-router 409-cel áll meg azon a sávon, amihez nincs modell rendelve.
+ */
 type QualityProfile = 'economy' | 'normal' | 'premium';
+
+/** A kérés sáv-mezője, ha a hívó kért egyet; különben semmi. */
+export function profileOf(
+	quality: QualityProfile | undefined
+): { qualityProfile: QualityProfile } | Record<string, never> {
+	return quality ? { qualityProfile: quality } : {};
+}
 
 export interface Song {
 	uid: string;
@@ -552,7 +565,7 @@ export async function drawTrackImage(
 	database: Firestore,
 	client: GatewayClient,
 	trackUid: string,
-	options: { model?: string; hint?: unknown; quality: QualityProfile },
+	options: { model?: string; hint?: unknown; quality?: QualityProfile },
 	now: number
 ): Promise<TrackImageResult> {
 	const song = await readSong(database, trackUid);
@@ -566,7 +579,7 @@ export async function drawTrackImage(
 	const prompt = buildImagePrompt(song, scene, palette, hint);
 	const result = await client.execute({
 		capability: 'image.generate',
-		qualityProfile: options.quality,
+		...profileOf(options.quality),
 		input: {
 			prompt,
 			...(options.model ? { model: options.model } : {}),
@@ -751,7 +764,7 @@ export async function estimateTrackClip(
 	database: Firestore,
 	client: GatewayClient,
 	trackUid: string,
-	quality: QualityProfile,
+	quality: QualityProfile | undefined,
 	now: number
 ): Promise<TrackClipEstimate> {
 	const song = await readSong(database, trackUid);
@@ -763,7 +776,7 @@ export async function estimateTrackClip(
 		client
 			.estimate({
 				capability: 'video.scene.generate',
-				qualityProfile: quality,
+				...profileOf(quality),
 				input: {
 					prompt: STYLE_LOCK,
 					durationSeconds: CLIP_SECONDS,
@@ -799,7 +812,7 @@ export async function startTrackClip(
 	client: GatewayClient,
 	trackUid: string,
 	uid: string,
-	quality: QualityProfile,
+	quality: QualityProfile | undefined,
 	now: number
 ): Promise<TrackClipState> {
 	const song = await readSong(database, trackUid);
@@ -822,7 +835,7 @@ export async function startTrackClip(
 
 	const accepted = await client.execute({
 		capability: 'video.scene.generate',
-		qualityProfile: quality,
+		...profileOf(quality),
 		input: {
 			prompt,
 			negativePrompt: NEGATIVE_PROMPT,
