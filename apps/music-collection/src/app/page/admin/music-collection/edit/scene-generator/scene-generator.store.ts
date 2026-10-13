@@ -173,25 +173,40 @@ export const SceneGeneratorStore = signalStore(
 					})
 				),
 				switchMap(() =>
-					effect.probeScene$({
-						subject: store.subject().trim(),
-						draft: store.draft(),
-						size: store.size(),
-						count: store.count(),
-						model: store.model().trim() || null,
-					})
-				),
-				tapResponse({
-					next: (result: SceneProbeResult) =>
-						patchState(store, { result, isProbing: false }),
-					error: (error: unknown) => {
-						console.error(error);
-						patchState(store, {
-							isProbing: false,
-							error: describeWriteError(error),
-						});
-					},
-				})
+					effect
+						.probeScene$({
+							subject: store.subject().trim(),
+							draft: store.draft(),
+							size: store.size(),
+							count: store.count(),
+							model: store.model().trim() || null,
+						})
+						/*
+						 * A hibakezelés a *belső* folyamon ül, nem a külsőn.
+						 * A `tapResponse` a hibát `EMPTY`-vel zárja le, és ha
+						 * ez a külső pipe-ra kerül, azzal az rxMethod
+						 * feliratkozása is végleg lezárul: egy elhasalt
+						 * rajzolás után a gomb néma marad, hiába vált az
+						 * admin modellt vagy promptot. Idebent csak ezt az
+						 * egy kérést temeti el.
+						 */
+						.pipe(
+							tapResponse({
+								next: (result: SceneProbeResult) =>
+									patchState(store, {
+										result,
+										isProbing: false,
+									}),
+								error: (error: unknown) => {
+									console.error(error);
+									patchState(store, {
+										isProbing: false,
+										error: describeWriteError(error),
+									});
+								},
+							})
+						)
+				)
 			)
 		),
 	}))

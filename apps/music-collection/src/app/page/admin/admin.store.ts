@@ -41,17 +41,16 @@ export const AdminStore = signalStore(
 							requests: requestEffect
 								.countPending$()
 								.pipe(startWith(0)),
-						})
-					),
-					// A kétféle kérés egy listában van, így egy szám is: az
-					// admin egy helyen dolgozza le őket.
-					map(({ releaseRequests, requests }) => ({
-						pendingRequests: releaseRequests + requests,
-					})),
-					tapResponse({
-						next: (badges) => patchState(store, { badges }),
-						error: (error) => console.error(error),
-					})
+						}).pipe(
+							map(({ releaseRequests, requests }) => ({
+								pendingRequests: releaseRequests + requests,
+							})),
+							tapResponse({
+								next: (badges) => patchState(store, { badges }),
+								error: (error) => console.error(error),
+							})
+						)
+					)
 				)
 			),
 		})

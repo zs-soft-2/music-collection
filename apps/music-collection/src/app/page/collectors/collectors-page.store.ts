@@ -106,21 +106,24 @@ export const CollectorsPageStore = signalStore(
 			load: rxMethod<void>(
 				pipe(
 					tap(() => patchState(store, { loading: true })),
-					switchMap(() => profiles.cards$()),
-					tapResponse({
-						next: (cards: CollectorCardDocument[]) =>
-							patchState(store, {
-								entries: toWallEntries(cards),
-								loading: false,
-							}),
-						error: (error) => {
-							console.error(
-								'Collector directory not read',
-								error
-							);
-							patchState(store, { loading: false });
-						},
-					})
+					switchMap(() =>
+						profiles.cards$().pipe(
+							tapResponse({
+								next: (cards: CollectorCardDocument[]) =>
+									patchState(store, {
+										entries: toWallEntries(cards),
+										loading: false,
+									}),
+								error: (error) => {
+									console.error(
+										'Collector directory not read',
+										error
+									);
+									patchState(store, { loading: false });
+								},
+							})
+						)
+					)
 				)
 			),
 
@@ -131,13 +134,21 @@ export const CollectorsPageStore = signalStore(
 			 */
 			loadDefinitions: rxMethod<void>(
 				pipe(
-					switchMap(() => definitions.listPublishedDefinitions$()),
-					tapResponse({
-						next: (published: MusicCollectionEntity[]) =>
-							patchState(store, { definitions: published }),
-						error: (error) =>
-							console.error('Collections not read', error),
-					})
+					switchMap(() =>
+						definitions.listPublishedDefinitions$().pipe(
+							tapResponse({
+								next: (published: MusicCollectionEntity[]) =>
+									patchState(store, {
+										definitions: published,
+									}),
+								error: (error) =>
+									console.error(
+										'Collections not read',
+										error
+									),
+							})
+						)
+					)
 				)
 			),
 

@@ -96,18 +96,21 @@ export const GenreAdminStore = signalStore(
 		load: rxMethod<void>(
 			pipe(
 				tap(() => patchState(store, { isLoading: true })),
-				switchMap(() => effect.taxonomy$),
-				tapResponse({
-					next: (genres) =>
-						patchState(store, { genres, isLoading: false }),
-					error: (error: Error) => {
-						console.error(error);
-						patchState(store, {
-							isLoading: false,
-							error: error.message,
-						});
-					},
-				})
+				switchMap(() =>
+					effect.taxonomy$.pipe(
+						tapResponse({
+							next: (genres) =>
+								patchState(store, { genres, isLoading: false }),
+							error: (error: Error) => {
+								console.error(error);
+								patchState(store, {
+									isLoading: false,
+									error: error.message,
+								});
+							},
+						})
+					)
+				)
 			)
 		),
 

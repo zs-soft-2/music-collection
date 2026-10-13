@@ -244,46 +244,56 @@ export const OverviewPageStore = signalStore(
 				pipe(
 					tap(() => patchState(store, { isLoading: true })),
 					switchMap(() =>
-						collectionItemStateService.selectLoadedEntities$()
-					),
-					tapResponse({
-						next: (entities: CollectionItemEntity[]) =>
-							patchState(store, {
-								releases: entities.map(toReleaseView),
-								isLoading: false,
-							}),
-						error: (error: unknown) => {
-							console.error(error);
-							patchState(store, { isLoading: false });
-						},
-					})
+						(collectionItemStateService.selectLoadedEntities$()
+						).pipe(
+							tapResponse({
+								next: (entities: CollectionItemEntity[]) =>
+									patchState(store, {
+										releases: entities.map(toReleaseView),
+										isLoading: false,
+									}),
+								error: (error: unknown) => {
+									console.error(error);
+									patchState(store, { isLoading: false });
+								},
+							})
+						)
+					)
 				)
 			),
 			loadCollections: rxMethod<void>(
 				pipe(
 					tap(() => patchState(store, { standingsLoading: true })),
-					switchMap(() => musicCollectionEffect.listStandings$()),
-					tapResponse({
-						next: (standings: MusicCollectionStanding[]) =>
-							patchState(store, {
-								standings,
-								standingsLoading: false,
-							}),
-						error: (error: unknown) => {
-							console.error(error);
-							patchState(store, { standingsLoading: false });
-						},
-					})
+					switchMap(() =>
+						musicCollectionEffect.listStandings$().pipe(
+							tapResponse({
+								next: (standings: MusicCollectionStanding[]) =>
+									patchState(store, {
+										standings,
+										standingsLoading: false,
+									}),
+								error: (error: unknown) => {
+									console.error(error);
+									patchState(store, {
+										standingsLoading: false,
+									});
+								},
+							})
+						)
+					)
 				)
 			),
 			loadRatings: rxMethod<void>(
 				pipe(
-					switchMap(() => ratingEffect.list$()),
-					tapResponse({
-						next: (ratings: AlbumRating[]) =>
-							patchState(store, { ratings }),
-						error: (error: unknown) => console.error(error),
-					})
+					switchMap(() =>
+						ratingEffect.list$().pipe(
+							tapResponse({
+								next: (ratings: AlbumRating[]) =>
+									patchState(store, { ratings }),
+								error: (error: unknown) => console.error(error),
+							})
+						)
+					)
 				)
 			),
 		})

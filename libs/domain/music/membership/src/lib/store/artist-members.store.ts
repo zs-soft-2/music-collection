@@ -216,33 +216,39 @@ export const ArtistMembersStore = signalStore(
 				tap((artistUid) =>
 					patchState(store, { artistUid, isLoading: true })
 				),
-				switchMap((artistUid) => effect.loadLineup$(artistUid)),
-				tapResponse({
-					next: ({ artist, artistName, rows }) =>
-						patchState(store, {
-							artist,
-							artistName,
-							rows,
-							isLoading: false,
-						}),
-					error: (error) => {
-						console.error(error);
-						patchState(store, {
-							isLoading: false,
-							error: describeError(error),
-						});
-					},
-				})
+				switchMap((artistUid) =>
+					effect.loadLineup$(artistUid).pipe(
+						tapResponse({
+							next: ({ artist, artistName, rows }) =>
+								patchState(store, {
+									artist,
+									artistName,
+									rows,
+									isLoading: false,
+								}),
+							error: (error) => {
+								console.error(error);
+								patchState(store, {
+									isLoading: false,
+									error: describeError(error),
+								});
+							},
+						})
+					)
+				)
 			)
 		),
 		/** The band's albums, kept current while the tab is open. */
 		loadAlbums: rxMethod<string>(
 			pipe(
-				switchMap((artistUid) => effect.loadAlbums$(artistUid)),
-				tapResponse({
-					next: (albums) => patchState(store, { albums }),
-					error: (error) => console.error(error),
-				})
+				switchMap((artistUid) =>
+					effect.loadAlbums$(artistUid).pipe(
+						tapResponse({
+							next: (albums) => patchState(store, { albums }),
+							error: (error) => console.error(error),
+						})
+					)
+				)
 			)
 		),
 		/**
@@ -332,24 +338,25 @@ export const ArtistMembersStore = signalStore(
 					})
 				),
 				exhaustMap((candidate) =>
-					effect.loadCandidates$(lookup(store, candidate))
-				),
-				tapResponse({
-					next: (result) =>
-						patchState(store, {
-							isLoadingCandidates: false,
-							externalFailed: result.externalFailed,
-							candidates: toRows(result.candidates),
-							error: emptyError(result),
-						}),
-					error: (error) => {
-						console.error(error);
-						patchState(store, {
-							isLoadingCandidates: false,
-							error: describeError(error),
-						});
-					},
-				})
+					effect.loadCandidates$(lookup(store, candidate)).pipe(
+						tapResponse({
+							next: (result) =>
+								patchState(store, {
+									isLoadingCandidates: false,
+									externalFailed: result.externalFailed,
+									candidates: toRows(result.candidates),
+									error: emptyError(result),
+								}),
+							error: (error) => {
+								console.error(error);
+								patchState(store, {
+									isLoadingCandidates: false,
+									error: describeError(error),
+								});
+							},
+						})
+					)
+				)
 			)
 		),
 		closeNamesakes: () => patchState(store, { namesakes: null }),
@@ -379,26 +386,30 @@ export const ArtistMembersStore = signalStore(
 			pipe(
 				tap(() => patchState(store, { isSaving: true, error: null })),
 				exhaustMap(() =>
-					effect.applyCandidates$(
-						store.candidates()?.filter((row) => row.selected) ?? [],
-						store.artistUid(),
-						store.artistName()
-					)
-				),
-				tapResponse({
-					next: () =>
-						patchState(store, {
-							isSaving: false,
-							candidates: null,
-						}),
-					error: (error) => {
-						console.error(error);
-						patchState(store, {
-							isSaving: false,
-							error: describeError(error),
-						});
-					},
-				})
+					effect
+						.applyCandidates$(
+							store.candidates()?.filter((row) => row.selected) ??
+								[],
+							store.artistUid(),
+							store.artistName()
+						)
+						.pipe(
+							tapResponse({
+								next: () =>
+									patchState(store, {
+										isSaving: false,
+										candidates: null,
+									}),
+								error: (error) => {
+									console.error(error);
+									patchState(store, {
+										isSaving: false,
+										error: describeError(error),
+									});
+								},
+							})
+						)
+				)
 			)
 		),
 		startAdd: (kind: 'member' | 'guest') =>
@@ -431,18 +442,20 @@ export const ArtistMembersStore = signalStore(
 		searchMusicians: rxMethod<string>(
 			pipe(
 				switchMap((term) =>
-					term.trim().length < 2
+					(term.trim().length < 2
 						? of([])
 						: effect.searchMusicians$(term.trim())
-				),
-				tapResponse({
-					next: (musicianOptions) =>
-						patchState(store, { musicianOptions }),
-					error: (error) => {
-						console.error(error);
-						patchState(store, { musicianOptions: [] });
-					},
-				})
+					).pipe(
+						tapResponse({
+							next: (musicianOptions) =>
+								patchState(store, { musicianOptions }),
+							error: (error) => {
+								console.error(error);
+								patchState(store, { musicianOptions: [] });
+							},
+						})
+					)
+				)
 			)
 		),
 		/**
@@ -453,29 +466,32 @@ export const ArtistMembersStore = signalStore(
 		createMusician: rxMethod<string>(
 			pipe(
 				tap(() => patchState(store, { isSaving: true, error: null })),
-				exhaustMap((name) => effect.createMusician$(name.trim())),
-				tapResponse({
-					next: (musician) => {
-						const draft = store.draft();
+				exhaustMap((name) =>
+					effect.createMusician$(name.trim()).pipe(
+						tapResponse({
+							next: (musician) => {
+								const draft = store.draft();
 
-						patchState(store, {
-							isSaving: false,
-							musicianOptions: [],
-							draft: draft && {
-								...draft,
-								musicianUid: musician.uid,
-								musicianName: musician.name,
+								patchState(store, {
+									isSaving: false,
+									musicianOptions: [],
+									draft: draft && {
+										...draft,
+										musicianUid: musician.uid,
+										musicianName: musician.name,
+									},
+								});
 							},
-						});
-					},
-					error: (error) => {
-						console.error(error);
-						patchState(store, {
-							isSaving: false,
-							error: describeError(error),
-						});
-					},
-				})
+							error: (error) => {
+								console.error(error);
+								patchState(store, {
+									isSaving: false,
+									error: describeError(error),
+								});
+							},
+						})
+					)
+				)
 			)
 		),
 		/**

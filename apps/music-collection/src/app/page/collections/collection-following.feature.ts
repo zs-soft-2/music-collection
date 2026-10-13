@@ -58,20 +58,26 @@ export function withCollectionFollowing() {
 				loadFollowing: rxMethod<void>(
 					pipe(
 						switchMap(() =>
-							settings.value$(COLLECTION_FOLLOWING_SETTING)
-						),
-						tapResponse({
-							next: ({ followed, shown }: CollectionFollowing) =>
-								patchState(store, {
-									followed,
-									shown,
-									followingLoaded: true,
-								}),
-							error: (error) => {
-								console.error(error);
-								patchState(store, { followingLoaded: true });
-							},
-						})
+							settings.value$(COLLECTION_FOLLOWING_SETTING).pipe(
+								tapResponse({
+									next: ({
+										followed,
+										shown,
+									}: CollectionFollowing) =>
+										patchState(store, {
+											followed,
+											shown,
+											followingLoaded: true,
+										}),
+									error: (error) => {
+										console.error(error);
+										patchState(store, {
+											followingLoaded: true,
+										});
+									},
+								})
+							)
+						)
 					)
 				),
 				/**

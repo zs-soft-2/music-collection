@@ -276,23 +276,29 @@ export const ProfilePageStore = signalStore(
 			/** The collector's own verdicts; follows sign-in. */
 			loadRatings: rxMethod<void>(
 				pipe(
-					switchMap(() => ratingEffect.list$()),
-					tapResponse({
-						next: (ratings: AlbumRating[]) =>
-							patchState(store, { ratings }),
-						error: (error) => console.error(error),
-					})
+					switchMap(() =>
+						ratingEffect.list$().pipe(
+							tapResponse({
+								next: (ratings: AlbumRating[]) =>
+									patchState(store, { ratings }),
+								error: (error) => console.error(error),
+							})
+						)
+					)
 				)
 			),
 			/** The listening log, which the player writes as records go on. */
 			loadPlayLog: rxMethod<void>(
 				pipe(
-					switchMap(() => playLogEffect.list$()),
-					tapResponse({
-						next: (playLog: PlayLogEntry[]) =>
-							patchState(store, { playLog }),
-						error: (error: unknown) => console.error(error),
-					})
+					switchMap(() =>
+						playLogEffect.list$().pipe(
+							tapResponse({
+								next: (playLog: PlayLogEntry[]) =>
+									patchState(store, { playLog }),
+								error: (error: unknown) => console.error(error),
+							})
+						)
+					)
 				)
 			),
 			/**
@@ -1004,20 +1010,23 @@ export const ProfilePageStore = signalStore(
 							authentication.selectIsAuthenticated$()
 						),
 						switchMap((isAuthenticated) =>
-							isAuthenticated
+							(isAuthenticated
 								? collections.listStandings$()
 								: of([])
-						),
-						tapResponse({
-							next: (standings: MusicCollectionStanding[]) =>
-								patchState(store, { standings }),
-							error: (error) => {
-								console.error(
-									'Collections not resolved',
-									error
-								);
-							},
-						})
+							).pipe(
+								tapResponse({
+									next: (
+										standings: MusicCollectionStanding[]
+									) => patchState(store, { standings }),
+									error: (error) => {
+										console.error(
+											'Collections not resolved',
+											error
+										);
+									},
+								})
+							)
+						)
 					)
 				),
 
@@ -1033,17 +1042,22 @@ export const ProfilePageStore = signalStore(
 							authentication.selectIsAuthenticated$()
 						),
 						switchMap((isAuthenticated) =>
-							isAuthenticated
+							(isAuthenticated
 								? wishlistItems.selectLoadedOwnEntities$()
 								: of([])
-						),
-						tapResponse({
-							next: (wishes: WishlistItemEntity[]) =>
-								patchState(store, { wishes }),
-							error: (error) => {
-								console.error('Wishlist not loaded', error);
-							},
-						})
+							).pipe(
+								tapResponse({
+									next: (wishes: WishlistItemEntity[]) =>
+										patchState(store, { wishes }),
+									error: (error) => {
+										console.error(
+											'Wishlist not loaded',
+											error
+										);
+									},
+								})
+							)
+						)
 					)
 				),
 

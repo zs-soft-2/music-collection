@@ -95,15 +95,21 @@ export const UpcomingPageStore = signalStore(
 		load: rxMethod<void>(
 			pipe(
 				tap(() => patchState(store, { isLoading: true })),
-				switchMap(() => effect.list$()),
-				tapResponse({
-					next: (releases: UpcomingReleaseEntity[]) =>
-						patchState(store, { releases, isLoading: false }),
-					error: (error) => {
-						console.error(error);
-						patchState(store, { isLoading: false });
-					},
-				})
+				switchMap(() =>
+					effect.list$().pipe(
+						tapResponse({
+							next: (releases: UpcomingReleaseEntity[]) =>
+								patchState(store, {
+									releases,
+									isLoading: false,
+								}),
+							error: (error) => {
+								console.error(error);
+								patchState(store, { isLoading: false });
+							},
+						})
+					)
+				)
 			)
 		),
 		setFilter: (filter: UpcomingFilter) => patchState(store, { filter }),

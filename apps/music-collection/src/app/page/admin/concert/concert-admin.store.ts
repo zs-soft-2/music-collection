@@ -364,49 +364,65 @@ export const ConcertAdminStore = signalStore(
 		load: rxMethod<void>(
 			pipe(
 				tap(() => patchState(store, { isLoading: true })),
-				switchMap(() => effect.concerts$),
-				tapResponse({
-					next: (concerts) =>
-						patchState(store, { concerts, isLoading: false }),
-					error: (error: Error) => {
-						console.error(error);
-						patchState(store, {
-							isLoading: false,
-							error: error.message,
-						});
-					},
-				})
+				switchMap(() =>
+					effect.concerts$.pipe(
+						tapResponse({
+							next: (concerts) =>
+								patchState(store, {
+									concerts,
+									isLoading: false,
+								}),
+							error: (error: Error) => {
+								console.error(error);
+								patchState(store, {
+									isLoading: false,
+									error: error.message,
+								});
+							},
+						})
+					)
+				)
 			)
 		),
 
 		watchSuggestions: rxMethod<void>(
 			pipe(
-				switchMap(() => effect.pending$),
-				tapResponse({
-					next: (suggestions) => patchState(store, { suggestions }),
-					error: (error: Error) => console.error(error),
-				})
+				switchMap(() =>
+					effect.pending$.pipe(
+						tapResponse({
+							next: (suggestions) =>
+								patchState(store, { suggestions }),
+							error: (error: Error) => console.error(error),
+						})
+					)
+				)
 			)
 		),
 
 		watchVenues: rxMethod<void>(
 			pipe(
-				switchMap(() => effect.venues$),
-				tapResponse({
-					next: (venues) => patchState(store, { venues }),
-					error: (error: Error) => console.error(error),
-				})
+				switchMap(() =>
+					effect.venues$.pipe(
+						tapResponse({
+							next: (venues) => patchState(store, { venues }),
+							error: (error: Error) => console.error(error),
+						})
+					)
+				)
 			)
 		),
 
 		watchVenueSuggestions: rxMethod<void>(
 			pipe(
-				switchMap(() => effect.pendingVenues$),
-				tapResponse({
-					next: (venueSuggestions) =>
-						patchState(store, { venueSuggestions }),
-					error: (error: Error) => console.error(error),
-				})
+				switchMap(() =>
+					effect.pendingVenues$.pipe(
+						tapResponse({
+							next: (venueSuggestions) =>
+								patchState(store, { venueSuggestions }),
+							error: (error: Error) => console.error(error),
+						})
+					)
+				)
 			)
 		),
 
@@ -422,19 +438,23 @@ export const ConcertAdminStore = signalStore(
 		openSettings: rxMethod<void>(
 			pipe(
 				tap(() => patchState(store, { isSettingsOpen: true })),
-				exhaustMap(() => effect.readAiSettings$()),
-				tapResponse({
-					next: (settings) => patchState(store, { settings }),
-					error: (error: Error) => {
-						console.error(error);
-						patchState(store, {
-							error: error.message,
-							// A keret nem olvasható, de a form valahonnan
-							// induljon: ugyanabból, amiből a szerver indul.
-							settings: DEFAULT_CONCERT_AI_SETTINGS,
-						});
-					},
-				})
+				exhaustMap(() =>
+					effect.readAiSettings$().pipe(
+						tapResponse({
+							next: (settings) => patchState(store, { settings }),
+							error: (error: Error) => {
+								console.error(error);
+								patchState(store, {
+									error: error.message,
+									// A keret nem olvasható, de a form
+									// valahonnan induljon: ugyanabból,
+									// amiből a szerver indul.
+									settings: DEFAULT_CONCERT_AI_SETTINGS,
+								});
+							},
+						})
+					)
+				)
 			)
 		),
 
@@ -524,19 +544,25 @@ export const ConcertAdminStore = signalStore(
 		loadVenues: rxMethod<void>(
 			pipe(
 				tap(() => patchState(store, startRun('venues'))),
-				exhaustMap(() => effect.loadVenues$(store.countryCode())),
-				tapResponse({
-					next: (loadedVenues) =>
-						patchState(
-							store,
-							{ loadedVenues, savedAt: Date.now() },
-							endRun('venues', null)
-						),
-					error: (error: Error) => {
-						console.error(error);
-						patchState(store, endRun('venues', error.message));
-					},
-				})
+				exhaustMap(() =>
+					effect.loadVenues$(store.countryCode()).pipe(
+						tapResponse({
+							next: (loadedVenues) =>
+								patchState(
+									store,
+									{ loadedVenues, savedAt: Date.now() },
+									endRun('venues', null)
+								),
+							error: (error: Error) => {
+								console.error(error);
+								patchState(
+									store,
+									endRun('venues', error.message)
+								);
+							},
+						})
+					)
+				)
 			)
 		),
 
@@ -551,23 +577,32 @@ export const ConcertAdminStore = signalStore(
 			pipe(
 				tap(() => patchState(store, startRun('ai-venues'))),
 				exhaustMap(() =>
-					effect.suggestVenues$({
-						countryCode: store.countryCode(),
-						cities: store.askCities(),
-					})
-				),
-				tapResponse({
-					next: (suggestedVenues) =>
-						patchState(
-							store,
-							{ suggestedVenues, tab: 'venue-suggestions' },
-							endRun('ai-venues', null)
-						),
-					error: (error: Error) => {
-						console.error(error);
-						patchState(store, endRun('ai-venues', error.message));
-					},
-				})
+					effect
+						.suggestVenues$({
+							countryCode: store.countryCode(),
+							cities: store.askCities(),
+						})
+						.pipe(
+							tapResponse({
+								next: (suggestedVenues) =>
+									patchState(
+										store,
+										{
+											suggestedVenues,
+											tab: 'venue-suggestions',
+										},
+										endRun('ai-venues', null)
+									),
+								error: (error: Error) => {
+									console.error(error);
+									patchState(
+										store,
+										endRun('ai-venues', error.message)
+									);
+								},
+							})
+						)
+				)
 			)
 		),
 
@@ -576,23 +611,29 @@ export const ConcertAdminStore = signalStore(
 			pipe(
 				tap(() => patchState(store, startRun('concerts'))),
 				exhaustMap(() =>
-					effect.loadConcerts$({
-						countryCode: store.countryCode(),
-						days: store.days(),
-					})
-				),
-				tapResponse({
-					next: (loadedConcerts) =>
-						patchState(
-							store,
-							{ loadedConcerts, savedAt: Date.now() },
-							endRun('concerts', null)
-						),
-					error: (error: Error) => {
-						console.error(error);
-						patchState(store, endRun('concerts', error.message));
-					},
-				})
+					effect
+						.loadConcerts$({
+							countryCode: store.countryCode(),
+							days: store.days(),
+						})
+						.pipe(
+							tapResponse({
+								next: (loadedConcerts) =>
+									patchState(
+										store,
+										{ loadedConcerts, savedAt: Date.now() },
+										endRun('concerts', null)
+									),
+								error: (error: Error) => {
+									console.error(error);
+									patchState(
+										store,
+										endRun('concerts', error.message)
+									);
+								},
+							})
+						)
+				)
 			)
 		),
 
@@ -606,24 +647,30 @@ export const ConcertAdminStore = signalStore(
 			pipe(
 				tap(() => patchState(store, startRun('ai'))),
 				exhaustMap(() =>
-					effect.suggestConcerts$({
-						countryCode: store.countryCode(),
-						days: store.days(),
-						venueUids: store.askVenueUids(),
-					})
-				),
-				tapResponse({
-					next: (suggested) =>
-						patchState(
-							store,
-							{ suggested, tab: 'suggestions' },
-							endRun('ai', null)
-						),
-					error: (error: Error) => {
-						console.error(error);
-						patchState(store, endRun('ai', error.message));
-					},
-				})
+					effect
+						.suggestConcerts$({
+							countryCode: store.countryCode(),
+							days: store.days(),
+							venueUids: store.askVenueUids(),
+						})
+						.pipe(
+							tapResponse({
+								next: (suggested) =>
+									patchState(
+										store,
+										{ suggested, tab: 'suggestions' },
+										endRun('ai', null)
+									),
+								error: (error: Error) => {
+									console.error(error);
+									patchState(
+										store,
+										endRun('ai', error.message)
+									);
+								},
+							})
+						)
+				)
 			)
 		),
 
@@ -633,21 +680,24 @@ export const ConcertAdminStore = signalStore(
 		approve: rxMethod<ConcertSuggestionEntity>(
 			pipe(
 				tap(() => patchState(store, { isSaving: true, error: null })),
-				exhaustMap((suggestion) => effect.approve$(suggestion)),
-				tapResponse({
-					next: () =>
-						patchState(store, {
-							isSaving: false,
-							savedAt: Date.now(),
-						}),
-					error: (error: Error) => {
-						console.error(error);
-						patchState(store, {
-							isSaving: false,
-							error: error.message,
-						});
-					},
-				})
+				exhaustMap((suggestion) =>
+					effect.approve$(suggestion).pipe(
+						tapResponse({
+							next: () =>
+								patchState(store, {
+									isSaving: false,
+									savedAt: Date.now(),
+								}),
+							error: (error: Error) => {
+								console.error(error);
+								patchState(store, {
+									isSaving: false,
+									error: error.message,
+								});
+							},
+						})
+					)
+				)
 			)
 		),
 
@@ -658,21 +708,24 @@ export const ConcertAdminStore = signalStore(
 		reject: rxMethod<ConcertSuggestionEntity>(
 			pipe(
 				tap(() => patchState(store, { isSaving: true, error: null })),
-				exhaustMap((suggestion) => effect.reject$(suggestion)),
-				tapResponse({
-					next: () =>
-						patchState(store, {
-							isSaving: false,
-							savedAt: Date.now(),
-						}),
-					error: (error: Error) => {
-						console.error(error);
-						patchState(store, {
-							isSaving: false,
-							error: error.message,
-						});
-					},
-				})
+				exhaustMap((suggestion) =>
+					effect.reject$(suggestion).pipe(
+						tapResponse({
+							next: () =>
+								patchState(store, {
+									isSaving: false,
+									savedAt: Date.now(),
+								}),
+							error: (error: Error) => {
+								console.error(error);
+								patchState(store, {
+									isSaving: false,
+									error: error.message,
+								});
+							},
+						})
+					)
+				)
 			)
 		),
 
@@ -1009,21 +1062,24 @@ export const ConcertAdminStore = signalStore(
 		approveVenue: rxMethod<VenueSuggestionEntity>(
 			pipe(
 				tap(() => patchState(store, { isSaving: true, error: null })),
-				exhaustMap((suggestion) => effect.approveVenue$(suggestion)),
-				tapResponse({
-					next: () =>
-						patchState(store, {
-							isSaving: false,
-							savedAt: Date.now(),
-						}),
-					error: (error: Error) => {
-						console.error(error);
-						patchState(store, {
-							isSaving: false,
-							error: error.message,
-						});
-					},
-				})
+				exhaustMap((suggestion) =>
+					effect.approveVenue$(suggestion).pipe(
+						tapResponse({
+							next: () =>
+								patchState(store, {
+									isSaving: false,
+									savedAt: Date.now(),
+								}),
+							error: (error: Error) => {
+								console.error(error);
+								patchState(store, {
+									isSaving: false,
+									error: error.message,
+								});
+							},
+						})
+					)
+				)
 			)
 		),
 
@@ -1034,21 +1090,24 @@ export const ConcertAdminStore = signalStore(
 		rejectVenue: rxMethod<VenueSuggestionEntity>(
 			pipe(
 				tap(() => patchState(store, { isSaving: true, error: null })),
-				exhaustMap((suggestion) => effect.rejectVenue$(suggestion)),
-				tapResponse({
-					next: () =>
-						patchState(store, {
-							isSaving: false,
-							savedAt: Date.now(),
-						}),
-					error: (error: Error) => {
-						console.error(error);
-						patchState(store, {
-							isSaving: false,
-							error: error.message,
-						});
-					},
-				})
+				exhaustMap((suggestion) =>
+					effect.rejectVenue$(suggestion).pipe(
+						tapResponse({
+							next: () =>
+								patchState(store, {
+									isSaving: false,
+									savedAt: Date.now(),
+								}),
+							error: (error: Error) => {
+								console.error(error);
+								patchState(store, {
+									isSaving: false,
+									error: error.message,
+								});
+							},
+						})
+					)
+				)
 			)
 		),
 
@@ -1066,24 +1125,25 @@ export const ConcertAdminStore = signalStore(
 			pipe(
 				tap(() => patchState(store, { isSaving: true, error: null })),
 				exhaustMap(({ venue, active }) =>
-					effect.retireVenue$(venue, active)
-				),
-				tapResponse({
-					next: () =>
-						patchState(store, {
-							isSaving: false,
-							savedAt: Date.now(),
-							pendingVenue: null,
-							pendingVenueUsage: null,
-						}),
-					error: (error: Error) => {
-						console.error(error);
-						patchState(store, {
-							isSaving: false,
-							error: error.message,
-						});
-					},
-				})
+					effect.retireVenue$(venue, active).pipe(
+						tapResponse({
+							next: () =>
+								patchState(store, {
+									isSaving: false,
+									savedAt: Date.now(),
+									pendingVenue: null,
+									pendingVenueUsage: null,
+								}),
+							error: (error: Error) => {
+								console.error(error);
+								patchState(store, {
+									isSaving: false,
+									error: error.message,
+								});
+							},
+						})
+					)
+				)
 			)
 		),
 
@@ -1102,17 +1162,21 @@ export const ConcertAdminStore = signalStore(
 						error: null,
 					})
 				),
-				switchMap((venue) => effect.venueUsage$(venue.uid)),
-				tapResponse({
-					next: (pendingVenueUsage) =>
-						patchState(store, { pendingVenueUsage }),
-					error: (error: Error) => {
-						console.error(error);
-						// Számolás nélkül nem kínálunk törlést: a nulla itt
-						// nem tény, hanem a kérdés elmaradása.
-						patchState(store, { error: error.message });
-					},
-				})
+				switchMap((venue) =>
+					effect.venueUsage$(venue.uid).pipe(
+						tapResponse({
+							next: (pendingVenueUsage) =>
+								patchState(store, { pendingVenueUsage }),
+							error: (error: Error) => {
+								console.error(error);
+								// Számolás nélkül nem kínálunk törlést: a
+								// nulla itt nem tény, hanem a kérdés
+								// elmaradása.
+								patchState(store, { error: error.message });
+							},
+						})
+					)
+				)
 			)
 		),
 

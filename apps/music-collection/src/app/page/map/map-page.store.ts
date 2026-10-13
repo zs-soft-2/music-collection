@@ -91,32 +91,37 @@ export const MapPageStore = signalStore(
 						patchState(store, { isAuthenticated: !!user?.uid })
 					),
 					switchMap((user) =>
-						user?.uid
+						(user?.uid
 							? locations.shared$()
 							: of([] as PublicUserLocation[])
-					),
-					tapResponse({
-						next: (shared: PublicUserLocation[]) =>
-							patchState(store, {
-								locations: shared,
-								loading: false,
-							}),
-						error: (error) => {
-							console.error(error);
-							patchState(store, { loading: false });
-						},
-					})
+						).pipe(
+							tapResponse({
+								next: (shared: PublicUserLocation[]) =>
+									patchState(store, {
+										locations: shared,
+										loading: false,
+									}),
+								error: (error) => {
+									console.error(error);
+									patchState(store, { loading: false });
+								},
+							})
+						)
+					)
 				)
 			),
 
 			loadLand: rxMethod<void>(
 				pipe(
-					switchMap(() => atlas.land$()),
-					tapResponse({
-						next: (land: FeatureCollection) =>
-							patchState(store, { land }),
-						error: (error) => console.error(error),
-					})
+					switchMap(() =>
+						atlas.land$().pipe(
+							tapResponse({
+								next: (land: FeatureCollection) =>
+									patchState(store, { land }),
+								error: (error) => console.error(error),
+							})
+						)
+					)
 				)
 			),
 

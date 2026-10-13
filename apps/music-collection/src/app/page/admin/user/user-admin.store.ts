@@ -173,26 +173,28 @@ export const UserAdminStore = signalStore(
 				pipe(
 					tap(() => patchState(store, { isLoading: true })),
 					switchMap(() =>
-						combineLatest({
+						(combineLatest({
 							users: userEffect.users$,
 							roles: roleEffect.roles$,
 						})
-					),
-					tapResponse({
-						next: ({ users, roles }) =>
-							patchState(store, {
-								users,
-								roles,
-								isLoading: false,
-							}),
-						error: (error: Error) => {
-							console.error(error);
-							patchState(store, {
-								isLoading: false,
-								error: error.message,
-							});
-						},
-					})
+						).pipe(
+							tapResponse({
+								next: ({ users, roles }) =>
+									patchState(store, {
+										users,
+										roles,
+										isLoading: false,
+									}),
+								error: (error: Error) => {
+									console.error(error);
+									patchState(store, {
+										isLoading: false,
+										error: error.message,
+									});
+								},
+							})
+						)
+					)
 				)
 			),
 
@@ -200,13 +202,16 @@ export const UserAdminStore = signalStore(
 			readMe: rxMethod<void>(
 				pipe(
 					switchMap(() =>
-						authentication.selectAuthenticatedUser$()
-					),
-					tapResponse({
-						next: (user) =>
-							patchState(store, { myUid: user?.uid ?? null }),
-						error: (error: Error) => console.error(error),
-					})
+						authentication.selectAuthenticatedUser$().pipe(
+							tapResponse({
+								next: (user) =>
+									patchState(store, {
+										myUid: user?.uid ?? null,
+									}),
+								error: (error: Error) => console.error(error),
+							})
+						)
+					)
 				)
 			),
 
@@ -311,21 +316,24 @@ export const UserAdminStore = signalStore(
 							isEffectiveLoading: true,
 						})
 					),
-					switchMap((uid) => userEffect.effectivePermissions$(uid)),
-					tapResponse({
-						next: (effective) =>
-							patchState(store, {
-								effective,
-								isEffectiveLoading: false,
-							}),
-						error: (error: Error) => {
-							console.error(error);
-							patchState(store, {
-								isEffectiveLoading: false,
-								error: error.message,
-							});
-						},
-					})
+					switchMap((uid) =>
+						userEffect.effectivePermissions$(uid).pipe(
+							tapResponse({
+								next: (effective) =>
+									patchState(store, {
+										effective,
+										isEffectiveLoading: false,
+									}),
+								error: (error: Error) => {
+									console.error(error);
+									patchState(store, {
+										isEffectiveLoading: false,
+										error: error.message,
+									});
+								},
+							})
+						)
+					)
 				)
 			),
 			close: () =>
@@ -345,21 +353,24 @@ export const UserAdminStore = signalStore(
 							error: null,
 						})
 					),
-					exhaustMap(() => userEffect.resync$()),
-					tapResponse({
-						next: (resynced) =>
-							patchState(store, {
-								resynced,
-								isResyncing: false,
-							}),
-						error: (error: Error) => {
-							console.error(error);
-							patchState(store, {
-								isResyncing: false,
-								error: error.message,
-							});
-						},
-					})
+					exhaustMap(() =>
+						userEffect.resync$().pipe(
+							tapResponse({
+								next: (resynced) =>
+									patchState(store, {
+										resynced,
+										isResyncing: false,
+									}),
+								error: (error: Error) => {
+									console.error(error);
+									patchState(store, {
+										isResyncing: false,
+										error: error.message,
+									});
+								},
+							})
+						)
+					)
 				)
 			),
 		})

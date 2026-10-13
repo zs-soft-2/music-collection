@@ -167,13 +167,15 @@ export const AdminDashboardStore = signalStore(
 						combineLatest([
 							quantityState.selectEntityCounts$(),
 							quantityState.selectEntityCountsLoading$(),
-						])
-					),
-					tapResponse({
-						next: ([counts, loading]) =>
-							patchState(store, { counts, loading }),
-						error: () => patchState(store, { loading: false }),
-					})
+						]).pipe(
+							tapResponse({
+								next: ([counts, loading]) =>
+									patchState(store, { counts, loading }),
+								error: () =>
+									patchState(store, { loading: false }),
+							})
+						)
+					)
 				)
 			),
 			loadAlbums: rxMethod<void>(
@@ -182,16 +184,20 @@ export const AdminDashboardStore = signalStore(
 						entities$(
 							() => albumState.selectEntities$(),
 							() => albumState.dispatchListEntitiesAction()
+						).pipe(
+							tapResponse({
+								next: (albums) =>
+									patchState(store, {
+										albums,
+										albumsLoading: false,
+									}),
+								error: (error) => {
+									console.error(error);
+									patchState(store, { albumsLoading: false });
+								},
+							})
 						)
-					),
-					tapResponse({
-						next: (albums) =>
-							patchState(store, { albums, albumsLoading: false }),
-						error: (error) => {
-							console.error(error);
-							patchState(store, { albumsLoading: false });
-						},
-					})
+					)
 				)
 			),
 			loadArtists: rxMethod<void>(
@@ -200,58 +206,69 @@ export const AdminDashboardStore = signalStore(
 						entities$(
 							() => artistState.selectEntities$(),
 							() => artistState.dispatchListEntitiesAction()
+						).pipe(
+							tapResponse({
+								next: (artists) =>
+									patchState(store, {
+										artists,
+										artistsLoading: false,
+									}),
+								error: (error) => {
+									console.error(error);
+									patchState(store, {
+										artistsLoading: false,
+									});
+								},
+							})
 						)
-					),
-					tapResponse({
-						next: (artists) =>
-							patchState(store, {
-								artists,
-								artistsLoading: false,
-							}),
-						error: (error) => {
-							console.error(error);
-							patchState(store, { artistsLoading: false });
-						},
-					})
+					)
 				)
 			),
 			loadTrackStats: rxMethod<void>(
 				pipe(
-					switchMap(() => trackStatsEffect.load$()),
-					tapResponse({
-						next: (trackStats) => patchState(store, { trackStats }),
-						error: (error) => console.error(error),
-					})
+					switchMap(() =>
+						trackStatsEffect.load$().pipe(
+							tapResponse({
+								next: (trackStats) =>
+									patchState(store, { trackStats }),
+								error: (error) => console.error(error),
+							})
+						)
+					)
 				)
 			),
 			loadLineups: rxMethod<void>(
 				pipe(
 					switchMap(() =>
-						artistLineupEffect.loadArtistUidsWithLineup$()
-					),
-					tapResponse({
-						next: (artistUidsWithLineup) =>
-							patchState(store, { artistUidsWithLineup }),
-						error: (error) => console.error(error),
-					})
+						artistLineupEffect.loadArtistUidsWithLineup$().pipe(
+							tapResponse({
+								next: (artistUidsWithLineup) =>
+									patchState(store, { artistUidsWithLineup }),
+								error: (error) => console.error(error),
+							})
+						)
+					)
 				)
 			),
 			loadReleases: rxMethod<void>(
 				pipe(
 					switchMap(() =>
-						collectionItemState.selectLoadedEntities$()
-					),
-					tapResponse({
-						next: (items) =>
-							patchState(store, {
-								releases: items.map(toReleaseView),
-								releasesLoading: false,
-							}),
-						error: (error) => {
-							console.error(error);
-							patchState(store, { releasesLoading: false });
-						},
-					})
+						collectionItemState.selectLoadedEntities$().pipe(
+							tapResponse({
+								next: (items) =>
+									patchState(store, {
+										releases: items.map(toReleaseView),
+										releasesLoading: false,
+									}),
+								error: (error) => {
+									console.error(error);
+									patchState(store, {
+										releasesLoading: false,
+									});
+								},
+							})
+						)
+					)
 				)
 			),
 		})

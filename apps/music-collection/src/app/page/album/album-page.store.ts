@@ -660,12 +660,15 @@ export const AlbumPageStore = signalStore(
 			/** The collector's listening, to say how often this record went on. */
 			loadPlayLog: rxMethod<void>(
 				pipe(
-					switchMap(() => playLogEffect.list$()),
-					tapResponse({
-						next: (playLog: PlayLogEntry[]) =>
-							patchState(store, { playLog }),
-						error: (error) => console.error(error),
-					})
+					switchMap(() =>
+						playLogEffect.list$().pipe(
+							tapResponse({
+								next: (playLog: PlayLogEntry[]) =>
+									patchState(store, { playLog }),
+								error: (error) => console.error(error),
+							})
+						)
+					)
 				)
 			),
 			/** The signed-in user's release requests; follows sign-in. */
@@ -676,14 +679,17 @@ export const AlbumPageStore = signalStore(
 					),
 					map((user) => user?.uid ?? ''),
 					switchMap((userId) =>
-						userId
+						(userId
 							? releaseRequestEffect.listByUser$(userId)
 							: of([])
-					),
-					tapResponse({
-						next: (requests) => patchState(store, { requests }),
-						error: (error) => console.error(error),
-					})
+						).pipe(
+							tapResponse({
+								next: (requests) =>
+									patchState(store, { requests }),
+								error: (error) => console.error(error),
+							})
+						)
+					)
 				)
 			),
 			/** The Discogs pressings of the album's master, once per master. */
@@ -894,13 +900,16 @@ export const AlbumPageStore = signalStore(
 			 */
 			loadCollections: rxMethod<void>(
 				pipe(
-					switchMap(() => musicCollectionEffect.listStandings$()),
-					tapResponse({
-						next: (
-							collectionStandings: MusicCollectionStanding[]
-						) => patchState(store, { collectionStandings }),
-						error: (error) => console.error(error),
-					})
+					switchMap(() =>
+						musicCollectionEffect.listStandings$().pipe(
+							tapResponse({
+								next: (
+									collectionStandings: MusicCollectionStanding[]
+								) => patchState(store, { collectionStandings }),
+								error: (error) => console.error(error),
+							})
+						)
+					)
 				)
 			),
 			loadAlbums: rxMethod<void>(
@@ -909,16 +918,20 @@ export const AlbumPageStore = signalStore(
 						entities$(
 							() => albumStateService.selectEntities$(),
 							() => albumStateService.dispatchListEntitiesAction()
+						).pipe(
+							tapResponse({
+								next: (albums) =>
+									patchState(store, {
+										albums,
+										albumsLoading: false,
+									}),
+								error: (error) => {
+									console.error(error);
+									patchState(store, { albumsLoading: false });
+								},
+							})
 						)
-					),
-					tapResponse({
-						next: (albums) =>
-							patchState(store, { albums, albumsLoading: false }),
-						error: (error) => {
-							console.error(error);
-							patchState(store, { albumsLoading: false });
-						},
-					})
+					)
 				)
 			),
 			loadArtists: rxMethod<void>(
@@ -928,15 +941,16 @@ export const AlbumPageStore = signalStore(
 							() => artistStateService.selectEntities$(),
 							() =>
 								artistStateService.dispatchListEntitiesAction()
+						).pipe(
+							tapResponse({
+								next: (artists) =>
+									patchState(store, {
+										artists: artists.map(toArtistView),
+									}),
+								error: (error) => console.error(error),
+							})
 						)
-					),
-					tapResponse({
-						next: (artists) =>
-							patchState(store, {
-								artists: artists.map(toArtistView),
-							}),
-						error: (error) => console.error(error),
-					})
+					)
 				)
 			),
 			/** Who is signed in and whether they may add to their collection. */
@@ -973,21 +987,22 @@ export const AlbumPageStore = signalStore(
 							() => releaseStateService.selectEntities$(),
 							() =>
 								releaseStateService.dispatchListEntitiesAction()
+						).pipe(
+							tapResponse({
+								next: (catalogReleases) =>
+									patchState(store, {
+										catalogReleases,
+										catalogReleasesLoading: false,
+									}),
+								error: (error) => {
+									console.error(error);
+									patchState(store, {
+										catalogReleasesLoading: false,
+									});
+								},
+							})
 						)
-					),
-					tapResponse({
-						next: (catalogReleases) =>
-							patchState(store, {
-								catalogReleases,
-								catalogReleasesLoading: false,
-							}),
-						error: (error) => {
-							console.error(error);
-							patchState(store, {
-								catalogReleasesLoading: false,
-							});
-						},
-					})
+					)
 				)
 			),
 			/** Follows the add; the picker closes once the copy is saved. */
@@ -1050,12 +1065,16 @@ export const AlbumPageStore = signalStore(
 			loadPastItems: rxMethod<void>(
 				pipe(
 					switchMap(() =>
-						collectionItemStateService.selectLoadedDisposedEntities$()
-					),
-					tapResponse({
-						next: (pastItems) => patchState(store, { pastItems }),
-						error: (error) => console.error(error),
-					})
+						collectionItemStateService
+							.selectLoadedDisposedEntities$()
+							.pipe(
+								tapResponse({
+									next: (pastItems) =>
+										patchState(store, { pastItems }),
+									error: (error) => console.error(error),
+								})
+							)
+					)
 				)
 			),
 			/**
@@ -1208,12 +1227,15 @@ export const AlbumPageStore = signalStore(
 					tap(() =>
 						wishlistItemStateService.dispatchListOwnEntitiesAction()
 					),
-					switchMap(() => wishlistItemStateService.selectEntities$()),
-					tapResponse({
-						next: (wishlistItems) =>
-							patchState(store, { wishlistItems }),
-						error: (error) => console.error(error),
-					})
+					switchMap(() =>
+						wishlistItemStateService.selectEntities$().pipe(
+							tapResponse({
+								next: (wishlistItems) =>
+									patchState(store, { wishlistItems }),
+								error: (error) => console.error(error),
+							})
+						)
+					)
 				)
 			),
 			/** Follows the add; the dialog closes once the album is wanted. */
@@ -1292,20 +1314,23 @@ export const AlbumPageStore = signalStore(
 			loadReleases: rxMethod<void>(
 				pipe(
 					switchMap(() =>
-						collectionItemStateService.selectLoadedEntities$()
-					),
-					tapResponse({
-						next: (items) =>
-							patchState(store, {
-								ownedItems: items,
-								releases: items.map(toReleaseView),
-								releasesLoading: false,
-							}),
-						error: (error) => {
-							console.error(error);
-							patchState(store, { releasesLoading: false });
-						},
-					})
+						collectionItemStateService.selectLoadedEntities$().pipe(
+							tapResponse({
+								next: (items) =>
+									patchState(store, {
+										ownedItems: items,
+										releases: items.map(toReleaseView),
+										releasesLoading: false,
+									}),
+								error: (error) => {
+									console.error(error);
+									patchState(store, {
+										releasesLoading: false,
+									});
+								},
+							})
+						)
+					)
 				)
 			),
 		})
@@ -1386,12 +1411,15 @@ export const AlbumPageStore = signalStore(
 			/** The collector's own verdicts; follows sign-in. */
 			loadRatings: rxMethod<void>(
 				pipe(
-					switchMap(() => ratingEffect.list$()),
-					tapResponse({
-						next: (ratings: AlbumRating[]) =>
-							patchState(store, { ratings }),
-						error: (error) => console.error(error),
-					})
+					switchMap(() =>
+						ratingEffect.list$().pipe(
+							tapResponse({
+								next: (ratings: AlbumRating[]) =>
+									patchState(store, { ratings }),
+								error: (error) => console.error(error),
+							})
+						)
+					)
 				)
 			),
 			/**
@@ -1404,13 +1432,18 @@ export const AlbumPageStore = signalStore(
 				pipe(
 					switchMap(() => albumId$),
 					switchMap((albumId) =>
-						albumId ? ratingEffect.summary$(albumId) : of(null)
-					),
-					tapResponse({
-						next: (ratingSummary: AlbumRatingSummary | null) =>
-							patchState(store, { ratingSummary }),
-						error: (error) => console.error(error),
-					})
+						(albumId
+							? ratingEffect.summary$(albumId)
+							: of(null)
+						).pipe(
+							tapResponse({
+								next: (
+									ratingSummary: AlbumRatingSummary | null
+								) => patchState(store, { ratingSummary }),
+								error: (error) => console.error(error),
+							})
+						)
+					)
 				)
 			),
 			/** Gives the record its stars, keeping whatever note stands. */

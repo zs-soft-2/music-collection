@@ -85,15 +85,18 @@ export const ConcertPageStore = signalStore(
 		load: rxMethod<void>(
 			pipe(
 				tap(() => patchState(store, { isLoading: true })),
-				switchMap(() => effect.comingWithVenue$()),
-				tapResponse({
-					next: (rows: ConcertRow[]) =>
-						patchState(store, { rows, isLoading: false }),
-					error: (error) => {
-						console.error(error);
-						patchState(store, { isLoading: false });
-					},
-				})
+				switchMap(() =>
+					effect.comingWithVenue$().pipe(
+						tapResponse({
+							next: (rows: ConcertRow[]) =>
+								patchState(store, { rows, isLoading: false }),
+							error: (error) => {
+								console.error(error);
+								patchState(store, { isLoading: false });
+							},
+						})
+					)
+				)
 			)
 		),
 		setFilter: (filter: ConcertFilter) => patchState(store, { filter }),

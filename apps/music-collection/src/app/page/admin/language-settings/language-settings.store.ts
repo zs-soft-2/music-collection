@@ -45,16 +45,22 @@ export const LanguageSettingsStore = signalStore(
 		load: rxMethod<void>(
 			pipe(
 				tap(() => patchState(store, { isLoading: true })),
-				switchMap(() => effect.value$()),
-				tapResponse({
-					next: (language) =>
-						patchState(store, { language, isLoading: false }),
-					error: (error: Error) =>
-						patchState(store, {
-							isLoading: false,
-							error: error.message,
-						}),
-				})
+				switchMap(() =>
+					effect.value$().pipe(
+						tapResponse({
+							next: (language) =>
+								patchState(store, {
+									language,
+									isLoading: false,
+								}),
+							error: (error: Error) =>
+								patchState(store, {
+									isLoading: false,
+									error: error.message,
+								}),
+						})
+					)
+				)
 			)
 		),
 

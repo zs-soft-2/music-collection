@@ -257,12 +257,13 @@ export const ScanPageStore = signalStore(
 							() => albumStateService.selectEntities$(),
 							() =>
 								albumStateService.dispatchListEntitiesAction()
+						).pipe(
+							tapResponse({
+								next: (albums) => patchState(store, { albums }),
+								error: (error) => console.error(error),
+							})
 						)
-					),
-					tapResponse({
-						next: (albums) => patchState(store, { albums }),
-						error: (error) => console.error(error),
-					})
+					)
 				)
 			),
 
@@ -273,12 +274,14 @@ export const ScanPageStore = signalStore(
 							() => releaseStateService.selectEntities$(),
 							() =>
 								releaseStateService.dispatchListEntitiesAction()
+						).pipe(
+							tapResponse({
+								next: (releases) =>
+									patchState(store, { releases }),
+								error: (error) => console.error(error),
+							})
 						)
-					),
-					tapResponse({
-						next: (releases) => patchState(store, { releases }),
-						error: (error) => console.error(error),
-					})
+					)
 				)
 			),
 
@@ -286,13 +289,15 @@ export const ScanPageStore = signalStore(
 			loadOwnedItems: rxMethod<void>(
 				pipe(
 					switchMap(() =>
-						collectionItemStateService.selectLoadedEntities$()
-					),
-					tapResponse({
-						next: (ownedItems) =>
-							patchState(store, { ownedItems }),
-						error: (error) => console.error(error),
-					})
+						(collectionItemStateService.selectLoadedEntities$()
+						).pipe(
+							tapResponse({
+								next: (ownedItems) =>
+									patchState(store, { ownedItems }),
+								error: (error) => console.error(error),
+							})
+						)
+					)
 				)
 			),
 

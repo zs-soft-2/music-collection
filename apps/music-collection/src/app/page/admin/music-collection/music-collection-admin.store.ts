@@ -120,21 +120,27 @@ export const MusicCollectionAdminStore = signalStore(
 			load: rxMethod<void>(
 				pipe(
 					tap(() => patchState(store, { isLoading: true })),
-					switchMap(() => effect.listAllResolutions$()),
-					tapResponse({
-						next: (resolutions) =>
-							patchState(store, {
-								rows: toRows(resolutions, text.translator()),
-								isLoading: false,
-							}),
-						error: (error) => {
-							console.error(error);
-							patchState(store, {
-								isLoading: false,
-								error: describeWriteError(error),
-							});
-						},
-					})
+					switchMap(() =>
+						effect.listAllResolutions$().pipe(
+							tapResponse({
+								next: (resolutions) =>
+									patchState(store, {
+										rows: toRows(
+											resolutions,
+											text.translator()
+										),
+										isLoading: false,
+									}),
+								error: (error) => {
+									console.error(error);
+									patchState(store, {
+										isLoading: false,
+										error: describeWriteError(error),
+									});
+								},
+							})
+						)
+					)
 				)
 			),
 			setStatusFilter: (statusFilter: StatusFilter) =>
@@ -154,17 +160,20 @@ export const MusicCollectionAdminStore = signalStore(
 							error: null,
 						})
 					),
-					switchMap(() => effect.listDiscographyCandidates$()),
-					tapResponse({
-						next: (candidates: DiscographyCandidate[]) =>
-							patchState(store, { candidates }),
-						error: (error) => {
-							console.error(error);
-							patchState(store, {
-								error: describeWriteError(error),
-							});
-						},
-					})
+					switchMap(() =>
+						effect.listDiscographyCandidates$().pipe(
+							tapResponse({
+								next: (candidates: DiscographyCandidate[]) =>
+									patchState(store, { candidates }),
+								error: (error) => {
+									console.error(error);
+									patchState(store, {
+										error: describeWriteError(error),
+									});
+								},
+							})
+						)
+					)
 				)
 			),
 			closeDiscographyPicker: () =>

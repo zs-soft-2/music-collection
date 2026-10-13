@@ -213,12 +213,15 @@ export const ArtistPageStore = signalStore(
 			/** The collector's own verdicts; follows sign-in. */
 			loadRatings: rxMethod<void>(
 				pipe(
-					switchMap(() => ratingEffect.list$()),
-					tapResponse({
-						next: (ratings: AlbumRating[]) =>
-							patchState(store, { ratings }),
-						error: (error) => console.error(error),
-					})
+					switchMap(() =>
+						ratingEffect.list$().pipe(
+							tapResponse({
+								next: (ratings: AlbumRating[]) =>
+									patchState(store, { ratings }),
+								error: (error) => console.error(error),
+							})
+						)
+					)
 				)
 			),
 			/** Follows the `:artistId` route parameter. */
@@ -241,17 +244,22 @@ export const ArtistPageStore = signalStore(
 							filter(
 								(artist): artist is ArtistEntity => !!artist
 							),
-							map(toArtistProfile)
+							map(toArtistProfile),
+							tapResponse({
+								next: (artist) =>
+									patchState(store, {
+										artist,
+										artistLoading: false,
+									}),
+								error: (error) => {
+									console.error(error);
+									patchState(store, {
+										artistLoading: false,
+									});
+								},
+							})
 						)
-					),
-					tapResponse({
-						next: (artist) =>
-							patchState(store, { artist, artistLoading: false }),
-						error: (error) => {
-							console.error(error);
-							patchState(store, { artistLoading: false });
-						},
-					})
+					)
 				)
 			),
 			loadAlbums: rxMethod<void>(
@@ -260,40 +268,44 @@ export const ArtistPageStore = signalStore(
 						entities$(
 							() => albumStateService.selectEntities$(),
 							() => albumStateService.dispatchListEntitiesAction()
+						).pipe(
+							tapResponse({
+								next: (albums) =>
+									patchState(store, {
+										albums: albums.map((album) => ({
+											...toAlbumView(album),
+											artistId: album.artist?.uid ?? '',
+										})),
+										albumsLoading: false,
+									}),
+								error: (error) => {
+									console.error(error);
+									patchState(store, { albumsLoading: false });
+								},
+							})
 						)
-					),
-					tapResponse({
-						next: (albums) =>
-							patchState(store, {
-								albums: albums.map((album) => ({
-									...toAlbumView(album),
-									artistId: album.artist?.uid ?? '',
-								})),
-								albumsLoading: false,
-							}),
-						error: (error) => {
-							console.error(error);
-							patchState(store, { albumsLoading: false });
-						},
-					})
+					)
 				)
 			),
 			loadReleases: rxMethod<void>(
 				pipe(
 					switchMap(() =>
-						collectionItemStateService.selectLoadedEntities$()
-					),
-					tapResponse({
-						next: (items) =>
-							patchState(store, {
-								releases: items.map(toReleaseView),
-								releasesLoading: false,
-							}),
-						error: (error) => {
-							console.error(error);
-							patchState(store, { releasesLoading: false });
-						},
-					})
+						collectionItemStateService.selectLoadedEntities$().pipe(
+							tapResponse({
+								next: (items) =>
+									patchState(store, {
+										releases: items.map(toReleaseView),
+										releasesLoading: false,
+									}),
+								error: (error) => {
+									console.error(error);
+									patchState(store, {
+										releasesLoading: false,
+									});
+								},
+							})
+						)
+					)
 				)
 			),
 			loadArtists: rxMethod<void>(
@@ -303,15 +315,16 @@ export const ArtistPageStore = signalStore(
 							() => artistStateService.selectEntities$(),
 							() =>
 								artistStateService.dispatchListEntitiesAction()
+						).pipe(
+							tapResponse({
+								next: (artists) =>
+									patchState(store, {
+										artists: artists.map(toArtistView),
+									}),
+								error: (error) => console.error(error),
+							})
 						)
-					),
-					tapResponse({
-						next: (artists) =>
-							patchState(store, {
-								artists: artists.map(toArtistView),
-							}),
-						error: (error) => console.error(error),
-					})
+					)
 				)
 			),
 			/** Follows `:artistId` and loads the band's line-up. */

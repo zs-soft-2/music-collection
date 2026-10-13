@@ -196,12 +196,15 @@ export const MusicianPageStore = signalStore(
 			/** The collector's own verdicts; follows sign-in. */
 			loadRatings: rxMethod<void>(
 				pipe(
-					switchMap(() => ratingEffect.list$()),
-					tapResponse({
-						next: (ratings: AlbumRating[]) =>
-							patchState(store, { ratings }),
-						error: (error) => console.error(error),
-					})
+					switchMap(() =>
+						ratingEffect.list$().pipe(
+							tapResponse({
+								next: (ratings: AlbumRating[]) =>
+									patchState(store, { ratings }),
+								error: (error) => console.error(error),
+							})
+						)
+					)
 				)
 			),
 			/** Follows the `:musicianId` route parameter. */
@@ -259,19 +262,20 @@ export const MusicianPageStore = signalStore(
 						entities$(
 							() => albumStateService.selectEntities$(),
 							() => albumStateService.dispatchListEntitiesAction()
+						).pipe(
+							tapResponse({
+								next: (albums) =>
+									patchState(store, {
+										albums: albums.map(toAlbumView),
+										albumsLoading: false,
+									}),
+								error: (error) => {
+									console.error(error);
+									patchState(store, { albumsLoading: false });
+								},
+							})
 						)
-					),
-					tapResponse({
-						next: (albums) =>
-							patchState(store, {
-								albums: albums.map(toAlbumView),
-								albumsLoading: false,
-							}),
-						error: (error) => {
-							console.error(error);
-							patchState(store, { albumsLoading: false });
-						},
-					})
+					)
 				)
 			),
 			loadReleases: rxMethod<void>(
@@ -281,15 +285,16 @@ export const MusicianPageStore = signalStore(
 							() => collectionItemStateService.selectEntities$(),
 							() =>
 								collectionItemStateService.dispatchListEntitiesAction()
+						).pipe(
+							tapResponse({
+								next: (items) =>
+									patchState(store, {
+										releases: items.map(toReleaseView),
+									}),
+								error: (error) => console.error(error),
+							})
 						)
-					),
-					tapResponse({
-						next: (items) =>
-							patchState(store, {
-								releases: items.map(toReleaseView),
-							}),
-						error: (error) => console.error(error),
-					})
+					)
 				)
 			),
 			loadArtists: rxMethod<void>(
@@ -299,15 +304,16 @@ export const MusicianPageStore = signalStore(
 							() => artistStateService.selectEntities$(),
 							() =>
 								artistStateService.dispatchListEntitiesAction()
+						).pipe(
+							tapResponse({
+								next: (artists) =>
+									patchState(store, {
+										artists: artists.map(toArtistView),
+									}),
+								error: (error) => console.error(error),
+							})
 						)
-					),
-					tapResponse({
-						next: (artists) =>
-							patchState(store, {
-								artists: artists.map(toArtistView),
-							}),
-						error: (error) => console.error(error),
-					})
+					)
 				)
 			),
 			setAlbumRole: (albumRole: AlbumRoleFilter) =>

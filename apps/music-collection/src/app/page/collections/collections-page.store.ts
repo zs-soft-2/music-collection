@@ -142,53 +142,58 @@ export const CollectionsPageStore = signalStore(
 							// The verdicts only break ties in the ranking, so the
 							// list is drawn without waiting for them.
 							ratingEffect.list$().pipe(startWith([])),
-						])
-					),
-					tapResponse({
-						next: ([standings, ratings]: [
-							MusicCollectionStanding[],
-							AlbumRating[],
-						]) => {
-							const collections = sortCollectionCards(
-								standings.map(toCollectionCard)
-							);
-							/*
-							 * The hunt is about a shelf. With nothing on it — a
-							 * guest, or a collector who has not filed a record yet
-							 * — there is nothing to continue, and the records are
-							 * not ranked at all: a guest is not made to pay, even
-							 * in a pass over memory, for advice given to nobody.
-							 */
-							const hasShelf = collections.some(
-								(collection) => collection.owned > 0
-							);
+						]).pipe(
+							tapResponse({
+								next: ([standings, ratings]: [
+									MusicCollectionStanding[],
+									AlbumRating[],
+								]) => {
+									const collections = sortCollectionCards(
+										standings.map(toCollectionCard)
+									);
+									/*
+									 * The hunt is about a shelf. With
+									 * nothing on it — a guest, or a
+									 * collector who has not filed a record
+									 * yet — there is nothing to continue,
+									 * and the records are not ranked at
+									 * all: a guest is not made to pay,
+									 * even in a pass over memory, for
+									 * advice given to nobody.
+									 */
+									const hasShelf = collections.some(
+										(collection) => collection.owned > 0
+									);
 
-							patchState(store, {
-								collections,
-								/*
-								 * Over every published collection, not only the
-								 * ones followed: the pick is a view, and a
-								 * collection nobody starred still pays when it is
-								 * finished — the same reason the header counts
-								 * them all.
-								 */
-								nextAlbums: hasShelf
-									? toNextAlbums(
-											effect.suggestNextAlbums(
-												standings,
-												lovedArtists(ratings)
-											),
-											collections
-										)
-									: [],
-								isLoading: false,
-							});
-						},
-						error: (error) => {
-							console.error(error);
-							patchState(store, { isLoading: false });
-						},
-					})
+									patchState(store, {
+										collections,
+										/*
+										 * Over every published collection,
+										 * not only the ones followed: the
+										 * pick is a view, and a collection
+										 * nobody starred still pays when
+										 * it is finished — the same reason
+										 * the header counts them all.
+										 */
+										nextAlbums: hasShelf
+											? toNextAlbums(
+													effect.suggestNextAlbums(
+														standings,
+														lovedArtists(ratings)
+													),
+													collections
+												)
+											: [],
+										isLoading: false,
+									});
+								},
+								error: (error) => {
+									console.error(error);
+									patchState(store, { isLoading: false });
+								},
+							})
+						)
+					)
 				)
 			),
 			setTab: (tab: CollectionsTab) => patchState(store, { tab }),

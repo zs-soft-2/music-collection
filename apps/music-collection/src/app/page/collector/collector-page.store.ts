@@ -94,7 +94,7 @@ export const CollectorPageStore = signalStore(
 				pipe(
 					tap((uid) => patchState(store, { uid, loading: true })),
 					switchMap((uid) =>
-						uid
+						(uid
 							? profiles
 									.profile$(uid)
 									.pipe(
@@ -111,15 +111,23 @@ export const CollectorPageStore = signalStore(
 										)
 									)
 							: of(null)
-					),
-					tapResponse({
-						next: (view: CollectorView | null) =>
-							patchState(store, { view, loading: false }),
-						error: (error) => {
-							console.error('Collector page not read', error);
-							patchState(store, { view: null, loading: false });
-						},
-					})
+						).pipe(
+							tapResponse({
+								next: (view: CollectorView | null) =>
+									patchState(store, { view, loading: false }),
+								error: (error) => {
+									console.error(
+										'Collector page not read',
+										error
+									);
+									patchState(store, {
+										view: null,
+										loading: false,
+									});
+								},
+							})
+						)
+					)
 				)
 			),
 
@@ -148,19 +156,28 @@ export const CollectorPageStore = signalStore(
 				pipe(
 					tap(() => patchState(store, { albumsLoading: true })),
 					switchMap(() =>
-						store.uid() ? profiles.albums$(store.uid()) : of(null)
-					),
-					tapResponse({
-						next: (albums: CollectorAlbumsDocument | null) =>
-							patchState(store, {
-								albums: toCollectorAlbums(albums),
-								albumsLoading: false,
-							}),
-						error: (error) => {
-							console.error('Collector shelf not read', error);
-							patchState(store, { albumsLoading: false });
-						},
-					})
+						(store.uid()
+							? profiles.albums$(store.uid())
+							: of(null)
+						).pipe(
+							tapResponse({
+								next: (
+									albums: CollectorAlbumsDocument | null
+								) =>
+									patchState(store, {
+										albums: toCollectorAlbums(albums),
+										albumsLoading: false,
+									}),
+								error: (error) => {
+									console.error(
+										'Collector shelf not read',
+										error
+									);
+									patchState(store, { albumsLoading: false });
+								},
+							})
+						)
+					)
 				)
 			),
 

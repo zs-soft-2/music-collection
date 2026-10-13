@@ -443,12 +443,15 @@ export const CollectionItemPageStore = signalStore(
 			/** The collector's own verdicts; follows sign-in. */
 			loadRatings: rxMethod<void>(
 				pipe(
-					switchMap(() => ratingEffect.list$()),
-					tapResponse({
-						next: (ratings: AlbumRating[]) =>
-							patchState(store, { ratings }),
-						error: (error) => console.error(error),
-					})
+					switchMap(() =>
+						ratingEffect.list$().pipe(
+							tapResponse({
+								next: (ratings: AlbumRating[]) =>
+									patchState(store, { ratings }),
+								error: (error) => console.error(error),
+							})
+						)
+					)
 				)
 			),
 			/**
@@ -611,24 +614,24 @@ export const CollectionItemPageStore = signalStore(
 							filter(
 								(releases: ReleaseEntity[]) =>
 									releases?.length > 0
-							)
+							),
+							tapResponse({
+								next: (catalogReleases: ReleaseEntity[]) =>
+									patchState(store, {
+										catalogReleases,
+										catalogReleasesLoading: false,
+									}),
+								error: (error) => {
+									console.error(error);
+									patchState(store, {
+										catalogReleasesLoading: false,
+										releaseError:
+											'The album\u2019s releases could not be read just now.',
+									});
+								},
+							})
 						)
-					),
-					tapResponse({
-						next: (catalogReleases: ReleaseEntity[]) =>
-							patchState(store, {
-								catalogReleases,
-								catalogReleasesLoading: false,
-							}),
-						error: (error) => {
-							console.error(error);
-							patchState(store, {
-								catalogReleasesLoading: false,
-								releaseError:
-									'The album\u2019s releases could not be read just now.',
-							});
-						},
-					})
+					)
 				)
 			),
 			/**

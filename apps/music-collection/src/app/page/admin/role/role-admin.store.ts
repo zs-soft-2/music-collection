@@ -86,18 +86,21 @@ export const RoleAdminStore = signalStore(
 		load: rxMethod<void>(
 			pipe(
 				tap(() => patchState(store, { isLoading: true })),
-				switchMap(() => effect.roles$),
-				tapResponse({
-					next: (roles) =>
-						patchState(store, { roles, isLoading: false }),
-					error: (error: Error) => {
-						console.error(error);
-						patchState(store, {
-							isLoading: false,
-							error: error.message,
-						});
-					},
-				})
+				switchMap(() =>
+					effect.roles$.pipe(
+						tapResponse({
+							next: (roles) =>
+								patchState(store, { roles, isLoading: false }),
+							error: (error: Error) => {
+								console.error(error);
+								patchState(store, {
+									isLoading: false,
+									error: error.message,
+								});
+							},
+						})
+					)
+				)
 			)
 		),
 
@@ -110,7 +113,7 @@ export const RoleAdminStore = signalStore(
 		countHolders: rxMethod<Role[]>(
 			pipe(
 				switchMap((roles) =>
-					roles.length
+					(roles.length
 						? forkJoin(
 								roles.map((role) =>
 									effect
@@ -123,14 +126,16 @@ export const RoleAdminStore = signalStore(
 								)
 							)
 						: of([] as (readonly [string, number | null])[])
-				),
-				tapResponse({
-					next: (counts) =>
-						patchState(store, {
-							holders: Object.fromEntries(counts),
-						}),
-					error: (error: Error) => console.error(error),
-				})
+					).pipe(
+						tapResponse({
+							next: (counts) =>
+								patchState(store, {
+									holders: Object.fromEntries(counts),
+								}),
+							error: (error: Error) => console.error(error),
+						})
+					)
+				)
 			)
 		),
 

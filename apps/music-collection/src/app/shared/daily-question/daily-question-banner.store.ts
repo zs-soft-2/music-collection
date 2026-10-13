@@ -156,27 +156,31 @@ export const DailyQuestionBannerStore = signalStore(
 									event instanceof NavigationEnd
 							),
 							map((event) => event.urlAfterRedirects),
-							startWith(router.url)
-						)
-					),
-					tapResponse({
-						next: (url: string) => {
-							patchState(store, {
-								isOnGamePage:
-									url.startsWith(DAILY_QUESTION_PATH),
-							});
+							startWith(router.url),
+							tapResponse({
+								next: (url: string) => {
+									patchState(store, {
+										isOnGamePage:
+											url.startsWith(DAILY_QUESTION_PATH),
+									});
 
-							// A tab maradhat nyitva éjfélen át. A következő
-							// lépésnél már az új nap kérdését kell nézni,
-							// különben a tegnapi tipp tartja lent a sávot.
-							// (Üres nap = a követés még el sem indult.)
-							if (store.day() && effect.today() !== store.day()) {
-								follow(of(undefined));
-								followAnswer(of(undefined));
-							}
-						},
-						error: (error) => console.error(error),
-					})
+									// A tab maradhat nyitva éjfélen át. A
+									// következő lépésnél már az új nap
+									// kérdését kell nézni, különben a tegnapi
+									// tipp tartja lent a sávot. (Üres nap = a
+									// követés még el sem indult.)
+									if (
+										store.day() &&
+										effect.today() !== store.day()
+									) {
+										follow(of(undefined));
+										followAnswer(of(undefined));
+									}
+								},
+								error: (error) => console.error(error),
+							})
+						)
+					)
 				)
 			);
 

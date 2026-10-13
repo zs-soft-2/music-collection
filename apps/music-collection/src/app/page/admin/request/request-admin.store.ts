@@ -242,70 +242,89 @@ export const RequestAdminStore = signalStore(
 			return {
 				load: rxMethod<void>(
 					pipe(
-						switchMap(() => requestEffect.listAll$()),
-						tapResponse({
-							next: (requests) =>
-								patchState(store, {
-									requests,
-									loadingRequests: false,
-								}),
-							error: (error) => {
-								console.error(error);
-								patchState(store, { loadingRequests: false });
-							},
-						})
+						switchMap(() =>
+							requestEffect.listAll$().pipe(
+								tapResponse({
+									next: (requests) =>
+										patchState(store, {
+											requests,
+											loadingRequests: false,
+										}),
+									error: (error) => {
+										console.error(error);
+										patchState(store, {
+											loadingRequests: false,
+										});
+									},
+								})
+							)
+						)
 					)
 				),
 				loadReleaseRequests: rxMethod<void>(
 					pipe(
-						switchMap(() => releaseRequestEffect.listAll$()),
-						tapResponse({
-							next: (releaseRequests) =>
-								patchState(store, {
-									releaseRequests,
-									loadingReleaseRequests: false,
-								}),
-							error: (error) => {
-								console.error(error);
-								patchState(store, {
-									loadingReleaseRequests: false,
-								});
-							},
-						})
+						switchMap(() =>
+							releaseRequestEffect.listAll$().pipe(
+								tapResponse({
+									next: (releaseRequests) =>
+										patchState(store, {
+											releaseRequests,
+											loadingReleaseRequests: false,
+										}),
+									error: (error) => {
+										console.error(error);
+										patchState(store, {
+											loadingReleaseRequests: false,
+										});
+									},
+								})
+							)
+						)
 					)
 				),
 				loadResponses: rxMethod<void>(
 					pipe(
-						switchMap(() => requestEffect.listAllResponses$()),
-						tapResponse({
-							next: (responses) =>
-								patchState(store, { responses }),
-							error: (error) => console.error(error),
-						})
+						switchMap(() =>
+							requestEffect.listAllResponses$().pipe(
+								tapResponse({
+									next: (responses) =>
+										patchState(store, { responses }),
+									error: (error) => console.error(error),
+								})
+							)
+						)
 					)
 				),
 				loadUsers: rxMethod<void>(
 					pipe(
-						switchMap(() => requestEffect.listUsers$()),
-						tapResponse({
-							next: (users) => patchState(store, { users }),
-							error: (error) => console.error(error),
-						})
+						switchMap(() =>
+							requestEffect.listUsers$().pipe(
+								tapResponse({
+									next: (users) =>
+										patchState(store, { users }),
+									error: (error) => console.error(error),
+								})
+							)
+						)
 					)
 				),
 				/** The catalog releases, to approve with one of the album's. */
 				loadReleases: rxMethod<void>(
 					pipe(
-						switchMap(() => releaseStateService.selectEntities$()),
-						tap((releases) => {
-							if (!releases.length) {
-								releaseStateService.dispatchListEntitiesAction();
-							}
-						}),
-						tapResponse({
-							next: (releases) => patchState(store, { releases }),
-							error: (error) => console.error(error),
-						})
+						switchMap(() =>
+							releaseStateService.selectEntities$().pipe(
+								tap((releases) => {
+									if (!releases.length) {
+										releaseStateService.dispatchListEntitiesAction();
+									}
+								}),
+								tapResponse({
+									next: (releases) =>
+										patchState(store, { releases }),
+									error: (error) => console.error(error),
+								})
+							)
+						)
 					)
 				),
 				loadAdmin: rxMethod<void>(

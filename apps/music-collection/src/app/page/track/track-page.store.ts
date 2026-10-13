@@ -626,14 +626,16 @@ export const TrackPageStore = signalStore(
 				pipe(
 					distinctUntilChanged(),
 					switchMap((trackUid) =>
-						trackUid
+						(trackUid
 							? from(trackMediaEffect.clipState(trackUid))
 							: EMPTY
-					),
-					tapResponse({
-						next: (state) => patchState(store, read(state)),
-						error: (error) => console.error(error),
-					})
+						).pipe(
+							tapResponse({
+								next: (state) => patchState(store, read(state)),
+								error: (error) => console.error(error),
+							})
+						)
+					)
 				)
 			),
 

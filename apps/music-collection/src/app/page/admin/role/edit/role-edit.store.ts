@@ -208,12 +208,14 @@ export const RoleEditStore = signalStore(
 			countHolders: rxMethod<Role | null>(
 				pipe(
 					switchMap((role) =>
-						role ? effect.countHolders$(role) : of(null)
-					),
-					tapResponse({
-						next: (holders) => patchState(store, { holders }),
-						error: (error: Error) => console.error(error),
-					})
+						(role ? effect.countHolders$(role) : of(null)).pipe(
+							tapResponse({
+								next: (holders) =>
+									patchState(store, { holders }),
+								error: (error: Error) => console.error(error),
+							})
+						)
+					)
 				)
 			),
 

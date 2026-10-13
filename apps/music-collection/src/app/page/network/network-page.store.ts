@@ -249,19 +249,22 @@ export const NetworkPageStore = signalStore(
 								() => artistStateService.selectEntities$(),
 								() =>
 									artistStateService.dispatchListEntitiesAction()
+							).pipe(
+								tapResponse({
+									next: (artists) =>
+										patchState(store, {
+											artists: artists.map(toArtistView),
+											artistsLoading: false,
+										}),
+									error: (error) => {
+										console.error(error);
+										patchState(store, {
+											artistsLoading: false,
+										});
+									},
+								})
 							)
-						),
-						tapResponse({
-							next: (artists) =>
-								patchState(store, {
-									artists: artists.map(toArtistView),
-									artistsLoading: false,
-								}),
-							error: (error) => {
-								console.error(error);
-								patchState(store, { artistsLoading: false });
-							},
-						})
+						)
 					)
 				),
 				loadAlbums: rxMethod<void>(
@@ -271,32 +274,38 @@ export const NetworkPageStore = signalStore(
 								() => albumStateService.selectEntities$(),
 								() =>
 									albumStateService.dispatchListEntitiesAction()
+							).pipe(
+								map((albums) =>
+									albums.map((album) => ({
+										...toAlbumView(album),
+										artistId: album.artist?.uid ?? '',
+									}))
+								),
+								tapResponse({
+									next: (albums) =>
+										patchState(store, { albums }),
+									error: (error) => console.error(error),
+								})
 							)
-						),
-						map((albums) =>
-							albums.map((album) => ({
-								...toAlbumView(album),
-								artistId: album.artist?.uid ?? '',
-							}))
-						),
-						tapResponse({
-							next: (albums) => patchState(store, { albums }),
-							error: (error) => console.error(error),
-						})
+						)
 					)
 				),
 				loadReleases: rxMethod<void>(
 					pipe(
 						switchMap(() =>
-							collectionItemStateService.selectLoadedEntities$()
-						),
-						tapResponse({
-							next: (items) =>
-								patchState(store, {
-									releases: items.map(toReleaseView),
-								}),
-							error: (error) => console.error(error),
-						})
+							collectionItemStateService
+								.selectLoadedEntities$()
+								.pipe(
+									tapResponse({
+										next: (items) =>
+											patchState(store, {
+												releases:
+													items.map(toReleaseView),
+											}),
+										error: (error) => console.error(error),
+									})
+								)
+						)
 					)
 				),
 				setFocus: (nodeId: string) => {

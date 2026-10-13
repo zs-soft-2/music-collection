@@ -213,12 +213,15 @@ export const CollectionDetailPageStore = signalStore(
 			/** Follows sign-in and sign-out while the page is open. */
 			loadAuthentication: rxMethod<void>(
 				pipe(
-					switchMap(() => authentication.selectIsAuthenticated$()),
-					tapResponse({
-						next: (authenticated: boolean) =>
-							patchState(store, { authenticated }),
-						error: (error: unknown) => console.error(error),
-					})
+					switchMap(() =>
+						authentication.selectIsAuthenticated$().pipe(
+							tapResponse({
+								next: (authenticated: boolean) =>
+									patchState(store, { authenticated }),
+								error: (error: unknown) => console.error(error),
+							})
+						)
+					)
 				)
 			),
 			/**
@@ -228,13 +231,21 @@ export const CollectionDetailPageStore = signalStore(
 			 */
 			loadWall: rxMethod<void>(
 				pipe(
-					switchMap(() => profiles.cards$()),
-					tapResponse({
-						next: (cards: CollectorCardDocument[]) =>
-							patchState(store, { wall: toWallEntries(cards) }),
-						error: (error) =>
-							console.error('Collector wall not read', error),
-					})
+					switchMap(() =>
+						profiles.cards$().pipe(
+							tapResponse({
+								next: (cards: CollectorCardDocument[]) =>
+									patchState(store, {
+										wall: toWallEntries(cards),
+									}),
+								error: (error) =>
+									console.error(
+										'Collector wall not read',
+										error
+									),
+							})
+						)
+					)
 				)
 			),
 			load: rxMethod<string>(
@@ -242,22 +253,27 @@ export const CollectionDetailPageStore = signalStore(
 					tap(() =>
 						patchState(store, { isLoading: true, notFound: false })
 					),
-					switchMap((slug) => effect.loadStanding$(slug)),
-					tapResponse({
-						next: (standing: MusicCollectionStanding | null) =>
-							patchState(store, {
-								collection: standing
-									? toCollectionDetail(standing)
-									: null,
-								standing,
-								notFound: !standing,
-								isLoading: false,
-							}),
-						error: (error) => {
-							console.error(error);
-							patchState(store, { isLoading: false });
-						},
-					})
+					switchMap((slug) =>
+						effect.loadStanding$(slug).pipe(
+							tapResponse({
+								next: (
+									standing: MusicCollectionStanding | null
+								) =>
+									patchState(store, {
+										collection: standing
+											? toCollectionDetail(standing)
+											: null,
+										standing,
+										notFound: !standing,
+										isLoading: false,
+									}),
+								error: (error) => {
+									console.error(error);
+									patchState(store, { isLoading: false });
+								},
+							})
+						)
+					)
 				)
 			),
 			setFilter: (filter: AlbumFilter) => patchState(store, { filter }),

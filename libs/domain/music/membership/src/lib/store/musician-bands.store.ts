@@ -51,18 +51,21 @@ export const MusicianBandsStore = signalStore(
 		load: rxMethod<string>(
 			pipe(
 				tap(() => patchState(store, { isLoading: true })),
-				switchMap((musicianUid) => effect.loadByMusician$(musicianUid)),
-				tapResponse({
-					next: (rows) =>
-						patchState(store, { rows, isLoading: false }),
-					error: (error) => {
-						console.error(error);
-						patchState(store, {
-							isLoading: false,
-							error: 'ui.musicianBands.error-general',
-						});
-					},
-				})
+				switchMap((musicianUid) =>
+					effect.loadByMusician$(musicianUid).pipe(
+						tapResponse({
+							next: (rows) =>
+								patchState(store, { rows, isLoading: false }),
+							error: (error) => {
+								console.error(error);
+								patchState(store, {
+									isLoading: false,
+									error: 'ui.musicianBands.error-general',
+								});
+							},
+						})
+					)
+				)
 			)
 		),
 	}))

@@ -142,22 +142,25 @@ export const DailyQuestionSettingsStore = signalStore(
 		const load = rxMethod<void>(
 			pipe(
 				tap(() => patchState(store, { isLoading: true, error: null })),
-				switchMap(() => effect.settings$()),
-				tapResponse({
-					next: (view) =>
-						patchState(store, {
-							settings: view.settings,
-							templates: view.templates,
-							isLoading: false,
-						}),
-					error: (error: unknown) => {
-						console.error(error);
-						patchState(store, {
-							isLoading: false,
-							error: describeWriteError(error),
-						});
-					},
-				})
+				switchMap(() =>
+					effect.settings$().pipe(
+						tapResponse({
+							next: (view) =>
+								patchState(store, {
+									settings: view.settings,
+									templates: view.templates,
+									isLoading: false,
+								}),
+							error: (error: unknown) => {
+								console.error(error);
+								patchState(store, {
+									isLoading: false,
+									error: describeWriteError(error),
+								});
+							},
+						})
+					)
+				)
 			)
 		);
 
@@ -170,15 +173,21 @@ export const DailyQuestionSettingsStore = signalStore(
 		const loadHistory = rxMethod<void>(
 			pipe(
 				tap(() => patchState(store, { isHistoryLoading: true })),
-				switchMap(() => effect.questionHistory$(HISTORY_DAYS)),
-				tapResponse({
-					next: (history) =>
-						patchState(store, { history, isHistoryLoading: false }),
-					error: (error: unknown) => {
-						console.error(error);
-						patchState(store, { isHistoryLoading: false });
-					},
-				})
+				switchMap(() =>
+					effect.questionHistory$(HISTORY_DAYS).pipe(
+						tapResponse({
+							next: (history) =>
+								patchState(store, {
+									history,
+									isHistoryLoading: false,
+								}),
+							error: (error: unknown) => {
+								console.error(error);
+								patchState(store, { isHistoryLoading: false });
+							},
+						})
+					)
+				)
 			)
 		);
 
@@ -245,25 +254,29 @@ export const DailyQuestionSettingsStore = signalStore(
 					tap(() =>
 						patchState(store, { isSaving: true, error: null })
 					),
-					switchMap(() => effect.saveSettings$(store.settings())),
-					tapResponse({
-						next: (view) =>
-							patchState(store, {
-								// The server clamps, so what it returns is the
-								// truth — not what the form sent.
-								settings: view.settings,
-								templates: view.templates,
-								isSaving: false,
-								savedAt: Date.now(),
-							}),
-						error: (error: unknown) => {
-							console.error(error);
-							patchState(store, {
-								isSaving: false,
-								error: describeWriteError(error),
-							});
-						},
-					})
+					switchMap(() =>
+						effect.saveSettings$(store.settings()).pipe(
+							tapResponse({
+								next: (view) =>
+									patchState(store, {
+										// The server clamps, so what it
+										// returns is the truth — not what
+										// the form sent.
+										settings: view.settings,
+										templates: view.templates,
+										isSaving: false,
+										savedAt: Date.now(),
+									}),
+								error: (error: unknown) => {
+									console.error(error);
+									patchState(store, {
+										isSaving: false,
+										error: describeWriteError(error),
+									});
+								},
+							})
+						)
+					)
 				)
 			),
 			/**
@@ -280,25 +293,29 @@ export const DailyQuestionSettingsStore = signalStore(
 							error: null,
 						})
 					),
-					switchMap((force) => effect.compose$(undefined, force)),
-					tapResponse({
-						next: (composed) => {
-							patchState(store, {
-								composed,
-								isComposing: false,
-							});
+					switchMap((force) =>
+						effect.compose$(undefined, force).pipe(
+							tapResponse({
+								next: (composed) => {
+									patchState(store, {
+										composed,
+										isComposing: false,
+									});
 
-							// A lista élére most került oda a mai kérdés.
-							if (composed.created) loadHistory();
-						},
-						error: (error: unknown) => {
-							console.error(error);
-							patchState(store, {
-								isComposing: false,
-								error: describeWriteError(error),
-							});
-						},
-					})
+									// A lista élére most került oda a mai
+									// kérdés.
+									if (composed.created) loadHistory();
+								},
+								error: (error: unknown) => {
+									console.error(error);
+									patchState(store, {
+										isComposing: false,
+										error: describeWriteError(error),
+									});
+								},
+							})
+						)
+					)
 				)
 			),
 			refreshLeaderboard: rxMethod<void>(
@@ -310,21 +327,24 @@ export const DailyQuestionSettingsStore = signalStore(
 							error: null,
 						})
 					),
-					switchMap(() => effect.refreshLeaderboard$()),
-					tapResponse({
-						next: (refreshed) =>
-							patchState(store, {
-								refreshed,
-								isRefreshing: false,
-							}),
-						error: (error: unknown) => {
-							console.error(error);
-							patchState(store, {
-								isRefreshing: false,
-								error: describeWriteError(error),
-							});
-						},
-					})
+					switchMap(() =>
+						effect.refreshLeaderboard$().pipe(
+							tapResponse({
+								next: (refreshed) =>
+									patchState(store, {
+										refreshed,
+										isRefreshing: false,
+									}),
+								error: (error: unknown) => {
+									console.error(error);
+									patchState(store, {
+										isRefreshing: false,
+										error: describeWriteError(error),
+									});
+								},
+							})
+						)
+					)
 				)
 			),
 		};

@@ -76,22 +76,25 @@ function options$(
 	store: (options: PickerOption[]) => void
 ) {
 	return pipe(
-		switchMap(() => select()),
-		tap((entities) => {
-			if (!entities?.length) {
-				dispatchList();
-			}
-		}),
-		filter((entities) => entities?.length > 0),
-		tapResponse({
-			next: (entities: { uid: string; name: string }[]) =>
-				store(
-					entities
-						.map(({ uid, name }) => ({ uid, name }))
-						.sort((a, b) => a.name.localeCompare(b.name))
-				),
-			error: (error: unknown) => console.error(error),
-		})
+		switchMap(() =>
+			select().pipe(
+				tap((entities) => {
+					if (!entities?.length) {
+						dispatchList();
+					}
+				}),
+				filter((entities) => entities?.length > 0),
+				tapResponse({
+					next: (entities: { uid: string; name: string }[]) =>
+						store(
+							entities
+								.map(({ uid, name }) => ({ uid, name }))
+								.sort((a, b) => a.name.localeCompare(b.name))
+						),
+					error: (error: unknown) => console.error(error),
+				})
+			)
+		)
 	);
 }
 
@@ -260,26 +263,27 @@ export const MusicCollectionEditStore = signalStore(
 					tap(() => patchState(store, { isPreviewing: true })),
 					debounceTime(PREVIEW_DEBOUNCE_MS),
 					switchMap((criteria) =>
-						effect.preview$(toCriteria(criteria))
-					),
-					tapResponse({
-						next: (resolved) =>
-							patchState(store, {
-								previewAlbums: resolved.albums.slice(
-									0,
-									PREVIEW_SIZE
-								),
-								previewTotal: resolved.total,
-								previewPoints: derivedBasePoints(
-									resolved.albums
-								),
-								isPreviewing: false,
-							}),
-						error: (error) => {
-							console.error(error);
-							patchState(store, { isPreviewing: false });
-						},
-					})
+						effect.preview$(toCriteria(criteria)).pipe(
+							tapResponse({
+								next: (resolved) =>
+									patchState(store, {
+										previewAlbums: resolved.albums.slice(
+											0,
+											PREVIEW_SIZE
+										),
+										previewTotal: resolved.total,
+										previewPoints: derivedBasePoints(
+											resolved.albums
+										),
+										isPreviewing: false,
+									}),
+								error: (error) => {
+									console.error(error);
+									patchState(store, { isPreviewing: false });
+								},
+							})
+						)
+					)
 				)
 			);
 
@@ -291,13 +295,14 @@ export const MusicCollectionEditStore = signalStore(
 			const offerGallery = rxMethod<BadgeImage[]>(
 				pipe(
 					switchMap((gallery) =>
-						effect.offeredBadgeGallery$(gallery)
-					),
-					tapResponse({
-						next: (badgeGallery: BadgeImage[]) =>
-							patchState(store, { badgeGallery }),
-						error: (error: unknown) => console.error(error),
-					})
+						effect.offeredBadgeGallery$(gallery).pipe(
+							tapResponse({
+								next: (badgeGallery: BadgeImage[]) =>
+									patchState(store, { badgeGallery }),
+								error: (error: unknown) => console.error(error),
+							})
+						)
+					)
 				)
 			);
 
@@ -309,21 +314,22 @@ export const MusicCollectionEditStore = signalStore(
 			const loadLibrary = rxMethod<LibraryTarget>(
 				pipe(
 					switchMap((target: LibraryTarget) =>
-						effect.uploadedImages$(LIBRARY_CATEGORY[target])
-					),
-					tapResponse({
-						next: (documents: DocumentEntity[]) =>
-							patchState(store, {
-								library: documents.map(
-									({ uid, name, filePath }) => ({
-										uid,
-										name,
-										filePath,
-									})
-								),
-							}),
-						error: (error: unknown) => console.error(error),
-					})
+						effect.uploadedImages$(LIBRARY_CATEGORY[target]).pipe(
+							tapResponse({
+								next: (documents: DocumentEntity[]) =>
+									patchState(store, {
+										library: documents.map(
+											({ uid, name, filePath }) => ({
+												uid,
+												name,
+												filePath,
+											})
+										),
+									}),
+								error: (error: unknown) => console.error(error),
+							})
+						)
+					)
 				)
 			);
 
@@ -346,38 +352,41 @@ export const MusicCollectionEditStore = signalStore(
 						effect.adoptBadgeDocument$(
 							store.uid() as string,
 							image.uid
-						)
-					),
-					tapResponse({
-						next: (image: BadgeImage) => {
-							// Ugyanaz a sorrend, amit a szerver írt: ami már
-							// bent volt, marad a helyén.
-							const gallery = store
-								.badgeGallery()
-								.some(
-									({ documentUid }) =>
-										documentUid === image.documentUid
-								)
-								? store.badgeGallery()
-								: [...store.badgeGallery(), image];
+						).pipe(
+							tapResponse({
+								next: (image: BadgeImage) => {
+									// Ugyanaz a sorrend, amit a szerver
+									// írt: ami már bent volt, marad a
+									// helyén.
+									const gallery = store
+										.badgeGallery()
+										.some(
+											({ documentUid }) =>
+												documentUid ===
+												image.documentUid
+										)
+										? store.badgeGallery()
+										: [...store.badgeGallery(), image];
 
-							patchState(store, {
-								badgeGallery: gallery,
-								badgeImageUrl: image.filePath,
-								badgeImageUid: image.documentUid,
-								isPickingBadge: false,
-								libraryTarget: null,
-							});
-							offerGallery(of(gallery));
-						},
-						error: (error: unknown) => {
-							console.error(error);
-							patchState(store, {
-								isPickingBadge: false,
-								error: describeWriteError(error),
-							});
-						},
-					})
+									patchState(store, {
+										badgeGallery: gallery,
+										badgeImageUrl: image.filePath,
+										badgeImageUid: image.documentUid,
+										isPickingBadge: false,
+										libraryTarget: null,
+									});
+									offerGallery(of(gallery));
+								},
+								error: (error: unknown) => {
+									console.error(error);
+									patchState(store, {
+										isPickingBadge: false,
+										error: describeWriteError(error),
+									});
+								},
+							})
+						)
+					)
 				)
 			);
 
@@ -416,7 +425,7 @@ export const MusicCollectionEditStore = signalStore(
 							})
 						),
 						switchMap((uid) =>
-							uid === NEW_UID
+							(uid === NEW_UID
 								? of(null)
 								: effect
 										.loadResolution$(uid)
@@ -427,61 +436,66 @@ export const MusicCollectionEditStore = signalStore(
 													null
 											)
 										)
-						),
-						tapResponse({
-							next: (
-								collection: MusicCollectionEntity | null
-							) => {
-								const form = collection
-									? toForm(collection)
-									: emptyCollectionForm();
+							).pipe(
+								tapResponse({
+									next: (
+										collection: MusicCollectionEntity | null
+									) => {
+										const form = collection
+											? toForm(collection)
+											: emptyCollectionForm();
 
-								const gallery =
-									collection?.badge?.gallery ?? [];
+										const gallery =
+											collection?.badge?.gallery ?? [];
 
-								patchState(store, {
-									uid: collection?.uid ?? null,
-									form,
-									slugTouched: !!collection,
-									isLoading: false,
-									badgeImageUrl:
-										collection?.badge?.image?.filePath ??
-										null,
-									badgeImageUid:
-										collection?.badge?.image?.documentUid ??
-										null,
-									badgeGallery: gallery,
-								});
-								offerGallery(of(gallery));
-								preview(of(form.criteria));
-							},
-							error: (error) => {
-								console.error(error);
-								patchState(store, {
-									isLoading: false,
-									error: describeWriteError(error),
-								});
-							},
-						})
+										patchState(store, {
+											uid: collection?.uid ?? null,
+											form,
+											slugTouched: !!collection,
+											isLoading: false,
+											badgeImageUrl:
+												collection?.badge?.image
+													?.filePath ?? null,
+											badgeImageUid:
+												collection?.badge?.image
+													?.documentUid ?? null,
+											badgeGallery: gallery,
+										});
+										offerGallery(of(gallery));
+										preview(of(form.criteria));
+									},
+									error: (error) => {
+										console.error(error);
+										patchState(store, {
+											isLoading: false,
+											error: describeWriteError(error),
+										});
+									},
+								})
+							)
+						)
 					)
 				),
 				loadOptions: rxMethod<void>(
 					pipe(
-						switchMap(() => effect.listAllResolutions$()),
-						tapResponse({
-							next: (resolutions) =>
-								patchState(store, {
-									parents: resolutions
-										.map(({ collection }) => ({
-											uid: collection.uid,
-											name: collection.name,
-										}))
-										.sort((a, b) =>
-											a.name.localeCompare(b.name)
-										),
-								}),
-							error: (error) => console.error(error),
-						})
+						switchMap(() =>
+							effect.listAllResolutions$().pipe(
+								tapResponse({
+									next: (resolutions) =>
+										patchState(store, {
+											parents: resolutions
+												.map(({ collection }) => ({
+													uid: collection.uid,
+													name: collection.name,
+												}))
+												.sort((a, b) =>
+													a.name.localeCompare(b.name)
+												),
+										}),
+									error: (error) => console.error(error),
+								})
+							)
+						)
 					)
 				),
 				/**
@@ -491,11 +505,15 @@ export const MusicCollectionEditStore = signalStore(
 				 */
 				loadStyles: rxMethod<void>(
 					pipe(
-						switchMap(() => genreEffect.styles$),
-						tapResponse({
-							next: (styles) => patchState(store, { styles }),
-							error: (error) => console.error(error),
-						})
+						switchMap(() =>
+							genreEffect.styles$.pipe(
+								tapResponse({
+									next: (styles) =>
+										patchState(store, { styles }),
+									error: (error) => console.error(error),
+								})
+							)
+						)
 					)
 				),
 				loadArtists: rxMethod<void>(
@@ -736,32 +754,34 @@ export const MusicCollectionEditStore = signalStore(
 								store.uid() as string,
 								store.curatedPoints() ?? store.derivedPoints(),
 								store.badgeModel().trim() || null
-							)
-						),
-						tapResponse({
-							next: (draw: GenerateBadgeResult) => {
-								// A szerver már beírta őket a galériába; itt
-								// csak a végére fűzzük, hogy ne kelljen
-								// újratölteni a definíciót.
-								const badgeGallery = [
-									...store.badgeGallery(),
-									...draw.candidates,
-								];
+							).pipe(
+								tapResponse({
+									next: (draw: GenerateBadgeResult) => {
+										// A szerver már beírta őket a
+										// galériába; itt csak a végére
+										// fűzzük, hogy ne kelljen
+										// újratölteni a definíciót.
+										const badgeGallery = [
+											...store.badgeGallery(),
+											...draw.candidates,
+										];
 
-								patchState(store, {
-									badgeGallery,
-									isGeneratingBadge: false,
-								});
-								offerGallery(of(badgeGallery));
-							},
-							error: (error: unknown) => {
-								console.error(error);
-								patchState(store, {
-									isGeneratingBadge: false,
-									error: describeWriteError(error),
-								});
-							},
-						})
+										patchState(store, {
+											badgeGallery,
+											isGeneratingBadge: false,
+										});
+										offerGallery(of(badgeGallery));
+									},
+									error: (error: unknown) => {
+										console.error(error);
+										patchState(store, {
+											isGeneratingBadge: false,
+											error: describeWriteError(error),
+										});
+									},
+								})
+							)
+						)
 					)
 				),
 
@@ -783,23 +803,28 @@ export const MusicCollectionEditStore = signalStore(
 									store.uid() as string,
 									image.documentUid
 								)
-								.pipe(map(() => image))
-						),
-						tapResponse({
-							next: (image: BadgeImage) =>
-								patchState(store, {
-									badgeImageUrl: image.filePath,
-									badgeImageUid: image.documentUid,
-									isPickingBadge: false,
-								}),
-							error: (error: unknown) => {
-								console.error(error);
-								patchState(store, {
-									isPickingBadge: false,
-									error: describeWriteError(error),
-								});
-							},
-						})
+								.pipe(
+									map(() => image),
+									tapResponse({
+										next: (image: BadgeImage) =>
+											patchState(store, {
+												badgeImageUrl: image.filePath,
+												badgeImageUid:
+													image.documentUid,
+												isPickingBadge: false,
+											}),
+										error: (error: unknown) => {
+											console.error(error);
+											patchState(store, {
+												isPickingBadge: false,
+												error: describeWriteError(
+													error
+												),
+											});
+										},
+									})
+								)
+						)
 					)
 				),
 
@@ -824,23 +849,28 @@ export const MusicCollectionEditStore = signalStore(
 							})
 						),
 						exhaustMap(() =>
-							effect.setBadgeImage$(store.uid() as string, null)
-						),
-						tapResponse({
-							next: () =>
-								patchState(store, {
-									badgeImageUrl: null,
-									badgeImageUid: null,
-									isPickingBadge: false,
-								}),
-							error: (error: unknown) => {
-								console.error(error);
-								patchState(store, {
-									isPickingBadge: false,
-									error: describeWriteError(error),
-								});
-							},
-						})
+							effect
+								.setBadgeImage$(store.uid() as string, null)
+								.pipe(
+									tapResponse({
+										next: () =>
+											patchState(store, {
+												badgeImageUrl: null,
+												badgeImageUid: null,
+												isPickingBadge: false,
+											}),
+										error: (error: unknown) => {
+											console.error(error);
+											patchState(store, {
+												isPickingBadge: false,
+												error: describeWriteError(
+													error
+												),
+											});
+										},
+									})
+								)
+						)
 					)
 				),
 
@@ -853,11 +883,12 @@ export const MusicCollectionEditStore = signalStore(
 							const uid = store.uid();
 							const draft = toDraft(store.form());
 
-							return uid
-								? effect.update$(uid, draft)
-								: effect.create$(draft);
-						}),
-						tapResponse({ next: finish, error: fail })
+							return (
+								uid
+									? effect.update$(uid, draft)
+									: effect.create$(draft)
+							).pipe(tapResponse({ next: finish, error: fail }));
+						})
 					)
 				),
 
@@ -885,19 +916,27 @@ export const MusicCollectionEditStore = signalStore(
 				 */
 				loadImageSetup: rxMethod<void>(
 					pipe(
-						switchMap(() => effect.loadProbeSetup$()),
-						tapResponse({
-							next: (setup) =>
-								patchState(store, {
-									imageModels: setup.models,
-									sceneLocks: setup.locks,
-								}),
-							error: (error: unknown) =>
-								// Not shown: without it both pickers fall back
-								// to the gateway's own choice, which is what
-								// they did before any of this existed.
-								console.error('Image models unavailable', error),
-						})
+						switchMap(() =>
+							effect.loadProbeSetup$().pipe(
+								tapResponse({
+									next: (setup) =>
+										patchState(store, {
+											imageModels: setup.models,
+											sceneLocks: setup.locks,
+										}),
+									error: (error: unknown) =>
+										// Not shown: without it both
+										// pickers fall back to the
+										// gateway's own choice, which is
+										// what they did before any of this
+										// existed.
+										console.error(
+											'Image models unavailable',
+											error
+										),
+								})
+							)
+						)
 					)
 				),
 			};

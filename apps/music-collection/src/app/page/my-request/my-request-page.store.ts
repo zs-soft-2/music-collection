@@ -100,25 +100,33 @@ export const MyRequestPageStore = signalStore(
 								),
 								startWith([] as ReleaseRequest[])
 							),
-						})
-					),
-					tapResponse({
-						next: ({ requests, responses, releaseRequests }) =>
-							patchState(store, {
-								requests,
-								responses,
-								releaseRequests,
-								loading: false,
-								failed: false,
-							}),
-						error: (error) => {
-							console.error(
-								'The requests could not be read',
-								error
-							);
-							patchState(store, { loading: false, failed: true });
-						},
-					})
+						}).pipe(
+							tapResponse({
+								next: ({
+									requests,
+									responses,
+									releaseRequests,
+								}) =>
+									patchState(store, {
+										requests,
+										responses,
+										releaseRequests,
+										loading: false,
+										failed: false,
+									}),
+								error: (error) => {
+									console.error(
+										'The requests could not be read',
+										error
+									);
+									patchState(store, {
+										loading: false,
+										failed: true,
+									});
+								},
+							})
+						)
+					)
 				)
 			),
 		})

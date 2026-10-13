@@ -58,18 +58,25 @@ export function withPageOrigin() {
 							patchState(store, { originSlug, originName: null })
 						),
 						switchMap((slug) =>
-							slug ? collections.loadDefinition$(slug) : of(null)
-						),
-						tapResponse({
-							next: (collection: MusicCollectionEntity | null) =>
-								patchState(store, {
-									originName: collection?.name ?? null,
-								}),
-							error: (error) => {
-								console.error(error);
-								patchState(store, { originName: null });
-							},
-						})
+							(slug
+								? collections.loadDefinition$(slug)
+								: of(null)
+							).pipe(
+								tapResponse({
+									next: (
+										collection: MusicCollectionEntity | null
+									) =>
+										patchState(store, {
+											originName:
+												collection?.name ?? null,
+										}),
+									error: (error) => {
+										console.error(error);
+										patchState(store, { originName: null });
+									},
+								})
+							)
+						)
 					)
 				),
 			})

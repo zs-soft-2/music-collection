@@ -640,32 +640,39 @@ export const HomePageStore = signalStore(
 				/** The collector's own verdicts; follows sign-in. */
 				loadRatings: rxMethod<void>(
 					pipe(
-						switchMap(() => ratingEffect.list$()),
-						tapResponse({
-							next: (ratings: AlbumRating[]) =>
-								patchState(store, { ratings }),
-							error: (error: unknown) => console.error(error),
-						})
+						switchMap(() =>
+							ratingEffect.list$().pipe(
+								tapResponse({
+									next: (ratings: AlbumRating[]) =>
+										patchState(store, { ratings }),
+									error: (error: unknown) =>
+										console.error(error),
+								})
+							)
+						)
 					)
 				),
 				loadCollections: rxMethod<void>(
 					pipe(
-						switchMap(() => musicCollectionEffect.listStandings$()),
-						tapResponse({
-							next: (
-								collectionStandings: MusicCollectionStanding[]
-							) =>
-								patchState(store, {
-									collectionStandings,
-									collectionsLoading: false,
-								}),
-							error: (error) => {
-								console.error(error);
-								patchState(store, {
-									collectionsLoading: false,
-								});
-							},
-						})
+						switchMap(() =>
+							musicCollectionEffect.listStandings$().pipe(
+								tapResponse({
+									next: (
+										collectionStandings: MusicCollectionStanding[]
+									) =>
+										patchState(store, {
+											collectionStandings,
+											collectionsLoading: false,
+										}),
+									error: (error) => {
+										console.error(error);
+										patchState(store, {
+											collectionsLoading: false,
+										});
+									},
+								})
+							)
+						)
 					)
 				),
 				loadArtists: rxMethod<void>(
@@ -675,25 +682,28 @@ export const HomePageStore = signalStore(
 								() => artistStateService.selectEntities$(),
 								() =>
 									artistStateService.dispatchListEntitiesAction()
+							).pipe(
+								tapResponse({
+									next: (artists) => {
+										patchState(store, {
+											artists: measure(
+												'home.mapArtists',
+												{ artists: artists.length },
+												() => artists.map(toArtistView)
+											),
+											artistsLoading: false,
+										});
+										ensureSpotlight();
+									},
+									error: (error) => {
+										console.error(error);
+										patchState(store, {
+											artistsLoading: false,
+										});
+									},
+								})
 							)
-						),
-						tapResponse({
-							next: (artists) => {
-								patchState(store, {
-									artists: measure(
-										'home.mapArtists',
-										{ artists: artists.length },
-										() => artists.map(toArtistView)
-									),
-									artistsLoading: false,
-								});
-								ensureSpotlight();
-							},
-							error: (error) => {
-								console.error(error);
-								patchState(store, { artistsLoading: false });
-							},
-						})
+						)
 					)
 				),
 				loadAlbums: rxMethod<void>(
@@ -703,49 +713,58 @@ export const HomePageStore = signalStore(
 								() => albumStateService.selectEntities$(),
 								() =>
 									albumStateService.dispatchListEntitiesAction()
+							).pipe(
+								tapResponse({
+									next: (albums) => {
+										patchState(store, {
+											albums: measure(
+												'home.mapAlbums',
+												{ albums: albums.length },
+												() => albums.map(toAlbumView)
+											),
+											albumsLoading: false,
+										});
+										ensureSpotlight();
+									},
+									error: (error) => {
+										console.error(error);
+										patchState(store, {
+											albumsLoading: false,
+										});
+									},
+								})
 							)
-						),
-						tapResponse({
-							next: (albums) => {
-								patchState(store, {
-									albums: measure(
-										'home.mapAlbums',
-										{ albums: albums.length },
-										() => albums.map(toAlbumView)
-									),
-									albumsLoading: false,
-								});
-								ensureSpotlight();
-							},
-							error: (error) => {
-								console.error(error);
-								patchState(store, { albumsLoading: false });
-							},
-						})
+						)
 					)
 				),
 				loadReleases: rxMethod<void>(
 					pipe(
 						switchMap(() =>
-							collectionItemStateService.selectLoadedEntities$()
-						),
-						tapResponse({
-							next: (items) => {
-								patchState(store, {
-									releases: measure(
-										'home.mapReleases',
-										{ releases: items.length },
-										() => items.map(toReleaseView)
-									),
-									releasesLoading: false,
-								});
-								ensureSpotlight();
-							},
-							error: (error) => {
-								console.error(error);
-								patchState(store, { releasesLoading: false });
-							},
-						})
+							collectionItemStateService
+								.selectLoadedEntities$()
+								.pipe(
+									tapResponse({
+										next: (items) => {
+											patchState(store, {
+												releases: measure(
+													'home.mapReleases',
+													{ releases: items.length },
+													() =>
+														items.map(toReleaseView)
+												),
+												releasesLoading: false,
+											});
+											ensureSpotlight();
+										},
+										error: (error) => {
+											console.error(error);
+											patchState(store, {
+												releasesLoading: false,
+											});
+										},
+									})
+								)
+						)
 					)
 				),
 				/** Live catalog-wide counts (artists, albums, tracks, …). */
@@ -760,16 +779,22 @@ export const HomePageStore = signalStore(
 							combineLatest([
 								quantityStateService.selectEntityCounts$(),
 								quantityStateService.selectEntityCountsLoading$(),
-							])
-						),
-						tapResponse({
-							next: ([counts, countsLoading]) =>
-								patchState(store, { counts, countsLoading }),
-							error: (error) => {
-								console.error(error);
-								patchState(store, { countsLoading: false });
-							},
-						})
+							]).pipe(
+								tapResponse({
+									next: ([counts, countsLoading]) =>
+										patchState(store, {
+											counts,
+											countsLoading,
+										}),
+									error: (error) => {
+										console.error(error);
+										patchState(store, {
+											countsLoading: false,
+										});
+									},
+								})
+							)
+						)
 					)
 				),
 				/**
@@ -779,21 +804,28 @@ export const HomePageStore = signalStore(
 				 */
 				loadBandOfTheWeek: rxMethod<void>(
 					pipe(
-						switchMap(() => bandOfTheWeekEffect.current$()),
-						tapResponse({
-							next: (bandOfTheWeek: BandOfTheWeek | null) => {
-								patchState(store, {
-									bandOfTheWeek,
-									bandLoading: false,
-								});
-								ensureSpotlight();
-							},
-							error: (error) => {
-								console.error(error);
-								patchState(store, { bandLoading: false });
-								ensureSpotlight();
-							},
-						})
+						switchMap(() =>
+							bandOfTheWeekEffect.current$().pipe(
+								tapResponse({
+									next: (
+										bandOfTheWeek: BandOfTheWeek | null
+									) => {
+										patchState(store, {
+											bandOfTheWeek,
+											bandLoading: false,
+										});
+										ensureSpotlight();
+									},
+									error: (error) => {
+										console.error(error);
+										patchState(store, {
+											bandLoading: false,
+										});
+										ensureSpotlight();
+									},
+								})
+							)
+						)
 					)
 				),
 				/**
@@ -804,28 +836,39 @@ export const HomePageStore = signalStore(
 				 */
 				loadWall: rxMethod<void>(
 					pipe(
-						switchMap(() => collectorProfiles.cards$()),
-						tapResponse({
-							next: (cards: CollectorCardDocument[]) =>
-								patchState(store, {
-									wall: toWallEntries(cards),
-								}),
-							error: (error) =>
-								console.error('Collector wall not read', error),
-						})
+						switchMap(() =>
+							collectorProfiles.cards$().pipe(
+								tapResponse({
+									next: (cards: CollectorCardDocument[]) =>
+										patchState(store, {
+											wall: toWallEntries(cards),
+										}),
+									error: (error) =>
+										console.error(
+											'Collector wall not read',
+											error
+										),
+								})
+							)
+						)
 					)
 				),
 				/** Follows sign-in and sign-out while the page is open. */
 				loadAuthentication: rxMethod<void>(
 					pipe(
 						switchMap(() =>
-							authenticationStateService.selectIsAuthenticated$()
-						),
-						tapResponse({
-							next: (authenticated) =>
-								patchState(store, { authenticated }),
-							error: (error) => console.error(error),
-						})
+							authenticationStateService
+								.selectIsAuthenticated$()
+								.pipe(
+									tapResponse({
+										next: (authenticated) =>
+											patchState(store, {
+												authenticated,
+											}),
+										error: (error) => console.error(error),
+									})
+								)
+						)
 					)
 				),
 				/** Google sign-in, the same the top bar offers. */
