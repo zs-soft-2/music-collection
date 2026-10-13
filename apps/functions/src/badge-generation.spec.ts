@@ -1,6 +1,10 @@
 import { Firestore } from 'firebase-admin/firestore';
 
-import { adoptBadgeDocument, adoptBadgeImage } from './badge-generation';
+import {
+	adoptBadgeDocument,
+	adoptBadgeImage,
+	drawImages,
+} from './badge-generation';
 
 // ── Storage-utánzat ───────────────────────────────────────────────────────
 //
@@ -27,7 +31,11 @@ jest.mock('firebase-functions/v2/https', () => ({
 	HttpsError: class HttpsError extends Error {
 		constructor(
 			public readonly code: string,
-			message: string
+			message: string,
+			// A `details` nem dísz: ezen utazik a kliensig az, hogy *miféle*
+			// hiba volt, és az admin felülete ebből dönti el, kiírja-e a
+			// szerver mondatát a saját kész szövege helyett.
+			public readonly details?: unknown
 		) {
 			super(message);
 		}
@@ -375,5 +383,158 @@ describe('adoptBadgeDocument', () => {
 		expect(
 			store.documents['music-collection/wave']['badge']
 		).toBeUndefined();
+	});
+});
+
+// ── A kép nélküli „sikeres" válasz ────────────────────────────────────────
+//
+// 2026-10-13: a gateway nyolc és fél másodperc után sikert jelentett, nulla
+// dollárral, kép nélkül. Nálunk ebből egy 500 lett, aminek az üzenete
+// annyit mondott, hogy nincs kép — se azt, melyik modell, se azt, mit
+// felelt helyette. Ez a néhány teszt azt a kört őrzi, ami ezt megtörte.
+
+/** Egy gateway, ami azt adja vissza, amit a teszt mond neki. */
+function fakeGateway(answer: unknown) {
+	return {
+		execute: jest.fn(async () => answer),
+	} as unknown as Parameters<typeof drawImages>[0];
+}
+
+const DRAW = {
+	prompt: 'Antique cast pewter enamel pin badge, a horned skull.',
+	size: '1024x1024',
+	count: 2,
+	qualityProfile: 'economy' as const,
+	model: 'valami-image',
+};
+
+/** Amit a hibából a kliens olvas. */
+function reasonOf(error: unknown): unknown {
+	return (error as { details?: { reason?: unknown } })?.details?.reason;
+}
+
+describe('drawImages', () => {
+	it('a beágyazott képeket adja vissza, a rajzoló modell nevével', async () => {
+		const drawn = await drawImages(
+			fakeGateway({
+				kind: 'result',
+				status: 'succeeded',
+				model: 'gpt-image-1',
+				output: { images: [{ b64: 'AAAA' }, { b64: 'BBBB' }] },
+			}),
+			DRAW
+		);
+
+		expect(drawn).toStrictEqual({
+			images: ['AAAA', 'BBBB'],
+			model: 'gpt-image-1',
+		});
+	});
+
+	/**
+	 * A szerződés szerint a képek az `images`-ben jönnek, de ugyanaz a
+	 * kimenet ismeri a `mediaUrl`-t is. Egy kifizetett kép nem veszhet el
+	 * azon, hogy melyik mezőben állt.
+	 */
+	it('a mediaUrl-ben érkezett egyetlen képet is elfogadja', async () => {
+		const fetched = jest.fn(async () => ({
+			ok: true,
+			status: 200,
+			arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer,
+		}));
+
+		(globalThis as unknown as { fetch: unknown }).fetch = fetched;
+
+		const drawn = await drawImages(
+			fakeGateway({
+				kind: 'result',
+				status: 'succeeded',
+				model: 'valami-image',
+				output: { mediaUrl: 'https://gateway/kep.png', images: [] },
+			}),
+			DRAW
+		);
+
+		expect(fetched).toHaveBeenCalledWith('https://gateway/kep.png');
+		expect(drawn.images).toStrictEqual([
+			Buffer.from(new Uint8Array([1, 2, 3])).toString('base64'),
+		]);
+	});
+
+	it('kép nélküli válaszból megnevezett ok lesz', async () => {
+		expect.assertions(3);
+
+		try {
+			await drawImages(
+				fakeGateway({
+					kind: 'result',
+					status: 'succeeded',
+					model: 'gemini-3.1-flash-image',
+					output: {},
+					cost: { totalCost: 0 },
+				}),
+				DRAW
+			);
+		} catch (error) {
+			expect(reasonOf(error)).toBe('no-image');
+			expect((error as Error).message).toContain('egyetlen képet sem');
+			// A modell neve az üzenetben: a padon az a következő lépés.
+			expect((error as Error).message).toContain(
+				'gemini-3.1-flash-image'
+			);
+		}
+	});
+
+	/**
+	 * Egy képkérésre adott próza az elzárkózás alakja. Az admin ezt akarja
+	 * olvasni, nem azt, hogy „nincs kép".
+	 */
+	it('a modell szövegét az üzenetbe teszi', async () => {
+		expect.assertions(2);
+
+		try {
+			await drawImages(
+				fakeGateway({
+					kind: 'result',
+					status: 'succeeded',
+					model: 'gemini-3.1-flash-image',
+					output: { text: 'I cannot draw a real band’s mascot.' },
+				}),
+				DRAW
+			);
+		} catch (error) {
+			expect(reasonOf(error)).toBe('no-image');
+			expect((error as Error).message).toContain('I cannot draw');
+		}
+	});
+
+	it('a gateway elutasítása más ok, mint a néma válasz', async () => {
+		expect.assertions(1);
+
+		const client = {
+			execute: jest.fn(async () => {
+				throw new Error('kapcsolat megszakadt');
+			}),
+		} as unknown as Parameters<typeof drawImages>[0];
+
+		try {
+			await drawImages(client, DRAW);
+		} catch (error) {
+			expect(reasonOf(error)).toBe('gateway-error');
+		}
+	});
+
+	/** A rajzolás szinkron: egy `accepted` válasz szerződésváltozás volna. */
+	it('a végrehajtásnak vett rajzolást elutasítja', async () => {
+		expect.assertions(1);
+
+		try {
+			await drawImages(
+				fakeGateway({ kind: 'accepted', executionId: 'x' }),
+				DRAW
+			);
+		} catch (error) {
+			expect(reasonOf(error)).toBe('unexpected-shape');
+		}
 	});
 });

@@ -346,8 +346,12 @@ interface DrawRequest {
  * ugyanezt kéri a gatewaytől, csak más mérettel és más prompttal — a hibák
  * fordítása, az `accepted` válasz elutasítása és a kép beágyazása pedig
  * mindkettőn ugyanaz.
+ *
+ * Exportált, mert a kép nélküli válasz kezelése itt lakik, és azt a
+ * `badge-generation.spec.ts` közvetlenül kéri számon: ez az a pont, ahol egy
+ * „sikeres" gateway-hívásból vagy kép lesz, vagy egy megnevezett ok.
  */
-async function drawImages(
+export async function drawImages(
 	client: GatewayClient,
 	request: DrawRequest
 ): Promise<DrawnImages> {
