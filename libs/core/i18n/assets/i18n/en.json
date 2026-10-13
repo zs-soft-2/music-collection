@@ -2172,6 +2172,7 @@
 			"this-tab": "this tab",
 			"and-tick": "and tick",
 			"share-tab-audio": "Share tab audio",
+			"no-sound-shared": "No sound is arriving from the shared tab, so the visuals are moving on their own. Check that you shared this tab with its audio ticked, and that the music plays here rather than on another device.",
 			"spotify": "Spotify",
 			"youtube": "YouTube",
 			"lyricsEarlierBy": "· lyrics earlier by {{seconds}} s",

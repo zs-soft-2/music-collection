@@ -2172,6 +2172,7 @@
 			"this-tab": "diesen Tab",
 			"and-tick": "und hake",
 			"share-tab-audio": "Tab-Audio teilen",
+			"no-sound-shared": "Vom geteilten Tab kommt kein Ton, also bewegen sich die Effekte von selbst. Prüfe, ob du diesen Tab mit angehaktem Ton geteilt hast und ob die Musik hier läuft und nicht auf einem anderen Gerät.",
 			"spotify": "Spotify",
 			"youtube": "YouTube",
 			"lyricsEarlierBy": "· Text {{seconds}} s früher",

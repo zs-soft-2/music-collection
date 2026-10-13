@@ -2172,6 +2172,7 @@
 			"this-tab": "ezt a lapot",
 			"and-tick": "és pipáld be",
 			"share-tab-audio": "Lap hangjának megosztása",
+			"no-sound-shared": "Nem érkezik hang a megosztott lapról, így a látvány magától mozog. Nézd meg, hogy ezt a lapot osztod-e meg bepipált hanggal, és hogy a zene itt szól-e, nem másik eszközön.",
 			"spotify": "Spotify",
 			"youtube": "YouTube",
 			"lyricsEarlierBy": "· dalszöveg {{seconds}} mp-cel korábban",
