@@ -301,6 +301,19 @@
 						>.
 					</p>
 				}
+				<!--
+					Shared, playing, and still not a sound: the visuals are
+					improvising, and only this line says so.
+				-->
+				@if (
+					player.audioStatus() === 'on' &&
+					player.audioSilent() &&
+					player.playing()
+				) {
+					<p class="hint error">
+						{{ 'ui.playerStage.no-sound-shared' | transloco }}
+					</p>
+				}
 			}
 			@if (player.audioError(); as audioError) {
 				<p class="hint error">{{ audioError }}</p>

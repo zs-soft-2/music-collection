@@ -436,6 +436,12 @@ export const PlayerStore = signalStore(
 		 * object must not go into the (frozen) store state.
 		 */
 		analyser: signal<AnalyserNode | null>(null),
+		/**
+		 * The shared sound has gone quiet. Worth saying out loud: a capture
+		 * that delivers nothing looks exactly like no capture at all, and
+		 * the visuals go on improvising either way.
+		 */
+		audioSilent: signal(false),
 	})),
 	withComputed(
 		(
@@ -1008,6 +1014,7 @@ export const PlayerStore = signalStore(
 				capture?.stop();
 				capture = null;
 				store.analyser.set(null);
+				store.audioSilent.set(false);
 				patchState(store, { audioStatus: 'off' });
 			};
 
@@ -1593,8 +1600,14 @@ export const PlayerStore = signalStore(
 					try {
 						capture = await audioCaptureEffect.start();
 						store.analyser.set(capture.analyser);
+						store.audioSilent.set(false);
 						patchState(store, { audioStatus: 'on' });
 						const current = capture;
+						current.onSilence = (silent) => {
+							if (capture === current) {
+								store.audioSilent.set(silent);
+							}
+						};
 						// Stopped from the browser's "sharing" bar.
 						void current.ended.then(() => {
 							if (capture === current) {
@@ -1700,6 +1713,15 @@ export const PlayerStore = signalStore(
 			store.loadSettings(of(undefined));
 			store.loadShuffled(of(undefined));
 			store.loadLyrics(() => store.shown().trackId);
+
+			// A pause is silent too, and nothing is wrong with that. Only
+			// the quiet that lasts while the music plays is worth a word,
+			// so every start wipes the slate.
+			effect(() => {
+				if (store.playing()) {
+					untracked(() => store.audioSilent.set(false));
+				}
+			});
 
 			// Playing on into a new side: hold there until the collector has
 			// turned the record over.

@@ -3,12 +3,27 @@ import { DOCUMENT, Injectable, inject } from '@angular/core';
 /** A running capture: the analyser to read and a way to end it. */
 export interface AudioCapture {
 	analyser: AnalyserNode;
+	/**
+	 * Called when the shared sound falls silent, and again when it comes
+	 * back. A tab can be shared without a single sample ever arriving —
+	 * the wrong tab was picked, the box was left unticked, or the music
+	 * plays on another device — and nothing else would say so: the visuals
+	 * simply go on improvising as if no one had shared anything.
+	 */
+	onSilence: ((silent: boolean) => void) | null;
 	/** Fires once when the user stops sharing from the browser's bar. */
 	ended: Promise<void>;
 	stop(): void;
 }
 
 export class AudioCaptureError extends Error {}
+
+/** How often the shared sound is checked for signs of life. */
+const SILENCE_POLL_MS = 250;
+/** This long without a sound, and the capture counts as silent. */
+const SILENCE_MS = 2500;
+/** Anything above this in any band counts as a sound, of 255. */
+const SILENCE_FLOOR = 4;
 
 /**
  * Captures this browser tab's own sound (Spotify's browser player, YouTube)
@@ -64,16 +79,45 @@ export class AudioCaptureRepository {
 		// Not connected to the output: the tab plays the sound already.
 		source.connect(analyser);
 
+		const capture: AudioCapture = {
+			analyser,
+			onSilence: null,
+			ended: Promise.resolve(),
+			stop: () => undefined,
+		};
+
+		// Watched here rather than by whoever draws the bars: the drawing
+		// stops with the view, and a backdrop that reads the same analyser
+		// may never draw a bar at all.
+		const spectrum = new Uint8Array(analyser.frequencyBinCount);
+		let silentMs = 0;
+		let silent = false;
+		const watch = setInterval(() => {
+			analyser.getByteFrequencyData(spectrum);
+			let peak = 0;
+			for (const value of spectrum) {
+				peak = Math.max(peak, value);
+			}
+			silentMs = peak > SILENCE_FLOOR ? 0 : silentMs + SILENCE_POLL_MS;
+			const now = silentMs >= SILENCE_MS;
+			if (now !== silent) {
+				silent = now;
+				capture.onSilence?.(silent);
+			}
+		}, SILENCE_POLL_MS);
+
 		const stop = () => {
+			clearInterval(watch);
 			audioTrack.stop();
 			source.disconnect();
 			void context.close();
 		};
-		const ended = new Promise<void>((resolve) =>
+		capture.ended = new Promise<void>((resolve) =>
 			audioTrack.addEventListener('ended', () => resolve(), {
 				once: true,
 			})
 		);
-		return { analyser, ended, stop };
+		capture.stop = stop;
+		return capture;
 	}
 }
