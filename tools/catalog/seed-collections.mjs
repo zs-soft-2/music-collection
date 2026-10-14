@@ -25,6 +25,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 
 import { ENV_OPTION, readEnvironment } from '../sync/environment.mjs';
 import { stamp, touchCatalog } from '../sync/catalog-sync.mjs';
+import { GENRE_COLLECTIONS } from './genre-seed-data.mjs';
 
 const FEATURE_KEY = 'music-collection';
 /** `libs/common/api` EntityTypeEnum.MusicCollection. */
@@ -45,8 +46,13 @@ const badge = (name, description, icon) => ({
  * Ten collections of different sizes and ages, so the pages have something
  * to show: a tree, a draft, curated and derived scores, and rules that reach
  * from thirteen records to a hundred and fifty.
+ *
+ * All of them are rock, because that is what the catalog was. The genres
+ * seeded alongside it bring their own (`genre-seed-data.mjs`), and they are
+ * written by this same script — one place where a definition is created
+ * outside the admin page is enough.
  */
-const COLLECTIONS = [
+const ROCK_COLLECTIONS = [
 	{
 		name: 'The Thrash Scenes',
 		slug: 'thrash-scenes',
@@ -224,6 +230,8 @@ const COLLECTIONS = [
 		),
 	},
 ];
+
+const COLLECTIONS = [...ROCK_COLLECTIONS, ...GENRE_COLLECTIONS];
 
 /** Key order does not change a rule; this is what tells a real change. */
 function fingerprint(value) {

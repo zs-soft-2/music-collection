@@ -13,7 +13,8 @@
  * role, their permissions — is keyed by the uid.
  *
  * It deletes nothing that holds anything: a document with a subcollection
- * under it is kept and named instead. Deletions leave tombstones and bump the
+ * under it is kept and named instead, and a seeded mock collector (`mock-…`)
+ * is skipped whatever it holds. Deletions leave tombstones and bump the
  * feature's version, the way the app's own wrapper does, so the clients drop
  * them from their caches as well.
  *
@@ -32,6 +33,15 @@ import { tombstone, touchCatalog } from './catalog-sync.mjs';
 import { ENV_OPTION, readEnvironment } from './environment.mjs';
 
 const USER_COLLECTION = 'user';
+/**
+ * The mock collectors (`tools/sync/seed-mock-collectors.mjs`) have no Auth
+ * account on purpose: nobody signs in as them, their shelves are there so the
+ * collectors' wall, the map and the genre scoping have more than one
+ * collector to show. By this script's measure every one of them is an orphan,
+ * so they are named here rather than left to the "holds something" test — an
+ * emptied mock collector is still not a leftover.
+ */
+const MOCK_PREFIX = 'mock-';
 /** Documents per batch: each one costs two writes, itself and its tombstone. */
 const BATCH_SIZE = 200;
 
@@ -69,7 +79,7 @@ const orphans = [];
 const kept = [];
 
 for (const document of documents.docs) {
-	if (authUids.has(document.id)) {
+	if (authUids.has(document.id) || document.id.startsWith(MOCK_PREFIX)) {
 		continue;
 	}
 
