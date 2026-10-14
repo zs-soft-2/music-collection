@@ -17,6 +17,7 @@ import {
 	ArtistModel,
 	ArtistModelAdd,
 	ArtistModelUpdate,
+	CATALOG_LOOKUP_LIMIT,
 	DiscogsLookupClient,
 	MUSICBRAINZ_ARTIST_URL,
 	MusicBrainzClient,
@@ -359,6 +360,14 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 
 	public load$(uid: string): Observable<ArtistModel | undefined> {
 		return super.loadModel$(uid);
+	}
+
+	public lookupByName$(term: string): Observable<ArtistModel[]> {
+		return super.lookupModels$(
+			'searchParameters',
+			term.toLowerCase(),
+			CATALOG_LOOKUP_LIMIT
+		);
 	}
 
 	public search$(params: SearchParams): Observable<ArtistModel[]> {

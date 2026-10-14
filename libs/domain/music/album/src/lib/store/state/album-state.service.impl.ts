@@ -54,6 +54,10 @@ export class AlbumStateServiceImpl extends AlbumStateService {
 		this.store.dispatch(albumActions.loadAlbum({ uid }));
 	}
 
+	public dispatchLookupByName(term: string): void {
+		this.store.dispatch(albumActions.lookupByName({ term }));
+	}
+
 	public dispatchSearch(params: SearchParams): void {
 		this.store.dispatch(albumActions.search({ params }));
 	}
@@ -150,6 +154,10 @@ export class AlbumStateServiceImpl extends AlbumStateService {
 
 	public selectNewEntityButtonEnabled$(): Observable<boolean> {
 		return this.store.pipe(select(albumSelectors.isNewEntityButtonEnabled));
+	}
+
+	public selectLookupLoading$(): Observable<boolean> {
+		return this.store.pipe(select(albumSelectors.selectLookupLoading));
 	}
 
 	public selectSearchResult$(): Observable<AlbumEntity[]> {

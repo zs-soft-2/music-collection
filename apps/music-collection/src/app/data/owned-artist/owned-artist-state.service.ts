@@ -94,6 +94,15 @@ export class OwnedArtistStateService extends ArtistStateService {
 		return;
 	}
 
+	/** The collector's own bands are all here; there is no server to ask. */
+	public dispatchLookupByName(): void {
+		return;
+	}
+
+	public selectLookupLoading$(): Observable<boolean> {
+		return of(false);
+	}
+
 	public dispatchSetSelectedEntityIdAction(entityId: string): void {
 		this.selectedEntityId$.next(entityId);
 	}

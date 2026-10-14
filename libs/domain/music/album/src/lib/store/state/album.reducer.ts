@@ -8,6 +8,8 @@ export interface State extends EntityState<AlbumEntity> {
 	isNewEntityButtonEnabled: boolean;
 	selectedId?: string;
 	loading: boolean;
+	/** Whether a name is being looked up on the server right now. */
+	lookupLoading: boolean;
 	searchResult: AlbumEntity[];
 	error?: string | null;
 }
@@ -29,6 +31,7 @@ export const albumAdapter: EntityAdapter<AlbumEntity> =
 export const initialState: State = albumAdapter.getInitialState({
 	isNewEntityButtonEnabled: true,
 	loading: false,
+	lookupLoading: false,
 	error: null,
 	searchResult: [],
 });
@@ -64,6 +67,23 @@ export const albumReducer = createReducer(
 	on(albumActions.setSelectedAlbumId, (state, { albumId }) => ({
 		...state,
 		selectedId: albumId,
+	})),
+	/**
+	 * The albums a name was looked up with on the server simply join the ones
+	 * already held: no list is replaced and nothing is selected, so a lookup
+	 * can run under a page that is showing something else.
+	 */
+	on(albumActions.lookupByName, (state) => ({
+		...state,
+		lookupLoading: true,
+	})),
+	on(albumActions.lookupByNameSuccess, (state, { result }) =>
+		albumAdapter.upsertMany(result, { ...state, lookupLoading: false })
+	),
+	on(albumActions.lookupByNameFailed, (state, { error }) => ({
+		...state,
+		lookupLoading: false,
+		error,
 	})),
 	on(albumActions.searchSuccess, (state, { result }) => ({
 		...state,

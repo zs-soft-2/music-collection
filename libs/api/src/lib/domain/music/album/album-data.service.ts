@@ -30,6 +30,12 @@ export abstract class AlbumDataService extends FirebaseDataService<
 		artistName: string,
 		name: string
 	): Observable<AlbumExternalTracks | null>;
+	/**
+	 * The albums of the catalog whose own name or whose artist's name begins
+	 * with the term, asked of the server — what this client's own copy of the
+	 * catalog cannot answer.
+	 */
+	public abstract lookupByName$(term: string): Observable<AlbumModel[]>;
 	/** The album's tracks (`track` collection) in play order. */
 	public abstract listTracks$(albumUid: string): Observable<TrackEntity[]>;
 	/**

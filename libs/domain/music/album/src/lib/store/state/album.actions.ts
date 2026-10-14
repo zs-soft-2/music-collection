@@ -81,6 +81,23 @@ export const loadAlbumSuccess = createAction(
 	props<{ album: AlbumEntity | undefined }>()
 );
 
+/**
+ * Asks the server for the albums of a typed name — the fallback for a client
+ * whose own copy of the catalog does not hold them.
+ */
+export const lookupByName = createAction(
+	'[Album] Lookup Albums By Name',
+	props<{ term: string }>()
+);
+export const lookupByNameFailed = createAction(
+	'[Album] Lookup Albums By Name Failed',
+	props<{ error: string }>()
+);
+export const lookupByNameSuccess = createAction(
+	'[Album] Lookup Albums By Name Success',
+	props<{ result: AlbumEntity[] }>()
+);
+
 export const search = createAction(
 	'[Album] Search Albums',
 	props<{ params: SearchParams }>()

@@ -333,6 +333,7 @@
 			"collected": "A gyűjteményedben",
 			"catalog": "A katalógusban",
 			"empty": "Nincs találat előadóra vagy albumra.",
+			"looking": "Keresés a teljes katalógusban…",
 			"inCollection": "„{{query}}” keresése a gyűjteményedben",
 			"announcement": {
 				"one": "{{count}} találat",

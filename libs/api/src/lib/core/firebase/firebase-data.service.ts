@@ -1,4 +1,4 @@
-import { Observable, map } from 'rxjs';
+import { Observable, from, map } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
 import {
@@ -10,6 +10,7 @@ import {
 	DocumentData,
 	Firestore,
 	getDocs,
+	limit,
 	query,
 	QueryConstraint,
 	where,
@@ -121,6 +122,39 @@ export abstract class FirebaseDataService<
 				snapshot.exists()
 					? ({ ...toSyncedData(snapshot), uid: snapshot.id } as R)
 					: undefined
+			)
+		);
+	}
+
+	/**
+	 * The documents whose `field` array holds `value`, at most `max` of them,
+	 * asked of the server rather than read from the synced cache.
+	 *
+	 * This is the way round a catalog the client only holds part of. A
+	 * narrowed scope downloads the genres the collector follows and nothing
+	 * else (`CatalogScopeService`), and even an unnarrowed one is only as
+	 * fresh as the bundle it was filled from — so a band filed under another
+	 * genre, or imported since the bundles were last built, is simply not in
+	 * the cache to be found. Asking by name costs the few documents that
+	 * match, which is what makes it affordable where a search came back
+	 * empty.
+	 */
+	protected lookupModels$(
+		field: string,
+		value: string,
+		max: number
+	): Observable<R[]> {
+		const lookupQuery = query(
+			collectionGroup(this.firestore, this.featureKey),
+			where(field, 'array-contains', value),
+			limit(max)
+		);
+
+		return from(getDocs(lookupQuery)).pipe(
+			map((snapshot) =>
+				snapshot.docs.map(
+					(document) => toSyncedData(document) as unknown as R
+				)
 			)
 		);
 	}

@@ -13,6 +13,8 @@ export interface State extends EntityState<ArtistEntity> {
 	isNewEntityButtonEnabled: boolean;
 	selectedId?: string;
 	loading: boolean;
+	/** Whether a name is being looked up on the server right now. */
+	lookupLoading: boolean;
 	searchResult: ArtistEntity[];
 	error?: string | null;
 }
@@ -35,6 +37,7 @@ export const initialState: State = artistAdapter.getInitialState({
 	albumsById: undefined,
 	isNewEntityButtonEnabled: true,
 	loading: false,
+	lookupLoading: false,
 	error: null,
 	searchResult: [],
 });
@@ -86,6 +89,23 @@ export const artistReducer = createReducer(
 	on(artistActions.setSelectedArtistId, (state, { artistId }) => ({
 		...state,
 		selectedId: artistId,
+	})),
+	/**
+	 * The artists a name was looked up with on the server simply join the
+	 * ones already held: no list is replaced and nothing is selected, so a
+	 * lookup can run under a page that is showing something else.
+	 */
+	on(artistActions.lookupByName, (state) => ({
+		...state,
+		lookupLoading: true,
+	})),
+	on(artistActions.lookupByNameSuccess, (state, { result }) =>
+		artistAdapter.upsertMany(result, { ...state, lookupLoading: false })
+	),
+	on(artistActions.lookupByNameFailed, (state, { error }) => ({
+		...state,
+		lookupLoading: false,
+		error,
 	})),
 	on(artistActions.searchSuccess, (state, { result }) => {
 		return artistAdapter.upsertMany(result, {

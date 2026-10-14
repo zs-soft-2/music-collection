@@ -333,6 +333,7 @@
 			"collected": "In your collection",
 			"catalog": "In the catalog",
 			"empty": "No artists or albums found.",
+			"looking": "Looking in the whole catalog…",
 			"inCollection": "Search “{{query}}” in your collection",
 			"announcement": {
 				"one": "{{count}} result",

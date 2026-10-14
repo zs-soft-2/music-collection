@@ -1,4 +1,12 @@
-import { Observable, catchError, map, of, switchMap, take } from 'rxjs';
+import {
+	Observable,
+	catchError,
+	forkJoin,
+	map,
+	of,
+	switchMap,
+	take,
+} from 'rxjs';
 
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
@@ -23,6 +31,7 @@ import {
 	AlbumExternalTracks,
 	AlbumTrackAdd,
 	AlbumTrackDraft,
+	CATALOG_LOOKUP_LIMIT,
 	DiscogsLookupClient,
 	DiscogsMasterProfile,
 	EntityTypeEnum,
@@ -520,6 +529,40 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 		return super
 			.listModelsByIds$([uid])
 			.pipe(switchMap((entities) => of(entities[0])));
+	}
+
+	/**
+	 * Both ways a typed name can name an album: its own title, and the band
+	 * whose record it is. Two queries because the name of the artist lives in
+	 * its own field on the album — a single `array-contains` cannot ask about
+	 * both — and the same album answering both is only kept once.
+	 */
+	public lookupByName$(term: string): Observable<AlbumModel[]> {
+		const needle = term.toLowerCase();
+
+		return forkJoin([
+			super.lookupModels$(
+				'searchParameters',
+				needle,
+				CATALOG_LOOKUP_LIMIT
+			),
+			super.lookupModels$(
+				'artist.searchParameters',
+				needle,
+				CATALOG_LOOKUP_LIMIT
+			),
+		]).pipe(
+			map(([byTitle, byArtist]) =>
+				Array.from(
+					new Map(
+						[...byTitle, ...byArtist].map((album) => [
+							album.uid,
+							album,
+						])
+					).values()
+				)
+			)
+		);
 	}
 
 	public search$(params: SearchParams): Observable<AlbumModel[]> {

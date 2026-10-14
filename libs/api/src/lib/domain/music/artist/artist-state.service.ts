@@ -22,6 +22,16 @@ export abstract class ArtistStateService extends EntityStateService<
 		enabled: boolean
 	): void;
 	public abstract dispatchSelectArtistAction(artist: ArtistEntity): void;
+	/**
+	 * Looks the name up in the catalog on the server and keeps whatever comes
+	 * back, so that the rest of the client finds it from then on.
+	 *
+	 * For the reader whose catalog does not hold the artist at all: a scope
+	 * narrowed to their genres, or a bundle built before the band was
+	 * imported. Nothing is selected and no list is replaced — the artists
+	 * simply join the ones already here.
+	 */
+	public abstract dispatchLookupByName(term: string): void;
 	/** The artist's albums found online by name, country and styles. */
 	public abstract fetchExternalAlbums$(
 		query: ArtistExternalQuery
@@ -38,5 +48,7 @@ export abstract class ArtistStateService extends EntityStateService<
 		artistId: string
 	): Observable<AlbumEntity[]>;
 	public abstract selectNewEntityButtonEnabled$(): Observable<boolean>;
+	/** Whether a name is being looked up on the server right now. */
+	public abstract selectLookupLoading$(): Observable<boolean>;
 	public abstract selectSearchResult$(): Observable<ArtistEntity[]>;
 }

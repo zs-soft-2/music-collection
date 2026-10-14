@@ -3,6 +3,7 @@
 		<mc-home-search
 			[query]="store.query()"
 			[results]="store.searchResults()"
+			[looking]="store.lookingUp()"
 			(queryChange)="store.setQuery($event)"
 		/>
 	</search>

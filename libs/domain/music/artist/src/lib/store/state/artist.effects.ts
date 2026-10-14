@@ -183,6 +183,27 @@ export class ArtistEffects {
 			)
 		)
 	);
+	public lookupArtistsByName = createEffect(() =>
+		this.actions$.pipe(
+			ofType(artistActions.lookupByName),
+			switchMap((action) =>
+				this.artistDataService.lookupByName$(action.term).pipe(
+					map((result) =>
+						artistActions.lookupByNameSuccess({
+							result: result.map((artist) =>
+								this.artistUtilService.convertModelToEntity(
+									artist
+								)
+							),
+						})
+					),
+					catchError((error) =>
+						of(artistActions.lookupByNameFailed(error))
+					)
+				)
+			)
+		)
+	);
 	public searchArtists = createEffect(() =>
 		this.actions$.pipe(
 			ofType(artistActions.search),

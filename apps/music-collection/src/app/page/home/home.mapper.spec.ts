@@ -1,5 +1,7 @@
 import { AlbumView, ArtistView, ReleaseView } from '../../shared/music-ui';
 import {
+	HomeSearchGroup,
+	HomeSearchItem,
 	albumCountsByArtist,
 	albumsByDecade,
 	albumsByStyle,
@@ -7,6 +9,7 @@ import {
 	decadeCoverage,
 	mostCatalogedArtists,
 	newInCatalog,
+	unansweredKinds,
 } from './home.mapper';
 
 const album = (id: string, year: number | null) => ({ id, year }) as AlbumView;
@@ -212,5 +215,39 @@ describe('newInCatalog', () => {
 		] as AlbumView[];
 
 		expect(newInCatalog(albums, 2).map(({ id }) => id)).toEqual(['b', 'd']);
+	});
+});
+
+describe('unansweredKinds', () => {
+	const group = (
+		kind: HomeSearchGroup['kind'],
+		items = 1
+	): HomeSearchGroup => ({
+		kind,
+		labelKey: `home.search.${kind}`,
+		items: Array.from({ length: items }, () => ({}) as HomeSearchItem),
+	});
+
+	it('asks about nothing the client answered itself', () => {
+		expect(unansweredKinds([group('artist'), group('album')])).toEqual([]);
+	});
+
+	it('asks about both where the search came back empty', () => {
+		expect(unansweredKinds([])).toEqual(['artist', 'album']);
+	});
+
+	it('asks only about the album where the band was found', () => {
+		expect(unansweredKinds([group('artist')])).toEqual(['album']);
+	});
+
+	it('takes a collected copy as the album answered', () => {
+		expect(unansweredKinds([group('release')])).toEqual(['artist']);
+	});
+
+	it('reads an empty group as no answer', () => {
+		expect(unansweredKinds([group('artist', 0)])).toEqual([
+			'artist',
+			'album',
+		]);
 	});
 });

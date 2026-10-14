@@ -33,6 +33,17 @@ export abstract class AlbumStateService extends EntityStateService<
 		artistName: string,
 		name: string
 	): Observable<AlbumExternalTracks | null>;
+	/**
+	 * Looks the name up in the catalog on the server — as an album title and
+	 * as a band's name — and keeps whatever comes back, so that the rest of
+	 * the client finds it from then on.
+	 *
+	 * For the reader whose catalog does not hold the albums at all: a scope
+	 * narrowed to their genres, or a bundle built before the records were
+	 * imported. Nothing is selected and no list is replaced — the albums
+	 * simply join the ones already here.
+	 */
+	public abstract dispatchLookupByName(term: string): void;
 	/** The album's tracks (`track` collection) in play order. */
 	public abstract listTracks$(albumUid: string): Observable<TrackEntity[]>;
 	/**
@@ -83,5 +94,7 @@ export abstract class AlbumStateService extends EntityStateService<
 	public abstract deleteReleaseTrack(uid: string): Promise<void>;
 	public abstract dispatchSelectAlbumAction(album: AlbumEntity): void;
 	public abstract selectNewEntityButtonEnabled$(): Observable<boolean>;
+	/** Whether a name is being looked up on the server right now. */
+	public abstract selectLookupLoading$(): Observable<boolean>;
 	public abstract selectSearchResult$(): Observable<AlbumEntity[]>;
 }

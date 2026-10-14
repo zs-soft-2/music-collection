@@ -108,6 +108,23 @@ export const loadArtistSuccess = createAction(
 	props<{ artist: ArtistEntity | undefined }>()
 );
 
+/**
+ * Asks the server for the artists of a typed name — the fallback for a
+ * client whose own copy of the catalog does not hold them.
+ */
+export const lookupByName = createAction(
+	'[Artist] Lookup Artists By Name',
+	props<{ term: string }>()
+);
+export const lookupByNameFailed = createAction(
+	'[Artist] Lookup Artists By Name Failed',
+	props<{ error: string }>()
+);
+export const lookupByNameSuccess = createAction(
+	'[Artist] Lookup Artists By Name Success',
+	props<{ result: ArtistEntity[] }>()
+);
+
 export const search = createAction(
 	'[Artist] Search Artists',
 	props<{ params: SearchParams }>()

@@ -14,6 +14,9 @@ import {
 	Firestore,
 	collection,
 	doc,
+	getDocs,
+	limit,
+	where,
 } from '@angular/fire/firestore';
 
 import { Entity, GLOBAL_OWNER_ID } from '../../common';
@@ -23,7 +26,14 @@ import { FirestoreSyncService } from './firestore-sync.service';
 jest.mock('@angular/fire/firestore', () => ({
 	...jest.requireActual('@angular/fire/firestore'),
 	collection: jest.fn(() => ({})),
+	collectionGroup: jest.fn(() => ({})),
 	doc: jest.fn(() => ({ id: `id-${++ids}` })),
+	getDocs: jest.fn(),
+	limit: jest.fn((max: number) => ({ limit: max })),
+	query: jest.fn(() => ({})),
+	where: jest.fn((field: string, operation: string, value: unknown) => ({
+		where: [field, operation, value],
+	})),
 }));
 
 /** Counts the generated ids, so each added row gets its own. */
@@ -48,6 +58,10 @@ class RowDataService extends FirebaseDataService<Row, { name: string }, Row> {
 
 	public update$(row: Row): Observable<Row> {
 		return super.updateModel$(row);
+	}
+
+	public lookup$(value: string, max: number): Observable<Row[]> {
+		return super.lookupModels$('searchParameters', value, max);
 	}
 }
 
@@ -107,5 +121,29 @@ describe('FirebaseDataService', () => {
 		);
 
 		expect(added.meta?.ownerId).toBe(GLOBAL_OWNER_ID);
+	});
+
+	describe('lookupModels$', () => {
+		it('asks for the documents holding the value, and no more than the limit', async () => {
+			(getDocs as jest.Mock).mockResolvedValue({
+				docs: [
+					{ data: () => ({ uid: 'u1', name: 'Amon Amarth' }) },
+					{ data: () => ({ uid: 'u2', name: 'Amorphis' }) },
+				],
+			});
+
+			const rows = await firstValueFrom(service().lookup$('amo', 10));
+
+			expect(where).toHaveBeenCalledWith(
+				'searchParameters',
+				'array-contains',
+				'amo'
+			);
+			expect(limit).toHaveBeenCalledWith(10);
+			expect(rows.map((row) => row.name)).toEqual([
+				'Amon Amarth',
+				'Amorphis',
+			]);
+		});
 	});
 });

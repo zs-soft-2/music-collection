@@ -23,6 +23,16 @@ export const searchParameters = (name: string): string[] => {
 	return prefixes;
 };
 
+/**
+ * How many documents a catalog lookup asks the server for per field.
+ *
+ * It is a cost ceiling rather than a page size: a lookup only runs where the
+ * client's own copy of the catalog turned up nothing, and the few names that
+ * share a typed prefix are what it is meant to bring back. Somebody who
+ * types "the" is not served by five hundred reads either.
+ */
+export const CATALOG_LOOKUP_LIMIT = 10;
+
 export interface SearchParam {
 	entityType: EntityTypeEnum;
 	query: ParamItem<unknown>;

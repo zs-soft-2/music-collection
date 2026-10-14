@@ -97,6 +97,7 @@ import {
 	pickRandom,
 	releaseCountsByArtist,
 	searchHome,
+	unansweredKinds,
 } from './home.mapper';
 
 /**
@@ -124,6 +125,11 @@ interface HomePageState {
 	bandOfTheWeek: BandOfTheWeek | null;
 	bandLoading: boolean;
 	query: string;
+	/**
+	 * Whether the search is being looked up on the server, the catalog this
+	 * client holds having had no answer. See `lookUpCatalog`.
+	 */
+	lookingUp: boolean;
 	/** Signed in, as opposed to reading the catalog as a guest. */
 	authenticated: boolean;
 	/** The collectors who share a page, for the wall of finished collections. */
@@ -161,6 +167,7 @@ const initialState: HomePageState = {
 	bandOfTheWeek: null,
 	bandLoading: true,
 	query: '',
+	lookingUp: false,
 	authenticated: false,
 	collectionTab: null,
 	heroSlug: null,
@@ -176,6 +183,13 @@ const SEARCH_RESULT_COUNT = 5;
 const SEARCH_SETTLED_MS = 800;
 /** Below this a term is still being typed, not searched with. */
 const SEARCH_MIN_LENGTH = 2;
+/**
+ * How long the box has to stand still before the search is taken to the
+ * server. Shorter than `SEARCH_SETTLED_MS`, because this one the reader is
+ * waiting for rather than only being counted by, and longer than a pause
+ * between two letters, because every run of it is three queries.
+ */
+const LOOKUP_SETTLED_MS = 500;
 /** Rows of the catalog bands, and the covers or tiles shown in each. */
 const GROUP_COUNT = 6;
 const GROUP_ALBUM_COUNT = 12;
@@ -903,9 +917,68 @@ export const HomePageStore = signalStore(
 	),
 	withMethods((store) => {
 		const analytics = inject(AnalyticsService);
+		const artistStateService = inject(ArtistStateService);
+		const albumStateService = inject(AlbumStateService);
 		const query$ = toObservable(store.query);
 
 		return {
+			/**
+			 * Takes the search to the server where the catalog this browser
+			 * holds had nothing to say.
+			 *
+			 * A collector downloads the genres they follow, as the bundles
+			 * stood when they were last built (`CatalogScopeService`), so a
+			 * band somebody imported this morning — or one filed under a
+			 * genre they do not follow — cannot be found here at all. Rather
+			 * than have the search answer that there is no such band, the
+			 * typed name is asked of the catalog itself: a handful of reads,
+			 * about what opening one record's page costs. What comes back is
+			 * kept, so the artist and the albums are then found like any
+			 * others — by this search, and by the page it leads to.
+			 *
+			 * Only the kinds that came back empty are looked up, and only
+			 * once the box has stood still: this is the fallback, not the
+			 * search.
+			 */
+			lookUpCatalog: rxMethod<void>(
+				pipe(
+					switchMap(() => query$),
+					map((query) => query.trim()),
+					debounceTime(LOOKUP_SETTLED_MS),
+					distinctUntilChanged(),
+					filter((term) => term.length >= SEARCH_MIN_LENGTH),
+					tap((term) => {
+						const kinds = unansweredKinds(store.searchResults());
+
+						if (kinds.includes('artist')) {
+							artistStateService.dispatchLookupByName(term);
+						}
+
+						if (kinds.includes('album')) {
+							albumStateService.dispatchLookupByName(term);
+						}
+					})
+				)
+			),
+			/** Keeps the search box's note in step with the lookups. */
+			watchLookups: rxMethod<void>(
+				pipe(
+					switchMap(() =>
+						combineLatest([
+							artistStateService.selectLookupLoading$(),
+							albumStateService.selectLookupLoading$(),
+						]).pipe(
+							tapResponse({
+								next: ([artists, albums]: boolean[]) =>
+									patchState(store, {
+										lookingUp: artists || albums,
+									}),
+								error: (error: unknown) => console.error(error),
+							})
+						)
+					)
+				)
+			),
 			/**
 			 * Counts a search once the box has stood still. The term itself
 			 * never leaves the browser — only how much it turned up, which is
@@ -946,6 +1019,8 @@ export const HomePageStore = signalStore(
 			store.loadAuthentication(of(undefined));
 			store.loadRatings(of(undefined));
 			store.watchSearches(of(undefined));
+			store.lookUpCatalog(of(undefined));
+			store.watchLookups(of(undefined));
 		},
 	})
 );

@@ -374,6 +374,31 @@ export function searchHome(
 	return groups.filter((group) => group.items.length > 0);
 }
 
+/**
+ * Which kinds of a search the catalog this browser holds had no answer for,
+ * and so are worth asking the server about (`HomePageStore.lookUpCatalog`).
+ *
+ * A copy found in the collection answers for the album as well: it names one,
+ * and the album group deliberately leaves out what is already collected.
+ */
+export function unansweredKinds(groups: HomeSearchGroup[]): HomeSearchKind[] {
+	const found = (...kinds: HomeSearchKind[]) =>
+		groups.some(
+			(group) => kinds.includes(group.kind) && group.items.length > 0
+		);
+	const unanswered: HomeSearchKind[] = [];
+
+	if (!found('artist')) {
+		unanswered.push('artist');
+	}
+
+	if (!found('album', 'release')) {
+		unanswered.push('album');
+	}
+
+	return unanswered;
+}
+
 /** Catalog albums of one decade and how many of them are in the collection. */
 export interface DecadeCoverage {
 	label: string;

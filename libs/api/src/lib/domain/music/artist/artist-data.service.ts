@@ -32,6 +32,11 @@ export abstract class ArtistDataService extends FirebaseDataService<
 		query: ArtistExternalQuery
 	): Observable<ArtistExternalProfile | null>;
 	public abstract importAlbum$(album: AlbumModel): Observable<AlbumModel>;
+	/**
+	 * The artists of the catalog whose name begins with the term, asked of
+	 * the server — what this client's own copy of the catalog cannot answer.
+	 */
+	public abstract lookupByName$(term: string): Observable<ArtistModel[]>;
 	public abstract listAlbumsById$(uid: string): Observable<AlbumModel[]>;
 	/** The artists of the searched name found online, the best fit first. */
 	public abstract searchExternalArtists$(

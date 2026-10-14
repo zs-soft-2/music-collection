@@ -108,7 +108,13 @@ import { HomeSearchGroup, HomeSearchItem } from '../../home.mapper';
 						}
 					</div>
 				} @empty {
-					<p class="empty">{{ t('home.search.empty') }}</p>
+					<p class="empty">
+						{{
+							looking()
+								? t('home.search.looking')
+								: t('home.search.empty')
+						}}
+					</p>
 				}
 
 				<!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
@@ -301,6 +307,13 @@ export class HomeSearchComponent {
 
 	public readonly query = input.required<string>();
 	public readonly results = input.required<HomeSearchGroup[]>();
+	/**
+	 * Whether the catalog is being asked about this name on the server. What
+	 * this browser holds is only part of the catalog, so an empty list is not
+	 * yet an answer — saying so is the difference between "there is no such
+	 * band" and "not here, asking".
+	 */
+	public readonly looking = input<boolean>(false);
 	public readonly queryChange = output<string>();
 
 	protected readonly open = signal(false);
