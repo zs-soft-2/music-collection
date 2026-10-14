@@ -13,6 +13,7 @@ import { AlbumRating } from '../rating';
 import { PublicUserLocation } from '../user-location';
 import {
 	ALBUM_LIST_LIMIT,
+	CARD_RECORD_LIMIT,
 	CollectorProfileSource,
 	FAVOURITE_LIMIT,
 	SHOWCASE_LIMIT,
@@ -720,6 +721,73 @@ describe('toPublicCollectorCard', () => {
 		expect(card?.collecting).toEqual([]);
 		expect(card?.badges.map(({ slug }) => slug)).toEqual(['doom']);
 		expect(card?.city).toBeUndefined();
+	});
+
+	/**
+	 * The sleeves are what tell a reader, before any name does, what kind of
+	 * shelf this is — and they have to be the page's own first few, or the
+	 * entry and the page it leads to disagree about what is on it.
+	 */
+	/**
+	 * A tile with no picture in it says nothing, and the row is read at a
+	 * glance — so a record without a sleeve is passed over rather than drawn
+	 * as a grey square.
+	 */
+	it('passes over a record with no sleeve', () => {
+		const card = toPublicCollectorCard(
+			source({
+				releases: [
+					release({ id: '1', title: 'No Cover', coverUrl: null }),
+					release({ id: '2', title: 'Kind of Blue', year: 1959 }),
+				],
+			})
+		);
+
+		expect(card?.records?.map(({ title }) => title)).toEqual([
+			'Kind of Blue',
+		]);
+	});
+
+	it('carries the first few records of the window', () => {
+		const releases = [
+			release({ id: '1', title: 'Reign in Blood', year: 1986 }),
+			release({ id: '2', title: 'Kind of Blue', year: 1959 }),
+			release({ id: '3', title: 'Exodus', year: 1977 }),
+			release({ id: '4', title: 'Illmatic', year: 1994 }),
+			release({ id: '5', title: 'Homework', year: 1997 }),
+		];
+		const card = toPublicCollectorCard(source({ releases }));
+		const profile = toPublicCollectorProfile(source({ releases }));
+
+		expect(card?.records).toHaveLength(CARD_RECORD_LIMIT);
+		expect(card?.records).toEqual(
+			profile?.showcase
+				.slice(0, CARD_RECORD_LIMIT)
+				.map(({ title, artistName, coverUrl }) => ({
+					title,
+					artistName,
+					coverUrl,
+				}))
+		);
+	});
+
+	/**
+	 * The shelf is the other consent: somebody who shares a hunt and nothing
+	 * else has said nothing about what they own.
+	 */
+	it('carries no record while the shelf is not shared', () => {
+		const settings = { ...source().settings, shared: false };
+		const card = toPublicCollectorCard(
+			source({
+				settings,
+				standings: [
+					standing(albums, ['a'], { uid: 'doom', slug: 'doom' }),
+				],
+				shownCollections: ['doom'],
+			})
+		);
+
+		expect(card?.records).toBeUndefined();
 	});
 
 	it('leaves another collector badge out where only one was shown', () => {

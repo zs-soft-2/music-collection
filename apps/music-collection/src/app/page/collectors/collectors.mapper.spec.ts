@@ -61,6 +61,82 @@ describe('toWallEntries', () => {
 		expect(entry.photoURL).toBeNull();
 	});
 
+	it('carries the records off the shelf', () => {
+		const [entry] = entries(
+			card({
+				records: [
+					{
+						title: 'Kind of Blue',
+						artistName: 'Miles Davis',
+						coverUrl: 'https://e.test/kob.jpg',
+					},
+				],
+			})
+		);
+
+		expect(entry.records).toEqual([
+			{
+				title: 'Kind of Blue',
+				artistName: 'Miles Davis',
+				coverUrl: 'https://e.test/kob.jpg',
+			},
+		]);
+	});
+
+	/** An entry written before the records travelled is an entry, not a fault. */
+	it('leaves the records empty where the entry carries none', () => {
+		const [entry] = entries(card());
+
+		expect(entry.records).toEqual([]);
+	});
+
+	/**
+	 * The rules hold the length of the list and nothing inside it, so a
+	 * sleeve is a picture this page may load, or no picture at all.
+	 */
+	it('refuses a sleeve that is not a web address, and keeps the record', () => {
+		const [entry] = entries(
+			card({
+				records: [
+					{
+						title: 'Kind of Blue',
+						artistName: 'Miles Davis',
+						coverUrl: 'javascript:alert(1)',
+					},
+				],
+			} as never)
+		);
+
+		expect(entry.records).toEqual([
+			{
+				title: 'Kind of Blue',
+				artistName: 'Miles Davis',
+				coverUrl: null,
+			},
+		]);
+	});
+
+	it('drops a record with nothing to name it, and stops at four', () => {
+		const [entry] = entries(
+			card({
+				records: [
+					{ title: '', artistName: 'Nobody', coverUrl: null },
+					...Array.from({ length: 6 }, (_, index) => ({
+						title: `Record ${index}`,
+						artistName: 'Somebody',
+						coverUrl: null,
+					})),
+				],
+			} as never)
+		);
+
+		expect(entry.records.map(({ title }) => title)).toEqual([
+			'Record 0',
+			'Record 1',
+			'Record 2',
+		]);
+	});
+
 	it('drops a badge with nothing to name it', () => {
 		const [entry] = entries(
 			card({ badges: [{ slug: '', name: '' }] } as never)

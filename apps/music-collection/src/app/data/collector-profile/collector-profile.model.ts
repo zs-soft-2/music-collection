@@ -493,6 +493,30 @@ function toFavourites(ratings: readonly AlbumRating[]): CollectorFavourite[] {
  * what the shelf adds up to, and the collections they have finished, which is
  * what the wall is actually about.
  */
+/**
+ * How many sleeves travel with a directory entry.
+ *
+ * Four, because they are there to show what kind of shelf this is, not to be
+ * browsed: the page is one click away and holds twenty-four. The entry is
+ * listed — every visitor downloads every one of them — so each sleeve has to
+ * earn the couple of hundred bytes it costs.
+ */
+export const CARD_RECORD_LIMIT = 4;
+
+/**
+ * One record on a directory entry: a sleeve and what it is.
+ *
+ * The same records the page's shop window opens with, cut to the first few.
+ * A visitor to the wall has no catalog of their own — or a catalog narrowed
+ * to two genres — so the title and the artist travel with the picture rather
+ * than being looked up.
+ */
+export interface CollectorCardRecord {
+	title: string;
+	artistName: string;
+	coverUrl: string | null;
+}
+
 export interface PublicCollectorCard {
 	uid: string;
 	displayName?: string;
@@ -502,6 +526,12 @@ export interface PublicCollectorCard {
 	/** What the shelf holds, for sorting by size. */
 	copies: number;
 	points: number;
+	/**
+	 * A few records off the shelf, where the shelf is shared at all. Absent
+	 * on an entry that is only a name beside a collection: the records are
+	 * the shelf, and the shelf is the other consent.
+	 */
+	records?: CollectorCardRecord[];
 	/** The collections finished, the most valuable first. */
 	badges: CollectorBadge[];
 	/**
@@ -577,6 +607,27 @@ export function toPublicCollectorCard(
 		collecting,
 		hasPage: settings.shared,
 	};
+	// The window's own order, not a pick of their own: an entry showing
+	// records the page does not open with is an entry that disagrees with it.
+	//
+	// Only the ones with a sleeve, though. A row of four covers is read in a
+	// glance and a placeholder tile says nothing at all — and plenty of the
+	// catalog has no cover, classical especially. Skipping those shows less
+	// than the page does, never something else.
+	const records = settings.shared
+		? toShowcase(releases, source.now)
+				.filter(({ coverUrl }) => !!coverUrl)
+				.slice(0, CARD_RECORD_LIMIT)
+				.map(({ title, artistName, coverUrl }) => ({
+					title,
+					artistName,
+					coverUrl,
+				}))
+		: [];
+
+	if (records.length) {
+		card.records = records;
+	}
 
 	if (owner.displayName) {
 		card.displayName = owner.displayName;

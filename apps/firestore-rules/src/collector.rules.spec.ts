@@ -188,6 +188,41 @@ describe('collector: the directory', () => {
 			)
 		));
 
+	/**
+	 * A few sleeves off the shelf. The entry is listed, so its length is what
+	 * the rules can hold; what is inside each record is the client border
+	 * post's business.
+	 */
+	it('publishes a few records of the shelf', () =>
+		assertSucceeds(
+			setDoc(
+				cardRef(asMe()),
+				card({
+					records: [
+						{
+							title: 'Kind of Blue',
+							artistName: 'Miles Davis',
+							coverUrl: 'https://e.test/kob.jpg',
+						},
+					],
+				})
+			)
+		));
+
+	it('refuses more records than a card may carry', () =>
+		assertFails(
+			setDoc(
+				cardRef(asMe()),
+				card({
+					records: Array.from({ length: 5 }, () => ({
+						title: 'Kind of Blue',
+						artistName: 'Miles Davis',
+						coverUrl: null,
+					})),
+				})
+			)
+		));
+
 	it('refuses more badges than a card may carry', () =>
 		assertFails(
 			setDoc(

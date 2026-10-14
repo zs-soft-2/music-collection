@@ -7,6 +7,20 @@
  * for. This page answers the other question: who got there, and with what.
  */
 
+/**
+ * One record off somebody's shelf, as a row of the wall draws it.
+ *
+ * The sleeve is what a stranger reads first: a row of four covers says what
+ * kind of collection this is before the name of a single collection does. It
+ * is not a link — the visitor may have no catalog, and the record belongs to
+ * the collector's page, which is where the row leads.
+ */
+export interface WallRecord {
+	title: string;
+	artistName: string;
+	coverUrl: string | null;
+}
+
 /** One finished collection, as the wall shows it. */
 export interface WallBadge {
 	slug: string;
@@ -45,6 +59,12 @@ export interface WallEntry {
 	 * comes from the catalog in `dressHunts`.
 	 */
 	collecting: WallPursuit[];
+	/**
+	 * A few records off their shelf, as the entry carries them: a sleeve and
+	 * what it is. Empty on an entry written before they travelled, and on one
+	 * whose owner shares a hunt but not a shelf.
+	 */
+	records: WallRecord[];
 	/** Epoch ms of the entry; what "recent" sorts by. */
 	updatedAt: number;
 }

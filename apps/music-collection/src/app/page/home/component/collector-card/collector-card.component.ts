@@ -7,22 +7,28 @@ import {
 import { RouterLink } from '@angular/router';
 import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
+import { CoverFallbackDirective } from '../../../../shared/image';
 import { WallEntry } from '../../../collectors/collectors.model';
 import { HOME_COLLECTOR_PINS } from '../../home.model';
 
 /**
  * One collector, as the home page introduces them: the face, where they are
- * and how big the shelf is, the pins they have earned, and what they are
- * after right now.
+ * and how big the shelf is, a few records off that shelf, the pins they have
+ * earned, and what they are after right now.
  *
  * What they are after is the point of the card. A row of badges says what is
  * already done; the hunts say what could be shared tomorrow, and that is the
  * sentence a visitor can answer with a shelf of their own.
+ *
+ * The sleeves are what make that sentence concrete, and they are the one
+ * thing here that does not narrow with the reader's own genres: somebody
+ * whose catalog is two genres wide still sees that the collector three cards
+ * along is deep in something else entirely.
  */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-collector-card',
-	imports: [...I18N_IMPORTS, RouterLink],
+	imports: [...I18N_IMPORTS, RouterLink, CoverFallbackDirective],
 	template: `
 		@let who = collector();
 
@@ -54,6 +60,32 @@ import { HOME_COLLECTOR_PINS } from '../../home.model';
 					</span>
 				</span>
 			</span>
+
+			@if (who.records.length) {
+				<span class="records">
+					@for (record of who.records; track $index) {
+						<span
+							class="sleeve"
+							[attr.title]="
+								record.artistName
+									? record.artistName + ' — ' + record.title
+									: record.title
+							"
+						>
+							@if (record.coverUrl) {
+								<img
+									mcCoverFallback
+									[src]="record.coverUrl"
+									alt=""
+									loading="lazy"
+								/>
+							} @else {
+								<i class="pi pi-image" aria-hidden="true"></i>
+							}
+						</span>
+					}
+				</span>
+			}
 
 			@if (who.badges.length) {
 				<span class="pins">
@@ -165,6 +197,33 @@ import { HOME_COLLECTOR_PINS } from '../../home.model';
 			.copies::before {
 				margin-right: 0.3rem;
 				content: '·';
+			}
+		}
+
+		/*
+		 * A few records off the shelf. They are what says, before any name
+		 * does, that this collector is somewhere else entirely — jazz beside
+		 * thrash — so they sit directly under the name and get the width.
+		 */
+		.records {
+			display: grid;
+			grid-template-columns: repeat(4, 1fr);
+			gap: 0.3rem;
+		}
+
+		.sleeve {
+			display: grid;
+			place-items: center;
+			overflow: hidden;
+			aspect-ratio: 1;
+			color: var(--mc-text-subtle);
+			background: var(--mc-surface-2);
+			border-radius: var(--mc-radius-sm);
+
+			img {
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
 			}
 		}
 

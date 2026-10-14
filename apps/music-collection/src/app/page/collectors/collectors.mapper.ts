@@ -1,4 +1,5 @@
 import {
+	CARD_RECORD_LIMIT,
 	CollectorCardDocument,
 	clipText,
 	listOf,
@@ -7,7 +8,7 @@ import {
 	wholeNumber,
 } from '../../data/collector-profile';
 import { countryName } from '../../data/user-location';
-import { NAME_MAX } from '../collector/collector.model';
+import { NAME_MAX, TITLE_MAX } from '../collector/collector.model';
 
 import { MusicCollectionEntity } from '@music-collection/domain/music-collection/api';
 
@@ -20,6 +21,7 @@ import {
 	WallCollectionCard,
 	WallEntry,
 	WallPursuit,
+	WallRecord,
 	WallSort,
 } from './collectors.model';
 
@@ -78,6 +80,27 @@ function toHunts(entry: CollectorCardDocument): WallPursuit[] {
 		.filter((hunt) => !!hunt.slug);
 }
 
+/**
+ * The records the entry carries. Same three outcomes as everything else that
+ * arrives in a list: a clipped string, a picture this page may load, or
+ * nothing — and a record without a title is dropped, because a nameless
+ * sleeve is a hole in the row rather than a record.
+ */
+function toRecords(entry: CollectorCardDocument): WallRecord[] {
+	return listOf(entry.records)
+		.slice(0, CARD_RECORD_LIMIT)
+		.map((value) => {
+			const record = value as Record<string, unknown>;
+
+			return {
+				title: clipText(record['title'], TITLE_MAX),
+				artistName: clipText(record['artistName'], NAME_MAX),
+				coverUrl: pictureUrl(record['coverUrl']),
+			};
+		})
+		.filter((record) => !!record.title);
+}
+
 function toPlace(entry: CollectorCardDocument): string | null {
 	const code = clipText(entry.countryCode, 2);
 	const city = clipText(entry.city, 60);
@@ -108,6 +131,7 @@ export function toWallEntries(
 					points: positiveNumber(entry.points) ?? 0,
 					badges: toBadges(entry),
 					collecting: toHunts(entry),
+					records: toRecords(entry),
 					updatedAt: wholeNumber(entry.updatedAt) ?? 0,
 				};
 			})

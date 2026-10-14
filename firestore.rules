@@ -875,7 +875,8 @@ service cloud.firestore {
                                                       'photoURL', 'countryCode',
                                                       'city', 'copies', 'points',
                                                       'badges', 'collecting',
-                                                      'hasPage', 'updatedAt'])
+                                                      'records', 'hasPage',
+                                                      'updatedAt'])
                             && card().uid == uid
                             && (!('displayName' in card().keys())
                                 || isDisplayName(card().displayName))
@@ -902,6 +903,15 @@ service cloud.firestore {
                             && (!('collecting' in card().keys())
                                 || (card().collecting is list
                                     && card().collecting.size() <= 50))
+                            // Néhány lemez a polcról: a kártyán ennyi fér el,
+                            // és az entry listázva van, tehát a hossz itt
+                            // dől el. A listaelemeket — cím, előadó, borító —
+                            // a rules nem tudja megnézni, azokat a kliens
+                            // határátkelője (`collectors.mapper.ts`) vágja és
+                            // szűri, mint a badge-eket.
+                            && (!('records' in card().keys())
+                                || (card().records is list
+                                    && card().records.size() <= 4))
                             // Whether a page stands behind the name. An entry
                             // may exist without one: showing a collection is
                             // enough to be named on the wall.
