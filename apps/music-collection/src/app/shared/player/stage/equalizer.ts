@@ -13,21 +13,39 @@ const PULSE_BPM = 120;
 /** Highest frequency shown, in Hz. */
 const TOP_HZ = 16000;
 const BOTTOM_HZ = 40;
-/** Bass band for beat detection, in Hz. */
+/** Bass band, where the kick drum lives, in Hz. */
 const BASS_HZ = 150;
-/** A bass hit: this much above the recent average. */
-const BEAT_RATIO = 1.35;
+/**
+ * Where the snare cracks. Stopping short of the hats (which carry on up to
+ * 12 kHz) keeps a steady eighth-note pattern from reading as a drum hit.
+ */
+const SNAP_FROM_HZ = 1800;
+const SNAP_TO_HZ = 5000;
+/** A kick: this much above the band's recent average. */
+const KICK_RATIO = 1.35;
+/** A snare, against a band that is busier to begin with. */
+const SNAP_RATIO = 1.4;
+/** Below this the band is too quiet to call anything, of 1. */
+const KICK_FLOOR = 0.25;
+const SNAP_FLOOR = 0.1;
+/**
+ * How fast each band's average follows it. The snare's is the slower of the
+ * two on purpose: a steady hi-hat settles into the baseline and only the
+ * snare rises out of it.
+ */
+const KICK_MEMORY = 3;
+const SNAP_MEMORY = 1.6;
 /** No two beats closer than this, in seconds. */
 const BEAT_GAP = 0.18;
 
 /**
  * A spectrum bar visualiser over a canvas. With an analyser (the tab's
  * sound) the bars show the real frequencies on a log scale and `onBeat`
- * fires on bass hits; without one they dance to a steady simulated pulse,
+ * fires on the drums; without one they dance to a steady simulated pulse,
  * jumping on `kick()`. They settle while paused.
  */
 export class EqualizerBars {
-	/** Called on every detected bass hit (analyser only). */
+	/** Called on every kick or snare heard (analyser only). */
 	public onBeat: ((strength: number) => void) | null = null;
 
 	private readonly context: CanvasRenderingContext2D;
@@ -36,6 +54,9 @@ export class EqualizerBars {
 	private spectrum = new Uint8Array(0);
 	private bassBins = 1;
 	private bassAverage = 0;
+	private snapFrom = 1;
+	private snapTo = 2;
+	private snapAverage = 0;
 	private sinceBeat = 0;
 	private frame = 0;
 	private last = 0;
@@ -71,6 +92,12 @@ export class EqualizerBars {
 		this.spectrum = new Uint8Array(bins);
 		this.bassBins = Math.max(1, Math.round(BASS_HZ / binHz));
 		this.bassAverage = 0;
+		this.snapFrom = Math.min(bins - 1, Math.round(SNAP_FROM_HZ / binHz));
+		this.snapTo = Math.min(
+			bins,
+			Math.max(this.snapFrom + 1, Math.round(SNAP_TO_HZ / binHz))
+		);
+		this.snapAverage = 0;
 
 		// Log-spaced bands, each at least one bin wide.
 		const count = this.bars.length;
@@ -133,7 +160,7 @@ export class EqualizerBars {
 		this.draw();
 	}
 
-	/** The real spectrum, and bass hits. */
+	/** The real spectrum, and the drums in it. */
 	private measure(seconds: number): void {
 		const analyser = this.analyser!;
 		analyser.getByteFrequencyData(this.spectrum);
@@ -148,22 +175,44 @@ export class EqualizerBars {
 			bar.target = Math.min(1, ((peak / 255) * tilt) ** 1.6);
 		}
 
-		let bass = 0;
-		for (let bin = 1; bin <= this.bassBins; bin++) {
-			bass += this.spectrum[bin];
-		}
-		bass /= this.bassBins * 255;
+		// Two drums, not one. The kick is down in the bass, where the bass
+		// guitar also sits and can hold the average so high that the drum
+		// never clears it; the snare is a world away in the upper mids, so
+		// a song that keeps its backbeat up there is still followed.
+		const bass = this.band(1, this.bassBins + 1);
+		const snap = this.band(this.snapFrom, this.snapTo);
+
+		const kickHit =
+			bass > KICK_FLOOR && bass > this.bassAverage * KICK_RATIO
+				? (bass - this.bassAverage) * 3
+				: 0;
+		const snapHit =
+			snap > SNAP_FLOOR && snap > this.snapAverage * SNAP_RATIO
+				? (snap - this.snapAverage) * 4
+				: 0;
+
+		// One gap for both: a kick and a snare struck together are one hit
+		// to look at, not two flashes on top of each other.
 		this.sinceBeat += seconds;
-		if (
-			bass > 0.25 &&
-			bass > this.bassAverage * BEAT_RATIO &&
-			this.sinceBeat > BEAT_GAP
-		) {
+		const hit = Math.max(kickHit, snapHit);
+		if (hit > 0 && this.sinceBeat > BEAT_GAP) {
 			this.sinceBeat = 0;
-			this.onBeat?.(Math.min(1, (bass - this.bassAverage) * 3));
+			this.onBeat?.(Math.min(1, hit));
 		}
+
 		this.bassAverage +=
-			(bass - this.bassAverage) * Math.min(1, seconds * 3);
+			(bass - this.bassAverage) * Math.min(1, seconds * KICK_MEMORY);
+		this.snapAverage +=
+			(snap - this.snapAverage) * Math.min(1, seconds * SNAP_MEMORY);
+	}
+
+	/** Mean level of the bins in [from, to), of 1. */
+	private band(from: number, to: number): number {
+		let total = 0;
+		for (let bin = from; bin < to; bin++) {
+			total += this.spectrum[bin];
+		}
+		return to > from ? total / (to - from) / 255 : 0;
 	}
 
 	/** A steady pulse with random movement, kicked from outside. */

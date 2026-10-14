@@ -75,7 +75,10 @@ export class AudioCaptureRepository {
 		);
 		const analyser = context.createAnalyser();
 		analyser.fftSize = 2048;
-		analyser.smoothingTimeConstant = 0.72;
+		// Low enough that a drum still arrives as a transient: at 0.72 each
+		// frame kept nearly three quarters of the one before, which smeared
+		// the very attacks the beat detection looks for.
+		analyser.smoothingTimeConstant = 0.5;
 		// Not connected to the output: the tab plays the sound already.
 		source.connect(analyser);
 
