@@ -32,6 +32,17 @@ export interface Album {
 	discogs?: AlbumDiscogs;
 	format: FormatEnum;
 	genre: GenreName;
+	/**
+	 * Whether the catalog holds the album's own tracklist — the songs being
+	 * documents of their own in the `track` collection, not a field here.
+	 *
+	 * It is written by `tools/sync/backfill-album-has-tracks.mjs` rather
+	 * than kept current by every write, so that the admin list can find the
+	 * records still to be filled in without every client downloading all of
+	 * the tracks to work it out. Missing on an album the script has not seen
+	 * yet, which is not the same as false.
+	 */
+	hasTracks?: boolean;
 	name: string;
 	songs: string[];
 	/** Spotify album id, used for the embedded player on the album page. */
