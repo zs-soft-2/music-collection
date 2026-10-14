@@ -70,6 +70,11 @@ export class ArtistTableComponent extends BaseComponent implements OnInit {
 		this.componentService.clearSearch();
 	}
 
+	/** Narrow the list to the artists no genre of the taxonomy names. */
+	public showIncompleteOnly(incomplete: boolean): void {
+		this.componentService.showIncompleteOnly(incomplete);
+	}
+
 	public deleteArtist(artist: ArtistEntity): void {
 		console.log(artist);
 	}

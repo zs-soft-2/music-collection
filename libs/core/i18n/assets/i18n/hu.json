@@ -2002,7 +2002,10 @@
 			"actions": "Műveletek",
 			"edit-artist": "Előadó szerkesztése",
 			"delete-artist2": "Előadó törlése",
-			"export-artist2": "Előadó exportálása"
+			"export-artist2": "Előadó exportálása",
+			"genre": "Műfaj",
+			"no-genre": "nincs műfaj",
+			"without-genre": "Műfaj nélkül"
 		},
 		"artistDetailView": {
 			"image": "Kép",

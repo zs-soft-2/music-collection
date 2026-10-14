@@ -20,6 +20,29 @@
 		>
 		</p-autocomplete>
 
+		<!--
+			The artists the taxonomy does not name: a Discogs credit import
+			creates them without a genre, and an artist outside every genre
+			reaches no client that narrowed its catalog to one. Nothing is
+			offered while there are none to find.
+		-->
+		@if (params.incompleteCount || params.incomplete) {
+			<button
+				tools
+				type="button"
+				pButton
+				pRipple
+				class="p-button-sm mc-incomplete-filter"
+				[class.p-button-outlined]="!params.incomplete"
+				[attr.aria-pressed]="params.incomplete"
+				(click)="showIncompleteOnly(!params.incomplete)"
+			>
+				<i class="pi pi-filter" aria-hidden="true"></i>
+				{{ 'ui.artistTable.without-genre' | transloco }}
+				<span class="p-chip">{{ params.incompleteCount }}</span>
+			</button>
+		}
+
 		<ng-template #card let-artist>
 			<mc-entity-card
 				[title]="artist.name"
@@ -85,6 +108,22 @@
 			let-artist
 		>
 			{{ artist.formedIn | date: 'yyyy' }}
+		</ng-template>
+
+		<!-- The field this list is here to fill in, so it is a column of it. -->
+		<ng-template
+			mcColumn
+			[header]="'ui.artistTable.genre' | transloco"
+			field="genre"
+			let-artist
+		>
+			@if (artist.genre) {
+				{{ artist.genre }}
+			} @else {
+				<span class="mc-missing">{{
+					'ui.artistTable.no-genre' | transloco
+				}}</span>
+			}
 		</ng-template>
 
 		<ng-template

@@ -2002,7 +2002,10 @@
 			"actions": "Actions",
 			"edit-artist": "Edit artist",
 			"delete-artist2": "Delete artist",
-			"export-artist2": "Export artist"
+			"export-artist2": "Export artist",
+			"genre": "Genre",
+			"no-genre": "no genre",
+			"without-genre": "Without a genre"
 		},
 		"artistDetailView": {
 			"image": "Image",

@@ -105,6 +105,18 @@ export type ArtistDetailViewStateModel = {
 export type ArtistTableParams = {
 	artists: ArtistEntity[];
 	empty: string[];
+	/**
+	 * Whether the list is narrowed to the artists whose genre the taxonomy
+	 * does not name — the ones a Discogs credit import created without one,
+	 * and the few still carrying a value from the retired enum.
+	 *
+	 * They are worth finding because they are invisible rather than merely
+	 * unfinished: the genre bundles are built per genre, so an artist outside
+	 * every genre reaches no client that narrowed its catalog.
+	 */
+	incomplete: boolean;
+	/** How many of them there are, whether or not the list is narrowed. */
+	incompleteCount: number;
 };
 
 export type ArtistListParams = {
