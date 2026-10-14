@@ -1,5 +1,6 @@
 import {
 	effectAt,
+	holdMotion,
 	SLIDE_EFFECTS,
 	slideFrame,
 	type SlideEffect,
@@ -88,5 +89,53 @@ describe('slideFrame', () => {
 		expect(slideFrame('next', 'wipe', 0.5).clipPath).toBe(
 			'inset(0 0 0 50%)'
 		);
+	});
+});
+
+describe('holdMotion', () => {
+	it('pushes slowly into the picture over its turn', () => {
+		expect(holdMotion(0, 1).zoom).toBeGreaterThan(holdMotion(0, 0).zoom);
+	});
+
+	/*
+	 * A picture at the frame's own size has nothing outside it to move
+	 * into, so panning one would show the stage behind its edge.
+	 */
+	it('starts in far enough that a moving picture keeps its edges out', () => {
+		const { zoom, pan } = holdMotion(0, 0);
+
+		expect(Math.abs(pan)).toBeLessThan(((zoom - 1) / 2) * 100);
+	});
+
+	it('sinks through one turn and rises through the next', () => {
+		expect(holdMotion(4, 1).pan).toBeGreaterThan(holdMotion(4, 0).pan);
+		expect(holdMotion(5, 1).pan).toBeLessThan(holdMotion(5, 0).pan);
+	});
+
+	it('hands the next picture on from where this one got to', () => {
+		expect(holdMotion(5, 0).pan).toBe(holdMotion(4, 1).pan);
+		expect(holdMotion(6, 0).pan).toBe(holdMotion(5, 1).pan);
+	});
+
+	it('leaves a turn it cannot count alone', () => {
+		expect(holdMotion(Number.NaN, Number.NaN).pan).toBe(
+			holdMotion(0, 0).pan
+		);
+	});
+});
+
+describe('the mosaic crossing', () => {
+	/*
+	 * The tiles of the picture coming apart are the mosaic's own, drawn
+	 * above both layers; the layer they were cut from stands aside for it.
+	 */
+	it('hands the departing picture over to the mosaic', () => {
+		expect(slideFrame('current', 'mosaic', 0.4).opacity).toBe(0);
+		expect(slideFrame('next', 'mosaic', 0.4).opacity).toBe(1);
+	});
+
+	it('keeps the picture due next out of sight until the crossing', () => {
+		expect(slideFrame('current', 'mosaic', 0).opacity).toBe(1);
+		expect(slideFrame('next', 'mosaic', 0).opacity).toBe(0);
 	});
 });

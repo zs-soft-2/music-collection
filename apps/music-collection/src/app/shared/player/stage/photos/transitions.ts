@@ -10,7 +10,7 @@
  */
 
 export type SlideEffect =
-	'dissolve' | 'push' | 'zoom' | 'wipe' | 'rise' | 'drift';
+	'dissolve' | 'push' | 'zoom' | 'wipe' | 'rise' | 'mosaic' | 'drift';
 
 /**
  * The crossings, in the order they come round. Neighbours are deliberately
@@ -23,6 +23,7 @@ export const SLIDE_EFFECTS: readonly SlideEffect[] = [
 	'zoom',
 	'wipe',
 	'rise',
+	'mosaic',
 	'drift',
 ];
 
@@ -53,6 +54,55 @@ export function effectAt(turn: number): SlideEffect {
 	const index = Math.floor(turn) % SLIDE_EFFECTS.length;
 
 	return SLIDE_EFFECTS[index < 0 ? index + SLIDE_EFFECTS.length : index];
+}
+
+/**
+ * Where the slow push starts, and how far it goes. It starts in rather than
+ * at the frame's own size so there is picture outside the frame to pan into:
+ * a picture at scale 1 that moved would show the stage behind its edge.
+ */
+const HOLD_ZOOM_FROM = 1.06;
+const HOLD_ZOOM_SPAN = 0.06;
+
+/**
+ * How far the picture travels while it is up, as a share of the frame. Kept
+ * well inside the 3% of picture the starting scale leaves outside the frame
+ * on each side, so the edge never comes into view.
+ */
+const HOLD_PAN = 2.2;
+
+/** The slow movement of the picture that is simply up, between crossings. */
+export interface HoldMotion {
+	/** The scale it is at, which the crossings build on. */
+	zoom: number;
+	/** Where it is vertically, in percent — negative is up. */
+	pan: number;
+}
+
+/** A picture that is to be left alone. */
+export const HOLD_STILL: HoldMotion = { zoom: 1, pan: 0 };
+
+/**
+ * How the picture on show is moving, this instant of its own turn.
+ *
+ * It sinks through one turn and rises through the next, so a song's backdrop
+ * is not the same drift twenty times over; which way round is the turn's,
+ * not a draw, so it is the same on every playback. Turning about rather than
+ * starting over is deliberate: a picture arriving begins exactly where the
+ * one leaving has got to, so the backdrop changes direction at the crossing
+ * instead of snapping back to where the last one set off from.
+ */
+export function holdMotion(turn: number, progress: number): HoldMotion {
+	const counted = Number.isFinite(turn) ? Math.floor(turn) : 0;
+	const moved = Number.isFinite(progress)
+		? Math.min(Math.max(progress, 0), 1)
+		: 0;
+	const downwards = Math.abs(counted) % 2 === 0 ? 1 : -1;
+
+	return {
+		zoom: HOLD_ZOOM_FROM + HOLD_ZOOM_SPAN * moved,
+		pan: round(downwards * HOLD_PAN * (2 * moved - 1)),
+	};
 }
 
 /** Softens both ends of the crossing, so nothing starts or stops abruptly. */
@@ -95,7 +145,8 @@ export function slideFrame(
 	role: SlideRole,
 	effect: SlideEffect,
 	fade: number,
-	zoom = 1
+	zoom = 1,
+	pan = 0
 ): SlideFrame {
 	if (role === 'hidden') {
 		return {
@@ -118,8 +169,8 @@ export function slideFrame(
 				...STILL,
 				opacity: 1,
 				transform: arriving
-					? transform(100 * (1 - moved), 0, zoom)
-					: transform(-30 * moved, 0, zoom),
+					? transform(100 * (1 - moved), pan, zoom)
+					: transform(-30 * moved, pan, zoom),
 				zIndex,
 			};
 		case 'zoom':
@@ -129,15 +180,15 @@ export function slideFrame(
 				...STILL,
 				opacity: arriving ? fade : 1,
 				transform: arriving
-					? transform(0, 0, zoom * (1.35 - 0.35 * moved))
-					: transform(0, 0, zoom * (1 + 0.12 * moved)),
+					? transform(0, pan, zoom * (1.35 - 0.35 * moved))
+					: transform(0, pan, zoom * (1 + 0.12 * moved)),
 				zIndex,
 			};
 		case 'wipe':
 			// Uncovered from the left edge, both pictures otherwise still.
 			return {
 				opacity: 1,
-				transform: transform(0, 0, zoom),
+				transform: transform(0, pan, zoom),
 				filter: 'none',
 				// Unclipped the moment it has the frame: a picture that
 				// holds for seconds should not be left behind a mask.
@@ -152,8 +203,8 @@ export function slideFrame(
 				...STILL,
 				opacity: arriving ? fade : 1,
 				transform: arriving
-					? transform(0, 22 * (1 - moved), zoom)
-					: transform(0, -10 * moved, zoom),
+					? transform(0, pan + 22 * (1 - moved), zoom)
+					: transform(0, pan - 10 * moved, zoom),
 				zIndex,
 			};
 		case 'drift':
@@ -168,19 +219,38 @@ export function slideFrame(
 				transform: arriving
 					? transform(
 							-6 * (1 - moved),
-							0,
+							pan,
 							zoom * (1.08 - 0.08 * moved)
 						)
-					: transform(5 * moved, 0, zoom),
+					: transform(5 * moved, pan, zoom),
 				filter: arriving ? blur(9 * (1 - moved)) : blur(5 * moved),
 				zIndex,
 			};
+		case 'mosaic': {
+			/*
+			 * The picture that is leaving is handed to the mosaic, which
+			 * breaks it into tiles and holds them above everything; the one
+			 * arriving waits underneath, whole, until a tile lets it
+			 * through. So the two swap their usual places — but only once
+			 * the crossing is under way, or the picture due next would be
+			 * the one on show for the whole of this one's turn.
+			 */
+			const breaking = fade > 0;
+			const shown = arriving === breaking;
+
+			return {
+				...STILL,
+				opacity: shown ? 1 : 0,
+				transform: transform(0, pan, zoom),
+				zIndex: shown ? 1 : 0,
+			};
+		}
 		case 'dissolve':
 		default:
 			return {
 				...STILL,
 				opacity: arriving ? fade : 1,
-				transform: transform(0, 0, zoom),
+				transform: transform(0, pan, zoom),
 				zIndex,
 			};
 	}

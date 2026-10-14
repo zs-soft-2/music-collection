@@ -63,6 +63,60 @@ describe('TrackPhotosComponent', () => {
 		expect(look()).not.toBe(first);
 	});
 
+	/*
+	 * The sixth crossing is the mosaic one; 41.3s is halfway through it.
+	 * It is the sixth turn too, so of three pictures the third is the one
+	 * coming apart and the first is the one arriving underneath it.
+	 */
+	it('breaks the picture into tiles on the turn that asks for it', () => {
+		const fixture = render(41.3);
+		const mosaic = fixture.nativeElement.querySelector('mc-photo-mosaic');
+
+		expect(mosaic).not.toBeNull();
+		expect(mosaic.querySelectorAll('span.tile').length).toBeGreaterThan(1);
+
+		const [arriving, waiting, breaking] = layers(fixture);
+
+		expect(breaking.style.opacity).toBe('0');
+		expect(arriving.style.opacity).toBe('1');
+		expect(waiting.style.opacity).toBe('0');
+	});
+
+	it('keeps the tiles out of the page the rest of the time', () => {
+		const fixture = render(6.7);
+		const tiled = () =>
+			fixture.nativeElement.querySelector('mc-photo-mosaic') !== null;
+
+		expect(tiled()).toBe(false);
+
+		// The mosaic's own turn, but before its crossing has started.
+		fixture.componentRef.setInput('positionSeconds', 38);
+		fixture.detectChanges();
+
+		expect(tiled()).toBe(false);
+	});
+
+	it('sinks the picture through one turn and lifts it through the next', () => {
+		const fixture = render(1);
+		const height = (layer: number) => {
+			const [translate] =
+				layers(fixture)[layer].style.transform.split(')');
+
+			return Number(translate.split(',')[1].replace('%', ''));
+		};
+		const at = (seconds: number, layer: number) => {
+			fixture.componentRef.setInput('positionSeconds', seconds);
+			fixture.detectChanges();
+
+			return height(layer);
+		};
+
+		// The first picture's turn: it is making its way down the frame.
+		expect(at(5, 0)).toBeGreaterThan(at(1, 0));
+		// The second's, which is the same journey back up again.
+		expect(at(12, 1)).toBeLessThan(at(8, 1));
+	});
+
 	it('leaves the pictures where they are when nothing may move', () => {
 		for (const img of layers(render(6.7, false))) {
 			expect(img.style.transform).toBe('translate(0%, 0%) scale(1)');
