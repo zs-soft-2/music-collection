@@ -27,6 +27,7 @@ import {
 	EDITIONS_MAX,
 	NAME_MAX,
 	NOTE_MAX,
+	SLUG_MAX,
 	TITLE_MAX,
 } from './collector.model';
 
@@ -52,6 +53,11 @@ import {
 const clip = clipText;
 const picture = pictureUrl;
 const count = wholeNumber;
+
+/** A route segment, or nothing — the router encodes whatever is left. */
+function slug(value: unknown): string | null {
+	return clip(value, SLUG_MAX) || null;
+}
 
 function year(value: unknown): number | null {
 	return typeof value === 'number' && Number.isInteger(value) ? value : null;
@@ -111,6 +117,7 @@ function toBadges(document: CollectorProfileDocument): CollectorBadgeView[] {
 		const badge = entry as Record<string, unknown>;
 
 		return {
+			slug: slug(badge['slug']),
 			name: clip(badge['name'], NAME_MAX),
 			imageUrl: picture(badge['imageUrl']),
 			points: count(badge['points']) ?? 0,
@@ -128,6 +135,7 @@ function toPursuits(
 			const owned = Math.min(count(pursuit['owned']) ?? 0, total);
 
 			return {
+				slug: slug(pursuit['slug']),
 				name: clip(pursuit['name'], NAME_MAX),
 				progress: {
 					owned,
@@ -156,6 +164,7 @@ function toCardPursuits(
 			const hunt = entry as Record<string, unknown>;
 
 			return {
+				slug: slug(typeof entry === 'string' ? entry : hunt['slug']),
 				name: clip(
 					typeof entry === 'string' ? '' : hunt['name'],
 					NAME_MAX

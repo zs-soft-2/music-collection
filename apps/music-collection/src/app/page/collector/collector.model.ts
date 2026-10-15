@@ -37,12 +37,16 @@ export interface CollectorNumbersView {
 }
 
 export interface CollectorBadgeView {
+	/** Where the collection behind the badge lives; null leaves it unlinked. */
+	slug: string | null;
 	name: string;
 	imageUrl: string | null;
 	points: number;
 }
 
 export interface CollectorPursuitView {
+	/** Where the collection being hunted lives; null leaves it unlinked. */
+	slug: string | null;
 	name: string;
 	/**
 	 * How far along, where that is published at all.
@@ -132,6 +136,8 @@ export interface CollectorView {
 /** How much of a text out of the document may reach the page. */
 export const TITLE_MAX = 200;
 export const NAME_MAX = 120;
+/** As much of a slug as any of ours is long. */
+export const SLUG_MAX = 120;
 export const EDITION_MAX = 40;
 /** How much of a line about a record reaches the page. */
 export const NOTE_MAX = 280;

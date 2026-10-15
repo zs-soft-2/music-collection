@@ -127,16 +127,30 @@
 
 				<ul class="badge-grid">
 					@for (badge of view.badges; track $index) {
+						<!--
+							The badge says what was finished; the collection
+							behind it says what that took. A null slug leaves
+							the anchor without an href, so an old entry still
+							draws, it just leads nowhere.
+						-->
 						<li>
-							@if (badge.imageUrl) {
-								<img [src]="badge.imageUrl" alt="" />
-							} @else {
-								<span class="pin" aria-hidden="true">
-									<i class="pi pi-shield"></i>
-								</span>
-							}
-							<b>{{ badge.name }}</b>
-							<span>{{ badge.points }}</span>
+							<a
+								[routerLink]="
+									badge.slug
+										? ['/collections', badge.slug]
+										: null
+								"
+							>
+								@if (badge.imageUrl) {
+									<img [src]="badge.imageUrl" alt="" />
+								} @else {
+									<span class="pin" aria-hidden="true">
+										<i class="pi pi-shield"></i>
+									</span>
+								}
+								<b>{{ badge.name }}</b>
+								<span>{{ badge.points }}</span>
+							</a>
 						</li>
 					}
 				</ul>
@@ -153,7 +167,14 @@
 					@for (pursuit of view.pursuits; track $index) {
 						<li>
 							<span class="bar-head">
-								<b>{{ pursuit.name }}</b>
+								<a
+									[routerLink]="
+										pursuit.slug
+											? ['/collections', pursuit.slug]
+											: null
+									"
+									><b>{{ pursuit.name }}</b></a
+								>
 								@if (pursuit.progress; as progress) {
 									<span
 										>{{ progress.owned }} /

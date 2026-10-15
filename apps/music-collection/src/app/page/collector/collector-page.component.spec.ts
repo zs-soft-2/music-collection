@@ -122,6 +122,18 @@ describe('CollectorPageComponent', () => {
 		);
 	});
 
+	/** What a badge means is the collection behind it, one click away. */
+	it('links a badge and a pursuit to their collections', () => {
+		const host = render(SHARED);
+
+		expect(host.querySelector('.badge-grid a')?.getAttribute('href')).toBe(
+			'/collections/bay-area'
+		);
+		expect(host.querySelector('.bars a')?.getAttribute('href')).toBe(
+			'/collections/doom'
+		);
+	});
+
 	/** The bar is drawn from the owned/total of the document, not from a width. */
 	it('draws how far a pursuit has got', () => {
 		const host = render(SHARED);

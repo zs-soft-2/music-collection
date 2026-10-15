@@ -155,6 +155,23 @@ describe('toCollectorView: what the rules could not check', () => {
 		expect(view?.badges[0].points).toBe(0);
 	});
 
+	/** The badge leads to its collection — or, written without a slug, nowhere. */
+	it('carries the slug a badge links to', () => {
+		const view = toCollectorView(
+			document({
+				badges: [
+					{ slug: 'bay-area', name: 'Thrash Historian', points: 1 },
+					{ name: 'Older Entry', points: 1 },
+				],
+			} as never)
+		);
+
+		expect(view?.badges.map(({ slug }) => slug)).toEqual([
+			'bay-area',
+			null,
+		]);
+	});
+
 	/** A progress bar past its end would draw over the page. */
 	it('holds a pursuit to its own total', () => {
 		const view = toCollectorView(
@@ -258,7 +275,7 @@ describe('toCollectorCardView', () => {
 
 		expect(view?.hero.displayName).toBe('Anna');
 		expect(view?.pursuits).toEqual([
-			{ name: 'Doom Essentials', progress: null },
+			{ slug: 'doom', name: 'Doom Essentials', progress: null },
 		]);
 	});
 
