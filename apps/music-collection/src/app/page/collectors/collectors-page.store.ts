@@ -128,14 +128,16 @@ export const CollectorsPageStore = signalStore(
 			),
 
 			/**
-			 * The definitions themselves, unresolved. A collection nobody has
-			 * finished is still worth naming — it is the one somebody might go
-			 * and finish — and that is what the wall of collectors cannot show.
+			 * The definitions themselves. A collection nobody has finished is
+			 * still worth naming — it is the one somebody might go and finish
+			 * — and that is what the wall of collectors cannot show. Only the
+			 * ones this browser can open, though: a card leading to 0/0 names
+			 * a collection the reader was never given the records of.
 			 */
 			loadDefinitions: rxMethod<void>(
 				pipe(
 					switchMap(() =>
-						definitions.listPublishedDefinitions$().pipe(
+						definitions.listOpenableDefinitions$().pipe(
 							tapResponse({
 								next: (published: MusicCollectionEntity[]) =>
 									patchState(store, {

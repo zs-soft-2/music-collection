@@ -205,15 +205,30 @@ export class MusicCollectionEffect {
 	}
 
 	/**
-	 * Every published definition, unresolved.
+	 * The published definitions that resolve to at least one record of the
+	 * catalog this browser holds.
 	 *
-	 * What a page needs when it is about the collections themselves rather
-	 * than about where anybody stands on them — a wall naming them, say.
-	 * Resolving is a pass over the whole catalog per collection, and that is
-	 * a price only a page showing progress has a reason to pay.
+	 * The ones a page may link to: a collection none of whose records are
+	 * here — another genre's, or one past the showcase — would open onto 0/0.
+	 * Resolving is the price, but it is a pass over what this browser holds,
+	 * and where that is the whole catalog the home page has paid it already.
 	 */
-	public listPublishedDefinitions$(): Observable<MusicCollectionEntity[]> {
-		return this.repository.listPublished$();
+	public listOpenableDefinitions$(): Observable<MusicCollectionEntity[]> {
+		return this.repository
+			.listPublished$()
+			.pipe(
+				switchMap((collections) =>
+					this.catalog$(collections).pipe(
+						map((catalog) =>
+							collections.filter(
+								(collection) =>
+									resolveMusicCollection(collection, catalog)
+										.total > 0
+							)
+						)
+					)
+				)
+			);
 	}
 
 	/**

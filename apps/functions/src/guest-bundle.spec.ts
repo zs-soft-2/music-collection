@@ -6,7 +6,9 @@ import {
 	GuestCollection,
 	collectionGenre,
 	matchesAlbum,
+	cardSlugs,
 	needsBuild,
+	pickFeatured,
 	pickShowcase,
 	toYear,
 } from './guest-bundle';
@@ -260,5 +262,94 @@ describe('needsBuild', () => {
 		expect(needsBuild(existing, '2026-W42', at(5))).toBe(false);
 		expect(needsBuild(existing, '2026-W42', at(4))).toBe(false);
 		expect(needsBuild(existing, '2026-W42', at(6))).toBe(true);
+	});
+
+	it('akkor is, ha a kártyák más collectiont neveznek meg', () => {
+		const existing = {
+			path: 'p',
+			week: '2026-W42',
+			catalogAt: at(5),
+			cardSlugs: ['doom', 'funk'],
+		};
+
+		expect(needsBuild(existing, '2026-W42', at(5), ['doom', 'funk'])).toBe(
+			false
+		);
+		expect(
+			needsBuild(existing, '2026-W42', at(5), ['doom', 'funk', 'soul'])
+		).toBe(true);
+	});
+});
+
+describe('cardSlugs', () => {
+	it('a jelvények és a vadászatok slugjai, régi és új alakban', () => {
+		expect(
+			cardSlugs([
+				{
+					badges: [{ slug: 'funk', name: 'On the One' }],
+					collecting: [{ slug: 'soul', name: 'Soul' }, 'doom'],
+				},
+				{ badges: [{ slug: 'funk' }, { name: 'slug nélkül' }] },
+				{ badges: 'nem lista', collecting: null },
+			])
+		).toEqual(['doom', 'funk', 'soul']);
+	});
+});
+
+describe('pickFeatured', () => {
+	const thrash = { styles: { includesAny: ['Thrash'] } };
+	const albums = [album({ uid: 'a1' })];
+
+	it('a kártyán megnevezett, ki nem húzott collectiont felveszi', () => {
+		const featured = pickFeatured(
+			[
+				collection({
+					uid: 'named',
+					slug: 'named',
+					parentUid: 'p',
+					criteria: thrash,
+				}),
+				collection({ uid: 'drawn', slug: 'drawn', criteria: thrash }),
+				collection({ uid: 'other', slug: 'other', criteria: thrash }),
+			],
+			albums,
+			noArtists,
+			['named', 'drawn'],
+			new Set(['drawn'])
+		);
+
+		expect(featured.map((entry) => entry.collection.uid)).toEqual([
+			'named',
+		]);
+		expect(featured[0].albums.map((entry) => entry.uid)).toEqual(['a1']);
+	});
+
+	it('a draftot, a credits-szabályút és az üreset nem', () => {
+		const featured = pickFeatured(
+			[
+				collection({
+					uid: 'd',
+					slug: 'd',
+					status: 'draft',
+					criteria: thrash,
+				}),
+				collection({
+					uid: 'k',
+					slug: 'k',
+					criteria: { ...thrash, credits: {} },
+				}),
+				collection({
+					uid: 'e',
+					slug: 'e',
+					criteria: { styles: { includesAny: ['Polka'] } },
+				}),
+			],
+			albums,
+			noArtists,
+			['d', 'k', 'e'],
+			new Set()
+		);
+
+		expect(featured).toEqual([]);
 	});
 });

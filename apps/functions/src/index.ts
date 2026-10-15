@@ -1784,7 +1784,9 @@ export const composeBandOfTheWeekDaily = onSchedule(
  * firebase-schedule-composeGuestBundleDaily-europe-west4`.
  *
  * Fél GiB: a teljes előadó- és albumlista a memóriában áll, amíg a
- * választás készül — néhány ezer dokumentum, keresési előtagokkal együtt.
+ * választás készül — néhány ezer dokumentum, keresési előtagokkal együtt —,
+ * plusz a zárt kirakat trackjei, közreműködései, tagságai és zenészei
+ * (devben 2026-10-15-én ~9 600 dokumentum, helyben ~290 MB RSS).
  */
 export const composeGuestBundleDaily = onSchedule(
 	{

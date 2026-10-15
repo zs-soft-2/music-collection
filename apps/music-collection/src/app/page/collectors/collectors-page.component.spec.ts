@@ -66,7 +66,7 @@ describe('CollectorsPageComponent', () => {
 				{
 					provide: MusicCollectionEffect,
 					useValue: {
-						listPublishedDefinitions$: () => of(definitions),
+						listOpenableDefinitions$: () => of(definitions),
 					},
 				},
 			],

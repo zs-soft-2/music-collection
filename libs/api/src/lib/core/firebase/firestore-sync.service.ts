@@ -141,8 +141,8 @@ interface CatalogBundle {
 	count: number;
 	/**
 	 * Per feature how many of its documents the file holds, where the file
-	 * says. The showcase carries artists and albums and nothing else, and a
-	 * feature it has none of is not worth downloading the file for.
+	 * says. A feature it has none of is not worth downloading the file for;
+	 * a feature it does not name at all, the showcase did not bring.
 	 */
 	features?: Record<string, number>;
 }
@@ -161,8 +161,9 @@ interface CatalogSync {
 	genreBundles?: Record<string, CatalogBundle | undefined>;
 	/**
 	 * The showcase for a reader following no genre: a few collections of
-	 * every genre, with their albums and the artists of those. Built every
-	 * week by `composeGuestBundle` (apps/functions).
+	 * every genre, with their albums and the artists of those, closed over
+	 * what their pages reach — tracks, credits, line-ups, musicians. Built
+	 * every week by `composeGuestBundle` (apps/functions).
 	 */
 	guestBundle?: CatalogBundle;
 }
@@ -228,9 +229,10 @@ export interface SyncedQuery {
 	 *
 	 * It matters where the catalog is narrowed, because there the bundles
 	 * decide what the cache holds, and what they did not bring would be an
-	 * empty page. So a narrow query that the bundles left empty asks the
-	 * server for its few documents; under the showcase, which brings next to
-	 * nothing of most features, it asks once for every new showcase. A query
+	 * empty page. So a narrow query that the genre bundles left empty asks
+	 * the server for its few documents. The showcase is closed over what its
+	 * pages reach, so there the bundle is the answer, empty or not; only a
+	 * showcase built before that asks the server, once for every new one. A query
 	 * that lists the whole feature must not set this: there the server would
 	 * hand over the whole catalog the scope exists to keep out.
 	 */
@@ -598,8 +600,14 @@ export class FirestoreSyncService {
 			// those only run while the catalog is not narrowed.
 			if (version?.scope.length) {
 				const newest = this.newestOf(version.scope);
+				const guest = version.scopeKey === GUEST_SCOPE_KEY;
+				// A showcase that carries the feature is closed over it: what
+				// is reachable from it is in it, and what is not in it is not
+				// shown — so it is never asked of the server.
+				const closed =
+					guest && this.carries(version.scope, synced.featureKey);
 
-				if (synced.narrow && version.scopeKey === GUEST_SCOPE_KEY) {
+				if (synced.narrow && guest && !closed) {
 					return this.refreshNarrow(synced, newest);
 				}
 
@@ -609,7 +617,7 @@ export class FirestoreSyncService {
 					// What the genres did not bring — a record of another
 					// genre's tracks, a guest musician's other credits — is
 					// asked for by name rather than left an empty page.
-					return scoped.length || !synced.narrow
+					return scoped.length || !synced.narrow || closed
 						? scoped
 						: this.downloadAll(synced, newest);
 				}
@@ -694,7 +702,19 @@ export class FirestoreSyncService {
 	}
 
 	/**
-	 * A narrow query under the showcase: its few documents from the server,
+	 * Whether every bundle of the set says it carries the feature — a count,
+	 * even a zero one. A showcase built before it was closed names only
+	 * artists and albums, and its tracks are still asked of the server.
+	 */
+	private carries(bundles: CatalogBundle[], featureKey: string): boolean {
+		return bundles.every(
+			(bundle) => !!bundle.features && featureKey in bundle.features
+		);
+	}
+
+	/**
+	 * A narrow query under a showcase not yet closed over the feature: its
+	 * few documents from the server,
 	 * once for every showcase published, and from the cache in between.
 	 *
 	 * Not served from the bundle even where the bundle holds some of it: the

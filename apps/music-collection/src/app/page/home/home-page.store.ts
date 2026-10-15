@@ -21,9 +21,11 @@ import {
 	ArtistStateService,
 	AuthenticationStateService,
 	BandOfTheWeek,
+	CatalogScopeService,
 	CollectionItemStateService,
 	EntityCounts,
 	EntityQuantityStateService,
+	GUEST_SCOPE_KEY,
 } from '@music-collection/api';
 import {
 	MusicCollectionEffect,
@@ -919,6 +921,7 @@ export const HomePageStore = signalStore(
 		const analytics = inject(AnalyticsService);
 		const artistStateService = inject(ArtistStateService);
 		const albumStateService = inject(AlbumStateService);
+		const catalogScope = inject(CatalogScopeService);
 		const query$ = toObservable(store.query);
 
 		return {
@@ -939,6 +942,10 @@ export const HomePageStore = signalStore(
 			 * Only the kinds that came back empty are looked up, and only
 			 * once the box has stood still: this is the fallback, not the
 			 * search.
+			 *
+			 * Not under the showcase: it is closed over what its pages reach,
+			 * and a record found past it would open onto a page whose
+			 * tracks, credits and line-up this browser was never given.
 			 */
 			lookUpCatalog: rxMethod<void>(
 				pipe(
@@ -947,6 +954,7 @@ export const HomePageStore = signalStore(
 					debounceTime(LOOKUP_SETTLED_MS),
 					distinctUntilChanged(),
 					filter((term) => term.length >= SEARCH_MIN_LENGTH),
+					filter(() => catalogScope.key() !== GUEST_SCOPE_KEY),
 					tap((term) => {
 						const kinds = unansweredKinds(store.searchResults());
 

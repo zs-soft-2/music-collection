@@ -148,8 +148,15 @@ export const CollectionsPageStore = signalStore(
 									MusicCollectionStanding[],
 									AlbumRating[],
 								]) => {
+									// One with none of its records in this
+									// browser's catalog would open onto 0/0.
 									const collections = sortCollectionCards(
-										standings.map(toCollectionCard)
+										standings
+											.map(toCollectionCard)
+											.filter(
+												(collection) =>
+													collection.total > 0
+											)
 									);
 									/*
 									 * The hunt is about a shelf. With

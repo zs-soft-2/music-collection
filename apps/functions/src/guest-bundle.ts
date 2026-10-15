@@ -3,13 +3,22 @@
  * műfajt — vendégnek, és a bejelentkezett gyűjtőnek is, amíg nem szűkített.
  *
  * Műfajonként legfeljebb öt collection, a hozzájuk tartozó albumokkal és az
- * albumok előadóival. Track, közreműködés, tagság és zenész nincs benne: a
- * katalógus súlyát ezek adják (a rock bundle 39 ezer dokumentumából 30 ezer),
- * és a kliens ezeket lapnyitáskor, szűrt lekérdezéssel kéri a szervertől
- * (`narrow` a FirestoreSyncService-ben).
+ * albumok előadóival — és **zártan**: ami a kirakatból egy kattintással
+ * elérhető, az is benne van. Az albumok trackjei és közreműködései, az
+ * előadók tagságai, és minden zenész, akit ezek megneveznek. A vendég így
+ * lapnyitáskor semmit nem kérdez a szervertől; ami a bundle-ön kívül esik
+ * (egy kirakatbeli előadó többi lemeze, egy zenész másik zenekara), az nála
+ * nem jelenik meg, nem üres lapra vezet.
+ *
+ * A határ szándékos: a teljes burok (zenészen át a többi zenekarba) a dev
+ * katalógus 90%-a volt, a zárt kirakat ~700 KB a teljes ~2,6 MB-ból.
  *
  * A gyűjtők nincsenek benne, mert nem kell: a `collector-card` könyvtár
- * (60 kártya) nem műfaj-szeletelt, minden kliens megkapja.
+ * (60 kártya) nem műfaj-szeletelt, minden kliens megkapja. A kártyák viszont
+ * collectionöket neveznek meg (jelvény, vadászat), és a nyitólapról egy
+ * kattintás odavisz — ezért a kártyákon szereplő collectionök a sorsolástól
+ * függetlenül bekerülnek. Ami a nyitólapon kint van, az a vendégnek nyíljon
+ * is ki, ne 0/0-val álljon.
  *
  * A választás a hétből származik: ugyanaz a hét ugyanazt a kirakatot adja,
  * hétfőn cserélődik. Az éjszakai futás ennél gyakrabban is építhet — akkor,
@@ -46,6 +55,27 @@ const GENRE_COLLECTION = 'genre';
 const ARTIST_COLLECTION = 'artist';
 const ALBUM_COLLECTION = 'album';
 const MUSIC_COLLECTION_COLLECTION = 'music-collection';
+const COLLECTOR_CARD_COLLECTION = 'collector-card';
+const TRACK_COLLECTION = 'track';
+const CONTRIBUTION_COLLECTION = 'contribution';
+const MEMBERSHIP_COLLECTION = 'membership';
+const MUSICIAN_COLLECTION = 'musician';
+
+/** A feature-ök, amelyek változása új építést kér: mind, ami a bundle-be kerül. */
+const SOURCE_FEATURE_KEYS = [
+	ARTIST_COLLECTION,
+	ALBUM_COLLECTION,
+	MUSIC_COLLECTION_COLLECTION,
+	TRACK_COLLECTION,
+	CONTRIBUTION_COLLECTION,
+	MEMBERSHIP_COLLECTION,
+	MUSICIAN_COLLECTION,
+];
+
+/** Az `in` szűrő felső határa egy lekérdezésben. */
+const IN_LIMIT = 30;
+/** Egy `getAll` ennyi dokumentumot kér egyszerre. */
+const GET_ALL_LIMIT = 100;
 
 /** Storage-mappa: `bundles/guest/{seconds}.bundle`. */
 export const GUEST_BUNDLE_FOLDER = 'bundles/guest';
@@ -53,12 +83,16 @@ export const GUEST_BUNDLE_FOLDER = 'bundles/guest';
 /** Műfajonként ennyi collection kerül a kirakatba. */
 export const GUEST_COLLECTIONS_PER_GENRE = 5;
 
-/** A feature-ök, amelyek változása új építést kér. */
-const SOURCE_FEATURE_KEYS = [
-	ARTIST_COLLECTION,
-	ALBUM_COLLECTION,
-	MUSIC_COLLECTION_COLLECTION,
-];
+const toStrings = (value: unknown): string[] =>
+	Array.isArray(value)
+		? value.filter((item): item is string => typeof item === 'string')
+		: [];
+
+const toText = (value: unknown): string | null =>
+	typeof value === 'string' && value ? value : null;
+
+const asArray = (value: unknown): unknown[] =>
+	Array.isArray(value) ? value : [];
 
 // ── A feloldás ──────────────────────────────────────────────────────────────
 
@@ -299,7 +333,147 @@ export function pickShowcase(
 	return showcase;
 }
 
+/**
+ * A collection-slugok, amelyeket a gyűjtő-kártyák megneveznek: a megszerzett
+ * jelvények és a kiírt vadászatok. A régi kártya a vadászatot puszta slugként
+ * hordja, az újabb `{slug, name}`-ként. Rendezve, hogy két futás összevethető
+ * legyen.
+ */
+export function cardSlugs(cards: Record<string, unknown>[]): string[] {
+	const slugs = new Set<string>();
+	const slugOf = (value: unknown): string | null =>
+		typeof value === 'string'
+			? toText(value)
+			: value && typeof value === 'object'
+				? toText((value as Record<string, unknown>)['slug'])
+				: null;
+
+	for (const card of cards) {
+		for (const value of [
+			...asArray(card['badges']),
+			...asArray(card['collecting']),
+		]) {
+			const slug = slugOf(value);
+
+			if (slug) {
+				slugs.add(slug);
+			}
+		}
+	}
+
+	return [...slugs].sort();
+}
+
+/**
+ * A kártyákon megnevezett collectionök, amelyeket a sorsolás nem húzott ki.
+ *
+ * A kísérő collection is jöhet — azt a kártya nevezte meg, nem a kirakat
+ * szélessége kéri. A draft és a credits-szabályú nem: az elsőt a kliens nem
+ * mutatja, a másodikat a közreműködések nélkül nem tudná feloldani.
+ */
+export function pickFeatured(
+	collections: GuestCollection[],
+	albums: GuestAlbum[],
+	artists: Map<string, GuestArtist>,
+	slugs: string[],
+	picked: Set<string>
+): ShowcaseEntry[] {
+	const wanted = new Set(slugs);
+
+	return collections
+		.filter(
+			(collection) =>
+				wanted.has(collection.slug) &&
+				!picked.has(collection.uid) &&
+				collection.status === 'published' &&
+				!collection.criteria.credits
+		)
+		.map((collection) => {
+			const matched = albums.filter((album) =>
+				matchesAlbum(album, collection.criteria, artists)
+			);
+
+			return {
+				collection,
+				albums: matched,
+				genre: collectionGenre(matched) ?? '',
+			};
+		})
+		.filter((entry) => entry.albums.length > 0);
+}
+
 // ── Az építés ───────────────────────────────────────────────────────────────
+
+const chunks = <T>(items: T[], size: number): T[][] =>
+	Array.from({ length: Math.ceil(items.length / size) }, (_, index) =>
+		items.slice(index * size, (index + 1) * size)
+	);
+
+/** A kollekció dokumentumai, amelyeknek a mezője a felsoroltak egyike. */
+async function readWhereIn(
+	database: Firestore,
+	collection: string,
+	field: string,
+	values: string[]
+): Promise<DocumentSnapshot[]> {
+	const snapshots = await Promise.all(
+		chunks(values, IN_LIMIT).map((chunk) =>
+			database.collection(collection).where(field, 'in', chunk).get()
+		)
+	);
+
+	return snapshots.flatMap((snapshot) => snapshot.docs);
+}
+
+/** A kollekció dokumentumai azonosító szerint; a nem létezőek kimaradnak. */
+async function readByIds(
+	database: Firestore,
+	collection: string,
+	uids: string[]
+): Promise<DocumentSnapshot[]> {
+	const snapshots = await Promise.all(
+		chunks(uids, GET_ALL_LIMIT).map((chunk) =>
+			database.getAll(
+				...chunk.map((uid) => database.collection(collection).doc(uid))
+			)
+		)
+	);
+
+	return snapshots.flat().filter((document) => document.exists);
+}
+
+/**
+ * Ami egy kirakatbeli album és előadó lapjáról elérhető: a trackek, a
+ * közreműködések, a tagságok, és a zenészek, akiket ezek megneveznek. Itt
+ * áll meg — egy zenész többi zenekara már nem jön, különben a burok a
+ * katalógus nagy része lenne.
+ */
+export async function readSurroundings(
+	database: Firestore,
+	albumUids: string[],
+	artistUids: string[]
+): Promise<{
+	tracks: DocumentSnapshot[];
+	contributions: DocumentSnapshot[];
+	memberships: DocumentSnapshot[];
+	musicians: DocumentSnapshot[];
+}> {
+	const [tracks, contributions, memberships] = await Promise.all([
+		readWhereIn(database, TRACK_COLLECTION, 'albumUid', albumUids),
+		readWhereIn(database, CONTRIBUTION_COLLECTION, 'albumUid', albumUids),
+		readWhereIn(database, MEMBERSHIP_COLLECTION, 'artistUid', artistUids),
+	]);
+	const musicianUids = new Set(
+		[...contributions, ...memberships]
+			.map((document) => toText(document.get('musicianUid')))
+			.filter((uid): uid is string => !!uid)
+	);
+	const musicians = await readByIds(database, MUSICIAN_COLLECTION, [
+		...musicianUids,
+	]);
+
+	return { tracks, contributions, memberships, musicians };
+}
 
 /** A `sync/catalog.guestBundle` bejegyzés, amiből a kliens tudja, mit töltsön. */
 export interface GuestBundleEntry {
@@ -316,6 +490,13 @@ export interface GuestBundleEntry {
 	week: string;
 	/** Műfajonként a kirakat collectionjeinek uid-ja. */
 	collections: Record<string, string[]>;
+	/**
+	 * A gyűjtő-kártyák által megnevezett collectionök slugjai az építéskor —
+	 * ha a kártyák mást neveznek meg, új építés kell.
+	 */
+	cardSlugs: string[];
+	/** Ezekből a sorsolás mellé felvett collectionök uid-ja. */
+	featured: string[];
 	/** A forrás-feature-ök legújabb verziója az építéskor. */
 	catalogAt: Timestamp | null;
 }
@@ -340,30 +521,25 @@ const newestOf = (times: (Timestamp | null | undefined)[]): Timestamp | null =>
 	);
 
 /**
- * Kell-e új építés: más hét van, vagy a katalógus változott az előző óta.
- * Egy ugyanazon a héten megismételt futás így semmit nem ír.
+ * Kell-e új építés: más hét van, a katalógus változott az előző óta, vagy a
+ * gyűjtő-kártyák más collectionöket neveznek meg. Egy ugyanazon a héten
+ * megismételt futás így semmit nem ír.
  */
 export function needsBuild(
 	existing: Partial<GuestBundleEntry> | null,
 	week: string,
-	catalogAt: Timestamp | null
+	catalogAt: Timestamp | null,
+	slugs: string[] = []
 ): boolean {
 	return (
 		!existing?.path ||
 		existing.week !== week ||
 		(!!catalogAt &&
 			(!existing.catalogAt ||
-				catalogAt.toMillis() > existing.catalogAt.toMillis()))
+				catalogAt.toMillis() > existing.catalogAt.toMillis())) ||
+		(existing.cardSlugs ?? []).join('\n') !== slugs.join('\n')
 	);
 }
-
-const toStrings = (value: unknown): string[] =>
-	Array.isArray(value)
-		? value.filter((item): item is string => typeof item === 'string')
-		: [];
-
-const toText = (value: unknown): string | null =>
-	typeof value === 'string' && value ? value : null;
 
 /**
  * Megépíti és kiteszi a hét vendég-bundle-jét, ha kell.
@@ -399,7 +575,12 @@ export async function composeGuestBundle(
 		bytes: 0,
 	});
 
-	if (!options.force && !needsBuild(existing, week, catalogAt)) {
+	// Pár tucat kis doksi naponta: ennyiből derül ki, hogy a kártyák új
+	// collectiont neveztek-e meg.
+	const cards = await database.collection(COLLECTOR_CARD_COLLECTION).get();
+	const slugs = cardSlugs(cards.docs.map((document) => document.data()));
+
+	if (!options.force && !needsBuild(existing, week, catalogAt, slugs)) {
 		return skipped('current');
 	}
 
@@ -464,7 +645,15 @@ export async function composeGuestBundle(
 	);
 
 	const showcase = pickShowcase(collections, albums, artists, week);
-	const entries = [...showcase.values()].flat();
+	const drawn = [...showcase.values()].flat();
+	const featured = pickFeatured(
+		collections,
+		albums,
+		artists,
+		slugs,
+		new Set(drawn.map((entry) => entry.collection.uid))
+	);
+	const entries = [...drawn, ...featured];
 
 	if (!entries.length) {
 		return skipped('no-catalog');
@@ -483,10 +672,24 @@ export async function composeGuestBundle(
 		.map((uid) => artistDocuments.get(uid))
 		.filter((document): document is DocumentSnapshot => !!document);
 
+	const surroundings = await readSurroundings(
+		database,
+		pickedAlbums.map((document) => document.id),
+		pickedArtists.map((document) => document.id)
+	);
+	const included = [
+		...pickedArtists,
+		...pickedAlbums,
+		...surroundings.tracks,
+		...surroundings.contributions,
+		...surroundings.memberships,
+		...surroundings.musicians,
+	];
+
 	const modifiedAt = Timestamp.now();
 	const builder = database.bundle(`guest-${week}-${modifiedAt.seconds}`);
 
-	for (const document of [...pickedArtists, ...pickedAlbums]) {
+	for (const document of included) {
 		builder.add(document);
 	}
 
@@ -495,14 +698,20 @@ export async function composeGuestBundle(
 
 	await uploadBundle(bucket, path, gzipped);
 
-	const count = pickedArtists.length + pickedAlbums.length;
+	const count = included.length;
 	const entry: GuestBundleEntry = {
 		path,
 		modifiedAt,
 		count,
+		// Minden feature szerepel, a nullás is: a kliens ebből tudja, hogy a
+		// bundle zárt, és a hiányzó dokumentumot nem kell a szervertől kérnie.
 		features: {
 			[ARTIST_COLLECTION]: pickedArtists.length,
 			[ALBUM_COLLECTION]: pickedAlbums.length,
+			[TRACK_COLLECTION]: surroundings.tracks.length,
+			[CONTRIBUTION_COLLECTION]: surroundings.contributions.length,
+			[MEMBERSHIP_COLLECTION]: surroundings.memberships.length,
+			[MUSICIAN_COLLECTION]: surroundings.musicians.length,
 		},
 		week,
 		collections: Object.fromEntries(
@@ -511,6 +720,8 @@ export async function composeGuestBundle(
 				picked.map((item) => item.collection.uid),
 			])
 		),
+		cardSlugs: slugs,
+		featured: featured.map((item) => item.collection.uid),
 		catalogAt,
 	};
 
