@@ -38,6 +38,7 @@ import {
 	GENRE_BUNDLE_FEATURE_KEYS,
 	GENRE_BUNDLE_FOLDER,
 	announceGenreBundle,
+	buildBundle,
 	uploadBundle,
 	ensureBundleCors,
 	featureVersion,
@@ -110,7 +111,7 @@ for (const [slug, documents] of slices) {
 		builder.add(snapshot);
 	}
 
-	const content = builder.build();
+	const content = buildBundle(builder);
 	const gzipped = gzipSync(content);
 	const path = `${GENRE_BUNDLE_FOLDER}/${slug}/${version.seconds}.bundle`;
 

@@ -2949,6 +2949,8 @@
 			"all": "Every genre",
 			"following": "Browsing, search and the radio stay inside the genres you follow.",
 			"everything": "The whole catalog is downloaded, every genre of it.",
+			"showcase": "A taste of every genre",
+			"showcaseNote": "A few collections from every genre with their records, changing every week. Pick a genre to download the whole of it.",
 			"rebuild": "The app rebuilds its local catalog and reloads the page.",
 			"apply": "Apply",
 			"applying": "Rebuilding the catalog…"
@@ -3062,7 +3064,8 @@
 			"access": "Access",
 			"roles": "Roles",
 			"users": "Users",
-			"concerts": "Concerts"
+			"concerts": "Concerts",
+			"bundles": "Bundles"
 		},
 		"genre": {
 			"title": "Genres and styles",
@@ -3536,6 +3539,38 @@
 			"cost": {
 				"free": "free",
 				"paid": "paid"
+			}
+		},
+		"bundles": {
+			"title": "Catalog bundles",
+			"intro": "The clients load the catalog from these files instead of document by document. Whatever changed since a bundle was built, every new visitor then reads one by one — once a lot has piled up, build it again.",
+			"recount": "Recount",
+			"behind-summary": "{{count}} bundles have fallen behind the catalog",
+			"all-current": "Every bundle is current",
+			"checked-at": "counted at",
+			"name": "Bundle",
+			"documents": "Documents",
+			"built": "Built",
+			"since": "Since",
+			"actions": "Actions",
+			"changes": "{{changed}} changed, {{deleted}} deleted",
+			"guest-name": "Showcase",
+			"guest-title": "Showcase",
+			"guest-intro": "What a guest gets, and anyone who follows no genre: five collections of every genre with their albums. It rebuilds itself every night when artists, albums or collections changed; a new selection comes every Monday.",
+			"genre-title": "Genre bundles",
+			"genre-intro": "Collectors following a genre download this and are updated from it alone. The change count is the whole catalog's, not only that genre's. A build reads the whole catalog.",
+			"feature-title": "Feature bundles",
+			"feature-intro": "The whole catalog for the administrator and older clients, one feature at a time. The clients read the changes on top, so nothing is lost — it only gets expensive.",
+			"rebuild": "Rebuild",
+			"rebuilding": "Building…",
+			"confirm": "Yes, build it (~{{reads}} reads)",
+			"cancel": "Cancel",
+			"rebuilt": "Done: {{count}} documents, {{kb}} KB, {{seconds}} s",
+			"state": {
+				"missing": "not published",
+				"reset": "stale since reset",
+				"behind": "behind",
+				"current": "current"
 			}
 		}
 	},

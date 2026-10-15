@@ -5,6 +5,7 @@ import { TestBed } from '@angular/core/testing';
 import {
 	AuthenticationStateService,
 	AuthorizationService,
+	CatalogScopeService,
 	EffectivePermissions,
 	EffectivePermissionsDataService,
 	User,
@@ -21,6 +22,7 @@ describe('AuthorizationEffects', () => {
 		removeAll: jest.Mock;
 	};
 	let load: jest.Mock;
+	let useWholeCatalog: jest.Mock;
 
 	const user = (uid: string) => ({ uid }) as User;
 
@@ -37,6 +39,7 @@ describe('AuthorizationEffects', () => {
 			removeAll: jest.fn(),
 		};
 		load = jest.fn().mockReturnValue(effective$);
+		useWholeCatalog = jest.fn();
 
 		TestBed.configureTestingModule({
 			providers: [
@@ -56,8 +59,32 @@ describe('AuthorizationEffects', () => {
 					provide: EffectivePermissionsDataService,
 					useValue: { load$: load },
 				},
+				{
+					provide: CatalogScopeService,
+					useValue: { useWholeCatalog },
+				},
 			],
 		});
+	});
+
+	it('az admin a teljes katalógust kapja, más a kirakatot', () => {
+		create();
+		authenticatedUser$.next(user('u1'));
+		effective$.next({ permissions: ['ADMIN'], roles: ['ADMIN'] });
+
+		expect(useWholeCatalog).toHaveBeenLastCalledWith(true);
+
+		effective$.next({ permissions: [], roles: ['USER'] });
+
+		expect(useWholeCatalog).toHaveBeenLastCalledWith(false);
+	});
+
+	it('kijelentkezve nem dönt a katalógusról', () => {
+		create();
+
+		// Induláskor a munkamenet visszaállítása előtt is ez látszik: egy
+		// admin böngészője ettől nem eshet vissza a kirakatra.
+		expect(useWholeCatalog).not.toHaveBeenCalled();
 	});
 
 	it('bejelentkezés nélkül nem kér le jogosultságot', () => {

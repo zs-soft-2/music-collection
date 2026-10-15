@@ -350,6 +350,7 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 		return this.firestoreSync.list$<AlbumModel>({
 			featureKey: ALBUM_FEATURE_KEY,
 			cacheKey: `${ALBUM_FEATURE_KEY}@${albumCollection.path}`,
+			narrow: true,
 			query: albumCollection,
 		});
 	}

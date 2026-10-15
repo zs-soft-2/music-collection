@@ -31,6 +31,7 @@ import {
 	BUNDLE_FEATURE_KEYS,
 	BUNDLE_FOLDER,
 	announceBundle,
+	buildBundle,
 	uploadBundle,
 	ensureBundleCors,
 	featureVersion,
@@ -90,10 +91,11 @@ for (const featureKey of featureKeys) {
 	// Read after the version: a document written in between is in the bundle
 	// and is fetched again as a change, never missed.
 	const snapshot = await db.collectionGroup(featureKey).get();
-	const content = db
-		.bundle(`${featureKey}-${modifiedAt.seconds}`)
-		.add(featureKey, snapshot)
-		.build();
+	const content = buildBundle(
+		db
+			.bundle(`${featureKey}-${modifiedAt.seconds}`)
+			.add(featureKey, snapshot)
+	);
 	const gzipped = gzipSync(content);
 	const path = `${BUNDLE_FOLDER}/${featureKey}/${modifiedAt.seconds}.bundle`;
 

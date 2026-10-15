@@ -138,6 +138,11 @@ export const ADMIN_NAV: AdminNavGroup[] = [
 				countType: 'Document',
 			},
 			{
+				labelKey: 'admin.nav.bundles',
+				route: 'bundles',
+				icon: 'pi-box',
+			},
+			{
 				labelKey: 'admin.nav.dailyQuestion',
 				route: 'daily-question',
 				icon: 'pi-question-circle',

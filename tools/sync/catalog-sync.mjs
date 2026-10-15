@@ -183,6 +183,56 @@ export async function announceGenreBundle(
 		);
 }
 
+/**
+ * The bytes of a bundle, the same as `builder.build()` gives, in linear time.
+ *
+ * The SDK's `build()` copies everything gathered so far with `Buffer.concat`
+ * at every element: for the rock slice (40 thousand documents, 80 thousand
+ * elements, 42 MB) that is three minutes and 3.5 GB of garbage outside the
+ * heap. Here every element is made once and joined once. It reaches into the
+ * builder, and falls back to the SDK's own `build()` when the inside is not
+ * what it expects. Kept in step with `buildBundle` in
+ * apps/functions/src/bundle-storage.ts, which is tested byte for byte.
+ */
+export function buildBundle(builder) {
+	const { documents, namedQueries, latestReadTime } = builder;
+
+	if (
+		!(documents instanceof Map) ||
+		!(namedQueries instanceof Map) ||
+		typeof builder.elementToLengthPrefixedBuffer !== 'function' ||
+		!latestReadTime
+	) {
+		return builder.build();
+	}
+
+	const element = (value) => builder.elementToLengthPrefixedBuffer(value);
+	const chunks = [];
+
+	for (const namedQuery of namedQueries.values()) {
+		chunks.push(element({ namedQuery }));
+	}
+	for (const bundled of documents.values()) {
+		chunks.push(element({ documentMetadata: bundled.metadata }));
+		if (bundled.document) {
+			chunks.push(element({ document: bundled.document }));
+		}
+	}
+
+	const body = Buffer.concat(chunks);
+	const metadata = element({
+		metadata: {
+			id: builder.bundleId,
+			createTime: latestReadTime.toProto().timestampValue,
+			version: 1,
+			totalDocuments: documents.size,
+			totalBytes: body.length,
+		},
+	});
+
+	return Buffer.concat([metadata, body]);
+}
+
 /** How many times a bundle upload is retried before the run gives up. */
 const UPLOAD_ATTEMPTS = 3;
 

@@ -34,7 +34,11 @@ import { ProfilePageStore } from '../../profile-page.store';
 					(click)="store.clearGenreDraft()"
 				>
 					<i class="pi pi-globe" aria-hidden="true"></i>
-					{{ t('ui.profileGenres.all') }}
+					@if (store.genreScopeWhole()) {
+						{{ t('ui.profileGenres.all') }}
+					} @else {
+						{{ t('ui.profileGenres.showcase') }}
+					}
 				</button>
 
 				@for (genre of store.genres(); track genre.slug) {
@@ -60,8 +64,10 @@ import { ProfilePageStore } from '../../profile-page.store';
 			<p class="note">
 				@if (store.genreScope().length) {
 					{{ t('ui.profileGenres.following') }}
-				} @else {
+				} @else if (store.genreScopeWhole()) {
 					{{ t('ui.profileGenres.everything') }}
+				} @else {
+					{{ t('ui.profileGenres.showcaseNote') }}
 				}
 			</p>
 

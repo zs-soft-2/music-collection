@@ -2949,6 +2949,8 @@
 			"all": "Minden műfaj",
 			"following": "A böngészés, a keresés és a rádió a választott műfajokat járja.",
 			"everything": "A teljes katalógus letöltődik, minden műfajjal.",
+			"showcase": "Válogatás minden műfajból",
+			"showcaseNote": "Minden műfajból néhány kollekció a lemezeivel, hetente cserélődik. Válassz műfajt, és a teljes katalógusa letöltődik.",
 			"rebuild": "Az alkalmazás újraépíti a helyi katalógust, és újratölti az oldalt.",
 			"apply": "Alkalmazás",
 			"applying": "Katalógus újraépítése…"
@@ -3062,7 +3064,8 @@
 			"access": "Jogosultság",
 			"roles": "Szerepkörök",
 			"users": "Felhasználók",
-			"concerts": "Koncertek"
+			"concerts": "Koncertek",
+			"bundles": "Bundle-ök"
 		},
 		"genre": {
 			"title": "Műfajok és stílusok",
@@ -3536,6 +3539,38 @@
 			"cost": {
 				"free": "ingyenes",
 				"paid": "fizetős"
+			}
+		},
+		"bundles": {
+			"title": "Katalógus-bundle-ök",
+			"intro": "A kliensek ezekből a fájlokból töltik a katalógust, nem dokumentumonként. Ami a bundle építése óta változott, azt minden új látogató egyenként olvassa le utána — ha sok gyűlt össze, építsd újra.",
+			"recount": "Újraszámolás",
+			"behind-summary": "{{count}} bundle lemaradt a katalógustól",
+			"all-current": "Minden bundle naprakész",
+			"checked-at": "számolva",
+			"name": "Bundle",
+			"documents": "Dokumentum",
+			"built": "Épült",
+			"since": "Azóta",
+			"actions": "Műveletek",
+			"changes": "{{changed}} módosult, {{deleted}} törölve",
+			"guest-name": "Kirakat",
+			"guest-title": "Kirakat",
+			"guest-intro": "Ezt kapja a vendég és az, aki nem választott műfajt: műfajonként öt collection az albumaival. Minden éjjel magától frissül, ha az előadók, albumok vagy collectionök változtak; hétfőn új válogatás jön.",
+			"genre-title": "Műfaj-bundle-ök",
+			"genre-intro": "A műfajt választó gyűjtők ezt töltik le, és csak ebből frissülnek. A változásszám a katalógus egészére vonatkozik, nem csak az adott műfajra. Egy építés a teljes katalógust végigolvassa.",
+			"feature-title": "Feature-bundle-ök",
+			"feature-intro": "Az admin és a régi kliensek teljes katalógusa, feature-önként. Ezekre a kliens a változásokat ráolvassa, tehát nem vesznek el — csak drágák lesznek.",
+			"rebuild": "Újraépítés",
+			"rebuilding": "Épül…",
+			"confirm": "Igen, építsd (~{{reads}} olvasás)",
+			"cancel": "Mégse",
+			"rebuilt": "Kész: {{count}} dokumentum, {{kb}} KB, {{seconds}} mp",
+			"state": {
+				"missing": "nincs publikálva",
+				"reset": "reset óta elavult",
+				"behind": "lemaradt",
+				"current": "naprakész"
 			}
 		}
 	},

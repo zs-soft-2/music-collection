@@ -16,6 +16,37 @@ export const GENRE_SCOPE_LIMIT = 2;
 /** Where the scope is kept in this browser; see `readStored`. */
 const STORAGE_KEY = 'mc-genre-scope';
 
+/** Where this browser remembers that it serves an administrator. */
+const WHOLE_STORAGE_KEY = 'mc-catalog-whole';
+
+/**
+ * The scope of a reader who follows no genre and is not an administrator:
+ * the showcase (`sync/catalog.guestBundle`, built by `composeGuestBundle` in
+ * apps/functions). Not a slug any genre could have, so it can stand where a
+ * scope key does without ever meaning a genre.
+ */
+export const GUEST_SCOPE_KEY = '@guest';
+
+/**
+ * What this browser downloads of the catalog: the genres followed, or —
+ * where there are none — the showcase for a guest and the whole catalog for
+ * an administrator.
+ */
+export interface CatalogScope {
+	genres: string[];
+	/** Following no genre and not an administrator: the showcase. */
+	guest: boolean;
+}
+
+/** The scope's identity: what tells its cache bookkeeping from another's. */
+export function catalogScopeKey(scope: CatalogScope): string {
+	return scope.genres.length
+		? genreScopeKey(scope.genres)
+		: scope.guest
+			? GUEST_SCOPE_KEY
+			: '';
+}
+
 /**
  * The catalog features a genre bundle carries, and so the only ones a
  * narrowed scope changes anything for.
@@ -63,9 +94,12 @@ export function genreScopeKey(slugs: readonly string[]): string {
  * the account only confirms or corrects it afterwards
  * (`GenreScopeSyncService`).
  *
- * An empty scope means the whole catalog, deliberately: that is what an
- * administrator working the catalog needs, what a collector who has not
- * chosen yet gets, and what every client did before this setting existed.
+ * Following no genre means the showcase — a few collections of every genre
+ * with their albums and artists, a fraction of the catalog — for a guest and
+ * for a collector who has not chosen yet. An administrator working the
+ * catalog gets the whole of it instead (`useWholeCatalog`). Where no showcase
+ * is published the sync layer falls back to the whole catalog, which is what
+ * every client did before either existed.
  *
  * It holds no data layer of its own, because `FirestoreSyncService` asks it
  * what to download: anything it injected from there would be injected back
@@ -74,21 +108,35 @@ export function genreScopeKey(slugs: readonly string[]): string {
 @Injectable({ providedIn: 'root' })
 export class CatalogScopeService {
 	private readonly state = signal<string[]>(this.readStored());
+	private readonly wholeState = signal<boolean>(this.readWhole());
 	/**
 	 * The same value as a stream. A subject rather than `toObservable`,
 	 * because the sync layer subscribes to this before the first catalog
 	 * query: a signal turned into a stream first emits when effects run,
-	 * and a query that started in the meantime would have gone by an empty
-	 * scope — which is to say, by the whole catalog.
+	 * and a query that started in the meantime would have gone by the
+	 * wrong scope — the whole catalog, or the showcase in place of a genre.
 	 */
-	private readonly changes = new BehaviorSubject<string[]>(this.state());
+	private readonly changes = new BehaviorSubject<CatalogScope>(
+		this.current()
+	);
 
 	/** The genre slugs followed, at most `GENRE_SCOPE_LIMIT`; empty is all. */
 	public readonly slugs: Signal<string[]> = this.state.asReadonly();
 
-	/** Whether the catalog is narrowed at all. */
+	/** Whether the catalog is narrowed to genres. */
 	public readonly narrowed: Signal<boolean> = computed(
 		() => this.state().length > 0
+	);
+
+	/** Whether this browser serves an administrator, who gets everything. */
+	public readonly whole: Signal<boolean> = this.wholeState.asReadonly();
+
+	/** The key of the scope in force; see `catalogScopeKey`. */
+	public readonly key: Signal<string> = computed(() =>
+		catalogScopeKey({
+			genres: this.state(),
+			guest: !this.wholeState(),
+		})
 	);
 
 	/**
@@ -96,10 +144,10 @@ export class CatalogScopeService {
 	 * list, so the sync layer has to be able to resubscribe on it rather
 	 * than read it once at startup.
 	 */
-	public readonly scope$: Observable<string[]> = this.changes.pipe(
+	public readonly scope$: Observable<CatalogScope> = this.changes.pipe(
 		distinctUntilChanged(
 			(previous, current) =>
-				genreScopeKey(previous) === genreScopeKey(current)
+				catalogScopeKey(previous) === catalogScopeKey(current)
 		)
 	);
 
@@ -117,14 +165,55 @@ export class CatalogScopeService {
 		}
 
 		this.state.set(kept);
-		this.changes.next(kept);
+		this.changes.next(this.current());
 		this.write(kept);
 	}
 
 	/**
+	 * Whether the reader is an administrator, who works on the whole
+	 * catalog where a collector following no genre gets the showcase.
+	 *
+	 * Remembered in this browser for the same reason the genres are: the
+	 * first catalog query runs before the roles have arrived, and an
+	 * administrator's page would otherwise start on the showcase and then
+	 * load everything on top of it. Going from the showcase to the whole
+	 * catalog needs no cache reset — the whole holds the showcase.
+	 */
+	public useWholeCatalog(whole: boolean): void {
+		if (whole === this.wholeState()) {
+			return;
+		}
+
+		this.wholeState.set(whole);
+		this.changes.next(this.current());
+
+		try {
+			if (whole) {
+				localStorage.setItem(WHOLE_STORAGE_KEY, 'true');
+			} else {
+				localStorage.removeItem(WHOLE_STORAGE_KEY);
+			}
+		} catch {
+			// Storage unavailable (e.g. private window): lasts the session.
+		}
+	}
+
+	private current(): CatalogScope {
+		return { genres: this.state(), guest: !this.wholeState() };
+	}
+
+	private readWhole(): boolean {
+		try {
+			return localStorage.getItem(WHOLE_STORAGE_KEY) === 'true';
+		} catch {
+			return false;
+		}
+	}
+
+	/**
 	 * What this browser was last set to, tolerant of anything that is not
-	 * what we wrote: a scope that cannot be read is an unnarrowed catalog,
-	 * which is slower but never wrong.
+	 * what we wrote: a scope that cannot be read is no genre at all — the
+	 * showcase, which the collector can narrow again from their profile.
 	 */
 	private readStored(): string[] {
 		try {

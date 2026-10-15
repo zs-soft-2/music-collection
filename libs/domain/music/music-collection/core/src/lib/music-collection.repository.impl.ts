@@ -139,6 +139,7 @@ export class MusicCollectionFirestoreRepository extends MusicCollectionRepositor
 				this.firestoreSync.list$<ContributionEntity>({
 					featureKey: CONTRIBUTION_FEATURE_KEY,
 					cacheKey: `${CONTRIBUTION_FEATURE_KEY}?musicianUid=${uids.join(',')}`,
+					narrow: true,
 					query: query(
 						collection(this.firestore, CONTRIBUTION_FEATURE_KEY),
 						where('musicianUid', 'in', uids)

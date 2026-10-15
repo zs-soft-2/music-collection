@@ -813,6 +813,19 @@ export const ProfilePageStore = signalStore(
 	 * — whatever acts on them reads the same signal, and two copies of a
 	 * consent is one too many.
 	 */
+	/**
+	 * Whether following no genre means the whole catalog here — an
+	 * administrator's — or the weekly showcase everybody else gets. Read
+	 * from the scope itself, like the genres, so the form describes the
+	 * catalog this browser is actually on.
+	 */
+	withComputed(() => {
+		const genreScope = inject(GenreScopeEffect);
+
+		return {
+			genreScopeWhole: computed(() => genreScope.wholeCatalog()),
+		};
+	}),
 	withComputed(() => {
 		const measurement = inject(MeasurementConsentService);
 		const players = inject(ExternalPlayerConsentService);

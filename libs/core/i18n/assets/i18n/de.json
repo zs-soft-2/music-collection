@@ -2949,6 +2949,8 @@
 			"all": "Alle Genres",
 			"following": "Stöbern, Suche und Radio bleiben in den gewählten Genres.",
 			"everything": "Der gesamte Katalog wird heruntergeladen, mit allen Genres.",
+			"showcase": "Eine Auswahl aus allen Genres",
+			"showcaseNote": "Aus jedem Genre ein paar Kollektionen mit ihren Platten, jede Woche neu. Wähle ein Genre, um seinen ganzen Katalog zu laden.",
 			"rebuild": "Die App baut den lokalen Katalog neu auf und lädt die Seite neu.",
 			"apply": "Übernehmen",
 			"applying": "Katalog wird neu aufgebaut…"
@@ -3062,7 +3064,8 @@
 			"access": "Berechtigung",
 			"roles": "Rollen",
 			"users": "Benutzer",
-			"concerts": "Konzerte"
+			"concerts": "Konzerte",
+			"bundles": "Bundles"
 		},
 		"genre": {
 			"title": "Genres und Stile",
@@ -3536,6 +3539,38 @@
 			"cost": {
 				"free": "kostenlos",
 				"paid": "kostenpflichtig"
+			}
+		},
+		"bundles": {
+			"title": "Katalog-Bundles",
+			"intro": "Die Clients laden den Katalog aus diesen Dateien statt Dokument für Dokument. Was sich seit dem Bau eines Bundles geändert hat, liest jeder neue Besucher danach einzeln nach — hat sich viel angesammelt, baue es neu.",
+			"recount": "Neu zählen",
+			"behind-summary": "{{count}} Bundles sind hinter dem Katalog zurück",
+			"all-current": "Alle Bundles sind aktuell",
+			"checked-at": "gezählt um",
+			"name": "Bundle",
+			"documents": "Dokumente",
+			"built": "Gebaut",
+			"since": "Seitdem",
+			"actions": "Aktionen",
+			"changes": "{{changed}} geändert, {{deleted}} gelöscht",
+			"guest-name": "Schaufenster",
+			"guest-title": "Schaufenster",
+			"guest-intro": "Das bekommt ein Gast und jeder, der kein Genre gewählt hat: fünf Kollektionen pro Genre mit ihren Alben. Es baut sich jede Nacht neu, wenn sich Künstler, Alben oder Kollektionen geändert haben; montags kommt eine neue Auswahl.",
+			"genre-title": "Genre-Bundles",
+			"genre-intro": "Sammler mit gewähltem Genre laden dies und werden nur daraus aktualisiert. Die Änderungszahl gilt für den ganzen Katalog, nicht nur für das Genre. Ein Bau liest den ganzen Katalog.",
+			"feature-title": "Feature-Bundles",
+			"feature-intro": "Der ganze Katalog für Admins und ältere Clients, je Feature. Die Clients lesen die Änderungen obendrauf, es geht also nichts verloren — es wird nur teuer.",
+			"rebuild": "Neu bauen",
+			"rebuilding": "Wird gebaut…",
+			"confirm": "Ja, bauen (~{{reads}} Lesevorgänge)",
+			"cancel": "Abbrechen",
+			"rebuilt": "Fertig: {{count}} Dokumente, {{kb}} KB, {{seconds}} s",
+			"state": {
+				"missing": "nicht veröffentlicht",
+				"reset": "seit Reset veraltet",
+				"behind": "zurück",
+				"current": "aktuell"
 			}
 		}
 	},

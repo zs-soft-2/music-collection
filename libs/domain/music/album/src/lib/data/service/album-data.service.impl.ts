@@ -286,6 +286,7 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 			.list$<TrackEntity>({
 				featureKey: TRACK_FEATURE_KEY,
 				cacheKey: `${TRACK_FEATURE_KEY}?albumUid=${albumUid}`,
+				narrow: true,
 				query: query(
 					collection(this.firestore, TRACK_FEATURE_KEY),
 					where('albumUid', '==', albumUid)
@@ -460,6 +461,7 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 			.list$<TrackEntity>({
 				featureKey: TRACK_FEATURE_KEY,
 				cacheKey: `${TRACK_FEATURE_KEY}?releaseUid=${releaseUid}`,
+				narrow: true,
 				query: query(
 					collection(this.firestore, TRACK_FEATURE_KEY),
 					where('releaseUid', '==', releaseUid)

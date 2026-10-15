@@ -322,6 +322,21 @@ const routes: Routes = [
 				canActivate: [NgxPermissionsGuard],
 			},
 			{
+				path: 'bundles',
+				data: {
+					breadcrumb: 'bundles',
+					permissions: {
+						only: [RoleNames.ADMIN],
+						redirectTo: '/error',
+					},
+				},
+				loadComponent: () =>
+					import('./catalog-bundle/catalog-bundle-admin.component').then(
+						(module) => module.CatalogBundleAdminComponent
+					),
+				canActivate: [NgxPermissionsGuard],
+			},
+			{
 				path: 'wishlist-item',
 				data: {
 					breadcrumb: 'wishlist-item',

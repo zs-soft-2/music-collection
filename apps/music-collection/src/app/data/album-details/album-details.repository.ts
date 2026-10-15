@@ -32,6 +32,7 @@ export class AlbumDetailsRepository {
 		return this.firestoreSync.list$<TrackEntity>({
 			featureKey: TRACK_FEATURE_KEY,
 			cacheKey: `${TRACK_FEATURE_KEY}?releaseUid=${releaseUid}`,
+			narrow: true,
 			query: query(
 				collection(this.firestore, TRACK_FEATURE_KEY),
 				where('releaseUid', '==', releaseUid)
@@ -56,6 +57,7 @@ export class AlbumDetailsRepository {
 		return this.firestoreSync.list$<T>({
 			featureKey: collectionName,
 			cacheKey: `${collectionName}?albumUid=${albumUid}`,
+			narrow: true,
 			query: query(
 				collection(this.firestore, collectionName),
 				where('albumUid', '==', albumUid)

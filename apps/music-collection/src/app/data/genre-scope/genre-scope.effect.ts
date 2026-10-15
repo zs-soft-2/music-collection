@@ -33,6 +33,12 @@ export class GenreScopeEffect {
 	/** The genres followed, by slug. */
 	public readonly slugs: Signal<string[]> = this.scope.slugs;
 
+	/**
+	 * Whether following no genre gives this reader the whole catalog — an
+	 * administrator — rather than the weekly showcase.
+	 */
+	public readonly wholeCatalog: Signal<boolean> = this.scope.whole;
+
 	/** The genres to pick from: the ones an admin has not retired. */
 	public genres$(): Observable<GenreEntity[]> {
 		return this.genres.genres$;

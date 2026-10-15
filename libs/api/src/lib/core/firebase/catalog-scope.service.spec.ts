@@ -1,8 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 
 import {
+	CatalogScope,
 	CatalogScopeService,
 	GENRE_SCOPE_LIMIT,
+	GUEST_SCOPE_KEY,
+	catalogScopeKey,
 	genreScopeKey,
 	isGenreScoped,
 } from './catalog-scope.service';
@@ -18,9 +21,28 @@ describe('CatalogScopeService', () => {
 		TestBed.resetTestingModule();
 	});
 
-	it('follows the whole catalog until somebody says otherwise', () => {
+	it('serves the showcase until somebody says otherwise', () => {
 		expect(scope().slugs()).toEqual([]);
 		expect(scope().narrowed()).toBe(false);
+		expect(scope().key()).toBe(GUEST_SCOPE_KEY);
+	});
+
+	it('gives an administrator the whole catalog, and remembers it', () => {
+		scope().useWholeCatalog(true);
+
+		expect(scope().key()).toBe('');
+
+		// Read back on the next start, before the roles have arrived.
+		TestBed.resetTestingModule();
+		expect(scope().whole()).toBe(true);
+		expect(scope().key()).toBe('');
+	});
+
+	it('lets the genres win over the whole catalog', () => {
+		scope().useWholeCatalog(true);
+		scope().choose(['rock']);
+
+		expect(scope().key()).toBe(genreScopeKey(['rock']));
 	});
 
 	it('reads back what this browser was last set to', () => {
@@ -52,11 +74,9 @@ describe('CatalogScopeService', () => {
 		});
 	});
 
-	it('takes an unreadable scope for the whole catalog', () => {
+	it('takes an unreadable scope for no genre at all', () => {
 		localStorage.setItem(STORAGE_KEY, 'not json');
 
-		// Slower than it needs to be, but never a catalog with something
-		// silently missing from it.
 		expect(scope().slugs()).toEqual([]);
 	});
 
@@ -71,16 +91,33 @@ describe('CatalogScopeService', () => {
 
 	it('emits a change once, and not for a reordering of the same scope', () => {
 		const service = scope();
-		const seen: string[][] = [];
+		const seen: CatalogScope[] = [];
 
-		service.scope$.subscribe((slugs) => seen.push(slugs));
+		service.scope$.subscribe((current) => seen.push(current));
 		service.choose(['rock', 'jazz']);
 		service.choose(['jazz', 'rock']);
 
 		// The first is the scope in force at subscription, which a reader
 		// has to have before anything changes; the reordering is not a
 		// change and must not send every catalog list round again.
-		expect(seen).toEqual([[], ['rock', 'jazz']]);
+		expect(seen).toEqual([
+			{ genres: [], guest: true },
+			{ genres: ['rock', 'jazz'], guest: true },
+		]);
+	});
+
+	it('does not send the lists round when the administrator follows genres', () => {
+		const service = scope();
+		const seen: string[] = [];
+
+		service.choose(['rock']);
+		service.scope$.subscribe((current) =>
+			seen.push(catalogScopeKey(current))
+		);
+		service.useWholeCatalog(true);
+
+		// Genres win either way: the same scope, so the same lists.
+		expect(seen).toEqual([genreScopeKey(['rock'])]);
 	});
 });
 

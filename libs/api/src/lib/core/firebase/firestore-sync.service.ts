@@ -50,8 +50,10 @@ import {
 import { Storage, getBlob, ref } from '@angular/fire/storage';
 
 import {
+	CatalogScope,
 	CatalogScopeService,
-	genreScopeKey,
+	GUEST_SCOPE_KEY,
+	catalogScopeKey,
 	isGenreScoped,
 } from './catalog-scope.service';
 
@@ -137,6 +139,12 @@ interface CatalogBundle {
 	path: string;
 	modifiedAt: Timestamp;
 	count: number;
+	/**
+	 * Per feature how many of its documents the file holds, where the file
+	 * says. The showcase carries artists and albums and nothing else, and a
+	 * feature it has none of is not worth downloading the file for.
+	 */
+	features?: Record<string, number>;
 }
 
 interface CatalogSync {
@@ -151,6 +159,12 @@ interface CatalogSync {
 	 * downloads two files however many collections they are spread over.
 	 */
 	genreBundles?: Record<string, CatalogBundle | undefined>;
+	/**
+	 * The showcase for a reader following no genre: a few collections of
+	 * every genre, with their albums and the artists of those. Built every
+	 * week by `composeGuestBundle` (apps/functions).
+	 */
+	guestBundle?: CatalogBundle;
 }
 
 interface FeatureVersion {
@@ -158,9 +172,10 @@ interface FeatureVersion {
 	resetAt: Timestamp | null;
 	bundle: CatalogBundle | null;
 	/**
-	 * The genre bundles this query is to be served from, empty where the
-	 * catalog is not narrowed. All of the scope's genres or none of them: a
-	 * scope half served is a catalog with a genre silently missing from it.
+	 * The bundles this query is to be served from — the genres followed, or
+	 * the showcase — empty where the catalog is whole. All of the scope's
+	 * genres or none of them: a scope half served is a catalog with a genre
+	 * silently missing from it.
 	 */
 	scope: CatalogBundle[];
 	/** The scope the bundles above belong to, for the cache bookkeeping. */
@@ -207,6 +222,19 @@ export interface SyncedQuery {
 	 * feature anyway is better served by the bundle.
 	 */
 	bundle?: boolean;
+	/**
+	 * The query names a small part of its feature — one album's tracks, one
+	 * band's line-up, one artist's records — rather than listing it.
+	 *
+	 * It matters where the catalog is narrowed, because there the bundles
+	 * decide what the cache holds, and what they did not bring would be an
+	 * empty page. So a narrow query that the bundles left empty asks the
+	 * server for its few documents; under the showcase, which brings next to
+	 * nothing of most features, it asks once for every new showcase. A query
+	 * that lists the whole feature must not set this: there the server would
+	 * hand over the whole catalog the scope exists to keep out.
+	 */
+	narrow?: boolean;
 }
 
 const compareTimestamps = (
@@ -485,7 +513,7 @@ export class FirestoreSyncService {
 	 */
 	private version$(featureKey: string): Observable<FeatureVersion | null> {
 		return combineLatest([this.catalog$, this.scope.scope$]).pipe(
-			map(([catalog, slugs]) =>
+			map(([catalog, scope]) =>
 				catalog
 					? {
 							modifiedAt:
@@ -495,9 +523,9 @@ export class FirestoreSyncService {
 							scope: this.scopeBundles(
 								catalog,
 								featureKey,
-								slugs
+								scope
 							),
-							scopeKey: genreScopeKey(slugs),
+							scopeKey: catalogScopeKey(scope),
 						}
 					: null
 			),
@@ -517,26 +545,35 @@ export class FirestoreSyncService {
 	}
 
 	/**
-	 * The genre bundles serving this feature, or none.
+	 * The bundles serving this feature: the genres followed, or the
+	 * showcase, or none.
 	 *
-	 * None where the collector follows everything, where the feature does
-	 * not arrive in a genre bundle (a label belongs to no one genre), and —
+	 * None for an administrator following no genre, where the feature does
+	 * not arrive in a scoped bundle (a label belongs to no one genre), and —
 	 * deliberately — where any one genre of the scope has no bundle
 	 * published yet. Serving the genres that do have one would leave the
 	 * other missing from every list without saying so; falling back to the
 	 * whole feature is slower, but it is the catalog the collector asked
-	 * for.
+	 * for. A showcase not yet published falls back the same way.
 	 */
 	private scopeBundles(
 		catalog: CatalogSync,
 		featureKey: string,
-		slugs: string[]
+		scope: CatalogScope
 	): CatalogBundle[] {
-		if (!slugs.length || !isGenreScoped(featureKey)) {
+		if (!isGenreScoped(featureKey)) {
 			return [];
 		}
 
-		const bundles = slugs.map((slug) => catalog.genreBundles?.[slug]);
+		if (!scope.genres.length) {
+			return scope.guest && catalog.guestBundle
+				? [catalog.guestBundle]
+				: [];
+		}
+
+		const bundles = scope.genres.map(
+			(slug) => catalog.genreBundles?.[slug]
+		);
 
 		return bundles.every((bundle): bundle is CatalogBundle => !!bundle)
 			? bundles
@@ -560,10 +597,21 @@ export class FirestoreSyncService {
 			// bundle that cannot be loaded leaves the paths below to it, and
 			// those only run while the catalog is not narrowed.
 			if (version?.scope.length) {
+				const newest = this.newestOf(version.scope);
+
+				if (synced.narrow && version.scopeKey === GUEST_SCOPE_KEY) {
+					return this.refreshNarrow(synced, newest);
+				}
+
 				const scoped = await this.refreshFromScope(synced, version);
 
 				if (scoped) {
-					return scoped;
+					// What the genres did not bring — a record of another
+					// genre's tracks, a guest musician's other credits — is
+					// asked for by name rather than left an empty page.
+					return scoped.length || !synced.narrow
+						? scoped
+						: this.downloadAll(synced, newest);
 				}
 			}
 
@@ -618,7 +666,8 @@ export class FirestoreSyncService {
 	 * read the cache they filled.
 	 *
 	 * Nothing is asked of the server beyond the tombstones — no document
-	 * reads, and none of the catch-up the unnarrowed paths do. A catalog
+	 * reads, and none of the catch-up the unnarrowed paths do — except by a
+	 * narrow query the bundles left empty (`SyncedQuery.narrow`). A catalog
 	 * this client holds only part of cannot ask "what changed since?"
 	 * without being handed the genres it does not want, so a narrowed
 	 * catalog moves forward when a new bundle is published and not before.
@@ -642,6 +691,32 @@ export class FirestoreSyncService {
 
 		this.writeMarker(synced, this.newestOf(version.scope), cached.size);
 		return cached.docs;
+	}
+
+	/**
+	 * A narrow query under the showcase: its few documents from the server,
+	 * once for every showcase published, and from the cache in between.
+	 *
+	 * Not served from the bundle even where the bundle holds some of it: the
+	 * showcase carries an artist's records only as far as its collections
+	 * reach, and an artist page drawn from that would be a discography with
+	 * holes in it, looking whole.
+	 */
+	private async refreshNarrow(
+		synced: SyncedQuery,
+		showcaseAt: Timestamp
+	): Promise<QueryDocumentSnapshot[]> {
+		const marker = this.readMarker(synced);
+
+		if (marker && compareTimestamps(showcaseAt, marker) <= 0) {
+			const cached = await this.readIntactCache(synced);
+
+			if (cached) {
+				return cached;
+			}
+		}
+
+		return this.downloadAll(synced, showcaseAt);
 	}
 
 	private async downloadAll(
@@ -779,6 +854,16 @@ export class FirestoreSyncService {
 		const loaded = this.readJson<LoadedBundle>(
 			this.bundleStorageKey(featureKey)
 		);
+
+		// Files that say what they carry and carry none of this feature: the
+		// showcase holds no tracks, and downloading it again on every start
+		// for the tracks it does not have would be the whole cost for nothing.
+		if (
+			bundles.every((bundle) => bundle.features) &&
+			bundles.every((bundle) => !bundle.features?.[featureKey])
+		) {
+			return true;
+		}
 
 		if (loaded?.path === id && (await this.hasCached(featureKey))) {
 			return true;
@@ -977,14 +1062,12 @@ export class FirestoreSyncService {
 	}
 
 	/**
-	 * What tells one scope's bookkeeping from another's. Empty while the
-	 * catalog is not narrowed, so a client that never narrows goes on
-	 * reading the keys it has always written.
+	 * What tells one scope's bookkeeping from another's. Empty for the
+	 * whole catalog, so an administrator's client goes on reading the keys
+	 * it has always written.
 	 */
 	private scopeSuffix(featureKey: string): string {
-		const scope = isGenreScoped(featureKey)
-			? genreScopeKey(this.scope.slugs())
-			: '';
+		const scope = isGenreScoped(featureKey) ? this.scope.key() : '';
 
 		return scope ? `#${scope}` : '';
 	}

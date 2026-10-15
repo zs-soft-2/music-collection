@@ -136,6 +136,7 @@ export class MembershipRepository {
 		return this.firestoreSync.list$<MembershipEntity>({
 			featureKey: MEMBERSHIP_FEATURE_KEY,
 			cacheKey: `${MEMBERSHIP_FEATURE_KEY}?${field}=${value}`,
+			narrow: true,
 			query: query(
 				collection(this.firestore, MEMBERSHIP_FEATURE_KEY),
 				where(field, '==', value)
