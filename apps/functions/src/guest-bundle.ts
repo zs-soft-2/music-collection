@@ -80,6 +80,16 @@ const GET_ALL_LIMIT = 100;
 /** Storage-mappa: `bundles/guest/{seconds}.bundle`. */
 export const GUEST_BUNDLE_FOLDER = 'bundles/guest';
 
+/**
+ * A kirakat két része, külön mappában, mert a takarítás mappánként a
+ * legutóbbiakat hagyja meg. A mag az, amiből a nyitólap kirajzolódik — az
+ * előadók és az albumok, a dokumentumok tizede —, a többi (számok,
+ * közreműködések, tagságok, zenészek) csak akkor jön le, amikor egy lap
+ * kéri. Az egyben épített fájl a régi klienseknek marad.
+ */
+export const GUEST_CORE_FOLDER = 'bundles/guest-core';
+export const GUEST_REST_FOLDER = 'bundles/guest-rest';
+
 /** Műfajonként ennyi collection kerül a kirakatba. */
 export const GUEST_COLLECTIONS_PER_GENRE = 5;
 
@@ -499,6 +509,19 @@ export interface GuestBundleEntry {
 	featured: string[];
 	/** A forrás-feature-ök legújabb verziója az építéskor. */
 	catalogAt: Timestamp | null;
+	/**
+	 * Ugyanez két fájlban: a kliens feature-önként csak azt tölti le,
+	 * amelyik a feature-t hordozza. Az első képernyőhöz így a mag elég.
+	 */
+	parts: GuestBundlePart[];
+}
+
+/** A kirakat egyik része: ugyanaz a pillanatkép, a feature-ök egy szelete. */
+export interface GuestBundlePart {
+	path: string;
+	modifiedAt: Timestamp;
+	count: number;
+	features: Record<string, number>;
 }
 
 export interface GuestBundleResult {
@@ -687,16 +710,37 @@ export async function composeGuestBundle(
 	];
 
 	const modifiedAt = Timestamp.now();
-	const builder = database.bundle(`guest-${week}-${modifiedAt.seconds}`);
+	const build = async (
+		folder: string,
+		name: string,
+		documents: DocumentSnapshot[]
+	) => {
+		const builder = database.bundle(
+			`${name}-${week}-${modifiedAt.seconds}`
+		);
 
-	for (const document of included) {
-		builder.add(document);
-	}
+		for (const document of documents) {
+			builder.add(document);
+		}
 
-	const gzipped = gzipSync(buildBundle(builder));
-	const path = `${GUEST_BUNDLE_FOLDER}/${modifiedAt.seconds}.bundle`;
+		const gzipped = gzipSync(buildBundle(builder));
+		const path = `${folder}/${modifiedAt.seconds}.bundle`;
 
-	await uploadBundle(bucket, path, gzipped);
+		await uploadBundle(bucket, path, gzipped);
+		return { path, bytes: gzipped.length };
+	};
+
+	const { path, bytes } = await build(GUEST_BUNDLE_FOLDER, 'guest', included);
+	const core = await build(GUEST_CORE_FOLDER, 'guest-core', [
+		...pickedArtists,
+		...pickedAlbums,
+	]);
+	const rest = await build(GUEST_REST_FOLDER, 'guest-rest', [
+		...surroundings.tracks,
+		...surroundings.contributions,
+		...surroundings.memberships,
+		...surroundings.musicians,
+	]);
 
 	const count = included.length;
 	const entry: GuestBundleEntry = {
@@ -723,6 +767,30 @@ export async function composeGuestBundle(
 		cardSlugs: slugs,
 		featured: featured.map((item) => item.collection.uid),
 		catalogAt,
+		parts: [
+			{
+				path: core.path,
+				modifiedAt,
+				count: pickedArtists.length + pickedAlbums.length,
+				features: {
+					[ARTIST_COLLECTION]: pickedArtists.length,
+					[ALBUM_COLLECTION]: pickedAlbums.length,
+				},
+			},
+			{
+				path: rest.path,
+				modifiedAt,
+				count:
+					count - pickedArtists.length - pickedAlbums.length,
+				features: {
+					[TRACK_COLLECTION]: surroundings.tracks.length,
+					[CONTRIBUTION_COLLECTION]:
+						surroundings.contributions.length,
+					[MEMBERSHIP_COLLECTION]: surroundings.memberships.length,
+					[MUSICIAN_COLLECTION]: surroundings.musicians.length,
+				},
+			},
+		],
 	};
 
 	await catalogReference.set(
@@ -730,6 +798,8 @@ export async function composeGuestBundle(
 		{ merge: true }
 	);
 	await removeOldBundles(bucket, GUEST_BUNDLE_FOLDER, path);
+	await removeOldBundles(bucket, GUEST_CORE_FOLDER, core.path);
+	await removeOldBundles(bucket, GUEST_REST_FOLDER, rest.path);
 
 	return {
 		week,
@@ -738,6 +808,6 @@ export async function composeGuestBundle(
 		path,
 		count,
 		collections: entries.length,
-		bytes: gzipped.length,
+		bytes,
 	};
 }

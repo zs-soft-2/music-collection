@@ -165,7 +165,17 @@ interface CatalogSync {
 	 * what their pages reach — tracks, credits, line-ups, musicians. Built
 	 * every week by `composeGuestBundle` (apps/functions).
 	 */
-	guestBundle?: CatalogBundle;
+	guestBundle?: GuestBundle;
+}
+
+/**
+ * The showcase, whole and in parts. The parts are the same snapshot split
+ * by feature: the artists and albums the home page is drawn from, and the
+ * tracks, credits, line-ups and musicians behind them — nine documents in
+ * ten, which a first visit has no use for until a page asks.
+ */
+interface GuestBundle extends CatalogBundle {
+	parts?: CatalogBundle[];
 }
 
 interface FeatureVersion {
@@ -569,7 +579,7 @@ export class FirestoreSyncService {
 
 		if (!scope.genres.length) {
 			return scope.guest && catalog.guestBundle
-				? [catalog.guestBundle]
+				? this.guestBundles(catalog.guestBundle, featureKey)
 				: [];
 		}
 
@@ -580,6 +590,29 @@ export class FirestoreSyncService {
 		return bundles.every((bundle): bundle is CatalogBundle => !!bundle)
 			? bundles
 			: [];
+	}
+
+	/**
+	 * The showcase files serving a feature: the part that carries it, so the
+	 * home page waits on the artists and albums alone. A feature no part
+	 * names is handed all of them, which say so and are not downloaded for
+	 * it; a showcase built before the split is the one file it always was.
+	 */
+	private guestBundles(
+		guest: GuestBundle,
+		featureKey: string
+	): CatalogBundle[] {
+		const parts = guest.parts ?? [];
+
+		if (!parts.length) {
+			return [guest];
+		}
+
+		const carrying = parts.filter(
+			(part) => !!part.features && featureKey in part.features
+		);
+
+		return carrying.length ? carrying : parts;
 	}
 
 	/**
@@ -889,6 +922,9 @@ export class FirestoreSyncService {
 			return true;
 		}
 
+		// Asked before the files land, which would answer it for them.
+		const warm = !!loaded || (await this.hasCached(featureKey));
+
 		const fetched = await Promise.all(
 			bundles.map((bundle) => this.fetchBundle(bundle.path))
 		);
@@ -900,10 +936,17 @@ export class FirestoreSyncService {
 		}
 
 		// Loading never removes documents: evict the ones deleted since the
-		// previous bundle, or since ever when there was none.
+		// previous bundle, or since ever when the cache holds documents of
+		// unknown age. An empty cache has only the files' own to lose — those
+		// deleted after the oldest of them was cut — so a first visit does
+		// not read every deletion there ever was.
 		await this.evictDeleted(
 			featureKey,
-			loaded ? new Timestamp(loaded.seconds, loaded.nanoseconds) : null
+			loaded
+				? new Timestamp(loaded.seconds, loaded.nanoseconds)
+				: warm
+					? null
+					: this.oldestOf(bundles)
 		);
 
 		const newest = this.newestOf(bundles);
@@ -949,6 +992,17 @@ export class FirestoreSyncService {
 				compareTimestamps(bundle.modifiedAt, newest) > 0
 					? bundle.modifiedAt
 					: newest,
+			bundles[0].modifiedAt
+		);
+	}
+
+	/** The version of the oldest bundle of a set. */
+	private oldestOf(bundles: CatalogBundle[]): Timestamp {
+		return bundles.reduce(
+			(oldest, bundle) =>
+				compareTimestamps(bundle.modifiedAt, oldest) < 0
+					? bundle.modifiedAt
+					: oldest,
 			bundles[0].modifiedAt
 		);
 	}
