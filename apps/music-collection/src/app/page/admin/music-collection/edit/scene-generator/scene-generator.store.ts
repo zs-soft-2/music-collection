@@ -128,11 +128,9 @@ export const SceneGeneratorStore = signalStore(
 				// kézi base64-dekódolás nélkül, és a típus is megmarad.
 				const blob = await (await fetch(image)).blob();
 
-				const stored = await images.storeAsDocument(
+				const stored = await images.storeDrawnAsDocument(
 					name,
-					new File([blob], `${name}.png`, {
-						type: blob.type || 'image/png',
-					}),
+					blob,
 					// Ami itt készül, az háttér: a dokumentum ezt mondja ki,
 					// mert a bájtokból senki nem olvassa ki. Enélkül a
 					// besorolatlan feltöltések közé esne, holott a padnak épp

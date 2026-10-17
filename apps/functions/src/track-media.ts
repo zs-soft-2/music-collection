@@ -653,7 +653,7 @@ export async function drawTrackImage(
 				uid: documentUid,
 				name,
 				originalName,
-				fileType: mimeType,
+				fileType: uploaded.contentType,
 				filePath: uploaded.filePath,
 				category: TRACK_IMAGE_CATEGORY,
 			},

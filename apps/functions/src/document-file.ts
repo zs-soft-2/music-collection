@@ -16,6 +16,7 @@ import { randomUUID } from 'node:crypto';
 import { FieldValue, Firestore, Transaction } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import objectHash from 'object-hash';
+import sharp from 'sharp';
 
 import { stamp } from './catalog-sync';
 
@@ -32,6 +33,53 @@ export interface UploadedFile {
 	storagePath: string;
 	/** A letöltési URL — ez kerül a dokumentumba és a katalógusba. */
 	filePath: string;
+	/** Amit ténylegesen eltettünk: egy PNG-ből WebP lesz. */
+	contentType: string;
+}
+
+/** Amit WebP-re kódolunk: a képmodellek PNG-t adnak, néha JPEG-et. */
+const REENCODED = new Set(['image/png', 'image/jpeg']);
+/**
+ * A hosszabb oldal felső határa. A legnagyobb, amit kirajzolunk, a teljes
+ * képernyős jelenet-háttér; ennél nagyobb képet egy képernyő sem mutat.
+ */
+const MAX_EDGE = 2048;
+const WEBP_QUALITY = 82;
+
+/**
+ * A generált kép WebP-ként. A képmodell PNG-je átlagosan 1,6 MB, és a
+ * főlapon több is van belőle egyszerre — a Lighthouse ezt mérte a legnagyobb
+ * tételnek. A WebP az átlátszóságot is megtartja, amivel a jelvények
+ * rajzolódnak, így a pin sem veszít semmit.
+ *
+ * Ha a kódolás valamiért elbukik, az eredeti bájtok mennek fel: egy nagy
+ * kép még mindig jobb, mint egy elveszett generálás.
+ */
+async function compact(
+	bytes: Buffer,
+	contentType: string
+): Promise<{ bytes: Buffer; contentType: string }> {
+	if (!REENCODED.has(contentType)) {
+		return { bytes, contentType };
+	}
+
+	try {
+		const webp = await sharp(bytes)
+			.resize({
+				width: MAX_EDGE,
+				height: MAX_EDGE,
+				fit: 'inside',
+				withoutEnlargement: true,
+			})
+			.webp({ quality: WEBP_QUALITY })
+			.toBuffer();
+
+		return webp.byteLength < bytes.byteLength
+			? { bytes: webp, contentType: 'image/webp' }
+			: { bytes, contentType };
+	} catch {
+		return { bytes, contentType };
+	}
 }
 
 /**
@@ -40,10 +88,14 @@ export interface UploadedFile {
  * adunk, hogy a `filePath` mezők egyformák legyenek a katalógusban.
  */
 export async function uploadDocumentFile(
-	bytes: Buffer,
+	original: Buffer,
 	fileName: string,
-	contentType = 'image/png'
+	originalContentType = 'image/png'
 ): Promise<UploadedFile> {
+	const { bytes, contentType } = await compact(
+		original,
+		originalContentType
+	);
 	const bucket = getStorage().bucket();
 	// A vezető perjelet a kliens SDK lenyeli, az Admin SDK nem — itt kell
 	// levenni.
@@ -63,6 +115,7 @@ export async function uploadDocumentFile(
 
 	return {
 		storagePath,
+		contentType,
 		filePath:
 			`https://firebasestorage.googleapis.com/v0/b/${bucket.name}` +
 			`/o/${encodeURIComponent(storagePath)}?alt=media&token=${token}`,

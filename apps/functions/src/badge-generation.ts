@@ -704,7 +704,7 @@ async function fileCandidates(
 					category: DOCUMENT_BADGE_CATEGORY,
 					name: upload.name,
 					originalName: upload.originalName,
-					fileType: 'image/png',
+					fileType: upload.contentType,
 					filePath: upload.filePath,
 					createdAt: now,
 				})

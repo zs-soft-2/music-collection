@@ -8,6 +8,7 @@ import {
 	EntityTypeEnum,
 } from '@music-collection/api';
 
+import { scaleImage } from '../../shared/image';
 import { CollectionImageRepository } from './collection-image.repository';
 
 /** An uploaded picture: where it is, and how it can be shown. */
@@ -21,6 +22,13 @@ export interface StoredImage {
 /** What the Storage rule lets a client put in the `document` folder. */
 const MAX_BYTES = 5 * 1024 * 1024;
 const ACCEPTED = /^image\//;
+
+/**
+ * A rajzolt kép hosszabb oldala: a legnagyobb, amit kirajzolunk, a teljes
+ * képernyős jelenet-háttér. A functions `document-file.ts` ugyanígy vágja.
+ */
+const DRAWN_MAX_EDGE = 2048;
+const DRAWN_QUALITY = 0.82;
 
 /**
  * Storing a picture an admin made by hand for a collection. It is uploaded
@@ -73,6 +81,36 @@ export class CollectionImageEffect {
 	 * A pin útja ezért marad a `store`-nál: azt a szerver iktatja be, és
 	 * egy fájl fölé nem kell két dokumentum.
 	 */
+	/**
+	 * Egy modell rajzolta kép, WebP-ként eltéve.
+	 *
+	 * A képmodell PNG-t ad, átlagosan 1,6 MB-ot, és a főlapon több is látszik
+	 * belőle egyszerre. A WebP az átlátszóságot is megtartja, ezért itt nem
+	 * jár azzal a veszteséggel, ami miatt a kézi feltöltés érintetlen marad.
+	 * Ahol a böngésző nem tud WebP-t kódolni, ott PNG jön vissza — a fájl
+	 * neve és típusa azt követi, ami ténylegesen elkészült.
+	 */
+	public async storeDrawnAsDocument(
+		name: string,
+		drawn: Blob,
+		category?: DocumentCategoryEnum
+	): Promise<StoredImage> {
+		const { blob, type } = await scaleImage(drawn, {
+			maxEdge: DRAWN_MAX_EDGE,
+			quality: DRAWN_QUALITY,
+			type: 'image/webp',
+		});
+		const kept = blob.size < drawn.size ? blob : drawn;
+		const keptType = kept === blob ? type : drawn.type || 'image/png';
+		const extension = keptType.split('/').pop() ?? 'png';
+
+		return this.storeAsDocument(
+			name,
+			new File([kept], `${name}.${extension}`, { type: keptType }),
+			category
+		);
+	}
+
 	public async storeAsDocument(
 		name: string,
 		file: File,
