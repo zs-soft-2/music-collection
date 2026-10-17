@@ -48,6 +48,7 @@
 					"apps/music-collection/src/favicon.ico",
 					"apps/music-collection/src/favicon.svg",
 					"apps/music-collection/src/robots.txt",
+					"apps/music-collection/src/i18n-preload.js",
 					"apps/music-collection/src/assets",
 					{
 						"glob": "countries-110m.json",

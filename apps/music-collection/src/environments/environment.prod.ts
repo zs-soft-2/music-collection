@@ -53,6 +53,6 @@ export const environment = {
 	},
 	type: 'production',
 	/** Base version + per-build suffix (tools/version/generate-version.mjs). */
-	version: `1.0.0-${VERSION.build}`,
+	version: VERSION.version,
 	buildTime: VERSION.buildTime,
 };
