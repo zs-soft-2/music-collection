@@ -1,1 +1,1 @@
-export * from './key-value';
+export type * from './key-value';

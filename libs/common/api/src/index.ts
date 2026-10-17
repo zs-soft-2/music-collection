@@ -1,12 +1,12 @@
-export * from './lib/activable';
+export type * from './lib/activable';
 export * from './lib/base';
-export * from './lib/config';
+export type * from './lib/config';
 export * from './lib/country';
 export * from './lib/data';
 export * from './lib/entity';
-export * from './lib/file';
-export * from './lib/identifiable';
-export * from './lib/key-value';
+export type * from './lib/file';
+export type * from './lib/identifiable';
+export type * from './lib/key-value';
 export * from './lib/meta';
 export * from './lib/music';
 export * from './lib/owned';

@@ -1,3 +1,3 @@
 export * from './user-settings.effect';
-export * from './user-settings.model';
+export type * from './user-settings.model';
 export * from './user-settings.repository';

@@ -1,1 +1,1 @@
-export * from './component-base.param';
+export type * from './component-base.param';

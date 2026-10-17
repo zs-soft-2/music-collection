@@ -1,2 +1,2 @@
-export * from './param';
+export type * from './param';
 export * from './service';

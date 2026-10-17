@@ -1,4 +1,4 @@
-export * from './role';
+export type * from './role';
 export * from './role-data.service';
 export * from './role-names';
 export * from './role-permissions.service';

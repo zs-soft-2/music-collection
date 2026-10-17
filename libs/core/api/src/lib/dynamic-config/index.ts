@@ -1,1 +1,1 @@
-export * from './dynamic-config';
+export type * from './dynamic-config';

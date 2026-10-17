@@ -1,3 +1,3 @@
 export * from './format';
-export * from './genre';
+export type * from './genre';
 export * from './media';

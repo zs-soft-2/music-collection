@@ -1,3 +1,3 @@
 export * from './audio-features';
-export * from './visual-profile';
-export * from './visual-state';
+export type * from './visual-profile';
+export type * from './visual-state';

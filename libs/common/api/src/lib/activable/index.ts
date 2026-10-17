@@ -1,1 +1,1 @@
-export * from './activable';
+export type * from './activable';

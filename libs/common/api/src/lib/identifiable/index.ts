@@ -1,1 +1,1 @@
-export * from './identifiable';
+export type * from './identifiable';

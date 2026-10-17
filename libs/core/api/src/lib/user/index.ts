@@ -1,4 +1,4 @@
-export * from './user';
+export type * from './user';
 export * from './user-hook.service';
 export * from './user-permissions.service';
 export * from './user-resource.enum';

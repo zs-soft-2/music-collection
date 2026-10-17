@@ -5,4 +5,4 @@ export * from './musician-permissions.service';
 export * from './musician-resource.enum';
 export * from './musician-state.service';
 export * from './musician-util.service';
-export * from './musician';
+export type * from './musician';

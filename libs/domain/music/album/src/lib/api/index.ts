@@ -1,1 +1,1 @@
-export * from './album';
+export type * from './album';
