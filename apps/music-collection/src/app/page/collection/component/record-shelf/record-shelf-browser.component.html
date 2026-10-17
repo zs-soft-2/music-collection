@@ -1,0 +1,285 @@
+<dialog
+	#dialog
+	class="browser"
+	aria-labelledby="shelf-browser-title"
+	(close)="onClosed()"
+	(keydown)="onKey($event)"
+>
+	@if (compartment(); as compartment) {
+		<header class="browser-head">
+			<button
+				type="button"
+				class="icon-button"
+				[disabled]="where() <= 0"
+				[attr.aria-label]="
+					'ui.recordShelf.browse-previous-compartment' | transloco
+				"
+				[title]="
+					'ui.recordShelf.browse-previous-compartment' | transloco
+				"
+				(click)="turn(-1)"
+			>
+				<i class="pi pi-angle-double-left" aria-hidden="true"></i>
+			</button>
+			<div class="browser-title">
+				<p class="eyebrow">
+					@if (compartment.unitName) {
+						<span>{{ compartment.unitName }}</span>
+					}
+					@if (compartment.spot; as spot) {
+						<span>{{
+							'ui.recordShelf.rowSlot'
+								| transloco
+									: { row: spot.row, slot: spot.column }
+						}}</span>
+					}
+				</p>
+				<h2 id="shelf-browser-title">{{ compartment.label }}</h2>
+			</div>
+			<button
+				type="button"
+				class="icon-button"
+				[disabled]="where() >= compartments().length - 1"
+				[attr.aria-label]="
+					'ui.recordShelf.browse-next-compartment' | transloco
+				"
+				[title]="'ui.recordShelf.browse-next-compartment' | transloco"
+				(click)="turn(1)"
+			>
+				<i class="pi pi-angle-double-right" aria-hidden="true"></i>
+			</button>
+			<button
+				type="button"
+				class="icon-button browser-close"
+				[attr.aria-label]="'ui.recordShelf.browse-close' | transloco"
+				(click)="close()"
+			>
+				<i class="pi pi-times" aria-hidden="true"></i>
+			</button>
+		</header>
+
+		<div class="browser-body">
+			@if (current(); as record) {
+				<section class="stage" aria-live="polite">
+					<div
+						class="stage-cover"
+						[style.--swatch]="swatch(record)"
+						(pointerdown)="onSwipeStart($event)"
+						(pointerup)="onSwipeEnd($event)"
+						(pointercancel)="onSwipeEnd($event)"
+					>
+						@if (record.release.coverUrl) {
+							<img
+								[src]="record.release.coverUrl"
+								alt=""
+								draggable="false"
+							/>
+						}
+					</div>
+					<p class="stage-at">
+						{{ at() + 1 }} / {{ compartment.records.length }}
+					</p>
+					<p class="stage-artist">{{ record.release.artistName }}</p>
+					<h3 class="stage-title">{{ record.release.title }}</h3>
+					<p class="stage-meta">
+						@if (record.release.year) {
+							<span>{{ record.release.year }}</span>
+						}
+						<span>{{ record.release.format }}</span>
+						@if (record.release.albumType) {
+							<span>{{ record.release.albumType }}</span>
+						}
+						@if (record.release.labelName) {
+							<span>{{ record.release.labelName }}</span>
+						}
+					</p>
+					<div class="stage-actions">
+						<button
+							type="button"
+							class="icon-button"
+							[disabled]="at() === 0"
+							[attr.aria-label]="
+								'ui.recordShelf.browse-previous' | transloco
+							"
+							[title]="
+								'ui.recordShelf.browse-previous' | transloco
+							"
+							(click)="step(-1)"
+						>
+							<i class="pi pi-angle-left" aria-hidden="true"></i>
+						</button>
+						<a
+							class="stage-open"
+							[attr.href]="record.href"
+							(click)="openCurrent($event)"
+							>{{ 'ui.recordShelf.open' | transloco }}</a
+						>
+						<button
+							type="button"
+							class="icon-button"
+							[disabled]="at() >= compartment.records.length - 1"
+							[attr.aria-label]="
+								'ui.recordShelf.browse-next' | transloco
+							"
+							[title]="'ui.recordShelf.browse-next' | transloco"
+							(click)="step(1)"
+						>
+							<i class="pi pi-angle-right" aria-hidden="true"></i>
+						</button>
+					</div>
+					<!--
+						Moving the record along without a drag: the way a
+						phone does it, and a keyboard with Alt and an arrow.
+					-->
+					@if (canArrange()) {
+						<div class="stage-arrange">
+							<button
+								type="button"
+								class="arrange-button"
+								[disabled]="
+									at() === 0 && record.side === 'left'
+								"
+								(click)="shift(-1)"
+							>
+								<i
+									class="pi pi-arrow-up"
+									aria-hidden="true"
+								></i>
+								{{
+									'ui.recordShelf.browse-move-up' | transloco
+								}}
+							</button>
+							<button
+								type="button"
+								class="arrange-button"
+								[disabled]="
+									at() === compartment.records.length - 1 &&
+									record.side === 'right'
+								"
+								(click)="shift(1)"
+							>
+								<i
+									class="pi pi-arrow-down"
+									aria-hidden="true"
+								></i>
+								{{
+									'ui.recordShelf.browse-move-down'
+										| transloco
+								}}
+							</button>
+						</div>
+					}
+				</section>
+			}
+
+			<!--
+				The compartment in the order it stands. A listbox the arrow
+				keys walk, rather than a column of buttons the Tab key would
+				have to crawl through thirty of.
+			-->
+			<ol
+				#list
+				class="rows"
+				role="listbox"
+				tabindex="0"
+				[attr.aria-label]="'ui.recordShelf.browse-list' | transloco"
+				[attr.aria-activedescendant]="'shelf-browser-row-' + at()"
+				[class.is-arrangeable]="canArrange()"
+				(dragstart)="onDragStart($event)"
+				(dragover)="onDragOver($event)"
+				(drop)="onDrop($event)"
+				(dragend)="onDragEnd()"
+			>
+				@for (
+					record of compartment.records;
+					track record.release.id;
+					let i = $index
+				) {
+					@if (i === gapAt()) {
+						<li
+							class="rows-gap"
+							role="presentation"
+							[class.is-drop-left]="
+								dropMark()?.at === i &&
+								dropMark()?.side === 'left'
+							"
+							[class.is-drop-right]="
+								dropMark()?.at === i &&
+								dropMark()?.side === 'right'
+							"
+						>
+							{{
+								(compartment.down
+									? 'ui.recordShelf.browse-gap-tower'
+									: 'ui.recordShelf.browse-gap'
+								) | transloco
+							}}
+						</li>
+					}
+					<li
+						class="row"
+						role="option"
+						[id]="'shelf-browser-row-' + i"
+						[attr.data-at]="i"
+						[attr.data-id]="record.release.id"
+						[attr.draggable]="canArrange() || null"
+						[attr.aria-selected]="i === at()"
+						[class.is-current]="i === at()"
+						[class.is-found]="found().has(record.release.id)"
+						[class.is-lifted]="lifted() === record.release.id"
+						[class.is-drop-before]="markOf(i) === 'before'"
+						[class.is-drop-after]="markOf(i) === 'after'"
+						(click)="goTo(i)"
+						(dblclick)="openCurrent()"
+					>
+						@if (canArrange()) {
+							<i
+								class="pi pi-bars row-grip"
+								aria-hidden="true"
+							></i>
+						}
+						<span class="row-at">{{ i + 1 }}</span>
+						<span
+							class="row-thumb"
+							[style.--swatch]="swatch(record)"
+						>
+							@if (record.release.coverUrl) {
+								<img
+									[src]="record.release.coverUrl"
+									alt=""
+									loading="lazy"
+								/>
+							}
+						</span>
+						<span class="row-text">
+							<span class="row-title">{{
+								record.release.title
+							}}</span>
+							<span class="row-artist">{{
+								record.release.artistName
+							}}</span>
+						</span>
+						<span class="row-format">{{
+							record.release.format
+						}}</span>
+					</li>
+				}
+			</ol>
+		</div>
+
+		<footer class="browser-foot">
+			<p class="browser-keys" aria-hidden="true">
+				{{ 'ui.recordShelf.browse-keys' | transloco }}
+				@if (canArrange()) {
+					· {{ 'ui.recordShelf.browse-keys-arrange' | transloco }}
+				}
+			</p>
+			@if (saving()) {
+				<p class="browser-saving" role="status">
+					<i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+					{{ 'ui.recordShelf.browse-saving' | transloco }}
+				</p>
+			}
+		</footer>
+	}
+</dialog>

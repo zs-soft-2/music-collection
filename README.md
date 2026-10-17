@@ -492,6 +492,8 @@ keret `frame-src`. Ami kimarad, azt a böngésző eldobja — és ez is néma: a
 nem jelenik meg, a lekérdezés hibára fut. Amit érdemes tudni:
 
 - a mérés a `region1.google-analytics.com`-ra is küld, nem csak a `www`-re,
+  és a gtag egy része képként (pixel) megy ki a `googletagmanager.com/a`-ra,
+  ezért a két GA-origin az `img-src`-ben is kell, nem csak a `connect-src`-ben,
 - a Spotify embed API továbbtölt egy scriptet az `*.spotifycdn.com`-ról,
 - a Cover Art Archive az `archive.org`-ra irányít át, és a CSP a
   **redirect célját** is nézi,

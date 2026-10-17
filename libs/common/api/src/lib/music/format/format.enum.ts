@@ -5,11 +5,14 @@ export enum FormatEnum {
 	compilation = 'compilation',
 	single = 'single',
 	maxi = 'maxi',
+	/** A physical carrier, yet the way a concert film is labelled. */
+	dvd = 'dvd',
 }
 
 export const FormatList: FormatEnum[] = [
 	FormatEnum.ep,
 	FormatEnum.compilation,
+	FormatEnum.dvd,
 	FormatEnum.live,
 	FormatEnum.lp,
 	FormatEnum.maxi,

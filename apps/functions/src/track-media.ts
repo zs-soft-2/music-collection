@@ -47,7 +47,7 @@ import {
 	uploadDocumentFile,
 	writeDocument,
 } from './document-file';
-import { GatewayClient } from './gateway-client';
+import { GatewayArtifact, GatewayClient } from './gateway-client';
 
 const TRACK_COLLECTION = 'track';
 /** A dalszöveg külön dokumentumban él, mert nem publikus. */
@@ -880,9 +880,12 @@ export async function startTrackClip(
 		},
 		// A szám hangja a zene; a klip csak kép.
 		context: { sceneType: 'track-clip', templateId: song.uid },
-		// Egy számhoz egy nap egy klip-rendelés: egy újrapróbált hívás a
-		// meglévő executiont kapja vissza, nem egy második számlát.
-		idempotencyKey: `track-clip:${song.uid}:${dayOf(now)}`,
+		// Indításonként egy kulcs: az SDK újrapróbája ugyanazt az executiont
+		// kapja vissza, nem egy második számlát — egy új gombnyomás viszont
+		// új klipet rendel. A napi kulcs korábban minden aznapi újraindításra
+		// a reggeli klipet adta vissza, miközben a keretből levont. A
+		// párhuzamos rendelést a fenti `running` ellenőrzés fogja meg.
+		idempotencyKey: `track-clip:${song.uid}:${now}`,
 	});
 
 	await job.set({
@@ -922,6 +925,7 @@ export async function startTrackClip(
 export async function readTrackClipState(
 	database: Firestore,
 	client: GatewayClient,
+	downloadArtifact: (executionId: string) => Promise<GatewayArtifact>,
 	trackUid: string,
 	now: number
 ): Promise<TrackClipState> {
@@ -986,9 +990,14 @@ export async function readTrackClipState(
 		};
 	}
 
-	if (execution.status !== 'succeeded' || !execution.output?.mediaUrl) {
+	// A kész klipnek nem kell `mediaUrl`: a fájl a hitelesített
+	// artifact-végpontról jön (`keepClip`), a link pedig nem mindig van ott.
+	// Ezen a feltételen állt meg korábban minden kész klip.
+	if (execution.status !== 'succeeded') {
+		// `||`, nem `??`: egy üres hibaszöveg a kliensen semmit nem mutatna,
+		// a futásjelző pedig szó nélkül eltűnne.
 		const error =
-			execution.error?.message ??
+			execution.error?.message?.trim() ||
 			`A generálás ${execution.status} állapotban zárult.`;
 
 		await job.set(
@@ -1006,10 +1015,9 @@ export async function readTrackClipState(
 		};
 	}
 
-	const clip = await keepClip(database, song, executionId, {
-		mediaUrl: execution.output.mediaUrl,
-		durationSeconds: execution.output.durationSeconds ?? CLIP_SECONDS,
-		mimeType: execution.output.mimeType ?? 'video/mp4',
+	const clip = await keepClip(database, song, executionId, downloadArtifact, {
+		durationSeconds: execution.output?.durationSeconds ?? CLIP_SECONDS,
+		mimeType: execution.output?.mimeType ?? 'video/mp4',
 		model: execution.model ?? null,
 		prompt: prompt ?? '',
 		now,
@@ -1043,7 +1051,7 @@ async function storedClip(
 	return (snapshot.get('clip') as TrackClip | undefined) ?? null;
 }
 
-/** A fájl letöltése a gateway artifact-címéről, józan határral. */
+/** Egy kép letöltése a gateway címéről, józan határral. */
 async function download(url: string): Promise<Buffer> {
 	const response = await fetch(url);
 
@@ -1073,7 +1081,7 @@ async function download(url: string): Promise<Buffer> {
 }
 
 /**
- * A kész klip eltevése: letöltés a gateway címéről, objektum a `document/`
+ * A kész klip eltevése: letöltés a gateway artifact-végpontjáról, objektum a `document/`
  * mappába, fölé dokumentum a `track-clip` kategóriával, és a hivatkozás a
  * szám dokumentumába.
  *
@@ -1086,8 +1094,8 @@ async function keepClip(
 	database: Firestore,
 	song: Song,
 	executionId: string,
+	downloadArtifact: (executionId: string) => Promise<GatewayArtifact>,
 	details: {
-		mediaUrl: string;
 		durationSeconds: number | null;
 		mimeType: string;
 		model: string | null;
@@ -1095,7 +1103,20 @@ async function keepClip(
 		now: number;
 	}
 ): Promise<TrackClip> {
-	const bytes = await download(details.mediaUrl);
+	const artifact = await downloadArtifact(executionId);
+	const bytes = artifact.bytes;
+
+	if (!bytes.length) {
+		throw new TrackMediaError(
+			'A kész klip üres fájlként jött meg.',
+			'gateway'
+		);
+	}
+
+	if (bytes.byteLength > MAX_FILE_BYTES) {
+		throw new TrackMediaError('A kész fájl túl nagy.', 'gateway');
+	}
+
 	const extension = details.mimeType === 'video/webm' ? 'webm' : 'mp4';
 	const originalName = `${song.uid}-clip-${executionId}.${extension}`;
 	const uploaded = await uploadDocumentFile(

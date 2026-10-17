@@ -29,6 +29,10 @@ import {
 } from '../../collection.model';
 import { shelfSizeOf } from '../../shelf-placement';
 
+import {
+	BrowsedCompartment,
+	RecordShelfBrowserComponent,
+} from './record-shelf-browser.component';
 import { RecordShelfPeekComponent } from './record-shelf-peek.component';
 
 interface Spine {
@@ -342,7 +346,11 @@ function isPale(color: string): boolean {
 	selector: 'mc-record-shelf',
 	templateUrl: './record-shelf.component.html',
 	styleUrls: ['./record-shelf.component.scss'],
-	imports: [...I18N_IMPORTS, RecordShelfPeekComponent],
+	imports: [
+		...I18N_IMPORTS,
+		RecordShelfPeekComponent,
+		RecordShelfBrowserComponent,
+	],
 })
 export class RecordShelfComponent {
 	public readonly shelves = input.required<ShelfUnitView[]>();
@@ -383,6 +391,11 @@ export class RecordShelfComponent {
 	 * carried to its edge.
 	 */
 	public readonly arranging = input(false);
+	/**
+	 * A move is being written. The shelf takes no other until it is, so the
+	 * compartment browser holds its next one back rather than lose it.
+	 */
+	public readonly placing = input(false);
 
 	/** A record was let go over a compartment of a drawn unit. */
 	public readonly filed = output<ShelfDrop>();
@@ -391,6 +404,7 @@ export class RecordShelfComponent {
 
 	private readonly router = inject(Router);
 	private readonly peek = viewChild.required(RecordShelfPeekComponent);
+	private readonly browser = viewChild.required(RecordShelfBrowserComponent);
 	private readonly room = viewChild.required<ElementRef<HTMLElement>>('room');
 	/** The floor the furniture stands on, and what scrolls while arranging. */
 	private readonly floor =
@@ -542,6 +556,34 @@ export class RecordShelfComponent {
 					: [],
 			};
 		})
+	);
+
+	/**
+	 * Every compartment with something in it, the way the room reads: what
+	 * the browser walks, one compartment at a time and on to the next.
+	 */
+	protected readonly browsable = computed<BrowsedCompartment[]>(() =>
+		this.units().flatMap((unit) =>
+			unit.compartments
+				.filter((compartment) => !compartment.empty)
+				.map((compartment) => ({
+					key: compartment.key,
+					label: compartment.label,
+					unitName: unit.name,
+					spot: compartment.spot,
+					down: unit.down,
+					rightFrom: compartment.leftCount,
+					records: compartment.spines.map(
+						({ release, href, side, hue, tint }) => ({
+							release,
+							href,
+							side,
+							hue,
+							tint,
+						})
+					),
+				}))
+		)
 	);
 
 	/**
@@ -700,6 +742,20 @@ export class RecordShelfComponent {
 			return;
 		}
 
+		const browse =
+			target instanceof Element
+				? target.closest<HTMLElement>('.label-browse')
+				: null;
+
+		/* The compartment's name: the compartment taken down to go through. */
+		if (browse) {
+			event.preventDefault();
+			this.browse(
+				browse.closest<HTMLElement>('.compartment')?.dataset['cell'] ?? ''
+			);
+			return;
+		}
+
 		const cell =
 			target instanceof Element
 				? target.closest<HTMLElement>('.plan-cell')
@@ -819,6 +875,24 @@ export class RecordShelfComponent {
 	private open(href: string | null): void {
 		this.putBack();
 		void this.router.navigateByUrl(href || '/');
+	}
+
+	/**
+	 * One compartment taken off the shelf to be gone through record by
+	 * record, starting at the record the search is turned to where it stands
+	 * in there, then at the first one it found, and otherwise at the first.
+	 */
+	private browse(key: string): void {
+		const records = this.browsable().find(
+			(compartment) => compartment.key === key
+		)?.records;
+		const turned = this.turnedTo();
+		const start =
+			records?.find(({ release }) => release.id === turned) ??
+			records?.find(({ release }) => this.found().has(release.id));
+
+		this.putBack();
+		this.browser().open(key, start?.release.id ?? null);
 	}
 
 	/**

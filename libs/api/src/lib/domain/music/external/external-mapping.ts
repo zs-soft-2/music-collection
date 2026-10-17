@@ -62,6 +62,7 @@ export function toCatalogStyles(
 export function toDiscogsFormat(formats: string[]): FormatEnum | null {
 	const words = new Set(formats.map((format) => format.trim().toLowerCase()));
 
+	if (words.has('dvd')) return FormatEnum.dvd;
 	if (words.has('compilation')) return FormatEnum.compilation;
 	if (words.has('maxi-single')) return FormatEnum.maxi;
 	if (words.has('mini-album') || words.has('ep')) return FormatEnum.ep;

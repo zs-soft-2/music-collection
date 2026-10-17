@@ -36,6 +36,7 @@ export const DISCOGRAPHY_COMPANION_FORMATS: FormatEnum[] = [
 	FormatEnum.maxi,
 	FormatEnum.live,
 	FormatEnum.compilation,
+	FormatEnum.dvd,
 ];
 
 /** What the two slugs of a discography are built from. */

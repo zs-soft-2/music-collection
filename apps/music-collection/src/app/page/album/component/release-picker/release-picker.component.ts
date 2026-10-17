@@ -112,6 +112,8 @@ export class ReleasePickerComponent {
 	public readonly discogsError = input<string | null>(null);
 	public readonly requesting = input(false);
 	public readonly requestError = input<string | null>(null);
+	/** The collector may let an owned copy go from here. */
+	public readonly canRemove = input(false);
 
 	/** The catalog pressing picked, with the copy's number where it has one. */
 	public readonly picked = output<CopyPick>();
@@ -124,6 +126,8 @@ export class ReleasePickerComponent {
 	/** The same photo once more — the reader was busy, the picture is fine. */
 	public readonly photoRetried = output<void>();
 	public readonly requestSent = output<ReleaseRequestDraft>();
+	/** The owned copy of a pressing, to be let go of. */
+	public readonly removeRequested = output<string>();
 	/** Closed by the button, Escape or the page. */
 	public readonly closed = output<void>();
 

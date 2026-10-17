@@ -8,7 +8,7 @@
  * veszi a klienst, és ami ezután jön, az is ide fog kötni.
  */
 
-import { AiGatewayClient } from '@zssz-soft/zs-ai-sdk';
+import { AiGatewayClient, ZsAiClient } from '@zssz-soft/zs-ai-sdk';
 
 /** A gateway naplóiban és fogyasztási soraiban ez a név azonosít minket. */
 export const APPLICATION_ID = 'music-collection';
@@ -53,4 +53,36 @@ export function createGatewayClient(
 		fetchImpl: (input, init) =>
 			fetch(input, { ...init, signal: AbortSignal.timeout(timeoutMs) }),
 	});
+}
+
+/** Egy execution kész fájlja, ahogy a gateway saját végpontja adja. */
+export interface GatewayArtifact {
+	bytes: Buffer;
+	mimeType: string;
+}
+
+/**
+ * A kész execution fájlja a gateway `/executions/:id/artifact` végpontjáról,
+ * a tenant-kulccsal.
+ *
+ * Miért nem az execution `output.url`-je: az egy rövid életű link vissza a
+ * gatewayre, és nincs is mindig — egy linkeket nem kiadó gatewaynél
+ * hiányzik, egy lejárt link pedig 403-mal áll meg. Ez a végpont az SDK szerint
+ * mindig működik, és nem függ a link lejártától.
+ */
+export function createArtifactDownloader(
+	settings: GatewaySettings
+): (executionId: string) => Promise<GatewayArtifact> {
+	const client = new ZsAiClient({
+		baseUrl: settings.baseUrl.replace(/\/+$/, ''),
+		apiKey: settings.apiKey,
+		applicationId: APPLICATION_ID,
+	});
+
+	return async (executionId) => {
+		const { bytes, mimeType } =
+			await client.executions.download(executionId);
+
+		return { bytes: Buffer.from(bytes), mimeType };
+	};
 }

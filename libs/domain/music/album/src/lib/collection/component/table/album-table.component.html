@@ -193,4 +193,87 @@
 			</button>
 		</ng-template>
 	</mc-collection-list>
+
+	<p-dialog
+		[header]="'ui.albumDeletion.title' | transloco"
+		[modal]="true"
+		[visible]="!!deletion.pending()"
+		(visibleChange)="$event || deletion.cancel()"
+		[style]="{ width: 'min(34rem, 95vw)' }"
+		[dismissableMask]="true"
+	>
+		@if (deletion.pending(); as album) {
+			<p>
+				<strong>{{ album.name }}</strong>
+				@if (album.artist?.name) {
+					<span> — {{ album.artist.name }}</span>
+				}
+			</p>
+
+			@if (deletion.isChecking()) {
+				<p>{{ 'ui.albumDeletion.checking' | transloco }}</p>
+			} @else if (deletion.canDelete()) {
+				<p>{{ 'ui.albumDeletion.can-delete' | transloco }}</p>
+				@if (deletion.releaseCount()) {
+					<p>
+						{{
+							'ui.albumDeletion.goes-with-releases'
+								| transloco: { count: deletion.releaseCount() }
+						}}
+					</p>
+				}
+				@if (deletion.trackCount()) {
+					<p>
+						{{
+							'ui.albumDeletion.goes-with-tracks'
+								| transloco: { count: deletion.trackCount() }
+						}}
+					</p>
+				}
+				@if (deletion.ownCopyCount()) {
+					<p role="alert">
+						{{
+							'ui.albumDeletion.goes-with-own-copies'
+								| transloco: { count: deletion.ownCopyCount() }
+						}}
+					</p>
+				}
+			} @else {
+				<p role="alert">
+					{{
+						'ui.albumDeletion.in-use'
+							| transloco: { count: deletion.foreignCopyCount() }
+					}}
+				</p>
+			}
+
+			@if (deletion.error(); as error) {
+				<p role="alert">
+					@if (error === inUse) {
+						{{ 'ui.albumDeletion.in-use-now' | transloco }}
+					} @else {
+						{{ error }}
+					}
+				</p>
+			}
+		}
+
+		<ng-template #footer>
+			@if (deletion.canDelete()) {
+				<p-button
+					[label]="'ui.albumDeletion.really-delete' | transloco"
+					icon="pi pi-trash"
+					severity="danger"
+					[loading]="deletion.isWorking()"
+					(onClick)="deletion.confirmDeletion()"
+				></p-button>
+			}
+			<p-button
+				[label]="'ui.albumDeletion.cancel' | transloco"
+				severity="secondary"
+				[text]="true"
+				(onClick)="deletion.cancel()"
+			></p-button>
+		</ng-template>
+	</p-dialog>
 }

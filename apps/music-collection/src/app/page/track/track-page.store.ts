@@ -632,7 +632,13 @@ export const TrackPageStore = signalStore(
 						).pipe(
 							tapResponse({
 								next: (state) => patchState(store, read(state)),
-								error: (error) => console.error(error),
+								error: (error) =>
+									patchState(store, {
+										clipError: clipMessage(
+											error,
+											'Nem sikerült megkérdezni, hol tart a videó.'
+										),
+									}),
 							})
 						)
 					)
@@ -643,6 +649,10 @@ export const TrackPageStore = signalStore(
 			 * While a clip is being made, asks again every so often. Driven
 			 * by the state rather than by a timer of its own: when nothing is
 			 * running, nothing is asked.
+			 *
+			 * The error is caught per question, not on the outer pipe: one
+			 * failed question there ended the watcher for good, and the clip
+			 * then sat "being made" with nobody asking about it.
 			 */
 			watchClip: rxMethod<boolean>(
 				pipe(
@@ -652,13 +662,22 @@ export const TrackPageStore = signalStore(
 					switchMap(() => {
 						const trackUid = store.trackId();
 
-						return trackUid
-							? from(trackMediaEffect.clipState(trackUid))
-							: EMPTY;
-					}),
-					tapResponse({
-						next: (state) => patchState(store, read(state)),
-						error: (error) => console.error(error),
+						return (
+							trackUid
+								? from(trackMediaEffect.clipState(trackUid))
+								: EMPTY
+						).pipe(
+							tapResponse({
+								next: (state) => patchState(store, read(state)),
+								error: (error) =>
+									patchState(store, {
+										clipError: clipMessage(
+											error,
+											'Nem sikerült megkérdezni, hol tart a videó.'
+										),
+									}),
+							})
+						);
 					})
 				)
 			),

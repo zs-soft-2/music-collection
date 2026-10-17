@@ -84,8 +84,12 @@ export class ReleaseTableComponent extends BaseComponent implements OnInit {
 		);
 	}
 
-	public clearSearch(): void {
-		this.componentService.clearSearch();
+	public clearArtistSearch(): void {
+		this.componentService.clearSearch('artist');
+	}
+
+	public clearNameSearch(): void {
+		this.componentService.clearSearch('name');
 	}
 
 	/**
@@ -109,8 +113,12 @@ export class ReleaseTableComponent extends BaseComponent implements OnInit {
 		this.params$ = this.componentService.init$();
 	}
 
-	public searchHandler(event: any): void {
-		this.componentService.searchHandler(event['query']);
+	public searchByArtistNameHandler(event: any): void {
+		this.componentService.searchByArtistName(event['query']);
+	}
+
+	public searchByNameHandler(event: any): void {
+		this.componentService.searchByName(event['query']);
 	}
 
 	/** Where the eye leads: the page that shows this release. */

@@ -76,7 +76,8 @@
 			"single": "Single",
 			"maxi": "Maxi-Single",
 			"live": "Live-Album",
-			"compilation": "Kompilation"
+			"compilation": "Kompilation",
+			"dvd": "DVD"
 		},
 		"formatDescription": {
 			"box-set": "Box-Set",
@@ -1233,7 +1234,21 @@
 			"put-left": "An die linke Wand: {{where}}",
 			"put-right": "An die rechte Wand: {{where}}",
 			"put-bottom": "Nach unten: {{where}}",
-			"put-top": "Nach oben: {{where}}"
+			"put-top": "Nach oben: {{where}}",
+			"browse": "Durchsehen: {{where}}",
+			"browse-previous": "Vorherige Platte",
+			"browse-next": "Nächste Platte",
+			"browse-previous-compartment": "Vorheriges Fach",
+			"browse-next-compartment": "Nächstes Fach",
+			"browse-close": "Schließen",
+			"browse-list": "Platten im Fach",
+			"browse-gap": "Leerraum — ab hier an der rechten Wand",
+			"browse-gap-tower": "Leerraum — ab hier oben",
+			"browse-keys": "← → Platte für Platte · Bild↑ / Bild↓ Fach für Fach · Enter öffnen · Esc schließen",
+			"browse-move-up": "Nach vorn",
+			"browse-move-down": "Nach hinten",
+			"browse-keys-arrange": "Alt + ↑ ↓ oder ziehen: verschieben",
+			"browse-saving": "Speichern…"
 		},
 		"networkDetails": {
 			"connections-in-view": "Sichtbare Verbindungen",
@@ -1488,7 +1503,9 @@
 			"send-request": "Anfrage senden",
 			"sending": "Wird gesendet…",
 			"paste-not-an-image": "Das war kein Bild. Kopiere das Bild selbst — im Browser Rechtsklick und „Bild kopieren“. Eine aus dem Finder kopierte Datei lässt sich nicht einfügen, aber du kannst sie hier ablegen.",
-			"clipboard-empty": "Die Zwischenablage ist leer."
+			"clipboard-empty": "Die Zwischenablage ist leer.",
+			"remove": "Entfernen",
+			"from-your-collection": "aus deiner Sammlung"
 		},
 		"discographyTimeline": {
 			"releases-over-time": "Veröffentlichungen im Zeitverlauf",
@@ -1717,6 +1734,8 @@
 			"no-releases-found": "Keine Veröffentlichungen gefunden.",
 			"filter-by-name": "Nach Name filtern…",
 			"filter-by-name2": "Nach Name filtern",
+			"filter-by-artist": "Nach Künstler filtern…",
+			"filter-by-artist2": "Nach Künstler filtern",
 			"delete-release": "Veröffentlichung löschen",
 			"name": "Name",
 			"artist": "Künstler",
@@ -1884,6 +1903,18 @@
 			"actions": "Aktionen",
 			"edit-album": "Album bearbeiten",
 			"delete-album2": "Album löschen"
+		},
+		"albumDeletion": {
+			"title": "Album löschen",
+			"checking": "Prüfe, was es hält …",
+			"can-delete": "Kein Exemplar anderer Sammler hält es, es kann endgültig gelöscht werden.",
+			"goes-with-releases": "{{count}} Ausgabe(n) gehen mit.",
+			"goes-with-tracks": "{{count}} Titel gehen mit.",
+			"goes-with-own-copies": "{{count}} Exemplar(e) davon stehen in deiner eigenen Sammlung — sie werden mitgelöscht.",
+			"in-use": "{{count}} Exemplar(e) davon stehen in den Sammlungen anderer, deshalb ist das Album nicht löschbar — entfernen kann sie nur die jeweilige Besitzerin oder der Besitzer.",
+			"in-use-now": "Inzwischen hat jemand anderes ein Exemplar angelegt, daher ist das Album doch nicht löschbar.",
+			"really-delete": "Endgültig löschen",
+			"cancel": "Abbrechen"
 		},
 		"albumSimpleView": {
 			"image": "Bild"

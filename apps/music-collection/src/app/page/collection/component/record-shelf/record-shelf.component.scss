@@ -224,6 +224,44 @@
 }
 
 /*
+ * The name is the way into the compartment, so it is a button — but one
+ * that still reads as the label it is, until it is pointed at.
+ */
+.label-browse {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 0.4em;
+	min-width: 0;
+	padding: 0;
+	border: 0;
+	font: inherit;
+	letter-spacing: inherit;
+	text-transform: inherit;
+	text-align: left;
+	color: inherit;
+	background: none;
+	cursor: pointer;
+
+	&:hover .label-text,
+	&:focus-visible .label-text {
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+}
+
+.label-browse-icon {
+	flex: none;
+	font-size: 0.6rem;
+	opacity: 0;
+	transition: opacity 0.15s ease;
+}
+
+.compartment:hover .label-browse-icon,
+.label-browse:focus-visible .label-browse-icon {
+	opacity: 0.8;
+}
+
+/*
  * Which compartment of the unit this is. Drawn in the grid the shelf says
  * that by where the compartment stands, so it is only worth the room on a
  * screen too narrow to draw the grid.
@@ -869,7 +907,8 @@
 
 /* Nothing hovers on a touch screen, so what hover would reveal has to stay. */
 @media (hover: none) {
-	.label-play {
+	.label-play,
+	.label-browse-icon {
 		opacity: 1;
 	}
 }

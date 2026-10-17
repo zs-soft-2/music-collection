@@ -925,14 +925,16 @@ service cloud.firestore {
     // lekérdezés megszorításaiból bizonyítja, ezért ilyen lekérdezés csak a
     // saját `userId`-ra szűkítve áll meg — enélkül az egészet elutasítja.
     //
-    // Egyetlen kivétel a kiadás törlése: a törlés előtti „hány példány áll
-    // még polcon" kérdés az egész fát számolja meg (`count()`), és ezt csak
-    // az kapja meg, aki a kiadást törölheti is. A számláló dokumentumot nem
-    // ad vissza, a szerver pedig tranzakcióban újra megkérdezi.
+    // Egyetlen kivétel a kiadás és az album törlése: a törlés előtti „hány
+    // példány áll még polcon" kérdés az egész fát számolja meg (`count()`),
+    // és ezt csak az kapja meg, aki a kiadást vagy az albumot törölheti is.
+    // A számláló dokumentumot nem ad vissza, a szerver pedig tranzakcióban
+    // újra megkérdezi.
     match /{path=**}/collection-item/{itemId} {
       allow read: if isAuthed()
                   && (resource.data.userId == request.auth.uid
-                      || hasPerm('deleteReleaseEntity'));
+                      || hasPerm('deleteReleaseEntity')
+                      || hasPerm('deleteAlbumEntity'));
     }
     match /{path=**}/wishlist-item/{itemId} {
       allow read: if isAuthed()

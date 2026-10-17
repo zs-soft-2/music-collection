@@ -1,9 +1,17 @@
-import { Observable, from, map } from 'rxjs';
+import { Observable, from, map, of, switchMap } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
-import { collection } from '@angular/fire/firestore';
+import {
+	collection,
+	collectionGroup,
+	getDocs,
+	limit,
+	query,
+	where,
+} from '@angular/fire/firestore';
 import { Functions, httpsCallable } from '@angular/fire/functions';
 import {
+	ARTIST_FEATURE_KEY,
 	DISCOGS_MASTER_VERSIONS_FUNCTION,
 	DiscogsLookupClient,
 	DiscogsMasterVersionsRequest,
@@ -15,9 +23,13 @@ import {
 	ReleaseModelAdd,
 	ReleaseModelUpdate,
 	SearchParams,
+	toSyncedData,
 } from '@music-collection/api';
 
 import { pickMasterId } from './release-discogs.mapper';
+
+/** Firestore's ceiling on the values of one `in` filter. */
+const MAX_ARTISTS_SEARCHED = 30;
 
 @Injectable()
 export class ReleaseDataServiceImpl extends ReleaseDataService {
@@ -95,6 +107,48 @@ export class ReleaseDataServiceImpl extends ReleaseDataService {
 
 	public search$(params: SearchParams): Observable<ReleaseModel[]> {
 		return super.searchModel$(params);
+	}
+
+	/**
+	 * In two steps: the artists whose name matches, by the prefixes the
+	 * artist documents already carry, then the pressings filed under them.
+	 * The release keeps only a copy of the artist's name, with no prefixes
+	 * of its own, so it is the artist that is searched.
+	 */
+	public searchByArtistName$(term: string): Observable<ReleaseModel[]> {
+		const artistQuery = query(
+			collectionGroup(this.firestore, ARTIST_FEATURE_KEY),
+			where('searchParameters', 'array-contains', term.toLowerCase()),
+			limit(MAX_ARTISTS_SEARCHED)
+		);
+
+		return from(getDocs(artistQuery)).pipe(
+			map((snapshot) => snapshot.docs.map((document) => document.id)),
+			switchMap((artistIds) =>
+				artistIds.length
+					? from(
+							getDocs(
+								query(
+									collectionGroup(
+										this.firestore,
+										this.featureKey
+									),
+									where('artist.uid', 'in', artistIds)
+								)
+							)
+						).pipe(
+							map((snapshot) =>
+								snapshot.docs.map(
+									(document) =>
+										toSyncedData(
+											document
+										) as unknown as ReleaseModel
+								)
+							)
+						)
+					: of([])
+			)
+		);
 	}
 
 	public update$(

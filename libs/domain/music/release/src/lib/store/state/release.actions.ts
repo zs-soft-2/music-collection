@@ -70,6 +70,10 @@ export const search = createAction(
 	'[Release] Search Releases',
 	props<{ params: SearchParams }>()
 );
+export const searchByArtistName = createAction(
+	'[Release] Search Releases By Artist Name',
+	props<{ term: string }>()
+);
 export const searchFailed = createAction(
 	'[Release] Search Releases Failed',
 	props<{ error: string }>()

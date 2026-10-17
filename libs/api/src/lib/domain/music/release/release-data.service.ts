@@ -21,4 +21,8 @@ export abstract class ReleaseDataService extends FirebaseDataService<
 	public abstract listExternalVersions$(
 		masterId: number
 	): Observable<DiscogsVersion[]>;
+	/** The pressings of the artists whose name matches the term. */
+	public abstract searchByArtistName$(
+		term: string
+	): Observable<ReleaseModel[]>;
 }

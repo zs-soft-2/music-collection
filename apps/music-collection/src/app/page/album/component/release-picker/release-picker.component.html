@@ -233,41 +233,19 @@
 									release.id === highlightReleaseId()
 								"
 							>
-								<button
-									type="button"
-									class="option"
-									[disabled]="busy() || release.owned"
-									(click)="choose(release)"
-								>
-									<mc-format-badge
-										[format]="release.format"
-										[weight]="release.weight"
-									/>
-									<span class="details">
-										@if (release.labelName) {
-											<span>{{ release.labelName }}</span>
-										}
-										@if (release.country) {
-											<span>{{ release.country }}</span>
-										}
-										@if (release.year) {
-											<span>{{ release.year }}</span>
-										}
-									</span>
-									@if (release.editions.length) {
-										<span class="editions">
-											@for (
-												edition of release.editions;
-												track edition
-											) {
-												<span class="edition">{{
-													edition
-												}}</span>
-											}
-										</span>
-									}
-									<span class="action">
-										@if (release.owned) {
+								@if (
+									release.owned &&
+									release.ownedCopyId &&
+									canRemove()
+								) {
+									<div class="option is-owned">
+										<ng-container
+											*ngTemplateOutlet="
+												pressing;
+												context: { $implicit: release }
+											"
+										/>
+										<span class="action">
 											<span class="state">
 												<i
 													class="pi pi-check"
@@ -278,18 +256,69 @@
 														| transloco
 												}}
 											</span>
-										} @else {
-											<i
-												class="pi pi-plus"
-												aria-hidden="true"
-											></i>
-											<span class="visually-hidden">{{
-												'ui.releasePicker.add'
-													| transloco
-											}}</span>
-										}
-									</span>
-								</button>
+											<button
+												type="button"
+												class="remove"
+												[disabled]="busy()"
+												(click)="
+													removeRequested.emit(
+														release.ownedCopyId
+													)
+												"
+											>
+												<i
+													class="pi pi-sign-out"
+													aria-hidden="true"
+												></i>
+												{{
+													'ui.releasePicker.remove'
+														| transloco
+												}}
+												<span class="visually-hidden">{{
+													'ui.releasePicker.from-your-collection'
+														| transloco
+												}}</span>
+											</button>
+										</span>
+									</div>
+								} @else {
+									<button
+										type="button"
+										class="option"
+										[disabled]="busy() || release.owned"
+										(click)="choose(release)"
+									>
+										<ng-container
+											*ngTemplateOutlet="
+												pressing;
+												context: { $implicit: release }
+											"
+										/>
+										<span class="action">
+											@if (release.owned) {
+												<span class="state">
+													<i
+														class="pi pi-check"
+														aria-hidden="true"
+													></i>
+													{{
+														'ui.releasePicker.in-your-collection'
+															| transloco
+													}}
+												</span>
+											} @else {
+												<i
+													class="pi pi-plus"
+													aria-hidden="true"
+												></i>
+												<span class="visually-hidden">{{
+													'ui.releasePicker.add'
+														| transloco
+												}}</span>
+											}
+										</span>
+									</button>
+								}
 							</li>
 						}
 					</ul>
@@ -932,6 +961,28 @@
 	} @else {
 		<span class="thumb is-empty" aria-hidden="true">
 			<i class="pi pi-image"></i>
+		</span>
+	}
+</ng-template>
+
+<ng-template #pressing let-release>
+	<mc-format-badge [format]="release.format" [weight]="release.weight" />
+	<span class="details">
+		@if (release.labelName) {
+			<span>{{ release.labelName }}</span>
+		}
+		@if (release.country) {
+			<span>{{ release.country }}</span>
+		}
+		@if (release.year) {
+			<span>{{ release.year }}</span>
+		}
+	</span>
+	@if (release.editions.length) {
+		<span class="editions">
+			@for (edition of release.editions; track edition) {
+				<span class="edition">{{ edition }}</span>
+			}
 		</span>
 	}
 </ng-template>

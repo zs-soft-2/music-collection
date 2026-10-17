@@ -24,6 +24,9 @@ import {
 	createCollectionView,
 } from '@music-collection/ui';
 
+/** Which box the list was last narrowed from — only one search runs at a time. */
+type ReleaseSearchField = 'artist' | 'name';
+
 @Injectable()
 export class ReleaseTableService extends BaseComponent {
 	private activatedRoute = inject(ActivatedRoute);
@@ -46,12 +49,19 @@ export class ReleaseTableService extends BaseComponent {
 		super();
 
 		this.params$$ = new ReplaySubject();
-		this.term$$ = new BehaviorSubject<string>(this.place.filterOf('name'));
+		this.term$$ = new BehaviorSubject<string>(
+			this.place.filterOf(this.searchedField() ?? 'name')
+		);
 	}
 
-	/** Back to the whole catalog: the search is over. */
-	public clearSearch(): void {
-		this.place.setFilter('name', '');
+	/** Back to the whole catalog: that search is over. */
+	public clearSearch(field: ReleaseSearchField): void {
+		// Emptying the box that is not searched from leaves the list alone.
+		if (this.searchedField() !== field) {
+			return;
+		}
+
+		this.place.setFilter(field, '');
 		this.term$$.next('');
 	}
 
@@ -75,8 +85,10 @@ export class ReleaseTableService extends BaseComponent {
 	 * release finds the list as it was.
 	 */
 	public init$(): Observable<ReleaseTableParams> {
-		if (this.term$$.value) {
-			this.dispatchSearch(this.term$$.value);
+		const field = this.searchedField();
+
+		if (field) {
+			this.dispatchSearch(field, this.place.filterOf(field));
 		}
 
 		return combineLatest([
@@ -98,13 +110,21 @@ export class ReleaseTableService extends BaseComponent {
 		);
 	}
 
-	public searchHandler(term: string): void {
-		this.place.setFilter('name', term);
-		this.term$$.next(term);
-		this.dispatchSearch(term);
+	public searchByArtistName(term: string): void {
+		this.search('artist', term);
 	}
 
-	private dispatchSearch(term: string): void {
+	public searchByName(term: string): void {
+		this.search('name', term);
+	}
+
+	private dispatchSearch(field: ReleaseSearchField, term: string): void {
+		if (field === 'artist') {
+			this.releaseStateService.dispatchSearchByArtistName(term);
+
+			return;
+		}
+
 		const searchParams: SearchParams =
 			this.releaseUtilService.createSearchParams(
 				EntityTypeEnum.Release,
@@ -112,5 +132,21 @@ export class ReleaseTableService extends BaseComponent {
 			);
 
 		this.releaseStateService.dispatchSearch(searchParams);
+	}
+
+	/** One search at a time: the box that is not searched from is emptied. */
+	private search(field: ReleaseSearchField, term: string): void {
+		this.place.setFilter(field === 'artist' ? 'name' : 'artist', '');
+		this.place.setFilter(field, term);
+		this.term$$.next(term);
+		this.dispatchSearch(field, term);
+	}
+
+	private searchedField(): ReleaseSearchField | null {
+		if (this.place.filterOf('artist')) {
+			return 'artist';
+		}
+
+		return this.place.filterOf('name') ? 'name' : null;
 	}
 }

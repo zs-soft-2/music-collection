@@ -863,12 +863,14 @@
 		[photoScanned]="store.photoScanned()"
 		[photoError]="store.photoError()"
 		[photoPreviewUrl]="store.photoPreviewUrl()"
+		[canRemove]="store.canManageCopies()"
 		(picked)="store.addToCollection($event)"
 		(genericPicked)="store.addGenericCopy($event)"
 		(photoPicked)="store.scanPressingPhoto($event)"
 		(photoRetried)="store.scanPressingPhoto('again')"
 		(discogsRequested)="store.showDiscogsVersions()"
 		(requestSent)="store.requestRelease($event)"
+		(removeRequested)="store.removeFromPicker($event)"
 		(closed)="onPickerClosed()"
 	/>
 }

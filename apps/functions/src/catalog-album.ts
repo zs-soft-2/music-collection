@@ -68,6 +68,7 @@ const VARIOUS_ARTIST_ID = 194;
 
 /** A Discogs formátum-leírásai → a katalógus album-típusa (FormatEnum). */
 const FORMATS: [RegExp, string][] = [
+	[/\bdvd\b/i, 'dvd'],
 	[/\blive\b/i, 'live'],
 	[/\bcompilation\b/i, 'compilation'],
 	[/\bmaxi-single\b/i, 'maxi'],

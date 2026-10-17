@@ -141,6 +141,27 @@ export class ReleaseEffects {
 			)
 		)
 	);
+	public searchReleasesByArtistName = createEffect(() =>
+		this.actions$.pipe(
+			ofType(releaseActions.searchByArtistName),
+			switchMap((action) =>
+				this.releaseDataService.searchByArtistName$(action.term).pipe(
+					map((result) =>
+						releaseActions.searchSuccess({
+							result: result.map((release) =>
+								this.releaseUtilService.convertModelToEntity(
+									release
+								)
+							),
+						})
+					),
+					catchError((error) => {
+						return of(releaseActions.searchFailed(error));
+					})
+				)
+			)
+		)
+	);
 	public selectRelease = createEffect(() =>
 		this.actions$.pipe(
 			ofType(releaseActions.selectRelease),

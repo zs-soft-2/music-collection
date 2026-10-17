@@ -13,8 +13,23 @@
 			[ngModel]="place.filterOf('name')"
 			[suggestions]="params.empty"
 			[showClear]="true"
-			(completeMethod)="searchHandler($event)"
-			(onClear)="clearSearch()"
+			(completeMethod)="searchByNameHandler($event)"
+			(onClear)="clearNameSearch()"
+			[minQueryLength]="3"
+			[delay]="400"
+		>
+		</p-autocomplete>
+
+		<p-autocomplete
+			tools
+			class="mc-table-search"
+			[placeholder]="'ui.releaseTable.filter-by-artist' | transloco"
+			[ariaLabel]="'ui.releaseTable.filter-by-artist2' | transloco"
+			[ngModel]="place.filterOf('artist')"
+			[suggestions]="params.empty"
+			[showClear]="true"
+			(completeMethod)="searchByArtistNameHandler($event)"
+			(onClear)="clearArtistSearch()"
 			[minQueryLength]="3"
 			[delay]="400"
 		>

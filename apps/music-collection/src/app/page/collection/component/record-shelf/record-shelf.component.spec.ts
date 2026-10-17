@@ -884,4 +884,328 @@ describe('RecordShelfComponent', () => {
 			expect(walked).toHaveBeenCalled();
 		});
 	});
+
+	describe('going through a compartment', () => {
+		/** Takes the compartment down by its name. */
+		const browse = (host: HTMLElement, at = 0): HTMLElement => {
+			host.querySelectorAll<HTMLElement>('.label-browse')[at].click();
+			fixture.detectChanges();
+
+			return host.querySelector<HTMLElement>('.browser') as HTMLElement;
+		};
+
+		const key = (dialog: HTMLElement, name: string): void => {
+			dialog.dispatchEvent(
+				new KeyboardEvent('keydown', {
+					key: name,
+					bubbles: true,
+					cancelable: true,
+				})
+			);
+			fixture.detectChanges();
+		};
+
+		const current = (dialog: HTMLElement) =>
+			dialog
+				.querySelector('.row.is-current .row-at')
+				?.textContent?.trim();
+
+		it('lists the compartment in the order it stands, at the first record', () => {
+			const host = render([
+				shelf({ compartments: [filled('a', ['one', 'two', 'three'])] }),
+			]);
+			const dialog = browse(host);
+
+			expect(dialog.querySelectorAll('.row')).toHaveLength(3);
+			expect(current(dialog)).toBe('1');
+			expect(dialog.querySelector('.stage-at')?.textContent).toContain(
+				'1 / 3'
+			);
+		});
+
+		it('walks the records with the arrow keys and stops at the walls', () => {
+			const host = render([
+				shelf({ compartments: [filled('a', ['one', 'two', 'three'])] }),
+			]);
+			const dialog = browse(host);
+
+			key(dialog, 'ArrowRight');
+			expect(current(dialog)).toBe('2');
+
+			key(dialog, 'End');
+			key(dialog, 'ArrowRight');
+			expect(current(dialog)).toBe('3');
+
+			key(dialog, 'Home');
+			key(dialog, 'ArrowLeft');
+			expect(current(dialog)).toBe('1');
+		});
+
+		it('goes on to the next compartment of the room', () => {
+			const host = render([
+				shelf({
+					compartments: [
+						filled('a', ['one']),
+						empty('b'),
+						{ ...filled('c', ['two', 'three']), label: 'CD' },
+					],
+				}),
+			]);
+			const dialog = browse(host);
+
+			key(dialog, 'PageDown');
+
+			expect(dialog.querySelector('h2')?.textContent).toBe('CD');
+			expect(dialog.querySelectorAll('.row')).toHaveLength(2);
+		});
+
+		it('starts at the record the search is turned to', () => {
+			const host = render([
+				shelf({ compartments: [filled('a', ['one', 'two', 'three'])] }),
+			]);
+
+			fixture.componentRef.setInput('found', new Set(['three']));
+			fixture.componentRef.setInput('turnedTo', 'three');
+			fixture.detectChanges();
+
+			const dialog = browse(host);
+
+			expect(current(dialog)).toBe('3');
+			expect(dialog.querySelector('.row.is-found')).not.toBeNull();
+		});
+
+		it('marks the empty shelf between the two runs', () => {
+			const host = render([
+				shelf({
+					compartments: [filled('a', ['one', 'two', 'three'], 2)],
+				}),
+			]);
+			const dialog = browse(host);
+			const items = Array.from(dialog.querySelectorAll('.rows > li'));
+
+			expect(items.map((item) => item.className.split(' ')[0])).toEqual([
+				'row',
+				'row',
+				'rows-gap',
+				'row',
+			]);
+		});
+
+		it('opens the record it is at', () => {
+			const host = render([
+				shelf({ compartments: [filled('a', ['one', 'two'])] }),
+			]);
+			const router = TestBed.inject(Router);
+			const navigate = jest
+				.spyOn(router, 'navigateByUrl')
+				.mockResolvedValue(true);
+			const dialog = browse(host);
+
+			key(dialog, 'ArrowDown');
+			key(dialog, 'Enter');
+
+			expect(navigate).toHaveBeenCalledWith('/collection/copy/two');
+		});
+
+		it('keeps the armful in hand while the compartment is gone through', async () => {
+			const host = render([
+				shelf({ compartments: [filled('a', ['one', 'two'])] }),
+			]);
+
+			fixture.componentRef.setInput('placeable', true);
+			fixture.detectChanges();
+
+			const blocks = await fixture.getDeferBlocks();
+			await blocks[0].render(DeferBlockState.Complete);
+
+			host.querySelector<HTMLElement>('.spine')?.dispatchEvent(pick());
+			fixture.detectChanges();
+
+			const dialog = browse(host);
+
+			dialog.querySelectorAll<HTMLElement>('.row')[1].click();
+			fixture.detectChanges();
+
+			expect(host.querySelector('.hands-count')?.textContent).toBe('1');
+		});
+	});
+
+	describe('rearranging a compartment from the browser', () => {
+		let drops: ShelfDrop[];
+
+		const browse = (host: HTMLElement): HTMLElement => {
+			host.querySelector<HTMLElement>('.label-browse')?.click();
+			fixture.detectChanges();
+
+			return host.querySelector<HTMLElement>('.browser') as HTMLElement;
+		};
+
+		const press = (dialog: HTMLElement, key: string, altKey = false) => {
+			dialog.dispatchEvent(
+				new KeyboardEvent('keydown', {
+					key,
+					altKey,
+					bubbles: true,
+					cancelable: true,
+				})
+			);
+			fixture.detectChanges();
+		};
+
+		/** The pause after the last move, and the write it lets out. */
+		const settle = () => {
+			jest.advanceTimersByTime(700);
+			fixture.detectChanges();
+		};
+
+		const order = (dialog: HTMLElement) =>
+			Array.from(dialog.querySelectorAll<HTMLElement>('.row')).map(
+				(row) => row.dataset['id']
+			);
+
+		const arrange = (ids: string[], rightFrom = ids.length) => {
+			const host = render([
+				shelf({ compartments: [filled('a', ids, rightFrom)] }),
+			]);
+
+			fixture.componentRef.setInput('placeable', true);
+			fixture.detectChanges();
+
+			return host;
+		};
+
+		beforeEach(() => {
+			jest.useFakeTimers();
+			drops = [];
+			fixture.componentInstance.filed.subscribe((drop) =>
+				drops.push(drop)
+			);
+		});
+
+		afterEach(() => jest.useRealTimers());
+
+		it('moves the record along with Alt and an arrow, at once', () => {
+			const dialog = browse(arrange(['one', 'two', 'three']));
+
+			press(dialog, 'ArrowDown', true);
+
+			expect(order(dialog)).toEqual(['two', 'one', 'three']);
+			/* Drawn straight away, written once it has stood still. */
+			expect(drops).toEqual([]);
+
+			settle();
+
+			expect(drops).toEqual([
+				{
+					releaseIds: ['one'],
+					unitId: 'one',
+					row: 1,
+					column: 1,
+					side: 'left',
+					index: 1,
+				},
+			]);
+		});
+
+		it('writes a record walked several places as one move', () => {
+			const dialog = browse(arrange(['one', 'two', 'three', 'four']));
+
+			press(dialog, 'ArrowDown', true);
+			press(dialog, 'ArrowDown', true);
+			press(dialog, 'ArrowDown', true);
+			settle();
+
+			expect(drops).toHaveLength(1);
+			expect(drops[0]).toEqual(
+				expect.objectContaining({ side: 'left', index: 3 })
+			);
+		});
+
+		it('crosses the empty shelf to the far wall before passing anyone', () => {
+			const dialog = browse(arrange(['one', 'two', 'three'], 2));
+
+			press(dialog, 'ArrowDown');
+			press(dialog, 'ArrowDown', true);
+			settle();
+
+			expect(order(dialog)).toEqual(['one', 'two', 'three']);
+			expect(drops[0]).toEqual(
+				expect.objectContaining({
+					releaseIds: ['two'],
+					side: 'right',
+					index: 0,
+				})
+			);
+		});
+
+		it('holds the next move back while the last one is being written', () => {
+			const host = arrange(['one', 'two', 'three']);
+			const dialog = browse(host);
+
+			press(dialog, 'ArrowDown', true);
+			settle();
+			fixture.componentRef.setInput('placing', true);
+			fixture.detectChanges();
+
+			press(dialog, 'ArrowUp');
+			press(dialog, 'ArrowDown', true);
+			settle();
+
+			expect(drops).toHaveLength(1);
+
+			fixture.componentRef.setInput('placing', false);
+			fixture.detectChanges();
+
+			expect(drops).toHaveLength(2);
+		});
+
+		it('drops a dragged row where the line is drawn', () => {
+			const dialog = browse(arrange(['one', 'two', 'three']));
+			const rows = Array.from(
+				dialog.querySelectorAll<HTMLElement>('.row')
+			);
+
+			rows.forEach((row, at) => {
+				row.getBoundingClientRect = () =>
+					({
+						top: at * 40,
+						height: 40,
+						bottom: at * 40 + 40,
+					}) as DOMRect;
+			});
+
+			rows[0].dispatchEvent(drag('dragstart'));
+			fixture.detectChanges();
+			rows[2].dispatchEvent(drag('dragover', 0, 110));
+			fixture.detectChanges();
+
+			expect(rows[2].classList.contains('is-drop-after')).toBe(true);
+
+			rows[2].dispatchEvent(drag('drop', 0, 110));
+			fixture.detectChanges();
+			settle();
+
+			expect(drops[0]).toEqual(
+				expect.objectContaining({
+					releaseIds: ['one'],
+					side: 'left',
+					index: 2,
+				})
+			);
+		});
+
+		it('leaves the order alone on a shelf that cannot be rearranged', () => {
+			const host = render([
+				shelf({ compartments: [filled('a', ['one', 'two'])] }),
+			]);
+			const dialog = browse(host);
+
+			press(dialog, 'ArrowDown', true);
+			settle();
+
+			expect(order(dialog)).toEqual(['one', 'two']);
+			expect(dialog.querySelector('.stage-arrange')).toBeNull();
+			expect(drops).toEqual([]);
+		});
+	});
 });

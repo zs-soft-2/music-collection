@@ -1,4 +1,5 @@
 export * from './album-data.service';
+export * from './album-deletion.repository';
 export * from './album-feature.key';
 export * from './album-hook.service';
 export * from './album-permissions.service';

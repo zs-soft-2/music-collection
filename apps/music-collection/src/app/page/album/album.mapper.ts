@@ -68,6 +68,8 @@ export interface ReleaseOptionView {
 	editions: EditionTag[];
 	/** The collector already has a copy of this release. */
 	owned: boolean;
+	/** That copy, to let go of from the picker; null when not owned. */
+	ownedCopyId: string | null;
 }
 
 /** A Discogs pressing of the album, to request when not in the catalog. */
@@ -410,12 +412,12 @@ export function groupCredits(
  */
 export function toReleaseOptions(
 	releases: ReleaseEntity[],
-	ownedReleaseIds: Set<string>
+	ownedCopyIds: Map<string, string>
 ): ReleaseOptionView[] {
 	return releases
 		.filter(
 			(release) =>
-				!isReleaseArchived(release) || ownedReleaseIds.has(release.uid)
+				!isReleaseArchived(release) || ownedCopyIds.has(release.uid)
 		)
 		.map((release): ReleaseOptionView => {
 			const descriptions = toDescriptions(release.formatDescription);
@@ -430,7 +432,8 @@ export function toReleaseOptions(
 				editions: EDITION_TAGS.filter((tag) =>
 					descriptions.includes(tag)
 				),
-				owned: ownedReleaseIds.has(release.uid),
+				owned: ownedCopyIds.has(release.uid),
+				ownedCopyId: ownedCopyIds.get(release.uid) ?? null,
 			};
 		})
 		.sort(

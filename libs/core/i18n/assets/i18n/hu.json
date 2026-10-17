@@ -76,7 +76,8 @@
 			"single": "Kislemez",
 			"maxi": "Maxi kislemez",
 			"live": "Koncertlemez",
-			"compilation": "Válogatás"
+			"compilation": "Válogatás",
+			"dvd": "DVD"
 		},
 		"formatDescription": {
 			"box-set": "Díszdoboz",
@@ -1233,7 +1234,21 @@
 			"put-left": "A bal falhoz: {{where}}",
 			"put-right": "A jobb falhoz: {{where}}",
 			"put-bottom": "Az aljára: {{where}}",
-			"put-top": "A tetejére: {{where}}"
+			"put-top": "A tetejére: {{where}}",
+			"browse": "Rekesz átnézése: {{where}}",
+			"browse-previous": "Előző lemez",
+			"browse-next": "Következő lemez",
+			"browse-previous-compartment": "Előző rekesz",
+			"browse-next-compartment": "Következő rekesz",
+			"browse-close": "Bezárás",
+			"browse-list": "Lemezek a rekeszben",
+			"browse-gap": "üres hely — innentől a jobb falnál",
+			"browse-gap-tower": "üres hely — innentől a tetején",
+			"browse-keys": "← → lemezről lemezre · PgUp / PgDn rekeszről rekeszre · Enter megnyitás · Esc bezárás",
+			"browse-move-up": "Előrébb",
+			"browse-move-down": "Hátrébb",
+			"browse-keys-arrange": "Alt + ↑ ↓ vagy húzás: áthelyezés",
+			"browse-saving": "Mentés…"
 		},
 		"networkDetails": {
 			"connections-in-view": "Látható kapcsolatok",
@@ -1488,7 +1503,9 @@
 			"send-request": "Kérés küldése",
 			"sending": "Küldés…",
 			"paste-not-an-image": "Ez nem kép volt. Magát a képet másold — böngészőben jobb gomb, „Kép másolása”. A Finderből másolt fájlt nem lehet beilleszteni, de ide ejtheted.",
-			"clipboard-empty": "A vágólap üres."
+			"clipboard-empty": "A vágólap üres.",
+			"remove": "Eltávolítás",
+			"from-your-collection": "a gyűjteményedből"
 		},
 		"discographyTimeline": {
 			"releases-over-time": "Kiadások az időben",
@@ -1717,6 +1734,8 @@
 			"no-releases-found": "Nincs találat.",
 			"filter-by-name": "Szűrés névre…",
 			"filter-by-name2": "Szűrés névre",
+			"filter-by-artist": "Szűrés előadóra…",
+			"filter-by-artist2": "Szűrés előadóra",
 			"delete-release": "Kiadás törlése",
 			"name": "Név",
 			"artist": "Előadó",
@@ -1884,6 +1903,18 @@
 			"actions": "Műveletek",
 			"edit-album": "Album szerkesztése",
 			"delete-album2": "Album törlése"
+		},
+		"albumDeletion": {
+			"title": "Album törlése",
+			"checking": "Megnézem, mi tartja életben…",
+			"can-delete": "Más gyűjtő példánya nem tartja, véglegesen törölhető.",
+			"goes-with-releases": "{{count}} kiadás megy vele.",
+			"goes-with-tracks": "{{count}} szám megy vele.",
+			"goes-with-own-copies": "{{count}} példány a te gyűjteményedben van belőle — ezek is törlődnek vele.",
+			"in-use": "{{count}} példány más gyűjtő gyűjteményében van belőle, ezért nem törölhető — a példányokat a gazdájuk tudja eltávolítani.",
+			"in-use-now": "Közben valaki más felvett belőle egy példányt, ezért mégsem törölhető.",
+			"really-delete": "Végleges törlés",
+			"cancel": "Mégsem"
 		},
 		"albumSimpleView": {
 			"image": "Kép"

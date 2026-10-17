@@ -488,12 +488,16 @@ export const AlbumPageStore = signalStore(
 			/** The album's catalog releases to pick the collected one from. */
 			releaseOptions: computed(() => {
 				const albumId = store.albumId();
-				const owned = new Set(
+				// Pressing → the collector's copy of it, so the picker can
+				// offer to let that copy go where it says it is owned.
+				const owned = new Map(
 					store
 						.releases()
 						.filter((release) => release.albumId === albumId)
 						.flatMap((release) =>
-							release.releaseId ? [release.releaseId] : []
+							release.releaseId
+								? [[release.releaseId, release.id] as const]
+								: []
 						)
 				);
 
@@ -1481,6 +1485,19 @@ export const AlbumPageStore = signalStore(
 		) => {
 			let catalogRequested = false;
 
+			const closePicker = (): void => {
+				keepPhoto(store, null);
+				patchState(store, {
+					pickerOpen: false,
+					pickedReleaseUid: null,
+					pickedDiscogsReleaseId: null,
+					// The next record gets its own photo, not this one's.
+					photoCandidates: [],
+					photoScanned: false,
+					photoError: null,
+				});
+			};
+
 			return {
 				openPicker(): void {
 					if (!catalogRequested) {
@@ -1500,17 +1517,18 @@ export const AlbumPageStore = signalStore(
 						store.loadDiscogsVersions(masterId);
 					}
 				},
-				closePicker(): void {
-					keepPhoto(store, null);
-					patchState(store, {
-						pickerOpen: false,
-						pickedReleaseUid: null,
-						pickedDiscogsReleaseId: null,
-						// The next record gets its own photo, not this one's.
-						photoCandidates: [],
-						photoScanned: false,
-						photoError: null,
-					});
+				closePicker,
+				/**
+				 * The picker shows a pressing as owned, and the collector
+				 * wants that copy gone: the picker closes and the same removal
+				 * dialog opens that the copy list on the page offers.
+				 */
+				removeFromPicker(copyId: string): void {
+					if (!store.canManageCopies()) {
+						return;
+					}
+					closePicker();
+					store.openRemoval(copyId);
 				},
 				openWishlist(): void {
 					patchState(store, { wishlistOpen: true, wishError: null });

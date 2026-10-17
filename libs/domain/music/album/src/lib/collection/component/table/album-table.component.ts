@@ -13,11 +13,16 @@ import {
 } from '@music-collection/api';
 import { Observable } from 'rxjs';
 
+import { ALBUM_IN_USE } from '../../../deletion/album-deletion.effect';
+import { provideAlbumDeletion } from '../../../deletion/album-deletion.providers';
+import { AlbumDeletionStore } from '../../../deletion/album-deletion.store';
+
 import { AlbumTableService } from './album-table.service';
+import { Dialog } from 'primeng/dialog';
 import { AutoComplete } from 'primeng/autocomplete';
 import { Chip } from 'primeng/chip';
 import { Ripple } from 'primeng/ripple';
-import { ButtonDirective } from 'primeng/button';
+import { Button, ButtonDirective } from 'primeng/button';
 import { AsyncPipe, DatePipe } from '@angular/common';
 import {
 	CollectionColumnDirective,
@@ -28,7 +33,11 @@ import {
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	providers: [AlbumTableService],
+	providers: [
+		AlbumTableService,
+		AlbumDeletionStore,
+		...provideAlbumDeletion(),
+	],
 	selector: 'mc-album-table',
 	templateUrl: './album-table.component.html',
 	styleUrls: ['./album-table.component.scss'],
@@ -38,7 +47,9 @@ import {
 		AutoComplete,
 		Chip,
 		Ripple,
+		Button,
 		ButtonDirective,
+		Dialog,
 		AsyncPipe,
 		DatePipe,
 		CollectionColumnDirective,
@@ -49,6 +60,12 @@ import {
 })
 export class AlbumTableComponent extends BaseComponent implements OnInit {
 	private componentService = inject(AlbumTableService);
+
+	/** The confirmation behind the trash icon; the template reads it. */
+	public readonly deletion = inject(AlbumDeletionStore);
+
+	/** The one error the dialog has a sentence of its own for. */
+	public readonly inUse = ALBUM_IN_USE;
 
 	public params$!: Observable<AlbumTableParams>;
 
@@ -69,8 +86,12 @@ export class AlbumTableComponent extends BaseComponent implements OnInit {
 		this.componentService.clearSearch('name');
 	}
 
+	/**
+	 * Asks before deleting, and asks the server what holds the album: what
+	 * goes with it, and whether anybody else's copy stands in the way.
+	 */
 	public deleteAlbum(album: AlbumEntity): void {
-		console.log(album);
+		this.deletion.ask(album);
 	}
 
 	public editAlbum(album: AlbumEntity): void {

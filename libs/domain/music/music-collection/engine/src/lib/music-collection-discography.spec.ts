@@ -204,6 +204,7 @@ describe('planDiscography', () => {
 				FormatEnum.maxi,
 				FormatEnum.live,
 				FormatEnum.compilation,
+				FormatEnum.dvd,
 			],
 		});
 		expect(companion.slug).toBe('iron-maiden-beyond-the-albums');

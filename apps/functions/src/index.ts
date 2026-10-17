@@ -94,9 +94,13 @@ import {
 	PhotoInput,
 } from './photo-signals';
 import { VisionError, createVisionClient } from './vision-client';
-import { GatewaySettings, createGatewayClient } from './gateway-client';
+import {
+	GatewaySettings,
+	createArtifactDownloader,
+	createGatewayClient,
+} from './gateway-client';
 import { approveReleaseRequest as approve } from './release-request-approval';
-import { DeletionError, deleteRelease } from './catalog-deletion';
+import { DeletionError, deleteAlbum, deleteRelease } from './catalog-deletion';
 import { decideRequest as decide } from './request-decision';
 import { RequestDecisionError } from './request-schema';
 import {
@@ -1303,6 +1307,34 @@ export const deleteReleaseEntity = onCall(async (request) => {
 });
 
 /**
+ * Egy album törlése a katalógusból. `{ uid, artistUid? }` → `{ uid,
+ * deletedReleases, deletedTracks, deletedCopies, deletedRatings }`.
+ *
+ * A préselései, a számai és a közreműködései vele mennek. A hívó saját
+ * példányai és értékelései is — a kliens erre előbb rákérdez —, de ha más
+ * gyűjtőnek van belőle példánya vagy értékelte, a törlés
+ * `failed-precondition`.
+ */
+export const deleteAlbumEntity = onCall(async (request) => {
+	const callerUid = await requireCaller(request, 'deleteAlbumEntity');
+
+	try {
+		return await deleteAlbum(
+			database(),
+			request.data?.uid,
+			request.data?.artistUid,
+			callerUid
+		);
+	} catch (error) {
+		if (error instanceof DeletionError) {
+			throw new HttpsError(error.code, error.message);
+		}
+
+		throw error;
+	}
+});
+
+/**
  * Kérés elbírálása (ADMIN). A gyűjtő kérésének mezőiről az admin egyenként
  * dönt; az elfogadottak a katalógusba kerülnek, és megszületik a válasz
  * (`entity-response`), amiben minden elutasítás mellett ott az indoklás.
@@ -2148,11 +2180,18 @@ export const generateTrackMedia = onCall(
 			return await readTrackClipState(
 				database(),
 				client,
+				createArtifactDownloader(gatewaySettings()),
 				trackUid,
 				Date.now()
 			);
 		} catch (error) {
 			if (error instanceof TrackMediaError) {
+				// A saját hibánk is a naplóba kerül: a klip állapotát a kliens
+				// percenként kérdezi, és egy itt elakadó letöltés korábban
+				// semmi nyomot nem hagyott a function naplójában.
+				logger.warn(
+					`A szám médiája (${action}, ${trackUid}): ${error.message}`
+				);
 				throw new HttpsError(
 					error.reason === 'not-found'
 						? 'not-found'

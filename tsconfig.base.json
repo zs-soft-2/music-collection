@@ -44,6 +44,9 @@
 			"@music-collection/domain/album": [
 				"libs/domain/music/album/src/index.ts"
 			],
+			"@music-collection/domain/album/testing": [
+				"libs/domain/music/album/src/testing.ts"
+			],
 			"@music-collection/domain/album/core": [
 				"libs/domain/music/album/src/lib/domain-album.module.ts"
 			],

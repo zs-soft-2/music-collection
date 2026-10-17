@@ -139,9 +139,39 @@
 						>
 							<h3 class="label">
 								@if (!compartment.empty) {
-									<span class="label-text">{{
-										compartment.label
-									}}</span>
+									<!--
+									The compartment's name opens it: the
+									records in it listed in the order they
+									stand, to be gone through one by one
+									rather than aimed at eight pixels at a
+									time.
+								-->
+									<button
+										type="button"
+										class="label-browse"
+										[attr.aria-label]="
+											'ui.recordShelf.browse'
+												| transloco
+													: {
+															where: compartment.label,
+													  }
+										"
+										[title]="
+											'ui.recordShelf.browse'
+												| transloco
+													: {
+															where: compartment.label,
+													  }
+										"
+									>
+										<span class="label-text">{{
+											compartment.label
+										}}</span>
+										<i
+											class="pi pi-list label-browse-icon"
+											aria-hidden="true"
+										></i>
+									</button>
 									@if (compartment.spot; as spot) {
 										<!--
 										Which compartment of the unit this
@@ -386,3 +416,11 @@
 
 	<mc-record-shelf-peek />
 </div>
+
+<mc-record-shelf-browser
+	[compartments]="browsable()"
+	[found]="found()"
+	[placeable]="placeable()"
+	[busy]="placing()"
+	(filed)="filed.emit($event)"
+/>

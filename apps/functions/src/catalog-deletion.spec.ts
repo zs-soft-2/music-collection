@@ -1,6 +1,6 @@
 import { Firestore } from 'firebase-admin/firestore';
 
-import { deleteRelease } from './catalog-deletion';
+import { deleteAlbum, deleteRelease } from './catalog-deletion';
 
 // ── Firestore-utánzat lekérdezésekkel ──────────────────────────────────────
 //
@@ -24,6 +24,9 @@ interface Write {
 	data: Record<string, unknown>;
 }
 
+/** A tárolt dokumentumok: a `reference` ebből olvas, ha lekérik. */
+let stored: Document[] = [];
+
 const reference = (path: string): any => {
 	const parts = path.split('/');
 
@@ -32,6 +35,16 @@ const reference = (path: string): any => {
 		id: parts[parts.length - 1],
 		parent: { id: parts[parts.length - 2] },
 		collection: (name: string) => collectionAt(`${path}/${name}`),
+		run() {
+			const document = stored.find((held) => held.path === path);
+
+			return {
+				exists: !!document,
+				ref: reference(path),
+				get: (field: string) =>
+					document ? valueAt(document.data, field) : undefined,
+			};
+		},
 	};
 };
 
@@ -57,17 +70,32 @@ const valueAt = (data: Record<string, unknown>, field: string): unknown =>
 			data
 		);
 
+const matches = (held: unknown, operation: string, value: unknown) => {
+	switch (operation) {
+		case 'in':
+			return (value as unknown[]).includes(held);
+		case 'array-contains':
+			return Array.isArray(held) && held.includes(value);
+		default:
+			return held === value;
+	}
+};
+
 function fakeDatabase(documents: Document[]) {
 	const deletions: Deletion[] = [];
 	const writes: Write[] = [];
+	const updates: Write[] = [];
+
+	stored = documents;
 
 	const buildQuery = (collectionId: string, group: boolean): any => {
-		const filters: { field: string; value: unknown }[] = [];
+		const filters: { field: string; operation: string; value: unknown }[] =
+			[];
 		let cap = Infinity;
 
 		const self: any = {
-			where(field: string, _operation: string, value: unknown) {
-				filters.push({ field, value });
+			where(field: string, operation: string, value: unknown) {
+				filters.push({ field, operation, value });
 
 				return self;
 			},
@@ -85,10 +113,12 @@ function fakeDatabase(documents: Document[]) {
 								document.path.split('/').length === 2
 					)
 					.filter((document) =>
-						filters.every(
-							(filter) =>
-								valueAt(document.data, filter.field) ===
+						filters.every((filter) =>
+							matches(
+								valueAt(document.data, filter.field),
+								filter.operation,
 								filter.value
+							)
 						)
 					)
 					.slice(0, cap);
@@ -112,6 +142,8 @@ function fakeDatabase(documents: Document[]) {
 		delete: ({ path }: { path: string }) => deletions.push({ path }),
 		set: ({ path }: { path: string }, data: Record<string, unknown>) =>
 			writes.push({ path, data }),
+		update: ({ path }: { path: string }, data: Record<string, unknown>) =>
+			updates.push({ path, data }),
 	};
 
 	const database = {
@@ -125,7 +157,12 @@ function fakeDatabase(documents: Document[]) {
 			work(transaction),
 	};
 
-	return { database: database as unknown as Firestore, deletions, writes };
+	return {
+		database: database as unknown as Firestore,
+		deletions,
+		writes,
+		updates,
+	};
 }
 
 const RELEASE_PATH = 'artist/a1/album/al1/release/r1';
@@ -239,5 +276,127 @@ describe('deleteRelease', () => {
 		await expect(deleteRelease(database, '  ')).rejects.toThrow(
 			/Hiányzó uid/
 		);
+	});
+});
+
+// ── Album ──────────────────────────────────────────────────────────────────
+
+const ALBUM_PATH = 'artist/a1/album/al1';
+
+const albumCatalog = (): Document[] => [
+	{
+		path: ALBUM_PATH,
+		data: { uid: 'al1', name: 'Scream Bloody Gore', artist: { uid: 'a1' } },
+	},
+	...catalog(),
+	{
+		path: 'contribution/co1',
+		data: { uid: 'co1', albumUid: 'al1' },
+	},
+	{
+		path: 'membership/m1',
+		data: { uid: 'm1', albumUids: ['al1', 'al2'], albumCount: 2 },
+	},
+	{
+		path: 'copy-serial/r1_7',
+		data: { releaseId: 'r1', number: 7, userId: 'collector-1' },
+	},
+];
+
+describe('deleteAlbum', () => {
+	it('mindent visz, ami alatta van, ha senkinek nincs példánya', async () => {
+		const { database, deletions, updates } = fakeDatabase(albumCatalog());
+
+		const result = await deleteAlbum(database, 'al1', 'a1', 'admin');
+
+		expect(result).toEqual({
+			uid: 'al1',
+			deletedReleases: 1,
+			deletedTracks: 2,
+			deletedCopies: 0,
+			deletedRatings: 0,
+		});
+		expect(deletions.map((deletion) => deletion.path).sort()).toEqual(
+			[
+				ALBUM_PATH,
+				RELEASE_PATH,
+				'track/al1_001',
+				'track/r1_001',
+				'contribution/co1',
+				'copy-serial/r1_7',
+			].sort()
+		);
+		expect(updates.map((update) => update.path)).toEqual(['membership/m1']);
+		expect(updates[0].data['albumCount']).toBe(1);
+	});
+
+	it('a hívó saját példányát és értékelését is viszi', async () => {
+		const { database, deletions } = fakeDatabase([
+			...albumCatalog(),
+			copy('user/collector-1/collection-item/c1'),
+			{
+				path: 'user/collector-1/rating/al1',
+				data: { albumId: 'al1', stars: 2 },
+			},
+		]);
+
+		const result = await deleteAlbum(database, 'al1', 'a1', 'collector-1');
+
+		expect(result.deletedCopies).toBe(1);
+		expect(result.deletedRatings).toBe(1);
+		expect(deletions.map((deletion) => deletion.path)).toEqual(
+			expect.arrayContaining([
+				'user/collector-1/collection-item/c1',
+				'user/collector-1/rating/al1',
+			])
+		);
+	});
+
+	it('elutasítja, ha más gyűjtőnek van példánya', async () => {
+		const { database, deletions } = fakeDatabase([
+			...albumCatalog(),
+			copy('user/collector-2/collection-item/c9'),
+		]);
+
+		await expect(
+			deleteAlbum(database, 'al1', 'a1', 'collector-1')
+		).rejects.toThrow(/más gyűjtő/);
+		expect(deletions).toEqual([]);
+	});
+
+	it('elutasítja, ha más gyűjtő értékelte', async () => {
+		const { database } = fakeDatabase([
+			...albumCatalog(),
+			{
+				path: 'user/collector-2/rating/al1',
+				data: { albumId: 'al1', stars: 5 },
+			},
+		]);
+
+		await expect(
+			deleteAlbum(database, 'al1', 'a1', 'collector-1')
+		).rejects.toThrow(/értékelte/);
+	});
+
+	it('lépteti az album és a kiadás darabszámát', async () => {
+		const { database, writes } = fakeDatabase(albumCatalog());
+
+		await deleteAlbum(database, 'al1', 'a1', 'admin');
+
+		const paths = writes.map((write) => write.path);
+
+		expect(paths).toContain('entity-quantity/Album');
+		expect(paths).toContain('entity-quantity/Release');
+		expect(paths).toContain(
+			`sync/album/deletion/${ALBUM_PATH.split('/').join('~')}`
+		);
+	});
+
+	it('nem talál albumot ismeretlen uid-re', async () => {
+		const { database } = fakeDatabase(albumCatalog());
+
+		await expect(
+			deleteAlbum(database, 'al404', 'a1', 'admin')
+		).rejects.toThrow(/Nincs ilyen album/);
 	});
 });

@@ -267,6 +267,36 @@ button.option {
 	color: var(--mc-text-muted);
 }
 
+.remove {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	padding: 0.3rem 0.75rem;
+	border: 1px solid var(--mc-border-strong);
+	border-radius: 999px;
+	font: inherit;
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: var(--mc-text-muted);
+	background: transparent;
+	cursor: pointer;
+
+	&:hover:not(:disabled) {
+		color: var(--mc-text);
+		border-color: var(--mc-primary);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--mc-primary);
+		outline-offset: 2px;
+	}
+
+	&:disabled {
+		cursor: default;
+		opacity: 0.5;
+	}
+}
+
 .filters {
 	display: flex;
 	flex-wrap: wrap;

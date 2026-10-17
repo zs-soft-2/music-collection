@@ -57,6 +57,10 @@ export class ReleaseStateServiceImpl extends ReleaseStateService {
 		this.store.dispatch(releaseActions.search({ params }));
 	}
 
+	public dispatchSearchByArtistName(term: string): void {
+		this.store.dispatch(releaseActions.searchByArtistName({ term }));
+	}
+
 	public dispatchSelectReleaseAction(release: ReleaseEntity): void {
 		this.store.dispatch(releaseActions.selectRelease({ release }));
 	}

@@ -56,6 +56,11 @@ describe('albumFormat', () => {
 		expect(albumFormat(release({ formats: formats(['LP', 'Live']) }))).toBe(
 			'live'
 		);
+		expect(
+			albumFormat(
+				release({ formats: [{ name: 'DVD', descriptions: ['PAL'] }] })
+			)
+		).toBe('dvd');
 	});
 });
 
