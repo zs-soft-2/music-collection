@@ -6,6 +6,7 @@ import {
 	inject,
 } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { filter, take } from 'rxjs';
 import {
 	AuthenticationStateService,
 	EntityQuantityStateService,
@@ -21,16 +22,17 @@ import {
 	TabBarComponent,
 	TopBarModule,
 } from './module';
-import {
-	AmbientBackdropComponent,
-	SceneBackdropComponent,
-} from './shared/backdrop';
+// A @defer mögötti komponensek a fájljukból jönnek, nem a barrelből: a
+// barrel a main chunkba húzná őket, és a @defer semmit nem választana le.
+import { AmbientBackdropComponent } from './shared/backdrop/ambient-backdrop.component';
+import { SceneBackdropComponent } from './shared/backdrop/scene-backdrop.component';
 import { ConsentBarComponent } from './shared/consent';
-import { DemoTourComponent } from './shared/demo-tour';
+import { DemoTourComponent } from './shared/demo-tour/demo-tour.component';
 import { DailyQuestionBannerComponent } from './shared/daily-question';
-import { PlayerStageComponent, PlayerStore } from './shared/player';
+import { PlayerStageComponent } from './shared/player/stage/player-stage.component';
+import { PlayerStore } from './shared/player/player.store';
 import { VerdictPromptComponent } from './shared/verdict-prompt';
-import { YoutubeDockComponent } from './shared/youtube';
+import { YoutubeDockComponent } from './shared/youtube/youtube-dock.component';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -67,7 +69,17 @@ export class AppComponent implements OnInit {
 	public version = environment.version;
 	public buildTime = environment.buildTime;
 
+	/**
+	 * The per-type counters are read by the catalog's write effects alone, and
+	 * a guest writes nothing — so they are fetched once someone signs in, not
+	 * on every visitor's first page.
+	 */
 	public ngOnInit(): void {
-		this.entityQuantityStateService.dispatchListEntitiesAction();
+		this.authenticationStateService
+			.selectIsAuthenticated$()
+			.pipe(filter(Boolean), take(1))
+			.subscribe(() =>
+				this.entityQuantityStateService.dispatchListEntitiesAction()
+			);
 	}
 }

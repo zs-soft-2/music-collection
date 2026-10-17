@@ -12,10 +12,10 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { BaseComponent, RoleNames } from '@music-collection/api';
 
-import { PlayerMiniComponent } from '../../../../shared/player';
+import { PlayerMiniComponent } from '../../../../shared/player/player-mini.component';
 import { ExternalPlayerConsentService } from '../../../../data/external-player';
 import { LanguagePickerComponent } from '../../../../i18n';
-import { SceneBackdropService } from '../../../../shared/backdrop';
+import { SceneBackdropService } from '../../../../shared/backdrop/scene-backdrop.service';
 import { LayoutWidthService, ThemeService } from '../../../../theme';
 // A fájlra közvetlenül, nem a sáv barreljére: az a komponenst is exportálja,
 // az pedig innen, a top-bar szolgáltatásából kér menüelemeket — körbeérne.

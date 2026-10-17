@@ -3,7 +3,10 @@
 	megáll, hacsak a gyűjtő nem kért élőt. Alatta marad a mintás réteg,
 	ami akkor is kitölti a lapot, ha nincs jelenet.
 -->
-<mc-scene-backdrop />
+@defer (on idle) {
+	<!-- A jelenet a shadereivel külön chunk: a lap előbb rajzolódik ki. -->
+	<mc-scene-backdrop />
+}
 <mc-ambient-backdrop />
 <mc-top-bar></mc-top-bar>
 
@@ -54,10 +57,14 @@
 	check for itself.
 -->
 @if (players.allowed()) {
-	<mc-youtube-dock />
+	@defer {
+		<mc-youtube-dock />
+	}
 
 	@if (player.stageOpen()) {
-		<mc-player-stage />
+		@defer {
+			<mc-player-stage />
+		}
 	}
 }
 
@@ -71,5 +78,7 @@
 	DemoTourService csak akkor kéri le, amikor ez a blokk a lapra kerül.
 -->
 @if (tour.enabled()) {
-	<mc-demo-tour />
+	@defer {
+		<mc-demo-tour />
+	}
 }

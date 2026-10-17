@@ -10,9 +10,9 @@ import {
 import { Injectable, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
-	AlbumEntity,
+	type AlbumEntity,
 	AlbumStateService,
-	AlbumTableParams,
+	type AlbumTableParams,
 	AlbumUtilService,
 	ArtistStateService,
 	BaseComponent,
@@ -20,7 +20,7 @@ import {
 	ParamItem,
 	QueryConstraintTypeEnum,
 	QueryOperatorEnum,
-	SearchParams,
+	type SearchParams,
 	sortByRecent,
 } from '@music-collection/api';
 import {

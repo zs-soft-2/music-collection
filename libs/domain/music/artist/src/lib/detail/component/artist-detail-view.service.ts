@@ -5,10 +5,10 @@ import { map, switchMap, tap } from 'rxjs/operators';
 import { EventEmitter, Injectable, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import {
-	AlbumEntity,
+	type AlbumEntity,
 	AlbumUtilService,
 	ArtistDetailViewStateModel,
-	ArtistEntity,
+	type ArtistEntity,
 	ArtistStateService,
 	BaseComponent,
 } from '@music-collection/api';

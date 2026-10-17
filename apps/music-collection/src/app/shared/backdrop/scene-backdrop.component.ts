@@ -13,7 +13,7 @@ import {
 	resolveVisualProfile,
 } from '@music-collection/ui/visual-engine';
 
-import { PlayerStore } from '../player';
+import { PlayerStore } from '../player/player.store';
 import { VisualSceneComponent } from '../visual-scene';
 import { SceneBackdropService } from './scene-backdrop.service';
 

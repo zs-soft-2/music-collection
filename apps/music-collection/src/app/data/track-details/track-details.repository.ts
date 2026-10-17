@@ -16,9 +16,9 @@ import {
 	FirestoreSyncService,
 	TRACK_FEATURE_KEY,
 	TRACK_LYRICS_FEATURE_KEY,
-	Track,
+	type Track,
 	type TrackImage,
-	TrackLyrics,
+	type TrackLyrics,
 } from '@music-collection/api';
 
 /** Fields of a track editable by hand. */

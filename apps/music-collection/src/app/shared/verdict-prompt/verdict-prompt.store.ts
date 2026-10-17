@@ -13,7 +13,7 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
 import { AlbumRating, RatingEffect, ratingFor } from '../../data/rating';
-import { FinishedRecord, PlayerStore } from '../player';
+import { FinishedRecord, PlayerStore } from '../player/player.store';
 
 /**
  * Which record the question is about, out of what just finished and what the

@@ -1,4 +1,4 @@
-export const enum EntityTypeEnum {
+export enum EntityTypeEnum {
 	ApplicationConfig = 'ApplicationConfig',
 	Artist = 'Artist',
 	Album = 'Album',
