@@ -415,10 +415,7 @@ export async function readLyrics(
  * A kép elmegy a cím alapján is, egy nyolc másodperces videó viszont a
  * legdrágább hívásunk: amiből nincs mit megírni, azt ne is rendeljük meg.
  */
-async function requireLyrics(
-	database: Firestore,
-	song: Song
-): Promise<string> {
+async function requireLyrics(database: Firestore, song: Song): Promise<string> {
 	const lyrics = await readLyrics(database, song.uid);
 
 	if (!lyrics) {
@@ -513,29 +510,40 @@ export async function writeImageScene(
 		return { scene: '', palette: '' };
 	}
 
-	const result = await client.execute({
-		capability: 'text.complete',
-		input: {
-			prompt:
-				`Below are the lyrics of the song "${song.name}". Read them ` +
-				'and describe ONE still image the words call up: what is in ' +
-				'the frame, where it is, in what light and weather. Take the ' +
-				'imagery from the words themselves — a line naming a place, ' +
-				'an object or a sky is worth more than a summary of the ' +
-				'meaning. Never quote a line, and never put writing in the ' +
-				'picture.' +
-				(hint ? ` Lean towards: ${hint}.` : '') +
-				`\n\n${lyrics}`,
-			systemPrompt:
-				'You write briefs for an image model. You are precise, ' +
-				'visual and short, and you never quote song lyrics.',
-			responseSchema: IMAGE_SCENE_SCHEMA,
-			maxTokens: 400,
-		},
-		context: { sceneType: 'track-image', templateId: song.uid },
-	});
+	// A gateway a megtagadott hívást kivétellel jelzi, nem `kind`-dal — egy
+	// szöveges modellhez nem jogosult tenant (`MODEL_NOT_ENTITLED`) így az
+	// egész rajzolást vitte, holott a kép e lépés nélkül is elkészülhet.
+	const result = await client
+		.execute({
+			capability: 'text.complete',
+			input: {
+				prompt:
+					`Below are the lyrics of the song "${song.name}". Read them ` +
+					'and describe ONE still image the words call up: what is in ' +
+					'the frame, where it is, in what light and weather. Take the ' +
+					'imagery from the words themselves — a line naming a place, ' +
+					'an object or a sky is worth more than a summary of the ' +
+					'meaning. Never quote a line, and never put writing in the ' +
+					'picture.' +
+					(hint ? ` Lean towards: ${hint}.` : '') +
+					`\n\n${lyrics}`,
+				systemPrompt:
+					'You write briefs for an image model. You are precise, ' +
+					'visual and short, and you never quote song lyrics.',
+				responseSchema: IMAGE_SCENE_SCHEMA,
+				maxTokens: 400,
+			},
+			context: { sceneType: 'track-image', templateId: song.uid },
+		})
+		.catch((error: unknown) => {
+			logger.warn(
+				'A dalszöveg elolvasása elszállt, cím alapján rajzolunk',
+				error
+			);
+			return undefined;
+		});
 
-	if (result.kind !== 'result' || !result.output?.text) {
+	if (!result || result.kind !== 'result' || !result.output?.text) {
 		// A szöveg elolvasása nem sikerült — a rajzolás ettől még mehet a cím
 		// és az irány alapján. Egy hiba itt ne vigye el az egész gombot.
 		return { scene: '', palette: '' };
@@ -596,7 +604,12 @@ export async function drawTrackImage(
 	// rajzolás. Két hívás egy kép helyett — a szöveges lépés a töredéke a
 	// képének, és nélküle minden szám ugyanarról a címről kapna képet.
 	const lyrics = await readLyrics(database, song.uid);
-	const { scene, palette } = await writeImageScene(client, song, lyrics, hint);
+	const { scene, palette } = await writeImageScene(
+		client,
+		song,
+		lyrics,
+		hint
+	);
 	const prompt = buildImagePrompt(song, scene, palette, hint);
 	const result = await client.execute({
 		capability: 'image.generate',
