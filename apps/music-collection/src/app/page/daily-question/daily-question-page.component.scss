@@ -548,14 +548,28 @@ a.subject:hover {
 }
 
 .skeleton {
+	position: relative;
+	overflow: hidden;
+	background: var(--mc-card-bg);
+	border-radius: var(--mc-radius-md, 8px);
+}
+
+/*
+ * The light passes over on a layer of its own. A moving transform is the
+ * compositor's work; a moving background is a repaint of every placeholder
+ * on every frame, which on a slow phone holds back the page it stands for.
+ */
+.skeleton::after {
+	content: '';
+	position: absolute;
+	inset: 0;
 	background: linear-gradient(
 		100deg,
-		var(--mc-card-bg) 40%,
+		transparent 40%,
 		var(--mc-surface-2) 50%,
-		var(--mc-card-bg) 60%
+		transparent 60%
 	);
-	background-size: 200% 100%;
-	border-radius: var(--mc-radius-md, 8px);
+	transform: translateX(-100%);
 	animation: mc-shimmer 1.4s linear infinite;
 }
 
@@ -565,12 +579,8 @@ a.subject:hover {
 }
 
 @keyframes mc-shimmer {
-	from {
-		background-position: 200% 0;
-	}
-
 	to {
-		background-position: -200% 0;
+		transform: translateX(100%);
 	}
 }
 
