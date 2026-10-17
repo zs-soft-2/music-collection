@@ -42,8 +42,17 @@ mc-collection-big-card,
 	margin-top: 1.25rem;
 }
 
+/* Akkora, amekkora a kártya lesz, különben a megérkezése lenyomja a lapot. */
 .big-card-skeleton {
-	height: 20rem;
+	height: 23rem;
+
+	@media (max-width: 1000px) {
+		height: 30rem;
+	}
+
+	@media (max-width: 640px) {
+		height: 43rem;
+	}
 }
 
 /* ── Sections ─────────────────────────────────────────────────────────── */
@@ -401,6 +410,16 @@ mc-collection-big-card,
 
 .collection-skeleton {
 	height: 15rem;
+}
+
+/* Egy gyűjtő-kártya magassága, hogy a fal ne tolja le a lapot. */
+.collector-skeleton {
+	height: 16.2rem;
+}
+
+/* A „mind a N" link a számmal együtt jön; addig is foglalja a helyét. */
+.more.is-pending {
+	visibility: hidden;
 }
 
 /* ── Who is collecting here ───────────────────────────────────────────── */

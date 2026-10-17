@@ -136,6 +136,7 @@ interface HomePageState {
 	authenticated: boolean;
 	/** The collectors who share a page, for the wall of finished collections. */
 	wall: WallEntry[];
+	wallLoading: boolean;
 	/** Which tab of the collection grid is open; null is the first on offer. */
 	collectionTab: HomeCollectionTab | null;
 	/**
@@ -164,6 +165,7 @@ const initialState: HomePageState = {
 	collectionStandings: [],
 	ratings: [],
 	wall: [],
+	wallLoading: true,
 	collectionsLoading: true,
 	spotlightId: null,
 	bandOfTheWeek: null,
@@ -442,6 +444,18 @@ export const HomePageStore = signalStore(
 				),
 				heroCollections,
 				heroIndex,
+				/**
+				 * The collections are still on their way. The standings come
+				 * before the catalog they are counted against on a cold start,
+				 * and every collection then has nothing in it — so the
+				 * placeholders stay until the albums are in, rather than the
+				 * section folding away and pushing the page back down.
+				 */
+				collectionsPending: computed(
+					() =>
+						store.collectionsLoading() ||
+						(store.albumsLoading() && collectionTiles().length === 0)
+				),
 				/**
 				 * The collection the big card shows — what the page opens on,
 				 * and the one thing on it that says what this app is for. The
@@ -858,12 +872,17 @@ export const HomePageStore = signalStore(
 									next: (cards: CollectorCardDocument[]) =>
 										patchState(store, {
 											wall: toWallEntries(cards),
+											wallLoading: false,
 										}),
-									error: (error) =>
+									error: (error) => {
 										console.error(
 											'Collector wall not read',
 											error
-										),
+										);
+										patchState(store, {
+											wallLoading: false,
+										});
+									},
 								})
 							)
 						)

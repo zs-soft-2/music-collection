@@ -27,7 +27,7 @@
 			(next)="store.nextBigCard()"
 			(show)="store.showBigCard($event)"
 		/>
-	} @else if (store.collectionsLoading()) {
+	} @else if (store.collectionsPending()) {
 		<div class="skeleton big-card-skeleton" role="status" aria-busy="true">
 			<span class="visually-hidden">{{ t('common.loading') }}</span>
 		</div>
@@ -38,11 +38,15 @@
 		about people rather than records, and for a visitor with no shelf of
 		their own it is the clearest answer to what the app is for.
 	-->
-	@if (store.collectorCards().length) {
+	@if (store.wallLoading() || store.collectorCards().length) {
 		<section class="section" aria-labelledby="collectors-title">
 			<header class="section-head">
 				<h2 id="collectors-title">{{ t('home.collectors.title') }}</h2>
-				<a class="more" routerLink="/collectors">
+				<a
+					class="more"
+					routerLink="/collectors"
+					[class.is-pending]="store.wallLoading()"
+				>
 					{{
 						t('home.collectors.allOf', {
 							count: store.collectorTotal(),
@@ -53,6 +57,11 @@
 			</header>
 
 			<ul class="collector-grid">
+				@if (store.wallLoading()) {
+					@for (i of placeholders(collectorPlaceholders); track i) {
+						<li class="skeleton collector-skeleton"></li>
+					}
+				}
 				@for (
 					collector of store.collectorCards();
 					track collector.uid
@@ -93,7 +102,7 @@
 	}
 
 	<!-- The collections themselves, under whichever shelf is asked for. -->
-	@if (store.collectionsLoading() || store.visibleCollections().length) {
+	@if (store.collectionsPending() || store.visibleCollections().length) {
 		<section class="section" aria-labelledby="collections-title">
 			<header class="section-head">
 				<h2 id="collections-title">
@@ -132,7 +141,7 @@
 			}
 
 			<ul class="collection-grid">
-				@if (store.collectionsLoading()) {
+				@if (store.collectionsPending()) {
 					@for (i of placeholders(3); track i) {
 						<li class="skeleton collection-skeleton"></li>
 					}

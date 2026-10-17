@@ -17,6 +17,7 @@ import { CatalogCoverageChartComponent } from './component/catalog-coverage-char
 import { HomeSearchComponent } from './component/home-search/home-search.component';
 import { JoinPromptComponent } from './component/join-prompt/join-prompt.component';
 import { HomePageStore } from './home-page.store';
+import { HOME_COLLECTOR_CARDS } from './home.model';
 import { CoverFallbackDirective } from '../../shared/image';
 
 /**
@@ -60,6 +61,9 @@ import { CoverFallbackDirective } from '../../shared/image';
 })
 export class HomePageComponent {
 	protected readonly store = inject(HomePageStore);
+
+	/** As many as the wall shows, so the page keeps its length. */
+	protected readonly collectorPlaceholders = HOME_COLLECTOR_CARDS;
 
 	protected readonly placeholders = (count: number) =>
 		Array.from({ length: count }, (_, i) => i);

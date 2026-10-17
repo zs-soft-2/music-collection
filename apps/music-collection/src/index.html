@@ -12,12 +12,57 @@
 		<link rel="icon" href="favicon.ico" sizes="48x48" />
 		<link rel="icon" type="image/svg+xml" href="favicon.svg" />
 		<link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+		<!--
+			Where the first data comes from: the App Check script (every
+			Firestore read waits on its token), Firestore, and the catalog
+			bundles in Storage. Opened while main.js is still on its way.
+		-->
+		<link rel="preconnect" href="https://www.gstatic.com" />
+		<link
+			rel="preconnect"
+			href="https://content-firebaseappcheck.googleapis.com"
+			crossorigin
+		/>
+		<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+		<link
+			rel="preconnect"
+			href="https://firebasestorage.googleapis.com"
+			crossorigin
+		/>
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
 			rel="stylesheet"
 			href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap"
 		/>
+		<style>
+			.mc-boot {
+				display: flex;
+				align-items: center;
+				gap: 0.5rem;
+				height: 64px;
+				padding: 0 1.5rem;
+				box-sizing: border-box;
+				background: var(--mc-card-bg, #161616);
+				border-bottom: 1px solid var(--mc-border, rgba(255, 255, 255, 0.08));
+				color: var(--mc-text, #fff);
+			}
+			.mc-boot svg {
+				color: var(--mc-primary, #ff4444);
+			}
+			.mc-boot span {
+				font-family: var(--mc-font-display, 'Bebas Neue', Impact, sans-serif);
+				font-size: 1.75rem;
+				letter-spacing: 0.04em;
+				line-height: 1;
+				white-space: nowrap;
+			}
+			@media (max-width: 768px) {
+				.mc-boot {
+					padding: 0 1rem;
+				}
+			}
+		</style>
 		<script>
 			// A mentett téma még az első festés előtt (villanás nélkül).
 			try {
@@ -28,6 +73,28 @@
 		</script>
 	</head>
 	<body>
-		<mc-root></mc-root>
+		<!--
+			What is on the screen while main.js downloads: the bar's own mark,
+			where the bar will draw it. Angular empties the element when it
+			starts, so this is painted once and never seen again after.
+		-->
+		<mc-root>
+			<div class="mc-boot" aria-hidden="true">
+				<svg
+					viewBox="0 0 24 24"
+					width="28"
+					height="28"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="1.8"
+					stroke-linecap="round"
+				>
+					<path
+						d="M3.5 12a8.5 8.5 0 1 0 17 0a8.5 8.5 0 1 0-17 0M10 12a2 2 0 1 0 4 0a2 2 0 1 0-4 0M12 6.5a5.5 5.5 0 0 0-5.5 5.5"
+					/>
+				</svg>
+				<span>Music Collection</span>
+			</div>
+		</mc-root>
 	</body>
 </html>

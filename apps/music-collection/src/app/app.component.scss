@@ -8,9 +8,14 @@ main {
 	padding-bottom: var(--mc-tab-bar-height);
 }
 
+/*
+ * A tartalom maga tölti ki a képernyőt, így a lábléc a hajtás alatt indul:
+ * amíg a lap kódja tölt, nem áll ott, ahonnan a megérkezése ellökné.
+ */
 .content {
 	flex: 1;
 	min-width: 0;
+	min-height: calc(100vh - var(--mc-app-bar-height));
 }
 
 footer {
