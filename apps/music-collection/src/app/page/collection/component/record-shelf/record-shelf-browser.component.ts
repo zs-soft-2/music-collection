@@ -707,6 +707,22 @@ export class RecordShelfBrowserComponent {
 		}
 	}
 
+	/** A click on a row of the list goes to that record. */
+	protected onRowClick(event: MouseEvent): void {
+		const at = this.rowAt(event);
+
+		if (at !== null) {
+			this.goTo(at);
+		}
+	}
+
+	/** A double click on a row opens the record it is. */
+	protected onRowOpen(event: MouseEvent): void {
+		if (this.rowAt(event) !== null) {
+			this.openCurrent(event);
+		}
+	}
+
 	protected onSwipeStart(event: PointerEvent): void {
 		this.swipeFrom = event.pointerType === 'mouse' ? null : event.clientX;
 	}
@@ -728,6 +744,16 @@ export class RecordShelfBrowserComponent {
 	/** The spine colour a record with no cover is shown in. */
 	protected swatch(record: BrowsedRecord): string {
 		return record.tint ?? `hsl(${record.hue} 32% 30%)`;
+	}
+
+	/** The place of the row an event happened on, or null off the rows. */
+	private rowAt(event: Event): number | null {
+		const row = (event.target as Element | null)?.closest<HTMLElement>(
+			'.row'
+		);
+		const at = Number(row?.dataset['at']);
+
+		return row && Number.isInteger(at) ? at : null;
 	}
 
 	/**

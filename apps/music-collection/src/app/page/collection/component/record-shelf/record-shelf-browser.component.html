@@ -1,9 +1,17 @@
+<!--
+	The dialog reads the keys and the clicks on the rows alike: a row is
+	reached with the arrow keys as well as with the pointer, so both land on
+	the one element that holds the focus.
+-->
 <dialog
 	#dialog
 	class="browser"
+	tabindex="-1"
 	aria-labelledby="shelf-browser-title"
 	(close)="onClosed()"
 	(keydown)="onKey($event)"
+	(click)="onRowClick($event)"
+	(dblclick)="onRowOpen($event)"
 >
 	@if (compartment(); as compartment) {
 		<header class="browser-head">
@@ -229,8 +237,6 @@
 						[class.is-lifted]="lifted() === record.release.id"
 						[class.is-drop-before]="markOf(i) === 'before'"
 						[class.is-drop-after]="markOf(i) === 'after'"
-						(click)="goTo(i)"
-						(dblclick)="openCurrent()"
 					>
 						@if (canArrange()) {
 							<i
