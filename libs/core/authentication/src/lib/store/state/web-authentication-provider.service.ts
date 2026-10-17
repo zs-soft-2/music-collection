@@ -1,6 +1,7 @@
 import {
 	Auth,
 	GoogleAuthProvider,
+	browserPopupRedirectResolver,
 	signInWithPopup,
 	signOut,
 } from '@angular/fire/auth';
@@ -22,7 +23,10 @@ export class WebAuthenticationProviderService extends AuthenticationProviderServ
 		// A Google különben csendben a böngésző aktív fiókját választja,
 		// így több fióknál nem lehetne másikkal belépni.
 		provider.setCustomParameters({ prompt: 'select_account' });
-		await signInWithPopup(this.auth, provider);
+		// The resolver is handed over here rather than at startup
+		// (app.config.ts): it loads Google's popup scripts, which only a
+		// sign-in needs.
+		await signInWithPopup(this.auth, provider, browserPopupRedirectResolver);
 	}
 
 	public async signOut(): Promise<void> {

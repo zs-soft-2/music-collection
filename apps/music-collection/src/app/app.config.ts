@@ -12,7 +12,13 @@ import {
 } from '@angular/core';
 import { getApp, initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { initializeAppCheck, provideAppCheck } from '@angular/fire/app-check';
-import { getAuth, provideAuth } from '@angular/fire/auth';
+import {
+	browserLocalPersistence,
+	browserSessionPersistence,
+	indexedDBLocalPersistence,
+	initializeAuth,
+	provideAuth,
+} from '@angular/fire/auth';
 import {
 	CACHE_SIZE_UNLIMITED,
 	initializeFirestore,
@@ -142,7 +148,22 @@ export const appConfig: ApplicationConfig = {
 				}),
 			})
 		),
-		provideAuth(() => getAuth()),
+		// `getAuth()` without the popup resolver. With it, the SDK fetches
+		// Google's api.js, its iframe loader and the auth iframe before it
+		// settles who is signed in — about 130 KB and three round trips, on
+		// the way to the first screen of every visit, for a popup that only a
+		// sign-in ever opens. The persistence is `getAuth()`'s own; the
+		// resolver goes to `signInWithPopup` instead
+		// (WebAuthenticationProviderService).
+		provideAuth(() =>
+			initializeAuth(getApp(), {
+				persistence: [
+					indexedDBLocalPersistence,
+					browserLocalPersistence,
+					browserSessionPersistence,
+				],
+			})
+		),
 		// The callables run where the Firestore database is (apps/functions).
 		provideFunctions(() => getFunctions(getApp(), 'europe-west4')),
 		provideStorage(() => getStorage()),
