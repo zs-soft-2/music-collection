@@ -182,11 +182,11 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 	 * The albums of the artist found online, the oldest first. Empty when no
 	 * source has one.
 	 *
-	 * MusicBrainz answers first with its official studio albums and EPs; live
-	 * albums and compilations are left out, as official bootlegs outnumber the
-	 * albums of some bands by far. An empty answer — the artist is unknown
-	 * there, or it lists nothing but live records — hands the question to the
-	 * Discogs discography.
+	 * MusicBrainz answers first with its official studio albums, EPs, live
+	 * albums and compilations; soundtracks, remixes, demos and the like are
+	 * left out. An empty answer — the artist is unknown there, or it lists
+	 * nothing the shelf knows — hands the question to the Discogs
+	 * discography.
 	 */
 	public fetchExternalAlbums$(
 		query: ArtistExternalQuery
@@ -202,7 +202,7 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 		);
 	}
 
-	/** The artist's official studio albums and EPs on MusicBrainz. */
+	/** The artist's official albums, EPs, live albums and compilations on MusicBrainz. */
 	private fetchMusicBrainzAlbums$(
 		query: ArtistExternalQuery
 	): Observable<ArtistExternalAlbum[]> {
@@ -214,7 +214,7 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 							new HttpParams()
 								.set(
 									'query',
-									`arid:${hit.id} AND primarytype:(album OR ep) AND status:official AND NOT secondarytype:*`
+									`arid:${hit.id} AND primarytype:(album OR ep) AND status:official AND NOT secondarytype:(soundtrack OR spokenword OR interview OR audiobook OR "audio drama" OR remix OR dj-mix OR mixtape/street OR demo OR "field recording")`
 								)
 								.set('limit', 100)
 								.set('fmt', 'json')

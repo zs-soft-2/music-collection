@@ -2000,7 +2000,7 @@
 		},
 		"artistAlbums": {
 			"load": "Laden",
-			"load-the-missing-studio": "Die fehlenden Studioalben und EPs von MusicBrainz laden",
+			"load-the-missing-studio": "Die fehlenden Alben, EPs, Live-Alben und Compilations von MusicBrainz laden",
 			"year": "Jahr",
 			"name": "Name",
 			"format": "Format",

@@ -2000,7 +2000,7 @@
 		},
 		"artistAlbums": {
 			"load": "Betöltés",
-			"load-the-missing-studio": "A hiányzó stúdióalbumok és EP-k betöltése a MusicBrainzről",
+			"load-the-missing-studio": "A hiányzó albumok, EP-k, live és válogatáslemezek betöltése a MusicBrainzről",
 			"year": "Év",
 			"name": "Név",
 			"format": "Formátum",

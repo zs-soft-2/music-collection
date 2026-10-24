@@ -272,15 +272,35 @@ export interface MusicBrainzReleaseGroupSearch {
 }
 
 /**
- * The release group as an album: a studio album or an EP. Null for other
- * kinds (live, compilation, demo…) and for those without a release date.
+ * What a release group's secondary types make of it: a live album, a
+ * compilation, or nothing the shelf has a word for. A group that is both
+ * counts as live. Any other secondary type (soundtrack, remix, demo…) makes
+ * it something else.
+ */
+function secondaryFormat(types: string[]): FormatEnum | null {
+	if (types.some((type) => type !== 'Live' && type !== 'Compilation')) {
+		return null;
+	}
+
+	return types.includes('Live')
+		? FormatEnum.live
+		: types.includes('Compilation')
+			? FormatEnum.compilation
+			: null;
+}
+
+/**
+ * The release group as an album: a studio album, an EP, a live album or a
+ * compilation. Null for other kinds (soundtrack, remix, demo…) and for
+ * those without a release date.
  */
 export function toExternalAlbum(
 	group: MusicBrainzReleaseGroup
 ): ArtistExternalAlbum | null {
 	const year = toFormedIn(group['first-release-date']);
-	const format = group['secondary-types']?.length
-		? null
+	const secondary = group['secondary-types'] ?? [];
+	const format = secondary.length
+		? secondaryFormat(secondary)
 		: group['primary-type'] === 'Album'
 			? FormatEnum.lp
 			: group['primary-type'] === 'EP'
