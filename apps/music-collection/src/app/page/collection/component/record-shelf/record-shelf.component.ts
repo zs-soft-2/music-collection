@@ -151,11 +151,14 @@ const READABLE_PX = 6;
 const HEX_COLOR = /^#[0-9a-f]{6}$/i;
 
 /**
- * How much of a compartment goes on one drawn board: a Kallax width, which
- * is the run a collector's eye is used to. Anything longer wraps onto the
- * next board of the same compartment.
+ * How much of a compartment goes on one drawn board. A board is as long as
+ * the compartment it is drawn for, so a compartment lengthened by a
+ * centimetre is drawn a centimetre longer and a centimetre more of it
+ * stands empty for records to be filed into. Only what is longer than a
+ * metre — wider than the room is likely to be — wraps onto the next board of
+ * the same compartment.
  */
-const BOARD_MM = 330;
+const BOARD_MM = 1000;
 
 /** The gap between two boards of the same compartment, as the styles set it. */
 const BOARD_GAP = 8;
