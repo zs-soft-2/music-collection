@@ -2,6 +2,7 @@ import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import {
 	ChangeDetectionStrategy,
 	Component,
+	DestroyRef,
 	inject,
 	signal,
 } from '@angular/core';
@@ -22,12 +23,14 @@ import { ADMIN_NAV } from './admin-nav';
 import { AdminStore } from './admin.store';
 
 const HIDDEN_STORAGE_KEY = 'mc-admin-nav-hidden';
+/** Ez alatt a menü fiók, fölötte oldalsáv (a stílus ugyanezt a határt húzza). */
+const COMPACT_QUERY = '(max-width: 1024px)';
 
 /**
- * Az admin felület héja: csoportosított oldalsáv (tableten és mobilon
- * ikonsáv, a menügombbal kinyitható), morzsamenü és a tartalom. Az
- * oldalsáv teljesen el is rejthető, hogy a tartalomé legyen a szélesség;
- * a választás ebben a böngészőben megmarad. Ha egy nyilvános oldalról
+ * Az admin felület héja: csoportosított menü, morzsamenü és a tartalom.
+ * Asztalon oldalsáv, ami teljesen el is rejthető, hogy a tartalomé legyen a
+ * szélesség (a választás ebben a böngészőben megmarad); tableten és
+ * mobilon ugyanez a menü fiók, amit a tartalom tetején lévő gomb nyit. Ha egy nyilvános oldalról
  * érkeztünk (`returnUrl`), vissza link oda.
  */
 @Component({
@@ -62,10 +65,14 @@ export class AdminComponent {
 		{ initialValue: this.createReturnLink() }
 	);
 	protected readonly expanded = signal(false);
+	/** Szűk képernyő: a menü fiók, az elrejtés itt nem számít. */
+	protected readonly compact = signal(false);
 	/** Teljesen elrejtett oldalsáv: a tartalom kapja a teljes szélességet. */
 	protected readonly hidden = signal(readHidden());
 
 	public constructor() {
+		this.followCompact();
+
 		// Oldalváltáskor a kinyitott (overlay) oldalsáv bezárul.
 		this.router.events
 			.pipe(
@@ -73,6 +80,27 @@ export class AdminComponent {
 				takeUntilDestroyed()
 			)
 			.subscribe(() => this.expanded.set(false));
+	}
+
+	private followCompact(): void {
+		if (typeof matchMedia !== 'function') {
+			return;
+		}
+
+		const query = matchMedia(COMPACT_QUERY);
+		const update = () => {
+			this.compact.set(query.matches);
+
+			if (!query.matches) {
+				this.expanded.set(false);
+			}
+		};
+
+		update();
+		query.addEventListener('change', update);
+		inject(DestroyRef).onDestroy(() =>
+			query.removeEventListener('change', update)
+		);
 	}
 
 	private createReturnLink(): UrlTree | null {
