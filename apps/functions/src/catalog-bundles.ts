@@ -34,7 +34,7 @@ import {
 	removeOldBundles,
 	uploadBundle,
 } from './bundle-storage';
-import { composeGuestBundle } from './guest-bundle';
+import { composeGuestBundle, readSurroundings } from './guest-bundle';
 
 const SYNC_COLLECTION = 'sync';
 const CATALOG_SYNC_DOCUMENT = 'catalog';
@@ -67,6 +67,8 @@ const GUEST_SOURCE_KEYS = ['artist', 'album', 'music-collection'];
 
 const BUNDLE_FOLDER = 'bundles';
 const GENRE_BUNDLE_FOLDER = 'bundles/genre';
+/** A műfaj-bundle részei: `bundles/genre-part/{slug}/{rész}/{másodperc}.bundle`. */
+const GENRE_PART_FOLDER = 'bundles/genre-part';
 
 /**
  * A beágyazott gyűjtemények (`artist/{uid}/album`): ezeket collection
@@ -293,13 +295,15 @@ export async function catalogBundleStatus(
 		name: string | null,
 		entry: BundleEntry | undefined,
 		featureKeys: string[],
-		since: Timestamp | null | undefined
+		since: Timestamp | null | undefined,
+		costKeys: string[] = featureKeys,
+		costExtra = 0
 	): Promise<CatalogBundleStatus> => {
 		const [changes, readCost] = await Promise.all([
 			since
 				? counter.changes(featureKeys, since)
 				: Promise.resolve({ changed: 0, deleted: 0 }),
-			totalOf(featureKeys),
+			totalOf(costKeys),
 		]);
 
 		return {
@@ -314,7 +318,7 @@ export async function catalogBundleStatus(
 			outdatedByReset:
 				kind !== 'guest' &&
 				isOutdatedByReset(resetAt, featureKeys, entry?.modifiedAt),
-			readCost,
+			readCost: readCost + costExtra,
 			week: entry?.week ?? null,
 		};
 	};
@@ -356,7 +360,11 @@ export async function catalogBundleStatus(
 					genreNames.get(slug) ?? slug,
 					genres[slug],
 					GENRE_BUNDLE_FEATURE_KEYS,
-					genres[slug]?.modifiedAt
+					genres[slug]?.modifiedAt,
+					// A szelet az előadókat és az albumokat olvassa végig, a
+					// többit csak ami hozzájuk tartozik: az előző építés mérete.
+					['artist', 'album'],
+					genres[slug]?.count ?? 0
 				)
 			),
 		...BUNDLE_FEATURE_KEYS.map((key) =>
@@ -477,92 +485,64 @@ async function rebuildFeatureBundle(
 	};
 }
 
+/** Egy műfaj szelete, feature-önként. */
+export interface GenreSlice {
+	artists: DocumentSnapshot[];
+	albums: DocumentSnapshot[];
+	tracks: DocumentSnapshot[];
+	memberships: DocumentSnapshot[];
+	contributions: DocumentSnapshot[];
+	musicians: DocumentSnapshot[];
+}
+
 /**
- * Egy műfaj szelete, ahogy a build-genre-bundles.mjs vágja: az előadó és az
- * album viszi a műfajt, a track az albumáét, a tagság a zenekaráét, a zenész
- * pedig minden zenekaráét, amiben játszott.
+ * Egy műfaj szelete: az előadó és az album viszi a műfajt, a track és a
+ * közreműködés az albumét, a tagság a zenekaráét, a zenész pedig mindazokét,
+ * amelyekben megnevezik.
  *
- * Az egész katalógust végig kell olvasni, mert a tagság nem mondja meg
- * magáról, melyik műfajba tartozik — de csak a kért műfaj dokumentumai
- * maradnak a memóriában.
+ * Csak az előadókat és az albumokat kell végigolvasni (a műfaj rajtuk van, a
+ * katalógus töredéke); a többit a hozzájuk tartozó azonosítók szerint kérdezzük,
+ * így az olvasás a szelet méretével arányos, nem a katalógusáéval.
  */
 export async function genreSlice(
 	database: Firestore,
 	slug: string,
 	genreOf: Map<unknown, string>
-): Promise<DocumentSnapshot[]> {
-	const slice: DocumentSnapshot[] = [];
-	const keep = (
-		documentSlug: string | null | undefined,
-		document: DocumentSnapshot
-	) => {
-		if (documentSlug === slug) {
-			slice.push(document);
-		}
-	};
-
+): Promise<GenreSlice> {
+	const artists: DocumentSnapshot[] = [];
 	const artistSlug = new Map<string, string | undefined>();
-	const artists = await database.collectionGroup('artist').get();
 
-	for (const artist of artists.docs) {
+	for (const artist of (await database.collectionGroup('artist').get())
+		.docs) {
 		const artistGenre = genreOf.get(artist.get('genre'));
 
 		artistSlug.set(artist.id, artistGenre);
-		keep(artistGenre, artist);
+
+		if (artistGenre === slug) {
+			artists.push(artist);
+		}
 	}
 
-	const albumSlug = new Map<string, string | undefined>();
-	const albums = await database.collectionGroup('album').get();
+	const albums: DocumentSnapshot[] = [];
 
-	for (const album of albums.docs) {
+	for (const album of (await database.collectionGroup('album').get()).docs) {
 		// Az album saját műfaja, vagy a zenekaráé, ha neki nincs.
 		const albumGenre =
 			genreOf.get(album.get('genre')) ??
 			artistSlug.get(album.ref.parent.parent?.id ?? '');
 
-		albumSlug.set(album.id, albumGenre);
-		keep(albumGenre, album);
-	}
-
-	const tracks = await database.collectionGroup('track').get();
-
-	for (const track of tracks.docs) {
-		keep(albumSlug.get(track.get('albumUid')), track);
-	}
-
-	/** A zenészek, akik ebben a műfajban játszottak. */
-	const musicians = new Set<string>();
-	const memberships = await database.collectionGroup('membership').get();
-
-	for (const membership of memberships.docs) {
-		const membershipGenre = artistSlug.get(membership.get('artistUid'));
-
-		if (membershipGenre === slug && membership.get('musicianUid')) {
-			musicians.add(membership.get('musicianUid'));
-		}
-		keep(membershipGenre, membership);
-	}
-
-	const contributions = await database.collectionGroup('contribution').get();
-
-	for (const contribution of contributions.docs) {
-		const contributionGenre = albumSlug.get(contribution.get('albumUid'));
-
-		if (contributionGenre === slug && contribution.get('musicianUid')) {
-			musicians.add(contribution.get('musicianUid'));
-		}
-		keep(contributionGenre, contribution);
-	}
-
-	const musicianDocuments = await database.collectionGroup('musician').get();
-
-	for (const musician of musicianDocuments.docs) {
-		if (musicians.has(musician.id)) {
-			slice.push(musician);
+		if (albumGenre === slug) {
+			albums.push(album);
 		}
 	}
 
-	return slice;
+	const around = await readSurroundings(
+		database,
+		albums.map((album) => album.id),
+		artists.map((artist) => artist.id)
+	);
+
+	return { artists, albums, ...around };
 }
 
 async function rebuildGenreBundle(
@@ -601,7 +581,15 @@ async function rebuildGenreBundle(
 	const genreOf = new Map<unknown, string>(
 		taxonomy.docs.map((document) => [document.get('name'), document.id])
 	);
-	const documents = await genreSlice(database, slug, genreOf);
+	const slice = await genreSlice(database, slug, genreOf);
+	const documents = [
+		...slice.artists,
+		...slice.albums,
+		...slice.tracks,
+		...slice.memberships,
+		...slice.contributions,
+		...slice.musicians,
+	];
 
 	if (!documents.length) {
 		throw new CatalogBundleError(
@@ -610,37 +598,96 @@ async function rebuildGenreBundle(
 		);
 	}
 
-	const builder = database.bundle(`genre-${slug}-${version.seconds}`);
+	const write = async (
+		folder: string,
+		name: string,
+		files: DocumentSnapshot[]
+	) => {
+		const builder = database.bundle(`${name}-${version.seconds}`);
 
-	for (const document of documents) {
-		builder.add(document);
+		for (const document of files) {
+			builder.add(document);
+		}
+
+		const gzipped = gzipSync(buildBundle(builder));
+		const path = `${folder}/${version.seconds}.bundle`;
+
+		await uploadBundle(bucket, path, gzipped);
+		return { path, bytes: gzipped.length };
+	};
+
+	// Az egyben épített fájl a régi klienseknek marad; az újak feature-önként
+	// töltenek: előbb az előadók és az albumok, amiből a lap kirajzolódik,
+	// aztán egymás után a többi.
+	const whole = await write(
+		`${GENRE_BUNDLE_FOLDER}/${slug}`,
+		`genre-${slug}`,
+		documents
+	);
+	const partFiles: [string, Record<string, DocumentSnapshot[]>][] = [
+		['core', { artist: slice.artists, album: slice.albums }],
+		['track', { track: slice.tracks }],
+		['membership', { membership: slice.memberships }],
+		['contribution', { contribution: slice.contributions }],
+		['musician', { musician: slice.musicians }],
+	];
+	const parts = [];
+
+	for (const [name, features] of partFiles) {
+		const files = Object.values(features).flat();
+		const built = await write(
+			`${GENRE_PART_FOLDER}/${slug}/${name}`,
+			`genre-${slug}-${name}`,
+			files
+		);
+
+		parts.push({
+			path: built.path,
+			modifiedAt: version,
+			count: files.length,
+			features: Object.fromEntries(
+				Object.entries(features).map(([feature, list]) => [
+					feature,
+					list.length,
+				])
+			),
+		});
 	}
 
-	const gzipped = gzipSync(buildBundle(builder));
-	const path = `${GENRE_BUNDLE_FOLDER}/${slug}/${version.seconds}.bundle`;
-
-	await uploadBundle(bucket, path, gzipped);
 	await catalogReference(database).set(
 		{
 			genreBundles: {
 				[slug]: {
-					path,
+					path: whole.path,
 					modifiedAt: version,
 					count: documents.length,
 					builtAt: FieldValue.serverTimestamp(),
+					parts,
 				},
 			},
 		},
 		{ merge: true }
 	);
-	await removeOldBundles(bucket, `${GENRE_BUNDLE_FOLDER}/${slug}`, path);
+	await removeOldBundles(
+		bucket,
+		`${GENRE_BUNDLE_FOLDER}/${slug}`,
+		whole.path
+	);
+
+	for (const [index, [name]] of partFiles.entries()) {
+		await removeOldBundles(
+			bucket,
+			`${GENRE_PART_FOLDER}/${slug}/${name}`,
+			parts[index].path
+		);
+	}
 
 	return {
 		kind: 'genre',
 		key: slug,
-		path,
+		path: whole.path,
 		count: documents.length,
-		bytes: gzipped.length,
+		bytes: whole.bytes,
 		collections: null,
 	};
 }

@@ -145,6 +145,12 @@ interface CatalogBundle {
 	modifiedAt: Timestamp;
 	count: number;
 	/**
+	 * The same snapshot in parts, by feature, where it was built so: the
+	 * artists and albums a page is drawn from, then the rest one feature to
+	 * a file. A reader fetches the parts that carry what it asks for.
+	 */
+	parts?: CatalogBundle[];
+	/**
 	 * Per feature how many of its documents the file holds, where the file
 	 * says. A feature it has none of is not worth downloading the file for;
 	 * a feature it does not name at all, the showcase did not bring.
@@ -179,9 +185,7 @@ interface CatalogSync {
  * tracks, credits, line-ups and musicians behind them — nine documents in
  * ten, which a first visit has no use for until a page asks.
  */
-interface GuestBundle extends CatalogBundle {
-	parts?: CatalogBundle[];
-}
+type GuestBundle = CatalogBundle;
 
 interface FeatureVersion {
 	modifiedAt: Timestamp | null;
@@ -591,7 +595,7 @@ export class FirestoreSyncService {
 
 		if (!scope.genres.length) {
 			return scope.guest && catalog.guestBundle
-				? this.guestBundles(catalog.guestBundle, featureKey)
+				? this.partsFor(catalog.guestBundle, featureKey)
 				: [];
 		}
 
@@ -600,20 +604,18 @@ export class FirestoreSyncService {
 		);
 
 		return bundles.every((bundle): bundle is CatalogBundle => !!bundle)
-			? bundles
+			? bundles.flatMap((bundle) => this.partsFor(bundle, featureKey))
 			: [];
 	}
 
 	/**
-	 * The showcase files serving a feature: the part that carries it, so the
-	 * home page waits on the artists and albums alone. A feature no part
-	 * names is handed all of them, which say so and are not downloaded for
-	 * it; a showcase built before the split is the one file it always was.
+	 * The files of a showcase or a genre serving a feature: the part that
+	 * carries it, so the home page waits on the artists and albums alone. A
+	 * feature no part names is handed all of them, which say so and are not
+	 * downloaded for it; a bundle built before the split is the one file it
+	 * always was.
 	 */
-	private guestBundles(
-		guest: GuestBundle,
-		featureKey: string
-	): CatalogBundle[] {
+	private partsFor(guest: GuestBundle, featureKey: string): CatalogBundle[] {
 		const parts = guest.parts ?? [];
 
 		if (!parts.length) {

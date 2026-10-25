@@ -13,12 +13,35 @@ const document = (
 	ref: { parent: { parent: parentId ? { id: parentId } : null } },
 });
 
-/** Collection groupok, ahogy a szeletelés olvassa őket. */
+/**
+ * Az adatbázis, ahogy a szeletelés olvassa: az előadók és az albumok
+ * collection groupként, a többi azonosító szerinti szűréssel.
+ */
 const database = (groups: Record<string, ReturnType<typeof document>[]>) =>
 	({
 		collectionGroup: (name: string) => ({
 			get: async () => ({ docs: groups[name] ?? [] }),
 		}),
+		collection: (name: string) => ({
+			doc: (id: string) => ({ collection: name, id }),
+			where: (field: string, _operator: string, values: unknown[]) => ({
+				get: async () => ({
+					docs: (groups[name] ?? []).filter((item) =>
+						values.includes(item.get(field))
+					),
+				}),
+			}),
+		}),
+		getAll: async (...references: { collection: string; id: string }[]) =>
+			references.map((reference) => {
+				const found = (groups[reference.collection] ?? []).find(
+					(item) => item.id === reference.id
+				);
+
+				return found
+					? Object.assign(found, { exists: true })
+					: { id: reference.id, exists: false };
+			}),
 	}) as unknown as Firestore;
 
 const genreOf = new Map<unknown, string>([
@@ -58,7 +81,8 @@ describe('genreSlice', () => {
 		],
 	});
 	const ids = async (slug: string) =>
-		(await genreSlice(catalog, slug, genreOf))
+		Object.values(await genreSlice(catalog, slug, genreOf))
+			.flat()
 			.map((item) => item.id)
 			.sort();
 

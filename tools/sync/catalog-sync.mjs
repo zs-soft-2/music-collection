@@ -176,6 +176,9 @@ export async function announceGenreBundle(
 						modifiedAt,
 						count,
 						builtAt: FieldValue.serverTimestamp(),
+						// This builds the one file; parts of an earlier build
+						// would be older than it.
+						parts: FieldValue.delete(),
 					},
 				},
 			},
