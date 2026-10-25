@@ -142,6 +142,14 @@ export const appConfig: ApplicationConfig = {
 			// the sync cache (FirestoreSyncService) relies on nothing being
 			// garbage collected.
 			initializeFirestore(getApp(), {
+				// Every catalog list waits for the confirmed `sync/catalog`
+				// snapshot, which only arrives over Firestore's streaming
+				// channel. Mobile networks, proxies and in-app browsers
+				// often hold that channel back; the SDK then tries again and
+				// again while a first visit, with no cache to show, sits
+				// empty. This has it switch to long polling when the stream
+				// does not come up.
+				experimentalAutoDetectLongPolling: true,
 				localCache: persistentLocalCache({
 					cacheSizeBytes: CACHE_SIZE_UNLIMITED,
 					tabManager: persistentMultipleTabManager(),
