@@ -5,6 +5,7 @@
 			"still": "Backdrop: still scene",
 			"live": "Backdrop: live scene"
 		},
+		"discover": "Discover",
 		"overview": "Overview",
 		"brandHome": "Music Collection — home",
 		"main": "Main",
@@ -272,6 +273,10 @@
 		"week": "{{start}} – {{end}}"
 	},
 	"home": {
+		"discover": {
+			"title": "Browse the catalog",
+			"lead": "Styles, decades, artists and the newest albums."
+		},
 		"glance": {
 			"title": "The catalog at a glance",
 			"openCollection": "Open my collection",
@@ -3679,37 +3684,9 @@
 					"title": "Find a record",
 					"content": "One field for the whole catalog: an artist, an album or a track, and the results come while you type."
 				},
-				"spotlight": {
-					"title": "One act in the light",
-					"content": "The home page always puts one artist forward: the band of the week, or — on a week nobody was chosen for — a draw from the catalog. Shuffle it if you would rather see somebody else."
-				},
-				"catalog": {
-					"title": "What the catalog holds",
-					"content": "Artists, albums, pressings and tracks, and how much of all that already has a cover, a year and a label on it."
-				},
-				"coverage": {
-					"title": "How much of it is collected",
-					"content": "The catalog's albums by decade, and how many of them are already on a shelf — signed in, it is your own collection drawn onto it."
-				},
-				"artists": {
-					"title": "The acts",
-					"content": "The artist pages open from here: their records, who played in them, and who those musicians played with elsewhere."
-				},
-				"styles": {
-					"title": "By style",
-					"content": "The catalog broken up by genre: a row of albums for each style, to read on from."
-				},
-				"decades": {
-					"title": "By decade",
-					"content": "The same by age: how many records the catalog holds from each decade, either side of the eighties."
-				},
-				"acts": {
-					"title": "Bands, projects and formations",
-					"content": "Not every act is a band: the catalog keeps solo projects, supergroups and one-off formations apart."
-				},
-				"albums": {
-					"title": "The newest albums",
-					"content": "What went into the catalog last — by when it was written down, not by when it came out."
+				"discover": {
+					"title": "The rest of the catalog",
+					"content": "Styles, decades, artists and the newest albums — browsing, rather than things to do."
 				}
 			},
 			"guest": {
@@ -3724,17 +3701,9 @@
 						"title": "The bar",
 						"content": "Everything starts here: the pages a visitor may browse, and to the right the language and the light or dark theme."
 					},
-					"recent": {
-						"title": "What arrived lately",
-						"content": "The catalog's latest entries: what collectors have most recently written down in it."
-					},
 					"challenges": {
 						"title": "Challenges",
 						"content": "Sets of records a rule defines: a label's series, a decade, a band's whole output. Signed in, you also see how far you have got in each."
-					},
-					"join": {
-						"title": "What signing in adds",
-						"content": "A shelf of your own, a wishlist, radio made of your own records, challenges and the question of the day — all of it hangs on an account."
 					},
 					"login": {
 						"title": "This is the way in",
@@ -3753,10 +3722,6 @@
 					"bar": {
 						"title": "The bar",
 						"content": "Everything starts here. On a wide screen the pages sit in a row, on a phone they are behind the menu button, and the language and the theme are always to the right."
-					},
-					"recent": {
-						"title": "What arrived lately",
-						"content": "The copies you put on the shelf most recently — or, on a week you added none, what the catalog itself has gained."
 					},
 					"challenges": {
 						"title": "Challenges",
@@ -4374,6 +4339,41 @@
 				"bandmates": {
 					"title": "Who they played with",
 					"content": "The musicians they shared a band with. The network carries on from here."
+				}
+			},
+			"discover": {
+				"name": "The discover page",
+				"spotlight": {
+					"title": "One act in the light",
+					"content": "The home page always puts one artist forward: the band of the week, or — on a week nobody was chosen for — a draw from the catalog. Shuffle it if you would rather see somebody else."
+				},
+				"catalog": {
+					"title": "What the catalog holds",
+					"content": "Artists, albums, pressings and tracks, and how much of all that already has a cover, a year and a label on it."
+				},
+				"coverage": {
+					"title": "How much of it is collected",
+					"content": "The catalog's albums by decade, and how many of them are already on a shelf — signed in, it is your own collection drawn onto it."
+				},
+				"artists": {
+					"title": "The acts",
+					"content": "The artist pages open from here: their records, who played in them, and who those musicians played with elsewhere."
+				},
+				"styles": {
+					"title": "By style",
+					"content": "The catalog broken up by genre: a row of albums for each style, to read on from."
+				},
+				"decades": {
+					"title": "By decade",
+					"content": "The same by age: how many records the catalog holds from each decade, either side of the eighties."
+				},
+				"acts": {
+					"title": "Bands, projects and formations",
+					"content": "Not every act is a band: the catalog keeps solo projects, supergroups and one-off formations apart."
+				},
+				"albums": {
+					"title": "The newest albums",
+					"content": "What went into the catalog last — by when it was written down, not by when it came out."
 				}
 			}
 		}

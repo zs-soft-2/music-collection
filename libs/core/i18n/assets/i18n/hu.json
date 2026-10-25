@@ -5,6 +5,7 @@
 			"still": "Háttér: álló jelenet",
 			"live": "Háttér: élő jelenet"
 		},
+		"discover": "Felfedezés",
 		"overview": "Áttekintés",
 		"brandHome": "Music Collection — főoldal",
 		"main": "Fő menü",
@@ -272,6 +273,10 @@
 		"week": "{{start}} – {{end}}"
 	},
 	"home": {
+		"discover": {
+			"title": "Böngészd a katalógust",
+			"lead": "Műfajok, évtizedek, előadók és a legújabb albumok."
+		},
 		"glance": {
 			"title": "A katalógus egy pillantásra",
 			"openCollection": "Gyűjteményem megnyitása",
@@ -3679,37 +3684,9 @@
 					"title": "Keress egy lemezt",
 					"content": "Egy mező az egész katalógusra: előadó, album vagy szám — a találatok már gépelés közben jönnek."
 				},
-				"spotlight": {
-					"title": "Egy előadó a reflektorban",
-					"content": "A nyitólap mindig előrevesz valakit: a hét bandáját, vagy — ha arra a hétre nem választott senkit — egy húzást a katalógusból. Ha mást szeretnél, keverd meg."
-				},
-				"catalog": {
-					"title": "Mit tud a katalógus",
-					"content": "Előadók, albumok, kiadások, számok — és hogy mindebből mennyinek van már borítója, éve és kiadója."
-				},
-				"coverage": {
-					"title": "Mennyi van meg belőle",
-					"content": "A katalógus albumai évtizedenként, és hogy mennyi van már meg közülük — belépve a saját gyűjteményed rajzolódik rá."
-				},
-				"artists": {
-					"title": "Az előadók",
-					"content": "Innen nyílnak az előadó-oldalak: a lemezeikkel, a tagsággal, és azzal, hogy a zenészeik hol játszottak még."
-				},
-				"styles": {
-					"title": "Műfaj szerint",
-					"content": "A katalógus műfajonként szétszedve: stílusonként egy sor album, ahonnan tovább lehet olvasni."
-				},
-				"decades": {
-					"title": "Évtized szerint",
-					"content": "Ugyanaz kor szerint: melyik évtizedből mennyi lemez van a katalógusban, a nyolcvanas évek két oldalán."
-				},
-				"acts": {
-					"title": "Zenekarok, projektek, formációk",
-					"content": "Nem minden előadó zenekar: a katalógus külön veszi a szólóprojekteket, a szupergroupokat és az alkalmi formációkat."
-				},
-				"albums": {
-					"title": "A legfrissebb albumok",
-					"content": "Ami utoljára került a katalógusba — nem a megjelenés éve szerint, hanem aszerint, hogy mikor írtuk le."
+				"discover": {
+					"title": "A katalógus többi része",
+					"content": "Műfaj, évtized, előadók és a legújabb albumok — ami már nem a te teendőid, hanem a böngészés."
 				}
 			},
 			"guest": {
@@ -3724,17 +3701,9 @@
 						"title": "A felső sáv",
 						"content": "Innen indul minden: a lapok, amiket vendégként is megnézhetsz, jobbra pedig a nyelv és a világos vagy sötét téma."
 					},
-					"recent": {
-						"title": "Ami mostanában került be",
-						"content": "A katalógus friss szerzeményei: amit a gyűjtők legutóbb írtak le benne."
-					},
 					"challenges": {
 						"title": "Kihívások",
 						"content": "Lemezek halmaza szabály szerint: egy kiadó sorozata, egy évtized, egy banda teljes termése. Belépve az is látszik, hol tartasz bennük."
-					},
-					"join": {
-						"title": "Ami belépés után jön",
-						"content": "Saját polc, kívánságlista, rádió a saját lemezeidből, kihívások és a napi kérdés — ezek mind a fiókodhoz tartoznak."
 					},
 					"login": {
 						"title": "Itt tudsz belépni",
@@ -3753,10 +3722,6 @@
 					"bar": {
 						"title": "A felső sáv",
 						"content": "Innen indul minden. Nagy képernyőn egy sorban állnak a lapok, telefonon a menü mögött, a nyelv meg a téma pedig mindig jobbra."
-					},
-					"recent": {
-						"title": "Ami mostanában került be",
-						"content": "A legutóbb polcra tett lemezeid — és ha épp nem tettél fel semmit, az, amivel a katalógus bővült."
 					},
 					"challenges": {
 						"title": "Kihívások",
@@ -4374,6 +4339,41 @@
 				"bandmates": {
 					"title": "Akikkel játszott",
 					"content": "A zenészek, akikkel közös bandában volt. Innen tovább lehet menni a hálón."
+				}
+			},
+			"discover": {
+				"name": "A felfedezés lap",
+				"spotlight": {
+					"title": "Egy előadó a reflektorban",
+					"content": "A nyitólap mindig előrevesz valakit: a hét bandáját, vagy — ha arra a hétre nem választott senkit — egy húzást a katalógusból. Ha mást szeretnél, keverd meg."
+				},
+				"catalog": {
+					"title": "Mit tud a katalógus",
+					"content": "Előadók, albumok, kiadások, számok — és hogy mindebből mennyinek van már borítója, éve és kiadója."
+				},
+				"coverage": {
+					"title": "Mennyi van meg belőle",
+					"content": "A katalógus albumai évtizedenként, és hogy mennyi van már meg közülük — belépve a saját gyűjteményed rajzolódik rá."
+				},
+				"artists": {
+					"title": "Az előadók",
+					"content": "Innen nyílnak az előadó-oldalak: a lemezeikkel, a tagsággal, és azzal, hogy a zenészeik hol játszottak még."
+				},
+				"styles": {
+					"title": "Műfaj szerint",
+					"content": "A katalógus műfajonként szétszedve: stílusonként egy sor album, ahonnan tovább lehet olvasni."
+				},
+				"decades": {
+					"title": "Évtized szerint",
+					"content": "Ugyanaz kor szerint: melyik évtizedből mennyi lemez van a katalógusban, a nyolcvanas évek két oldalán."
+				},
+				"acts": {
+					"title": "Zenekarok, projektek, formációk",
+					"content": "Nem minden előadó zenekar: a katalógus külön veszi a szólóprojekteket, a szupergroupokat és az alkalmi formációkat."
+				},
+				"albums": {
+					"title": "A legfrissebb albumok",
+					"content": "Ami utoljára került a katalógusba — nem a megjelenés éve szerint, hanem aszerint, hogy mikor írtuk le."
 				}
 			}
 		}

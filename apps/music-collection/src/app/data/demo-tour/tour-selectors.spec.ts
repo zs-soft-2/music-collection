@@ -26,6 +26,7 @@ const PAGES: Record<string, string[]> = {
 		'module/top-bar',
 		'app.component.html',
 	],
+	'page-discover': ['page/discover/discover-page.component.html'],
 	'page-collection': ['page/collection/collection-page.component.html'],
 	'page-copy': ['page/collection-item/collection-item-page.component.html'],
 	'page-scan': ['page/scan/scan-page.component.html'],

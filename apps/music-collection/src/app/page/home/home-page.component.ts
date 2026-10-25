@@ -2,23 +2,13 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
-import {
-	ArtistTileComponent,
-	ReleaseCardComponent,
-} from '../../shared/music-ui';
 import { NextAlbumsComponent } from '../collections/component/next-albums/next-albums.component';
-import { AlbumGroupComponent } from './component/album-group/album-group.component';
-import { ArtistGroupComponent } from './component/artist-group/artist-group.component';
-import { ArtistSpotlightComponent } from './component/artist-spotlight/artist-spotlight.component';
 import { CollectionBigCardComponent } from './component/collection-big-card/collection-big-card.component';
 import { CollectionTileComponent } from './component/collection-tile/collection-tile.component';
 import { CollectorCardComponent } from './component/collector-card/collector-card.component';
-import { CatalogCoverageChartComponent } from './component/catalog-coverage-chart/catalog-coverage-chart.component';
 import { HomeSearchComponent } from './component/home-search/home-search.component';
-import { JoinPromptComponent } from './component/join-prompt/join-prompt.component';
 import { HomePageStore } from './home-page.store';
 import { HOME_COLLECTOR_CARDS } from './home.model';
-import { CoverFallbackDirective } from '../../shared/image';
 
 /**
  * Home page. It opens on the big card — the collection of the week, which
@@ -26,10 +16,9 @@ import { CoverFallbackDirective } from '../../shared/image';
  * then on the collections themselves: what there is to do with this catalog
  * comes before how big the catalog is.
  *
- * Below that the catalog has its own half of the page: the counts and the
- * coverage by decade, the band of the week, what was added recently, the
- * most collected artists, ways through the catalog by style, by decade and
- * by kind of act, and its newest albums.
+ * The catalog's own half — counts, the band of the week, ways through
+ * it by style, decade and act — lives on the discover page, linked from
+ * the foot of this one.
  *
  * Everything the catalog holds is shown to a guest as well; what needs a
  * collection behind it falls back to the catalog, and the sign-in prompt
@@ -42,17 +31,9 @@ import { CoverFallbackDirective } from '../../shared/image';
 	templateUrl: './home-page.component.html',
 	styleUrls: ['./home-page.component.scss'],
 	imports: [
-		CoverFallbackDirective,
 		...I18N_IMPORTS,
 		RouterLink,
-		ReleaseCardComponent,
-		AlbumGroupComponent,
-		ArtistGroupComponent,
-		ArtistSpotlightComponent,
-		ArtistTileComponent,
-		CatalogCoverageChartComponent,
 		HomeSearchComponent,
-		JoinPromptComponent,
 		CollectionBigCardComponent,
 		CollectionTileComponent,
 		CollectorCardComponent,

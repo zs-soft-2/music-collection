@@ -5,6 +5,7 @@
 			"still": "Hintergrund: stehende Szene",
 			"live": "Hintergrund: lebendige Szene"
 		},
+		"discover": "Entdecken",
 		"overview": "Überblick",
 		"brandHome": "Music Collection — Startseite",
 		"main": "Hauptmenü",
@@ -272,6 +273,10 @@
 		"week": "{{start}} – {{end}}"
 	},
 	"home": {
+		"discover": {
+			"title": "Katalog durchstöbern",
+			"lead": "Stile, Jahrzehnte, Künstler und die neuesten Alben."
+		},
 		"glance": {
 			"title": "Der Katalog auf einen Blick",
 			"openCollection": "Meine Sammlung öffnen",
@@ -3679,37 +3684,9 @@
 					"title": "Finde eine Platte",
 					"content": "Ein Feld für den ganzen Katalog: Interpret, Album oder Titel — die Treffer kommen, während du tippst."
 				},
-				"spotlight": {
-					"title": "Ein Act im Scheinwerfer",
-					"content": "Die Startseite stellt immer jemanden nach vorn: die Band der Woche oder — in einer Woche ohne Wahl — einen Zufallsgriff aus dem Katalog. Willst du jemand anderen, mische neu."
-				},
-				"catalog": {
-					"title": "Was der Katalog weiß",
-					"content": "Interpreten, Alben, Pressungen und Titel — und wie viel davon schon Cover, Jahr und Label hat."
-				},
-				"coverage": {
-					"title": "Wie viel davon gesammelt ist",
-					"content": "Die Alben des Katalogs nach Jahrzehnten, und wie viele davon schon im Regal stehen — angemeldet ist es deine eigene Sammlung, die daraufgezeichnet wird."
-				},
-				"artists": {
-					"title": "Die Acts",
-					"content": "Von hier öffnen die Interpretenseiten: ihre Platten, wer darin gespielt hat und wo diese Musiker sonst noch spielten."
-				},
-				"styles": {
-					"title": "Nach Stil",
-					"content": "Der Katalog nach Genres zerlegt: pro Stil eine Reihe von Alben, von der aus es weitergeht."
-				},
-				"decades": {
-					"title": "Nach Jahrzehnt",
-					"content": "Dasselbe nach Alter: wie viele Platten der Katalog aus jedem Jahrzehnt hält, beiderseits der Achtziger."
-				},
-				"acts": {
-					"title": "Bands, Projekte und Formationen",
-					"content": "Nicht jeder Act ist eine Band: Der Katalog hält Soloprojekte, Supergroups und einmalige Formationen auseinander."
-				},
-				"albums": {
-					"title": "Die neuesten Alben",
-					"content": "Was zuletzt in den Katalog kam — danach, wann es erfasst wurde, nicht wann es erschien."
+				"discover": {
+					"title": "Der Rest des Katalogs",
+					"content": "Stile, Jahrzehnte, Künstler und die neuesten Alben — Stöbern statt Aufgaben."
 				}
 			},
 			"guest": {
@@ -3724,17 +3701,9 @@
 						"title": "Die Leiste",
 						"content": "Hier fängt alles an: die Seiten, die auch ein Gast ansehen darf — und rechts die Sprache und das helle oder dunkle Design."
 					},
-					"recent": {
-						"title": "Was zuletzt kam",
-						"content": "Die jüngsten Einträge des Katalogs: was Sammler zuletzt darin erfasst haben."
-					},
 					"challenges": {
 						"title": "Challenges",
 						"content": "Plattenmengen, die eine Regel bestimmt: eine Serie eines Labels, ein Jahrzehnt, das ganze Werk einer Band. Angemeldet siehst du auch, wie weit du bist."
-					},
-					"join": {
-						"title": "Was die Anmeldung bringt",
-						"content": "Ein eigenes Regal, eine Wunschliste, Radio aus deinen eigenen Platten, Challenges und die Tagesfrage — all das hängt an einem Konto."
 					},
 					"login": {
 						"title": "Hier geht es hinein",
@@ -3753,10 +3722,6 @@
 					"bar": {
 						"title": "Die Leiste",
 						"content": "Hier fängt alles an. Auf einem breiten Bildschirm stehen die Seiten in einer Reihe, auf dem Telefon hinter dem Menüknopf — und Sprache und Design immer rechts."
-					},
-					"recent": {
-						"title": "Was zuletzt kam",
-						"content": "Die Platten, die du zuletzt ins Regal gestellt hast — oder, in einer Woche ohne Zugang, was der Katalog selbst dazubekommen hat."
 					},
 					"challenges": {
 						"title": "Challenges",
@@ -4374,6 +4339,41 @@
 				"bandmates": {
 					"title": "Mit wem er gespielt hat",
 					"content": "Die Musiker, mit denen er in einer Band war. Von hier geht es im Netz weiter."
+				}
+			},
+			"discover": {
+				"name": "Die Entdecken-Seite",
+				"spotlight": {
+					"title": "Ein Act im Scheinwerfer",
+					"content": "Die Startseite stellt immer jemanden nach vorn: die Band der Woche oder — in einer Woche ohne Wahl — einen Zufallsgriff aus dem Katalog. Willst du jemand anderen, mische neu."
+				},
+				"catalog": {
+					"title": "Was der Katalog weiß",
+					"content": "Interpreten, Alben, Pressungen und Titel — und wie viel davon schon Cover, Jahr und Label hat."
+				},
+				"coverage": {
+					"title": "Wie viel davon gesammelt ist",
+					"content": "Die Alben des Katalogs nach Jahrzehnten, und wie viele davon schon im Regal stehen — angemeldet ist es deine eigene Sammlung, die daraufgezeichnet wird."
+				},
+				"artists": {
+					"title": "Die Acts",
+					"content": "Von hier öffnen die Interpretenseiten: ihre Platten, wer darin gespielt hat und wo diese Musiker sonst noch spielten."
+				},
+				"styles": {
+					"title": "Nach Stil",
+					"content": "Der Katalog nach Genres zerlegt: pro Stil eine Reihe von Alben, von der aus es weitergeht."
+				},
+				"decades": {
+					"title": "Nach Jahrzehnt",
+					"content": "Dasselbe nach Alter: wie viele Platten der Katalog aus jedem Jahrzehnt hält, beiderseits der Achtziger."
+				},
+				"acts": {
+					"title": "Bands, Projekte und Formationen",
+					"content": "Nicht jeder Act ist eine Band: Der Katalog hält Soloprojekte, Supergroups und einmalige Formationen auseinander."
+				},
+				"albums": {
+					"title": "Die neuesten Alben",
+					"content": "Was zuletzt in den Katalog kam — danach, wann es erfasst wurde, nicht wann es erschien."
 				}
 			}
 		}

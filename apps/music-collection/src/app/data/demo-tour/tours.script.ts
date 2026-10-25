@@ -80,35 +80,15 @@ const head = (id: string): string => `[aria-labelledby="${id}"] .section-head`;
 
 /**
  * The stops both home walkthroughs share, in the order the page lays them
- * out. Everything the page draws gets a stop: a tour that skipped half the
- * rows would leave the reader wondering what the rest was.
+ * out. The rest of the catalog has a page of its own, with its own tour.
  */
 const homeCatalogStops: Stop[] = [
 	{ id: 'search', selector: 'mc-home-search' },
-	// The artist's own block rather than the whole hero: the hero is the width
-	// of the page, so a tooltip has nowhere to stand beside it. The skeleton
-	// stands in while the catalog is still arriving.
-	{
-		id: 'spotlight',
-		selector: 'mc-artist-spotlight .content, .spotlight-skeleton',
-		position: 'right',
-	},
-	// The headings, not the whole sections: what is under them stays readable
-	// through the veil, and the tooltip gets room below.
-	{ id: 'catalog', selector: head('glance-title') },
-	{
-		id: 'coverage',
-		selector: 'mc-catalog-coverage-chart',
-		position: 'top',
-	},
 ];
 
-/** The ways through the catalog, at the foot of the home page. */
+/** The way on to the rest of the catalog, at the foot of the home page. */
 const homeWayStops: Stop[] = [
-	{ id: 'styles', selector: head('styles-title') },
-	{ id: 'decades', selector: head('decades-title') },
-	{ id: 'acts', selector: head('acts-title') },
-	{ id: 'albums', selector: head('albums-title') },
+	{ id: 'discover', selector: '.discover-link', position: 'top' },
 ];
 
 /** The home page as a visitor meets it. */
@@ -122,16 +102,11 @@ const homeGuestTour: DemoScript = {
 			{ id: 'welcome', text: GUEST, selector: 'mc-top-bar .brand' },
 			{ id: 'bar', text: GUEST, selector: 'mc-top-bar .bar' },
 			...homeCatalogStops,
-			{ id: 'recent', text: GUEST, selector: head('recent-title') },
 			{
 				id: 'challenges',
 				text: GUEST,
 				selector: head('collections-title'),
 			},
-			{ id: 'artists', selector: head('artists-title') },
-			// Only a signed-out page has this one, and it says what the sign-in
-			// is for — so it stands where the page puts it, halfway down.
-			{ id: 'join', text: GUEST, selector: 'mc-join-prompt' },
 			...homeWayStops,
 			// The way in, last: the button is in the bar rather than on this page,
 			// so it is where a visitor who has heard the whole case should be left.
@@ -155,14 +130,12 @@ const homeCollectorTour: DemoScript = {
 		{ id: 'welcome', text: COLLECTOR, selector: 'mc-top-bar .brand' },
 		{ id: 'bar', text: COLLECTOR, selector: 'mc-top-bar .bar' },
 		...homeCatalogStops,
-		{ id: 'recent', text: COLLECTOR, selector: head('recent-title') },
 		{
 			id: 'challenges',
 			text: COLLECTOR,
 			selector: head('collections-title'),
 		},
 		{ id: 'hunt', text: COLLECTOR, selector: head('hunt-title') },
-		{ id: 'artists', selector: head('artists-title') },
 		...homeWayStops,
 		{ id: 'account', text: COLLECTOR, selector: 'mc-top-bar .account' },
 	].map(look),
@@ -249,6 +222,19 @@ const pageTour = (
 		),
 	},
 });
+
+// --- The catalog's half of the old home page --------------------------------
+
+const discoverTour = pageTour('discover', 'discover', [
+	['spotlight', 'mc-artist-spotlight .content, .spotlight-skeleton', 'right'],
+	['catalog', head('glance-title')],
+	['coverage', 'mc-catalog-coverage-chart', 'top'],
+	['artists', head('artists-title')],
+	['styles', head('styles-title')],
+	['decades', head('decades-title')],
+	['acts', head('acts-title')],
+	['albums', head('albums-title')],
+]);
 
 // --- The collector's own pages ---------------------------------------------
 
@@ -493,6 +479,7 @@ const musicianTour = pageTour('musician', 'musician/:musicianId', [
 export const pageTours: readonly PageTour[] = [
 	{ path: 'home', audience: 'guest', script: homeGuestTour },
 	{ path: 'home', audience: 'collector', script: homeCollectorTour },
+	discoverTour,
 	collectionTour,
 	copyTour,
 	scanTour,

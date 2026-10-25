@@ -22,6 +22,18 @@ export const routes: Routes = [
 		},
 	},
 	{
+		// The catalog's half of the old home page: counts, the band of the
+		// week, and the ways through the catalog by style, decade and act.
+		path: 'discover',
+		loadComponent: () =>
+			import('./page/discover/discover-page.component').then(
+				(module) => module.DiscoverPageComponent
+			),
+		data: {
+			breadcrumb: 'discover',
+		},
+	},
+	{
 		path: 'album/:albumId',
 		loadComponent: () =>
 			import('./page/album/album-page.component').then(

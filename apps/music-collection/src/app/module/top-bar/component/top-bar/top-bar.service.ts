@@ -89,6 +89,12 @@ export class TopBarService {
 				requiresAuth: true,
 			},
 			{
+				labelKey: 'nav.discover',
+				icon: 'pi-compass',
+				routerLink: ['/discover'],
+				group: 'explore',
+			},
+			{
 				labelKey: 'nav.collectors',
 				icon: 'pi-users',
 				routerLink: ['/collectors'],

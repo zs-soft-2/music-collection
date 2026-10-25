@@ -500,3 +500,30 @@ mc-collection-big-card,
 		outline-offset: 3px;
 	}
 }
+
+/* The way on to the rest of the catalog, closing the home page. */
+.discover-link {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-top: 2rem;
+	padding: 1.1rem 1.4rem;
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-lg, 1rem);
+	background: var(--mc-card-bg);
+	color: var(--mc-text-muted);
+	text-decoration: none;
+	transition: background var(--mc-duration-fast) ease;
+
+	strong {
+		display: block;
+		color: var(--mc-text);
+		font-size: 1.05rem;
+	}
+
+	&:hover,
+	&:focus-visible {
+		background: var(--mc-card-bg-hover);
+	}
+}
