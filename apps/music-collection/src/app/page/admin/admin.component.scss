@@ -6,6 +6,7 @@
 	position: relative;
 	display: flex;
 	min-height: calc(100vh - var(--mc-app-bar-height));
+	min-height: calc(100dvh - var(--mc-app-bar-height));
 }
 
 /* ── Oldalsáv ──────────────────────────────────────────────────────────── */
@@ -15,7 +16,10 @@
 	top: var(--mc-app-bar-height);
 	z-index: 20;
 	width: 248px;
+	/* `dvh`: on a phone `vh` is taller than what is visible, and the foot of
+	   the menu — the system group, bundles among it — sat under the toolbar. */
 	height: calc(100vh - var(--mc-app-bar-height));
+	height: calc(100dvh - var(--mc-app-bar-height));
 	flex-shrink: 0;
 	box-sizing: border-box;
 	display: flex;
