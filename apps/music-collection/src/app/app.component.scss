@@ -25,3 +25,55 @@ footer {
 	font-size: 0.75rem;
 	text-align: center;
 }
+
+/* Az első lap érkezéséig: futó sáv és egy üres kártya az üres fekete helyett. */
+.booting {
+	display: grid;
+	gap: 1.25rem;
+	padding: 0.5rem 1rem;
+}
+
+.booting-bar {
+	height: 3px;
+	overflow: hidden;
+	border-radius: 2px;
+	background: var(--mc-border);
+
+	&::after {
+		content: '';
+		display: block;
+		width: 40%;
+		height: 100%;
+		background: var(--mc-primary);
+		animation: booting-run 1.2s ease-in-out infinite;
+	}
+}
+
+.booting-card {
+	height: 320px;
+	border-radius: var(--mc-radius-lg, 16px);
+	background: var(--mc-card-bg, var(--mc-surface-2));
+	animation: booting-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes booting-run {
+	from {
+		transform: translateX(-100%);
+	}
+	to {
+		transform: translateX(250%);
+	}
+}
+
+@keyframes booting-pulse {
+	50% {
+		opacity: 0.55;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.booting-bar::after,
+	.booting-card {
+		animation: none;
+	}
+}

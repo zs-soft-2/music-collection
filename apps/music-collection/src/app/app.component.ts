@@ -5,8 +5,15 @@ import {
 	OnInit,
 	inject,
 } from '@angular/core';
-import { RouterModule } from '@angular/router';
-import { filter, take } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
+import {
+	NavigationCancel,
+	NavigationEnd,
+	NavigationError,
+	Router,
+	RouterModule,
+} from '@angular/router';
+import { filter, map, take } from 'rxjs';
 import {
 	AuthenticationStateService,
 	EntityQuantityStateService,
@@ -17,11 +24,7 @@ import { ExternalPlayerConsentService } from './data/external-player';
 import { environment } from '../environments/environment';
 import { CoreErrorModule } from '@music-collection/core/error';
 
-import {
-	SideRailComponent,
-	TabBarComponent,
-	TopBarModule,
-} from './module';
+import { SideRailComponent, TabBarComponent, TopBarModule } from './module';
 // A @defer mögötti komponensek a fájljukból jönnek, nem a barrelből: a
 // barrel a main chunkba húzná őket, és a @defer semmit nem választana le.
 import { AmbientBackdropComponent } from './shared/backdrop/ambient-backdrop.component';
@@ -59,11 +62,31 @@ import { YoutubeDockComponent } from './shared/youtube/youtube-dock.component';
 export class AppComponent implements OnInit {
 	private authenticationStateService = inject(AuthenticationStateService);
 	private entityQuantityStateService = inject(EntityQuantityStateService);
+	private readonly router = inject(Router);
 	protected readonly player = inject(PlayerStore);
 	/** Whether the outside players may be on the page at all. */
 	protected readonly players = inject(ExternalPlayerConsentService);
 	/** Whether this collector asked to be shown around. */
 	protected readonly tour = inject(DemoTourService);
+
+	/**
+	 * The first page has not arrived: the route's chunk is on its way, or an
+	 * initializer is still waiting. The outlet is empty until then, and an
+	 * empty outlet is a black screen, so something says the app is coming.
+	 */
+	protected readonly booting = toSignal(
+		this.router.events.pipe(
+			filter(
+				(event) =>
+					event instanceof NavigationEnd ||
+					event instanceof NavigationCancel ||
+					event instanceof NavigationError
+			),
+			take(1),
+			map(() => false)
+		),
+		{ initialValue: true }
+	);
 
 	public title = 'music-collection';
 	public version = environment.version;

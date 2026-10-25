@@ -26,6 +26,15 @@
 
 <main>
 	<div class="content">
+		@if (booting()) {
+			<div class="booting" role="status" aria-live="polite">
+				<div class="booting-bar"></div>
+				<div class="booting-card" aria-hidden="true"></div>
+				<span class="visually-hidden">{{
+					'common.loading' | transloco
+				}}</span>
+			</div>
+		}
 		<router-outlet></router-outlet>
 	</div>
 

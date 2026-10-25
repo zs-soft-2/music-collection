@@ -28,7 +28,11 @@
 			href="https://content-firebaseappcheck.googleapis.com"
 			crossorigin
 		/>
-		<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+		<link
+			rel="preconnect"
+			href="https://firestore.googleapis.com"
+			crossorigin
+		/>
 		<link
 			rel="preconnect"
 			href="https://firebasestorage.googleapis.com"
@@ -49,18 +53,65 @@
 				padding: 0 1.5rem;
 				box-sizing: border-box;
 				background: var(--mc-card-bg, #161616);
-				border-bottom: 1px solid var(--mc-border, rgba(255, 255, 255, 0.08));
+				border-bottom: 1px solid
+					var(--mc-border, rgba(255, 255, 255, 0.08));
 				color: var(--mc-text, #fff);
 			}
 			.mc-boot svg {
 				color: var(--mc-primary, #ff4444);
 			}
 			.mc-boot span {
-				font-family: var(--mc-font-display, 'Bebas Neue', Impact, sans-serif);
+				font-family: var(
+					--mc-font-display,
+					'Bebas Neue',
+					Impact,
+					sans-serif
+				);
 				font-size: 1.75rem;
 				letter-spacing: 0.04em;
 				line-height: 1;
 				white-space: nowrap;
+			}
+			/* A keret alatt futó sáv és egy üres kártya: amíg a program tölt, a
+			   képernyő él, nem fekete. Az Angular indulásakor eltűnik. */
+			.mc-boot-bar {
+				height: 3px;
+				overflow: hidden;
+				background: var(--mc-border, rgba(255, 255, 255, 0.08));
+			}
+			.mc-boot-bar::after {
+				content: '';
+				display: block;
+				width: 40%;
+				height: 100%;
+				background: var(--mc-primary, #ff4444);
+				animation: mc-boot-run 1.2s ease-in-out infinite;
+			}
+			.mc-boot-card {
+				height: 320px;
+				margin: 1.25rem 1rem;
+				border-radius: 16px;
+				background: var(--mc-card-bg, #161616);
+				animation: mc-boot-pulse 1.6s ease-in-out infinite;
+			}
+			@keyframes mc-boot-run {
+				from {
+					transform: translateX(-100%);
+				}
+				to {
+					transform: translateX(250%);
+				}
+			}
+			@keyframes mc-boot-pulse {
+				50% {
+					opacity: 0.55;
+				}
+			}
+			@media (prefers-reduced-motion: reduce) {
+				.mc-boot-bar::after,
+				.mc-boot-card {
+					animation: none;
+				}
 			}
 			@media (max-width: 768px) {
 				.mc-boot {
@@ -100,6 +151,12 @@
 				</svg>
 				<span>Music Collection</span>
 			</div>
+			<div
+				class="mc-boot-bar"
+				role="progressbar"
+				aria-label="Loading"
+			></div>
+			<div class="mc-boot-card" aria-hidden="true"></div>
 		</mc-root>
 	</body>
 </html>
