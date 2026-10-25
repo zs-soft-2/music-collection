@@ -57,6 +57,11 @@ import {
 	isGenreScoped,
 } from './catalog-scope.service';
 
+/** The features the first screen is drawn from; their bundles go first. */
+const FIRST_SCREEN_FEATURES: readonly string[] = ['artist', 'album'];
+/** How long the other bundles wait for the first screen's, at most. */
+const FIRST_SCREEN_WAIT_MS = 8000;
+
 /** Collection of the sync bookkeeping documents. */
 export const SYNC_COLLECTION = 'sync';
 /**
@@ -312,6 +317,11 @@ export class FirestoreSyncService {
 	private readonly bundleLoads = new Map<string, Promise<boolean>>();
 	/** Bundle files downloaded in this session, by storage path. */
 	private readonly bundleFiles = new Map<string, Promise<boolean>>();
+	/** Settles once the first screen's features have had their bundle load. */
+	private firstScreenLoaded!: () => void;
+	private readonly firstScreen = new Promise<void>((resolve) => {
+		this.firstScreenLoaded = resolve;
+	});
 
 	private readonly catalog$: Observable<CatalogSync | null> =
 		new Observable<CatalogSync | null>((subscriber) =>
@@ -884,16 +894,20 @@ export class FirestoreSyncService {
 		let loading = this.bundleLoads.get(key);
 
 		if (!loading) {
-			loading = this.loadBundlesIntoCache(featureKey, bundles, id).catch(
-				(error) => {
+			loading = this.loadBundlesIntoCache(featureKey, bundles, id)
+				.catch((error) => {
 					console.warn(
 						`Bundle "${id}" unavailable, downloading documents`,
 						error
 					);
 					this.bundleLoads.delete(key);
 					return false;
-				}
-			);
+				})
+				.finally(() => {
+					if (FIRST_SCREEN_FEATURES.includes(featureKey)) {
+						this.firstScreenLoaded();
+					}
+				});
 			this.bundleLoads.set(key, loading);
 		}
 		return loading;
@@ -924,6 +938,19 @@ export class FirestoreSyncService {
 
 		// Asked before the files land, which would answer it for them.
 		const warm = !!loaded || (await this.hasCached(featureKey));
+
+		// The first screen is drawn from the artists and albums, so the rest
+		// of the catalog does not compete with them for the line and for the
+		// cache's write queue: it starts when they are in. Should nothing ever
+		// ask for them, the wait is capped rather than left hanging.
+		if (!FIRST_SCREEN_FEATURES.includes(featureKey)) {
+			await Promise.race([
+				this.firstScreen,
+				new Promise<void>((resolve) =>
+					setTimeout(resolve, FIRST_SCREEN_WAIT_MS)
+				),
+			]);
+		}
 
 		const fetched = await Promise.all(
 			bundles.map((bundle) => this.fetchBundle(bundle.path))
