@@ -317,6 +317,8 @@ export class FirestoreSyncService {
 	private readonly bundleLoads = new Map<string, Promise<boolean>>();
 	/** Bundle files downloaded in this session, by storage path. */
 	private readonly bundleFiles = new Map<string, Promise<boolean>>();
+	/** The later bundles' downloads, one after the other. */
+	private laterBundles: Promise<unknown> = Promise.resolve();
 	/** Settles once the first screen's features have had their bundle load. */
 	private firstScreenLoaded!: () => void;
 	private readonly firstScreen = new Promise<void>((resolve) => {
@@ -645,8 +647,9 @@ export class FirestoreSyncService {
 				const newest = this.newestOf(version.scope);
 				const guest = version.scopeKey === GUEST_SCOPE_KEY;
 				// A showcase that carries the feature is closed over it: what
-				// is reachable from it is in it, and what is not in it is not
-				// shown — so it is never asked of the server.
+				// is reachable from it is in it — so a whole list is never
+				// asked of the server. A narrow query it leaves empty is: the
+				// record may exist past the showcase, and is looked up.
 				const closed =
 					guest && this.carries(version.scope, synced.featureKey);
 
@@ -660,7 +663,7 @@ export class FirestoreSyncService {
 					// What the genres did not bring — a record of another
 					// genre's tracks, a guest musician's other credits — is
 					// asked for by name rather than left an empty page.
-					return scoped.length || !synced.narrow || closed
+					return scoped.length || !synced.narrow
 						? scoped
 						: this.downloadAll(synced, newest);
 				}
@@ -952,9 +955,14 @@ export class FirestoreSyncService {
 			]);
 		}
 
-		const fetched = await Promise.all(
-			bundles.map((bundle) => this.fetchBundle(bundle.path))
-		);
+		const fetch = () =>
+			Promise.all(bundles.map((bundle) => this.fetchBundle(bundle.path)));
+
+		// One at a time after the first screen: a phone is handed a file,
+		// writes it into the cache, and only then is handed the next.
+		const fetched = FIRST_SCREEN_FEATURES.includes(featureKey)
+			? await fetch()
+			: await this.inTurn(fetch);
 
 		// All of them or none: half a scope is a genre missing from every
 		// list, and the cache would be marked as holding it.
@@ -984,6 +992,14 @@ export class FirestoreSyncService {
 			nanoseconds: newest.nanoseconds,
 		} satisfies LoadedBundle);
 		return true;
+	}
+
+	/** Runs the download after the later ones already queued. */
+	private inTurn<T>(download: () => Promise<T>): Promise<T> {
+		const turn = this.laterBundles.then(download);
+
+		this.laterBundles = turn.catch(() => undefined);
+		return turn;
 	}
 
 	/**

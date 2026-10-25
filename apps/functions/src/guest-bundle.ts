@@ -81,14 +81,20 @@ const GET_ALL_LIMIT = 100;
 export const GUEST_BUNDLE_FOLDER = 'bundles/guest';
 
 /**
- * A kirakat két része, külön mappában, mert a takarítás mappánként a
+ * A kirakat részei, külön mappában, mert a takarítás mappánként a
  * legutóbbiakat hagyja meg. A mag az, amiből a nyitólap kirajzolódik — az
- * előadók és az albumok, a dokumentumok tizede —, a többi (számok,
- * közreműködések, tagságok, zenészek) csak akkor jön le, amikor egy lap
- * kéri. Az egyben épített fájl a régi klienseknek marad.
+ * előadók és az albumok, a dokumentumok tizede —, a többi feature (számok,
+ * közreműködések, tagságok, zenészek) egy-egy kis fájl, amit a kliens
+ * egymás után, a mag után tölt: egy telefon így nem egy nagy falatot kap.
+ * Az egyben épített fájl a régi klienseknek marad.
  */
 export const GUEST_CORE_FOLDER = 'bundles/guest-core';
-export const GUEST_REST_FOLDER = 'bundles/guest-rest';
+export const GUEST_FEATURE_FOLDERS: Record<string, string> = {
+	[TRACK_COLLECTION]: 'bundles/guest-track',
+	[CONTRIBUTION_COLLECTION]: 'bundles/guest-contribution',
+	[MEMBERSHIP_COLLECTION]: 'bundles/guest-membership',
+	[MUSICIAN_COLLECTION]: 'bundles/guest-musician',
+};
 
 /** Műfajonként ennyi collection kerül a kirakatba. */
 export const GUEST_COLLECTIONS_PER_GENRE = 5;
@@ -735,12 +741,20 @@ export async function composeGuestBundle(
 		...pickedArtists,
 		...pickedAlbums,
 	]);
-	const rest = await build(GUEST_REST_FOLDER, 'guest-rest', [
-		...surroundings.tracks,
-		...surroundings.contributions,
-		...surroundings.memberships,
-		...surroundings.musicians,
-	]);
+	const featureDocuments: Record<string, DocumentSnapshot[]> = {
+		[TRACK_COLLECTION]: surroundings.tracks,
+		[CONTRIBUTION_COLLECTION]: surroundings.contributions,
+		[MEMBERSHIP_COLLECTION]: surroundings.memberships,
+		[MUSICIAN_COLLECTION]: surroundings.musicians,
+	};
+	const featureParts = [];
+
+	for (const [feature, folder] of Object.entries(GUEST_FEATURE_FOLDERS)) {
+		const documents = featureDocuments[feature];
+		const built = await build(folder, `guest-${feature}`, documents);
+
+		featureParts.push({ feature, folder, built, count: documents.length });
+	}
 
 	const count = included.length;
 	const entry: GuestBundleEntry = {
@@ -777,19 +791,14 @@ export async function composeGuestBundle(
 					[ALBUM_COLLECTION]: pickedAlbums.length,
 				},
 			},
-			{
-				path: rest.path,
-				modifiedAt,
-				count:
-					count - pickedArtists.length - pickedAlbums.length,
-				features: {
-					[TRACK_COLLECTION]: surroundings.tracks.length,
-					[CONTRIBUTION_COLLECTION]:
-						surroundings.contributions.length,
-					[MEMBERSHIP_COLLECTION]: surroundings.memberships.length,
-					[MUSICIAN_COLLECTION]: surroundings.musicians.length,
-				},
-			},
+			...featureParts.map(
+				({ feature, built, count: featureCount }): GuestBundlePart => ({
+					path: built.path,
+					modifiedAt,
+					count: featureCount,
+					features: { [feature]: featureCount },
+				})
+			),
 		],
 	};
 
@@ -799,7 +808,9 @@ export async function composeGuestBundle(
 	);
 	await removeOldBundles(bucket, GUEST_BUNDLE_FOLDER, path);
 	await removeOldBundles(bucket, GUEST_CORE_FOLDER, core.path);
-	await removeOldBundles(bucket, GUEST_REST_FOLDER, rest.path);
+	for (const { folder, built } of featureParts) {
+		await removeOldBundles(bucket, folder, built.path);
+	}
 
 	return {
 		week,
