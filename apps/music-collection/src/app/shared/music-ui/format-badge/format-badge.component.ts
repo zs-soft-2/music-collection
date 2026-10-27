@@ -1,17 +1,14 @@
-import {
-	ChangeDetectionStrategy,
-	Component,
-	computed,
-	input,
-} from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
-import { FORMAT_LABELS, MediaFormat } from '../music-ui.model';
+import { MediaFormat } from '@music-collection/ui/music-view';
 
 /** Inline format label with a format-specific icon. */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-format-badge',
 	host: { class: 'format-badge' },
+	imports: [...I18N_IMPORTS],
 	template: `
 		@switch (format()) {
 			@case ('cd') {
@@ -40,6 +37,19 @@ import { FORMAT_LABELS, MediaFormat } from '../music-ui.model';
 					/>
 					<circle cx="8" cy="12" r="2" />
 					<circle cx="16" cy="12" r="2" />
+				</svg>
+			}
+			@case ('boxset') {
+				<svg
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="1.5"
+					aria-hidden="true"
+				>
+					<rect x="3" y="7" width="18" height="13" rx="1.5" />
+					<path d="M3 11h18" />
+					<path d="M10 7V4h4v3" />
 				</svg>
 			}
 			@case ('dvd') {
@@ -80,7 +90,7 @@ import { FORMAT_LABELS, MediaFormat } from '../music-ui.model';
 				</svg>
 			}
 		}
-		<span>{{ label() }}</span>
+		<span>{{ format() | mcCatalog: 'media' }}</span>
 		@if (weight()) {
 			<span class="weight">{{ weight() }}g</span>
 		}
@@ -111,6 +121,4 @@ import { FORMAT_LABELS, MediaFormat } from '../music-ui.model';
 export class FormatBadgeComponent {
 	public readonly format = input.required<MediaFormat>();
 	public readonly weight = input<number | null>(null);
-
-	protected readonly label = computed(() => FORMAT_LABELS[this.format()]);
 }

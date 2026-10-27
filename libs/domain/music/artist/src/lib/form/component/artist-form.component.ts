@@ -1,15 +1,24 @@
+import { I18N_IMPORTS, TextService } from '@music-collection/core/i18n';
 import { Observable } from 'rxjs';
 
 import {
 	ChangeDetectionStrategy,
 	Component,
 	OnInit,
+	computed,
 	inject,
 } from '@angular/core';
-import { ArtistFormParams, BaseComponent } from '@music-collection/api';
+import {
+	ARTIST_TYPE_OPTIONS,
+	ArtistExternalField,
+	ArtistFormParams,
+	BaseComponent,
+} from '@music-collection/api';
 
+import { ArtistExternalCandidateRow } from './artist-external-candidate';
+import { ArtistCandidatePickerComponent } from './candidate';
 import { ArtistFormService } from './artist-form.service';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Bind } from 'primeng/bind';
 import { InputText } from 'primeng/inputtext';
 import { Textarea } from 'primeng/textarea';
@@ -19,6 +28,8 @@ import { MultiSelect } from 'primeng/multiselect';
 import { AutoComplete } from 'primeng/autocomplete';
 import { Image } from 'primeng/image';
 import { Button } from 'primeng/button';
+import { Checkbox } from 'primeng/checkbox';
+import { Dialog } from 'primeng/dialog';
 import { AsyncPipe } from '@angular/common';
 
 @Component({
@@ -28,6 +39,8 @@ import { AsyncPipe } from '@angular/common';
 	templateUrl: './artist-form.component.html',
 	styleUrls: ['./artist-form.component.scss'],
 	imports: [
+		...I18N_IMPORTS,
+		FormsModule,
 		ReactiveFormsModule,
 		Bind,
 		InputText,
@@ -38,16 +51,75 @@ import { AsyncPipe } from '@angular/common';
 		AutoComplete,
 		Image,
 		Button,
+		Checkbox,
+		Dialog,
 		AsyncPipe,
+		ArtistCandidatePickerComponent,
 	],
 })
 export class ArtistFormComponent extends BaseComponent implements OnInit {
 	private componentService = inject(ArtistFormService);
+	private readonly text = inject(TextService);
 
 	public params$!: Observable<ArtistFormParams>;
 
+	/**
+	 * What kind of act the artist is, in the language in force. The options
+	 * carry a key rather than a word, so the select is handed the translation
+	 * instead: without it every row reads `empty`.
+	 */
+	public readonly artistTypes = computed(() => {
+		const translate = this.text.translator();
+
+		return ARTIST_TYPE_OPTIONS.map(({ labelKey, value }) => ({
+			label: translate(labelKey),
+			value,
+		}));
+	});
+
+	public readonly duplicate = this.componentService.duplicate;
+	public readonly externalCandidates =
+		this.componentService.externalCandidates;
+	public readonly externalComparison =
+		this.componentService.externalComparison;
+	public readonly externalError = this.componentService.externalError;
+	public readonly externalLoading = this.componentService.externalLoading;
+	public readonly hasSelectedExternalRow = computed(
+		() => !!this.externalComparison()?.rows.some((row) => row.selected)
+	);
+
+	public applyExternal(): void {
+		this.componentService.applyExternal();
+	}
+
 	public cancel(): void {
 		this.componentService.cancel();
+	}
+
+	public chooseExternalCandidate(
+		candidate: ArtistExternalCandidateRow
+	): void {
+		void this.componentService.chooseExternalCandidate(candidate);
+	}
+
+	public closeExternal(): void {
+		this.componentService.closeExternal();
+	}
+
+	public closeExternalCandidates(): void {
+		this.componentService.closeExternalCandidates();
+	}
+
+	public loadExternal(): void {
+		void this.componentService.loadExternal();
+	}
+
+	public openDuplicate(): void {
+		this.componentService.openDuplicate();
+	}
+
+	public toggleExternalRow(field: ArtistExternalField): void {
+		this.componentService.toggleExternalRow(field);
 	}
 
 	public ngOnInit(): void {

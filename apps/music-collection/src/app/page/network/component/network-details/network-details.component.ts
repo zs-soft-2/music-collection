@@ -7,8 +7,10 @@ import {
 	output,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import { NETWORK_KIND_LABELS, NetworkDetailsView } from '../../network.model';
+import { CoverFallbackDirective } from '../../../../shared/image';
 
 /** Rows of a list shown before "Show all". */
 const PREVIEW = 8;
@@ -21,7 +23,7 @@ const PREVIEW = 8;
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-network-details',
-	imports: [RouterLink],
+	imports: [CoverFallbackDirective, ...I18N_IMPORTS, RouterLink],
 	templateUrl: './network-details.component.html',
 	styleUrls: ['./network-details.component.scss'],
 })

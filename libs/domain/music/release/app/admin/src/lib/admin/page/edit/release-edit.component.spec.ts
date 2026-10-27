@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { of } from 'rxjs';
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -21,10 +22,13 @@ describe('ReleaseEditComponent', () => {
 		await TestBed.configureTestingModule({
 			imports: [ReleaseEditComponent],
 			providers: [
+				provideI18nTesting(),
 				provideRouter([]),
 				{
 					provide: ReleaseStateService,
-					useValue: { selectEntityById$: jest.fn(() => of(undefined)) },
+					useValue: {
+						selectEntityById$: jest.fn(() => of(undefined)),
+					},
 				},
 				{
 					provide: ReleaseUtilService,
@@ -33,8 +37,11 @@ describe('ReleaseEditComponent', () => {
 							new FormBuilder().group({
 								album: [null],
 								artist: [null],
+								catno: [null],
 								country: [null],
+								coverColor: [null],
 								date: [null],
+								discogsReleaseId: [null],
 								formatDescription: [null],
 								label: [null],
 								media: [null],
@@ -54,7 +61,11 @@ describe('ReleaseEditComponent', () => {
 				},
 				{
 					provide: LabelStateService,
-					useValue: { selectSearchResult$: jest.fn(() => of([])) },
+					useValue: {
+						dispatchListEntitiesAction: jest.fn(),
+						selectEntities$: jest.fn(() => of([])),
+						selectSearchResult$: jest.fn(() => of([])),
+					},
 				},
 			],
 		}).compileComponents();

@@ -1,2 +1,2 @@
-export * from './menu-item.type';
-export * from './top-bar.params';
+export type * from './menu-item.type';
+export type * from './top-bar.params';

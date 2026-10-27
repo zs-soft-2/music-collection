@@ -1,13 +1,15 @@
 <section class="entity-admin">
 	<header class="mc-page-head">
 		<div>
-			<h1>Documents</h1>
-			<p>Uploaded images and files, e.g. album covers.</p>
+			<h1>{{ 'ui.documentAdmin.documents' | transloco }}</h1>
+			<p>
+				{{ 'ui.documentAdmin.uploaded-images-and-files' | transloco }}
+			</p>
 		</div>
 
 		<div class="mc-page-actions" *ngxPermissionsOnly="buttonPermissions">
 			<p-button
-				label="Add document"
+				[label]="'ui.documentAdmin.add-document' | transloco"
 				icon="pi pi-plus"
 				(onClick)="clickHandler()"
 				[disabled]="(isNewEntityButtonEnabled$ | async) === false"

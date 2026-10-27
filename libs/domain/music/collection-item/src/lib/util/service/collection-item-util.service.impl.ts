@@ -13,6 +13,10 @@ import {
 	EntityQuantityEntityUpdate,
 	EntityQuantityGroup,
 	EntityTypeEnum,
+	ParamItem,
+	QueryConstraintTypeEnum,
+	QueryOperatorEnum,
+	SearchParams,
 	UpdateEntityQuantityType,
 	UpdateEntityQuantityTypeEnum,
 	User,
@@ -38,6 +42,9 @@ export class CollectionItemUtilServiceImpl extends CollectionItemUtilService {
 			searchParameters: this.createSearchParameters(
 				entity.release.name || ''
 			),
+			artistSearchParameters: this.createSearchParameters(
+				entity.release.artist?.name || ''
+			),
 		};
 	}
 
@@ -50,6 +57,9 @@ export class CollectionItemUtilServiceImpl extends CollectionItemUtilService {
 			searchParameters: this.createSearchParameters(
 				entity.release.name || ''
 			),
+			artistSearchParameters: this.createSearchParameters(
+				entity.release.artist?.name || ''
+			),
 		};
 	}
 
@@ -61,6 +71,9 @@ export class CollectionItemUtilServiceImpl extends CollectionItemUtilService {
 			date: entity.date?.getTime(),
 			searchParameters: this.createSearchParameters(
 				entity.release?.name || ''
+			),
+			artistSearchParameters: this.createSearchParameters(
+				entity.release?.artist?.name || ''
 			),
 		};
 	}
@@ -107,6 +120,34 @@ export class CollectionItemUtilServiceImpl extends CollectionItemUtilService {
 			entity.userId = model.userId;
 		}
 
+		if (model.updatedAt) {
+			entity.updatedAt = model.updatedAt;
+		}
+
+		// A place taken back is written as `null`, which is a change like any
+		// other — only a missing key means the place was left alone.
+		if (model.placement !== undefined) {
+			entity.placement = model.placement;
+		}
+
+		// What the collector tells about the copy itself. Cleared the same
+		// way as the place: `null` is the erasure, a missing key is silence.
+		if (model.purchase !== undefined) {
+			entity.purchase = model.purchase;
+		}
+
+		if (model.condition !== undefined) {
+			entity.condition = model.condition;
+		}
+
+		if (model.story !== undefined) {
+			entity.story = model.story;
+		}
+
+		if (model.photos !== undefined) {
+			entity.photos = model.photos;
+		}
+
 		return entity;
 	}
 
@@ -114,8 +155,9 @@ export class CollectionItemUtilServiceImpl extends CollectionItemUtilService {
 		return {
 			release: formGroup.value['release'],
 			userId: formGroup.value['userId'],
-			description: formGroup.value['userId'],
+			description: formGroup.value['description'],
 			date: formGroup.value['date'],
+			placement: formGroup.value['placement'] ?? null,
 			entityType: EntityTypeEnum.CollectionItem,
 		};
 	}
@@ -134,7 +176,28 @@ export class CollectionItemUtilServiceImpl extends CollectionItemUtilService {
 			date: [collectionItem?.date || null, [Validators.required]],
 			release: [collectionItem?.release || null, [Validators.required]],
 			description: [collectionItem?.description || null],
+			// Where the copy stands on the shelf; the form writes the whole
+			// placement at once, so it is one value rather than three fields.
+			placement: [collectionItem?.placement ?? null],
 		});
+	}
+
+	/**
+	 * The search of the artist column: it looks in the prefixes of the
+	 * artist's name written next to the item, not in the release's own.
+	 */
+	public createSearchParamsByArtist(
+		entityType: EntityTypeEnum,
+		term: string
+	): SearchParams {
+		const query: ParamItem<string> = {
+			queryConstraint: QueryConstraintTypeEnum.where,
+			operation: QueryOperatorEnum.arrayContains,
+			field: 'artistSearchParameters',
+			value: term.toLowerCase(),
+		};
+
+		return [{ entityType, query }];
 	}
 
 	public filterByArtist(
@@ -195,8 +258,9 @@ export class CollectionItemUtilServiceImpl extends CollectionItemUtilService {
 			uid: formGroup.value['uid'],
 			release: formGroup.value['release'],
 			userId: formGroup.value['userId'],
-			description: formGroup.value['userId'],
+			description: formGroup.value['description'],
 			date: formGroup.value['date'],
+			placement: formGroup.value['placement'] ?? null,
 			entityType: EntityTypeEnum.CollectionItem,
 		};
 	}

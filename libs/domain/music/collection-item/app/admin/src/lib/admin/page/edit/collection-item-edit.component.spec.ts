@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { of } from 'rxjs';
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -20,6 +21,7 @@ describe('CollectionItemEditComponent', () => {
 		await TestBed.configureTestingModule({
 			imports: [CollectionItemEditComponent],
 			providers: [
+				provideI18nTesting(),
 				provideRouter([]),
 				{
 					provide: AuthenticationStateService,
@@ -29,7 +31,9 @@ describe('CollectionItemEditComponent', () => {
 				},
 				{
 					provide: CollectionItemStateService,
-					useValue: { selectEntityById$: jest.fn(() => of(undefined)) },
+					useValue: {
+						selectEntityById$: jest.fn(() => of(undefined)),
+					},
 				},
 				{
 					provide: CollectionItemUtilService,

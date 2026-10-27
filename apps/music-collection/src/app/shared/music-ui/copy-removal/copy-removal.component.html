@@ -1,0 +1,124 @@
+<dialog
+	#dialog
+	class="removal"
+	aria-labelledby="copy-removal-title"
+	[attr.aria-busy]="busy()"
+	(close)="closed.emit()"
+>
+	<header class="removal-header">
+		<div>
+			<p class="eyebrow">
+				{{ 'ui.copyRemoval.remove-from-collection' | transloco }}
+			</p>
+			<h2 id="copy-removal-title">{{ albumTitle() }}</h2>
+		</div>
+		<button
+			type="button"
+			class="icon-button"
+			[attr.aria-label]="'ui.copyRemoval.close' | transloco"
+			[disabled]="busy()"
+			(click)="close()"
+		>
+			<i class="pi pi-times" aria-hidden="true"></i>
+		</button>
+	</header>
+
+	<div class="copy">
+		<mc-format-badge [format]="copy().format" [weight]="copy().weight" />
+		<span class="details">
+			@if (copy().generic) {
+				<span>{{ 'catalog.genericPressing' | transloco }}</span>
+			} @else if (copy().labelName) {
+				<span>{{ copy().labelName }}</span>
+			}
+			@if (copy().country) {
+				<span>{{ copy().country }}</span>
+			}
+		</span>
+	</div>
+
+	<form (submit)="$event.preventDefault(); submit()">
+		<fieldset class="reasons">
+			<legend>
+				{{ 'ui.copyRemoval.what-happened-to-it' | transloco }}
+			</legend>
+			<div class="chips">
+				@for (option of reasons; track option) {
+					<label class="chip">
+						<input
+							type="radio"
+							name="reason"
+							[value]="option"
+							[checked]="reason() === option"
+							(change)="reason.set(option)"
+						/>
+						{{ option | mcCatalog: 'disposalReason' }}
+					</label>
+				}
+			</div>
+		</fieldset>
+
+		<label class="field">
+			<span>{{ 'ui.copyRemoval.when' | transloco }}</span>
+			<input
+				type="date"
+				required
+				[max]="today"
+				[value]="date()"
+				[attr.aria-invalid]="dateInvalid()"
+				(input)="onInput('date', $event)"
+			/>
+			@if (dateInvalid()) {
+				<span class="field-error">{{
+					'ui.copyRemoval.pick-a-day-today' | transloco
+				}}</span>
+			}
+		</label>
+
+		<label class="field">
+			<span>{{ 'ui.copyRemoval.note-optional' | transloco }}</span>
+			<textarea
+				rows="3"
+				[attr.maxlength]="noteMaxLength"
+				[value]="note()"
+				(input)="onInput('note', $event)"
+				[placeholder]="'ui.copyRemoval.e-g-sold-on' | transloco"
+			></textarea>
+		</label>
+
+		<p class="hint">
+			{{ 'ui.copyRemoval.it-stays-in-your' | transloco }}
+		</p>
+
+		@if (error()) {
+			<p class="error" role="alert">
+				{{
+					'ui.copyRemoval.removeFailed'
+						| transloco: { error: error() }
+				}}
+			</p>
+		}
+
+		<div class="form-actions">
+			<button
+				type="button"
+				class="text-button"
+				[disabled]="busy()"
+				(click)="close()"
+			>
+				{{ 'ui.copyRemoval.cancel' | transloco }}
+			</button>
+			<button
+				type="submit"
+				class="primary-button"
+				[disabled]="dateInvalid() || busy()"
+			>
+				{{
+					busy()
+						? ('ui.copyRemoval.removing' | transloco)
+						: ('ui.copyRemoval.remove-from-collection' | transloco)
+				}}
+			</button>
+		</div>
+	</form>
+</dialog>

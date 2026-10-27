@@ -6,6 +6,10 @@ terraform {
       source  = "hashicorp/google-beta"
       version = "~> 6.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.5"
+    }
   }
 }
 
@@ -21,6 +25,47 @@ variable "web_app_display_name" {
 variable "firestore_location" {
   type        = string
   description = "A Firestore adatbázis helye. Létrehozás után NEM módosítható; a dev a prod helyét követi."
+}
+variable "app_check_domains" {
+  type        = list(string)
+  default     = []
+  description = "Azok a domainek, ahonnan az App Check reCAPTCHA kulcsa tokent ad (pl. a hosting domainek, devben a localhost). Üresen App Check nem jön létre."
+}
+variable "app_check_debug_token" {
+  type        = bool
+  default     = false
+  description = "Devben: egy tofu-teremtette App Check debug token a localhosthoz. Prodban sosem — aki ismeri a tokent, az App Checket megkerülve hívhatja a callable-öket."
+}
+
+# Az App Check enforcement szolgáltatásonként külön kapcsoló: a kulcs a
+# szolgáltatás API-neve, az érték a mód.
+#
+#   ENFORCED   – a szolgáltatás elutasít minden App Check token nélküli kérést,
+#   UNENFORCED – nem utasít el semmit, csak méri, mennyi érkezne token nélkül.
+#
+# A fel nem sorolt szolgáltatás érintetlen marad (OFF): se nem véd, se nem mér.
+# Használható kulcsok:
+#   firestore.googleapis.com        – Cloud Firestore
+#   firebasestorage.googleapis.com  – Cloud Storage for Firebase
+#   identitytoolkit.googleapis.com  – Firebase Auth (bejelentkezés, regisztráció)
+variable "app_check_services" {
+  type        = map(string)
+  default     = {}
+  description = "App Check enforcement szolgáltatásonként: {\"firestore.googleapis.com\" = \"ENFORCED\"}. A fel nem soroltakon az App Check ki van kapcsolva."
+
+  validation {
+    condition = alltrue([
+      for mode in values(var.app_check_services) :
+      contains(["ENFORCED", "UNENFORCED"], mode)
+    ])
+    error_message = "Az App Check módja csak ENFORCED vagy UNENFORCED lehet; a kikapcsoláshoz hagyd ki a szolgáltatást a mapből."
+  }
+}
+
+variable "firestore_point_in_time_recovery" {
+  type        = bool
+  default     = false
+  description = "Point-in-time recovery (7 napra visszamenő olvasás/visszaállítás) a Firestore adatbázison."
 }
 
 resource "google_firebase_project" "this" {
@@ -49,6 +94,17 @@ resource "google_firebase_web_app" "app" {
   depends_on = [google_firebase_project.this]
 }
 
+# A web app SDK-konfigurációja, ahogy a Firebase adja — csak olvasás. A
+# `measurement_id` akkor van benne, ha a projekthez GA4 property van kötve;
+# azt a Firebase konzol köti be (`projects.addGoogleAnalytics`), a providernek
+# nincs rá resource-a. Üres érték tehát azt jelenti, hogy a mérésnek nincs
+# hova mennie.
+data "google_firebase_web_app_config" "app" {
+  provider   = google-beta
+  project    = var.project_id
+  web_app_id = google_firebase_web_app.app.app_id
+}
+
 resource "google_firestore_database" "default" {
   provider    = google-beta
   project     = var.project_id
@@ -56,12 +112,141 @@ resource "google_firestore_database" "default" {
   location_id = var.firestore_location
   type        = "FIRESTORE_NATIVE"
 
+  point_in_time_recovery_enablement = (
+    var.firestore_point_in_time_recovery
+    ? "POINT_IN_TIME_RECOVERY_ENABLED"
+    : "POINT_IN_TIME_RECOVERY_DISABLED"
+  )
+
   # ABANDON: egy destroy a state-ből veszi ki, az adatot nem érinti.
   deletion_policy = "ABANDON"
 
   depends_on = [google_firebase_project.this]
 }
 
+# ── App Check ───────────────────────────────────────────────────────────────
+# A callable-ök (apps/functions/src/index.ts: `enforceAppCheck`) App Check
+# tokent követelnek, mert a bejelentkezés önmagában nem mondja meg, hogy a hívás
+# a mi appunkból jön: egy kimásolt ID tokennel a végpontok scriptből is
+# hívhatók lennének, az `identifyRecordFromPhoto` esetében hívásonként egy
+# modell-kérés árán.
+#
+# A kulcs pontozó (SCORE) típusú: a látogató nem kap kirakóst, a reCAPTCHA a
+# viselkedésből ad pontot, és a döntést az App Check hozza meg belőle.
+resource "google_recaptcha_enterprise_key" "app_check" {
+  provider     = google-beta
+  count        = length(var.app_check_domains) > 0 ? 1 : 0
+  project      = var.project_id
+  display_name = "${var.web_app_display_name}-app-check"
+
+  web_settings {
+    integration_type = "SCORE"
+    allowed_domains  = var.app_check_domains
+  }
+
+  depends_on = [google_firebase_project.this]
+}
+
+# A web app regisztrálása App Checkbe ezzel a kulccsal. A kliens a kulcs
+# nevét (= magát a site key-t) kapja az `environment*.ts`-ben.
+resource "google_firebase_app_check_recaptcha_enterprise_config" "app" {
+  provider = google-beta
+  count    = length(var.app_check_domains) > 0 ? 1 : 0
+  project  = var.project_id
+  app_id   = google_firebase_web_app.app.app_id
+  site_key = google_recaptcha_enterprise_key.app_check[0].name
+}
+
+# ── App Check enforcement (Firestore, Storage) ─────────────────────────────
+# A callable-öket a kód maga védi (`enforceAppCheck`), a Firestore-t és a
+# Storage-ot viszont nem a mi kódunk szolgálja ki, hanem a Google API-ja: ott
+# egyedül ez a szolgáltatás-beállítás mondhatja ki, hogy App Check token nélkül
+# nem jön be kérés. Nélküle a szabályok publikus ágai (katalógus, borítók,
+# bundle-ök) bárki scriptjéből hívhatók, tetszőleges ütemben — a projekt-
+# azonosító és az apiKey a kliens bundle-jéből kiolvasható —, és az olvasási
+# költség is velük megy.
+#
+# A kliens megfelel a feltételnek: az App Check a Firebase appra épül
+# (`app.config.ts`), a Firestore és a Storage SDK-hívásai ebből maguktól viszik
+# a tokent. Az Admin SDK-t (`tools/`, `apps/functions`) az enforcement nem
+# érinti — a szolgáltatásfiók hitelesítése erősebb bizonyíték nála.
+#
+# Az apply után az enforcement kb. 15 perccel lép életbe (és ennyivel áll is
+# vissza), szóval nem azonnal látszik, hogy jó döntés volt-e.
+resource "google_firebase_app_check_service_config" "services" {
+  provider         = google-beta
+  for_each         = var.app_check_services
+  project          = var.project_id
+  service_id       = each.key
+  enforcement_mode = each.value
+
+  # Előbb legyen kulcs és App Checkbe regisztrált web app, utána kapcsoljon az
+  # enforcement: fordított sorrendben a saját kliensünket zárnánk ki elsőként.
+  depends_on = [google_firebase_app_check_recaptcha_enterprise_config.app]
+
+  lifecycle {
+    precondition {
+      condition     = each.value != "ENFORCED" || length(var.app_check_domains) > 0
+      error_message = "ENFORCED App Check kulcs nélkül mindenkit kizárna (a kliens sem tudna tokent szerezni): előbb add meg az `app_check_domains` értékét."
+    }
+  }
+}
+
+# ── App Check debug token (csak dev) ────────────────────────────────────────
+# A localhost ott van a kulcs engedélyezett domainjei között, de a valódi
+# reCAPTCHA a fejlesztői gépen sérülékeny: egy frissen nyitott profil, egy
+# letiltott third-party süti vagy egy bezárt hálózat pontja alacsony lehet, és
+# a callable-ök elutasítanak. A debug token ezt kerüli meg: az App Check a
+# token puszta ismeretét fogadja el bizonyítéknak.
+#
+# Ezért a token TITOK: a tofu teremti, a state-ben él, és a fejlesztő kéri el
+# (`tofu output -raw app_check_debug_token`). A publikus repóba sosem kerül be.
+resource "random_bytes" "app_check_debug" {
+  count  = var.app_check_debug_token ? 1 : 0
+  length = 16
+}
+
+# Az App Check kifejezetten UUID4-et vár ("should be a UUID4"), a `random_uuid`
+# viszont a verzió- és variáns-számjegyeket is véletlenre hagyja. Ezért a 16
+# véletlen bájtot magunk öntjük UUID4 alakba: a harmadik csoport `4`-gyel, a
+# negyedik `8`-cal kezdődik, a többi jegy a véletlenből jön.
+locals {
+  app_check_debug_hex = one(random_bytes.app_check_debug[*].hex)
+
+  app_check_debug_token = local.app_check_debug_hex == null ? null : join("-", [
+    substr(local.app_check_debug_hex, 0, 8),
+    substr(local.app_check_debug_hex, 8, 4),
+    "4${substr(local.app_check_debug_hex, 12, 3)}",
+    "8${substr(local.app_check_debug_hex, 15, 3)}",
+    substr(local.app_check_debug_hex, 18, 12),
+  ])
+}
+
+resource "google_firebase_app_check_debug_token" "app" {
+  provider     = google-beta
+  count        = var.app_check_debug_token ? 1 : 0
+  project      = var.project_id
+  app_id       = google_firebase_web_app.app.app_id
+  display_name = "${var.web_app_display_name}-localhost"
+  token        = local.app_check_debug_token
+}
+
+output "app_check_debug_token" {
+  value       = local.app_check_debug_token
+  sensitive   = true
+  description = "A localhost App Check debug tokenje (csak dev). Titok: a `.app-check-debug-token` fájlba megy, amit a git nem lát."
+}
+
+output "app_check_site_key" {
+  value       = one(google_recaptcha_enterprise_key.app_check[*].name)
+  description = "A reCAPTCHA Enterprise site key — ez megy az environment*.ts `appCheck.recaptchaSiteKey` mezőjébe. Nem titok, a kliensbe kerül."
+}
+
 output "web_app_id" {
   value = google_firebase_web_app.app.app_id
+}
+
+output "measurement_id" {
+  value       = data.google_firebase_web_app_config.app.measurement_id
+  description = "A GA4 measurement id, ahogy a Firebase adja — ez megy az environment*.ts `firebase.measurementId` mezőjébe. Nem titok, a kliensbe kerül. Üres, ha a projekthez nincs Google Analytics kötve."
 }

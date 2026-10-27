@@ -1,3 +1,26 @@
 <section class="release-edit">
-	<mc-release-form></mc-release-form>
+	@if (isExisting) {
+		<p-tabs value="details">
+			<p-tablist>
+				<p-tab value="details">{{
+					'ui.releaseEdit.details' | transloco
+				}}</p-tab>
+				<p-tab value="tracks">{{
+					'ui.releaseEdit.tracks' | transloco
+				}}</p-tab>
+			</p-tablist>
+			<p-tabpanels>
+				<p-tabpanel value="details">
+					<mc-release-form></mc-release-form>
+				</p-tabpanel>
+				<p-tabpanel value="tracks">
+					<mc-release-tracks
+						[releaseId]="releaseId"
+					></mc-release-tracks>
+				</p-tabpanel>
+			</p-tabpanels>
+		</p-tabs>
+	} @else {
+		<mc-release-form></mc-release-form>
+	}
 </section>

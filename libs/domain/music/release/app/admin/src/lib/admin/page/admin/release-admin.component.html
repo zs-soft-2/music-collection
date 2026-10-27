@@ -1,13 +1,13 @@
 <section class="entity-admin">
 	<header class="mc-page-head">
 		<div>
-			<h1>Releases</h1>
-			<p>Pressings and editions of the albums.</p>
+			<h1>{{ 'ui.releaseAdmin.releases' | transloco }}</h1>
+			<p>{{ 'ui.releaseAdmin.pressings-and-editions-of' | transloco }}</p>
 		</div>
 
 		<div class="mc-page-actions" *ngxPermissionsOnly="buttonPermissions">
 			<p-button
-				label="Add release"
+				[label]="'ui.releaseAdmin.add-release' | transloco"
 				icon="pi pi-plus"
 				(onClick)="clickHandler()"
 				[disabled]="(isNewEntityButtonEnabled$ | async) === false"

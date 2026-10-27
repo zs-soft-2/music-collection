@@ -1,2 +1,4 @@
 export * from './membership-feature.key';
-export * from './membership';
+export * from './membership-permissions.service';
+export * from './membership-resource.enum';
+export type * from './membership';

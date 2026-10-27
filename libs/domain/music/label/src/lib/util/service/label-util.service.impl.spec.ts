@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { TestBed } from '@angular/core/testing';
 
 import { LabelUtilServiceImpl } from './label-util.service.impl';
@@ -7,7 +8,7 @@ describe('LabelUtilServiceImpl', () => {
 
 	beforeEach(() => {
 		TestBed.configureTestingModule({
-			providers: [LabelUtilServiceImpl],
+			providers: [provideI18nTesting(), LabelUtilServiceImpl],
 		});
 		service = TestBed.inject(LabelUtilServiceImpl);
 	});

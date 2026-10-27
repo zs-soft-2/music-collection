@@ -19,7 +19,6 @@ import * as documentSelectors from './document.selectors';
 export class DocumentStateServiceImpl extends DocumentStateService {
 	private store = inject<Store<fromDocument.DocumentPartialState>>(Store);
 
-
 	public dispatchAddEntityAction(document: DocumentEntityAdd): void {
 		this.store.dispatch(documentActions.addDocument({ document }));
 	}
@@ -48,6 +47,10 @@ export class DocumentStateServiceImpl extends DocumentStateService {
 
 	public dispatchLoadEntityAction(uid: string): void {
 		this.store.dispatch(documentActions.loadDocument({ uid }));
+	}
+
+	public dispatchRestoreEntityAction(document: DocumentEntity): void {
+		this.store.dispatch(documentActions.restoreDocument({ document }));
 	}
 
 	public dispatchSearch(params: SearchParams): void {

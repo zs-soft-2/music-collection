@@ -1,6 +1,7 @@
 import {
 	calculateEffectivePermissions,
 	isSameEffectivePermissions,
+	missingDefaultRole,
 	roleReferences,
 } from './effective-permissions';
 
@@ -13,6 +14,11 @@ const EDITOR = {
 	id: 'role-2',
 	name: 'EDITOR',
 	permissions: ['createMusicianEntity', 'updateMusicianEntity'],
+};
+const USER = {
+	id: 'role-3',
+	name: 'USER',
+	permissions: ['createCollectionItemEntity'],
 };
 
 describe('roleReferences', () => {
@@ -89,6 +95,44 @@ describe('calculateEffectivePermissions', () => {
 			permissions: [],
 			roles: [],
 		});
+	});
+
+	it('az alapértelmezett szerepkört csak hivatkozással kapja meg', () => {
+		expect(calculateEffectivePermissions({}, [ADMIN, USER])).toEqual({
+			permissions: [],
+			roles: [],
+		});
+		expect(
+			calculateEffectivePermissions({ roleIds: ['role-3'] }, [ADMIN, USER])
+		).toEqual({
+			permissions: ['createCollectionItemEntity'],
+			roles: ['USER'],
+		});
+	});
+});
+
+describe('missingDefaultRole', () => {
+	it('a USER szerepkör azonosítóját adja az új usernek', () => {
+		expect(missingDefaultRole({}, [ADMIN, USER])).toBe('role-3');
+	});
+
+	it('a nevet adja, ha a szerepkör még nem létezik', () => {
+		expect(missingDefaultRole({}, [ADMIN])).toBe('USER');
+	});
+
+	it('null, ha a user már azonosítóval hivatkozik rá', () => {
+		expect(missingDefaultRole({ roleIds: ['role-3'] }, [USER])).toBeNull();
+	});
+
+	it('null, ha a user már névvel hivatkozik rá', () => {
+		expect(missingDefaultRole({ roleIds: ['USER'] }, [USER])).toBeNull();
+		expect(missingDefaultRole({ roles: [{ name: 'USER' }] }, [])).toBeNull();
+	});
+
+	it('a többi szerepkör mellé is kiosztja', () => {
+		expect(
+			missingDefaultRole({ roleIds: ['role-1'] }, [ADMIN, USER])
+		).toBe('role-3');
 	});
 });
 

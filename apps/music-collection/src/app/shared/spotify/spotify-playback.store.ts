@@ -1,4 +1,4 @@
-import { DOCUMENT, computed, inject } from '@angular/core';
+import { DOCUMENT, computed, effect, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import {
 	patchState,
@@ -9,6 +9,7 @@ import {
 	withState,
 } from '@ngrx/signals';
 
+import { ExternalPlayerConsentService } from '../../data/external-player';
 import {
 	SdkPlayer,
 	SpotifyApiError,
@@ -17,12 +18,12 @@ import {
 	SpotifyNowPlaying,
 	SpotifyPlaybackEffect,
 	TrackToMatch,
+	currentPositionMs,
 } from '../../data/spotify';
 
 type SpotifyStatus = 'disconnected' | 'connecting' | 'ready';
 
 interface SpotifyPlaybackState {
-	configured: boolean;
 	status: SpotifyStatus;
 	/** This browser as a Spotify Connect device. */
 	browserDeviceId: string | null;
@@ -36,6 +37,8 @@ interface SpotifyPlaybackState {
 	trackUris: Record<string, string>;
 	/** Volume of the output device, 0–100. */
 	volume: number;
+	/** Volume the browser player starts at, kept for this browser, 0–100. */
+	browserVolume: number;
 	error: string | null;
 }
 
@@ -68,7 +71,6 @@ const errorMessage = (error: unknown): string => {
 export const SpotifyPlaybackStore = signalStore(
 	{ providedIn: 'root' },
 	withState<SpotifyPlaybackState>({
-		configured: false,
 		status: 'disconnected',
 		browserDeviceId: null,
 		selectedDeviceId: null,
@@ -77,9 +79,18 @@ export const SpotifyPlaybackStore = signalStore(
 		tracksAlbumId: null,
 		trackUris: {},
 		volume: 80,
+		browserVolume: 80,
 		error: null,
 	}),
-	withComputed((store) => ({
+	withComputed((store, effect = inject(SpotifyPlaybackEffect)) => ({
+		/**
+		 * The collector named their own Spotify app: what the player needs to
+		 * drive Spotify itself. The embedded player asks for none of it.
+		 */
+		hasOwnApp: effect.hasOwnApp,
+		clientId: effect.clientId,
+		/** What their Spotify app has to send the sign-in back to. */
+		redirectUri: computed(() => effect.redirectUri),
 		connected: computed(() => store.status() === 'ready'),
 		outputDeviceId: computed(
 			() => store.selectedDeviceId() ?? store.browserDeviceId()
@@ -93,15 +104,20 @@ export const SpotifyPlaybackStore = signalStore(
 				)?.[0] ?? null
 			);
 		}),
-		/** Whether the output device lets its volume be changed. */
-		volumeSupported: computed(() => {
+		/**
+		 * The device the sound comes out of, when that is not this browser.
+		 * Playback can be moved from the Spotify app too, so what plays is
+		 * not always what was picked here.
+		 */
+		remoteDeviceId: computed(() => {
 			const selected = store.selectedDeviceId();
-			return (
-				!selected ||
-				(store.devices().find((device) => device.id === selected)
-					?.supportsVolume ??
-					true)
-			);
+			if (selected) {
+				return selected;
+			}
+			const playing = store.nowPlaying()?.deviceId ?? null;
+			return playing && playing !== store.browserDeviceId()
+				? playing
+				: null;
 		}),
 		/** Other devices than this browser. */
 		otherDevices: computed(() =>
@@ -110,12 +126,27 @@ export const SpotifyPlaybackStore = signalStore(
 				.filter((device) => device.id !== store.browserDeviceId())
 		),
 	})),
+	withComputed((store) => ({
+		/** Whether the device playing lets its volume be changed. */
+		volumeSupported: computed(() => {
+			const remote = store.remoteDeviceId();
+			if (!remote) {
+				// This browser: only a player that exists has a volume.
+				return !!store.browserDeviceId();
+			}
+			return (
+				store.devices().find((device) => device.id === remote)
+					?.supportsVolume ?? true
+			);
+		}),
+	})),
 	withMethods(
 		(
 			store,
 			effect = inject(SpotifyPlaybackEffect),
 			router = inject(Router),
-			document = inject(DOCUMENT)
+			document = inject(DOCUMENT),
+			players = inject(ExternalPlayerConsentService)
 		) => {
 			let player: SdkPlayer | null = null;
 			let pollTimer: ReturnType<typeof setInterval> | null = null;
@@ -168,9 +199,12 @@ export const SpotifyPlaybackStore = signalStore(
 				}
 			};
 
+			// The SDK reports its own player; everything else has to be asked
+			// for. A browser that never became a device (iOS) is never the
+			// output, so what plays there has to be polled as well.
 			const pollWhenRemote = () => {
 				stopPolling();
-				if (store.selectedDeviceId()) {
+				if (store.selectedDeviceId() || !store.browserDeviceId()) {
 					pollTimer = setInterval(refreshNowPlaying, REMOTE_POLL_MS);
 					void refreshNowPlaying();
 				}
@@ -194,7 +228,25 @@ export const SpotifyPlaybackStore = signalStore(
 
 			/** Starts the browser player when signed in before. */
 			const start = async () => {
-				if (!store.configured() || !effect.hasToken || player) {
+				if (player) {
+					return;
+				}
+				// The app and the connection both hang on the account, so
+				// they arrive with a document rather than out of browser
+				// storage: asking before the answer is in would read "no app,
+				// never connected".
+				await effect.accountReady();
+				// Spotify saját scriptje a saját szerveréről jön: betölteni
+				// annyi, mint jelenteni a látogatást. Ezért csak azzal a
+				// gyűjtővel indul, aki a külső lejátszókat megengedte — és
+				// mivel ez a válasz is dokumentumból érkezik, a hiányzó válasz
+				// „még nem", nem „nem": a hook alatt újraindítja, amint megjön.
+				if (
+					!players.allowed() ||
+					!store.hasOwnApp() ||
+					!effect.hasToken ||
+					player
+				) {
 					return;
 				}
 				patchState(store, { status: 'connecting', error: null });
@@ -205,10 +257,13 @@ export const SpotifyPlaybackStore = signalStore(
 								browserDeviceId,
 								status: 'ready',
 							});
+							pollWhenRemote();
 							void refreshDevices();
 						},
-						notReady: () =>
-							patchState(store, { browserDeviceId: null }),
+						notReady: () => {
+							patchState(store, { browserDeviceId: null });
+							pollWhenRemote();
+						},
 						stateChanged: (nowPlaying) => {
 							if (!store.selectedDeviceId()) {
 								patchState(store, { nowPlaying });
@@ -245,6 +300,24 @@ export const SpotifyPlaybackStore = signalStore(
 				start,
 				refreshDevices,
 
+				/**
+				 * Leszedi a böngésző-lejátszót: a gyűjtő visszavonta a
+				 * hozzájárulást, vagy kijelentkezett. A Spotify-kapcsolatához
+				 * nem nyúl — ez nem kiléptetés.
+				 */
+				stop(): void {
+					reset();
+				},
+
+				/**
+				 * Unlocks the player's audio element. Safari only lets sound
+				 * start from the tap itself, so this has to run before the
+				 * click's first `await`, not where playback finally begins.
+				 */
+				activate(): void {
+					void player?.activateElement();
+				},
+
 				/** Leaves for the Spotify sign-in, then returns to this page. */
 				async connect(): Promise<void> {
 					try {
@@ -268,6 +341,23 @@ export const SpotifyPlaybackStore = signalStore(
 					effect.signOut();
 					reset();
 					patchState(store, { error: null });
+				},
+
+				/**
+				 * Names the collector's own Spotify app; an empty id forgets
+				 * it. Whatever was playing belonged to the app before this
+				 * one, so the player goes with it and the new app starts from
+				 * its own sign-in.
+				 */
+				async saveClientId(clientId: string): Promise<void> {
+					try {
+						await effect.saveClientId(clientId);
+						reset();
+						patchState(store, { error: null });
+						await start();
+					} catch (error) {
+						fail(error);
+					}
 				},
 
 				dismissError(): void {
@@ -300,10 +390,14 @@ export const SpotifyPlaybackStore = signalStore(
 					}
 				},
 
-				/** Plays the album, from one of its tracks when given. */
+				/**
+				 * Plays the album, from one of its tracks when given; with
+				 * `single`, only that track.
+				 */
 				async play(
 					albumId: string,
-					trackId: string | null
+					trackId: string | null,
+					single = false
 				): Promise<void> {
 					// Browsers only allow audio started from the click itself.
 					void player?.activateElement();
@@ -326,7 +420,40 @@ export const SpotifyPlaybackStore = signalStore(
 						return;
 					}
 					try {
-						await effect.play(deviceId, albumId, trackUri);
+						await effect.play(deviceId, albumId, trackUri, single);
+						patchState(store, { error: null });
+						if (store.selectedDeviceId()) {
+							setTimeout(refreshNowPlaying, 800);
+						}
+					} catch (error) {
+						fail(error);
+					}
+				},
+
+				/**
+				 * Plays the one track, and Spotify stops after it.
+				 *
+				 * A song can carry a Spotify id of its own while its record
+				 * carries none — the catalog was seeded from elsewhere, or
+				 * Spotify simply has not got the release. There is no album
+				 * to play on into, so the song is all this puts on.
+				 */
+				async playTrack(spotifyTrackId: string): Promise<void> {
+					// Browsers only allow audio started from the click itself.
+					void player?.activateElement();
+
+					const deviceId = store.outputDeviceId();
+					if (!deviceId) {
+						patchState(store, {
+							error: 'The Spotify player is not ready yet.',
+						});
+						return;
+					}
+					try {
+						await effect.playTrack(
+							deviceId,
+							`spotify:track:${spotifyTrackId}`
+						);
 						patchState(store, { error: null });
 						if (store.selectedDeviceId()) {
 							setTimeout(refreshNowPlaying, 800);
@@ -344,12 +471,35 @@ export const SpotifyPlaybackStore = signalStore(
 					}
 					try {
 						await effect.setPaused(!nowPlaying.paused);
+						const now = Date.now();
 						patchState(store, {
 							nowPlaying: {
 								...nowPlaying,
 								paused: !nowPlaying.paused,
+								positionMs: currentPositionMs(nowPlaying, now),
+								positionAt: now,
 							},
 						});
+					} catch (error) {
+						fail(error);
+					}
+				},
+
+				/** Jumps to the position (milliseconds) in the track playing. */
+				async seek(positionMs: number): Promise<void> {
+					const nowPlaying = store.nowPlaying();
+					if (!nowPlaying) {
+						return;
+					}
+					patchState(store, {
+						nowPlaying: {
+							...nowPlaying,
+							positionMs,
+							positionAt: Date.now(),
+						},
+					});
+					try {
+						await effect.seek(positionMs);
 					} catch (error) {
 						fail(error);
 					}
@@ -378,8 +528,9 @@ export const SpotifyPlaybackStore = signalStore(
 						clearTimeout(volumeTimer);
 						volumeTimer = null;
 					}
-					const deviceId = store.selectedDeviceId();
+					const deviceId = store.remoteDeviceId();
 					if (!deviceId) {
+						patchState(store, { browserVolume: volume });
 						effect.saveBrowserVolume(volume);
 						player?.setVolume(volume / 100).catch(fail);
 						return;
@@ -392,6 +543,25 @@ export const SpotifyPlaybackStore = signalStore(
 							fail(error);
 						}
 					}, VOLUME_DEBOUNCE_MS);
+				},
+
+				/**
+				 * The volume the browser player starts at. Unlike `setVolume`
+				 * it never reaches a remote device: this is the setting of
+				 * this browser, not the volume of what is playing elsewhere.
+				 */
+				setBrowserVolume(volumePercent: number): void {
+					const volume = Math.round(
+						Math.min(100, Math.max(0, volumePercent))
+					);
+
+					patchState(store, { browserVolume: volume });
+					effect.saveBrowserVolume(volume);
+
+					if (!store.remoteDeviceId()) {
+						patchState(store, { volume });
+						player?.setVolume(volume / 100).catch(fail);
+					}
 				},
 
 				/** Plays on the device from now on; moves what is playing there. */
@@ -418,12 +588,31 @@ export const SpotifyPlaybackStore = signalStore(
 		}
 	),
 	withHooks({
-		onInit(store, effect = inject(SpotifyPlaybackEffect)) {
+		// A `playback` név azért nem `effect`, mert itt az Angular `effect`-je
+		// kell alá.
+		onInit(
+			store,
+			playback = inject(SpotifyPlaybackEffect),
+			players = inject(ExternalPlayerConsentService)
+		) {
 			patchState(store, {
-				configured: effect.configured,
-				volume: effect.browserVolume,
+				volume: playback.browserVolume,
+				browserVolume: playback.browserVolume,
 			});
-			void store.start();
+
+			// A lejátszó a hozzájárulást követi, mindkét irányban. A válasz a
+			// fiók dokumentumából jön, tehát az első futáskor még hiányzik és
+			// nemnek olvas: enélkül a lejátszót a válasz megérkezése előtt
+			// kérnénk el, a kérés elbukna, és többé nem próbálkoznánk — egy
+			// később visszavont hozzájárulás után pedig ott maradna a
+			// Spotifynál egy csatlakozott eszközünk.
+			effect(() => {
+				if (players.allowed()) {
+					void store.start();
+				} else {
+					store.stop();
+				}
+			});
 		},
 	})
 );

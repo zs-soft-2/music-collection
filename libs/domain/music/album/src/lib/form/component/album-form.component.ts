@@ -1,23 +1,32 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import { Observable } from 'rxjs';
 
 import {
 	ChangeDetectionStrategy,
 	Component,
 	OnInit,
+	computed,
 	inject,
 } from '@angular/core';
-import { AlbumFormParams, BaseComponent } from '@music-collection/api';
+import {
+	AlbumExternalField,
+	AlbumFormParams,
+	BaseComponent,
+} from '@music-collection/api';
 
 import { AlbumFormService } from './album-form.service';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Bind } from 'primeng/bind';
 import { AutoComplete } from 'primeng/autocomplete';
 import { InputText } from 'primeng/inputtext';
+import { Textarea } from 'primeng/textarea';
 import { Select } from 'primeng/select';
 import { DatePicker } from 'primeng/datepicker';
 import { MultiSelect } from 'primeng/multiselect';
 import { Image } from 'primeng/image';
 import { Button } from 'primeng/button';
+import { Checkbox } from 'primeng/checkbox';
+import { Dialog } from 'primeng/dialog';
 import { AsyncPipe } from '@angular/common';
 
 @Component({
@@ -27,15 +36,20 @@ import { AsyncPipe } from '@angular/common';
 	templateUrl: './album-form.component.html',
 	styleUrls: ['./album-form.component.scss'],
 	imports: [
+		...I18N_IMPORTS,
+		FormsModule,
 		ReactiveFormsModule,
 		Bind,
 		AutoComplete,
 		InputText,
+		Textarea,
 		Select,
 		DatePicker,
 		MultiSelect,
 		Image,
 		Button,
+		Checkbox,
+		Dialog,
 		AsyncPipe,
 	],
 })
@@ -44,8 +58,37 @@ export class AlbumFormComponent extends BaseComponent implements OnInit {
 
 	public params$!: Observable<AlbumFormParams>;
 
+	public readonly duplicate = this.componentService.duplicate;
+	public readonly externalComparison =
+		this.componentService.externalComparison;
+	public readonly externalError = this.componentService.externalError;
+	public readonly externalLoading = this.componentService.externalLoading;
+	public readonly hasSelectedExternalRow = computed(
+		() => !!this.externalComparison()?.rows.some((row) => row.selected)
+	);
+
+	public applyExternal(): void {
+		this.componentService.applyExternal();
+	}
+
 	public cancel(): void {
 		this.componentService.cancel();
+	}
+
+	public closeExternal(): void {
+		this.componentService.closeExternal();
+	}
+
+	public loadExternal(): void {
+		void this.componentService.loadExternal();
+	}
+
+	public openDuplicate(): void {
+		this.componentService.openDuplicate();
+	}
+
+	public toggleExternalRow(field: AlbumExternalField): void {
+		this.componentService.toggleExternalRow(field);
 	}
 
 	public ngOnInit(): void {

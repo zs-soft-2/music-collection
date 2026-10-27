@@ -1,0 +1,75 @@
+:host {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.stars {
+	display: inline-flex;
+	align-items: center;
+}
+
+.star {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	color: var(--mc-border-strong);
+	background: none;
+	border: 0;
+
+	svg {
+		width: 1.5rem;
+		height: 1.5rem;
+		fill: currentcolor;
+		transition: transform 0.12s ease;
+	}
+
+	&.is-lit {
+		color: var(--mc-accent);
+	}
+}
+
+// A pressable star carries a touch target of its own: the row is the one
+// thing on the page a thumb aims at without reading first.
+button.star {
+	width: 2.75rem;
+	height: 2.75rem;
+	cursor: pointer;
+
+	&:disabled {
+		cursor: progress;
+	}
+
+	&:hover:not(:disabled) svg,
+	&:focus-visible svg {
+		transform: scale(1.12);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--mc-primary);
+		outline-offset: -4px;
+		border-radius: var(--mc-radius-sm, 0.375rem);
+	}
+}
+
+.is-readonly .star svg {
+	width: 1.125rem;
+	height: 1.125rem;
+}
+
+.take-back {
+	padding: 0;
+	font-size: 0.78rem;
+	color: var(--mc-text-subtle);
+	text-decoration: underline;
+	background: none;
+	border: 0;
+	cursor: pointer;
+
+	&:hover:not(:disabled),
+	&:focus-visible {
+		color: var(--mc-text);
+	}
+}

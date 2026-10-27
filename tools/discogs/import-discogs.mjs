@@ -625,7 +625,7 @@ async function writeOps(db, ops) {
  */
 async function planArtist(db, band, memberships, discogsArtistId, replace) {
 	const ops = [];
-	const stats = { created: 0, completed: 0, unchanged: 0 };
+	const stats = { created: 0, completed: 0, unchanged: 0, kept: 0 };
 
 	const membershipRefs = memberships.map((m) =>
 		db.collection('membership').doc(m.uid)
@@ -642,6 +642,13 @@ async function planArtist(db, band, memberships, discogsArtistId, replace) {
 
 	const upsert = (ref, snap, data) => {
 		if (replace) {
+			// A line-up row edited in the admin is left alone even here:
+			// replace is for refreshing what Discogs wrote, and a hand
+			// correction is the one thing Discogs cannot give back.
+			if (snap?.exists && snap.get('source') !== 'discogs') {
+				stats.kept++;
+				return;
+			}
 			ops.push({ type: 'set', ref, data });
 			return;
 		}
@@ -824,7 +831,8 @@ async function writeCommand() {
 				(profile
 					? ''
 					: ' (no Discogs member list — run fetch-artists)') +
-				` → ${stats.created} new, ${stats.completed} completed, ${stats.unchanged} unchanged`
+				` → ${stats.created} new, ${stats.completed} completed, ${stats.unchanged} unchanged` +
+				(stats.kept ? `, ${stats.kept} kept as edited by hand` : '')
 		);
 
 		if (!options.confirm || !ops.length) continue;

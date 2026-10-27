@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import {
 	ChangeDetectionStrategy,
 	Component,
@@ -26,6 +27,7 @@ import { DatePipe } from '@angular/common';
 	templateUrl: './artist-detail-view.component.html',
 	styleUrls: ['./artist-detail-view.component.scss'],
 	imports: [
+		...I18N_IMPORTS,
 		Bind,
 		Image,
 		Tabs,

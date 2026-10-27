@@ -1,0 +1,168 @@
+@if (params$ | async; as params) {
+	@if (!params.release?.album?.uid) {
+		<section class="mc-form-section">
+			<p class="mc-form-note">
+				{{ 'ui.releaseTracks.give-the-pressing-an' | transloco }}
+			</p>
+		</section>
+	} @else {
+		<section class="mc-form-section" aria-labelledby="release-album-tracks">
+			<h2 id="release-album-tracks">
+				{{
+					'ui.releaseTracks.albumHeading'
+						| transloco: { count: params.albumTracks.length }
+				}}
+			</h2>
+			<p class="mc-form-note">
+				{{ 'ui.releaseTracks.every-pressing-of-this' | transloco }}
+			</p>
+			@if (params.albumTracks.length) {
+				<ol class="release-tracks-list is-album">
+					@for (track of params.albumTracks; track track.uid) {
+						<li>
+							<span class="release-tracks-position">{{
+								track.position
+							}}</span>
+							<span class="release-tracks-name">{{
+								track.name
+							}}</span>
+							<span class="release-tracks-duration">{{
+								track.duration
+							}}</span>
+						</li>
+					}
+				</ol>
+			}
+		</section>
+
+		<section class="mc-form-section" aria-labelledby="release-own-tracks">
+			<h2 id="release-own-tracks">
+				{{
+					'ui.releaseTracks.ownHeading'
+						| transloco: { count: params.releaseTracks.length }
+				}}
+			</h2>
+
+			@if (params.releaseTracks.length) {
+				<ol class="release-tracks-list">
+					@for (track of params.releaseTracks; track track.uid) {
+						<li>
+							<span class="release-tracks-position">{{
+								track.position
+							}}</span>
+							<span class="release-tracks-name">{{
+								track.name
+							}}</span>
+							<span class="release-tracks-duration">{{
+								track.duration
+							}}</span>
+							<span class="release-tracks-actions">
+								<p-button
+									icon="pi pi-pencil"
+									size="small"
+									severity="secondary"
+									[text]="true"
+									[ariaLabel]="
+										'ui.releaseTracks.edit-this-track'
+											| transloco
+									"
+									[disabled]="saving()"
+									(onClick)="edit(track)"
+								></p-button>
+								<p-button
+									icon="pi pi-trash"
+									size="small"
+									severity="danger"
+									[text]="true"
+									[ariaLabel]="
+										'ui.releaseTracks.remove-this-track'
+											| transloco
+									"
+									[disabled]="saving()"
+									(onClick)="remove(track)"
+								></p-button>
+							</span>
+						</li>
+					}
+				</ol>
+			} @else {
+				<p class="mc-form-note">
+					{{
+						'ui.releaseTracks.nothing-yet-this-pressing' | transloco
+					}}
+				</p>
+			}
+
+			<div class="mc-form-grid release-tracks-form">
+				<div class="mc-field release-tracks-field-position">
+					<label for="track-position">{{
+						'ui.releaseTracks.position' | transloco
+					}}</label>
+					<input
+						id="track-position"
+						type="text"
+						pInputText
+						[placeholder]="
+							editing()
+								? ''
+								: 'Printed on the sleeve, e.g. ' +
+									params.nextIndex
+						"
+						[value]="position()"
+						(input)="position.set(text($event))"
+					/>
+				</div>
+
+				<div class="mc-field is-wide">
+					<label for="track-name">{{
+						'ui.releaseTracks.title' | transloco
+					}}</label>
+					<input
+						id="track-name"
+						type="text"
+						pInputText
+						[value]="name()"
+						(input)="name.set(text($event))"
+					/>
+				</div>
+
+				<div class="mc-field release-tracks-field-duration">
+					<label for="track-duration">{{
+						'ui.releaseTracks.length' | transloco
+					}}</label>
+					<input
+						id="track-duration"
+						type="text"
+						pInputText
+						placeholder="4:04"
+						[value]="duration()"
+						(input)="duration.set(text($event))"
+					/>
+				</div>
+			</div>
+
+			@if (error()) {
+				<small class="release-tracks-error">{{ error() }}</small>
+			}
+
+			<div class="mc-form-actions">
+				@if (editing()) {
+					<p-button
+						[label]="'ui.releaseTracks.cancel' | transloco"
+						severity="secondary"
+						[outlined]="true"
+						[disabled]="saving()"
+						(onClick)="cancel()"
+					></p-button>
+				}
+				<p-button
+					[label]="editing() ? 'Save the track' : 'Add the track'"
+					icon="pi pi-check"
+					[loading]="saving()"
+					[disabled]="!name().trim()"
+					(onClick)="save(params.nextIndex)"
+				></p-button>
+			</div>
+		</section>
+	}
+}

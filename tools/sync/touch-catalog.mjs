@@ -18,7 +18,11 @@ import { parseArgs } from 'node:util';
 import { initializeApp, applicationDefault } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
-import { CATALOG_FEATURE_KEYS, touchCatalog } from './catalog-sync.mjs';
+import {
+	BUNDLE_FEATURE_KEYS,
+	CATALOG_FEATURE_KEYS,
+	touchCatalog,
+} from './catalog-sync.mjs';
 import { ENV_OPTION, readEnvironment } from './environment.mjs';
 
 const { values: options } = parseArgs({
@@ -40,8 +44,21 @@ console.log(
 		(options.confirm ? '' : ' — DRY RUN, add --confirm to write')
 );
 
+// A bundle built before the reset is ignored by the clients (it may miss the
+// very edits the reset is for): until it is built again the feature is
+// downloaded document by document.
+const bundled = featureKeys.filter((key) => BUNDLE_FEATURE_KEYS.includes(key));
+
 if (options.confirm) {
 	initializeApp({ credential: applicationDefault(), projectId });
 	await touchCatalog(getFirestore(), featureKeys, { reset: true });
 	console.log('sync/catalog updated');
+
+	if (bundled.length) {
+		console.log(
+			`bundles of ${bundled.join(', ')} are stale now — rebuild them:\n` +
+				`  node tools/sync/build-bundles.mjs --env ${options.env}` +
+				` --collections ${bundled.join(',')} --confirm`
+		);
+	}
 }

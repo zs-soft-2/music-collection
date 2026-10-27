@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import { filter, map } from 'rxjs';
 
 import {
@@ -21,7 +22,8 @@ export type AdminEditEntity =
 	| 'label'
 	| 'musician'
 	| 'collection-item'
-	| 'wishlist-item';
+	| 'wishlist-item'
+	| 'document';
 
 const ENTITY_NAMES: Record<AdminEditEntity, string> = {
 	artist: 'artist',
@@ -31,6 +33,7 @@ const ENTITY_NAMES: Record<AdminEditEntity, string> = {
 	musician: 'musician',
 	'collection-item': 'collection item',
 	'wishlist-item': 'wishlist item',
+	document: 'document',
 };
 
 /**
@@ -42,7 +45,7 @@ const ENTITY_NAMES: Record<AdminEditEntity, string> = {
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-admin-edit-link',
-	imports: [RouterLink],
+	imports: [...I18N_IMPORTS, RouterLink],
 	host: {
 		'[class.is-icon]': "variant() === 'icon'",
 		'[hidden]': '!visible()',
@@ -58,7 +61,9 @@ const ENTITY_NAMES: Record<AdminEditEntity, string> = {
 			>
 				<i class="pi pi-pencil" aria-hidden="true"></i>
 				@if (variant() === 'button') {
-					<span>Edit in admin</span>
+					<span>{{
+						'ui.adminEditLink.edit-in-admin' | transloco
+					}}</span>
 				}
 			</a>
 		}
@@ -68,18 +73,24 @@ const ENTITY_NAMES: Record<AdminEditEntity, string> = {
 			display: inline-flex;
 		}
 
+		/*
+		 * A \`button\` változat mérete három hangolóból jön. Az alapérték a
+		 * visszafogott, fejlécbe való gomb; ahol a link a lap saját gombjai
+		 * közé kerül (pl. a kezdőlap reflektorfénye), ott a befoglaló sor
+		 * állítja át ezeket, és a link felveszi a szomszédai méretét.
+		 */
 		.edit {
 			display: inline-flex;
 			align-items: center;
 			gap: 0.5rem;
-			height: 36px;
+			height: var(--mc-admin-edit-height, 36px);
 			box-sizing: border-box;
-			padding: 0 0.875rem;
+			padding: 0 var(--mc-admin-edit-padding-x, 0.875rem);
 			border: 1px solid var(--mc-border-strong);
 			border-radius: var(--mc-radius-md);
 			background: color-mix(in srgb, var(--mc-bg) 60%, transparent);
 			color: var(--mc-text);
-			font-size: 0.8125rem;
+			font-size: var(--mc-admin-edit-font-size, 0.8125rem);
 			font-weight: 600;
 			text-decoration: none;
 			white-space: nowrap;
@@ -90,13 +101,13 @@ const ENTITY_NAMES: Record<AdminEditEntity, string> = {
 			}
 
 			i {
-				font-size: 0.8125rem;
+				font-size: inherit;
 			}
 		}
 
 		:host(.is-icon) .edit {
-			width: 32px;
-			height: 32px;
+			width: var(--mc-circle-xs);
+			height: var(--mc-circle-xs);
 			justify-content: center;
 			padding: 0;
 			border-radius: 9999px;

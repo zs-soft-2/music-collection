@@ -1,9 +1,10 @@
-import { Observable } from 'rxjs';
+import { Observable, from, map } from 'rxjs';
 
 import { Injectable } from '@angular/core';
-import { collection, doc } from '@angular/fire/firestore';
+import { collection, deleteField, doc, getDoc } from '@angular/fire/firestore';
 import {
 	COLLECTION_ITEM_FEATURE_KEY,
+	COPY_SERIAL_FEATURE_KEY,
 	CollectionItemModel,
 	CollectionItemModelAdd,
 	CollectionItemModelUpdate,
@@ -14,9 +15,37 @@ import {
 	WISHLIST_ITEM_FEATURE_KEY,
 	WishlistItemModelAdd,
 	WishlistItemModelUpdate,
+	toCopySerialClaimId,
+	withLocalUpdatedAt,
 } from '@music-collection/api';
 
 import { USER_FEATURE_KEY } from '../../store/state/user.reducer';
+
+/**
+ * A copy as it is written into a batch, where the write merges into whatever
+ * is already in the document.
+ *
+ * The one field that cannot be merged is `placement`: the left-hand wall of
+ * a compartment is written as the *absence* of `side` (see `placementAt`),
+ * and Firestore merges a map field by field — so a record moved from the
+ * right-hand row to the left-hand one would keep the `side: 'right'` it was
+ * written with, and jump back against the far wall the moment the shelf read
+ * itself back. Written as a deletion, the field goes.
+ */
+function forBatch(
+	collectionItem: CollectionItemModelUpdate
+): Record<string, unknown> {
+	const data: Record<string, unknown> = { ...collectionItem };
+
+	if (collectionItem.placement) {
+		data['placement'] = {
+			...collectionItem.placement,
+			side: collectionItem.placement.side ?? deleteField(),
+		};
+	}
+
+	return data;
+}
 
 @Injectable()
 export class UserDataServiceImpl extends UserDataService {
@@ -27,8 +56,33 @@ export class UserDataServiceImpl extends UserDataService {
 		this.collection = collection(this.firestore, this.featureKey);
 	}
 
+	/**
+	 * A user dokumentum azonosítója az Auth uid, nem generált: a rules csak
+	 * így engedi a saját dokumentum létrehozását (`isSelf(uid)`), a
+	 * belépés ezen keresi, és a `USER` szerepkört is ide írja a function
+	 * (`assignDefaultRole`). Generált azonosítóval az első belépés írása
+	 * elhasalt, és a gyűjtőnek sosem lett se dokumentuma, se jogosultsága.
+	 */
 	public add$(user: User): Observable<User> {
-		return super.addModel$(user);
+		if (!user.uid) {
+			return super.addModel$(user);
+		}
+
+		return new Observable((subscriber) => {
+			this.firestoreSync
+				// Merged, because the document may already be there: the
+				// profile sent here carries no `roleIds` — that field is the
+				// permission sync's — and an overwrite would take it off,
+				// which the rules refuse outright.
+				.set(doc(this.collection, user.uid), this.featureKey, user, {
+					merge: true,
+				})
+				.then(() => {
+					subscriber.next(withLocalUpdatedAt(user));
+					subscriber.complete();
+				})
+				.catch((error) => subscriber.error(error));
+		});
 	}
 
 	public addCollectionItem$(
@@ -61,7 +115,8 @@ export class UserDataServiceImpl extends UserDataService {
 					subscriber.next({
 						...newCollectionItem,
 					} as unknown as CollectionItemModel);
-				});
+				})
+				.catch((error) => subscriber.error(error));
 		});
 	}
 
@@ -115,11 +170,44 @@ export class UserDataServiceImpl extends UserDataService {
 			this.firestoreSync
 				.delete(collectionItemDocument, COLLECTION_ITEM_FEATURE_KEY)
 				.then(() => {
+					void this.releaseCopySerial(collectionItem);
 					subscriber.next({
 						...collectionItem,
 					} as unknown as CollectionItemModel);
 				});
 		});
+	}
+
+	/**
+	 * Gives a numbered copy's number back to the registry once the copy is
+	 * gone, so whoever holds the record can write it down. Nearly every copy
+	 * carries no number and there is nothing here to do.
+	 *
+	 * The copy is already deleted by the time this runs, so a failure is
+	 * logged rather than raised: it costs one number nobody can claim, which
+	 * is less than an error over a deletion that went through.
+	 */
+	private async releaseCopySerial(
+		collectionItem: CollectionItemModel
+	): Promise<void> {
+		const releaseId = collectionItem.release?.uid ?? null;
+
+		if (!collectionItem.serial || !releaseId) {
+			return;
+		}
+
+		try {
+			await this.firestoreSync.delete(
+				doc(
+					this.firestore,
+					COPY_SERIAL_FEATURE_KEY,
+					toCopySerialClaimId(releaseId, collectionItem.serial.number)
+				),
+				COPY_SERIAL_FEATURE_KEY
+			);
+		} catch (error) {
+			console.error(error);
+		}
 	}
 
 	public deleteWishlistItem$(
@@ -149,6 +237,17 @@ export class UserDataServiceImpl extends UserDataService {
 		return super.loadModel$(uid);
 	}
 
+	/** See `UserDataService.loadExisting$`: one answer, the server's. */
+	public loadExisting$(uid: string): Observable<User | undefined> {
+		return from(getDoc(doc(this.collection, uid))).pipe(
+			map((snapshot) =>
+				snapshot.exists()
+					? ({ ...snapshot.data(), uid: snapshot.id } as User)
+					: undefined
+			)
+		);
+	}
+
 	public search$(params: SearchParams): Observable<User[]> {
 		throw new Error('Method not implemented.');
 	}
@@ -171,8 +270,32 @@ export class UserDataServiceImpl extends UserDataService {
 					...collectionItem,
 				})
 				.then(() => {
-					subscriber.next(collectionItem);
-				});
+					subscriber.next(withLocalUpdatedAt(collectionItem));
+					subscriber.complete();
+				})
+				.catch((error) => subscriber.error(error));
+		});
+	}
+
+	public updateCollectionItems$(
+		collectionItems: CollectionItemModelUpdate[]
+	): Observable<CollectionItemModelUpdate[]> {
+		const writes = collectionItems.map((collectionItem) => ({
+			reference: doc(
+				this.firestore,
+				`${USER_FEATURE_KEY}/${collectionItem.userId}/${COLLECTION_ITEM_FEATURE_KEY}/${collectionItem.uid}`
+			),
+			data: forBatch(collectionItem),
+		}));
+
+		return new Observable((subscriber) => {
+			this.firestoreSync
+				.setAll(COLLECTION_ITEM_FEATURE_KEY, writes)
+				.then(() => {
+					subscriber.next(collectionItems.map(withLocalUpdatedAt));
+					subscriber.complete();
+				})
+				.catch((error) => subscriber.error(error));
 		});
 	}
 

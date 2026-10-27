@@ -1,3 +1,5 @@
+import { provideGenreTesting } from '@music-collection/domain/genre/testing';
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { of } from 'rxjs';
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -20,10 +22,16 @@ describe('AlbumEditComponent', () => {
 		await TestBed.configureTestingModule({
 			imports: [AlbumEditComponent],
 			providers: [
+				provideI18nTesting(),
+				provideGenreTesting(),
 				provideRouter([]),
 				{
 					provide: AlbumStateService,
-					useValue: { selectEntityById$: jest.fn(() => of(undefined)) },
+					useValue: {
+						selectEntities$: jest.fn(() => of([])),
+						dispatchListEntitiesAction: jest.fn(),
+						selectEntityById$: jest.fn(() => of(undefined)),
+					},
 				},
 				{
 					provide: AlbumUtilService,
@@ -32,19 +40,26 @@ describe('AlbumEditComponent', () => {
 							new FormBuilder().group({
 								artist: [null],
 								coverImage: [null],
+								coverImageUrl: [null],
 								format: [null],
 								name: [null],
 								spotify: [null],
 								styles: [null],
 								uid: [null],
 								year: [null],
+								youtubeMusic: [null],
+								youtubeVideos: [null],
 							})
 						),
 					},
 				},
 				{
 					provide: ArtistStateService,
-					useValue: { selectSearchResult$: jest.fn(() => of([])) },
+					useValue: {
+						selectEntities$: jest.fn(() => of([])),
+						dispatchListEntitiesAction: jest.fn(),
+						selectSearchResult$: jest.fn(() => of([])),
+					},
 				},
 				{
 					provide: DocumentStateService,

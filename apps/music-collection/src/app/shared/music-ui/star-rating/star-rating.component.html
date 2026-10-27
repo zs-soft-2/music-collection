@@ -1,0 +1,59 @@
+@if (readonly()) {
+	<span
+		class="stars is-readonly"
+		[attr.aria-label]="
+			label() ?? (shown() | mcPlural: 'ui.starRating.starCount')
+		"
+	>
+		@for (star of scale; track star) {
+			<span class="star" [class.is-lit]="star <= shown()">
+				<svg viewBox="0 0 24 24" aria-hidden="true">
+					<path
+						d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
+					/>
+				</svg>
+			</span>
+		}
+	</span>
+} @else {
+	<span
+		class="stars"
+		role="radiogroup"
+		[attr.aria-label]="
+			label() ?? ('ui.starRating.your-verdict' | transloco)
+		"
+	>
+		@for (star of scale; track star) {
+			<button
+				type="button"
+				class="star"
+				role="radio"
+				[class.is-lit]="star <= shown()"
+				[attr.aria-checked]="stars() === star"
+				[attr.aria-label]="star | mcPlural: 'ui.starRating.starCount'"
+				[disabled]="busy()"
+				(click)="choose(star)"
+				(pointerenter)="preview(star)"
+				(pointerleave)="preview(null)"
+				(focus)="preview(star)"
+				(blur)="preview(null)"
+			>
+				<svg viewBox="0 0 24 24" aria-hidden="true">
+					<path
+						d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
+					/>
+				</svg>
+			</button>
+		}
+	</span>
+	@if (takeBackable()) {
+		<button
+			type="button"
+			class="take-back"
+			[disabled]="busy()"
+			(click)="cleared.emit()"
+		>
+			{{ 'ui.starRating.take-it-back' | transloco }}
+		</button>
+	}
+}

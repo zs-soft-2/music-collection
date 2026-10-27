@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 /**
  * The Spotify logo mark. Green by default; inside a green Spotify button it
@@ -8,6 +9,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-spotify-icon',
+	imports: [...I18N_IMPORTS],
 	template: `
 		<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
 			<path

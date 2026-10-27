@@ -33,12 +33,34 @@ service firebase.storage {
       return hasPerm('ADMIN');
     }
 
+    // Feltöltési korlát: kép, józan mérethatárral. A korlát a szabályba
+    // tartozik és nem a formba — a kliens SDK-t a form megkerülésével is meg
+    // lehet hívni, a tárolás és a forgalom pedig a bucket tulajdonosának a
+    // számláján van. A `delete` nem visz erőforrást magával, ezért az üres
+    // `request.resource` átmegy.
+    function isImageUpload(maxBytes) {
+      return request.resource == null
+          || (request.resource.size < maxBytes
+              && request.resource.contentType.matches('image/.*'));
+    }
+
     // Document entitás fájljai (document-form, export-import: `/document/{hash}`).
+    // Ide kerül minden katalógus-kép: a borítók, a jelvények, és a
+    // zeneszámok képei meg generált klipjei is — a fájl fölött mindig egy
+    // dokumentum áll, azon keresztül található meg.
     // Publikus olvasás: a katalógusoldalak borítóit bárki letöltheti.
+    //
+    // Feltölteni csak képet lehet, legfeljebb 5 MB-ot: a kézzel feltöltött
+    // borító és a visszaimportált kép is ezen belül van. A generált jelvényt
+    // az Admin SDK teszi le (`badge-generation.ts`), arra a szabály nem
+    // vonatkozik — ott a function őrzi a 8 MB-os határt.
     match /document/{path=**} {
       allow read: if true;
-      allow create: if hasPerm('createDocumentEntity');
-      allow update: if hasPerm('createDocumentEntity') || hasPerm('updateDocumentEntity');
+      allow create: if hasPerm('createDocumentEntity')
+                    && isImageUpload(5 * 1024 * 1024);
+      allow update: if (hasPerm('createDocumentEntity')
+                        || hasPerm('updateDocumentEntity'))
+                    && isImageUpload(5 * 1024 * 1024);
       allow delete: if hasPerm('deleteDocumentEntity');
     }
 
@@ -49,8 +71,44 @@ service firebase.storage {
       allow write: if false;
     }
 
-    // Tenant-szintű fájlok (pl. példányfotók) később ide kerülnek:
-    // `tenant/{tenantId}/…` — tulajdonlás-ellenőrzéssel. Addig tiltva.
+    // Avatar-ruhatár: a profil karakterkészítőjének rajzolt rétegei
+    // (`tools/avatar/upload-assets.mjs` tölti fel, Admin SDK-val). Publikus
+    // olvasás: a kliens egy sima <img>-mel rajzolja őket, ami nem visz
+    // Auth-tokent, és a katalógusképekhez hasonlóan nincs is mit védeni
+    // rajtuk. A verziózott mappát (`avatar/v1/`) örökre cache-elhetőnek
+    // adjuk ki, ezért nem felülírjuk, hanem új verziót töltünk fel.
+    match /avatar/{path=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // A gyűjtő összeállított avatarjának kirenderelt képe. Az útvonal viszi
+    // a tulajdonost, így csak ő írhatja. Az olvasás publikus: az avatar ott
+    // jelenik meg, ahol a gyűjtő mások mellett áll — a térképen, a hálózati
+    // oldalon, a felső sávban.
+    match /user-avatar/{userId}/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.auth.uid == userId
+                   && isImageUpload(1 * 1024 * 1024);
+    }
+
+    // Példányfotók: a gyűjtő saját lemezéről készült kép, példányonként
+    // legfeljebb kettő (elöl-hátul). Az útvonal viszi a tulajdonost, így a
+    // jogosultság ránézésre eldönthető, és a Firestore-szabály ugyanerre az
+    // alakra illeszti a dokumentumban tárolt `path`-t.
+    //
+    // Az olvasás a tulajdonosé: a példány-oldal ma csak a saját lemezeidet
+    // nyitja meg. Ha később megosztható lesz, ez a sor nyílik publikusra —
+    // a feltöltés akkor sem.
+    match /collection-item/{userId}/{itemId}/{fileName} {
+      allow read: if request.auth != null
+                  && request.auth.uid == userId;
+      allow write: if request.auth != null
+                   && request.auth.uid == userId
+                   && hasPerm('updateCollectionItemEntity')
+                   && isImageUpload(2 * 1024 * 1024);
+    }
 
     // Minden más: csak ADMIN.
     match /{allPaths=**} {

@@ -3,9 +3,15 @@ import { Observable } from 'rxjs';
 import { Injectable, inject } from '@angular/core';
 import {
 	AlbumEntity,
+	AlbumEntityAdd,
 	ArtistEntity,
 	ArtistEntityAdd,
 	ArtistEntityUpdate,
+	ArtistDataService,
+	ArtistExternalAlbum,
+	ArtistExternalCandidate,
+	ArtistExternalProfile,
+	ArtistExternalQuery,
 	ArtistStateService,
 	SearchParams,
 } from '@music-collection/api';
@@ -17,7 +23,12 @@ import * as artistSelectors from './artist.selectors';
 
 @Injectable()
 export class ArtistStateServiceImpl extends ArtistStateService {
+	private artistDataService = inject(ArtistDataService);
 	private store = inject<Store<fromArtist.ArtistPartialState>>(Store);
+
+	public dispatchAddAlbumsAction(albums: AlbumEntityAdd[]): void {
+		this.store.dispatch(artistActions.addAlbums({ albums }));
+	}
 
 	public dispatchAddEntityAction(artist: ArtistEntityAdd): void {
 		this.store.dispatch(artistActions.addArtist({ artist }));
@@ -49,6 +60,10 @@ export class ArtistStateServiceImpl extends ArtistStateService {
 		this.store.dispatch(artistActions.loadArtist({ uid }));
 	}
 
+	public dispatchLookupByName(term: string): void {
+		this.store.dispatch(artistActions.lookupByName({ term }));
+	}
+
 	public dispatchSearch(params: SearchParams): void {
 		this.store.dispatch(artistActions.search({ params }));
 	}
@@ -65,6 +80,24 @@ export class ArtistStateServiceImpl extends ArtistStateService {
 
 	public dispatchUpdateEntityAction(artist: ArtistEntityUpdate): void {
 		this.store.dispatch(artistActions.updateArtist({ artist }));
+	}
+
+	public fetchExternalAlbums$(
+		query: ArtistExternalQuery
+	): Observable<ArtistExternalAlbum[]> {
+		return this.artistDataService.fetchExternalAlbums$(query);
+	}
+
+	public fetchExternalProfile$(
+		query: ArtistExternalQuery
+	): Observable<ArtistExternalProfile | null> {
+		return this.artistDataService.fetchExternalProfile$(query);
+	}
+
+	public searchExternalArtists$(
+		query: ArtistExternalQuery
+	): Observable<ArtistExternalCandidate[]> {
+		return this.artistDataService.searchExternalArtists$(query);
 	}
 
 	public isLoading$(): Observable<boolean> {
@@ -91,6 +124,10 @@ export class ArtistStateServiceImpl extends ArtistStateService {
 		return this.store.pipe(
 			select(artistSelectors.isNewEntityButtonEnabled)
 		);
+	}
+
+	public selectLookupLoading$(): Observable<boolean> {
+		return this.store.pipe(select(artistSelectors.selectLookupLoading));
 	}
 
 	public selectSearchResult$(): Observable<ArtistEntity[]> {

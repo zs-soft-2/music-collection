@@ -1,70 +1,109 @@
 @if (params$ | async; as params) {
-	<section class="label-table mc-card">
-		<p-table
-			[value]="params.labels"
-			styleClass="mc-table"
-			responsiveLayout="scroll"
+	<mc-collection-list
+		[items]="params.labels"
+		[place]="place"
+		[view]="collectionView"
+		[emptyMessage]="'ui.labelTable.no-labels-found' | transloco"
+	>
+		<p-autocomplete
+			tools
+			class="mc-table-search"
+			[placeholder]="'ui.labelTable.filter-by-name' | transloco"
+			[ariaLabel]="'ui.labelTable.filter-by-name2' | transloco"
+			[ngModel]="place.filterOf('name')"
+			[suggestions]="params.empty"
+			[showClear]="true"
+			(completeMethod)="searchHandler($event)"
+			(onClear)="clearSearch()"
+			[minQueryLength]="3"
+			[delay]="400"
 		>
-			<ng-template #header>
-				<tr>
-					<th>Name</th>
+		</p-autocomplete>
 
-					<th>Parent</th>
+		<ng-template #card let-label>
+			<mc-entity-card
+				[title]="label.name"
+				[subtitle]="label.parent?.name"
+				imageShape="square"
+				(open)="editLabel(label)"
+			>
+				<mc-view-action
+					cardActions
+					[link]="viewLink(label)"
+					entity="label"
+					[name]="label.name"
+				/>
+				<button
+					cardActions
+					pButton
+					pRipple
+					[attr.aria-label]="'ui.labelTable.delete-label' | transloco"
+					class="p-button-text p-button-rounded p-button-danger"
+					(click)="deleteLabel(label)"
+					iconOnly
+				>
+					<i class="pi pi-trash" aria-hidden="true"></i>
+				</button>
+			</mc-entity-card>
+		</ng-template>
 
-					<th></th>
-				</tr>
+		<ng-template
+			mcColumn
+			[header]="'ui.labelTable.name' | transloco"
+			let-label
+		>
+			{{ label.name }}
+		</ng-template>
 
-				<tr>
-					<th>
-						<p-autocomplete
-							placeholder="Filter by name…"
-							ariaLabel="Filter by name"
-							[suggestions]="params.empty"
-							[showClear]="true"
-							(completeMethod)="searchHandler($event)"
-							[minQueryLength]="3"
-							[delay]="400"
-						>
-						</p-autocomplete>
-					</th>
+		<ng-template
+			mcColumn
+			[header]="'ui.labelTable.parent' | transloco"
+			let-label
+		>
+			{{ label.parent?.name }}
+		</ng-template>
 
-					<th></th>
+		<ng-template
+			mcColumn
+			[header]="'ui.labelTable.updated' | transloco"
+			field="updatedAt"
+			let-label
+		>
+			{{ label.updatedAt | date: 'yyyy-MM-dd HH:mm' }}
+		</ng-template>
 
-					<th></th>
-				</tr>
-			</ng-template>
+		<ng-template
+			mcColumn
+			[header]="'ui.labelTable.actions' | transloco"
+			headerHidden
+			let-label
+		>
+			<mc-view-action
+				[link]="viewLink(label)"
+				entity="label"
+				[name]="label.name"
+			/>
+			<button
+				pButton
+				pRipple
+				[attr.aria-label]="'ui.labelTable.edit-label' | transloco"
+				class="p-button-text p-button-rounded p-button-secondary"
+				(click)="editLabel(label)"
+				iconOnly
+			>
+				<i class="pi pi-pencil" aria-hidden="true"></i>
+			</button>
 
-			<ng-template #body let-label>
-				<tr>
-					<td>{{ label.name }}</td>
-
-					<td>{{ label.parent?.name }}</td>
-
-					<td>
-						<button
-							pButton
-							pRipple
-							aria-label="Edit label"
-							class="p-button-text p-button-rounded p-button-secondary"
-							(click)="editLabel(label)"
-							iconOnly
-						>
-							<i class="pi pi-pencil" aria-hidden="true"></i>
-						</button>
-
-						<button
-							pButton
-							pRipple
-							aria-label="Delete label"
-							class="p-button-text p-button-rounded p-button-danger"
-							(click)="deleteLabel(label)"
-							iconOnly
-						>
-							<i class="pi pi-trash" aria-hidden="true"></i>
-						</button>
-					</td>
-				</tr>
-			</ng-template>
-		</p-table>
-	</section>
+			<button
+				pButton
+				pRipple
+				[attr.aria-label]="'ui.labelTable.delete-label2' | transloco"
+				class="p-button-text p-button-rounded p-button-danger"
+				(click)="deleteLabel(label)"
+				iconOnly
+			>
+				<i class="pi pi-trash" aria-hidden="true"></i>
+			</button>
+		</ng-template>
+	</mc-collection-list>
 }

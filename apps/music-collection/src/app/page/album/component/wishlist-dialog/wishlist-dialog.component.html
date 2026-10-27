@@ -1,0 +1,100 @@
+<dialog
+	#dialog
+	class="wish"
+	aria-labelledby="wishlist-dialog-title"
+	[attr.aria-busy]="busy()"
+	(close)="closed.emit()"
+>
+	<header class="wish-header">
+		<div>
+			<p class="eyebrow">
+				{{ 'ui.wishlistDialog.add-to-wishlist' | transloco }}
+			</p>
+			<h2 id="wishlist-dialog-title">{{ albumTitle() }}</h2>
+			@if (artistName()) {
+				<p class="artist">{{ artistName() }}</p>
+			}
+		</div>
+		<button
+			type="button"
+			class="icon-button"
+			[attr.aria-label]="'ui.wishlistDialog.close' | transloco"
+			[disabled]="busy()"
+			(click)="close()"
+		>
+			<i class="pi pi-times" aria-hidden="true"></i>
+		</button>
+	</header>
+
+	<form (submit)="$event.preventDefault(); submit()">
+		<fieldset class="medias">
+			<legend>
+				{{ 'ui.wishlistDialog.which-format-are-you' | transloco }}
+			</legend>
+			<div class="chips">
+				@for (option of options; track option) {
+					<label class="chip">
+						<input
+							type="checkbox"
+							name="media"
+							[value]="option"
+							[checked]="isPicked(option)"
+							(change)="toggleMedia(option)"
+						/>
+						{{ labels[option] }}
+					</label>
+				}
+			</div>
+		</fieldset>
+
+		<label class="field">
+			<span>{{
+				'ui.wishlistDialog.shop-link-optional' | transloco
+			}}</span>
+			<input
+				type="url"
+				inputmode="url"
+				[placeholder]="'ui.wishlistDialog.https' | transloco"
+				[value]="sourceLink()"
+				[attr.aria-invalid]="linkInvalid()"
+				(input)="onLink($event)"
+			/>
+			@if (linkInvalid()) {
+				<span class="field-error">
+					{{ 'ui.wishlistDialog.paste-a-full-address' | transloco }}
+				</span>
+			}
+		</label>
+
+		<p class="hint">
+			{{ 'ui.wishlistDialog.it-lands-on-your' | transloco }}
+		</p>
+
+		@if (error()) {
+			<p class="error" role="alert">
+				{{
+					'ui.wishlistDialog.addFailed'
+						| transloco: { error: error() }
+				}}
+			</p>
+		}
+
+		<div class="form-actions">
+			<button
+				type="button"
+				class="text-button"
+				[disabled]="busy()"
+				(click)="close()"
+			>
+				{{ 'ui.wishlistDialog.cancel' | transloco }}
+			</button>
+			<button
+				type="submit"
+				class="primary-button"
+				[disabled]="linkInvalid() || busy()"
+			>
+				{{ busy() ? 'Adding…' : 'Add to wishlist' }}
+			</button>
+		</div>
+	</form>
+</dialog>

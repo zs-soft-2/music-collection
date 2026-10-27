@@ -1,8 +1,13 @@
-import { of, pipe, switchMap, tap } from 'rxjs';
+import { combineLatest, of, pairwise, pipe, switchMap, tap } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
 import {
+	AuthenticationStateService,
+	EntityTypeEnum,
+	RoleNames,
 	WishlistItemEntity,
+	WishlistItemEntityUpdate,
+	WishlistItemPermissionsService,
 	WishlistItemStateService,
 } from '@music-collection/api';
 import { tapResponse } from '@ngrx/operators';
@@ -15,8 +20,9 @@ import {
 	withState,
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
+import { NgxPermissionsService } from 'ngx-permissions';
 
-import { FORMAT_LABELS, MediaFormat, ReleaseView } from '../../shared/music-ui';
+import { MediaFormat, ReleaseView } from '../../shared/music-ui';
 
 export type WishlistFormatFilter = MediaFormat | 'all';
 
@@ -34,25 +40,46 @@ export interface WishlistEntryView {
 }
 
 interface WishlistPageState {
-	entries: WishlistEntryView[];
+	/** The signed-in user's own wanted albums. */
+	items: WishlistItemEntity[];
 	isLoading: boolean;
 	query: string;
 	format: WishlistFormatFilter;
 	showFound: boolean;
+	/** The item whose found state is being written. */
+	changingId: string | null;
+	changeError: string | null;
+	/** Who is signed in; a guest has no wishlist of their own. */
+	userId: string | null;
+	/** May change their own wanted albums (mark them found). */
+	canEdit: boolean;
 }
 
 const initialState: WishlistPageState = {
-	entries: [],
+	items: [],
 	isLoading: true,
 	query: '',
 	format: 'all',
 	showFound: false,
+	changingId: null,
+	changeError: null,
+	userId: null,
+	canEdit: false,
 };
 
-const FORMAT_ORDER: MediaFormat[] = ['vinyl', 'cd', 'cassette', 'dvd', 'other'];
+const FORMAT_ORDER: MediaFormat[] = [
+	'vinyl',
+	'cd',
+	'cassette',
+	'dvd',
+	'boxset',
+	'other',
+];
 
 function toFormat(media: string): MediaFormat {
-	return media in FORMAT_LABELS ? (media as MediaFormat) : 'other';
+	return FORMAT_ORDER.includes(media as MediaFormat)
+		? (media as MediaFormat)
+		: 'other';
 }
 
 function safeUrl(url: string | undefined | null): string | null {
@@ -75,6 +102,7 @@ export function toWishlistEntryView(
 		release: {
 			id: item.uid,
 			albumId: item.albumReference?.uid ?? '',
+			releaseId: null,
 			title: item.albumReference?.name ?? 'Unknown album',
 			artistId: item.artistReference?.uid ?? '',
 			artistName: item.artistReference?.name ?? 'Unknown artist',
@@ -90,6 +118,11 @@ export function toWishlistEntryView(
 			addedAt: 0,
 			labelName: null,
 			country: null,
+			/* No pressing picked out yet, so no sleeve to know the colour of. */
+			coverColor: null,
+			generic: false,
+			/* A wanted record stands nowhere yet. */
+			placement: null,
 		},
 	};
 }
@@ -98,11 +131,12 @@ export function toWishlistEntryView(
 export const WishlistPageStore = signalStore(
 	withState(initialState),
 	withComputed((store) => {
+		const entries = computed(() => store.items().map(toWishlistEntryView));
+
 		const searched = computed(() => {
 			const query = store.query().trim().toLowerCase();
 
-			return store
-				.entries()
+			return entries()
 				.filter((entry) => store.showFound() || entry.isActive)
 				.filter(
 					(entry) =>
@@ -128,6 +162,7 @@ export const WishlistPageStore = signalStore(
 		);
 
 		return {
+			entries,
 			visible,
 			/**
 			 * Cards per render chunk: the first chunk renders at once, the
@@ -145,20 +180,16 @@ export const WishlistPageStore = signalStore(
 			formatCounts: computed(() =>
 				FORMAT_ORDER.map((format) => ({
 					format,
-					label: FORMAT_LABELS[format],
 					count: searched().filter((entry) =>
 						entry.formats.includes(format)
 					).length,
 				})).filter((option) => option.count > 0)
 			),
 			stats: computed(() => ({
-				wanted: store.entries().filter((entry) => entry.isActive)
-					.length,
-				found: store.entries().filter((entry) => !entry.isActive)
-					.length,
+				wanted: entries().filter((entry) => entry.isActive).length,
+				found: entries().filter((entry) => !entry.isActive).length,
 				artists: new Set(
-					store
-						.entries()
+					entries()
 						.filter((entry) => entry.isActive)
 						.map((entry) => entry.release.artistId)
 				).size,
@@ -171,24 +202,49 @@ export const WishlistPageStore = signalStore(
 	withMethods(
 		(
 			store,
-			wishlistItemStateService = inject(WishlistItemStateService)
+			wishlistItemStateService = inject(WishlistItemStateService),
+			authenticationStateService = inject(AuthenticationStateService),
+			permissionsService = inject(NgxPermissionsService)
 		) => ({
+			/** The signed-in user's own wanted albums; a guest has none. */
 			load: rxMethod<void>(
 				pipe(
 					tap(() => {
 						patchState(store, { isLoading: true });
-						wishlistItemStateService.dispatchListEntitiesAction();
+						wishlistItemStateService.dispatchListOwnEntitiesAction();
 					}),
 					switchMap(() =>
-						wishlistItemStateService.selectEntities$().pipe(
+						combineLatest([
+							wishlistItemStateService.selectEntities$(),
+							authenticationStateService.selectAuthenticatedUser$(),
+							permissionsService.permissions$,
+						]).pipe(
 							tapResponse({
-								next: (items: WishlistItemEntity[]) =>
+								next: ([items, user, permissions]: [
+									WishlistItemEntity[],
+									{ uid?: string } | null | undefined,
+									Record<string, unknown>,
+								]) => {
+									const userId = user?.uid ?? null;
+
 									patchState(store, {
-										entries: (items ?? []).map(
-											toWishlistEntryView
+										userId,
+										canEdit:
+											!!userId &&
+											(WishlistItemPermissionsService.updateWishlistItemEntity in
+												permissions ||
+												RoleNames.ADMIN in permissions),
+										// The list is a collection group: the
+										// admin's view may hold other users'.
+										items: (items ?? []).filter(
+											(item) =>
+												!!userId &&
+												item.userReference?.uid ===
+													userId
 										),
 										isLoading: false,
-									}),
+									});
+								},
 								error: (error) => {
 									console.error(error);
 									patchState(store, { isLoading: false });
@@ -198,17 +254,76 @@ export const WishlistPageStore = signalStore(
 					)
 				)
 			),
+			/** Follows the write; the card stops waiting once it is saved. */
+			watchChange: rxMethod<void>(
+				pipe(
+					switchMap(() =>
+						combineLatest([
+							wishlistItemStateService.selectUpdating$(),
+							wishlistItemStateService.selectError$(),
+						])
+					),
+					pairwise(),
+					tap(([[wasUpdating], [updating, error]]) => {
+						if (wasUpdating && !updating) {
+							patchState(store, {
+								changingId: null,
+								changeError: error,
+							});
+						}
+					})
+				)
+			),
+			/**
+			 * Marks a wanted album found (it is in the collection now), or
+			 * wanted again. The item stays on the wishlist either way.
+			 */
+			setFound(entryId: string, found: boolean): void {
+				const item = store
+					.items()
+					.find((wanted) => wanted.uid === entryId);
+
+				if (!item || !store.canEdit() || store.changingId()) {
+					return;
+				}
+
+				const update: WishlistItemEntityUpdate = {
+					entityType: EntityTypeEnum.WishlistItem,
+					uid: item.uid,
+					userReference: item.userReference,
+					// The album keeps the item's search parameters; without it
+					// the write would clear them.
+					albumReference: item.albumReference,
+					isActive: !found,
+				};
+
+				patchState(store, {
+					changingId: entryId,
+					changeError: null,
+					// The card would vanish from a wanted-only list: show the
+					// found ones, so the change is seen and can be undone.
+					showFound: found || store.showFound(),
+				});
+				wishlistItemStateService.dispatchUpdateEntityAction(update);
+			},
 			setQuery: (query: string) => patchState(store, { query }),
 			setFormat: (format: WishlistFormatFilter) =>
 				patchState(store, { format }),
 			toggleFound: () =>
 				patchState(store, { showFound: !store.showFound() }),
 			clearFilters: () => patchState(store, { query: '', format: 'all' }),
+			/**
+			 * `authenticatedGuard` keeps a guest off this route; this is for
+			 * the case it is ever reached without a session, so the page asks
+			 * for a sign-in rather than calling the wishlist empty.
+			 */
+			login: () => authenticationStateService.dispatchLogin(),
 		})
 	),
 	withHooks({
 		onInit(store) {
 			store.load(of(undefined));
+			store.watchChange(of(undefined));
 		},
 	})
 );

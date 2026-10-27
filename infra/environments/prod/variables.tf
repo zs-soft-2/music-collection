@@ -53,6 +53,11 @@ variable "firestore_location" {
   type = string
 }
 
+variable "firestore_point_in_time_recovery" {
+  type    = bool
+  default = false
+}
+
 variable "build_configuration" {
   type = string
 }
@@ -84,11 +89,80 @@ variable "services" {
     # A Compute default SA-t (a Cloud Build alapértelmezett build SA-ja) ennek
     # bekapcsolása hozza létre; futó VM-et nem indítunk.
     "compute.googleapis.com",
+    # A Discogs token tárolása (DISCOGS_TOKEN secret).
+    "secretmanager.googleapis.com",
+    # App Check: a callable-ök csak a saját appunkból hívhatók. A reCAPTCHA
+    # Enterprise adja a pontot, az App Check a belőle váltott tokent.
+    "firebaseappcheck.googleapis.com",
+    "recaptchaenterprise.googleapis.com",
+    # Vertex AI: a collection badge-eket az Imagen rajzolja meg
+    # (generateMusicCollectionBadge).
+    "aiplatform.googleapis.com",
+    # Cloud Scheduler: a `refreshUpcomingReleases` naponta fut. A v2 ütemezett
+    # function deployja maga hozza létre a schedulerjobot — enélkül elszáll.
+    "cloudscheduler.googleapis.com",
+    # Költségvetési riasztás: a budgetet a Cloud Billing Budget API teremti, az
+    # értesítési csatorna pedig a Cloud Monitoringé.
+    "billingbudgets.googleapis.com",
+    "monitoring.googleapis.com",
   ]
+}
+
+variable "app_check_domains" {
+  type        = list(string)
+  default     = []
+  description = "Azok a domainek, ahonnan az App Check reCAPTCHA kulcsa tokent ad. Üresen App Check nem jön létre."
+}
+
+variable "app_check_debug_token" {
+  type        = bool
+  default     = false
+  description = "Devben: egy tofu-teremtette App Check debug token a localhosthoz. Prodban sosem."
+}
+
+variable "app_check_services" {
+  type        = map(string)
+  default     = {}
+  description = "App Check enforcement szolgáltatásonként (`firestore.googleapis.com`, `firebasestorage.googleapis.com`, `identitytoolkit.googleapis.com`) → ENFORCED vagy UNENFORCED. A fel nem soroltakon az App Check ki van kapcsolva."
 }
 
 variable "deployment_branches" {
   type        = list(string)
   default     = ["main"]
   description = "Az ágak, amelyekről a GitHub environmentbe telepíteni lehet."
+}
+
+variable "budget_amount" {
+  type        = number
+  default     = 5
+  description = "A projekt havi költségkerete a számlázási fiók pénznemében (a fiók USD-ben számol). Nem korlát: a Google nem kapcsol le semmit a túllépéskor, csak riaszt."
+}
+
+# A repó PUBLIKUS, ezért e-mail cím nem kerülhet a `<env>.tfvars`-ba. A címet
+# egy git által nem látott `local.auto.tfvars` adja (lásd a README-t), vagy a
+# `TF_VAR_alert_emails` környezeti változó.
+#
+# Üresen hagyva a BUDGET ettől még küld levelet (a számlázási fiók adminjainak),
+# a Firestore olvasás-riasztás viszont NEM — annak nincs alapértelmezett
+# címzettje. A tofu ezt minden plan/apply végén ki is írja figyelmeztetésként.
+variable "alert_emails" {
+  type        = list(string)
+  default     = []
+  description = "A költség-riasztások címzettjei. Nem a `<env>.tfvars`-ba való: a repó publikus."
+}
+
+# A küszöb a MEGSZOKOTT forgalomhoz van szabva, nem elméletből. A dev órás
+# csúcsai (2026-09-16..30): medián 97, 90. percentilis ~2 900, a legnagyobb
+# rendes óra ~41 000 (egy-két katalógus-script futása, egy futás ~25 ezer
+# olvasás). A 2026-09-21-i elszabadulás egyetlen órája 187 719 volt — ezt kell
+# elkapni anélkül, hogy egy sima script-futás riasztana.
+#
+# Prodban a rendes nap néhány száz olvasás; ott a nagy órák a
+# `copy-prod-to-dev.mjs` futásai voltak (~50 000), és azokról nem baj, ha szól.
+#
+# 0 = ne jöjjön létre a riasztás.
+variable "firestore_read_alert_threshold" {
+  type        = number
+  default     = 50000
+  description = "Hány Firestore dokumentum-olvasás fölött szóljon a riasztás egy gördülő órás ablakban."
 }

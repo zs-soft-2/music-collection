@@ -1,9 +1,14 @@
-<div class="page">
+<div class="page" [class.is-compact]="compact()">
+	<mc-page-breadcrumb
+		[trail]="store.trail()"
+		[backLabel]="store.backLabel()"
+	/>
 	@if (store.album(); as album) {
 		<!-- Album -->
 		<header class="hero">
 			@if (album.coverUrl) {
 				<img
+					mcCoverFallback
 					class="backdrop"
 					[src]="album.coverUrl"
 					alt=""
@@ -17,10 +22,16 @@
 				[id]="album.id"
 				[name]="album.title"
 			/>
+			<mc-propose-link
+				class="mc-hero-admin"
+				entity="album"
+				[id]="album.id"
+			/>
 
 			<div class="profile">
 				@if (album.coverUrl) {
 					<img
+						mcCoverFallback
 						class="cover"
 						[src]="album.coverUrl"
 						[alt]="album.title + ' cover'"
@@ -47,107 +58,431 @@
 					<dl class="facts">
 						@if (album.year) {
 							<div>
-								<dt>Year</dt>
+								<dt>{{ 'page.album.year' | transloco }}</dt>
 								<dd>{{ album.year }}</dd>
 							</div>
 						}
 						@if (album.genre) {
 							<div>
-								<dt>Genre</dt>
+								<dt>{{ 'page.album.genre' | transloco }}</dt>
 								<dd>{{ album.genre }}</dd>
 							</div>
 						}
 						@if (store.tracks().length) {
 							<div>
-								<dt>Tracks</dt>
+								<dt>{{ 'page.album.tracks' | transloco }}</dt>
 								<dd>{{ store.tracks().length }}</dd>
 							</div>
 						}
 						@if (store.totalDuration()) {
 							<div>
-								<dt>Length</dt>
+								<dt>{{ 'page.album.length' | transloco }}</dt>
 								<dd>{{ store.totalDuration() }}</dd>
 							</div>
 						}
 					</dl>
 
 					@if (album.styles.length) {
-						<ul class="styles" aria-label="Styles">
+						<ul
+							class="styles"
+							[attr.aria-label]="'page.album.styles' | transloco"
+						>
 							@for (style of album.styles; track style) {
 								<li>{{ style }}</li>
 							}
 						</ul>
 					}
+
+					@if (store.playable() || store.canCollect()) {
+						<div class="play-actions">
+							<mc-page-play-button />
+							@if (store.playable()) {
+								<button
+									type="button"
+									class="player-button"
+									[title]="
+										'page.album.full-screen-player'
+											| transloco
+									"
+									[attr.aria-label]="
+										'page.album.open-the-full-screen'
+											| transloco
+									"
+									(click)="store.openPlayer()"
+								>
+									<i
+										class="pi pi-window-maximize"
+										aria-hidden="true"
+									></i>
+								</button>
+							}
+							@if (store.canCollect()) {
+								<button
+									type="button"
+									class="collect-button"
+									data-collect-toggle
+									aria-haspopup="dialog"
+									(click)="store.openPicker()"
+								>
+									<i
+										class="pi pi-plus"
+										aria-hidden="true"
+									></i>
+									<span>{{
+										store.copies().length
+											? 'Add another copy'
+											: 'Add to collection'
+									}}</span>
+								</button>
+								@if (store.pendingRequests().length) {
+									<button
+										type="button"
+										class="requested-chip"
+										(click)="store.openPicker()"
+									>
+										<i
+											class="pi pi-clock"
+											aria-hidden="true"
+										></i>
+										{{
+											'page.album.release-requested-pending'
+												| transloco
+										}}
+									</button>
+								}
+							}
+							@if (store.canWish()) {
+								@if (store.wanted()) {
+									<a
+										class="wanted-chip"
+										routerLink="/wishlist"
+									>
+										<i
+											class="pi pi-heart-fill"
+											aria-hidden="true"
+										></i>
+										{{
+											'page.album.on-your-wishlist'
+												| transloco
+										}}
+									</a>
+								} @else {
+									<button
+										type="button"
+										class="wish-button"
+										data-wish-toggle
+										aria-haspopup="dialog"
+										(click)="store.openWishlist()"
+									>
+										<i
+											class="pi pi-heart"
+											aria-hidden="true"
+										></i>
+										<span>{{
+											'page.album.add-to-wishlist'
+												| transloco
+										}}</span>
+									</button>
+								}
+							}
+						</div>
+					}
+
+					@if (store.collections().length) {
+						<mc-album-collections
+							[collections]="store.collections()"
+						/>
+					}
 				</div>
 			</div>
 		</header>
+
+		<div class="view-bar">
+			<button
+				type="button"
+				class="view-toggle"
+				[attr.aria-pressed]="compact()"
+				(click)="toggleCompact()"
+			>
+				<i
+					class="pi"
+					[class.pi-list]="!compact()"
+					[class.pi-bars]="compact()"
+					aria-hidden="true"
+				></i>
+				{{ 'page.album.compact-view' | transloco }}
+			</button>
+			@if (compact() && openSections().size) {
+				<button
+					type="button"
+					class="text-button"
+					(click)="collapseAll()"
+				>
+					{{ 'page.album.collapse-all' | transloco }}
+				</button>
+			}
+		</div>
 
 		<!-- Original release -->
 		@if (album.original; as original) {
 			<section class="original" aria-labelledby="original-title">
 				<h2 id="original-title" class="panel-title">
-					Original release
+					@if (compact()) {
+						<button
+							type="button"
+							class="section-toggle"
+							[attr.aria-expanded]="isOpen('original')"
+							(click)="toggleSection('original')"
+						>
+							<i
+								class="pi"
+								[class.pi-chevron-right]="!isOpen('original')"
+								[class.pi-chevron-down]="isOpen('original')"
+								aria-hidden="true"
+							></i>
+							{{ 'page.album.original-release' | transloco }}
+						</button>
+					} @else {
+						Original release
+					}
 				</h2>
-				<dl class="original-facts">
-					@if (original.released) {
-						<div>
-							<dt>Released</dt>
-							<dd>{{ original.released }}</dd>
-						</div>
-					}
-					@if (original.country) {
-						<div>
-							<dt>Country</dt>
-							<dd>{{ original.country }}</dd>
-						</div>
-					}
-					@if (original.labels) {
-						<div>
-							<dt>Label</dt>
-							<dd>{{ original.labels }}</dd>
-						</div>
-					}
-					@if (original.formats) {
-						<div>
-							<dt>Format</dt>
-							<dd>{{ original.formats }}</dd>
-						</div>
-					}
-				</dl>
-				<a
-					class="source"
-					[href]="original.discogsUrl"
-					target="_blank"
-					rel="noopener noreferrer"
-				>
-					Data from Discogs
-					<i class="pi pi-external-link" aria-hidden="true"></i>
-					<span class="visually-hidden">(opens in a new tab)</span>
-				</a>
+				@if (isOpen('original')) {
+					<dl class="original-facts">
+						@if (original.released) {
+							<div>
+								<dt>{{ 'page.album.released' | transloco }}</dt>
+								<dd>{{ original.released }}</dd>
+							</div>
+						}
+						@if (original.country) {
+							<div>
+								<dt>{{ 'page.album.country' | transloco }}</dt>
+								<dd>{{ original.country }}</dd>
+							</div>
+						}
+						@if (original.labels) {
+							<div>
+								<dt>{{ 'page.album.label' | transloco }}</dt>
+								<dd>{{ original.labels }}</dd>
+							</div>
+						}
+						@if (original.formats) {
+							<div>
+								<dt>{{ 'page.album.format' | transloco }}</dt>
+								<dd>{{ original.formats }}</dd>
+							</div>
+						}
+					</dl>
+					<a
+						class="source"
+						[href]="original.discogsUrl"
+						target="_blank"
+						rel="noopener noreferrer"
+					>
+						{{ 'page.album.data-from-discogs' | transloco }}
+						<i class="pi pi-external-link" aria-hidden="true"></i>
+						<span class="visually-hidden">{{
+							'page.album.opens-in-a-new' | transloco
+						}}</span>
+					</a>
+				}
 			</section>
 		}
 
 		<!-- Listen -->
-		@if (album.spotifyAlbumId) {
+		@if (store.playable()) {
 			<section class="listen" aria-labelledby="listen-title">
-				<h2 id="listen-title" class="panel-title spotify-title">
-					<mc-spotify-icon />
-					Listen on Spotify
+				<h2 id="listen-title" class="panel-title">
+					@if (compact()) {
+						<button
+							type="button"
+							class="section-toggle"
+							[attr.aria-expanded]="isOpen('listen')"
+							(click)="toggleSection('listen')"
+						>
+							<i
+								class="pi"
+								[class.pi-chevron-right]="!isOpen('listen')"
+								[class.pi-chevron-down]="isOpen('listen')"
+								aria-hidden="true"
+							></i>
+							{{ 'page.album.listen' | transloco }}
+						</button>
+					} @else {
+						Listen
+					}
 				</h2>
-				<mc-spotify-panel
-					[albumId]="album.spotifyAlbumId"
-					[albumTitle]="album.artistName + ' – ' + album.title"
-				/>
+				@if (isOpen('listen')) {
+					<mc-player-panel />
+
+					@if (store.listening(); as listening) {
+						@if (listening.plays) {
+							<p class="listening">
+								<i class="pi pi-history" aria-hidden="true"></i>
+								{{
+									listening.plays
+										| mcPlural: 'page.album.playCount'
+								}}
+								@if (listening.fullPlays) {
+									<span class="through">
+										{{
+											'page.album.rightThrough'
+												| transloco
+													: {
+															count: listening.fullPlays,
+													  }
+										}}
+									</span>
+								}
+								@if (listening.lastPlayedAt) {
+									<span class="last">
+										{{
+											'page.album.lastOn'
+												| transloco
+													: {
+															date:
+																listening.lastPlayedAt
+																| mcDate
+																	: 'mediumDate',
+													  }
+										}}
+									</span>
+								}
+							</p>
+						}
+					}
+				}
+			</section>
+		}
+
+		<!-- What the collector thinks -->
+		@if (store.canRate() || store.community()) {
+			<section class="verdict" aria-labelledby="verdict-title">
+				<h2 id="verdict-title" class="panel-title">
+					@if (compact()) {
+						<button
+							type="button"
+							class="section-toggle"
+							[attr.aria-expanded]="isOpen('verdict')"
+							(click)="toggleSection('verdict')"
+						>
+							<i
+								class="pi"
+								[class.pi-chevron-right]="!isOpen('verdict')"
+								[class.pi-chevron-down]="isOpen('verdict')"
+								aria-hidden="true"
+							></i>
+							{{ 'page.album.what-you-think' | transloco }}
+						</button>
+					} @else {
+						{{ 'page.album.what-you-think' | transloco }}
+					}
+				</h2>
+				@if (isOpen('verdict')) {
+					@if (store.canRate()) {
+						<mc-star-rating
+							[stars]="store.myRating()?.stars ?? null"
+							[busy]="store.ratingWriting()"
+							[label]="'page.album.your-verdict' | transloco"
+							(rated)="store.rate($event)"
+							(cleared)="store.clearRating()"
+						/>
+
+						@if (store.myRating(); as mine) {
+							<label class="verdict-note">
+								<span class="verdict-note-label">
+									{{
+										'page.album.why-this-record' | transloco
+									}}
+								</span>
+								<input
+									type="text"
+									[value]="mine.note ?? ''"
+									[attr.maxlength]="noteLimit"
+									[disabled]="store.ratingWriting()"
+									[attr.placeholder]="
+										'page.album.one-line-is-enough'
+											| transloco
+									"
+									(blur)="saveNote($event)"
+									(keydown.enter)="saveNote($event)"
+								/>
+							</label>
+						}
+					}
+
+					@if (store.community(); as crowd) {
+						<p class="crowd">
+							<mc-star-rating
+								[stars]="rounded(crowd.average)"
+								[readonly]="true"
+								[label]="
+									'page.album.what-everybody-says' | transloco
+								"
+							/>
+							<span class="crowd-average">
+								{{
+									'page.album.communityAverage'
+										| transloco
+											: {
+													average: crowd.average,
+													count: crowd.count,
+											  }
+								}}
+							</span>
+							@if (crowd.differsBy; as differsBy) {
+								<span class="crowd-gap">
+									{{
+										(differsBy > 0
+											? 'page.album.aboveTheCrowd'
+											: 'page.album.belowTheCrowd'
+										)
+											| transloco
+												: { stars: absolute(differsBy) }
+									}}
+								</span>
+							}
+						</p>
+					}
+
+					@if (store.ratingError()) {
+						<p class="verdict-error" role="alert">
+							{{ 'page.album.verdict-not-kept' | transloco }}
+						</p>
+					}
+				}
 			</section>
 		}
 
 		<!-- Tracklist and credits -->
 		<div class="details">
 			<section class="panel" aria-labelledby="tracklist-title">
-				<h2 id="tracklist-title" class="section-title">Tracklist</h2>
-				@if (store.detailsLoading()) {
+				<h2 id="tracklist-title" class="section-title">
+					@if (compact()) {
+						<button
+							type="button"
+							class="section-toggle"
+							[attr.aria-expanded]="isOpen('tracklist')"
+							(click)="toggleSection('tracklist')"
+						>
+							<i
+								class="pi"
+								[class.pi-chevron-right]="!isOpen('tracklist')"
+								[class.pi-chevron-down]="isOpen('tracklist')"
+								aria-hidden="true"
+							></i>
+							{{ 'page.album.tracklist' | transloco }}
+						</button>
+					} @else {
+						Tracklist
+					}
+				</h2>
+				@if (!isOpen('tracklist')) {
+				} @else if (store.detailsLoading()) {
 					<div role="status" aria-busy="true">
-						<span class="visually-hidden">Loading tracklist…</span>
+						<span class="visually-hidden">{{
+							'page.album.loading-tracklist' | transloco
+						}}</span>
 						@for (i of placeholders(8); track i) {
 							<div class="skeleton row-skeleton"></div>
 						}
@@ -156,13 +491,9 @@
 					<mc-album-tracklist
 						[groups]="store.trackGroups()"
 						[total]="store.totalDuration()"
-						[playable]="
-							spotify.connected() && !!album.spotifyAlbumId
-						"
-						[playingId]="spotify.playingTrackId()"
-						(playTrack)="
-							playTrack(album.spotifyAlbumId ?? '', $event)
-						"
+						[playable]="store.playable()"
+						[playingId]="store.playingTrackId()"
+						(playTrack)="store.playTrack($event)"
 					/>
 				} @else {
 					<p class="empty">
@@ -177,10 +508,32 @@
 			</section>
 
 			<section class="panel" aria-labelledby="credits-title">
-				<h2 id="credits-title" class="section-title">Credits</h2>
-				@if (store.detailsLoading()) {
+				<h2 id="credits-title" class="section-title">
+					@if (compact()) {
+						<button
+							type="button"
+							class="section-toggle"
+							[attr.aria-expanded]="isOpen('credits')"
+							(click)="toggleSection('credits')"
+						>
+							<i
+								class="pi"
+								[class.pi-chevron-right]="!isOpen('credits')"
+								[class.pi-chevron-down]="isOpen('credits')"
+								aria-hidden="true"
+							></i>
+							{{ 'page.album.credits' | transloco }}
+						</button>
+					} @else {
+						Credits
+					}
+				</h2>
+				@if (!isOpen('credits')) {
+				} @else if (store.detailsLoading()) {
 					<div role="status" aria-busy="true">
-						<span class="visually-hidden">Loading credits…</span>
+						<span class="visually-hidden">{{
+							'page.album.loading-credits' | transloco
+						}}</span>
 						@for (i of placeholders(6); track i) {
 							<div class="skeleton row-skeleton"></div>
 						}
@@ -196,7 +549,7 @@
 					}
 				} @else if (!store.detailsFailed()) {
 					<p class="empty">
-						No credits have been imported for this album yet.
+						{{ 'page.album.no-credits-have-been' | transloco }}
 					</p>
 				}
 			</section>
@@ -204,14 +557,36 @@
 
 		<!-- The collector's copies -->
 		<section class="section" aria-labelledby="copies-title">
-			<h2 id="copies-title" class="section-title">In your collection</h2>
-			@if (store.releasesLoading()) {
+			<h2 id="copies-title" class="section-title">
+				@if (compact()) {
+					<button
+						type="button"
+						class="section-toggle"
+						[attr.aria-expanded]="isOpen('copies')"
+						(click)="toggleSection('copies')"
+					>
+						<i
+							class="pi"
+							[class.pi-chevron-right]="!isOpen('copies')"
+							[class.pi-chevron-down]="isOpen('copies')"
+							aria-hidden="true"
+						></i>
+						{{ 'page.album.in-your-collection' | transloco }}
+					</button>
+				} @else {
+					In your collection
+				}
+			</h2>
+			@if (!isOpen('copies')) {
+			} @else if (store.releasesLoading()) {
 				<div
 					class="skeleton row-skeleton"
 					role="status"
 					aria-busy="true"
 				>
-					<span class="visually-hidden">Loading…</span>
+					<span class="visually-hidden">{{
+						'page.album.loading' | transloco
+					}}</span>
 				</div>
 			} @else if (store.copies().length) {
 				<ul class="copies">
@@ -222,7 +597,11 @@
 								[weight]="copy.weight"
 							/>
 							<span class="copy-details">
-								@if (copy.labelName) {
+								@if (copy.generic) {
+									<span>{{
+										'catalog.genericPressing' | transloco
+									}}</span>
+								} @else if (copy.labelName) {
 									<span>{{ copy.labelName }}</span>
 								}
 								@if (copy.country) {
@@ -241,18 +620,147 @@
 									}
 								</span>
 							}
-							<mc-admin-edit-link
-								class="copy-admin"
-								variant="icon"
-								entity="collection-item"
-								[id]="copy.id"
-								[name]="album.title"
-							/>
+							@if (copy.placement; as spot) {
+								<span class="copy-spot">
+									<i
+										class="pi pi-bookmark"
+										aria-hidden="true"
+									></i>
+									{{
+										'page.album.shelfSpot'
+											| transloco
+												: {
+														shelf: shelfName(
+															spot.unitId
+														),
+														row: spot.row,
+														slot: spot.column,
+												  }
+									}}
+								</span>
+							}
+							<span class="copy-actions">
+								@if (store.canPlaceCopies()) {
+									<button
+										type="button"
+										class="copy-place"
+										[attr.data-place-copy]="copy.id"
+										[disabled]="store.placing()"
+										(click)="store.openPlacement(copy.id)"
+									>
+										<i
+											class="pi pi-bookmark"
+											aria-hidden="true"
+										></i>
+										{{ copy.placement ? 'Move' : 'Place' }}
+										<span class="visually-hidden">{{
+											'page.album.on-the-shelf'
+												| transloco
+										}}</span>
+									</button>
+								}
+								@if (store.canManageCopies()) {
+									<button
+										type="button"
+										class="copy-remove"
+										[attr.data-remove-copy]="copy.id"
+										[disabled]="store.disposing()"
+										(click)="store.openRemoval(copy.id)"
+									>
+										<i
+											class="pi pi-sign-out"
+											aria-hidden="true"
+										></i>
+										{{ 'page.album.remove' | transloco }}
+										<span class="visually-hidden">{{
+											'page.album.from-your-collection'
+												| transloco
+										}}</span>
+									</button>
+								}
+								<mc-admin-edit-link
+									variant="icon"
+									entity="collection-item"
+									[id]="copy.id"
+									[name]="album.title"
+								/>
+							</span>
 						</li>
 					}
 				</ul>
 			} @else {
-				<p class="empty">This album is not in your collection.</p>
+				<p class="empty">
+					{{ 'page.album.this-album-is-not' | transloco }}
+				</p>
+			}
+			@if (isOpen('copies') && store.pastCopies().length) {
+				<h3 class="past-title">
+					{{ 'page.album.previously-owned' | transloco }}
+				</h3>
+				@if (store.disposeError() && !store.removingCopyId()) {
+					<p class="past-error" role="alert">
+						{{
+							'page.album.takeBackFailed'
+								| transloco: { error: store.disposeError() }
+						}}
+					</p>
+				}
+				<ul class="copies">
+					@for (copy of store.pastCopies(); track copy.id) {
+						<li class="copy is-past">
+							<mc-format-badge
+								[format]="copy.format"
+								[weight]="copy.weight"
+							/>
+							<span class="copy-details">
+								@if (copy.generic) {
+									<span>{{
+										'catalog.genericPressing' | transloco
+									}}</span>
+								} @else if (copy.labelName) {
+									<span>{{ copy.labelName }}</span>
+								}
+								@if (copy.country) {
+									<span>{{ copy.country }}</span>
+								}
+							</span>
+							<span class="past-state">
+								{{ copy.reason | mcCatalog: 'disposalReason' }}
+								<time
+									[attr.datetime]="
+										copy.disposedAt | date: 'yyyy-MM-dd'
+									"
+									>{{
+										copy.disposedAt | date: 'mediumDate'
+									}}</time
+								>
+							</span>
+							@if (copy.note) {
+								<span class="past-note">{{ copy.note }}</span>
+							}
+							@if (store.canManageCopies()) {
+								<span class="copy-actions">
+									<button
+										type="button"
+										class="copy-remove"
+										[disabled]="store.disposing()"
+										(click)="store.restoreCopy(copy.id)"
+									>
+										<i
+											class="pi pi-undo"
+											aria-hidden="true"
+										></i>
+										{{ 'page.album.take-back' | transloco }}
+										<span class="visually-hidden">{{
+											'page.album.into-your-collection'
+												| transloco
+										}}</span>
+									</button>
+								</span>
+							}
+						</li>
+					}
+				</ul>
 			}
 		</section>
 
@@ -261,38 +769,143 @@
 			<section class="section" aria-labelledby="more-title">
 				<header class="section-head">
 					<h2 id="more-title" class="section-title">
-						More from {{ album.artistName }}
+						@if (compact()) {
+							<button
+								type="button"
+								class="section-toggle"
+								[attr.aria-expanded]="isOpen('more')"
+								(click)="toggleSection('more')"
+							>
+								<i
+									class="pi"
+									[class.pi-chevron-right]="!isOpen('more')"
+									[class.pi-chevron-down]="isOpen('more')"
+									aria-hidden="true"
+								></i>
+								{{
+									'page.album.moreFrom'
+										| transloco
+											: { artist: album.artistName }
+								}}
+							</button>
+						} @else {
+							More from {{ album.artistName }}
+						}
 					</h2>
 					<a class="more" [routerLink]="['/artist', album.artistId]">
-						Full discography
+						{{ 'page.album.full-discography' | transloco }}
 						<i class="pi pi-arrow-right" aria-hidden="true"></i>
 					</a>
 				</header>
-				@defer (on viewport({ rootMargin: '800px' })) {
-					<ul class="album-grid">
-						@for (other of store.moreAlbums(); track other.id) {
-							<li><mc-discography-card [album]="other" /></li>
-						}
-					</ul>
-				} @placeholder {
-					<div
-						class="defer-placeholder is-cards"
-						[style.--count]="store.moreAlbums().length"
-					></div>
+				@if (isOpen('more')) {
+					@defer (on viewport({ rootMargin: '800px' })) {
+						<ul class="album-grid">
+							@for (other of store.moreAlbums(); track other.id) {
+								<li>
+									<mc-discography-card
+										[album]="other"
+										[stars]="starsFor(other.id)"
+									/>
+								</li>
+							}
+						</ul>
+					} @placeholder {
+						<div
+							class="defer-placeholder is-cards"
+							[style.--count]="store.moreAlbums().length"
+						></div>
+					}
 				}
 			</section>
 		}
 	} @else if (store.notFound()) {
 		<div class="not-found">
 			<p class="not-found-icon" aria-hidden="true">♪</p>
-			<h1>Album not found</h1>
-			<p>This album is not in the catalog.</p>
-			<a class="button" routerLink="/home">Back to home</a>
+			<h1>{{ 'page.album.album-not-found' | transloco }}</h1>
+			<p>{{ 'page.album.this-album-is-not2' | transloco }}</p>
+			<a class="button" routerLink="/home">{{
+				'page.album.back-to-home' | transloco
+			}}</a>
 		</div>
 	} @else {
 		<div role="status" aria-busy="true">
-			<span class="visually-hidden">Loading album…</span>
+			<span class="visually-hidden">{{
+				'page.album.loading-album' | transloco
+			}}</span>
 			<div class="skeleton hero-skeleton"></div>
 		</div>
 	}
 </div>
+
+@if (store.pickerOpen() && store.album(); as album) {
+	<mc-release-picker
+		[albumTitle]="album.title"
+		[releases]="store.releaseOptions()"
+		[ownedGenericMedia]="store.ownedGenericMedia()"
+		[loading]="store.catalogReleasesLoading()"
+		[adding]="
+			store.adding() || store.claiming() || store.preparingGeneric()
+		"
+		[error]="store.addError()"
+		[pendingRequests]="store.pendingRequests()"
+		[rejectedRequests]="store.rejectedRequests()"
+		[discogsAvailable]="!!store.discogsMasterId()"
+		[discogsVersions]="store.discogsOptions()"
+		[discogsLoading]="store.discogsLoading()"
+		[discogsError]="store.discogsError()"
+		[requesting]="store.requesting()"
+		[requestError]="store.requestError()"
+		[initialView]="store.pickerView()"
+		[highlightReleaseId]="store.pickedReleaseUid()"
+		[highlightDiscogsReleaseId]="store.pickedDiscogsReleaseId()"
+		[photoVersions]="store.photoOptions()"
+		[photoScanning]="store.photoScanning()"
+		[photoScanned]="store.photoScanned()"
+		[photoError]="store.photoError()"
+		[photoPreviewUrl]="store.photoPreviewUrl()"
+		[canRemove]="store.canManageCopies()"
+		(picked)="store.addToCollection($event)"
+		(genericPicked)="store.addGenericCopy($event)"
+		(photoPicked)="store.scanPressingPhoto($event)"
+		(photoRetried)="store.scanPressingPhoto('again')"
+		(discogsRequested)="store.showDiscogsVersions()"
+		(requestSent)="store.requestRelease($event)"
+		(removeRequested)="store.removeFromPicker($event)"
+		(closed)="onPickerClosed()"
+	/>
+}
+
+@if (store.wishlistOpen() && store.album(); as album) {
+	<mc-wishlist-dialog
+		[albumTitle]="album.title"
+		[artistName]="album.artistName"
+		[busy]="store.wishing()"
+		[error]="store.wishError()"
+		(wished)="store.addToWishlist($event)"
+		(closed)="onWishlistClosed()"
+	/>
+}
+
+@if (store.placingCopy(); as copy) {
+	<mc-copy-placement
+		[albumTitle]="store.album()?.title ?? copy.title"
+		[copy]="copy"
+		[units]="store.shelfUnits()"
+		[filed]="store.filedElsewhere()"
+		[busy]="store.placing()"
+		[error]="store.placeError()"
+		(placed)="store.placeCopy($event)"
+		(closed)="store.closePlacement()"
+	/>
+}
+
+@if (store.removingCopy(); as copy) {
+	<mc-copy-removal
+		[albumTitle]="store.album()?.title ?? copy.title"
+		[copy]="copy"
+		[busy]="store.disposing()"
+		[error]="store.disposeError()"
+		(removed)="store.removeCopy($event)"
+		(closed)="store.closeRemoval()"
+	/>
+}

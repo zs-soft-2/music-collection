@@ -1,0 +1,160 @@
+:host {
+	display: block;
+}
+
+/**
+ * The turning card. Both faces sit in the same grid cell so the card is as
+ * tall as the taller picture and nothing jumps when it turns; the back is
+ * pre-turned, so a half-turn shows it the right way round.
+ */
+.card {
+	position: relative;
+	display: block;
+	width: 100%;
+	perspective: 1400px;
+}
+
+.faces {
+	display: grid;
+	transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+	transform-style: preserve-3d;
+}
+
+.face {
+	grid-area: 1 / 1;
+	width: 100%;
+	height: auto;
+	border-radius: var(--mc-radius-lg, 0.75rem);
+	backface-visibility: hidden;
+	box-shadow: var(--mc-shadow-menu);
+	object-fit: cover;
+}
+
+.back {
+	transform: rotateY(180deg);
+}
+
+.turnable {
+	cursor: pointer;
+
+	&:hover .faces,
+	&:focus-visible .faces {
+		transform: rotateY(180deg);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--mc-primary);
+		outline-offset: 4px;
+		border-radius: var(--mc-radius-lg, 0.75rem);
+	}
+}
+
+/**
+ * A phone has no pointer to hover with, and the back of a sleeve is the half
+ * worth seeing — so there a tap turns the card and keeps it turned. Where
+ * hover exists the tap state is ignored on purpose: a card that is both
+ * hovered and tapped would turn twice and land back on its front.
+ */
+@media (hover: none) {
+	.turnable.turned .faces {
+		transform: rotateY(180deg);
+	}
+}
+
+/* A turn is motion for its own sake; the card still turns, just at once. */
+@media (prefers-reduced-motion: reduce) {
+	.faces {
+		transition: none;
+	}
+}
+
+.hint {
+	position: absolute;
+	right: 0.75rem;
+	bottom: 0.75rem;
+	display: inline-flex;
+	gap: 0.35rem;
+	align-items: center;
+	padding: 0.25rem 0.6rem;
+	font-size: 0.72rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--mc-text);
+	background: rgb(0 0 0 / 0.55);
+	border-radius: 999px;
+	pointer-events: none;
+}
+
+.empty {
+	margin: 0;
+	color: var(--mc-text-muted);
+}
+
+.controls {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	align-items: center;
+	margin-top: 0.75rem;
+}
+
+.control {
+	display: inline-flex;
+	gap: 0.4rem;
+	align-items: center;
+}
+
+.control-label {
+	font-size: 0.72rem;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--mc-text-subtle);
+}
+
+.button {
+	display: inline-flex;
+	gap: 0.35rem;
+	align-items: center;
+	padding: 0.4rem 0.8rem;
+	font: inherit;
+	font-size: 0.85rem;
+	color: var(--mc-text);
+	cursor: pointer;
+	background: var(--mc-surface-2);
+	border: 1px solid var(--mc-border);
+	border-radius: 999px;
+
+	&:hover {
+		background: var(--mc-card-bg-hover);
+	}
+
+	&:focus-within,
+	&:focus-visible {
+		outline: 2px solid var(--mc-primary);
+		outline-offset: 2px;
+	}
+
+	/* The file input is the label: visible focus lives on the label itself. */
+	input {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+	}
+}
+
+.remove:hover {
+	color: var(--mc-status-bad);
+}
+
+.note {
+	margin: 0.5rem 0 0;
+	font-size: 0.8rem;
+	color: var(--mc-text-subtle);
+}
+
+.error {
+	margin: 0.5rem 0 0;
+	color: var(--mc-status-bad);
+}

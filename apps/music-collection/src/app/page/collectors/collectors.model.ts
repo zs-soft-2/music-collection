@@ -1,0 +1,139 @@
+/**
+ * The wall of finished collections.
+ *
+ * Not a list of collectors — a list of what collectors have finished, under
+ * the face of whoever finished it. A collection nobody has completed is
+ * nowhere here; the collections page is where those live, with what they ask
+ * for. This page answers the other question: who got there, and with what.
+ */
+
+/**
+ * One record off somebody's shelf, as a row of the wall draws it.
+ *
+ * The sleeve is what a stranger reads first: a row of four covers says what
+ * kind of collection this is before the name of a single collection does. It
+ * is not a link — the visitor may have no catalog, and the record belongs to
+ * the collector's page, which is where the row leads.
+ */
+export interface WallRecord {
+	title: string;
+	artistName: string;
+	coverUrl: string | null;
+}
+
+/** One finished collection, as the wall shows it. */
+export interface WallBadge {
+	slug: string;
+	name: string;
+	imageUrl: string | null;
+	points: number;
+}
+
+/**
+ * A collection somebody says they are after, as a row of the wall shows it.
+ *
+ * A collector who has finished nothing still belongs on the wall: they said
+ * out loud what they are collecting, and that sentence is what the row shows
+ * until a badge replaces it.
+ */
+export interface WallPursuit {
+	slug: string;
+	name: string;
+	imageUrl: string | null;
+}
+
+/** One collector, with what they have finished. */
+export interface WallEntry {
+	uid: string;
+	displayName: string | null;
+	photoURL: string | null;
+	/** Stands in for a missing picture. */
+	initial: string;
+	place: string | null;
+	copies: number;
+	points: number;
+	badges: WallBadge[];
+	/**
+	 * The collections they say they are after. The entry names them itself;
+	 * the picture — and the name of one written before the names travelled —
+	 * comes from the catalog in `dressHunts`.
+	 */
+	collecting: WallPursuit[];
+	/**
+	 * A few records off their shelf, as the entry carries them: a sleeve and
+	 * what it is. Empty on an entry written before they travelled, and on one
+	 * whose owner shares a hunt but not a shelf.
+	 */
+	records: WallRecord[];
+	/** Epoch ms of the entry; what "recent" sorts by. */
+	updatedAt: number;
+}
+
+/** A collection somebody on the wall has finished, and how many did. */
+export interface WallCollection {
+	slug: string;
+	name: string;
+	imageUrl: string | null;
+	collectors: number;
+}
+
+/** A face on a collection's card: who finished it. */
+export interface WallFinisher {
+	uid: string;
+	displayName: string | null;
+	photoURL: string | null;
+	initial: string;
+}
+
+/**
+ * A published collection, and who has finished it.
+ *
+ * The definitions come from the catalog, which only the server writes, so
+ * nothing here needs the border post the collector-written entries do. The
+ * faces on it do: they come from the directory.
+ */
+export interface WallCollectionCard extends CollectionCrowd {
+	slug: string;
+	name: string;
+	description: string | null;
+	/** PrimeIcons class, where the collection carries one. */
+	icon: string | null;
+	imageUrl: string | null;
+	/** Discographies stand apart: there is a pair of them per band. */
+	group: string | null;
+}
+
+/**
+ * Who stands on one collection: the faces of whoever finished it, and of
+ * whoever says they are after it, with how many there are of each.
+ *
+ * It is what turns a rule into something a visitor can see the point of, so
+ * it is read the same way wherever a collection is drawn — this page's cards
+ * and the home page's grid alike.
+ */
+export interface CollectionCrowd {
+	finishers: WallFinisher[];
+	finisherCount: number;
+	/** Who says they are after it — following it, and showing that. */
+	hunters: WallFinisher[];
+	hunterCount: number;
+}
+
+/** Which way round the page is read: by collection, or by collector. */
+export type WallView = 'collections' | 'collectors';
+
+export type WallSort = 'recent' | 'badges' | 'points' | 'shelf' | 'name';
+
+export const WALL_SORTS: { value: WallSort; labelKey: string }[] = [
+	{ value: 'recent', labelKey: 'page.collectors.sort.recent' },
+	{ value: 'badges', labelKey: 'page.collectors.sort.badges' },
+	{ value: 'points', labelKey: 'page.collectors.sort.points' },
+	{ value: 'shelf', labelKey: 'page.collectors.sort.shelf' },
+	{ value: 'name', labelKey: 'page.collectors.sort.name' },
+];
+
+/** How many collections the filter row offers before it stops. */
+export const WALL_FILTER_LIMIT = 16;
+
+/** How many faces a collection's card carries before it only counts them. */
+export const WALL_FACES = 5;

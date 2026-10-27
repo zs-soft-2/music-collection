@@ -2,22 +2,22 @@
 	<header class="hero">
 		<div>
 			<p class="eyebrow">musiCollection</p>
-			<h1>Wishlist</h1>
+			<h1>{{ 'ui.wishlistPage.wishlist' | transloco }}</h1>
 		</div>
 
 		@if (!store.isLoading()) {
 			<dl class="stats">
 				<div class="stat">
-					<dt>Wanted</dt>
+					<dt>{{ 'ui.wishlistPage.wanted' | transloco }}</dt>
 					<dd>{{ store.stats().wanted }}</dd>
 				</div>
 				<div class="stat">
-					<dt>Artists</dt>
+					<dt>{{ 'ui.wishlistPage.artists' | transloco }}</dt>
 					<dd>{{ store.stats().artists }}</dd>
 				</div>
 				@if (store.stats().found) {
 					<div class="stat">
-						<dt>Found</dt>
+						<dt>{{ 'ui.wishlistPage.found' | transloco }}</dt>
 						<dd>{{ store.stats().found }}</dd>
 					</div>
 				}
@@ -28,27 +28,33 @@
 	<div class="toolbar">
 		<div class="search">
 			<i class="pi pi-search" aria-hidden="true"></i>
-			<label class="visually-hidden" for="wishlist-search"
-				>Search artist or album</label
-			>
+			<label class="visually-hidden" for="wishlist-search">{{
+				'ui.wishlistPage.search-artist-or-album' | transloco
+			}}</label>
 			<input
 				id="wishlist-search"
 				type="search"
-				placeholder="Search artist or album…"
+				[placeholder]="
+					'ui.wishlistPage.search-artist-or-album2' | transloco
+				"
 				autocomplete="off"
 				[value]="store.query()"
 				(input)="onQuery($event)"
 			/>
 		</div>
 
-		<div class="chips" role="group" aria-label="Filter by format">
+		<div
+			class="chips"
+			role="group"
+			[attr.aria-label]="'ui.wishlistPage.filter-by-format' | transloco"
+		>
 			<button
 				type="button"
 				class="chip"
 				[attr.aria-pressed]="store.format() === 'all'"
 				(click)="store.setFormat('all')"
 			>
-				All
+				{{ 'ui.wishlistPage.all' | transloco }}
 			</button>
 			@for (option of store.formatCounts(); track option.format) {
 				<button
@@ -57,7 +63,7 @@
 					[attr.aria-pressed]="store.format() === option.format"
 					(click)="store.setFormat(option.format)"
 				>
-					{{ option.label }}
+					{{ option.format | mcCatalog: 'media' }}
 					<span class="chip-count">{{ option.count }}</span>
 				</button>
 			}
@@ -71,10 +77,19 @@
 				(click)="store.toggleFound()"
 			>
 				<i class="pi pi-check" aria-hidden="true"></i>
-				Show found
+				{{ 'ui.wishlistPage.show-found' | transloco }}
 			</button>
 		}
 	</div>
+
+	@if (store.changeError()) {
+		<p class="change-error" role="alert">
+			{{
+				'ui.wishlistPage.saveFailed'
+					| transloco: { error: store.changeError() }
+			}}
+		</p>
+	}
 
 	<p class="summary" aria-live="polite">
 		@if (!store.isLoading()) {
@@ -85,7 +100,7 @@
 					class="link-button"
 					(click)="store.clearFilters()"
 				>
-					Clear filters
+					{{ 'ui.wishlistPage.clear-filters' | transloco }}
 				</button>
 			} @else {
 				{{ store.visible().length }} albums
@@ -95,27 +110,43 @@
 
 	@if (store.isLoading()) {
 		<div class="grid" role="status" aria-busy="true">
-			<span class="visually-hidden">Loading wishlist…</span>
+			<span class="visually-hidden">{{
+				'ui.wishlistPage.loading-wishlist' | transloco
+			}}</span>
 			@for (skeleton of skeletons; track skeleton) {
 				<div class="skeleton"></div>
 			}
 		</div>
+	} @else if (!store.userId()) {
+		<div class="empty">
+			<i class="pi pi-heart empty-icon" aria-hidden="true"></i>
+			<h2>
+				{{ 'ui.wishlistPage.your-wishlist-lives-behind' | transloco }}
+			</h2>
+			<p>{{ 'ui.wishlistPage.log-in-to-see' | transloco }}</p>
+			<button type="button" class="button" (click)="store.login()">
+				<i class="pi pi-sign-in" aria-hidden="true"></i>
+				{{ 'ui.wishlistPage.log-in' | transloco }}
+			</button>
+		</div>
 	} @else if (!store.entries().length) {
 		<div class="empty">
 			<i class="pi pi-heart empty-icon" aria-hidden="true"></i>
-			<h2>Your wishlist is empty</h2>
+			<h2>{{ 'ui.wishlistPage.your-wishlist-is-empty' | transloco }}</h2>
 			<p>
-				Browse the collection and note the albums you are looking for.
+				{{ 'ui.wishlistPage.browse-the-collection-and' | transloco }}
 			</p>
-			<a class="button" routerLink="/collection">Open collection</a>
+			<a class="button" routerLink="/collection">{{
+				'ui.wishlistPage.open-collection' | transloco
+			}}</a>
 		</div>
 	} @else if (!store.visible().length) {
 		<div class="empty">
 			<i class="pi pi-search empty-icon" aria-hidden="true"></i>
-			<h2>No albums found</h2>
-			<p>Try another search or format.</p>
+			<h2>{{ 'ui.wishlistPage.no-albums-found' | transloco }}</h2>
+			<p>{{ 'ui.wishlistPage.try-another-search-or' | transloco }}</p>
 			<button type="button" class="button" (click)="store.clearFilters()">
-				Clear filters
+				{{ 'ui.wishlistPage.clear-filters2' | transloco }}
 			</button>
 		</div>
 	} @else {
@@ -160,7 +191,12 @@
 				/>
 				<div class="entry-meta">
 					@if (entry.formats.length > 1) {
-						<ul class="formats" aria-label="Also wanted on">
+						<ul
+							class="formats"
+							[attr.aria-label]="
+								'ui.wishlistPage.also-wanted-on' | transloco
+							"
+						>
 							@for (
 								format of entry.formats.slice(1);
 								track format
@@ -174,30 +210,71 @@
 						<span></span>
 					}
 					@if (!entry.isActive) {
-						<span class="found">
-							<i class="pi pi-check" aria-hidden="true"></i>
-							Found
+						<span class="actions">
+							<span class="found">
+								<i class="pi pi-check" aria-hidden="true"></i>
+								{{ 'ui.wishlistPage.found2' | transloco }}
+							</span>
+							@if (store.canEdit()) {
+								<button
+									type="button"
+									class="link-button"
+									[disabled]="store.changingId() === entry.id"
+									(click)="store.setFound(entry.id, false)"
+								>
+									{{
+										'ui.wishlistPage.want-again' | transloco
+									}}
+								</button>
+							}
 						</span>
-					} @else if (entry.shopUrl) {
-						<a
-							class="shop"
-							[href]="entry.shopUrl"
-							target="_blank"
-							rel="noopener noreferrer"
-							[attr.aria-label]="
-								'Shop: ' +
-								entry.release.artistName +
-								' — ' +
-								entry.release.title +
-								' (opens in a new tab)'
-							"
-						>
-							Shop
-							<i
-								class="pi pi-external-link"
-								aria-hidden="true"
-							></i>
-						</a>
+					} @else {
+						<span class="actions">
+							@if (entry.shopUrl) {
+								<a
+									class="shop"
+									[href]="entry.shopUrl"
+									target="_blank"
+									rel="noopener noreferrer"
+									[attr.aria-label]="
+										'Shop: ' +
+										entry.release.artistName +
+										' — ' +
+										entry.release.title +
+										' (opens in a new tab)'
+									"
+								>
+									{{ 'ui.wishlistPage.shop' | transloco }}
+									<i
+										class="pi pi-external-link"
+										aria-hidden="true"
+									></i>
+								</a>
+							}
+							@if (store.canEdit()) {
+								<button
+									type="button"
+									class="got-it"
+									[disabled]="store.changingId() === entry.id"
+									[attr.aria-label]="
+										'I have ' +
+										entry.release.title +
+										' — mark it found'
+									"
+									(click)="store.setFound(entry.id, true)"
+								>
+									<i
+										class="pi pi-check"
+										aria-hidden="true"
+									></i>
+									{{
+										store.changingId() === entry.id
+											? 'Saving…'
+											: 'I have it'
+									}}
+								</button>
+							}
+						</span>
 					}
 				</div>
 			</li>

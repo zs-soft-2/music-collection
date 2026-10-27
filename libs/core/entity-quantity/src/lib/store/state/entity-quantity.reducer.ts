@@ -1,4 +1,5 @@
 import {
+	EntityCounts,
 	EntityQuantityEntity,
 	ENTITY_QUANTITY_FEATURE_KEY,
 } from '@music-collection/api';
@@ -11,6 +12,9 @@ export interface State extends EntityState<EntityQuantityEntity> {
 	selectedId?: string;
 	loading: boolean;
 	error?: string | null;
+	/** Live counts per entity type (see `countEntities`). */
+	counts: EntityCounts;
+	countsLoading: boolean;
 }
 
 export interface EntityQuantityPartialState {
@@ -25,6 +29,8 @@ export const entityQuantityAdapter: EntityAdapter<EntityQuantityEntity> =
 export const initialState: State = entityQuantityAdapter.getInitialState({
 	loading: false,
 	error: null,
+	counts: {},
+	countsLoading: false,
 });
 
 export const entityQuantityReducer = createReducer(
@@ -37,6 +43,20 @@ export const entityQuantityReducer = createReducer(
 				state
 			)
 	),
+	on(entityQuantityActions.countEntities, (state) => ({
+		...state,
+		countsLoading: true,
+	})),
+	on(entityQuantityActions.countEntitiesSuccess, (state, { counts }) => ({
+		...state,
+		counts: { ...state.counts, ...counts },
+		countsLoading: false,
+	})),
+	on(entityQuantityActions.countEntitiesFail, (state, { error }) => ({
+		...state,
+		countsLoading: false,
+		error,
+	})),
 	on(
 		entityQuantityActions.selectEntityQuantity,
 		(state, { entityQuantityId }) => ({

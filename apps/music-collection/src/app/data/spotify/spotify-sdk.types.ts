@@ -3,12 +3,18 @@
 export interface SdkTrack {
 	uri: string;
 	name: string;
+	duration_ms: number;
 	artists: { name: string }[];
 	album: { uri: string; name: string; images: { url: string }[] };
 }
 
 export interface SdkPlaybackState {
 	paused: boolean;
+	/** Milliseconds into the track when the state was taken. */
+	position: number;
+	duration: number;
+	/** Epoch milliseconds the state was taken at. */
+	timestamp: number;
 	track_window: { current_track: SdkTrack };
 }
 
@@ -26,6 +32,7 @@ export interface SdkPlayer {
 	getVolume(): Promise<number>;
 	/** 0–1. */
 	setVolume(volume: number): Promise<void>;
+	seek(positionMs: number): Promise<void>;
 	addListener(
 		event: 'ready' | 'not_ready',
 		callback: (payload: { device_id: string }) => void

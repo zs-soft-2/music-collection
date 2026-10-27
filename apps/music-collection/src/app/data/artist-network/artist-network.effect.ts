@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { Injectable, inject } from '@angular/core';
 import { MembershipEntity } from '@music-collection/api';
 
-import { MembershipRepository } from '../artist-lineup/membership.repository';
+import { MembershipRepository } from '@music-collection/domain/membership';
 
 /**
  * Loads the data of the relationship network: every membership (musician ↔

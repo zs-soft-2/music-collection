@@ -8,10 +8,14 @@
 				class="mc-form-section"
 				aria-labelledby="collection-item-details"
 			>
-				<h2 id="collection-item-details">Details</h2>
+				<h2 id="collection-item-details">
+					{{ 'ui.collectionItemForm.details' | transloco }}
+				</h2>
 				<div class="mc-form-grid">
 					<div class="mc-field">
-						<label for="release">Release</label>
+						<label for="release">{{
+							'ui.collectionItemForm.release' | transloco
+						}}</label>
 						<p-autocomplete
 							inputId="release"
 							formControlName="release"
@@ -19,13 +23,18 @@
 							[minQueryLength]="3"
 							[delay]="400"
 							optionLabel="nameAndMedia"
-							placeholder="Start typing a release…"
+							[placeholder]="
+								'ui.collectionItemForm.start-typing-a-release'
+									| transloco
+							"
 							(completeMethod)="searchRelease($event)"
 						></p-autocomplete>
 					</div>
 
 					<div class="mc-field">
-						<label for="date">Date</label>
+						<label for="date">{{
+							'ui.collectionItemForm.date' | transloco
+						}}</label>
 						<p-datepicker
 							inputId="date"
 							formControlName="date"
@@ -34,15 +43,137 @@
 				</div>
 			</section>
 
+			<section
+				class="mc-form-section"
+				aria-labelledby="collection-item-place"
+			>
+				<h2 id="collection-item-place">
+					{{ 'ui.collectionItemForm.shelf-place' | transloco }}
+				</h2>
+
+				@if (params.placement.units.length) {
+					<div class="mc-form-grid">
+						<div class="mc-field">
+							<label for="placement-unit">{{
+								'ui.collectionItemForm.unit' | transloco
+							}}</label>
+							<p-select
+								inputId="placement-unit"
+								[options]="params.placement.units"
+								[ngModel]="params.placement.unitId"
+								[ngModelOptions]="{ standalone: true }"
+								optionLabel="label"
+								optionValue="value"
+								[placeholder]="
+									'ui.collectionItemForm.select-a-unit'
+										| transloco
+								"
+								(onChange)="chooseUnit($event)"
+							></p-select>
+						</div>
+
+						<div class="mc-field">
+							<label for="placement-spot">{{
+								'ui.collectionItemForm.compartment' | transloco
+							}}</label>
+							<p-select
+								inputId="placement-spot"
+								[options]="params.placement.spots"
+								[ngModel]="params.placement.spot"
+								[ngModelOptions]="{ standalone: true }"
+								optionLabel="label"
+								optionValue="value"
+								[placeholder]="
+									'ui.collectionItemForm.filed-by-the-shelf'
+										| transloco
+								"
+								(onChange)="chooseSpot($event)"
+							></p-select>
+						</div>
+
+						<div class="mc-field">
+							<label for="placement-side">{{
+								'ui.collectionItemForm.side' | transloco
+							}}</label>
+							<p-select
+								inputId="placement-side"
+								[options]="sideOptions"
+								[ngModel]="params.placement.side"
+								[ngModelOptions]="{ standalone: true }"
+								optionLabel="label"
+								optionValue="value"
+								[disabled]="!params.placement.spot"
+								(onChange)="chooseSide($event)"
+							></p-select>
+						</div>
+
+						<div class="mc-field">
+							<label for="placement-position">{{
+								'ui.collectionItemForm.position' | transloco
+							}}</label>
+							<p-inputnumber
+								inputId="placement-position"
+								[ngModel]="params.placement.position"
+								[ngModelOptions]="{ standalone: true }"
+								[min]="1"
+								[max]="params.placement.maxPosition"
+								[disabled]="!params.placement.spot"
+								[showButtons]="true"
+								(onInput)="choosePosition($event)"
+							></p-inputnumber>
+						</div>
+					</div>
+
+					<p class="mc-form-note">
+						@if (params.placement.lost) {
+							This copy is filed into a compartment that is not
+							drawn any more. Pick another one, or take the place
+							back — until then it keeps the one it has.
+						} @else if (params.placement.spot) {
+							@if (params.placement.side === 'right') {
+								Counted from the right wall of the compartment,
+								so the far end of it stays put however the
+								left-hand run grows.
+							} @else {
+								Counted from the left of the compartment; the
+								shelf files the rest around it.
+							}
+						} @else {
+							Not filed by hand: the shelf puts this copy where
+							the reading order takes it.
+						}
+					</p>
+
+					@if (params.placement.spot || params.placement.lost) {
+						<p-button
+							[label]="
+								'ui.collectionItemForm.take-the-place-back'
+									| transloco
+							"
+							severity="secondary"
+							[text]="true"
+							(onClick)="clearPlace()"
+						></p-button>
+					}
+				} @else {
+					<p class="mc-form-note">
+						{{
+							'ui.collectionItemForm.no-shelf-drawn-yet'
+								| transloco
+						}}
+					</p>
+				}
+			</section>
+
 			<div class="mc-form-actions">
 				<p-button
-					label="Cancel"
+					[label]="'ui.collectionItemForm.cancel' | transloco"
 					severity="secondary"
 					[outlined]="true"
 					(onClick)="cancel()"
 				></p-button>
 				<p-button
-					label="Save"
+					[label]="'ui.collectionItemForm.save' | transloco"
 					icon="pi pi-check"
 					[disabled]="!params.formGroup.valid"
 					(onClick)="submit()"

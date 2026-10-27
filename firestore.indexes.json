@@ -137,6 +137,50 @@
 		},
 		{
 			"collectionGroup": "album",
+			"fieldPath": "spotifyAlbumId",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "album",
+			"fieldPath": "styles",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "album",
 			"fieldPath": "uid",
 			"indexes": [
 				{
@@ -160,6 +204,50 @@
 		{
 			"collectionGroup": "album",
 			"fieldPath": "updatedAt",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "album",
+			"fieldPath": "youtubePlaylistId",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "album",
+			"fieldPath": "youtubeVideoIds",
 			"indexes": [
 				{
 					"order": "ASCENDING",
@@ -212,6 +300,58 @@
 		{
 			"collectionGroup": "artist",
 			"fieldPath": "updatedAt",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "collection-item",
+			"fieldPath": "artistSearchParameters",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "collection-item",
+			"fieldPath": "release.uid",
 			"indexes": [
 				{
 					"order": "ASCENDING",
@@ -358,6 +498,28 @@
 			]
 		},
 		{
+			"collectionGroup": "genre",
+			"fieldPath": "updatedAt",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
 			"collectionGroup": "label",
 			"fieldPath": "searchParameters",
 			"indexes": [
@@ -381,6 +543,28 @@
 		},
 		{
 			"collectionGroup": "label",
+			"fieldPath": "updatedAt",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "music-collection",
 			"fieldPath": "updatedAt",
 			"indexes": [
 				{
@@ -426,6 +610,116 @@
 		{
 			"collectionGroup": "musician",
 			"fieldPath": "updatedAt",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "play-log",
+			"fieldPath": "updatedAt",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "rating",
+			"fieldPath": "albumId",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "release",
+			"fieldPath": "artist.uid",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "release",
+			"fieldPath": "album.uid",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "release",
+			"fieldPath": "label.uid",
 			"indexes": [
 				{
 					"order": "ASCENDING",
@@ -471,6 +765,28 @@
 				},
 				{
 					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION_GROUP"
+				}
+			]
+		},
+		{
+			"collectionGroup": "release",
+			"fieldPath": "uid",
+			"indexes": [
+				{
+					"order": "ASCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "DESCENDING",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"arrayConfig": "CONTAINS",
+					"queryScope": "COLLECTION"
+				},
+				{
+					"order": "ASCENDING",
 					"queryScope": "COLLECTION_GROUP"
 				}
 			]

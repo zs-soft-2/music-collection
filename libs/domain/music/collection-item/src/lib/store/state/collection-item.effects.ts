@@ -1,17 +1,23 @@
 import { of } from 'rxjs';
-import { catchError, first, map, switchMap } from 'rxjs/operators';
+import {
+	catchError,
+	distinctUntilChanged,
+	first,
+	map,
+	mergeMap,
+	switchMap,
+	withLatestFrom,
+} from 'rxjs/operators';
 
 import { inject, Injectable } from '@angular/core';
 import {
+	AnalyticsService,
+	AuthenticationStateService,
 	CollectionItemDataService,
 	CollectionItemEntity,
 	CollectionItemUtilService,
-	EntityQuantityEntity,
-	EntityQuantityStateService,
-	EntityQuantityUtilService,
-	EntityTypeEnum,
-	UpdateEntityQuantityTypeEnum,
 	UserDataService,
+	toStoredPhoto,
 } from '@music-collection/api';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 
@@ -22,25 +28,19 @@ export class CollectionItemEffects {
 	private actions$: Actions = inject(Actions);
 	private collectionItemDataService = inject(CollectionItemDataService);
 	private collectionItemUtilService = inject(CollectionItemUtilService);
-	private entityQuantityStateService = inject(EntityQuantityStateService);
-	private entityQuantityUtilService = inject(EntityQuantityUtilService);
 	private userDataService = inject(UserDataService);
+	private authenticationStateService = inject(AuthenticationStateService);
+	private analytics = inject(AnalyticsService);
 
+	/**
+	 * No stored count is kept for copies, here or on removal: the pages count
+	 * them live (see `ENTITY_COUNT_COLLECTIONS`), and the shared
+	 * `entity-quantity` counter is the admin's to write, not a collector's.
+	 */
 	public addCollectionItem = createEffect(() =>
 		this.actions$.pipe(
 			ofType(collectionItemActions.addCollectionItem),
 			switchMap((action) =>
-				this.entityQuantityStateService
-					.selectEntityById$(EntityTypeEnum.CollectionItem)
-					.pipe(
-						map((entityQuantityEntity) => ({
-							action,
-							entityQuantityEntity,
-						})),
-						first()
-					)
-			),
-			switchMap(({ action, entityQuantityEntity }) =>
 				this.userDataService
 					.addCollectionItem$(
 						this.collectionItemUtilService.convertEntityAddToModelAdd(
@@ -49,29 +49,30 @@ export class CollectionItemEffects {
 					)
 					.pipe(
 						map((collectionItem) => {
-							entityQuantityEntity =
-								entityQuantityEntity ||
-								this.entityQuantityUtilService.createEntityQuantity(
-									EntityTypeEnum.CollectionItem
-								);
-
 							const collectionItemEntity: CollectionItemEntity =
 								this.collectionItemUtilService.convertModelToEntity(
 									collectionItem
 								);
 
-							this.entityQuantityStateService.dispatchUpdateEntityAction(
-								this.collectionItemUtilService.updateEntityQuantity(
-									entityQuantityEntity,
-									collectionItemEntity,
-									UpdateEntityQuantityTypeEnum.increase
-								)
-							);
+							// What was added, and on what it plays: the media
+							// is a closed list, so it says which shelves fill
+							// up without saying whose they are.
+							this.analytics.track('add_to_collection', {
+								media: collectionItemEntity.release.media,
+							});
 
 							return collectionItemActions.addCollectionItemSuccess(
 								{
 									collectionItem: collectionItemEntity,
 								}
+							);
+						}),
+						catchError((error) => {
+							console.error(error);
+							return of(
+								collectionItemActions.addCollectionItemFail({
+									error,
+								})
 							);
 						})
 					)
@@ -82,17 +83,6 @@ export class CollectionItemEffects {
 		this.actions$.pipe(
 			ofType(collectionItemActions.deleteCollectionItem),
 			switchMap((action) =>
-				this.entityQuantityStateService
-					.selectEntityById$(EntityTypeEnum.CollectionItem)
-					.pipe(
-						map((entityQuantityEntity) => ({
-							action,
-							entityQuantityEntity,
-						})),
-						first()
-					)
-			),
-			switchMap(({ action, entityQuantityEntity }) =>
 				this.userDataService
 					.deleteCollectionItem$(
 						this.collectionItemUtilService.convertEntityToModel(
@@ -100,32 +90,310 @@ export class CollectionItemEffects {
 						)
 					)
 					.pipe(
-						map((collectionItem) => {
-							this.entityQuantityStateService.dispatchUpdateEntityAction(
-								this.collectionItemUtilService.updateEntityQuantity(
-									entityQuantityEntity as EntityQuantityEntity,
-									this.collectionItemUtilService.convertModelToEntity(
-										collectionItem
-									),
-									UpdateEntityQuantityTypeEnum.decrease
-								)
-							);
-
-							return collectionItemActions.deleteCollectionItemSuccess(
+						map((collectionItem) =>
+							collectionItemActions.deleteCollectionItemSuccess({
+								collectionItemId: collectionItem.uid,
+							})
+						)
+					)
+			)
+		)
+	);
+	/** Disposes of a copy or restores it. The item is kept either way. */
+	public changeCollectionItemDisposal = createEffect(() =>
+		this.actions$.pipe(
+			ofType(collectionItemActions.changeCollectionItemDisposal),
+			mergeMap(({ collectionItem, disposal }) =>
+				this.userDataService
+					.updateCollectionItem$({
+						uid: collectionItem.uid,
+						entityType: collectionItem.entityType,
+						userId: collectionItem.userId,
+						disposal,
+					})
+					.pipe(
+						first(),
+						map(({ updatedAt }) =>
+							collectionItemActions.changeCollectionItemDisposalSuccess(
 								{
-									collectionItemId: collectionItem.uid,
+									collectionItem: {
+										id: collectionItem.uid,
+										changes: {
+											disposal,
+											updatedAt,
+										},
+									},
 								}
+							)
+						),
+						catchError((error) => {
+							console.error(error);
+							return of(
+								collectionItemActions.changeCollectionItemDisposalFail(
+									{ error }
+								)
 							);
 						})
 					)
 			)
 		)
 	);
+	/**
+	 * Writes what the collector tells about the copy. Like a placement, this
+	 * changes nothing about what is owned, so no count is touched — and the
+	 * whole telling goes in one write, so the page and the record agree even
+	 * when a field was emptied.
+	 */
+	public changeCollectionItemDetails = createEffect(() =>
+		this.actions$.pipe(
+			ofType(collectionItemActions.changeCollectionItemDetails),
+			mergeMap(({ collectionItem, details }) =>
+				this.userDataService
+					.updateCollectionItem$({
+						uid: collectionItem.uid,
+						entityType: collectionItem.entityType,
+						userId: collectionItem.userId,
+						...details,
+					})
+					.pipe(
+						first(),
+						map(({ updatedAt }) =>
+							collectionItemActions.changeCollectionItemDetailsSuccess(
+								{
+									collectionItem: {
+										id: collectionItem.uid,
+										changes: { ...details, updatedAt },
+									},
+								}
+							)
+						),
+						catchError((error) => {
+							console.error(error);
+							return of(
+								collectionItemActions.changeCollectionItemDetailsFail(
+									{ error }
+								)
+							);
+						})
+					)
+			)
+		)
+	);
+
+	/**
+	 * Moves the copy to another release of the same album.
+	 *
+	 * The search prefixes go with it: the collection is searched by the
+	 * release's name and by the artist's, and a copy refiled under another
+	 * pressing whose old prefixes stayed behind would answer to a name it no
+	 * longer carries. Nothing is counted here either — what is owned did not
+	 * change, only which pressing it is owned as.
+	 */
+	public changeCollectionItemRelease = createEffect(() =>
+		this.actions$.pipe(
+			ofType(collectionItemActions.changeCollectionItemRelease),
+			mergeMap(({ collectionItem, release }) =>
+				this.userDataService
+					.updateCollectionItem$({
+						uid: collectionItem.uid,
+						entityType: collectionItem.entityType,
+						userId: collectionItem.userId,
+						release,
+						searchParameters:
+							this.collectionItemUtilService.createSearchParameters(
+								release.name || ''
+							),
+						artistSearchParameters:
+							this.collectionItemUtilService.createSearchParameters(
+								release.artist?.name || ''
+							),
+					})
+					.pipe(
+						first(),
+						map(({ updatedAt }) => {
+							this.analytics.track('copy_release_changed', {
+								from_generic: !!collectionItem.release?.generic,
+							});
+
+							return collectionItemActions.changeCollectionItemReleaseSuccess(
+								{
+									collectionItem: {
+										id: collectionItem.uid,
+										changes: { release, updatedAt },
+									},
+								}
+							);
+						}),
+						catchError((error) => {
+							console.error(error);
+							return of(
+								collectionItemActions.changeCollectionItemReleaseFail(
+									{ error }
+								)
+							);
+						})
+					)
+			)
+		)
+	);
+
+	/**
+	 * Writes the list of photos. The pictures are already uploaded; a write
+	 * that fails here leaves them in Storage unreferenced, which costs a few
+	 * kilobytes and is the harmless half of the two ways this can go wrong.
+	 */
+	public changeCollectionItemPhotos = createEffect(() =>
+		this.actions$.pipe(
+			ofType(collectionItemActions.changeCollectionItemPhotos),
+			map(({ collectionItem, photos }) => ({
+				collectionItem,
+				// Down to path and size, so that a picture taken before the
+				// URL left the document cannot carry its download token back
+				// in — see `toStoredPhoto`.
+				photos: photos.map(toStoredPhoto),
+			})),
+			mergeMap(({ collectionItem, photos }) =>
+				this.userDataService
+					.updateCollectionItem$({
+						uid: collectionItem.uid,
+						entityType: collectionItem.entityType,
+						userId: collectionItem.userId,
+						photos,
+					})
+					.pipe(
+						first(),
+						map(({ updatedAt }) => {
+							this.analytics.track('copy_photos_changed', {
+								count: photos.length,
+							});
+
+							return collectionItemActions.changeCollectionItemPhotosSuccess(
+								{
+									collectionItem: {
+										id: collectionItem.uid,
+										changes: { photos, updatedAt },
+									},
+								}
+							);
+						}),
+						catchError((error) => {
+							console.error(error);
+							return of(
+								collectionItemActions.changeCollectionItemPhotosFail(
+									{ error }
+								)
+							);
+						})
+					)
+			)
+		)
+	);
+
+	/**
+	 * Files a copy into a compartment of the drawn shelf, or takes the place
+	 * back with `null`. Only the place moves: nothing here changes what the
+	 * collector owns, so no count is touched.
+	 */
+	public changeCollectionItemPlacement = createEffect(() =>
+		this.actions$.pipe(
+			ofType(collectionItemActions.changeCollectionItemPlacement),
+			mergeMap(({ collectionItem, placement }) =>
+				this.userDataService
+					.updateCollectionItem$({
+						uid: collectionItem.uid,
+						entityType: collectionItem.entityType,
+						userId: collectionItem.userId,
+						placement,
+					})
+					.pipe(
+						first(),
+						map(({ updatedAt }) => {
+							this.analytics.track('shelf_placement_changed', {
+								placed: !!placement,
+							});
+
+							return collectionItemActions.changeCollectionItemPlacementSuccess(
+								{
+									collectionItem: {
+										id: collectionItem.uid,
+										changes: { placement, updatedAt },
+									},
+								}
+							);
+						}),
+						catchError((error) => {
+							console.error(error);
+							return of(
+								collectionItemActions.changeCollectionItemPlacementFail(
+									{ error }
+								)
+							);
+						})
+					)
+			)
+		)
+	);
+
+	/**
+	 * Files several copies in one batch: rearranging a compartment moves
+	 * every record in it, and a half-written compartment would leave two
+	 * records standing in the same place.
+	 */
+	public changeCollectionItemPlacements = createEffect(() =>
+		this.actions$.pipe(
+			ofType(collectionItemActions.changeCollectionItemPlacements),
+			mergeMap(({ placements }) =>
+				this.userDataService
+					.updateCollectionItems$(
+						placements.map(({ collectionItem, placement }) => ({
+							uid: collectionItem.uid,
+							entityType: collectionItem.entityType,
+							userId: collectionItem.userId,
+							placement,
+						}))
+					)
+					.pipe(
+						first(),
+						map((updated) =>
+							collectionItemActions.changeCollectionItemPlacementsSuccess(
+								{
+									collectionItems: updated.map(
+										({ uid, placement, updatedAt }) => ({
+											id: uid,
+											changes: { placement, updatedAt },
+										})
+									),
+								}
+							)
+						),
+						catchError((error) => {
+							console.error(error);
+							return of(
+								collectionItemActions.changeCollectionItemPlacementsFail(
+									{ error }
+								)
+							);
+						})
+					)
+			)
+		)
+	);
+
 	public listCollectionItems = createEffect(() =>
 		this.actions$.pipe(
 			ofType(collectionItemActions.listCollectionItems),
+			// The signed-in user's collection; a guest has none. Follows
+			// sign-in and sign-out.
 			switchMap(() =>
-				this.collectionItemDataService.list$().pipe(
+				this.authenticationStateService.selectAuthenticatedUser$()
+			),
+			map((user) => user?.uid ?? ''),
+			distinctUntilChanged(),
+			switchMap((userId) =>
+				(userId
+					? this.collectionItemDataService.listByUser$(userId)
+					: of([])
+				).pipe(
 					map((collectionItems) =>
 						collectionItems.map((collectionItem) =>
 							this.collectionItemUtilService.convertModelToEntity(
@@ -133,11 +401,17 @@ export class CollectionItemEffects {
 							)
 						)
 					),
-					map((collectionItems) => {
-						return collectionItemActions.listCollectionItemsSuccess(
-							{
-								collectionItems,
-							}
+					map((collectionItems) =>
+						collectionItemActions.listCollectionItemsSuccess({
+							collectionItems,
+						})
+					),
+					catchError((error) => {
+						console.error(error);
+						return of(
+							collectionItemActions.listCollectionItemsFail({
+								error,
+							})
 						);
 					})
 				)
@@ -154,7 +428,7 @@ export class CollectionItemEffects {
 							collectionItem: collectionItem
 								? this.collectionItemUtilService.convertModelToEntity(
 										collectionItem
-								  )
+									)
 								: undefined,
 						});
 					}),
@@ -167,11 +441,25 @@ export class CollectionItemEffects {
 			)
 		)
 	);
+	/**
+	 * A search of the collector's own shelves. The term goes to whoever is
+	 * signed in and nowhere else: the whole tree would answer the same
+	 * question about everybody's copies, which is nobody else's business.
+	 */
 	public searchCollectionItems = createEffect(() =>
 		this.actions$.pipe(
 			ofType(collectionItemActions.search),
-			switchMap((action) =>
-				this.collectionItemDataService.search$(action.params).pipe(
+			withLatestFrom(
+				this.authenticationStateService.selectAuthenticatedUser$()
+			),
+			switchMap(([action, user]) =>
+				(user?.uid
+					? this.collectionItemDataService.searchByUser$(
+							user.uid,
+							action.params
+						)
+					: of([])
+				).pipe(
 					map((result) =>
 						result.map((collectionItem) =>
 							this.collectionItemUtilService.convertModelToEntity(

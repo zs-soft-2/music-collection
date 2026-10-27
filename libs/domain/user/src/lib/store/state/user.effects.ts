@@ -1,5 +1,5 @@
 import { of } from 'rxjs';
-import { catchError, map, switchMap, take } from 'rxjs/operators';
+import { catchError, map, switchMap } from 'rxjs/operators';
 
 import { inject, Injectable } from '@angular/core';
 import {
@@ -36,10 +36,12 @@ export class UserEffects {
 		this.actions$.pipe(
 			ofType(UserActions.loadExistedUser),
 			switchMap((action) =>
-				this.userDataService.load$(action.user.uid || '').pipe(
-					// A load$ élő Firestore-listener: kijelentkezéskor újra
-					// emittálna, és visszaállítaná a bejelentkezett állapotot.
-					take(1),
+				// A `loadExisting$` egyszer olvas, és onnan, ahol az igazság
+				// van: a szerverről. A `load$` listener a helyi cache-ből
+				// válaszol előbb, és egy cache, ami ezt a gyűjtőt még sosem
+				// látta, nem létezőnek mondja — amire a belépés nekiállna
+				// létrehozni a meglévő dokumentum fölé.
+				this.userDataService.loadExisting$(action.user.uid || '').pipe(
 					map((user) => {
 						if (user && user.uid) {
 							// A jogosultságokat nem innen töltjük: a beágyazott

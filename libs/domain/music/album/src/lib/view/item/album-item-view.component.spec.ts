@@ -1,9 +1,9 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import {
 	AlbumEntity,
 	EntityTypeEnum,
 	FormatEnum,
-	GenreEnum,
 } from '@music-collection/api';
 
 import { AlbumItemViewComponent } from './album-item-view.component';
@@ -24,7 +24,7 @@ describe('AlbumItemViewComponent', () => {
 		},
 		coverImage: null,
 		format: FormatEnum.lp,
-		genre: GenreEnum.Rock,
+		genre: 'Rock',
 		songs: [],
 		styles: [],
 		year: new Date(1987, 0, 1),
@@ -32,6 +32,7 @@ describe('AlbumItemViewComponent', () => {
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
+			providers: [provideI18nTesting()],
 			imports: [AlbumItemViewComponent],
 		}).compileComponents();
 

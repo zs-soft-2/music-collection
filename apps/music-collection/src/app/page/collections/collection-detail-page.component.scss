@@ -1,0 +1,580 @@
+@use '../../shared/music-ui/music-tokens' as mc;
+
+:host {
+	display: block;
+	color: var(--mc-text);
+	font-family: var(--mc-font-body);
+}
+
+.page {
+	max-width: var(--mc-page-max-width);
+	min-height: calc(100vh - var(--mc-app-bar-height));
+	margin: 0 auto;
+	padding: 2rem clamp(1rem, 3vw, 2.5rem) 3rem;
+}
+
+ul,
+ol {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+/* ── A fejléc: a nagy kártya, oldalméretben ───────────────────────────── */
+
+.hero {
+	@include mc.on-image;
+
+	position: relative;
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	align-items: center;
+	gap: clamp(1.25rem, 3vw, 2.5rem);
+	overflow: hidden;
+	margin-top: 1rem;
+	padding: clamp(1.5rem, 3vw, 2.5rem);
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-lg);
+
+	/* Csak a borítófalé: a kurátor képe élesen marad. */
+	--mc-backdrop-blur: 18px;
+
+	&.is-completed {
+		border-color: var(--mc-accent);
+	}
+}
+
+.hero-emblem {
+	position: relative;
+	z-index: 1;
+	width: clamp(8rem, 15vw, 12rem);
+
+	--mc-emblem-radius: var(--mc-radius-md, 0.9rem);
+	--mc-emblem-share-size: 0.9rem;
+	--mc-emblem-art-icon: 3.5rem;
+}
+
+/* A jelvény a pontblokk fölött ül, a panel jobb felső sarkában. */
+.hero-pin {
+	width: clamp(3.5rem, 5vw, 4.5rem);
+	margin-bottom: 0.5rem;
+
+	--mc-pin-size: 1.6rem;
+}
+
+/*
+ * A szöveg a saját árnyékát hozza, nem a háttér sötétítését: a kurátor
+ * képe élesen áll a panel mögött, és egy akkora fedés, ami minden képen
+ * olvashatóvá tenné a betűt, pont azt a képet takarná el.
+ */
+.hero-text,
+.hero-score {
+	position: relative;
+	z-index: 1;
+	text-shadow: 0 1px 14px rgba(10, 10, 10, 0.85);
+}
+
+.eyebrow {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	margin: 0;
+	padding: 0.3rem 0.7rem;
+	font-size: 0.7rem;
+	font-weight: 700;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--mc-accent);
+	background: rgba(255, 255, 255, 0.08);
+	border: 1px solid var(--mc-border-strong);
+	border-radius: 999px;
+
+	i {
+		font-size: 0.7rem;
+	}
+}
+
+h1 {
+	margin: 0.6rem 0 0.5rem;
+	font-family: var(--mc-font-display);
+	font-size: clamp(2.2rem, 5vw, 4rem);
+	font-weight: 400;
+	line-height: 0.95;
+	letter-spacing: 0.01em;
+	text-transform: uppercase;
+	overflow-wrap: anywhere;
+}
+
+.lead {
+	max-width: 56ch;
+	margin: 0 0 0.9rem;
+	font-size: 0.95rem;
+	line-height: 1.45;
+	color: var(--mc-text-muted);
+}
+
+.chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	margin: 0 0 1.25rem;
+
+	li {
+		padding: 0.25rem 0.65rem;
+		font-size: 0.7rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		background: rgba(255, 255, 255, 0.08);
+		border: 1px solid var(--mc-border-strong);
+		border-radius: 999px;
+	}
+}
+
+.hero-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.6rem;
+}
+
+.action {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	box-sizing: border-box;
+	height: 2.6rem;
+	padding: 0 1.1rem;
+	font: inherit;
+	font-size: 0.88rem;
+	font-weight: 600;
+	color: #fff;
+	cursor: pointer;
+	background: rgba(10, 10, 10, 0.4);
+	border: 1px solid var(--mc-border-strong);
+	border-radius: 999px;
+	transition:
+		background var(--mc-duration-fast) ease,
+		border-color var(--mc-duration-fast) ease;
+
+	&:hover:not(:disabled) {
+		border-color: var(--mc-text-muted);
+	}
+
+	&:focus-visible {
+		outline: 2px solid #fff;
+		outline-offset: 2px;
+	}
+
+	&.is-on {
+		color: var(--mc-accent);
+		border-color: var(--mc-accent);
+	}
+
+	&:disabled {
+		cursor: default;
+		opacity: 0.5;
+	}
+}
+
+/* ── A pont és a haladás a fejlécben ──────────────────────────────────── */
+
+.hero-score {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 0.4rem;
+	min-width: 13rem;
+	text-align: right;
+}
+
+.points {
+	display: flex;
+	align-items: baseline;
+	gap: 0.35rem;
+	margin: 0;
+
+	b {
+		font-family: var(--mc-font-display);
+		font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+		font-weight: 400;
+		line-height: 1;
+		color: var(--mc-accent);
+		font-variant-numeric: tabular-nums;
+	}
+
+	span {
+		font-size: 0.8rem;
+		font-weight: 700;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--mc-accent);
+	}
+}
+
+.worth,
+.parts {
+	margin: 0;
+	font-size: 0.78rem;
+	color: var(--mc-text-muted);
+	font-variant-numeric: tabular-nums;
+}
+
+.parts {
+	margin-bottom: 0.4rem;
+}
+
+.bonus {
+	color: var(--mc-accent);
+}
+
+.faces {
+	display: flex;
+	gap: 0.3rem;
+
+	li {
+		display: grid;
+		place-items: center;
+		width: 1.9rem;
+		height: 1.9rem;
+		overflow: hidden;
+		font-family: var(--mc-font-display);
+		font-size: 0.8rem;
+		color: var(--mc-primary);
+		background: var(--mc-bg-muted);
+		border: 1px solid var(--mc-border-strong);
+		border-radius: 50%;
+	}
+
+	img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+}
+
+.crowd-line {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 0.25rem 0.6rem;
+	margin: 0;
+	font-size: 0.75rem;
+	color: var(--mc-text-muted);
+
+	.done {
+		color: var(--mc-accent);
+	}
+}
+
+.bar {
+	display: block;
+	width: 100%;
+	height: 6px;
+	overflow: hidden;
+	background: rgba(255, 255, 255, 0.14);
+	border-radius: 999px;
+}
+
+.fill {
+	display: block;
+	height: 100%;
+	background: var(--mc-primary);
+	border-radius: inherit;
+	transition: width var(--mc-duration) ease;
+
+	.is-completed & {
+		background: var(--mc-accent);
+	}
+}
+
+.counts {
+	margin: 0;
+	font-size: 0.8rem;
+	color: var(--mc-text-muted);
+	font-variant-numeric: tabular-nums;
+}
+
+/* A számsor saját komponens; itt csak a helye van. */
+.stats {
+	margin-top: 1rem;
+}
+
+/* ── Két hasáb: mit tegyél, és mi ez ──────────────────────────────────── */
+
+.columns {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 20rem;
+	gap: clamp(1.25rem, 3vw, 2rem);
+	margin-top: 2rem;
+	align-items: start;
+}
+
+.main,
+.aside {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	gap: 1.5rem;
+}
+
+.block-head {
+	margin-bottom: 1rem;
+	padding-bottom: 0.6rem;
+	border-bottom: 1px solid var(--mc-border);
+
+	h2 {
+		margin: 0;
+		font-family: var(--mc-font-display);
+		font-size: clamp(1.5rem, 2.5vw, 2rem);
+		font-weight: 400;
+		line-height: 1;
+		letter-spacing: 0.02em;
+	}
+}
+
+.block-lead {
+	margin: 0.4rem 0 0;
+	font-size: 0.82rem;
+	color: var(--mc-text-muted);
+}
+
+/* ── Szűrő és rendezés ────────────────────────────────────────────────── */
+
+.toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	gap: 0.75rem;
+	margin-bottom: 1.25rem;
+}
+
+.switches {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
+	padding: 0.45rem 0.9rem;
+	font: inherit;
+	font-size: 0.85rem;
+	color: var(--mc-text-muted);
+	cursor: pointer;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: 999px;
+	transition:
+		color var(--mc-duration-fast) ease,
+		background var(--mc-duration-fast) ease,
+		border-color var(--mc-duration-fast) ease;
+
+	&:hover {
+		color: var(--mc-text);
+		border-color: var(--mc-border-strong);
+	}
+
+	&.is-active {
+		color: var(--mc-on-primary);
+		background: var(--mc-primary);
+		border-color: var(--mc-primary);
+	}
+
+	/* A rendezés nem szűr: halkabb, hogy ne versenyezzen a szűrőkkel. */
+	&.is-quiet.is-active {
+		color: var(--mc-text);
+		background: var(--mc-surface-2);
+		border-color: var(--mc-border-strong);
+	}
+}
+
+.count {
+	font-variant-numeric: tabular-nums;
+	opacity: 0.75;
+}
+
+/* ── A lemezek ────────────────────────────────────────────────────────── */
+
+.grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+	gap: 1.25rem;
+}
+
+/* ── A jobb hasáb paneljei ────────────────────────────────────────────── */
+
+.panel {
+	padding: 1.1rem 1.25rem;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-lg);
+}
+
+.panel-title {
+	margin: 0;
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--mc-text-subtle);
+}
+
+.panel-lead {
+	margin: 0.45rem 0 0;
+	font-size: 0.8rem;
+	line-height: 1.4;
+	color: var(--mc-text-muted);
+}
+
+/* Mi adta a pontot */
+.highlights {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	margin-top: 0.9rem;
+
+	li {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: 0 0.6rem;
+		font-size: 0.8rem;
+	}
+}
+
+.highlight-album {
+	font-weight: 600;
+}
+
+.highlight-points {
+	color: var(--mc-accent);
+	font-variant-numeric: tabular-nums;
+}
+
+.highlight-reasons {
+	grid-column: 1 / -1;
+	font-size: 0.75rem;
+	color: var(--mc-text-subtle);
+}
+
+/* ── Töltés és üres állapot ───────────────────────────────────────────── */
+
+.skeleton {
+	position: relative;
+	overflow: hidden;
+	background: var(--mc-card-bg);
+	border-radius: var(--mc-radius-lg);
+}
+
+/*
+ * The light passes over on a layer of its own. A moving transform is the
+ * compositor's work; a moving background is a repaint of every placeholder
+ * on every frame, which on a slow phone holds back the page it stands for.
+ */
+.skeleton::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(
+		100deg,
+		transparent 40%,
+		var(--mc-surface-2) 50%,
+		transparent 60%
+	);
+	transform: translateX(-100%);
+	animation: mc-shimmer 1.4s linear infinite;
+}
+
+.hero-skeleton {
+	height: 16rem;
+	margin: 1rem 0 2rem;
+}
+
+.album-skeleton {
+	aspect-ratio: 0.85;
+}
+
+.empty {
+	max-width: 46ch;
+	padding: 3rem 1rem;
+	margin: 0 auto;
+	text-align: center;
+	color: var(--mc-text-muted);
+
+	a {
+		color: var(--mc-primary);
+	}
+}
+
+@keyframes mc-shimmer {
+	to {
+		transform: translateX(100%);
+	}
+}
+
+/* ── Keskenyebb képernyők ─────────────────────────────────────────────── */
+
+@media (max-width: 1100px) {
+	.columns {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	/* Telefonon az „mi ez" előbb jön, mint a száz lemez rácsa. */
+	.aside {
+		order: -1;
+	}
+}
+
+@media (max-width: 1000px) {
+	.hero {
+		grid-template-columns: auto minmax(0, 1fr);
+	}
+
+	.hero-score {
+		grid-column: 1 / -1;
+		align-items: flex-start;
+		width: 100%;
+		text-align: left;
+	}
+
+	.crowd-line {
+		justify-content: flex-start;
+	}
+}
+
+@media (max-width: 640px) {
+	.hero {
+		grid-template-columns: minmax(0, 1fr);
+		justify-items: center;
+		text-align: center;
+	}
+
+	.chips,
+	.hero-actions {
+		justify-content: center;
+	}
+
+	.lead {
+		margin-inline: auto;
+	}
+
+	.hero-score {
+		align-items: center;
+		text-align: center;
+	}
+
+	.crowd-line {
+		justify-content: center;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.fill,
+	.chip,
+	.action {
+		transition: none;
+	}
+}

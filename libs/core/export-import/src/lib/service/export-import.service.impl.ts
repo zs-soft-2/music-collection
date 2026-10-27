@@ -13,6 +13,7 @@ import {
 import { first, mergeMap, reduce, tap } from 'rxjs/operators';
 
 import { Injectable, inject } from '@angular/core';
+import { performanceLog } from '@music-collection/common/engine';
 import {
 	AlbumEntity,
 	AlbumExportModel,
@@ -34,7 +35,6 @@ import {
 export class ExportImportServiceImpl extends ExportImportService {
 	private exportImportStateService = inject(ExportImportStateService);
 	private exportImportUtilService = inject(ExportImportUtilService);
-
 
 	public createArtistExport(artist: ArtistEntity): Observable<boolean> {
 		const artistId = artist.uid;
@@ -73,6 +73,12 @@ export class ExportImportServiceImpl extends ExportImportService {
 				}
 			),
 			switchMap(({ artistExportModel, albumExportModels }) => {
+				// Every cover of the discography as base64 in one string:
+				// timed, because this is the other stretch of the app that
+				// holds the main thread for a whole artist at a time.
+				const run = performanceLog.start('export.serialise', {
+					albums: albumExportModels.length,
+				});
 				const blob = new Blob(
 					[
 						JSON.stringify({
@@ -84,6 +90,8 @@ export class ExportImportServiceImpl extends ExportImportService {
 						type: 'text/json; charset=utf-8',
 					}
 				);
+
+				run.end({ bytes: blob.size });
 
 				saveAs(blob, `${artist.name}.bundle.json`);
 
@@ -126,7 +134,15 @@ export class ExportImportServiceImpl extends ExportImportService {
 				return result;
 			}),
 			switchMap((arrayBuffer) => {
-				return of(this.exportImportUtilService.encode(arrayBuffer));
+				const run = performanceLog.start('export.encodeImage', {
+					bytes: arrayBuffer.byteLength,
+				});
+				const encoded =
+					this.exportImportUtilService.encode(arrayBuffer);
+
+				run.end();
+
+				return of(encoded);
 			}),
 			switchMap((fileAsText) => {
 				return of(

@@ -1,7 +1,13 @@
-import { Observable } from 'rxjs';
+import { Observable, from, map } from 'rxjs';
 
 import { Injectable } from '@angular/core';
-import { collection, doc } from '@angular/fire/firestore';
+import {
+	collection,
+	doc,
+	getDocs,
+	query,
+	where,
+} from '@angular/fire/firestore';
 import {
 	COLLECTION_ITEM_FEATURE_KEY,
 	CollectionItemDataService,
@@ -9,7 +15,12 @@ import {
 	CollectionItemModelAdd,
 	CollectionItemModelUpdate,
 	SearchParams,
+	toSyncedData,
+	withLocalUpdatedAt,
 } from '@music-collection/api';
+
+/** Parent of the users' own data (`user/{uid}/collection-item`). */
+const USER_COLLECTION = 'user';
 
 @Injectable()
 export class CollectionItemDataServiceImpl extends CollectionItemDataService {
@@ -38,6 +49,19 @@ export class CollectionItemDataServiceImpl extends CollectionItemDataService {
 		return super.listModels$();
 	}
 
+	public listByUser$(userId: string): Observable<CollectionItemModel[]> {
+		return this.firestoreSync.list$<CollectionItemModel>({
+			featureKey: this.featureKey,
+			cacheKey: `${this.featureKey}?userId=${userId}`,
+			query: collection(
+				this.firestore,
+				USER_COLLECTION,
+				userId,
+				this.featureKey
+			),
+		});
+	}
+
 	public listByIds$(ids: string[]): Observable<CollectionItemModel[]> {
 		return super.listModelsByIds$(ids);
 	}
@@ -48,6 +72,36 @@ export class CollectionItemDataServiceImpl extends CollectionItemDataService {
 
 	public search$(params: SearchParams): Observable<CollectionItemModel[]> {
 		return super.searchModel$(params);
+	}
+
+	public searchByUser$(
+		userId: string,
+		params: SearchParams
+	): Observable<CollectionItemModel[]> {
+		const itemQuery = query(
+			collection(
+				this.firestore,
+				USER_COLLECTION,
+				userId,
+				this.featureKey
+			),
+			...params.map((param) =>
+				where(
+					param.query.field,
+					param.query.operation,
+					param.query.value
+				)
+			)
+		);
+
+		return from(getDocs(itemQuery)).pipe(
+			map((snapshot) =>
+				snapshot.docs.map(
+					(document) =>
+						toSyncedData(document) as unknown as CollectionItemModel
+				)
+			)
+		);
 	}
 
 	public update$(
@@ -64,7 +118,7 @@ export class CollectionItemDataServiceImpl extends CollectionItemDataService {
 					...album,
 				})
 				.then(() => {
-					subscriber.next(album);
+					subscriber.next(withLocalUpdatedAt(album));
 				});
 		});
 	}

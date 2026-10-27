@@ -1,0 +1,665 @@
+<section class="mc-form-section" aria-labelledby="artist-members">
+	<div class="artist-members-heading">
+		<h2 id="artist-members">
+			{{
+				'ui.artistMembers.heading'
+					| transloco: { count: store.members().length }
+			}}
+		</h2>
+		<div
+			class="artist-members-actions"
+			*ngxPermissionsOnly="writePermissions"
+		>
+			<p-button
+				[label]="'ui.artistMembers.add-member' | transloco"
+				icon="pi pi-plus"
+				size="small"
+				(onClick)="store.startAdd('member')"
+			></p-button>
+			<p-button
+				[label]="'ui.artistMembers.add-guest' | transloco"
+				icon="pi pi-plus"
+				size="small"
+				severity="secondary"
+				[outlined]="true"
+				(onClick)="store.startAdd('guest')"
+			></p-button>
+			<p-button
+				[label]="'ui.artistMembers.load' | transloco"
+				icon="pi pi-cloud-download"
+				size="small"
+				severity="secondary"
+				[outlined]="true"
+				[loading]="store.isLoadingCandidates()"
+				[ariaLabel]="'ui.artistMembers.load-hint' | transloco"
+				(onClick)="store.loadCandidates()"
+			></p-button>
+		</div>
+	</div>
+
+	@if (store.error(); as error) {
+		<small class="artist-members-error" role="alert">{{
+			error | transloco
+		}}</small>
+	}
+
+	@if (store.isLoading()) {
+		<p class="mc-form-note">{{ 'ui.artistMembers.loading' | transloco }}</p>
+	} @else {
+		@if (store.members().length) {
+			<div class="mc-stacked-table">
+				<table>
+					<thead>
+						<tr>
+							<th scope="col">
+								{{ 'ui.artistMembers.musician' | transloco }}
+							</th>
+							<th scope="col">
+								{{ 'ui.artistMembers.instruments' | transloco }}
+							</th>
+							<th scope="col">
+								{{ 'ui.artistMembers.from' | transloco }}
+							</th>
+							<th scope="col">
+								{{ 'ui.artistMembers.to' | transloco }}
+							</th>
+							<th scope="col">
+								{{ 'ui.artistMembers.albums' | transloco }}
+							</th>
+							<th scope="col">
+								<span class="visually-hidden">{{
+									'ui.artistMembers.row-actions' | transloco
+								}}</span>
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						@for (row of store.members(); track row.uid) {
+							<tr>
+								<th scope="row">{{ row.musicianName }}</th>
+								<td
+									[attr.data-label]="
+										'ui.artistMembers.instruments'
+											| transloco
+									"
+								>
+									{{
+										(row.instruments
+											| mcCatalog: 'instrument') || '—'
+									}}
+								</td>
+								<td
+									[attr.data-label]="
+										'ui.artistMembers.from' | transloco
+									"
+								>
+									{{ row.from ?? '—' }}
+								</td>
+								<td
+									[attr.data-label]="
+										'ui.artistMembers.to' | transloco
+									"
+								>
+									@if (row.active) {
+										{{
+											'ui.artistMembers.present'
+												| transloco
+										}}
+									} @else {
+										{{ row.to ?? '—' }}
+									}
+								</td>
+								<td
+									[attr.data-label]="
+										'ui.artistMembers.albums' | transloco
+									"
+								>
+									{{ row.albumCount }}
+								</td>
+								<td class="mc-stacked-actions">
+									<ng-container
+										*ngxPermissionsOnly="writePermissions"
+									>
+										<p-button
+											icon="pi pi-pencil"
+											size="small"
+											severity="secondary"
+											[text]="true"
+											[ariaLabel]="
+												'ui.artistMembers.edit'
+													| transloco
+											"
+											(onClick)="edit(row)"
+										></p-button>
+										<p-button
+											icon="pi pi-trash"
+											size="small"
+											severity="danger"
+											[text]="true"
+											[ariaLabel]="
+												'ui.artistMembers.delete'
+													| transloco
+											"
+											(onClick)="store.askDeletion(row)"
+										></p-button>
+									</ng-container>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		} @else {
+			<p class="mc-form-note">
+				{{ 'ui.artistMembers.no-members-yet' | transloco }}
+			</p>
+		}
+
+		@if (store.guests().length) {
+			<h3 class="artist-members-subheading">
+				{{
+					'ui.artistMembers.guests'
+						| transloco: { count: store.guests().length }
+				}}
+			</h3>
+			<div class="mc-stacked-table">
+				<table>
+					<thead>
+						<tr>
+							<th scope="col">
+								{{ 'ui.artistMembers.musician' | transloco }}
+							</th>
+							<th scope="col">
+								{{ 'ui.artistMembers.instruments' | transloco }}
+							</th>
+							<th scope="col">
+								{{ 'ui.artistMembers.years' | transloco }}
+							</th>
+							<th scope="col">
+								{{ 'ui.artistMembers.albums' | transloco }}
+							</th>
+							<th scope="col">
+								<span class="visually-hidden">{{
+									'ui.artistMembers.row-actions' | transloco
+								}}</span>
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						@for (row of store.guests(); track row.uid) {
+							<tr>
+								<th scope="row">{{ row.musicianName }}</th>
+								<td
+									[attr.data-label]="
+										'ui.artistMembers.instruments'
+											| transloco
+									"
+								>
+									{{
+										(row.instruments
+											| mcCatalog: 'instrument') || '—'
+									}}
+								</td>
+								<td
+									[attr.data-label]="
+										'ui.artistMembers.years' | transloco
+									"
+								>
+									@if (row.from) {
+										{{ row.from }}
+										@if (row.to && row.to !== row.from) {
+											–{{ row.to }}
+										}
+									} @else {
+										—
+									}
+								</td>
+								<td
+									[attr.data-label]="
+										'ui.artistMembers.albums' | transloco
+									"
+								>
+									{{ row.albumCount }}
+								</td>
+								<td class="mc-stacked-actions">
+									<ng-container
+										*ngxPermissionsOnly="writePermissions"
+									>
+										<p-button
+											icon="pi pi-pencil"
+											size="small"
+											severity="secondary"
+											[text]="true"
+											[ariaLabel]="
+												'ui.artistMembers.edit'
+													| transloco
+											"
+											(onClick)="edit(row)"
+										></p-button>
+										<p-button
+											icon="pi pi-trash"
+											size="small"
+											severity="danger"
+											[text]="true"
+											[ariaLabel]="
+												'ui.artistMembers.delete'
+													| transloco
+											"
+											(onClick)="store.askDeletion(row)"
+										></p-button>
+									</ng-container>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		}
+	}
+</section>
+
+<p-dialog
+	[header]="
+		(store.draft()?.uid
+			? 'ui.artistMembers.edit-member'
+			: 'ui.artistMembers.add-member'
+		) | transloco
+	"
+	[modal]="true"
+	[visible]="!!store.draft()"
+	(visibleChange)="$event || store.cancelEdit()"
+	[style]="{ width: 'min(40rem, 95vw)' }"
+	[dismissableMask]="true"
+>
+	@if (store.draft(); as draft) {
+		<div class="mc-form-grid">
+			<div class="mc-field is-wide">
+				<label for="member-musician">{{
+					'ui.artistMembers.musician' | transloco
+				}}</label>
+				@if (draft.uid) {
+					<input
+						id="member-musician"
+						type="text"
+						pInputText
+						[value]="draft.musicianName"
+						[readOnly]="true"
+					/>
+					<small>{{
+						'ui.artistMembers.musician-fixed' | transloco
+					}}</small>
+				} @else {
+					<p-autocomplete
+						inputId="member-musician"
+						[ngModel]="draft.musicianName"
+						[ngModelOptions]="{ standalone: true }"
+						[suggestions]="store.musicianOptions()"
+						optionLabel="name"
+						[minQueryLength]="2"
+						[delay]="400"
+						[placeholder]="
+							'ui.artistMembers.search-musicians' | transloco
+						"
+						(completeMethod)="store.searchMusicians($event.query)"
+						(ngModelChange)="typeMusician($event)"
+						(onSelect)="pickMusician($event.value)"
+					></p-autocomplete>
+					@if (creatable(); as name) {
+						<p-button
+							class="artist-members-create"
+							[label]="
+								'ui.artistMembers.create-musician'
+									| transloco: { name: name }
+							"
+							icon="pi pi-user-plus"
+							size="small"
+							severity="secondary"
+							[outlined]="true"
+							[loading]="store.isSaving()"
+							(onClick)="store.createMusician(name)"
+						></p-button>
+					}
+				}
+			</div>
+
+			<div class="mc-field is-wide">
+				<label for="member-instruments">{{
+					'ui.artistMembers.instruments' | transloco
+				}}</label>
+				<p-multiselect
+					inputId="member-instruments"
+					[options]="instrumentGroups()"
+					[group]="true"
+					optionLabel="label"
+					optionValue="value"
+					optionGroupLabel="label"
+					optionGroupChildren="items"
+					[filter]="true"
+					display="chip"
+					[showToggleAll]="false"
+					[maxSelectedLabels]="null"
+					[ngModel]="draft.instruments"
+					[ngModelOptions]="{ standalone: true }"
+					[placeholder]="
+						'ui.artistMembers.instruments-placeholder' | transloco
+					"
+					[filterPlaceHolder]="
+						'ui.artistMembers.instruments-placeholder' | transloco
+					"
+					[emptyFilterMessage]="
+						'ui.artistMembers.instruments-empty' | transloco
+					"
+					(ngModelChange)="setInstruments($event)"
+				></p-multiselect>
+				<small>{{
+					'ui.artistMembers.instruments-hint' | transloco
+				}}</small>
+			</div>
+
+			<div class="mc-field">
+				<label for="member-kind">{{
+					'ui.artistMembers.kind' | transloco
+				}}</label>
+				<p-select
+					inputId="member-kind"
+					[options]="kinds()"
+					optionLabel="label"
+					optionValue="value"
+					[ngModel]="draft.kind"
+					[ngModelOptions]="{ standalone: true }"
+					(ngModelChange)="setKind($event)"
+				></p-select>
+			</div>
+
+			<div class="mc-field">
+				<label for="member-from">{{
+					'ui.artistMembers.from' | transloco
+				}}</label>
+				<p-inputnumber
+					inputId="member-from"
+					[ngModel]="draft.from"
+					[ngModelOptions]="{ standalone: true }"
+					[useGrouping]="false"
+					[min]="earliestYear"
+					[max]="latestYear"
+					[placeholder]="'ui.artistMembers.year' | transloco"
+					(ngModelChange)="setFrom($event)"
+				></p-inputnumber>
+			</div>
+
+			@if (draft.kind === 'member') {
+				<div class="mc-field">
+					<p-checkbox
+						inputId="member-active"
+						[binary]="true"
+						[ngModel]="draft.active"
+						[ngModelOptions]="{ standalone: true }"
+						(onChange)="setActive($event.checked)"
+					></p-checkbox>
+					<label for="member-active">{{
+						'ui.artistMembers.still-a-member' | transloco
+					}}</label>
+				</div>
+			}
+
+			<div class="mc-field">
+				<label for="member-to">{{
+					'ui.artistMembers.to' | transloco
+				}}</label>
+				<p-inputnumber
+					inputId="member-to"
+					[ngModel]="draft.to"
+					[ngModelOptions]="{ standalone: true }"
+					[useGrouping]="false"
+					[min]="earliestYear"
+					[max]="latestYear"
+					[disabled]="draft.kind === 'member' && draft.active"
+					[placeholder]="'ui.artistMembers.to-optional' | transloco"
+					(ngModelChange)="setTo($event)"
+				></p-inputnumber>
+				<small>{{ 'ui.artistMembers.to-hint' | transloco }}</small>
+			</div>
+		</div>
+	}
+	<ng-template #footer>
+		<p-button
+			[label]="'ui.artistMembers.cancel' | transloco"
+			severity="secondary"
+			[outlined]="true"
+			(onClick)="store.cancelEdit()"
+		></p-button>
+		<p-button
+			[label]="'ui.artistMembers.save' | transloco"
+			icon="pi pi-check"
+			[disabled]="!store.isSaveable()"
+			[loading]="store.isSaving()"
+			(onClick)="store.save()"
+		></p-button>
+	</ng-template>
+</p-dialog>
+
+<p-dialog
+	[header]="'ui.artistMembers.delete-member' | transloco"
+	[modal]="true"
+	[visible]="!!store.pendingDeletion()"
+	(visibleChange)="$event || store.cancelDeletion()"
+	[style]="{ width: 'min(32rem, 95vw)' }"
+	[dismissableMask]="true"
+>
+	@if (store.pendingDeletion(); as row) {
+		<p>
+			{{
+				'ui.artistMembers.delete-question'
+					| transloco: { name: row.musicianName }
+			}}
+		</p>
+	}
+	<ng-template #footer>
+		<p-button
+			[label]="'ui.artistMembers.cancel' | transloco"
+			severity="secondary"
+			[outlined]="true"
+			(onClick)="store.cancelDeletion()"
+		></p-button>
+		<p-button
+			[label]="'ui.artistMembers.delete' | transloco"
+			icon="pi pi-trash"
+			severity="danger"
+			[loading]="store.isSaving()"
+			(onClick)="store.confirmDeletion()"
+		></p-button>
+	</ng-template>
+</p-dialog>
+
+<mc-artist-candidate-picker
+	[candidates]="namesakeRows()"
+	[hint]="'ui.artistMembers.pick-the-band' | transloco"
+	(picked)="chooseNamesake($event)"
+	(closed)="store.closeNamesakes()"
+></mc-artist-candidate-picker>
+
+<p-dialog
+	[header]="'ui.artistMembers.found' | transloco"
+	[modal]="true"
+	[visible]="!!store.candidates()"
+	(visibleChange)="$event || store.closeCandidates()"
+	[style]="{ width: 'min(52rem, 95vw)' }"
+	[dismissableMask]="true"
+>
+	@if (store.candidates(); as candidates) {
+		<p class="mc-form-note">
+			{{ 'ui.artistMembers.found-note' | transloco }}
+		</p>
+		@if (store.externalFailed()) {
+			<p class="artist-members-error" role="alert">
+				{{ 'ui.artistMembers.external-failed' | transloco }}
+			</p>
+		}
+		@if (store.isSaving()) {
+			<p class="mc-form-note" role="status">
+				{{ 'ui.artistMembers.adding' | transloco }}
+			</p>
+		}
+		@if (store.error(); as error) {
+			<p class="artist-members-error" role="alert">
+				{{ error | transloco }}
+			</p>
+		}
+		<div class="mc-stacked-table">
+			<table>
+				<thead>
+					<tr>
+						<th scope="col">
+							<p-checkbox
+								inputId="candidate-all"
+								[ariaLabel]="
+									'ui.artistMembers.select-all' | transloco
+								"
+								[binary]="true"
+								[ngModel]="
+									store.selectedCandidates().length ===
+									candidates.length
+								"
+								(onChange)="
+									store.toggleAllCandidates($event.checked)
+								"
+							></p-checkbox>
+						</th>
+						<th scope="col">
+							{{ 'ui.artistMembers.musician' | transloco }}
+						</th>
+						<th scope="col">
+							{{ 'ui.artistMembers.kind' | transloco }}
+						</th>
+						<th scope="col">
+							{{ 'ui.artistMembers.instruments' | transloco }}
+						</th>
+						<th scope="col">
+							{{ 'ui.artistMembers.years' | transloco }}
+						</th>
+						<th scope="col">
+							{{ 'ui.artistMembers.albums' | transloco }}
+						</th>
+						<th scope="col">
+							{{ 'ui.artistMembers.source' | transloco }}
+						</th>
+					</tr>
+				</thead>
+				<tbody>
+					@for (
+						candidate of candidates;
+						track candidate.musicianName;
+						let i = $index
+					) {
+						<tr [class.is-selected]="candidate.selected">
+							<td>
+								<p-checkbox
+									[inputId]="'candidate-' + i"
+									[binary]="true"
+									[ngModel]="candidate.selected"
+									(onChange)="
+										store.toggleCandidate(candidate)
+									"
+								></p-checkbox>
+							</td>
+							<th scope="row">
+								<label [for]="'candidate-' + i">{{
+									candidate.musicianName
+								}}</label>
+								@if (!candidate.musicianUid) {
+									<small class="artist-members-new">{{
+										'ui.artistMembers.new-musician'
+											| transloco
+									}}</small>
+								}
+							</th>
+							<td
+								[attr.data-label]="
+									'ui.artistMembers.kind' | transloco
+								"
+							>
+								{{
+									(candidate.kind === 'member'
+										? 'ui.artistMembers.kind-member'
+										: 'ui.artistMembers.kind-guest'
+									) | transloco
+								}}
+							</td>
+							<td
+								[attr.data-label]="
+									'ui.artistMembers.instruments' | transloco
+								"
+							>
+								{{
+									(candidate.instruments
+										| mcCatalog: 'instrument') || '—'
+								}}
+							</td>
+							<td
+								[attr.data-label]="
+									'ui.artistMembers.years' | transloco
+								"
+							>
+								@if (candidate.from) {
+									{{ candidate.from }}
+									@if (candidate.active) {
+										–{{
+											'ui.artistMembers.present'
+												| transloco
+										}}
+									} @else if (
+										candidate.to &&
+										candidate.to !== candidate.from
+									) {
+										–{{ candidate.to }}
+									}
+								} @else if (candidate.active) {
+									{{ 'ui.artistMembers.current' | transloco }}
+								} @else {
+									—
+								}
+							</td>
+							<td
+								[attr.data-label]="
+									'ui.artistMembers.albums' | transloco
+								"
+							>
+								{{ candidate.albumCount || '—' }}
+							</td>
+							<td
+								[attr.data-label]="
+									'ui.artistMembers.source' | transloco
+								"
+							>
+								{{
+									(candidate.source === 'musicbrainz'
+										? 'ui.artistMembers.source-musicbrainz'
+										: 'ui.artistMembers.source-catalog'
+									) | transloco
+								}}
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	}
+	<ng-template #footer>
+		<p-button
+			[label]="'ui.artistMembers.cancel' | transloco"
+			severity="secondary"
+			[outlined]="true"
+			(onClick)="store.closeCandidates()"
+		></p-button>
+		<p-button
+			[label]="
+				'ui.artistMembers.add-selected'
+					| transloco: { count: store.selectedCandidates().length }
+			"
+			icon="pi pi-check"
+			[disabled]="!store.selectedCandidates().length"
+			[loading]="store.isSaving()"
+			(onClick)="store.applyCandidates()"
+		></p-button>
+	</ng-template>
+</p-dialog>

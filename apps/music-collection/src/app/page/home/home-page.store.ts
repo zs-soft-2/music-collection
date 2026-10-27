@@ -1,11 +1,34 @@
-import { Observable, filter, of, pipe, switchMap, tap } from 'rxjs';
+import {
+	Observable,
+	combineLatest,
+	debounceTime,
+	distinctUntilChanged,
+	filter,
+	map,
+	of,
+	pipe,
+	switchMap,
+	tap,
+} from 'rxjs';
 
 import { computed, inject } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { measure } from '@music-collection/common/engine';
+import { TextService } from '@music-collection/core/i18n';
 import {
 	AlbumStateService,
+	AnalyticsService,
 	ArtistStateService,
+	AuthenticationStateService,
+	BandOfTheWeek,
 	CollectionItemStateService,
+	EntityCounts,
+	EntityQuantityStateService,
 } from '@music-collection/api';
+import {
+	MusicCollectionEffect,
+	MusicCollectionStanding,
+} from '@music-collection/domain/music-collection/core';
 import { tapResponse } from '@ngrx/operators';
 import {
 	patchState,
@@ -17,6 +40,19 @@ import {
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
+import { BandOfTheWeekEffect } from '../../data/band-of-the-week';
+import { AlbumRating, RatingEffect, lovedArtists } from '../../data/rating';
+import {
+	CollectorCardDocument,
+	CollectorProfileEffect,
+} from '../../data/collector-profile';
+import {
+	crowdBySlug,
+	dressHunts,
+	sortWall,
+	toWallEntries,
+} from '../collectors/collectors.mapper';
+import { WallEntry } from '../collectors/collectors.model';
 import {
 	AlbumView,
 	ArtistView,
@@ -26,42 +62,140 @@ import {
 	toReleaseView,
 } from '../../shared/music-ui';
 import {
-	decadeDistribution,
+	sortCollectionCards,
+	toCollectionCard,
+	toNextAlbums,
+} from '../collections/collections.mapper';
+import {
+	CollectionCardView,
+	NextAlbumView,
+} from '../collections/collections.model';
+import { withCollectionFollowing } from '../collections/collection-following.feature';
+import {
+	filterCollectionTiles,
+	pickHeroCollections,
+	toCollectionTabs,
+	toCollectionTiles,
+} from './home-collections.mapper';
+import {
+	HOME_COLLECTION_TILES,
+	HOME_COLLECTOR_CARDS,
+	HOME_HERO_CARDS,
+	HomeCollectionTab,
+} from './home.model';
+import {
+	CATALOG_TYPES,
+	albumCountsByArtist,
+	albumsByDecade,
+	albumsByStyle,
+	artistsByType,
+	catalogStats,
+	decadeCoverage,
+	mostCatalogedArtists,
 	mostCollectedArtists,
+	newInCatalog,
 	pickRandom,
 	releaseCountsByArtist,
 	searchHome,
-	topStyles,
+	unansweredKinds,
 } from './home.mapper';
+
+/**
+ * How many records the home page names to hunt for. Fewer than the hunt list
+ * on `/collections`: this is a nudge on the way past, not the list itself.
+ */
+const HOME_HUNT_COUNT = 3;
 
 interface HomePageState {
 	artists: ArtistView[];
 	albums: AlbumView[];
 	releases: ReleaseView[];
+	counts: EntityCounts;
 	artistsLoading: boolean;
 	albumsLoading: boolean;
 	releasesLoading: boolean;
+	countsLoading: boolean;
+	/** The published collections with the collector's progress on them. */
+	collectionStandings: MusicCollectionStanding[];
+	/** The collector's own verdicts, to break ties on the hunt list. */
+	ratings: AlbumRating[];
+	collectionsLoading: boolean;
 	spotlightId: string | null;
+	/** This week's band; null on a week nobody chose one for. */
+	bandOfTheWeek: BandOfTheWeek | null;
+	bandLoading: boolean;
 	query: string;
+	/**
+	 * Whether the search is being looked up on the server, the catalog this
+	 * client holds having had no answer. See `lookUpCatalog`.
+	 */
+	lookingUp: boolean;
+	/** Signed in, as opposed to reading the catalog as a guest. */
+	authenticated: boolean;
+	/** The collectors who share a page, for the wall of finished collections. */
+	wall: WallEntry[];
+	wallLoading: boolean;
+	/** Which tab of the collection grid is open; null is the first on offer. */
+	collectionTab: HomeCollectionTab | null;
+	/**
+	 * Which collection the big card has been turned to; null is the week's,
+	 * which is where the page opens and where it stays unless the reader
+	 * turns it themselves.
+	 */
+	heroSlug: string | null;
+	/**
+	 * When the page was opened. The week's collection is picked against it
+	 * rather than against the clock, so the hero cannot change under a reader
+	 * who happens to be here at midnight on Sunday.
+	 */
+	openedAt: number;
 }
 
 const initialState: HomePageState = {
 	artists: [],
 	albums: [],
 	releases: [],
+	counts: {},
 	artistsLoading: true,
 	albumsLoading: true,
 	releasesLoading: true,
+	countsLoading: true,
+	collectionStandings: [],
+	ratings: [],
+	wall: [],
+	wallLoading: true,
+	collectionsLoading: true,
 	spotlightId: null,
+	bandOfTheWeek: null,
+	bandLoading: true,
 	query: '',
+	lookingUp: false,
+	authenticated: false,
+	collectionTab: null,
+	heroSlug: null,
+	openedAt: Date.now(),
 };
 
 const RECENT_COUNT = 6;
 const ARTIST_COUNT = 12;
 const ALBUM_COUNT = 12;
-const STYLE_COUNT = 6;
 const SPOTLIGHT_RELEASE_COUNT = 6;
 const SEARCH_RESULT_COUNT = 5;
+/** How long a search box has to stand still before it counts as a search. */
+const SEARCH_SETTLED_MS = 800;
+/** Below this a term is still being typed, not searched with. */
+const SEARCH_MIN_LENGTH = 2;
+/**
+ * How long the box has to stand still before the search is taken to the
+ * server. Shorter than `SEARCH_SETTLED_MS`, because this one the reader is
+ * waiting for rather than only being counted by, and longer than a pause
+ * between two letters, because every run of it is three queries.
+ */
+const LOOKUP_SETTLED_MS = 500;
+/** Rows of the catalog bands, and the covers or tiles shown in each. */
+const GROUP_COUNT = 6;
+const GROUP_ALBUM_COUNT = 12;
+const GROUP_ARTIST_COUNT = 8;
 
 /**
  * Loads a feature's entities once: selects them from the NgRx store and
@@ -83,99 +217,492 @@ function entities$<T>(
 
 export const HomePageStore = signalStore(
 	withState(initialState),
-	withComputed((store) => {
-		const counts = computed(() => releaseCountsByArtist(store.releases()));
+	// The collector's pick of collections, shared with `/collections`: the
+	// hero's "I'm collecting this" is the same star as the one over there.
+	withCollectionFollowing(),
+	withComputed(
+		(
+			store,
+			musicCollectionEffect = inject(MusicCollectionEffect),
+			text = inject(TextService)
+		) => {
+			const counts = computed(() =>
+				measure(
+					'home.releaseCounts',
+					{ releases: store.releases().length },
+					() => releaseCountsByArtist(store.releases())
+				)
+			);
 
-		/** Spotlight candidates: collected artists with a header photo. */
-		const spotlightCandidates = computed(() =>
-			store
-				.artists()
-				.filter((artist) => artist.headerUrl && counts().has(artist.id))
-		);
+			const albumCounts = computed(() =>
+				measure(
+					'home.albumCounts',
+					{ albums: store.albums().length },
+					() => albumCountsByArtist(store.albums())
+				)
+			);
 
-		const spotlight = computed(
-			() =>
+			/**
+			 * The collection has arrived and there is none — a guest, or a
+			 * collector who has not added a copy yet. The catalog is the content
+			 * then: its artists are ranked by the albums it holds of them, and
+			 * it stands in wherever the collection would have been shown.
+			 */
+			const catalogOnly = computed(
+				() => !store.releasesLoading() && store.releases().length === 0
+			);
+
+			/** What the artists are ranked by: the collection, or the catalog. */
+			const ranking = computed(() =>
+				catalogOnly() ? albumCounts() : counts()
+			);
+
+			/** Spotlight candidates: ranked artists with a header photo. */
+			const spotlightCandidates = computed(() =>
 				store
 					.artists()
-					.find((artist) => artist.id === store.spotlightId()) ?? null
-		);
+					.filter(
+						(artist) => artist.headerUrl && ranking().has(artist.id)
+					)
+			);
 
-		return {
-			spotlightCandidates,
-			spotlight,
-			spotlightReleaseCount: computed(() => {
-				const artist = spotlight();
-				return artist ? (counts().get(artist.id) ?? 0) : 0;
-			}),
-			spotlightReleases: computed(() => {
-				const artist = spotlight();
+			const spotlight = computed(
+				() =>
+					store
+						.artists()
+						.find((artist) => artist.id === store.spotlightId()) ??
+					null
+			);
 
-				return artist
-					? store
-							.releases()
-							.filter((release) => release.artistId === artist.id)
-							.sort((a, b) => (a.year ?? 0) - (b.year ?? 0))
-							.slice(0, SPOTLIGHT_RELEASE_COUNT)
-					: [];
-			}),
-			stats: computed(() => {
-				const releases = store.releases();
-
-				return {
-					releases: releases.length,
-					artists: counts().size,
-					vinyl: releases.filter(
-						(release) => release.format === 'vinyl'
-					).length,
-					cd: releases.filter((release) => release.format === 'cd')
-						.length,
-				};
-			}),
-			recentReleases: computed(() =>
-				[...store.releases()]
-					.sort((a, b) => b.addedAt - a.addedAt)
-					.slice(0, RECENT_COUNT)
-			),
-			decades: computed(() => decadeDistribution(store.releases())),
-			styles: computed(() => topStyles(store.releases(), STYLE_COUNT)),
-			topArtists: computed(() =>
-				mostCollectedArtists(store.artists(), counts(), ARTIST_COUNT)
-			),
-			searchResults: computed(() =>
-				searchHome(
-					store.query(),
-					store.artists(),
-					store.releases(),
-					store.albums(),
-					SEARCH_RESULT_COUNT
+			const collections = computed<CollectionCardView[]>(() =>
+				sortCollectionCards(
+					store.collectionStandings().map(toCollectionCard)
 				)
-			),
-			newestAlbums: computed(() =>
-				store
-					.albums()
-					.filter((album) => album.coverUrl)
-					.sort((a, b) => (b.year ?? 0) - (a.year ?? 0))
-					.slice(0, ALBUM_COUNT)
-			),
-		};
-	}),
+			);
+
+			/**
+			 * The collectors who share a page, with their hunts named: an
+			 * entry written before the names travelled carries a slug alone,
+			 * and the definitions already in hand are what name it.
+			 */
+			const wallEntries = computed(() =>
+				sortWall(
+					dressHunts(
+						store.wall(),
+						store
+							.collectionStandings()
+							.map((standing) => standing.collection)
+					),
+					'badges'
+				)
+			);
+
+			/** Who is on each collection, by slug: one pass over the wall. */
+			const crowds = computed(() => crowdBySlug(wallEntries()));
+
+			/**
+			 * The collections as the grid draws them: the cards, who is on
+			 * each, and whether this collector starred it. An empty one is
+			 * nobody's hunt — it is left out before anything is counted.
+			 */
+			const collectionTiles = computed(() =>
+				toCollectionTiles(
+					collections().filter((collection) => collection.total > 0),
+					crowds(),
+					store.followedUids()
+				)
+			);
+
+			const collectionTabs = computed(() =>
+				toCollectionTabs(collectionTiles())
+			);
+
+			/**
+			 * What the big card can show, the week's collection first. The
+			 * week is read off when the page was opened rather than off the
+			 * clock, so the card cannot change under a reader who happens to
+			 * be here at midnight on Sunday.
+			 */
+			const heroCollections = computed(() =>
+				pickHeroCollections(
+					collectionTiles(),
+					store.collectionStandings(),
+					store.openedAt(),
+					HOME_HERO_CARDS
+				)
+			);
+
+			/**
+			 * Which of them is on show. A collection turned to and then gone
+			 * — the standings came back and it is no longer among them —
+			 * falls back to the week's rather than to an empty card.
+			 */
+			const heroIndex = computed(() => {
+				const at = heroCollections().findIndex(
+					(hero) => hero.slug === store.heroSlug()
+				);
+
+				return at < 0 ? 0 : at;
+			});
+
+			/** The tab chosen, or the first one with anything behind it. */
+			const activeCollectionTab = computed<HomeCollectionTab>(
+				() =>
+					store.collectionTab() ??
+					collectionTabs()[0]?.value ??
+					'curated'
+			);
+
+			/**
+			 * Which records to buy next. The standings are already in state to
+			 * draw the collection rows, so ranking them costs a pass over what is
+			 * in hand — no query, and nothing kept.
+			 */
+			const nextAlbums = computed<NextAlbumView[]>(() => {
+				const cards = collections();
+
+				// The hunt is about a shelf, and a guest has none: nothing is
+				// ranked until there is something to continue.
+				if (!cards.some((collection) => collection.owned > 0)) {
+					return [];
+				}
+
+				return toNextAlbums(
+					musicCollectionEffect.suggestNextAlbums(
+						store.collectionStandings(),
+						lovedArtists(store.ratings())
+					),
+					cards,
+					HOME_HUNT_COUNT
+				);
+			});
+
+			/** The catalog ranks a guest's artists, so it is waited for too. */
+			const artistsPending = computed(
+				() =>
+					store.artistsLoading() ||
+					store.releasesLoading() ||
+					(catalogOnly() && store.albumsLoading())
+			);
+
+			/**
+			 * The hero is the week's band, as opposed to an artist the reader
+			 * went looking for with "show another".
+			 */
+			const showingBand = computed(() => {
+				const band = store.bandOfTheWeek();
+
+				return !!band && store.spotlightId() === band.artistUid;
+			});
+
+			return {
+				catalogOnly,
+				artistsPending,
+				showingBand,
+				/** Why they are the band of the week, in the reader's language. */
+				bandReasonKey: computed(() => {
+					const band = store.bandOfTheWeek();
+
+					return band ? `bandOfTheWeek.reason.${band.reason}` : null;
+				}),
+				bandReasonParams: computed(
+					() => store.bandOfTheWeek()?.reasonParams ?? {}
+				),
+				/**
+				 * There is a band of the week to go back to, and the reader is
+				 * not looking at them — what the way back is offered on.
+				 */
+				canReturnToBand: computed(
+					() => !!store.bandOfTheWeek() && !showingBand()
+				),
+				/** Only a guest is asked to sign in. */
+				isGuest: computed(() => !store.authenticated()),
+				/** Waiting on whichever list the "recently added" row shows. */
+				recentPending: computed(
+					() =>
+						store.releasesLoading() ||
+						(catalogOnly() && store.albumsLoading())
+				),
+				/** Catalog-wide totals named in the sign-in prompt. */
+				albumTotal: computed(
+					() => store.counts()['Album'] ?? store.albums().length
+				),
+				artistTotal: computed(
+					() => store.counts()['Artist'] ?? store.artists().length
+				),
+				collectionTabs,
+				activeCollectionTab,
+				/** The tiles of the open tab; the rest is one click away. */
+				visibleCollections: computed(() =>
+					filterCollectionTiles(
+						collectionTiles(),
+						activeCollectionTab(),
+						HOME_COLLECTION_TILES
+					)
+				),
+				heroCollections,
+				heroIndex,
+				/**
+				 * The collections are still on their way. The standings come
+				 * before the catalog they are counted against on a cold start,
+				 * and every collection then has nothing in it — so the
+				 * placeholders stay until the albums are in, rather than the
+				 * section folding away and pushing the page back down.
+				 */
+				collectionsPending: computed(
+					() =>
+						store.collectionsLoading() ||
+						(store.albumsLoading() && collectionTiles().length === 0)
+				),
+				/**
+				 * The collection the big card shows — what the page opens on,
+				 * and the one thing on it that says what this app is for. The
+				 * week's until the reader turns the card.
+				 */
+				bigCard: computed(() => heroCollections()[heroIndex()] ?? null),
+				/** The week's pick is always the first one the card can show. */
+				showingWeekly: computed(() => heroIndex() === 0),
+				/** What the card's dots are named after. */
+				heroNames: computed(() =>
+					heroCollections().map((hero) => hero.name)
+				),
+				/** The collectors the page introduces, the finishers first. */
+				collectorCards: computed(() =>
+					wallEntries().slice(0, HOME_COLLECTOR_CARDS)
+				),
+				collectorTotal: computed(() => store.wall().length),
+				nextAlbums,
+				/** Empty where there is no shelf to continue, or no gap left. */
+				showsHunt: computed(() => nextAlbums().length > 0),
+				completedCollections: computed(
+					() =>
+						collections().filter(
+							(collection) => collection.completed
+						).length
+				),
+				spotlightCandidates,
+				spotlight,
+				spotlightReleaseCount: computed(() => {
+					const artist = spotlight();
+					return artist ? (counts().get(artist.id) ?? 0) : 0;
+				}),
+				spotlightAlbumCount: computed(() => {
+					const artist = spotlight();
+					return artist ? (albumCounts().get(artist.id) ?? 0) : 0;
+				}),
+				spotlightReleases: computed(() => {
+					const artist = spotlight();
+
+					return artist
+						? store
+								.releases()
+								.filter(
+									(release) => release.artistId === artist.id
+								)
+								.sort((a, b) => (a.year ?? 0) - (b.year ?? 0))
+								.slice(0, SPOTLIGHT_RELEASE_COUNT)
+						: [];
+				}),
+				catalog: computed(() => catalogStats(store.counts())),
+				/** Catalog rows: by style, by decade, by kind of act. */
+				styleGroups: computed(() =>
+					measure(
+						'home.styleGroups',
+						{ albums: store.albums().length },
+						() =>
+							albumsByStyle(
+								store.albums(),
+								GROUP_COUNT,
+								GROUP_ALBUM_COUNT
+							)
+					)
+				),
+				decadeGroups: computed(() =>
+					measure(
+						'home.decadeGroups',
+						{ albums: store.albums().length },
+						() =>
+							albumsByDecade(
+								store.albums(),
+								GROUP_COUNT,
+								GROUP_ALBUM_COUNT
+							)
+					)
+				),
+				artistGroups: computed(() =>
+					artistsByType(
+						store.artists(),
+						albumCounts(),
+						GROUP_ARTIST_COUNT
+					)
+				),
+				/** The catalog entries written last — what stands in for the
+				 * recently added copies when there is no collection. */
+				newInCatalog: computed(() =>
+					newInCatalog(store.albums(), RECENT_COUNT)
+				),
+				coverage: computed(() =>
+					measure(
+						'home.coverage',
+						{
+							albums: store.albums().length,
+							releases: store.releases().length,
+						},
+						() => decadeCoverage(store.albums(), store.releases())
+					)
+				),
+				recentReleases: computed(() =>
+					[...store.releases()]
+						.sort((a, b) => b.addedAt - a.addedAt)
+						.slice(0, RECENT_COUNT)
+				),
+				topArtists: computed(() =>
+					catalogOnly()
+						? mostCatalogedArtists(
+								store.artists(),
+								albumCounts(),
+								ARTIST_COUNT
+							)
+						: mostCollectedArtists(
+								store.artists(),
+								counts(),
+								ARTIST_COUNT
+							)
+				),
+				searchResults: computed(() =>
+					searchHome(
+						store.query(),
+						store.artists(),
+						store.releases(),
+						store.albums(),
+						SEARCH_RESULT_COUNT,
+						text.catalog()
+					)
+				),
+				newestAlbums: computed(() =>
+					measure(
+						'home.newestAlbums',
+						{ albums: store.albums().length },
+						() =>
+							store
+								.albums()
+								.filter((album) => album.coverUrl)
+								.sort((a, b) => (b.year ?? 0) - (a.year ?? 0))
+								.slice(0, ALBUM_COUNT)
+					)
+				),
+			};
+		}
+	),
 	withMethods(
 		(
 			store,
 			artistStateService = inject(ArtistStateService),
 			albumStateService = inject(AlbumStateService),
-			collectionItemStateService = inject(CollectionItemStateService)
+			authenticationStateService = inject(AuthenticationStateService),
+			collectionItemStateService = inject(CollectionItemStateService),
+			quantityStateService = inject(EntityQuantityStateService),
+			musicCollectionEffect = inject(MusicCollectionEffect),
+			bandOfTheWeekEffect = inject(BandOfTheWeekEffect),
+			collectorProfiles = inject(CollectorProfileEffect),
+			ratingEffect = inject(RatingEffect)
 		) => {
-			const ensureSpotlight = () => {
-				if (!store.spotlightId()) {
-					patchState(store, {
-						spotlightId:
-							pickRandom(store.spotlightCandidates())?.id ?? null,
-					});
+			/**
+			 * Turns the big card to one of the collections it can show. It
+			 * wraps round, so the arrows never dead-end on a panel that is
+			 * only a handful of collections wide.
+			 */
+			const showBigCard = (index: number): void => {
+				const heroes = store.heroCollections();
+
+				if (!heroes.length) {
+					return;
 				}
+
+				const at =
+					((index % heroes.length) + heroes.length) % heroes.length;
+
+				patchState(store, { heroSlug: heroes[at].slug });
+			};
+
+			/**
+			 * Picks the hero once everything it stands on has arrived: the
+			 * week's band where a run has chosen one, and an artist of the
+			 * catalog otherwise.
+			 *
+			 * It waits for the ranking as well as for the week, so the
+			 * artists of the catalog are not passed over while the collection
+			 * is still on its way — and for the week even where the band is
+			 * not needed, because arriving late it would replace the artist
+			 * already on show.
+			 */
+			const ensureSpotlight = () => {
+				if (
+					store.spotlightId() ||
+					store.artistsPending() ||
+					store.bandLoading()
+				) {
+					return;
+				}
+
+				const band = store.bandOfTheWeek();
+				// A band the catalog no longer holds cannot be shown; the
+				// week then goes on as an ordinary spotlight.
+				const theirs =
+					band &&
+					store
+						.artists()
+						.some((artist) => artist.id === band.artistUid)
+						? band.artistUid
+						: null;
+
+				patchState(store, {
+					spotlightId:
+						theirs ??
+						pickRandom(store.spotlightCandidates())?.id ??
+						null,
+				});
 			};
 
 			return {
+				/** The collector's own verdicts; follows sign-in. */
+				loadRatings: rxMethod<void>(
+					pipe(
+						switchMap(() =>
+							ratingEffect.list$().pipe(
+								tapResponse({
+									next: (ratings: AlbumRating[]) =>
+										patchState(store, { ratings }),
+									error: (error: unknown) =>
+										console.error(error),
+								})
+							)
+						)
+					)
+				),
+				loadCollections: rxMethod<void>(
+					pipe(
+						switchMap(() =>
+							musicCollectionEffect.listStandings$().pipe(
+								tapResponse({
+									next: (
+										collectionStandings: MusicCollectionStanding[]
+									) =>
+										patchState(store, {
+											collectionStandings,
+											collectionsLoading: false,
+										}),
+									error: (error) => {
+										console.error(error);
+										patchState(store, {
+											collectionsLoading: false,
+										});
+									},
+								})
+							)
+						)
+					)
+				),
 				loadArtists: rxMethod<void>(
 					pipe(
 						switchMap(() =>
@@ -183,21 +710,28 @@ export const HomePageStore = signalStore(
 								() => artistStateService.selectEntities$(),
 								() =>
 									artistStateService.dispatchListEntitiesAction()
+							).pipe(
+								tapResponse({
+									next: (artists) => {
+										patchState(store, {
+											artists: measure(
+												'home.mapArtists',
+												{ artists: artists.length },
+												() => artists.map(toArtistView)
+											),
+											artistsLoading: false,
+										});
+										ensureSpotlight();
+									},
+									error: (error) => {
+										console.error(error);
+										patchState(store, {
+											artistsLoading: false,
+										});
+									},
+								})
 							)
-						),
-						tapResponse({
-							next: (artists) => {
-								patchState(store, {
-									artists: artists.map(toArtistView),
-									artistsLoading: false,
-								});
-								ensureSpotlight();
-							},
-							error: (error) => {
-								console.error(error);
-								patchState(store, { artistsLoading: false });
-							},
-						})
+						)
 					)
 				),
 				loadAlbums: rxMethod<void>(
@@ -207,46 +741,178 @@ export const HomePageStore = signalStore(
 								() => albumStateService.selectEntities$(),
 								() =>
 									albumStateService.dispatchListEntitiesAction()
+							).pipe(
+								tapResponse({
+									next: (albums) => {
+										patchState(store, {
+											albums: measure(
+												'home.mapAlbums',
+												{ albums: albums.length },
+												() => albums.map(toAlbumView)
+											),
+											albumsLoading: false,
+										});
+										ensureSpotlight();
+									},
+									error: (error) => {
+										console.error(error);
+										patchState(store, {
+											albumsLoading: false,
+										});
+									},
+								})
 							)
-						),
-						tapResponse({
-							next: (albums) =>
-								patchState(store, {
-									albums: albums.map(toAlbumView),
-									albumsLoading: false,
-								}),
-							error: (error) => {
-								console.error(error);
-								patchState(store, { albumsLoading: false });
-							},
-						})
+						)
 					)
 				),
 				loadReleases: rxMethod<void>(
 					pipe(
 						switchMap(() =>
-							entities$(
-								() =>
-									collectionItemStateService.selectEntities$(),
-								() =>
-									collectionItemStateService.dispatchListEntitiesAction()
-							)
-						),
-						tapResponse({
-							next: (items) => {
-								patchState(store, {
-									releases: items.map(toReleaseView),
-									releasesLoading: false,
-								});
-								ensureSpotlight();
-							},
-							error: (error) => {
-								console.error(error);
-								patchState(store, { releasesLoading: false });
-							},
-						})
+							collectionItemStateService
+								.selectLoadedEntities$()
+								.pipe(
+									tapResponse({
+										next: (items) => {
+											patchState(store, {
+												releases: measure(
+													'home.mapReleases',
+													{ releases: items.length },
+													() =>
+														items.map(toReleaseView)
+												),
+												releasesLoading: false,
+											});
+											ensureSpotlight();
+										},
+										error: (error) => {
+											console.error(error);
+											patchState(store, {
+												releasesLoading: false,
+											});
+										},
+									})
+								)
+						)
 					)
 				),
+				/** Live catalog-wide counts (artists, albums, tracks, …). */
+				loadCounts: rxMethod<void>(
+					pipe(
+						tap(() =>
+							quantityStateService.dispatchCountEntitiesAction(
+								CATALOG_TYPES.map(({ type }) => type)
+							)
+						),
+						switchMap(() =>
+							combineLatest([
+								quantityStateService.selectEntityCounts$(),
+								quantityStateService.selectEntityCountsLoading$(),
+							]).pipe(
+								tapResponse({
+									next: ([counts, countsLoading]) =>
+										patchState(store, {
+											counts,
+											countsLoading,
+										}),
+									error: (error) => {
+										console.error(error);
+										patchState(store, {
+											countsLoading: false,
+										});
+									},
+								})
+							)
+						)
+					)
+				),
+				/**
+				 * The band of the week: one document, read once a week by
+				 * everybody. It decides what stands in the hero, so the hero
+				 * waits for it rather than swapping under the reader.
+				 */
+				loadBandOfTheWeek: rxMethod<void>(
+					pipe(
+						switchMap(() =>
+							bandOfTheWeekEffect.current$().pipe(
+								tapResponse({
+									next: (
+										bandOfTheWeek: BandOfTheWeek | null
+									) => {
+										patchState(store, {
+											bandOfTheWeek,
+											bandLoading: false,
+										});
+										ensureSpotlight();
+									},
+									error: (error) => {
+										console.error(error);
+										patchState(store, {
+											bandLoading: false,
+										});
+										ensureSpotlight();
+									},
+								})
+							)
+						)
+					)
+				),
+				/**
+				 * The collectors who share a page, for the wall of finished
+				 * collections. Read through the sync cache and shared with
+				 * the wall's own page, so a visitor pays for the directory
+				 * once rather than on every landing.
+				 */
+				loadWall: rxMethod<void>(
+					pipe(
+						switchMap(() =>
+							collectorProfiles.cards$().pipe(
+								tapResponse({
+									next: (cards: CollectorCardDocument[]) =>
+										patchState(store, {
+											wall: toWallEntries(cards),
+											wallLoading: false,
+										}),
+									error: (error) => {
+										console.error(
+											'Collector wall not read',
+											error
+										);
+										patchState(store, {
+											wallLoading: false,
+										});
+									},
+								})
+							)
+						)
+					)
+				),
+				/** Follows sign-in and sign-out while the page is open. */
+				loadAuthentication: rxMethod<void>(
+					pipe(
+						switchMap(() =>
+							authenticationStateService
+								.selectIsAuthenticated$()
+								.pipe(
+									tapResponse({
+										next: (authenticated) =>
+											patchState(store, {
+												authenticated,
+											}),
+										error: (error) => console.error(error),
+									})
+								)
+						)
+					)
+				),
+				/** Google sign-in, the same the top bar offers. */
+				signIn: () => authenticationStateService.dispatchLogin(),
+				/** Which collections the grid shows. */
+				setCollectionTab: (collectionTab: HomeCollectionTab) =>
+					patchState(store, { collectionTab }),
+				showBigCard,
+				/** The arrows on the big card; both wrap round. */
+				nextBigCard: () => showBigCard(store.heroIndex() + 1),
+				previousBigCard: () => showBigCard(store.heroIndex() - 1),
 				setQuery: (query: string) => patchState(store, { query }),
 				/** Shows another artist in the spotlight. */
 				shuffleSpotlight: () =>
@@ -257,14 +923,127 @@ export const HomePageStore = signalStore(
 								store.spotlight() ?? undefined
 							)?.id ?? null,
 					}),
+				/** Back from browsing to the band the week belongs to. */
+				showBandOfTheWeek: () => {
+					const band = store.bandOfTheWeek();
+
+					if (band) {
+						patchState(store, { spotlightId: band.artistUid });
+					}
+				},
 			};
 		}
 	),
+	withMethods((store) => {
+		const analytics = inject(AnalyticsService);
+		const artistStateService = inject(ArtistStateService);
+		const albumStateService = inject(AlbumStateService);
+		const query$ = toObservable(store.query);
+
+		return {
+			/**
+			 * Takes the search to the server where the catalog this browser
+			 * holds had nothing to say.
+			 *
+			 * A collector downloads the genres they follow, as the bundles
+			 * stood when they were last built (`CatalogScopeService`), so a
+			 * band somebody imported this morning — or one filed under a
+			 * genre they do not follow — cannot be found here at all. Rather
+			 * than have the search answer that there is no such band, the
+			 * typed name is asked of the catalog itself: a handful of reads,
+			 * about what opening one record's page costs. What comes back is
+			 * kept, so the artist and the albums are then found like any
+			 * others — by this search, and by the page it leads to.
+			 *
+			 * Only the kinds that came back empty are looked up, and only
+			 * once the box has stood still: this is the fallback, not the
+			 * search.
+			 *
+			 * Under the showcase too: a record found past it opens onto a page
+			 * whose tracks and credits are asked of the server, because a
+			 * search that cannot find a record that exists is the worse fault.
+			 */
+			lookUpCatalog: rxMethod<void>(
+				pipe(
+					switchMap(() => query$),
+					map((query) => query.trim()),
+					debounceTime(LOOKUP_SETTLED_MS),
+					distinctUntilChanged(),
+					filter((term) => term.length >= SEARCH_MIN_LENGTH),
+					tap((term) => {
+						const kinds = unansweredKinds(store.searchResults());
+
+						if (kinds.includes('artist')) {
+							artistStateService.dispatchLookupByName(term);
+						}
+
+						if (kinds.includes('album')) {
+							albumStateService.dispatchLookupByName(term);
+						}
+					})
+				)
+			),
+			/** Keeps the search box's note in step with the lookups. */
+			watchLookups: rxMethod<void>(
+				pipe(
+					switchMap(() =>
+						combineLatest([
+							artistStateService.selectLookupLoading$(),
+							albumStateService.selectLookupLoading$(),
+						]).pipe(
+							tapResponse({
+								next: ([artists, albums]: boolean[]) =>
+									patchState(store, {
+										lookingUp: artists || albums,
+									}),
+								error: (error: unknown) => console.error(error),
+							})
+						)
+					)
+				)
+			),
+			/**
+			 * Counts a search once the box has stood still. The term itself
+			 * never leaves the browser — only how much it turned up, which is
+			 * what says whether the search finds what people come for.
+			 */
+			watchSearches: rxMethod<void>(
+				pipe(
+					switchMap(() => query$),
+					map((query) => query.trim()),
+					debounceTime(SEARCH_SETTLED_MS),
+					distinctUntilChanged(),
+					filter((query) => query.length >= SEARCH_MIN_LENGTH),
+					tap(() =>
+						analytics.track('search', {
+							results: store
+								.searchResults()
+								.reduce(
+									(found, group) =>
+										found + group.items.length,
+									0
+								),
+						})
+					)
+				)
+			),
+		};
+	}),
 	withHooks({
 		onInit(store) {
 			store.loadArtists(of(undefined));
 			store.loadAlbums(of(undefined));
 			store.loadReleases(of(undefined));
+			store.loadCounts(of(undefined));
+			store.loadCollections(of(undefined));
+			store.loadBandOfTheWeek(of(undefined));
+			store.loadWall(of(undefined));
+			store.loadFollowing(of(undefined));
+			store.loadAuthentication(of(undefined));
+			store.loadRatings(of(undefined));
+			store.watchSearches(of(undefined));
+			store.lookUpCatalog(of(undefined));
+			store.watchLookups(of(undefined));
 		},
 	})
 );

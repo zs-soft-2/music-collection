@@ -1,13 +1,13 @@
 <section class="entity-admin">
 	<header class="mc-page-head">
 		<div>
-			<h1>Wishlist items</h1>
-			<p>Albums the users are looking for.</p>
+			<h1>{{ 'ui.wishlistItemAdmin.wishlist-items' | transloco }}</h1>
+			<p>{{ 'ui.wishlistItemAdmin.albums-the-users-are' | transloco }}</p>
 		</div>
 
 		<div class="mc-page-actions" *ngxPermissionsOnly="buttonPermissions">
 			<p-button
-				label="Add wishlist item"
+				[label]="'ui.wishlistItemAdmin.add-wishlist-item' | transloco"
 				icon="pi pi-plus"
 				(onClick)="clickHandler()"
 				[disabled]="(isNewEntityButtonEnabled$ | async) === false"

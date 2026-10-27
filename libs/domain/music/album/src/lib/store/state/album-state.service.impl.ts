@@ -4,8 +4,17 @@ import { Injectable, inject } from '@angular/core';
 import {
 	AlbumEntity,
 	AlbumEntityAdd,
+	AlbumDataService,
 	AlbumEntityUpdate,
+	AlbumExternalProfile,
+	AlbumExternalTrack,
+	AlbumExternalTracks,
 	AlbumStateService,
+	ExternalSource,
+	AlbumTrackAdd,
+	AlbumTrackDraft,
+	ReleaseTrackDraft,
+	TrackEntity,
 	SearchParams,
 } from '@music-collection/api';
 import { select, Store } from '@ngrx/store';
@@ -16,8 +25,8 @@ import * as albumSelectors from './album.selectors';
 
 @Injectable()
 export class AlbumStateServiceImpl extends AlbumStateService {
+	private albumDataService = inject(AlbumDataService);
 	private store = inject<Store<fromAlbum.AlbumPartialState>>(Store);
-
 
 	public dispatchAddEntityAction(album: AlbumEntityAdd): void {
 		this.store.dispatch(albumActions.addAlbum({ album }));
@@ -45,6 +54,10 @@ export class AlbumStateServiceImpl extends AlbumStateService {
 		this.store.dispatch(albumActions.loadAlbum({ uid }));
 	}
 
+	public dispatchLookupByName(term: string): void {
+		this.store.dispatch(albumActions.lookupByName({ term }));
+	}
+
 	public dispatchSearch(params: SearchParams): void {
 		this.store.dispatch(albumActions.search({ params }));
 	}
@@ -63,6 +76,68 @@ export class AlbumStateServiceImpl extends AlbumStateService {
 		this.store.dispatch(albumActions.updateAlbum({ album }));
 	}
 
+	public fetchExternalProfile$(
+		artistName: string,
+		name: string
+	): Observable<AlbumExternalProfile | null> {
+		return this.albumDataService.fetchExternalProfile$(artistName, name);
+	}
+
+	public fetchExternalTracks$(
+		artistName: string,
+		name: string
+	): Observable<AlbumExternalTracks | null> {
+		return this.albumDataService.fetchExternalTracks$(artistName, name);
+	}
+
+	public listTracks$(albumUid: string): Observable<TrackEntity[]> {
+		return this.albumDataService.listTracks$(albumUid);
+	}
+
+	public saveTracks(
+		albumUid: string,
+		tracks: AlbumExternalTrack[],
+		existing: TrackEntity[],
+		source: ExternalSource
+	): Promise<void> {
+		return this.albumDataService.saveTracks(
+			albumUid,
+			tracks,
+			existing,
+			source
+		);
+	}
+
+	public saveAlbumTrack(track: AlbumTrackDraft): Promise<void> {
+		return this.albumDataService.saveAlbumTrack(track);
+	}
+
+	public addAlbumTrack(
+		track: AlbumTrackAdd,
+		albumTracks: TrackEntity[]
+	): Promise<TrackEntity> {
+		return this.albumDataService.addAlbumTrack(track, albumTracks);
+	}
+
+	public deleteAlbumTrack(
+		uid: string,
+		albumTracks: TrackEntity[]
+	): Promise<void> {
+		return this.albumDataService.deleteAlbumTrack(uid, albumTracks);
+	}
+
+	public listReleaseTracks$(releaseUid: string): Observable<TrackEntity[]> {
+		return this.albumDataService.listReleaseTracks$(releaseUid);
+	}
+
+	public saveReleaseTrack(track: ReleaseTrackDraft): Promise<void> {
+		return this.albumDataService.saveReleaseTrack(track);
+	}
+
+	public deleteReleaseTrack(uid: string): Promise<void> {
+		return this.albumDataService.deleteReleaseTrack(uid);
+	}
+
 	public isLoading$(): Observable<boolean> {
 		return this.store.pipe(select(albumSelectors.isLoading));
 	}
@@ -79,6 +154,10 @@ export class AlbumStateServiceImpl extends AlbumStateService {
 
 	public selectNewEntityButtonEnabled$(): Observable<boolean> {
 		return this.store.pipe(select(albumSelectors.isNewEntityButtonEnabled));
+	}
+
+	public selectLookupLoading$(): Observable<boolean> {
+		return this.store.pipe(select(albumSelectors.selectLookupLoading));
 	}
 
 	public selectSearchResult$(): Observable<AlbumEntity[]> {

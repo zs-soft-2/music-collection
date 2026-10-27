@@ -4,7 +4,6 @@ import { catchError, first, map, switchMap } from 'rxjs/operators';
 import { inject, Injectable } from '@angular/core';
 import {
 	ArtistDataService,
-	EntityQuantityEntity,
 	EntityQuantityStateService,
 	EntityQuantityUtilService,
 	EntityTypeEnum,
@@ -76,47 +75,6 @@ export class ReleaseEffects {
 			)
 		)
 	);
-	public deleteRelease = createEffect(() =>
-		this.actions$.pipe(
-			ofType(releaseActions.deleteRelease),
-			switchMap((action) =>
-				this.entityQuantityStateService
-					.selectEntityById$(EntityTypeEnum.Release)
-					.pipe(
-						map((entityQuantityEntity) => ({
-							action,
-							entityQuantityEntity,
-						})),
-						first()
-					)
-			),
-			switchMap(({ action, entityQuantityEntity }) =>
-				this.artistDataService
-					.deleteRelease$(
-						this.releaseUtilService.convertEntityToModel(
-							action.release
-						)
-					)
-					.pipe(
-						map((release) => {
-							this.entityQuantityStateService.dispatchUpdateEntityAction(
-								this.releaseUtilService.updateEntityQuantity(
-									entityQuantityEntity as EntityQuantityEntity,
-									this.releaseUtilService.convertModelToEntity(
-										release
-									),
-									UpdateEntityQuantityTypeEnum.decrease
-								)
-							);
-
-							return releaseActions.deleteReleaseSuccess({
-								releaseId: release.uid,
-							});
-						})
-					)
-			)
-		)
-	);
 	public listReleases = createEffect(() =>
 		this.actions$.pipe(
 			ofType(releaseActions.listReleases),
@@ -176,6 +134,27 @@ export class ReleaseEffects {
 							result,
 						});
 					}),
+					catchError((error) => {
+						return of(releaseActions.searchFailed(error));
+					})
+				)
+			)
+		)
+	);
+	public searchReleasesByArtistName = createEffect(() =>
+		this.actions$.pipe(
+			ofType(releaseActions.searchByArtistName),
+			switchMap((action) =>
+				this.releaseDataService.searchByArtistName$(action.term).pipe(
+					map((result) =>
+						releaseActions.searchSuccess({
+							result: result.map((release) =>
+								this.releaseUtilService.convertModelToEntity(
+									release
+								)
+							),
+						})
+					),
 					catchError((error) => {
 						return of(releaseActions.searchFailed(error));
 					})

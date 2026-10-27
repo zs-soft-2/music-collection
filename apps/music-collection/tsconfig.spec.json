@@ -6,8 +6,16 @@
 		"target": "es2022",
 		"types": ["jest", "node"],
 		"moduleResolution": "bundler",
-		"isolatedModules": true
+		"isolatedModules": true,
+		// A tesztek a valódi assets/i18n/en.json-t olvassák be.
+		"resolveJsonModule": true
 	},
 	"files": ["src/test-setup.ts"],
-	"include": ["jest.config.ts", "**/*.test.ts", "**/*.spec.ts", "**/*.d.ts"]
+	"include": [
+		"jest.config.ts",
+		"**/*.test.ts",
+		"**/*.spec.ts",
+		"**/*.d.ts",
+		"src/assets/i18n/*.json"
+	]
 }

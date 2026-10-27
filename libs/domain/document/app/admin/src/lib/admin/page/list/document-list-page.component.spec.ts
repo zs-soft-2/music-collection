@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { of } from 'rxjs';
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -18,11 +19,15 @@ describe('DocumentListComponent', () => {
 		await TestBed.configureTestingModule({
 			imports: [DocumentListPageComponent],
 			providers: [
+				provideI18nTesting(),
 				provideRouter([]),
 				provideNoopAnimations(),
 				{
 					provide: DocumentStateService,
-					useValue: { selectSearchResult$: jest.fn(() => of([])) },
+					useValue: {
+						selectEntities$: jest.fn(() => of([])),
+						selectSearchResult$: jest.fn(() => of([])),
+					},
 				},
 				{ provide: DocumentUtilService, useValue: {} },
 			],

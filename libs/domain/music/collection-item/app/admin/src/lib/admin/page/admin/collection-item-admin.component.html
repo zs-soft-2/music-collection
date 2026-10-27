@@ -1,13 +1,17 @@
 <section class="entity-admin">
 	<header class="mc-page-head">
 		<div>
-			<h1>Collection items</h1>
-			<p>Items the users own in their collections.</p>
+			<h1>{{ 'ui.collectionItemAdmin.collection-items' | transloco }}</h1>
+			<p>
+				{{ 'ui.collectionItemAdmin.items-the-users-own' | transloco }}
+			</p>
 		</div>
 
 		<div class="mc-page-actions" *ngxPermissionsOnly="buttonPermissions">
 			<p-button
-				label="Add collection item"
+				[label]="
+					'ui.collectionItemAdmin.add-collection-item' | transloco
+				"
 				icon="pi pi-plus"
 				(onClick)="clickHandler()"
 				[disabled]="(isNewEntityButtonEnabled$ | async) === false"

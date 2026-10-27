@@ -1,8 +1,31 @@
+import {
+	type TrackClip,
+	type TrackImage,
+	isSpotifyAlbumId,
+	isSpotifyTrackId,
+} from '@music-collection/api';
+
 export interface SpotifyToken {
 	accessToken: string;
 	refreshToken: string;
 	/** Epoch milliseconds. */
 	expiresAt: number;
+}
+
+/**
+ * The collector's own Spotify app, and the connection made with it.
+ *
+ * The app is theirs rather than ours because Spotify counts the people who
+ * sign in through an app: one in development mode takes twenty-five, and a
+ * single shared app would spend those on whoever arrived first and leave
+ * every collector after them with nothing. Their own app costs them a few
+ * minutes in Spotify's dashboard and answers only for them.
+ */
+export interface SpotifyAccount {
+	/** Client id of their app. Not a secret: the sign-in uses PKCE. */
+	clientId: string;
+	/** The connection made with that app, while there is one. */
+	token: SpotifyToken | null;
 }
 
 /** A Spotify Connect device of the signed-in account. */
@@ -35,6 +58,11 @@ export interface SpotifyNowPlaying {
 	deviceId: string | null;
 	/** 0–100, when the device reports it. */
 	volumePercent: number | null;
+	/** Position in the track at `positionAt`. */
+	positionMs: number;
+	durationMs: number;
+	/** Epoch milliseconds `positionMs` was measured at. */
+	positionAt: number;
 }
 
 /** A track of our album, to be matched to its Spotify track. */
@@ -43,10 +71,54 @@ export interface TrackToMatch {
 	name: string;
 	/** Play order, 1-based. */
 	index: number;
+	/**
+	 * Position as printed on the release, e.g. "A1". Nothing here matches on
+	 * it; the player reads the record's sides off it.
+	 */
+	position?: string | null;
+	/**
+	 * The track's own pictures, carried so the player's stage can put them up
+	 * behind the words. They travel with the track rather than being looked
+	 * up when it starts playing: the list is already loaded wherever a record
+	 * is played from, and a read per track change would cost one for every
+	 * song of every record anybody puts on.
+	 */
+	images?: TrackImage[];
+	/** The clip generated from those pictures, where one was. */
+	clip?: TrackClip | null;
+}
+
+/** Where the track is now: measured position plus the time since, unless paused. */
+export function currentPositionMs(
+	nowPlaying: SpotifyNowPlaying,
+	now = Date.now()
+): number {
+	const position = nowPlaying.paused
+		? nowPlaying.positionMs
+		: nowPlaying.positionMs + (now - nowPlaying.positionAt);
+
+	return Math.min(Math.max(0, position), nowPlaying.durationMs || position);
 }
 
 export class SpotifyNotConnectedError extends Error {
 	public constructor() {
 		super('Not connected to Spotify.');
 	}
+}
+
+/**
+ * What Spotify's embedded frame would hold for a record, or for the one
+ * track in focus: the same answer for the frame that shows it and for the
+ * player that presses its play button, so the two can never disagree about
+ * which record is in there.
+ */
+export function spotifyEmbedUri(
+	albumId: string | null | undefined,
+	trackId: string | null | undefined = null
+): string | null {
+	if (isSpotifyTrackId(trackId)) {
+		return `spotify:track:${trackId}`;
+	}
+
+	return isSpotifyAlbumId(albumId) ? `spotify:album:${albumId}` : null;
 }

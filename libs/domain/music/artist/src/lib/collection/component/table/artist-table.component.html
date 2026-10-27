@@ -1,114 +1,213 @@
 @if (params$ | async; as params) {
-	<section class="artist-table mc-card">
-		<p-table
-			[value]="params.artists"
-			sortField="name"
-			sortMode="multiple"
-			styleClass="mc-table"
-			responsiveLayout="scroll"
-			[paginator]="true"
-			[rows]="10"
+	<mc-collection-list
+		[items]="params.artists"
+		[place]="place"
+		[view]="collectionView"
+		[emptyMessage]="'ui.artistTable.no-artists-found' | transloco"
+	>
+		<p-autocomplete
+			tools
+			class="mc-table-search"
+			[placeholder]="'ui.artistTable.filter-by-name' | transloco"
+			[ariaLabel]="'ui.artistTable.filter-by-name2' | transloco"
+			[ngModel]="place.filterOf('name')"
+			[suggestions]="params.empty"
+			[showClear]="true"
+			(completeMethod)="searchByNameHandler($event)"
+			(onClear)="clearSearch()"
+			[minQueryLength]="3"
+			[delay]="400"
 		>
-			<ng-template #header>
-				<tr>
-					<th pSortableColumn="name">
-						Name <p-sorticon field="name"></p-sorticon>
-					</th>
+		</p-autocomplete>
 
-					<th pSortableColumn="formedIn">
-						Formed in <p-sorticon field="formedIn"></p-sorticon>
-					</th>
+		<!--
+			The artists the taxonomy does not name: a Discogs credit import
+			creates them without a genre, and an artist outside every genre
+			reaches no client that narrowed its catalog to one. Nothing is
+			offered while there are none to find.
+		-->
+		@if (params.incompleteCount || params.incomplete) {
+			<button
+				tools
+				type="button"
+				pButton
+				pRipple
+				class="p-button-sm mc-incomplete-filter"
+				[class.p-button-outlined]="!params.incomplete"
+				[attr.aria-pressed]="params.incomplete"
+				(click)="showIncompleteOnly(!params.incomplete)"
+			>
+				<i class="pi pi-filter" aria-hidden="true"></i>
+				{{ 'ui.artistTable.without-genre' | transloco }}
+				<span class="p-chip">{{ params.incompleteCount }}</span>
+			</button>
+		}
 
-					<th>Styles</th>
+		<ng-template #card let-artist>
+			<mc-entity-card
+				[title]="artist.name"
+				[subtitle]="artist.formedIn | date: 'yyyy'"
+				[imageUrl]="imageOf(artist)"
+				imageShape="round"
+				(open)="editArtist(artist)"
+			>
+				<mc-view-action
+					cardActions
+					[link]="viewLink(artist)"
+					entity="artist"
+					[name]="artist.name"
+				/>
+				@for (style of artist.styles; track style) {
+					<p-chip styleClass="style">
+						{{ style }}
+					</p-chip>
+				}
 
-					<th>Images</th>
+				<button
+					cardActions
+					pButton
+					pRipple
+					[attr.aria-label]="
+						'ui.artistTable.export-artist' | transloco
+					"
+					class="p-button-text p-button-rounded p-button-secondary"
+					(click)="exportArtist(artist)"
+					iconOnly
+				>
+					<i class="pi pi-file-export" aria-hidden="true"></i>
+				</button>
+				<button
+					cardActions
+					pButton
+					pRipple
+					[attr.aria-label]="
+						'ui.artistTable.delete-artist' | transloco
+					"
+					class="p-button-text p-button-rounded p-button-danger"
+					(click)="deleteArtist(artist)"
+					iconOnly
+				>
+					<i class="pi pi-trash" aria-hidden="true"></i>
+				</button>
+			</mc-entity-card>
+		</ng-template>
 
-					<th></th>
-				</tr>
-				<tr>
-					<th>
-						<p-autocomplete
-							placeholder="Filter by name…"
-							ariaLabel="Filter by name"
-							[suggestions]="params.empty"
-							[showClear]="true"
-							(completeMethod)="searchByNameHandler($event)"
-							[minQueryLength]="3"
-							[delay]="400"
-						>
-						</p-autocomplete>
-					</th>
+		<ng-template
+			mcColumn
+			[header]="'ui.artistTable.name' | transloco"
+			field="name"
+			let-artist
+		>
+			{{ artist.name }}
+		</ng-template>
 
-					<th></th>
+		<ng-template
+			mcColumn
+			[header]="'ui.artistTable.formed-in' | transloco"
+			field="formedIn"
+			let-artist
+		>
+			{{ artist.formedIn | date: 'yyyy' }}
+		</ng-template>
 
-					<th></th>
+		<!-- The field this list is here to fill in, so it is a column of it. -->
+		<ng-template
+			mcColumn
+			[header]="'ui.artistTable.genre' | transloco"
+			field="genre"
+			let-artist
+		>
+			@if (artist.genre) {
+				{{ artist.genre }}
+			} @else {
+				<span class="mc-missing">{{
+					'ui.artistTable.no-genre' | transloco
+				}}</span>
+			}
+		</ng-template>
 
-					<th></th>
+		<ng-template
+			mcColumn
+			[header]="'ui.artistTable.styles' | transloco"
+			let-artist
+		>
+			@for (style of artist.styles; track style) {
+				<p-chip styleClass="style">
+					{{ style }}
+				</p-chip>
+			}
+		</ng-template>
 
-					<th></th>
-				</tr>
-			</ng-template>
+		<ng-template
+			mcColumn
+			[header]="'ui.artistTable.images' | transloco"
+			let-artist
+		>
+			<div class="mc-image-flags">
+				@if (artist.headerImage) {
+					<span class="p-chip">{{
+						'ui.artistTable.header' | transloco
+					}}</span>
+				}
+				@if (artist.mainImage) {
+					<span class="p-chip">{{
+						'ui.artistTable.main' | transloco
+					}}</span>
+				}
+			</div>
+		</ng-template>
 
-			<ng-template #body let-artist>
-				<tr>
-					<td>{{ artist.name }}</td>
+		<ng-template
+			mcColumn
+			[header]="'ui.artistTable.updated' | transloco"
+			field="updatedAt"
+			let-artist
+		>
+			{{ artist.updatedAt | date: 'yyyy-MM-dd HH:mm' }}
+		</ng-template>
 
-					<td>{{ artist.formedIn | date: 'yyyy' }}</td>
+		<ng-template
+			mcColumn
+			[header]="'ui.artistTable.actions' | transloco"
+			headerHidden
+			let-artist
+		>
+			<mc-view-action
+				[link]="viewLink(artist)"
+				entity="artist"
+				[name]="artist.name"
+			/>
+			<button
+				pButton
+				pRipple
+				[attr.aria-label]="'ui.artistTable.edit-artist' | transloco"
+				class="p-button-text p-button-rounded p-button-secondary"
+				(click)="editArtist(artist)"
+				iconOnly
+			>
+				<i class="pi pi-pencil" aria-hidden="true"></i>
+			</button>
+			<button
+				pButton
+				pRipple
+				[attr.aria-label]="'ui.artistTable.delete-artist2' | transloco"
+				class="p-button-text p-button-rounded p-button-danger"
+				(click)="deleteArtist(artist)"
+				iconOnly
+			>
+				<i class="pi pi-trash" aria-hidden="true"></i>
+			</button>
 
-					<td>
-						@for (style of artist.styles; track style) {
-							<p-chip styleClass="style">
-								{{ style }}
-							</p-chip>
-						}
-					</td>
-
-					<td>
-						<div class="mc-image-flags">
-							@if (artist.headerImage) {
-								<span class="p-chip">Header</span>
-							}
-							@if (artist.mainImage) {
-								<span class="p-chip">Main</span>
-							}
-						</div>
-					</td>
-
-					<td>
-						<button
-							pButton
-							pRipple
-							aria-label="Edit artist"
-							class="p-button-text p-button-rounded p-button-secondary"
-							(click)="editArtist(artist)"
-							iconOnly
-						>
-							<i class="pi pi-pencil" aria-hidden="true"></i>
-						</button>
-						<button
-							pButton
-							pRipple
-							aria-label="Delete artist"
-							class="p-button-text p-button-rounded p-button-danger"
-							(click)="deleteArtist(artist)"
-							iconOnly
-						>
-							<i class="pi pi-trash" aria-hidden="true"></i>
-						</button>
-
-						<button
-							pButton
-							pRipple
-							aria-label="Export artist"
-							class="p-button-text p-button-rounded p-button-secondary"
-							(click)="exportArtist(artist)"
-							iconOnly
-						>
-							<i class="pi pi-file-export" aria-hidden="true"></i>
-						</button>
-					</td>
-				</tr>
-			</ng-template>
-		</p-table>
-	</section>
+			<button
+				pButton
+				pRipple
+				[attr.aria-label]="'ui.artistTable.export-artist2' | transloco"
+				class="p-button-text p-button-rounded p-button-secondary"
+				(click)="exportArtist(artist)"
+				iconOnly
+			>
+				<i class="pi pi-file-export" aria-hidden="true"></i>
+			</button>
+		</ng-template>
+	</mc-collection-list>
 }

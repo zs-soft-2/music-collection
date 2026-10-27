@@ -71,6 +71,37 @@ export class DocumentEffects {
 			)
 		)
 	);
+	/**
+	 * Withdrawing a document. The file and the document itself stay — the
+	 * data service only marks it — so the count of documents is left alone
+	 * as well: what was filed is still filed, it is just not offered.
+	 */
+	public deleteDocument = createEffect(() =>
+		this.actions$.pipe(
+			ofType(documentActions.deleteDocument),
+			mergeMap((action) =>
+				this.documentDataService
+					.delete$(
+						this.documentUtilService.convertEntityToModel(
+							action.document
+						)
+					)
+					.pipe(
+						map((document) =>
+							documentActions.deleteDocumentSuccess({
+								document:
+									this.documentUtilService.convertModelToEntity(
+										document
+									),
+							})
+						),
+						catchError((error) =>
+							of(documentActions.deleteDocumentFail(error))
+						)
+					)
+			)
+		)
+	);
 	public listDocuments = createEffect(() =>
 		this.actions$.pipe(
 			ofType(documentActions.listDocuments),
@@ -111,6 +142,32 @@ export class DocumentEffects {
 						return of(documentActions.loadDocumentFail(error));
 					})
 				)
+			)
+		)
+	);
+	public restoreDocument = createEffect(() =>
+		this.actions$.pipe(
+			ofType(documentActions.restoreDocument),
+			mergeMap((action) =>
+				this.documentDataService
+					.restore$(
+						this.documentUtilService.convertEntityToModel(
+							action.document
+						)
+					)
+					.pipe(
+						map((document) =>
+							documentActions.restoreDocumentSuccess({
+								document:
+									this.documentUtilService.convertModelToEntity(
+										document
+									),
+							})
+						),
+						catchError((error) =>
+							of(documentActions.restoreDocumentFail(error))
+						)
+					)
 			)
 		)
 	);

@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { of } from 'rxjs';
 
 import { Component } from '@angular/core';
@@ -18,6 +19,7 @@ describe('IsAuthenticatedDirective', () => {
 		await TestBed.configureTestingModule({
 			imports: [TestHostComponent],
 			providers: [
+				provideI18nTesting(),
 				{
 					provide: AuthenticationStateService,
 					useValue: { selectIsAuthenticated$: () => of(true) },

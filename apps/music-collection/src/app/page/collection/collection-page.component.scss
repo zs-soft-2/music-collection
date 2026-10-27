@@ -56,40 +56,6 @@ h1 {
 	letter-spacing: 0.02em;
 }
 
-.stats {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.75rem;
-	margin: 0;
-}
-
-.stat {
-	min-width: 5.5rem;
-	padding: 0.6rem 0.9rem;
-	background: var(--mc-card-bg);
-	border: 1px solid var(--mc-border);
-	border-radius: var(--mc-radius-md);
-
-	dt {
-		font-size: 0.68rem;
-		font-weight: 600;
-		letter-spacing: 0.1em;
-		text-transform: uppercase;
-		color: var(--mc-text-subtle);
-	}
-
-	dd {
-		margin: 0.1rem 0 0;
-		font-family: var(--mc-font-display);
-		font-size: 1.9rem;
-		line-height: 1;
-	}
-
-	&.is-format dd {
-		color: var(--mc-accent);
-	}
-}
-
 /* ── Toolbar ──────────────────────────────────────────────────────────── */
 
 .toolbar {
@@ -339,14 +305,28 @@ button {
 
 .skeleton {
 	aspect-ratio: 0.78;
+	position: relative;
+	overflow: hidden;
+	background: var(--mc-card-bg);
+	border-radius: var(--mc-radius-lg);
+}
+
+/*
+ * The light passes over on a layer of its own. A moving transform is the
+ * compositor's work; a moving background is a repaint of every placeholder
+ * on every frame, which on a slow phone holds back the page it stands for.
+ */
+.skeleton::after {
+	content: '';
+	position: absolute;
+	inset: 0;
 	background: linear-gradient(
 		100deg,
-		var(--mc-card-bg) 40%,
+		transparent 40%,
 		var(--mc-surface-2) 50%,
-		var(--mc-card-bg) 60%
+		transparent 60%
 	);
-	background-size: 200% 100%;
-	border-radius: var(--mc-radius-lg);
+	transform: translateX(-100%);
 	animation: mc-shimmer 1.4s linear infinite;
 }
 
@@ -371,18 +351,180 @@ button {
 }
 
 .button {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
 	margin-top: 1rem;
 	padding: 0.6rem 1.2rem;
+	font: inherit;
 	font-weight: 600;
 	color: var(--mc-on-primary);
 	background: var(--mc-primary);
 	border: 0;
 	border-radius: var(--mc-radius-md);
+	cursor: pointer;
 }
 
 @keyframes mc-shimmer {
 	to {
-		background-position: -200% 0;
+		transform: translateX(100%);
+	}
+}
+
+/* ── At a glance ──────────────────────────────────────────────────────── */
+
+.glance-section {
+	margin-top: 1.5rem;
+}
+
+.glance-title {
+	margin: 0 0 1rem;
+	font-family: var(--mc-font-display);
+	font-size: clamp(1.5rem, 2.5vw, 2rem);
+	font-weight: 400;
+	line-height: 1;
+	letter-spacing: 0.02em;
+}
+
+.glance {
+	display: grid;
+	grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.2fr) minmax(0, 1fr);
+	gap: 1rem;
+}
+
+.panel {
+	padding: 1.1rem 1.25rem;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-md);
+}
+
+.stats {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	align-content: start;
+	gap: 0.75rem;
+	margin: 0;
+}
+
+.stat {
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	padding: 0.8rem 1rem;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-md);
+
+	dt {
+		font-size: 0.8rem;
+		color: var(--mc-text-muted);
+	}
+
+	dd {
+		margin: 0.15rem 0 0;
+		font-size: 1.6rem;
+		font-weight: 600;
+		line-height: 1.1;
+		font-variant-numeric: tabular-nums;
+	}
+
+	&.is-hero {
+		grid-column: 1 / -1;
+
+		dd {
+			font-size: 3.5rem;
+			font-weight: 700;
+			line-height: 1;
+		}
+	}
+}
+
+.glance-skeleton {
+	height: 260px;
+}
+
+/* ── Collection goals ─────────────────────────────────────────────────── */
+
+.collections-section {
+	margin-top: 2rem;
+}
+
+.collections-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.5rem 1rem;
+	margin-bottom: 1rem;
+}
+
+.collections-head .glance-title {
+	margin: 0;
+}
+
+.collections-summary {
+	margin: 0;
+	font-size: 0.9rem;
+	color: var(--mc-text-muted);
+	font-variant-numeric: tabular-nums;
+}
+
+.collections-more {
+	margin-left: auto;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: var(--mc-primary);
+	text-decoration: none;
+
+	&:hover {
+		text-decoration: underline;
+	}
+}
+
+.collection-list {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+	gap: 0.75rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.collection-skeleton {
+	height: 6.25rem;
+	border-radius: var(--mc-radius-lg);
+}
+
+@media (max-width: 1100px) {
+	.glance {
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	}
+
+	.stats {
+		grid-column: 1 / -1;
+		grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+	}
+
+	.stat.is-hero {
+		grid-column: auto;
+
+		dd {
+			font-size: 1.9rem;
+			font-weight: 600;
+		}
+	}
+}
+
+@media (max-width: 720px) {
+	.glance {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.stats {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 }
 
@@ -404,5 +546,164 @@ button {
 @media (prefers-reduced-motion: reduce) {
 	.skeleton {
 		animation: none;
+	}
+}
+
+/*
+ * What the search found on the shelf. The shelf itself is never cut down to
+ * the matches — where a record stands is the whole point of that view — so
+ * this is where the search says what it did: how many, and the way to each
+ * one, each a step the collector can take to it.
+ */
+.shelf-found {
+	margin-bottom: 0.75rem;
+	padding: 0.7rem 0.9rem;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-left: 3px solid var(--mc-accent);
+	border-radius: var(--mc-radius-md);
+}
+
+.shelf-found-head {
+	margin: 0;
+	font-size: 0.85rem;
+	font-weight: 600;
+}
+
+.shelf-found-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	margin: 0.6rem 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.found-item {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.1rem;
+	padding: 0.35rem 0.6rem;
+	font: inherit;
+	text-align: left;
+	color: var(--mc-text);
+	background: transparent;
+	border: 1px solid var(--mc-border-strong);
+	border-radius: var(--mc-radius-md);
+	cursor: pointer;
+
+	&:hover,
+	&:focus-visible {
+		border-color: var(--mc-accent);
+	}
+
+	/* The one the shelf is turned to right now. */
+	&.is-current {
+		border-color: var(--mc-accent);
+		background: color-mix(in srgb, var(--mc-accent) 14%, transparent);
+	}
+}
+
+.found-record {
+	font-size: 0.85rem;
+}
+
+.found-artist {
+	font-weight: 600;
+
+	&::after {
+		content: ' — ';
+		font-weight: 400;
+		color: var(--mc-text-muted);
+	}
+}
+
+.found-where {
+	font-size: 0.75rem;
+	color: var(--mc-text-muted);
+}
+
+.shelf-found-more {
+	margin: 0.5rem 0 0;
+	font-size: 0.8rem;
+	color: var(--mc-text-muted);
+}
+
+/* What the shelf lets the collector do, and what went wrong if it did not. */
+.shelf-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	margin-bottom: 0.75rem;
+}
+
+.shelf-note {
+	margin: 0;
+	flex: 1 1 18rem;
+	font-size: 0.85rem;
+	color: var(--mc-text-muted);
+}
+
+/* The same note, said the way the screen at hand can be worked. */
+.on-touch {
+	display: none;
+}
+
+@media (hover: none) {
+	.on-pointer {
+		display: none;
+	}
+
+	.on-touch {
+		display: inline;
+	}
+}
+
+/* Freezing the arrangement, or handing it back to the shelf. */
+.shelf-keep {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.45rem 0.9rem;
+	font: inherit;
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: var(--mc-text);
+	background: transparent;
+	border: 1px solid var(--mc-border-strong);
+	border-radius: var(--mc-radius-md);
+	cursor: pointer;
+
+	&:hover:not(:disabled) {
+		background: var(--mc-card-bg-hover);
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: default;
+	}
+}
+
+.shelf-error {
+	margin: 0 0 0.75rem;
+	padding: 0.6rem 0.8rem;
+	font-size: 0.9rem;
+	color: var(--mc-status-bad);
+	border: 1px solid var(--mc-status-bad);
+	border-radius: var(--mc-radius-md);
+}
+
+/* The arranging switch, while the furniture is laid out in a row. */
+.shelf-keep.is-on {
+	color: var(--mc-on-primary, #fff);
+	background: var(--mc-primary);
+	border-color: var(--mc-primary);
+
+	&:hover:not(:disabled) {
+		background: var(--mc-primary);
+		filter: brightness(1.1);
 	}
 }

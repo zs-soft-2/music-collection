@@ -1,0 +1,4390 @@
+{
+	"nav": {
+		"backdrop": {
+			"off": "Hintergrund: keine Szene",
+			"still": "Hintergrund: stehende Szene",
+			"live": "Hintergrund: lebendige Szene"
+		},
+		"discover": "Entdecken",
+		"overview": "Überblick",
+		"brandHome": "Music Collection — Startseite",
+		"main": "Hauptmenü",
+		"home": "Startseite",
+		"collection": "Meine Sammlung",
+		"scan": "Scannen",
+		"shelf-scan": "Regal",
+		"collections": "Challenges",
+		"radio": "Radio",
+		"daily-question": "Tagesfrage",
+		"upcoming": "Erscheint",
+		"wishlist": "Wunschliste",
+		"network": "Netzwerk",
+		"collectors": "Sammler",
+		"map": "Karte",
+		"admin": "Admin",
+		"profile": "Profil",
+		"language": "Sprache",
+		"accountMenu": "Kontomenü",
+		"closeAccountMenu": "Kontomenü schließen",
+		"signedIn": "Angemeldet",
+		"logIn": "Anmelden",
+		"logOut": "Abmelden",
+		"openMenu": "Menü öffnen",
+		"closeMenu": "Menü schließen",
+		"wideLayout": "Breites Layout",
+		"widthStandard": "Normale Breite",
+		"widthFull": "Volle Breite nutzen",
+		"themeLight": "Zum hellen Design wechseln",
+		"themeDark": "Zum dunklen Design wechseln",
+		"owned-artists": "Meine Bands",
+		"my-requests": "Meine Anfragen",
+		"group": {
+			"collection": "Sammeln",
+			"explore": "Entdecken",
+			"contribute": "Mitwirken"
+		},
+		"concerts": "Konzerte"
+	},
+	"common": {
+		"save": "Speichern",
+		"cancel": "Abbrechen",
+		"close": "Schließen",
+		"delete": "Löschen",
+		"edit": "Bearbeiten",
+		"add": "Hinzufügen",
+		"back": "Zurück",
+		"search": "Suchen",
+		"loading": "Wird geladen…",
+		"retry": "Erneut versuchen",
+		"yes": "Ja",
+		"no": "Nein",
+		"none": "Keine",
+		"more": "Mehr",
+		"all": "Alle",
+		"unknown": "Unbekannt",
+		"loadingLabel": "Wird geladen…",
+		"saving": "Wird gespeichert…",
+		"match": {
+			"exact": "Genaue Übereinstimmung",
+			"likely": "Wahrscheinlich",
+			"possible": "Möglich"
+		}
+	},
+	"catalog": {
+		"format": {
+			"lp": "LP",
+			"ep": "EP",
+			"single": "Single",
+			"maxi": "Maxi-Single",
+			"live": "Live-Album",
+			"compilation": "Kompilation",
+			"dvd": "DVD"
+		},
+		"formatDescription": {
+			"box-set": "Box-Set",
+			"deluxe-edition": "Deluxe-Edition",
+			"180g": "180 g",
+			"gatefold": "Klappcover",
+			"limited-edition": "Limitierte Auflage",
+			"picture-disc": "Picture Disc",
+			"reissue": "Wiederveröffentlichung",
+			"remastered": "Remastered"
+		},
+		"media": {
+			"all": "Alle",
+			"boxset": "Box-Set",
+			"cassette": "Kassette",
+			"cd": "CD",
+			"dvd": "DVD",
+			"vinyl": "Vinyl",
+			"other": "Sonstige",
+			"cdbox": "CD-Box"
+		},
+		"country": {
+			"australia": "Australien",
+			"brazil": "Brasilien",
+			"canada": "Kanada",
+			"denmark": "Dänemark",
+			"finland": "Finnland",
+			"france": "Frankreich",
+			"germany": "Deutschland",
+			"greece": "Griechenland",
+			"hungary": "Ungarn",
+			"ireland": "Irland",
+			"norway": "Norwegen",
+			"poland": "Polen",
+			"spain": "Spanien",
+			"sweden": "Schweden",
+			"switzerland": "Schweiz",
+			"the-netherlands": "Niederlande",
+			"uk": "Vereinigtes Königreich",
+			"usa": "USA"
+		},
+		"releaseCountry": {
+			"argentina": "Argentinien",
+			"europe": "Europa",
+			"new-zealand": "Neuseeland",
+			"uk-europe": "Vereinigtes Königreich & Europa"
+		},
+		"grade": {
+			"m": "Mint",
+			"nm": "Near Mint",
+			"vg-plus": "Very Good Plus",
+			"vg": "Very Good",
+			"g": "Good",
+			"f": "Fair",
+			"p": "Poor"
+		},
+		"instrument": {
+			"vocals": "Gesang",
+			"lead-vocals": "Leadgesang",
+			"backing-vocals": "Backgroundgesang",
+			"spoken-word": "Gesprochenes Wort",
+			"choir": "Chor",
+			"guitar": "Gitarre",
+			"lead-guitar": "Leadgitarre",
+			"rhythm-guitar": "Rhythmusgitarre",
+			"acoustic-guitar": "Akustikgitarre",
+			"electric-guitar": "E-Gitarre",
+			"slide-guitar": "Slide-Gitarre",
+			"twelve-string-guitar": "Zwölfsaitige Gitarre",
+			"bass": "Bass",
+			"bass-guitar": "Bassgitarre",
+			"double-bass": "Kontrabass",
+			"keyboards": "Keyboards",
+			"piano": "Klavier",
+			"electric-piano": "E-Piano",
+			"organ": "Orgel",
+			"synthesizer": "Synthesizer",
+			"mellotron": "Mellotron",
+			"harpsichord": "Cembalo",
+			"accordion": "Akkordeon",
+			"drums": "Schlagzeug",
+			"percussion": "Perkussion",
+			"congas": "Congas",
+			"tambourine": "Tamburin",
+			"timpani": "Pauken",
+			"vibraphone": "Vibraphon",
+			"drum-machine": "Drumcomputer",
+			"violin": "Violine",
+			"viola": "Bratsche",
+			"cello": "Cello",
+			"strings": "Streicher",
+			"harp": "Harfe",
+			"saxophone": "Saxophon",
+			"trumpet": "Trompete",
+			"trombone": "Posaune",
+			"french-horn": "Waldhorn",
+			"horns": "Bläser",
+			"flute": "Flöte",
+			"clarinet": "Klarinette",
+			"oboe": "Oboe",
+			"harmonica": "Mundharmonika",
+			"banjo": "Banjo",
+			"mandolin": "Mandoline",
+			"ukulele": "Ukulele",
+			"sitar": "Sitar",
+			"theremin": "Theremin",
+			"turntables": "Plattenspieler",
+			"sampler": "Sampler",
+			"programming": "Programmierung",
+			"effects": "Effekte"
+		},
+		"artistType": {
+			"band": "Band",
+			"project": "Projekt",
+			"formation": "Formation"
+		},
+		"artistTypePlural": {
+			"band": "Bands",
+			"project": "Projekte",
+			"formation": "Formationen"
+		},
+		"disposalReason": {
+			"sold": "Verkauft",
+			"traded": "Getauscht",
+			"gifted": "Verschenkt",
+			"lost": "Verloren",
+			"other": "Sonstiges"
+		},
+		"documentCategory": {
+			"album-cover": "Albumcover",
+			"artist-image": "Künstlerbild",
+			"badge": "Abzeichen",
+			"scene": "Szenenhintergrund"
+		},
+		"decade": {
+			"1900": "1900er",
+			"1910": "1910er",
+			"1920": "1920er",
+			"1930": "1930er",
+			"1940": "1940er",
+			"1950": "1950er",
+			"1960": "1960er",
+			"1970": "1970er",
+			"1980": "1980er",
+			"1990": "1990er",
+			"2000": "2000er",
+			"2010": "2010er",
+			"2020": "2020er",
+			"2030": "2030er"
+		},
+		"genericPressing": "Pressung nicht angegeben"
+	},
+	"dailyQuestion": {
+		"template": {
+			"albumArtist": "Von welchem Interpreten ist „{{album}}“?",
+			"albumYear": "In welchem Jahr erschien „{{album}}“ ({{artist}})?",
+			"openingTrack": "Welcher Titel eröffnet „{{album}}“ ({{artist}})?",
+			"longestTrack": "Welcher ist der längste Titel auf „{{album}}“ ({{artist}})?",
+			"sideBOpener": "Welcher Titel eröffnet die B-Seite von „{{album}}“ ({{artist}})?",
+			"trackCount": "Wie viele Titel sind auf „{{album}}“ ({{artist}})?",
+			"releaseLabel": "Bei welchem Label erschien „{{album}}“ ({{artist}})?",
+			"releaseLabelEdition": "Bei welchem Label erschien die Pressung {{edition}} von „{{album}}“ ({{artist}})?",
+			"releaseCatno": "Welche Katalognummer steht auf der Pressung von „{{album}}“ ({{artist}})?",
+			"releaseCatnoLabel": "Welche Katalognummer steht auf der {{label}}-Pressung von „{{album}}“ ({{artist}})?",
+			"artistCountry": "Aus welchem Land kommt {{artist}}?",
+			"fallback": "Wähle die richtige Antwort aus dem Katalog.",
+			"albumStyle": "Welchen Stil gibt der Katalog „{{album}}“ ({{artist}})?",
+			"earliestAlbum": "Welches ist das früheste {{artist}}-Album im Katalog?",
+			"trackAlbum": "Auf welchem Album ist „{{track}}“ ({{artist}})?",
+			"nextTrack": "Welcher Titel folgt auf „{{track}}“ auf „{{album}}“ ({{artist}})?",
+			"trackPosition": "An welcher Stelle steht „{{track}}“ auf „{{album}}“ ({{artist}})?",
+			"shortestTrack": "Welches ist der kürzeste Titel auf „{{album}}“ ({{artist}})?",
+			"albumLength": "Wie lang ist „{{album}}“ ({{artist}}) ungefähr, in Minuten?",
+			"notOnAlbum": "Welcher Titel ist NICHT auf „{{album}}“ ({{artist}})?",
+			"coverAlbum": "Von welchem {{artist}}-Album ist dieses Cover?",
+			"releaseCountry": "In welchem Land erschien diese Ausgabe von „{{album}}“ ({{artist}})?",
+			"artistFormedIn": "In welchem Jahr wurde {{artist}} gegründet?",
+			"bandMember": "Wer spielte bei {{artist}}?",
+			"memberBand": "In welcher Band spielte {{musician}}?",
+			"memberInstrument": "Was spielte {{musician}} bei {{artist}}?",
+			"albumCredit": "Wer ist auf „{{album}}“ ({{artist}}) als „{{role}}“ angegeben?",
+			"albumProducer": "Wer produzierte „{{album}}“ ({{artist}})?"
+		}
+	},
+	"bandOfTheWeek": {
+		"reason": {
+			"random": "Der Katalog hat sie für diese Woche gezogen.",
+			"anniversary": "Eine ihrer Platten wird diese Woche {{years}}: {{album}}.",
+			"new-in-catalog": "Diese Woche kamen von ihnen die meisten Platten in den Katalog.",
+			"upcoming": "Eine neue Platte von ihnen ist unterwegs: {{album}}."
+		},
+		"week": "{{start}} – {{end}}"
+	},
+	"home": {
+		"discover": {
+			"title": "Katalog durchstöbern",
+			"lead": "Stile, Jahrzehnte, Künstler und die neuesten Alben."
+		},
+		"glance": {
+			"title": "Der Katalog auf einen Blick",
+			"openCollection": "Meine Sammlung öffnen",
+			"unavailable": "Die Katalogzahlen sind gerade nicht verfügbar.",
+			"coverage": "Katalogalben nach Jahrzehnt"
+		},
+		"count": {
+			"artists": "Künstler",
+			"albums": "Alben",
+			"labels": "Labels",
+			"releases": "Veröffentlichungen",
+			"musicians": "Musiker",
+			"tracks": "Titel"
+		},
+		"recent": {
+			"title": "Zuletzt hinzugefügt",
+			"catalogTitle": "Zuletzt in den Katalog aufgenommen",
+			"allReleases": "Alle Veröffentlichungen"
+		},
+		"collectors": {
+			"title": "Wer hier sammelt",
+			"all": "Alle ansehen",
+			"allOf": "Alle {{count}} Sammler",
+			"join": {
+				"title": "Hier wäre Platz für dich",
+				"lead": "Sag, was du sammelst, und dein Name steht an der Wand.",
+				"signIn": "Anmelden",
+				"share": "Mein Regal teilen"
+			}
+		},
+		"collections": {
+			"title": "Sammlungen",
+			"all": "Alle",
+			"done": "Fertig",
+			"yoursToTake": "noch ist niemand dahinter — greif zu",
+			"tab": {
+				"mine": "Was ich sammle",
+				"curated": "Kuratiert",
+				"discography": "Diskografien",
+				"completed": "Vollendet"
+			}
+		},
+		"hunt": {
+			"title": "Als Nächstes auf der Jagd",
+			"all": "Die ganze Jagd"
+		},
+		"artists": {
+			"collected": "Meistgesammelte Künstler",
+			"catalog": "Künstler im Katalog"
+		},
+		"byStyle": "Nach Stil",
+		"byDecade": "Nach Jahrzehnt",
+		"byAct": "Bands, Projekte und Formationen",
+		"newestAlbums": "Neueste Alben im Katalog",
+		"search": {
+			"label": "Künstler und Alben suchen",
+			"placeholder": "Künstler und Alben suchen…",
+			"results": "Suchergebnisse",
+			"artists": "Künstler",
+			"collected": "In deiner Sammlung",
+			"catalog": "Im Katalog",
+			"empty": "Keine Künstler oder Alben gefunden.",
+			"looking": "Suche im gesamten Katalog…",
+			"inCollection": "„{{query}}“ in deiner Sammlung suchen",
+			"announcement": {
+				"one": "{{count}} Ergebnis",
+				"other": "{{count}} Ergebnisse"
+			}
+		},
+		"group": {
+			"albums": {
+				"one": "{{count}} Album",
+				"other": "{{count}} Alben"
+			},
+			"inCatalog": {
+				"one": "{{count}} im Katalog",
+				"other": "{{count}} im Katalog"
+			}
+		},
+		"weekly": {
+			"eyebrow": "Sammlung der Woche",
+			"featured": "Sammlung zum Entdecken",
+			"pick": "Sammlung wählen",
+			"previous": "Vorherige Sammlung",
+			"next": "Nächste Sammlung",
+			"open": "Öffnen",
+			"collect": "Das sammle ich",
+			"collecting": "Du sammelst das",
+			"signInToCollect": "Anmelden und sammeln",
+			"points": "Pkt",
+			"worth": "so viel bringt sie vollendet",
+			"progress": "Fortschritt bei dieser Sammlung",
+			"albums": {
+				"one": "{{count}} Platte",
+				"other": "{{count}} Platten"
+			}
+		}
+	},
+	"page": {
+		"overview": {
+			"eyebrow": "Willkommen zurück",
+			"title": "Sammlungsüberblick",
+			"openCollection": "Regal öffnen",
+			"headline": "Die Sammlung in Zahlen",
+			"guest": "Melde dich an, um den Überblick über deine eigene Sammlung zu sehen.",
+			"empty": "Noch nichts im Regal. Scanne eine Platte, dann erscheint hier die Übersicht.",
+			"stat": {
+				"copies": "Platten",
+				"artists": "Künstler",
+				"styles": "Stilrichtungen",
+				"labels": "Labels",
+				"delta": "+{{count}} in den letzten {{days}} Tagen",
+				"noChange": "unverändert"
+			},
+			"styles": "Verteilung der Stilrichtungen",
+			"otherStyles": "Sonstige",
+			"copies": "Platten",
+			"noStyles": "Keine deiner Platten hat bisher eine Stilrichtung.",
+			"arrivals": "Zuletzt hinzugefügt",
+			"seeAll": "Alle",
+			"growth": "Zuwachs",
+			"growthCaption": "neue Platten in den letzten {{days}} Tagen",
+			"formats": "Tonträger",
+			"topArtists": "Top-Künstler",
+			"progress": "Herausforderungen",
+			"done": "geschafft",
+			"completed": "Abgeschlossen",
+			"missing": "Fehlt",
+			"rated": "Bewertet",
+			"noCollections": "Du folgst noch keiner Herausforderung.",
+			"decades": "Jahrzehnte"
+		},
+		"collection": {
+			"my-collection": "Meine Sammlung",
+			"your-collection-at-a": "Deine Sammlung auf einen Blick",
+			"releases": "Veröffentlichungen",
+			"artists": "Künstler",
+			"releases-by-decade": "Veröffentlichungen nach Jahrzehnt",
+			"top-styles": "Häufigste Stile",
+			"collection-goals": "Sammlungsziele",
+			"all-collections": "Alle Challenges",
+			"search-artist-or-album": "Künstler oder Album suchen",
+			"search-artist-or-album2": "Künstler oder Album suchen…",
+			"filter-by-format": "Nach Format filtern",
+			"all": "Alle",
+			"sort": "Sortierung",
+			"group": "Gruppierung",
+			"view": "Ansicht",
+			"clear-filters": "Filter zurücksetzen",
+			"clear-filters2": "Filter zurücksetzen",
+			"loading-collection": "Sammlung wird geladen…",
+			"your-collection-lives-behind": "Deine Sammlung liegt hinter der Anmeldung",
+			"log-in-to-see": "Melde dich an, um deine Platten zu sehen und neue aufzunehmen.",
+			"log-in": "Anmelden",
+			"no-releases-found": "Keine Veröffentlichungen gefunden",
+			"try-another-search-or": "Versuche eine andere Suche oder ein anderes Format.",
+			"sortBy": {
+				"artist": "Künstler A–Z",
+				"title": "Album A–Z",
+				"newest": "Neueste Veröffentlichung",
+				"oldest": "Älteste Veröffentlichung",
+				"added": "Zuletzt hinzugefügt",
+				"stars": "Deine Sterne"
+			},
+			"groupBy": {
+				"none": "Keine Gruppierung",
+				"artist": "Künstler",
+				"format": "Format",
+				"style": "Stil",
+				"decade": "Jahrzehnt"
+			},
+			"viewAs": {
+				"grid": "Raster",
+				"list": "Liste",
+				"shelf": "Regal"
+			},
+			"summary": {
+				"complete": "{{completed}} von {{total}} vollständig",
+				"missing": {
+					"one": "{{count}} Platte fehlt",
+					"other": "{{count}} Platten fehlen"
+				},
+				"points": {
+					"one": "{{count}} Punkt erreicht",
+					"other": "{{count}} Punkte erreicht"
+				}
+			},
+			"showingOf": "{{shown}} von {{total}} Veröffentlichungen",
+			"releaseCount": {
+				"one": "{{count}} Veröffentlichung",
+				"other": "{{count}} Veröffentlichungen"
+			},
+			"shelf": {
+				"dragHint": "Zieh eine Platte dorthin, wo sie wirklich steht. Ein Fach, das du eingeräumt hast, behält den Platz, den du darin gelassen hast; alles Unplatzierte füllt weiterhin die freigelassenen Fächer.",
+				"tapHint": "Tippe auf einen Rücken: Die Platte kommt heraus und zeigt ihr Cover. Noch ein Tippen öffnet sie. Zum Umräumen brauchst du vorerst einen größeren Bildschirm und eine Maus.",
+				"filterHint": "Lösche den Formatfilter, um das Regal von Hand umzuräumen. Die Suche lässt das Regal ganz — sie zeigt nur, wo eine Platte steht.",
+				"fileFailed": "Konnte nicht eingeordnet werden: {{error}}",
+				"keep": "So lassen",
+				"release": "Das Regal einräumen lassen",
+				"keptHint": "Das Regal steht, wie du es verlassen hast: Die Platten behalten ihren Platz, auch wenn eine dazukommt oder ein Exemplar weggeht. Eine neue Platte kommt in ein noch freies Fach.",
+				"searchHint": "Die Suche lässt das Regal ganz: Sie zeigt, wo eine Platte steht, statt den Rest wegzuräumen.",
+				"found": {
+					"one": "{{count}} Platte im Regal gefunden",
+					"other": "{{count}} Platten im Regal gefunden"
+				},
+				"foundNone": "Zu dieser Suche steht nichts im Regal.",
+				"foundMore": "+ {{count}} weitere, im Regal hervorgehoben.",
+				"arrange": "Ordnen",
+				"arrangeDone": "Fertig geordnet",
+				"arrangeHint": "Die Regale stehen in einer Reihe, eine Platte wandert nur noch seitwärts. Klick auf einen Rücken nimmt sie in die Hand — Shift-Klick eine ganze Reihe innerhalb eines Fachs —, dann zieh sie hinüber oder tippe auf die Schaltfläche des Zielfachs."
+			},
+			"groupFallback": "Sammlung",
+			"unknownStyle": "Unbekannter Stil",
+			"unknownYear": "Unbekanntes Jahr",
+			"filter-by-stars": "Nach deinem Urteil filtern",
+			"stars": {
+				"all": "Alle",
+				"loved": "Lieblinge",
+				"unrated": "Nie bewertet"
+			}
+		},
+		"profile": {
+			"lists": "Listen",
+			"profile": "Profil",
+			"your-account-and-how": "Dein Konto und wie sich die App für dich verhält. Was du hier einstellst, bleibt am Konto und folgt dir in den nächsten Browser, in dem du dich anmeldest.",
+			"account": "Konto",
+			"how-you-appear-in": "Wie du in der App erscheinst.",
+			"avatar": "Avatar",
+			"avatarIntro": "Die Figur, die für dein Foto einsteht — du baust sie, und sie bleibt deine.",
+			"appearance": "Darstellung",
+			"the-theme-and-how": "Das Design und wie viel vom Bildschirm die Seiten nutzen.",
+			"demoTour": "Geführte Tour",
+			"demoTourIntro": "Der Kompass in der Ecke des Bildschirms, der immer die gerade offene Seite erklärt.",
+			"what-the-collection-opens": "Womit die Sammlung öffnet und wie viel einer Albumseite auf einmal zu sehen ist.",
+			"shelves": "Regale",
+			"the-furniture-your-records": "Das Möbel, in dem deine Platten stehen. Zeichne, was du wirklich hast — wie viele Elemente, und wie viele Fächer in Breite und Höhe — und die Regalansicht der Sammlung wird darin eingeräumt.",
+			"playback": "Wiedergabe",
+			"how-the-player-starts": "Wie der Player startet, je Seitenart eine Einstellung — eine Titelseite will gut und gern eine vollere Bühne als der Rest.",
+			"listening": "Hören",
+			"what-you-have-actually": "Was du hier tatsächlich aufgelegt hast, den Platten zugerechnet statt einem Konto anderswo.",
+			"privacy": "Privatsphäre",
+			"sharing": "Geteiltes Profil",
+			"sharingIntro": "Eine Seite über deine Sammlung, die du jedem zeigen kannst — und eine Wunschliste, aus der dich jemand überraschen kann.",
+			"what-other-collectors-get": "Was andere Sammler von dir sehen. Hier wird nichts geteilt, bis du es sagst, und ein Zurückschalten nimmt es sofort wieder weg.",
+			"spotify": "Spotify",
+			"where-spotify-plays-and": "Wo Spotify spielt und wie laut es hier startet.",
+			"sign-in-to-set": "Melde dich an, um dein Profil einzurichten.",
+			"log-in": "Anmelden",
+			"listSettings": {
+				"order": "Reihenfolge der Sammlung",
+				"grouping": "Gruppierung der Sammlung",
+				"view": "Ansicht der Sammlung",
+				"albumCompact": "Albumseiten mit eingeklappten Abschnitten öffnen"
+			},
+			"language": "Sprache",
+			"languageIntro": "In welcher Sprache die App mit dir spricht. Bleibt am Konto und folgt dir in den nächsten Browser, in dem du dich anmeldest.",
+			"tabs": {
+				"label": "Profilbereiche",
+				"account": "Konto",
+				"collection": "Sammlung",
+				"playback": "Wiedergabe",
+				"data": "Daten"
+			},
+			"genres": "Genres, die dich interessieren",
+			"genresIntro": "Höchstens zwei Genres. Die App lädt nur den Katalog der gewählten Genres herunter — deine eigene Sammlung bleibt davon unberührt vollständig.",
+			"verdicts": "Was du denkst",
+			"verdictsIntro": "Die Sterne, die du deinen Platten gegeben hast, und die, die du zuerst nennen würdest."
+		},
+		"track": {
+			"loading": "Wird geladen…",
+			"the-track-could-not": "Der Titel konnte nicht geladen werden.",
+			"track-not-found": "Titel nicht gefunden.",
+			"edit": "Bearbeiten",
+			"spotify-link": "Spotify-Link",
+			"https-open-spotify-com": "https://open.spotify.com/track/…",
+			"not-a-spotify-track": "Kein Spotify-Titellink.",
+			"youtube-video": "YouTube-Video",
+			"https-www-youtube-com": "https://www.youtube.com/watch?v=…",
+			"not-a-youtube-video": "Kein YouTube-Videolink.",
+			"writers-comma-separated": "Autoren (durch Komma getrennt)",
+			"lyrics-visible-to-signed": "Songtext (nur für angemeldete Nutzer sichtbar)",
+			"synced-lyrics-lrc-for": "Synchroner Songtext (LRC, für den Textplayer)",
+			"00-12-34-first": "[00:12.34] Erste Zeile",
+			"cancel": "Abbrechen",
+			"player": "Player",
+			"lyrics": "Songtext",
+			"no-lyrics-here-lyrics": "Hier steht kein Songtext. Texte werden nur angemeldet angezeigt.",
+			"credits": "Mitwirkende",
+			"no-credits-for-this": "Keine Mitwirkenden für diesen Titel.",
+			"other-tracks": "Weitere Titel",
+			"loadLyrics": "Songtext laden",
+			"pictures": "Bilder"
+		},
+		"label": {
+			"looking-for-this-label": "Label wird gesucht…",
+			"no-label-under-this": "Kein Label unter diesem Namen.",
+			"either-it-was-never": "Entweder war es nie im Katalog oder es wurde entfernt. Die Platten, die es nannten, behalten den Namen, mit dem sie gepresst wurden.",
+			"back-to-the-catalog": "Zurück zum Katalog",
+			"label": "Label",
+			"a-label-of": "Ein Label von",
+			"sub-labels": "Sublabels",
+			"artists": "Künstler",
+			"pressings": "Pressungen",
+			"no-pressing-in-the": "Noch keine Pressung im Katalog trägt dieses Label.",
+			"showAllArtists": {
+				"one": "Alle {{count}} Künstler zeigen",
+				"other": "Alle {{count}} Künstler zeigen"
+			},
+			"showAllPressings": {
+				"one": "Alle {{count}} Pressungen zeigen",
+				"other": "Alle {{count}} Pressungen zeigen"
+			}
+		},
+		"document": {
+			"looking-for-this-document": "Dokument wird gesucht…",
+			"no-document-under-this": "Kein Dokument unter dieser Kennung.",
+			"documents-are-never-deleted": "Dokumente werden nie gelöscht, nur zurückgezogen — dieses war also entweder nie hier oder wurde von Hand entfernt.",
+			"back-to-the-documents": "Zurück zu den Dokumenten",
+			"this-document-is-withdrawn": "Dieses Dokument ist zurückgezogen: es wird nicht mehr angeboten. Die Datei bleibt, wo sie ist, damit alles, was bereits darauf verweist, weiter funktioniert.",
+			"document": "Dokument",
+			"open-the-file": "Datei öffnen"
+		},
+		"album": {
+			"year": "Jahr",
+			"genre": "Genre",
+			"tracks": "Titel",
+			"length": "Länge",
+			"styles": "Stile",
+			"full-screen-player": "Vollbild-Player",
+			"open-the-full-screen": "Vollbild-Player öffnen",
+			"release-requested-pending": "Veröffentlichung angefragt · ausstehend",
+			"on-your-wishlist": "Auf deiner Wunschliste",
+			"add-to-wishlist": "Zur Wunschliste",
+			"compact-view": "Kompakte Ansicht",
+			"collapse-all": "Alle einklappen",
+			"original-release": "Erstveröffentlichung",
+			"released": "Erschienen",
+			"country": "Land",
+			"label": "Label",
+			"format": "Format",
+			"data-from-discogs": "Daten von Discogs",
+			"opens-in-a-new": "(öffnet in einem neuen Tab)",
+			"listen": "Anhören",
+			"tracklist": "Titelliste",
+			"loading-tracklist": "Titelliste wird geladen…",
+			"credits": "Mitwirkende",
+			"loading-credits": "Mitwirkende werden geladen…",
+			"no-credits-have-been": "Für dieses Album wurden noch keine Mitwirkenden importiert.",
+			"in-your-collection": "In deiner Sammlung",
+			"loading": "Wird geladen…",
+			"on-the-shelf": "im Regal",
+			"remove": "Entfernen",
+			"from-your-collection": "aus deiner Sammlung",
+			"this-album-is-not": "Dieses Album ist nicht in deiner Sammlung.",
+			"previously-owned": "Früher besessen",
+			"take-back": "Zurücknehmen",
+			"into-your-collection": "in deine Sammlung",
+			"full-discography": "Vollständige Diskografie",
+			"album-not-found": "Album nicht gefunden",
+			"this-album-is-not2": "Dieses Album ist nicht im Katalog.",
+			"back-to-home": "Zurück zur Startseite",
+			"loading-album": "Album wird geladen…",
+			"playCount": {
+				"one": "Du hast diese Platte {{count}} Mal aufgelegt",
+				"other": "Du hast diese Platte {{count}} Mal aufgelegt"
+			},
+			"rightThrough": "· {{count}} Mal ganz durch",
+			"lastOn": "· zuletzt am {{date}}",
+			"shelfSpot": "{{shelf}} · Reihe {{row}} · Platz {{slot}}",
+			"takeBackFailed": "Konnte nicht zurückgenommen werden: {{error}}",
+			"moreFrom": "Mehr von {{artist}}",
+			"what-you-think": "Was du denkst",
+			"your-verdict": "Dein Urteil",
+			"why-this-record": "Warum diese Platte",
+			"one-line-is-enough": "Eine Zeile genügt",
+			"what-everybody-says": "Was Sammler sagen",
+			"communityAverage": "{{average}} im Schnitt von {{count}} Sammlern",
+			"aboveTheCrowd": "du liegst {{stars}} darüber",
+			"belowTheCrowd": "du liegst {{stars}} darunter",
+			"verdict-not-kept": "Dein Urteil wurde nicht gespeichert. Versuch die Sterne erneut."
+		},
+		"artist": {
+			"artist": "Künstler",
+			"country": "Land",
+			"formed": "Gegründet",
+			"genre": "Genre",
+			"styles": "Stile",
+			"links": "Links",
+			"opens-in-a-new": "(öffnet in einem neuen Tab)",
+			"albums-in-the-catalog": "Alben im Katalog",
+			"releases-in-your-collection": "Veröffentlichungen in deiner Sammlung",
+			"on-record": "Auf Platte",
+			"sections": "Abschnitte",
+			"about": "Über",
+			"line-up": "Besetzung",
+			"view-in-the-relationship": "Im Beziehungsnetz ansehen",
+			"discography": "Diskografie",
+			"filter-by-album-type": "Nach Albumtyp filtern",
+			"all": "Alle",
+			"in-your-collection": "In deiner Sammlung",
+			"open-collection": "Sammlung öffnen",
+			"similar-artists": "Ähnliche Künstler",
+			"artist-not-found": "Künstler nicht gefunden",
+			"this-artist-is-not": "Dieser Künstler ist nicht im Katalog.",
+			"back-to-home": "Zurück zur Startseite",
+			"loading-artist": "Künstler wird geladen…",
+			"noAlbums": "Noch keine Alben von {{artist}} im Katalog."
+		},
+		"collection-item": {
+			"looking-for-this-copy": "Exemplar wird gesucht…",
+			"this-copy-is-not": "Dieses Exemplar ist nicht in deiner Sammlung.",
+			"a-copy-page-only": "Eine Exemplarseite öffnet sich nur für deine eigenen Platten — Regalplatz, Preis und die Geschichte dazu gehören dir allein.",
+			"sign-in-to-open": "Melde dich an, um deine Exemplare zu öffnen.",
+			"what-a-copy-page": "Was eine Exemplarseite über den Katalog hinaus zeigt, gehört dem Sammler, dem sie gehört — sie muss also wissen, wer du bist.",
+			"back-to-the-collection": "Zurück zur Sammlung",
+			"your-copy": "Dein Exemplar",
+			"this-copy": "Dieses Exemplar",
+			"edit": "Bearbeiten",
+			"in-the-collection-since": "In der Sammlung seit",
+			"bought-on": "Gekauft am",
+			"where-from": "Woher",
+			"price": "Preis",
+			"record": "Platte",
+			"sleeve": "Hülle",
+			"numbered-copy": "Nummeriertes Exemplar",
+			"on-the-shelf": "Im Regal",
+			"nothing-is-written-down": "Über dieses Exemplar ist noch nichts notiert — wann du es bekommen hast, was du gezahlt hast, wie es sich gehalten hat.",
+			"its-story": "Seine Geschichte",
+			"the-pressing": "Die Pressung",
+			"what-this-release-adds": "Was diese Veröffentlichung dem Album hinzufügt — welches Label sie presste, wo, und in welcher Ausführung sie erschien.",
+			"release": "Veröffentlichung",
+			"label": "Label",
+			"country": "Land",
+			"format": "Format",
+			"only-on-this-pressing": "Nur auf dieser Pressung",
+			"this-pressing-on-discogs": "Diese Pressung auf Discogs",
+			"what-it-plays": "Was darauf ist",
+			"the-album": "Das Album",
+			"loading-the-tracklist": "Titelliste wird geladen…",
+			"only-on-this-pressing2": "Nur auf dieser Pressung",
+			"this-pressing": "Diese Pressung",
+			"no-tracklist-for-this": "Für dieses Album gibt es noch keine Titelliste.",
+			"leftOn": "Hat die Sammlung am {{date}} verlassen ({{reason}}).",
+			"spot": "Reihe {{row}} · Platz {{slot}} · Position {{position}}",
+			"remove": "Entfernen",
+			"removeFailed": "Konnte nicht entfernt werden: {{error}}",
+			"what-you-think": "Was du von der Platte hältst",
+			"another-release": "Andere Ausgabe",
+			"filed-on-format-alone": "Dieses Exemplar ist nur nach Format eingeordnet — der Katalog weiß nicht, welche Pressung du besitzt. Findest du sie in der Liste, ordne das Exemplar ihr zu.",
+			"moveFailed": "Die Ausgabe konnte nicht geändert werden: {{error}}"
+		},
+		"collectors": {
+			"title": "Sammlungen und Sammler",
+			"lead": "Was es gibt, und wer es vollendet hat. Öffne eine Sammlung, oder sieh, was bei jemandem im Regal steht.",
+			"view": {
+				"collections": "Sammlungen",
+				"collectors": "Sammler"
+			},
+			"finishedBy": "von {{count}} vollendet",
+			"collectedBy": "{{count}} sind dahinter",
+			"nobodyYet": "Noch hat es niemand vollendet.",
+			"noCollections": "Noch wurde keine Sammlung veröffentlicht.",
+			"collectors": "Sammler",
+			"finished": "vollendete Sammlungen",
+			"all": "Alle",
+			"search": "Nach Name oder Sammlung suchen",
+			"sortBy": "Sortierung",
+			"none": "Dazu gibt es nichts.",
+			"noBadges": "Noch keine vollendete Sammlung.",
+			"chasing": "Sammelt gerade",
+			"seeAll": "Alle ansehen",
+			"homeLead": "Was die anderen vollendet haben.",
+			"sort": {
+				"recent": "Neueste",
+				"badges": "Meiste Abzeichen",
+				"points": "Meiste Punkte",
+				"shelf": "Größtes Regal",
+				"name": "Name"
+			}
+		},
+		"collector": {
+			"loading": "Wir blättern…",
+			"aCollector": "Ein Sammler",
+			"records": "Platten",
+			"points": "Punkte",
+			"badges": "Abzeichen",
+			"shelf": "Das Regal",
+			"showAll": "Alle {{count}} Platten",
+			"albums": "Alben",
+			"artists": "Künstler",
+			"oldest": "die älteste",
+			"since": "sammelt seit",
+			"asOf": "So stand es:",
+			"badgeSection": "Abzeichen",
+			"pursuitSection": "Daran arbeitet er gerade",
+			"noShelf": "Diese Sammlerin oder dieser Sammler teilt das Regal nicht — nur, was gesucht wird.",
+			"showcaseSection": "Die Auslage",
+			"wishlistSection": "Gesucht",
+			"wishlistLead": "Auf diese Platten wartet er. Wenn du überraschen willst, wähle hier.",
+			"buyAt": "zu haben bei",
+			"emptyTitle": "Keine Seite hier",
+			"emptyLead": "Dieser Sammler hat kein Profil geteilt — oder es zurückgenommen.",
+			"inviteTitle": "Mach dir deine eigene",
+			"inviteLead": "Trage deine Platten ein, und du bekommst so eine Seite, die du jedem zeigen kannst.",
+			"inviteButton": "Los geht es",
+			"mineTitle": "Deine Sammlung",
+			"mineLead": "Sieh, wo du stehst — und teile sie auch, wenn du magst.",
+			"mineButton": "Meine Sammlung",
+			"selfTitle": "Das ist deine Seite",
+			"selfLead": "So sehen andere sie. Das Teilen schaltest du in deinem Profil.",
+			"selfButton": "Einstellungen",
+			"favouritesSection": "Was sie denken",
+			"favouritesLead": "Die Platten, die diese Sammlung am höchsten bewertet."
+		},
+		"collections": {
+			"collections": "Challenges",
+			"shownToOthers": "Andere sehen es",
+			"onlyMine": "Nur für mich",
+			"sets-of-records-defined": "Plattenmengen, die eine Regel bestimmt, keine Liste — sie wachsen mit dem Katalog.",
+			"collections2": "Challenges",
+			"completed": "Vollständig",
+			"records-missing": "Fehlende Platten",
+			"points-earned": "Erreichte Punkte",
+			"no-collection-has-been": "Noch wurde keine Challenge veröffentlicht. Sobald es eine gibt, siehst du hier, wie weit dein Regal kommt.",
+			"next-on-the-hunt": "Als Nächstes auf der Jagd",
+			"a-collection-pays-only": "Eine Challenge zahlt sich erst vollständig aus — diese Platten bringen dich am schnellsten dorthin.",
+			"which-collections": "Welche Challenges",
+			"search-collections": "Challenges suchen",
+			"search-collections2": "Challenges suchen",
+			"star-the-collections-you": "Markiere die Challenges, die du verfolgst — „Gefolgt“ behält dann nur diese, wie viele auch veröffentlicht werden.",
+			"filter": {
+				"all": "Alle",
+				"owned": "Vorhanden",
+				"missing": "Fehlt",
+				"following": "Gefolgt"
+			},
+			"pointsEarned": {
+				"one": "{{count}} Punkt erreicht",
+				"other": "{{count}} Punkte erreicht"
+			},
+			"pointsWorth": {
+				"one": "{{count}} Punkt wert, wenn vollständig",
+				"other": "{{count}} Punkte wert, wenn vollständig"
+			},
+			"basePoints": "{{points}} Grundpunkte",
+			"bonusPoints": "+ {{points}} für deine Pressungen",
+			"group": {
+				"curated": "Collections",
+				"curatedLead": "Von einem Kurator zusammengestellte Plattenmengen — eine Szene, ein Jahr, ein Stil.",
+				"discography": "Diskografien",
+				"discographyLead": "Eine Band auf einmal: die Studioalben, und alles andere, was sie daneben veröffentlicht hat."
+			}
+		},
+		"daily-question": {
+			"question-of-the-day": "Frage des Tages",
+			"one-question-out-of": "Eine Frage pro Tag, für alle dieselbe — aus dem Katalog geschöpft. Du hast einen Versuch, danach wird die Lösung verraten.",
+			"stat": {
+				"points": "Punkte",
+				"streak": "Serie",
+				"best": "Längste",
+				"hit-rate": "Treffer"
+			},
+			"difficulty": {
+				"easy": "Leicht",
+				"medium": "Mittel",
+				"hard": "Schwer"
+			},
+			"no-question-today": "Heute gibt es keine Frage. Sie entsteht wenige Minuten nach Mitternacht aus dem Katalog; reichte das Material nicht, versucht es morgen erneut.",
+			"send-the-guess": "Tipp abschicken",
+			"sending": "Wird gesendet…",
+			"one-guess-only": "Nur ein Versuch — danach erscheint die Lösung sofort.",
+			"that-was-right": "Richtig!",
+			"that-was-wrong": "Leider nicht.",
+			"points": "Punkte",
+			"more-about": "Mehr zu {{subject}}",
+			"a-new-question-tomorrow": "Morgen kommt eine neue Frage.",
+			"failure": {
+				"stale-day": "Der Tag hat gewechselt — hier ist die heutige Frage.",
+				"no-question": "Für diesen Tag gibt es keine Frage.",
+				"signed-out": "Die Sitzung ist abgelaufen. Melde dich neu an, dann kann der Tipp raus.",
+				"unknown": "Der Tipp ist nicht durchgekommen. Versuche es noch einmal."
+			},
+			"bonus-day": "Bonustag · {{multiplier}}× Punkte",
+			"seconds-left": "noch {{seconds}} s",
+			"time-is-up": "Zeit abgelaufen",
+			"the-cover": "Das gesuchte Cover",
+			"answered-late": "Der Tipp kam nach Ablauf der Zeit: die Lösung gibt es, Punkte nicht.",
+			"late-guess-is-free": "Die Zeit ist um — der Tipp bringt keine Punkte mehr, zeigt aber die Lösung.",
+			"breakdown": {
+				"base": "Basis",
+				"streak": "Serie",
+				"speed": "Tempo"
+			},
+			"history": {
+				"title": "Frühere Fragen",
+				"played-of": "An {{played}} der letzten {{days}} Tage hast du geraten.",
+				"nothing-yet": "Noch keine Tage hinter dir — heute ist die erste Frage.",
+				"skipped": "Ausgelassen",
+				"late": "Zu spät",
+				"the-answer-was": "Die Lösung: {{answer}}",
+				"you-said": "dein Tipp: {{picked}}"
+			},
+			"leaderboard": {
+				"title": "Rangliste",
+				"players": "{{players}} Spieler",
+				"your-place": "dein Platz: {{rank}}",
+				"rank": "Platz",
+				"collector": "Sammler",
+				"anonymous": "Namenloser Sammler",
+				"you": "Du",
+				"unplaced": "—",
+				"rebuilt-nightly": "Die Rangliste wird einmal täglich am Abend neu gebaut; deine Punkte sind sofort aktuell, dein Platz beim nächsten Lauf."
+			}
+		},
+		"error": {
+			"this-page-is-not": "Diese Seite ist nicht verfügbar",
+			"it-doesn-t-exist": "Sie existiert nicht, oder dein Konto hat keinen Zugriff darauf. Admin-Seiten erfordern eine Administrator-Anmeldung.",
+			"go-to-home": "Zur Startseite",
+			"open-collection": "Sammlung öffnen"
+		},
+		"map": {
+			"collectors": "Sammler",
+			"where-the-records-are": "Wo die Platten stehen. Alle hier haben selbst entschieden, auf dieser Karte zu sein, und wie viel sie von sich zeigen —",
+			"your-own-is-in": "deine eigene steht im Profil",
+			"collectors2": "Sammler",
+			"countries": "Länder",
+			"sign-in-to-see": "Melde dich an, um zu sehen, wo die anderen Sammler sind.",
+			"log-in": "Anmelden",
+			"collectors-around-the-world": "Sammler rund um die Welt",
+			"looking-for-collectors": "Sammler werden gesucht…",
+			"nobody-shares-where-they": "Noch teilt niemand, wo er ist. Du könntest der Erste sein.",
+			"drag-to-move-scroll": "Ziehen zum Bewegen, scrollen zum Zoomen, und wähle eine Nadel, um zu sehen, wer dort ist.",
+			"back-to-all": "Zurück zu allen",
+			"where-they-are": "Wo sie sind",
+			"no-one-on-the": "Noch niemand auf der Karte."
+		},
+		"musician": {
+			"musician": "Musiker",
+			"real-name": "Bürgerlicher Name",
+			"also-known-as": "Auch bekannt als",
+			"plays": "Spielt",
+			"active": "Aktiv",
+			"links": "Links",
+			"relationship-network": "Beziehungsnetz",
+			"opens-in-a-new": "(öffnet in einem neuen Tab)",
+			"discogs-com": "discogs.com",
+			"opens-in-a-new2": "(öffnet in einem neuen Tab)",
+			"bands": "Bands",
+			"guest-appearances": "Gastauftritte",
+			"albums-credited": "Alben mit Credit",
+			"in-your-collection": "In deiner Sammlung",
+			"sections": "Abschnitte",
+			"about": "Über",
+			"bands2": "Bands",
+			"view-in-the-relationship": "Im Beziehungsnetz ansehen",
+			"guest-appearances2": "Gastauftritte",
+			"view-in-the-relationship2": "Im Beziehungsnetz ansehen",
+			"albums": "Alben",
+			"filter-by-credit": "Nach Credit filtern",
+			"all": "Alle",
+			"credits": "Credits",
+			"bandmates": "Bandkollegen",
+			"musician-not-found": "Musiker nicht gefunden",
+			"this-musician-is-not": "Dieser Musiker ist nicht im Katalog.",
+			"back-to-home": "Zurück zur Startseite",
+			"loading-musician": "Musiker wird geladen…",
+			"collectedReleases": {
+				"one": "{{count}} in deiner Sammlung",
+				"other": "{{count}} in deiner Sammlung"
+			}
+		},
+		"network": {
+			"relationship-network": "Beziehungsnetz",
+			"who-played-with-whom": "Wer mit wem spielte — Musiker und die Bands, Projekte und Formationen, in denen sie spielten.",
+			"relationship-network2": "Beziehungsnetz",
+			"exit-full-screen": "Vollbild verlassen",
+			"network-settings": "Netzwerkeinstellungen",
+			"focus": "Fokus",
+			"depth": "Tiefe",
+			"filters": "Filter",
+			"guests": "Gäste",
+			"only-my-collection": "Nur meine Sammlung",
+			"loading-the-network": "Netzwerk wird geladen…",
+			"no-connections-to-show": "Keine Verbindungen anzuzeigen. Wähle einen anderen Fokus oder ändere die Filter.",
+			"the-network-is-too": "Das Netzwerk ist zu groß für eine vollständige Darstellung — verringere die Tiefe oder blende Gäste aus.",
+			"legend": "Legende",
+			"in-your-collection": "In deiner Sammlung",
+			"member": "Mitglied",
+			"former-member": "Ehemaliges Mitglied",
+			"guest": "Gast",
+			"details": "Details"
+		},
+		"radio": {
+			"radio": "Radio",
+			"a-record-chosen-for": "Eine Platte, für dich ausgewählt: was der Katalog gerade aufgenommen hat, was dein Regal über deinen Geschmack sagt, ein Fach dieses Regals, eine Challenge, die du verfolgst — oder nichts Bestimmtes.",
+			"random-order": "Zufällige Reihenfolge",
+			"draw-the-records-out": "Zieh die Platten aus dem Hut, statt den Sender der Reihe nach zu spielen.",
+			"on-air": "Auf Sendung",
+			"on-air2": "Auf Sendung",
+			"next-record": "Nächste Platte",
+			"stop-the-station": "Sender stoppen",
+			"waiting-to-go-on": "Wartet auf Sendung",
+			"privacy-card-on-your": "Datenschutzkarte in deinem Profil",
+			"nothing-to-play-yet": "Noch nichts zu spielen. Das Radio braucht Platten mit einem Spotify- oder YouTube-Link dahinter — nimm ein paar in den Katalog auf, und die Sender erscheinen hier.",
+			"playStation": "{{station}} abspielen",
+			"blocked": {
+				"signIn": "Das Radio spielt Platten über YouTube und Spotify. Melde dich an, um zu hören — beides sind fremde Player, und keiner davon kommt für Besucher auf die Seite.",
+				"consentBefore": "Das Radio spielt Platten über YouTube und Spotify. Jede Einbettung schreibt in den Speicher ihres Betreibers und meldet ihm, dass du hier warst, darum fragt sie vorher — die Leiste unten fragt, und die",
+				"consentAfter": "nimmt die Antwort jederzeit zurück."
+			},
+			"andMore": "und {{count}} weitere"
+		},
+		"release": {
+			"looking-for-this-pressing": "Pressung wird gesucht…",
+			"no-pressing-under-this": "Keine Pressung unter dieser Kennung.",
+			"the-catalog-holds-the": "Der Katalog führt das Album, zu dem sie gehörte, aber diese Ausgabe davon nicht — oder nicht mehr.",
+			"back-to-the-catalog": "Zurück zum Katalog",
+			"pressing": "Pressung",
+			"open-the-album": "Album öffnen",
+			"other-pressings-of-this": "Weitere Pressungen dieses Albums",
+			"this-is-the-only": "Dies ist die einzige Pressung des Albums, die der Katalog kennt."
+		},
+		"scan": {
+			"state": {
+				"in-collection": "Schon in deiner Sammlung",
+				"in-catalog": "Im Katalog",
+				"new-release": "Neue Pressung",
+				"new-album": "Neues Album"
+			},
+			"scan-a-record": "Platte scannen",
+			"photograph-the-sleeve-the": "Fotografiere die Hülle — die Rückseite mit Barcode oder Katalognummer funktioniert am besten.",
+			"your-account-may-not": "Dein Konto darf noch keine Platten in eine Sammlung aufnehmen. Bitte um die Sammlerrolle, dann öffnet sich der Scan.",
+			"sign-in-as-a": "Melde dich als Sammler an, um Platten in deine Sammlung aufzunehmen.",
+			"log-in": "Anmelden",
+			"the-photo": "Das Foto",
+			"the-record-photographed": "Die fotografierte Platte",
+			"reading-the-photo": "Foto wird gelesen…",
+			"add-a-photo": "Foto hinzufügen",
+			"scan-another": "Weitere scannen",
+			"nothing-recognised-on-this": "Auf diesem Foto war nichts zu erkennen. Versuch die Rückseite, mit Barcode oder Katalognummer im Bild.",
+			"what-this-looks-like": "Das sieht danach aus",
+			"open-album": "Album öffnen",
+			"add-a-copy": "Exemplar hinzufügen",
+			"request-this-pressing": "Diese Pressung anfragen",
+			"requested": "Angefragt",
+			"request-album": "Album anfragen",
+			"read-off-the-photo": "Vom Foto gelesen",
+			"artist": "Künstler",
+			"title": "Titel",
+			"label": "Label",
+			"catalogue-number": "Katalognummer",
+			"barcode": "Barcode",
+			"year": "Jahr"
+		},
+		"shelf-scan": {
+			"scan-a-shelf": "Regal einlesen",
+			"photograph-one-compartment-twice": "Fotografiere ein Fach aus zwei Winkeln. Erst das zweite Lesen zeigt, welche Rücken die App richtig erkannt hat und welche deinen Blick brauchen.",
+			"your-account-may-not": "Dein Konto darf noch keine Platten in eine Sammlung legen. Frag nach der Sammlerrolle, dann öffnet sich das Einlesen.",
+			"sign-in-as-a": "Melde dich als Sammler an, um Platten in deine Sammlung zu legen.",
+			"log-in": "Anmelden",
+			"the-photos": "Die Fotos",
+			"one-from-the-front": "Eines frontal, eines von der Seite. Die Spiegelung, die einen schwarzen Rücken verdeckt, wandert mit dem Winkel.",
+			"the-compartment-photographed": "Das fotografierte Fach",
+			"remove-this-photo": "Dieses Foto entfernen",
+			"add-a-photo": "Foto hinzufügen",
+			"what-is-in-the-compartment": "Was liegt im Fach",
+			"reading-the-spines": "Rücken werden gelesen…",
+			"read-the-shelf": "Regal einlesen",
+			"start-over": "Von vorn",
+			"no-spine-could-be": "Kein Rücken war lesbar. Versuch es näher oder mit mehr Licht von der Seite.",
+			"check-what-was-read": "Prüfe, was gelesen wurde",
+			"rows-read": "{{rows}} Platten gelesen.",
+			"need-a-look": "{{count}} brauchen einen Blick.",
+			"the-photos-counted-differently": "Die Fotos haben unterschiedlich viele Platten gezählt ({{counts}}). Eines davon hat einen Rücken gesehen, der hier fehlt.",
+			"artist": "Künstler",
+			"album": "Album",
+			"label": "Label",
+			"catalogue-number": "Katalognummer",
+			"seen-on-photos": "auf {{seen}} Foto(s)",
+			"keep-it": "Behalten",
+			"leave-it-out": "Weglassen",
+			"nothing-could-be-read": "Von diesem Rücken war nichts lesbar — trag es ein oder lass die Zeile weg.",
+			"the-photos-disagree": "Die Fotos widersprechen sich bei: {{field}}.",
+			"take": "Nimm",
+			"sending": "Wird gesendet…",
+			"ask-for-these": "Diese {{count}} Platten anfragen",
+			"an-admin-approves-each": "Ein Admin gibt jede Anfrage frei; vorher kommt nichts in den Katalog.",
+			"media": {
+				"vinyl": "Vinyl",
+				"cd": "CD",
+				"cassette": "Kassette",
+				"dvd": "DVD"
+			}
+		},
+		"upcoming": {
+			"coming-out": "Erscheint",
+			"the-next-few-weeks": "Die nächsten Wochen an Platten von Künstlern, die schon im Katalog stehen — Neues wie Wiederveröffentlichungen, einmal täglich von MusicBrainz geholt.",
+			"records": "Platten",
+			"new": "Neu",
+			"reissues": "Wiederveröffentlichungen",
+			"artists": "Künstler",
+			"nothing-is-announced-for": "Für die kommenden Wochen ist nichts angekündigt. Sobald eine Platte eines Künstlers aus dem Katalog bei MusicBrainz ein Datum bekommt, taucht sie hier auf — meist einige Wochen im Voraus.",
+			"which-records": "Welche Platten",
+			"on-vinyl": "Auf Vinyl",
+			"matched-on-the-artist": "Nur über den Künstlernamen zugeordnet — es könnte ein Namensvetter sein.",
+			"name-match": "Namensgleichheit",
+			"new2": "Neu",
+			"filter": {
+				"all": "Alles",
+				"new": "Neue Platten",
+				"reissue": "Wiederveröffentlichungen"
+			},
+			"filteredOut": {
+				"one": "In den nächsten Wochen passt nichts dazu. Es kommt noch {{count}} Platte.",
+				"other": "In den nächsten Wochen passt nichts dazu. Es kommen noch {{count}} Platten."
+			},
+			"reissue": "Wiederveröffentlichung",
+			"reissueOf": "Wiederveröffentlichung von {{year}}"
+		},
+		"wishlist-item": {
+			"looking-for-this-wish": "Wunsch wird gesucht…",
+			"no-wish-under-this": "Kein Wunsch unter dieser Kennung.",
+			"either-the-record-has": "Entweder wurde die Platte gefunden und der Wunsch gestrichen, oder er stand nie auf jemandes Liste.",
+			"back-to-the-wishlist": "Zurück zur Wunschliste",
+			"this-wish-is-no": "Dieser Wunsch ist nicht mehr aktiv — die Platte wurde gefunden, oder die Jagd wurde abgeblasen.",
+			"on-the-wishlist": "Auf der Wunschliste",
+			"open-the-album": "Album öffnen",
+			"pressings-that-would-do": "Pressungen, die es täten",
+			"the-catalog-knows-no": "Der Katalog kennt noch keine Pressung dieses Albums."
+		},
+		"owned-artist": {
+			"title": "Meine Bands",
+			"lead": "Kennt der Katalog eine Band nicht, kannst du sie hier selbst anlegen. Nur du siehst sie, und sie zählt weder für Punkte noch für Statistiken.",
+			"add": "Neue Band",
+			"new-band": "Neue Band",
+			"edit-band": "Band bearbeiten",
+			"cancel": "Abbrechen",
+			"could-not-save": "Speichern fehlgeschlagen. Versuche es erneut.",
+			"loading": "Bands werden geladen…",
+			"nothing-yet": "Du hast noch keine eigenen Bands.",
+			"only-yours": "Was du hier anlegst, bleibt deins — in den Katalog bringt es nur eine Freigabe.",
+			"edit": "Bearbeiten",
+			"remove": "Löschen",
+			"remove-it": "Wirklich löschen?",
+			"yes": "Ja",
+			"submit": "In den Katalog einreichen",
+			"submitting": "Wird eingereicht…",
+			"could-not-submit": "Einreichen fehlgeschlagen. Versuche es erneut.",
+			"request-pending": "Wartet auf Entscheidung",
+			"request-approved": "In den Katalog übernommen",
+			"request-partly-approved": "Teilweise übernommen",
+			"request-rejected": "Abgelehnt"
+		},
+		"propose": {
+			"suggest-a-change": "Änderung vorschlagen",
+			"lead": "Ändere, was im Katalog deiner Meinung nach falsch steht. Das Speichern schreibt nichts — im nächsten Schritt fragen wir nach dem Beleg, danach geht es an einen Admin.",
+			"what-backs-it": "Was belegt es?",
+			"every-field-needs-one": "Jedes geänderte Feld braucht einen Beleg: einen Link, eine Katalognummer oder deine eigenen Worte, wenn du die Platte in der Hand hast.",
+			"reference-placeholder": "Link, Kennung oder ein Satz",
+			"anything-else": "Sonst noch etwas für den Admin (optional)",
+			"send": "Absenden",
+			"sending": "Wird gesendet…",
+			"discard": "Verwerfen",
+			"sent": "Gesendet. Ein Admin entscheidet Feld für Feld und begründet jede Ablehnung.",
+			"see-my-requests": "Meine Anfragen",
+			"nothing-to-send": "Du hast nichts zu senden. Öffne einen Künstler und schlage dort eine Änderung vor.",
+			"back-to-the-catalog": "Zurück zum Katalog",
+			"could-not-send": "Senden fehlgeschlagen. Versuche es erneut.",
+			"what-you-are-adding": "Was du hinzufügst",
+			"say-where-it-is-from": "Sag, woher du es weißt, wenn du kannst — ein Link, eine Katalognummer, oder dass du die Platte in der Hand hast. Es lässt sich auch ohne senden.",
+			"where-is-it-from": "Woher weißt du es? (optional)"
+		},
+		"my-request": {
+			"title": "Meine Anfragen",
+			"lead": "Was du dem Katalog angeboten hast und was zurückkam. Eine Ablehnung trägt ihre Begründung — darauf kannst du antworten.",
+			"loading": "Anfragen werden geladen…",
+			"could-not-read": "Deine Anfragen konnten nicht geladen werden.",
+			"nothing-yet": "Du hast noch nichts gesendet.",
+			"my-bands": "Meine Bands",
+			"status-pending": "Wartet auf Entscheidung",
+			"status-approved": "Übernommen",
+			"status-partly": "Teilweise übernommen",
+			"status-rejected": "Abgelehnt",
+			"new-entity": "neuer Eintrag",
+			"change": "Änderung",
+			"accepted": "Übernommen",
+			"rejected": "Abgelehnt",
+			"what-you-asked": "Was du angeboten hast ({{count}} Felder)",
+			"from-the-admin": "Admin",
+			"new-release": "Pressungs-Anfrage",
+			"missing-something": "Fehlt etwas im Katalog?",
+			"add-artist": "Neuer Künstler",
+			"add-album": "Neues Album",
+			"add-release": "Neue Pressung",
+			"add-label": "Neues Label",
+			"add-musician": "Neuer Musiker"
+		},
+		"concert": {
+			"title": "Konzerte",
+			"lead": "Wo die Bands des Katalogs spielen. Nur Abende von Künstlern, die schon im Regal stehen — angekündigte Termine von MusicBrainz und suchgestützte Vorschläge, die jemand bestätigt hat.",
+			"nights": "Abende",
+			"bands": "Bands",
+			"festivals": "Festivals",
+			"cities": "Städte",
+			"which-nights": "Welche Abende",
+			"city": "Stadt",
+			"every-city": "Alle Städte",
+			"nothing": "Für die Bands des Katalogs ist noch kein Konzert angekündigt. Sobald sich ein Termin aus einer Quelle bestätigen lässt, steht er hier.",
+			"filtered-out": "Die Filter verbergen alles, was da ist. Lockere sie, oder wähle eine andere Stadt.",
+			"cancelled": "Abgesagt",
+			"festival": "Festival",
+			"until": "bis {{day}}",
+			"lineup": "Line-up",
+			"tickets": "Tickets",
+			"source": "Quelle",
+			"checked-hint": "Ein suchgestützter Vorschlag, den jemand bestätigt hat. Die Quelle öffnet sich unten auf der Karte.",
+			"filter": {
+				"all": "Alle",
+				"concerts": "Konzerte",
+				"festivals": "Festivals"
+			},
+			"countdown": {
+				"today": "Heute",
+				"tomorrow": "Morgen",
+				"days": "in {{value}} Tagen",
+				"nextWeek": "nächste Woche",
+				"weeks": "in {{value}} Wochen"
+			}
+		}
+	},
+	"ui": {
+		"artistSpotlight": {
+			"artist-spotlight": "Künstler im Rampenlicht",
+			"styles": "Stile",
+			"view-artist": "Künstler ansehen",
+			"show-another-artist": "Anderen Künstler zeigen",
+			"in-your-collection": "In deiner Sammlung",
+			"releasesOwned": {
+				"one": "{{count}} Veröffentlichung in deiner Sammlung",
+				"other": "{{count}} Veröffentlichungen in deiner Sammlung"
+			},
+			"albumsInCatalog": {
+				"one": "{{count}} Album im Katalog",
+				"other": "{{count}} Alben im Katalog"
+			},
+			"band-of-the-week": "Band der Woche",
+			"back-to-band": "Zurück zur Band der Woche",
+			"listen-radio": "Das Radio der Woche"
+		},
+		"recordShelf": {
+			"off-the-shelf": "Außerhalb des Regals",
+			"no-drawn-compartment-left": "Kein gezeichnetes Fach ist übrig, oder keines ist hoch genug dafür — sieh dein Regal im Profil durch.",
+			"play-what-stands-here": "Abspielen, was hier steht",
+			"play-what-stands-here2": "Abspielen, was hier steht",
+			"open": "Öffnen",
+			"rowSlot": "Reihe {{row}} · Fach {{slot}}",
+			"in-hand": "Platten in der Hand",
+			"in-hand-how": "Zieh sie in ein Fach oder tippe auf die Wand, an die sie sollen.",
+			"put-down": "Ablegen",
+			"put-left": "An die linke Wand: {{where}}",
+			"put-right": "An die rechte Wand: {{where}}",
+			"put-bottom": "Nach unten: {{where}}",
+			"put-top": "Nach oben: {{where}}",
+			"browse": "Durchsehen: {{where}}",
+			"browse-previous": "Vorherige Platte",
+			"browse-next": "Nächste Platte",
+			"browse-previous-compartment": "Vorheriges Fach",
+			"browse-next-compartment": "Nächstes Fach",
+			"browse-close": "Schließen",
+			"browse-list": "Platten im Fach",
+			"browse-gap": "Leerraum — ab hier an der rechten Wand",
+			"browse-gap-tower": "Leerraum — ab hier oben",
+			"browse-keys": "← → Platte für Platte · Bild↑ / Bild↓ Fach für Fach · Enter öffnen · Esc schließen",
+			"browse-move-up": "Nach vorn",
+			"browse-move-down": "Nach hinten",
+			"browse-keys-arrange": "Alt + ↑ ↓ oder ziehen: verschieben",
+			"browse-saving": "Speichern…"
+		},
+		"networkDetails": {
+			"connections-in-view": "Sichtbare Verbindungen",
+			"albums": "Alben",
+			"collection": "Sammlung",
+			"in-your-collection": "In deiner Sammlung",
+			"open-page": "Seite öffnen",
+			"focus-here": "Hierher fokussieren",
+			"parallel-groups": "Parallele Gruppen",
+			"played-together-with": "Spielte zusammen mit",
+			"related-albums": "Verwandte Alben",
+			"owned": "Vorhanden"
+		},
+		"networkGraph": {
+			"view": "Ansicht",
+			"zoom-in": "Vergrößern",
+			"zoom-out": "Verkleinern",
+			"fit-to-screen": "An Bildschirm anpassen"
+		},
+		"admin": {
+			"close-admin-menu": "Admin-Menü schließen",
+			"admin": "Admin",
+			"admin2": "Admin",
+			"back-to-page": "Zurück zur Seite",
+			"breadcrumb": "Brotkrümelnavigation",
+			"hide-menu": "Menü ausblenden",
+			"show-menu": "Menü einblenden"
+		},
+		"adminDashboard": {
+			"dashboard": "Übersicht",
+			"the-catalog-and-the": "Katalog und Sammlungsdaten auf einen Blick.",
+			"record-counts": "Datensatzzahlen",
+			"loading": "Wird geladen",
+			"open-list": "Liste öffnen",
+			"collection-growth": "Wachstum der Sammlung",
+			"no-dated-collection-items": "Noch keine datierten Sammlungseinträge.",
+			"collection-growth2": "Wachstum der Sammlung",
+			"data-completeness": "Datenvollständigkeit",
+			"album-types": "Albumtypen",
+			"album-types-in-the": "Albumtypen im Katalog",
+			"top-styles": "Häufigste Stile",
+			"top-styles-in-the": "Häufigste Stile im Katalog",
+			"quick-actions": "Schnellaktionen"
+		},
+		"collectionDetailPage": {
+			"this-collection-is-not": "Diese Sammlung ist nicht veröffentlicht oder existiert nicht mehr.",
+			"back-to-the-collections": "Zurück zu den Sammlungen",
+			"collection": "Sammlung",
+			"play-this-collection": "Sammlung abspielen",
+			"points": "Punkte",
+			"nothing-in-the-catalog": "Im Katalog entspricht dieser Sammlung noch nichts.",
+			"which-records": "Welche Platten",
+			"no-record-here-yet": "Hier steht noch keine Platte.",
+			"earned": "so viel hast du damit geholt",
+			"sortBy": "Sortierung",
+			"stat": {
+				"records": "Platten",
+				"owned": "Im Regal",
+				"missing": "Fehlt",
+				"done": "Fortschritt",
+				"points": "Punkte",
+				"finishers": "Vollendet",
+				"hunters": "Sammeln sie"
+			},
+			"sort": {
+				"year": "Nach Jahr",
+				"artist": "Nach Interpret",
+				"name": "Nach Name"
+			},
+			"state": {
+				"owned": "Vorhanden",
+				"missing": "Fehlt"
+			},
+			"albums": {
+				"title": "Die Platten"
+			},
+			"hunt": {
+				"title": "Was als Nächstes",
+				"lead": "Aus dieser Sammlung bringen dich diese am weitesten."
+			},
+			"badge": {
+				"earned": "Erreicht",
+				"toGo": {
+					"one": "Noch {{count}} Platte",
+					"other": "Noch {{count}} Platten"
+				}
+			},
+			"rule": {
+				"title": "Was hineingehört",
+				"lead": "Eine Sammlung ist eine Regel, keine Liste: Was passt, kommt von selbst dazu, sobald der Katalog wächst.",
+				"years": "Jahre",
+				"styles": "Stil",
+				"allStyles": "Alle diese Stile",
+				"artistStyles": "Stil des Interpreten",
+				"artists": "Interpreten",
+				"moreArtists": "Weitere Interpreten",
+				"formats": "Format",
+				"countries": "Land",
+				"roles": "Mitwirkung",
+				"musicians": "Genannte Musiker",
+				"notStyles": "Nicht dieser Stil",
+				"notArtistStyles": "Nicht dieser Interpretenstil"
+			},
+			"decades": {
+				"title": "Jahrzehnte",
+				"lead": "Die ganze Säule ist die Sammlung, der gefüllte Teil dein Regal.",
+				"one": "{{decade}}: {{owned}} von {{total}} Platten"
+			},
+			"crowd": {
+				"title": "Wer sie sammelt",
+				"finished": "vollendet",
+				"hunting": "sammelt sie"
+			},
+			"score": {
+				"title": "Was die Punkte brachte",
+				"lead": "Diese Platten machen die Sammlung wertvoller."
+			}
+		},
+		"copyPhotos": {
+			"no-photos-of-this": "Keine Fotos von diesem Exemplar.",
+			"replace": "Ersetzen",
+			"remove": "Entfernen",
+			"at-most-two-pictures": "Höchstens zwei Bilder — Vorder- und Rückseite. Sie werden im Browser verkleinert, bevor etwas hochgeladen wird."
+		},
+		"copyDetailsForm": {
+			"how-you-came-by": "Wie du sie bekommen hast",
+			"bought-on": "Gekauft am",
+			"that-day-is-still": "Dieser Tag liegt noch vor uns.",
+			"where-from": "Woher",
+			"a-shop-a-fair": "Ein Laden, eine Börse, ein Webshop, eine Person…",
+			"price": "Preis",
+			"this-is-not-an": "Das ist kein Betrag.",
+			"currency": "Währung",
+			"huf": "HUF",
+			"how-it-has-held": "Wie sie sich gehalten hat",
+			"record": "Platte",
+			"not-graded": "Nicht bewertet",
+			"sleeve": "Hülle",
+			"not-graded2": "Nicht bewertet",
+			"which-one-of-them": "Welches Exemplar",
+			"only-a-numbered-edition": "Nur eine nummerierte Auflage trägt so etwas — die Nummer, die auf der Platte gestempelt, geprägt oder von Hand geschrieben ist. Sie wird seitenweit registriert: zwei Sammler können nicht dasselbe Exemplar eintragen.",
+			"copy-number": "Exemplarnummer",
+			"this-is-not-a": "Das ist keine Exemplarnummer.",
+			"which-one-of-them2": "Welches ist deins? Eine Auflagenhöhe allein sagt nichts über dieses Exemplar.",
+			"out-of": "Von",
+			"this-is-not-an2": "Das ist keine Auflagenhöhe.",
+			"the-edition-is-smaller": "Die Auflage ist kleiner als die Nummer dieses Exemplars.",
+			"what-there-is-to": "Was es zu erzählen gibt",
+			"note": "Notiz",
+			"the-one-line-that": "Die eine Zeile, die neben der Platte steht",
+			"story": "Geschichte",
+			"how-it-found-you": "Wie sie zu dir fand und was sie seither erlebt hat.",
+			"cancel": "Abbrechen"
+		},
+		"wishlistDialog": {
+			"add-to-wishlist": "Zur Wunschliste",
+			"close": "Schließen",
+			"which-format-are-you": "Welches Format suchst du?",
+			"shop-link-optional": "Shop-Link (optional)",
+			"https": "https://…",
+			"paste-a-full-address": "Füge eine vollständige Adresse ein, beginnend mit http:// oder https://.",
+			"it-lands-on-your": "Er landet auf deiner eigenen Wunschliste. Markiere ihn dort als gefunden, sobald du ihn hast.",
+			"cancel": "Abbrechen",
+			"addFailed": "Konnte nicht hinzugefügt werden: {{error}}"
+		},
+		"copyRemoval": {
+			"remove-from-collection": "Aus der Sammlung entfernen",
+			"close": "Schließen",
+			"what-happened-to-it": "Was ist damit passiert?",
+			"when": "Wann",
+			"pick-a-day-today": "Wähle einen Tag, spätestens heute.",
+			"note-optional": "Notiz (optional)",
+			"e-g-sold-on": "z. B. auf Discogs verkauft, gegen eine Death-LP getauscht",
+			"it-stays-in-your": "Sie bleibt in deiner Historie, und du kannst sie jederzeit zurücknehmen.",
+			"cancel": "Abbrechen",
+			"removeFailed": "Konnte nicht entfernt werden: {{error}}",
+			"numberTakenMeanwhile": "Das Exemplar ist zurück, aber seine Nummer wurde inzwischen von einem anderen Sammler registriert.",
+			"removing": "Wird entfernt…",
+			"removeTitle": "{{title}} aus der Sammlung entfernen"
+		},
+		"releasePicker": {
+			"add-to-collection": "Zur Sammlung hinzufügen",
+			"close": "Schließen",
+			"requested-waiting-for-an": "Angefragt, wartet auf einen Admin",
+			"not-added-by-the": "Vom Admin nicht aufgenommen",
+			"is-your-copy-a": "Ist dein Exemplar nummeriert?",
+			"only-a-numbered-edition": "Nur eine nummerierte Auflage trägt so etwas — die auf der Platte gestempelte oder geschriebene Nummer. Lass es leer, wenn deins keine hat; du kannst es später auf der Seite des Exemplars nachtragen.",
+			"copy-number": "Exemplarnummer",
+			"out-of": "Von",
+			"this-is-not-a": "Das ist keine Exemplarnummer.",
+			"this-is-not-an": "Das ist keine Auflagenhöhe.",
+			"the-edition-is-smaller": "Die Auflage ist kleiner als die Nummer dieses Exemplars.",
+			"which-one-of-them": "Welches ist deins? Eine Auflagenhöhe allein sagt nichts über dieses Exemplar.",
+			"another-pressing": "Andere Pressung",
+			"which-pressing-do-you": "Welche Pressung hast du?",
+			"loading-releases": "Veröffentlichungen werden geladen…",
+			"in-your-collection": "In deiner Sammlung",
+			"add": "Hinzufügen",
+			"no-release-of-this": "Noch keine Veröffentlichung dieses Albums ist im Katalog. So kannst du es trotzdem aufnehmen:",
+			"don-t-see-your": "Du siehst deine Pressung nicht?",
+			"find-it-on-discogs": "Auf Discogs finden",
+			"identify-from-a-photo": "Anhand eines Fotos erkennen",
+			"describe-it": "Beschreiben",
+			"catalog-releases": "Katalog-Veröffentlichungen",
+			"pick-your-pressing-from": "Wähle deine Pressung bei Discogs:",
+			"loading-discogs-pressings": "Discogs-Pressungen werden geladen…",
+			"try-again": "Erneut versuchen",
+			"filter-by-format": "Nach Format filtern",
+			"all": "Alle",
+			"requested": "Angefragt",
+			"discogs-lists-no-pressings": "Discogs führt keine Pressungen davon.",
+			"not-there": "Nicht dabei?",
+			"describe-it2": "Beschreiben",
+			"catalog-releases2": "Katalog-Veröffentlichungen",
+			"the-record-photographed": "Die fotografierte Platte",
+			"reading-the-photo": "Foto wird gelesen…",
+			"photograph-the-record-the": "Fotografiere die Platte — die Rückseite oder das Label, sodass Katalognummer oder Barcode lesbar sind. Daran erkennt man deine Pressung unter den anderen.",
+			"add-a-photo": "Foto hinzufügen",
+			"or-paste-an-image": "oder füge ein Bild ein oder zieh eines hierher",
+			"try-again2": "Erneut versuchen",
+			"another-photo": "Anderes Foto",
+			"which-one-is-yours": "Welche ist deine?",
+			"requested2": "Angefragt",
+			"nothing-recognised-on-this": "Auf diesem Foto war nichts zu erkennen. Versuch die Seite mit Katalognummer oder Barcode.",
+			"rather-type-it": "Lieber eintippen?",
+			"describe-it3": "Beschreiben",
+			"catalog-releases3": "Katalog-Veröffentlichungen",
+			"paste-its-discogs-link": "Füge den Discogs-Link ein oder beschreibe sie: Format, Label, Land, Jahr.",
+			"discogs-release-link": "Discogs-Veröffentlichungslink",
+			"https-www-discogs-com": "https://www.discogs.com/release/…",
+			"not-a-discogs-release": "Kein Discogs-Veröffentlichungslink.",
+			"description": "Beschreibung",
+			"e-g-vinyl-lp": "z. B. Vinyl-LP, Nuclear Blast, Deutschland, 2016, rotes Vinyl",
+			"request-this-pressing": "Diese Pressung anfragen:",
+			"note-for-the-admin": "Notiz für den Admin (optional)",
+			"e-g-signed-copy": "z. B. signiertes Exemplar, farbiges Vinyl",
+			"choose-another": "Andere wählen",
+			"addFailed": "Konnte nicht in deine Sammlung aufgenommen werden: {{error}}",
+			"generic-hint": "Du weißt nicht, welche Pressung es ist?",
+			"generic-open": "Nur mit Format aufnehmen",
+			"generic-lead": "Wähle das Format, auf dem du es hast. Es kommt als das Album selbst in deine Sammlung — ohne Label, Land und Katalognummer.",
+			"generic-option": "Pressung nicht angegeben",
+			"generic-adding": "Wird hinzugefügt…",
+			"routes-now": "Kommt sofort in deine Sammlung",
+			"routes-request": "Geht als Anfrage an den Admin",
+			"generic-route-hint": "Du wählst nur das Format, auf dem du es hast. Es kommt ohne Label, Land und Katalognummer hinein.",
+			"discogs-route-hint": "Wähle deine Pressung aus der Discogs-Liste.",
+			"photo-route-hint": "Fotografiere die Rückseite oder das Label, und wir suchen heraus, welche Pressung es ist.",
+			"describe-route-hint": "Füge den Discogs-Link ein oder beschreibe sie in ein paar Worten.",
+			"add-to-my-collection": "Zu meiner Sammlung hinzufügen",
+			"adding": "Wird hinzugefügt…",
+			"send-request": "Anfrage senden",
+			"sending": "Wird gesendet…",
+			"paste-not-an-image": "Das war kein Bild. Kopiere das Bild selbst — im Browser Rechtsklick und „Bild kopieren“. Eine aus dem Finder kopierte Datei lässt sich nicht einfügen, aber du kannst sie hier ablegen.",
+			"clipboard-empty": "Die Zwischenablage ist leer.",
+			"remove": "Entfernen",
+			"from-your-collection": "aus deiner Sammlung"
+		},
+		"discographyTimeline": {
+			"releases-over-time": "Veröffentlichungen im Zeitverlauf",
+			"in-your-collection": "In deiner Sammlung",
+			"not-collected": "Nicht gesammelt",
+			"in-your-collection2": "In deiner Sammlung"
+		},
+		"wishlistPage": {
+			"wishlist": "Wunschliste",
+			"wanted": "Gesucht",
+			"artists": "Künstler",
+			"found": "Gefunden",
+			"search-artist-or-album": "Künstler oder Album suchen",
+			"search-artist-or-album2": "Künstler oder Album suchen…",
+			"filter-by-format": "Nach Format filtern",
+			"all": "Alle",
+			"show-found": "Gefundene anzeigen",
+			"clear-filters": "Filter zurücksetzen",
+			"loading-wishlist": "Wunschliste wird geladen…",
+			"your-wishlist-lives-behind": "Deine Wunschliste liegt hinter der Anmeldung",
+			"log-in-to-see": "Melde dich an, um die Alben zu sehen, die du suchst.",
+			"log-in": "Anmelden",
+			"your-wishlist-is-empty": "Deine Wunschliste ist leer",
+			"browse-the-collection-and": "Durchstöbere die Sammlung und notiere die Alben, die du suchst.",
+			"open-collection": "Sammlung öffnen",
+			"no-albums-found": "Keine Alben gefunden",
+			"try-another-search-or": "Versuche eine andere Suche oder ein anderes Format.",
+			"clear-filters2": "Filter zurücksetzen",
+			"also-wanted-on": "Auch gesucht auf",
+			"found2": "Gefunden",
+			"want-again": "Wieder suchen",
+			"shop": "Shop",
+			"saveFailed": "Konnte nicht gespeichert werden: {{error}}"
+		},
+		"releaseCard": {
+			"dvd": "DVD"
+		},
+		"copyPlacement": {
+			"place-on-the-shelf": "Ins Regal stellen",
+			"close": "Schließen",
+			"which-shelf": "Welches Regal",
+			"which-compartment": "Welches Fach",
+			"holds-inserts": "In diesem Fach stehen Einsätze; wähle den Einsatz bei den Regalen.",
+			"which-side": "Welche Seite des Fachs",
+			"position-in-the-compartment": "Position im Fach",
+			"counted-from-the-left": "Von links gezählt. Platten, die du nicht selbst eingeräumt hast, füllen weiterhin die freigelassenen Fächer.",
+			"counted-from-the-right": "Von rechts gezählt. Das rechte Ende des Fachs bleibt stehen, auch wenn die linke Reihe wächst.",
+			"take-off-the-shelf": "Aus dem Regal nehmen",
+			"cancel": "Abbrechen",
+			"placeFailed": "Konnte nicht eingeräumt werden: {{error}}",
+			"against-the-left-wall": "Linke Seite",
+			"against-the-right-wall": "Rechte Seite"
+		},
+		"collectionViewToggle": {
+			"view": "Ansicht",
+			"table": "Tabelle",
+			"cards": "Karten"
+		},
+		"errorToast": {
+			"close": "Schließen"
+		},
+		"wishlistItemAdmin": {
+			"wishlist-items": "Wunschlisteneinträge",
+			"albums-the-users-are": "Alben, nach denen die Nutzer suchen.",
+			"add-wishlist-item": "Wunsch hinzufügen"
+		},
+		"wishlistItemForm": {
+			"details": "Details",
+			"artist": "Künstler",
+			"start-typing-an-artist": "Künstler eintippen…",
+			"album": "Album",
+			"start-typing-an-album": "Album eintippen…",
+			"medias": "Medien",
+			"select-medias": "Medien wählen",
+			"source-link": "Quelllink",
+			"active-still-looking-for": "Aktiv — noch auf der Suche",
+			"cancel": "Abbrechen",
+			"save": "Speichern"
+		},
+		"wishlistItemTable": {
+			"no-wishlist-items-found": "Keine Wunschlisteneinträge gefunden.",
+			"filter-by-name": "Nach Name filtern…",
+			"filter-by-name2": "Nach Name filtern",
+			"delete-wishlist-item": "Wunsch löschen",
+			"artist-name": "Künstlername",
+			"album-name": "Albumtitel",
+			"medias": "Medien",
+			"updated": "Geändert",
+			"actions": "Aktionen",
+			"edit-wishlist-item": "Wunsch bearbeiten",
+			"delete-wishlist-item2": "Wunsch löschen"
+		},
+		"wishlistItemSimpleView": {
+			"image": "Bild",
+			"shop": "Shop",
+			"image2": "Bild",
+			"shop2": "Shop"
+		},
+		"labelAdmin": {
+			"labels": "Labels",
+			"record-labels-of-the": "Plattenlabels des globalen Katalogs.",
+			"add-label": "Label hinzufügen"
+		},
+		"labelForm": {
+			"details": "Details",
+			"load": "Laden",
+			"load-data-from-discogs": "Daten von Discogs laden, per Discogs-ID oder über den Namen",
+			"name": "Name",
+			"parent-label": "Mutterlabel",
+			"start-typing-a-label": "Label eintippen…",
+			"profile": "Profil",
+			"discogs-markup-such-as": "Discogs-Auszeichnungen wie [a=Name] werden auf der öffentlichen Seite bereinigt.",
+			"image-and-links": "Bild und Links",
+			"logo-url": "Logo-URL",
+			"enter-a-full-http": "Gib eine vollständige http(s)-Adresse ein.",
+			"logo-preview": "Logo-Vorschau",
+			"links": "Links",
+			"one-address-per-line": "Eine Adresse pro Zeile.",
+			"source": "Quelle",
+			"discogs-id": "Discogs-ID",
+			"empty-the-load-searches": "Leer: das Laden sucht bei Discogs nach dem Namen.",
+			"cancel": "Abbrechen",
+			"save": "Speichern",
+			"which-label-is-this": "Welches Label ist das?",
+			"discogs-knows-several-labels": "Discogs kennt mehrere Labels dieses Namens. Wähle das richtige — seine ID kommt als Zeile zurück, die bleibt.",
+			"open-on-discogs": "Auf Discogs öffnen",
+			"cancel2": "Abbrechen",
+			"loaded-label-data": "Geladene Labeldaten",
+			"source2": "Quelle:",
+			"apply": "Übernehmen",
+			"field": "Feld",
+			"current": "Aktuell",
+			"loaded": "Geladen",
+			"the-loaded-data-matches": "Die geladenen Daten stimmen mit dem Formular überein.",
+			"cancel3": "Abbrechen",
+			"apply-to-form": "Auf das Formular anwenden",
+			"parentOnDiscogs": "Mutterlabel auf Discogs: {{name}}. Wähle es von Hand — der Katalog hat es womöglich noch nicht."
+		},
+		"labelTable": {
+			"no-labels-found": "Keine Labels gefunden.",
+			"filter-by-name": "Nach Name filtern…",
+			"filter-by-name2": "Nach Name filtern",
+			"delete-label": "Label löschen",
+			"name": "Name",
+			"parent": "Mutterlabel",
+			"updated": "Geändert",
+			"actions": "Aktionen",
+			"edit-label": "Label bearbeiten",
+			"delete-label2": "Label löschen"
+		},
+		"labelSimpleView": {
+			"label-simple-view-works": "einfache Labelansicht funktioniert!"
+		},
+		"labelDetailView": {
+			"label-detail-view-works": "detaillierte Labelansicht funktioniert!"
+		},
+		"releaseAdmin": {
+			"releases": "Veröffentlichungen",
+			"pressings-and-editions-of": "Pressungen und Ausgaben der Alben.",
+			"add-release": "Veröffentlichung hinzufügen"
+		},
+		"releaseEdit": {
+			"details": "Details",
+			"tracks": "Titel"
+		},
+		"releaseTracks": {
+			"give-the-pressing-an": "Gib der Pressung zuerst ein Album — ein Titel der Veröffentlichung ist ein Titel des Albums.",
+			"every-pressing-of-this": "Jede Pressung dieses Albums spielt diese. Sie werden am Album bearbeitet, nicht hier.",
+			"edit-this-track": "Diesen Titel bearbeiten",
+			"remove-this-track": "Diesen Titel entfernen",
+			"nothing-yet-this-pressing": "Noch nichts. Diese Pressung spielt das Album, wie es ist.",
+			"position": "Position",
+			"title": "Titel",
+			"length": "Länge",
+			"cancel": "Abbrechen",
+			"albumHeading": "Das Album ({{count}})",
+			"ownHeading": "Nur auf dieser Pressung ({{count}})"
+		},
+		"releaseForm": {
+			"details": "Details",
+			"name": "Name",
+			"artist": "Künstler",
+			"start-typing-an-artist": "Künstler eintippen…",
+			"album": "Album",
+			"start-typing-an-album": "Album eintippen…",
+			"label": "Label",
+			"start-typing-a-label": "Label eintippen…",
+			"date": "Datum",
+			"pressing": "Pressung",
+			"media": "Medium",
+			"select-a-media": "Medium wählen",
+			"country": "Land",
+			"select-a-country": "Land wählen",
+			"format-description": "Ausführung",
+			"select-a-format-description": "Ausführung wählen",
+			"cancel": "Abbrechen",
+			"save": "Speichern",
+			"load": "Laden",
+			"load-pressings-from-discogs": "Die Pressungen des Albums von Discogs laden",
+			"catno": "Katalognummer",
+			"catno-example": "z. B. MOVLP2620",
+			"catno-hint": "Die auf Rücken und Rückseite gedruckte Nummer; danach sucht die Fotoerkennung.",
+			"cover-color": "Hüllenfarbe",
+			"cover-color-hint": "Die vorherrschende Farbe der Hülle; damit zeichnet das Regal den Rücken. Leer gelassen, bleibt es bei der selbst erdachten Farbe.",
+			"no-cover-color": "nicht gesetzt",
+			"clear-cover-color": "Löschen",
+			"which-pressing-is-this": "Welche Pressung ist das?",
+			"discogs-lists-these-pressings": "Discogs kennt {{count}} Pressungen dieses Albums. Wähle die passende — ihre Daten kommen ins Formular.",
+			"filter-pressings": "Filtern",
+			"filter-pressings-example": "Jahr, Land, Katalognummer, Format…",
+			"open-on-discogs": "Auf Discogs öffnen",
+			"no-pressing-matches": "Keine Pressung passt zum Filter.",
+			"cancel2": "Abbrechen",
+			"loaded-pressing-data": "Geladene Pressungsdaten",
+			"source": "Quelle:",
+			"labelOnDiscogs": "Label auf Discogs: {{name}}. Im Katalog gibt es kein Label dieses Namens, bitte von Hand wählen.",
+			"apply": "Übernehmen",
+			"field": "Feld",
+			"current": "Aktuell",
+			"loaded": "Geladen",
+			"discogs-id": "Discogs-ID",
+			"the-loaded-data-matches": "Die geladenen Daten stimmen mit dem Formular überein.",
+			"cancel3": "Abbrechen",
+			"apply-to-form": "Ins Formular übernehmen"
+		},
+		"releaseTable": {
+			"no-releases-found": "Keine Veröffentlichungen gefunden.",
+			"filter-by-name": "Nach Name filtern…",
+			"filter-by-name2": "Nach Name filtern",
+			"filter-by-artist": "Nach Künstler filtern…",
+			"filter-by-artist2": "Nach Künstler filtern",
+			"delete-release": "Veröffentlichung löschen",
+			"name": "Name",
+			"artist": "Künstler",
+			"date": "Datum",
+			"media": "Medium",
+			"format": "Format",
+			"updated": "Geändert",
+			"actions": "Aktionen",
+			"edit-release": "Veröffentlichung bearbeiten",
+			"delete-release2": "Veröffentlichung löschen"
+		},
+		"releaseDeletion": {
+			"title": "Ausgabe löschen",
+			"checking": "Prüfe, was sie hält …",
+			"nothing-holds": "Nichts verweist darauf, sie kann endgültig gelöscht werden.",
+			"goes-with-tracks": "{{count}} Titel gehen mit.",
+			"in-use": "{{count}} Exemplar(e) davon stehen in Sammlungen, deshalb ist die Ausgabe nicht löschbar — entfernen kann sie nur die jeweilige Besitzerin oder der Besitzer. Archiviere sie stattdessen: sie verschwindet aus den Formularen, die vorhandenen Exemplare bleiben.",
+			"in-use-now": "Inzwischen wurde ein Exemplar angelegt, daher ist die Ausgabe doch nicht löschbar. Archiviere sie lieber.",
+			"really-delete": "Endgültig löschen",
+			"archive": "Archivieren",
+			"unarchive": "Wiederherstellen",
+			"cancel": "Abbrechen",
+			"archived": "archiviert"
+		},
+		"releaseDetailView": {
+			"release-detail-view-works": "detaillierte Veröffentlichungsansicht funktioniert!"
+		},
+		"collectionItemAdmin": {
+			"collection-items": "Sammlungseinträge",
+			"items-the-users-own": "Einträge, die die Nutzer in ihren Sammlungen haben.",
+			"add-collection-item": "Sammlungseintrag hinzufügen"
+		},
+		"collectionItemForm": {
+			"details": "Details",
+			"release": "Veröffentlichung",
+			"start-typing-a-release": "Veröffentlichung eintippen…",
+			"date": "Datum",
+			"shelf-place": "Regalplatz",
+			"unit": "Element",
+			"select-a-unit": "Element wählen",
+			"compartment": "Fach",
+			"side": "Seite",
+			"filed-by-the-shelf": "Vom Regal eingeordnet",
+			"position": "Position",
+			"take-the-place-back": "Platz zurücknehmen",
+			"no-shelf-drawn-yet": "Noch kein Regal gezeichnet. Zeichne die Elemente in deinem Profil, dann lassen sich die Exemplare hier einräumen.",
+			"cancel": "Abbrechen",
+			"save": "Speichern"
+		},
+		"collectionItemTable": {
+			"no-collection-items-found": "Keine Sammlungseinträge gefunden.",
+			"filter-by-name": "Nach Name filtern…",
+			"filter-by-name2": "Nach Name filtern",
+			"filter-by-artist": "Nach Künstler filtern…",
+			"filter-by-artist2": "Nach Künstler filtern",
+			"delete-collection-item": "Sammlungseintrag löschen",
+			"name": "Name",
+			"artist": "Künstler",
+			"year": "Jahr",
+			"updated": "Geändert",
+			"actions": "Aktionen",
+			"edit-collection-item": "Sammlungseintrag bearbeiten",
+			"delete-collection-item2": "Sammlungseintrag löschen"
+		},
+		"collectionItemDetailView": {
+			"collection-item-detail-view": "detaillierte Sammlungseintrag-Ansicht funktioniert!"
+		},
+		"albumAdmin": {
+			"albums": "Alben",
+			"albums-of-the-global": "Alben des globalen Katalogs.",
+			"add-album": "Album hinzufügen"
+		},
+		"albumEdit": {
+			"details": "Details",
+			"tracks": "Titel"
+		},
+		"albumForm": {
+			"details": "Details",
+			"genre": "Genre",
+			"load": "Laden",
+			"load-missing-data-from": "Fehlende Daten von MusicBrainz laden",
+			"select-a-genre": "Genre auswählen",
+			"title": "Titel",
+			"this-artist-already-has": "Dieser Künstler hat bereits",
+			"artist": "Künstler",
+			"start-typing-an-artist": "Künstler eintippen…",
+			"format": "Format",
+			"select-a-format": "Format wählen",
+			"year": "Jahr",
+			"styles": "Stile",
+			"select-styles": "Stile wählen",
+			"spotify-link": "Spotify-Link",
+			"youtube-music-link": "YouTube-Music-Link",
+			"youtube-videos": "YouTube-Videos",
+			"cover": "Cover",
+			"cover-url": "Cover-URL",
+			"used-when-no-cover": "Wird genutzt, wenn kein Coverbild angehängt ist",
+			"cover2": "Cover",
+			"cover-image": "Coverbild",
+			"search-documents": "Dokumente suchen…",
+			"cover-image2": "Coverbild",
+			"save-the-album-first": "Speichere das Album zuerst, um ein Coverbild anzuhängen.",
+			"cancel": "Abbrechen",
+			"save": "Speichern",
+			"loaded-album-data": "Geladene Albumdaten",
+			"source": "Quelle:",
+			"apply": "Übernehmen",
+			"field": "Feld",
+			"current": "Aktuell",
+			"loaded": "Geladen",
+			"current-cover": "Aktuelles Cover",
+			"loaded-cover": "Geladenes Cover",
+			"the-loaded-data-matches": "Die geladenen Daten stimmen mit dem Formular überein.",
+			"cancel2": "Abbrechen",
+			"apply-to-form": "Auf das Formular anwenden",
+			"filled-in-from": "Ergänzt aus:"
+		},
+		"albumTracks": {
+			"load": "Laden",
+			"load-the-tracklist-from": "Titelliste von MusicBrainz laden",
+			"add": "Hinzufügen",
+			"add-a-track-by": "Titel von Hand hinzufügen",
+			"add-this-track": "Diesen Titel hinzufügen",
+			"no-tracks-yet-load": "Noch keine Titel. Lade sie von MusicBrainz oder füge sie von Hand hinzu.",
+			"tracks-found": "Gefundene Titel",
+			"source": "Quelle:",
+			"cancel": "Abbrechen",
+			"heading": "Titel ({{count}})",
+			"saveNote": {
+				"one": "Das Speichern ersetzt den aktuellen {{count}} Titel; ihre Links und Texte bleiben nach Position erhalten.",
+				"other": "Das Speichern ersetzt die aktuellen {{count}} Titel; ihre Links und Texte bleiben nach Position erhalten."
+			},
+			"position": "Position",
+			"title": "Titel",
+			"length": "Länge",
+			"edit-this-track": "Diesen Titel bearbeiten",
+			"save-this-track": "Diesen Titel speichern",
+			"remove-this-track": "Diesen Titel entfernen",
+			"open-the-track-page": "Die Seite des Titels: Text, Links, Autoren",
+			"lyrics-and-links-live": "Der Text, die Spotify- und YouTube-Links und die Autoren werden auf der eigenen Seite des Titels bearbeitet — öffne sie über den Titel.",
+			"remove": "Entfernen",
+			"removeHeading": "Titel entfernen",
+			"removeQuestion": "„{{name}}“ vom Album entfernen?",
+			"removeNote": "Der Text des Titels wird mit entfernt. Ein erneutes Laden der Titelliste bringt den Titel zurück, den Text nicht."
+		},
+		"albumTable": {
+			"no-albums-found": "Keine Alben gefunden.",
+			"filter-by-name": "Nach Name filtern…",
+			"filter-by-name2": "Nach Name filtern",
+			"filter-by-artist": "Nach Künstler filtern…",
+			"filter-by-artist2": "Nach Künstler filtern",
+			"delete-album": "Album löschen",
+			"name": "Name",
+			"artist": "Künstler",
+			"year": "Jahr",
+			"styles": "Stile",
+			"tracks": "Titel",
+			"tracks2": "Titel",
+			"tracks-unknown": "Nicht geprüft",
+			"no-tracks": "Keine Titel",
+			"cover": "Cover",
+			"cover2": "Cover",
+			"no-cover": "Kein Cover",
+			"updated": "Geändert",
+			"actions": "Aktionen",
+			"edit-album": "Album bearbeiten",
+			"delete-album2": "Album löschen"
+		},
+		"albumDeletion": {
+			"title": "Album löschen",
+			"checking": "Prüfe, was es hält …",
+			"can-delete": "Kein Exemplar anderer Sammler hält es, es kann endgültig gelöscht werden.",
+			"goes-with-releases": "{{count}} Ausgabe(n) gehen mit.",
+			"goes-with-tracks": "{{count}} Titel gehen mit.",
+			"goes-with-own-copies": "{{count}} Exemplar(e) davon stehen in deiner eigenen Sammlung — sie werden mitgelöscht.",
+			"in-use": "{{count}} Exemplar(e) davon stehen in den Sammlungen anderer, deshalb ist das Album nicht löschbar — entfernen kann sie nur die jeweilige Besitzerin oder der Besitzer.",
+			"in-use-now": "Inzwischen hat jemand anderes ein Exemplar angelegt, daher ist das Album doch nicht löschbar.",
+			"really-delete": "Endgültig löschen",
+			"cancel": "Abbrechen"
+		},
+		"albumSimpleView": {
+			"image": "Bild"
+		},
+		"albumDetailView": {
+			"image": "Bild"
+		},
+		"albumItemView": {
+			"image": "Bild",
+			"detail": "Details"
+		},
+		"artistAdmin": {
+			"artists": "Künstler",
+			"artists-and-bands-of": "Künstler und Bands des globalen Katalogs.",
+			"import-artists": "Künstler importieren",
+			"add-artist": "Künstler hinzufügen"
+		},
+		"artistEdit": {
+			"details": "Details",
+			"albums": "Alben",
+			"members": "Besetzung"
+		},
+		"artistImport": {
+			"import-artists": "Künstler importieren",
+			"upload-an-artist-bundle": "Lade ein Künstlerpaket hoch, das aus der Künstlerliste exportiert wurde.",
+			"file": "Datei"
+		},
+		"artistCandidatePicker": {
+			"which-artist-is-this": "Welcher Künstler ist das?",
+			"open-on-musicbrainz": "Auf MusicBrainz öffnen",
+			"cancel": "Abbrechen",
+			"several": "MusicBrainz kennt mehrere Künstler dieses Namens. {{hint}}",
+			"open-on-discogs": "Auf Discogs öffnen",
+			"several-on-discogs": "Discogs kennt mehrere Künstler dieses Namens, MusicBrainz keinen. {{hint}}"
+		},
+		"artistForm": {
+			"details": "Details",
+			"genre": "Genre",
+			"load": "Laden",
+			"load-missing-data-from": "Fehlende Daten von MusicBrainz und Wikipedia laden",
+			"name": "Name",
+			"select-a-genre": "Genre auswählen",
+			"the-catalog-already-has": "Der Katalog hat bereits",
+			"type": "Typ",
+			"country": "Land",
+			"select-a-country": "Land wählen",
+			"formed-in": "Gegründet in",
+			"styles": "Stile",
+			"select-styles": "Stile wählen",
+			"description": "Beschreibung",
+			"images": "Bilder",
+			"photo-url": "Foto-URL",
+			"used-when-no-main": "Wird genutzt, wenn kein Hauptbild angehängt ist",
+			"photo": "Foto",
+			"header-image": "Kopfbild",
+			"search-documents": "Dokumente suchen…",
+			"header-image2": "Kopfbild",
+			"main-image": "Hauptbild",
+			"search-documents2": "Dokumente suchen…",
+			"main-image2": "Hauptbild",
+			"save-the-artist-first": "Speichere den Künstler zuerst, um Bilder anzuhängen.",
+			"source": "Quelle",
+			"musicbrainz": "MusicBrainz",
+			"artist-id-or-page": "Künstler-ID oder Seiten-URL",
+			"load-looks-the-artist": "Das Laden sucht den Künstler hierüber statt über den Namen.",
+			"cancel": "Abbrechen",
+			"save": "Speichern",
+			"pick-the-one-this": "Wähle den richtigen — seine ID kommt als Zeile zurück, die bleibt.",
+			"loaded-artist-data": "Geladene Künstlerdaten",
+			"source2": "Quelle:",
+			"apply": "Übernehmen",
+			"field": "Feld",
+			"current": "Aktuell",
+			"loaded": "Geladen",
+			"the-loaded-data-matches": "Die geladenen Daten stimmen mit dem Formular überein.",
+			"cancel2": "Abbrechen",
+			"apply-to-form": "Auf das Formular anwenden",
+			"musicbrainzId": "MusicBrainz-ID",
+			"discogs": "Discogs",
+			"discogsArtistId": "Discogs-ID",
+			"discogs-answers-when": "Kommt zum Einsatz, wenn MusicBrainz den Künstler nicht kennt.",
+			"filled-in-from": "Ergänzt aus:"
+		},
+		"artistAlbums": {
+			"load": "Laden",
+			"load-the-missing-studio": "Die fehlenden Alben, EPs, Live-Alben und Compilations von MusicBrainz laden",
+			"year": "Jahr",
+			"name": "Name",
+			"format": "Format",
+			"no-albums-yet-load": "Noch keine Alben. Lade sie von MusicBrainz.",
+			"pick-the-one-whose": "Wähle den, dessen Alben das sind — speichere seine ID im Tab „Details“, damit die Wahl bleibt.",
+			"albums-found": "Gefundene Alben",
+			"check-the-artist-they": "Prüfe, von welchem Künstler sie stammen",
+			"select-all": "Alle auswählen",
+			"year2": "Jahr",
+			"name2": "Name",
+			"format2": "Format",
+			"open-on-musicbrainz": "Auf MusicBrainz öffnen",
+			"every-album-found-is": "Jedes gefundene Album ist bereits im Katalog.",
+			"cancel": "Abbrechen",
+			"heading": "Alben ({{count}})",
+			"note": "Studioalben und EPs von MusicBrainz, die noch nicht im Katalog sind. Die ausgewählten werden angelegt."
+		},
+		"artistTable": {
+			"no-artists-found": "Keine Künstler gefunden.",
+			"filter-by-name": "Nach Name filtern…",
+			"filter-by-name2": "Nach Name filtern",
+			"export-artist": "Künstler exportieren",
+			"delete-artist": "Künstler löschen",
+			"name": "Name",
+			"formed-in": "Gegründet in",
+			"styles": "Stile",
+			"images": "Bilder",
+			"header": "Kopfbild",
+			"main": "Haupt",
+			"updated": "Geändert",
+			"actions": "Aktionen",
+			"edit-artist": "Künstler bearbeiten",
+			"delete-artist2": "Künstler löschen",
+			"export-artist2": "Künstler exportieren",
+			"genre": "Genre",
+			"no-genre": "kein Genre",
+			"without-genre": "Ohne Genre"
+		},
+		"artistDetailView": {
+			"image": "Bild",
+			"country": "Land:",
+			"formed-in": "Gegründet in:",
+			"styles": "Stile:",
+			"members": "Mitglieder",
+			"info": "Info",
+			"discography": "Diskografie"
+		},
+		"artistSimpleView": {
+			"detail": "Details",
+			"image": "Bild"
+		},
+		"musicianAdmin": {
+			"musicians": "Musiker",
+			"musicians-of-the-global": "Musiker des globalen Katalogs, mit ihrem Discogs-Profil.",
+			"add-musician": "Musiker hinzufügen"
+		},
+		"musicianForm": {
+			"details": "Details",
+			"load": "Laden",
+			"load-data-from-discogs": "Daten von Discogs per Discogs-ID laden",
+			"name": "Name",
+			"real-name": "Bürgerlicher Name",
+			"biography": "Biografie",
+			"discogs-markup-such-as": "Discogs-Auszeichnungen wie [a=Name] werden auf der öffentlichen Seite bereinigt.",
+			"image-and-links": "Bild und Links",
+			"portrait-url": "Porträt-URL",
+			"enter-a-full-http": "Gib eine vollständige http(s)-Adresse ein.",
+			"portrait-preview": "Porträt-Vorschau",
+			"links": "Links",
+			"one-address-per-line": "Eine Adresse pro Zeile.",
+			"also-known-as": "Auch bekannt als",
+			"one-name-per-line": "Ein Name pro Zeile.",
+			"source": "Quelle",
+			"discogs-id": "Discogs-ID",
+			"imported-from": "Importiert von",
+			"cancel": "Abbrechen",
+			"save": "Speichern",
+			"loaded-musician-data": "Geladene Musikerdaten",
+			"source2": "Quelle:",
+			"apply": "Übernehmen",
+			"field": "Feld",
+			"current": "Aktuell",
+			"loaded": "Geladen",
+			"the-loaded-data-matches": "Die geladenen Daten stimmen mit dem Formular überein.",
+			"cancel2": "Abbrechen",
+			"apply-to-form": "Auf das Formular anwenden",
+			"nameVariations": "Namensvarianten"
+		},
+		"musicianTable": {
+			"no-musicians-found": "Keine Musiker gefunden.",
+			"filter-by-name": "Nach Name filtern…",
+			"filter-musicians-by-name": "Nach Name, bürgerlichem Namen oder Alias filtern",
+			"portrait": "Porträt",
+			"name": "Name",
+			"real-name": "Bürgerlicher Name",
+			"profile": "Profil",
+			"updated": "Geändert",
+			"actions": "Aktionen",
+			"biography": "Biografie",
+			"discogs": "Discogs"
+		},
+		"documentAdmin": {
+			"documents": "Dokumente",
+			"uploaded-images-and-files": "Hochgeladene Bilder und Dateien, z. B. Albumcover.",
+			"add-document": "Dokument hinzufügen"
+		},
+		"documentForm": {
+			"file": "Datei",
+			"name": "Name",
+			"category": "Kategorie",
+			"no-category": "Keine Kategorie",
+			"category-hint": "Wofür die Datei gemacht wurde. Danach richten sich die Auswahllisten: Cover für ein Album, Bilder für einen Künstler.",
+			"upload": "Hochladen",
+			"uploaded-file-preview": "Vorschau der hochgeladenen Datei",
+			"stored-file": "Gespeicherte Datei",
+			"file-path": "Dateipfad",
+			"original-name": "Ursprünglicher Name",
+			"file-type": "Dateityp",
+			"cancel": "Abbrechen",
+			"save": "Speichern"
+		},
+		"documentTable": {
+			"no-documents-found": "Keine Dokumente gefunden.",
+			"filter-by-name": "Nach Name filtern…",
+			"filter-by-name2": "Nach Name filtern",
+			"category": "Kategorie",
+			"withdraw": "Zurückziehen",
+			"the-file-stays-where": "? Die Datei bleibt, wo sie ist — alles, was bereits darauf verweist, funktioniert weiter — aber sie wird nicht mehr angeboten.",
+			"cancel": "Abbrechen",
+			"withdraw2": "Zurückziehen",
+			"restore-document": "Dokument wiederherstellen",
+			"withdraw-document": "Dokument zurückziehen",
+			"thumbnail": "Miniaturbild",
+			"name": "Name",
+			"original-name": "Ursprünglicher Name",
+			"category2": "Kategorie",
+			"updated": "Geändert",
+			"actions": "Aktionen",
+			"restore-document2": "Dokument wiederherstellen",
+			"edit-document": "Dokument bearbeiten",
+			"withdraw-document2": "Dokument zurückziehen",
+			"badges": "Abzeichen",
+			"album-covers": "Albumcover",
+			"artist-images": "Künstlerbilder",
+			"scenes": "Szenenhintergründe",
+			"uploads": "Uploads",
+			"withdrawn": "Zurückgezogene"
+		},
+		"documentSimpleView": {
+			"document-simple-view-works": "einfache Dokumentansicht funktioniert!"
+		},
+		"documentDetailView": {
+			"document-detail-view-works": "detaillierte Dokumentansicht funktioniert!"
+		},
+		"visualLab": {
+			"poz-ci": "Position",
+			"15-mp-vissza": "15 s zurück",
+			"15-mp-el-re": "15 s vor",
+			"lemez": "Platte",
+			"el-z": "Zurück",
+			"lemez2": "Platte",
+			"k-vetkez": "Weiter",
+			"minden-csal-dhoz-egy": "Eine Platte je Familie, damit sich alle Welten der Engine durchschreiten lassen.",
+			"vissza-a-list-hoz": "zurück zur Liste",
+			"el-ad": "Künstler",
+			"lemez3": "Platte",
+			"sz-m": "Titel",
+			"st-lus": "Stil",
+			"thrash-doom-black": "Thrash, Doom, Black…",
+			"vil-g": "Welt",
+			"bemenet": "Eingang",
+			"az-audio-reactive-m": "Der audio-reaktive Modus bekommt simulierte Audiodaten, damit er sich ohne Anbieterzugang testen lässt.",
+			"szekci": "Abschnitt",
+			"auto": "auto",
+			"min-s-g": "Qualität",
+			"param-terek": "Parameter",
+			"knob": {
+				"intensity": "Intensität",
+				"fog": "Nebel",
+				"fogSpeed": "Nebelgeschwindigkeit",
+				"particleDensity": "Partikeldichte",
+				"particleSpeed": "Partikelgeschwindigkeit",
+				"camera": "Kamerabewegung",
+				"light": "Helligkeit",
+				"glow": "Leuchten",
+				"shake": "Wackeln",
+				"darkness": "Dunkelheit",
+				"vignette": "Vignette",
+				"surreal": "Surreal"
+			},
+			"engineFailed": "Die visuelle Engine ist nicht gestartet: {{message}}",
+			"own": "Eigenes"
+		},
+		"playerStage": {
+			"close": "Schließen",
+			"no-synced-lyrics-saved": "Für diesen Titel ist kein synchroner Text gespeichert: der Text läuft mit dem Song mit.",
+			"nothing-to-play-this": "Nichts, worauf das laufen könnte: kein Spotify- oder YouTube-Link.",
+			"position": "Position",
+			"lyrics-earlier": "Text früher",
+			"lyrics-earlier2": "Text früher",
+			"previous-track": "Vorheriger Titel",
+			"connect-spotify-to-play": "Spotify verbinden zum Abspielen",
+			"next-track": "Nächster Titel",
+			"lyrics-later": "Text später",
+			"lyrics-later2": "Text später",
+			"volume": "Lautstärke",
+			"pick": "Wähle",
+			"this-tab": "diesen Tab",
+			"and-tick": "und hake",
+			"share-tab-audio": "Tab-Audio teilen",
+			"no-sound-shared": "Vom geteilten Tab kommt kein Ton, also bewegen sich die Effekte von selbst. Prüfe, ob du diesen Tab mit angehaktem Ton geteilt hast und ob die Musik hier läuft und nicht auf einem anderen Gerät.",
+			"spotify": "Spotify",
+			"youtube": "YouTube",
+			"lyricsEarlierBy": "· Text {{seconds}} s früher",
+			"lyricsLaterBy": "· Text {{seconds}} s später"
+		},
+		"joinPrompt": {
+			"make-it-your-collection": "Mach sie zu deiner Sammlung",
+			"continue-with-google": "Weiter mit Google",
+			"pitch": "Der Katalog steht allen offen — {{albums}} Alben von {{artists}} Künstlern zum Durchlesen. Melde dich an, um deine eigenen Exemplare zu führen, zu sehen, was einer Challenge noch fehlt, und dein Regal zwischen Geräten mitzunehmen."
+		},
+		"catalogCoverageChart": {
+			"in-my-collection": "In meiner Sammlung",
+			"rest-of-the-catalog": "Rest des Katalogs",
+			"in-the-catalog": "im Katalog",
+			"summary": "{{collected}} von {{catalog}} Katalogalben gesammelt"
+		},
+		"networkSearch": {
+			"search-the-network": "Im Netzwerk suchen",
+			"search-the-network2": "Im Netzwerk suchen…",
+			"search-results": "Suchergebnisse"
+		},
+		"collectionGrowthChart": {
+			"added": "hinzugefügt",
+			"in-total": "insgesamt"
+		},
+		"completenessMeters": {
+			"open-list": "Liste öffnen",
+			"complete": "vollständig"
+		},
+		"releaseRequestRow": {
+			"not-in-the-catalog": "Nicht im Katalog — die Freigabe legt auch das Album an",
+			"collector": "Sammler:",
+			"admin": "Admin:",
+			"reason-shown-to-the": "Begründung (für den Sammler sichtbar, optional)",
+			"cancel": "Abbrechen",
+			"reject-request": "Anfrage ablehnen",
+			"catalog-release": "Katalog-Veröffentlichung",
+			"link-a-catalog-release": "Katalog-Veröffentlichung verknüpfen…",
+			"approve-with-it": "Damit freigeben",
+			"reject": "Ablehnen",
+			"add-the-release-to": "Nimm die Veröffentlichung im Admin zum Album auf und verknüpfe sie dann hier.",
+			"importing": "Läuft…",
+			"import-from-discogs": "Von Discogs importieren"
+		},
+		"releaseRequestAdmin": {
+			"error-not-found": "Nicht gefunden: die Anfrage, ihr Album, die Veröffentlichung oder die Discogs-Veröffentlichung.",
+			"error-moved-on": "Bereits entschieden — oder ohne Discogs-Veröffentlichung: verknüpfe eine Katalog-Veröffentlichung.",
+			"error-not-allowed": "Nur ein Admin darf Anfragen entscheiden.",
+			"error-discogs-unreachable": "Discogs ist gerade nicht erreichbar. Versuche es später erneut.",
+			"error-discogs-busy": "Discogs ist gerade ausgelastet. Versuche es in einer Minute erneut.",
+			"error-unknown": "Etwas ist schiefgelaufen. Versuche es später erneut."
+		},
+		"musicCollectionAdmin": {
+			"collections": "Kollektionen",
+			"sets-of-records-defined": "Plattenmengen, die eine Regel bestimmt. Was dazugehört, wird gegen den Katalog aufgelöst, sodass eine Kollektion mit ihm wächst — und das Abzeichen verdient, wer sie alle besitzt.",
+			"add-collection": "Kollektion hinzufügen",
+			"filter-by-status": "Nach Status filtern",
+			"loading-collections": "Kollektionen werden geladen…",
+			"no-collection-here-yet": "Hier gibt es noch keine Kollektion.",
+			"records": "Platten",
+			"pts": "Pkt.",
+			"edit": "Bearbeiten",
+			"delete": "Löschen",
+			"delete2": "Löschen",
+			"whoever-earned-its-badge": "? Wer ihr Abzeichen verdient hat, verliert es, und das lässt sich hier nicht rückgängig machen.",
+			"cancel": "Abbrechen",
+			"add-discography": "Diskografie anlegen"
+		},
+		"musicCollectionEdit": {
+			"a-collection-is-a": "Eine Kollektion ist eine Regel, keine Liste: was zu ihr gehört, wird bei jedem Lesen gegen den Katalog aufgelöst.",
+			"loading": "Wird geladen…",
+			"the-collection": "Die Kollektion",
+			"name": "Name",
+			"slug": "Slug",
+			"description": "Beschreibung",
+			"icon": "Symbol",
+			"pi-pi-box": "pi pi-box",
+			"a-primeicons-class-as": "Eine PrimeIcons-Klasse, wie im Menü.",
+			"cover-image-url": "Coverbild-URL",
+			"status": "Status",
+			"a-draft-is-not": "Ein Entwurf wird nicht gelistet und bringt niemandem ein Abzeichen.",
+			"visibility": "Sichtbarkeit",
+			"points": "Punkte",
+			"parent-collection": "Übergeordnete Kollektion",
+			"none": "— keine —",
+			"the-rule": "Die Regel",
+			"every-filter-given-must": "Jeder angegebene Filter muss zutreffen. Ein leer gelassener Filter sagt nichts — sind alle leer, verlangt die Kollektion den ganzen Katalog.",
+			"released-from": "Erschienen ab",
+			"released-to": "Erschienen bis",
+			"artists": "Künstler",
+			"search-artists": "Künstler suchen…",
+			"nothing-picked-means-any": "Nichts gewählt heißt: jeder Künstler.",
+			"credited-musicians": "Genannte Musiker",
+			"search-musicians": "Musiker suchen…",
+			"credited-as": "Genannt als",
+			"drums-producer": "Schlagzeug, Produzent",
+			"discogs-roles-comma-separated": "Discogs-Rollen, durch Komma getrennt. Ein einzelner Credit muss beides erfüllen: der Musiker in dieser Rolle, nicht zwei Credits zusammen.",
+			"the-badge": "Das Abzeichen",
+			"name2": "Name",
+			"without-a-name-the": "Ohne Namen vergibt die Kollektion kein Abzeichen.",
+			"icon2": "Symbol",
+			"pi-pi-star": "pi pi-star",
+			"description2": "Beschreibung",
+			"artwork-url": "Grafik-URL",
+			"a-hand-made-image": "Ein handgemachtes Bild, für das seltene Abzeichen, das eines will. Der erzeugte Pin darunter sticht es.",
+			"the-pin": "Der Pin",
+			"drawn-by-an-image": "Von einem Bildmodell gezeichnet, aus den eigenen Daten dieser Kollektion. Der Stil ist auf jedem Abzeichen derselbe — nur Motiv, Emaille, Patina und Rand folgen der Regel. Jedes gezeichnete Bild bleibt erhalten, der Pin kann also jedes davon sein, heute oder nächstes Jahr. Auch ein eigenes Bild kann Pin sein: Das hochgeladene Bild kommt ebenso in die Galerie und wird sofort zum Abzeichen.",
+			"save-the-collection-first": "Speichere die Kollektion zuerst: der Prompt wird auf dem Server aus dem Gespeicherten gebaut, nicht aus diesem Formular.",
+			"the-collection-s-badge": "Das Abzeichen der Kollektion",
+			"the-badge2": "Das Abzeichen",
+			"pick-this-one": "Dieses wählen",
+			"what-it-catches": "Was sie erfasst",
+			"no-filter-yet-this": "Noch kein Filter — diese Regel nimmt den ganzen Katalog auf. Ihre Veröffentlichung wird abgelehnt.",
+			"resolving": "· wird aufgelöst…",
+			"worth": "Wert",
+			"points-and-only-once": "Punkte, und erst, wenn ein Sammler sie alle besitzt. Die Originalpressung einer alten Platte zu besitzen hebt ihn weiter.",
+			"cancel": "Abbrechen",
+			"andMore": "…und {{count}} weitere.",
+			"pointsHint": {
+				"one": "Was das Vollenden wert ist. Leer gelassen entscheidet die Regel — wie viele Platten sie verlangt und wie alt sie sind — was derzeit {{count}} Punkt wäre.",
+				"other": "Was das Vollenden wert ist. Leer gelassen entscheidet die Regel — wie viele Platten sie verlangt und wie alt sie sind — was derzeit {{count}} Punkte wären."
+			},
+			"previewTotal": {
+				"one": "{{count}} Platte",
+				"other": "{{count}} Platten"
+			},
+			"group": "Gruppe",
+			"groupHint": "Unter welcher Überschrift sie in der Liste steht. Eine Diskografie ist das eigene Paar einer Band.",
+			"upload-an-image": "Bild hochladen",
+			"uploading-the-image": "Wird hochgeladen…",
+			"the-uploaded-artwork": "Das hochgeladene Bild",
+			"take-the-pin-off": "Pin abnehmen",
+			"a-chosen-pin-covers": "Der gewählte Pin verdeckt das hochgeladene Bild. Nimm den Pin ab, damit dein eigenes Bild das Abzeichen wird.",
+			"my-own-picture-as-pin": "Eigenes Bild als Pin",
+			"pick-from-uploaded": "Hochgeladenes wählen",
+			"already-uploaded": "Bereits hochgeladene Bilder",
+			"search-images": "Bilder nach Namen suchen…",
+			"no-uploaded-image": "Unter dieser Rubrik ist noch kein Bild abgelegt. Ein nicht eingeordneter Upload wird hier nicht angeboten.",
+			"more-images": "…und {{count}} weitere. Suche nach dem Namen.",
+			"close-the-library": "Schließen",
+			"the-picked-image-becomes": "Das gewählte Bild wird sofort zum Abzeichen — nichts wird hochgeladen, die Datei ist schon da.",
+			"collection-editor": "Sammlungseditor",
+			"the-editor-s-sections": "Die Abschnitte des Editors",
+			"basics": "Grunddaten",
+			"rule": "Regel",
+			"looks": "Aussehen",
+			"badge": "Abzeichen",
+			"the-look": "Das Aussehen",
+			"the-cover-stands-behind": "Das Titelbild steht hinter der Sammlung, wo immer sie gezeigt wird: auf ihrer Karte und über ihrer eigenen Seite."
+		},
+		"profileSharing": {
+			"page": "Öffentliche Sammlerseite",
+			"share": "Gib mir eine öffentliche Seite",
+			"shareHint": "Ein Link, den du weitergeben kannst: jeder sieht, was in deinem Regal steht, angemeldet oder nicht. Solange das aus ist, wird nichts veröffentlicht.",
+			"wishlist": "Meine Wunschliste dazu",
+			"wishlistHint": "So weiß die Familie, womit sie dich überraschen kann. Auf deiner Liste stehen {{count}} Platten.",
+			"preview": "Deine Seite zeigt {{copies}} Platten, {{badges}} Abzeichen und {{points}} Punkte.",
+			"previewWishlist": "Daneben {{count}} Wünsche.",
+			"previewCollections": "Daneben {{count}} Sammlungen, hinter denen du her bist — das Auge an der Sammlung entscheidet.",
+			"pickCollections": "Sammlungen →",
+			"off": "Du hast keine öffentliche Seite, und nichts von deiner Sammlung wird veröffentlicht.",
+			"link": "Der Link zu deiner Seite",
+			"copy": "Kopieren",
+			"copied": "Kopiert",
+			"look": "Ansehen",
+			"shareCard": "Bild teilen",
+			"drawing": "Wird gezeichnet…",
+			"cardTagline": "Sammlung",
+			"shareText": "Sieh dir meine Plattensammlung an",
+			"updated": "So stand es:",
+			"pending": "Die Seite wird gerade zusammengestellt — einen Moment, dann funktioniert der Link.",
+			"favourites": "Lieblinge",
+			"favouritesHint": "Die von dir am besten bewerteten Platten, mit dem, was du über sie geschrieben hast. Bewertet hast du {{count}}.",
+			"previewFavourites": "Deine {{count}} Lieblingsplatten gehen mit."
+		},
+		"profilePrivacy": {
+			"show-where-you-collect": "Zeigen, von wo du sammelst",
+			"country": "Land",
+			"not-chosen": "Nicht gewählt",
+			"city": "Stadt",
+			"outside-players": "Externe Player",
+			"let-me-listen-here": "Lass mich hier hören",
+			"puts-youtube-s-and": "Setzt die Player von YouTube und Spotify auf die Seite. Sie gehören nicht uns: jeder schreibt in seinen eigenen Speicher und meldet seinem Betreiber, dass du hier warst. Ausschalten nimmt sie sofort von der Seite, und die Platten verstummen.",
+			"usage-measurement": "Nutzungsmessung",
+			"count-how-the-app": "Zählen, wie die App genutzt wird",
+			"which-pages-and-features": "Welche Seiten und Funktionen geöffnet werden, über Google Analytics. Keine Werbung, und nichts über deine Platten oder deine Suchen. Ausschalten stoppt es sofort und löscht, was es in diesem Browser hinterlassen hat.",
+			"place": {
+				"off": "Gar nicht",
+				"country": "Mein Land",
+				"city": "Mein Land und meine Stadt",
+				"profile": "Mein Land, meine Stadt und ich"
+			}
+		},
+		"profilePlayback": {
+			"back-to-defaults": "Zurück zu den Standardwerten",
+			"play-on": "Abspielen auf",
+			"opens": "Öffnet als",
+			"visuals": "Visuals",
+			"show-the-lyrics-when": "Den Songtext zeigen, wenn es einen gibt",
+			"play-on-to-the": "Weiter zum nächsten Titel"
+		},
+		"profileShelves": {
+			"draw-the-shelving-you": "Zeichne das Regal, das du wirklich hast. Ein Element ist ein Raster aus Fächern, und ein Fach hat zwei Maße: die Höhe entscheidet, was hineinpasst (eine LP braucht 32 cm, eine DVD 20, eine CD 12, eine Kassette 8), die Länge, wie viel. Platten werden vom ersten Element bis zum letzten eingeräumt — was ein Fach nicht aufnehmen kann, wartet auf das nächste.",
+			"shelf-name": "Regalname",
+			"rows": "Reihen",
+			"one-row-fewer": "Eine Reihe weniger",
+			"one-row-more": "Eine Reihe mehr",
+			"columns": "Spalten",
+			"one-column-fewer": "Eine Spalte weniger",
+			"one-column-more": "Eine Spalte mehr",
+			"move-this-shelf-earlier": "Dieses Regal nach vorn",
+			"move-this-shelf-later": "Dieses Regal nach hinten",
+			"remove-this-shelf": "Dieses Regal entfernen",
+			"remove-this-insert": "Diesen Einsatz entfernen",
+			"add-insert": "Einsatz",
+			"insert-in": "Steht in",
+			"inserts-do-not-fit": "Die Einsätze in diesem Fach passen zusammen nicht hinein — das Fach muss größer sein oder weniger davon aufnehmen.",
+			"nothing-drawn-yet-the": "Noch nichts gezeichnet — die Sammlung steht an einer offenen Wand, die mit ihr wächst.",
+			"add-shelf": "Regal hinzufügen",
+			"remove-all": "Alle entfernen",
+			"short": {
+				"one": "{{count}} Platte hat keinen Platz — sie steht unter dem Möbel, bis du mehr zeichnest.",
+				"other": "{{count}} Platten haben keinen Platz — sie stehen unter dem Möbel, bis du mehr zeichnest."
+			},
+			"unitNote": "{{compartments}} Fächer · ein Fach fasst:",
+			"roomNote": "{{units}} Regale · {{compartments}} Fächer · insgesamt {{length}} cm Regallänge, darauf passen {{holds}} deiner Platten.",
+			"cubby-height": "Fachhöhe",
+			"cubby-length": "Fachlänge",
+			"one-notch-lower": "Eine Stufe niedriger",
+			"one-notch-higher": "Eine Stufe höher",
+			"shorter": "Einen Zentimeter kürzer",
+			"longer": "Einen Zentimeter länger",
+			"how-the-copies-lie": "Wie die Exemplare im Fach liegen",
+			"standing": "Stehend",
+			"stacked": "Gestapelt",
+			"nothing-fits": "In ein so niedriges Fach passt nichts",
+			"widths-title": "Rückenbreiten",
+			"widths-intro": "Wie dick eine Hülle in deinem Regal ist. Dieselbe Zahl zeichnet den Rücken und entscheidet, wie viele in ein Fach passen — miss deine eigenen, wenn sie nicht dem Standard entsprechen.",
+			"one-pixel-narrower": "Ein Pixel schmaler",
+			"one-pixel-wider": "Ein Pixel breiter",
+			"standard": "Standard",
+			"spine": {
+				"vinyl": "Vinyl",
+				"boxset": "Vinyl-Box",
+				"dvd": "DVD",
+				"cd": "CD",
+				"cdbox": "Mehr-CD-Ausgabe",
+				"cassette": "Kassette"
+			}
+		},
+		"profileSpotify": {
+			"your-own-app-explained": "Mit deiner eigenen Spotify-App steuert dieser Player Spotify: Warteschlange, Radio, nächster Titel, deine eigenen Lautsprecher. Ohne sie bleibt Spotifys eingebetteter Rahmen auf der Albumseite — er spielt vollständig, wenn du bei Spotify angemeldet bist, gesteuert wird er von hier aus aber nicht. Spotify zählt, wer sich über eine App anmeldet — eine App fasst fünfundzwanzig Leute —, deshalb muss es deine eigene sein.",
+			"step-create-app": "Öffne developer.spotify.com/dashboard und lege eine App an (Web Playback SDK).",
+			"step-redirect-uri": "Trage das bei den Redirect-URIs der App ein:",
+			"step-copy-client-id": "Kopiere die Client ID der App hierher.",
+			"same-account-and-premium": "Lege die App mit demselben Spotify-Konto an, mit dem du dich anmeldest: eine App im Entwicklungsmodus lässt nur ihren eigenen Besitzer hinein. Für die von hier gesteuerte Wiedergabe brauchst du außerdem Spotify Premium — ohne das startet der Player gar nicht.",
+			"client-id": "Spotify Client ID",
+			"client-id-placeholder": "Die 32-stellige ID von der Seite deiner App",
+			"save-app": "Speichern",
+			"cancel": "Abbrechen",
+			"your-app": "Deine App:",
+			"change-app": "Ändern",
+			"forget-app": "Entfernen",
+			"connected": "Verbunden",
+			"disconnect": "Trennen",
+			"play-on": "Abspielen auf",
+			"play-spotify-on": "Spotify abspielen auf",
+			"this-browser": "Dieser Browser",
+			"refresh-device-list": "Geräteliste aktualisieren",
+			"refresh-device-list2": "Geräteliste aktualisieren",
+			"speakers-show-up-when": "Lautsprecher tauchen auf, wenn sie Spotify Connect unterstützen und eingeschaltet sind. Fehlt einer? Spiel einmal etwas darauf aus der Spotify-App ab und aktualisiere dann.",
+			"volume-in-this-browser": "Lautstärke in diesem Browser",
+			"what-the-browser-player": "Womit der Browser-Player startet. Dies bleibt im Browser statt am Konto — die Lautsprecher unterscheiden sich von Rechner zu Rechner."
+		},
+		"profileAppearance": {
+			"theme": "Design",
+			"page-width": "Seitenbreite",
+			"the-wide-setting-only": "Die breite Einstellung zeigt sich nur auf einem Bildschirm mit Platz dafür.",
+			"dark": "Dunkel",
+			"light": "Hell",
+			"standard": "Standard",
+			"fullWidth": "Volle Breite",
+			"mosaic": "Cover-Mosaik",
+			"mosaic-still": "Steht",
+			"seconds-short": "Sek.",
+			"a-collection-without-artwork": "Eine Sammlung ohne eigenes Bild wird als vier Cover gezeichnet. In Bewegung wechselt in diesem Takt genau ein Cover auf der Seite zu einer weiteren Platte — ausgelost aus den Kacheln aller sichtbaren Mosaike, sodass immer nur ein Bild wechselt und nicht die ganze Seite.",
+			"mosaic-turn": "Wechsel",
+			"turn": {
+				"fade": "Überblenden",
+				"slide": "Schieben",
+				"flip": "Umschlagen",
+				"zoom": "Heranzoomen",
+				"random": "Zufällig"
+			}
+		},
+		"profileDemoTour": {
+			"the-launcher": "Starter",
+			"show-me-around": "Zeig mir die App",
+			"puts-the-play-button": "Legt einen Kompass in die Ecke jeder Seite — und von hier aus lässt sich die Tour ebenfalls starten.",
+			"start-the-tour-now": "Diese Seite zeigen"
+		},
+		"profileListening": {
+			"records-put-on": "Aufgelegte Platten",
+			"heard-right-through": "Ganz durchgehört",
+			"different-records": "Verschiedene Platten",
+			"this-year": "Dieses Jahr",
+			"hours": "Stunden",
+			"put-on-most": "Am häufigsten aufgelegt",
+			"nothing-yet-put-a": "Noch nichts. Leg eine Platte von einer Albumseite auf, und sie wird hier gezählt — eine Platte zählt, sobald sie eine halbe Minute lief, und gilt als ganz durchgehört, wenn jeder ihrer Titel gelaufen ist.",
+			"plays": "{{count}}×",
+			"through": "· {{count}} Mal ganz durch"
+		},
+		"profileAccount": {
+			"display-name": "Anzeigename",
+			"saved": "Gespeichert.",
+			"note": "Dieser Name steht neben dem, was du in den Katalog aufnimmst."
+		},
+		"nextAlbums": {
+			"the-moment-it-is": "in dem Moment, in dem sie im Regal steht",
+			"moves": "bringt",
+			"closer": "näher",
+			"completes": "Vervollständigt {{collections}}"
+		},
+		"albumTracklist": {
+			"total-length": "Gesamtlänge"
+		},
+		"albumCollections": {
+			"part-of": "Teil von",
+			"missing-this-one": "diese fehlt"
+		},
+		"artistLineup": {
+			"former-members": "Ehemalige Mitglieder",
+			"guest-musicians": "Gastmusiker"
+		},
+		"spotifyCallback": {
+			"spotify-sign-in-failed": "Spotify-Anmeldung fehlgeschlagen",
+			"back-to-home": "Zurück zur Startseite",
+			"connecting-to-spotify": "Verbindung zu Spotify…"
+		},
+		"youtubePanel": {
+			"choose-what-to-play": "Wähle, was laufen soll",
+			"full-album": "Ganzes Album",
+			"playing-now": "Läuft gerade:",
+			"play-this-album-instead": "Stattdessen dieses Album abspielen",
+			"video": "Video {{number}}"
+		},
+		"youtubeDock": {
+			"close-youtube-player": "YouTube-Player schließen"
+		},
+		"consentBar": {
+			"your-choices": "Deine Entscheidungen",
+			"may-we-count-which": "Dürfen wir zählen, welche Seiten und Funktionen genutzt werden? Google Analytics, keine Werbung — was du besitzt und wonach du suchst, bleibt außen vor.",
+			"no-thanks": "Nein danke",
+			"allow": "Erlauben",
+			"may-we-put-youtube": "Dürfen wir die Player von YouTube und Spotify auf die Seite setzen, damit du hier hören kannst? Sie gehören nicht uns: jeder schreibt in seinen eigenen Speicher und meldet seinem Betreiber, dass du hier warst. Ohne das bleiben die Platten stumm.",
+			"keep-them-off": "Ausgeschaltet lassen",
+			"allow2": "Erlauben",
+			"you-can-change-either": "Beides kannst du jederzeit in deinem Profil ändern."
+		},
+		"pageBreadcrumb": {
+			"breadcrumb": "Brotkrümelnavigation"
+		},
+		"pageBack": {
+			"back": "Zurück"
+		},
+		"discographyCard": {
+			"in-your-collection": "In deiner Sammlung",
+			"not-in-your-collection": "Nicht in deiner Sammlung"
+		},
+		"adminEditLink": {
+			"edit-in-admin": "Im Admin bearbeiten"
+		},
+		"playAlbumButton": {
+			"play-on-spotify": "{{title}} auf Spotify abspielen",
+			"pause-on-spotify": "{{title}} auf Spotify pausieren",
+			"play-on-youtube": "{{title}} auf YouTube abspielen",
+			"pause-on-youtube": "{{title}} auf YouTube pausieren"
+		},
+		"playerMini": {
+			"player": "Player",
+			"previous-track": "Vorheriger Titel",
+			"next-track": "Nächster Titel",
+			"next-record-of-the": "Nächste Platte des Senders",
+			"volume": "Lautstärke",
+			"volume2": "Lautstärke",
+			"open-the-full-screen": "Vollbild-Player öffnen",
+			"full-screen": "Vollbild"
+		},
+		"playerPanel": {
+			"previous-track": "Vorheriger Titel",
+			"next-track": "Nächster Titel",
+			"volume": "Lautstärke",
+			"open-the-full-screen": "Vollbild-Player öffnen",
+			"full-screen": "Vollbild",
+			"this-player-only-plays": "Das ist Spotifys eigener Rahmen: Er spielt vollständig, wenn du bei Spotify angemeldet bist, steuerbar ist er von hier aus aber nicht. Verbinde dein Spotify-Premium-Konto in den Einstellungen (Zahnrad), damit Warteschlange, Radio und deine Lautsprecher funktionieren.",
+			"spotifys-own-frame": "Das ist Spotifys eigener Rahmen: Seine eigene Taste startet ihn, und er spielt vollständig, wenn du bei Spotify angemeldet bist. Für Warteschlange, Radio und deine Lautsprecher trage deine eigene Spotify-App in deinem Profil ein."
+		},
+		"playerSideBreak": {
+			"turn-the-record-over": "Dreh die Platte um",
+			"play": "{{side}} abspielen",
+			"upNext": "Als Nächstes: {{side}}"
+		},
+		"playerStation": {
+			"station": "Sender",
+			"last-record-of-the": "Letzte Platte des Senders",
+			"play-in-a-random": "In zufälliger Reihenfolge abspielen",
+			"play-in-a-random2": "In zufälliger Reihenfolge abspielen",
+			"next-record": "Nächste Platte",
+			"next-record2": "Nächste Platte",
+			"stop-the-station": "Sender stoppen",
+			"stop-the-station2": "Sender stoppen",
+			"waiting": {
+				"one": "noch {{count}} Platte wartet",
+				"other": "noch {{count}} Platten warten"
+			}
+		},
+		"playerSettingsMenu": {
+			"player-settings": "Player-Einstellungen",
+			"player-settings2": "Player-Einstellungen",
+			"play-on": "Abspielen auf",
+			"spotify-output": "Spotify-Ausgabe",
+			"play-spotify-on": "Spotify abspielen auf",
+			"this-browser": "Dieser Browser",
+			"refresh-device-list": "Geräteliste aktualisieren",
+			"refresh-device-list2": "Geräteliste aktualisieren",
+			"speakers-show-up-when": "Lautsprecher tauchen auf, wenn sie Spotify Connect unterstützen und eingeschaltet sind. Fehlt einer? Spiel einmal etwas darauf aus der Spotify-App ab und aktualisiere dann.",
+			"disconnect-spotify": "Spotify trennen",
+			"connect-spotify-premium": "Spotify verbinden (Premium)",
+			"open-as": "Öffnen als",
+			"backdrop": "Hintergrund",
+			"effects": "Effekte",
+			"show-lyrics": "Songtext zeigen",
+			"play-on-to-the": "Weiter zum nächsten Titel",
+			"stop-to-turn-the": "Zum Plattenwenden anhalten",
+			"reset-to-defaults": "Auf Standard zurücksetzen",
+			"scope": "Einstellungen für {{context}}",
+			"own-app-in-profile": "Um Spotify von hier aus zu steuern — Warteschlange, Radio, Lautsprecher —, trage deine eigene Spotify-App in deinem Profil ein."
+		},
+		"playback": {
+			"auto": "Automatisch",
+			"spotify": "Spotify",
+			"youtube": "YouTube",
+			"page": "Seite",
+			"fullScreen": "Vollbild",
+			"cover": "Cover",
+			"animatedWorld": "Animierte Welt",
+			"off": "Aus",
+			"subtle": "Dezent",
+			"full": "Voll",
+			"songPictures": "Bilder des Songs"
+		},
+		"collectionItemList": {
+			"allItems": "Alle Einträge: {{count}}"
+		},
+		"form": {
+			"savingKeepsBoth": "Das Speichern behält beide — führe eines davon im Katalog zusammen."
+		},
+		"entityPicker": {
+			"noMatch": "Nichts passt zu „{{query}}“."
+		},
+		"profileLanguage": {
+			"legend": "Sprache",
+			"chosen": "Deine eigene Wahl. Die Standardsprache der App gilt für dich nicht mehr.",
+			"following": "Folgt der Standardsprache der App oder dem, was dein Browser verlangt."
+		},
+		"musicianEdit": {
+			"details": "Daten",
+			"bands": "Bands"
+		},
+		"artistMembers": {
+			"heading": "Mitglieder ({{count}})",
+			"guests": "Gastmusiker ({{count}})",
+			"add-member": "Mitglied hinzufügen",
+			"add-guest": "Gast hinzufügen",
+			"loading": "Besetzung wird geladen…",
+			"musician": "Musiker",
+			"musician-fixed": "Band und Musiker bilden die Kennung dieser Zeile; für einen anderen Musiker die Zeile löschen und eine neue anlegen.",
+			"search-musicians": "Namen eintippen",
+			"create-musician": "„{{name}}“ als Musiker anlegen",
+			"instruments": "Instrumente",
+			"instruments-placeholder": "Instrumente wählen",
+			"instruments-hint": "Wähle, was gespielt wird; jede Sprache liest die Liste in ihren eigenen Worten.",
+			"instrument-group": {
+				"vocals": "Gesang",
+				"guitars": "Gitarren & Bass",
+				"keyboards": "Tasteninstrumente",
+				"percussion": "Schlagzeug & Perkussion",
+				"strings": "Streicher",
+				"winds": "Bläser",
+				"other": "Sonstige",
+				"unlisted": "Wie die Quelle es schreibt"
+			},
+			"kind": "Rolle in der Band",
+			"kind-member": "Mitglied",
+			"kind-guest": "Gast",
+			"from": "Von",
+			"to": "Bis",
+			"to-optional": "Optional",
+			"to-hint": "Leer lassen, wenn das Endjahr unbekannt ist.",
+			"year": "Jahr",
+			"still-a-member": "Weiterhin in der Band",
+			"cancel": "Abbrechen",
+			"save": "Speichern",
+			"present": "heute",
+			"years": "Jahre",
+			"albums": "Alben",
+			"row-actions": "Aktionen",
+			"edit": "Bearbeiten",
+			"edit-member": "Mitglied bearbeiten",
+			"delete": "Löschen",
+			"delete-member": "Aus der Besetzung entfernen",
+			"delete-question": "{{name}} aus der Besetzung entfernen? Der Musiker bleibt im Katalog.",
+			"no-members-yet": "Noch keine Mitglieder. Von Hand eintragen oder den Discogs-Import die Besetzung füllen lassen.",
+			"error-duplicate": "Dieser Musiker steht bereits in der Besetzung. Bearbeite stattdessen diese Zeile.",
+			"error-permission": "Du darfst die Besetzung nicht ändern.",
+			"error-general": "Etwas ist schiefgelaufen. Versuche es später erneut.",
+			"load": "Laden",
+			"load-hint": "Besetzung aus MusicBrainz und den Credits des Katalogs laden",
+			"pick-the-band": "Wähle die Band, deren Besetzung das ist — speichere ihre ID im Reiter „Daten“, damit die Wahl bleibt.",
+			"found": "Gefundene Besetzung",
+			"found-note": "Mitglieder und Jahre aus MusicBrainz, Gäste und Instrumente aus den Credits im Katalog. Wer schon in der Besetzung steht, bleibt weg.",
+			"select-all": "Alle auswählen",
+			"new-musician": "neu",
+			"source": "Quelle",
+			"source-musicbrainz": "MusicBrainz",
+			"source-catalog": "Credits",
+			"current": "Aktuelles Mitglied",
+			"add-selected": "{{count}} Zeilen hinzufügen",
+			"adding": "Zeilen werden hinzugefügt… neue Musiker werden einzeln angelegt, das kann ein paar Sekunden dauern.",
+			"error-nothing-found": "Nichts hinzuzufügen: keine Besetzung auf MusicBrainz, und der Katalog hat keine Credits zu den Alben dieser Band.",
+			"external-failed": "MusicBrainz war nicht erreichbar, daher stehen hier nur die Credits des Katalogs. Für Mitglieder und Jahre später erneut laden.",
+			"instruments-empty": "Kein solches Instrument auf der Liste."
+		},
+		"musicianBands": {
+			"heading": "Bands ({{count}})",
+			"loading": "Bands werden geladen…",
+			"band": "Band",
+			"kind": "Rolle",
+			"kind-member": "Mitglied",
+			"kind-guest": "Gast",
+			"instruments": "Instrumente",
+			"years": "Jahre",
+			"albums": "Alben",
+			"present": "heute",
+			"current": "Aktuelles Mitglied",
+			"no-bands-yet": "Dieser Musiker steht noch in keiner Besetzung.",
+			"edit-on-the-band": "Die Besetzung wird auf der Seite der Band unter „Besetzung“ bearbeitet.",
+			"error-general": "Etwas ist schiefgelaufen. Versuche es später erneut."
+		},
+		"dailyQuestionBanner": {
+			"there-is-a-question": "Die heutige Frage steht, und du hast noch nicht geraten.",
+			"play-it": "Jetzt raten",
+			"not-now": "Jetzt nicht"
+		},
+		"dailyQuestionSettings": {
+			"title": "Tagesfrage",
+			"lead": "Die Spielregeln: wie viel Zeit zum Antworten bleibt, was ein Tipp zahlt und woraus die Maschine fragen darf.",
+			"loading": "Wird geladen…",
+			"the-game": "Das Spiel",
+			"game-is-on": "Das Spiel läuft",
+			"switched-off": "Ausgeschaltet entsteht keine neue Frage, und die Seite sagt das. Bereits erstellte Tage bleiben.",
+			"time-limit": "Zeitlimit (s)",
+			"time-limit-hint": "So viel Zeit bleibt zum Antworten. Null nimmt die Uhr weg und damit den Tempobonus. Ein später Tipp wird angenommen, zahlt aber nichts.",
+			"what-a-guess-pays": "Was ein Tipp zahlt",
+			"points-easy": "Leichte Frage",
+			"points-medium": "Mittlere Frage",
+			"points-hard": "Schwere Frage",
+			"streak-bonus": "Serienbonus pro Tag",
+			"streak-bonus-hint": "Der erste Tag einer Serie zahlt noch keinen Bonus: der Bonus belohnt die Rückkehr.",
+			"streak-days": "So viele Tage lang",
+			"speed-bonus": "Tempobonus (max.)",
+			"speed-bonus-hint": "Gleitend: ein sofortiger Tipp bekommt alles, ein Tipp in der letzten Sekunde nichts. Ohne Uhr zahlt er nicht.",
+			"the-luck": "Das Glück",
+			"bonus-day-chance": "Chance auf einen Bonustag (%)",
+			"bonus-day-chance-hint": "Ergibt sich aus dem Tag selbst — derselbe Tag ist für alle ein Bonustag.",
+			"bonus-day-multiplier": "Multiplikator am Bonustag",
+			"question-kinds": "Fragearten",
+			"question-kinds-hint": "Was ausgeschaltet ist, wird nie gezogen. Materialabhängige Arten schalten sich von selbst ein, sobald die Daten da sind — das Ausschalten gewinnt immer.",
+			"enabled-count": "{{enabled}} von {{all}} an",
+			"the-field": "Die Rangliste",
+			"leaderboard-size": "Sichtbare Plätze",
+			"leaderboard-size-hint": "Alle anderen sehen ihren eigenen Platz trotzdem: der nächtliche Lauf schreibt ihn in ihre Kasse.",
+			"save": "Speichern",
+			"saving": "Wird gespeichert…",
+			"saved": "Gespeichert",
+			"today": "Heute",
+			"compose-now": "Frage jetzt erstellen",
+			"compose-force": "Heutige Frage ersetzen",
+			"composing": "Wird erstellt…",
+			"refresh-leaderboard": "Rangliste neu bauen",
+			"refreshing": "Wird gebaut…",
+			"composed": "{{day}}: {{template}} ({{difficulty}}), aus {{tries}} Zügen",
+			"compose-exists": "{{day}}: die Frage stand schon; nichts wurde überschrieben.",
+			"compose-disabled": "Das Spiel ist ausgeschaltet, daher wurde keine Frage erstellt.",
+			"compose-no-material": "Im Katalog war nicht genug für eine Frage.",
+			"leaderboard-refreshed": "{{players}} Spieler, {{ranked}} Plätze aktualisiert.",
+			"history": "Frühere Fragen",
+			"history-hint": "Was das Spiel bisher gefragt hat. Die Lösungen stehen nicht in der Liste — die bleiben auf dem Server. Die Zusammenstellung schaut zwei Wochen zurück: dieselbe Platte kommt so lange nicht wieder, dieselbe Fragenart eine Woche lang nicht, derselbe Künstler vier Tage lang nicht.",
+			"history-empty": "Es wurde noch nichts gefragt."
+		},
+		"requestAdmin": {
+			"requests": "Anfragen",
+			"what-collectors-ask": "Alles, was die Sammler vom Katalog wollen, an einem Ort: was er aufnehmen soll, und die Pressungen, die sie anfragen. Eine Katalog-Anfrage entscheidest du Feld für Feld — eine Ablehnung braucht eine Begründung, und der Sammler liest sie.",
+			"filter-by-status": "Nach Status filtern",
+			"loading-requests": "Anfragen werden geladen…",
+			"no-requests-here": "Hier gibt es keine Anfragen.",
+			"error-not-found": "Die Anfrage oder das Katalogdokument gibt es nicht mehr.",
+			"error-moved-on": "Der Katalog hat sich inzwischen geändert, oder die Anfrage wurde bereits entschieden. Lade die Seite neu.",
+			"error-invalid": "Die Entscheidung ist unvollständig: Jedes Feld braucht ein Urteil, jede Ablehnung eine Begründung.",
+			"error-not-allowed": "Nur ein Admin darf Anfragen entscheiden.",
+			"error-unknown": "Etwas ist schiefgelaufen. Versuche es später erneut.",
+			"filter-by-kind": "Nach Art filtern",
+			"kind-all": "Alle Arten",
+			"kind-catalog": "Katalog-Anfrage",
+			"kind-release": "Veröffentlichungsanfrage"
+		},
+		"requestRow": {
+			"new-entity": "neuer Eintrag",
+			"change": "Änderung",
+			"collector": "Sammler",
+			"admin": "Admin",
+			"field": "Feld",
+			"now": "Jetzt",
+			"asked": "Gewünscht",
+			"reference": "Beleg",
+			"decision": "Entscheidung",
+			"no-reference": "kein Beleg",
+			"accept": "Übernehmen",
+			"reject": "Ablehnen",
+			"accepted": "Übernommen",
+			"rejected": "Abgelehnt",
+			"why-not": "Warum nicht? (erforderlich)",
+			"admin-note": "Ein Wort an den Sammler",
+			"save-decision": "Entscheidung speichern",
+			"saving": "Wird gespeichert…",
+			"decide-every-field": "Jedes Feld braucht ein Urteil, jede Ablehnung eine Begründung.",
+			"taken-in": "Übernommen als:"
+		},
+		"proposeLink": {
+			"suggest-a-change": "Änderung vorschlagen",
+			"pending-one": "In Prüfung: {{field}}",
+			"pending-many": "{{count}} Felder in Prüfung",
+			"pending-title": "Sieh nach, wo dein Vorschlag steht"
+		},
+		"profileAvatar": {
+			"yours": "Das ist deine Figur. Sie erscheint in der oberen Leiste, auf der Karte und überall, wo du neben anderen Sammlern stehst.",
+			"none": "Du hast noch keine Figur. Bau eine, und sie wird dein Bild — anstelle eines Fotos.",
+			"build": "Figur bauen",
+			"edit": "Figur bearbeiten",
+			"remove": "Entfernen",
+			"note": "Was du baust, bleibt beim Konto, und du kannst es jederzeit ändern.",
+			"saved": "Gespeichert."
+		},
+		"avatarFigure": {
+			"unavailable": "Dieses Teil ist noch nicht gezeichnet — die Figur bleibt, wie sie war."
+		},
+		"avatarEditor": {
+			"title": "Bau deine Figur",
+			"front": "Vorderseite",
+			"back": "Rückseite",
+			"closer": "Hose aus der Nähe",
+			"whole": "Ganze Figur",
+			"reset": "Von vorn",
+			"download": "Bild herunterladen",
+			"group": {
+				"body": "Statur",
+				"age": "Alter",
+				"face": "Gesicht und Bart",
+				"hair": "Haare",
+				"glasses": "Brille",
+				"shirtStyle": "Shirt",
+				"outfit": "Kleidung",
+				"pants": "Hose",
+				"wrist": "Armband",
+				"necklace": "Kette",
+				"patch": "Rückenaufnäher",
+				"tattoo": "Tätowierung"
+			},
+			"needs": {
+				"patch": "Ein Aufnäher kommt auf Weste oder Jacke — ein T-Shirt hat keinen Rücken dafür.",
+				"tattoo": "Die Tinte zeigt sich auf bloßem Arm; ein Jackenärmel verdeckt sie."
+			},
+			"body": {
+				"slim": "Schmal",
+				"regular": "Durchschnittlich",
+				"broad": "Breit",
+				"heavy": "Kräftig"
+			},
+			"age": {
+				"20": "20 Jahre",
+				"30": "30 Jahre",
+				"40": "40 Jahre",
+				"50": "50 Jahre",
+				"60": "60 Jahre",
+				"70": "70 Jahre"
+			},
+			"face": {
+				"stubble": "Dreitagebart",
+				"beard": "Vollbart",
+				"longbeard": "Langer Bart",
+				"sharp": "Glatt rasiert"
+			},
+			"hair": {
+				"short": "Kurz und zerzaust",
+				"buzz": "Sehr kurz",
+				"undercut": "Undercut",
+				"mohawk": "Irokese",
+				"long": "Lang und glatt",
+				"curly": "Lockig",
+				"mullet": "Vokuhila",
+				"topknot": "Hochgebunden"
+			},
+			"glasses": {
+				"none": "Keine",
+				"biker": "Bikerbrille mit Nieten",
+				"roundmetal": "Lila rund",
+				"mirror": "Verspiegelte Pilotenbrille",
+				"blood": "Blutrot"
+			},
+			"shirtStyle": {
+				"black": "Schwarz",
+				"camo": "Tarnmuster"
+			},
+			"outfit": {
+				"shirt": "T-Shirt",
+				"sleeveless": "Ärmelloses Shirt",
+				"vest": "Jeansweste",
+				"acidvest": "Gebleichte Weste",
+				"blackvest": "Schwarze Weste",
+				"redvest": "Weinrote Weste",
+				"olivevest": "Olivgrüne Weste",
+				"leather": "Lederjacke",
+				"denim": "Jeansjacke"
+			},
+			"pants": {
+				"black": "Schwarze Jeans",
+				"blue": "Blaue Jeans",
+				"acid": "Gebleichte Jeans",
+				"leather": "Lederhose"
+			},
+			"wrist": {
+				"none": "Keins",
+				"plain": "Kurzes Leder",
+				"studded": "Kurz mit Nieten",
+				"longstud": "Lang mit Nieten"
+			},
+			"necklace": {
+				"none": "Keine",
+				"chain": "Silberkette",
+				"skull": "Totenkopf",
+				"pentagram": "Pentagramm",
+				"pick": "Plektrum",
+				"dogtag": "Erkennungsmarke",
+				"tooth": "Lederband mit Zahn"
+			},
+			"patch": {
+				"none": "Keiner",
+				"star": "Stern",
+				"bolt": "Blitz",
+				"skull": "Totenkopf"
+			},
+			"tattoo": {
+				"none": "Keine",
+				"star": "Stern",
+				"bolt": "Blitz"
+			}
+		},
+		"profileGenres": {
+			"legend": "Bis zu {{limit}} Genres",
+			"all": "Alle Genres",
+			"following": "Stöbern, Suche und Radio bleiben in den gewählten Genres.",
+			"everything": "Der gesamte Katalog wird heruntergeladen, mit allen Genres.",
+			"showcase": "Eine Auswahl aus allen Genres",
+			"showcaseNote": "Aus jedem Genre ein paar Kollektionen mit ihren Platten, jede Woche neu. Wähle ein Genre, um seinen ganzen Katalog zu laden.",
+			"rebuild": "Die App baut den lokalen Katalog neu auf und lädt die Seite neu.",
+			"apply": "Übernehmen",
+			"applying": "Katalog wird neu aufgebaut…"
+		},
+		"discographyPicker": {
+			"title": "Diskografie einer Band anlegen",
+			"hint": "Zwei Collections auf einmal: die Studioalben, und alles andere, was die Band daneben veröffentlicht hat. Hier steht jede Band, von der der Katalog zwei Studioalben kennt.",
+			"close": "Schließen",
+			"searchBands": "Bands suchen",
+			"counts": "{{studio}} Studioalben · {{other}} andere Tonträger",
+			"alreadyFollowed": "Wird schon von „{{collection}}“ verfolgt",
+			"open": "Anlegen",
+			"opening": "Wird angelegt…",
+			"opened": "Angelegt für {{band}}:",
+			"and": "und",
+			"companionIsDraft": "— bleibt ein Entwurf: der Katalog hat noch nichts dafür.",
+			"noBand": "Keine Band passt zu „{{query}}“.",
+			"noCandidate": "Noch keine Band im Katalog hat zwei Studioalben.",
+			"more": "{{shown}} von {{total}} Bands — tippe weiter, um einzugrenzen."
+		},
+		"starRating": {
+			"starCount": {
+				"one": "{{count}} Stern",
+				"other": "{{count}} Sterne"
+			},
+			"your-verdict": "Dein Urteil",
+			"take-it-back": "Zurücknehmen"
+		},
+		"verdictPrompt": {
+			"how-was-it": "Wie war sie?",
+			"not-now": "Jetzt nicht",
+			"not-kept": "Das wurde nicht gespeichert. Versuch noch einen Stern."
+		},
+		"profileVerdicts": {
+			"records-rated": "Bewertete Platten",
+			"your-average": "Dein Schnitt",
+			"what-you-name-first": "Was du zuerst nennen würdest",
+			"nothing-rated-yet": "Noch kein Stern. Leg eine Platte auf oder bewerte sie auf ihrer eigenen Seite."
+		},
+		"aiMark": {
+			"label": "Modell",
+			"hint": {
+				"proposed": "Das hat ein Modell auf Basis einer Suche vorgeschlagen. Solange niemand die genannte Quelle geöffnet hat, ist es ein Kandidat, keine Aussage.",
+				"approved": "Aus dem Vorschlag eines Modells übernommen: jemand hat die genannte Quelle geöffnet und zugestimmt.",
+				"load": "Dieser Abruf fragt ein Modell mit Suche, und er wird pro Anfrage abgerechnet. Was er findet, wartet auf die Freigabe.",
+				"photo": "Ein Modell liest das Foto. Was es erkennt, ist ein Vorschlag — entschieden wird von dir.",
+				"image": "Ein Bildmodell hat dieses Bild aus den eigenen Daten gezeichnet."
+			}
+		},
+		"pressingSwitch": {
+			"which-one-is-yours": "Welche ist deine? Unter der markierten Ausgabe steht dieses Exemplar derzeit; du kannst es jederzeit einer anderen zuordnen.",
+			"reading-the-catalog": "Ausgaben des Albums werden geladen…",
+			"your-copy": "Dein Exemplar",
+			"another-copy-of-yours": "Dein anderes Exemplar",
+			"the-catalog-knows-no-other": "Der Katalog kennt zu diesem Album noch keine andere Ausgabe. Ist deine eine andere Pressung, bitte auf der Albumseite darum.",
+			"cancel": "Abbrechen",
+			"moving": "Wird zugeordnet…",
+			"move-this-copy": "Exemplar hierher verschieben",
+			"the-copy-keeps": "Alles Festgehaltene bleibt erhalten: Preis, Zustand, Geschichte, Fotos, Regalplatz und die Nummer wandern mit.",
+			"moveFailed": "Das Exemplar konnte nicht verschoben werden: {{error}}"
+		},
+		"trackImages": {
+			"close": "Schließen",
+			"show-picture": "Bild {{number}} anzeigen",
+			"move-earlier": "Nach vorne",
+			"move-later": "Nach hinten",
+			"remove": "Bild entfernen",
+			"add-a-picture": "Bild hinzufügen",
+			"uploading": "Wird hochgeladen…",
+			"scaled-to-webp": "Der Browser verkleinert das Bild zu WebP, bevor etwas hochgeladen wird. Die Reihenfolge ist die, in der der Player sie abspielt.",
+			"model": "Modell",
+			"gateway-chooses": "Das Gateway soll wählen",
+			"direction": "Richtung (optional)",
+			"direction-example": "z. B. regnerische Straße bei Nacht, Neonlicht",
+			"drawing": "Das Modell zeichnet…",
+			"being-drawn": "Das Modell zeichnet das Bild gerade aus dem Songtext. Das dauert eine halbe Minute oder länger — lade die Seite währenddessen nicht neu.",
+			"draw": "Bild erzeugen",
+			"drawn-from-lyrics": "Das Bild entsteht aus dem Songtext: Das Gateway liest zuerst heraus, was darin zu sehen ist — Ort, Objekte, Wetter, Licht — und zeichnet das. Ohne Text bleiben der Titel und deine Richtung."
+		},
+		"trackClip": {
+			"title": "Clip aus dem Songtext",
+			"being-made": "wird erstellt…",
+			"ready": "fertig",
+			"needs-lyrics": "Trage zuerst den Songtext ein — daraus entsteht der Clip.",
+			"what-it-does": "Das Gateway liest den Songtext, schreibt daraus eine Szene und eine langsame Kamerabewegung und erzeugt einen kurzen, stummen, wiederholten Clip für den Hintergrund des Players. Es dauert Minuten; die Seite kann in der Zwischenzeit verlassen werden.",
+			"ask-the-price": "Was würde es kosten?",
+			"generate": "Clip erzeugen",
+			"generate-again": "Neuen Clip erzeugen",
+			"left-today": "heute noch {{count}} Clips"
+		}
+	},
+	"admin": {
+		"nav": {
+			"dashboard": "Übersicht",
+			"catalog": "Katalog",
+			"artists": "Künstler",
+			"musicians": "Musiker",
+			"albums": "Alben",
+			"releases": "Veröffentlichungen",
+			"labels": "Labels",
+			"collections": "Kollektionen",
+			"genres": "Genres",
+			"userData": "Nutzerdaten",
+			"collectionItems": "Sammlungseinträge",
+			"wishlistItems": "Wunschlisteneinträge",
+			"system": "System",
+			"documents": "Dokumente",
+			"language": "Sprache",
+			"dailyQuestion": "Tagesfrage",
+			"requests": "Anfragen",
+			"access": "Berechtigung",
+			"roles": "Rollen",
+			"users": "Benutzer",
+			"concerts": "Konzerte",
+			"bundles": "Bundles"
+		},
+		"genre": {
+			"title": "Genres und Stile",
+			"intro": "Die Genres und die Stile darunter. Beide Katalogformulare wählen aus dieser Liste, und das Online-Laden ordnet die Namen der Quellen diesen zu.",
+			"add": "Genre hinzufügen",
+			"editor": "Genre-Editor",
+			"editing": "Genre bearbeiten",
+			"adding": "Neues Genre",
+			"name": "Name",
+			"name-placeholder": "z. B. Jazz",
+			"name-taken": "Ein Genre mit diesem Namen existiert bereits.",
+			"description": "Beschreibung",
+			"styles": "Stile",
+			"style-placeholder": "z. B. Hard Bop",
+			"add-style": "Stil hinzufügen",
+			"remove-style": "Stil entfernen",
+			"no-style-yet": "Noch kein Stil darunter.",
+			"offered-on-forms": "In den Formularen angeboten",
+			"retired": "zurückgezogen",
+			"save": "Speichern",
+			"cancel": "Abbrechen",
+			"edit": "Bearbeiten",
+			"delete": "Löschen",
+			"really-delete": "Wirklich löschen?",
+			"in-use": "Ein Interpret im Katalog trägt dieses Genre, es kann daher nicht gelöscht werden. Ziehe es stattdessen zurück: es verschwindet aus den Formularen, die gespeicherten Stile behalten ihr Genre.",
+			"empty": "Noch kein Genre. Lege das erste an — die Formulare wählen aus dieser Liste.",
+			"genres": "Genres",
+			"styles-total": "Stile",
+			"style-hint": "Stil eintippen und Enter drücken. Ein Komma nimmt mehrere auf einmal.",
+			"actions": "Aktionen"
+		},
+		"field": {
+			"albums": "Alben",
+			"artists": "Künstler",
+			"trackGroup": "Titel",
+			"coverImage": "Coverbild",
+			"releaseYear": "Erscheinungsjahr",
+			"styles": "Stile",
+			"spotifyLink": "Spotify-Link",
+			"youtubePlaylist": "YouTube-Playlist",
+			"photo": "Foto",
+			"headerImage": "Kopfbild",
+			"country": "Land",
+			"formedYear": "Gründungsjahr",
+			"description": "Beschreibung",
+			"tracklist": "Titelliste",
+			"lineUp": "Besetzung",
+			"tracks": "Titel",
+			"lyrics": "Songtext",
+			"youtubeVideo": "YouTube-Video"
+		},
+		"criterion": {
+			"anyOf": "eines von",
+			"allOf": "alle von",
+			"noneOf": "keines von",
+			"albumStyles": "Album-Stile",
+			"artistStyles": "Künstler-Stile",
+			"albumFormats": "Album-Formate",
+			"artistCountries": "Künstler-Länder",
+			"operatorFor": "{{field}} — Operator"
+		},
+		"visibility": {
+			"public": "Öffentlich — für alle gelistet",
+			"link": "Link — lesbar für alle, die ihn kennen",
+			"private": "Privat — nur ein Admin"
+		},
+		"filter": {
+			"all": "Alle",
+			"published": "Veröffentlicht",
+			"drafts": "Entwürfe",
+			"pending": "Ausstehend",
+			"approved": "Freigegeben",
+			"rejected": "Abgelehnt",
+			"partially-approved": "Teilweise"
+		},
+		"summary": {
+			"not": "nicht ",
+			"all": "alle ",
+			"artists": "{{count}} Künstler",
+			"musicians": "{{count}} Musiker",
+			"credited": "genannt: {{credited}}",
+			"as": " als ",
+			"noRule": "Keine Regel — trifft auf den ganzen Katalog zu"
+		},
+		"meter": {
+			"row": "{{field}}: {{share}} % gefüllt, {{missing}} fehlen"
+		},
+		"language": {
+			"title": "Standardsprache",
+			"intro": "Die Sprache, in der die App für alle öffnet, die keine gewählt haben. Wer gewählt hat, behält seine Wahl — auch du.",
+			"heading": "Welche Sprache",
+			"hint": "Ein Besucher, dessen Browser eine Sprache verlangt, die die App nicht spricht, sieht diese.",
+			"unset": "Nichts gesetzt: die App folgt jedem Browser und fällt auf Englisch zurück.",
+			"saved": "Gespeichert."
+		},
+		"requestField": {
+			"name": "Name",
+			"artistType": "Art",
+			"country": "Land",
+			"description": "Beschreibung",
+			"genre": "Genre",
+			"styles": "Stile",
+			"sites": "Webseiten",
+			"imageUrl": "Bild-URL",
+			"musicBrainzId": "MusicBrainz-ID",
+			"formedIn": "Gegründet",
+			"discogs": "Discogs",
+			"members": "Mitglieder",
+			"mainImage": "Hauptbild",
+			"headerImage": "Kopfbild",
+			"year": "Jahr",
+			"format": "Format",
+			"songs": "Titel",
+			"coverImageUrl": "Cover-URL",
+			"spotifyAlbumId": "Spotify-Album",
+			"youtubePlaylistId": "YouTube-Playlist",
+			"youtubeVideoIds": "YouTube-Videos",
+			"catno": "Katalognummer",
+			"coverColor": "Hüllenfarbe",
+			"media": "Medium",
+			"formatDescription": "Format",
+			"date": "Datum",
+			"discogsReleaseId": "Discogs-Pressung",
+			"discogsId": "Discogs-ID",
+			"realName": "Echter Name",
+			"aliases": "Aliasse",
+			"nameVariations": "Namensvarianten",
+			"albumUid": "Album",
+			"releaseUid": "Pressung",
+			"artistUid": "Künstler",
+			"musicianUid": "Musiker",
+			"musicianName": "Name des Musikers",
+			"artistName": "Name des Künstlers",
+			"index": "Titelnummer",
+			"position": "Position",
+			"duration": "Länge",
+			"durationSec": "Länge (s)",
+			"heading": "Abschnitt",
+			"spotifyTrackId": "Spotify-Titel",
+			"youtubeVideoId": "YouTube-Video",
+			"writers": "Autoren",
+			"role": "Rolle",
+			"roleDetail": "Rollendetail",
+			"creditedAs": "Genannt als",
+			"tracks": "Titel",
+			"kind": "Art",
+			"instruments": "Instrumente",
+			"from": "Von",
+			"to": "Bis",
+			"active": "Aktiv"
+		},
+		"requestStatus": {
+			"pending": "Ausstehend",
+			"approved": "Freigegeben",
+			"partially-approved": "Teilweise freigegeben",
+			"rejected": "Abgelehnt"
+		},
+		"role": {
+			"title": "Rollen",
+			"intro": "Eine Rolle ist der einzige Ort, an dem eine Berechtigung entsteht. Was hier angehakt wird, rechnet der Server für jeden Benutzer zusammen, der die Rolle trägt — ein Speichern ändert also, was mehrere Personen dürfen.",
+			"add": "Neue Rolle",
+			"editor": "Rollen-Editor",
+			"editing": "Rolle bearbeiten",
+			"adding": "Neue Rolle",
+			"name": "Name",
+			"name-placeholder": "z. B. Redakteur",
+			"id-hint": "Kennung: {{id}} — nach dem Anlegen unveränderlich.",
+			"id-kept": "Kennung: {{id}} — bleibt auch beim Umbenennen.",
+			"description": "Beschreibung",
+			"permissions": "Berechtigungen",
+			"resource-column": "Ressource",
+			"whole-row": "Alle",
+			"all": "Alle auswählen",
+			"none": "Keine auswählen",
+			"action": {
+				"view": "Ansehen",
+				"create": "Anlegen",
+				"update": "Ändern",
+				"delete": "Löschen"
+			},
+			"wildcard": "Vollzugriff (ADMIN)",
+			"wildcard-hint": "Besteht jede Prüfung, unabhängig von den übrigen Haken.",
+			"group": {
+				"catalog": "Katalog",
+				"catalog-hint": "Der gemeinsame Katalog: Interpreten, Alben, Veröffentlichungen und was dazugehört.",
+				"collector": "Sammlerdaten",
+				"collector-hint": "Die eigenen Exemplare und die Wunschliste eines Sammlers.",
+				"owned": "Eigene Einträge",
+				"owned-hint": "Was ein Sammler selbst anlegt, solange der Katalog es nicht kennt.",
+				"access": "Berechtigung",
+				"access-hint": "Rollen, Benutzer und das Lesen der effektiven Rechte.",
+				"system": "System",
+				"system-hint": "Anwendungsweite Einstellungen.",
+				"pages": "Admin-Seiten",
+				"pages-hint": "Zugang zu einzelnen Admin-Seiten. Mit Vollzugriff geht es auch ohne."
+			},
+			"page": {
+				"artistList": "Interpretenliste",
+				"artistEdit": "Interpreten-Editor",
+				"albumList": "Albumliste",
+				"albumEdit": "Album-Editor",
+				"releaseList": "Veröffentlichungsliste",
+				"releaseEdit": "Veröffentlichungs-Editor",
+				"labelList": "Labelliste",
+				"labelEdit": "Label-Editor",
+				"musicianList": "Musikerliste",
+				"musicianEdit": "Musiker-Editor",
+				"documentList": "Dokumentliste",
+				"documentEdit": "Dokument-Editor",
+				"collectionItemList": "Liste der Sammlungseinträge",
+				"collectionItemEdit": "Editor für Sammlungseinträge",
+				"wishlistItemList": "Wunschliste",
+				"wishlistItemEdit": "Wunschlisten-Editor"
+			},
+			"baseline": "Das hat jeder Sammler schon",
+			"baseline-hint": "Die Rolle USER trägt es, und der Server gibt sie jedem Benutzer, sobald sein Dokument entsteht. Hier wird sie nicht vergeben: so viel braucht es, um eine Platte ins eigene Regal zu stellen. Eine Rolle kommt obendrauf.",
+			"extra": "Unbekannte Berechtigungen",
+			"extra-hint": "Die Rolle trägt Rechte, die diese Seite nicht kennt — von einem Skript geschrieben oder von einer inzwischen umbenannten Ressource. Beim Speichern bleiben sie erhalten.",
+			"remove-permission": "Berechtigung entfernen",
+			"save": "Speichern",
+			"cancel": "Abbrechen",
+			"edit": "Bearbeiten",
+			"delete": "Löschen",
+			"really-delete": "Wirklich löschen?",
+			"actions": "Aktionen",
+			"empty": "Noch keine Rolle. Lege die erste an — ohne sie hat niemand eine einzige Berechtigung.",
+			"count": "{{count}} Rollen",
+			"no-permission": "Gewährt nichts.",
+			"in-use": "{{count}} Benutzer tragen diese Rolle, deshalb ist sie nicht löschbar. Nimm sie ihnen zuerst ab oder leere ihre Berechtigungen.",
+			"resource": {
+				"artist": "Interpret",
+				"album": "Album",
+				"release": "Veröffentlichung",
+				"track": "Titel",
+				"label": "Label",
+				"musician": "Musiker",
+				"membership": "Mitgliedschaft",
+				"contribution": "Mitwirkung",
+				"document": "Dokument",
+				"genre": "Genre",
+				"musicCollection": "Kollektion",
+				"entityQuantity": "Stückzahlen",
+				"collectionItem": "Sammlungseintrag",
+				"wishlistItem": "Wunschlisteneintrag",
+				"role": "Rolle",
+				"user": "Benutzer",
+				"security": "Effektive Rechte",
+				"defaultLanguage": "Standardsprache",
+				"badgeSettings": "Abzeichen-Erzeugung",
+				"venue": "Spielstätte",
+				"concert": "Konzert"
+			},
+			"reach": "Reichweite",
+			"holders": "Getragen von",
+			"clone": "Kopie anlegen",
+			"back-to-list": "Zurück zur Liste",
+			"identity": "Identität",
+			"copy-of": "Eine Kopie von {{name}} — die Berechtigungen sind übernommen; den Namen vergibst du.",
+			"search-permissions": "Berechtigung suchen",
+			"no-match": "Keine Berechtigung passt zur Suche.",
+			"impact": "Was das Speichern ändert",
+			"reaches": "Betrifft {{count}} Benutzer.",
+			"reaches-nobody": "Diese Rolle trägt zurzeit niemand.",
+			"reaches-unknown": "Wie viele Benutzer betroffen sind, lässt sich nicht sagen — dafür fehlt das Recht, die Benutzer zu listen.",
+			"reaches-new": "Eine neue Rolle: bis zur Vergabe trägt sie niemand.",
+			"will-add": "Kommt hinzu ({{count}})",
+			"will-remove": "Fällt weg ({{count}})",
+			"no-change": "An den Berechtigungen ändert sich nichts.",
+			"holders-unreadable": "Wer die Rolle trägt, lässt sich nicht feststellen, deshalb ist sie nicht löschbar. Dafür fehlt das Recht, die Benutzer zu listen (viewUserEntity).",
+			"finding": {
+				"name-empty": "Gib der Rolle einen Namen.",
+				"name-too-long": "Der Name darf höchstens {{max}} Zeichen haben.",
+				"name-taken": "Eine Rolle mit diesem Namen gibt es bereits. Die Berechtigungssynchronisation gleicht auch über den Namen ab und könnte die beiden nicht auseinanderhalten.",
+				"id-taken": "Aus diesem Namen entstünde die Kennung {{id}}, und die ist bereits vergeben. Wähle einen anderen Namen.",
+				"locks-me-out": "Damit nimmst du dir selbst die Berechtigung, mit der du hierherkommst. Gib sie zuerst einer anderen deiner Rollen.",
+				"no-permissions": "Diese Rolle gewährt nichts. Das ist in Ordnung, wenn es so gemeint ist — so leert man eine Rolle, statt sie zu löschen.",
+				"wildcard-redundant": "Neben dem Vollzugriff zählen die übrigen {{count}} Haken nicht. Wenn das die Absicht ist, können sie weg.",
+				"edit-page-without-write": "{{resource}}: der Editor öffnet sich, aber die Regeln lehnen das Speichern ab — das Recht zum Anlegen oder Ändern fehlt.",
+				"user-admin-without-view": "Benutzer dürfen geschrieben, aber nicht gelistet werden: die Benutzerseite öffnet sich leer. Füge auch das Leserecht hinzu.",
+				"role-delete-without-user-view": "Rollen dürfen gelöscht werden, aber wer eine trägt, lässt sich nicht feststellen — der Löschvorgang läuft so nicht durch. Füge das Leserecht auf Benutzer hinzu."
+			},
+			"write-failed": {
+				"name-taken": "Inzwischen hat jemand eine Rolle mit diesem Namen angelegt.",
+				"id-taken": "Inzwischen hat jemand diese Kennung belegt."
+			}
+		},
+		"user": {
+			"title": "Benutzer und Rollen",
+			"intro": "Wer welche Rolle trägt. Die Berechtigung kommt von der Rolle — hier wird nur entschieden, wer sie bekommt. Die effektiven Rechte rechnet der Server aus; das Auge zeigt, was dabei herauskam.",
+			"resync": "Rechte neu berechnen",
+			"resynced": "{{users}} Benutzer geprüft, {{changed}} aktualisiert.",
+			"search": "Suche nach Name, E-Mail oder Kennung",
+			"count": "{{count}} Benutzer",
+			"empty": "Kein Benutzer passt zur Suche.",
+			"person": "Benutzer",
+			"roles": "Rollen",
+			"actions": "Aktionen",
+			"no-role": "Trägt keine Rolle.",
+			"dangling": "Verweist auf eine Rolle, die es nicht gibt: {{names}}",
+			"full-access": "Vollzugriff",
+			"edit-roles": "Rollen bearbeiten",
+			"save": "Speichern",
+			"cancel": "Abbrechen",
+			"show-permissions": "Effektive Rechte anzeigen",
+			"hide-permissions": "Effektive Rechte ausblenden",
+			"effective": "{{count}} effektive Berechtigungen",
+			"no-effective": "Der Server hat für diesen Benutzer noch keine Rechte berechnet.",
+			"would-lock-out": "Du kannst dir nicht selbst den Weg zurück in diese Seiten nehmen.",
+			"filtered-by": "Filter: {{name}}",
+			"clear-filter": "Filter aufheben"
+		},
+		"group": {
+			"curated": "Kuratiert",
+			"discography": "Diskografien"
+		},
+		"concert": {
+			"title": "Konzerte",
+			"intro": "Die Konzerte der Bands aus dem Katalog. Vier Ladeläufe füllen sie: die Spielstätten von MusicBrainz und darüber hinaus die, die ein Modell aus einer Suche aufzählt; die mbid-verankerten Konzerte ebenfalls von dort, der Rest aus den Vorschlägen desselben Modells — vorgeschlagene Spielstätten und Abende warten beide hier auf eine Entscheidung.",
+			"loads": "Ladeläufe",
+			"load": "Laden",
+			"ask": "Vorschläge anfragen",
+			"load-venues": "Spielstätten von MusicBrainz",
+			"load-venues-hint": "Die Orte eines Landes von MusicBrainz. Langsam (eine Anfrage pro Sekunde), aber selten nötig: die Halle bleibt, wo sie war.",
+			"load-concerts": "Konzerte von MusicBrainz",
+			"load-concerts-hint": "Die Künstler des Katalogs, die eine MusicBrainz-Id haben. Was dabei gefunden wird, hängt an einer mbid und geht darum ohne Bestätigung raus.",
+			"load-ai": "Konzerte von einem Modell",
+			"load-ai-hint": "Eine kostenpflichtige Anfrage je Spielstätte, gestützt auf die Google-Suche. Was sie vorschlägt, wartet im Reiter Konzert-Vorschläge, bis jemand die genannte Quelle öffnet.",
+			"ai-venues": "Abgefragte Spielstätten",
+			"ai-venues-all": "Der Reihe nach, wo die Runde steht",
+			"ai-venues-selected": "{0} Spielstätten gewählt",
+			"ai-venues-hint": "Leer gelassen, läuft die Runde dort weiter, wo der letzte Lauf endete.",
+			"ai-venues-cost": "{{count}} Spielstätten, je eine kostenpflichtige Anfrage.",
+			"window": "Zeitfenster (Tage)",
+			"window-hint": "Wie weit die Ladeläufe vorausfragen.",
+			"sections": "Bereiche",
+			"tab": {
+				"suggestions": "Konzert-Vorschläge",
+				"concerts": "Konzerte",
+				"venues": "Spielstätten",
+				"venue-suggestions": "Spielstätten-Vorschläge"
+			},
+			"type": {
+				"concert": "Konzert",
+				"festival": "Festival",
+				"other": "Sonstiges"
+			},
+			"source": {
+				"musicbrainz": "MusicBrainz",
+				"ai": "Modell",
+				"manual": "Von Hand"
+			},
+			"no-pending": "Nichts wartet auf Bestätigung. Frage Vorschläge an, um mehr zu bekommen.",
+			"no-concerts": "Noch keine Konzerte abgelegt. Beginne mit den Spielstätten, dann lade die Konzerte.",
+			"no-venues": "Noch keine Spielstätten. Der Spielstätten-Ladelauf holt die Orte eines ganzen Landes von MusicBrainz.",
+			"approve": "Bestätigen",
+			"approve-and-file": "Bestätigen und ablegen",
+			"fix": "Korrigieren",
+			"reject": "Verwerfen",
+			"open-source": "Quelle öffnen",
+			"tickets": "Tickets",
+			"no-source": "Keine Quelle",
+			"unknown-venue": "Unbekannte Spielstätte",
+			"editor": "Konzert-Editor",
+			"venue-editor": "Spielstätten-Editor",
+			"editing": "Konzert von {{artist}} bearbeiten",
+			"approving": "Vorschlag für {{artist}} prüfen",
+			"editing-venue": "Spielstätte bearbeiten",
+			"adding-venue": "Neue Spielstätte",
+			"add-venue": "Neue Spielstätte",
+			"name": "Name des Abends",
+			"venue": "Spielstätte",
+			"venue-placeholder": "Aus den geladenen Spielstätten wählen",
+			"venue-hint": "Steht die Spielstätte nicht auf der Liste, trage ihren Namen unten ein — ein späterer Ladelauf holt sie nach.",
+			"venue-name": "Name der Spielstätte",
+			"venue-type": "Art",
+			"city": "Stadt",
+			"address": "Adresse",
+			"day": "Tag",
+			"time": "Beginn",
+			"last-day": "Letzter Tag",
+			"last-day-hint": "Nur für ein Festival, das über mehrere Tage läuft.",
+			"kind": "Art",
+			"band": "Band",
+			"acts": "Line-up",
+			"acts-hint": "Der zugeschriebene Künstler bleibt oben — unter ihm wird das Konzert abgelegt, und aus ihm wird die Id des Dokuments gebaut. Der Rest des Programms steht darunter, in der Reihenfolge des Programms. Ab dem dritten Buchstaben wird der Katalog durchsucht: Was du aus der Liste wählst, wird auf der Seite verlinkt. Eine Band, die der Katalog nicht führt, steht als Name da.",
+			"act-name": "Name des Acts",
+			"act-placeholder": "Namen eingeben — Suche ab 3 Buchstaben",
+			"no-artist": "Kein Künstler im Katalog beginnt so. Der Name bleibt wie eingegeben, nur ohne Link.",
+			"add-act": "Act hinzufügen",
+			"remove-act": "Act entfernen",
+			"credited": "Zugeschrieben",
+			"in-catalog": "Im Katalog",
+			"origin": "Herkunft",
+			"ticket-url": "Ticket-URL",
+			"source-url": "Quell-URL",
+			"source-url-hint": "Worauf die Angabe beruht. Das ist es, was sich vor dem Bestätigen zu öffnen lohnt.",
+			"cancelled": "Abgesagt",
+			"offered-on-forms": "Wird in den Formularen angeboten",
+			"retired": "Stillgelegt",
+			"save": "Speichern",
+			"cancel": "Abbrechen",
+			"edit": "Bearbeiten",
+			"delete": "Löschen",
+			"actions": "Aktionen",
+			"concert-count": "{{count}} kommende Konzerte",
+			"venue-count": "{{count}} Spielstätten",
+			"confirm-delete": "Konzert von {{artist}} am {{day}} löschen?",
+			"confirm-delete-venue": "Die Spielstätte {{name}} löschen?",
+			"venue-in-use": "An dieser Spielstätte ist ein Konzert abgelegt, sie lässt sich darum nicht löschen. Lege sie stattdessen still — sie verschwindet aus den Formularen, die Konzerte behalten ihren Platz.",
+			"ai-disabled": "Konzert-Vorschläge sind abgeschaltet.",
+			"ai-quota": "Das heutige Modell-Budget ist aufgebraucht. Morgen kannst du wieder anfragen.",
+			"budget": "Modell-Budget",
+			"budget-hint": "Was der Vorschlagslauf darf. Der Prompt lässt sich hier nicht setzen: Er wird auf dem Server aus den eigenen Daten des Katalogs gebaut, damit niemand auf unsere Rechnung etwas beantworten lassen kann.",
+			"ai-enabled": "Vorschlagsläufe sind an",
+			"venues-a-run": "Spielstätten je Lauf",
+			"venues-a-run-hint": "Nach wie vielen Spielstätten-Programmen ein Lauf fragt — und wie viele Anfragen er verbraucht.",
+			"daily-limit": "Tägliches Anfragelimit",
+			"daily-limit-hint": "Die letzte Bremse: Kein Fehler soll ein Monatsbudget kosten.",
+			"country": "Land",
+			"country-hint": "Alle vier Ladeläufe gelten für dieses Land.",
+			"load-ai-venues": "Spielstätten von einem Modell",
+			"load-ai-venues-hint": "Wo MusicBrainz dünn ist — außerhalb Ungarns meist —, zählt ein Modell die Konzertorte des Landes aus einer Suche auf. Eine kostenpflichtige Anfrage je Frage, und das Ergebnis wartet im Reiter „Spielstätten-Vorschläge“.",
+			"ai-cities": "Gefragte Städte",
+			"ai-cities-all": "Das ganze Land, in einer Anfrage",
+			"ai-cities-hint": "Mit Komma trennen. Leer gelassen fragen wir das ganze Land in einer einzigen Anfrage — daraus kommen die großen Häuser.",
+			"ai-cities-cost": "{{count}} Städte, je eine kostenpflichtige Anfrage.",
+			"no-pending-venues": "Keine Spielstätte wartet auf eine Entscheidung. Der Ladelauf „Spielstätten von einem Modell“ holt neue.",
+			"approving-venue": "Vorgeschlagene Spielstätte prüfen",
+			"approve-and-add": "Freigeben und aufnehmen",
+			"retire": "Zurückziehen",
+			"restore": "Zurückholen",
+			"venue-held-by": "An {{name}} sind {{count}} Konzert(e) abgelegt, sie lässt sich darum nicht löschen. Zieh sie stattdessen zurück: in den Formularen erscheint sie nicht mehr, die Konzerte bleiben.",
+			"counting-venue-use": "Es wird gezählt, was auf diese Spielstätte verweist…",
+			"venue-use-unknown": "Es kam keine Antwort darauf, ob an {{name}} ein Konzert abgelegt ist. Der Löschversuch ist möglich: ist dort etwas abgelegt, lehnt der Server ab.",
+			"run": {
+				"running": "Läuft… {{elapsed}}",
+				"done": "Fertig",
+				"failed": "Fehlgeschlagen",
+				"meta": "{{country}} · {{time}}",
+				"meta-running": "{{country}} · gestartet {{time}}",
+				"empty-venues": "MusicBrainz kennt für dieses Land keine Konzert-Spielstätte. Frag stattdessen das Modell nach Spielstätten.",
+				"empty-ai-venues": "Das Modell hat keine einzige Spielstätte genannt. Frag stadtweise nach: Die Landesfrage bringt die großen Häuser, die Städte die Clubs.",
+				"empty-concerts": "MusicBrainz kennt keinen kommenden Auftritt der Künstler des Katalogs — in diesem Land, für so viele Tage im Voraus. Es kennt insgesamt zwei ungarische Ereignisse, darum gibt es das Modell.",
+				"empty-ai": "Das Modell hat in den abgefragten Programmen keinen Abend gefunden. Versuch andere Spielstätten oder ein größeres Fenster.",
+				"nothing-new": "Eine Antwort kam, nur nichts Neues: Was sie nennt, ist entweder schon da oder wurde schon einmal abgelehnt.",
+				"failed-questions": "Das Modell hat {{count}} Fragen nicht beantwortet — so viele Anfragen gingen ergebnislos vom Limit ab. Der Fehler: {{message}}",
+				"failed-questions-plain": "Das Modell hat {{count}} Fragen nicht beantwortet — so viele Anfragen gingen ergebnislos vom Limit ab.",
+				"row": {
+					"scanned": "Orte von MusicBrainz",
+					"venues": "Davon Spielstätten",
+					"written": "Geschrieben",
+					"unchanged": "Unverändert",
+					"artists": "Abgefragte Künstler",
+					"events": "Geprüfte Ereignisse",
+					"matched": "Von Katalog-Künstlern",
+					"deleted": "Vergangen, gelöscht",
+					"venues-created": "Neu angelegte Spielstätten",
+					"asked": "Fragen",
+					"queried": "Abgefragte Spielstätten",
+					"seen": "Von der Antwort genannt",
+					"proposed": "Von Katalog-Künstlern",
+					"suggested": "Wartet auf Freigabe",
+					"duplicates": "Schon vorhanden",
+					"rejected": "Früher abgelehnt",
+					"discarded": "Vom Filter verworfen",
+					"left": "Vom Tageslimit übrig",
+					"model": "Modell",
+					"failed": "Unbeantwortete Fragen"
+				}
+			},
+			"cost": {
+				"free": "kostenlos",
+				"paid": "kostenpflichtig"
+			}
+		},
+		"bundles": {
+			"title": "Katalog-Bundles",
+			"intro": "Die Clients laden den Katalog aus diesen Dateien statt Dokument für Dokument. Was sich seit dem Bau eines Bundles geändert hat, liest jeder neue Besucher danach einzeln nach — hat sich viel angesammelt, baue es neu.",
+			"recount": "Neu zählen",
+			"behind-summary": "{{count}} Bundles sind hinter dem Katalog zurück",
+			"all-current": "Alle Bundles sind aktuell",
+			"checked-at": "gezählt um",
+			"name": "Bundle",
+			"documents": "Dokumente",
+			"built": "Gebaut",
+			"since": "Seitdem",
+			"actions": "Aktionen",
+			"changes": "{{changed}} geändert, {{deleted}} gelöscht",
+			"guest-name": "Schaufenster",
+			"guest-title": "Schaufenster",
+			"guest-intro": "Das bekommt ein Gast und jeder, der kein Genre gewählt hat: fünf Kollektionen pro Genre mit ihren Alben. Es baut sich jede Nacht neu, wenn sich Künstler, Alben oder Kollektionen geändert haben; montags kommt eine neue Auswahl.",
+			"genre-title": "Genre-Bundles",
+			"genre-intro": "Sammler mit gewähltem Genre laden dies und werden nur daraus aktualisiert. Die Änderungszahl gilt für den ganzen Katalog, nicht nur für das Genre. Ein Bau liest den ganzen Katalog.",
+			"feature-title": "Feature-Bundles",
+			"feature-intro": "Der ganze Katalog für Admins und ältere Clients, je Feature. Die Clients lesen die Änderungen obendrauf, es geht also nichts verloren — es wird nur teuer.",
+			"rebuild": "Neu bauen",
+			"rebuilding": "Wird gebaut…",
+			"confirm": "Ja, bauen (~{{reads}} Lesevorgänge)",
+			"cancel": "Abbrechen",
+			"rebuilt": "Fertig: {{count}} Dokumente, {{kb}} KB, {{seconds}} s",
+			"state": {
+				"missing": "nicht veröffentlicht",
+				"reset": "seit Reset veraltet",
+				"behind": "zurück",
+				"current": "aktuell"
+			}
+		}
+	},
+	"fact": {
+		"album": "Album",
+		"artist": "Künstler",
+		"label": "Label",
+		"country": "Land",
+		"format": "Format",
+		"released": "Erschienen",
+		"discogs": "Discogs",
+		"wantedOn": "Gesucht auf",
+		"collector": "Sammler",
+		"whereSeen": "Wo sie gesehen wurde",
+		"lastChange": "Letzte Änderung",
+		"originalName": "Ursprünglicher Name",
+		"madeFor": "Erstellt für",
+		"fileType": "Dateityp",
+		"withdrawn": "Zurückgezogen",
+		"file": "Datei",
+		"parentLabel": "Mutterlabel",
+		"subLabels": "Sublabels",
+		"pressings": "Pressungen",
+		"artists": "Künstler",
+		"years": "Jahre"
+	},
+	"section": {
+		"about": "Über",
+		"lineUp": "Besetzung",
+		"discography": "Diskografie",
+		"inYourCollection": "In deiner Sammlung",
+		"similarArtists": "Ähnliche Künstler",
+		"bands": "Bands",
+		"guestAppearances": "Gastauftritte",
+		"albums": "Alben",
+		"bandmates": "Bandkollegen"
+	},
+	"radio": {
+		"bandOfTheWeek": {
+			"name": "Band der Woche: {{name}}",
+			"description": "Jede vierte Platte ist ihre, dazwischen dein Geschmack und der Katalog."
+		},
+		"justIn": {
+			"description": "Die Platten, die der Katalog zuletzt aufgenommen hat.",
+			"name": "Frisch eingetroffen"
+		},
+		"yourTaste": {
+			"description": "Platten in den Stilen, von denen dein Regal am meisten hat — ob du sie besitzt oder nicht.",
+			"name": "Dein Geschmack"
+		},
+		"yourShelf": {
+			"description": "Deine eigenen Exemplare, eines nach dem anderen.",
+			"name": "Dein Regal"
+		},
+		"anything": {
+			"description": "Der Katalog, ohne jede Ordnung.",
+			"name": "Irgendwas"
+		},
+		"unnamedUnit": "Unbenanntes Element",
+		"unit": {
+			"description": "Die Platten, die du in dieses Element eingeräumt hast, in der Reihenfolge, in der sie stehen."
+		},
+		"collection": {
+			"description": "Jede Platte, die diese Challenge verlangt."
+		},
+		"loved": {
+			"name": "Platten, die du liebst",
+			"description": "Die mit vier oder fünf Sternen, in beliebiger Folge."
+		}
+	},
+	"tour": {
+		"home": {
+			"steps": {
+				"search": {
+					"title": "Finde eine Platte",
+					"content": "Ein Feld für den ganzen Katalog: Interpret, Album oder Titel — die Treffer kommen, während du tippst."
+				},
+				"discover": {
+					"title": "Der Rest des Katalogs",
+					"content": "Stile, Jahrzehnte, Künstler und die neuesten Alben — Stöbern statt Aufgaben."
+				}
+			},
+			"guest": {
+				"name": "Die Startseite",
+				"description": "Eine Minute auf der Startseite: was der Katalog weiß — und was daraus wird, wenn du dich anmeldest.",
+				"steps": {
+					"welcome": {
+						"title": "Willkommen",
+						"content": "Das ist musiCollection: ein Plattenkatalog mit Interpreten, Alben und Pressungen. Hier ist die Startseite in einer Minute."
+					},
+					"bar": {
+						"title": "Die Leiste",
+						"content": "Hier fängt alles an: die Seiten, die auch ein Gast ansehen darf — und rechts die Sprache und das helle oder dunkle Design."
+					},
+					"challenges": {
+						"title": "Challenges",
+						"content": "Plattenmengen, die eine Regel bestimmt: eine Serie eines Labels, ein Jahrzehnt, das ganze Werk einer Band. Angemeldet siehst du auch, wie weit du bist."
+					},
+					"login": {
+						"title": "Hier geht es hinein",
+						"content": "Ein Klick mit einem Google-Konto. Danach ist auch diese Tour eine andere: Sie zeigt dir, was dir gehört."
+					}
+				}
+			},
+			"collector": {
+				"name": "Deine Startseite",
+				"description": "Eine Minute auf der Startseite: was sie aus dem Katalog holt — und was aus deinem eigenen Regal.",
+				"steps": {
+					"welcome": {
+						"title": "Willkommen zurück",
+						"content": "Das ist deine Startseite: oben der Katalog, darunter die Reihen, die aus deinem eigenen Regal kommen. Eine Minute, und wir sind durch."
+					},
+					"bar": {
+						"title": "Die Leiste",
+						"content": "Hier fängt alles an. Auf einem breiten Bildschirm stehen die Seiten in einer Reihe, auf dem Telefon hinter dem Menüknopf — und Sprache und Design immer rechts."
+					},
+					"challenges": {
+						"title": "Challenges",
+						"content": "Plattenmengen, die eine Regel bestimmt: eine Serie eines Labels, ein Jahrzehnt, das ganze Werk einer Band. Der Balken zeigt, wie weit du bist, und die Seite schlägt vor, welche Platte am meisten bringt."
+					},
+					"hunt": {
+						"title": "Die nächste Platte",
+						"content": "Was sich als Nächstes zu kaufen lohnt: die Platten, die den fast fertigen Challenges noch fehlen, der Reihe nach."
+					},
+					"account": {
+						"title": "Und der Rest steckt hier",
+						"content": "Dein Regal, das Scannen, das Radio, die Wunschliste und das Profil — im Profil lässt sich diese Tour auch abschalten, wenn du sie gesehen hast."
+					}
+				}
+			}
+		},
+		"pages": {
+			"collection": {
+				"intro": {
+					"title": "Dein eigenes Regal",
+					"content": "Von hier an ist alles deins: wie viele Platten, von wie vielen Interpreten, in welchem Format. Diese Seite sieht außer dir niemand."
+				},
+				"stats": {
+					"title": "Auf einen Blick",
+					"content": "Wie viele Platten, von wie vielen Interpreten, in welchem Format — und was das Regal wert ist, wenn du eingetragen hast, was du gezahlt hast."
+				},
+				"views": {
+					"title": "Drei Ansichten",
+					"content": "Eine Wand aus Covern, eine schlichte Liste, oder das Regal selbst, mit jedem Exemplar dort, wo es wirklich steht. Die Möbel zeichnest du im Profil."
+				},
+				"name": "Dein Regal",
+				"decades": {
+					"title": "Nach Jahrzehnten",
+					"content": "Deine eigenen Platten nach Alter sortiert: man sieht sofort, aus welchem Jahrzehnt du am meisten sammelst."
+				},
+				"styles": {
+					"title": "Nach Stilen",
+					"content": "Dasselbe nach Genre: wie viel Punk, wie viel Jazz, wie viel von allem anderen in deinem Regal steht."
+				},
+				"challenges": {
+					"title": "Deine Herausforderungen",
+					"content": "Was du angefangen hast, und wie viel davon schon in deinem Regal steht. Die ganze Liste öffnet sich von hier."
+				},
+				"search": {
+					"title": "Suche in deinen eigenen",
+					"content": "Sucht nur in deinen Platten — nach Act und Albumtitel, schon beim Tippen."
+				},
+				"formats": {
+					"title": "Nach Format",
+					"content": "Lass nur Vinyl, CD oder Kassette stehen. Die Zahl am Chip sagt, wie viele es sind."
+				},
+				"sort": {
+					"title": "Sortieren und gruppieren",
+					"content": "Nach Act, Jahr oder dem Tag des Erwerbs — und gruppiert so, wie du selbst an sie denkst."
+				},
+				"shelf": {
+					"title": "Das Regal, wie es steht",
+					"content": "Die Regalansicht zeichnet jedes Exemplar dorthin, wo es wirklich steht. Das Möbel legst du im Profil an."
+				}
+			},
+			"scan": {
+				"intro": {
+					"title": "Eine Platte aus einem Foto",
+					"content": "Fotografiere die Hülle. Der Katalog liest das Cover, sagt, welche Platte er darin erkennt, und ein paar Tipps später steht das Exemplar in deinem Regal."
+				},
+				"name": "Eine Platte vom Foto",
+				"shot": {
+					"title": "Das Foto",
+					"content": "Hier fängt es an: fotografiere die Hülle oder wähle ein Bild aus der Galerie. Das Cover sollte drauf sein, möglichst gerade."
+				},
+				"results": {
+					"title": "Worauf es tippt",
+					"content": "Was der Katalog anhand des Fotos gefunden hat, das Wahrscheinlichste zuerst. Wähle aus, welches deins ist."
+				},
+				"read": {
+					"title": "Was vom Bild gelesen wurde",
+					"content": "Der Text, den es auf der Hülle gefunden hat — damit wurde gesucht. Wenn es sich verlesen hat, siehst du hier, warum."
+				}
+			},
+			"shelfScan": {
+				"intro": {
+					"title": "Ein ganzes Fach auf einmal",
+					"content": "Ein Foto einer Reihe von Rücken, und alles, was er entziffern kann, wird zusammen angeboten — so kommt ein schon volles Regal herein."
+				},
+				"name": "Ein ganzes Fach auf einmal",
+				"shots": {
+					"title": "Die Fotos",
+					"content": "Mehrere auf einmal: geh das Fach Rücken für Rücken ab, Bild für Bild."
+				},
+				"controls": {
+					"title": "Was im Fach steht",
+					"content": "Sag, ob dort Vinyl, CD oder Kassette steht — das grenzt die Suche ein — und starte dann die Erkennung."
+				},
+				"review": {
+					"title": "Das Durchgehen",
+					"content": "Jeder erkannte Rücken der Reihe nach: übernehmen, korrigieren oder überspringen. In dein Regal kommt nur, was du bestätigst."
+				}
+			},
+			"wishlist": {
+				"intro": {
+					"title": "Was noch fehlt",
+					"content": "Die Platten, auf die du es abgesehen hast, und was du dafür zahlen würdest. Die Jagdliste der Startseite entsteht daraus."
+				},
+				"name": "Deine Wunschliste",
+				"stats": {
+					"title": "Wo du stehst",
+					"content": "Wie viele Platten du jagst, von wie vielen Acts — und wie viele du schon gefunden hast."
+				},
+				"search": {
+					"title": "Suche",
+					"content": "Sucht innerhalb der Wunschliste, nach Act und Titel."
+				},
+				"formats": {
+					"title": "Nach Format",
+					"content": "Wenn du sie nur auf Vinyl willst, grenze die Liste darauf ein."
+				},
+				"found": {
+					"title": "Die gefundenen",
+					"content": "Was du schon hast, ist standardmäßig ausgeblendet. Dieser Schalter holt es zurück."
+				},
+				"gotIt": {
+					"title": "Hab ich",
+					"content": "Wenn du sie bekommen hast, legt ein Tippen sie ins Regal und nimmt sie von der Liste."
+				}
+			},
+			"challenges": {
+				"intro": {
+					"title": "Challenges",
+					"content": "Plattenmengen, die eine Regel bestimmt, keine Liste: eine Serie eines Labels, ein Jahrzehnt, das ganze Werk einer Band. Wer eine abschließt, wird bezahlt."
+				},
+				"name": "Die Herausforderungen",
+				"stats": {
+					"title": "Die Zahlen",
+					"content": "Wie viele Herausforderungen es gibt, wie viele du angefangen und wie viele du abgeschlossen hast."
+				},
+				"hunt": {
+					"title": "Die nächste Platte",
+					"content": "Was sich am meisten lohnen würde: die fehlenden Platten aus deinen fast fertigen Herausforderungen, der Reihe nach."
+				},
+				"tabs": {
+					"title": "Filtern",
+					"content": "Alle, die angefangenen, die verfolgten, oder die bereits fertigen."
+				},
+				"card": {
+					"title": "Eine Herausforderung",
+					"content": "Das Bild, die Regel und wie viele Platten dazugehören. Tippe sie an, und die ganze Liste öffnet sich."
+				},
+				"progress": {
+					"title": "Wo du stehst",
+					"content": "Der Balken zählt dein eigenes Regal gegen das, was die Herausforderung verlangt."
+				},
+				"follow": {
+					"title": "Folgen",
+					"content": "Folge ihr, und du behältst auch auf der Startseite im Auge, was noch fehlt."
+				}
+			},
+			"radio": {
+				"intro": {
+					"title": "Dein eigenes Radio",
+					"content": "Eine Platte aus deinem Regal, aufgelegt, Seite für Seite. Der Reihe nach oder gemischt — und was wirklich lief, landet im Protokoll."
+				},
+				"name": "Dein Radio",
+				"order": {
+					"title": "Der Reihe nach oder gemischt",
+					"content": "Schalte es ein, und das Radio zieht deine Platten in zufälliger Reihenfolge."
+				},
+				"onAir": {
+					"title": "Was gerade läuft",
+					"content": "Die Sendung, wie sie läuft: die Platte, die Seite und wie weit sie ist. Von hier hältst du sie an."
+				},
+				"stations": {
+					"title": "Die Sender",
+					"content": "Jeder Sender greift anders in dein Regal: nach Genre, nach Jahrzehnt, oder nach dem, was lange nicht lief. Wähl einen, und los geht es."
+				}
+			},
+			"dailyQuestion": {
+				"intro": {
+					"title": "Die Frage des Tages",
+					"content": "Eine Frage aus dem Katalog, für alle dieselbe, einmal am Tag. Punkte, eine Serie, die am Leben bleiben will, und eine Rangliste."
+				},
+				"history": {
+					"title": "Die früheren Fragen",
+					"content": "Alles bisher Gefragte mit deinen Antworten — und welche davon richtig waren."
+				},
+				"name": "Die Frage des Tages",
+				"score": {
+					"title": "Dein Stand",
+					"content": "Punkte, Serie, längste Serie und Trefferquote. Ein einziger ausgelassener Tag reißt die Serie ab."
+				},
+				"question": {
+					"title": "Die Frage von heute",
+					"content": "Für alle dieselbe, aus dem Katalog. Eine pro Tag, und du antwortest einmal."
+				},
+				"clock": {
+					"title": "Die Uhr",
+					"content": "Solange sie läuft, ist eine richtige Antwort mehr wert. Hetzen musst du nicht — lange grübeln lohnt aber auch nicht."
+				},
+				"options": {
+					"title": "Die Antworten",
+					"content": "Ein paar zur Wahl, eine davon richtig. Sobald du wählst, siehst du, welche es war."
+				},
+				"leaderboard": {
+					"title": "Die Rangliste",
+					"content": "Wie du zu den anderen stehst. Darauf steht nur, wer gespielt hat."
+				}
+			},
+			"upcoming": {
+				"intro": {
+					"title": "Was kommt",
+					"content": "Was die Interpreten des Katalogs als Nächstes herausbringen — einmal täglich zusammengetragen, damit dir eine Neuauflage nicht entgeht."
+				},
+				"name": "Was kommt",
+				"stats": {
+					"title": "Die Zahlen",
+					"content": "Wie viele Veröffentlichungen bevorstehen und wie viele davon von den Acts des Katalogs kommen."
+				},
+				"tabs": {
+					"title": "Filtern",
+					"content": "Alle — oder nur die Acts, die du sammelst."
+				},
+				"timeline": {
+					"title": "Der Zeitstrahl",
+					"content": "Monat für Monat, Tag für Tag, was wann erscheint. Einmal täglich zusammengetragen."
+				}
+			},
+			"map": {
+				"intro": {
+					"title": "Sammler",
+					"content": "Wo die Platten stehen. Deine eigene Nadel zeigt genau so viel, wie du im Profil erlaubt hast."
+				},
+				"name": "Die Karte der Sammler",
+				"stats": {
+					"title": "Die Zahlen",
+					"content": "Wie viele Sammler und wie viele Länder auf der Karte gelandet sind — so viel, wie sie preisgegeben haben."
+				},
+				"world": {
+					"title": "Die Karte",
+					"content": "Ziehen, scrollen, eine Nadel antippen. Deine zeigt genau so viel, wie du im Profil erlaubt hast."
+				},
+				"countries": {
+					"title": "Die Länder",
+					"content": "Wo Sammler sind, Land für Land. Tippe eins an, und nur die von dort bleiben."
+				},
+				"collectors": {
+					"title": "Die Sammler dort",
+					"content": "Alle aus diesem Land, die gesagt haben, dass sie dort sind."
+				}
+			},
+			"requests": {
+				"intro": {
+					"title": "Gib etwas zurück",
+					"content": "Ein Interpret, ein Album oder eine Pressung, die der Katalog noch nicht kennt? Schlage sie hier vor und verfolge, was aus dem geworden ist, was du geschickt hast."
+				},
+				"propose": {
+					"title": "Schlag etwas vor",
+					"content": "Fehlt ein Interpret, ein Album, eine Pressung oder ein Label? Hier beginnt das Formular, und was du schickst, kommt auf diese Seite zurück."
+				},
+				"name": "Deine Vorschläge",
+				"list": {
+					"title": "Was du eingeschickt hast",
+					"content": "Jeder deiner Vorschläge und was daraus wurde: wartet, übernommen, oder mit Begründung zurück."
+				}
+			},
+			"profile": {
+				"name": "Dein Profil",
+				"intro": {
+					"title": "Dein Profil",
+					"content": "Dein Konto und alles, was die App auf dich einstellt: Sprache, Design, die Zeichnung deines Regals, die Wiedergabe und was du mit anderen teilst."
+				},
+				"tabs": {
+					"title": "Vier Gruppen",
+					"content": "Die Einstellungen auf vier Tabs: dein Konto, das Sammeln, die Wiedergabe und deine Daten. Immer nur einer ist offen — die Tour öffnet alle vier nacheinander und legt die Seite danach wieder so hin, wie sie sie vorgefunden hat."
+				},
+				"accountTab": {
+					"title": "Erster Tab: dein Konto",
+					"content": "Hier fangen wir an. Auf diesem Tab steht, was die App über dich weiß: dein Name, die Sprache, das Aussehen — und der Schalter für diese Tour. Geh weiter, ich öffne ihn."
+				},
+				"account": {
+					"title": "Dein Konto",
+					"content": "Dein Name, wie der Katalog ihn zeigt, und das Konto, mit dem du angemeldet bist."
+				},
+				"avatar": {
+					"title": "Dein Avatar",
+					"content": "Kein Foto? Bau dir eine Figur — Statur, Gesicht, Haare, Kleidung —, und sie steht dort, wo sonst ein Profilbild wäre."
+				},
+				"language": {
+					"title": "Die Sprache",
+					"content": "Ungarisch, Englisch oder Deutsch. Sie bleibt beim Konto und folgt dir in den nächsten Browser."
+				},
+				"appearance": {
+					"title": "Das Aussehen",
+					"content": "Dunkel oder hell — und wie viel von der Breite des Bildschirms die Seiten nutzen dürfen."
+				},
+				"collectionTab": {
+					"title": "Zweiter Tab: das Sammeln",
+					"content": "Dieser Tab handelt von deinen Platten: womit die Sammlung öffnet und in welchen Regalen sie stehen. Geh weiter, ich öffne ihn."
+				},
+				"genres": {
+					"title": "Deine Genres",
+					"content": "Höchstens zwei Genres, und die App lädt nur deren Katalog herunter. Das bestimmt, was du beim Stöbern, Suchen und im Radio siehst."
+				},
+				"lists": {
+					"title": "Die Listen",
+					"content": "Womit die Sammlung öffnet und wie sie deine Platten ordnet."
+				},
+				"shelves": {
+					"title": "Deine Regale",
+					"content": "Das Möbel, in dem deine Platten stehen: wie viele Fächer, wie groß. Daraus wird die Regalansicht gezeichnet."
+				},
+				"playbackTab": {
+					"title": "Dritter Tab: die Wiedergabe",
+					"content": "Dieser Tab handelt vom Ton: welcher Player klingen darf und dein Spotify-Konto. Geh weiter, ich öffne ihn."
+				},
+				"playback": {
+					"title": "Die Wiedergabe",
+					"content": "Welcher Player klingen darf und was du auf die Seite lässt."
+				},
+				"spotify": {
+					"title": "Spotify",
+					"content": "Verbindest du dein Konto, laufen deine Platten über dein eigenes Spotify."
+				},
+				"dataTab": {
+					"title": "Vierter Tab: deine Daten",
+					"content": "Der letzte Tab handelt davon, was notiert wird und was dich verlässt: dein Hörprotokoll und was andere Sammler von dir sehen. Geh weiter, ich öffne ihn."
+				},
+				"listening": {
+					"title": "Das Hörprotokoll",
+					"content": "Was darüber notiert wird, was bei dir wirklich gelaufen ist."
+				},
+				"verdicts": {
+					"title": "Was du denkst",
+					"content": "Die Sterne, die du deinen Platten gegeben hast, und wie freigebig du damit bist. Ein Tipp auf der Albumseite genügt."
+				},
+				"privacy": {
+					"title": "Deine Daten",
+					"content": "Was andere von dir sehen: dein Ort auf der Karte, dein Name in der Rangliste. Nichts, bis du es sagst."
+				},
+				"sharing": {
+					"title": "Geteiltes Profil",
+					"content": "Ein Link zu deiner Sammlung, den jeder öffnen kann, angemeldet oder nicht — und deine Wunschliste, wenn du magst. Standardmäßig hast du keine solche Seite."
+				},
+				"back": {
+					"title": "Zurück zum ersten",
+					"content": "Das waren alle vier Tabs. Ich bringe dich zurück zum Konto-Tab, wo ich dich gefunden habe — eines fehlt noch."
+				},
+				"switch": {
+					"title": "Und hier ist der Schalter",
+					"content": "Der Kompass sitzt in der Ecke jeder Seite und zeigt immer die Seite, die du offen hast. Schalte ihn aus, und er ist weg; schalte ihn wieder ein, wenn du ihn brauchst."
+				}
+			},
+			"network": {
+				"intro": {
+					"title": "Das Netzwerk",
+					"content": "Wer mit wem spielte: die Musiker und Bands des Katalogs in einem Graphen, in dem gemeinsame Mitglieder die Bands verbinden."
+				},
+				"name": "Das Netzwerk",
+				"focus": {
+					"title": "Die Mitte",
+					"content": "Hier wählst du, was in der Mitte des Graphen steht und wie weit von dort aus geschaut wird."
+				},
+				"search": {
+					"title": "Im Netz suchen",
+					"content": "Tippe den Namen einer Band oder eines Musikers ein, und der Graph springt hin."
+				},
+				"graph": {
+					"title": "Der Graph",
+					"content": "Die Punkte sind Bands und Musiker, die Linien gemeinsame Mitgliedschaft. Ziehen, scrollen, einen Punkt antippen."
+				},
+				"legend": {
+					"title": "Die Legende",
+					"content": "Was jede Farbe bedeutet und was jede Linie verbindet."
+				},
+				"details": {
+					"title": "Das Ausgewählte",
+					"content": "Was du angetippt hast: wer dazugehört, wohin das Netz es bindet und wo es weitergeht."
+				}
+			},
+			"copy": {
+				"name": "Dieses Exemplar",
+				"intro": {
+					"title": "Eine Platte, wie du sie hast",
+					"content": "Nicht das Album im Allgemeinen, sondern dieses eine Exemplar: wie du es gekauft hast, wie es aussieht, wo es steht."
+				},
+				"photos": {
+					"title": "Deine eigenen Fotos",
+					"content": "Fotografiere Hülle, Platte, Beilagen. Diese Bilder bleiben deine, nicht die des Katalogs."
+				},
+				"facts": {
+					"title": "Was dieses Exemplar ist",
+					"content": "Preis, Zustand, wo und wann du es bekommen hast, wo es im Regal steht. Über Bearbeiten lässt sich alles ändern."
+				},
+				"form": {
+					"title": "Das Formular",
+					"content": "Was du hier einträgst, gehört allein zu deinem Exemplar — die gemeinsamen Daten des Katalogs bleiben unberührt."
+				}
+			},
+			"wishlistItem": {
+				"name": "Ein Wunsch",
+				"intro": {
+					"title": "Was du jagst",
+					"content": "Die Platte, wie der Katalog sie kennt — und was du dazugeschrieben hast: was du zahlen würdest und welche Pressung es sein muss."
+				},
+				"facts": {
+					"title": "Was die Platte ist",
+					"content": "Label, Jahr, Format, Katalognummer — so viel, dass du sie im Laden wiedererkennst."
+				}
+			},
+			"bands": {
+				"name": "Deine Bands",
+				"intro": {
+					"title": "Deine Bands",
+					"content": "Die Acts, zu denen du den Schlüssel bekommen hast: hier bearbeitest du die Seiten deiner eigenen Bands."
+				},
+				"list": {
+					"title": "Was du betreust",
+					"content": "Jede Band, die dir gehört. Von hier öffnet sich das Bearbeiten — und hier gibst du sie auch wieder ab."
+				}
+			},
+			"challenge": {
+				"name": "Diese Sammlung",
+				"intro": {
+					"title": "Die Sammlung",
+					"content": "Die Regel, die diese Platten zusammenhält, und was zum Abschluss fehlt."
+				},
+				"progress": {
+					"title": "Wo du stehst",
+					"content": "So viel von der Sammlung steht schon in deinem Regal — und so viel bringt sie vollendet."
+				},
+				"score": {
+					"title": "Sechs Zahlen",
+					"content": "Vorhanden, fehlend, Fortschritt, Punkte — und wie viele andere sie vollendet haben oder sammeln."
+				},
+				"badge": {
+					"title": "Das Abzeichen",
+					"content": "Schließt du sie ab, steht dieses Abzeichen neben deinem Namen."
+				},
+				"filter": {
+					"title": "Filtern und sortieren",
+					"content": "Alle, was du hast oder was fehlt — nach Jahr, Interpret oder Name."
+				},
+				"grid": {
+					"title": "Die Platten",
+					"content": "Die Sammlung in voller Länge. Was du hast, ist markiert; der Rest bleibt zu jagen."
+				},
+				"rule": {
+					"title": "Was hineingehört",
+					"content": "Eine Sammlung ist eine Regel, keine Liste: Was passt, kommt von selbst dazu, sobald der Katalog wächst."
+				},
+				"decades": {
+					"title": "Jahrzehnte",
+					"content": "Die ganze Säule ist die Sammlung, der gefüllte Teil dein Regal — hier zeigt sich die Lücke."
+				},
+				"crowd": {
+					"title": "Wer sie sammelt",
+					"content": "Wer sie vollendet hat und wer ihr nachjagt. Ihre Regale sind einen Tipp entfernt."
+				},
+				"hunt": {
+					"title": "Was als Nächstes",
+					"content": "Aus dieser Sammlung bringen dich diese Platten am weitesten."
+				}
+			},
+			"artist": {
+				"name": "Dieser Act",
+				"intro": {
+					"title": "Der Act",
+					"content": "Die Seite der Band oder des Solokünstlers: woher sie kommen, wann sie sich gegründet haben, was sie spielen."
+				},
+				"stats": {
+					"title": "Die Zahlen",
+					"content": "Wie viele Alben der Katalog von ihnen hat, wie viele davon deine sind, und wie weit ihre Laufbahn reicht."
+				},
+				"nav": {
+					"title": "Die Teile der Seite",
+					"content": "Sprung zu einem Abschnitt: die Biografie, die Besetzung, die Platten und die ähnlichen Acts."
+				},
+				"about": {
+					"title": "Die Biografie",
+					"content": "Was der Katalog über sie weiß. Ist sie dünn, füllst du sie über den Vorschlag-Knopf auf."
+				},
+				"lineup": {
+					"title": "Die Besetzung",
+					"content": "Wer in der Band gespielt hat, und von wann bis wann. Die Seiten der Musiker öffnen sich von hier."
+				},
+				"discography": {
+					"title": "Die Platten",
+					"content": "Jedes Album aus dem Katalog, nach Jahr. Was du hast, ist markiert."
+				},
+				"collection": {
+					"title": "Was du von ihnen hast",
+					"content": "Deine eigenen Exemplare dieses Acts, Pressung für Pressung."
+				},
+				"similar": {
+					"title": "Ähnliche",
+					"content": "Acts aus demselben Genre — oder solche, die mit denselben Musikern gearbeitet haben."
+				}
+			},
+			"album": {
+				"name": "Dieses Album",
+				"intro": {
+					"title": "Das Album",
+					"content": "Das Album, wie der Katalog es kennt: der Act, das Jahr, das Genre und die Hülle."
+				},
+				"collect": {
+					"title": "Ins Regal stellen",
+					"content": "Ein Tippen, und dein Exemplar kommt in die Sammlung — die Pressung kannst du gleich dazu wählen."
+				},
+				"wish": {
+					"title": "Auf die Wunschliste",
+					"content": "Hast du es noch nicht, landet es von hier auf deiner Jagdliste."
+				},
+				"challenges": {
+					"title": "In Herausforderungen",
+					"content": "Zu welchen Herausforderungen diese Platte gehört und was sie einbringen würde."
+				},
+				"original": {
+					"title": "Die Erstpressung",
+					"content": "Die erste Veröffentlichung: wann, bei welchem Label, in welchem Format."
+				},
+				"listen": {
+					"title": "Hör hinein",
+					"content": "Hast du die Player erlaubt, klingt die Platte von hier."
+				},
+				"tracklist": {
+					"title": "Die Titel",
+					"content": "Das Album der Reihe nach, mit Längen. Tippe einen an für die eigene Seite des Titels."
+				},
+				"credits": {
+					"title": "Die Mitwirkenden",
+					"content": "Wer was auf der Platte gespielt hat und wer sie aufgenommen hat."
+				},
+				"copies": {
+					"title": "Die Exemplare",
+					"content": "Deine eigenen Exemplare dieses Albums — und die, die du wieder abgegeben hast."
+				},
+				"more": {
+					"title": "Mehr von ihnen",
+					"content": "Weitere Platten desselben Acts aus dem Katalog."
+				}
+			},
+			"track": {
+				"name": "Dieser Titel",
+				"intro": {
+					"title": "Der Titel",
+					"content": "Ein Titel vom Album: auf welcher Platte, an welcher Stelle, wie lang."
+				},
+				"actions": {
+					"title": "Was du damit tun kannst",
+					"content": "Abspielen, wenn du die Player erlaubt hast — und zurück zur Seite der Platte."
+				},
+				"lyrics": {
+					"title": "Der Text",
+					"content": "Hat der Katalog ihn, steht er hier. Hat er ihn nicht, kannst du einen vorschlagen."
+				},
+				"credits": {
+					"title": "Die Mitwirkenden",
+					"content": "Wer diesen einen Titel geschrieben, gespielt und aufgenommen hat."
+				},
+				"neighbours": {
+					"title": "Davor, danach",
+					"content": "Der Titel davor und der danach, damit sich die Reihenfolge durchlesen lässt."
+				}
+			},
+			"release": {
+				"name": "Diese Pressung",
+				"intro": {
+					"title": "Die Pressung",
+					"content": "Eine bestimmte Veröffentlichung: dasselbe Album, aber diese Pressung — mit eigenem Jahr, Label und Format."
+				},
+				"facts": {
+					"title": "Was diese Pressung ist",
+					"content": "Label, Katalognummer, Land, Jahr, Format. Genug, um eine Platte im Laden auseinanderzuhalten."
+				},
+				"tracks": {
+					"title": "Die Titel",
+					"content": "Die Reihenfolge dieser Pressung — nicht immer dieselbe wie die der Erstausgabe."
+				}
+			},
+			"label": {
+				"name": "Dieses Label",
+				"intro": {
+					"title": "Das Label",
+					"content": "Die Seite der Plattenfirma: wann sie gegründet wurde, wo, und was im Katalog ihren Namen trägt."
+				},
+				"facts": {
+					"title": "Was das Label ist",
+					"content": "Gründung, Sitz, und was der Katalog sonst über es weiß."
+				},
+				"catalog": {
+					"title": "Was dort erschienen ist",
+					"content": "Die Pressungen dieser Firma — die Platten öffnen sich von hier."
+				}
+			},
+			"musician": {
+				"name": "Dieser Musiker",
+				"intro": {
+					"title": "Der Musiker",
+					"content": "Ein Mensch, keine Band: was er spielt, wann er geboren wurde und wo er überall war."
+				},
+				"stats": {
+					"title": "Die Zahlen",
+					"content": "In wie vielen Bands er gespielt hat, auf wie vielen Platten er steht, und wie weit seine Laufbahn reicht."
+				},
+				"bands": {
+					"title": "Seine Bands",
+					"content": "In welcher Band, von wann bis wann, in welcher Rolle. Das ist das Rückgrat des Netzwerks."
+				},
+				"guest": {
+					"title": "Gastauftritte",
+					"content": "Platten, auf denen er gespielt hat, ohne je Mitglied gewesen zu sein."
+				},
+				"albums": {
+					"title": "Seine Platten",
+					"content": "Jedes Album, auf dem er steht, als Mitglied oder als Gast."
+				},
+				"bandmates": {
+					"title": "Mit wem er gespielt hat",
+					"content": "Die Musiker, mit denen er in einer Band war. Von hier geht es im Netz weiter."
+				}
+			},
+			"discover": {
+				"name": "Die Entdecken-Seite",
+				"spotlight": {
+					"title": "Ein Act im Scheinwerfer",
+					"content": "Die Startseite stellt immer jemanden nach vorn: die Band der Woche oder — in einer Woche ohne Wahl — einen Zufallsgriff aus dem Katalog. Willst du jemand anderen, mische neu."
+				},
+				"catalog": {
+					"title": "Was der Katalog weiß",
+					"content": "Interpreten, Alben, Pressungen und Titel — und wie viel davon schon Cover, Jahr und Label hat."
+				},
+				"coverage": {
+					"title": "Wie viel davon gesammelt ist",
+					"content": "Die Alben des Katalogs nach Jahrzehnten, und wie viele davon schon im Regal stehen — angemeldet ist es deine eigene Sammlung, die daraufgezeichnet wird."
+				},
+				"artists": {
+					"title": "Die Acts",
+					"content": "Von hier öffnen die Interpretenseiten: ihre Platten, wer darin gespielt hat und wo diese Musiker sonst noch spielten."
+				},
+				"styles": {
+					"title": "Nach Stil",
+					"content": "Der Katalog nach Genres zerlegt: pro Stil eine Reihe von Alben, von der aus es weitergeht."
+				},
+				"decades": {
+					"title": "Nach Jahrzehnt",
+					"content": "Dasselbe nach Alter: wie viele Platten der Katalog aus jedem Jahrzehnt hält, beiderseits der Achtziger."
+				},
+				"acts": {
+					"title": "Bands, Projekte und Formationen",
+					"content": "Nicht jeder Act ist eine Band: Der Katalog hält Soloprojekte, Supergroups und einmalige Formationen auseinander."
+				},
+				"albums": {
+					"title": "Die neuesten Alben",
+					"content": "Was zuletzt in den Katalog kam — danach, wann es erfasst wurde, nicht wann es erschien."
+				}
+			}
+		}
+	},
+	"app": {
+		"version": "Version: {{version}} von Zsagia",
+		"build": "Build: {{time}}"
+	}
+}

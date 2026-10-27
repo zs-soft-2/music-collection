@@ -9,9 +9,14 @@
 }
 
 .page {
+	--mc-page-gutter: clamp(1rem, 3vw, 2.5rem);
+	/* On a phone the catalog rows run out to both screen edges, and give
+	   the gutter back as their own padding. */
+	--mc-carousel-bleed: var(--mc-page-gutter);
+
 	max-width: var(--mc-page-max-width);
 	margin: 0 auto;
-	padding: clamp(1rem, 2vw, 1.5rem) clamp(1rem, 3vw, 2.5rem) 3rem;
+	padding: clamp(1rem, 2vw, 1.5rem) var(--mc-page-gutter) 3rem;
 }
 
 ul {
@@ -29,6 +34,25 @@ ul {
 	clip: rect(0 0 0 0);
 	white-space: nowrap;
 	border: 0;
+}
+
+mc-collection-big-card,
+.big-card-skeleton {
+	display: block;
+	margin-top: 1.25rem;
+}
+
+/* Akkora, amekkora a kártya lesz, különben a megérkezése lenyomja a lapot. */
+.big-card-skeleton {
+	height: 23rem;
+
+	@media (max-width: 1000px) {
+		height: 30rem;
+	}
+
+	@media (max-width: 640px) {
+		height: 43rem;
+	}
 }
 
 /* ── Sections ─────────────────────────────────────────────────────────── */
@@ -87,17 +111,10 @@ ul {
 
 /* ── At a glance ──────────────────────────────────────────────────────── */
 
-.glance {
+.catalog {
 	display: grid;
-	grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.2fr) minmax(0, 1fr);
+	grid-template-columns: repeat(6, minmax(0, 1fr));
 	gap: 1rem;
-}
-
-.stats {
-	display: grid;
-	grid-template-columns: repeat(3, minmax(0, 1fr));
-	align-content: start;
-	gap: 0.75rem;
 	margin: 0;
 }
 
@@ -105,7 +122,7 @@ ul {
 	display: flex;
 	flex-direction: column;
 	justify-content: flex-end;
-	padding: 0.8rem 1rem;
+	padding: 1rem 1.1rem;
 	background: var(--mc-card-bg);
 	border: 1px solid var(--mc-border);
 	border-radius: var(--mc-radius-md);
@@ -116,28 +133,29 @@ ul {
 	}
 
 	dd {
-		margin: 0.15rem 0 0;
-		font-size: 1.6rem;
-		font-weight: 600;
-		line-height: 1.1;
-	}
-
-	&.is-hero {
-		grid-column: 1 / -1;
-
-		dd {
-			font-size: 3.5rem;
-			font-weight: 700;
-			line-height: 1;
-		}
+		margin: 0.2rem 0 0;
+		font-size: 2.4rem;
+		font-weight: 700;
+		line-height: 1;
+		font-variant-numeric: tabular-nums;
 	}
 }
 
+/* Catalog vs. collection by decade, below the count tiles. */
 .panel {
 	padding: 1.1rem 1.25rem;
 	background: var(--mc-card-bg);
 	border: 1px solid var(--mc-border);
 	border-radius: var(--mc-radius-md);
+}
+
+.coverage {
+	margin-top: 1rem;
+}
+
+.coverage-skeleton {
+	height: 320px;
+	margin-top: 1rem;
 }
 
 /* ── Grids ────────────────────────────────────────────────────────────── */
@@ -239,17 +257,39 @@ ul {
 	color: #cfcfcf;
 }
 
+/* ── Catalog rows ─────────────────────────────────────────────────────── */
+
+.groups {
+	display: flex;
+	flex-direction: column;
+	gap: 2rem;
+}
+
 /* ── Loading ──────────────────────────────────────────────────────────── */
 
 .skeleton {
+	position: relative;
+	overflow: hidden;
+	background: var(--mc-card-bg);
+	border-radius: var(--mc-radius-lg);
+}
+
+/*
+ * The light passes over on a layer of its own. A moving transform is the
+ * compositor's work; a moving background is a repaint of every placeholder
+ * on every frame, which on a slow phone holds back the page it stands for.
+ */
+.skeleton::after {
+	content: '';
+	position: absolute;
+	inset: 0;
 	background: linear-gradient(
 		100deg,
-		var(--mc-card-bg) 40%,
+		transparent 40%,
 		var(--mc-surface-2) 50%,
-		var(--mc-card-bg) 60%
+		transparent 60%
 	);
-	background-size: 200% 100%;
-	border-radius: var(--mc-radius-lg);
+	transform: translateX(-100%);
 	animation: mc-shimmer 1.4s linear infinite;
 }
 
@@ -257,8 +297,17 @@ ul {
 	height: 440px;
 }
 
+.group-skeleton {
+	height: 13rem;
+}
+
+.muted {
+	margin: 0;
+	color: var(--mc-text-muted);
+}
+
 .glance-skeleton {
-	height: 260px;
+	height: 92px;
 }
 
 .card-skeleton {
@@ -272,37 +321,23 @@ ul {
 
 @keyframes mc-shimmer {
 	to {
-		background-position: -200% 0;
+		transform: translateX(100%);
 	}
 }
 
 @media (max-width: 1100px) {
-	.glance {
-		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-	}
-
-	.stats {
-		grid-column: 1 / -1;
-		grid-template-columns: repeat(4, minmax(0, 1fr));
-	}
-
-	.stat.is-hero {
-		grid-column: auto;
-
-		dd {
-			font-size: 1.9rem;
-			font-weight: 600;
-		}
+	.catalog {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
 	}
 }
 
 @media (max-width: 720px) {
-	.glance {
-		grid-template-columns: minmax(0, 1fr);
+	.catalog {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 
-	.stats {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
+	.stat dd {
+		font-size: 1.8rem;
 	}
 
 	.card-grid {
@@ -329,5 +364,166 @@ ul {
 	.album-info,
 	.more i {
 		transition: none;
+	}
+}
+
+/* ── Collections ──────────────────────────────────────────────────────── */
+
+/* Melyik polcot mutatja a rács; ugyanaz a fülsor, mint a /collections-on. */
+.tabs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	margin: -0.5rem 0 1.25rem;
+}
+
+.tab {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	padding: 0.35rem 0.8rem;
+	font: inherit;
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: var(--mc-text-muted);
+	cursor: pointer;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: 999px;
+
+	&:hover {
+		border-color: var(--mc-border-strong);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--mc-primary);
+		outline-offset: 2px;
+	}
+
+	&.is-on {
+		color: var(--mc-text);
+		background: var(--mc-surface-2);
+		border-color: var(--mc-border-strong);
+	}
+
+	.count {
+		font-size: 0.72rem;
+		font-variant-numeric: tabular-nums;
+		color: var(--mc-text-subtle);
+	}
+}
+
+.collection-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+	gap: 1rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.collection-skeleton {
+	height: 15rem;
+}
+
+/* Egy gyűjtő-kártya magassága, hogy a fal ne tolja le a lapot. */
+.collector-skeleton {
+	height: 16.2rem;
+}
+
+/* A „mind a N" link a számmal együtt jön; addig is foglalja a helyét. */
+.more.is-pending {
+	visibility: hidden;
+}
+
+/* ── Who is collecting here ───────────────────────────────────────────── */
+
+.collector-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+	gap: 0.75rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+/* A szabad hely az asztalnál: ugyanakkora kártya, csak nem vezet sehova. */
+.join {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+	height: 100%;
+	padding: 1rem;
+	background: var(--mc-card-bg);
+	border: 1px dashed var(--mc-border-strong);
+	border-radius: var(--mc-radius-lg);
+
+	h3 {
+		margin: 0;
+		font-size: 0.95rem;
+	}
+
+	p {
+		margin: 0;
+		font-size: 0.8rem;
+		line-height: 1.4;
+		color: var(--mc-text-muted);
+	}
+}
+
+.join-cta {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	margin-top: auto;
+	padding: 0;
+	font: inherit;
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: var(--mc-accent);
+	text-align: left;
+	text-decoration: none;
+	cursor: pointer;
+	background: none;
+	border: 0;
+
+	i {
+		font-size: 0.75rem;
+	}
+
+	&:hover {
+		text-decoration: underline;
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--mc-primary);
+		outline-offset: 3px;
+	}
+}
+
+/* The way on to the rest of the catalog, closing the home page. */
+.discover-link {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-top: 2rem;
+	padding: 1.1rem 1.4rem;
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-lg, 1rem);
+	background: var(--mc-card-bg);
+	color: var(--mc-text-muted);
+	text-decoration: none;
+	transition: background var(--mc-duration-fast) ease;
+
+	strong {
+		display: block;
+		color: var(--mc-text);
+		font-size: 1.05rem;
+	}
+
+	&:hover,
+	&:focus-visible {
+		background: var(--mc-card-bg-hover);
 	}
 }

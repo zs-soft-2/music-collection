@@ -1,4 +1,4 @@
-import { Observable } from 'rxjs';
+import { Observable, from, map } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
 import {
@@ -6,17 +6,28 @@ import {
 	collectionGroup,
 	CollectionReference,
 	doc,
-	docData,
+	docSnapshots,
 	DocumentData,
 	Firestore,
 	getDocs,
+	limit,
 	query,
 	QueryConstraint,
 	where,
 } from '@angular/fire/firestore';
 
-import { Entity, EntityDataService, SearchParams } from '../../common';
-import { FirestoreSyncService } from './firestore-sync.service';
+import {
+	Entity,
+	EntityDataService,
+	GLOBAL_OWNER_ID,
+	SearchParams,
+	withOwner,
+} from '../../common';
+import {
+	FirestoreSyncService,
+	toSyncedData,
+	withLocalUpdatedAt,
+} from './firestore-sync.service';
 
 @Injectable()
 export abstract class FirebaseDataService<
@@ -30,20 +41,41 @@ export abstract class FirebaseDataService<
 	protected collection!: CollectionReference<DocumentData>;
 	protected featureKey!: string;
 
+	/**
+	 * One write, then done: the stream completes, so an operator that waits
+	 * for the end of it — `concatMap`, `forkJoin`, `toArray` — moves on
+	 * instead of holding the caller forever. A failed write is reported as
+	 * an error for the same reason: a silent stop looks like a slow save.
+	 */
 	protected addModel$(entityAdd: S): Observable<R> {
 		const uid = doc(collection(this.firestore, 'id')).id;
-		const newEntity = {
-			...entityAdd,
-			uid,
-		};
+		const newEntity = withOwner(
+			{
+				...entityAdd,
+				uid,
+			},
+			this.ownerId()
+		);
 
 		return new Observable((subscriber) => {
 			this.firestoreSync
 				.set(doc(this.collection, uid), this.featureKey, newEntity)
 				.then(() => {
-					subscriber.next({ ...newEntity } as unknown as R);
-				});
+					subscriber.next(
+						withLocalUpdatedAt(newEntity) as unknown as R
+					);
+					subscriber.complete();
+				})
+				.catch((error) => subscriber.error(error));
 		});
+	}
+
+	/**
+	 * Who the documents written here belong to. The catalog is everybody's;
+	 * a collector's own side of a feature says their uid instead.
+	 */
+	protected ownerId(): string {
+		return GLOBAL_OWNER_ID;
 	}
 
 	protected deleteModel$(entity: R): Observable<R> {
@@ -67,24 +99,64 @@ export abstract class FirebaseDataService<
 		);
 
 		return new Observable((subscriber) => {
-			getDocs(albumsQuery).then((snapshots) => {
-				const entities: R[] = [];
+			getDocs(albumsQuery)
+				.then((snapshots) => {
+					const entities: R[] = [];
 
-				snapshots.forEach((doc) => {
-					entities.push(doc.data() as unknown as R);
-				});
+					snapshots.forEach((doc) => {
+						entities.push(toSyncedData(doc) as unknown as R);
+					});
 
-				subscriber.next(entities);
-			});
+					subscriber.next(entities);
+					subscriber.complete();
+				})
+				.catch((error) => subscriber.error(error));
 		});
 	}
 
 	protected loadModel$(uid: string): Observable<R | undefined> {
 		const albumDocument = doc(this.firestore, `${this.featureKey}/${uid}`);
 
-		return docData(albumDocument, {
-			idField: 'uid',
-		}) as Observable<R>;
+		return docSnapshots(albumDocument).pipe(
+			map((snapshot) =>
+				snapshot.exists()
+					? ({ ...toSyncedData(snapshot), uid: snapshot.id } as R)
+					: undefined
+			)
+		);
+	}
+
+	/**
+	 * The documents whose `field` array holds `value`, at most `max` of them,
+	 * asked of the server rather than read from the synced cache.
+	 *
+	 * This is the way round a catalog the client only holds part of. A
+	 * narrowed scope downloads the genres the collector follows and nothing
+	 * else (`CatalogScopeService`), and even an unnarrowed one is only as
+	 * fresh as the bundle it was filled from — so a band filed under another
+	 * genre, or imported since the bundles were last built, is simply not in
+	 * the cache to be found. Asking by name costs the few documents that
+	 * match, which is what makes it affordable where a search came back
+	 * empty.
+	 */
+	protected lookupModels$(
+		field: string,
+		value: string,
+		max: number
+	): Observable<R[]> {
+		const lookupQuery = query(
+			collectionGroup(this.firestore, this.featureKey),
+			where(field, 'array-contains', value),
+			limit(max)
+		);
+
+		return from(getDocs(lookupQuery)).pipe(
+			map((snapshot) =>
+				snapshot.docs.map(
+					(document) => toSyncedData(document) as unknown as R
+				)
+			)
+		);
 	}
 
 	protected searchModel$(params: SearchParams): Observable<R[]> {
@@ -104,10 +176,11 @@ export abstract class FirebaseDataService<
 						snapshot.docs.map(
 							(doc) =>
 								({
-									...doc.data(),
+									...toSyncedData(doc),
 								}) as unknown as R
 						)
 					);
+					subscriber.complete();
 				})
 				.catch((error) => {
 					subscriber.error(error);
@@ -116,9 +189,12 @@ export abstract class FirebaseDataService<
 	}
 
 	protected updateModel$(entity: T): Observable<T> {
-		const newEntity: T = {
-			...entity,
-		} as T;
+		const newEntity: T = withOwner(
+			{
+				...entity,
+			},
+			this.ownerId()
+		) as T;
 
 		return new Observable((subscriber) => {
 			this.firestoreSync
@@ -128,10 +204,12 @@ export abstract class FirebaseDataService<
 					newEntity
 				)
 				.then(() => {
-					subscriber.next({
-						...newEntity,
-					} as unknown as T);
-				});
+					subscriber.next(
+						withLocalUpdatedAt(newEntity) as unknown as T
+					);
+					subscriber.complete();
+				})
+				.catch((error) => subscriber.error(error));
 		});
 	}
 }

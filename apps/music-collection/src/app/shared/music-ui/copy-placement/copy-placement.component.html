@@ -1,0 +1,194 @@
+<dialog
+	#dialog
+	class="placement"
+	aria-labelledby="copy-placement-title"
+	[attr.aria-busy]="busy()"
+	(close)="closed.emit()"
+>
+	<header class="placement-header">
+		<div>
+			<p class="eyebrow">
+				{{ 'ui.copyPlacement.place-on-the-shelf' | transloco }}
+			</p>
+			<h2 id="copy-placement-title">{{ albumTitle() }}</h2>
+		</div>
+		<button
+			type="button"
+			class="icon-button"
+			[attr.aria-label]="'ui.copyPlacement.close' | transloco"
+			[disabled]="busy()"
+			(click)="close()"
+		>
+			<i class="pi pi-times" aria-hidden="true"></i>
+		</button>
+	</header>
+
+	<div class="copy">
+		<mc-format-badge [format]="copy().format" [weight]="copy().weight" />
+		<span class="details">
+			@if (copy().generic) {
+				<span>{{ 'catalog.genericPressing' | transloco }}</span>
+			} @else if (copy().labelName) {
+				<span>{{ copy().labelName }}</span>
+			}
+			@if (copy().country) {
+				<span>{{ copy().country }}</span>
+			}
+		</span>
+	</div>
+
+	<form (submit)="$event.preventDefault(); submit()">
+		@if (units().length > 1) {
+			<fieldset class="units">
+				<legend>
+					{{ 'ui.copyPlacement.which-shelf' | transloco }}
+				</legend>
+				<div class="chips">
+					@for (drawn of units(); track drawn.id) {
+						<label class="chip">
+							<input
+								type="radio"
+								name="unit"
+								[value]="drawn.id"
+								[checked]="unitId() === drawn.id"
+								(change)="unitId.set(drawn.id)"
+							/>
+							{{ titles().get(drawn.id) }}
+						</label>
+					}
+				</div>
+			</fieldset>
+		}
+
+		<fieldset class="compartments">
+			<legend>
+				{{ 'ui.copyPlacement.which-compartment' | transloco }}
+			</legend>
+			@if (unit(); as drawn) {
+				<div class="grid" [style.--cols]="drawn.columns">
+					@for (cell of cells(); track cell.key) {
+						<button
+							type="button"
+							class="cell"
+							[class.is-chosen]="cell.chosen"
+							[attr.aria-pressed]="cell.chosen"
+							[attr.aria-label]="
+								cell.label +
+								(cell.filed
+									? ', ' + cell.filed + ' filed here'
+									: ', empty')
+							"
+							[class.is-hosting]="cell.hosting"
+							[title]="
+								cell.hosting
+									? ('ui.copyPlacement.holds-inserts'
+										| transloco)
+									: null
+							"
+							[disabled]="busy() || cell.hosting"
+							(click)="pick(cell.row, cell.column)"
+						>
+							@if (cell.filed) {
+								<span class="cell-count">{{ cell.filed }}</span>
+							}
+						</button>
+					}
+				</div>
+				<p class="chosen-name">
+					@if (spot(); as here) {
+						Row {{ here.row }} · Slot {{ here.column }}
+					} @else {
+						Pick a compartment.
+					}
+				</p>
+			}
+		</fieldset>
+
+		<fieldset class="sides">
+			<legend>{{ 'ui.copyPlacement.which-side' | transloco }}</legend>
+			<div class="chips">
+				<label class="chip">
+					<input
+						type="radio"
+						name="side"
+						value="left"
+						[checked]="side() === 'left'"
+						[disabled]="!spot() || busy()"
+						(change)="lean('left')"
+					/>
+					{{ 'ui.copyPlacement.against-the-left-wall' | transloco }}
+				</label>
+				<label class="chip">
+					<input
+						type="radio"
+						name="side"
+						value="right"
+						[checked]="side() === 'right'"
+						[disabled]="!spot() || busy()"
+						(change)="lean('right')"
+					/>
+					{{ 'ui.copyPlacement.against-the-right-wall' | transloco }}
+				</label>
+			</div>
+		</fieldset>
+
+		<label class="field">
+			<span>{{
+				'ui.copyPlacement.position-in-the-compartment' | transloco
+			}}</span>
+			<input
+				type="number"
+				min="1"
+				[max]="maxPosition()"
+				[value]="position()"
+				[disabled]="!spot()"
+				(input)="onPosition($event)"
+			/>
+		</label>
+
+		<p class="hint">
+			@if (side() === 'right') {
+				{{ 'ui.copyPlacement.counted-from-the-right' | transloco }}
+			} @else {
+				{{ 'ui.copyPlacement.counted-from-the-left' | transloco }}
+			}
+		</p>
+
+		@if (error()) {
+			<p class="error" role="alert">
+				{{
+					'ui.copyPlacement.placeFailed'
+						| transloco: { error: error() }
+				}}
+			</p>
+		}
+
+		<div class="form-actions">
+			@if (standing()) {
+				<button
+					type="button"
+					class="text-button"
+					[disabled]="busy()"
+					(click)="takeOff()"
+				>
+					{{ 'ui.copyPlacement.take-off-the-shelf' | transloco }}
+				</button>
+			}
+			<button
+				type="button"
+				class="text-button"
+				[disabled]="busy()"
+				(click)="close()"
+			>
+				{{ 'ui.copyPlacement.cancel' | transloco }}
+			</button>
+			<button
+				type="submit"
+				class="primary-button"
+				[disabled]="!canPlace()"
+			>
+				{{ busy() ? 'Placing…' : 'Place it here' }}
+			</button>
+		</div>
+	</form>
+</dialog>

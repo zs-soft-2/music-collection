@@ -12,10 +12,14 @@
 				class="mc-form-section"
 				aria-labelledby="wishlist-item-details"
 			>
-				<h2 id="wishlist-item-details">Details</h2>
+				<h2 id="wishlist-item-details">
+					{{ 'ui.wishlistItemForm.details' | transloco }}
+				</h2>
 				<div class="mc-form-grid">
 					<div class="mc-field">
-						<label for="artistReference">Artist</label>
+						<label for="artistReference">{{
+							'ui.wishlistItemForm.artist' | transloco
+						}}</label>
 						<p-autocomplete
 							inputId="artistReference"
 							formControlName="artistReference"
@@ -23,13 +27,18 @@
 							[minQueryLength]="3"
 							[delay]="400"
 							optionLabel="name"
-							placeholder="Start typing an artist…"
+							[placeholder]="
+								'ui.wishlistItemForm.start-typing-an-artist'
+									| transloco
+							"
 							(completeMethod)="searchArtistHandler($event)"
 						></p-autocomplete>
 					</div>
 
 					<div class="mc-field">
-						<label for="albumReference">Album</label>
+						<label for="albumReference">{{
+							'ui.wishlistItemForm.album' | transloco
+						}}</label>
 						<p-autocomplete
 							inputId="albumReference"
 							formControlName="albumReference"
@@ -37,17 +46,24 @@
 							[minQueryLength]="3"
 							[delay]="400"
 							optionLabel="name"
-							placeholder="Start typing an album…"
+							[placeholder]="
+								'ui.wishlistItemForm.start-typing-an-album'
+									| transloco
+							"
 							(completeMethod)="searchAlbumHandler($event)"
 						></p-autocomplete>
 					</div>
 
 					<div class="mc-field">
-						<label for="medias">Medias</label>
+						<label for="medias">{{
+							'ui.wishlistItemForm.medias' | transloco
+						}}</label>
 						<p-multiselect
 							inputId="medias"
 							[options]="params.mediaList"
-							placeholder="Select medias"
+							[placeholder]="
+								'ui.wishlistItemForm.select-medias' | transloco
+							"
 							[filter]="false"
 							formControlName="medias"
 							display="chip"
@@ -55,7 +71,9 @@
 					</div>
 
 					<div class="mc-field">
-						<label for="sourceLink">Source link</label>
+						<label for="sourceLink">{{
+							'ui.wishlistItemForm.source-link' | transloco
+						}}</label>
 						<input
 							id="sourceLink"
 							type="url"
@@ -71,22 +89,23 @@
 							name="isActive"
 							inputId="isActive"
 						></p-checkbox>
-						<label for="isActive"
-							>Active — still looking for it</label
-						>
+						<label for="isActive">{{
+							'ui.wishlistItemForm.active-still-looking-for'
+								| transloco
+						}}</label>
 					</div>
 				</div>
 			</section>
 
 			<div class="mc-form-actions">
 				<p-button
-					label="Cancel"
+					[label]="'ui.wishlistItemForm.cancel' | transloco"
 					severity="secondary"
 					[outlined]="true"
 					(onClick)="cancel()"
 				></p-button>
 				<p-button
-					label="Save"
+					[label]="'ui.wishlistItemForm.save' | transloco"
 					icon="pi pi-check"
 					[disabled]="!params.formGroup.valid"
 					(onClick)="submit()"

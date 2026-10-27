@@ -5,6 +5,7 @@ import {
 	ArtistView,
 	DiscographyAlbum,
 	formatGenre,
+	isCurrentMember,
 	performerOrder,
 	toArtistView,
 } from '../../shared/music-ui';
@@ -155,7 +156,8 @@ export interface LineupMember {
 	instruments: string[];
 	from: number | null;
 	to: number | null;
-	active: boolean | null;
+	/** Still in the band, as the years and the flag together tell it. */
+	active: boolean;
 	/** "1987–2008", "1983–present" or null when the years are unknown. */
 	years: string | null;
 	albumCount: number;
@@ -175,7 +177,8 @@ const instrumentOrder = (role: string) =>
 	performerOrder(role) + (SECONDARY_ROLE.test(role) ? 10 : 0);
 
 function toLineupMember(membership: MembershipEntity): LineupMember {
-	const { from, to, active } = membership;
+	const { from, to } = membership;
+	const active = isCurrentMember(membership);
 	const end = active ? 'present' : to !== from ? to : null;
 
 	return {
@@ -215,7 +218,7 @@ export function toLineup(
 		.filter((_, index) => memberships[index].kind === 'member')
 		.sort(
 			(a, b) =>
-				Number(!!b.active) - Number(!!a.active) ||
+				Number(b.active) - Number(a.active) ||
 				(a.active ? instrumentRank(a) - instrumentRank(b) : 0) ||
 				(a.from ?? 9999) - (b.from ?? 9999) ||
 				instrumentRank(a) - instrumentRank(b) ||

@@ -1,6 +1,6 @@
 import { ContributionEntity, MembershipEntity } from '@music-collection/api';
 
-import { AlbumView } from '../../shared/music-ui/music-ui.model';
+import { AlbumView } from '@music-collection/ui/music-view';
 import {
 	toBandmates,
 	toMusicianAlbums,
@@ -55,6 +55,7 @@ function contribution(albumUid: string, role: string): ContributionEntity {
 const album = (id: string, year: number): AlbumView => ({
 	id,
 	title: id,
+	artistId: 'maiden',
 	artistName: 'Iron Maiden',
 	coverUrl: null,
 	year,
@@ -127,6 +128,20 @@ describe('musician mapper', () => {
 		expect(bands[0].years).toBe('1981–present');
 		expect(bands[0].span).toEqual({ from: 1981, to: YEAR, active: true });
 		expect(bands[0].artist).toBeNull();
+	});
+
+	it('keeps a member with a start and no end year in the band', () => {
+		// What the line-up editor leaves behind: no end year, flag off.
+		const bands = toMusicianBands(
+			[membership('thanos', 'chronosphere', 2012, null, false)],
+			[],
+			[],
+			YEAR
+		);
+
+		expect(bands[0].active).toBe(true);
+		expect(bands[0].years).toBe('2012–present');
+		expect(bands[0].span).toEqual({ from: 2012, to: YEAR, active: true });
 	});
 
 	it('merges the credits of an album and skips albums not in the catalog', () => {

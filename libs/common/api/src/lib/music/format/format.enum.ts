@@ -1,0 +1,43 @@
+export enum FormatEnum {
+	ep = 'ep',
+	lp = 'lp',
+	live = 'live',
+	compilation = 'compilation',
+	single = 'single',
+	maxi = 'maxi',
+	/** A physical carrier, yet the way a concert film is labelled. */
+	dvd = 'dvd',
+}
+
+export const FormatList: FormatEnum[] = [
+	FormatEnum.ep,
+	FormatEnum.compilation,
+	FormatEnum.dvd,
+	FormatEnum.live,
+	FormatEnum.lp,
+	FormatEnum.maxi,
+	FormatEnum.single,
+];
+
+export enum FormatDescriptionEnum {
+	boxSet = 'box set',
+	deluxeEdition = 'deluxe edition',
+	g180 = '180g',
+	/** A jacket that folds open — and on a shelf, a visibly wider spine. */
+	gatefold = 'gatefold',
+	limitedEdition = 'limited edition',
+	pictureDisc = 'picture disc',
+	reissue = 'reissue',
+	remastered = 'remastered',
+}
+
+export const FormatDescriptionList: FormatDescriptionEnum[] = [
+	FormatDescriptionEnum.boxSet,
+	FormatDescriptionEnum.deluxeEdition,
+	FormatDescriptionEnum.g180,
+	FormatDescriptionEnum.gatefold,
+	FormatDescriptionEnum.limitedEdition,
+	FormatDescriptionEnum.pictureDisc,
+	FormatDescriptionEnum.reissue,
+	FormatDescriptionEnum.remastered,
+];

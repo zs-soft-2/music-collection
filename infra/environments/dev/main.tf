@@ -39,7 +39,15 @@ resource "google_project_iam_member" "functions_runtime" {
   for_each = toset([
     "roles/datastore.user",
     "roles/eventarc.eventReceiver",
+    # A 2. generációs Firestore-trigger ezzel a fiókkal hívja a function
+    # Cloud Run szolgáltatását; enélkül minden esemény elakad, és a
+    # jogosultság-szinkron (effective_permissions) sosem fut le.
+    "roles/run.invoker",
     "roles/logging.logWriter",
+    # A badge-generálás: az Imagen hívása, és a kész kép a Storage
+    # `badge/` útvonalára. A Firestore-t a datastore.user fedi.
+    "roles/aiplatform.user",
+    "roles/storage.objectUser",
   ])
   project = local.project_id
   role    = each.value
@@ -57,6 +65,118 @@ resource "google_project_iam_member" "functions_build" {
   member  = "serviceAccount:${local.project_number}-compute@developer.gserviceaccount.com"
 
   depends_on = [google_project_service.enabled]
+}
+
+# A Storage-szabályok a permission-listát a Firestore-ból olvassák (a
+# storage.rules `firestore.get()`-jei). Ez cross-service Rules, amihez a Cloud
+# Storage for Firebase service agentnek külön szerepkör kell. Enélkül a
+# `firestore.get()` hibára fut, a kiértékelés megszakad, és MINDEN írás tiltott
+# lesz (`storage/unauthorized`) — az adminé is, miközben az olvasás (`if true`)
+# látszólag rendben működik. A `firebase deploy` interaktívan rákérdez erre a
+# kiosztásra, a CI viszont `--non-interactive` (.github/workflows/ci.yml), és
+# olyankor szó nélkül kihagyja; ezért áll itt, és nem a deployra bízzuk.
+resource "google_project_iam_member" "storage_rules_cross_service" {
+  project = local.project_id
+  role    = "roles/firebaserules.firestoreServiceAgent"
+  member  = "serviceAccount:service-${local.project_number}@gcp-sa-firebasestorage.iam.gserviceaccount.com"
+
+  depends_on = [google_project_service.enabled]
+}
+
+# A Discogs personal access token (60 kérés/perc a token nélküli 25 helyett) a
+# Discogs-lekérdező functionöknek. A secretet a tofu teremti, az ÉRTÉKÉT nem:
+# az nem kerülhet a state-be, kézzel tesszük fel —
+#   printf %s "$TOKEN" | gcloud secrets versions add DISCOGS_TOKEN \
+#     --data-file=- --project <project_id>
+# Érték nélkül a function deployja elszáll (a `defineSecret` verziót vár).
+resource "google_secret_manager_secret" "discogs_token" {
+  project   = local.project_id
+  secret_id = "DISCOGS_TOKEN"
+
+  replication {
+    auto {}
+  }
+
+  depends_on = [google_project_service.enabled]
+}
+
+# Csak a function futtatója olvashatja, és csak ezt az egy secretet.
+resource "google_secret_manager_secret_iam_member" "discogs_token_runtime" {
+  project   = local.project_id
+  secret_id = google_secret_manager_secret.discogs_token.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.functions_runtime.email}"
+}
+
+# A `firebase deploy` ellenőrzi a secret verzióját és a futtató hozzáférését;
+# ehhez a deployernek elég a viewer (az értéket nem olvashatja).
+resource "google_secret_manager_secret_iam_member" "discogs_token_deployer" {
+  project   = local.project_id
+  secret_id = google_secret_manager_secret.discogs_token.secret_id
+  role      = "roles/secretmanager.viewer"
+  member    = "serviceAccount:${module.service_accounts.deployer_email}"
+}
+
+# Az AI-gateway tenant API-kulcsa (`zsk_…`) a fotós lemez- és polcfelismeréshez
+# (`identifyRecordFromPhoto`, `identifyShelfFromPhotos`). A modellt a gateway
+# hívja, a szolgáltatói kulcsok nála vannak. Ugyanaz a szabály, mint a Discogs
+# tokennél: a secretet a tofu teremti, az ÉRTÉKÉT nem —
+#   printf %s "$KEY" | gcloud secrets versions add GATEWAY_API_KEY \
+#     --data-file=- --project <project_id>
+# A gateway címe nem titok: az `apps/functions/.env.<project_id>` adja.
+resource "google_secret_manager_secret" "gateway_api_key" {
+  project   = local.project_id
+  secret_id = "GATEWAY_API_KEY"
+
+  replication {
+    auto {}
+  }
+
+  depends_on = [google_project_service.enabled]
+}
+
+resource "google_secret_manager_secret_iam_member" "gateway_api_key_runtime" {
+  project   = local.project_id
+  secret_id = google_secret_manager_secret.gateway_api_key.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.functions_runtime.email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "gateway_api_key_deployer" {
+  project   = local.project_id
+  secret_id = google_secret_manager_secret.gateway_api_key.secret_id
+  role      = "roles/secretmanager.viewer"
+  member    = "serviceAccount:${module.service_accounts.deployer_email}"
+}
+
+# KIVEZETÉS ALATT: az Anthropic API kulcs, amivel a functions korábban
+# közvetlenül hívta a modellt. A kód már a GATEWAY_API_KEY-t olvassa; ez a
+# secret addig marad, amíg az új functionök mindkét környezetben futnak (a
+# még futó régi revíziók ebből olvasnak). Utána a három erőforrás törlendő, a
+# kulcs pedig visszavonandó az Anthropic konzolon.
+resource "google_secret_manager_secret" "anthropic_api_key" {
+  project   = local.project_id
+  secret_id = "ANTHROPIC_API_KEY"
+
+  replication {
+    auto {}
+  }
+
+  depends_on = [google_project_service.enabled]
+}
+
+resource "google_secret_manager_secret_iam_member" "anthropic_api_key_runtime" {
+  project   = local.project_id
+  secret_id = google_secret_manager_secret.anthropic_api_key.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.functions_runtime.email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "anthropic_api_key_deployer" {
+  project   = local.project_id
+  secret_id = google_secret_manager_secret.anthropic_api_key.secret_id
+  role      = "roles/secretmanager.viewer"
+  member    = "serviceAccount:${module.service_accounts.deployer_email}"
 }
 
 module "service_accounts" {
@@ -89,6 +209,12 @@ module "service_accounts" {
     "roles/cloudbuild.builds.editor",
     "roles/artifactregistry.writer",
     "roles/iam.serviceAccountUser",
+    # Az ütemezett function (`refreshUpcomingReleases`) deployja maga hozza
+    # létre és frissíti a Cloud Scheduler jobját, ezért a deployernek kell rá
+    # jog. Szűkebb beépített szerepkör nincs: a `jobRunner` csak futtat, a
+    # `viewer` csak olvas — create/update-hez az admin az egyetlen előre
+    # definiált. Az API-t a `services` kapcsolja be, az önmagában kevés volt.
+    "roles/cloudscheduler.admin",
   ]
 
   depends_on = [google_project_service.enabled]
@@ -112,7 +238,90 @@ module "firebase" {
   hosting_sites      = var.hosting_sites
   firestore_location = var.firestore_location
 
+  firestore_point_in_time_recovery = var.firestore_point_in_time_recovery
+  app_check_domains                = var.app_check_domains
+  app_check_debug_token            = var.app_check_debug_token
+  app_check_services               = var.app_check_services
+
   depends_on = [google_project_service.enabled]
+}
+
+# Ez megy az apps/music-collection/src/environments/environment*.ts
+# `appCheck.recaptchaSiteKey` mezőjébe:
+#   tofu output -raw app_check_site_key
+# A localhost App Check debug tokenje (csak dev). Titok — a fejlesztő így kéri
+# el, a fájlt a git nem látja:
+#   tofu -chdir=infra/environments/dev output -raw app_check_debug_token \
+#     > .app-check-debug-token
+output "app_check_debug_token" {
+  value       = module.firebase.app_check_debug_token
+  sensitive   = true
+  description = "A `.app-check-debug-token` fájl tartalma a fejlesztői gépen."
+}
+
+output "app_check_site_key" {
+  value       = module.firebase.app_check_site_key
+  description = "A kliensbe kerülő reCAPTCHA Enterprise site key (nem titok)."
+}
+
+# Az `environment*.ts` `firebase.appId` mezőjének ezzel kell egyeznie —
+# különben az App Check nem arra az appra került, amelyik az appot kiszolgálja.
+output "web_app_id" {
+  value       = module.firebase.web_app_id
+  description = "A tofu által kezelt Firebase web app azonosítója."
+}
+
+# Az `environment*.ts` `firebase.measurementId` mezője. A tofu nem kapcsolja be
+# a mérést — a GA4 propertyt és a Firebase-hez kötését a konzol adja, a
+# providerben nincs rá resource —, csak visszaolvassa, hogy a kliensben lévő
+# érték ne kézzel bemásolt maradjon:
+#   tofu -chdir=infra/environments/dev output -raw measurement_id
+output "measurement_id" {
+  value       = module.firebase.measurement_id
+  description = "A kliensbe kerülő GA4 measurement id (nem titok). Üres, ha a projekthez nincs Google Analytics kötve."
+}
+
+# ── Költség-riasztás ────────────────────────────────────────────────────────
+# A Firestore-olvasás, a Storage-forgalom és a functionök számlája csendben nő:
+# egy elszabadult script vagy egy nem cache-elt lekérdezés csak a hónap végi
+# számlán látszana. A modul két riasztást teremt — egy havi költségkeretet és
+# egy Firestore olvasás-figyelőt —, mert a kettő más-más dolgot vesz észre; a
+# részletek a modul fejlécében.
+#
+# Egyik sem korlát: a Google a keret túllépésekor tovább szolgál ki.
+#
+# A budget a SZÁMLÁZÁSI FIÓK erőforrása, nem a projekté, és a dev meg a prod
+# ugyanazon a fiókon ül. Mindkét gyökér a sajátját teremti, a saját projektjére
+# szűkítve — így a két környezet kerete külön mozog, és egyik apply sem nyúl a
+# másikéhoz.
+module "cost_alerts" {
+  source = "../../modules/cost-alerts"
+
+  providers = {
+    google.billing = google.billing
+  }
+
+  project_id      = local.project_id
+  project_number  = local.project_number
+  billing_account = data.google_project.this.billing_account
+  display_name    = "${var.github_repo} ${var.env}"
+
+  budget_amount = var.budget_amount
+  alert_emails  = var.alert_emails
+
+  firestore_read_threshold = var.firestore_read_alert_threshold
+
+  depends_on = [google_project_service.enabled]
+}
+
+output "budget_name" {
+  value       = module.cost_alerts.budget_name
+  description = "A költségvetési riasztás erőforrásneve a számlázási fiókon."
+}
+
+output "firestore_read_alert_name" {
+  value       = module.cost_alerts.firestore_read_alert_name
+  description = "A Firestore olvasás-riasztás erőforrásneve. Üres, ha ki van kapcsolva."
 }
 
 module "github_environment" {

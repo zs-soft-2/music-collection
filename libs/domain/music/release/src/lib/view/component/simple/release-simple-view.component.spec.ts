@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -5,7 +6,6 @@ import {
 	EntityTypeEnum,
 	FormatDescriptionEnum,
 	FormatEnum,
-	GenreEnum,
 	MediaEnum,
 	ReleaseCountryEnum,
 	ReleaseEntity,
@@ -36,7 +36,7 @@ describe('ReleaseSimpleViewComponent', () => {
 			artist,
 			coverImage: null,
 			format: FormatEnum.lp,
-			genre: GenreEnum.Rock,
+			genre: 'Rock',
 			songs: [],
 			styles: [],
 			year: new Date(1987, 0, 1),
@@ -57,6 +57,7 @@ describe('ReleaseSimpleViewComponent', () => {
 		await TestBed.configureTestingModule({
 			imports: [ReleaseSimpleViewComponent],
 			providers: [
+				provideI18nTesting(),
 				provideHttpClient(),
 				provideHttpClientTesting(),
 				provideAngularSvgIcon(),

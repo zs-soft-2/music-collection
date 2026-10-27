@@ -58,6 +58,11 @@ export const selectAlbumById = () =>
 		}
 	);
 
+export const selectLookupLoading = createSelector(
+	getAlbumState,
+	(state: State) => state.lookupLoading
+);
+
 export const selectSearchResult = createSelector(
 	getAlbumState,
 	(state: State) => state.searchResult

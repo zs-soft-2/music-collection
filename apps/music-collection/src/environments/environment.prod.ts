@@ -1,3 +1,6 @@
+import { PRIMEUI_LICENSE } from './primeui-license';
+import { VERSION } from './version';
+
 export const environment = {
 	production: true,
 	firebase: {
@@ -9,14 +12,47 @@ export const environment = {
 		appId: '1:110722700843:web:2b53358337e0976ba87c6e',
 		measurementId: 'G-7H6CC1PTSY',
 	},
-	spotify: {
+	appCheck: {
 		/**
-		 * Client ID of the Spotify app (developer.spotify.com/dashboard) for
-		 * full playback on the album page. Not a secret (PKCE flow). Empty
-		 * leaves only the embedded preview player.
+		 * A reCAPTCHA Enterprise site key. A kulcsot és az App Check
+		 * regisztrációját a tofu teremti (infra/modules/firebase), az értéke
+		 * innen jön:
+		 *   tofu -chdir=infra/environments/prod output -raw app_check_site_key
+		 *
+		 * Nem titok: a kliensbe kerül, a védelmet a hozzá tartozó,
+		 * szerveroldalon ellenőrzött token adja.
+		 *
+		 * Üresen az App Check nem indul el, és a callable-ök — amik App Check
+		 * tokent követelnek (apps/functions/src/index.ts) — mindent
+		 * elutasítanak.
 		 */
-		clientId: '0ab3fba0933440238c563c337700db27',
+		recaptchaSiteKey: '6Le8PdItAAAAAPCTKDGgY1FmI6Du7G413PEYcRgK',
+		/**
+		 * Debug token a prod buildben SOHA: aki ismeri, az App Checket
+		 * megkerülve hívhatná a callable-öket. Csak a dev környezet kap
+		 * ilyet, a localhost-fejlesztéshez (`environment.ts`).
+		 */
+		debugToken: '',
+	},
+	analytics: {
+		/**
+		 * Mérés a prod GA4 propertyjébe (`measurementId` feljebb). Csak
+		 * hozzájárulás után indul el: a gtag scriptet is akkor tölti be
+		 * először a böngésző (`FirebaseAnalyticsService`).
+		 */
+		enabled: true,
+	},
+	primeui: {
+		/**
+		 * Ugyanaz a generált kulcs, mint devben: nem környezetfüggő. A CI a
+		 * `MC_PRIMEUI_LICENSE` környezeti változóból kapja
+		 * (.github/workflows/ci.yml); enélkül a kitett oldalon is ott a
+		 * licenc-sáv.
+		 */
+		license: PRIMEUI_LICENSE,
 	},
 	type: 'production',
-	version: '1.0.0',
+	/** Base version + per-build suffix (tools/version/generate-version.mjs). */
+	version: VERSION.version,
+	buildTime: VERSION.buildTime,
 };

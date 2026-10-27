@@ -1,0 +1,91 @@
+import { DatePipe } from '@angular/common';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	computed,
+	inject,
+} from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
+import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS, TextService } from '@music-collection/core/i18n';
+
+import { AdminEditLinkComponent } from '../../shared/music-ui';
+import { DocumentPageStore } from './document-page.store';
+import { EntityFact, EntityFactsComponent } from '../../shared/entity-view';
+import { PageBreadcrumbComponent } from '../../shared/page-breadcrumb';
+
+/**
+ * The document page: what an uploaded file is, and the file itself. An image
+ * and a PDF are shown here; anything else is offered to be opened, because a
+ * page that cannot render a file should not pretend it has.
+ */
+@Component({
+	changeDetection: ChangeDetectionStrategy.OnPush,
+	providers: [DatePipe, DocumentPageStore],
+	selector: 'mc-document-page',
+	templateUrl: './document-page.component.html',
+	styleUrls: ['./document-page.component.scss'],
+	imports: [
+		...I18N_IMPORTS,
+		PageBreadcrumbComponent,
+		RouterLink,
+		EntityFactsComponent,
+		AdminEditLinkComponent,
+	],
+})
+export class DocumentPageComponent {
+	private readonly datePipe = inject(DatePipe);
+	private readonly sanitizer = inject(DomSanitizer);
+	private readonly text = inject(TextService);
+
+	protected readonly store = inject(DocumentPageStore);
+
+	/**
+	 * The file's own address, marked safe to frame — and marked so only after
+	 * the store has found it to be a file of this catalog's own bucket. The
+	 * bypass is what makes that check load-bearing: past it the browser goes
+	 * wherever the string says, and a page loaded from somebody else's bucket
+	 * would run on its own origin inside this one.
+	 */
+	protected readonly framedUrl = computed(() => {
+		const url = this.store.framableFileUrl();
+
+		return url ? this.sanitizer.bypassSecurityTrustResourceUrl(url) : null;
+	});
+
+	protected readonly facts = computed<EntityFact[]>(() => {
+		const document = this.store.document();
+		const withdrawnAt = this.store.withdrawnAt();
+
+		return [
+			{
+				labelKey: 'fact.originalName',
+				value: document?.originalName ?? null,
+			},
+			{
+				labelKey: 'fact.madeFor',
+				value: document?.category
+					? this.text.catalog()('documentCategory', document.category)
+					: 'Uploaded by hand',
+			},
+			{ labelKey: 'fact.fileType', value: document?.fileType ?? null },
+			{
+				labelKey: 'fact.lastChange',
+				value: document?.updatedAt
+					? this.datePipe.transform(document.updatedAt, 'medium')
+					: null,
+			},
+			{
+				labelKey: 'fact.withdrawn',
+				value: withdrawnAt
+					? this.datePipe.transform(withdrawnAt, 'medium')
+					: null,
+			},
+			{
+				labelKey: 'fact.file',
+				value: this.store.fileUrl() ? 'Open in a new tab' : null,
+				href: this.store.fileUrl(),
+			},
+		];
+	});
+}

@@ -1,0 +1,95 @@
+:host {
+	display: block;
+}
+
+.album-tracks-heading {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+}
+
+.album-tracks-heading-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.album-tracks-error {
+	display: block;
+	margin-block-end: 0.75rem;
+	color: var(--p-red-500);
+}
+
+.album-tracks-source {
+	margin-block-start: 0;
+	word-break: break-all;
+}
+
+.album-tracks-note {
+	color: var(--p-text-muted-color);
+}
+
+.album-tracks-list {
+	margin: 0 0 1rem;
+	padding: 0;
+	list-style: none;
+
+	li {
+		display: grid;
+		grid-template-columns: 5rem minmax(0, 1fr) 6rem auto;
+		gap: 0.75rem;
+		align-items: center;
+		padding-block: 0.35rem;
+		border-block-end: 1px solid var(--p-content-border-color);
+	}
+
+	input {
+		inline-size: 100%;
+		min-inline-size: 0;
+	}
+
+	/* The row being typed into closes the list; nothing follows it. */
+	li.is-new {
+		border-block-end: none;
+	}
+
+	/* What the dialog loaded is only read, and reads as a numbered list. */
+	&.is-preview {
+		padding-inline-start: 2rem;
+		list-style: decimal;
+
+		li {
+			display: list-item;
+		}
+
+		.album-tracks-duration {
+			float: inline-end;
+		}
+	}
+}
+
+.album-tracks-position,
+.album-tracks-duration {
+	color: var(--p-text-muted-color);
+	font-variant-numeric: tabular-nums;
+}
+
+.album-tracks-name {
+	min-inline-size: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: inherit;
+	text-decoration: none;
+
+	&:hover,
+	&:focus-visible {
+		text-decoration: underline;
+	}
+}
+
+.album-tracks-actions {
+	display: inline-flex;
+	gap: 0.25rem;
+}

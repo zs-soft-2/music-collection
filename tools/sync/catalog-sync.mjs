@@ -22,11 +22,19 @@ export const CATALOG_FEATURE_KEYS = [
 	'contribution',
 	'document',
 	'entity-quantity',
+	// A műfaj-taxonómia: bundle nélkül, tucatnyi dokumentum.
+	'genre',
 	'label',
 	'membership',
+	'music-collection',
 	'musician',
 	'release',
+	'release-request',
+	// A szerepkörök: egy maroknyi dokumentum, bundle nélkül.
+	'role',
 	'track',
+	// Bundle nélkül: néhány tucat dokumentum, naponta egyszer újraírva.
+	'upcoming-release',
 	'user',
 	'wishlist-item',
 ];
@@ -73,7 +81,20 @@ export async function touchCatalog(db, featureKeys, { reset = false } = {}) {
 }
 
 /** Collections served to the clients as Firestore bundles by default. */
-export const BUNDLE_FEATURE_KEYS = ['membership', 'track', 'contribution'];
+/**
+ * The general catalog, published as bundles: a client loads them from Cloud
+ * Storage instead of reading every document. What belongs to one collector
+ * (collection-item, wishlist-item) is synced per user instead, and cached
+ * the same way.
+ */
+export const BUNDLE_FEATURE_KEYS = [
+	'album',
+	'artist',
+	'contribution',
+	'membership',
+	'music-collection',
+	'track',
+];
 /** Storage folder of the bundles: `bundles/{featureKey}/{seconds}.bundle`. */
 export const BUNDLE_FOLDER = 'bundles';
 
@@ -114,4 +135,193 @@ export async function announceBundle(
 			},
 			{ merge: true }
 		);
+}
+
+/**
+ * The features a genre bundle carries — the slice of the catalog that
+ * belongs to one genre. Kept in step with GENRE_SCOPED_FEATURES in
+ * libs/api/src/lib/core/firebase/catalog-scope.service.ts: the client only
+ * narrows the features it knows arrive in a bundle.
+ */
+export const GENRE_BUNDLE_FEATURE_KEYS = [
+	'artist',
+	'album',
+	'musician',
+	'track',
+	'membership',
+	'contribution',
+];
+
+/** Storage folder of the genre bundles: `bundles/genre/{slug}/{seconds}.bundle`. */
+export const GENRE_BUNDLE_FOLDER = 'bundles/genre';
+
+/**
+ * Announces one genre's bundle. Separate from `bundles` because it is not a
+ * feature's bundle: it holds a slice of six of them, and the clients that
+ * follow that genre load it in place of all six.
+ */
+export async function announceGenreBundle(
+	db,
+	slug,
+	{ path, modifiedAt, count }
+) {
+	await db
+		.collection(SYNC_COLLECTION)
+		.doc(CATALOG_SYNC_DOCUMENT)
+		.set(
+			{
+				genreBundles: {
+					[slug]: {
+						path,
+						modifiedAt,
+						count,
+						builtAt: FieldValue.serverTimestamp(),
+						// This builds the one file; parts of an earlier build
+						// would be older than it.
+						parts: FieldValue.delete(),
+					},
+				},
+			},
+			{ merge: true }
+		);
+}
+
+/**
+ * The bytes of a bundle, the same as `builder.build()` gives, in linear time.
+ *
+ * The SDK's `build()` copies everything gathered so far with `Buffer.concat`
+ * at every element: for the rock slice (40 thousand documents, 80 thousand
+ * elements, 42 MB) that is three minutes and 3.5 GB of garbage outside the
+ * heap. Here every element is made once and joined once. It reaches into the
+ * builder, and falls back to the SDK's own `build()` when the inside is not
+ * what it expects. Kept in step with `buildBundle` in
+ * apps/functions/src/bundle-storage.ts, which is tested byte for byte.
+ */
+export function buildBundle(builder) {
+	const { documents, namedQueries, latestReadTime } = builder;
+
+	if (
+		!(documents instanceof Map) ||
+		!(namedQueries instanceof Map) ||
+		typeof builder.elementToLengthPrefixedBuffer !== 'function' ||
+		!latestReadTime
+	) {
+		return builder.build();
+	}
+
+	const element = (value) => builder.elementToLengthPrefixedBuffer(value);
+	const chunks = [];
+
+	for (const namedQuery of namedQueries.values()) {
+		chunks.push(element({ namedQuery }));
+	}
+	for (const bundled of documents.values()) {
+		chunks.push(element({ documentMetadata: bundled.metadata }));
+		if (bundled.document) {
+			chunks.push(element({ document: bundled.document }));
+		}
+	}
+
+	const body = Buffer.concat(chunks);
+	const metadata = element({
+		metadata: {
+			id: builder.bundleId,
+			createTime: latestReadTime.toProto().timestampValue,
+			version: 1,
+			totalDocuments: documents.size,
+			totalBytes: body.length,
+		},
+	});
+
+	return Buffer.concat([metadata, body]);
+}
+
+/** How many times a bundle upload is retried before the run gives up. */
+const UPLOAD_ATTEMPTS = 3;
+
+/**
+ * Puts a built bundle in the bucket.
+ *
+ * It is written to a local file and streamed up from there, rather than
+ * pushed out of memory in a single request: a genre bundle is tens of
+ * megabytes, and one socket dying mid-write (EPIPE) would throw away a
+ * catalog read that costs tens of thousands of documents. For the same
+ * reason it retries, and leaves the file behind when it finally gives up, so
+ * the bundle can be put up without reading the catalog again.
+ */
+export async function uploadBundle(bucket, path, gzipped) {
+	const { writeFile, rm } = await import('node:fs/promises');
+	const { tmpdir } = await import('node:os');
+	const { join } = await import('node:path');
+	const local = join(tmpdir(), path.replace(/\//g, '-'));
+
+	await writeFile(local, gzipped);
+
+	for (let attempt = 1; ; attempt++) {
+		try {
+			await bucket.upload(local, {
+				destination: path,
+				resumable: true,
+				metadata: {
+					contentType: 'application/octet-stream',
+					contentEncoding: 'gzip',
+					cacheControl: 'public, max-age=31536000, immutable',
+				},
+			});
+			await rm(local, { force: true });
+			return;
+		} catch (error) {
+			if (attempt >= UPLOAD_ATTEMPTS) {
+				console.error(
+					`Upload of ${path} failed ${attempt} times; the bundle is kept at ${local} — ` +
+						`put it up with: gcloud storage cp --content-encoding=gzip ${local} gs://${bucket.name}/${path}`
+				);
+				throw error;
+			}
+			console.warn(
+				`  upload of ${path} failed (${error.code ?? error.message}), retrying ${attempt}/${UPLOAD_ATTEMPTS - 1}`
+			);
+			await new Promise((resolve) => setTimeout(resolve, 2000 * attempt));
+		}
+	}
+}
+
+/**
+ * Lets a browser download bundles from the bucket. The browser fetches them
+ * with XHR, which is a cross-origin request; without this it never gets to
+ * ask for the file at all.
+ */
+export async function ensureBundleCors(bucket) {
+	const [metadata] = await bucket.getMetadata();
+	const allowsGet = (metadata.cors ?? []).some(
+		(rule) => rule.origin?.includes('*') && rule.method?.includes('GET')
+	);
+
+	if (allowsGet) {
+		return false;
+	}
+
+	await bucket.setCorsConfiguration([
+		...(metadata.cors ?? []),
+		{ origin: ['*'], method: ['GET'], maxAgeSeconds: 3600 },
+	]);
+
+	return true;
+}
+
+/**
+ * Deletes the bundles of a folder but the newest `kept` of them. Clients
+ * still downloading the previous one must not have it taken away mid-flight,
+ * which is why it is never only the current one that stays.
+ */
+export async function removeOldBundles(bucket, folder, current, kept = 2) {
+	const [files] = await bucket.getFiles({ prefix: `${folder}/` });
+	const old = files
+		.filter((file) => file.name !== current)
+		.sort((a, b) => b.name.localeCompare(a.name, 'en', { numeric: true }))
+		.slice(kept - 1);
+
+	await Promise.all(old.map((file) => file.delete()));
+
+	return old.length;
 }

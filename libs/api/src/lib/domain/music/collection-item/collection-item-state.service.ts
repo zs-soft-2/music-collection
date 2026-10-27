@@ -2,24 +2,108 @@ import { Observable } from 'rxjs';
 
 import { EntityStateService } from '../../../common';
 import {
+	CollectionItemDetails,
+	CollectionItemDisposal,
+	CollectionItemDisposalStatus,
 	CollectionItemEntity,
 	CollectionItemEntityAdd,
 	CollectionItemEntityUpdate,
 	CollectionItemListConfig,
+	CollectionItemPhoto,
+	CollectionItemPlacement,
 } from './collection-item';
+import { ReleaseEntity } from '../release';
 
 export abstract class CollectionItemStateService extends EntityStateService<
 	CollectionItemEntity,
 	CollectionItemEntityAdd,
 	CollectionItemEntityUpdate
 > {
+	/** Marks the copy as gone from the collection; it stays as history. */
+	public abstract dispatchDisposeEntityAction(
+		collectionItem: CollectionItemEntity,
+		disposal: CollectionItemDisposal
+	): void;
+	/** Takes a copy gone from the collection back into it. */
+	public abstract dispatchRestoreEntityAction(
+		collectionItem: CollectionItemEntity
+	): void;
+	/**
+	 * Files the copy into a compartment of the drawn shelf; `null` takes the
+	 * place back and leaves the filing to the shelf again.
+	 */
+	public abstract dispatchPlaceEntityAction(
+		collectionItem: CollectionItemEntity,
+		placement: CollectionItemPlacement | null
+	): void;
+	/**
+	 * Writes what the collector tells about the copy — how it was come by,
+	 * how it has held up, the story behind it. The whole telling is written,
+	 * so a field left empty is cleared on the record.
+	 */
+	public abstract dispatchChangeDetailsAction(
+		collectionItem: CollectionItemEntity,
+		details: CollectionItemDetails
+	): void;
+	/**
+	 * Writes which pressing the copy is of. The copy itself does not change —
+	 * what was paid for it, its grades, its place on the shelf and its
+	 * photographs are of this very record whichever release the catalog says
+	 * it came out on. Only the pressing it is filed under is corrected.
+	 */
+	public abstract dispatchChangeReleaseAction(
+		collectionItem: CollectionItemEntity,
+		release: ReleaseEntity
+	): void;
+	/** Writes the photos of the copy, front first. */
+	public abstract dispatchChangePhotosAction(
+		collectionItem: CollectionItemEntity,
+		photos: CollectionItemPhoto[]
+	): void;
+	/** Files several copies at once, as a rearranged compartment needs. */
+	public abstract dispatchPlaceEntitiesAction(
+		placements: {
+			collectionItem: CollectionItemEntity;
+			placement: CollectionItemPlacement | null;
+		}[]
+	): void;
 	public abstract dispatchChangeNewEntityButtonEnabled(
 		enabled: boolean
 	): void;
 	public abstract dispatchSetCollectionItemConfigAction(
 		collectionItemListConfig: CollectionItemListConfig
 	): void;
+	/** An item is being added. */
+	public abstract selectAdding$(): Observable<boolean>;
+	/** A copy is being disposed of or restored. */
+	public abstract selectDisposing$(): Observable<boolean>;
+	/**
+	 * The same flag together with the error of that write, out of one and the
+	 * same state. What follows a disposal to its end reads this rather than
+	 * the two apart: see `CollectionItemDisposalStatus`.
+	 */
+	public abstract selectDisposalStatus$(): Observable<CollectionItemDisposalStatus>;
+	/** A copy is being filed into a compartment, or taken out of one. */
+	public abstract selectPlacing$(): Observable<boolean>;
+
+	/** What the collector tells about a copy is being written. */
+	public abstract selectSaving$(): Observable<boolean>;
+	/**
+	 * The copies gone from the signed-in user's collection, requested like
+	 * `selectLoadedEntities$`.
+	 */
+	public abstract selectLoadedDisposedEntities$(): Observable<
+		CollectionItemEntity[]
+	>;
 	public abstract selectCollectionItemListConfig$(): Observable<CollectionItemListConfig | null>;
+	/** The error of the last failed write, `null` after a new one starts. */
+	public abstract selectError$(): Observable<string | null>;
+	/**
+	 * The signed-in user's collection (the copies still owned), requested
+	 * when not yet loaded; emits only once it has arrived, an empty
+	 * collection included.
+	 */
+	public abstract selectLoadedEntities$(): Observable<CollectionItemEntity[]>;
 	public abstract selectNewEntityButtonEnabled$(): Observable<boolean>;
 	public abstract selectSearchResult$(): Observable<CollectionItemEntity[]>;
 }

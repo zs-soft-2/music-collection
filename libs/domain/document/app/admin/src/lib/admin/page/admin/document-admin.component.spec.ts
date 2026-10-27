@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { NgxPermissionsModule } from 'ngx-permissions';
 import { of } from 'rxjs';
 
@@ -15,6 +16,7 @@ describe('DocumentAdminComponent', () => {
 		await TestBed.configureTestingModule({
 			imports: [DocumentAdminComponent, NgxPermissionsModule.forRoot()],
 			providers: [
+				provideI18nTesting(),
 				provideRouter([]),
 				{
 					provide: DocumentStateService,

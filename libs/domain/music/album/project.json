@@ -4,7 +4,7 @@
 	"projectType": "library",
 	"sourceRoot": "libs/domain/music/album/src",
 	"prefix": "music-collection",
-	"tags": [],
+	"tags": ["type:domain", "platform:angular"],
 	"targets": {
 		"test": {
 			"executor": "@nx/jest:jest",

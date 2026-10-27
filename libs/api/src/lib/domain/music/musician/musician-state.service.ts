@@ -6,6 +6,7 @@ import {
 	MusicianEntityAdd,
 	MusicianEntityUpdate,
 } from './musician';
+import { MusicianExternalProfile } from './musician-external';
 
 export abstract class MusicianStateService extends EntityStateService<
 	MusicianEntity,
@@ -15,6 +16,9 @@ export abstract class MusicianStateService extends EntityStateService<
 	public abstract dispatchChangeNewEntityButtonEnabled(
 		enabled: boolean
 	): void;
+	public abstract fetchExternalProfile$(
+		discogsId: number
+	): Observable<MusicianExternalProfile>;
 	public abstract selectNewEntityButtonEnabled$(): Observable<boolean>;
 	public abstract selectSearchResult$(): Observable<MusicianEntity[]>;
 }

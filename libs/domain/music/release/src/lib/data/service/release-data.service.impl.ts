@@ -1,18 +1,41 @@
-import { Observable } from 'rxjs';
+import { Observable, from, map, of, switchMap } from 'rxjs';
 
-import { Injectable } from '@angular/core';
-import { collection } from '@angular/fire/firestore';
+import { Injectable, inject } from '@angular/core';
 import {
+	collection,
+	collectionGroup,
+	getDocs,
+	limit,
+	query,
+	where,
+} from '@angular/fire/firestore';
+import { Functions, httpsCallable } from '@angular/fire/functions';
+import {
+	ARTIST_FEATURE_KEY,
+	DISCOGS_MASTER_VERSIONS_FUNCTION,
+	DiscogsLookupClient,
+	DiscogsMasterVersionsRequest,
+	DiscogsMasterVersionsResponse,
+	DiscogsVersion,
 	RELEASE_FEATURE_KEY,
 	ReleaseDataService,
 	ReleaseModel,
 	ReleaseModelAdd,
 	ReleaseModelUpdate,
 	SearchParams,
+	toSyncedData,
 } from '@music-collection/api';
+
+import { pickMasterId } from './release-discogs.mapper';
+
+/** Firestore's ceiling on the values of one `in` filter. */
+const MAX_ARTISTS_SEARCHED = 30;
 
 @Injectable()
 export class ReleaseDataServiceImpl extends ReleaseDataService {
+	private discogs = inject(DiscogsLookupClient);
+	private functions = inject(Functions);
+
 	public constructor() {
 		super();
 
@@ -30,6 +53,28 @@ export class ReleaseDataServiceImpl extends ReleaseDataService {
 		) as Observable<ReleaseModel>;
 	}
 
+	/**
+	 * The album's Discogs master, through the title search. A miss is an
+	 * answer here, not a failure: plenty of the catalog's albums are not on
+	 * Discogs at all, and the form says so rather than reporting an error.
+	 */
+	public findExternalMaster$(
+		artistName: string,
+		albumName: string
+	): Observable<number | null> {
+		return this.discogs
+			.lookupOrNull$({
+				kind: 'master-search',
+				artist: artistName,
+				album: albumName,
+			})
+			.pipe(
+				map((result) =>
+					pickMasterId(artistName, albumName, result?.candidates)
+				)
+			);
+	}
+
 	public list$(): Observable<ReleaseModel[]> {
 		return super.listModels$();
 	}
@@ -38,12 +83,72 @@ export class ReleaseDataServiceImpl extends ReleaseDataService {
 		return super.listModelsByIds$(ids);
 	}
 
+	/**
+	 * Through the `discogsMasterVersions` callable, which holds the answer
+	 * for a week — the same list the collector's release picker reads, so an
+	 * album looked at from both sides costs Discogs one call.
+	 */
+	public listExternalVersions$(
+		masterId: number
+	): Observable<DiscogsVersion[]> {
+		const callable = httpsCallable<
+			DiscogsMasterVersionsRequest,
+			DiscogsMasterVersionsResponse
+		>(this.functions, DISCOGS_MASTER_VERSIONS_FUNCTION);
+
+		return from(callable({ masterId })).pipe(
+			map((result) => result.data.versions)
+		);
+	}
+
 	public load$(uid: string): Observable<ReleaseModel | undefined> {
 		return super.loadModel$(uid);
 	}
 
 	public search$(params: SearchParams): Observable<ReleaseModel[]> {
 		return super.searchModel$(params);
+	}
+
+	/**
+	 * In two steps: the artists whose name matches, by the prefixes the
+	 * artist documents already carry, then the pressings filed under them.
+	 * The release keeps only a copy of the artist's name, with no prefixes
+	 * of its own, so it is the artist that is searched.
+	 */
+	public searchByArtistName$(term: string): Observable<ReleaseModel[]> {
+		const artistQuery = query(
+			collectionGroup(this.firestore, ARTIST_FEATURE_KEY),
+			where('searchParameters', 'array-contains', term.toLowerCase()),
+			limit(MAX_ARTISTS_SEARCHED)
+		);
+
+		return from(getDocs(artistQuery)).pipe(
+			map((snapshot) => snapshot.docs.map((document) => document.id)),
+			switchMap((artistIds) =>
+				artistIds.length
+					? from(
+							getDocs(
+								query(
+									collectionGroup(
+										this.firestore,
+										this.featureKey
+									),
+									where('artist.uid', 'in', artistIds)
+								)
+							)
+						).pipe(
+							map((snapshot) =>
+								snapshot.docs.map(
+									(document) =>
+										toSyncedData(
+											document
+										) as unknown as ReleaseModel
+								)
+							)
+						)
+					: of([])
+			)
+		);
 	}
 
 	public update$(

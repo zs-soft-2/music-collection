@@ -19,7 +19,6 @@ import {
 export class DocumentUtilServiceImpl extends DocumentUtilService {
 	private formBuilder = inject(FormBuilder);
 
-
 	public _sort(a: DocumentEntity, b: DocumentEntity): number {
 		return a.name < b.name ? 1 : -1;
 	}
@@ -71,6 +70,14 @@ export class DocumentUtilServiceImpl extends DocumentUtilService {
 			uid: model.uid,
 		};
 
+		if (model.category) {
+			entity.category = model.category;
+		}
+
+		if (model.deletedAt !== undefined) {
+			entity.deletedAt = model.deletedAt;
+		}
+
 		if (model.filePath) {
 			entity.filePath = model.filePath;
 		}
@@ -87,6 +94,10 @@ export class DocumentUtilServiceImpl extends DocumentUtilService {
 			entity.originalName = model.originalName;
 		}
 
+		if (model.updatedAt) {
+			entity.updatedAt = model.updatedAt;
+		}
+
 		return entity;
 	}
 
@@ -97,6 +108,7 @@ export class DocumentUtilServiceImpl extends DocumentUtilService {
 			filePath: formGroup.value['filePath'],
 			originalName: formGroup.value['originalName'],
 			fileType: formGroup.value['fileType'],
+			...this.filedProperties(formGroup),
 		};
 	}
 
@@ -104,32 +116,30 @@ export class DocumentUtilServiceImpl extends DocumentUtilService {
 		return folder + objectHash(data);
 	}
 
-	public createFormGroup(release: DocumentEntity | undefined): FormGroup {
-		return this.createFormGroupByProperties(
-			release?.name,
-			release?.filePath,
-			release?.fileType,
-			release?.originalName,
-			release?.uid
-		);
+	public createFormGroup(document: DocumentEntity | undefined): FormGroup {
+		return this.createFormGroupByProperties({ ...document });
 	}
 
 	public createFormGroupByProperties(
-		name: string | undefined,
-		filePath: string | undefined,
-		fileType: string | undefined,
-		originalName: string | undefined,
-		uid: string | undefined
+		document: Partial<DocumentEntity>
 	): FormGroup {
 		return this.formBuilder.group({
 			name: [
-				name || null,
+				document.name || null,
 				[Validators.required, Validators.min(3), Validators.max(30)],
 			],
-			originalName: [originalName || null, [Validators.required]],
-			filePath: [filePath || null, [Validators.required]],
-			fileType: [fileType || null, [Validators.required]],
-			uid: [uid || null],
+			originalName: [
+				document.originalName || null,
+				[Validators.required],
+			],
+			filePath: [document.filePath || null, [Validators.required]],
+			fileType: [document.fileType || null, [Validators.required]],
+			// What the document was made for, picked by hand; empty is a
+			// document nobody has filed yet.
+			category: [document.category || null],
+			// Carried, not edited: a save writes the whole document.
+			deletedAt: [document.deletedAt ?? null],
+			uid: [document.uid || null],
 		});
 	}
 
@@ -141,6 +151,7 @@ export class DocumentUtilServiceImpl extends DocumentUtilService {
 			originalName: formGroup.value['originalName'],
 			fileType: formGroup.value['fileType'],
 			uid: formGroup.value['uid'],
+			...this.filedProperties(formGroup),
 		};
 	}
 
@@ -150,6 +161,24 @@ export class DocumentUtilServiceImpl extends DocumentUtilService {
 		return {
 			...entityQuantity,
 			quantity: entityQuantity.quantity + 1,
+		};
+	}
+
+	/**
+	 * How the document is filed: the category an admin picked and the
+	 * withdrawal mark the form only carries. Left out while empty — an
+	 * undefined field is not something Firestore takes, and the save writes
+	 * the whole document, so a category cleared here is gone from it.
+	 */
+	private filedProperties(
+		formGroup: FormGroup
+	): Pick<DocumentEntity, 'category' | 'deletedAt'> {
+		const category = formGroup.value['category'];
+		const deletedAt = formGroup.value['deletedAt'];
+
+		return {
+			...(category ? { category } : {}),
+			...(deletedAt ? { deletedAt } : {}),
 		};
 	}
 }

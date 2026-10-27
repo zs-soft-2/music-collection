@@ -1,0 +1,1949 @@
+import {
+	Observable,
+	TimeoutError,
+	distinctUntilChanged,
+	filter,
+	firstValueFrom,
+	of,
+	pipe,
+	switchMap,
+	tap,
+	timeout,
+} from 'rxjs';
+
+import {
+	DOCUMENT,
+	DestroyRef,
+	computed,
+	effect,
+	inject,
+	signal,
+	untracked,
+} from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import {
+	AlbumEntity,
+	AlbumStateService,
+	TrackEntity,
+	TrackLyrics,
+	type TrackClip,
+	type TrackImage,
+	isSpotifyAlbumId,
+	isSpotifyTrackId,
+	isYoutubePlaylistId,
+	isYoutubeVideoId,
+} from '@music-collection/api';
+import {
+	patchState,
+	signalStore,
+	withComputed,
+	withHooks,
+	withMethods,
+	withProps,
+	withState,
+} from '@ngrx/signals';
+import { rxMethod } from '@ngrx/signals/rxjs-interop';
+
+import { AlbumDetailsEffect } from '../../data/album-details';
+import { AudioCapture, AudioCaptureEffect } from '../../data/audio';
+import { ExternalPlayerConsentService } from '../../data/external-player';
+import { PlayLogEffect, PlayLogEntry } from '../../data/play-log';
+import {
+	RADIO_SHUFFLE_SETTING,
+	RadioEffect,
+	RadioStation,
+	shuffle,
+} from '../../data/radio';
+import {
+	PlayerContext,
+	PlayerSettings,
+	PlayerSettingsEffect,
+	PlayerSettingsOverrides,
+	PlayerSource,
+	resolvePlayerSettings,
+} from '../../data/player';
+import {
+	TrackToMatch,
+	currentPositionMs,
+	spotifyEmbedUri,
+} from '../../data/spotify';
+import { UserSettingsEffect } from '../../data/user-settings';
+import { TrackDetailsEffect } from '../../data/track-details';
+import { SpotifyEmbedStore } from '../spotify/spotify-embed.store';
+import { SpotifyPlaybackStore } from '../spotify/spotify-playback.store';
+import {
+	YoutubeAlbum,
+	YoutubeItem,
+	YoutubePlaybackStore,
+} from '../youtube/youtube-playback.store';
+
+import { TrackSide, sideBreaks } from './sides';
+
+export type { PlayerSource };
+
+/**
+ * Below this much actually played, a record was not listened to — it was
+ * passed over on the way to another one, and the log stays quiet about it.
+ */
+const MIN_SITTING_MS = 30_000;
+
+/** How long a station may take to choose its records before it gives up. */
+const TUNING_TIMEOUT_MS = 10_000;
+
+/**
+ * Records the queue may pass over in a row before it gives up. Without a
+ * limit, a station tuned in before the Spotify sign-in would run through
+ * everything it holds in one go.
+ */
+const MAX_PASSED_OVER = 5;
+
+/**
+ * One sitting with one album, while it lasts. Only what the player itself
+ * put on is followed: an album started on the phone is Spotify's own history
+ * to keep, and the app does not know which record of the catalog it is.
+ */
+interface Sitting {
+	albumId: string;
+	albumTitle: string;
+	artistName: string | null;
+	artistId: string | null;
+	source: PlayerSource;
+	startedAt: number;
+	trackCount: number;
+	/** Tracks of the album heard, by id. */
+	heard: Set<string>;
+	/** Milliseconds played, of the spans that have ended. */
+	playedMs: number;
+	/** When the span playing now began; null while it is paused. */
+	playingSince: number | null;
+	/** When it last played. */
+	endedAt: number;
+}
+
+/** Milliseconds heard, the open span included. */
+const heardMs = (sitting: Sitting, at: number): number =>
+	sitting.playedMs +
+	(sitting.playingSince !== null ? at - sitting.playingSince : 0);
+
+/** The sitting as the log keeps it. */
+const toLogEntry = (sitting: Sitting, at: number): PlayLogEntry => ({
+	uid: `${sitting.albumId}-${sitting.startedAt}`,
+	albumId: sitting.albumId,
+	albumTitle: sitting.albumTitle,
+	artistName: sitting.artistName,
+	source: sitting.source,
+	startedAt: sitting.startedAt,
+	endedAt: sitting.playingSince !== null ? at : sitting.endedAt,
+	playedMs: heardMs(sitting, at),
+	playedTracks: sitting.heard.size,
+	trackCount: sitting.trackCount,
+	completed:
+		sitting.trackCount > 0 && sitting.heard.size >= sitting.trackCount,
+});
+
+/** An album, or one of its tracks, to play. */
+export interface PlayRequest {
+	context: PlayerContext;
+	/** Our album id. */
+	albumId: string;
+	albumTitle: string;
+	artistName: string | null;
+	/**
+	 * Our own id of that artist, where the record names one. Nothing in the
+	 * playing uses it; it is carried so that a verdict given after the record
+	 * can say whose record it was — a name is read, a uid is matched.
+	 */
+	artistId: string | null;
+	coverUrl: string | null;
+	/**
+	 * The album's styles, as the taxonomy spells them. The animated backdrop
+	 * reads them to pick which world to build: without them it had to draw a
+	 * world out of the band's name, so the look was different per record but
+	 * never actually about the music.
+	 */
+	styles: string[];
+	spotifyAlbumId: string | null;
+	youtubePlaylistId: string | null;
+	/** The album's tracks in play order. */
+	tracks: TrackToMatch[];
+	/** Our id of the track in focus; null for the whole album. */
+	trackId: string | null;
+	trackName: string | null;
+	/** YouTube video of the track in focus. */
+	youtubeVideoId: string | null;
+	/** Spotify track in focus, for the preview player when not signed in. */
+	spotifyTrackId: string | null;
+	/** The album's other YouTube videos. */
+	youtubeVideoIds: string[];
+}
+
+/** What plays now, whichever source it is on. */
+export interface NowPlaying {
+	source: PlayerSource;
+	title: string;
+	subtitle: string;
+	coverUrl: string | null;
+	playing: boolean;
+	/** Our album and track, when what plays is one of ours. */
+	albumId: string | null;
+	trackId: string | null;
+}
+
+interface PlayerState {
+	/** What the current page shows. */
+	page: PlayRequest | null;
+	/** What was last started, and on which source. */
+	session: PlayRequest | null;
+	sessionSource: PlayerSource | null;
+	overrides: PlayerSettingsOverrides;
+	stageOpen: boolean;
+	/** Lyrics of the track on show. */
+	lyrics: TrackLyrics | null;
+	/** Album being loaded to be played. */
+	loadingAlbumId: string | null;
+	/** The source it was asked for on; null when nobody named one. */
+	loadingSource: PlayerSource | null;
+	/** The tab's sound is analysed for the visuals. */
+	audioStatus: 'off' | 'starting' | 'on';
+	audioError: string | null;
+	/** The record is waiting to be turned over; null while it plays on. */
+	sideBreak: SideBreak | null;
+	/**
+	 * The side the collector has already been let through, so the hold does
+	 * not catch the same track again the moment it plays on.
+	 */
+	sideResumedTrackId: string | null;
+	/** Records waiting to go on after this one, by album id. */
+	queue: string[];
+	/** The station that filled the queue; null when nobody did. */
+	station: RadioStation | null;
+	/** What that station is called, for the player to say what is on. */
+	stationLabel: string | null;
+	/** A station is being tuned in: its records are being chosen. */
+	tuning: boolean;
+	/** Queues are put on in a random order. */
+	shuffled: boolean;
+	/**
+	 * The record that just went round once, waiting for a word about it;
+	 * null while there is nothing to ask about. A sitting that was stopped
+	 * halfway never lands here: a record somebody walked away from has
+	 * already told us what they thought of it.
+	 */
+	finished: FinishedRecord | null;
+}
+
+/** A record heard right through, as the question about it names it. */
+export interface FinishedRecord {
+	albumId: string;
+	albumTitle: string;
+	artistName: string | null;
+	/** Our own artist id, where the record being played carries one. */
+	artistId: string | null;
+}
+
+/** A record waiting in the queue, as a list of what is coming shows it. */
+export interface QueuedRecord {
+	albumId: string;
+	albumTitle: string;
+	artistName: string | null;
+	coverUrl: string | null;
+}
+
+/** Playback held at the start of a side, waiting to be let on. */
+export interface SideBreak {
+	/** The track the side starts with. */
+	trackId: string;
+	/** "Side B", as the prompt names it. */
+	label: string;
+}
+
+/** A track of the catalog as the player holds it. */
+export const toTrackToMatch = ({
+	uid,
+	name,
+	index,
+	position,
+	images,
+	clip,
+}: TrackEntity): TrackToMatch => ({
+	id: uid,
+	name,
+	index,
+	position,
+	images: images ?? [],
+	clip: clip ?? null,
+});
+
+/** An album of the catalog as something to play. */
+export function albumPlayRequest(
+	album: AlbumEntity,
+	tracks: TrackEntity[],
+	context: PlayerContext = 'album'
+): PlayRequest {
+	return {
+		context,
+		albumId: album.uid,
+		albumTitle: album.name,
+		artistName: album.artist?.name ?? null,
+		artistId: album.artist?.uid ?? null,
+		coverUrl: album.coverImage?.filePath || album.coverImageUrl || null,
+		styles: album.styles ?? [],
+		spotifyAlbumId: isSpotifyAlbumId(album.spotifyAlbumId)
+			? album.spotifyAlbumId
+			: null,
+		youtubePlaylistId: isYoutubePlaylistId(album.youtubePlaylistId)
+			? album.youtubePlaylistId
+			: null,
+		tracks: tracks.map(toTrackToMatch),
+		trackId: null,
+		trackName: null,
+		youtubeVideoId: null,
+		spotifyTrackId: null,
+		youtubeVideoIds: (album.youtubeVideoIds ?? []).filter(isYoutubeVideoId),
+	};
+}
+
+/** What Spotify has of a request: the record, or the song alone. */
+export type SpotifyPlayable =
+	| { kind: 'album'; id: string }
+	| { kind: 'track'; id: string };
+
+/**
+ * What Spotify would play for this request, and null where it has nothing.
+ *
+ * The record comes first: played from it, a song has what follows it. But
+ * most of the catalog was seeded from elsewhere, so Spotify can be missing
+ * the record while having the song on it — and then the song on its own is
+ * still better than a play button that does nothing.
+ */
+export function onSpotify(
+	request: PlayRequest | null | undefined
+): SpotifyPlayable | null {
+	const albumId = request?.spotifyAlbumId;
+	const trackId = request?.spotifyTrackId;
+
+	if (albumId) {
+		return { kind: 'album', id: albumId };
+	}
+
+	return isSpotifyTrackId(trackId) ? { kind: 'track', id: trackId } : null;
+}
+
+/** A record being listened to, and what is playing it. */
+export interface Listening {
+	/** The record, as whoever put it on asked for it. */
+	request: PlayRequest;
+	source: PlayerSource;
+	playing: boolean;
+	/** Our track, where the source can name one. */
+	trackId: string | null;
+}
+
+/**
+ * The record being listened to, whoever is playing it: the one this player
+ * put on, or the one the page's Spotify frame plays.
+ *
+ * The frame is a listening like any other — it is how a collector without
+ * their own Spotify app hears everything — so the log follows it too. What
+ * the frame cannot say is which track is on, so a sitting with it names none
+ * and therefore never finishes a record. Nor does it need to leave out the
+ * thirty-second tastes the frame plays for a visitor not signed in to
+ * Spotify: they are over before a sitting is long enough to be written.
+ */
+export function listeningTo(
+	now: NowPlaying | null,
+	session: PlayRequest | null,
+	page: PlayRequest | null,
+	frame: { drives: boolean; playing: boolean }
+): Listening | null {
+	if (now && session && now.albumId && session.albumId === now.albumId) {
+		return {
+			request: session,
+			source: now.source,
+			playing: now.playing,
+			trackId: now.trackId,
+		};
+	}
+
+	return page && frame.drives
+		? {
+				request: page,
+				source: 'spotify',
+				playing: frame.playing,
+				trackId: null,
+			}
+		: null;
+}
+
+/**
+ * A request as an album of the YouTube player: the track's video first, then
+ * the album playlist and the other videos.
+ */
+export function youtubeAlbumOf(request: PlayRequest): YoutubeAlbum {
+	const items: YoutubeItem[] = [];
+	if (request.youtubeVideoId) {
+		items.push({ kind: 'video', id: request.youtubeVideoId });
+	}
+	if (request.youtubePlaylistId) {
+		items.push({ kind: 'playlist', id: request.youtubePlaylistId });
+	}
+	for (const id of request.youtubeVideoIds) {
+		if (id !== request.youtubeVideoId) {
+			items.push({ kind: 'video', id });
+		}
+	}
+	return {
+		uid: request.albumId,
+		title: request.albumTitle,
+		artistName: request.artistName ?? '',
+		coverUrl: request.coverUrl,
+		items,
+		trackNames: request.tracks.map((track) => track.name),
+	};
+}
+
+/**
+ * The app's one player. Pages tell it what they show (`setPage`) and start
+ * it; it plays on Spotify or YouTube as the settings of the page's kind say,
+ * and tells what plays in one shape whichever source it is on. Playback goes
+ * on across pages.
+ */
+export const PlayerStore = signalStore(
+	{ providedIn: 'root' },
+	withState<PlayerState>({
+		page: null,
+		session: null,
+		sessionSource: null,
+		overrides: {},
+		stageOpen: false,
+		lyrics: null,
+		loadingAlbumId: null,
+		loadingSource: null,
+		audioStatus: 'off',
+		audioError: null,
+		sideBreak: null,
+		sideResumedTrackId: null,
+		queue: [],
+		station: null,
+		stationLabel: null,
+		tuning: false,
+		shuffled: false,
+		finished: null,
+	}),
+	withProps(() => ({
+		/**
+		 * The live analyser of the tab's sound. A plain signal: a browser
+		 * object must not go into the (frozen) store state.
+		 */
+		analyser: signal<AnalyserNode | null>(null),
+		/**
+		 * The shared sound has gone quiet. Worth saying out loud: a capture
+		 * that delivers nothing looks exactly like no capture at all, and
+		 * the visuals go on improvising either way.
+		 */
+		audioSilent: signal(false),
+	})),
+	withComputed(
+		(
+			store,
+			spotify = inject(SpotifyPlaybackStore),
+			embed = inject(SpotifyEmbedStore),
+			youtube = inject(YoutubePlaybackStore),
+			albumStateService = inject(AlbumStateService),
+			consent = inject(ExternalPlayerConsentService)
+		) => {
+			const albums = toSignal(albumStateService.selectEntities$(), {
+				initialValue: [] as AlbumEntity[],
+			});
+
+			const settingsFor = (context: PlayerContext | undefined) =>
+				resolvePlayerSettings(context ?? 'default', store.overrides());
+
+			const availableFor = (request: PlayRequest | null) => ({
+				// Spotify's embedded player needs no app of ours and no
+				// token, so the source is there the moment Spotify has the
+				// record — or, failing that, the song. Their own app is what
+				// lets this player drive Spotify rather than hand the record
+				// to Spotify's own frame.
+				spotify: !!onSpotify(request),
+				// YouTube's frame is nothing this player can offer once its
+				// script has been blocked: the frame plays by its own
+				// buttons, and every button of ours for it would be dead.
+				youtube:
+					youtube.controllable() &&
+					(!!request?.youtubeVideoId ||
+						!!request?.youtubePlaylistId ||
+						!!request?.youtubeVideoIds.length),
+			});
+
+			/**
+			 * The source a request would be played on, and null where there
+			 * is none.
+			 *
+			 * This is where the outside players are let in or kept out. Both
+			 * sources are somebody else's player: embedding one writes their
+			 * storage and reports the visit, so without the collector's leave
+			 * there is no source at all — which is what every play button,
+			 * the stage and `start` itself already read.
+			 */
+			const sourceFor = (
+				request: PlayRequest | null
+			): PlayerSource | null => {
+				if (!consent.allowed()) {
+					return null;
+				}
+				const { spotify: onSpotify, youtube: onYoutube } =
+					availableFor(request);
+				switch (settingsFor(request?.context).source) {
+					case 'spotify':
+						return onSpotify
+							? 'spotify'
+							: onYoutube
+								? 'youtube'
+								: null;
+					case 'youtube':
+						return onYoutube
+							? 'youtube'
+							: onSpotify
+								? 'spotify'
+								: null;
+					default:
+						// Spotify when signed in to it, else YouTube, else
+						// Spotify (it offers the sign-in).
+						return onSpotify && spotify.connected()
+							? 'spotify'
+							: onYoutube
+								? 'youtube'
+								: onSpotify
+									? 'spotify'
+									: null;
+				}
+			};
+
+			/**
+			 * Spotify's embedded frame holds this record and can be pressed
+			 * from here.
+			 *
+			 * For a collector who has not registered their own Spotify app
+			 * the frame is the whole of Spotify, so the play button over it
+			 * presses that rather than doing nothing. It reaches no further
+			 * than the page showing it: this one record, play and pause, and
+			 * not a track it could name, a next, or a volume.
+			 */
+			const embedDrives = (request: PlayRequest | null): boolean => {
+				const uri = spotifyEmbedUri(
+					request?.spotifyAlbumId,
+					request?.spotifyTrackId
+				);
+
+				return (
+					!!uri &&
+					sourceFor(request) === 'spotify' &&
+					!spotify.connected() &&
+					// A collector who registered an app did it for the
+					// playback this player drives, so their play button
+					// still takes them to the sign-in that buys it.
+					!spotify.hasOwnApp() &&
+					embed.controllable() &&
+					embed.uri() === uri
+				);
+			};
+
+			/** The session or the page, whichever is about the album. */
+			const requestFor = (
+				matches: (request: PlayRequest) => boolean
+			): PlayRequest | null => {
+				const session = store.session();
+				const page = store.page();
+				return session && matches(session)
+					? session
+					: page && matches(page)
+						? page
+						: null;
+			};
+
+			const spotifyNow = computed<NowPlaying | null>(() => {
+				const nowPlaying = spotify.nowPlaying();
+				if (!spotify.connected() || !nowPlaying) {
+					return null;
+				}
+				// A record is recognised by the album playing; a song put on
+				// without its record, by the song itself — there is no album
+				// uri of ours to match it against.
+				const onItsOwn = (request: PlayRequest): boolean => {
+					const playable = onSpotify(request);
+
+					return (
+						playable?.kind === 'track' &&
+						nowPlaying.trackUri === `spotify:track:${playable.id}`
+					);
+				};
+				const session = requestFor(
+					(request) =>
+						(!!request.spotifyAlbumId &&
+							nowPlaying.albumUri ===
+								`spotify:album:${request.spotifyAlbumId}`) ||
+						onItsOwn(request)
+				);
+
+				const trackId = !session
+					? null
+					: onItsOwn(session)
+						? session.trackId
+						: spotify.tracksAlbumId() === session.spotifyAlbumId
+							? (Object.entries(spotify.trackUris()).find(
+									([, uri]) => uri === nowPlaying.trackUri
+								)?.[0] ?? null)
+							: null;
+				// Started elsewhere (e.g. on the phone): our album, if in the catalog.
+				const spotifyAlbumId = nowPlaying.albumUri.replace(
+					'spotify:album:',
+					''
+				);
+				const catalogAlbumId = session
+					? session.albumId
+					: (albums()?.find(
+							(album) => album.spotifyAlbumId === spotifyAlbumId
+						)?.uid ?? null);
+				return {
+					source: 'spotify',
+					title: nowPlaying.trackName,
+					subtitle: nowPlaying.artists,
+					coverUrl: session
+						? (session.coverUrl ?? nowPlaying.imageUrl)
+						: nowPlaying.imageUrl,
+					playing: !nowPlaying.paused,
+					albumId: catalogAlbumId,
+					trackId,
+				};
+			});
+
+			const youtubeNow = computed<NowPlaying | null>(() => {
+				const album = youtube.album();
+				if (!album || !youtube.started()) {
+					return null;
+				}
+				const ours = requestFor(
+					(request) => request.albumId === album.uid
+				);
+				const selection = youtube.selection();
+				let trackId: string | null = null;
+				if (ours && selection?.kind === 'video') {
+					trackId =
+						selection.id === ours.youtubeVideoId
+							? ours.trackId
+							: null;
+				} else if (ours && selection?.kind === 'playlist') {
+					const index = youtube.playlistIndex();
+					trackId =
+						index !== null
+							? (ours.tracks[index]?.id ?? null)
+							: null;
+				}
+				return {
+					source: 'youtube',
+					title: youtube.nowPlayingTitle() ?? album.title,
+					subtitle: album.artistName,
+					coverUrl: album.coverUrl,
+					playing: youtube.playing(),
+					albumId: album.uid,
+					trackId,
+				};
+			});
+
+			/** The session's source first, then whichever plays. */
+			const now = computed<NowPlaying | null>(() => {
+				const onSpotify = spotifyNow();
+				const onYoutube = youtubeNow();
+				if (store.sessionSource() === 'youtube') {
+					return onYoutube ?? onSpotify;
+				}
+				if (store.sessionSource() === 'spotify') {
+					return onSpotify ?? onYoutube;
+				}
+				return onYoutube?.playing
+					? onYoutube
+					: (onSpotify ?? onYoutube);
+			});
+
+			/** What the page shows is what is loaded in the player. */
+			const pageActive = computed(() => {
+				const page = store.page();
+				const current = now();
+				return (
+					!!page &&
+					!!current &&
+					current.albumId === page.albumId &&
+					(!page.trackId || current.trackId === page.trackId)
+				);
+			});
+
+			/** What the stage shows: what plays, or else the page. */
+			const shown = computed(() => {
+				const current = now();
+				const request = current
+					? requestFor(
+							(item) =>
+								!!current.albumId &&
+								item.albumId === current.albumId
+						)
+					: store.page();
+				return {
+					request,
+					trackId: current
+						? current.trackId
+						: (request?.trackId ?? null),
+				};
+			});
+
+			const settings = computed<PlayerSettings>(() =>
+				settingsFor(shown().request?.context)
+			);
+
+			/**
+			 * Where the record on show has to be turned over, by the track id
+			 * the side starts with. Empty for a release without sides.
+			 */
+			const sides = computed(() => {
+				const request = shown().request;
+
+				return request
+					? sideBreaks(request.tracks)
+					: new Map<string, TrackSide>();
+			});
+
+			const durationMs = computed(() => {
+				const current = now();
+				if (!current) {
+					// Nothing of ours plays: the frame still says how long
+					// what is in it runs, which is all it says.
+					return embedDrives(shown().request)
+						? embed.durationMs()
+						: 0;
+				}
+				return current.source === 'spotify'
+					? (spotify.nowPlaying()?.durationMs ?? 0)
+					: youtube.durationMs();
+			});
+
+			/**
+			 * The records a card can start, by the source it would start
+			 * them on — none at all while the outside players are not
+			 * allowed, so a button that could only disappoint is never
+			 * offered.
+			 *
+			 * A Spotify record counts only with the collector's own app:
+			 * Spotify's embedded frame plays on the record's own page, but a
+			 * card has no frame whose play button could be pressed. A
+			 * YouTube record counts by its playlist or its videos, and only
+			 * while YouTube's player can be driven at all.
+			 */
+			const playableSources = computed(() => {
+				const spotifyAlbums = new Set<string>();
+				const youtubeAlbums = new Set<string>();
+				const ownApp = spotify.hasOwnApp();
+				const canDriveYoutube = youtube.controllable();
+
+				for (const album of consent.allowed() ? (albums() ?? []) : []) {
+					if (ownApp && isSpotifyAlbumId(album.spotifyAlbumId)) {
+						spotifyAlbums.add(album.uid);
+					}
+					if (
+						canDriveYoutube &&
+						(isYoutubePlaylistId(album.youtubePlaylistId) ||
+							(album.youtubeVideoIds ?? []).some(
+								isYoutubeVideoId
+							))
+					) {
+						youtubeAlbums.add(album.uid);
+					}
+				}
+
+				return { spotify: spotifyAlbums, youtube: youtubeAlbums };
+			});
+
+			/**
+			 * The page's album / track can be played — by this player, or by
+			 * pressing the frame the page puts it in. Where neither can, no
+			 * button is offered: one that does nothing when pressed is worse
+			 * than none at all.
+			 */
+			const pagePlayable = computed(() => {
+				const page = store.page();
+				const source = sourceFor(page);
+
+				return (
+					!!source &&
+					(source !== 'spotify' ||
+						spotify.connected() ||
+						spotify.hasOwnApp() ||
+						embedDrives(page))
+				);
+			});
+
+			/**
+			 * The page puts the record in Spotify's own frame: it plays on
+			 * Spotify and the collector has not signed in here, so Spotify's
+			 * frame is what carries it.
+			 */
+			const pageFrame = computed(() => {
+				const page = store.page();
+
+				return (
+					sourceFor(page) === 'spotify' &&
+					!spotify.connected() &&
+					!!onSpotify(page)
+				);
+			});
+
+			/**
+			 * The play button on the page is ours to put there.
+			 *
+			 * Where Spotify's own frame carries the record, that frame's
+			 * button is the one place to press: a second remote for the same
+			 * device is only a second thing to explain. Signing in — which
+			 * is what buys this player its own buttons — is in the settings
+			 * beside it, and the frame's own note says so.
+			 */
+			const pagePlayButton = computed(
+				() => pagePlayable() && !pageFrame()
+			);
+
+			return {
+				now,
+				sides,
+				/** The record on show has sides, so it can be turned over. */
+				hasSides: computed(() => sides().size > 0),
+				/**
+				 * The pictures of the track on show, in the order they were
+				 * put there. The stage plays them through behind the words;
+				 * an empty list is what sends it back to the blurred cover.
+				 *
+				 * They come off the track the player is already holding, so
+				 * a song changing costs no read — only a lookup.
+				 */
+				trackPhotos: computed((): TrackImage[] => {
+					const { request, trackId } = shown();
+					const track = request?.tracks.find(
+						(item) => item.id === trackId
+					);
+
+					return track?.images ?? [];
+				}),
+				/**
+				 * The moving clip written from the song's lyrics, when it
+				 * has one. The stage prefers it to the slideshow: it comes
+				 * from the same words the pictures were drawn from, and it
+				 * moves.
+				 */
+				trackClip: computed((): TrackClip | null => {
+					const { request, trackId } = shown();
+					const track = request?.tracks.find(
+						(item) => item.id === trackId
+					);
+
+					return track?.clip ?? null;
+				}),
+				/**
+				 * The records waiting to go on, in the order they will. The
+				 * queue holds ids and the catalog holds the titles, so a
+				 * record the catalog cannot name is left out of the list
+				 * rather than standing in it as a blank — the count beside
+				 * it comes from the queue itself and stays true.
+				 */
+				queueRecords: computed((): QueuedRecord[] => {
+					const named = new Map(
+						(albums() ?? []).map((album) => [album.uid, album])
+					);
+
+					return store.queue().flatMap((albumId) => {
+						const album = named.get(albumId);
+
+						return album
+							? [
+									{
+										albumId,
+										albumTitle: album.name,
+										artistName: album.artist?.name ?? null,
+										coverUrl:
+											album.coverImage?.filePath ||
+											album.coverImageUrl ||
+											null,
+									},
+								]
+							: [];
+					});
+				}),
+				pageActive,
+				/** The page's album / track plays now. */
+				pagePlaying: computed(
+					() =>
+						(pageActive() && !!now()?.playing) ||
+						(embedDrives(store.page()) && embed.playing())
+				),
+				pagePlayable,
+				pagePlayButton,
+				pageFrame,
+				/** What plays is the page's frame, not this player. */
+				embedDrives: computed(() => embedDrives),
+				shown,
+				settings,
+				/** Sources for the settings menu. */
+				available: computed(() => availableFor(shown().request)),
+				/** The source the stage's play button uses. */
+				source: computed(
+					() => now()?.source ?? sourceFor(shown().request)
+				),
+				playing: computed(
+					() =>
+						!!now()?.playing ||
+						(embedDrives(shown().request) && embed.playing())
+				),
+				durationMs,
+				canSeek: computed(() => !!now() && durationMs() > 0),
+				canSkip: computed(() => {
+					const current = now();
+					return (
+						!!current &&
+						(current.source === 'spotify' ||
+							youtube.selection()?.kind === 'playlist')
+					);
+				}),
+				/** Waiting for the Spotify sign-in before it can play. */
+				needsSpotifyLogin: computed(
+					() =>
+						!now() &&
+						sourceFor(shown().request) === 'spotify' &&
+						!spotify.connected() &&
+						// The frame plays it without any sign-in at all.
+						!embedDrives(shown().request)
+				),
+				/** Volume of what plays (0–100); null when nothing plays. */
+				volume: computed(() => {
+					const source = now()?.source;
+					return source === 'spotify'
+						? spotify.volume()
+						: source === 'youtube'
+							? youtube.volume()
+							: null;
+				}),
+				/** Some Spotify Connect devices do not allow volume changes. */
+				volumeSupported: computed(
+					() =>
+						now()?.source !== 'spotify' || spotify.volumeSupported()
+				),
+				/**
+				 * The source's last error, e.g. a missing Premium account or
+				 * a YouTube player nothing here can reach. A blocked YouTube
+				 * leaves no source at all, so it is said whenever the page
+				 * has nothing better to report.
+				 */
+				error: computed(() =>
+					(now()?.source ?? sourceFor(shown().request)) === 'spotify'
+						? (spotify.error() ?? embed.error())
+						: youtube.error()
+				),
+				sourceFor: computed(() => sourceFor),
+				/** Which sources a record could be played on at all. */
+				availableFor: computed(() => availableFor),
+				/** The source the page plays on (what plays, when it is the page's). */
+				pageSource: computed(() =>
+					pageActive() ? now()!.source : sourceFor(store.page())
+				),
+				pageYoutubeAlbum: computed(() => {
+					const page = store.page();
+					return page ? youtubeAlbumOf(page) : null;
+				}),
+				/** Their own app is named: this player can drive Spotify. */
+				spotifyHasOwnApp: computed(() => spotify.hasOwnApp()),
+				/** The collector's own Spotify app, when they named one. */
+				spotifyClientId: computed(() => spotify.clientId()),
+				/** What that app has to send the sign-in back to. */
+				spotifyRedirectUri: computed(() => spotify.redirectUri()),
+				spotifyConnected: computed(() => spotify.connected()),
+				spotifyConnecting: computed(
+					() => spotify.status() === 'connecting'
+				),
+				/** Spotify Connect devices other than this browser. */
+				devices: computed(() => spotify.otherDevices()),
+				/** Chosen output device; null plays in this browser. */
+				selectedDeviceId: computed(() => spotify.selectedDeviceId()),
+				/** Volume the browser player starts at, 0–100. */
+				spotifyBrowserVolume: computed(() => spotify.browserVolume()),
+				/** The outside players may be put on the page at all. */
+				playersAllowed: computed(() => consent.allowed()),
+				/**
+				 * Albums of the catalog this player can start itself, by the
+				 * source it would start them on — none at all while the
+				 * outside players are not allowed, so a button that could
+				 * only disappoint is never offered.
+				 *
+				 * A Spotify album counts only with the collector's own app:
+				 * Spotify's embedded frame plays on the album's own page, but
+				 * a card has no frame whose play button could be pressed.
+				 */
+				playableSources,
+				/** Every record a card could start, on whichever source. */
+				playableAlbumIds: computed(
+					() =>
+						new Set([
+							...playableSources().spotify,
+							...playableSources().youtube,
+						])
+				),
+			};
+		}
+	),
+	withMethods(
+		(
+			store,
+			settingsEffect = inject(PlayerSettingsEffect),
+			trackDetailsEffect = inject(TrackDetailsEffect),
+			albumDetailsEffect = inject(AlbumDetailsEffect),
+			albumStateService = inject(AlbumStateService),
+			spotify = inject(SpotifyPlaybackStore),
+			embed = inject(SpotifyEmbedStore),
+			youtube = inject(YoutubePlaybackStore),
+			audioCaptureEffect = inject(AudioCaptureEffect),
+			radioEffect = inject(RadioEffect),
+			userSettingsEffect = inject(UserSettingsEffect)
+		) => {
+			let capture: AudioCapture | null = null;
+
+			const stopCapture = () => {
+				capture?.stop();
+				capture = null;
+				store.analyser.set(null);
+				store.audioSilent.set(false);
+				patchState(store, { audioStatus: 'off' });
+			};
+
+			const saveOverrides = (overrides: PlayerSettingsOverrides) => {
+				patchState(store, { overrides });
+				settingsEffect.save(overrides).catch((error) => {
+					console.error('Player settings not saved', error);
+				});
+			};
+
+			/** The kind of page the player is on, which the menu applies to. */
+			const shownContext = (): PlayerContext =>
+				store.shown().request?.context ?? 'default';
+
+			const updateFor = (
+				context: PlayerContext,
+				changes: Partial<PlayerSettings>
+			) => {
+				saveOverrides({
+					...store.overrides(),
+					[context]: { ...store.overrides()[context], ...changes },
+				});
+			};
+
+			const resetFor = (context: PlayerContext) => {
+				const overrides = { ...store.overrides() };
+
+				delete overrides[context];
+				saveOverrides(overrides);
+			};
+
+			/**
+			 * Plays the request from its track (or the album's start), on the
+			 * source asked for where the record has one — a card offers a
+			 * button per source, and each plays what its colour promises.
+			 */
+			const start = async (
+				request: PlayRequest,
+				on?: PlayerSource
+			): Promise<void> => {
+				// Without leave there is no source at all, whoever asked.
+				const settled = store.sourceFor()(request);
+				if (!settled) {
+					return;
+				}
+				const source =
+					on && store.availableFor()(request)[on] ? on : settled;
+				const settings = resolvePlayerSettings(
+					request.context,
+					store.overrides()
+				);
+				if (source === 'spotify' && !spotify.connected()) {
+					// Their own app buys the queue, the stage and their own
+					// speakers, so a collector who has one is sent to sign in
+					// rather than left with the frame.
+					if (spotify.hasOwnApp()) {
+						await spotify.connect();
+
+						return;
+					}
+					// Otherwise the page's own frame is the whole of Spotify
+					// here, and pressing it is the one thing this can do.
+					if (store.embedDrives()(request)) {
+						await embed.play();
+					}
+
+					return;
+				}
+				patchState(store, {
+					session: request,
+					sessionSource: source,
+					sideBreak: null,
+					sideResumedTrackId: null,
+				});
+				if (settings.view === 'stage') {
+					patchState(store, { stageOpen: true });
+				}
+
+				if (source === 'spotify') {
+					const playable = onSpotify(request);
+
+					if (playable?.kind === 'album') {
+						if (request.trackId) {
+							await spotify.loadAlbumTracks(
+								playable.id,
+								request.tracks
+							);
+						}
+						await spotify.play(
+							playable.id,
+							request.trackId,
+							!settings.autoAdvance
+						);
+					} else if (playable) {
+						// Only the song is Spotify's, so there is no record
+						// to play it from and nothing can come after it —
+						// autoAdvance has nowhere to advance to.
+						await spotify.playTrack(playable.id);
+					}
+					return;
+				}
+				const album = youtubeAlbumOf(request);
+				const video = album.items.find((item) => item.kind === 'video');
+				const playlist = album.items.find(
+					(item) => item.kind === 'playlist'
+				);
+				const index = request.tracks.find(
+					(track) => track.id === request.trackId
+				)?.index;
+				if (request.trackId && video) {
+					youtube.playAlbum(album, video);
+				} else if (playlist) {
+					youtube.playAlbum(
+						album,
+						playlist,
+						index !== undefined ? index - 1 : 0
+					);
+				}
+			};
+
+			/** Plays an album of the catalog from its start. */
+			const playAlbumById = async (
+				albumId: string,
+				on?: PlayerSource
+			): Promise<void> => {
+				patchState(store, {
+					loadingAlbumId: albumId,
+					loadingSource: on ?? null,
+				});
+				try {
+					const albums = await firstValueFrom(
+						albumStateService.selectEntities$().pipe(
+							tap((all) => {
+								if (!all?.length) {
+									albumStateService.dispatchListEntitiesAction();
+								}
+							}),
+							filter((all) => all?.length > 0)
+						)
+					);
+					const album = albums.find((item) => item.uid === albumId);
+
+					if (!album) {
+						return;
+					}
+					const { tracks } = await firstValueFrom(
+						albumDetailsEffect.load$(albumId)
+					);
+
+					await start(albumPlayRequest(album, tracks), on);
+				} catch (error) {
+					console.error(error);
+				} finally {
+					patchState(store, {
+						loadingAlbumId: null,
+						loadingSource: null,
+					});
+				}
+			};
+
+			/**
+			 * The records of a queue in the order they go on: as they came,
+			 * or drawn out of a hat where the collector asked for that.
+			 */
+			const inOrder = (albumIds: readonly string[]): string[] =>
+				store.shuffled() ? shuffle(albumIds) : [...albumIds];
+
+			/**
+			 * The next record of the queue, or the end of the station. A
+			 * record that turns out to have nothing to play on is passed
+			 * over rather than leaving the queue stuck on it.
+			 */
+			const playNextAlbum = async (passedOver = 0): Promise<void> => {
+				const [next, ...rest] = store.queue();
+
+				patchState(store, { queue: rest });
+				if (!next) {
+					patchState(store, { station: null, stationLabel: null });
+
+					return;
+				}
+				await playAlbumById(next);
+				if (
+					store.session()?.albumId !== next &&
+					passedOver < MAX_PASSED_OVER
+				) {
+					await playNextAlbum(passedOver + 1);
+				}
+			};
+
+			const toggle = async (): Promise<void> => {
+				const current = store.now();
+				if (current?.source === 'spotify') {
+					await spotify.togglePlay();
+				} else if (current?.source === 'youtube') {
+					youtube.togglePlay();
+				} else if (store.embedDrives()(store.shown().request)) {
+					// Nothing of ours plays, but the page's frame does.
+					await embed.togglePlay();
+				}
+			};
+
+			/**
+			 * Holds playback where the record has to be turned over: the side
+			 * has already begun by the time the source reports it, so it is
+			 * wound back to its first track's start and waits there.
+			 */
+			const holdAtSide = async (
+				trackId: string,
+				label: string
+			): Promise<void> => {
+				patchState(store, { sideBreak: { trackId, label } });
+				const current = store.now();
+
+				if (current?.source === 'spotify') {
+					await spotify.togglePlay();
+					await spotify.seek(0);
+				} else if (current?.source === 'youtube') {
+					youtube.togglePlay();
+					youtube.seek(0);
+				}
+			};
+
+			/** Lets the record play on from the side it was held at. */
+			const continueSide = async (): Promise<void> => {
+				const held = store.sideBreak();
+
+				if (!held) {
+					return;
+				}
+				patchState(store, {
+					sideBreak: null,
+					sideResumedTrackId: held.trackId,
+				});
+				await toggle();
+			};
+
+			/**
+			 * Unlocks Spotify's audio element. Safari only lets sound start
+			 * from the tap itself, so every method that begins playback calls
+			 * this before its first `await` — by then the tap no longer counts.
+			 */
+			const activate = () => spotify.activate();
+
+			return {
+				activate,
+
+				/** Lets the record play on from the side it was held at. */
+				continueSide,
+
+				/**
+				 * Holds the record at a side, for the watcher below to call
+				 * when playback runs into a turnover.
+				 */
+				holdAtSide,
+
+				/** The page shows an album or track (null: nothing to play). */
+				setPage(page: PlayRequest | null): void {
+					patchState(store, { page });
+				},
+
+				/** The page left; unless another page took over already. */
+				clearPage(page: PlayRequest | null): void {
+					if (page && store.page() === page) {
+						patchState(store, { page: null });
+					}
+				},
+
+				/** Plays the page's album / track, or pauses / resumes it. */
+				async togglePage(): Promise<void> {
+					activate();
+					const page = store.page();
+					if (store.sideBreak() && store.pageActive()) {
+						await continueSide();
+					} else if (store.pageActive()) {
+						await toggle();
+					} else if (store.embedDrives()(page)) {
+						// The page's frame is what plays it: the same button
+						// pauses and lets it on again.
+						await embed.togglePlay();
+					} else if (page) {
+						await start(page);
+					}
+				},
+
+				/** Plays a track of the page's album. */
+				async playPageTrack(trackId: string): Promise<void> {
+					activate();
+					const page = store.page();
+					const track = page?.tracks.find(
+						(item) => item.id === trackId
+					);
+					if (page && track) {
+						await start({
+							...page,
+							trackId,
+							trackName: track.name,
+							youtubeVideoId: null,
+						});
+						// Asked for by name: no record is turned over here.
+						patchState(store, { sideResumedTrackId: trackId });
+					}
+				},
+
+				/**
+				 * Plays an album of the catalog from its start, on the source
+				 * asked for. A card offers one button per source the record
+				 * has, so the button that was pressed decides — not the
+				 * settings, which cannot know which colour was under the
+				 * finger.
+				 */
+				playAlbum(albumId: string, on?: PlayerSource): Promise<void> {
+					activate();
+
+					return playAlbumById(albumId, on);
+				},
+
+				/**
+				 * Tunes in a station: chooses its records, puts the first on
+				 * and leaves the rest waiting.
+				 */
+				async startStation(
+					station: RadioStation,
+					label: string
+				): Promise<void> {
+					if (!store.playersAllowed()) {
+						return;
+					}
+					activate();
+					patchState(store, { tuning: true });
+					try {
+						const albumIds = await firstValueFrom(
+							radioEffect
+								.albums$(station, store.playableAlbumIds())
+								.pipe(
+									filter((ids) => ids.length > 0),
+									// The catalog and the shelf arrive on
+									// their own time; a station that never
+									// fills is one with nothing to play.
+									timeout(TUNING_TIMEOUT_MS)
+								)
+						);
+						const [first, ...rest] = inOrder(albumIds);
+
+						patchState(store, {
+							queue: rest,
+							station,
+							stationLabel: label,
+						});
+						await playAlbumById(first);
+					} catch (error) {
+						patchState(store, {
+							queue: [],
+							station: null,
+							stationLabel: null,
+						});
+						if (!(error instanceof TimeoutError)) {
+							console.error(error);
+						}
+					} finally {
+						patchState(store, { tuning: false });
+					}
+				},
+
+				/**
+				 * Plays a run of records one after another — what stands in
+				 * one compartment, what a page has in front of it. A station
+				 * proper goes through `startStation`; this is the same queue
+				 * without a rule behind it.
+				 */
+				async playQueue(
+					albumIds: readonly string[],
+					label: string
+				): Promise<void> {
+					activate();
+					const playable = store.playableAlbumIds();
+					const [first, ...rest] = inOrder(
+						albumIds.filter((albumId) => playable.has(albumId))
+					);
+
+					if (!first) {
+						return;
+					}
+					patchState(store, {
+						queue: rest,
+						station: null,
+						stationLabel: label,
+					});
+					await playAlbumById(first);
+				},
+
+				/** Puts the next record of the queue on. */
+				playNextAlbum(): Promise<void> {
+					activate();
+
+					return playNextAlbum();
+				},
+
+				/**
+				 * Puts a record of the queue on now, passing over the ones
+				 * standing before it — they have had their turn.
+				 */
+				playQueuedAlbum(albumId: string): Promise<void> {
+					activate();
+					const waiting = store.queue();
+					const at = waiting.indexOf(albumId);
+
+					if (at < 0) {
+						return Promise.resolve();
+					}
+					patchState(store, { queue: waiting.slice(at + 1) });
+
+					return playAlbumById(albumId);
+				},
+
+				/**
+				 * Whether queues are put on in a random order. Turning it on
+				 * draws the records still waiting again; turning it off
+				 * leaves them as they stand, since the order they came in is
+				 * not kept anywhere to be put back.
+				 */
+				setShuffled(shuffled: boolean): void {
+					const waiting = store.queue();
+
+					patchState(store, {
+						shuffled,
+						queue: shuffled ? shuffle(waiting) : waiting,
+					});
+					userSettingsEffect
+						.save(RADIO_SHUFFLE_SETTING, shuffled)
+						.catch((error) =>
+							console.error('Shuffle not kept', error)
+						);
+				},
+
+				/** The kept answer, which the collector gave last time. */
+				loadShuffled: rxMethod<void>(
+					pipe(
+						switchMap(() =>
+							userSettingsEffect.value$(RADIO_SHUFFLE_SETTING)
+						),
+						tap((shuffled) => patchState(store, { shuffled }))
+					)
+				),
+
+				/** Takes the queue off; what plays now plays to its end. */
+				stopStation(): void {
+					patchState(store, {
+						queue: [],
+						station: null,
+						stationLabel: null,
+					});
+				},
+
+				/** Pauses / resumes what plays, or starts what is shown. */
+				async togglePlay(): Promise<void> {
+					activate();
+					const request = store.shown().request;
+					if (store.sideBreak()) {
+						await continueSide();
+					} else if (store.now() || store.embedDrives()(request)) {
+						await toggle();
+					} else if (request) {
+						await start(request);
+					}
+				},
+
+				skip(direction: 'previous' | 'next'): void {
+					const current = store.now();
+					// Skipped into a side deliberately: it is not a turnover.
+					const tracks = store.shown().request?.tracks ?? [];
+					const at = tracks.findIndex(
+						(track) => track.id === current?.trackId
+					);
+					const target =
+						tracks[at + (direction === 'next' ? 1 : -1)]?.id ??
+						null;
+
+					patchState(store, { sideResumedTrackId: target });
+					if (current?.source === 'spotify') {
+						void spotify.skip(direction);
+					} else if (current?.source === 'youtube') {
+						youtube.skip(direction);
+					}
+				},
+
+				/** Where what plays is now, in milliseconds. */
+				positionMs(now: number): number {
+					const current = store.now();
+					if (current?.source === 'spotify') {
+						const nowPlaying = spotify.nowPlaying();
+						return nowPlaying
+							? currentPositionMs(nowPlaying, now)
+							: 0;
+					}
+					if (current?.source === 'youtube') {
+						const position = youtube.playing()
+							? youtube.positionMs() +
+								(now - youtube.positionAt())
+							: youtube.positionMs();
+						return Math.min(
+							Math.max(0, position),
+							youtube.durationMs() || position
+						);
+					}
+					if (store.embedDrives()(store.shown().request)) {
+						// The frame reports where it is now and then; the
+						// seconds in between are counted here, as they are
+						// for the sources this player drives itself.
+						const position = embed.playing()
+							? embed.positionMs() + (now - embed.positionAt())
+							: embed.positionMs();
+
+						return Math.min(
+							Math.max(0, position),
+							embed.durationMs() || position
+						);
+					}
+					return 0;
+				},
+
+				seek(positionMs: number): void {
+					if (!store.canSeek()) {
+						return;
+					}
+					const position = Math.max(0, positionMs);
+					if (store.now()?.source === 'spotify') {
+						void spotify.seek(position);
+					} else {
+						youtube.seek(position);
+					}
+				},
+
+				setVolume(volumePercent: number): void {
+					if (store.now()?.source === 'youtube') {
+						youtube.setVolume(volumePercent);
+					} else {
+						spotify.setVolume(volumePercent);
+					}
+				},
+
+				connectSpotify(): Promise<void> {
+					return spotify.connect();
+				},
+
+				/** Names the collector's own Spotify app (empty: forgets it). */
+				saveSpotifyClientId(clientId: string): Promise<void> {
+					return spotify.saveClientId(clientId);
+				},
+
+				disconnectSpotify(): void {
+					spotify.disconnect();
+				},
+
+				refreshDevices(): Promise<void> {
+					return spotify.refreshDevices();
+				},
+
+				/** Plays on the device from now on (null: this browser). */
+				selectDevice(deviceId: string | null): Promise<void> {
+					return spotify.selectDevice(deviceId);
+				},
+
+				/** The volume the browser player starts at, 0–100. */
+				setSpotifyBrowserVolume(volumePercent: number): void {
+					spotify.setBrowserVolume(volumePercent);
+				},
+
+				/** Tab audio capture is possible in this browser. */
+				audioCaptureSupported(): boolean {
+					return audioCaptureEffect.supported;
+				},
+
+				/** Lets the visuals follow the music: asks to share the tab's sound. */
+				async startAudioCapture(): Promise<void> {
+					if (store.audioStatus() !== 'off') {
+						return;
+					}
+					patchState(store, {
+						audioStatus: 'starting',
+						audioError: null,
+					});
+					try {
+						capture = await audioCaptureEffect.start();
+						store.analyser.set(capture.analyser);
+						store.audioSilent.set(false);
+						patchState(store, { audioStatus: 'on' });
+						const current = capture;
+						current.onSilence = (silent) => {
+							if (capture === current) {
+								store.audioSilent.set(silent);
+							}
+						};
+						// Stopped from the browser's "sharing" bar.
+						void current.ended.then(() => {
+							if (capture === current) {
+								stopCapture();
+							}
+						});
+					} catch (error) {
+						capture = null;
+						// Cancelling the prompt is no error to show.
+						const cancelled =
+							error instanceof DOMException &&
+							error.name === 'NotAllowedError';
+						patchState(store, {
+							audioStatus: 'off',
+							audioError: cancelled
+								? null
+								: error instanceof Error
+									? error.message
+									: String(error),
+						});
+					}
+				},
+
+				stopAudioCapture(): void {
+					stopCapture();
+				},
+
+				openStage(): void {
+					patchState(store, { stageOpen: true });
+				},
+
+				closeStage(): void {
+					patchState(store, { stageOpen: false });
+				},
+
+				/**
+				 * The question about the record that just finished is done
+				 * with — answered, or sent away. Either way it is not asked
+				 * again for that sitting.
+				 */
+				clearFinished(): void {
+					patchState(store, { finished: null });
+				},
+
+				/** Changes the settings of the shown kind of page and keeps them. */
+				updateSettings(changes: Partial<PlayerSettings>): void {
+					updateFor(shownContext(), changes);
+				},
+
+				/** Back to the defaults of the shown kind of page. */
+				resetSettings(): void {
+					resetFor(shownContext());
+				},
+
+				/**
+				 * The same, for a kind of page that is not on show — the
+				 * profile sets all of them at once.
+				 */
+				updateSettingsFor(
+					context: PlayerContext,
+					changes: Partial<PlayerSettings>
+				): void {
+					updateFor(context, changes);
+				},
+
+				resetSettingsFor(context: PlayerContext): void {
+					resetFor(context);
+				},
+
+				loadSettings: rxMethod<void>(
+					pipe(
+						switchMap(() => settingsEffect.overrides$()),
+						tap((overrides) => patchState(store, { overrides }))
+					)
+				),
+
+				/** Follows the lyrics of the track on show. */
+				loadLyrics: rxMethod<string | null>(
+					pipe(
+						distinctUntilChanged(),
+						tap(() => patchState(store, { lyrics: null })),
+						switchMap((trackId): Observable<TrackLyrics | null> =>
+							trackId
+								? trackDetailsEffect.lyrics$(trackId)
+								: of(null)
+						),
+						tap((lyrics) => patchState(store, { lyrics }))
+					)
+				),
+			};
+		}
+	),
+	withHooks({
+		onInit(
+			store,
+			spotify = inject(SpotifyPlaybackStore),
+			embed = inject(SpotifyEmbedStore),
+			youtube = inject(YoutubePlaybackStore),
+			playLog = inject(PlayLogEffect),
+			document = inject(DOCUMENT),
+			destroyRef = inject(DestroyRef)
+		) {
+			store.loadSettings(of(undefined));
+			store.loadShuffled(of(undefined));
+			store.loadLyrics(() => store.shown().trackId);
+
+			// A pause is silent too, and nothing is wrong with that. Only
+			// the quiet that lasts while the music plays is worth a word,
+			// so every start wipes the slate.
+			effect(() => {
+				if (store.playing()) {
+					untracked(() => store.audioSilent.set(false));
+				}
+			});
+
+			// Playing on into a new side: hold there until the collector has
+			// turned the record over.
+			effect(() => {
+				const current = store.now();
+				const trackId = current?.trackId ?? null;
+				const side = trackId ? store.sides().get(trackId) : null;
+
+				if (
+					!side ||
+					!trackId ||
+					!current?.playing ||
+					!store.settings().sideBreak ||
+					store.sideBreak() ||
+					store.sideResumedTrackId() === trackId
+				) {
+					return;
+				}
+				untracked(() => void store.holdAtSide(trackId, side.label));
+			});
+
+			// The album being listened to now; one document per sitting.
+			let sitting: Sitting | null = null;
+			const playNextOfQueue = () =>
+				store
+					.playNextAlbum()
+					.catch((error) =>
+						console.error('The next record did not go on', error)
+					);
+
+			/**
+			 * Writes the sitting out. `end` leaves it behind (the album is
+			 * over); without it the same document is written again as the
+			 * record plays on — the id holds the moment it started, so the
+			 * two are one play, not two.
+			 */
+			const flush = (end: boolean): void => {
+				const at = Date.now();
+				const done = sitting;
+
+				if (end) {
+					sitting = null;
+				}
+				if (!done || heardMs(done, at) < MIN_SITTING_MS) {
+					return;
+				}
+				const entry = toLogEntry(done, at);
+
+				if (playLog.recording) {
+					playLog
+						.record(entry)
+						.catch((error) =>
+							console.error('Listening not logged', error)
+						);
+				}
+
+				// A record heard right through, and over: the one moment a
+				// collector has an opinion ready and nothing else to do with
+				// it. Mid-sitting flushes are left alone — the question would
+				// arrive over the last track rather than after it.
+				if (end && entry.completed && playLog.recording) {
+					patchState(store, {
+						finished: {
+							albumId: entry.albumId,
+							albumTitle: entry.albumTitle,
+							artistName: entry.artistName,
+							artistId: done.artistId,
+						},
+					});
+				}
+			};
+
+			/**
+			 * The record ran out on its own, rather than being stopped. On
+			 * YouTube the player says so; Spotify parks on the last track of
+			 * the album with nothing left to play.
+			 */
+			const ranOut = (): boolean => {
+				const current = store.now();
+				const request = store.session();
+				const last = request?.tracks[request.tracks.length - 1];
+
+				// A record held to be turned over looks stopped, and on a
+				// last side of one track it even looks finished. It is not:
+				// it is waiting for a hand.
+				if (!current || current.playing || !last || store.sideBreak()) {
+					return false;
+				}
+
+				return current.source === 'youtube'
+					? youtube.ended()
+					: current.trackId === last.id &&
+							spotify.nowPlaying()?.positionMs === 0;
+			};
+
+			/** Whether this record has actually played, so it can run out. */
+			let played = false;
+
+			/** What is being listened to, this player's doing or not. */
+			const listening = computed(() => {
+				const page = store.page();
+
+				return listeningTo(store.now(), store.session(), page, {
+					drives: store.embedDrives()(page),
+					playing: embed.playing(),
+				});
+			});
+
+			// What is playing, as the log follows it, and where the queue
+			// takes over once a record has run out.
+			effect(() => {
+				const heard = listening();
+				const at = Date.now();
+
+				untracked(() => {
+					const albumId = heard?.request.albumId ?? null;
+
+					if (sitting && sitting.albumId !== albumId) {
+						// Another record went on, or the player fell silent.
+						played = false;
+						if (sitting.playingSince !== null) {
+							sitting.playedMs += at - sitting.playingSince;
+							sitting.playingSince = null;
+							sitting.endedAt = at;
+						}
+						flush(true);
+					}
+					if (!heard || !albumId) {
+						return;
+					}
+					sitting ??= {
+						albumId,
+						albumTitle: heard.request.albumTitle,
+						artistName: heard.request.artistName,
+						artistId: heard.request.artistId,
+						source: heard.source,
+						startedAt: at,
+						trackCount: heard.request.tracks.length,
+						heard: new Set<string>(),
+						playedMs: 0,
+						playingSince: null,
+						endedAt: at,
+					};
+					if (heard.playing) {
+						sitting.playingSince ??= at;
+						sitting.endedAt = at;
+						if (heard.trackId) {
+							sitting.heard.add(heard.trackId);
+						}
+					} else if (sitting.playingSince !== null) {
+						sitting.playedMs += at - sitting.playingSince;
+						sitting.playingSince = null;
+						sitting.endedAt = at;
+					}
+
+					if (heard.playing) {
+						played = true;
+					} else if (played && store.queue().length && ranOut()) {
+						played = false;
+						void playNextOfQueue();
+					}
+				});
+			});
+
+			/**
+			 * The leave taken back while a record plays. The shell takes the
+			 * dock, the stage and the mini player off the page at once, so
+			 * what is playing would play on with nothing left to stop it.
+			 *
+			 * Only playback is ended here. Whether withdrawing also signs the
+			 * account out of Spotify is the consent's question, not the
+			 * player's, and this does not answer it.
+			 */
+			effect(() => {
+				if (store.playersAllowed()) {
+					return;
+				}
+				untracked(() => {
+					if (!store.now() && !store.queue().length) {
+						return;
+					}
+					const nowPlaying = spotify.nowPlaying();
+
+					if (nowPlaying && !nowPlaying.paused) {
+						void spotify.togglePlay();
+					}
+					youtube.close();
+					store.stopStation();
+					flush(true);
+				});
+			});
+
+			// A tab being hidden may never come back: keep what was heard.
+			const onVisibilityChange = () => {
+				if (document.visibilityState === 'hidden') {
+					flush(false);
+				}
+			};
+
+			document.addEventListener('visibilitychange', onVisibilityChange);
+			destroyRef.onDestroy(() =>
+				document.removeEventListener(
+					'visibilitychange',
+					onVisibilityChange
+				)
+			);
+
+			// Signed in to Spotify: map the playing (or shown) album's tracks.
+			effect(() => {
+				const request = store.session() ?? store.page();
+				if (
+					spotify.connected() &&
+					request?.spotifyAlbumId &&
+					request.tracks.length
+				) {
+					const { spotifyAlbumId, tracks } = request;
+					untracked(
+						() =>
+							void spotify.loadAlbumTracks(spotifyAlbumId, tracks)
+					);
+				}
+			});
+		},
+	})
+);

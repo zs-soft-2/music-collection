@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { NgxPermissionsModule } from 'ngx-permissions';
 import { of } from 'rxjs';
 
@@ -14,7 +15,12 @@ import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
 
 import { AppComponent } from './app.component';
-import { SpotifyPlaybackStore } from './shared/spotify';
+import { MeasurementConsentService } from './data/analytics';
+import { DailyQuestionEffect } from './data/daily-question';
+import { DemoTourService } from './data/demo-tour';
+import { ExternalPlayerConsentService } from './data/external-player';
+import { RatingEffect } from './data/rating';
+import { PlayerStore } from './shared/player';
 
 describe('AppComponent', () => {
 	beforeEach(async () => {
@@ -28,6 +34,7 @@ describe('AppComponent', () => {
 			],
 			providers: [
 				provideRouter([]),
+				provideI18nTesting(),
 				{
 					provide: AuthenticationStateService,
 					useValue: {
@@ -50,15 +57,69 @@ describe('AppComponent', () => {
 					useValue: { selectEntities$: () => of([]) },
 				},
 				{
-					provide: SpotifyPlaybackStore,
+					// A hozzájárulás a beállításokból jönne (Firestore/Auth);
+					// itt elég annyi, hogy a sáv ne kérdezzen semmit.
+					provide: MeasurementConsentService,
+					useValue: { consented: signal(false), decide: jest.fn() },
+				},
+				{
+					provide: ExternalPlayerConsentService,
 					useValue: {
-						connected: signal(false),
-						nowPlaying: signal(null),
-						volume: signal(0),
-						volumeSupported: signal(false),
-						setVolume: jest.fn(),
-						skip: jest.fn(),
-						togglePlay: jest.fn(),
+						consented: signal(false),
+						allowed: signal(false),
+						asking: signal(false),
+						decide: jest.fn(),
+					},
+				},
+				{
+					// A bemutató kapcsolója is a beállításokból jönne
+					// (Firestore/Auth); itt elég annyi, hogy a séta ne
+					// kerüljön a lapra.
+					provide: DemoTourService,
+					useValue: {
+						wanted: signal(false),
+						enabled: signal(false),
+						decide: jest.fn(),
+						prepare: jest.fn(),
+						start: jest.fn(),
+					},
+				},
+				{
+					// A napi kérdés sávja a játék adataiból élne (Firestore);
+					// itt elég annyi, hogy ne legyen kérdés, tehát ne is
+					// szóljon róla.
+					provide: DailyQuestionEffect,
+					useValue: {
+						today: () => '2026-09-25',
+						uid$: () => of(null),
+						question$: () => of(null),
+						answer$: () => of(null),
+						isDismissed: () => false,
+						dismiss: jest.fn(),
+					},
+				},
+				{
+					provide: PlayerStore,
+					useValue: {
+						stageOpen: signal(false),
+						now: signal(null),
+						// Amit a háttérvilág olvas: mi szól éppen, ha szól.
+						shown: signal({ request: null }),
+						finished: signal(null),
+						clearFinished: jest.fn(),
+					},
+				},
+				{
+					// A lemez utáni kérdés a gyűjtő saját értékeléseiből élne
+					// (Firestore); itt elég annyi, hogy ne legyen mit
+					// kérdezni.
+					provide: RatingEffect,
+					useValue: {
+						list$: () => of([]),
+						summary$: () => of(null),
+						rate: jest.fn(),
+						clear: jest.fn(),
+						rating: false,
 					},
 				},
 			],

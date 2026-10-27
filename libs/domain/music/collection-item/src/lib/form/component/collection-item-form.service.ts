@@ -1,4 +1,4 @@
-import { combineLatest, Observable, ReplaySubject } from 'rxjs';
+import { combineLatest, Observable, of, ReplaySubject } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
 import { Injectable, inject } from '@angular/core';
@@ -9,15 +9,29 @@ import {
 	CollectionItemEntityAdd,
 	CollectionItemEntityUpdate,
 	CollectionItemFormParams,
+	CollectionItemPlacement,
+	CollectionItemPlacementParams,
 	CollectionItemStateService,
 	CollectionItemUtilService,
 	EntityTypeEnum,
+	maxPositionIn,
 	ReleaseEntity,
 	ReleaseStateService,
 	ReturnNavigationService,
 	SearchParams,
+	ShelfLayoutService,
+	ShelfSide,
+	ShelfUnitLayout,
 	User,
+	placementAt,
+	placementInLayout,
+	placementSide,
+	unitSpots,
+	unitTitle,
 } from '@music-collection/api';
+
+/** The chosen compartment, as the select carries it. */
+const spotValue = (row: number, column: number): string => `${row}:${column}`;
 
 @Injectable()
 export class CollectionItemFormService {
@@ -28,10 +42,21 @@ export class CollectionItemFormService {
 	private releaseStateService = inject(ReleaseStateService);
 	private componentUtil = inject(CollectionItemUtilService);
 	private returnNavigation = inject(ReturnNavigationService);
+	/**
+	 * Only the app itself knows the collector's furniture (it is a setting of
+	 * theirs). Without it the form simply has no shelf to file the copy into.
+	 */
+	private shelfLayoutService = inject(ShelfLayoutService, {
+		optional: true,
+	});
 
 	private collectionItem!: CollectionItemEntity | undefined;
 	private params!: CollectionItemFormParams;
 	private params$$: ReplaySubject<CollectionItemFormParams>;
+	private units: ShelfUnitLayout[] = [];
+	/** The place the form holds now; it starts as the one the copy has. */
+	private placement: CollectionItemPlacement | null = null;
+	private unitId = '';
 
 	public constructor() {
 		this.params$$ = new ReplaySubject();
@@ -50,10 +75,26 @@ export class CollectionItemFormService {
 					),
 					this.releaseStateService.selectSearchResult$(),
 					this.authenticationStateService.selectAuthenticatedUser$(),
+					this.shelfLayoutService?.units$() ?? of([]),
 				])
 			),
-			switchMap(([collectionItem, artists, authenticatedUser]) => {
+			switchMap(([collectionItem, artists, authenticatedUser, units]) => {
+				const opened = this.collectionItem?.uid !== collectionItem?.uid;
+
 				this.collectionItem = collectionItem;
+				this.units = units;
+
+				// The place follows the copy that was opened; from then on it
+				// is the collector's to change, and a release searched for
+				// meanwhile must not put the copy back where it came from.
+				if (opened) {
+					this.placement = collectionItem?.placement ?? null;
+					this.unitId = this.placement?.unitId ?? '';
+				}
+				if (!this.unitId) {
+					this.unitId = this.units[0]?.id ?? '';
+				}
+
 				this.params = this.createCollectionItemParams(
 					collectionItem,
 					artists,
@@ -76,6 +117,60 @@ export class CollectionItemFormService {
 		this.releaseStateService.dispatchSearch(searchParams);
 	}
 
+	/**
+	 * Another piece of furniture: the compartment went with the old one, so
+	 * the copy is filed by the shelf again until one is picked here.
+	 */
+	public chooseUnit(unitId: string): void {
+		this.unitId = unitId;
+		this.setPlacement(null);
+	}
+
+	public chooseSpot(spot: string): void {
+		const [row, column] = spot.split(':').map(Number);
+		const standing = this.placement;
+		const staying =
+			standing &&
+			standing.unitId === this.unitId &&
+			standing.row === row &&
+			standing.column === column;
+
+		this.setPlacement(
+			placementAt(
+				{ unitId: this.unitId, row, column },
+				staying ? placementSide(standing) : 'left',
+				staying ? standing.position : 1
+			)
+		);
+	}
+
+	/** The wall of the compartment the copy leans on; the place keeps its
+	 * number, which is read from that wall either way. */
+	public chooseSide(side: ShelfSide): void {
+		const placement = this.placement;
+
+		if (placement) {
+			this.setPlacement(placementAt(placement, side, placement.position));
+		}
+	}
+
+	public choosePosition(position: number): void {
+		if (this.placement) {
+			this.setPlacement(
+				placementAt(
+					this.placement,
+					placementSide(this.placement),
+					position
+				)
+			);
+		}
+	}
+
+	/** Takes the place back: the shelf files the copy again. */
+	public clearPlace(): void {
+		this.setPlacement(null);
+	}
+
 	public submit(): void {
 		if (this.collectionItem) {
 			this.updateCollectionItem();
@@ -93,6 +188,46 @@ export class CollectionItemFormService {
 		this.collectionItemStateService.dispatchAddEntityAction(collectionItem);
 	}
 
+	private setPlacement(placement: CollectionItemPlacement | null): void {
+		this.placement = placement;
+		this.params.formGroup.get('placement')?.setValue(placement);
+		this.params = {
+			...this.params,
+			placement: this.createPlacementParams(),
+		};
+
+		this.params$$.next(this.params);
+	}
+
+	private createPlacementParams(): CollectionItemPlacementParams {
+		const unit = this.units.find((drawn) => drawn.id === this.unitId);
+		const placement = this.placement;
+
+		return {
+			units: this.units.map((drawn, index) => ({
+				value: drawn.id,
+				label: unitTitle(drawn, this.units, `Shelf ${index + 1}`),
+			})),
+			unitId: this.unitId,
+			spots: unit
+				? unitSpots(unit, this.units).map((spot) => ({
+						value: spotValue(spot.row, spot.column),
+						label: spot.label,
+					}))
+				: [],
+			spot:
+				placement && placement.unitId === this.unitId
+					? spotValue(placement.row, placement.column)
+					: null,
+			side: placementSide(placement),
+			position: placement?.position ?? 1,
+			maxPosition: unit ? maxPositionIn(unit) : 1,
+			// A place no drawn compartment answers to any more is kept, but
+			// there is nothing to show it on.
+			lost: !!placement && !placementInLayout(placement, this.units),
+		};
+	}
+
 	private createCollectionItemParams(
 		collectionItem: CollectionItemEntity | undefined,
 		releases: ReleaseEntity[],
@@ -103,12 +238,15 @@ export class CollectionItemFormService {
 			authenticatedUser
 		);
 
+		formGroup.get('placement')?.setValue(this.placement);
+
 		const collectionItemFormParams: CollectionItemFormParams = {
 			releases: releases.map((release) => ({
 				...release,
 				nameAndMedia: `${release.name} (${release.media})`,
 			})),
 			formGroup,
+			placement: this.createPlacementParams(),
 		};
 
 		return collectionItemFormParams;

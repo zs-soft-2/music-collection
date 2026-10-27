@@ -1,0 +1,772 @@
+import { WishlistItemEntity } from '@music-collection/api';
+import { MediaEnum } from '@music-collection/common/api';
+import { MusicCollectionStanding } from '@music-collection/domain/music-collection/core';
+import { ageWeight } from '@music-collection/domain/music-collection/engine';
+import { MediaFormat, ReleaseView } from '@music-collection/ui/music-view';
+
+import { AlbumRating } from '../rating';
+import { PublicUserLocation } from '../user-location';
+import { UserSetting } from '../user-settings';
+
+/**
+ * The collector's own page, as a stranger gets it.
+ *
+ * One document, put together when the collector writes, so that a visit
+ * costs a single read rather than a query over somebody's shelf. Everything
+ * a visitor sees is denormalized into it on purpose: a visitor has no
+ * catalog in their cache — and if they have one, it may be narrowed to two
+ * genres — so a document that only named album ids would draw a page full of
+ * holes.
+ *
+ * What is NOT here matters as much. No price, no estimated worth, no shelf
+ * place, no serial number, no copy photographs: the photographs live behind
+ * closed Storage rules anyway, so the shop window shows catalog covers. The
+ * points are the only measure that goes out.
+ *
+ * The numbers are the collector's own word. They are computed on their
+ * machine, because resolving collections needs the catalog that is already
+ * cached there — so this document can never feed a leaderboard or a reward.
+ * An official ranking would have to be computed on the server, from the
+ * shelf itself.
+ */
+
+/** How many records the shop window holds. Mirrored in `firestore.rules`. */
+export const SHOWCASE_LIMIT = 24;
+/** How many badges travel with the profile. Mirrored in `firestore.rules`. */
+export const BADGE_LIMIT = 50;
+/**
+ * How many collections the page lists as being worked on.
+ *
+ * These are the collector's own choice — the collections they follow and have
+ * said may be shown — so the limit is only there to keep the document small,
+ * not to curate for them.
+ */
+export const PURSUIT_LIMIT = 12;
+/** How many wishes a visitor is shown. Mirrored in `firestore.rules`. */
+export const WISHLIST_LIMIT = 200;
+/** A shop link is a link, not an essay. */
+export const SOURCE_LINK_MAX_LENGTH = 500;
+/**
+ * How many favourites the page carries. Mirrored in `firestore.rules`.
+ *
+ * Ten, not fifty: a list of favourites that goes on for two screens is a
+ * catalog, and a visitor reads the first ten of anything. The collector's own
+ * profile shows them all.
+ */
+export const FAVOURITE_LIMIT = 10;
+
+/**
+ * What the collector chose. Two consents, not one: a shelf worth showing is
+ * not the same as a list of what one is still missing, and the family that
+ * reads the second is not the stranger who found the first.
+ */
+export interface CollectorProfileSettings {
+	/** Whether the public page exists at all. */
+	shared: boolean;
+	/** Whether the wishlist goes on it. */
+	shareWishlist: boolean;
+	/**
+	 * Whether the records they rated highest go on it, with the line they
+	 * wrote about them. Its own consent: the shelf says what somebody owns,
+	 * and this says what they think — the second is an opinion with a name
+	 * on it, and plenty of collectors would publish the first and not the
+	 * second.
+	 */
+	shareRatings: boolean;
+}
+
+export const NO_COLLECTOR_PROFILE: CollectorProfileSettings = {
+	shared: false,
+	shareWishlist: false,
+	shareRatings: false,
+};
+
+export const COLLECTOR_PROFILE_SETTING: UserSetting<CollectorProfileSettings> =
+	{
+		id: 'collector-profile',
+		featureKey: 'collector-profile-setting',
+		storageKey: 'mc-collector-profile',
+		toValue: (data) => ({
+			shared: data['shared'] === true,
+			shareWishlist: data['shareWishlist'] === true,
+			shareRatings: data['shareRatings'] === true,
+		}),
+		toDocument: ({ shared, shareWishlist, shareRatings }) => ({
+			shared,
+			shareWishlist,
+			shareRatings,
+		}),
+	};
+
+/** Who the page is about, as the user document holds it. */
+export interface CollectorProfileOwner {
+	uid: string;
+	displayName?: string | null;
+	photoURL?: string | null;
+}
+
+/** One record from the shelf, as the shop window shows it. */
+export interface CollectorShowcaseRecord {
+	title: string;
+	artistName: string;
+	year: number | null;
+	format: MediaFormat;
+	coverUrl: string | null;
+	/** Limited edition, picture disc, box set — what makes this copy special. */
+	editions: string[];
+}
+
+/** A badge earned by owning every album of a collection. */
+export interface CollectorBadge {
+	slug: string;
+	name: string;
+	imageUrl: string | null;
+	points: number;
+}
+
+/**
+ * A collection somebody says they are after, named and nothing more: the
+ * smallest thing a collector can publish about themselves.
+ */
+export interface CollectorHunt {
+	slug: string;
+	name: string;
+}
+
+/** A collection being worked on, and how far it has got. */
+export interface CollectorPursuit {
+	slug: string;
+	name: string;
+	owned: number;
+	total: number;
+}
+
+/** A record still wanted — the list a family buys a present from. */
+export interface CollectorWish {
+	title: string;
+	artistName: string;
+	coverUrl: string | null;
+	/** The formats that would do; empty means any pressing is welcome. */
+	medias: MediaEnum[];
+	/** Where it is for sale, when the collector noted one. */
+	sourceLink?: string;
+}
+
+/**
+ * A record the collector rated highly, as the page shows it: the stars, and
+ * the line they wrote about it where they wrote one.
+ *
+ * No cover and no format. A favourite is about the music, not the pressing —
+ * the pressing is what the shop window is for — and the titles keep this part
+ * of the document to a few hundred bytes.
+ */
+export interface CollectorFavourite {
+	title: string;
+	artistName: string | null;
+	stars: number;
+	/** Why, in the collector's own words; absent where they said nothing. */
+	note?: string;
+}
+
+/** The shelf in numbers. */
+export interface CollectorNumbers {
+	copies: number;
+	albums: number;
+	artists: number;
+	/** Only the formats actually on the shelf, so the document stays small. */
+	byFormat: Partial<Record<MediaFormat, number>>;
+	oldestYear: number | null;
+	/**
+	 * The year the first copy was filed here — which is when the collecting
+	 * arrived in this app, not when it began.
+	 */
+	since: number | null;
+}
+
+/** The only measure that goes out: points, and what earned them. */
+export interface CollectorPoints {
+	total: number;
+	completedCollections: number;
+}
+
+export interface PublicCollectorProfile {
+	uid: string;
+	displayName?: string;
+	photoURL?: string;
+	/** From the location consent — never more than that level let out. */
+	countryCode?: string;
+	city?: string;
+	numbers: CollectorNumbers;
+	points: CollectorPoints;
+	badges: CollectorBadge[];
+	pursuits: CollectorPursuit[];
+	showcase: CollectorShowcaseRecord[];
+	/** Present only while the collector shares it. */
+	wishlist?: CollectorWish[];
+	/** The same, for what they think of their records. */
+	favourites?: CollectorFavourite[];
+}
+
+/** The document as it comes back: what was written, plus the sync stamp. */
+export type CollectorProfileDocument = PublicCollectorProfile & {
+	/** Epoch milliseconds; written by `FirestoreSyncService` on every save. */
+	updatedAt?: number;
+};
+
+/**
+ * The whole shelf, in a document of its own.
+ *
+ * The page carries a window of two dozen records, because a visit should cost
+ * one read and a few kilobytes. A collector-to-collector visit often wants
+ * the rest of it — "what else has he got?" — and that is this list: a second
+ * read, made only when somebody asks for it, and without covers, so a
+ * thousand records are a couple of hundred kilobytes rather than a megabyte.
+ */
+export const ALBUM_LIST_LIMIT = 3000;
+
+/** One record as the full list names it: no cover, no copy, just the record. */
+export interface CollectorAlbumEntry {
+	title: string;
+	artistName: string;
+	year: number | null;
+	format: MediaFormat;
+}
+
+export interface PublicCollectorAlbums {
+	uid: string;
+	/** Everything on the shelf — even where the list below had to stop. */
+	count: number;
+	albums: CollectorAlbumEntry[];
+}
+
+export type CollectorAlbumsDocument = PublicCollectorAlbums & {
+	updatedAt?: number;
+};
+
+/** Everything the snapshot is made of, all of it already on the client. */
+export interface CollectorProfileSource {
+	settings: CollectorProfileSettings;
+	owner: CollectorProfileOwner;
+	/** The copies owned; the ones gone from the collection are not here. */
+	releases: readonly ReleaseView[];
+	standings: readonly MusicCollectionStanding[];
+	wishes: readonly WishlistItemEntity[];
+	/** What the collector thinks of their records; empty where unasked. */
+	ratings: readonly AlbumRating[];
+	/** What the location consent already publishes, or null. */
+	location: PublicUserLocation | null;
+	/** Epoch milliseconds, so the age of a record does not depend on the clock. */
+	now: number;
+	/**
+	 * Uids of the followed collections the collector shows to others.
+	 *
+	 * Following one is taking it on; showing it is telling people so. The
+	 * page lists these as what they are after, and nothing else: a hunt kept
+	 * private stays private, which is what makes a surprise possible.
+	 */
+	shownCollections: readonly string[];
+}
+
+function toNumbers(releases: readonly ReleaseView[]): CollectorNumbers {
+	const albums = new Set<string>();
+	const artists = new Set<string>();
+	const byFormat: Partial<Record<MediaFormat, number>> = {};
+	let oldestYear: number | null = null;
+	let since: number | null = null;
+
+	for (const release of releases) {
+		if (release.albumId) {
+			albums.add(release.albumId);
+		}
+
+		if (release.artistId) {
+			artists.add(release.artistId);
+		}
+
+		byFormat[release.format] = (byFormat[release.format] ?? 0) + 1;
+
+		if (
+			release.year !== null &&
+			(oldestYear === null || release.year < oldestYear)
+		) {
+			oldestYear = release.year;
+		}
+
+		if (release.addedAt && (since === null || release.addedAt < since)) {
+			since = release.addedAt;
+		}
+	}
+
+	return {
+		copies: releases.length,
+		albums: albums.size,
+		artists: artists.size,
+		byFormat,
+		oldestYear,
+		since: since === null ? null : new Date(since).getFullYear(),
+	};
+}
+
+/**
+ * How much a copy earns its place in the window: what the pressing is, and
+ * how long it has been around. The same two things the scoring weighs — the
+ * age from the engine, so the window and the points cannot disagree about
+ * what counts as old.
+ */
+function showcaseWeight(release: ReleaseView, now: number): number {
+	return (
+		release.editions.length * 2 +
+		(release.weight === 180 ? 1 : 0) +
+		ageWeight(release.year, now) * 2
+	);
+}
+
+function toShowcase(
+	releases: readonly ReleaseView[],
+	now: number
+): CollectorShowcaseRecord[] {
+	return [...releases]
+		.sort(
+			(one, other) =>
+				showcaseWeight(other, now) - showcaseWeight(one, now) ||
+				(one.year ?? Number.MAX_SAFE_INTEGER) -
+					(other.year ?? Number.MAX_SAFE_INTEGER) ||
+				one.title.localeCompare(other.title)
+		)
+		.slice(0, SHOWCASE_LIMIT)
+		.map((release) => ({
+			title: release.title,
+			artistName: release.artistName,
+			year: release.year,
+			format: release.format,
+			coverUrl: release.coverUrl,
+			editions: release.editions,
+		}));
+}
+
+function toPoints(
+	standings: readonly MusicCollectionStanding[]
+): CollectorPoints {
+	let total = 0;
+	let completedCollections = 0;
+
+	for (const { progress, score } of standings) {
+		total += score.earnedPoints;
+
+		if (progress.completed) {
+			completedCollections += 1;
+		}
+	}
+
+	return { total, completedCollections };
+}
+
+/** The badges earned, the most valuable first. */
+function toBadges(
+	standings: readonly MusicCollectionStanding[]
+): CollectorBadge[] {
+	return standings
+		.filter(({ progress }) => progress.completed)
+		.sort((one, other) => other.score.earnedPoints - one.score.earnedPoints)
+		.slice(0, BADGE_LIMIT)
+		.map(({ collection, score }) => ({
+			slug: collection.slug,
+			name: collection.badge?.name || collection.name,
+			// The cast pin where there is one, the typed-in artwork until then.
+			imageUrl:
+				collection.badge?.image?.filePath ??
+				collection.badge?.artworkUrl ??
+				null,
+			points: score.earnedPoints,
+		}));
+}
+
+/**
+ * What the collector is after: the collections they follow and have chosen to
+ * show, minus the ones already finished — those are badges now, and a badge
+ * says more than a full progress bar.
+ *
+ * Nothing is picked automatically. A page that advertised whichever
+ * collections somebody happened to be nearest to finishing would be
+ * publishing a hunt they never mentioned to anybody.
+ */
+function toPursuits(
+	standings: readonly MusicCollectionStanding[],
+	shown: readonly string[]
+): CollectorPursuit[] {
+	const chosen = new Set(shown);
+
+	return standings
+		.filter(
+			({ collection, progress }) =>
+				chosen.has(collection.uid) &&
+				!progress.completed &&
+				progress.total > 0
+		)
+		.sort(
+			(one, other) =>
+				other.progress.percentage - one.progress.percentage ||
+				one.collection.name.localeCompare(other.collection.name)
+		)
+		.slice(0, PURSUIT_LIMIT)
+		.map(({ collection, progress }) => ({
+			slug: collection.slug,
+			name: collection.name,
+			owned: progress.owned,
+			total: progress.total,
+		}));
+}
+
+/**
+ * A shop link only where it is a web address this page may offer a stranger.
+ * The rules cannot look inside a list — Firestore has no iteration — so a
+ * link that leaves here unchecked is one the page would hand to a visitor on
+ * our own domain.
+ */
+function toSourceLink(link: string | undefined): string | undefined {
+	const trimmed = link?.trim();
+
+	return trimmed &&
+		trimmed.startsWith('https://') &&
+		trimmed.length <= SOURCE_LINK_MAX_LENGTH
+		? trimmed
+		: undefined;
+}
+
+function toWishlist(wishes: readonly WishlistItemEntity[]): CollectorWish[] {
+	return wishes.slice(0, WISHLIST_LIMIT).map((wish) => {
+		const sourceLink = toSourceLink(wish.sourceLink);
+		const wanted: CollectorWish = {
+			title: wish.albumReference?.name ?? '',
+			artistName: wish.artistReference?.name ?? '',
+			coverUrl: wish.albumReference?.coverImage?.filePath ?? null,
+			// `all` is not a format but the absence of a preference, and an
+			// empty list says the same thing without the visitor having to
+			// know our enum.
+			medias: (wish.medias ?? []).filter(
+				(media) => media !== MediaEnum.all
+			),
+		};
+
+		if (sourceLink) {
+			wanted.sourceLink = sourceLink;
+		}
+
+		return wanted;
+	});
+}
+
+/**
+ * The records the collector thinks most of, the best first and the newest
+ * judgement first among equals — the same order their own profile ranks them
+ * in, so the page a visitor reads and the page the collector sees agree.
+ */
+function toFavourites(ratings: readonly AlbumRating[]): CollectorFavourite[] {
+	return [...ratings]
+		.sort(
+			(one, other) =>
+				other.stars - one.stars || other.ratedAt - one.ratedAt
+		)
+		.slice(0, FAVOURITE_LIMIT)
+		.map((rating) => {
+			const favourite: CollectorFavourite = {
+				title: rating.albumTitle,
+				artistName: rating.artistName,
+				stars: rating.stars,
+			};
+
+			if (rating.note) {
+				favourite.note = rating.note;
+			}
+
+			return favourite;
+		});
+}
+
+/**
+ * The entry in the directory: one collector, small enough that a page may
+ * hold everybody's.
+ *
+ * The page document is ten to twenty kilobytes — a window of covers, a
+ * wishlist — and a wall of those would be half a megabyte to draw a grid of
+ * faces. This is the same collector in a few hundred bytes: who they are,
+ * what the shelf adds up to, and the collections they have finished, which is
+ * what the wall is actually about.
+ */
+/**
+ * How many sleeves travel with a directory entry.
+ *
+ * Four, because they are there to show what kind of shelf this is, not to be
+ * browsed: the page is one click away and holds twenty-four. The entry is
+ * listed — every visitor downloads every one of them — so each sleeve has to
+ * earn the couple of hundred bytes it costs.
+ */
+export const CARD_RECORD_LIMIT = 4;
+
+/**
+ * One record on a directory entry: a sleeve and what it is.
+ *
+ * The same records the page's shop window opens with, cut to the first few.
+ * A visitor to the wall has no catalog of their own — or a catalog narrowed
+ * to two genres — so the title and the artist travel with the picture rather
+ * than being looked up.
+ */
+export interface CollectorCardRecord {
+	title: string;
+	artistName: string;
+	coverUrl: string | null;
+}
+
+export interface PublicCollectorCard {
+	uid: string;
+	displayName?: string;
+	photoURL?: string;
+	countryCode?: string;
+	city?: string;
+	/** What the shelf holds, for sorting by size. */
+	copies: number;
+	points: number;
+	/**
+	 * A few records off the shelf, where the shelf is shared at all. Absent
+	 * on an entry that is only a name beside a collection: the records are
+	 * the shelf, and the shelf is the other consent.
+	 */
+	records?: CollectorCardRecord[];
+	/** The collections finished, the most valuable first. */
+	badges: CollectorBadge[];
+	/**
+	 * The collections they are after and have chosen to show — the wall counts
+	 * these as "collecting it", beside those who finished it.
+	 *
+	 * Named, not just pointed at, for the same reason the badges are: a page
+	 * that drew these would otherwise have to fetch the collection catalog to
+	 * find out what they are called, and a visitor who followed a link has no
+	 * catalog. No progress travels with them — how far along somebody is
+	 * belongs to the shelf, and the shelf is the other consent.
+	 */
+	collecting: CollectorHunt[];
+	/**
+	 * Whether there is a page behind the name.
+	 *
+	 * An entry can exist without one: showing a collection is enough to be
+	 * named on the wall, and that is a smaller thing than publishing a
+	 * shelf. The wall uses this to decide whether the name is a link — a
+	 * link to a page nobody shared leads to "nothing here".
+	 */
+	hasPage: boolean;
+}
+
+export type CollectorCardDocument = PublicCollectorCard & {
+	updatedAt?: number;
+};
+
+/**
+ * The directory entry, or null when nothing is shared.
+ *
+ * Built from the same source as the page, so the two cannot disagree: a card
+ * showing a badge the page does not is a card nobody can trust.
+ */
+export function toPublicCollectorCard(
+	source: CollectorProfileSource
+): PublicCollectorCard | null {
+	const { settings, owner, releases, standings, location } = source;
+	const shown = new Set(source.shownCollections);
+	const collecting: CollectorHunt[] = toPursuits(
+		standings,
+		source.shownCollections
+	).map(({ slug, name }) => ({ slug, name }));
+	/**
+	 * Without a page, only the shown collections speak — including the ones
+	 * finished. A collector who showed a collection and then completed it
+	 * would otherwise vanish from the wall at the moment of finishing it,
+	 * which is the one moment the wall exists for.
+	 */
+	const badges = settings.shared
+		? toBadges(standings)
+		: toBadges(
+				standings.filter(({ collection }) => shown.has(collection.uid))
+			);
+
+	// Two ways onto the wall, and showing a collection is the smaller one.
+	// Saying "I am after this" is a public act in itself: it would be a
+	// strange app that took the statement and then left the person who made
+	// it off the page. The shelf behind the name is the other consent, and
+	// without it the entry carries no numbers and leads nowhere.
+	if (
+		!owner.uid ||
+		(!settings.shared && !collecting.length && !badges.length)
+	) {
+		return null;
+	}
+
+	const card: PublicCollectorCard = {
+		uid: owner.uid,
+		copies: settings.shared ? releases.length : 0,
+		points: settings.shared ? toPoints(standings).total : 0,
+		badges,
+		collecting,
+		hasPage: settings.shared,
+	};
+	// The window's own order, not a pick of their own: an entry showing
+	// records the page does not open with is an entry that disagrees with it.
+	//
+	// Only the ones with a sleeve, though. A row of four covers is read in a
+	// glance and a placeholder tile says nothing at all — and plenty of the
+	// catalog has no cover, classical especially. Skipping those shows less
+	// than the page does, never something else.
+	const records = settings.shared
+		? toShowcase(releases, source.now)
+				.filter(({ coverUrl }) => !!coverUrl)
+				.slice(0, CARD_RECORD_LIMIT)
+				.map(({ title, artistName, coverUrl }) => ({
+					title,
+					artistName,
+					coverUrl,
+				}))
+		: [];
+
+	if (records.length) {
+		card.records = records;
+	}
+
+	if (owner.displayName) {
+		card.displayName = owner.displayName;
+	}
+
+	if (owner.photoURL) {
+		card.photoURL = owner.photoURL;
+	}
+
+	// The place belongs to the page: it came out of the map's consent, and
+	// an entry that is only a name beside a collection has no business
+	// carrying it.
+	if (settings.shared && location?.countryCode) {
+		card.countryCode = location.countryCode;
+	}
+
+	if (settings.shared && location?.city) {
+		card.city = location.city;
+	}
+
+	return card;
+}
+
+/**
+ * The whole shelf, by artist and then by year — the order a collector would
+ * read a shelf in, and the one the collection page opens with.
+ *
+ * Null whenever the profile is not shared: the list is part of the page, not
+ * a thing of its own, so it comes and goes with it.
+ */
+export function toPublicCollectorAlbums(
+	source: CollectorProfileSource
+): PublicCollectorAlbums | null {
+	const { settings, owner, releases } = source;
+
+	if (!settings.shared || !owner.uid) {
+		return null;
+	}
+
+	const albums = [...releases]
+		.sort(
+			(one, other) =>
+				one.artistName.localeCompare(other.artistName) ||
+				(one.year ?? Number.MAX_SAFE_INTEGER) -
+					(other.year ?? Number.MAX_SAFE_INTEGER) ||
+				one.title.localeCompare(other.title)
+		)
+		.slice(0, ALBUM_LIST_LIMIT)
+		.map((release) => ({
+			title: release.title,
+			artistName: release.artistName,
+			year: release.year,
+			format: release.format,
+		}));
+
+	return { uid: owner.uid, count: releases.length, albums };
+}
+
+/**
+ * The document the others may read, or null when there is nothing to share.
+ *
+ * This is where both consents are enforced. A profile that is not shared
+ * produces nothing at all — the page is the document, so withdrawing it is
+ * deleting it — and a wishlist that is not shared never leaves this
+ * function, so a later change of mind about what the page draws cannot
+ * expose it either. The place comes from the location consent and is never
+ * widened here: whatever that level already published is all this may carry.
+ */
+export function toPublicCollectorProfile(
+	source: CollectorProfileSource
+): PublicCollectorProfile | null {
+	const { settings, owner, releases, standings, wishes, location, now } =
+		source;
+
+	if (!settings.shared || !owner.uid) {
+		return null;
+	}
+
+	const profile: PublicCollectorProfile = {
+		uid: owner.uid,
+		numbers: toNumbers(releases),
+		points: toPoints(standings),
+		badges: toBadges(standings),
+		pursuits: toPursuits(standings, source.shownCollections),
+		showcase: toShowcase(releases, now),
+	};
+
+	if (owner.displayName) {
+		profile.displayName = owner.displayName;
+	}
+
+	if (owner.photoURL) {
+		profile.photoURL = owner.photoURL;
+	}
+
+	if (location?.countryCode) {
+		profile.countryCode = location.countryCode;
+	}
+
+	if (location?.city) {
+		profile.city = location.city;
+	}
+
+	if (settings.shareWishlist) {
+		profile.wishlist = toWishlist(wishes);
+	}
+
+	if (settings.shareRatings) {
+		profile.favourites = toFavourites(source.ratings);
+	}
+
+	return profile;
+}
+
+/**
+ * A short fingerprint of what would be published.
+ *
+ * The snapshot is rebuilt whenever the shelf changes, and most of those
+ * changes leave the page identical — a copy graded, a shelf place moved, a
+ * record filed that did not make the window. Writing anyway would cost a
+ * write per keystroke somewhere else in the app, so the fingerprint is what
+ * decides, and the document is only written when the page would actually
+ * read differently.
+ *
+ * The hash is FNV-1a over the JSON, with the length appended: the order of
+ * the fields comes from how this module builds them, so it is stable, and two
+ * different pages would have to agree on both the hash and the length to be
+ * mistaken for one another.
+ */
+export function collectorProfileFingerprint(
+	profile: PublicCollectorProfile | PublicCollectorCard
+): string {
+	const json = JSON.stringify(profile);
+	let hash = 2166136261;
+
+	for (let index = 0; index < json.length; index += 1) {
+		hash ^= json.charCodeAt(index);
+		hash = Math.imul(hash, 16777619);
+	}
+
+	return `${(hash >>> 0).toString(36)}:${json.length}`;
+}

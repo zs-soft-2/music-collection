@@ -27,6 +27,15 @@ variable "environment_variables" {
   default = {}
 }
 
+# A `reviewers.users` mező a GitHub API-t követi: NUMERIKUS azonosítót vár, nem
+# felhasználónevet. A tfvars-ban viszont a név az olvasható érték (`["zsagia"]`),
+# ezért itt kérdezzük meg hozzá az azonosítót. Egy elgépelt név így a tervnél
+# derül ki, nem az apply közben.
+data "github_user" "reviewers" {
+  for_each = toset(var.reviewer_users)
+  username = each.value
+}
+
 resource "github_repository_environment" "this" {
   repository  = var.repository
   environment = var.environment
@@ -35,7 +44,7 @@ resource "github_repository_environment" "this" {
   dynamic "reviewers" {
     for_each = (length(var.reviewer_users) > 0 || length(var.reviewer_team_ids) > 0) ? [1] : []
     content {
-      users = var.reviewer_users
+      users = [for user in data.github_user.reviewers : tonumber(user.id)]
       teams = var.reviewer_team_ids
     }
   }

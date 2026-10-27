@@ -28,6 +28,7 @@ export class MusicianRepository {
 			.list$<MusicianEntity>({
 				featureKey: MUSICIAN_FEATURE_KEY,
 				cacheKey: `${MUSICIAN_FEATURE_KEY}?uid=${musicianUid}`,
+				narrow: true,
 				query: query(
 					collection(this.firestore, MUSICIAN_FEATURE_KEY),
 					where(documentId(), '==', musicianUid)
@@ -43,6 +44,7 @@ export class MusicianRepository {
 		return this.firestoreSync.list$<ContributionEntity>({
 			featureKey: CONTRIBUTION_FEATURE_KEY,
 			cacheKey: `${CONTRIBUTION_FEATURE_KEY}?musicianUid=${musicianUid}`,
+			narrow: true,
 			query: query(
 				collection(this.firestore, CONTRIBUTION_FEATURE_KEY),
 				where('musicianUid', '==', musicianUid)

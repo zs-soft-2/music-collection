@@ -43,11 +43,11 @@ export class UserProfileComponent extends BaseComponent implements OnInit {
 		this.userMenuItems = [
 			{
 				icon: 'pi pi-cog',
-				label: 'Admin',
+				labelKey: 'nav.admin',
 				routerLink: 'admin',
 			},
 			{
-				label: 'Log out',
+				labelKey: 'nav.logOut',
 				icon: 'pi pi-sign-out',
 				command: () => {
 					this.logout.emit(true);

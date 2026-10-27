@@ -2,11 +2,11 @@ import { Observable } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
 import {
-	AlbumEntity,
+	type AlbumEntity,
 	AlbumEntityUpdate,
-	ArtistEntity,
-	DocumentEntity,
-	DocumentFile,
+	type ArtistEntity,
+	type DocumentEntity,
+	type DocumentFile,
 	ExportImportStateService,
 } from '@music-collection/api';
 import { select, Store } from '@ngrx/store';

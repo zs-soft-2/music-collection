@@ -10,8 +10,14 @@ import * as wishlistItemActions from './wishlist-item.actions';
 export interface State extends EntityState<WishlistItemEntity> {
 	isNewEntityButtonEnabled: boolean;
 	selectedId?: string;
+	/** An album is being added to the wishlist. */
+	adding: boolean;
 	loading: boolean;
+	/** The list has arrived once, an empty wishlist included. */
+	loaded: boolean;
 	searchResult: WishlistItemEntity[];
+	/** An item is being changed (e.g. marked found) or removed. */
+	updating: boolean;
 	error?: string | null;
 }
 
@@ -31,16 +37,63 @@ export const wishlistItemAdapter: EntityAdapter<WishlistItemEntity> =
 
 export const initialState: State = wishlistItemAdapter.getInitialState({
 	isNewEntityButtonEnabled: true,
+	adding: false,
 	loading: false,
+	loaded: false,
+	updating: false,
 	error: null,
 	searchResult: [],
 });
 
 export const wishlistItemReducer = createReducer(
 	initialState,
+	on(wishlistItemActions.addWishlistItem, (state) => ({
+		...state,
+		adding: true,
+		error: null,
+	})),
 	on(wishlistItemActions.addWishlistItemSuccess, (state, { wishlistItem }) =>
-		wishlistItemAdapter.addOne(wishlistItem as WishlistItemEntity, state)
+		wishlistItemAdapter.addOne(wishlistItem as WishlistItemEntity, {
+			...state,
+			adding: false,
+		})
 	),
+	on(wishlistItemActions.addWishlistItemFail, (state, { error }) => ({
+		...state,
+		adding: false,
+		error: error?.message ?? String(error),
+	})),
+	on(
+		wishlistItemActions.updateWishlistItem,
+		wishlistItemActions.deleteWishlistItem,
+		(state) => ({
+			...state,
+			updating: true,
+			error: null,
+		})
+	),
+	on(
+		wishlistItemActions.updateWishlistItemFail,
+		wishlistItemActions.deleteWishlistItemFail,
+		(state, { error }) => ({
+			...state,
+			updating: false,
+			error: error?.message ?? String(error),
+		})
+	),
+	on(
+		wishlistItemActions.listWishlistItems,
+		wishlistItemActions.listOwnWishlistItems,
+		(state) => ({
+			...state,
+			loading: true,
+		})
+	),
+	on(wishlistItemActions.listWishlistItemsFail, (state, { error }) => ({
+		...state,
+		loading: false,
+		error: error?.message ?? String(error),
+	})),
 	on(
 		wishlistItemActions.changeNewEntityButtonEnabled,
 		(state, { enabled }) => ({
@@ -57,19 +110,25 @@ export const wishlistItemReducer = createReducer(
 	on(
 		wishlistItemActions.updateWishlistItemSuccess,
 		(state, { wishlistItem }) =>
-			wishlistItemAdapter.updateOne(wishlistItem, state)
+			wishlistItemAdapter.updateOne(wishlistItem, {
+				...state,
+				updating: false,
+			})
 	),
 	on(
 		wishlistItemActions.deleteWishlistItemSuccess,
 		(state, { wishlistItemId }) =>
-			wishlistItemAdapter.removeOne(wishlistItemId, state)
+			wishlistItemAdapter.removeOne(wishlistItemId, {
+				...state,
+				updating: false,
+			})
 	),
 	on(
 		wishlistItemActions.listWishlistItemsSuccess,
 		(state, { wishlistItems }) =>
 			wishlistItemAdapter.upsertMany(
 				wishlistItems as WishlistItemEntity[],
-				state
+				{ ...state, loading: false, loaded: true }
 			)
 	),
 	on(wishlistItemActions.loadWishlistItemSuccess, (state, { wishlistItem }) =>

@@ -2,9 +2,9 @@ import { EventEmitter, Injectable } from '@angular/core';
 import {
 	BaseComponent,
 	CollectionGroupByEnum,
-	CollectionItemEntity,
-	CollectionItemListConfig,
-	CollectionItemMap,
+	type CollectionItemEntity,
+	type CollectionItemListConfig,
+	type CollectionItemMap,
 	CollectionItemStateService,
 	CollectionItemUtilService,
 	MediaEnum,

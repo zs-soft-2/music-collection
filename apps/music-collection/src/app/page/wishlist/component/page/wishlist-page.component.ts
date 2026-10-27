@@ -1,6 +1,7 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
 	FormatBadgeComponent,
@@ -16,6 +17,7 @@ import { WishlistPageStore } from '../../wishlist-page.store';
 	templateUrl: './wishlist-page.component.html',
 	styleUrls: ['./wishlist-page.component.scss'],
 	imports: [
+		...I18N_IMPORTS,
 		NgTemplateOutlet,
 		RouterLink,
 		ReleaseCardComponent,

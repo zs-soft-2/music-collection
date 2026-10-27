@@ -1,6 +1,8 @@
 import {
 	Observable,
+	asyncScheduler,
 	catchError,
+	combineLatest,
 	concat,
 	concatMap,
 	defer,
@@ -9,6 +11,7 @@ import {
 	map,
 	of,
 	shareReplay,
+	throttleTime,
 } from 'rxjs';
 
 import {
@@ -19,6 +22,7 @@ import {
 } from '@angular/core';
 import {
 	DocumentData,
+	DocumentSnapshot,
 	DocumentReference,
 	Firestore,
 	Query,
@@ -28,6 +32,8 @@ import {
 	UpdateData,
 	WriteBatch,
 	collection,
+	clearIndexedDbPersistence,
+	collectionGroup,
 	doc,
 	getDocFromServer,
 	getDocsFromCache,
@@ -37,10 +43,24 @@ import {
 	onSnapshot,
 	query,
 	serverTimestamp,
+	terminate,
 	where,
 	writeBatch,
 } from '@angular/fire/firestore';
 import { Storage, getBlob, ref } from '@angular/fire/storage';
+
+import {
+	CatalogScope,
+	CatalogScopeService,
+	GUEST_SCOPE_KEY,
+	catalogScopeKey,
+	isGenreScoped,
+} from './catalog-scope.service';
+
+/** The features the first screen is drawn from; their bundles go first. */
+const FIRST_SCREEN_FEATURES: readonly string[] = ['artist', 'album'];
+/** How long the other bundles wait for the first screen's, at most. */
+const FIRST_SCREEN_WAIT_MS = 8000;
 
 /** Collection of the sync bookkeeping documents. */
 export const SYNC_COLLECTION = 'sync';
@@ -54,6 +74,66 @@ export const DELETION_COLLECTION = 'deletion';
 /** Server time of a document's last write, set on every write. */
 export const UPDATED_AT_FIELD = 'updatedAt';
 
+/**
+ * How many documents one batch writes, the feature stamp left room for.
+ * Firestore takes 500 operations in a batch; a deletion is two of them,
+ * because it writes a tombstone as well.
+ */
+const BATCH_WRITE_LIMIT = 499;
+const BATCH_DELETE_LIMIT = 249;
+
+/**
+ * How long a run of catalog stamps is gathered into one round of syncing.
+ *
+ * Every write bumps `modifiedAt` and every client watches that one document,
+ * so a stamp is an order to every open client to ask the feature again. A
+ * bulk edit sends one per batch, and a signed-in client can send them by
+ * hand — the rules hold the stamp to the server clock and to one feature a
+ * write, but they cannot tell a made-up stamp from a real write's. Unchecked,
+ * each one is a round of queries at every client.
+ *
+ * The first stamp goes straight through, so a collector's own write shows at
+ * once and a quiet catalog is as prompt as it ever was; only the ones treading
+ * on its heels wait for the window to close, and then one round answers all of
+ * them. The state is a whole document, not a list of events, so the last one
+ * carries everything the dropped ones said.
+ */
+const CATALOG_BUMP_WINDOW = 2000;
+
+/** One document written, as `setAll` takes it. */
+interface SyncWrite {
+	reference: DocumentReference;
+	data: DocumentData;
+}
+
+/**
+ * The work split into batches Firestore will take. Never empty: a call with
+ * nothing to write still bumps the feature's stamp, the way it did when this
+ * was one batch.
+ */
+export function toSyncBatches(
+	writes: SyncWrite[],
+	deletions: DocumentReference[]
+): { writes: SyncWrite[]; deletions: DocumentReference[] }[] {
+	const rounds: { writes: SyncWrite[]; deletions: DocumentReference[] }[] =
+		[];
+
+	for (let at = 0; at < writes.length; at += BATCH_WRITE_LIMIT) {
+		rounds.push({
+			writes: writes.slice(at, at + BATCH_WRITE_LIMIT),
+			deletions: [],
+		});
+	}
+	for (let at = 0; at < deletions.length; at += BATCH_DELETE_LIMIT) {
+		rounds.push({
+			writes: [],
+			deletions: deletions.slice(at, at + BATCH_DELETE_LIMIT),
+		});
+	}
+
+	return rounds.length ? rounds : [{ writes: [], deletions: [] }];
+}
+
 type TimestampMap = Record<string, Timestamp | undefined>;
 
 /**
@@ -64,18 +144,62 @@ interface CatalogBundle {
 	path: string;
 	modifiedAt: Timestamp;
 	count: number;
+	/**
+	 * The same snapshot in parts, by feature, where it was built so: the
+	 * artists and albums a page is drawn from, then the rest one feature to
+	 * a file. A reader fetches the parts that carry what it asks for.
+	 */
+	parts?: CatalogBundle[];
+	/**
+	 * Per feature how many of its documents the file holds, where the file
+	 * says. A feature it has none of is not worth downloading the file for;
+	 * a feature it does not name at all, the showcase did not bring.
+	 */
+	features?: Record<string, number>;
 }
 
 interface CatalogSync {
 	modifiedAt?: TimestampMap;
 	resetAt?: TimestampMap;
 	bundles?: Record<string, CatalogBundle | undefined>;
+	/**
+	 * Per genre slug the bundle of that genre's slice of the catalog: its
+	 * bands, their albums and the musicians on them, with the tracks,
+	 * line-ups and credits that hang off those. One file per genre rather
+	 * than one per genre and feature, so a collector who follows two genres
+	 * downloads two files however many collections they are spread over.
+	 */
+	genreBundles?: Record<string, CatalogBundle | undefined>;
+	/**
+	 * The showcase for a reader following no genre: a few collections of
+	 * every genre, with their albums and the artists of those, closed over
+	 * what their pages reach — tracks, credits, line-ups, musicians. Built
+	 * every week by `composeGuestBundle` (apps/functions).
+	 */
+	guestBundle?: GuestBundle;
 }
+
+/**
+ * The showcase, whole and in parts. The parts are the same snapshot split
+ * by feature: the artists and albums the home page is drawn from, and the
+ * tracks, credits, line-ups and musicians behind them — nine documents in
+ * ten, which a first visit has no use for until a page asks.
+ */
+type GuestBundle = CatalogBundle;
 
 interface FeatureVersion {
 	modifiedAt: Timestamp | null;
 	resetAt: Timestamp | null;
 	bundle: CatalogBundle | null;
+	/**
+	 * The bundles this query is to be served from — the genres followed, or
+	 * the showcase — empty where the catalog is whole. All of the scope's
+	 * genres or none of them: a scope half served is a catalog with a genre
+	 * silently missing from it.
+	 */
+	scope: CatalogBundle[];
+	/** The scope the bundles above belong to, for the cache bookkeeping. */
+	scopeKey: string;
 }
 
 /** What the local cache of a query holds, kept in localStorage. */
@@ -105,6 +229,33 @@ export interface SyncedQuery {
 	 * when their feature changes.
 	 */
 	incremental?: boolean;
+	/**
+	 * Whether this query may fill its cache from the feature's bundle.
+	 * Defaults to true, which is what a query over the whole feature wants:
+	 * one download instead of a document read apiece.
+	 *
+	 * A bundle holds the feature *whole* — it is built per feature key, not
+	 * per query — so a narrow filter over a large feature pays for everything
+	 * it did not ask for. `false` leaves the bundle alone and reads the few
+	 * documents the filter names. Worth it only where the filter is narrow
+	 * and the feature is large; a query that will end up wanting most of the
+	 * feature anyway is better served by the bundle.
+	 */
+	bundle?: boolean;
+	/**
+	 * The query names a small part of its feature — one album's tracks, one
+	 * band's line-up, one artist's records — rather than listing it.
+	 *
+	 * It matters where the catalog is narrowed, because there the bundles
+	 * decide what the cache holds, and what they did not bring would be an
+	 * empty page. So a narrow query that the genre bundles left empty asks
+	 * the server for its few documents. The showcase is closed over what its
+	 * pages reach, so there the bundle is the answer, empty or not; only a
+	 * showcase built before that asks the server, once for every new one. A query
+	 * that lists the whole feature must not set this: there the server would
+	 * hand over the whole catalog the scope exists to keep out.
+	 */
+	narrow?: boolean;
 }
 
 const compareTimestamps = (
@@ -116,6 +267,33 @@ const timestampKey = (timestamp: Timestamp | null) =>
 	timestamp ? `${timestamp.seconds}.${timestamp.nanoseconds}` : '';
 
 /**
+ * The data of a document with `updatedAt` as epoch milliseconds (undefined
+ * missing when never stamped), so models stay serializable and can be ordered by
+ * their last change. A pending server timestamp reads as its local estimate.
+ */
+export const toSyncedData = (snapshot: DocumentSnapshot): DocumentData => {
+	const { [UPDATED_AT_FIELD]: updatedAt, ...data } =
+		snapshot.data({ serverTimestamps: 'estimate' }) ?? {};
+
+	// Never undefined: embedded copies are written back, Firestore rejects it.
+	return updatedAt instanceof Timestamp
+		? { ...data, [UPDATED_AT_FIELD]: updatedAt.toMillis() }
+		: data;
+};
+
+/**
+ * The written data as the store should hold it: stamped with the local time
+ * in place of the server timestamp the write gets, so a just created or
+ * modified entity is ordered as the last changed without reloading it.
+ */
+export const withLocalUpdatedAt = <T extends object>(
+	data: T
+): T & { [UPDATED_AT_FIELD]: number } => ({
+	...data,
+	[UPDATED_AT_FIELD]: Date.now(),
+});
+
+/**
  * Client-side cache of the catalog on top of Firestore's persistent
  * (IndexedDB) cache.
  *
@@ -123,7 +301,8 @@ const timestampKey = (timestamp: Timestamp | null) =>
  * listening to the single `sync/catalog` document. When a feature's
  * `modifiedAt` is newer than what the cache holds, only the documents changed
  * since then are downloaded and deleted ones are evicted by their tombstones.
- * An unchanged catalog costs one document read per app start.
+ * An unchanged catalog costs one document read per app start, and a run of
+ * stamps one round of syncing rather than one apiece (CATALOG_BUMP_WINDOW).
  *
  * Bundles: when a feature is published as a bundle, a query without a
  * current cache loads the bundle from Cloud Storage (no document reads) and
@@ -137,8 +316,18 @@ export class FirestoreSyncService {
 	private readonly firestore = inject(Firestore);
 	private readonly injector = inject(EnvironmentInjector);
 	private readonly storage = inject(Storage);
-	/** Bundle loads in progress or done in this session, by path. */
+	private readonly scope = inject(CatalogScopeService);
+	/** Bundle loads in progress or done in this session, by bookkeeping id. */
 	private readonly bundleLoads = new Map<string, Promise<boolean>>();
+	/** Bundle files downloaded in this session, by storage path. */
+	private readonly bundleFiles = new Map<string, Promise<boolean>>();
+	/** The later bundles' downloads, one after the other. */
+	private laterBundles: Promise<unknown> = Promise.resolve();
+	/** Settles once the first screen's features have had their bundle load. */
+	private firstScreenLoaded!: () => void;
+	private readonly firstScreen = new Promise<void>((resolve) => {
+		this.firstScreenLoaded = resolve;
+	});
 
 	private readonly catalog$: Observable<CatalogSync | null> =
 		new Observable<CatalogSync | null>((subscriber) =>
@@ -167,7 +356,13 @@ export class FirestoreSyncService {
 					}
 				)
 			)
-		).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+		).pipe(
+			throttleTime(CATALOG_BUMP_WINDOW, asyncScheduler, {
+				leading: true,
+				trailing: true,
+			}),
+			shareReplay({ bufferSize: 1, refCount: true })
+		);
 
 	/**
 	 * The documents of a query: the local cache at once (when it is known to
@@ -190,6 +385,26 @@ export class FirestoreSyncService {
 			),
 			map((docs) => docs.map((snapshot) => this.toModel<T>(snapshot)))
 		);
+	}
+
+	/**
+	 * Throws away everything this browser holds of the catalog, and the
+	 * bookkeeping that says what it holds.
+	 *
+	 * Narrowing the catalog has to take away what has fallen out of scope,
+	 * not merely stop adding to it: the documents of a genre the collector
+	 * dropped sit in Firestore's own cache, and a cached query would go on
+	 * answering with them — the collector would have chosen jazz and still
+	 * be shown the metal they were sent home with. Firestore has no "evict
+	 * this feature" call, so the cache goes whole, which it only allows on
+	 * a terminated instance. That leaves this Firestore unusable, so the
+	 * caller reloads the page afterwards.
+	 */
+	public async resetLocalCatalog(): Promise<void> {
+		this.clearMarkers();
+
+		await this.run(() => terminate(this.firestore));
+		await this.run(() => clearIndexedDbPersistence(this.firestore));
 	}
 
 	/** Creates or overwrites a document. */
@@ -217,23 +432,50 @@ export class FirestoreSyncService {
 		});
 	}
 
+	/**
+	 * Sets (merges) and deletes documents of one feature; deletions leave
+	 * tombstones like `delete`.
+	 *
+	 * One batch where it fits, and Firestore allows 500 writes in one — a
+	 * deletion costs two of them (the document and its tombstone), and the
+	 * feature's own stamp one more. Beyond that the writes go in batches,
+	 * one after the other: half a shelf written is better than a shelf that
+	 * could not be written at all, and the caller learns of a failure the
+	 * same way either path.
+	 */
+	public setAll(
+		featureKey: string,
+		writes: { reference: DocumentReference; data: DocumentData }[],
+		deletions: DocumentReference[] = []
+	): Promise<void> {
+		const rounds = toSyncBatches(writes, deletions);
+
+		return rounds.reduce(
+			(done, round) =>
+				done.then(() =>
+					this.commit((batch) => {
+						round.writes.forEach(({ reference, data }) =>
+							batch.set(reference, this.stamp(data), {
+								merge: true,
+							})
+						);
+						round.deletions.forEach((reference) =>
+							this.remove(batch, reference, featureKey)
+						);
+						this.touch(batch, featureKey);
+					})
+				),
+			Promise.resolve()
+		);
+	}
+
 	/** Deletes a document and leaves a tombstone for the other clients. */
 	public delete(
 		reference: DocumentReference,
 		featureKey: string
 	): Promise<void> {
 		return this.commit((batch) => {
-			batch.delete(reference);
-			batch.set(
-				doc(
-					this.firestore,
-					SYNC_COLLECTION,
-					featureKey,
-					DELETION_COLLECTION,
-					reference.path.split('/').join('~')
-				),
-				{ path: reference.path, deletedAt: serverTimestamp() }
-			);
+			this.remove(batch, reference, featureKey);
 			this.touch(batch, featureKey);
 		});
 	}
@@ -247,10 +489,36 @@ export class FirestoreSyncService {
 		});
 	}
 
+	private remove(
+		batch: WriteBatch,
+		reference: DocumentReference,
+		featureKey: string
+	): void {
+		batch.delete(reference);
+		batch.set(
+			doc(
+				this.firestore,
+				SYNC_COLLECTION,
+				featureKey,
+				DELETION_COLLECTION,
+				reference.path.split('/').join('~')
+			),
+			{ path: reference.path, deletedAt: serverTimestamp() }
+		);
+	}
+
 	private stamp<T extends object>(data: T): T {
 		return { ...data, [UPDATED_AT_FIELD]: serverTimestamp() };
 	}
 
+	/**
+	 * Stamps the feature: the order the other clients sync by.
+	 *
+	 * One key a write and the server's own clock, because that is all the
+	 * rules let a client send (firestore.rules, `sync/catalog`) — a stamp the
+	 * client dated itself would sit in every client's marker and hide the
+	 * changes that came after it.
+	 */
 	private touch(batch: WriteBatch, featureKey: string): void {
 		batch.set(
 			this.catalogReference(),
@@ -263,16 +531,29 @@ export class FirestoreSyncService {
 		return doc(this.firestore, SYNC_COLLECTION, CATALOG_SYNC_DOCUMENT);
 	}
 
-	/** The feature's version; null when the sync state cannot be read. */
+	/**
+	 * The feature's version; null when the sync state cannot be read.
+	 *
+	 * It follows the scope as well as the catalog, because narrowing the
+	 * catalog invalidates every list the same way a catalog change does —
+	 * what a query is allowed to hold has changed, and it has to be asked
+	 * again rather than left on what it last read.
+	 */
 	private version$(featureKey: string): Observable<FeatureVersion | null> {
-		return this.catalog$.pipe(
-			map((catalog) =>
+		return combineLatest([this.catalog$, this.scope.scope$]).pipe(
+			map(([catalog, scope]) =>
 				catalog
 					? {
 							modifiedAt:
 								catalog.modifiedAt?.[featureKey] ?? null,
 							resetAt: catalog.resetAt?.[featureKey] ?? null,
 							bundle: catalog.bundles?.[featureKey] ?? null,
+							scope: this.scopeBundles(
+								catalog,
+								featureKey,
+								scope
+							),
+							scopeKey: catalogScopeKey(scope),
 						}
 					: null
 			),
@@ -284,9 +565,68 @@ export class FirestoreSyncService {
 						timestampKey(current.modifiedAt) &&
 					timestampKey(previous.resetAt) ===
 						timestampKey(current.resetAt) &&
-					previous.bundle?.path === current.bundle?.path
+					previous.bundle?.path === current.bundle?.path &&
+					this.bundleId(previous.scope, previous.scopeKey) ===
+						this.bundleId(current.scope, current.scopeKey)
 			)
 		);
+	}
+
+	/**
+	 * The bundles serving this feature: the genres followed, or the
+	 * showcase, or none.
+	 *
+	 * None for an administrator following no genre, where the feature does
+	 * not arrive in a scoped bundle (a label belongs to no one genre), and —
+	 * deliberately — where any one genre of the scope has no bundle
+	 * published yet. Serving the genres that do have one would leave the
+	 * other missing from every list without saying so; falling back to the
+	 * whole feature is slower, but it is the catalog the collector asked
+	 * for. A showcase not yet published falls back the same way.
+	 */
+	private scopeBundles(
+		catalog: CatalogSync,
+		featureKey: string,
+		scope: CatalogScope
+	): CatalogBundle[] {
+		if (!isGenreScoped(featureKey)) {
+			return [];
+		}
+
+		if (!scope.genres.length) {
+			return scope.guest && catalog.guestBundle
+				? this.partsFor(catalog.guestBundle, featureKey)
+				: [];
+		}
+
+		const bundles = scope.genres.map(
+			(slug) => catalog.genreBundles?.[slug]
+		);
+
+		return bundles.every((bundle): bundle is CatalogBundle => !!bundle)
+			? bundles.flatMap((bundle) => this.partsFor(bundle, featureKey))
+			: [];
+	}
+
+	/**
+	 * The files of a showcase or a genre serving a feature: the part that
+	 * carries it, so the home page waits on the artists and albums alone. A
+	 * feature no part names is handed all of them, which say so and are not
+	 * downloaded for it; a bundle built before the split is the one file it
+	 * always was.
+	 */
+	private partsFor(guest: GuestBundle, featureKey: string): CatalogBundle[] {
+		const parts = guest.parts ?? [];
+
+		if (!parts.length) {
+			return [guest];
+		}
+
+		const carrying = parts.filter(
+			(part) => !!part.features && featureKey in part.features
+		);
+
+		return carrying.length ? carrying : parts;
 	}
 
 	/**
@@ -299,6 +639,37 @@ export class FirestoreSyncService {
 	): Observable<QueryDocumentSnapshot[] | null> {
 		return defer(async () => {
 			const modifiedAt = version?.modifiedAt ?? null;
+
+			// A narrowed catalog is served from its genre bundles and from
+			// nothing else. Downloading the whole feature is the very thing
+			// the scope exists to prevent, so it is not a fallback here: a
+			// bundle that cannot be loaded leaves the paths below to it, and
+			// those only run while the catalog is not narrowed.
+			if (version?.scope.length) {
+				const newest = this.newestOf(version.scope);
+				const guest = version.scopeKey === GUEST_SCOPE_KEY;
+				// A showcase that carries the feature is closed over it: what
+				// is reachable from it is in it — so a whole list is never
+				// asked of the server. A narrow query it leaves empty is: the
+				// record may exist past the showcase, and is looked up.
+				const closed =
+					guest && this.carries(version.scope, synced.featureKey);
+
+				if (synced.narrow && guest && !closed) {
+					return this.refreshNarrow(synced, newest);
+				}
+
+				const scoped = await this.refreshFromScope(synced, version);
+
+				if (scoped) {
+					// What the genres did not bring — a record of another
+					// genre's tracks, a guest musician's other credits — is
+					// asked for by name rather than left an empty page.
+					return scoped.length || !synced.narrow
+						? scoped
+						: this.downloadAll(synced, newest);
+				}
+			}
 
 			// Unversioned feature: the cache cannot be trusted.
 			if (!modifiedAt) {
@@ -344,6 +715,76 @@ export class FirestoreSyncService {
 				return of(null);
 			})
 		);
+	}
+
+	/**
+	 * The query served from the scope's genre bundles: load them once, then
+	 * read the cache they filled.
+	 *
+	 * Nothing is asked of the server beyond the tombstones — no document
+	 * reads, and none of the catch-up the unnarrowed paths do — except by a
+	 * narrow query the bundles left empty (`SyncedQuery.narrow`). A catalog
+	 * this client holds only part of cannot ask "what changed since?"
+	 * without being handed the genres it does not want, so a narrowed
+	 * catalog moves forward when a new bundle is published and not before.
+	 * That is also how fresh it needs to be: the catalog changes on import,
+	 * which is exactly when the bundles are built.
+	 *
+	 * Null when the bundles could not be loaded, leaving the caller on the
+	 * unnarrowed path.
+	 */
+	private async refreshFromScope(
+		synced: SyncedQuery,
+		version: FeatureVersion
+	): Promise<QueryDocumentSnapshot[] | null> {
+		const id = this.bundleId(version.scope, version.scopeKey);
+
+		if (!(await this.loadBundles(synced.featureKey, version.scope, id))) {
+			return null;
+		}
+
+		const cached = await this.run(() => getDocsFromCache(synced.query));
+
+		this.writeMarker(synced, this.newestOf(version.scope), cached.size);
+		return cached.docs;
+	}
+
+	/**
+	 * Whether every bundle of the set says it carries the feature — a count,
+	 * even a zero one. A showcase built before it was closed names only
+	 * artists and albums, and its tracks are still asked of the server.
+	 */
+	private carries(bundles: CatalogBundle[], featureKey: string): boolean {
+		return bundles.every(
+			(bundle) => !!bundle.features && featureKey in bundle.features
+		);
+	}
+
+	/**
+	 * A narrow query under a showcase not yet closed over the feature: its
+	 * few documents from the server,
+	 * once for every showcase published, and from the cache in between.
+	 *
+	 * Not served from the bundle even where the bundle holds some of it: the
+	 * showcase carries an artist's records only as far as its collections
+	 * reach, and an artist page drawn from that would be a discography with
+	 * holes in it, looking whole.
+	 */
+	private async refreshNarrow(
+		synced: SyncedQuery,
+		showcaseAt: Timestamp
+	): Promise<QueryDocumentSnapshot[]> {
+		const marker = this.readMarker(synced);
+
+		if (marker && compareTimestamps(showcaseAt, marker) <= 0) {
+			const cached = await this.readIntactCache(synced);
+
+			if (cached) {
+				return cached;
+			}
+		}
+
+		return this.downloadAll(synced, showcaseAt);
 	}
 
 	private async downloadAll(
@@ -420,10 +861,11 @@ export class FirestoreSyncService {
 
 		// A bundle built before a reset misses edits made without `updatedAt`.
 		if (
+			synced.bundle === false ||
 			!bundle ||
 			!behind ||
 			(resetAt && compareTimestamps(resetAt, bundle.modifiedAt) > 0) ||
-			!(await this.loadFeatureBundle(synced.featureKey, bundle))
+			!(await this.loadBundles(synced.featureKey, [bundle], bundle.path))
 		) {
 			return marker;
 		}
@@ -438,70 +880,196 @@ export class FirestoreSyncService {
 		};
 	}
 
-	/** Loads the bundle once per session; false when it cannot be used. */
-	private loadFeatureBundle(
+	/**
+	 * Fills a feature's cache from bundles, once per session: its own single
+	 * bundle, or the genre bundles of a narrowed scope. False when they
+	 * cannot be used.
+	 *
+	 * `id` is what the feature's bookkeeping records as loaded — a path for
+	 * a lone bundle, the scope and its version for several — so that a
+	 * collector who changes which genres they follow is not left on a cache
+	 * filled for the previous ones.
+	 */
+	private loadBundles(
 		featureKey: string,
-		bundle: CatalogBundle
+		bundles: CatalogBundle[],
+		id: string
 	): Promise<boolean> {
-		let loading = this.bundleLoads.get(bundle.path);
+		const key = `${featureKey}@${id}`;
+		let loading = this.bundleLoads.get(key);
 
 		if (!loading) {
-			loading = this.loadBundleIntoCache(featureKey, bundle).catch(
-				(error) => {
+			loading = this.loadBundlesIntoCache(featureKey, bundles, id)
+				.catch((error) => {
 					console.warn(
-						`Bundle "${bundle.path}" unavailable, downloading documents`,
+						`Bundle "${id}" unavailable, downloading documents`,
 						error
 					);
-					this.bundleLoads.delete(bundle.path);
+					this.bundleLoads.delete(key);
 					return false;
-				}
-			);
-			this.bundleLoads.set(bundle.path, loading);
+				})
+				.finally(() => {
+					if (FIRST_SCREEN_FEATURES.includes(featureKey)) {
+						this.firstScreenLoaded();
+					}
+				});
+			this.bundleLoads.set(key, loading);
 		}
 		return loading;
 	}
 
-	private async loadBundleIntoCache(
+	private async loadBundlesIntoCache(
 		featureKey: string,
-		bundle: CatalogBundle
+		bundles: CatalogBundle[],
+		id: string
 	): Promise<boolean> {
 		const loaded = this.readJson<LoadedBundle>(
 			this.bundleStorageKey(featureKey)
 		);
 
+		// Files that say what they carry and carry none of this feature: the
+		// showcase holds no tracks, and downloading it again on every start
+		// for the tracks it does not have would be the whole cost for nothing.
 		if (
-			loaded?.path === bundle.path &&
-			(await this.hasCached(featureKey))
+			bundles.every((bundle) => bundle.features) &&
+			bundles.every((bundle) => !bundle.features?.[featureKey])
 		) {
 			return true;
 		}
 
-		const blob = await this.run(() =>
-			getBlob(ref(this.storage, bundle.path))
-		);
-		const data = await blob.arrayBuffer();
+		if (loaded?.path === id && (await this.hasCached(featureKey))) {
+			return true;
+		}
 
-		await this.run(() => loadBundle(this.firestore, data));
+		// Asked before the files land, which would answer it for them.
+		const warm = !!loaded || (await this.hasCached(featureKey));
+
+		// The first screen is drawn from the artists and albums, so the rest
+		// of the catalog does not compete with them for the line and for the
+		// cache's write queue: it starts when they are in. Should nothing ever
+		// ask for them, the wait is capped rather than left hanging.
+		if (!FIRST_SCREEN_FEATURES.includes(featureKey)) {
+			await Promise.race([
+				this.firstScreen,
+				new Promise<void>((resolve) =>
+					setTimeout(resolve, FIRST_SCREEN_WAIT_MS)
+				),
+			]);
+		}
+
+		const fetch = () =>
+			Promise.all(bundles.map((bundle) => this.fetchBundle(bundle.path)));
+
+		// One at a time after the first screen: a phone is handed a file,
+		// writes it into the cache, and only then is handed the next.
+		const fetched = FIRST_SCREEN_FEATURES.includes(featureKey)
+			? await fetch()
+			: await this.inTurn(fetch);
+
+		// All of them or none: half a scope is a genre missing from every
+		// list, and the cache would be marked as holding it.
+		if (!fetched.every(Boolean)) {
+			return false;
+		}
+
 		// Loading never removes documents: evict the ones deleted since the
-		// previous bundle, or since ever when there was none.
+		// previous bundle, or since ever when the cache holds documents of
+		// unknown age. An empty cache has only the files' own to lose — those
+		// deleted after the oldest of them was cut — so a first visit does
+		// not read every deletion there ever was.
 		await this.evictDeleted(
 			featureKey,
-			loaded ? new Timestamp(loaded.seconds, loaded.nanoseconds) : null
+			loaded
+				? new Timestamp(loaded.seconds, loaded.nanoseconds)
+				: warm
+					? null
+					: this.oldestOf(bundles)
 		);
 
+		const newest = this.newestOf(bundles);
+
 		this.writeJson(this.bundleStorageKey(featureKey), {
-			path: bundle.path,
-			seconds: bundle.modifiedAt.seconds,
-			nanoseconds: bundle.modifiedAt.nanoseconds,
+			path: id,
+			seconds: newest.seconds,
+			nanoseconds: newest.nanoseconds,
 		} satisfies LoadedBundle);
 		return true;
 	}
 
+	/** Runs the download after the later ones already queued. */
+	private inTurn<T>(download: () => Promise<T>): Promise<T> {
+		const turn = this.laterBundles.then(download);
+
+		this.laterBundles = turn.catch(() => undefined);
+		return turn;
+	}
+
+	/**
+	 * Downloads one bundle file into the local cache, once per session
+	 * however many features are served from it — a genre bundle carries six
+	 * of them, and downloading it once per feature would cost six times the
+	 * bytes for the very same documents.
+	 */
+	private fetchBundle(path: string): Promise<boolean> {
+		let loading = this.bundleFiles.get(path);
+
+		if (!loading) {
+			loading = this.run(() => getBlob(ref(this.storage, path)))
+				.then((blob) => blob.arrayBuffer())
+				.then((data) =>
+					this.run(() => loadBundle(this.firestore, data))
+				)
+				.then(() => true)
+				.catch((error) => {
+					console.warn(`Bundle file "${path}" unavailable`, error);
+					this.bundleFiles.delete(path);
+					return false;
+				});
+			this.bundleFiles.set(path, loading);
+		}
+		return loading;
+	}
+
+	/** The version of the newest bundle of a set. */
+	private newestOf(bundles: CatalogBundle[]): Timestamp {
+		return bundles.reduce(
+			(newest, bundle) =>
+				compareTimestamps(bundle.modifiedAt, newest) > 0
+					? bundle.modifiedAt
+					: newest,
+			bundles[0].modifiedAt
+		);
+	}
+
+	/** The version of the oldest bundle of a set. */
+	private oldestOf(bundles: CatalogBundle[]): Timestamp {
+		return bundles.reduce(
+			(oldest, bundle) =>
+				compareTimestamps(bundle.modifiedAt, oldest) < 0
+					? bundle.modifiedAt
+					: oldest,
+			bundles[0].modifiedAt
+		);
+	}
+
+	/** What a set of bundles is recorded as, in the cache bookkeeping. */
+	private bundleId(bundles: CatalogBundle[], scopeKey: string): string {
+		if (!bundles.length) {
+			return '';
+		}
+
+		const newest = this.newestOf(bundles);
+
+		return `genre:${scopeKey}@${newest.seconds}.${newest.nanoseconds}`;
+	}
+
 	/** Whether the cache holds any document of the feature. */
 	private async hasCached(featureKey: string): Promise<boolean> {
+		// A collection group: a nested feature (`artist/{uid}/album`) has no
+		// document directly under its own name, and would always read empty.
 		const cached = await this.run(() =>
 			getDocsFromCache(
-				query(collection(this.firestore, featureKey), limit(1))
+				query(collectionGroup(this.firestore, featureKey), limit(1))
 			)
 		).catch(() => null);
 
@@ -582,10 +1150,7 @@ export class FirestoreSyncService {
 	}
 
 	private toModel<T>(snapshot: QueryDocumentSnapshot): T {
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const { [UPDATED_AT_FIELD]: updatedAt, ...data } = snapshot.data();
-
-		return { ...data, uid: snapshot.id } as T;
+		return { ...toSyncedData(snapshot), uid: snapshot.id } as T;
 	}
 
 	private signature(docs: QueryDocumentSnapshot[]): string {
@@ -604,11 +1169,26 @@ export class FirestoreSyncService {
 	}
 
 	private storageKey(synced: SyncedQuery): string {
-		return `mc.sync.${this.firestore.app.options.projectId}.${this.cacheKey(synced)}`;
+		return `${this.keyPrefix()}${this.cacheKey(synced)}${this.scopeSuffix(synced.featureKey)}`;
 	}
 
 	private bundleStorageKey(featureKey: string): string {
-		return `mc.sync.${this.firestore.app.options.projectId}.bundle:${featureKey}`;
+		return `${this.keyPrefix()}bundle:${featureKey}${this.scopeSuffix(featureKey)}`;
+	}
+
+	private keyPrefix(): string {
+		return `mc.sync.${this.firestore.app.options.projectId}.`;
+	}
+
+	/**
+	 * What tells one scope's bookkeeping from another's. Empty for the
+	 * whole catalog, so an administrator's client goes on reading the keys
+	 * it has always written.
+	 */
+	private scopeSuffix(featureKey: string): string {
+		const scope = isGenreScoped(featureKey) ? this.scope.key() : '';
+
+		return scope ? `#${scope}` : '';
 	}
 
 	private readMarker(synced: SyncedQuery): SyncMarker | null {
@@ -642,6 +1222,19 @@ export class FirestoreSyncService {
 			localStorage.setItem(key, JSON.stringify(value));
 		} catch {
 			// Storage unavailable — the next start downloads again.
+		}
+	}
+
+	/** Every sync marker of this project, whatever scope wrote it. */
+	private clearMarkers(): void {
+		try {
+			const prefix = this.keyPrefix();
+
+			Object.keys(localStorage)
+				.filter((key) => key.startsWith(prefix))
+				.forEach((key) => localStorage.removeItem(key));
+		} catch {
+			// Storage unavailable — there is nothing kept to remove.
 		}
 	}
 

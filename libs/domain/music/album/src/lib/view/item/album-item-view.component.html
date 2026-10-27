@@ -2,10 +2,10 @@
 	<div class="album-item-content">
 		<div class="cover">
 			<p-image
-				[src]="album.coverImage?.filePath || ''"
+				[src]="album.coverImage?.filePath || album.coverImageUrl || ''"
 				[height]="'100'"
 				[width]="width"
-				alt="Image"
+				[alt]="'ui.albumItemView.image' | transloco"
 				styleClass="item-image"
 			></p-image>
 		</div>
@@ -16,12 +16,16 @@
 			</h3>
 
 			<div>
-				{{ album.year | date : 'yyyy' }}
+				{{ album.year | date: 'yyyy' }}
 			</div>
 		</div>
 	</div>
 
 	<div class="album-item-action">
-		<p-button label="detail" (click)="detailClickHandler()"> </p-button>
+		<p-button
+			[label]="'ui.albumItemView.detail' | transloco"
+			(click)="detailClickHandler()"
+		>
+		</p-button>
 	</div>
 </div>

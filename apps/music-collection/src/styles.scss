@@ -32,10 +32,46 @@ html.mc-dark {
 	--mc-spotify: #1ed760;
 	--mc-on-spotify: #000000;
 	--mc-spotify-text: #1ed760;
+	// YouTube brand red: the same job, on the other source's buttons.
+	--mc-youtube: #cc0029;
+	--mc-on-youtube: #ffffff;
 	--mc-status-warn: #ffb733;
 	--mc-status-bad: #ff6b6b;
 	--mc-shadow-menu:
 		0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+
+	/*
+	 * A diagramok sorozat-színei: hat rögzített árnyalat, mindig ebben a
+	 * sorrendben kiosztva, soha nem körbeforgatva. Maga a sorrend a
+	 * biztonsági háló — az egymás mellé kerülő párok színtévesztéssel is
+	 * elválnak (protan/deutan ΔE ≥ 8, OKLab ×100), a hetedik sorozat ezért
+	 * nem kap kitalált hetedik árnyalatot, hanem az „egyéb” szürkéjébe
+	 * olvad. A két mód ugyanaz a hat árnyalat, a saját hátterére lépve.
+	 */
+	--mc-series-1: #e66767;
+	--mc-series-2: #3987e5;
+	--mc-series-3: #d95926;
+	--mc-series-4: #199e70;
+	--mc-series-5: #9085e9;
+	--mc-series-6: #c98500;
+	--mc-series-other: #6b6b6b;
+}
+
+/*
+ * Üveglapok a világ fölött. Amíg jelenet áll a lap mögött, a felületek
+ * átengednek belőle valamennyit — ettől ül a tartalom a világban ahelyett,
+ * hogy eltakarná. Csak a sötét témán: a világos témának nincs jelenete.
+ *
+ * Szándékosan nincs rajtuk `backdrop-filter`. Egy lapon több tucat kártya
+ * van, és mindegyiken egy-egy elmosás külön réteget és külön rajzolást
+ * jelentene; a 12–20% átengedés ugyanazt a hatást adja ingyen.
+ */
+html.mc-dark.mc-scene,
+html.mc-scene:not(.mc-light) {
+	--mc-card-bg: rgba(22, 22, 22, 0.82);
+	--mc-card-bg-hover: rgba(31, 31, 31, 0.88);
+	--mc-surface-2: rgba(30, 30, 30, 0.85);
+	--mc-bg-muted: rgba(17, 17, 17, 0.78);
 }
 
 html.mc-light {
@@ -61,11 +97,21 @@ html.mc-light {
 	--mc-spotify: #1ed760;
 	--mc-on-spotify: #000000;
 	--mc-spotify-text: #0f7a3a;
+	--mc-youtube: #cc0029;
+	--mc-on-youtube: #ffffff;
 	--mc-status-warn: #8a5700;
 	--mc-status-bad: #b91c1c;
 	--mc-shadow-menu:
 		0 10px 15px -3px rgb(15 23 42 / 0.1),
 		0 4px 6px -4px rgb(15 23 42 / 0.08);
+
+	--mc-series-1: #e34948;
+	--mc-series-2: #2a78d6;
+	--mc-series-3: #eb6834;
+	--mc-series-4: #1baf7a;
+	--mc-series-5: #4a3aa7;
+	--mc-series-6: #eda100;
+	--mc-series-other: #8a8a8a;
 }
 
 :root {
@@ -80,6 +126,44 @@ html.mc-light {
 	--mc-font-body:
 		Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 	--mc-app-bar-height: 64px;
+	/*
+	 * Az álló bal oldali navigáció szélessége. Csak 1100px felett van
+	 * ilyen sáv; a lap ennyivel beljebb kezdődik, nem a sáv úszik a
+	 * tartalom fölött.
+	 */
+	--mc-rail-width: 15rem;
+	/*
+	 * Az alsó lapsáv magassága. Nulla mindenütt, ahol nincs ilyen sáv,
+	 * hogy a lap alja és a lebegő lejátszó egy képlettel számolhasson
+	 * vele, töréspont-figyelés nélkül.
+	 */
+	--mc-tab-bar-height: 0px;
+
+	// A kör alakú (ikon-)gombok méretskálája. Mobilon minden fok egy méretpaddal
+	// kisebb: a telefon képernyőjén ugyanaz a gomb aránytalanul nagy, és a
+	// lejátszó vezérlői egymásra futnak. A gomb belsejében az ikon a törzs
+	// betűméretét követi, ezért csak a kör átmérőjét kell váltani.
+	--mc-circle-xs: 2rem;
+	--mc-circle-sm: 2.25rem;
+	--mc-circle-md: 2.5rem;
+	--mc-circle-lg: 2.75rem;
+	--mc-circle-xl: 3rem;
+	--mc-circle-2xl: 3.75rem;
+}
+
+// A mobil töréspont: a lapok egy hasábra rendeződnek, a kör alakú gombok pedig
+// mind egy fokkal kisebbek lesznek. Új kör alakú gomb ne írjon saját px-et,
+// hanem ezekre a tokenekre hivatkozzon, így a mobilos zsugorodást ingyen kapja.
+@media (max-width: 720px) {
+	:root {
+		--mc-tab-bar-height: 3.75rem;
+		--mc-circle-xs: 1.75rem;
+		--mc-circle-sm: 2rem;
+		--mc-circle-md: 2.125rem;
+		--mc-circle-lg: 2.375rem;
+		--mc-circle-xl: 2.625rem;
+		--mc-circle-2xl: 3.125rem;
+	}
 }
 
 html {
@@ -165,6 +249,16 @@ body .p-chip {
 		line-height: 22px;
 		margin: 0;
 	}
+}
+
+// Egy archivált katalógus-tétel: megvan, de nem ajánljuk fel többé. A
+// figyelmeztető szín azért kell, mert a lista ugyanúgy mutatja, mint a
+// többit — az egyetlen jel, hogy erre már ne vegyen fel senki példányt.
+body .p-chip.archived {
+	border-color: var(--mc-status-warn);
+	color: var(--mc-status-warn);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
 }
 
 .p-datatable {
@@ -264,6 +358,16 @@ body .p-chip {
 	}
 }
 
+// Kártyanézet rácsa (mc-entity-card elemek) a listaoldalakon.
+.mc-card-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+	gap: 0.75rem;
+	margin: 0;
+	padding: 0.75rem;
+	list-style: none;
+}
+
 // Sorvégi ikongombok a táblázatban.
 .mc-row-actions {
 	display: flex;
@@ -342,6 +446,109 @@ body .p-chip {
 	border-top: 1px solid var(--mc-border);
 }
 
+// Kézzel írt táblázat, ami keskeny képernyőn kártyákra bomlik: a fejléc
+// eltűnik, és minden cella a saját címkéjét viseli (`data-label`). Címke
+// nélküli cella (jelölőnégyzet, sorvégi gombok) a kártya sarkába kerül.
+.mc-stacked-table {
+	overflow-x: auto;
+
+	table {
+		width: 100%;
+		border-collapse: collapse;
+	}
+
+	th,
+	td {
+		padding: 0.5rem 0.75rem;
+		text-align: left;
+		border-bottom: 1px solid var(--mc-border);
+		white-space: nowrap;
+	}
+
+	thead th {
+		font-size: 0.8rem;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--mc-text-muted);
+	}
+
+	tbody tr.is-selected {
+		background: var(--mc-card-bg-hover);
+	}
+
+	.mc-stacked-actions {
+		display: flex;
+		gap: 0.25rem;
+		justify-content: flex-end;
+	}
+
+	@media (max-width: 900px) {
+		overflow-x: visible;
+
+		table,
+		tbody,
+		tr,
+		th,
+		td {
+			display: block;
+		}
+
+		thead {
+			// A fejlécsor helyett a cellák `data-label`-je címkéz.
+			display: none;
+		}
+
+		tbody tr {
+			position: relative;
+			margin-bottom: 0.75rem;
+			padding: 0.75rem 0.875rem;
+			background: var(--mc-card-bg);
+			border: 1px solid var(--mc-border);
+			border-radius: var(--mc-radius-lg);
+		}
+
+		th[scope='row'] {
+			// Hely a sarokba kerülő jelölőnégyzetnek és gomboknak.
+			padding: 0 5.5rem 0.5rem 0;
+			font-size: 1rem;
+			border: 0;
+			white-space: normal;
+		}
+
+		td {
+			display: flex;
+			gap: 1rem;
+			align-items: baseline;
+			justify-content: space-between;
+			padding: 0.25rem 0;
+			border: 0;
+			text-align: right;
+			white-space: normal;
+
+			&::before {
+				content: attr(data-label);
+				flex: 0 0 auto;
+				font-size: 0.75rem;
+				text-transform: uppercase;
+				letter-spacing: 0.06em;
+				color: var(--mc-text-muted);
+				text-align: left;
+			}
+		}
+
+		td:not([data-label]) {
+			position: absolute;
+			top: 0.5rem;
+			right: 0.5rem;
+			padding: 0;
+		}
+
+		.mc-stacked-actions {
+			justify-content: flex-start;
+		}
+	}
+}
+
 // Az entitás-táblázatok (a domain libek mc-table osztálya).
 .mc-table {
 	.p-datatable-thead > tr:nth-child(2) > th {
@@ -368,6 +575,20 @@ body .p-chip {
 
 	.p-autocomplete {
 		min-width: 12rem;
+	}
+
+	// A sorok és oszlopok, amiket a mc-collection-list épít: a domain
+	// sablonja csak megnevezi őket (rowClass, columnClass).
+	tr.is-withdrawn {
+		opacity: 0.6;
+	}
+
+	.thumbnail-column {
+		width: 3.5rem;
+	}
+
+	.profile {
+		white-space: nowrap;
 	}
 }
 
@@ -432,6 +653,86 @@ body .p-chip {
 	}
 }
 
+// Kártyák play gombja (mc-play-album-button): hoverre / fókuszra jelenik meg,
+// amíg a kártya albuma szól, mindig látszik.
+.mc-card-play {
+	position: absolute;
+	top: 0.5rem;
+	left: 0.5rem;
+	z-index: 5;
+	opacity: 0;
+	transform: translateY(4px);
+	transition:
+		opacity var(--mc-duration-fast) ease,
+		transform var(--mc-duration-fast) ease;
+
+	&:has(.on) {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+:hover > .mc-card-play,
+:focus-within > .mc-card-play {
+	opacity: 1;
+	transform: none;
+}
+
+@media (hover: none) {
+	.mc-card-play {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+// A kártyák alsó sarkaiban ülő gombok (mc-release-card): a polcra tevő
+// jobbra, az „eltávolítás a gyűjteményből" balra. Ugyanúgy hoverre / fókuszra
+// jelennek meg, mint az admin ikon — a sarok az egyetlen különbség köztük.
+.mc-card-place,
+.mc-card-remove {
+	position: absolute;
+	bottom: 0.5rem;
+	z-index: 5;
+	display: grid;
+	place-items: center;
+	width: var(--mc-circle-xs);
+	height: var(--mc-circle-xs);
+	color: var(--mc-text);
+	cursor: pointer;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: 999px;
+	opacity: 0;
+	transition: opacity var(--mc-duration-fast) ease;
+
+	&:hover,
+	&:focus-visible {
+		border-color: var(--mc-border-strong);
+	}
+}
+
+.mc-card-place {
+	right: 0.5rem;
+}
+
+.mc-card-remove {
+	left: 0.5rem;
+}
+
+:hover > .mc-card-place,
+:focus-within > .mc-card-place,
+:hover > .mc-card-remove,
+:focus-within > .mc-card-remove {
+	opacity: 1;
+}
+
+@media (hover: none) {
+	.mc-card-place,
+	.mc-card-remove {
+		opacity: 1;
+	}
+}
+
 // A lapok tartalmának legnagyobb szélessége; széles nézetben (a felső sáv
 // kapcsolója, LayoutWidthService) nincs korlát, csak az oldalsó térköz.
 :root {
@@ -448,4 +749,16 @@ body .p-chip {
 	top: 1rem;
 	right: 1rem;
 	z-index: 3;
+}
+
+// Törött borító helyőrzője (CoverFallbackDirective). A kép helyére átlátszó
+// pixel kerül, a lapot és a lemez-rajzot ez a szabály festi: így a téma
+// váltásakor is a helyes színű marad, amit egy beégetett data URI nem tudna.
+// A rajz semleges szürke, mert az mindkét témában olvasható.
+.mc-cover-failed {
+	background-color: var(--mc-surface-2);
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a8a8a' stroke-width='1.4'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Ccircle cx='12' cy='12' r='3.2'/%3E%3Ccircle cx='12' cy='12' r='.7' fill='%238a8a8a' stroke='none'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: 40%;
 }

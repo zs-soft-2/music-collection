@@ -1,0 +1,264 @@
+import { Observable, combineLatest, filter, map, of, tap } from 'rxjs';
+
+import { Injectable, inject } from '@angular/core';
+import {
+	AlbumEntity,
+	AlbumStateService,
+	CollectionItemEntity,
+	CollectionItemStateService,
+	isSpotifyAlbumId,
+	isYoutubePlaylistId,
+	isYoutubeVideoId,
+} from '@music-collection/api';
+import { MusicCollectionEffect } from '@music-collection/domain/music-collection/core';
+
+import { BandOfTheWeekEffect } from '../band-of-the-week';
+import { RatingEffect, lovedAlbums } from '../rating';
+
+import {
+	BAND_OF_THE_WEEK_EVERY,
+	RADIO_LENGTH,
+	RadioRecordName,
+	RadioStation,
+	TASTE_EVERY,
+	TASTE_STYLES,
+} from './radio.model';
+import {
+	RadioAlbum,
+	ShelfCopy,
+	byArtist,
+	byTaste,
+	distinct,
+	newest,
+	onShelf,
+	shuffle,
+	styleWeights,
+	weave,
+} from './radio-picks';
+
+/** An album the app could put on at all, whichever source ends up playing it. */
+const isPlayable = (album: AlbumEntity): boolean =>
+	isSpotifyAlbumId(album.spotifyAlbumId ?? null) ||
+	isYoutubePlaylistId(album.youtubePlaylistId ?? null) ||
+	(album.youtubeVideoIds ?? []).some(isYoutubeVideoId);
+
+const toRadioAlbum = (album: AlbumEntity): RadioAlbum => ({
+	uid: album.uid,
+	styles: album.styles ?? [],
+	// A year is a poor stand-in for when the catalog got the record, but it
+	// is what a document written before the sync stamps existed can offer.
+	addedAt: album.updatedAt ?? album.year?.getTime() ?? 0,
+	artistUid: album.artist?.uid ?? null,
+});
+
+const toShelfCopy = (item: CollectionItemEntity): ShelfCopy | null => {
+	const albumUid = item.release?.album?.uid;
+
+	return albumUid
+		? {
+				albumUid,
+				placement: item.placement ?? null,
+				addedAt: item.date?.getTime?.() ?? 0,
+			}
+		: null;
+};
+
+/**
+ * What a radio station plays: a list of album ids, in the order they go on.
+ *
+ * Every station reads the catalog and the shelf the app already holds, so
+ * tuning in costs a pass over memory rather than a query. What a station may
+ * reach for is decided by the caller — the player knows which records it can
+ * actually put on, and a station that offered the rest would only fall
+ * silent on them.
+ */
+@Injectable({ providedIn: 'root' })
+export class RadioEffect {
+	private readonly albumStateService = inject(AlbumStateService);
+	private readonly collectionItemStateService = inject(
+		CollectionItemStateService
+	);
+	private readonly musicCollectionEffect = inject(MusicCollectionEffect);
+	private readonly bandOfTheWeek = inject(BandOfTheWeekEffect);
+	private readonly ratings = inject(RatingEffect);
+
+	public albums$(
+		station: RadioStation,
+		playable: ReadonlySet<string>
+	): Observable<string[]> {
+		const keep = (uids: string[]) =>
+			uids.filter((uid) => playable.has(uid)).slice(0, RADIO_LENGTH);
+
+		switch (station.kind) {
+			case 'week':
+				return combineLatest([
+					this.catalog$(),
+					this.owned$(),
+					this.bandOfTheWeek.current$(),
+				]).pipe(
+					map(([albums, copies, band]) => {
+						const playing = (uids: string[]) =>
+							uids.filter((uid) => playable.has(uid));
+						// Weighed before the weave, not after: a record the
+						// player cannot put on would take a place in the
+						// order and leave a gap where it was passed over.
+						const theirs = band
+							? playing(
+									byArtist(
+										albums,
+										band.artistUid,
+										RADIO_LENGTH
+									)
+								)
+							: [];
+						const ours = new Set(theirs);
+						const taste = playing(
+							byTaste(
+								albums,
+								styleWeights(
+									this.stylesOf(copies),
+									TASTE_STYLES
+								),
+								RADIO_LENGTH * 2
+							)
+						);
+						const anything = playing(
+							shuffle(albums).map((album) => album.uid)
+						);
+						// The band keeps their own places: between them it is
+						// taste and the open catalog, theirs held back so the
+						// weave does not spend one early.
+						const between = weave(
+							taste,
+							anything,
+							TASTE_EVERY
+						).filter((uid) => !ours.has(uid));
+
+						return weave(
+							between,
+							theirs,
+							BAND_OF_THE_WEEK_EVERY
+						).slice(0, RADIO_LENGTH);
+					})
+				);
+			case 'new':
+				return this.catalog$().pipe(
+					map((albums) => keep(newest(albums, RADIO_LENGTH * 2)))
+				);
+			case 'random':
+				return this.catalog$().pipe(
+					map((albums) =>
+						keep(shuffle(albums).map((album) => album.uid))
+					)
+				);
+			case 'taste':
+				return combineLatest([this.catalog$(), this.owned$()]).pipe(
+					map(([albums, copies]) =>
+						keep(
+							byTaste(
+								albums,
+								styleWeights(
+									this.stylesOf(copies),
+									TASTE_STYLES
+								),
+								RADIO_LENGTH * 2
+							)
+						)
+					)
+				);
+			case 'shelf':
+				return this.owned$().pipe(
+					map((copies) =>
+						keep(
+							onShelf(
+								copies
+									.map(toShelfCopy)
+									.filter(
+										(copy): copy is ShelfCopy => !!copy
+									),
+								station
+							)
+						)
+					)
+				);
+			// Shuffled rather than best first: a station that opens with the
+			// collector's favourite record every time is a station they stop
+			// putting on.
+			case 'loved':
+				return this.ratings
+					.list$()
+					.pipe(
+						map((ratings) => keep(shuffle(lovedAlbums(ratings))))
+					);
+			case 'collection':
+				return station.slug
+					? this.musicCollectionEffect
+							.loadStanding$(station.slug)
+							.pipe(
+								map((standing) =>
+									keep(
+										shuffle(
+											distinct(
+												(
+													standing?.resolved.albums ??
+													[]
+												).map((album) => album.albumUid)
+											)
+										)
+									)
+								)
+							)
+					: of([]);
+		}
+	}
+
+	/**
+	 * The catalog's records by id, for a page that wants to say which ones a
+	 * station would put on rather than only how many.
+	 */
+	public names$(): Observable<Map<string, RadioRecordName>> {
+		return this.albumStateService.selectEntities$().pipe(
+			map(
+				(albums) =>
+					new Map(
+						(albums ?? []).map((album) => [
+							album.uid,
+							{
+								albumTitle: album.name,
+								artistName: album.artist?.name ?? null,
+							},
+						])
+					)
+			)
+		);
+	}
+
+	/**
+	 * Every album the catalog could play, as the stations weigh them. The
+	 * catalog is asked for while it is empty and nothing is said until it has
+	 * arrived: a station chosen out of nothing would be an empty station.
+	 */
+	private catalog$(): Observable<RadioAlbum[]> {
+		return this.albumStateService.selectEntities$().pipe(
+			tap((albums) => {
+				if (!albums?.length) {
+					this.albumStateService.dispatchListEntitiesAction();
+				}
+			}),
+			filter((albums) => albums?.length > 0),
+			map((albums) => albums.filter(isPlayable).map(toRadioAlbum))
+		);
+	}
+
+	/** The copies still on the collector's shelf; empty while signed out. */
+	private owned$(): Observable<CollectionItemEntity[]> {
+		return this.collectionItemStateService.selectLoadedEntities$();
+	}
+
+	/** The styles standing on the shelf, one entry per copy. */
+	private stylesOf(copies: CollectionItemEntity[]): { styles: string[] }[] {
+		return copies.map((item) => ({
+			styles: item.release?.album?.styles ?? [],
+		}));
+	}
+}

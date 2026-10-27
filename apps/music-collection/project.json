@@ -4,8 +4,29 @@
 	"projectType": "application",
 	"sourceRoot": "apps/music-collection/src",
 	"prefix": "music-collection",
-	"tags": [],
+	"tags": ["type:app", "platform:angular"],
 	"targets": {
+		"version": {
+			"executor": "nx:run-commands",
+			"cache": false,
+			"options": {
+				"command": "node tools/version/generate-version.mjs"
+			}
+		},
+		"app-check-token": {
+			"executor": "nx:run-commands",
+			"cache": false,
+			"options": {
+				"command": "node tools/app-check/generate-debug-token.mjs"
+			}
+		},
+		"primeui-license": {
+			"executor": "nx:run-commands",
+			"cache": false,
+			"options": {
+				"command": "node tools/primeui/generate-license.mjs"
+			}
+		},
 		"build": {
 			"executor": "@angular-devkit/build-angular:browser",
 			"outputs": [
@@ -21,10 +42,24 @@
 				"index": "apps/music-collection/src/index.html",
 				"main": "apps/music-collection/src/main.ts",
 				"tsConfig": "apps/music-collection/tsconfig.app.json",
+				"webWorkerTsConfig": "apps/music-collection/tsconfig.worker.json",
 				"inlineStyleLanguage": "scss",
 				"assets": [
 					"apps/music-collection/src/favicon.ico",
-					"apps/music-collection/src/assets"
+					"apps/music-collection/src/favicon.svg",
+					"apps/music-collection/src/robots.txt",
+					"apps/music-collection/src/i18n-preload.js",
+					"apps/music-collection/src/assets",
+					{
+						"glob": "countries-110m.json",
+						"input": "node_modules/world-atlas",
+						"output": "assets/world"
+					},
+					{
+						"glob": "*.json",
+						"input": "libs/core/i18n/assets/i18n",
+						"output": "assets/i18n"
+					}
 				],
 				"styles": [
 					"node_modules/primeicons/primeicons.css",
@@ -38,8 +73,8 @@
 					"budgets": [
 						{
 							"type": "initial",
-							"maximumWarning": "1.5mb",
-							"maximumError": "4mb"
+							"maximumWarning": "3.9mb",
+							"maximumError": "4.5mb"
 						},
 						{
 							"type": "anyComponentStyle",
@@ -51,6 +86,10 @@
 						{
 							"replace": "apps/music-collection/src/environments/environment.ts",
 							"with": "apps/music-collection/src/environments/environment.prod.ts"
+						},
+						{
+							"replace": "apps/music-collection/src/app/store-devtools.ts",
+							"with": "apps/music-collection/src/app/store-devtools.prod.ts"
 						}
 					],
 					"outputHashing": "all"
@@ -59,13 +98,19 @@
 					"budgets": [
 						{
 							"type": "initial",
-							"maximumWarning": "1.5mb",
-							"maximumError": "4mb"
+							"maximumWarning": "3.9mb",
+							"maximumError": "4.5mb"
 						},
 						{
 							"type": "anyComponentStyle",
 							"maximumWarning": "8kb",
 							"maximumError": "16kb"
+						}
+					],
+					"fileReplacements": [
+						{
+							"replace": "apps/music-collection/src/app/store-devtools.ts",
+							"with": "apps/music-collection/src/app/store-devtools.prod.ts"
 						}
 					],
 					"outputHashing": "all"
@@ -79,7 +124,29 @@
 					"namedChunks": true
 				}
 			},
-			"defaultConfiguration": "dev"
+			"defaultConfiguration": "dev",
+			"dependsOn": [
+				"^build",
+				"version",
+				"app-check-token",
+				"primeui-license"
+			],
+			"inputs": [
+				"production",
+				"^production",
+				{
+					"env": "GITHUB_RUN_NUMBER"
+				},
+				{
+					"env": "GITHUB_SHA"
+				},
+				{
+					"env": "MC_APP_CHECK_DEBUG_TOKEN"
+				},
+				{
+					"env": "MC_PRIMEUI_LICENSE"
+				}
+			]
 		},
 		"serve": {
 			"executor": "@angular-devkit/build-angular:dev-server",
@@ -95,7 +162,12 @@
 				}
 			},
 			"defaultConfiguration": "development",
-			"continuous": true
+			"continuous": true,
+			"dependsOn": [
+				"version",
+				"app-check-token",
+				"primeui-license"
+			]
 		},
 		"extract-i18n": {
 			"executor": "@angular-devkit/build-angular:extract-i18n",
@@ -109,7 +181,12 @@
 			"options": {
 				"jestConfig": "apps/music-collection/jest.config.ts",
 				"tsConfig": "apps/music-collection/tsconfig.spec.json"
-			}
+			},
+			"dependsOn": [
+				"version",
+				"app-check-token",
+				"primeui-license"
+			]
 		},
 		"lint": {
 			"executor": "@nx/eslint:lint"

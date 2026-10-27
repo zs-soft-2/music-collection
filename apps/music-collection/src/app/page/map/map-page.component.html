@@ -1,0 +1,156 @@
+<div class="page">
+	<header class="hero">
+		<div class="hero-text">
+			<p class="eyebrow">musiCollection</p>
+			<h1>{{ 'page.map.collectors' | transloco }}</h1>
+			<p class="lead">
+				{{ 'page.map.where-the-records-are' | transloco }}
+				<a routerLink="/profile">{{
+					'page.map.your-own-is-in' | transloco
+				}}</a
+				>.
+			</p>
+		</div>
+
+		@if (store.isAuthenticated() && store.collectorCount()) {
+			<dl class="stats">
+				<div class="stat">
+					<dt>{{ 'page.map.collectors2' | transloco }}</dt>
+					<dd>{{ store.collectorCount() }}</dd>
+				</div>
+				<div class="stat">
+					<dt>{{ 'page.map.countries' | transloco }}</dt>
+					<dd>{{ store.countryCount() }}</dd>
+				</div>
+			</dl>
+		}
+	</header>
+
+	@if (!store.isAuthenticated()) {
+		<div class="notice">
+			<p>{{ 'page.map.sign-in-to-see' | transloco }}</p>
+
+			<button type="button" (click)="store.login()">
+				<i class="pi pi-sign-in" aria-hidden="true"></i>
+				{{ 'page.map.log-in' | transloco }}
+			</button>
+		</div>
+	} @else {
+		<div class="layout">
+			<div class="map-card">
+				<mc-world-map
+					[land]="store.land()"
+					[pins]="store.pins()"
+					[selectedId]="store.selectedCode()"
+					[label]="'page.map.collectors-around-the-world' | transloco"
+					(pick)="store.select($event)"
+				/>
+
+				@if (store.loading()) {
+					<p class="map-note">
+						{{ 'page.map.looking-for-collectors' | transloco }}
+					</p>
+				} @else if (!store.collectorCount()) {
+					<p class="map-note">
+						{{ 'page.map.nobody-shares-where-they' | transloco }}
+					</p>
+				} @else {
+					<p class="map-note">
+						{{ 'page.map.drag-to-move-scroll' | transloco }}
+					</p>
+				}
+			</div>
+
+			<aside class="panel">
+				@if (store.selected(); as country) {
+					<header class="panel-head">
+						<h2>{{ country.name }}</h2>
+						<button
+							type="button"
+							class="link"
+							(click)="store.clearSelection()"
+						>
+							{{ 'page.map.back-to-all' | transloco }}
+						</button>
+					</header>
+
+					<ul class="collectors">
+						@for (
+							collector of country.collectors;
+							track collector.uid
+						) {
+							<li>
+								@if (collector.photoURL) {
+									<img
+										class="avatar"
+										[src]="collector.photoURL"
+										alt=""
+										referrerpolicy="no-referrer"
+									/>
+								} @else {
+									<span class="avatar" aria-hidden="true">
+										<i class="pi pi-user"></i>
+									</span>
+								}
+
+								<span class="who">
+									<!--
+										A pin that carries a name leads to that
+										collector's page. A nameless one does
+										not: its owner chose a level that keeps
+										them unnamed, and pointing at them here
+										would undo that choice. The page itself
+										says so where there is nothing shared.
+									-->
+									@if (collector.displayName) {
+										<a
+											class="name"
+											[routerLink]="[
+												'/collector',
+												collector.uid,
+											]"
+											>{{ collector.displayName }}</a
+										>
+									} @else {
+										<b>{{
+											'page.collector.aCollector'
+												| transloco
+										}}</b>
+									}
+									@if (collector.city) {
+										<span>{{ collector.city }}</span>
+									}
+								</span>
+							</li>
+						}
+					</ul>
+				} @else {
+					<header class="panel-head">
+						<h2>{{ 'page.map.where-they-are' | transloco }}</h2>
+					</header>
+
+					<ul class="countries">
+						@for (
+							country of store.countries();
+							track country.code
+						) {
+							<li>
+								<button
+									type="button"
+									(click)="store.select(country.code)"
+								>
+									<span>{{ country.name }}</span>
+									<b>{{ country.count }}</b>
+								</button>
+							</li>
+						} @empty {
+							<li class="empty">
+								{{ 'page.map.no-one-on-the' | transloco }}
+							</li>
+						}
+					</ul>
+				}
+			</aside>
+		</div>
+	}
+</div>

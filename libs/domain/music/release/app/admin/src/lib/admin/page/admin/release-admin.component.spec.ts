@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { of } from 'rxjs';
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -15,6 +16,7 @@ describe('ReleaseAdminComponent', () => {
 		await TestBed.configureTestingModule({
 			imports: [NgxPermissionsModule.forRoot(), ReleaseAdminComponent],
 			providers: [
+				provideI18nTesting(),
 				provideRouter([]),
 				{
 					provide: ReleaseStateService,

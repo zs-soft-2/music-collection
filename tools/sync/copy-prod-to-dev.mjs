@@ -103,6 +103,9 @@ if (options.confirm) {
 	// After the writes: the version must not be older than what it covers.
 	await touchCatalog(targetDb, CATALOG_FEATURE_KEYS, { reset: true });
 	console.log('sync/catalog: reset');
+	// The reset invalidates the bundles: until they are built again every
+	// client downloads the copied collections document by document.
+	console.log('next: node tools/sync/build-bundles.mjs --env dev --confirm');
 }
 
 if (!options['skip-storage']) {

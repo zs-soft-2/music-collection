@@ -24,3 +24,7 @@ export interface Membership {
 }
 
 export type MembershipEntity = Membership & Entity;
+
+export type MembershipEntityAdd = Omit<MembershipEntity, 'uid'>;
+
+export type MembershipEntityUpdate = Partial<MembershipEntity> & { uid: string };

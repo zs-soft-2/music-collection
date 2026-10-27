@@ -1,25 +1,13 @@
 import {
-	SimulationLinkDatum,
-	SimulationNodeDatum,
-	forceCollide,
-	forceLink,
-	forceManyBody,
-	forceRadial,
-	forceSimulation,
-} from 'd3-force';
-
-import {
 	NETWORK_KIND_LABELS,
 	NetworkEdge,
 	NetworkEdgeKind,
 	NetworkNode,
 	NetworkNodeKind,
 } from '../../network.model';
+import { NetworkLayoutRequest, Point } from './network-graph.simulation';
 
-export interface Point {
-	x: number;
-	y: number;
-}
+export type { Point };
 
 export interface PlacedNode extends NetworkNode, Point {
 	/** Label clipped to fit under the node. */
@@ -56,21 +44,13 @@ export const NODE_RADIUS: Record<NetworkNodeKind, number> = {
 };
 
 const LABEL_MAX = 22;
-const RING_GAP = 200;
 
+/** How far apart the force holds the two ends of each kind of edge. */
 const LINK_DISTANCE: Record<NetworkEdgeKind, number> = {
 	member: 190,
 	former: 200,
 	guest: 220,
 };
-
-interface SimNode extends SimulationNodeDatum {
-	id: string;
-	kind: NetworkNodeKind;
-	distance: number;
-}
-
-type SimLink = SimulationLinkDatum<SimNode> & { kind: NetworkEdgeKind };
 
 function clip(text: string): string {
 	return text.length > LABEL_MAX ? `${text.slice(0, LABEL_MAX - 1)}…` : text;
@@ -96,104 +76,31 @@ function ariaLabelOf(node: NetworkNode, edgeCount: number): string {
 	return parts.join(', ');
 }
 
-/** Room a node needs on its ring: its shape plus the label around it. */
-const RING_SLOT = 2 * 38;
-
 /**
- * Radius of each distance ring: at least RING_GAP further out than the
- * previous one, and wide enough that the ring's nodes fit side by side.
+ * The network as the force layout sees it: circles with a radius and a
+ * distance from the focus. Only this much crosses to the worker — labels,
+ * images and links stay here, where they are drawn.
  */
-function ringRadii(nodes: NetworkNode[]): number[] {
-	const slots: number[] = [];
-
-	for (const node of nodes) {
-		slots[node.distance] =
-			(slots[node.distance] ?? 0) +
-			NODE_RADIUS[node.kind] * 2 +
-			RING_SLOT;
-	}
-	const radii = [0];
-
-	for (let distance = 1; distance < slots.length; distance++) {
-		radii[distance] = Math.max(
-			radii[distance - 1] + RING_GAP,
-			(slots[distance] ?? 0) / (2 * Math.PI)
-		);
-	}
-	return radii;
-}
-
-/**
- * Force-directed placement: the focus is pinned to the origin, the others
- * are pulled onto rings by their distance. Nodes already placed start from
- * their previous position, so the graph does not jump when it grows.
- */
-export function simulateNetwork(
+export function toLayoutRequest(
 	nodes: NetworkNode[],
 	edges: NetworkEdge[],
 	focusId: string | null,
 	previous: ReadonlyMap<string, Point>
-): Map<string, Point> {
-	const golden = Math.PI * (3 - Math.sqrt(5));
-	const radii = ringRadii(nodes);
-	const ring = (distance: number) => radii[distance] ?? 0;
-	const simNodes: SimNode[] = nodes.map((node, index) => {
-		const known = previous.get(node.id);
-		const angle = index * golden;
-		const pinned = node.id === focusId;
-
-		return {
+): NetworkLayoutRequest {
+	return {
+		nodes: nodes.map((node) => ({
 			id: node.id,
-			kind: node.kind,
+			radius: NODE_RADIUS[node.kind],
 			distance: node.distance,
-			x: pinned ? 0 : (known?.x ?? Math.cos(angle) * ring(node.distance)),
-			y: pinned ? 0 : (known?.y ?? Math.sin(angle) * ring(node.distance)),
-			fx: pinned ? 0 : undefined,
-			fy: pinned ? 0 : undefined,
-		};
-	});
-	const ids = new Set(simNodes.map((node) => node.id));
-	const links: SimLink[] = edges
-		.filter((edge) => ids.has(edge.source) && ids.has(edge.target))
-		.map((edge) => ({
+		})),
+		edges: edges.map((edge) => ({
 			source: edge.source,
 			target: edge.target,
-			kind: edge.kind,
-		}));
-	const reused = simNodes.filter((node) => previous.has(node.id)).length;
-
-	const simulation = forceSimulation<SimNode>(simNodes)
-		.force(
-			'link',
-			forceLink<SimNode, SimLink>(links)
-				.id((node) => node.id)
-				.distance((link) => LINK_DISTANCE[link.kind])
-				.strength(0.3)
-		)
-		.force('charge', forceManyBody<SimNode>().strength(-900))
-		.force(
-			'collide',
-			forceCollide<SimNode>((node) => NODE_RADIUS[node.kind] + 38)
-		)
-		.force(
-			'radial',
-			forceRadial<SimNode>((node) => ring(node.distance)).strength(0.35)
-		)
-		// Mostly known positions only need settling.
-		.alpha(reused > simNodes.length / 2 ? 0.4 : 1)
-		.stop();
-
-	const ticks = Math.ceil(
-		Math.log(simulation.alphaMin()) / Math.log(1 - simulation.alphaDecay())
-	);
-
-	for (let i = 0; i < ticks; i++) {
-		simulation.tick();
-	}
-
-	return new Map(
-		simNodes.map((node) => [node.id, { x: node.x ?? 0, y: node.y ?? 0 }])
-	);
+			length: LINK_DISTANCE[edge.kind],
+		})),
+		focusId,
+		previous,
+	};
 }
 
 /** The most a layout is stretched to match the canvas. */

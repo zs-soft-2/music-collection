@@ -1,0 +1,4390 @@
+{
+	"nav": {
+		"backdrop": {
+			"off": "Háttér: nincs jelenet",
+			"still": "Háttér: álló jelenet",
+			"live": "Háttér: élő jelenet"
+		},
+		"discover": "Felfedezés",
+		"overview": "Áttekintés",
+		"brandHome": "Music Collection — főoldal",
+		"main": "Fő menü",
+		"home": "Főoldal",
+		"collection": "Gyűjteményem",
+		"scan": "Beolvasás",
+		"shelf-scan": "Polc",
+		"collections": "Kihívások",
+		"radio": "Rádió",
+		"daily-question": "Napi kérdés",
+		"upcoming": "Megjelenik",
+		"wishlist": "Kívánságlista",
+		"network": "Kapcsolatháló",
+		"collectors": "Gyűjtők",
+		"map": "Térkép",
+		"admin": "Admin",
+		"profile": "Profil",
+		"language": "Nyelv",
+		"accountMenu": "Fiók menü",
+		"closeAccountMenu": "Fiók menü bezárása",
+		"signedIn": "Bejelentkezve",
+		"logIn": "Bejelentkezés",
+		"logOut": "Kijelentkezés",
+		"openMenu": "Menü megnyitása",
+		"closeMenu": "Menü bezárása",
+		"wideLayout": "Széles elrendezés",
+		"widthStandard": "Normál szélesség",
+		"widthFull": "Teljes szélesség",
+		"themeLight": "Váltás világos témára",
+		"themeDark": "Váltás sötét témára",
+		"owned-artists": "Saját zenekaraim",
+		"my-requests": "Kéréseim",
+		"group": {
+			"collection": "Gyűjtés",
+			"explore": "Felfedezés",
+			"contribute": "Közreműködés"
+		},
+		"concerts": "Koncertek"
+	},
+	"common": {
+		"save": "Mentés",
+		"cancel": "Mégse",
+		"close": "Bezárás",
+		"delete": "Törlés",
+		"edit": "Szerkesztés",
+		"add": "Hozzáadás",
+		"back": "Vissza",
+		"search": "Keresés",
+		"loading": "Betöltés…",
+		"retry": "Újra",
+		"yes": "Igen",
+		"no": "Nem",
+		"none": "Nincs",
+		"more": "Több",
+		"all": "Mind",
+		"unknown": "Ismeretlen",
+		"loadingLabel": "Betöltés…",
+		"saving": "Mentés…",
+		"match": {
+			"exact": "Biztos találat",
+			"likely": "Valószínű",
+			"possible": "Lehetséges"
+		}
+	},
+	"catalog": {
+		"format": {
+			"lp": "Nagylemez",
+			"ep": "EP",
+			"single": "Kislemez",
+			"maxi": "Maxi kislemez",
+			"live": "Koncertlemez",
+			"compilation": "Válogatás",
+			"dvd": "DVD"
+		},
+		"formatDescription": {
+			"box-set": "Díszdoboz",
+			"deluxe-edition": "Deluxe kiadás",
+			"180g": "180 g",
+			"gatefold": "Kihajtható borító",
+			"limited-edition": "Limitált kiadás",
+			"picture-disc": "Képlemez",
+			"reissue": "Újrakiadás",
+			"remastered": "Remaszterelt"
+		},
+		"media": {
+			"all": "Mind",
+			"boxset": "Díszdoboz",
+			"cassette": "Kazetta",
+			"cd": "CD",
+			"dvd": "DVD",
+			"vinyl": "Bakelit",
+			"other": "Egyéb",
+			"cdbox": "CD doboz"
+		},
+		"country": {
+			"australia": "Ausztrália",
+			"brazil": "Brazília",
+			"canada": "Kanada",
+			"denmark": "Dánia",
+			"finland": "Finnország",
+			"france": "Franciaország",
+			"germany": "Németország",
+			"greece": "Görögország",
+			"hungary": "Magyarország",
+			"ireland": "Írország",
+			"norway": "Norvégia",
+			"poland": "Lengyelország",
+			"spain": "Spanyolország",
+			"sweden": "Svédország",
+			"switzerland": "Svájc",
+			"the-netherlands": "Hollandia",
+			"uk": "Egyesült Királyság",
+			"usa": "Egyesült Államok"
+		},
+		"releaseCountry": {
+			"argentina": "Argentína",
+			"europe": "Európa",
+			"new-zealand": "Új-Zéland",
+			"uk-europe": "Egyesült Királyság és Európa"
+		},
+		"grade": {
+			"m": "Hibátlan",
+			"nm": "Szinte hibátlan",
+			"vg-plus": "Nagyon jó plusz",
+			"vg": "Nagyon jó",
+			"g": "Jó",
+			"f": "Elfogadható",
+			"p": "Gyenge"
+		},
+		"instrument": {
+			"vocals": "Ének",
+			"lead-vocals": "Vezető ének",
+			"backing-vocals": "Vokál",
+			"spoken-word": "Beszélt szöveg",
+			"choir": "Kórus",
+			"guitar": "Gitár",
+			"lead-guitar": "Szólógitár",
+			"rhythm-guitar": "Ritmusgitár",
+			"acoustic-guitar": "Akusztikus gitár",
+			"electric-guitar": "Elektromos gitár",
+			"slide-guitar": "Slide gitár",
+			"twelve-string-guitar": "Tizenkét húros gitár",
+			"bass": "Basszus",
+			"bass-guitar": "Basszusgitár",
+			"double-bass": "Nagybőgő",
+			"keyboards": "Billentyűk",
+			"piano": "Zongora",
+			"electric-piano": "Elektromos zongora",
+			"organ": "Orgona",
+			"synthesizer": "Szintetizátor",
+			"mellotron": "Mellotron",
+			"harpsichord": "Csembaló",
+			"accordion": "Tangóharmonika",
+			"drums": "Dob",
+			"percussion": "Ütőhangszerek",
+			"congas": "Konga",
+			"tambourine": "Csörgődob",
+			"timpani": "Üstdob",
+			"vibraphone": "Vibrafon",
+			"drum-machine": "Dobgép",
+			"violin": "Hegedű",
+			"viola": "Brácsa",
+			"cello": "Cselló",
+			"strings": "Vonósok",
+			"harp": "Hárfa",
+			"saxophone": "Szaxofon",
+			"trumpet": "Trombita",
+			"trombone": "Harsona",
+			"french-horn": "Kürt",
+			"horns": "Fúvósok",
+			"flute": "Fuvola",
+			"clarinet": "Klarinét",
+			"oboe": "Oboa",
+			"harmonica": "Szájharmonika",
+			"banjo": "Bendzsó",
+			"mandolin": "Mandolin",
+			"ukulele": "Ukulele",
+			"sitar": "Szitár",
+			"theremin": "Teremin",
+			"turntables": "Lemezjátszó",
+			"sampler": "Sampler",
+			"programming": "Programozás",
+			"effects": "Effektek"
+		},
+		"artistType": {
+			"band": "Zenekar",
+			"project": "Projekt",
+			"formation": "Formáció"
+		},
+		"artistTypePlural": {
+			"band": "Zenekarok",
+			"project": "Projektek",
+			"formation": "Formációk"
+		},
+		"disposalReason": {
+			"sold": "Eladva",
+			"traded": "Elcserélve",
+			"gifted": "Elajándékozva",
+			"lost": "Elveszett",
+			"other": "Egyéb"
+		},
+		"documentCategory": {
+			"album-cover": "Albumborító",
+			"artist-image": "Előadó kép",
+			"badge": "Jelvény",
+			"scene": "Jelenet-háttér"
+		},
+		"decade": {
+			"1900": "1900-as évek",
+			"1910": "1910-es évek",
+			"1920": "1920-as évek",
+			"1930": "1930-as évek",
+			"1940": "1940-es évek",
+			"1950": "1950-es évek",
+			"1960": "1960-as évek",
+			"1970": "1970-es évek",
+			"1980": "1980-as évek",
+			"1990": "1990-es évek",
+			"2000": "2000-es évek",
+			"2010": "2010-es évek",
+			"2020": "2020-as évek",
+			"2030": "2030-as évek"
+		},
+		"genericPressing": "Kiadás nincs megadva"
+	},
+	"dailyQuestion": {
+		"template": {
+			"albumArtist": "Melyik előadó lemeze a(z) „{{album}}”?",
+			"albumYear": "Melyik évben jelent meg a(z) „{{album}}” ({{artist}})?",
+			"openingTrack": "Melyik szám nyitja a(z) „{{album}}” lemezt ({{artist}})?",
+			"longestTrack": "Melyik a leghosszabb szám a(z) „{{album}}” lemezen ({{artist}})?",
+			"sideBOpener": "Melyik szám nyitja a B oldalt a(z) „{{album}}” lemezen ({{artist}})?",
+			"trackCount": "Hány szám van a(z) „{{album}}” lemezen ({{artist}})?",
+			"releaseLabel": "Melyik kiadó adta ki a(z) „{{album}}” lemezt ({{artist}})?",
+			"releaseLabelEdition": "Melyik kiadó adta ki a(z) „{{album}}” ({{artist}}) {{edition}} kiadását?",
+			"releaseCatno": "Melyik katalógusszám szerepel a(z) „{{album}}” ({{artist}}) kiadásán?",
+			"releaseCatnoLabel": "Melyik katalógusszám szerepel a(z) „{{album}}” ({{artist}}) {{label}} által kiadott lemezén?",
+			"artistCountry": "Melyik országból származik a(z) {{artist}}?",
+			"fallback": "Válaszd ki a helyes választ a katalógusból.",
+			"albumStyle": "Melyik stílust adja a katalógus a(z) „{{album}}” lemezhez ({{artist}})?",
+			"earliestAlbum": "Melyik a(z) {{artist}} legkorábbi lemeze a katalógusban?",
+			"trackAlbum": "Melyik lemezen szerepel a(z) „{{track}}” ({{artist}})?",
+			"nextTrack": "Melyik szám következik a(z) „{{track}}” után a(z) „{{album}}” lemezen ({{artist}})?",
+			"trackPosition": "Hányadik szám a(z) „{{track}}” a(z) „{{album}}” lemezen ({{artist}})?",
+			"shortestTrack": "Melyik a legrövidebb szám a(z) „{{album}}” lemezen ({{artist}})?",
+			"albumLength": "Körülbelül hány perc a(z) „{{album}}” ({{artist}}) teljes játékideje?",
+			"notOnAlbum": "Melyik szám NEM szerepel a(z) „{{album}}” lemezen ({{artist}})?",
+			"coverAlbum": "Melyik {{artist}}-lemez borítója ez?",
+			"releaseCountry": "Melyik országban jelent meg a(z) „{{album}}” ({{artist}}) kiadása?",
+			"artistFormedIn": "Melyik évben alakult a(z) {{artist}}?",
+			"bandMember": "Ki játszott a(z) {{artist}} zenekarban?",
+			"memberBand": "Melyik zenekarban játszott {{musician}}?",
+			"memberInstrument": "Milyen hangszeren játszott {{musician}} a(z) {{artist}} zenekarban?",
+			"albumCredit": "Ki szerepel „{{role}}” szerepben a(z) „{{album}}” lemezen ({{artist}})?",
+			"albumProducer": "Ki a producere a(z) „{{album}}” lemeznek ({{artist}})?"
+		}
+	},
+	"bandOfTheWeek": {
+		"reason": {
+			"random": "Erre a hétre a katalógus sorsolása hozta őket.",
+			"anniversary": "Ezen a héten {{years}} éves a lemezük: {{album}}.",
+			"new-in-catalog": "A héten tőlük került be a legtöbb lemez a katalógusba.",
+			"upcoming": "Jön az új lemezük: {{album}}."
+		},
+		"week": "{{start}} – {{end}}"
+	},
+	"home": {
+		"discover": {
+			"title": "Böngészd a katalógust",
+			"lead": "Műfajok, évtizedek, előadók és a legújabb albumok."
+		},
+		"glance": {
+			"title": "A katalógus egy pillantásra",
+			"openCollection": "Gyűjteményem megnyitása",
+			"unavailable": "A katalógus darabszámai most nem érhetők el.",
+			"coverage": "A katalógus albumai évtizedenként"
+		},
+		"count": {
+			"artists": "Előadók",
+			"albums": "Albumok",
+			"labels": "Kiadók",
+			"releases": "Kiadások",
+			"musicians": "Zenészek",
+			"tracks": "Számok"
+		},
+		"recent": {
+			"title": "Nemrég hozzáadva",
+			"catalogTitle": "Nemrég került a katalógusba",
+			"allReleases": "Összes kiadás"
+		},
+		"collectors": {
+			"title": "Kik gyűjtenek itt",
+			"all": "Mind",
+			"allOf": "Mind a {{count}} gyűjtő",
+			"join": {
+				"title": "Te is itt lehetsz",
+				"lead": "Jelöld meg, mit gyűjtesz, és a neved kikerül a falra.",
+				"signIn": "Belépek",
+				"share": "Megosztom a polcom"
+			}
+		},
+		"collections": {
+			"title": "Kollekciók",
+			"all": "Mind",
+			"done": "Kész",
+			"yoursToTake": "még senki nem gyűjti — tiéd a terep",
+			"tab": {
+				"mine": "Amiket gyűjtök",
+				"curated": "Kurált",
+				"discography": "Diszkográfiák",
+				"completed": "Kész"
+			}
+		},
+		"hunt": {
+			"title": "Következő a vadászlistán",
+			"all": "A teljes vadászlista"
+		},
+		"artists": {
+			"collected": "Legtöbbet gyűjtött előadók",
+			"catalog": "Előadók a katalógusban"
+		},
+		"byStyle": "Stílus szerint",
+		"byDecade": "Évtized szerint",
+		"byAct": "Zenekarok, projektek és formációk",
+		"newestAlbums": "A katalógus legújabb albumai",
+		"search": {
+			"label": "Előadók és albumok keresése",
+			"placeholder": "Előadók és albumok keresése…",
+			"results": "Találatok",
+			"artists": "Előadók",
+			"collected": "A gyűjteményedben",
+			"catalog": "A katalógusban",
+			"empty": "Nincs találat előadóra vagy albumra.",
+			"looking": "Keresés a teljes katalógusban…",
+			"inCollection": "„{{query}}” keresése a gyűjteményedben",
+			"announcement": {
+				"one": "{{count}} találat",
+				"other": "{{count}} találat"
+			}
+		},
+		"group": {
+			"albums": {
+				"one": "{{count}} album",
+				"other": "{{count}} album"
+			},
+			"inCatalog": {
+				"one": "{{count}} a katalógusban",
+				"other": "{{count}} a katalógusban"
+			}
+		},
+		"weekly": {
+			"eyebrow": "A hét kollekciója",
+			"featured": "Kiemelt kollekció",
+			"pick": "Kollekció választása",
+			"previous": "Előző kollekció",
+			"next": "Következő kollekció",
+			"open": "Megnyitom",
+			"collect": "Gyűjtöm",
+			"collecting": "Ezt gyűjtöd",
+			"signInToCollect": "Lépj be, és gyűjtheted",
+			"points": "pts",
+			"worth": "ennyit ér, ha végigviszed",
+			"progress": "Haladás ezen a kollekción",
+			"albums": {
+				"one": "{{count}} lemez",
+				"other": "{{count}} lemez"
+			}
+		}
+	},
+	"page": {
+		"overview": {
+			"eyebrow": "Üdvözöllek vissza",
+			"title": "Gyűjtemény áttekintés",
+			"openCollection": "Polc megnyitása",
+			"headline": "A gyűjtemény számokban",
+			"guest": "Jelentkezz be, és itt látod a saját gyűjteményed összegzését.",
+			"empty": "Még nincs lemez a polcodon. Olvass be egyet, és itt megjelenik az összegzés.",
+			"stat": {
+				"copies": "Lemezek",
+				"artists": "Előadók",
+				"styles": "Műfajok",
+				"labels": "Kiadók",
+				"delta": "+{{count}} az elmúlt {{days}} napban",
+				"noChange": "nem változott"
+			},
+			"styles": "Műfajok megoszlása",
+			"otherStyles": "Egyéb",
+			"copies": "lemez",
+			"noStyles": "Egyetlen lemezed sincs műfajhoz kötve.",
+			"arrivals": "Legutóbb hozzáadott",
+			"seeAll": "Összes",
+			"growth": "Gyarapodás",
+			"growthCaption": "új lemez az elmúlt {{days}} napban",
+			"formats": "Adathordozók",
+			"topArtists": "Top előadók",
+			"progress": "Kihívások",
+			"done": "teljesítve",
+			"completed": "Teljesítve",
+			"missing": "Hiányzik",
+			"rated": "Értékelve",
+			"noCollections": "Még egy kihívást sem követsz.",
+			"decades": "Évtizedek"
+		},
+		"collection": {
+			"my-collection": "Gyűjteményem",
+			"your-collection-at-a": "A gyűjteményed egy pillantásra",
+			"releases": "Kiadások",
+			"artists": "Előadók",
+			"releases-by-decade": "Kiadások évtizedenként",
+			"top-styles": "Vezető stílusok",
+			"collection-goals": "Gyűjtői célok",
+			"all-collections": "Összes kihívás",
+			"search-artist-or-album": "Előadó vagy album keresése",
+			"search-artist-or-album2": "Előadó vagy album keresése…",
+			"filter-by-format": "Szűrés formátumra",
+			"all": "Mind",
+			"sort": "Rendezés",
+			"group": "Csoportosítás",
+			"view": "Nézet",
+			"clear-filters": "Szűrők törlése",
+			"clear-filters2": "Szűrők törlése",
+			"loading-collection": "Gyűjtemény betöltése…",
+			"your-collection-lives-behind": "A gyűjteményed bejelentkezés mögött van",
+			"log-in-to-see": "Jelentkezz be, hogy lásd a meglévő lemezeidet, és újakat vehess fel.",
+			"log-in": "Bejelentkezés",
+			"no-releases-found": "Nincs találat",
+			"try-another-search-or": "Próbálj másik keresést vagy formátumot.",
+			"sortBy": {
+				"artist": "Előadó A–Z",
+				"title": "Album A–Z",
+				"newest": "Legújabb kiadás",
+				"oldest": "Legrégebbi kiadás",
+				"added": "Nemrég hozzáadva",
+				"stars": "A csillagaid"
+			},
+			"groupBy": {
+				"none": "Nincs csoportosítás",
+				"artist": "Előadó",
+				"format": "Formátum",
+				"style": "Stílus",
+				"decade": "Évtized"
+			},
+			"viewAs": {
+				"grid": "Rács",
+				"list": "Lista",
+				"shelf": "Polc"
+			},
+			"summary": {
+				"complete": "{{total}} kihívásból {{completed}} teljes",
+				"missing": {
+					"one": "{{count}} lemez hiányzik",
+					"other": "{{count}} lemez hiányzik"
+				},
+				"points": {
+					"one": "{{count}} pont megszerezve",
+					"other": "{{count}} pont megszerezve"
+				}
+			},
+			"showingOf": "{{total}} kiadásból {{shown}} látszik",
+			"releaseCount": {
+				"one": "{{count}} kiadás",
+				"other": "{{count}} kiadás"
+			},
+			"shelf": {
+				"dragHint": "Húzz egy lemezt oda, ahol valójában áll. Az általad elrendezett rekesz megtartja a benne hagyott helyet; amit nem raktál el, az továbbra is a szabadon hagyott rekeszeket tölti.",
+				"tapHint": "Koppints egy gerincre: kihúzza a lemezt és megmutatja a borítóját. Még egy koppintás, és megnyitja. Átrendezni egyelőre nagyobb képernyőn, egérrel tudod.",
+				"filterHint": "Töröld a formátumszűrőt, hogy kézzel rendezhesd át a polcot. A keresés nem szűri a polcot, csak megmutatja, hol áll a lemez.",
+				"fileFailed": "Nem sikerült elrakni: {{error}}",
+				"keep": "Maradjon így",
+				"release": "Rendezze a polc",
+				"keptHint": "A polc úgy áll, ahogy elraktad: a lemezek a helyükön maradnak akkor is, ha újat veszel fel vagy egy példány kikerül. Az új lemez a szabadon maradt rekeszekbe áll be.",
+				"searchHint": "A keresés a polcot egyben hagyja: megmutatja, hol áll a lemez, ahelyett hogy kipakolná a többit.",
+				"found": {
+					"one": "{{count}} találat a polcon",
+					"other": "{{count}} találat a polcon"
+				},
+				"foundNone": "Erre a keresésre semmi nem áll a polcon.",
+				"foundMore": "+ még {{count}}, a polcon kiemelve.",
+				"arrange": "Rendezés",
+				"arrangeDone": "Kész a rendezés",
+				"arrangeHint": "A polcok egy sorban állnak: a lemez már csak oldalra utazik. Kattints egy gerincre, és a kezedbe kerül — Shift + kattintás egy egész sort fog meg a rekeszen belül —, aztán húzd át, vagy koppints a cél rekesz gombjára."
+			},
+			"groupFallback": "Gyűjtemény",
+			"unknownStyle": "Ismeretlen stílus",
+			"unknownYear": "Ismeretlen év",
+			"filter-by-stars": "Szűrés a véleményed szerint",
+			"stars": {
+				"all": "Mind",
+				"loved": "Kedvencek",
+				"unrated": "Még nem értékelt"
+			}
+		},
+		"profile": {
+			"lists": "Listák",
+			"profile": "Profil",
+			"your-account-and-how": "A fiókod, és ahogy az app viselkedik nálad. Amit itt beállítasz, a fiókkal marad, így követ a következő böngészőre is, ahol belépsz.",
+			"account": "Fiók",
+			"how-you-appear-in": "Ahogy az appban megjelensz.",
+			"avatar": "Avatar",
+			"avatarIntro": "A karakter, ami a fényképed helyett áll — te rakod össze, a tiéd marad.",
+			"appearance": "Megjelenés",
+			"the-theme-and-how": "A téma, és hogy az oldalak mennyit használnak a képernyőből.",
+			"demoTour": "Vezetett bemutató",
+			"demoTourIntro": "Az iránytű a képernyő sarkában, ami mindig az épp nyitott oldalt mutatja be.",
+			"what-the-collection-opens": "Mivel nyíljon a gyűjtemény, és mennyi látszódjon egyszerre egy albumoldalból.",
+			"shelves": "Polcok",
+			"the-furniture-your-records": "A bútor, amiben a lemezeid állnak. Rajzold le, amid valóban van — hány elem, és rekeszből mennyi széltében és magasságban —, és a gyűjtemény polcnézete ebbe kerül be.",
+			"playback": "Lejátszás",
+			"how-the-player-starts": "Hogyan induljon a lejátszó, oldaltípusonként külön — egy számoldal jó eséllyel teljesebb színpadot kíván, mint a többi.",
+			"listening": "Hallgatás",
+			"what-you-have-actually": "Amit ténylegesen feltettél itt, a lemezekhez számolva, nem egy máshol vezetett fiókhoz.",
+			"privacy": "Adatvédelem",
+			"sharing": "Megosztható profil",
+			"sharingIntro": "Egy lap a gyűjteményedről, amit bárkinek megmutathatsz — és egy kívánságlista, amiből meg lehet lepni.",
+			"what-other-collectors-get": "Amit más gyűjtők látnak rólad. Itt semmi nem oszlik meg, amíg rá nem bólintasz, és ha visszakapcsolod, azonnal el is tűnik.",
+			"spotify": "Spotify",
+			"where-spotify-plays-and": "Hol szól a Spotify, és milyen hangerővel indul itt.",
+			"sign-in-to-set": "Jelentkezz be a profilod beállításához.",
+			"log-in": "Bejelentkezés",
+			"listSettings": {
+				"order": "Gyűjtemény rendezése",
+				"grouping": "Gyűjtemény csoportosítása",
+				"view": "Gyűjtemény nézete",
+				"albumCompact": "Az albumoldalak összecsukott szakaszokkal nyíljanak"
+			},
+			"language": "Nyelv",
+			"languageIntro": "Milyen nyelven szól hozzád az app. A fiókkal marad, így követ a következő böngészőre is, ahol belépsz.",
+			"tabs": {
+				"label": "Profil szakaszai",
+				"account": "Fiók",
+				"collection": "Gyűjtemény",
+				"playback": "Lejátszás",
+				"data": "Adatok"
+			},
+			"genres": "Műfajok, amik érdekelnek",
+			"genresIntro": "Legfeljebb két műfaj. Az alkalmazás csak a választott műfajok katalógusát tölti le — a gyűjteményed ettől függetlenül teljes marad.",
+			"verdicts": "Amit a lemezeidről gondolsz",
+			"verdictsIntro": "A csillagok, amiket a lemezeidnek adtál, és amelyeket elsőként emlegetnél."
+		},
+		"track": {
+			"loading": "Betöltés…",
+			"the-track-could-not": "A szám nem tölthető be.",
+			"track-not-found": "A szám nem található.",
+			"edit": "Szerkesztés",
+			"spotify-link": "Spotify-link",
+			"https-open-spotify-com": "https://open.spotify.com/track/…",
+			"not-a-spotify-track": "Ez nem Spotify-szám link.",
+			"youtube-video": "YouTube-videó",
+			"https-www-youtube-com": "https://www.youtube.com/watch?v=…",
+			"not-a-youtube-video": "Ez nem YouTube-videó link.",
+			"writers-comma-separated": "Szerzők (vesszővel elválasztva)",
+			"lyrics-visible-to-signed": "Dalszöveg (csak bejelentkezve látszik)",
+			"synced-lyrics-lrc-for": "Időzített dalszöveg (LRC, a dalszöveg-lejátszóhoz)",
+			"00-12-34-first": "[00:12.34] Első sor",
+			"cancel": "Mégse",
+			"player": "Lejátszó",
+			"lyrics": "Dalszöveg",
+			"no-lyrics-here-lyrics": "Itt nincs dalszöveg. A dalszöveg csak bejelentkezve látszik.",
+			"credits": "Közreműködők",
+			"no-credits-for-this": "Ehhez a számhoz nincs közreműködő.",
+			"other-tracks": "További számok",
+			"loadLyrics": "Dalszöveg betöltése",
+			"pictures": "Képek"
+		},
+		"label": {
+			"looking-for-this-label": "Kiadó keresése…",
+			"no-label-under-this": "Nincs kiadó ezen a néven.",
+			"either-it-was-never": "Vagy sosem volt a katalógusban, vagy törölték. A lemezek, amiken szerepelt, megtartják a rájuk nyomott nevet.",
+			"back-to-the-catalog": "Vissza a katalógushoz",
+			"label": "Kiadó",
+			"a-label-of": "Ennek a kiadója",
+			"sub-labels": "Alkiadók",
+			"artists": "Előadók",
+			"pressings": "Lemeznyomások",
+			"no-pressing-in-the": "A katalógusban még egy nyomás sem viseli ezt a kiadót.",
+			"showAllArtists": {
+				"one": "Mind a(z) {{count}} előadó",
+				"other": "Mind a(z) {{count}} előadó"
+			},
+			"showAllPressings": {
+				"one": "Mind a(z) {{count}} nyomás",
+				"other": "Mind a(z) {{count}} nyomás"
+			}
+		},
+		"document": {
+			"looking-for-this-document": "Dokumentum keresése…",
+			"no-document-under-this": "Nincs dokumentum ezzel az azonosítóval.",
+			"documents-are-never-deleted": "Dokumentumot sosem törlünk, csak visszavonunk — így ez vagy sosem volt itt, vagy kézzel távolították el.",
+			"back-to-the-documents": "Vissza a dokumentumokhoz",
+			"this-document-is-withdrawn": "Ez a dokumentum vissza van vonva: többé nem ajánljuk fel. A fájl a helyén marad, így minden, ami már hivatkozik rá, tovább működik.",
+			"document": "Dokumentum",
+			"open-the-file": "Fájl megnyitása"
+		},
+		"album": {
+			"year": "Év",
+			"genre": "Műfaj",
+			"tracks": "Számok",
+			"length": "Hossz",
+			"styles": "Stílusok",
+			"full-screen-player": "Teljes képernyős lejátszó",
+			"open-the-full-screen": "Teljes képernyős lejátszó megnyitása",
+			"release-requested-pending": "Kiadás kérve · függőben",
+			"on-your-wishlist": "A kívánságlistádon",
+			"add-to-wishlist": "Kívánságlistára",
+			"compact-view": "Tömör nézet",
+			"collapse-all": "Mind összecsukása",
+			"original-release": "Eredeti kiadás",
+			"released": "Megjelent",
+			"country": "Ország",
+			"label": "Kiadó",
+			"format": "Formátum",
+			"data-from-discogs": "Adatok a Discogsról",
+			"opens-in-a-new": "(új lapon nyílik)",
+			"listen": "Hallgatás",
+			"tracklist": "Számlista",
+			"loading-tracklist": "Számlista betöltése…",
+			"credits": "Közreműködők",
+			"loading-credits": "Közreműködők betöltése…",
+			"no-credits-have-been": "Ehhez az albumhoz még nem került be közreműködő.",
+			"in-your-collection": "A gyűjteményedben",
+			"loading": "Betöltés…",
+			"on-the-shelf": "a polcon",
+			"remove": "Eltávolítás",
+			"from-your-collection": "a gyűjteményedből",
+			"this-album-is-not": "Ez az album nincs a gyűjteményedben.",
+			"previously-owned": "Korábban megvolt",
+			"take-back": "Visszavétel",
+			"into-your-collection": "a gyűjteményedbe",
+			"full-discography": "Teljes diszkográfia",
+			"album-not-found": "Az album nem található",
+			"this-album-is-not2": "Ez az album nincs a katalógusban.",
+			"back-to-home": "Vissza a főoldalra",
+			"loading-album": "Album betöltése…",
+			"playCount": {
+				"one": "Ezt a lemezt {{count}} alkalommal tetted fel",
+				"other": "Ezt a lemezt {{count}} alkalommal tetted fel"
+			},
+			"rightThrough": "· {{count}} alkalommal végig",
+			"lastOn": "· utoljára: {{date}}",
+			"shelfSpot": "{{shelf}} · {{row}}. sor · {{slot}}. hely",
+			"takeBackFailed": "Nem sikerült visszavenni: {{error}}",
+			"moreFrom": "Több tőle: {{artist}}",
+			"what-you-think": "Amit te gondolsz",
+			"your-verdict": "A te véleményed",
+			"why-this-record": "Miért ez a lemez",
+			"one-line-is-enough": "Egy sor is elég",
+			"what-everybody-says": "Amit a gyűjtők mondanak",
+			"communityAverage": "{{average}} átlag {{count}} gyűjtőtől",
+			"aboveTheCrowd": "te {{stars}} csillaggal fölötte vagy",
+			"belowTheCrowd": "te {{stars}} csillaggal alatta vagy",
+			"verdict-not-kept": "A véleményed nem mentődött el. Csillagozd meg újra."
+		},
+		"artist": {
+			"artist": "Előadó",
+			"country": "Ország",
+			"formed": "Alakult",
+			"genre": "Műfaj",
+			"styles": "Stílusok",
+			"links": "Linkek",
+			"opens-in-a-new": "(új lapon nyílik)",
+			"albums-in-the-catalog": "Albumok a katalógusban",
+			"releases-in-your-collection": "Kiadások a gyűjteményedben",
+			"on-record": "Lemezen",
+			"sections": "Szakaszok",
+			"about": "Bemutatás",
+			"line-up": "Felállás",
+			"view-in-the-relationship": "Megtekintés a kapcsolathálóban",
+			"discography": "Diszkográfia",
+			"filter-by-album-type": "Szűrés albumtípusra",
+			"all": "Mind",
+			"in-your-collection": "A gyűjteményedben",
+			"open-collection": "Gyűjtemény megnyitása",
+			"similar-artists": "Hasonló előadók",
+			"artist-not-found": "Az előadó nem található",
+			"this-artist-is-not": "Ez az előadó nincs a katalógusban.",
+			"back-to-home": "Vissza a főoldalra",
+			"loading-artist": "Előadó betöltése…",
+			"noAlbums": "A katalógusban még nincs album ettől: {{artist}}."
+		},
+		"collection-item": {
+			"looking-for-this-copy": "Példány keresése…",
+			"this-copy-is-not": "Ez a példány nincs a gyűjteményedben.",
+			"a-copy-page-only": "A példányoldal csak a saját lemezeidhez nyílik meg — a polchely, az ár és a hozzá fűződő történet csak a tiéd.",
+			"sign-in-to-open": "Jelentkezz be a példányaid megnyitásához.",
+			"what-a-copy-page": "Amit a példányoldal a katalóguson túl mutat, azé a gyűjtőé, akié a lemez — ezért tudnia kell, ki vagy.",
+			"back-to-the-collection": "Vissza a gyűjteményhez",
+			"your-copy": "A te példányod",
+			"this-copy": "Ez a példány",
+			"edit": "Szerkesztés",
+			"in-the-collection-since": "A gyűjteményben ezóta",
+			"bought-on": "Vásárlás dátuma",
+			"where-from": "Honnan",
+			"price": "Ár",
+			"record": "Lemez",
+			"sleeve": "Borító",
+			"numbered-copy": "Számozott példány",
+			"on-the-shelf": "A polcon",
+			"nothing-is-written-down": "Erről a példányról még semmi nincs feljegyezve — mikor lett meg, mennyiért, hogyan bírta az időt.",
+			"its-story": "A története",
+			"the-pressing": "A nyomás",
+			"what-this-release-adds": "Amit ez a kiadás az albumhoz hozzátesz — melyik kiadó nyomta, hol, és milyen kivitelben jelent meg.",
+			"release": "Kiadás",
+			"label": "Kiadó",
+			"country": "Ország",
+			"format": "Formátum",
+			"only-on-this-pressing": "Csak ezen a nyomáson",
+			"this-pressing-on-discogs": "Ez a nyomás a Discogson",
+			"what-it-plays": "Amit lejátszik",
+			"the-album": "Az album",
+			"loading-the-tracklist": "Számlista betöltése…",
+			"only-on-this-pressing2": "Csak ezen a nyomáson",
+			"this-pressing": "Ez a nyomás",
+			"no-tracklist-for-this": "Ehhez az albumhoz még nincs számlista.",
+			"leftOn": "{{date}} napon került ki a gyűjteményből ({{reason}}).",
+			"spot": "{{row}}. sor · {{slot}}. hely · {{position}}. pozíció",
+			"remove": "Eltávolítás",
+			"removeFailed": "Nem sikerült eltávolítani: {{error}}",
+			"what-you-think": "Amit a lemezről gondolsz",
+			"another-release": "Másik kiadás",
+			"filed-on-format-alone": "Ez a példány csak a formátum szerint van beosztva — a katalógus nem tudja, melyik nyomás van nálad. Ha megtalálod a listában, válts rá.",
+			"moveFailed": "A kiadás módosítása nem sikerült: {{error}}"
+		},
+		"collectors": {
+			"title": "Kollekciók és gyűjtők",
+			"lead": "Mi van kitűzve, és ki vitte végig. Nyiss meg egy kollekciót, vagy nézd meg, kinek mi áll a polcán.",
+			"view": {
+				"collections": "Kollekciók",
+				"collectors": "Gyűjtők"
+			},
+			"finishedBy": "{{count}} gyűjtő vitte végig",
+			"collectedBy": "{{count}} gyűjtő gyűjti",
+			"nobodyYet": "Még senki nem vitte végig.",
+			"noCollections": "Még nincs publikált kollekció.",
+			"collectors": "gyűjtő",
+			"finished": "kigyűjtött kollekció",
+			"all": "Mind",
+			"search": "Keresés név vagy kollekció szerint",
+			"sortBy": "Rendezés",
+			"none": "Erre nincs találat.",
+			"noBadges": "Még nincs kigyűjtött kollekciója.",
+			"chasing": "Ezeket gyűjti",
+			"seeAll": "Mind",
+			"homeLead": "Amit a többiek végigvittek.",
+			"sort": {
+				"recent": "Legutóbbi",
+				"badges": "Legtöbb jelvény",
+				"points": "Legtöbb pont",
+				"shelf": "Legnagyobb polc",
+				"name": "Név"
+			}
+		},
+		"collector": {
+			"loading": "Lapozzuk…",
+			"aCollector": "Egy gyűjtő",
+			"records": "lemez",
+			"points": "pont",
+			"badges": "jelvény",
+			"shelf": "A polc",
+			"showAll": "Mind a {{count}} lemez",
+			"albums": "album",
+			"artists": "előadó",
+			"oldest": "a legrégebbi",
+			"since": "óta gyűjt itt",
+			"asOf": "Így állt:",
+			"badgeSection": "Jelvények",
+			"pursuitSection": "Amin épp dolgozik",
+			"noShelf": "Ez a gyűjtő a polcát nem osztotta meg — csak azt, hogy mit gyűjt.",
+			"showcaseSection": "A kirakat",
+			"wishlistSection": "Amit keres",
+			"wishlistLead": "Ezekre a lemezekre vár. Ha meg akarod lepni, innen válassz.",
+			"buyAt": "kapható:",
+			"emptyTitle": "Nincs itt lap",
+			"emptyLead": "Ez a gyűjtő nem osztott meg profilt — vagy visszavonta.",
+			"inviteTitle": "Készítsd el a sajátodat",
+			"inviteLead": "Vedd fel a lemezeidet, és neked is lesz egy ilyen lapod, amit bárkinek megmutathatsz.",
+			"inviteButton": "Kezdjük",
+			"mineTitle": "A te gyűjteményed",
+			"mineLead": "Nézd meg, hol tartasz — és oszd meg te is, ha kedved van.",
+			"mineButton": "A gyűjteményem",
+			"selfTitle": "Ez a te lapod",
+			"selfLead": "Így látják mások. A megosztást a profilodon kapcsolhatod ki és be.",
+			"selfButton": "Beállítások",
+			"favouritesSection": "Amit a lemezeiről gondol",
+			"favouritesLead": "A lemezek, amikre ez a gyűjtő a legtöbb csillagot adta."
+		},
+		"collections": {
+			"collections": "Kihívások",
+			"shownToOthers": "Mások is látják",
+			"onlyMine": "Csak nekem",
+			"sets-of-records-defined": "Lemezek halmaza szabály szerint, nem felsorolás szerint — a katalógussal együtt nőnek.",
+			"collections2": "Kihívások",
+			"completed": "Teljesítve",
+			"records-missing": "Hiányzó lemez",
+			"points-earned": "Megszerzett pont",
+			"no-collection-has-been": "Még nincs közzétett kihívás. Ha lesz, itt látod majd, meddig jut el a polcod.",
+			"next-on-the-hunt": "Következő a vadászlistán",
+			"a-collection-pays-only": "Egy kihívás csak teljesen fizet — ezek a lemezek visznek a legtöbbet előre.",
+			"which-collections": "Mely kihívások",
+			"search-collections": "Kihívások keresése",
+			"search-collections2": "Kihívások keresése",
+			"star-the-collections-you": "Csillagozd meg a kihívásokat, amikre hajtasz — a Követett ezután csak azokat tartja meg, bármennyit tesznek is közzé.",
+			"filter": {
+				"all": "Mind",
+				"owned": "Megvan",
+				"missing": "Hiányzik",
+				"following": "Követett"
+			},
+			"pointsEarned": {
+				"one": "{{count}} pont megszerezve",
+				"other": "{{count}} pont megszerezve"
+			},
+			"pointsWorth": {
+				"one": "teljesen {{count}} pontot ér",
+				"other": "teljesen {{count}} pontot ér"
+			},
+			"basePoints": "{{points}} alappont",
+			"bonusPoints": "+ {{points}} a nyomásaidért",
+			"group": {
+				"curated": "Collectionök",
+				"curatedLead": "Kurátor által összerakott lemezhalmazok — egy szcéna, egy év, egy stílus.",
+				"discography": "Diszkográfiák",
+				"discographyLead": "Egy zenekar egyszerre: a nagylemezek, és minden más, amit mellettük kiadtak."
+			}
+		},
+		"daily-question": {
+			"question-of-the-day": "Napi kérdés",
+			"one-question-out-of": "Egy kérdés egy napra, mindenkinek ugyanaz — a katalógusból merítve. Egy tipped van, utána rögtön kiderül a megfejtés.",
+			"stat": {
+				"points": "Pont",
+				"streak": "Sorozat",
+				"best": "Leghosszabb",
+				"hit-rate": "Találat"
+			},
+			"difficulty": {
+				"easy": "Könnyű",
+				"medium": "Közepes",
+				"hard": "Nehéz"
+			},
+			"no-question-today": "Ma nincs kérdés. A kérdés éjfél után néhány perccel áll össze a katalógusból; ha nem volt hozzá elég adat, holnap újra próbálkozik.",
+			"send-the-guess": "Tipp beküldése",
+			"sending": "Küldés…",
+			"one-guess-only": "Egy tipped van — a válasz után azonnal látszik a megfejtés.",
+			"that-was-right": "Ez az!",
+			"that-was-wrong": "Nem ez volt.",
+			"points": "pont",
+			"more-about": "Tovább: {{subject}}",
+			"a-new-question-tomorrow": "Holnap új kérdés jön.",
+			"failure": {
+				"stale-day": "Közben fordult a nap — itt a mai kérdés.",
+				"no-question": "Erre a napra nincs kérdés.",
+				"signed-out": "Lejárt a munkamenet. Jelentkezz be újra, és mehet a tipp.",
+				"unknown": "A tipp nem ment át. Próbáld meg újra."
+			},
+			"bonus-day": "Bónusz nap · {{multiplier}}× pont",
+			"seconds-left": "{{seconds}} mp van hátra",
+			"time-is-up": "Lejárt az idő",
+			"the-cover": "A keresett lemez borítója",
+			"answered-late": "A tipp az idő lejárta után érkezett: a megfejtés megvan, pont nem jár érte.",
+			"late-guess-is-free": "Lejárt az idő — a tipp már nem ér pontot, de a megfejtést megmutatjuk.",
+			"breakdown": {
+				"base": "Alap",
+				"streak": "Sorozat",
+				"speed": "Gyorsaság"
+			},
+			"history": {
+				"title": "Korábbi kérdések",
+				"played-of": "Az utóbbi {{days}} nap kérdéseiből {{played}} napon tippeltél.",
+				"nothing-yet": "Még nincs mögötted nap — a mai az első kérdés.",
+				"skipped": "Kihagyva",
+				"late": "Későn",
+				"the-answer-was": "A megfejtés: {{answer}}",
+				"you-said": "a te tipped: {{picked}}"
+			},
+			"leaderboard": {
+				"title": "Ranglista",
+				"players": "{{players}} játékos",
+				"your-place": "a te helyed: {{rank}}.",
+				"rank": "Hely",
+				"collector": "Gyűjtő",
+				"anonymous": "Névtelen gyűjtő",
+				"you": "Te",
+				"unplaced": "—",
+				"rebuilt-nightly": "A ranglista naponta egyszer, este épül újra; a pontod azonnal frissül, a helyezésed a következő futáskor."
+			}
+		},
+		"error": {
+			"this-page-is-not": "Ez az oldal nem érhető el",
+			"it-doesn-t-exist": "Nem létezik, vagy a fiókodnak nincs hozzáférése. Az admin oldalakhoz rendszergazdai belépés kell.",
+			"go-to-home": "Ugrás a főoldalra",
+			"open-collection": "Gyűjtemény megnyitása"
+		},
+		"map": {
+			"collectors": "Gyűjtők",
+			"where-the-records-are": "Ahol a lemezeket tartják. Aki itt van, maga választotta, hogy felkerül a térképre, és azt is, mennyit mutat magából —",
+			"your-own-is-in": "a sajátod a profilban van",
+			"collectors2": "Gyűjtők",
+			"countries": "Országok",
+			"sign-in-to-see": "Jelentkezz be, hogy lásd, hol vannak a többi gyűjtők.",
+			"log-in": "Bejelentkezés",
+			"collectors-around-the-world": "Gyűjtők a világ körül",
+			"looking-for-collectors": "Gyűjtők keresése…",
+			"nobody-shares-where-they": "Még senki nem osztja meg, hol van. Te lehetnél az első.",
+			"drag-to-move-scroll": "Húzd a mozgatáshoz, görgess a nagyításhoz, és válassz egy tűt, hogy lásd, ki van ott.",
+			"back-to-all": "Vissza az összeshez",
+			"where-they-are": "Hol vannak",
+			"no-one-on-the": "Még senki nincs a térképen."
+		},
+		"musician": {
+			"musician": "Zenész",
+			"real-name": "Valódi név",
+			"also-known-as": "Más néven",
+			"plays": "Hangszer",
+			"active": "Aktív",
+			"links": "Linkek",
+			"relationship-network": "Kapcsolatháló",
+			"opens-in-a-new": "(új lapon nyílik)",
+			"discogs-com": "discogs.com",
+			"opens-in-a-new2": "(új lapon nyílik)",
+			"bands": "Zenekarok",
+			"guest-appearances": "Vendégszereplések",
+			"albums-credited": "Albumok, ahol szerepel",
+			"in-your-collection": "A gyűjteményedben",
+			"sections": "Szakaszok",
+			"about": "Bemutatás",
+			"bands2": "Zenekarok",
+			"view-in-the-relationship": "Megtekintés a kapcsolathálóban",
+			"guest-appearances2": "Vendégszereplések",
+			"view-in-the-relationship2": "Megtekintés a kapcsolathálóban",
+			"albums": "Albumok",
+			"filter-by-credit": "Szűrés közreműködésre",
+			"all": "Mind",
+			"credits": "Közreműködések",
+			"bandmates": "Zenekartársak",
+			"musician-not-found": "A zenész nem található",
+			"this-musician-is-not": "Ez a zenész nincs a katalógusban.",
+			"back-to-home": "Vissza a főoldalra",
+			"loading-musician": "Zenész betöltése…",
+			"collectedReleases": {
+				"one": "{{count}} a gyűjteményedben",
+				"other": "{{count}} a gyűjteményedben"
+			}
+		},
+		"network": {
+			"relationship-network": "Kapcsolatháló",
+			"who-played-with-whom": "Ki kivel játszott — zenészek, és a zenekarok, projektek és formációk, amikben megfordultak.",
+			"relationship-network2": "Kapcsolatháló",
+			"exit-full-screen": "Kilépés a teljes képernyőből",
+			"network-settings": "Hálózat beállításai",
+			"focus": "Fókusz",
+			"depth": "Mélység",
+			"filters": "Szűrők",
+			"guests": "Vendégek",
+			"only-my-collection": "Csak a gyűjteményem",
+			"loading-the-network": "Hálózat betöltése…",
+			"no-connections-to-show": "Nincs megjeleníthető kapcsolat. Válassz másik fókuszt, vagy módosítsd a szűrőket.",
+			"the-network-is-too": "A hálózat túl nagy ahhoz, hogy egészben látszódjon — csökkentsd a mélységet, vagy rejtsd el a vendégeket.",
+			"legend": "Jelmagyarázat",
+			"in-your-collection": "A gyűjteményedben",
+			"member": "Tag",
+			"former-member": "Korábbi tag",
+			"guest": "Vendég",
+			"details": "Részletek"
+		},
+		"radio": {
+			"radio": "Rádió",
+			"a-record-chosen-for": "Egy lemez, neked válogatva: amit a katalógus épp bevett, amit a polcod szerint szeretsz, a polc egy rekesze, egy kihívás, amire hajtasz — vagy semmi különös.",
+			"random-order": "Véletlen sorrend",
+			"draw-the-records-out": "Húzd a lemezeket kalapból, ahelyett hogy sorban szólna az adó.",
+			"on-air": "Adásban",
+			"on-air2": "Adásban",
+			"next-record": "Következő lemez",
+			"stop-the-station": "Adó leállítása",
+			"waiting-to-go-on": "Adásra vár",
+			"privacy-card-on-your": "adatvédelmi kártya a profilodon",
+			"nothing-to-play-yet": "Még nincs mit lejátszani. A rádióhoz olyan lemezek kellenek, amik mögött Spotify- vagy YouTube-link van — vegyél fel párat a katalógusba, és megjelennek az adók.",
+			"playStation": "{{station}} lejátszása",
+			"blocked": {
+				"signIn": "A rádió a YouTube-on és a Spotifyon át szólaltatja meg a lemezeket. Jelentkezz be a hallgatáshoz — mindkettő valaki más lejátszója, és egyiket sem tesszük ki látogatónak.",
+				"consentBefore": "A rádió a YouTube-on és a Spotifyon át szólaltatja meg a lemezeket. Bármelyik beágyazása a tulajdonosa tárolójába ír, és jelzi neki, hogy itt jártál, ezért előbb engedélyt kér — a lenti sáv kérdez, a",
+				"consentAfter": "bármikor visszavonja a választ."
+			},
+			"andMore": "és még {{count}}"
+		},
+		"release": {
+			"looking-for-this-pressing": "Nyomás keresése…",
+			"no-pressing-under-this": "Nincs nyomás ezzel az azonosítóval.",
+			"the-catalog-holds-the": "A katalógusban benne van az album, amihez tartozott, de ez a kiadása nincs — vagy már nincs.",
+			"back-to-the-catalog": "Vissza a katalógushoz",
+			"pressing": "Nyomás",
+			"open-the-album": "Album megnyitása",
+			"other-pressings-of-this": "Az album további nyomásai",
+			"this-is-the-only": "A katalógus csak ezt az egy nyomást ismeri az albumból."
+		},
+		"scan": {
+			"state": {
+				"in-collection": "Már a gyűjteményedben",
+				"in-catalog": "A katalógusban",
+				"new-release": "Új nyomás",
+				"new-album": "Új album"
+			},
+			"scan-a-record": "Lemez beolvasása",
+			"photograph-the-sleeve-the": "Fényképezd le a borítót — a hátlap a vonalkóddal vagy a katalógusszámmal a legjobb.",
+			"your-account-may-not": "A fiókod még nem vehet fel lemezt gyűjteménybe. Kérd a gyűjtő szerepet, és a beolvasás megnyílik.",
+			"sign-in-as-a": "Jelentkezz be gyűjtőként, hogy lemezt vehess fel a gyűjteményedbe.",
+			"log-in": "Bejelentkezés",
+			"the-photo": "A fénykép",
+			"the-record-photographed": "A lefényképezett lemez",
+			"reading-the-photo": "Fénykép olvasása…",
+			"add-a-photo": "Fénykép hozzáadása",
+			"scan-another": "Másik beolvasása",
+			"nothing-recognised-on-this": "Ezen a fényképen nincs felismerhető. Próbáld a hátlapot, úgy, hogy a vonalkód vagy a katalógusszám beleférjen.",
+			"what-this-looks-like": "Erre hasonlít",
+			"open-album": "Album megnyitása",
+			"add-a-copy": "Példány hozzáadása",
+			"request-this-pressing": "Ezt a nyomást kérem",
+			"requested": "Kérve",
+			"request-album": "Album kérése",
+			"read-off-the-photo": "A fényképről leolvasva",
+			"artist": "Előadó",
+			"title": "Cím",
+			"label": "Kiadó",
+			"catalogue-number": "Katalógusszám",
+			"barcode": "Vonalkód",
+			"year": "Év"
+		},
+		"shelf-scan": {
+			"scan-a-shelf": "Polc beolvasása",
+			"photograph-one-compartment-twice": "Fényképezz le egy rekeszt két szögből. A kétszeri olvasásból derül ki, melyik gerincet találta el az app, és melyikre kell ránézned.",
+			"your-account-may-not": "A fiókod még nem tehet lemezt gyűjteménybe. Kérd a gyűjtő szerepkört, és megnyílik a beolvasás.",
+			"sign-in-as-a": "Jelentkezz be gyűjtőként, hogy lemezt tehess a gyűjteményedbe.",
+			"log-in": "Bejelentkezés",
+			"the-photos": "A fotók",
+			"one-from-the-front": "Egy szemből, egy oldalról. A csillogás, ami eltakar egy fekete gerincet, a szöggel együtt mozdul.",
+			"the-compartment-photographed": "A lefényképezett rekesz",
+			"remove-this-photo": "Fotó eltávolítása",
+			"add-a-photo": "Fotó hozzáadása",
+			"what-is-in-the-compartment": "Mi van a rekeszben",
+			"reading-the-spines": "Gerincek olvasása…",
+			"read-the-shelf": "Polc beolvasása",
+			"start-over": "Kezdjük elölről",
+			"no-spine-could-be": "Egy gerincet sem sikerült elolvasni. Próbáld közelebbről, vagy több oldalirányú fénnyel.",
+			"check-what-was-read": "Nézd át, mit olvasott ki",
+			"rows-read": "{{rows}} lemez beolvasva.",
+			"need-a-look": "{{count}} kér egy pillantást.",
+			"the-photos-counted-differently": "A két fotó különböző számú lemezt számolt ({{counts}}). Az egyikük látott egy gerincet, ami nincs ebben a listában.",
+			"artist": "Előadó",
+			"album": "Album",
+			"label": "Kiadó",
+			"catalogue-number": "Katalógusszám",
+			"seen-on-photos": "{{seen}} fotón",
+			"keep-it": "Maradjon",
+			"leave-it-out": "Hagyd ki",
+			"nothing-could-be-read": "Erről a gerincről semmit nem lehetett kiolvasni — töltsd ki, vagy hagyd ki.",
+			"the-photos-disagree": "A két fotó nem ért egyet ebben: {{field}}.",
+			"take": "Legyen",
+			"sending": "Küldés…",
+			"ask-for-these": "Kérés erre a(z) {{count}} lemezre",
+			"an-admin-approves-each": "Minden kérést egy admin hagy jóvá; addig semmi nem kerül a katalógusba.",
+			"media": {
+				"vinyl": "Bakelit",
+				"cd": "CD",
+				"cassette": "Kazetta",
+				"dvd": "DVD"
+			}
+		},
+		"upcoming": {
+			"coming-out": "Megjelenik",
+			"the-next-few-weeks": "A következő hetek lemezei a katalógusban már szereplő előadóktól — újak és újrakiadások egyaránt, naponta egyszer a MusicBrainzről gyűjtve.",
+			"records": "Lemezek",
+			"new": "Új",
+			"reissues": "Újrakiadások",
+			"artists": "Előadók",
+			"nothing-is-announced-for": "A közelgő hetekre nincs bejelentés. Amint a katalógus egyik előadójának lemeze dátumot kap a MusicBrainzen, itt megjelenik — általában néhány héttel előre.",
+			"which-records": "Mely lemezek",
+			"on-vinyl": "Bakeliten",
+			"matched-on-the-artist": "Csak az előadó neve alapján egyeztetve — lehet névrokon is.",
+			"name-match": "névegyezés",
+			"new2": "Új",
+			"filter": {
+				"all": "Minden",
+				"new": "Új lemezek",
+				"reissue": "Újrakiadások"
+			},
+			"filteredOut": {
+				"one": "A következő hetekben semmi nem felel meg ennek. Még {{count}} lemez érkezik.",
+				"other": "A következő hetekben semmi nem felel meg ennek. Még {{count}} lemez érkezik."
+			},
+			"reissue": "Újrakiadás",
+			"reissueOf": "A(z) {{year}}-es kiadás újrakiadása"
+		},
+		"wishlist-item": {
+			"looking-for-this-wish": "Kívánság keresése…",
+			"no-wish-under-this": "Nincs kívánság ezzel az azonosítóval.",
+			"either-the-record-has": "Vagy megvan a lemez, és a kívánság lekerült, vagy sosem volt senki listáján.",
+			"back-to-the-wishlist": "Vissza a kívánságlistához",
+			"this-wish-is-no": "Ez a kívánság már nem aktív — vagy megvan a lemez, vagy a vadászat lefújva.",
+			"on-the-wishlist": "A kívánságlistán",
+			"open-the-album": "Album megnyitása",
+			"pressings-that-would-do": "Nyomások, amik megtennék",
+			"the-catalog-knows-no": "A katalógus még egyetlen nyomását sem ismeri ennek az albumnak."
+		},
+		"owned-artist": {
+			"title": "Saját zenekaraim",
+			"lead": "Ha a katalógus nem ismeri a zenekart, itt felveheted magadnak. Csak te látod, és nem számít bele sem a pontokba, sem a statisztikákba.",
+			"add": "Új zenekar",
+			"new-band": "Új zenekar",
+			"edit-band": "Zenekar szerkesztése",
+			"cancel": "Mégse",
+			"could-not-save": "A mentés nem sikerült. Próbáld újra.",
+			"loading": "Zenekarok betöltése…",
+			"nothing-yet": "Még nincs saját zenekarod.",
+			"only-yours": "Amit itt felveszel, csak a tiéd — a katalógusba a jóváhagyás viszi át.",
+			"edit": "Szerkesztés",
+			"remove": "Törlés",
+			"remove-it": "Biztosan törlöd?",
+			"yes": "Igen",
+			"submit": "Beküldés a katalógusba",
+			"submitting": "Beküldés…",
+			"could-not-submit": "A beküldés nem sikerült. Próbáld újra.",
+			"request-pending": "Elbírálásra vár",
+			"request-approved": "Bekerült a katalógusba",
+			"request-partly-approved": "Részben bekerült",
+			"request-rejected": "Elutasítva"
+		},
+		"propose": {
+			"suggest-a-change": "Módosítási javaslat",
+			"lead": "Írd át, aminek szerinted másképp kellene állnia a katalógusban. A mentés nem ír semmit — a következő lépésben megkérdezzük, mi támasztja alá, és utána megy be egy adminhoz.",
+			"what-backs-it": "Mi támasztja alá?",
+			"every-field-needs-one": "Minden megváltoztatott mezőhöz kell egy forrás: link, katalógusszám, vagy a saját szavaiddal, ha a lemez a kezedben van.",
+			"reference-placeholder": "Link, azonosító vagy egy mondat",
+			"anything-else": "Bármi más, amit az adminnak tudnia kell (nem kötelező)",
+			"send": "Beküldés",
+			"sending": "Beküldés…",
+			"discard": "Elvetem",
+			"sent": "Beküldtük. Egy admin mezőnként dönt róla, és minden elutasítást megindokol.",
+			"see-my-requests": "A kéréseim",
+			"nothing-to-send": "Nincs beküldhető javaslatod. Nyiss meg egy előadót, és ott javasold a módosítást.",
+			"back-to-the-catalog": "Vissza a katalógushoz",
+			"could-not-send": "A beküldés nem sikerült. Próbáld újra.",
+			"what-you-are-adding": "Mit veszel fel?",
+			"say-where-it-is-from": "Ha tudod, írd meg, honnan — link, katalógusszám, vagy hogy a kezedben van a lemez. Enélkül is beküldhető.",
+			"where-is-it-from": "Honnan tudod? (nem kötelező)"
+		},
+		"my-request": {
+			"title": "A kéréseim",
+			"lead": "Amit a katalógusba szántál, és ami visszajött rá. Az elutasításnál ott az indok — arra jöhetsz vissza jobb forrással.",
+			"loading": "Kérések betöltése…",
+			"could-not-read": "A kérések betöltése nem sikerült.",
+			"nothing-yet": "Még nem küldtél be semmit.",
+			"my-bands": "A saját zenekaraim",
+			"status-pending": "Elbírálásra vár",
+			"status-approved": "Elfogadva",
+			"status-partly": "Részben elfogadva",
+			"status-rejected": "Elutasítva",
+			"new-entity": "új felvétel",
+			"change": "módosítás",
+			"accepted": "Elfogadva",
+			"rejected": "Elutasítva",
+			"what-you-asked": "Amit beküldtél ({{count}} mező)",
+			"from-the-admin": "Admin",
+			"new-release": "kiadás-kérés",
+			"missing-something": "Hiányzik valami a katalógusból?",
+			"add-artist": "Új előadó",
+			"add-album": "Új album",
+			"add-release": "Új kiadás",
+			"add-label": "Új kiadó",
+			"add-musician": "Új zenész"
+		},
+		"concert": {
+			"title": "Koncertek",
+			"lead": "Hol játszanak a katalógus zenekarai. Csak azok az esték kerülnek fel, amelyek a polcon lévő előadókhoz tartoznak — a bejelentett fellépések a MusicBrainzről és keresésre támaszkodó javaslatokból, emberi jóváhagyással.",
+			"nights": "Esték",
+			"bands": "Zenekarok",
+			"festivals": "Fesztiválok",
+			"cities": "Városok",
+			"which-nights": "Mely esték",
+			"city": "Város",
+			"every-city": "Minden város",
+			"nothing": "Jelenleg nincs bejelentett koncert a katalógus zenekaraitól. Amint egy fellépés forrásból megerősíthető, itt megjelenik.",
+			"filtered-out": "A szűrők mindent elrejtenek, ami van. Lazíts rajtuk, vagy válassz más várost.",
+			"cancelled": "Elmarad",
+			"festival": "Fesztivál",
+			"until": "{{day}}-ig",
+			"lineup": "Fellépők",
+			"tickets": "Jegyek",
+			"source": "Forrás",
+			"checked-hint": "Keresésre támaszkodó javaslat, amit ember hagyott jóvá. A forrás a kártya alján nyitható.",
+			"filter": {
+				"all": "Minden",
+				"concerts": "Koncertek",
+				"festivals": "Fesztiválok"
+			},
+			"countdown": {
+				"today": "Ma",
+				"tomorrow": "Holnap",
+				"days": "{{value}} nap múlva",
+				"nextWeek": "Jövő héten",
+				"weeks": "{{value}} hét múlva"
+			}
+		}
+	},
+	"ui": {
+		"artistSpotlight": {
+			"artist-spotlight": "Kiemelt előadó",
+			"styles": "Stílusok",
+			"view-artist": "Előadó megtekintése",
+			"show-another-artist": "Másik előadó",
+			"in-your-collection": "A gyűjteményedben",
+			"releasesOwned": {
+				"one": "{{count}} kiadás a gyűjteményedben",
+				"other": "{{count}} kiadás a gyűjteményedben"
+			},
+			"albumsInCatalog": {
+				"one": "{{count}} album a katalógusban",
+				"other": "{{count}} album a katalógusban"
+			},
+			"band-of-the-week": "A hét bandája",
+			"back-to-band": "Vissza a hét bandájához",
+			"listen-radio": "A hét rádiója"
+		},
+		"recordShelf": {
+			"off-the-shelf": "Polcon kívül",
+			"no-drawn-compartment-left": "Nincs több megrajzolt rekesz, vagy egyik sem elég magas ezekhez — nézd át a polcaidat a profilodban.",
+			"play-what-stands-here": "Ami itt áll, szóljon",
+			"play-what-stands-here2": "Ami itt áll, szóljon",
+			"open": "Megnyitás",
+			"rowSlot": "{{row}}. sor · {{slot}}. hely",
+			"in-hand": "lemez a kezedben",
+			"in-hand-how": "Húzd őket egy rekeszbe, vagy koppints arra a falra, amelyikhez kerüljenek.",
+			"put-down": "Leteszem",
+			"put-left": "A bal falhoz: {{where}}",
+			"put-right": "A jobb falhoz: {{where}}",
+			"put-bottom": "Az aljára: {{where}}",
+			"put-top": "A tetejére: {{where}}",
+			"browse": "Rekesz átnézése: {{where}}",
+			"browse-previous": "Előző lemez",
+			"browse-next": "Következő lemez",
+			"browse-previous-compartment": "Előző rekesz",
+			"browse-next-compartment": "Következő rekesz",
+			"browse-close": "Bezárás",
+			"browse-list": "Lemezek a rekeszben",
+			"browse-gap": "üres hely — innentől a jobb falnál",
+			"browse-gap-tower": "üres hely — innentől a tetején",
+			"browse-keys": "← → lemezről lemezre · PgUp / PgDn rekeszről rekeszre · Enter megnyitás · Esc bezárás",
+			"browse-move-up": "Előrébb",
+			"browse-move-down": "Hátrébb",
+			"browse-keys-arrange": "Alt + ↑ ↓ vagy húzás: áthelyezés",
+			"browse-saving": "Mentés…"
+		},
+		"networkDetails": {
+			"connections-in-view": "Látható kapcsolatok",
+			"albums": "Albumok",
+			"collection": "Gyűjtemény",
+			"in-your-collection": "A gyűjteményedben",
+			"open-page": "Oldal megnyitása",
+			"focus-here": "Fókusz ide",
+			"parallel-groups": "Párhuzamos zenekarok",
+			"played-together-with": "Együtt játszott vele",
+			"related-albums": "Kapcsolódó albumok",
+			"owned": "Megvan"
+		},
+		"networkGraph": {
+			"view": "Nézet",
+			"zoom-in": "Nagyítás",
+			"zoom-out": "Kicsinyítés",
+			"fit-to-screen": "Képernyőhöz igazítás"
+		},
+		"admin": {
+			"close-admin-menu": "Admin menü bezárása",
+			"admin": "Admin",
+			"admin2": "Admin",
+			"back-to-page": "Vissza az oldalra",
+			"breadcrumb": "Morzsamenü",
+			"hide-menu": "Menü elrejtése",
+			"show-menu": "Menü megjelenítése"
+		},
+		"adminDashboard": {
+			"dashboard": "Áttekintés",
+			"the-catalog-and-the": "A katalógus és a gyűjteményadatok egy pillantásra.",
+			"record-counts": "Rekordszámok",
+			"loading": "Betöltés",
+			"open-list": "Lista megnyitása",
+			"collection-growth": "Gyűjtemény növekedése",
+			"no-dated-collection-items": "Még nincs dátumozott gyűjteménytétel.",
+			"collection-growth2": "Gyűjtemény növekedése",
+			"data-completeness": "Adatok teljessége",
+			"album-types": "Albumtípusok",
+			"album-types-in-the": "Albumtípusok a katalógusban",
+			"top-styles": "Vezető stílusok",
+			"top-styles-in-the": "Vezető stílusok a katalógusban",
+			"quick-actions": "Gyors műveletek"
+		},
+		"collectionDetailPage": {
+			"this-collection-is-not": "Ez a kollekció nincs közzétéve, vagy már nem létezik.",
+			"back-to-the-collections": "Vissza a kollekciókhoz",
+			"collection": "Kollekció",
+			"play-this-collection": "Kollekció lejátszása",
+			"points": "pont",
+			"nothing-in-the-catalog": "A katalógusban még semmi nem felel meg ennek a kollekciónak.",
+			"which-records": "Mely lemezek",
+			"no-record-here-yet": "Itt még nincs lemez.",
+			"earned": "ennyit szereztél vele",
+			"sortBy": "Rendezés",
+			"stat": {
+				"records": "Lemez",
+				"owned": "Megvan",
+				"missing": "Hiányzik",
+				"done": "Készültség",
+				"points": "Pont",
+				"finishers": "Végigvitte",
+				"hunters": "Gyűjti"
+			},
+			"sort": {
+				"year": "Év szerint",
+				"artist": "Előadó szerint",
+				"name": "Név szerint"
+			},
+			"state": {
+				"owned": "Megvan",
+				"missing": "Hiányzik"
+			},
+			"albums": {
+				"title": "A lemezek"
+			},
+			"hunt": {
+				"title": "Mit vegyél legközelebb",
+				"lead": "Ebből a kollekcióból ezek visznek a legtöbbet előre."
+			},
+			"badge": {
+				"earned": "Megszerezve",
+				"toGo": {
+					"one": "Még {{count}} lemez",
+					"other": "Még {{count}} lemez"
+				}
+			},
+			"rule": {
+				"title": "Mi kerül bele",
+				"lead": "A kollekció szabály, nem felsorolás: ami ráillik, az magától bekerül, ahogy a katalógus nő.",
+				"years": "Évek",
+				"styles": "Stílus",
+				"allStyles": "Mindegyik stílus",
+				"artistStyles": "Az előadó stílusa",
+				"artists": "Előadók",
+				"moreArtists": "További előadó",
+				"formats": "Forma",
+				"countries": "Ország",
+				"roles": "Közreműködés",
+				"musicians": "Megnevezett zenész",
+				"notStyles": "Nem ez a stílus",
+				"notArtistStyles": "Nem ez az előadói stílus"
+			},
+			"decades": {
+				"title": "Évtizedek",
+				"lead": "A teljes oszlop a kollekcióé, a kitöltött rész a polcodé.",
+				"one": "{{decade}}: {{owned}} megvan a {{total}} lemezből"
+			},
+			"crowd": {
+				"title": "Kik gyűjtik",
+				"finished": "végigvitte",
+				"hunting": "gyűjti"
+			},
+			"score": {
+				"title": "Mi adta a pontot",
+				"lead": "Ezek a lemezek emelték a kollekció értékét."
+			}
+		},
+		"copyPhotos": {
+			"no-photos-of-this": "Nincs fénykép erről a példányról.",
+			"replace": "Csere",
+			"remove": "Eltávolítás",
+			"at-most-two-pictures": "Legfeljebb két kép — az elülső és a hátsó. A böngésző kicsinyíti őket, mielőtt bármi feltöltődne."
+		},
+		"copyDetailsForm": {
+			"how-you-came-by": "Hogyan lett meg",
+			"bought-on": "Vásárlás dátuma",
+			"that-day-is-still": "Az a nap még hátravan.",
+			"where-from": "Honnan",
+			"a-shop-a-fair": "Bolt, börze, webshop, valaki…",
+			"price": "Ár",
+			"this-is-not-an": "Ez nem összeg.",
+			"currency": "Pénznem",
+			"huf": "HUF",
+			"how-it-has-held": "Milyen állapotban van",
+			"record": "Lemez",
+			"not-graded": "Nincs besorolva",
+			"sleeve": "Borító",
+			"not-graded2": "Nincs besorolva",
+			"which-one-of-them": "Melyik darab",
+			"only-a-numbered-edition": "Csak számozott kiadáson van ilyen — a lemezre ütött, domborított vagy kézzel írt szám. Az egész oldalon nyilvántartjuk: két gyűjtő nem írhatja fel ugyanazt a példányt.",
+			"copy-number": "Példányszám",
+			"this-is-not-a": "Ez nem példányszám.",
+			"which-one-of-them2": "Melyik darab a tiéd? A példányszám önmagában semmit nem mond erről a darabról.",
+			"out-of": "Ebből",
+			"this-is-not-an2": "Ez nem példányszám.",
+			"the-edition-is-smaller": "A kiadás kisebb, mint ennek a példánynak a száma.",
+			"what-there-is-to": "Amit el lehet mondani róla",
+			"note": "Megjegyzés",
+			"the-one-line-that": "Az az egy sor, ami a lemez mellett áll",
+			"story": "Történet",
+			"how-it-found-you": "Hogyan talált rád, és mi történt vele azóta.",
+			"cancel": "Mégse"
+		},
+		"wishlistDialog": {
+			"add-to-wishlist": "Kívánságlistára",
+			"close": "Bezárás",
+			"which-format-are-you": "Melyik formátumot keresed?",
+			"shop-link-optional": "Boltlink (nem kötelező)",
+			"https": "https://…",
+			"paste-a-full-address": "Illessz be teljes címet, http:// vagy https:// kezdettel.",
+			"it-lands-on-your": "A saját kívánságlistádra kerül. Ha megvan, ott jelöld megtaláltnak.",
+			"cancel": "Mégse",
+			"addFailed": "Nem sikerült hozzáadni: {{error}}"
+		},
+		"copyRemoval": {
+			"remove-from-collection": "Eltávolítás a gyűjteményből",
+			"close": "Bezárás",
+			"what-happened-to-it": "Mi történt vele?",
+			"when": "Mikor",
+			"pick-a-day-today": "Válassz napot, legkésőbb a mait.",
+			"note-optional": "Megjegyzés (nem kötelező)",
+			"e-g-sold-on": "pl. eladva a Discogson, elcserélve egy Death nagylemezre",
+			"it-stays-in-your": "Az előzményeidben marad, és bármikor visszaveheted.",
+			"cancel": "Mégse",
+			"removeFailed": "Nem sikerült eltávolítani: {{error}}",
+			"numberTakenMeanwhile": "A példány visszakerült, de a sorszámát időközben regisztrálta egy másik gyűjtő.",
+			"removing": "Eltávolítás…",
+			"removeTitle": "{{title}} eltávolítása a gyűjteményből"
+		},
+		"releasePicker": {
+			"add-to-collection": "Hozzáadás a gyűjteményhez",
+			"close": "Bezárás",
+			"requested-waiting-for-an": "Kérve, adminra vár",
+			"not-added-by-the": "Az admin nem vette fel",
+			"is-your-copy-a": "Számozott a te példányod?",
+			"only-a-numbered-edition": "Csak számozott kiadáson van ilyen — a lemezre ütött vagy írt szám. Hagyd üresen, ha a tiéden nincs; később a példány saját oldalán is megadhatod.",
+			"copy-number": "Példányszám",
+			"out-of": "Ebből",
+			"this-is-not-a": "Ez nem példányszám.",
+			"this-is-not-an": "Ez nem példányszám.",
+			"the-edition-is-smaller": "A kiadás kisebb, mint ennek a példánynak a száma.",
+			"which-one-of-them": "Melyik darab a tiéd? A példányszám önmagában semmit nem mond erről a darabról.",
+			"another-pressing": "Másik nyomás",
+			"which-pressing-do-you": "Melyik nyomás van meg?",
+			"loading-releases": "Kiadások betöltése…",
+			"in-your-collection": "A gyűjteményedben",
+			"add": "Hozzáadás",
+			"no-release-of-this": "Ennek az albumnak még egy kiadása sincs a katalógusban. Így veheted fel a gyűjteményedbe:",
+			"don-t-see-your": "Nem látod a nyomásodat?",
+			"find-it-on-discogs": "Megkeresem a Discogson",
+			"identify-from-a-photo": "Felismerés fényképről",
+			"describe-it": "Leírom",
+			"catalog-releases": "Katalógusbeli kiadások",
+			"pick-your-pressing-from": "Válaszd ki a nyomásodat a Discogsról:",
+			"loading-discogs-pressings": "Discogs-nyomások betöltése…",
+			"try-again": "Újra",
+			"filter-by-format": "Szűrés formátumra",
+			"all": "Mind",
+			"requested": "Kérve",
+			"discogs-lists-no-pressings": "A Discogs egyetlen nyomását sem sorolja fel.",
+			"not-there": "Nincs köztük?",
+			"describe-it2": "Leírom",
+			"catalog-releases2": "Katalógusbeli kiadások",
+			"the-record-photographed": "A lefényképezett lemez",
+			"reading-the-photo": "Fénykép olvasása…",
+			"photograph-the-record-the": "Fényképezd le a lemezt — a hátlapot vagy a címkét, hogy a katalógusszám vagy a vonalkód olvasható legyen. Ez különbözteti meg a te nyomásodat a többitől.",
+			"add-a-photo": "Fénykép hozzáadása",
+			"or-paste-an-image": "vagy illessz be képet, vagy ejts ide egyet",
+			"try-again2": "Újra",
+			"another-photo": "Másik fénykép",
+			"which-one-is-yours": "Melyik a tiéd?",
+			"requested2": "Kérve",
+			"nothing-recognised-on-this": "Ezen a fényképen nincs felismerhető. Próbáld azt az oldalt, ahol a katalógusszám vagy a vonalkód van.",
+			"rather-type-it": "Inkább beírod?",
+			"describe-it3": "Leírom",
+			"catalog-releases3": "Katalógusbeli kiadások",
+			"paste-its-discogs-link": "Illeszd be a Discogs-linkjét, vagy írd le: formátum, kiadó, ország, év.",
+			"discogs-release-link": "Discogs kiadás-link",
+			"https-www-discogs-com": "https://www.discogs.com/release/…",
+			"not-a-discogs-release": "Ez nem Discogs kiadás-link.",
+			"description": "Leírás",
+			"e-g-vinyl-lp": "pl. bakelit nagylemez, Nuclear Blast, Németország, 2016, piros bakelit",
+			"request-this-pressing": "Ezt a nyomást kérem:",
+			"note-for-the-admin": "Megjegyzés az adminnak (nem kötelező)",
+			"e-g-signed-copy": "pl. dedikált példány, színes bakelit",
+			"choose-another": "Másikat választok",
+			"addFailed": "Nem sikerült felvenni a gyűjteményedbe: {{error}}",
+			"generic-hint": "Nem tudod, melyik kiadás?",
+			"generic-open": "Felvétel csak formátummal",
+			"generic-lead": "Válaszd ki, milyen formátumon van meg. Magaként az albumként kerül a gyűjteményedbe — kiadó, ország és katalógusszám nélkül.",
+			"generic-option": "Kiadás nincs megadva",
+			"generic-adding": "Hozzáadás…",
+			"routes-now": "Rögtön bekerül a gyűjteményedbe",
+			"routes-request": "Kérés az adminhoz — ő veszi fel",
+			"generic-route-hint": "Csak azt választod ki, milyen formátumon van meg. Kiadó, ország és katalógusszám nélkül kerül be.",
+			"discogs-route-hint": "Kiválasztod a nyomásodat a Discogs listájából.",
+			"photo-route-hint": "Lefényképezed a lemez hátulját vagy a címkéjét, és megkeressük, melyik nyomás.",
+			"describe-route-hint": "Beírod a Discogs-linkjét, vagy leírod pár szóval.",
+			"add-to-my-collection": "Hozzáadás a gyűjteményemhez",
+			"adding": "Hozzáadás…",
+			"send-request": "Kérés küldése",
+			"sending": "Küldés…",
+			"paste-not-an-image": "Ez nem kép volt. Magát a képet másold — böngészőben jobb gomb, „Kép másolása”. A Finderből másolt fájlt nem lehet beilleszteni, de ide ejtheted.",
+			"clipboard-empty": "A vágólap üres.",
+			"remove": "Eltávolítás",
+			"from-your-collection": "a gyűjteményedből"
+		},
+		"discographyTimeline": {
+			"releases-over-time": "Kiadások az időben",
+			"in-your-collection": "A gyűjteményedben",
+			"not-collected": "Nincs meg",
+			"in-your-collection2": "A gyűjteményedben"
+		},
+		"wishlistPage": {
+			"wishlist": "Kívánságlista",
+			"wanted": "Keresett",
+			"artists": "Előadók",
+			"found": "Megvan",
+			"search-artist-or-album": "Előadó vagy album keresése",
+			"search-artist-or-album2": "Előadó vagy album keresése…",
+			"filter-by-format": "Szűrés formátumra",
+			"all": "Mind",
+			"show-found": "Megtaláltak mutatása",
+			"clear-filters": "Szűrők törlése",
+			"loading-wishlist": "Kívánságlista betöltése…",
+			"your-wishlist-lives-behind": "A kívánságlistád bejelentkezés mögött van",
+			"log-in-to-see": "Jelentkezz be, hogy lásd, mely albumokat keresed.",
+			"log-in": "Bejelentkezés",
+			"your-wishlist-is-empty": "A kívánságlistád üres",
+			"browse-the-collection-and": "Böngészd a gyűjteményt, és jegyezd fel az albumokat, amiket keresel.",
+			"open-collection": "Gyűjtemény megnyitása",
+			"no-albums-found": "Nincs találat",
+			"try-another-search-or": "Próbálj másik keresést vagy formátumot.",
+			"clear-filters2": "Szűrők törlése",
+			"also-wanted-on": "Ezen is keresed",
+			"found2": "Megvan",
+			"want-again": "Mégis kell",
+			"shop": "Bolt",
+			"saveFailed": "Nem sikerült menteni: {{error}}"
+		},
+		"releaseCard": {
+			"dvd": "DVD"
+		},
+		"copyPlacement": {
+			"place-on-the-shelf": "Elhelyezés a polcon",
+			"close": "Bezárás",
+			"which-shelf": "Melyik polc",
+			"which-compartment": "Melyik rekesz",
+			"holds-inserts": "Ebben a rekeszben betétek állnak; a polcok közül válaszd a betétet.",
+			"which-side": "A rekesz melyik oldalán",
+			"position-in-the-compartment": "Hely a rekeszben",
+			"counted-from-the-left": "Balról számolva. Amit nem raktál el magad, az továbbra is a szabadon hagyott rekeszeket tölti.",
+			"counted-from-the-right": "Jobbról számolva. A rekesz jobb vége akkor is a helyén marad, ha a bal oldali sor nő.",
+			"take-off-the-shelf": "Levétel a polcról",
+			"cancel": "Mégse",
+			"placeFailed": "Nem sikerült elhelyezni: {{error}}",
+			"against-the-left-wall": "Bal oldalt",
+			"against-the-right-wall": "Jobb oldalt"
+		},
+		"collectionViewToggle": {
+			"view": "Nézet",
+			"table": "Táblázat",
+			"cards": "Kártyák"
+		},
+		"errorToast": {
+			"close": "Bezárás"
+		},
+		"wishlistItemAdmin": {
+			"wishlist-items": "Kívánságlista-tételek",
+			"albums-the-users-are": "Albumok, amiket a felhasználók keresnek.",
+			"add-wishlist-item": "Kívánság hozzáadása"
+		},
+		"wishlistItemForm": {
+			"details": "Adatok",
+			"artist": "Előadó",
+			"start-typing-an-artist": "Kezdj el gépelni egy előadót…",
+			"album": "Album",
+			"start-typing-an-album": "Kezdj el gépelni egy albumot…",
+			"medias": "Hordozók",
+			"select-medias": "Válassz hordozókat",
+			"source-link": "Forráslink",
+			"active-still-looking-for": "Aktív — még keresem",
+			"cancel": "Mégse",
+			"save": "Mentés"
+		},
+		"wishlistItemTable": {
+			"no-wishlist-items-found": "Nincs találat.",
+			"filter-by-name": "Szűrés névre…",
+			"filter-by-name2": "Szűrés névre",
+			"delete-wishlist-item": "Kívánság törlése",
+			"artist-name": "Előadó neve",
+			"album-name": "Album címe",
+			"medias": "Hordozók",
+			"updated": "Módosítva",
+			"actions": "Műveletek",
+			"edit-wishlist-item": "Kívánság szerkesztése",
+			"delete-wishlist-item2": "Kívánság törlése"
+		},
+		"wishlistItemSimpleView": {
+			"image": "Kép",
+			"shop": "Bolt",
+			"image2": "Kép",
+			"shop2": "Bolt"
+		},
+		"labelAdmin": {
+			"labels": "Kiadók",
+			"record-labels-of-the": "A globális katalógus lemezkiadói.",
+			"add-label": "Kiadó hozzáadása"
+		},
+		"labelForm": {
+			"details": "Adatok",
+			"load": "Betöltés",
+			"load-data-from-discogs": "Adatok betöltése a Discogsról a Discogs-azonosító vagy a név alapján",
+			"name": "Név",
+			"parent-label": "Anyakiadó",
+			"start-typing-a-label": "Kezdj el gépelni egy kiadót…",
+			"profile": "Bemutatkozás",
+			"discogs-markup-such-as": "A Discogs jelölései, például az [a=Név], a nyilvános oldalon meg vannak tisztítva.",
+			"image-and-links": "Kép és linkek",
+			"logo-url": "Logó URL",
+			"enter-a-full-http": "Adj meg teljes http(s) címet.",
+			"logo-preview": "Logó előnézete",
+			"links": "Linkek",
+			"one-address-per-line": "Soronként egy cím.",
+			"source": "Forrás",
+			"discogs-id": "Discogs-azonosító",
+			"empty-the-load-searches": "Üresen hagyva a betöltés a név alapján keres a Discogson.",
+			"cancel": "Mégse",
+			"save": "Mentés",
+			"which-label-is-this": "Melyik kiadó ez?",
+			"discogs-knows-several-labels": "A Discogs több kiadót is ismer ezen a néven. Válaszd ki, melyik ez — az azonosítója sorként jön vissza, azt tartjuk meg.",
+			"open-on-discogs": "Megnyitás a Discogson",
+			"cancel2": "Mégse",
+			"loaded-label-data": "Betöltött kiadóadatok",
+			"source2": "Forrás:",
+			"apply": "Alkalmaz",
+			"field": "Mező",
+			"current": "Jelenlegi",
+			"loaded": "Betöltött",
+			"the-loaded-data-matches": "A betöltött adatok megegyeznek az űrlappal.",
+			"cancel3": "Mégse",
+			"apply-to-form": "Alkalmazás az űrlapra",
+			"parentOnDiscogs": "Anyakiadó a Discogson: {{name}}. Válaszd ki kézzel — lehet, hogy a katalógusban még nincs meg."
+		},
+		"labelTable": {
+			"no-labels-found": "Nincs találat.",
+			"filter-by-name": "Szűrés névre…",
+			"filter-by-name2": "Szűrés névre",
+			"delete-label": "Kiadó törlése",
+			"name": "Név",
+			"parent": "Anyakiadó",
+			"updated": "Módosítva",
+			"actions": "Műveletek",
+			"edit-label": "Kiadó szerkesztése",
+			"delete-label2": "Kiadó törlése"
+		},
+		"labelSimpleView": {
+			"label-simple-view-works": "az egyszerű kiadónézet működik!"
+		},
+		"labelDetailView": {
+			"label-detail-view-works": "a részletes kiadónézet működik!"
+		},
+		"releaseAdmin": {
+			"releases": "Kiadások",
+			"pressings-and-editions-of": "Az albumok nyomásai és kiadásai.",
+			"add-release": "Kiadás hozzáadása"
+		},
+		"releaseEdit": {
+			"details": "Adatok",
+			"tracks": "Számok"
+		},
+		"releaseTracks": {
+			"give-the-pressing-an": "Adj előbb albumot a nyomásnak — egy kiadás száma az album száma.",
+			"every-pressing-of-this": "Az album minden nyomása ezeket játssza. Az albumnál szerkeszthetők, nem itt.",
+			"edit-this-track": "Szám szerkesztése",
+			"remove-this-track": "Szám eltávolítása",
+			"nothing-yet-this-pressing": "Még semmi. Ez a nyomás az albumot játssza, ahogy van.",
+			"position": "Pozíció",
+			"title": "Cím",
+			"length": "Hossz",
+			"cancel": "Mégse",
+			"albumHeading": "Az album ({{count}})",
+			"ownHeading": "Csak ezen a nyomáson ({{count}})"
+		},
+		"releaseForm": {
+			"details": "Adatok",
+			"name": "Név",
+			"artist": "Előadó",
+			"start-typing-an-artist": "Kezdj el gépelni egy előadót…",
+			"album": "Album",
+			"start-typing-an-album": "Kezdj el gépelni egy albumot…",
+			"label": "Kiadó",
+			"start-typing-a-label": "Kezdj el gépelni egy kiadót…",
+			"date": "Dátum",
+			"pressing": "Nyomás",
+			"media": "Hordozó",
+			"select-a-media": "Válassz hordozót",
+			"country": "Ország",
+			"select-a-country": "Válassz országot",
+			"format-description": "Kivitel",
+			"select-a-format-description": "Válassz kivitelt",
+			"cancel": "Mégse",
+			"save": "Mentés",
+			"load": "Betöltés",
+			"load-pressings-from-discogs": "Az album kiadásainak betöltése a Discogsról",
+			"catno": "Katalógusszám",
+			"catno-example": "pl. MOVLP2620",
+			"catno-hint": "A gerincre és a hátlapra nyomtatott szám; ez alapján ismeri fel a fotós keresés.",
+			"cover-color": "Borító színe",
+			"cover-color-hint": "A kiadás borítójának uralkodó színe; a polcon ezzel rajzoljuk a gerincet. Üresen hagyva a polc marad a kitalált színnél.",
+			"no-cover-color": "nincs megadva",
+			"clear-cover-color": "Törlés",
+			"which-pressing-is-this": "Melyik kiadás ez?",
+			"discogs-lists-these-pressings": "A Discogs {{count}} kiadást ismer ehhez az albumhoz. Válaszd ki, melyik ez — az adatai az űrlapra kerülnek.",
+			"filter-pressings": "Szűrés",
+			"filter-pressings-example": "év, ország, katalógusszám, formátum…",
+			"open-on-discogs": "Megnyitás a Discogson",
+			"no-pressing-matches": "Egy kiadás sem illik a szűrésre.",
+			"cancel2": "Mégse",
+			"loaded-pressing-data": "Betöltött kiadásadatok",
+			"source": "Forrás:",
+			"labelOnDiscogs": "Kiadó a Discogson: {{name}}. A katalógusban nincs ilyen nevű kiadó, ezért kézzel válaszd ki.",
+			"apply": "Alkalmaz",
+			"field": "Mező",
+			"current": "Jelenlegi",
+			"loaded": "Betöltött",
+			"discogs-id": "Discogs-azonosító",
+			"the-loaded-data-matches": "A betöltött adatok megegyeznek az űrlappal.",
+			"cancel3": "Mégse",
+			"apply-to-form": "Alkalmazás az űrlapra"
+		},
+		"releaseTable": {
+			"no-releases-found": "Nincs találat.",
+			"filter-by-name": "Szűrés névre…",
+			"filter-by-name2": "Szűrés névre",
+			"filter-by-artist": "Szűrés előadóra…",
+			"filter-by-artist2": "Szűrés előadóra",
+			"delete-release": "Kiadás törlése",
+			"name": "Név",
+			"artist": "Előadó",
+			"date": "Dátum",
+			"media": "Hordozó",
+			"format": "Formátum",
+			"updated": "Módosítva",
+			"actions": "Műveletek",
+			"edit-release": "Kiadás szerkesztése",
+			"delete-release2": "Kiadás törlése"
+		},
+		"releaseDeletion": {
+			"title": "Kiadás törlése",
+			"checking": "Megnézem, mi tartja életben…",
+			"nothing-holds": "Semmi nem hivatkozik rá, véglegesen törölhető.",
+			"goes-with-tracks": "{{count}} szám megy vele.",
+			"in-use": "{{count}} példány van belőle gyűjteményben, ezért nem törölhető — a példányokat a gazdájuk tudja eltávolítani. Archiváld helyette: lekerül a formokról, de a meglévő példányok megmaradnak mellette.",
+			"in-use-now": "Közben felvettek belőle egy példányt, ezért mégsem törölhető. Archiváld inkább.",
+			"really-delete": "Végleges törlés",
+			"archive": "Archiválás",
+			"unarchive": "Visszaállítás",
+			"cancel": "Mégsem",
+			"archived": "archivált"
+		},
+		"releaseDetailView": {
+			"release-detail-view-works": "a részletes kiadásnézet működik!"
+		},
+		"collectionItemAdmin": {
+			"collection-items": "Gyűjteménytételek",
+			"items-the-users-own": "Tételek, amik a felhasználók gyűjteményében vannak.",
+			"add-collection-item": "Gyűjteménytétel hozzáadása"
+		},
+		"collectionItemForm": {
+			"details": "Adatok",
+			"release": "Kiadás",
+			"start-typing-a-release": "Kezdj el gépelni egy kiadást…",
+			"date": "Dátum",
+			"shelf-place": "Polchely",
+			"unit": "Elem",
+			"select-a-unit": "Válassz elemet",
+			"compartment": "Rekesz",
+			"side": "Oldal",
+			"filed-by-the-shelf": "A polc rakja el",
+			"position": "Pozíció",
+			"take-the-place-back": "Polchely visszavétele",
+			"no-shelf-drawn-yet": "Még nincs megrajzolt polc. Rajzold meg az elemeket a profilodban, és a példányok ide rakhatók.",
+			"cancel": "Mégse",
+			"save": "Mentés"
+		},
+		"collectionItemTable": {
+			"no-collection-items-found": "Nincs találat.",
+			"filter-by-name": "Szűrés névre…",
+			"filter-by-name2": "Szűrés névre",
+			"filter-by-artist": "Szűrés előadóra…",
+			"filter-by-artist2": "Szűrés előadóra",
+			"delete-collection-item": "Gyűjteménytétel törlése",
+			"name": "Név",
+			"artist": "Előadó",
+			"year": "Év",
+			"updated": "Módosítva",
+			"actions": "Műveletek",
+			"edit-collection-item": "Gyűjteménytétel szerkesztése",
+			"delete-collection-item2": "Gyűjteménytétel törlése"
+		},
+		"collectionItemDetailView": {
+			"collection-item-detail-view": "a részletes gyűjteménytétel-nézet működik!"
+		},
+		"albumAdmin": {
+			"albums": "Albumok",
+			"albums-of-the-global": "A globális katalógus albumai.",
+			"add-album": "Album hozzáadása"
+		},
+		"albumEdit": {
+			"details": "Adatok",
+			"tracks": "Számok"
+		},
+		"albumForm": {
+			"details": "Adatok",
+			"genre": "Műfaj",
+			"load": "Betöltés",
+			"load-missing-data-from": "Hiányzó adatok betöltése a MusicBrainzről",
+			"select-a-genre": "Válassz műfajt",
+			"title": "Cím",
+			"this-artist-already-has": "Ennek az előadónak már van",
+			"artist": "Előadó",
+			"start-typing-an-artist": "Kezdj el gépelni egy előadót…",
+			"format": "Formátum",
+			"select-a-format": "Válassz formátumot",
+			"year": "Év",
+			"styles": "Stílusok",
+			"select-styles": "Válassz stílusokat",
+			"spotify-link": "Spotify-link",
+			"youtube-music-link": "YouTube Music link",
+			"youtube-videos": "YouTube-videók",
+			"cover": "Borító",
+			"cover-url": "Borító URL",
+			"used-when-no-cover": "Akkor használjuk, ha nincs csatolt borítókép",
+			"cover2": "Borító",
+			"cover-image": "Borítókép",
+			"search-documents": "Dokumentumok keresése…",
+			"cover-image2": "Borítókép",
+			"save-the-album-first": "Előbb mentsd az albumot, hogy borítóképet csatolhass.",
+			"cancel": "Mégse",
+			"save": "Mentés",
+			"loaded-album-data": "Betöltött albumadatok",
+			"source": "Forrás:",
+			"apply": "Alkalmaz",
+			"field": "Mező",
+			"current": "Jelenlegi",
+			"loaded": "Betöltött",
+			"current-cover": "Jelenlegi borító",
+			"loaded-cover": "Betöltött borító",
+			"the-loaded-data-matches": "A betöltött adatok megegyeznek az űrlappal.",
+			"cancel2": "Mégse",
+			"apply-to-form": "Alkalmazás az űrlapra",
+			"filled-in-from": "Kiegészítve innen:"
+		},
+		"albumTracks": {
+			"load": "Betöltés",
+			"load-the-tracklist-from": "Számlista betöltése a MusicBrainzről",
+			"add": "Hozzáadás",
+			"add-a-track-by": "Szám hozzáadása kézzel",
+			"add-this-track": "A szám hozzáadása",
+			"no-tracks-yet-load": "Még nincs szám. Töltsd be őket a MusicBrainzről, vagy vedd fel őket kézzel.",
+			"tracks-found": "Talált számok",
+			"source": "Forrás:",
+			"cancel": "Mégse",
+			"heading": "Számok ({{count}})",
+			"saveNote": {
+				"one": "A mentés lecseréli a jelenlegi {{count}} számot; a linkjeik és a dalszövegeik pozíció szerint megmaradnak.",
+				"other": "A mentés lecseréli a jelenlegi {{count}} számot; a linkjeik és a dalszövegeik pozíció szerint megmaradnak."
+			},
+			"position": "Pozíció",
+			"title": "Cím",
+			"length": "Hossz",
+			"edit-this-track": "Szám szerkesztése",
+			"save-this-track": "Szám mentése",
+			"remove-this-track": "Szám törlése",
+			"open-the-track-page": "A szám oldala: dalszöveg, linkek, szerzők",
+			"lyrics-and-links-live": "A dalszöveg, a Spotify- és YouTube-link és a szerzők a szám saját oldalán szerkeszthetők — kattints a címére.",
+			"remove": "Törlés",
+			"removeHeading": "Szám törlése",
+			"removeQuestion": "Törlöd a(z) „{{name}}” számot az albumról?",
+			"removeNote": "A szám dalszövege is törlődik. A számlistát újratöltve a szám visszakerül, a dalszöveg nem."
+		},
+		"albumTable": {
+			"no-albums-found": "Nincs találat.",
+			"filter-by-name": "Szűrés névre…",
+			"filter-by-name2": "Szűrés névre",
+			"filter-by-artist": "Szűrés előadóra…",
+			"filter-by-artist2": "Szűrés előadóra",
+			"delete-album": "Album törlése",
+			"name": "Név",
+			"artist": "Előadó",
+			"year": "Év",
+			"styles": "Stílusok",
+			"tracks": "Számok",
+			"tracks2": "Számok",
+			"tracks-unknown": "Nincs megnézve",
+			"no-tracks": "Nincs szám",
+			"cover": "Borító",
+			"cover2": "Borító",
+			"no-cover": "Nincs borító",
+			"updated": "Módosítva",
+			"actions": "Műveletek",
+			"edit-album": "Album szerkesztése",
+			"delete-album2": "Album törlése"
+		},
+		"albumDeletion": {
+			"title": "Album törlése",
+			"checking": "Megnézem, mi tartja életben…",
+			"can-delete": "Más gyűjtő példánya nem tartja, véglegesen törölhető.",
+			"goes-with-releases": "{{count}} kiadás megy vele.",
+			"goes-with-tracks": "{{count}} szám megy vele.",
+			"goes-with-own-copies": "{{count}} példány a te gyűjteményedben van belőle — ezek is törlődnek vele.",
+			"in-use": "{{count}} példány más gyűjtő gyűjteményében van belőle, ezért nem törölhető — a példányokat a gazdájuk tudja eltávolítani.",
+			"in-use-now": "Közben valaki más felvett belőle egy példányt, ezért mégsem törölhető.",
+			"really-delete": "Végleges törlés",
+			"cancel": "Mégsem"
+		},
+		"albumSimpleView": {
+			"image": "Kép"
+		},
+		"albumDetailView": {
+			"image": "Kép"
+		},
+		"albumItemView": {
+			"image": "Kép",
+			"detail": "részletek"
+		},
+		"artistAdmin": {
+			"artists": "Előadók",
+			"artists-and-bands-of": "A globális katalógus előadói és zenekarai.",
+			"import-artists": "Előadók importálása",
+			"add-artist": "Előadó hozzáadása"
+		},
+		"artistEdit": {
+			"details": "Adatok",
+			"albums": "Albumok",
+			"members": "Felállás"
+		},
+		"artistImport": {
+			"import-artists": "Előadók importálása",
+			"upload-an-artist-bundle": "Tölts fel egy előadó-csomagot, amit az előadólistából exportáltál.",
+			"file": "Fájl"
+		},
+		"artistCandidatePicker": {
+			"which-artist-is-this": "Melyik előadó ez?",
+			"open-on-musicbrainz": "Megnyitás a MusicBrainzen",
+			"cancel": "Mégse",
+			"several": "A MusicBrainz több előadót is ismer ezen a néven. {{hint}}",
+			"open-on-discogs": "Megnyitás a Discogson",
+			"several-on-discogs": "A Discogs több előadót ismer ezen a néven, a MusicBrainz egyet sem. {{hint}}"
+		},
+		"artistForm": {
+			"details": "Adatok",
+			"genre": "Műfaj",
+			"load": "Betöltés",
+			"load-missing-data-from": "Hiányzó adatok betöltése a MusicBrainzről és a Wikipédiáról",
+			"name": "Név",
+			"select-a-genre": "Válassz műfajt",
+			"the-catalog-already-has": "A katalógusban már van",
+			"type": "Típus",
+			"country": "Ország",
+			"select-a-country": "Válassz országot",
+			"formed-in": "Alakulás éve",
+			"styles": "Stílusok",
+			"select-styles": "Válassz stílusokat",
+			"description": "Leírás",
+			"images": "Képek",
+			"photo-url": "Fotó URL",
+			"used-when-no-main": "Akkor használjuk, ha nincs csatolt főkép",
+			"photo": "Fotó",
+			"header-image": "Fejléckép",
+			"search-documents": "Dokumentumok keresése…",
+			"header-image2": "Fejléckép",
+			"main-image": "Főkép",
+			"search-documents2": "Dokumentumok keresése…",
+			"main-image2": "Főkép",
+			"save-the-artist-first": "Előbb mentsd az előadót, hogy képeket csatolhass.",
+			"source": "Forrás",
+			"musicbrainz": "MusicBrainz",
+			"artist-id-or-page": "Előadó-azonosító vagy oldal URL",
+			"load-looks-the-artist": "A betöltés ez alapján keresi az előadót, nem a név alapján.",
+			"cancel": "Mégse",
+			"save": "Mentés",
+			"pick-the-one-this": "Válaszd ki, melyik ez — az azonosítója sorként jön vissza, azt tartjuk meg.",
+			"loaded-artist-data": "Betöltött előadóadatok",
+			"source2": "Forrás:",
+			"apply": "Alkalmaz",
+			"field": "Mező",
+			"current": "Jelenlegi",
+			"loaded": "Betöltött",
+			"the-loaded-data-matches": "A betöltött adatok megegyeznek az űrlappal.",
+			"cancel2": "Mégse",
+			"apply-to-form": "Alkalmazás az űrlapra",
+			"musicbrainzId": "MusicBrainz-azonosító",
+			"discogs": "Discogs",
+			"discogsArtistId": "Discogs-azonosító",
+			"discogs-answers-when": "Akkor jön szóba, ha a MusicBrainz nem ismeri az előadót.",
+			"filled-in-from": "Kiegészítve innen:"
+		},
+		"artistAlbums": {
+			"load": "Betöltés",
+			"load-the-missing-studio": "A hiányzó albumok, EP-k, live és válogatáslemezek betöltése a MusicBrainzről",
+			"year": "Év",
+			"name": "Név",
+			"format": "Formátum",
+			"no-albums-yet-load": "Még nincs album. Töltsd be őket a MusicBrainzről.",
+			"pick-the-one-whose": "Válaszd ki, kinek az albumai ezek — mentsd az azonosítóját az Adatok fülön, hogy a választás megmaradjon.",
+			"albums-found": "Talált albumok",
+			"check-the-artist-they": "Ellenőrizd, melyik előadótól jöttek",
+			"select-all": "Mind kijelölése",
+			"year2": "Év",
+			"name2": "Név",
+			"format2": "Formátum",
+			"open-on-musicbrainz": "Megnyitás a MusicBrainzen",
+			"every-album-found-is": "Minden talált album már a katalógusban van.",
+			"cancel": "Mégse",
+			"heading": "Albumok ({{count}})",
+			"note": "A MusicBrainz stúdióalbumai és EP-i, amik még nincsenek a katalógusban. A kijelöltek létrejönnek."
+		},
+		"artistTable": {
+			"no-artists-found": "Nincs találat.",
+			"filter-by-name": "Szűrés névre…",
+			"filter-by-name2": "Szűrés névre",
+			"export-artist": "Előadó exportálása",
+			"delete-artist": "Előadó törlése",
+			"name": "Név",
+			"formed-in": "Alakult",
+			"styles": "Stílusok",
+			"images": "Képek",
+			"header": "Fejléc",
+			"main": "Fő",
+			"updated": "Módosítva",
+			"actions": "Műveletek",
+			"edit-artist": "Előadó szerkesztése",
+			"delete-artist2": "Előadó törlése",
+			"export-artist2": "Előadó exportálása",
+			"genre": "Műfaj",
+			"no-genre": "nincs műfaj",
+			"without-genre": "Műfaj nélkül"
+		},
+		"artistDetailView": {
+			"image": "Kép",
+			"country": "Ország:",
+			"formed-in": "Alakult:",
+			"styles": "Stílusok:",
+			"members": "Tagok",
+			"info": "Infó",
+			"discography": "Diszkográfia"
+		},
+		"artistSimpleView": {
+			"detail": "részletek",
+			"image": "Kép"
+		},
+		"musicianAdmin": {
+			"musicians": "Zenészek",
+			"musicians-of-the-global": "A globális katalógus zenészei, Discogs-profiljukkal.",
+			"add-musician": "Zenész hozzáadása"
+		},
+		"musicianForm": {
+			"details": "Adatok",
+			"load": "Betöltés",
+			"load-data-from-discogs": "Adatok betöltése a Discogsról a Discogs-azonosító alapján",
+			"name": "Név",
+			"real-name": "Valódi név",
+			"biography": "Életrajz",
+			"discogs-markup-such-as": "A Discogs jelölései, például az [a=Név], a nyilvános oldalon meg vannak tisztítva.",
+			"image-and-links": "Kép és linkek",
+			"portrait-url": "Portré URL",
+			"enter-a-full-http": "Adj meg teljes http(s) címet.",
+			"portrait-preview": "Portré előnézete",
+			"links": "Linkek",
+			"one-address-per-line": "Soronként egy cím.",
+			"also-known-as": "Más néven",
+			"one-name-per-line": "Soronként egy név.",
+			"source": "Forrás",
+			"discogs-id": "Discogs-azonosító",
+			"imported-from": "Importálva innen",
+			"cancel": "Mégse",
+			"save": "Mentés",
+			"loaded-musician-data": "Betöltött zenészadatok",
+			"source2": "Forrás:",
+			"apply": "Alkalmaz",
+			"field": "Mező",
+			"current": "Jelenlegi",
+			"loaded": "Betöltött",
+			"the-loaded-data-matches": "A betöltött adatok megegyeznek az űrlappal.",
+			"cancel2": "Mégse",
+			"apply-to-form": "Alkalmazás az űrlapra",
+			"nameVariations": "Névváltozatok"
+		},
+		"musicianTable": {
+			"no-musicians-found": "Nincs találat.",
+			"filter-by-name": "Szűrés névre…",
+			"filter-musicians-by-name": "Szűrés névre, valódi névre vagy művésznévre",
+			"portrait": "Portré",
+			"name": "Név",
+			"real-name": "Valódi név",
+			"profile": "Bemutatkozás",
+			"updated": "Módosítva",
+			"actions": "Műveletek",
+			"biography": "Életrajz",
+			"discogs": "Discogs"
+		},
+		"documentAdmin": {
+			"documents": "Dokumentumok",
+			"uploaded-images-and-files": "Feltöltött képek és fájlok, például albumborítók.",
+			"add-document": "Dokumentum hozzáadása"
+		},
+		"documentForm": {
+			"file": "Fájl",
+			"name": "Név",
+			"category": "Kategória",
+			"no-category": "Nincs kategória",
+			"category-hint": "Mire készült a fájl. Ebből tudják a választók, mit ajánljanak fel: borítót az albumnak, képet az előadónak.",
+			"upload": "Feltöltés",
+			"uploaded-file-preview": "Feltöltött fájl előnézete",
+			"stored-file": "Tárolt fájl",
+			"file-path": "Fájl útvonala",
+			"original-name": "Eredeti név",
+			"file-type": "Fájltípus",
+			"cancel": "Mégse",
+			"save": "Mentés"
+		},
+		"documentTable": {
+			"no-documents-found": "Nincs találat.",
+			"filter-by-name": "Szűrés névre…",
+			"filter-by-name2": "Szűrés névre",
+			"category": "Kategória",
+			"withdraw": "Visszavonás",
+			"the-file-stays-where": "? A fájl a helyén marad — minden, ami már hivatkozik rá, tovább működik —, de többé nem ajánljuk fel.",
+			"cancel": "Mégse",
+			"withdraw2": "Visszavonás",
+			"restore-document": "Dokumentum visszaállítása",
+			"withdraw-document": "Dokumentum visszavonása",
+			"thumbnail": "Bélyegkép",
+			"name": "Név",
+			"original-name": "Eredeti név",
+			"category2": "Kategória",
+			"updated": "Módosítva",
+			"actions": "Műveletek",
+			"restore-document2": "Dokumentum visszaállítása",
+			"edit-document": "Dokumentum szerkesztése",
+			"withdraw-document2": "Dokumentum visszavonása",
+			"badges": "Jelvények",
+			"album-covers": "Albumborítók",
+			"artist-images": "Előadó képek",
+			"scenes": "Jelenet-hátterek",
+			"uploads": "Feltöltések",
+			"withdrawn": "Visszavontak"
+		},
+		"documentSimpleView": {
+			"document-simple-view-works": "az egyszerű dokumentumnézet működik!"
+		},
+		"documentDetailView": {
+			"document-detail-view-works": "a részletes dokumentumnézet működik!"
+		},
+		"visualLab": {
+			"poz-ci": "Pozíció",
+			"15-mp-vissza": "15 mp vissza",
+			"15-mp-el-re": "15 mp előre",
+			"lemez": "Lemez",
+			"el-z": "Előző",
+			"lemez2": "Lemez",
+			"k-vetkez": "Következő",
+			"minden-csal-dhoz-egy": "Minden családhoz egy lemez, hogy végig lehessen lépni a motor összes világán.",
+			"vissza-a-list-hoz": "vissza a listához",
+			"el-ad": "Előadó",
+			"lemez3": "Lemez",
+			"sz-m": "Szám",
+			"st-lus": "Stílus",
+			"thrash-doom-black": "Thrash, Doom, Black…",
+			"vil-g": "Világ",
+			"bemenet": "Bemenet",
+			"az-audio-reactive-m": "Az audio-reactive mód szimulált hangadatot kap, hogy a szolgáltatói hozzáférés nélkül is tesztelhető legyen.",
+			"szekci": "Szekció",
+			"auto": "auto",
+			"min-s-g": "Minőség",
+			"param-terek": "Paraméterek",
+			"knob": {
+				"intensity": "Intenzitás",
+				"fog": "Köd",
+				"fogSpeed": "Ködsebesség",
+				"particleDensity": "Részecskesűrűség",
+				"particleSpeed": "Részecskesebesség",
+				"camera": "Kameramozgás",
+				"light": "Fényerő",
+				"glow": "Ragyogás",
+				"shake": "Rázkódás",
+				"darkness": "Sötétség",
+				"vignette": "Vignetta",
+				"surreal": "Szürreális"
+			},
+			"engineFailed": "A vizuális motor nem indult el: {{message}}",
+			"own": "Sajátot"
+		},
+		"playerStage": {
+			"close": "Bezárás",
+			"no-synced-lyrics-saved": "Ehhez a számhoz nincs mentett időzített dalszöveg: a szöveg a dallal együtt gördül.",
+			"nothing-to-play-this": "Nincs mivel lejátszani: nincs Spotify- vagy YouTube-link.",
+			"position": "Pozíció",
+			"lyrics-earlier": "Dalszöveg korábban",
+			"lyrics-earlier2": "Dalszöveg korábban",
+			"previous-track": "Előző szám",
+			"connect-spotify-to-play": "Kösd össze a Spotifyjal a lejátszáshoz",
+			"next-track": "Következő szám",
+			"lyrics-later": "Dalszöveg később",
+			"lyrics-later2": "Dalszöveg később",
+			"volume": "Hangerő",
+			"pick": "Válaszd",
+			"this-tab": "ezt a lapot",
+			"and-tick": "és pipáld be",
+			"share-tab-audio": "Lap hangjának megosztása",
+			"no-sound-shared": "Nem érkezik hang a megosztott lapról, így a látvány magától mozog. Nézd meg, hogy ezt a lapot osztod-e meg bepipált hanggal, és hogy a zene itt szól-e, nem másik eszközön.",
+			"spotify": "Spotify",
+			"youtube": "YouTube",
+			"lyricsEarlierBy": "· dalszöveg {{seconds}} mp-cel korábban",
+			"lyricsLaterBy": "· dalszöveg {{seconds}} mp-cel később"
+		},
+		"joinPrompt": {
+			"make-it-your-collection": "Legyen a tiéd a gyűjtemény",
+			"continue-with-google": "Folytatás Google-fiókkal",
+			"pitch": "A katalógus mindenki előtt nyitva áll — {{albums}} album {{artists}} előadótól, végigolvasásra. Jelentkezz be, hogy nyilvántartsd a saját példányaidat, lásd, mi hiányzik még egy kihíváshoz, és a polcod kövessen az eszközeid között."
+		},
+		"catalogCoverageChart": {
+			"in-my-collection": "A gyűjteményemben",
+			"rest-of-the-catalog": "A katalógus többi része",
+			"in-the-catalog": "a katalógusban",
+			"summary": "{{catalog}} katalógusbeli albumból {{collected}} megvan"
+		},
+		"networkSearch": {
+			"search-the-network": "Keresés a hálózatban",
+			"search-the-network2": "Keresés a hálózatban…",
+			"search-results": "Találatok"
+		},
+		"collectionGrowthChart": {
+			"added": "hozzáadva",
+			"in-total": "összesen"
+		},
+		"completenessMeters": {
+			"open-list": "Lista megnyitása",
+			"complete": "teljes"
+		},
+		"releaseRequestRow": {
+			"not-in-the-catalog": "Nincs a katalógusban — a jóváhagyás az albumot is létrehozza",
+			"collector": "Gyűjtő:",
+			"admin": "Admin:",
+			"reason-shown-to-the": "Indoklás (a gyűjtő látja, nem kötelező)",
+			"cancel": "Mégse",
+			"reject-request": "Kérés elutasítása",
+			"catalog-release": "Katalógusbeli kiadás",
+			"link-a-catalog-release": "Katalógusbeli kiadás összekötése…",
+			"approve-with-it": "Jóváhagyás ezzel",
+			"reject": "Elutasítás",
+			"add-the-release-to": "Vedd fel a kiadást az albumhoz az adminban, aztán kösd össze itt.",
+			"importing": "Folyamatban…",
+			"import-from-discogs": "Import a Discogsról"
+		},
+		"releaseRequestAdmin": {
+			"error-not-found": "Nincs meg: a kérés, az albuma, a kiadás vagy a Discogs-kiadás.",
+			"error-moved-on": "Már elbírálták — vagy nincs Discogs-kiadása: köss hozzá katalógusbeli kiadást.",
+			"error-not-allowed": "Kérést csak admin bírálhat el.",
+			"error-discogs-unreachable": "A Discogs most nem érhető el. Próbáld újra később.",
+			"error-discogs-busy": "A Discogs most túlterhelt. Próbáld újra egy perc múlva.",
+			"error-unknown": "Valami félresikerült. Próbáld újra később."
+		},
+		"musicCollectionAdmin": {
+			"collections": "Kollekciók",
+			"sets-of-records-defined": "Lemezek halmaza szabály szerint. Hogy mi tartozik bele, a katalógushoz mérve dől el, így a kollekció vele együtt nő — a jelvény pedig azzal jár, ha mind megvan.",
+			"add-collection": "Kollekció hozzáadása",
+			"filter-by-status": "Szűrés állapotra",
+			"loading-collections": "Kollekciók betöltése…",
+			"no-collection-here-yet": "Itt még nincs kollekció.",
+			"records": "lemez",
+			"pts": "pont",
+			"edit": "Szerkesztés",
+			"delete": "Törlés",
+			"delete2": "Törlés",
+			"whoever-earned-its-badge": "? Aki megszerezte a jelvényét, elveszíti, és ez innen nem vonható vissza.",
+			"cancel": "Mégse",
+			"add-discography": "Diszkográfia nyitása"
+		},
+		"musicCollectionEdit": {
+			"a-collection-is-a": "A kollekció szabály, nem lista: hogy mi tartozik bele, minden olvasáskor a katalógushoz mérve dől el.",
+			"loading": "Betöltés…",
+			"the-collection": "A kollekció",
+			"name": "Név",
+			"slug": "Rövid név",
+			"description": "Leírás",
+			"icon": "Ikon",
+			"pi-pi-box": "pi pi-box",
+			"a-primeicons-class-as": "PrimeIcons-osztály, mint a menüben.",
+			"cover-image-url": "Borítókép URL",
+			"status": "Állapot",
+			"a-draft-is-not": "A piszkozat nem jelenik meg a listában, és senkinek nem ad jelvényt.",
+			"visibility": "Láthatóság",
+			"points": "Pontok",
+			"parent-collection": "Szülő kollekció",
+			"none": "— nincs —",
+			"the-rule": "A szabály",
+			"every-filter-given-must": "Minden megadott szűrőnek teljesülnie kell. Az üresen hagyott szűrő nem mond semmit — ha mind üres, a kollekció a teljes katalógust kéri.",
+			"released-from": "Megjelent ettől",
+			"released-to": "Megjelent eddig",
+			"artists": "Előadók",
+			"search-artists": "Előadók keresése…",
+			"nothing-picked-means-any": "Ha nem választasz, bármelyik előadó jó.",
+			"credited-musicians": "Feltüntetett zenészek",
+			"search-musicians": "Zenészek keresése…",
+			"credited-as": "Ebben a szerepben",
+			"drums-producer": "Dob, Producer",
+			"discogs-roles-comma-separated": "Discogs-szerepek, vesszővel elválasztva. Egyetlen közreműködésnek kell mindkettőnek megfelelnie: az a zenész abban a szerepben, nem két külön bejegyzés együtt.",
+			"the-badge": "A jelvény",
+			"name2": "Név",
+			"without-a-name-the": "Név nélkül a kollekció nem ad jelvényt.",
+			"icon2": "Ikon",
+			"pi-pi-star": "pi pi-star",
+			"description2": "Leírás",
+			"artwork-url": "Grafika URL",
+			"a-hand-made-image": "Kézzel készült kép, arra a ritka jelvényre, aminek kell. Az alábbi generált pin felülírja.",
+			"the-pin": "A pin",
+			"drawn-by-an-image": "Képmodell rajzolja, a kollekció saját adataiból. A stílus minden jelvényen ugyanaz — csak a motívum, a zománc, a patina és a perem követi a szabályt. Minden megrajzolt kép megmarad, így a pin bármelyik lehet, ma vagy jövőre. Saját kép is lehet pin: a feltöltött kép ugyanúgy a galériába kerül, és rögtön jelvény lesz.",
+			"save-the-collection-first": "Előbb mentsd a kollekciót: a promptot a szerver a tároltakból építi, nem ebből az űrlapból.",
+			"the-collection-s-badge": "A kollekció jelvénye",
+			"the-badge2": "A jelvény",
+			"pick-this-one": "Ezt választom",
+			"what-it-catches": "Amit befog",
+			"no-filter-yet-this": "Még nincs szűrő — ez a szabály a teljes katalógust befogja. A közzététele el lesz utasítva.",
+			"resolving": "· feloldás…",
+			"worth": "Ér",
+			"points-and-only-once": "pont, és csak akkor, ha a gyűjtőnek mind megvan. Egy régi lemez eredeti nyomásának birtoklása tovább emeli.",
+			"cancel": "Mégse",
+			"andMore": "…és még {{count}}.",
+			"pointsHint": {
+				"one": "Mennyit ér teljesíteni. Üresen hagyva a szabály dönt — hány lemezt kér, és mennyire régiek —, ami most {{count}} pont lenne.",
+				"other": "Mennyit ér teljesíteni. Üresen hagyva a szabály dönt — hány lemezt kér, és mennyire régiek —, ami most {{count}} pont lenne."
+			},
+			"previewTotal": {
+				"one": "{{count}} lemez",
+				"other": "{{count}} lemez"
+			},
+			"group": "Csoport",
+			"groupHint": "Melyik cím alatt áll a listában. A diszkográfia egy zenekar saját collection-párja.",
+			"upload-an-image": "Kép feltöltése",
+			"uploading-the-image": "Feltöltés…",
+			"the-uploaded-artwork": "A feltöltött grafika",
+			"take-the-pin-off": "Pin levétele",
+			"a-chosen-pin-covers": "A kiválasztott pin takarja a feltöltött grafikát. Vedd le a pint, ha a saját képed legyen a jelvény.",
+			"my-own-picture-as-pin": "Saját kép pinnek",
+			"pick-from-uploaded": "Válassz a feltöltöttekből",
+			"already-uploaded": "Már feltöltött képek",
+			"search-images": "Kép keresése név szerint…",
+			"no-uploaded-image": "Ebbe a kategóriába még nincs kép beiktatva. Ami besorolatlan, itt nem jelenik meg.",
+			"more-images": "…és még {{count}} kép. Keress rá a nevére.",
+			"close-the-library": "Bezárás",
+			"the-picked-image-becomes": "A kiválasztott kép rögtön a jelvény lesz — feltöltés nélkül, mert a fájl már megvan.",
+			"collection-editor": "Kollekció-szerkesztő",
+			"the-editor-s-sections": "A szerkesztő lapjai",
+			"basics": "Alapok",
+			"rule": "Szabály",
+			"looks": "Kinézet",
+			"badge": "Jelvény",
+			"the-look": "A kinézet",
+			"the-cover-stands-behind": "A borító a kollekció mögött áll, bárhol is mutatják: a kártyáján és a saját lapja fején."
+		},
+		"profileSharing": {
+			"page": "Nyilvános gyűjtő-profil",
+			"share": "Legyen nyilvános lapom",
+			"shareHint": "Egy link, amit bárkinek továbbadhatsz: bejelentkezés nélkül is látja, mi van a polcodon. Amíg ki van kapcsolva, semmi nem kerül ki.",
+			"wishlist": "A kívánságlistám is legyen rajta",
+			"wishlistHint": "Így a család tudja, mivel lephet meg. Most {{count}} lemez van a listádon.",
+			"preview": "A lapodon {{copies}} lemez, {{badges}} jelvény és {{points}} pont látszik.",
+			"previewWishlist": "Mellettük {{count}} kívánság.",
+			"previewCollections": "Ezen kívül {{count}} kollekció, amit gyűjtesz — a kollekcióknál a szem ikonnal állítod.",
+			"pickCollections": "Kollekciók →",
+			"off": "Nincs nyilvános lapod, és semmi nem kerül ki a gyűjteményedről.",
+			"link": "A lapod linkje",
+			"copy": "Másolás",
+			"copied": "Kimásolva",
+			"look": "Megnézem",
+			"shareCard": "Kép megosztása",
+			"drawing": "Rajzolom…",
+			"cardTagline": "Gyűjtemény",
+			"shareText": "Nézd meg a lemezgyűjteményemet",
+			"updated": "Így állt:",
+			"pending": "A lap most készül el — egy pillanat, és a link működik.",
+			"favourites": "Kedvencek",
+			"favouritesHint": "A legjobbra értékelt lemezeid, azzal együtt, amit írtál róluk. Eddig {{count}} lemezt értékeltél.",
+			"previewFavourites": "Vele megy a {{count}} kedvenc lemezed is."
+		},
+		"profilePrivacy": {
+			"show-where-you-collect": "Mutassuk, honnan gyűjtesz",
+			"country": "Ország",
+			"not-chosen": "Nincs kiválasztva",
+			"city": "Város",
+			"outside-players": "Külső lejátszók",
+			"let-me-listen-here": "Hadd hallgassam itt",
+			"puts-youtube-s-and": "Kiteszi a YouTube és a Spotify lejátszóját az oldalra. Ezek nem a mieink: mindegyik a saját tárolójába ír, és jelzi a tulajdonosának, hogy itt jártál. Ha kikapcsolod, azonnal lekerülnek az oldalról, és a lemezek elhallgatnak.",
+			"usage-measurement": "Használat mérése",
+			"count-how-the-app": "Számoljuk, hogyan használod az appot",
+			"which-pages-and-features": "Mely oldalak és funkciók nyílnak meg, a Google Analyticsen keresztül. Nincs hirdetés, és semmi nem megy át a lemezeidről vagy a kereséseidről. Ha kikapcsolod, azonnal leáll, és törli, amit ebben a böngészőben hagyott.",
+			"place": {
+				"off": "Sehogy",
+				"country": "Az országom",
+				"city": "Az országom és a városom",
+				"profile": "Az országom, a városom és én"
+			}
+		},
+		"profilePlayback": {
+			"back-to-defaults": "Vissza az alapértelmezettre",
+			"play-on": "Lejátszás itt",
+			"opens": "Így nyílik",
+			"visuals": "Látvány",
+			"show-the-lyrics-when": "Mutassuk a dalszöveget, ha van",
+			"play-on-to-the": "Menjen tovább a következő számra"
+		},
+		"profileShelves": {
+			"draw-the-shelving-you": "Rajzold le a polcot, ami valóban megvan. Egy elem rekeszek rácsa, és egy rekesznek két mérete van: a magassága dönti el, mi fér bele (a bakelit 32 cm, a DVD 20, a CD 12, a kazetta 8), a hossza pedig, hogy mennyi. A lemezek az első elemtől az utolsóig kerülnek be — amit egy rekesz nem tud befogadni, az a következőre vár.",
+			"shelf-name": "Polc neve",
+			"rows": "Sorok",
+			"one-row-fewer": "Eggyel kevesebb sor",
+			"one-row-more": "Eggyel több sor",
+			"columns": "Oszlopok",
+			"one-column-fewer": "Eggyel kevesebb oszlop",
+			"one-column-more": "Eggyel több oszlop",
+			"move-this-shelf-earlier": "Polc előrébb",
+			"move-this-shelf-later": "Polc hátrébb",
+			"remove-this-shelf": "Polc eltávolítása",
+			"remove-this-insert": "Betét eltávolítása",
+			"add-insert": "Betét",
+			"insert-in": "Hol áll",
+			"inserts-do-not-fit": "Az ebben a rekeszben álló betétek együtt nem férnek el benne — nagyobb rekesz vagy kevesebb betét kell.",
+			"nothing-drawn-yet-the": "Még nincs megrajzolva semmi — a gyűjtemény egyetlen nyitott falon áll, ami vele együtt nő.",
+			"add-shelf": "Polc hozzáadása",
+			"remove-all": "Mind eltávolítása",
+			"short": {
+				"one": "{{count}} lemeznek nincs hol állnia — a bútor alatt látszik, amíg nem rajzolsz többet.",
+				"other": "{{count}} lemeznek nincs hol állnia — a bútor alatt látszanak, amíg nem rajzolsz többet."
+			},
+			"unitNote": "{{compartments}} rekesz · egy rekeszbe:",
+			"roomNote": "{{units}} polc · {{compartments}} rekesz · összesen {{length}} cm polchossz, amin {{holds}} lemezed elfér.",
+			"cubby-height": "Rekesz magassága",
+			"cubby-length": "Rekesz hossza",
+			"one-notch-lower": "Eggyel alacsonyabb rekesz",
+			"one-notch-higher": "Eggyel magasabb rekesz",
+			"shorter": "Egy centivel rövidebb rekesz",
+			"longer": "Egy centivel hosszabb rekesz",
+			"how-the-copies-lie": "Hogyan állnak a lemezek a rekeszben",
+			"standing": "Állva",
+			"stacked": "Fektetve",
+			"nothing-fits": "Ilyen alacsony rekeszbe semmi nem fér be",
+			"widths-title": "Lemezvastagságok",
+			"widths-intro": "Milyen vastag egy-egy tok a polcodon. Ugyanez a szám rajzolja ki a gerincet és dönti el, mennyi fér egy rekeszbe — mérd meg a sajátjaidat, ha nem szabványosak.",
+			"one-pixel-narrower": "Egy pixellel keskenyebb",
+			"one-pixel-wider": "Egy pixellel szélesebb",
+			"standard": "Alapérték",
+			"spine": {
+				"vinyl": "Bakelit",
+				"boxset": "Bakelit díszdoboz",
+				"dvd": "DVD",
+				"cd": "CD",
+				"cdbox": "Több CD-s kiadás",
+				"cassette": "Kazetta"
+			}
+		},
+		"profileSpotify": {
+			"your-own-app-explained": "A saját Spotify appoddal ez a lejátszó vezérli a Spotifyt: sor, rádió, következő szám, a saját hangszóróid. Nélküle marad a Spotify beágyazott kerete az album oldalán — abban teljes hosszban szól a szám, ha be vagy jelentkezve a Spotifyba, de innen semmi nem vezérli. A Spotify appokhoz köti, ki léphet be rajtuk — egy app huszonöt embert bír el —, ezért kell a sajátod.",
+			"step-create-app": "Nyisd meg a developer.spotify.com/dashboard oldalt, és hozz létre egy appot (Web Playback SDK).",
+			"step-redirect-uri": "Vedd fel az app Redirect URI-jai közé ezt:",
+			"step-copy-client-id": "Másold ide az app Client ID-ját.",
+			"same-account-and-premium": "Az appot azzal a Spotify-fiókkal hozd létre, amelyikkel majd belépsz: a fejlesztői módban lévő app csak a saját tulajdonosát engedi be. Az innen vezérelt lejátszáshoz Spotify Premium is kell — anélkül a lejátszó el sem indul.",
+			"client-id": "Spotify client ID",
+			"client-id-placeholder": "A 32 karakteres azonosító az appod oldaláról",
+			"save-app": "Mentés",
+			"cancel": "Mégse",
+			"your-app": "A te appod:",
+			"change-app": "Csere",
+			"forget-app": "Elfelejtés",
+			"connected": "Csatlakoztatva",
+			"disconnect": "Szétkapcsolás",
+			"play-on": "Lejátszás itt",
+			"play-spotify-on": "Spotify lejátszása itt",
+			"this-browser": "Ez a böngésző",
+			"refresh-device-list": "Eszközlista frissítése",
+			"refresh-device-list2": "Eszközlista frissítése",
+			"speakers-show-up-when": "A hangszórók akkor jelennek meg, ha támogatják a Spotify Connectet és be vannak kapcsolva. Hiányzik? Játssz le rajta egyszer valamit a Spotify appból, aztán frissíts.",
+			"volume-in-this-browser": "Hangerő ebben a böngészőben",
+			"what-the-browser-player": "Amivel a böngészőbeli lejátszó indul. Ez a böngészőben marad, nem a fiókban — a hangszórók gépenként mások."
+		},
+		"profileAppearance": {
+			"theme": "Téma",
+			"page-width": "Oldalszélesség",
+			"the-wide-setting-only": "A széles beállítás csak olyan képernyőn látszik, ahol van rá hely.",
+			"dark": "Sötét",
+			"light": "Világos",
+			"standard": "Normál",
+			"fullWidth": "Teljes szélesség",
+			"mosaic": "Borítómozaik",
+			"mosaic-still": "Áll",
+			"seconds-short": "mp",
+			"a-collection-without-artwork": "A saját kép nélküli gyűjteményeket négy borító képviseli. Ha mozgásra állítod, ennyi időnként az oldalon egyetlen borító fordul át a gyűjtemény egy következő lemezére — a látható mozaikok összes csempéje közül sorsolva, hogy mindig csak egy kép mozduljon, ne az egész oldal.",
+			"mosaic-turn": "Váltás",
+			"turn": {
+				"fade": "Átúszás",
+				"slide": "Csúszás",
+				"flip": "Fordulás",
+				"zoom": "Ráközelítés",
+				"random": "Véletlen"
+			}
+		},
+		"profileDemoTour": {
+			"the-launcher": "Indító",
+			"show-me-around": "Vezess körbe",
+			"puts-the-play-button": "Kitesz egy iránytűt minden oldal sarkába, és innen is elindíthatod.",
+			"start-the-tour-now": "Mutasd be ezt az oldalt"
+		},
+		"profileListening": {
+			"records-put-on": "Feltett lemezek",
+			"heard-right-through": "Végighallgatva",
+			"different-records": "Különböző lemez",
+			"this-year": "Idén",
+			"hours": "Óra",
+			"put-on-most": "Legtöbbször feltéve",
+			"nothing-yet-put-a": "Még semmi. Tegyél fel egy lemezt egy albumoldalról, és itt számolódik — egy lemez fél perc szólás után számít, és akkor számít végighallgatottnak, ha minden száma megszólalt.",
+			"plays": "{{count}}×",
+			"through": "· {{count}} alkalommal végig"
+		},
+		"profileAccount": {
+			"display-name": "Megjelenített név",
+			"saved": "Mentve.",
+			"note": "Ez a név látszik amellett, amit a katalógushoz adsz."
+		},
+		"nextAlbums": {
+			"the-moment-it-is": "abban a pillanatban, hogy a polcon van",
+			"moves": "közelebb visz",
+			"closer": "-hoz",
+			"completes": "Teljessé teszi: {{collections}}"
+		},
+		"albumTracklist": {
+			"total-length": "Teljes hossz"
+		},
+		"albumCollections": {
+			"part-of": "Része ennek",
+			"missing-this-one": "ez hiányzik"
+		},
+		"artistLineup": {
+			"former-members": "Korábbi tagok",
+			"guest-musicians": "Vendégzenészek"
+		},
+		"spotifyCallback": {
+			"spotify-sign-in-failed": "A Spotify-belépés nem sikerült",
+			"back-to-home": "Vissza a főoldalra",
+			"connecting-to-spotify": "Csatlakozás a Spotifyhoz…"
+		},
+		"youtubePanel": {
+			"choose-what-to-play": "Válaszd ki, mi szóljon",
+			"full-album": "Teljes album",
+			"playing-now": "Most szól:",
+			"play-this-album-instead": "Inkább ez az album szóljon",
+			"video": "{{number}}. videó"
+		},
+		"youtubeDock": {
+			"close-youtube-player": "YouTube-lejátszó bezárása"
+		},
+		"consentBar": {
+			"your-choices": "A te döntéseid",
+			"may-we-count-which": "Számolhatjuk, mely oldalak és funkciók kerülnek használatba? Google Analytics, hirdetés nélkül — hogy mid van és mit keresel, abból kimarad.",
+			"no-thanks": "Köszönöm, nem",
+			"allow": "Engedélyezem",
+			"may-we-put-youtube": "Kitehetjük a YouTube és a Spotify lejátszóját az oldalra, hogy itt hallgathass? Ezek nem a mieink: mindegyik a saját tárolójába ír, és jelzi a tulajdonosának, hogy itt jártál. Enélkül a lemezek némák maradnak.",
+			"keep-them-off": "Maradjanak ki",
+			"allow2": "Engedélyezem",
+			"you-can-change-either": "Mindkettőt bármikor módosíthatod a profilodban."
+		},
+		"pageBreadcrumb": {
+			"breadcrumb": "Morzsamenü"
+		},
+		"pageBack": {
+			"back": "Vissza"
+		},
+		"discographyCard": {
+			"in-your-collection": "A gyűjteményedben",
+			"not-in-your-collection": "Nincs a gyűjteményedben"
+		},
+		"adminEditLink": {
+			"edit-in-admin": "Szerkesztés az adminban"
+		},
+		"playAlbumButton": {
+			"play-on-spotify": "Lejátszás a Spotifyon: {{title}}",
+			"pause-on-spotify": "Szünet a Spotifyon: {{title}}",
+			"play-on-youtube": "Lejátszás a YouTube-on: {{title}}",
+			"pause-on-youtube": "Szünet a YouTube-on: {{title}}"
+		},
+		"playerMini": {
+			"player": "Lejátszó",
+			"previous-track": "Előző szám",
+			"next-track": "Következő szám",
+			"next-record-of-the": "Az adó következő lemeze",
+			"volume": "Hangerő",
+			"volume2": "Hangerő",
+			"open-the-full-screen": "Teljes képernyős lejátszó megnyitása",
+			"full-screen": "Teljes képernyő"
+		},
+		"playerPanel": {
+			"previous-track": "Előző szám",
+			"next-track": "Következő szám",
+			"volume": "Hangerő",
+			"open-the-full-screen": "Teljes képernyős lejátszó megnyitása",
+			"full-screen": "Teljes képernyő",
+			"this-player-only-plays": "Ez a Spotify saját kerete: teljes hosszban szól, ha be vagy jelentkezve a Spotifyba, de innen nem vezérelhető. Kösd össze a Spotify Premium fiókodat a beállításoknál (fogaskerék), hogy a sor, a rádió és a hangszóróid is működjenek.",
+			"spotifys-own-frame": "Ez a Spotify saját kerete: a saját gombjával indul, és teljes hosszban szól, ha be vagy jelentkezve a Spotifyba. A sorhoz, a rádióhoz és a hangszóróidhoz add meg a saját Spotify appodat a profilodban."
+		},
+		"playerSideBreak": {
+			"turn-the-record-over": "Fordítsd meg a lemezt",
+			"play": "{{side}} lejátszása",
+			"upNext": "Következik: {{side}}"
+		},
+		"playerStation": {
+			"station": "Adó",
+			"last-record-of-the": "Az adó utolsó lemeze",
+			"play-in-a-random": "Lejátszás véletlen sorrendben",
+			"play-in-a-random2": "Lejátszás véletlen sorrendben",
+			"next-record": "Következő lemez",
+			"next-record2": "Következő lemez",
+			"stop-the-station": "Adó leállítása",
+			"stop-the-station2": "Adó leállítása",
+			"waiting": {
+				"one": "még {{count}} lemez várakozik",
+				"other": "még {{count}} lemez várakozik"
+			}
+		},
+		"playerSettingsMenu": {
+			"player-settings": "Lejátszó beállításai",
+			"player-settings2": "Lejátszó beállításai",
+			"play-on": "Lejátszás itt",
+			"spotify-output": "Spotify kimenet",
+			"play-spotify-on": "Spotify lejátszása itt",
+			"this-browser": "Ez a böngésző",
+			"refresh-device-list": "Eszközlista frissítése",
+			"refresh-device-list2": "Eszközlista frissítése",
+			"speakers-show-up-when": "A hangszórók akkor jelennek meg, ha támogatják a Spotify Connectet és be vannak kapcsolva. Hiányzik? Játssz le rajta egyszer valamit a Spotify appból, aztán frissíts.",
+			"disconnect-spotify": "Spotify szétkapcsolása",
+			"connect-spotify-premium": "Spotify csatlakoztatása (Premium)",
+			"open-as": "Így nyíljon",
+			"backdrop": "Háttér",
+			"effects": "Effektek",
+			"show-lyrics": "Dalszöveg mutatása",
+			"play-on-to-the": "Menjen tovább a következő számra",
+			"stop-to-turn-the": "Álljon meg lemezfordításhoz",
+			"reset-to-defaults": "Vissza az alapértelmezettre",
+			"scope": "{{context}} beállításai",
+			"own-app-in-profile": "A Spotify innen vezérléséhez — sor, rádió, hangszórók — add meg a saját Spotify appodat a profilodban."
+		},
+		"playback": {
+			"auto": "Automatikus",
+			"spotify": "Spotify",
+			"youtube": "YouTube",
+			"page": "Oldal",
+			"fullScreen": "Teljes képernyő",
+			"cover": "Borító",
+			"animatedWorld": "Animált világ",
+			"off": "Ki",
+			"subtle": "Visszafogott",
+			"full": "Teljes",
+			"songPictures": "A szám képei"
+		},
+		"collectionItemList": {
+			"allItems": "Összes tétel: {{count}}"
+		},
+		"form": {
+			"savingKeepsBoth": "A mentés mindkettőt megtartja — az egyiket a katalógusban olvaszd össze."
+		},
+		"entityPicker": {
+			"noMatch": "Semmi nem felel meg ennek: „{{query}}”."
+		},
+		"profileLanguage": {
+			"legend": "Nyelv",
+			"chosen": "A saját választásod. Az app alapértelmezése rád már nem vonatkozik.",
+			"following": "Az app alapértelmezését követi, vagy azt, amit a böngésződ kér."
+		},
+		"musicianEdit": {
+			"details": "Adatok",
+			"bands": "Bandák"
+		},
+		"artistMembers": {
+			"heading": "Tagok ({{count}})",
+			"guests": "Vendégzenészek ({{count}})",
+			"add-member": "Tag hozzáadása",
+			"add-guest": "Vendég hozzáadása",
+			"loading": "Felállás betöltése…",
+			"musician": "Zenész",
+			"musician-fixed": "A sort a banda és a zenész azonosítja; ha mást akarsz, töröld ezt a sort, és vegyél fel újat.",
+			"search-musicians": "Kezdd el gépelni a nevet",
+			"create-musician": "„{{name}}” létrehozása zenészként",
+			"instruments": "Hangszerek",
+			"instruments-placeholder": "Válassz hangszert",
+			"instruments-hint": "Válaszd ki, amin játszik; a lista minden nyelven a saját szavát mutatja.",
+			"instrument-group": {
+				"vocals": "Ének",
+				"guitars": "Gitár és basszus",
+				"keyboards": "Billentyűsök",
+				"percussion": "Dob és ütősök",
+				"strings": "Vonósok",
+				"winds": "Fúvósok",
+				"other": "Egyéb",
+				"unlisted": "Ahogy a forrás írja"
+			},
+			"kind": "Szerep a bandában",
+			"kind-member": "Tag",
+			"kind-guest": "Vendég",
+			"from": "Kezdés",
+			"to": "Befejezés",
+			"to-optional": "Nem kötelező",
+			"to-hint": "Hagyd üresen, ha nem tudni, mikor ért véget.",
+			"year": "Év",
+			"still-a-member": "Jelenleg is tag",
+			"cancel": "Mégse",
+			"save": "Mentés",
+			"present": "napjainkig",
+			"years": "Évek",
+			"albums": "Albumok",
+			"row-actions": "Műveletek",
+			"edit": "Szerkesztés",
+			"edit-member": "Tag szerkesztése",
+			"delete": "Törlés",
+			"delete-member": "Kivétel a felállásból",
+			"delete-question": "Kiveszed {{name}} nevű zenészt a felállásból? A zenész a katalógusban marad.",
+			"no-members-yet": "Még nincs tag. Vedd fel őket kézzel, vagy töltsd be a felállást a Discogs importtal.",
+			"error-duplicate": "Ez a zenész már szerepel a felállásban. Azt a sort szerkeszd.",
+			"error-permission": "Nincs jogosultságod a felállás módosításához.",
+			"error-general": "Valami hiba történt. Próbáld újra később.",
+			"load": "Betöltés",
+			"load-hint": "A felállás betöltése a MusicBrainzről és a katalógus kreditjeiből",
+			"pick-the-band": "Válaszd ki, melyik banda felállása ez — mentsd az azonosítóját az Adatok fülön, hogy a választás megmaradjon.",
+			"found": "Talált felállás",
+			"found-note": "A tagok és az évek a MusicBrainzről, a vendégek és a hangszerek a katalógusban már meglévő kreditekből. Aki már szerepel a felállásban, az kimarad.",
+			"select-all": "Mind kijelölése",
+			"new-musician": "új",
+			"source": "Forrás",
+			"source-musicbrainz": "MusicBrainz",
+			"source-catalog": "Kreditek",
+			"current": "Jelenlegi tag",
+			"add-selected": "{{count}} sor felvétele",
+			"adding": "Felvétel folyamatban… az új zenészek egyesével jönnek létre, ez eltarthat pár másodpercig.",
+			"error-nothing-found": "Nincs mit felvenni: a MusicBrainzen nincs felállás, a katalógusban pedig nincs kredit a banda albumaihoz.",
+			"external-failed": "A MusicBrainz nem volt elérhető, ezért csak a katalógus kreditjei szerepelnek. A tagokért és az évekért próbáld újra a betöltést később.",
+			"instruments-empty": "Nincs ilyen hangszer a listán."
+		},
+		"musicianBands": {
+			"heading": "Bandák ({{count}})",
+			"loading": "Bandák betöltése…",
+			"band": "Banda",
+			"kind": "Szerep",
+			"kind-member": "Tag",
+			"kind-guest": "Vendég",
+			"instruments": "Hangszerek",
+			"years": "Évek",
+			"albums": "Albumok",
+			"present": "napjainkig",
+			"current": "Jelenlegi tag",
+			"no-bands-yet": "Ez a zenész még egyetlen felállásban sem szerepel.",
+			"edit-on-the-band": "A felállást a banda oldalán, a Felállás fülön lehet szerkeszteni.",
+			"error-general": "Valami hiba történt. Próbáld újra később."
+		},
+		"dailyQuestionBanner": {
+			"there-is-a-question": "Itt a mai kérdés, és még nem tippeltél rá.",
+			"play-it": "Mehet a tipp",
+			"not-now": "Most nem"
+		},
+		"dailyQuestionSettings": {
+			"title": "Napi kérdés",
+			"lead": "A játék szabályai: mennyi idő van válaszolni, mit fizet egy tipp, és miből kérdezhet a motor.",
+			"loading": "Betöltés…",
+			"the-game": "A játék",
+			"game-is-on": "A játék megy",
+			"switched-off": "Kikapcsolva nem áll össze új kérdés, és a lap ezt mondja a gyűjtőnek. A meglévő napok kérdései megmaradnak.",
+			"time-limit": "Időkorlát (mp)",
+			"time-limit-hint": "Ennyi idő van válaszolni. Nulla: nincs óra, és gyorsasági bónusz sincs. A késői tippet a szerver elfogadja, de nem fizeti.",
+			"what-a-guess-pays": "Mit fizet egy tipp",
+			"points-easy": "Könnyű kérdés",
+			"points-medium": "Közepes kérdés",
+			"points-hard": "Nehéz kérdés",
+			"streak-bonus": "Sorozat-bónusz naponta",
+			"streak-bonus-hint": "A sorozat első napja még nem bónuszol: a bónusz a visszatérést díjazza.",
+			"streak-days": "Ennyi napig",
+			"speed-bonus": "Gyorsasági bónusz (max)",
+			"speed-bonus-hint": "Csúszó skálán fizet: az azonnali tipp az egészet viszi, az utolsó másodpercben érkező semmit. Óra nélkül nem fizet.",
+			"the-luck": "A szerencse",
+			"bonus-day-chance": "Bónusz nap esélye (%)",
+			"bonus-day-chance-hint": "A napból dől el, tehát mindenkinek ugyanaz a nap a bónusz nap.",
+			"bonus-day-multiplier": "Bónusz napi szorzó",
+			"question-kinds": "Kérdésfajták",
+			"question-kinds-hint": "Amit kikapcsolsz, abból nem lesz kérdés. A merítés-függő fajták maguktól kapcsolnak be, ahogy az adat pótlódik — a kikapcsolás viszont mindig erősebb.",
+			"enabled-count": "{{enabled}} / {{all}} bekapcsolva",
+			"the-field": "A ranglista",
+			"leaderboard-size": "Ennyi hely látszik",
+			"leaderboard-size-hint": "A többi gyűjtő a saját helyezését így is látja: azt a kasszájába írja a napi futás.",
+			"save": "Mentés",
+			"saving": "Mentés…",
+			"saved": "Mentve",
+			"today": "A mai nap",
+			"compose-now": "Kérdés összeállítása most",
+			"compose-force": "Mai kérdés lecserélése",
+			"composing": "Összeállítás…",
+			"refresh-leaderboard": "Ranglista újraépítése",
+			"refreshing": "Építés…",
+			"composed": "{{day}}: {{template}} ({{difficulty}}), {{tries}} húzásból",
+			"compose-exists": "{{day}}: a kérdés már megvolt, nem írtuk felül.",
+			"compose-disabled": "A játék ki van kapcsolva, ezért nem készült kérdés.",
+			"compose-no-material": "Nem volt elég anyag a katalógusban a kérdéshez.",
+			"leaderboard-refreshed": "{{players}} játékos, {{ranked}} helyezés frissült.",
+			"history": "Korábbi kérdések",
+			"history-hint": "Amit a játék eddig kérdezett. A megfejtés nincs a listában — az a szerveren marad. Az összeállítás két hétre néz vissza: a lemezt addig nem kérdezi újra, a kérdésfajtát egy hétig, az előadót négy napig.",
+			"history-empty": "Még nincs korábbi kérdés."
+		},
+		"requestAdmin": {
+			"requests": "Kérések",
+			"what-collectors-ask": "Minden kérés egy helyen: amit a gyűjtők a katalógusba szánnak, és amit a saját lemezükhöz kiadásként kérnek. A katalógus-kérésekről mezőnként dönthetsz — az elutasítást indokolni kell, a gyűjtő ezt olvassa.",
+			"filter-by-status": "Szűrés állapot szerint",
+			"loading-requests": "Kérések betöltése…",
+			"no-requests-here": "Itt nincs kérés.",
+			"error-not-found": "A kérés vagy a katalógus dokumentuma már nincs meg.",
+			"error-moved-on": "A katalógus időközben megváltozott, vagy a kérést már elbírálták. Töltsd újra az oldalt.",
+			"error-invalid": "A döntés hiányos: minden mezőről dönteni kell, és minden elutasítást indokolni.",
+			"error-not-allowed": "Kérést csak admin bírálhat el.",
+			"error-unknown": "Valami félresikerült. Próbáld újra később.",
+			"filter-by-kind": "Szűrés fajta szerint",
+			"kind-all": "Minden fajta",
+			"kind-catalog": "Katalógus-kérés",
+			"kind-release": "Kiadás-kérés"
+		},
+		"requestRow": {
+			"new-entity": "új felvétel",
+			"change": "módosítás",
+			"collector": "Gyűjtő",
+			"admin": "Admin",
+			"field": "Mező",
+			"now": "Most",
+			"asked": "Kérve",
+			"reference": "Forrás",
+			"decision": "Döntés",
+			"no-reference": "nincs forrás",
+			"accept": "Elfogad",
+			"reject": "Elutasít",
+			"accepted": "Elfogadva",
+			"rejected": "Elutasítva",
+			"why-not": "Miért nem? (kötelező)",
+			"admin-note": "Megjegyzés a gyűjtőnek",
+			"save-decision": "Döntés mentése",
+			"saving": "Mentés…",
+			"decide-every-field": "Minden mezőről dönteni kell, és minden elutasításhoz indoklás kell.",
+			"taken-in": "Bekerült ide:"
+		},
+		"proposeLink": {
+			"suggest-a-change": "Módosítást javaslok",
+			"pending-one": "Elbírálás alatt: {{field}}",
+			"pending-many": "{{count}} mező elbírálás alatt",
+			"pending-title": "Megnézem, hol tart a javaslatom"
+		},
+		"profileAvatar": {
+			"yours": "Ez a karaktered. Ez látszik a felső sávban, a térképen és ott, ahol más gyűjtők mellett állsz.",
+			"none": "Még nincs karaktered. Rakj össze egyet, és az lesz a profilképed a fénykép helyett.",
+			"build": "Karakter összerakása",
+			"edit": "Karakter szerkesztése",
+			"remove": "Eltávolítás",
+			"note": "Amit összeraksz, a fiókkal marad, és bármikor újraszerkesztheted.",
+			"saved": "Mentve."
+		},
+		"avatarFigure": {
+			"unavailable": "Ez a részlet még nincs megrajzolva — a karakter az előző választásnál marad."
+		},
+		"avatarEditor": {
+			"title": "Rakd össze a karakteredet",
+			"front": "Elölnézet",
+			"back": "Hátoldal",
+			"closer": "Nadrág közelről",
+			"whole": "Teljes alak",
+			"reset": "Alaphelyzet",
+			"download": "Kép letöltése",
+			"group": {
+				"body": "Testalkat",
+				"age": "Életkor",
+				"face": "Arc és szakáll",
+				"hair": "Haj",
+				"glasses": "Szemüveg",
+				"shirtStyle": "Póló mintája",
+				"outfit": "Öltözék",
+				"pants": "Nadrág",
+				"wrist": "Csuklóvédő",
+				"necklace": "Nyaklánc",
+				"patch": "Hátoldali felvarró",
+				"tattoo": "Tetoválás"
+			},
+			"needs": {
+				"patch": "A felvarró mellényre vagy dzsekire kerül — pólón nincs hova.",
+				"tattoo": "A tetoválás csupasz karon látszik, a dzseki ujja eltakarja."
+			},
+			"body": {
+				"slim": "Vékonyabb",
+				"regular": "Átlagos",
+				"broad": "Erősebb",
+				"heavy": "Kövérebb"
+			},
+			"age": {
+				"20": "20 éves",
+				"30": "30 éves",
+				"40": "40 éves",
+				"50": "50 éves",
+				"60": "60 éves",
+				"70": "70 éves"
+			},
+			"face": {
+				"stubble": "Borostás",
+				"beard": "Szakállas",
+				"longbeard": "Hosszú szakáll",
+				"sharp": "Sima arc"
+			},
+			"hair": {
+				"short": "Rövid, kócos",
+				"buzz": "Nagyon rövid",
+				"undercut": "Undercut",
+				"mohawk": "Mohawk",
+				"long": "Hosszú, egyenes",
+				"curly": "Göndör",
+				"mullet": "Mullet",
+				"topknot": "Feltűzött"
+			},
+			"glasses": {
+				"none": "Nincs",
+				"biker": "Szegecses motoros",
+				"roundmetal": "Lila kerek",
+				"mirror": "Tükrös pilóta",
+				"blood": "Vérvörös"
+			},
+			"shirtStyle": {
+				"black": "Fekete",
+				"camo": "Terepszínű"
+			},
+			"outfit": {
+				"shirt": "Rövid ujjú póló",
+				"sleeveless": "Ujjatlan póló",
+				"vest": "Farmermellény",
+				"acidvest": "Hypózott mellény",
+				"blackvest": "Fekete mellény",
+				"redvest": "Bordó mellény",
+				"olivevest": "Olívazöld mellény",
+				"leather": "Bőrdzseki",
+				"denim": "Farmerdzseki"
+			},
+			"pants": {
+				"black": "Fekete farmer",
+				"blue": "Kék farmer",
+				"acid": "Hypózott farmer",
+				"leather": "Bőrnadrág"
+			},
+			"wrist": {
+				"none": "Nincs",
+				"plain": "Rövid bőr",
+				"studded": "Rövid szegecses",
+				"longstud": "Hosszú szegecses"
+			},
+			"necklace": {
+				"none": "Nincs",
+				"chain": "Ezüst lánc",
+				"skull": "Koponya",
+				"pentagram": "Pentagram",
+				"pick": "Pengető",
+				"dogtag": "Dögcédula",
+				"tooth": "Bőrzsinór és fog"
+			},
+			"patch": {
+				"none": "Nincs",
+				"star": "Csillag",
+				"bolt": "Villám",
+				"skull": "Koponya"
+			},
+			"tattoo": {
+				"none": "Nincs",
+				"star": "Csillag",
+				"bolt": "Villám"
+			}
+		},
+		"profileGenres": {
+			"legend": "Legfeljebb {{limit}} műfaj",
+			"all": "Minden műfaj",
+			"following": "A böngészés, a keresés és a rádió a választott műfajokat járja.",
+			"everything": "A teljes katalógus letöltődik, minden műfajjal.",
+			"showcase": "Válogatás minden műfajból",
+			"showcaseNote": "Minden műfajból néhány kollekció a lemezeivel, hetente cserélődik. Válassz műfajt, és a teljes katalógusa letöltődik.",
+			"rebuild": "Az alkalmazás újraépíti a helyi katalógust, és újratölti az oldalt.",
+			"apply": "Alkalmazás",
+			"applying": "Katalógus újraépítése…"
+		},
+		"discographyPicker": {
+			"title": "Zenekar diszkográfiájának nyitása",
+			"hint": "Két collection egyszerre: a nagylemezek, és minden más, amit a zenekar mellettük kiadott. Itt van minden zenekar, amelynek a katalógus két nagylemezét ismeri.",
+			"close": "Bezárás",
+			"searchBands": "Zenekar keresése",
+			"counts": "{{studio}} nagylemez · {{other}} egyéb kiadvány",
+			"alreadyFollowed": "Már követi: „{{collection}}”",
+			"open": "Létrehozás",
+			"opening": "Létrehozás…",
+			"opened": "Létrejött ehhez: {{band}} —",
+			"and": "és",
+			"companionIsDraft": "— piszkozat maradt: a katalógusban még nincs mit összegyűjtenie.",
+			"noBand": "Egyetlen zenekar sem felel meg ennek: „{{query}}”.",
+			"noCandidate": "A katalógusban még egy zenekarnak sincs két nagylemeze.",
+			"more": "{{shown}} zenekar látszik {{total}} közül — írj tovább a szűkítéshez."
+		},
+		"starRating": {
+			"starCount": {
+				"one": "{{count}} csillag",
+				"other": "{{count}} csillag"
+			},
+			"your-verdict": "A te véleményed",
+			"take-it-back": "Visszavonom"
+		},
+		"verdictPrompt": {
+			"how-was-it": "Milyen volt?",
+			"not-now": "Most nem",
+			"not-kept": "Nem mentődött el. Koppints újra egy csillagra."
+		},
+		"profileVerdicts": {
+			"records-rated": "Értékelt lemez",
+			"your-average": "Az átlagod",
+			"what-you-name-first": "Amit elsőként emlegetnél",
+			"nothing-rated-yet": "Még egy csillag sem. Tegyél fel egy lemezt, vagy csillagozd meg a saját lapján."
+		},
+		"aiMark": {
+			"label": "Modell",
+			"hint": {
+				"proposed": "Ezt egy modell javasolta, keresésre támaszkodva. Amíg valaki nem nyitotta meg a hivatkozott forrást, addig jelölt, nem állítás.",
+				"approved": "Modell javaslatából került be: valaki megnyitotta a hivatkozott forrást, és jóváhagyta.",
+				"load": "A betöltés egy modellt kérdez, keresésre támaszkodva, és fizetős kérésenként megy. Amit talál, az jóváhagyásra vár.",
+				"photo": "A fotót egy modell olvassa le. Amit felismer, az javaslat — te döntesz róla.",
+				"image": "A képet egy képmodell rajzolta, a saját adataiból."
+			}
+		},
+		"pressingSwitch": {
+			"which-one-is-yours": "Melyik kiadás a tiéd? A kijelölt alatt áll most a példány; egy másikra bármikor átvezetheted.",
+			"reading-the-catalog": "Az album kiadásainak betöltése…",
+			"your-copy": "A te példányod",
+			"another-copy-of-yours": "Másik példányod",
+			"the-catalog-knows-no-other": "A katalógus egyelőre csak ezt az egy kiadást ismeri ennél az albumnál. Ha a tiéd más, kérd a felvételét az album lapján.",
+			"cancel": "Mégsem",
+			"moving": "Átvezetés…",
+			"move-this-copy": "Átvezetés erre a kiadásra",
+			"the-copy-keeps": "A példányról feljegyzett adatok megmaradnak: az ár, az állapot, a történet, a fotók, a polchely és a sorszám is átkerül.",
+			"moveFailed": "Az átvezetés nem sikerült: {{error}}"
+		},
+		"trackImages": {
+			"close": "Bezárás",
+			"show-picture": "{{number}}. kép megjelenítése",
+			"move-earlier": "Előbbre",
+			"move-later": "Hátrébb",
+			"remove": "Kép törlése",
+			"add-a-picture": "Kép hozzáadása",
+			"uploading": "Feltöltés…",
+			"scaled-to-webp": "A böngésző WebP-re kicsinyíti a képet, mielőtt bármi feltöltődik. A sorrend az, ahogy a lejátszó végigjátssza őket.",
+			"model": "Modell",
+			"gateway-chooses": "A gateway válasszon",
+			"direction": "Irány (nem kötelező)",
+			"direction-example": "pl. esős utca éjjel, neonfény",
+			"drawing": "A modell rajzol…",
+			"being-drawn": "A modell most rajzolja a képet a dalszövegből. Ez fél percig vagy tovább is eltarthat — a lapot addig ne frissítsd.",
+			"draw": "Kép generálása",
+			"drawn-from-lyrics": "A kép a szám dalszövegéből készül: a gateway előbb kiolvassa belőle, mi látszik — hely, tárgy, idő, fény —, és abból rajzol. Dalszöveg nélkül a cím és az irány marad."
+		},
+		"trackClip": {
+			"title": "Videó a dal szövegéből",
+			"being-made": "készül…",
+			"ready": "kész",
+			"needs-lyrics": "Előbb vedd fel a dalszöveget — a videó abból íródik.",
+			"what-it-does": "A gateway elolvassa a szám dalszövegét, ír belőle egy jelenetet és egy lassú kameramozgást, és ebből generál egy rövid, néma, ismétlődő klipet a lejátszó hátterébe. Percekig tart; a lapot addig el lehet hagyni.",
+			"ask-the-price": "Mennyibe kerül?",
+			"generate": "Videó generálása",
+			"generate-again": "Új videó generálása",
+			"left-today": "ma még {{count}} klip"
+		}
+	},
+	"admin": {
+		"nav": {
+			"dashboard": "Áttekintés",
+			"catalog": "Katalógus",
+			"artists": "Előadók",
+			"musicians": "Zenészek",
+			"albums": "Albumok",
+			"releases": "Kiadások",
+			"labels": "Kiadók",
+			"collections": "Kollekciók",
+			"genres": "Műfajok",
+			"userData": "Felhasználói adatok",
+			"collectionItems": "Gyűjteménytételek",
+			"wishlistItems": "Kívánságlista-tételek",
+			"system": "Rendszer",
+			"documents": "Dokumentumok",
+			"language": "Nyelv",
+			"dailyQuestion": "Napi kérdés",
+			"requests": "Kérések",
+			"access": "Jogosultság",
+			"roles": "Szerepkörök",
+			"users": "Felhasználók",
+			"concerts": "Koncertek",
+			"bundles": "Bundle-ök"
+		},
+		"genre": {
+			"title": "Műfajok és stílusok",
+			"intro": "A műfajok és az alattuk lévő stílusok. Az előadó- és album-form ebből a listából választ, és az online betöltés is ezekhez a nevekhez illeszti, amit a forrásoknál talál.",
+			"add": "Új műfaj",
+			"editor": "Műfaj szerkesztő",
+			"editing": "Műfaj szerkesztése",
+			"adding": "Új műfaj",
+			"name": "Név",
+			"name-placeholder": "pl. Jazz",
+			"name-taken": "Ilyen nevű műfaj már van.",
+			"description": "Leírás",
+			"styles": "Stílusok",
+			"style-placeholder": "pl. Hard Bop",
+			"add-style": "Stílus hozzáadása",
+			"remove-style": "Stílus eltávolítása",
+			"no-style-yet": "Még nincs stílus ez alatt.",
+			"offered-on-forms": "Felajánlható a formokon",
+			"retired": "visszavonva",
+			"save": "Mentés",
+			"cancel": "Mégsem",
+			"edit": "Szerkesztés",
+			"delete": "Törlés",
+			"really-delete": "Biztosan törlöd?",
+			"in-use": "A katalógusban van előadó ezzel a műfajjal, ezért nem törölhető. Vond vissza helyette: így lekerül a formokról, de a mentett stílusok megtartják a műfajukat.",
+			"empty": "Még egy műfaj sincs. Vedd fel az elsőt — a formok ebből a listából választanak.",
+			"genres": "műfaj",
+			"styles-total": "stílus",
+			"style-hint": "Írd be a stílus nevét, és nyomj Entert. Vesszővel többet is felvehetsz egyszerre.",
+			"actions": "Műveletek"
+		},
+		"field": {
+			"albums": "Albumok",
+			"artists": "Előadók",
+			"trackGroup": "Számok",
+			"coverImage": "Borítókép",
+			"releaseYear": "Megjelenés éve",
+			"styles": "Stílusok",
+			"spotifyLink": "Spotify-link",
+			"youtubePlaylist": "YouTube-lejátszási lista",
+			"photo": "Fotó",
+			"headerImage": "Fejléckép",
+			"country": "Ország",
+			"formedYear": "Alakulás éve",
+			"description": "Leírás",
+			"tracklist": "Számlista",
+			"lineUp": "Felállás",
+			"tracks": "Számok",
+			"lyrics": "Dalszöveg",
+			"youtubeVideo": "YouTube-videó"
+		},
+		"criterion": {
+			"anyOf": "bármelyik",
+			"allOf": "mindegyik",
+			"noneOf": "egyik sem",
+			"albumStyles": "Album stílusai",
+			"artistStyles": "Előadó stílusai",
+			"albumFormats": "Album formátumai",
+			"artistCountries": "Előadó országai",
+			"operatorFor": "{{field}} — művelet"
+		},
+		"visibility": {
+			"public": "Nyilvános — mindenkinek látszik a listában",
+			"link": "Link — az olvashatja, aki ismeri",
+			"private": "Privát — csak admin"
+		},
+		"filter": {
+			"all": "Mind",
+			"published": "Közzétett",
+			"drafts": "Piszkozatok",
+			"pending": "Függőben",
+			"approved": "Jóváhagyva",
+			"rejected": "Elutasítva",
+			"partially-approved": "Részben"
+		},
+		"summary": {
+			"not": "nem ",
+			"all": "mind ",
+			"artists": "{{count}} előadó",
+			"musicians": "{{count}} zenész",
+			"credited": "feltüntetve: {{credited}}",
+			"as": " mint ",
+			"noRule": "Nincs szabály — a teljes katalógusra illeszkedik"
+		},
+		"meter": {
+			"row": "{{field}}: {{share}}% kitöltve, {{missing}} hiányzik"
+		},
+		"language": {
+			"title": "Alapértelmezett nyelv",
+			"intro": "Ezen a nyelven nyílik meg az app annak, aki nem választott magának. Aki választott, az a saját nyelvét kapja — te is.",
+			"heading": "Melyik nyelv",
+			"hint": "Az a látogató látja ezt, akinek a böngészője olyan nyelvet kér, amit az app nem beszél.",
+			"unset": "Nincs beállítva: az app minden böngészőt követ, és angolra esik vissza.",
+			"saved": "Mentve."
+		},
+		"requestField": {
+			"name": "Név",
+			"artistType": "Típus",
+			"country": "Ország",
+			"description": "Leírás",
+			"genre": "Műfaj",
+			"styles": "Stílusok",
+			"sites": "Honlapok",
+			"imageUrl": "Kép URL",
+			"musicBrainzId": "MusicBrainz-azonosító",
+			"formedIn": "Alakulás",
+			"discogs": "Discogs",
+			"members": "Tagok",
+			"mainImage": "Főkép",
+			"headerImage": "Fejléckép",
+			"year": "Év",
+			"format": "Formátum",
+			"songs": "Dalok",
+			"coverImageUrl": "Borító URL",
+			"spotifyAlbumId": "Spotify album",
+			"youtubePlaylistId": "YouTube lejátszási lista",
+			"youtubeVideoIds": "YouTube videók",
+			"catno": "Katalógusszám",
+			"coverColor": "Borító színe",
+			"media": "Hordozó",
+			"formatDescription": "Formátum",
+			"date": "Dátum",
+			"discogsReleaseId": "Discogs kiadás",
+			"discogsId": "Discogs azonosító",
+			"realName": "Valódi név",
+			"aliases": "Álnevek",
+			"nameVariations": "Névváltozatok",
+			"albumUid": "Album",
+			"releaseUid": "Kiadás",
+			"artistUid": "Előadó",
+			"musicianUid": "Zenész",
+			"musicianName": "Zenész neve",
+			"artistName": "Előadó neve",
+			"index": "Sorszám",
+			"position": "Pozíció",
+			"duration": "Hossz",
+			"durationSec": "Hossz (mp)",
+			"heading": "Szakasz",
+			"spotifyTrackId": "Spotify szám",
+			"youtubeVideoId": "YouTube videó",
+			"writers": "Szerzők",
+			"role": "Szerep",
+			"roleDetail": "Szerep részlete",
+			"creditedAs": "Feltüntetve mint",
+			"tracks": "Számok",
+			"kind": "Fajta",
+			"instruments": "Hangszerek",
+			"from": "Ettől",
+			"to": "Eddig",
+			"active": "Aktív"
+		},
+		"requestStatus": {
+			"pending": "Elbírálásra vár",
+			"approved": "Elfogadva",
+			"partially-approved": "Részben elfogadva",
+			"rejected": "Elutasítva"
+		},
+		"role": {
+			"title": "Szerepkörök",
+			"intro": "A szerepkör az egyetlen hely, ahol jogosultság keletkezik. Amit itt bepipálsz, azt a szerver számolja össze minden felhasználóra, aki a szerepkört hordozza — egy mentés tehát több ember jogát változtatja meg egyszerre.",
+			"add": "Új szerepkör",
+			"editor": "Szerepkör szerkesztő",
+			"editing": "Szerepkör szerkesztése",
+			"adding": "Új szerepkör",
+			"name": "Név",
+			"name-placeholder": "pl. Szerkesztő",
+			"id-hint": "Azonosító: {{id}} — a létrehozás után nem változik.",
+			"id-kept": "Azonosító: {{id}} — átnevezéskor is ez marad.",
+			"description": "Leírás",
+			"permissions": "Jogosultságok",
+			"resource-column": "Erőforrás",
+			"whole-row": "Mind",
+			"all": "Mindet",
+			"none": "Egyiket sem",
+			"action": {
+				"view": "Megtekintés",
+				"create": "Létrehozás",
+				"update": "Módosítás",
+				"delete": "Törlés"
+			},
+			"wildcard": "Teljes hozzáférés (ADMIN)",
+			"wildcard-hint": "Minden ellenőrzésen átmegy, a többi pipától függetlenül.",
+			"group": {
+				"catalog": "Katalógus",
+				"catalog-hint": "A közös katalógus adatai: előadók, albumok, kiadások és ami hozzájuk tartozik.",
+				"collector": "Gyűjtői adatok",
+				"collector-hint": "A gyűjtő saját példányai és kívánságlistája.",
+				"owned": "Saját entitások",
+				"owned-hint": "Amit a gyűjtő magának vesz fel, ha a katalógus még nem ismeri.",
+				"access": "Jogosultság",
+				"access-hint": "Szerepkörök, felhasználók és az effektív jogok olvasása.",
+				"system": "Rendszer",
+				"system-hint": "Alkalmazás-szintű beállítások.",
+				"pages": "Admin oldalak",
+				"pages-hint": "Belépés az admin felület egy-egy oldalára. A teljes hozzáférés ezek nélkül is beenged."
+			},
+			"page": {
+				"artistList": "Előadók listája",
+				"artistEdit": "Előadó szerkesztő",
+				"albumList": "Albumok listája",
+				"albumEdit": "Album szerkesztő",
+				"releaseList": "Kiadások listája",
+				"releaseEdit": "Kiadás szerkesztő",
+				"labelList": "Kiadók listája",
+				"labelEdit": "Kiadó szerkesztő",
+				"musicianList": "Zenészek listája",
+				"musicianEdit": "Zenész szerkesztő",
+				"documentList": "Dokumentumok listája",
+				"documentEdit": "Dokumentum szerkesztő",
+				"collectionItemList": "Gyűjteménytételek listája",
+				"collectionItemEdit": "Gyűjteménytétel szerkesztő",
+				"wishlistItemList": "Kívánságlista listája",
+				"wishlistItemEdit": "Kívánságlista szerkesztő"
+			},
+			"baseline": "Ezt minden gyűjtő megkapja",
+			"baseline-hint": "A USER szerepkör hordozza, és azt a szerver minden felhasználóra ráteszi, amint a dokumentuma létrejön. Nem itt osztod ki: ennyi kell ahhoz, hogy valaki lemezt tegyen a saját polcára. Egy szerepkörrel csak ezen túl adsz jogot.",
+			"extra": "Ismeretlen jogosultságok",
+			"extra-hint": "A szerepkör olyan jogokat is hordoz, amiket ez a lap nem ismer — script írta, vagy egy azóta átnevezett erőforrásé. Mentéskor megmaradnak.",
+			"remove-permission": "Jogosultság eltávolítása",
+			"save": "Mentés",
+			"cancel": "Mégsem",
+			"edit": "Szerkesztés",
+			"delete": "Törlés",
+			"really-delete": "Biztosan törlöd?",
+			"actions": "Műveletek",
+			"empty": "Még egy szerepkör sincs. Vedd fel az elsőt — enélkül a felhasználóknak egyetlen joguk sincs.",
+			"count": "{{count}} szerepkör",
+			"no-permission": "Nincs jogosultsága.",
+			"in-use": "A szerepkört {{count}} felhasználó hordozza, ezért nem törölhető. Előbb vedd le róluk, vagy ürítsd ki a jogosultságait.",
+			"resource": {
+				"artist": "Előadó",
+				"album": "Album",
+				"release": "Kiadás",
+				"track": "Szám",
+				"label": "Kiadó",
+				"musician": "Zenész",
+				"membership": "Tagság",
+				"contribution": "Közreműködés",
+				"document": "Dokumentum",
+				"genre": "Műfaj",
+				"musicCollection": "Kollekció",
+				"entityQuantity": "Darabszámok",
+				"collectionItem": "Gyűjteménytétel",
+				"wishlistItem": "Kívánságlista-tétel",
+				"role": "Szerepkör",
+				"user": "Felhasználó",
+				"security": "Effektív jogosultságok",
+				"defaultLanguage": "Alapértelmezett nyelv",
+				"badgeSettings": "Jelvénygenerálás",
+				"venue": "Helyszín",
+				"concert": "Koncert"
+			},
+			"reach": "Meddig ér el",
+			"holders": "Hordozza",
+			"clone": "Másolat készítése",
+			"back-to-list": "Vissza a listához",
+			"identity": "Azonosítás",
+			"copy-of": "Másolat ebből: {{name}} — a jogosultságokat átvettük, nevet te adj neki.",
+			"search-permissions": "Jogosultság keresése",
+			"no-match": "Nincs a keresésnek megfelelő jogosultság.",
+			"impact": "Mit változtat a mentés",
+			"reaches": "{{count}} felhasználót érint.",
+			"reaches-nobody": "Ezt a szerepkört jelenleg senki nem hordozza.",
+			"reaches-unknown": "Nem tudom megmondani, hány felhasználót érint — ehhez a felhasználók listázási joga kell.",
+			"reaches-new": "Új szerepkör: mentés után még senki nem hordozza.",
+			"will-add": "Hozzáad ({{count}})",
+			"will-remove": "Elvesz ({{count}})",
+			"no-change": "A jogosultságok nem változnak.",
+			"holders-unreadable": "Nem tudom megnézni, ki hordozza a szerepkört, ezért nem törölhető. Ehhez a felhasználók listázási joga (viewUserEntity) kell.",
+			"finding": {
+				"name-empty": "Adj nevet a szerepkörnek.",
+				"name-too-long": "A név legfeljebb {{max}} karakter lehet.",
+				"name-taken": "Ilyen nevű szerepkör már van. A jogosultság-szinkron név alapján is azonosít, tehát két azonos nevű szerepkört nem tudna szétválasztani.",
+				"id-taken": "Ebből a névből {{id}} azonosító lenne, és az már foglalt. Válassz másik nevet.",
+				"locks-me-out": "Ezzel a mentéssel magadtól vennéd el a jogot, amivel ide bejutsz. Előbb add meg egy másik szerepkörödnek.",
+				"no-permissions": "Ez a szerepkör semmit nem ad. Ez rendben van, ha szándékos — így lehet egy szerepkört „kiüresíteni\" törlés helyett.",
+				"wildcard-redundant": "A teljes hozzáférés mellett a másik {{count}} pipa nem számít. Ha ez a szándék, a többit le lehet venni.",
+				"edit-page-without-write": "{{resource}}: a szerkesztő lap megnyílik, de a mentést a szabályok elutasítják — hiányzik a létrehozás/módosítás joga.",
+				"user-admin-without-view": "A felhasználók írhatók, de nem listázhatók: a felhasználói lap megnyílik, és üres marad. Add hozzá a megtekintés jogát is.",
+				"role-delete-without-user-view": "A szerepkör törölhető, de nem derül ki, ki hordozza — a törlés így nem tud lefutni. Add hozzá a felhasználók megtekintési jogát is."
+			},
+			"write-failed": {
+				"name-taken": "Közben valaki létrehozott egy ilyen nevű szerepkört.",
+				"id-taken": "Közben valaki elvette ezt az azonosítót."
+			}
+		},
+		"user": {
+			"title": "Felhasználók és szerepkörök",
+			"intro": "Ki melyik szerepkört hordozza. A jogosultságot a szerepkör adja — itt csak az dől el, ki kapja meg. Az effektív jogokat a szerver számolja; a szem ikonnal nézheted meg, mire jutott.",
+			"resync": "Jogok újraszámolása",
+			"resynced": "{{users}} felhasználó ellenőrizve, {{changed}} frissült.",
+			"search": "Keresés név, e-mail vagy azonosító szerint",
+			"count": "{{count}} felhasználó",
+			"empty": "Nincs a keresésnek megfelelő felhasználó.",
+			"person": "Felhasználó",
+			"roles": "Szerepkörök",
+			"actions": "Műveletek",
+			"no-role": "Nincs szerepköre.",
+			"dangling": "Nem létező szerepkörre hivatkozik: {{names}}",
+			"full-access": "teljes hozzáférés",
+			"edit-roles": "Szerepkörök szerkesztése",
+			"save": "Mentés",
+			"cancel": "Mégsem",
+			"show-permissions": "Effektív jogok megjelenítése",
+			"hide-permissions": "Effektív jogok elrejtése",
+			"effective": "{{count}} effektív jogosultság",
+			"no-effective": "A szervernek még nincs számolt jogosultsága erre a felhasználóra.",
+			"would-lock-out": "Magadtól nem veheted el a jogot, amivel ide bejutsz.",
+			"filtered-by": "Szűrés: {{name}}",
+			"clear-filter": "Szűrés törlése"
+		},
+		"group": {
+			"curated": "Kurált",
+			"discography": "Diszkográfiák"
+		},
+		"concert": {
+			"title": "Koncertek",
+			"intro": "A katalógus zenekarainak fellépései. Négy betöltés tölti meg: a helyszínek a MusicBrainzről, azokon túl pedig egy modell keresésből sorolt helyszínei; a mbid-del horgonyzott koncertek ugyanonnan, a többi pedig ugyanannak a modellnek a javaslataiból — a modell adta helyszínek és estek egyaránt itt várnak jóváhagyásra.",
+			"loads": "Betöltések",
+			"load": "Betöltés",
+			"ask": "Javaslatokat kérek",
+			"load-venues": "Helyszínek a MusicBrainzről",
+			"load-venues-hint": "Egy ország helyei a MusicBrainzről. Lassú (másodpercenként egy kérés), de ritkán kell: a hall ott marad, ahol volt.",
+			"load-concerts": "Koncertek a MusicBrainzről",
+			"load-concerts-hint": "A katalógus azon előadói, akiknek van MusicBrainz-azonosítójuk. Amit hoz, az mbid-del horgonyzott, ezért jóváhagyás nélkül is kimegy.",
+			"load-ai": "Koncertek modelltől",
+			"load-ai-hint": "Helyszínenként egy fizetős kérés, Google-kereséssel megtámasztva. Amit ad, az a Koncert-javaslatok fülön várja, hogy valaki megnyissa a hivatkozott forrást.",
+			"ai-venues": "Kérdezett helyszínek",
+			"ai-venues-all": "Sorban, ahol a kör tart",
+			"ai-venues-selected": "{0} helyszín kijelölve",
+			"ai-venues-hint": "Üresen hagyva ott folytatja a sort, ahol az előző futás abbahagyta.",
+			"ai-venues-cost": "{{count}} helyszín, helyszínenként egy fizetős kérés.",
+			"window": "Ablak (nap)",
+			"window-hint": "Ennyi napra előre kérdezünk.",
+			"sections": "Szakaszok",
+			"tab": {
+				"suggestions": "Koncert-javaslatok",
+				"concerts": "Koncertek",
+				"venues": "Helyszínek",
+				"venue-suggestions": "Helyszín-javaslatok"
+			},
+			"type": {
+				"concert": "Koncert",
+				"festival": "Fesztivál",
+				"other": "Egyéb"
+			},
+			"source": {
+				"musicbrainz": "MusicBrainz",
+				"ai": "Modell",
+				"manual": "Kézi"
+			},
+			"no-pending": "Nincs jóváhagyásra váró koncert-javaslat. A „Koncertek modelltől” kártya „Javaslatokat kérek” gombjával kérhetsz újakat.",
+			"no-concerts": "Még nincs beiktatott koncert. Kezdd a helyszínekkel, aztán töltsd be a koncerteket.",
+			"no-venues": "Még nincs helyszín. A „Helyszínek” betöltés egy ország összes helyét elhozza a MusicBrainzről.",
+			"approve": "Jóváhagyás",
+			"approve-and-file": "Jóváhagyás és beiktatás",
+			"fix": "Javítás",
+			"reject": "Elutasítás",
+			"open-source": "Forrás megnyitása",
+			"tickets": "Jegyek",
+			"no-source": "Nincs forrás",
+			"unknown-venue": "Ismeretlen helyszín",
+			"editor": "Koncert szerkesztő",
+			"venue-editor": "Helyszín szerkesztő",
+			"editing": "{{artist}} koncertjének szerkesztése",
+			"approving": "{{artist}} javaslatának átnézése",
+			"editing-venue": "Helyszín szerkesztése",
+			"adding-venue": "Új helyszín",
+			"add-venue": "Új helyszín",
+			"name": "A fellépés neve",
+			"venue": "Helyszín",
+			"venue-placeholder": "Válassz a betöltött helyszínekből",
+			"venue-hint": "Ha a helyszín nincs a listán, a nevét alatta írd be — a betöltés később felveszi.",
+			"venue-name": "A helyszín neve",
+			"venue-type": "Típus",
+			"city": "Város",
+			"address": "Cím",
+			"day": "Nap",
+			"time": "Kezdés",
+			"last-day": "Utolsó nap",
+			"last-day-hint": "Csak többnapos fesztiválnál.",
+			"kind": "Fajta",
+			"band": "Zenekar",
+			"acts": "Fellépők",
+			"acts-hint": "A beiktatott előadó marad az élen — róla szól a koncert, és a dokumentum azonosítója is belőle áll. Alá a többi fellépő kerül, abban a sorrendben, ahogy a műsor sorolja őket. Harmadik betűtől a katalógusban keresünk: amit a listából választasz, azt az oldal linkeli. Aki nincs a katalógusban, név szerint marad.",
+			"act-name": "A fellépő neve",
+			"act-placeholder": "Írd be a nevét — 3 betűtől keresünk",
+			"no-artist": "Nincs ilyen kezdetű előadó a katalógusban. A név így is marad, csak link nélkül.",
+			"add-act": "Fellépő hozzáadása",
+			"remove-act": "Fellépő törlése",
+			"credited": "Beiktatva",
+			"in-catalog": "Katalógusban",
+			"origin": "Forrás",
+			"ticket-url": "Jegy URL",
+			"source-url": "Forrás URL",
+			"source-url-hint": "Amire a fellépés állítása épül. Ez az, amit jóváhagyás előtt érdemes megnyitni.",
+			"cancelled": "Elmarad",
+			"offered-on-forms": "Felajánlható a formokon",
+			"retired": "Visszavonva",
+			"save": "Mentés",
+			"cancel": "Mégse",
+			"edit": "Szerkesztés",
+			"delete": "Törlés",
+			"actions": "Műveletek",
+			"concert-count": "{{count}} közelgő koncert",
+			"venue-count": "{{count}} helyszín",
+			"confirm-delete": "Törölhető {{artist}} {{day}}-i koncertje?",
+			"confirm-delete-venue": "Törölhető a(z) {{name}} helyszín?",
+			"venue-in-use": "Erre a helyszínre koncert hivatkozik, ezért nem törölhető. Vond vissza helyette — így a formokon nem jelenik meg, a koncertek viszont megmaradnak.",
+			"ai-disabled": "A koncert-javaslatok ki vannak kapcsolva.",
+			"ai-quota": "A mai modell-keret elfogyott. Holnap újra kérhetsz javaslatokat.",
+			"budget": "Modell-keret",
+			"budget-hint": "Mit tehet a javaslatkérés. A promptot nem lehet innen állítani: az a szerveren épül a katalógus adataiból, hogy a hívó ne rajzoltathasson bármit a mi számlánkra.",
+			"ai-enabled": "A javaslatkérés fut",
+			"venues-a-run": "Helyszín / futás",
+			"venues-a-run-hint": "Ennyi helyszín programját kéri el egy futás — és ennyi kérés megy el.",
+			"daily-limit": "Napi kérés-korlát",
+			"daily-limit-hint": "A végső fék: egy hiba se vihessen el egy havi keretet.",
+			"country": "Ország",
+			"country-hint": "Mind a négy betöltés erre az országra fut.",
+			"load-ai-venues": "Helyszínek modelltől",
+			"load-ai-venues-hint": "Ahol a MusicBrainz szegény — Magyarországon kívül jellemzően az —, ott a modell sorolja fel keresésből az ország koncerthelyszíneit. Kérdésenként egy fizetős kérés, és amit ad, az a Helyszín-javaslatok fülön vár valakire.",
+			"ai-cities": "Kérdezett városok",
+			"ai-cities-all": "Az egész ország, egy kérésből",
+			"ai-cities-hint": "Vesszővel válaszd el őket. Üresen hagyva az egész országot kérdezzük, egyetlen kérésből — a nagy házakat az adja ki.",
+			"ai-cities-cost": "{{count}} város, városonként egy fizetős kérés.",
+			"no-pending-venues": "Nincs jóváhagyásra váró helyszín. A „Helyszínek modelltől” betöltéssel kérhetsz újakat.",
+			"approving-venue": "Helyszín-javaslat átnézése",
+			"approve-and-add": "Jóváhagyás és felvétel",
+			"retire": "Visszavonás",
+			"restore": "Visszaállítás",
+			"venue-held-by": "A(z) {{name}} helyszínre {{count}} koncert hivatkozik, ezért nem törölhető. Vond vissza helyette: a formokon nem jelenik meg többé, a már beiktatott koncertek viszont megmaradnak.",
+			"counting-venue-use": "Számolom, mi hivatkozik a helyszínre…",
+			"venue-use-unknown": "A(z) {{name}} helyszínről most nem jött válasz arra, hogy hivatkozik-e rá koncert. A törlés megkísérelhető: ha hivatkozik rá valami, a szerver megtagadja.",
+			"run": {
+				"running": "Fut… {{elapsed}}",
+				"done": "Kész",
+				"failed": "Nem sikerült",
+				"meta": "{{country}} · {{time}}",
+				"meta-running": "{{country}} · indult {{time}}",
+				"empty-venues": "A MusicBrainz egyetlen koncerthelyszínt sem ad erre az országra. Kérd a helyszíneket a modelltől.",
+				"empty-ai-venues": "A modell egyetlen helyszínt sem sorolt fel. Kérdezd meg városonként: a nagy házakat az ország-kérdés adja ki, a klubokat a városok.",
+				"empty-concerts": "A katalógus előadóinak egyetlen közelgő fellépése sincs a MusicBrainzen — ebben az országban, ennyi napra előre. A MusicBrainz két magyar eseményt ismer összesen, ezért van a modell.",
+				"empty-ai": "A modell egyetlen estet sem talált a kérdezett helyszínek programjában. Próbálj más helyszíneket, vagy tágítsd az ablakot.",
+				"nothing-new": "Jött válasz, csak új javaslat nem lett belőle: amit adott, az vagy megvan már, vagy egyszer már el lett utasítva.",
+				"failed-questions": "A modell {{count}} kérdésre nem válaszolt — ennyi kérés elment a keretből eredmény nélkül. A hiba: {{message}}",
+				"failed-questions-plain": "A modell {{count}} kérdésre nem válaszolt — ennyi kérés elment a keretből eredmény nélkül.",
+				"row": {
+					"scanned": "Hely a MusicBrainzről",
+					"venues": "Ebből koncerthelyszín",
+					"written": "Írva",
+					"unchanged": "Változatlan",
+					"artists": "Kérdezett előadó",
+					"events": "Átnézett esemény",
+					"matched": "Katalógusbeli előadóé",
+					"deleted": "Lejárt, törölve",
+					"venues-created": "Új helyszín kellett hozzá",
+					"asked": "Kérdés",
+					"queried": "Kérdezett helyszín",
+					"seen": "Amit a válasz felsorolt",
+					"proposed": "Katalógusbeli előadóé",
+					"suggested": "Jóváhagyásra vár",
+					"duplicates": "Már megvolt",
+					"rejected": "Egyszer már elutasítva",
+					"discarded": "Kiesett a szűrőn",
+					"left": "Mai keretből maradt",
+					"model": "Modell",
+					"failed": "Válasz nélkül maradt kérdés"
+				}
+			},
+			"cost": {
+				"free": "ingyenes",
+				"paid": "fizetős"
+			}
+		},
+		"bundles": {
+			"title": "Katalógus-bundle-ök",
+			"intro": "A kliensek ezekből a fájlokból töltik a katalógust, nem dokumentumonként. Ami a bundle építése óta változott, azt minden új látogató egyenként olvassa le utána — ha sok gyűlt össze, építsd újra.",
+			"recount": "Újraszámolás",
+			"behind-summary": "{{count}} bundle lemaradt a katalógustól",
+			"all-current": "Minden bundle naprakész",
+			"checked-at": "számolva",
+			"name": "Bundle",
+			"documents": "Dokumentum",
+			"built": "Épült",
+			"since": "Azóta",
+			"actions": "Műveletek",
+			"changes": "{{changed}} módosult, {{deleted}} törölve",
+			"guest-name": "Kirakat",
+			"guest-title": "Kirakat",
+			"guest-intro": "Ezt kapja a vendég és az, aki nem választott műfajt: műfajonként öt collection az albumaival. Minden éjjel magától frissül, ha az előadók, albumok vagy collectionök változtak; hétfőn új válogatás jön.",
+			"genre-title": "Műfaj-bundle-ök",
+			"genre-intro": "A műfajt választó gyűjtők ezt töltik le, és csak ebből frissülnek. A változásszám a katalógus egészére vonatkozik, nem csak az adott műfajra. Egy építés a teljes katalógust végigolvassa.",
+			"feature-title": "Feature-bundle-ök",
+			"feature-intro": "Az admin és a régi kliensek teljes katalógusa, feature-önként. Ezekre a kliens a változásokat ráolvassa, tehát nem vesznek el — csak drágák lesznek.",
+			"rebuild": "Újraépítés",
+			"rebuilding": "Épül…",
+			"confirm": "Igen, építsd (~{{reads}} olvasás)",
+			"cancel": "Mégse",
+			"rebuilt": "Kész: {{count}} dokumentum, {{kb}} KB, {{seconds}} mp",
+			"state": {
+				"missing": "nincs publikálva",
+				"reset": "reset óta elavult",
+				"behind": "lemaradt",
+				"current": "naprakész"
+			}
+		}
+	},
+	"fact": {
+		"album": "Album",
+		"artist": "Előadó",
+		"label": "Kiadó",
+		"country": "Ország",
+		"format": "Formátum",
+		"released": "Megjelent",
+		"discogs": "Discogs",
+		"wantedOn": "Keresve ezen",
+		"collector": "Gyűjtő",
+		"whereSeen": "Hol látták",
+		"lastChange": "Utolsó módosítás",
+		"originalName": "Eredeti név",
+		"madeFor": "Ehhez készült",
+		"fileType": "Fájltípus",
+		"withdrawn": "Visszavonva",
+		"file": "Fájl",
+		"parentLabel": "Anyakiadó",
+		"subLabels": "Alkiadók",
+		"pressings": "Nyomások",
+		"artists": "Előadók",
+		"years": "Évek"
+	},
+	"section": {
+		"about": "Bemutatás",
+		"lineUp": "Felállás",
+		"discography": "Diszkográfia",
+		"inYourCollection": "A gyűjteményedben",
+		"similarArtists": "Hasonló előadók",
+		"bands": "Zenekarok",
+		"guestAppearances": "Vendégszereplések",
+		"albums": "Albumok",
+		"bandmates": "Zenekartársak"
+	},
+	"radio": {
+		"bandOfTheWeek": {
+			"name": "A hét bandája: {{name}}",
+			"description": "Minden negyedik lemez az övék, közte az ízlésed és a katalógus."
+		},
+		"justIn": {
+			"description": "A lemezek, amiket a katalógus legutóbb vett fel.",
+			"name": "Frissen érkezett"
+		},
+		"yourTaste": {
+			"description": "Lemezek azokban a stílusokban, amikből a polcod a legtöbbet tartja — akár megvan, akár nem.",
+			"name": "A te ízlésed"
+		},
+		"yourShelf": {
+			"description": "A saját példányaid, egymás után.",
+			"name": "A polcod"
+		},
+		"anything": {
+			"description": "A katalógus, mindenféle rend nélkül.",
+			"name": "Bármi"
+		},
+		"unnamedUnit": "Névtelen elem",
+		"unit": {
+			"description": "A lemezek, amiket ebbe az elembe raktál, úgy végigolvasva, ahogy állnak."
+		},
+		"collection": {
+			"description": "Minden lemez, amit ez a kihívás kér."
+		},
+		"loved": {
+			"name": "Amit szeretsz",
+			"description": "A négy- és ötcsillagos lemezeid, találomra."
+		}
+	},
+	"tour": {
+		"home": {
+			"steps": {
+				"search": {
+					"title": "Keress egy lemezt",
+					"content": "Egy mező az egész katalógusra: előadó, album vagy szám — a találatok már gépelés közben jönnek."
+				},
+				"discover": {
+					"title": "A katalógus többi része",
+					"content": "Műfaj, évtized, előadók és a legújabb albumok — ami már nem a te teendőid, hanem a böngészés."
+				}
+			},
+			"guest": {
+				"name": "A nyitólap",
+				"description": "Egy perc a nyitólapon: mit tud a katalógus, és mi lesz belőle, ha belépsz.",
+				"steps": {
+					"welcome": {
+						"title": "Üdv",
+						"content": "Ez a musiCollection: egy lemezkatalógus előadókkal, albumokkal, kiadásokkal. Nézzük meg egy percben a nyitólapot."
+					},
+					"bar": {
+						"title": "A felső sáv",
+						"content": "Innen indul minden: a lapok, amiket vendégként is megnézhetsz, jobbra pedig a nyelv és a világos vagy sötét téma."
+					},
+					"challenges": {
+						"title": "Kihívások",
+						"content": "Lemezek halmaza szabály szerint: egy kiadó sorozata, egy évtized, egy banda teljes termése. Belépve az is látszik, hol tartasz bennük."
+					},
+					"login": {
+						"title": "Itt tudsz belépni",
+						"content": "Google-fiókkal, egy kattintás. Utána ez a séta is másik lesz: a sajátodat mutatja meg."
+					}
+				}
+			},
+			"collector": {
+				"name": "A nyitólapod",
+				"description": "Egy perc a nyitólapon: mit hoz elő a katalógusból, és mit a saját polcodról.",
+				"steps": {
+					"welcome": {
+						"title": "Üdv újra",
+						"content": "Ez a nyitólapod: fent a katalógus, lejjebb az, ami a saját polcodról szól. Egy perc, és végigmegyünk rajta."
+					},
+					"bar": {
+						"title": "A felső sáv",
+						"content": "Innen indul minden. Nagy képernyőn egy sorban állnak a lapok, telefonon a menü mögött, a nyelv meg a téma pedig mindig jobbra."
+					},
+					"challenges": {
+						"title": "Kihívások",
+						"content": "Lemezek halmaza szabály szerint: egy kiadó sorozata, egy évtized, egy banda teljes termése. A sáv mutatja, hol tartasz, a lap pedig ajánlja, melyik lemez hozna a legtöbbet."
+					},
+					"hunt": {
+						"title": "A következő lemez",
+						"content": "Amit a legjobban megérné megvenni: a majdnem teljes kihívásaidból hiányzó lemezek, sorrendben."
+					},
+					"account": {
+						"title": "És a többi mind itt",
+						"content": "A polcod, a beolvasás, a rádió, a kívánságlista és a profil — a profilban kapcsolhatod ki ezt a sétát is, ha már láttad."
+					}
+				}
+			}
+		},
+		"pages": {
+			"collection": {
+				"intro": {
+					"title": "A te polcod",
+					"content": "Innentől minden a tiéd: hány lemez, hány előadótól, milyen formátumban. Ezt a lapot rajtad kívül senki nem látja."
+				},
+				"stats": {
+					"title": "Egy pillantásra",
+					"content": "Hány lemez, hány előadótól, milyen formátumban — és mennyit ér a polc, ha beírtad, mennyiért vetted."
+				},
+				"views": {
+					"title": "Háromféle nézet",
+					"content": "Borítófal, egyszerű lista, vagy maga a polc, minden példánnyal ott, ahol valóban áll. A bútort a profilban rajzolod meg."
+				},
+				"name": "Ez a polcod",
+				"decades": {
+					"title": "Évtizedek szerint",
+					"content": "A saját lemezeid kora szerint szétosztva: rögtön látszik, melyik évtizedből gyűjtesz a legtöbbet."
+				},
+				"styles": {
+					"title": "Műfajok szerint",
+					"content": "Ugyanaz stílusonként: mennyi punk, mennyi jazz, mennyi minden más áll a polcodon."
+				},
+				"challenges": {
+					"title": "A kihívásaid",
+					"content": "Amikbe belefogtál, és hogy a polcodról mennyi van meg belőlük. Innen nyílik a teljes lista is."
+				},
+				"search": {
+					"title": "Keresés a sajátjaid közt",
+					"content": "Csak a te lemezeid között keres — előadóra és albumcímre, már gépelés közben."
+				},
+				"formats": {
+					"title": "Formátum szerint",
+					"content": "Hagyd meg csak a bakelitet, a CD-t vagy a kazettát. A szám a chipen mutatja, mennyi van belőle."
+				},
+				"sort": {
+					"title": "Rendezés és csoportosítás",
+					"content": "Rendezd előadó, év vagy a beszerzés napja szerint — és csoportosítsd úgy, ahogy magadban is gondolsz rájuk."
+				},
+				"shelf": {
+					"title": "A polc, ahogy áll",
+					"content": "A polcnézet minden példányt oda rajzol, ahol valóban áll. A bútort a profilban rajzolod meg."
+				}
+			},
+			"scan": {
+				"intro": {
+					"title": "Lemez egy fényképről",
+					"content": "Fényképezd le a borítót. A katalógus kiolvassa, megmondja, melyik lemeznek gondolja, és pár koppintással a polcodon van."
+				},
+				"name": "Lemez fényképről",
+				"shot": {
+					"title": "A fénykép",
+					"content": "Innen indul: készíts képet a borítóról, vagy válassz egyet a galériából. A borító legyen rajta, lehetőleg egyenesen."
+				},
+				"results": {
+					"title": "Amire tippel",
+					"content": "Amit a katalógusban talált a fénykép alapján, a legvalószínűbbel elöl. Válaszd ki, melyik a tiéd."
+				},
+				"read": {
+					"title": "Amit a képről leolvasott",
+					"content": "A szöveg, amit a borítón talált — ebből keresett. Ha félreolvasta, innen látod, miért."
+				}
+			},
+			"shelfScan": {
+				"intro": {
+					"title": "Egy egész rekesz egyszerre",
+					"content": "Egy fénykép a gerincekről, és amit felismer, azt egyszerre ajánlja fel — így kerül be egy már tele polc."
+				},
+				"name": "Egy rekesz egyszerre",
+				"shots": {
+					"title": "A fényképek",
+					"content": "Több kép is mehet egyszerre: fotózd végig a rekeszt a gerincek felől, kép a képhez."
+				},
+				"controls": {
+					"title": "Mi van a rekeszben",
+					"content": "Mondd meg, bakelit, CD vagy kazetta áll-e ott — ez szűkíti, mit keressen —, aztán indítsd a felismerést."
+				},
+				"review": {
+					"title": "Az átnézés",
+					"content": "Sorban mindegyik gerinc, amit felismert: fogadd el, javítsd, vagy hagyd ki. A polcodra csak az kerül, amit jóváhagysz."
+				}
+			},
+			"wishlist": {
+				"intro": {
+					"title": "Ami még hiányzik",
+					"content": "A lemezek, amikre vadászol, és hogy mennyit adnál értük. A nyitólap vadászlistája is ebből épül."
+				},
+				"name": "A kívánságlistád",
+				"stats": {
+					"title": "Ahol tartasz",
+					"content": "Hány lemezre vadászol, hány előadótól — és mennyit találtál meg közülük."
+				},
+				"search": {
+					"title": "Keresés",
+					"content": "A kívánságlistán belül keres, előadóra és címre."
+				},
+				"formats": {
+					"title": "Formátum szerint",
+					"content": "Ha csak bakeliten akarod, szűkítsd le rá a listát."
+				},
+				"found": {
+					"title": "A megtaláltak",
+					"content": "Amit már megszereztél, alapból nem látszik. Ezzel a kapcsolóval visszahozod őket."
+				},
+				"gotIt": {
+					"title": "Megvan",
+					"content": "Ha megszerezted, egy koppintás átteszi a polcodra, és lekerül a listáról."
+				}
+			},
+			"challenges": {
+				"intro": {
+					"title": "Kihívások",
+					"content": "Lemezek halmaza szabály szerint, nem felsorolás szerint: egy kiadó sorozata, egy évtized, egy banda teljes termése. Ha befejezel egyet, fizet."
+				},
+				"name": "A kihívások",
+				"stats": {
+					"title": "A számok",
+					"content": "Hány kihívás van, hányba fogtál bele, és hányat fejeztél be."
+				},
+				"hunt": {
+					"title": "A következő lemez",
+					"content": "Amit a legjobban megérné megvenni: a majdnem teljes kihívásaidból hiányzó lemezek, sorrendben."
+				},
+				"tabs": {
+					"title": "Szűrés",
+					"content": "Mind, amibe belefogtál, amit követsz, vagy ami már kész."
+				},
+				"card": {
+					"title": "Egy kihívás",
+					"content": "A borító, a szabály és hogy hány lemezből áll. Koppints rá, és megnyílik a teljes lista."
+				},
+				"progress": {
+					"title": "Hol tartasz",
+					"content": "A sáv a saját polcodból mutatja, mennyi van meg a kihívás lemezeiből."
+				},
+				"follow": {
+					"title": "Követés",
+					"content": "Kövesd, és a nyitólapon is szemmel tarthatod, mennyi hiányzik még."
+				}
+			},
+			"radio": {
+				"intro": {
+					"title": "A saját rádiód",
+					"content": "Egy lemez a polcodról, feltéve, oldalról oldalra. Sorban vagy keverve — és ami tényleg elszólt, bekerül a naplóba."
+				},
+				"name": "A rádiód",
+				"order": {
+					"title": "Sorban vagy keverve",
+					"content": "Kapcsold be, és a rádió véletlen sorrendben húzza elő a lemezeidet."
+				},
+				"onAir": {
+					"title": "Ami most szól",
+					"content": "Az adás, ami épp megy: a lemez, az oldal, és hogy hol tart. Innen tudod megállítani."
+				},
+				"stations": {
+					"title": "Az adók",
+					"content": "Mindegyik adó másképp válogat a polcodról: műfaj, évtized, vagy ami rég nem szólt. Válassz egyet, és indul."
+				}
+			},
+			"dailyQuestion": {
+				"intro": {
+					"title": "A nap kérdése",
+					"content": "Egy kérdés a katalógusból, mindenkinek ugyanaz, naponta egy. Pont, sorozat, amit életben kell tartani, és ranglista."
+				},
+				"history": {
+					"title": "A korábbi kérdések",
+					"content": "Amit eddig kérdeztünk, a te válaszaiddal — és hogy melyiket találtad el."
+				},
+				"name": "A napi kérdés",
+				"score": {
+					"title": "Az eredményed",
+					"content": "Pont, sorozat, leghosszabb sorozat és találati arány. A sorozat egyetlen kihagyott nappal elszakad."
+				},
+				"question": {
+					"title": "A mai kérdés",
+					"content": "Mindenkinek ugyanaz, a katalógusból. Naponta egy, és csak egyszer válaszolhatsz."
+				},
+				"clock": {
+					"title": "Az óra",
+					"content": "Amíg jár, többet ér a jó válasz. Nem kell kapkodni, de sokat gondolkodni sem érdemes."
+				},
+				"options": {
+					"title": "A válaszok",
+					"content": "Néhány lehetőség, egy jó. A választás után rögtön látod, mi volt a helyes."
+				},
+				"leaderboard": {
+					"title": "A ranglista",
+					"content": "Ki hogy áll a többiekhez képest. Csak azok szerepelnek rajta, akik játszottak."
+				}
+			},
+			"upcoming": {
+				"intro": {
+					"title": "Ami jön",
+					"content": "Mit adnak ki legközelebb a katalógus előadói — naponta egyszer összeszedve, hogy egy újrakiadás ne csússzon el melletted."
+				},
+				"name": "Ami jön",
+				"stats": {
+					"title": "A számok",
+					"content": "Hány megjelenés van előtted, és mennyi az, ami a katalógus előadóitól jön."
+				},
+				"tabs": {
+					"title": "Szűrés",
+					"content": "Mind, vagy csak azok, akiket gyűjtesz."
+				},
+				"timeline": {
+					"title": "Az idővonal",
+					"content": "Hónapokra, napokra bontva, mi mikor jelenik meg. Naponta egyszer frissül."
+				}
+			},
+			"map": {
+				"intro": {
+					"title": "Gyűjtők",
+					"content": "Hol állnak a lemezek. A te tűd pontosan annyit mutat, amennyit a profilban megengedtél."
+				},
+				"name": "A gyűjtők térképe",
+				"stats": {
+					"title": "A számok",
+					"content": "Hány gyűjtő és hány ország került a térképre — annyi, amennyit megosztottak magukról."
+				},
+				"world": {
+					"title": "A térkép",
+					"content": "Húzd, görgesd, koppints egy tűre. A tiéd csak annyit mutat, amennyit a profilban megengedtél."
+				},
+				"countries": {
+					"title": "Az országok",
+					"content": "Ahol gyűjtők vannak, országonként. Koppints egyre, és csak az ottaniak maradnak."
+				},
+				"collectors": {
+					"title": "Az ottani gyűjtők",
+					"content": "Akik ebből az országból megosztották, hogy itt vannak."
+				}
+			},
+			"requests": {
+				"intro": {
+					"title": "Adj vissza valamit",
+					"content": "Hiányzik egy előadó, egy album vagy egy kiadás? Javasold itt, és kövesd, mi lett azzal, amit beküldtél."
+				},
+				"propose": {
+					"title": "Javasolj valamit",
+					"content": "Hiányzik egy előadó, album, kiadás vagy kiadó? Innen indul az űrlap, és a beküldött javaslat ide fut vissza."
+				},
+				"name": "A javaslataid",
+				"list": {
+					"title": "Amit beküldtél",
+					"content": "Minden javaslatod, és hogy mi lett vele: vár, elfogadtuk, vagy visszakaptad indoklással."
+				}
+			},
+			"profile": {
+				"name": "Ez a profilod",
+				"intro": {
+					"title": "A profilod",
+					"content": "A fiókod, és minden, ami az appot hozzád igazítja: nyelv, téma, a polc rajza, a lejátszás, és amit másokkal megosztasz."
+				},
+				"tabs": {
+					"title": "Négy csoport",
+					"content": "A beállítások négy lapon: a fiókod, a gyűjtés, a lejátszás és az adataid. Egyszerre egy lap látszik — a séta mind a négyet kinyitja, sorban, és a végén visszatesz oda, ahol találtad."
+				},
+				"accountTab": {
+					"title": "Első lap: a fiók",
+					"content": "Itt kezdjük. Ezen a lapon az van, amit az app rólad tud: a neved, a nyelv, a megjelenés — és ennek a sétának a kapcsolója. Lépj tovább, és kinyitom."
+				},
+				"account": {
+					"title": "A fiókod",
+					"content": "A neved, ahogy a katalógusban megjelensz, és a fiók, amivel beléptél."
+				},
+				"avatar": {
+					"title": "Az avatarod",
+					"content": "Nincs fényképed? Rakj össze egy karaktert — testalkat, arc, haj, ruha —, és az áll majd ott, ahol máshol a profilkép."
+				},
+				"language": {
+					"title": "A nyelv",
+					"content": "Magyar, angol vagy német. A fiókkal marad, így követ a következő böngészőre is."
+				},
+				"appearance": {
+					"title": "A megjelenés",
+					"content": "Sötét vagy világos téma, és hogy az oldalak mennyit használjanak a képernyő szélességéből."
+				},
+				"collectionTab": {
+					"title": "Második lap: a gyűjtés",
+					"content": "Ez a lap a lemezeidről szól: mivel nyisson a gyűjtemény, és milyen polcon állnak. Lépj tovább, és kinyitom."
+				},
+				"genres": {
+					"title": "A műfajaid",
+					"content": "Legfeljebb két műfaj, és az alkalmazás csak azoknak a katalógusát tölti le. Ez dönti el, mit látsz böngészés, keresés és rádió közben."
+				},
+				"lists": {
+					"title": "A listák",
+					"content": "Mit nyisson meg a gyűjtemény alapból, és hogyan rendezze a lemezeidet."
+				},
+				"shelves": {
+					"title": "A polcaid",
+					"content": "A bútor, amire a lemezeid kerülnek: hány rekesz, mekkora. A polcnézet ebből rajzolódik."
+				},
+				"playbackTab": {
+					"title": "Harmadik lap: a lejátszás",
+					"content": "Ez a lap a hangról szól: melyik lejátszó szólalhat meg, és a Spotify-fiókod. Lépj tovább, és kinyitom."
+				},
+				"playback": {
+					"title": "A lejátszás",
+					"content": "Melyik lejátszó szóljon, és mit engedsz be az oldalra."
+				},
+				"spotify": {
+					"title": "A Spotify",
+					"content": "Ha összekötöd a fiókodat, a lemezeid a saját Spotify-odon szólnak."
+				},
+				"dataTab": {
+					"title": "Negyedik lap: az adataid",
+					"content": "Az utolsó lap arról szól, mi kerül feljegyzésre és mi jut másokhoz: a hallgatási naplód, és amit a többi gyűjtő lát belőled. Lépj tovább, és kinyitom."
+				},
+				"listening": {
+					"title": "A hallgatás naplója",
+					"content": "Mit jegyezzünk fel arról, ami tényleg elszólt nálad."
+				},
+				"verdicts": {
+					"title": "Amit a lemezeidről gondolsz",
+					"content": "A csillagok, amiket a lemezeidnek adtál, és hogy milyen bőkezűen adod őket. Egy koppintás az album lapján, és megvan."
+				},
+				"privacy": {
+					"title": "Az adataid",
+					"content": "Mit látnak mások belőled: a térképen a helyed, a ranglistán a neved. Alapból semmit."
+				},
+				"sharing": {
+					"title": "Megosztható profil",
+					"content": "Egy link a gyűjteményedről, amit bárki megnyithat, bejelentkezés nélkül is — és a kívánságlistád, ha kéred. Alapból nincs ilyen lapod."
+				},
+				"back": {
+					"title": "Vissza az elsőre",
+					"content": "Ennyi volt mind a négy lap. Visszaviszlek a fiók lapra, ahol találtalak — egy dolog maradt hátra."
+				},
+				"switch": {
+					"title": "És itt a kapcsoló",
+					"content": "Az iránytű minden oldal sarkában ott van, és mindig az épp nyitott lapot mutatja be. Kapcsold ki, és eltűnik; kapcsold vissza, ha megint kellene."
+				}
+			},
+			"network": {
+				"intro": {
+					"title": "A kapcsolatháló",
+					"content": "Ki kivel játszott: a katalógus zenészei és zenekarai egy gráfban, ahol a közös tagok kötik össze a bandákat."
+				},
+				"name": "A kapcsolatháló",
+				"focus": {
+					"title": "A középpont",
+					"content": "Innen választod ki, mi álljon a gráf közepén, és milyen messzire nézzen el tőle."
+				},
+				"search": {
+					"title": "Keresés a hálóban",
+					"content": "Írd be egy zenekar vagy egy zenész nevét, és a gráf odaugrik."
+				},
+				"graph": {
+					"title": "A gráf",
+					"content": "A pontok a zenekarok és a zenészek, a vonalak a közös tagság. Húzd, görgesd, koppints egy pontra."
+				},
+				"legend": {
+					"title": "A jelmagyarázat",
+					"content": "Melyik szín mit jelent, és melyik vonal mit köt össze."
+				},
+				"details": {
+					"title": "A kiválasztott",
+					"content": "Amire koppintottál: kik a tagjai, hová köti a háló, és merre lehet tovább."
+				}
+			},
+			"copy": {
+				"name": "Ez a példány",
+				"intro": {
+					"title": "Egy lemez, ahogy nálad van",
+					"content": "Nem az album általában, hanem ez az egy példány: ahogy megvetted, ahogy kinéz, ahol áll."
+				},
+				"photos": {
+					"title": "A saját fényképeid",
+					"content": "Fotózd le a borítót, a lemezt, a mellékleteket. Ezek a képek a tiéid maradnak, nem a katalóguséi."
+				},
+				"facts": {
+					"title": "A példány adatai",
+					"content": "Ár, állapot, hol és mikor szerezted, hol áll a polcon. A szerkesztés gombbal bármikor átírható."
+				},
+				"form": {
+					"title": "Az űrlap",
+					"content": "Amit itt beírsz, csak a te példányodhoz tartozik — a katalógus közös adatait nem írja át."
+				}
+			},
+			"wishlistItem": {
+				"name": "Egy kívánság",
+				"intro": {
+					"title": "Amire vadászol",
+					"content": "Ez a lemez, ahogy a katalógus ismeri — és amit te írtál hozzá: mennyit adnál érte, milyen kiadásban kell."
+				},
+				"facts": {
+					"title": "A lemez adatai",
+					"content": "Kiadó, év, formátum, katalógusszám — ennyiről ismered fel, ha szembejön egy boltban."
+				}
+			},
+			"bands": {
+				"name": "A bandáid",
+				"intro": {
+					"title": "A bandáid",
+					"content": "Az előadók, amikhez hozzáférést kaptál: a saját zenekaraid lapját innen szerkesztheted."
+				},
+				"list": {
+					"title": "Amit kezelsz",
+					"content": "Minden banda, ami a tiéd. Innen nyílik a szerkesztés, és innen adhatod vissza a kezelést."
+				}
+			},
+			"challenge": {
+				"name": "Ez a kollekció",
+				"intro": {
+					"title": "A kollekció",
+					"content": "A szabály, ami a lemezeket összefogja, és hogy mi kell a teljesítéséhez."
+				},
+				"progress": {
+					"title": "Hol tartasz",
+					"content": "Ennyi van meg a kollekció lemezeiből a saját polcodról, és ennyit fizet, ha végigviszed."
+				},
+				"score": {
+					"title": "Hat szám",
+					"content": "Megvan, hiányzik, készültség, pont — és hányan vitték végig vagy gyűjtik rajtad kívül."
+				},
+				"badge": {
+					"title": "A jelvény",
+					"content": "Ha befejezed, ez a jelvény kerül a neved mellé."
+				},
+				"filter": {
+					"title": "Szűrés és rendezés",
+					"content": "Mind, ami megvan, vagy ami hiányzik — év, előadó vagy név szerint."
+				},
+				"grid": {
+					"title": "A lemezek",
+					"content": "A kollekció teljes egészében. Ami megvan, jelölve; a többi az, amire vadászni lehet."
+				},
+				"rule": {
+					"title": "Mi kerül bele",
+					"content": "A kollekció szabály, nem felsorolás: ami ráillik, magától bekerül, ahogy a katalógus nő."
+				},
+				"decades": {
+					"title": "Évtizedek",
+					"content": "A teljes oszlop a kollekcióé, a kitöltött rész a polcodé — itt látszik, melyik évtized hiányzik."
+				},
+				"crowd": {
+					"title": "Kik gyűjtik",
+					"content": "Aki végigvitte, és aki épp hajt rá. A nevükre koppintva a polcuk is megnézhető."
+				},
+				"hunt": {
+					"title": "Mit vegyél legközelebb",
+					"content": "Ebből a kollekcióból ezek a lemezek visznek a legtöbbet előre."
+				}
+			},
+			"artist": {
+				"name": "Ez az előadó",
+				"intro": {
+					"title": "Az előadó",
+					"content": "A banda vagy a szólóelőadó lapja: honnan jött, mikor alakult, milyen műfajban játszik."
+				},
+				"stats": {
+					"title": "A számok",
+					"content": "Hány albuma van a katalógusban, ebből mennyi a tiéd, és meddig tart a pályája."
+				},
+				"nav": {
+					"title": "A lap részei",
+					"content": "Ugrás a szakaszokra: az életrajz, a felállás, a lemezek és a hasonló előadók."
+				},
+				"about": {
+					"title": "Az életrajz",
+					"content": "Amit a katalógus tud róluk. Ha hiányos, a javaslat gombbal kiegészítheted."
+				},
+				"lineup": {
+					"title": "A felállás",
+					"content": "Kik játszottak a bandában, és mikortól meddig. Innen nyílnak a zenészek saját lapjai."
+				},
+				"discography": {
+					"title": "A lemezek",
+					"content": "Minden album a katalógusból, év szerint. Ami megvan, jelölve."
+				},
+				"collection": {
+					"title": "Ami tőlük megvan",
+					"content": "A saját példányaid ettől az előadótól, kiadásonként."
+				},
+				"similar": {
+					"title": "Hasonlók",
+					"content": "Előadók, akik ugyanabban a műfajban vagy ugyanazokkal a zenészekkel dolgoztak."
+				}
+			},
+			"album": {
+				"name": "Ez az album",
+				"intro": {
+					"title": "Az album",
+					"content": "Az album, ahogy a katalógus ismeri: az előadó, az év, a műfaj és a borító."
+				},
+				"collect": {
+					"title": "Tedd a polcra",
+					"content": "Egy koppintás, és a saját példányod bekerül a gyűjteménybe — kiadást is választhatsz hozzá."
+				},
+				"wish": {
+					"title": "Kívánságlistára",
+					"content": "Ha még nincs meg, innen kerül a vadászlistádra."
+				},
+				"challenges": {
+					"title": "Kihívásokban",
+					"content": "Melyik kihíváshoz tartozik ez a lemez, és mennyit hozna, ha megszereznéd."
+				},
+				"original": {
+					"title": "Az eredeti kiadás",
+					"content": "Az első megjelenés adatai: mikor, melyik kiadónál, milyen formátumban."
+				},
+				"listen": {
+					"title": "Hallgasd meg",
+					"content": "Ha engedélyezted a lejátszókat, innen szólhat bele a lemez."
+				},
+				"tracklist": {
+					"title": "A számok",
+					"content": "Az album számai sorrendben, hosszal együtt. Koppints egyre a szám saját lapjáért."
+				},
+				"credits": {
+					"title": "A közreműködők",
+					"content": "Ki mit játszott a lemezen, és ki vette fel."
+				},
+				"copies": {
+					"title": "A példányok",
+					"content": "A saját példányaid ebből az albumból — és amit régebben elengedtél."
+				},
+				"more": {
+					"title": "Az előadótól még",
+					"content": "További lemezek ugyanattól az előadótól a katalógusból."
+				}
+			},
+			"track": {
+				"name": "Ez a szám",
+				"intro": {
+					"title": "A szám",
+					"content": "Egy szám az albumról: melyik lemezen, hányadikként, milyen hosszan."
+				},
+				"actions": {
+					"title": "Mit tehetsz vele",
+					"content": "Lejátszás, ha engedted a lejátszókat, és vissza a lemez lapjára."
+				},
+				"lyrics": {
+					"title": "A szöveg",
+					"content": "Ha van a katalógusban, itt olvasható. Ha nincs, javasolhatsz egyet."
+				},
+				"credits": {
+					"title": "A közreműködők",
+					"content": "Ki írta, ki játszotta, ki vette fel ezt az egy számot."
+				},
+				"neighbours": {
+					"title": "Előtte, utána",
+					"content": "A lemez előző és következő száma, hogy végig lehessen olvasni a sort."
+				}
+			},
+			"release": {
+				"name": "Ez a kiadás",
+				"intro": {
+					"title": "A kiadás",
+					"content": "Egy konkrét megjelenés: ugyanaz az album, de ez a préselés — a saját évével, kiadójával, formátumával."
+				},
+				"facts": {
+					"title": "A kiadás adatai",
+					"content": "Kiadó, katalógusszám, ország, év, formátum. Ennyiből azonosítható egy lemez a boltban."
+				},
+				"tracks": {
+					"title": "A számok",
+					"content": "Ennek a kiadásnak a számsora — nem mindig ugyanaz, mint az eredetié."
+				}
+			},
+			"label": {
+				"name": "Ez a kiadó",
+				"intro": {
+					"title": "A kiadó",
+					"content": "A lemezcég lapja: mikor alapították, hol, és mi köthető hozzá a katalógusban."
+				},
+				"facts": {
+					"title": "A kiadó adatai",
+					"content": "Alapítás, székhely, és amit a katalógus még tud róla."
+				},
+				"catalog": {
+					"title": "Ami náluk jelent meg",
+					"content": "A kiadások, amiket ez a cég adott ki — innen nyílnak a lemezek."
+				}
+			},
+			"musician": {
+				"name": "Ez a zenész",
+				"intro": {
+					"title": "A zenész",
+					"content": "Egy ember, nem egy banda: mit játszik, mikor született, és merre járt."
+				},
+				"stats": {
+					"title": "A számok",
+					"content": "Hány bandában játszott, hány lemezen szerepel, és meddig tart a pályája."
+				},
+				"bands": {
+					"title": "A bandái",
+					"content": "Melyik zenekarban, mettől meddig, milyen szerepben. Ez a kapcsolatháló gerince."
+				},
+				"guest": {
+					"title": "Vendégszereplések",
+					"content": "Lemezek, amiken vendégként játszott, anélkül hogy tag lett volna."
+				},
+				"albums": {
+					"title": "A lemezei",
+					"content": "Minden album, amin rajta van, akár tagként, akár vendégként."
+				},
+				"bandmates": {
+					"title": "Akikkel játszott",
+					"content": "A zenészek, akikkel közös bandában volt. Innen tovább lehet menni a hálón."
+				}
+			},
+			"discover": {
+				"name": "A felfedezés lap",
+				"spotlight": {
+					"title": "Egy előadó a reflektorban",
+					"content": "A nyitólap mindig előrevesz valakit: a hét bandáját, vagy — ha arra a hétre nem választott senkit — egy húzást a katalógusból. Ha mást szeretnél, keverd meg."
+				},
+				"catalog": {
+					"title": "Mit tud a katalógus",
+					"content": "Előadók, albumok, kiadások, számok — és hogy mindebből mennyinek van már borítója, éve és kiadója."
+				},
+				"coverage": {
+					"title": "Mennyi van meg belőle",
+					"content": "A katalógus albumai évtizedenként, és hogy mennyi van már meg közülük — belépve a saját gyűjteményed rajzolódik rá."
+				},
+				"artists": {
+					"title": "Az előadók",
+					"content": "Innen nyílnak az előadó-oldalak: a lemezeikkel, a tagsággal, és azzal, hogy a zenészeik hol játszottak még."
+				},
+				"styles": {
+					"title": "Műfaj szerint",
+					"content": "A katalógus műfajonként szétszedve: stílusonként egy sor album, ahonnan tovább lehet olvasni."
+				},
+				"decades": {
+					"title": "Évtized szerint",
+					"content": "Ugyanaz kor szerint: melyik évtizedből mennyi lemez van a katalógusban, a nyolcvanas évek két oldalán."
+				},
+				"acts": {
+					"title": "Zenekarok, projektek, formációk",
+					"content": "Nem minden előadó zenekar: a katalógus külön veszi a szólóprojekteket, a szupergroupokat és az alkalmi formációkat."
+				},
+				"albums": {
+					"title": "A legfrissebb albumok",
+					"content": "Ami utoljára került a katalógusba — nem a megjelenés éve szerint, hanem aszerint, hogy mikor írtuk le."
+				}
+			}
+		}
+	},
+	"app": {
+		"version": "Verzió: {{version}} — Zsagia",
+		"build": "Build: {{time}}"
+	}
+}

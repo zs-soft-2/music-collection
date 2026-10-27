@@ -1,12 +1,11 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
+import { provideReleaseDeletionTesting } from '@music-collection/domain/release/testing';
 import { of } from 'rxjs';
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
-import {
-	ReleaseStateService,
-	ReleaseUtilService,
-} from '@music-collection/api';
+import { ReleaseStateService, ReleaseUtilService } from '@music-collection/api';
 
 import { ReleaseListPageComponent } from './release-list-page.component';
 
@@ -18,6 +17,8 @@ describe('ReleaseListComponent', () => {
 		await TestBed.configureTestingModule({
 			imports: [ReleaseListPageComponent],
 			providers: [
+				provideI18nTesting(),
+				...provideReleaseDeletionTesting(),
 				provideRouter([]),
 				provideNoopAnimations(),
 				{

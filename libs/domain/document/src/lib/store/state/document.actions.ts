@@ -32,6 +32,10 @@ export const clearDocuments = createAction('[Document] Clear Documents');
 
 export const clearFilePath = createAction('[Document] Clear File Path');
 
+/**
+ * Withdraws the document. Nothing is removed: the document is marked, so
+ * what already points at its file goes on working.
+ */
 export const deleteDocument = createAction(
 	'[Document] Delete Document',
 	props<{ document: DocumentEntity }>()
@@ -44,7 +48,7 @@ export const deleteDocumentFail = createAction(
 
 export const deleteDocumentSuccess = createAction(
 	'[Document] Delete Document Success',
-	props<{ documentId: string }>()
+	props<{ document: DocumentEntity }>()
 );
 
 export const listDocuments = createAction('[Document] List Documents');
@@ -82,6 +86,22 @@ export const loadDocumentFail = createAction(
 export const loadDocumentSuccess = createAction(
 	'[Document] Load Document Success',
 	props<{ document: DocumentEntity | undefined }>()
+);
+
+/** Takes a withdrawn document back among the ones on offer. */
+export const restoreDocument = createAction(
+	'[Document] Restore Document',
+	props<{ document: DocumentEntity }>()
+);
+
+export const restoreDocumentFail = createAction(
+	'[Document] Restore Document Fail',
+	props<{ error: Error }>()
+);
+
+export const restoreDocumentSuccess = createAction(
+	'[Document] Restore Document Success',
+	props<{ document: DocumentEntity }>()
 );
 
 export const search = createAction(

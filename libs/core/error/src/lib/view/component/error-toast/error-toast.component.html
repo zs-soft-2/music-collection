@@ -12,7 +12,7 @@
 				<button
 					type="button"
 					class="error-close"
-					aria-label="Close"
+					[attr.aria-label]="'ui.errorToast.close' | transloco"
 					(click)="dismiss(error.uid)"
 				>
 					<i class="pi pi-times" aria-hidden="true"></i>

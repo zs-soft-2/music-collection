@@ -51,9 +51,6 @@ export const releaseReducer = createReducer(
 	on(releaseActions.updateReleaseSuccess, (state, { release }) =>
 		releaseAdapter.updateOne(release, state)
 	),
-	on(releaseActions.deleteReleaseSuccess, (state, { releaseId }) =>
-		releaseAdapter.removeOne(releaseId, state)
-	),
 	on(releaseActions.listReleasesSuccess, (state, { releases }) =>
 		releaseAdapter.upsertMany(releases as ReleaseEntity[], state)
 	),

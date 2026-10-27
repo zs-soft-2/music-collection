@@ -28,6 +28,16 @@ export const getEntityQuantityLoading = createSelector(
 	(state: State) => state.loading
 );
 
+export const selectEntityCounts = createSelector(
+	getEntityQuantityState,
+	(state: State) => state.counts
+);
+
+export const selectEntityCountsLoading = createSelector(
+	getEntityQuantityState,
+	(state: State) => state.countsLoading
+);
+
 export const getSelectedId = createSelector(
 	getEntityQuantityState,
 	(state: State) => state.selectedId || ''

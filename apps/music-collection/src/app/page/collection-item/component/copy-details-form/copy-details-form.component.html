@@ -1,0 +1,248 @@
+<form class="form" (submit)="$event.preventDefault(); submit()">
+	<fieldset class="group" [disabled]="busy()">
+		<legend>{{ 'ui.copyDetailsForm.how-you-came-by' | transloco }}</legend>
+
+		<div class="fields">
+			<label class="field">
+				<span class="label">{{
+					'ui.copyDetailsForm.bought-on' | transloco
+				}}</span>
+				<input
+					type="date"
+					[max]="today"
+					[value]="purchaseDate()"
+					[attr.aria-invalid]="dateInvalid() ? 'true' : null"
+					(input)="purchaseDate.set(text($event))"
+				/>
+				@if (dateInvalid()) {
+					<span class="field-error">{{
+						'ui.copyDetailsForm.that-day-is-still' | transloco
+					}}</span>
+				}
+			</label>
+
+			<label class="field wide">
+				<span class="label">{{
+					'ui.copyDetailsForm.where-from' | transloco
+				}}</span>
+				<input
+					type="text"
+					[placeholder]="
+						'ui.copyDetailsForm.a-shop-a-fair' | transloco
+					"
+					[attr.maxlength]="placeMaxLength"
+					[value]="purchasePlace()"
+					(input)="purchasePlace.set(text($event))"
+				/>
+			</label>
+
+			<label class="field narrow">
+				<span class="label">{{
+					'ui.copyDetailsForm.price' | transloco
+				}}</span>
+				<input
+					type="text"
+					inputmode="decimal"
+					[value]="purchasePrice()"
+					[attr.aria-invalid]="priceInvalid() ? 'true' : null"
+					(input)="purchasePrice.set(text($event))"
+				/>
+				@if (priceInvalid()) {
+					<span class="field-error">{{
+						'ui.copyDetailsForm.this-is-not-an' | transloco
+					}}</span>
+				}
+			</label>
+
+			<label class="field narrow">
+				<span class="label">{{
+					'ui.copyDetailsForm.currency' | transloco
+				}}</span>
+				<input
+					type="text"
+					maxlength="3"
+					[placeholder]="'ui.copyDetailsForm.huf' | transloco"
+					[value]="purchaseCurrency()"
+					(input)="purchaseCurrency.set(text($event))"
+				/>
+			</label>
+		</div>
+	</fieldset>
+
+	<fieldset class="group" [disabled]="busy()">
+		<legend>{{ 'ui.copyDetailsForm.how-it-has-held' | transloco }}</legend>
+
+		<div class="fields">
+			<label class="field">
+				<span class="label">{{
+					'ui.copyDetailsForm.record' | transloco
+				}}</span>
+				<select
+					[value]="mediaGrade() ?? ''"
+					(change)="mediaGrade.set(grade($event))"
+				>
+					<option value="">
+						{{ 'ui.copyDetailsForm.not-graded' | transloco }}
+					</option>
+					@for (value of grades; track value) {
+						<option [value]="value">
+							{{ value }} — {{ gradeLabels[value] }}
+						</option>
+					}
+				</select>
+			</label>
+
+			<label class="field">
+				<span class="label">{{
+					'ui.copyDetailsForm.sleeve' | transloco
+				}}</span>
+				<select
+					[value]="sleeveGrade() ?? ''"
+					(change)="sleeveGrade.set(grade($event))"
+				>
+					<option value="">
+						{{ 'ui.copyDetailsForm.not-graded2' | transloco }}
+					</option>
+					@for (value of grades; track value) {
+						<option [value]="value">
+							{{ value }} — {{ gradeLabels[value] }}
+						</option>
+					}
+				</select>
+			</label>
+		</div>
+	</fieldset>
+
+	<fieldset class="group" [disabled]="busy()">
+		<legend>
+			{{ 'ui.copyDetailsForm.which-one-of-them' | transloco }}
+		</legend>
+
+		<p class="group-lead">
+			{{ 'ui.copyDetailsForm.only-a-numbered-edition' | transloco }}
+		</p>
+
+		<div class="fields">
+			<label class="field narrow">
+				<span class="label">{{
+					'ui.copyDetailsForm.copy-number' | transloco
+				}}</span>
+				<input
+					type="text"
+					inputmode="numeric"
+					placeholder="123"
+					[value]="serialNumber()"
+					[attr.aria-invalid]="
+						serialProblem() === 'number' ||
+						serialProblem() === 'totalAlone'
+							? 'true'
+							: null
+					"
+					(input)="serialNumber.set(text($event))"
+				/>
+				@if (serialProblem() === 'number') {
+					<span class="field-error">{{
+						'ui.copyDetailsForm.this-is-not-a' | transloco
+					}}</span>
+				}
+				@if (serialProblem() === 'totalAlone') {
+					<span class="field-error">
+						{{
+							'ui.copyDetailsForm.which-one-of-them2' | transloco
+						}}
+					</span>
+				}
+			</label>
+
+			<label class="field narrow">
+				<span class="label">{{
+					'ui.copyDetailsForm.out-of' | transloco
+				}}</span>
+				<input
+					type="text"
+					inputmode="numeric"
+					placeholder="500"
+					[value]="serialTotal()"
+					[attr.aria-invalid]="
+						serialProblem() === 'total' ||
+						serialProblem() === 'tooLarge'
+							? 'true'
+							: null
+					"
+					(input)="serialTotal.set(text($event))"
+				/>
+				@if (serialProblem() === 'total') {
+					<span class="field-error">
+						{{ 'ui.copyDetailsForm.this-is-not-an2' | transloco }}
+					</span>
+				}
+				@if (serialProblem() === 'tooLarge') {
+					<span class="field-error">
+						{{
+							'ui.copyDetailsForm.the-edition-is-smaller'
+								| transloco
+						}}
+					</span>
+				}
+			</label>
+		</div>
+	</fieldset>
+
+	<fieldset class="group" [disabled]="busy()">
+		<legend>{{ 'ui.copyDetailsForm.what-there-is-to' | transloco }}</legend>
+
+		<label class="field">
+			<span class="label">{{
+				'ui.copyDetailsForm.note' | transloco
+			}}</span>
+			<input
+				type="text"
+				[placeholder]="
+					'ui.copyDetailsForm.the-one-line-that' | transloco
+				"
+				[value]="description()"
+				(input)="description.set(text($event))"
+			/>
+		</label>
+
+		<label class="field">
+			<span class="label">{{
+				'ui.copyDetailsForm.story' | transloco
+			}}</span>
+			<textarea
+				rows="6"
+				[attr.maxlength]="storyMaxLength"
+				[placeholder]="
+					'ui.copyDetailsForm.how-it-found-you' | transloco
+				"
+				[value]="story()"
+				(input)="story.set(text($event))"
+			></textarea>
+			<span class="counter">
+				{{ story().length }} / {{ storyMaxLength }}
+			</span>
+		</label>
+	</fieldset>
+
+	@if (error()) {
+		<p class="error" role="alert">{{ error() }}</p>
+	}
+
+	<div class="actions">
+		<button
+			type="button"
+			class="button"
+			[disabled]="busy()"
+			(click)="cancelled.emit()"
+		>
+			{{ 'ui.copyDetailsForm.cancel' | transloco }}
+		</button>
+		<button
+			type="submit"
+			class="button primary"
+			[disabled]="busy() || invalid()"
+		>
+			{{ busy() ? 'Saving…' : 'Save' }}
+		</button>
+	</div>
+</form>

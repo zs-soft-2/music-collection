@@ -2,9 +2,11 @@ import { Observable } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
 import {
+	MusicianDataService,
 	MusicianEntity,
 	MusicianEntityAdd,
 	MusicianEntityUpdate,
+	MusicianExternalProfile,
 	MusicianStateService,
 	SearchParams,
 } from '@music-collection/api';
@@ -16,6 +18,7 @@ import * as musicianSelectors from './musician.selectors';
 
 @Injectable()
 export class MusicianStateServiceImpl extends MusicianStateService {
+	private musicianDataService = inject(MusicianDataService);
 	private store = inject<Store<fromMusician.MusicianPartialState>>(Store);
 
 	public dispatchAddEntityAction(musician: MusicianEntityAdd): void {
@@ -60,6 +63,12 @@ export class MusicianStateServiceImpl extends MusicianStateService {
 
 	public dispatchUpdateEntityAction(musician: MusicianEntityUpdate): void {
 		this.store.dispatch(musicianActions.updateMusician({ musician }));
+	}
+
+	public fetchExternalProfile$(
+		discogsId: number
+	): Observable<MusicianExternalProfile> {
+		return this.musicianDataService.fetchExternalProfile$(discogsId);
 	}
 
 	public isLoading$(): Observable<boolean> {

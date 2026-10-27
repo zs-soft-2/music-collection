@@ -2,9 +2,12 @@ import { Observable } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
 import {
+	LabelDataService,
 	LabelEntity,
 	LabelEntityAdd,
 	LabelEntityUpdate,
+	LabelExternalCandidate,
+	LabelExternalProfile,
 	LabelStateService,
 	SearchParams,
 } from '@music-collection/api';
@@ -16,8 +19,8 @@ import * as labelSelectors from './label.selectors';
 
 @Injectable()
 export class LabelStateServiceImpl extends LabelStateService {
+	private labelDataService = inject(LabelDataService);
 	private store = inject<Store<fromLabel.LabelPartialState>>(Store);
-
 
 	public dispatchAddEntityAction(label: LabelEntityAdd): void {
 		this.store.dispatch(labelActions.addLabel({ label }));
@@ -63,6 +66,12 @@ export class LabelStateServiceImpl extends LabelStateService {
 		this.store.dispatch(labelActions.updateLabel({ label }));
 	}
 
+	public fetchExternalProfile$(
+		discogsId: number
+	): Observable<LabelExternalProfile> {
+		return this.labelDataService.fetchExternalProfile$(discogsId);
+	}
+
 	public isLoading$(): Observable<boolean> {
 		throw new Error('Method not implemented.');
 	}
@@ -75,6 +84,12 @@ export class LabelStateServiceImpl extends LabelStateService {
 		return this.store.pipe(
 			select(labelSelectors.selectLabelById(), { uid })
 		);
+	}
+
+	public searchExternalLabels$(
+		name: string
+	): Observable<LabelExternalCandidate[]> {
+		return this.labelDataService.searchExternalLabels$(name);
 	}
 
 	public selectNewEntityButtonEnabled$(): Observable<boolean> {

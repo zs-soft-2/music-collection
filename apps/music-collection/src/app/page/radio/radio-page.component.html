@@ -1,0 +1,196 @@
+<div class="page">
+	<header class="hero">
+		<div class="hero-text">
+			<p class="eyebrow">musiCollection</p>
+			<h1>{{ 'page.radio.radio' | transloco }}</h1>
+			<p class="lead">
+				{{ 'page.radio.a-record-chosen-for' | transloco }}
+			</p>
+		</div>
+
+		<label class="order">
+			<input
+				type="checkbox"
+				[checked]="store.shuffled()"
+				(change)="store.setShuffled(!store.shuffled())"
+			/>
+			<span>
+				<span class="order-label">{{
+					'page.radio.random-order' | transloco
+				}}</span>
+				<span class="order-hint">
+					{{ 'page.radio.draw-the-records-out' | transloco }}
+				</span>
+			</span>
+		</label>
+	</header>
+
+	@if (player.station(); as playing) {
+		<section
+			class="on-air"
+			[attr.aria-label]="'page.radio.on-air' | transloco"
+		>
+			<div class="on-air-text">
+				<p class="on-air-label">
+					{{ 'page.radio.on-air2' | transloco }}
+				</p>
+				<p class="on-air-station">{{ player.stationLabel() }}</p>
+				<p class="on-air-queue">
+					@if (player.queue().length) {
+						{{
+							player.queue().length
+								| mcPlural: 'ui.playerStation.waiting'
+						}}
+					} @else {
+						{{ 'ui.playerStation.last-record-of-the' | transloco }}
+					}
+				</p>
+			</div>
+			<div class="on-air-actions">
+				<button
+					type="button"
+					class="ghost"
+					[disabled]="!player.queue().length"
+					(click)="store.skip()"
+				>
+					<i class="pi pi-step-forward" aria-hidden="true"></i>
+					{{ 'page.radio.next-record' | transloco }}
+				</button>
+				<button type="button" class="ghost" (click)="store.stop()">
+					<i class="pi pi-times" aria-hidden="true"></i>
+					{{ 'page.radio.stop-the-station' | transloco }}
+				</button>
+			</div>
+
+			@if (store.upNext().length) {
+				<ol
+					class="up-next"
+					[attr.aria-label]="
+						'page.radio.waiting-to-go-on' | transloco
+					"
+				>
+					@for (record of store.upNext(); track record.albumId) {
+						<li>
+							<button
+								type="button"
+								[attr.title]="
+									'Play ' + record.albumTitle + ' now'
+								"
+								(click)="store.playQueued(record.albumId)"
+							>
+								@if (record.coverUrl) {
+									<img
+										mcCoverFallback
+										[src]="record.coverUrl"
+										alt=""
+										loading="lazy"
+									/>
+								} @else {
+									<span class="no-cover" aria-hidden="true">
+										<i class="pi pi-image"></i>
+									</span>
+								}
+								<span class="names">
+									<span class="title">{{
+										record.albumTitle
+									}}</span>
+									@if (record.artistName) {
+										<span class="artist">{{
+											record.artistName
+										}}</span>
+									}
+								</span>
+							</button>
+						</li>
+					}
+				</ol>
+			}
+		</section>
+	}
+
+	@if (store.blocked()) {
+		<p class="blocked">
+			@switch (store.blocked()) {
+				@case ('sign-in') {
+					{{ 'page.radio.blocked.signIn' | transloco }}
+				}
+				@case ('consent') {
+					{{ 'page.radio.blocked.consentBefore' | transloco }}
+					<a routerLink="/profile">{{
+						'page.radio.privacy-card-on-your' | transloco
+					}}</a>
+					{{ 'page.radio.blocked.consentAfter' | transloco }}
+				}
+			}
+		</p>
+	} @else if (store.isLoading()) {
+		<ul class="stations" aria-hidden="true">
+			@for (skeleton of skeletons; track skeleton) {
+				<li class="station skeleton"></li>
+			}
+		</ul>
+	} @else if (store.stations().length) {
+		<ul class="stations">
+			@for (station of store.stations(); track station.id) {
+				<li
+					class="station"
+					[class.playing]="store.playingStationId() === station.id"
+				>
+					<i class="icon {{ station.icon }}" aria-hidden="true"></i>
+					<div class="text">
+						<h2>{{ station.label }}</h2>
+						<p class="description">{{ station.description }}</p>
+						<p class="count">
+							{{ station.count }}
+							{{ station.count === 1 ? 'record' : 'records' }}
+						</p>
+						@if (station.preview.length) {
+							<p class="preview">
+								<!-- Two records may share a title, so the
+								     place in the line is what tracks them. -->
+								@for (record of station.preview; track $index) {
+									<span class="record">
+										{{ record.albumTitle }}
+										@if (record.artistName) {
+											<span class="by">
+												· {{ record.artistName }}
+											</span>
+										}
+									</span>
+								}
+								@if (station.count > station.preview.length) {
+									<span class="rest">{{
+										'page.radio.andMore'
+											| transloco
+												: {
+														count:
+															station.count -
+															station.preview
+																.length,
+												  }
+									}}</span>
+								}
+							</p>
+						}
+					</div>
+					<button
+						type="button"
+						class="play"
+						[disabled]="store.tuning()"
+						[attr.aria-label]="
+							'page.radio.playStation'
+								| transloco: { station: station.label }
+						"
+						(click)="play(station)"
+					>
+						<i class="pi pi-play" aria-hidden="true"></i>
+					</button>
+				</li>
+			}
+		</ul>
+	} @else {
+		<p class="empty">
+			{{ 'page.radio.nothing-to-play-yet' | transloco }}
+		</p>
+	}
+</div>

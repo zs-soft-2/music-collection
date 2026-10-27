@@ -1,6 +1,7 @@
 import { Observable, filter, map, of, pipe, switchMap, tap } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
+import { TextService } from '@music-collection/core/i18n';
 import { ActivatedRoute } from '@angular/router';
 import {
 	AlbumStateService,
@@ -21,6 +22,7 @@ import {
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
+import { AlbumRating, RatingEffect } from '../../data/rating';
 import { MusicianProfileEffect } from '../../data/musician-profile';
 import {
 	AlbumView,
@@ -30,6 +32,7 @@ import {
 	toArtistView,
 	toReleaseView,
 } from '../../shared/music-ui';
+import { Crumb, pageTrail } from '../../shared/page-breadcrumb';
 import {
 	AlbumRoleFilter,
 	albumRoleCounts,
@@ -54,6 +57,8 @@ interface MusicianPageState {
 	albumsLoading: boolean;
 	/** Selected credit category of the album list. */
 	albumRole: AlbumRoleFilter;
+	/** The collector's own verdicts, for the record list to wear. */
+	ratings: AlbumRating[];
 }
 
 const initialState: MusicianPageState = {
@@ -68,6 +73,7 @@ const initialState: MusicianPageState = {
 	artists: [],
 	albumsLoading: true,
 	albumRole: 'all',
+	ratings: [],
 };
 
 /** Selects a feature's entities and requests the list while it is empty. */
@@ -87,7 +93,7 @@ function entities$<T>(
 
 export const MusicianPageStore = signalStore(
 	withState(initialState),
-	withComputed((store) => {
+	withComputed((store, text = inject(TextService)) => {
 		const currentYear = new Date().getFullYear();
 
 		const albums = computed(() =>
@@ -107,15 +113,30 @@ export const MusicianPageStore = signalStore(
 			)
 		);
 
+		const header = computed(() =>
+			toMusicianHeader(
+				store.musicianId() ?? '',
+				store.musician(),
+				store.memberships(),
+				store.contributions()
+			)
+		);
+
 		return {
-			header: computed(() =>
-				toMusicianHeader(
-					store.musicianId() ?? '',
-					store.musician(),
-					store.memberships(),
-					store.contributions()
-				)
-			),
+			header,
+			/** Network › this musician. */
+			/** Home › the network of players › this one. */
+			trail: computed<Crumb[]>(() => {
+				const name = header()?.name;
+
+				return pageTrail(text.translator(), [
+					{
+						label: text.translator()('nav.network'),
+						link: '/network',
+					},
+					name ? { label: name } : null,
+				]);
+			}),
 			summary: computed(() =>
 				toMusicianSummary(
 					store.memberships(),
@@ -169,8 +190,23 @@ export const MusicianPageStore = signalStore(
 			musicianProfileEffect = inject(MusicianProfileEffect),
 			albumStateService = inject(AlbumStateService),
 			artistStateService = inject(ArtistStateService),
-			collectionItemStateService = inject(CollectionItemStateService)
+			collectionItemStateService = inject(CollectionItemStateService),
+			ratingEffect = inject(RatingEffect)
 		) => ({
+			/** The collector's own verdicts; follows sign-in. */
+			loadRatings: rxMethod<void>(
+				pipe(
+					switchMap(() =>
+						ratingEffect.list$().pipe(
+							tapResponse({
+								next: (ratings: AlbumRating[]) =>
+									patchState(store, { ratings }),
+								error: (error) => console.error(error),
+							})
+						)
+					)
+				)
+			),
 			/** Follows the `:musicianId` route parameter. */
 			loadProfile: rxMethod<void>(
 				pipe(
@@ -226,19 +262,20 @@ export const MusicianPageStore = signalStore(
 						entities$(
 							() => albumStateService.selectEntities$(),
 							() => albumStateService.dispatchListEntitiesAction()
+						).pipe(
+							tapResponse({
+								next: (albums) =>
+									patchState(store, {
+										albums: albums.map(toAlbumView),
+										albumsLoading: false,
+									}),
+								error: (error) => {
+									console.error(error);
+									patchState(store, { albumsLoading: false });
+								},
+							})
 						)
-					),
-					tapResponse({
-						next: (albums) =>
-							patchState(store, {
-								albums: albums.map(toAlbumView),
-								albumsLoading: false,
-							}),
-						error: (error) => {
-							console.error(error);
-							patchState(store, { albumsLoading: false });
-						},
-					})
+					)
 				)
 			),
 			loadReleases: rxMethod<void>(
@@ -248,15 +285,16 @@ export const MusicianPageStore = signalStore(
 							() => collectionItemStateService.selectEntities$(),
 							() =>
 								collectionItemStateService.dispatchListEntitiesAction()
+						).pipe(
+							tapResponse({
+								next: (items) =>
+									patchState(store, {
+										releases: items.map(toReleaseView),
+									}),
+								error: (error) => console.error(error),
+							})
 						)
-					),
-					tapResponse({
-						next: (items) =>
-							patchState(store, {
-								releases: items.map(toReleaseView),
-							}),
-						error: (error) => console.error(error),
-					})
+					)
 				)
 			),
 			loadArtists: rxMethod<void>(
@@ -266,15 +304,16 @@ export const MusicianPageStore = signalStore(
 							() => artistStateService.selectEntities$(),
 							() =>
 								artistStateService.dispatchListEntitiesAction()
+						).pipe(
+							tapResponse({
+								next: (artists) =>
+									patchState(store, {
+										artists: artists.map(toArtistView),
+									}),
+								error: (error) => console.error(error),
+							})
 						)
-					),
-					tapResponse({
-						next: (artists) =>
-							patchState(store, {
-								artists: artists.map(toArtistView),
-							}),
-						error: (error) => console.error(error),
-					})
+					)
 				)
 			),
 			setAlbumRole: (albumRole: AlbumRoleFilter) =>
@@ -284,6 +323,7 @@ export const MusicianPageStore = signalStore(
 	withHooks({
 		onInit(store) {
 			store.loadProfile(of(undefined));
+			store.loadRatings(of(undefined));
 			store.loadLineups(
 				computed(() => [
 					...new Set(

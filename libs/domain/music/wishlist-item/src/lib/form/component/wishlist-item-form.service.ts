@@ -5,20 +5,20 @@ import { Injectable, inject } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import {
-	AlbumEntity,
+	type AlbumEntity,
 	AlbumStateService,
-	ArtistEntity,
+	type ArtistEntity,
 	ArtistStateService,
 	AuthenticationStateService,
 	EntityTypeEnum,
 	FormatList,
 	MediaList,
 	ReturnNavigationService,
-	SearchParams,
-	WishlistItemEntity,
-	WishlistItemEntityAdd,
-	WishlistItemEntityUpdate,
-	WishlistItemFormParams,
+	type SearchParams,
+	type WishlistItemEntity,
+	type WishlistItemEntityAdd,
+	type WishlistItemEntityUpdate,
+	type WishlistItemFormParams,
 	WishlistItemStateService,
 	WishlistItemUtilService,
 } from '@music-collection/api';

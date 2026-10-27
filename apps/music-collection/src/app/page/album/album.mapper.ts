@@ -1,19 +1,41 @@
 import {
 	AlbumEntity,
+	CollectionItemDisposalReason,
+	MediaEnum,
+	CollectionItemEntity,
 	ContributionEntity,
+	DiscogsVersion,
+	ReleaseEntity,
+	ReleaseRequest,
+	ReleaseRequestPressing,
+	ScanCandidate,
+	ScanMatch,
 	TrackEntity,
+	discogsReleaseUrl,
+	isReleaseArchived,
 	isSpotifyAlbumId,
+	isYoutubePlaylistId,
+	isYoutubeVideoId,
 } from '@music-collection/api';
+import { MusicCollectionStanding } from '@music-collection/domain/music-collection/core';
 
 import {
 	AlbumView,
 	CREDIT_CATEGORY_LABELS,
 	CreditCategory,
+	EDITION_TAGS,
+	EditionTag,
+	MediaFormat,
+	ReleaseView,
 	creditCategory,
 	formatCountry,
 	performerOrder,
 	formatGenre,
 	toAlbumView,
+	toDescriptions,
+	toMediaFormat,
+	toReleaseView,
+	toYear,
 } from '../../shared/music-ui';
 
 export interface OriginalReleaseView {
@@ -30,6 +52,87 @@ export interface AlbumProfileView extends AlbumView {
 	genre: string | null;
 	original: OriginalReleaseView | null;
 	spotifyAlbumId: string | null;
+	youtubePlaylistId: string | null;
+	youtubeVideoIds: string[];
+}
+
+/** A catalog release (pressing) of the album, offered to be collected. */
+export interface ReleaseOptionView {
+	id: string;
+	format: MediaFormat;
+	/** Pressing weight in grams (180g vinyl). */
+	weight: number | null;
+	labelName: string | null;
+	country: string | null;
+	year: number | null;
+	editions: EditionTag[];
+	/** The collector already has a copy of this release. */
+	owned: boolean;
+	/** That copy, to let go of from the picker; null when not owned. */
+	ownedCopyId: string | null;
+}
+
+/** A Discogs pressing of the album, to request when not in the catalog. */
+export interface DiscogsVersionView {
+	id: number;
+	format: MediaFormat;
+	/** Discogs format text, e.g. "Vinyl, LP, Album, Reissue". */
+	formatText: string | null;
+	label: string | null;
+	catno: string | null;
+	country: string | null;
+	year: number | null;
+	discogsUrl: string;
+	/** Discogs cover thumbnail, when the pressing has one. */
+	thumbUrl: string | null;
+	/** How sure a photo scan is; `null` for a pressing picked from a list. */
+	match: ScanMatch | null;
+	/** The collector has a pending request for it. */
+	requested: boolean;
+}
+
+/** A release request of the collector for the album. */
+export interface PendingRequestView {
+	id: string;
+	/** e.g. "Vinyl, LP · Megaforce (81741-1) · US · 1987". */
+	summary: string;
+	note: string | null;
+	discogsUrl: string | null;
+	/** The admin's reason, when rejected. */
+	adminNote: string | null;
+}
+
+/** What the collector asks the admin to add to the catalog. */
+export interface ReleaseRequestDraft {
+	discogsReleaseId: number | null;
+	pressing: ReleaseRequestPressing | null;
+	note: string | null;
+}
+
+/** What the collector wants the wanted album on. */
+export const WISHLIST_MEDIA_LABELS: Record<MediaEnum, string> = {
+	[MediaEnum.all]: 'Any format',
+	[MediaEnum.vinyl]: 'Vinyl',
+	[MediaEnum.cd]: 'CD',
+	[MediaEnum.cassette]: 'Cassette',
+	[MediaEnum.dvd]: 'DVD',
+	[MediaEnum.boxset]: 'Box set',
+};
+
+/** What the collector adds to their wishlist. */
+export interface WishlistDraft {
+	medias: MediaEnum[];
+	/** Where it can be bought; `null` when not noted. */
+	sourceLink: string | null;
+}
+
+/** A copy gone from the collection. */
+export interface PastCopyView extends ReleaseView {
+	/** Why it left, as the dictionary keys it: `sold`, `traded`, `lost`… */
+	reason: CollectionItemDisposalReason;
+	/** When it left (epoch ms). */
+	disposedAt: number;
+	note: string | null;
 }
 
 export interface TrackRow {
@@ -77,6 +180,10 @@ export function toAlbumProfile(album: AlbumEntity): AlbumProfileView {
 		spotifyAlbumId: isSpotifyAlbumId(album.spotifyAlbumId)
 			? album.spotifyAlbumId
 			: null,
+		youtubePlaylistId: isYoutubePlaylistId(album.youtubePlaylistId)
+			? album.youtubePlaylistId
+			: null,
+		youtubeVideoIds: (album.youtubeVideoIds ?? []).filter(isYoutubeVideoId),
 		original: discogs
 			? {
 					released: discogs.released,
@@ -293,4 +400,214 @@ export function groupCredits(
 						: people.sort((a, b) => a.name.localeCompare(b.name)),
 			};
 		});
+}
+
+/**
+ * The album's releases, owned ones last, then by year and format.
+ *
+ * An archived pressing is left out: it is a page an admin took off the
+ * forms — a duplicate, or one that turned out wrong — and no new copy
+ * should join it. One the collector already owns a copy of stays on the
+ * list, marked owned, so their shelf is not missing from what they read.
+ */
+export function toReleaseOptions(
+	releases: ReleaseEntity[],
+	ownedCopyIds: Map<string, string>
+): ReleaseOptionView[] {
+	return releases
+		.filter(
+			(release) =>
+				!isReleaseArchived(release) || ownedCopyIds.has(release.uid)
+		)
+		.map((release): ReleaseOptionView => {
+			const descriptions = toDescriptions(release.formatDescription);
+
+			return {
+				id: release.uid,
+				format: toMediaFormat(release.media),
+				weight: descriptions.includes('180g') ? 180 : null,
+				labelName: release.label?.name || null,
+				country: formatCountry(release.country),
+				year: toYear(release.date),
+				editions: EDITION_TAGS.filter((tag) =>
+					descriptions.includes(tag)
+				),
+				owned: ownedCopyIds.has(release.uid),
+				ownedCopyId: ownedCopyIds.get(release.uid) ?? null,
+			};
+		})
+		.sort(
+			(a, b) =>
+				Number(a.owned) - Number(b.owned) ||
+				(a.year ?? Infinity) - (b.year ?? Infinity) ||
+				a.format.localeCompare(b.format)
+		);
+}
+
+const DISCOGS_MEDIA: Record<string, MediaFormat> = {
+	vinyl: 'vinyl',
+	cd: 'cd',
+	cassette: 'cassette',
+	dvd: 'dvd',
+	'box set': 'boxset',
+};
+
+/**
+ * What the pressing plays on. A box set is packaging rather than a medium, so
+ * it stands as the format only when nothing more specific is listed — Discogs
+ * names it first as readily as last.
+ */
+function discogsMediaFormat(majorFormats: string[]): MediaFormat {
+	const known = majorFormats
+		.map((format) => DISCOGS_MEDIA[format.toLowerCase()])
+		.filter((media): media is MediaFormat => !!media);
+
+	return known.find((media) => media !== 'boxset') ?? known[0] ?? 'other';
+}
+
+export function toDiscogsVersionViews(
+	versions: DiscogsVersion[],
+	requestedIds: Set<number>
+): DiscogsVersionView[] {
+	return versions.map((version) => ({
+		id: version.id,
+		format: discogsMediaFormat(version.majorFormats),
+		formatText: version.format,
+		label: version.label,
+		catno: version.catno,
+		country: version.country,
+		year: version.year,
+		discogsUrl: discogsReleaseUrl(version.id),
+		thumbUrl: version.thumbUrl,
+		match: null,
+		requested: requestedIds.has(version.id),
+	}));
+}
+
+/**
+ * The pressings a photo found, as picker options. They stand in for Discogs
+ * versions on purpose: from here the collector confirms and requests exactly
+ * as they would from the version list, so nothing downstream changes.
+ */
+export function toPhotoVersionViews(
+	candidates: ScanCandidate[],
+	requestedIds: Set<number>
+): DiscogsVersionView[] {
+	return candidates
+		.filter((candidate) => !!candidate.discogsReleaseId)
+		.map((candidate) => ({
+			id: candidate.discogsReleaseId as number,
+			format: discogsMediaFormat(candidate.formats),
+			formatText: candidate.formats.join(', ') || null,
+			label: candidate.label,
+			catno: candidate.catno,
+			country: candidate.country,
+			year: candidate.year,
+			discogsUrl: discogsReleaseUrl(candidate.discogsReleaseId as number),
+			thumbUrl: candidate.thumbUrl,
+			match: candidate.match,
+			requested: requestedIds.has(candidate.discogsReleaseId as number),
+		}));
+}
+
+/** The pressing a request is about, as the collector saw it. */
+export function toRequestPressing(
+	version: DiscogsVersionView
+): ReleaseRequestPressing {
+	return {
+		format: version.formatText,
+		label: version.label,
+		catno: version.catno,
+		country: version.country,
+		year: version.year,
+	};
+}
+
+function pressingSummary(pressing: ReleaseRequestPressing | null): string {
+	if (!pressing) {
+		return '';
+	}
+	const label = pressing.label
+		? pressing.catno
+			? `${pressing.label} (${pressing.catno})`
+			: pressing.label
+		: null;
+
+	return [pressing.format, label, pressing.country, pressing.year]
+		.filter((part) => part !== null && part !== '')
+		.join(' · ');
+}
+
+export function toPendingRequestView(
+	request: ReleaseRequest
+): PendingRequestView {
+	const summary = pressingSummary(request.pressing);
+
+	return {
+		id: request.uid,
+		summary:
+			summary ||
+			(request.discogsReleaseId
+				? `Discogs release ${request.discogsReleaseId}`
+				: 'Described pressing'),
+		note: request.note,
+		discogsUrl: request.discogsReleaseId
+			? discogsReleaseUrl(request.discogsReleaseId)
+			: null,
+		adminNote: request.adminNote ?? null,
+	};
+}
+
+export function toPastCopyView(item: CollectionItemEntity): PastCopyView {
+	return {
+		...toReleaseView(item),
+		reason: item.disposal?.reason ?? 'other',
+		disposedAt: item.disposal?.date ?? 0,
+		note: item.disposal?.note ?? null,
+	};
+}
+
+/** A collection this album belongs to, as the album page shows it. */
+export interface AlbumCollectionView {
+	uid: string;
+	slug: string;
+	name: string;
+	badgeName: string | null;
+	owned: number;
+	total: number;
+	/** 0–100. */
+	percentage: number;
+	completed: boolean;
+	/** The collector already owns this very record. */
+	ownsThisAlbum: boolean;
+}
+
+/**
+ * The collections asking for this album, nearest to complete first. The
+ * album page answers "what is this record part of, and how far am I with
+ * it" — which is the question a collection is for.
+ */
+export function toAlbumCollections(
+	standings: MusicCollectionStanding[],
+	albumId: string
+): AlbumCollectionView[] {
+	return standings
+		.filter(({ resolved }) =>
+			resolved.albums.some((album) => album.albumUid === albumId)
+		)
+		.map(({ collection, progress }) => ({
+			uid: collection.uid,
+			slug: collection.slug,
+			name: collection.name,
+			badgeName: collection.badge?.name ?? null,
+			owned: progress.owned,
+			total: progress.total,
+			percentage: progress.percentage,
+			completed: progress.completed,
+			ownsThisAlbum: progress.ownedAlbumUids.includes(albumId),
+		}))
+		.sort(
+			(a, b) =>
+				b.percentage - a.percentage || a.name.localeCompare(b.name)
+		);
 }

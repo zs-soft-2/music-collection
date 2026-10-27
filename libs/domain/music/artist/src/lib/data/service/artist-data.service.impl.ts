@@ -1,6 +1,7 @@
-import { Observable } from 'rxjs';
+import { Observable, catchError, map, of, switchMap, take } from 'rxjs';
 
-import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
 import { collection, doc } from '@angular/fire/firestore';
 import {
 	ALBUM_FEATURE_KEY,
@@ -9,18 +10,64 @@ import {
 	AlbumModelUpdate,
 	ARTIST_FEATURE_KEY,
 	ArtistDataService,
+	ArtistExternalAlbum,
+	ArtistExternalCandidate,
+	ArtistExternalProfile,
+	ArtistExternalQuery,
 	ArtistModel,
 	ArtistModelAdd,
 	ArtistModelUpdate,
+	CATALOG_LOOKUP_LIMIT,
+	DiscogsLookupClient,
+	MUSICBRAINZ_ARTIST_URL,
+	MusicBrainzClient,
 	RELEASE_FEATURE_KEY,
 	ReleaseModel,
 	ReleaseModelAdd,
 	ReleaseModelUpdate,
 	SearchParams,
+	StyleName,
+	toMusicBrainzId,
+	withLocalUpdatedAt,
 } from '@music-collection/api';
+import { GenreEffect } from '@music-collection/domain/genre';
+
+import {
+	MusicBrainzArtist,
+	MusicBrainzReleaseGroupSearch,
+	MusicBrainzSearch,
+	WIKIDATA_API_URL,
+	WIKIPEDIA_SUMMARY_URL,
+	WikidataEntities,
+	WikipediaSummary,
+	rankArtists,
+	toCommonsImageUrl,
+	toArtistType,
+	toCountry,
+	toExternalAlbum,
+	toExternalCandidate,
+	toFormedIn,
+	toStyles,
+	toWikidataId,
+} from './artist-external.mapper';
+import {
+	fillArtistGaps,
+	hasArtistGaps,
+	toDiscogsAlbum,
+	toDiscogsCandidate,
+	toDiscogsProfile,
+} from './artist-discogs.mapper';
+
+/** Hits of the name to rank by country and styles. */
+const SEARCH_LIMIT = 25;
 
 @Injectable()
 export class ArtistDataServiceImpl extends ArtistDataService {
+	private discogs = inject(DiscogsLookupClient);
+	private genre = inject(GenreEffect);
+	private http = inject(HttpClient);
+	private musicBrainz = inject(MusicBrainzClient);
+
 	public constructor() {
 		super();
 
@@ -30,6 +77,160 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 
 	public add$(artist: ArtistModelAdd): Observable<ArtistModel> {
 		return super.addModel$(artist);
+	}
+
+	/**
+	 * Looks the artist up online. MusicBrainz answers first — by name, country
+	 * and styles, with its description from the English Wikipedia and its
+	 * photo from Commons through Wikidata. Null when neither source has it.
+	 *
+	 * Discogs is asked where that leaves something open: no artist of the name
+	 * at all, or one MusicBrainz knows without a description or a picture. It
+	 * knows no country and no founding year, so those stay as MusicBrainz left
+	 * them; what MusicBrainz does know is never overwritten.
+	 *
+	 * An artist already identified on Discogs is not looked for on MusicBrainz:
+	 * the id names one artist, and there is nothing to search.
+	 */
+	public fetchExternalProfile$(
+		query: ArtistExternalQuery
+	): Observable<ArtistExternalProfile | null> {
+		if (!toMusicBrainzId(query.musicBrainzId) && query.discogsArtistId) {
+			return this.fetchDiscogsProfile$(query.discogsArtistId);
+		}
+
+		return this.fetchMusicBrainzProfile$(query).pipe(
+			switchMap((profile) =>
+				profile && !hasArtistGaps(profile)
+					? of(profile)
+					: this.searchDiscogsProfile$(query).pipe(
+							map((discogs) =>
+								profile && discogs
+									? fillArtistGaps(profile, discogs)
+									: (profile ?? discogs)
+							)
+						)
+			)
+		);
+	}
+
+	/**
+	 * The styles the taxonomy holds right now, for matching what a source
+	 * names its own way. The list is shared and cached, so this is the value
+	 * already in hand; it is empty only before the first answer arrives —
+	 * which is a load started in the first moment of a form, and costs the
+	 * styles of that one load, not the load itself.
+	 */
+	private knownStyles$(): Observable<StyleName[]> {
+		return this.genre.styles$.pipe(take(1));
+	}
+
+	/** The artist on MusicBrainz, with Wikipedia and Commons; null if none. */
+	private fetchMusicBrainzProfile$(
+		query: ArtistExternalQuery
+	): Observable<ArtistExternalProfile | null> {
+		return this.searchMusicBrainzArtist$(query).pipe(
+			switchMap((hit) =>
+				hit
+					? this.musicBrainz.get$<MusicBrainzArtist>(
+							`/artist/${hit.id}`,
+							new HttpParams()
+								.set('inc', 'genres+url-rels')
+								.set('fmt', 'json')
+						)
+					: of(null)
+			),
+			switchMap((artist) =>
+				this.knownStyles$().pipe(
+					map((known) => ({ artist, known }))
+				)
+			),
+			switchMap(({ artist, known }) =>
+				artist
+					? this.fetchWikidata$(toWikidataId(artist.relations)).pipe(
+							map(
+								({
+									description,
+									imageUrl,
+								}): ArtistExternalProfile => ({
+									artistType: toArtistType(artist.type),
+									country: toCountry(artist.country),
+									description,
+									discogsArtistId: null,
+									fillerSourceUrl: null,
+									formedIn: toFormedIn(
+										artist['life-span']?.begin
+									),
+									imageUrl,
+									musicBrainzId: artist.id,
+									name: artist.name,
+									source: 'musicbrainz',
+									sourceUrl: `${MUSICBRAINZ_ARTIST_URL}/${artist.id}`,
+									styles: toStyles(
+										artist.genres,
+										known
+									),
+								})
+							)
+						)
+					: of(null)
+			)
+		);
+	}
+
+	/**
+	 * The albums of the artist found online, the oldest first. Empty when no
+	 * source has one.
+	 *
+	 * MusicBrainz answers first with its official studio albums, EPs, live
+	 * albums and compilations; soundtracks, remixes, demos and the like are
+	 * left out. An empty answer — the artist is unknown there, or it lists
+	 * nothing the shelf knows — hands the question to the Discogs
+	 * discography.
+	 */
+	public fetchExternalAlbums$(
+		query: ArtistExternalQuery
+	): Observable<ArtistExternalAlbum[]> {
+		if (!toMusicBrainzId(query.musicBrainzId) && query.discogsArtistId) {
+			return this.fetchDiscogsAlbums$(query.discogsArtistId);
+		}
+
+		return this.fetchMusicBrainzAlbums$(query).pipe(
+			switchMap((albums) =>
+				albums.length ? of(albums) : this.searchDiscogsAlbums$(query)
+			)
+		);
+	}
+
+	/** The artist's official albums, EPs, live albums and compilations on MusicBrainz. */
+	private fetchMusicBrainzAlbums$(
+		query: ArtistExternalQuery
+	): Observable<ArtistExternalAlbum[]> {
+		return this.searchMusicBrainzArtist$(query).pipe(
+			switchMap((hit) =>
+				hit
+					? this.musicBrainz.get$<MusicBrainzReleaseGroupSearch>(
+							'/release-group',
+							new HttpParams()
+								.set(
+									'query',
+									`arid:${hit.id} AND primarytype:(album OR ep) AND status:official AND NOT secondarytype:(soundtrack OR spokenword OR interview OR audiobook OR "audio drama" OR remix OR dj-mix OR mixtape/street OR demo OR "field recording")`
+								)
+								.set('limit', 100)
+								.set('fmt', 'json')
+						)
+					: of(null)
+			),
+			map((result) =>
+				(result?.['release-groups'] ?? [])
+					.map(toExternalAlbum)
+					.filter((album): album is ArtistExternalAlbum => !!album)
+					.sort(
+						(a, b) =>
+							(a.year?.getTime() ?? 0) - (b.year?.getTime() ?? 0)
+					)
+			)
+		);
 	}
 
 	public addAlbum$(album: AlbumModelAdd): Observable<AlbumModel> {
@@ -50,7 +251,9 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 			this.firestoreSync
 				.set(doc(collectionReference, uid), ALBUM_FEATURE_KEY, newAlbum)
 				.then(() => {
-					subscriber.next({ ...newAlbum } as unknown as AlbumModel);
+					subscriber.next(
+						withLocalUpdatedAt(newAlbum) as unknown as AlbumModel
+					);
 				});
 		});
 	}
@@ -79,9 +282,11 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 					newRelease
 				)
 				.then(() => {
-					subscriber.next({
-						...newRelease,
-					} as unknown as ReleaseModel);
+					subscriber.next(
+						withLocalUpdatedAt(
+							newRelease
+						) as unknown as ReleaseModel
+					);
 				});
 		});
 	}
@@ -125,7 +330,9 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 					album
 				)
 				.then(() => {
-					subscriber.next({ ...album } as unknown as AlbumModel);
+					subscriber.next(
+						withLocalUpdatedAt(album) as unknown as AlbumModel
+					);
 				});
 		});
 	}
@@ -143,6 +350,7 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 		return this.firestoreSync.list$<AlbumModel>({
 			featureKey: ALBUM_FEATURE_KEY,
 			cacheKey: `${ALBUM_FEATURE_KEY}@${albumCollection.path}`,
+			narrow: true,
 			query: albumCollection,
 		});
 	}
@@ -155,8 +363,47 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 		return super.loadModel$(uid);
 	}
 
+	public lookupByName$(term: string): Observable<ArtistModel[]> {
+		return super.lookupModels$(
+			'searchParameters',
+			term.toLowerCase(),
+			CATALOG_LOOKUP_LIMIT
+		);
+	}
+
 	public search$(params: SearchParams): Observable<ArtistModel[]> {
 		return super.searchModel$(params);
+	}
+
+	/**
+	 * The artists of the searched name, the one best fitting the country and
+	 * styles of the form first, so the admin can say which namesake theirs
+	 * is. The id in the form is not used: it already names one artist, and
+	 * there would be nothing to choose.
+	 *
+	 * A name MusicBrainz knows nobody of is searched on Discogs instead; those
+	 * hits carry no country, year or note, so they are harder to tell apart —
+	 * which is why this is the fallback and not the first question.
+	 */
+	public searchExternalArtists$(
+		query: ArtistExternalQuery
+	): Observable<ArtistExternalCandidate[]> {
+		return this.knownStyles$().pipe(
+			switchMap((known) =>
+				this.searchMusicBrainzArtists$(query).pipe(
+					map((artists) =>
+						artists.map((artist) =>
+							toExternalCandidate(artist, known)
+						)
+					)
+				)
+			),
+			switchMap((candidates) =>
+				candidates.length
+					? of(candidates)
+					: this.searchDiscogsArtists$(query.name)
+			)
+		);
 	}
 
 	public update$(artist: ArtistModelUpdate): Observable<ArtistModelUpdate> {
@@ -173,7 +420,7 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 			this.firestoreSync
 				.update(albumDocument, ALBUM_FEATURE_KEY, { ...album })
 				.then(() => {
-					subscriber.next(album);
+					subscriber.next(withLocalUpdatedAt(album));
 				});
 		});
 	}
@@ -190,8 +437,194 @@ export class ArtistDataServiceImpl extends ArtistDataService {
 			this.firestoreSync
 				.update(releaseDocument, RELEASE_FEATURE_KEY, { ...release })
 				.then(() => {
-					subscriber.next(release);
+					subscriber.next(withLocalUpdatedAt(release));
 				});
 		});
+	}
+
+	/**
+	 * The MusicBrainz artist the query fits best; null when not found.
+	 * A known id settles it, no search needed. Otherwise only the name is
+	 * searched on: the country and the styles are left to `pickArtist`, as
+	 * a hit MusicBrainz knows no country or tags for would drop out of a
+	 * filtered search altogether. Hence the wide page of hits.
+	 */
+	private searchMusicBrainzArtist$(
+		query: ArtistExternalQuery
+	): Observable<MusicBrainzArtist | null> {
+		const musicBrainzId = toMusicBrainzId(query.musicBrainzId);
+		if (musicBrainzId) {
+			return of({ id: musicBrainzId, name: query.name });
+		}
+
+		return this.searchMusicBrainzArtists$(query).pipe(
+			map((artists) => artists[0] ?? null)
+		);
+	}
+
+	/** The hits of the name, the one the query fits best first. */
+	private searchMusicBrainzArtists$(
+		query: ArtistExternalQuery
+	): Observable<MusicBrainzArtist[]> {
+		const params = new HttpParams()
+			.set('query', `artist:"${query.name.replace(/"/g, '')}"`)
+			.set('limit', SEARCH_LIMIT)
+			.set('fmt', 'json');
+
+		return this.knownStyles$().pipe(
+			switchMap((known) =>
+				this.musicBrainz
+					.get$<MusicBrainzSearch>('/artist', params)
+					.pipe(
+						map((result) =>
+							rankArtists(query, result.artists ?? [], known)
+						)
+					)
+			)
+		);
+	}
+
+	/**
+	 * The Discogs artists of the name, as the chooser lists them. The callable
+	 * hands back exact name matches only, so every hit here carries the name —
+	 * which of them is the right artist, only the thumbnail and the Discogs
+	 * page can say.
+	 */
+	private searchDiscogsArtists$(
+		name: string
+	): Observable<ArtistExternalCandidate[]> {
+		return this.discogs
+			.lookupOrNull$({ kind: 'artist-search', name })
+			.pipe(
+				map((result) =>
+					(result?.candidates ?? []).map(toDiscogsCandidate)
+				)
+			);
+	}
+
+	/** The Discogs artist by its id there; null when the lookup finds none. */
+	private fetchDiscogsProfile$(
+		discogsArtistId: number
+	): Observable<ArtistExternalProfile | null> {
+		return this.knownStyles$().pipe(
+			switchMap((known) =>
+				this.discogs
+					.lookupOrNull$({
+						kind: 'artist-profile',
+						discogsId: discogsArtistId,
+					})
+					.pipe(
+						map((result) =>
+							result
+								? toDiscogsProfile(result.profile, known)
+								: null
+						)
+					)
+			)
+		);
+	}
+
+	/**
+	 * The profile of the first Discogs artist of the name. Where several carry
+	 * it, the chooser has already asked which one is meant — this runs when the
+	 * search found a single artist, or none.
+	 */
+	private searchDiscogsProfile$(
+		query: ArtistExternalQuery
+	): Observable<ArtistExternalProfile | null> {
+		return this.searchDiscogsArtists$(query.name).pipe(
+			switchMap((candidates) => {
+				const discogsArtistId = candidates[0]?.discogsArtistId;
+
+				return discogsArtistId
+					? this.fetchDiscogsProfile$(discogsArtistId)
+					: of(null);
+			})
+		);
+	}
+
+	/** The Discogs discography of the artist by its id there. */
+	private fetchDiscogsAlbums$(
+		discogsArtistId: number
+	): Observable<ArtistExternalAlbum[]> {
+		return this.discogs
+			.lookupOrNull$({
+				kind: 'artist-albums',
+				discogsId: discogsArtistId,
+			})
+			.pipe(
+				map((result) =>
+					(result?.albums ?? [])
+						.map(toDiscogsAlbum)
+						.filter(
+							(album): album is ArtistExternalAlbum => !!album
+						)
+				)
+			);
+	}
+
+	/** The discography of the first Discogs artist of the name. */
+	private searchDiscogsAlbums$(
+		query: ArtistExternalQuery
+	): Observable<ArtistExternalAlbum[]> {
+		return this.searchDiscogsArtists$(query.name).pipe(
+			switchMap((candidates) => {
+				const discogsArtistId = candidates[0]?.discogsArtistId;
+
+				return discogsArtistId
+					? this.fetchDiscogsAlbums$(discogsArtistId)
+					: of([]);
+			})
+		);
+	}
+
+	/**
+	 * The English Wikipedia summary and the Commons photo of a Wikidata
+	 * item; null where missing. Both are optional: errors give nulls.
+	 */
+	private fetchWikidata$(
+		wikidataId: string | null
+	): Observable<{ description: string | null; imageUrl: string | null }> {
+		const empty = { description: null, imageUrl: null };
+		if (!wikidataId) {
+			return of(empty);
+		}
+		const params = new HttpParams()
+			.set('action', 'wbgetentities')
+			.set('ids', wikidataId)
+			.set('props', 'sitelinks|claims')
+			.set('sitefilter', 'enwiki')
+			.set('format', 'json')
+			.set('origin', '*');
+
+		return this.http
+			.get<WikidataEntities>(WIKIDATA_API_URL, { params })
+			.pipe(
+				switchMap((result) => {
+					const entity = result.entities?.[wikidataId];
+					const imageUrl = toCommonsImageUrl(entity?.claims);
+					const title = entity?.sitelinks?.['enwiki']?.title;
+
+					const summary$: Observable<WikipediaSummary | null> = title
+						? this.http.get<WikipediaSummary>(
+								`${WIKIPEDIA_SUMMARY_URL}/${encodeURIComponent(
+									title.replace(/ /g, '_')
+								)}`
+							)
+						: of(null);
+
+					return summary$.pipe(
+						map((summary) => ({
+							description:
+								summary?.type === 'standard'
+									? summary.extract?.trim() || null
+									: null,
+							imageUrl,
+						})),
+						catchError(() => of({ description: null, imageUrl }))
+					);
+				}),
+				catchError(() => of(empty))
+			);
 	}
 }

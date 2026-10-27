@@ -8,7 +8,9 @@
  *
  * Run it after an import. Per collection it reads every document (one read
  * each), uploads `bundles/{featureKey}/{seconds}.bundle` (gzip) and announces
- * it in `sync/catalog.bundles`. The two newest bundles of a collection are
+ * it in `sync/catalog.bundles`. The documents are read as a collection group,
+ * like the app lists them, so a nested collection (`artist/{uid}/album`) ends
+ * up in its bundle too. The two newest bundles of a collection are
  * kept, so clients still downloading the previous one are not cut off.
  *
  * On the first --confirm run it sets a GET-only CORS rule on the bucket
@@ -29,11 +31,13 @@ import {
 	BUNDLE_FEATURE_KEYS,
 	BUNDLE_FOLDER,
 	announceBundle,
+	buildBundle,
+	uploadBundle,
+	ensureBundleCors,
 	featureVersion,
+	removeOldBundles,
 } from './catalog-sync.mjs';
 import { ENV_OPTION, readEnvironment } from './environment.mjs';
-
-const KEPT_BUNDLES = 2;
 
 const { values: options } = parseArgs({
 	options: {
@@ -62,7 +66,7 @@ const db = getFirestore();
 const bucket = getStorage().bucket();
 
 if (options.confirm) {
-	await ensureCors();
+	await ensureBundleCors(bucket);
 }
 
 for (const featureKey of featureKeys) {
@@ -77,7 +81,7 @@ for (const featureKey of featureKeys) {
 	}
 
 	if (!options.confirm) {
-		const count = await db.collection(featureKey).count().get();
+		const count = await db.collectionGroup(featureKey).count().get();
 		console.log(
 			`${featureKey}: ${count.data().count} documents (${count.data().count} reads to build)`
 		);
@@ -86,22 +90,16 @@ for (const featureKey of featureKeys) {
 
 	// Read after the version: a document written in between is in the bundle
 	// and is fetched again as a change, never missed.
-	const snapshot = await db.collection(featureKey).get();
-	const content = db
-		.bundle(`${featureKey}-${modifiedAt.seconds}`)
-		.add(featureKey, snapshot)
-		.build();
+	const snapshot = await db.collectionGroup(featureKey).get();
+	const content = buildBundle(
+		db
+			.bundle(`${featureKey}-${modifiedAt.seconds}`)
+			.add(featureKey, snapshot)
+	);
 	const gzipped = gzipSync(content);
 	const path = `${BUNDLE_FOLDER}/${featureKey}/${modifiedAt.seconds}.bundle`;
 
-	await bucket.file(path).save(gzipped, {
-		resumable: false,
-		metadata: {
-			contentType: 'application/octet-stream',
-			contentEncoding: 'gzip',
-			cacheControl: 'public, max-age=31536000, immutable',
-		},
-	});
+	await uploadBundle(bucket, path, gzipped);
 	await announceBundle(db, featureKey, {
 		path,
 		modifiedAt,
@@ -111,36 +109,9 @@ for (const featureKey of featureKeys) {
 		`${featureKey}: ${snapshot.size} documents, ${kb(content.length)} → ${kb(gzipped.length)} gzip, ${path}`
 	);
 
-	await removeOldBundles(featureKey, path);
+	await removeOldBundles(bucket, `${BUNDLE_FOLDER}/${featureKey}`, path);
 }
 
 function kb(bytes) {
 	return `${Math.round(bytes / 1024)} KB`;
-}
-
-async function removeOldBundles(featureKey, current) {
-	const [files] = await bucket.getFiles({
-		prefix: `${BUNDLE_FOLDER}/${featureKey}/`,
-	});
-	const old = files
-		.filter((file) => file.name !== current)
-		.sort((a, b) => b.name.localeCompare(a.name, 'en', { numeric: true }))
-		.slice(KEPT_BUNDLES - 1);
-
-	await Promise.all(old.map((file) => file.delete()));
-}
-
-async function ensureCors() {
-	const [metadata] = await bucket.getMetadata();
-	const allowsGet = (metadata.cors ?? []).some(
-		(rule) => rule.origin?.includes('*') && rule.method?.includes('GET')
-	);
-
-	if (!allowsGet) {
-		await bucket.setCorsConfiguration([
-			...(metadata.cors ?? []),
-			{ origin: ['*'], method: ['GET'], maxAgeSeconds: 3600 },
-		]);
-		console.log('bucket CORS: GET allowed from any origin');
-	}
 }

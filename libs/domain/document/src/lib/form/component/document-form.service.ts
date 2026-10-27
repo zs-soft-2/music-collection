@@ -125,21 +125,31 @@ export class DocumentFormService {
 		file: File | undefined,
 		filePath: string | undefined
 	): FormGroup {
-		return this.documentUtilService.createFormGroupByProperties(
-			formGroup?.value['name'] || document?.name || null,
-			filePath ||
+		return this.documentUtilService.createFormGroupByProperties({
+			...document,
+			// What the form already holds wins, and a cleared category stays
+			// cleared: the form is re-made when an upload lands, and a
+			// category picked a moment earlier must survive that.
+			category: formGroup
+				? formGroup.value['category'] || undefined
+				: document?.category,
+			name: formGroup?.value['name'] || document?.name || undefined,
+			filePath:
+				filePath ||
 				formGroup?.value['filePath'] ||
 				document?.filePath ||
-				null,
-			file?.type ||
+				undefined,
+			fileType:
+				file?.type ||
 				formGroup?.value['fileType'] ||
 				document?.fileType ||
-				null,
-			file?.name ||
+				undefined,
+			originalName:
+				file?.name ||
 				formGroup?.value['originalName'] ||
 				document?.originalName ||
-				null,
-			formGroup?.value['uid'] || document?.uid || null
-		);
+				undefined,
+			uid: formGroup?.value['uid'] || document?.uid || undefined,
+		});
 	}
 }

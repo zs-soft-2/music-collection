@@ -1,0 +1,162 @@
+<div class="page">
+	<header class="hero">
+		<div class="hero-text">
+			<p class="eyebrow">musiCollection</p>
+			<h1>{{ 'page.profile.profile' | transloco }}</h1>
+			<p class="lead">
+				{{ 'page.profile.your-account-and-how' | transloco }}
+			</p>
+		</div>
+	</header>
+
+	@if (store.isAuthenticated()) {
+		<div
+			class="tabs"
+			role="tablist"
+			[attr.aria-label]="'page.profile.tabs.label' | transloco"
+		>
+			@for (tab of tabs; track tab.id; let index = $index) {
+				<button
+					#tabButton
+					type="button"
+					role="tab"
+					class="tab"
+					[id]="'mc-profile-tab-' + tab.id"
+					[class.is-active]="active() === tab.id"
+					[attr.aria-selected]="active() === tab.id"
+					[attr.aria-controls]="'mc-profile-panel-' + tab.id"
+					[attr.tabindex]="active() === tab.id ? 0 : -1"
+					(click)="show(tab.id)"
+					(keydown)="onTabKeydown($event, index)"
+				>
+					<i class="pi {{ tab.icon }}" aria-hidden="true"></i>
+					{{ tab.labelKey | transloco }}
+				</button>
+			}
+		</div>
+
+		<div
+			class="sections"
+			role="tabpanel"
+			[id]="'mc-profile-panel-' + active()"
+			[attr.aria-labelledby]="'mc-profile-tab-' + active()"
+		>
+			@switch (active()) {
+				@case ('account') {
+					<mc-profile-section
+						heading="page.profile.account"
+						intro="page.profile.how-you-appear-in"
+					>
+						<mc-profile-account />
+					</mc-profile-section>
+
+					<mc-profile-section
+						heading="page.profile.avatar"
+						intro="page.profile.avatarIntro"
+					>
+						<mc-profile-avatar />
+					</mc-profile-section>
+
+					<mc-profile-section
+						heading="page.profile.language"
+						intro="page.profile.languageIntro"
+					>
+						<mc-profile-language />
+					</mc-profile-section>
+
+					<mc-profile-section
+						heading="page.profile.appearance"
+						intro="page.profile.the-theme-and-how"
+					>
+						<mc-profile-appearance />
+					</mc-profile-section>
+
+					<mc-profile-section
+						heading="page.profile.demoTour"
+						intro="page.profile.demoTourIntro"
+					>
+						<mc-profile-demo-tour />
+					</mc-profile-section>
+				}
+
+				@case ('collection') {
+					<mc-profile-section
+						heading="page.profile.genres"
+						intro="page.profile.genresIntro"
+					>
+						<mc-profile-genres />
+					</mc-profile-section>
+
+					<mc-profile-section
+						heading="page.profile.lists"
+						intro="page.profile.what-the-collection-opens"
+					>
+						<mc-profile-lists />
+					</mc-profile-section>
+
+					<mc-profile-section
+						heading="page.profile.shelves"
+						intro="page.profile.the-furniture-your-records"
+					>
+						<mc-profile-shelves />
+					</mc-profile-section>
+				}
+
+				@case ('playback') {
+					<mc-profile-section
+						heading="page.profile.playback"
+						intro="page.profile.how-the-player-starts"
+					>
+						<mc-profile-playback />
+					</mc-profile-section>
+
+					<mc-profile-section
+						heading="page.profile.spotify"
+						intro="page.profile.where-spotify-plays-and"
+					>
+						<mc-profile-spotify />
+					</mc-profile-section>
+				}
+
+				@case ('data') {
+					<mc-profile-section
+						heading="page.profile.listening"
+						intro="page.profile.what-you-have-actually"
+					>
+						<mc-profile-listening />
+					</mc-profile-section>
+
+					<mc-profile-section
+						heading="page.profile.verdicts"
+						intro="page.profile.verdictsIntro"
+					>
+						<mc-profile-verdicts />
+					</mc-profile-section>
+
+					<mc-profile-section
+						heading="page.profile.privacy"
+						intro="page.profile.what-other-collectors-get"
+					>
+						<mc-profile-privacy />
+					</mc-profile-section>
+
+					<mc-profile-section
+						heading="page.profile.sharing"
+						intro="page.profile.sharingIntro"
+					>
+						<mc-profile-sharing />
+					</mc-profile-section>
+				}
+			}
+		</div>
+	} @else {
+		<div class="signed-out">
+			<p>{{ 'page.profile.sign-in-to-set' | transloco }}</p>
+
+			<button type="button" (click)="store.login()">
+				<i class="pi pi-sign-in" aria-hidden="true"></i>
+				{{ 'page.profile.log-in' | transloco }}
+			</button>
+		</div>
+	}
+</div>

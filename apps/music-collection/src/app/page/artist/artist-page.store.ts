@@ -1,6 +1,7 @@
 import { Observable, filter, map, of, pipe, switchMap, tap } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
+import { TextService } from '@music-collection/core/i18n';
 import { ActivatedRoute } from '@angular/router';
 import {
 	AlbumStateService,
@@ -21,6 +22,7 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
 import { ArtistLineupEffect } from '../../data/artist-lineup';
+import { AlbumRating, RatingEffect } from '../../data/rating';
 import {
 	AlbumView,
 	ArtistView,
@@ -31,6 +33,7 @@ import {
 	toDiscography,
 	toReleaseView,
 } from '../../shared/music-ui';
+import { Crumb, pageTrail } from '../../shared/page-breadcrumb';
 import {
 	ArtistProfileView,
 	albumTypeCounts,
@@ -53,6 +56,8 @@ interface ArtistPageState {
 	albumType: string | null;
 	memberships: MembershipEntity[];
 	lineupLoading: boolean;
+	/** The collector's own verdicts, for the discography to wear. */
+	ratings: AlbumRating[];
 }
 
 const initialState: ArtistPageState = {
@@ -67,6 +72,7 @@ const initialState: ArtistPageState = {
 	albumType: null,
 	memberships: [],
 	lineupLoading: true,
+	ratings: [],
 };
 
 const SIMILAR_COUNT = 6;
@@ -88,7 +94,7 @@ function entities$<T>(
 
 export const ArtistPageStore = signalStore(
 	withState(initialState),
-	withComputed((store) => {
+	withComputed((store, text = inject(TextService)) => {
 		/** The collection's releases of this artist. */
 		const ownReleases = computed(() =>
 			store
@@ -123,6 +129,18 @@ export const ArtistPageStore = signalStore(
 		});
 
 		return {
+			/**
+			 * Home › this artist. A band stands on its own: it is in the
+			 * catalog whether or not a copy of anything it made is on the
+			 * shelf, so the collection is no step on the way to it.
+			 */
+			trail: computed<Crumb[]>(() => {
+				const name = store.artist()?.name;
+
+				return pageTrail(text.translator(), [
+					name ? { label: name } : null,
+				]);
+			}),
 			ownReleases,
 			discography,
 			albumTypes: computed(() => albumTypeCounts(discography())),
@@ -189,8 +207,23 @@ export const ArtistPageStore = signalStore(
 			artistLineupEffect = inject(ArtistLineupEffect),
 			artistStateService = inject(ArtistStateService),
 			albumStateService = inject(AlbumStateService),
-			collectionItemStateService = inject(CollectionItemStateService)
+			collectionItemStateService = inject(CollectionItemStateService),
+			ratingEffect = inject(RatingEffect)
 		) => ({
+			/** The collector's own verdicts; follows sign-in. */
+			loadRatings: rxMethod<void>(
+				pipe(
+					switchMap(() =>
+						ratingEffect.list$().pipe(
+							tapResponse({
+								next: (ratings: AlbumRating[]) =>
+									patchState(store, { ratings }),
+								error: (error) => console.error(error),
+							})
+						)
+					)
+				)
+			),
 			/** Follows the `:artistId` route parameter. */
 			loadArtist: rxMethod<void>(
 				pipe(
@@ -211,17 +244,22 @@ export const ArtistPageStore = signalStore(
 							filter(
 								(artist): artist is ArtistEntity => !!artist
 							),
-							map(toArtistProfile)
+							map(toArtistProfile),
+							tapResponse({
+								next: (artist) =>
+									patchState(store, {
+										artist,
+										artistLoading: false,
+									}),
+								error: (error) => {
+									console.error(error);
+									patchState(store, {
+										artistLoading: false,
+									});
+								},
+							})
 						)
-					),
-					tapResponse({
-						next: (artist) =>
-							patchState(store, { artist, artistLoading: false }),
-						error: (error) => {
-							console.error(error);
-							patchState(store, { artistLoading: false });
-						},
-					})
+					)
 				)
 			),
 			loadAlbums: rxMethod<void>(
@@ -230,44 +268,44 @@ export const ArtistPageStore = signalStore(
 						entities$(
 							() => albumStateService.selectEntities$(),
 							() => albumStateService.dispatchListEntitiesAction()
+						).pipe(
+							tapResponse({
+								next: (albums) =>
+									patchState(store, {
+										albums: albums.map((album) => ({
+											...toAlbumView(album),
+											artistId: album.artist?.uid ?? '',
+										})),
+										albumsLoading: false,
+									}),
+								error: (error) => {
+									console.error(error);
+									patchState(store, { albumsLoading: false });
+								},
+							})
 						)
-					),
-					tapResponse({
-						next: (albums) =>
-							patchState(store, {
-								albums: albums.map((album) => ({
-									...toAlbumView(album),
-									artistId: album.artist?.uid ?? '',
-								})),
-								albumsLoading: false,
-							}),
-						error: (error) => {
-							console.error(error);
-							patchState(store, { albumsLoading: false });
-						},
-					})
+					)
 				)
 			),
 			loadReleases: rxMethod<void>(
 				pipe(
 					switchMap(() =>
-						entities$(
-							() => collectionItemStateService.selectEntities$(),
-							() =>
-								collectionItemStateService.dispatchListEntitiesAction()
+						collectionItemStateService.selectLoadedEntities$().pipe(
+							tapResponse({
+								next: (items) =>
+									patchState(store, {
+										releases: items.map(toReleaseView),
+										releasesLoading: false,
+									}),
+								error: (error) => {
+									console.error(error);
+									patchState(store, {
+										releasesLoading: false,
+									});
+								},
+							})
 						)
-					),
-					tapResponse({
-						next: (items) =>
-							patchState(store, {
-								releases: items.map(toReleaseView),
-								releasesLoading: false,
-							}),
-						error: (error) => {
-							console.error(error);
-							patchState(store, { releasesLoading: false });
-						},
-					})
+					)
 				)
 			),
 			loadArtists: rxMethod<void>(
@@ -277,15 +315,16 @@ export const ArtistPageStore = signalStore(
 							() => artistStateService.selectEntities$(),
 							() =>
 								artistStateService.dispatchListEntitiesAction()
+						).pipe(
+							tapResponse({
+								next: (artists) =>
+									patchState(store, {
+										artists: artists.map(toArtistView),
+									}),
+								error: (error) => console.error(error),
+							})
 						)
-					),
-					tapResponse({
-						next: (artists) =>
-							patchState(store, {
-								artists: artists.map(toArtistView),
-							}),
-						error: (error) => console.error(error),
-					})
+					)
 				)
 			),
 			/** Follows `:artistId` and loads the band's line-up. */
@@ -323,6 +362,7 @@ export const ArtistPageStore = signalStore(
 	withHooks({
 		onInit(store) {
 			store.loadArtist(of(undefined));
+			store.loadRatings(of(undefined));
 			store.loadLineup(of(undefined));
 			store.loadAlbums(of(undefined));
 			store.loadReleases(of(undefined));

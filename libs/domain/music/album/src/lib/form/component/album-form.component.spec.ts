@@ -1,3 +1,5 @@
+import { provideGenreTesting } from '@music-collection/domain/genre/testing';
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { of } from 'rxjs';
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -20,15 +22,25 @@ describe('AlbumFormComponent', () => {
 		await TestBed.configureTestingModule({
 			imports: [AlbumFormComponent],
 			providers: [
+				provideI18nTesting(),
+				provideGenreTesting(),
 				provideRouter([]),
 				{
 					provide: AlbumStateService,
-					useValue: { selectEntityById$: jest.fn(() => of(undefined)) },
+					useValue: {
+						selectEntities$: jest.fn(() => of([])),
+						dispatchListEntitiesAction: jest.fn(),
+						selectEntityById$: jest.fn(() => of(undefined)),
+					},
 				},
 				{ provide: AlbumUtilService, useClass: AlbumUtilServiceImpl },
 				{
 					provide: ArtistStateService,
-					useValue: { selectSearchResult$: jest.fn(() => of([])) },
+					useValue: {
+						selectEntities$: jest.fn(() => of([])),
+						dispatchListEntitiesAction: jest.fn(),
+						selectSearchResult$: jest.fn(() => of([])),
+					},
 				},
 				{
 					provide: DocumentStateService,

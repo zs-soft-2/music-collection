@@ -1,0 +1,12 @@
+:host {
+	display: block;
+	color: var(--mc-text);
+	font-family: var(--mc-font-body);
+}
+
+.page {
+	max-width: var(--mc-page-max-width);
+	min-height: calc(100vh - var(--mc-app-bar-height));
+	margin: 0 auto;
+	padding: 2rem clamp(1rem, 3vw, 2.5rem) 3rem;
+}

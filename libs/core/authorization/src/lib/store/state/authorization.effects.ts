@@ -1,12 +1,21 @@
-import { Observable, Subscription, catchError, of, switchMap } from 'rxjs';
-import { distinctUntilChanged, map } from 'rxjs/operators';
+import {
+	Observable,
+	ReplaySubject,
+	Subscription,
+	catchError,
+	of,
+	switchMap,
+} from 'rxjs';
+import { distinctUntilChanged, filter, map, take } from 'rxjs/operators';
 
 import { Injectable, OnDestroy, inject } from '@angular/core';
 import {
 	AuthenticationStateService,
 	AuthorizationService,
+	CatalogScopeService,
 	EffectivePermissions,
 	EffectivePermissionsDataService,
+	RoleNames,
 } from '@music-collection/api';
 
 const EMPTY_PERMISSIONS: EffectivePermissions = { permissions: [], roles: [] };
@@ -20,6 +29,12 @@ const EMPTY_PERMISSIONS: EffectivePermissions = { permissions: [], roles: [] };
  *
  * Élő listener: a szerepkör megváltozása újratöltés nélkül is megjelenik.
  * Kijelentkezéskor mindent kiürítünk.
+ *
+ * Innen tudja a katalógus-szinkron is, hogy adminnak szolgál-e ki: az admin
+ * műfaj-választás nélkül a teljes katalógust kapja, mindenki más a kirakatot
+ * (`CatalogScopeService.useWholeCatalog`). Csak bejelentkezett user
+ * megerősített szerepköreiből dönt — a kijelentkezett állapot nem vesz el
+ * semmit, mert induláskor a munkamenet visszaállítása előtt is az látszik.
  */
 @Injectable()
 export class AuthorizationEffects implements OnDestroy {
@@ -28,19 +43,49 @@ export class AuthorizationEffects implements OnDestroy {
 	private effectivePermissionsDataService = inject(
 		EffectivePermissionsDataService
 	);
+	private catalogScope = inject(CatalogScopeService);
 
 	private subscription = new Subscription();
+
+	/** Annak a usernek az uid-ja, akinek a jogosultságai épp érvényben vannak. */
+	private appliedUid$ = new ReplaySubject<string | undefined>(1);
 
 	public constructor() {
 		this.subscription = this.authenticatedUid$()
 			.pipe(
 				switchMap((uid) =>
 					uid
-						? this.effectivePermissions$(uid)
-						: of(EMPTY_PERMISSIONS)
+						? this.effectivePermissions$(uid).pipe(
+								map((effective) => ({ uid, effective }))
+							)
+						: of({ uid, effective: EMPTY_PERMISSIONS })
 				)
 			)
-			.subscribe((effective) => this.apply(effective));
+			.subscribe(({ uid, effective }) => {
+				this.apply(effective);
+
+				if (uid) {
+					this.catalogScope.useWholeCatalog(
+						effective.roles.includes(RoleNames.ADMIN)
+					);
+				}
+
+				this.appliedUid$.next(uid);
+			});
+	}
+
+	/**
+	 * Akkor emittál, amikor az adott user jogosultságai először érvénybe
+	 * léptek. Az app initializer ezzel várja meg, hogy oldal-újratöltéskor a
+	 * route guardok (NgxPermissionsGuard) már a betöltött szerepkörökkel
+	 * fussanak, ne az üres listával.
+	 */
+	public appliedFor$(uid: string): Observable<void> {
+		return this.appliedUid$.pipe(
+			filter((appliedUid) => appliedUid === uid),
+			take(1),
+			map(() => undefined)
+		);
 	}
 
 	public ngOnDestroy(): void {

@@ -4,7 +4,7 @@
 	"projectType": "library",
 	"sourceRoot": "libs/core/error/src",
 	"prefix": "music-collection",
-	"tags": [],
+	"tags": ["type:core", "platform:angular"],
 	"targets": {
 		"test": {
 			"executor": "@nx/jest:jest",

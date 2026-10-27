@@ -1,120 +1,279 @@
 @if (params$ | async; as params) {
-	<section class="album-table mc-card">
-		<p-table
-			[value]="params.albums"
-			[paginator]="true"
-			[rows]="10"
-			sortField="name"
-			sortMode="multiple"
-			styleClass="mc-table"
-			responsiveLayout="scroll"
+	<mc-collection-list
+		[items]="params.albums"
+		[place]="place"
+		[view]="collectionView"
+		[emptyMessage]="'ui.albumTable.no-albums-found' | transloco"
+	>
+		<p-autocomplete
+			tools
+			class="mc-table-search"
+			[placeholder]="'ui.albumTable.filter-by-name' | transloco"
+			[ariaLabel]="'ui.albumTable.filter-by-name2' | transloco"
+			[ngModel]="place.filterOf('name')"
+			[suggestions]="params.empty"
+			[showClear]="true"
+			(completeMethod)="searchByNameHandler($event)"
+			(onClear)="clearNameSearch()"
+			[minQueryLength]="3"
+			[delay]="400"
 		>
-			<ng-template #header>
-				<tr>
-					<th pSortableColumn="name">
-						Name <p-sorticon field="name"></p-sorticon>
-					</th>
+		</p-autocomplete>
 
-					<th pSortableColumn="artist.name">
-						Artist <p-sorticon field="artist.name"></p-sorticon>
-					</th>
+		<p-autocomplete
+			tools
+			class="mc-table-search"
+			[placeholder]="'ui.albumTable.filter-by-artist' | transloco"
+			[ariaLabel]="'ui.albumTable.filter-by-artist2' | transloco"
+			[ngModel]="place.filterOf('artist')"
+			[suggestions]="params.empty"
+			[showClear]="true"
+			(completeMethod)="searchByArtistNameHandler($event)"
+			(onClear)="clearArtistSearch()"
+			[minQueryLength]="3"
+			[delay]="400"
+		>
+		</p-autocomplete>
 
-					<th pSortableColumn="year">
-						Year <p-sorticon field="year"></p-sorticon>
-					</th>
+		<ng-template #card let-album>
+			<mc-entity-card
+				[title]="album.name"
+				[subtitle]="
+					album.artist?.name +
+					(album.year ? ' · ' + (album.year | date: 'yyyy') : '')
+				"
+				[imageUrl]="imageOf(album)"
+				imageShape="square"
+				(open)="editAlbum(album)"
+			>
+				<mc-view-action
+					cardActions
+					[link]="viewLink(album)"
+					entity="album"
+					[name]="album.name"
+				/>
+				@for (style of album.styles; track style) {
+					<p-chip styleClass="style">
+						{{ style }}
+					</p-chip>
+				}
 
-					<th>Styles</th>
+				<button
+					cardActions
+					pButton
+					pRipple
+					[attr.aria-label]="'ui.albumTable.delete-album' | transloco"
+					class="p-button-text p-button-rounded p-button-danger"
+					(click)="deleteAlbum(album)"
+					iconOnly
+				>
+					<i class="pi pi-trash" aria-hidden="true"></i>
+				</button>
+			</mc-entity-card>
+		</ng-template>
 
-					<th>Cover</th>
+		<ng-template
+			mcColumn
+			[header]="'ui.albumTable.name' | transloco"
+			field="name"
+			let-album
+		>
+			{{ album.name }}
+		</ng-template>
 
-					<th></th>
-				</tr>
+		<ng-template
+			mcColumn
+			[header]="'ui.albumTable.artist' | transloco"
+			field="artist.name"
+			let-album
+		>
+			{{ album.artist.name }}
+		</ng-template>
 
-				<tr>
-					<th>
-						<p-autocomplete
-							placeholder="Filter by name…"
-							ariaLabel="Filter by name"
-							[suggestions]="params.empty"
-							[showClear]="true"
-							(completeMethod)="searchByNameHandler($event)"
-							[minQueryLength]="3"
-							[delay]="400"
-						>
-						</p-autocomplete>
-					</th>
+		<ng-template
+			mcColumn
+			[header]="'ui.albumTable.year' | transloco"
+			field="year"
+			let-album
+		>
+			{{ album.year | date: 'yyyy' }}
+		</ng-template>
 
-					<th>
-						<p-autocomplete
-							placeholder="Filter by artist…"
-							ariaLabel="Filter by artist"
-							[suggestions]="params.empty"
-							[showClear]="true"
-							(completeMethod)="searchByArtistNameHandler($event)"
-							[minQueryLength]="3"
-							[delay]="400"
-						>
-						</p-autocomplete>
-					</th>
+		<ng-template
+			mcColumn
+			[header]="'ui.albumTable.styles' | transloco"
+			let-album
+		>
+			@for (style of album.styles; track style) {
+				<div>
+					<p-chip styleClass="style">
+						{{ style }}
+					</p-chip>
+				</div>
+			}
+		</ng-template>
 
-					<th></th>
-					<th></th>
-					<th></th>
-					<th></th>
-				</tr>
-			</ng-template>
+		<ng-template
+			mcColumn
+			[header]="'ui.albumTable.tracks' | transloco"
+			field="hasTracks"
+			let-album
+		>
+			@if (album.hasTracks === undefined) {
+				<span class="mc-missing">{{
+					'ui.albumTable.tracks-unknown' | transloco
+				}}</span>
+			} @else if (album.hasTracks) {
+				<span class="p-chip">{{
+					'ui.albumTable.tracks2' | transloco
+				}}</span>
+			} @else {
+				<span class="mc-missing">{{
+					'ui.albumTable.no-tracks' | transloco
+				}}</span>
+			}
+		</ng-template>
 
-			<ng-template #body let-album>
-				<tr>
-					<td>{{ album.name }}</td>
+		<ng-template
+			mcColumn
+			[header]="'ui.albumTable.cover' | transloco"
+			let-album
+		>
+			@if (album.coverImage || album.coverImageUrl) {
+				<span class="p-chip">{{
+					'ui.albumTable.cover2' | transloco
+				}}</span>
+			} @else {
+				<span class="mc-missing">{{
+					'ui.albumTable.no-cover' | transloco
+				}}</span>
+			}
+		</ng-template>
 
-					<td>{{ album.artist.name }}</td>
+		<ng-template
+			mcColumn
+			[header]="'ui.albumTable.updated' | transloco"
+			field="updatedAt"
+			let-album
+		>
+			{{ album.updatedAt | date: 'yyyy-MM-dd HH:mm' }}
+		</ng-template>
 
-					<td>{{ album.year | date: 'yyyy' }}</td>
+		<ng-template
+			mcColumn
+			[header]="'ui.albumTable.actions' | transloco"
+			headerHidden
+			let-album
+		>
+			<mc-view-action
+				[link]="viewLink(album)"
+				entity="album"
+				[name]="album.name"
+			/>
+			<button
+				pButton
+				pRipple
+				[attr.aria-label]="'ui.albumTable.edit-album' | transloco"
+				class="p-button-text p-button-rounded p-button-secondary"
+				(click)="editAlbum(album)"
+				iconOnly
+			>
+				<i class="pi pi-pencil" aria-hidden="true"></i>
+			</button>
 
-					<td>
-						@for (style of album.styles; track style) {
-							<div>
-								<p-chip styleClass="style">
-									{{ style }}
-								</p-chip>
-							</div>
-						}
-					</td>
+			<button
+				pButton
+				pRipple
+				[attr.aria-label]="'ui.albumTable.delete-album2' | transloco"
+				class="p-button-text p-button-rounded p-button-danger"
+				(click)="deleteAlbum(album)"
+				iconOnly
+			>
+				<i class="pi pi-trash" aria-hidden="true"></i>
+			</button>
+		</ng-template>
+	</mc-collection-list>
 
-					<td>
-						@if (album.coverImage) {
-							<span class="p-chip">Cover</span>
-						} @else {
-							<span class="mc-missing">No cover</span>
-						}
-					</td>
+	<p-dialog
+		[header]="'ui.albumDeletion.title' | transloco"
+		[modal]="true"
+		[visible]="!!deletion.pending()"
+		(visibleChange)="$event || deletion.cancel()"
+		[style]="{ width: 'min(34rem, 95vw)' }"
+		[dismissableMask]="true"
+	>
+		@if (deletion.pending(); as album) {
+			<p>
+				<strong>{{ album.name }}</strong>
+				@if (album.artist?.name) {
+					<span> — {{ album.artist.name }}</span>
+				}
+			</p>
 
-					<td>
-						<button
-							pButton
-							pRipple
-							aria-label="Edit album"
-							class="p-button-text p-button-rounded p-button-secondary"
-							(click)="editAlbum(album)"
-							iconOnly
-						>
-							<i class="pi pi-pencil" aria-hidden="true"></i>
-						</button>
+			@if (deletion.isChecking()) {
+				<p>{{ 'ui.albumDeletion.checking' | transloco }}</p>
+			} @else if (deletion.canDelete()) {
+				<p>{{ 'ui.albumDeletion.can-delete' | transloco }}</p>
+				@if (deletion.releaseCount()) {
+					<p>
+						{{
+							'ui.albumDeletion.goes-with-releases'
+								| transloco: { count: deletion.releaseCount() }
+						}}
+					</p>
+				}
+				@if (deletion.trackCount()) {
+					<p>
+						{{
+							'ui.albumDeletion.goes-with-tracks'
+								| transloco: { count: deletion.trackCount() }
+						}}
+					</p>
+				}
+				@if (deletion.ownCopyCount()) {
+					<p role="alert">
+						{{
+							'ui.albumDeletion.goes-with-own-copies'
+								| transloco: { count: deletion.ownCopyCount() }
+						}}
+					</p>
+				}
+			} @else {
+				<p role="alert">
+					{{
+						'ui.albumDeletion.in-use'
+							| transloco: { count: deletion.foreignCopyCount() }
+					}}
+				</p>
+			}
 
-						<button
-							pButton
-							pRipple
-							aria-label="Delete album"
-							class="p-button-text p-button-rounded p-button-danger"
-							(click)="deleteAlbum(album)"
-							iconOnly
-						>
-							<i class="pi pi-trash" aria-hidden="true"></i>
-						</button>
-					</td>
-				</tr>
-			</ng-template>
-		</p-table>
-	</section>
+			@if (deletion.error(); as error) {
+				<p role="alert">
+					@if (error === inUse) {
+						{{ 'ui.albumDeletion.in-use-now' | transloco }}
+					} @else {
+						{{ error }}
+					}
+				</p>
+			}
+		}
+
+		<ng-template #footer>
+			@if (deletion.canDelete()) {
+				<p-button
+					[label]="'ui.albumDeletion.really-delete' | transloco"
+					icon="pi pi-trash"
+					severity="danger"
+					[loading]="deletion.isWorking()"
+					(onClick)="deletion.confirmDeletion()"
+				></p-button>
+			}
+			<p-button
+				[label]="'ui.albumDeletion.cancel' | transloco"
+				severity="secondary"
+				[text]="true"
+				(onClick)="deletion.cancel()"
+			></p-button>
+		</ng-template>
+	</p-dialog>
 }

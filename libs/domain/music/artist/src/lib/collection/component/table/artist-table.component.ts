@@ -1,3 +1,5 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
+import { FormsModule } from '@angular/forms';
 import {
 	ChangeDetectionStrategy,
 	Component,
@@ -12,13 +14,17 @@ import {
 import { Observable } from 'rxjs';
 
 import { ArtistTableService } from './artist-table.service';
-import { Bind } from 'primeng/bind';
-import { Table, SortableColumn, SortIcon } from 'primeng/table';
 import { AutoComplete } from 'primeng/autocomplete';
 import { Chip } from 'primeng/chip';
 import { Ripple } from 'primeng/ripple';
 import { ButtonDirective } from 'primeng/button';
 import { AsyncPipe, DatePipe } from '@angular/common';
+import {
+	CollectionColumnDirective,
+	CollectionListComponent,
+	EntityCardComponent,
+	ViewActionComponent,
+} from '@music-collection/ui';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -27,22 +33,47 @@ import { AsyncPipe, DatePipe } from '@angular/common';
 	templateUrl: './artist-table.component.html',
 	styleUrls: ['./artist-table.component.scss'],
 	imports: [
-		Bind,
-		Table,
-		SortableColumn,
-		SortIcon,
+		...I18N_IMPORTS,
+		FormsModule,
 		AutoComplete,
 		Chip,
 		Ripple,
 		ButtonDirective,
 		AsyncPipe,
 		DatePipe,
+		CollectionColumnDirective,
+		CollectionListComponent,
+		EntityCardComponent,
+		ViewActionComponent,
 	],
 })
 export class ArtistTableComponent extends BaseComponent implements OnInit {
 	private componentService = inject(ArtistTableService);
 
 	public params$!: Observable<ArtistTableParams>;
+
+	public readonly collectionView = this.componentService.collectionView;
+
+	public readonly place = this.componentService.place;
+
+	/** The uploaded main image, else the photo found on the web. */
+	public imageOf(artist: ArtistEntity): string | null {
+		return (
+			artist.mainImage?.filePath ||
+			artist.imageUrl ||
+			artist.discogs?.imageUrl ||
+			null
+		);
+	}
+
+	public clearSearch(): void {
+		this.componentService.clearSearch();
+	}
+
+	/** Narrow the list to the artists no genre of the taxonomy names. */
+	public showIncompleteOnly(incomplete: boolean): void {
+		this.componentService.showIncompleteOnly(incomplete);
+	}
 
 	public deleteArtist(artist: ArtistEntity): void {
 		console.log(artist);
@@ -62,5 +93,10 @@ export class ArtistTableComponent extends BaseComponent implements OnInit {
 
 	public ngOnInit(): void {
 		this.params$ = this.componentService.init$();
+	}
+
+	/** Where the eye leads: the page that shows this artist. */
+	public viewLink(artist: ArtistEntity): unknown[] {
+		return this.componentService.viewLink(artist);
 	}
 }

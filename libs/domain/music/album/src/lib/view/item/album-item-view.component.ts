@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import {
 	ChangeDetectionStrategy,
 	Component,
@@ -16,7 +17,7 @@ import { DatePipe } from '@angular/common';
 	selector: 'mc-album-item-view',
 	templateUrl: './album-item-view.component.html',
 	styleUrls: ['./album-item-view.component.scss'],
-	imports: [Bind, Image, Button, DatePipe],
+	imports: [...I18N_IMPORTS, Bind, Image, Button, DatePipe],
 })
 export class AlbumItemViewComponent extends BaseComponent {
 	@Input()

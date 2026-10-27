@@ -57,40 +57,41 @@ export const CollectionItemListState = signalStore(
 								filter((entities) => entities.length > 0),
 							),
 							collectionItemStateService.selectCollectionItemListConfig$(),
-						]),
+						]).pipe(
+							tapResponse({
+								next: ([entities, config]) => {
+									entities = collectionItemUtilService.filterByArtist(
+										entities,
+										config?.filterByArtistNames?.map(
+											(item) => item.value,
+										) || null,
+									);
+
+									patchState(store, {
+										allItemsSize: entities.length,
+										collectionItemMaps:
+											collectionItemListService.createCollectionItemMap(
+												collectionItemUtilService.sortCollectionItems(
+													config?.sortBy || null,
+													entities,
+												),
+												config,
+											),
+										fxLayoutValue:
+											collectionItemListService.createFxLayoutValue(
+												config,
+											),
+									});
+
+									patchState(store, { isLoading: false });
+								},
+								error: console.error,
+								finalize: () => {
+									patchState(store, { isLoading: false });
+								},
+							}),
+						),
 					),
-					tapResponse({
-						next: ([entities, config]) => {
-							entities = collectionItemUtilService.filterByArtist(
-								entities,
-								config?.filterByArtistNames?.map(
-									(item) => item.value,
-								) || null,
-							);
-
-							patchState(store, {
-								allItemsSize: entities.length,
-								collectionItemMaps:
-									collectionItemListService.createCollectionItemMap(
-										collectionItemUtilService.sortCollectionItems(
-											config?.sortBy || null,
-											entities,
-										),
-										config,
-									),
-								fxLayoutValue:
-									collectionItemListService.createFxLayoutValue(
-										config,
-									),
-							});
-
-							patchState(store, { isLoading: false });
-						},
-						error: console.error,
-						finalize: () => {
-							patchState(store, { isLoading: false });
-						},
-					}),
 				),
 			),
 			collectionItemClick: (collectionItem: CollectionItemEntity) =>

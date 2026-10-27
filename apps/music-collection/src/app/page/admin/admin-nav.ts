@@ -1,87 +1,156 @@
 export interface AdminNavItem {
-	label: string;
+	/** A menüpont szövegének szótárkulcsa, pl. `admin.nav.artists`. */
+	labelKey: string;
 	/** Útvonal az /admin alatt. */
 	route: string;
 	icon: string;
-	/** Az entitás-számláló típusa, ha van. */
-	quantityType?: string;
-	/** Új elem felvétele (a lista „Add” gombjával azonos cél). */
-	createLabel?: string;
+	/** A megszámolt entitás típusa (`EntityCounts` kulcs), ha van. */
+	countType?: string;
+	/** Új elem felvételének szótárkulcsa (a lista „Add” gombjával azonos cél). */
+	createLabelKey?: string;
+	/** Teendők száma a menüpont mellett (pl. függő kérések). */
+	badge?: 'pendingRequests';
 }
 
 export interface AdminNavGroup {
-	label: string;
+	/** A csoport címének szótárkulcsa; üres, ha a csoportnak nincs címe. */
+	labelKey: string;
 	items: AdminNavItem[];
 }
 
 export const ADMIN_NAV: AdminNavGroup[] = [
 	{
-		label: '',
-		items: [{ label: 'Dashboard', route: 'dashboard', icon: 'pi-home' }],
-	},
-	{
-		label: 'Catalog',
+		labelKey: '',
 		items: [
 			{
-				label: 'Artists',
+				labelKey: 'admin.nav.dashboard',
+				route: 'dashboard',
+				icon: 'pi-home',
+			},
+		],
+	},
+	{
+		labelKey: 'admin.nav.catalog',
+		items: [
+			{
+				labelKey: 'admin.nav.artists',
 				route: 'artist',
 				icon: 'pi-microphone',
-				quantityType: 'Artist',
-				createLabel: 'Add artist',
+				countType: 'Artist',
+				createLabelKey: 'ui.artistAdmin.add-artist',
 			},
 			{
-				label: 'Musicians',
+				labelKey: 'admin.nav.musicians',
 				route: 'musician',
 				icon: 'pi-user',
-				createLabel: 'Add musician',
+				countType: 'Musician',
+				createLabelKey: 'ui.musicianAdmin.add-musician',
 			},
 			{
-				label: 'Albums',
+				labelKey: 'admin.nav.albums',
 				route: 'album',
 				icon: 'pi-circle',
-				quantityType: 'Album',
-				createLabel: 'Add album',
+				countType: 'Album',
+				createLabelKey: 'ui.albumAdmin.add-album',
 			},
 			{
-				label: 'Releases',
+				labelKey: 'admin.nav.releases',
 				route: 'release',
 				icon: 'pi-clone',
-				quantityType: 'Release',
-				createLabel: 'Add release',
+				countType: 'Release',
+				createLabelKey: 'ui.releaseAdmin.add-release',
 			},
 			{
-				label: 'Labels',
+				labelKey: 'admin.nav.labels',
 				route: 'label',
 				icon: 'pi-building',
-				quantityType: 'Label',
-				createLabel: 'Add label',
+				countType: 'Label',
+				createLabelKey: 'ui.labelAdmin.add-label',
+			},
+			{
+				labelKey: 'admin.nav.collections',
+				route: 'music-collection',
+				icon: 'pi-bookmark',
+				createLabelKey: 'ui.musicCollectionAdmin.add-collection',
+			},
+			{
+				labelKey: 'admin.nav.genres',
+				route: 'genre',
+				icon: 'pi-tags',
+				createLabelKey: 'admin.genre.add',
+			},
+			{
+				// Számláló nélkül: az `entity-quantity` dokumentumokat a kliens
+				// írásai tartják karban, a koncerteket viszont egy betöltés
+				// írja. A darabszám a koncert-lapon áll, ahol a lista is.
+				labelKey: 'admin.nav.concerts',
+				route: 'concert',
+				icon: 'pi-calendar-clock',
 			},
 		],
 	},
 	{
-		label: 'User data',
+		labelKey: 'admin.nav.userData',
 		items: [
 			{
-				label: 'Collection items',
+				labelKey: 'admin.nav.collectionItems',
 				route: 'collection-item',
 				icon: 'pi-th-large',
-				quantityType: 'Collection Item',
+				countType: 'Collection Item',
 			},
 			{
-				label: 'Wishlist items',
+				labelKey: 'admin.nav.requests',
+				route: 'request',
+				icon: 'pi-inbox',
+				badge: 'pendingRequests',
+			},
+			{
+				labelKey: 'admin.nav.wishlistItems',
 				route: 'wishlist-item',
 				icon: 'pi-heart',
+				countType: 'Wishlist Item',
 			},
 		],
 	},
 	{
-		label: 'System',
+		labelKey: 'admin.nav.access',
 		items: [
 			{
-				label: 'Documents',
+				labelKey: 'admin.nav.roles',
+				route: 'role',
+				icon: 'pi-key',
+				createLabelKey: 'admin.role.add',
+			},
+			{
+				labelKey: 'admin.nav.users',
+				route: 'user',
+				icon: 'pi-users',
+			},
+		],
+	},
+	{
+		labelKey: 'admin.nav.system',
+		items: [
+			{
+				labelKey: 'admin.nav.documents',
 				route: 'document',
 				icon: 'pi-file',
-				quantityType: 'Document',
+				countType: 'Document',
+			},
+			{
+				labelKey: 'admin.nav.bundles',
+				route: 'bundles',
+				icon: 'pi-box',
+			},
+			{
+				labelKey: 'admin.nav.dailyQuestion',
+				route: 'daily-question',
+				icon: 'pi-question-circle',
+			},
+			{
+				labelKey: 'admin.nav.language',
+				route: 'language-settings',
+				icon: 'pi-globe',
 			},
 		],
 	},

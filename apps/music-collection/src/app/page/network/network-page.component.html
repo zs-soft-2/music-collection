@@ -1,9 +1,8 @@
 <div class="page">
 	<header class="intro">
-		<h1>Relationship network</h1>
+		<h1>{{ 'page.network.relationship-network' | transloco }}</h1>
 		<p>
-			Who played with whom — musicians and the bands, projects and
-			formations they played in.
+			{{ 'page.network.who-played-with-whom' | transloco }}
 		</p>
 	</header>
 
@@ -20,11 +19,13 @@
 		(close)="onDialogClose()"
 	>
 		<header class="dialog-header">
-			<h2 id="network-dialog-title">Relationship network</h2>
+			<h2 id="network-dialog-title">
+				{{ 'page.network.relationship-network2' | transloco }}
+			</h2>
 			<button
 				type="button"
 				class="close"
-				aria-label="Exit full screen"
+				[attr.aria-label]="'page.network.exit-full-screen' | transloco"
 				(click)="collapse()"
 			>
 				<i class="pi pi-times" aria-hidden="true"></i>
@@ -35,14 +36,20 @@
 }
 
 <ng-template #network>
-	<div class="toolbar" role="group" aria-label="Network settings">
+	<div
+		class="toolbar"
+		role="group"
+		[attr.aria-label]="'page.network.network-settings' | transloco"
+	>
 		<div class="focus">
-			<span class="focus-label">Focus</span>
+			<span class="focus-label">{{
+				'page.network.focus' | transloco
+			}}</span>
 			<strong>{{ store.focusNode()?.label ?? '—' }}</strong>
 		</div>
 
 		<label class="field">
-			<span>Depth</span>
+			<span>{{ 'page.network.depth' | transloco }}</span>
 			<select [value]="store.depth()" (change)="onDepthChange($event)">
 				@for (depth of depths; track depth) {
 					<option
@@ -56,14 +63,16 @@
 		</label>
 
 		<fieldset class="types">
-			<legend class="visually-hidden">Filters</legend>
+			<legend class="visually-hidden">
+				{{ 'page.network.filters' | transloco }}
+			</legend>
 			<label class="check">
 				<input
 					type="checkbox"
 					[checked]="store.includeGuests()"
 					(change)="onFlagChange('includeGuests', $event)"
 				/>
-				Guests
+				{{ 'page.network.guests' | transloco }}
 			</label>
 			<label class="check">
 				<input
@@ -71,7 +80,7 @@
 					[checked]="store.onlyOwned()"
 					(change)="onFlagChange('onlyOwned', $event)"
 				/>
-				Only my collection
+				{{ 'page.network.only-my-collection' | transloco }}
 			</label>
 		</fieldset>
 
@@ -89,13 +98,12 @@
 			@if (store.loading()) {
 				<div class="state" role="status">
 					<i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
-					Loading the network…
+					{{ 'page.network.loading-the-network' | transloco }}
 				</div>
 			} @else if (store.empty()) {
 				<div class="state" role="status">
 					<i class="pi pi-share-alt" aria-hidden="true"></i>
-					No connections to show. Pick another focus or change the
-					filters.
+					{{ 'page.network.no-connections-to-show' | transloco }}
 				</div>
 			} @else {
 				<mc-network-graph
@@ -114,12 +122,14 @@
 			@if (store.graph().truncated) {
 				<p class="notice" role="status">
 					<i class="pi pi-info-circle" aria-hidden="true"></i>
-					The network is too large to show in full — lower the depth
-					or hide guests.
+					{{ 'page.network.the-network-is-too' | transloco }}
 				</p>
 			}
 
-			<ul class="legend" aria-label="Legend">
+			<ul
+				class="legend"
+				[attr.aria-label]="'page.network.legend' | transloco"
+			>
 				@for (kind of kinds; track kind) {
 					<li>
 						<svg
@@ -156,17 +166,27 @@
 				}
 				<li>
 					<i class="pi pi-check-circle owned" aria-hidden="true"></i>
-					In your collection
+					{{ 'page.network.in-your-collection' | transloco }}
 				</li>
-				<li><span class="line" data-kind="member"></span>Member</li>
 				<li>
-					<span class="line" data-kind="former"></span>Former member
+					<span class="line" data-kind="member"></span
+					>{{ 'page.network.member' | transloco }}
 				</li>
-				<li><span class="line" data-kind="guest"></span>Guest</li>
+				<li>
+					<span class="line" data-kind="former"></span
+					>{{ 'page.network.former-member' | transloco }}
+				</li>
+				<li>
+					<span class="line" data-kind="guest"></span
+					>{{ 'page.network.guest' | transloco }}
+				</li>
 			</ul>
 		</div>
 
-		<aside class="details" aria-label="Details">
+		<aside
+			class="details"
+			[attr.aria-label]="'page.network.details' | transloco"
+		>
 			@if (store.details(); as details) {
 				<mc-network-details
 					[details]="details"

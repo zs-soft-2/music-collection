@@ -1,26 +1,51 @@
-import { ViewportScroller } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import {
 	ChangeDetectionStrategy,
 	Component,
+	ElementRef,
+	Injector,
+	afterNextRender,
 	effect,
 	inject,
+	signal,
 	untracked,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { unitTitle } from '@music-collection/api';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
 	AdminEditLinkComponent,
+	ProposeLinkComponent,
+	CopyPlacementComponent,
+	CopyRemovalComponent,
 	DiscographyCardComponent,
 	FormatBadgeComponent,
+	StarRatingComponent,
 } from '../../shared/music-ui';
+import { RATING_NOTE_LIMIT } from '../../data/rating';
 import {
-	SpotifyIconComponent,
-	SpotifyPanelComponent,
-	SpotifyPlaybackStore,
-} from '../../shared/spotify';
+	PagePlayButtonComponent,
+	PlayerPanelComponent,
+} from '../../shared/player';
 import { AlbumPageStore } from './album-page.store';
+import { AlbumCollectionsComponent } from './component/album-collections/album-collections.component';
 import { AlbumCreditsComponent } from './component/album-credits/album-credits.component';
 import { AlbumTracklistComponent } from './component/album-tracklist/album-tracklist.component';
+import { ReleasePickerComponent } from './component/release-picker/release-picker.component';
+import { WishlistDialogComponent } from './component/wishlist-dialog/wishlist-dialog.component';
+import { PageBreadcrumbComponent } from '../../shared/page-breadcrumb';
+import { focusOnClose } from '../../shared/dialog-focus';
+import { CoverFallbackDirective } from '../../shared/image';
+
+type AlbumSection =
+	| 'original'
+	| 'listen'
+	| 'verdict'
+	| 'tracklist'
+	| 'credits'
+	| 'copies'
+	| 'more';
 
 /**
  * Album page: the album with its original release, tracklist, credits
@@ -34,51 +59,168 @@ import { AlbumTracklistComponent } from './component/album-tracklist/album-track
 	templateUrl: './album-page.component.html',
 	styleUrls: ['./album-page.component.scss'],
 	imports: [
+		CoverFallbackDirective,
+		...I18N_IMPORTS,
+		PageBreadcrumbComponent,
 		RouterLink,
 		DiscographyCardComponent,
 		FormatBadgeComponent,
+		AlbumCollectionsComponent,
 		AlbumCreditsComponent,
 		AlbumTracklistComponent,
-		SpotifyIconComponent,
-		SpotifyPanelComponent,
 		AdminEditLinkComponent,
+		ProposeLinkComponent,
+		PagePlayButtonComponent,
+		PlayerPanelComponent,
+		ReleasePickerComponent,
+		CopyRemovalComponent,
+		CopyPlacementComponent,
+		StarRatingComponent,
+		WishlistDialogComponent,
+		DatePipe,
 	],
 })
 export class AlbumPageComponent {
 	protected readonly store = inject(AlbumPageStore);
-	protected readonly spotify = inject(SpotifyPlaybackStore);
-	private readonly viewportScroller = inject(ViewportScroller);
+	private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+	private readonly injector = inject(Injector);
+
+	/** Compact view: sections show only their titles until opened. Kept for
+	 * the user, so it follows them to the next browser. */
+	protected readonly compact = this.store.compact;
+	/** Sections opened in the compact view; a new album starts closed. */
+	protected readonly openSections = signal(new Set<AlbumSection>());
 
 	protected readonly placeholders = (count: number) =>
 		Array.from({ length: count }, (_, i) => i);
 
+	/** The note next to the stars may not outgrow what the rules allow. */
+	protected readonly noteLimit = RATING_NOTE_LIMIT;
+
+	/** The collector's verdict on another record of the artist, if any. */
+	protected readonly starsFor = (albumId: string): number | null =>
+		this.store.ratings().find((rating) => rating.albumId === albumId)
+			?.stars ?? null;
+
+	/** An average is a fraction; a row of stars is not. */
+	protected readonly rounded = (value: number) => Math.round(value);
+	protected readonly absolute = (value: number) => Math.abs(value);
+
+	/**
+	 * Keeps the line about why, when it is a line the collector changed.
+	 * Leaving the field or pressing Enter is the save: a note next to five
+	 * stars that are already kept does not deserve a button of its own.
+	 */
+	protected saveNote(event: Event): void {
+		const field = event.target as HTMLInputElement;
+		const note = field.value.trim();
+
+		if (note !== (this.store.myRating()?.note ?? '')) {
+			void this.store.writeRatingNote(note);
+		}
+	}
+
 	public constructor() {
-		// Moving to another album of the artist reuses this page.
+		// Moving to another album of the artist reuses this page, so the
+		// sections have to be closed again. The scroll is the shell's
+		// (PageScrollService).
 		effect(() => {
 			this.store.albumId();
-			untracked(() => this.viewportScroller.scrollToPosition([0, 0]));
+			untracked(() => {
+				this.openSections.set(new Set());
+			});
 		});
 
-		// Signed in to Spotify: map the tracklist to the Spotify album's tracks.
+		// Back on the page (closed or added): focus the button that opened the
+		// picker.
+		let pickerWasOpen = false;
 		effect(() => {
-			const spotifyAlbumId = this.store.album()?.spotifyAlbumId;
-			const tracks = this.store.tracks();
-			if (this.spotify.connected() && spotifyAlbumId && tracks.length) {
-				untracked(() =>
-					this.spotify.loadAlbumTracks(
-						spotifyAlbumId,
-						tracks.map(({ uid, name, index }) => ({
-							id: uid,
-							name,
-							index,
-						}))
-					)
+			const open = this.store.pickerOpen();
+			if (pickerWasOpen && !open) {
+				afterNextRender(
+					() =>
+						this.host.nativeElement
+							.querySelector<HTMLElement>('[data-collect-toggle]')
+							?.focus(),
+					{ injector: this.injector }
 				);
 			}
+			pickerWasOpen = open;
+		});
+
+		// Back on the page (closed or added): focus the wishlist button, which
+		// is gone once the album is wanted — then the collect button.
+		let wishlistWasOpen = false;
+		effect(() => {
+			const open = this.store.wishlistOpen();
+			if (wishlistWasOpen && !open) {
+				afterNextRender(
+					() => {
+						const root = this.host.nativeElement;
+						(
+							root.querySelector<HTMLElement>(
+								'[data-wish-toggle]'
+							) ??
+							root.querySelector<HTMLElement>(
+								'[data-collect-toggle]'
+							)
+						)?.focus();
+					},
+					{ injector: this.injector }
+				);
+			}
+			wishlistWasOpen = open;
+		});
+
+		// Back from the removal dialog: focus its button, or the add button once
+		// the copy is gone.
+		focusOnClose(this.store.removingCopyId, (copyId) => [
+			`[data-remove-copy="${copyId}"]`,
+			'[data-collect-toggle]',
+		]);
+
+		// Back from the placement dialog: focus the button it opened from.
+		focusOnClose(this.store.placingCopyId, (copyId) => [
+			`[data-place-copy="${copyId}"]`,
+		]);
+	}
+
+	/** What the collector called the unit a copy stands in. */
+	protected shelfName(unitId: string): string {
+		const units = this.store.shelfUnits();
+		const unit = units.find((drawn) => drawn.id === unitId);
+
+		return unit ? unitTitle(unit, units, 'Shelf') : 'Shelf';
+	}
+
+	protected isOpen(section: AlbumSection): boolean {
+		return !this.compact() || this.openSections().has(section);
+	}
+
+	protected toggleSection(section: AlbumSection): void {
+		this.openSections.update((open) => {
+			const next = new Set(open);
+			if (!next.delete(section)) {
+				next.add(section);
+			}
+			return next;
 		});
 	}
 
-	protected playTrack(spotifyAlbumId: string, trackId: string): void {
-		void this.spotify.play(spotifyAlbumId, trackId);
+	protected toggleCompact(): void {
+		this.store.toggleCompact();
+		this.openSections.set(new Set());
+	}
+
+	protected onPickerClosed(): void {
+		this.store.closePicker();
+	}
+
+	protected onWishlistClosed(): void {
+		this.store.closeWishlist();
+	}
+
+	protected collapseAll(): void {
+		this.openSections.set(new Set());
 	}
 }

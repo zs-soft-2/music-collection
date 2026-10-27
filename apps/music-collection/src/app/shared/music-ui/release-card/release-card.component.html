@@ -3,7 +3,7 @@
 <a
 	class="card"
 	[class]="'is-' + item.format"
-	[routerLink]="['/album', item.albumId]"
+	[routerLink]="link()"
 	[attr.aria-label]="ariaLabel()"
 >
 	<div class="stage">
@@ -24,6 +24,7 @@
 							<span class="record-label">
 								@if (item.coverUrl) {
 									<img
+										mcCoverFallback
 										[src]="item.coverUrl"
 										alt=""
 										loading="lazy"
@@ -52,6 +53,19 @@
 					</div>
 				</div>
 			}
+			@case ('boxset') {
+				<div class="medium boxset" aria-hidden="true">
+					<div class="box">
+						<span class="box-lid"></span>
+						<span class="box-spine">
+							<span class="box-artist">{{
+								item.artistName
+							}}</span>
+							<span class="box-title">{{ item.title }}</span>
+						</span>
+					</div>
+				</div>
+			}
 			@case ('other') {}
 			@default {
 				<!-- CD and DVD: a disc slides out -->
@@ -61,6 +75,7 @@
 						<span class="disc-center">
 							@if (item.coverUrl) {
 								<img
+									mcCoverFallback
 									[src]="item.coverUrl"
 									alt=""
 									loading="lazy"
@@ -77,6 +92,7 @@
 		<div class="sleeve">
 			@if (item.coverUrl) {
 				<img
+					mcCoverFallback
 					class="cover"
 					[src]="item.coverUrl"
 					[alt]="item.title"
@@ -89,7 +105,9 @@
 				<span class="jewel-reflection" aria-hidden="true"></span>
 			}
 			@if (item.format === 'dvd') {
-				<span class="case-band" aria-hidden="true">DVD</span>
+				<span class="case-band" aria-hidden="true">{{
+					'ui.releaseCard.dvd' | transloco
+				}}</span>
 			}
 		</div>
 
@@ -121,8 +139,22 @@
 		</div>
 		<h3 class="title">{{ item.title }}</h3>
 		<p class="artist">{{ item.artistName }}</p>
+		@if (stars(); as given) {
+			<mc-star-rating
+				class="card-stars"
+				[stars]="given"
+				[readonly]="true"
+				[label]="given | mcPlural: 'ui.starRating.starCount'"
+			/>
+		}
 	</div>
 </a>
+
+<mc-play-album-button
+	class="mc-card-play"
+	[albumId]="item.albumId"
+	[title]="item.title"
+/>
 
 <mc-admin-edit-link
 	class="mc-card-admin"
@@ -131,3 +163,33 @@
 	[id]="item.id"
 	[name]="item.artistName + ' — ' + item.title"
 />
+
+@if (canPlace()) {
+	<button
+		type="button"
+		class="mc-card-place"
+		[attr.data-place-copy]="item.id"
+		[attr.aria-label]="
+			(item.placement ? 'Move ' : 'Place ') + item.title + ' on the shelf'
+		"
+		[title]="item.placement ? 'Move on the shelf' : 'Place on the shelf'"
+		(click)="place.emit(item.id)"
+	>
+		<i class="pi pi-bookmark" aria-hidden="true"></i>
+	</button>
+}
+
+@if (canRemove()) {
+	<button
+		type="button"
+		class="mc-card-remove"
+		[attr.data-remove-copy]="item.id"
+		[attr.aria-label]="
+			'ui.copyRemoval.removeTitle' | transloco: { title: item.title }
+		"
+		[title]="'ui.copyRemoval.remove-from-collection' | transloco"
+		(click)="remove.emit(item.id)"
+	>
+		<i class="pi pi-sign-out" aria-hidden="true"></i>
+	</button>
+}

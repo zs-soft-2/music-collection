@@ -17,15 +17,15 @@ import { ArtistDetailViewService } from './artist-detail-view.service';
 
 const menuItems: MenuItem[] = [
 	{
-		label: 'Info',
+		labelKey: 'ui.artistDetailView.info',
 		icon: '',
 	},
 	{
-		label: 'Discography',
+		labelKey: 'ui.artistDetailView.discography',
 		icon: '',
 	},
 	{
-		label: 'Members',
+		labelKey: 'ui.artistDetailView.members',
 		icon: '',
 	},
 ];
@@ -49,30 +49,34 @@ export const ArtistDetailViewStore = signalStore(
 			init: rxMethod(
 				pipe(
 					tap(() => patchState(store, { isLoading: true })),
-					switchMap(() => artistDetailViewService.getData()),
-					tapResponse({
-						next: (data: any[]) => {
-							patchState(store, {
-								albums: data[1],
-								artist: data[0] || null,
-								activeMenuItem:
-									menuItems[
-										menuItemNames.findIndex(
-											(menuItemName) =>
-												menuItemName ===
-												store.selectedContent()
-										) || 0
-									],
-								country: null,
-								isLoading: false,
-								menuItems,
-								selectedContent:
-									store.selectedContent() || 'info',
-							});
-						},
-						error: console.error,
-						finalize: () => patchState(store, { isLoading: false }),
-					})
+					switchMap(() =>
+						artistDetailViewService.getData().pipe(
+							tapResponse({
+								next: (data: any[]) => {
+									patchState(store, {
+										albums: data[1],
+										artist: data[0] || null,
+										activeMenuItem:
+											menuItems[
+												menuItemNames.findIndex(
+													(menuItemName) =>
+														menuItemName ===
+														store.selectedContent()
+												) || 0
+											],
+										country: null,
+										isLoading: false,
+										menuItems,
+										selectedContent:
+											store.selectedContent() || 'info',
+									});
+								},
+								error: console.error,
+								finalize: () =>
+									patchState(store, { isLoading: false }),
+							})
+						)
+					)
 				)
 			),
 			selectAlbumDetail: (album: AlbumEntity): void => {

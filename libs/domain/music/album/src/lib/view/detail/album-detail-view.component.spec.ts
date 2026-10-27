@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { of } from 'rxjs';
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -14,10 +15,13 @@ describe('AlbumDetailViewComponent', () => {
 		await TestBed.configureTestingModule({
 			imports: [AlbumDetailViewComponent],
 			providers: [
+				provideI18nTesting(),
 				provideRouter([]),
 				{
 					provide: AlbumStateService,
-					useValue: { selectEntityById$: jest.fn(() => of(undefined)) },
+					useValue: {
+						selectEntityById$: jest.fn(() => of(undefined)),
+					},
 				},
 			],
 		}).compileComponents();

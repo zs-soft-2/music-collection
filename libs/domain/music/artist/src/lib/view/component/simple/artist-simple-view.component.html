@@ -10,9 +10,9 @@
 				{{ artist.name }}
 			</h2>
 
-			<a href="javascript:void(0)" (click)="detailClickHandler(artist)"
-				>detail</a
-			>
+			<a href="javascript:void(0)" (click)="detailClickHandler(artist)">{{
+				'ui.artistSimpleView.detail' | transloco
+			}}</a>
 
 			<div>
 				@for (style of artist.styles; track style) {
@@ -24,7 +24,7 @@
 		<div class="right" fxFlex="60">
 			<p-image
 				[src]="artist.mainImage?.filePath || ''"
-				alt="Image"
+				[alt]="'ui.artistSimpleView.image' | transloco"
 				width="450"
 			></p-image>
 		</div>

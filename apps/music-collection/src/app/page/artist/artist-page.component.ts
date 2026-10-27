@@ -1,4 +1,4 @@
-import { DOCUMENT, ViewportScroller } from '@angular/common';
+import { DOCUMENT } from '@angular/common';
 import {
 	ChangeDetectionStrategy,
 	Component,
@@ -13,18 +13,20 @@ import {
 	untracked,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
 	AdminEditLinkComponent,
+	ProposeLinkComponent,
 	ArtistTileComponent,
 	DiscographyCardComponent,
-	FORMAT_LABELS,
 	ReleaseCardComponent,
 	whenDeferredRendered,
 } from '../../shared/music-ui';
 import { ArtistPageStore } from './artist-page.store';
 import { ArtistLineupComponent } from './component/artist-lineup/artist-lineup.component';
 import { DiscographyTimelineComponent } from './component/discography-timeline/discography-timeline.component';
+import { PageBreadcrumbComponent } from '../../shared/page-breadcrumb';
 
 /** Paragraphs shown before "Read more". */
 const COLLAPSED_PARAGRAPHS = 2;
@@ -44,6 +46,8 @@ const SECTION_REACHED_OFFSET = 24;
 	templateUrl: './artist-page.component.html',
 	styleUrls: ['./artist-page.component.scss'],
 	imports: [
+		...I18N_IMPORTS,
+		PageBreadcrumbComponent,
 		RouterLink,
 		ArtistTileComponent,
 		ReleaseCardComponent,
@@ -51,17 +55,21 @@ const SECTION_REACHED_OFFSET = 24;
 		DiscographyTimelineComponent,
 		ArtistLineupComponent,
 		AdminEditLinkComponent,
+		ProposeLinkComponent,
 	],
 })
 export class ArtistPageComponent {
 	protected readonly store = inject(ArtistPageStore);
-	private readonly viewportScroller = inject(ViewportScroller);
 	private readonly document = inject(DOCUMENT);
 	private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 	private readonly zone = inject(NgZone);
 	private readonly destroyRef = inject(DestroyRef);
 
-	protected readonly formatLabels = FORMAT_LABELS;
+	/** The collector's verdict on a record of the discography, if any. */
+	protected readonly starsFor = (albumId: string): number | null =>
+		this.store.ratings().find((rating) => rating.albumId === albumId)
+			?.stars ?? null;
+
 	protected readonly bioExpanded = signal(false);
 
 	/** Renders every deferred section at once (before an in-page jump). */
@@ -103,17 +111,25 @@ export class ArtistPageComponent {
 	protected readonly sections = computed(() => {
 		const artist = this.store.artist();
 		const sections = [
-			{ id: 'about', label: 'About', shown: !!artist?.paragraphs.length },
-			{ id: 'lineup', label: 'Line-up', shown: this.hasLineup() },
-			{ id: 'discography', label: 'Discography', shown: true },
+			{
+				id: 'about',
+				labelKey: 'section.about',
+				shown: !!artist?.paragraphs.length,
+			},
+			{
+				id: 'lineup',
+				labelKey: 'section.lineUp',
+				shown: this.hasLineup(),
+			},
+			{ id: 'discography', labelKey: 'section.discography', shown: true },
 			{
 				id: 'in-collection',
-				label: 'In your collection',
+				labelKey: 'section.inYourCollection',
 				shown: this.store.ownReleases().length > 0,
 			},
 			{
 				id: 'similar',
-				label: 'Similar artists',
+				labelKey: 'section.similarArtists',
 				shown: this.store.similar().length > 0,
 			},
 		];
@@ -136,7 +152,6 @@ export class ArtistPageComponent {
 			untracked(() => {
 				this.bioExpanded.set(false);
 				this.activeSection.set(null);
-				this.viewportScroller.scrollToPosition([0, 0]);
 			});
 		});
 

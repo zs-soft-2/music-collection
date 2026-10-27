@@ -4,10 +4,34 @@
 			<input name="uid" formControlName="uid" hidden />
 
 			<section class="mc-form-section" aria-labelledby="musician-details">
-				<h2 id="musician-details">Details</h2>
+				<div class="musician-form-heading">
+					<h2 id="musician-details">
+						{{ 'ui.musicianForm.details' | transloco }}
+					</h2>
+					<p-button
+						[label]="'ui.musicianForm.load' | transloco"
+						icon="pi pi-cloud-download"
+						size="small"
+						severity="secondary"
+						[outlined]="true"
+						[loading]="externalLoading()"
+						[disabled]="!params.formGroup.value.discogsId"
+						[ariaLabel]="
+							'ui.musicianForm.load-data-from-discogs' | transloco
+						"
+						(onClick)="loadExternal()"
+					></p-button>
+				</div>
+				@if (externalError()) {
+					<small class="musician-form-error">{{
+						externalError()
+					}}</small>
+				}
 				<div class="mc-form-grid">
 					<div class="mc-field">
-						<label for="name">Name</label>
+						<label for="name">{{
+							'ui.musicianForm.name' | transloco
+						}}</label>
 						<input
 							id="name"
 							type="text"
@@ -17,7 +41,9 @@
 					</div>
 
 					<div class="mc-field">
-						<label for="realName">Real name</label>
+						<label for="realName">{{
+							'ui.musicianForm.real-name' | transloco
+						}}</label>
 						<input
 							id="realName"
 							type="text"
@@ -27,7 +53,9 @@
 					</div>
 
 					<div class="mc-field is-wide">
-						<label for="description">Biography</label>
+						<label for="description">{{
+							'ui.musicianForm.biography' | transloco
+						}}</label>
 						<textarea
 							id="description"
 							pTextarea
@@ -35,18 +63,24 @@
 							formControlName="description"
 						></textarea>
 						<small>
-							Discogs markup such as [a=Name] is cleaned up on the
-							public page.
+							{{
+								'ui.musicianForm.discogs-markup-such-as'
+									| transloco
+							}}
 						</small>
 					</div>
 				</div>
 			</section>
 
 			<section class="mc-form-section" aria-labelledby="musician-links">
-				<h2 id="musician-links">Image and links</h2>
+				<h2 id="musician-links">
+					{{ 'ui.musicianForm.image-and-links' | transloco }}
+				</h2>
 				<div class="mc-form-grid">
 					<div class="mc-field is-wide">
-						<label for="imageUrl">Portrait URL</label>
+						<label for="imageUrl">{{
+							'ui.musicianForm.portrait-url' | transloco
+						}}</label>
 						<input
 							id="imageUrl"
 							type="url"
@@ -56,20 +90,28 @@
 						/>
 						@if (params.formGroup.get('imageUrl')?.invalid) {
 							<small id="imageUrl-hint" class="is-error">
-								Enter a full http(s) address.
+								{{
+									'ui.musicianForm.enter-a-full-http'
+										| transloco
+								}}
 							</small>
 						}
 						@if (params.formGroup.get('imageUrl')?.value; as url) {
 							<img
 								class="portrait-preview"
 								[src]="url"
-								alt="Portrait preview"
+								[alt]="
+									'ui.musicianForm.portrait-preview'
+										| transloco
+								"
 							/>
 						}
 					</div>
 
 					<div class="mc-field">
-						<label for="sites">Links</label>
+						<label for="sites">{{
+							'ui.musicianForm.links' | transloco
+						}}</label>
 						<textarea
 							id="sites"
 							pTextarea
@@ -77,11 +119,15 @@
 							formControlName="sites"
 							aria-describedby="sites-hint"
 						></textarea>
-						<small id="sites-hint">One address per line.</small>
+						<small id="sites-hint">{{
+							'ui.musicianForm.one-address-per-line' | transloco
+						}}</small>
 					</div>
 
 					<div class="mc-field">
-						<label for="aliases">Also known as</label>
+						<label for="aliases">{{
+							'ui.musicianForm.also-known-as' | transloco
+						}}</label>
 						<textarea
 							id="aliases"
 							pTextarea
@@ -89,16 +135,22 @@
 							formControlName="aliases"
 							aria-describedby="aliases-hint"
 						></textarea>
-						<small id="aliases-hint">One name per line.</small>
+						<small id="aliases-hint">{{
+							'ui.musicianForm.one-name-per-line' | transloco
+						}}</small>
 					</div>
 				</div>
 			</section>
 
 			<section class="mc-form-section" aria-labelledby="musician-source">
-				<h2 id="musician-source">Source</h2>
+				<h2 id="musician-source">
+					{{ 'ui.musicianForm.source' | transloco }}
+				</h2>
 				<div class="mc-form-grid">
 					<div class="mc-field">
-						<label for="discogsId">Discogs ID</label>
+						<label for="discogsId">{{
+							'ui.musicianForm.discogs-id' | transloco
+						}}</label>
 						<input
 							id="discogsId"
 							type="number"
@@ -110,7 +162,9 @@
 
 					@if (params.formGroup.get('source')?.value; as source) {
 						<div class="mc-field">
-							<span class="source-label">Imported from</span>
+							<span class="source-label">{{
+								'ui.musicianForm.imported-from' | transloco
+							}}</span>
 							<span>{{ source }}</span>
 						</div>
 					}
@@ -119,13 +173,13 @@
 
 			<div class="mc-form-actions">
 				<p-button
-					label="Cancel"
+					[label]="'ui.musicianForm.cancel' | transloco"
 					severity="secondary"
 					[outlined]="true"
 					(onClick)="cancel()"
 				></p-button>
 				<p-button
-					label="Save"
+					[label]="'ui.musicianForm.save' | transloco"
 					icon="pi pi-check"
 					[disabled]="!params.formGroup.valid"
 					(onClick)="submit()"
@@ -133,4 +187,98 @@
 			</div>
 		</form>
 	</section>
+
+	<p-dialog
+		[header]="'ui.musicianForm.loaded-musician-data' | transloco"
+		[modal]="true"
+		[visible]="!!externalComparison()"
+		(visibleChange)="$event || closeExternal()"
+		[style]="{ width: 'min(56rem, 95vw)' }"
+		[dismissableMask]="true"
+	>
+		@if (externalComparison(); as comparison) {
+			<p class="musician-external-source">
+				{{ 'ui.musicianForm.source2' | transloco }}
+				<a
+					[href]="comparison.sourceUrl"
+					target="_blank"
+					rel="noopener"
+					>{{ comparison.sourceUrl }}</a
+				>
+			</p>
+			@if (comparison.rows.length) {
+				<div class="musician-external-table">
+					<table>
+						<thead>
+							<tr>
+								<th scope="col">
+									<span class="visually-hidden">{{
+										'ui.musicianForm.apply' | transloco
+									}}</span>
+								</th>
+								<th scope="col">
+									{{ 'ui.musicianForm.field' | transloco }}
+								</th>
+								<th scope="col">
+									{{ 'ui.musicianForm.current' | transloco }}
+								</th>
+								<th scope="col">
+									{{ 'ui.musicianForm.loaded' | transloco }}
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							@for (row of comparison.rows; track row.field) {
+								<tr [class.is-selected]="row.selected">
+									<td>
+										<p-checkbox
+											[inputId]="'external-' + row.field"
+											[binary]="true"
+											[ngModel]="row.selected"
+											[ngModelOptions]="{
+												standalone: true,
+											}"
+											(onChange)="
+												toggleExternalRow(row.field)
+											"
+										></p-checkbox>
+									</td>
+									<th scope="row">
+										<label
+											[for]="'external-' + row.field"
+											>{{
+												row.labelKey | transloco
+											}}</label
+										>
+									</th>
+									<td class="is-current">
+										{{ row.current || '—' }}
+									</td>
+									<td class="is-loaded">{{ row.loaded }}</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			} @else {
+				<p>
+					{{ 'ui.musicianForm.the-loaded-data-matches' | transloco }}
+				</p>
+			}
+		}
+		<ng-template #footer>
+			<p-button
+				[label]="'ui.musicianForm.cancel2' | transloco"
+				severity="secondary"
+				[outlined]="true"
+				(onClick)="closeExternal()"
+			></p-button>
+			<p-button
+				[label]="'ui.musicianForm.apply-to-form' | transloco"
+				icon="pi pi-check"
+				[disabled]="!hasSelectedExternalRow()"
+				(onClick)="applyExternal()"
+			></p-button>
+		</ng-template>
+	</p-dialog>
 }

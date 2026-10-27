@@ -2,7 +2,12 @@ import { NgxPermissionsGuard } from 'ngx-permissions';
 
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { RoleNames } from '@music-collection/api';
+import {
+	RoleNames,
+	RolePermissionsService,
+	UserPermissionsService,
+} from '@music-collection/api';
+import { provideConcert } from '@music-collection/domain/concert';
 
 import { AdminComponent } from './admin.component';
 
@@ -121,6 +126,215 @@ const routes: Routes = [
 					),
 				canActivate: [NgxPermissionsGuard],
 				canLoad: [NgxPermissionsGuard],
+			},
+			{
+				path: 'request',
+				data: {
+					breadcrumb: 'request',
+					permissions: {
+						only: [RoleNames.ADMIN],
+						redirectTo: '/error',
+					},
+				},
+				loadComponent: () =>
+					import('./request/request-admin.component').then(
+						(module) => module.RequestAdminComponent
+					),
+				canActivate: [NgxPermissionsGuard],
+			},
+			{
+				// A kiadás-kérések a kérések listájában élnek: aki a régi
+				// linket nyitja meg, oda érkezik.
+				path: 'release-request',
+				pathMatch: 'full',
+				redirectTo: 'request',
+			},
+			{
+				path: 'music-collection',
+				data: {
+					breadcrumb: 'music-collection',
+					permissions: {
+						only: [RoleNames.ADMIN],
+						redirectTo: '/error',
+					},
+				},
+				loadComponent: () =>
+					import('./music-collection/music-collection-admin.component').then(
+						(module) => module.MusicCollectionAdminComponent
+					),
+				canActivate: [NgxPermissionsGuard],
+			},
+			{
+				path: 'music-collection/edit/:uid',
+				data: {
+					breadcrumb: 'music-collection',
+					permissions: {
+						only: [RoleNames.ADMIN],
+						redirectTo: '/error',
+					},
+				},
+				loadComponent: () =>
+					import('./music-collection/edit/music-collection-edit.component').then(
+						(module) => module.MusicCollectionEditComponent
+					),
+				canActivate: [NgxPermissionsGuard],
+			},
+			{
+				// A koncertek: a katalógus zenekarainak fellépései, és a három
+				// betöltés, ami megtölti őket. A repositorykat itt kötjük be,
+				// nem az app configban — a lap lazy, a lib se kerüljön a fő
+				// bundle-be.
+				path: 'concert',
+				data: {
+					breadcrumb: 'concert',
+					permissions: {
+						only: [RoleNames.ADMIN],
+						redirectTo: '/error',
+					},
+				},
+				providers: [provideConcert()],
+				loadComponent: () =>
+					import('./concert/concert-admin.component').then(
+						(module) => module.ConcertAdminComponent
+					),
+				canActivate: [NgxPermissionsGuard],
+			},
+			{
+				path: 'genre',
+				data: {
+					breadcrumb: 'genre',
+					permissions: {
+						only: [RoleNames.ADMIN],
+						redirectTo: '/error',
+					},
+				},
+				loadComponent: () =>
+					import('./genre/genre-admin.component').then(
+						(module) => module.GenreAdminComponent
+					),
+				canActivate: [NgxPermissionsGuard],
+			},
+			{
+				// A szerepkörök szerkesztése a jogosultság írása maga: aki
+				// ide bejut, az osztja a permissionöket. Ezért a wildcard
+				// mellett csak az áll meg, akinek külön joga van rá.
+				path: 'role',
+				data: {
+					breadcrumb: 'role',
+					permissions: {
+						only: [
+							RoleNames.ADMIN,
+							RolePermissionsService.updateRoleEntity,
+						],
+						redirectTo: '/error',
+					},
+				},
+				loadComponent: () =>
+					import('./role/role-admin.component').then(
+						(module) => module.RoleAdminComponent
+					),
+				canActivate: [NgxPermissionsGuard],
+			},
+			{
+				// The editor is a page of its own so that a role has an
+				// address: one admin can send another the role in question.
+				path: 'role/new',
+				data: {
+					breadcrumb: 'role',
+					permissions: {
+						only: [
+							RoleNames.ADMIN,
+							RolePermissionsService.createRoleEntity,
+						],
+						redirectTo: '/error',
+					},
+				},
+				loadComponent: () =>
+					import('./role/edit/role-edit.component').then(
+						(module) => module.RoleEditComponent
+					),
+				canActivate: [NgxPermissionsGuard],
+			},
+			{
+				path: 'role/edit/:roleId',
+				data: {
+					breadcrumb: 'role',
+					permissions: {
+						only: [
+							RoleNames.ADMIN,
+							RolePermissionsService.updateRoleEntity,
+						],
+						redirectTo: '/error',
+					},
+				},
+				loadComponent: () =>
+					import('./role/edit/role-edit.component').then(
+						(module) => module.RoleEditComponent
+					),
+				canActivate: [NgxPermissionsGuard],
+			},
+			{
+				path: 'user',
+				data: {
+					breadcrumb: 'user',
+					permissions: {
+						only: [
+							RoleNames.ADMIN,
+							UserPermissionsService.updateUserEntity,
+						],
+						redirectTo: '/error',
+					},
+				},
+				loadComponent: () =>
+					import('./user/user-admin.component').then(
+						(module) => module.UserAdminComponent
+					),
+				canActivate: [NgxPermissionsGuard],
+			},
+			{
+				path: 'language-settings',
+				data: {
+					breadcrumb: 'language-settings',
+					permissions: {
+						only: [RoleNames.ADMIN],
+						redirectTo: '/error',
+					},
+				},
+				loadComponent: () =>
+					import('./language-settings/language-settings.component').then(
+						(module) => module.LanguageSettingsComponent
+					),
+				canActivate: [NgxPermissionsGuard],
+			},
+			{
+				path: 'daily-question',
+				data: {
+					breadcrumb: 'daily-question',
+					permissions: {
+						only: [RoleNames.ADMIN],
+						redirectTo: '/error',
+					},
+				},
+				loadComponent: () =>
+					import('./daily-question/daily-question-settings.component').then(
+						(module) => module.DailyQuestionSettingsComponent
+					),
+				canActivate: [NgxPermissionsGuard],
+			},
+			{
+				path: 'bundles',
+				data: {
+					breadcrumb: 'bundles',
+					permissions: {
+						only: [RoleNames.ADMIN],
+						redirectTo: '/error',
+					},
+				},
+				loadComponent: () =>
+					import('./catalog-bundle/catalog-bundle-admin.component').then(
+						(module) => module.CatalogBundleAdminComponent
+					),
+				canActivate: [NgxPermissionsGuard],
 			},
 			{
 				path: 'wishlist-item',

@@ -1,0 +1,186 @@
+:host {
+	display: block;
+}
+
+.switch {
+	display: grid;
+	gap: 0.9rem;
+}
+
+.lead {
+	margin: 0;
+	font-size: 0.85rem;
+	line-height: 1.5;
+	color: var(--mc-text-muted);
+}
+
+.status {
+	margin: 0;
+	font-size: 0.85rem;
+	color: var(--mc-text-subtle);
+}
+
+.error {
+	margin: 0;
+	font-size: 0.85rem;
+	color: var(--mc-status-bad);
+}
+
+.hint {
+	margin: 0;
+	font-size: 0.78rem;
+	line-height: 1.5;
+	color: var(--mc-text-subtle);
+}
+
+.options {
+	display: grid;
+	gap: 0.4rem;
+	padding: 0;
+	margin: 0;
+	list-style: none;
+}
+
+.option {
+	display: flex;
+	gap: 0.75rem;
+	align-items: center;
+	width: 100%;
+	padding: 0.6rem 0.8rem;
+	font: inherit;
+	color: var(--mc-text);
+	text-align: left;
+	cursor: pointer;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-md);
+	transition:
+		background var(--mc-duration-fast) ease,
+		border-color var(--mc-duration-fast) ease;
+
+	&:hover:not(:disabled) {
+		background: var(--mc-card-bg-hover);
+		border-color: var(--mc-border-strong);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--mc-primary);
+		outline-offset: 2px;
+	}
+
+	// The copy's own pressing and one already taken by another copy are both
+	// unclickable, but they are not the same thing: the collector's own is
+	// the answer the list was opened for, so it stays at full strength.
+	&:disabled {
+		cursor: default;
+	}
+
+	&.is-current {
+		background: var(--mc-bg-muted);
+		border-color: var(--mc-primary);
+	}
+
+	&:disabled:not(.is-current) {
+		opacity: 0.55;
+	}
+
+	&.is-picked {
+		border-color: var(--mc-primary);
+		box-shadow: inset 0 0 0 1px var(--mc-primary);
+	}
+}
+
+.details {
+	display: grid;
+	gap: 0.15rem;
+	min-width: 0;
+	margin-right: auto;
+}
+
+.line {
+	font-size: 0.9rem;
+}
+
+.sep {
+	padding: 0 0.1rem;
+	color: var(--mc-text-subtle);
+}
+
+.sub {
+	overflow: hidden;
+	font-size: 0.75rem;
+	color: var(--mc-text-subtle);
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.mark {
+	flex: none;
+	padding: 0.15rem 0.5rem;
+	font-size: 0.65rem;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--mc-text-muted);
+	background: var(--mc-surface-2);
+	border-radius: 999px;
+
+	&.is-mine {
+		color: var(--mc-on-primary);
+		background: var(--mc-primary);
+	}
+}
+
+.actions {
+	display: flex;
+	gap: 0.5rem;
+	justify-content: flex-end;
+}
+
+.button {
+	padding: 0.5rem 1.1rem;
+	font: inherit;
+	color: var(--mc-text);
+	cursor: pointer;
+	background: var(--mc-surface-2);
+	border: 1px solid var(--mc-border);
+	border-radius: 999px;
+
+	&:hover:not(:disabled) {
+		background: var(--mc-card-bg-hover);
+	}
+
+	&:disabled {
+		cursor: default;
+		opacity: 0.6;
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--mc-primary);
+		outline-offset: 2px;
+	}
+
+	&.primary {
+		color: var(--mc-on-primary);
+		background: var(--mc-primary);
+		border-color: transparent;
+
+		&:hover:not(:disabled) {
+			filter: brightness(1.1);
+		}
+	}
+}
+
+@media (width <= 40rem) {
+	.option {
+		flex-wrap: wrap;
+	}
+
+	.actions {
+		justify-content: stretch;
+
+		.button {
+			flex: 1;
+		}
+	}
+}

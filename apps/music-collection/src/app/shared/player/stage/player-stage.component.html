@@ -1,0 +1,350 @@
+<div class="backdrop" aria-hidden="true">
+	@if (sceneOn()) {
+		<mc-visual-scene
+			class="scene"
+			[profile]="visualProfile()"
+			[mode]="visualMode()"
+			[quality]="visualQuality()"
+			[positionSeconds]="positionSeconds()"
+			[analyser]="player.analyser()"
+		/>
+	} @else if (photosOn()) {
+		@if (clip(); as video) {
+			<!--
+				Muted and looping: the song is the sound, the clip only
+				moves. It plays while the music plays and holds still when
+				the music does.
+			-->
+			<video
+				#clipVideo
+				class="scene clip"
+				[src]="video.filePath"
+				[class.paused]="!player.playing()"
+				autoplay
+				muted
+				loop
+				playsinline
+			></video>
+		} @else {
+			<mc-track-photos
+				class="scene"
+				[photos]="photos()"
+				[positionSeconds]="positionSeconds()"
+				[moving]="effects() !== 'off'"
+			/>
+		}
+		<canvas #equalizer class="equalizer"></canvas>
+		<canvas #embers class="embers"></canvas>
+	} @else {
+		@if (coverUrl(); as cover) {
+			<img
+				mcCoverFallback
+				class="blur"
+				[class.paused]="!player.playing()"
+				[src]="cover"
+				alt=""
+			/>
+		}
+		<div class="vignette"></div>
+		<canvas #equalizer class="equalizer"></canvas>
+		<canvas #embers class="embers"></canvas>
+	}
+	<div #flash class="flash"></div>
+	<div class="grain"></div>
+</div>
+
+<header class="top">
+	<div class="now">
+		@if (coverUrl(); as cover) {
+			<img
+				mcCoverFallback
+				class="cover"
+				[class.beat]="player.playing()"
+				[src]="cover"
+				alt=""
+			/>
+		}
+		<div class="meta">
+			<h2 class="title">{{ title() }}</h2>
+			<p class="sub">{{ subtitle() }}</p>
+		</div>
+	</div>
+	<div class="top-actions">
+		<mc-player-settings-menu />
+		<button
+			type="button"
+			class="icon-button"
+			[attr.aria-label]="'ui.playerStage.close' | transloco"
+			(click)="close()"
+		>
+			<i class="pi pi-times" aria-hidden="true"></i>
+		</button>
+	</div>
+</header>
+
+<div
+	#scroller
+	class="lyrics"
+	(wheel)="onManualScroll()"
+	(touchmove)="onManualScroll()"
+>
+	@if (synced()) {
+		<div class="spacer"></div>
+		@for (line of lines(); track $index) {
+			<p
+				#line
+				class="line"
+				[class.active]="$index === activeIndex()"
+				[class.past]="$index < activeIndex()"
+				[class.gap]="!line.text"
+				role="button"
+				tabindex="0"
+				(click)="seekTo(line.timeMs)"
+				(keydown.enter)="seekTo(line.timeMs)"
+				(keydown.space)="$event.preventDefault(); seekTo(line.timeMs)"
+			>
+				{{ line.text || '♪' }}
+			</p>
+		}
+		<div class="spacer"></div>
+	} @else if (plainLines().length) {
+		@for (line of plainLines(); track $index) {
+			<p #line class="plain">{{ line || ' ' }}</p>
+		}
+	} @else if (coverUrl(); as cover) {
+		<img mcCoverFallback class="hero-cover" [src]="cover" alt="" />
+	}
+</div>
+
+<footer class="controls">
+	<mc-player-station />
+
+	<mc-player-side-break />
+
+	@if (lyrics() && !synced()) {
+		<p class="hint">
+			{{ 'ui.playerStage.no-synced-lyrics-saved' | transloco }}
+		</p>
+	}
+
+	@switch (player.source()) {
+		@case (null) {
+			<p class="hint">
+				{{ 'ui.playerStage.nothing-to-play-this' | transloco }}
+			</p>
+		}
+		@default {
+			<div class="transport">
+				<span class="time">{{ formatTime(positionMs()) }}</span>
+				<div
+					class="bar"
+					[class.disabled]="!player.canSeek()"
+					role="slider"
+					[attr.aria-label]="'ui.playerStage.position' | transloco"
+					[attr.tabindex]="player.canSeek() ? 0 : -1"
+					aria-valuemin="0"
+					[attr.aria-valuemax]="player.durationMs()"
+					[attr.aria-valuenow]="positionMs()"
+					[attr.aria-valuetext]="
+						formatTime(positionMs()) +
+						' of ' +
+						formatTime(player.durationMs())
+					"
+					(click)="seekFromBar($event)"
+					(keydown.arrowleft)="seekBy(-5000)"
+					(keydown.arrowright)="seekBy(5000)"
+				>
+					<div
+						class="fill"
+						[style.transform]="'scaleX(' + progress() + ')'"
+					></div>
+				</div>
+				<span class="time">{{ formatTime(player.durationMs()) }}</span>
+			</div>
+			<div class="buttons">
+				@if (synced()) {
+					<button
+						type="button"
+						class="icon-button small"
+						[title]="'ui.playerStage.lyrics-earlier' | transloco"
+						[attr.aria-label]="
+							'ui.playerStage.lyrics-earlier2' | transloco
+						"
+						(click)="nudge(1)"
+					>
+						<i class="pi pi-minus" aria-hidden="true"></i>
+					</button>
+				}
+				@if (player.canSkip()) {
+					<button
+						type="button"
+						class="icon-button"
+						[attr.aria-label]="
+							'ui.playerStage.previous-track' | transloco
+						"
+						(click)="player.skip('previous')"
+					>
+						<i class="pi pi-step-backward" aria-hidden="true"></i>
+					</button>
+				}
+				@if (player.needsSpotifyLogin()) {
+					<button
+						type="button"
+						class="connect"
+						(click)="player.togglePlay()"
+					>
+						<mc-spotify-icon />
+						<span>{{
+							'ui.playerStage.connect-spotify-to-play' | transloco
+						}}</span>
+					</button>
+				} @else {
+					<button
+						type="button"
+						class="play"
+						[attr.aria-label]="player.playing() ? 'Pause' : 'Play'"
+						(click)="player.togglePlay()"
+					>
+						<i
+							class="pi"
+							[class.pi-pause]="player.playing()"
+							[class.pi-play]="!player.playing()"
+							aria-hidden="true"
+						></i>
+					</button>
+				}
+				@if (player.canSkip()) {
+					<button
+						type="button"
+						class="icon-button"
+						[attr.aria-label]="
+							'ui.playerStage.next-track' | transloco
+						"
+						(click)="player.skip('next')"
+					>
+						<i class="pi pi-step-forward" aria-hidden="true"></i>
+					</button>
+				}
+				@if (synced()) {
+					<button
+						type="button"
+						class="icon-button small"
+						[title]="'ui.playerStage.lyrics-later' | transloco"
+						[attr.aria-label]="
+							'ui.playerStage.lyrics-later2' | transloco
+						"
+						(click)="nudge(-1)"
+					>
+						<i class="pi pi-plus" aria-hidden="true"></i>
+					</button>
+				}
+			</div>
+			@if (player.volume() !== null) {
+				<label class="volume">
+					<i
+						class="pi"
+						[class.pi-volume-off]="player.volume() === 0"
+						[class.pi-volume-down]="
+							player.volume()! > 0 && player.volume()! < 50
+						"
+						[class.pi-volume-up]="player.volume()! >= 50"
+						aria-hidden="true"
+					></i>
+					<input
+						type="range"
+						min="0"
+						max="100"
+						step="1"
+						[attr.aria-label]="'ui.playerStage.volume' | transloco"
+						[value]="player.volume()"
+						[disabled]="!player.volumeSupported()"
+						[title]="
+							player.volumeSupported()
+								? player.volume() + '%'
+								: 'This device does not allow volume control'
+						"
+						(input)="setVolume($event)"
+					/>
+				</label>
+			}
+			@if (audioCaptureSupported && effects() !== 'off') {
+				<button
+					type="button"
+					class="follow"
+					[class.on]="player.audioStatus() === 'on'"
+					[disabled]="player.audioStatus() === 'starting'"
+					[attr.aria-pressed]="player.audioStatus() === 'on'"
+					[title]="
+						player.audioStatus() === 'on'
+							? 'Stop following the music'
+							: 'Share this tab\'s audio so the visuals follow the music'
+					"
+					(click)="toggleAudioCapture()"
+				>
+					<i class="pi pi-chart-bar" aria-hidden="true"></i>
+					<span>{{
+						player.audioStatus() === 'on'
+							? 'Following the music'
+							: 'Follow the music'
+					}}</span>
+				</button>
+				@if (player.audioStatus() === 'starting') {
+					<p class="hint">
+						{{ 'ui.playerStage.pick' | transloco }}
+						<strong>{{
+							'ui.playerStage.this-tab' | transloco
+						}}</strong>
+						{{ 'ui.playerStage.and-tick' | transloco }}
+						<strong>{{
+							'ui.playerStage.share-tab-audio' | transloco
+						}}</strong
+						>.
+					</p>
+				}
+				<!--
+					Shared, playing, and still not a sound: the visuals are
+					improvising, and only this line says so.
+				-->
+				@if (
+					player.audioStatus() === 'on' &&
+					player.audioSilent() &&
+					player.playing()
+				) {
+					<p class="hint error">
+						{{ 'ui.playerStage.no-sound-shared' | transloco }}
+					</p>
+				}
+			}
+			@if (player.audioError(); as audioError) {
+				<p class="hint error">{{ audioError }}</p>
+			}
+			<p class="source">
+				@if (player.source() === 'spotify') {
+					<mc-spotify-icon />
+					<span>{{ 'ui.playerStage.spotify' | transloco }}</span>
+				} @else {
+					<mc-youtube-icon />
+					<span>{{ 'ui.playerStage.youtube' | transloco }}</span>
+				}
+				@if (offsetMs()) {
+					<span>{{
+						(offsetMs() > 0
+							? 'ui.playerStage.lyricsEarlierBy'
+							: 'ui.playerStage.lyricsLaterBy'
+						)
+							| transloco
+								: {
+										seconds:
+											(offsetMs() < 0
+												? -offsetMs()
+												: offsetMs()) / 1000,
+								  }
+					}}</span>
+				}
+			</p>
+		}
+	}
+	@if (player.error(); as error) {
+		<p class="hint error">{{ error }}</p>
+	}
+</footer>

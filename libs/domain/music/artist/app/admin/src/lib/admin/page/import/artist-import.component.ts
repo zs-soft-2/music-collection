@@ -1,3 +1,4 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import { first } from 'rxjs';
 
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
@@ -10,7 +11,7 @@ import { FileUpload } from 'primeng/fileupload';
 	selector: 'mc-artist-import',
 	templateUrl: './artist-import.component.html',
 	styleUrls: ['./artist-import.component.scss'],
-	imports: [Bind, FileUpload],
+	imports: [...I18N_IMPORTS, Bind, FileUpload],
 })
 export class ArtistImportComponent extends BaseComponent {
 	private exportImportService = inject(ExportImportService);

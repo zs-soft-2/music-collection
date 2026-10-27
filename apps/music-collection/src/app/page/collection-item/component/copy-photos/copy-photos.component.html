@@ -1,0 +1,106 @@
+@if (photos().length) {
+	<div
+		class="card"
+		[class.turnable]="canTurn()"
+		[class.turned]="turned()"
+		[attr.role]="canTurn() ? 'button' : null"
+		[attr.tabindex]="canTurn() ? 0 : null"
+		[attr.aria-label]="canTurn() ? 'Turn ' + albumTitle() + ' over' : null"
+		(click)="toggle()"
+		(keydown.enter)="toggle()"
+		(keydown.space)="toggle(); $event.preventDefault()"
+	>
+		<div class="faces">
+			<!--
+				The URL arrives a moment after the picture itself: the copy
+				carries the Storage path, and where it can be read from is
+				Storage's to say. Until it has, the face stays empty rather
+				than pointing at nothing.
+			-->
+			@if (front(); as photo) {
+				@if (photo.url; as url) {
+					<img
+						class="face front"
+						[src]="url"
+						[width]="photo.width"
+						[height]="photo.height"
+						[alt]="photo.side + ' of ' + albumTitle()"
+					/>
+				}
+			}
+			@if (back(); as photo) {
+				@if (photo.url; as url) {
+					<img
+						class="face back"
+						[src]="url"
+						[width]="photo.width"
+						[height]="photo.height"
+						[alt]="photo.side + ' of ' + albumTitle()"
+					/>
+				}
+			}
+		</div>
+
+		@if (canTurn()) {
+			<span class="hint" aria-hidden="true">
+				<i class="pi pi-replay"></i>
+				{{ turned() ? 'Back' : 'Front' }}
+			</span>
+		}
+	</div>
+} @else if (!canEdit()) {
+	<p class="empty">{{ 'ui.copyPhotos.no-photos-of-this' | transloco }}</p>
+}
+
+@if (canEdit()) {
+	<div class="controls">
+		@for (photo of photos(); track $index) {
+			<div class="control">
+				<span class="control-label">{{ photo.side }}</span>
+				<label class="button">
+					<input
+						type="file"
+						accept="image/*"
+						[disabled]="busy()"
+						(change)="
+							choose($index === 0 ? 'front' : 'back', $event)
+						"
+					/>
+					{{ 'ui.copyPhotos.replace' | transloco }}
+				</label>
+				<button
+					type="button"
+					class="button remove"
+					[disabled]="busy()"
+					(click)="removed.emit($index)"
+				>
+					{{ 'ui.copyPhotos.remove' | transloco }}
+				</button>
+			</div>
+		}
+
+		@if (photos().length < 2) {
+			<label class="button add">
+				<input
+					type="file"
+					accept="image/*"
+					[disabled]="busy()"
+					(change)="choose(nextSlot(), $event)"
+				/>
+				@if (busy()) {
+					Uploading…
+				} @else {
+					{{ photos().length ? 'Add the back' : 'Add a photo' }}
+				}
+			</label>
+		}
+	</div>
+
+	<p class="note">
+		{{ 'ui.copyPhotos.at-most-two-pictures' | transloco }}
+	</p>
+
+	@if (error()) {
+		<p class="error" role="alert">{{ error() }}</p>
+	}
+}

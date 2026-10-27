@@ -5,12 +5,13 @@ import { FormGroup } from '@angular/forms';
 import {
 	CountryEnum,
 	Entity,
-	GenreEnum,
+	GenreName,
 	Identifiable,
 	Searchable,
-	StyleEnum,
+	StyleName,
 } from '../../../common';
 import { DocumentEntity } from '../../document';
+import { GenreEntity } from '../genre';
 import { AlbumEntity } from '../album';
 
 /** What kind of act the artist is; all artists are bands until set. */
@@ -18,15 +19,16 @@ export type ArtistType = 'band' | 'project' | 'formation';
 
 export const DEFAULT_ARTIST_TYPE: ArtistType = 'band';
 
-export const ARTIST_TYPE_OPTIONS: { label: string; value: ArtistType }[] = [
-	{ label: 'Band', value: 'band' },
-	{ label: 'Project', value: 'project' },
-	{ label: 'Formation', value: 'formation' },
+export const ARTIST_TYPE_OPTIONS: { labelKey: string; value: ArtistType }[] = [
+	{ labelKey: 'catalog.artistType.band', value: 'band' },
+	{ labelKey: 'catalog.artistType.project', value: 'project' },
+	{ labelKey: 'catalog.artistType.formation', value: 'formation' },
 ];
 
 /** Where an artist imported from Discogs comes from. */
 export interface ArtistDiscogs {
-	artistId?: number;
+	/** Null where the admin cleared the field the online load fills in. */
+	artistId?: number | null;
 	/** Photo on Discogs, for artists without an uploaded image. */
 	imageUrl?: string | null;
 }
@@ -37,15 +39,22 @@ export interface Artist {
 	country: CountryEnum;
 	description: string;
 	discogs?: ArtistDiscogs;
-	genre: GenreEnum;
+	genre: GenreName;
 	headerImage?: DocumentEntity;
+	/** Photo on the web (Wikimedia Commons), for artists without an uploaded image. */
+	imageUrl?: string | null;
 	mainImage?: DocumentEntity;
 	members?: unknown[];
+	/**
+	 * The artist's MusicBrainz id, once loaded or typed in. Without it the
+	 * online lookup searches on the name, country and styles instead.
+	 */
+	musicBrainzId?: string | null;
 	name: string;
 	sites: string[];
 	/** `discogs` for artists created by the Discogs import. */
 	source?: string;
-	styles: StyleEnum[];
+	styles: StyleName[];
 }
 
 export type ArtistEntity = Artist &
@@ -73,12 +82,14 @@ export type ArtistReference = {
 } & Identifiable;
 
 export type ArtistFormParams = {
-	artistTypes: typeof ARTIST_TYPE_OPTIONS;
 	countries: CountryEnum[];
 	documents: DocumentEntity[];
 	formGroup: FormGroup;
+	/** The genres of the taxonomy an admin has not retired. */
+	genres: GenreEntity[];
 	isImagesTabActive: boolean;
-	styleList: StyleEnum[];
+	/** The styles the chosen genre offers, plus those already on the artist. */
+	styleList: StyleName[];
 };
 
 export type ArtistDetailViewStateModel = {
@@ -94,6 +105,18 @@ export type ArtistDetailViewStateModel = {
 export type ArtistTableParams = {
 	artists: ArtistEntity[];
 	empty: string[];
+	/**
+	 * Whether the list is narrowed to the artists whose genre the taxonomy
+	 * does not name — the ones a Discogs credit import created without one,
+	 * and the few still carrying a value from the retired enum.
+	 *
+	 * They are worth finding because they are invisible rather than merely
+	 * unfinished: the genre bundles are built per genre, so an artist outside
+	 * every genre reaches no client that narrowed its catalog.
+	 */
+	incomplete: boolean;
+	/** How many of them there are, whether or not the list is narrowed. */
+	incompleteCount: number;
 };
 
 export type ArtistListParams = {

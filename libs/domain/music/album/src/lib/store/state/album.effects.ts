@@ -115,6 +115,27 @@ export class AlbumEffects {
 			)
 		)
 	);
+	public lookupAlbumsByName = createEffect(() =>
+		this.actions$.pipe(
+			ofType(albumActions.lookupByName),
+			switchMap((action) =>
+				this.albumDataService.lookupByName$(action.term).pipe(
+					map((result) =>
+						albumActions.lookupByNameSuccess({
+							result: result.map((album) =>
+								this.albumUtilService.convertModelToEntity(
+									album
+								)
+							),
+						})
+					),
+					catchError((error) =>
+						of(albumActions.lookupByNameFailed(error))
+					)
+				)
+			)
+		)
+	);
 	public searchAlbums = createEffect(() =>
 		this.actions$.pipe(
 			ofType(albumActions.search),

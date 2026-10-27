@@ -1,0 +1,553 @@
+<div class="page">
+	<mc-page-breadcrumb [trail]="trail()" />
+
+	@if (store.itemLoading()) {
+		<p class="status">
+			{{ 'page.collection-item.looking-for-this-copy' | transloco }}
+		</p>
+	} @else if (store.notFound()) {
+		<section class="missing">
+			@if (store.userId()) {
+				<h1>
+					{{ 'page.collection-item.this-copy-is-not' | transloco }}
+				</h1>
+				<p>
+					{{ 'page.collection-item.a-copy-page-only' | transloco }}
+				</p>
+			} @else {
+				<h1>
+					{{ 'page.collection-item.sign-in-to-open' | transloco }}
+				</h1>
+				<p>
+					{{ 'page.collection-item.what-a-copy-page' | transloco }}
+				</p>
+			}
+			<a class="button" routerLink="/collection">{{
+				'page.collection-item.back-to-the-collection' | transloco
+			}}</a>
+		</section>
+	} @else if (store.album(); as album) {
+		<header class="hero">
+			@if (album.coverUrl) {
+				<img
+					mcCoverFallback
+					class="backdrop"
+					[src]="album.coverUrl"
+					alt=""
+					aria-hidden="true"
+				/>
+			}
+			<div class="shade" aria-hidden="true"></div>
+
+			<div class="profile">
+				@if (album.coverUrl) {
+					<img
+						mcCoverFallback
+						class="cover"
+						[src]="album.coverUrl"
+						[alt]="album.title + ' cover'"
+						fetchpriority="high"
+					/>
+				} @else {
+					<div class="cover placeholder" aria-hidden="true">♪</div>
+				}
+
+				<div class="identity">
+					<p class="eyebrow">
+						{{ 'page.collection-item.your-copy' | transloco }}
+					</p>
+					<h1>{{ album.title }}</h1>
+
+					<a
+						class="artist-link"
+						[routerLink]="['/artist', album.artistId]"
+					>
+						{{ album.artistName }}
+					</a>
+
+					@if (store.pressing(); as pressing) {
+						<p class="pressing-line">
+							<mc-format-badge [format]="pressing.format" />
+							<span>
+								{{
+									pressing.generic
+										? ('catalog.genericPressing'
+											| transloco)
+										: (pressing.labelName ??
+											'Unknown label')
+								}}
+								@if (pressing.country) {
+									· {{ pressing.country }}
+								}
+								@if (album.year) {
+									· {{ album.year }}
+								}
+							</span>
+						</p>
+					}
+
+					@if (store.disposal(); as disposal) {
+						<p class="gone">
+							{{
+								'page.collection-item.leftOn'
+									| transloco
+										: {
+												date:
+													disposal.date
+													| mcDate: 'longDate',
+												reason:
+													disposal.reason
+													| mcCatalog
+														: 'disposalReason',
+										  }
+							}}
+						</p>
+					}
+				</div>
+			</div>
+		</header>
+
+		<!-- The copy itself -->
+		<section class="section copy">
+			<div class="copy-photos">
+				<mc-copy-photos
+					[photos]="store.photos()"
+					[albumTitle]="album.title"
+					[canEdit]="store.canManageCopies()"
+					[busy]="store.busy()"
+					[error]="store.photoError()"
+					(chosen)="store.addPhoto($event.slot, $event.file)"
+					(removed)="store.removePhoto($event)"
+				/>
+			</div>
+
+			<div class="copy-facts">
+				<div class="section-head">
+					<h2 tabindex="-1" data-copy-heading>
+						{{ 'page.collection-item.this-copy' | transloco }}
+					</h2>
+					@if (
+						!store.editing() &&
+						(store.canManageCopies() || store.canRemove())
+					) {
+						<div class="section-actions">
+							@if (store.canManageCopies()) {
+								<button
+									type="button"
+									class="button"
+									(click)="store.edit()"
+								>
+									{{
+										'page.collection-item.edit' | transloco
+									}}
+								</button>
+							}
+							@if (store.canRemove()) {
+								<button
+									type="button"
+									class="button is-quiet"
+									[attr.data-remove-copy]="store.itemId()"
+									[disabled]="store.disposing()"
+									(click)="store.askRemoval()"
+								>
+									<i
+										class="pi pi-sign-out"
+										aria-hidden="true"
+									></i>
+									{{
+										'page.collection-item.remove'
+											| transloco
+									}}
+								</button>
+							}
+						</div>
+					}
+				</div>
+
+				@if (store.disposeError() && !store.removingCopyId()) {
+					<p class="removal-error" role="alert">
+						{{
+							'page.collection-item.removeFailed'
+								| transloco: { error: store.disposeError() }
+						}}
+					</p>
+				}
+
+				@if (store.editing()) {
+					<mc-copy-details-form
+						[draft]="store.draft()"
+						[busy]="store.savingDetails()"
+						[error]="store.saveError()"
+						(saved)="save($event)"
+						(cancelled)="store.cancelEdit()"
+					/>
+				} @else {
+					<dl class="facts">
+						<div>
+							<dt>
+								{{
+									'page.collection-item.in-the-collection-since'
+										| transloco
+								}}
+							</dt>
+							<dd>{{ store.item()?.date | date: 'longDate' }}</dd>
+						</div>
+
+						@if (store.provenance(); as provenance) {
+							@if (provenance.date) {
+								<div>
+									<dt>
+										{{
+											'page.collection-item.bought-on'
+												| transloco
+										}}
+									</dt>
+									<dd>{{ provenance.date }}</dd>
+								</div>
+							}
+							@if (provenance.place) {
+								<div>
+									<dt>
+										{{
+											'page.collection-item.where-from'
+												| transloco
+										}}
+									</dt>
+									<dd>{{ provenance.place }}</dd>
+								</div>
+							}
+							@if (provenance.price) {
+								<div>
+									<dt>
+										{{
+											'page.collection-item.price'
+												| transloco
+										}}
+									</dt>
+									<dd>{{ provenance.price }}</dd>
+								</div>
+							}
+						}
+
+						@if (store.condition(); as condition) {
+							@if (condition.media) {
+								<div>
+									<dt>
+										{{
+											'page.collection-item.record'
+												| transloco
+										}}
+									</dt>
+									<dd>{{ condition.media }}</dd>
+								</div>
+							}
+							@if (condition.sleeve) {
+								<div>
+									<dt>
+										{{
+											'page.collection-item.sleeve'
+												| transloco
+										}}
+									</dt>
+									<dd>{{ condition.sleeve }}</dd>
+								</div>
+							}
+						}
+
+						@if (store.serial(); as serial) {
+							<div>
+								<dt>
+									{{
+										'page.collection-item.numbered-copy'
+											| transloco
+									}}
+								</dt>
+								<dd>{{ serial }}</dd>
+							</div>
+						}
+
+						@if (store.item()?.placement; as spot) {
+							<div>
+								<dt>
+									{{
+										'page.collection-item.on-the-shelf'
+											| transloco
+									}}
+								</dt>
+								<dd>
+									{{
+										'page.collection-item.spot'
+											| transloco
+												: {
+														row: spot.row,
+														slot: spot.column,
+														position: spot.position,
+												  }
+									}}
+								</dd>
+							</div>
+						}
+					</dl>
+
+					@if (store.item()?.description; as note) {
+						<p class="note">{{ note }}</p>
+					}
+
+					@if (
+						store.provenance()?.empty &&
+						store.condition()?.empty &&
+						store.canManageCopies()
+					) {
+						<p class="prompt">
+							{{
+								'page.collection-item.nothing-is-written-down'
+									| transloco
+							}}
+						</p>
+					}
+				}
+			</div>
+		</section>
+
+		<!-- The story -->
+		@if (store.story(); as story) {
+			<section class="section">
+				<h2>{{ 'page.collection-item.its-story' | transloco }}</h2>
+				<p class="story">{{ story }}</p>
+			</section>
+		}
+
+		<!-- The pressing -->
+		@if (store.pressing(); as pressing) {
+			<section class="section">
+				<div class="section-head">
+					<h2>
+						{{ 'page.collection-item.the-pressing' | transloco }}
+					</h2>
+					@if (store.canChangeRelease() && !store.choosingRelease()) {
+						<button
+							type="button"
+							class="button"
+							data-change-release
+							(click)="store.chooseRelease()"
+						>
+							{{
+								'page.collection-item.another-release'
+									| transloco
+							}}
+						</button>
+					}
+				</div>
+				<p class="section-lead">
+					{{
+						'page.collection-item.what-this-release-adds'
+							| transloco
+					}}
+				</p>
+
+				<!--
+					A copy filed on its format alone has no label, country or
+					year to list, so the facts below would read as an empty
+					pressing rather than an unknown one. It is also the copy
+					most likely to be sitting under the wrong release, which
+					is what the list next to it is for.
+				-->
+				@if (pressing.generic) {
+					<p class="pressing-generic">
+						{{
+							'page.collection-item.filed-on-format-alone'
+								| transloco
+						}}
+					</p>
+				}
+
+				<dl class="facts">
+					@if (pressing.name) {
+						<div>
+							<dt>
+								{{ 'page.collection-item.release' | transloco }}
+							</dt>
+							<dd>{{ pressing.name }}</dd>
+						</div>
+					}
+					@if (pressing.labelName) {
+						<div>
+							<dt>
+								{{ 'page.collection-item.label' | transloco }}
+							</dt>
+							<dd>{{ pressing.labelName }}</dd>
+						</div>
+					}
+					@if (pressing.country) {
+						<div>
+							<dt>
+								{{ 'page.collection-item.country' | transloco }}
+							</dt>
+							<dd>{{ pressing.country }}</dd>
+						</div>
+					}
+					@if (pressing.formatDescription) {
+						<div>
+							<dt>
+								{{ 'page.collection-item.format' | transloco }}
+							</dt>
+							<dd>{{ pressing.formatDescription }}</dd>
+						</div>
+					}
+					@if (store.exclusiveCount()) {
+						<div>
+							<dt>
+								{{
+									'page.collection-item.only-on-this-pressing'
+										| transloco
+								}}
+							</dt>
+							<dd>
+								{{ store.exclusiveCount() }}
+								{{
+									store.exclusiveCount() === 1
+										? 'track'
+										: 'tracks'
+								}}
+							</dd>
+						</div>
+					}
+				</dl>
+
+				@if (pressing.discogsUrl) {
+					<a
+						class="link-out"
+						[href]="pressing.discogsUrl"
+						target="_blank"
+						rel="noopener"
+					>
+						{{
+							'page.collection-item.this-pressing-on-discogs'
+								| transloco
+						}}
+					</a>
+				}
+
+				<!--
+					Which of the album's releases this copy stands under, and
+					the move onto another one. It opens on a click rather than
+					with the page: the catalog's releases are a list of their
+					own to read, and a visit to look at a record should not
+					pay for it.
+				-->
+				@if (store.choosingRelease()) {
+					<mc-pressing-switch
+						[options]="store.pressingOptions()"
+						[loading]="store.catalogReleasesLoading()"
+						[busy]="store.changingRelease()"
+						[picked]="store.pickedReleaseId()"
+						[error]="store.releaseError()"
+						(pick)="store.pickRelease($event)"
+						(confirmed)="changeRelease($event)"
+						(cancelled)="store.closeReleaseChoice()"
+					/>
+				} @else if (store.releaseError(); as releaseError) {
+					<p class="removal-error" role="alert">
+						{{
+							'page.collection-item.moveFailed'
+								| transloco: { error: releaseError }
+						}}
+					</p>
+				}
+			</section>
+		}
+
+		<!-- The album -->
+		<section class="section">
+			<div class="section-head">
+				<h2>{{ 'page.collection-item.what-it-plays' | transloco }}</h2>
+				<a class="button" [routerLink]="['/album', album.id]">
+					{{ 'page.collection-item.the-album' | transloco }}
+				</a>
+			</div>
+
+			<!--
+				What the collector thinks of the music. The grades above are
+				about the plastic; this is about the record, and it is the same
+				verdict the album page keeps — one record, one opinion.
+			-->
+			@if (store.userId()) {
+				<div class="verdict">
+					<span class="verdict-label">
+						{{ 'page.collection-item.what-you-think' | transloco }}
+					</span>
+					<mc-star-rating
+						[stars]="store.myRating()?.stars ?? null"
+						[busy]="store.ratingWriting()"
+						[label]="
+							'page.collection-item.what-you-think' | transloco
+						"
+						(rated)="store.rate($event)"
+						(cleared)="store.clearRating()"
+					/>
+					@if (store.myRating()?.note; as note) {
+						<p class="verdict-note">{{ note }}</p>
+					}
+				</div>
+			}
+
+			@if (store.detailsLoading()) {
+				<p class="status">
+					{{
+						'page.collection-item.loading-the-tracklist' | transloco
+					}}
+				</p>
+			} @else if (store.tracklist().length) {
+				<ol class="tracks">
+					@for (track of store.tracklist(); track track.id) {
+						<li class="track" [class.exclusive]="track.exclusive">
+							<span class="position">{{ track.position }}</span>
+							<a
+								class="name"
+								[routerLink]="[
+									'/album',
+									album.id,
+									'track',
+									track.id,
+								]"
+								>{{ track.name }}</a
+							>
+							@if (track.exclusive) {
+								<span
+									class="badge"
+									[title]="
+										'page.collection-item.only-on-this-pressing2'
+											| transloco
+									"
+								>
+									{{
+										'page.collection-item.this-pressing'
+											| transloco
+									}}
+								</span>
+							}
+							<span class="duration">{{ track.duration }}</span>
+						</li>
+					}
+				</ol>
+			} @else {
+				<p class="status">
+					{{
+						'page.collection-item.no-tracklist-for-this' | transloco
+					}}
+				</p>
+			}
+		</section>
+	}
+</div>
+
+@if (store.removingCopy(); as copy) {
+	<mc-copy-removal
+		[albumTitle]="store.album()?.title ?? ''"
+		[copy]="copy"
+		[busy]="store.disposing()"
+		[error]="store.disposeError()"
+		(removed)="store.removeCopy($event)"
+		(closed)="store.closeRemoval()"
+	/>
+}

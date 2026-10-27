@@ -1,8 +1,13 @@
 import {
+	CollectionItemDetails,
+	CollectionItemDisposal,
 	CollectionItemEntity,
+	CollectionItemPhoto,
+	CollectionItemPlacement,
 	CollectionItemEntityAdd,
 	CollectionItemEntityUpdate,
 	CollectionItemListConfig,
+	ReleaseEntity,
 	SearchParams,
 } from '@music-collection/api';
 import { Update } from '@ngrx/entity';
@@ -45,6 +50,140 @@ export const deleteCollectionItemFail = createAction(
 export const deleteCollectionItemSuccess = createAction(
 	'[CollectionItem] Delete CollectionItem Success',
 	props<{ collectionItemId: string }>()
+);
+
+/** Disposes of the copy, or restores it with `disposal: null`. */
+export const changeCollectionItemDisposal = createAction(
+	'[CollectionItem] Change CollectionItem Disposal',
+	props<{
+		collectionItem: CollectionItemEntity;
+		disposal: CollectionItemDisposal | null;
+	}>()
+);
+
+export const changeCollectionItemDisposalFail = createAction(
+	'[CollectionItem] Change CollectionItem Disposal Fail',
+	props<{ error: Error }>()
+);
+
+export const changeCollectionItemDisposalSuccess = createAction(
+	'[CollectionItem] Change CollectionItem Disposal Success',
+	props<{ collectionItem: Update<CollectionItemEntity> }>()
+);
+
+/** Files the copy into a compartment, or takes the place back with `null`. */
+export const changeCollectionItemPlacement = createAction(
+	'[CollectionItem] Change CollectionItem Placement',
+	props<{
+		collectionItem: CollectionItemEntity;
+		placement: CollectionItemPlacement | null;
+	}>()
+);
+
+export const changeCollectionItemPlacementFail = createAction(
+	'[CollectionItem] Change CollectionItem Placement Fail',
+	props<{ error: Error }>()
+);
+
+export const changeCollectionItemPlacementSuccess = createAction(
+	'[CollectionItem] Change CollectionItem Placement Success',
+	props<{ collectionItem: Update<CollectionItemEntity> }>()
+);
+
+/**
+ * Writes what the collector tells about the copy — how it was come by, how
+ * it has held up, the story behind it. The whole telling is written at once,
+ * so a field emptied on the page is emptied on the record.
+ */
+export const changeCollectionItemDetails = createAction(
+	'[CollectionItem] Change CollectionItem Details',
+	props<{
+		collectionItem: CollectionItemEntity;
+		details: CollectionItemDetails;
+	}>()
+);
+
+export const changeCollectionItemDetailsFail = createAction(
+	'[CollectionItem] Change CollectionItem Details Fail',
+	props<{ error: Error }>()
+);
+
+export const changeCollectionItemDetailsSuccess = createAction(
+	'[CollectionItem] Change CollectionItem Details Success',
+	props<{ collectionItem: Update<CollectionItemEntity> }>()
+);
+
+/**
+ * Writes which pressing the copy is of: the collector found the right release
+ * for a record they had filed under another one — or under none, having given
+ * only the format when they added it.
+ *
+ * The copy keeps everything else. The price, the grades, the story, the
+ * shelf place and the photographs are of this very record; what changes is
+ * only which release of the catalog it is a copy of.
+ */
+export const changeCollectionItemRelease = createAction(
+	'[CollectionItem] Change CollectionItem Release',
+	props<{
+		collectionItem: CollectionItemEntity;
+		release: ReleaseEntity;
+	}>()
+);
+
+export const changeCollectionItemReleaseFail = createAction(
+	'[CollectionItem] Change CollectionItem Release Fail',
+	props<{ error: Error }>()
+);
+
+export const changeCollectionItemReleaseSuccess = createAction(
+	'[CollectionItem] Change CollectionItem Release Success',
+	props<{ collectionItem: Update<CollectionItemEntity> }>()
+);
+
+/**
+ * Writes the photos of the copy. The pictures are already in Storage by the
+ * time this runs: what is written is the list pointing at them, front first.
+ */
+export const changeCollectionItemPhotos = createAction(
+	'[CollectionItem] Change CollectionItem Photos',
+	props<{
+		collectionItem: CollectionItemEntity;
+		photos: CollectionItemPhoto[];
+	}>()
+);
+
+export const changeCollectionItemPhotosFail = createAction(
+	'[CollectionItem] Change CollectionItem Photos Fail',
+	props<{ error: Error }>()
+);
+
+export const changeCollectionItemPhotosSuccess = createAction(
+	'[CollectionItem] Change CollectionItem Photos Success',
+	props<{ collectionItem: Update<CollectionItemEntity> }>()
+);
+
+/**
+ * Files several copies at once — a compartment rearranged by hand moves
+ * every record in it, and they move together or not at all.
+ */
+export const changeCollectionItemPlacements = createAction(
+	'[CollectionItem] Change CollectionItem Placements',
+	props<{
+		placements: {
+			collectionItem: CollectionItemEntity;
+			placement: CollectionItemPlacement | null;
+		}[];
+	}>()
+);
+
+export const changeCollectionItemPlacementsFail = createAction(
+	'[CollectionItem] Change CollectionItem Placements Fail',
+	props<{ error: Error }>()
+);
+
+export const changeCollectionItemPlacementsSuccess = createAction(
+	'[CollectionItem] Change CollectionItem Placements Success',
+	props<{ collectionItems: Update<CollectionItemEntity>[] }>()
 );
 
 export const listCollectionItems = createAction(

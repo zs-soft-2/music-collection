@@ -1,8 +1,32 @@
-<header class="bar">
+<header class="bar" *transloco="let t">
+	<!--
+		A bal oldali sáv kapcsolója. Csak ott van, ahol a sáv maga is:
+		keskenyebb képernyőn a jobb szélső hamburger nyitja a lapot
+		kitöltő lemezt, és a kettő egyszerre csak zavarná egymást.
+	-->
+	<button
+		type="button"
+		class="icon-btn rail-toggle"
+		aria-controls="mc-side-rail"
+		[attr.aria-expanded]="rail.isOpen()"
+		[attr.aria-label]="
+			rail.isOpen() ? t('nav.closeMenu') : t('nav.openMenu')
+		"
+		[attr.title]="rail.isOpen() ? t('nav.closeMenu') : t('nav.openMenu')"
+		(click)="toggleRail()"
+	>
+		<i
+			class="pi"
+			[class.pi-bars]="!rail.isOpen()"
+			[class.pi-times]="rail.isOpen()"
+			aria-hidden="true"
+		></i>
+	</button>
+
 	<button
 		type="button"
 		class="brand"
-		aria-label="Music Collection — home"
+		[attr.aria-label]="t('nav.brandHome')"
 		(click)="goHome()"
 	>
 		<svg
@@ -19,11 +43,13 @@
 				d="M3.5 12a8.5 8.5 0 1 0 17 0a8.5 8.5 0 1 0-17 0M10 12a2 2 0 1 0 4 0a2 2 0 1 0-4 0M12 6.5a5.5 5.5 0 0 0-5.5 5.5"
 			/>
 		</svg>
+		<!-- The app's own name, and so the one string on the bar that is the
+		     same in all three languages. -->
 		<span class="word">Music Collection</span>
 	</button>
 
-	<nav class="nav" aria-label="Main">
-		@for (item of navItems; track item.label) {
+	<nav class="nav" [attr.aria-label]="t('nav.main')">
+		@for (item of navItems; track item.labelKey) {
 			<a
 				class="nav-link"
 				[routerLink]="item.routerLink"
@@ -31,32 +57,28 @@
 				ariaCurrentWhenActive="page"
 			>
 				<i class="pi {{ item.icon }}" aria-hidden="true"></i>
-				{{ item.label }}
+				{{ t(item.labelKey) }}
 			</a>
 		}
-		<a
-			*ngxPermissionsOnly="adminRoles"
-			class="nav-link"
-			routerLink="/admin"
-			routerLinkActive="is-active"
-			ariaCurrentWhenActive="page"
-		>
-			<i class="pi pi-cog" aria-hidden="true"></i>
-			Admin
-		</a>
 	</nav>
 
 	<div class="actions">
-		<mc-spotify-mini-player />
+		<!-- Nincs mit mutatni, ha nincs mivel szólnia: a külső lejátszókat
+		     vendégnek, és hozzájárulás nélkül, nem tesszük ki. -->
+		@if (players.allowed()) {
+			<mc-player-mini />
+		}
 
 		<!-- Csak nagy képernyőn: ott van mit kitölteni. -->
 		<button
 			type="button"
 			class="icon-btn width-btn"
-			aria-label="Wide layout"
+			[attr.aria-label]="t('nav.wideLayout')"
 			[attr.aria-pressed]="layoutWidth.isWide()"
 			[attr.title]="
-				layoutWidth.isWide() ? 'Standard width' : 'Use the full width'
+				layoutWidth.isWide()
+					? t('nav.widthStandard')
+					: t('nav.widthFull')
 			"
 			(click)="layoutWidth.toggle()"
 		>
@@ -68,13 +90,34 @@
 			></i>
 		</button>
 
+		<!--
+			A háttérvilág kapcsolója: nincs → álló → élő. Három fokozat egy
+			gombon, mert a sorrendjük a költségük sorrendje — aki lejjebb
+			akar venni, egy koppintással teheti.
+		-->
+		<button
+			type="button"
+			class="icon-btn backdrop-btn"
+			[class.is-on]="backdrop.mode() !== 'off'"
+			[attr.aria-label]="t('nav.backdrop.' + backdrop.mode())"
+			[attr.title]="t('nav.backdrop.' + backdrop.mode())"
+			(click)="backdrop.cycle()"
+		>
+			<i
+				class="pi"
+				[class.pi-image]="backdrop.mode() !== 'live'"
+				[class.pi-bolt]="backdrop.mode() === 'live'"
+				aria-hidden="true"
+			></i>
+		</button>
+
+		<mc-language-picker />
+
 		<button
 			type="button"
 			class="icon-btn"
 			[attr.aria-label]="
-				theme.isDark()
-					? 'Switch to light theme'
-					: 'Switch to dark theme'
+				theme.isDark() ? t('nav.themeLight') : t('nav.themeDark')
 			"
 			(click)="theme.toggle()"
 		>
@@ -91,7 +134,7 @@
 				<button
 					type="button"
 					class="avatar-btn"
-					aria-label="Account menu"
+					[attr.aria-label]="t('nav.accountMenu')"
 					aria-haspopup="menu"
 					[attr.aria-expanded]="accountOpen()"
 					(click)="toggleAccount()"
@@ -114,26 +157,82 @@
 					<button
 						type="button"
 						class="scrim"
-						aria-label="Close account menu"
+						[attr.aria-label]="t('nav.closeAccountMenu')"
 						tabindex="-1"
 						(click)="closeMenus()"
 					></button>
 					<div class="menu" role="menu">
 						<div class="menu-user">
-							<b>{{ user()?.displayName || 'Signed in' }}</b>
+							<b>{{
+								user()?.displayName || t('nav.signedIn')
+							}}</b>
 							@if (user()?.email; as email) {
 								<span>{{ email }}</span>
 							}
 						</div>
+						<!-- A cím maga nem menüelem: a csoport viseli a nevét,
+						     hogy a felolvasó is a többivel együtt mondja ki. -->
+						@for (section of accountSections; track section.group) {
+							<div
+								class="menu-group collector"
+								role="group"
+								[attr.aria-label]="
+									section.titleKey
+										? t(section.titleKey)
+										: null
+								"
+							>
+								@if (section.titleKey; as titleKey) {
+									<p class="menu-section" aria-hidden="true">
+										{{ t(titleKey) }}
+									</p>
+								}
+								@for (
+									item of section.items;
+									track item.labelKey
+								) {
+									<a
+										class="menu-item"
+										role="menuitem"
+										[routerLink]="item.routerLink"
+										routerLinkActive="is-active"
+										ariaCurrentWhenActive="page"
+										(click)="closeMenus()"
+									>
+										<i
+											class="pi {{ item.icon }}"
+											aria-hidden="true"
+										></i>
+										{{ t(item.labelKey) }}
+									</a>
+								}
+							</div>
+						}
+						<!-- Az oldalak alatt a fiók maga: a profil, az
+						     admin és a kilépés nem a gyűjteményről szól. -->
+						<hr class="menu-divider" />
+						<a
+							class="menu-item"
+							role="menuitem"
+							routerLink="/profile"
+							routerLinkActive="is-active"
+							ariaCurrentWhenActive="page"
+							(click)="closeMenus()"
+						>
+							<i class="pi pi-user" aria-hidden="true"></i>
+							{{ t('nav.profile') }}
+						</a>
 						<a
 							*ngxPermissionsOnly="adminRoles"
 							class="menu-item"
 							role="menuitem"
 							routerLink="/admin"
+							routerLinkActive="is-active"
+							ariaCurrentWhenActive="page"
 							(click)="closeMenus()"
 						>
 							<i class="pi pi-cog" aria-hidden="true"></i>
-							Admin
+							{{ t('nav.admin') }}
 						</a>
 						<button
 							type="button"
@@ -142,7 +241,7 @@
 							(click)="logout()"
 						>
 							<i class="pi pi-sign-out" aria-hidden="true"></i>
-							Log out
+							{{ t('nav.logOut') }}
 						</button>
 					</div>
 				}
@@ -151,18 +250,20 @@
 			<button
 				type="button"
 				class="login-btn"
-				aria-label="Log in"
+				[attr.aria-label]="t('nav.logIn')"
 				(click)="login()"
 			>
 				<i class="pi pi-sign-in" aria-hidden="true"></i>
-				<span class="login-text">Log in</span>
+				<span class="login-text">{{ t('nav.logIn') }}</span>
 			</button>
 		}
 
 		<button
 			type="button"
 			class="icon-btn menu-toggle"
-			[attr.aria-label]="menuOpen() ? 'Close menu' : 'Open menu'"
+			[attr.aria-label]="
+				menuOpen() ? t('nav.closeMenu') : t('nav.openMenu')
+			"
 			aria-controls="mc-mobile-nav"
 			[attr.aria-expanded]="menuOpen()"
 			(click)="toggleMenu()"
@@ -178,18 +279,38 @@
 </header>
 
 @if (menuOpen()) {
-	<nav id="mc-mobile-nav" class="sheet" aria-label="Main">
-		@for (item of navItems; track item.label) {
-			<a
-				class="sheet-link"
-				[routerLink]="item.routerLink"
-				routerLinkActive="is-active"
-				ariaCurrentWhenActive="page"
-				(click)="closeMenus()"
+	<nav
+		id="mc-mobile-nav"
+		class="sheet"
+		*transloco="let t"
+		[attr.aria-label]="t('nav.main')"
+	>
+		@for (section of sheetSections(); track section.group) {
+			<div
+				class="sheet-group"
+				role="group"
+				[attr.aria-label]="
+					section.titleKey ? t(section.titleKey) : null
+				"
 			>
-				<i class="pi {{ item.icon }}" aria-hidden="true"></i>
-				{{ item.label }}
-			</a>
+				@if (section.titleKey; as titleKey) {
+					<p class="sheet-section" aria-hidden="true">
+						{{ t(titleKey) }}
+					</p>
+				}
+				@for (item of section.items; track item.labelKey) {
+					<a
+						class="sheet-link"
+						[routerLink]="item.routerLink"
+						routerLinkActive="is-active"
+						ariaCurrentWhenActive="page"
+						(click)="closeMenus()"
+					>
+						<i class="pi {{ item.icon }}" aria-hidden="true"></i>
+						{{ t(item.labelKey) }}
+					</a>
+				}
+			</div>
 		}
 		<a
 			*ngxPermissionsOnly="adminRoles"
@@ -200,7 +321,7 @@
 			(click)="closeMenus()"
 		>
 			<i class="pi pi-cog" aria-hidden="true"></i>
-			Admin
+			{{ t('nav.admin') }}
 		</a>
 	</nav>
 }

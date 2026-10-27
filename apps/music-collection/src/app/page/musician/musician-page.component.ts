@@ -1,4 +1,4 @@
-import { DOCUMENT, ViewportScroller } from '@angular/common';
+import { DOCUMENT } from '@angular/common';
 import {
 	ChangeDetectionStrategy,
 	Component,
@@ -10,15 +10,18 @@ import {
 	untracked,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
 	AdminEditLinkComponent,
+	ProposeLinkComponent,
 	CREDIT_CATEGORY_LABELS,
 	DiscographyCardComponent,
 	whenDeferredRendered,
 } from '../../shared/music-ui';
 import { MusicianBandView, bandsSpan } from './musician.mapper';
 import { MusicianPageStore } from './musician-page.store';
+import { PageBreadcrumbComponent } from '../../shared/page-breadcrumb';
 
 /** Paragraphs shown before "Read more". */
 const COLLAPSED_PARAGRAPHS = 2;
@@ -43,11 +46,22 @@ const TYPE_LABELS: Record<string, string> = {
 	selector: 'mc-musician-page',
 	templateUrl: './musician-page.component.html',
 	styleUrls: ['./musician-page.component.scss'],
-	imports: [RouterLink, DiscographyCardComponent, AdminEditLinkComponent],
+	imports: [
+		...I18N_IMPORTS,
+		PageBreadcrumbComponent,
+		RouterLink,
+		DiscographyCardComponent,
+		AdminEditLinkComponent,
+		ProposeLinkComponent,
+	],
 })
 export class MusicianPageComponent {
 	protected readonly store = inject(MusicianPageStore);
-	private readonly viewportScroller = inject(ViewportScroller);
+
+	/** The collector's verdict on a record the musician played on, if any. */
+	protected readonly starsFor = (albumId: string): number | null =>
+		this.store.ratings().find((rating) => rating.albumId === albumId)
+			?.stars ?? null;
 	private readonly document = inject(DOCUMENT);
 	private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
@@ -120,27 +134,27 @@ export class MusicianPageComponent {
 		[
 			{
 				id: 'about',
-				label: 'About',
+				labelKey: 'section.about',
 				shown: !!this.store.header()?.paragraphs.length,
 			},
 			{
 				id: 'bands',
-				label: 'Bands',
+				labelKey: 'section.bands',
 				shown: this.store.members().length > 0,
 			},
 			{
 				id: 'guest',
-				label: 'Guest appearances',
+				labelKey: 'section.guestAppearances',
 				shown: this.store.guestBands().length > 0,
 			},
 			{
 				id: 'albums',
-				label: 'Albums',
+				labelKey: 'section.albums',
 				shown: this.store.albums().length > 0,
 			},
 			{
 				id: 'bandmates',
-				label: 'Bandmates',
+				labelKey: 'section.bandmates',
 				shown: this.store.bandmates().length > 0,
 			},
 		].filter((section) => section.shown)
@@ -156,7 +170,6 @@ export class MusicianPageComponent {
 			untracked(() => {
 				this.showAllBandmates.set(false);
 				this.bioExpanded.set(false);
-				this.viewportScroller.scrollToPosition([0, 0]);
 			});
 		});
 	}

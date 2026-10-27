@@ -1,5 +1,5 @@
 /**
- * Music Collection — szerveroldali jogosultság-szinkron.
+ * Music Collection — szerveroldali jogosultság-szinkron és Discogs-lekérdezés.
  *
  * A `role/{roleId}.permissions` és a user szerepkör-hivatkozásai
  * (`user/{uid}.roleIds`, illetve a régi, beágyazott `roles`) alapján
@@ -14,23 +14,139 @@
  * régióval a deploy elszáll.
  */
 
+import { ZsAiError } from '@zssz-soft/zs-ai-sdk';
+
 import { initializeApp } from 'firebase-admin/app';
 import {
 	DocumentReference,
 	FieldValue,
 	getFirestore,
 } from 'firebase-admin/firestore';
+import { getStorage } from 'firebase-admin/storage';
+import { defineSecret, defineString } from 'firebase-functions/params';
 import { setGlobalOptions } from 'firebase-functions/v2';
 import { onDocumentWritten } from 'firebase-functions/v2/firestore';
-import { HttpsError, onCall } from 'firebase-functions/v2/https';
+import {
+	CallableRequest,
+	HttpsError,
+	onCall,
+} from 'firebase-functions/v2/https';
+import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions/v2';
 
+import { DiscogsRequestOptions } from './discogs-api';
+import { DiscogsArtistProfile, fetchArtistProfile } from './discogs-artist';
+import {
+	DiscogsLabelCandidate,
+	DiscogsLabelProfile,
+	fetchLabelProfile,
+	searchLabels,
+} from './discogs-label';
+import {
+	fetchArtistAlbums,
+	fetchBandProfile,
+	fetchMasterProfile,
+	searchArtists,
+	searchMasters,
+} from './discogs-lookup';
+import {
+	DiscogsError,
+	DiscogsVersion,
+	fetchMasterVersions,
+} from './discogs-versions';
+import {
+	adoptBadgeDocument,
+	adoptBadgeImage,
+	generateBadgeCandidates,
+	listSceneModels,
+	probeSceneCandidates,
+	setBadgeImage,
+} from './badge-generation';
+import { describeLocks } from './scene-probe-prompt';
+import { readBadgeSettings, writeBadgeSettings } from './badge-settings';
+import {
+	createMusicCollection,
+	deleteMusicCollection,
+	updateMusicCollection,
+} from './music-collection-write';
+import { syncVenues } from './concert-venue';
+import { syncConcerts } from './concert-event';
+import {
+	ConcertAiError,
+	readConcertAiSettings as readConcertSettings,
+	sanitizeConcertAiSettings,
+	suggestConcerts as askForConcerts,
+} from './concert-suggestion';
+import { suggestVenues as askForVenues } from './venue-suggestion';
+import { DiscogsSearchHit } from './discogs-search';
+import { ScanAlbumContext, scanPhoto } from './photo-scan';
+import { ScanQuotaError, reserveVisionRequests } from './photo-scan-quota';
+import {
+	MAX_SHELF_PHOTOS,
+	SHELF_REQUEST_TIMEOUT_MS,
+	ShelfPhotoContext,
+	mergeShelfReads,
+	readShelfSignals,
+} from './shelf-signals';
+import {
+	PHOTO_MEDIA_TYPES,
+	PHOTO_REQUEST_TIMEOUT_MS,
+	PhotoInput,
+} from './photo-signals';
+import { VisionError, createVisionClient } from './vision-client';
+import {
+	GatewaySettings,
+	createArtifactDownloader,
+	createGatewayClient,
+} from './gateway-client';
+import { approveReleaseRequest as approve } from './release-request-approval';
+import { DeletionError, deleteAlbum, deleteRelease } from './catalog-deletion';
+import { decideRequest as decide } from './request-decision';
+import { RequestDecisionError } from './request-schema';
+import {
+	ensureGenericRelease as ensureGeneric,
+	isGenericReleaseMedia,
+} from './generic-release';
+import {
+	DailyAnswerError,
+	DailyAnswerFailure,
+	answerDailyQuestion as gradeDailyAnswer,
+} from './daily-answer';
+import {
+	RATING_COLLECTION,
+	syncAlbumRating as syncRatingSummary,
+} from './album-rating';
+import { composeBandOfTheWeek } from './band-of-the-week';
+import { composeGuestBundle } from './guest-bundle';
+import {
+	CatalogBundleError,
+	CatalogBundleKind,
+	catalogBundleStatus,
+	rebuildCatalogBundle as rebuildBundle,
+} from './catalog-bundles';
+import { composeDailyQuestion } from './daily-question-compose';
+import { refreshDailyQuestionLeaderboard } from './daily-question-leaderboard';
+import {
+	readDailyQuestionSettings as readGameSettings,
+	writeDailyQuestionSettings,
+} from './daily-question-settings';
+import { templateCatalog } from './daily-question';
+import { syncUpcomingReleases } from './upcoming-release';
+import {
+	TrackMediaError,
+	drawTrackImage,
+	estimateTrackClip,
+	listImageModels,
+	readTrackClipState,
+	startTrackClip,
+} from './track-media';
 import {
 	CatalogRole,
 	EffectivePermissions,
 	UserDocument,
 	calculateEffectivePermissions,
 	isSameEffectivePermissions,
+	missingDefaultRole,
 	roleReferences,
 } from './effective-permissions';
 
@@ -38,15 +154,84 @@ import {
 const REGION = 'europe-west4';
 
 const ROLE_COLLECTION = 'role';
+/** A Discogs-válaszok cache-e; csak a function (Admin SDK) éri el. */
+const DISCOGS_CACHE_COLLECTION = 'discogs-cache';
+/**
+ * Discogs personal access token (Secret Manager, infra/environments): 60
+ * kérés/perc a token nélküli 25 helyett.
+ */
+const discogsToken = defineSecret('DISCOGS_TOKEN');
+/**
+ * A fotós azonosítás az AI-gatewayen át megy (`vision-client.ts`). A kulcs a
+ * gateway-tenant API-kulcsa (Secret Manager, infra/environments); a
+ * szolgáltatói kulcsok a gatewaynél vannak, nem itt.
+ */
+const gatewayApiKey = defineSecret('GATEWAY_API_KEY');
+/**
+ * A gateway címe `/api/v1` nélkül. Nem titok: környezetenként az
+ * `apps/functions/.env.<projekt>` adja.
+ */
+const gatewayBaseUrl = defineString('GATEWAY_BASE_URL');
+
+function gatewaySettings(): GatewaySettings {
+	return { baseUrl: gatewayBaseUrl.value(), apiKey: gatewayApiKey.value() };
+}
+/** Ennyi ideig használjuk a cache-elt kiadáslistát. */
+const DISCOGS_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const USER_COLLECTION = 'user';
 
 initializeApp();
-// A `functions-runtime@` rövidítést a Firebase a projekt azonosítójával egészíti
-// ki; a service accountot és a szerepköreit az infra/environments hozza létre.
+// A service accountot és a szerepköreit az infra/environments hozza létre. Teljes
+// címmel adjuk meg: a `functions-runtime@` rövidítést a CLI secret-hozzáférés
+// ellenőrzése nem egészíti ki, és érvénytelen taggal hívná a setIamPolicy-t.
+// A GCLOUD_PROJECT-et a CLI a deploy közbeni betöltéskor is beállítja.
 setGlobalOptions({
 	region: REGION,
 	maxInstances: 10,
-	serviceAccount: 'functions-runtime@',
+	// A Cloud Run régiós kerete 20 vCPU (`CpuAllocPerProjectRegion`, 20 000
+	// mvCPU), a firebase-functions viszont minden functionnek egy egész vCPU-t
+	// ad — 256 MiB memória mellett is. Huszonkét functionnél ez már a deployba
+	// sem fér bele: egy deploy mindegyiknek új revíziót indít (közös
+	// forrás-archívum, bármelyik fájl változása átírja mindegyikük hash-ét), és
+	// minden induló revízió lefoglalja a maga CPU-ját, amíg a healthcheck le nem
+	// fut. A példány a deploy után is él még egy ideig, ezért a deploy körökre
+	// osztása önmagában csak eltolta a problémát.
+	//
+	// 2026-10-04: a keret egyszer már elfogyott, 37 functionnél. Két oka volt,
+	// és mindkettő tanulság. Az egyik, hogy három function egész CPU-n maradt
+	// abból az időből, amikor a modellt még innen hívtuk — mióta a gateway
+	// hívja, egyik sem számol, csak vár, úgyhogy ma mind a fél CPU-n fut. A
+	// másik, hogy a forrásból törölt function Cloud Run szolgáltatása életben
+	// maradt: a `firebase deploy` a bukásra `Skipping deletes`-szel felel, így
+	// a hely, ami kellett volna, épp a hiba miatt nem szabadult fel. Törölni
+	// kézzel kell: `firebase functions:delete security:<név>`.
+	//
+	// Fél CPU-val a mostani készlet 18,5 vCPU — másfél vCPU tartalék, ami egy
+	// deploy átfedését is elbírja. Egy új function fél vCPU; harminckilencnél
+	// megint a határon állunk.
+	//
+	// Egy alatti CPU-hoz a Cloud Run 1-es concurrency-t követel: innentől egy
+	// példány egy kérést szolgál ki egyszerre, a párhuzamosságot a `maxInstances`
+	// szabja. Amelyik functionnek a fél CPU kevés, az helyben felülírja.
+	// ÁTMENETI ÉRTÉK. A keret egyszer megtelt, és onnan nem volt kiút: egy
+	// deploy a RÉGI revízió mellé indítja az újat, tehát ahhoz, hogy egy
+	// function kevesebbet kérjen, előbb el kell férnie annak, ami majd
+	// kevesebbet kér. 19,5 + 0,5 = 20,0, vagyis semmit nem lehetett
+	// telepíteni. A kiút a kisebb falat: egy negyed CPU befér a maradékba, és
+	// ahogy a készlet lecserélődik, magától szabadul fel a hely. Ha mind a 37
+	// function ezen van (9,25 vCPU), a `0.5` visszaemelhető.
+	cpu: 0.25,
+	concurrency: 1,
+	serviceAccount: `functions-runtime@${process.env['GCLOUD_PROJECT']}.iam.gserviceaccount.com`,
+	// Minden callable csak a saját appunkból hívható. A jogosultság-ellenőrzés
+	// önmagában nem elég: egy ID token a böngészőből kimásolható, és onnantól a
+	// végpontok scriptből, tetszőleges ütemben hívhatók — az
+	// `identifyRecordFromPhoto` esetében hívásonként egy modell-kérés árán. Az
+	// App Check token azt igazolja, hogy a hívás a mi appunkból jön; a kliens
+	// oldali párja a `provideAppCheck` az app.config.ts-ben.
+	//
+	// Globálisan állítjuk, hogy egy új callable is védetten szülessen.
+	enforceAppCheck: true,
 });
 
 const database = () => getFirestore();
@@ -111,12 +296,32 @@ function sameReferences(before?: UserDocument, after?: UserDocument): boolean {
 	return a.size === b.size && [...a].every((reference) => b.has(reference));
 }
 
-/** A user szerepkör-hivatkozásainak változása. */
+/**
+ * A user szerepkör-hivatkozásainak változása. Az új user dokumentumba (a
+ * kliens az első belépéskor hozza létre, az Auth uid-dal) itt kerül be az
+ * alapértelmezett `USER` szerepkör; az írás újra elindítja ezt a triggert, és
+ * az már a szerepkörrel együtt számol.
+ */
 export const syncUserPermissions = onDocumentWritten(
 	`${USER_COLLECTION}/{uid}`,
 	async (event) => {
 		const before = event.data?.before.data() as UserDocument | undefined;
 		const after = event.data?.after.data() as UserDocument | undefined;
+
+		if (!event.data?.before.exists && event.data?.after.exists) {
+			const defaultRole = missingDefaultRole(after, await loadRoles());
+
+			if (defaultRole) {
+				await event.data.after.ref.update({
+					roleIds: FieldValue.arrayUnion(defaultRole),
+				});
+				logger.info(
+					`${event.params.uid}: ${defaultRole} szerepkör hozzáadva`
+				);
+
+				return;
+			}
+		}
 
 		// A user saját adatainak (név, kép) írása nem érinti a jogosultságot.
 		if (
@@ -128,6 +333,40 @@ export const syncUserPermissions = onDocumentWritten(
 		}
 
 		await syncUser(event.params.uid, await loadRoles());
+	}
+);
+
+/**
+ * Egy gyűjtő értékelése megváltozott: a lemez közösségi átlaga újraszámolódik.
+ *
+ * A trigger a saját, privát értékelésre figyel — ezt a dokumentumot a
+ * szabályok csak a tulajdonosának engedik el —, és kizárólag összeget ír ki
+ * (`album-rating/{albumId}`): darabszámot, átlagot, megoszlást. Hogy ki mit
+ * adott, nem hagyja el a user dokumentumát.
+ *
+ * Az ÍRÁS a kliensé, a SZÁMOLÁS a szerveré. Egy kliens-oldali átlaghoz
+ * mindenki értékelését olvasni kellene, amit a szabályok helyesen nem
+ * engednek; egy increment-alapú összeg pedig hamisan állna, amint a trigger
+ * kétszer fut le ugyanarra az írásra. Lásd `album-rating.ts`.
+ */
+export const syncAlbumRating = onDocumentWritten(
+	`${USER_COLLECTION}/{uid}/${RATING_COLLECTION}/{albumId}`,
+	async (event) => {
+		const { albumId } = event.params;
+		const before = event.data?.before.get('stars');
+		const after = event.data?.after.get('stars');
+
+		// Semmi, ami az átlagot mozdítaná: a jegyzet átírása ugyanannyi
+		// csillag mellett nem közösségi esemény.
+		if (before === after) {
+			return;
+		}
+
+		const result = await syncRatingSummary(database(), albumId);
+
+		logger.info(
+			`${albumId} értékelése: ${result.count} csillag (${result.read} olvasás)`
+		);
 	}
 );
 
@@ -164,7 +403,10 @@ export const resyncEffectivePermissions = onCall(async (request) => {
 	const permissions = (caller.data()?.permissions ?? []) as string[];
 
 	if (!permissions.includes('ADMIN')) {
-		throw new HttpsError('permission-denied', 'ADMIN permission szükséges.');
+		throw new HttpsError(
+			'permission-denied',
+			'ADMIN permission szükséges.'
+		);
 	}
 
 	const roles = await loadRoles();
@@ -175,3 +417,1817 @@ export const resyncEffectivePermissions = onCall(async (request) => {
 
 	return { users: users.size, changed: changed.filter(Boolean).length };
 });
+
+/** A hívó effektív jogosultságai (üres, ha nincs dokumentuma). */
+async function callerPermissions(uid: string): Promise<string[]> {
+	const snapshot = await effectivePermissionsReference(uid).get();
+
+	return (snapshot.data()?.permissions ?? []) as string[];
+}
+
+/**
+ * Ekkora base64-képet fogadunk el (kb. 4 MB kép). A kliens 1600 képpontra
+ * méretez, ennél nagyobb kép a felismerésen már nem javít.
+ */
+const MAX_PHOTO_BASE64_LENGTH = 6_000_000;
+
+/** A kliens képe, ha érvényes; `null`, ha nem küldött. */
+function readPhotoInput(value: unknown): PhotoInput | null {
+	if (!value || typeof value !== 'object') return null;
+
+	const { data, mediaType } = value as Record<string, unknown>;
+
+	if (typeof data !== 'string' || !data) return null;
+
+	if (data.length > MAX_PHOTO_BASE64_LENGTH) {
+		throw new HttpsError('invalid-argument', 'A kép túl nagy.');
+	}
+	if (!PHOTO_MEDIA_TYPES.includes(mediaType as PhotoInput['mediaType'])) {
+		throw new HttpsError('invalid-argument', 'Nem támogatott képformátum.');
+	}
+
+	return { data, mediaType: mediaType as PhotoInput['mediaType'] };
+}
+
+/** Az ismert album, ha a gyűjtő az album oldaláról fotóz. */
+function readAlbumContext(value: unknown): ScanAlbumContext | null {
+	if (!value || typeof value !== 'object') return null;
+
+	const { name, artistName } = value as Record<string, unknown>;
+
+	if (typeof name !== 'string' || !name.trim()) return null;
+
+	return {
+		name: name.trim(),
+		artistName:
+			typeof artistName === 'string' && artistName.trim()
+				? artistName.trim()
+				: null,
+	};
+}
+
+/** A vonalkódos Discogs-keresés cache-e, a master-kiadások mintájára. */
+function firestoreBarcodeCache() {
+	const reference = (barcode: string) =>
+		database()
+			.collection(DISCOGS_CACHE_COLLECTION)
+			.doc(`barcode-${barcode}`);
+
+	return {
+		async read(barcode: string): Promise<DiscogsSearchHit[] | null> {
+			const cached = await reference(barcode).get();
+			const fetchedAt = cached.data()?.fetchedAt as number | undefined;
+
+			if (!fetchedAt || Date.now() - fetchedAt >= DISCOGS_CACHE_TTL_MS) {
+				return null;
+			}
+
+			return cached.data()?.hits as DiscogsSearchHit[];
+		},
+		async write(barcode: string, hits: DiscogsSearchHit[]): Promise<void> {
+			await reference(barcode).set({ fetchedAt: Date.now(), hits });
+		},
+	};
+}
+
+/**
+ * A Discogs hibájának megfelelő callable-hiba. A `missing` az, amit a 404
+ * jelent az adott végponton — másra a hívó nem tud mit lépni.
+ */
+function discogsFailure(error: unknown, missing: string): HttpsError {
+	if (error instanceof DiscogsError && error.status === 404) {
+		return new HttpsError('not-found', missing);
+	}
+	if (error instanceof DiscogsError && error.status === 429) {
+		return new HttpsError(
+			'resource-exhausted',
+			'A Discogs most túlterhelt, próbáld újra egy perc múlva.'
+		);
+	}
+
+	return new HttpsError('unavailable', 'A Discogs nem érhető el.');
+}
+
+/**
+ * Az elfogyott fotós keret callable-hibája. A `source` azért kell, mert a
+ * `resource-exhausted` a fotós végpontokon háromfélét jelenthet — túlterhelt
+ * Discogs, túlterhelt modell, elfogyott keret —, és a gyűjtőnek csak az első
+ * kettőnél érdemes újra megpróbálnia.
+ */
+function scanQuotaFailure(error: ScanQuotaError): HttpsError {
+	return new HttpsError(
+		error.reason === 'off' ? 'failed-precondition' : 'resource-exhausted',
+		error.message,
+		{ source: 'quota' }
+	);
+}
+
+/**
+ * Keresett szöveg → dokumentum-azonosító. Nem ékezettelenítünk és nem
+ * szűkítünk latin betűkre: a nem latin betűs kiadónevek abból csupa
+ * kötőjelre fogynának, és egymás találatait olvasnák. A `/` a Firestore-ban
+ * útelválasztó, ezért kódoljuk.
+ */
+function searchCacheKey(term: string): string {
+	return encodeURIComponent(term.toLowerCase()).slice(0, 200);
+}
+
+/**
+ * Egy Discogs master kiadásai. Gyűjtő (createCollectionItemEntity) vagy ADMIN
+ * hívhatja; az eredményt `discogs-cache/master-{id}` alatt egy hétig őrizzük.
+ */
+export const discogsMasterVersions = onCall(
+	{ secrets: [discogsToken] },
+	async (request) => {
+		const uid = request.auth?.uid;
+
+		if (!uid) {
+			throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
+		}
+
+		const permissions = await callerPermissions(uid);
+
+		if (
+			!permissions.includes('ADMIN') &&
+			!permissions.includes('createCollectionItemEntity')
+		) {
+			throw new HttpsError('permission-denied', 'Nincs jogosultság.');
+		}
+
+		const masterId = Number(request.data?.masterId);
+
+		if (!Number.isSafeInteger(masterId) || masterId <= 0) {
+			throw new HttpsError('invalid-argument', 'Érvénytelen masterId.');
+		}
+
+		const cacheReference = database()
+			.collection(DISCOGS_CACHE_COLLECTION)
+			.doc(`master-${masterId}`);
+		const cached = await cacheReference.get();
+		const fetchedAt = cached.data()?.fetchedAt as number | undefined;
+
+		if (fetchedAt && Date.now() - fetchedAt < DISCOGS_CACHE_TTL_MS) {
+			return {
+				masterId,
+				versions: cached.data()?.versions as DiscogsVersion[],
+			};
+		}
+
+		try {
+			const versions = await fetchMasterVersions(masterId, {
+				token: discogsToken.value() || null,
+			});
+
+			await cacheReference.set({ fetchedAt: Date.now(), versions });
+
+			return { masterId, versions };
+		} catch (error) {
+			logger.warn(`discogsMasterVersions ${masterId}`, error);
+
+			if (error instanceof DiscogsError && error.status === 404) {
+				throw new HttpsError(
+					'not-found',
+					'Nincs ilyen Discogs master.'
+				);
+			}
+			if (error instanceof DiscogsError && error.status === 429) {
+				throw new HttpsError(
+					'resource-exhausted',
+					'A Discogs most túlterhelt, próbáld újra egy perc múlva.'
+				);
+			}
+			throw new HttpsError('unavailable', 'A Discogs nem érhető el.');
+		}
+	}
+);
+
+/**
+ * Egy Discogs előadó profilja a zenész szerkesztőűrlapjának Load gombjához.
+ * Csak ADMIN hívhatja; az eredményt `discogs-cache/artist-{id}` alatt egy
+ * hétig őrizzük.
+ */
+export const discogsArtistProfile = onCall(
+	{ secrets: [discogsToken] },
+	async (request) => {
+		const uid = request.auth?.uid;
+
+		if (!uid) {
+			throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
+		}
+		if (!(await callerPermissions(uid)).includes('ADMIN')) {
+			throw new HttpsError(
+				'permission-denied',
+				'ADMIN permission szükséges.'
+			);
+		}
+
+		const artistId = Number(request.data?.artistId);
+
+		if (!Number.isSafeInteger(artistId) || artistId <= 0) {
+			throw new HttpsError('invalid-argument', 'Érvénytelen artistId.');
+		}
+
+		const cacheReference = database()
+			.collection(DISCOGS_CACHE_COLLECTION)
+			.doc(`artist-${artistId}`);
+		const cached = await cacheReference.get();
+		const fetchedAt = cached.data()?.fetchedAt as number | undefined;
+
+		if (fetchedAt && Date.now() - fetchedAt < DISCOGS_CACHE_TTL_MS) {
+			return cached.data()?.profile as DiscogsArtistProfile;
+		}
+
+		try {
+			const profile = await fetchArtistProfile(artistId, {
+				token: discogsToken.value() || null,
+			});
+
+			if (!profile) {
+				throw new DiscogsError('Üres Discogs-előadó.', 404);
+			}
+
+			await cacheReference.set({ fetchedAt: Date.now(), profile });
+
+			return profile;
+		} catch (error) {
+			logger.warn(`discogsArtistProfile ${artistId}`, error);
+
+			if (error instanceof DiscogsError && error.status === 404) {
+				throw new HttpsError(
+					'not-found',
+					'Nincs ilyen Discogs-előadó.'
+				);
+			}
+			if (error instanceof DiscogsError && error.status === 429) {
+				throw new HttpsError(
+					'resource-exhausted',
+					'A Discogs most túlterhelt, próbáld újra egy perc múlva.'
+				);
+			}
+			throw new HttpsError('unavailable', 'A Discogs nem érhető el.');
+		}
+	}
+);
+
+/**
+ * Egy Discogs kiadó profilja a kiadó szerkesztőűrlapjának Load gombjához.
+ * A kiadó szerkesztője (vagy ADMIN) hívhatja; az eredményt
+ * `discogs-cache/label-{id}` alatt egy hétig őrizzük.
+ */
+export const discogsLabelProfile = onCall(
+	{ secrets: [discogsToken] },
+	async (request) => {
+		await requireCaller(request, [
+			'createLabelEntity',
+			'updateLabelEntity',
+		]);
+
+		const labelId = Number(request.data?.labelId);
+
+		if (!Number.isSafeInteger(labelId) || labelId <= 0) {
+			throw new HttpsError('invalid-argument', 'Érvénytelen labelId.');
+		}
+
+		const cacheReference = database()
+			.collection(DISCOGS_CACHE_COLLECTION)
+			.doc(`label-${labelId}`);
+		const cached = await cacheReference.get();
+		const fetchedAt = cached.data()?.fetchedAt as number | undefined;
+
+		if (fetchedAt && Date.now() - fetchedAt < DISCOGS_CACHE_TTL_MS) {
+			return cached.data()?.profile as DiscogsLabelProfile;
+		}
+
+		try {
+			const profile = await fetchLabelProfile(labelId, {
+				token: discogsToken.value() || null,
+			});
+
+			if (!profile) {
+				throw new DiscogsError('Üres Discogs-kiadó.', 404);
+			}
+
+			await cacheReference.set({ fetchedAt: Date.now(), profile });
+
+			return profile;
+		} catch (error) {
+			logger.warn(`discogsLabelProfile ${labelId}`, error);
+
+			throw discogsFailure(error, 'Nincs ilyen Discogs-kiadó.');
+		}
+	}
+);
+
+/**
+ * A névre illő Discogs-kiadók: a katalógus kiadói a kiadásokból, névre
+ * jönnek létre, így a Load első lépése a keresés. A találatokat
+ * `discogs-cache/label-search-{név}` alatt egy hétig őrizzük.
+ */
+export const discogsLabelSearch = onCall(
+	{ secrets: [discogsToken] },
+	async (request) => {
+		await requireCaller(request, [
+			'createLabelEntity',
+			'updateLabelEntity',
+		]);
+
+		const name = String(request.data?.name ?? '').trim();
+
+		if (!name) {
+			throw new HttpsError('invalid-argument', 'Hiányzó kiadónév.');
+		}
+
+		const cacheReference = database()
+			.collection(DISCOGS_CACHE_COLLECTION)
+			.doc(`label-search-${searchCacheKey(name)}`);
+		const cached = await cacheReference.get();
+		const fetchedAt = cached.data()?.fetchedAt as number | undefined;
+
+		if (fetchedAt && Date.now() - fetchedAt < DISCOGS_CACHE_TTL_MS) {
+			return {
+				candidates: cached.data()
+					?.candidates as DiscogsLabelCandidate[],
+			};
+		}
+
+		try {
+			const candidates = await searchLabels(name, {
+				token: discogsToken.value() || null,
+			});
+
+			await cacheReference.set({ fetchedAt: Date.now(), candidates });
+
+			return { candidates };
+		} catch (error) {
+			logger.warn(`discogsLabelSearch ${name}`, error);
+
+			throw discogsFailure(error, 'Nincs ilyen Discogs-kiadó.');
+		}
+	}
+);
+
+/**
+ * Egy `discogsLookup` kérés: honnan olvasható a cache-ből, mit kérdezzünk a
+ * Discogstól, és mit jelent ott a 404.
+ */
+interface DiscogsLookupPlan {
+	cacheKey: string;
+	fetch: (options: DiscogsRequestOptions) => Promise<object>;
+	missing: string;
+}
+
+/** Kötelező, pozitív egész a kérésből. */
+function lookupId(value: unknown, name: string): number {
+	const id = Number(value);
+
+	if (!Number.isSafeInteger(id) || id <= 0) {
+		throw new HttpsError('invalid-argument', `Érvénytelen ${name}.`);
+	}
+
+	return id;
+}
+
+/** Kötelező, nem üres szöveg a kérésből. */
+function lookupText(value: unknown, name: string): string {
+	const term = String(value ?? '').trim();
+
+	if (!term) {
+		throw new HttpsError('invalid-argument', `Hiányzó ${name}.`);
+	}
+
+	return term;
+}
+
+/**
+ * Az üres profil ugyanaz a válasz, mint a nem létező: a Discogs 404-e és egy
+ * azonosító nélküli előadó között a hívónak nincs mit választania.
+ */
+async function requirePresent<T>(profile: T | null, what: string): Promise<T> {
+	if (!profile) {
+		throw new DiscogsError(what, 404);
+	}
+
+	return profile;
+}
+
+/** Melyik lekérdezés melyik cache-kulcson és melyik Discogs-végponton fut. */
+function discogsLookupPlan(kind: string, data: unknown): DiscogsLookupPlan {
+	const request = data as Record<string, unknown> | undefined;
+
+	switch (kind) {
+		case 'artist-search': {
+			const name = lookupText(request?.['name'], 'előadónév');
+
+			return {
+				cacheKey: `band-search-${searchCacheKey(name)}`,
+				fetch: async (options) => ({
+					candidates: await searchArtists(name, options),
+				}),
+				missing: 'Nincs ilyen Discogs-előadó.',
+			};
+		}
+		case 'artist-profile': {
+			const discogsId = lookupId(request?.['discogsId'], 'discogsId');
+
+			return {
+				cacheKey: `band-${discogsId}`,
+				fetch: async (options) => ({
+					profile: await requirePresent(
+						await fetchBandProfile(discogsId, options),
+						'Üres Discogs-előadó.'
+					),
+				}),
+				missing: 'Nincs ilyen Discogs-előadó.',
+			};
+		}
+		case 'artist-albums': {
+			const discogsId = lookupId(request?.['discogsId'], 'discogsId');
+
+			return {
+				cacheKey: `band-albums-${discogsId}`,
+				fetch: async (options) => ({
+					albums: await fetchArtistAlbums(discogsId, options),
+				}),
+				missing: 'Nincs ilyen Discogs-előadó.',
+			};
+		}
+		case 'master-search': {
+			const artist = lookupText(request?.['artist'], 'előadónév');
+			const album = lookupText(request?.['album'], 'albumcím');
+
+			return {
+				cacheKey: `master-search-${searchCacheKey(
+					artist
+				)}--${searchCacheKey(album)}`,
+				fetch: async (options) => ({
+					candidates: await searchMasters(artist, album, options),
+				}),
+				missing: 'Nincs ilyen Discogs-album.',
+			};
+		}
+		case 'master-profile': {
+			const masterId = lookupId(request?.['masterId'], 'masterId');
+
+			return {
+				// A `master-{id}` a kiadáslistát tartja (discogsMasterVersions).
+				cacheKey: `master-profile-${masterId}`,
+				fetch: async (options) => ({
+					profile: await requirePresent(
+						await fetchMasterProfile(masterId, options),
+						'Üres Discogs-master.'
+					),
+				}),
+				missing: 'Nincs ilyen Discogs-album.',
+			};
+		}
+		default:
+			throw new HttpsError(
+				'invalid-argument',
+				`Ismeretlen lekérdezés: ${kind || '—'}.`
+			);
+	}
+}
+
+/**
+ * A katalógus-űrlapok Discogs-alternatívája, amikor a MusicBrainz nem ismeri a
+ * bandát vagy a lemezt: banda keresése és profilja, diszkográfiája, album
+ * (master) keresése és profilja a tracklistával.
+ *
+ * Öt kérdés egy végponton: a europe-west4-es Cloud Run régiós CPU-kerete (20
+ * vCPU) minden új functionnel szűkül, és az öt lekérdezés ugyanazt a tokent,
+ * cache-t és hibakezelést használja.
+ *
+ * `{ kind, … }` → a kind válasza. Előadó- vagy album-szerkesztő, illetve ADMIN
+ * hívhatja; minden válasz `discogs-cache/{kulcs}` alatt egy hétig él.
+ */
+export const discogsLookup = onCall(
+	{ secrets: [discogsToken] },
+	async (request) => {
+		await requireCaller(request, [
+			'createArtistEntity',
+			'updateArtistEntity',
+			'createAlbumEntity',
+			'updateAlbumEntity',
+		]);
+
+		const kind = String(request.data?.kind ?? '');
+		const plan = discogsLookupPlan(kind, request.data);
+		const cacheReference = database()
+			.collection(DISCOGS_CACHE_COLLECTION)
+			.doc(plan.cacheKey);
+		const cached = await cacheReference.get();
+		const fetchedAt = cached.data()?.fetchedAt as number | undefined;
+
+		if (fetchedAt && Date.now() - fetchedAt < DISCOGS_CACHE_TTL_MS) {
+			return cached.data()?.result as object;
+		}
+
+		try {
+			const result = await plan.fetch({
+				token: discogsToken.value() || null,
+			});
+
+			await cacheReference.set({ fetchedAt: Date.now(), result });
+
+			return result;
+		} catch (error) {
+			logger.warn(`discogsLookup ${kind} ${plan.cacheKey}`, error);
+
+			throw discogsFailure(error, plan.missing);
+		}
+	}
+);
+
+/**
+ * Egy lemez azonosítása fotóról: a kliens vonalkódja, majd — ha az nem dönt —
+ * a képről kiolvasott jelek alapján keres a Discogson. Gyűjtő
+ * (createCollectionItemEntity) vagy ADMIN hívhatja.
+ *
+ * A katalógussal a kliens veti össze a jelölteket; ez a function csak azt
+ * mondja meg, mi van a fotón. A vonalkódos kereséseket
+ * `discogs-cache/barcode-{ean}` alatt egy hétig őrizzük.
+ *
+ * A modell hívása napi keretbe fér (`photo-scan-quota.ts`), gyűjtőnként: a
+ * jogosultság azt mondja meg, hogy a hívó gyűjthet, nem azt, hogy mennyit
+ * költhet.
+ */
+export const identifyRecordFromPhoto = onCall(
+	{
+		secrets: [discogsToken, gatewayApiKey],
+		memory: '512MiB',
+		// A globális negyednél több: a kép base64-be csomagolása és a válasz
+		// feldolgozása számol, nem csak vár. Egész CPU-t akkor kapott, amikor
+		// a modellt még innen hívtuk — azóta a gateway hívja, és a fél elég.
+		cpu: 0.5,
+		// A képolvasás újrapróbálkozásai is ebbe a keretbe férnek bele.
+		timeoutSeconds: 180,
+	},
+	async (request) => {
+		const uid = request.auth?.uid;
+
+		if (!uid) {
+			throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
+		}
+
+		const permissions = await callerPermissions(uid);
+
+		if (
+			!permissions.includes('ADMIN') &&
+			!permissions.includes('createCollectionItemEntity')
+		) {
+			throw new HttpsError('permission-denied', 'Nincs jogosultság.');
+		}
+
+		const photo = readPhotoInput(request.data?.photo);
+		const barcode = String(request.data?.barcode ?? '').replace(/\D+/g, '');
+
+		if (!photo && !barcode) {
+			throw new HttpsError('invalid-argument', 'Kép vagy vonalkód kell.');
+		}
+
+		try {
+			return await scanPhoto(
+				{
+					photo,
+					barcode: barcode || null,
+					album: readAlbumContext(request.data?.album),
+				},
+				{
+					client: createVisionClient(
+						gatewaySettings(),
+						PHOTO_REQUEST_TIMEOUT_MS
+					),
+					discogs: { token: discogsToken.value() || null },
+					barcodeCache: firestoreBarcodeCache(),
+					// A napi keret: a kép elolvasása előtt fogy, a vonalkóddal
+					// eldőlt keresés tehát ingyen van.
+					reserveVision: async () => {
+						await reserveVisionRequests(
+							database(),
+							uid,
+							1,
+							Date.now()
+						);
+					},
+				}
+			);
+		} catch (error) {
+			// Az elfogyott keret nem a mi hibánk és nem is múló baj: pontos
+			// üzenet tartozik hozzá, nem az alábbi „valami hiba történt".
+			if (error instanceof ScanQuotaError) throw scanQuotaFailure(error);
+
+			logger.warn(`identifyRecordFromPhoto ${uid}`, error);
+
+			// A `details.source` mondja meg a kliensnek, mi akadt el: a
+			// modell túlterheltségét „a Discogs nem érhető el"-nek fordítani
+			// rossz okot mutat a gyűjtőnek, és rossz megoldást keres hozzá.
+			if (error instanceof DiscogsError) {
+				throw new HttpsError(
+					error.status === 429 ? 'resource-exhausted' : 'unavailable',
+					error.status === 429
+						? 'A Discogs most túlterhelt, próbáld újra egy perc múlva.'
+						: 'A Discogs nem érhető el.',
+					{ source: 'discogs' }
+				);
+			}
+			if (error instanceof VisionError) {
+				throw new HttpsError(
+					error.retryable ? 'resource-exhausted' : 'internal',
+					error.message,
+					{ source: 'vision' }
+				);
+			}
+			throw new HttpsError(
+				'internal',
+				'A fotó feldolgozása nem sikerült.',
+				{ source: 'unknown' }
+			);
+		}
+	}
+);
+
+/** A rekesz hordozója, ha a gyűjtő megadta — csak a kép olvasását szűkíti. */
+function readShelfMedia(value: unknown): ShelfPhotoContext['media'] {
+	const media = ['vinyl', 'cd', 'cassette', 'dvd'] as const;
+
+	return media.find((known) => known === value) ?? null;
+}
+
+/**
+ * Egy polcrekesz gerinceinek kiolvasása egy vagy két fotóról. Gyűjtő
+ * (createCollectionItemEntity) vagy ADMIN hívhatja.
+ *
+ * A két fotó két külön modellkérésbe megy: egy kérésben a modell összefésülné
+ * őket, és egyetlen magabiztos választ adna — pont az veszne el, amiért a
+ * második kép készült. A két független olvasatból derül ki, melyik mezőben
+ * nem értenek egyet, és a gyűjtőnek csak azokat kell átnéznie.
+ *
+ * Préselést itt nem keresünk: rekeszenként tíz-húsz Discogs-kérés belefutna a
+ * percenkénti keretbe, és a sorok nagy része a kliensnél lévő katalógusból is
+ * megválaszolható. A Discogs a beküldött soroké, a review után.
+ *
+ * A két kérés a gyűjtő napi fotós keretéből megy (`photo-scan-quota.ts`) —
+ * ugyanabból, amiből az egy lemezt azonosító hívás.
+ */
+export const identifyShelfFromPhotos = onCall(
+	{
+		secrets: [gatewayApiKey],
+		memory: '512MiB',
+		// Mint az `identifyRecordFromPhoto`, csak két képpel.
+		cpu: 0.5,
+		// Két kép, egyenként egy modellkérés, újrapróbálkozásokkal.
+		timeoutSeconds: 300,
+	},
+	async (request) => {
+		const uid = request.auth?.uid;
+
+		if (!uid) {
+			throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
+		}
+
+		const permissions = await callerPermissions(uid);
+
+		if (
+			!permissions.includes('ADMIN') &&
+			!permissions.includes('createCollectionItemEntity')
+		) {
+			throw new HttpsError('permission-denied', 'Nincs jogosultság.');
+		}
+
+		const sent = request.data?.photos;
+		const photos = (Array.isArray(sent) ? sent : [])
+			.map((photo) => readPhotoInput(photo))
+			.filter((photo): photo is PhotoInput => !!photo);
+
+		if (!photos.length) {
+			throw new HttpsError('invalid-argument', 'Legalább egy kép kell.');
+		}
+		if (photos.length > MAX_SHELF_PHOTOS) {
+			throw new HttpsError(
+				'invalid-argument',
+				`Legfeljebb ${MAX_SHELF_PHOTOS} kép küldhető egy rekeszről.`
+			);
+		}
+
+		const context = { media: readShelfMedia(request.data?.media) };
+		const client = createVisionClient(
+			gatewaySettings(),
+			SHELF_REQUEST_TIMEOUT_MS
+		);
+
+		try {
+			// Minden fotó egy-egy modellkérés, és mindegyik el is indul — a
+			// keretet ezért egyben, előre vonjuk le. Ha nincs benne mind, egy
+			// sem fut le: egy félig elolvasott rekesz a gyűjtőnek semmit nem ér.
+			await reserveVisionRequests(
+				database(),
+				uid,
+				photos.length,
+				Date.now()
+			);
+
+			const reads = await Promise.all(
+				photos.map((photo) => readShelfSignals(photo, client, context))
+			);
+
+			return { ...mergeShelfReads(reads), usedVision: true };
+		} catch (error) {
+			if (error instanceof ScanQuotaError) throw scanQuotaFailure(error);
+
+			logger.warn(`identifyShelfFromPhotos ${uid}`, error);
+
+			if (error instanceof VisionError) {
+				throw new HttpsError(
+					error.retryable ? 'resource-exhausted' : 'internal',
+					error.message,
+					{ source: 'vision' }
+				);
+			}
+			throw new HttpsError(
+				'internal',
+				'A polc feldolgozása nem sikerült.',
+				{ source: 'unknown' }
+			);
+		}
+	}
+);
+
+/**
+ * Release-kérés jóváhagyása (ADMIN): a kiadás a katalógusba, egy példány a kérő
+ * kollekciójába kerül. `{ requestId, releaseUid? }` — `releaseUid` nélkül a
+ * kérés Discogs-kiadását importálja.
+ */
+export const approveReleaseRequest = onCall(
+	{ secrets: [discogsToken] },
+	async (request) => {
+		const uid = request.auth?.uid;
+
+		if (!uid) {
+			throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
+		}
+		if (!(await callerPermissions(uid)).includes('ADMIN')) {
+			throw new HttpsError(
+				'permission-denied',
+				'ADMIN permission szükséges.'
+			);
+		}
+
+		const requestId = request.data?.requestId;
+		const releaseUid = request.data?.releaseUid ?? null;
+
+		if (typeof requestId !== 'string' || !requestId) {
+			throw new HttpsError('invalid-argument', 'Hiányzó requestId.');
+		}
+		if (releaseUid !== null && typeof releaseUid !== 'string') {
+			throw new HttpsError('invalid-argument', 'Érvénytelen releaseUid.');
+		}
+
+		try {
+			return await approve(
+				database(),
+				{ requestId, releaseUid },
+				{ adminUid: uid, token: discogsToken.value() || null }
+			);
+		} catch (error) {
+			if (error instanceof HttpsError) throw error;
+
+			logger.warn(`approveReleaseRequest ${requestId}`, error);
+
+			if (error instanceof DiscogsError) {
+				throw new HttpsError(
+					error.status === 404 ? 'not-found' : 'unavailable',
+					error.status === 404
+						? 'Nincs ilyen Discogs-kiadás.'
+						: 'A Discogs nem érhető el.'
+				);
+			}
+			throw new HttpsError('internal', 'A jóváhagyás nem sikerült.');
+		}
+	}
+);
+
+/**
+ * A hívó uid-je, ha megvan a permissionje — többet felsorolva bármelyikkel.
+ * Az ADMIN mindent visz; a bejelentkezés hiánya és a hiányzó jog
+ * szándékosan külön hiba.
+ */
+async function requireCaller(
+	request: CallableRequest,
+	permission: string | string[]
+): Promise<string> {
+	const uid = request.auth?.uid;
+
+	if (!uid) {
+		throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
+	}
+
+	const permissions = await callerPermissions(uid);
+	const accepted = Array.isArray(permission) ? permission : [permission];
+
+	if (
+		!permissions.includes('ADMIN') &&
+		!accepted.some((name) => permissions.includes(name))
+	) {
+		throw new HttpsError('permission-denied', 'Nincs jogosultság.');
+	}
+
+	return uid;
+}
+
+/**
+ * Az album általános kiadása egy hordozón (bakelit, CD, DVD, kazetta): a
+ * meglévő, vagy most létrehozva. A gyűjtő ezzel vesz fel egy példányt,
+ * amelynek csak a hordozóját tudja — a préselést nem.
+ * `{ artistUid, albumUid, media }` → `{ release, created }`.
+ */
+export const ensureGenericRelease = onCall(async (request) => {
+	await requireCaller(request, 'createCollectionItemEntity');
+
+	const artistUid = request.data?.artistUid;
+	const albumUid = request.data?.albumUid;
+	const media = request.data?.media;
+
+	if (
+		typeof artistUid !== 'string' ||
+		!artistUid ||
+		typeof albumUid !== 'string' ||
+		!albumUid
+	) {
+		throw new HttpsError('invalid-argument', 'Hiányzó album.');
+	}
+	if (!isGenericReleaseMedia(media)) {
+		throw new HttpsError('invalid-argument', 'Érvénytelen hordozó.');
+	}
+
+	let result: Awaited<ReturnType<typeof ensureGeneric>>;
+
+	try {
+		result = await ensureGeneric(database(), {
+			artistUid,
+			albumUid,
+			media,
+		});
+	} catch (error) {
+		logger.warn(`ensureGenericRelease ${albumUid}/${media}`, error);
+		throw new HttpsError(
+			'internal',
+			'Az általános kiadás létrehozása nem sikerült.'
+		);
+	}
+
+	if (!result) {
+		throw new HttpsError('not-found', 'Nincs ilyen album.');
+	}
+
+	return result;
+});
+
+/**
+ * Egy kiadás törlése a katalógusból. `{ uid }` → `{ uid, deletedTracks,
+ * releasedSerials }`.
+ *
+ * A rules a kliensnek tiltja a kiadás törlését, mert a feltételt csak itt
+ * lehet megbízhatóan megnézni: ha bárkinek a gyűjteményében van példány a
+ * kiadásból, a törlés `failed-precondition`, és a kliens az archiválást
+ * (`active: false`) ajánlja fel helyette. A kiadás saját számai és az
+ * elárvult sorszám-foglalások vele mennek.
+ */
+export const deleteReleaseEntity = onCall(async (request) => {
+	await requireCaller(request, 'deleteReleaseEntity');
+
+	try {
+		return await deleteRelease(database(), request.data?.uid);
+	} catch (error) {
+		if (error instanceof DeletionError) {
+			throw new HttpsError(error.code, error.message);
+		}
+
+		throw error;
+	}
+});
+
+/**
+ * Egy album törlése a katalógusból. `{ uid, artistUid? }` → `{ uid,
+ * deletedReleases, deletedTracks, deletedCopies, deletedRatings }`.
+ *
+ * A préselései, a számai és a közreműködései vele mennek. A hívó saját
+ * példányai és értékelései is — a kliens erre előbb rákérdez —, de ha más
+ * gyűjtőnek van belőle példánya vagy értékelte, a törlés
+ * `failed-precondition`.
+ */
+export const deleteAlbumEntity = onCall(async (request) => {
+	const callerUid = await requireCaller(request, 'deleteAlbumEntity');
+
+	try {
+		return await deleteAlbum(
+			database(),
+			request.data?.uid,
+			request.data?.artistUid,
+			callerUid
+		);
+	} catch (error) {
+		if (error instanceof DeletionError) {
+			throw new HttpsError(error.code, error.message);
+		}
+
+		throw error;
+	}
+});
+
+/**
+ * Kérés elbírálása (ADMIN). A gyűjtő kérésének mezőiről az admin egyenként
+ * dönt; az elfogadottak a katalógusba kerülnek, és megszületik a válasz
+ * (`entity-response`), amiben minden elutasítás mellett ott az indoklás.
+ * `{ requestId, verdicts: [{ field, kind, reason? }], adminNote? }`
+ */
+export const decideRequest = onCall(async (request) => {
+	const uid = await requireCaller(request, 'ADMIN');
+	const requestId = request.data?.requestId;
+
+	if (typeof requestId !== 'string' || !requestId) {
+		throw new HttpsError('invalid-argument', 'Hiányzó requestId.');
+	}
+	if (!Array.isArray(request.data?.verdicts)) {
+		throw new HttpsError('invalid-argument', 'Hiányzó döntések.');
+	}
+
+	try {
+		return await decide(
+			database(),
+			{
+				requestId,
+				verdicts: request.data.verdicts,
+				adminNote: request.data?.adminNote ?? null,
+			},
+			{ adminUid: uid }
+		);
+	} catch (error) {
+		if (error instanceof HttpsError) throw error;
+		// A döntés logikája nem ismeri a callable hibáit (a
+		// `firebase-functions` importja tesztelhetetlenné tenné); a sajátját
+		// itt fordítjuk azzá, amit a kliens olvas.
+		if (error instanceof RequestDecisionError) {
+			throw new HttpsError(error.code, error.message);
+		}
+
+		logger.warn(`decideRequest ${requestId}`, error);
+
+		throw new HttpsError('internal', 'Az elbírálás nem sikerült.');
+	}
+});
+
+/**
+ * Egy collection-definíció létrehozása, módosítása és törlése. A
+ * `firestore.rules` a `music-collection` írását a kliensnek tiltja, ezért a
+ * szabály validálása és a kliens-cache szinkronja is itt történik.
+ */
+export const createMusicCollectionEntity = onCall(async (request) => {
+	await requireCaller(request, 'createMusicCollectionEntity');
+
+	return createMusicCollection(database(), request.data?.collection);
+});
+
+export const updateMusicCollectionEntity = onCall(async (request) => {
+	await requireCaller(request, 'updateMusicCollectionEntity');
+
+	return updateMusicCollection(
+		database(),
+		request.data?.uid,
+		request.data?.collection
+	);
+});
+
+export const deleteMusicCollectionEntity = onCall(async (request) => {
+	await requireCaller(request, 'deleteMusicCollectionEntity');
+
+	return deleteMusicCollection(database(), request.data?.uid);
+});
+
+/**
+ * Badge-generálás. A prompt a szerveren épül a collection tárolt adataiból —
+ * a hívó a uid-et küldi, és a feloldott pontszámot, ami csak a perem
+ * gazdagságát mozdítja. A `timeoutSeconds` a képmodell miatt bőséges, a
+ * memória a base64 képek miatt.
+ */
+export const generateMusicCollectionBadge = onCall(
+	// A jelölteket base64-ben mozgatjuk, ezért a nagyobb memória-keret. CPU-ból
+	// a globális fél elég: a rajzolás a gatewayen történik, itt a kép csak
+	// megérkezik és továbbmegy.
+	{
+		timeoutSeconds: 300,
+		memory: '1GiB',
+		// A Cloud Run 512 MiB fölötti memóriához legalább fél CPU-t követel,
+		// ezért ez a function nem követi a globális negyedet.
+		cpu: 0.5,
+		secrets: [gatewayApiKey],
+	},
+	async (request) => {
+		await requireCaller(request, 'updateMusicCollectionEntity');
+
+		// IDEIGLENES: a kollekciók háttérképéhez keressük a stíluszárat, és a
+		// próba ezen a function-ön utazik, nem sajáton — a dev régió
+		// CPU-kvótája szűk, és egy kísérlet nem vehet el helyet egy valódi
+		// funkciótól. A nyertes zárral ez az ág kikerül innen.
+		if (request.data?.probe) {
+			const client = createGatewayClient(gatewaySettings(), 240_000);
+
+			// A modell-lista nem rajzol, tehát nem kerül semmibe — és ez az
+			// egyetlen forrás arra, hogy ez a tenant mihez jogosult. Enélkül
+			// a próba vagy találgat, vagy marad a sáv-routing legolcsóbb
+			// modelljénél, ami ma mindent rajzol, badge-et is.
+			if (request.data.probe.list) {
+				// A zárak szövege is innen megy: a lap ebből rakja össze
+				// élőben a kimenő promptot, és így nem fordulhat elő, hogy
+				// egy beillesztett, kész prompt elé csendben odaragad egy
+				// előtag, amiről csak a kész kép árulkodik.
+				return {
+					models: await listSceneModels(client),
+					locks: describeLocks(),
+				};
+			}
+
+			return probeSceneCandidates(
+				database(),
+				client,
+				request.data.probe,
+				Date.now()
+			);
+		}
+
+		return generateBadgeCandidates(
+			database(),
+			// A rajzolás a function idejének a java része; a keret a
+			// `timeoutSeconds` alatt marad, hogy a hiba a miénk legyen.
+			createGatewayClient(gatewaySettings(), 240_000),
+			request.data?.uid,
+			request.data?.points,
+			Date.now()
+		);
+	}
+);
+
+/**
+ * A galéria egyik darabjának megjelölése jelvénynek. Kép nem utazik: a
+ * rajzolás óta mindegyik fájl, így ide elég a dokumentum azonosítója.
+ */
+export const setMusicCollectionBadgeImage = onCall(async (request) => {
+	await requireCaller(request, 'updateMusicCollectionEntity');
+
+	return setBadgeImage(
+		database(),
+		request.data?.uid,
+		request.data?.documentUid
+	);
+});
+
+/**
+ * A szerkesztőből feltöltött kép beiktatása jelvénynek. A fájl már a
+ * Storage-ban van; innentől dokumentum is van fölötte, a galériában is ott
+ * áll, és ez a collection pinje.
+ *
+ * Két út, egy hívás. A frissen feltöltött kép a fájl útvonalával érkezik —
+ * dokumentumot is itt kap. Amire viszont már van dokumentum (egy korábbi
+ * collection pinje, egy rajzolt jelölt, egy adminban feltöltött kép), az az
+ * azonosítójával: azt nem kell sem feltölteni, sem újra beiktatni.
+ */
+export const adoptMusicCollectionBadgeImage = onCall(async (request) => {
+	await requireCaller(request, 'updateMusicCollectionEntity');
+
+	return request.data?.documentUid
+		? adoptBadgeDocument(
+				database(),
+				request.data?.uid,
+				request.data?.documentUid,
+				Date.now()
+			)
+		: adoptBadgeImage(
+				database(),
+				request.data?.uid,
+				request.data?.storagePath,
+				request.data?.fileName,
+				Date.now()
+			);
+});
+
+/**
+ * A generálás beállításai. A stíluszár szándékosan nincs köztük: az tartja
+ * egy készletben a badge-eket, és kódban marad, verziózva.
+ */
+export const updateBadgeGenerationSettings = onCall(async (request) => {
+	await requireCaller(request, 'updateBadgeGenerationSettings');
+
+	return writeBadgeSettings(database(), request.data?.settings);
+});
+
+export const readBadgeGenerationSettings = onCall(async (request) => {
+	await requireCaller(request, 'updateBadgeGenerationSettings');
+
+	return readBadgeSettings(database());
+});
+
+// A `listBadgeGenerationModels` innen kivezetve: a modellt a gateway
+// választja, nem az admin. Amíg a régi revízió él, a kliens hívhatná — a
+// felület viszont már nem kéri. A Cloud Run szolgáltatást kézzel kell
+// eltüntetni: `firebase functions:delete security:listBadgeGenerationModels`.
+
+/**
+ * Ami még nem jelent meg: a katalógus előadóinak következő lemezei a
+ * MusicBrainzről, naponta egyszer. A hajnali időpont a MusicBrainz
+ * kedvéért is jó — a keret másodpercenként egy kérés, és a futás
+ * lapozás közben percekig tart.
+ *
+ * A `timeoutSeconds` ezért bőséges: egy hónap néhány ezer kiadás, százas
+ * lapokban, minden lap után egy másodperc várakozással.
+ *
+ * Az időzítéshez a Cloud Scheduler API kell (infra/environments
+ * `services`); enélkül a deploy elszáll.
+ */
+export const refreshUpcomingReleases = onSchedule(
+	{
+		schedule: '30 3 * * *',
+		timeZone: 'Europe/Budapest',
+		timeoutSeconds: 900,
+		memory: '512MiB',
+		// Ütemezett futás, nem a böngészőből: App Check tokenje nincs.
+		enforceAppCheck: false,
+	},
+	async () => {
+		const result = await syncUpcomingReleases(database());
+
+		logger.info(
+			`Upcoming releases: ${result.scanned} kiadásból ${result.matched} a katalógus előadóié (${result.written} írva, ${result.deleted} törölve)`
+		);
+	}
+);
+
+/**
+ * Ugyanaz kézzel, az adminnak: az ütemezett futás előtt, vagy ha valami
+ * félbemaradt. Drága hívás (percekig fut), ezért ADMIN kell hozzá.
+ */
+export const syncUpcomingReleasesNow = onCall(
+	{ timeoutSeconds: 900, memory: '512MiB' },
+	async (request) => {
+		await requireCaller(request, 'ADMIN');
+
+		return syncUpcomingReleases(database());
+	}
+);
+
+/**
+ * A nap kérdése, éjfél után néhány perccel — hogy aki a nap első percében
+ * nyit rá, már találjon kérdést.
+ *
+ * Idempotens: ha a nap kérdése megvan, a futás nem ír újra. Az ütemező
+ * újrapróbálkozása így nem cserélheti le a kérdést az alól, aki már
+ * válaszolt rá.
+ */
+export const composeDailyQuestionDaily = onSchedule(
+	{
+		schedule: '5 0 * * *',
+		timeZone: 'Europe/Budapest',
+		timeoutSeconds: 120,
+		// Ütemezett futás, nem a böngészőből: App Check tokenje nincs.
+		enforceAppCheck: false,
+	},
+	async () => {
+		const result = await composeDailyQuestion(database());
+		const outcome = {
+			created: `${result.templateKey} / ${result.difficulty}, ${result.tries} húzásból${
+				result.multiplier > 1
+					? `, bónusz nap ×${result.multiplier}`
+					: ''
+			}`,
+			exists: 'már megvolt',
+			disabled: 'a játék ki van kapcsolva',
+			'no-material': 'nem állt össze kérdés',
+		};
+
+		logger.info(`Napi kérdés (${result.day}): ${outcome[result.reason]}`);
+	}
+);
+
+/**
+ * Ugyanaz kézzel, az adminnak: holnapi kérdés előre, vagy egy rossz kérdés
+ * lecserélése (`force`). A `force` azt is felülírja, amire már válaszoltak,
+ * ezért ADMIN kell hozzá.
+ */
+export const composeDailyQuestionNow = onCall(async (request) => {
+	await requireCaller(request, 'ADMIN');
+
+	const input = (request.data ?? {}) as { day?: string; force?: boolean };
+
+	if (input.day && !/^\d{4}-\d{2}-\d{2}$/.test(input.day)) {
+		throw new HttpsError('invalid-argument', 'A nap YYYY-MM-DD alakú.');
+	}
+
+	return composeDailyQuestion(database(), {
+		day: input.day,
+		force: !!input.force,
+	});
+});
+
+/**
+ * A kiértékelés elakadásai hibakódra fordítva. A nap fordulása nem
+ * „érvénytelen adat": a kliens ebből tudja, hogy a kérdést kell újratöltenie,
+ * nem a tippet javítania.
+ */
+const ANSWER_ERROR_CODES: Record<
+	DailyAnswerFailure,
+	'failed-precondition' | 'not-found' | 'invalid-argument'
+> = {
+	'stale-day': 'failed-precondition',
+	'no-question': 'not-found',
+	'unknown-option': 'invalid-argument',
+};
+
+/**
+ * A nap kérdésére adott tipp: kiértékelés, pont, sorozat.
+ *
+ * Bejelentkezés kell hozzá, permission nem — a napi kérdés a gyűjtőké, mint
+ * a hallgatási napló. A tipp helyességét csak itt lehet megtudni: a
+ * megfejtés olyan dokumentumban áll, amit a szabályok senkinek nem engednek
+ * olvasni.
+ *
+ * Egy tipp: a második hívás ugyanazt a választ adja vissza (`graded: false`),
+ * nem értékel újra.
+ */
+export const answerDailyQuestion = onCall(async (request) => {
+	const uid = request.auth?.uid;
+
+	if (!uid) {
+		throw new HttpsError('unauthenticated', 'Bejelentkezés szükséges.');
+	}
+
+	const input = (request.data ?? {}) as {
+		day?: string;
+		optionId?: string;
+		elapsedSec?: number;
+	};
+
+	if (!input.day || !/^\d{4}-\d{2}-\d{2}$/.test(input.day)) {
+		throw new HttpsError('invalid-argument', 'A nap YYYY-MM-DD alakú.');
+	}
+	if (typeof input.optionId !== 'string' || !input.optionId) {
+		throw new HttpsError('invalid-argument', 'Hiányzó válaszlehetőség.');
+	}
+
+	try {
+		return await gradeDailyAnswer(
+			database(),
+			uid,
+			input.day,
+			input.optionId,
+			new Date(),
+			input.elapsedSec
+		);
+	} catch (error) {
+		if (error instanceof DailyAnswerError) {
+			throw new HttpsError(
+				ANSWER_ERROR_CODES[error.reason],
+				error.message
+			);
+		}
+
+		logger.warn(`answerDailyQuestion ${uid} ${input.day}`, error);
+
+		throw new HttpsError('internal', 'A tipp kiértékelése nem sikerült.');
+	}
+});
+
+/**
+ * A játék beállításai az admin felületnek, és amit ki-be lehet kapcsolni: a
+ * kérdésfajták listája a motorból jön, nem egy kézzel karbantartott
+ * másolatból — így nem lehet olyan sablont kapcsolgatni, amit senki nem húz.
+ */
+export const readDailyQuestionSettings = onCall(async (request) => {
+	await requireCaller(request, 'ADMIN');
+
+	return {
+		settings: await readGameSettings(database()),
+		templates: templateCatalog(),
+	};
+});
+
+export const updateDailyQuestionSettings = onCall(async (request) => {
+	await requireCaller(request, 'ADMIN');
+
+	return {
+		settings: await writeDailyQuestionSettings(
+			database(),
+			request.data?.settings
+		),
+		templates: templateCatalog(),
+	};
+});
+
+/**
+ * A ranglista újraépítése, naponta egyszer — nem éjfélkor, hanem este:
+ * akkor van a legtöbb tipp a mai napról a kasszákban, tehát a lista akkor
+ * mond a legtöbbet.
+ *
+ * A mezőnyt egyedül ez a futás olvassa végig; a látogató egy dokumentumot
+ * olvas belőle, a saját helyezését pedig a kasszájából.
+ */
+export const refreshDailyQuestionLeaderboardDaily = onSchedule(
+	{
+		schedule: '40 23 * * *',
+		timeZone: 'Europe/Budapest',
+		timeoutSeconds: 300,
+		enforceAppCheck: false,
+	},
+	async () => {
+		const settings = await readGameSettings(database());
+		const result = await refreshDailyQuestionLeaderboard(
+			database(),
+			settings.leaderboardSize
+		);
+
+		logger.info(
+			`Napi kérdés ranglista: ${result.players} játékos, ${result.ranked} helyezés frissült`
+		);
+	}
+);
+
+/** Ugyanaz kézzel, az adminnak — a beállítás mentése után jól jön. */
+export const refreshDailyQuestionLeaderboardNow = onCall(
+	{ timeoutSeconds: 300 },
+	async (request) => {
+		await requireCaller(request, 'ADMIN');
+
+		const settings = await readGameSettings(database());
+
+		return refreshDailyQuestionLeaderboard(
+			database(),
+			settings.leaderboardSize
+		);
+	}
+);
+
+/**
+ * A hét bandája. Minden éjjel fut, de hetente egyszer ír: idempotens, tehát
+ * ha a hét zenekara megvan, a futás nem nyúl hozzá — nem cserélheti le a
+ * bandát az alól, aki már hallgatja.
+ *
+ * Miért napi az ütemezés egy heti dologhoz: így a hétfői futás kimaradása
+ * nem visz bandátlan hetet (kedden pótolja), és az első futás sem várat a
+ * következő hétfőig — az első éjjel a deploy után már lesz kit mutatni a
+ * home főhelyén. Hétfő hajnalban ugyanúgy megvan az új zenekar, mint egy
+ * heti ütemezéssel.
+ *
+ * Tíz perccel a napi kérdés után: mindkettő a katalógusból húz, és semmi
+ * értelme egyszerre terhelni vele a Firestore-t.
+ */
+export const composeBandOfTheWeekDaily = onSchedule(
+	{
+		schedule: '15 0 * * *',
+		timeZone: 'Europe/Budapest',
+		timeoutSeconds: 120,
+		// Ütemezett futás, nem a böngészőből: App Check tokenje nincs.
+		enforceAppCheck: false,
+	},
+	async () => {
+		const result = await composeBandOfTheWeek(database());
+		const outcome = {
+			created:
+				`${result.artistName} ` +
+				`(${result.playableAlbums} lejátszható lemez, ` +
+				`${result.candidates} jelöltből)`,
+			exists: `már megvolt: ${result.artistName}`,
+			'no-material':
+				'nem akadt zenekar, aki megállná a helyét ' +
+				`(${result.candidates} jelölt)`,
+		};
+
+		logger.info(
+			`A hét bandája (${result.week}): ${outcome[result.reason]}`
+		);
+	}
+);
+
+/**
+ * A vendég-bundle (`guest-bundle.ts`): a katalógus kirakata annak, aki még
+ * nem választott műfajt. Hetente cserél választást, de minden éjjel
+ * ránéz: ha a katalógus változott az előző építés óta, ugyanazzal a
+ * választással újraépíti, különben egyetlen olvasás után kilép.
+ *
+ * Napi ütemezés, mint a hét bandájánál: az első éjjel a deploy után már van
+ * bundle, és egy kimaradt hétfő sem hagy régi kirakatot egész hétre. Kézi
+ * frissítés katalógus-import után: `gcloud scheduler jobs run
+ * firebase-schedule-composeGuestBundleDaily-europe-west4`.
+ *
+ * Fél GiB: a teljes előadó- és albumlista a memóriában áll, amíg a
+ * választás készül — néhány ezer dokumentum, keresési előtagokkal együtt —,
+ * plusz a zárt kirakat trackjei, közreműködései, tagságai és zenészei
+ * (devben 2026-10-15-én ~9 600 dokumentum, helyben ~290 MB RSS).
+ */
+export const composeGuestBundleDaily = onSchedule(
+	{
+		schedule: '30 0 * * *',
+		timeZone: 'Europe/Budapest',
+		timeoutSeconds: 300,
+		memory: '512MiB',
+		enforceAppCheck: false,
+	},
+	async () => {
+		const result = await composeGuestBundle(
+			database(),
+			getStorage().bucket()
+		);
+
+		logger.info(
+			result.built
+				? `Vendég-bundle (${result.week}): ${result.collections} collection, ` +
+						`${result.count} dokumentum, ${Math.round(result.bytes / 1024)} KB → ${result.path}`
+				: `Vendég-bundle (${result.week}): ${
+						result.reason === 'current'
+							? 'friss, nem kellett építeni'
+							: 'nincs publikált collection, amiből építeni lehetne'
+					}`
+		);
+	}
+);
+
+/**
+ * Admin: minden katalógus-bundle állapota — mikor épült, mennyi dokumentum
+ * van benne, és hány változott vagy törlődött azóta (`catalog-bundles.ts`).
+ * Aggregációkból számol, nem tölt le dokumentumot: egy hívás pár tucat
+ * olvasás.
+ */
+export const catalogBundleStatusNow = onCall(async (request) => {
+	await requireCaller(request, 'ADMIN');
+
+	return { bundles: await catalogBundleStatus(database()) };
+});
+
+const BUNDLE_KINDS: CatalogBundleKind[] = ['feature', 'genre', 'guest'];
+
+/**
+ * Admin: egy bundle újraépítése most, a scriptek és az éjszakai futás
+ * helyett. `{ kind: 'feature' | 'genre' | 'guest', key }`.
+ *
+ * Egy GiB és fél CPU: a műfaj-bundle-höz az egész katalógust végig kell
+ * olvasni (a tagság nem tudja magáról, melyik műfajé), és a rock szelete
+ * harmincezer dokumentum. Kilenc perc: ennyi a callable felső határa, egy
+ * rock építés ennek töredéke.
+ */
+export const rebuildCatalogBundle = onCall(
+	{
+		timeoutSeconds: 540,
+		memory: '1GiB',
+		// A Cloud Run 512 MiB fölött legalább fél CPU-t követel.
+		cpu: 0.5,
+	},
+	async (request) => {
+		await requireCaller(request, 'ADMIN');
+
+		const input = (request.data ?? {}) as { kind?: unknown; key?: unknown };
+		const kind = input.kind as CatalogBundleKind;
+		const key = typeof input.key === 'string' ? input.key.trim() : '';
+
+		if (!BUNDLE_KINDS.includes(kind) || (kind !== 'guest' && !key)) {
+			throw new HttpsError(
+				'invalid-argument',
+				'A bundle fajtája (feature, genre, guest) és kulcsa kell.'
+			);
+		}
+
+		try {
+			const result = await rebuildBundle(
+				database(),
+				getStorage().bucket(),
+				kind,
+				key
+			);
+
+			logger.info(
+				`Bundle újraépítve kézzel (${kind}/${result.key}): ` +
+					`${result.count} dokumentum, ${Math.round(result.bytes / 1024)} KB → ${result.path}`
+			);
+
+			return result;
+		} catch (error) {
+			if (error instanceof CatalogBundleError) {
+				throw new HttpsError(error.code, error.message);
+			}
+			throw error;
+		}
+	}
+);
+
+/**
+ * Koncerthelyszínek egy országból, a MusicBrainz `place` entitásából.
+ *
+ * Ez a feature egyetlen igazán gazdag forrása: Magyarországra 249 hely, száz
+ * közülük koordinátával és címmel. Lassú hívás — a MusicBrainz másodpercenként
+ * egy kérést enged, és a böngészés százas lapokban megy —, de ritka: a hall
+ * ott marad, ahol volt.
+ */
+export const loadConcertVenues = onCall(
+	{ timeoutSeconds: 540, memory: '512MiB' },
+	async (request) => {
+		await requireCaller(request, 'createVenueEntity');
+
+		return syncVenues(
+			database(),
+			typeof request.data?.countryCode === 'string'
+				? request.data.countryCode
+				: 'HU'
+		);
+	}
+);
+
+/**
+ * Koncertek a MusicBrainzről, a katalógus előadóira: kötegenként tizenöt
+ * MusicBrainz-azonosító egy keresésben.
+ *
+ * Amit ez a betöltés hoz, az kevés, de biztos: minden koncert mögött ott van
+ * egy mbid, ezért jóváhagyás nélkül is kimehet a nyilvános lapra. A lap
+ * tartalmát a modell javaslatai adják — azokat a `suggestConcerts` kéri.
+ */
+export const loadConcertsFromMusicBrainz = onCall(
+	{ timeoutSeconds: 900, memory: '512MiB' },
+	async (request) => {
+		await requireCaller(request, 'createConcertEntity');
+
+		return syncConcerts(
+			database(),
+			typeof request.data?.countryCode === 'string'
+				? request.data.countryCode
+				: 'HU',
+			{
+				windowDays:
+					typeof request.data?.days === 'number'
+						? request.data.days
+						: undefined,
+			}
+		);
+	}
+);
+
+/**
+ * Koncert-javaslatok egy Vertex modelltől, keresésre támaszkodva.
+ *
+ * Fizetős hívás, helyszínenként egy kérés, ezért a napi keret a modell előtt
+ * fogy (`concert-suggestion.ts`). Amit a modell ad, az a `concert-suggestion`
+ * kollekcióba kerül, `pending` állapotban — a nyilvános lapra csak azután jut
+ * ki, hogy valaki megnyitotta a hivatkozott forrást és jóváhagyta.
+ */
+export const suggestConcerts = onCall(
+	{ timeoutSeconds: 900, memory: '512MiB', secrets: [gatewayApiKey] },
+	async (request) => {
+		await requireCaller(request, 'createConcertEntity');
+
+		try {
+			return await askForConcerts(
+				database(),
+				typeof request.data?.countryCode === 'string'
+					? request.data.countryCode
+					: 'HU',
+				// Egy futás több helyszínt kérdez végig, helyszínenként egy
+				// keresésre támaszkodó hívással; a keret a function idejéből jön.
+				createGatewayClient(gatewaySettings(), 120_000),
+				{
+					venueUids: Array.isArray(request.data?.venueUids)
+						? (request.data.venueUids as string[])
+						: undefined,
+					windowDays:
+						typeof request.data?.days === 'number'
+							? request.data.days
+							: undefined,
+				}
+			);
+		} catch (error) {
+			if (error instanceof ConcertAiError) {
+				// Ugyanaz a minta, mint a fotós keretnél: a kód a
+				// `details`-ben utazik, a mondat marad mondatnak.
+				throw new HttpsError(
+					error.reason === 'off'
+						? 'failed-precondition'
+						: 'resource-exhausted',
+					error.message,
+					{
+						source: 'quota',
+						code:
+							error.reason === 'off'
+								? 'concert-ai-disabled'
+								: 'concert-ai-quota',
+					}
+				);
+			}
+
+			throw error;
+		}
+	}
+);
+
+/**
+ * Helyszín-javaslatok egy modelltől, keresésre támaszkodva — más országokra.
+ *
+ * Ugyanaz a keret és ugyanaz a gateway, mint a koncert-javaslatnál: egy
+ * kérdés egy kérés, és a kérdés vagy az egész országra megy, vagy a
+ * megnevezett városokra, városonként egy kéréssel. Amit a modell ad, az a
+ * `venue-suggestion` kollekcióba kerül `pending` állapotban — a katalógus
+ * helyszínei közé csak az kerül, amit valaki megnyitott és jóváhagyott.
+ */
+export const suggestVenues = onCall(
+	{ timeoutSeconds: 540, memory: '512MiB', secrets: [gatewayApiKey] },
+	async (request) => {
+		await requireCaller(request, 'createVenueEntity');
+
+		try {
+			return await askForVenues(
+				database(),
+				typeof request.data?.countryCode === 'string'
+					? request.data.countryCode
+					: 'HU',
+				createGatewayClient(gatewaySettings(), 120_000),
+				{
+					cities: Array.isArray(request.data?.cities)
+						? (request.data.cities as string[])
+						: undefined,
+				}
+			);
+		} catch (error) {
+			if (error instanceof ConcertAiError) {
+				// Ugyanaz a minta, mint a koncert-javaslatnál: a kód a
+				// `details`-ben utazik, a mondat marad mondatnak.
+				throw new HttpsError(
+					error.reason === 'off'
+						? 'failed-precondition'
+						: 'resource-exhausted',
+					error.message,
+					{
+						source: 'quota',
+						code:
+							error.reason === 'off'
+								? 'concert-ai-disabled'
+								: 'concert-ai-quota',
+					}
+				);
+			}
+
+			throw error;
+		}
+	}
+);
+
+export const readConcertAiSettings = onCall(async (request) => {
+	await requireCaller(request, 'createConcertEntity');
+
+	return readConcertSettings(database());
+});
+
+export const updateConcertAiSettings = onCall(async (request) => {
+	await requireCaller(request, 'createConcertEntity');
+
+	const settings = sanitizeConcertAiSettings(request.data?.settings);
+
+	await database()
+		.collection('app-setting')
+		.doc('concert-ai')
+		.set(settings, { merge: true });
+
+	return settings;
+});
+
+/**
+ * A zeneszám médiája: kép rajzolása, a klip ára, indítása és állapota — egy
+ * végponton (`track-media.ts`).
+ *
+ * Egy function mindre: a régió CPU-kerete szűk (lásd a globális
+ * beállítást), és az ár, a rajzolás, az indítás meg a visszakérdezés
+ * ugyanarról a számról szól. Az `action` dönti el, melyik.
+ *
+ * A prompt a szerveren, a szám tárolt adataiból és a dalszövegéből készül —
+ * a hívó a szám uid-jét küldi, a modellt, és legfeljebb egy rövid irányt. A
+ * `timeoutSeconds` a jelenetíró és a képmodell miatt bőséges; a videóra nem
+ * várunk, azt a gateway futtatja, és a `status` szedi össze.
+ *
+ * 512 MiB: a kész fájl a memórián át kerül a bucketbe (néhány MB), és ennél
+ * többet a Cloud Run már csak fél CPU-val adna — a régiós CPU-keret pedig
+ * szűk. Így ez a function is a globális negyeden fut.
+ */
+export const generateTrackMedia = onCall(
+	{
+		timeoutSeconds: 300,
+		memory: '512MiB',
+		secrets: [gatewayApiKey],
+	},
+	async (request) => {
+		const uid = await requireCaller(request, 'updateTrackEntity');
+		const trackUid = String(request.data?.trackUid ?? '');
+		const action = String(request.data?.action ?? 'status');
+		// A sávot a hívó választja — és ha nem választ, nem is kérünk egyet.
+		// Egy bedrótozott alapértelmezés itt azt jelentette, hogy minden
+		// hívás abba az egy sávba ment, amihez a gateway katalógusában nem
+		// volt modell rendelve: a profil-router szándékosan nem esik vissza
+		// egy másik sávra, hanem 409-cel megáll
+		// (`QUALITY_PROFILE_UNAVAILABLE`). Profil nélkül a gateway a saját
+		// alapértelmezését választja, és a kérés él.
+		const quality =
+			request.data?.qualityProfile === 'premium' ||
+			request.data?.qualityProfile === 'normal' ||
+			request.data?.qualityProfile === 'economy'
+				? request.data.qualityProfile
+				: undefined;
+		// A rajzolás és a megrendelés is a gatewayen történik; itt a kérés
+		// csak elindul és visszajön.
+		const client = createGatewayClient(gatewaySettings(), 240_000);
+
+		try {
+			if (action === 'models') {
+				return { models: await listImageModels(client) };
+			}
+
+			if (action === 'image') {
+				return await drawTrackImage(
+					database(),
+					client,
+					trackUid,
+					{
+						model:
+							typeof request.data?.model === 'string'
+								? request.data.model
+								: undefined,
+						hint: request.data?.hint,
+						quality,
+					},
+					Date.now()
+				);
+			}
+
+			if (action === 'estimate') {
+				return await estimateTrackClip(
+					database(),
+					client,
+					trackUid,
+					quality,
+					Date.now()
+				);
+			}
+
+			if (action === 'start') {
+				return await startTrackClip(
+					database(),
+					client,
+					trackUid,
+					uid,
+					quality,
+					Date.now()
+				);
+			}
+
+			return await readTrackClipState(
+				database(),
+				client,
+				createArtifactDownloader(gatewaySettings()),
+				trackUid,
+				Date.now()
+			);
+		} catch (error) {
+			if (error instanceof TrackMediaError) {
+				// A saját hibánk is a naplóba kerül: a klip állapotát a kliens
+				// percenként kérdezi, és egy itt elakadó letöltés korábban
+				// semmi nyomot nem hagyott a function naplójában.
+				logger.warn(
+					`A szám médiája (${action}, ${trackUid}): ${error.message}`
+				);
+				throw new HttpsError(
+					error.reason === 'not-found'
+						? 'not-found'
+						: error.reason === 'quota'
+							? 'resource-exhausted'
+							: error.reason === 'running'
+								? 'already-exists'
+								: error.reason === 'no-lyrics'
+									? 'failed-precondition'
+									: 'internal',
+					error.message,
+					{ reason: error.reason }
+				);
+			}
+
+			logger.error('A szám médiájának generálása elszállt', error);
+
+			// A gateway hibakódja megmondja, hogy van-e értelme újrapróbálni.
+			// Egy beállítatlan minőségi sáv, egy jogosulatlan modell vagy egy
+			// kimerült keret ugyanúgy jön vissza, mint egy percnyi zavar —
+			// „próbáld újra később" pedig mindháromra hazugság: a hívás
+			// holnap is ugyanígy áll meg, amíg a gatewayen nem történik
+			// valami. A kódot és a gateway saját mondatát ezért kiadjuk; a
+			// kliens ezt az üzenetet mutatja a gomb mellett.
+			if (error instanceof ZsAiError) {
+				throw new HttpsError(
+					'failed-precondition',
+					`A gateway nem vállalta a hívást (${error.code}): ${error.message}`,
+					{ reason: 'gateway-error', code: error.code }
+				);
+			}
+
+			throw new HttpsError(
+				'internal',
+				'A generálás nem sikerült. Próbáld újra később.'
+			);
+		}
+	}
+);

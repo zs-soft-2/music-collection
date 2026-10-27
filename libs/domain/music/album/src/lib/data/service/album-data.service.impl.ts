@@ -1,9 +1,19 @@
-import { Observable, of, switchMap } from 'rxjs';
+import {
+	Observable,
+	catchError,
+	forkJoin,
+	map,
+	of,
+	switchMap,
+	take,
+} from 'rxjs';
 
-import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
 import {
 	collection,
 	collectionGroup,
+	doc,
 	Firestore,
 	getDocs,
 	query,
@@ -16,10 +26,56 @@ import {
 	AlbumModelUpdate,
 	SearchParams,
 	AlbumDataService,
+	AlbumExternalProfile,
+	AlbumExternalTrack,
+	AlbumExternalTracks,
+	AlbumTrackAdd,
+	AlbumTrackDraft,
+	CATALOG_LOOKUP_LIMIT,
+	DiscogsLookupClient,
+	DiscogsMasterProfile,
+	EntityTypeEnum,
+	ExternalSource,
+	MusicBrainzClient,
+	discogsMasterUrl,
+	ReleaseTrackDraft,
+	StyleName,
+	TRACK_FEATURE_KEY,
+	TRACK_LYRICS_FEATURE_KEY,
+	TrackEntity,
 } from '@music-collection/api';
+import { GenreEffect } from '@music-collection/domain/genre';
+
+import {
+	COVER_ART_ARCHIVE_URL,
+	CoverArtArchive,
+	MusicBrainzRelease,
+	MusicBrainzReleaseGroup,
+	MusicBrainzReleaseGroupSearch,
+	pickRelease,
+	pickReleaseGroup,
+	toCoverUrl,
+	toDate,
+	toDurationSec,
+	toFormat,
+	toTracks,
+	toStyles,
+} from './album-external.mapper';
+import {
+	fillAlbumGaps,
+	hasAlbumGaps,
+	pickDiscogsMaster,
+	toDiscogsAlbumProfile,
+	toDiscogsTracks,
+} from './album-discogs.mapper';
 
 @Injectable()
 export class AlbumDataServiceImpl extends AlbumDataService {
+	private discogs = inject(DiscogsLookupClient);
+	private genre = inject(GenreEffect);
+	private http = inject(HttpClient);
+	private musicBrainz = inject(MusicBrainzClient);
+
 	public constructor() {
 		super();
 
@@ -35,6 +91,421 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 		return this.update$(
 			album as AlbumModelUpdate
 		) as Observable<AlbumModel>;
+	}
+
+	/**
+	 * Looks the album of the artist up online; null when no source has it.
+	 *
+	 * MusicBrainz answers first, with the front cover from the Cover Art
+	 * Archive. Discogs is asked where that leaves something open: no release
+	 * group of the title at all, or one that carries no cover and no genres —
+	 * the Cover Art Archive answers 404 for a great many albums, which used to
+	 * end the load with "the loaded data matches the form" and an empty cover
+	 * field. What MusicBrainz does know is never overwritten; Discogs only
+	 * fills the holes.
+	 */
+	public fetchExternalProfile$(
+		artistName: string,
+		name: string
+	): Observable<AlbumExternalProfile | null> {
+		return this.fetchMusicBrainzProfile$(artistName, name).pipe(
+			switchMap((profile) =>
+				profile && !hasAlbumGaps(profile)
+					? of(profile)
+					: this.fetchDiscogsProfile$(artistName, name).pipe(
+							map((discogs) =>
+								profile && discogs
+									? fillAlbumGaps(profile, discogs)
+									: (profile ?? discogs)
+							)
+						)
+			)
+		);
+	}
+
+	/**
+	 * The styles the taxonomy holds right now, for matching what a source
+	 * names its own way. Shared and cached with the genres the forms read, so
+	 * this is the value already in hand.
+	 */
+	private knownStyles$(): Observable<StyleName[]> {
+		return this.genre.styles$.pipe(take(1));
+	}
+
+	/** The album on MusicBrainz with its Cover Art Archive front cover. */
+	private fetchMusicBrainzProfile$(
+		artistName: string,
+		name: string
+	): Observable<AlbumExternalProfile | null> {
+		return this.findReleaseGroup$(artistName, name, 'genres').pipe(
+			switchMap((group) =>
+				group
+					? this.fetchCoverUrl$(group.id).pipe(
+							switchMap((coverImageUrl) =>
+								this.knownStyles$().pipe(
+									map((known): AlbumExternalProfile => ({
+										coverImageUrl,
+										fillerSourceUrl: null,
+										format: toFormat(group),
+										name: group.title,
+										source: 'musicbrainz',
+										sourceUrl: `https://musicbrainz.org/release-group/${group.id}`,
+										styles: toStyles(group.genres, known),
+										year: toDate(
+											group['first-release-date']
+										),
+									}))
+								)
+							)
+						)
+					: of(null)
+			)
+		);
+	}
+
+	/**
+	 * The album's tracklist found online; null when no source has one.
+	 *
+	 * MusicBrainz answers first, from the earliest official release. An empty
+	 * answer hands the question to the Discogs master, whose tracklist is the
+	 * album's own — and which is often the only one there is, as a release on
+	 * MusicBrainz can carry no recordings at all.
+	 */
+	public fetchExternalTracks$(
+		artistName: string,
+		name: string
+	): Observable<AlbumExternalTracks | null> {
+		return this.fetchMusicBrainzTracks$(artistName, name).pipe(
+			switchMap((tracks) =>
+				tracks?.tracks.length
+					? of(tracks)
+					: this.fetchDiscogsTracks$(artistName, name)
+			)
+		);
+	}
+
+	/** The tracklist of the album's earliest official MusicBrainz release. */
+	private fetchMusicBrainzTracks$(
+		artistName: string,
+		name: string
+	): Observable<AlbumExternalTracks | null> {
+		return this.findReleaseGroup$(artistName, name, 'releases').pipe(
+			map((group) => pickRelease(group?.releases)),
+			switchMap((release) =>
+				release
+					? this.musicBrainz.get$<MusicBrainzRelease>(
+							`/release/${release.id}`,
+							new HttpParams()
+								.set('inc', 'recordings')
+								.set('fmt', 'json')
+						)
+					: of(null)
+			),
+			map((release) =>
+				release
+					? {
+							tracks: toTracks(release),
+							source: 'musicbrainz' as const,
+							sourceUrl: `https://musicbrainz.org/release/${release.id}`,
+						}
+					: null
+			)
+		);
+	}
+
+	/**
+	 * The Discogs master of the album: the title search, then the master
+	 * itself, which carries the profile, the cover and the tracklist together.
+	 * Null when Discogs has no master of that album either.
+	 */
+	private fetchDiscogsMaster$(
+		artistName: string,
+		name: string
+	): Observable<DiscogsMasterProfile | null> {
+		return this.discogs
+			.lookupOrNull$({
+				kind: 'master-search',
+				artist: artistName,
+				album: name,
+			})
+			.pipe(
+				switchMap((result) => {
+					const hit = pickDiscogsMaster(
+						artistName,
+						name,
+						result?.candidates ?? []
+					);
+
+					return hit
+						? this.discogs.lookupOrNull$({
+								kind: 'master-profile',
+								masterId: hit.masterId,
+							})
+						: of(null);
+				}),
+				map((result) => result?.profile ?? null)
+			);
+	}
+
+	/** The album's Discogs master as the form's fields. */
+	private fetchDiscogsProfile$(
+		artistName: string,
+		name: string
+	): Observable<AlbumExternalProfile | null> {
+		return this.knownStyles$().pipe(
+			switchMap((known) =>
+				this.fetchDiscogsMaster$(artistName, name).pipe(
+					map((master) =>
+						master ? toDiscogsAlbumProfile(master, known) : null
+					)
+				)
+			)
+		);
+	}
+
+	/** The tracklist of the album's Discogs master. */
+	private fetchDiscogsTracks$(
+		artistName: string,
+		name: string
+	): Observable<AlbumExternalTracks | null> {
+		return this.fetchDiscogsMaster$(artistName, name).pipe(
+			map((master) =>
+				master
+					? {
+							tracks: toDiscogsTracks(master.tracks),
+							source: 'discogs' as const,
+							sourceUrl: discogsMasterUrl(master.masterId),
+						}
+					: null
+			)
+		);
+	}
+
+	public listTracks$(albumUid: string): Observable<TrackEntity[]> {
+		return this.firestoreSync
+			.list$<TrackEntity>({
+				featureKey: TRACK_FEATURE_KEY,
+				cacheKey: `${TRACK_FEATURE_KEY}?albumUid=${albumUid}`,
+				narrow: true,
+				query: query(
+					collection(this.firestore, TRACK_FEATURE_KEY),
+					where('albumUid', '==', albumUid)
+				),
+			})
+			.pipe(
+				map((tracks) => [...tracks].sort((a, b) => a.index - b.index))
+			);
+	}
+
+	/**
+	 * Same ids as the Discogs import: `<albumUid>_<index:000>`.
+	 *
+	 * What one pressing added is left out of this entirely. Those tracks are
+	 * not part of the album's tracklist, so reloading that list from
+	 * MusicBrainz must neither overwrite them nor count them among the
+	 * surplus to delete — a Japanese edition's tenth song would otherwise
+	 * disappear the next time someone refreshed the original nine.
+	 */
+	public saveTracks(
+		albumUid: string,
+		tracks: AlbumExternalTrack[],
+		existing: TrackEntity[],
+		source: ExternalSource
+	): Promise<void> {
+		const albumTracks = existing.filter((track) => !track.releaseUid);
+		// Every id the album has already handed out. A list someone deleted a
+		// track from by hand runs 001, 002, 004…, and numbering a new track
+		// by its place in play order would give 004 away a second time: two
+		// songs would write the same document and the batch would keep one.
+		const taken = new Set(albumTracks.map((track) => track.uid));
+		let free = 1;
+		const writes = tracks.map((track, i) => {
+			const index = i + 1;
+			let uid = albumTracks[i]?.uid;
+
+			if (!uid) {
+				while (taken.has(trackUidOf(albumUid, free))) {
+					free += 1;
+				}
+				uid = trackUidOf(albumUid, free);
+				taken.add(uid);
+			}
+
+			return {
+				reference: doc(this.firestore, TRACK_FEATURE_KEY, uid),
+				data: {
+					...track,
+					albumUid,
+					entityType: 'Track',
+					heading: null,
+					index,
+					source,
+					uid,
+				},
+			};
+		});
+		const deletions = albumTracks
+			.slice(tracks.length)
+			.map((track) => doc(this.firestore, TRACK_FEATURE_KEY, track.uid));
+
+		return this.firestoreSync.setAll(TRACK_FEATURE_KEY, writes, deletions);
+	}
+
+	/**
+	 * One track of the album written by hand. A merge, not a replacement: the
+	 * Spotify id, the YouTube id and the writers were added on the track page
+	 * and are not on this form, so a title corrected here must not take them
+	 * with it.
+	 */
+	public saveAlbumTrack(track: AlbumTrackDraft): Promise<void> {
+		return this.firestoreSync.set(
+			doc(this.firestore, TRACK_FEATURE_KEY, track.uid),
+			TRACK_FEATURE_KEY,
+			{
+				uid: track.uid,
+				index: track.index,
+				position: track.position,
+				name: track.name,
+				duration: track.duration,
+				durationSec: toDurationSec(track.duration),
+			},
+			{ merge: true }
+		);
+	}
+
+	/**
+	 * Adds one track to the end of the album's own tracklist.
+	 *
+	 * Both the id and the play order are handed out here rather than counted
+	 * by the form: a list someone deleted the third track from runs 001,
+	 * 002, 004…, and a fourth song numbered by its place would write over
+	 * 004. The first free id is taken instead, and the new track plays after
+	 * the highest number the album already uses.
+	 *
+	 * The written track is returned, because the list it belongs to is only
+	 * read again when the catalog sync comes round, and a second track typed
+	 * in before that has to know this one is there.
+	 */
+	public async addAlbumTrack(
+		track: AlbumTrackAdd,
+		albumTracks: TrackEntity[]
+	): Promise<TrackEntity> {
+		const taken = new Set(albumTracks.map((existing) => existing.uid));
+		let free = 1;
+
+		while (taken.has(trackUidOf(track.albumUid, free))) {
+			free += 1;
+		}
+
+		const index =
+			albumTracks.reduce(
+				(highest, existing) => Math.max(highest, existing.index ?? 0),
+				0
+			) + 1;
+		const added: TrackEntity = {
+			uid: trackUidOf(track.albumUid, free),
+			albumUid: track.albumUid,
+			entityType: EntityTypeEnum.Track,
+			index,
+			position: track.position || String(index),
+			name: track.name,
+			duration: track.duration,
+			durationSec: toDurationSec(track.duration),
+			heading: null,
+			source: 'manual',
+		};
+
+		await this.firestoreSync.set(
+			doc(this.firestore, TRACK_FEATURE_KEY, added.uid),
+			TRACK_FEATURE_KEY,
+			added
+		);
+
+		return added;
+	}
+
+	/**
+	 * Takes one track off the album and closes the gap behind it: play order
+	 * is counted on and not only sorted by — the YouTube player opens a
+	 * playlist at `index - 1` — so everything behind the deleted track moves
+	 * up one.
+	 *
+	 * The lyrics go with it. They are filed under the track's id, and that id
+	 * is free again the moment the track is gone: the next import to number a
+	 * song into the empty slot would otherwise find the deleted song's words
+	 * waiting under it.
+	 */
+	public async deleteAlbumTrack(
+		uid: string,
+		albumTracks: TrackEntity[]
+	): Promise<void> {
+		const at = albumTracks.findIndex((track) => track.uid === uid);
+		const writes = (at < 0 ? [] : albumTracks.slice(at + 1)).map(
+			(track, offset) => ({
+				reference: doc(this.firestore, TRACK_FEATURE_KEY, track.uid),
+				data: { index: at + offset + 1 },
+			})
+		);
+
+		await this.firestoreSync.setAll(TRACK_FEATURE_KEY, writes, [
+			doc(this.firestore, TRACK_FEATURE_KEY, uid),
+		]);
+		await this.firestoreSync.delete(
+			doc(this.firestore, TRACK_LYRICS_FEATURE_KEY, uid),
+			TRACK_LYRICS_FEATURE_KEY
+		);
+	}
+
+	public listReleaseTracks$(releaseUid: string): Observable<TrackEntity[]> {
+		return this.firestoreSync
+			.list$<TrackEntity>({
+				featureKey: TRACK_FEATURE_KEY,
+				cacheKey: `${TRACK_FEATURE_KEY}?releaseUid=${releaseUid}`,
+				narrow: true,
+				query: query(
+					collection(this.firestore, TRACK_FEATURE_KEY),
+					where('releaseUid', '==', releaseUid)
+				),
+			})
+			.pipe(
+				map((tracks) => [...tracks].sort((a, b) => a.index - b.index))
+			);
+	}
+
+	/**
+	 * A pressing's track is filed under the pressing — `<releaseUid>_<index>`
+	 * — and never under the album. The album's own ids run to its own track
+	 * count, so a tenth song added by one edition can never take the id a
+	 * tenth song of the album would be given later.
+	 */
+	public saveReleaseTrack(track: ReleaseTrackDraft): Promise<void> {
+		const uid = track.uid || trackUidOf(track.releaseUid, track.index);
+
+		return this.firestoreSync.set(
+			doc(this.firestore, TRACK_FEATURE_KEY, uid),
+			TRACK_FEATURE_KEY,
+			{
+				uid,
+				albumUid: track.albumUid,
+				releaseUid: track.releaseUid,
+				entityType: 'Track',
+				index: track.index,
+				position: track.position,
+				name: track.name,
+				duration: track.duration,
+				durationSec: toDurationSec(track.duration),
+				heading: null,
+				source: 'release',
+			},
+			{ merge: true }
+		);
+	}
+
+	public deleteReleaseTrack(uid: string): Promise<void> {
+		return this.firestoreSync.delete(
+			doc(this.firestore, TRACK_FEATURE_KEY, uid),
+			TRACK_FEATURE_KEY
+		);
 	}
 
 	public list$(): Observable<AlbumModel[]> {
@@ -62,11 +533,106 @@ export class AlbumDataServiceImpl extends AlbumDataService {
 			.pipe(switchMap((entities) => of(entities[0])));
 	}
 
+	/**
+	 * Both ways a typed name can name an album: its own title, and the band
+	 * whose record it is. Two queries because the name of the artist lives in
+	 * its own field on the album — a single `array-contains` cannot ask about
+	 * both — and the same album answering both is only kept once.
+	 */
+	public lookupByName$(term: string): Observable<AlbumModel[]> {
+		const needle = term.toLowerCase();
+
+		return forkJoin([
+			super.lookupModels$(
+				'searchParameters',
+				needle,
+				CATALOG_LOOKUP_LIMIT
+			),
+			super.lookupModels$(
+				'artist.searchParameters',
+				needle,
+				CATALOG_LOOKUP_LIMIT
+			),
+		]).pipe(
+			map(([byTitle, byArtist]) =>
+				Array.from(
+					new Map(
+						[...byTitle, ...byArtist].map((album) => [
+							album.uid,
+							album,
+						])
+					).values()
+				)
+			)
+		);
+	}
+
 	public search$(params: SearchParams): Observable<AlbumModel[]> {
 		return super.searchModel$(params);
+	}
+
+	/** The front cover of the release group; null when it has none. */
+	private fetchCoverUrl$(releaseGroupId: string): Observable<string | null> {
+		return this.http
+			.get<CoverArtArchive>(
+				`${COVER_ART_ARCHIVE_URL}/release-group/${releaseGroupId}`
+			)
+			.pipe(
+				map(toCoverUrl),
+				catchError(() => of(null))
+			);
+	}
+
+	/**
+	 * The release group of the artist with the title, looked up with the
+	 * given `inc`; null when not found.
+	 */
+	private findReleaseGroup$(
+		artistName: string,
+		name: string,
+		inc: string
+	): Observable<MusicBrainzReleaseGroup | null> {
+		const quote = (value: string): string => value.replace(/"/g, '');
+		const params = new HttpParams()
+			.set(
+				'query',
+				`releasegroup:"${quote(name)}" AND artist:"${quote(artistName)}"`
+			)
+			.set('limit', 25)
+			.set('fmt', 'json');
+
+		return this.musicBrainz
+			.get$<MusicBrainzReleaseGroupSearch>('/release-group', params)
+			.pipe(
+				map((result) =>
+					pickReleaseGroup(
+						artistName,
+						name,
+						result['release-groups'] ?? []
+					)
+				),
+				switchMap((hit) =>
+					hit
+						? this.musicBrainz.get$<MusicBrainzReleaseGroup>(
+								`/release-group/${hit.id}`,
+								new HttpParams()
+									.set('inc', inc)
+									.set('fmt', 'json')
+							)
+						: of(null)
+				)
+			);
 	}
 
 	public update$(album: AlbumModelUpdate): Observable<AlbumModelUpdate> {
 		return super.updateModel$(album);
 	}
+}
+
+/**
+ * The id a track is filed under: `<ownerUid>_<index:000>`, the owner being
+ * the album for its own tracks and the pressing for what one edition added.
+ */
+function trackUidOf(ownerUid: string, index: number): string {
+	return `${ownerUid}_${String(index).padStart(3, '0')}`;
 }

@@ -1,0 +1,21 @@
+:host {
+	display: block;
+}
+
+// A rendezés sorszáma, ha több oszlop is rendezi a listát.
+.mc-sort-level {
+	margin-left: 0.25rem;
+	padding: 0 0.3rem;
+	font-size: 0.7rem;
+	font-weight: 600;
+	line-height: 1.4;
+	color: var(--mc-text-muted);
+	border: 1px solid var(--mc-border-strong);
+	border-radius: 999px;
+}
+
+.mc-collection-empty {
+	margin: 0;
+	padding: 1.25rem;
+	color: var(--mc-text-muted);
+}

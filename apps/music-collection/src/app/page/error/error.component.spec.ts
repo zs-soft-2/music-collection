@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
@@ -11,7 +12,7 @@ describe('ErrorComponent', () => {
 	beforeEach(waitForAsync(() => {
 		TestBed.configureTestingModule({
 			imports: [HttpClientTestingModule, ErrorComponent],
-			providers: [provideRouter([])],
+			providers: [provideI18nTesting(), provideRouter([])],
 		}).compileComponents();
 	}));
 

@@ -1,0 +1,247 @@
+<div class="page">
+	<header class="hero">
+		<div class="hero-text">
+			<p class="eyebrow">musiCollection</p>
+			<h1>{{ 'page.scan.scan-a-record' | transloco }}</h1>
+			<p class="lead">
+				{{ 'page.scan.photograph-the-sleeve-the' | transloco }}
+			</p>
+			<!-- A fotót modell olvassa le; a lap ezt kimondja, ugyanazzal a
+			     jelzéssel, mint a koncertlap és a jelvények. -->
+			<mc-ai-mark
+				[hint]="'ui.aiMark.hint.photo' | transloco"
+			></mc-ai-mark>
+		</div>
+	</header>
+
+	@if (!store.canCollect()) {
+		<div class="notice">
+			@if (store.userId()) {
+				<p>
+					{{ 'page.scan.your-account-may-not' | transloco }}
+				</p>
+			} @else {
+				<p>{{ 'page.scan.sign-in-as-a' | transloco }}</p>
+
+				<button type="button" (click)="store.login()">
+					<i class="pi pi-sign-in" aria-hidden="true"></i>
+					{{ 'page.scan.log-in' | transloco }}
+				</button>
+			}
+		</div>
+	} @else {
+		<!-- No `capture`: it would force the camera and hide the photo
+		     library, so a picture already taken could not be picked. -->
+		<input
+			#file
+			type="file"
+			class="file-input"
+			accept="image/*"
+			aria-hidden="true"
+			tabindex="-1"
+			(change)="onFile($event)"
+		/>
+
+		<section class="shot" aria-labelledby="shot-title">
+			<h2 id="shot-title" class="sr-only">
+				{{ 'page.scan.the-photo' | transloco }}
+			</h2>
+
+			@if (store.photo(); as photo) {
+				<figure class="preview">
+					<img
+						[src]="photo.previewUrl"
+						[alt]="'page.scan.the-record-photographed' | transloco"
+					/>
+					@if (store.scanning()) {
+						<figcaption class="scanning">
+							<i
+								class="pi pi-spin pi-spinner"
+								aria-hidden="true"
+							></i>
+							{{ 'page.scan.reading-the-photo' | transloco }}
+						</figcaption>
+					}
+				</figure>
+			} @else {
+				<button type="button" class="shoot" (click)="pick()">
+					<i class="pi pi-camera" aria-hidden="true"></i>
+					<span>{{ 'page.scan.add-a-photo' | transloco }}</span>
+				</button>
+			}
+
+			@if (store.photo() && !store.scanning()) {
+				<button type="button" class="secondary" (click)="rescan()">
+					<i class="pi pi-refresh" aria-hidden="true"></i>
+					{{ 'page.scan.scan-another' | transloco }}
+				</button>
+			}
+		</section>
+
+		@if (store.error(); as error) {
+			<p class="error" role="alert">{{ error }}</p>
+		}
+
+		@if (store.empty()) {
+			<p class="notice">
+				{{ 'page.scan.nothing-recognised-on-this' | transloco }}
+			</p>
+		}
+
+		@if (store.candidateViews().length) {
+			<section class="results" aria-labelledby="results-title">
+				<h2 id="results-title" class="subtitle">
+					{{ 'page.scan.what-this-looks-like' | transloco }}
+				</h2>
+
+				<ul class="candidates">
+					@for (
+						candidate of store.candidateViews();
+						track candidate.key
+					) {
+						<li class="candidate" [class]="'is-' + candidate.state">
+							@if (candidate.thumbUrl) {
+								<img
+									mcCoverFallback
+									class="thumb"
+									[src]="candidate.thumbUrl"
+									alt=""
+									loading="lazy"
+								/>
+							} @else {
+								<span class="thumb is-empty" aria-hidden="true">
+									<i class="pi pi-image"></i>
+								</span>
+							}
+
+							<div class="details">
+								<p class="title">
+									@if (candidate.artistName) {
+										<span class="artist"
+											>{{ candidate.artistName }} —
+										</span>
+									}
+									{{ candidate.albumName }}
+								</p>
+								<p class="summary">{{ candidate.summary }}</p>
+								<p class="badges">
+									<span class="badge is-match">{{
+										matchLabels[candidate.match] | transloco
+									}}</span>
+									<span class="badge is-state">{{
+										stateLabels[candidate.state] | transloco
+									}}</span>
+								</p>
+							</div>
+
+							<div class="action">
+								@switch (candidate.state) {
+									@case ('in-collection') {
+										<a
+											class="secondary"
+											[routerLink]="albumLink(candidate)"
+											>{{
+												'page.scan.open-album'
+													| transloco
+											}}</a
+										>
+									}
+									@case ('in-catalog') {
+										<a
+											class="primary"
+											[routerLink]="albumLink(candidate)"
+											[queryParams]="
+												albumQuery(candidate)
+											"
+											>{{
+												'page.scan.add-a-copy'
+													| transloco
+											}}</a
+										>
+									}
+									@case ('new-release') {
+										<a
+											class="primary"
+											[routerLink]="albumLink(candidate)"
+											[queryParams]="
+												albumQuery(candidate)
+											"
+											>{{
+												'page.scan.request-this-pressing'
+													| transloco
+											}}</a
+										>
+									}
+									@case ('new-album') {
+										@if (requested(candidate)) {
+											<span class="requested">
+												<i
+													class="pi pi-check"
+													aria-hidden="true"
+												></i>
+												{{
+													'page.scan.requested'
+														| transloco
+												}}
+											</span>
+										} @else {
+											<button
+												type="button"
+												class="primary"
+												[disabled]="store.requesting()"
+												(click)="request(candidate)"
+											>
+												{{
+													'page.scan.request-album'
+														| transloco
+												}}
+											</button>
+										}
+									}
+								}
+							</div>
+						</li>
+					}
+				</ul>
+
+				@if (store.requestError(); as error) {
+					<p class="error" role="alert">{{ error }}</p>
+				}
+			</section>
+		}
+
+		@if (store.signals(); as signals) {
+			<section class="read" aria-labelledby="read-title">
+				<h2 id="read-title" class="subtitle">
+					{{ 'page.scan.read-off-the-photo' | transloco }}
+				</h2>
+				<dl class="signals">
+					@if (signals.artist) {
+						<dt>{{ 'page.scan.artist' | transloco }}</dt>
+						<dd>{{ signals.artist }}</dd>
+					}
+					@if (signals.albumTitle) {
+						<dt>{{ 'page.scan.title' | transloco }}</dt>
+						<dd>{{ signals.albumTitle }}</dd>
+					}
+					@if (signals.label) {
+						<dt>{{ 'page.scan.label' | transloco }}</dt>
+						<dd>{{ signals.label }}</dd>
+					}
+					@if (signals.catalogNumber) {
+						<dt>{{ 'page.scan.catalogue-number' | transloco }}</dt>
+						<dd>{{ signals.catalogNumber }}</dd>
+					}
+					@if (signals.barcode) {
+						<dt>{{ 'page.scan.barcode' | transloco }}</dt>
+						<dd>{{ signals.barcode }}</dd>
+					}
+					@if (signals.year) {
+						<dt>{{ 'page.scan.year' | transloco }}</dt>
+						<dd>{{ signals.year }}</dd>
+					}
+				</dl>
+			</section>
+		}
+	}
+</div>

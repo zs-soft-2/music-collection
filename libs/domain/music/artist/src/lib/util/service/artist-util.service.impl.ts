@@ -1,9 +1,12 @@
 import { Injectable, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import {
+	AlbumEntityAdd,
 	ArtistEntity,
 	ArtistEntityAdd,
+	ArtistDiscogs,
 	ArtistEntityUpdate,
+	ArtistExternalAlbum,
 	ArtistModel,
 	ArtistModelAdd,
 	ArtistModelUpdate,
@@ -12,7 +15,8 @@ import {
 	EntityQuantityEntity,
 	EntityQuantityEntityUpdate,
 	EntityTypeEnum,
-	GenreEnum,
+	toDiscogsArtistId,
+	toMusicBrainzId,
 } from '@music-collection/api';
 
 @Injectable()
@@ -86,8 +90,16 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 			entity.description = model.description;
 		}
 
+		if (model.discogs !== undefined) {
+			entity.discogs = model.discogs;
+		}
+
 		if (model.headerImage) {
 			entity.headerImage = model.headerImage;
+		}
+
+		if (model.imageUrl !== undefined) {
+			entity.imageUrl = model.imageUrl;
 		}
 
 		if (model.mainImage) {
@@ -102,6 +114,10 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 			entity.members = model.members;
 		}
 
+		if (model.musicBrainzId !== undefined) {
+			entity.musicBrainzId = model.musicBrainzId;
+		}
+
 		if (model.name) {
 			entity.name = model.name;
 		}
@@ -114,7 +130,35 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 			entity.styles = model.styles;
 		}
 
+		if (model.updatedAt) {
+			entity.updatedAt = model.updatedAt;
+		}
+
 		return entity;
+	}
+
+	public createAlbumFromExternal(
+		artist: ArtistEntity,
+		album: ArtistExternalAlbum
+	): AlbumEntityAdd {
+		return {
+			artist: {
+				entityType: EntityTypeEnum.Artist,
+				name: artist.name,
+				searchParameters: this.createSearchParameters(artist.name),
+				uid: artist.uid,
+			},
+			coverImage: null,
+			entityType: EntityTypeEnum.Album,
+			format: album.format,
+			// The album of a band is filed under the band's genre; the styles
+			// come with it for the same reason.
+			genre: artist.genre,
+			name: album.name.trim(),
+			songs: [],
+			styles: artist.styles ?? [],
+			year: album.year ?? new Date(0),
+		};
 	}
 
 	public createEntity(formGroup: FormGroup): ArtistEntityAdd {
@@ -124,9 +168,12 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 			description: formGroup.value['description'],
 			entityType: EntityTypeEnum.Artist,
 			formedIn: formGroup.value['formedIn'],
-			genre: GenreEnum.Rock,
+			genre: formGroup.value['genre'],
 			headerImage: formGroup.value['headerImage'],
+			imageUrl: formGroup.value['imageUrl'] || null,
 			mainImage: formGroup.value['mainImage'],
+			musicBrainzId: toMusicBrainzId(formGroup.value['musicBrainzId']),
+			...this.toDiscogs(formGroup),
 			name: (formGroup.value['name'] as string).trim(),
 			sites: [],
 			styles: formGroup.value['styles'],
@@ -142,8 +189,15 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 			country: [artist?.country || null],
 			description: [artist?.description || null],
 			formedIn: [artist?.formedIn || null, [Validators.required]],
+			genre: [artist?.genre || null, [Validators.required]],
 			headerImage: [artist?.headerImage || null],
+			imageUrl: [artist?.imageUrl || null],
 			mainImage: [artist?.mainImage || null],
+			musicBrainzId: [artist?.musicBrainzId || null],
+			discogsArtistId: [artist?.discogs?.artistId || null],
+			// What the Discogs import wrote besides the id — kept as it is, so
+			// saving the form cannot drop the photo it found.
+			discogs: [artist?.discogs || null],
 			name: [
 				artist?.name || null,
 				[Validators.required, Validators.min(3), Validators.max(30)],
@@ -153,6 +207,18 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 		});
 	}
 
+	/**
+	 * The artist's Discogs block as the form leaves it: the id from its own
+	 * field, everything else the import wrote kept untouched. Absent — not
+	 * null — when there is neither, as the field is optional on the entity.
+	 */
+	private toDiscogs(formGroup: FormGroup): { discogs?: ArtistDiscogs } {
+		const artistId = toDiscogsArtistId(formGroup.value['discogsArtistId']);
+		const discogs = formGroup.value['discogs'] as ArtistDiscogs | null;
+
+		return artistId || discogs ? { discogs: { ...discogs, artistId } } : {};
+	}
+
 	public updateEntity(formGroup: FormGroup): ArtistEntityUpdate {
 		return {
 			artistType: formGroup.value['artistType'] ?? DEFAULT_ARTIST_TYPE,
@@ -160,9 +226,12 @@ export class ArtistUtilServiceImpl extends ArtistUtilService {
 			description: formGroup.value['description'],
 			entityType: EntityTypeEnum.Artist,
 			formedIn: formGroup.value['formedIn'],
-			genre: GenreEnum.Rock,
+			genre: formGroup.value['genre'],
 			headerImage: formGroup.value['headerImage'],
+			imageUrl: formGroup.value['imageUrl'] || null,
 			mainImage: formGroup.value['mainImage'],
+			musicBrainzId: toMusicBrainzId(formGroup.value['musicBrainzId']),
+			...this.toDiscogs(formGroup),
 			name: (formGroup.value['name'] as string).trim(),
 			styles: formGroup.value['styles'],
 			sites: [],

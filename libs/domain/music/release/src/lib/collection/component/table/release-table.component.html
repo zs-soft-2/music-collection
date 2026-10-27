@@ -1,84 +1,263 @@
 @if (params$ | async; as params) {
-	<section class="release-table mc-card">
-		<p-table
-			[value]="params.releases"
-			styleClass="mc-table"
-			responsiveLayout="scroll"
+	<mc-collection-list
+		[items]="params.releases"
+		[place]="place"
+		[view]="collectionView"
+		[emptyMessage]="'ui.releaseTable.no-releases-found' | transloco"
+	>
+		<p-autocomplete
+			tools
+			class="mc-table-search"
+			[placeholder]="'ui.releaseTable.filter-by-name' | transloco"
+			[ariaLabel]="'ui.releaseTable.filter-by-name2' | transloco"
+			[ngModel]="place.filterOf('name')"
+			[suggestions]="params.empty"
+			[showClear]="true"
+			(completeMethod)="searchByNameHandler($event)"
+			(onClear)="clearNameSearch()"
+			[minQueryLength]="3"
+			[delay]="400"
 		>
-			<ng-template #header>
-				<tr>
-					<th>Name</th>
+		</p-autocomplete>
 
-					<th>Artist</th>
+		<p-autocomplete
+			tools
+			class="mc-table-search"
+			[placeholder]="'ui.releaseTable.filter-by-artist' | transloco"
+			[ariaLabel]="'ui.releaseTable.filter-by-artist2' | transloco"
+			[ngModel]="place.filterOf('artist')"
+			[suggestions]="params.empty"
+			[showClear]="true"
+			(completeMethod)="searchByArtistNameHandler($event)"
+			(onClear)="clearArtistSearch()"
+			[minQueryLength]="3"
+			[delay]="400"
+		>
+		</p-autocomplete>
 
-					<th>Date</th>
+		<ng-template #card let-release>
+			<mc-entity-card
+				[title]="release.name"
+				[subtitle]="release.artist?.name"
+				[imageUrl]="imageOf(release)"
+				imageShape="square"
+				(open)="editRelease(release)"
+			>
+				@if (isArchived(release)) {
+					<p-chip styleClass="archived">
+						{{ 'ui.releaseDeletion.archived' | transloco }}
+					</p-chip>
+				}
+				<mc-view-action
+					cardActions
+					[link]="viewLink(release)"
+					entity="release"
+					[name]="release.name"
+				/>
+				@if (release.media) {
+					<p-chip styleClass="style">
+						{{ release.media }}
+					</p-chip>
+				}
+				@if (release.format) {
+					<p-chip styleClass="style">
+						{{ release.format }}
+					</p-chip>
+				}
+				@if (release.date) {
+					<p-chip styleClass="style">
+						{{ release.date | date: 'yyyy' }}
+					</p-chip>
+				}
 
-					<th>Media</th>
+				<button
+					cardActions
+					pButton
+					pRipple
+					[attr.aria-label]="
+						'ui.releaseTable.delete-release' | transloco
+					"
+					class="p-button-text p-button-rounded p-button-danger"
+					(click)="deleteRelease(release)"
+					iconOnly
+				>
+					<i class="pi pi-trash" aria-hidden="true"></i>
+				</button>
+			</mc-entity-card>
+		</ng-template>
 
-					<th>Format</th>
+		<ng-template
+			mcColumn
+			[header]="'ui.releaseTable.name' | transloco"
+			let-release
+		>
+			{{ release.name }}
+			@if (isArchived(release)) {
+				<p-chip styleClass="archived">
+					{{ 'ui.releaseDeletion.archived' | transloco }}
+				</p-chip>
+			}
+		</ng-template>
 
-					<th></th>
-				</tr>
+		<ng-template
+			mcColumn
+			[header]="'ui.releaseTable.artist' | transloco"
+			let-release
+		>
+			{{ release.artist.name }}
+		</ng-template>
 
-				<tr>
-					<th>
-						<p-autocomplete
-							placeholder="Filter by name…"
-							ariaLabel="Filter by name"
-							[suggestions]="params.empty"
-							[showClear]="true"
-							(completeMethod)="searchHandler($event)"
-							[minQueryLength]="3"
-							[delay]="400"
-						>
-						</p-autocomplete>
-					</th>
+		<ng-template
+			mcColumn
+			[header]="'ui.releaseTable.date' | transloco"
+			let-release
+		>
+			{{ release.date | date: 'yyyy' }}
+		</ng-template>
 
-					<th></th>
-					<th></th>
-					<th></th>
-					<th></th>
-					<th></th>
-				</tr>
-			</ng-template>
+		<ng-template
+			mcColumn
+			[header]="'ui.releaseTable.media' | transloco"
+			let-release
+		>
+			{{ release.media }}
+		</ng-template>
 
-			<ng-template #body let-release>
-				<tr>
-					<td>{{ release.name }}</td>
+		<ng-template
+			mcColumn
+			[header]="'ui.releaseTable.format' | transloco"
+			let-release
+		>
+			{{ release.format }}
+		</ng-template>
 
-					<td>{{ release.artist.name }}</td>
+		<ng-template
+			mcColumn
+			[header]="'ui.releaseTable.updated' | transloco"
+			field="updatedAt"
+			let-release
+		>
+			{{ release.updatedAt | date: 'yyyy-MM-dd HH:mm' }}
+		</ng-template>
 
-					<td>{{ release.date | date: 'yyyy' }}</td>
+		<ng-template
+			mcColumn
+			[header]="'ui.releaseTable.actions' | transloco"
+			headerHidden
+			let-release
+		>
+			<mc-view-action
+				[link]="viewLink(release)"
+				entity="release"
+				[name]="release.name"
+			/>
+			<button
+				pButton
+				pRipple
+				[attr.aria-label]="'ui.releaseTable.edit-release' | transloco"
+				class="p-button-text p-button-rounded p-button-secondary"
+				(click)="editRelease(release)"
+				iconOnly
+			>
+				<i class="pi pi-pencil" aria-hidden="true"></i>
+			</button>
 
-					<td>{{ release.media }}</td>
+			<button
+				pButton
+				pRipple
+				[attr.aria-label]="
+					'ui.releaseTable.delete-release2' | transloco
+				"
+				class="p-button-text p-button-rounded p-button-danger"
+				(click)="deleteRelease(release)"
+				iconOnly
+			>
+				<i class="pi pi-trash" aria-hidden="true"></i>
+			</button>
+		</ng-template>
+	</mc-collection-list>
 
-					<td>{{ release.format }}</td>
+	<p-dialog
+		[header]="'ui.releaseDeletion.title' | transloco"
+		[modal]="true"
+		[visible]="!!deletion.pending()"
+		(visibleChange)="$event || deletion.cancel()"
+		[style]="{ width: 'min(34rem, 95vw)' }"
+		[dismissableMask]="true"
+	>
+		@if (deletion.pending(); as release) {
+			<p class="release-deletion-subject">
+				<strong>{{ release.name }}</strong>
+				@if (release.artist?.name) {
+					<span> — {{ release.artist.name }}</span>
+				}
+			</p>
 
-					<td>
-						<button
-							pButton
-							pRipple
-							aria-label="Edit release"
-							class="p-button-text p-button-rounded p-button-secondary"
-							(click)="editRelease(release)"
-							iconOnly
-						>
-							<i class="pi pi-pencil" aria-hidden="true"></i>
-						</button>
+			@if (deletion.isChecking()) {
+				<p class="release-deletion-checking">
+					{{ 'ui.releaseDeletion.checking' | transloco }}
+				</p>
+			} @else if (deletion.canDelete()) {
+				<p>{{ 'ui.releaseDeletion.nothing-holds' | transloco }}</p>
+				@if (deletion.trackCount()) {
+					<p class="release-deletion-cascade">
+						{{
+							'ui.releaseDeletion.goes-with-tracks'
+								| transloco: { count: deletion.trackCount() }
+						}}
+					</p>
+				}
+			} @else {
+				<p class="release-deletion-blocked" role="alert">
+					{{
+						'ui.releaseDeletion.in-use'
+							| transloco: { count: deletion.copyCount() }
+					}}
+				</p>
+			}
 
-						<button
-							pButton
-							pRipple
-							aria-label="Delete release"
-							class="p-button-text p-button-rounded p-button-danger"
-							(click)="deleteRelease(release)"
-							iconOnly
-						>
-							<i class="pi pi-trash" aria-hidden="true"></i>
-						</button>
-					</td>
-				</tr>
-			</ng-template>
-		</p-table>
-	</section>
+			@if (deletion.error(); as error) {
+				<p class="release-deletion-error" role="alert">
+					@if (error === inUse) {
+						{{ 'ui.releaseDeletion.in-use-now' | transloco }}
+					} @else {
+						{{ error }}
+					}
+				</p>
+			}
+		}
+
+		<ng-template #footer>
+			@if (deletion.canDelete()) {
+				<p-button
+					[label]="'ui.releaseDeletion.really-delete' | transloco"
+					icon="pi pi-trash"
+					severity="danger"
+					[loading]="deletion.isWorking()"
+					(onClick)="deletion.confirmDeletion()"
+				></p-button>
+			} @else if (!deletion.isChecking()) {
+				<p-button
+					[label]="
+						(deletion.isArchived()
+							? 'ui.releaseDeletion.unarchive'
+							: 'ui.releaseDeletion.archive'
+						) | transloco
+					"
+					[icon]="
+						deletion.isArchived() ? 'pi pi-eye' : 'pi pi-eye-slash'
+					"
+					severity="warn"
+					[loading]="deletion.isWorking()"
+					(onClick)="deletion.setArchived(!deletion.isArchived())"
+				></p-button>
+			}
+			<p-button
+				[label]="'ui.releaseDeletion.cancel' | transloco"
+				severity="secondary"
+				[text]="true"
+				(onClick)="deletion.cancel()"
+			></p-button>
+		</ng-template>
+	</p-dialog>
 }

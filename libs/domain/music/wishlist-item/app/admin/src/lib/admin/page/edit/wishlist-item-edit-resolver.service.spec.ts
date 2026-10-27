@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { TestBed } from '@angular/core/testing';
 import { WishlistItemStateService } from '@music-collection/api';
 
@@ -9,6 +10,7 @@ describe('WishlistItemEditResolverService', () => {
 	beforeEach(() => {
 		TestBed.configureTestingModule({
 			providers: [
+				provideI18nTesting(),
 				WishlistItemEditResolverService,
 				{ provide: WishlistItemStateService, useValue: {} },
 			],

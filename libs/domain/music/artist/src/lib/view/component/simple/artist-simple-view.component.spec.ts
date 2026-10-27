@@ -1,9 +1,9 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import {
 	ArtistEntity,
 	CountryEnum,
 	EntityTypeEnum,
-	GenreEnum,
 } from '@music-collection/api';
 
 import { ArtistSimpleViewComponent } from './artist-simple-view.component';
@@ -18,7 +18,7 @@ describe('ArtistSimpleViewComponent', () => {
 		country: CountryEnum.Australia,
 		description: '',
 		formedIn: null,
-		genre: GenreEnum.Rock,
+		genre: 'Rock',
 		name: 'Artist',
 		sites: [],
 		styles: [],
@@ -26,6 +26,7 @@ describe('ArtistSimpleViewComponent', () => {
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
+			providers: [provideI18nTesting()],
 			imports: [ArtistSimpleViewComponent],
 		}).compileComponents();
 

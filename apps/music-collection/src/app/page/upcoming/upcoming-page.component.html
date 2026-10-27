@@ -1,0 +1,226 @@
+<div class="page">
+	<header class="hero">
+		<div class="hero-text">
+			<p class="eyebrow">musiCollection</p>
+			<h1>{{ 'page.upcoming.coming-out' | transloco }}</h1>
+			<p class="lead">
+				{{ 'page.upcoming.the-next-few-weeks' | transloco }}
+			</p>
+		</div>
+
+		@if (!store.isLoading() && store.releases().length) {
+			<dl class="stats">
+				<div class="stat">
+					<dt>{{ 'page.upcoming.records' | transloco }}</dt>
+					<dd>{{ store.releases().length }}</dd>
+				</div>
+				<div class="stat">
+					<dt>{{ 'page.upcoming.new' | transloco }}</dt>
+					<dd>{{ store.newCount() }}</dd>
+				</div>
+				<div class="stat">
+					<dt>{{ 'page.upcoming.reissues' | transloco }}</dt>
+					<dd>{{ store.reissueCount() }}</dd>
+				</div>
+				<div class="stat">
+					<dt>{{ 'page.upcoming.artists' | transloco }}</dt>
+					<dd>{{ store.artistCount() }}</dd>
+				</div>
+			</dl>
+		}
+	</header>
+
+	@if (store.isLoading()) {
+		<div class="timeline">
+			@for (skeleton of skeletons; track skeleton) {
+				<div class="skeleton row-skeleton"></div>
+			}
+		</div>
+	} @else if (store.isEmpty()) {
+		<p class="empty">
+			{{ 'page.upcoming.nothing-is-announced-for' | transloco }}
+		</p>
+	} @else {
+		<div class="toolbar">
+			<div
+				class="tabs"
+				role="tablist"
+				[attr.aria-label]="'page.upcoming.which-records' | transloco"
+			>
+				@for (option of filterOptions; track option.value) {
+					<button
+						type="button"
+						role="tab"
+						class="tab"
+						[class.is-active]="store.filter() === option.value"
+						[attr.aria-selected]="store.filter() === option.value"
+						(click)="onFilter(option.value)"
+					>
+						{{ option.labelKey | transloco }}
+					</button>
+				}
+			</div>
+
+			<label class="vinyl-only">
+				<input
+					type="checkbox"
+					[checked]="store.vinylOnly()"
+					(change)="onVinylOnly()"
+				/>
+				{{ 'page.upcoming.on-vinyl' | transloco }}
+			</label>
+		</div>
+
+		@if (store.isFilteredOut()) {
+			<p class="empty">
+				{{
+					store.releases().length
+						| mcPlural: 'page.upcoming.filteredOut'
+				}}
+			</p>
+		}
+
+		@for (month of store.months(); track month.key) {
+			<section class="month" [attr.aria-label]="month.label">
+				<h2 class="month-label">{{ month.label }}</h2>
+
+				@for (day of month.days; track day.key) {
+					<div class="day">
+						<div class="day-mark">
+							<span class="day-number">{{ day.day }}</span>
+							<span class="day-weekday">{{ day.weekday }}</span>
+							<span class="day-countdown">{{
+								day.countdown
+							}}</span>
+						</div>
+
+						<ul class="records">
+							@for (record of day.releases; track record.uid) {
+								<li class="record">
+									<div
+										class="art"
+										[style.background-image]="
+											record.artistImageUrl
+												? 'url(' +
+													record.artistImageUrl +
+													')'
+												: null
+										"
+									>
+										<img
+											class="cover"
+											[src]="record.coverUrl"
+											[alt]="
+												record.title +
+												' by ' +
+												record.artistName
+											"
+											loading="lazy"
+											(error)="onCoverError($event)"
+										/>
+									</div>
+
+									<div class="record-text">
+										<p class="artist">
+											@if (record.artistUid) {
+												<a
+													[routerLink]="[
+														'/artist',
+														record.artistUid,
+													]"
+													>{{ record.artistName }}</a
+												>
+											} @else {
+												{{ record.artistName }}
+											}
+
+											@if (record.namesake) {
+												<span
+													class="namesake"
+													[title]="
+														'page.upcoming.matched-on-the-artist'
+															| transloco
+													"
+													>{{
+														'page.upcoming.name-match'
+															| transloco
+													}}</span
+												>
+											}
+										</p>
+
+										<h3 class="title">
+											<a
+												[href]="record.sourceUrl"
+												target="_blank"
+												rel="noopener noreferrer"
+												>{{ record.title }}</a
+											>
+										</h3>
+
+										<p class="meta">
+											@if (record.kind === 'reissue') {
+												<span
+													class="chip chip-reissue"
+													>{{
+														record.originalYear
+															? ('page.upcoming.reissueOf'
+																| transloco
+																	: {
+																			year: record.originalYear,
+																	  })
+															: ('page.upcoming.reissue'
+																| transloco)
+													}}</span
+												>
+											} @else {
+												<span class="chip chip-new">{{
+													'page.upcoming.new2'
+														| transloco
+												}}</span>
+											}
+
+											@if (record.typeLabel) {
+												<span class="chip">{{
+													record.typeLabel
+												}}</span>
+											}
+
+											@for (
+												format of record.formats;
+												track format
+											) {
+												<span
+													class="chip"
+													[class.chip-vinyl]="
+														isVinyl(format)
+													"
+													>{{ format }}</span
+												>
+											}
+										</p>
+
+										@if (
+											record.labels || record.countries
+										) {
+											<p class="footnote">
+												{{ record.labels }}
+												@if (
+													record.labels &&
+													record.countries
+												) {
+													·
+												}
+												{{ record.countries }}
+											</p>
+										}
+									</div>
+								</li>
+							}
+						</ul>
+					</div>
+				}
+			</section>
+		}
+	}
+</div>

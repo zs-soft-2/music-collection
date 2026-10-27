@@ -1,8 +1,9 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { AdminEditLinkComponent } from '../admin-edit-link/admin-edit-link.component';
-import { ArtistTileView } from '../music-ui.model';
+import { ArtistTileView } from '@music-collection/ui/music-view';
 
 /**
  * Artist photo tile — the whole tile links to the artist page. Shows the number
@@ -11,7 +12,7 @@ import { ArtistTileView } from '../music-ui.model';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-artist-tile',
-	imports: [RouterLink, AdminEditLinkComponent],
+	imports: [...I18N_IMPORTS, RouterLink, AdminEditLinkComponent],
 	template: `
 		@let item = artist();
 

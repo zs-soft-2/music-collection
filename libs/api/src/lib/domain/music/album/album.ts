@@ -3,13 +3,14 @@ import { FormGroup } from '@angular/forms';
 import {
 	Entity,
 	FormatEnum,
-	GenreEnum,
+	GenreName,
 	Identifiable,
 	Searchable,
-	StyleEnum,
+	StyleName,
 } from '../../../common';
 import { DocumentEntity } from '../../document';
 import { ArtistEntity } from '../artist';
+import { GenreEntity } from '../genre';
 
 /** Original release of the album on Discogs (set by the Discogs import). */
 export interface AlbumDiscogs {
@@ -26,14 +27,31 @@ export interface AlbumDiscogs {
 export interface Album {
 	artist: AlbumArtist;
 	coverImage: AlbumDocument | null;
+	/** Cover found online, used when no cover image is attached. */
+	coverImageUrl?: string | null;
 	discogs?: AlbumDiscogs;
 	format: FormatEnum;
-	genre: GenreEnum;
+	genre: GenreName;
+	/**
+	 * Whether the catalog holds the album's own tracklist — the songs being
+	 * documents of their own in the `track` collection, not a field here.
+	 *
+	 * It is written by `tools/sync/backfill-album-has-tracks.mjs` rather
+	 * than kept current by every write, so that the admin list can find the
+	 * records still to be filled in without every client downloading all of
+	 * the tracks to work it out. Missing on an album the script has not seen
+	 * yet, which is not the same as false.
+	 */
+	hasTracks?: boolean;
 	name: string;
 	songs: string[];
 	/** Spotify album id, used for the embedded player on the album page. */
 	spotifyAlbumId?: string | null;
-	styles: StyleEnum[];
+	styles: StyleName[];
+	/** YouTube (Music) playlist of the album, for the embedded player. */
+	youtubePlaylistId?: string | null;
+	/** YouTube videos of the album (clips, live performances). */
+	youtubeVideoIds?: string[] | null;
 }
 
 export type AlbumEntity = Album &
@@ -65,8 +83,11 @@ export type AlbumFormParams = {
 	documents: DocumentEntity[];
 	formatList: FormatEnum[];
 	formGroup: FormGroup;
+	/** The genres of the taxonomy an admin has not retired. */
+	genres: GenreEntity[];
 	isImagesTabActive: boolean;
-	styleList: StyleEnum[];
+	/** The styles the chosen genre offers, plus those already on the album. */
+	styleList: StyleName[];
 };
 
 export type AlbumTableParams = {

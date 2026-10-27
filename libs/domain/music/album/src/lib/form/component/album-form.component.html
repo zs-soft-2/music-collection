@@ -4,20 +4,70 @@
 			<input name="uid" formControlName="uid" hidden />
 
 			<section class="mc-form-section" aria-labelledby="album-details">
-				<h2 id="album-details">Details</h2>
+				<div class="album-form-heading">
+					<h2 id="album-details">
+						{{ 'ui.albumForm.details' | transloco }}
+					</h2>
+					<p-button
+						[label]="'ui.albumForm.load' | transloco"
+						icon="pi pi-cloud-download"
+						size="small"
+						severity="secondary"
+						[outlined]="true"
+						[loading]="externalLoading()"
+						[disabled]="
+							!params.formGroup.value.name ||
+							!params.formGroup.value.artist?.name
+						"
+						[ariaLabel]="
+							'ui.albumForm.load-missing-data-from' | transloco
+						"
+						(onClick)="loadExternal()"
+					></p-button>
+				</div>
+				@if (externalError()) {
+					<small class="album-form-error">{{
+						externalError()
+					}}</small>
+				}
 				<div class="mc-form-grid">
 					<div class="mc-field">
-						<label for="name">Title</label>
+						<label for="name">{{
+							'ui.albumForm.title' | transloco
+						}}</label>
 						<input
 							id="name"
 							type="text"
 							pInputText
 							formControlName="name"
 						/>
+						@if (duplicate(); as twin) {
+							<small
+								class="album-form-duplicate"
+								[class.is-warning]="!twin.blocking"
+							>
+								{{
+									'ui.albumForm.this-artist-already-has'
+										| transloco
+								}}
+								<button
+									type="button"
+									class="album-form-duplicate-link"
+									(click)="openDuplicate()"
+								>
+									{{ twin.name }}</button
+								>.
+								@if (!twin.blocking) {
+									{{ 'ui.form.savingKeepsBoth' | transloco }}
+								}
+							</small>
+						}
 					</div>
 
 					<div class="mc-field">
-						<label for="artist">Artist</label>
+						<label for="artist">{{
+							'ui.albumForm.artist' | transloco
+						}}</label>
 						<p-autocomplete
 							inputId="artist"
 							formControlName="artist"
@@ -25,43 +75,75 @@
 							[minQueryLength]="3"
 							[delay]="400"
 							optionLabel="name"
-							placeholder="Start typing an artist…"
+							[placeholder]="
+								'ui.albumForm.start-typing-an-artist'
+									| transloco
+							"
 							(completeMethod)="searchArtist($event)"
 						></p-autocomplete>
 					</div>
 
 					<div class="mc-field">
-						<label for="format">Format</label>
+						<label for="format">{{
+							'ui.albumForm.format' | transloco
+						}}</label>
 						<p-select
 							inputId="format"
 							[options]="params.formatList"
-							placeholder="Select a format"
+							[placeholder]="
+								'ui.albumForm.select-a-format' | transloco
+							"
 							formControlName="format"
 						></p-select>
 					</div>
 
 					<div class="mc-field">
-						<label for="year">Year</label>
+						<label for="year">{{
+							'ui.albumForm.year' | transloco
+						}}</label>
 						<p-datepicker
 							inputId="year"
 							formControlName="year"
 						></p-datepicker>
 					</div>
 
+					<div class="mc-field">
+						<label for="genre">{{
+							'ui.albumForm.genre' | transloco
+						}}</label>
+						<p-select
+							inputId="genre"
+							[options]="params.genres"
+							optionLabel="name"
+							optionValue="name"
+							[placeholder]="
+								'ui.albumForm.select-a-genre' | transloco
+							"
+							formControlName="genre"
+							[filter]="true"
+						></p-select>
+					</div>
+
 					<div class="mc-field is-wide">
-						<label for="styles">Styles</label>
+						<label for="styles">{{
+							'ui.albumForm.styles' | transloco
+						}}</label>
 						<p-multiselect
 							inputId="styles"
 							[options]="params.styleList"
 							[filter]="false"
 							formControlName="styles"
 							display="chip"
-							placeholder="Select styles"
+							[placeholder]="
+								'ui.albumForm.select-styles' | transloco
+							"
 						></p-multiselect>
 					</div>
 
 					<div class="mc-field is-wide">
-						<label for="spotify">Spotify link</label>
+						<label for="spotify">{{
+							'ui.albumForm.spotify-link' | transloco
+						}}</label>
 						<input
 							id="spotify"
 							type="url"
@@ -88,14 +170,111 @@
 							}
 						</small>
 					</div>
+
+					<div class="mc-field is-wide">
+						<label for="youtube-music">{{
+							'ui.albumForm.youtube-music-link' | transloco
+						}}</label>
+						<input
+							id="youtube-music"
+							type="url"
+							pInputText
+							formControlName="youtubeMusic"
+							aria-describedby="youtube-music-help"
+							[attr.aria-invalid]="
+								params.formGroup.controls['youtubeMusic']
+									.invalid
+							"
+						/>
+						<small
+							id="youtube-music-help"
+							[class.is-error]="
+								params.formGroup.controls['youtubeMusic']
+									.invalid
+							"
+						>
+							@if (
+								params.formGroup.controls['youtubeMusic']
+									.invalid
+							) {
+								Not a YouTube playlist link. In YouTube Music:
+								open the album, Share → Copy link.
+							} @else {
+								Optional. Paste the album link from YouTube
+								Music (Share → Copy link) to play the album on
+								the album page.
+							}
+						</small>
+					</div>
+
+					<div class="mc-field is-wide">
+						<label for="youtube-videos">{{
+							'ui.albumForm.youtube-videos' | transloco
+						}}</label>
+						<textarea
+							id="youtube-videos"
+							pTextarea
+							rows="3"
+							formControlName="youtubeVideos"
+							aria-describedby="youtube-videos-help"
+							[attr.aria-invalid]="
+								params.formGroup.controls['youtubeVideos']
+									.invalid
+							"
+						></textarea>
+						<small
+							id="youtube-videos-help"
+							[class.is-error]="
+								params.formGroup.controls['youtubeVideos']
+									.invalid
+							"
+						>
+							@if (
+								params.formGroup.controls['youtubeVideos']
+									.invalid
+							) {
+								Every line must be a YouTube video link.
+							} @else {
+								Optional. One YouTube video link per line (music
+								videos, live performances).
+							}
+						</small>
+					</div>
 				</div>
 			</section>
 
 			<section class="mc-form-section" aria-labelledby="album-images">
-				<h2 id="album-images">Cover</h2>
+				<h2 id="album-images">
+					{{ 'ui.albumForm.cover' | transloco }}
+				</h2>
+				<div class="mc-field">
+					<label for="coverImageUrl">{{
+						'ui.albumForm.cover-url' | transloco
+					}}</label>
+					<input
+						pInputText
+						id="coverImageUrl"
+						type="url"
+						formControlName="coverImageUrl"
+						[placeholder]="
+							'ui.albumForm.used-when-no-cover' | transloco
+						"
+					/>
+					@if (params.formGroup.value.coverImageUrl; as url) {
+						<p-image
+							class="mc-form-image"
+							[src]="url"
+							[preview]="true"
+							[alt]="'ui.albumForm.cover2' | transloco"
+							width="200"
+						></p-image>
+					}
+				</div>
 				@if (params.isImagesTabActive) {
 					<div class="mc-field">
-						<label for="coverImage">Cover image</label>
+						<label for="coverImage">{{
+							'ui.albumForm.cover-image' | transloco
+						}}</label>
 						<p-autocomplete
 							inputId="coverImage"
 							formControlName="coverImage"
@@ -103,7 +282,9 @@
 							[minQueryLength]="3"
 							[delay]="400"
 							optionLabel="name"
-							placeholder="Search documents…"
+							[placeholder]="
+								'ui.albumForm.search-documents' | transloco
+							"
 							(completeMethod)="searchDocument($event)"
 						></p-autocomplete>
 						@if (params.formGroup.value.coverImage) {
@@ -116,27 +297,27 @@
 									)
 								"
 								[preview]="true"
-								alt="Cover image"
+								[alt]="'ui.albumForm.cover-image2' | transloco"
 								width="200"
 							></p-image>
 						}
 					</div>
 				} @else {
 					<p class="mc-form-note">
-						Save the album first to attach a cover image.
+						{{ 'ui.albumForm.save-the-album-first' | transloco }}
 					</p>
 				}
 			</section>
 
 			<div class="mc-form-actions">
 				<p-button
-					label="Cancel"
+					[label]="'ui.albumForm.cancel' | transloco"
 					severity="secondary"
 					[outlined]="true"
 					(onClick)="cancel()"
 				></p-button>
 				<p-button
-					label="Save"
+					[label]="'ui.albumForm.save' | transloco"
 					icon="pi pi-check"
 					[disabled]="!params.formGroup.valid"
 					(onClick)="submit()"
@@ -144,4 +325,131 @@
 			</div>
 		</form>
 	</section>
+
+	<p-dialog
+		[header]="'ui.albumForm.loaded-album-data' | transloco"
+		[modal]="true"
+		[visible]="!!externalComparison()"
+		(visibleChange)="$event || closeExternal()"
+		[style]="{ width: 'min(56rem, 95vw)' }"
+		[dismissableMask]="true"
+	>
+		@if (externalComparison(); as comparison) {
+			<p class="album-external-source">
+				{{ 'ui.albumForm.source' | transloco }}
+				<a
+					[href]="comparison.sourceUrl"
+					target="_blank"
+					rel="noopener"
+					>{{ comparison.sourceUrl }}</a
+				>
+			</p>
+			@if (comparison.fillerSourceUrl; as fillerUrl) {
+				<p class="album-external-source">
+					{{ 'ui.albumForm.filled-in-from' | transloco }}
+					<a [href]="fillerUrl" target="_blank" rel="noopener">{{
+						fillerUrl
+					}}</a>
+				</p>
+			}
+			@if (comparison.rows.length) {
+				<div class="album-external-table">
+					<table>
+						<thead>
+							<tr>
+								<th scope="col">
+									<span class="visually-hidden">{{
+										'ui.albumForm.apply' | transloco
+									}}</span>
+								</th>
+								<th scope="col">
+									{{ 'ui.albumForm.field' | transloco }}
+								</th>
+								<th scope="col">
+									{{ 'ui.albumForm.current' | transloco }}
+								</th>
+								<th scope="col">
+									{{ 'ui.albumForm.loaded' | transloco }}
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							@for (row of comparison.rows; track row.field) {
+								<tr [class.is-selected]="row.selected">
+									<td>
+										<p-checkbox
+											[inputId]="'external-' + row.field"
+											[binary]="true"
+											[ngModel]="row.selected"
+											[ngModelOptions]="{
+												standalone: true,
+											}"
+											(onChange)="
+												toggleExternalRow(row.field)
+											"
+										></p-checkbox>
+									</td>
+									<th scope="row">
+										<label
+											[for]="'external-' + row.field"
+											>{{
+												row.labelKey | transloco
+											}}</label
+										>
+									</th>
+									<td class="is-current">
+										@if (
+											row.field === 'coverImageUrl' &&
+											row.current
+										) {
+											<img
+												class="album-external-cover"
+												[src]="row.current"
+												[alt]="
+													'ui.albumForm.current-cover'
+														| transloco
+												"
+											/>
+										} @else {
+											{{ row.current || '—' }}
+										}
+									</td>
+									<td class="is-loaded">
+										@if (row.field === 'coverImageUrl') {
+											<img
+												class="album-external-cover"
+												[src]="row.loaded"
+												[alt]="
+													'ui.albumForm.loaded-cover'
+														| transloco
+												"
+											/>
+										} @else {
+											{{ row.loaded }}
+										}
+									</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			} @else {
+				<p>{{ 'ui.albumForm.the-loaded-data-matches' | transloco }}</p>
+			}
+		}
+		<ng-template #footer>
+			<p-button
+				[label]="'ui.albumForm.cancel2' | transloco"
+				severity="secondary"
+				[outlined]="true"
+				(onClick)="closeExternal()"
+			></p-button>
+			<p-button
+				[label]="'ui.albumForm.apply-to-form' | transloco"
+				icon="pi pi-check"
+				[disabled]="!hasSelectedExternalRow()"
+				(onClick)="applyExternal()"
+			></p-button>
+		</ng-template>
+	</p-dialog>
 }

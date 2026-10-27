@@ -14,6 +14,16 @@ export interface State extends EntityState<CollectionItemEntity> {
 	isNewEntityButtonEnabled: boolean;
 	selectedId?: string;
 	loading: boolean;
+	/** An item is being added. */
+	adding: boolean;
+	/** An item is being disposed of or restored. */
+	disposing: boolean;
+	/** A copy is being filed into a compartment, or taken out of one. */
+	placing: boolean;
+	/** What the collector tells about a copy is being written. */
+	saving: boolean;
+	/** The signed-in user's collection has arrived (empty included). */
+	loaded: boolean;
 	searchResult: CollectionItemEntity[];
 	error?: string | null;
 	collectionItemListConfig: CollectionItemListConfig | null;
@@ -46,20 +56,35 @@ export const initialState: State = collectionItemAdapter.getInitialState({
 	},
 	isNewEntityButtonEnabled: true,
 	loading: false,
+	adding: false,
+	disposing: false,
+	placing: false,
+	saving: false,
+	loaded: false,
 	error: null,
 	searchResult: [],
 });
 
 export const collectionItemReducer = createReducer(
 	initialState,
+	on(collectionItemActions.addCollectionItem, (state) => ({
+		...state,
+		adding: true,
+		error: null,
+	})),
 	on(
 		collectionItemActions.addCollectionItemSuccess,
 		(state, { collectionItem }) =>
 			collectionItemAdapter.addOne(
 				collectionItem as CollectionItemEntity,
-				state
+				{ ...state, adding: false }
 			)
 	),
+	on(collectionItemActions.addCollectionItemFail, (state, { error }) => ({
+		...state,
+		adding: false,
+		error: error?.message ?? String(error),
+	})),
 	on(
 		collectionItemActions.changeNewEntityButtonEnabled,
 		(state, { enabled }) => ({
@@ -81,19 +106,151 @@ export const collectionItemReducer = createReducer(
 		(state, { collectionItem }) =>
 			collectionItemAdapter.updateOne(collectionItem, state)
 	),
+	on(collectionItemActions.changeCollectionItemDisposal, (state) => ({
+		...state,
+		disposing: true,
+		error: null,
+	})),
+	on(
+		collectionItemActions.changeCollectionItemDisposalSuccess,
+		(state, { collectionItem }) =>
+			collectionItemAdapter.updateOne(collectionItem, {
+				...state,
+				disposing: false,
+			})
+	),
+	on(
+		collectionItemActions.changeCollectionItemDisposalFail,
+		(state, { error }) => ({
+			...state,
+			disposing: false,
+			error: error?.message ?? String(error),
+		})
+	),
+	on(collectionItemActions.changeCollectionItemDetails, (state) => ({
+		...state,
+		saving: true,
+		error: null,
+	})),
+	on(
+		collectionItemActions.changeCollectionItemDetailsSuccess,
+		(state, { collectionItem }) =>
+			collectionItemAdapter.updateOne(collectionItem, {
+				...state,
+				saving: false,
+			})
+	),
+	on(
+		collectionItemActions.changeCollectionItemDetailsFail,
+		(state, { error }) => ({
+			...state,
+			saving: false,
+			error: error?.message ?? String(error),
+		})
+	),
+	on(collectionItemActions.changeCollectionItemRelease, (state) => ({
+		...state,
+		saving: true,
+		error: null,
+	})),
+	on(
+		collectionItemActions.changeCollectionItemReleaseSuccess,
+		(state, { collectionItem }) =>
+			collectionItemAdapter.updateOne(collectionItem, {
+				...state,
+				saving: false,
+			})
+	),
+	on(
+		collectionItemActions.changeCollectionItemReleaseFail,
+		(state, { error }) => ({
+			...state,
+			saving: false,
+			error: error?.message ?? String(error),
+		})
+	),
+	on(collectionItemActions.changeCollectionItemPhotos, (state) => ({
+		...state,
+		saving: true,
+		error: null,
+	})),
+	on(
+		collectionItemActions.changeCollectionItemPhotosSuccess,
+		(state, { collectionItem }) =>
+			collectionItemAdapter.updateOne(collectionItem, {
+				...state,
+				saving: false,
+			})
+	),
+	on(
+		collectionItemActions.changeCollectionItemPhotosFail,
+		(state, { error }) => ({
+			...state,
+			saving: false,
+			error: error?.message ?? String(error),
+		})
+	),
+	on(collectionItemActions.changeCollectionItemPlacement, (state) => ({
+		...state,
+		placing: true,
+		error: null,
+	})),
+	on(
+		collectionItemActions.changeCollectionItemPlacementSuccess,
+		(state, { collectionItem }) =>
+			collectionItemAdapter.updateOne(collectionItem, {
+				...state,
+				placing: false,
+			})
+	),
+	on(
+		collectionItemActions.changeCollectionItemPlacementFail,
+		(state, { error }) => ({
+			...state,
+			placing: false,
+			error: error?.message ?? String(error),
+		})
+	),
+	on(collectionItemActions.changeCollectionItemPlacements, (state) => ({
+		...state,
+		placing: true,
+		error: null,
+	})),
+	on(
+		collectionItemActions.changeCollectionItemPlacementsSuccess,
+		(state, { collectionItems }) =>
+			collectionItemAdapter.updateMany(collectionItems, {
+				...state,
+				placing: false,
+			})
+	),
+	on(
+		collectionItemActions.changeCollectionItemPlacementsFail,
+		(state, { error }) => ({
+			...state,
+			placing: false,
+			error: error?.message ?? String(error),
+		})
+	),
 	on(
 		collectionItemActions.deleteCollectionItemSuccess,
 		(state, { collectionItemId }) =>
 			collectionItemAdapter.removeOne(collectionItemId, state)
 	),
+	// The whole collection of the signed-in user: replaces the previous one.
 	on(
 		collectionItemActions.listCollectionItemsSuccess,
 		(state, { collectionItems }) =>
-			collectionItemAdapter.upsertMany(
+			collectionItemAdapter.setAll(
 				collectionItems as CollectionItemEntity[],
-				state
+				{ ...state, loaded: true }
 			)
 	),
+	on(collectionItemActions.listCollectionItemsFail, (state, { error }) => ({
+		...state,
+		loaded: true,
+		error: error?.message ?? String(error),
+	})),
 	on(
 		collectionItemActions.loadCollectionItemSuccess,
 		(state, { collectionItem }) =>

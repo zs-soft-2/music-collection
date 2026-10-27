@@ -1,0 +1,112 @@
+<div class="page">
+	<mc-page-breadcrumb [trail]="store.trail()" />
+
+	<header class="head">
+		<h1>{{ 'page.my-request.title' | transloco }}</h1>
+		<p class="lead">{{ 'page.my-request.lead' | transloco }}</p>
+	</header>
+
+	<section class="add">
+		<h2>{{ 'page.my-request.missing-something' | transloco }}</h2>
+		<nav class="kinds">
+			@for (kind of kinds; track kind.feature) {
+				<a
+					class="secondary"
+					[routerLink]="['/propose', kind.feature, 'edit', '0']"
+				>
+					<i class="pi {{ kind.icon }}" aria-hidden="true"></i>
+					{{ kind.labelKey | transloco }}
+				</a>
+			}
+		</nav>
+	</section>
+
+	@if (store.failed()) {
+		<p class="error">{{ 'page.my-request.could-not-read' | transloco }}</p>
+	}
+
+	@if (store.loading()) {
+		<p class="status">{{ 'page.my-request.loading' | transloco }}</p>
+	} @else if (store.isEmpty()) {
+		<section class="empty">
+			<p>{{ 'page.my-request.nothing-yet' | transloco }}</p>
+			<a class="secondary" routerLink="/my-bands">
+				{{ 'page.my-request.my-bands' | transloco }}
+			</a>
+		</section>
+	} @else {
+		<ul class="requests">
+			@for (row of store.rows(); track row.id) {
+				<li class="request">
+					<header class="request-head">
+						<div>
+							<h3>
+								{{ row.subject }}
+								<span class="kind">{{
+									row.operationLabelKey | transloco
+								}}</span>
+							</h3>
+							<p class="meta">
+								{{ row.entityType }} · {{ row.askedOn }}
+								@if (row.answeredOn) {
+									· {{ row.answeredOn }}
+								}
+							</p>
+						</div>
+						<span class="status" [attr.data-status]="row.status">{{
+							row.statusLabelKey | transloco
+						}}</span>
+					</header>
+
+					@if (row.summary) {
+						<p class="summary">{{ row.summary }}</p>
+					}
+
+					@if (row.refused.length) {
+						<ul class="fields">
+							@for (field of row.refused; track field.field) {
+								<li>
+									<mc-my-request-field
+										[field]="field"
+										[isNew]="row.isNew"
+									/>
+								</li>
+							}
+						</ul>
+					}
+
+					@if (row.fields.length) {
+						<details class="asked">
+							<summary>
+								{{
+									'page.my-request.what-you-asked'
+										| transloco
+											: { count: row.fields.length }
+								}}
+							</summary>
+							<ul class="fields">
+								@for (field of row.fields; track field.field) {
+									<li>
+										<mc-my-request-field
+											[field]="field"
+											[isNew]="row.isNew"
+										/>
+									</li>
+								}
+							</ul>
+						</details>
+					}
+
+					@if (row.adminNote) {
+						<p class="note">
+							<span>{{
+								'page.my-request.from-the-admin' | transloco
+							}}</span>
+							{{ row.adminNote }}
+						</p>
+					}
+				</li>
+			}
+		</ul>
+	}
+</div>

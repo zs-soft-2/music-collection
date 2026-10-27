@@ -1,0 +1,361 @@
+import { MediaEnum, MediaList } from '@music-collection/common/api';
+import { FORMAT_ORDER, MediaFormat } from '@music-collection/ui/music-view';
+
+import {
+	CollectorAlbumsDocument,
+	CollectorCardDocument,
+	CollectorProfileDocument,
+	FAVOURITE_LIMIT,
+	clipText,
+	listOf,
+	pictureUrl,
+	positiveNumber,
+	wholeNumber,
+} from '../../data/collector-profile';
+import { countryName } from '../../data/user-location';
+import {
+	CollectorAlbumsView,
+	CollectorBadgeView,
+	CollectorFavouriteView,
+	CollectorFormatView,
+	CollectorNumbersView,
+	CollectorPursuitView,
+	CollectorRecordView,
+	CollectorView,
+	CollectorWishView,
+	EDITION_MAX,
+	EDITIONS_MAX,
+	NAME_MAX,
+	NOTE_MAX,
+	SLUG_MAX,
+	TITLE_MAX,
+} from './collector.model';
+
+/**
+ * From the published document onto what this page renders.
+ *
+ * This is the border post of the feature. The document was written by the
+ * collector's own browser, and the security rules can only hold its shape:
+ * Firestore rules have no iteration, so the numbers and the list lengths are
+ * checked up there while the contents of the lists are not. Everything that
+ * comes out of a list therefore arrives here unvetted, and leaves here as one
+ * of three things — a clipped string, a picture this page may load, or
+ * nothing.
+ *
+ * Pictures and links are held to `https://`. A `javascript:` or `data:` URL in
+ * an `<img src>` or an `<a href>` would be this page handing a visitor
+ * something a stranger wrote, under our own domain; the hosting CSP would
+ * catch much of that, but a page that relies on a header to be safe is a page
+ * that is not.
+ */
+
+/** The border post's own shorthands, in the names this page reads best. */
+const clip = clipText;
+const picture = pictureUrl;
+const count = wholeNumber;
+
+/** A route segment, or nothing — the router encodes whatever is left. */
+function slug(value: unknown): string | null {
+	return clip(value, SLUG_MAX) || null;
+}
+
+function year(value: unknown): number | null {
+	return typeof value === 'number' && Number.isInteger(value) ? value : null;
+}
+
+/** One of ours, or the catch-all — never whatever string arrived. */
+function format(value: unknown): MediaFormat {
+	return FORMAT_ORDER.includes(value as MediaFormat)
+		? (value as MediaFormat)
+		: 'other';
+}
+
+const list = listOf;
+
+/** The shop link, with the host it leads to — or neither. */
+function shopLink(value: unknown): {
+	sourceLink: string | null;
+	sourceHost: string | null;
+} {
+	const link = picture(value);
+
+	if (!link) {
+		return { sourceLink: null, sourceHost: null };
+	}
+
+	try {
+		return { sourceLink: link, sourceHost: new URL(link).host };
+	} catch {
+		return { sourceLink: null, sourceHost: null };
+	}
+}
+
+function toFormats(byFormat: unknown): CollectorFormatView[] {
+	const counts = (byFormat ?? {}) as Record<string, unknown>;
+
+	return FORMAT_ORDER.map((format) => ({
+		format,
+		count: count(counts[format]) ?? 0,
+	})).filter((entry) => entry.count > 0);
+}
+
+function toNumbers(document: CollectorProfileDocument): CollectorNumbersView {
+	const numbers = document.numbers ?? ({} as CollectorNumbersView);
+
+	return {
+		copies: count(numbers.copies) ?? 0,
+		albums: count(numbers.albums) ?? 0,
+		artists: count(numbers.artists) ?? 0,
+		oldestYear: year(numbers.oldestYear),
+		since: year(numbers.since),
+		formats: toFormats(numbers.byFormat),
+	};
+}
+
+function toBadges(document: CollectorProfileDocument): CollectorBadgeView[] {
+	return list(document.badges).map((entry) => {
+		const badge = entry as Record<string, unknown>;
+
+		return {
+			slug: slug(badge['slug']),
+			name: clip(badge['name'], NAME_MAX),
+			imageUrl: picture(badge['imageUrl']),
+			points: count(badge['points']) ?? 0,
+		};
+	});
+}
+
+function toPursuits(
+	document: CollectorProfileDocument
+): CollectorPursuitView[] {
+	return list(document.pursuits)
+		.map((entry) => {
+			const pursuit = entry as Record<string, unknown>;
+			const total = count(pursuit['total']) ?? 0;
+			const owned = Math.min(count(pursuit['owned']) ?? 0, total);
+
+			return {
+				slug: slug(pursuit['slug']),
+				name: clip(pursuit['name'], NAME_MAX),
+				progress: {
+					owned,
+					total,
+					percentage: total ? Math.round((owned / total) * 100) : 0,
+				},
+			};
+		})
+		.filter((pursuit) => (pursuit.progress?.total ?? 0) > 0);
+}
+
+/**
+ * The hunts of a collector who published no page: named, and nothing else.
+ *
+ * The entry carries the names itself, which is what lets this page draw them
+ * without asking for the collection catalog — a visitor who followed a link
+ * has none, and fetching one to label two chips would cost the visit its
+ * promise. An entry written before the names travelled carries the slug
+ * alone, and a slug names nothing, so it is left out.
+ */
+function toCardPursuits(
+	document: CollectorCardDocument
+): CollectorPursuitView[] {
+	return list(document.collecting)
+		.map((entry) => {
+			const hunt = entry as Record<string, unknown>;
+
+			return {
+				slug: slug(typeof entry === 'string' ? entry : hunt['slug']),
+				name: clip(
+					typeof entry === 'string' ? '' : hunt['name'],
+					NAME_MAX
+				),
+				progress: null,
+			};
+		})
+		.filter((pursuit) => !!pursuit.name);
+}
+
+function toShowcase(document: CollectorProfileDocument): CollectorRecordView[] {
+	return list(document.showcase).map((entry) => {
+		const record = entry as Record<string, unknown>;
+
+		return {
+			title: clip(record['title'], TITLE_MAX),
+			artistName: clip(record['artistName'], NAME_MAX),
+			year: year(record['year']),
+			format: format(record['format']),
+			coverUrl: picture(record['coverUrl']),
+			editions: list(record['editions'])
+				.slice(0, EDITIONS_MAX)
+				.map((edition) => clip(edition, EDITION_MAX))
+				.filter(Boolean),
+		};
+	});
+}
+
+function toWishlist(document: CollectorProfileDocument): CollectorWishView[] {
+	return list(document.wishlist).map((entry) => {
+		const wish = entry as Record<string, unknown>;
+
+		return {
+			title: clip(wish['title'], TITLE_MAX),
+			artistName: clip(wish['artistName'], NAME_MAX),
+			coverUrl: picture(wish['coverUrl']),
+			// A format the app does not know is nothing a shop could be asked
+			// for either.
+			medias: list(wish['medias']).filter((media): media is MediaEnum =>
+				MediaList.includes(media as MediaEnum)
+			),
+			...shopLink(wish['sourceLink']),
+		};
+	});
+}
+
+/**
+ * The records they named, with the stars they gave them.
+ *
+ * A star that is not one of the five this app can give is not shown as some
+ * other number — the entry is dropped. The rules can hold the length of this
+ * list but cannot look inside it, so a document claiming eleven stars for a
+ * record would otherwise draw eleven of them.
+ */
+function toFavourites(
+	document: CollectorProfileDocument
+): CollectorFavouriteView[] {
+	return list(document.favourites)
+		.slice(0, FAVOURITE_LIMIT)
+		.map((entry) => {
+			const favourite = entry as Record<string, unknown>;
+			const stars = favourite['stars'];
+
+			return {
+				title: clip(favourite['title'], TITLE_MAX),
+				artistName: clip(favourite['artistName'], NAME_MAX),
+				stars:
+					typeof stars === 'number' &&
+					Number.isInteger(stars) &&
+					stars >= 1 &&
+					stars <= 5
+						? stars
+						: 0,
+				note: clip(favourite['note'], NOTE_MAX),
+			};
+		})
+		.filter((favourite) => favourite.stars > 0 && !!favourite.title);
+}
+
+/** The place, as much of it as was shared. */
+function toPlace(document: CollectorProfileDocument): string | null {
+	const code = clip(document.countryCode, 2);
+	const city = clip(document.city, 60);
+
+	if (!code) {
+		return city || null;
+	}
+
+	return city ? `${city}, ${countryName(code)}` : countryName(code);
+}
+
+export function toCollectorView(
+	document: CollectorProfileDocument | null
+): CollectorView | null {
+	if (!document) {
+		return null;
+	}
+
+	const displayName = clip(document.displayName, NAME_MAX) || null;
+
+	return {
+		hasShelf: true,
+		hero: {
+			displayName,
+			photoURL: picture(document.photoURL),
+			initial: (displayName ?? '?').charAt(0).toUpperCase(),
+			place: toPlace(document),
+			updatedAt: count(document.updatedAt),
+		},
+		numbers: toNumbers(document),
+		points: {
+			total: positiveNumber(document.points?.total) ?? 0,
+			completedCollections:
+				count(document.points?.completedCollections) ?? 0,
+		},
+		badges: toBadges(document),
+		pursuits: toPursuits(document),
+		showcase: toShowcase(document),
+		wishlist: toWishlist(document),
+		favourites: toFavourites(document),
+	};
+}
+
+/**
+ * The page of a collector who shared no shelf, out of their directory entry.
+ *
+ * Everything the entry does not carry stays empty rather than being drawn as
+ * a zero: this is a collector and the hunts they chose to show, which is
+ * exactly what they published and no more. Null where there is no entry
+ * either — then there is genuinely nothing here.
+ */
+export function toCollectorCardView(
+	document: CollectorCardDocument | null
+): CollectorView | null {
+	const pursuits = document ? toCardPursuits(document) : [];
+
+	if (!document || !pursuits.length) {
+		return null;
+	}
+
+	const displayName = clip(document.displayName, NAME_MAX) || null;
+
+	return {
+		hasShelf: false,
+		hero: {
+			displayName,
+			photoURL: picture(document.photoURL),
+			initial: (displayName ?? '?').charAt(0).toUpperCase(),
+			place: null,
+			updatedAt: count(document.updatedAt),
+		},
+		numbers: {
+			copies: 0,
+			albums: 0,
+			artists: 0,
+			oldestYear: null,
+			since: null,
+			formats: [],
+		},
+		points: { total: 0, completedCollections: 0 },
+		badges: [],
+		pursuits,
+		showcase: [],
+		wishlist: [],
+		favourites: [],
+	};
+}
+
+/**
+ * The full shelf, as unvetted as everything else that travelled inside a
+ * document: same border post, same three outcomes.
+ */
+export function toCollectorAlbums(
+	document: CollectorAlbumsDocument | null
+): CollectorAlbumsView {
+	if (!document) {
+		return { count: 0, albums: [] };
+	}
+
+	const albums = list(document.albums).map((entry) => {
+		const album = entry as Record<string, unknown>;
+
+		return {
+			title: clip(album['title'], TITLE_MAX),
+			artistName: clip(album['artistName'], NAME_MAX),
+			year: year(album['year']),
+			format: format(album['format']),
+		};
+	});
+
+	// The count is what the shelf holds; the list may have stopped short of
+	// it, and saying so is more honest than counting the rows drawn.
+	return { count: count(document.count) ?? albums.length, albums };
+}

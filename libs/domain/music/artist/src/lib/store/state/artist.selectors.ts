@@ -56,6 +56,11 @@ export const selectArtistById = (uid: string) =>
 		}
 	);
 
+export const selectLookupLoading = createSelector(
+	getArtistState,
+	(state: State) => state.lookupLoading
+);
+
 export const selectSearchResult = createSelector(
 	getArtistState,
 	(state: State) => state.searchResult

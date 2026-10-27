@@ -1,4 +1,5 @@
 import { EntityUtilService } from '../../../common';
+import { AlbumEntityAdd } from '../album';
 import {
 	EntityQuantityEntity,
 	EntityQuantityEntityUpdate,
@@ -11,12 +12,18 @@ import {
 	ArtistModelAdd,
 	ArtistModelUpdate,
 } from './artist';
+import { ArtistExternalAlbum } from './artist-external';
 
 export abstract class ArtistUtilService extends EntityUtilService<
 	ArtistEntity,
 	ArtistEntityAdd,
 	ArtistEntityUpdate
 > {
+	/** A new album of the artist from an album found online. */
+	public abstract createAlbumFromExternal(
+		artist: ArtistEntity,
+		album: ArtistExternalAlbum
+	): AlbumEntityAdd;
 	public abstract convertEntityAddToModelAdd(
 		entity: ArtistEntityAdd
 	): ArtistModelAdd;

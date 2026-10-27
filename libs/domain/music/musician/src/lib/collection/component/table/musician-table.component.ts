@@ -1,6 +1,8 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import { Observable } from 'rxjs';
 
-import { AsyncPipe, NgTemplateOutlet } from '@angular/common';
+import { AsyncPipe, DatePipe, NgTemplateOutlet } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import {
 	ChangeDetectionStrategy,
 	Component,
@@ -13,16 +15,17 @@ import {
 	MusicianTableParams,
 } from '@music-collection/api';
 import { ButtonDirective } from 'primeng/button';
-import { DataView } from 'primeng/dataview';
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
 import { InputText } from 'primeng/inputtext';
-import { SortIcon, SortableColumn, Table } from 'primeng/table';
-
 import {
-	MusicianTableService,
-	MusicianTableView,
-} from './musician-table.service';
+	CollectionColumnDirective,
+	CollectionListComponent,
+	EntityCardComponent,
+	ViewActionComponent,
+} from '@music-collection/ui';
+
+import { MusicianTableService } from './musician-table.service';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -31,16 +34,19 @@ import {
 	templateUrl: './musician-table.component.html',
 	styleUrls: ['./musician-table.component.scss'],
 	imports: [
-		Table,
-		SortableColumn,
-		SortIcon,
+		...I18N_IMPORTS,
+		FormsModule,
 		ButtonDirective,
-		DataView,
 		IconField,
 		InputIcon,
 		InputText,
 		AsyncPipe,
+		DatePipe,
 		NgTemplateOutlet,
+		CollectionColumnDirective,
+		CollectionListComponent,
+		EntityCardComponent,
+		ViewActionComponent,
 	],
 })
 export class MusicianTableComponent extends BaseComponent implements OnInit {
@@ -48,30 +54,24 @@ export class MusicianTableComponent extends BaseComponent implements OnInit {
 
 	public params$!: Observable<MusicianTableParams>;
 
-	public readonly view = this.componentService.view;
+	public readonly collectionView = this.componentService.collectionView;
 
-	public readonly viewOptions: {
-		value: MusicianTableView;
-		label: string;
-		icon: string;
-	}[] = [
-		{ value: 'table', label: 'Table', icon: 'pi pi-list' },
-		{ value: 'cards', label: 'Cards', icon: 'pi pi-th-large' },
-	];
+	public readonly place = this.componentService.place;
 
 	public editMusician(musician: MusicianEntity): void {
 		this.componentService.editMusician(musician);
 	}
 
-	public filter(event: Event): void {
-		this.componentService.filter((event.target as HTMLInputElement).value);
+	public filter(query: string): void {
+		this.componentService.filter(query);
 	}
 
 	public ngOnInit(): void {
 		this.params$ = this.componentService.init$();
 	}
 
-	public setView(view: MusicianTableView): void {
-		this.componentService.setView(view);
+	/** Where the eye leads: the page that shows this musician. */
+	public viewLink(musician: MusicianEntity): unknown[] {
+		return this.componentService.viewLink(musician);
 	}
 }

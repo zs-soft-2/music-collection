@@ -10,6 +10,10 @@ rules_version = '2';
 //    syncRolePermissions) a user összes szerepkörének permissionjeit a
 //    `security/users/{uid}/effective_permissions` dokumentumba gyűjti
 //    (`permissions: string[]`, `roles: string[]`).
+//  - A `USER` szerepkör a gyűjtő alapjoga (saját példány, kívánságlista): az
+//    első belépéskor a kliens létrehozza a `user/{uid}` dokumentumot (az Auth
+//    uid-dal, szerepkör nélkül), a `syncUserPermissions` function pedig
+//    beírja a `roleIds`-be.
 //  - Egyetlen igazságforrás ez a dokumentum: a storage.rules is ezt olvassa
 //    (cross-service `firestore.get()`). Custom claimet nem használunk, mert a
 //    claimek együtt 1000 bájtba férnek, amit a teljes permission-lista
@@ -19,14 +23,14 @@ rules_version = '2';
 // Adatvilágok:
 //  - Globális katalógus (artist, album, release, label, musician, document,
 //    track, contribution, membership): publikus olvasás, permission-alapú írás.
-//  - Tenant (`tenant/{tenantId}/…`): a felhasználó saját adatvilága; a tenant
-//    dokumentumot csak a bootstrap function írja (Admin SDK).
-//  - Collection (`music-collection`): globális és tenant-szintű; a collection,
-//    a szabály és az elemlista írása KIZÁRÓLAG szerveroldali (callable-ök
-//    ellenőrzik a `createMusicCollectionEntity` stb. permissiont).
+//  - Saját adat (`user/{uid}/…`): a gyűjtő példányai, kívánságlistája és
+//    beállításai; csak ő írhatja, a megfelelő permissionnel.
+//  - Collection (`music-collection`): globális; a collection, a szabály és az
+//    elemlista írása KIZÁRÓLAG szerveroldali (a callable-ök ellenőrzik a
+//    `createMusicCollectionEntity` stb. permissiont).
 //  - Minden más tiltva.
 //
-// FONTOS: a tenant alatt NEM használhatunk katalógus collection-nevet
+// FONTOS: a saját adat alatt NEM használhatunk katalógus collection-nevet
 // (album, release, label …), mert a lenti collection-group olvasási szabályok
 // bármely mélységben publikussá tennék.
 // ---------------------------------------------------------------------------
@@ -60,18 +64,205 @@ service cloud.firestore {
       return request.resource.data.diff(resource.data).affectedKeys();
     }
 
-    // Tenant-tulajdonlás: induláskor 1 user : 1 tenant (`ownerUserId`).
-    // A `tenantId` path-változó, ezért list-lekérdezésnél is feloldható.
-    function tenantPath(tenantId) {
-      return /databases/$(database)/documents/tenant/$(tenantId);
+    // Egy példány eladása / elcserélése: a dokumentum megmarad (history),
+    // a `disposal` null vagy { reason, date, note }.
+    function isValidDisposal(data) {
+      return !('disposal' in data)
+          || data.disposal == null
+          || (data.disposal is map
+              && data.disposal.keys().hasOnly(['reason', 'date', 'note'])
+              && data.disposal.reason in ['sold', 'traded', 'gifted', 'lost', 'other']
+              && data.disposal.date is number
+              && (data.disposal.note == null
+                  || (data.disposal.note is string
+                      && data.disposal.note.size() <= 500)));
     }
-    function ownsTenant(tenantId) {
-      return isAuthed()
-          && exists(tenantPath(tenantId))
-          && get(tenantPath(tenantId)).data.ownerUserId == request.auth.uid;
+
+    // A példány helye a polcon: melyik szekrény, melyik rekesz, hányadik
+    // pozíció. A hiánya vagy a null azt jelenti, hogy a polc rakja el.
+    //
+    // A pozíció felső korlátja onnan jön, hogy hány lemez FÉR egy rekeszbe:
+    // a leghosszabb rajzolható rekesz 4 m (SHELF_LIMITS.maxLength), a
+    // legvékonyabb gerinc egy 5 mm-es LP-borító — vagyis 800. A korábbi 36
+    // egy fél Kallax-rekesznyi volt: aki telerakta a rekeszt, annak a
+    // 37. lemeze némán nem íródott ki.
+    function isValidPlacement(data) {
+      return !('placement' in data)
+          || data.placement == null
+          || (data.placement is map
+              && data.placement.keys().hasOnly(['unitId', 'row', 'column', 'side', 'position'])
+              && data.placement.unitId is string
+              && data.placement.unitId.size() > 0
+              && data.placement.unitId.size() <= 100
+              && data.placement.row is int
+              && data.placement.row >= 1 && data.placement.row <= 12
+              && data.placement.column is int
+              && data.placement.column >= 1 && data.placement.column <= 12
+              && data.placement.position is int
+              && data.placement.position >= 1 && data.placement.position <= 800
+              // A rekesz melyik falánál áll: hiánya a bal oldal, mert a
+              // rekeszek onnan telnek, és a jobb fal előtt kiírt helyek
+              // mind ott állnak.
+              && (!('side' in data.placement)
+                  || data.placement.side in ['left', 'right']));
+    }
+
+    // A beszerzés: mikor, hol, mennyiért. Minden mező önmagában állhat —
+    // egy ajándéknak van helye, de nincs ára.
+    function isValidPurchase(data) {
+      return !('purchase' in data)
+          || data.purchase == null
+          || (data.purchase is map
+              && data.purchase.keys().hasOnly(['date', 'place', 'price', 'currency'])
+              && (data.purchase.date == null || data.purchase.date is number)
+              && (data.purchase.place == null
+                  || (data.purchase.place is string
+                      && data.purchase.place.size() <= 200))
+              && (data.purchase.price == null
+                  || (data.purchase.price is number
+                      && data.purchase.price >= 0))
+              && (data.purchase.currency == null
+                  || (data.purchase.currency is string
+                      && data.purchase.currency.size() == 3)));
+    }
+
+    // Goldmine-osztályzat: a lemez és a borító külön.
+    function isValidGrade(grade) {
+      return grade == null
+          || grade in ['M', 'NM', 'VG+', 'VG', 'G', 'F', 'P'];
+    }
+    function isValidCondition(data) {
+      return !('condition' in data)
+          || data.condition == null
+          || (data.condition is map
+              && data.condition.keys().hasOnly(['media', 'sleeve'])
+              && isValidGrade(data.condition.media)
+              && isValidGrade(data.condition.sleeve));
+    }
+
+    // ── Számozott kiadás sorszáma ───────────────────────────────────────────
+    // Alakja: 1-től induló egész, és ha tudjuk a példányszámot, az nem lehet
+    // kisebb nála — a 600. darab nem létezhet 500-as kiadásban.
+    function isValidSerial(data) {
+      return !('serial' in data)
+          || data.serial == null
+          || (data.serial is map
+              && data.serial.keys().hasOnly(['number', 'total'])
+              && data.serial.number is int
+              && data.serial.number >= 1
+              && data.serial.number <= 1000000
+              && (data.serial.total == null
+                  || (data.serial.total is int
+                      && data.serial.total >= data.serial.number
+                      && data.serial.total <= 1000000)));
+    }
+
+    // A foglalás helye: `copy-serial/{kiadás}_{sorszám}`.
+    function serialClaimPath(data) {
+      return /databases/$(database)/documents/copy-serial/$(data.release.uid + '_' + string(data.serial.number));
+    }
+    // Sorszámot csak akkor írhatsz a példányra, ha a hozzá tartozó foglalás
+    // megvan és a tiéd. Ez köti össze a két írást: a foglalás dönti el, ki
+    // kapta meg a számot, ez pedig nem engedi, hogy más mégis beírja.
+    function ownsSerialClaim(data, uid) {
+      return !('serial' in data)
+          || data.serial == null
+          || (data.release is map
+              && data.release.uid is string
+              && data.release.uid.size() > 0
+              && exists(serialClaimPath(data))
+              && get(serialClaimPath(data)).data.userId == uid);
+    }
+
+    // A példány sztorija. Hosszabb, mint a `description`, de nem határtalan:
+    // a dokumentum egy megabájtos kerete mindenki más adatát is viszi.
+    function isValidStory(data) {
+      return !('story' in data)
+          || data.story == null
+          || (data.story is string && data.story.size() <= 5000);
+    }
+
+    // Példányfotók: legfeljebb kettő (elöl-hátul), mindegyik a saját Storage
+    // útvonalára mutat. A `path` ellenőrzése az, ami megakadályozza, hogy a
+    // dokumentum más gyűjtő fájljára hivatkozzon.
+    //
+    // Útvonal igen, letöltési URL nem. A Storage download URL-je tokent visz,
+    // és az a token bejelentkezés nélkül, a Storage-szabályt megkerülve nyitja
+    // meg a fájlt — dokumentumban tárolva egy kiszórt kulcs, ami annyit ér,
+    // amennyit a dokumentum védettsége. A kliens a képek megjelenítésekor kéri
+    // el az URL-t a Storage-tól, azt a kérést pedig a szabály bírálja el.
+    function isValidPhoto(photo, uid, itemId) {
+      return photo is map
+          && photo.keys().hasOnly(['path', 'width', 'height'])
+          && photo.path is string
+          && photo.path.matches('^collection-item/' + uid + '/' + itemId + '/[A-Za-z0-9._-]{1,120}$')
+          && photo.width is int && photo.width > 0
+          && photo.height is int && photo.height > 0;
+    }
+    function isValidPhotos(data, uid, itemId) {
+      return !('photos' in data)
+          || data.photos == null
+          || (data.photos is list
+              && data.photos.size() <= 2
+              && isValidPhotoAt(data.photos, 0, uid, itemId)
+              && isValidPhotoAt(data.photos, 1, uid, itemId));
+    }
+    function isValidPhotoAt(photos, index, uid, itemId) {
+      return photos.size() <= index || isValidPhoto(photos[index], uid, itemId);
+    }
+
+    // Amit a példány-oldal ír a lemezről: beszerzés, állapot, sztori, fotók.
+    function isValidCopyStory(data, uid, itemId) {
+      return isValidPurchase(data)
+          && isValidCondition(data)
+          && isValidSerial(data)
+          && isValidStory(data)
+          && isValidPhotos(data, uid, itemId);
+    }
+
+    // ── Lemez-értékelés ─────────────────────────────────────────────────────
+    // Egész csillag 1 és 5 között. Félcsillag szándékosan nincs: a skála csak
+    // akkor összehasonlítható, ha mindenki ugyanazt az öt fokot használja.
+    //
+    // A dokumentum azonosítója az album azonosítója, és a szabály ezt a
+    // kettőt összekapcsolja — ez az, ami miatt egy lemezre egy értékelés jut:
+    // aki átgondolja, a magáét írja át, nem szavaz újra. A közösségi átlagot
+    // ez teszi értelmessé (`album-rating`, lásd lent).
+    //
+    // A `hasOnly` nem díszítés: a szerver ebből a dokumentumból számolja az
+    // átlagot, és csak azt a mezőkészletet olvassa, ami itt fel van sorolva.
+    // Egy szabadon bővíthető dokumentum azt jelentené, hogy a kliens olyan
+    // mezőt is elhelyezhet benne, amiről a szerveroldal nem tud.
+    // Az `updatedAt` a sync-wrapper bélyege (FirestoreSyncService), minden
+    // íráson ott van.
+    function isValidRating(data, albumId) {
+      return data.keys().hasOnly(['uid', 'albumId', 'albumTitle', 'artistName',
+                                  'artistId', 'stars', 'note', 'ratedAt',
+                                  'updatedAt'])
+          && data.keys().hasAll(['albumId', 'stars', 'ratedAt'])
+          && data.albumId == albumId
+          && (!('uid' in data) || data.uid == albumId)
+          && data.stars is int
+          && data.stars >= 1
+          && data.stars <= 5
+          && data.ratedAt is number
+          && (!('albumTitle' in data)
+              || (data.albumTitle is string && data.albumTitle.size() <= 500))
+          && (!('artistName' in data)
+              || data.artistName == null
+              || (data.artistName is string && data.artistName.size() <= 500))
+          && (!('artistId' in data)
+              || data.artistId == null
+              || (data.artistId is string && data.artistId.size() <= 200))
+          && (!('note' in data)
+              || data.note == null
+              || (data.note is string && data.note.size() <= 280));
     }
 
     // A sync-marker feature key → permission-erőforrás. Ismeretlen kulcs → tiltás.
+    // Az `owned-` előtagúak a gyűjtő saját entitásai (lásd lent): külön
+    // erőforrás, külön jog — a katalógusba írni továbbra is `createArtistEntity`
+    // kell, a saját előadóhoz `createOwnedArtistEntity` elég.
     function syncResources() {
       return {
         'artist': 'ArtistEntity',
@@ -81,50 +272,291 @@ service cloud.firestore {
         'musician': 'MusicianEntity',
         'document': 'DocumentEntity',
         'track': 'TrackEntity',
+        'track-lyrics': 'TrackEntity',
         'contribution': 'ContributionEntity',
         'membership': 'MembershipEntity',
+        'music-collection': 'MusicCollectionEntity',
+        'genre': 'GenreEntity',
+        'venue': 'VenueEntity',
+        'venue-suggestion': 'VenueEntity',
+        'concert': 'ConcertEntity',
+        'concert-suggestion': 'ConcertEntity',
+        'role': 'RoleEntity',
         'user': 'UserEntity',
         'entity-quantity': 'EntityQuantityEntity',
         'collection-item': 'CollectionItemEntity',
-        'wishlist-item': 'WishlistItemEntity'
+        'wishlist-item': 'WishlistItemEntity',
+        'release-request': 'ReleaseRequestEntity',
+        'owned-artist': 'OwnedArtistEntity',
+        'owned-album': 'OwnedAlbumEntity',
+        'owned-release': 'OwnedReleaseEntity',
+        'owned-label': 'OwnedLabelEntity',
+        'owned-musician': 'OwnedMusicianEntity',
+        'owned-document': 'OwnedDocumentEntity',
+        'owned-track': 'OwnedTrackEntity',
+        'owned-contribution': 'OwnedContributionEntity',
+        'owned-membership': 'OwnedMembershipEntity'
       };
+    }
+
+    // Egy helyszín dokumentum alakja. A koordináta szám, nem szöveg: a térkép
+    // és a távolságszámítás ebből él.
+    function isValidVenue() {
+      let data = request.resource.data;
+
+      return data.name is string
+          && data.name.size() > 0
+          && data.name.size() <= 200
+          && data.countryCode is string
+          && data.countryCode.size() == 2
+          && (!('city' in data) || data.city == null
+              || (data.city is string && data.city.size() <= 120))
+          && (!('address' in data) || data.address == null
+              || (data.address is string && data.address.size() <= 300))
+          && (!('type' in data) || data.type == null
+              || (data.type is string && data.type.size() <= 60))
+          && (!('coordinates' in data) || data.coordinates == null
+              || (data.coordinates.latitude is number
+                  && data.coordinates.longitude is number))
+          && (!('source' in data)
+              || data.source in ['musicbrainz', 'ai', 'manual']);
+    }
+
+    // Egy koncert dokumentum alakja. A nap teljes dátum: részleges dátumra a
+    // lap nem tud idővonalat rajzolni, és a lejárat-söprés sem működne.
+    function isValidConcert() {
+      let data = request.resource.data;
+
+      return data.artistUid is string
+          && data.artistUid.size() > 0
+          && data.artistName is string
+          && data.artistName.size() > 0
+          && data.artistName.size() <= 300
+          && data.venueName is string
+          && data.venueName.size() > 0
+          && data.venueName.size() <= 200
+          && data.title is string
+          && data.title.size() > 0
+          && data.title.size() <= 300
+          && data.countryCode is string
+          && data.countryCode.size() == 2
+          && data.startsAt is string
+          && data.startsAt.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')
+          && (!('endsAt' in data) || data.endsAt == null
+              || data.endsAt.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}'))
+          && (!('startsAtTime' in data) || data.startsAtTime == null
+              || data.startsAtTime.matches('[0-9]{2}:[0-9]{2}'))
+          && data.eventType in ['concert', 'festival', 'other']
+          && data.source in ['musicbrainz', 'ai', 'manual']
+          && data.cancelled is bool
+          && (!('ticketUrl' in data) || data.ticketUrl == null
+              || (data.ticketUrl is string && data.ticketUrl.size() <= 1000))
+          && (!('sourceUrl' in data) || data.sourceUrl == null
+              || (data.sourceUrl is string && data.sourceUrl.size() <= 1000))
+          && (!('supportingActs' in data)
+              || (data.supportingActs is list
+                  && data.supportingActs.size() <= 30))
+          // A teljes műsor, a főfellépővel együtt: a fenti névsor plusz egy,
+          // és a lista elemei a lapon linkké válnak.
+          && (!('lineup' in data)
+              || (data.lineup is list
+                  && data.lineup.size() <= 31));
+    }
+
+    // Egy műfaj dokumentum alakja. A stíluslista az, amit a formok kínálnak,
+    // ezért kap korlátot: száz stílus fölött nem lista, hanem szótár.
+    function isValidGenre() {
+      return request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.name.size() <= 60
+          && request.resource.data.slug is string
+          && request.resource.data.slug.size() > 0
+          && request.resource.data.slug.size() <= 60
+          && request.resource.data.styles is list
+          && request.resource.data.styles.size() <= 100
+          && (!('description' in request.resource.data)
+              || request.resource.data.description == null
+              || (request.resource.data.description is string
+                  && request.resource.data.description.size() <= 500))
+          && (!('active' in request.resource.data)
+              || request.resource.data.active is bool);
+    }
+
+    // A dokumentum fájljának címe. A `filePath` a Storage letöltési URL-je: a
+    // katalógusoldalak ezt teszik <img>-be, a dokumentum-oldal pedig — PDF
+    // esetén — iframe-be. Az iframe-be tett cím idegen originként fut a saját
+    // oldalunkban, ezért nem elég, hogy „Storage-URL”: a
+    // firebasestorage.googleapis.com egyetlen host, amin a világ összes
+    // Firebase-projektje osztozik. Bárki csinálhat projektet, feltölthet rá
+    // egy oldalt, és a címe mindenben a mienkre hasonlít — egy dolog kivételével.
+    // Az a bucket neve, és ezért azt nézzük.
+    //
+    // A két saját bucket azért áll itt kiírva, mert a szabálynak nincs honnan
+    // megtudnia, melyik projektben fut: ugyanez a fájl megy a devre és a prodra.
+    // (A kliens szigorúbb: az a futó build EGY bucketjéhez köti — lásd
+    // `own-storage-file.ts`.)
+    function isOwnStorageUrl(url) {
+      return url is string
+          && url.matches('^https://firebasestorage[.]googleapis[.]com/v0/b/(music-collection-16676[.]firebasestorage[.]app|music-collection-4e074[.]appspot[.]com)/o/[^?#]+([?][^#]*)?$');
+    }
+
+    // ── A gyűjtő neve és képe ───────────────────────────────────────────────
+    // Mindkettőt maga a gyűjtő írja, és mindkettő kikerül mellé a ranglistára
+    // és a térképre — más gyűjtők böngészőjébe, a név szövegként, a kép
+    // `<img src>`-ként. Ezért van alakja mindkettőnek:
+    //
+    //  - A név egy soron: a ranglista és a térkép-kártya egy sorban mutatja,
+    //    és a sortörésekkel teleírt név a mezőny többi sorát tolja el. A 200
+    //    a `user-location` korábbi korlátja, és egy Google-profilnév a
+    //    töredéke.
+    //  - A kép vagy a saját Storage-unkban lakik (a profilon összerakott
+    //    figura, `user-avatar/{uid}/`), vagy a Google profilképe — a
+    //    bejelentkezés egyedül Google-lel megy, a `photoURL` onnan jön. Egy
+    //    szabadon írható cím ennél annyit jelentene, hogy a térképet megnyitó
+    //    gyűjtők böngészője egy idegen szerverre jelentkezik be, amit a
+    //    dokumentum írója választott.
+    function isDisplayName(value) {
+      return value is string
+          && value.size() <= 200
+          && value.matches('^[^[:cntrl:]]*$');
+    }
+    function isProfilePhotoUrl(url) {
+      return url is string
+          && url.size() <= 2000
+          && (isOwnStorageUrl(url)
+              || url.matches('^https://[a-z0-9.-]+[.]googleusercontent[.]com/.*$'));
+    }
+    // A user dokumentum két mezője: a hiánya és a null is rendben van — a
+    // gyűjtőnek nem kötelező se neve, se képe.
+    function isValidUserName(data) {
+      return !('displayName' in data)
+          || data.displayName == null
+          || isDisplayName(data.displayName);
+    }
+    function isValidUserPhoto(data) {
+      return !('photoURL' in data)
+          || data.photoURL == null
+          || isProfilePhotoUrl(data.photoURL);
+    }
+
+    // Egy szerepkör dokumentum alakja. A permission-lista az, amiből a
+    // szerveroldali szinkron az effektív jogosultságot számolja, ezért kap
+    // korlátot: a felület száznál kevesebbet kínál, és egy elszabadult írás
+    // ne tudja megfeküdni minden érintett user szinkron-dokumentumát.
+    function isValidRole() {
+      return request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.name.size() <= 60
+          && request.resource.data.permissions is list
+          && request.resource.data.permissions.size() <= 200
+          && (!('description' in request.resource.data)
+              || request.resource.data.description == null
+              || (request.resource.data.description is string
+                  && request.resource.data.description.size() <= 500));
+    }
+
+    // A gyűjtő saját entitásának collectionje: `owned-` előtag, és csak a
+    // fenti listán szereplő erőforrásra. Ismeretlen `owned-…` név → tiltás.
+    function isOwnedFeature(featureKey) {
+      return featureKey.matches('^owned-[a-z-]+$')
+          && featureKey in syncResources();
+    }
+
+    // A saját entitás tulajdonosa maga a gyűjtő — és csak ő. Ez tiltja meg,
+    // hogy bárki a sajátját `GLOBAL`-ra emelje: a katalógusba egyedül a
+    // jóváhagyás viheti át.
+    function isOwnedBy(uid) {
+      return request.resource.data.meta is map
+          && request.resource.data.meta.ownerId == uid;
+    }
+
+    // Az app alapértelmezett nyelve. Kivétel az alábbi szabály alól: ezt a
+    // kijelentkezett látogatónak is látnia kell, mert ez dönti el, milyen
+    // nyelven nyílik meg neki az oldal. Nincs benne semmi védeni való — egy
+    // háromértékű kód —, írni viszont csak jogosultsággal lehet. A szabályok
+    // VAGY-olnak, ezért ez a pontosabb szabály a lenti mellett áll meg.
+    match /app-setting/language {
+      allow get: if true;
+      // A `FirestoreSyncService` a szinkron-bélyeget is ráírja, ezért az
+      // `updatedAt` is megengedett kulcs — a `language` viszont csak a
+      // három nyelv egyike lehet.
+      allow write: if hasPerm('updateDefaultLanguage')
+        && request.resource.data.keys().hasOnly(['language', 'updatedAt'])
+        && request.resource.data.language in ['hu', 'en', 'de'];
+    }
+
+    // Alkalmazás-szintű beállítások (pl. `badge-generation`). Írni csak a
+    // callable tud, mert a napi keret számlálója is itt él — a kliens nem
+    // nullázhatja le magának.
+    match /app-setting/{settingId} {
+      allow get, list: if hasPerm('updateBadgeGenerationSettings');
+      allow write: if false;
     }
 
     // ── Jogosultság: szerepkör, user, effektív permissionök ─────────────────
     match /role/{roleId} {
       allow get, list: if isAuthed();
-      allow create: if hasPerm('createRoleEntity');
-      allow update: if hasPerm('updateRoleEntity');
+      allow create: if hasPerm('createRoleEntity') && isValidRole();
+      allow update: if hasPerm('updateRoleEntity') && isValidRole();
       allow delete: if hasPerm('deleteRoleEntity');
     }
 
     // A `roleIds` (és a régi, beágyazott `roles`) csak permissionnel írható —
-    // a user önmagának nem adhat szerepkört.
+    // a user önmagának nem adhat szerepkört. A név és a kép alakja pedig azé
+    // a két mezőé, ami a gyűjtő mellett elhagyja a dokumentumát (lásd
+    // `isDisplayName` / `isProfilePhotoUrl`) — az adminra is, mert az sem
+    // tolhat be egy megabájtos nevet.
+    //
+    // Frissítésnél a változatlan érték átmegy, ahogy a `document.filePath`-nál
+    // is: a 2022-es prod adatra ez a szabály visszamenőleg nem lehet igaz, és
+    // egy régi dokumentumon attól még lehessen mást javítani — új nevet vagy
+    // képet viszont csak ebben az alakban lehet beírni.
     match /user/{uid} {
       allow get: if isSelf(uid) || hasPerm('viewUserEntity');
       allow list: if hasPerm('viewUserEntity');
-      allow create: if hasPerm('createUserEntity')
-                    || (isSelf(uid)
-                        && !request.resource.data.keys().hasAny(['roleIds', 'roles']));
-      allow update: if hasPerm('updateUserEntity')
-                    || (isSelf(uid) && !changedKeys().hasAny(['roleIds', 'roles']));
+      allow create: if (hasPerm('createUserEntity')
+                        || (isSelf(uid)
+                            && !request.resource.data.keys().hasAny(['roleIds', 'roles'])))
+                    && isValidUserName(request.resource.data)
+                    && isValidUserPhoto(request.resource.data);
+      allow update: if (hasPerm('updateUserEntity')
+                        || (isSelf(uid) && !changedKeys().hasAny(['roleIds', 'roles'])))
+                    && (!changedKeys().hasAny(['displayName'])
+                        || isValidUserName(request.resource.data))
+                    && (!changedKeys().hasAny(['photoURL'])
+                        || isValidUserPhoto(request.resource.data));
       allow delete: if hasPerm('deleteUserEntity');
 
-      // ÁTMENETI (tenant-migrációig): a saját adat még a user alatt él.
-      // A migráció (user/{uid}/… → tenant/{tenantId}/…) PR-jében törlendő,
-      // a lenti collection-group olvasással együtt.
+      // A gyűjtő saját adata a user alatt él, és nem is megy tovább: a
+      // példány ára, a hozzá tartozó történet, a polcon elfoglalt helye és a
+      // fényképei csak a tulajdonosáé. (A Storage ugyanígy zárja a képeket.)
       match /collection-item/{itemId} {
-        allow read: if true;
+        allow read: if isSelf(uid);
         allow create: if isSelf(uid)
                       && hasPerm('createCollectionItemEntity')
-                      && request.resource.data.userId == uid;
+                      && request.resource.data.userId == uid
+                      && isValidPlacement(request.resource.data)
+                      && isValidCopyStory(request.resource.data, uid, itemId)
+                      && ownsSerialClaim(request.resource.data, uid);
+        // A `release` is a foglalást kéri, nem csak a `serial`: a foglalás
+        // kiadásra és számra szól, így a példányt átvinni egy másik kiadásra
+        // ugyanúgy új foglalás, mint új számot beírni. Nélküle a sorszám úgy
+        // sétálhatna át egy kiadásra, amelynek azt a számát más gyűjtő
+        // jelentette be — vagyis a registry pont ott nem fogna, ahol való.
+        // Számozatlan példánynál az `ownsSerialClaim` rövidre zár, olvasás
+        // nélkül.
         allow update: if isSelf(uid)
                       && hasPerm('updateCollectionItemEntity')
-                      && request.resource.data.userId == uid;
+                      && request.resource.data.userId == uid
+                      && isValidDisposal(request.resource.data)
+                      && isValidPlacement(request.resource.data)
+                      && isValidCopyStory(request.resource.data, uid, itemId)
+                      && (!changedKeys().hasAny(['serial', 'release'])
+                          || ownsSerialClaim(request.resource.data, uid));
         allow delete: if isSelf(uid) && hasPerm('deleteCollectionItemEntity');
       }
       match /wishlist-item/{itemId} {
-        allow read: if true;
+        allow read: if isSelf(uid);
         allow create: if isSelf(uid)
                       && hasPerm('createWishlistItemEntity')
                       && request.resource.data.userReference.uid == uid;
@@ -133,16 +565,380 @@ service cloud.firestore {
                       && request.resource.data.userReference.uid == uid;
         allow delete: if isSelf(uid) && hasPerm('deleteWishlistItemEntity');
       }
+      // Saját beállítások (pl. lejátszó: user/{uid}/setting/player).
+      match /setting/{settingId} {
+        allow read, write: if isSelf(uid);
+      }
+
+      // Hallgatási napló: egy dokumentum egy leülés egy lemezzel. Teljesen
+      // privát — se collection-group olvasás, se más user nem látja. Nincs
+      // hozzá permission: aki be van jelentkezve, a saját hallgatását
+      // rögzítheti. Törlés is szabad: a saját naplóját bárki kitörölheti.
+      match /play-log/{entryId} {
+        allow read, write: if isSelf(uid);
+      }
+
+      // Amit a gyűjtő a lemezről gondol: egy dokumentum egy album, benne a
+      // csillag és egy sor arról, miért. Ugyanolyan privát, mint a napló —
+      // se collection-group olvasás, se más user nem látja. Jog nem kell
+      // hozzá: aki be van jelentkezve, a saját véleményét leírhatja.
+      //
+      // FIGYELEM: `rating` nevű collectionre collection-group szabály soha
+      // nem jöhet (`/{path=**}/rating/{...}`). A katalógus szabályai pontosan
+      // így tesznek publikussá minden `album` vagy `release` nevű collectiont
+      // bármilyen mélységben — egy ilyen szabály itt mindenki véleményét
+      // kiolvashatóvá tenné. A közösségi átlagot ezért nem a kliens gyűjti
+      // össze, hanem a szerver írja ki (`album-rating`).
+      match /rating/{albumId} {
+        allow read: if isSelf(uid);
+        allow create, update: if isSelf(uid)
+                              && isValidRating(request.resource.data, albumId);
+        allow delete: if isSelf(uid);
+      }
+
+      // Napi kérdés: a gyűjtő tippje egy napra, a megfejtéssel együtt — a
+      // kiértékelés után már megmutatható neki. Kizárólag az
+      // `answerDailyQuestion` callable írja (Admin SDK): a kliens a saját
+      // tippjét sem javíthatja át, és pontot sem írhat magának.
+      match /daily-answer/{day} {
+        allow read: if isSelf(uid);
+        allow write: if false; // answerDailyQuestion
+      }
+
+      // A fotós azonosítás napi kerete: egy dokumentum egy nap, benne a ma
+      // elindított modellkérések száma. Az `identifyRecordFromPhoto` és az
+      // `identifyShelfFromPhotos` írja (Admin SDK). A gyűjtő láthatja,
+      // mennyit használt el — nullázni viszont nem tudja, különben a keret
+      // annyit érne, amennyit a kliens jókedve.
+      match /scan-quota/{day} {
+        allow read: if isSelf(uid);
+        allow write: if false; // identifyRecordFromPhoto, identifyShelfFromPhotos
+      }
+
+      // A játékok kasszája (`game/daily-question`): pont, sorozat, találat.
+      // Szándékosan külön a collection-pontoktól — ott semmi nem fizet a
+      // collection befejezéséig, és ha a kvíz ugyanabba a kasszába
+      // csordogálna, az a szabály elveszítené az értelmét.
+      match /game/{gameId} {
+        allow read: if isSelf(uid);
+        allow write: if false; // answerDailyQuestion
+      }
+
+      // ── Amit a gyűjtő magának vett fel ────────────────────────────────
+      // Egy zenekar, amiről a katalógus még nem hallott, és idővel a lemezei:
+      // ugyanaz a modell, mint a katalógusé, csak nem a katalógusban él.
+      //
+      // Az `owned-` előtag nem díszítés. A katalógus collection-group
+      // szabályai (`/{path=**}/artist/{artistId}`) minden `artist` nevű
+      // collectiont publikussá tesznek bármilyen mélységben, tehát a saját
+      // előadót nem hívhatjuk `artist`-nak: a privát bejegyzést mindenki
+      // olvasná. A név tartja szét a két világot, és velük a bundle-öket, a
+      // darabszámokat és minden mást, amit a katalógus collection-group
+      // lekérdezései táplálnak.
+      //
+      // Csak a tulaj látja. A kliens sima collection-lekérdezéssel olvassa
+      // (nem collection-grouppal), ezért állhat meg a szabály az `isSelf`-nél
+      // — és ezért nem kell hozzá összetett index.
+      match /{ownedCollection}/{ownedId} {
+        allow read: if isSelf(uid) && isOwnedFeature(ownedCollection);
+        allow create: if isSelf(uid)
+                      && isOwnedFeature(ownedCollection)
+                      && hasPerm('create' + syncResources()[ownedCollection])
+                      && isOwnedBy(uid);
+        allow update: if isSelf(uid)
+                      && isOwnedFeature(ownedCollection)
+                      && hasPerm('update' + syncResources()[ownedCollection])
+                      && isOwnedBy(uid);
+        allow delete: if isSelf(uid)
+                      && isOwnedFeature(ownedCollection)
+                      && hasPerm('delete' + syncResources()[ownedCollection]);
+      }
     }
 
-    // ÁTMENETI: a jelenlegi kliens szűretlen collection-group lekérdezése miatt.
-    // A tenant-migrációval együtt törlendő — különben a tenant alatti
-    // collection-item / wishlist-item is publikus lenne.
-    match /{path=**}/collection-item/{itemId} {
+    // ── Megosztott hely (közösségi térkép) ──────────────────────────────────
+    // A user maga választja meg, mennyi látszódjon belőle (country / city /
+    // profile). A választás maga privát marad a beállításai közt; ide CSAK az
+    // a mezőkészlet kerülhet ki, amit a választott szint enged, és a
+    // dokumentum csak addig létezik, amíg megosztja. Ezért olvashatja bárki,
+    // aki be van jelentkezve: itt már nincs más, mint amit a tulajdonosa
+    // szánt ide.
+    match /user-location/{uid} {
+      function shared() {
+        return request.resource.data;
+      }
+      function isOptional(field, maxSize) {
+        return !(field in shared().keys())
+               || (shared()[field] is string && shared()[field].size() <= maxSize);
+      }
+      function isValidShared() {
+        return shared().uid == uid
+               && shared().level in ['country', 'city', 'profile']
+               && shared().countryCode is string
+               && shared().countryCode.size() == 2
+               && shared().keys().hasOnly(['uid', 'level', 'countryCode',
+                                           'city', 'displayName', 'photoURL',
+                                           'updatedAt'])
+               && isOptional('city', 60)
+               // A név és a kép itt kerül ki a térképre: ugyanaz az alak,
+               // amiben a user dokumentumba írható.
+               && (!('displayName' in shared().keys())
+                   || isDisplayName(shared().displayName))
+               && (!('photoURL' in shared().keys())
+                   || isProfilePhotoUrl(shared().photoURL))
+               // A szintnél többet nem publikálhat: a városnév csak city-től,
+               // a név és a kép csak profile szinten kerülhet ki.
+               && (shared().level != 'country'
+                   || !shared().keys().hasAny(['city', 'displayName', 'photoURL']))
+               && (shared().level != 'city'
+                   || !shared().keys().hasAny(['displayName', 'photoURL']));
+      }
+
+      allow read: if isAuthed();
+      allow create, update: if isSelf(uid) && isValidShared();
+      allow delete: if isSelf(uid) || hasPerm('deleteUserEntity');
+    }
+
+    // ── Megosztható gyűjtő-profil ───────────────────────────────────────────
+    // Egy doksi egy gyűjtőről, és a létezése maga a megosztás: nincs
+    // `visibility` mező, amin hazudni lehetne — aki visszavonja, az törli.
+    // Ezért nincs token sem a kulcsban: a lap nyilvános, a link nem titok.
+    //
+    // Az olvasás kijelentkezve is megy, mint a katalógus és a hét bandája. Ez
+    // a funkció értelme: egy idegen attól kap kedvet a saját gyűjteményéhez,
+    // hogy belát egy polcra. Emiatt van a doksiban denormalizálva minden,
+    // amit a lap kirajzol (cím, előadó, borító-URL) — a látogatónak nincs
+    // katalógusa, vagy csak két műfajnyi van (genre bundle), tehát egy
+    // album-uid üres helyet jelentene. Ez egy olvasás egy látogatásra.
+    //
+    // A számokat a gyűjtő gépe állítja össze — a collection-feloldás és a
+    // pontozás a kliensen fut, mert a katalógus ott van a cache-ben —, tehát
+    // ÖNBEVALLÁS. A szabály a *alakot* tudja kikényszeríteni, a tartalmat
+    // nem. Következésképp ez a doksi soha nem táplálhat ranglistát, jutalmat
+    // vagy badge-et; egy hivatalos verseny szerveroldali futásból jön, a
+    // polcról (mint a `leaderboard/daily-question`).
+    //
+    // Pont igen, pénz nem: ár, becsült érték, vételi hely és dátum, sorszám,
+    // polc-pozíció és példányfotó nem kerülhet ki. A kulcslista alant ezt
+    // zárja le — amit nem sorol fel, azt a doksi nem viheti.
+    //
+    // Amit a szabály NEM tud megnézni: a listák elemeit. A rules-nak nincs
+    // iterációja, ezért a badge-ek, a kirakat és a wishlist csak típusban és
+    // hosszban van megszorítva. A megjelenítő lap tehát a doksi szövegét
+    // ADATKÉNT kezeli (Angular interpoláció escape-el), a kép-URL-eket a
+    // hosting CSP `img-src`-je szűri, a wishlist bolt-linkjét pedig a kliens
+    // szorítja https-re az írás előtt (`toSourceLink`), és
+    // `rel="nofollow ugc noopener noreferrer"`-rel adja ki.
+    match /collector/{uid} {
+      function profile() {
+        return request.resource.data;
+      }
+      function isOptionalText(field, maxSize) {
+        return !(field in profile().keys())
+               || (profile()[field] is string
+                   && profile()[field].size() <= maxSize);
+      }
+      // A polc számokban. A `byFormat` kulcsai a média-formátumok, ezért a
+      // méretük felülről zárt: egy szabadon növelhető map a doksi 1 MB-os
+      // keretét vinné el.
+      function isValidNumbers() {
+        let numbers = profile().numbers;
+
+        return numbers is map
+               && numbers.keys().hasOnly(['copies', 'albums', 'artists',
+                                          'byFormat', 'oldestYear', 'since'])
+               && numbers.copies is int && numbers.copies >= 0
+               && numbers.albums is int && numbers.albums >= 0
+               && numbers.artists is int && numbers.artists >= 0
+               && numbers.byFormat is map
+               && numbers.byFormat.keys().size() <= 10
+               && (numbers.oldestYear == null || numbers.oldestYear is int)
+               && (numbers.since == null || numbers.since is int);
+      }
+      function isValidPoints() {
+        let points = profile().points;
+
+        return points is map
+               && points.keys().hasOnly(['total', 'completedCollections'])
+               && points.total is number && points.total >= 0
+               && points.completedCollections is int
+               && points.completedCollections >= 0;
+      }
+      // A hosszak a kliens korlátaival egyeznek (`collector-profile.model.ts`:
+      // BADGE_LIMIT, PURSUIT_LIMIT, SHOWCASE_LIMIT, WISHLIST_LIMIT). A
+      // wishlist hiánya a hozzájárulás hiánya: aki nem osztja meg, annak a
+      // doksijában nincs is ilyen kulcs.
+      function isValidLists() {
+        return profile().badges is list
+               && profile().badges.size() <= 50
+               && profile().pursuits is list
+               && profile().pursuits.size() <= 12
+               && profile().showcase is list
+               && profile().showcase.size() <= 24
+               && (!('wishlist' in profile().keys())
+                   || (profile().wishlist is list
+                       && profile().wishlist.size() <= 200))
+               // A kedvencek ugyanígy: a kulcs hiánya a hozzájárulás hiánya
+               // (FAVOURITE_LIMIT). A csillagokat sem tudja a szabály
+               // végignézni — a lemezenkénti 1..5 kényszerítés a saját
+               // `rating` doksin történik, ez itt a gyűjtő által kiválasztott
+               // kivonat.
+               && (!('favourites' in profile().keys())
+                   || (profile().favourites is list
+                       && profile().favourites.size() <= 10));
+      }
+      function isValidProfile() {
+        return profile().keys().hasOnly(['uid', 'displayName', 'photoURL',
+                                         'countryCode', 'city', 'numbers',
+                                         'points', 'badges', 'pursuits',
+                                         'showcase', 'wishlist', 'favourites',
+                                         'updatedAt'])
+               && profile().uid == uid
+               // A név és a kép ugyanabban az alakban, ahogy a user
+               // dokumentumba és a térkép pinjébe írható.
+               && (!('displayName' in profile().keys())
+                   || isDisplayName(profile().displayName))
+               && (!('photoURL' in profile().keys())
+                   || isProfilePhotoUrl(profile().photoURL))
+               // A hely a hely-hozzájárulásból jön (`user-location`): ez a
+               // doksi nem szélesítheti ki, csak átveheti, amit az kiengedett.
+               && (!('countryCode' in profile().keys())
+                   || (profile().countryCode is string
+                       && profile().countryCode.size() == 2))
+               && isOptionalText('city', 60)
+               && isValidNumbers()
+               && isValidPoints()
+               && isValidLists();
+      }
+
+      // Címről igen, listázni nem. A lap doksija tíz-húsz kilobájt (kirakat,
+      // wishlist), és egy `list` ebből végiglapozhatná az összes gyűjtőt —
+      // azt a költséget senki nem kérte. A felfedezés a `collector-card`
+      // könyvtáron megy, ami pár száz bájtos bejegyzésekből áll.
+      allow get: if true;
+      allow list: if false;
+      allow create, update: if isSelf(uid) && isValidProfile();
+      allow delete: if isSelf(uid) || hasPerm('deleteUserEntity');
+
+      // ── A teljes polc ───────────────────────────────────────────────────
+      // A lap két tucat lemezt mutat; az egész listát csak az kapja meg, aki
+      // rákattint. Ezért külön doksi: a belépő így marad egy olvasás, ez
+      // pedig a második — borító nélkül, tehát ezer lemez is pár száz
+      // kilobájt.
+      //
+      // Az olvasás a FÖLÖTTE álló profil létezéséhez kötött. A visszavonás a
+      // profil-doksit törli, a Firestore pedig nem kaszkádol: egy megszakadt
+      // kliens után ez a lista kint maradhatna. A `get()` ára egy olvasás —
+      // de csak azé fizeti, aki a teljes listát kérte.
+      match /albums/{listId} {
+        function albums() {
+          return request.resource.data;
+        }
+
+        allow read: if exists(/databases/$(database)/documents/collector/$(uid));
+        allow create, update: if isSelf(uid)
+                              && albums().keys().hasOnly(['uid', 'count',
+                                                          'albums', 'updatedAt'])
+                              && albums().uid == uid
+                              && albums().count is int
+                              && albums().count >= 0
+                              // A hossz a kliens korlátjával egyezik
+                              // (`collector-profile.model.ts`,
+                              // ALBUM_LIST_LIMIT); az elemeit a szabály itt
+                              // sem tudja végignézni, azokat a megjelenítő
+                              // lap kezeli adatként.
+                              && albums().albums is list
+                              && albums().albums.size() <= 3000;
+        allow delete: if isSelf(uid) || hasPerm('deleteUserEntity');
+      }
+    }
+
+
+    // ── Gyűjtő-könyvtár ─────────────────────────────────────────────────────
+    // Egy bejegyzés egy megosztott gyűjtőről, pár száz bájtban: ki ő, mekkora
+    // a polca, és mely collectionöket gyűjtötte ki. Ebből áll össze a
+    // „kigyűjtött kollekciók" fala a kezdőlapon és a `/collectors` lapon —
+    // listázva, tehát a doksinak kicsinek KELL maradnia; a nagy lap-doksi
+    // épp ezért nem listázható.
+    //
+    // Ugyanaz az írás készíti, mint a lapot, ugyanabból a forrásból: egy
+    // bejegyzés, ami mást mond, mint a lap, olyan bejegyzés, amiben nem lehet
+    // megbízni. A kliens írja, tehát ez is önbevallás — és ezért nem is
+    // rangsorol: a lap rendezni enged, de pontot nem oszt.
+    match /collector-card/{uid} {
+      function card() {
+        return request.resource.data;
+      }
+
       allow read: if true;
+      allow create, update: if isSelf(uid)
+                            && card().keys().hasOnly(['uid', 'displayName',
+                                                      'photoURL', 'countryCode',
+                                                      'city', 'copies', 'points',
+                                                      'badges', 'collecting',
+                                                      'records', 'hasPage',
+                                                      'updatedAt'])
+                            && card().uid == uid
+                            && (!('displayName' in card().keys())
+                                || isDisplayName(card().displayName))
+                            && (!('photoURL' in card().keys())
+                                || isProfilePhotoUrl(card().photoURL))
+                            && (!('countryCode' in card().keys())
+                                || (card().countryCode is string
+                                    && card().countryCode.size() == 2))
+                            && (!('city' in card().keys())
+                                || (card().city is string
+                                    && card().city.size() <= 60))
+                            && card().copies is int
+                            && card().copies >= 0
+                            && card().points is number
+                            && card().points >= 0
+                            && card().badges is list
+                            && card().badges.size() <= 50
+                            // A collection followed and shown: the collector
+                            // says they are after it, and the wall counts
+                            // them in beside those who finished it. Optional,
+                            // because a card written before the field existed
+                            // — or by a client that has not reloaded — has
+                            // none, and that is a card, not an attack.
+                            && (!('collecting' in card().keys())
+                                || (card().collecting is list
+                                    && card().collecting.size() <= 50))
+                            // Néhány lemez a polcról: a kártyán ennyi fér el,
+                            // és az entry listázva van, tehát a hossz itt
+                            // dől el. A listaelemeket — cím, előadó, borító —
+                            // a rules nem tudja megnézni, azokat a kliens
+                            // határátkelője (`collectors.mapper.ts`) vágja és
+                            // szűri, mint a badge-eket.
+                            && (!('records' in card().keys())
+                                || (card().records is list
+                                    && card().records.size() <= 4))
+                            // Whether a page stands behind the name. An entry
+                            // may exist without one: showing a collection is
+                            // enough to be named on the wall.
+                            && (!('hasPage' in card().keys())
+                                || card().hasPage is bool);
+      allow delete: if isSelf(uid) || hasPerm('deleteUserEntity');
+    }
+
+    // Collection-group olvasás a saját adaton. A szabály itt nem szűr, hanem
+    // szűrést KÖVETEL: a `resource.data`-ra hivatkozó feltételt a Firestore a
+    // lekérdezés megszorításaiból bizonyítja, ezért ilyen lekérdezés csak a
+    // saját `userId`-ra szűkítve áll meg — enélkül az egészet elutasítja.
+    //
+    // Egyetlen kivétel a kiadás és az album törlése: a törlés előtti „hány
+    // példány áll még polcon" kérdés az egész fát számolja meg (`count()`),
+    // és ezt csak az kapja meg, aki a kiadást vagy az albumot törölheti is.
+    // A számláló dokumentumot nem ad vissza, a szerver pedig tranzakcióban
+    // újra megkérdezi.
+    match /{path=**}/collection-item/{itemId} {
+      allow read: if isAuthed()
+                  && (resource.data.userId == request.auth.uid
+                      || hasPerm('deleteReleaseEntity')
+                      || hasPerm('deleteAlbumEntity'));
     }
     match /{path=**}/wishlist-item/{itemId} {
-      allow read: if true;
+      allow read: if isAuthed()
+                  && resource.data.userReference.uid == request.auth.uid;
     }
 
     // A jogosultság-szinkron function írja (Admin SDK); a kliens csak olvassa
@@ -150,6 +946,186 @@ service cloud.firestore {
     match /security/users/{uid}/effective_permissions {
       allow get: if isSelf(uid) || hasPerm('viewSecurityEntity');
       allow list, create, update, delete: if false;
+    }
+
+    // ── Számozott példány foglalása ─────────────────────────────────────────
+    // A dokumentum azonosítója maga a kulcs: `{kiadás}_{sorszám}`. Ezért a
+    // `create` az, ami egyedivé teszi — aki másodiknak írná ugyanazt a számot,
+    // az egy már álló dokumentumra írna, az pedig update, azt pedig senki nem
+    // kap meg. Nincs tranzakció és nincs számláló: az azonosító dönt.
+    //
+    // A foglalás állítás, nem bizonyíték. Azt nem tudja megmondani, hogy a
+    // lemez tényleg a gyűjtő kezében van-e; azt tudja, hogy ketten nem írták
+    // fel ugyanazt.
+    function isValidSerialClaim(claimId) {
+      return request.resource.data.keys().hasOnly(
+               ['releaseId', 'number', 'userId', 'itemId', 'updatedAt'])
+          && request.resource.data.userId == request.auth.uid
+          && request.resource.data.releaseId is string
+          && request.resource.data.releaseId.size() > 0
+          && request.resource.data.releaseId.size() <= 200
+          // Null, ha a szám olyan példányra kellett, ami még nem létezett:
+          // a felvétel és a beszámozás egy mozdulat, a foglalásnak pedig meg
+          // kell előznie az írást, különben a szabály utasítaná el.
+          && (request.resource.data.itemId == null
+              || (request.resource.data.itemId is string
+                  && request.resource.data.itemId.size() > 0
+                  && request.resource.data.itemId.size() <= 200))
+          && request.resource.data.number is int
+          && request.resource.data.number >= 1
+          && request.resource.data.number <= 1000000
+          && claimId == request.resource.data.releaseId + '_'
+                        + string(request.resource.data.number);
+    }
+    match /copy-serial/{claimId} {
+      // Olvasni bárki bejelentkezett tud: a form ebből mondja meg előre, hogy
+      // a szám foglalt, ahelyett hogy a mentés hasalna el rajta.
+      allow get: if isAuthed();
+      allow list: if false;
+      allow create: if hasPerm('updateCollectionItemEntity')
+                    && isValidSerialClaim(claimId);
+      // Ez a sor a lényeg: egy álló foglalást senki nem írhat át.
+      allow update: if false;
+      // Elengedni csak a gazdája tudja — eladáskor, vagy ha elírta a számot.
+      allow delete: if isAuthed() && resource.data.userId == request.auth.uid;
+    }
+
+    // ── Release-kérés: a gyűjtő kéri egy kiadás felvételét a katalógusba ────
+    // A gyűjtő csak a sajátját olvashatja, és csak függőben lévőt hozhat létre
+    // (a lekérdezésnek ezért `userId == uid`-ra kell szűrnie). Elbírálni
+    // (status, törlés) csak ADMIN tud.
+    match /release-request/{requestId} {
+      // A kérés szabad szövegei: a gyűjtő jegyzete, az album, amire kéri, és
+      // amit a nyomásról leírt. Korlát nélkül egy kérés a dokumentum
+      // megabájtos keretéig hízhat, és azt a jóváhagyás-lista minden
+      // megnyitásnál végigolvassa — a gyűjtő a sajátjait, az admin mindenkiét.
+      // A jegyzet korlátja a `MAX_REQUEST_NOTE_LENGTH` (libs/common/api): a
+      // kettőt együtt kell mozgatni.
+      function isText(value, maxSize) {
+        return value == null
+               || (value is string && value.size() <= maxSize);
+      }
+      function isValidAlbum() {
+        let album = request.resource.data.album;
+
+        return album is map
+               && album.keys().hasOnly(['uid', 'name', 'artistUid', 'artistName'])
+               && album.name is string
+               && album.name.size() <= 300
+               && isText(album.uid, 200)
+               && isText(album.artistUid, 200)
+               && isText(album.artistName, 300);
+      }
+      function isValidPressing() {
+        let pressing = request.resource.data.pressing;
+
+        return pressing == null
+               || (pressing is map
+                   && pressing.keys().hasOnly(['format', 'label', 'catno',
+                                               'country', 'year'])
+                   && isText(pressing.format, 300)
+                   && isText(pressing.label, 200)
+                   && isText(pressing.catno, 100)
+                   && isText(pressing.country, 100)
+                   && (pressing.year == null || pressing.year is number));
+      }
+
+      allow read: if isAdmin()
+                  || (isAuthed() && resource.data.userId == request.auth.uid);
+      allow create: if hasPerm('createCollectionItemEntity')
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.status == 'pending'
+                    && request.resource.data.uid == requestId
+                    && request.resource.data.keys().hasOnly([
+                         'uid', 'userId', 'album', 'status',
+                         'discogsMasterId', 'discogsReleaseId', 'pressing',
+                         'note', 'createdAt', 'updatedAt'
+                       ])
+                    && isValidAlbum()
+                    && isValidPressing()
+                    && isText(request.resource.data.note, 500)
+                    // Katalógusban még nem szereplő album (fotóról azonosított
+                    // lemez) csak Discogs-kiadással kérhető: abból tud a
+                    // jóváhagyás albumot és előadót létrehozni.
+                    && (request.resource.data.album.uid != null
+                        || request.resource.data.discogsReleaseId != null);
+      allow update, delete: if isAdmin();
+    }
+
+    // ── Kérés és válasz: amit a gyűjtő a katalógusba szánna ─────────────────
+    // A gyűjtő nem ír a katalógusba. Amit felvesz, a saját fiókjában él
+    // (`user/{uid}/owned-…`), és egy kérésen keresztül kerülhet át: a kérés
+    // viszi a beküldött állapotot (`before`/`after`), a mezőnkénti eltéréseket
+    // és a hozzájuk tartozó referenciákat.
+    //
+    // A beküldés joga a tükrözött `owned-` erőforrásé: aki magának felvehet
+    // egy bandát (`createOwnedArtistEntity`), be is küldheti. A katalógusba
+    // ettől még egyedül a `decideRequest` ír.
+    match /entity-request/{requestId} {
+      function ownedResource() {
+        return 'owned-' + request.resource.data.target.featureKey;
+      }
+      function isText(value, maxSize) {
+        return value == null
+               || (value is string && value.size() <= maxSize);
+      }
+      // A megnevezett dokumentum: három path és két kulcs, mind rövid szöveg.
+      function isValidTarget() {
+        let target = request.resource.data.target;
+
+        return target.keys().hasOnly(['featureKey', 'entityType', 'path',
+                                      'parentPath', 'ownedPath'])
+               && target.featureKey.size() <= 60
+               && target.entityType is string
+               && target.entityType.size() <= 60
+               && isText(target.path, 300)
+               && isText(target.parentPath, 300)
+               && isText(target.ownedPath, 300);
+      }
+
+      allow read: if isAdmin()
+                  || (isAuthed() && resource.data.userId == request.auth.uid);
+      // A `changes` felső korlátja a MAX_ENTITY_REQUEST_CHANGES, a jegyzeté a
+      // MAX_REQUEST_NOTE_LENGTH (libs/common/api) — mindkettőt együtt kell
+      // mozgatni ezzel a szabállyal.
+      //
+      // Amit a szabály nem tud megmérni, az a beküldött állapot
+      // (`before`/`after`) és a `changes` elemei: a rules nem lát bájtot egy
+      // map-en, és listát nem tud bejárni. A mezők SZÁMÁT korlátozza, a
+      // tartalmuk súlyát a `decideRequest` felé nézi el — a jegyzet és a
+      // target viszont itt kap keretet, mert azokat egy sorban meg lehet
+      // fogni.
+      allow create: if isAuthed()
+                    && request.resource.data.keys().hasOnly([
+                         'uid', 'userId', 'operation', 'target', 'before',
+                         'after', 'changes', 'status', 'baseUpdatedAt',
+                         'note', 'createdAt', 'updatedAt'
+                       ])
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.uid == requestId
+                    && request.resource.data.status == 'pending'
+                    && request.resource.data.operation in ['create', 'update']
+                    && request.resource.data.target is map
+                    && request.resource.data.target.featureKey is string
+                    && isOwnedFeature(ownedResource())
+                    && hasPerm('create' + syncResources()[ownedResource()])
+                    && isValidTarget()
+                    && isText(request.resource.data.note, 500)
+                    && request.resource.data.changes is list
+                    && request.resource.data.changes.size() > 0
+                    && request.resource.data.changes.size() <= 40;
+      // A beküldött kérés nem változik többé: az elbírálás a `decideRequest`
+      // dolga, és az Admin SDK-val ír.
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+
+    // A kérésre adott válasz: mezőnkénti verdikt, az elutasításokhoz
+    // indoklással. Azé, akinek szól, és az adminé.
+    match /entity-response/{responseId} {
+      allow read: if isAdmin()
+                  || (isAuthed() && resource.data.userId == request.auth.uid);
+      allow write: if false; // decideRequest callable
     }
 
     // ── Globális katalógus: publikus olvasás, permission-alapú írás ─────────
@@ -169,7 +1145,10 @@ service cloud.firestore {
           allow read: if true;
           allow create: if hasPerm('createReleaseEntity');
           allow update: if hasPerm('updateReleaseEntity');
-          allow delete: if hasPerm('deleteReleaseEntity');
+          // Törölni csak a `deleteReleaseEntity` callable tud: azt, hogy
+          // van-e valakinek példánya a kiadásból, a kliens nem tudja
+          // megbízhatóan eldönteni (más gyűjtő adata, és közben változhat).
+          allow delete: if false;
         }
       }
     }
@@ -185,7 +1164,19 @@ service cloud.firestore {
       allow read: if true;
       allow create: if hasPerm('createReleaseEntity');
       allow update: if hasPerm('updateReleaseEntity');
-      allow delete: if hasPerm('deleteReleaseEntity');
+      // Ld. fent: a törlés a `deleteReleaseEntity` callable dolga.
+      allow delete: if false;
+    }
+
+    // A műfaj-taxonómia: műfajok és az alattuk lévő stílusok. Olvasni bárki
+    // olvashatja — ez az, amiből az előadó- és album-form választ, és amihez
+    // az online betöltés a forrásoknál talált neveket illeszti. Írni csak
+    // permissionnel lehet: ez a katalógus szótára, nem felhasználói adat.
+    match /genre/{genreId} {
+      allow read: if true;
+      allow create: if hasPerm('createGenreEntity') && isValidGenre();
+      allow update: if hasPerm('updateGenreEntity') && isValidGenre();
+      allow delete: if hasPerm('deleteGenreEntity');
     }
 
     match /label/{labelId} {
@@ -250,10 +1241,17 @@ service cloud.firestore {
       allow delete: if hasPerm('deleteMusicianEntity');
     }
 
+    // A `filePath` csak a saját Storage-unkba mutathat (`isOwnStorageUrl`).
+    // Frissítésnél a változatlan érték átmegy: a 2022-es prod adatra ez a
+    // szabály visszamenőleg nem lehet igaz, és egy régi dokumentum nevét
+    // attól még lehessen javítani — új idegen címet viszont beírni ne.
     match /document/{documentId} {
       allow read: if true;
-      allow create: if hasPerm('createDocumentEntity');
-      allow update: if hasPerm('updateDocumentEntity');
+      allow create: if hasPerm('createDocumentEntity')
+                    && isOwnStorageUrl(request.resource.data.filePath);
+      allow update: if hasPerm('updateDocumentEntity')
+                    && (request.resource.data.filePath == resource.data.filePath
+                        || isOwnStorageUrl(request.resource.data.filePath));
       allow delete: if hasPerm('deleteDocumentEntity');
     }
 
@@ -263,6 +1261,14 @@ service cloud.firestore {
       allow create: if hasPerm('createTrackEntity');
       allow update: if hasPerm('updateTrackEntity');
       allow delete: if hasPerm('deleteTrackEntity');
+    }
+
+    // Dalszöveg: szerzői jogvédett, ezért nem publikus — csak bejelentkezve
+    // olvasható. Külön collection, hogy a publikus track-dokumentumba ne
+    // kerüljön.
+    match /track-lyrics/{trackId} {
+      allow read: if isAuthed();
+      allow create, update, delete: if hasPerm('updateTrackEntity');
     }
 
     match /contribution/{contributionId} {
@@ -279,8 +1285,7 @@ service cloud.firestore {
       allow delete: if hasPerm('deleteMembershipEntity');
     }
 
-    // ÁTMENETI: globális számláló a user-szintű map-pel együtt. A tenant-
-    // migráció után a gyűjteményi számláló tenant-szintű / function-számolt lesz.
+    // Globális számláló a user-szintű map-pel együtt.
     match /entity-quantity/{entityType} {
       allow read: if true;
       allow create, update: if hasPerm('updateEntityQuantityEntity');
@@ -288,17 +1293,79 @@ service cloud.firestore {
     }
 
     // ── Sync (FirestoreSyncService / catalog-sync.mjs) ──────────────────────
-    // Minden kliensírás ugyanabban a batch-ben bumpolja a `modifiedAt.<key>`-t.
-    // A rules nem tudja, melyik entitás íródik mellette, ezért bejelentkezett
-    // user a `modifiedAt`-et írhatja (legrosszabb eset: fölösleges cache-
-    // újratöltés); a `resetAt` csak ADMIN.
+    // Minden kliensírás ugyanabban a batch-ben bumpolja a `modifiedAt.<key>`-t,
+    // és ezt az egy dokumentumot figyeli minden kliens. A rules nem tudja,
+    // melyik entitás íródik mellette, ezért a bumpot bejelentkezett user is
+    // írhatja — de csak abban az alakban, ahogy a saját írása küldi:
+    //
+    //  - Egy íráson egy kulcs. Egy bump egy feature szinkron-körét indítja el
+    //    a nyitott klienseknél; ha egyszerre mindet át lehetne állítani, egy
+    //    írás rendelné újra a teljes katalógust mindenkinél.
+    //  - Az új érték a szerver órája (`serverTimestamp()` → `request.time`),
+    //    nem a kliens által választott időpont. A jövőbe állított bélyeg nem
+    //    egy fölösleges kört ér: a kliens a markerét is a jövőbe állítja, a
+    //    valódi változások alá esnek, és onnantól — a `resetAt`-ig, ami ADMIN
+    //    — néma marad a szinkron. Szám vagy szöveg a timestamp helyén
+    //    ugyanide vezet: a kliens időbélyeget hasonlít, és a lekérdezés
+    //    hibával, csendben megáll.
+    //  - Új kulcsot csak amíg van hely. A kitalált kulcs örökre a
+    //    dokumentumban marad, és minden kliens minden indulásnál letölti;
+    //    kulcsonként egy írással a dokumentumot az 1 MB-os plafonjáig lehetne
+    //    tolni, ami után már senki nem tud bumpolni. A katalógus ma ~60
+    //    kulcsot használ, a 200 ennek a háromszorosa.
+    //
+    // Ami ezután marad: ugyanannak a kulcsnak az ismétlése — annyi, amennyit
+    // egy legitim írás is okoz —, és ezt a kliens csillapítja
+    // (FirestoreSyncService, CATALOG_BUMP_WINDOW).
+    function isFeatureBump(before) {
+      let after = request.resource.data.modifiedAt;
+
+      return after is map
+          && after.diff(before).affectedKeys().size() == 1
+          && request.time in after.values()
+          && (before.keys().hasAll(after.keys())
+              || after.keys().size() <= 200);
+    }
     match /sync/catalog {
       allow read: if true;
       allow create: if isAdmin()
-                    || (isAuthed() && request.resource.data.keys().hasOnly(['modifiedAt']));
+                    || (isAuthed()
+                        && request.resource.data.keys().hasOnly(['modifiedAt'])
+                        && isFeatureBump({}));
       allow update: if isAdmin()
-                    || (isAuthed() && changedKeys().hasOnly(['modifiedAt']));
+                    || (isAuthed()
+                        && changedKeys().hasOnly(['modifiedAt'])
+                        && isFeatureBump('modifiedAt' in resource.data
+                                         ? resource.data.modifiedAt
+                                         : {}));
       allow delete: if isAdmin();
+    }
+
+    // A marker alakja: a törölt dokumentum path-ja, és ugyanaz a path az
+    // azonosítójában is (`a/b/c` → `a~b~c`). A kliens ebből tudja meg, mit
+    // kell újrakérnie a szerverről (FirestoreSyncService, `evictDeleted`),
+    // ezért a szabály a kettőt összeköti, és a path-ot a marker saját feature
+    // collectionjébe kényszeríti: egy szabadon írható path azt jelentené,
+    // hogy egy marker minden nyitott kliensnek bármelyik dokumentum
+    // újraolvasását fel tudja adni.
+    function isDeletionMarker(featureKey, markerId) {
+      let data = request.resource.data;
+      let parts = data.path is string ? data.path.split('/') : [];
+
+      return data.keys().hasOnly(['path', 'deletedAt'])
+          && data.deletedAt == request.time
+          && parts.size() >= 2
+          && parts[parts.size() - 2] == featureKey
+          && markerId == parts.join('~');
+    }
+
+    // A markerhez tartozó sorszám-foglalás (`copy-serial/{kiadás}_{szám}`).
+    function markedSerialClaimPath() {
+      return /databases/$(database)/documents/copy-serial/$(request.resource.data.path.split('/')[1]);
+    }
+    function ownsMarkedSerialClaim() {
+      return exists(markedSerialClaimPath())
+          && get(markedSerialClaimPath()).data.userId == request.auth.uid;
     }
 
     // Törlési marker: aki az adott entitást törölheti, markert is írhat.
@@ -306,85 +1373,53 @@ service cloud.firestore {
     // path-ra mutathat: `user~{uid}~<featureKey>~…`.
     match /sync/{featureKey}/deletion/{markerId} {
       allow read: if true;
-      allow create, update: if featureKey in syncResources()
-                            && hasPerm('delete' + syncResources()[featureKey])
-                            && (!(featureKey in ['collection-item', 'wishlist-item'])
-                                || markerId.matches('user~' + request.auth.uid + '~' + featureKey + '~.+'));
+      allow create, update: if isDeletionMarker(featureKey, markerId)
+                            && ((featureKey in syncResources()
+                                 && hasPerm('delete' + syncResources()[featureKey])
+                                 && ((!(featureKey in ['collection-item', 'wishlist-item'])
+                                      && !isOwnedFeature(featureKey))
+                                     || markerId.matches('user~' + request.auth.uid + '~' + featureKey + '~.+')))
+                                // A saját megosztott helyét és a saját
+                                // gyűjtő-profilját bárki visszavonhatja,
+                                // permission nélkül is: ez a hozzájárulás
+                                // vége. A marker a saját doksijára mutat,
+                                // másra nem — az azonosító viszi az uid-ot.
+                                || (isAuthed()
+                                    && featureKey in ['user-location', 'collector',
+                                                      'collector-card']
+                                    && markerId == featureKey + '~' + request.auth.uid)
+                                // Egy sorszám elengedése a példány
+                                // szerkesztése, nem katalógus-törlés: aki a
+                                // példányt írhatja, a foglalását vissza is
+                                // tudja vonni — de csak a sajátját. Az
+                                // azonosító itt nem hordozza az uid-ot (a
+                                // foglalás globális collection), ezért magából
+                                // a foglalásból kell megtudni, kié: egy batch
+                                // minden írását a commit ELŐTTI állapoton
+                                // bírálja el a szabály, tehát a mellette
+                                // törlődő foglalás itt még látszik.
+                                || (featureKey == 'copy-serial'
+                                    && hasPerm('updateCollectionItemEntity')
+                                    && request.resource.data.path.matches('^copy-serial/[^/]+$')
+                                    && ownsMarkedSerialClaim())
+                                // A saját értékelését bárki visszavonhatja,
+                                // permission nélkül — megadni sem kellett
+                                // hozzá. A marker a saját útvonalára mutat:
+                                // `user~{uid}~rating~…`.
+                                //
+                                // A marker publikusan olvasható (a katalógus
+                                // törléseit minden kliensnek látnia kell),
+                                // tehát egy visszavonás annyit elárul, hogy
+                                // ez a gyűjtő értékelte ezt a lemezt, majd
+                                // meggondolta magát — a csillagot nem. A
+                                // megtartott értékelések nyom nélkül élnek;
+                                // marker csak a törléshez kell, hogy a gyűjtő
+                                // másik eszköze ne a visszavont véleményt
+                                // mutassa.
+                                || (isAuthed()
+                                    && featureKey == 'rating'
+                                    && markerId.matches('user~' + request.auth.uid + '~rating~.+')));
       allow delete: if isAdmin();
-    }
-
-    // ── Tenant: saját adatvilág ─────────────────────────────────────────────
-    match /tenant/{tenantId} {
-      allow get: if ownsTenant(tenantId) || hasPerm('viewTenantEntity');
-      allow list: if hasPerm('viewTenantEntity');
-      allow write: if false; // tenant-bootstrap function (Admin SDK)
-
-      // Birtokolt példányok. FEAT-010 után az írás callable-re kerül → false.
-      match /collection-item/{itemId} {
-        allow read: if ownsTenant(tenantId) || hasPerm('viewCollectionItemEntity');
-        allow create: if ownsTenant(tenantId)
-                      && hasPerm('createCollectionItemEntity')
-                      && request.resource.data.userId == request.auth.uid;
-        allow update: if ownsTenant(tenantId)
-                      && hasPerm('updateCollectionItemEntity')
-                      && request.resource.data.userId == resource.data.userId;
-        allow delete: if ownsTenant(tenantId) && hasPerm('deleteCollectionItemEntity');
-      }
-
-      match /wishlist-item/{itemId} {
-        allow read: if ownsTenant(tenantId) || hasPerm('viewWishlistItemEntity');
-        allow create: if ownsTenant(tenantId)
-                      && hasPerm('createWishlistItemEntity')
-                      && request.resource.data.userReference.uid == request.auth.uid;
-        allow update: if ownsTenant(tenantId)
-                      && hasPerm('updateWishlistItemEntity')
-                      && request.resource.data.userReference.uid == resource.data.userReference.uid;
-        allow delete: if ownsTenant(tenantId) && hasPerm('deleteWishlistItemEntity');
-      }
-
-      // Saját (konkrét) collection. Láthatóság: private | link | public.
-      // `link`: ID ismeretében olvasható, listázásban nem jelenik meg.
-      match /music-collection/{collectionId} {
-        function collectionVisibility() {
-          return get(/databases/$(database)/documents/tenant/$(tenantId)/music-collection/$(collectionId)).data.visibility;
-        }
-        function canReadCollection() {
-          return ownsTenant(tenantId)
-              || hasPerm('viewMusicCollectionEntity')
-              || collectionVisibility() in ['public', 'link'];
-        }
-
-        allow get: if ownsTenant(tenantId)
-                   || hasPerm('viewMusicCollectionEntity')
-                   || resource.data.visibility in ['public', 'link'];
-        allow list: if ownsTenant(tenantId)
-                    || hasPerm('viewMusicCollectionEntity')
-                    || resource.data.visibility == 'public';
-        allow write: if false; // music-collection-* callable-ök
-
-        match /rule/{ruleId} {
-          allow read: if canReadCollection();
-          allow write: if false;
-        }
-        match /items/{itemId} {
-          allow read: if canReadCollection();
-          allow write: if false; // music-collection-rebuild-items
-        }
-      }
-
-      // Teljesítés (FEAT-042): a doc ID = collectionUid. Publikus collectionnél
-      // a százalék látható, a példányadatok nem (azok a collection-item-ben vannak).
-      match /collection-progress/{collectionId} {
-        allow read: if ownsTenant(tenantId)
-                    || hasPerm('viewMusicCollectionEntity')
-                    || get(/databases/$(database)/documents/tenant/$(tenantId)/music-collection/$(collectionId)).data.visibility in ['public', 'link'];
-        allow write: if false; // RebuildCollectionProgress
-      }
-
-      // Tenant-szintű sync markerek a saját adathoz.
-      match /sync/{document=**} {
-        allow read, write: if ownsTenant(tenantId);
-      }
     }
 
     // ── Globális (absztrakt) collection ─────────────────────────────────────
@@ -402,10 +1437,130 @@ service cloud.firestore {
       }
     }
 
-    // Publikus collectionök böngészése (globális + tenant) collection-grouppal;
-    // a lekérdezésnek `visibility == 'public'` szűrőt kell tartalmaznia.
-    match /{path=**}/music-collection/{collectionId} {
-      allow list: if resource.data.visibility == 'public';
+    // ── Még meg nem jelent lemezek ──────────────────────────────────────────
+    // A MusicBrainzről a `refreshUpcomingReleases` (Admin SDK) tölti naponta;
+    // a kliens csak olvassa. Nyilvános, mint a katalógus többi része.
+    match /upcoming-release/{releaseGroupId} {
+      allow read: if true;
+      allow write: if false; // refreshUpcomingReleases / syncUpcomingReleasesNow
+    }
+
+    // ── Koncertek ───────────────────────────────────────────────────────────
+    // Helyszínek: a MusicBrainz `place` entitásából a `loadConcertVenues`
+    // (Admin SDK) tölti, kézzel pedig az admin javítja. Olvasni bárki
+    // olvashatja — ez a katalógus törzsadata, mint a kiadók listája.
+    match /venue/{venueId} {
+      allow read: if true;
+      allow create: if hasPerm('createVenueEntity') && isValidVenue();
+      allow update: if hasPerm('updateVenueEntity') && isValidVenue();
+      allow delete: if hasPerm('deleteVenueEntity');
+    }
+
+    // Beiktatott koncertek: amit a `loadConcertsFromMusicBrainz` mbid-del
+    // horgonyozva írt, vagy amit egy admin a javaslatok közül jóváhagyott.
+    // Ami ide bekerül, az a nyilvános lapon látszik — ezért ide a kliens csak
+    // permissionnel és csak érvényes alakban írhat.
+    match /concert/{concertId} {
+      allow read: if true;
+      allow create: if hasPerm('createConcertEntity') && isValidConcert();
+      allow update: if hasPerm('updateConcertEntity') && isValidConcert();
+      allow delete: if hasPerm('deleteConcertEntity');
+    }
+
+    // Koncert-javaslatok: amit a modell ajánlott (`suggestConcerts`), és ami
+    // emberre vár. SZÁNDÉKOSAN nem nyilvános: egy groundolt keresés is
+    // tévedhet, és amíg valaki nem nézte meg a hivatkozott forrást, addig ez
+    // nem állítás, csak jelölt. Írni a kliens csak a döntést tudja — az
+    // elutasítást —, a javaslatokat a function hozza.
+    match /concert-suggestion/{suggestionId} {
+      allow read: if hasPerm('viewConcertEntity')
+                  || hasPerm('createConcertEntity');
+      allow create: if false; // suggestConcerts (Admin SDK)
+      // A döntés: a felülvizsgálat három mezője. Maga a javaslat nem írható
+      // át itt — amit javítani kell, az jóváhagyáskor a `concert` alá kerül.
+      allow update: if hasPerm('updateConcertEntity')
+                    && changedKeys().hasOnly([
+                         'reviewState', 'reviewedAt', 'reviewedBy', 'updatedAt'
+                       ])
+                    && request.resource.data.reviewState in ['pending', 'rejected'];
+      allow delete: if hasPerm('updateConcertEntity');
+    }
+
+    // Helyszín-javaslatok: amit a modell ajánlott (`suggestVenues`), és ami
+    // emberre vár. SZÁNDÉKOSAN nem nyilvános, ugyanazért, amiért a
+    // koncert-javaslat sem: egy groundolt keresés is nevezhet olyan klubot,
+    // ami két éve bezárt — a helyszín meg a koncertlap törzsadata, arra
+    // hivatkozik minden est. Írni a kliens csak a döntést tudja, a
+    // javaslatokat a function hozza.
+    match /venue-suggestion/{suggestionId} {
+      allow read: if hasPerm('viewVenueEntity')
+                  || hasPerm('createVenueEntity');
+      allow create: if false; // suggestVenues (Admin SDK)
+      // A döntés: a felülvizsgálat három mezője. Magát a javaslatot nem lehet
+      // itt átírni — amit javítani kell, az jóváhagyáskor a `venue` alá kerül.
+      allow update: if hasPerm('updateVenueEntity')
+                    && changedKeys().hasOnly([
+                         'reviewState', 'reviewedAt', 'reviewedBy', 'updatedAt'
+                       ])
+                    && request.resource.data.reviewState in ['pending', 'rejected'];
+      allow delete: if hasPerm('updateVenueEntity');
+    }
+
+    // ── Napi kérdés ─────────────────────────────────────────────────────────
+    // Egy kérdés egy napra, a nap az azonosítója. Csak bejelentkezve
+    // olvasható: a játék a gyűjtőké. A kérdést a `composeDailyQuestionDaily`
+    // (Admin SDK) írja, a kliens soha.
+    //
+    // A megfejtés SZÁNDÉKOSAN nincs ebben a dokumentumban, hanem a `secret`
+    // alkollekcióban, amit senki nem olvashat — négy opciónál a válasz
+    // hashelése értelmetlen volna, mind a négyet végig lehetne próbálni.
+    // A választ ezért callable értékeli ki.
+    // A napi kérdés ranglistája: egy dokumentum, amit egy napi futás épít
+    // (`refreshDailyQuestionLeaderboardDaily`). Bejelentkezve olvasható —
+    // ez a játék mezőnye, nevekkel együtt.
+    //
+    // Azért egy dokumentum, és nem kliens-lekérdezés: az élő ranglista
+    // látogatónként egy lekérdezés lenne, és a mezőnnyel együtt romlana.
+    // A saját helyezés nem is innen jön, hanem a gyűjtő saját kasszájából.
+    match /leaderboard/{gameId} {
+      allow read: if isAuthed();
+      allow write: if false; // refreshDailyQuestionLeaderboard
+    }
+
+    match /daily-question/{day} {
+      allow read: if isAuthed();
+      allow write: if false; // composeDailyQuestionDaily / composeDailyQuestionNow
+
+      match /secret/{documentId} {
+        allow read, write: if false;
+      }
+    }
+
+    // A hét bandája: egy előadó egy hétre, mindenkinek ugyanaz. A home
+    // főhelyén áll, ezért a napi kérdéssel ellentétben a kijelentkezett
+    // látogatónak is olvashatónak kell lennie — ahogy maga a katalógus is az.
+    // Nincs benne titok: egy előadó-hivatkozás és az apropója.
+    match /band-of-the-week/{week} {
+      allow read: if true;
+      allow write: if false; // composeBandOfTheWeekWeekly / composeBandOfTheWeekNow
+    }
+
+    // A lemez közösségi átlaga: egy dokumentum egy album, a csillagok száma,
+    // átlaga és megoszlása. A `syncAlbumRating` trigger írja (Admin SDK) —
+    // a kliens a sajátján kívül senki értékelését nem látja, az összeg
+    // viszont mindenkinek szól, a kijelentkezett látogatónak is, ahogy maga
+    // a katalógus.
+    //
+    // Nem az album dokumentumának mezője, mert a katalógus bundle-ben
+    // utazik minden klienshez, ez a szám pedig minden csillagra változik —
+    // egy ilyen mező minden értékeléssel az egész album-bundle-t érvénytelenné
+    // tenné. Az album oldal egyetlen dokumentumot olvas, amikor megnyitják.
+    // Listázni nincs mit: nincs oldal, ami minden lemez átlagát egyszerre
+    // kérdezné.
+    match /album-rating/{albumId} {
+      allow get: if true;
+      allow list: if false;
+      allow write: if false; // syncAlbumRating
     }
 
     // ── Alapértelmezés: tiltás ──────────────────────────────────────────────

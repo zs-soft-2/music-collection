@@ -1,0 +1,193 @@
+import { CountryList, FormatList } from '@music-collection/common/api';
+import {
+	MusicCollectionGroup,
+	MusicCollectionStatus,
+	MusicCollectionVisibility,
+} from '@music-collection/domain/music-collection/api';
+
+/** How an enum criterion reads its list. */
+export type EnumOperator = 'includesAny' | 'includesAll' | 'excludes';
+
+export const ENUM_OPERATOR_OPTIONS: {
+	value: EnumOperator;
+	labelKey: string;
+}[] = [
+	{ value: 'includesAny', labelKey: 'admin.criterion.anyOf' },
+	{ value: 'includesAll', labelKey: 'admin.criterion.allOf' },
+	{ value: 'excludes', labelKey: 'admin.criterion.noneOf' },
+];
+
+export interface EnumCriterionForm {
+	operator: EnumOperator;
+	values: string[];
+}
+
+/**
+ * The criteria as the editor holds them: every criterion is present, and an
+ * empty one simply does not reach the definition. The shape is flat on
+ * purpose — a form field maps onto one property, and turning it into a rule
+ * happens in one place (`toCriteria`).
+ */
+export interface CriteriaForm {
+	yearFrom: number | null;
+	yearTo: number | null;
+	styles: EnumCriterionForm;
+	artistStyles: EnumCriterionForm;
+	albumFormats: EnumCriterionForm;
+	artistCountries: EnumCriterionForm;
+	/** Artist uids. */
+	artists: string[];
+	/** Musician uids that must be credited on the record. */
+	creditMusicians: string[];
+	/** Discogs roles, e.g. "Producer"; matched case-insensitively. */
+	creditRoles: string[];
+}
+
+export interface CollectionForm {
+	name: string;
+	slug: string;
+	description: string;
+	icon: string;
+	coverImageUrl: string;
+	status: MusicCollectionStatus;
+	visibility: MusicCollectionVisibility;
+	/** Empty leaves the score to the rule. */
+	basePoints: string;
+	parentUid: string;
+	/** Empty is the curated list; the editor carries the group of a pair. */
+	group: '' | MusicCollectionGroup;
+	badgeName: string;
+	badgeDescription: string;
+	badgeIcon: string;
+	badgeArtworkUrl: string;
+	criteria: CriteriaForm;
+}
+
+/** Which enum criteria the editor offers, and what they choose from. */
+export const ENUM_CRITERIA: {
+	key: keyof Pick<
+		CriteriaForm,
+		'styles' | 'artistStyles' | 'albumFormats' | 'artistCountries'
+	>;
+	labelKey: string;
+	hint: string;
+	/**
+	 * The values to choose from, where the code knows them. Null for the two
+	 * style criteria: which styles exist is the taxonomy's answer now, so the
+	 * editor reads those from the store.
+	 */
+	options: string[] | null;
+}[] = [
+	{
+		key: 'styles',
+		labelKey: 'admin.criterion.albumStyles',
+		hint: 'The style the record was written in.',
+		options: null,
+	},
+	{
+		key: 'artistStyles',
+		labelKey: 'admin.criterion.artistStyles',
+		hint: 'What the artist is known for — it may be decades from the album.',
+		options: null,
+	},
+	{
+		key: 'albumFormats',
+		labelKey: 'admin.criterion.albumFormats',
+		hint: '`lp` for studio albums; take in `ep` or `live` deliberately.',
+		options: FormatList,
+	},
+	{
+		key: 'artistCountries',
+		labelKey: 'admin.criterion.artistCountries',
+		hint: 'Where the artist is from, not where the pressing was made.',
+		options: CountryList,
+	},
+];
+
+export const STATUS_OPTIONS: MusicCollectionStatus[] = ['draft', 'published'];
+
+/**
+ * Which group the editor offers. The group is on the form rather than being
+ * left to the discography button alone, because saving a definition replaces
+ * the document: a field the editor does not send back is a field an edit
+ * would drop, and a discography would quietly leave its own group.
+ */
+export const GROUP_OPTIONS: {
+	value: '' | MusicCollectionGroup;
+	labelKey: string;
+}[] = [
+	{ value: '', labelKey: 'admin.group.curated' },
+	{ value: 'discography', labelKey: 'admin.group.discography' },
+];
+
+export const VISIBILITY_OPTIONS: {
+	value: MusicCollectionVisibility;
+	labelKey: string;
+}[] = [
+	{ value: 'public', labelKey: 'admin.visibility.public' },
+	{ value: 'link', labelKey: 'admin.visibility.link' },
+	{ value: 'private', labelKey: 'admin.visibility.private' },
+];
+
+const emptyEnumCriterion = (): EnumCriterionForm => ({
+	operator: 'includesAny',
+	values: [],
+});
+
+export const emptyCriteriaForm = (): CriteriaForm => ({
+	yearFrom: null,
+	yearTo: null,
+	styles: emptyEnumCriterion(),
+	artistStyles: emptyEnumCriterion(),
+	albumFormats: emptyEnumCriterion(),
+	artistCountries: emptyEnumCriterion(),
+	artists: [],
+	creditMusicians: [],
+	creditRoles: [],
+});
+
+export const emptyCollectionForm = (): CollectionForm => ({
+	name: '',
+	slug: '',
+	description: '',
+	icon: '',
+	coverImageUrl: '',
+	status: 'draft',
+	visibility: 'public',
+	basePoints: '',
+	parentUid: '',
+	group: '',
+	badgeName: '',
+	badgeDescription: '',
+	badgeIcon: '',
+	badgeArtworkUrl: '',
+	criteria: emptyCriteriaForm(),
+});
+
+/** One definition as the admin list shows it. */
+export interface CollectionRow {
+	uid: string;
+	name: string;
+	slug: string;
+	status: MusicCollectionStatus;
+	visibility: MusicCollectionVisibility;
+	/** What the rule catches in the catalog right now. */
+	total: number;
+	/** What finishing it is worth; the rule's number when there is no other. */
+	points: number;
+	/** The curator named no number, so the rule did. */
+	derivedPoints: boolean;
+	badgeName: string | null;
+	/** The criteria in one line, so the list says what the rule is. */
+	summary: string;
+	parentName: string | null;
+	/** Which group of the list it stands in; null is the curated list. */
+	group: MusicCollectionGroup | null;
+}
+
+/** The rows of one group, as the list renders them under one heading. */
+export interface CollectionRowGroup {
+	group: MusicCollectionGroup | null;
+	labelKey: string;
+	rows: CollectionRow[];
+}

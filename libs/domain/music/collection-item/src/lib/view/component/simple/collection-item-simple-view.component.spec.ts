@@ -1,10 +1,10 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import {
 	CollectionItemEntity,
 	EntityTypeEnum,
 	FormatDescriptionEnum,
 	FormatEnum,
-	GenreEnum,
 	MediaEnum,
 	ReleaseCountryEnum,
 } from '@music-collection/api';
@@ -48,7 +48,7 @@ describe('CollectionItemSimpleViewComponent', () => {
 				artist,
 				coverImage: null,
 				format: FormatEnum.lp,
-				genre: GenreEnum.Rock,
+				genre: 'Rock',
 				songs: [],
 				styles: [],
 				year: new Date(0),
@@ -58,6 +58,7 @@ describe('CollectionItemSimpleViewComponent', () => {
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
+			providers: [provideI18nTesting()],
 			imports: [CollectionItemSimpleViewComponent],
 		}).compileComponents();
 

@@ -1,33 +1,35 @@
 import { BehaviorSubject, Observable, combineLatest, map } from 'rxjs';
 
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
 	MusicianEntity,
 	MusicianStateService,
 	MusicianTableParams,
+	sortByRecent,
 } from '@music-collection/api';
-
-export type MusicianTableView = 'table' | 'cards';
-
-const VIEW_KEY = 'mc.admin.musicians.view';
-
-function readView(): MusicianTableView {
-	try {
-		return localStorage.getItem(VIEW_KEY) === 'cards' ? 'cards' : 'table';
-	} catch {
-		return 'table';
-	}
-}
+import {
+	createCollectionPlace,
+	createCollectionView,
+} from '@music-collection/ui';
 
 @Injectable()
 export class MusicianTableService {
 	private activatedRoute = inject(ActivatedRoute);
 	private musicianStateService = inject(MusicianStateService);
 	private router = inject(Router);
-	private query$ = new BehaviorSubject('');
 
-	public readonly view = signal<MusicianTableView>(readView());
+	public readonly collectionView = createCollectionView(
+		'mc.admin.musicians.view'
+	);
+
+	public readonly place = createCollectionPlace('mc.admin.musicians', {
+		cards: 48,
+		table: 50,
+	});
+
+	/** The query the list is narrowed by, taken up again where it was left. */
+	private query$ = new BehaviorSubject(this.place.filterOf('name'));
 
 	public editMusician(musician: MusicianEntity): void {
 		this.router.navigate(['../edit', musician.uid], {
@@ -35,16 +37,25 @@ export class MusicianTableService {
 		});
 	}
 
-	public filter(query: string): void {
-		this.query$.next(query.trim().toLowerCase());
+	/**
+	 * The page the musician is read on, as anyone else sees it —
+	 * the admin list's way of looking rather than editing.
+	 */
+	public viewLink(musician: MusicianEntity): unknown[] {
+		return ['/musician', musician.uid];
 	}
 
-	/** Every musician (the list page resolver loads them), name order, filtered by name, real name or alias. */
+	public filter(query: string): void {
+		this.place.setFilter('name', query);
+		this.query$.next(query);
+	}
+
+	/** Every musician (the list page resolver loads them), the last changed first, filtered by name, real name or alias. */
 	public init$(): Observable<MusicianTableParams> {
 		return combineLatest([
-			this.musicianStateService.selectEntities$(),
+			this.musicianStateService.selectEntities$().pipe(map(sortByRecent)),
 			this.musicianStateService.isLoading$(),
-			this.query$,
+			this.query$.pipe(map((query) => query.trim().toLowerCase())),
 		]).pipe(
 			map(([musicians, loading, query]) => ({
 				musicians: query
@@ -53,15 +64,6 @@ export class MusicianTableService {
 				loading,
 			}))
 		);
-	}
-
-	public setView(view: MusicianTableView): void {
-		this.view.set(view);
-		try {
-			localStorage.setItem(VIEW_KEY, view);
-		} catch {
-			// Preference is a convenience only.
-		}
 	}
 }
 

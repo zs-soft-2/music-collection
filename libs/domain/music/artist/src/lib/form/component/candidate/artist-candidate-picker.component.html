@@ -1,0 +1,72 @@
+<p-dialog
+	[header]="'ui.artistCandidatePicker.which-artist-is-this' | transloco"
+	[modal]="true"
+	[visible]="!!candidates()"
+	(visibleChange)="$event || closed.emit()"
+	[style]="{ width: 'min(44rem, 95vw)' }"
+	[dismissableMask]="true"
+>
+	@if (candidates(); as rows) {
+		<p class="artist-candidate-hint">
+			{{
+				(rows[0]?.source === 'discogs'
+					? 'ui.artistCandidatePicker.several-on-discogs'
+					: 'ui.artistCandidatePicker.several'
+				) | transloco: { hint: hint() }
+			}}
+		</p>
+		<ul class="artist-candidates">
+			@for (candidate of rows; track candidate.sourceUrl) {
+				<li>
+					<button
+						type="button"
+						class="artist-candidate"
+						(click)="picked.emit(candidate)"
+					>
+						<span class="artist-candidate-heading">
+							@if (candidate.thumbUrl) {
+								<img
+									class="artist-candidate-thumb"
+									[src]="candidate.thumbUrl"
+									[alt]="candidate.name"
+									loading="lazy"
+								/>
+							}
+							<span class="artist-candidate-name">
+								{{ candidate.name }}
+								@if (candidate.note) {
+									<em>({{ candidate.note }})</em>
+								}
+							</span>
+						</span>
+						@if (candidate.details) {
+							<span class="artist-candidate-details">
+								{{ candidate.details }}
+							</span>
+						}
+					</button>
+					<a
+						class="artist-candidate-link"
+						[href]="candidate.sourceUrl"
+						target="_blank"
+						rel="noopener"
+						>{{
+							(candidate.source === 'discogs'
+								? 'ui.artistCandidatePicker.open-on-discogs'
+								: 'ui.artistCandidatePicker.open-on-musicbrainz'
+							) | transloco
+						}}</a
+					>
+				</li>
+			}
+		</ul>
+	}
+	<ng-template #footer>
+		<p-button
+			[label]="'ui.artistCandidatePicker.cancel' | transloco"
+			severity="secondary"
+			[outlined]="true"
+			(onClick)="closed.emit()"
+		></p-button>
+	</ng-template>
+</p-dialog>

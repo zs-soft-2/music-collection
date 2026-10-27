@@ -1,0 +1,479 @@
+:host {
+	display: block;
+	color: var(--mc-text);
+	font-family: var(--mc-font-body);
+}
+
+.page {
+	max-width: var(--mc-page-max-width);
+	min-height: calc(100vh - var(--mc-app-bar-height));
+	margin: 0 auto;
+	padding: 2rem clamp(1rem, 3vw, 2.5rem) 3rem;
+}
+
+/* ── Header ───────────────────────────────────────────────────────────── */
+
+.hero {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 1.5rem;
+	padding-bottom: 1.5rem;
+	margin-bottom: 2rem;
+	border-bottom: 1px solid var(--mc-border);
+}
+
+.eyebrow {
+	margin: 0;
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: var(--mc-primary);
+}
+
+h1 {
+	margin: 0.25rem 0 0;
+	font-family: var(--mc-font-display);
+	font-size: clamp(2.5rem, 6vw, 4rem);
+	font-weight: 400;
+	line-height: 1;
+	letter-spacing: 0.02em;
+}
+
+.lead {
+	max-width: 46ch;
+	margin: 0.6rem 0 0;
+	color: var(--mc-text-muted);
+}
+
+.stats {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0.75rem;
+	margin: 0;
+}
+
+.stat {
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	padding: 0.8rem 1rem;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-md);
+
+	dt {
+		font-size: 0.8rem;
+		color: var(--mc-text-muted);
+	}
+
+	dd {
+		margin: 0.15rem 0 0;
+		font-size: 1.6rem;
+		font-weight: 600;
+		line-height: 1.1;
+		font-variant-numeric: tabular-nums;
+	}
+}
+
+/* ── The hunt ──────────────────────────────────────────────────────────── */
+
+.section {
+	margin-bottom: 2.5rem;
+}
+
+.section-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.35rem 1rem;
+	padding-bottom: 0.75rem;
+	margin-bottom: 1.25rem;
+	border-bottom: 1px solid var(--mc-border);
+
+	h2 {
+		margin: 0;
+		font-family: var(--mc-font-display);
+		font-size: clamp(1.6rem, 2.6vw, 2.1rem);
+		font-weight: 400;
+		line-height: 1;
+		letter-spacing: 0.02em;
+
+		/* The count beside a group heading reads as a tally, not as a word. */
+		.count {
+			font-family: inherit;
+			font-size: 0.5em;
+			letter-spacing: 0.08em;
+		}
+	}
+}
+
+.section-lead {
+	max-width: 52ch;
+	margin: 0;
+	font-size: 0.85rem;
+	color: var(--mc-text-muted);
+}
+
+/* ── Toolbar ───────────────────────────────────────────────────────────────── */
+
+.toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	margin-bottom: 1.25rem;
+}
+
+.tabs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.tab {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
+	padding: 0.45rem 0.9rem;
+	font: inherit;
+	font-size: 0.85rem;
+	color: var(--mc-text-muted);
+	cursor: pointer;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: 999px;
+	transition:
+		color 0.2s ease,
+		background 0.2s ease,
+		border-color 0.2s ease;
+
+	&:hover {
+		color: var(--mc-text);
+		border-color: var(--mc-border-strong);
+	}
+
+	&.is-active {
+		color: var(--mc-on-primary);
+		background: var(--mc-primary);
+		border-color: var(--mc-primary);
+	}
+}
+
+.count {
+	font-variant-numeric: tabular-nums;
+	opacity: 0.75;
+}
+
+.search {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.4rem 0.8rem;
+	color: var(--mc-text-subtle);
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: 999px;
+
+	&:focus-within {
+		border-color: var(--mc-border-strong);
+	}
+
+	input {
+		width: 12rem;
+		max-width: 100%;
+		font: inherit;
+		font-size: 0.85rem;
+		color: var(--mc-text);
+		background: none;
+		border: 0;
+		outline: none;
+	}
+}
+
+.hint {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.65rem 0.9rem;
+	margin: 0 0 1.25rem;
+	font-size: 0.85rem;
+	color: var(--mc-text-muted);
+	background: var(--mc-bg-muted);
+	border: 1px dashed var(--mc-border-strong);
+	border-radius: var(--mc-radius-md);
+
+	i {
+		color: var(--mc-primary);
+	}
+}
+
+/* ── Cards ────────────────────────────────────────────────────────────── */
+
+.grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+	gap: 1.25rem;
+	padding: 0;
+	margin: 0;
+	list-style: none;
+}
+
+.card {
+	position: relative;
+	display: flex;
+	height: 100%;
+	overflow: hidden;
+	background: var(--mc-card-bg);
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-lg);
+	transition:
+		background 0.2s ease,
+		border-color 0.2s ease,
+		transform 0.2s ease;
+
+	&:hover,
+	&:focus-within {
+		background: var(--mc-card-bg-hover);
+		border-color: var(--mc-border-strong);
+		transform: translateY(-2px);
+	}
+
+	/* Completed is the stronger state: it keeps the border where both hold. */
+	&.is-followed {
+		border-color: var(--mc-primary);
+	}
+
+	&.is-completed {
+		border-color: var(--mc-accent);
+	}
+}
+
+/* The whole card is the link; the star sits beside it, not inside it. */
+.card-link {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-width: 0;
+	color: inherit;
+	text-decoration: none;
+}
+
+.follow {
+	position: absolute;
+	top: 0.55rem;
+	right: 0.55rem;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--mc-circle-xs);
+	height: var(--mc-circle-xs);
+	padding: 0;
+	font-size: 0.85rem;
+	color: #ffffff;
+	cursor: pointer;
+	background: rgba(0, 0, 0, 0.55);
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	border-radius: 999px;
+	transition:
+		color 0.2s ease,
+		background 0.2s ease,
+		border-color 0.2s ease;
+
+	&:hover {
+		background: rgba(0, 0, 0, 0.75);
+		border-color: rgba(255, 255, 255, 0.35);
+	}
+
+	&[aria-pressed='true'] {
+		color: var(--mc-primary);
+		border-color: var(--mc-primary);
+	}
+
+	/* The star sits in the corner; the eye sits beside it rather than on top
+	   of it, which is where it landed while it shared the same rule. */
+	&.show {
+		right: calc(0.55rem + var(--mc-circle-xs) + 0.35rem);
+	}
+}
+
+.artwork {
+	position: relative;
+	aspect-ratio: 16 / 9;
+	background: var(--mc-surface-2);
+}
+
+mc-collection-artwork {
+	width: 100%;
+	height: 100%;
+}
+
+/* The pin sits on the artwork, opposite the star and clear of the chip. */
+.badge-pin {
+	position: absolute;
+	bottom: 0.6rem;
+	left: 0.6rem;
+	width: 2.5rem;
+	height: 2.5rem;
+	object-fit: contain;
+	filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.6));
+
+	/* Faded until the collection is finished, as the detail page shows it. */
+	&:not(.is-earned) {
+		filter: grayscale(1) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.6));
+		opacity: 0.55;
+	}
+}
+
+.earned {
+	position: absolute;
+	right: 0.6rem;
+	bottom: 0.6rem;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.25rem 0.6rem;
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--mc-on-accent);
+	background: var(--mc-accent);
+	border-radius: 999px;
+}
+
+.body {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: 0.5rem;
+	padding: 1rem;
+
+	h2 {
+		margin: 0;
+		font-size: 1.05rem;
+		font-weight: 600;
+		line-height: 1.3;
+	}
+}
+
+.description {
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+	margin: 0;
+	font-size: 0.85rem;
+	color: var(--mc-text-muted);
+}
+
+.progress {
+	margin-top: auto;
+	padding-top: 0.6rem;
+}
+
+.bar {
+	height: 6px;
+	overflow: hidden;
+	background: var(--mc-surface-2);
+	border-radius: 999px;
+}
+
+.fill {
+	display: block;
+	height: 100%;
+	background: var(--mc-primary);
+	border-radius: inherit;
+	transition: width 0.3s ease;
+}
+
+.is-completed .fill {
+	background: var(--mc-accent);
+}
+
+.counts {
+	margin: 0.4rem 0 0;
+	font-size: 0.8rem;
+	color: var(--mc-text-muted);
+	font-variant-numeric: tabular-nums;
+
+	strong {
+		color: var(--mc-text);
+	}
+}
+
+.percentage {
+	color: var(--mc-text-subtle);
+}
+
+.points {
+	margin: 0.25rem 0 0;
+	font-size: 0.78rem;
+	color: var(--mc-text-subtle);
+	font-variant-numeric: tabular-nums;
+
+	strong {
+		color: var(--mc-text-muted);
+	}
+}
+
+.is-completed .points strong {
+	color: var(--mc-accent);
+}
+
+/* ── Loading and empty ────────────────────────────────────────────────── */
+
+.skeleton {
+	position: relative;
+	overflow: hidden;
+	background: var(--mc-card-bg);
+	border-radius: var(--mc-radius-lg);
+}
+
+/*
+ * The light passes over on a layer of its own. A moving transform is the
+ * compositor's work; a moving background is a repaint of every placeholder
+ * on every frame, which on a slow phone holds back the page it stands for.
+ */
+.skeleton::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(
+		100deg,
+		transparent 40%,
+		var(--mc-surface-2) 50%,
+		transparent 60%
+	);
+	transform: translateX(-100%);
+	animation: mc-shimmer 1.4s linear infinite;
+}
+
+.card-skeleton {
+	height: 16rem;
+}
+
+.empty {
+	max-width: 46ch;
+	padding: 4rem 1rem;
+	margin: 0 auto;
+	text-align: center;
+	color: var(--mc-text-muted);
+}
+
+@keyframes mc-shimmer {
+	to {
+		transform: translateX(100%);
+	}
+}
+
+@media (max-width: 700px) {
+	.stats {
+		width: 100%;
+	}
+
+	.search {
+		flex: 1;
+	}
+}

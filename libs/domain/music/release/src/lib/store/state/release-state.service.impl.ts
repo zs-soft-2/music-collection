@@ -2,6 +2,8 @@ import { Observable } from 'rxjs';
 
 import { Injectable, inject } from '@angular/core';
 import {
+	DiscogsVersion,
+	ReleaseDataService,
 	ReleaseEntity,
 	ReleaseEntityAdd,
 	ReleaseEntityUpdate,
@@ -16,8 +18,8 @@ import * as releaseSelectors from './release.selectors';
 
 @Injectable()
 export class ReleaseStateServiceImpl extends ReleaseStateService {
+	private releaseDataService = inject(ReleaseDataService);
 	private store = inject<Store<fromRelease.ReleasePartialState>>(Store);
-
 
 	public dispatchAddEntityAction(release: ReleaseEntityAdd): void {
 		this.store.dispatch(releaseActions.addRelease({ release }));
@@ -29,8 +31,14 @@ export class ReleaseStateServiceImpl extends ReleaseStateService {
 		);
 	}
 
+	/**
+	 * Not this way. Deleting a pressing has to ask first whether a collector
+	 * owns a copy of it, and then delete on the server inside a transaction;
+	 * `ReleaseDeletionEffect` is where that lives. This store held a delete
+	 * that did neither, so it is gone rather than left as a second door.
+	 */
 	public dispatchDeleteEntityAction(release: ReleaseEntity): void {
-		this.store.dispatch(releaseActions.deleteRelease({ release }));
+		throw new Error('Use ReleaseDeletionEffect to delete a release.');
 	}
 
 	public dispatchListEntitiesAction(): void {
@@ -49,6 +57,10 @@ export class ReleaseStateServiceImpl extends ReleaseStateService {
 		this.store.dispatch(releaseActions.search({ params }));
 	}
 
+	public dispatchSearchByArtistName(term: string): void {
+		this.store.dispatch(releaseActions.searchByArtistName({ term }));
+	}
+
 	public dispatchSelectReleaseAction(release: ReleaseEntity): void {
 		this.store.dispatch(releaseActions.selectRelease({ release }));
 	}
@@ -63,8 +75,24 @@ export class ReleaseStateServiceImpl extends ReleaseStateService {
 		this.store.dispatch(releaseActions.updateRelease({ release }));
 	}
 
+	public findExternalMaster$(
+		artistName: string,
+		albumName: string
+	): Observable<number | null> {
+		return this.releaseDataService.findExternalMaster$(
+			artistName,
+			albumName
+		);
+	}
+
 	public isLoading$(): Observable<boolean> {
 		throw new Error('Method not implemented.');
+	}
+
+	public listExternalVersions$(
+		masterId: number
+	): Observable<DiscogsVersion[]> {
+		return this.releaseDataService.listExternalVersions$(masterId);
 	}
 
 	public selectEntities$(): Observable<ReleaseEntity[]> {

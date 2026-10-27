@@ -8,7 +8,6 @@ import { ReleaseStateService } from '@music-collection/api';
 export class ReleaseEditResolverService implements Resolve<void> {
 	private releaseStateService = inject(ReleaseStateService);
 
-
 	public resolve(): void | Observable<void> | Promise<void> {
 		this.releaseStateService.dispatchChangeNewEntityButtonEnabled(false);
 	}

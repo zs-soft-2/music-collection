@@ -1,4 +1,7 @@
+export * from './release-archive';
 export * from './release-data.service';
+export * from './release-deletion.repository';
+export type * from './release-external';
 export * from './release-feature.key';
 export * from './release-permissions.service';
 export * from './release-resource.enum';

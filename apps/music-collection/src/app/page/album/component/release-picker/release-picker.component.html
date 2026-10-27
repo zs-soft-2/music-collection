@@ -1,0 +1,988 @@
+<dialog
+	#dialog
+	tabindex="-1"
+	class="picker"
+	[class.is-dragging]="dragging()"
+	aria-labelledby="release-picker-title"
+	[attr.aria-busy]="busy()"
+	(close)="closed.emit()"
+>
+	<header class="picker-header">
+		<div>
+			<p class="eyebrow">
+				{{ 'ui.releasePicker.add-to-collection' | transloco }}
+			</p>
+			<h2 id="release-picker-title">{{ albumTitle() }}</h2>
+		</div>
+		<button
+			type="button"
+			class="icon-button"
+			[attr.aria-label]="'ui.releasePicker.close' | transloco"
+			[disabled]="busy()"
+			(click)="close()"
+		>
+			<i class="pi pi-times" aria-hidden="true"></i>
+		</button>
+	</header>
+
+	@if (pendingRequests().length) {
+		<section class="pending" aria-labelledby="pending-title">
+			<h3 id="pending-title" class="subtitle">
+				<i class="pi pi-clock" aria-hidden="true"></i>
+				{{ 'ui.releasePicker.requested-waiting-for-an' | transloco }}
+			</h3>
+			<ul>
+				@for (request of pendingRequests(); track request.id) {
+					<li>
+						@if (request.discogsUrl) {
+							<a
+								[href]="request.discogsUrl"
+								target="_blank"
+								rel="noopener"
+								>{{ request.summary }}</a
+							>
+						} @else {
+							<span>{{ request.summary }}</span>
+						}
+						@if (request.note) {
+							<span class="pending-note">{{ request.note }}</span>
+						}
+					</li>
+				}
+			</ul>
+		</section>
+	}
+
+	@if (rejectedRequests().length) {
+		<section class="pending is-rejected" aria-labelledby="rejected-title">
+			<h3 id="rejected-title" class="subtitle">
+				<i class="pi pi-times-circle" aria-hidden="true"></i>
+				{{ 'ui.releasePicker.not-added-by-the' | transloco }}
+			</h3>
+			<ul>
+				@for (request of rejectedRequests(); track request.id) {
+					<li>
+						<span>{{ request.summary }}</span>
+						@if (request.adminNote) {
+							<span class="pending-note">{{
+								request.adminNote
+							}}</span>
+						}
+					</li>
+				}
+			</ul>
+		</section>
+	}
+
+	@switch (view()) {
+		@case ('catalog') {
+			@if (chosenRelease(); as chosen) {
+				<p class="lead">
+					{{ 'ui.releasePicker.is-your-copy-a' | transloco }}
+				</p>
+
+				@if (error()) {
+					<p class="error" role="alert">
+						{{
+							'ui.releasePicker.addFailed'
+								| transloco: { error: error() }
+						}}
+					</p>
+				}
+
+				<p class="chosen">
+					<mc-format-badge
+						[format]="chosen.format"
+						[weight]="chosen.weight"
+					/>
+					<span>
+						{{ chosen.labelName ?? ('common.unknown' | transloco) }}
+						@if (chosen.country) {
+							· {{ chosen.country }}
+						}
+						@if (chosen.year) {
+							· {{ chosen.year }}
+						}
+					</span>
+				</p>
+
+				<p class="hint serial-lead">
+					{{ 'ui.releasePicker.only-a-numbered-edition' | transloco }}
+				</p>
+
+				<div class="serial-fields">
+					<label class="field">
+						<span>{{
+							'ui.releasePicker.copy-number' | transloco
+						}}</span>
+						<input
+							type="text"
+							inputmode="numeric"
+							placeholder="123"
+							[disabled]="busy()"
+							[value]="serialNumber()"
+							[attr.aria-invalid]="
+								serialProblem() === 'number' ||
+								serialProblem() === 'totalAlone'
+									? 'true'
+									: null
+							"
+							(input)="onSerialInput('number', $event)"
+						/>
+					</label>
+
+					<label class="field">
+						<span>{{ 'ui.releasePicker.out-of' | transloco }}</span>
+						<input
+							type="text"
+							inputmode="numeric"
+							placeholder="500"
+							[disabled]="busy()"
+							[value]="serialTotal()"
+							[attr.aria-invalid]="
+								serialProblem() === 'total' ||
+								serialProblem() === 'tooLarge'
+									? 'true'
+									: null
+							"
+							(input)="onSerialInput('total', $event)"
+						/>
+					</label>
+				</div>
+
+				@switch (serialProblem()) {
+					@case ('number') {
+						<p class="field-error">
+							{{ 'ui.releasePicker.this-is-not-a' | transloco }}
+						</p>
+					}
+					@case ('total') {
+						<p class="field-error">
+							{{ 'ui.releasePicker.this-is-not-an' | transloco }}
+						</p>
+					}
+					@case ('tooLarge') {
+						<p class="field-error">
+							{{
+								'ui.releasePicker.the-edition-is-smaller'
+									| transloco
+							}}
+						</p>
+					}
+					@case ('totalAlone') {
+						<p class="field-error">
+							{{
+								'ui.releasePicker.which-one-of-them' | transloco
+							}}
+						</p>
+					}
+				}
+
+				<div class="form-actions">
+					<button
+						type="button"
+						class="secondary-button"
+						[disabled]="busy()"
+						(click)="unchoose()"
+					>
+						{{ 'ui.releasePicker.another-pressing' | transloco }}
+					</button>
+					<button
+						type="button"
+						class="primary-button confirm-add"
+						[disabled]="busy() || !!serialProblem()"
+						(click)="confirmChoice()"
+					>
+						{{
+							(adding()
+								? 'ui.releasePicker.adding'
+								: 'ui.releasePicker.add-to-my-collection'
+							) | transloco
+						}}
+					</button>
+				</div>
+			} @else {
+				@if (loading() || releases().length) {
+					<p class="lead">
+						{{
+							'ui.releasePicker.which-pressing-do-you' | transloco
+						}}
+					</p>
+				}
+
+				@if (error()) {
+					<p class="error" role="alert">
+						{{
+							'ui.releasePicker.addFailed'
+								| transloco: { error: error() }
+						}}
+					</p>
+				}
+
+				@if (loading()) {
+					<div class="skeleton" role="status" aria-busy="true">
+						<span class="visually-hidden">{{
+							'ui.releasePicker.loading-releases' | transloco
+						}}</span>
+					</div>
+				} @else if (releases().length) {
+					<ul class="options">
+						@for (release of releases(); track release.id) {
+							<li
+								[class.is-highlighted]="
+									release.id === highlightReleaseId()
+								"
+							>
+								@if (
+									release.owned &&
+									release.ownedCopyId &&
+									canRemove()
+								) {
+									<div class="option is-owned">
+										<ng-container
+											*ngTemplateOutlet="
+												pressing;
+												context: { $implicit: release }
+											"
+										/>
+										<span class="action">
+											<span class="state">
+												<i
+													class="pi pi-check"
+													aria-hidden="true"
+												></i>
+												{{
+													'ui.releasePicker.in-your-collection'
+														| transloco
+												}}
+											</span>
+											<button
+												type="button"
+												class="remove"
+												[disabled]="busy()"
+												(click)="
+													removeRequested.emit(
+														release.ownedCopyId
+													)
+												"
+											>
+												<i
+													class="pi pi-sign-out"
+													aria-hidden="true"
+												></i>
+												{{
+													'ui.releasePicker.remove'
+														| transloco
+												}}
+												<span class="visually-hidden">{{
+													'ui.releasePicker.from-your-collection'
+														| transloco
+												}}</span>
+											</button>
+										</span>
+									</div>
+								} @else {
+									<button
+										type="button"
+										class="option"
+										[disabled]="busy() || release.owned"
+										(click)="choose(release)"
+									>
+										<ng-container
+											*ngTemplateOutlet="
+												pressing;
+												context: { $implicit: release }
+											"
+										/>
+										<span class="action">
+											@if (release.owned) {
+												<span class="state">
+													<i
+														class="pi pi-check"
+														aria-hidden="true"
+													></i>
+													{{
+														'ui.releasePicker.in-your-collection'
+															| transloco
+													}}
+												</span>
+											} @else {
+												<i
+													class="pi pi-plus"
+													aria-hidden="true"
+												></i>
+												<span class="visually-hidden">{{
+													'ui.releasePicker.add'
+														| transloco
+												}}</span>
+											}
+										</span>
+									</button>
+								}
+							</li>
+						}
+					</ul>
+					<footer class="missing">
+						<p class="lead">
+							{{ 'ui.releasePicker.don-t-see-your' | transloco }}
+						</p>
+						<ng-container *ngTemplateOutlet="routes" />
+					</footer>
+				} @else {
+					<p class="lead">
+						{{ 'ui.releasePicker.no-release-of-this' | transloco }}
+					</p>
+					<ng-container *ngTemplateOutlet="routes" />
+				}
+			}
+		}
+
+		@case ('discogs') {
+			<button type="button" class="back" (click)="show('catalog')">
+				<i class="pi pi-arrow-left" aria-hidden="true"></i>
+				{{ 'ui.releasePicker.catalog-releases' | transloco }}
+			</button>
+
+			@if (selectedVersion()) {
+				<ng-container *ngTemplateOutlet="confirmPressing" />
+			} @else {
+				<p class="lead">
+					{{ 'ui.releasePicker.pick-your-pressing-from' | transloco }}
+				</p>
+
+				@if (discogsLoading()) {
+					<div class="skeleton" role="status" aria-busy="true">
+						<span class="visually-hidden">{{
+							'ui.releasePicker.loading-discogs-pressings'
+								| transloco
+						}}</span>
+					</div>
+				} @else if (discogsError()) {
+					<p class="error" role="alert">{{ discogsError() }}</p>
+					<div class="form-actions">
+						<button
+							type="button"
+							class="secondary-button"
+							(click)="discogsRequested.emit()"
+						>
+							{{ 'ui.releasePicker.try-again' | transloco }}
+						</button>
+					</div>
+				} @else if (discogsVersions().length) {
+					@if (discogsFormats().length > 1) {
+						<div
+							class="filters"
+							role="group"
+							[attr.aria-label]="
+								'ui.releasePicker.filter-by-format' | transloco
+							"
+						>
+							<button
+								type="button"
+								class="chip"
+								[attr.aria-pressed]="formatFilter() === 'all'"
+								(click)="formatFilter.set('all')"
+							>
+								{{ 'ui.releasePicker.all' | transloco }}
+							</button>
+							@for (format of discogsFormats(); track format) {
+								<button
+									type="button"
+									class="chip"
+									[attr.aria-pressed]="
+										formatFilter() === format
+									"
+									(click)="formatFilter.set(format)"
+								>
+									{{ format | mcCatalog: 'media' }}
+								</button>
+							}
+						</div>
+					}
+					<ul class="options">
+						@for (version of filteredVersions(); track version.id) {
+							<li>
+								<button
+									type="button"
+									class="option"
+									[disabled]="version.requested"
+									(click)="select(version)"
+								>
+									<mc-format-badge
+										[format]="version.format"
+									/>
+									<span class="details">
+										<ng-container
+											*ngTemplateOutlet="
+												versionDetails;
+												context: { $implicit: version }
+											"
+										/>
+									</span>
+									<span class="action">
+										@if (version.requested) {
+											<span class="state">{{
+												'ui.releasePicker.requested'
+													| transloco
+											}}</span>
+										} @else {
+											<i
+												class="pi pi-chevron-right"
+												aria-hidden="true"
+											></i>
+										}
+									</span>
+								</button>
+							</li>
+						}
+					</ul>
+				} @else {
+					<p class="empty">
+						{{
+							'ui.releasePicker.discogs-lists-no-pressings'
+								| transloco
+						}}
+					</p>
+				}
+
+				<p class="hint">
+					{{ 'ui.releasePicker.not-there' | transloco }}
+					<button
+						type="button"
+						class="text-button"
+						(click)="show('describe')"
+					>
+						{{ 'ui.releasePicker.describe-it2' | transloco }}
+					</button>
+				</p>
+			}
+		}
+
+		@case ('photo') {
+			<button type="button" class="back" (click)="show('catalog')">
+				<i class="pi pi-arrow-left" aria-hidden="true"></i>
+				{{ 'ui.releasePicker.catalog-releases2' | transloco }}
+			</button>
+
+			@if (selectedVersion()) {
+				<ng-container *ngTemplateOutlet="confirmPressing" />
+			} @else {
+				<!-- No `capture`: with it a phone goes straight to the camera
+				     and hides the photo library, so a picture already taken
+				     could not be picked. Without it iOS and Android offer the
+				     camera and the library both. -->
+				<input
+					#photo
+					type="file"
+					class="photo-input"
+					accept="image/*"
+					aria-hidden="true"
+					tabindex="-1"
+					(change)="onPhoto($event)"
+				/>
+
+				@if (photoPreviewUrl(); as preview) {
+					<figure class="shot" [class.is-reading]="photoScanning()">
+						<img
+							[src]="preview"
+							[alt]="
+								'ui.releasePicker.the-record-photographed'
+									| transloco
+							"
+						/>
+						@if (photoScanning()) {
+							<figcaption class="shot-status" role="status">
+								<i
+									class="pi pi-spin pi-spinner"
+									aria-hidden="true"
+								></i>
+								{{
+									'ui.releasePicker.reading-the-photo'
+										| transloco
+								}}
+							</figcaption>
+						}
+					</figure>
+				} @else {
+					<p class="lead">
+						{{
+							'ui.releasePicker.photograph-the-record-the'
+								| transloco
+						}}
+					</p>
+
+					<button
+						type="button"
+						class="dropzone"
+						[class.is-over]="dragging()"
+						[disabled]="busy()"
+						(click)="takePhoto()"
+					>
+						<i class="pi pi-camera" aria-hidden="true"></i>
+						<span class="dropzone-title">{{
+							'ui.releasePicker.add-a-photo' | transloco
+						}}</span>
+						<span class="dropzone-hint">
+							{{
+								'ui.releasePicker.or-paste-an-image' | transloco
+							}}
+						</span>
+					</button>
+				}
+
+				@if (pasteHint(); as hint) {
+					<p class="notice" role="status">{{ hint }}</p>
+				}
+
+				@if (photoError()) {
+					<p class="error is-spaced" role="alert">
+						{{ photoError() }}
+					</p>
+				}
+
+				@if (photoPreviewUrl() && !photoScanning()) {
+					<div class="form-actions is-centred">
+						@if (canRetryPhoto()) {
+							<button
+								type="button"
+								class="primary-button"
+								(click)="photoRetried.emit()"
+							>
+								<i class="pi pi-refresh" aria-hidden="true"></i>
+								{{ 'ui.releasePicker.try-again2' | transloco }}
+							</button>
+						}
+						<button
+							type="button"
+							class="secondary-button"
+							(click)="takePhoto()"
+						>
+							<i class="pi pi-camera" aria-hidden="true"></i>
+							{{ 'ui.releasePicker.another-photo' | transloco }}
+						</button>
+					</div>
+				}
+
+				@if (photoVersions().length) {
+					<p class="lead">
+						{{ 'ui.releasePicker.which-one-is-yours' | transloco }}
+					</p>
+					<ul class="options">
+						@for (version of photoVersions(); track version.id) {
+							<li>
+								<button
+									type="button"
+									class="option is-candidate"
+									[disabled]="version.requested"
+									(click)="select(version)"
+								>
+									<ng-container
+										*ngTemplateOutlet="
+											versionThumb;
+											context: { $implicit: version }
+										"
+									/>
+									<span class="details">
+										<ng-container
+											*ngTemplateOutlet="
+												versionDetails;
+												context: { $implicit: version }
+											"
+										/>
+									</span>
+									<span class="action">
+										@if (version.match) {
+											<span
+												class="badge"
+												[class.is-sure]="
+													version.match === 'exact'
+												"
+												>{{
+													matchLabels[version.match]
+														| transloco
+												}}</span
+											>
+										}
+										@if (version.requested) {
+											<span class="state">{{
+												'ui.releasePicker.requested2'
+													| transloco
+											}}</span>
+										} @else {
+											<i
+												class="pi pi-chevron-right"
+												aria-hidden="true"
+											></i>
+										}
+									</span>
+								</button>
+							</li>
+						}
+					</ul>
+				} @else if (photoEmpty()) {
+					<p class="empty">
+						{{
+							'ui.releasePicker.nothing-recognised-on-this'
+								| transloco
+						}}
+					</p>
+				}
+
+				<p class="hint">
+					{{ 'ui.releasePicker.rather-type-it' | transloco }}
+					<button
+						type="button"
+						class="text-button"
+						(click)="show('describe')"
+					>
+						{{ 'ui.releasePicker.describe-it3' | transloco }}
+					</button>
+				</p>
+			}
+		}
+
+		@case ('generic') {
+			<button type="button" class="back" (click)="show('catalog')">
+				<i class="pi pi-arrow-left" aria-hidden="true"></i>
+				{{ 'ui.releasePicker.catalog-releases' | transloco }}
+			</button>
+
+			<p class="lead">
+				{{ 'ui.releasePicker.generic-lead' | transloco }}
+			</p>
+
+			@if (error()) {
+				<p class="error" role="alert">
+					{{
+						'ui.releasePicker.addFailed'
+							| transloco: { error: error() }
+					}}
+				</p>
+			}
+
+			<ul class="options">
+				@for (option of genericOptions(); track option.media) {
+					<li>
+						<button
+							type="button"
+							class="option"
+							[disabled]="busy() || option.owned"
+							(click)="pickGeneric(option.media)"
+						>
+							<mc-format-badge [format]="option.format" />
+							<span class="details">
+								<span>{{
+									'ui.releasePicker.generic-option'
+										| transloco
+								}}</span>
+							</span>
+							<span class="action">
+								@if (option.owned) {
+									<span class="state">
+										<i
+											class="pi pi-check"
+											aria-hidden="true"
+										></i>
+										{{
+											'ui.releasePicker.in-your-collection'
+												| transloco
+										}}
+									</span>
+								} @else {
+									<i
+										class="pi pi-plus"
+										aria-hidden="true"
+									></i>
+									<span class="visually-hidden">{{
+										'ui.releasePicker.add' | transloco
+									}}</span>
+								}
+							</span>
+						</button>
+					</li>
+				}
+			</ul>
+
+			@if (adding()) {
+				<p class="hint" role="status">
+					{{ 'ui.releasePicker.generic-adding' | transloco }}
+				</p>
+			}
+		}
+
+		@case ('describe') {
+			<button type="button" class="back" (click)="show('catalog')">
+				<i class="pi pi-arrow-left" aria-hidden="true"></i>
+				{{ 'ui.releasePicker.catalog-releases3' | transloco }}
+			</button>
+
+			<p class="lead">
+				{{ 'ui.releasePicker.paste-its-discogs-link' | transloco }}
+			</p>
+			<label class="field">
+				<span>{{
+					'ui.releasePicker.discogs-release-link' | transloco
+				}}</span>
+				<input
+					type="url"
+					inputmode="url"
+					[placeholder]="
+						'ui.releasePicker.https-www-discogs-com' | transloco
+					"
+					[value]="discogsLink()"
+					[attr.aria-invalid]="linkInvalid()"
+					(input)="onInput('link', $event)"
+				/>
+				@if (linkInvalid()) {
+					<span class="field-error">{{
+						'ui.releasePicker.not-a-discogs-release' | transloco
+					}}</span>
+				}
+			</label>
+			<label class="field">
+				<span>{{ 'ui.releasePicker.description' | transloco }}</span>
+				<textarea
+					rows="4"
+					[attr.maxlength]="noteMaxLength"
+					[value]="note()"
+					(input)="onInput('note', $event)"
+					[placeholder]="'ui.releasePicker.e-g-vinyl-lp' | transloco"
+				></textarea>
+			</label>
+			@if (requestError()) {
+				<p class="error" role="alert">{{ requestError() }}</p>
+			}
+			<div class="form-actions">
+				<button
+					type="button"
+					class="primary-button"
+					[disabled]="!canDescribe() || requesting()"
+					(click)="requestDescribed()"
+				>
+					{{
+						(requesting()
+							? 'ui.releasePicker.sending'
+							: 'ui.releasePicker.send-request'
+						) | transloco
+					}}
+				</button>
+			</div>
+		}
+	}
+</dialog>
+
+<!-- The ways in when the pressing is not in the list, each saying what it
+     does, under the heading that says what becomes of it: the format-only
+     route adds the record now, the other three only ask an admin for it. -->
+<ng-template #routes>
+	<h3 class="subtitle routes-title">
+		{{ 'ui.releasePicker.routes-now' | transloco }}
+	</h3>
+	<ul class="options">
+		<li>
+			<button
+				type="button"
+				class="option route is-now"
+				[disabled]="busy()"
+				(click)="show('generic')"
+			>
+				<i class="pi pi-bolt" aria-hidden="true"></i>
+				<span class="route-text">
+					<span class="route-name">{{
+						'ui.releasePicker.generic-open' | transloco
+					}}</span>
+					<span class="route-hint">{{
+						'ui.releasePicker.generic-route-hint' | transloco
+					}}</span>
+				</span>
+				<i class="pi pi-chevron-right" aria-hidden="true"></i>
+			</button>
+		</li>
+	</ul>
+
+	<h3 class="subtitle routes-title">
+		{{ 'ui.releasePicker.routes-request' | transloco }}
+	</h3>
+	<ul class="options">
+		@if (discogsAvailable()) {
+			<li>
+				<button
+					type="button"
+					class="option route"
+					[disabled]="busy()"
+					(click)="show('discogs')"
+				>
+					<i class="pi pi-search" aria-hidden="true"></i>
+					<span class="route-text">
+						<span class="route-name">{{
+							'ui.releasePicker.find-it-on-discogs' | transloco
+						}}</span>
+						<span class="route-hint">{{
+							'ui.releasePicker.discogs-route-hint' | transloco
+						}}</span>
+					</span>
+					<i class="pi pi-chevron-right" aria-hidden="true"></i>
+				</button>
+			</li>
+		}
+		<li>
+			<button
+				type="button"
+				class="option route"
+				[disabled]="busy()"
+				(click)="show('photo')"
+			>
+				<i class="pi pi-camera" aria-hidden="true"></i>
+				<span class="route-text">
+					<span class="route-name">{{
+						'ui.releasePicker.identify-from-a-photo' | transloco
+					}}</span>
+					<span class="route-hint">{{
+						'ui.releasePicker.photo-route-hint' | transloco
+					}}</span>
+				</span>
+				<i class="pi pi-chevron-right" aria-hidden="true"></i>
+			</button>
+		</li>
+		<li>
+			<button
+				type="button"
+				class="option route"
+				[disabled]="busy()"
+				(click)="show('describe')"
+			>
+				<i class="pi pi-pencil" aria-hidden="true"></i>
+				<span class="route-text">
+					<span class="route-name">{{
+						'ui.releasePicker.describe-it' | transloco
+					}}</span>
+					<span class="route-hint">{{
+						'ui.releasePicker.describe-route-hint' | transloco
+					}}</span>
+				</span>
+				<i class="pi pi-chevron-right" aria-hidden="true"></i>
+			</button>
+		</li>
+	</ul>
+</ng-template>
+
+<!-- The pressing picked, wherever it came from: the Discogs list or a photo
+     of the record. From here the request is the same. -->
+<ng-template #confirmPressing>
+	@if (selectedVersion(); as version) {
+		<p class="lead">
+			{{ 'ui.releasePicker.request-this-pressing' | transloco }}
+		</p>
+		<div class="option is-selected">
+			<ng-container
+				*ngTemplateOutlet="
+					versionThumb;
+					context: { $implicit: version }
+				"
+			/>
+			<mc-format-badge [format]="version.format" />
+			<span class="details">
+				<ng-container
+					*ngTemplateOutlet="
+						versionDetails;
+						context: { $implicit: version }
+					"
+				/>
+			</span>
+		</div>
+		<label class="field">
+			<span>{{ 'ui.releasePicker.note-for-the-admin' | transloco }}</span>
+			<textarea
+				rows="3"
+				[attr.maxlength]="noteMaxLength"
+				[value]="note()"
+				(input)="onInput('note', $event)"
+				[placeholder]="'ui.releasePicker.e-g-signed-copy' | transloco"
+			></textarea>
+		</label>
+		@if (requestError()) {
+			<p class="error" role="alert">{{ requestError() }}</p>
+		}
+		<div class="form-actions">
+			<button
+				type="button"
+				class="text-button"
+				[disabled]="requesting()"
+				(click)="selectedVersion.set(null)"
+			>
+				{{ 'ui.releasePicker.choose-another' | transloco }}
+			</button>
+			<button
+				type="button"
+				class="primary-button"
+				[disabled]="requesting()"
+				(click)="requestSelected()"
+			>
+				{{
+					(requesting()
+						? 'ui.releasePicker.sending'
+						: 'ui.releasePicker.send-request'
+					) | transloco
+				}}
+			</button>
+		</div>
+	}
+</ng-template>
+
+<ng-template #versionDetails let-version>
+	@if (version.formatText) {
+		<span>{{ version.formatText }}</span>
+	}
+	@if (version.label) {
+		<span
+			>{{ version.label
+			}}{{ version.catno ? ' (' + version.catno + ')' : '' }}</span
+		>
+	}
+	@if (version.country) {
+		<span>{{ version.country }}</span>
+	}
+	@if (version.year) {
+		<span>{{ version.year }}</span>
+	}
+</ng-template>
+
+<!-- The cover, or a placeholder in its place: a row of pressings reads as a
+     list only when every line starts at the same edge. -->
+<ng-template #versionThumb let-version>
+	@if (version.thumbUrl) {
+		<img
+			mcCoverFallback
+			class="thumb"
+			[src]="version.thumbUrl"
+			alt=""
+			loading="lazy"
+		/>
+	} @else {
+		<span class="thumb is-empty" aria-hidden="true">
+			<i class="pi pi-image"></i>
+		</span>
+	}
+</ng-template>
+
+<ng-template #pressing let-release>
+	<mc-format-badge [format]="release.format" [weight]="release.weight" />
+	<span class="details">
+		@if (release.labelName) {
+			<span>{{ release.labelName }}</span>
+		}
+		@if (release.country) {
+			<span>{{ release.country }}</span>
+		}
+		@if (release.year) {
+			<span>{{ release.year }}</span>
+		}
+	</span>
+	@if (release.editions.length) {
+		<span class="editions">
+			@for (edition of release.editions; track edition) {
+				<span class="edition">{{ edition }}</span>
+			}
+		</span>
+	}
+</ng-template>

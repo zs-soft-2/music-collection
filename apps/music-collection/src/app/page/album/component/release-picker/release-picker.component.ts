@@ -1,0 +1,517 @@
+import { MAX_REQUEST_NOTE_LENGTH } from '@music-collection/common/api';
+import { I18N_IMPORTS, TextService } from '@music-collection/core/i18n';
+import { NgTemplateOutlet } from '@angular/common';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	ElementRef,
+	Injector,
+	afterNextRender,
+	computed,
+	effect,
+	input,
+	linkedSignal,
+	output,
+	inject,
+	signal,
+	viewChild,
+} from '@angular/core';
+import {
+	GENERIC_RELEASE_MEDIA,
+	GenericReleaseMedia,
+	copySerialProblem,
+	parseDiscogsReleaseId,
+} from '@music-collection/api';
+
+import {
+	FormatBadgeComponent,
+	MATCH_LABELS,
+	MediaFormat,
+	toMediaFormat,
+} from '../../../../shared/music-ui';
+import {
+	DiscogsVersionView,
+	PendingRequestView,
+	ReleaseOptionView,
+	ReleaseRequestDraft,
+	toRequestPressing,
+} from '../../album.mapper';
+import { CoverFallbackDirective } from '../../../../shared/image';
+
+/**
+ * The catalog releases, the album's Discogs pressings, a photo of the record
+ * itself, a description, or only the format the album is on.
+ */
+type PickerView = 'catalog' | 'discogs' | 'photo' | 'describe' | 'generic';
+
+type FormatFilter = MediaFormat | 'all';
+
+/**
+ * A pressing the collector says they own, and the number on their copy of it
+ * where the edition was numbered. The numbers travel as typed: parsing them
+ * is the store's job, the same way the copy page's form hands its draft over.
+ */
+export interface CopyPick {
+	releaseId: string;
+	serialNumber: string;
+	serialTotal: string;
+}
+
+/** The same number the rules refuse a longer note by. */
+const NOTE_MAX_LENGTH = MAX_REQUEST_NOTE_LENGTH;
+
+/**
+ * Modal to add a copy of the album: the collector picks the pressing they own
+ * from the catalog. When it is missing, they request it from the admin — picked
+ * from the album's Discogs pressings or described. When they do not know the
+ * pressing at all, they add the album on its format alone.
+ */
+@Component({
+	changeDetection: ChangeDetectionStrategy.OnPush,
+	selector: 'mc-release-picker',
+	imports: [
+		CoverFallbackDirective,
+		...I18N_IMPORTS,
+		FormatBadgeComponent,
+		NgTemplateOutlet,
+	],
+	templateUrl: './release-picker.component.html',
+	styleUrls: ['./release-picker.component.scss'],
+})
+export class ReleasePickerComponent {
+	public readonly albumTitle = input.required<string>();
+	public readonly releases = input.required<ReleaseOptionView[]>();
+	/** The formats the collector already has the album on, pressing unknown. */
+	public readonly ownedGenericMedia = input<GenericReleaseMedia[]>([]);
+	public readonly loading = input(false);
+	public readonly adding = input(false);
+	public readonly error = input<string | null>(null);
+	public readonly pendingRequests = input<PendingRequestView[]>([]);
+	public readonly rejectedRequests = input<PendingRequestView[]>([]);
+	/** The album has a Discogs master to list pressings of. */
+	public readonly discogsAvailable = input(false);
+	public readonly discogsVersions = input<DiscogsVersionView[]>([]);
+	/**
+	 * Where the picker opens. A scan sends the collector straight to the
+	 * pressing it recognised, so the dialog must not start on the catalog
+	 * list they have already been past.
+	 */
+	public readonly initialView = input<PickerView>('catalog');
+	/** The catalog release the scan recognised, to point at. */
+	public readonly highlightReleaseId = input<string | null>(null);
+	/** The Discogs pressing the scan recognised, preselected to request. */
+	public readonly highlightDiscogsReleaseId = input<number | null>(null);
+	/** The pressings a photo of the record turned up. */
+	public readonly photoVersions = input<DiscogsVersionView[]>([]);
+	public readonly photoScanning = input(false);
+	public readonly photoScanned = input(false);
+	public readonly photoError = input<string | null>(null);
+	/** The photo being read, shown while it is. */
+	public readonly photoPreviewUrl = input<string | null>(null);
+	public readonly discogsLoading = input(false);
+	public readonly discogsError = input<string | null>(null);
+	public readonly requesting = input(false);
+	public readonly requestError = input<string | null>(null);
+	/** The collector may let an owned copy go from here. */
+	public readonly canRemove = input(false);
+
+	/** The catalog pressing picked, with the copy's number where it has one. */
+	public readonly picked = output<CopyPick>();
+	/** The album on this format, the pressing left unknown. */
+	public readonly genericPicked = output<GenericReleaseMedia>();
+	/** The Discogs pressings are needed. */
+	public readonly discogsRequested = output<void>();
+	/** A photo of the record, to identify the pressing from. */
+	public readonly photoPicked = output<Blob>();
+	/** The same photo once more — the reader was busy, the picture is fine. */
+	public readonly photoRetried = output<void>();
+	public readonly requestSent = output<ReleaseRequestDraft>();
+	/** The owned copy of a pressing, to be let go of. */
+	public readonly removeRequested = output<string>();
+	/** Closed by the button, Escape or the page. */
+	public readonly closed = output<void>();
+
+	protected readonly view = linkedSignal<PickerView, PickerView>({
+		source: this.initialView,
+		computation: (initial) => initial,
+	});
+	protected readonly formatFilter = signal<FormatFilter>('all');
+	protected readonly selectedVersion = signal<DiscogsVersionView | null>(
+		null
+	);
+	protected readonly note = signal('');
+	protected readonly discogsLink = signal('');
+	/**
+	 * The pressing chosen from the catalog, waiting on the number step. The
+	 * copy is not added the moment a pressing is clicked, because a numbered
+	 * record has to bring its number with it: the number is registered across
+	 * the whole site, and it can only be taken before the copy is written.
+	 */
+	protected readonly chosenRelease = signal<ReleaseOptionView | null>(null);
+	protected readonly serialNumber = signal('');
+	protected readonly serialTotal = signal('');
+	protected readonly noteMaxLength = NOTE_MAX_LENGTH;
+	protected readonly matchLabels = MATCH_LABELS;
+
+	/** The formats to add the album on, those it is already on marked. */
+	protected readonly genericOptions = computed(() =>
+		GENERIC_RELEASE_MEDIA.map((media) => ({
+			media,
+			format: toMediaFormat(media),
+			owned: this.ownedGenericMedia().includes(media),
+		}))
+	);
+
+	protected readonly busy = computed(
+		() => this.adding() || this.requesting() || this.photoScanning()
+	);
+
+	/** An image is being dragged over the dialog, ready to be dropped. */
+	protected readonly dragging = signal(false);
+	/**
+	 * Why a paste did nothing. A copied *file* (from Finder or Explorer)
+	 * reaches the page as a path the browser may not read, not as an image —
+	 * without saying so, the paste just silently fails.
+	 */
+	protected readonly pasteHint = signal<string | null>(null);
+
+	/**
+	 * The photo is still there after a failed scan, so it can go again as it
+	 * is: a busy reader is no reason to photograph the record twice.
+	 */
+	protected readonly canRetryPhoto = computed(
+		() =>
+			!!this.photoError() &&
+			!!this.photoPreviewUrl() &&
+			!this.photoScanning()
+	);
+
+	/** A photo was read and matched nothing to request. */
+	protected readonly photoEmpty = computed(
+		() =>
+			this.photoScanned() &&
+			!this.photoScanning() &&
+			!this.photoError() &&
+			this.photoVersions().length === 0
+	);
+
+	/** The formats the Discogs pressings come in, for the filter. */
+	protected readonly discogsFormats = computed(() => [
+		...new Set(this.discogsVersions().map((version) => version.format)),
+	]);
+
+	protected readonly filteredVersions = computed(() => {
+		const filter = this.formatFilter();
+		return filter === 'all'
+			? this.discogsVersions()
+			: this.discogsVersions().filter(
+					(version) => version.format === filter
+				);
+	});
+
+	protected readonly serialProblem = computed(() =>
+		copySerialProblem(this.serialNumber(), this.serialTotal())
+	);
+
+	protected readonly linkedReleaseId = computed(() =>
+		parseDiscogsReleaseId(this.discogsLink())
+	);
+
+	protected readonly linkInvalid = computed(
+		() => this.discogsLink().trim() !== '' && !this.linkedReleaseId()
+	);
+
+	/** A description needs a Discogs link or a few words. */
+	protected readonly canDescribe = computed(
+		() =>
+			!this.linkInvalid() &&
+			(!!this.linkedReleaseId() || this.note().trim().length > 0)
+	);
+
+	private readonly dialog =
+		viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
+	private readonly photoInput =
+		viewChild.required<ElementRef<HTMLInputElement>>('photo');
+	private readonly injector = inject(Injector);
+	private readonly text = inject(TextService);
+
+	public constructor() {
+		// Shown only while open; open it modally once rendered. The dialog
+		// itself takes the focus, not the close button the browser would pick
+		// on its own: the first thing outlined in a dialog about adding a
+		// record should not be the way out of it.
+		afterNextRender(() => {
+			const dialog = this.dialog().nativeElement;
+
+			dialog.showModal();
+			dialog.focus();
+		});
+
+		// A scan opens the picker on the pressing it recognised; select it as
+		// soon as the list it lives in has arrived.
+		effect(() => {
+			const wanted = this.highlightDiscogsReleaseId();
+			const versions = this.discogsVersions();
+
+			if (!wanted || this.selectedVersion()) {
+				return;
+			}
+
+			const version = versions.find((item) => item.id === wanted);
+
+			if (version && !version.requested) {
+				this.selectedVersion.set(version);
+			}
+		});
+
+		// A picture of the record can also be pasted (a screenshot, a copied
+		// image) or dropped on the dialog — on a desktop that beats finding
+		// the file. The paste listener sits on the document because the
+		// dialog may not hold the focus; this component only exists while
+		// the picker is open, so it cannot catch anything else.
+		effect((onCleanup) => {
+			const dialog = this.dialog().nativeElement;
+			const busy = this.busy();
+
+			const onPaste = (event: ClipboardEvent) => {
+				if (busy) {
+					return;
+				}
+
+				const image = this.imageIn(event.clipboardData);
+
+				if (image) {
+					event.preventDefault();
+					this.acceptImage(image);
+
+					return;
+				}
+
+				// Only in the photo view: elsewhere pasting text (a Discogs
+				// link into the description) is exactly what it should do.
+				if (this.view() === 'photo') {
+					const say = this.text.translator();
+
+					this.pasteHint.set(
+						say(
+							event.clipboardData?.types.length
+								? 'ui.releasePicker.paste-not-an-image'
+								: 'ui.releasePicker.clipboard-empty'
+						)
+					);
+				}
+			};
+			const onDragOver = (event: DragEvent) => {
+				if (!busy && event.dataTransfer?.types.includes('Files')) {
+					event.preventDefault();
+					this.dragging.set(true);
+				}
+			};
+			const onDragLeave = (event: DragEvent) => {
+				if (event.target === dialog) {
+					this.dragging.set(false);
+				}
+			};
+			const onDrop = (event: DragEvent) => {
+				event.preventDefault();
+				this.dragging.set(false);
+
+				const image = busy ? null : this.imageIn(event.dataTransfer);
+
+				if (image) {
+					this.acceptImage(image);
+				}
+			};
+
+			document.addEventListener('paste', onPaste);
+			dialog.addEventListener('dragover', onDragOver);
+			dialog.addEventListener('dragleave', onDragLeave);
+			dialog.addEventListener('drop', onDrop);
+
+			onCleanup(() => {
+				document.removeEventListener('paste', onPaste);
+				dialog.removeEventListener('dragover', onDragOver);
+				dialog.removeEventListener('dragleave', onDragLeave);
+				dialog.removeEventListener('drop', onDrop);
+			});
+		});
+
+		// Escape must not close the dialog halfway through a write.
+		effect((onCleanup) => {
+			const dialog = this.dialog().nativeElement;
+			const busy = this.busy();
+			const onCancel = (event: Event) => {
+				if (busy) {
+					event.preventDefault();
+				}
+			};
+			dialog.addEventListener('cancel', onCancel);
+			onCleanup(() => dialog.removeEventListener('cancel', onCancel));
+		});
+	}
+
+	protected close(): void {
+		if (!this.busy()) {
+			this.dialog().nativeElement.close();
+		}
+	}
+
+	protected takePhoto(): void {
+		this.pasteHint.set(null);
+		this.photoInput().nativeElement.click();
+	}
+
+	/**
+	 * The first image in a clipboard or drop payload. Text is ignored on
+	 * purpose: pasting a Discogs link into the description must keep working.
+	 */
+	private imageIn(data: DataTransfer | null): Blob | null {
+		const file = Array.from(data?.files ?? []).find((item) =>
+			item.type.startsWith('image/')
+		);
+
+		if (file) {
+			return file;
+		}
+
+		const item = Array.from(data?.items ?? []).find(
+			(entry) => entry.kind === 'file' && entry.type.startsWith('image/')
+		);
+
+		return item?.getAsFile() ?? null;
+	}
+
+	/**
+	 * An image arrived by paste or drop: from wherever in the dialog, it
+	 * means the same thing as taking a photo, so it opens that view.
+	 */
+	private acceptImage(image: Blob): void {
+		this.view.set('photo');
+		this.selectedVersion.set(null);
+		this.dragging.set(false);
+		this.pasteHint.set(null);
+		this.photoPicked.emit(image);
+	}
+
+	protected onPhoto(event: Event): void {
+		const input = event.target as HTMLInputElement;
+		const file = input.files?.[0];
+
+		if (file) {
+			this.selectedVersion.set(null);
+			this.photoPicked.emit(file);
+		}
+		// Photographing the same record again must fire the event again.
+		input.value = '';
+	}
+
+	/**
+	 * The pressing is chosen; now the copy of it. Most records carry no
+	 * number and the step is one press of Add, so the Add button takes the
+	 * focus rather than the empty field: typing a number is the exception,
+	 * and the common way through should be a keystroke.
+	 */
+	protected choose(release: ReleaseOptionView): void {
+		if (release.owned || this.busy()) {
+			return;
+		}
+		this.chosenRelease.set(release);
+		this.serialNumber.set('');
+		this.serialTotal.set('');
+		afterNextRender(
+			() =>
+				this.dialog()
+					.nativeElement.querySelector<HTMLElement>('.confirm-add')
+					?.focus(),
+			{ injector: this.injector }
+		);
+	}
+
+	/** Back to the list; the pressing was not the one after all. */
+	protected unchoose(): void {
+		this.chosenRelease.set(null);
+	}
+
+	protected confirmChoice(): void {
+		const release = this.chosenRelease();
+
+		if (!release || this.busy() || this.serialProblem()) {
+			return;
+		}
+		this.picked.emit({
+			releaseId: release.id,
+			serialNumber: this.serialNumber(),
+			serialTotal: this.serialTotal(),
+		});
+	}
+
+	/**
+	 * Added at once: there is no number step, because a numbered edition is
+	 * a pressing, and the pressing is exactly what is not known here.
+	 */
+	protected pickGeneric(media: GenericReleaseMedia): void {
+		if (!this.busy() && !this.ownedGenericMedia().includes(media)) {
+			this.genericPicked.emit(media);
+		}
+	}
+
+	protected onSerialInput(part: 'number' | 'total', event: Event): void {
+		const value = (event.target as HTMLInputElement).value;
+
+		(part === 'number' ? this.serialNumber : this.serialTotal).set(value);
+	}
+
+	protected show(view: PickerView): void {
+		this.view.set(view);
+		this.selectedVersion.set(null);
+		this.chosenRelease.set(null);
+		this.note.set('');
+		if (view === 'discogs') {
+			this.discogsRequested.emit();
+		}
+		// The button pressed is gone: focus the start of the new view.
+		afterNextRender(
+			() =>
+				this.dialog()
+					.nativeElement.querySelector<HTMLElement>(
+						view === 'catalog' ? '.option, .icon-button' : '.back'
+					)
+					?.focus(),
+			{ injector: this.injector }
+		);
+	}
+
+	protected select(version: DiscogsVersionView): void {
+		if (!version.requested) {
+			this.selectedVersion.set(version);
+			this.note.set('');
+		}
+	}
+
+	protected onInput(target: 'note' | 'link', event: Event): void {
+		const value = (event.target as HTMLInputElement | HTMLTextAreaElement)
+			.value;
+		(target === 'note' ? this.note : this.discogsLink).set(value);
+	}
+
+	protected requestSelected(): void {
+		const version = this.selectedVersion();
+		if (version) {
+			this.requestSent.emit({
+				discogsReleaseId: version.id,
+				pressing: toRequestPressing(version),
+				note: this.note().trim() || null,
+			});
+		}
+	}
+
+	protected requestDescribed(): void {
+		if (this.canDescribe()) {
+			this.requestSent.emit({
+				discogsReleaseId: this.linkedReleaseId(),
+				pressing: null,
+				note: this.note().trim() || null,
+			});
+		}
+	}
+}

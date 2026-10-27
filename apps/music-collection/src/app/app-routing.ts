@@ -2,6 +2,8 @@ import { NgxPermissionsGuard } from 'ngx-permissions';
 
 import { Routes } from '@angular/router';
 import { RoleNames } from '@music-collection/api';
+import { authenticatedGuard } from '@music-collection/core/authentication';
+import { provideConcert } from '@music-collection/domain/concert';
 
 export const routes: Routes = [
 	{
@@ -20,6 +22,18 @@ export const routes: Routes = [
 		},
 	},
 	{
+		// The catalog's half of the old home page: counts, the band of the
+		// week, and the ways through the catalog by style, decade and act.
+		path: 'discover',
+		loadComponent: () =>
+			import('./page/discover/discover-page.component').then(
+				(module) => module.DiscoverPageComponent
+			),
+		data: {
+			breadcrumb: 'discover',
+		},
+	},
+	{
 		path: 'album/:albumId',
 		loadComponent: () =>
 			import('./page/album/album-page.component').then(
@@ -27,6 +41,39 @@ export const routes: Routes = [
 			),
 		data: {
 			breadcrumb: 'album',
+		},
+	},
+	{
+		path: 'album/:albumId/track/:trackId',
+		loadComponent: () =>
+			import('./page/track/track-page.component').then(
+				(module) => module.TrackPageComponent
+			),
+		data: {
+			breadcrumb: 'track',
+		},
+	},
+	{
+		// A pressing: one edition of an album. The album page holds what is
+		// true of every copy; this one only what this edition added.
+		path: 'release/:releaseId',
+		loadComponent: () =>
+			import('./page/release/release-page.component').then(
+				(module) => module.ReleasePageComponent
+			),
+		data: {
+			breadcrumb: 'release',
+		},
+	},
+	{
+		// The record company, and everything in the catalog that carries it.
+		path: 'label/:labelId',
+		loadComponent: () =>
+			import('./page/label/label-page.component').then(
+				(module) => module.LabelPageComponent
+			),
+		data: {
+			breadcrumb: 'label',
 		},
 	},
 	{
@@ -67,6 +114,19 @@ export const routes: Routes = [
 			),
 	},
 	{
+		// The collection in one screen, ahead of the shelf itself: what a
+		// collector opens to see how they stand, not to find a record.
+		path: 'overview',
+		loadComponent: () =>
+			import('./page/overview/overview-page.component').then(
+				(module) => module.OverviewPageComponent
+			),
+		data: {
+			breadcrumb: 'overview',
+		},
+		canActivate: [authenticatedGuard],
+	},
+	{
 		path: 'collection',
 		loadComponent: () =>
 			import('./page/collection/collection-page.component').then(
@@ -75,6 +135,212 @@ export const routes: Routes = [
 		data: {
 			breadcrumb: 'collection',
 		},
+		canActivate: [authenticatedGuard],
+	},
+	{
+		// One copy on one shelf. Only the signed-in collector's own copies
+		// open here: what the page adds to the catalog — the price, the
+		// shelf place, the story, the photographs — is theirs.
+		path: 'collection/copy/:itemId',
+		loadComponent: () =>
+			import('./page/collection-item/collection-item-page.component').then(
+				(module) => module.CollectionItemPageComponent
+			),
+		data: {
+			breadcrumb: 'copy',
+		},
+		canActivate: [authenticatedGuard],
+	},
+	{
+		path: 'scan',
+		loadComponent: () =>
+			import('./page/scan/scan-page.component').then(
+				(module) => module.ScanPageComponent
+			),
+		data: {
+			breadcrumb: 'scan',
+		},
+		canActivate: [authenticatedGuard],
+	},
+	{
+		path: 'shelf-scan',
+		loadComponent: () =>
+			import('./page/shelf-scan/shelf-scan-page.component').then(
+				(module) => module.ShelfScanPageComponent
+			),
+		data: {
+			breadcrumb: 'shelf-scan',
+		},
+		canActivate: [authenticatedGuard],
+	},
+	{
+		path: 'radio',
+		loadComponent: () =>
+			import('./page/radio/radio-page.component').then(
+				(module) => module.RadioPageComponent
+			),
+		data: {
+			breadcrumb: 'radio',
+		},
+		canActivate: [authenticatedGuard],
+	},
+	{
+		path: 'visual-lab',
+		loadComponent: () =>
+			import('./page/visual-lab/visual-lab.component').then(
+				(module) => module.VisualLabComponent
+			),
+		data: {
+			breadcrumb: 'visual-lab',
+		},
+	},
+	{
+		// The records of the catalog's artists that are still to come.
+		// `refreshUpcomingReleases` gathers them from MusicBrainz once a
+		// day; the page only reads what it wrote.
+		path: 'upcoming',
+		loadComponent: () =>
+			import('./page/upcoming/upcoming-page.component').then(
+				(module) => module.UpcomingPageComponent
+			),
+		data: {
+			breadcrumb: 'upcoming',
+		},
+	},
+	{
+		// Where the bands of the catalog are playing. The concerts are loaded
+		// in the admin — MusicBrainz for what is anchored on an mbid, a model
+		// for the rest — and a model's night only arrives here once a person
+		// has approved it. The page reads; the repositories it needs are
+		// provided on the route rather than in the app config, so the concert
+		// lib stays out of the main bundle.
+		path: 'concert',
+		loadComponent: () =>
+			import('./page/concert/concert-page.component').then(
+				(module) => module.ConcertPageComponent
+			),
+		providers: [provideConcert()],
+		data: {
+			breadcrumb: 'concert',
+		},
+	},
+	{
+		// One question a day, the same for everybody, out of the catalog.
+		// Signed in only: the guess is graded against an answer nobody may
+		// read, and the points are kept per collector.
+		path: 'daily-question',
+		loadComponent: () =>
+			import('./page/daily-question/daily-question-page.component').then(
+				(module) => module.DailyQuestionPageComponent
+			),
+		data: {
+			breadcrumb: 'daily-question',
+		},
+		canActivate: [authenticatedGuard],
+	},
+	{
+		path: 'collections',
+		loadComponent: () =>
+			import('./page/collections/collections-page.component').then(
+				(module) => module.CollectionsPageComponent
+			),
+		data: {
+			breadcrumb: 'collections',
+		},
+	},
+	{
+		path: 'collections/:slug',
+		loadComponent: () =>
+			import('./page/collections/collection-detail-page.component').then(
+				(module) => module.CollectionDetailPageComponent
+			),
+		data: {
+			breadcrumb: 'collection',
+		},
+	},
+	{
+		path: 'map',
+		loadComponent: () =>
+			import('./page/map/map-page.component').then(
+				(module) => module.MapPageComponent
+			),
+		data: {
+			breadcrumb: 'map',
+		},
+		canActivate: [authenticatedGuard],
+	},
+	{
+		// What the collectors here have finished, under the faces of whoever
+		// finished it. Open to everybody: a visitor with no shelf yet is the
+		// reader it was built for.
+		path: 'collectors',
+		loadComponent: () =>
+			import('./page/collectors/collectors-page.component').then(
+				(module) => module.CollectorsPageComponent
+			),
+		data: {
+			breadcrumb: 'collectors',
+		},
+	},
+	{
+		// One collector's shelf, as anybody they sent the link to sees it.
+		//
+		// No guard: a signed-out visitor is exactly the reader this page is
+		// for — somebody who has no collection yet and might want one. The
+		// page draws a single document and asks for no catalog, so the visit
+		// stays one read.
+		path: 'collector/:uid',
+		loadComponent: () =>
+			import('./page/collector/collector-page.component').then(
+				(module) => module.CollectorPageComponent
+			),
+		data: {
+			breadcrumb: 'collector',
+		},
+	},
+	{
+		path: 'profile',
+		loadComponent: () =>
+			import('./page/profile/profile-page.component').then(
+				(module) => module.ProfilePageComponent
+			),
+		data: {
+			breadcrumb: 'profile',
+		},
+		canActivate: [authenticatedGuard],
+	},
+	{
+		path: 'propose',
+		loadChildren: () =>
+			import('./page/propose/propose.routes').then(
+				(module) => module.proposeRoutes
+			),
+		data: {
+			breadcrumb: 'propose',
+		},
+		canActivate: [authenticatedGuard],
+	},
+	{
+		path: 'my-requests',
+		loadComponent: () =>
+			import('./page/my-request/my-request-page.component').then(
+				(module) => module.MyRequestPageComponent
+			),
+		data: {
+			breadcrumb: 'my-requests',
+		},
+		canActivate: [authenticatedGuard],
+	},
+	{
+		path: 'my-bands',
+		loadChildren: () =>
+			import('./page/owned-artist/owned-artist.routes').then(
+				(module) => module.ownedArtistRoutes
+			),
+		data: {
+			breadcrumb: 'my-bands',
+		},
+		canActivate: [authenticatedGuard],
 	},
 	{
 		path: 'wishlist',
@@ -85,6 +351,36 @@ export const routes: Routes = [
 		data: {
 			breadcrumb: 'wishlist',
 		},
+		canActivate: [authenticatedGuard],
+	},
+	{
+		// Where a document used to open. Links were only ever made by the
+		// admin's own table, but a bookmark outlives a route.
+		path: 'document/:documentId',
+		redirectTo: 'admin/document/view/:documentId',
+	},
+	{
+		// An uploaded file as the catalog holds it. Documents are the
+		// machinery behind the covers and the badges rather than something
+		// to browse, so only an admin opens one — which is why the page
+		// lives at an admin address: a reader can see from the URL where
+		// they are, and the trail leads back up through the admin.
+		//
+		// Before `admin`, so the longer path wins; outside its shell, because
+		// the page is the catalog's own view of a document rather than a form.
+		path: 'admin/document/view/:documentId',
+		loadComponent: () =>
+			import('./page/document/document-page.component').then(
+				(module) => module.DocumentPageComponent
+			),
+		data: {
+			breadcrumb: 'document',
+			permissions: {
+				only: [RoleNames.ADMIN],
+				redirectTo: '/error',
+			},
+		},
+		canActivate: [NgxPermissionsGuard],
 	},
 	{
 		path: 'admin',

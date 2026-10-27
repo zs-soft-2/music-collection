@@ -1,3 +1,4 @@
+import { TranslocoDirective } from '@jsverse/transloco';
 import { NgxPermissionsModule } from 'ngx-permissions';
 
 import {
@@ -11,16 +12,16 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { BaseComponent, RoleNames } from '@music-collection/api';
 
-import { SpotifyMiniPlayerComponent } from '../../../../shared/spotify';
+import { PlayerMiniComponent } from '../../../../shared/player/player-mini.component';
+import { ExternalPlayerConsentService } from '../../../../data/external-player';
+import { LanguagePickerComponent } from '../../../../i18n';
+import { SceneBackdropService } from '../../../../shared/backdrop/scene-backdrop.service';
 import { LayoutWidthService, ThemeService } from '../../../../theme';
+// A fájlra közvetlenül, nem a sáv barreljére: az a komponenst is exportálja,
+// az pedig innen, a top-bar szolgáltatásából kér menüelemeket — körbeérne.
+import { SideRailService } from '../../../side-rail/side-rail.service';
+import { MenuGroup, MenuItem, MenuSection } from '../../api';
 import { TopBarService } from './top-bar.service';
-
-const NAV_ICONS: Record<string, string> = {
-	Home: 'pi-home',
-	Collection: 'pi-th-large',
-	Wishlist: 'pi-heart',
-	Network: 'pi-sitemap',
-};
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -32,7 +33,9 @@ const NAV_ICONS: Record<string, string> = {
 		RouterLink,
 		RouterLinkActive,
 		NgxPermissionsModule,
-		SpotifyMiniPlayerComponent,
+		PlayerMiniComponent,
+		LanguagePickerComponent,
+		TranslocoDirective,
 	],
 	host: {
 		'(document:keydown.escape)': 'closeMenus()',
@@ -42,20 +45,53 @@ export class TopBarComponent extends BaseComponent {
 	private readonly componentService = inject(TopBarService);
 	protected readonly theme = inject(ThemeService);
 	protected readonly layoutWidth = inject(LayoutWidthService);
+	/** A bal oldali sáv: a gombja itt van, maga a sáv a lap másik végén. */
+	protected readonly rail = inject(SideRailService);
+	/** Milyen világ áll a lap mögött: nincs, álló vagy élő. */
+	protected readonly backdrop = inject(SceneBackdropService);
+	/** Whether the outside players may be on the page at all. */
+	protected readonly players = inject(ExternalPlayerConsentService);
 
 	protected readonly adminRoles = [RoleNames.ADMIN];
 
-	protected readonly navItems = this.componentService
-		.createMenuItems()
-		.map((item) => ({
-			...item,
-			icon: NAV_ICONS[item.label] ?? 'pi-circle',
-		}));
+	private readonly menuItems = this.componentService.createMenuItems();
 
 	protected readonly params = toSignal(this.componentService.init$());
 	protected readonly isAuthenticated = toSignal(
 		this.componentService.selectIsAuthenticated$(),
 		{ initialValue: false }
+	);
+
+	/**
+	 * The bar carries what anyone may browse, and only that. It used to grow
+	 * by six links the moment a session was restored, which both crowded the
+	 * row and moved every link that was already on it.
+	 */
+	protected readonly navItems = this.menuItems.filter(
+		(item) => !item.requiresAuth
+	);
+
+	/**
+	 * The collector's own pages sit under their avatar, where the rest of what
+	 * is theirs already lives, laid out under the headings that say why each
+	 * one is there. Nothing filters them: the menu itself only exists once
+	 * there is somebody signed in to own them.
+	 */
+	protected readonly accountSections = this.toSections(
+		this.menuItems.filter((item) => item.requiresAuth)
+	);
+
+	/**
+	 * The sheet has a whole screen to fill and no avatar to hide anything
+	 * behind, so on a phone every page stays one list and one tap deep — the
+	 * same headings, with the home link above them all.
+	 */
+	protected readonly sheetSections = computed(() =>
+		this.toSections(
+			this.menuItems.filter(
+				(item) => !item.requiresAuth || this.isAuthenticated()
+			)
+		)
 	);
 
 	protected readonly accountOpen = signal(false);
@@ -84,6 +120,27 @@ export class TopBarComponent extends BaseComponent {
 			.toUpperCase();
 	});
 
+	/**
+	 * Keeps the groups in the order they were declared in, and drops the ones
+	 * nothing fell into — a guest's sheet has no `contribute` links at all.
+	 */
+	private toSections(items: MenuItem[]): MenuSection[] {
+		const order: MenuGroup[] = [
+			'general',
+			'collection',
+			'explore',
+			'contribute',
+		];
+
+		return order
+			.map((group) => ({
+				group,
+				titleKey: group === 'general' ? null : `nav.group.${group}`,
+				items: items.filter((item) => item.group === group),
+			}))
+			.filter((section) => section.items.length > 0);
+	}
+
 	protected closeMenus(): void {
 		this.accountOpen.set(false);
 		this.menuOpen.set(false);
@@ -92,6 +149,15 @@ export class TopBarComponent extends BaseComponent {
 	protected toggleAccount(): void {
 		this.menuOpen.set(false);
 		this.accountOpen.update((open) => !open);
+	}
+
+	/**
+	 * A sáv és a fiókmenü egyszerre a képernyő két szélét takarná el, úgyhogy
+	 * a nyíló mindig becsukja a másikat.
+	 */
+	protected toggleRail(): void {
+		this.closeMenus();
+		this.rail.toggle();
 	}
 
 	protected toggleMenu(): void {

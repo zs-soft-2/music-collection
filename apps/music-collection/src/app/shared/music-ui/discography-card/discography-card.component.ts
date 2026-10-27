@@ -1,9 +1,12 @@
+import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { AdminEditLinkComponent } from '../admin-edit-link/admin-edit-link.component';
 import { FormatBadgeComponent } from '../format-badge/format-badge.component';
-import { DiscographyAlbum } from '../music-ui.model';
+import { DiscographyAlbum } from '@music-collection/ui/music-view';
+import { PlayAlbumButtonComponent } from '../../player/play-album-button.component';
+import { StarRatingComponent } from '../star-rating/star-rating.component';
 
 /**
  * One album of the discography. Collected albums show the formats owned;
@@ -12,7 +15,14 @@ import { DiscographyAlbum } from '../music-ui.model';
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-discography-card',
-	imports: [RouterLink, FormatBadgeComponent, AdminEditLinkComponent],
+	imports: [
+		...I18N_IMPORTS,
+		RouterLink,
+		FormatBadgeComponent,
+		AdminEditLinkComponent,
+		PlayAlbumButtonComponent,
+		StarRatingComponent,
+	],
 	template: `
 		@let item = album();
 
@@ -43,18 +53,37 @@ import { DiscographyAlbum } from '../music-ui.model';
 					}
 				</span>
 
+				@if (stars(); as given) {
+					<mc-star-rating
+						class="card-stars"
+						[stars]="given"
+						[readonly]="true"
+						[label]="given | mcPlural: 'ui.starRating.starCount'"
+					/>
+				}
+
 				@if (item.ownedFormats.length) {
 					<span class="owned-row">
-						<span class="owned-label">In your collection</span>
+						<span class="owned-label">{{
+							'ui.discographyCard.in-your-collection' | transloco
+						}}</span>
 						@for (format of item.ownedFormats; track format) {
 							<mc-format-badge [format]="format" />
 						}
 					</span>
 				} @else {
-					<span class="not-owned">Not in your collection</span>
+					<span class="not-owned">{{
+						'ui.discographyCard.not-in-your-collection' | transloco
+					}}</span>
 				}
 			</span>
 		</a>
+
+		<mc-play-album-button
+			class="mc-card-play"
+			[albumId]="item.id"
+			[title]="item.title"
+		/>
 
 		<mc-admin-edit-link
 			class="mc-card-admin"
@@ -219,8 +248,19 @@ import { DiscographyAlbum } from '../music-ui.model';
 				transition: none;
 			}
 		}
+
+		.card-stars {
+			margin-top: 0.15rem;
+		}
 	`,
 })
 export class DiscographyCardComponent {
 	public readonly album = input.required<DiscographyAlbum>();
+	/**
+	 * The collector's verdict on this record, where they gave one. Shown and
+	 * not pressed: a discography is read to decide what to buy next, and the
+	 * stars belong to that decision — the giving of them happens where the
+	 * record itself is.
+	 */
+	public readonly stars = input<number | null>(null);
 }

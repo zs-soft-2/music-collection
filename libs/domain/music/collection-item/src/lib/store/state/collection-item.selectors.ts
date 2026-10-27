@@ -28,6 +28,16 @@ export const getCollectionItemLoading = createSelector(
 	(state: State) => state.loading
 );
 
+export const getCollectionItemLoaded = createSelector(
+	getCollectionItemState,
+	(state: State) => state.loaded
+);
+
+export const getCollectionItemAdding = createSelector(
+	getCollectionItemState,
+	(state: State) => state.adding
+);
+
 export const getSelectedId = createSelector(
 	getCollectionItemState,
 	(state: State) => state.selectedId || ''
@@ -43,9 +53,52 @@ export const selectCollectionItemEntities = createSelector(
 	selectEntities
 );
 
-export const selectAllCollectionItem = createSelector(
+export const getCollectionItemDisposing = createSelector(
+	getCollectionItemState,
+	(state: State) => state.disposing
+);
+
+/**
+ * The disposal flag and the error of that write, from one state and in one
+ * value. Read apart, the two arrive in two steps, and the step in between
+ * still carries the error of the write before — a refused disposal would
+ * read as a finished one for the length of it.
+ */
+export const getCollectionItemDisposalStatus = createSelector(
+	getCollectionItemDisposing,
+	getCollectionItemError,
+	(disposing, error) => ({ disposing, error: error ?? null })
+);
+
+export const getCollectionItemPlacing = createSelector(
+	getCollectionItemState,
+	(state: State) => state.placing
+);
+
+export const getCollectionItemSaving = createSelector(
+	getCollectionItemState,
+	(state: State) => state.saving
+);
+
+/** Every item, the ones gone from the collection included. */
+const selectEveryCollectionItem = createSelector(
 	getCollectionItemState,
 	selectAll
+);
+
+/** The copies owned: the ones gone from the collection are history. */
+export const selectAllCollectionItem = createSelector(
+	selectEveryCollectionItem,
+	(collectionItems) => collectionItems.filter((item) => !item.disposal)
+);
+
+/** The copies gone from the collection, the latest first. */
+export const selectDisposedCollectionItems = createSelector(
+	selectEveryCollectionItem,
+	(collectionItems) =>
+		collectionItems
+			.filter((item) => !!item.disposal)
+			.sort((a, b) => (b.disposal?.date ?? 0) - (a.disposal?.date ?? 0))
 );
 
 export const selectCollectionItem = createSelector(

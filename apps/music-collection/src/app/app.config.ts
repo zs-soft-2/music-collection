@@ -1,14 +1,24 @@
 import { provideAngularSvgIcon } from 'angular-svg-icon';
 import { providePrimeNG } from 'primeng/config';
+import { provideDemoAutopilot } from '@zssz-soft/demo-autopilot-core';
 
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import {
 	ApplicationConfig,
 	importProvidersFrom,
+	inject,
+	provideEnvironmentInitializer,
 	provideZonelessChangeDetection,
 } from '@angular/core';
 import { getApp, initializeApp, provideFirebaseApp } from '@angular/fire/app';
-import { getAuth, provideAuth } from '@angular/fire/auth';
+import { initializeAppCheck, provideAppCheck } from '@angular/fire/app-check';
+import {
+	browserLocalPersistence,
+	browserSessionPersistence,
+	indexedDBLocalPersistence,
+	initializeAuth,
+	provideAuth,
+} from '@angular/fire/auth';
 import {
 	CACHE_SIZE_UNLIMITED,
 	initializeFirestore,
@@ -16,55 +26,222 @@ import {
 	persistentMultipleTabManager,
 	provideFirestore,
 } from '@angular/fire/firestore';
+import { getFunctions, provideFunctions } from '@angular/fire/functions';
 import { provideStorage } from '@angular/fire/storage';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideRouter } from '@angular/router';
+import { ReCaptchaEnterpriseProvider } from 'firebase/app-check';
 import { getStorage } from 'firebase/storage';
 import { CoreAuthenticationModule } from '@music-collection/core/authentication';
 import { CoreAuthorizationModule } from '@music-collection/core/authorization';
 import { CoreEntityQuantityModule } from '@music-collection/core/entity-quantity';
 import { CoreErrorModule } from '@music-collection/core/error';
+import { provideI18n } from '@music-collection/core/i18n';
 import { CoreExportImportModule } from '@music-collection/core/export-import';
-import { DomainAlbumModule } from '@music-collection/domain/album';
-import { DomainArtistModule } from '@music-collection/domain/artist';
-import { DomainCollectionItemModule } from '@music-collection/domain/collection-item';
-import { DomainDocumentModule } from '@music-collection/domain/document';
-import { DomainReleaseModule } from '@music-collection/domain/release';
-import { DomainUserModule } from '@music-collection/domain/user';
-import { DomainWishlistItemModule } from '@music-collection/domain/wishlist-item';
+import { DomainAlbumModule } from '@music-collection/domain/album/core';
+import { DomainArtistModule } from '@music-collection/domain/artist/core';
+import { DomainCollectionItemModule } from '@music-collection/domain/collection-item/core';
+import { DomainDocumentModule } from '@music-collection/domain/document/core';
+import { provideGenre } from '@music-collection/domain/genre';
+import { provideMusicCollection } from '@music-collection/domain/music-collection/core';
+import { DomainReleaseModule } from '@music-collection/domain/release/core';
+import { DomainUserModule } from '@music-collection/domain/user/core';
+import { DomainWishlistItemModule } from '@music-collection/domain/wishlist-item/core';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
-import { StoreDevtoolsModule } from '@ngrx/store-devtools';
+
+import { AnalyticsService, ShelfLayoutService } from '@music-collection/api';
 
 import { environment } from '../environments/environment';
 import { routes } from './app-routing';
+import { FirebaseAnalyticsService } from './data/analytics';
+// Straight from the file: the page's barrel would pull the lazily loaded
+// collection page into the first bundle.
+import { CollectorShelfLayoutService } from './page/collection/shelf-layout.service';
 import { HookModule } from './module/hook';
+import { installPerformanceConsole } from './performance';
 import { metaReducers } from './reducer';
-import { MusicPreset } from './theme';
+import { storeDevtools } from './store-devtools';
+// Straight from the file for the same reason as above: the barrel would carry
+// the share-card drawing into the first bundle with it.
+import { CollectorProfileEffect } from './data/collector-profile/collector-profile.effect';
+import { GenreScopeSyncService } from './data/genre-scope';
+import { DefaultLanguageSyncService, LanguageSyncService } from './i18n';
+import { AppearanceSyncService, MusicPreset } from './theme';
+import { NavigationHistoryService } from './shared/page-back';
+import { PageScrollService } from './scroll';
 import { NgxPermissionsModule } from 'ngx-permissions';
+
+/** A gépek, ahol a debug token szóba jöhet: a fejlesztői gép böngészője. */
+const LOCAL_HOSTS = ['localhost', '127.0.0.1', '[::1]'];
+
+/**
+ * Az App Check debug módja: a token puszta ismerete a bizonyíték, reCAPTCHA
+ * pontozás nélkül. Az SDK csak ebből a globálisból indítja el, és csak az
+ * `initializeAppCheck` előtt beállítva — ezért áll itt, a provider factory
+ * első lépéseként.
+ *
+ * Prod buildben a token üres (`environment.prod.ts`), a dev környezetet pedig
+ * a CI ugyanabból az `environment.ts`-ből telepíti, amiből a `nx serve` dolgozik:
+ * ha a token egyszer mégis bekerülne egy telepített build-be, a hostname-feltétel
+ * miatt akkor sem szólalna meg a hosting domainjein.
+ */
+function enableAppCheckDebugToken(): void {
+	if (
+		environment.production ||
+		!environment.appCheck.debugToken ||
+		!LOCAL_HOSTS.includes(location.hostname)
+	) {
+		return;
+	}
+
+	(self as unknown as Record<string, unknown>)[
+		'FIREBASE_APPCHECK_DEBUG_TOKEN'
+	] = environment.appCheck.debugToken;
+}
 
 export const appConfig: ApplicationConfig = {
 	providers: [
 		provideZonelessChangeDetection(),
 		provideRouter(routes),
+		// Hungarian, English and German. The dictionary is fetched before
+		// the first screen, so nothing is ever drawn in the wrong language.
+		provideI18n({
+			version: environment.version,
+			production: environment.production,
+		}),
 		provideFirebaseApp(() => initializeApp(environment.firebase)),
+		// App Check: a callable-ök (apps/functions) App Check tokent követelnek,
+		// mert a bejelentkezés önmagában nem mondja meg, hogy a hívás a mi
+		// appunkból jön — egy kimásolt ID tokennel a végpontok scriptből is
+		// hívhatók lennének, hívásonként egy modell-kérés árán.
+		//
+		// Site key nélkül nem indítjuk el: az app elfut, de a callable-ök
+		// mindent elutasítanak, amíg a kulcs be nem kerül a környezetbe.
+		//
+		// Localhoston a dev környezet debug tokenje szólal meg, ha a fejlesztő
+		// elkérte a tofu-tól (tools/app-check/generate-debug-token.mjs) —
+		// enélkül a valódi reCAPTCHA fut, aminek a dev kulcs domainjei között
+		// ott a `localhost` (infra/environments/dev/dev.tfvars).
+		...(environment.appCheck.recaptchaSiteKey
+			? [
+					provideAppCheck(() => {
+						enableAppCheckDebugToken();
+
+						return initializeAppCheck(getApp(), {
+							provider: new ReCaptchaEnterpriseProvider(
+								environment.appCheck.recaptchaSiteKey
+							),
+							isTokenAutoRefreshEnabled: true,
+						});
+					}),
+				]
+			: []),
 		provideFirestore(() =>
 			// Persistent (IndexedDB) cache, shared by the tabs. Unlimited size:
 			// the sync cache (FirestoreSyncService) relies on nothing being
 			// garbage collected.
 			initializeFirestore(getApp(), {
+				// Every catalog list waits for the confirmed `sync/catalog`
+				// snapshot, which only arrives over Firestore's streaming
+				// channel. Mobile networks, proxies and in-app browsers
+				// often hold that channel back; the SDK then tries again and
+				// again while a first visit, with no cache to show, sits
+				// empty. This has it switch to long polling when the stream
+				// does not come up.
+				experimentalAutoDetectLongPolling: true,
 				localCache: persistentLocalCache({
 					cacheSizeBytes: CACHE_SIZE_UNLIMITED,
 					tabManager: persistentMultipleTabManager(),
 				}),
 			})
 		),
-		provideAuth(() => getAuth()),
+		// `getAuth()` without the popup resolver. With it, the SDK fetches
+		// Google's api.js, its iframe loader and the auth iframe before it
+		// settles who is signed in — about 130 KB and three round trips, on
+		// the way to the first screen of every visit, for a popup that only a
+		// sign-in ever opens. The persistence is `getAuth()`'s own; the
+		// resolver goes to `signInWithPopup` instead
+		// (WebAuthenticationProviderService).
+		provideAuth(() =>
+			initializeAuth(getApp(), {
+				persistence: [
+					indexedDBLocalPersistence,
+					browserLocalPersistence,
+					browserSessionPersistence,
+				],
+			})
+		),
+		// The callables run where the Firestore database is (apps/functions).
+		provideFunctions(() => getFunctions(getApp(), 'europe-west4')),
 		provideStorage(() => getStorage()),
 		provideHttpClient(withXhr()),
 		provideAngularSvgIcon(),
+		provideGenre(),
+		provideMusicCollection(),
+		// The admin form files a copy into the same furniture the shelf page
+		// draws: the drawing is a setting of the signed-in collector, which
+		// only the app can read.
+		{
+			provide: ShelfLayoutService,
+			useExisting: CollectorShelfLayoutService,
+		},
 		provideAnimationsAsync(),
+		// A vezetett bemutató motorja (@zssz-soft/demo-autopilot-core). Csak a
+		// szolgáltatásai állnak itt; az overlay, a tooltip és az indító a
+		// shellben, a beállítás mögött töltődik (`mc-demo-tour`).
+		//
+		// A jobb alsó sarok a YouTube dokké (shared/youtube), ezért az indító
+		// balra kerül. Az elemkeresés határa a könyvtár 5 másodperce helyett 8:
+		// a bemutató lapról lapra lép, és egy lazy route a chunkjával együtt
+		// néha ennél is közelebb van a határhoz.
+		provideDemoAutopilot({
+			config: {
+				controlsPosition: 'bottom-left',
+				elementTimeout: 8000,
+				spotlightPadding: 10,
+				spotlightBorderRadius: 12,
+				defaultStepDelay: 7000,
+				debug: !environment.production,
+			},
+		}),
+		// Carries the look of the app to and from the account. It has to be
+		// alive wherever the theme is switched, which is every page, so it
+		// starts with the app rather than with the page that shows it.
+		provideEnvironmentInitializer(() => inject(AppearanceSyncService)),
+		// The same for the language, and alive from the start for the same
+		// reason: the switch sits in the top bar, which every page has.
+		provideEnvironmentInitializer(() => inject(LanguageSyncService)),
+		// And the default an administrator set for everybody, which applies to
+		// whoever has not picked one of their own.
+		provideEnvironmentInitializer(() => inject(DefaultLanguageSyncService)),
+		// The genres the collector follows, carried to and from the account.
+		// It starts with the app because the catalog does: the first list a
+		// page asks for is already downloading by the time that page is
+		// drawn, and it has to be downloading the right genres.
+		provideEnvironmentInitializer(() => inject(GenreScopeSyncService)),
+		// A new page starts at its top rather than wherever the last one was
+		// left. It follows every navigation, so it starts with the app.
+		provideEnvironmentInitializer(() => inject(PageScrollService)),
+		// Which pages this visit has read, for the Back control. It has to
+		// start with the app too: a page can only be gone back from if the
+		// step onto it was watched, and the first Back control is drawn long
+		// after the visit began.
+		provideEnvironmentInitializer(() => inject(NavigationHistoryService)),
+		// Measurement. Nothing is sent — and the analytics SDK is not even
+		// fetched — until the collector has allowed it, but the service has to
+		// be alive from the start: it follows the navigations and the sign-in
+		// state, and neither of those waits for a first event.
+		{ provide: AnalyticsService, useExisting: FirebaseAnalyticsService },
+		provideEnvironmentInitializer(() => inject(FirebaseAnalyticsService)),
+		// `__mcPerf` in the console: the timings of the heavy work, in every
+		// build, so a slow machine's numbers can be read where it is slow.
+		provideEnvironmentInitializer(() => installPerformanceConsole()),
 		providePrimeNG({
+			// A PrimeNG 22 licencet ellenőriz induláskor: kulcs nélkül minden
+			// lapra kirak egy „Invalid PrimeUI License” sávot. A kulcs a
+			// repón kívülről jön (tools/primeui/generate-license.mjs).
+			license: environment.primeui.license,
 			theme: {
 				preset: MusicPreset,
 				options: {
@@ -83,7 +260,7 @@ export const appConfig: ApplicationConfig = {
 					},
 				}
 			),
-			!environment.production ? StoreDevtoolsModule.instrument() : [],
+			...storeDevtools,
 			EffectsModule.forRoot([]),
 			NgxPermissionsModule.forRoot(),
 			// Elsőként: a globális ErrorHandler a többi modul indulását is fedi.
@@ -100,6 +277,21 @@ export const appConfig: ApplicationConfig = {
 			DomainReleaseModule,
 			DomainWishlistItemModule,
 			HookModule
+		),
+		// What the collector publishes of themselves — the public page, and
+		// the entry on the wall — follows their consents rather than their
+		// route: a hunt is shown from the collections page, a record is filed
+		// from the scanner, and both change what the others would read. Two
+		// setting documents until something is actually shared; the shelf
+		// itself is only followed once it is.
+		//
+		// It stands after the modules rather than beside the other initializers:
+		// `watch()` subscribes straight away, and the first thing it reads is the
+		// authentication feature's state. `CoreAuthenticationModule` above is what
+		// registers that feature, so an initializer declared ahead of it would
+		// select from a state with no `authentication` in it yet.
+		provideEnvironmentInitializer(() =>
+			inject(CollectorProfileEffect).watch()
 		),
 	],
 };

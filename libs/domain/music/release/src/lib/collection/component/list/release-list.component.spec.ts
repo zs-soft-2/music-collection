@@ -1,3 +1,4 @@
+import { provideI18nTesting } from '@music-collection/core/i18n/testing';
 import { of } from 'rxjs';
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -13,6 +14,7 @@ describe('ReleaseListComponent', () => {
 		await TestBed.configureTestingModule({
 			imports: [ReleaseListComponent],
 			providers: [
+				provideI18nTesting(),
 				{
 					provide: ReleaseStateService,
 					useValue: { selectEntities$: jest.fn(() => of([])) },

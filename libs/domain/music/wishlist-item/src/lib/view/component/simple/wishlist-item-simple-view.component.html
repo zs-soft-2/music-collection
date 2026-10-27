@@ -1,82 +1,88 @@
-
 @switch (layout) {
-  @case ('horizontal') {
-    @if (wishlistItem) {
-      <div
-        fxLayout="row"
-        fxLayout.xs="column"
-        fxLayoutAlign="center"
-        fxLayoutGap="10px 5px grid"
-        >
-        <p-image
-          [src]="wishlistItem.albumReference.coverImage?.filePath || ''"
-          [preview]="true"
-          alt="Image"
-          [width]="width"
-          >
-        </p-image>
-        <div>
-          <p>
-            {{ wishlistItem.artistReference.name }}
-          </p>
-          <p>
-            {{ wishlistItem.albumReference.name }}
-          </p>
-        </div>
-        <div>
-          <p>
-            <a [href]="wishlistItem.sourceLink" target="_blank">Shop</a>
-          </p>
-          <p>
-            @for (media of wishlistItem.medias; track media) {
-              <div>
-                <p-chip styleClass="style">
-                  {{ media }}
-                </p-chip>
-              </div>
-            }
-          </p>
-        </div>
-      </div>
-    }
-  }
-  @case ('vertical') {
-    @if (wishlistItem) {
-      <div
-        fxLayout="column"
-        fxLayoutAlign="center"
-        fxLayoutGap="10px 5px grid"
-        >
-        <div>
-          <p-image
+	@case ('horizontal') {
+		@if (wishlistItem) {
+			<div
+				fxLayout="row"
+				fxLayout.xs="column"
+				fxLayoutAlign="center"
+				fxLayoutGap="10px 5px grid"
+			>
+				<p-image
 					[src]="
 						wishlistItem.albumReference.coverImage?.filePath || ''
 					"
-            [preview]="true"
-            alt="Image"
-            [width]="width"
-            >
-          </p-image>
-        </div>
-        <p>
-          {{ wishlistItem.artistReference.name }}
-        </p>
-        <p>
-          {{ wishlistItem.albumReference.name }}
-        </p>
-        <p>
-          @for (media of wishlistItem.medias; track media) {
-            <div>
-              <p-chip styleClass="style">
-                {{ media }}
-              </p-chip>
-            </div>
-          }
-        </p>
-        <p>
-          <a [href]="wishlistItem.sourceLink" target="_blank">Shop</a>
-        </p>
-      </div>
-    }
-  }
+					[preview]="true"
+					[alt]="'ui.wishlistItemSimpleView.image' | transloco"
+					[width]="width"
+				>
+				</p-image>
+				<div>
+					<p>
+						{{ wishlistItem.artistReference.name }}
+					</p>
+					<p>
+						{{ wishlistItem.albumReference.name }}
+					</p>
+				</div>
+				<div>
+					<p>
+						<a [href]="wishlistItem.sourceLink" target="_blank">{{
+							'ui.wishlistItemSimpleView.shop' | transloco
+						}}</a>
+					</p>
+					<p>
+						@for (media of wishlistItem.medias; track media) {
+							<div>
+								<p-chip styleClass="style">
+									{{ media }}
+								</p-chip>
+							</div>
+						}
+					</p>
+				</div>
+			</div>
+		}
+	}
+	@case ('vertical') {
+		@if (wishlistItem) {
+			<div
+				fxLayout="column"
+				fxLayoutAlign="center"
+				fxLayoutGap="10px 5px grid"
+			>
+				<div>
+					<p-image
+						[src]="
+							wishlistItem.albumReference.coverImage?.filePath ||
+							''
+						"
+						[preview]="true"
+						[alt]="'ui.wishlistItemSimpleView.image2' | transloco"
+						[width]="width"
+					>
+					</p-image>
+				</div>
+				<p>
+					{{ wishlistItem.artistReference.name }}
+				</p>
+				<p>
+					{{ wishlistItem.albumReference.name }}
+				</p>
+				<p>
+					@for (media of wishlistItem.medias; track media) {
+						<div>
+							<p-chip styleClass="style">
+								{{ media }}
+							</p-chip>
+						</div>
+					}
+				</p>
+				<p>
+					<a [href]="wishlistItem.sourceLink" target="_blank">{{
+						'ui.wishlistItemSimpleView.shop2' | transloco
+					}}</a>
+				</p>
+			</div>
+		}
+	}
 }

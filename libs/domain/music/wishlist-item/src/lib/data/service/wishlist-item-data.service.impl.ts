@@ -9,7 +9,11 @@ import {
 	WishlistItemModelUpdate,
 	SearchParams,
 	WISHLIST_ITEM_FEATURE_KEY,
+	withLocalUpdatedAt,
 } from '@music-collection/api';
+
+/** Parent of the users' own data (`user/{uid}/wishlist-item`). */
+const USER_COLLECTION = 'user';
 
 @Injectable()
 export class WishlistItemDataServiceImpl extends WishlistItemDataService {
@@ -47,9 +51,11 @@ export class WishlistItemDataServiceImpl extends WishlistItemDataService {
 					newWishlistItem
 				)
 				.then(() => {
-					subscriber.next({
-						...newWishlistItem,
-					} as unknown as WishlistItemModel);
+					subscriber.next(
+						withLocalUpdatedAt(
+							newWishlistItem
+						) as unknown as WishlistItemModel
+					);
 				});
 		});
 	}
@@ -64,6 +70,19 @@ export class WishlistItemDataServiceImpl extends WishlistItemDataService {
 
 	public list$(): Observable<WishlistItemModel[]> {
 		return super.listModels$();
+	}
+
+	public listByUser$(userId: string): Observable<WishlistItemModel[]> {
+		return this.firestoreSync.list$<WishlistItemModel>({
+			featureKey: this.featureKey,
+			cacheKey: `${this.featureKey}?userId=${userId}`,
+			query: collection(
+				this.firestore,
+				USER_COLLECTION,
+				userId,
+				this.featureKey
+			),
+		});
 	}
 
 	public listByIds$(ids: string[]): Observable<WishlistItemModel[]> {
