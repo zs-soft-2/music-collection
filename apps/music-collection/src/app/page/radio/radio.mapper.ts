@@ -1,6 +1,7 @@
 import {
 	CollectionItemPlacement,
 	ShelfUnitLayout,
+	unitTitle,
 } from '@music-collection/api';
 import { Translator } from '@music-collection/core/i18n';
 import { MusicCollectionStanding } from '@music-collection/domain/music-collection/core';
@@ -150,7 +151,7 @@ export function radioStations(
 			stations.push(
 				station({
 					station: { kind: 'shelf', unitId: unit.id },
-					label: unit.name || t('radio.unnamedUnit'),
+					label: unitTitle(unit, units, t('radio.unnamedUnit')),
 					description: t('radio.unit.description'),
 					icon: 'pi pi-th-large',
 				})

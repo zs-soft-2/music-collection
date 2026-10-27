@@ -39,6 +39,8 @@ import {
 import {
 	DEFAULT_SHELF,
 	NO_SHELF_LAYOUT,
+	SHELF_HEIGHT_UNIT_CM,
+	SHELF_MEDIA_SIZES,
 	SHELF_LAYOUT_SETTING,
 	SHELF_LIMITS,
 	ShelfCubby,
@@ -51,6 +53,8 @@ import {
 	clampCubbyLength,
 	clampShelfSide,
 	clampSpineWidth,
+	heldUnits,
+	insertsIn,
 	shelfCapacity,
 } from '../collection/shelf-layout.setting';
 
@@ -221,6 +225,7 @@ export const ProfilePageStore = signalStore(
 		/** What the drawn furniture holds, against what it has to hold. */
 		shelfRoom: computed(() => {
 			const units = store.shelfLayout();
+			const standing = units.filter((unit) => !unit.inside).length;
 			const room = shelfCapacity(
 				units,
 				store.mediaMix(),
@@ -228,11 +233,11 @@ export const ProfilePageStore = signalStore(
 			);
 
 			return {
-				units: units.length,
+				units: standing,
 				...room,
 				/** The drawn length in whole centimetres, as it is shown. */
 				lengthCm: Math.round(room.length / 10),
-				full: units.length >= SHELF_LIMITS.maxUnits,
+				full: standing >= SHELF_LIMITS.maxUnits,
 			};
 		}),
 		/** What the collector's listening adds up to. */
@@ -607,9 +612,16 @@ export const ProfilePageStore = signalStore(
 			 * because they are one answer to "what is on my shelf".
 			 */
 			const keep = (
-				units: ShelfUnitLayout[],
+				drawn: ShelfUnitLayout[],
 				widths: ShelfWidths = store.shelfWidths()
 			): void => {
+				/*
+				 * An insert goes with the compartment it stood in: a unit
+				 * thrown out, or redrawn without that compartment, takes its
+				 * inserts with it rather than leaving them standing nowhere.
+				 */
+				const units = heldUnits(drawn);
+
 				patchState(store, { shelfLayout: units, shelfWidths: widths });
 				settings
 					.save(SHELF_LAYOUT_SETTING, { units, widths })
@@ -672,23 +684,99 @@ export const ProfilePageStore = signalStore(
 				 */
 				addShelf(): void {
 					const units = store.shelfLayout();
+					const standing = units.filter((unit) => !unit.inside);
 
-					if (units.length >= SHELF_LIMITS.maxUnits) {
+					if (standing.length >= SHELF_LIMITS.maxUnits) {
 						return;
 					}
 
-					const last = units[units.length - 1];
+					const last = standing[standing.length - 1];
 
 					keep([
 						...units,
 						{
 							id: crypto.randomUUID(),
-							name: `Shelf ${units.length + 1}`,
+							name: `Shelf ${standing.length + 1}`,
 							rows: last?.rows ?? DEFAULT_SHELF.rows,
 							columns: last?.columns ?? DEFAULT_SHELF.columns,
 							cubby: last?.cubby ?? DEFAULT_SHELF.cubby,
 						},
 					]);
+				},
+
+				/**
+				 * Puts an insert into a compartment of a unit — the first one
+				 * with nothing standing in it yet. It starts out as what a
+				 * collector most often puts into a record cubby: CD towers,
+				 * as many side by side as the compartment is long, each as
+				 * tall as the compartment is high.
+				 */
+				addInsert(hostId: string): void {
+					const units = store.shelfLayout();
+					const host = units.find(
+						(unit) => unit.id === hostId && !unit.inside
+					);
+
+					if (!host || host.cubby.stance !== 'across') {
+						return;
+					}
+
+					const spots = Array.from(
+						{ length: host.rows * host.columns },
+						(_, at) => ({
+							unitId: host.id,
+							row: Math.floor(at / host.columns) + 1,
+							column: (at % host.columns) + 1,
+						})
+					);
+					const spot =
+						spots.find((each) => !insertsIn(units, each).length) ??
+						spots[0];
+
+					if (
+						insertsIn(units, spot).length >= SHELF_LIMITS.maxInserts
+					) {
+						return;
+					}
+
+					const cd = SHELF_MEDIA_SIZES.cd.height;
+					const mmPerUnit = SHELF_HEIGHT_UNIT_CM * 10;
+					const across = cd * mmPerUnit;
+
+					keep([
+						...units,
+						{
+							id: crypto.randomUUID(),
+							name: 'CD tower',
+							rows: 1,
+							columns: clampShelfSide(
+								Math.max(
+									1,
+									Math.floor(host.cubby.length / across)
+								)
+							),
+							cubby: {
+								height: cd,
+								length: clampCubbyLength(
+									host.cubby.height * mmPerUnit
+								),
+								stance: 'down',
+							},
+							inside: spot,
+						},
+					]);
+				},
+
+				/** Stands an insert in another compartment of its unit. */
+				placeInsert(id: string, row: number, column: number): void {
+					redraw(id, (unit) =>
+						unit.inside
+							? {
+									...unit,
+									inside: { ...unit.inside, row, column },
+								}
+							: unit
+					);
 				},
 
 				removeShelf(id: string): void {
@@ -748,7 +836,9 @@ export const ProfilePageStore = signalStore(
 				 * are filed into the furniture, so it is worth getting right.
 				 */
 				moveShelf(id: string, step: -1 | 1): void {
-					const units = [...store.shelfLayout()];
+					const all = store.shelfLayout();
+					/* Only the units standing in the room have an order in it. */
+					const units = all.filter((unit) => !unit.inside);
 					const from = units.findIndex((unit) => unit.id === id);
 					const to = from + step;
 
@@ -757,7 +847,7 @@ export const ProfilePageStore = signalStore(
 					}
 
 					units.splice(to, 0, ...units.splice(from, 1));
-					keep(units);
+					keep([...units, ...all.filter((unit) => !!unit.inside)]);
 				},
 
 				/**

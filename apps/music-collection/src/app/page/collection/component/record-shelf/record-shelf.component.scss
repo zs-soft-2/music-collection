@@ -431,6 +431,66 @@
 }
 
 /*
+ * A compartment holding inserts. Its floor is the compartment's own, so it is
+ * drawn at the compartment's size — but allowed to grow: an insert's
+ * compartments carry their labels and frames, which the tape measure that
+ * sized the insert knows nothing about, and drawing the records smaller to
+ * make room for those would be the one thing the shelf never does.
+ */
+.board-host {
+	gap: 6px;
+	justify-content: flex-start;
+	width: auto;
+	min-width: var(--board-w);
+	height: auto;
+	min-height: var(--board-h);
+}
+
+/* An insert: a lighter, thinner piece of furniture standing on that floor. */
+.insert {
+	display: flex;
+	flex: none;
+	flex-direction: column;
+	gap: 4px;
+	padding: 4px;
+	background: linear-gradient(180deg, #5a4632 0%, #3a2b1c 100%);
+	border-radius: 3px;
+	box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.45);
+}
+
+.insert-name {
+	padding: 0 2px;
+	overflow: hidden;
+	font-size: 0.6rem;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-overflow: ellipsis;
+	text-transform: uppercase;
+	white-space: nowrap;
+	color: #e9dcc6;
+}
+
+.insert-grid {
+	display: grid;
+	grid-template-columns: repeat(var(--cols), var(--cubby));
+	gap: 6px;
+}
+
+/* A compartment of an insert is small; its label says only what it must. */
+.insert .label {
+	font-size: 0.6rem;
+	letter-spacing: 0.06em;
+}
+
+.insert .label-spot {
+	display: none;
+}
+
+.insert .cubby {
+	padding: 4px;
+}
+
+/*
  * Which run of the compartment this is. It stands in the recess beside the
  * shelf rather than on it: a number drawn on the board would be room taken
  * out of the run, and every record standing in it would be drawn narrower
@@ -666,10 +726,45 @@
 }
 
 /* Lying flat, the spine reads the way a stacked case does: straight on. */
+/*
+ * A copy lying flat is a standing one turned on its side: the cap that marks
+ * the top edge of the case goes to its end, not along its top. Left on top
+ * it took half of an eight-pixel case, and a stack read as twice as many
+ * cases half as thick, slid over one another.
+ */
+.is-down .spine-cap {
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: auto;
+	width: 4px;
+	height: auto;
+	border-radius: 0 2px 2px 0;
+}
+
+.is-down .spine {
+	border-radius: 1px 2px 2px 1px;
+}
+
+/*
+ * The lettering runs along the case, and a line of it is no taller than the
+ * case is thick — or it spills onto the case above it.
+ */
 .is-down .spine-text {
-	inset: 0 6px;
+	inset: 0 8px 0 6px;
+	line-height: 1;
 	writing-mode: horizontal-tb;
 	transform: none;
+}
+
+.is-down .spine-title {
+	max-width: 70%;
+	max-height: none;
+}
+
+.is-down .spine-artist {
+	max-width: 40%;
+	max-height: none;
 }
 
 /* Rearranging by hand: the record in the air, and where it would land. */

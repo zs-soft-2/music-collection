@@ -10,6 +10,7 @@ import {
 	signal,
 	viewChild,
 } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { Router } from '@angular/router';
 import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
@@ -86,6 +87,11 @@ interface Compartment {
 	found: boolean;
 	/** The drawn compartment this is, or null on the wall and the overflow. */
 	spot: ShelfSpotRef | null;
+	/**
+	 * The units standing in this compartment, drawn inside it. A compartment
+	 * holding inserts holds nothing else, so it takes no records itself.
+	 */
+	inserts: Unit[];
 }
 
 /**
@@ -125,6 +131,8 @@ interface Unit {
 	compartments: Compartment[];
 	/** The unit at a glance; empty where there is no furniture to plan. */
 	plan: PlanCell[];
+	/** The compartment it stands in, where it is an insert. */
+	inside: ShelfSpotRef | null;
 }
 
 /**
@@ -351,6 +359,7 @@ function isPale(color: string): boolean {
 	styleUrls: ['./record-shelf.component.scss'],
 	imports: [
 		...I18N_IMPORTS,
+		NgTemplateOutlet,
 		RecordShelfPeekComponent,
 		RecordShelfBrowserComponent,
 	],
@@ -436,7 +445,8 @@ export class RecordShelfComponent {
 			: [];
 	});
 
-	protected readonly units = computed<Unit[]>(() =>
+	/** Every unit drawn on its own, inserts among them. */
+	private readonly drawn = computed<Unit[]>(() =>
 		this.shelves().map((shelf) => {
 			const down = shelf.cubby.stance === 'down';
 			const board = boardOf(shelf.cubby);
@@ -545,6 +555,7 @@ export class RecordShelfComponent {
 						albumIds: group.items.map((release) => release.albumId),
 						spines,
 						boards: overRuns(boards, Math.max(runs, needs), right),
+						inserts: [] as Unit[],
 					})
 				),
 				plan: planned
@@ -557,8 +568,101 @@ export class RecordShelfComponent {
 							),
 						}))
 					: [],
+				inside: shelf.inside,
 			};
 		})
+	);
+
+	/**
+	 * The furniture standing in the room, with every insert put into the
+	 * compartment it stands in. A compartment holding inserts is drawn as
+	 * them; on the unit's plan it is as full as they are together, and it
+	 * plays what stands in them.
+	 */
+	protected readonly units = computed<Unit[]>(() => {
+		const drawn = this.drawn();
+		const inserts = new Map<string, Unit[]>();
+
+		for (const unit of drawn) {
+			if (unit.inside) {
+				const { unitId, row, column } = unit.inside;
+				const key = `${unitId}#${row}:${column}`;
+
+				inserts.set(key, [...(inserts.get(key) ?? []), unit]);
+			}
+		}
+
+		return drawn
+			.filter((unit) => !unit.inside)
+			.map((unit) => {
+				const compartments = unit.compartments.map((compartment) => {
+					const spot = compartment.spot;
+					const inside = spot
+						? inserts.get(
+								`${spot.unitId}#${spot.row}:${spot.column}`
+							)
+						: undefined;
+
+					return inside?.length
+						? {
+								...compartment,
+								inserts: inside,
+								found: inside.some((insert) =>
+									insert.compartments.some(
+										(cell) => cell.found
+									)
+								),
+								albumIds: inside.flatMap(
+									(insert) => insert.albumIds
+								),
+							}
+						: compartment;
+				});
+
+				return {
+					...unit,
+					compartments,
+					albumIds: compartments.flatMap(
+						(compartment) => compartment.albumIds
+					),
+					plan: unit.plan.map((cell, at) => {
+						const inside = compartments[at]?.inserts ?? [];
+						const cells = inside.flatMap((insert) => insert.plan);
+
+						return inside.length
+							? {
+									...cell,
+									fill: cells.length
+										? cells.reduce(
+												(sum, each) => sum + each.fill,
+												0
+											) / cells.length
+										: 0,
+									found: cells.some((each) => each.found),
+								}
+							: cell;
+					}),
+				};
+			});
+	});
+
+	/**
+	 * Every compartment as the collector walks past it: a unit's own, with
+	 * the inserts' standing in place of the compartment that holds them.
+	 */
+	private readonly walked = computed(() =>
+		this.units().flatMap((unit) =>
+			unit.compartments.flatMap((compartment) =>
+				compartment.inserts.length
+					? compartment.inserts.flatMap((insert) =>
+							insert.compartments.map((cell) => ({
+								unit: insert,
+								compartment: cell,
+							}))
+						)
+					: [{ unit, compartment }]
+			)
+		)
 	);
 
 	/**
@@ -566,27 +670,25 @@ export class RecordShelfComponent {
 	 * the browser walks, one compartment at a time and on to the next.
 	 */
 	protected readonly browsable = computed<BrowsedCompartment[]>(() =>
-		this.units().flatMap((unit) =>
-			unit.compartments
-				.filter((compartment) => !compartment.empty)
-				.map((compartment) => ({
-					key: compartment.key,
-					label: compartment.label,
-					unitName: unit.name,
-					spot: compartment.spot,
-					down: unit.down,
-					rightFrom: compartment.leftCount,
-					records: compartment.spines.map(
-						({ release, href, side, hue, tint }) => ({
-							release,
-							href,
-							side,
-							hue,
-							tint,
-						})
-					),
-				}))
-		)
+		this.walked()
+			.filter(({ compartment }) => !compartment.empty)
+			.map(({ unit, compartment }) => ({
+				key: compartment.key,
+				label: compartment.label,
+				unitName: unit.name,
+				spot: compartment.spot,
+				down: unit.down,
+				rightFrom: compartment.leftCount,
+				records: compartment.spines.map(
+					({ release, href, side, hue, tint }) => ({
+						release,
+						href,
+						side,
+						hue,
+						tint,
+					})
+				),
+			}))
 	);
 
 	/**
@@ -610,11 +712,9 @@ export class RecordShelfComponent {
 	private readonly releasesById = computed(
 		() =>
 			new Map(
-				this.shelves().flatMap((shelf) =>
-					shelf.compartments.flatMap((group) =>
-						group.items.map(
-							(release) => [release.id, release] as const
-						)
+				this.walked().flatMap(({ compartment }) =>
+					compartment.spines.map(
+						({ release }) => [release.id, release] as const
 					)
 				)
 			)
@@ -754,7 +854,8 @@ export class RecordShelfComponent {
 		if (browse) {
 			event.preventDefault();
 			this.browse(
-				browse.closest<HTMLElement>('.compartment')?.dataset['cell'] ?? ''
+				browse.closest<HTMLElement>('.compartment')?.dataset['cell'] ??
+					''
 			);
 			return;
 		}

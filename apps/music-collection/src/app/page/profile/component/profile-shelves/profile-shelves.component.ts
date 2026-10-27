@@ -4,6 +4,7 @@ import {
 	computed,
 	inject,
 } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
@@ -18,6 +19,8 @@ import {
 	ShelfUnitLayout,
 	ShelfWidths,
 	cubbyHolds,
+	insertsIn,
+	insertsOverflow,
 } from '../../../collection/shelf-layout.setting';
 import { ProfilePageStore } from '../../profile-page.store';
 
@@ -55,6 +58,18 @@ interface ShelfDrawing {
 	cell: { width: number; height: number };
 	/** One per compartment, true where a record would already stand. */
 	cells: boolean[];
+	/** One per compartment, true where inserts stand in it. */
+	hosting: boolean[];
+	/** Where it is an insert: the compartment it stands in, as `row:column`. */
+	spot: string | null;
+	/** The compartments of its unit an insert may be moved to. */
+	spots: { value: string; row: number; column: number }[];
+	/** It is one of the inserts that, together, do not fit where they stand. */
+	tooBig: boolean;
+	/** Inserts may be put into its compartments: it stands in the room, and its copies stand up. */
+	canHost: boolean;
+	/** What stands in its compartments, unit by unit. */
+	inserts: ShelfDrawing[];
 	first: boolean;
 	last: boolean;
 }
@@ -87,7 +102,7 @@ const DRAWING = { width: 132, height: 120, minCell: 4 };
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	selector: 'mc-profile-shelves',
-	imports: [...I18N_IMPORTS],
+	imports: [...I18N_IMPORTS, NgTemplateOutlet],
 	template: `
 		<p class="intro">
 			{{ 'ui.profileShelves.draw-the-shelving-you' | transloco }}
@@ -97,345 +112,23 @@ const DRAWING = { width: 132, height: 120, minCell: 4 };
 			<ul class="units">
 				@for (shelf of shelves(); track shelf.id) {
 					<li class="unit">
-						<div class="drawing-box">
-							<div
-								class="drawing"
-								[class.is-down]="shelf.stance === 'down'"
-								[style.--cols]="shelf.columns"
-								[style.--cell-w.px]="shelf.cell.width"
-								[style.--cell-h.px]="shelf.cell.height"
-								[attr.aria-label]="
-									shelf.rows + ' by ' + shelf.columns
-								"
-							>
-								@for (cell of shelf.cells; track $index) {
-									<span
-										class="cell"
-										[class.is-filled]="cell"
-										aria-hidden="true"
-									></span>
-								}
-							</div>
-						</div>
-
-						<div class="controls">
-							<input
-								#name
-								class="name"
-								type="text"
-								[placeholder]="
-									'ui.profileShelves.shelf-name' | transloco
-								"
-								[value]="shelf.name"
-								[attr.maxlength]="limits.maxNameLength"
-								[attr.aria-label]="'Shelf name'"
-								(change)="
-									store.renameShelf(shelf.id, name.value)
+						<ng-container
+							*ngTemplateOutlet="
+								editor;
+								context: { $implicit: shelf }
+							"
+						/>
+					</li>
+					@for (insert of shelf.inserts; track insert.id) {
+						<li class="unit is-insert">
+							<ng-container
+								*ngTemplateOutlet="
+									editor;
+									context: { $implicit: insert }
 								"
 							/>
-
-							<div class="sizes">
-								<span class="size">
-									<span class="size-label">{{
-										'ui.profileShelves.rows' | transloco
-									}}</span>
-									<button
-										type="button"
-										[attr.aria-label]="
-											'ui.profileShelves.one-row-fewer'
-												| transloco
-										"
-										[disabled]="
-											shelf.rows <= limits.minSide
-										"
-										(click)="
-											store.resizeShelf(shelf.id, {
-												rows: shelf.rows - 1,
-											})
-										"
-									>
-										−
-									</button>
-									<span class="size-value">{{
-										shelf.rows
-									}}</span>
-									<button
-										type="button"
-										[attr.aria-label]="
-											'ui.profileShelves.one-row-more'
-												| transloco
-										"
-										[disabled]="
-											shelf.rows >= limits.maxSide
-										"
-										(click)="
-											store.resizeShelf(shelf.id, {
-												rows: shelf.rows + 1,
-											})
-										"
-									>
-										+
-									</button>
-								</span>
-
-								<span class="times" aria-hidden="true">×</span>
-
-								<span class="size">
-									<span class="size-label">{{
-										'ui.profileShelves.columns' | transloco
-									}}</span>
-									<button
-										type="button"
-										[attr.aria-label]="
-											'ui.profileShelves.one-column-fewer'
-												| transloco
-										"
-										[disabled]="
-											shelf.columns <= limits.minSide
-										"
-										(click)="
-											store.resizeShelf(shelf.id, {
-												columns: shelf.columns - 1,
-											})
-										"
-									>
-										−
-									</button>
-									<span class="size-value">{{
-										shelf.columns
-									}}</span>
-									<button
-										type="button"
-										[attr.aria-label]="
-											'ui.profileShelves.one-column-more'
-												| transloco
-										"
-										[disabled]="
-											shelf.columns >= limits.maxSide
-										"
-										(click)="
-											store.resizeShelf(shelf.id, {
-												columns: shelf.columns + 1,
-											})
-										"
-									>
-										+
-									</button>
-								</span>
-							</div>
-
-							<!--
-								The compartment itself: how tall it is, how
-								long it is, and whether the copies stand in it
-								or lie stacked.
-							-->
-							<div class="sizes">
-								<span class="size">
-									<span class="size-label">{{
-										'ui.profileShelves.cubby-height'
-											| transloco
-									}}</span>
-									<button
-										type="button"
-										[attr.aria-label]="
-											'ui.profileShelves.one-notch-lower'
-												| transloco
-										"
-										[disabled]="
-											shelf.height <= limits.minHeight
-										"
-										(click)="
-											store.measureShelf(shelf.id, {
-												height: shelf.height - 1,
-											})
-										"
-									>
-										−
-									</button>
-									<span class="size-value">{{
-										shelf.height * heightUnitCm
-									}}</span>
-									<button
-										type="button"
-										[attr.aria-label]="
-											'ui.profileShelves.one-notch-higher'
-												| transloco
-										"
-										[disabled]="
-											shelf.height >= limits.maxHeight
-										"
-										(click)="
-											store.measureShelf(shelf.id, {
-												height: shelf.height + 1,
-											})
-										"
-									>
-										+
-									</button>
-									<span class="unit-of">cm</span>
-								</span>
-
-								<span class="size">
-									<span class="size-label">{{
-										'ui.profileShelves.cubby-length'
-											| transloco
-									}}</span>
-									<button
-										type="button"
-										[attr.aria-label]="
-											'ui.profileShelves.shorter'
-												| transloco
-										"
-										[disabled]="
-											shelf.lengthCm * 10 <=
-											limits.minLength
-										"
-										(click)="
-											store.measureShelf(shelf.id, {
-												length:
-													(shelf.lengthCm - 1) * 10,
-											})
-										"
-									>
-										−
-									</button>
-									<span class="size-value">{{
-										shelf.lengthCm
-									}}</span>
-									<button
-										type="button"
-										[attr.aria-label]="
-											'ui.profileShelves.longer'
-												| transloco
-										"
-										[disabled]="
-											shelf.lengthCm * 10 >=
-											limits.maxLength
-										"
-										(click)="
-											store.measureShelf(shelf.id, {
-												length:
-													(shelf.lengthCm + 1) * 10,
-											})
-										"
-									>
-										+
-									</button>
-									<span class="unit-of">cm</span>
-								</span>
-
-								<span
-									class="stance"
-									role="group"
-									[attr.aria-label]="
-										'ui.profileShelves.how-the-copies-lie'
-											| transloco
-									"
-								>
-									<button
-										type="button"
-										[class.is-on]="
-											shelf.stance === 'across'
-										"
-										[attr.aria-pressed]="
-											shelf.stance === 'across'
-										"
-										(click)="
-											store.turnShelf(shelf.id, 'across')
-										"
-									>
-										{{
-											'ui.profileShelves.standing'
-												| transloco
-										}}
-									</button>
-									<button
-										type="button"
-										[class.is-on]="shelf.stance === 'down'"
-										[attr.aria-pressed]="
-											shelf.stance === 'down'
-										"
-										(click)="
-											store.turnShelf(shelf.id, 'down')
-										"
-									>
-										{{
-											'ui.profileShelves.stacked'
-												| transloco
-										}}
-									</button>
-								</span>
-							</div>
-
-							<p class="note">
-								{{
-									'ui.profileShelves.unitNote'
-										| transloco
-											: {
-													compartments:
-														shelf.compartments,
-											  }
-								}}
-								@if (shelf.holds.length) {
-									<span class="holds">
-										@for (
-											hold of shelf.holds;
-											track hold.media
-										) {
-											<span class="hold"
-												>{{ hold.count }}
-												{{
-													'catalog.media.' +
-														hold.media | transloco
-												}}</span
-											>
-										}
-									</span>
-								} @else {
-									<span class="holds is-empty">{{
-										'ui.profileShelves.nothing-fits'
-											| transloco
-									}}</span>
-								}
-							</p>
-
-							<div class="actions">
-								<button
-									type="button"
-									[attr.aria-label]="
-										'ui.profileShelves.move-this-shelf-earlier'
-											| transloco
-									"
-									[disabled]="shelf.first"
-									(click)="store.moveShelf(shelf.id, -1)"
-								>
-									<i class="pi pi-arrow-up"></i>
-								</button>
-								<button
-									type="button"
-									[attr.aria-label]="
-										'ui.profileShelves.move-this-shelf-later'
-											| transloco
-									"
-									[disabled]="shelf.last"
-									(click)="store.moveShelf(shelf.id, 1)"
-								>
-									<i class="pi pi-arrow-down"></i>
-								</button>
-								<button
-									type="button"
-									class="remove"
-									[attr.aria-label]="
-										'ui.profileShelves.remove-this-shelf'
-											| transloco
-									"
-									(click)="store.removeShelf(shelf.id)"
-								>
-									<i class="pi pi-trash"></i>
-								</button>
-							</div>
-						</div>
-					</li>
+						</li>
+					}
 				}
 			</ul>
 		} @else {
@@ -551,6 +244,341 @@ const DRAWING = { width: 132, height: 120, minCell: 4 };
 				}
 			</p>
 		</div>
+
+		<!--
+			One piece of furniture being drawn: a unit standing in the room, or
+			an insert standing in a compartment of one. An insert is drawn and
+			measured the same way; it only says where it stands instead of
+			where in the room it comes.
+		-->
+		<ng-template #editor let-shelf>
+			<div class="drawing-box">
+				<div
+					class="drawing"
+					[class.is-down]="shelf.stance === 'down'"
+					[style.--cols]="shelf.columns"
+					[style.--cell-w.px]="shelf.cell.width"
+					[style.--cell-h.px]="shelf.cell.height"
+					[attr.aria-label]="shelf.rows + ' by ' + shelf.columns"
+				>
+					@for (cell of shelf.cells; track $index) {
+						<span
+							class="cell"
+							[class.is-filled]="cell"
+							[class.is-hosting]="shelf.hosting[$index]"
+							aria-hidden="true"
+						></span>
+					}
+				</div>
+			</div>
+
+			<div class="controls">
+				<input
+					#name
+					class="name"
+					type="text"
+					[placeholder]="'ui.profileShelves.shelf-name' | transloco"
+					[value]="shelf.name"
+					[attr.maxlength]="limits.maxNameLength"
+					[attr.aria-label]="'Shelf name'"
+					(change)="store.renameShelf(shelf.id, name.value)"
+				/>
+
+				@if (shelf.spot) {
+					<label class="insert-in">
+						<span class="size-label">{{
+							'ui.profileShelves.insert-in' | transloco
+						}}</span>
+						<select
+							#where
+							[value]="shelf.spot"
+							(change)="placeInsert(shelf.id, where.value)"
+						>
+							@for (spot of shelf.spots; track spot.value) {
+								<option
+									[value]="spot.value"
+									[selected]="spot.value === shelf.spot"
+								>
+									{{
+										'ui.recordShelf.rowSlot'
+											| transloco
+												: {
+														row: spot.row,
+														slot: spot.column,
+												  }
+									}}
+								</option>
+							}
+						</select>
+					</label>
+					@if (shelf.tooBig) {
+						<p class="too-big">
+							{{
+								'ui.profileShelves.inserts-do-not-fit'
+									| transloco
+							}}
+						</p>
+					}
+				}
+
+				<div class="sizes">
+					<span class="size">
+						<span class="size-label">{{
+							'ui.profileShelves.rows' | transloco
+						}}</span>
+						<button
+							type="button"
+							[attr.aria-label]="
+								'ui.profileShelves.one-row-fewer' | transloco
+							"
+							[disabled]="shelf.rows <= limits.minSide"
+							(click)="
+								store.resizeShelf(shelf.id, {
+									rows: shelf.rows - 1,
+								})
+							"
+						>
+							−
+						</button>
+						<span class="size-value">{{ shelf.rows }}</span>
+						<button
+							type="button"
+							[attr.aria-label]="
+								'ui.profileShelves.one-row-more' | transloco
+							"
+							[disabled]="shelf.rows >= limits.maxSide"
+							(click)="
+								store.resizeShelf(shelf.id, {
+									rows: shelf.rows + 1,
+								})
+							"
+						>
+							+
+						</button>
+					</span>
+
+					<span class="times" aria-hidden="true">×</span>
+
+					<span class="size">
+						<span class="size-label">{{
+							'ui.profileShelves.columns' | transloco
+						}}</span>
+						<button
+							type="button"
+							[attr.aria-label]="
+								'ui.profileShelves.one-column-fewer' | transloco
+							"
+							[disabled]="shelf.columns <= limits.minSide"
+							(click)="
+								store.resizeShelf(shelf.id, {
+									columns: shelf.columns - 1,
+								})
+							"
+						>
+							−
+						</button>
+						<span class="size-value">{{ shelf.columns }}</span>
+						<button
+							type="button"
+							[attr.aria-label]="
+								'ui.profileShelves.one-column-more' | transloco
+							"
+							[disabled]="shelf.columns >= limits.maxSide"
+							(click)="
+								store.resizeShelf(shelf.id, {
+									columns: shelf.columns + 1,
+								})
+							"
+						>
+							+
+						</button>
+					</span>
+				</div>
+
+				<!--
+								The compartment itself: how tall it is, how
+								long it is, and whether the copies stand in it
+								or lie stacked.
+							-->
+				<div class="sizes">
+					<span class="size">
+						<span class="size-label">{{
+							'ui.profileShelves.cubby-height' | transloco
+						}}</span>
+						<button
+							type="button"
+							[attr.aria-label]="
+								'ui.profileShelves.one-notch-lower' | transloco
+							"
+							[disabled]="shelf.height <= limits.minHeight"
+							(click)="
+								store.measureShelf(shelf.id, {
+									height: shelf.height - 1,
+								})
+							"
+						>
+							−
+						</button>
+						<span class="size-value">{{
+							shelf.height * heightUnitCm
+						}}</span>
+						<button
+							type="button"
+							[attr.aria-label]="
+								'ui.profileShelves.one-notch-higher' | transloco
+							"
+							[disabled]="shelf.height >= limits.maxHeight"
+							(click)="
+								store.measureShelf(shelf.id, {
+									height: shelf.height + 1,
+								})
+							"
+						>
+							+
+						</button>
+						<span class="unit-of">cm</span>
+					</span>
+
+					<span class="size">
+						<span class="size-label">{{
+							'ui.profileShelves.cubby-length' | transloco
+						}}</span>
+						<button
+							type="button"
+							[attr.aria-label]="
+								'ui.profileShelves.shorter' | transloco
+							"
+							[disabled]="shelf.lengthCm * 10 <= limits.minLength"
+							(click)="
+								store.measureShelf(shelf.id, {
+									length: (shelf.lengthCm - 1) * 10,
+								})
+							"
+						>
+							−
+						</button>
+						<span class="size-value">{{ shelf.lengthCm }}</span>
+						<button
+							type="button"
+							[attr.aria-label]="
+								'ui.profileShelves.longer' | transloco
+							"
+							[disabled]="shelf.lengthCm * 10 >= limits.maxLength"
+							(click)="
+								store.measureShelf(shelf.id, {
+									length: (shelf.lengthCm + 1) * 10,
+								})
+							"
+						>
+							+
+						</button>
+						<span class="unit-of">cm</span>
+					</span>
+
+					<span
+						class="stance"
+						role="group"
+						[attr.aria-label]="
+							'ui.profileShelves.how-the-copies-lie' | transloco
+						"
+					>
+						<button
+							type="button"
+							[class.is-on]="shelf.stance === 'across'"
+							[attr.aria-pressed]="shelf.stance === 'across'"
+							(click)="store.turnShelf(shelf.id, 'across')"
+						>
+							{{ 'ui.profileShelves.standing' | transloco }}
+						</button>
+						<button
+							type="button"
+							[class.is-on]="shelf.stance === 'down'"
+							[attr.aria-pressed]="shelf.stance === 'down'"
+							(click)="store.turnShelf(shelf.id, 'down')"
+						>
+							{{ 'ui.profileShelves.stacked' | transloco }}
+						</button>
+					</span>
+				</div>
+
+				<p class="note">
+					{{
+						'ui.profileShelves.unitNote'
+							| transloco
+								: {
+										compartments: shelf.compartments,
+								  }
+					}}
+					@if (shelf.holds.length) {
+						<span class="holds">
+							@for (hold of shelf.holds; track hold.media) {
+								<span class="hold"
+									>{{ hold.count }}
+									{{
+										'catalog.media.' + hold.media
+											| transloco
+									}}</span
+								>
+							}
+						</span>
+					} @else {
+						<span class="holds is-empty">{{
+							'ui.profileShelves.nothing-fits' | transloco
+						}}</span>
+					}
+				</p>
+
+				<div class="actions">
+					@if (!shelf.spot) {
+						<button
+							type="button"
+							[attr.aria-label]="
+								'ui.profileShelves.move-this-shelf-earlier'
+									| transloco
+							"
+							[disabled]="shelf.first"
+							(click)="store.moveShelf(shelf.id, -1)"
+						>
+							<i class="pi pi-arrow-up"></i>
+						</button>
+						<button
+							type="button"
+							[attr.aria-label]="
+								'ui.profileShelves.move-this-shelf-later'
+									| transloco
+							"
+							[disabled]="shelf.last"
+							(click)="store.moveShelf(shelf.id, 1)"
+						>
+							<i class="pi pi-arrow-down"></i>
+						</button>
+					}
+					@if (shelf.canHost) {
+						<button
+							type="button"
+							class="add-insert"
+							(click)="store.addInsert(shelf.id)"
+						>
+							<i class="pi pi-plus" aria-hidden="true"></i>
+							{{ 'ui.profileShelves.add-insert' | transloco }}
+						</button>
+					}
+					<button
+						type="button"
+						class="remove"
+						[attr.aria-label]="
+							(shelf.spot
+								? 'ui.profileShelves.remove-this-insert'
+								: 'ui.profileShelves.remove-this-shelf'
+							) | transloco
+						"
+						(click)="store.removeShelf(shelf.id)"
+					>
+						<i class="pi pi-trash"></i>
+					</button>
+				</div>
+			</div>
+		</ng-template>
 	`,
 	styles: `
 		:host {
@@ -611,6 +639,43 @@ const DRAWING = { width: 132, height: 120, minCell: 4 };
 			height: var(--cell-h);
 			background: #101010;
 			border-radius: 1px;
+		}
+
+		/* A compartment holding inserts, drawn as the towers standing in it. */
+		.cell.is-hosting {
+			background-image: repeating-linear-gradient(
+				90deg,
+				rgb(255 255 255 / 18%) 0 1px,
+				transparent 1px 4px
+			);
+		}
+
+		/* An insert is drawn under the unit it stands in, set in from it. */
+		.unit.is-insert {
+			margin-left: 1.5rem;
+			border-left: 2px solid var(--mc-primary);
+		}
+
+		.insert-in {
+			display: inline-flex;
+			gap: 0.5rem;
+			align-items: center;
+		}
+
+		.insert-in select {
+			padding: 0.3rem 0.5rem;
+			font: inherit;
+			font-size: 0.8125rem;
+			color: var(--mc-text);
+			background: var(--mc-surface);
+			border: 1px solid transparent;
+			border-radius: var(--mc-radius-sm);
+		}
+
+		.too-big {
+			margin: 0;
+			font-size: 0.75rem;
+			color: var(--mc-primary);
 		}
 
 		/* A compartment the collection already reaches. */
@@ -896,16 +961,20 @@ export class ProfileShelvesComponent {
 	protected readonly shelves = computed<ShelfDrawing[]>(() => {
 		const units = this.store.shelfLayout();
 		const widths = this.store.shelfWidths();
-		const filled = this.room().filled;
-		let at = 0;
+		const filled = this.room().filledAt;
+		const standing = units.filter((unit) => !unit.inside);
 
-		return units.map((unit, index) => {
+		const draw = (unit: ShelfUnitLayout, index: number): ShelfDrawing => {
 			const compartments = unit.rows * unit.columns;
-			const cells = filled
-				.slice(at, at + compartments)
-				.map((count) => count > 0);
-
-			at += compartments;
+			const grid = Array.from({ length: compartments }, (_, at) => ({
+				unitId: unit.id,
+				row: Math.floor(at / unit.columns) + 1,
+				column: (at % unit.columns) + 1,
+			}));
+			const host = unit.inside
+				? units.find((drawn) => drawn.id === unit.inside?.unitId)
+				: undefined;
+			const canHost = !unit.inside && unit.cubby.stance === 'across';
 
 			return {
 				id: unit.id,
@@ -918,16 +987,59 @@ export class ProfileShelvesComponent {
 				stance: unit.cubby.stance,
 				holds: holdsOf(unit, widths),
 				cell: cellOf(unit),
-				/* A drawing shorter than the grid means nothing is in the rest. */
-				cells: Array.from(
-					{ length: compartments },
-					(_, cell) => cells[cell] ?? false
+				cells: grid.map(
+					(spot) =>
+						(filled.get(
+							`${spot.unitId}#${spot.row}:${spot.column}`
+						) ?? 0) > 0
 				),
+				hosting: grid.map((spot) => insertsIn(units, spot).length > 0),
+				spot: unit.inside
+					? `${unit.inside.row}:${unit.inside.column}`
+					: null,
+				spots: host
+					? Array.from(
+							{ length: host.rows * host.columns },
+							(_, at) => {
+								const row = Math.floor(at / host.columns) + 1;
+								const column = (at % host.columns) + 1;
+
+								return {
+									value: `${row}:${column}`,
+									row,
+									column,
+								};
+							}
+						)
+					: [],
+				tooBig:
+					!!host &&
+					!!unit.inside &&
+					insertsOverflow(host, insertsIn(units, unit.inside)),
+				canHost,
+				inserts: canHost
+					? units
+							.filter(
+								(insert) => insert.inside?.unitId === unit.id
+							)
+							.map((insert) => draw(insert, -1))
+					: [],
 				first: index === 0,
-				last: index === units.length - 1,
+				last: index === standing.length - 1,
 			};
-		});
+		};
+
+		return standing.map(draw);
 	});
+
+	/** An insert moved to another compartment, as the picker names it. */
+	protected placeInsert(id: string, value: string): void {
+		const [row, column] = value.split(':').map(Number);
+
+		if (row && column) {
+			this.store.placeInsert(id, row, column);
+		}
+	}
 }
 
 /**

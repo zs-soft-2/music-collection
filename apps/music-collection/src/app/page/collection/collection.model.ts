@@ -54,6 +54,11 @@ export interface ShelfCompartmentView extends ReleaseGroup {
 	 * nothing stands against the right wall, which is most compartments.
 	 */
 	rightFrom: number;
+	/**
+	 * The compartment holds inserts and nothing else: it is drawn with the
+	 * inserts standing in it, and takes no records of its own.
+	 */
+	hosting?: boolean;
 }
 
 /**
@@ -134,6 +139,8 @@ export interface ShelfUnitView {
 	compartments: ShelfCompartmentView[];
 	/** Records with no drawn compartment left to hold them. */
 	overflow: boolean;
+	/** The compartment this unit stands in, where it is an insert. */
+	inside: ShelfSpotRef | null;
 }
 
 /** A group split into render chunks, so hundreds of cards never build in one tick. */

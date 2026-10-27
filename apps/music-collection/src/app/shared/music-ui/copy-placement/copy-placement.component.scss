@@ -272,6 +272,15 @@ button {
 	}
 }
 
+/* Holds inserts: the copy goes into one of them, chosen as a shelf above. */
+.cell.is-hosting {
+	background-image: repeating-linear-gradient(
+		90deg,
+		rgb(255 255 255 / 10%) 0 2px,
+		transparent 2px 8px
+	);
+}
+
 .cell-count {
 	font-size: 0.75rem;
 	font-weight: 700;

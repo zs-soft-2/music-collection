@@ -455,3 +455,81 @@ describe('sortReleases by stars', () => {
 		]);
 	});
 });
+
+describe('arrangeShelves, with inserts', () => {
+	/** A one-record insert standing in a compartment of `unitId`. */
+	function insert(
+		id: string,
+		unitId: string,
+		row: number,
+		column: number,
+		columns = 1
+	): ShelfUnitLayout {
+		return { ...unit(id, 1, columns), inside: { unitId, row, column } };
+	}
+
+	it('fills a compartment holding inserts through them, in its place', () => {
+		const shelves = arrangeShelves(['a', 'b', 'c', 'd'].map(compartment), [
+			unit('one', 1, 3),
+			insert('tower', 'one', 1, 2, 2),
+		]);
+
+		expect(shelves.map((shelf) => shelf.key)).toEqual(['one', 'tower']);
+		expect(held(shelves[0].compartments)).toEqual(['a', 'd']);
+		expect(held(shelves[1].compartments)).toEqual(['b', 'c']);
+	});
+
+	it('takes no records into the compartment the inserts stand in', () => {
+		const [one, tower] = arrangeShelves(
+			[compartment('a')],
+			[unit('one', 1, 1), insert('tower', 'one', 1, 1)]
+		);
+
+		expect(one.compartments[0]).toMatchObject({
+			hosting: true,
+			items: [],
+		});
+		expect(tower.inside).toEqual({ unitId: 'one', row: 1, column: 1 });
+		expect(held(tower.compartments)).toEqual(['a']);
+	});
+
+	it('files a copy by hand into an insert by its id', () => {
+		const filed = release('x', 'Judas Priest', {
+			unitId: 'tower',
+			row: 1,
+			column: 1,
+			position: 1,
+		});
+		const units = [unit('one', 1, 2), insert('tower', 'one', 1, 1)];
+		const { placed, loose } = splitByPlacement([filed], units);
+		const [, tower] = arrangeShelves([], units, placed);
+
+		expect(loose).toEqual([]);
+		expect(held(tower.compartments)).toEqual(['x']);
+	});
+
+	it('hands back a copy filed into the compartment the inserts took', () => {
+		const filed = release('x', 'Judas Priest', {
+			unitId: 'one',
+			row: 1,
+			column: 1,
+			position: 1,
+		});
+		const { loose } = splitByPlacement(
+			[filed],
+			[unit('one', 1, 2), insert('tower', 'one', 1, 1)]
+		);
+
+		expect(loose.map((item) => item.id)).toEqual(['x']);
+	});
+
+	it('ignores an insert standing in a compartment the unit no longer has', () => {
+		const shelves = arrangeShelves(
+			[compartment('a')],
+			[unit('one', 1, 1), insert('tower', 'one', 3, 1)]
+		);
+
+		expect(shelves.map((shelf) => shelf.key)).toEqual(['one']);
+		expect(held(shelves[0].compartments)).toEqual(['a']);
+	});
+});

@@ -15,6 +15,7 @@ import {
 	CollectionItemPlacement,
 	ShelfSide,
 	ShelfUnitLayout,
+	insertsIn,
 	maxPositionIn,
 	nextPosition,
 	placementAt,
@@ -22,6 +23,8 @@ import {
 	placementSide,
 	spotKey,
 	unitSpots,
+	unitTitle,
+	withHeldInserts,
 } from '@music-collection/api';
 
 import { FormatBadgeComponent } from '../format-badge/format-badge.component';
@@ -36,6 +39,8 @@ interface SpotCell {
 	/** Copies the collector has filed here by hand. */
 	filed: number;
 	chosen: boolean;
+	/** Inserts stand in it; a copy is filed into one of them instead. */
+	hosting: boolean;
 }
 
 /**
@@ -192,6 +197,8 @@ export class CopyPlacementComponent {
 			counts.set(key, (counts.get(key) ?? 0) + 1);
 		}
 
+		const held = withHeldInserts(this.units());
+
 		return unitSpots(unit).map((cell) => ({
 			key: spotKey(cell.unitId, cell.row, cell.column),
 			row: cell.row,
@@ -200,8 +207,20 @@ export class CopyPlacementComponent {
 			filed: counts.get(spotKey(cell.unitId, cell.row, cell.column)) ?? 0,
 			chosen:
 				!!here && here.row === cell.row && here.column === cell.column,
+			hosting: insertsIn(held, cell).length > 0,
 		}));
 	});
+
+	/** Each unit as the picker names it; an insert after its shelf, too. */
+	protected readonly titles = computed(
+		() =>
+			new Map(
+				this.units().map((drawn) => [
+					drawn.id,
+					unitTitle(drawn, this.units(), 'Shelf'),
+				])
+			)
+	);
 
 	protected readonly canPlace = computed(
 		() => !!this.spot() && !!this.unit() && !this.busy()

@@ -239,6 +239,13 @@ export const DEFAULT_CUBBY: ShelfCubby = {
 	stance: 'across',
 };
 
+/** One compartment of a drawn unit, named by where it stands in it. */
+export interface ShelfHost {
+	unitId: string;
+	row: number;
+	column: number;
+}
+
 /**
  * One piece of shelving furniture: a grid of compartments, all the same size.
  * Rows and columns are what makes a unit stand up or lie down — 4 × 2 is a
@@ -255,6 +262,161 @@ export interface ShelfUnitLayout {
 	columns: number;
 	/** How big one of its compartments is; all of them are alike. */
 	cubby: ShelfCubby;
+	/**
+	 * The compartment of another unit this one stands in: an insert, such as
+	 * a CD tower put into a Kallax cubby. Missing on furniture that stands in
+	 * the room.
+	 *
+	 * An insert is a unit like any other — a copy is filed into it by its id,
+	 * which is why a placement needs no new word for it — and only the
+	 * compartment it stands in changes: that one holds the inserts and no
+	 * records of its own. Inserts go one deep, and they stand side by side
+	 * in the order the units are listed.
+	 */
+	inside?: ShelfHost;
+}
+
+/**
+ * What a unit is called where it is named on its own — a radio station, a
+ * copy's place. An insert is named after the unit it stands in as well,
+ * because "CD tower" says nothing until it is said which shelf it is in.
+ */
+export function unitTitle(
+	unit: ShelfUnitLayout,
+	units: readonly ShelfUnitLayout[],
+	unnamed: string
+): string {
+	const own = unit.name || unnamed;
+	const host = unit.inside
+		? units.find((drawn) => drawn.id === unit.inside?.unitId)
+		: undefined;
+
+	return host ? `${host.name || unnamed} › ${own}` : own;
+}
+
+/** The unit stands in another one's compartment rather than in the room. */
+export function isInsert(unit: ShelfUnitLayout): boolean {
+	return !!unit.inside;
+}
+
+/** The inserts standing in one compartment, left to right. */
+export function insertsIn(
+	units: readonly ShelfUnitLayout[],
+	host: ShelfHost
+): ShelfUnitLayout[] {
+	return units.filter(
+		(unit) =>
+			!!unit.inside &&
+			unit.inside.unitId === host.unitId &&
+			unit.inside.row === host.row &&
+			unit.inside.column === host.column
+	);
+}
+
+/**
+ * The inserts the drawn furniture can actually hold. An insert stands in a
+ * compartment of a unit that stands in the room — never in another insert,
+ * never in a tower, whose copies lie flat and leave no floor to stand
+ * anything on — and in a compartment that unit still has. Whatever the
+ * furniture no longer answers to is dropped: its copies go back to being
+ * filed by the shelf, the way a copy in a compartment that was drawn away
+ * does.
+ */
+export function withHeldInserts(
+	units: readonly ShelfUnitLayout[]
+): ShelfUnitLayout[] {
+	return units.filter((unit) => {
+		if (!unit.inside) {
+			return true;
+		}
+		const { unitId, row, column } = unit.inside;
+		const host = units.find((drawn) => drawn.id === unitId);
+
+		return (
+			!!host &&
+			!host.inside &&
+			host.cubby.stance === 'across' &&
+			row >= 1 &&
+			row <= host.rows &&
+			column >= 1 &&
+			column <= host.columns
+		);
+	});
+}
+
+/**
+ * Every compartment records are filed into, in the order they are filled:
+ * unit by unit as they stand in the room, top left to bottom right, and a
+ * compartment holding inserts read as the inserts' compartments in its
+ * place. A collector walking along the furniture passes them in this order.
+ */
+export function shelfWalk(
+	units: readonly ShelfUnitLayout[]
+): { unit: ShelfUnitLayout; row: number; column: number }[] {
+	const walk: { unit: ShelfUnitLayout; row: number; column: number }[] = [];
+	const visit = (unit: ShelfUnitLayout) => {
+		for (let row = 1; row <= unit.rows; row++) {
+			for (let column = 1; column <= unit.columns; column++) {
+				const inserts = insertsIn(units, {
+					unitId: unit.id,
+					row,
+					column,
+				});
+
+				if (inserts.length) {
+					inserts.forEach(visit);
+				} else {
+					walk.push({ unit, row, column });
+				}
+			}
+		}
+	};
+
+	units.filter((unit) => !unit.inside).forEach(visit);
+
+	return walk;
+}
+
+/**
+ * How much of a compartment's face a unit takes, in millimetres: how wide it
+ * stands and how tall. A shelf's compartments run their length across and
+ * their height up; a tower's the other way round.
+ */
+export function unitFootprint(unit: ShelfUnitLayout): {
+	width: number;
+	height: number;
+} {
+	const along = unit.cubby.length;
+	const across = unit.cubby.height * SHELF_HEIGHT_UNIT_CM * 10;
+	const cell =
+		unit.cubby.stance === 'down'
+			? { width: across, height: along }
+			: { width: along, height: across };
+
+	return {
+		width: cell.width * unit.columns,
+		height: cell.height * unit.rows,
+	};
+}
+
+/**
+ * The inserts of one compartment do not fit in it: side by side they are
+ * wider than it is long, or one of them is taller than it is high. Said, not
+ * prevented — the collector may well be drawing an insert before resizing
+ * the compartment to it — and never squeezed to fit.
+ */
+export function insertsOverflow(
+	host: ShelfUnitLayout,
+	inserts: readonly ShelfUnitLayout[]
+): boolean {
+	const prints = inserts.map(unitFootprint);
+	const width = prints.reduce((sum, print) => sum + print.width, 0);
+	const height = Math.max(0, ...prints.map((print) => print.height));
+
+	return (
+		width > host.cubby.length ||
+		height > host.cubby.height * SHELF_HEIGHT_UNIT_CM * 10
+	);
 }
 
 /** A compartment this tall has room for a copy of this medium standing up. */
@@ -359,7 +521,8 @@ export function placementInLayout(
 		return null;
 	}
 
-	const unit = units.find((drawn) => drawn.id === placement.unitId);
+	const held = withHeldInserts(units);
+	const unit = held.find((drawn) => drawn.id === placement.unitId);
 	const row = whole(placement.row);
 	const column = whole(placement.column);
 	const position = whole(placement.position);
@@ -370,7 +533,9 @@ export function placementInLayout(
 		position !== null &&
 		row <= unit.rows &&
 		column <= unit.columns &&
-		position <= maxPositionIn(unit)
+		position <= maxPositionIn(unit) &&
+		/* A compartment holding inserts holds nothing else. */
+		!insertsIn(held, { unitId: unit.id, row, column }).length
 		? placementAt(
 				{ unitId: unit.id, row, column },
 				placementSide(placement),
@@ -404,12 +569,23 @@ export function nextPosition(
 	return Math.min(maxPositionIn(unit), Math.max(0, ...taken) + 1);
 }
 
-/** Every compartment of a unit, top left to bottom right. */
-export function unitSpots(unit: ShelfUnitLayout): ShelfSpot[] {
+/**
+ * Every compartment of a unit a copy can be filed into, top left to bottom
+ * right. Given the rest of the furniture, the ones holding inserts are left
+ * out: the copy goes into the insert, which is a unit of its own.
+ */
+export function unitSpots(
+	unit: ShelfUnitLayout,
+	units: readonly ShelfUnitLayout[] = []
+): ShelfSpot[] {
 	const spots: ShelfSpot[] = [];
+	const held = withHeldInserts(units);
 
 	for (let row = 1; row <= unit.rows; row++) {
 		for (let column = 1; column <= unit.columns; column++) {
+			if (insertsIn(held, { unitId: unit.id, row, column }).length) {
+				continue;
+			}
 			spots.push({
 				unitId: unit.id,
 				row,

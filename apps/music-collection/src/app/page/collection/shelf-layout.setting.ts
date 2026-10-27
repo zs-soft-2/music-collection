@@ -5,12 +5,18 @@ import {
 	SHELF_MEDIA_SIZES,
 	SHELF_PX_PER_MM,
 	ShelfCubby,
+	ShelfHost,
 	ShelfMedia,
 	ShelfStance,
 	ShelfUnitLayout,
 	ShelfWidths,
 	cubbyHolds,
+	insertsIn,
+	insertsOverflow,
 	shelfMediaSize,
+	shelfWalk,
+	spotKey,
+	withHeldInserts,
 } from '@music-collection/api';
 
 import { UserSetting } from '../../data/user-settings';
@@ -22,6 +28,7 @@ import { UserSetting } from '../../data/user-settings';
  */
 export type {
 	ShelfCubby,
+	ShelfHost,
 	ShelfMedia,
 	ShelfStance,
 	ShelfUnitLayout,
@@ -34,6 +41,9 @@ export {
 	SHELF_MEDIA_SIZES,
 	SHELF_PX_PER_MM,
 	cubbyHolds,
+	insertsIn,
+	insertsOverflow,
+	withHeldInserts,
 };
 
 /**
@@ -59,7 +69,10 @@ export interface ShelfLayoutSettings {
 export const SHELF_LIMITS = {
 	minSide: 1,
 	maxSide: 12,
+	/** Units standing in the room; inserts are counted on their own. */
 	maxUnits: 12,
+	/** Inserts standing in one compartment, side by side. */
+	maxInserts: 6,
 	maxNameLength: 40,
 	/** Compartment height, in `SHELF_HEIGHT_UNIT_CM` units: 4 cm to 48 cm. */
 	minHeight: 1,
@@ -221,6 +234,7 @@ function toUnit(value: unknown, index: number): ShelfUnitLayout | null {
 
 	const id = data['id'];
 	const name = data['name'];
+	const inside = toHost(data['inside']);
 
 	return {
 		id: typeof id === 'string' && id ? id : `shelf-${index + 1}`,
@@ -231,7 +245,56 @@ function toUnit(value: unknown, index: number): ShelfUnitLayout | null {
 		rows,
 		columns,
 		cubby: toCubby(data['cubby']),
+		...(inside ? { inside } : {}),
 	};
+}
+
+/** The compartment an insert stands in, or null where it is not one. */
+function toHost(value: unknown): ShelfHost | null {
+	if (typeof value !== 'object' || value === null) {
+		return null;
+	}
+
+	const data = value as Record<string, unknown>;
+	const unitId = data['unitId'];
+	const row = side(data['row']);
+	const column = side(data['column']);
+
+	return typeof unitId === 'string' &&
+		unitId &&
+		row !== null &&
+		column !== null
+		? { unitId, row, column }
+		: null;
+}
+
+/**
+ * The furniture kept to what a room may hold: so many units standing in it,
+ * and so many inserts in any one compartment. The inserts are kept only
+ * where the furniture still has the compartment they stand in.
+ */
+export function heldUnits(
+	units: readonly ShelfUnitLayout[]
+): ShelfUnitLayout[] {
+	const standing = units
+		.filter((unit) => !unit.inside)
+		.slice(0, SHELF_LIMITS.maxUnits);
+	const kept = new Set(standing.map((unit) => unit.id));
+	const perCubby = new Map<string, number>();
+
+	return withHeldInserts(
+		units.filter((unit) => {
+			if (!unit.inside) {
+				return kept.has(unit.id);
+			}
+			const { unitId, row, column } = unit.inside;
+			const key = spotKey(unitId, row, column);
+			const count = (perCubby.get(key) ?? 0) + 1;
+
+			perCubby.set(key, count);
+			return count <= SHELF_LIMITS.maxInserts;
+		})
+	);
 }
 
 /** How many copies of each medium the collector owns. */
@@ -247,11 +310,16 @@ export interface ShelfRoom {
 	/** Copies with nowhere to stand. */
 	short: number;
 	/**
-	 * How many copies land in each compartment, in the order the units stand
-	 * in the room. It is what lets the little drawing in the settings fill up
-	 * as the collection does.
+	 * How many copies land in each compartment, in the order the shelf walks
+	 * them (`shelfWalk`). It is what lets the little drawing in the settings
+	 * fill up as the collection does.
 	 */
 	filled: number[];
+	/**
+	 * The same counts by compartment (`spotKey`). A compartment holding
+	 * inserts counts what its inserts hold.
+	 */
+	filledAt: ReadonlyMap<string, number>;
 }
 
 /**
@@ -266,9 +334,8 @@ export function shelfCapacity(
 	mix: ShelfMediaMix,
 	widths: ShelfWidths = {}
 ): ShelfRoom {
-	const compartments = units.flatMap((unit) =>
-		Array.from({ length: unit.rows * unit.columns }, () => unit.cubby)
-	);
+	const walk = shelfWalk(units);
+	const compartments = walk.map(({ unit }) => unit.cubby);
 	const filled = compartments.map(() => 0);
 	/* Shortest first, so the fussiest compartment is offered every medium. */
 	const room = compartments
@@ -303,12 +370,26 @@ export function shelfCapacity(
 		short += left;
 	}
 
+	const filledAt = new Map<string, number>();
+	const count = (key: string, copies: number) =>
+		filledAt.set(key, (filledAt.get(key) ?? 0) + copies);
+
+	walk.forEach(({ unit, row, column }, at) => {
+		count(spotKey(unit.id, row, column), filled[at]);
+		if (unit.inside) {
+			const { unitId, row: hostRow, column: hostColumn } = unit.inside;
+
+			count(spotKey(unitId, hostRow, hostColumn), filled[at]);
+		}
+	});
+
 	return {
 		compartments: compartments.length,
 		length: compartments.reduce((sum, cubby) => sum + cubby.length, 0),
 		holds,
 		short,
 		filled,
+		filledAt,
 	};
 }
 
@@ -317,19 +398,21 @@ export const SHELF_LAYOUT_SETTING: UserSetting<ShelfLayoutSettings> = {
 	featureKey: 'shelf-layout-setting',
 	storageKey: 'mc.collection.shelves',
 	toValue: (data) => ({
-		units: (Array.isArray(data['units']) ? data['units'] : [])
-			.map(toUnit)
-			.filter((unit): unit is ShelfUnitLayout => unit !== null)
-			.slice(0, SHELF_LIMITS.maxUnits),
+		units: heldUnits(
+			(Array.isArray(data['units']) ? data['units'] : [])
+				.map(toUnit)
+				.filter((unit): unit is ShelfUnitLayout => unit !== null)
+		),
 		widths: toWidths(data['widths']),
 	}),
 	toDocument: ({ units, widths }) => ({
-		units: units.map(({ id, name, rows, columns, cubby }) => ({
+		units: units.map(({ id, name, rows, columns, cubby, inside }) => ({
 			id,
 			name,
 			rows,
 			columns,
 			cubby: { ...cubby },
+			...(inside ? { inside: { ...inside } } : {}),
 		})),
 		widths: { ...widths },
 	}),

@@ -11,6 +11,7 @@ import {
 	untracked,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { unitTitle } from '@music-collection/api';
 import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
@@ -186,10 +187,10 @@ export class AlbumPageComponent {
 
 	/** What the collector called the unit a copy stands in. */
 	protected shelfName(unitId: string): string {
-		return (
-			this.store.shelfUnits().find((unit) => unit.id === unitId)?.name ||
-			'Shelf'
-		);
+		const units = this.store.shelfUnits();
+		const unit = units.find((drawn) => drawn.id === unitId);
+
+		return unit ? unitTitle(unit, units, 'Shelf') : 'Shelf';
 	}
 
 	protected isOpen(section: AlbumSection): boolean {

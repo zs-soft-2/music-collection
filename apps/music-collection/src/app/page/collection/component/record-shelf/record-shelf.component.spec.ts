@@ -25,6 +25,7 @@ function shelf(unit: Partial<ShelfUnitView>): ShelfUnitView {
 		cubby: DEFAULT_CUBBY,
 		compartments: [],
 		overflow: false,
+		inside: null,
 		...unit,
 	};
 }
@@ -131,6 +132,52 @@ describe('RecordShelfComponent', () => {
 		});
 
 		fixture = TestBed.createComponent(RecordShelfComponent);
+	});
+
+	it('draws an insert inside the compartment it stands in', () => {
+		fixture.componentRef.setInput('placeable', true);
+		const host = render([
+			shelf({
+				name: 'Kallax',
+				columns: 1,
+				compartments: [
+					{
+						...empty('one#1:1'),
+						spot: { unitId: 'one', row: 1, column: 1 },
+						hosting: true,
+					},
+				],
+			}),
+			shelf({
+				key: 'tower',
+				name: 'CD tower',
+				columns: 1,
+				cubby: { height: 3, length: 320, stance: 'down' },
+				compartments: [
+					{
+						...filled('tower#1:1', ['a', 'b']),
+						spot: { unitId: 'tower', row: 1, column: 1 },
+					},
+				],
+				inside: { unitId: 'one', row: 1, column: 1 },
+			}),
+		]);
+
+		/* One unit in the room; the tower stands in its compartment. */
+		expect(host.querySelectorAll('.floor > .unit')).toHaveLength(1);
+		const insert = host.querySelector('.compartment.is-host .insert');
+
+		expect(insert?.getAttribute('aria-label')).toBe('CD tower');
+		expect(insert?.classList).toContain('is-down');
+		expect(
+			insert?.querySelector('.compartment')?.getAttribute('data-unit')
+		).toBe('tower');
+		/* Nothing is filed into the compartment the tower takes. */
+		expect(
+			host
+				.querySelector('.compartment.is-host')
+				?.hasAttribute('data-unit')
+		).toBe(false);
 	});
 
 	it('draws a unit with every compartment it has, filled or not', () => {

@@ -1,4 +1,9 @@
-import { CollectionItemPlacement } from '@music-collection/api';
+import {
+	CollectionItemPlacement,
+	insertsIn,
+	shelfWalk,
+	withHeldInserts,
+} from '@music-collection/api';
 import { CatalogLabeller, Translator } from '@music-collection/core/i18n';
 
 import { LOVED_FROM_STARS } from '../../data/rating';
@@ -502,6 +507,7 @@ export function arrangeShelves(
 						cubby: DEFAULT_CUBBY,
 						compartments: wall.map(loose),
 						overflow: false,
+						inside: null,
 					},
 				]
 			: [];
@@ -515,28 +521,28 @@ export function arrangeShelves(
 		byHand.set(key, [...(byHand.get(key) ?? []), entry]);
 	}
 
-	/* The compartments the shelf may fill, in the order it fills them. */
-	const open: { unit: ShelfUnitLayout; row: number; column: number }[] = [];
+	const held = withHeldInserts(units);
 
-	for (const unit of units) {
-		for (let row = 1; row <= unit.rows; row++) {
-			for (let column = 1; column <= unit.columns; column++) {
-				if (!byHand.has(spotKey(unit.id, row, column))) {
-					open.push({ unit, row, column });
-				}
-			}
-		}
-	}
+	/*
+	 * The compartments the shelf may fill, in the order it fills them: a
+	 * compartment holding inserts is filled through them, in its own place.
+	 */
+	const open = shelfWalk(held).filter(
+		({ unit, row, column }) => !byHand.has(spotKey(unit.id, row, column))
+	);
 
 	const packed = packShelf(
 		groups,
 		open.map(({ unit }) => unit.cubby),
 		widths
 	);
-	const shelves: ShelfUnitView[] = [];
-	let filed = 0;
-
-	for (const unit of units) {
+	const packedAt = new Map(
+		open.map(({ unit, row, column }, at) => [
+			spotKey(unit.id, row, column),
+			packed[at],
+		])
+	);
+	const draw = (unit: ShelfUnitLayout): ShelfUnitView => {
 		const cells: ShelfCompartmentView[] = [];
 
 		for (let row = 1; row <= unit.rows; row++) {
@@ -545,12 +551,24 @@ export function arrangeShelves(
 				const spot = { unitId: unit.id, row, column };
 				const hand = byHand.get(key);
 
+				if (insertsIn(held, spot).length) {
+					cells.push({
+						key,
+						label: '',
+						items: [],
+						spot,
+						rightFrom: 0,
+						hosting: true,
+					});
+					continue;
+				}
+
 				if (hand?.length) {
 					cells.push({ ...handFiled(key, hand), spot });
 					continue;
 				}
 
-				const group = packed[filed++];
+				const group = packedAt.get(key);
 
 				/* The shelf fills a compartment from the left wall, always. */
 				cells.push(
@@ -561,15 +579,23 @@ export function arrangeShelves(
 			}
 		}
 
-		shelves.push({
+		return {
 			key: unit.id,
 			name: unit.name,
 			columns: unit.columns,
 			cubby: unit.cubby,
 			compartments: cells,
 			overflow: false,
-		});
-	}
+			inside: unit.inside ?? null,
+		};
+	};
+
+	/* Each unit standing in the room, followed by what stands in it. */
+	const standing = held.filter((unit) => !unit.inside);
+	const shelves = standing.flatMap((unit) => [
+		draw(unit),
+		...held.filter((insert) => insert.inside?.unitId === unit.id).map(draw),
+	]);
 
 	const spilled = packed
 		.slice(open.length)
@@ -579,11 +605,12 @@ export function arrangeShelves(
 		shelves.push({
 			key: 'overflow',
 			name: '',
-			columns: units[units.length - 1].columns,
+			columns: standing[standing.length - 1]?.columns ?? 1,
 			/* Off the shelf is not furniture; it is drawn as plain cubbies. */
 			cubby: DEFAULT_CUBBY,
 			compartments: spilled.map(loose),
 			overflow: true,
+			inside: null,
 		});
 	}
 

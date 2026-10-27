@@ -7,6 +7,8 @@ import {
 	clampCubbyHeight,
 	clampCubbyLength,
 	clampShelfSide,
+	heldUnits,
+	insertsOverflow,
 	shelfCapacity,
 } from './shelf-layout.setting';
 
@@ -211,5 +213,75 @@ describe('shelfCapacity', () => {
 		expect(shelfCapacity([unit('a', 1, 3)], { vinyl: 70 }).filled).toEqual([
 			55, 15, 0,
 		]);
+	});
+});
+
+describe('inserts', () => {
+	const tower: ShelfCubby = { height: 3, length: 320, stance: 'down' };
+	const kallax = unit('k', 1, 2);
+	const insert = (
+		id: string,
+		column: number,
+		columns = 2
+	): ShelfUnitLayout => ({
+		...unit(id, 1, columns, tower),
+		inside: { unitId: 'k', row: 1, column },
+	});
+
+	it('reads and writes the compartment an insert stands in', () => {
+		const value = SHELF_LAYOUT_SETTING.toValue(
+			SHELF_LAYOUT_SETTING.toDocument({
+				units: [kallax, insert('t', 2)],
+				widths: {},
+			})
+		);
+
+		expect(value.units[1].inside).toEqual({
+			unitId: 'k',
+			row: 1,
+			column: 2,
+		});
+		expect(value.units[0]).not.toHaveProperty('inside');
+	});
+
+	it('drops an insert whose compartment is gone, or that stands in one', () => {
+		const nested: ShelfUnitLayout = {
+			...unit('n', 1, 1, tower),
+			inside: { unitId: 't', row: 1, column: 1 },
+		};
+
+		expect(
+			heldUnits([kallax, insert('t', 1), insert('far', 3), nested]).map(
+				(each) => each.id
+			)
+		).toEqual(['k', 't']);
+	});
+
+	it('counts the units standing in the room, not the inserts', () => {
+		const room = Array.from({ length: SHELF_LIMITS.maxUnits }, (_, at) =>
+			unit(`u${at}`, 1, 1)
+		);
+		const inserts = Array.from({ length: 3 }, (_, at) => ({
+			...insert(`t${at}`, 1, 1),
+			inside: { unitId: 'u0', row: 1, column: 1 },
+		}));
+
+		expect(heldUnits([...room, ...inserts])).toHaveLength(
+			SHELF_LIMITS.maxUnits + 3
+		);
+	});
+
+	it('fills the inserts in place of the compartment they stand in', () => {
+		const room = shelfCapacity([kallax, insert('t', 1)], { cd: 100 });
+
+		/* Two towers of 32 cm, ten-millimetre cases: 32 each. Plus 33. */
+		expect(room.holds).toBe(32 + 32 + 33);
+		expect(room.filledAt.get('k#1:1')).toBe(64);
+		expect(room.filledAt.get('t#1:2')).toBe(32);
+	});
+
+	it('says when the inserts of a compartment do not fit in it', () => {
+		expect(insertsOverflow(kallax, [insert('t', 1)])).toBe(false);
+		expect(insertsOverflow(kallax, [insert('t', 1, 3)])).toBe(true);
 	});
 });

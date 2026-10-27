@@ -27,6 +27,7 @@ import {
 	placementInLayout,
 	placementSide,
 	unitSpots,
+	unitTitle,
 } from '@music-collection/api';
 
 /** The chosen compartment, as the select carries it. */
@@ -205,11 +206,11 @@ export class CollectionItemFormService {
 		return {
 			units: this.units.map((drawn, index) => ({
 				value: drawn.id,
-				label: drawn.name || `Shelf ${index + 1}`,
+				label: unitTitle(drawn, this.units, `Shelf ${index + 1}`),
 			})),
 			unitId: this.unitId,
 			spots: unit
-				? unitSpots(unit).map((spot) => ({
+				? unitSpots(unit, this.units).map((spot) => ({
 						value: spotValue(spot.row, spot.column),
 						label: spot.label,
 					}))
