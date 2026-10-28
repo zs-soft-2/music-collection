@@ -50,7 +50,11 @@ import { DomainWishlistItemModule } from '@music-collection/domain/wishlist-item
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
 
-import { AnalyticsService, ShelfLayoutService } from '@music-collection/api';
+import {
+	AnalyticsService,
+	CatalogSessionService,
+	ShelfLayoutService,
+} from '@music-collection/api';
 
 import { environment } from '../environments/environment';
 import { routes } from './app-routing';
@@ -220,6 +224,9 @@ export const appConfig: ApplicationConfig = {
 		// page asks for is already downloading by the time that page is
 		// drawn, and it has to be downloading the right genres.
 		provideEnvironmentInitializer(() => inject(GenreScopeSyncService)),
+		// Signing in or out changes the scope as well, and leaves the local
+		// catalog holding the last one's records until it is thrown away.
+		provideEnvironmentInitializer(() => inject(CatalogSessionService)),
 		// A new page starts at its top rather than wherever the last one was
 		// left. It follows every navigation, so it starts with the app.
 		provideEnvironmentInitializer(() => inject(PageScrollService)),

@@ -1,6 +1,12 @@
-import { Injectable, effect, inject } from '@angular/core';
+import { of, switchMap } from 'rxjs';
+
+import { Injectable, type Signal, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CatalogScopeService, genreScopeKey } from '@music-collection/api';
+import {
+	AuthenticatedUserService,
+	CatalogScopeService,
+	genreScopeKey,
+} from '@music-collection/api';
 
 import { UserSettingsEffect } from '../user-settings';
 
@@ -18,11 +24,17 @@ import { GENRE_SCOPE_SETTING, GenreScopeSettings } from './genre-scope.model';
  * It will not invent a choice: an account with no scope means the collector
  * has not narrowed anything, and writing this browser's empty scope back
  * would be indistinguishable from them choosing the whole catalog.
+ *
+ * Only an account is listened to. Signed out there is no choice to carry —
+ * a guest gets the showcase — and the genres this browser kept for its
+ * guest must not become the next account's.
  */
 @Injectable({ providedIn: 'root' })
 export class GenreScopeSyncService {
 	private readonly settings = inject(UserSettingsEffect);
 	private readonly scope = inject(CatalogScopeService);
+	private readonly authenticatedUser = inject(AuthenticatedUserService);
+	private readonly answeredState = signal(false);
 
 	/**
 	 * What the account holds, so applying it does not save it straight back.
@@ -31,10 +43,21 @@ export class GenreScopeSyncService {
 	 */
 	private stored: GenreScopeSettings | null = null;
 
+	/**
+	 * Whether the signed-in account has said what it follows, so that an
+	 * empty scope is the collector's and not merely the account still
+	 * loading — what asking them to choose waits for.
+	 */
+	public readonly answered: Signal<boolean> = this.answeredState.asReadonly();
+
 	public constructor() {
-		this.settings
-			.value$(GENRE_SCOPE_SETTING)
-			.pipe(takeUntilDestroyed())
+		this.authenticatedUser.user$
+			.pipe(
+				switchMap((user) =>
+					user ? this.settings.value$(GENRE_SCOPE_SETTING) : of(null)
+				),
+				takeUntilDestroyed()
+			)
 			.subscribe((settings) => this.apply(settings));
 
 		effect(() => {
@@ -55,8 +78,13 @@ export class GenreScopeSyncService {
 		});
 	}
 
-	private apply(settings: GenreScopeSettings): void {
+	private apply(settings: GenreScopeSettings | null): void {
 		this.stored = settings;
+		this.answeredState.set(!!settings);
+
+		if (!settings) {
+			return;
+		}
 
 		// An account that has never said leaves this browser's scope alone;
 		// an account that says "all of it" is a choice like any other.

@@ -2985,13 +2985,17 @@
 				"bolt": "Blitz"
 			}
 		},
+		"genreChoice": {
+			"title": "Was sammelst du?",
+			"pitch": "Wähle bis zu {{limit}} Genres. Deine Seiten zeigen nur deren Platten, Künstler und Kollektionen, und dein Browser lädt nur diese. Im Profil kannst du es jederzeit ändern.",
+			"start": "Los geht's"
+		},
 		"profileGenres": {
 			"legend": "Bis zu {{limit}} Genres",
 			"all": "Alle Genres",
 			"following": "Stöbern, Suche und Radio bleiben in den gewählten Genres.",
 			"everything": "Der gesamte Katalog wird heruntergeladen, mit allen Genres.",
-			"showcase": "Eine Auswahl aus allen Genres",
-			"showcaseNote": "Aus jedem Genre ein paar Kollektionen mit ihren Platten, jede Woche neu. Wähle ein Genre, um seinen ganzen Katalog zu laden.",
+			"chooseNote": "Wähle mindestens ein Genre: Deine Seiten zeigen nur, was du verfolgst.",
 			"rebuild": "Die App baut den lokalen Katalog neu auf und lädt die Seite neu.",
 			"apply": "Übernehmen",
 			"applying": "Katalog wird neu aufgebaut…"

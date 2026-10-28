@@ -27,19 +27,17 @@ import { ProfilePageStore } from '../../profile-page.store';
 					{{ t('ui.profileGenres.legend', { limit: limit }) }}
 				</legend>
 
-				<button
-					type="button"
-					[class.selected]="!store.genreDraft().length"
-					[attr.aria-pressed]="!store.genreDraft().length"
-					(click)="store.clearGenreDraft()"
-				>
-					<i class="pi pi-globe" aria-hidden="true"></i>
-					@if (store.genreScopeWhole()) {
+				@if (store.genreScopeWhole()) {
+					<button
+						type="button"
+						[class.selected]="!store.genreDraft().length"
+						[attr.aria-pressed]="!store.genreDraft().length"
+						(click)="store.clearGenreDraft()"
+					>
+						<i class="pi pi-globe" aria-hidden="true"></i>
 						{{ t('ui.profileGenres.all') }}
-					} @else {
-						{{ t('ui.profileGenres.showcase') }}
-					}
-				</button>
+					</button>
+				}
 
 				@for (genre of store.genres(); track genre.slug) {
 					<button
@@ -67,11 +65,11 @@ import { ProfilePageStore } from '../../profile-page.store';
 				} @else if (store.genreScopeWhole()) {
 					{{ t('ui.profileGenres.everything') }}
 				} @else {
-					{{ t('ui.profileGenres.showcaseNote') }}
+					{{ t('ui.profileGenres.chooseNote') }}
 				}
 			</p>
 
-			@if (store.genreScopeChanged()) {
+			@if (store.genreScopeApplicable()) {
 				<div class="apply">
 					<p class="warning">
 						<i

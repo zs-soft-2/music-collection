@@ -2985,13 +2985,17 @@
 				"bolt": "Villám"
 			}
 		},
+		"genreChoice": {
+			"title": "Mit gyűjtesz?",
+			"pitch": "Válassz legfeljebb {{limit}} műfajt. A lapjaidon csak ezek lemezei, előadói és collectionjei jelennek meg, és a böngésződ is csak ezeket tölti le. A profilodban bármikor átállíthatod.",
+			"start": "Kezdjük"
+		},
 		"profileGenres": {
 			"legend": "Legfeljebb {{limit}} műfaj",
 			"all": "Minden műfaj",
 			"following": "A böngészés, a keresés és a rádió a választott műfajokat járja.",
 			"everything": "A teljes katalógus letöltődik, minden műfajjal.",
-			"showcase": "Válogatás minden műfajból",
-			"showcaseNote": "Minden műfajból néhány kollekció a lemezeivel, hetente cserélődik. Válassz műfajt, és a teljes katalógusa letöltődik.",
+			"chooseNote": "Válassz legalább egy műfajt: a lapjaidon csak az jelenik meg, amit követsz.",
 			"rebuild": "Az alkalmazás újraépíti a helyi katalógust, és újratölti az oldalt.",
 			"apply": "Alkalmazás",
 			"applying": "Katalógus újraépítése…"

@@ -2985,13 +2985,17 @@
 				"bolt": "Lightning"
 			}
 		},
+		"genreChoice": {
+			"title": "What do you collect?",
+			"pitch": "Pick up to {{limit}} genres. Your pages show only their records, artists and collections, and your browser downloads only those. You can change it any time on your profile.",
+			"start": "Let's start"
+		},
 		"profileGenres": {
 			"legend": "Up to {{limit}} genres",
 			"all": "Every genre",
 			"following": "Browsing, search and the radio stay inside the genres you follow.",
 			"everything": "The whole catalog is downloaded, every genre of it.",
-			"showcase": "A taste of every genre",
-			"showcaseNote": "A few collections from every genre with their records, changing every week. Pick a genre to download the whole of it.",
+			"chooseNote": "Pick at least one genre: your pages show only what you follow.",
 			"rebuild": "The app rebuilds its local catalog and reloads the page.",
 			"apply": "Apply",
 			"applying": "Rebuilding the catalog…"

@@ -326,6 +326,25 @@ function emptyCrowd(): CollectionCrowd {
 }
 
 /**
+ * The collectors who stand on a collection this catalog can open — finished
+ * it, or say they are after it.
+ *
+ * What a collector following genres is introduced to: somebody whose every
+ * badge belongs to another genre is not a neighbour of theirs, and their
+ * card would lead to collections this browser was never given.
+ */
+export function withinCollections(
+	entries: readonly WallEntry[],
+	slugs: ReadonlySet<string>
+): WallEntry[] {
+	return entries.filter(
+		(entry) =>
+			entry.badges.some((badge) => slugs.has(badge.slug)) ||
+			entry.collecting.some((pursuit) => slugs.has(pursuit.slug))
+	);
+}
+
+/**
  * Who stands on each collection, by slug: whoever finished it, and whoever
  * says they are after it.
  *

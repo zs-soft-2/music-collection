@@ -6,6 +6,7 @@ import { NextAlbumsComponent } from '../collections/component/next-albums/next-a
 import { CollectionBigCardComponent } from './component/collection-big-card/collection-big-card.component';
 import { CollectionTileComponent } from './component/collection-tile/collection-tile.component';
 import { CollectorCardComponent } from './component/collector-card/collector-card.component';
+import { GenreChoiceComponent } from './component/genre-choice/genre-choice.component';
 import { HomeSearchComponent } from './component/home-search/home-search.component';
 import { HomePageStore } from './home-page.store';
 import { HOME_COLLECTOR_CARDS } from './home.model';
@@ -20,9 +21,10 @@ import { HOME_COLLECTOR_CARDS } from './home.model';
  * it by style, decade and act — lives on the discover page, linked from
  * the foot of this one.
  *
- * Everything the catalog holds is shown to a guest as well; what needs a
- * collection behind it falls back to the catalog, and the sign-in prompt
- * says what an account adds.
+ * A guest is shown the showcase; what needs a collection behind it falls
+ * back to the catalog, and the sign-in prompt says what an account adds. A
+ * collector is shown the genres they follow, and one following none is asked
+ * to choose before anything else.
  */
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,6 +39,7 @@ import { HOME_COLLECTOR_CARDS } from './home.model';
 		CollectionBigCardComponent,
 		CollectionTileComponent,
 		CollectorCardComponent,
+		GenreChoiceComponent,
 		NextAlbumsComponent,
 	],
 })
