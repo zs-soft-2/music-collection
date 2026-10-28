@@ -85,6 +85,13 @@ App Check), OpenTofu/Terraform infrastruktúra.
   galériában marad. A promptot a szerver építi a tárolt adatokból.
 - **Gyűjtői állás** — a gyűjtő látja, hol tart az egyes collectionökön, és
   kiválaszthatja, melyekkel foglalkozik; a vendég csak azt kapja, ami neki szól.
+- **Műfaj-hatókör** — a vendég (be nem jelentkezett látogató) a
+  vendég-kirakatot kapja: műfajonként néhány collection, a hozzájuk tartozó
+  lemezekkel és előadókkal. Bejelentkezve a kirakat eltűnik: a gyűjtő a
+  profilban választott (legfeljebb két) műfaj katalógusát tölti le, és a
+  képernyőn is csak az jelenik meg — más műfaj nem zajong. Aki még nem
+  választott, a műfaj-választóval kezd. Az admin műfaj nélkül a teljes
+  katalógust látja ([#63](https://github.com/zs-soft-2/music-collection/issues/63)).
 
 ### Lejátszás
 
@@ -149,7 +156,12 @@ App Check), OpenTofu/Terraform infrastruktúra.
   `Referrer-Policy`, `nosniff` (lásd lentebb).
 - **Verziózott kliens-cache és katalógus-bundle-ök** — a katalógus Firestore
   bundle-ökből, Cloud Storage-ból; egy Firestore-figyelés több olvasót szolgál
-  ki, hogy ne kérdezzünk kétszer.
+  ki, hogy ne kérdezzünk kétszer. Hogy melyik bundle jön, a hatókör dönti el:
+  vendégnek a vendég-kirakat (`bundles/guest-core` + `guest-rest`),
+  bejelentkezett gyűjtőnek a választott műfajok bundle-je
+  (`bundles/genre/{slug}`), adminnak műfaj nélkül a teljes katalógus. A
+  hatókör váltásakor (be- és kijelentkezés, műfajcsere) a helyi cache ürül,
+  hogy az előző hatókör dokumentumai ne válaszoljanak tovább.
 - **Globális hibakezelés** hiba-toasttal, és hibás lekérdezésnél sem néma
   megakadás.
 - **Analitika csak hozzájárulás után** — a mérés addig nem indul, amíg a
