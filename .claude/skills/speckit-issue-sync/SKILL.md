@@ -29,6 +29,9 @@ body. The only GitHub write is the optional summary comment (`--comment`).
 - `.specify/kit/stack-*.md` — stack rules and verification procedures, if present.
 - `.specify/kit/docs-first.md` — present only with the `docs-first` profile; it adds the docs step.
 
+Working files (the issue's images, drafts) go to `.specify/kit-ui/tmp/`, never `/tmp` or the project root;
+the dashboard empties it before a new run, so do not delete anything there yourself.
+
 ## Outline
 
 1. **Parse the input**:
@@ -44,6 +47,17 @@ body. The only GitHub write is the optional summary comment (`--comment`).
    ```
 
    On failure report the exact error and stop; never guess the content. A `CLOSED` issue: ask first.
+
+   **Images**: if the body or a comment carries images (`![…](…)`, `<img src=…>`, a
+   `github.com/user-attachments/…` link), download them with the kit and Read the printed files:
+
+   ```bash
+   npx zs-kit attachments <number> [--repo <owner/repo>]
+   ```
+
+   Never fetch them by hand (`curl`, `/tmp`, a file in the project root): a headless run is refused
+   outside the project whatever the rules say. A screenshot is part of the issue: describe what it
+   shows in the report. If the download fails, say so and go on with the text.
 
 3. **Pin the code base**: record `git branch --show-current` and `git rev-parse --short HEAD`.
    New work starts from the **local `dev`**; if HEAD is elsewhere, say so in the report
