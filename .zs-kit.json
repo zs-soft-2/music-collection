@@ -1,0 +1,10 @@
+{
+  "profiles": [
+    "angular-firebase"
+  ],
+  "vars": {
+    "BASE_BRANCH": "dev",
+    "FIREBASE_PROJECT": "music-collection-16676"
+  },
+  "exclude": []
+}

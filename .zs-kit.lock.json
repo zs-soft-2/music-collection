@@ -1,0 +1,11 @@
+{
+  "files": {
+    ".claude/skills/commit/SKILL.md": "68e8acc8e1c979d5e7b94086e14afbe62be2768581594236ffd6fff065b1f829",
+    ".claude/skills/docs-code-check/SKILL.md": "923129f4ea79754c2dd704a26f2cdb3b15cf5f2d3fb1472464730965cba3e663",
+    ".claude/skills/speckit-from-issue/SKILL.md": "47addc49147e3be4094052167ac14cd12e07d50e5118e02430aad319a9e93f7e",
+    ".claude/skills/speckit-issue-analyze/SKILL.md": "baa8de01a73c22b2aa44202e4c67a41640ce6c1d264b7b0cb3a3dc6f2ffbc9a0",
+    ".claude/skills/speckit-issue-sync/SKILL.md": "eb134628582ee2be0e259fcafe5fc364a86ba5e0db22cc918a71b87b0301d9f3",
+    ".claude/skills/speckit-issue-verify/SKILL.md": "4104b59a89b126f7b6d75d55e20bcc41108ef0d7ca690c1fee6a81945772f7fb",
+    ".specify/kit/stack-angular-firebase.md": "05111832c14c3f8b11287429ab2969a3295abbe1afa0a6cddc813af5aa70e034"
+  }
+}
