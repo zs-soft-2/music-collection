@@ -92,7 +92,7 @@
 		"@types/object-hash": "^2.2.1",
 		"@types/topojson-client": "^3.1.5",
 		"@typescript-eslint/utils": "^8.33.1",
-		"@zssz-soft/zs-kit": "~2.0.0",
+		"@zssz-soft/zs-kit": "~2.0.1",
 		"angular-eslint": "22.5.0",
 		"cypress": "15.21.1",
 		"eslint": "^9.28.0",
