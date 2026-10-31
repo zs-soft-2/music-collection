@@ -1,6 +1,6 @@
 ---
 name: speckit-from-issue
-description: Start a new SpecKit feature from a GitHub issue — fetches the issue with gh, syncs it with the code (/speckit-issue-sync, approved acceptance criteria), and runs the speckit-specify flow with the issue as the feature description; the issue number names the branch and the spec directory. Usage: /speckit-from-issue <issue-number|#number|issue-url> [--comment] [extra notes]
+description: Start a new SpecKit feature from a GitHub issue — fetches the issue with gh, syncs it with the code (/speckit-issue-sync, approved acceptance criteria), and runs the speckit-specify flow with the issue as the feature description; the issue number names the branch and the spec directory. Usage: /speckit-from-issue [<issue-number|#number|issue-url>] [--comment] [extra notes] — without a number it lists the open tickets by type to choose from
 ---
 
 ## User Input
@@ -12,10 +12,27 @@ $ARGUMENTS
 ## Outline
 
 1. **Parse the input**:
-   - The issue reference is required. Accept `308`, `#308`, or a full URL `https://github.com/<owner>/<repo>/issues/308`. Extract the issue number (and `owner/repo` if a URL was given).
+   - The issue reference is normally given. Accept `308`, `#308`, or a full URL `https://github.com/<owner>/<repo>/issues/308`. Extract the issue number (and `owner/repo` if a URL was given).
    - `--comment` (optional flag): post a comment on the issue after the spec is created (step 8). Without the flag, do NOT write anything to GitHub.
    - Any remaining text is **extra notes** from the user. They take precedence over the issue content when the two conflict.
-   - If no issue reference is present: ERROR "No GitHub issue provided. Usage: /speckit-from-issue <number|url> [--comment] [notes]" and stop.
+   - If no issue reference is present, let the user choose the ticket (never guess one):
+     1. Ask the **type** with AskUserQuestion: Feature, Task, Bug (Other covers the rest).
+     2. List the open tickets of that type, newest first:
+
+        ```bash
+        npx zs-kit issues --type <feature|task|bug|other>
+        ```
+
+        It classifies by the GitHub issue type, else by the labels (`issueTypes` in `.zs-kit.json`), and marks a
+        ticket that already has a `specs/<n>-…` directory. If the command fails, show its error and stop.
+     3. Show the list numbered (`#<n> <title> [labels]`, plus `→ specs/<dir>` when it exists) and ask which ticket to
+        take: a short list fits AskUserQuestion (up to 4 options), a longer one is asked as text ("answer with the
+        ticket number"). With no open ticket of that type, say so and offer the other types.
+     4. Go on with the chosen number as if it had been given.
+
+     In a headless run (`claude -p`, e.g. the zs-kit dashboard) AskUserQuestion is not available: print the type
+     question or the list, end with "Answer with a ticket number (or a type) to continue", and stop until the answer
+     comes back in the same session.
 
 2. **Fetch the issue**:
 

@@ -2,10 +2,10 @@
   "files": {
     ".claude/skills/commit/SKILL.md": "68e8acc8e1c979d5e7b94086e14afbe62be2768581594236ffd6fff065b1f829",
     ".claude/skills/docs-code-check/SKILL.md": "923129f4ea79754c2dd704a26f2cdb3b15cf5f2d3fb1472464730965cba3e663",
-    ".claude/skills/speckit-from-issue/SKILL.md": "47addc49147e3be4094052167ac14cd12e07d50e5118e02430aad319a9e93f7e",
-    ".claude/skills/speckit-issue-analyze/SKILL.md": "baa8de01a73c22b2aa44202e4c67a41640ce6c1d264b7b0cb3a3dc6f2ffbc9a0",
-    ".claude/skills/speckit-issue-sync/SKILL.md": "eb134628582ee2be0e259fcafe5fc364a86ba5e0db22cc918a71b87b0301d9f3",
-    ".claude/skills/speckit-issue-verify/SKILL.md": "4104b59a89b126f7b6d75d55e20bcc41108ef0d7ca690c1fee6a81945772f7fb",
+    ".claude/skills/speckit-from-issue/SKILL.md": "3b96222d951254d11b204759e3d0832c1f6deabe1bbafc51ca19751793e5e1fc",
+    ".claude/skills/speckit-issue-analyze/SKILL.md": "513388e660f278f163e7c2100a57936bb9dd6bd3945621c9fa687c30d670d26e",
+    ".claude/skills/speckit-issue-sync/SKILL.md": "b831e462b2fb42f7d481066daa4619de97f66eb00c211fcd18440119eb562bf0",
+    ".claude/skills/speckit-issue-verify/SKILL.md": "cb0145257b4800a38448decdaede700f4916fb00e0a3979b33ed301fbcfd8628",
     ".specify/kit/stack-angular-firebase.md": "05111832c14c3f8b11287429ab2969a3295abbe1afa0a6cddc813af5aa70e034"
   }
 }

@@ -81,6 +81,10 @@ body. The only GitHub write is the optional summary comment (`--comment`).
 
 7. **Constitution fit**: read `.specify/memory/constitution.md`. For every T and D item that would
    break a principle mark ❌ (name the principle); for one that needs care to stay within it mark ⚠️.
+   If the file is missing, or still the Spec Kit template (it has placeholders such as `[PROJECT_NAME]` or `[PRINCIPLE_1_NAME]`; `zs-kit status` prints its state), there is nothing to check against: write
+   "Constitution check not run: the constitution is <missing | the Spec Kit template>" under
+   `### Constitution`, mark it ⚠️, add "write the constitution (`zs-kit init --constitution ask` or
+   `/speckit-constitution`)" to the open decisions, and never report the check as passed.
 
 8. **Baseline test run** (unless `--no-baseline`): run only the suites that touch the affected area,
    with the commands `verify.md` gives per test level, so a later failure can be told apart from one

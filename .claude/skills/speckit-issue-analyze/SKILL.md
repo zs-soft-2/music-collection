@@ -26,6 +26,10 @@ A CRITICAL finding blocks `/speckit-implement` until it is resolved and this ski
    `spec.md` and, if present, `issue-sync.md` in the same directory. If the spec has no
    AC section, report one CRITICAL finding ("no acceptance criteria: run /speckit-issue-sync") and
    skip pass G. Read the test levels from `.specify/project/verify.md` (if present).
+   If `.specify/memory/constitution.md` is missing, or still the Spec Kit template (it has placeholders such as `[PROJECT_NAME]` or `[PRINCIPLE_1_NAME]`; `zs-kit status` prints its state), the constitution alignment pass of
+   `speckit-analyze` has nothing to check: report one HIGH finding ("constitution check not run: the
+   constitution is <missing | the Spec Kit template>; write it with `zs-kit init --constitution ask` or
+   `/speckit-constitution`") and never count it as "no constitution issues".
 
 3. **Pass G — acceptance-criteria coverage**:
 

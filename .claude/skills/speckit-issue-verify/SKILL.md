@@ -65,6 +65,9 @@ and the user decides what to change.
 7. **Constitution on the diff**: review `git diff dev...HEAD` (the **local**
    `dev`) against every principle in `.specify/memory/constitution.md` and the rules in
    `.specify/kit/stack-*.md`. A violation is ❌, with the principle and `path:line`.
+   - **No constitution**: if the file is missing, or still the Spec Kit template (it has placeholders such as `[PROJECT_NAME]` or `[PRINCIPLE_1_NAME]`; `zs-kit status` prints its state), write "Constitution check not run: the
+     constitution is <missing | the Spec Kit template>" under `## Constitution` as ⚠️ and in the open
+     items (the stack rules are still checked). It is a gap, never a pass.
    - **Ticket number**: the branch is `<n>-<short-name>`. If the constitution asks every commit to
      end with `(#<n>)`, list each subject in `git log --format='%h %s' dev..HEAD` that
      does not as ⚠️ (a reword before the PR fixes it; do not rewrite history without the user's
@@ -92,7 +95,7 @@ and the user decides what to change.
    Keep the `**Result**:` line exactly in this form: the `zs-kit ui` dashboard reads it. Re-running overwrites the file.
 
 10. **Outcome**:
-    - **READY FOR PR**: every AC ✅, no regression, no constitution ❌, no blocking review finding
+    - **READY FOR PR**: every AC ✅, no regression, the constitution check ran with no ❌, no blocking review finding
       (plus the docs-first and release conditions, when those profiles are active).
       Offer to open the PR (target `dev`) from the PR summary; do not push or open it
       without the user's go-ahead.
