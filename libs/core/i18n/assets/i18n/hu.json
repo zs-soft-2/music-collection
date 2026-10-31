@@ -568,6 +568,9 @@
 			"no-credits-for-this": "Ehhez a számhoz nincs közreműködő.",
 			"other-tracks": "További számok",
 			"loadLyrics": "Dalszöveg betöltése",
+			"lyrics-not-found": "Az LRCLIB-en nincs ehhez dalszöveg.",
+			"lyrics-service-busy": "Az LRCLIB most túlterhelt — próbáld újra egy kicsit később.",
+			"lyrics-load-failed": "Nem sikerült betölteni a dalszöveget.",
 			"pictures": "Képek"
 		},
 		"label": {

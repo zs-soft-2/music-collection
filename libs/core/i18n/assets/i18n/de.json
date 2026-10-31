@@ -568,6 +568,9 @@
 			"no-credits-for-this": "Keine Mitwirkenden für diesen Titel.",
 			"other-tracks": "Weitere Titel",
 			"loadLyrics": "Songtext laden",
+			"lyrics-not-found": "Auf LRCLIB wurde kein Songtext gefunden.",
+			"lyrics-service-busy": "LRCLIB ist gerade überlastet — versuch es gleich noch einmal.",
+			"lyrics-load-failed": "Der Songtext konnte nicht geladen werden.",
 			"pictures": "Bilder"
 		},
 		"label": {

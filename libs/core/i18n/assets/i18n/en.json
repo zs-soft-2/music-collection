@@ -568,6 +568,9 @@
 			"no-credits-for-this": "No credits for this track.",
 			"other-tracks": "Other tracks",
 			"loadLyrics": "Load lyrics",
+			"lyrics-not-found": "No lyrics found on LRCLIB.",
+			"lyrics-service-busy": "LRCLIB is busy right now — try again in a moment.",
+			"lyrics-load-failed": "Loading the lyrics failed.",
 			"pictures": "Pictures"
 		},
 		"label": {

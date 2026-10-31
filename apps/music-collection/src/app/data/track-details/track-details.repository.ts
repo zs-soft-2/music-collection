@@ -4,11 +4,18 @@ import {
 	finalize,
 	map,
 	of,
+	retry,
 	shareReplay,
 	switchMap,
+	throwError,
+	timer,
 } from 'rxjs';
 
-import { HttpClient, HttpParams } from '@angular/common/http';
+import {
+	HttpClient,
+	HttpErrorResponse,
+	HttpParams,
+} from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { DocumentData, Firestore, doc, docData } from '@angular/fire/firestore';
 import {
@@ -42,6 +49,27 @@ interface LrclibRecord {
 }
 
 const LRCLIB_URL = 'https://lrclib.net/api';
+
+/**
+ * LRCLIB turns requests away with a 503 ("ServerOverloaded") while it is
+ * busy, and a moment later serves them, so a busy answer is asked again a
+ * couple of times before it counts as a failure.
+ */
+const LRCLIB_BUSY_RETRIES = 2;
+const LRCLIB_BUSY_DELAY_MS = 1500;
+
+/** True when LRCLIB answered that it is too busy to serve the request. */
+export const isLyricsServiceBusy = (error: unknown): boolean =>
+	error instanceof HttpErrorResponse && error.status === 503;
+
+const retryWhileBusy = <T>() =>
+	retry<T>({
+		count: LRCLIB_BUSY_RETRIES,
+		delay: (error, attempt) =>
+			isLyricsServiceBusy(error)
+				? timer(attempt * LRCLIB_BUSY_DELAY_MS)
+				: throwError(() => error),
+	});
 
 const toLyrics = (record: LrclibRecord | undefined): TrackLyrics | null => {
 	const text = record?.plainLyrics?.trim();
@@ -166,54 +194,67 @@ export class TrackDetailsRepository {
 
 	/**
 	 * Looks the lyrics up on LRCLIB (lrclib.net): first the exact match,
-	 * then a looser search. Null when nothing is found.
+	 * then the exact match on artist and title alone (the album name or the
+	 * length often differ from LRCLIB's), then a looser search. Null when
+	 * nothing is found; an error when the search itself fails.
 	 */
 	public fetchExternalLyrics$(
 		query: LyricsQuery
 	): Observable<TrackLyrics | null> {
-		let exact = new HttpParams()
+		const byName = new HttpParams()
 			.set('artist_name', query.artistName)
 			.set('track_name', query.trackName);
+		let exact = byName;
 		if (query.albumName) {
 			exact = exact.set('album_name', query.albumName);
 		}
 		if (query.durationSec) {
 			exact = exact.set('duration', query.durationSec);
 		}
-		const search = new HttpParams()
-			.set('artist_name', query.artistName)
-			.set('track_name', query.trackName);
 
+		return this.getLyrics$(exact).pipe(
+			switchMap((lyrics) =>
+				lyrics || exact === byName
+					? of(lyrics)
+					: this.getLyrics$(byName)
+			),
+			switchMap((lyrics) =>
+				lyrics ? of(lyrics) : this.searchLyrics$(byName)
+			)
+		);
+	}
+
+	/** One exact lookup; null when LRCLIB has no such track (or fails). */
+	private getLyrics$(params: HttpParams): Observable<TrackLyrics | null> {
 		return this.http
-			.get<LrclibRecord>(`${LRCLIB_URL}/get`, { params: exact })
+			.get<LrclibRecord>(`${LRCLIB_URL}/get`, { params })
 			.pipe(
+				retryWhileBusy(),
 				map(toLyrics),
-				catchError(() => of(null)),
-				switchMap((lyrics) =>
-					lyrics
-						? of(lyrics)
-						: this.http
-								.get<LrclibRecord[]>(`${LRCLIB_URL}/search`, {
-									params: search,
-								})
-								.pipe(
-									map((records) =>
-										toLyrics(
-											// Prefer a match with synced lyrics.
-											records.find(
-												(record) =>
-													!record.instrumental &&
-													record.plainLyrics?.trim() &&
-													record.syncedLyrics?.trim()
-											) ??
-												records.find(
-													(record) =>
-														!record.instrumental &&
-														record.plainLyrics?.trim()
-												)
-										)
-									)
-								)
+				catchError(() => of(null))
+			);
+	}
+
+	/** The looser search, preferring a match with synced lyrics. */
+	private searchLyrics$(params: HttpParams): Observable<TrackLyrics | null> {
+		return this.http
+			.get<LrclibRecord[]>(`${LRCLIB_URL}/search`, { params })
+			.pipe(
+				retryWhileBusy(),
+				map((records) =>
+					toLyrics(
+						records.find(
+							(record) =>
+								!record.instrumental &&
+								record.plainLyrics?.trim() &&
+								record.syncedLyrics?.trim()
+						) ??
+							records.find(
+								(record) =>
+									!record.instrumental &&
+									record.plainLyrics?.trim()
+							)
+					)
 				)
 			);
 	}
