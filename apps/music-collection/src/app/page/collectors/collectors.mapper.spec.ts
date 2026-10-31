@@ -6,6 +6,7 @@ import {
 	toWallCollectionCards,
 	toWallCollections,
 	toWallEntries,
+	withinCollections,
 } from './collectors.mapper';
 import { WallEntry } from './collectors.model';
 
@@ -215,6 +216,31 @@ describe('filterWall', () => {
 		expect(
 			filterWall(wall(), null, 'szeged').map(({ uid }) => uid)
 		).toEqual(['u2']);
+	});
+});
+
+describe('withinCollections', () => {
+	const wall = () =>
+		entries(
+			card({ uid: 'u1', badges: [badge('doom')] }),
+			card({
+				uid: 'u2',
+				badges: [],
+				collecting: [{ slug: 'bay-area', name: 'Bay Area' }],
+			}),
+			card({ uid: 'u3', badges: [badge('bebop')] })
+		);
+
+	it('keeps whoever finished or hunts a collection this catalog opens', () => {
+		expect(
+			withinCollections(wall(), new Set(['doom', 'bay-area'])).map(
+				({ uid }) => uid
+			)
+		).toEqual(['u1', 'u2']);
+	});
+
+	it('leaves nobody where the catalog opens nothing', () => {
+		expect(withinCollections(wall(), new Set())).toEqual([]);
 	});
 });
 

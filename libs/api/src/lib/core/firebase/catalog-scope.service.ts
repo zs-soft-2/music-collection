@@ -19,22 +19,25 @@ const STORAGE_KEY = 'mc-genre-scope';
 /** Where this browser remembers that it serves an administrator. */
 const WHOLE_STORAGE_KEY = 'mc-catalog-whole';
 
+/** Where this browser remembers that somebody is signed in. */
+const SIGNED_IN_STORAGE_KEY = 'mc-catalog-signed-in';
+
 /**
- * The scope of a reader who follows no genre and is not an administrator:
- * the showcase (`sync/catalog.guestBundle`, built by `composeGuestBundle` in
+ * The scope of a guest — and of a collector who has not chosen a genre yet,
+ * whose page asks them to choose rather than showing it: the showcase (`sync/catalog.guestBundle`, built by `composeGuestBundle` in
  * apps/functions). Not a slug any genre could have, so it can stand where a
  * scope key does without ever meaning a genre.
  */
 export const GUEST_SCOPE_KEY = '@guest';
 
 /**
- * What this browser downloads of the catalog: the genres followed, or —
- * where there are none — the showcase for a guest and the whole catalog for
- * an administrator.
+ * What this browser downloads of the catalog: the showcase for a guest; for
+ * somebody signed in the genres they follow, or — where there are none — the
+ * whole catalog for an administrator.
  */
 export interface CatalogScope {
 	genres: string[];
-	/** Following no genre and not an administrator: the showcase. */
+	/** Signed out, or following no genre and not an administrator. */
 	guest: boolean;
 }
 
@@ -94,12 +97,16 @@ export function genreScopeKey(slugs: readonly string[]): string {
  * the account only confirms or corrects it afterwards
  * (`GenreScopeSyncService`).
  *
- * Following no genre means the showcase — a few collections of every genre
- * with their albums and artists, a fraction of the catalog — for a guest and
- * for a collector who has not chosen yet. An administrator working the
- * catalog gets the whole of it instead (`useWholeCatalog`). Where no showcase
- * is published the sync layer falls back to the whole catalog, which is what
- * every client did before either existed.
+ * The showcase — a few collections of every genre with their albums and
+ * artists, a fraction of the catalog — is for a guest. Somebody signed in
+ * gets the genres they follow and nothing past them, so that their screen
+ * shows what they are here for; the genres a guest may have left in this
+ * browser count for nothing until then (`useSession`). A collector who has
+ * not chosen yet still downloads the showcase, but is asked to choose before
+ * they are shown it (`GenreScopeEffect.needsChoice`), and an administrator
+ * working the catalog gets the whole of it (`useWholeCatalog`). Where no
+ * showcase is published the sync layer falls back to the whole catalog,
+ * which is what every client did before either existed.
  *
  * It holds no data layer of its own, because `FirestoreSyncService` asks it
  * what to download: anything it injected from there would be injected back
@@ -108,7 +115,13 @@ export function genreScopeKey(slugs: readonly string[]): string {
 @Injectable({ providedIn: 'root' })
 export class CatalogScopeService {
 	private readonly state = signal<string[]>(this.readStored());
-	private readonly wholeState = signal<boolean>(this.readWhole());
+	private readonly wholeState = signal<boolean>(
+		this.readFlag(WHOLE_STORAGE_KEY)
+	);
+	private readonly signedInState = signal<boolean>(
+		this.readFlag(SIGNED_IN_STORAGE_KEY)
+	);
+	private readonly rolesState = signal<boolean>(false);
 	/**
 	 * The same value as a stream. A subject rather than `toObservable`,
 	 * because the sync layer subscribes to this before the first catalog
@@ -120,23 +133,29 @@ export class CatalogScopeService {
 		this.current()
 	);
 
-	/** The genre slugs followed, at most `GENRE_SCOPE_LIMIT`; empty is all. */
+	/** The genre slugs followed, at most `GENRE_SCOPE_LIMIT`; empty is none. */
 	public readonly slugs: Signal<string[]> = this.state.asReadonly();
 
 	/** Whether the catalog is narrowed to genres. */
 	public readonly narrowed: Signal<boolean> = computed(
-		() => this.state().length > 0
+		() => this.signedInState() && this.state().length > 0
 	);
 
 	/** Whether this browser serves an administrator, who gets everything. */
 	public readonly whole: Signal<boolean> = this.wholeState.asReadonly();
 
+	/** Whether somebody is signed in, as far as the scope goes. */
+	public readonly signedIn: Signal<boolean> = this.signedInState.asReadonly();
+
+	/**
+	 * Whether the roles of whoever is signed in have arrived, and with them
+	 * whether `whole` is an answer or still last session's guess.
+	 */
+	public readonly rolesKnown: Signal<boolean> = this.rolesState.asReadonly();
+
 	/** The key of the scope in force; see `catalogScopeKey`. */
 	public readonly key: Signal<string> = computed(() =>
-		catalogScopeKey({
-			genres: this.state(),
-			guest: !this.wholeState(),
-		})
+		catalogScopeKey(this.scopeOf(this.signedInState()))
 	);
 
 	/**
@@ -180,33 +199,86 @@ export class CatalogScopeService {
 	 * catalog needs no cache reset — the whole holds the showcase.
 	 */
 	public useWholeCatalog(whole: boolean): void {
+		this.rolesState.set(true);
+
 		if (whole === this.wholeState()) {
 			return;
 		}
 
 		this.wholeState.set(whole);
 		this.changes.next(this.current());
+		this.writeFlag(WHOLE_STORAGE_KEY, whole);
+	}
 
-		try {
-			if (whole) {
-				localStorage.setItem(WHOLE_STORAGE_KEY, 'true');
-			} else {
-				localStorage.removeItem(WHOLE_STORAGE_KEY);
+	/**
+	 * Whether anybody is signed in, once Firebase has said.
+	 *
+	 * Remembered in this browser like the rest, so a collector's reload
+	 * starts on their genres rather than on the showcase. Signing out takes
+	 * everything the account brought with it — its genres, its whole
+	 * catalog — because the next reader of this browser is a guest, and a
+	 * guest gets the showcase whatever the last account followed. The account
+	 * still holds the genres; signing in again brings them back.
+	 */
+	public useSession(signedIn: boolean): void {
+		if (signedIn) {
+			if (!this.signedInState()) {
+				this.signedInState.set(true);
+				this.writeFlag(SIGNED_IN_STORAGE_KEY, true);
+				this.changes.next(this.current());
 			}
-		} catch {
-			// Storage unavailable (e.g. private window): lasts the session.
+
+			return;
 		}
+
+		const changed =
+			this.signedInState() ||
+			this.wholeState() ||
+			this.state().length > 0;
+
+		this.rolesState.set(false);
+
+		if (!changed) {
+			return;
+		}
+
+		this.signedInState.set(false);
+		this.wholeState.set(false);
+		this.state.set([]);
+		this.writeFlag(SIGNED_IN_STORAGE_KEY, false);
+		this.writeFlag(WHOLE_STORAGE_KEY, false);
+		this.write([]);
+		this.changes.next(this.current());
 	}
 
 	private current(): CatalogScope {
-		return { genres: this.state(), guest: !this.wholeState() };
+		return this.scopeOf(this.signedInState());
 	}
 
-	private readWhole(): boolean {
+	/** A guest gets the showcase, whatever this browser last followed. */
+	private scopeOf(signedIn: boolean): CatalogScope {
+		return signedIn
+			? { genres: this.state(), guest: !this.wholeState() }
+			: { genres: [], guest: true };
+	}
+
+	private readFlag(key: string): boolean {
 		try {
-			return localStorage.getItem(WHOLE_STORAGE_KEY) === 'true';
+			return localStorage.getItem(key) === 'true';
 		} catch {
 			return false;
+		}
+	}
+
+	private writeFlag(key: string, on: boolean): void {
+		try {
+			if (on) {
+				localStorage.setItem(key, 'true');
+			} else {
+				localStorage.removeItem(key);
+			}
+		} catch {
+			// Storage unavailable (e.g. private window): lasts the session.
 		}
 	}
 

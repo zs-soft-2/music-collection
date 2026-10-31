@@ -24,6 +24,7 @@ import {
 	CollectionItemStateService,
 	EntityCounts,
 	EntityQuantityStateService,
+	GenreEntity,
 } from '@music-collection/api';
 import {
 	MusicCollectionEffect,
@@ -41,6 +42,7 @@ import {
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
 import { BandOfTheWeekEffect } from '../../data/band-of-the-week';
+import { GenreScopeEffect } from '../../data/genre-scope';
 import { AlbumRating, RatingEffect, lovedArtists } from '../../data/rating';
 import {
 	CollectorCardDocument,
@@ -51,6 +53,7 @@ import {
 	dressHunts,
 	sortWall,
 	toWallEntries,
+	withinCollections,
 } from '../collectors/collectors.mapper';
 import { WallEntry } from '../collectors/collectors.model';
 import {
@@ -137,6 +140,10 @@ interface HomePageState {
 	wallLoading: boolean;
 	/** Which tab of the collection grid is open; null is the first on offer. */
 	collectionTab: HomeCollectionTab | null;
+	/** The genres a collector following none is asked to choose from. */
+	genreOptions: GenreEntity[];
+	/** The choice is being applied; the page is about to start again. */
+	genreChoiceApplying: boolean;
 	/**
 	 * Which collection the big card has been turned to; null is the week's,
 	 * which is where the page opens and where it stays unless the reader
@@ -172,6 +179,8 @@ const initialState: HomePageState = {
 	lookingUp: false,
 	authenticated: false,
 	collectionTab: null,
+	genreOptions: [],
+	genreChoiceApplying: false,
 	heroSlug: null,
 	openedAt: Date.now(),
 };
@@ -224,7 +233,8 @@ export const HomePageStore = signalStore(
 		(
 			store,
 			musicCollectionEffect = inject(MusicCollectionEffect),
-			text = inject(TextService)
+			text = inject(TextService),
+			genreScope = inject(GenreScopeEffect)
 		) => {
 			const counts = computed(() =>
 				measure(
@@ -395,6 +405,32 @@ export const HomePageStore = signalStore(
 				return !!band && store.spotlightId() === band.artistUid;
 			});
 
+			/**
+			 * The week's band, where this catalog holds them. The week is the
+			 * same for everybody, and a collector of jazz is not offered a
+			 * way back to a punk band their catalog never had.
+			 */
+			const bandInCatalog = computed(() => {
+				const band = store.bandOfTheWeek();
+
+				return (
+					!!band &&
+					store
+						.artists()
+						.some((artist) => artist.id === band.artistUid)
+				);
+			});
+
+			/** The collections this catalog opens onto, by slug. */
+			const openableSlugs = computed(
+				() =>
+					new Set(
+						collections()
+							.filter((collection) => collection.total > 0)
+							.map((collection) => collection.slug)
+					)
+			);
+
 			return {
 				catalogOnly,
 				artistsPending,
@@ -413,7 +449,7 @@ export const HomePageStore = signalStore(
 				 * not looking at them — what the way back is offered on.
 				 */
 				canReturnToBand: computed(
-					() => !!store.bandOfTheWeek() && !showingBand()
+					() => bandInCatalog() && !showingBand()
 				),
 				/** Only a guest is asked to sign in. */
 				isGuest: computed(() => !store.authenticated()),
@@ -452,7 +488,8 @@ export const HomePageStore = signalStore(
 				collectionsPending: computed(
 					() =>
 						store.collectionsLoading() ||
-						(store.albumsLoading() && collectionTiles().length === 0)
+						(store.albumsLoading() &&
+							collectionTiles().length === 0)
 				),
 				/**
 				 * The collection the big card shows — what the page opens on,
@@ -466,10 +503,23 @@ export const HomePageStore = signalStore(
 				heroNames: computed(() =>
 					heroCollections().map((hero) => hero.name)
 				),
-				/** The collectors the page introduces, the finishers first. */
+				/**
+				 * The collectors the page introduces, the finishers first.
+				 * Following genres, only those whose collections — finished
+				 * or hunted — this catalog can open: a collector of another
+				 * genre is somebody else's neighbour, not this page's.
+				 */
 				collectorCards: computed(() =>
-					wallEntries().slice(0, HOME_COLLECTOR_CARDS)
+					(genreScope.narrowed()
+						? withinCollections(wallEntries(), openableSlugs())
+						: wallEntries()
+					).slice(0, HOME_COLLECTOR_CARDS)
 				),
+				/**
+				 * A collector following no genre, asked to choose one in place
+				 * of the page: the showcase it would show is a guest's.
+				 */
+				needsGenreChoice: genreScope.needsChoice,
 				collectorTotal: computed(() => store.wall().length),
 				nextAlbums,
 				/** Empty where there is no shelf to continue, or no gap left. */
@@ -927,13 +977,51 @@ export const HomePageStore = signalStore(
 				showBandOfTheWeek: () => {
 					const band = store.bandOfTheWeek();
 
-					if (band) {
+					if (band && store.canReturnToBand()) {
 						patchState(store, { spotlightId: band.artistUid });
 					}
 				},
 			};
 		}
 	),
+	withMethods((store) => {
+		const genreScope = inject(GenreScopeEffect);
+
+		return {
+			/** The genres a collector following none can choose from. */
+			loadGenreOptions: rxMethod<void>(
+				pipe(
+					switchMap(() =>
+						genreScope.genres$().pipe(
+							tapResponse({
+								next: (genreOptions: GenreEntity[]) =>
+									patchState(store, { genreOptions }),
+								error: (error: unknown) => console.error(error),
+							})
+						)
+					)
+				)
+			),
+			/**
+			 * Follows the genres chosen. The app starts again on them, so
+			 * only a failure has anything to put back.
+			 */
+			async chooseGenres(slugs: string[]): Promise<void> {
+				if (store.genreChoiceApplying() || !slugs.length) {
+					return;
+				}
+
+				patchState(store, { genreChoiceApplying: true });
+
+				try {
+					await genreScope.apply(slugs);
+				} catch (error) {
+					console.error('Genre scope not applied', error);
+					patchState(store, { genreChoiceApplying: false });
+				}
+			},
+		};
+	}),
 	withMethods((store) => {
 		const analytics = inject(AnalyticsService);
 		const artistStateService = inject(ArtistStateService);
@@ -1044,6 +1132,7 @@ export const HomePageStore = signalStore(
 			store.watchSearches(of(undefined));
 			store.lookUpCatalog(of(undefined));
 			store.watchLookups(of(undefined));
+			store.loadGenreOptions(of(undefined));
 		},
 	})
 );

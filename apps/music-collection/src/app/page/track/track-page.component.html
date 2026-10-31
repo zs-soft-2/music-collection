@@ -169,7 +169,7 @@
 					</span>
 					@if (store.fetchLyricsError()) {
 						<small class="error">{{
-							store.fetchLyricsError()
+							t(store.fetchLyricsError()!)
 						}}</small>
 					}
 					<textarea

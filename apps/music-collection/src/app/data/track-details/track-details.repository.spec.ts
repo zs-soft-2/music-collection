@@ -1,7 +1,14 @@
 import { provideI18nTesting } from '@music-collection/core/i18n/testing';
-import { BehaviorSubject, Observable } from 'rxjs';
+import {
+	BehaviorSubject,
+	Observable,
+	defer,
+	firstValueFrom,
+	of,
+	throwError,
+} from 'rxjs';
 
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { DocumentData, Firestore, docData } from '@angular/fire/firestore';
 import {
@@ -9,7 +16,10 @@ import {
 	FirestoreSyncService,
 } from '@music-collection/api';
 
-import { TrackDetailsRepository } from './track-details.repository';
+import {
+	TrackDetailsRepository,
+	isLyricsServiceBusy,
+} from './track-details.repository';
 
 jest.mock('@angular/fire/firestore', () => ({
 	...jest.requireActual('@angular/fire/firestore'),
@@ -22,6 +32,7 @@ describe('TrackDetailsRepository', () => {
 	let opened: number;
 	let closed: number;
 	let user$: BehaviorSubject<{ uid: string } | null>;
+	const http = { get: jest.fn() };
 
 	const document$ = new Observable<DocumentData | undefined>((subscriber) => {
 		opened++;
@@ -40,6 +51,7 @@ describe('TrackDetailsRepository', () => {
 		user$ = new BehaviorSubject<{ uid: string } | null>({ uid: 'u1' });
 
 		(docData as jest.Mock).mockImplementation(() => document$);
+		http.get.mockReset();
 
 		TestBed.configureTestingModule({
 			providers: [
@@ -51,7 +63,7 @@ describe('TrackDetailsRepository', () => {
 					useValue: { user$, current: null },
 				},
 				{ provide: FirestoreSyncService, useValue: {} },
-				{ provide: HttpClient, useValue: {} },
+				{ provide: HttpClient, useValue: http },
 			],
 		});
 	});
@@ -89,5 +101,88 @@ describe('TrackDetailsRepository', () => {
 
 		expect(opened).toBe(0);
 		expect(lyrics).toBeNull();
+	});
+
+	describe('fetchExternalLyrics$', () => {
+		const query = {
+			artistName: 'Forbidden',
+			trackName: 'Burning the Lungs of Earth',
+			albumName: 'Forbidden',
+			durationSec: 313,
+		};
+		const notFound = () =>
+			throwError(() => new HttpErrorResponse({ status: 404 }));
+		const busy = () =>
+			throwError(() => new HttpErrorResponse({ status: 503 }));
+		const record = {
+			plainLyrics: 'a line',
+			syncedLyrics: null,
+			instrumental: false,
+		};
+		/** What each request asked for: the endpoint and its params. */
+		const requests = () =>
+			http.get.mock.calls.map(([url, { params }]) => [
+				url.split('/').pop(),
+				params.keys().join(','),
+			]);
+
+		it('tries the artist and title alone before searching', async () => {
+			http.get
+				.mockReturnValueOnce(notFound())
+				.mockReturnValueOnce(of(record));
+
+			const lyrics = await firstValueFrom(
+				repository().fetchExternalLyrics$(query)
+			);
+
+			expect(lyrics).toEqual({ text: 'a line', synced: null });
+			expect(requests()).toEqual([
+				['get', 'artist_name,track_name,album_name,duration'],
+				['get', 'artist_name,track_name'],
+			]);
+		});
+
+		it('asks a busy search again', async () => {
+			jest.useFakeTimers();
+			try {
+				let searches = 0;
+				// Like HttpClient's, every subscription sends the request anew.
+				http.get.mockImplementation((url: string) =>
+					url.endsWith('/get')
+						? notFound()
+						: defer(() =>
+								++searches === 1 ? busy() : of([record])
+							)
+				);
+
+				const result = firstValueFrom(
+					repository().fetchExternalLyrics$(query)
+				);
+				await jest.runAllTimersAsync();
+
+				expect(await result).toEqual({ text: 'a line', synced: null });
+				expect(searches).toBe(2);
+			} finally {
+				jest.useRealTimers();
+			}
+		});
+
+		it('fails as busy once the search stays busy', async () => {
+			jest.useFakeTimers();
+			try {
+				http.get.mockImplementation((url: string) =>
+					url.endsWith('/get') ? notFound() : busy()
+				);
+
+				const result = firstValueFrom(
+					repository().fetchExternalLyrics$(query)
+				).catch((error) => error);
+				await jest.runAllTimersAsync();
+
+				expect(isLyricsServiceBusy(await result)).toBe(true);
+			} finally {
+				jest.useRealTimers();
+			}
+		});
 	});
 });

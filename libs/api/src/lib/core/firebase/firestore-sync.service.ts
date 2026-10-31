@@ -44,6 +44,7 @@ import {
 	query,
 	serverTimestamp,
 	terminate,
+	waitForPendingWrites,
 	where,
 	writeBatch,
 } from '@angular/fire/firestore';
@@ -99,6 +100,9 @@ const BATCH_DELETE_LIMIT = 249;
  * carries everything the dropped ones said.
  */
 const CATALOG_BUMP_WINDOW = 2000;
+
+/** How long a cache reset waits for writes still on their way. */
+const PENDING_WRITES_TIMEOUT_MS = 5000;
 
 /** One document written, as `setAll` takes it. */
 interface SyncWrite {
@@ -399,10 +403,23 @@ export class FirestoreSyncService {
 	 * this feature" call, so the cache goes whole, which it only allows on
 	 * a terminated instance. That leaves this Firestore unusable, so the
 	 * caller reloads the page afterwards.
+	 *
+	 * Writes still on their way go first: the scope also changes on signing
+	 * in, while the account's own documents are being written, and
+	 * terminating then would drop them. Not for ever, though — offline they
+	 * would never land, and the reset must not wait on that.
 	 */
 	public async resetLocalCatalog(): Promise<void> {
 		this.clearMarkers();
 
+		await Promise.race([
+			this.run(() => waitForPendingWrites(this.firestore)).catch(
+				() => undefined
+			),
+			new Promise((resolve) =>
+				setTimeout(resolve, PENDING_WRITES_TIMEOUT_MS)
+			),
+		]);
 		await this.run(() => terminate(this.firestore));
 		await this.run(() => clearIndexedDbPersistence(this.firestore));
 	}

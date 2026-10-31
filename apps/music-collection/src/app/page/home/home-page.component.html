@@ -1,187 +1,208 @@
 <div class="page" *transloco="let t">
-	<search>
-		<mc-home-search
-			[query]="store.query()"
-			[results]="store.searchResults()"
-			[looking]="store.lookingUp()"
-			(queryChange)="store.setQuery($event)"
-		/>
-	</search>
-
 	<!--
-		The big card. The page opens on one set of records rather than on how
-		big the catalog is: a collection says what there is to do here, and
-		the catalog only says what there is. It opens on the week's and can
-		be turned to the others from there.
+		A collector following no genre is asked for one before anything else:
+		what the page would show them is the guest's showcase.
 	-->
-	@if (store.bigCard(); as card) {
-		<mc-collection-big-card
-			[collection]="card"
-			[weekly]="store.showingWeekly()"
-			[signedIn]="!store.isGuest()"
-			[siblings]="store.heroNames()"
-			[index]="store.heroIndex()"
-			(follow)="store.toggleFollow(card.uid)"
-			(signIn)="store.signIn()"
-			(previous)="store.previousBigCard()"
-			(next)="store.nextBigCard()"
-			(show)="store.showBigCard($event)"
+	@if (store.needsGenreChoice()) {
+		<mc-genre-choice
+			[genres]="store.genreOptions()"
+			[applying]="store.genreChoiceApplying()"
+			(choose)="store.chooseGenres($event)"
 		/>
-	} @else if (store.collectionsPending()) {
-		<div class="skeleton big-card-skeleton" role="status" aria-busy="true">
-			<span class="visually-hidden">{{ t('common.loading') }}</span>
-		</div>
-	}
+	} @else {
+		<search>
+			<mc-home-search
+				[query]="store.query()"
+				[results]="store.searchResults()"
+				[looking]="store.lookingUp()"
+				(queryChange)="store.setQuery($event)"
+			/>
+		</search>
 
-	<!--
-		Who is collecting here. It is the first thing on the page that is
-		about people rather than records, and for a visitor with no shelf of
-		their own it is the clearest answer to what the app is for.
-	-->
-	@if (store.wallLoading() || store.collectorCards().length) {
-		<section class="section" aria-labelledby="collectors-title">
-			<header class="section-head">
-				<h2 id="collectors-title">{{ t('home.collectors.title') }}</h2>
-				<a
-					class="more"
-					routerLink="/collectors"
-					[class.is-pending]="store.wallLoading()"
-				>
-					{{
-						t('home.collectors.allOf', {
-							count: store.collectorTotal(),
-						})
-					}}
-					<i class="pi pi-arrow-right" aria-hidden="true"></i>
-				</a>
-			</header>
+		<!--
+			The big card. The page opens on one set of records rather than on how
+			big the catalog is: a collection says what there is to do here, and
+			the catalog only says what there is. It opens on the week's and can
+			be turned to the others from there.
+		-->
+		@if (store.bigCard(); as card) {
+			<mc-collection-big-card
+				[collection]="card"
+				[weekly]="store.showingWeekly()"
+				[signedIn]="!store.isGuest()"
+				[siblings]="store.heroNames()"
+				[index]="store.heroIndex()"
+				(follow)="store.toggleFollow(card.uid)"
+				(signIn)="store.signIn()"
+				(previous)="store.previousBigCard()"
+				(next)="store.nextBigCard()"
+				(show)="store.showBigCard($event)"
+			/>
+		} @else if (store.collectionsPending()) {
+			<div
+				class="skeleton big-card-skeleton"
+				role="status"
+				aria-busy="true"
+			>
+				<span class="visually-hidden">{{ t('common.loading') }}</span>
+			</div>
+		}
 
-			<ul class="collector-grid">
-				@if (store.wallLoading()) {
-					@for (i of placeholders(collectorPlaceholders); track i) {
-						<li class="skeleton collector-skeleton"></li>
+		<!--
+			Who is collecting here. It is the first thing on the page that is
+			about people rather than records, and for a visitor with no shelf of
+			their own it is the clearest answer to what the app is for.
+		-->
+		@if (store.wallLoading() || store.collectorCards().length) {
+			<section class="section" aria-labelledby="collectors-title">
+				<header class="section-head">
+					<h2 id="collectors-title">
+						{{ t('home.collectors.title') }}
+					</h2>
+					<a
+						class="more"
+						routerLink="/collectors"
+						[class.is-pending]="store.wallLoading()"
+					>
+						{{
+							t('home.collectors.allOf', {
+								count: store.collectorTotal(),
+							})
+						}}
+						<i class="pi pi-arrow-right" aria-hidden="true"></i>
+					</a>
+				</header>
+
+				<ul class="collector-grid">
+					@if (store.wallLoading()) {
+						@for (
+							i of placeholders(collectorPlaceholders);
+							track i
+						) {
+							<li class="skeleton collector-skeleton"></li>
+						}
 					}
-				}
-				@for (
-					collector of store.collectorCards();
-					track collector.uid
-				) {
-					<li><mc-collector-card [collector]="collector" /></li>
-				}
+					@for (
+						collector of store.collectorCards();
+						track collector.uid
+					) {
+						<li><mc-collector-card [collector]="collector" /></li>
+					}
 
-				<!-- The empty chair at the table, and how to take it. -->
-				<li>
-					<div class="join">
-						<h3>{{ t('home.collectors.join.title') }}</h3>
-						<p>{{ t('home.collectors.join.lead') }}</p>
-						@if (store.isGuest()) {
+					<!-- The empty chair at the table, and how to take it. -->
+					<li>
+						<div class="join">
+							<h3>{{ t('home.collectors.join.title') }}</h3>
+							<p>{{ t('home.collectors.join.lead') }}</p>
+							@if (store.isGuest()) {
+								<button
+									type="button"
+									class="join-cta"
+									(click)="store.signIn()"
+								>
+									{{ t('home.collectors.join.signIn') }}
+									<i
+										class="pi pi-arrow-right"
+										aria-hidden="true"
+									></i>
+								</button>
+							} @else {
+								<a class="join-cta" routerLink="/profile">
+									{{ t('home.collectors.join.share') }}
+									<i
+										class="pi pi-arrow-right"
+										aria-hidden="true"
+									></i>
+								</a>
+							}
+						</div>
+					</li>
+				</ul>
+			</section>
+		}
+
+		<!-- The collections themselves, under whichever shelf is asked for. -->
+		@if (store.collectionsPending() || store.visibleCollections().length) {
+			<section class="section" aria-labelledby="collections-title">
+				<header class="section-head">
+					<h2 id="collections-title">
+						{{ t('home.collections.title') }}
+					</h2>
+					<a class="more" routerLink="/collections">
+						{{ t('home.collections.all') }}
+						<i class="pi pi-arrow-right" aria-hidden="true"></i>
+					</a>
+				</header>
+
+				@if (store.collectionTabs().length > 1) {
+					<div
+						class="tabs"
+						role="tablist"
+						[attr.aria-label]="t('home.collections.title')"
+					>
+						@for (tab of store.collectionTabs(); track tab.value) {
 							<button
 								type="button"
-								class="join-cta"
-								(click)="store.signIn()"
+								role="tab"
+								class="tab"
+								[class.is-on]="
+									store.activeCollectionTab() === tab.value
+								"
+								[attr.aria-selected]="
+									store.activeCollectionTab() === tab.value
+								"
+								(click)="store.setCollectionTab(tab.value)"
 							>
-								{{ t('home.collectors.join.signIn') }}
-								<i
-									class="pi pi-arrow-right"
-									aria-hidden="true"
-								></i>
+								{{ t(tab.labelKey) }}
+								<span class="count">{{ tab.count }}</span>
 							</button>
-						} @else {
-							<a class="join-cta" routerLink="/profile">
-								{{ t('home.collectors.join.share') }}
-								<i
-									class="pi pi-arrow-right"
-									aria-hidden="true"
-								></i>
-							</a>
 						}
 					</div>
-				</li>
-			</ul>
-		</section>
-	}
-
-	<!-- The collections themselves, under whichever shelf is asked for. -->
-	@if (store.collectionsPending() || store.visibleCollections().length) {
-		<section class="section" aria-labelledby="collections-title">
-			<header class="section-head">
-				<h2 id="collections-title">
-					{{ t('home.collections.title') }}
-				</h2>
-				<a class="more" routerLink="/collections">
-					{{ t('home.collections.all') }}
-					<i class="pi pi-arrow-right" aria-hidden="true"></i>
-				</a>
-			</header>
-
-			@if (store.collectionTabs().length > 1) {
-				<div
-					class="tabs"
-					role="tablist"
-					[attr.aria-label]="t('home.collections.title')"
-				>
-					@for (tab of store.collectionTabs(); track tab.value) {
-						<button
-							type="button"
-							role="tab"
-							class="tab"
-							[class.is-on]="
-								store.activeCollectionTab() === tab.value
-							"
-							[attr.aria-selected]="
-								store.activeCollectionTab() === tab.value
-							"
-							(click)="store.setCollectionTab(tab.value)"
-						>
-							{{ t(tab.labelKey) }}
-							<span class="count">{{ tab.count }}</span>
-						</button>
-					}
-				</div>
-			}
-
-			<ul class="collection-grid">
-				@if (store.collectionsPending()) {
-					@for (i of placeholders(3); track i) {
-						<li class="skeleton collection-skeleton"></li>
-					}
-				} @else {
-					@for (
-						collection of store.visibleCollections();
-						track collection.uid
-					) {
-						<li>
-							<mc-collection-tile
-								[collection]="collection"
-								[signedIn]="!store.isGuest()"
-							/>
-						</li>
-					}
 				}
-			</ul>
-		</section>
+
+				<ul class="collection-grid">
+					@if (store.collectionsPending()) {
+						@for (i of placeholders(3); track i) {
+							<li class="skeleton collection-skeleton"></li>
+						}
+					} @else {
+						@for (
+							collection of store.visibleCollections();
+							track collection.uid
+						) {
+							<li>
+								<mc-collection-tile
+									[collection]="collection"
+									[signedIn]="!store.isGuest()"
+								/>
+							</li>
+						}
+					}
+				</ul>
+			</section>
+		}
+
+		@if (store.showsHunt()) {
+			<section class="section" aria-labelledby="hunt-title">
+				<header class="section-head">
+					<h2 id="hunt-title">{{ t('home.hunt.title') }}</h2>
+					<a class="more" routerLink="/collections">
+						{{ t('home.hunt.all') }}
+						<i class="pi pi-arrow-right" aria-hidden="true"></i>
+					</a>
+				</header>
+
+				<mc-next-albums [albums]="store.nextAlbums()" />
+			</section>
+		}
+
+		<!-- The rest of the catalog has a page of its own. -->
+		<a class="discover-link" routerLink="/discover">
+			<span>
+				<strong>{{ t('home.discover.title') }}</strong>
+				{{ t('home.discover.lead') }}
+			</span>
+			<i class="pi pi-arrow-right" aria-hidden="true"></i>
+		</a>
 	}
-
-	@if (store.showsHunt()) {
-		<section class="section" aria-labelledby="hunt-title">
-			<header class="section-head">
-				<h2 id="hunt-title">{{ t('home.hunt.title') }}</h2>
-				<a class="more" routerLink="/collections">
-					{{ t('home.hunt.all') }}
-					<i class="pi pi-arrow-right" aria-hidden="true"></i>
-				</a>
-			</header>
-
-			<mc-next-albums [albums]="store.nextAlbums()" />
-		</section>
-	}
-
-	<!-- The rest of the catalog has a page of its own. -->
-	<a class="discover-link" routerLink="/discover">
-		<span>
-			<strong>{{ t('home.discover.title') }}</strong>
-			{{ t('home.discover.lead') }}
-		</span>
-		<i class="pi pi-arrow-right" aria-hidden="true"></i>
-	</a>
 </div>

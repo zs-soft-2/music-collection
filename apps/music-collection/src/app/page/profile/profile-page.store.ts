@@ -487,7 +487,13 @@ export const ProfilePageStore = signalStore(
 			 * back — only a failure does.
 			 */
 			async applyGenreScope(): Promise<void> {
-				if (store.genreScopeApplying() || !store.genreScopeChanged()) {
+				if (
+					store.genreScopeApplying() ||
+					!store.genreScopeChanged() ||
+					// The showcase is a guest's: only an administrator follows
+					// no genre, and gets the whole catalog for it.
+					(!store.genreDraft().length && !genreScope.wholeCatalog())
+				) {
 					return;
 				}
 
@@ -905,15 +911,27 @@ export const ProfilePageStore = signalStore(
 	 */
 	/**
 	 * Whether following no genre means the whole catalog here — an
-	 * administrator's — or the weekly showcase everybody else gets. Read
+	 * administrator's — or, for everybody else, being asked to choose. Read
 	 * from the scope itself, like the genres, so the form describes the
 	 * catalog this browser is actually on.
 	 */
-	withComputed(() => {
+	withComputed((store) => {
 		const genreScope = inject(GenreScopeEffect);
+		const genreScopeWhole = computed(() => genreScope.wholeCatalog());
 
 		return {
-			genreScopeWhole: computed(() => genreScope.wholeCatalog()),
+			genreScopeWhole,
+			/**
+			 * Whether the ticked genres can be applied. Ticking none is the
+			 * whole catalog for an administrator, and nothing for anybody
+			 * else: the showcase is a guest's, so a collector follows at
+			 * least one genre.
+			 */
+			genreScopeApplicable: computed(
+				() =>
+					store.genreScopeChanged() &&
+					(store.genreDraft().length > 0 || genreScopeWhole())
+			),
 		};
 	}),
 	withComputed(() => {

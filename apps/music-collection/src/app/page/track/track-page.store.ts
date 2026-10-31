@@ -48,6 +48,7 @@ import { AlbumDetailsEffect } from '../../data/album-details';
 import {
 	TrackDetailsEffect,
 	TrackDetailsUpdate,
+	isLyricsServiceBusy,
 } from '../../data/track-details';
 import { MAX_TRACK_IMAGES, TrackImageEffect } from '../../data/track-image';
 import { CLIP_POLL_MS, TrackMediaEffect } from '../../data/track-media';
@@ -74,6 +75,7 @@ interface TrackPageState {
 	saving: boolean;
 	saveError: string | null;
 	fetchingLyrics: boolean;
+	/** Translation key of why the online lookup gave nothing. */
 	fetchLyricsError: string | null;
 	/** A picture is being scaled, uploaded or written. */
 	storingImage: boolean;
@@ -372,14 +374,18 @@ export const TrackPageStore = signalStore(
 					);
 					patchState(store, {
 						fetchingLyrics: false,
-						fetchLyricsError: lyrics ? null : 'No lyrics found.',
+						fetchLyricsError: lyrics
+							? null
+							: 'page.track.lyrics-not-found',
 					});
 					return lyrics;
 				} catch (error) {
 					console.error(error);
 					patchState(store, {
 						fetchingLyrics: false,
-						fetchLyricsError: 'Loading lyrics failed.',
+						fetchLyricsError: isLyricsServiceBusy(error)
+							? 'page.track.lyrics-service-busy'
+							: 'page.track.lyrics-load-failed',
 					});
 					return null;
 				}

@@ -31,10 +31,11 @@ const EMPTY_PERMISSIONS: EffectivePermissions = { permissions: [], roles: [] };
  * Kijelentkezéskor mindent kiürítünk.
  *
  * Innen tudja a katalógus-szinkron is, hogy adminnak szolgál-e ki: az admin
- * műfaj-választás nélkül a teljes katalógust kapja, mindenki más a kirakatot
- * (`CatalogScopeService.useWholeCatalog`). Csak bejelentkezett user
- * megerősített szerepköreiből dönt — a kijelentkezett állapot nem vesz el
- * semmit, mert induláskor a munkamenet visszaállítása előtt is az látszik.
+ * műfaj-választás nélkül a teljes katalógust kapja, a többi gyűjtőt a
+ * műfaj-választó fogadja (`CatalogScopeService.useWholeCatalog`). Csak
+ * bejelentkezett user megerősített szerepköreiből dönt — a kijelentkezett
+ * állapot itt nem vesz el semmit, mert induláskor a munkamenet visszaállítása
+ * előtt is az látszik. Kijelentkezéskor a `CatalogSessionService` veszi el.
  */
 @Injectable()
 export class AuthorizationEffects implements OnDestroy {

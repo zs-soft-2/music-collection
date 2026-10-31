@@ -1,10 +1,10 @@
 import { Observable } from 'rxjs';
 
 import { DOCUMENT } from '@angular/common';
-import { Injectable, type Signal, inject } from '@angular/core';
+import { Injectable, type Signal, computed, inject } from '@angular/core';
 import {
 	CatalogScopeService,
-	FirestoreSyncService,
+	CatalogSessionService,
 	GenreEntity,
 	genreScopeKey,
 } from '@music-collection/api';
@@ -12,6 +12,7 @@ import { GenreEffect } from '@music-collection/domain/genre';
 
 import { UserSettingsEffect } from '../user-settings';
 
+import { GenreScopeSyncService } from './genre-scope-sync.service';
 import { GENRE_SCOPE_SETTING } from './genre-scope.model';
 
 /**
@@ -25,7 +26,8 @@ import { GENRE_SCOPE_SETTING } from './genre-scope.model';
 @Injectable({ providedIn: 'root' })
 export class GenreScopeEffect {
 	private readonly scope = inject(CatalogScopeService);
-	private readonly sync = inject(FirestoreSyncService);
+	private readonly session = inject(CatalogSessionService);
+	private readonly account = inject(GenreScopeSyncService);
 	private readonly settings = inject(UserSettingsEffect);
 	private readonly genres = inject(GenreEffect);
 	private readonly document = inject(DOCUMENT);
@@ -33,11 +35,32 @@ export class GenreScopeEffect {
 	/** The genres followed, by slug. */
 	public readonly slugs: Signal<string[]> = this.scope.slugs;
 
+	/** Whether a signed-in collector's catalog is narrowed to their genres. */
+	public readonly narrowed: Signal<boolean> = this.scope.narrowed;
+
 	/**
 	 * Whether following no genre gives this reader the whole catalog — an
 	 * administrator — rather than the weekly showcase.
 	 */
 	public readonly wholeCatalog: Signal<boolean> = this.scope.whole;
+
+	/**
+	 * A collector signed in and following no genre, who is asked to choose
+	 * one before being shown anything: the showcase is a guest's, and what
+	 * a collector sees is what they are here for.
+	 *
+	 * Only once the account and the roles have both answered — before that
+	 * an empty scope may be a choice still on its way, or an administrator
+	 * not yet known to be one.
+	 */
+	public readonly needsChoice: Signal<boolean> = computed(
+		() =>
+			this.scope.signedIn() &&
+			this.scope.rolesKnown() &&
+			this.account.answered() &&
+			!this.scope.narrowed() &&
+			!this.scope.whole()
+	);
 
 	/** The genres to pick from: the ones an admin has not retired. */
 	public genres$(): Observable<GenreEntity[]> {
@@ -48,12 +71,13 @@ export class GenreScopeEffect {
 	 * Follows these genres from now on.
 	 *
 	 * The order is the whole point. The choice is written to the account
-	 * first, because that is the record of it; then this browser's catalog
-	 * is thrown away, because it holds genres that are no longer followed;
-	 * and only then does the page start again, on a cache it will refill
-	 * from the bundles of the genres chosen. Reloading before the write
-	 * would lose the choice, and reloading before the cache is cleared would
-	 * leave the old genres to be read out of it.
+	 * first, because that is the record of it; only then does the scope
+	 * change, and with it `CatalogSessionService` throws away this
+	 * browser's catalog — it holds genres that are no longer followed — and
+	 * starts the page again on a cache it will refill from the bundles of
+	 * the genres chosen. Reloading before the write would lose the choice.
+	 * Going to the whole catalog keeps the cache, which holds part of it
+	 * already, so the page is only started again.
 	 */
 	public async apply(slugs: string[]): Promise<void> {
 		if (genreScopeKey(slugs) === genreScopeKey(this.scope.slugs())) {
@@ -63,7 +87,8 @@ export class GenreScopeEffect {
 		await this.settings.save(GENRE_SCOPE_SETTING, { genres: slugs });
 		this.scope.choose(slugs);
 
-		await this.sync.resetLocalCatalog();
-		this.document.defaultView?.location.reload();
+		if (!this.session.restarting) {
+			this.document.defaultView?.location.reload();
+		}
 	}
 }

@@ -28,6 +28,7 @@ describe('CatalogScopeService', () => {
 	});
 
 	it('gives an administrator the whole catalog, and remembers it', () => {
+		scope().useSession(true);
 		scope().useWholeCatalog(true);
 
 		expect(scope().key()).toBe('');
@@ -39,6 +40,7 @@ describe('CatalogScopeService', () => {
 	});
 
 	it('lets the genres win over the whole catalog', () => {
+		scope().useSession(true);
 		scope().useWholeCatalog(true);
 		scope().choose(['rock']);
 
@@ -51,10 +53,47 @@ describe('CatalogScopeService', () => {
 			JSON.stringify({ genres: ['rock', 'jazz'] })
 		);
 
+		localStorage.setItem('mc-catalog-signed-in', 'true');
+
 		// Synchronously, on construction: the first catalog query runs before
 		// anything asynchronous could have told it which genres to load.
 		expect(scope().slugs()).toEqual(['rock', 'jazz']);
 		expect(scope().narrowed()).toBe(true);
+		expect(scope().key()).toBe(genreScopeKey(['rock', 'jazz']));
+	});
+
+	it('gives a guest the showcase whatever this browser last followed', () => {
+		localStorage.setItem(STORAGE_KEY, JSON.stringify({ genres: ['rock'] }));
+
+		expect(scope().narrowed()).toBe(false);
+		expect(scope().key()).toBe(GUEST_SCOPE_KEY);
+	});
+
+	it('takes the genres and whole catalog of the account away on signing out', () => {
+		const service = scope();
+
+		service.useSession(true);
+		service.useWholeCatalog(true);
+		service.choose(['rock']);
+		service.useSession(false);
+
+		expect(service.key()).toBe(GUEST_SCOPE_KEY);
+		expect(service.slugs()).toEqual([]);
+		expect(service.whole()).toBe(false);
+		expect(service.rolesKnown()).toBe(false);
+
+		// Nor do they come back with the next start, signed in or not.
+		TestBed.resetTestingModule();
+		scope().useSession(true);
+		expect(scope().key()).toBe(GUEST_SCOPE_KEY);
+	});
+
+	it('knows the roles once they have been told, whatever they are', () => {
+		const service = scope();
+
+		expect(service.rolesKnown()).toBe(false);
+		service.useWholeCatalog(false);
+		expect(service.rolesKnown()).toBe(true);
 	});
 
 	it('keeps a third genre out', () => {
@@ -93,6 +132,7 @@ describe('CatalogScopeService', () => {
 		const service = scope();
 		const seen: CatalogScope[] = [];
 
+		service.useSession(true);
 		service.scope$.subscribe((current) => seen.push(current));
 		service.choose(['rock', 'jazz']);
 		service.choose(['jazz', 'rock']);
@@ -110,6 +150,7 @@ describe('CatalogScopeService', () => {
 		const service = scope();
 		const seen: string[] = [];
 
+		service.useSession(true);
 		service.choose(['rock']);
 		service.scope$.subscribe((current) =>
 			seen.push(catalogScopeKey(current))
