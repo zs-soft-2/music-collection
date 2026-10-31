@@ -37,6 +37,26 @@ App Check), OpenTofu/Terraform infrastruktúra.
   hír, mint az új lemez, de a kettő elkülönítve.
 - **Nyomvonal (breadcrumb) és visszaút** — az oldal tudja, honnan nyitották
   meg (pl. melyik collectionből), és oda vezet vissza.
+- **Felfedezés oldal** (`/discover`) — a katalógus fele annak, ami a kezdőlap
+  volt: darabszámok és évtizedes lefedettség, a hét bandája, a frissen
+  felvett és a legtöbbet gyűjtött előadók, utak a katalógusban stílus,
+  évtized és zenekar-típus szerint.
+- **Dalszöveg és zeneszám-média** — a zeneszám oldala az LRCLIB-ről hozza a
+  dalszöveget; a számhoz képet és klipet a szerver rajzoltat
+  (`generateTrackMedia`): a prompt a szám tárolt adataiból és a szövegéből
+  épül, a kész fájl `document` entitásként áll a szám alatt.
+- **Saját zenekarok és javaslatok** — a gyűjtő a katalógus saját űrlapjával
+  veszi fel a maga zenekarait (`/my-bands`), és javaslatot tehet a katalógus
+  bármelyik entitásának módosítására (`/propose`); az admin mezőnként dönt
+  (`decideRequest`), a gyűjtő a válaszban minden elutasítás mellett látja az
+  indoklást (`/my-requests`).
+- **Koncertek** — helyszínek a MusicBrainz `place` entitásából országonként
+  (`loadConcertVenues`), koncertek a katalógus előadóira a MusicBrainzről
+  (`loadConcertsFromMusicBrainz`). Ami onnan jön, kevés, de biztos, és
+  jóváhagyás nélkül kimehet; a lap tartalmát modell-javaslatok adják
+  (`suggestConcerts`, `suggestVenues`), amik `pending` állapotban várnak,
+  amíg valaki a forrást megnyitva jóvá nem hagyja. Napi keret, admin
+  beállítással.
 
 ### A gyűjtemény
 
@@ -53,7 +73,13 @@ App Check), OpenTofu/Terraform infrastruktúra.
 - **Fotó és fotós felismerés** — a példányhoz tartozó képek, és a `scan` oldal:
   lefényképezed a lemezt, az app megmondja, melyik pressing és hol van a
   katalógusban (vonalkód + Vision-jelek). Minden találat megerősítést kér —
-  a scan magától semmit nem vesz fel.
+  a scan magától semmit nem vesz fel. A `shelf-scan` oldal egy egész
+  rekeszt olvas ki egy-két fotóról (`identifyShelfFromPhotos`): két
+  független olvasat, és a gyűjtőnek csak azt kell átnéznie, amiben a kettő
+  nem ért egyet. Mindkettő a gyűjtő napi fotós keretéből megy.
+- **Példány préselés nélkül** — ha a gyűjtő csak a hordozót tudja (bakelit,
+  CD, DVD, kazetta), az album általános kiadására veszi fel a példányt
+  (`ensureGenericRelease`).
 - **Lemez-értékelés** — egész 1–5 csillag a lemezre (nem a példányra: több
   példány ugyanaz a zene, a plasztik állapotát a grading mondja), mellé egy sor
   arról, hogy miért. Egy koppintás az albumoldalon vagy a példányoldalon, és
@@ -80,9 +106,10 @@ App Check), OpenTofu/Terraform infrastruktúra.
 - **Következő lemez** — mit érdemes legközelebb megvenni: a befejező lemez
   előz, mert az egész sorozatot átadja; már feloldott collectionökből
   származtatva, új lekérdezés nélkül.
-- **Jelvények (badge)** — a collection definíciójából Vertex képmodellel
-  készülő pin: a function több jelöltet rajzol, az admin választ, a többi a
-  galériában marad. A promptot a szerver építi a tárolt adatokból.
+- **Jelvények (badge)** — a collection definíciójából az AI-gatewayen át
+  képmodellel készülő pin: a function több jelöltet rajzol, az admin választ
+  (vagy sajátot tölt fel), a többi a galériában marad. A promptot a szerver
+  építi a tárolt adatokból; a stíluszár kódban marad, verziózva.
 - **Gyűjtői állás** — a gyűjtő látja, hol tart az egyes collectionökön, és
   kiválaszthatja, melyekkel foglalkozik; a vendég csak azt kapja, ami neki szól.
 - **Műfaj-hatókör** — a vendég (be nem jelentkezett látogató) a
@@ -123,6 +150,19 @@ App Check), OpenTofu/Terraform infrastruktúra.
 
 - **Gyűjtők a térképen** — aki kéri, felkerül a világtérképre; a pin országot
   jelöl, alatta annyi látszik, amennyit az adott gyűjtő megosztott.
+- **Megosztható gyűjtő-profil** — gyűjtőnként egy publikus pillanatfelvétel
+  (`/collector/:uid`, lista a `/collectors` alatt); a `tools/sync/seed-mock-collectors.mjs`
+  műfajonként egy mintagyűjtőt tesz mellé.
+- **A hét bandája** — szerveroldali heti dokumentum
+  (`composeBandOfTheWeekDaily`): a kezdőlap főhelyén, és a rádió is sző
+  belőle. Minden éjjel fut, hetente egyszer ír.
+- **Napi kérdés** — a katalógusból épülő kérdés éjfél után
+  (`composeDailyQuestionDaily`), egy tipp naponta, pont és sorozat
+  (`answerDailyQuestion`), esti ranglista
+  (`refreshDailyQuestionLeaderboardDaily`). A megfejtést csak a szerver
+  látja; a sablonok ki-be kapcsolhatók az adminban.
+- **Avatar** — rétegekből összerakott gyűjtő-avatar; a ruhatár képei a
+  Storage-ban állnak (`tools/avatar/upload-assets.mjs`), nem a repóban.
 - **Közösségi átlag** — a lemez lapján ott áll, mit gondolnak róla a többiek,
   és hogy a gyűjtő mennyivel áll fölötte vagy alatta. Három értékelés alatt
   hallgat: egy ember véleménye nem közösségi vélemény. Az összeget egy trigger
@@ -135,10 +175,23 @@ App Check), OpenTofu/Terraform infrastruktúra.
 - Külön admin felület albumokhoz, előadókhoz, zenészekhez, kiadásokhoz,
   kiadókhoz, dokumentumokhoz, collection-itemekhez és wishlist-itemekhez
   (lista + szerkesztő, kártya nézet, szerkesztő-linkek a nyilvános oldalakról).
-- **Collection-item admin előadóra keresve**, release-kérések elbírálása,
-  badge-jelöltek közötti választás, jogosultság-újraszinkronizálás.
+- **Collection-item admin előadóra keresve**, release-kérések és
+  módosítási javaslatok elbírálása, badge-jelöltek közötti választás,
+  jogosultság-újraszinkronizálás.
 - **Katalógus-karbantartás**: duplikált albumok összevonása, névduplikátumok
-  keresése, dokumentum visszavonása törlés helyett.
+  keresése, dokumentum visszavonása törlés helyett. Album és kiadás törlése
+  callable-ön át (`deleteAlbumEntity`, `deleteReleaseEntity`): ha más
+  gyűjtőnek van belőle példánya, a törlés elutasít, és a kliens az
+  archiválást ajánlja.
+- **Műfaj-taxonómia** (`/admin/genre`): műfajok és alattuk a stílusok,
+  adatban — a `seed-genres.mjs` nélkül üres a választó.
+- **Bundle-ök** (`/admin/bundles`): minden katalógus-bundle állapota (mikor
+  épült, hány dokumentum változott azóta) és kézi újraépítés
+  (`rebuildCatalogBundle`).
+- **Koncert- és helyszín-admin**: MusicBrainz-betöltés, a modell-javaslatok
+  jóváhagyása, a napi AI-keret.
+- **Napi kérdés és jelvény beállításai**, a megjelenő lemezek kézi
+  frissítése (`syncUpcomingReleasesNow`).
 
 ### Platform
 
@@ -195,11 +248,12 @@ apps/
   firestore-rules/        a szabályok tesztjei
 libs/
   api/                    entitás-szerződések
-  common/                 framework-független közös szerződések és engine
-  core/                   auth, authorization, hibakezelés, export-import, darabszámok
-  domain/                 music (album, artist, musician, release, label,
-                          collection-item, music-collection, wishlist-item),
-                          document, user
+  common/                 framework-független közös szerződések (api) és engine
+  core/                   api, auth, authorization, hibakezelés (error),
+                          export-import, darabszámok (entity-quantity), i18n
+  domain/                 music (album, artist, musician, membership, release,
+                          label, genre, concert, collection-item,
+                          music-collection, wishlist-item), document, user
   ui/                     megosztott UI és a vizuális motor
 infra/                    OpenTofu: dev és prod környezet
 tools/                    karbantartó scriptek (lásd lent)
@@ -336,29 +390,48 @@ ami a fejlesztő gcloud ADC-jében épp be van állítva, a prod apply is a dev�
 
 ## Scriptek (`tools/`)
 
-| Script                                                           | Mire jó                                                          |
-| ---------------------------------------------------------------- | ---------------------------------------------------------------- |
-| `sync/catalog-sync.mjs`                                          | katalógus-szinkron (Firestore íráshoz mindig wrapperen át)       |
-| `sync/build-bundles.mjs`                                         | katalógus-bundle-ök építése                                      |
-| `sync/build-genre-bundles.mjs`                                   | műfajonkénti bundle a profilban választott műfajokhoz            |
-| `sync/copy-prod-to-dev.mjs`                                      | prod adat áthozása devbe                                         |
-| `sync/grant-permissions.mjs`                                     | jogosultság adása                                                |
-| `sync/seed-user-role.mjs`                                        | a `USER` szerepkör létrehozása, és kiosztása a meglévő usereknek |
-| `sync/backfill-collection-item-artist.mjs`                       | előadó-kereséshez visszatöltés                                   |
-| `sync/backfill-collection-item-cover-color.mjs`                  | a kiadás borítószíne a már bepolcozott példányokra               |
-| `sync/delete-collection-item.mjs`                                | egy példány törlése parancssorból                                |
-| `catalog/merge-duplicate-albums.mjs`, `find-duplicate-names.mjs` | duplikátumok                                                     |
-| `catalog/seed-collections.mjs`                                   | collectionök vetése                                              |
-| `discogs/import-discogs.mjs`                                     | tracklisták és közreműködők importja                             |
-| `scan/try-photo.mjs`                                             | a fotós felismerés kipróbálása                                   |
-| `avatar/upload-assets.mjs`                                       | az avatar-ruhatár feltöltése Storage-ba                          |
-| `avatar/archive-source.mjs`                                      | a ruhatár 1024×1536-os mesterképeinek archiválása                |
-| `app-check/generate-debug-token.mjs`                             | App Check debug token a buildhez                                 |
-| `primeui/generate-license.mjs`                                   | PrimeNG licenckulcs a buildhez                                   |
-| `hosting/verify-csp.mjs`                                         | a hosting CSP inline-hash-ei egyeznek-e a build kimenetével      |
+| Script                                                           | Mire jó                                                                    |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `sync/catalog-sync.mjs`                                          | katalógus-szinkron (Firestore íráshoz mindig wrapperen át)                 |
+| `sync/bundle-reader.mjs`                                         | egy publikált bundle visszaolvasása Storage-ból, dokumentum-olvasás nélkül |
+| `sync/build-bundles.mjs`                                         | katalógus-bundle-ök építése                                                |
+| `sync/build-genre-bundles.mjs`                                   | műfajonkénti bundle a profilban választott műfajokhoz                      |
+| `sync/touch-catalog.mjs`                                         | teljes letöltésre kényszeríti a klienseket egy-egy kollekcióra             |
+| `sync/copy-prod-to-dev.mjs`                                      | prod adat áthozása devbe                                                   |
+| `sync/grant-permissions.mjs`                                     | jogosultság adása                                                          |
+| `sync/seed-user-role.mjs`                                        | a `USER` szerepkör létrehozása, és kiosztása a meglévő usereknek           |
+| `sync/delete-orphan-users.mjs`                                   | `user` dokumentumok, amik mögött nincs Auth-fiók                           |
+| `sync/seed-mock-collectors.mjs`                                  | műfajonként egy mintagyűjtő polccal és publikus lappal                     |
+| `sync/backfill-collection-item-artist.mjs`                       | előadó-kereséshez visszatöltés                                             |
+| `sync/backfill-collection-item-cover-color.mjs`                  | a kiadás borítószíne a már bepolcozott példányokra                         |
+| `sync/backfill-album-has-tracks.mjs`                             | `hasTracks` minden albumra: van-e saját tracklistája a katalógusban        |
+| `sync/backfill-release-catno.mjs`                                | `catno` a mező előtt importált kiadásokra                                  |
+| `sync/backfill-concert-lineup.mjs`                               | a koncertek és javaslatok fellépői, és egy elveszett előadófotó            |
+| `sync/backfill-document-webp.mjs`                                | a `document/` alatti PNG-k átkódolása WebP-re, helyben                     |
+| `sync/reseal-copy-photos.mjs`                                    | a példányfotók letöltési URL-jei ki a dokumentumból, és új token a képen   |
+| `sync/delete-collection-item.mjs`                                | egy példány törlése parancssorból                                          |
+| `catalog/merge-duplicate-albums.mjs`, `find-duplicate-names.mjs` | duplikátumok                                                               |
+| `catalog/seed-genres.mjs`                                        | a műfaj-taxonómia (műfajok és stílusok) a katalógusba                      |
+| `catalog/seed-genre-catalog.mjs`                                 | a `genre-seed-data.mjs` előadói és albumai a rockon kívüli műfajokba       |
+| `catalog/seed-collections.mjs`                                   | collectionök vetése                                                        |
+| `catalog/mark-badge-documents.mjs`, `mark-scene-documents.mjs`   | a már megrajzolt jelvények / hátterek besorolása a kategóriájuk alá        |
+| `discogs/import-discogs.mjs`                                     | tracklisták és közreműködők importja a katalógus albumaihoz                |
+| `discogs/add-band.mjs`                                           | egy, a katalógusnak még ismeretlen zenekar felvétele Discogsról            |
+| `discogs/add-release.mjs`                                        | egy Discogs-kiadás albumként, tracklistával (válogatás, tribute)           |
+| `scan/try-photo.mjs`, `try-shelf.mjs`                            | a lemez- / polcfotós felismerés kipróbálása Firebase és UI nélkül          |
+| `avatar/upload-assets.mjs`                                       | az avatar-ruhatár feltöltése Storage-ba                                    |
+| `avatar/archive-source.mjs`                                      | a ruhatár 1024×1536-os mesterképeinek archiválása                          |
+| `functions/vendor-ai-sdk.mjs`                                    | a privát `@zssz-soft/zs-ai-sdk` tarballja a functions mellé                |
+| `generators/build-country-atlas.mjs`                             | az országok és pin-koordinátáik a térképhez (`world-countries`-ból)        |
+| `version/generate-version.mjs`                                   | buildenként egyedi verziószám (`1.0.0-build.42+abc1234`)                   |
+| `app-check/generate-debug-token.mjs`                             | App Check debug token a buildhez                                           |
+| `primeui/generate-license.mjs`                                   | PrimeNG licenckulcs a buildhez                                             |
+| `hosting/verify-csp.mjs`                                         | a hosting CSP inline-hash-ei egyeznek-e a build kimenetével                |
 
-A katalógus-scriptek olvasásigényesek (egy futás nagyságrendileg 25 ezer
-olvasás, a dry run is) — érdemes tudni, mielőtt indítod.
+A legtöbb script `--env dev|prod`-ot és `--confirm`-ot vár; enélkül száraz
+futás. A katalógus-scriptek olvasásigényesek voltak (egy régi vágású futás
+nagyságrendileg 25 ezer olvasás, a dry run is); a `bundle-reader` óta egy
+Storage GET plusz a változások — de érdemes tudni, mielőtt indítod.
 
 ---
 

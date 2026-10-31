@@ -1,4 +1,11 @@
-# functions — jogosultság-szinkron
+# functions
+
+A háttér: jogosultság-szinkron, a katalógus írásai, amiket a kliens nem
+kaphat meg, a külső források (Discogs, MusicBrainz) és minden modellhívás az
+AI-gatewayen át. Egy codebase (`security` a `firebase.json`-ben), egy régió
+(`europe-west4`), egy `index.ts` — a számítás a mellette álló fájlokban.
+
+## Jogosultság-szinkron
 
 A permission-alapú jogosultság szerveroldali fele. Egyetlen igazságforrást tart
 karban: a `security/users/{uid}/effective_permissions` dokumentumot.
@@ -18,6 +25,17 @@ user/{uid}.roleIds ────────┘        ▲                    ▲
 - **`syncRolePermissions`** — `role/{roleId}` írásakor minden érintett user.
 - **`resyncEffectivePermissions`** — callable, teljes újraszámolás (backfill).
   ADMIN permission kell hozzá.
+
+A `role` dokumentum `permissions` tömbje dönt; a user dokumentumon lévő
+hivatkozások (`roleIds`, illetve a régi, beágyazott `roles`) csak megnevezik a
+szerepkört. A beágyazott `roles[].permissions` szándékosan nem számít.
+
+**Custom claimet nem írunk**: a claimek együtt 1000 bájtba férnek, amit a teljes
+permission-lista túllépné. A Storage ezért cross-service `firestore.get()`-tel
+olvassa ugyanezt a dokumentumot.
+
+## Discogs
+
 - **`discogsMasterVersions`** — callable, egy Discogs master összes kiadása
   (`{ masterId }` → `{ masterId, versions }`) a release-kéréshez. Gyűjtő
   (`createCollectionItemEntity`) vagy ADMIN hívhatja. Az eredményt egy hétig a
@@ -40,10 +58,34 @@ user/{uid}.roleIds ────────┘        ▲                    ▲
     `apps/functions/src/discogs-lookup.ts` és a
     `libs/api/…/external/discogs-lookup.ts` alakját együtt kell tartani.
 
+- **`discogsArtistProfile`**, **`discogsLabelProfile`**, **`discogsLabelSearch`**
+  — a zenész- és kiadó-űrlap Load gombja; a kiadó névre keres előbb, mert a
+  katalógus kiadói a kiadásokból, névre születnek. Cache:
+  `discogs-cache/artist-{id}`, `label-{id}`, `label-search-{név}`.
+
+A Discogs-hívások a `DISCOGS_TOKEN` secretet használják (60 kérés/perc). A
+secretet és a hozzáférését az `infra/environments` teremti, az értékét kézzel
+tesszük fel (`gcloud secrets versions add DISCOGS_TOKEN --data-file=-`); érték
+nélkül a function deployja elszáll.
+
+## A katalógus írásai, amik csak innen mehetnek
+
 - **`approveReleaseRequest`** — callable, release-kérés jóváhagyása (ADMIN): a
   kiadás a katalógusba (a Discogsról importálva, vagy egy meglévő
   katalógus-kiadás), egy példány a kérő kollekciójába kerül, egy
   tranzakcióban, a kliens-szinkronnal (`updatedAt`, `sync/catalog`) együtt.
+- **`decideRequest`** — a gyűjtő módosítási javaslatának elbírálása (ADMIN):
+  mezőnként `verdicts`, az elfogadottak a katalógusba kerülnek, a válasz
+  (`entity-response`) minden elutasítás mellé indoklást visz.
+- **`ensureGenericRelease`** — az album általános kiadása egy hordozón
+  (`{ artistUid, albumUid, media }`), meglévő vagy most létrehozva: ezzel vesz
+  fel példányt az, aki a préselést nem tudja.
+- **`deleteReleaseEntity`**, **`deleteAlbumEntity`** — törlés a katalógusból.
+  A rules a kliensnek tiltja, mert a feltétel csak itt nézhető meg: ha más
+  gyűjtőnek van belőle példánya (albumnál: vagy értékelte), a válasz
+  `failed-precondition`, és a kliens az archiválást ajánlja. A kiadás saját
+  számai, az album préselései, számai, közreműködései és a hívó saját
+  példányai vele mennek.
 - **`createMusicCollectionEntity` / `updateMusicCollectionEntity` /
   `deleteMusicCollectionEntity`** — callable-ök az absztrakt collectionökhöz.
   A `firestore.rules` a `music-collection` írását a kliensnek tiltja, ezért a
@@ -57,33 +99,79 @@ user/{uid}.roleIds ────────┘        ▲                    ▲
     pedig az egész katalógusra illeszkedik. Publikálni ezért csak tényleges
     szűrővel lehet. A `criteriaVersion` csak akkor nő, ha a szabály változott.
 
-A Discogs-hívások a `DISCOGS_TOKEN` secretet használják (60 kérés/perc). A
-secretet és a hozzáférését az `infra/environments` teremti, az értékét kézzel
-tesszük fel (`gcloud secrets versions add DISCOGS_TOKEN --data-file=-`); érték
-nélkül a function deployja elszáll.
+- **`syncAlbumRating`** — trigger a gyűjtő privát értékelésén: a lemez
+  közösségi összegét (`album-rating/{albumId}`: darab, átlag, megoszlás)
+  számolja újra. Az írás a kliensé, a számolás a szerveré — ki mit adott, nem
+  hagyja el a user dokumentumát (`album-rating.ts`).
 
-A fotós felismerés (`identifyRecordFromPhoto`, `identifyShelfFromPhotos`) az
-**AI-gatewayen** át hív modellt (`src/vision-client.ts`, `@zssz-soft/zs-ai-sdk`):
-`POST /api/v1/complete`, a kép az üzenetben, a válasz JSON-sémához kötve. Két
-beállítás kell hozzá:
+## Modellhívások — mind az AI-gatewayen
+
+Minden modellhívás a gatewayen megy ki (`src/gateway-client.ts`,
+`@zssz-soft/zs-ai-sdk`): a szolgáltatót és a kulcsokat a gateway tartja,
+szolgáltatói kulcs (Anthropic, Vertex) itt nincs. Két beállítás kell hozzá:
 
 - `GATEWAY_API_KEY` — a gateway-tenant API-kulcsa, secret, ugyanúgy, mint a
   `DISCOGS_TOKEN` (az `infra/environments` teremti, az értéket kézzel tesszük
-  fel). A tenantnak engedélyezve kell lennie a `claude-opus-5` modellnek.
+  fel). A tenantnak engedélyezve kell lennie a használt modelleknek
+  (`claude-opus-5` a képolvasáshoz, `gemini-2.5-flash` a szöveges feladatokra,
+  a kép- és videómodellek a jelvényhez és a zeneszám-médiához).
 - `GATEWAY_BASE_URL` — a gateway címe `/api/v1` nélkül. Nem titok:
   projektenként az `.env.<project_id>` fájl adja.
 
-Szolgáltatói kulcs (Anthropic, Vertex) a képolvasáshoz itt nincs. A jelvénykép
-(`badge-generation.ts`) egyelőre még közvetlenül a Vertexet hívja a projekt
-saját service accountjával.
+- **`identifyRecordFromPhoto`**, **`identifyShelfFromPhotos`** — fotós
+  felismerés (`vision-client.ts`): vonalkód, majd a képről olvasott jelek a
+  Discogson; a polcfotó két független olvasat egy-két képről. Gyűjtő vagy
+  ADMIN hívhatja, gyűjtőnként napi keretből (`photo-scan-quota.ts`).
+- **`generateMusicCollectionBadge`**, **`setMusicCollectionBadgeImage`**,
+  **`adoptMusicCollectionBadgeImage`**, **`read`/`updateBadgeGenerationSettings`**
+  — jelvény a collection tárolt adataiból (`badge-generation.ts`): a prompt a
+  szerveren épül, több jelölt készül, az admin választ vagy sajátot iktat be.
+  A stíluszár kódban marad, verziózva.
+- **`generateTrackMedia`** — a zeneszám képe és klipje egy végponton
+  (`action`: ár, rajzolás, indítás, állapot; `track-media.ts`). A videót a
+  gateway futtatja, a `status` szedi össze.
+- **`suggestConcerts`**, **`suggestVenues`**, **`read`/`updateConcertAiSettings`**
+  — koncert- és helyszín-javaslatok keresésre támaszkodó modelltől
+  (`concert-suggestion.ts`, `venue-suggestion.ts`); `pending` állapotban a
+  `concert-suggestion` / `venue-suggestion` kollekcióba, a nyilvános lapra
+  csak jóváhagyás után. Napi keret, admin beállítással.
 
-A `role` dokumentum `permissions` tömbje dönt; a user dokumentumon lévő
-hivatkozások (`roleIds`, illetve a régi, beágyazott `roles`) csak megnevezik a
-szerepkört. A beágyazott `roles[].permissions` szándékosan nem számít.
+A napi kérdés és a hét bandája nem kérdez modellt: a katalógusból épülnek
+(lásd lent).
 
-**Custom claimet nem írunk**: a claimek együtt 1000 bájtba férnek, amit a teljes
-permission-lista túllépné. A Storage ezért cross-service `firestore.get()`-tel
-olvassa ugyanezt a dokumentumot.
+## MusicBrainz
+
+- **`loadConcertVenues`** — helyszínek egy országból a `place` entitásból
+  (`concert-venue.ts`); lassú (másodpercenként egy kérés), de ritka.
+- **`loadConcertsFromMusicBrainz`** — koncertek a katalógus előadóira,
+  kötegenként tizenöt mbid-vel (`concert-event.ts`); mbid áll mögöttük, ezért
+  jóváhagyás nélkül kimehetnek.
+- **`refreshUpcomingReleases`** (ütemezett, hajnalban) és
+  **`syncUpcomingReleasesNow`** (ADMIN) — a katalógus előadóinak következő
+  lemezei (`upcoming-release.ts`). Az ütemezéshez a Cloud Scheduler API kell
+  (infra `services`).
+
+## Ütemezett futások és a játék
+
+- **`composeDailyQuestionDaily`** / **`composeDailyQuestionNow`** — a nap
+  kérdése éjfél után; idempotens, a kézi `force` ADMIN-t kér
+  (`daily-question-compose.ts`).
+- **`answerDailyQuestion`** — a tipp kiértékelése, pont, sorozat
+  (`daily-answer.ts`); bejelentkezés kell, permission nem. A megfejtés olyan
+  dokumentumban áll, amit senki nem olvashat.
+- **`refreshDailyQuestionLeaderboardDaily`** / **`…Now`** — ranglista este,
+  egyetlen dokumentumba (`daily-question-leaderboard.ts`).
+- **`read`/`updateDailyQuestionSettings`** — a sablonok ki-be kapcsolása; a
+  lista a motorból jön (`daily-question-settings.ts`).
+- **`composeBandOfTheWeekDaily`** — a hét bandája (`band-of-the-week.ts`):
+  minden éjjel fut, hetente egyszer ír, tíz perccel a napi kérdés után.
+- **`composeGuestBundleDaily`** — a vendég-kirakat (`guest-bundle.ts`):
+  hetente cserél választást, de minden éjjel ránéz, és katalógus-változásnál
+  újraépít. Kézi frissítés: `gcloud scheduler jobs run
+firebase-schedule-composeGuestBundleDaily-europe-west4`.
+- **`catalogBundleStatusNow`**, **`rebuildCatalogBundle`** — admin: a
+  bundle-ök állapota aggregációkból, és egy bundle (`feature` / `genre` /
+  `guest`) újraépítése most (`catalog-bundles.ts`, `bundle-storage.ts`).
 
 ## Fejlesztés
 

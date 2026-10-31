@@ -55,7 +55,7 @@ different jobs:
 
 | Level | Keyed on | Decides |
 | --- | --- | --- |
-| Band | artist | the family (furnace, neon, haze, cobalt, rust, frost), the environment, the base hue, how the camera is held, the framing |
+| Band | artist | the family (`furnace`, `haze`, `grit`, `highway`, `boulevard`, `citadel`, `sepulchre`, `charnel`, `frostwood`, `ironcoast`, `orbit` — see `derived-profile.ts`), the environment, the base hue, how the camera is held, the framing |
 | Record | artist + album | the weather: hue off the band's, fog, darkness, what falls through the air and how much of it, the glow — and the skyline, through `world` |
 | Track | artist + album + title | how it is played through: its `energy`, tempo, camera movement, flicker and shake |
 
@@ -100,7 +100,11 @@ once) and whether bloom runs at all.
 
 ## Adding a world
 
-`environment.type` currently only renders `industrial`. A second world means a
-second fragment shader with the same uniforms and a branch where the engine
-builds its scene program; the controllers, the state and the profiles do not
-change.
+`EnvironmentType` names thirteen worlds (`industrial`, `urban`, `forest`,
+`swamp`, `cathedral`, `citadel`, `space`, `desert`, `coast`, `warehouse`,
+`abstract`, `nature`, `custom`), and the one scene shader draws all of them:
+`WORLDS` in `profile/world-shape.ts` says, per world, what stands on the
+horizon, what is in the sky and what the ground is made of, and those shapes
+go to the shader as uniforms. A new world is a new entry in `EnvironmentType`
+and in `WORLDS`; the shader, the controllers, the state and the profiles do
+not change unless the world needs a feature none of the others have.
