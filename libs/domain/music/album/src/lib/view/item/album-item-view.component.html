@@ -2,7 +2,7 @@
 	<div class="album-item-content">
 		<div class="cover">
 			<p-image
-				[src]="album.coverImage?.filePath || album.coverImageUrl || ''"
+				[src]="coverUrl(album) || ''"
 				[height]="'100'"
 				[width]="width"
 				[alt]="'ui.albumItemView.image' | transloco"

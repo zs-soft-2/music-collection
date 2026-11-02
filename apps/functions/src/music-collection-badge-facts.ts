@@ -20,6 +20,7 @@
 
 import { Firestore, Query } from 'firebase-admin/firestore';
 
+import { toAlbumCoverUrl } from './catalog-image-url';
 import { BadgeAlbum } from './music-collection-badge-context';
 
 const ARTIST_COLLECTION = 'artist';
@@ -71,7 +72,6 @@ export interface BadgeFacts {
 
 /** Egy albumdokumentum, ahogy a jelvénynek kell. */
 function toAlbum(data: Record<string, unknown>): BadgeAlbum {
-	const cover = (data['coverImage'] ?? null) as { filePath?: string } | null;
 	const year = data['year'];
 
 	return {
@@ -84,12 +84,7 @@ function toAlbum(data: Record<string, unknown>): BadgeAlbum {
 					(style) => typeof style === 'string'
 				)
 			: [],
-		coverUrl:
-			cover?.filePath ||
-			(typeof data['coverImageUrl'] === 'string'
-				? data['coverImageUrl']
-				: null) ||
-			null,
+		coverUrl: toAlbumCoverUrl(data['coverImageUrl'], data['coverImage']),
 	};
 }
 

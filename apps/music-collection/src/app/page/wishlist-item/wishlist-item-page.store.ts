@@ -4,6 +4,7 @@ import { computed, inject } from '@angular/core';
 import { TextService } from '@music-collection/core/i18n';
 import { ActivatedRoute } from '@angular/router';
 import { ReleaseEntity, WishlistItemEntity } from '@music-collection/api';
+import { toAlbumCoverUrl } from '@music-collection/common/engine';
 import { tapResponse } from '@ngrx/operators';
 import {
 	patchState,
@@ -51,7 +52,7 @@ export const WishlistItemPageStore = signalStore(
 		return {
 			album,
 			artist,
-			coverUrl: computed(() => album()?.coverImage?.filePath ?? null),
+			coverUrl: computed(() => toAlbumCoverUrl(album())),
 			/** The formats the collector would take it in. */
 			medias: computed(() => store.item()?.medias ?? []),
 			collector: computed(() => {

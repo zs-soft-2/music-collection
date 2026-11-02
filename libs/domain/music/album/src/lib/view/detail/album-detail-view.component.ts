@@ -8,6 +8,7 @@ import {
 	inject,
 } from '@angular/core';
 import { AlbumDetailViewParams, BaseComponent } from '@music-collection/api';
+import { toAlbumCoverUrl } from '@music-collection/common/engine';
 
 import { AlbumDetailViewStoreService } from './album-detail-view-store.service';
 import { AlbumDetailViewService } from './album-detail-view.service';
@@ -40,6 +41,9 @@ export class AlbumDetailViewComponent extends BaseComponent implements OnInit {
 	private componentService = inject(AlbumDetailViewService);
 
 	public params$!: Observable<AlbumDetailViewParams>;
+
+	/** Which address the cover is drawn from; the template asks it (#60). */
+	protected readonly coverUrl = toAlbumCoverUrl;
 
 	public ngOnInit(): void {
 		this.params$ = this.componentService.init$();

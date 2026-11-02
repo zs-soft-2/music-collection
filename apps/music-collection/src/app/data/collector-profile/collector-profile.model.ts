@@ -1,5 +1,6 @@
 import { WishlistItemEntity } from '@music-collection/api';
 import { MediaEnum } from '@music-collection/common/api';
+import { toAlbumCoverUrl } from '@music-collection/common/engine';
 import { MusicCollectionStanding } from '@music-collection/domain/music-collection/core';
 import { ageWeight } from '@music-collection/domain/music-collection/engine';
 import { MediaFormat, ReleaseView } from '@music-collection/ui/music-view';
@@ -439,7 +440,7 @@ function toWishlist(wishes: readonly WishlistItemEntity[]): CollectorWish[] {
 		const wanted: CollectorWish = {
 			title: wish.albumReference?.name ?? '',
 			artistName: wish.artistReference?.name ?? '',
-			coverUrl: wish.albumReference?.coverImage?.filePath ?? null,
+			coverUrl: toAlbumCoverUrl(wish.albumReference),
 			// `all` is not a format but the absence of a preference, and an
 			// empty list says the same thing without the visitor having to
 			// know our enum.

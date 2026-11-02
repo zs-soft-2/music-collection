@@ -9,6 +9,7 @@
 
 import { FieldPath, Firestore, Query } from 'firebase-admin/firestore';
 
+import { toAlbumCoverUrl } from './catalog-image-url';
 import { stamp } from './catalog-sync';
 import {
 	MaterialAlbum,
@@ -166,9 +167,6 @@ const toMaterialAlbum = (
 	const artist = document.get('artist') as
 		{ uid?: string; name?: string } | undefined;
 
-	const cover = document.get('coverImage') as
-		{ filePath?: string } | undefined;
-
 	return {
 		uid: document.id,
 		name: (document.get('name') as string) ?? '',
@@ -177,12 +175,12 @@ const toMaterialAlbum = (
 		year: yearOf(document.get('year')),
 		styles: (document.get('styles') as string[]) ?? [],
 		genre: (document.get('genre') as string | null) ?? null,
-		// Ugyanaz a sorrend, mint a felületen (`music-view.mapper`): a
-		// feltöltött borító előbbre való a netről talált címnél.
-		coverUrl:
-			cover?.filePath ||
-			(document.get('coverImageUrl') as string | null) ||
-			null,
+		// Ugyanaz a sorrend, mint a felületen (`music-view.mapper`): a beírt
+		// cím előbbre való a csatolt borítónál (#60).
+		coverUrl: toAlbumCoverUrl(
+			document.get('coverImageUrl'),
+			document.get('coverImage')
+		),
 	};
 };
 

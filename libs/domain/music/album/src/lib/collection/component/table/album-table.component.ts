@@ -11,6 +11,7 @@ import {
 	AlbumTableParams,
 	BaseComponent,
 } from '@music-collection/api';
+import { toAlbumCoverUrl } from '@music-collection/common/engine';
 import { Observable } from 'rxjs';
 
 import { ALBUM_IN_USE } from '../../../deletion/album-deletion.effect';
@@ -73,9 +74,9 @@ export class AlbumTableComponent extends BaseComponent implements OnInit {
 
 	public readonly place = this.componentService.place;
 
-	/** The uploaded cover, else the cover found on the web. */
+	/** The address an admin typed in, else the uploaded cover. */
 	public imageOf(album: AlbumEntity): string | null {
-		return album.coverImage?.filePath || album.coverImageUrl || null;
+		return toAlbumCoverUrl(album);
 	}
 
 	public clearArtistSearch(): void {

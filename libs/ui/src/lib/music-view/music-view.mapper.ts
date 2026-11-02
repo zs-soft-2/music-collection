@@ -7,6 +7,8 @@ import {
 } from '@music-collection/api';
 import {
 	formatCountry,
+	toAlbumCoverUrl,
+	toArtistImageUrl,
 	toDescriptions,
 	toEpochMs,
 	toYear,
@@ -69,10 +71,7 @@ export function toReleaseView(item: CollectionItemEntity): ReleaseView {
 		title: release.album?.name || release.name || 'Untitled',
 		artistId: release.artist?.uid ?? '',
 		artistName: release.artist?.name || 'Unknown artist',
-		coverUrl:
-			release.album?.coverImage?.filePath ||
-			release.album?.coverImageUrl ||
-			null,
+		coverUrl: toAlbumCoverUrl(release.album),
 		format,
 		albumType: toAlbumType(release.album?.format),
 		year: toYear(release.album?.year),
@@ -91,11 +90,7 @@ export function toReleaseView(item: CollectionItemEntity): ReleaseView {
 }
 
 export function toArtistView(artist: ArtistEntity): ArtistView {
-	const imageUrl =
-		artist.mainImage?.filePath ||
-		artist.imageUrl ||
-		artist.discogs?.imageUrl ||
-		null;
+	const imageUrl = toArtistImageUrl(artist);
 
 	return {
 		id: artist.uid,
@@ -115,7 +110,7 @@ export function toAlbumView(album: AlbumEntity): AlbumView {
 		title: album.name,
 		artistId: album.artist?.uid ?? '',
 		artistName: album.artist?.name ?? '',
-		coverUrl: album.coverImage?.filePath || album.coverImageUrl || null,
+		coverUrl: toAlbumCoverUrl(album),
 		year: toYear(album.year),
 		albumType: toAlbumType(album.format),
 		styles: album.styles ?? [],

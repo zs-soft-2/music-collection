@@ -14,6 +14,7 @@ import {
 	ReleaseTableParams,
 	isReleaseArchived,
 } from '@music-collection/api';
+import { toAlbumCoverUrl } from '@music-collection/common/engine';
 
 import { RELEASE_IN_USE } from '../../../deletion/release-deletion.effect';
 import { provideReleaseDeletion } from '../../../deletion/release-deletion.providers';
@@ -75,13 +76,9 @@ export class ReleaseTableComponent extends BaseComponent implements OnInit {
 
 	public readonly place = this.componentService.place;
 
-	/** The cover of the release's album (uploaded, else found on the web). */
+	/** The cover of the release's album: the entered address, else the upload. */
 	public imageOf(release: ReleaseEntity): string | null {
-		return (
-			release.album?.coverImage?.filePath ||
-			release.album?.coverImageUrl ||
-			null
-		);
+		return toAlbumCoverUrl(release.album);
 	}
 
 	public clearArtistSearch(): void {

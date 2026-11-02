@@ -7,6 +7,7 @@ import {
 	Output,
 } from '@angular/core';
 import { BaseComponent, WishlistItemEntity } from '@music-collection/api';
+import { toAlbumCoverUrl } from '@music-collection/common/engine';
 import {
 	DefaultLayoutDirective,
 	DefaultLayoutAlignDirective,
@@ -40,6 +41,9 @@ export class WishlistItemSimpleViewComponent extends BaseComponent {
 	public width = '200';
 	@Input()
 	public layout: 'horizontal' | 'vertical' = 'horizontal';
+
+	/** Which address the cover is drawn from; both layouts ask it (#60). */
+	protected readonly coverUrl = toAlbumCoverUrl;
 
 	public constructor() {
 		super();

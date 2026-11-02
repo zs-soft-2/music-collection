@@ -11,6 +11,7 @@ import {
 	WishlistItemTableParams,
 	BaseComponent,
 } from '@music-collection/api';
+import { toAlbumCoverUrl } from '@music-collection/common/engine';
 import { Observable } from 'rxjs';
 
 import { WishlistItemTableService } from './wishlist-item-table.service';
@@ -59,9 +60,12 @@ export class WishlistItemTableComponent
 
 	public readonly place = this.componentService.place;
 
-	/** The cover of the wished album, if it has one. */
+	/**
+	 * The cover of the wished album, if it has one: the address an admin typed
+	 * in, else the uploaded cover.
+	 */
 	public imageOf(wishlistItem: WishlistItemEntity): string | null {
-		return wishlistItem.albumReference?.coverImage?.filePath || null;
+		return toAlbumCoverUrl(wishlistItem.albumReference);
 	}
 
 	public clearSearch(): void {

@@ -1,4 +1,5 @@
 import { ReleaseEntity } from '@music-collection/api';
+import { toAlbumCoverUrl } from '@music-collection/common/engine';
 
 import { MediaFormat, toMediaFormat } from '../music-ui';
 
@@ -42,7 +43,7 @@ export function toPressingRow(release: ReleaseEntity): PressingRow {
 		albumName: album?.name ?? null,
 		artistUid: release.artist?.uid ?? null,
 		artistName: release.artist?.name ?? null,
-		coverUrl: album?.coverImage?.filePath || album?.coverImageUrl || null,
+		coverUrl: toAlbumCoverUrl(album),
 		year: pressingYear(release),
 		format: toMediaFormat(release.media),
 		formatDescription: release.formatDescription ?? null,

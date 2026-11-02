@@ -9,7 +9,11 @@ import {
 	FormatDescriptionList,
 	MediaEnum,
 } from '@music-collection/common/api';
-import { toDescriptions, toYear } from '@music-collection/common/engine';
+import {
+	toAlbumCoverUrl,
+	toDescriptions,
+	toYear,
+} from '@music-collection/common/engine';
 import {
 	CatalogAlbum,
 	CatalogArtist,
@@ -33,7 +37,7 @@ export function toCatalogAlbum(album: AlbumEntity): CatalogAlbum {
 		year: toYear(album.year),
 		styles: album.styles ?? [],
 		format: album.format ?? null,
-		coverUrl: album.coverImage?.filePath || album.coverImageUrl || null,
+		coverUrl: toAlbumCoverUrl(album),
 	};
 }
 

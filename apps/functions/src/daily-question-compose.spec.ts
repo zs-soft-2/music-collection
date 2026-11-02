@@ -334,6 +334,51 @@ describe('gatherMaterial — emberek és borító', () => {
 		expect(material?.album.genre).toBe('Rock');
 	});
 
+	/** Az albumdokumentum borító-mezői, a többit a `beforeEach` adja. */
+	const albumWithCover = (cover: Record<string, unknown>): void => {
+		contents['artist/artist-1/album'] = [
+			document(
+				'album-1',
+				{
+					name: 'Altars Of Madness',
+					artist: { uid: 'artist-1', name: 'Morbid Angel' },
+					year: 599616000000,
+					styles: ['Death Metal'],
+					genre: 'Rock',
+					...cover,
+				},
+				asked,
+				'artist/artist-1/album'
+			),
+		];
+	};
+
+	/**
+	 * AC-4 (#60): ahol mindkettő megvan, a beírt cím az, ami számít — a napi
+	 * kérdés ugyanazt a borítót mutassa, amit a felületen látni.
+	 */
+	it('a beírt címet a csatolt borító elé veszi', async () => {
+		albumWithCover({
+			coverImage: { filePath: 'https://storage/doc.jpg' },
+			coverImageUrl: 'https://a/url.jpg',
+		});
+
+		const material = await gatherMaterial(firestore(asked), random());
+
+		expect(material?.album.coverUrl).toBe('https://a/url.jpg');
+	});
+
+	/** A csatolmány sorrendje változott, a szerepe nem (FR-007). */
+	it('a csatolt borítót továbbra is megmutatja, ha nincs beírt cím', async () => {
+		albumWithCover({
+			coverImage: { filePath: 'https://storage/doc.jpg' },
+		});
+
+		const material = await gatherMaterial(firestore(asked), random());
+
+		expect(material?.album.coverUrl).toBe('https://storage/doc.jpg');
+	});
+
 	it('a közreműködőt azon a néven adja, ahogy a lemezen szerepel', async () => {
 		const material = await gatherMaterial(firestore(asked), random());
 

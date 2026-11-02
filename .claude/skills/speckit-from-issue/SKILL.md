@@ -43,6 +43,8 @@ $ARGUMENTS
    - If the command fails (not authenticated, issue not found, no network), report the exact error and stop. Do NOT invent or guess the issue content.
    - If `state` is `CLOSED`, tell the user and ask whether to continue before doing anything else.
    - Read the comments too: they may contain decisions or clarifications that refine the issue body.
+   - Images: follow step 2 "Images" of `speckit-issue-sync` (`npx zs-kit attachments <number>`) and hand the
+     files over with the issue.
 
 3. **Check the base branch**: the feature branch is created from the current `HEAD` (the git extension's `git checkout -b`).
    - New work starts from the **local `dev`** branch. If the current branch is not `dev`, tell the user and ask before going on.
@@ -94,6 +96,7 @@ $ARGUMENTS
 
 ## Notes
 
+- **Working files** (screenshots, drafts, command output to keep) go to `.specify/kit-ui/tmp/`, never `/tmp` or the project root. Git ignores the directory, and the dashboard empties it before a new run, so do not delete anything there yourself (a headless `rm` is refused).
 - Written for Spec Kit 1.2.x with the bundled `git` extension (`specify extension add git`): branch creation is the `before_specify` hook, the spec directory and file are created by `speckit-specify` itself. If an upgrade renumbers the speckit-specify Outline, re-check the overrides in step 6.
 - Run this skill only when the maintainer invokes it (directly, or with the Run button of the `zs-kit ui` dashboard): tickets are started manually, never by another skill, a plan or a suggestion.
 - The issue flow's companions: `speckit-issue-sync` (before the spec), `speckit-issue-analyze` (after the tasks, and after a converge), `speckit-issue-verify` (after the implementation).

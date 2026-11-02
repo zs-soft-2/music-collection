@@ -11,6 +11,7 @@ import {
 	ArtistTableParams,
 	BaseComponent,
 } from '@music-collection/api';
+import { toArtistImageUrl } from '@music-collection/common/engine';
 import { Observable } from 'rxjs';
 
 import { ArtistTableService } from './artist-table.service';
@@ -56,14 +57,12 @@ export class ArtistTableComponent extends BaseComponent implements OnInit {
 
 	public readonly place = this.componentService.place;
 
-	/** The uploaded main image, else the photo found on the web. */
+	/**
+	 * The address an admin typed in, else the uploaded main image, else the
+	 * photo the import found on the web.
+	 */
 	public imageOf(artist: ArtistEntity): string | null {
-		return (
-			artist.mainImage?.filePath ||
-			artist.imageUrl ||
-			artist.discogs?.imageUrl ||
-			null
-		);
+		return toArtistImageUrl(artist);
 	}
 
 	public clearSearch(): void {

@@ -8,9 +8,7 @@
 				fxLayoutGap="10px 5px grid"
 			>
 				<p-image
-					[src]="
-						wishlistItem.albumReference.coverImage?.filePath || ''
-					"
+					[src]="coverUrl(wishlistItem.albumReference) || ''"
 					[preview]="true"
 					[alt]="'ui.wishlistItemSimpleView.image' | transloco"
 					[width]="width"
@@ -52,10 +50,7 @@
 			>
 				<div>
 					<p-image
-						[src]="
-							wishlistItem.albumReference.coverImage?.filePath ||
-							''
-						"
+						[src]="coverUrl(wishlistItem.albumReference) || ''"
 						[preview]="true"
 						[alt]="'ui.wishlistItemSimpleView.image2' | transloco"
 						[width]="width"

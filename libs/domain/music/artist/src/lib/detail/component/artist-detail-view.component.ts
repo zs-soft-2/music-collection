@@ -8,6 +8,7 @@ import {
 	inject,
 } from '@angular/core';
 import { AlbumEntity, BaseComponent } from '@music-collection/api';
+import { toArtistHeaderUrl } from '@music-collection/common/engine';
 
 import { ArtistDetailViewService } from './artist-detail-view.service';
 import { ArtistDetailViewStore } from './artist-detail-view.store';
@@ -47,6 +48,13 @@ export class ArtistDetailViewComponent extends BaseComponent implements OnInit {
 
 	@Output()
 	public selectAlbumDetail: EventEmitter<AlbumEntity>;
+
+	/**
+	 * Which address the banner is drawn from; the template asks it (#60). The
+	 * *header* rule, not the picture rule: an attached header keeps precedence
+	 * (FR-006), and only an artist without one falls back to the photo.
+	 */
+	protected readonly headerUrl = toArtistHeaderUrl;
 
 	public constructor() {
 		super();
