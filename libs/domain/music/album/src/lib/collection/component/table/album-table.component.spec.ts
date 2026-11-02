@@ -137,6 +137,32 @@ describe('AlbumTableComponent', () => {
 		expect(row.textContent).not.toContain('No tracks');
 	});
 
+	/**
+	 * The cover order of #60: the address an admin typed in is the more
+	 * deliberate of the two, so it is the one the row shows.
+	 */
+	it('shows the entered address over the attached cover', () => {
+		expect(
+			component.imageOf({
+				uid: '1',
+				name: 'Nevermind',
+				coverImageUrl: 'https://a/url.jpg',
+				coverImage: { filePath: 'https://storage/doc.jpg' },
+			} as AlbumEntity)
+		).toBe('https://a/url.jpg');
+	});
+
+	/** The attachment is reordered, never dropped (FR-007). */
+	it('still shows the attached cover where nothing was entered', () => {
+		expect(
+			component.imageOf({
+				uid: '1',
+				name: 'Nevermind',
+				coverImage: { filePath: 'https://storage/doc.jpg' },
+			} as AlbumEntity)
+		).toBe('https://storage/doc.jpg');
+	});
+
 	it('offers a way to look at the album, not only to edit it', () => {
 		expect(
 			fixture.nativeElement

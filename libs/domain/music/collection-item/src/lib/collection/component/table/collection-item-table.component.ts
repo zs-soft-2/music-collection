@@ -11,6 +11,7 @@ import {
 	CollectionItemTableParams,
 	BaseComponent,
 } from '@music-collection/api';
+import { toAlbumCoverUrl } from '@music-collection/common/engine';
 import { Observable } from 'rxjs';
 
 import { CollectionItemTableService } from './collection-item-table.service';
@@ -59,13 +60,9 @@ export class CollectionItemTableComponent
 
 	public readonly place = this.componentService.place;
 
-	/** The cover of the item's album (uploaded, else found on the web). */
+	/** The cover of the item's album: the entered address, else the upload. */
 	public imageOf(collectionItem: CollectionItemEntity): string | null {
-		return (
-			collectionItem.release?.album?.coverImage?.filePath ||
-			collectionItem.release?.album?.coverImageUrl ||
-			null
-		);
+		return toAlbumCoverUrl(collectionItem.release?.album);
 	}
 
 	public clearArtistSearch(): void {

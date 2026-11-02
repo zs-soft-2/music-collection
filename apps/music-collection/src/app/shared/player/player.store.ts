@@ -33,6 +33,7 @@ import {
 	isYoutubePlaylistId,
 	isYoutubeVideoId,
 } from '@music-collection/api';
+import { toAlbumCoverUrl } from '@music-collection/common/engine';
 import {
 	patchState,
 	signalStore,
@@ -286,7 +287,7 @@ export function albumPlayRequest(
 		albumTitle: album.name,
 		artistName: album.artist?.name ?? null,
 		artistId: album.artist?.uid ?? null,
-		coverUrl: album.coverImage?.filePath || album.coverImageUrl || null,
+		coverUrl: toAlbumCoverUrl(album),
 		styles: album.styles ?? [],
 		spotifyAlbumId: isSpotifyAlbumId(album.spotifyAlbumId)
 			? album.spotifyAlbumId
@@ -865,10 +866,7 @@ export const PlayerStore = signalStore(
 										albumId,
 										albumTitle: album.name,
 										artistName: album.artist?.name ?? null,
-										coverUrl:
-											album.coverImage?.filePath ||
-											album.coverImageUrl ||
-											null,
+										coverUrl: toAlbumCoverUrl(album),
 									},
 								]
 							: [];

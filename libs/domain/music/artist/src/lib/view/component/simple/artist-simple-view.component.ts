@@ -7,6 +7,7 @@ import {
 	Output,
 } from '@angular/core';
 import { ArtistEntity, BaseComponent } from '@music-collection/api';
+import { toArtistImageUrl } from '@music-collection/common/engine';
 import {
 	DefaultLayoutDirective,
 	DefaultFlexDirective,
@@ -36,6 +37,9 @@ export class ArtistSimpleViewComponent extends BaseComponent {
 	public artist!: ArtistEntity;
 	@Output()
 	public selectArtist: EventEmitter<ArtistEntity>;
+
+	/** Which address the photo is drawn from; the template asks it (#60). */
+	protected readonly imageUrl = toArtistImageUrl;
 
 	public constructor() {
 		super();

@@ -76,6 +76,34 @@ describe('ArtistTableComponent', () => {
 			fixture.nativeElement.querySelector('.mc-incomplete-filter')
 		).toBeNull();
 	});
+
+	/**
+	 * The picture order of #60: the address an admin typed in is the more
+	 * deliberate of the two, so it is the one the row shows.
+	 */
+	it('shows the entered address over the attachment and the import', () => {
+		expect(
+			component.imageOf({
+				uid: '1',
+				name: 'Nirvana',
+				imageUrl: 'https://a/url.jpg',
+				mainImage: { filePath: 'https://storage/main.jpg' },
+				discogs: { imageUrl: 'https://discogs/x.jpg' },
+			} as ArtistEntity)
+		).toBe('https://a/url.jpg');
+	});
+
+	/** The attachment is reordered, never dropped (FR-007). */
+	it('still shows the attachment where nothing was entered', () => {
+		expect(
+			component.imageOf({
+				uid: '1',
+				name: 'Nirvana',
+				mainImage: { filePath: 'https://storage/main.jpg' },
+				discogs: { imageUrl: 'https://discogs/x.jpg' },
+			} as ArtistEntity)
+		).toBe('https://storage/main.jpg');
+	});
 });
 
 describe('ArtistTableComponent: the artists without a genre', () => {

@@ -1,6 +1,6 @@
-<div class="album-simple" [style.background]="album.coverImage?.filePath">
+<div class="album-simple" [style.background]="coverUrl(album)">
 	<p-image
-		[src]="album.coverImage?.filePath || album.coverImageUrl || ''"
+		[src]="coverUrl(album) || ''"
 		[width]="width"
 		[height]="height"
 		[alt]="'ui.albumSimpleView.image' | transloco"

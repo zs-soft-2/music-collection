@@ -7,6 +7,7 @@ import {
 	Output,
 } from '@angular/core';
 import { AlbumEntity, BaseComponent } from '@music-collection/api';
+import { toAlbumCoverUrl } from '@music-collection/common/engine';
 import { Bind } from 'primeng/bind';
 import { Image } from 'primeng/image';
 import { Button } from 'primeng/button';
@@ -26,6 +27,9 @@ export class AlbumItemViewComponent extends BaseComponent {
 	public width = '100';
 	@Output()
 	public selectAlbumDetail: EventEmitter<AlbumEntity>;
+
+	/** Which address the cover is drawn from; the template asks it (#60). */
+	protected readonly coverUrl = toAlbumCoverUrl;
 
 	public constructor() {
 		super();

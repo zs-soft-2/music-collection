@@ -10,6 +10,7 @@ import {
 	WishlistItemPermissionsService,
 	WishlistItemStateService,
 } from '@music-collection/api';
+import { toAlbumCoverUrl } from '@music-collection/common/engine';
 import { tapResponse } from '@ngrx/operators';
 import {
 	patchState,
@@ -106,7 +107,7 @@ export function toWishlistEntryView(
 			title: item.albumReference?.name ?? 'Unknown album',
 			artistId: item.artistReference?.uid ?? '',
 			artistName: item.artistReference?.name ?? 'Unknown artist',
-			coverUrl: item.albumReference?.coverImage?.filePath || null,
+			coverUrl: toAlbumCoverUrl(item.albumReference),
 			format: formats[0] ?? 'other',
 			albumType: null,
 			year: null,

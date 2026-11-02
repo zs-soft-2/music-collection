@@ -10,11 +10,7 @@
 			>
 				<div class="cover">
 					<p-image
-						[src]="
-							params.album.coverImage?.filePath ||
-							params.album.coverImageUrl ||
-							''
-						"
+						[src]="coverUrl(params.album) || ''"
 						[height]="params.imageHeight"
 						[width]="params.imageWidth"
 						[alt]="'ui.albumDetailView.image' | transloco"

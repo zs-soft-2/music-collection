@@ -139,6 +139,60 @@ describe('a collection tényei', () => {
 		]);
 	});
 
+	/**
+	 * AC-4 (#60): ahol mindkettő megvan, a beírt cím az, ami számít — a
+	 * jelvény ugyanazt a borítót nevezze meg, amit a felületen látni.
+	 */
+	it('a beírt címet a csatolt borító elé veszi', async () => {
+		const facts = await readBadgeFacts(
+			fakeDatabase({
+				artists: { megadeth: { name: 'Megadeth' } },
+				albums: {
+					megadeth: [
+						{
+							name: 'Rust in Peace',
+							year: 1990,
+							styles: ['Thrash'],
+							format: 'lp',
+							coverImage: { filePath: 'https://storage/doc.jpg' },
+							coverImageUrl: 'https://a/url.jpg',
+						},
+					],
+				},
+			}),
+			request({ artistUids: ['megadeth'] })
+		);
+
+		expect(facts.albums.map((album) => album.coverUrl)).toEqual([
+			'https://a/url.jpg',
+		]);
+	});
+
+	/** A csatolmány sorrendje változott, a szerepe nem (FR-007). */
+	it('a csatolt borítót továbbra is megnevezi, ha nincs beírt cím', async () => {
+		const facts = await readBadgeFacts(
+			fakeDatabase({
+				artists: { megadeth: { name: 'Megadeth' } },
+				albums: {
+					megadeth: [
+						{
+							name: 'Rust in Peace',
+							year: 1990,
+							styles: ['Thrash'],
+							format: 'lp',
+							coverImage: { filePath: 'https://storage/doc.jpg' },
+						},
+					],
+				},
+			}),
+			request({ artistUids: ['megadeth'] })
+		);
+
+		expect(facts.albums.map((album) => album.coverUrl)).toEqual([
+			'https://storage/doc.jpg',
+		]);
+	});
+
 	it('az előadó stílusait tartalékként hozza, nem döntésként', async () => {
 		// Ez a tömb kezdte az egészet: a „Hard rock" áll benne elöl, és
 		// amíg ez volt az első forrás, a Megadeth kapott egy pikk ászt.

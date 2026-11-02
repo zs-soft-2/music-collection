@@ -23,7 +23,7 @@
 
 		<div class="right" fxFlex="60">
 			<p-image
-				[src]="artist.mainImage?.filePath || ''"
+				[src]="imageUrl(artist) || ''"
 				[alt]="'ui.artistSimpleView.image' | transloco"
 				width="450"
 			></p-image>

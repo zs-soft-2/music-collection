@@ -250,6 +250,57 @@ describe('toPublicCollectorProfile: the consents', () => {
 	});
 
 	/**
+	 * AC-3 of #60: the shared profile used to ask the attached cover and
+	 * nothing else, so a wish whose only cover is a typed-in address went out
+	 * without one.
+	 */
+	const wishlistCover = (
+		album: Partial<WishlistItemEntity['albumReference']>
+	): string | null | undefined =>
+		toPublicCollectorProfile(
+			source({
+				settings: {
+					shared: true,
+					shareWishlist: true,
+					shareRatings: false,
+				},
+				wishes: [
+					wish({
+						albumReference: {
+							uid: 'album-9',
+							name: 'Peace Sells',
+							...album,
+						},
+					} as Partial<WishlistItemEntity>),
+				],
+			})
+		)?.wishlist?.[0].coverUrl;
+
+	it('case 3: publishes the entered address where there is no attachment', () => {
+		expect(wishlistCover({ coverImageUrl: 'https://a/url.jpg' })).toBe(
+			'https://a/url.jpg'
+		);
+	});
+
+	it('case 1: publishes the entered address over the attached cover', () => {
+		expect(
+			wishlistCover({
+				coverImageUrl: 'https://a/url.jpg',
+				coverImage: { filePath: 'https://e.test/peace.jpg' },
+			})
+		).toBe('https://a/url.jpg');
+	});
+
+	/** The attachment is reordered, never dropped (FR-007). */
+	it('case 2: still publishes the attachment where nothing was entered', () => {
+		expect(
+			wishlistCover({
+				coverImage: { filePath: 'https://e.test/peace.jpg' },
+			})
+		).toBe('https://e.test/peace.jpg');
+	});
+
+	/**
 	 * The page offers this link to strangers under our own domain, and the
 	 * rules cannot look inside a list — so anything but a web address is
 	 * left behind here.

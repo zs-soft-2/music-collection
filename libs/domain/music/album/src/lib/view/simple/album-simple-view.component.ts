@@ -1,6 +1,7 @@
 import { I18N_IMPORTS } from '@music-collection/core/i18n';
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { BaseComponent, SimpleAlbum } from '@music-collection/api';
+import { toAlbumCoverUrl } from '@music-collection/common/engine';
 import { Bind } from 'primeng/bind';
 import { Image } from 'primeng/image';
 
@@ -18,4 +19,7 @@ export class AlbumSimpleViewComponent extends BaseComponent {
 	public width = '300';
 	@Input()
 	public height = '300';
+
+	/** Which address the cover is drawn from; the template asks it (#60). */
+	protected readonly coverUrl = toAlbumCoverUrl;
 }
