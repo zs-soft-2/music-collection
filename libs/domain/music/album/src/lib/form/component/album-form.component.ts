@@ -13,6 +13,7 @@ import {
 	AlbumFormParams,
 	BaseComponent,
 } from '@music-collection/api';
+import { ImageUrlPreviewComponent } from '@music-collection/ui/image-url-preview';
 
 import { AlbumFormService } from './album-form.service';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -47,6 +48,7 @@ import { AsyncPipe } from '@angular/common';
 		DatePicker,
 		MultiSelect,
 		Image,
+		ImageUrlPreviewComponent,
 		Button,
 		Checkbox,
 		Dialog,

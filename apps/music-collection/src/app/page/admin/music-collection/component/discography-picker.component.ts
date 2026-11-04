@@ -217,7 +217,7 @@ import {
 			border-radius: var(--mc-radius-md);
 
 			&:focus-within {
-				border-color: var(--mc-primary);
+				border-color: var(--mc-info);
 			}
 
 			input {

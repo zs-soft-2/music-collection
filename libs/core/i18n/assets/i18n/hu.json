@@ -3060,6 +3060,9 @@
 			"the-copy-keeps": "A példányról feljegyzett adatok megmaradnak: az ár, az állapot, a történet, a fotók, a polchely és a sorszám is átkerül.",
 			"moveFailed": "Az átvezetés nem sikerült: {{error}}"
 		},
+		"imageUrlPreview": {
+			"could-not-load": "A kép nem tölthető be erről a címről."
+		},
 		"trackImages": {
 			"close": "Bezárás",
 			"show-picture": "{{number}}. kép megjelenítése",

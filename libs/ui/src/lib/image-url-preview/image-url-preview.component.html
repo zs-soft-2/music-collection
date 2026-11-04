@@ -1,0 +1,19 @@
+@if (url(); as src) {
+	@if (!failed()) {
+		<p-image
+			class="mc-form-image"
+			[src]="src"
+			[preview]="true"
+			[alt]="alt()"
+			width="200"
+			(onImageError)="onError()"
+		></p-image>
+	}
+}
+<div role="status">
+	@if (failed()) {
+		<p class="message">
+			{{ 'ui.imageUrlPreview.could-not-load' | transloco }}
+		</p>
+	}
+</div>

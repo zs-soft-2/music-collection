@@ -711,7 +711,7 @@ const DRAWING = { width: 132, height: 120, minCell: 4 };
 			border-radius: var(--mc-radius-sm);
 
 			&:focus {
-				border-color: var(--mc-primary);
+				border-color: var(--mc-info);
 				outline: none;
 			}
 		}

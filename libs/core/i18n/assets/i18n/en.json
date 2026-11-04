@@ -3060,6 +3060,9 @@
 			"the-copy-keeps": "The copy keeps everything written down about it: the price, the grades, the story, the photographs, the shelf place and its number.",
 			"moveFailed": "The copy could not be moved: {{error}}"
 		},
+		"imageUrlPreview": {
+			"could-not-load": "The picture cannot be loaded from this address."
+		},
 		"trackImages": {
 			"close": "Close",
 			"show-picture": "Show picture {{number}}",

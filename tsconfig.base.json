@@ -153,6 +153,9 @@
 			],
 			"@music-collection/ui/music-view": [
 				"libs/ui/src/lib/music-view/index.ts"
+			],
+			"@music-collection/ui/image-url-preview": [
+				"libs/ui/src/lib/image-url-preview/index.ts"
 			]
 		},
 		"strict": false,

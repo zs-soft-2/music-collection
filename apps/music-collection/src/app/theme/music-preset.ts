@@ -54,6 +54,9 @@ export const MusicPreset = definePreset(Aura, {
 			offset: '2px',
 			shadow: 'none',
 		},
+		formField: {
+			focusBorderColor: '{focus.ring.color}',
+		},
 		highlight: {
 			background: 'color-mix(in srgb, {primary.color}, transparent 86%)',
 			focusBackground:
