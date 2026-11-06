@@ -2,10 +2,11 @@
   "files": {
     ".claude/skills/commit/SKILL.md": "68e8acc8e1c979d5e7b94086e14afbe62be2768581594236ffd6fff065b1f829",
     ".claude/skills/docs-code-check/SKILL.md": "923129f4ea79754c2dd704a26f2cdb3b15cf5f2d3fb1472464730965cba3e663",
-    ".claude/skills/speckit-from-issue/SKILL.md": "06d2691b2d0321b809a788e71cd8501fbf5e1755c9880ee63d7ccecc26ef1573",
+    ".claude/skills/speckit-from-issue/SKILL.md": "f98f253dc73b06b318af9c27d94203018c3e76b693f382ea5d3e1241e123eec7",
     ".claude/skills/speckit-issue-analyze/SKILL.md": "513388e660f278f163e7c2100a57936bb9dd6bd3945621c9fa687c30d670d26e",
     ".claude/skills/speckit-issue-sync/SKILL.md": "f78737918532fc48b2b2f24358798eaf48e9bf64a753b32e0bf42d6300611839",
     ".claude/skills/speckit-issue-verify/SKILL.md": "cb0145257b4800a38448decdaede700f4916fb00e0a3979b33ed301fbcfd8628",
-    ".specify/kit/stack-angular-firebase.md": "05111832c14c3f8b11287429ab2969a3295abbe1afa0a6cddc813af5aa70e034"
+    ".specify/kit/stack-angular-firebase.md": "05111832c14c3f8b11287429ab2969a3295abbe1afa0a6cddc813af5aa70e034",
+    ".claude/skills/speckit-feature-define/SKILL.md": "37d74f740603afd6cff262e361d629986a7dcb380b7287331ac39de36234ae78"
   }
 }

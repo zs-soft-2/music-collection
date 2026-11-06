@@ -47,7 +47,8 @@ $ARGUMENTS
      files over with the issue.
 
 3. **Check the base branch**: the feature branch is created from the current `HEAD` (the git extension's `git checkout -b`).
-   - New work starts from the **local `dev`** branch. If the current branch is not `dev`, tell the user and ask before going on.
+   - **An activated ticket branch**: if the current branch already starts with `<number>-` (the dashboard activated the ticket, or its worktree was made for it), work on it: do not ask, and do not create another branch. Step 6 uses this branch's name, and its branch script does not run.
+   - Otherwise new work starts from the **local `dev`** branch. If the current branch is not `dev`, tell the user and ask before going on.
    - Do NOT `git pull`, reset or rebase anything to "fix" the base: reconciling the local branch is the user's call.
    - Uncommitted changes are carried over to the new branch. Mention them in the report, but do not stash or commit them.
 
@@ -68,6 +69,8 @@ $ARGUMENTS
      ```
 
      Note the returned `BRANCH_NAME` and `FEATURE_NUM` (the issue number).
+
+     On an activated ticket branch (step 3), skip this script: `BRANCH_NAME` is the current branch and `FEATURE_NUM` the issue number.
    - **Spec directory**: set `SPECIFY_FEATURE_DIRECTORY` to `specs/<number>-<short-name>`, so speckit-specify does not compute a sequential number of its own.
    - **Spec header (writing `SPEC_FILE`)**: set the `**Input**` line to:
 
