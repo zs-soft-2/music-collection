@@ -34,10 +34,14 @@ Run on the local app in both colour modes. Do not press Save: these checks leave
 | Replace it with a loading address | The message goes and the picture appears (AC-4) | open |
 | Apply an address from the artist form's data suggestions | Behaves like a typed one | open |
 
-## Open: needs a dev deploy (T017)
+## Dev check (T017)
 
-Needs the maintainer's go-ahead (constitution VIII). Hosting and the client have to be deployed to dev. No functions, rules or indexes change.
+Deployed 2026-11-06 with the maintainer's go-ahead: `npm run deploy:dev` from `7c2f28a2`, hosting only (client and `firebase.json` headers). No functions, rules or indexes changed.
+
+The address, rebuilt from the screenshot by Wikimedia's thumbnail pattern: `https://thumb.wikimedia.org/wikipedia/commons/thumb/a/af/Razor_14_%2829083912276%29.jpg/1280px-Razor_14_%2829083912276%29.jpg` (`curl`: 200 `image/jpeg`, with the dev origin as `Referer`).
 
 | Check | Expected | Result |
 |---|---|---|
-| Paste the screenshot's address (full URL on #60) on the Razor artist form on dev | The picture shows with no message (AC-1, SC-001). If it fails, the root cause is not found and #80 goes back to investigation. | open |
+| Headless Chrome on `https://music-collection-16676.web.app/home` (deployed page, its own CSP), the address loaded as an `Image` | Loads | Loaded, 1280 px wide |
+| Same page, control `https://example.com/x.jpg` | Blocked by the CSP | Error, with an `img-src` violation in the console: the policy is in force |
+| Paste the address on the Razor artist form on dev (needs an admin login) | The picture shows with no message (AC-1, SC-001). If it fails, the root cause is not found and #80 goes back to investigation. | open |
