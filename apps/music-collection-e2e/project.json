@@ -6,6 +6,11 @@
 	"targets": {
 		"e2e": {
 			"executor": "@nx/cypress:cypress",
+			"dependsOn": [
+				"music-collection:version",
+				"music-collection:app-check-token",
+				"music-collection:primeui-license"
+			],
 			"options": {
 				"cypressConfig": "apps/music-collection-e2e/cypress.config.ts",
 				"devServerTarget": "music-collection:serve:emulator",
