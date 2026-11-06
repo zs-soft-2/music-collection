@@ -22,6 +22,7 @@ Az app nem az első indításkor kér értesítési engedélyt. Akkor kér, amik
 Megtagadás után az app nem kérdez újra. A beállításoknál egy gomb a rendszerbeállításokhoz vezet.
 
 **Felület:** mobil
+**Ticket:** #109
 **UX:** [Engedélykérés](../ux/mobil/ertesitesek.md#engedélykérés)
 
 ### REQ-NOTIF-002: Beállítások típusonként
@@ -38,6 +39,7 @@ A Profil → Értesítések alatt típusonként be- és kikapcsolható:
 A beállítás a fiókhoz tartozik: minden eszközére érvényes.
 
 **Felület:** mobil
+**Ticket:** #109
 **UX:** [Beállítások](../ux/mobil/ertesitesek.md#beállítások)
 
 ### REQ-NOTIF-003: Release-kérés elbírálása
@@ -46,6 +48,7 @@ Jóváhagyáskor vagy elutasításkor a kérő értesítést kap. A jóváhagyá
 gyűjteményedben van”. Az elutasításé: „A kérésed nem ment át: <cím>”.
 
 **Felület:** mobil
+**Ticket:** #109
 
 ### REQ-NOTIF-004: Napi kérdés emlékeztető
 
@@ -53,12 +56,14 @@ Ha a felhasználó aznap még nem válaszolt a napi kérdésre, 18:00-kor (Europ
 Ha már válaszolt, nem kap.
 
 **Felület:** mobil
+**Ticket:** #113
 
 ### REQ-NOTIF-005: A hét bandája
 
 Amikor elkészül az új hét bandája, a felhasználó értesítést kap a banda nevével.
 
 **Felület:** mobil
+**Ticket:** #113
 
 ### REQ-NOTIF-006: Kölcsön határideje
 
@@ -66,6 +71,7 @@ Ha egy kölcsönadott lemez határideje lejárt, a tulajdonos a lejárat napján
 (REQ-LOAN-005).
 
 **Felület:** mobil
+**Ticket:** #113
 
 ### REQ-NOTIF-007: Koppintás a megfelelő helyre
 
@@ -77,18 +83,21 @@ Az értesítésre koppintva az app a hozzá tartozó képernyőn nyílik meg:
 - kölcsön → a lemez részletei.
 
 **Felület:** mobil
+**Ticket:** #109
 
 ### REQ-NOTIF-008: Kijelentkezés
 
 Kijelentkezés után az eszköz nem kap több értesítést annak a fióknak a nevében.
 
 **Felület:** mobil
+**Ticket:** #109
 
 ### REQ-NOTIF-009: A felhasználó nyelvén
 
 Az értesítés szövege a felhasználó beállított nyelvén (magyar vagy angol) érkezik.
 
 **Felület:** mobil
+**Ticket:** #109
 
 ## Nem része
 

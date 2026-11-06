@@ -22,6 +22,7 @@ A felhasználó a Kívánságlista fülön látja a keresett lemezeit:
 A lista offline is megnyílik.
 
 **Felület:** mobil
+**Ticket:** #107
 **UX:** [Lista](../ux/mobil/kivansaglista.md#lista)
 
 ### REQ-WISH-002: Kívánságlistára tétel
@@ -31,6 +32,7 @@ milyen formátumban keresi (LP, CD, kazetta…), és opcionálisan egy bolti lin
 az app ezt kiírja, és nem veszi fel újra.
 
 **Felület:** mobil
+**Ticket:** #107
 **UX:** [Felvétel](../ux/mobil/kivansaglista.md#felvétel-a-listára)
 
 ### REQ-WISH-003: Megtaláltam
@@ -39,6 +41,7 @@ A felhasználó egy tételt „megtaláltnak” jelöl, a listában vagy a szken
 listán marad, megtaláltként. Rögtön utána az app felajánlja a példány felvételét is (REQ-COPY-001).
 
 **Felület:** mobil
+**Ticket:** #107
 
 ### REQ-WISH-004: Eltávolítás
 
@@ -46,12 +49,14 @@ A felhasználó egy tételt eltávolíthat a listáról, elhúzással vagy a té
 kell.
 
 **Felület:** mobil
+**Ticket:** #107
 
 ### REQ-WISH-005: Offline módosítás
 
 A „megtaláltam” és az eltávolítás offline is működik, és a kapcsolat visszatértekor szinkronizálódik.
 
 **Felület:** mobil
+**Ticket:** #107
 
 ## Nem része
 

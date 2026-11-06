@@ -17,6 +17,7 @@ Ha a felhasználó aznap még nem válaszolt, a Gyűjtemény fül tetején egy k
 aznapra elrejthető.
 
 **Felület:** mobil
+**Ticket:** #112
 **UX:** [Kártya](../ux/mobil/napi-kerdes.md#kártya)
 
 ### REQ-DAILY-002: Válaszadás
@@ -25,6 +26,7 @@ A kérdés képernyőjén a felhasználó látja a kérdést és a lehetőségek
 számít. Tipp után látja, jó volt-e, a helyes választ, a szerzett pontot és a sorozatát.
 
 **Felület:** mobil
+**Ticket:** #112
 **UX:** [Kérdés](../ux/mobil/napi-kerdes.md#kérdés)
 
 ### REQ-DAILY-003: Ranglista
@@ -32,12 +34,14 @@ számít. Tipp után látja, jó volt-e, a helyes választ, a szerzett pontot é
 A kérdés képernyőjéről elérhető a ranglista, a felhasználó saját helyével.
 
 **Felület:** mobil
+**Ticket:** #112
 
 ### REQ-DAILY-004: Emlékeztető
 
 Az emlékeztető push a REQ-NOTIF-004 szerint működik.
 
 **Felület:** mobil
+**Ticket:** #113
 
 ### REQ-DAILY-005: Ugyanaz a játék
 
@@ -45,6 +49,7 @@ A mobilon adott válasz ugyanaz a válasz, mint a weben. Ha a felhasználó az e
 másikon az eredményt látja, és nem tippelhet újra.
 
 **Felület:** mindkettő
+**Ticket:** #112
 
 ## Nem része
 

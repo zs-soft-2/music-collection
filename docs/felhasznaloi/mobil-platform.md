@@ -24,6 +24,7 @@ Az iOS app a `dev` ág mai kódjára épül. A gyűjtemény, a lemez részletei,
 működik, mint a régi `mobile` ágon. Az adatréteget a webbel közösen használja.
 
 **Felület:** mobil
+**Ticket:** #101
 **Technikai:** [a `mobile` ág áthozása](../technikai/architektura/mobil-app.md#a-mobile-ág-áthozása)
 
 ### REQ-MOB-002: Android app
@@ -31,6 +32,7 @@ működik, mint a régi `mobile` ágon. Az adatréteget a webbel közösen haszn
 Az app Androidon is elérhető, ugyanazokkal a képernyőkkel és funkciókkal, mint iOS-en.
 
 **Felület:** mobil
+**Ticket:** #102
 **Technikai:** [Android](../technikai/architektura/mobil-app.md#android)
 
 ### REQ-MOB-003: Bejelentkezés Google-fiókkal
@@ -39,6 +41,7 @@ A felhasználó a telefon natív Google-bejelentkezésével lép be iOS-en és A
 újraindítása után is megmarad. A kijelentkezés a natív rétegből is kiléptet.
 
 **Felület:** mobil
+**Ticket:** #101, #102
 **UX:** [Bejelentkezés](../ux/mobil/navigacio.md#bejelentkezés)
 
 ### REQ-MOB-004: Offline olvasás
@@ -50,6 +53,7 @@ betöltött.
 - Az offline végzett írás (például „megtaláltam”) a kapcsolat visszatértekor szinkronizálódik.
 
 **Felület:** mobil
+**Ticket:** #101
 **UX:** [Offline sáv](../ux/mobil/navigacio.md#offline-sáv)
 
 ### REQ-MOB-005: Magyar és angol felület
@@ -58,6 +62,7 @@ A mobil app a web fordításait használja, és a profilban beállított nyelven
 szöveg nincs.
 
 **Felület:** mobil
+**Ticket:** #101
 
 ### REQ-MOB-006: Alsó fülsáv
 
@@ -71,6 +76,7 @@ Az app négy fő helyre vezet egy alsó fülsávon:
 A szkennelés kiemelt kör-gomb, hogy egy mozdulattal elérhető legyen.
 
 **Felület:** mobil
+**Ticket:** #101
 **UX:** [Fülsáv](../ux/mobil/navigacio.md#fülsáv)
 
 ### REQ-MOB-007: Dev és prod változat egymás mellett
@@ -79,6 +85,7 @@ A fejlesztői (dev Firebase projekt) és az éles (prod Firebase projekt) válto
 fut. Egy telefonra mindkettő telepíthető, és a nevük megkülönbözteti őket („MC Dev”, „Music Collection”).
 
 **Felület:** mobil
+**Ticket:** #103
 **Technikai:** [Változatok](../technikai/architektura/mobil-app.md#változatok-és-azonosítók)
 
 ### REQ-MOB-008: Belső tesztelés
@@ -87,6 +94,7 @@ A dev változat TestFlighton (iOS) és a Google Play belső tesztelési sávján
 tesztelőknek.
 
 **Felület:** mobil
+**Ticket:** #103
 
 ## Nem része
 

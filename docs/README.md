@@ -32,23 +32,23 @@ szabályai: [`.specify/project/docs.md`](../.specify/project/docs.md).
 
 ## Mobil app: feature-ök és ticketek
 
-Sorrendben. A „Függ” oszlop azt mutatja, mi kell előtte.
+Sorrendben. A „Függ” oszlop a sorszámra hivatkozik, és azt mutatja, mi kell előtte.
 
 | # | Feature | Követelmények | Függ | Ticket |
 |---|---|---|---|---|
-| 1 | Mobil app újraépítése a dev-en | REQ-MOB-001, -003, -004, -005, -006 | — | — |
-| 2 | Android platform | REQ-MOB-002 | 1 | — |
-| 3 | Dev/prod változat és belső tesztelés | REQ-MOB-007, -008 | 2 | — |
-| 4 | Élő vonalkód-szkennelés | REQ-SCAN-001…007, -009 | 1 | — |
-| 5 | Fotós felismerés a mobilon | REQ-SCAN-008 | 4 | — |
-| 6 | Példány gyors felvitele | REQ-COPY-001…007 | 4 | — |
-| 7 | Kívánságlista a mobilon | REQ-WISH-001…005 | 4 | — |
-| 8 | Release-kérés a mobilról | REQ-RREQ-001…004 | 4 | — |
-| 9 | Értesítések alapjai és a kérés elbírálása | REQ-NOTIF-001, -002, -003, -007, -008, -009; REQ-RREQ-005 | 8 | — |
-| 10 | „Feltettem” lejátszási napló | REQ-PLAY-001…006 | 1 | — |
-| 11 | Kölcsönadás | REQ-LOAN-001…004, -006 | 1 | — |
-| 12 | Napi kérdés a mobilon | REQ-DAILY-001…003, -005 | 1 | — |
-| 13 | Értesítések: napi kérdés, a hét bandája, lejárt kölcsön | REQ-NOTIF-004…006; REQ-DAILY-004; REQ-LOAN-005 | 9, 11, 12 | — |
+| 1 | Mobil app újraépítése a dev-en | REQ-MOB-001, -003, -004, -005, -006 | — | #101 |
+| 2 | Android platform | REQ-MOB-002 | 1 | #102 |
+| 3 | Dev/prod változat és belső tesztelés | REQ-MOB-007, -008 | 2 | #103 |
+| 4 | Élő vonalkód-szkennelés | REQ-SCAN-001…007, -009 | 1 | #104 |
+| 5 | Fotós felismerés a mobilon | REQ-SCAN-008 | 4 | #105 |
+| 6 | Példány gyors felvitele | REQ-COPY-001…007 | 4 | #106 |
+| 7 | Kívánságlista a mobilon | REQ-WISH-001…005 | 4 | #107 |
+| 8 | Release-kérés a mobilról | REQ-RREQ-001…004 | 4 | #108 |
+| 9 | Értesítések alapjai és a kérés elbírálása | REQ-NOTIF-001, -002, -003, -007, -008, -009; REQ-RREQ-005 | 8 | #109 |
+| 10 | „Feltettem” lejátszási napló | REQ-PLAY-001…006 | 1 | #110 |
+| 11 | Kölcsönadás | REQ-LOAN-001…004, -006 | 1 | #111 |
+| 12 | Napi kérdés a mobilon | REQ-DAILY-001…003, -005 | 1 | #112 |
+| 13 | Értesítések: napi kérdés, a hét bandája, lejárt kölcsön | REQ-NOTIF-004…006; REQ-DAILY-004; REQ-LOAN-005 | 9, 11, 12 | #113 |
 
 ### Későbbi ticketek
 

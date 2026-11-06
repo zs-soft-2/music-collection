@@ -19,6 +19,7 @@ adataival megy el: Discogs master- és release-azonosító, formátum, kiadó, k
 egy legfeljebb 500 karakteres megjegyzés írható.
 
 **Felület:** mobil
+**Ticket:** #108
 **UX:** [Kérés lap](../ux/mobil/release-keres.md#kérés-lap)
 
 ### REQ-RREQ-002: Ismételt kérés
@@ -27,6 +28,7 @@ Ha a felhasználónak ugyanerre a Discogs-kiadásra már van függő kérése, a
 „Ezt már kérted, elbírálásra vár”.
 
 **Felület:** mobil
+**Ticket:** #108
 
 ### REQ-RREQ-003: Kéréseim
 
@@ -37,6 +39,7 @@ A Profil alatt a „Kéréseim” lista mutatja a release-kéréseket, állapott
 - elutasítva, az admin megjegyzésével.
 
 **Felület:** mobil
+**Ticket:** #108
 **UX:** [Kéréseim](../ux/mobil/release-keres.md#kéréseim)
 
 ### REQ-RREQ-004: Jóváhagyás után a gyűjteményben
@@ -45,12 +48,14 @@ A jóváhagyott kérés lemeze a felhasználó gyűjteményébe kerül, külön 
 (`approveReleaseRequest`). A mobil gyűjteménye ezt frissítés nélkül mutatja.
 
 **Felület:** mindkettő
+**Ticket:** #108
 
 ### REQ-RREQ-005: Értesítés az elbírálásról
 
 A felhasználó push értesítést kap, amikor a kérését jóváhagyták vagy elutasították (REQ-NOTIF-003).
 
 **Felület:** mobil
+**Ticket:** #109
 
 ## Nem része
 

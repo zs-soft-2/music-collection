@@ -27,6 +27,7 @@ A felhasználó a Szkennelés fülön a kamera élőképével olvas vonalkódot 
 készítése nélkül. Az olvasás iOS-en és Androidon is működik.
 
 **Felület:** mobil
+**Ticket:** #104
 **UX:** [Élő olvasó](../ux/mobil/szkenneles.md#élő-olvasó)
 **Technikai:** [Vonalkód](../technikai/architektura/szkenneles.md#vonalkód-olvasás)
 
@@ -43,6 +44,7 @@ Egy beolvasott kód után az app egy eredménylapon a felismert kiadást és az 
 Ha a kód több kiadásra illik, az app legfeljebb hat jelöltet mutat, a legjobb egyezéssel elöl.
 
 **Felület:** mobil
+**Ticket:** #104
 **UX:** [Eredménylap](../ux/mobil/szkenneles.md#eredménylap)
 
 ### REQ-SCAN-003: Sorozat-szkennelés
@@ -52,6 +54,7 @@ lemezek egy listában gyűlnek, állapotjelzővel. Ugyanaz a kód másodszor nem
 kiemelődik.
 
 **Felület:** mobil
+**Ticket:** #104
 **UX:** [Munkamenet-lista](../ux/mobil/szkenneles.md#munkamenet-lista)
 
 ### REQ-SCAN-004: Műveletek az eredményből
@@ -65,6 +68,7 @@ Az eredménylapról, állapottól függően:
 - **Megnyitás:** a lemez részletei, ha megvan.
 
 **Felület:** mobil
+**Ticket:** #104
 
 ### REQ-SCAN-005: Kézi kódbevitel
 
@@ -72,6 +76,7 @@ Ha a kód sérült vagy a kamera nem olvassa, a felhasználó számmal is beírh
 olvasásé.
 
 **Felület:** mobil
+**Ticket:** #104
 **UX:** [Kézi bevitel](../ux/mobil/szkenneles.md#kézi-bevitel)
 
 ### REQ-SCAN-006: Visszajelzés olvasáskor
@@ -79,6 +84,7 @@ olvasásé.
 Sikeres olvasáskor a telefon röviden rezeg, és az élőképen a kód kerete kiemelődik.
 
 **Felület:** mobil
+**Ticket:** #104
 
 ### REQ-SCAN-007: Kamera-engedély
 
@@ -86,6 +92,7 @@ Az app az első szkenneléskor kér kamera-engedélyt, egy mondatos indoklással
 olvasó helyén magyarázat jelenik meg, egy gomb a rendszerbeállításokhoz, és a kézi kódbevitel.
 
 **Felület:** mobil
+**Ticket:** #104
 **UX:** [Nincs engedély](../ux/mobil/szkenneles.md#élő-olvasó)
 
 ### REQ-SCAN-008: Felismerés fotóból
@@ -97,6 +104,7 @@ Az app a fotóból felismeri a lemezt, és ugyanazt az eredménylapot mutatja, m
 - Ha a kvóta elfogyott vagy a funkció ki van kapcsolva, az app ezt kiírja, és felajánlja a kézi kódbevitelt.
 
 **Felület:** mobil
+**Ticket:** #105
 **UX:** [Fotó mód](../ux/mobil/szkenneles.md#fotó-mód)
 **Technikai:** [Fotós felismerés](../technikai/architektura/szkenneles.md#fotós-felismerés)
 
@@ -109,6 +117,7 @@ Offline beolvasott kód egy „Kapcsolatra vár” listába kerül, és nem vés
 - Offline a kézi kódbevitel is a függő listába ír.
 
 **Felület:** mobil
+**Ticket:** #104
 
 ## Nem része
 

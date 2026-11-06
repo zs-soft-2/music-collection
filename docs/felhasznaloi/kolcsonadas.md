@@ -24,6 +24,7 @@ A lemez részletei képernyőn a felhasználó egy példányt kölcsönadottnak 
 Az app felajánlja a korábban megadott neveket.
 
 **Felület:** mobil
+**Ticket:** #111
 **UX:** [Kölcsönadás lap](../ux/mobil/kolcsonadas.md#kölcsönadás-lap)
 
 ### REQ-LOAN-002: Visszakaptam
@@ -32,6 +33,7 @@ Egy kölcsönben lévő példánynál a „Visszakaptam” lezárja a kölcsönt
 kerül.
 
 **Felület:** mobil
+**Ticket:** #111
 
 ### REQ-LOAN-003: Kölcsönben lévő lemezek
 
@@ -39,6 +41,7 @@ A Profil → „Kölcsönben” lista mutatja az összes kint lévő példányt,
 határidejűek elöl állnak, kiemelve.
 
 **Felület:** mobil
+**Ticket:** #111
 **UX:** [Kölcsönben lista](../ux/mobil/kolcsonadas.md#kölcsönben-lista)
 
 ### REQ-LOAN-004: Jelzés a lemezen
@@ -49,6 +52,7 @@ Egy kölcsönben lévő példánynál ez látszik (például „Kölcsönben: P�
 - a weben a példány lapján és a polcon.
 
 **Felület:** mindkettő
+**Ticket:** #111
 
 ### REQ-LOAN-005: Emlékeztető a határidőn
 
@@ -56,12 +60,14 @@ Ha a határidő lejárt, és a felhasználó ezt engedélyezte, a lejárat napj�
 (REQ-NOTIF-006).
 
 **Felület:** mobil
+**Ticket:** #113
 
 ### REQ-LOAN-006: Előzmények
 
 A lemez részleteinél látszik, kinél járt már a példány (név, mettől meddig), a legutóbbi 20 kölcsönig.
 
 **Felület:** mobil
+**Ticket:** #111
 
 ## Nem része
 

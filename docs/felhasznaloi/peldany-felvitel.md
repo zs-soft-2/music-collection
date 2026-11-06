@@ -24,6 +24,7 @@ kiadás már ki van választva. A „Mentés” egyetlen koppintással felveszi 
 kötelezők.
 
 **Felület:** mobil
+**Ticket:** #106
 **UX:** [Felvételi lap](../ux/mobil/peldany-felvitel.md#felvételi-lap)
 
 ### REQ-COPY-002: Vásárlás adatai
@@ -35,6 +36,7 @@ A felvételi lapon megadható a vásárlás:
 - **ára és pénzneme**. A pénznem alapértéke a legutóbb használt.
 
 **Felület:** mobil
+**Ticket:** #106
 
 ### REQ-COPY-003: Állapot
 
@@ -42,6 +44,7 @@ A felvételi lapon megadható a lemez és a borító állapota külön, a Goldmi
 A fokozatok rövid magyarázatot kapnak.
 
 **Felület:** mobil
+**Ticket:** #106
 
 ### REQ-COPY-004: Fotó a példányról
 
@@ -49,12 +52,14 @@ A felhasználó legfeljebb két fotót készíthet vagy választhat a példányr
 Offline a Fotók szakasz nem érhető el; a példány maga fotó nélkül is mentődik (REQ-COPY-007).
 
 **Felület:** mobil
+**Ticket:** #106
 
 ### REQ-COPY-005: Még egy példány
 
 Ha a kiadás már megvan, a felvétel ugyanígy működik. A lap jelzi, hányadik példány lesz.
 
 **Felület:** mobil
+**Ticket:** #106
 
 ### REQ-COPY-006: Visszavonás
 
@@ -62,6 +67,7 @@ Mentés után néhány másodpercig egy „Visszavonás” gomb látszik. Ez a f
 törli.
 
 **Felület:** mobil
+**Ticket:** #106
 
 ### REQ-COPY-007: Felvétel offline
 
@@ -69,6 +75,7 @@ Ha nincs hálózat, a példány mentése akkor is sikerül. A gyűjteményben az
 visszatértekor szinkronizálódik.
 
 **Felület:** mobil
+**Ticket:** #106
 
 ## Nem része
 

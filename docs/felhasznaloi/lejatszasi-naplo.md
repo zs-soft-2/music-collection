@@ -17,6 +17,7 @@ hallgatási összegződben végre a polcod szerepel, nem a streaming.
 A lemez részletei képernyőn egy „Feltettem” gomb egy hallgatást rögzít a lemezre, a mostani időponttal.
 
 **Felület:** mobil
+**Ticket:** #110
 **UX:** [Lemez részletei](../ux/mobil/lejatszasi-naplo.md#feltettem-gomb)
 
 ### REQ-PLAY-002: Melyik példány
@@ -25,12 +26,14 @@ Ha a lemezből több példány van, a felhasználó választ, melyiket tette fel
 hallgatott példány. Egy példánynál nincs kérdés.
 
 **Felület:** mobil
+**Ticket:** #110
 
 ### REQ-PLAY-003: Visszavonás
 
 A rögzítés után néhány másodpercig egy „Visszavonás” gomb látszik. Ez törli a hallgatást.
 
 **Felület:** mobil
+**Ticket:** #110
 
 ### REQ-PLAY-004: Utoljára hallgatva
 
@@ -38,6 +41,7 @@ A lemez részletei mutatják, mikor hallgatta utoljára (például „Utoljára:
 Ebbe a lemezről és a streamingről rögzített hallgatások is beleszámítanak.
 
 **Felület:** mobil
+**Ticket:** #110
 
 ### REQ-PLAY-005: A hallgatási összegzőben
 
@@ -45,12 +49,14 @@ A lemezről rögzített hallgatások megjelennek a profil hallgatási összegző
 „lemezről” jelöléssel.
 
 **Felület:** mindkettő
+**Ticket:** #110
 
 ### REQ-PLAY-006: Offline
 
 A „Feltettem” offline is működik, és a kapcsolat visszatértekor szinkronizálódik.
 
 **Felület:** mobil
+**Ticket:** #110
 
 ## Nem része
 
