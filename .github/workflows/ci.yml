@@ -65,11 +65,57 @@ jobs:
       - run: npx nx run-many -t test --passWithNoTests
       - run: npm run build:prod
 
-  # dev branch → dev környezet automatikusan, de csak zöld build-test után.
+  # Végponttól végpontig: az app az Auth/Firestore/Storage emulátor ellen fut
+  # (firebase.e2e.json, `demo-` projekt), seedelt adattal. Sem a dev, sem a prod
+  # Firebase-adathoz nem nyúl. A helyi parancs ugyanez: `npm run e2e`
+  # (README — E2E tesztek). Külön job, hogy a build-testtel párhuzamosan fusson.
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@zssz-soft'
+          always-auth: true
+      # Ugyanaz, mint a build-test jobban: a @zssz-soft csomagokhoz a
+      # GH_PACKAGES_TOKEN secret kell.
+      - name: Csomag-registry token
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "::error::Hiányzik a GH_PACKAGES_TOKEN (vagy NPM_TOKEN) secret — a @zssz-soft csomagokhoz read:packages jogú PAT kell."
+            exit 1
+          fi
+      - run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.NPM_TOKEN }}
+      # Az emulátorokhoz a Firebase CLI és (a Firestore-emulátornak) Java 21.
+      - run: npm i -g firebase-tools@15.24.0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      # Licenckulcs nélkül a PrimeNG sávja a lap sarkában ülne, és eltakarhat
+      # egy gombot, amire a teszt kattint.
+      - run: npm run e2e
+        env:
+          MC_PRIMEUI_LICENSE: ${{ secrets.PRIMEUI_LICENSE }}
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: dist/cypress/apps/music-collection-e2e/screenshots
+          if-no-files-found: ignore
+
+  # dev branch → dev környezet automatikusan, de csak zöld build-test és e2e után.
   # A környezeti változókat (GCP_PROJECT, WIF_PROVIDER, DEPLOYER_SA, BUILD_CONFIG,
   # FIREBASE_HOSTING) az `infra/` tofu-gyökerei írják.
   deploy:
-    needs: build-test
+    needs: [build-test, e2e]
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment: dev

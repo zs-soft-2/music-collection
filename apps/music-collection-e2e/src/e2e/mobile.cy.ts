@@ -53,6 +53,8 @@ for (const phone of PHONES) {
 			});
 
 		beforeEach(() => {
+			// A first visit: the seeded emulator, and nothing in the browser.
+			cy.resetWorld();
 			cy.viewport(phone.width, phone.height);
 		});
 

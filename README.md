@@ -270,6 +270,7 @@ szerverlogika a functions alá kerül.
 npm start                 # nx serve music-collection
 npm test                  # a kliens tesztjei
 npm run test:rules        # firestore.rules tesztek
+npm run e2e               # végponttól végpontig, emulátoron (lásd lent)
 npm run lint
 npx nx dep-graph          # függőségi gráf
 ```
@@ -290,6 +291,48 @@ npm run emulator          # import + export-on-exit az ./emulators.backup-ból
 npm run export            # pillanatkép mentése
 firebase emulators:start  # tiszta indulás
 ```
+
+### E2E tesztek
+
+```bash
+npm run e2e
+```
+
+Egy parancs: elindítja az Auth, Firestore és Storage emulátort
+(`firebase.e2e.json`, `demo-music-collection` projekt), az appot az `emulator`
+konfigurációval (`nx serve music-collection --configuration=emulator`,
+`http://127.0.0.1:4280`), lefuttatja a Cypress-specceket
+(`apps/music-collection-e2e`), majd mindent leállít. Kell hozzá a globális
+`firebase` CLI, Java 21 és Chrome. A dev és a prod Firebase-adatot nem olvassa
+és nem írja: az `environment.emulator.ts` egy `demo-` projektre mutat, amit az
+emulátor nem létező projektként kezel, és minden SDK (Firestore, Auth,
+Functions, Storage) az emulátorhoz kapcsolódik; App Check és analitika nincs.
+
+- **Portok:** emulátorok 9510–9516, dev szerver 4280, mind `127.0.0.1`-en —
+  hogy a `firebase.json` alapportjain futó emulátorral és a 4200-as szerverrel
+  ne ütközzön.
+- **Seed:** minden teszt előtt a `tools/e2e/seed-emulator.mjs` üríti az
+  emulátort, és újraírja a kis világot: két kitalált zenekar, három album egy-egy
+  UK bakelit kiadással, egy publikált collection, a `rock` műfaj, és két fiók
+  (`collector@e2e.test`, `admin@e2e.test`, jelszó `e2e-password`). A
+  `sync/catalog` minden feature-t bélyegez, bundle nélkül: a kliens a
+  Firestore-ból olvas. A böngésző IndexedDB-jét (Firestore-cache, munkamenet)
+  a `resetWorld` parancs törli.
+- **Jogosultság:** a `security/users/{uid}/effective_permissions`
+  dokumentumot a seed **közvetlenül írja**, a function (syncUserPermissions)
+  nem fut. A `USER` szerepkör jogai a `tools/sync/seed-user-role.mjs`
+  listájából jönnek, az adminé `ADMIN`.
+- **Bejelentkezés:** az `emulator` build a Google-popup helyett
+  (`emulator-providers.emulator.ts`) jelszóval lépteti be a seedelt fiókot,
+  amit a teszt a `mc-e2e-account` localStorage-kulccsal választ. A többi
+  (munkamenet, user-dokumentum, guardok, jogosultság) az app sajátja. A dev és
+  a prod build ebből semmit nem tartalmaz (`fileReplacements`).
+- **Functions nincs:** ami callable-t hív (pl. a generikus kiadás
+  `ensureGenericRelease`-e), az a tesztben hibát kap, nem a felhőt éri el.
+- Ha a terminál `ELECTRON_RUN_AS_NODE`-ot örökölt (VS Code, Claude Code), a
+  Cypress `bad option: --smoke-test`-tel nem indul: `unset ELECTRON_RUN_AS_NODE`.
+
+A CI `e2e` jobja ugyanezt futtatja, és a `deploy` rá is vár.
 
 ### Deploy
 

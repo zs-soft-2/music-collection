@@ -11,6 +11,7 @@
 		"deploy:prod": "npm run build:prod && firebase deploy --only hosting:app --project prod",
 		"test": "nx test music-collection",
 		"test:rules": "nx test firestore-rules",
+		"e2e": "firebase emulators:exec --config firebase.e2e.json --project demo-music-collection --only auth,firestore,storage \"nx e2e music-collection-e2e\"",
 		"lint": "nx lint music-collection",
 		"verify:csp": "node tools/hosting/verify-csp.mjs",
 		"export": "firebase emulators:export ./emulators.backup",

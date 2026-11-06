@@ -6,15 +6,17 @@
 	"targets": {
 		"e2e": {
 			"executor": "@nx/cypress:cypress",
+			"dependsOn": [
+				"music-collection:version",
+				"music-collection:app-check-token",
+				"music-collection:primeui-license"
+			],
 			"options": {
 				"cypressConfig": "apps/music-collection-e2e/cypress.config.ts",
-				"devServerTarget": "music-collection:serve:development",
-				"testingType": "e2e"
-			},
-			"configurations": {
-				"production": {
-					"devServerTarget": "music-collection:serve:production"
-				}
+				"devServerTarget": "music-collection:serve:emulator",
+				"baseUrl": "http://127.0.0.1:4280",
+				"testingType": "e2e",
+				"browser": "chrome"
 			}
 		},
 		"lint": {

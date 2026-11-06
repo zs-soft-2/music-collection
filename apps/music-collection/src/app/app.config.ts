@@ -15,23 +15,29 @@ import { initializeAppCheck, provideAppCheck } from '@angular/fire/app-check';
 import {
 	browserLocalPersistence,
 	browserSessionPersistence,
+	connectAuthEmulator,
 	indexedDBLocalPersistence,
 	initializeAuth,
 	provideAuth,
 } from '@angular/fire/auth';
 import {
 	CACHE_SIZE_UNLIMITED,
+	connectFirestoreEmulator,
 	initializeFirestore,
 	persistentLocalCache,
 	persistentMultipleTabManager,
 	provideFirestore,
 } from '@angular/fire/firestore';
-import { getFunctions, provideFunctions } from '@angular/fire/functions';
+import {
+	connectFunctionsEmulator,
+	getFunctions,
+	provideFunctions,
+} from '@angular/fire/functions';
 import { provideStorage } from '@angular/fire/storage';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideRouter } from '@angular/router';
 import { ReCaptchaEnterpriseProvider } from 'firebase/app-check';
-import { getStorage } from 'firebase/storage';
+import { connectStorageEmulator, getStorage } from 'firebase/storage';
 import { CoreAuthenticationModule } from '@music-collection/core/authentication';
 import { CoreAuthorizationModule } from '@music-collection/core/authorization';
 import { CoreEntityQuantityModule } from '@music-collection/core/entity-quantity';
@@ -62,6 +68,7 @@ import { FirebaseAnalyticsService } from './data/analytics';
 // Straight from the file: the page's barrel would pull the lazily loaded
 // collection page into the first bundle.
 import { CollectorShelfLayoutService } from './page/collection/shelf-layout.service';
+import { emulatorProviders } from './emulator/emulator-providers';
 import { HookModule } from './module/hook';
 import { installPerformanceConsole } from './performance';
 import { metaReducers } from './reducer';
@@ -141,11 +148,11 @@ export const appConfig: ApplicationConfig = {
 					}),
 				]
 			: []),
-		provideFirestore(() =>
+		provideFirestore(() => {
 			// Persistent (IndexedDB) cache, shared by the tabs. Unlimited size:
 			// the sync cache (FirestoreSyncService) relies on nothing being
 			// garbage collected.
-			initializeFirestore(getApp(), {
+			const firestore = initializeFirestore(getApp(), {
 				// Every catalog list waits for the confirmed `sync/catalog`
 				// snapshot, which only arrives over Firestore's streaming
 				// channel. Mobile networks, proxies and in-app browsers
@@ -158,8 +165,20 @@ export const appConfig: ApplicationConfig = {
 					cacheSizeBytes: CACHE_SIZE_UNLIMITED,
 					tabManager: persistentMultipleTabManager(),
 				}),
-			})
-		),
+			});
+
+			// The end-to-end build only (`environment.emulator.ts`); the dev
+			// and the prod environment have no emulators.
+			if (environment.emulators) {
+				connectFirestoreEmulator(
+					firestore,
+					environment.emulators.host,
+					environment.emulators.firestore
+				);
+			}
+
+			return firestore;
+		}),
 		// `getAuth()` without the popup resolver. With it, the SDK fetches
 		// Google's api.js, its iframe loader and the auth iframe before it
 		// settles who is signed in — about 130 KB and three round trips, on
@@ -167,18 +186,54 @@ export const appConfig: ApplicationConfig = {
 		// sign-in ever opens. The persistence is `getAuth()`'s own; the
 		// resolver goes to `signInWithPopup` instead
 		// (WebAuthenticationProviderService).
-		provideAuth(() =>
-			initializeAuth(getApp(), {
+		provideAuth(() => {
+			const auth = initializeAuth(getApp(), {
 				persistence: [
 					indexedDBLocalPersistence,
 					browserLocalPersistence,
 					browserSessionPersistence,
 				],
-			})
-		),
+			});
+
+			if (environment.emulators) {
+				connectAuthEmulator(
+					auth,
+					`http://${environment.emulators.host}:${environment.emulators.auth}`,
+					{ disableWarnings: true }
+				);
+			}
+
+			return auth;
+		}),
 		// The callables run where the Firestore database is (apps/functions).
-		provideFunctions(() => getFunctions(getApp(), 'europe-west4')),
-		provideStorage(() => getStorage()),
+		provideFunctions(() => {
+			const functions = getFunctions(getApp(), 'europe-west4');
+
+			// Nothing listens there unless the functions emulator is started
+			// as well: a callable then fails instead of reaching the project.
+			if (environment.emulators) {
+				connectFunctionsEmulator(
+					functions,
+					environment.emulators.host,
+					environment.emulators.functions
+				);
+			}
+
+			return functions;
+		}),
+		provideStorage(() => {
+			const storage = getStorage();
+
+			if (environment.emulators) {
+				connectStorageEmulator(
+					storage,
+					environment.emulators.host,
+					environment.emulators.storage
+				);
+			}
+
+			return storage;
+		}),
 		provideHttpClient(withXhr()),
 		provideAngularSvgIcon(),
 		provideGenre(),
@@ -300,5 +355,9 @@ export const appConfig: ApplicationConfig = {
 		provideEnvironmentInitializer(() =>
 			inject(CollectorProfileEffect).watch()
 		),
+		// Last, so that they win: what the end-to-end build replaces (the
+		// Google popup, which a test cannot drive). Empty in every other build
+		// (`emulator/emulator-providers.ts`).
+		...emulatorProviders,
 	],
 };
