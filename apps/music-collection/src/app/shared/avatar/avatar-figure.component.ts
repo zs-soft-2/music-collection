@@ -14,7 +14,6 @@ import {
 	AVATAR_SIZE,
 	AVATAR_TATTOO_GLYPHS,
 	AVATAR_TATTOO_MARK,
-	AvatarEffect,
 	AvatarLayerSize,
 	AvatarLook,
 	AvatarView,
@@ -22,6 +21,7 @@ import {
 	loadAvatarLayer,
 	showsTattoo,
 } from '../../data/avatar';
+import { AvatarStore } from './avatar.store';
 
 /**
  * The assembled character, drawn as the stack of pictures it is made of.
@@ -132,7 +132,7 @@ export class AvatarFigureComponent {
 	 */
 	public readonly size = input<AvatarLayerSize>('large');
 
-	private readonly avatars = inject(AvatarEffect);
+	private readonly avatars = inject(AvatarStore);
 
 	protected readonly viewBox = `0 0 ${AVATAR_SIZE.width} ${AVATAR_SIZE.height}`;
 	protected readonly mark = AVATAR_TATTOO_MARK;

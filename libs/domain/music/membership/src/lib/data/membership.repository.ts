@@ -5,8 +5,12 @@ import {
 	Firestore,
 	collection,
 	doc,
+	endAt,
 	getDocs,
+	limit,
+	orderBy,
 	query,
+	startAt,
 	where,
 } from '@angular/fire/firestore';
 import {
@@ -14,7 +18,9 @@ import {
 	ContributionEntity,
 	FirestoreSyncService,
 	MEMBERSHIP_FEATURE_KEY,
+	MUSICIAN_FEATURE_KEY,
 	MembershipEntity,
+	MusicianEntity,
 } from '@music-collection/api';
 
 /** How many values an `in` filter takes in one query. */
@@ -119,6 +125,39 @@ export class MembershipRepository {
 				)
 			)
 		).pipe(map((results) => results.flat()));
+	}
+
+	/**
+	 * Musicians whose stored name starts with the prefix, at most `max` of
+	 * them. Asked for directly rather than synced: the search runs on every
+	 * keystroke of the line-up editor, and the musicians are not a list any
+	 * page keeps.
+	 */
+	public findMusiciansByName$(
+		prefix: string,
+		max: number
+	): Observable<MusicianEntity[]> {
+		return from(
+			getDocs(
+				query(
+					collection(this.firestore, MUSICIAN_FEATURE_KEY),
+					orderBy('name'),
+					startAt(prefix),
+					endAt(`${prefix}\uf8ff`),
+					limit(max)
+				)
+			)
+		).pipe(
+			map((snapshot) =>
+				snapshot.docs.map(
+					(document) =>
+						({
+							...document.data(),
+							uid: document.id,
+						}) as MusicianEntity
+				)
+			)
+		);
 	}
 
 	public remove(uid: string): Promise<void> {

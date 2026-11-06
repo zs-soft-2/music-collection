@@ -19,6 +19,11 @@ import {
 export class DocumentFileRepository {
 	private readonly storage = inject(Storage);
 
+	/** The bucket this build uploads to, and reads back from. */
+	public bucket(): string {
+		return ref(this.storage).bucket;
+	}
+
 	public path(fileName: string): string {
 		return `document/${fileName}`;
 	}

@@ -1,7 +1,6 @@
 import { map, of, pipe, switchMap, tap } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
-import { Storage, ref } from '@angular/fire/storage';
 import { TextService } from '@music-collection/core/i18n';
 import { ActivatedRoute } from '@angular/router';
 import { DocumentEntity, isWithdrawnDocument } from '@music-collection/api';
@@ -43,11 +42,15 @@ const initialState: DocumentPageState = {
 export const DocumentPageStore = signalStore(
 	withState(initialState),
 	withComputed(
-		(store, text = inject(TextService), storage = inject(Storage)) => {
+		(
+			store,
+			text = inject(TextService),
+			documentDetailsEffect = inject(DocumentDetailsEffect)
+		) => {
 			const name = computed(() => store.document()?.name ?? '');
 			const fileUrl = computed(() => store.document()?.filePath ?? null);
 			/** The bucket this build uploads to, and reads back from. */
-			const bucket = ref(storage).bucket;
+			const bucket = documentDetailsEffect.storageBucket();
 
 			return {
 				name,
