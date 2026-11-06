@@ -1,0 +1,95 @@
+/*
+	No box of its own: the aside has to be the layout's grid item, because
+	it is sticky — inside a wrapper of its own height it would have nowhere
+	to stick.
+*/
+:host {
+	display: contents;
+}
+
+.preview {
+	position: sticky;
+	top: calc(var(--mc-app-bar-height) + 1rem);
+	padding: 1.25rem;
+	background:
+		radial-gradient(
+			120% 90% at 100% 0%,
+			color-mix(in srgb, var(--tint) 12%, transparent),
+			transparent 62%
+		),
+		var(--mc-card-bg);
+	border: 1px solid color-mix(in srgb, var(--tint) 22%, var(--mc-border));
+	border-radius: var(--mc-radius-lg);
+
+	h2 {
+		margin: 0;
+		font-size: 0.8rem;
+		font-weight: 700;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--mc-text-muted);
+	}
+}
+
+/* A szám maga a mondat — „12 lemez” —, ezért az egész sor nagy. */
+.total {
+	margin: 0.35rem 0 0.75rem;
+	font-size: 1.35rem;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+	color: var(--mc-text);
+}
+
+.busy {
+	font-size: 0.8rem;
+	color: var(--mc-text-subtle);
+}
+
+.points {
+	margin: 0 0 0.75rem;
+	font-size: 0.82rem;
+	color: var(--mc-text-muted);
+
+	strong {
+		color: var(--mc-accent);
+		font-size: 1rem;
+		font-variant-numeric: tabular-nums;
+	}
+}
+
+.albums {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+	max-height: 24rem;
+	overflow-y: auto;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+
+	li {
+		display: flex;
+		flex-direction: column;
+		font-size: 0.82rem;
+	}
+}
+
+.album {
+	font-weight: 600;
+}
+
+.artist {
+	color: var(--mc-text-muted);
+}
+
+.more {
+	margin: 0.6rem 0 0;
+	font-size: 0.8rem;
+	color: var(--mc-text-subtle);
+}
+
+.warning {
+	margin: 0.5rem 0 0;
+	font-size: 0.82rem;
+	color: var(--mc-status-warn, var(--mc-accent));
+}

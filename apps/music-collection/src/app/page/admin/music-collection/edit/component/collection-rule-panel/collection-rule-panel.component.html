@@ -1,0 +1,151 @@
+@let form = store.form();
+
+<section class="mc-form-section">
+	<h2>
+		<span class="chip" aria-hidden="true">
+			<i class="pi pi-filter"></i>
+		</span>
+		{{ 'ui.musicCollectionEdit.the-rule' | transloco }}
+	</h2>
+	<p class="hint">
+		{{ 'ui.musicCollectionEdit.every-filter-given-must' | transloco }}
+	</p>
+
+	<div class="mc-form-grid">
+		<div class="mc-field">
+			<label for="year-from">{{
+				'ui.musicCollectionEdit.released-from' | transloco
+			}}</label>
+			<input
+				id="year-from"
+				type="number"
+				[value]="form.criteria.yearFrom ?? ''"
+				(input)="onYear('yearFrom', $event)"
+			/>
+		</div>
+
+		<div class="mc-field">
+			<label for="year-to">{{
+				'ui.musicCollectionEdit.released-to' | transloco
+			}}</label>
+			<input
+				id="year-to"
+				type="number"
+				[value]="form.criteria.yearTo ?? ''"
+				(input)="onYear('yearTo', $event)"
+			/>
+		</div>
+
+		@for (criterion of enumCriteria; track criterion.key) {
+			<div class="mc-field is-wide">
+				<label [attr.for]="criterion.key">
+					{{ criterion.labelKey | transloco }}
+				</label>
+				<div class="criterion">
+					<select
+						class="operator"
+						[attr.aria-label]="
+							'admin.criterion.operatorFor'
+								| transloco
+									: {
+											field:
+												criterion.labelKey | transloco,
+									  }
+						"
+						(change)="onOperator(criterion.key, $event)"
+					>
+						@for (
+							operator of operatorOptions;
+							track operator.value
+						) {
+							<option
+								[value]="operator.value"
+								[selected]="
+									form.criteria[criterion.key].operator ===
+									operator.value
+								"
+							>
+								{{ operator.labelKey | transloco }}
+							</option>
+						}
+					</select>
+
+					<select
+						[id]="criterion.key"
+						multiple
+						size="5"
+						(change)="onValues(criterion.key, $event)"
+					>
+						@for (option of options(criterion); track option) {
+							<option
+								[value]="option"
+								[selected]="
+									form.criteria[
+										criterion.key
+									].values.includes(option)
+								"
+							>
+								{{ option }}
+							</option>
+						}
+					</select>
+				</div>
+				<small>{{ criterion.hint }}</small>
+			</div>
+		}
+
+		<div class="mc-field is-wide">
+			<label for="artists">{{
+				'ui.musicCollectionEdit.artists' | transloco
+			}}</label>
+			<mc-entity-picker
+				inputId="artists"
+				[placeholder]="
+					'ui.musicCollectionEdit.search-artists' | transloco
+				"
+				[options]="store.artists()"
+				[selected]="form.criteria.artists"
+				(selectedChange)="onCriteria({ artists: $event })"
+			/>
+			<small>{{
+				'ui.musicCollectionEdit.nothing-picked-means-any' | transloco
+			}}</small>
+		</div>
+
+		<div class="mc-field">
+			<label for="credit-musicians">
+				{{ 'ui.musicCollectionEdit.credited-musicians' | transloco }}
+			</label>
+			<mc-entity-picker
+				inputId="credit-musicians"
+				[placeholder]="
+					'ui.musicCollectionEdit.search-musicians' | transloco
+				"
+				[options]="store.musicians()"
+				[selected]="form.criteria.creditMusicians"
+				(selectedChange)="onCriteria({ creditMusicians: $event })"
+			/>
+		</div>
+
+		<div class="mc-field">
+			<label for="credit-roles">{{
+				'ui.musicCollectionEdit.credited-as' | transloco
+			}}</label>
+			<input
+				id="credit-roles"
+				type="text"
+				[placeholder]="
+					'ui.musicCollectionEdit.drums-producer' | transloco
+				"
+				[value]="form.criteria.creditRoles.join(', ')"
+				(change)="onRoles($event)"
+			/>
+			<small>
+				{{
+					'ui.musicCollectionEdit.discogs-roles-comma-separated'
+						| transloco
+				}}
+			</small>
+		</div>
+	</div>
+</section>

@@ -1,0 +1,123 @@
+@let form = store.form();
+
+<section class="mc-form-section">
+	<h2>
+		<span class="chip" aria-hidden="true">
+			<i class="pi pi-star"></i>
+		</span>
+		{{ 'ui.musicCollectionEdit.the-badge' | transloco }}
+	</h2>
+
+	<div class="mc-form-grid">
+		<div class="mc-field">
+			<label for="badge-name">{{
+				'ui.musicCollectionEdit.name2' | transloco
+			}}</label>
+			<input
+				id="badge-name"
+				type="text"
+				[value]="form.badgeName"
+				(input)="
+					store.setField({
+						badgeName: value($event),
+					})
+				"
+			/>
+			<small>
+				{{ 'ui.musicCollectionEdit.without-a-name-the' | transloco }}
+			</small>
+		</div>
+
+		<div class="mc-field">
+			<label for="badge-icon">{{
+				'ui.musicCollectionEdit.icon2' | transloco
+			}}</label>
+			<input
+				id="badge-icon"
+				type="text"
+				[placeholder]="'ui.musicCollectionEdit.pi-pi-star' | transloco"
+				[value]="form.badgeIcon"
+				(input)="
+					store.setField({
+						badgeIcon: value($event),
+					})
+				"
+			/>
+		</div>
+
+		<div class="mc-field is-wide">
+			<label for="badge-description">{{
+				'ui.musicCollectionEdit.description2' | transloco
+			}}</label>
+			<textarea
+				id="badge-description"
+				rows="2"
+				[value]="form.badgeDescription"
+				(input)="
+					store.setField({
+						badgeDescription: value($event),
+					})
+				"
+			></textarea>
+		</div>
+
+		<div class="mc-field is-wide">
+			<label for="badge-art">{{
+				'ui.musicCollectionEdit.artwork-url' | transloco
+			}}</label>
+			<input
+				id="badge-art"
+				type="url"
+				[value]="form.badgeArtworkUrl"
+				(input)="
+					store.setField({
+						badgeArtworkUrl: value($event),
+					})
+				"
+			/>
+			<small>
+				{{ 'ui.musicCollectionEdit.a-hand-made-image' | transloco }}
+			</small>
+
+			<mc-collection-image-upload
+				[uploading]="store.uploadingField() === 'badgeArtworkUrl'"
+				[disabled]="!!store.uploadingField()"
+				(fileChosen)="upload('badgeArtworkUrl', $event)"
+				(libraryRequested)="store.openLibrary('badgeArtworkUrl')"
+			>
+				@if (form.badgeArtworkUrl) {
+					<img
+						class="image-preview"
+						[src]="form.badgeArtworkUrl"
+						[alt]="
+							'ui.musicCollectionEdit.the-uploaded-artwork'
+								| transloco
+						"
+					/>
+				}
+			</mc-collection-image-upload>
+
+			@if (store.libraryTarget() === 'badgeArtworkUrl') {
+				<mc-image-library
+					[images]="store.library()"
+					(picked)="store.pickFromLibrary($event)"
+					(closed)="store.closeLibrary()"
+				></mc-image-library>
+			}
+
+			@if (store.badgeImageUid()) {
+				<p class="hint">
+					{{
+						'ui.musicCollectionEdit.a-chosen-pin-covers' | transloco
+					}}
+				</p>
+			}
+		</div>
+
+		<!--
+			A pin a saját komponensében: a jelvény képe nem mező, hanem a
+			szerver galériája, saját gombsorral és választással.
+		-->
+		<mc-collection-badge-pin class="mc-field is-wide badge-art" />
+	</div>
+</section>

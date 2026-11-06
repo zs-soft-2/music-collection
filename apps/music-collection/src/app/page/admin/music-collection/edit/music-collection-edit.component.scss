@@ -1,0 +1,58 @@
+@use 'music-collection-edit' as edit;
+
+:host {
+	display: block;
+	/*
+		A nyitott lap színe. Minden szakasz ebből festi a keretét, a
+		fejléc-ikonját és a mezői fókuszgyűrűjét, így egy pillantásból
+		látszik, melyik lapon áll az ember — a lap tetejére felnézni
+		nélküle is kellene.
+	*/
+	--tint: var(--mc-primary);
+}
+
+.panel {
+	display: flex;
+	flex-direction: column;
+	gap: 1.25rem;
+}
+
+/*
+	A nem látszó lap a DOM-ban marad, csak rejtve: a jelenetpad
+	állapota — a kirajzolt, még el nem mentett jelöltek — a
+	komponensében él, és egy feltételes blokk lapváltáskor eldobná.
+*/
+.panel[hidden] {
+	display: none;
+}
+
+.layout {
+	display: grid;
+	grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr);
+	gap: 1.25rem;
+	align-items: start;
+}
+
+@media (max-width: 1000px) {
+	.layout {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+@include edit.button;
+
+.error {
+	padding: 0.75rem 1rem;
+	margin-bottom: 1rem;
+	color: var(--mc-primary);
+	border: 1px solid var(--mc-primary);
+	border-radius: var(--mc-radius-md);
+}
+
+.skeleton {
+	height: 20rem;
+	border-radius: var(--mc-radius-lg);
+	background: var(--mc-card-bg);
+}
+
+@include edit.visually-hidden;

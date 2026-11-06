@@ -1,0 +1,54 @@
+<aside class="preview" aria-live="polite">
+	<h2>
+		{{ 'ui.musicCollectionEdit.what-it-catches' | transloco }}
+	</h2>
+
+	@if (matchesEverything()) {
+		<p class="warning">
+			{{ 'ui.musicCollectionEdit.no-filter-yet-this' | transloco }}
+		</p>
+	}
+
+	<p class="total">
+		{{ total() | mcPlural: 'ui.musicCollectionEdit.previewTotal' }}
+		@if (isPreviewing()) {
+			<span class="busy">{{
+				'ui.musicCollectionEdit.resolving' | transloco
+			}}</span>
+		}
+	</p>
+
+	<p class="points">
+		{{ 'ui.musicCollectionEdit.worth' | transloco }}
+		<strong>
+			{{ points() }}
+		</strong>
+		{{ 'ui.musicCollectionEdit.points-and-only-once' | transloco }}
+	</p>
+
+	<ul class="albums">
+		@for (album of albums(); track album.albumUid) {
+			<li>
+				<span class="album">{{ album.albumName }}</span>
+				<span class="artist">
+					{{ album.artistName }}
+					@if (album.year) {
+						· {{ album.year }}
+					}
+				</span>
+			</li>
+		}
+	</ul>
+
+	@if (total() > albums().length) {
+		<p class="more">
+			{{
+				'ui.musicCollectionEdit.andMore'
+					| transloco
+						: {
+								count: total() - albums().length,
+						  }
+			}}
+		</p>
+	}
+</aside>

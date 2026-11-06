@@ -1,0 +1,131 @@
+/**
+ * What the editor's parts share. They used to be one stylesheet over one
+ * template; split into components, each view is encapsulated on its own, so
+ * a rule written once for the whole editor has to be included by every part
+ * whose markup it styles. The colour they lean on, `--tint`, is not copied:
+ * it is a custom property, and it reaches every part through the DOM.
+ */
+
+/** The bare fields: the page uses native inputs, not PrimeNG. */
+@mixin fields {
+	input:focus-visible,
+	select:focus-visible,
+	textarea:focus-visible {
+		outline: none;
+		border-color: color-mix(in srgb, var(--tint) 65%, transparent);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--tint) 20%, transparent);
+	}
+
+	input,
+	select,
+	textarea {
+		padding: 0.45rem 0.6rem;
+		font: inherit;
+		font-size: 0.9rem;
+		color: var(--mc-text);
+		background: var(--mc-bg);
+		border: 1px solid var(--mc-border-strong);
+		border-radius: var(--mc-radius-md);
+	}
+}
+
+/** One tab's section, painted in the open tab's colour. */
+@mixin section {
+	:host {
+		display: block;
+	}
+
+	.mc-form-section {
+		position: relative;
+		background:
+			radial-gradient(
+				130% 100% at 0% 0%,
+				color-mix(in srgb, var(--tint) 9%, transparent),
+				transparent 62%
+			),
+			var(--mc-card-bg);
+		border-color: color-mix(in srgb, var(--tint) 22%, var(--mc-border));
+	}
+
+	.mc-form-section::before {
+		content: '';
+		position: absolute;
+		inset: 0 0 auto;
+		height: 2px;
+		background: linear-gradient(
+			90deg,
+			var(--tint),
+			color-mix(in srgb, var(--tint) 20%, transparent) 65%,
+			transparent
+		);
+		border-radius: var(--mc-radius-lg) var(--mc-radius-lg) 0 0;
+	}
+
+	.mc-form-section > h2 {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		font-size: 1rem;
+	}
+
+	.chip {
+		display: inline-grid;
+		flex: 0 0 auto;
+		place-items: center;
+		width: 1.8rem;
+		height: 1.8rem;
+		font-size: 0.8rem;
+		color: var(--tint);
+		background: color-mix(in srgb, var(--tint) 16%, transparent);
+		border-radius: var(--mc-radius-md);
+	}
+
+	.hint {
+		margin: 0;
+		font-size: 0.82rem;
+		color: var(--mc-text-muted);
+	}
+}
+
+/** `.button` is not a global class; this is its recipe on this page. */
+@mixin button {
+	.button {
+		padding: 0.45rem 1rem;
+		font: inherit;
+		font-size: 0.9rem;
+		color: var(--mc-text);
+		text-decoration: none;
+		cursor: pointer;
+		background: transparent;
+		border: 1px solid var(--mc-border-strong);
+		border-radius: var(--mc-radius-md);
+
+		&:disabled {
+			opacity: 0.6;
+			cursor: default;
+		}
+
+		&.is-primary {
+			color: var(--mc-on-primary);
+			background: linear-gradient(
+				135deg,
+				var(--mc-primary),
+				var(--mc-accent)
+			);
+			border-color: transparent;
+		}
+	}
+}
+
+@mixin visually-hidden {
+	.visually-hidden {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
+		border: 0;
+	}
+}

@@ -1,0 +1,16 @@
+@use '../../music-collection-edit' as edit;
+
+@include edit.section;
+@include edit.fields;
+
+/* Ugyanabban az arányban, ahogy a kollekció mögött állni fog. */
+.cover-preview {
+	width: 100%;
+	max-width: 32rem;
+	aspect-ratio: 16 / 9;
+	margin-top: 0.75rem;
+	object-fit: cover;
+	background: var(--mc-bg-muted);
+	border: 1px solid var(--mc-border);
+	border-radius: var(--mc-radius-md);
+}
