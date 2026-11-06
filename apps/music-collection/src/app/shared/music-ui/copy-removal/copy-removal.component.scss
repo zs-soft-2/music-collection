@@ -161,7 +161,7 @@ button {
 	}
 
 	&:has(input:focus-visible) {
-		outline: 2px solid var(--mc-primary);
+		outline: 2px solid var(--mc-info);
 		outline-offset: 2px;
 	}
 }
@@ -186,7 +186,7 @@ button {
 		resize: vertical;
 
 		&:focus-visible {
-			outline: 2px solid var(--mc-primary);
+			outline: 2px solid var(--mc-info);
 			outline-offset: 1px;
 		}
 

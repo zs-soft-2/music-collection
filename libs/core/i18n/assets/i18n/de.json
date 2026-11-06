@@ -3060,6 +3060,9 @@
 			"the-copy-keeps": "Alles Festgehaltene bleibt erhalten: Preis, Zustand, Geschichte, Fotos, Regalplatz und die Nummer wandern mit.",
 			"moveFailed": "Das Exemplar konnte nicht verschoben werden: {{error}}"
 		},
+		"imageUrlPreview": {
+			"could-not-load": "Das Bild kann von dieser Adresse nicht geladen werden."
+		},
 		"trackImages": {
 			"close": "Schließen",
 			"show-picture": "Bild {{number}} anzeigen",

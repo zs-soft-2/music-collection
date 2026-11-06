@@ -14,6 +14,7 @@ import {
 	ArtistFormParams,
 	BaseComponent,
 } from '@music-collection/api';
+import { ImageUrlPreviewComponent } from '@music-collection/ui/image-url-preview';
 
 import { ArtistExternalCandidateRow } from './artist-external-candidate';
 import { ArtistCandidatePickerComponent } from './candidate';
@@ -52,6 +53,7 @@ import { AsyncPipe } from '@angular/common';
 		MultiSelect,
 		AutoComplete,
 		Image,
+		ImageUrlPreviewComponent,
 		Button,
 		Checkbox,
 		Dialog,

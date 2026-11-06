@@ -4,6 +4,7 @@ import { TranslocoService } from '@jsverse/transloco';
 import { firstValueFrom, of } from 'rxjs';
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { FormGroup, FormGroupDirective } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import {
@@ -167,5 +168,129 @@ describe('ArtistFormComponent: editing an artist that has attachments', () => {
 		expect(params.formGroup.value['headerImage']).toEqual(
 			artist.headerImage
 		);
+	});
+});
+
+/**
+ * #80: the photo address previews through `mc-image-url-preview`. The form is
+ * read from the template's own directive: `params$` builds a new form on every
+ * subscription, so it would not be the one on screen.
+ */
+describe('ArtistFormComponent: the photo address preview', () => {
+	let fixture: ComponentFixture<ArtistFormComponent>;
+
+	const artist = {
+		uid: 'artist-1',
+		name: 'Nirvana',
+		formedIn: '1987-01-01T00:00:00.000Z',
+		genre: 'rock',
+		styles: ['grunge'],
+		imageUrl: null,
+	};
+
+	function renderedForm(): FormGroup {
+		return fixture.debugElement
+			.query(By.directive(FormGroupDirective))
+			.injector.get(FormGroupDirective).form;
+	}
+
+	function enterAddress(address: string): void {
+		const input: HTMLInputElement =
+			fixture.nativeElement.querySelector('input#imageUrl');
+
+		input.value = address;
+		input.dispatchEvent(new Event('input'));
+		fixture.detectChanges();
+	}
+
+	function picture(): HTMLImageElement | null {
+		return fixture.nativeElement.querySelector('mc-image-url-preview img');
+	}
+
+	function message(): string | undefined {
+		return fixture.nativeElement
+			.querySelector('mc-image-url-preview [role="status"]')
+			?.textContent?.trim();
+	}
+
+	function failToLoad(): void {
+		picture()?.dispatchEvent(new Event('error'));
+		fixture.detectChanges();
+	}
+
+	function saveButton(): HTMLButtonElement | undefined {
+		const label = TestBed.inject(TranslocoService).translate(
+			'ui.artistForm.save'
+		);
+
+		return Array.from<HTMLButtonElement>(
+			fixture.nativeElement.querySelectorAll('button')
+		).find((button) => button.textContent?.trim() === label);
+	}
+
+	beforeEach(async () => {
+		await TestBed.configureTestingModule({
+			imports: [ArtistFormComponent],
+			providers: [
+				provideI18nTesting(),
+				provideGenreTesting(),
+				provideRouter([]),
+				{
+					provide: ArtistStateService,
+					useValue: {
+						selectEntities$: jest.fn(() => of([])),
+						dispatchListEntitiesAction: jest.fn(),
+						selectEntityById$: jest.fn(() => of(artist)),
+					},
+				},
+				{ provide: ArtistUtilService, useClass: ArtistUtilServiceImpl },
+				{
+					provide: DocumentStateService,
+					useValue: { selectSearchResult$: jest.fn(() => of([])) },
+				},
+			],
+		}).compileComponents();
+
+		fixture = TestBed.createComponent(ArtistFormComponent);
+		fixture.detectChanges();
+	});
+
+	it('AC-1: shows the picture at the entered address, with no message', () => {
+		enterAddress('https://a/photo.jpg');
+
+		expect(picture()?.getAttribute('src')).toBe('https://a/photo.jpg');
+		expect(message()).toBe('');
+	});
+
+	it('AC-2: says so when it cannot load, and the form can still be saved', () => {
+		enterAddress('https://a/photo.jpg');
+		expect(renderedForm().valid).toBe(true);
+		expect(saveButton()?.disabled).toBe(false);
+
+		failToLoad();
+
+		expect(picture()).toBeNull();
+		expect(message()).toBe(
+			TestBed.inject(TranslocoService).translate(
+				'ui.imageUrlPreview.could-not-load'
+			)
+		);
+		expect(message()).not.toBe('ui.imageUrlPreview.could-not-load');
+		expect(
+			fixture.nativeElement.querySelector('input#imageUrl').value
+		).toBe('https://a/photo.jpg');
+		expect(renderedForm().value['imageUrl']).toBe('https://a/photo.jpg');
+		expect(renderedForm().valid).toBe(true);
+		expect(saveButton()?.disabled).toBe(false);
+	});
+
+	it('AC-4: a new address clears the message and shows its picture', () => {
+		enterAddress('https://a/bad.jpg');
+		failToLoad();
+
+		enterAddress('https://a/good.jpg');
+
+		expect(picture()?.getAttribute('src')).toBe('https://a/good.jpg');
+		expect(message()).toBe('');
 	});
 });
