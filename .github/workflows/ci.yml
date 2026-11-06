@@ -162,12 +162,14 @@ jobs:
       # hanem a régióban egyszerre futó összes példányra számít, és az első kör
       # frissen indított példányai a második kör alatt még élnek — 11 + 11
       # ugyanúgy 22. A tényleges megoldás a fél CPU a `setGlobalOptions`-ben
-      # (apps/functions/src/index.ts); a két kör az e melletti tartalék, hogy
-      # egy új function ne feszítse rögtön a keretet.
+      # (apps/functions/src/functions-runtime.ts); a két kör az e melletti
+      # tartalék, hogy egy új function ne feszítse rögtön a keretet.
       #
       # A névsor a forrásból jön, hogy új functionnél itt ne kelljen átírni
-      # semmit. Amit viszont kivesznek a kódból, azt egyik kör sem törli:
-      # a `firebase functions:delete` marad kézi lépésnek.
+      # semmit: a definíciók a `*.functions.ts` fájlokban élnek (az index.ts
+      # csak re-exportál), és ott csak function exportálható. Amit viszont
+      # kivesznek a kódból, azt egyik kör sem törli: a `firebase
+      # functions:delete` marad kézi lépésnek.
       - name: Functionök deployja két körben (Cloud Run CPU-kvóta)
         if: steps.tip.outputs.stale != 'true'
         # A predeploy (firebase.json) hozza le a @zssz-soft/zs-ai-sdk tarballját
@@ -175,7 +177,12 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.NPM_TOKEN }}
         run: |
-          names=$(grep -o '^export const [a-zA-Z0-9_]*' apps/functions/src/index.ts | awk '{print $3}')
+          names=$(grep -ho '^export const [a-zA-Z0-9_]*' apps/functions/src/*.functions.ts | awk '{print $3}')
+          # Egy témafájlban definiált, de az index.ts-ből ki nem exportált név
+          # itt nem létező functionre célozna — inkább álljon meg a deploy.
+          for name in $names; do
+            grep -qw "$name" apps/functions/src/index.ts || { echo "Nincs re-exportálva az index.ts-ben: $name"; exit 1; }
+          done
           total=$(echo "$names" | wc -l | tr -d ' ')
           half=$(( (total + 1) / 2 ))
           first=$(echo "$names" | head -n "$half" | sed 's/^/functions:security:/' | paste -sd, -)
