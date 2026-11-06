@@ -122,6 +122,24 @@
 					"extractLicenses": false,
 					"sourceMap": true,
 					"namedChunks": true
+				},
+				"emulator": {
+					"buildOptimizer": false,
+					"optimization": false,
+					"vendorChunk": true,
+					"extractLicenses": false,
+					"sourceMap": true,
+					"namedChunks": true,
+					"fileReplacements": [
+						{
+							"replace": "apps/music-collection/src/environments/environment.ts",
+							"with": "apps/music-collection/src/environments/environment.emulator.ts"
+						},
+						{
+							"replace": "apps/music-collection/src/app/emulator/emulator-providers.ts",
+							"with": "apps/music-collection/src/app/emulator/emulator-providers.emulator.ts"
+						}
+					]
 				}
 			},
 			"defaultConfiguration": "dev",
@@ -159,6 +177,10 @@
 				},
 				"development": {
 					"buildTarget": "music-collection:build:development"
+				},
+				"emulator": {
+					"buildTarget": "music-collection:build:emulator",
+					"port": 4280
 				}
 			},
 			"defaultConfiguration": "development",

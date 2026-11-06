@@ -8,13 +8,10 @@
 			"executor": "@nx/cypress:cypress",
 			"options": {
 				"cypressConfig": "apps/music-collection-e2e/cypress.config.ts",
-				"devServerTarget": "music-collection:serve:development",
-				"testingType": "e2e"
-			},
-			"configurations": {
-				"production": {
-					"devServerTarget": "music-collection:serve:production"
-				}
+				"devServerTarget": "music-collection:serve:emulator",
+				"baseUrl": "http://127.0.0.1:4280",
+				"testingType": "e2e",
+				"browser": "chrome"
 			}
 		},
 		"lint": {

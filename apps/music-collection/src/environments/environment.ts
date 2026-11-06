@@ -5,6 +5,7 @@
  * a `--env prod` kapcsolóval kérik.
  */
 import { APP_CHECK_DEBUG_TOKEN } from './app-check-debug-token';
+import type { EmulatorHosts } from './emulator-hosts';
 import { PRIMEUI_LICENSE } from './primeui-license';
 import { VERSION } from './version';
 
@@ -71,6 +72,11 @@ export const environment = {
 		 */
 		license: PRIMEUI_LICENSE,
 	},
+	/**
+	 * The Firebase emulators to talk to instead of the project. Only the
+	 * `emulator` build sets it (`environment.emulator.ts`, end-to-end tests).
+	 */
+	emulators: null as EmulatorHosts | null,
 	type: 'develop',
 	/** Base version + per-build suffix (tools/version/generate-version.mjs). */
 	version: VERSION.version,
