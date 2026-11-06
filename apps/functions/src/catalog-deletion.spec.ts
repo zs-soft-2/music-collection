@@ -24,10 +24,38 @@ interface Write {
 	data: Record<string, unknown>;
 }
 
+interface Snapshot {
+	exists: boolean;
+	ref: Reference;
+	get: (field: string) => unknown;
+}
+
+interface Reference {
+	path: string;
+	id: string;
+	parent: { id: string };
+	collection: (name: string) => Collection;
+	run(): Snapshot;
+}
+
+interface Collection {
+	doc: (id: string) => Reference;
+}
+
+interface Query {
+	where(field: string, operation: string, value: unknown): Query;
+	limit(count: number): Query;
+	run(): {
+		empty: boolean;
+		size: number;
+		docs: { ref: Reference; get: (field: string) => unknown }[];
+	};
+}
+
 /** A tárolt dokumentumok: a `reference` ebből olvas, ha lekérik. */
 let stored: Document[] = [];
 
-const reference = (path: string): any => {
+const reference = (path: string): Reference => {
 	const parts = path.split('/');
 
 	return {
@@ -48,7 +76,7 @@ const reference = (path: string): any => {
 	};
 };
 
-const collectionAt = (path: string): any => ({
+const collectionAt = (path: string): Collection => ({
 	doc: (id: string) => reference(`${path}/${id}`),
 });
 
@@ -88,12 +116,12 @@ function fakeDatabase(documents: Document[]) {
 
 	stored = documents;
 
-	const buildQuery = (collectionId: string, group: boolean): any => {
+	const buildQuery = (collectionId: string, group: boolean): Query => {
 		const filters: { field: string; operation: string; value: unknown }[] =
 			[];
 		let cap = Infinity;
 
-		const self: any = {
+		const self: Query = {
 			where(field: string, operation: string, value: unknown) {
 				filters.push({ field, operation, value });
 
@@ -138,7 +166,7 @@ function fakeDatabase(documents: Document[]) {
 	};
 
 	const transaction = {
-		get: async (query: any) => query.run(),
+		get: async (query: Reference | Query) => query.run(),
 		delete: ({ path }: { path: string }) => deletions.push({ path }),
 		set: ({ path }: { path: string }, data: Record<string, unknown>) =>
 			writes.push({ path, data }),

@@ -270,16 +270,16 @@ export class CollectionItemUtilServiceImpl extends CollectionItemUtilService {
 		collectionItem: CollectionItemEntity,
 		type: UpdateEntityQuantityType
 	): EntityQuantityEntityUpdate {
-		const group: object = { ...entityQuantity.group };
-		const userGroup = (group as any)[EntityTypeEnum.User]
-			? { ...(group as any)[EntityTypeEnum.User] }
+		const group: EntityQuantityGroup = { ...entityQuantity.group };
+		const userGroup: { [uid: string]: number } = group[EntityTypeEnum.User]
+			? { ...group[EntityTypeEnum.User] }
 			: {};
 		const userProperty = userGroup[collectionItem.userId || ''] || 0;
 		const value = type === UpdateEntityQuantityTypeEnum.increase ? 1 : -1;
 
 		userGroup[collectionItem.userId || ''] = userProperty + value;
 
-		(group as any)[EntityTypeEnum.User] = userGroup;
+		group[EntityTypeEnum.User] = userGroup;
 
 		return {
 			...entityQuantity,

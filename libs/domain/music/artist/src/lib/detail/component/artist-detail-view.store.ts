@@ -52,7 +52,7 @@ export const ArtistDetailViewStore = signalStore(
 					switchMap(() =>
 						artistDetailViewService.getData().pipe(
 							tapResponse({
-								next: (data: any[]) => {
+								next: (data) => {
 									patchState(store, {
 										albums: data[1],
 										artist: data[0] || null,

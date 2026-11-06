@@ -295,15 +295,17 @@ export class AlbumUtilServiceImpl extends AlbumUtilService {
 		entityQuantity: EntityQuantityEntity,
 		album: AlbumEntity
 	): EntityQuantityEntityUpdate {
-		const group: object = { ...entityQuantity.group };
-		const artistGroup = (group as any)[EntityTypeEnum.Artist]
-			? { ...(group as any)[EntityTypeEnum.Artist] }
+		const group: EntityQuantityGroup = { ...entityQuantity.group };
+		const artistGroup: { [uid: string]: number } = group[
+			EntityTypeEnum.Artist
+		]
+			? { ...group[EntityTypeEnum.Artist] }
 			: {};
 		const artistProperty = artistGroup[album.artist.uid || ''] || 0;
 
 		artistGroup[album.artist.uid || ''] = artistProperty + 1;
 
-		(group as any)[EntityTypeEnum.Artist] = artistGroup;
+		group[EntityTypeEnum.Artist] = artistGroup;
 
 		return {
 			...entityQuantity,

@@ -51,7 +51,7 @@ export const selectAlbum = createSelector(
 export const selectAlbumById = () =>
 	createSelector(
 		selectAlbumEntities,
-		(albumEntities: Dictionary<AlbumEntity>, props: any) => {
+		(albumEntities: Dictionary<AlbumEntity>, props: { uid: string }) => {
 			const albumEntity = albumEntities[props.uid];
 
 			return albumEntity;

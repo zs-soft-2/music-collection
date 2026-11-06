@@ -79,7 +79,7 @@ jest.mock('firebase-admin/storage', () => ({
 
 function fakeDatabase(documents: Record<string, Record<string, unknown>>) {
 	let next = 0;
-	const reference = (path: string): any => ({
+	const reference = (path: string) => ({
 		path,
 		id: path.split('/').pop(),
 	});
@@ -97,7 +97,7 @@ function fakeDatabase(documents: Record<string, Record<string, unknown>>) {
 			},
 		}),
 		runTransaction: async <T>(
-			body: (transaction: any) => Promise<T>
+			body: (transaction: unknown) => Promise<T>
 		): Promise<T> =>
 			body({
 				get: async (held: { path: string }) => snapshot(held.path),

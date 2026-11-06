@@ -1,3 +1,3 @@
 export interface Configurable {
-	config: any;
+	config: Record<string, string>;
 }

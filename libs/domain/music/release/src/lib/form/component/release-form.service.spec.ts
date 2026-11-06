@@ -219,11 +219,7 @@ describe('ReleaseFormService', () => {
 	});
 
 	function formValue() {
-		let group!: ReturnType<
-			ReleaseUtilServiceImpl['createEntity']
-		> extends never
-			? never
-			: any;
+		let group!: ReleaseFormParams['formGroup'];
 
 		service.init$().subscribe((params) => (group = params.formGroup));
 

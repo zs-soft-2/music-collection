@@ -13,6 +13,7 @@ import { WishlistItemFormService } from './wishlist-item-form.service';
 import { ReactiveFormsModule } from '@angular/forms';
 import { Bind } from 'primeng/bind';
 import { AutoComplete } from 'primeng/autocomplete';
+import type { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { InputText } from 'primeng/inputtext';
 import { MultiSelect } from 'primeng/multiselect';
 import { Checkbox } from 'primeng/checkbox';
@@ -54,11 +55,11 @@ export class WishlistItemFormComponent extends BaseComponent implements OnInit {
 		this.componentService.submit();
 	}
 
-	public searchAlbumHandler(event: any): void {
+	public searchAlbumHandler(event: AutoCompleteCompleteEvent): void {
 		this.componentService.searchAlbum(event['query']);
 	}
 
-	public searchArtistHandler(event: any): void {
+	public searchArtistHandler(event: AutoCompleteCompleteEvent): void {
 		this.componentService.searchArtist(event['query']);
 	}
 }

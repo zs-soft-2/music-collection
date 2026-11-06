@@ -5,6 +5,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { BaseComponent, ExportImportService } from '@music-collection/api';
 import { Bind } from 'primeng/bind';
 import { FileUpload } from 'primeng/fileupload';
+import type { FileUploadHandlerEvent } from 'primeng/fileupload';
 
 @Component({
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -16,7 +17,7 @@ import { FileUpload } from 'primeng/fileupload';
 export class ArtistImportComponent extends BaseComponent {
 	private exportImportService = inject(ExportImportService);
 
-	public artistImport(event: any): void {
+	public artistImport(event: FileUploadHandlerEvent): void {
 		this.exportImportService
 			.importArtistBundle(event.files[0])
 			.pipe(first())
