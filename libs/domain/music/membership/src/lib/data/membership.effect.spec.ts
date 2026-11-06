@@ -1,13 +1,13 @@
 import { firstValueFrom, of } from 'rxjs';
 
 import { TestBed } from '@angular/core/testing';
-import { Firestore } from '@angular/fire/firestore';
 import {
 	ArtistStateService,
 	DiscogsLookupClient,
 	MembershipEntity,
 	MusicBrainzClient,
 	MusicianDataService,
+	MusicianEntity,
 } from '@music-collection/api';
 
 import { LineupCandidate } from './lineup-candidates';
@@ -54,7 +54,11 @@ const saved = (fields: Partial<MembershipEntity> = {}): MembershipEntity =>
 
 function setUp(): {
 	effect: MembershipEffect;
-	repository: { save: jest.Mock; saveAll: jest.Mock };
+	repository: {
+		save: jest.Mock;
+		saveAll: jest.Mock;
+		findMusiciansByName$: jest.Mock;
+	};
 	musicians: { add$: jest.Mock };
 	musicBrainz: { get$: jest.Mock };
 	discogs: { lookupOrNull$: jest.Mock };
@@ -66,6 +70,7 @@ function setUp(): {
 		listByArtist$: jest.fn().mockReturnValue(of([])),
 		listByMusician$: jest.fn().mockReturnValue(of([])),
 		listContributionsByAlbums$: jest.fn().mockReturnValue(of([])),
+		findMusiciansByName$: jest.fn().mockReturnValue(of([])),
 	};
 	const musicians = {
 		add$: jest
@@ -83,7 +88,6 @@ function setUp(): {
 	TestBed.configureTestingModule({
 		providers: [
 			MembershipEffect,
-			{ provide: Firestore, useValue: {} },
 			{ provide: MembershipRepository, useValue: repository },
 			{ provide: MusicianDataService, useValue: musicians },
 			{ provide: MusicBrainzClient, useValue: musicBrainz },
@@ -375,5 +379,48 @@ describe('MembershipEffect.fetchExternalMembers$', () => {
 				})
 			)
 		).toEqual([]);
+	});
+});
+
+describe('MembershipEffect.searchMusicians$', () => {
+	const musician = (uid: string, name: string): MusicianEntity =>
+		({ uid, name }) as MusicianEntity;
+
+	it('asks the repository for the name as typed and title-cased', async () => {
+		const { effect, repository } = setUp();
+
+		await firstValueFrom(effect.searchMusicians$('bill steer'));
+
+		expect(repository.findMusiciansByName$.mock.calls).toEqual([
+			['bill steer', 10],
+			['Bill Steer', 10],
+		]);
+	});
+
+	it('asks once when the term is already spelled as stored', async () => {
+		const { effect, repository } = setUp();
+
+		await firstValueFrom(effect.searchMusicians$('Bill'));
+
+		expect(repository.findMusiciansByName$).toHaveBeenCalledTimes(1);
+	});
+
+	it('merges both answers into one sorted list, each musician once', async () => {
+		const { effect, repository } = setUp();
+
+		repository.findMusiciansByName$.mockImplementation((prefix: string) =>
+			of(
+				prefix === 'bill'
+					? [musician('m2', 'Bill Steer')]
+					: [
+							musician('m3', 'Billy Gibbons'),
+							musician('m2', 'Bill Steer'),
+						]
+			)
+		);
+
+		const found = await firstValueFrom(effect.searchMusicians$('bill'));
+
+		expect(found.map(({ uid }) => uid)).toEqual(['m2', 'm3']);
 	});
 });
