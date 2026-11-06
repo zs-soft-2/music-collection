@@ -3,7 +3,9 @@
 A háttér: jogosultság-szinkron, a katalógus írásai, amiket a kliens nem
 kaphat meg, a külső források (Discogs, MusicBrainz) és minden modellhívás az
 AI-gatewayen át. Egy codebase (`security` a `firebase.json`-ben), egy régió
-(`europe-west4`), egy `index.ts` — a számítás a mellette álló fájlokban.
+(`europe-west4`). A functionök témánként a `*.functions.ts` fájlokban élnek, a
+közös beállítás (régió, CPU, App Check, secretek) a `functions-runtime.ts`-ben;
+az `index.ts` csak re-exportál. A számítás a mellettük álló fájlokban.
 
 ## Jogosultság-szinkron
 

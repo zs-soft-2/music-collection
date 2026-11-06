@@ -19,7 +19,7 @@
 
 /**
  * A hívó adatának baja; a `code` a callable hibakódja lesz. A callable hibája
- * csak az index.ts-ben születik meg: a `firebase-functions/v2/https` importja
+ * csak a catalog.functions.ts-ben születik meg: a `firebase-functions/v2/https` importja
  * a firebase-admin auth ágát is behúzza, amit a tesztfutó nem tud betölteni —
  * és akkor a séma maradna teszt nélkül, amiből itt semmi nem maradhat.
  */

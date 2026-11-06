@@ -35,7 +35,7 @@
  * A naplózás `console`-on megy, és a hibaosztály is saját (`ConcertAiError`),
  * nem `HttpsError`: a `firebase-functions` betöltése a firebase-admin auth
  * láncán át ESM-et húz be, amivel a modul teszt alatt el sem indulna. A
- * callable fordítja a hibát `HttpsError`-rá (`index.ts`) — ugyanaz a minta,
+ * callable fordítja a hibát `HttpsError`-rá (`concert.functions.ts`) — ugyanaz a minta,
  * mint a fotós kereté és a napi kérdésé. A Cloud Functions a `console`
  * hívásait ugyanúgy strukturált naplóba veszi.
  */
@@ -71,7 +71,7 @@ const BATCH_LIMIT = 400;
 const EXACT_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
- * A keret hibája. Nem `HttpsError`: a callable fordítja azzá (`index.ts`),
+ * A keret hibája. Nem `HttpsError`: a callable fordítja azzá (`concert.functions.ts`),
  * mint a fotós keretnél — a modul így a firebase-functions burka nélkül is
  * tesztelhető.
  */

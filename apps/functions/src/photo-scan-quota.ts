@@ -26,7 +26,7 @@ import { Firestore } from 'firebase-admin/firestore';
 import { gameDay } from './daily-question';
 
 /**
- * A keret hibája. Nem `HttpsError`: a callable-ök fordítják azzá (`index.ts`),
+ * A keret hibája. Nem `HttpsError`: a callable-ök fordítják azzá (`photo-scan.functions.ts`),
  * mint a Discogsé és a napi kérdésé — a modul így a firebase-functions burka
  * nélkül is tesztelhető, és a hibakód a végpont dolga marad.
  */

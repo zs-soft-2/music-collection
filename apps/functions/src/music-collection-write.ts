@@ -1,7 +1,7 @@
 /**
  * A collection-definíciók írása. A `firestore.rules` a kliensnek tiltja a
  * `music-collection/{uid}` írását, ezért minden változás itt megy át: a
- * jogosultságot az index.ts ellenőrzi, a szabályt a
+ * jogosultságot a music-collection.functions.ts ellenőrzi, a szabályt a
  * music-collection-definition.ts validálja, és itt marad a Firestore —
  * egyediség, szülőlánc, és a kliens-cache szinkronja.
  */

@@ -23,7 +23,7 @@ export const environment = {
 		 * szerveroldalon ellenőrzött token adja.
 		 *
 		 * Üresen az App Check nem indul el, és a callable-ök — amik App Check
-		 * tokent követelnek (apps/functions/src/index.ts) — mindent
+		 * tokent követelnek (apps/functions/src/functions-runtime.ts) — mindent
 		 * elutasítanak.
 		 */
 		recaptchaSiteKey: '6Le8PdItAAAAAPCTKDGgY1FmI6Du7G413PEYcRgK',
