@@ -159,7 +159,7 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 		};
 	}
 
-	public createFormGroup(entity: ReleaseEntity | undefined): FormGroup<any> {
+	public createFormGroup(entity: ReleaseEntity | undefined): FormGroup {
 		throw new Error('Method not implemented.');
 	}
 
@@ -262,8 +262,10 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 	): EntityQuantityEntityUpdate {
 		let group: EntityQuantityGroup = { ...entityQuantity.group };
 
-		const albumGroupItem = group[EntityTypeEnum.Album]
-			? { ...(group as any)[EntityTypeEnum.Album] }
+		const albumGroupItem: { [uid: string]: number } = group[
+			EntityTypeEnum.Album
+		]
+			? { ...group[EntityTypeEnum.Album] }
 			: {};
 		const albumProperty = albumGroupItem[release.album.uid] || 0;
 		const value = type === UpdateEntityQuantityTypeEnum.increase ? 1 : -1;
@@ -274,8 +276,10 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 
 		group = { ...entityQuantity.group };
 
-		const artistGroupItem = group[EntityTypeEnum.Artist]
-			? { ...(group as any)[EntityTypeEnum.Artist] }
+		const artistGroupItem: { [uid: string]: number } = group[
+			EntityTypeEnum.Artist
+		]
+			? { ...group[EntityTypeEnum.Artist] }
 			: {};
 		const artistProperty = artistGroupItem[release.artist.uid] || 0;
 

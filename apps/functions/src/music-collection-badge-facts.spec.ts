@@ -21,11 +21,17 @@ interface Catalog {
 	groupFails?: boolean;
 }
 
+interface Query {
+	limit: () => Query;
+	where: (field: string, operator: string, value: string) => Query;
+	select: () => { get: () => Promise<{ docs: { data: () => Doc }[] }> };
+}
+
 function fakeDatabase(catalog: Catalog): Firestore {
 	const result = (documents: Doc[]) => ({
 		docs: documents.map((data) => ({ data: () => data })),
 	});
-	const query = (documents: Doc[], fails = false): any => ({
+	const query = (documents: Doc[], fails = false): Query => ({
 		limit: () => query(documents, fails),
 		// A valódi lekérdezés az indexen szűr, tehát az utánzatnak is kell:
 		// enélkül a stílusra menő ág mindent visszaadna, és a teszt nem

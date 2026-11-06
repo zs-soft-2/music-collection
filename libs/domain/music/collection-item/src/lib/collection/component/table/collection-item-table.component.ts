@@ -16,6 +16,7 @@ import { Observable } from 'rxjs';
 
 import { CollectionItemTableService } from './collection-item-table.service';
 import { AutoComplete } from 'primeng/autocomplete';
+import type { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { Chip } from 'primeng/chip';
 import { Ripple } from 'primeng/ripple';
 import { ButtonDirective } from 'primeng/button';
@@ -85,11 +86,11 @@ export class CollectionItemTableComponent
 		this.params$ = this.componentService.init$();
 	}
 
-	public searchByNameHandler(event: any): void {
+	public searchByNameHandler(event: AutoCompleteCompleteEvent): void {
 		this.componentService.searchByName(event['query']);
 	}
 
-	public searchByArtistNameHandler(event: any): void {
+	public searchByArtistNameHandler(event: AutoCompleteCompleteEvent): void {
 		this.componentService.searchByArtistName(event['query']);
 	}
 

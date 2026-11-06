@@ -19,6 +19,7 @@ import {
 
 import { DocumentTableService } from './document-table.service';
 import { AutoComplete } from 'primeng/autocomplete';
+import type { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { Ripple } from 'primeng/ripple';
 import { ButtonDirective } from 'primeng/button';
 import { AsyncPipe, DatePipe } from '@angular/common';
@@ -139,7 +140,7 @@ export class DocumentTableComponent extends BaseComponent implements OnInit {
 		this.componentService.restoreDocument(document);
 	}
 
-	public searchHandler(event: any): void {
+	public searchHandler(event: AutoCompleteCompleteEvent): void {
 		this.componentService.searchHandler(event['query']);
 	}
 

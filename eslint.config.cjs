@@ -95,8 +95,13 @@ module.exports = [
       '**/*.cjs',
       '**/*.mjs',
     ],
-    // Override or add rules here
-    rules: {},
+    rules: {
+      // Az Nx `flat/typescript` csak figyelmeztet rá, ami nem állítja meg a
+      // CI-t. Spec fájlra sincs kivétel: a hamis adatbázisok is típusozhatók.
+      // Ha egy helyen tényleg nem megy, soron belüli eslint-disable kell
+      // indoklással (#88).
+      '@typescript-eslint/no-explicit-any': 'error',
+    },
   },
   {
     files: ['**/*.html'],

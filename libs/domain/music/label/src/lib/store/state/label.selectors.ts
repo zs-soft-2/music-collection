@@ -46,7 +46,7 @@ export const selectLabel = createSelector(
 export const selectLabelById = () =>
 	createSelector(
 		selectLabelEntities,
-		(labelEntities: Dictionary<LabelEntity>, props: any) => {
+		(labelEntities: Dictionary<LabelEntity>, props: { uid: string }) => {
 			const labelEntity = labelEntities[props.uid];
 
 			return labelEntity;

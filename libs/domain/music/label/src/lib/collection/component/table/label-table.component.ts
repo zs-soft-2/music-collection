@@ -15,6 +15,7 @@ import { Observable } from 'rxjs';
 
 import { LabelTableService } from './label-table.service';
 import { AutoComplete } from 'primeng/autocomplete';
+import type { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { Ripple } from 'primeng/ripple';
 import { ButtonDirective } from 'primeng/button';
 import { AsyncPipe, DatePipe } from '@angular/common';
@@ -70,7 +71,7 @@ export class LabelTableComponent extends BaseComponent implements OnInit {
 		this.params$ = this.componentService.init$();
 	}
 
-	public searchHandler(event: any): void {
+	public searchHandler(event: AutoCompleteCompleteEvent): void {
 		this.componentService.searchHandler(event['query']);
 	}
 

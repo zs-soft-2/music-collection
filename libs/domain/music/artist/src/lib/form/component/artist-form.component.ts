@@ -26,6 +26,8 @@ import { Select } from 'primeng/select';
 import { DatePicker } from 'primeng/datepicker';
 import { MultiSelect } from 'primeng/multiselect';
 import { AutoComplete } from 'primeng/autocomplete';
+import type { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
+import type { FileUploadHandlerEvent } from 'primeng/fileupload';
 import { Image } from 'primeng/image';
 import { Button } from 'primeng/button';
 import { Checkbox } from 'primeng/checkbox';
@@ -126,7 +128,7 @@ export class ArtistFormComponent extends BaseComponent implements OnInit {
 		this.params$ = this.componentService.init$();
 	}
 
-	public mainImageUpload(event: any): void {
+	public mainImageUpload(event: FileUploadHandlerEvent): void {
 		this.componentService.mainImageUpload(event['files'][0]);
 	}
 
@@ -134,7 +136,7 @@ export class ArtistFormComponent extends BaseComponent implements OnInit {
 		this.componentService.submit();
 	}
 
-	public searchDocument(event: any): void {
+	public searchDocument(event: AutoCompleteCompleteEvent): void {
 		this.componentService.searchDocument(event['query']);
 	}
 }

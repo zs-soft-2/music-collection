@@ -47,7 +47,7 @@ export const selectUser = createSelector(
 export const selectUserById = () =>
 	createSelector(
 		getUserEntities,
-		(userEntities: Dictionary<User>, props: any) => {
+		(userEntities: Dictionary<User>, props: { userId: string }) => {
 			return userEntities[props.userId];
 		}
 	);

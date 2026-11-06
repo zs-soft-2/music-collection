@@ -131,9 +131,7 @@ export class WishlistItemUtilServiceImpl extends WishlistItemUtilService {
 		};
 	}
 
-	public createFormGroup(
-		entity: WishlistItemEntity | undefined
-	): FormGroup<any> {
+	public createFormGroup(entity: WishlistItemEntity | undefined): FormGroup {
 		throw new Error('Method not implemented.');
 	}
 
@@ -221,8 +219,10 @@ export class WishlistItemUtilServiceImpl extends WishlistItemUtilService {
 	): EntityQuantityEntityUpdate {
 		let group: EntityQuantityGroup = { ...entityQuantity.group };
 
-		const albumGroupItem = group[EntityTypeEnum.Album]
-			? { ...(group as any)[EntityTypeEnum.Album] }
+		const albumGroupItem: { [uid: string]: number } = group[
+			EntityTypeEnum.Album
+		]
+			? { ...group[EntityTypeEnum.Album] }
 			: {};
 		const albumProperty =
 			albumGroupItem[wishlistItem.albumReference.uid] || 0;
@@ -234,8 +234,10 @@ export class WishlistItemUtilServiceImpl extends WishlistItemUtilService {
 
 		group = { ...entityQuantity.group };
 
-		const userGroupItem = group[EntityTypeEnum.User]
-			? { ...(group as any)[EntityTypeEnum.User] }
+		const userGroupItem: { [uid: string]: number } = group[
+			EntityTypeEnum.User
+		]
+			? { ...group[EntityTypeEnum.User] }
 			: {};
 		const userProperty = userGroupItem[wishlistItem.userReference.uid] || 0;
 

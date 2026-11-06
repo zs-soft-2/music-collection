@@ -13,6 +13,9 @@ import { CollectionItemFormService } from './collection-item-form.service';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Bind } from 'primeng/bind';
 import { AutoComplete } from 'primeng/autocomplete';
+import type { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
+import type { InputNumberInputEvent } from 'primeng/inputnumber';
+import type { SelectChangeEvent } from 'primeng/select';
 import { DatePicker } from 'primeng/datepicker';
 import { Button } from 'primeng/button';
 import { InputNumber } from 'primeng/inputnumber';
@@ -64,27 +67,27 @@ export class CollectionItemFormComponent
 		this.componentService.submit();
 	}
 
-	public searchRelease(event: any): void {
+	public searchRelease(event: AutoCompleteCompleteEvent): void {
 		this.componentService.searchRelease(event['query']);
 	}
 
 	/** Another piece of furniture; the compartment goes with the old one. */
-	public chooseUnit(event: any): void {
+	public chooseUnit(event: SelectChangeEvent): void {
 		this.componentService.chooseUnit(event['value']);
 	}
 
-	public chooseSpot(event: any): void {
+	public chooseSpot(event: SelectChangeEvent): void {
 		this.componentService.chooseSpot(event['value']);
 	}
 
 	/** Which wall of the compartment the copy leans on. */
-	public chooseSide(event: any): void {
+	public chooseSide(event: SelectChangeEvent): void {
 		this.componentService.chooseSide(
 			event['value'] === 'right' ? 'right' : 'left'
 		);
 	}
 
-	public choosePosition(event: any): void {
+	public choosePosition(event: InputNumberInputEvent): void {
 		this.componentService.choosePosition(Number(event['value']));
 	}
 

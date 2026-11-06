@@ -16,6 +16,7 @@ import { Observable } from 'rxjs';
 
 import { WishlistItemTableService } from './wishlist-item-table.service';
 import { AutoComplete } from 'primeng/autocomplete';
+import type { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { Chip } from 'primeng/chip';
 import { Ripple } from 'primeng/ripple';
 import { ButtonDirective } from 'primeng/button';
@@ -80,7 +81,7 @@ export class WishlistItemTableComponent
 		this.componentService.editWishlistItem(wishlistItem);
 	}
 
-	public searchByNameHandler(event: any): void {
+	public searchByNameHandler(event: AutoCompleteCompleteEvent): void {
 		this.componentService.searchByName(event['query']);
 	}
 

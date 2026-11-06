@@ -18,6 +18,7 @@ import {
 	discogsLabelUrl,
 } from '@music-collection/api';
 import { AutoComplete } from 'primeng/autocomplete';
+import type { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { Bind } from 'primeng/bind';
 import { Button } from 'primeng/button';
 import { Checkbox } from 'primeng/checkbox';
@@ -93,7 +94,7 @@ export class LabelFormComponent extends BaseComponent implements OnInit {
 		this.params$ = this.componentService.init$();
 	}
 
-	public searchLabel(event: any): void {
+	public searchLabel(event: AutoCompleteCompleteEvent): void {
 		this.componentService.searchLabel(event['query']);
 	}
 

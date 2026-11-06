@@ -11,6 +11,7 @@ import {
 	UserStateService,
 } from '@music-collection/api';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
+import type { Action } from '@ngrx/store';
 
 import * as authenticationActions from './authentication.actions';
 
@@ -47,7 +48,7 @@ export class AuthenticationEffects extends BaseService {
 			ofType(authenticationActions.getUser),
 			mergeMap(() => {
 				const authData = this.authenticatedUser.current;
-				const actions: any[] = [];
+				const actions: Action[] = [];
 
 				// eslint-disable-next-line no-constant-condition
 				if (authData) {

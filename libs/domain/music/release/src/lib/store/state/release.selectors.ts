@@ -47,7 +47,10 @@ export const selectRelease = createSelector(
 export const selectReleaseById = () =>
 	createSelector(
 		selectReleaseEntities,
-		(releaseEntities: Dictionary<ReleaseEntity>, props: any) => {
+		(
+			releaseEntities: Dictionary<ReleaseEntity>,
+			props: { uid: string }
+		) => {
 			const releaseEntity = releaseEntities[props.uid];
 
 			return releaseEntity;
