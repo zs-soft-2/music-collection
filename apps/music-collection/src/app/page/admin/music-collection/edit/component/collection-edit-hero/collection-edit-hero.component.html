@@ -1,0 +1,61 @@
+<!--
+	A fej a kollekciót mutatja, nem a szerkesztőt: a borító mögötte
+	áll elmosva, a címkék pedig azt mondják el, ami a mentés után
+	számít — közzé van-e téve, ki látja, és hány lemezt fog be.
+-->
+<header class="hero">
+	@if (form().coverImageUrl; as cover) {
+		<img class="hero-art" [src]="cover" alt="" aria-hidden="true" />
+	}
+
+	<div class="hero-text">
+		<p class="eyebrow">
+			{{ 'ui.musicCollectionEdit.collection-editor' | transloco }}
+		</p>
+
+		<h1>
+			{{
+				form().name || (isNew() ? 'Add collection' : 'Edit collection')
+			}}
+		</h1>
+
+		<p class="lead">
+			{{ 'ui.musicCollectionEdit.a-collection-is-a' | transloco }}
+		</p>
+
+		@if (!isLoading()) {
+			<div class="pills">
+				<span
+					class="pill"
+					[style.--pill]="
+						form().status === 'published'
+							? 'var(--mc-status-ok)'
+							: 'var(--mc-status-warn)'
+					"
+				>
+					<i class="pi pi-circle-fill" aria-hidden="true"></i>
+					{{ form().status }}
+				</span>
+
+				<span class="pill" [style.--pill]="'var(--mc-info)'">
+					<i class="pi pi-eye" aria-hidden="true"></i>
+					{{ visibilityLabel() | transloco }}
+				</span>
+
+				<span class="pill" [style.--pill]="'var(--mc-accent)'">
+					<i class="pi pi-database" aria-hidden="true"></i>
+					{{
+						previewTotal()
+							| mcPlural: 'ui.musicCollectionEdit.previewTotal'
+					}}
+				</span>
+
+				@if (form().slug) {
+					<span class="pill is-path">
+						/collections/{{ form().slug }}
+					</span>
+				}
+			</div>
+		}
+	</div>
+</header>

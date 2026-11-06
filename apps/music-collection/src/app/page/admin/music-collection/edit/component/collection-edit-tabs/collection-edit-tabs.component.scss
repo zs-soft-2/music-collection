@@ -1,0 +1,71 @@
+:host {
+	display: block;
+}
+
+/* Négy lap: telefonon csúszik a sor, nem tördelődik két sorba. */
+.tabs {
+	display: flex;
+	gap: 0.3rem;
+	max-width: 100%;
+	padding: 0.3rem;
+	margin-bottom: 1.1rem;
+	overflow-x: auto;
+	overflow-y: hidden;
+	background: var(--mc-bg-muted);
+	border: 1px solid var(--mc-border);
+	border-radius: 999px;
+	scrollbar-width: thin;
+}
+
+.tabs button {
+	display: inline-flex;
+	flex: 0 0 auto;
+	align-items: center;
+	gap: 0.45rem;
+	padding: 0.5rem 0.95rem;
+	font: inherit;
+	font-size: 0.85rem;
+	font-weight: 600;
+	white-space: nowrap;
+	color: var(--mc-text-muted);
+	cursor: pointer;
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: 999px;
+	transition:
+		background var(--mc-duration-fast),
+		color var(--mc-duration-fast);
+
+	i {
+		font-size: 0.85rem;
+		color: var(--tint);
+	}
+
+	&:hover {
+		color: var(--mc-text);
+		background: color-mix(in srgb, var(--tint) 12%, transparent);
+	}
+
+	&.is-active {
+		color: var(--mc-text);
+		background: color-mix(in srgb, var(--tint) 22%, transparent);
+		border-color: color-mix(in srgb, var(--tint) 55%, transparent);
+	}
+}
+
+/* Hány szűrő él a szabályon, és hogy van-e már kép, illetve jelvény. */
+.tabs .count {
+	padding: 0 0.4rem;
+	font-size: 0.72rem;
+	font-variant-numeric: tabular-nums;
+	color: var(--mc-on-primary);
+	background: var(--tint);
+	border-radius: 999px;
+}
+
+.tabs .dot {
+	width: 0.4rem;
+	height: 0.4rem;
+	background: var(--tint);
+	border-radius: 50%;
+}

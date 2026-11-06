@@ -1,0 +1,12 @@
+@use '../../music-collection-edit' as edit;
+
+@include edit.section;
+@include edit.fields;
+
+/* The thumbnail is projected into the upload row, but it is this view's. */
+.image-preview {
+	width: 64px;
+	height: 64px;
+	object-fit: contain;
+	border-radius: var(--mc-radius-md);
+}

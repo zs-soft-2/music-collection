@@ -1,0 +1,78 @@
+@let form = store.form();
+
+<section class="mc-form-section">
+	<h2>
+		<span class="chip" aria-hidden="true">
+			<i class="pi pi-image"></i>
+		</span>
+		{{ 'ui.musicCollectionEdit.the-look' | transloco }}
+	</h2>
+	<p class="hint">
+		{{ 'ui.musicCollectionEdit.the-cover-stands-behind' | transloco }}
+	</p>
+
+	<div class="mc-form-grid">
+		<div class="mc-field is-wide">
+			<label for="cover">{{
+				'ui.musicCollectionEdit.cover-image-url' | transloco
+			}}</label>
+			<input
+				id="cover"
+				type="url"
+				[value]="form.coverImageUrl"
+				(input)="
+					store.setField({
+						coverImageUrl: value($event),
+					})
+				"
+			/>
+
+			<mc-collection-image-upload
+				[uploading]="store.uploadingField() === 'coverImageUrl'"
+				[disabled]="!!store.uploadingField()"
+				(fileChosen)="upload('coverImageUrl', $event)"
+				(libraryRequested)="store.openLibrary('coverImageUrl')"
+			/>
+
+			<!--
+				A borító nem bélyegkép: 16:9-ben áll a
+				kollekció mögött, és azon dől el, marad-e
+				hely a címnek. Akkora, hogy ez látszódjon
+				rajta — a gombsorból kikerülve, saját
+				sorban.
+			-->
+			@if (form.coverImageUrl) {
+				<img
+					class="cover-preview"
+					[src]="form.coverImageUrl"
+					[alt]="'ui.musicCollectionEdit.cover-image-url' | transloco"
+				/>
+			}
+
+			@if (store.libraryTarget() === 'coverImageUrl') {
+				<mc-image-library
+					[images]="store.library()"
+					(picked)="store.pickFromLibrary($event)"
+					(closed)="store.closeLibrary()"
+				></mc-image-library>
+			}
+		</div>
+	</div>
+
+	<!--
+		A rajzolás a borító mellett áll, és nem egy
+		beállítás-lapon: ugyanaz a döntés, mint a feltöltés
+		fölötte — hogy néz ki ez a kollekció —, csak a kép nem
+		kész, hanem most készül. Ami megszületik, a borító
+		URL-jébe kerül, ahonnan mentéskor a definícióba. Saját
+		blokként, nem a mezőbe ágyazva: egy mezőn belül a
+		saját rácsa teljes szélességű dobozok oszlopává esik
+		szét.
+	-->
+	<mc-scene-generator
+		[models]="store.imageModels()"
+		[locks]="store.sceneLocks()"
+		[title]="form.name"
+		(picked)="store.useAsCover($event)"
+	></mc-scene-generator>
+</section>
