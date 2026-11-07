@@ -1,11 +1,8 @@
-# Verification: The entered picture address reaches wishes and stored album copies — issue #79 — 79-image-url-wishlist-snapshots @ 356bf7a7 + uncommitted working tree — 2026-11-07
+# Verification: The entered picture address reaches wishes and stored album copies — issue #79 — 79-image-url-wishlist-snapshots @ cfefffe4 — 2026-11-07
 
 **Result**: GAPS  (7 ✅ · 1 ⚠️ · 0 ❌)
 
-The code, tests, docs and the dev backfill are done, and every suite is green. Three gaps remain:
-- AC-4's logged-in UI check on dev data is open (it needs an admin login).
-- Nothing is committed yet, so the docs are not "on the branch" and there are no `(#79)` commits.
-- Two small review findings were fixed after this run (#2, #3).
+The code, tests, docs and the dev backfill are done and committed (`05b27a9b`, `cfefffe4`), and every suite is green. One gap remains: AC-4's logged-in UI check on dev data (T021) needs an admin login, and no browser tool is available in this session.
 
 ## Acceptance criteria
 
@@ -33,7 +30,7 @@ The AC ids sit in each test's doc comment ("AC-n of #79"), not in the test name.
 | README area row | `docs/README.md` | review | ✅ |
 
 - **Deviation lines:** none names #79, and none was added.
-- **Docs on the branch:** ⚠️ the changes are in the working tree only. `git diff dev...HEAD -- docs/` is empty until they are committed.
+- **Docs on the branch:** ✅ `git diff dev...HEAD -- docs/` lists `README.md`, `felhasznaloi/katalogus-kepek.md`, `felhasznaloi/kivansaglista.md` and `technikai/architektura/kivansaglista.md`.
 - **Screens:** no documented screen state changed. The mobile wishlist list already shows a cover per row, and the web has no UX docs. Nothing to capture again.
 - **Undocumented behaviour:** none. The backfill and the builder are named in the architecture doc.
 
@@ -46,7 +43,7 @@ The AC ids sit in each test's doc comment ("AC-n of #79"), not in the test name.
 | `domain-release` | 64/64 | 65/65 |
 | `domain-collection-item` | 28/28 | 29/29 |
 | `ui` | 114/114 | 115/115 |
-| `music-collection` | 1701/1701 | 1707/1707 (fresh `--runInBand`, no cache) |
+| `music-collection` | 1701/1701 | 1707/1707 (fresh `--runInBand`, no cache, rerun after the fixes) |
 | `npx nx run-many -t test --exclude=firestore-rules,functions --parallel=1` | not recorded | All 38 tasks pass on the rerun. On the first run `music-collection` failed with only 1,425 tests reported: the jest-worker crash seen before on this machine. A fresh serial run passes 1707/1707. |
 | `npm run test:rules` | not recorded | 384/384 |
 | lint (6 projects) | not recorded | 0 errors; 1 old warning in `libs/api/jest.config.ts` (not changed here) |
@@ -57,14 +54,14 @@ No regression.
 
 ## Constitution
 
-Checked against the working tree, `git diff dev` plus the untracked files, because nothing is committed.
+Checked on `git diff dev...HEAD` (2 commits, 37 files).
 
 | Principle | Result |
 |---|---|
 | I Approved criteria | ✅ AC list identical to `issue-sync.md` (see the analyze note: a small rewording against the chat wording at the gate) |
 | II Root cause | ✅ Writers fixed, old data filled; readers untouched |
 | III Test proves the change | ✅ Red-first tests on the writers and the banner; the backfill proven by a recorded dry run, the run and a rerun |
-| IV Ticket | ⚠️ No commit yet, so no `(#79)` subject to check |
+| IV Ticket | ✅ Both subjects end with `(#79)`: `05b27a9b docs(79): …`, `cfefffe4 fix(79): …` |
 | V–VII Layers | ✅ Pure builder in `type:api`; no repository injected anywhere new |
 | VIII No deploy | ✅ No deploy. The one live write (backfill `--confirm` on dev) ran after the maintainer's explicit go-ahead. |
 | IX, X Boundaries | ✅ Lint passes; the builder is not in the agnostic engine |
@@ -75,7 +72,7 @@ Checked against the working tree, `git diff dev` plus the untracked files, becau
 
 ## Code review
 
-`code-review` (medium) on the working-tree changes. No blocking finding after assessment.
+`code-review` (medium) on the changes before they were committed. Since then only review #2 and #3 were fixed (an optional field, a requirement's wording), so it was not run again. No blocking finding after assessment.
 
 | # | Finding | Location | Assessment |
 |---|---|---|---|
@@ -91,7 +88,6 @@ Checked against the working tree, `git diff dev` plus the untracked files, becau
 ## Open items
 
 - **T021 (unticked):** a logged-in look at an old wish, a pressing and a copy on dev data (AC-4, and extra confidence for AC-3). Needs an admin login.
-- **Uncommitted:** the code, docs and spec are not committed, so constitution IV and "docs on the branch" cannot pass yet.
 - **Review #2 and #3:** fixed after this run (see above). #1, #4 and #7 are follow-up candidates.
 - **AC wording:** the spec and `issue-sync.md` reword four approved AC cells slightly (punctuation, "a te jóváhagyásoddal" → "jóváhagyással"), as the analyze report noted (G1).
 - **Changed since the spec:** nothing. The issue was last updated on 2026-11-02 and has no comments.
