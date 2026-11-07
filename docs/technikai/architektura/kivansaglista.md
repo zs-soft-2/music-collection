@@ -7,7 +7,9 @@
 - **Modell:** `libs/api/src/lib/domain/music/wishlist-item/wishlist-item.ts`.
   - `WishlistItem { albumReference, artistReference, medias: MediaEnum[], sourceLink, userReference }`;
   - `WishlistItemEntity = WishlistItem & Activable & Entity`.
-  - Az `AlbumReference` csak a `{ uid, name, coverImage }` mezőket tartalmazza.
+  - Az `AlbumReference` a `{ uid, name, coverImage, coverImageUrl }` mezőket tartalmazza, és minden író a
+    `toAlbumReference`-szel építi (`libs/api/src/lib/domain/music/album/album-reference.ts`).
+- **Visszatöltés:** a #79 előtt felvett tételek a címet a `tools/sync/backfill-album-cover-url.mjs`-től kapták.
 - **Felvétel (web):** album lap → `wishlist-dialog` → `page/album/store/album-wishlist.feature.ts`
   `addToWishlist()`.
   - A tétel `isActive: true`-val jön létre.
@@ -45,9 +47,9 @@ WishlistPage (mobil) → WishlistPageStore (képernyő)
   újra kell létrehozni ([ADR-002](../adr/ADR-002-mobil-ag-ujraepitese-merge-helyett.md)). A web
   `wishlist-page.store`-ja rá delegálhat.
 - **A felvétel kiemelése:** az `album-wishlist.feature.ts` duplikátum-ellenőrzése és entitás-építése
-  `withWishlistAdding()` feature-ként a domain libbe kerül. A felvételhez kell az album `uid`, `name` és
-  `coverImage` mezője és az előadó referenciája. Ezeket a szkennelés `catalogMatch.albumUid`-ja alapján
-  egyedi album-betöltés adja.
+  `withWishlistAdding()` feature-ként a domain libbe kerül. A felvételhez kell az album `uid`, `name`,
+  `coverImage` és `coverImageUrl` mezője és az előadó referenciája. Ezeket a szkennelés
+  `catalogMatch.albumUid`-ja alapján egyedi album-betöltés adja.
 - **Eltávolítás:** `dispatchDeleteEntityAction`, a `deleteWishlistItemEntity` jogosultsággal. A rules már
   engedi.
 - **Offline:** a Firestore tartós cache sorba állítja az írást. A store optimistán frissít.

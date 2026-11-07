@@ -58,6 +58,18 @@ A „megtaláltam” és az eltávolítás offline is működik, és a kapcsolat
 **Felület:** mobil
 **Ticket:** #107
 
+### REQ-WISH-006: A tétel borítója
+
+A kívánságlista tétele mindenhol, ahol megjelenik (a lista, a tétel saját lapja, az admin lista és tábla,
+a megosztott gyűjtő-profil), az album megadott kép-címét mutatja, ennek hiányában a csatolt borítót.
+A tétel a címet a létrehozásakor eltárolja. Szerkesztéskor megtartja, ha pedig az albumot újraválasztják,
+az új album címét veszi át. Az album címének későbbi változása nem frissíti a már tárolt tételt. A korábban
+felvett tételek egy egyszeri frissítéssel kapták meg a címet.
+
+**Felület:** mindkettő
+**Ticket:** #79
+**Technikai:** [Kívánságlista architektúra](../technikai/architektura/kivansaglista.md)
+
 ## Nem része
 
 - Piaci ár és elérhetőség a tételek mellett.
