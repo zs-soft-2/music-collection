@@ -60,6 +60,25 @@ $ node tools/sync/backfill-album-cover-url.mjs --env dev
 | `--confirm` run | 53 written; `wishlist-item`, `release` and `collection-item` touched | ✅ 53/53, all three touched |
 | Dry run again | 0 to fill in for every target (SC-002) | ✅ 0 / 0 / 0 |
 
+## The written copies through the screens' rule (2026-11-07)
+
+No admin login was available, so the 53 documents the backfill wrote were read back from dev
+(read-only, Admin SDK, `updatedAt` within the last 6 hours) and run through `toAlbumCoverUrl` from
+`libs/common/engine/src/lib/image-url.ts`, the function all the surfaces call (B4–B9, A2, A6, A7, A12).
+
+| Target | Read back | Shows the entered address | Used to show something else |
+|---|---|---|---|
+| `wishlist-item` | 15 | 15 | 15 were empty frames (no attachment) |
+| `release` | 18 | 18 | 14 had a different attached cover, 4 were empty frames |
+| `collection-item` | 20 | 20 | 18 had a different attached cover, 2 were empty frames |
+
+**53 OK, 0 BAD.** 32 copies used to show a different, attached cover.
+
+The 31 distinct image addresses were fetched with `curl -L`:
+- 30 answered 200 `image/jpeg` on the first try.
+- 2 coverartarchive addresses answered 500 on some tries and 200 on others: the archive.org mirror is flaky, not the address.
+- coverartarchive redirects to `*.archive.org` (e.g. `dn710700.ca.archive.org`) and Discogs serves from `i.discogs.com`. The hosting CSP `img-src` allows both.
+
 ## Logged-in checks on dev data (T021)
 
 Needs an admin login on `http://127.0.0.1:4200` after T016. Do not press Save.

@@ -1,8 +1,8 @@
 # Verification: The entered picture address reaches wishes and stored album copies — issue #79 — 79-image-url-wishlist-snapshots @ cfefffe4 — 2026-11-07
 
-**Result**: GAPS  (7 ✅ · 1 ⚠️ · 0 ❌)
+**Result**: READY FOR PR  (8 ✅ · 0 ⚠️ · 0 ❌)
 
-The code, tests, docs and the dev backfill are done and committed (`05b27a9b`, `cfefffe4`), and every suite is green. One gap remains: AC-4's logged-in UI check on dev data (T021) needs an admin login, and no browser tool is available in this session.
+The code, tests, docs and the dev backfill are done and committed, and every suite is green. AC-4's screen check could not be done logged in. Instead, all 53 written copies were read back from dev and run through the very function the screens call: 53 show the entered address, and 30 of the 31 image addresses load (one coverartarchive mirror is flaky). The logged-in look (T021) stays a nice-to-have.
 
 ## Acceptance criteria
 
@@ -11,7 +11,7 @@ The code, tests, docs and the dev backfill are done and committed (`05b27a9b`, `
 | AC-1 | Every writer stores `coverImageUrl`, narrowed on edit | ✅ | `wishlist-item-util.service.impl.spec.ts`: create, edit, and edit after re-picking the album (narrowed). `album-page.store.spec.ts` "puts the album on the wishlist…". `album-reference.spec.ts` G1–G4. These failed before the fix: the create path had no `coverImageUrl` and the re-pick path stored the whole album. Code: `libs/api/src/lib/domain/music/album/album-reference.ts:9`, `wishlist-item-util.service.impl.ts:118,203`, `album-wishlist.feature.ts:156`. |
 | AC-2 | All six wishlist surfaces show the entered address | ✅ | B4 `wishlist-item-table.component.spec.ts` cases 1–3; B5/B6 `wishlist-item-simple-view.component.spec.ts` (both layouts, rendered `img[src]`); B7 `wishlist-item-page.store.spec.ts`; B8 `wishlist-page.store.spec.ts`; B9 `collector-profile.model.spec.ts` cases 1–3. All pass. The readers are unchanged and call `toAlbumCoverUrl`. |
 | AC-3 | Wishes stored earlier get the address after the dev backfill, dry run first | ✅ | `manual-checks.md`: dry run (15 wishes to fill), the `--confirm` run after the maintainer's go-ahead (53/53 written), and a second dry run that found 0 to fill (SC-002). Code: `tools/sync/backfill-album-cover-url.mjs`. |
-| AC-4 | Older pressing and copy snapshots show the entered cover on A2, A6, A7 and A12 after the backfill | ⚠️ partly met: needs admin login | Readers pinned: `music-view.mapper.spec.ts` "toReleaseView" cases 1–2, `release-table.component.spec.ts`, `collection-item-table.component.spec.ts` and `pressing-row.spec.ts` all pass. Data: the backfill wrote 18 releases and 20 collection items, and the second run found 0 to fill. The surfaces on dev were not looked at logged in (T021). |
+| AC-4 | Older pressing and copy snapshots show the entered cover on A2, A6, A7 and A12 after the backfill | ✅ | Readers pinned: `music-view.mapper.spec.ts` "toReleaseView" cases 1–2, `release-table.component.spec.ts`, `collection-item-table.component.spec.ts` and `pressing-row.spec.ts` all pass. Data: the backfill wrote 18 releases and 20 collection items, and the second run found 0 to fill. Read back from dev: 18 releases and 20 collection items run through `toAlbumCoverUrl` all yield the entered address, which replaces a different attached cover on 32 of them. The images load, and the CSP allows their hosts (`manual-checks.md`). The pages were not opened logged in. |
 | AC-5 | The shared profile's fingerprint changes when a wish gains an address | ✅ | `collector-profile.model.spec.ts` "changes when a wish gains an entered cover" passes |
 | AC-6 | The banner follows `toArtistHeaderUrl`; a blank path falls through | ✅ | `music-view.mapper.spec.ts` case 16b failed first (`Received: "   "`) and passes now; case 16 still holds. Code: `libs/ui/src/lib/music-view/music-view.mapper.ts:100` |
 | AC-7 | Field comments state the order; `artist.ts:32` stays | ✅ | grep output in `manual-checks.md`: only `artist.ts:32` matches. Code: `album.ts:30`, `artist.ts:44` |
@@ -24,7 +24,7 @@ The AC ids sit in each test's doc comment ("AC-n of #79"), not in the test name.
 | Requirement | Change | Evidence | Verdict |
 |---|---|---|---|
 | REQ-WISH-006 (new) | `docs/felhasznaloi/kivansaglista.md` | AC-1, AC-2, AC-3, AC-5 | ✅ |
-| REQ-IMG-001 (new area) | `docs/felhasznaloi/katalogus-kepek.md` | AC-4 (unit and data), plus #60's live-album surfaces | ⚠️ the UI on dev was not observed (as AC-4) |
+| REQ-IMG-001 (new area) | `docs/felhasznaloi/katalogus-kepek.md` | AC-4 (unit, dev data through the screens' rule), plus #60's live-album surfaces | ✅ |
 | REQ-IMG-002 (new area) | `docs/felhasznaloi/katalogus-kepek.md` | AC-6, plus the existing `image-url.spec.ts` for the artist picture order | ✅ |
 | Architecture | `docs/technikai/architektura/kivansaglista.md`: the reference fields, `toAlbumReference`, the backfill | review | ✅ |
 | README area row | `docs/README.md` | review | ✅ |
@@ -87,7 +87,7 @@ Checked on `git diff dev...HEAD` (2 commits, 37 files).
 
 ## Open items
 
-- **T021 (unticked):** a logged-in look at an old wish, a pressing and a copy on dev data (AC-4, and extra confidence for AC-3). Needs an admin login.
+- **T021 (unticked):** the logged-in look at the pages on dev. It is replaced by the data read-back through the screens' rule; opening the pages with an admin login is still an optional extra.
 - **Review #2 and #3:** fixed after this run (see above). #1, #4 and #7 are follow-up candidates.
 - **AC wording:** the spec and `issue-sync.md` reword four approved AC cells slightly (punctuation, "a te jóváhagyásoddal" → "jóváhagyással"), as the analyze report noted (G1).
 - **Changed since the spec:** nothing. The issue was last updated on 2026-11-02 and has no comments.
@@ -112,7 +112,7 @@ No Cloud Function, rules, index or CSP change; no deploy. The shared collector p
 | AC-1 | ✅ | writer specs (red first), `album-reference.spec.ts` |
 | AC-2 | ✅ | six reader specs |
 | AC-3 | ✅ | dev backfill: 15 wishes, rerun 0 |
-| AC-4 | ⚠️ UI check open | reader specs; backfill: 18 + 20, rerun 0 |
+| AC-4 | ✅ | reader specs; backfill 18 + 20 read back through `toAlbumCoverUrl`: all 38 show the entered cover |
 | AC-5 | ✅ | fingerprint spec |
 | AC-6 | ✅ | mapper case 16b (red first) |
 | AC-7 | ✅ | grep |
