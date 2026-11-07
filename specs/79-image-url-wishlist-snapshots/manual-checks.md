@@ -69,8 +69,8 @@ No admin login was available, so the 53 documents the backfill wrote were read b
 | Target | Read back | Shows the entered address | Used to show something else |
 |---|---|---|---|
 | `wishlist-item` | 15 | 15 | 15 were empty frames (no attachment) |
-| `release` | 18 | 18 | 14 had a different attached cover, 4 were empty frames |
-| `collection-item` | 20 | 20 | 18 had a different attached cover, 2 were empty frames |
+| `release` | 18 | 18 | 15 had a different attached cover, 3 were empty frames |
+| `collection-item` | 20 | 20 | 17 had a different attached cover, 3 were empty frames |
 
 **53 OK, 0 BAD.** 32 copies used to show a different, attached cover.
 
