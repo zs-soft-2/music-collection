@@ -76,6 +76,21 @@ describe('toArtistView: the header picture', () => {
 		).toBe('https://storage/header.jpg');
 	});
 
+	/**
+	 * AC-6 of #79: the banner follows the shared header order, where a path
+	 * that trims to nothing is no picture.
+	 */
+	it('case 16b: a blank attached header falls through to the artist picture', () => {
+		expect(
+			toArtistView(
+				artistOf({
+					headerImage: { filePath: '   ' },
+					imageUrl: 'https://a/photo.jpg',
+				} as Partial<ArtistEntity>)
+			).headerUrl
+		).toBe('https://a/photo.jpg');
+	});
+
 	it('case 17: without an attached header the entered address becomes the banner', () => {
 		expect(
 			toArtistView(

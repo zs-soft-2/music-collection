@@ -7,6 +7,7 @@ import {
 	WishlistItemEntity,
 	WishlistItemEntityAdd,
 	WishlistItemStateService,
+	toAlbumReference,
 } from '@music-collection/api';
 import { tapResponse } from '@ngrx/operators';
 import {
@@ -152,11 +153,7 @@ export function withAlbumWishlist() {
 
 					const wishlistItem: WishlistItemEntityAdd = {
 						entityType: EntityTypeEnum.WishlistItem,
-						albumReference: {
-							coverImage: album.coverImage ?? null,
-							name: album.name,
-							uid: album.uid,
-						},
+						albumReference: toAlbumReference(album),
 						artistReference: {
 							name: album.artist?.name ?? '',
 							uid: album.artist?.uid ?? '',

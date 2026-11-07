@@ -95,4 +95,22 @@ describe('ReleaseTableComponent', () => {
 
 		expect(component.place.filterOf('artist')).toBe('nirv');
 	});
+
+	/**
+	 * AC-4 of #79: the table draws from the pressing's stored copy of the
+	 * album, so the entered address on that copy has to win.
+	 */
+	it('shows the entered address of the stored album over its attachment', () => {
+		expect(
+			component.imageOf({
+				...release,
+				album: {
+					uid: 'al1',
+					name: 'Nevermind',
+					coverImageUrl: 'https://a/url.jpg',
+					coverImage: { filePath: 'https://storage/doc.jpg' },
+				},
+			} as ReleaseEntity)
+		).toBe('https://a/url.jpg');
+	});
 });

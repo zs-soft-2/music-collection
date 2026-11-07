@@ -1217,8 +1217,14 @@ describe('AlbumPageStore', () => {
 	});
 
 	describe('the wishlist', () => {
+		/**
+		 * AC-1 of #79: the wish keeps the entered cover address, because the
+		 * wishlist surfaces read this copy and never the album.
+		 */
 		it('puts the album on the wishlist and closes once it is wanted', () => {
-			const { store, fakes } = setUp();
+			const { store, fakes } = setUp({
+				albums: [album({ coverImageUrl: 'https://a/url.jpg' })],
+			});
 
 			expect(
 				fakes.wishlistState.dispatchListOwnEntitiesAction
@@ -1232,6 +1238,7 @@ describe('AlbumPageStore', () => {
 				expect.objectContaining({
 					albumReference: {
 						coverImage: null,
+						coverImageUrl: 'https://a/url.jpg',
 						name: 'Bonded by Blood',
 						uid: 'al1',
 					},

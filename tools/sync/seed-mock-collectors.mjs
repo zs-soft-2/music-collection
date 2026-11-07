@@ -616,6 +616,7 @@ for (const genre of genres) {
 					uid: wish.uid,
 					name: wish.name,
 					coverImage: null,
+					coverImageUrl: wish.coverUrl,
 				},
 				artistReference: {
 					uid: seedUid(wish.artist.slug),

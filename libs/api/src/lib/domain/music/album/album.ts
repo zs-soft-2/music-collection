@@ -27,7 +27,7 @@ export interface AlbumDiscogs {
 export interface Album {
 	artist: AlbumArtist;
 	coverImage: AlbumDocument | null;
-	/** Cover found online, used when no cover image is attached. */
+	/** Cover address entered by an admin; it takes precedence over the attached cover image. */
 	coverImageUrl?: string | null;
 	discogs?: AlbumDiscogs;
 	format: FormatEnum;
@@ -75,6 +75,12 @@ export type AlbumModelUpdate = Partial<AlbumModel> & Entity;
 
 export type AlbumReference = {
 	coverImage: AlbumDocument | null;
+	/**
+	 * The entered address when the reference was written. The wishlist
+	 * surfaces draw their cover from this copy alone, never from the album.
+	 * Missing on wishes stored before #79 whose album had no address.
+	 */
+	coverImageUrl?: string | null;
 	name: string;
 } & Identifiable;
 

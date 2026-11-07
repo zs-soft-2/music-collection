@@ -8,6 +8,7 @@ import {
 import {
 	formatCountry,
 	toAlbumCoverUrl,
+	toArtistHeaderUrl,
 	toArtistImageUrl,
 	toDescriptions,
 	toEpochMs,
@@ -97,7 +98,7 @@ export function toArtistView(artist: ArtistEntity): ArtistView {
 		name: artist.name,
 		type: artist.artistType ?? DEFAULT_ARTIST_TYPE,
 		imageUrl,
-		headerUrl: artist.headerImage?.filePath || imageUrl,
+		headerUrl: toArtistHeaderUrl(artist),
 		styles: artist.styles ?? [],
 		country: formatCountry(artist.country),
 		formedYear: toYear(artist.formedIn),

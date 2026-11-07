@@ -41,7 +41,7 @@ export interface Artist {
 	discogs?: ArtistDiscogs;
 	genre: GenreName;
 	headerImage?: DocumentEntity;
-	/** Photo on the web (Wikimedia Commons), for artists without an uploaded image. */
+	/** Photo address entered by an admin; it takes precedence over the attached main image, and the imported Discogs photo comes last. */
 	imageUrl?: string | null;
 	mainImage?: DocumentEntity;
 	members?: unknown[];
