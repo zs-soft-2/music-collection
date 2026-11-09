@@ -82,4 +82,20 @@ describe('pressing rows', () => {
 			'a',
 		]);
 	});
+
+	/** AC-4 of #79: the stored album's entered address wins over its attachment. */
+	it('draws the cover from the entered address over the attached one', () => {
+		expect(
+			toPressingRow(
+				release({
+					album: {
+						uid: 'album-1',
+						name: 'Nevermind',
+						coverImageUrl: 'https://example.test/cover.jpg',
+						coverImage: { filePath: 'https://storage/doc.jpg' },
+					},
+				} as Partial<ReleaseEntity>)
+			).coverUrl
+		).toBe('https://example.test/cover.jpg');
+	});
 });

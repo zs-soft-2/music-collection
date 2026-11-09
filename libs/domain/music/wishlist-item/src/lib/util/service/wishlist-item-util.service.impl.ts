@@ -1,8 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import {
-	AlbumEntity,
-	AlbumReference,
 	ArtistEntity,
 	ArtistReference,
 	EntityQuantityEntity,
@@ -23,6 +21,7 @@ import {
 	WishlistItemModelAdd,
 	WishlistItemModelUpdate,
 	WishlistItemUtilService,
+	toAlbumReference,
 } from '@music-collection/api';
 
 @Injectable()
@@ -116,9 +115,7 @@ export class WishlistItemUtilServiceImpl extends WishlistItemUtilService {
 	public createEntity(formGroup: FormGroup): WishlistItemEntityAdd {
 		return {
 			entityType: EntityTypeEnum.WishlistItem,
-			albumReference: this.createAlbumReference(
-				formGroup.value['albumReference']
-			),
+			albumReference: toAlbumReference(formGroup.value['albumReference']),
 			artistReference: this.createArtistReference(
 				formGroup.value['artistReference']
 			),
@@ -203,7 +200,7 @@ export class WishlistItemUtilServiceImpl extends WishlistItemUtilService {
 		return {
 			entityType: EntityTypeEnum.WishlistItem,
 			uid: formGroup.value['uid'],
-			albumReference: formGroup.value['albumReference'],
+			albumReference: toAlbumReference(formGroup.value['albumReference']),
 			artistReference: formGroup.value['artistReference'],
 			userReference: formGroup.value['userReference'],
 			medias: formGroup.value['medias'],
@@ -249,16 +246,6 @@ export class WishlistItemUtilServiceImpl extends WishlistItemUtilService {
 			...entityQuantity,
 			quantity: entityQuantity.quantity + value,
 			group: group as EntityQuantityGroup,
-		};
-	}
-
-	private createAlbumReference(album: AlbumEntity): AlbumReference {
-		const { coverImage, name, uid } = album;
-
-		return {
-			coverImage,
-			name,
-			uid,
 		};
 	}
 

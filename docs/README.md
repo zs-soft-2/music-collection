@@ -20,6 +20,7 @@ szabályai: [`.specify/project/docs.md`](../.specify/project/docs.md).
 | Lejátszási napló (PLAY) | [lejatszasi-naplo](felhasznaloi/lejatszasi-naplo.md) | [lejatszasi-naplo](technikai/architektura/lejatszasi-naplo.md) | [lejatszasi-naplo](ux/mobil/lejatszasi-naplo.md) |
 | Kölcsönadás (LOAN) | [kolcsonadas](felhasznaloi/kolcsonadas.md) | [kolcsonadas](technikai/architektura/kolcsonadas.md) | [kolcsonadas](ux/mobil/kolcsonadas.md) |
 | Napi kérdés (DAILY) | [napi-kerdes](felhasznaloi/napi-kerdes.md) | [napi-kerdes](technikai/architektura/napi-kerdes.md) | [napi-kerdes](ux/mobil/napi-kerdes.md) |
+| Katalógus-képek (IMG) | [katalogus-kepek](felhasznaloi/katalogus-kepek.md) | — | — |
 
 ## Döntési rekordok
 

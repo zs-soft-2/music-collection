@@ -1,4 +1,8 @@
-import { WishlistItemEntity } from '@music-collection/api';
+import type {
+	AlbumDocument,
+	AlbumReference,
+	WishlistItemEntity,
+} from '@music-collection/api';
 import { EntityTypeEnum, MediaEnum } from '@music-collection/common/api';
 import {
 	MusicCollectionEntity,
@@ -133,19 +137,31 @@ function standing(
 	};
 }
 
+/** An attached cover, complete enough for the compiler to check it. */
+const peaceCover: AlbumDocument = {
+	entityType: EntityTypeEnum.Document,
+	filePath: 'https://e.test/peace.jpg',
+	name: 'peace.jpg',
+	uid: 'doc-9',
+};
+
 function wish(changes: Partial<WishlistItemEntity> = {}): WishlistItemEntity {
 	return {
 		uid: 'wish-1',
+		entityType: EntityTypeEnum.WishlistItem,
+		isActive: true,
 		albumReference: {
 			uid: 'album-9',
 			name: 'Peace Sells',
-			coverImage: { filePath: 'https://e.test/peace.jpg' },
+			coverImage: peaceCover,
+			coverImageUrl: null,
 		},
 		artistReference: { uid: 'artist-9', name: 'Megadeth' },
+		userReference: { uid: 'user-1' },
 		medias: [MediaEnum.vinyl],
 		sourceLink: 'https://shop.test/peace',
 		...changes,
-	} as WishlistItemEntity;
+	};
 }
 
 function rating(
@@ -255,7 +271,7 @@ describe('toPublicCollectorProfile: the consents', () => {
 	 * without one.
 	 */
 	const wishlistCover = (
-		album: Partial<WishlistItemEntity['albumReference']>
+		album: Partial<AlbumReference>
 	): string | null | undefined =>
 		toPublicCollectorProfile(
 			source({
@@ -269,9 +285,11 @@ describe('toPublicCollectorProfile: the consents', () => {
 						albumReference: {
 							uid: 'album-9',
 							name: 'Peace Sells',
+							coverImage: null,
+							coverImageUrl: null,
 							...album,
 						},
-					} as Partial<WishlistItemEntity>),
+					}),
 				],
 			})
 		)?.wishlist?.[0].coverUrl;
@@ -286,7 +304,7 @@ describe('toPublicCollectorProfile: the consents', () => {
 		expect(
 			wishlistCover({
 				coverImageUrl: 'https://a/url.jpg',
-				coverImage: { filePath: 'https://e.test/peace.jpg' },
+				coverImage: peaceCover,
 			})
 		).toBe('https://a/url.jpg');
 	});
@@ -294,9 +312,7 @@ describe('toPublicCollectorProfile: the consents', () => {
 	/** The attachment is reordered, never dropped (FR-007). */
 	it('case 2: still publishes the attachment where nothing was entered', () => {
 		expect(
-			wishlistCover({
-				coverImage: { filePath: 'https://e.test/peace.jpg' },
-			})
+			wishlistCover({ coverImage: peaceCover })
 		).toBe('https://e.test/peace.jpg');
 	});
 
@@ -592,6 +608,34 @@ describe('collectorProfileFingerprint', () => {
 					shareRatings: false,
 				},
 				wishes: [wish()],
+			})
+		);
+	});
+
+	/**
+	 * AC-5 of #79: the page is a stored document, so a wish that gains an
+	 * entered cover reaches visitors only because the page counts as changed.
+	 */
+	it('changes when a wish gains an entered cover', () => {
+		const sharedWishlist = {
+			shared: true,
+			shareWishlist: true,
+			shareRatings: false,
+		};
+
+		expect(
+			fingerprint({ settings: sharedWishlist, wishes: [wish()] })
+		).not.toBe(
+			fingerprint({
+				settings: sharedWishlist,
+				wishes: [
+					wish({
+						albumReference: {
+							...wish().albumReference,
+							coverImageUrl: 'https://a/url.jpg',
+						},
+					}),
+				],
 			})
 		);
 	});

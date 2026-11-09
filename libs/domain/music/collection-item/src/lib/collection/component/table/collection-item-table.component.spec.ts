@@ -63,4 +63,25 @@ describe('CollectionItemTableComponent', () => {
 			fixture.nativeElement.querySelector('mc-entity-card').textContent
 		).toContain('Nevermind LP');
 	});
+
+	/**
+	 * AC-4 of #79: the table draws from the copy's stored pressing, and so
+	 * from its stored album: the entered address there has to win.
+	 */
+	it('shows the entered address of the stored album over its attachment', () => {
+		expect(
+			component.imageOf({
+				...collectionItem,
+				release: {
+					...collectionItem.release,
+					album: {
+						uid: 'al1',
+						name: 'Nevermind',
+						coverImageUrl: 'https://a/url.jpg',
+						coverImage: { filePath: 'https://storage/doc.jpg' },
+					},
+				},
+			} as CollectionItemEntity)
+		).toBe('https://a/url.jpg');
+	});
 });
