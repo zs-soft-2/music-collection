@@ -16,6 +16,7 @@ import { Observable } from 'rxjs';
 
 import { ArtistTableService } from './artist-table.service';
 import { AutoComplete } from 'primeng/autocomplete';
+import type { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { Chip } from 'primeng/chip';
 import { Ripple } from 'primeng/ripple';
 import { ButtonDirective } from 'primeng/button';
@@ -86,7 +87,7 @@ export class ArtistTableComponent extends BaseComponent implements OnInit {
 		this.componentService.exportArtist(artist);
 	}
 
-	public searchByNameHandler(event: any): void {
+	public searchByNameHandler(event: AutoCompleteCompleteEvent): void {
 		this.componentService.searchByName(event['query']);
 	}
 

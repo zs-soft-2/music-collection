@@ -1,0 +1,162 @@
+<div class="badge-art-head">
+	<div>
+		<strong>
+			{{ 'ui.musicCollectionEdit.the-pin' | transloco }}
+			<!-- A képet képmodell rajzolja: a
+			     jelzés ugyanaz, mint a fotós
+			     felismerésen és a koncertlapon. -->
+			<mc-ai-mark
+				[compact]="true"
+				[hint]="'ui.aiMark.hint.image' | transloco"
+			></mc-ai-mark>
+		</strong>
+		<small>
+			{{ 'ui.musicCollectionEdit.drawn-by-an-image' | transloco }}
+		</small>
+	</div>
+	<div class="badge-art-actions">
+		<!--
+			A saját kép ugyanúgy pin lesz, mint
+			egy rajzolt: dokumentum készül fölé,
+			bekerül a galériába, és ott marad,
+			ha később mégis másikra esik a
+			választás.
+		-->
+		<label class="button pin-upload" [class.is-disabled]="store.isNew()">
+			<input
+				type="file"
+				accept="image/*"
+				[disabled]="store.isNew() || store.isUploadingPin()"
+				(change)="choosePin($event)"
+			/>
+			{{
+				store.isUploadingPin()
+					? ('ui.musicCollectionEdit.uploading-the-image' | transloco)
+					: ('ui.musicCollectionEdit.my-own-picture-as-pin'
+						| transloco)
+			}}
+		</label>
+
+		<!--
+			Egy már beiktatott kép — másik
+			collection pinje, korábbi jelölt,
+			feltöltött grafika — újra pin lehet,
+			feltöltés nélkül.
+		-->
+		<button
+			type="button"
+			[disabled]="store.isNew() || store.isPickingBadge()"
+			(click)="store.openLibrary('pin')"
+		>
+			{{ 'ui.musicCollectionEdit.pick-from-uploaded' | transloco }}
+		</button>
+
+		<!--
+			Melyik modell rajzolja. Üresen a
+			gateway dönt, és az ársáv szerinti
+			választása a legolcsóbb képmodell —
+			minden eddigi pin azon készült,
+			anélkül hogy ez bárhol látszott
+			volna.
+		-->
+		<label class="model-pick">
+			<span class="visually-hidden"> A pin modellje </span>
+			<select
+				[disabled]="store.isNew()"
+				(change)="store.setBadgeModel(value($event))"
+			>
+				<option value="" [selected]="!store.badgeModel()">
+					A gateway válasszon
+				</option>
+				@for (model of store.imageModels(); track model.id) {
+					<option
+						[value]="model.id"
+						[selected]="model.id === store.badgeModel()"
+					>
+						{{ model.id }}
+					</option>
+				}
+			</select>
+		</label>
+
+		<button
+			type="button"
+			[disabled]="store.isNew() || store.isGeneratingBadge()"
+			(click)="store.generateBadge()"
+		>
+			{{
+				store.isGeneratingBadge()
+					? 'Drawing…'
+					: store.badgeImageUrl()
+						? 'Draw again'
+						: 'Generate'
+			}}
+		</button>
+
+		<!--
+			A pin levétele nem törli a képet: a
+			galériában marad, csak a jelvény
+			esik vissza a feltöltött grafikára.
+		-->
+		@if (store.badgeImageUid()) {
+			<button
+				type="button"
+				[disabled]="store.isPickingBadge()"
+				(click)="store.clearBadgeImage()"
+			>
+				{{ 'ui.musicCollectionEdit.take-the-pin-off' | transloco }}
+			</button>
+		}
+	</div>
+</div>
+
+@if (store.isNew()) {
+	<p class="hint">
+		{{ 'ui.musicCollectionEdit.save-the-collection-first' | transloco }}
+	</p>
+}
+
+@if (store.libraryTarget() === 'pin') {
+	<p class="hint">
+		{{ 'ui.musicCollectionEdit.the-picked-image-becomes' | transloco }}
+	</p>
+	<mc-image-library
+		[images]="store.library()"
+		[chosenUid]="store.badgeImageUid()"
+		[busy]="store.isPickingBadge()"
+		(picked)="store.pickFromLibrary($event)"
+		(closed)="store.closeLibrary()"
+	></mc-image-library>
+}
+
+@if (store.badgeImageUrl(); as badge) {
+	<img
+		class="chosen"
+		[src]="badge"
+		[alt]="'ui.musicCollectionEdit.the-collection-s-badge' | transloco"
+	/>
+}
+
+@if (store.badgeGallery().length) {
+	<ul class="gallery">
+		@for (image of store.badgeGallery(); track image.documentUid) {
+			<li [class.is-chosen]="image.documentUid === store.badgeImageUid()">
+				<img [src]="image.filePath" [alt]="image.name" loading="lazy" />
+
+				@if (image.documentUid === store.badgeImageUid()) {
+					<span class="current">
+						{{ 'ui.musicCollectionEdit.the-badge2' | transloco }}
+					</span>
+				} @else {
+					<button
+						type="button"
+						[disabled]="store.isPickingBadge()"
+						(click)="store.pickBadge(image)"
+					>
+						{{ 'ui.musicCollectionEdit.pick-this-one' | transloco }}
+					</button>
+				}
+			</li>
+		}
+	</ul>
+}

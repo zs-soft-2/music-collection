@@ -1,0 +1,176 @@
+@let form = store.form();
+
+<section class="mc-form-section">
+	<h2>
+		<span class="chip" aria-hidden="true">
+			<i class="pi pi-id-card"></i>
+		</span>
+		{{ 'ui.musicCollectionEdit.the-collection' | transloco }}
+	</h2>
+
+	<div class="mc-form-grid">
+		<div class="mc-field">
+			<label for="name">{{
+				'ui.musicCollectionEdit.name' | transloco
+			}}</label>
+			<input
+				id="name"
+				type="text"
+				[value]="form.name"
+				(input)="store.setName(value($event))"
+			/>
+		</div>
+
+		<div class="mc-field">
+			<label for="slug">{{
+				'ui.musicCollectionEdit.slug' | transloco
+			}}</label>
+			<input
+				id="slug"
+				type="text"
+				[value]="form.slug"
+				(input)="store.setSlug(value($event))"
+			/>
+			<small>/collections/{{ form.slug || '…' }}</small>
+		</div>
+
+		<div class="mc-field is-wide">
+			<label for="description">{{
+				'ui.musicCollectionEdit.description' | transloco
+			}}</label>
+			<textarea
+				id="description"
+				rows="2"
+				[value]="form.description"
+				(input)="
+					store.setField({
+						description: value($event),
+					})
+				"
+			></textarea>
+		</div>
+
+		<div class="mc-field">
+			<label for="icon">{{
+				'ui.musicCollectionEdit.icon' | transloco
+			}}</label>
+			<input
+				id="icon"
+				type="text"
+				[placeholder]="'ui.musicCollectionEdit.pi-pi-box' | transloco"
+				[value]="form.icon"
+				(input)="store.setField({ icon: value($event) })"
+			/>
+			<small>{{
+				'ui.musicCollectionEdit.a-primeicons-class-as' | transloco
+			}}</small>
+		</div>
+
+		<div class="mc-field">
+			<label for="status">{{
+				'ui.musicCollectionEdit.status' | transloco
+			}}</label>
+			<select
+				id="status"
+				(change)="
+					store.setField({
+						status:
+							value($event) === 'published'
+								? 'published'
+								: 'draft',
+					})
+				"
+			>
+				@for (option of statusOptions; track option) {
+					<option
+						[value]="option"
+						[selected]="form.status === option"
+					>
+						{{ option }}
+					</option>
+				}
+			</select>
+			<small>
+				{{ 'ui.musicCollectionEdit.a-draft-is-not' | transloco }}
+			</small>
+		</div>
+
+		<div class="mc-field">
+			<label for="visibility">{{
+				'ui.musicCollectionEdit.visibility' | transloco
+			}}</label>
+			<select id="visibility" (change)="onVisibility($event)">
+				@for (option of visibilityOptions; track option.value) {
+					<option
+						[value]="option.value"
+						[selected]="form.visibility === option.value"
+					>
+						{{ option.labelKey | transloco }}
+					</option>
+				}
+			</select>
+		</div>
+
+		<div class="mc-field">
+			<label for="base-points">{{
+				'ui.musicCollectionEdit.points' | transloco
+			}}</label>
+			<input
+				id="base-points"
+				type="number"
+				min="0"
+				[placeholder]="store.derivedPoints()"
+				[value]="form.basePoints"
+				(input)="
+					store.setField({
+						basePoints: value($event),
+					})
+				"
+			/>
+			<small>
+				{{
+					store.derivedPoints()
+						| mcPlural: 'ui.musicCollectionEdit.pointsHint'
+				}}
+			</small>
+		</div>
+
+		<div class="mc-field">
+			<label for="parent">{{
+				'ui.musicCollectionEdit.parent-collection' | transloco
+			}}</label>
+			<select id="parent" (change)="onParent($event)">
+				<option value="">
+					{{ 'ui.musicCollectionEdit.none' | transloco }}
+				</option>
+				@for (parent of parents(); track parent.uid) {
+					<option
+						[value]="parent.uid"
+						[selected]="form.parentUid === parent.uid"
+					>
+						{{ parent.name }}
+					</option>
+				}
+			</select>
+		</div>
+
+		<div class="mc-field">
+			<label for="group">{{
+				'ui.musicCollectionEdit.group' | transloco
+			}}</label>
+			<select id="group" (change)="onGroup($event)">
+				@for (option of groupOptions; track option.value) {
+					<option
+						[value]="option.value"
+						[selected]="form.group === option.value"
+					>
+						{{ option.labelKey | transloco }}
+					</option>
+				}
+			</select>
+			<small>
+				{{ 'ui.musicCollectionEdit.groupHint' | transloco }}
+			</small>
+		</div>
+	</div>
+</section>

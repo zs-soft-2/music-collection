@@ -1,0 +1,4 @@
+@use '../../music-collection-edit' as edit;
+
+@include edit.section;
+@include edit.fields;

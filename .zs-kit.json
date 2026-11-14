@@ -1,6 +1,7 @@
 {
   "profiles": [
-    "angular-firebase"
+    "angular-firebase",
+    "docs-first"
   ],
   "vars": {
     "BASE_BRANCH": "dev",

@@ -236,7 +236,7 @@ interface LevelChoice {
 			border-radius: var(--mc-radius-md);
 
 			&:focus-visible {
-				outline: 2px solid var(--mc-primary);
+				outline: 2px solid var(--mc-info);
 				outline-offset: 1px;
 			}
 		}

@@ -6,6 +6,7 @@ export * from './album-permissions.service';
 export * from './album-resource.enum';
 export * from './album-state.service';
 export * from './album-util.service';
+export * from './album-reference';
 export type * from './album';
 export type * from './album-external';
 export * from './spotify-album-id';

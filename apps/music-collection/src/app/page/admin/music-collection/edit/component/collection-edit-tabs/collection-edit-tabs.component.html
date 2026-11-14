@@ -1,0 +1,35 @@
+<nav
+	class="tabs"
+	role="tablist"
+	[attr.aria-label]="
+		'ui.musicCollectionEdit.the-editor-s-sections' | transloco
+	"
+>
+	@for (one of tabs; track one.id) {
+		<button
+			type="button"
+			role="tab"
+			[id]="'tab-' + one.id"
+			[class.is-active]="active() === one.id"
+			[style.--tint]="one.tint"
+			[attr.aria-selected]="active() === one.id"
+			[attr.aria-controls]="'panel-' + one.id"
+			[attr.tabindex]="active() === one.id ? 0 : -1"
+			(click)="activeChange.emit(one.id)"
+			(keydown)="onTabKey($event)"
+		>
+			<i [class]="one.icon" aria-hidden="true"></i>
+			{{ one.labelKey | transloco }}
+
+			@if (one.id === 'rule' && criteriaCount(); as count) {
+				<span class="count">{{ count }}</span>
+			}
+			@if (one.id === 'looks' && hasCover()) {
+				<span class="dot" aria-hidden="true"></span>
+			}
+			@if (one.id === 'badge' && hasBadge()) {
+				<span class="dot" aria-hidden="true"></span>
+			}
+		</button>
+	}
+</nav>

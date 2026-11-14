@@ -11,6 +11,7 @@
 		"deploy:prod": "npm run build:prod && firebase deploy --only hosting:app --project prod",
 		"test": "nx test music-collection",
 		"test:rules": "nx test firestore-rules",
+		"e2e": "firebase emulators:exec --config firebase.e2e.json --project demo-music-collection --only auth,firestore,storage \"nx e2e music-collection-e2e\"",
 		"lint": "nx lint music-collection",
 		"verify:csp": "node tools/hosting/verify-csp.mjs",
 		"export": "firebase emulators:export ./emulators.backup",
@@ -62,10 +63,10 @@
 		"zone.js": "0.16.3"
 	},
 	"devDependencies": {
-		"@angular-devkit/build-angular": "22.2.2",
-		"@angular-devkit/core": "22.2.2",
-		"@angular-devkit/schematics": "22.2.2",
-		"@angular/cli": "22.2.2",
+		"@angular-devkit/build-angular": "22.2.6",
+		"@angular-devkit/core": "22.2.6",
+		"@angular-devkit/schematics": "22.2.6",
+		"@angular/cli": "22.2.6",
 		"@angular/compiler-cli": "22.2.2",
 		"@angular/language-service": "22.2.2",
 		"@eslint/js": "^9.8.0",
@@ -92,7 +93,7 @@
 		"@types/object-hash": "^2.2.1",
 		"@types/topojson-client": "^3.1.5",
 		"@typescript-eslint/utils": "^8.33.1",
-		"@zssz-soft/zs-kit": "~2.5.3",
+		"@zssz-soft/zs-kit": "~2.8.1",
 		"angular-eslint": "22.5.0",
 		"cypress": "15.21.1",
 		"eslint": "^9.28.0",
@@ -121,6 +122,7 @@
 		"@babel/core": "^7.29.7",
 		"axios": "^1.20.0",
 		"smol-toml": "^1.9.1",
+		"follow-redirects": "^1.16.2",
 		"brace-expansion@>=4.0.0 <5.0.12": "^5.0.12"
 	}
 }

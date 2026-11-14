@@ -164,15 +164,10 @@
 							'ui.artistForm.url-wins-over-main' | transloco
 						"
 					/>
-					@if (params.formGroup.value.imageUrl; as url) {
-						<p-image
-							class="mc-form-image"
-							[src]="url"
-							[preview]="true"
-							[alt]="'ui.artistForm.photo' | transloco"
-							width="200"
-						></p-image>
-					}
+					<mc-image-url-preview
+						[url]="params.formGroup.value.imageUrl"
+						[alt]="'ui.artistForm.photo' | transloco"
+					/>
 				</div>
 				@if (params.isImagesTabActive) {
 					<div class="mc-form-grid">

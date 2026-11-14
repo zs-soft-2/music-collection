@@ -73,7 +73,10 @@ export const selectWishlistItem = createSelector(
 export const selectWishlistItemById = () =>
 	createSelector(
 		selectWishlistItemEntities,
-		(wishlistItemEntities: Dictionary<WishlistItemEntity>, props: any) => {
+		(
+			wishlistItemEntities: Dictionary<WishlistItemEntity>,
+			props: { uid: string }
+		) => {
 			const wishlistItemEntity = wishlistItemEntities[props.uid];
 
 			return wishlistItemEntity;

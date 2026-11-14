@@ -1,6 +1,5 @@
 import {
 	Observable,
-	TimeoutError,
 	distinctUntilChanged,
 	filter,
 	firstValueFrom,
@@ -8,7 +7,6 @@ import {
 	pipe,
 	switchMap,
 	tap,
-	timeout,
 } from 'rxjs';
 
 import {
@@ -17,179 +15,73 @@ import {
 	computed,
 	effect,
 	inject,
-	signal,
 	untracked,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import {
-	AlbumEntity,
 	AlbumStateService,
-	TrackEntity,
-	TrackLyrics,
 	type TrackClip,
 	type TrackImage,
-	isSpotifyAlbumId,
-	isSpotifyTrackId,
-	isYoutubePlaylistId,
-	isYoutubeVideoId,
+	type TrackLyrics,
 } from '@music-collection/api';
-import { toAlbumCoverUrl } from '@music-collection/common/engine';
 import {
 	patchState,
 	signalStore,
 	withComputed,
+	withFeature,
 	withHooks,
 	withMethods,
-	withProps,
 	withState,
 } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 
 import { AlbumDetailsEffect } from '../../data/album-details';
-import { AudioCapture, AudioCaptureEffect } from '../../data/audio';
 import { ExternalPlayerConsentService } from '../../data/external-player';
-import { PlayLogEffect, PlayLogEntry } from '../../data/play-log';
+import { PlayLogEffect } from '../../data/play-log';
 import {
-	RADIO_SHUFFLE_SETTING,
-	RadioEffect,
-	RadioStation,
-	shuffle,
-} from '../../data/radio';
-import {
-	PlayerContext,
-	PlayerSettings,
-	PlayerSettingsEffect,
-	PlayerSettingsOverrides,
-	PlayerSource,
+	type PlayerContext,
+	type PlayerSettings,
+	type PlayerSettingsOverrides,
+	type PlayerSource,
 	resolvePlayerSettings,
 } from '../../data/player';
-import {
-	TrackToMatch,
-	currentPositionMs,
-	spotifyEmbedUri,
-} from '../../data/spotify';
-import { UserSettingsEffect } from '../../data/user-settings';
+import { currentPositionMs, spotifyEmbedUri } from '../../data/spotify';
 import { TrackDetailsEffect } from '../../data/track-details';
 import { SpotifyEmbedStore } from '../spotify/spotify-embed.store';
 import { SpotifyPlaybackStore } from '../spotify/spotify-playback.store';
-import {
-	YoutubeAlbum,
-	YoutubeItem,
-	YoutubePlaybackStore,
-} from '../youtube/youtube-playback.store';
+import { YoutubePlaybackStore } from '../youtube/youtube-playback.store';
 
-import { TrackSide, sideBreaks } from './sides';
+import { withPlayerAudio } from './player-audio.feature';
+import { withPlayerCatalog } from './player-catalog.feature';
+import { withPlayerQueue } from './player-queue.feature';
+import {
+	type FinishedRecord,
+	type NowPlaying,
+	type PlayRequest,
+	type SideBreak,
+	albumPlayRequest,
+	listeningTo,
+	onSpotify,
+	youtubeAlbumOf,
+} from './player-request';
+import { withPlayerSettings } from './player-settings.feature';
+import { SittingLog } from './player-sitting';
+import {
+	type AvailableSources,
+	chooseSource,
+	pickNow,
+	runningPositionMs,
+} from './player-sources';
+import { withPlayerSpotifyAccount } from './player-spotify-account.feature';
+import { type TrackSide, sideBreaks } from './sides';
 
 export type { PlayerSource };
+export * from './player-request';
 
 /**
- * Below this much actually played, a record was not listened to — it was
- * passed over on the way to another one, and the log stays quiet about it.
+ * What the player itself holds. The rest of its state comes with its
+ * features: the tab's sound (`withPlayerAudio`) and the queue
+ * (`withPlayerQueue`).
  */
-const MIN_SITTING_MS = 30_000;
-
-/** How long a station may take to choose its records before it gives up. */
-const TUNING_TIMEOUT_MS = 10_000;
-
-/**
- * Records the queue may pass over in a row before it gives up. Without a
- * limit, a station tuned in before the Spotify sign-in would run through
- * everything it holds in one go.
- */
-const MAX_PASSED_OVER = 5;
-
-/**
- * One sitting with one album, while it lasts. Only what the player itself
- * put on is followed: an album started on the phone is Spotify's own history
- * to keep, and the app does not know which record of the catalog it is.
- */
-interface Sitting {
-	albumId: string;
-	albumTitle: string;
-	artistName: string | null;
-	artistId: string | null;
-	source: PlayerSource;
-	startedAt: number;
-	trackCount: number;
-	/** Tracks of the album heard, by id. */
-	heard: Set<string>;
-	/** Milliseconds played, of the spans that have ended. */
-	playedMs: number;
-	/** When the span playing now began; null while it is paused. */
-	playingSince: number | null;
-	/** When it last played. */
-	endedAt: number;
-}
-
-/** Milliseconds heard, the open span included. */
-const heardMs = (sitting: Sitting, at: number): number =>
-	sitting.playedMs +
-	(sitting.playingSince !== null ? at - sitting.playingSince : 0);
-
-/** The sitting as the log keeps it. */
-const toLogEntry = (sitting: Sitting, at: number): PlayLogEntry => ({
-	uid: `${sitting.albumId}-${sitting.startedAt}`,
-	albumId: sitting.albumId,
-	albumTitle: sitting.albumTitle,
-	artistName: sitting.artistName,
-	source: sitting.source,
-	startedAt: sitting.startedAt,
-	endedAt: sitting.playingSince !== null ? at : sitting.endedAt,
-	playedMs: heardMs(sitting, at),
-	playedTracks: sitting.heard.size,
-	trackCount: sitting.trackCount,
-	completed:
-		sitting.trackCount > 0 && sitting.heard.size >= sitting.trackCount,
-});
-
-/** An album, or one of its tracks, to play. */
-export interface PlayRequest {
-	context: PlayerContext;
-	/** Our album id. */
-	albumId: string;
-	albumTitle: string;
-	artistName: string | null;
-	/**
-	 * Our own id of that artist, where the record names one. Nothing in the
-	 * playing uses it; it is carried so that a verdict given after the record
-	 * can say whose record it was — a name is read, a uid is matched.
-	 */
-	artistId: string | null;
-	coverUrl: string | null;
-	/**
-	 * The album's styles, as the taxonomy spells them. The animated backdrop
-	 * reads them to pick which world to build: without them it had to draw a
-	 * world out of the band's name, so the look was different per record but
-	 * never actually about the music.
-	 */
-	styles: string[];
-	spotifyAlbumId: string | null;
-	youtubePlaylistId: string | null;
-	/** The album's tracks in play order. */
-	tracks: TrackToMatch[];
-	/** Our id of the track in focus; null for the whole album. */
-	trackId: string | null;
-	trackName: string | null;
-	/** YouTube video of the track in focus. */
-	youtubeVideoId: string | null;
-	/** Spotify track in focus, for the preview player when not signed in. */
-	spotifyTrackId: string | null;
-	/** The album's other YouTube videos. */
-	youtubeVideoIds: string[];
-}
-
-/** What plays now, whichever source it is on. */
-export interface NowPlaying {
-	source: PlayerSource;
-	title: string;
-	subtitle: string;
-	coverUrl: string | null;
-	playing: boolean;
-	/** Our album and track, when what plays is one of ours. */
-	albumId: string | null;
-	trackId: string | null;
-}
-
 interface PlayerState {
 	/** What the current page shows. */
 	page: PlayRequest | null;
@@ -204,9 +96,6 @@ interface PlayerState {
 	loadingAlbumId: string | null;
 	/** The source it was asked for on; null when nobody named one. */
 	loadingSource: PlayerSource | null;
-	/** The tab's sound is analysed for the visuals. */
-	audioStatus: 'off' | 'starting' | 'on';
-	audioError: string | null;
 	/** The record is waiting to be turned over; null while it plays on. */
 	sideBreak: SideBreak | null;
 	/**
@@ -214,16 +103,6 @@ interface PlayerState {
 	 * not catch the same track again the moment it plays on.
 	 */
 	sideResumedTrackId: string | null;
-	/** Records waiting to go on after this one, by album id. */
-	queue: string[];
-	/** The station that filled the queue; null when nobody did. */
-	station: RadioStation | null;
-	/** What that station is called, for the player to say what is on. */
-	stationLabel: string | null;
-	/** A station is being tuned in: its records are being chosen. */
-	tuning: boolean;
-	/** Queues are put on in a random order. */
-	shuffled: boolean;
 	/**
 	 * The record that just went round once, waiting for a word about it;
 	 * null while there is nothing to ask about. A sitting that was stopped
@@ -233,181 +112,14 @@ interface PlayerState {
 	finished: FinishedRecord | null;
 }
 
-/** A record heard right through, as the question about it names it. */
-export interface FinishedRecord {
-	albumId: string;
-	albumTitle: string;
-	artistName: string | null;
-	/** Our own artist id, where the record being played carries one. */
-	artistId: string | null;
-}
-
-/** A record waiting in the queue, as a list of what is coming shows it. */
-export interface QueuedRecord {
-	albumId: string;
-	albumTitle: string;
-	artistName: string | null;
-	coverUrl: string | null;
-}
-
-/** Playback held at the start of a side, waiting to be let on. */
-export interface SideBreak {
-	/** The track the side starts with. */
-	trackId: string;
-	/** "Side B", as the prompt names it. */
-	label: string;
-}
-
-/** A track of the catalog as the player holds it. */
-export const toTrackToMatch = ({
-	uid,
-	name,
-	index,
-	position,
-	images,
-	clip,
-}: TrackEntity): TrackToMatch => ({
-	id: uid,
-	name,
-	index,
-	position,
-	images: images ?? [],
-	clip: clip ?? null,
-});
-
-/** An album of the catalog as something to play. */
-export function albumPlayRequest(
-	album: AlbumEntity,
-	tracks: TrackEntity[],
-	context: PlayerContext = 'album'
-): PlayRequest {
-	return {
-		context,
-		albumId: album.uid,
-		albumTitle: album.name,
-		artistName: album.artist?.name ?? null,
-		artistId: album.artist?.uid ?? null,
-		coverUrl: toAlbumCoverUrl(album),
-		styles: album.styles ?? [],
-		spotifyAlbumId: isSpotifyAlbumId(album.spotifyAlbumId)
-			? album.spotifyAlbumId
-			: null,
-		youtubePlaylistId: isYoutubePlaylistId(album.youtubePlaylistId)
-			? album.youtubePlaylistId
-			: null,
-		tracks: tracks.map(toTrackToMatch),
-		trackId: null,
-		trackName: null,
-		youtubeVideoId: null,
-		spotifyTrackId: null,
-		youtubeVideoIds: (album.youtubeVideoIds ?? []).filter(isYoutubeVideoId),
-	};
-}
-
-/** What Spotify has of a request: the record, or the song alone. */
-export type SpotifyPlayable =
-	| { kind: 'album'; id: string }
-	| { kind: 'track'; id: string };
-
-/**
- * What Spotify would play for this request, and null where it has nothing.
- *
- * The record comes first: played from it, a song has what follows it. But
- * most of the catalog was seeded from elsewhere, so Spotify can be missing
- * the record while having the song on it — and then the song on its own is
- * still better than a play button that does nothing.
- */
-export function onSpotify(
-	request: PlayRequest | null | undefined
-): SpotifyPlayable | null {
-	const albumId = request?.spotifyAlbumId;
-	const trackId = request?.spotifyTrackId;
-
-	if (albumId) {
-		return { kind: 'album', id: albumId };
-	}
-
-	return isSpotifyTrackId(trackId) ? { kind: 'track', id: trackId } : null;
-}
-
-/** A record being listened to, and what is playing it. */
-export interface Listening {
-	/** The record, as whoever put it on asked for it. */
-	request: PlayRequest;
-	source: PlayerSource;
-	playing: boolean;
-	/** Our track, where the source can name one. */
-	trackId: string | null;
-}
-
-/**
- * The record being listened to, whoever is playing it: the one this player
- * put on, or the one the page's Spotify frame plays.
- *
- * The frame is a listening like any other — it is how a collector without
- * their own Spotify app hears everything — so the log follows it too. What
- * the frame cannot say is which track is on, so a sitting with it names none
- * and therefore never finishes a record. Nor does it need to leave out the
- * thirty-second tastes the frame plays for a visitor not signed in to
- * Spotify: they are over before a sitting is long enough to be written.
- */
-export function listeningTo(
-	now: NowPlaying | null,
-	session: PlayRequest | null,
-	page: PlayRequest | null,
-	frame: { drives: boolean; playing: boolean }
-): Listening | null {
-	if (now && session && now.albumId && session.albumId === now.albumId) {
-		return {
-			request: session,
-			source: now.source,
-			playing: now.playing,
-			trackId: now.trackId,
-		};
-	}
-
-	return page && frame.drives
-		? {
-				request: page,
-				source: 'spotify',
-				playing: frame.playing,
-				trackId: null,
-			}
-		: null;
-}
-
-/**
- * A request as an album of the YouTube player: the track's video first, then
- * the album playlist and the other videos.
- */
-export function youtubeAlbumOf(request: PlayRequest): YoutubeAlbum {
-	const items: YoutubeItem[] = [];
-	if (request.youtubeVideoId) {
-		items.push({ kind: 'video', id: request.youtubeVideoId });
-	}
-	if (request.youtubePlaylistId) {
-		items.push({ kind: 'playlist', id: request.youtubePlaylistId });
-	}
-	for (const id of request.youtubeVideoIds) {
-		if (id !== request.youtubeVideoId) {
-			items.push({ kind: 'video', id });
-		}
-	}
-	return {
-		uid: request.albumId,
-		title: request.albumTitle,
-		artistName: request.artistName ?? '',
-		coverUrl: request.coverUrl,
-		items,
-		trackNames: request.tracks.map((track) => track.name),
-	};
-}
-
 /**
  * The app's one player. Pages tell it what they show (`setPage`) and start
  * it; it plays on Spotify or YouTube as the settings of the page's kind say,
  * and tells what plays in one shape whichever source it is on. Playback goes
  * on across pages.
+ *
+ * Mind the names when adding to it: a computed named like a feature's state
+ * field is not created, and nothing says so.
  */
 export const PlayerStore = signalStore(
 	{ providedIn: 'root' },
@@ -420,47 +132,28 @@ export const PlayerStore = signalStore(
 		lyrics: null,
 		loadingAlbumId: null,
 		loadingSource: null,
-		audioStatus: 'off',
-		audioError: null,
 		sideBreak: null,
 		sideResumedTrackId: null,
-		queue: [],
-		station: null,
-		stationLabel: null,
-		tuning: false,
-		shuffled: false,
 		finished: null,
 	}),
-	withProps(() => ({
-		/**
-		 * The live analyser of the tab's sound. A plain signal: a browser
-		 * object must not go into the (frozen) store state.
-		 */
-		analyser: signal<AnalyserNode | null>(null),
-		/**
-		 * The shared sound has gone quiet. Worth saying out loud: a capture
-		 * that delivers nothing looks exactly like no capture at all, and
-		 * the visuals go on improvising either way.
-		 */
-		audioSilent: signal(false),
-	})),
+	withPlayerAudio(),
+	withPlayerCatalog(),
 	withComputed(
 		(
 			store,
 			spotify = inject(SpotifyPlaybackStore),
 			embed = inject(SpotifyEmbedStore),
 			youtube = inject(YoutubePlaybackStore),
-			albumStateService = inject(AlbumStateService),
 			consent = inject(ExternalPlayerConsentService)
 		) => {
-			const albums = toSignal(albumStateService.selectEntities$(), {
-				initialValue: [] as AlbumEntity[],
-			});
+			const albums = store._albums;
 
 			const settingsFor = (context: PlayerContext | undefined) =>
 				resolvePlayerSettings(context ?? 'default', store.overrides());
 
-			const availableFor = (request: PlayRequest | null) => ({
+			const availableFor = (
+				request: PlayRequest | null
+			): AvailableSources => ({
 				// Spotify's embedded player needs no app of ours and no
 				// token, so the source is there the moment Spotify has the
 				// record — or, failing that, the song. Their own app is what
@@ -493,32 +186,13 @@ export const PlayerStore = signalStore(
 				if (!consent.allowed()) {
 					return null;
 				}
-				const { spotify: onSpotify, youtube: onYoutube } =
-					availableFor(request);
-				switch (settingsFor(request?.context).source) {
-					case 'spotify':
-						return onSpotify
-							? 'spotify'
-							: onYoutube
-								? 'youtube'
-								: null;
-					case 'youtube':
-						return onYoutube
-							? 'youtube'
-							: onSpotify
-								? 'spotify'
-								: null;
-					default:
-						// Spotify when signed in to it, else YouTube, else
-						// Spotify (it offers the sign-in).
-						return onSpotify && spotify.connected()
-							? 'spotify'
-							: onYoutube
-								? 'youtube'
-								: onSpotify
-									? 'spotify'
-									: null;
-				}
+				const available = availableFor(request);
+
+				return chooseSource(
+					settingsFor(request?.context).source,
+					available,
+					() => spotify.connected()
+				);
 			};
 
 			/**
@@ -653,19 +327,9 @@ export const PlayerStore = signalStore(
 			});
 
 			/** The session's source first, then whichever plays. */
-			const now = computed<NowPlaying | null>(() => {
-				const onSpotify = spotifyNow();
-				const onYoutube = youtubeNow();
-				if (store.sessionSource() === 'youtube') {
-					return onYoutube ?? onSpotify;
-				}
-				if (store.sessionSource() === 'spotify') {
-					return onSpotify ?? onYoutube;
-				}
-				return onYoutube?.playing
-					? onYoutube
-					: (onSpotify ?? onYoutube);
-			});
+			const now = computed<NowPlaying | null>(() =>
+				pickNow(store.sessionSource(), spotifyNow(), youtubeNow())
+			);
 
 			/** What the page shows is what is loaded in the player. */
 			const pageActive = computed(() => {
@@ -725,42 +389,6 @@ export const PlayerStore = signalStore(
 				return current.source === 'spotify'
 					? (spotify.nowPlaying()?.durationMs ?? 0)
 					: youtube.durationMs();
-			});
-
-			/**
-			 * The records a card can start, by the source it would start
-			 * them on — none at all while the outside players are not
-			 * allowed, so a button that could only disappoint is never
-			 * offered.
-			 *
-			 * A Spotify record counts only with the collector's own app:
-			 * Spotify's embedded frame plays on the record's own page, but a
-			 * card has no frame whose play button could be pressed. A
-			 * YouTube record counts by its playlist or its videos, and only
-			 * while YouTube's player can be driven at all.
-			 */
-			const playableSources = computed(() => {
-				const spotifyAlbums = new Set<string>();
-				const youtubeAlbums = new Set<string>();
-				const ownApp = spotify.hasOwnApp();
-				const canDriveYoutube = youtube.controllable();
-
-				for (const album of consent.allowed() ? (albums() ?? []) : []) {
-					if (ownApp && isSpotifyAlbumId(album.spotifyAlbumId)) {
-						spotifyAlbums.add(album.uid);
-					}
-					if (
-						canDriveYoutube &&
-						(isYoutubePlaylistId(album.youtubePlaylistId) ||
-							(album.youtubeVideoIds ?? []).some(
-								isYoutubeVideoId
-							))
-					) {
-						youtubeAlbums.add(album.uid);
-					}
-				}
-
-				return { spotify: spotifyAlbums, youtube: youtubeAlbums };
 			});
 
 			/**
@@ -845,33 +473,6 @@ export const PlayerStore = signalStore(
 
 					return track?.clip ?? null;
 				}),
-				/**
-				 * The records waiting to go on, in the order they will. The
-				 * queue holds ids and the catalog holds the titles, so a
-				 * record the catalog cannot name is left out of the list
-				 * rather than standing in it as a blank — the count beside
-				 * it comes from the queue itself and stays true.
-				 */
-				queueRecords: computed((): QueuedRecord[] => {
-					const named = new Map(
-						(albums() ?? []).map((album) => [album.uid, album])
-					);
-
-					return store.queue().flatMap((albumId) => {
-						const album = named.get(albumId);
-
-						return album
-							? [
-									{
-										albumId,
-										albumTitle: album.name,
-										artistName: album.artist?.name ?? null,
-										coverUrl: toAlbumCoverUrl(album),
-									},
-								]
-							: [];
-					});
-				}),
 				pageActive,
 				/** The page's album / track plays now. */
 				pagePlaying: computed(
@@ -952,98 +553,20 @@ export const PlayerStore = signalStore(
 					const page = store.page();
 					return page ? youtubeAlbumOf(page) : null;
 				}),
-				/** Their own app is named: this player can drive Spotify. */
-				spotifyHasOwnApp: computed(() => spotify.hasOwnApp()),
-				/** The collector's own Spotify app, when they named one. */
-				spotifyClientId: computed(() => spotify.clientId()),
-				/** What that app has to send the sign-in back to. */
-				spotifyRedirectUri: computed(() => spotify.redirectUri()),
-				spotifyConnected: computed(() => spotify.connected()),
-				spotifyConnecting: computed(
-					() => spotify.status() === 'connecting'
-				),
-				/** Spotify Connect devices other than this browser. */
-				devices: computed(() => spotify.otherDevices()),
-				/** Chosen output device; null plays in this browser. */
-				selectedDeviceId: computed(() => spotify.selectedDeviceId()),
-				/** Volume the browser player starts at, 0–100. */
-				spotifyBrowserVolume: computed(() => spotify.browserVolume()),
-				/** The outside players may be put on the page at all. */
-				playersAllowed: computed(() => consent.allowed()),
-				/**
-				 * Albums of the catalog this player can start itself, by the
-				 * source it would start them on — none at all while the
-				 * outside players are not allowed, so a button that could
-				 * only disappoint is never offered.
-				 *
-				 * A Spotify album counts only with the collector's own app:
-				 * Spotify's embedded frame plays on the album's own page, but
-				 * a card has no frame whose play button could be pressed.
-				 */
-				playableSources,
-				/** Every record a card could start, on whichever source. */
-				playableAlbumIds: computed(
-					() =>
-						new Set([
-							...playableSources().spotify,
-							...playableSources().youtube,
-						])
-				),
 			};
 		}
 	),
+	withPlayerSpotifyAccount(),
 	withMethods(
 		(
 			store,
-			settingsEffect = inject(PlayerSettingsEffect),
 			trackDetailsEffect = inject(TrackDetailsEffect),
 			albumDetailsEffect = inject(AlbumDetailsEffect),
 			albumStateService = inject(AlbumStateService),
 			spotify = inject(SpotifyPlaybackStore),
 			embed = inject(SpotifyEmbedStore),
-			youtube = inject(YoutubePlaybackStore),
-			audioCaptureEffect = inject(AudioCaptureEffect),
-			radioEffect = inject(RadioEffect),
-			userSettingsEffect = inject(UserSettingsEffect)
+			youtube = inject(YoutubePlaybackStore)
 		) => {
-			let capture: AudioCapture | null = null;
-
-			const stopCapture = () => {
-				capture?.stop();
-				capture = null;
-				store.analyser.set(null);
-				store.audioSilent.set(false);
-				patchState(store, { audioStatus: 'off' });
-			};
-
-			const saveOverrides = (overrides: PlayerSettingsOverrides) => {
-				patchState(store, { overrides });
-				settingsEffect.save(overrides).catch((error) => {
-					console.error('Player settings not saved', error);
-				});
-			};
-
-			/** The kind of page the player is on, which the menu applies to. */
-			const shownContext = (): PlayerContext =>
-				store.shown().request?.context ?? 'default';
-
-			const updateFor = (
-				context: PlayerContext,
-				changes: Partial<PlayerSettings>
-			) => {
-				saveOverrides({
-					...store.overrides(),
-					[context]: { ...store.overrides()[context], ...changes },
-				});
-			};
-
-			const resetFor = (context: PlayerContext) => {
-				const overrides = { ...store.overrides() };
-
-				delete overrides[context];
-				saveOverrides(overrides);
-			};
-
 			/**
 			 * Plays the request from its track (or the album's start), on the
 			 * source asked for where the record has one — a card offers a
@@ -1173,36 +696,6 @@ export const PlayerStore = signalStore(
 				}
 			};
 
-			/**
-			 * The records of a queue in the order they go on: as they came,
-			 * or drawn out of a hat where the collector asked for that.
-			 */
-			const inOrder = (albumIds: readonly string[]): string[] =>
-				store.shuffled() ? shuffle(albumIds) : [...albumIds];
-
-			/**
-			 * The next record of the queue, or the end of the station. A
-			 * record that turns out to have nothing to play on is passed
-			 * over rather than leaving the queue stuck on it.
-			 */
-			const playNextAlbum = async (passedOver = 0): Promise<void> => {
-				const [next, ...rest] = store.queue();
-
-				patchState(store, { queue: rest });
-				if (!next) {
-					patchState(store, { station: null, stationLabel: null });
-
-					return;
-				}
-				await playAlbumById(next);
-				if (
-					store.session()?.albumId !== next &&
-					passedOver < MAX_PASSED_OVER
-				) {
-					await playNextAlbum(passedOver + 1);
-				}
-			};
-
 			const toggle = async (): Promise<void> => {
 				const current = store.now();
 				if (current?.source === 'spotify') {
@@ -1259,6 +752,13 @@ export const PlayerStore = signalStore(
 
 			return {
 				activate,
+
+				/**
+				 * Plays an album of the catalog from its start, without the
+				 * tap's `activate` — for the queue, whose own methods have
+				 * already called it.
+				 */
+				_playAlbumById: playAlbumById,
 
 				/** Lets the record play on from the side it was held at. */
 				continueSide,
@@ -1330,143 +830,6 @@ export const PlayerStore = signalStore(
 					return playAlbumById(albumId, on);
 				},
 
-				/**
-				 * Tunes in a station: chooses its records, puts the first on
-				 * and leaves the rest waiting.
-				 */
-				async startStation(
-					station: RadioStation,
-					label: string
-				): Promise<void> {
-					if (!store.playersAllowed()) {
-						return;
-					}
-					activate();
-					patchState(store, { tuning: true });
-					try {
-						const albumIds = await firstValueFrom(
-							radioEffect
-								.albums$(station, store.playableAlbumIds())
-								.pipe(
-									filter((ids) => ids.length > 0),
-									// The catalog and the shelf arrive on
-									// their own time; a station that never
-									// fills is one with nothing to play.
-									timeout(TUNING_TIMEOUT_MS)
-								)
-						);
-						const [first, ...rest] = inOrder(albumIds);
-
-						patchState(store, {
-							queue: rest,
-							station,
-							stationLabel: label,
-						});
-						await playAlbumById(first);
-					} catch (error) {
-						patchState(store, {
-							queue: [],
-							station: null,
-							stationLabel: null,
-						});
-						if (!(error instanceof TimeoutError)) {
-							console.error(error);
-						}
-					} finally {
-						patchState(store, { tuning: false });
-					}
-				},
-
-				/**
-				 * Plays a run of records one after another — what stands in
-				 * one compartment, what a page has in front of it. A station
-				 * proper goes through `startStation`; this is the same queue
-				 * without a rule behind it.
-				 */
-				async playQueue(
-					albumIds: readonly string[],
-					label: string
-				): Promise<void> {
-					activate();
-					const playable = store.playableAlbumIds();
-					const [first, ...rest] = inOrder(
-						albumIds.filter((albumId) => playable.has(albumId))
-					);
-
-					if (!first) {
-						return;
-					}
-					patchState(store, {
-						queue: rest,
-						station: null,
-						stationLabel: label,
-					});
-					await playAlbumById(first);
-				},
-
-				/** Puts the next record of the queue on. */
-				playNextAlbum(): Promise<void> {
-					activate();
-
-					return playNextAlbum();
-				},
-
-				/**
-				 * Puts a record of the queue on now, passing over the ones
-				 * standing before it — they have had their turn.
-				 */
-				playQueuedAlbum(albumId: string): Promise<void> {
-					activate();
-					const waiting = store.queue();
-					const at = waiting.indexOf(albumId);
-
-					if (at < 0) {
-						return Promise.resolve();
-					}
-					patchState(store, { queue: waiting.slice(at + 1) });
-
-					return playAlbumById(albumId);
-				},
-
-				/**
-				 * Whether queues are put on in a random order. Turning it on
-				 * draws the records still waiting again; turning it off
-				 * leaves them as they stand, since the order they came in is
-				 * not kept anywhere to be put back.
-				 */
-				setShuffled(shuffled: boolean): void {
-					const waiting = store.queue();
-
-					patchState(store, {
-						shuffled,
-						queue: shuffled ? shuffle(waiting) : waiting,
-					});
-					userSettingsEffect
-						.save(RADIO_SHUFFLE_SETTING, shuffled)
-						.catch((error) =>
-							console.error('Shuffle not kept', error)
-						);
-				},
-
-				/** The kept answer, which the collector gave last time. */
-				loadShuffled: rxMethod<void>(
-					pipe(
-						switchMap(() =>
-							userSettingsEffect.value$(RADIO_SHUFFLE_SETTING)
-						),
-						tap((shuffled) => patchState(store, { shuffled }))
-					)
-				),
-
-				/** Takes the queue off; what plays now plays to its end. */
-				stopStation(): void {
-					patchState(store, {
-						queue: [],
-						station: null,
-						stationLabel: null,
-					});
-				},
-
 				/** Pauses / resumes what plays, or starts what is shown. */
 				async togglePlay(): Promise<void> {
 					activate();
@@ -1509,26 +872,28 @@ export const PlayerStore = signalStore(
 							: 0;
 					}
 					if (current?.source === 'youtube') {
-						const position = youtube.playing()
-							? youtube.positionMs() +
-								(now - youtube.positionAt())
-							: youtube.positionMs();
-						return Math.min(
-							Math.max(0, position),
-							youtube.durationMs() || position
+						return runningPositionMs(
+							{
+								playing: youtube.playing(),
+								positionMs: youtube.positionMs(),
+								positionAt: youtube.positionAt(),
+								durationMs: youtube.durationMs(),
+							},
+							now
 						);
 					}
 					if (store.embedDrives()(store.shown().request)) {
 						// The frame reports where it is now and then; the
 						// seconds in between are counted here, as they are
 						// for the sources this player drives itself.
-						const position = embed.playing()
-							? embed.positionMs() + (now - embed.positionAt())
-							: embed.positionMs();
-
-						return Math.min(
-							Math.max(0, position),
-							embed.durationMs() || position
+						return runningPositionMs(
+							{
+								playing: embed.playing(),
+								positionMs: embed.positionMs(),
+								positionAt: embed.positionAt(),
+								durationMs: embed.durationMs(),
+							},
+							now
 						);
 					}
 					return 0;
@@ -1554,85 +919,6 @@ export const PlayerStore = signalStore(
 					}
 				},
 
-				connectSpotify(): Promise<void> {
-					return spotify.connect();
-				},
-
-				/** Names the collector's own Spotify app (empty: forgets it). */
-				saveSpotifyClientId(clientId: string): Promise<void> {
-					return spotify.saveClientId(clientId);
-				},
-
-				disconnectSpotify(): void {
-					spotify.disconnect();
-				},
-
-				refreshDevices(): Promise<void> {
-					return spotify.refreshDevices();
-				},
-
-				/** Plays on the device from now on (null: this browser). */
-				selectDevice(deviceId: string | null): Promise<void> {
-					return spotify.selectDevice(deviceId);
-				},
-
-				/** The volume the browser player starts at, 0–100. */
-				setSpotifyBrowserVolume(volumePercent: number): void {
-					spotify.setBrowserVolume(volumePercent);
-				},
-
-				/** Tab audio capture is possible in this browser. */
-				audioCaptureSupported(): boolean {
-					return audioCaptureEffect.supported;
-				},
-
-				/** Lets the visuals follow the music: asks to share the tab's sound. */
-				async startAudioCapture(): Promise<void> {
-					if (store.audioStatus() !== 'off') {
-						return;
-					}
-					patchState(store, {
-						audioStatus: 'starting',
-						audioError: null,
-					});
-					try {
-						capture = await audioCaptureEffect.start();
-						store.analyser.set(capture.analyser);
-						store.audioSilent.set(false);
-						patchState(store, { audioStatus: 'on' });
-						const current = capture;
-						current.onSilence = (silent) => {
-							if (capture === current) {
-								store.audioSilent.set(silent);
-							}
-						};
-						// Stopped from the browser's "sharing" bar.
-						void current.ended.then(() => {
-							if (capture === current) {
-								stopCapture();
-							}
-						});
-					} catch (error) {
-						capture = null;
-						// Cancelling the prompt is no error to show.
-						const cancelled =
-							error instanceof DOMException &&
-							error.name === 'NotAllowedError';
-						patchState(store, {
-							audioStatus: 'off',
-							audioError: cancelled
-								? null
-								: error instanceof Error
-									? error.message
-									: String(error),
-						});
-					}
-				},
-
-				stopAudioCapture(): void {
-					stopCapture();
-				},
-
 				openStage(): void {
 					patchState(store, { stageOpen: true });
 				},
@@ -1650,38 +936,6 @@ export const PlayerStore = signalStore(
 					patchState(store, { finished: null });
 				},
 
-				/** Changes the settings of the shown kind of page and keeps them. */
-				updateSettings(changes: Partial<PlayerSettings>): void {
-					updateFor(shownContext(), changes);
-				},
-
-				/** Back to the defaults of the shown kind of page. */
-				resetSettings(): void {
-					resetFor(shownContext());
-				},
-
-				/**
-				 * The same, for a kind of page that is not on show — the
-				 * profile sets all of them at once.
-				 */
-				updateSettingsFor(
-					context: PlayerContext,
-					changes: Partial<PlayerSettings>
-				): void {
-					updateFor(context, changes);
-				},
-
-				resetSettingsFor(context: PlayerContext): void {
-					resetFor(context);
-				},
-
-				loadSettings: rxMethod<void>(
-					pipe(
-						switchMap(() => settingsEffect.overrides$()),
-						tap((overrides) => patchState(store, { overrides }))
-					)
-				),
-
 				/** Follows the lyrics of the track on show. */
 				loadLyrics: rxMethod<string | null>(
 					pipe(
@@ -1697,6 +951,19 @@ export const PlayerStore = signalStore(
 				),
 			};
 		}
+	),
+	withFeature((store) =>
+		withPlayerQueue({
+			session: store.session,
+			albums: store._albums,
+			playersAllowed: store.playersAllowed,
+			playableAlbumIds: store.playableAlbumIds,
+			activate: store.activate,
+			playAlbumById: store._playAlbumById,
+		})
+	),
+	withFeature((store) =>
+		withPlayerSettings(() => store.shown().request?.context ?? 'default')
 	),
 	withHooks({
 		onInit(
@@ -1742,7 +1009,7 @@ export const PlayerStore = signalStore(
 			});
 
 			// The album being listened to now; one document per sitting.
-			let sitting: Sitting | null = null;
+			const sittings = new SittingLog();
 			const playNextOfQueue = () =>
 				store
 					.playNextAlbum()
@@ -1757,16 +1024,12 @@ export const PlayerStore = signalStore(
 			 * two are one play, not two.
 			 */
 			const flush = (end: boolean): void => {
-				const at = Date.now();
-				const done = sitting;
+				const done = sittings.take(end, Date.now());
 
-				if (end) {
-					sitting = null;
-				}
-				if (!done || heardMs(done, at) < MIN_SITTING_MS) {
+				if (!done) {
 					return;
 				}
-				const entry = toLogEntry(done, at);
+				const { entry } = done;
 
 				if (playLog.recording) {
 					playLog
@@ -1837,43 +1100,16 @@ export const PlayerStore = signalStore(
 				untracked(() => {
 					const albumId = heard?.request.albumId ?? null;
 
-					if (sitting && sitting.albumId !== albumId) {
+					if (sittings.isWithOther(albumId)) {
 						// Another record went on, or the player fell silent.
 						played = false;
-						if (sitting.playingSince !== null) {
-							sitting.playedMs += at - sitting.playingSince;
-							sitting.playingSince = null;
-							sitting.endedAt = at;
-						}
+						sittings.pause(at);
 						flush(true);
 					}
 					if (!heard || !albumId) {
 						return;
 					}
-					sitting ??= {
-						albumId,
-						albumTitle: heard.request.albumTitle,
-						artistName: heard.request.artistName,
-						artistId: heard.request.artistId,
-						source: heard.source,
-						startedAt: at,
-						trackCount: heard.request.tracks.length,
-						heard: new Set<string>(),
-						playedMs: 0,
-						playingSince: null,
-						endedAt: at,
-					};
-					if (heard.playing) {
-						sitting.playingSince ??= at;
-						sitting.endedAt = at;
-						if (heard.trackId) {
-							sitting.heard.add(heard.trackId);
-						}
-					} else if (sitting.playingSince !== null) {
-						sitting.playedMs += at - sitting.playingSince;
-						sitting.playingSince = null;
-						sitting.endedAt = at;
-					}
+					sittings.hear(heard, at);
 
 					if (heard.playing) {
 						played = true;

@@ -22,7 +22,7 @@ import {
 	TRACK_FEATURE_KEY,
 } from '@music-collection/api';
 
-/** The callable that does the deleting; see `apps/functions/src/index.ts`. */
+/** The callable that does the deleting; see `apps/functions/src/catalog.functions.ts`. */
 export const DELETE_ALBUM_ENTITY_FUNCTION = 'deleteAlbumEntity';
 
 /** Parent of the users' own data (`user/{uid}/collection-item`). */

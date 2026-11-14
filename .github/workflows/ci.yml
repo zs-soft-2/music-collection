@@ -65,11 +65,57 @@ jobs:
       - run: npx nx run-many -t test --passWithNoTests
       - run: npm run build:prod
 
-  # dev branch → dev környezet automatikusan, de csak zöld build-test után.
+  # Végponttól végpontig: az app az Auth/Firestore/Storage emulátor ellen fut
+  # (firebase.e2e.json, `demo-` projekt), seedelt adattal. Sem a dev, sem a prod
+  # Firebase-adathoz nem nyúl. A helyi parancs ugyanez: `npm run e2e`
+  # (README — E2E tesztek). Külön job, hogy a build-testtel párhuzamosan fusson.
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@zssz-soft'
+          always-auth: true
+      # Ugyanaz, mint a build-test jobban: a @zssz-soft csomagokhoz a
+      # GH_PACKAGES_TOKEN secret kell.
+      - name: Csomag-registry token
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "::error::Hiányzik a GH_PACKAGES_TOKEN (vagy NPM_TOKEN) secret — a @zssz-soft csomagokhoz read:packages jogú PAT kell."
+            exit 1
+          fi
+      - run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.NPM_TOKEN }}
+      # Az emulátorokhoz a Firebase CLI és (a Firestore-emulátornak) Java 21.
+      - run: npm i -g firebase-tools@15.24.0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      # Licenckulcs nélkül a PrimeNG sávja a lap sarkában ülne, és eltakarhat
+      # egy gombot, amire a teszt kattint.
+      - run: npm run e2e
+        env:
+          MC_PRIMEUI_LICENSE: ${{ secrets.PRIMEUI_LICENSE }}
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: dist/cypress/apps/music-collection-e2e/screenshots
+          if-no-files-found: ignore
+
+  # dev branch → dev környezet automatikusan, de csak zöld build-test és e2e után.
   # A környezeti változókat (GCP_PROJECT, WIF_PROVIDER, DEPLOYER_SA, BUILD_CONFIG,
   # FIREBASE_HOSTING) az `infra/` tofu-gyökerei írják.
   deploy:
-    needs: build-test
+    needs: [build-test, e2e]
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment: dev
@@ -162,12 +208,14 @@ jobs:
       # hanem a régióban egyszerre futó összes példányra számít, és az első kör
       # frissen indított példányai a második kör alatt még élnek — 11 + 11
       # ugyanúgy 22. A tényleges megoldás a fél CPU a `setGlobalOptions`-ben
-      # (apps/functions/src/index.ts); a két kör az e melletti tartalék, hogy
-      # egy új function ne feszítse rögtön a keretet.
+      # (apps/functions/src/functions-runtime.ts); a két kör az e melletti
+      # tartalék, hogy egy új function ne feszítse rögtön a keretet.
       #
       # A névsor a forrásból jön, hogy új functionnél itt ne kelljen átírni
-      # semmit. Amit viszont kivesznek a kódból, azt egyik kör sem törli:
-      # a `firebase functions:delete` marad kézi lépésnek.
+      # semmit: a definíciók a `*.functions.ts` fájlokban élnek (az index.ts
+      # csak re-exportál), és ott csak function exportálható. Amit viszont
+      # kivesznek a kódból, azt egyik kör sem törli: a `firebase
+      # functions:delete` marad kézi lépésnek.
       - name: Functionök deployja két körben (Cloud Run CPU-kvóta)
         if: steps.tip.outputs.stale != 'true'
         # A predeploy (firebase.json) hozza le a @zssz-soft/zs-ai-sdk tarballját
@@ -175,7 +223,12 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.NPM_TOKEN }}
         run: |
-          names=$(grep -o '^export const [a-zA-Z0-9_]*' apps/functions/src/index.ts | awk '{print $3}')
+          names=$(grep -ho '^export const [a-zA-Z0-9_]*' apps/functions/src/*.functions.ts | awk '{print $3}')
+          # Egy témafájlban definiált, de az index.ts-ből ki nem exportált név
+          # itt nem létező functionre célozna — inkább álljon meg a deploy.
+          for name in $names; do
+            grep -qw "$name" apps/functions/src/index.ts || { echo "Nincs re-exportálva az index.ts-ben: $name"; exit 1; }
+          done
           total=$(echo "$names" | wc -l | tr -d ' ')
           half=$(( (total + 1) / 2 ))
           first=$(echo "$names" | head -n "$half" | sed 's/^/functions:security:/' | paste -sd, -)

@@ -65,6 +65,6 @@ export const selectEntityQuantityById = () =>
 		selectEntityQuantityEntities,
 		(
 			entityQuantityEntities: Dictionary<EntityQuantityEntity>,
-			props: any
+			props: { uid: string }
 		) => entityQuantityEntities[props.uid]
 	);

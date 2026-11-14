@@ -1,0 +1,27 @@
+<!--
+	A rejtett input és a köré írt label: a lap sehol nem hoz be PrimeNG-t,
+	a példányfotóknál is ez a gomb alakja.
+-->
+<label class="button">
+	<input
+		type="file"
+		accept="image/*"
+		[disabled]="disabled()"
+		(change)="choose($event)"
+	/>
+	{{
+		uploading()
+			? ('ui.musicCollectionEdit.uploading-the-image' | transloco)
+			: ('ui.musicCollectionEdit.upload-an-image' | transloco)
+	}}
+</label>
+
+<!--
+	Amit egyszer feltöltöttek, azt nem kell másodszor: a könyvtárból is
+	választható.
+-->
+<button type="button" class="button" (click)="libraryRequested.emit()">
+	{{ 'ui.musicCollectionEdit.pick-from-uploaded' | transloco }}
+</button>
+
+<ng-content />

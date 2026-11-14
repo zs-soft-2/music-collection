@@ -125,8 +125,8 @@ resource "google_firestore_database" "default" {
 }
 
 # ── App Check ───────────────────────────────────────────────────────────────
-# A callable-ök (apps/functions/src/index.ts: `enforceAppCheck`) App Check
-# tokent követelnek, mert a bejelentkezés önmagában nem mondja meg, hogy a hívás
+# A callable-ök (apps/functions/src/functions-runtime.ts: `enforceAppCheck`)
+# App Check tokent követelnek, mert a bejelentkezés önmagában nem mondja meg, hogy a hívás
 # a mi appunkból jön: egy kimásolt ID tokennel a végpontok scriptből is
 # hívhatók lennének, az `identifyRecordFromPhoto` esetében hívásonként egy
 # modell-kérés árán.

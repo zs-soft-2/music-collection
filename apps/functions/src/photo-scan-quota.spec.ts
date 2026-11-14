@@ -19,9 +19,14 @@ interface Write {
 	data: Record<string, unknown>;
 }
 
+interface Reference {
+	path: string;
+	collection: (name: string) => { doc: (id: string) => Reference };
+}
+
 function fakeDatabase(documents: Record<string, Record<string, unknown>>) {
 	const writes: Write[] = [];
-	const reference = (path: string): any => ({
+	const reference = (path: string): Reference => ({
 		path,
 		collection: (name: string) => ({
 			doc: (id: string) => reference(`${path}/${name}/${id}`),
@@ -35,7 +40,9 @@ function fakeDatabase(documents: Record<string, Record<string, unknown>>) {
 		collection: (name: string) => ({
 			doc: (id: string) => reference(`${name}/${id}`),
 		}),
-		runTransaction: async (body: (transaction: any) => Promise<unknown>) =>
+		runTransaction: async (
+			body: (transaction: unknown) => Promise<unknown>
+		) =>
 			body({
 				getAll: async (...references: { path: string }[]) =>
 					references.map((held) => snapshot(held.path)),

@@ -260,15 +260,10 @@
 							'ui.albumForm.url-wins-over-cover' | transloco
 						"
 					/>
-					@if (params.formGroup.value.coverImageUrl; as url) {
-						<p-image
-							class="mc-form-image"
-							[src]="url"
-							[preview]="true"
-							[alt]="'ui.albumForm.cover2' | transloco"
-							width="200"
-						></p-image>
-					}
+					<mc-image-url-preview
+						[url]="params.formGroup.value.coverImageUrl"
+						[alt]="'ui.albumForm.cover2' | transloco"
+					/>
 				</div>
 				@if (params.isImagesTabActive) {
 					<div class="mc-field">

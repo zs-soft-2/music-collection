@@ -15,23 +15,12 @@ import {
 import { HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import {
-	Firestore,
-	collection,
-	endAt,
-	getDocs,
-	limit,
-	orderBy,
-	query,
-	startAt,
-} from '@angular/fire/firestore';
-import {
 	AlbumEntity,
 	ArtistEntity,
 	ArtistExternalCandidate,
 	ArtistExternalQuery,
 	ArtistStateService,
 	EntityTypeEnum,
-	MUSICIAN_FEATURE_KEY,
 	MembershipEntity,
 	DiscogsLookupClient,
 	MusicBrainzClient,
@@ -135,7 +124,6 @@ const titleCase = (term: string): string =>
 @Injectable()
 export class MembershipEffect {
 	private readonly artistStateService = inject(ArtistStateService);
-	private readonly firestore = inject(Firestore);
 	private readonly discogs = inject(DiscogsLookupClient);
 	private readonly musicBrainz = inject(MusicBrainzClient);
 	private readonly musicianDataService = inject(MusicianDataService);
@@ -445,7 +433,11 @@ export class MembershipEffect {
 	public searchMusicians$(term: string): Observable<MusicianEntity[]> {
 		const terms = [...new Set([term, titleCase(term)])];
 
-		return forkJoin(terms.map((prefix) => this.findByName(prefix))).pipe(
+		return forkJoin(
+			terms.map((prefix) =>
+				this.repository.findMusiciansByName$(prefix, SEARCH_LIMIT)
+			)
+		).pipe(
 			map((results) => {
 				const found = new Map<string, MusicianEntity>();
 
@@ -471,30 +463,6 @@ export class MembershipEffect {
 				source: 'manual',
 			})
 			.pipe(map((musician) => musician as MusicianEntity));
-	}
-
-	private findByName(prefix: string): Observable<MusicianEntity[]> {
-		return from(
-			getDocs(
-				query(
-					collection(this.firestore, MUSICIAN_FEATURE_KEY),
-					orderBy('name'),
-					startAt(prefix),
-					endAt(`${prefix}`),
-					limit(SEARCH_LIMIT)
-				)
-			)
-		).pipe(
-			map((snapshot) =>
-				snapshot.docs.map(
-					(document) =>
-						({
-							...document.data(),
-							uid: document.id,
-						}) as MusicianEntity
-				)
-			)
-		);
 	}
 
 	/** Prefixes of the lower-case name, as the catalog's search expects. */

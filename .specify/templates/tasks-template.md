@@ -46,6 +46,20 @@ description: "Task list template for feature implementation"
   ============================================================================
 -->
 
+## Phase 0: Docs first
+
+**Purpose**: the docs describe the change before the code does (`.specify/kit/docs-first.md`; the
+paths are in `.specify/project/docs.md`)
+
+- [ ] T000a Update the requirements: the changed requirement ids and the new ones (next free number); drop the settled open questions
+- [ ] T000b [P] Update the architecture docs (and add a decision record) where the structure or a decision changes
+- [ ] T000c [P] Derive the new / changed screen states from a real capture and link them from the requirements
+
+**Last task of the feature** (in the Polish phase): capture the changed screens again from the
+implemented app and remove this issue's deviation lines.
+
+---
+
 ## Phase 1: Setup (Shared Infrastructure)
 
 **Purpose**: Project initialization and basic structure

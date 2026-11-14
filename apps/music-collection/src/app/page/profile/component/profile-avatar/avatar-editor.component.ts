@@ -11,7 +11,6 @@ import {
 import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
-	AvatarEffect,
 	AvatarHair,
 	AvatarLayerSize,
 	AvatarLook,
@@ -21,7 +20,7 @@ import {
 	renderAvatar,
 	sameAvatarLook,
 } from '../../../../data/avatar';
-import { AvatarFigureComponent } from '../../../../shared/avatar';
+import { AvatarFigureComponent, AvatarStore } from '../../../../shared/avatar';
 import { AVATAR_GROUPS } from './avatar-choices';
 
 /**
@@ -417,7 +416,7 @@ export class AvatarEditorComponent {
 	public readonly save = output<AvatarLook>();
 	public readonly closed = output<void>();
 
-	private readonly avatars = inject(AvatarEffect);
+	private readonly avatars = inject(AvatarStore);
 
 	/**
 	 * Which cut of the wardrobe this screen draws. Read once, when the editor

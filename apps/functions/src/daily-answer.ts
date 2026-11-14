@@ -56,7 +56,7 @@ export type DailyAnswerFailure =
  * A HttpsError-t szándékosan nem itt dobjuk: a `firebase-functions` betöltése
  * ESM-láncot húz be, amit a unit tesztek futtatója nem tud betölteni — a
  * kiértékelés maga pedig épp az, amit tesztelni akarunk. A callable fordítja
- * hibakódra (`index.ts`), ahogy a Discogs-hibákat is.
+ * hibakódra (`daily-question.functions.ts`), ahogy a Discogs-hibákat is.
  */
 export class DailyAnswerError extends Error {
 	constructor(

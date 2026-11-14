@@ -1,0 +1,23 @@
+@use '../../music-collection-edit' as edit;
+
+@include edit.section;
+@include edit.fields;
+
+select[multiple] {
+	min-height: 7rem;
+}
+
+.criterion {
+	display: flex;
+	gap: 0.5rem;
+	align-items: flex-start;
+
+	.operator {
+		flex: 0 0 8rem;
+	}
+
+	select[multiple] {
+		flex: 1;
+		min-width: 0;
+	}
+}

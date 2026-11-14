@@ -1,19 +1,6 @@
-import {
-	Observable,
-	combineLatest,
-	exhaustMap,
-	filter,
-	firstValueFrom,
-	from,
-	map,
-	of,
-	pairwise,
-	pipe,
-	switchMap,
-	tap,
-} from 'rxjs';
+import { combineLatest, filter, map, of, pipe, switchMap, tap } from 'rxjs';
 
-import { DestroyRef, Signal, computed, effect, inject } from '@angular/core';
+import { computed, inject } from '@angular/core';
 import { TextService } from '@music-collection/core/i18n';
 import { ActivatedRoute } from '@angular/router';
 import {
@@ -22,38 +9,23 @@ import {
 	ArtistStateService,
 	AuthenticationStateService,
 	CollectionItemEntity,
-	CollectionItemEntityAdd,
 	CollectionItemPermissionsService,
-	CollectionItemPlacement,
 	CollectionItemStateService,
 	ContributionEntity,
-	DiscogsVersion,
-	EntityTypeEnum,
-	GenericReleaseMedia,
-	ReleaseEntity,
-	ReleaseRequest,
-	ReleaseStateService,
 	RoleNames,
-	ScanCandidate,
 	TrackEntity,
-	WishlistItemEntity,
-	WishlistItemEntityAdd,
 	WishlistItemPermissionsService,
-	WishlistItemStateService,
-	genericReleaseUid,
-	toCollectionItemSerial,
 } from '@music-collection/api';
 import { tapResponse } from '@ngrx/operators';
 import {
-	WritableStateSource,
 	patchState,
 	signalStore,
+	signalStoreFeature,
 	withComputed,
 	withHooks,
 	withMethods,
 	withState,
 } from '@ngrx/signals';
-import { toObservable } from '@angular/core/rxjs-interop';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { NgxPermissionsService } from 'ngx-permissions';
 
@@ -63,23 +35,7 @@ import {
 } from '@music-collection/domain/music-collection/core';
 
 import { AlbumDetailsEffect } from '../../data/album-details';
-import { CopySerialEffect, CopySerialTakenError } from '../../data/copy-serial';
 import { PlayLogEffect, PlayLogEntry, listeningFor } from '../../data/play-log';
-import {
-	AlbumRating,
-	AlbumRatingSummary,
-	RatedAlbum,
-	RatingEffect,
-	communityVoice,
-	ratingFor,
-} from '../../data/rating';
-import { UserSettingsEffect } from '../../data/user-settings';
-import {
-	PhotoScanEffect,
-	PreparedPhoto,
-	scanQuotaMessage,
-} from '../../data/photo-scan';
-import { ReleaseRequestEffect } from '../../data/release-request';
 import {
 	ArtistView,
 	ReleaseView,
@@ -92,37 +48,54 @@ import { withCopyDisposal } from '../../shared/copy-disposal/copy-disposal.featu
 import { DisposalDraft } from '../../shared/music-ui/copy-removal/copy-removal.model';
 import { withPageOrigin } from '../../shared/page-origin';
 import {
-	NO_SHELF_LAYOUT,
-	SHELF_LAYOUT_SETTING,
-	ShelfUnitLayout,
-} from '../collection/shelf-layout.setting';
-import { placementInLayout } from '../collection/shelf-placement';
-import { ALBUM_VIEW_SETTING } from './album-view.setting';
-import { CopyPick } from './component/release-picker/release-picker.component';
-import {
 	groupCredits,
-	ReleaseRequestDraft,
-	WishlistDraft,
 	groupTracks,
 	toAlbumCollections,
 	toAlbumProfile,
-	toDiscogsVersionViews,
-	toPendingRequestView,
-	toPhotoVersionViews,
 	toPastCopyView,
-	toReleaseOptions,
 	totalDuration,
 } from './album.mapper';
 import {
-	PlayRequest,
-	PlayerStore,
-	albumPlayRequest,
-} from '../../shared/player';
+	albumOf,
+	entities$,
+	keepPhoto,
+	ownsRelease,
+} from './store/album-page.helpers';
+import { withAlbumCopyAdding } from './store/album-copy-adding.feature';
+import { withAlbumPhotoScan } from './store/album-photo-scan.feature';
+import { withAlbumPlacement } from './store/album-placement.feature';
+import { withAlbumPlayer } from './store/album-player.feature';
+import { withAlbumRating } from './store/album-rating.feature';
+import { withAlbumReleaseRequest } from './store/album-release-request.feature';
+import { withAlbumView } from './store/album-view.feature';
+import { withAlbumWishlist } from './store/album-wishlist.feature';
+
+/*
+ * The album page. `withAlbumPage` holds the album, its catalog neighbours
+ * and the collector; each thing the page lets the collector do with the
+ * record lives in its own feature under `./store`:
+ *
+ * - withAlbumView            the compact layout, kept with the settings
+ * - withAlbumReleaseRequest  Discogs pressings and release requests
+ * - withAlbumPhotoScan       telling the pressing from a photo
+ * - withAlbumCopyAdding      adding a copy from the picker
+ * - withAlbumWishlist        wanting the album
+ * - withAlbumPlacement       filing a copy into the drawn furniture
+ * - withAlbumRating          the collector's stars and the community's
+ * - withAlbumPlayer          the page's side of the app's one player
+ *
+ * The order matters: a feature can only read what is declared before it,
+ * and a computed named like a feature's state field is silently dropped —
+ * so a new name is checked against every feature's state first.
+ *
+ * `signalStore` is typed for at most 15 features; past that, or when the
+ * overloads cannot infer the chain, the store type widens to an index
+ * signature without a word. `tsc -p tsconfig.app.json` shows it, jest does
+ * not.
+ */
 
 interface AlbumPageState {
 	albumId: string | null;
-	/** Sections collapsed, so the whole album fits on one screen. */
-	compact: boolean;
 	albums: AlbumEntity[];
 	artists: ArtistView[];
 	releases: ReleaseView[];
@@ -132,26 +105,12 @@ interface AlbumPageState {
 	pastItems: CollectionItemEntity[];
 	tracks: TrackEntity[];
 	contributions: ContributionEntity[];
-	/** Every release of the catalog; loaded when the picker first opens. */
-	catalogReleases: ReleaseEntity[];
-	catalogReleasesLoading: boolean;
 	/** The signed-in user, who may add to their collection. */
 	userId: string | null;
 	userName: string | null;
 	canCollect: boolean;
 	/** May put albums on their own wishlist. */
 	canWish: boolean;
-	/** The signed-in user's wanted albums (all albums). */
-	wishlistItems: WishlistItemEntity[];
-	wishlistOpen: boolean;
-	wishing: boolean;
-	wishError: string | null;
-	/** The copy the placement dialog is open for. */
-	placingCopyId: string | null;
-	placing: boolean;
-	placeError: string | null;
-	/** The furniture the collector drew in their profile; empty for none. */
-	shelfUnits: ShelfUnitLayout[];
 	pickerOpen: boolean;
 	/**
 	 * A photo scan sends the collector here with the pressing it recognised:
@@ -159,60 +118,10 @@ interface AlbumPageState {
 	 */
 	pickedReleaseUid: string | null;
 	pickedDiscogsReleaseId: number | null;
-	adding: boolean;
-	addError: string | null;
-	/**
-	 * A number is being taken for a copy about to be added. Its own round
-	 * trip, before the write the picker waits on — the dialog has to be held
-	 * shut over it too, or a second press would start the add again.
-	 */
-	claiming: boolean;
-	/**
-	 * The number taken for a copy that is being written. Given back if the
-	 * write is refused, so a copy that never arrived locks nothing away.
-	 */
-	claimedSerial: { releaseId: string; number: number } | null;
-	/**
-	 * The album's generic release is being fetched — or made, for the first
-	 * such copy — before the copy of it can be written.
-	 */
-	preparingGeneric: boolean;
-	/** The signed-in user's release requests (all albums). */
-	requests: ReleaseRequest[];
-	/** Discogs pressings of the master `discogsVersionsFor`. */
-	discogsVersions: DiscogsVersion[];
-	discogsVersionsFor: number | null;
-	discogsLoading: boolean;
-	discogsError: string | null;
-	requesting: boolean;
-	requestError: string | null;
-	/**
-	 * Identifying the pressing from a photo of it. The album is known here,
-	 * so only the pressing is in question — which is exactly the part the
-	 * catalog and the Discogs list cannot always answer.
-	 */
-	photoScanning: boolean;
-	photoError: string | null;
-	photoCandidates: ScanCandidate[];
-	/**
-	 * The photo as it was sent. Kept so a failed scan can be retried with
-	 * the same picture — an overloaded reader is no reason to make the
-	 * collector photograph the record again.
-	 */
-	photo: PreparedPhoto | null;
-	/** A photo was scanned — tells "nothing found" from "not tried". */
-	photoScanned: boolean;
 	/** The published collections, to say what this album is part of. */
 	collectionStandings: MusicCollectionStanding[];
 	/** The collector's own listening log; empty while signed out. */
 	playLog: PlayLogEntry[];
-	/** The collector's own verdicts; empty while signed out. */
-	ratings: AlbumRating[];
-	/** What everybody together said about this record; null while nobody did. */
-	ratingSummary: AlbumRatingSummary | null;
-	/** A verdict is on its way; the stars wait rather than lie about it. */
-	ratingWriting: boolean;
-	ratingError: string | null;
 	albumsLoading: boolean;
 	releasesLoading: boolean;
 	detailsLoading: boolean;
@@ -221,7 +130,6 @@ interface AlbumPageState {
 
 const initialState: AlbumPageState = {
 	albumId: null,
-	compact: false,
 	albums: [],
 	artists: [],
 	releases: [],
@@ -229,46 +137,15 @@ const initialState: AlbumPageState = {
 	pastItems: [],
 	tracks: [],
 	contributions: [],
-	catalogReleases: [],
-	catalogReleasesLoading: true,
 	userId: null,
 	userName: null,
 	canCollect: false,
 	canWish: false,
-	wishlistItems: [],
-	wishlistOpen: false,
-	wishing: false,
-	wishError: null,
-	placingCopyId: null,
-	placing: false,
-	placeError: null,
-	shelfUnits: NO_SHELF_LAYOUT.units,
 	pickerOpen: false,
 	pickedReleaseUid: null,
 	pickedDiscogsReleaseId: null,
-	adding: false,
-	addError: null,
-	claiming: false,
-	claimedSerial: null,
-	preparingGeneric: false,
-	requests: [],
-	discogsVersions: [],
-	discogsVersionsFor: null,
-	discogsLoading: false,
-	discogsError: null,
-	requesting: false,
-	requestError: null,
-	photoScanning: false,
-	photoError: null,
-	photoCandidates: [],
-	photo: null,
-	photoScanned: false,
 	collectionStandings: [],
 	playLog: [],
-	ratings: [],
-	ratingSummary: null,
-	ratingWriting: false,
-	ratingError: null,
 	albumsLoading: true,
 	releasesLoading: true,
 	detailsLoading: true,
@@ -277,372 +154,146 @@ const initialState: AlbumPageState = {
 
 const MORE_ALBUMS_COUNT = 6;
 
-/** A release is collected once: a copy of it is already owned. */
-function ownsRelease(
-	ownedItems: CollectionItemEntity[],
-	releaseId: string | undefined
-): boolean {
-	return (
-		!!releaseId &&
-		ownedItems.some((item) => item.release?.uid === releaseId)
-	);
-}
-
-/** What the collector reads when the number is already spoken for. */
-function toSerialError(error: unknown): string {
-	if (error instanceof CopySerialTakenError) {
-		return error.conflict === 'mine'
-			? 'You have already registered this number on another copy.'
-			: 'Another collector has registered this copy. If it is the one in your hands, check the number on it.';
-	}
-	console.error(error);
-
-	return 'The number could not be checked just now. Try again.';
-}
-
-/** What the collector reads when a request or a Discogs lookup fails. */
-function describeError(error: unknown): string {
-	const code = (error as { code?: string })?.code ?? '';
-
-	if (code.endsWith('resource-exhausted')) {
-		return 'Discogs is busy right now. Try again in a minute.';
-	}
-	if (code.endsWith('not-found')) {
-		return 'This album was not found on Discogs.';
-	}
-	if (code.endsWith('permission-denied')) {
-		return 'You are not allowed to do this.';
-	}
-	if (code.endsWith('unavailable')) {
-		return 'Discogs cannot be reached right now.';
-	}
-	return 'Something went wrong. Try again later.';
-}
-
 /**
- * What the collector reads when the photo scan fails. The source matters: a
- * busy photo reader is not an unreachable Discogs, and only one of the two
- * is worth retrying with the same picture.
+ * The album itself, what surrounds it in the catalog, and how it came to be
+ * open. Kept as one feature of its own so that its type is settled before
+ * the features that read it: inferred inline, next to features that state
+ * what they need, the signalStore overloads lose track of it.
  */
-function describeScanError(error: unknown): string {
-	const { code = '', details } = (error ?? {}) as {
-		code?: string;
-		details?: { source?: string };
-	};
-	const quota = scanQuotaMessage(error);
+function withAlbumPage() {
+	return signalStoreFeature(
+		withState(initialState),
+		withPageOrigin(),
+		withCopyDisposal(),
+		withComputed((store, text = inject(TextService)) => {
+			const albumEntity = computed(
+				() => albumOf(store.albums(), store.albumId()) ?? null
+			);
+			const album = computed(() => {
+				const entity = albumEntity();
+				return entity ? toAlbumProfile(entity) : null;
+			});
 
-	if (quota) {
-		return quota;
-	}
-	if (details?.source === 'vision') {
-		return code.endsWith('resource-exhausted')
-			? 'The photo reader is busy right now. Try again in a moment.'
-			: 'This photo could not be read. Try another one, or describe the pressing.';
-	}
+			return {
+				album,
+				/**
+				 * Home › the band › this album. The record is the band's, and
+				 * that is true of it wherever it was opened from; where the
+				 * reader came from is the Back control's business.
+				 */
+				trail: computed<Crumb[]>(() => {
+					const profile = album();
 
-	return describeError(error);
-}
+					return pageTrail(text.translator(), [
+						profile?.artistId
+							? {
+									label: profile.artistName,
+									link: ['/artist', profile.artistId],
+								}
+							: null,
+						profile ? { label: profile.title } : null,
+					]);
+				}),
+				/** The collection this album was opened from, for the way back. */
+				backLabel: computed(() => store.originName()),
+				/** The collections this record is part of, nearest to complete. */
+				collections: computed(() =>
+					toAlbumCollections(
+						store.collectionStandings(),
+						store.albumId() ?? ''
+					)
+				),
+				artist: computed(
+					() =>
+						store
+							.artists()
+							.find(
+								(artist) => artist.id === album()?.artistId
+							) ?? null
+				),
+				/** The collector's copies of this album. */
+				copies: computed(() =>
+					store
+						.releases()
+						.filter(
+							(release) => release.albumId === store.albumId()
+						)
+				),
+				/** The copy the removal dialog is open for. */
+				removingCopy: computed(
+					() =>
+						store
+							.releases()
+							.find(
+								(release) =>
+									release.id === store.removingCopyId()
+							) ?? null
+				),
+				/** The collector's copies of this album gone from the collection. */
+				pastCopies: computed(() =>
+					store
+						.pastItems()
+						.map(toPastCopyView)
+						.filter((copy) => copy.albumId === store.albumId())
+				),
+				trackGroups: computed(() =>
+					groupTracks(store.tracks(), store.contributions())
+				),
+				totalDuration: computed(() => totalDuration(store.tracks())),
+				creditGroups: computed(() =>
+					groupCredits(store.contributions())
+				),
+				/** Other albums of the same artist, nearest release years first. */
+				moreAlbums: computed(() => {
+					const current = album();
+					if (!current) {
+						return [];
+					}
+					const others = store
+						.albums()
+						.filter(
+							(other) =>
+								other.artist?.uid === current.artistId &&
+								other.uid !== current.id
+						)
+						.map((other) => toAlbumProfile(other));
 
-type PhotoState = { photo: PreparedPhoto | null };
-type PhotoHolder = WritableStateSource<PhotoState> & {
-	photo: Signal<PreparedPhoto | null>;
-};
-
-/** A new picture, or `'again'`: the one already taken, sent once more. */
-type PhotoScanInput = Blob | 'again';
-
-/**
- * Holds on to the photo being scanned, releasing the preview of the one
- * before it — an object URL lives until it is revoked, and a collector who
- * photographs a shelf-full of records would leak one per record.
- */
-function keepPhoto(store: PhotoHolder, photo: PreparedPhoto | null): void {
-	const previous = store.photo();
-
-	if (previous && previous !== photo) {
-		URL.revokeObjectURL(previous.previewUrl);
-	}
-
-	patchState(store, { photo });
-}
-
-/** Selects a feature's entities and requests the list while it is empty. */
-function entities$<T>(
-	select: () => Observable<T[]>,
-	dispatchList: () => void
-): Observable<T[]> {
-	return select().pipe(
-		tap((items) => {
-			if (!items?.length) {
-				dispatchList();
-			}
-		}),
-		filter((items) => items?.length > 0)
+					return toDiscography(others, store.releases())
+						.sort(
+							(a, b) =>
+								Math.abs((a.year ?? 0) - (current.year ?? 0)) -
+								Math.abs((b.year ?? 0) - (current.year ?? 0))
+						)
+						.slice(0, MORE_ALBUMS_COUNT)
+						.sort((a, b) => (a.year ?? 0) - (b.year ?? 0));
+				}),
+				notFound: computed(
+					() =>
+						!store.albumsLoading() &&
+						!albumEntity() &&
+						store.albums().length > 0
+				),
+				/** Where the picker opens: a scan may point at a Discogs pressing. */
+				pickerView: computed((): 'catalog' | 'discogs' =>
+					store.pickedDiscogsReleaseId() ? 'discogs' : 'catalog'
+				),
+				/** How often the collector has put this record on. */
+				listening: computed(() =>
+					listeningFor(store.playLog(), store.albumId())
+				),
+			};
+		})
 	);
 }
 
 export const AlbumPageStore = signalStore(
-	withState(initialState),
-	withPageOrigin(),
-	withCopyDisposal(),
-	withComputed((store, text = inject(TextService)) => {
-		const albumEntity = computed(
-			() =>
-				store.albums().find((album) => album.uid === store.albumId()) ??
-				null
-		);
-		const album = computed(() => {
-			const entity = albumEntity();
-			return entity ? toAlbumProfile(entity) : null;
-		});
-
-		return {
-			album,
-			/**
-			 * Home › the band › this album. The record is the band's, and
-			 * that is true of it wherever it was opened from; where the
-			 * reader came from is the Back control's business.
-			 */
-			trail: computed<Crumb[]>(() => {
-				const profile = album();
-
-				return pageTrail(text.translator(), [
-					profile?.artistId
-						? {
-								label: profile.artistName,
-								link: ['/artist', profile.artistId],
-							}
-						: null,
-					profile ? { label: profile.title } : null,
-				]);
-			}),
-			/** The collection this album was opened from, for the way back. */
-			backLabel: computed(() => store.originName()),
-			/** The collections this record is part of, nearest to complete. */
-			collections: computed(() =>
-				toAlbumCollections(
-					store.collectionStandings(),
-					store.albumId() ?? ''
-				)
-			),
-			artist: computed(
-				() =>
-					store
-						.artists()
-						.find((artist) => artist.id === album()?.artistId) ??
-					null
-			),
-			/** The collector's copies of this album. */
-			copies: computed(() =>
-				store
-					.releases()
-					.filter((release) => release.albumId === store.albumId())
-			),
-			/** The copy the placement dialog is open for. */
-			placingCopy: computed(
-				() =>
-					store
-						.releases()
-						.find(
-							(release) => release.id === store.placingCopyId()
-						) ?? null
-			),
-			/**
-			 * Where the collector's other copies stand in the room — the copy
-			 * being placed left out, so the picker counts the compartment it
-			 * is about to leave without it.
-			 */
-			filedElsewhere: computed<CollectionItemPlacement[]>(() =>
-				store
-					.releases()
-					.filter(
-						(release) =>
-							release.id !== store.placingCopyId() &&
-							release.placement
-					)
-					.map(
-						(release) =>
-							release.placement as CollectionItemPlacement
-					)
-			),
-			/** The collector can only file a copy into furniture they drew. */
-			canPlaceCopies: computed(
-				() => store.canManageCopies() && store.shelfUnits().length > 0
-			),
-			/** The copy the removal dialog is open for. */
-			removingCopy: computed(
-				() =>
-					store
-						.releases()
-						.find(
-							(release) => release.id === store.removingCopyId()
-						) ?? null
-			),
-			/** The collector's copies of this album gone from the collection. */
-			pastCopies: computed(() =>
-				store
-					.pastItems()
-					.map(toPastCopyView)
-					.filter((copy) => copy.albumId === store.albumId())
-			),
-			/** The album's catalog releases to pick the collected one from. */
-			releaseOptions: computed(() => {
-				const albumId = store.albumId();
-				// Pressing → the collector's copy of it, so the picker can
-				// offer to let that copy go where it says it is owned.
-				const owned = new Map(
-					store
-						.releases()
-						.filter((release) => release.albumId === albumId)
-						.flatMap((release) =>
-							release.releaseId
-								? [[release.releaseId, release.id] as const]
-								: []
-						)
-				);
-
-				// The generic releases are not pressings to pick from: they
-				// are offered by medium, in the picker's own view.
-				return toReleaseOptions(
-					store
-						.catalogReleases()
-						.filter(
-							(release) =>
-								release.album?.uid === albumId &&
-								!release.generic
-						),
-					owned
-				);
-			}),
-			/** The media the collector has the album on without a pressing. */
-			ownedGenericMedia: computed(() => {
-				const albumId = store.albumId();
-
-				return store
-					.ownedItems()
-					.filter(
-						(item) =>
-							item.release?.generic &&
-							item.release.album?.uid === albumId
-					)
-					.map((item) => item.release.media as GenericReleaseMedia);
-			}),
-			trackGroups: computed(() =>
-				groupTracks(store.tracks(), store.contributions())
-			),
-			totalDuration: computed(() => totalDuration(store.tracks())),
-			creditGroups: computed(() => groupCredits(store.contributions())),
-			/** Other albums of the same artist, nearest release years first. */
-			moreAlbums: computed(() => {
-				const current = album();
-				if (!current) {
-					return [];
-				}
-				const others = store
-					.albums()
-					.filter(
-						(other) =>
-							other.artist?.uid === current.artistId &&
-							other.uid !== current.id
-					)
-					.map((other) => toAlbumProfile(other));
-
-				return toDiscography(others, store.releases())
-					.sort(
-						(a, b) =>
-							Math.abs((a.year ?? 0) - (current.year ?? 0)) -
-							Math.abs((b.year ?? 0) - (current.year ?? 0))
-					)
-					.slice(0, MORE_ALBUMS_COUNT)
-					.sort((a, b) => (a.year ?? 0) - (b.year ?? 0));
-			}),
-			/** This album on the signed-in user's wishlist, still wanted. */
-			wanted: computed(() => {
-				const userId = store.userId();
-				const albumId = store.albumId();
-
-				return (
-					store
-						.wishlistItems()
-						.find(
-							(item) =>
-								item.userReference?.uid === userId &&
-								item.albumReference?.uid === albumId &&
-								item.isActive !== false
-						) ?? null
-				);
-			}),
-			/** The album's Discogs master: its pressings can be requested. */
-			discogsMasterId: computed(
-				() => albumEntity()?.discogs?.masterId ?? null
-			),
-			/** The collector's pending requests for this album. */
-			pendingRequests: computed(() =>
-				store
-					.requests()
-					.filter(
-						(request) =>
-							request.status === 'pending' &&
-							request.album?.uid === store.albumId()
-					)
-					.map(toPendingRequestView)
-			),
-			/** The collector's rejected requests for this album, with the reason. */
-			rejectedRequests: computed(() =>
-				store
-					.requests()
-					.filter(
-						(request) =>
-							request.status === 'rejected' &&
-							request.album?.uid === store.albumId()
-					)
-					.map(toPendingRequestView)
-			),
-			discogsOptions: computed(() => {
-				const masterId = albumEntity()?.discogs?.masterId ?? null;
-				if (!masterId || store.discogsVersionsFor() !== masterId) {
-					return [];
-				}
-				const requested = new Set(
-					store
-						.requests()
-						.filter((request) => request.status === 'pending')
-						.flatMap((request) =>
-							request.discogsReleaseId
-								? [request.discogsReleaseId]
-								: []
-						)
-				);
-				return toDiscogsVersionViews(
-					store.discogsVersions(),
-					requested
-				);
-			}),
-			/** The pressings a photo found, as picker options. */
-			photoOptions: computed(() => {
-				const requested = new Set(
-					store
-						.requests()
-						.filter((request) => request.status === 'pending')
-						.flatMap((request) =>
-							request.discogsReleaseId
-								? [request.discogsReleaseId]
-								: []
-						)
-				);
-
-				return toPhotoVersionViews(store.photoCandidates(), requested);
-			}),
-			/** The photo being scanned, to show it while it is read. */
-			photoPreviewUrl: computed(() => store.photo()?.previewUrl ?? null),
-			notFound: computed(
-				() =>
-					!store.albumsLoading() &&
-					!albumEntity() &&
-					store.albums().length > 0
-			),
-		};
-	}),
+	withAlbumPage(),
+	withAlbumView(),
+	withAlbumReleaseRequest(),
+	withAlbumPhotoScan(),
+	withAlbumCopyAdding(),
+	withAlbumWishlist(),
+	withAlbumPlacement(),
 	withMethods(
 		(
 			store,
@@ -650,840 +301,25 @@ export const AlbumPageStore = signalStore(
 			albumStateService = inject(AlbumStateService),
 			artistStateService = inject(ArtistStateService),
 			collectionItemStateService = inject(CollectionItemStateService),
-			wishlistItemStateService = inject(WishlistItemStateService),
-			releaseStateService = inject(ReleaseStateService),
 			authenticationStateService = inject(AuthenticationStateService),
 			permissionsService = inject(NgxPermissionsService),
 			albumDetailsEffect = inject(AlbumDetailsEffect),
-			releaseRequestEffect = inject(ReleaseRequestEffect),
-			photoScanEffect = inject(PhotoScanEffect),
 			musicCollectionEffect = inject(MusicCollectionEffect),
-			playLogEffect = inject(PlayLogEffect),
-			serialEffect = inject(CopySerialEffect)
-		) => ({
-			/** The collector's listening, to say how often this record went on. */
-			loadPlayLog: rxMethod<void>(
-				pipe(
-					switchMap(() =>
-						playLogEffect.list$().pipe(
-							tapResponse({
-								next: (playLog: PlayLogEntry[]) =>
-									patchState(store, { playLog }),
-								error: (error) => console.error(error),
-							})
-						)
-					)
-				)
-			),
-			/** The signed-in user's release requests; follows sign-in. */
-			loadRequests: rxMethod<void>(
-				pipe(
-					switchMap(() =>
-						authenticationStateService.selectAuthenticatedUser$()
-					),
-					map((user) => user?.uid ?? ''),
-					switchMap((userId) =>
-						(userId
-							? releaseRequestEffect.listByUser$(userId)
-							: of([])
-						).pipe(
-							tapResponse({
-								next: (requests) =>
-									patchState(store, { requests }),
-								error: (error) => console.error(error),
-							})
-						)
-					)
-				)
-			),
-			/** The Discogs pressings of the album's master, once per master. */
-			loadDiscogsVersions: rxMethod<number>(
-				pipe(
-					filter(
-						(masterId) =>
-							masterId !== store.discogsVersionsFor() ||
-							!!store.discogsError()
-					),
-					tap(() =>
-						patchState(store, {
-							discogsLoading: true,
-							discogsError: null,
-						})
-					),
-					switchMap((masterId) =>
-						releaseRequestEffect
-							.listDiscogsVersions$(masterId)
-							.pipe(
-								tapResponse({
-									next: (discogsVersions) =>
-										patchState(store, {
-											discogsVersions,
-											discogsVersionsFor: masterId,
-											discogsLoading: false,
-										}),
-									error: (error) => {
-										console.error(error);
-										patchState(store, {
-											discogsLoading: false,
-											discogsError: describeError(error),
-										});
-									},
-								})
-							)
-					)
-				)
-			),
-			/**
-			 * Identifies the pressing from a photo of the record. The album
-			 * is known here, so the search starts from it: the photo only has
-			 * to give up the catalogue number or the barcode, which is what
-			 * tells two pressings of the same album apart.
-			 */
-			scanPressingPhoto: rxMethod<PhotoScanInput>(
-				pipe(
-					filter(
-						(input) =>
-							!store.photoScanning() &&
-							(input !== 'again' || !!store.photo())
-					),
-					tap(() =>
-						patchState(store, {
-							photoScanning: true,
-							photoError: null,
-							photoCandidates: [],
-						})
-					),
-					switchMap((input) =>
-						from(
-							input === 'again'
-								? Promise.resolve(
-										store.photo() as PreparedPhoto
-									)
-								: photoScanEffect.prepare(input).catch(() => {
-										// A format the browser cannot decode
-										// (an untouched iPhone HEIC, say)
-										// fails here, not at the lookup — say
-										// so instead of blaming the server.
-										throw new Error('unreadable-photo');
-									})
-						).pipe(
-							tap((photo) => keepPhoto(store, photo)),
-							switchMap((photo) => {
-								const album = store.album();
-
-								return photoScanEffect.identify$(
-									photo,
-									album
-										? {
-												name: album.title,
-												artistName: album.artistName,
-											}
-										: null
-								);
-							}),
-							tapResponse({
-								next: (result) =>
-									patchState(store, {
-										photoCandidates: result.candidates,
-										photoScanning: false,
-										photoScanned: true,
-									}),
-								error: (error) => {
-									console.error(error);
-									patchState(store, {
-										photoScanning: false,
-										photoScanned: true,
-										photoError:
-											(error as Error)?.message ===
-											'unreadable-photo'
-												? 'This image could not be read. Try a JPEG or PNG — an iPhone photo may need to be shared as a picture first.'
-												: describeScanError(error),
-									});
-								},
-							})
-						)
-					)
-				)
-			),
-
-			/** Sends the request to the admin; the picker closes when sent. */
-			requestRelease: rxMethod<ReleaseRequestDraft>(
-				pipe(
-					filter(() => !store.requesting()),
-					map((draft) => {
-						const album = store
-							.albums()
-							.find((item) => item.uid === store.albumId());
-						const userId = store.userId();
-
-						return album && userId
-							? releaseRequestEffect.request$({
-									userId,
-									album: {
-										uid: album.uid,
-										name: album.name,
-										artistUid: album.artist?.uid ?? null,
-										artistName: album.artist?.name ?? null,
-									},
-									status: 'pending',
-									discogsMasterId:
-										album.discogs?.masterId ?? null,
-									discogsReleaseId: draft.discogsReleaseId,
-									pressing: draft.pressing,
-									note: draft.note,
-									createdAt: Date.now(),
-								})
-							: null;
-					}),
-					filter((request$) => request$ !== null),
-					tap(() =>
-						patchState(store, {
-							requesting: true,
-							requestError: null,
-						})
-					),
-					exhaustMap((request$) =>
-						request$.pipe(
-							tapResponse({
-								next: () =>
-									patchState(store, {
-										requesting: false,
-										pickerOpen: false,
-									}),
-								error: (error) => {
-									console.error(error);
-									patchState(store, {
-										requesting: false,
-										requestError: describeError(error),
-									});
-								},
-							})
-						)
-					)
-				)
-			),
-			/** Follows `:albumId` and loads the tracklist and credits. */
-			loadDetails: rxMethod<void>(
-				pipe(
-					switchMap(() => route.paramMap),
-					map((params) => params.get('albumId') ?? ''),
-					tap((albumId) =>
-						patchState(store, {
-							albumId,
-							tracks: [],
-							contributions: [],
-							detailsLoading: true,
-							detailsFailed: false,
-						})
-					),
-					switchMap((albumId) =>
-						albumDetailsEffect.load$(albumId).pipe(
-							tapResponse({
-								next: ({ tracks, contributions }) =>
-									patchState(store, {
-										tracks,
-										contributions,
-										detailsLoading: false,
-									}),
-								error: (error) => {
-									console.error(error);
-									patchState(store, {
-										detailsLoading: false,
-										detailsFailed: true,
-									});
-								},
-							})
-						)
-					)
-				)
-			),
-			/**
-			 * Which collections ask for this album. Nothing is stored: the
-			 * standings are resolved from the catalog and the shelf, so the
-			 * answer follows both.
-			 */
-			loadCollections: rxMethod<void>(
-				pipe(
-					switchMap(() =>
-						musicCollectionEffect.listStandings$().pipe(
-							tapResponse({
-								next: (
-									collectionStandings: MusicCollectionStanding[]
-								) => patchState(store, { collectionStandings }),
-								error: (error) => console.error(error),
-							})
-						)
-					)
-				)
-			),
-			loadAlbums: rxMethod<void>(
-				pipe(
-					switchMap(() =>
-						entities$(
-							() => albumStateService.selectEntities$(),
-							() => albumStateService.dispatchListEntitiesAction()
-						).pipe(
-							tapResponse({
-								next: (albums) =>
-									patchState(store, {
-										albums,
-										albumsLoading: false,
-									}),
-								error: (error) => {
-									console.error(error);
-									patchState(store, { albumsLoading: false });
-								},
-							})
-						)
-					)
-				)
-			),
-			loadArtists: rxMethod<void>(
-				pipe(
-					switchMap(() =>
-						entities$(
-							() => artistStateService.selectEntities$(),
-							() =>
-								artistStateService.dispatchListEntitiesAction()
-						).pipe(
-							tapResponse({
-								next: (artists) =>
-									patchState(store, {
-										artists: artists.map(toArtistView),
-									}),
-								error: (error) => console.error(error),
-							})
-						)
-					)
-				)
-			),
-			/** Who is signed in and whether they may add to their collection. */
-			loadCollector: rxMethod<void>(
-				pipe(
-					switchMap(() =>
-						combineLatest([
-							authenticationStateService.selectAuthenticatedUser$(),
-							permissionsService.permissions$,
-						])
-					),
-					tap(([user, permissions]) =>
-						patchState(store, {
-							userId: user?.uid ?? null,
-							userName: user?.displayName ?? null,
-							canWish:
-								!!user?.uid &&
-								(WishlistItemPermissionsService.createWishlistItemEntity in
-									permissions ||
-									RoleNames.ADMIN in permissions),
-							canCollect:
-								!!user?.uid &&
-								(CollectionItemPermissionsService.createCollectionItemEntity in
-									permissions ||
-									RoleNames.ADMIN in permissions),
-						})
-					)
-				)
-			),
-			loadCatalogReleases: rxMethod<void>(
-				pipe(
-					switchMap(() =>
-						entities$(
-							() => releaseStateService.selectEntities$(),
-							() =>
-								releaseStateService.dispatchListEntitiesAction()
-						).pipe(
-							tapResponse({
-								next: (catalogReleases) =>
-									patchState(store, {
-										catalogReleases,
-										catalogReleasesLoading: false,
-									}),
-								error: (error) => {
-									console.error(error);
-									patchState(store, {
-										catalogReleasesLoading: false,
-									});
-								},
-							})
-						)
-					)
-				)
-			),
-			/** Follows the add; the picker closes once the copy is saved. */
-			watchAdding: rxMethod<void>(
-				pipe(
-					switchMap(() =>
-						combineLatest([
-							collectionItemStateService.selectAdding$(),
-							collectionItemStateService.selectError$(),
-						])
-					),
-					pairwise(),
-					tap(([[wasAdding], [adding, error]]) => {
-						patchState(store, { adding });
-						if (!wasAdding || adding) {
-							return;
-						}
-						const claimed = store.claimedSerial();
-
-						patchState(store, {
-							addError: error,
-							pickerOpen: !!error,
-							claimedSerial: null,
-						});
-						// The copy never arrived; the number it was taking
-						// goes back, or nobody could ever register it.
-						if (error && claimed) {
-							void serialEffect.release(
-								claimed.releaseId,
-								claimed.number
-							);
-						}
-					})
-				)
-			),
-			/** Marks the copy sold, traded… It stays in the history. */
-			removeCopy(draft: DisposalDraft): void {
-				const item = store
-					.ownedItems()
-					.find((owned) => owned.uid === store.removingCopyId());
-
-				if (item && store.canManageCopies()) {
-					store.disposeCopy(item, draft);
-				}
-			},
-			/** Takes a copy gone from the collection back into it. */
-			restoreCopy(copyId: string): void {
-				const item = store
-					.pastItems()
-					.find((past) => past.uid === copyId);
-
-				if (
-					item &&
-					store.canManageCopies() &&
-					!ownsRelease(store.ownedItems(), item.release?.uid)
-				) {
-					store.restoreDisposedCopy(item);
-				}
-			},
-			loadPastItems: rxMethod<void>(
-				pipe(
-					switchMap(() =>
-						collectionItemStateService
-							.selectLoadedDisposedEntities$()
-							.pipe(
-								tapResponse({
-									next: (pastItems) =>
-										patchState(store, { pastItems }),
-									error: (error) => console.error(error),
-								})
-							)
-					)
-				)
-			),
-			/**
-			 * Adds a copy of the release to the signed-in user's collection,
-			 * unless it is already in it (an approved release request adds it
-			 * on its own).
-			 */
-			async addToCollection(pick: CopyPick): Promise<void> {
-				const release = store
-					.catalogReleases()
-					.find((item) => item.uid === pick.releaseId);
-				const userId = store.userId();
-
-				if (!release || !userId || store.adding() || store.claiming()) {
-					return;
-				}
-				if (ownsRelease(store.ownedItems(), pick.releaseId)) {
-					patchState(store, {
-						addError: 'This release is already in your collection.',
-					});
-					return;
-				}
-				const serial = toCollectionItemSerial(
-					pick.serialNumber,
-					pick.serialTotal
-				);
-
-				patchState(store, { addError: null });
-
-				// The number is taken before the copy is written, because the
-				// rules refuse a copy carrying a number it does not hold. The
-				// claim cannot name the copy yet — it does not exist — and it
-				// can never be edited, so it stays pointing at nothing.
-				if (serial) {
-					patchState(store, { claiming: true });
-					try {
-						await serialEffect.hold(
-							pick.releaseId,
-							serial,
-							userId,
-							null
-						);
-					} catch (error) {
-						patchState(store, {
-							claiming: false,
-							addError: toSerialError(error),
-						});
-						return;
-					}
-					patchState(store, { claiming: false });
-				}
-
-				const collectionItem: CollectionItemEntityAdd = {
-					entityType: EntityTypeEnum.CollectionItem,
-					date: new Date(),
-					release,
-					serial,
-					userId,
-				};
-
-				patchState(store, {
-					// A refused add gives the number straight back, so a copy
-					// that never arrived locks nothing away.
-					claimedSerial: serial
-						? { releaseId: pick.releaseId, number: serial.number }
-						: null,
-				});
-				collectionItemStateService.dispatchAddEntityAction(
-					collectionItem
-				);
-			},
-			/**
-			 * Adds the album on a medium, without a pressing: the collector
-			 * knows it is a vinyl or a CD of it and nothing more. The copy is
-			 * of the album's generic release, which the server makes for the
-			 * first such copy; from there it is added like any other copy,
-			 * only without a number — a numbered edition is a pressing.
-			 */
-			async addGenericCopy(media: GenericReleaseMedia): Promise<void> {
-				const album = store
-					.albums()
-					.find((item) => item.uid === store.albumId());
-				const userId = store.userId();
-
-				if (
-					!album?.artist?.uid ||
-					!userId ||
-					store.adding() ||
-					store.claiming() ||
-					store.preparingGeneric()
-				) {
-					return;
-				}
-				if (
-					ownsRelease(
-						store.ownedItems(),
-						genericReleaseUid(album.uid, media)
-					)
-				) {
-					patchState(store, {
-						addError:
-							'This album is already in your collection on this format.',
-					});
-					return;
-				}
-
-				patchState(store, { addError: null, preparingGeneric: true });
-
-				let release: ReleaseEntity;
-
-				try {
-					release = await firstValueFrom(
-						releaseRequestEffect.ensureGenericRelease$(
-							album.artist.uid,
-							album.uid,
-							media
-						)
-					);
-				} catch (error) {
-					console.error(error);
-					const code = (error as { code?: string })?.code ?? '';
-
-					patchState(store, {
-						preparingGeneric: false,
-						// Here it is the album the server did not find, not
-						// a Discogs one.
-						addError: code.endsWith('not-found')
-							? 'This album is no longer in the catalog.'
-							: describeError(error),
-					});
-					return;
-				}
-
-				patchState(store, { preparingGeneric: false });
-
-				const collectionItem: CollectionItemEntityAdd = {
-					entityType: EntityTypeEnum.CollectionItem,
-					date: new Date(),
-					release,
-					userId,
-				};
-
-				collectionItemStateService.dispatchAddEntityAction(
-					collectionItem
-				);
-			},
-			/** The signed-in user's wanted albums; follows sign-in. */
-			loadWishlist: rxMethod<void>(
-				pipe(
-					tap(() =>
-						wishlistItemStateService.dispatchListOwnEntitiesAction()
-					),
-					switchMap(() =>
-						wishlistItemStateService.selectEntities$().pipe(
-							tapResponse({
-								next: (wishlistItems) =>
-									patchState(store, { wishlistItems }),
-								error: (error) => console.error(error),
-							})
-						)
-					)
-				)
-			),
-			/** Follows the add; the dialog closes once the album is wanted. */
-			watchWishing: rxMethod<void>(
-				pipe(
-					switchMap(() =>
-						combineLatest([
-							wishlistItemStateService.selectAdding$(),
-							wishlistItemStateService.selectError$(),
-						])
-					),
-					pairwise(),
-					tap(([[wasWishing], [wishing, error]]) => {
-						patchState(store, { wishing });
-						if (wasWishing && !wishing) {
-							patchState(store, {
-								wishError: error,
-								wishlistOpen: !!error,
-							});
-						}
-					})
-				)
-			),
-			/**
-			 * Puts the album on the signed-in user's wishlist, unless it is
-			 * already wanted.
-			 */
-			addToWishlist(draft: WishlistDraft): void {
-				const album = store
-					.albums()
-					.find((item) => item.uid === store.albumId());
-				const userId = store.userId();
-
-				if (!album || !userId || !store.canWish() || store.wishing()) {
-					return;
-				}
-				if (
-					store
-						.wishlistItems()
-						.some(
-							(item) =>
-								item.userReference?.uid === userId &&
-								item.albumReference?.uid === album.uid &&
-								item.isActive !== false
-						)
-				) {
-					patchState(store, {
-						wishError: 'This album is already on your wishlist.',
-					});
-					return;
-				}
-
-				const wishlistItem: WishlistItemEntityAdd = {
-					entityType: EntityTypeEnum.WishlistItem,
-					albumReference: {
-						coverImage: album.coverImage ?? null,
-						name: album.name,
-						uid: album.uid,
-					},
-					artistReference: {
-						name: album.artist?.name ?? '',
-						uid: album.artist?.uid ?? '',
-					},
-					userReference: {
-						displayName: store.userName(),
-						uid: userId,
-					},
-					medias: draft.medias,
-					sourceLink: draft.sourceLink ?? '',
-					isActive: true,
-				};
-
-				patchState(store, { wishError: null });
-				wishlistItemStateService.dispatchAddEntityAction(wishlistItem);
-			},
-			loadReleases: rxMethod<void>(
-				pipe(
-					switchMap(() =>
-						collectionItemStateService.selectLoadedEntities$().pipe(
-							tapResponse({
-								next: (items) =>
-									patchState(store, {
-										ownedItems: items,
-										releases: items.map(toReleaseView),
-										releasesLoading: false,
-									}),
-								error: (error) => {
-									console.error(error);
-									patchState(store, {
-										releasesLoading: false,
-									});
-								},
-							})
-						)
-					)
-				)
-			),
-		})
-	),
-	withComputed((store) => ({
-		/** Where the picker opens: a scan may point at a Discogs pressing. */
-		pickerView: computed((): 'catalog' | 'discogs' =>
-			store.pickedDiscogsReleaseId() ? 'discogs' : 'catalog'
-		),
-		/** How often the collector has put this record on. */
-		listening: computed(() =>
-			listeningFor(store.playLog(), store.albumId())
-		),
-		/** The collector's own verdict on this record; null while unjudged. */
-		myRating: computed(() => ratingFor(store.ratings(), store.albumId())),
-		/**
-		 * What everybody else makes of it, once enough collectors have said
-		 * so. Null is the usual answer and not a failure: most records are
-		 * rated by nobody, or by too few to call it a crowd.
-		 */
-		community: computed(() =>
-			communityVoice(
-				store.ratingSummary(),
-				ratingFor(store.ratings(), store.albumId())?.stars ?? null
-			)
-		),
-		/** Signed out there is nobody to keep a verdict for. */
-		canRate: computed(() => !!store.userId()),
-	})),
-	withMethods((store, ratingEffect = inject(RatingEffect)) => {
-		const albumId$ = toObservable(store.albumId);
-
-		/**
-		 * The record as a verdict names it. The title and the artist travel
-		 * into the document, so a top list on a shared profile reads as
-		 * sentences to a visitor who has no catalog.
-		 */
-		const ratedAlbum = (): RatedAlbum | null => {
-			const album = store
-				.albums()
-				.find((item) => item.uid === store.albumId());
-
-			return album
-				? {
-						albumId: album.uid,
-						albumTitle: album.name,
-						artistName: album.artist?.name ?? null,
-						artistId: album.artist?.uid ?? null,
-					}
-				: null;
-		};
-
-		const write = async (
-			run: (album: RatedAlbum) => Promise<void>
-		): Promise<void> => {
-			const album = ratedAlbum();
-
-			if (!album || !store.canRate() || store.ratingWriting()) {
-				return;
-			}
-
-			patchState(store, { ratingWriting: true, ratingError: null });
-
-			try {
-				await run(album);
-			} catch (error) {
-				console.error('Verdict not kept', error);
-				patchState(store, {
-					ratingError:
-						error instanceof Error ? error.message : String(error),
-				});
-			} finally {
-				patchState(store, { ratingWriting: false });
-			}
-		};
-
-		return {
-			/** The collector's own verdicts; follows sign-in. */
-			loadRatings: rxMethod<void>(
-				pipe(
-					switchMap(() =>
-						ratingEffect.list$().pipe(
-							tapResponse({
-								next: (ratings: AlbumRating[]) =>
-									patchState(store, { ratings }),
-								error: (error) => console.error(error),
-							})
-						)
-					)
-				)
-			),
-			/**
-			 * Everybody's stars for the record shown. It follows the album
-			 * rather than the page: moving to another album of the artist
-			 * reuses this page, and the old average would otherwise stand
-			 * under the new record.
-			 */
-			watchRatingSummary: rxMethod<void>(
-				pipe(
-					switchMap(() => albumId$),
-					switchMap((albumId) =>
-						(albumId
-							? ratingEffect.summary$(albumId)
-							: of(null)
-						).pipe(
-							tapResponse({
-								next: (
-									ratingSummary: AlbumRatingSummary | null
-								) => patchState(store, { ratingSummary }),
-								error: (error) => console.error(error),
-							})
-						)
-					)
-				)
-			),
-			/** Gives the record its stars, keeping whatever note stands. */
-			rate(stars: number): Promise<void> {
-				const note = store.myRating()?.note ?? null;
-
-				return write((album) =>
-					ratingEffect.rate(album, { stars, note })
-				);
-			},
-			/**
-			 * Writes the line about why. Nothing to write it next to is
-			 * nothing to write: the note belongs to a verdict.
-			 */
-			writeRatingNote(note: string): Promise<void> {
-				const stars = store.myRating()?.stars;
-
-				return stars
-					? write((album) =>
-							ratingEffect.rate(album, { stars, note })
-						)
-					: Promise.resolve();
-			},
-			/** Leaves the record unjudged again rather than poor. */
-			clearRating(): Promise<void> {
-				return write((album) => ratingEffect.clear(album.albumId));
-			},
-		};
-	}),
-	withMethods(
-		(
-			store,
-			settingsEffect = inject(UserSettingsEffect),
-			collectionItemStateService = inject(CollectionItemStateService)
+			playLogEffect = inject(PlayLogEffect)
 		) => {
 			let catalogRequested = false;
+
+			const openPicker = (): void => {
+				if (!catalogRequested) {
+					catalogRequested = true;
+					store.loadCatalogReleases(of(undefined));
+				}
+				patchState(store, {
+					pickerOpen: true,
+					addError: null,
+					requestError: null,
+				});
+			};
 
 			const closePicker = (): void => {
 				keepPhoto(store, null);
@@ -1499,24 +335,213 @@ export const AlbumPageStore = signalStore(
 			};
 
 			return {
-				openPicker(): void {
-					if (!catalogRequested) {
-						catalogRequested = true;
-						store.loadCatalogReleases(of(undefined));
+				/** The collector's listening, to say how often this record went on. */
+				loadPlayLog: rxMethod<void>(
+					pipe(
+						switchMap(() =>
+							playLogEffect.list$().pipe(
+								tapResponse({
+									next: (playLog: PlayLogEntry[]) =>
+										patchState(store, { playLog }),
+									error: (error) => console.error(error),
+								})
+							)
+						)
+					)
+				),
+				/** Follows `:albumId` and loads the tracklist and credits. */
+				loadDetails: rxMethod<void>(
+					pipe(
+						switchMap(() => route.paramMap),
+						map((params) => params.get('albumId') ?? ''),
+						tap((albumId) =>
+							patchState(store, {
+								albumId,
+								tracks: [],
+								contributions: [],
+								detailsLoading: true,
+								detailsFailed: false,
+							})
+						),
+						switchMap((albumId) =>
+							albumDetailsEffect.load$(albumId).pipe(
+								tapResponse({
+									next: ({ tracks, contributions }) =>
+										patchState(store, {
+											tracks,
+											contributions,
+											detailsLoading: false,
+										}),
+									error: (error) => {
+										console.error(error);
+										patchState(store, {
+											detailsLoading: false,
+											detailsFailed: true,
+										});
+									},
+								})
+							)
+						)
+					)
+				),
+				/**
+				 * Which collections ask for this album. Nothing is stored: the
+				 * standings are resolved from the catalog and the shelf, so the
+				 * answer follows both.
+				 */
+				loadCollections: rxMethod<void>(
+					pipe(
+						switchMap(() =>
+							musicCollectionEffect.listStandings$().pipe(
+								tapResponse({
+									next: (
+										collectionStandings: MusicCollectionStanding[]
+									) =>
+										patchState(store, {
+											collectionStandings,
+										}),
+									error: (error) => console.error(error),
+								})
+							)
+						)
+					)
+				),
+				loadAlbums: rxMethod<void>(
+					pipe(
+						switchMap(() =>
+							entities$(
+								() => albumStateService.selectEntities$(),
+								() =>
+									albumStateService.dispatchListEntitiesAction()
+							).pipe(
+								tapResponse({
+									next: (albums) =>
+										patchState(store, {
+											albums,
+											albumsLoading: false,
+										}),
+									error: (error) => {
+										console.error(error);
+										patchState(store, {
+											albumsLoading: false,
+										});
+									},
+								})
+							)
+						)
+					)
+				),
+				loadArtists: rxMethod<void>(
+					pipe(
+						switchMap(() =>
+							entities$(
+								() => artistStateService.selectEntities$(),
+								() =>
+									artistStateService.dispatchListEntitiesAction()
+							).pipe(
+								tapResponse({
+									next: (artists) =>
+										patchState(store, {
+											artists: artists.map(toArtistView),
+										}),
+									error: (error) => console.error(error),
+								})
+							)
+						)
+					)
+				),
+				/** Who is signed in and whether they may add to their collection. */
+				loadCollector: rxMethod<void>(
+					pipe(
+						switchMap(() =>
+							combineLatest([
+								authenticationStateService.selectAuthenticatedUser$(),
+								permissionsService.permissions$,
+							])
+						),
+						tap(([user, permissions]) =>
+							patchState(store, {
+								userId: user?.uid ?? null,
+								userName: user?.displayName ?? null,
+								canWish:
+									!!user?.uid &&
+									(WishlistItemPermissionsService.createWishlistItemEntity in
+										permissions ||
+										RoleNames.ADMIN in permissions),
+								canCollect:
+									!!user?.uid &&
+									(CollectionItemPermissionsService.createCollectionItemEntity in
+										permissions ||
+										RoleNames.ADMIN in permissions),
+							})
+						)
+					)
+				),
+				loadReleases: rxMethod<void>(
+					pipe(
+						switchMap(() =>
+							collectionItemStateService
+								.selectLoadedEntities$()
+								.pipe(
+									tapResponse({
+										next: (items) =>
+											patchState(store, {
+												ownedItems: items,
+												releases:
+													items.map(toReleaseView),
+												releasesLoading: false,
+											}),
+										error: (error) => {
+											console.error(error);
+											patchState(store, {
+												releasesLoading: false,
+											});
+										},
+									})
+								)
+						)
+					)
+				),
+				loadPastItems: rxMethod<void>(
+					pipe(
+						switchMap(() =>
+							collectionItemStateService
+								.selectLoadedDisposedEntities$()
+								.pipe(
+									tapResponse({
+										next: (pastItems) =>
+											patchState(store, { pastItems }),
+										error: (error) => console.error(error),
+									})
+								)
+						)
+					)
+				),
+				/** Marks the copy sold, traded… It stays in the history. */
+				removeCopy(draft: DisposalDraft): void {
+					const item = store
+						.ownedItems()
+						.find((owned) => owned.uid === store.removingCopyId());
+
+					if (item && store.canManageCopies()) {
+						store.disposeCopy(item, draft);
 					}
-					patchState(store, {
-						pickerOpen: true,
-						addError: null,
-						requestError: null,
-					});
 				},
-				/** Looks up the album's pressings on Discogs. */
-				showDiscogsVersions(): void {
-					const masterId = store.discogsMasterId();
-					if (masterId) {
-						store.loadDiscogsVersions(masterId);
+				/** Takes a copy gone from the collection back into it. */
+				restoreCopy(copyId: string): void {
+					const item = store
+						.pastItems()
+						.find((past) => past.uid === copyId);
+
+					if (
+						item &&
+						store.canManageCopies() &&
+						!ownsRelease(store.ownedItems(), item.release?.uid)
+					) {
+						store.restoreDisposedCopy(item);
 					}
 				},
+				openPicker,
 				closePicker,
 				/**
 				 * The picker shows a pressing as owned, and the collector
@@ -1530,169 +555,48 @@ export const AlbumPageStore = signalStore(
 					closePicker();
 					store.openRemoval(copyId);
 				},
-				openWishlist(): void {
-					patchState(store, { wishlistOpen: true, wishError: null });
-				},
-				closeWishlist(): void {
-					patchState(store, { wishlistOpen: false });
-				},
-				/** The drawn furniture, and any later change to it. */
-				loadShelfLayout: rxMethod<void>(
-					pipe(
-						switchMap(() =>
-							settingsEffect.value$(SHELF_LAYOUT_SETTING)
-						),
-						tap(({ units }) =>
-							patchState(store, { shelfUnits: units })
-						)
-					)
-				),
-				/** Follows a placement; the dialog closes once the place is saved. */
-				watchPlacing: rxMethod<void>(
-					pipe(
-						switchMap(() =>
-							combineLatest([
-								collectionItemStateService.selectPlacing$(),
-								collectionItemStateService.selectError$(),
-							])
-						),
-						pairwise(),
-						tap(([[wasPlacing], [placing, error]]) => {
-							patchState(store, { placing });
-							if (wasPlacing && !placing) {
-								patchState(store, {
-									placeError: error,
-									placingCopyId: error
-										? store.placingCopyId()
-										: null,
-								});
-							}
-						})
-					)
-				),
 				/**
-				 * Files the copy into the compartment the collector picked, or
-				 * takes the place back with `null` and leaves the filing to the
-				 * shelf again.
+				 * A photo scan links here with `?pick=`: the picker opens on what it
+				 * recognised — a catalog release to add, or a Discogs pressing to
+				 * request. The collector still confirms; the link only saves them
+				 * finding it in the list.
 				 */
-				placeCopy(placement: CollectionItemPlacement | null): void {
-					const item = store
-						.ownedItems()
-						.find((owned) => owned.uid === store.placingCopyId());
-
-					if (!item || !store.canManageCopies() || store.placing()) {
-						return;
-					}
-
-					patchState(store, { placeError: null });
-					collectionItemStateService.dispatchPlaceEntityAction(
-						item,
-						placement &&
-							placementInLayout(placement, store.shelfUnits())
-					);
-				},
-				openPlacement(copyId: string): void {
-					patchState(store, {
-						placingCopyId: copyId,
-						placeError: null,
-					});
-				},
-				closePlacement(): void {
-					patchState(store, { placingCopyId: null });
-				},
-
-				/** The layout kept for the user, and any later change to it. */
-				loadView: rxMethod<void>(
+				followScanPick: rxMethod<void>(
 					pipe(
-						switchMap(() =>
-							settingsEffect.value$(ALBUM_VIEW_SETTING)
-						),
-						tap(({ compact }) => {
-							if (compact !== null) {
-								patchState(store, { compact });
+						switchMap(() => route.queryParamMap),
+						map((params) => params.get('pick')),
+						filter((pick): pick is string => !!pick),
+						tap((pick) => {
+							const [kind, value] = pick.split(':');
+							const discogsReleaseId =
+								kind === 'discogs' ? Number(value) : NaN;
+
+							patchState(store, {
+								pickedReleaseUid:
+									kind === 'release' ? value : null,
+								pickedDiscogsReleaseId: Number.isSafeInteger(
+									discogsReleaseId
+								)
+									? discogsReleaseId
+									: null,
+							});
+							openPicker();
+
+							if (kind === 'discogs') {
+								store.showDiscogsVersions();
 							}
 						})
 					)
 				),
-
-				/** Collapses the sections, or opens them again, for good. */
-				toggleCompact(): void {
-					const compact = !store.compact();
-
-					patchState(store, { compact });
-					settingsEffect
-						.save(ALBUM_VIEW_SETTING, { compact })
-						.catch((error) => {
-							console.error('Album view not saved', error);
-						});
-				},
 			};
 		}
 	),
-	withMethods((store, route = inject(ActivatedRoute)) => ({
-		/**
-		 * A photo scan links here with `?pick=`: the picker opens on what it
-		 * recognised — a catalog release to add, or a Discogs pressing to
-		 * request. The collector still confirms; the link only saves them
-		 * finding it in the list.
-		 */
-		followScanPick: rxMethod<void>(
-			pipe(
-				switchMap(() => route.queryParamMap),
-				map((params) => params.get('pick')),
-				filter((pick): pick is string => !!pick),
-				tap((pick) => {
-					const [kind, value] = pick.split(':');
-					const discogsReleaseId =
-						kind === 'discogs' ? Number(value) : NaN;
-
-					patchState(store, {
-						pickedReleaseUid: kind === 'release' ? value : null,
-						pickedDiscogsReleaseId: Number.isSafeInteger(
-							discogsReleaseId
-						)
-							? discogsReleaseId
-							: null,
-					});
-					store.openPicker();
-
-					if (kind === 'discogs') {
-						store.showDiscogsVersions();
-					}
-				})
-			)
-		),
-	})),
-	withComputed((store, player = inject(PlayerStore)) => ({
-		/** Our id of the album's track playing now. */
-		playingTrackId: computed(() => {
-			const now = player.now();
-			return now?.albumId === store.albumId() ? now.trackId : null;
-		}),
-		/** The page has a player to show at all. */
-		playable: computed(() => player.pagePlayable()),
-	})),
-	withMethods((store, player = inject(PlayerStore)) => ({
-		playTrack(trackId: string): Promise<void> {
-			return player.playPageTrack(trackId);
-		},
-		openPlayer(): void {
-			player.openStage();
-		},
-	})),
+	withAlbumRating(),
+	// Its hook goes first, as it did inline: the player is told about the
+	// page before anything below starts loading it.
+	withAlbumPlayer(),
 	withHooks({
-		onInit(store, player = inject(PlayerStore)) {
-			// The player gets ready for the album shown.
-			let page: PlayRequest | null = null;
-			effect(() => {
-				const album = store
-					.albums()
-					.find((item) => item.uid === store.albumId());
-				page = album ? albumPlayRequest(album, store.tracks()) : null;
-				player.setPage(page);
-			});
-			inject(DestroyRef).onDestroy(() => player.clearPage(page));
-
+		onInit(store) {
 			store.followScanPick(of(undefined));
 			store.loadOrigin(of(undefined));
 			store.loadView(of(undefined));

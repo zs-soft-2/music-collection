@@ -102,7 +102,7 @@ const MAX_FILE_BYTES = 40 * 1024 * 1024;
 const MAX_LYRICS_CHARS = 4000;
 
 /**
- * A hiba, amit a callable fordít `HttpsError`-rá (`index.ts`), mint a fotós
+ * A hiba, amit a callable fordít `HttpsError`-rá (`track-media.functions.ts`), mint a fotós
  * kereté. A modul így a firebase-functions burka nélkül tesztelhető.
  */
 export class TrackMediaError extends Error {

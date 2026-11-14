@@ -16,9 +16,9 @@ try {
 	// Storage unavailable — nothing to clean up.
 }
 
-function localStorageSyncReducer(
-	reducer: ActionReducer<unknown>
-): ActionReducer<unknown> {
+function localStorageSyncReducer<T>(
+	reducer: ActionReducer<T>
+): ActionReducer<T> {
 	return localStorageSync({
 		// Entity slices are not stored here: Firestore's persistent cache serves
 		// their lists (FirestoreSyncService), and restoring them would skip the
@@ -33,6 +33,6 @@ function localStorageSyncReducer(
 	})(reducer);
 }
 
-export const metaReducers: Array<MetaReducer<any, Action>> = [
+export const metaReducers: Array<MetaReducer<object, Action>> = [
 	localStorageSyncReducer,
 ];

@@ -1,0 +1,99 @@
+<mc-collection-edit-hero
+	[form]="store.form()"
+	[isNew]="store.isNew()"
+	[isLoading]="store.isLoading()"
+	[previewTotal]="store.previewTotal()"
+/>
+
+@if (store.error(); as error) {
+	<p class="error" role="alert">{{ error }}</p>
+}
+
+@if (store.isLoading()) {
+	<div class="skeleton" role="status" aria-busy="true">
+		<span class="visually-hidden">{{
+			'ui.musicCollectionEdit.loading' | transloco
+		}}</span>
+	</div>
+} @else {
+	<!--
+		Négy lap egy űrlap helyett. A rejtett lapok a DOM-ban
+		maradnak — hidden attribútummal, nem feltételes blokkal —,
+		mert a jelenetpad saját store-ja a komponensében él: egy
+		lapváltás különben eldobná a kirajzolt jelölteket, amik
+		pénzbe kerültek.
+	-->
+	<mc-collection-edit-tabs
+		[active]="tab()"
+		[criteriaCount]="criteriaCount()"
+		[hasCover]="!!store.form().coverImageUrl"
+		[hasBadge]="!!store.form().badgeName"
+		(activeChange)="tab.set($event)"
+	/>
+
+	<div class="layout" [style.--tint]="tint()">
+		<div class="mc-form">
+			<div
+				class="panel"
+				role="tabpanel"
+				[id]="'panel-basics'"
+				[attr.aria-labelledby]="'tab-basics'"
+				[hidden]="tab() !== 'basics'"
+			>
+				<mc-collection-basics-panel />
+			</div>
+
+			<div
+				class="panel"
+				role="tabpanel"
+				[id]="'panel-rule'"
+				[attr.aria-labelledby]="'tab-rule'"
+				[hidden]="tab() !== 'rule'"
+			>
+				<mc-collection-rule-panel />
+			</div>
+
+			<div
+				class="panel"
+				role="tabpanel"
+				[id]="'panel-looks'"
+				[attr.aria-labelledby]="'tab-looks'"
+				[hidden]="tab() !== 'looks'"
+			>
+				<mc-collection-looks-panel />
+			</div>
+
+			<div
+				class="panel"
+				role="tabpanel"
+				[id]="'panel-badge'"
+				[attr.aria-labelledby]="'tab-badge'"
+				[hidden]="tab() !== 'badge'"
+			>
+				<mc-collection-badge-panel />
+			</div>
+		</div>
+
+		<mc-collection-edit-preview
+			[matchesEverything]="store.matchesEverything()"
+			[total]="store.previewTotal()"
+			[isPreviewing]="store.isPreviewing()"
+			[points]="store.curatedPoints() ?? store.derivedPoints()"
+			[albums]="store.previewAlbums()"
+		/>
+	</div>
+
+	<div class="mc-form-actions">
+		<a class="button" routerLink="/admin/music-collection">{{
+			'ui.musicCollectionEdit.cancel' | transloco
+		}}</a>
+		<button
+			type="button"
+			class="button is-primary"
+			[disabled]="!store.canSave()"
+			(click)="store.save()"
+		>
+			{{ store.isSaving() ? 'Saving…' : 'Save' }}
+		</button>
+	</div>
+}

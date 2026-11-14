@@ -17,8 +17,9 @@ export type EntityQuantityEntity = EntityQuantity & Entity;
 export type EntityQuantityEntityAdd = Omit<EntityQuantityEntity, 'uid'>;
 export type EntityQuantityEntityUpdate = Partial<EntityQuantityEntity> & Entity;
 
+/** Counts per entity type, then per entity uid: `group[Artist][artistUid]`. */
 export interface EntityQuantityGroup {
-	[x: string]: number;
+	[entityType: string]: { [uid: string]: number };
 }
 
 export enum UpdateEntityQuantityTypeEnum {

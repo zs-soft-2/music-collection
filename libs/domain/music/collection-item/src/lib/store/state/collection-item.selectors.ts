@@ -113,7 +113,7 @@ export const selectCollectionItemById = () =>
 		selectCollectionItemEntities,
 		(
 			collectionItemEntities: Dictionary<CollectionItemEntity>,
-			props: any
+			props: { uid: string }
 		) => {
 			const collectionItemEntity = collectionItemEntities[props.uid];
 

@@ -13,7 +13,7 @@
  * életben tartja, és ilyenkor a kliens az archiválást ajánlja fel helyette.
  *
  * A hibát `DeletionError` jelzi, nem `HttpsError`: a `firebase-functions`
- * modult a jest nem tudja betölteni, a hívó (index.ts) pedig egy sorban
+ * modult a jest nem tudja betölteni, a hívó (catalog.functions.ts) pedig egy sorban
  * fordítja át — ugyanaz a felállás, mint a music-collection-definition.ts-nél.
  */
 

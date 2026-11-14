@@ -19,6 +19,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { Bind } from 'primeng/bind';
 import { InputText } from 'primeng/inputtext';
 import { FileUpload } from 'primeng/fileupload';
+import type { FileUploadHandlerEvent } from 'primeng/fileupload';
 import { Image } from 'primeng/image';
 import { Select } from 'primeng/select';
 import { Button } from 'primeng/button';
@@ -70,7 +71,7 @@ export class DocumentFormComponent extends BaseComponent implements OnInit {
 		this.params$ = this.componentService.init$();
 	}
 
-	public fileUpload(event: any): void {
+	public fileUpload(event: FileUploadHandlerEvent): void {
 		this.componentService.fileUpload(event['files'][0]);
 	}
 

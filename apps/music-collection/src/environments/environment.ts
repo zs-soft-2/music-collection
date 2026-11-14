@@ -5,6 +5,7 @@
  * a `--env prod` kapcsolóval kérik.
  */
 import { APP_CHECK_DEBUG_TOKEN } from './app-check-debug-token';
+import type { EmulatorHosts } from './emulator-hosts';
 import { PRIMEUI_LICENSE } from './primeui-license';
 import { VERSION } from './version';
 
@@ -30,7 +31,7 @@ export const environment = {
 		 * szerveroldalon ellenőrzött token adja.
 		 *
 		 * Üresen az App Check nem indul el, és a callable-ök — amik App Check
-		 * tokent követelnek (apps/functions/src/index.ts) — mindent
+		 * tokent követelnek (apps/functions/src/functions-runtime.ts) — mindent
 		 * elutasítanak.
 		 */
 		recaptchaSiteKey: '6LfnhcctAAAAAFX_jp0sInM0Fl5xmk7Z15YLYfC_',
@@ -71,6 +72,11 @@ export const environment = {
 		 */
 		license: PRIMEUI_LICENSE,
 	},
+	/**
+	 * The Firebase emulators to talk to instead of the project. Only the
+	 * `emulator` build sets it (`environment.emulator.ts`, end-to-end tests).
+	 */
+	emulators: null as EmulatorHosts | null,
 	type: 'develop',
 	/** Base version + per-build suffix (tools/version/generate-version.mjs). */
 	version: VERSION.version,

@@ -13,11 +13,13 @@ import {
 	AlbumFormParams,
 	BaseComponent,
 } from '@music-collection/api';
+import { ImageUrlPreviewComponent } from '@music-collection/ui/image-url-preview';
 
 import { AlbumFormService } from './album-form.service';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Bind } from 'primeng/bind';
 import { AutoComplete } from 'primeng/autocomplete';
+import type { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { InputText } from 'primeng/inputtext';
 import { Textarea } from 'primeng/textarea';
 import { Select } from 'primeng/select';
@@ -47,6 +49,7 @@ import { AsyncPipe } from '@angular/common';
 		DatePicker,
 		MultiSelect,
 		Image,
+		ImageUrlPreviewComponent,
 		Button,
 		Checkbox,
 		Dialog,
@@ -99,11 +102,11 @@ export class AlbumFormComponent extends BaseComponent implements OnInit {
 		this.componentService.submit();
 	}
 
-	public searchArtist(event: any): void {
+	public searchArtist(event: AutoCompleteCompleteEvent): void {
 		this.componentService.searchArtist(event['query']);
 	}
 
-	public searchDocument(event: any): void {
+	public searchDocument(event: AutoCompleteCompleteEvent): void {
 		this.componentService.searchDocument(event['query']);
 	}
 }

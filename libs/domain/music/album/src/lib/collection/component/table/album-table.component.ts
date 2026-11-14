@@ -21,6 +21,7 @@ import { AlbumDeletionStore } from '../../../deletion/album-deletion.store';
 import { AlbumTableService } from './album-table.service';
 import { Dialog } from 'primeng/dialog';
 import { AutoComplete } from 'primeng/autocomplete';
+import type { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { Chip } from 'primeng/chip';
 import { Ripple } from 'primeng/ripple';
 import { Button, ButtonDirective } from 'primeng/button';
@@ -103,11 +104,11 @@ export class AlbumTableComponent extends BaseComponent implements OnInit {
 		this.params$ = this.componentService.init$();
 	}
 
-	public searchByNameHandler(event: any): void {
+	public searchByNameHandler(event: AutoCompleteCompleteEvent): void {
 		this.componentService.searchByName(event['query']);
 	}
 
-	public searchByArtistNameHandler(event: any): void {
+	public searchByArtistNameHandler(event: AutoCompleteCompleteEvent): void {
 		this.componentService.searchByArtistName(event['query']);
 	}
 

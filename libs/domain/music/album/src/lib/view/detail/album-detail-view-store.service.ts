@@ -36,8 +36,8 @@ export class AlbumDetailViewStoreService extends ComponentStore<AlbumDetailViewS
 			switchMap((album) => {
 				this.setState({
 					album: album || null,
-					imageHeight: dynamicConfig.config.imageHeight,
-					imageWidth: dynamicConfig.config.imageWidth,
+					imageHeight: dynamicConfig.config['imageHeight'],
+					imageWidth: dynamicConfig.config['imageWidth'],
 				});
 
 				return of(true);

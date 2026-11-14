@@ -23,6 +23,7 @@ import { ReleaseDeletionStore } from '../../../deletion/release-deletion.store';
 import { ReleaseTableService } from './release-table.service';
 import { Dialog } from 'primeng/dialog';
 import { AutoComplete } from 'primeng/autocomplete';
+import type { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { Chip } from 'primeng/chip';
 import { Ripple } from 'primeng/ripple';
 import { Button, ButtonDirective } from 'primeng/button';
@@ -110,11 +111,11 @@ export class ReleaseTableComponent extends BaseComponent implements OnInit {
 		this.params$ = this.componentService.init$();
 	}
 
-	public searchByArtistNameHandler(event: any): void {
+	public searchByArtistNameHandler(event: AutoCompleteCompleteEvent): void {
 		this.componentService.searchByArtistName(event['query']);
 	}
 
-	public searchByNameHandler(event: any): void {
+	public searchByNameHandler(event: AutoCompleteCompleteEvent): void {
 		this.componentService.searchByName(event['query']);
 	}
 
