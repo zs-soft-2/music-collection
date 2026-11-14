@@ -164,6 +164,24 @@
 					</div>
 
 					<div class="mc-field">
+						<label for="editionSize">{{
+							'ui.releaseForm.edition-size' | transloco
+						}}</label>
+						<input
+							id="editionSize"
+							type="number"
+							min="1"
+							step="1"
+							pInputText
+							formControlName="editionSize"
+							aria-describedby="edition-size-hint"
+						/>
+						<small id="edition-size-hint">{{
+							'ui.releaseForm.edition-size-hint' | transloco
+						}}</small>
+					</div>
+
+					<div class="mc-field">
 						<label for="coverColor">{{
 							'ui.releaseForm.cover-color' | transloco
 						}}</label>

@@ -23,11 +23,12 @@ import {
 } from '@music-collection/api';
 import {
 	BadgeImage,
-	SceneLockText,
-	SceneModel,
 	GenerateBadgeResult,
+	MUSIC_COLLECTION_MINIMUM_ALBUMS,
 	MusicCollectionEntity,
 	MusicCollectionMembership,
+	SceneLockText,
+	SceneModel,
 } from '@music-collection/domain/music-collection/api';
 import { GenreEffect } from '@music-collection/domain/genre';
 import { MusicCollectionEffect } from '@music-collection/domain/music-collection/core';
@@ -53,10 +54,9 @@ import {
 	describeDrawError,
 	describeWriteError,
 } from '../music-collection-admin.errors';
-import { derivedBasePoints } from '@music-collection/domain/music-collection/engine';
+import { basePoints } from '@music-collection/domain/music-collection/engine';
 
 import {
-	toBasePoints,
 	toCriteria,
 	toDraft,
 	toForm,
@@ -243,13 +243,27 @@ export const MusicCollectionEditStore = signalStore(
 		matchesEverything: computed(
 			() => !Object.keys(toCriteria(store.form().criteria)).length
 		),
-		canSave: computed(
-			() => !!store.form().name.trim() && !store.isSaving()
+		/**
+		 * The rule reaches fewer albums than a collection needs. A draft may
+		 * still be saved that way; publishing it is what the server refuses.
+		 */
+		tooFewAlbums: computed(
+			() =>
+				!store.isPreviewing() &&
+				store.previewTotal() < MUSIC_COLLECTION_MINIMUM_ALBUMS
 		),
-		/** What the rule alone would make the collection worth. */
+		canSave: computed(
+			() =>
+				!!store.form().name.trim() &&
+				!store.isSaving() &&
+				!(
+					store.form().status === 'published' &&
+					!store.isPreviewing() &&
+					store.previewTotal() < MUSIC_COLLECTION_MINIMUM_ALBUMS
+				)
+		),
+		/** What the collection is worth on the most modest shelf. */
 		derivedPoints: computed(() => store.previewPoints()),
-		/** The curator's number, once it is a number. */
-		curatedPoints: computed(() => toBasePoints(store.form().basePoints)),
 	})),
 	withMethods(
 		(
@@ -275,8 +289,8 @@ export const MusicCollectionEditStore = signalStore(
 											PREVIEW_SIZE
 										),
 										previewTotal: resolved.total,
-										previewPoints: derivedBasePoints(
-											resolved.albums
+										previewPoints: basePoints(
+											resolved.total
 										),
 										isPreviewing: false,
 									}),
@@ -755,7 +769,7 @@ export const MusicCollectionEditStore = signalStore(
 						exhaustMap(() =>
 							effect.generateBadge$(
 								store.uid() as string,
-								store.curatedPoints() ?? store.derivedPoints(),
+								store.derivedPoints(),
 								store.badgeModel().trim() || null
 							).pipe(
 								tapResponse({

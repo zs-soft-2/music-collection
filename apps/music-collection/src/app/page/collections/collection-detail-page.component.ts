@@ -20,6 +20,7 @@ import { CollectionBadgeComponent } from './component/collection-badge/collectio
 import { CollectionCrowdComponent } from './component/collection-crowd/collection-crowd.component';
 import { CollectionDecadesComponent } from './component/collection-decades/collection-decades.component';
 import { CollectionRuleComponent } from './component/collection-rule/collection-rule.component';
+import { CollectionScoreComponent } from './component/collection-score/collection-score.component';
 import { CollectionStatsComponent } from './component/collection-stats/collection-stats.component';
 import { NextAlbumsComponent } from './component/next-albums/next-albums.component';
 import { CollectionDetailPageStore } from './collection-detail-page.store';
@@ -62,6 +63,7 @@ const HERO_FACES = 5;
 		CollectionEmblemComponent,
 		CollectionPinComponent,
 		CollectionRuleComponent,
+		CollectionScoreComponent,
 		CollectionStatsComponent,
 		NextAlbumsComponent,
 		PageBreadcrumbComponent,

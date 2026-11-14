@@ -42,6 +42,7 @@ describe('ReleaseEditComponent', () => {
 								coverColor: [null],
 								date: [null],
 								discogsReleaseId: [null],
+								editionSize: [null],
 								formatDescription: [null],
 								label: [null],
 								media: [null],

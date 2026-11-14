@@ -12,6 +12,7 @@ import {
 	ArtistStateService,
 	CollectionItemStateService,
 	DocumentStateService,
+	ReleaseStateService,
 } from '@music-collection/api';
 import {
 	MusicCollectionEntity,
@@ -71,11 +72,15 @@ function standing(
 		score: {
 			collectionUid,
 			basePoints: totalPoints,
-			bonusPoints: 0,
+			albumPoints: totalPoints,
+			sizeFactor: 1,
+			formatFactor: 1,
+			uniformMedia: null,
 			totalPoints,
 			earnedPoints: 0,
-			derived: true,
-			highlights: [],
+			suspended: false,
+			albums: [],
+			opportunities: [],
 		} as MusicCollectionScore,
 	};
 }
@@ -93,6 +98,7 @@ describe('MusicCollectionEffect.suggestNextAlbums', () => {
 				{ provide: ArtistStateService, useValue: {} },
 				{ provide: CollectionItemStateService, useValue: {} },
 				{ provide: DocumentStateService, useValue: {} },
+				{ provide: ReleaseStateService, useValue: {} },
 			],
 		});
 
@@ -202,6 +208,7 @@ describe('MusicCollectionEffect credits', () => {
 				},
 				{ provide: CollectionItemStateService, useValue: {} },
 				{ provide: DocumentStateService, useValue: {} },
+				{ provide: ReleaseStateService, useValue: {} },
 			],
 		});
 
@@ -296,6 +303,7 @@ describe('MusicCollectionEffect uploaded images', () => {
 				{ provide: AlbumStateService, useValue: {} },
 				{ provide: ArtistStateService, useValue: {} },
 				{ provide: CollectionItemStateService, useValue: {} },
+				{ provide: ReleaseStateService, useValue: {} },
 				{
 					provide: DocumentStateService,
 					useValue: {

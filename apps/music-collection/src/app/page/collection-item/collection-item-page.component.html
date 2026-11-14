@@ -86,6 +86,10 @@
 						</p>
 					}
 
+					@if (store.item()?.release; as release) {
+						<mc-rarity-badge [release]="release" />
+					}
+
 					@if (store.disposal(); as disposal) {
 						<p class="gone">
 							{{

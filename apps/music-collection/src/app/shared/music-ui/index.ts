@@ -21,3 +21,4 @@ export * from './sparkline/sparkline.component';
 export * from './star-rating/star-rating.component';
 export * from './spotify-player/spotify-player.component';
 export * from './style-bars/style-bars.component';
+export * from './rarity-badge/rarity-badge.component';

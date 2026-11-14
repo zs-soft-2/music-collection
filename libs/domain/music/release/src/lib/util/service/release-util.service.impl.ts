@@ -10,6 +10,7 @@ import {
 	LabelEntity,
 	QueryConstraintTypeEnum,
 	QueryOperatorEnum,
+	RELEASE_EDITION_SIZE_MAX,
 	ReleaseArtist,
 	ReleaseEntity,
 	ReleaseEntityAdd,
@@ -24,7 +25,23 @@ import {
 	UpdateEntityQuantityType,
 	UpdateEntityQuantityTypeEnum,
 	toCoverColor,
+	withoutServerRarity,
 } from '@music-collection/api';
+
+/**
+ * A run size as the catalog keeps it: a whole number of copies, or null. An
+ * emptied field, a zero and a half-typed number all mean "not known".
+ */
+function toEditionSize(value: unknown): number | null {
+	const size = typeof value === 'string' ? Number(value) : value;
+
+	return typeof size === 'number' &&
+		Number.isSafeInteger(size) &&
+		size >= 1 &&
+		size <= RELEASE_EDITION_SIZE_MAX
+		? size
+		: null;
+}
 
 @Injectable()
 export class ReleaseUtilServiceImpl extends ReleaseUtilService {
@@ -37,7 +54,7 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 		entity: ReleaseEntityAdd
 	): ReleaseModelAdd {
 		return {
-			...entity,
+			...withoutServerRarity(entity),
 			date: entity.date?.getTime(),
 			searchParameters: this.createSearchParameters(entity.name),
 		};
@@ -45,7 +62,7 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 
 	public convertEntityToModel(entity: ReleaseEntity): ReleaseModel {
 		return {
-			...entity,
+			...withoutServerRarity(entity),
 			date: entity.date?.getTime(),
 			searchParameters: this.createSearchParameters(entity.name),
 		};
@@ -55,7 +72,7 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 		entity: ReleaseEntityUpdate
 	): ReleaseModelUpdate {
 		return {
-			...entity,
+			...withoutServerRarity(entity),
 			date: entity.date?.getTime(),
 			searchParameters: this.createSearchParameters(entity.name || ''),
 		};
@@ -119,6 +136,12 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 			entity.discogsReleaseId = model.discogsReleaseId;
 		}
 
+		// Like `catno`: a run size taken off the pressing is null, and the
+		// store has to hear that it is gone.
+		if (model.editionSize !== undefined) {
+			entity.editionSize = model.editionSize;
+		}
+
 		if (model.formatDescription) {
 			entity.formatDescription = model.formatDescription;
 		}
@@ -151,6 +174,7 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 			coverColor: toCoverColor(formGroup.value['coverColor']),
 			date: formGroup.value['date'],
 			discogsReleaseId: formGroup.value['discogsReleaseId'] ?? null,
+			editionSize: toEditionSize(formGroup.value['editionSize']),
 			entityType: EntityTypeEnum.Release,
 			formatDescription: formGroup.value['formatDescription'],
 			label: this.createReleaseLabel(formGroup.value['label']),
@@ -190,6 +214,16 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 				// The Discogs pressing a load came from. No field of its own
 				// on the form: it is set by the load and carried on.
 				discogsReleaseId: [release?.discogsReleaseId ?? null],
+				// How many copies were made, where the record says so. It is
+				// the pressing's fact rather than a copy's, because it helps
+				// decide how rare the pressing is — and with that, a score.
+				editionSize: [
+					release?.editionSize ?? null,
+					[
+						Validators.min(1),
+						Validators.max(RELEASE_EDITION_SIZE_MAX),
+					],
+				],
 				formatDescription: [release?.formatDescription || null],
 				// A generic release has none: it is the album on a medium,
 				// not a pressing of it.
@@ -246,6 +280,7 @@ export class ReleaseUtilServiceImpl extends ReleaseUtilService {
 			coverColor: toCoverColor(formGroup.value['coverColor']),
 			date: formGroup.value['date'],
 			discogsReleaseId: formGroup.value['discogsReleaseId'] ?? null,
+			editionSize: toEditionSize(formGroup.value['editionSize']),
 			entityType: EntityTypeEnum.Release,
 			name: formGroup.value['name'],
 			label: this.createReleaseLabel(formGroup.value['label']),

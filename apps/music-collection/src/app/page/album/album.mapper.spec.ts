@@ -31,7 +31,6 @@ function standing(
 				icon: null,
 				artworkUrl: null,
 			},
-			basePoints: null,
 			parentUid: null,
 			group: null,
 			status: 'published',
@@ -73,9 +72,7 @@ function standing(
 				total: albumUids.length,
 				calculatedAt: 0,
 			},
-			[],
-			null,
-			missingAlbumUids.length === 0
+			[]
 		),
 	};
 }

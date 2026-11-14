@@ -46,7 +46,7 @@ export function fakeEditStore(form: Partial<CollectionForm> = {}) {
 		previewTotal: signal(0),
 		previewAlbums: signal([]),
 		isPreviewing: signal(false),
-		curatedPoints: signal<number | null>(null),
+		tooFewAlbums: signal(false),
 		canSave: signal(false),
 	};
 	const methods = {

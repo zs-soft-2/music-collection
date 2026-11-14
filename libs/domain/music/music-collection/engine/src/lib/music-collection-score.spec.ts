@@ -1,67 +1,68 @@
-import { FormatDescriptionEnum } from '@music-collection/common/api';
+import { MediaEnum, RarityTier } from '@music-collection/common/api';
 import {
 	MusicCollectionMembership,
 	OwnedCopy,
 	ResolvedMusicCollection,
 } from '@music-collection/domain/music-collection/api';
 
-import { owned } from './music-collection.fixture';
+import { disposed, owned } from './music-collection.fixture';
 import {
 	ageWeight,
-	derivedBasePoints,
+	basePoints,
+	copyPoints,
 	scoreCollection,
+	sizeFactor,
 } from './music-collection-score';
 
-/** Scoring is done at a fixed moment, so the ages in here never drift. */
 const NOW = Date.UTC(2026, 5, 1);
-const THIS_YEAR = 2026;
-/** Thirty-eight years old at `NOW`: all but fully vintage. */
-const ALBUM_YEAR = 1988;
-/** What an album of `ALBUM_YEAR` weighs: 38 / 40. */
-const VINTAGE = 0.95;
+const { vinyl, cd, cassette, boxset, dvd } = MediaEnum;
 
-function membership(
-	albumUid: string,
-	year: number | null = ALBUM_YEAR
-): MusicCollectionMembership {
+function membership(albumUid: string): MusicCollectionMembership {
 	return {
 		albumUid,
 		albumName: `Album ${albumUid}`,
 		artistUid: 'artist',
 		artistName: 'Artist',
-		year,
+		year: 1988,
 		coverUrl: null,
 	};
 }
 
-function resolved(
-	albums: MusicCollectionMembership[]
-): ResolvedMusicCollection {
+function resolved(albumUids: string[]): ResolvedMusicCollection {
 	return {
-		collectionUid: 'bay-area-1988',
+		collectionUid: 'bay-area',
 		criteriaVersion: 1,
-		albums,
-		total: albums.length,
+		albums: albumUids.map(membership),
+		total: albumUids.length,
 		calculatedAt: NOW,
 	};
 }
 
-/** Four 1988 albums, base 400: one album is worth 100. */
-const FOUR = resolved(['a', 'b', 'c', 'd'].map((uid) => membership(uid)));
-const ALL_FOUR: OwnedCopy[] = [owned('a'), owned('b'), owned('c'), owned('d')];
+function collectionOf(size: number): ResolvedMusicCollection {
+	return resolved(
+		Array.from({ length: size }, (_unused, index) => `${index}`)
+	);
+}
 
-const score = (
-	copies: OwnedCopy[],
-	completed: boolean,
-	base: number | null = 400
-) => scoreCollection(FOUR, copies, base, completed, NOW);
+const EIGHT = resolved(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']);
+
+/** The shelf of the docs' worked example: six vinyls and two CDs. */
+const DOCS_SHELF: OwnedCopy[] = [
+	owned('a', vinyl, 'rare'),
+	owned('b', vinyl, 'veryRare'),
+	owned('c', vinyl, 'uncommon'),
+	owned('d', vinyl),
+	owned('e', vinyl),
+	owned('f', vinyl),
+	owned('g', cd, 'uncommon'),
+	owned('h', cd),
+];
 
 describe('ageWeight', () => {
 	it('grows from nothing to one over forty years', () => {
-		expect(ageWeight(THIS_YEAR, NOW)).toBe(0);
-		expect(ageWeight(THIS_YEAR - 20, NOW)).toBe(0.5);
-		expect(ageWeight(THIS_YEAR - 40, NOW)).toBe(1);
-		expect(ageWeight(THIS_YEAR - 60, NOW)).toBe(1);
+		expect(ageWeight(2026, NOW)).toBe(0);
+		expect(ageWeight(2006, NOW)).toBe(0.5);
+		expect(ageWeight(1966, NOW)).toBe(1);
 	});
 
 	it('grants nothing for a year the catalog does not know', () => {
@@ -69,201 +70,252 @@ describe('ageWeight', () => {
 	});
 });
 
-describe('derivedBasePoints', () => {
-	it('grows faster than the collection does', () => {
-		// A fortieth record is harder to find than a fourth.
-		const four = resolved(
-			['a', 'b', 'c', 'd'].map((uid) => membership(uid, THIS_YEAR))
-		).albums;
-		const forty = resolved(
-			Array.from({ length: 40 }, (_unused, index) =>
-				membership(`album-${index}`, THIS_YEAR)
-			)
-		).albums;
-
-		expect(derivedBasePoints(four, NOW)).toBe(43);
-		expect(derivedBasePoints(forty, NOW)).toBe(720);
+describe('sizeFactor', () => {
+	it('starts at one and adds a quarter every time the count doubles', () => {
+		expect(sizeFactor(2)).toBe(1);
+		expect(sizeFactor(4)).toBe(1.25);
+		expect(sizeFactor(8)).toBe(1.5);
+		expect(sizeFactor(20)).toBe(1.83);
+		expect(sizeFactor(64)).toBe(2.25);
 	});
 
-	/* The point the collector made: an old record is not a new one. */
-	it('counts an old album for nearly double a new one', () => {
-		const fresh = [membership('a', THIS_YEAR)];
-		const vintage = [membership('a', THIS_YEAR - 40)];
-
-		expect(derivedBasePoints(fresh, NOW)).toBe(10);
-		expect(derivedBasePoints(vintage, NOW)).toBe(20);
+	it('has no ceiling, so a collection has no largest size', () => {
+		expect(sizeFactor(1000)).toBe(3.24);
+		expect(sizeFactor(100_000)).toBeGreaterThan(sizeFactor(1000));
 	});
 
-	it('is nothing for a collection that resolves to nothing', () => {
-		expect(derivedBasePoints([], NOW)).toBe(0);
+	it('is nothing below the fewest albums a collection needs', () => {
+		expect(sizeFactor(1)).toBe(0);
+		expect(sizeFactor(0)).toBe(0);
+	});
+});
+
+describe('basePoints', () => {
+	it('is the most modest shelf: five points an album, times the size', () => {
+		expect(basePoints(2)).toBe(10);
+		expect(basePoints(8)).toBe(60);
+		expect(basePoints(20)).toBe(183);
+	});
+});
+
+describe('copyPoints', () => {
+	it('weighs the medium: vinyl, box set, CD, then cassette and DVD', () => {
+		const points = (media: MediaEnum) =>
+			copyPoints({ media, rarity: 'common' });
+
+		expect(points(vinyl)).toBe(10);
+		expect(points(boxset)).toBe(8);
+		expect(points(cd)).toBe(7);
+		expect(points(cassette)).toBe(5);
+		expect(points(dvd)).toBe(5);
+	});
+
+	it('multiplies by how rare the pressing is', () => {
+		const points = (rarity: RarityTier) =>
+			copyPoints({ media: vinyl, rarity });
+
+		expect(points('common')).toBe(10);
+		expect(points('uncommon')).toBe(12.5);
+		expect(points('rare')).toBe(16);
+		expect(points('veryRare')).toBe(20);
+		expect(points('ultraRare')).toBe(25);
 	});
 });
 
 describe('scoreCollection', () => {
-	it('earns nothing while an album is missing', () => {
-		const incomplete = score([owned('a'), owned('b')], false);
+	it('adds the albums up and multiplies by the size, on a mixed shelf too', () => {
+		const score = scoreCollection(EIGHT, DOCS_SHELF);
 
-		expect(incomplete.earnedPoints).toBe(0);
-		// What it would be worth is still on show.
-		expect(incomplete.totalPoints).toBe(400);
+		expect(score.albumPoints).toBe(94.25);
+		expect(score.sizeFactor).toBe(1.5);
+		expect(score.formatFactor).toBe(1);
+		expect(score.uniformMedia).toBeNull();
+		expect(score.totalPoints).toBe(141);
+		expect(score.earnedPoints).toBe(141);
 	});
 
-	it('earns the whole score once the collection is complete', () => {
-		expect(score(ALL_FOUR, true).earnedPoints).toBe(400);
+	it('rewards a set of a piece: vinyl most, then CD, then cassette', () => {
+		const all = (media: MediaEnum) =>
+			scoreCollection(
+				EIGHT,
+				EIGHT.albums.map((album) => owned(album.albumUid, media))
+			);
+
+		expect(all(vinyl)).toMatchObject({
+			formatFactor: 1.5,
+			uniformMedia: vinyl,
+			totalPoints: 180,
+		});
+		expect(all(cd)).toMatchObject({
+			formatFactor: 1.3,
+			uniformMedia: cd,
+			totalPoints: 109,
+		});
+		expect(all(cassette)).toMatchObject({
+			formatFactor: 1.15,
+			uniformMedia: cassette,
+			totalPoints: 69,
+		});
 	});
 
-	it('pays for an original pressing in proportion to its age', () => {
-		const result = score(
-			[owned('a', ALBUM_YEAR), owned('b'), owned('c'), owned('d')],
-			true
-		);
+	it('gives a set of box sets or DVDs no format multiplier', () => {
+		for (const media of [boxset, dvd]) {
+			const score = scoreCollection(
+				EIGHT,
+				EIGHT.albums.map((album) => owned(album.albumUid, media))
+			);
 
-		// 0.4 × 0.95 of a 100-point share.
-		expect(result.bonusPoints).toBe(Math.round(100 * 0.4 * VINTAGE));
-		expect(result.highlights).toEqual([
-			{
-				albumUid: 'a',
-				albumName: 'Album a',
-				reasons: ['original pressing'],
-				points: 38,
-			},
-		]);
+			expect(score.formatFactor).toBe(1);
+			expect(score.uniformMedia).toBeNull();
+		}
 	});
 
-	/*
-	 * Every copy of this year's record is an original pressing — the
-	 * collector bought it in a shop, which is not a find.
-	 */
-	it('pays nothing for the original pressing of a new record', () => {
-		const fresh = resolved([membership('a', THIS_YEAR)]);
-		const result = scoreCollection(
-			fresh,
-			[owned('a', THIS_YEAR)],
-			100,
-			true,
-			NOW
-		);
+	it('scores the docs example at 222 once the two CDs are vinyls', () => {
+		const shelf = [
+			...DOCS_SHELF.slice(0, 6),
+			owned('g', vinyl),
+			owned('h', vinyl),
+		];
 
-		expect(result.bonusPoints).toBe(0);
-	});
-
-	it('does not call a reissue of the same year an original', () => {
-		const result = score(
-			[
-				owned('a', ALBUM_YEAR, [FormatDescriptionEnum.reissue]),
-				owned('b'),
-				owned('c'),
-				owned('d'),
-			],
-			true
-		);
-
-		expect(result.bonusPoints).toBe(0);
-	});
-
-	it('adds up what one pressing is, but never more than half a share', () => {
-		const result = score(
-			[
-				owned('a', ALBUM_YEAR, [
-					FormatDescriptionEnum.limitedEdition,
-					FormatDescriptionEnum.pictureDisc,
-					FormatDescriptionEnum.g180,
-				]),
-				owned('b'),
-				owned('c'),
-				owned('d'),
-			],
-			true
-		);
-
-		// 0.38 + 0.3 + 0.2 + 0.1, capped at 0.5 of a 100-point share.
-		expect(result.bonusPoints).toBe(50);
+		expect(scoreCollection(EIGHT, shelf)).toMatchObject({
+			albumPoints: 98.5,
+			formatFactor: 1.5,
+			totalPoints: 222,
+			earnedPoints: 222,
+		});
 	});
 
 	it('counts the best copy of an album, not every copy', () => {
-		const result = score(
-			[
-				owned('a'),
-				owned('a', ALBUM_YEAR),
-				owned('b'),
-				owned('c'),
-				owned('d'),
-			],
-			true
-		);
+		const two = resolved(['a', 'b']);
+		const score = scoreCollection(two, [
+			owned('a', cd),
+			owned('a', cd, 'rare'),
+			owned('b', cassette),
+		]);
 
-		expect(result.bonusPoints).toBe(38);
-		expect(result.highlights).toHaveLength(1);
+		expect(score.albums[0]).toMatchObject({
+			media: cd,
+			rarity: 'rare',
+			copies: 2,
+		});
+		expect(score.albums[0].points).toBeCloseTo(11.2);
+		expect(score.totalPoints).toBe(16);
+	});
+
+	it('lets a common vinyl stand in for a rarer CD when it makes the set whole', () => {
+		const two = resolved(['a', 'b']);
+		const score = scoreCollection(two, [
+			owned('a', vinyl),
+			// 17.5 points against the vinyl's 10 — but it breaks the set.
+			owned('a', cd, 'ultraRare'),
+			owned('b', vinyl),
+		]);
+
+		// Mixed: 27.5. All vinyl: 20 × 1.5 = 30.
+		expect(score.uniformMedia).toBe(vinyl);
+		expect(score.albums[0].media).toBe(vinyl);
+		expect(score.totalPoints).toBe(30);
+	});
+
+	it('keeps the mixed counting where it is worth more than the set', () => {
+		const two = resolved(['a', 'b']);
+		const score = scoreCollection(two, [
+			owned('a', cassette),
+			owned('a', vinyl, 'ultraRare'),
+			owned('b', cassette),
+		]);
+
+		// Mixed: 25 + 5 = 30. All cassette: 10 × 1.15 = 11.5.
+		expect(score.uniformMedia).toBeNull();
+		expect(score.totalPoints).toBe(30);
 	});
 
 	it('ignores a copy that left the collection', () => {
-		const result = score(
-			[
-				{
-					albumUid: 'a',
-					disposedAt: 1_600_000_000_000,
-					releaseYear: ALBUM_YEAR,
-					editions: [FormatDescriptionEnum.limitedEdition],
-				},
-				owned('a'),
-				owned('b'),
-				owned('c'),
-				owned('d'),
-			],
-			true
+		const two = resolved(['a', 'b']);
+		const score = scoreCollection(two, [owned('a'), disposed('b')]);
+
+		expect(score.earnedPoints).toBe(0);
+		expect(score.albums[1]).toMatchObject({ media: null, copies: 0 });
+	});
+
+	it('earns nothing while an album is missing, and shows the least it will come to', () => {
+		const score = scoreCollection(EIGHT, DOCS_SHELF.slice(0, 6));
+
+		expect(score.earnedPoints).toBe(0);
+		// 78.5 on the shelf, two missing albums at five each, times 1.5.
+		expect(score.albumPoints).toBe(88.5);
+		expect(score.formatFactor).toBe(1);
+		expect(score.totalPoints).toBe(133);
+	});
+
+	it('is worth its base to a collector who owns none of it', () => {
+		const score = scoreCollection(EIGHT, []);
+
+		expect(score.basePoints).toBe(60);
+		expect(score.totalPoints).toBe(60);
+		expect(score.earnedPoints).toBe(0);
+		expect(score.opportunities).toEqual([]);
+	});
+
+	it('names the albums missing from a set of a piece within reach', () => {
+		const score = scoreCollection(EIGHT, DOCS_SHELF);
+
+		expect(score.opportunities).toEqual([
+			{ media: vinyl, missingAlbumUids: ['g', 'h'], minimumPoints: 222 },
+		]);
+	});
+
+	it('offers no set on a medium fewer than half the albums are on', () => {
+		const score = scoreCollection(EIGHT, [
+			...EIGHT.albums.map((album) => owned(album.albumUid, cd)),
+			owned('a', vinyl),
+			owned('b', vinyl),
+			owned('c', vinyl),
+		]);
+
+		expect(score.uniformMedia).toBe(cd);
+		expect(score.opportunities).toEqual([]);
+	});
+
+	it('offers no set that would be worth less than the shelf already is', () => {
+		const two = resolved(['a', 'b']);
+		const score = scoreCollection(two, [
+			owned('a', vinyl, 'ultraRare'),
+			owned('a', cassette),
+			owned('b', vinyl, 'ultraRare'),
+		]);
+
+		// All vinyl already: 50 × 1.5 = 75. All cassette would be 11.5.
+		expect(score.totalPoints).toBe(75);
+		expect(score.opportunities).toEqual([]);
+	});
+
+	it('scores a thousand albums as readily as eight', () => {
+		const thousand = collectionOf(1000);
+		const score = scoreCollection(
+			thousand,
+			thousand.albums.map((album) => owned(album.albumUid))
 		);
 
-		expect(result.bonusPoints).toBe(0);
+		expect(score.sizeFactor).toBe(3.24);
+		expect(score.totalPoints).toBe(Math.round(10_000 * 3.24 * 1.5));
+		expect(score.albums).toHaveLength(1000);
 	});
 
-	it('shares the base between the albums, so a bonus follows the worth', () => {
-		const cheap = score([owned('a', ALBUM_YEAR), ...ALL_FOUR], true, 400);
-		const prized = score([owned('a', ALBUM_YEAR), ...ALL_FOUR], true, 4000);
+	it('puts a collection of fewer than two albums at rest', () => {
+		for (const size of [0, 1]) {
+			const small = collectionOf(size);
+			const score = scoreCollection(
+				small,
+				small.albums.map((album) => owned(album.albumUid))
+			);
 
-		expect(cheap.bonusPoints).toBe(38);
-		expect(prized.bonusPoints).toBe(380);
-	});
-
-	it('falls back to the rule when the curator named no base', () => {
-		const result = score(ALL_FOUR, true, null);
-
-		expect(result.derived).toBe(true);
-		expect(result.basePoints).toBe(derivedBasePoints(FOUR.albums, NOW));
-	});
-
-	/*
-	 * The promise "buy this record and you hold N points" is made from a
-	 * score computed while the record is still missing, so `totalPoints` has
-	 * to be what `earnedPoints` becomes once it arrives — and a floor, never
-	 * a boast: the copy that completes the set may be a prized pressing and
-	 * raise the bonus further.
-	 */
-	it('shows, while a record is missing, the least completing it earns', () => {
-		const missingOne = [owned('a', ALBUM_YEAR), owned('b'), owned('c')];
-		const promised = score(missingOne, false);
-
-		expect(promised.earnedPoints).toBe(0);
-		// The plainest copy of the last record earns exactly what was shown.
-		expect(score([...missingOne, owned('d')], true).earnedPoints).toBe(
-			promised.totalPoints
-		);
-		// A prized one earns more — the number shown is never a boast.
-		expect(
-			score(
-				[
-					...missingOne,
-					owned('d', ALBUM_YEAR, [
-						FormatDescriptionEnum.limitedEdition,
-					]),
-				],
-				true
-			).earnedPoints
-		).toBeGreaterThan(promised.totalPoints);
-	});
-
-	it('scores an empty collection at nothing, earned or not', () => {
-		const empty = scoreCollection(resolved([]), [], null, false, NOW);
-
-		expect([empty.totalPoints, empty.earnedPoints]).toEqual([0, 0]);
+			expect(score).toMatchObject({
+				suspended: true,
+				basePoints: 0,
+				totalPoints: 0,
+				earnedPoints: 0,
+			});
+		}
 	});
 });

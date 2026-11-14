@@ -112,27 +112,21 @@
 		</div>
 
 		<div class="mc-field">
-			<label for="base-points">{{
+			<span class="mc-field-label">{{
 				'ui.musicCollectionEdit.points' | transloco
-			}}</label>
-			<input
-				id="base-points"
-				type="number"
-				min="0"
-				[placeholder]="store.derivedPoints()"
-				[value]="form.basePoints"
-				(input)="
-					store.setField({
-						basePoints: value($event),
-					})
-				"
-			/>
+			}}</span>
+			<output class="base-points">{{ store.derivedPoints() }}</output>
 			<small>
-				{{
-					store.derivedPoints()
-						| mcPlural: 'ui.musicCollectionEdit.pointsHint'
-				}}
+				{{ 'ui.musicCollectionEdit.pointsHint' | transloco }}
 			</small>
+			@if (store.tooFewAlbums()) {
+				<small class="too-few" role="alert">
+					{{
+						'ui.musicCollectionEdit.tooFewAlbums'
+							| transloco: { count: store.previewTotal() }
+					}}
+				</small>
+			}
 		</div>
 
 		<div class="mc-field">

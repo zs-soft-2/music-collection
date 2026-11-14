@@ -171,25 +171,41 @@
 					{{
 						collection.completed
 							? t('ui.collectionDetailPage.earned')
-							: t('home.weekly.worth')
+							: collection.owned
+								? t('ui.collectionDetailPage.atLeast')
+								: t('ui.collectionDetailPage.baseValue')
 					}}
 				</p>
 
-				@if (collection.bonusPoints) {
-					<p class="parts">
+				<p class="factors">
+					<span class="factor">
+						×{{ collection.sizeFactor | mcNumber: '1.2-2' }} ·
 						{{
-							t('page.collections.basePoints', {
-								points:
-									collection.points - collection.bonusPoints,
-							})
+							collection.total
+								| mcPlural: 'ui.collectionScore.records'
 						}}
-						<span class="bonus">{{
-							t('page.collections.bonusPoints', {
-								points: collection.bonusPoints,
-							})
-						}}</span>
-					</p>
-				}
+					</span>
+					@if (collection.completed) {
+						<span
+							class="factor"
+							[class.is-uniform]="collection.uniformMedia"
+						>
+							@if (collection.uniformMedia) {
+								{{
+									t(
+										'ui.collectionScore.uniform.' +
+											collection.uniformMedia
+									)
+								}}
+								×{{
+									collection.formatFactor | mcNumber: '1.0-2'
+								}}
+							} @else {
+								{{ t('ui.collectionScore.mixed') }}
+							}
+						</span>
+					}
+				</p>
 
 				@if (crowd.finishers.length || crowd.hunters.length) {
 					<ul class="faces">
@@ -425,35 +441,11 @@
 						<mc-collection-crowd class="panel" [crowd]="crowd" />
 					}
 
-					@if (collection.highlights.length) {
-						<section class="panel" aria-labelledby="score-title">
-							<h2 class="panel-title" id="score-title">
-								{{ t('ui.collectionDetailPage.score.title') }}
-							</h2>
-							<p class="panel-lead">
-								{{ t('ui.collectionDetailPage.score.lead') }}
-							</p>
-
-							<ul class="highlights">
-								@for (
-									highlight of collection.highlights;
-									track highlight.albumUid
-								) {
-									<li>
-										<span class="highlight-album">{{
-											highlight.albumName
-										}}</span>
-										<span class="highlight-points"
-											>+{{ highlight.points }}</span
-										>
-										<span class="highlight-reasons">{{
-											highlight.reasons.join(' · ')
-										}}</span>
-									</li>
-								}
-							</ul>
-						</section>
-					}
+					<mc-collection-score
+						class="panel"
+						[score]="collection.score"
+						[signedIn]="store.isSignedIn()"
+					/>
 				</aside>
 			</div>
 		}

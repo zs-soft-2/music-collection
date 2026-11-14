@@ -18,6 +18,8 @@ import {
 	DocumentCategoryEnum,
 	DocumentEntity,
 	DocumentStateService,
+	ReleaseEntity,
+	ReleaseStateService,
 	isWithdrawnDocument,
 	liveDocuments,
 } from '@music-collection/api';
@@ -127,21 +129,28 @@ export class MusicCollectionEffect {
 		CollectionItemStateService
 	);
 	private readonly documentStateService = inject(DocumentStateService);
+	private readonly releaseStateService = inject(ReleaseStateService);
 
 	/** Every published collection with the collector's progress on it. */
 	public listStandings$(): Observable<MusicCollectionStanding[]> {
 		return combineLatest([
 			this.repository.listPublished$(),
 			this.collectionItemStateService.selectLoadedEntities$(),
+			this.releases$(),
 		]).pipe(
-			switchMap(([collections, items]) =>
+			switchMap(([collections, items, releases]) =>
 				this.catalog$(collections).pipe(
 					map((catalog) => {
-						const copies = toOwnedCopies(items);
+						const copies = toOwnedCopies(items, releases);
 
-						return collections.map((collection) =>
-							this.toStanding(collection, catalog, copies)
-						);
+						// A rule that reaches fewer albums than a collection
+						// needs is at rest: it is listed to nobody until the
+						// catalog fills it again.
+						return collections
+							.map((collection) =>
+								this.toStanding(collection, catalog, copies)
+							)
+							.filter((standing) => !standing.score.suspended);
 					})
 				)
 			)
@@ -155,15 +164,16 @@ export class MusicCollectionEffect {
 		return combineLatest([
 			this.repository.loadBySlug$(slug),
 			this.collectionItemStateService.selectLoadedEntities$(),
+			this.releases$(),
 		]).pipe(
-			switchMap(([collection, items]) =>
+			switchMap(([collection, items, releases]) =>
 				this.catalog$(collection ? [collection] : []).pipe(
 					map((catalog) =>
 						collection
 							? this.toStanding(
 									collection,
 									catalog,
-									toOwnedCopies(items)
+									toOwnedCopies(items, releases)
 								)
 							: null
 					)
@@ -552,6 +562,20 @@ export class MusicCollectionEffect {
 		return this.repository.loadProbeSetup$();
 	}
 
+	/**
+	 * The catalog's pressings, for the rarity each one carries today. A copy
+	 * keeps the pressing as it was when the copy was filed, and a tier worked
+	 * out since would never reach the score from there.
+	 *
+	 * Starts empty rather than waiting: a shelf can be scored from the copies'
+	 * own snapshots, and the tiers correct it when the pressings arrive.
+	 */
+	private releases$(): Observable<ReleaseEntity[]> {
+		return this.releaseStateService
+			.selectEntities$()
+			.pipe(startWith([] as ReleaseEntity[]));
+	}
+
 	private toStanding(
 		collection: MusicCollectionEntity,
 		catalog: MusicCollectionCatalog,
@@ -567,12 +591,7 @@ export class MusicCollectionEffect {
 			collection,
 			resolved,
 			progress,
-			score: scoreCollection(
-				resolved,
-				copies,
-				collection.basePoints,
-				progress.completed
-			),
+			score: scoreCollection(resolved, copies),
 		};
 
 		run.end({ matched: resolved.total });

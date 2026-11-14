@@ -820,17 +820,19 @@
 				"one": "{{count}} Punkt erreicht",
 				"other": "{{count}} Punkte erreicht"
 			},
-			"pointsWorth": {
-				"one": "{{count}} Punkt wert, wenn vollständig",
-				"other": "{{count}} Punkte wert, wenn vollständig"
-			},
-			"basePoints": "{{points}} Grundpunkte",
-			"bonusPoints": "+ {{points}} für deine Pressungen",
 			"group": {
 				"curated": "Collections",
 				"curatedLead": "Von einem Kurator zusammengestellte Plattenmengen — eine Szene, ein Jahr, ein Stil.",
 				"discography": "Diskografien",
 				"discographyLead": "Eine Band auf einmal: die Studioalben, und alles andere, was sie daneben veröffentlicht hat."
+			},
+			"pointsAtLeast": {
+				"one": "vollständig mindestens {{count}} Punkt wert",
+				"other": "vollständig mindestens {{count}} Punkte wert"
+			},
+			"pointsBase": {
+				"one": "Grundwert: {{count}} Punkt",
+				"other": "Grundwert: {{count}} Punkte"
 			}
 		},
 		"daily-question": {
@@ -1370,10 +1372,8 @@
 				"finished": "vollendet",
 				"hunting": "sammelt sie"
 			},
-			"score": {
-				"title": "Was die Punkte brachte",
-				"lead": "Diese Platten machen die Sammlung wertvoller."
-			}
+			"atLeast": "so viel ist sie vollständig mindestens wert",
+			"baseValue": "Grundwert — dein Regal kann mehr daraus machen"
 		},
 		"copyPhotos": {
 			"no-photos-of-this": "Keine Fotos von diesem Exemplar.",
@@ -1737,7 +1737,9 @@
 			"discogs-id": "Discogs-ID",
 			"the-loaded-data-matches": "Die geladenen Daten stimmen mit dem Formular überein.",
 			"cancel3": "Abbrechen",
-			"apply-to-form": "Ins Formular übernehmen"
+			"apply-to-form": "Ins Formular übernehmen",
+			"edition-size": "Auflage",
+			"edition-size-hint": "Wie viele Exemplare dieser Pressung hergestellt wurden, sofern die Platte es angibt (nummerierte oder limitierte Auflage). Die Seltenheitsstufe rechnet damit."
 		},
 		"releaseTable": {
 			"no-releases-found": "Keine Veröffentlichungen gefunden.",
@@ -2287,7 +2289,8 @@
 			"delete2": "Löschen",
 			"whoever-earned-its-badge": "? Wer ihr Abzeichen verdient hat, verliert es, und das lässt sich hier nicht rückgängig machen.",
 			"cancel": "Abbrechen",
-			"add-discography": "Diskografie anlegen"
+			"add-discography": "Diskografie anlegen",
+			"suspended": "Ruht"
 		},
 		"musicCollectionEdit": {
 			"a-collection-is-a": "Eine Kollektion ist eine Regel, keine Liste: was zu ihr gehört, wird bei jedem Lesen gegen den Katalog aufgelöst.",
@@ -2339,10 +2342,7 @@
 			"points-and-only-once": "Punkte, und erst, wenn ein Sammler sie alle besitzt. Die Originalpressung einer alten Platte zu besitzen hebt ihn weiter.",
 			"cancel": "Abbrechen",
 			"andMore": "…und {{count}} weitere.",
-			"pointsHint": {
-				"one": "Was das Vollenden wert ist. Leer gelassen entscheidet die Regel — wie viele Platten sie verlangt und wie alt sie sind — was derzeit {{count}} Punkt wäre.",
-				"other": "Was das Vollenden wert ist. Leer gelassen entscheidet die Regel — wie viele Platten sie verlangt und wie alt sie sind — was derzeit {{count}} Punkte wären."
-			},
+			"pointsHint": "Grundwert: so viel ist die Kollektion mit dem bescheidensten Regal wert. Er ergibt sich aus der Zahl der Platten und lässt sich nicht eintragen; die Punkte eines Sammlers hängen von den Tonträgern und der Seltenheit der Pressungen ab.",
 			"previewTotal": {
 				"one": "{{count}} Platte",
 				"other": "{{count}} Platten"
@@ -2369,7 +2369,8 @@
 			"looks": "Aussehen",
 			"badge": "Abzeichen",
 			"the-look": "Das Aussehen",
-			"the-cover-stands-behind": "Das Titelbild steht hinter der Sammlung, wo immer sie gezeigt wird: auf ihrer Karte und über ihrer eigenen Seite."
+			"the-cover-stands-behind": "Das Titelbild steht hinter der Sammlung, wo immer sie gezeigt wird: auf ihrer Karte und über ihrer eigenen Seite.",
+			"tooFewAlbums": "Auf die Filter passen {{count}} Platte(n). Eine Kollektion lässt sich ab 2 Platten veröffentlichen; als Entwurf kann sie trotzdem gespeichert werden."
 		},
 		"profileSharing": {
 			"page": "Öffentliche Sammlerseite",
@@ -3091,6 +3092,89 @@
 			"generate": "Clip erzeugen",
 			"generate-again": "Neuen Clip erzeugen",
 			"left-today": "heute noch {{count}} Clips"
+		},
+		"collectionScore": {
+			"title": "So entsteht die Punktzahl",
+			"signIn": "Melde dich an, dann rechnen wir mit deinem eigenen Regal.",
+			"albumPoints": "Punkte der Platten",
+			"modestShelf": "Mit dem bescheidensten Regal ({{count}} × 5)",
+			"sizeFactor": "Größen-Multiplikator ({{count}} Platten)",
+			"formatFactor": "Format-Multiplikator",
+			"mixed": "Gemischte Reihe",
+			"unfinished": "noch nicht vollständig",
+			"total": "Gesamt",
+			"atLeast": "Mindestens, wenn vollständig",
+			"baseValue": "Grundwert",
+			"points": {
+				"one": "{{count}} Punkt",
+				"other": "{{count}} Punkte"
+			},
+			"records": {
+				"one": "{{count}} Platte",
+				"other": "{{count}} Platten"
+			},
+			"uniform": {
+				"vinyl": "Nur Vinyl",
+				"cd": "Nur CD",
+				"cassette": "Nur Kassette"
+			},
+			"uniformDone": "Jede Platte ist auf demselben Tonträger vorhanden.",
+			"tip": {
+				"title": "{{media}}: mindestens {{points}} Punkte (+{{gain}})",
+				"missing": {
+					"one": "Noch {{count}} Platte fehlt auf diesem Tonträger:",
+					"other": "Noch {{count}} Platten fehlen auf diesem Tonträger:"
+				}
+			},
+			"perAlbum": "Platte für Platte",
+			"media": {
+				"vinyl": "Vinyl",
+				"cd": "CD",
+				"cassette": "Kassette",
+				"boxset": "Boxset",
+				"dvd": "DVD",
+				"all": "Unbekannter Tonträger"
+			},
+			"rarity": {
+				"common": "Häufig",
+				"uncommon": "Seltener",
+				"rare": "Selten",
+				"veryRare": "Sehr selten",
+				"ultraRare": "Kuriosität"
+			},
+			"copies": {
+				"one": "{{count}} Exemplar",
+				"other": "dieses zählt von {{count}} Exemplaren"
+			},
+			"missing": "Fehlt im Regal — mindestens 5 Punkte wert",
+			"more": {
+				"one": "Noch {{count}} Platte",
+				"other": "Noch {{count}} Platten"
+			},
+			"note": "Punkte und Abzeichen gibt es nur für die vollständige Kollektion. Was eine Platte kostet, zählt nicht."
+		},
+		"rarityBadge": {
+			"generic": "Allgemeines Exemplar — gib die genaue Pressung an, damit ihre Seltenheit zählt",
+			"pending": "Die Seltenheit wurde noch nicht berechnet",
+			"manual": "Von einem Kurator festgelegt",
+			"catalog": "Nach den Tags des Katalogs",
+			"discogs": {
+				"one": "{{count}} Discogs-Sammler hat sie",
+				"other": "{{count}} Discogs-Sammler haben sie"
+			},
+			"edition": {
+				"one": "{{count}} Exemplar wurde hergestellt",
+				"other": "{{count}} Exemplare wurden hergestellt"
+			}
+		},
+		"rarityAdmin": {
+			"title": "Seltenheit überschreiben",
+			"lead": "Der Server berechnet die Stufe aus der Auflage und der Zahl der Discogs-Sammler. Wenn du es besser weißt, lege sie hier fest — eine Begründung ist Pflicht, damit der nächste Kurator sieht, warum.",
+			"tier": "Stufe",
+			"note": "Begründung",
+			"save": "Überschreibung speichern",
+			"clear": "Überschreibung entfernen",
+			"refresh": "Jetzt neu berechnen"
 		}
 	},
 	"admin": {

@@ -1,5 +1,5 @@
-import { CollectionItemEntity } from '@music-collection/api';
-import { FormatDescriptionEnum, MediaEnum } from '@music-collection/common/api';
+import { CollectionItemEntity, ReleaseEntity } from '@music-collection/api';
+import { MediaEnum } from '@music-collection/common/api';
 
 import { toOwnedCopies } from './music-collection.mapper';
 
@@ -20,8 +20,8 @@ const copy = (
 const bare = (albumUid: string) => ({
 	albumUid,
 	disposedAt: null,
-	releaseYear: null,
-	editions: [],
+	media: MediaEnum.all,
+	rarity: 'common',
 });
 
 describe('toOwnedCopies', () => {
@@ -51,77 +51,56 @@ describe('toOwnedCopies', () => {
 		]);
 	});
 
-	it('reads the pressing facts the scoring weighs', () => {
+	it('reads the medium the copy is on', () => {
 		const copies = toOwnedCopies([
-			copy('a', 'new-order', null, {
-				date: new Date('1988-05-05'),
-				formatDescription: [
-					FormatDescriptionEnum.limitedEdition,
-					FormatDescriptionEnum.g180,
-				],
-			}),
+			copy('a', 'new-order', null, { media: MediaEnum.cd }),
 		]);
 
-		expect(copies[0]).toEqual({
-			albumUid: 'new-order',
-			disposedAt: null,
-			releaseYear: 1988,
-			editions: [
-				FormatDescriptionEnum.limitedEdition,
-				FormatDescriptionEnum.g180,
+		expect(copies[0].media).toBe(MediaEnum.cd);
+	});
+
+	it('weighs a copy that names no medium as the least of them', () => {
+		expect(toOwnedCopies([copy('a', 'new-order')])[0].media).toBe(
+			MediaEnum.all
+		);
+	});
+
+	it('reads the rarity the server worked out for the pressing', () => {
+		const copies = toOwnedCopies([
+			copy('a', 'new-order', null, { rarity: { tier: 'rare' } }),
+		]);
+
+		expect(copies[0].rarity).toBe('rare');
+	});
+
+	it('takes the tier from the catalog rather than the copy that grew old', () => {
+		const copies = toOwnedCopies(
+			[
+				copy('a', 'new-order', null, {
+					uid: 'pressing',
+					rarity: { tier: 'rare' },
+				}),
 			],
-		});
+			[{ uid: 'pressing', rarity: { tier: 'veryRare' } } as ReleaseEntity]
+		);
+
+		expect(copies[0].rarity).toBe('veryRare');
 	});
 
-	it('takes a single description as well as a list', () => {
+	it('calls a pressing nobody has weighed yet common', () => {
+		expect(toOwnedCopies([copy('a', 'new-order')])[0].rarity).toBe(
+			'common'
+		);
+	});
+
+	it('calls a generic copy common, whatever it carries', () => {
 		const copies = toOwnedCopies([
 			copy('a', 'new-order', null, {
-				formatDescription: FormatDescriptionEnum.reissue,
+				generic: true,
+				rarity: { tier: 'ultraRare' },
 			}),
 		]);
 
-		expect(copies[0].editions).toEqual([FormatDescriptionEnum.reissue]);
-	});
-
-	it('drops a tag the catalog does not know', () => {
-		const copies = toOwnedCopies([
-			copy('a', 'new-order', null, {
-				formatDescription: [
-					'coloured vinyl',
-					FormatDescriptionEnum.boxSet,
-				],
-			}),
-		]);
-
-		expect(copies[0].editions).toEqual([FormatDescriptionEnum.boxSet]);
-	});
-
-	it('keeps the gatefold jacket, which the shelf measures by', () => {
-		const copies = toOwnedCopies([
-			copy('a', 'new-order', null, {
-				formatDescription: [FormatDescriptionEnum.gatefold],
-			}),
-		]);
-
-		expect(copies[0].editions).toEqual([FormatDescriptionEnum.gatefold]);
-	});
-
-	it('counts a copy filed under the box set medium as a box set', () => {
-		const copies = toOwnedCopies([
-			copy('a', 'new-order', null, { media: MediaEnum.boxset }),
-		]);
-
-		expect(copies[0].editions).toEqual([FormatDescriptionEnum.boxSet]);
-	});
-
-	it('does not tag a box set twice when it is also described as one', () => {
-		const copies = toOwnedCopies([
-			copy('a', 'new-order', null, {
-				media: MediaEnum.boxset,
-				formatDescription: [FormatDescriptionEnum.boxSet],
-			}),
-		]);
-
-		expect(copies[0].editions).toEqual([FormatDescriptionEnum.boxSet]);
+		expect(copies[0].rarity).toBe('common');
 	});
 });

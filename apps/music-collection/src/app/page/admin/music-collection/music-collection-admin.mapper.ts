@@ -2,12 +2,13 @@ import { slugify } from '@music-collection/common/engine';
 import { Translator } from '@music-collection/core/i18n';
 import {
 	EnumCriterion,
+	MUSIC_COLLECTION_MINIMUM_ALBUMS,
 	MusicCollectionCriteria,
 	MusicCollectionDraft,
 	MusicCollectionEntity,
 } from '@music-collection/domain/music-collection/api';
 import { MusicCollectionResolution } from '@music-collection/domain/music-collection/core';
-import { derivedBasePoints } from '@music-collection/domain/music-collection/engine';
+import { basePoints } from '@music-collection/domain/music-collection/engine';
 
 import {
 	CollectionForm,
@@ -34,19 +35,6 @@ import {
  */
 
 const trimmed = (value: string): string | null => value.trim() || null;
-
-/**
- * The curator's score, or null to leave it to the rule. Anything that is not
- * a whole number is left to the rule too — the server would refuse it, and
- * "no number" is what a half-typed one means anyway.
- */
-export function toBasePoints(value: string): number | null {
-	const points = Number(value.trim());
-
-	return value.trim() && Number.isSafeInteger(points) && points >= 0
-		? points
-		: null;
-}
 
 function toEnumCriterion(
 	criterion: EnumCriterionForm
@@ -140,8 +128,6 @@ export function toCriteriaForm(
 export function toForm(collection: MusicCollectionEntity): CollectionForm {
 	return {
 		...emptyCollectionForm(),
-		basePoints:
-			collection.basePoints === null ? '' : String(collection.basePoints),
 		name: collection.name,
 		slug: collection.slug,
 		description: collection.description ?? '',
@@ -177,7 +163,6 @@ export function toDraft(form: CollectionForm): MusicCollectionDraft {
 					artworkUrl: trimmed(form.badgeArtworkUrl),
 				}
 			: null,
-		basePoints: toBasePoints(form.basePoints),
 		parentUid: trimmed(form.parentUid),
 		group: form.group || null,
 		status: form.status,
@@ -276,8 +261,10 @@ export function toRows(
 			status: collection.status,
 			visibility: collection.visibility,
 			total: resolved.total,
-			points: collection.basePoints ?? derivedBasePoints(resolved.albums),
-			derivedPoints: collection.basePoints === null,
+			points: basePoints(resolved.total),
+			suspended:
+				collection.status === 'published' &&
+				resolved.total < MUSIC_COLLECTION_MINIMUM_ALBUMS,
 			badgeName: collection.badge?.name ?? null,
 			summary: describeCriteria(collection.criteria, t),
 			parentName: collection.parentUid

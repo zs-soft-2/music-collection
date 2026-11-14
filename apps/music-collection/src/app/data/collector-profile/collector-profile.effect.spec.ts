@@ -55,7 +55,6 @@ function collection(): MusicCollectionEntity {
 		icon: null,
 		criteria: {},
 		badge: null,
-		basePoints: 100,
 		parentUid: null,
 		group: null,
 		status: 'published',

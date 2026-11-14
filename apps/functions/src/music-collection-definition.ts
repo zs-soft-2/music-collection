@@ -52,8 +52,6 @@ const MAX_NAME_LENGTH = 120;
 const MAX_TEXT_LENGTH = 2000;
 /** Egy lista ennyi elemet vehet fel; ennél a szabály már nem szabály. */
 const MAX_LIST_LENGTH = 200;
-/** Az alappontszám felső határa; ennél a pont már nem mond semmit. */
-const MAX_BASE_POINTS = 1_000_000;
 /** A kiadás éve; a katalógus ennél régebbi lemezt nem ismer. */
 const MIN_YEAR = 1000;
 const MAX_YEAR = 3000;
@@ -83,8 +81,6 @@ export interface MusicCollectionCriteria {
 export interface MusicCollectionDefinition {
 	name: string;
 	slug: string;
-	/** Null: a pontszámot a szabály adja (albumszám és méret). */
-	basePoints: number | null;
 	description: string | null;
 	coverImageUrl: string | null;
 	icon: string | null;
@@ -183,26 +179,6 @@ function year(value: unknown, field: string): number {
 		value > MAX_YEAR
 	) {
 		invalid(`Érvénytelen évszám: ${field}.`);
-	}
-
-	return value;
-}
-
-/**
- * A kurátor pontszáma, vagy null. A nullát nem utasítjuk vissza: egy
- * pontatlan collection nulla pontot érjen, ne egy hibaüzenetet.
- */
-function basePoints(value: unknown): number | null {
-	if (value === undefined || value === null || value === '') {
-		return null;
-	}
-	if (
-		typeof value !== 'number' ||
-		!Number.isSafeInteger(value) ||
-		value < 0 ||
-		value > MAX_BASE_POINTS
-	) {
-		invalid('Érvénytelen alappontszám.');
 	}
 
 	return value;
@@ -340,6 +316,9 @@ export function prepareDefinition(data: unknown): MusicCollectionDefinition {
 			'icon',
 			'criteria',
 			'badge',
+			// Pontértéket senki nem ír be: a collection értéke a képletből
+			// adódik. A kulcsot a régi kliens még elküldi, ezért nem hiba —
+			// de a dokumentumba nem kerül be.
 			'basePoints',
 			'parentUid',
 			'group',
@@ -379,7 +358,6 @@ export function prepareDefinition(data: unknown): MusicCollectionDefinition {
 	return {
 		name: text(source['name'], 'név', MAX_NAME_LENGTH),
 		slug,
-		basePoints: basePoints(source['basePoints']),
 		description: optionalText(source['description'], 'leírás'),
 		coverImageUrl: optionalText(source['coverImageUrl'], 'borító'),
 		icon: optionalText(source['icon'], 'ikon', MAX_NAME_LENGTH),

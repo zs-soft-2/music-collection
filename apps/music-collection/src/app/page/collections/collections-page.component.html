@@ -255,11 +255,36 @@
 																| mcPlural
 																	: 'page.collections.pointsEarned'
 														}}
-													} @else {
+														@if (
+															collection.uniformMedia
+														) {
+															<span
+																class="uniform"
+																>{{
+																	'ui.collectionScore.uniform.' +
+																		collection.uniformMedia
+																		| transloco
+																}}
+																×{{
+																	collection.formatFactor
+																		| mcNumber
+																			: '1.0-2'
+																}}</span
+															>
+														}
+													} @else if (
+														collection.owned
+													) {
 														{{
 															collection.points
 																| mcPlural
-																	: 'page.collections.pointsWorth'
+																	: 'page.collections.pointsAtLeast'
+														}}
+													} @else {
+														{{
+															collection.basePoints
+																| mcPlural
+																	: 'page.collections.pointsBase'
 														}}
 													}
 												</p>

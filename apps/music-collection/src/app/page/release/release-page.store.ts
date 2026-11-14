@@ -1,8 +1,9 @@
-import { map, of, pipe, switchMap, tap } from 'rxjs';
+import { Observable, exhaustMap, map, of, pipe, switchMap, tap } from 'rxjs';
 
 import { computed, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { ReleaseEntity } from '@music-collection/api';
+import { ReleaseEntity, ReleaseRarity } from '@music-collection/api';
+import { RarityTier } from '@music-collection/common/api';
 import { TextService } from '@music-collection/core/i18n';
 import { tapResponse } from '@ngrx/operators';
 import {
@@ -29,6 +30,16 @@ interface ReleasePageState {
 	/** Every pressing of the same album, this one among them. */
 	pressings: ReleaseEntity[];
 	loading: boolean;
+	/** A curator's change to the rarity is on its way to the server. */
+	raritySaving: boolean;
+	/** What the server said when it refused one. */
+	rarityError: string | null;
+}
+
+/** A curator's tier for the pressing; `tier: null` takes the override back. */
+export interface RarityOverrideChange {
+	tier: RarityTier | null;
+	note: string;
 }
 
 const initialState: ReleasePageState = {
@@ -36,6 +47,8 @@ const initialState: ReleasePageState = {
 	release: null,
 	pressings: [],
 	loading: true,
+	raritySaving: false,
+	rarityError: null,
 };
 
 /** Where a pressing can be read up on outside the catalog. */
@@ -104,38 +117,116 @@ export const ReleasePageStore = signalStore(
 			store,
 			route = inject(ActivatedRoute),
 			releaseDetailsEffect = inject(ReleaseDetailsEffect)
-		) => ({
-			/** Follows the `:releaseId` route parameter. */
-			loadRelease: rxMethod<void>(
-				pipe(
-					switchMap(() => route.paramMap),
-					map((params) => params.get('releaseId') ?? ''),
-					tap((releaseId) =>
-						patchState(store, {
-							releaseId,
-							release: null,
-							pressings: [],
-							loading: true,
-						})
-					),
-					switchMap((releaseId) =>
-						releaseDetailsEffect.load$(releaseId).pipe(
-							tapResponse({
-								next: (details) =>
-									patchState(store, {
-										...details,
-										loading: false,
-									}),
-								error: (error) => {
-									console.error(error);
-									patchState(store, { loading: false });
-								},
+		) => {
+			/**
+			 * One change to the rarity at a time, and the page shows the tier
+			 * the server answered with — it is the server's to decide, so
+			 * nothing is assumed about it here.
+			 */
+			const changeRarity = <T>(
+				ask: (change: T) => Observable<ReleaseRarity>,
+				after: (release: ReleaseEntity, change: T) => ReleaseEntity
+			) =>
+				rxMethod<T>(
+					pipe(
+						tap(() =>
+							patchState(store, {
+								raritySaving: true,
+								rarityError: null,
 							})
+						),
+						exhaustMap((change) =>
+							ask(change).pipe(
+								tapResponse({
+									next: (rarity) => {
+										const release = store.release();
+
+										patchState(store, {
+											release: release && {
+												...after(release, change),
+												rarity,
+											},
+											raritySaving: false,
+										});
+									},
+									error: (error: unknown) => {
+										console.error(error);
+										patchState(store, {
+											raritySaving: false,
+											rarityError:
+												error instanceof Error
+													? error.message
+													: String(error),
+										});
+									},
+								})
+							)
 						)
 					)
-				)
-			),
-		})
+				);
+
+			return {
+				/** A curator's own tier, or taking it back. */
+				overrideRarity: changeRarity<RarityOverrideChange>(
+					({ tier, note }) =>
+						releaseDetailsEffect.overrideRarity$(
+							store.releaseId(),
+							tier,
+							note
+						),
+					(release, { tier, note }) => ({
+						...release,
+						rarityOverride:
+							tier === null
+								? null
+								: {
+										tier,
+										note,
+										byUserId:
+											release.rarityOverride?.byUserId ??
+											'',
+										at: Date.now(),
+									},
+					})
+				),
+				/** Works the tier out again now. */
+				refreshRarity: changeRarity<void>(
+					() =>
+						releaseDetailsEffect.refreshRarity$(store.releaseId()),
+					(release) => release
+				),
+				/** Follows the `:releaseId` route parameter. */
+				loadRelease: rxMethod<void>(
+					pipe(
+						switchMap(() => route.paramMap),
+						map((params) => params.get('releaseId') ?? ''),
+						tap((releaseId) =>
+							patchState(store, {
+								releaseId,
+								release: null,
+								pressings: [],
+								loading: true,
+							})
+						),
+						switchMap((releaseId) =>
+							releaseDetailsEffect.load$(releaseId).pipe(
+								tapResponse({
+									next: (details) =>
+										patchState(store, {
+											...details,
+											loading: false,
+										}),
+									error: (error) => {
+										console.error(error);
+										patchState(store, { loading: false });
+									},
+								})
+							)
+						)
+					)
+				),
+			};
+		}
 	),
 	withHooks({
 		onInit(store) {

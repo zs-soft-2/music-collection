@@ -1,7 +1,8 @@
 import {
 	CountryEnum,
-	FormatDescriptionEnum,
 	FormatEnum,
+	MediaEnum,
+	RarityTier,
 	StyleName,
 } from '@music-collection/common/api';
 
@@ -75,8 +76,11 @@ export interface OwnedCopy {
 	albumUid: string;
 	/** Null while owned; the epoch ms it left the collection once gone. */
 	disposedAt: number | null;
-	/** Year of this pressing; null when the catalog does not know it. */
-	releaseYear: number | null;
-	/** `limited edition`, `picture disc`, `reissue`… as the catalog tags them. */
-	editions: FormatDescriptionEnum[];
+	/** What this copy is on: the medium decides what the album is worth. */
+	media: MediaEnum;
+	/**
+	 * How rare the pressing is. A generic copy — "I have it on vinyl" — and a
+	 * pressing nobody has weighed yet are common: rarity is shown, not assumed.
+	 */
+	rarity: RarityTier;
 }
