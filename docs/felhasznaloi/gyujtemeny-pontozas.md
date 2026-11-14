@@ -271,6 +271,11 @@ ritkaságot jelent.
 **Javaslat:** B, a ticket részeként futó kalibráló riport alapján; a cél, hogy a katalógus kiadásainak nagyjából
 60%-a Gyakori, 20%-a Ritkább, 12%-a Ritka, 6%-a Nagyon ritka és 2%-a Kuriózum legyen.
 
+**Állás (2026-11-14):** a riport lefutott a dev katalóguson. A 712 kiadásból 11-nek van Discogs-azonosítója
+(9 vinyl, 2 box set; CD és kazetta egy sem), ebből küszöböt hangolni nem lehet. A kiinduló értékek maradnak, a
+kérdés nyitva. Amíg a kiadások nincsenek Discogs-hoz kötve, a szintjük a címkékből adódik, legfeljebb Ritka
+szintig; a kalibrálás előfeltétele ezért a Discogs-azonosítók pótlása.
+
 ### Q-SCORE-003: Box set és DVD
 
 A box set hordozóként szerepel a katalógusban, de nem mondja meg, vinyl vagy CD van-e benne.
