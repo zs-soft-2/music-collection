@@ -245,7 +245,7 @@ export const MusicCollectionEditStore = signalStore(
 		),
 		/**
 		 * The rule reaches fewer albums than a collection needs. A draft may
-		 * still be saved that way; publishing it is what the server refuses.
+		 * still be saved that way; publishing it is what `canSave` refuses.
 		 */
 		tooFewAlbums: computed(
 			() =>
