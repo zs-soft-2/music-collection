@@ -21,6 +21,7 @@ szabályai: [`.specify/project/docs.md`](../.specify/project/docs.md).
 | Kölcsönadás (LOAN) | [kolcsonadas](felhasznaloi/kolcsonadas.md) | [kolcsonadas](technikai/architektura/kolcsonadas.md) | [kolcsonadas](ux/mobil/kolcsonadas.md) |
 | Napi kérdés (DAILY) | [napi-kerdes](felhasznaloi/napi-kerdes.md) | [napi-kerdes](technikai/architektura/napi-kerdes.md) | [napi-kerdes](ux/mobil/napi-kerdes.md) |
 | Katalógus-képek (IMG) | [katalogus-kepek](felhasznaloi/katalogus-kepek.md) | — | — |
+| Collection-pontozás (SCORE) | [gyujtemeny-pontozas](felhasznaloi/gyujtemeny-pontozas.md) | [gyujtemeny-pontozas](technikai/architektura/gyujtemeny-pontozas.md) | [gyujtemeny-pontozas](ux/web/gyujtemeny-pontozas.md) |
 
 ## Döntési rekordok
 
@@ -30,6 +31,7 @@ szabályai: [`.specify/project/docs.md`](../.specify/project/docs.md).
 | [ADR-002](technikai/adr/ADR-002-mobil-ag-ujraepitese-merge-helyett.md) | A mobil app újraépítése a dev-en, nem a `mobile` ág összefésülése | javasolt |
 | [ADR-003](technikai/adr/ADR-003-nativ-vonalkod-olvaso.md) | Natív vonalkód-olvasó plugin a mobilon | javasolt |
 | [ADR-004](technikai/adr/ADR-004-push-fcm-mindket-platformon.md) | Push értesítések FCM-en át, mindkét platformon | javasolt |
+| [ADR-005](technikai/adr/ADR-005-kiadas-ritkasaga-discogs-have-alapjan.md) | A kiadás ritkasága a Discogs „have” számából és a példányszámból | javasolt |
 
 ## Mobil app: feature-ök és ticketek
 
