@@ -1,7 +1,8 @@
+import { MediaEnum, RarityTier } from '@music-collection/common/api';
 import {
 	MusicCollectionGroup,
 	MusicCollectionMembership,
-	ScoreHighlight,
+	UniformMedia,
 } from '@music-collection/domain/music-collection/api';
 
 /**
@@ -42,12 +43,21 @@ export interface CollectionCardView {
 	/** 0–100. */
 	percentage: number;
 	completed: boolean;
-	/** What finishing it is worth, the collector's pressings included. */
+	/**
+	 * What finishing it is worth to this collector: the score once it is
+	 * complete, and the least it will come to until then.
+	 */
 	points: number;
 	/** What they hold right now: 0 until the collection is complete. */
 	earnedPoints: number;
-	/** How much of `points` the collector's own pressings added. */
-	bonusPoints: number;
+	/** What it is worth on the most modest shelf — the same for everyone. */
+	basePoints: number;
+	/** What the number of albums multiplies the score by. */
+	sizeFactor: number;
+	/** Above 1 only on a finished set that is all on one medium. */
+	formatFactor: number;
+	/** The medium of such a set; null on a mixed or unfinished one. */
+	uniformMedia: UniformMedia | null;
 	/** Covers of the first albums, for a collection without artwork. */
 	covers: string[];
 	/**
@@ -117,11 +127,53 @@ export interface CollectionBadgeView {
 	earned: boolean;
 }
 
+/** One album in the score's working: the copy that counts, and its points. */
+export interface CollectionScoreAlbumView {
+	albumUid: string;
+	albumName: string;
+	/** Null while the album is missing from the shelf. */
+	media: MediaEnum | null;
+	rarity: RarityTier | null;
+	points: number;
+	/** How many copies of it are on the shelf; the best one counts. */
+	copies: number;
+}
+
+/** A set of a piece within reach, in the collector's terms. */
+export interface CollectionScoreTipView {
+	media: UniformMedia;
+	/** The albums still missing on that medium, by name. */
+	albumNames: string[];
+	/** The least the set would be worth. */
+	minimumPoints: number;
+	/** How much that is above what the shelf is worth now. */
+	gain: number;
+}
+
+/**
+ * How the score comes about, line by line — so a collector can work the
+ * number out again from what stands next to it.
+ */
+export interface CollectionScoreView {
+	/** At least one album of the collection is on the shelf. */
+	started: boolean;
+	completed: boolean;
+	total: number;
+	basePoints: number;
+	albumPoints: number;
+	sizeFactor: number;
+	formatFactor: number;
+	uniformMedia: UniformMedia | null;
+	points: number;
+	albums: CollectionScoreAlbumView[];
+	/** The most valuable set of a piece within reach; null when none is. */
+	tip: CollectionScoreTipView | null;
+}
+
 export interface CollectionDetailView extends CollectionCardView {
 	badge: CollectionBadgeView | null;
 	albums: CollectionAlbumView[];
-	/** Which records raised the score, and why. */
-	highlights: ScoreHighlight[];
+	score: CollectionScoreView;
 }
 
 /**

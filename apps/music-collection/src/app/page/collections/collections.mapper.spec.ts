@@ -1,4 +1,4 @@
-import { EntityTypeEnum } from '@music-collection/common/api';
+import { EntityTypeEnum, MediaEnum } from '@music-collection/common/api';
 import {
 	BadgeImage,
 	MusicCollectionEntity,
@@ -17,6 +17,7 @@ import {
 	toCollectionDetail,
 	toCollectionGroups,
 	toCollectionRule,
+	toCollectionScore,
 	toNextAlbums,
 } from './collections.mapper';
 import {
@@ -67,7 +68,6 @@ function collection(
 		icon: null,
 		criteria: {},
 		badge: null,
-		basePoints: null,
 		parentUid: null,
 		group: null,
 		status: 'published',
@@ -118,11 +118,9 @@ function standing(
 			ownedAlbumUids.map((albumUid) => ({
 				albumUid,
 				disposedAt: null,
-				releaseYear: null,
-				editions: [],
-			})),
-			definition.basePoints,
-			progress.completed
+				media: MediaEnum.vinyl,
+				rarity: 'common' as const,
+			}))
 		),
 	};
 }
@@ -152,18 +150,22 @@ describe('toCollectionCard', () => {
 
 	it('shows what it is worth, but earns nothing while incomplete', () => {
 		const started = toCollectionCard(
-			standing([membership('a'), membership('b')], ['a'], {
-				basePoints: 500,
-			})
+			standing([membership('a'), membership('b')], ['a'])
 		);
 		const finished = toCollectionCard(
-			standing([membership('a'), membership('b')], ['a', 'b'], {
-				basePoints: 500,
-			})
+			standing([membership('a'), membership('b')], ['a', 'b'])
 		);
 
-		expect([started.points, started.earnedPoints]).toEqual([500, 0]);
-		expect([finished.points, finished.earnedPoints]).toEqual([500, 500]);
+		// A common vinyl and a missing album at the least it can be worth.
+		expect([started.points, started.earnedPoints]).toEqual([15, 0]);
+		// Two common vinyls, and the multiplier a set of a piece earns.
+		expect([finished.points, finished.earnedPoints]).toEqual([30, 30]);
+		expect(finished).toMatchObject({
+			basePoints: 10,
+			sizeFactor: 1,
+			formatFactor: 1.5,
+			uniformMedia: MediaEnum.vinyl,
+		});
 	});
 
 	it('names the badge the collection rewards', () => {
@@ -373,6 +375,58 @@ describe('toCollectionDetail', () => {
 		);
 
 		expect(view.badge?.artworkUrl).toBe('https://example.test/pin.png');
+	});
+});
+
+describe('toCollectionScore', () => {
+	const four = ['a', 'b', 'c', 'd'].map((uid) => membership(uid));
+
+	it('lays the sum out line by line for a finished set', () => {
+		const score = toCollectionScore(standing(four, ['a', 'b', 'c', 'd']));
+
+		expect(score).toMatchObject({
+			started: true,
+			completed: true,
+			total: 4,
+			basePoints: 25,
+			albumPoints: 40,
+			sizeFactor: 1.25,
+			formatFactor: 1.5,
+			uniformMedia: MediaEnum.vinyl,
+			points: 75,
+			tip: null,
+		});
+		expect(score.albums).toHaveLength(4);
+		expect(score.albums[0]).toMatchObject({
+			media: MediaEnum.vinyl,
+			rarity: 'common',
+			points: 10,
+			copies: 1,
+		});
+	});
+
+	it('names the albums a set of a piece still misses, and what it would add', () => {
+		const score = toCollectionScore(standing(four, ['a', 'b']));
+
+		// Two vinyls and two missing albums: (20 + 10) × 1.25 = 37.5.
+		expect(score.points).toBe(38);
+		expect(score.tip).toEqual({
+			media: MediaEnum.vinyl,
+			albumNames: [four[2].albumName, four[3].albumName],
+			minimumPoints: 75,
+			gain: 37,
+		});
+	});
+
+	it('is the base value, with nothing to work out, for an empty shelf', () => {
+		const score = toCollectionScore(standing(four, []));
+
+		expect(score).toMatchObject({
+			started: false,
+			completed: false,
+			points: 25,
+			tip: null,
+		});
 	});
 });
 

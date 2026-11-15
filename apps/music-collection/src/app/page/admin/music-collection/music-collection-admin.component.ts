@@ -144,15 +144,13 @@ import {
 												| transloco
 										}}
 									</span>
-									<span
-										class="points"
-										[class.is-derived]="row.derivedPoints"
-										[title]="
-											row.derivedPoints
-												? 'From the rule — no curated score'
-												: 'Set by the curator'
-										"
-									>
+									@if (row.suspended) {
+										<span class="suspended">{{
+											'ui.musicCollectionAdmin.suspended'
+												| transloco
+										}}</span>
+									}
+									<span class="points">
 										<strong>{{ row.points }}</strong>
 										{{
 											'ui.musicCollectionAdmin.pts'
@@ -371,10 +369,17 @@ import {
 			font-size: 0.85rem;
 			color: var(--mc-accent);
 			font-variant-numeric: tabular-nums;
+		}
 
-			&.is-derived {
-				color: var(--mc-text-muted);
-			}
+		.suspended {
+			padding: 0.1rem 0.5rem;
+			font-size: 0.7rem;
+			font-weight: 700;
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
+			color: var(--mc-status-warn);
+			border: 1px solid var(--mc-status-warn);
+			border-radius: 999px;
 		}
 
 		.actions {

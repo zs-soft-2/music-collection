@@ -1,4 +1,5 @@
 import {
+	MUSIC_COLLECTION_MINIMUM_ALBUMS,
 	MusicCollectionProgress,
 	OwnedCopy,
 	ResolvedMusicCollection,
@@ -46,7 +47,10 @@ export function compareWithCollection(
 
 	const total = resolved.total;
 	const ownedCount = ownedAlbumUidsOfCollection.length;
-	const completed = total > 0 && ownedCount === total;
+	// A rule reaching fewer albums than a collection needs is at rest: one
+	// record on a shelf is not a finished collection.
+	const completed =
+		total >= MUSIC_COLLECTION_MINIMUM_ALBUMS && ownedCount === total;
 
 	return {
 		collectionUid: resolved.collectionUid,

@@ -8,6 +8,12 @@ import {
 export type MusicCollectionStatus = 'draft' | 'published';
 
 /**
+ * The fewest albums a rule has to reach before it is a collection. One
+ * record is a record; a collection starts at two. There is no upper bound.
+ */
+export const MUSIC_COLLECTION_MINIMUM_ALBUMS = 2;
+
+/**
  * Which shelf of the list a collection stands on. `discography` is every
  * collection that follows one band's own output rather than a scene, a year
  * or a style: there is one pair of them per band the catalog knows two
@@ -168,11 +174,6 @@ export interface MusicCollection {
 	icon: string | null;
 	criteria: MusicCollectionCriteria;
 	badge: BadgeDefinition | null;
-	/**
-	 * What completing it is worth. Null leaves it to the rule: a collection
-	 * is then worth what its size says, and follows the catalog as it grows.
-	 */
-	basePoints: number | null;
 	/** Parent in the collection tree; null at the top. */
 	parentUid: string | null;
 	/**

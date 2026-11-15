@@ -16,6 +16,7 @@ import {
 	CollectionGroupView,
 	CollectionDetailView,
 	CollectionRuleRow,
+	CollectionScoreView,
 	NEXT_ALBUM_COUNT,
 	NextAlbumDemandView,
 	NextAlbumView,
@@ -79,7 +80,10 @@ export function toCollectionCard(
 		completed: progress.completed,
 		points: score.totalPoints,
 		earnedPoints: score.earnedPoints,
-		bonusPoints: score.bonusPoints,
+		basePoints: score.basePoints,
+		sizeFactor: score.sizeFactor,
+		formatFactor: score.formatFactor,
+		uniformMedia: score.uniformMedia,
 		covers: toCovers(standing),
 		// A definition written before the field existed has no group.
 		group: collection.group ?? null,
@@ -162,7 +166,45 @@ export function toCollectionDetail(
 		...toCollectionCard(standing),
 		badge: toBadge(standing),
 		albums,
-		highlights: standing.score.highlights,
+		score: toCollectionScore(standing),
+	};
+}
+
+/**
+ * The score's working. Only one set of a piece is offered — the one worth
+ * the most — because a page naming three ways to rebuy the same records is
+ * a page nobody acts on.
+ */
+export function toCollectionScore(
+	standing: MusicCollectionStanding
+): CollectionScoreView {
+	const { progress, score } = standing;
+	const names = new Map(
+		score.albums.map((album) => [album.albumUid, album.albumName])
+	);
+	const [opportunity] = score.opportunities;
+
+	return {
+		started: progress.owned > 0,
+		completed: progress.completed,
+		total: progress.total,
+		basePoints: score.basePoints,
+		albumPoints: score.albumPoints,
+		sizeFactor: score.sizeFactor,
+		formatFactor: score.formatFactor,
+		uniformMedia: score.uniformMedia,
+		points: score.totalPoints,
+		albums: score.albums,
+		tip: opportunity
+			? {
+					media: opportunity.media,
+					albumNames: opportunity.missingAlbumUids.map(
+						(albumUid) => names.get(albumUid) ?? albumUid
+					),
+					minimumPoints: opportunity.minimumPoints,
+					gain: opportunity.minimumPoints - score.totalPoints,
+				}
+			: null,
 	};
 }
 

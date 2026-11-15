@@ -5,11 +5,66 @@ import {
 	Entity,
 	FormatDescriptionEnum,
 	MediaEnum,
+	RarityTier,
 	Searchable,
 } from '../../../common';
 import { AlbumEntity } from '../album';
 import { ArtistEntity } from '../artist';
 import { LabelEntity } from '../label';
+
+/**
+ * How rare this pressing is, as the server last worked it out.
+ *
+ * Only the server writes it. A collector's score hangs on the tier, so a
+ * value a client could set would be a score a client could set.
+ */
+export interface ReleaseRarity {
+	tier: RarityTier;
+	/** Which source decided: a curator, the run size, Discogs, or the tags. */
+	source: 'manual' | 'edition' | 'discogs' | 'catalog';
+	/**
+	 * How many Discogs collectors held this pressing when the tier was worked
+	 * out; null where the tier did not come from that count.
+	 */
+	have: number | null;
+	/** Epoch milliseconds. */
+	calculatedAt: number;
+}
+
+/** A curator's own tier for a pressing, which stands above every source. */
+export interface ReleaseRarityOverride {
+	tier: RarityTier;
+	/** Why — the next curator has to be able to tell a reason from a slip. */
+	note: string;
+	byUserId: string;
+	/** Epoch milliseconds. */
+	at: number;
+}
+
+/**
+ * A pressing as a client may write it: without the tier and without the
+ * curator's override.
+ *
+ * Both are the server's to write, and the rules refuse a client write that
+ * changes either. A client that sent back the tier it had read a week ago
+ * would be changing it the moment the server had worked out a newer one — so
+ * the fields are left out, and the merge leaves what the server wrote alone.
+ */
+export function withoutServerRarity<
+	T extends { rarity?: unknown; rarityOverride?: unknown },
+>(release: T): Omit<T, 'rarity' | 'rarityOverride'> {
+	const written: { rarity?: unknown; rarityOverride?: unknown } = {
+		...release,
+	};
+
+	delete written.rarity;
+	delete written.rarityOverride;
+
+	return written as Omit<T, 'rarity' | 'rarityOverride'>;
+}
+
+/** The largest run a pressing's `editionSize` is taken to be. */
+export const RELEASE_EDITION_SIZE_MAX = 1000000;
 
 export interface Release {
 	/**
@@ -46,6 +101,12 @@ export interface Release {
 	coverColor?: string | null;
 	/** The Discogs pressing this release was imported from, when it was. */
 	discogsReleaseId?: number | null;
+	/**
+	 * How many copies of this pressing were made, where that is known — a
+	 * numbered or limited run. It is the pressing's fact, kept by an admin:
+	 * the number a collector types on their own copy never decides a tier.
+	 */
+	editionSize?: number | null;
 	formatDescription: FormatDescriptionEnum;
 	/**
 	 * Not a pressing but the album itself on a medium: the collector knows it
@@ -58,6 +119,9 @@ export interface Release {
 	label: ReleaseLabel | null;
 	media: MediaEnum;
 	name: string;
+	/** Missing until the server has worked it out; read as common till then. */
+	rarity?: ReleaseRarity | null;
+	rarityOverride?: ReleaseRarityOverride | null;
 }
 
 export type ReleaseEntity = Release &

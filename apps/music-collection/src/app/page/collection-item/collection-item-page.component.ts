@@ -17,6 +17,7 @@ import { focusOnClose } from '../../shared/dialog-focus';
 import {
 	CopyRemovalComponent,
 	FormatBadgeComponent,
+	RarityBadgeComponent,
 	StarRatingComponent,
 } from '../../shared/music-ui';
 import {
@@ -49,6 +50,7 @@ import { CoverFallbackDirective } from '../../shared/image';
 		PageBreadcrumbComponent,
 		RouterLink,
 		FormatBadgeComponent,
+		RarityBadgeComponent,
 		CopyRemovalComponent,
 		CopyPhotosComponent,
 		CopyDetailsFormComponent,

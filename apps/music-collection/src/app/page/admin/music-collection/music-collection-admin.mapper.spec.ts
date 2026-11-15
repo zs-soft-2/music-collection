@@ -30,7 +30,6 @@ function collection(
 		icon: null,
 		criteria: {},
 		badge: null,
-		basePoints: null,
 		parentUid: null,
 		group: null,
 		status: 'draft',
@@ -180,7 +179,6 @@ describe('toForm', () => {
 			icon: null,
 			criteria: original.criteria,
 			badge: original.badge,
-			basePoints: null,
 			parentUid: null,
 			group: null,
 			status: original.status,
@@ -274,6 +272,40 @@ describe('toRows', () => {
 		).toEqual([
 			['American Thrash', 40, null],
 			['Bay Area', 6, 'American Thrash'],
+		]);
+	});
+
+	it('values a collection by its size and puts a published one below two albums at rest', () => {
+		const resolution = (
+			uid: string,
+			total: number,
+			status: 'draft' | 'published'
+		): MusicCollectionResolution => ({
+			collection: collection({ uid, name: uid, status }),
+			resolved: {
+				collectionUid: uid,
+				criteriaVersion: 1,
+				albums: [],
+				total,
+				calculatedAt: 0,
+			},
+		});
+		const rows = toRows(
+			[
+				resolution('a-eight', 8, 'published'),
+				resolution('b-one', 1, 'published'),
+				resolution('c-draft', 1, 'draft'),
+			],
+			() => ''
+		);
+
+		expect(
+			rows.map(({ points, suspended }) => [points, suspended])
+		).toEqual([
+			[60, false],
+			[0, true],
+			// A draft is not shown to anyone yet: nothing to put at rest.
+			[0, false],
 		]);
 	});
 });

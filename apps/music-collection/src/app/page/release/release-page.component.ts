@@ -9,12 +9,15 @@ import { RouterLink } from '@angular/router';
 import { I18N_IMPORTS } from '@music-collection/core/i18n';
 
 import {
+	AdminAccessService,
 	AdminEditLinkComponent,
 	ProposeLinkComponent,
 	FormatBadgeComponent,
+	RarityBadgeComponent,
 } from '../../shared/music-ui';
 import { EntityFact, EntityFactsComponent } from '../../shared/entity-view';
 import { PageBreadcrumbComponent } from '../../shared/page-breadcrumb';
+import { ReleaseRarityAdminComponent } from './component/release-rarity-admin/release-rarity-admin.component';
 import { ReleasePageStore } from './release-page.store';
 import { CoverFallbackDirective } from '../../shared/image';
 
@@ -34,6 +37,8 @@ import { CoverFallbackDirective } from '../../shared/image';
 		RouterLink,
 		EntityFactsComponent,
 		FormatBadgeComponent,
+		RarityBadgeComponent,
+		ReleaseRarityAdminComponent,
 		AdminEditLinkComponent,
 		ProposeLinkComponent,
 	],
@@ -42,6 +47,7 @@ export class ReleasePageComponent {
 	private readonly datePipe = inject(DatePipe);
 
 	protected readonly store = inject(ReleasePageStore);
+	protected readonly admin = inject(AdminAccessService);
 
 	protected readonly facts = computed<EntityFact[]>(() => {
 		const pressing = this.store.pressing();

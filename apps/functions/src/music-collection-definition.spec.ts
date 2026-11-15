@@ -82,7 +82,6 @@ describe('prepareDefinition', () => {
 			icon: null,
 			criteria: { years: { equals: 1988 } },
 			badge: null,
-			basePoints: null,
 			parentUid: null,
 			group: null,
 			status: 'draft',
@@ -151,17 +150,28 @@ describe('prepareDefinition', () => {
 		).toThrow(/badge neve/);
 	});
 
-	it('az alappontszámot számként kéri, vagy sehogy', () => {
-		expect(prepareDefinition(definition()).basePoints).toBeNull();
+	// A collection értéke a képletből adódik; kézzel senki nem írja be.
+	it('a kézzel megadott pontértéket nem írja be a dokumentumba', () => {
 		expect(
-			prepareDefinition(definition({ basePoints: 500 })).basePoints
-		).toBe(500);
+			prepareDefinition(definition({ basePoints: 500 }))
+		).not.toHaveProperty('basePoints');
+	});
+
+	// A tartalmat csak szűrő adhatja meg: lemezt egyenként megnevezni nem lehet.
+	it('a lemezeket egyenként megnevező szabályt visszautasítja', () => {
+		for (const key of [
+			'albums',
+			'albumUids',
+			'includeAlbums',
+			'excludeAlbums',
+		]) {
+			expect(() =>
+				validateCriteria({ [key]: { includesAny: ['new-order'] } })
+			).toThrow(/Ismeretlen mező/);
+		}
 		expect(() =>
-			prepareDefinition(definition({ basePoints: '500' }))
-		).toThrow(/alappontszám/);
-		expect(() => prepareDefinition(definition({ basePoints: -1 }))).toThrow(
-			/alappontszám/
-		);
+			prepareDefinition(definition({ albumUids: ['new-order'] }))
+		).toThrow(/Ismeretlen mező/);
 	});
 
 	it('a nevet megköveteli', () => {

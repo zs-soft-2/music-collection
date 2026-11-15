@@ -224,7 +224,6 @@ export function planDiscography(
 				icon: 'pi pi-user',
 				artworkUrl: null,
 			},
-			basePoints: null,
 			parentUid: null,
 			group: 'discography',
 			status: 'published',
@@ -248,7 +247,6 @@ export function planDiscography(
 				icon: 'pi pi-list',
 				artworkUrl: null,
 			},
-			basePoints: null,
 			/* Set to the main collection once the server has written it. */
 			parentUid: null,
 			group: 'discography',

@@ -214,19 +214,27 @@ h1 {
 }
 
 .worth,
-.parts {
-	margin: 0;
-	font-size: 0.78rem;
-	color: var(--mc-text-muted);
+.factors {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: inherit;
+	gap: 0.35rem;
+	margin: 0 0 0.4rem;
+}
+
+.factor {
+	padding: 0.15rem 0.6rem;
+	font-size: 0.75rem;
+	font-weight: 600;
+	white-space: nowrap;
 	font-variant-numeric: tabular-nums;
-}
+	border: 1px solid var(--mc-border-strong);
+	border-radius: 999px;
 
-.parts {
-	margin-bottom: 0.4rem;
-}
-
-.bonus {
-	color: var(--mc-accent);
+	&.is-uniform {
+		color: var(--mc-accent);
+		border-color: var(--mc-accent);
+	}
 }
 
 .faces {
@@ -428,36 +436,6 @@ h1 {
 	font-size: 0.8rem;
 	line-height: 1.4;
 	color: var(--mc-text-muted);
-}
-
-/* Mi adta a pontot */
-.highlights {
-	display: flex;
-	flex-direction: column;
-	gap: 0.5rem;
-	margin-top: 0.9rem;
-
-	li {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) auto;
-		gap: 0 0.6rem;
-		font-size: 0.8rem;
-	}
-}
-
-.highlight-album {
-	font-weight: 600;
-}
-
-.highlight-points {
-	color: var(--mc-accent);
-	font-variant-numeric: tabular-nums;
-}
-
-.highlight-reasons {
-	grid-column: 1 / -1;
-	font-size: 0.75rem;
-	color: var(--mc-text-subtle);
 }
 
 /* ── Töltés és üres állapot ───────────────────────────────────────────── */

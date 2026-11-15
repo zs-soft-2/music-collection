@@ -3,17 +3,10 @@ import {
 	ArtistEntity,
 	CollectionItemEntity,
 	ContributionEntity,
+	ReleaseEntity,
 } from '@music-collection/api';
-import {
-	FormatDescriptionEnum,
-	FormatDescriptionList,
-	MediaEnum,
-} from '@music-collection/common/api';
-import {
-	toAlbumCoverUrl,
-	toDescriptions,
-	toYear,
-} from '@music-collection/common/engine';
+import { MediaEnum, RarityTier } from '@music-collection/common/api';
+import { toAlbumCoverUrl, toYear } from '@music-collection/common/engine';
 import {
 	CatalogAlbum,
 	CatalogArtist,
@@ -60,23 +53,20 @@ export function toCatalogCredit(
 }
 
 /**
- * The edition tags the catalog knows, out of whatever the pressing carries:
- * the field holds one description on old records and a list on new ones, and
- * a tag the enum does not know is not a tag the scoring can weigh.
- */
-function toEditions(value: unknown): FormatDescriptionEnum[] {
-	return toDescriptions(value).filter(
-		(description): description is FormatDescriptionEnum =>
-			FormatDescriptionList.includes(description as FormatDescriptionEnum)
-	);
-}
-
-/**
  * The collector's copies, as the completion and the scoring need to see
  * them. A copy without an album is dropped: it cannot say which record it is
  * a pressing of.
+ *
+ * A copy carries the pressing as it was the day the copy was filed, and a
+ * rarity is worked out again every month — so the tier is read from the
+ * catalog's own pressing where the catalog is at hand, and from the copy's
+ * snapshot only where it is not.
  */
-export function toOwnedCopies(items: CollectionItemEntity[]): OwnedCopy[] {
+export function toOwnedCopies(
+	items: CollectionItemEntity[],
+	releases: readonly ReleaseEntity[] = []
+): OwnedCopy[] {
+	const catalog = new Map(releases.map((release) => [release.uid, release]));
 	const copies: OwnedCopy[] = [];
 
 	for (const item of items) {
@@ -86,8 +76,9 @@ export function toOwnedCopies(items: CollectionItemEntity[]): OwnedCopy[] {
 			copies.push({
 				albumUid,
 				disposedAt: item.disposal?.date ?? null,
-				releaseYear: toYear(item.release?.date),
-				editions: toCopyEditions(item.release),
+				// A copy that names no medium is weighed as the least of them.
+				media: item.release.media ?? MediaEnum.all,
+				rarity: toRarity(catalog.get(item.release.uid) ?? item.release),
 			});
 		}
 	}
@@ -96,17 +87,10 @@ export function toOwnedCopies(items: CollectionItemEntity[]): OwnedCopy[] {
 }
 
 /**
- * What the scoring weighs about this copy. A pressing filed under the box set
- * medium is a box set whether or not anyone also tagged it as one, so it earns
- * that edition here — the engine only ever sees the tags.
+ * How rare the pressing is. A generic release — "I have it on vinyl" — is
+ * not a pressing at all, and one the server has not weighed yet says
+ * nothing: both are common, because rarity is shown, never assumed.
  */
-function toCopyEditions(
-	release: CollectionItemEntity['release']
-): FormatDescriptionEnum[] {
-	const editions = toEditions(release?.formatDescription);
-
-	return release?.media === MediaEnum.boxset &&
-		!editions.includes(FormatDescriptionEnum.boxSet)
-		? [...editions, FormatDescriptionEnum.boxSet]
-		: editions;
+function toRarity(release: ReleaseEntity): RarityTier {
+	return release.generic ? 'common' : (release.rarity?.tier ?? 'common');
 }

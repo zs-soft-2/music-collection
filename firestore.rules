@@ -259,6 +259,31 @@ service cloud.firestore {
               || (data.note is string && data.note.size() <= 280));
     }
 
+    // A kiadás ritkasága (`rarity`) és a kurátori felülbírálat
+    // (`rarityOverride`) a szerveré: a gyűjtő pontja múlik rajtuk, ezért a
+    // kliens sem létrehozáskor nem hozhatja magával, sem később nem
+    // változtathatja meg (`refreshReleaseRarity*`, `setReleaseRarityOverride`).
+    // A példányszámot (`editionSize`) az admin írja, de csak értelmes számot.
+    function isValidEditionSize(data) {
+      return !('editionSize' in data)
+          || data.editionSize == null
+          || (data.editionSize is int
+              && data.editionSize >= 1
+              && data.editionSize <= 1000000);
+    }
+
+    function isValidReleaseCreate(data) {
+      return data.get('rarity', null) == null
+          && data.get('rarityOverride', null) == null
+          && isValidEditionSize(data);
+    }
+
+    function isValidReleaseUpdate(data, existing) {
+      return data.get('rarity', null) == existing.get('rarity', null)
+          && data.get('rarityOverride', null) == existing.get('rarityOverride', null)
+          && isValidEditionSize(data);
+    }
+
     // A sync-marker feature key → permission-erőforrás. Ismeretlen kulcs → tiltás.
     // Az `owned-` előtagúak a gyűjtő saját entitásai (lásd lent): külön
     // erőforrás, külön jog — a katalógusba írni továbbra is `createArtistEntity`
@@ -1143,8 +1168,10 @@ service cloud.firestore {
 
         match /release/{releaseId} {
           allow read: if true;
-          allow create: if hasPerm('createReleaseEntity');
-          allow update: if hasPerm('updateReleaseEntity');
+          allow create: if hasPerm('createReleaseEntity')
+              && isValidReleaseCreate(request.resource.data);
+          allow update: if hasPerm('updateReleaseEntity')
+              && isValidReleaseUpdate(request.resource.data, resource.data);
           // Törölni csak a `deleteReleaseEntity` callable tud: azt, hogy
           // van-e valakinek példánya a kiadásból, a kliens nem tudja
           // megbízhatóan eldönteni (más gyűjtő adata, és közben változhat).
@@ -1162,8 +1189,10 @@ service cloud.firestore {
 
     match /release/{releaseId} {
       allow read: if true;
-      allow create: if hasPerm('createReleaseEntity');
-      allow update: if hasPerm('updateReleaseEntity');
+      allow create: if hasPerm('createReleaseEntity')
+          && isValidReleaseCreate(request.resource.data);
+      allow update: if hasPerm('updateReleaseEntity')
+          && isValidReleaseUpdate(request.resource.data, resource.data);
       // Ld. fent: a törlés a `deleteReleaseEntity` callable dolga.
       allow delete: if false;
     }

@@ -820,17 +820,19 @@
 				"one": "{{count}} pt earned",
 				"other": "{{count}} pts earned"
 			},
-			"pointsWorth": {
-				"one": "worth {{count}} pt when complete",
-				"other": "worth {{count}} pts when complete"
-			},
-			"basePoints": "{{points}} base",
-			"bonusPoints": "+ {{points}} for your pressings",
 			"group": {
 				"curated": "Collections",
 				"curatedLead": "Sets of records put together by a curator — a scene, a year, a style.",
 				"discography": "Discographies",
 				"discographyLead": "One band at a time: the studio albums, and everything else they put out beside them."
+			},
+			"pointsAtLeast": {
+				"one": "worth at least {{count}} point complete",
+				"other": "worth at least {{count}} points complete"
+			},
+			"pointsBase": {
+				"one": "base value: {{count}} point",
+				"other": "base value: {{count}} points"
 			}
 		},
 		"daily-question": {
@@ -1370,10 +1372,8 @@
 				"finished": "finished it",
 				"hunting": "collecting it"
 			},
-			"score": {
-				"title": "What raised the score",
-				"lead": "These records are what the collection is worth more for."
-			}
+			"atLeast": "the least it is worth once complete",
+			"baseValue": "base value — your shelf can make it more"
 		},
 		"copyPhotos": {
 			"no-photos-of-this": "No photos of this copy.",
@@ -1737,7 +1737,9 @@
 			"discogs-id": "Discogs id",
 			"the-loaded-data-matches": "The loaded data matches the form.",
 			"cancel3": "Cancel",
-			"apply-to-form": "Apply to form"
+			"apply-to-form": "Apply to form",
+			"edition-size": "Edition size",
+			"edition-size-hint": "How many copies of this pressing were made, where the record says so (a numbered or limited run). The rarity tier takes it into account."
 		},
 		"releaseTable": {
 			"no-releases-found": "No releases found.",
@@ -2287,7 +2289,8 @@
 			"delete2": "Delete",
 			"whoever-earned-its-badge": "? Whoever earned its badge loses it, and this cannot be undone here.",
 			"cancel": "Cancel",
-			"add-discography": "Open a discography"
+			"add-discography": "Open a discography",
+			"suspended": "At rest"
 		},
 		"musicCollectionEdit": {
 			"a-collection-is-a": "A collection is a rule, not a list: what belongs to it is resolved against the catalog every time it is read.",
@@ -2339,10 +2342,7 @@
 			"points-and-only-once": "points, and only once a collector owns every one of them. Owning the original pressing of an old record raises it further.",
 			"cancel": "Cancel",
 			"andMore": "…and {{count}} more.",
-			"pointsHint": {
-				"one": "What finishing it is worth. Left empty the rule decides — how many records it asks for, and how old they are — which right now would be {{count}} point.",
-				"other": "What finishing it is worth. Left empty the rule decides — how many records it asks for, and how old they are — which right now would be {{count}} points."
-			},
+			"pointsHint": "Base value: what the collection is worth on the most modest shelf. It follows from the number of records and cannot be typed in; a collector's score depends on the media and on how rare the pressings are.",
 			"previewTotal": {
 				"one": "{{count}} record",
 				"other": "{{count}} records"
@@ -2369,7 +2369,8 @@
 			"looks": "Looks",
 			"badge": "Badge",
 			"the-look": "The look",
-			"the-cover-stands-behind": "The cover stands behind the collection wherever it is shown: on its card, and across the top of its own page."
+			"the-cover-stands-behind": "The cover stands behind the collection wherever it is shown: on its card, and across the top of its own page.",
+			"tooFewAlbums": "The filters match {{count}} record(s). A collection can be published from 2 records; it can still be saved as a draft."
 		},
 		"profileSharing": {
 			"page": "Public collector page",
@@ -3091,6 +3092,89 @@
 			"generate": "Generate a clip",
 			"generate-again": "Generate a new clip",
 			"left-today": "{{count}} clips left today"
+		},
+		"collectionScore": {
+			"title": "How the score comes about",
+			"signIn": "Sign in and it is worked out from your own shelf.",
+			"albumPoints": "Points of the records",
+			"modestShelf": "On the most modest shelf ({{count}} × 5)",
+			"sizeFactor": "Size multiplier ({{count}} records)",
+			"formatFactor": "Format multiplier",
+			"mixed": "Mixed set",
+			"unfinished": "not complete yet",
+			"total": "Total",
+			"atLeast": "At least, once complete",
+			"baseValue": "Base value",
+			"points": {
+				"one": "{{count}} point",
+				"other": "{{count}} points"
+			},
+			"records": {
+				"one": "{{count}} record",
+				"other": "{{count}} records"
+			},
+			"uniform": {
+				"vinyl": "All vinyl",
+				"cd": "All CD",
+				"cassette": "All cassette"
+			},
+			"uniformDone": "Every record is there on the same medium.",
+			"tip": {
+				"title": "{{media}}: at least {{points}} points (+{{gain}})",
+				"missing": {
+					"one": "{{count}} more record is needed on this medium:",
+					"other": "{{count}} more records are needed on this medium:"
+				}
+			},
+			"perAlbum": "Record by record",
+			"media": {
+				"vinyl": "Vinyl",
+				"cd": "CD",
+				"cassette": "Cassette",
+				"boxset": "Box set",
+				"dvd": "DVD",
+				"all": "Unknown medium"
+			},
+			"rarity": {
+				"common": "Common",
+				"uncommon": "Uncommon",
+				"rare": "Rare",
+				"veryRare": "Very rare",
+				"ultraRare": "Curiosity"
+			},
+			"copies": {
+				"one": "{{count}} copy",
+				"other": "this one counts of {{count}} copies"
+			},
+			"missing": "Not on the shelf — worth at least 5 points",
+			"more": {
+				"one": "{{count}} more record",
+				"other": "{{count}} more records"
+			},
+			"note": "Points and the badge come only with the complete collection. What a record costs does not count."
+		},
+		"rarityBadge": {
+			"generic": "Generic copy — name the exact pressing for its rarity to count",
+			"pending": "Its rarity has not been worked out yet",
+			"manual": "Set by a curator",
+			"catalog": "From the catalog’s tags",
+			"discogs": {
+				"one": "{{count}} Discogs collector has it",
+				"other": "{{count}} Discogs collectors have it"
+			},
+			"edition": {
+				"one": "{{count}} copy was made",
+				"other": "{{count}} copies were made"
+			}
+		},
+		"rarityAdmin": {
+			"title": "Override the rarity",
+			"lead": "The server works the tier out from the edition size and the number of Discogs collectors. If you know better, set it here — a reason is required, so the next curator can see why.",
+			"tier": "Tier",
+			"note": "Reason",
+			"save": "Save the override",
+			"clear": "Remove the override",
+			"refresh": "Work it out again now"
 		}
 	},
 	"admin": {

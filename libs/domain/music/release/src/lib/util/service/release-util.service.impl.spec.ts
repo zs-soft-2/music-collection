@@ -51,6 +51,50 @@ describe('ReleaseUtilServiceImpl', () => {
 		});
 	});
 
+	it('keeps a run size as a whole number of copies, or not at all', () => {
+		const formGroup = service.createOrUpdateFormGroupForDisabling(
+			undefined as unknown as FormGroup,
+			undefined,
+			false,
+			true
+		);
+		const sized = (editionSize: unknown) => {
+			formGroup.patchValue({
+				artist: { uid: 'artist-1', name: 'Testament' },
+				editionSize,
+			});
+
+			return service.createEntity(formGroup).editionSize;
+		};
+
+		expect(sized(500)).toBe(500);
+		// A number input hands its value over as text.
+		expect(sized('500')).toBe(500);
+		expect(sized('')).toBeNull();
+		expect(sized(0)).toBeNull();
+		expect(sized(12.5)).toBeNull();
+		expect(sized(1_000_001)).toBeNull();
+		expect(service.updateEntity(formGroup).editionSize).toBeNull();
+	});
+
+	it('never sends the rarity the server worked out back to it', () => {
+		const model = service.convertEntityToModel({
+			uid: 'pressing',
+			name: 'The Legacy',
+			date: new Date('1987-04-21'),
+			rarity: {
+				tier: 'rare',
+				source: 'discogs',
+				have: 214,
+				calculatedAt: 0,
+			},
+			rarityOverride: { tier: 'rare', note: 'x', byUserId: 'c', at: 0 },
+		} as never);
+
+		expect(model).not.toHaveProperty('rarity');
+		expect(model).not.toHaveProperty('rarityOverride');
+	});
+
 	it('clears a catalog number the admin emptied', () => {
 		const formGroup = service.createOrUpdateFormGroupForDisabling(
 			undefined as unknown as FormGroup,

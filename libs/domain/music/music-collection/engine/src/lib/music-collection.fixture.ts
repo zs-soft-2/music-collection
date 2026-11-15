@@ -1,7 +1,8 @@
 import {
 	CountryEnum,
-	FormatDescriptionEnum,
 	FormatEnum,
+	MediaEnum,
+	RarityTier,
 	StyleName,
 } from '@music-collection/common/api';
 import {
@@ -44,18 +45,18 @@ export function artist(
 
 export function owned(
 	albumUid: string,
-	releaseYear: number | null = null,
-	editions: FormatDescriptionEnum[] = []
+	media: MediaEnum = MediaEnum.vinyl,
+	rarity: RarityTier = 'common'
 ): OwnedCopy {
-	return { albumUid, disposedAt: null, releaseYear, editions };
+	return { albumUid, disposedAt: null, media, rarity };
 }
 
 export function disposed(albumUid: string): OwnedCopy {
 	return {
 		albumUid,
 		disposedAt: 1_600_000_000_000,
-		releaseYear: null,
-		editions: [],
+		media: MediaEnum.vinyl,
+		rarity: 'common',
 	};
 }
 

@@ -820,17 +820,19 @@
 				"one": "{{count}} pont megszerezve",
 				"other": "{{count}} pont megszerezve"
 			},
-			"pointsWorth": {
-				"one": "teljesen {{count}} pontot ér",
-				"other": "teljesen {{count}} pontot ér"
-			},
-			"basePoints": "{{points}} alappont",
-			"bonusPoints": "+ {{points}} a nyomásaidért",
 			"group": {
 				"curated": "Collectionök",
 				"curatedLead": "Kurátor által összerakott lemezhalmazok — egy szcéna, egy év, egy stílus.",
 				"discography": "Diszkográfiák",
 				"discographyLead": "Egy zenekar egyszerre: a nagylemezek, és minden más, amit mellettük kiadtak."
+			},
+			"pointsAtLeast": {
+				"one": "teljesen legalább {{count}} pontot ér",
+				"other": "teljesen legalább {{count}} pontot ér"
+			},
+			"pointsBase": {
+				"one": "alapérték: {{count}} pont",
+				"other": "alapérték: {{count}} pont"
 			}
 		},
 		"daily-question": {
@@ -1370,10 +1372,8 @@
 				"finished": "végigvitte",
 				"hunting": "gyűjti"
 			},
-			"score": {
-				"title": "Mi adta a pontot",
-				"lead": "Ezek a lemezek emelték a kollekció értékét."
-			}
+			"atLeast": "legalább ennyit ér, ha végigviszed",
+			"baseValue": "alapérték — a polcod ennél többet hozhat"
 		},
 		"copyPhotos": {
 			"no-photos-of-this": "Nincs fénykép erről a példányról.",
@@ -1737,7 +1737,9 @@
 			"discogs-id": "Discogs-azonosító",
 			"the-loaded-data-matches": "A betöltött adatok megegyeznek az űrlappal.",
 			"cancel3": "Mégse",
-			"apply-to-form": "Alkalmazás az űrlapra"
+			"apply-to-form": "Alkalmazás az űrlapra",
+			"edition-size": "Példányszám",
+			"edition-size-hint": "Hány darab készült ebből a kiadásból, ha a lemez megmondja (számozott vagy limitált széria). A ritkasági szint számol vele."
 		},
 		"releaseTable": {
 			"no-releases-found": "Nincs találat.",
@@ -2287,7 +2289,8 @@
 			"delete2": "Törlés",
 			"whoever-earned-its-badge": "? Aki megszerezte a jelvényét, elveszíti, és ez innen nem vonható vissza.",
 			"cancel": "Mégse",
-			"add-discography": "Diszkográfia nyitása"
+			"add-discography": "Diszkográfia nyitása",
+			"suspended": "Szünetel"
 		},
 		"musicCollectionEdit": {
 			"a-collection-is-a": "A kollekció szabály, nem lista: hogy mi tartozik bele, minden olvasáskor a katalógushoz mérve dől el.",
@@ -2339,10 +2342,7 @@
 			"points-and-only-once": "pont, és csak akkor, ha a gyűjtőnek mind megvan. Egy régi lemez eredeti nyomásának birtoklása tovább emeli.",
 			"cancel": "Mégse",
 			"andMore": "…és még {{count}}.",
-			"pointsHint": {
-				"one": "Mennyit ér teljesíteni. Üresen hagyva a szabály dönt — hány lemezt kér, és mennyire régiek —, ami most {{count}} pont lenne.",
-				"other": "Mennyit ér teljesíteni. Üresen hagyva a szabály dönt — hány lemezt kér, és mennyire régiek —, ami most {{count}} pont lenne."
-			},
+			"pointsHint": "Alapérték: ennyit ér a kollekció a legszerényebb polccal. A lemezek számából adódik, kézzel nem írható át; a gyűjtő pontja a hordozóktól és a kiadások ritkaságától függ.",
 			"previewTotal": {
 				"one": "{{count}} lemez",
 				"other": "{{count}} lemez"
@@ -2369,7 +2369,8 @@
 			"looks": "Kinézet",
 			"badge": "Jelvény",
 			"the-look": "A kinézet",
-			"the-cover-stands-behind": "A borító a kollekció mögött áll, bárhol is mutatják: a kártyáján és a saját lapja fején."
+			"the-cover-stands-behind": "A borító a kollekció mögött áll, bárhol is mutatják: a kártyáján és a saját lapja fején.",
+			"tooFewAlbums": "A szűrőkre {{count}} lemez illik. Kollekció 2 lemeztől publikálható; piszkozatként így is menthető."
 		},
 		"profileSharing": {
 			"page": "Nyilvános gyűjtő-profil",
@@ -3091,6 +3092,89 @@
 			"generate": "Videó generálása",
 			"generate-again": "Új videó generálása",
 			"left-today": "ma még {{count}} klip"
+		},
+		"collectionScore": {
+			"title": "Így áll össze a pontszám",
+			"signIn": "Jelentkezz be, és a saját polcod szerint számolunk.",
+			"albumPoints": "Lemezek pontjai",
+			"modestShelf": "Legszerényebb polccal ({{count}} × 5)",
+			"sizeFactor": "Darabszám-szorzó ({{count}} lemez)",
+			"formatFactor": "Formátum-szorzó",
+			"mixed": "Vegyes sorozat",
+			"unfinished": "még nem teljes",
+			"total": "Összesen",
+			"atLeast": "Legalább, ha teljes",
+			"baseValue": "Alapérték",
+			"points": {
+				"one": "{{count}} pont",
+				"other": "{{count}} pont"
+			},
+			"records": {
+				"one": "{{count}} lemez",
+				"other": "{{count}} lemez"
+			},
+			"uniform": {
+				"vinyl": "Csupa bakelit",
+				"cd": "Csupa CD",
+				"cassette": "Csupa kazetta"
+			},
+			"uniformDone": "Minden lemez ugyanazon a hordozón van meg.",
+			"tip": {
+				"title": "{{media}}: legalább {{points}} pont (+{{gain}})",
+				"missing": {
+					"one": "Még {{count}} lemez kell ezen a hordozón:",
+					"other": "Még {{count}} lemez kell ezen a hordozón:"
+				}
+			},
+			"perAlbum": "Lemezenként",
+			"media": {
+				"vinyl": "Bakelit",
+				"cd": "CD",
+				"cassette": "Kazetta",
+				"boxset": "Box set",
+				"dvd": "DVD",
+				"all": "Ismeretlen hordozó"
+			},
+			"rarity": {
+				"common": "Gyakori",
+				"uncommon": "Ritkább",
+				"rare": "Ritka",
+				"veryRare": "Nagyon ritka",
+				"ultraRare": "Kuriózum"
+			},
+			"copies": {
+				"one": "{{count}} példány",
+				"other": "{{count}} példányból ez számít"
+			},
+			"missing": "Hiányzik a polcról — legalább 5 pontot ér",
+			"more": {
+				"one": "Még {{count}} lemez",
+				"other": "Még {{count}} lemez"
+			},
+			"note": "Pont és jelvény csak a teljes kollekcióért jár. Amit egy lemezért fizetni kell, az nem számít."
+		},
+		"rarityBadge": {
+			"generic": "Általános példány — add meg a pontos kiadást, hogy a ritkasága számítson",
+			"pending": "A ritkaságát még nem számoltuk ki",
+			"manual": "Kurátor állította be",
+			"catalog": "A katalógus címkéi alapján",
+			"discogs": {
+				"one": "{{count}} Discogs-gyűjtőnek van meg",
+				"other": "{{count}} Discogs-gyűjtőnek van meg"
+			},
+			"edition": {
+				"one": "{{count}} darab készült belőle",
+				"other": "{{count}} darab készült belőle"
+			}
+		},
+		"rarityAdmin": {
+			"title": "Ritkaság felülbírálása",
+			"lead": "A szintet a szerver számolja a példányszámból és a Discogs-gyűjtők számából. Ha te jobban tudod, itt felülírhatod — az indoklás kötelező, hogy a következő kurátor lássa, miért.",
+			"tier": "Szint",
+			"note": "Indoklás",
+			"save": "Felülbírálás mentése",
+			"clear": "Felülbírálás törlése",
+			"refresh": "Újraszámolás most"
 		}
 	},
 	"admin": {

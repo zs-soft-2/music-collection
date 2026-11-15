@@ -78,7 +78,6 @@ function collection(
 		icon: null,
 		criteria: {},
 		badge: null,
-		basePoints: 100,
 		parentUid: null,
 		group: null,
 		status: 'published',
@@ -128,11 +127,9 @@ function standing(
 			ownedAlbumUids.map((albumUid) => ({
 				albumUid,
 				disposedAt: null,
-				releaseYear: null,
-				editions: [],
-			})),
-			definition.basePoints,
-			progress.completed
+				media: MediaEnum.vinyl,
+				rarity: 'common' as const,
+			}))
 		),
 	};
 }

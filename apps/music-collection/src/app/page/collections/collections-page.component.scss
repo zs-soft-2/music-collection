@@ -422,6 +422,16 @@ mc-collection-artwork {
 	color: var(--mc-accent);
 }
 
+.uniform {
+	margin-left: 0.3rem;
+	padding: 0.05rem 0.45rem;
+	font-weight: 600;
+	white-space: nowrap;
+	color: var(--mc-accent);
+	border: 1px solid var(--mc-accent);
+	border-radius: 999px;
+}
+
 /* ── Loading and empty ────────────────────────────────────────────────── */
 
 .skeleton {

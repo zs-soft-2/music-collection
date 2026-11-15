@@ -48,6 +48,13 @@ export {
 	ensureGenericRelease,
 } from './catalog.functions';
 export {
+	rateReleaseOnWrite,
+	rateRootReleaseOnWrite,
+	refreshReleaseRarityNightly,
+	refreshReleaseRarityNow,
+	setReleaseRarityOverride,
+} from './release-rarity.functions';
+export {
 	adoptMusicCollectionBadgeImage,
 	createMusicCollectionEntity,
 	deleteMusicCollectionEntity,

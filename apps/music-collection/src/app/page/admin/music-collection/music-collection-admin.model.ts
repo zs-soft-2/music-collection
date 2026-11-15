@@ -51,8 +51,6 @@ export interface CollectionForm {
 	coverImageUrl: string;
 	status: MusicCollectionStatus;
 	visibility: MusicCollectionVisibility;
-	/** Empty leaves the score to the rule. */
-	basePoints: string;
 	parentUid: string;
 	/** Empty is the curated list; the editor carries the group of a pair. */
 	group: '' | MusicCollectionGroup;
@@ -154,7 +152,6 @@ export const emptyCollectionForm = (): CollectionForm => ({
 	coverImageUrl: '',
 	status: 'draft',
 	visibility: 'public',
-	basePoints: '',
 	parentUid: '',
 	group: '',
 	badgeName: '',
@@ -173,10 +170,13 @@ export interface CollectionRow {
 	visibility: MusicCollectionVisibility;
 	/** What the rule catches in the catalog right now. */
 	total: number;
-	/** What finishing it is worth; the rule's number when there is no other. */
+	/** What it is worth on the most modest shelf: the size of it decides. */
 	points: number;
-	/** The curator named no number, so the rule did. */
-	derivedPoints: boolean;
+	/**
+	 * Published, yet the rule reaches fewer albums than a collection needs:
+	 * it earns nothing and is shown to nobody until the catalog fills it.
+	 */
+	suspended: boolean;
 	badgeName: string | null;
 	/** The criteria in one line, so the list says what the rule is. */
 	summary: string;

@@ -1,58 +1,80 @@
-import { FormatDescriptionEnum } from '@music-collection/common/api';
+import { MediaEnum, RarityTier } from '@music-collection/common/api';
 import {
+	AlbumScore,
+	FormatOpportunity,
+	MUSIC_COLLECTION_MINIMUM_ALBUMS,
 	MusicCollectionMembership,
 	MusicCollectionScore,
 	OwnedCopy,
 	ResolvedMusicCollection,
-	ScoreHighlight,
+	UniformMedia,
 } from '@music-collection/domain/music-collection/api';
 
 /**
  * Scoring a collection.
  *
- * The base says what finishing it is worth. Left to the rule, that is the
- * size of the collection with two hands on the scale: a fortieth record is
- * harder to find than a fourth, because by then only the awkward ones are
- * left — and an old record is harder than a new one, which is still in
- * print and in every shop.
+ * An album is worth what it is on, times how rare the pressing is. The
+ * albums are added up, and two multipliers stand on the sum: one for the
+ * size of the collection, which every finished collection gets, and one for
+ * a set of a piece — every album on the same medium — which a mixed shelf
+ * does not.
  *
- * The bonus is what the shelf adds. Each album carries an equal share of the
- * base, and the best pressing the collector owns of it adds a fraction of
- * that share — so the same original pressing is worth more inside a prized
- * collection than inside a cheap one, which is what a collector would say
- * too. Age weighs here as well: every copy of this year's record is an
- * original pressing, so being one is worth nothing until time has passed.
+ * What a record costs is nowhere in here. Rarity counts copies, not prices.
  *
  * Nothing is earned until the collection is complete. That is the whole
  * point of a collection, and the reason the pages show what it *would* be
  * worth next to what it is worth now.
  */
 
-/** A base point per album, before age and size are weighed. */
-const POINTS_PER_ALBUM = 10;
-/** Every this many albums adds another 100% to the base. */
-const SIZE_SCALE = 50;
-/** The age at which a record counts as fully vintage. */
-const VINTAGE_YEARS = 40;
-/** What a fully vintage album adds to its own base point, as a fraction. */
-const VINTAGE_BONUS = 1;
+/** What an album is worth on each medium, before rarity. */
+export const MEDIA_POINTS: Record<MediaEnum, number> = {
+	[MediaEnum.vinyl]: 10,
+	[MediaEnum.boxset]: 8,
+	[MediaEnum.cd]: 7,
+	[MediaEnum.cassette]: 5,
+	[MediaEnum.dvd]: 5,
+	// Not a medium a copy is filed under; weighed as the least if one is.
+	[MediaEnum.all]: 5,
+};
 
-/** What a pressing adds, as a fraction of its album's share of the base. */
-const PRESSING_FACTORS: { edition: FormatDescriptionEnum; factor: number }[] = [
-	{ edition: FormatDescriptionEnum.limitedEdition, factor: 0.3 },
-	{ edition: FormatDescriptionEnum.pictureDisc, factor: 0.2 },
-	{ edition: FormatDescriptionEnum.boxSet, factor: 0.2 },
-	{ edition: FormatDescriptionEnum.g180, factor: 0.1 },
+export const RARITY_FACTORS: Record<RarityTier, number> = {
+	common: 1,
+	uncommon: 1.25,
+	rare: 1.6,
+	veryRare: 2,
+	ultraRare: 2.5,
+};
+
+/**
+ * What a set of a piece is multiplied by. A box set and a DVD are not here:
+ * a box does not say what is inside it, so neither can make a set uniform.
+ */
+export const FORMAT_FACTORS: Record<UniformMedia, number> = {
+	[MediaEnum.vinyl]: 1.5,
+	[MediaEnum.cd]: 1.3,
+	[MediaEnum.cassette]: 1.15,
+};
+
+/** The media a set can be uniform on, the most rewarded first. */
+const UNIFORM_MEDIA: readonly UniformMedia[] = [
+	MediaEnum.vinyl,
+	MediaEnum.cd,
+	MediaEnum.cassette,
 ];
-/** What an original pressing adds once the record is fully vintage. */
-const ORIGINAL_PRESSING_FACTOR = 0.4;
-/** However special a copy is, one album cannot carry the whole collection. */
-const MAX_PRESSING_FACTOR = 0.5;
+
+/** The least an album can be worth: a common copy on the humblest medium. */
+export const MINIMUM_ALBUM_POINTS = 5;
+
+/** Vintage, as the collector's profile reads it: forty years. */
+const VINTAGE_YEARS = 40;
 
 /**
  * How old a record is, from nothing for this year's to one at forty years.
  * A year the catalog does not know earns nothing: age must be shown, not
  * assumed.
+ *
+ * The scoring no longer reads it — a pressing's age speaks through its
+ * rarity — but the collector's profile still weighs a shelf by it.
  */
 export function ageWeight(year: number | null, now: number): number {
 	if (year === null) {
@@ -65,137 +87,219 @@ export function ageWeight(year: number | null, now: number): number {
 }
 
 /**
- * What the rule alone says the collection is worth. The curator may write a
- * base of their own; this is what stands in when they do not.
+ * What the size of a collection multiplies its albums by: 1 at two albums,
+ * and a quarter more every time the count doubles. It never stops growing,
+ * because a collection has no largest size — only ever more slowly.
  *
- * A forty-year-old album counts double: it went out of print decades ago,
- * and what is left of it is what somebody decided to keep.
+ * Rounded to two places before it is used, so the sum a page shows can be
+ * worked out again by hand from the numbers standing next to it.
  */
-export function derivedBasePoints(
-	albums: readonly { year: number | null }[],
-	now: number = Date.now()
-): number {
-	const weight = albums.reduce(
-		(sum, album) => sum + 1 + VINTAGE_BONUS * ageWeight(album.year, now),
-		0
-	);
-
-	return Math.round(
-		POINTS_PER_ALBUM * weight * (1 + albums.length / SIZE_SCALE)
-	);
+export function sizeFactor(albums: number): number {
+	return albums < MUSIC_COLLECTION_MINIMUM_ALBUMS
+		? 0
+		: Math.round((1 + 0.25 * Math.log2(albums / 2)) * 100) / 100;
 }
 
-/**
- * The pressing that came out with the record: same year as the album, and
- * not marked a reissue. Without a year on either side it cannot be claimed.
- */
-function isOriginalPressing(
-	copy: OwnedCopy,
-	albumYear: number | null
-): boolean {
-	return (
-		copy.releaseYear !== null &&
-		albumYear !== null &&
-		copy.releaseYear === albumYear &&
-		!copy.editions.includes(FormatDescriptionEnum.reissue)
-	);
+/** What the collection is worth on the most modest shelf there is. */
+export function basePoints(albums: number): number {
+	return Math.round(albums * MINIMUM_ALBUM_POINTS * sizeFactor(albums));
 }
 
-/** What this copy adds, and what to call it. */
-function weighCopy(
-	copy: OwnedCopy,
-	albumYear: number | null,
-	now: number
-): { factor: number; reasons: string[] } {
-	const reasons: string[] = [];
-	let factor = 0;
+/** What one copy makes its album worth. */
+export function copyPoints(copy: Pick<OwnedCopy, 'media' | 'rarity'>): number {
+	return MEDIA_POINTS[copy.media] * RARITY_FACTORS[copy.rarity];
+}
 
-	if (isOriginalPressing(copy, albumYear)) {
-		// Every copy of this year's record is an original pressing; only
-		// time makes holding one worth anything.
-		factor += ORIGINAL_PRESSING_FACTOR * ageWeight(albumYear, now);
-		reasons.push('original pressing');
-	}
+/** The copies still on the shelf, by the album they are a pressing of. */
+function copiesByAlbum(copies: readonly OwnedCopy[]): Map<string, OwnedCopy[]> {
+	const byAlbum = new Map<string, OwnedCopy[]>();
 
-	for (const { edition, factor: added } of PRESSING_FACTORS) {
-		if (copy.editions.includes(edition)) {
-			factor += added;
-			reasons.push(edition);
+	for (const copy of copies) {
+		if (copy.disposedAt === null) {
+			const held = byAlbum.get(copy.albumUid);
+
+			if (held) {
+				held.push(copy);
+			} else {
+				byAlbum.set(copy.albumUid, [copy]);
+			}
 		}
 	}
 
-	return factor > MAX_PRESSING_FACTOR
-		? { factor: MAX_PRESSING_FACTOR, reasons }
-		: { factor, reasons };
+	return byAlbum;
 }
 
-/** The best copy the collector owns of this album; several may be owned. */
+/** The copy worth the most, of all of them or of those on one medium. */
 function bestCopy(
 	copies: readonly OwnedCopy[],
-	album: MusicCollectionMembership,
-	now: number
-): { factor: number; reasons: string[] } {
-	let best = { factor: 0, reasons: [] as string[] };
+	media?: UniformMedia
+): OwnedCopy | null {
+	let best: OwnedCopy | null = null;
 
 	for (const copy of copies) {
-		if (copy.disposedAt === null && copy.albumUid === album.albumUid) {
-			const weighed = weighCopy(copy, album.year, now);
-
-			if (weighed.factor > best.factor) {
-				best = weighed;
-			}
+		if (
+			(media === undefined || copy.media === media) &&
+			(best === null || copyPoints(copy) > copyPoints(best))
+		) {
+			best = copy;
 		}
 	}
 
 	return best;
 }
 
+/** One way of counting the shelf: which copy stands for each album. */
+interface Candidate {
+	albums: AlbumScore[];
+	albumPoints: number;
+	formatFactor: number;
+	uniformMedia: UniformMedia | null;
+	totalPoints: number;
+}
+
+function toCandidate(
+	members: readonly MusicCollectionMembership[],
+	byAlbum: Map<string, OwnedCopy[]>,
+	size: number,
+	media: UniformMedia | null
+): Candidate {
+	const albums = members.map((album): AlbumScore => {
+		const held = byAlbum.get(album.albumUid) ?? [];
+		const copy = bestCopy(held, media ?? undefined);
+
+		return {
+			albumUid: album.albumUid,
+			albumName: album.albumName,
+			media: copy?.media ?? null,
+			rarity: copy?.rarity ?? null,
+			points: copy ? copyPoints(copy) : MINIMUM_ALBUM_POINTS,
+			copies: held.length,
+		};
+	});
+	const albumPoints = albums.reduce((sum, album) => sum + album.points, 0);
+	const formatFactor = media ? FORMAT_FACTORS[media] : 1;
+
+	return {
+		albums,
+		albumPoints,
+		formatFactor,
+		uniformMedia: media,
+		totalPoints: Math.round(albumPoints * size * formatFactor),
+	};
+}
+
 /**
- * What this collection is worth to this collector, as both stand now.
- *
- * `basePoints` is the curator's number; null leaves it to the rule.
+ * A set of a piece that is within reach on this medium: the least it would
+ * come to, with the albums not yet on it counted as common copies of it.
  */
-export function scoreCollection(
-	resolved: ResolvedMusicCollection,
-	copies: readonly OwnedCopy[],
-	basePoints: number | null,
-	completed: boolean,
-	now: number = Date.now()
-): MusicCollectionScore {
-	const derived = basePoints === null;
-	const base = derived ? derivedBasePoints(resolved.albums, now) : basePoints;
-	// An album's share of the base; a collection of nothing shares nothing.
-	const albumShare = resolved.total ? base / resolved.total : 0;
-	const highlights: ScoreHighlight[] = [];
-	let bonus = 0;
+function toOpportunity(
+	members: readonly MusicCollectionMembership[],
+	byAlbum: Map<string, OwnedCopy[]>,
+	size: number,
+	media: UniformMedia
+): FormatOpportunity {
+	const missingAlbumUids: string[] = [];
+	let points = 0;
 
-	for (const album of resolved.albums) {
-		const { factor, reasons } = bestCopy(copies, album, now);
+	for (const album of members) {
+		const copy = bestCopy(byAlbum.get(album.albumUid) ?? [], media);
 
-		if (factor > 0) {
-			const points = albumShare * factor;
-
-			bonus += points;
-			highlights.push({
-				albumUid: album.albumUid,
-				albumName: album.albumName,
-				reasons,
-				points: Math.round(points),
-			});
+		if (copy) {
+			points += copyPoints(copy);
+		} else {
+			points += MEDIA_POINTS[media];
+			missingAlbumUids.push(album.albumUid);
 		}
 	}
 
-	const bonusPoints = Math.round(bonus);
-	const totalPoints = base + bonusPoints;
+	return {
+		media,
+		missingAlbumUids,
+		minimumPoints: Math.round(points * size * FORMAT_FACTORS[media]),
+	};
+}
+
+/**
+ * What this collection is worth to this collector, as both stand now.
+ *
+ * Where several copies of an album are owned, the counting is whichever
+ * hands the collection the most: the best copy of every album, or — where
+ * every album is there on one medium — the copies on that medium, with the
+ * multiplier a set of a piece earns. A rare CD can therefore lose its place
+ * to a common vinyl, when the vinyl is what makes the set whole.
+ */
+export function scoreCollection(
+	resolved: ResolvedMusicCollection,
+	copies: readonly OwnedCopy[]
+): MusicCollectionScore {
+	const total = resolved.albums.length;
+
+	// Fewer than a collection needs: at rest, and worth nothing to anyone.
+	if (total < MUSIC_COLLECTION_MINIMUM_ALBUMS) {
+		return {
+			collectionUid: resolved.collectionUid,
+			basePoints: 0,
+			albumPoints: 0,
+			sizeFactor: 0,
+			formatFactor: 1,
+			uniformMedia: null,
+			totalPoints: 0,
+			earnedPoints: 0,
+			suspended: true,
+			albums: [],
+			opportunities: [],
+		};
+	}
+
+	const size = sizeFactor(total);
+	const byAlbum = copiesByAlbum(copies);
+	const completed = resolved.albums.every((album) =>
+		byAlbum.has(album.albumUid)
+	);
+	let chosen = toCandidate(resolved.albums, byAlbum, size, null);
+	const opportunities: FormatOpportunity[] = [];
+
+	for (const media of UNIFORM_MEDIA) {
+		const onMedia = resolved.albums.filter((album) =>
+			bestCopy(byAlbum.get(album.albumUid) ?? [], media)
+		).length;
+
+		if (onMedia === total) {
+			const uniform = toCandidate(resolved.albums, byAlbum, size, media);
+
+			// A tie goes to the set of a piece, and among those to the medium
+			// tried first — which is the order they are rewarded in.
+			if (
+				uniform.totalPoints > chosen.totalPoints ||
+				(uniform.totalPoints === chosen.totalPoints &&
+					chosen.uniformMedia === null)
+			) {
+				chosen = uniform;
+			}
+		} else if (onMedia * 2 >= total) {
+			opportunities.push(
+				toOpportunity(resolved.albums, byAlbum, size, media)
+			);
+		}
+	}
 
 	return {
 		collectionUid: resolved.collectionUid,
-		basePoints: base,
-		bonusPoints,
-		totalPoints,
+		basePoints: basePoints(total),
+		albumPoints: chosen.albumPoints,
+		sizeFactor: size,
+		formatFactor: chosen.formatFactor,
+		uniformMedia: chosen.uniformMedia,
+		totalPoints: chosen.totalPoints,
 		// Complete or nothing: this is what makes it a collection.
-		earnedPoints: completed ? totalPoints : 0,
-		derived,
-		highlights: highlights.sort((a, b) => b.points - a.points),
+		earnedPoints: completed ? chosen.totalPoints : 0,
+		suspended: false,
+		albums: chosen.albums,
+		// Only what would actually be worth more than the shelf is now.
+		opportunities: opportunities
+			.filter(
+				(opportunity) => opportunity.minimumPoints > chosen.totalPoints
+			)
+			.sort((a, b) => b.minimumPoints - a.minimumPoints),
 	};
 }

@@ -79,8 +79,90 @@ describe('release rules', () => {
 		);
 	});
 
+	// The tier decides a collector's score, so only the server writes it.
+	it('refuses a client write that changes the rarity or the override', async () => {
+		const admin = testEnv.authenticatedContext(ADMIN).firestore();
+		const change = (path: string, fields: Record<string, unknown>) =>
+			setDoc(
+				doc(admin, path),
+				{ ...fields, updatedAt: serverTimestamp() },
+				{ merge: true }
+			);
+
+		for (const path of [ROOT_PATH, NESTED_PATH]) {
+			await assertFails(
+				change(path, {
+					rarity: { tier: 'ultraRare', source: 'manual' },
+				})
+			);
+			await assertFails(
+				change(path, {
+					rarityOverride: { tier: 'ultraRare', note: 'mine' },
+				})
+			);
+		}
+	});
+
+	it('lets the admin edit a pressing the server has already rated', async () => {
+		await testEnv.withSecurityRulesDisabled(async (context) => {
+			await setDoc(
+				doc(context.firestore(), ROOT_PATH),
+				release({
+					rarity: { tier: 'rare', source: 'discogs', have: 214 },
+				})
+			);
+		});
+
+		const admin = testEnv.authenticatedContext(ADMIN).firestore();
+
+		// A merge leaves the tier where the server put it.
+		await assertSucceeds(
+			setDoc(
+				doc(admin, ROOT_PATH),
+				{
+					name: 'Master of Puppets — 1986 UK',
+					updatedAt: serverTimestamp(),
+				},
+				{ merge: true }
+			)
+		);
+	});
+
+	it('refuses a new pressing that brings its own rarity', async () => {
+		const admin = testEnv.authenticatedContext(ADMIN).firestore();
+
+		await assertFails(
+			setDoc(
+				doc(admin, 'release/r2'),
+				release({ uid: 'r2', rarity: { tier: 'ultraRare' } })
+			)
+		);
+		await assertSucceeds(
+			setDoc(doc(admin, 'release/r2'), release({ uid: 'r2' }))
+		);
+	});
+
+	it('takes an edition size only as a whole number that makes sense', async () => {
+		const admin = testEnv.authenticatedContext(ADMIN).firestore();
+		const size = (editionSize: unknown) =>
+			setDoc(
+				doc(admin, ROOT_PATH),
+				{ editionSize, updatedAt: serverTimestamp() },
+				{ merge: true }
+			);
+
+		await assertSucceeds(size(500));
+		await assertSucceeds(size(null));
+		await assertFails(size(0));
+		await assertFails(size(1_000_001));
+		await assertFails(size(12.5));
+		await assertFails(size('500'));
+	});
+
 	it('refuses the delete to a collector as well', async () => {
-		const collector = testEnv.authenticatedContext('collector-1').firestore();
+		const collector = testEnv
+			.authenticatedContext('collector-1')
+			.firestore();
 
 		await assertFails(deleteDoc(doc(collector, ROOT_PATH)));
 	});
