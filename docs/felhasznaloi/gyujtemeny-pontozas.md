@@ -231,6 +231,7 @@ collection-ökkel ne lehessen ugyanazt a polcot korlátlanul sokszor elszámolni
 
 **Felület:** mindkettő
 **Megjegyzés:** a gyűjtői collection-szerkesztő ticketjével együtt valósul meg (lásd Q-SCORE-001).
+**Ticket:** #119
 
 ## Nem része
 
@@ -257,7 +258,7 @@ collection-t gyárthat.
 - **B)** Elismerés: a gyűjtői collection pontja csak akkor számít az összpontszámba, ha kurátor jóváhagyta.
 - **C)** Mindkettő.
 
-**Javaslat:** A. A REQ-SCORE-016 ezt írja le; a gyűjtői szerkesztő ticketjének megnyitásakor véglegesítjük.
+**Javaslat:** A. A REQ-SCORE-016 ezt írja le; a gyűjtői szerkesztő ticketje (#119) véglegesíti.
 
 ### Q-SCORE-002: A ritkasági küszöbök kalibrálása
 
@@ -274,7 +275,7 @@ ritkaságot jelent.
 **Állás (2026-11-14):** a riport lefutott a dev katalóguson. A 712 kiadásból 11-nek van Discogs-azonosítója
 (9 vinyl, 2 box set; CD és kazetta egy sem), ebből küszöböt hangolni nem lehet. A kiinduló értékek maradnak, a
 kérdés nyitva. Amíg a kiadások nincsenek Discogs-hoz kötve, a szintjük a címkékből adódik, legfeljebb Ritka
-szintig; a kalibrálás előfeltétele ezért a Discogs-azonosítók pótlása.
+szintig; a kalibrálás előfeltétele ezért a Discogs-azonosítók pótlása. A pótlást és a kalibrálást a #118 végzi el.
 
 ### Q-SCORE-003: Box set és DVD
 
